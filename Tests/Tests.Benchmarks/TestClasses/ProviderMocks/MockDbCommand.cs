@@ -10,7 +10,7 @@ namespace LinqToDB.Benchmarks.TestProvider
 		private readonly QueryResult?   _result;
 		private readonly QueryResult[]? _results;
 
-		private readonly MockDbParameterCollection _parameters = new MockDbParameterCollection();
+		private readonly MockDbParameterCollection _parameters = new ();
 
 		public MockDbCommand(QueryResult result)
 		{

@@ -297,7 +297,6 @@ namespace Tests.Linq
 			ProviderName.DB2,
 			TestProvName.AllOracle,
 			TestProvName.AllMySql,
-			ProviderName.SqlServer2000,
 			TestProvName.AllSybase,
 			TestProvName.AllInformix,
 			TestProvName.AllSapHana)]

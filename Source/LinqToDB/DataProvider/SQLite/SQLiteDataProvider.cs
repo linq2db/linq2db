@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.SQLite
 {
+	using System.Data.Common;
 	using Common;
 	using Data;
 	using Mapping;
@@ -124,9 +125,9 @@ namespace LinqToDB.DataProvider.SQLite
 					"DATETIME", "DATETIME2", "DATE", "SMALLDATE", "SMALLDATETIME", "TIME", "TIMESTAMP", "DATETIMEOFFSET");
 
 				// also specify explicit converter for non-integer numerics, repored as integer by provider
-				SetToType<IDataReader, float  , long>((r, i) => r.GetFloat(i));
-				SetToType<IDataReader, double , long>((r, i) => r.GetDouble(i));
-				SetToType<IDataReader, decimal, long>((r, i) => r.GetDecimal(i));
+				SetToType<DbDataReader, float  , long>((r, i) => r.GetFloat(i));
+				SetToType<DbDataReader, double , long>((r, i) => r.GetDouble(i));
+				SetToType<DbDataReader, decimal, long>((r, i) => r.GetDecimal(i));
 			}
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
@@ -136,21 +137,21 @@ namespace LinqToDB.DataProvider.SQLite
 
 		}
 
-		private void SetSqliteField<T>(Expression<Func<IDataReader, int, T>> expr, Type[] fieldTypes, params string[] typeNames)
+		private void SetSqliteField<T>(Expression<Func<DbDataReader, int, T>> expr, Type[] fieldTypes, params string[] typeNames)
 		{
 			foreach (var fieldType in fieldTypes)
 			{
 				foreach (var typeName in typeNames)
-					SetField<IDataReader, T>(typeName, fieldType, expr);
+					SetField(typeName, fieldType, expr);
 
 				// defaults: v2
 				if (fieldType != typeof(byte[]))
 					foreach (var typeName in typeNames)
-						SetField<IDataReader, T>(typeName, typeof(byte[]), expr);
+						SetField(typeName, typeof(byte[]), expr);
 
 				// defaults: v1
 				foreach (var typeName in typeNames)
-					SetField<IDataReader, T>(typeName, typeof(int), expr);
+					SetField(typeName, typeof(int), expr);
 			}
 		}
 
@@ -169,7 +170,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public override IDisposable? ExecuteScope(DataConnection dataConnection)
 		{
 			if (Adapter.DisposeCommandOnError)
-				return new CallOnExceptionRegion(() => dataConnection.DisposeCommand());
+				return new DisposeCommandOnExceptionRegion(dataConnection);
 
 			return base.ExecuteScope(dataConnection);
 		}
@@ -203,7 +204,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return new SQLiteSchemaProvider();
 		}
 
-		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
+		public override bool? IsDBNullAllowed(DbDataReader reader, int idx)
 		{
 			if (SQLiteTools.AlwaysCheckDbNull)
 				return true;
@@ -211,7 +212,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return base.IsDBNullAllowed(reader, idx);
 		}
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			// handles situation, when char values were serialized as character hex value for some
 			// versions of Microsoft.Data.Sqlite
@@ -227,10 +228,10 @@ namespace LinqToDB.DataProvider.SQLite
 				value = guid.ToByteArray();
 			}
 
-			base.SetParameter(dataConnection, parameter, "@" + name, dataType, value);
+			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
 			switch (dataType.DataType)
 			{
@@ -265,7 +266,7 @@ namespace LinqToDB.DataProvider.SQLite
 				cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

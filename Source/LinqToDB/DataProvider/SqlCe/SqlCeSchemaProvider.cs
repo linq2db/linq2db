@@ -42,7 +42,7 @@ namespace LinqToDB.DataProvider.SqlCe
 	{
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
+			var tables = dataConnection.Connection.GetSchema("Tables");
 
 			return
 			(
@@ -81,7 +81,7 @@ WHERE PRIMARY_KEY = 1");
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var cs = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
+			var cs = dataConnection.Connection.GetSchema("Columns");
 
 			return
 			(
@@ -121,7 +121,7 @@ INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE oc ON oc.CONSTRAINT_NAME = rc.UNI
 
 		protected override string GetDatabaseName(DataConnection dbConnection)
 		{
-			return Path.GetFileNameWithoutExtension(((DbConnection)dbConnection.Connection).Database);
+			return Path.GetFileNameWithoutExtension(dbConnection.Connection.Database);
 		}
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)

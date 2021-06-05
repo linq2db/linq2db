@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Data.SqlTypes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,6 +34,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			SqlProviderFlags.IsOrderByAggregateFunctionsSupported = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported     = false;
 			SqlProviderFlags.IsUpdateFromSupported                = false;
+			SqlProviderFlags.IsGroupByExpressionSupported         = false;
 
 			SetCharFieldToType<char>("NChar", DataTools.GetCharExpression);
 
@@ -63,7 +65,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			return new SqlCeSchemaProvider();
 		}
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			switch (dataType.DataType)
 			{
@@ -80,7 +82,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
 			SqlDbType? type = null;
 
@@ -130,7 +132,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 #endregion
 
-		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
+		public override bool? IsDBNullAllowed(DbDataReader reader, int idx)
 		{
 			return true;
 		}
@@ -158,7 +160,7 @@ namespace LinqToDB.DataProvider.SqlCe
 				cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

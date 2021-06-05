@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Threading;
@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using System.Data.Common;
 	using Common;
 	using Data;
 	using Mapping;
@@ -85,7 +86,7 @@ namespace LinqToDB.DataProvider.DB2
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
 			return Version == DB2Version.zOS ?
-				new DB2zOSSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags) as ISqlBuilder:
+				new DB2zOSSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags) :
 				new DB2LUWSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
@@ -96,13 +97,7 @@ namespace LinqToDB.DataProvider.DB2
 			return _sqlOptimizer;
 		}
 
-		public override void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters)
-		{
-			dataConnection.DisposeCommand();
-			base.InitCommand(dataConnection, commandType, commandText, parameters, withParameters);
-		}
-
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			if (value is sbyte sb)
 			{
@@ -164,11 +159,10 @@ namespace LinqToDB.DataProvider.DB2
 					}
 			}
 
-			// TODO: why we add @ explicitly for DB2, SQLite and Sybase providers???
-			base.SetParameter(dataConnection, parameter, "@" + name, dataType, value);
+			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
 			DB2ProviderAdapter.DB2Type? type = null;
 			switch (dataType.DataType)
@@ -219,7 +213,7 @@ namespace LinqToDB.DataProvider.DB2
 				cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

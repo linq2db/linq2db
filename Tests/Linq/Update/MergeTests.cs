@@ -42,32 +42,23 @@ namespace Tests.xUpdate
 		{
 			static string[] Supported = new[]
 			{
-				ProviderName.Sybase,
-				ProviderName.SybaseManaged,
-				ProviderName.SqlServer2008,
-				ProviderName.SqlServer2012,
-				ProviderName.SqlServer2014,
-				TestProvName.SqlServer2016,
-				ProviderName.SqlServer2017,
-				TestProvName.SqlServer2019,
-				TestProvName.SqlServer2019SequentialAccess,
-				TestProvName.SqlServer2019FastExpressionCompiler,
-				TestProvName.SqlAzure
-			};
+				TestProvName.AllSybase,
+				TestProvName.AllSqlServer2008Plus
+			}.SelectMany(_ => _.Split(',')).ToArray();
 
 			public IdentityInsertMergeDataContextSourceAttribute(params string[] except)
-				: base(true, Supported.Except(except).ToArray())
+				: base(true, Supported.Except(except.SelectMany(_ => _.Split(','))).ToArray())
 			{
 			}
 
 			public IdentityInsertMergeDataContextSourceAttribute(bool includeLinqService, params string[] except)
-				: base(includeLinqService, Supported.Except(except).ToArray())
+				: base(includeLinqService, Supported.Except(except.SelectMany(_ => _.Split(','))).ToArray())
 			{
 			}
 		}
 
 		[Table("merge1")]
-		class TestMapping1
+		internal class TestMapping1
 		{
 			[Column("Id")]
 			[PrimaryKey]
@@ -104,7 +95,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table("merge2")]
-		class TestMapping2
+		internal class TestMapping2
 		{
 			[Column("Id")]
 			[PrimaryKey]

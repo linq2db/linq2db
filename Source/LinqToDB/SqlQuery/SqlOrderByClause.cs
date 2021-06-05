@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -9,16 +8,6 @@ namespace LinqToDB.SqlQuery
 	{
 		internal SqlOrderByClause(SelectQuery selectQuery) : base(selectQuery)
 		{
-		}
-
-		internal SqlOrderByClause(
-			SelectQuery   selectQuery,
-			SqlOrderByClause clone,
-			Dictionary<ICloneableElement,ICloneableElement> objectTree,
-			Predicate<ICloneableElement> doClone)
-			: base(selectQuery)
-		{
-			Items.AddRange(clone.Items.Select(item => (SqlOrderByItem)item.Clone(objectTree, doClone)));
 		}
 
 		internal SqlOrderByClause(IEnumerable<SqlOrderByItem> items) : base(null)

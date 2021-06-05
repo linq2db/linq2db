@@ -19,6 +19,7 @@ namespace Tests.Data
 	using System.Transactions;
 	using LinqToDB.AspNet;
 	using LinqToDB.Data.RetryPolicy;
+	using LinqToDB.Interceptors;
 	using LinqToDB.Mapping;
 	using Microsoft.Extensions.DependencyInjection;
 	using Model;
@@ -216,6 +217,54 @@ namespace Tests.Data
 			}
 		}
 
+		private class TestConnectionInterceptor : ConnectionInterceptor
+		{
+			private readonly Action<ConnectionOpeningEventData, DbConnection>? _onConnectionOpening;
+			private readonly Action<ConnectionOpenedEventData, DbConnection>? _onConnectionOpened;
+
+			private readonly Func<ConnectionOpeningEventData, DbConnection, CancellationToken, Task>? _onConnectionOpeningAsync;
+			private readonly Func<ConnectionOpenedEventData, DbConnection, CancellationToken, Task>?  _onConnectionOpenedAsync;
+
+			public TestConnectionInterceptor(
+				Action<ConnectionOpeningEventData, DbConnection>? onConnectionOpening,
+				Action<ConnectionOpenedEventData, DbConnection>? onConnectionOpened,
+				Func<ConnectionOpeningEventData, DbConnection, CancellationToken, Task>? onConnectionOpeningAsync,
+				Func<ConnectionOpenedEventData, DbConnection, CancellationToken, Task>? onConnectionOpenedAsync)
+			{
+				_onConnectionOpening = onConnectionOpening;
+				_onConnectionOpened  = onConnectionOpened;
+				_onConnectionOpeningAsync = onConnectionOpeningAsync;
+				_onConnectionOpenedAsync = onConnectionOpenedAsync;
+			}
+			public override void ConnectionOpened(ConnectionOpenedEventData eventData, DbConnection connection)
+			{
+				_onConnectionOpened?.Invoke(eventData, connection);
+				base.ConnectionOpened(eventData, connection);
+			}
+
+			public override async Task ConnectionOpenedAsync(ConnectionOpenedEventData eventData, DbConnection connection, CancellationToken cancellationToken)
+			{
+				if (_onConnectionOpenedAsync != null)
+					await _onConnectionOpenedAsync(eventData, connection, cancellationToken);
+
+				await base.ConnectionOpenedAsync(eventData, connection, cancellationToken);
+			}
+
+			public override void ConnectionOpening(ConnectionOpeningEventData eventData, DbConnection connection)
+			{
+				_onConnectionOpening?.Invoke(eventData, connection);
+				base.ConnectionOpening(eventData, connection);
+			}
+
+			public override async Task ConnectionOpeningAsync(ConnectionOpeningEventData eventData, DbConnection connection, CancellationToken cancellationToken)
+			{
+				if (_onConnectionOpeningAsync != null)
+					await _onConnectionOpeningAsync(eventData, connection, cancellationToken);
+
+				await base.ConnectionOpeningAsync(eventData, connection, cancellationToken);
+			}
+		}
+
 		[Test]
 		public void TestOpenEvent()
 		{
@@ -223,8 +272,12 @@ namespace Tests.Data
 			var openedAsync = false;
 			using (var conn = new DataConnection())
 			{
-				conn.OnConnectionOpened += (dc, cn) => opened = true;
-				conn.OnConnectionOpenedAsync += async (dc, cn, token) => await Task.Run(() => openedAsync = true);
+				conn.AddInterceptor(new TestConnectionInterceptor(
+					null,
+					(args, cn) => opened = true,
+					null,
+					async (args, cn, се) => await Task.Run(() => openedAsync = true)));
+
 				Assert.False(opened);
 				Assert.False(openedAsync);
 				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
@@ -240,8 +293,12 @@ namespace Tests.Data
 			var openedAsync = false;
 			using (var conn = new DataConnection())
 			{
-				conn.OnConnectionOpened += (dc, cn) => opened = true;
-				conn.OnConnectionOpenedAsync += async (dc, cn, token) => await Task.Run(() => openedAsync = true);
+				conn.AddInterceptor(new TestConnectionInterceptor(
+					null,
+					(args, cn) => opened = true,
+					null,
+					async (args, cn, ct) => await Task.Run(() => openedAsync = true, ct)));
+
 				Assert.False(opened);
 				Assert.False(openedAsync);
 				await conn.SelectAsync(() => 1);
@@ -405,16 +462,20 @@ namespace Tests.Data
 			var openAsync = false;
 			using (var conn = new DataConnection())
 			{
-				conn.OnBeforeConnectionOpen += (dc, cn) =>
-				{
-					if (cn.State == ConnectionState.Closed)
-						open = true;
-				};
-				conn.OnBeforeConnectionOpenAsync += (dc, cn, token) => Task.Run(() =>
-				{
-					if (cn.State == ConnectionState.Closed)
-						openAsync = true;
-				}, default);
+				conn.AddInterceptor(new TestConnectionInterceptor(
+					(args, cn) =>
+					{
+						if (cn.State == ConnectionState.Closed)
+							open = true;
+					},
+					null,
+					async (args, cn, ct) => await Task.Run(() =>
+					{
+						if (cn.State == ConnectionState.Closed)
+							openAsync = true;
+					}, ct),
+					null));
+
 				Assert.False(open);
 				Assert.False(openAsync);
 				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
@@ -430,16 +491,20 @@ namespace Tests.Data
 			var openAsync = false;
 			using (var conn = new DataConnection())
 			{
-				conn.OnBeforeConnectionOpen += (dc, cn) =>
+				conn.AddInterceptor(new TestConnectionInterceptor(
+					(args, cn) =>
 					{
 						if (cn.State == ConnectionState.Closed)
 							open = true;
-					};
-				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() => 
-						{
-							if (cn.State == ConnectionState.Closed)
-								openAsync = true;
-						}, default);
+					},
+					null,
+					async (args, cn, ct) => await Task.Run(() =>
+					{
+						if (cn.State == ConnectionState.Closed)
+							openAsync = true;
+					}, ct),
+					null));
+
 				Assert.False(open);
 				Assert.False(openAsync);
 				await conn.SelectAsync(() => 1);
@@ -855,8 +920,12 @@ namespace Tests.Data
 				}
 
 				db.Close();
-				db.OnBeforeConnectionOpen += OnBeforeConnectionOpen;
-				db.OnConnectionOpened     += OnConnectionOpened;
+				db.AddInterceptor(new TestConnectionInterceptor(
+					(args, cn) => OnBeforeConnectionOpen(args.DataConnection, cn),
+					(args, cn) => OnConnectionOpened(args.DataConnection, cn),
+					null,
+					null));
+
 				Assert.AreEqual(0, open);
 				Assert.AreEqual(0, opened);
 				_ = db.Connection;
@@ -879,8 +948,6 @@ namespace Tests.Data
 					open   = 0;
 					opened = 0;
 					cdb.Close();
-					db.OnBeforeConnectionOpen -= OnBeforeConnectionOpen;
-					db.OnConnectionOpened     -= OnConnectionOpened;
 					_ = cdb.Connection;
 					Assert.AreEqual(1, open);
 					Assert.AreEqual(1, opened);
@@ -892,21 +959,26 @@ namespace Tests.Data
 				Assert.AreEqual(0, open);
 				Assert.AreEqual(0, opened);
 				_ = db.Connection;
-				Assert.AreEqual(0, open);
-				Assert.AreEqual(0, opened);
+				Assert.AreEqual(1, open);
+				Assert.AreEqual(1, opened);
+				open   = 0;
+				opened = 0;
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
 					Assert.AreEqual(0, open);
 					Assert.AreEqual(0, opened);
+					cdb.Close();
 					_ = cdb.Connection;
-					Assert.AreEqual(0, open);
-					Assert.AreEqual(0, opened);
+					// with MARS cloned data connection inherit connection from parent and close do nothing
+					var expected = db.IsMarsEnabled ? 0 : 1;
+					Assert.AreEqual(expected, open);
+					Assert.AreEqual(expected, opened);
 				}
 			}
 
-			void OnBeforeConnectionOpen(DataConnection dc, IDbConnection cn) => open++;
-			void OnConnectionOpened    (DataConnection dc, IDbConnection cn) => opened++;
+			void OnBeforeConnectionOpen(DataConnection dc, DbConnection cn) => open++;
+			void OnConnectionOpened    (DataConnection dc, DbConnection cn) => opened++;
 		}
 
 		[Test]
@@ -933,8 +1005,11 @@ namespace Tests.Data
 				}
 
 				db.Close();
-				db.OnBeforeConnectionOpenAsync += OnBeforeConnectionOpenAsync;
-				db.OnConnectionOpenedAsync     += OnConnectionOpenedAsync;
+				db.AddInterceptor(new TestConnectionInterceptor(
+					null,
+					null,
+					(args, cn, ct) => OnBeforeConnectionOpenAsync(args.DataConnection, cn, ct),
+					(args, cn, ct) => OnConnectionOpenedAsync(args.DataConnection, cn, ct)));
 				Assert.AreEqual(0, open);
 				Assert.AreEqual(0, opened);
 				await db.EnsureConnectionAsync();
@@ -957,8 +1032,6 @@ namespace Tests.Data
 					open   = 0;
 					opened = 0;
 					cdb.Close();
-					db.OnBeforeConnectionOpenAsync -= OnBeforeConnectionOpenAsync;
-					db.OnConnectionOpenedAsync     -= OnConnectionOpenedAsync;
 					await cdb.EnsureConnectionAsync();
 					Assert.AreEqual(1, open);
 					Assert.AreEqual(1, opened);
@@ -970,26 +1043,31 @@ namespace Tests.Data
 				Assert.AreEqual(0, open);
 				Assert.AreEqual(0, opened);
 				await db.EnsureConnectionAsync();
-				Assert.AreEqual(0, open);
-				Assert.AreEqual(0, opened);
+				Assert.AreEqual(1, open);
+				Assert.AreEqual(1, opened);
+				open   = 0;
+				opened = 0;
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
 					Assert.AreEqual(0, open);
 					Assert.AreEqual(0, opened);
+					cdb.Close();
 					await cdb.EnsureConnectionAsync();
-					Assert.AreEqual(0, open);
-					Assert.AreEqual(0, opened);
+					// with MARS cloned data connection inherit connection from parent and close do nothing
+					var expected = db.IsMarsEnabled ? 0 : 1;
+					Assert.AreEqual(expected, open);
+					Assert.AreEqual(expected, opened);
 				}
 			}
 
-			Task OnBeforeConnectionOpenAsync(DataConnection dc, IDbConnection cn, CancellationToken ct)
+			Task OnBeforeConnectionOpenAsync(DataConnection dc, DbConnection cn, CancellationToken ct)
 			{
 				open++;
 				return Task.CompletedTask;
 			}
 
-			Task OnConnectionOpenedAsync(DataConnection dc, IDbConnection cn, CancellationToken ct)
+			Task OnConnectionOpenedAsync(DataConnection dc, DbConnection cn, CancellationToken ct)
 			{
 				opened++;
 				return Task.CompletedTask;
@@ -1017,7 +1095,7 @@ namespace Tests.Data
 				{
 					Assert.AreEqual(ConnectionState.Open, cn.State);
 
-					IDbConnection? clonedConnection = null;
+					DbConnection? clonedConnection = null;
 					using (var clonedDb = (DataConnection)((IDataContext)testDb).Clone(true))
 					{
 						clonedConnection = clonedDb.Connection;
@@ -1209,7 +1287,7 @@ namespace Tests.Data
 				scope?.Dispose();
 			}
 		}
-		#endregion
+#endregion
 
 		[Table]
 		class TransactionScopeTable
@@ -1234,6 +1312,7 @@ namespace Tests.Data
 					using (var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled))
 					{
 						// this query will be executed outside of TransactionScope transaction as it wasn't enlisted into connection
+						// will change when https://github.com/linq2db/linq2db/issues/2676 implemented
 						db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 2 });
 
 						Transaction.Current!.Rollback();
@@ -1308,7 +1387,7 @@ namespace Tests.Data
 					db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 1 });
 					using (var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled))
 					{
-						((DbConnection)db.Connection).EnlistTransaction(Transaction.Current);
+						db.Connection.EnlistTransaction(Transaction.Current);
 						db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 2 });
 
 						Transaction.Current!.Rollback();
@@ -1331,5 +1410,506 @@ namespace Tests.Data
 				}
 			}
 		}
+
+		#region MARS Support Tests (https://github.com/linq2db/linq2db/issues/2643)
+
+		// Following providers allow multiple active data readers on same command:
+		// ORACLE: Oracle.DataAccess
+		// ORACLE: Oracle.ManagedDataAccess(.Core)
+		// SQLCE : System.Data.SqlServerCe
+		// SQLITE: Microsoft.Data.Sqlite (prior to v2.1.0)
+		// SYBASE: AdoNetCore.AseClient
+		[Test]
+		public void MARS_MultipleDataReadersOnSameCommand_Supported(
+			[IncludeDataSources(false,
+				TestProvName.AllOracle,
+				ProviderName.SqlCe,
+#if NET472
+				ProviderName.SQLiteMS,
+#endif
+				ProviderName.SybaseManaged)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+					Assert.Ignore("MARS not enabled");
+
+				var cnt1 = db.Person.Count();
+				var cnt2 = 0;
+				db.Person.ToList();
+				var sql = db.LastQuery!;
+
+				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
+				using (var cmd = db.CreateCommand())
+				{
+					cmd.CommandText = sql;
+					using (var reader1 = cmd.ExecuteReader())
+					{
+						while (reader1.Read())
+						{
+							cnt2++;
+
+							// open another reader on same command
+							var cnt3 = 0;
+							using (var reader2 = cmd.ExecuteReader())
+							{
+								while (reader2.Read())
+								{
+									cnt3++;
+								}
+							}
+
+							Assert.True(cnt3 > 0);
+						}
+					}
+				}
+
+				Assert.True(cnt1 > 0);
+				Assert.AreEqual(cnt1, cnt2);
+			}
+		}
+
+		[Test]
+		public void MARS_MultipleDataReadersOnSameCommand_NotSupported(
+			[DataSources(false,
+				TestProvName.AllOracle,
+				ProviderName.SqlCe,
+				ProviderName.SQLiteMS,
+				ProviderName.SybaseManaged)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+					Assert.Ignore("MARS not enabled");
+
+				db.Person.ToList();
+				var sql = db.LastQuery!;
+
+				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
+				using (var cmd = db.CreateCommand())
+				{
+					cmd.CommandText = sql;
+					try
+					{
+						using (var reader1 = cmd.ExecuteReader())
+						{
+							while (reader1.Read())
+							{
+								// open another reader on same command
+								using (var reader2 = cmd.ExecuteReader())
+								{
+									while (reader2.Read())
+									{
+									}
+								}
+							}
+						}
+					}
+					catch
+					{
+						Assert.Pass();
+					}
+				}
+			}
+
+			Assert.Fail("Failure expected");
+		}
+
+		// Following providers allow multiple active data readers with own command:
+		// ACCESS   : System.Data.OleDb
+		// ACCESS   : System.Data.Odbc
+		// DB2      : IBM.Data.DB2(.Core)
+		// Firebird : FirebirdSql.Data.FirebirdClient
+		// Informix : IBM.Data.DB2(.Core)
+		// Informix : IBM.Data.Informix
+		// ORACLE   : Oracle.DataAccess
+		// ORACLE   : Oracle.ManagedDataAccess(.Core)
+		// SAP HANA : Sap.Data.Hana.v4.5/Sap.Data.Hana.Core.v2.1
+		// SAP HANA : System.Data.Odbc
+		// SQLCE    : System.Data.SqlServerCe
+		// SQLITE   : System.Data.Sqlite
+		// SQLITE   : Microsoft.Data.Sqlite (prior to v2.1.0)
+		// SQLServer: System.Data.SqlClient (with MARS enabled)
+		// SQLServer: Microsoft.Data.SqlClient (with MARS enabled)
+		// SYBASE   : Sybase.AdoNet45.AseClient
+		// SYBASE   : AdoNetCore.AseClient
+		[Test]
+		public void MARS_ProviderSupportsMultipleDataReadersOnNewCommand_NoDispose_Supported(
+			[IncludeDataSources(false,
+				TestProvName.AllAccess,
+				ProviderName.DB2,
+				TestProvName.AllFirebird,
+				TestProvName.AllInformix,
+				TestProvName.AllOracle,
+				TestProvName.AllSapHana,
+				ProviderName.SqlCe,
+				TestProvName.AllSQLite,
+				TestProvName.AllSqlServer,
+				TestProvName.AllSybase)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+					Assert.Ignore("MARS not enabled");
+
+				var cnt1 = db.Person.Count();
+				var cnt2 = 0;
+				db.Person.ToList();
+				var sql = db.LastQuery!;
+
+				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
+				using (var cmd = db.CreateCommand())
+				{
+					cmd.CommandText = sql;
+					using (var reader1 = cmd.ExecuteReader())
+					{
+						while (reader1.Read())
+						{
+							cnt2++;
+
+							// open another reader on new command
+							using (var cmd2 = db.CreateCommand())
+							{
+								var cnt3 = 0;
+								cmd2.CommandText = sql;
+
+								using (var reader2 = cmd2.ExecuteReader())
+								{
+									while (reader2.Read())
+									{
+										cnt3++;
+									}
+								}
+
+								Assert.True(cnt3 > 0);
+							}
+						}
+					}
+				}
+
+				Assert.True(cnt1 > 0);
+				Assert.AreEqual(cnt1, cnt2);
+			}
+		}
+
+		[Test]
+		public void MARS_ProviderSupportsMultipleDataReadersOnNewCommand_NoDispose_NotSupported(
+			[DataSources(false,
+				TestProvName.AllAccess,
+				ProviderName.DB2,
+				TestProvName.AllFirebird,
+				TestProvName.AllInformix,
+				TestProvName.AllOracle,
+				TestProvName.AllSapHana,
+				ProviderName.SqlCe,
+				TestProvName.AllSQLite,
+				TestProvName.AllSqlServer,
+				TestProvName.AllSybase)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+					Assert.Ignore("MARS not enabled");
+
+				db.Person.ToList();
+				var sql = db.LastQuery!;
+
+				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
+				using (var cmd = db.CreateCommand())
+				{
+					cmd.CommandText = sql;
+					try
+					{
+						using (var reader1 = cmd.ExecuteReader())
+						{
+							while (reader1.Read())
+							{
+								// open another reader on new command
+								using (var cmd2 = db.CreateCommand())
+								{
+									cmd2.CommandText = sql;
+
+									using (var reader2 = cmd2.ExecuteReader())
+									{
+										while (reader2.Read())
+										{
+										}
+									}
+								}
+							}
+						}
+					}
+					catch
+					{
+						Assert.Pass();
+					}
+				}
+			}
+
+			Assert.Fail("Failure expected");
+		}
+
+		// Following providers allow multiple active data readers with own command (disposed):
+		// ACCESS   : System.Data.OleDb
+		// ACCESS   : System.Data.Odbc
+		// DB2      : IBM.Data.DB2(.Core)
+		// Informix : IBM.Data.DB2(.Core)
+		// Informix : IBM.Data.Informix
+		// ORACLE   : Oracle.DataAccess
+		// ORACLE   : Oracle.ManagedDataAccess(.Core)
+		// SAP HANA : Sap.Data.Hana.v4.5/Sap.Data.Hana.Core.v2.1
+		// SAP HANA : System.Data.Odbc
+		// SQLCE    : System.Data.SqlServerCe
+		// SQLITE   : System.Data.Sqlite
+		// SQLITE   : Microsoft.Data.Sqlite (prior to v2.1.0)
+		// SQLServer: System.Data.SqlClient (with MARS enabled)
+		// SQLServer: Microsoft.Data.SqlClient (with MARS enabled)
+		// SYBASE   : Sybase.AdoNet45.AseClient
+		// SYBASE   : AdoNetCore.AseClient
+		[Test]
+		public void MARS_ProviderSupportsMultipleDataReadersOnNewCommand_Dispose_Supported(
+			[IncludeDataSources(false,
+				TestProvName.AllAccess,
+				ProviderName.DB2,
+				TestProvName.AllInformix,
+				TestProvName.AllOracle,
+				TestProvName.AllSapHana,
+				ProviderName.SqlCe,
+				TestProvName.AllSQLiteClassic,
+#if NET472
+				ProviderName.SQLiteMS,
+#endif
+				TestProvName.AllSqlServer,
+				TestProvName.AllSybase)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+					Assert.Ignore("MARS not enabled");
+
+				var cnt1 = db.Person.Count();
+				var cnt2 = 0;
+				db.Person.ToList();
+				var sql = db.LastQuery!;
+
+				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
+				var cmd = db.CreateCommand();
+				cmd.CommandText = sql;
+				using (var reader1 = cmd.ExecuteReader())
+				{
+					cmd.Dispose();
+					while (reader1.Read())
+					{
+						cnt2++;
+
+						// open another reader on new command
+						using (var cmd2 = db.CreateCommand())
+						{
+							var cnt3 = 0;
+							cmd2.CommandText = sql;
+
+							using (var reader2 = cmd2.ExecuteReader())
+							{
+								while (reader2.Read())
+								{
+									cnt3++;
+								}
+							}
+
+							Assert.True(cnt3 > 0);
+						}
+					}
+				}
+
+				Assert.True(cnt1 > 0);
+				Assert.AreEqual(cnt1, cnt2);
+			}
+		}
+
+		[Test]
+		public void MARS_ProviderSupportsMultipleDataReadersOnNewCommand_Dispose_NotSupported(
+			[DataSources(false,
+				TestProvName.AllAccess,
+				ProviderName.DB2,
+				TestProvName.AllInformix,
+				TestProvName.AllOracle,
+				TestProvName.AllSapHana,
+				ProviderName.SqlCe,
+				TestProvName.AllSQLite,
+				TestProvName.AllSqlServer,
+				TestProvName.AllSybase)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+					Assert.Ignore("MARS not enabled");
+
+				db.Person.ToList();
+				var sql = db.LastQuery!;
+
+				// we need to use raw ADO.NET for this test, as we ADO.NET test provider behavior without linq2db
+				var cmd = db.CreateCommand();
+				cmd.CommandText = sql;
+				using (var reader1 = cmd.ExecuteReader())
+				{
+					cmd.Dispose();
+					try
+					{
+						while (reader1.Read())
+						{
+							// open another reader on new command
+							using (var cmd2 = db.CreateCommand())
+							{
+								cmd2.CommandText = sql;
+
+								using (var reader2 = cmd2.ExecuteReader())
+								{
+									while (reader2.Read())
+									{
+									}
+								}
+							}
+						}
+					}
+					catch
+					{
+						Assert.Pass();
+					}
+				}
+			}
+
+			Assert.Fail("Failure expected");
+		}
+
+		[Test]
+		public void MARS_Supported(
+			[DataSources(false,
+				TestProvName.AllMySql,
+				TestProvName.AllPostgreSQL)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+					Assert.Ignore("MARS not enabled");
+
+				var cnt1 = db.Person.Count();
+				var cnt2 = 0;
+				foreach (var p in db.Person)
+				{
+					db.Doctor.Where(_ => _.PersonID == p.ID).ToList();
+					cnt2++;
+				}
+
+				Assert.True(cnt1 > 0);
+				Assert.AreEqual(cnt1, cnt2);
+			}
+		}
+
+		[Test]
+		public void MARS_Unsupported(
+			[IncludeDataSources(false,
+				TestProvName.AllMySql,
+				TestProvName.AllPostgreSQL)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				if (db.DataProvider is SqlServerDataProvider && db.IsMarsEnabled)
+					Assert.Ignore("MARS enabled");
+
+				var failed = false;
+				try
+				{
+					foreach (var p in db.Person)
+						db.Doctor.Where(_ => _.PersonID == p.ID).ToList();
+				}
+				catch { failed = true; }
+
+				if (!failed)
+					Assert.Fail("Failure expected");
+			}
+		}
+
+		[Test]
+		public void MARS_ParametersPreservedAfterDispose([DataSources(false)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var commandInterceptor = new SaveCommandInterceptor();
+				db.AddInterceptor(commandInterceptor);
+
+				var param = "test";
+
+				db.Person.Where(_ => _.LastName == param).ToList();
+
+				Assert.AreEqual(1, commandInterceptor.Parameters.Length);
+			}
+		}
+
+		[Test]
+		public async Task MARS_ParametersPreservedAfterDisposeAsync([DataSources(false)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var commandInterceptor = new SaveCommandInterceptor();
+				db.AddInterceptor(commandInterceptor);
+
+				var param = "test";
+
+				await db.Person.Where(_ => _.LastName == param).ToListAsync();
+
+				Assert.AreEqual(1, commandInterceptor.Parameters.Length);
+			}
+		}
+
+#if !NET472
+		[Test]
+		public async Task MARS_SupportedAsync(
+			[DataSources(false,
+				TestProvName.AllMySql,
+				TestProvName.AllPostgreSQL)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				if (db.DataProvider is SqlServerDataProvider && !db.IsMarsEnabled)
+					Assert.Ignore("MARS not enabled");
+
+				var cnt1 = await db.Person.CountAsync();
+				var cnt2 = 0;
+				await foreach(var p in db.Person.AsAsyncEnumerable())
+				{
+					await db.Doctor.Where(_ => _.PersonID == p.ID).ToListAsync();
+					cnt2++;
+				}
+
+				Assert.True(cnt1 > 0);
+				Assert.AreEqual(cnt1, cnt2);
+			}
+		}
+
+		[Test]
+		public async Task MARS_UnsupportedAsync(
+			[IncludeDataSources(false,
+				TestProvName.AllMySql,
+				TestProvName.AllPostgreSQL)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				if (db.DataProvider is SqlServerDataProvider && db.IsMarsEnabled)
+					Assert.Ignore("MARS enabled");
+
+				var failed = false;
+				try
+				{
+					await foreach (var p in db.Person.AsAsyncEnumerable())
+						await db.Doctor.Where(_ => _.PersonID == p.ID).ToListAsync();
+				}
+				catch { failed = true; }
+
+				if (!failed)
+					Assert.Fail("Failure expected");
+			}
+		}
+#endif
+#endregion
 	}
 }

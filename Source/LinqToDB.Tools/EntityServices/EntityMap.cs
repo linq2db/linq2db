@@ -142,8 +142,7 @@ namespace LinqToDB.Tools.EntityServices
 
 		volatile ConcurrentDictionary<Type,IKeyComparer>? _keyComparers;
 
-		[return: MaybeNull]
-		public T GetEntity(IDataContext context, object key)
+		public T? GetEntity(IDataContext context, object key)
 		{
 			if (context == null) throw new ArgumentNullException(nameof(context));
 			if (key     == null) throw new ArgumentNullException(nameof(key));

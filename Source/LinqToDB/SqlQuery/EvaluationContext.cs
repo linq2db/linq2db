@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.SqlQuery
@@ -31,7 +30,7 @@ namespace LinqToDB.SqlQuery
 
 		public IReadOnlyParameterValues? ParameterValues { get; }
 
-		public bool TryGetValue(IQueryElement expr, [MaybeNullWhen(false)] out EvaluationInfo? info)
+		public bool TryGetValue(IQueryElement expr, [NotNullWhen(true)] out EvaluationInfo? info)
 		{
 			if (_evaluationCache == null)
 			{

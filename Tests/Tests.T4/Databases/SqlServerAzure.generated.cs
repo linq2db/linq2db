@@ -674,11 +674,18 @@ namespace TestAzureSQL
 
 		public static int ExecuteProcIntParameters(this Issue1733DB dataConnection, int? @input, ref int? @output)
 		{
-			var ret = dataConnection.ExecuteProc("[dbo].[ExecuteProcIntParameters]",
+			var parameters = new []
+			{
 				new DataParameter("@input",  @input,  LinqToDB.DataType.Int32),
-				new DataParameter("@output", @output, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput });
+				new DataParameter("@output", @output, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				}
+			};
 
-			@output = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output"]).Value);
+			var ret = dataConnection.ExecuteProc("[dbo].[ExecuteProcIntParameters]", parameters);
+
+			@output = Converter.ChangeTypeTo<int?>(parameters[1].Value);
 
 			return ret;
 		}
@@ -695,6 +702,15 @@ namespace TestAzureSQL
 		/// </param>
 		public static IEnumerable<ExecuteProcStringParametersResult> ExecuteProcStringParameters(this Issue1733DB dataConnection, int? @input, ref int? @output)
 		{
+			var parameters = new []
+			{
+				new DataParameter("@input",  @input,  LinqToDB.DataType.Int32),
+				new DataParameter("@output", @output, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				}
+			};
+
 			var ms = dataConnection.MappingSchema;
 
 			var ret = dataConnection.QueryProc(dataReader =>
@@ -702,11 +718,9 @@ namespace TestAzureSQL
 				{
 					Column1 = Converter.ChangeTypeTo<string>(dataReader.GetValue(0), ms),
 				},
-				"[dbo].[ExecuteProcStringParameters]",
-				new DataParameter("@input",  @input,  LinqToDB.DataType.Int32),
-				new DataParameter("@output", @output, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput }).ToList();
+				"[dbo].[ExecuteProcStringParameters]", parameters).ToList();
 
-			@output = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output"]).Value);
+			@output = Converter.ChangeTypeTo<int?>(parameters[1].Value);
 
 			return ret;
 		}
@@ -731,13 +745,28 @@ namespace TestAzureSQL
 
 		public static int OutRefEnumTest(this Issue1733DB dataConnection, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
 		{
-			var ret = dataConnection.ExecuteProc("[dbo].[OutRefEnumTest]",
-				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar),
-				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 },
-				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
+			var parameters = new []
+			{
+				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar)
+				{
+					Direction = ParameterDirection.InputOutput,
+					Size      = 50
+				},
+				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar)
+				{
+					Direction = ParameterDirection.InputOutput,
+					Size      = 50
+				}
+			};
 
-			@outputStr      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["@outputStr"]).     Value);
-			@inputOutputStr = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputStr"]).Value);
+			var ret = dataConnection.ExecuteProc("[dbo].[OutRefEnumTest]", parameters);
+
+			@outputStr      = Converter.ChangeTypeTo<string?>(parameters[1].Value);
+			@inputOutputStr = Converter.ChangeTypeTo<string?>(parameters[2].Value);
 
 			return ret;
 		}
@@ -748,18 +777,39 @@ namespace TestAzureSQL
 
 		public static int OutRefTest(this Issue1733DB dataConnection, int? @ID, ref int? @outputID, ref int? @inputOutputID, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
 		{
-			var ret = dataConnection.ExecuteProc("[dbo].[OutRefTest]",
+			var parameters = new []
+			{
 				new DataParameter("@ID",             @ID,             LinqToDB.DataType.Int32),
-				new DataParameter("@outputID",       @outputID,       LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@inputOutputID",  @inputOutputID,  LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar),
-				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 },
-				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar) { Direction = ParameterDirection.InputOutput, Size = 50 });
+				new DataParameter("@outputID",       @outputID,       LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				},
+				new DataParameter("@inputOutputID",  @inputOutputID,  LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				},
+				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar)
+				{
+					Direction = ParameterDirection.InputOutput,
+					Size      = 50
+				},
+				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar)
+				{
+					Direction = ParameterDirection.InputOutput,
+					Size      = 50
+				}
+			};
 
-			@outputID       = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["@outputID"]).      Value);
-			@inputOutputID  = Converter.ChangeTypeTo<int?>   (((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputID"]). Value);
-			@outputStr      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["@outputStr"]).     Value);
-			@inputOutputStr = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["@inputOutputStr"]).Value);
+			var ret = dataConnection.ExecuteProc("[dbo].[OutRefTest]", parameters);
+
+			@outputID       = Converter.ChangeTypeTo<int?>   (parameters[1].Value);
+			@inputOutputID  = Converter.ChangeTypeTo<int?>   (parameters[2].Value);
+			@outputStr      = Converter.ChangeTypeTo<string?>(parameters[4].Value);
+			@inputOutputStr = Converter.ChangeTypeTo<string?>(parameters[5].Value);
 
 			return ret;
 		}
@@ -789,9 +839,19 @@ namespace TestAzureSQL
 
 		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this Issue1733DB dataConnection, string? @firstName, string? @lastName)
 		{
-			return dataConnection.QueryProc<PatientSelectByNameResult>("[dbo].[Patient_SelectByName]",
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar),
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar));
+			var parameters = new []
+			{
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				}
+			};
+
+			return dataConnection.QueryProc<PatientSelectByNameResult>("[dbo].[Patient_SelectByName]", parameters);
 		}
 
 		public partial class PatientSelectByNameResult
@@ -810,8 +870,12 @@ namespace TestAzureSQL
 
 		public static int PersonDelete(this Issue1733DB dataConnection, int? @PersonID)
 		{
-			return dataConnection.ExecuteProc("[dbo].[Person_Delete]",
-				new DataParameter("@PersonID", @PersonID, LinqToDB.DataType.Int32));
+			var parameters = new []
+			{
+				new DataParameter("@PersonID", @PersonID, LinqToDB.DataType.Int32)
+			};
+
+			return dataConnection.ExecuteProc("[dbo].[Person_Delete]", parameters);
 		}
 
 		#endregion
@@ -820,11 +884,27 @@ namespace TestAzureSQL
 
 		public static IEnumerable<PersonInsertResult> PersonInsert(this Issue1733DB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
 		{
-			return dataConnection.QueryProc<PersonInsertResult>("[dbo].[Person_Insert]",
-				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar),
-				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar),
-				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar),
-				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char));
+			var parameters = new []
+			{
+				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char)
+				{
+					Size = 1
+				}
+			};
+
+			return dataConnection.QueryProc<PersonInsertResult>("[dbo].[Person_Insert]", parameters);
 		}
 
 		public partial class PersonInsertResult
@@ -838,14 +918,33 @@ namespace TestAzureSQL
 
 		public static int PersonInsertOutputParameter(this Issue1733DB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender, ref int? @PersonID)
 		{
-			var ret = dataConnection.ExecuteProc("[dbo].[Person_Insert_OutputParameter]",
-				new DataParameter("@FirstName", @FirstName, LinqToDB.DataType.NVarChar),
-				new DataParameter("@LastName", @LastName, LinqToDB.DataType.NVarChar),
-				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar),
-				new DataParameter("@Gender",   @Gender,   LinqToDB.DataType.Char),
-				new DataParameter("@PersonID", @PersonID, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput });
+			var parameters = new []
+			{
+				new DataParameter("@FirstName", @FirstName, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@LastName", @LastName, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@Gender",   @Gender,   LinqToDB.DataType.Char)
+				{
+					Size = 1
+				},
+				new DataParameter("@PersonID", @PersonID, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				}
+			};
 
-			@PersonID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@PersonID"]).Value);
+			var ret = dataConnection.ExecuteProc("[dbo].[Person_Insert_OutputParameter]", parameters);
+
+			@PersonID = Converter.ChangeTypeTo<int?>(parameters[4].Value);
 
 			return ret;
 		}
@@ -865,8 +964,12 @@ namespace TestAzureSQL
 
 		public static IEnumerable<Person> PersonSelectByKey(this Issue1733DB dataConnection, int? @id)
 		{
-			return dataConnection.QueryProc<Person>("[dbo].[Person_SelectByKey]",
-				new DataParameter("@id", @id, LinqToDB.DataType.Int32));
+			var parameters = new []
+			{
+				new DataParameter("@id", @id, LinqToDB.DataType.Int32)
+			};
+
+			return dataConnection.QueryProc<Person>("[dbo].[Person_SelectByKey]", parameters);
 		}
 
 		#endregion
@@ -875,14 +978,18 @@ namespace TestAzureSQL
 
 		public static IEnumerable<PersonSelectByKeyLowercaseResult> PersonSelectByKeyLowercase(this Issue1733DB dataConnection, int? @id)
 		{
-			return dataConnection.QueryProc<PersonSelectByKeyLowercaseResult>("[dbo].[Person_SelectByKeyLowercase]",
-				new DataParameter("@id", @id, LinqToDB.DataType.Int32));
+			var parameters = new []
+			{
+				new DataParameter("@id", @id, LinqToDB.DataType.Int32)
+			};
+
+			return dataConnection.QueryProc<PersonSelectByKeyLowercaseResult>("[dbo].[Person_SelectByKeyLowercase]", parameters);
 		}
 
 		public partial class PersonSelectByKeyLowercaseResult
 		{
-			public int    personid  { get; set; }
-			public string firstname { get; set; } = null!;
+			public int    PersonID  { get; set; }
+			public string FirstName { get; set; } = null!;
 		}
 
 		#endregion
@@ -891,9 +998,19 @@ namespace TestAzureSQL
 
 		public static IEnumerable<Person> PersonSelectByName(this Issue1733DB dataConnection, string? @firstName, string? @lastName)
 		{
-			return dataConnection.QueryProc<Person>("[dbo].[Person_SelectByName]",
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar),
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar));
+			var parameters = new []
+			{
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				}
+			};
+
+			return dataConnection.QueryProc<Person>("[dbo].[Person_SelectByName]", parameters);
 		}
 
 		#endregion
@@ -902,9 +1019,19 @@ namespace TestAzureSQL
 
 		public static IEnumerable<Person> PersonSelectListByName(this Issue1733DB dataConnection, string? @firstName, string? @lastName)
 		{
-			return dataConnection.QueryProc<Person>("[dbo].[Person_SelectListByName]",
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar),
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar));
+			var parameters = new []
+			{
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				}
+			};
+
+			return dataConnection.QueryProc<Person>("[dbo].[Person_SelectListByName]", parameters);
 		}
 
 		#endregion
@@ -913,12 +1040,28 @@ namespace TestAzureSQL
 
 		public static int PersonUpdate(this Issue1733DB dataConnection, int? @PersonID, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
 		{
-			return dataConnection.ExecuteProc("[dbo].[Person_Update]",
+			var parameters = new []
+			{
 				new DataParameter("@PersonID",   @PersonID,   LinqToDB.DataType.Int32),
-				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar),
-				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar),
-				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar),
-				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char));
+				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char)
+				{
+					Size = 1
+				}
+			};
+
+			return dataConnection.ExecuteProc("[dbo].[Person_Update]", parameters);
 		}
 
 		#endregion
@@ -927,15 +1070,28 @@ namespace TestAzureSQL
 
 		public static IEnumerable<Person> QueryProcMultipleParameters(this Issue1733DB dataConnection, int? @input, ref int? @output1, ref int? @output2, ref int? @output3)
 		{
-			var ret = dataConnection.QueryProc<Person>("[dbo].[QueryProcMultipleParameters]",
+			var parameters = new []
+			{
 				new DataParameter("@input",   @input,   LinqToDB.DataType.Int32),
-				new DataParameter("@output1", @output1, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@output2", @output2, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@output3", @output3, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput }).ToList();
+				new DataParameter("@output1", @output1, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				},
+				new DataParameter("@output2", @output2, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				},
+				new DataParameter("@output3", @output3, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				}
+			};
 
-			@output1 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output1"]).Value);
-			@output2 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output2"]).Value);
-			@output3 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output3"]).Value);
+			var ret = dataConnection.QueryProc<Person>("[dbo].[QueryProcMultipleParameters]", parameters).ToList();
+
+			@output1 = Converter.ChangeTypeTo<int?>(parameters[1].Value);
+			@output2 = Converter.ChangeTypeTo<int?>(parameters[2].Value);
+			@output3 = Converter.ChangeTypeTo<int?>(parameters[3].Value);
 
 			return ret;
 		}
@@ -946,13 +1102,23 @@ namespace TestAzureSQL
 
 		public static IEnumerable<Person> QueryProcParameters(this Issue1733DB dataConnection, int? @input, ref int? @output1, ref int? @output2)
 		{
-			var ret = dataConnection.QueryProc<Person>("[dbo].[QueryProcParameters]",
+			var parameters = new []
+			{
 				new DataParameter("@input",   @input,   LinqToDB.DataType.Int32),
-				new DataParameter("@output1", @output1, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput },
-				new DataParameter("@output2", @output2, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput }).ToList();
+				new DataParameter("@output1", @output1, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				},
+				new DataParameter("@output2", @output2, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				}
+			};
 
-			@output1 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output1"]).Value);
-			@output2 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["@output2"]).Value);
+			var ret = dataConnection.QueryProc<Person>("[dbo].[QueryProcParameters]", parameters).ToList();
+
+			@output1 = Converter.ChangeTypeTo<int?>(parameters[1].Value);
+			@output2 = Converter.ChangeTypeTo<int?>(parameters[2].Value);
 
 			return ret;
 		}
@@ -984,8 +1150,15 @@ namespace TestAzureSQL
 
 		public static IEnumerable<TableTypeTestProcResult> TableTypeTestProc(this Issue1733DB dataConnection, DataTable? @table)
 		{
-			return dataConnection.QueryProc<TableTypeTestProcResult>("[dbo].[TableTypeTestProc]",
-				new DataParameter("@table", @table, LinqToDB.DataType.Structured){ DbType = "[dbo].[TestTableType]" });
+			var parameters = new []
+			{
+				new DataParameter("@table", @table, LinqToDB.DataType.Structured)
+				{
+					DbType = "[dbo].[TestTableType]"
+				}
+			};
+
+			return dataConnection.QueryProc<TableTypeTestProcResult>("[dbo].[TableTypeTestProc]", parameters);
 		}
 
 		public partial class TableTypeTestProcResult
@@ -1021,8 +1194,12 @@ namespace TestAzureSQL
 
 		public static IEnumerable<VariableResultsResult> VariableResults(this Issue1733DB dataConnection, bool? @ReturnFullRow)
 		{
-			return dataConnection.QueryProc<VariableResultsResult>("[dbo].[VariableResults]",
-				new DataParameter("@ReturnFullRow", @ReturnFullRow, LinqToDB.DataType.Boolean));
+			var parameters = new []
+			{
+				new DataParameter("@ReturnFullRow", @ReturnFullRow, LinqToDB.DataType.Boolean)
+			};
+
+			return dataConnection.QueryProc<VariableResultsResult>("[dbo].[VariableResults]", parameters);
 		}
 
 		public partial class VariableResultsResult

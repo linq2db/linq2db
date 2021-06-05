@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 using System.IO;
 using System.Linq;
 
@@ -22,7 +23,7 @@ using Tests.Model;
 // ReSharper disable once TestClassNameSuffixWarning
 public class a_CreateData : TestBase
 {
-	static void RunScript(string configString, string divider, string name, Action<IDbConnection>? action = null, string? databaseName = null)
+	static void RunScript(string configString, string divider, string name, Action<DbConnection>? action = null, string? databaseName = null)
 	{
 		TestContext.WriteLine("=== " + name + " === \n");
 
@@ -48,6 +49,12 @@ public class a_CreateData : TestBase
 
 		using (var db = new TestDataConnection(configString))
 		{
+			if (configString == ProviderName.OracleNative || configString == TestProvName.Oracle11Native)
+			{
+				// we need this to avoid errors in trigger creation when native provider
+				// recognize ":NEW" as parameter
+				db.AddInterceptor(new BindByNameOracleCommandInterceptor());
+			}
 			//db.CommandTimeout = 20;
 
 			var database = databaseName ?? db.Connection.Database;
@@ -71,17 +78,7 @@ public class a_CreateData : TestBase
 					if (DataConnection.TraceSwitch.TraceInfo)
 						TestContext.WriteLine(command);
 
-					if (configString == ProviderName.OracleNative || configString == TestProvName.Oracle11Native)
-					{
-						// we need this to avoid errors in trigger creation when native provider
-						// recognize ":NEW" as parameter
-						var cmd = db.CreateCommand();
-						cmd.CommandText = command;
-						((dynamic)cmd).BindByName = false;
-						cmd.ExecuteNonQuery();
-					}
-					else
-						db.Execute(command);
+					db.Execute(command);
 
 					if (DataConnection.TraceSwitch.TraceInfo)
 						TestContext.WriteLine("\nOK\n");
@@ -94,7 +91,8 @@ public class a_CreateData : TestBase
 							TestContext.WriteLine(command);
 
 						var isDrop =
-							command.TrimStart().StartsWith("DROP") ||
+							command.TrimStart().StartsWith("DROP")          ||
+							command.TrimStart().Contains("DROP PROCEDURE ") ||
 							command.TrimStart().StartsWith("CALL DROP");
 
 						TestContext.WriteLine(ex.Message);
@@ -247,7 +245,8 @@ public class a_CreateData : TestBase
 		switch (context)
 		{
 			case ProviderName.Firebird                            :
-			case TestProvName.Firebird3                           : RunScript(context,          "COMMIT;", "Firebird", FirebirdAction);    break;
+			case TestProvName.Firebird3                           :
+			case TestProvName.Firebird4                           : RunScript(context,          "COMMIT;", "Firebird", FirebirdAction);    break;
 			case ProviderName.PostgreSQL                          :
 			case ProviderName.PostgreSQL92                        :
 			case ProviderName.PostgreSQL93                        :
@@ -260,16 +259,16 @@ public class a_CreateData : TestBase
 			case ProviderName.MySqlConnector                      :
 			case TestProvName.MySql55                             :
 			case TestProvName.MariaDB                             : RunScript(context,          "\nGO\n",  "MySql");                       break;
-			case ProviderName.SqlServer2000                       : RunScript(context,          "\nGO\n",  "SqlServer2000");               break;
 			case ProviderName.SqlServer2005                       :
 			case ProviderName.SqlServer2008                       :
 			case ProviderName.SqlServer2012                       :
 			case ProviderName.SqlServer2014                       :
-			case TestProvName.SqlServer2016                       :
+			case ProviderName.SqlServer2016                       :
 			case ProviderName.SqlServer2017                       :
 			case TestProvName.SqlServer2019                       :
 			case TestProvName.SqlServer2019SequentialAccess       :
 			case TestProvName.SqlServer2019FastExpressionCompiler :
+			case TestProvName.SqlServerContained                  :
 			case TestProvName.SqlAzure                            : RunScript(context,          "\nGO\n",  "SqlServer");                   break;
 			case TestProvName.Default                             : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);      break;
 			case ProviderName.SQLiteClassic                       :
@@ -307,7 +306,7 @@ public class a_CreateData : TestBase
 		}
 	}
 
-	static void AccessODBCAction(IDbConnection connection)
+	static void AccessODBCAction(DbConnection connection)
 	{
 
 		using (var conn = AccessTools.CreateDataConnection(connection, ProviderName.AccessOdbc))
@@ -343,7 +342,7 @@ public class a_CreateData : TestBase
 		}
 	}
 
-	static void AccessAction(IDbConnection connection)
+	static void AccessAction(DbConnection connection)
 	{
 		using (var conn = AccessTools.CreateDataConnection(connection, ProviderName.Access))
 		{
@@ -378,7 +377,7 @@ public class a_CreateData : TestBase
 		}
 	}
 
-	void FirebirdAction(IDbConnection connection)
+	void FirebirdAction(DbConnection connection)
 	{
 		using (var conn = LinqToDB.DataProvider.Firebird.FirebirdTools.CreateDataConnection(connection))
 		{
@@ -410,7 +409,7 @@ public class a_CreateData : TestBase
 		}
 	}
 
-	static void SQLiteAction(IDbConnection connection)
+	static void SQLiteAction(DbConnection connection)
 	{
 		using (var conn = LinqToDB.DataProvider.SQLite.SQLiteTools.CreateDataConnection(connection))
 		{
@@ -432,7 +431,7 @@ public class a_CreateData : TestBase
 		}
 	}
 
-	static void InformixAction(IDbConnection connection)
+	static void InformixAction(DbConnection connection)
 	{
 		using (var conn = LinqToDB.DataProvider.Informix.InformixTools.CreateDataConnection(connection, ProviderName.Informix))
 		{
@@ -450,7 +449,7 @@ public class a_CreateData : TestBase
 		}
 	}
 
-	static void InformixDB2Action(IDbConnection connection)
+	static void InformixDB2Action(DbConnection connection)
 	{
 		using (var conn = LinqToDB.DataProvider.Informix.InformixTools.CreateDataConnection(connection, ProviderName.InformixDB2))
 		{

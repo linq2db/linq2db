@@ -13,10 +13,12 @@ using NUnit.Framework;
 
 namespace Tests.Samples
 {
+	using System.Data.Common;
+	using System.Threading.Tasks;
 	using Model;
 	/// <summary>
 	/// This sample demonstrates how can we use <see cref="IDataContext"/> decoration
-	/// to deal with different <see cref="MappingSchema"/> objects in one <see cref="IDbConnection"/>
+	/// to deal with different <see cref="MappingSchema"/> objects in one <see cref="DbConnection"/>.
 	/// </summary>
 	[TestFixture]
 	public class DataContextDecoratorTests
@@ -65,9 +67,19 @@ namespace Tests.Samples
 				_context.Close();
 			}
 
+			public Task CloseAsync()
+			{
+				return _context.CloseAsync();
+			}
+
 			public void Dispose()
 			{
 				_context.Dispose();
+			}
+
+			public ValueTask DisposeAsync()
+			{
+				return _context.DisposeAsync();
 			}
 
 			public IQueryRunner GetQueryRunner(Query query, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles)
@@ -75,12 +87,12 @@ namespace Tests.Samples
 				return _context.GetQueryRunner(query, queryNumber, expression, parameters, preambles);
 			}
 
-			public Expression GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
+			public Expression GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType)
 			{
 				return _context.GetReaderExpression(reader, idx, readerExpression, toType);
 			}
 
-			public bool? IsDBNullAllowed(IDataReader reader, int idx)
+			public bool? IsDBNullAllowed(DbDataReader reader, int idx)
 			{
 				return _context.IsDBNullAllowed(reader, idx);
 			}

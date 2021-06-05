@@ -14,7 +14,17 @@ namespace LinqToDB.DataProvider.Sybase
 	// AseException : Incorrect syntax near ','.
 	class SybaseBulkCopy : BasicBulkCopy
 	{
-		private readonly SybaseDataProvider _provider;
+		/// <remarks>
+		/// Setting is conservative based on https://maxdb.sap.com/doc/7_6/f6/069940ccd42a54e10000000a1550b0/content.htm
+		/// Possible to be higher in other versions.
+		/// </remarks>
+		protected override int                MaxSqlLength  => 65536;
+		/// <remarks>
+		/// Settings based on https://www.jooq.org/doc/3.12/manual/sql-building/dsl-context/custom-settings/settings-inline-threshold/
+		/// We subtract 1 based on possibility of provider using parameter for command.
+		/// </remarks>
+		protected override int                MaxParameters => 1999;
+		private readonly   SybaseDataProvider _provider;
 
 		public SybaseBulkCopy(SybaseDataProvider provider)
 		{
@@ -59,7 +69,7 @@ namespace LinqToDB.DataProvider.Sybase
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T>           table,
 			BulkCopyOptions     options,
@@ -82,17 +92,18 @@ namespace LinqToDB.DataProvider.Sybase
 #endif
 
 		private ProviderConnections? GetProviderConnection<T>(ITable<T> table)
+			where T : notnull
 		{
-			if (table.DataContext is DataConnection dataConnection && _provider.Adapter.BulkCopy != null)
+			if (table.TryGetDataConnection(out var dataConnection) && _provider.Adapter.BulkCopy != null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
 
 				// for run in transaction see
 				// https://stackoverflow.com/questions/57675379
 				// provider will call sp_oledb_columns which creates temp table
 				var transaction = dataConnection.Transaction;
 				if (connection != null && transaction != null)
-					transaction = _provider.TryGetProviderTransaction(transaction, dataConnection.MappingSchema);
+					transaction = _provider.TryGetProviderTransaction(transaction, table.DataContext.MappingSchema);
 
 				if (connection != null && (dataConnection.Transaction == null || transaction != null))
 				{
@@ -112,13 +123,14 @@ namespace LinqToDB.DataProvider.Sybase
 			ITable<T>                                               table,
 			BulkCopyOptions                                         options,
 			Func<List<Mapping.ColumnDescriptor>, BulkCopyReader<T>> createDataReader)
+			where T : notnull
 		{
 			var dataConnection = providerConnections.DataConnection;
 			var connection     = providerConnections.ProviderConnection;
 			var transaction    = providerConnections.ProviderTransaction;
-			var ed             = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-			var sb             = _provider.CreateSqlBuilder(dataConnection.MappingSchema);
+			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema);
 			var rd             = createDataReader(columns);
 			var sqlopt         = SybaseProviderAdapter.AseBulkCopyOptions.Default;
 			var rc             = new BulkCopyRowsCopied();
@@ -192,7 +204,7 @@ namespace LinqToDB.DataProvider.Sybase
 			return MultipleRowsCopy2Async(table, options, source, "", cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

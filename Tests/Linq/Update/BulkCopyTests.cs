@@ -52,11 +52,7 @@ namespace Tests.xUpdate
 			[DataSources(false)]string context,
 			[Values(null, true, false)]bool? keepIdentity,
 			[Values] BulkCopyType copyType,
-#if NET472
-			[Values(0, 1)] int asyncMode) // 0 == sync, 1 == async
-#else
 			[Values(0, 1, 2)] int asyncMode) // 0 == sync, 1 == async, 2 == async with IAsyncEnumerable
-#endif
 		{
 			ResetAllTypesIdentity(context);
 
@@ -120,11 +116,9 @@ namespace Tests.xUpdate
 						}
 						else // asynchronous with IAsyncEnumerable
 						{
-#if !NET472
 							await db.BulkCopyAsync(
 								options,
 								AsAsyncEnumerable(values));
-#endif
 						}
 					}
 				}
@@ -142,11 +136,7 @@ namespace Tests.xUpdate
 			[DataSources(false)]        string       context,
 			[Values(null, true, false)] bool?        keepIdentity,
 			[Values]                    BulkCopyType copyType,
-#if NET472
-			[Values(0, 1)]              int          asyncMode) // 0 == sync, 1 == async
-#else
 			[Values(0, 1, 2)]           int          asyncMode) // 0 == sync, 1 == async, 2 == async with IAsyncEnumerable
-#endif
 		{
 			ResetAllTypesIdentity(context);
 
@@ -207,11 +197,9 @@ namespace Tests.xUpdate
 						}
 						else // asynchronous with IAsyncEnumerable
 						{
-#if !NET472
 							await db.BulkCopyAsync(
 								options,
 								AsAsyncEnumerable(values));
-#endif
 						}
 					}
 				}
@@ -223,7 +211,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if !NET472
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 		private async IAsyncEnumerable<T> AsAsyncEnumerable<T>(IEnumerable<T> enumerable)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
@@ -234,11 +221,10 @@ namespace Tests.xUpdate
 				yield return enumerator.Current;
 			}
 		}
-#endif
 
 		private async Task<bool> ExecuteAsync(DataConnection db, string context, Func<Task> perform, bool? keepIdentity, BulkCopyType copyType)
 		{
-			if ((context == ProviderName.Firebird || context == TestProvName.Firebird3)
+			if (context.Contains("Firebird")
 				&& keepIdentity == true
 				&& (copyType    == BulkCopyType.Default
 					|| copyType == BulkCopyType.MultipleRows
@@ -289,6 +275,97 @@ namespace Tests.xUpdate
 				db.Parent.BulkCopy(options, new[] { new Parent { ParentID = 111001 } });
 				db.Child. BulkCopy(options, new[] { new Child  { ParentID = 111001 } });
 			}
+		}
+		
+		[Test]
+		public void UseParametersTest([DataSources(false)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (db.BeginTransaction())
+			{
+				var options = new BulkCopyOptions(){ UseParameters = true, MaxBatchSize = 50, BulkCopyType = BulkCopyType.MultipleRows };
+				var start   = 111001;
+
+				var rowsToInsert = Enumerable.Range(start, 149)
+					.Select(r => new Parent() {ParentID = r, Value1 = r-start}).ToList();
+
+				db.Parent.BulkCopy(options, rowsToInsert);
+
+				Assert.AreEqual(rowsToInsert.Count,
+					db.Parent.Where(r =>
+						r.ParentID >= rowsToInsert[0].ParentID && r.ParentID <= rowsToInsert.Last().ParentID).Count());
+			}
+		}
+
+		[Table]
+		public class SimpleBulkCopyTable
+		{
+			[Column] public int Id { get; set; }
+		}
+
+		[Test]
+		public void BulkCopyWithDataContext(
+			[DataSources(false)]        string       context,
+			[Values]                    BulkCopyType copyType)
+		{
+			using (var db = new DataContext(context))
+			using (var table = db.CreateLocalTable<SimpleBulkCopyTable>())
+			{
+				db.DataProvider.BulkCopy(table, new BulkCopyOptions() { BulkCopyType = copyType }, new[] { new SimpleBulkCopyTable() { Id = 1 } });
+			}
+		}
+
+		[Test]
+		public async Task BulkCopyWithDataContextAsync(
+			[DataSources(false)] string context,
+			[Values] BulkCopyType copyType)
+		{
+			using (var db = new DataContext(context))
+			using (var table = db.CreateLocalTable<SimpleBulkCopyTable>())
+			{
+				await db.DataProvider.BulkCopyAsync(table, new BulkCopyOptions() { BulkCopyType = copyType }, new[] { new SimpleBulkCopyTable() { Id = 1 } }, default);
+				await db.DataProvider.BulkCopyAsync(table, new BulkCopyOptions() { BulkCopyType = copyType }, AsyncEnumerableData(2, 1), default);
+			}
+		}
+
+		[Test]
+		public void BulkCopyWithDataContextFromTable(
+			[DataSources(false)] string context,
+			[Values] BulkCopyType copyType)
+		{
+			using (var db = new DataContext(context))
+			using (var table = db.CreateLocalTable<SimpleBulkCopyTable>())
+			{
+				table.BulkCopy(new[] { new SimpleBulkCopyTable() { Id = 1 } });
+				table.BulkCopy(5, new[] { new SimpleBulkCopyTable() { Id = 2 } });
+				table.BulkCopy(new BulkCopyOptions() { BulkCopyType = copyType }, new[] { new SimpleBulkCopyTable() { Id = 3 } });
+			}
+		}
+
+		[Test]
+		public async Task BulkCopyWithDataContextFromTableAsync(
+			[DataSources(false)] string context,
+			[Values] BulkCopyType copyType)
+		{
+			using (var db = new DataContext(context))
+			using (var table = db.CreateLocalTable<SimpleBulkCopyTable>())
+			{
+				await table.BulkCopyAsync(new[] { new SimpleBulkCopyTable() { Id = 1 } });
+				await table.BulkCopyAsync(5, new[] { new SimpleBulkCopyTable() { Id = 2 } });
+				await table.BulkCopyAsync(new BulkCopyOptions() { BulkCopyType = copyType }, new[] { new SimpleBulkCopyTable() { Id = 3 } });
+
+				await table.BulkCopyAsync(AsyncEnumerableData(10, 1));
+				await table.BulkCopyAsync(5, AsyncEnumerableData(20, 1));
+				await table.BulkCopyAsync(new BulkCopyOptions() { BulkCopyType = copyType }, AsyncEnumerableData(30, 1));
+			}
+		}
+
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+		private async IAsyncEnumerable<SimpleBulkCopyTable> AsyncEnumerableData(int start, int count)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+		{
+			for (var i = 0; i < count; i++)
+				yield return new SimpleBulkCopyTable() { Id = start + i };
 		}
 	}
 }

@@ -20,6 +20,7 @@
 		SearchStringPredicate,
 		BetweenPredicate,
 		IsNullPredicate,
+		IsDistinctPredicate,
 		IsTruePredicate,
 		InSubQueryPredicate,
 		InListPredicate,
@@ -57,14 +58,18 @@
 		UpdateStatement,
 		DeleteStatement,
 		MergeStatement,
+		MultiInsertStatement,
+			ConditionalInsertClause,
 
 		CreateTableStatement,
 		DropTableStatement,
 		TruncateTableStatement,
 
-		MergeSourceTable,
+		SqlTableLikeSource,
 		MergeOperationClause,
 
-		GroupingSet
+		GroupingSet,
+
+		Comment
 	}
 }

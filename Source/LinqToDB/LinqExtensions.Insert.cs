@@ -22,9 +22,11 @@ namespace LinqToDB
 		/// <param name="target">Target table.</param>
 		/// <param name="setter">Insert expression. Expression supports only target table record new expression with field initializers.</param>
 		/// <returns>Inserted record.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static TTarget InsertWithOutput<TTarget>(
 			                this ITable<TTarget>      target,
 			[InstantHandle] Expression<Func<TTarget>> setter)
+			where TTarget : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
@@ -48,10 +50,12 @@ namespace LinqToDB
 		/// <param name="setter">Insert expression. Expression supports only target table record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<TTarget> InsertWithOutputAsync<TTarget>(
 			                this ITable<TTarget>      target,
 			[InstantHandle] Expression<Func<TTarget>> setter,
 							CancellationToken         token = default)
+			where TTarget : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
@@ -75,9 +79,11 @@ namespace LinqToDB
 		/// <param name="target">Target table.</param>
 		/// <param name="obj">Object with data to insert.</param>
 		/// <returns>Inserted record.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static TTarget InsertWithOutput<TTarget>(
 			                this ITable<TTarget> target,
 			[InstantHandle] TTarget              obj)
+			where TTarget : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (obj    == null) throw new ArgumentNullException(nameof(obj));
@@ -101,10 +107,12 @@ namespace LinqToDB
 		/// <param name="obj">Object with data to insert.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<TTarget> InsertWithOutputAsync<TTarget>(
-			                this ITable<TTarget> target,
-			[InstantHandle] TTarget              obj,
-			CancellationToken                             token = default)
+			           this ITable<TTarget>   target,
+			[InstantHandle] TTarget           obj,
+			                CancellationToken token = default)
+			where TTarget : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (obj    == null) throw new ArgumentNullException(nameof(obj));
@@ -130,10 +138,12 @@ namespace LinqToDB
 		/// <param name="outputExpression">Output record constructor expression.
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Inserted record.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static TOutput InsertWithOutput<TTarget,TOutput>(
 			                this ITable<TTarget>              target,
 			[InstantHandle] Expression<Func<TTarget>>         setter,
 			                Expression<Func<TTarget,TOutput>> outputExpression)
+			where TTarget : notnull
 		{
 			if (target           == null) throw new ArgumentNullException(nameof(target));
 			if (setter           == null) throw new ArgumentNullException(nameof(setter));
@@ -161,11 +171,13 @@ namespace LinqToDB
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<TOutput> InsertWithOutputAsync<TTarget,TOutput>(
 			                this ITable<TTarget>              target,
 			[InstantHandle] Expression<Func<TTarget>>         setter,
 			                Expression<Func<TTarget,TOutput>> outputExpression,
 							CancellationToken                 token = default)
+			where TTarget : notnull
 
 		{
 			if (target           == null) throw new ArgumentNullException(nameof(target));
@@ -191,10 +203,12 @@ namespace LinqToDB
 		/// <param name="setter">Insert expression. Expression supports only target table record new expression with field initializers.</param>
 		/// <param name="outputTable">Output table.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static int InsertWithOutputInto<TTarget>(
 			                this ITable<TTarget>      target,
 			[InstantHandle] Expression<Func<TTarget>> setter,
 			                ITable<TTarget>           outputTable)
+			where TTarget : notnull
 		{
 			if (target      == null) throw new ArgumentNullException(nameof(target));
 			if (setter      == null) throw new ArgumentNullException(nameof(setter));
@@ -218,11 +232,13 @@ namespace LinqToDB
 		/// <param name="outputTable">Output table.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<int> InsertWithOutputIntoAsync<TTarget>(
 			                this ITable<TTarget>      target,
 			[InstantHandle] Expression<Func<TTarget>> setter,
 			                ITable<TTarget>           outputTable,
 							CancellationToken         token = default)
+			where TTarget : notnull
 		{
 			if (target      == null) throw new ArgumentNullException(nameof(target));
 			if (setter      == null) throw new ArgumentNullException(nameof(setter));
@@ -253,11 +269,14 @@ namespace LinqToDB
 		/// <param name="outputExpression">Output record constructor expression.
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static int InsertWithOutputInto<TTarget,TOutput>(
 			                this ITable<TTarget>              target,
 			[InstantHandle] Expression<Func<TTarget>>         setter,
 			                ITable<TOutput>                   outputTable,
 			                Expression<Func<TTarget,TOutput>> outputExpression)
+			where TOutput : notnull
+			where TTarget : notnull
 		{
 			if (target           == null) throw new ArgumentNullException(nameof(target));
 			if (setter           == null) throw new ArgumentNullException(nameof(setter));
@@ -286,12 +305,15 @@ namespace LinqToDB
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<int> InsertWithOutputIntoAsync<TTarget,TOutput>(
 			                this ITable<TTarget>              target,
 			[InstantHandle] Expression<Func<TTarget>>         setter,
 			                ITable<TOutput>                   outputTable,
 			                Expression<Func<TTarget,TOutput>> outputExpression,
 							CancellationToken                 token = default)
+			where TOutput : notnull
+			where TTarget : notnull
 		{
 			if (target           == null) throw new ArgumentNullException(nameof(target));
 			if (setter           == null) throw new ArgumentNullException(nameof(setter));
@@ -326,10 +348,12 @@ namespace LinqToDB
 		/// <param name="setter">Inserted record constructor expression.
 		/// Expression supports only target table record new expression with field initializers.</param>
 		/// <returns>Enumeration of records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static IEnumerable<TTarget> InsertWithOutput<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter)
+			where TTarget : notnull
 		{
 			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (target           == null) throw new ArgumentNullException(nameof(target));
@@ -356,11 +380,13 @@ namespace LinqToDB
 		/// Expression supports only target table record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Array of records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<TTarget[]> InsertWithOutputAsync<TSource, TTarget>(
 			                this IQueryable<TSource>           source,
 			                ITable<TTarget>                    target,
 			[InstantHandle] Expression<Func<TSource, TTarget>> setter,
 							CancellationToken                  token = default)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -389,12 +415,14 @@ namespace LinqToDB
 		/// <param name="outputExpression">Output record constructor expression.
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Enumeration of records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		[Pure]
 		public static IEnumerable<TOutput> InsertWithOutput<TSource,TTarget,TOutput>(
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
 			                Expression<Func<TTarget,TOutput>> outputExpression)
+			where TTarget : notnull
 		{
 			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (target           == null) throw new ArgumentNullException(nameof(target));
@@ -426,12 +454,14 @@ namespace LinqToDB
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Array of records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<TOutput[]> InsertWithOutputAsync<TSource,TTarget,TOutput>(
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
 			                Expression<Func<TTarget,TOutput>> outputExpression,
 							CancellationToken                 token = default)
+			where TTarget : notnull
 		{
 			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (target           == null) throw new ArgumentNullException(nameof(target));
@@ -460,12 +490,13 @@ namespace LinqToDB
 		/// Expression supports only target table record new expression with field initializers.</param>
 		/// <param name="outputTable">Output table.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static int InsertWithOutputInto<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
-			                ITable<TTarget>                   outputTable
-			)
+			                ITable<TTarget>                   outputTable)
+			where TTarget : notnull
 		{
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 			if (target      == null) throw new ArgumentNullException(nameof(target));
@@ -493,12 +524,14 @@ namespace LinqToDB
 		/// <param name="outputTable">Output table.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<int> InsertWithOutputIntoAsync<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
 			                ITable<TTarget>                   outputTable,
 							CancellationToken                 token = default)
+			where TTarget : notnull
 		{
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 			if (target      == null) throw new ArgumentNullException(nameof(target));
@@ -533,12 +566,15 @@ namespace LinqToDB
 		/// <param name="outputExpression">Output record constructor expression.
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static int InsertWithOutputInto<TSource,TTarget,TOutput>(
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
 			                ITable<TOutput>                   outputTable,
 			                Expression<Func<TTarget,TOutput>> outputExpression)
+			where TOutput : notnull
+			where TTarget : notnull
 		{
 			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (target           == null) throw new ArgumentNullException(nameof(target));
@@ -571,6 +607,7 @@ namespace LinqToDB
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<int> InsertWithOutputIntoAsync<TSource,TTarget,TOutput>(
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
@@ -578,6 +615,8 @@ namespace LinqToDB
 			                ITable<TOutput>                   outputTable,
 			                Expression<Func<TTarget,TOutput>> outputExpression,
 							CancellationToken                 token = default)
+			where TOutput : notnull
+			where TTarget : notnull
 		{
 			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (target           == null) throw new ArgumentNullException(nameof(target));
@@ -607,6 +646,7 @@ namespace LinqToDB
 		/// <typeparam name="TTarget">Target table record type.</typeparam>
 		/// <param name="source">Insert query.</param>
 		/// <returns>Inserted record.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static TTarget InsertWithOutput<TSource,TTarget>(this ISelectInsertable<TSource,TTarget> source)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -630,6 +670,7 @@ namespace LinqToDB
 		/// <param name="source">Insert query.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<TTarget> InsertWithOutputAsync<TSource,TTarget>(
 			this ISelectInsertable<TSource,TTarget> source,
 			     CancellationToken                  token = default)
@@ -655,9 +696,11 @@ namespace LinqToDB
 		/// <param name="source">Insert query.</param>
 		/// <param name="outputTable">Output table.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static int InsertWithOutputInto<TSource,TTarget>(
 			this ISelectInsertable<TSource,TTarget> source,
 			     ITable<TTarget>                    outputTable)
+			where TTarget : notnull
 		{
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
@@ -680,10 +723,12 @@ namespace LinqToDB
 		/// <param name="outputTable">Output table.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>Supported Providers: MS SQL</remarks>
 		public static Task<int> InsertWithOutputIntoAsync<TSource,TTarget>(
 			this ISelectInsertable<TSource,TTarget> source,
 			     ITable<TTarget>                    outputTable,
 			     CancellationToken                  token = default)
+			where TTarget : notnull
 
 		{
 			if (source      == null) throw new ArgumentNullException(nameof(source));

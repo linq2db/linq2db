@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -20,6 +20,7 @@ using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Linq.Internal;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
+using LinqToDB.Tools;
 using Microsoft.SqlServer.Types;
 using NUnit.Framework;
 using Tests.Model;
@@ -62,12 +63,10 @@ namespace Tests.DataProvider
 				Assert.That(TestType<bool?>    (conn, "bitDataType",              DataType.Boolean),       Is.EqualTo(true));
 				Assert.That(TestType<short?>   (conn, "smallintDataType",         DataType.Int16),         Is.EqualTo(25555));
 				Assert.That(TestType<decimal?> (conn, "decimalDataType",          DataType.Decimal),       Is.EqualTo(2222222m));
-				Assert.That(TestType<decimal?> (conn, "smallmoneyDataType",       DataType.SmallMoney,
-					skipUndefinedNull : context == ProviderName.SqlServer2000),                            Is.EqualTo(100000m));
+				Assert.That(TestType<decimal?> (conn, "smallmoneyDataType",       DataType.SmallMoney),    Is.EqualTo(100000m));
 				Assert.That(TestType<int?>     (conn, "intDataType",              DataType.Int32),         Is.EqualTo(7777777));
 				Assert.That(TestType<sbyte?>   (conn, "tinyintDataType",          DataType.SByte),         Is.EqualTo(100));
-				Assert.That(TestType<decimal?> (conn, "moneyDataType",            DataType.Money,
-					skipUndefinedNull : context == ProviderName.SqlServer2000),                            Is.EqualTo(100000m));
+				Assert.That(TestType<decimal?> (conn, "moneyDataType",            DataType.Money),         Is.EqualTo(100000m));
 				Assert.That(TestType<double?>  (conn, "floatDataType",            DataType.Double),        Is.EqualTo(20.31d));
 				Assert.That(TestType<float?>   (conn, "realDataType",             DataType.Single),        Is.EqualTo(16.2f));
 
@@ -93,9 +92,7 @@ namespace Tests.DataProvider
 				Assert.That(TestType<byte[]>   (conn, "varbinary_max_DataType",   DataType.VarBinary),              Is.EqualTo(new byte[] { 0, 0, 9, 41 }));
 
 				Assert.That(TestType<string>   (conn, "xmlDataType",              DataType.Xml, skipPass:true),
-					Is.EqualTo(context == ProviderName.SqlServer2000 ?
-						"<root><element strattr=\"strvalue\" intattr=\"12345\"/></root>" :
-						"<root><element strattr=\"strvalue\" intattr=\"12345\" /></root>"));
+					Is.EqualTo("<root><element strattr=\"strvalue\" intattr=\"12345\" /></root>"));
 
 				Assert.That(conn.Execute<byte[]>("SELECT timestampDataType FROM AllTypes WHERE ID = 1").Length, Is.EqualTo(8));
 			}
@@ -480,15 +477,7 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar(20))"),   Is.EqualTo("12345"));
 				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as varchar(20))"),   Is.Null);
 
-				bool isScCollation; 
-				if (context == ProviderName.SqlServer2000)
-				{
-					isScCollation = false;
-				}
-				else
-				{
-					isScCollation = conn.Execute<int>("SELECT COUNT(*) FROM sys.databases WHERE database_id = DB_ID() AND collation_name LIKE '%_SC'") > 0;
-				}
+				var isScCollation = conn.Execute<int>("SELECT COUNT(*) FROM sys.databases WHERE database_id = DB_ID() AND collation_name LIKE '%_SC'") > 0;
 				if (isScCollation)
 				{
 					// explicit collation set for legacy text types as they doesn't support *_SC collations
@@ -497,15 +486,12 @@ namespace Tests.DataProvider
 				}
 				else
 				{
-					Assert.That(conn.Execute<string>("SELECT Cast('12345' as text)"),     Is.EqualTo("12345"));
-					Assert.That(conn.Execute<string>("SELECT Cast(NULL    as text)"),     Is.Null);
+					Assert.That(conn.Execute<string>("SELECT Cast('12345' as text)"),      Is.EqualTo("12345"));
+					Assert.That(conn.Execute<string>("SELECT Cast(NULL    as text)"),      Is.Null);
 				}
 
-				if (context != ProviderName.SqlServer2000)
-				{
-					Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar(max))"),  Is.EqualTo("12345"));
-					Assert.That(conn.Execute<string>("SELECT Cast(NULL    as varchar(max))"),  Is.Null);
-				}
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar(max))"),  Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as varchar(max))"),  Is.Null);
 
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar)"),         Is.EqualTo("12345"));
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar(20))"),     Is.EqualTo("12345"));
@@ -527,11 +513,8 @@ namespace Tests.DataProvider
 					Assert.That(conn.Execute<string>("SELECT Cast(NULL    as ntext)"), Is.Null);
 				}
 
-				if (context != ProviderName.SqlServer2000)
-				{
-					Assert.That(conn.Execute<string>("SELECT Cast('12345' as nvarchar(max))"), Is.EqualTo("12345"));
-					Assert.That(conn.Execute<string>("SELECT Cast(NULL    as nvarchar(max))"), Is.Null);
-				}
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nvarchar(max))"), Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as nvarchar(max))"), Is.Null);
 
 				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.Char    ("p", "123")), Is.EqualTo("123"));
 				Assert.That(conn.Execute<string>("SELECT @p", DataParameter.VarChar ("p", "123")), Is.EqualTo("123"));
@@ -554,17 +537,15 @@ namespace Tests.DataProvider
 
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(conn.Execute<byte[]>("SELECT Cast(12345 as binary(2))"),    Is.EqualTo(           arr1));
-				Assert.That(conn.Execute<Binary>("SELECT Cast(12345 as binary(4))"),    Is.EqualTo(new Binary(arr2)));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(12345 as binary(2))"),      Is.EqualTo(           arr1));
+				Assert.That(conn.Execute<Binary>("SELECT Cast(12345 as binary(4))"),      Is.EqualTo(new Binary(arr2)));
 
-				Assert.That(conn.Execute<byte[]>("SELECT Cast(12345 as varbinary(2))"), Is.EqualTo(           arr1));
-				Assert.That(conn.Execute<Binary>("SELECT Cast(12345 as varbinary(4))"), Is.EqualTo(new Binary(arr2)));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(12345 as varbinary(2))"),   Is.EqualTo(           arr1));
+				Assert.That(conn.Execute<Binary>("SELECT Cast(12345 as varbinary(4))"),   Is.EqualTo(new Binary(arr2)));
 
-				Assert.That(conn.Execute<byte[]>("SELECT Cast(NULL as image)"),         Is.EqualTo(null));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(NULL as image)"),           Is.EqualTo(null));
 
-				Assert.That(conn.Execute<byte[]>(
-					context == ProviderName.SqlServer2000 ? "SELECT Cast(12345 as varbinary(4000))" : "SELECT Cast(12345 as varbinary(max))"),
-					Is.EqualTo(arr2));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(12345 as varbinary(max))"), Is.EqualTo(arr2));
 
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Binary   ("p", arr1)), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
@@ -599,8 +580,7 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<SqlSingle> ("SELECT Cast(1        as real)").     Value, Is.EqualTo((float)1));
 				Assert.That(conn.Execute<SqlString> ("SELECT Cast('12345'  as char(6))").  Value, Is.EqualTo("12345 "));
 
-				if (context != ProviderName.SqlServer2000)
-					Assert.That(conn.Execute<SqlXml>("SELECT Cast('<xml/>' as xml)").      Value, Is.EqualTo("<xml />"));
+				Assert.That(conn.Execute<SqlXml>("SELECT Cast('<xml/>' as xml)").      Value, Is.EqualTo("<xml />"));
 
 				Assert.That(
 					conn.Execute<SqlDateTime>("SELECT Cast('2012-12-12 12:12:12' as datetime)").Value,
@@ -616,13 +596,10 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<SqlBoolean>("SELECT @p", new DataParameter("p", true)).                  Value, Is.EqualTo(true));
 				Assert.That(conn.Execute<SqlBoolean>("SELECT @p", new DataParameter("p", true, DataType.Boolean)).Value, Is.EqualTo(true));
 
-				if (context != ProviderName.SqlServer2000)
-				{
-					var conv = conn.MappingSchema.GetConverter<string,SqlXml>()!;
+				var conv = conn.MappingSchema.GetConverter<string,SqlXml>()!;
 
-					Assert.That(conn.Execute<SqlXml>("SELECT @p", new DataParameter("p", conv("<xml/>"))).              Value, Is.EqualTo("<xml />"));
-					Assert.That(conn.Execute<SqlXml>("SELECT @p", new DataParameter("p", conv("<xml/>"), DataType.Xml)).Value, Is.EqualTo("<xml />"));
-				}
+				Assert.That(conn.Execute<SqlXml>("SELECT @p", new DataParameter("p", conv("<xml/>"))).              Value, Is.EqualTo("<xml />"));
+				Assert.That(conn.Execute<SqlXml>("SELECT @p", new DataParameter("p", conv("<xml/>"), DataType.Xml)).Value, Is.EqualTo("<xml />"));
 			}
 		}
 
@@ -743,12 +720,9 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				if (context != ProviderName.SqlServer2000)
-				{
-					Assert.That(conn.Execute<string>     ("SELECT Cast('<xml/>' as xml)"),            Is.EqualTo("<xml/>").Or.EqualTo("<xml />"));
-					Assert.That(conn.Execute<XDocument>  ("SELECT Cast('<xml/>' as xml)").ToString(), Is.EqualTo("<xml/>").Or.EqualTo("<xml />"));
-					Assert.That(conn.Execute<XmlDocument>("SELECT Cast('<xml/>' as xml)").InnerXml,   Is.EqualTo("<xml/>").Or.EqualTo("<xml />"));
-				}
+				Assert.That(conn.Execute<string>     ("SELECT Cast('<xml/>' as xml)"),            Is.EqualTo("<xml/>").Or.EqualTo("<xml />"));
+				Assert.That(conn.Execute<XDocument>  ("SELECT Cast('<xml/>' as xml)").ToString(), Is.EqualTo("<xml/>").Or.EqualTo("<xml />"));
+				Assert.That(conn.Execute<XmlDocument>("SELECT Cast('<xml/>' as xml)").InnerXml,   Is.EqualTo("<xml/>").Or.EqualTo("<xml />"));
 
 				var xdoc = XDocument.Parse("<xml/>");
 				var xml  = Convert<string,XmlDocument>.Lambda("<xml/>");
@@ -973,40 +947,28 @@ namespace Tests.DataProvider
 			[Column(DataType=DataType.VarChar,   Length=int.MaxValue), Nullable] public string?         varchar_max_DataType     { get; set; }
 			[Column(DataType=DataType.VarBinary, Length=int.MaxValue), Nullable] public byte[]?         varbinary_max_DataType   { get; set; }
 			[Column(DataType=DataType.Xml),                            Nullable] public string?         xmlDataType              { get; set; }
-			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
 			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
 			[Column(DataType=DataType.DateTime2),                      Nullable] public DateTime?       datetime2DataType        { get; set; }
-			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
 			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
 			[Column(DataType=DataType.DateTimeOffset),                 Nullable] public DateTimeOffset? datetimeoffsetDataType   { get; set; }
-			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
 			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
 			[Column(DataType=DataType.DateTimeOffset,Scale=0),         Nullable] public DateTimeOffset? datetimeoffset0DataType   { get; set; }
-			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
 			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
 			[Column(DataType=DataType.DateTimeOffset,Scale=1),         Nullable] public DateTimeOffset? datetimeoffset1DataType   { get; set; }
-			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
 			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
 			[Column(DataType=DataType.DateTimeOffset,Scale=2),         Nullable] public DateTimeOffset? datetimeoffset2DataType   { get; set; }
-			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
 			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
 			[Column(DataType=DataType.DateTimeOffset,Scale=3),         Nullable] public DateTimeOffset? datetimeoffset3DataType   { get; set; }
-			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
 			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
 			[Column(DataType=DataType.DateTimeOffset,Scale=4),         Nullable] public DateTimeOffset? datetimeoffset4DataType   { get; set; }
-			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
 			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
 			[Column(DataType=DataType.DateTimeOffset,Scale=5),         Nullable] public DateTimeOffset? datetimeoffset5DataType   { get; set; }
-			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
 			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
 			[Column(DataType=DataType.DateTimeOffset,Scale=6),         Nullable] public DateTimeOffset? datetimeoffset6DataType   { get; set; }
-			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
 			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
 			[Column(DataType=DataType.DateTimeOffset,Scale=7),         Nullable] public DateTimeOffset? datetimeoffset7DataType   { get; set; }
-			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
 			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
 			[Column(DataType=DataType.Date),                           Nullable] public DateTime?       dateDataType             { get; set; }
-			[Column(Configuration=ProviderName.SqlServer2000, DataType=DataType.VarChar)]
 			[Column(Configuration=ProviderName.SqlServer2005, DataType=DataType.VarChar)]
 			[Column(DataType=DataType.Time),                           Nullable] public TimeSpan?       timeDataType             { get; set; }
 		}
@@ -1159,7 +1121,8 @@ namespace Tests.DataProvider
 			await BulkCopyAllTypesAsync(context, BulkCopyType.ProviderSpecific);
 		}
 
-		void CompareObject<T>(MappingSchema mappingSchema, [DisallowNull] T actual, [DisallowNull] T test)
+		void CompareObject<T>(MappingSchema mappingSchema, T actual, T test)
+			where T : notnull
 		{
 			var ed = mappingSchema.GetEntityDescriptor(typeof(T));
 
@@ -1419,7 +1382,7 @@ namespace Tests.DataProvider
 				provider = new SqlServerDataProvider(db.DataProvider.Name, ((SqlServerDataProvider)db.DataProvider).Version, ((SqlServerDataProvider)db.DataProvider).Provider);
 			}
 
-			provider.ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal) }] = (Expression<Func<IDataReader, int, decimal>>)((r, i) => GetDecimal(r, i));
+			provider.ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal) }] = (Expression<Func<DbDataReader, int, decimal>>)((r, i) => GetDecimal(r, i));
 
 			using (var db = new DataConnection(provider, DataConnection.GetConnectionString(context)))
 			{
@@ -1430,7 +1393,7 @@ namespace Tests.DataProvider
 		const int ClrPrecision = 29;
 
 		[ColumnReader(1)]
-		static decimal GetDecimal(IDataReader rd, int idx)
+		static decimal GetDecimal(DbDataReader rd, int idx)
 		{
 			SqlDecimal value = ((dynamic)rd).GetSqlDecimal(idx);
 
@@ -1723,10 +1686,17 @@ namespace Tests.DataProvider
 
 		public static int Issue1897(DataConnection dataConnection, out int @return)
 		{
-			var ret = dataConnection.ExecuteProc("[Issue1897]",
-				new DataParameter("@return", null, DataType.Int32) { Direction = ParameterDirection.ReturnValue });
+			var parameters = new []
+			{
+				new DataParameter("@return", null, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.ReturnValue
+				}
+			};
 
-			@return = Converter.ChangeTypeTo<int>(((IDbDataParameter)dataConnection.Command.Parameters["@return"]).Value);
+			var ret = dataConnection.ExecuteProc("[Issue1897]", parameters);
+
+			@return = Converter.ChangeTypeTo<int>(parameters[0].Value);
 
 			return ret;
 		}
@@ -1911,6 +1881,40 @@ AS
 				param = func.Parameters.FirstOrDefault(p => p.ParameterName == "@value")!;
 				Assert.NotNull(param);
 				Assert.AreEqual("This is <test> scalar function parameter!", param.Description);
+			}
+		}
+
+		[Test]
+		public void TestRetrieveIdentity([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context, [Values] bool useIdentity)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				using (db.BeginTransaction())
+				{
+					// advance identity forward
+					db.Insert(new Person() { FirstName = "", LastName = "" });
+					db.Insert(new Person() { FirstName = "", LastName = "" });
+					db.Insert(new Person() { FirstName = "", LastName = "" });
+				}
+
+				var lastIdentity = db.Person.Select(_ => _.ID).Max();
+				var step         = 1;
+				var max = lastIdentity;
+
+				if (useIdentity)
+				{
+					lastIdentity = db.Execute<int>("SELECT IDENT_CURRENT('Person')");
+					step         = db.Execute<int>("SELECT IDENT_INCR('Person')");
+					Assert.True(max < lastIdentity);
+					Assert.AreEqual(1, step);
+				}
+
+				var persons  = Enumerable.Range(1, 10).Select(_ => new Person()).ToArray();
+
+				persons.RetrieveIdentity(db, useIdentity: useIdentity);
+
+				for (var i = 0; i < 10; i++)
+					Assert.AreEqual(lastIdentity + (i + 1) * step, persons[i].ID);
 			}
 		}
 	}

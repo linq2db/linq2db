@@ -325,7 +325,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			LoadCurrentUser(dataConnection);
 
-			var ps = ((DbConnection)dataConnection.Connection).GetSchema("Procedures");
+			var ps = dataConnection.Connection.GetSchema("Procedures");
 
 			return
 			(
@@ -354,7 +354,7 @@ namespace LinqToDB.DataProvider.Oracle
 			// uses ALL_ARGUMENTS view
 			// https://docs.oracle.com/cd/B28359_01/server.111/b28320/statviews_1014.htm#REFRN20015
 			// SELECT * FROM ALL_ARGUMENTS WHERE DATA_LEVEL = 0 AND (OWNER = :OWNER  OR :OWNER is null) AND (OBJECT_NAME = :OBJECTNAME  OR :OBJECTNAME is null)
-			var pps = ((DbConnection)dataConnection.Connection).GetSchema("ProcedureParameters");
+			var pps = dataConnection.Connection.GetSchema("ProcedureParameters");
 
 			// SEQUENCE filter filters-out non-argument records without DATA_TYPE
 			// check https://llblgen.com/tinyforum/Messages.aspx?ThreadID=22795

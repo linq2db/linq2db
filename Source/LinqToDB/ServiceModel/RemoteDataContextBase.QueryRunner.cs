@@ -1,6 +1,5 @@
 ﻿#if NETFRAMEWORK
 using System;
-using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -9,11 +8,15 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.ServiceModel
 {
-	using Linq;
+	using System.Data.Common;
 	using Common.Internal;
-	using SqlQuery;
+	using Linq;
+	using LinqToDB.Data;
 	using SqlProvider;
+	using SqlQuery;
+#if !NATIVE_ASYNC
 	using Tools;
+#endif
 
 	public abstract partial class RemoteDataContextBase
 	{
@@ -190,7 +193,7 @@ namespace LinqToDB.ServiceModel
 				return _client.ExecuteScalar(_dataContext.Configuration, data);
 			}
 
-			public override IDataReader ExecuteReader()
+			public override DataReaderWrapper ExecuteReader()
 			{
 				_dataContext.ThrowOnDisposed();
 
@@ -217,7 +220,7 @@ namespace LinqToDB.ServiceModel
 
 				var result = LinqServiceSerializer.DeserializeResult(_dataContext.SerializationMappingSchema, ret);
 
-				return new ServiceModelDataReader(_dataContext.SerializationMappingSchema, result);
+				return new DataReaderWrapper(new ServiceModelDataReader(_dataContext.SerializationMappingSchema, result));
 			}
 
 			class DataReaderAsync : IDataReaderAsync
@@ -227,7 +230,7 @@ namespace LinqToDB.ServiceModel
 					DataReader = dataReader;
 				}
 
-				public IDataReader DataReader { get; }
+				public DbDataReader DataReader { get; }
 
 				public Task<bool> ReadAsync(CancellationToken cancellationToken)
 				{
@@ -254,6 +257,20 @@ namespace LinqToDB.ServiceModel
 				{
 					DataReader.Dispose();
 				}
+
+#if !NATIVE_ASYNC
+				public Task DisposeAsync()
+				{
+					DataReader.Dispose();
+					return TaskEx.CompletedTask;
+				}
+#else
+				public ValueTask DisposeAsync()
+				{
+					DataReader.Dispose();
+					return default;
+				}
+#endif
 			}
 
 			public override async Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)

@@ -114,7 +114,7 @@ namespace LinqToDB.Linq
 		
 			dc.EnsureConnection();
 
-			if (dc.TransactionAsync != null || dc.Command.Transaction != null)
+			if (dc.TransactionAsync != null || dc.CurrentCommand?.Transaction != null)
 				return null;
 		
 			return dc!.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel);
@@ -144,7 +144,7 @@ namespace LinqToDB.Linq
 		
 			await dc.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			if (dc.TransactionAsync != null || dc.Command.Transaction != null)
+			if (dc.TransactionAsync != null || dc.CurrentCommand?.Transaction != null)
 				return null;
 		
 			return await dc!.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)!
@@ -209,7 +209,7 @@ namespace LinqToDB.Linq
 				try
 				{
 					Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-#if NETFRAMEWORK
+#if !NATIVE_ASYNC
 					return Tuple.Create<IAsyncEnumerator<T>, IDisposable?>(
 #else
 					return Tuple.Create<IAsyncEnumerator<T>, IAsyncDisposable?>(

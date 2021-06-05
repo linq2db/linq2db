@@ -3,10 +3,16 @@ using System.Data;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using LinqToDB.Data;
 
 namespace LinqToDB.Linq
 {
 	public interface IQueryRunner: IDisposable
+#if NATIVE_ASYNC
+		, IAsyncDisposable
+#else
+		, Async.IAsyncDisposable
+#endif
 	{
 		/// <summary>
 		/// Executes query and returns number of affected records.
@@ -22,7 +28,7 @@ namespace LinqToDB.Linq
 		/// Executes query and returns data reader.
 		/// </summary>
 		/// <returns>Data reader with query results.</returns>
-		IDataReader           ExecuteReader  ();
+		DataReaderWrapper     ExecuteReader  ();
 
 		/// <summary>
 		/// Executes query asynchronously and returns number of affected records.

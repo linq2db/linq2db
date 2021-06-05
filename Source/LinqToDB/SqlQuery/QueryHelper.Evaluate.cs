@@ -22,6 +22,13 @@ namespace LinqToDB.SqlQuery
 			return info.IsEvaluated;
 		}
 
+		public static bool IsMutable(this IQueryElement expr)
+		{
+			if (expr.CanBeEvaluated(false))
+				return false;
+			return expr.CanBeEvaluated(true);
+		}
+
 		public static bool CanBeEvaluated(this IQueryElement expr, bool withParameters)
 		{
 			return expr.TryEvaluateExpression(new EvaluationContext(withParameters ? SqlParameterValues.Empty : null)).IsEvaluated;
@@ -322,6 +329,16 @@ namespace LinqToDB.SqlQuery
 			}
 
 			return info.Value;
+		}
+
+		public static bool? EvaluateBoolExpression(this IQueryElement expr, EvaluationContext context, bool? defaultValue = null)
+		{
+			var evaluated = expr.EvaluateExpression(context);
+
+			if (evaluated is bool boolValue)
+				return boolValue;
+
+			return defaultValue;
 		}
 
 		private static string GetEvaluationError(IQueryElement expr)

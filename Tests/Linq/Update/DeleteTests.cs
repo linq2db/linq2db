@@ -301,7 +301,6 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				TestProvName.AllMySql,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000,
 				TestProvName.AllSapHana)]
 			string context)
 		{

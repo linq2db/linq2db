@@ -25,7 +25,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			DataTypesSchema = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
+			DataTypesSchema = dataConnection.Connection.GetSchema("DataTypes");
 
 			return DataTypesSchema.AsEnumerable()
 				.Select(t => new DataTypeInfo
@@ -48,7 +48,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			LoadCurrentSchema(dataConnection);
 
-			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
+			var tables = dataConnection.Connection.GetSchema("Tables");
 
 			return
 			(
@@ -138,7 +138,7 @@ WHERE
 			return _columns = dataConnection.Query(rd =>
 				{
 					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					var tableId     = dataConnection.Connection.Database + "." + rd.GetString(0) + "." + rd.GetString(1);
+					var tableId     = dataConnection.Connection.Database + "." + rd.ToString(0) + "." + rd.ToString(1);
 					var name        = rd.ToString(2)!;
 					var size        = Converter.ChangeTypeTo<long?>(rd[3]);
 					var scale       = Converter.ChangeTypeTo<int?>(rd[4]);
@@ -287,8 +287,7 @@ WHERE
 							var format = string.Join(",",
 								type.CreateParameters
 									.Split(',')
-									.Select((p,i) => "{" + i + "}")
-									.ToArray());
+									.Select((p,i) => "{" + i + "}"));
 
 							type.CreateFormat = type.TypeName + "(" + format + ")";
 						}
@@ -379,7 +378,7 @@ WHERE
 
 		protected override string GetDataSourceName(DataConnection dbConnection)
 		{
-			var str = ((DbConnection)dbConnection.Connection).ConnectionString;
+			var str = dbConnection.Connection.ConnectionString;
 
 			var host = str?.Split(';')
 				.Select(s =>
@@ -516,7 +515,7 @@ WHERE
 
 	static class DB2Extensions
 	{
-		public static string? ToString(this IDataReader reader, int i)
+		public static string? ToString(this DbDataReader reader, int i)
 		{
 			var value = Converter.ChangeTypeTo<string?>(reader[i]);
 			return value?.TrimEnd();

@@ -1,22 +1,15 @@
-using System;
+﻿using System;
 using System.Data;
 using System.Diagnostics;
 
 namespace LinqToDB.Configuration
 {
+	using System.Collections.Generic;
+	using System.Data.Common;
 	using Data;
 	using DataProvider;
+	using LinqToDB.Interceptors;
 	using Mapping;
-
-	internal enum ConnectionSetupType
-	{
-		DefaultConfiguration,
-		ConnectionString,
-		ConfigurationString,
-		Connection,
-		ConnectionFactory,
-		Transaction
-	}
 
 	/// <summary>
 	/// Used to build <see cref="LinqToDbConnectionOptions"/>
@@ -25,18 +18,21 @@ namespace LinqToDB.Configuration
 	/// </summary>
 	public class LinqToDbConnectionOptionsBuilder
 	{
+		private List<IInterceptor>? _interceptors;
+
 		public MappingSchema?                        MappingSchema       { get; private set; }
 		public IDataProvider?                        DataProvider        { get; private set; }
-		public IDbConnection?                        DbConnection        { get; private set; }
+		public DbConnection?                         DbConnection        { get; private set; }
 		public bool                                  DisposeConnection   { get; private set; }
 		public string?                               ConfigurationString { get; private set; }
 		public string?                               ProviderName        { get; private set; }
 		public string?                               ConnectionString    { get; private set; }
-		public Func<IDbConnection>?                  ConnectionFactory   { get; private set; }
-		public IDbTransaction?                       DbTransaction       { get; private set; }
+		public Func<DbConnection>?                   ConnectionFactory   { get; private set; }
+		public DbTransaction?                        DbTransaction       { get; private set; }
 		public Action<TraceInfo>?                    OnTrace             { get; private set; }
 		public TraceLevel?                           TraceLevel          { get; private set; }
 		public Action<string?, string?, TraceLevel>? WriteTrace          { get; private set; }
+		public IReadOnlyList<IInterceptor>?          Interceptors        => _interceptors;
 
 		private void CheckAssignSetupType(ConnectionSetupType type)
 		{
@@ -62,56 +58,6 @@ namespace LinqToDB.Configuration
 		public LinqToDbConnectionOptions Build()
 		{
 			return new LinqToDbConnectionOptions(this);
-		}
-
-		/// <summary>
-		/// Configure the database to use SqlServer default provider and connection string.
-		/// </summary>
-		/// <param name="connectionString">SqlServer connection string</param>
-		/// <returns>The builder instance so calls can be chained</returns>
-		public LinqToDbConnectionOptionsBuilder UseSqlServer(string connectionString)
-		{
-			return UseConnectionString(LinqToDB.ProviderName.SqlServer, connectionString);
-		}
-
-		/// <summary>
-		/// Configure the database to use Oracle default provider and connection string.
-		/// </summary>
-		/// <param name="connectionString">Oracle connection string.</param>
-		/// <returns>The builder instance so calls can be chained.</returns>
-		public LinqToDbConnectionOptionsBuilder UseOracle(string connectionString)
-		{
-			return UseConnectionString(LinqToDB.ProviderName.Oracle, connectionString);
-		}
-
-		/// <summary>
-		/// Configure the database to use PostgreSQL default provider and connection string.
-		/// </summary>
-		/// <param name="connectionString">PostgreSQL connection string.</param>
-		/// <returns>The builder instance so calls can be chained.</returns>
-		public LinqToDbConnectionOptionsBuilder UsePostgreSQL(string connectionString)
-		{
-			return UseConnectionString(LinqToDB.ProviderName.PostgreSQL, connectionString);
-		}
-
-		/// <summary>
-		/// Configure the database to use MySql default provider and connection string.
-		/// </summary>
-		/// <param name="connectionString">MySql connection string.</param>
-		/// <returns>The builder instance so calls can be chained.</returns>
-		public LinqToDbConnectionOptionsBuilder UseMySql(string connectionString)
-		{
-			return UseConnectionString(LinqToDB.ProviderName.MySql, connectionString);
-		}
-
-		/// <summary>
-		/// Configure the database to use SqlLite default provider and connection string.
-		/// </summary>
-		/// <param name="connectionString">SQLite connection string.</param>
-		/// <returns>The builder instance so calls can be chained.</returns>
-		public LinqToDbConnectionOptionsBuilder UseSQLite(string connectionString)
-		{
-			return UseConnectionString(LinqToDB.ProviderName.SQLite, connectionString);
 		}
 
 		/// <summary>
@@ -164,14 +110,14 @@ namespace LinqToDB.Configuration
 		}
 
 		/// <summary>
-		/// Configure the database to use the specified provider and callback as an <see cref="IDbConnection"/> factory.
+		/// Configure the database to use the specified provider and callback as an <see cref="DbConnection"/> factory.
 		/// </summary>
 		/// <param name="dataProvider">Used by the connection to determine functionality when executing commands/queries.</param>
 		/// <param name="connectionFactory">Factory function used to obtain the connection.</param>
 		/// <returns>The builder instance so calls can be chained.</returns>
 		public LinqToDbConnectionOptionsBuilder UseConnectionFactory(
-			IDataProvider dataProvider,
-			Func<IDbConnection> connectionFactory)
+			IDataProvider      dataProvider,
+			Func<DbConnection> connectionFactory)
 		{
 			CheckAssignSetupType(ConnectionSetupType.ConnectionFactory);
 
@@ -182,7 +128,7 @@ namespace LinqToDB.Configuration
 		}
 
 		/// <summary>
-		/// Configure the database to use the specified provider and an existing <see cref="IDbConnection"/>.
+		/// Configure the database to use the specified provider and an existing <see cref="DbConnection"/>.
 		/// </summary>
 		/// <param name="dataProvider">Used by the connection to determine functionality when executing commands/queries.</param>
 		/// <param name="connection">Existing connection, can be open or closed, will be opened automatically if closed.</param>
@@ -190,7 +136,7 @@ namespace LinqToDB.Configuration
 		/// <returns>The builder instance so calls can be chained.</returns>
 		public LinqToDbConnectionOptionsBuilder UseConnection(
 			IDataProvider dataProvider,
-			IDbConnection connection,
+			DbConnection  connection,
 			bool          disposeConnection = false)
 		{
 			CheckAssignSetupType(ConnectionSetupType.Connection);
@@ -204,13 +150,13 @@ namespace LinqToDB.Configuration
 		}
 
 		/// <summary>
-		/// Configure the database to use the specified provider and an existing <see cref="IDbTransaction"/>.
+		/// Configure the database to use the specified provider and an existing <see cref="System.Data.Common.DbTransaction"/>.
 		/// </summary>
 		/// <param name="dataProvider">Used by the connection to determine functionality when executing commands/queries.</param>
 		/// <param name="transaction">Existing transaction.</param>
 		/// <returns>The builder instance so calls can be chained.</returns>
 		public LinqToDbConnectionOptionsBuilder UseTransaction(IDataProvider dataProvider,
-			IDbTransaction transaction)
+			DbTransaction transaction)
 		{
 			CheckAssignSetupType(ConnectionSetupType.Transaction);
 
@@ -276,6 +222,11 @@ namespace LinqToDB.Configuration
 			return this;
 		}
 
+		public LinqToDbConnectionOptionsBuilder WithInterceptor(IInterceptor interceptor)
+		{
+			(_interceptors ??= new List<IInterceptor>()).Add(interceptor);
+			return this;
+		}
 
 		/// <summary>
 		/// Configure the database to use the specified a string trace callback.
@@ -305,6 +256,7 @@ namespace LinqToDB.Configuration
 			TraceLevel          = null;
 			OnTrace             = null;
 			WriteTrace          = null;
+			_interceptors?.Clear();
 			SetupType           = ConnectionSetupType.DefaultConfiguration;
 
 			return this;

@@ -9,6 +9,8 @@ namespace LinqToDB.Data
 {
 	using Async;
 	using DbCommandProcessor;
+	using LinqToDB.DataProvider;
+	using LinqToDB.Interceptors;
 	using RetryPolicy;
 
 	public partial class DataConnection
@@ -52,7 +54,7 @@ namespace LinqToDB.Data
 
 			// If transaction is open, we dispose it, it will rollback all changes.
 			//
-			TransactionAsync?.Dispose();
+			if (TransactionAsync != null) await TransactionAsync.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			// Create new transaction object.
 			//
@@ -79,7 +81,7 @@ namespace LinqToDB.Data
 
 			if (_connection == null)
 			{
-				IDbConnection connection;
+				DbConnection connection;
 				if (_connectionFactory != null)
 					connection = _connectionFactory();
 				else
@@ -95,28 +97,27 @@ namespace LinqToDB.Data
 			{
 				try
 				{
-					var task = OnBeforeConnectionOpenAsync?.Invoke(this, _connection.Connection, cancellationToken);
-					if (task != null)
-						await task.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					if (_connectionInterceptors != null)
+						await _connectionInterceptors.Apply((interceptor, arg1, arg2, ct) => interceptor.ConnectionOpeningAsync(arg1, arg2, ct), new ConnectionOpeningEventData(this), _connection.Connection, cancellationToken)
+							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 					await _connection.OpenAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 					_closeConnection = true;
 
-					task = OnConnectionOpenedAsync?.Invoke(this, _connection.Connection, cancellationToken);
-					if (task != null)
-						await task.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					if (_connectionInterceptors != null)
+						await _connectionInterceptors.Apply((interceptor, arg1, arg2, ct) => interceptor.ConnectionOpenedAsync(arg1, arg2, ct), new ConnectionOpenedEventData(this), _connection.Connection, cancellationToken)
+							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				}
 				catch (Exception ex)
 				{
 					if (TraceSwitchConnection.TraceError)
 					{
-						OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
+						OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.Open, true)
 						{
 							TraceLevel     = TraceLevel.Error,
 							StartTime      = DateTime.UtcNow,
 							Exception      = ex,
-							IsAsync        = true,
 						});
 					}
 
@@ -139,7 +140,7 @@ namespace LinqToDB.Data
 
 				if (_closeTransaction)
 				{
-					TransactionAsync.Dispose();
+					await TransactionAsync.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					TransactionAsync = null;
 
 					if (_command != null)
@@ -162,7 +163,7 @@ namespace LinqToDB.Data
 
 				if (_closeTransaction)
 				{
-					TransactionAsync.Dispose();
+					await TransactionAsync.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					TransactionAsync = null;
 
 					if (_command != null)
@@ -174,9 +175,8 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Closes and dispose associated underlying database transaction/connection asynchronously.
 		/// </summary>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
-		public virtual async Task CloseAsync(CancellationToken cancellationToken = default)
+		public virtual async Task CloseAsync()
 		{
 			OnClosing?.Invoke(this, EventArgs.Empty);
 
@@ -184,7 +184,7 @@ namespace LinqToDB.Data
 
 			if (TransactionAsync != null && _closeTransaction)
 			{
-				TransactionAsync.Dispose();
+				await TransactionAsync.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				TransactionAsync = null;
 			}
 
@@ -206,36 +206,39 @@ namespace LinqToDB.Data
 		/// Disposes connection asynchronously.
 		/// </summary>
 		/// <returns>Asynchronous operation completion task.</returns>
-		public async Task DisposeAsync(CancellationToken cancellationToken = default)
+#if NATIVE_ASYNC
+		public async ValueTask DisposeAsync()
+#else
+		public async Task DisposeAsync()
+#endif
 		{
 			Disposed = true;
-			await CloseAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			await CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		#region ExecuteNonQueryAsync
 
-		protected virtual Task<int> ExecuteNonQueryAsync(IDbCommand command, CancellationToken cancellationToken)
+		protected virtual Task<int> ExecuteNonQueryAsync(DbCommand command, CancellationToken cancellationToken)
 		{
-			return ((DbCommand)Command).ExecuteNonQueryExtAsync(cancellationToken);
+			return CurrentCommand!.ExecuteNonQueryExtAsync(cancellationToken);
 		}
 
 		internal async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
 		{
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				using (DataProvider.ExecuteScope(this))
-					return await ExecuteNonQueryAsync(Command, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					return await ExecuteNonQueryAsync(CurrentCommand!, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
 
 			if (TraceSwitchConnection.TraceInfo)
 			{
-				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute)
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteNonQuery, true)
 				{
 					TraceLevel     = TraceLevel.Info,
 					StartTime      = now,
-					Command        = GetCurrentCommand(),
-					IsAsync        = true,
+					Command        = CurrentCommand,
 				});
 			}
 
@@ -243,18 +246,17 @@ namespace LinqToDB.Data
 			{
 				int ret;
 				using (DataProvider.ExecuteScope(this))
-					ret = await ExecuteNonQueryAsync(Command, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					ret = await ExecuteNonQueryAsync(CurrentCommand!, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				if (TraceSwitchConnection.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteNonQuery, true)
 					{
 						TraceLevel      = TraceLevel.Info,
-						Command         = GetCurrentCommand(),
+						Command         = CurrentCommand,
 						StartTime       = now,
 						ExecutionTime   = sw.Elapsed,
 						RecordsAffected = ret,
-						IsAsync         = true,
 					});
 				}
 
@@ -264,14 +266,13 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitchConnection.TraceError)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteNonQuery, true)
 					{
 						TraceLevel     = TraceLevel.Error,
-						Command        = GetCurrentCommand(),
+						Command        = CurrentCommand,
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
 						Exception      = ex,
-						IsAsync        = true,
 					});
 				}
 
@@ -283,28 +284,27 @@ namespace LinqToDB.Data
 
 		#region ExecuteScalarAsync
 
-		protected virtual Task<object?> ExecuteScalarAsync(IDbCommand command, CancellationToken cancellationToken)
+		protected virtual Task<object?> ExecuteScalarAsync(DbCommand command, CancellationToken cancellationToken)
 		{
-			return ((DbCommand)Command).ExecuteScalarExtAsync(cancellationToken);
+			return CurrentCommand!.ExecuteScalarExtAsync(cancellationToken);
 		}
 
 		internal async Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
 		{
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				using (DataProvider.ExecuteScope(this))
-					return await ExecuteScalarAsync(Command, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					return await ExecuteScalarAsync(CurrentCommand!, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
 
 			if (TraceSwitchConnection.TraceInfo)
 			{
-				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute)
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteScalar, true)
 				{
 					TraceLevel     = TraceLevel.Info,
-					Command        = GetCurrentCommand(),
+					Command        = CurrentCommand,
 					StartTime      = now,
-					IsAsync        = true,
 				});
 			}
 
@@ -312,17 +312,16 @@ namespace LinqToDB.Data
 			{
 				object? ret;
 				using (DataProvider.ExecuteScope(this))
-					ret = await ExecuteScalarAsync(Command, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					ret = await ExecuteScalarAsync(CurrentCommand!, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				if (TraceSwitchConnection.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteScalar, true)
 					{
 						TraceLevel      = TraceLevel.Info,
-						Command         = GetCurrentCommand(),
+						Command         = CurrentCommand,
 						StartTime       = now,
 						ExecutionTime   = sw.Elapsed,
-						IsAsync         = true,
 					});
 				}
 
@@ -332,14 +331,13 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitchConnection.TraceError)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteScalar, true)
 					{
 						TraceLevel     = TraceLevel.Error,
-						Command        = GetCurrentCommand(),
+						Command        = CurrentCommand,
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
 						Exception      = ex,
-						IsAsync        = true,
 					});
 				}
 
@@ -351,21 +349,25 @@ namespace LinqToDB.Data
 
 		#region ExecuteReaderAsync
 
-		protected virtual Task<DbDataReader> ExecuteReaderAsync(
-			IDbCommand        command,
+		protected virtual async Task<DataReaderWrapper> ExecuteReaderAsync(
+			DbCommand         command,
 			CommandBehavior   commandBehavior,
 			CancellationToken cancellationToken)
 		{
-			return ((DbCommand)Command).ExecuteReaderExtAsync(commandBehavior, cancellationToken);
+			var dr      = await CurrentCommand!.ExecuteReaderExtAsync(commandBehavior, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			var wrapper = new DataReaderWrapper(this, dr, CurrentCommand);
+			_command    = null;
+
+			return wrapper;
 		}
 
-		internal async Task<DbDataReader> ExecuteReaderAsync(
+		internal async Task<DataReaderWrapper> ExecuteDataReaderAsync(
 			CommandBehavior commandBehavior,
 			CancellationToken cancellationToken)
 		{
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				using (DataProvider.ExecuteScope(this))
-					return await ExecuteReaderAsync(Command, commandBehavior, cancellationToken)
+					return await ExecuteReaderAsync(CurrentCommand!, commandBehavior, cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			var now = DateTime.UtcNow;
@@ -373,32 +375,30 @@ namespace LinqToDB.Data
 
 			if (TraceSwitchConnection.TraceInfo)
 			{
-				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute)
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteReader, true)
 				{
 					TraceLevel     = TraceLevel.Info,
-					Command        = GetCurrentCommand(),
+					Command        = CurrentCommand,
 					StartTime      = now,
-					IsAsync        = true,
 				});
 			}
 
 			try
 			{
-				DbDataReader ret;
+				DataReaderWrapper ret;
 
 				using (DataProvider.ExecuteScope(this))
-					ret = await ExecuteReaderAsync(Command, commandBehavior, cancellationToken)
+					ret = await ExecuteReaderAsync(CurrentCommand!, commandBehavior, cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				if (TraceSwitchConnection.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteReader, true)
 					{
 						TraceLevel     = TraceLevel.Info,
-						Command        = GetCurrentCommand(),
+						Command        = ret.Command,
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
-						IsAsync        = true,
 					});
 				}
 
@@ -408,14 +408,13 @@ namespace LinqToDB.Data
 			{
 				if (TraceSwitchConnection.TraceError)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error)
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteReader, true)
 					{
 						TraceLevel     = TraceLevel.Error,
-						Command        = GetCurrentCommand(),
+						Command        = CurrentCommand,
 						StartTime      = now,
 						ExecutionTime  = sw.Elapsed,
 						Exception      = ex,
-						IsAsync        = true,
 					});
 				}
 

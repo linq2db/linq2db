@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.SqlQuery;
 
@@ -332,6 +333,27 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void NewGuidOrder(
+			[DataSources(false,
+				ProviderName.DB2,
+				TestProvName.AllInformix,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
+				TestProvName.AllAccess)]
+			string context)
+		{
+			using var db = (TestDataConnection)GetDataContext(context);
+			var query =
+				from p in db.Types
+				orderby Sql.NewGuid()
+				select p.GuidValue;
+
+			_ = query.ToArray();
+
+			Assert.That(db.LastQuery, Does.Contain("ORDER"));
+		}
+
+		[Test]
 		public void CustomFunc([DataSources] string context)
 		{
 			Expressions.MapMember<Person>(p => p.FullName(), (Expression<Func<Person,string>>)(p => p.LastName + ", " + p.FirstName));
@@ -514,7 +536,7 @@ namespace Tests.Linq
 			return person.LastName + ", " + person.FirstName;
 		}
 
-		[Sql.Function("SUM", ServerSideOnly = true, IsAggregate = true, ArgIndices = new[]{0})]
+		[Sql.Function("SUM", ServerSideOnly = true, IsAggregate = true, ArgIndices = new[]{1})]
 		public static TItem MySum<TSource,TItem>(this IEnumerable<TSource> src, Expression<Func<TSource,TItem>> value)
 		{
 			throw new InvalidOperationException();

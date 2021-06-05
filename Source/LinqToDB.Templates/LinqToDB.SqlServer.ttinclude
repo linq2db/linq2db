@@ -50,7 +50,8 @@ void DoGenerateSqlServerFreeText()
 						"return Sql.Ext.SqlServer().FreeTextTable<TTable, TKey>(table, columns, search);"
 					})
 				{
-					GenericArguments = { "TTable", "TKey" }
+					GenericArguments = { "TTable", "TKey" },
+					AfterSignature   = !EnableNullableReferenceTypes ? new List<string>() : new List<string>() { "where TTable : notnull" }
 				},
 			}
 		}

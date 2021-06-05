@@ -1,18 +1,20 @@
-﻿using LinqToDB.Expressions;
-using LinqToDB.SqlQuery;
-using System.Linq;
+﻿using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
+	using SqlQuery;
+
+	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
+
 	internal partial class MergeBuilder
 	{
 		internal class UpdateWhenMatched : MethodCallBuilder
 		{
 			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
-				return methodCall.Method.IsGenericMethod
-					&& LinqExtensions.UpdateWhenMatchedAndMethodInfo == methodCall.Method.GetGenericMethodDefinition();
+				return methodCall.IsSameGenericMethod(UpdateWhenMatchedAndMethodInfo);
 			}
 
 			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -22,7 +24,6 @@ namespace LinqToDB.Linq.Builder
 
 				var statement = mergeContext.Merge;
 				var operation = new SqlMergeOperationClause(MergeOperationType.Update);
-				statement.Operations.Add(operation);
 
 				var predicate = methodCall.Arguments[1];
 				var setter    = methodCall.Arguments[2];
@@ -47,11 +48,19 @@ namespace LinqToDB.Linq.Builder
 					foreach (var field in sqlTable.Fields.Where(f => f.IsUpdatable).Except(keys))
 					{
 						var expression = LinqToDB.Expressions.Extensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, param);
-						var expr       = mergeContext.SourceContext.ConvertToSql(builder.ConvertExpression(expression), 1, ConvertFlags.Field)[0].Sql;
+						var tgtExpr    = mergeContext.TargetContext.ConvertToSql(builder.ConvertExpression(expression), 1, ConvertFlags.Field)[0].Sql;
+						var srcExpr    = mergeContext.SourceContext.ConvertToSql(builder.ConvertExpression(expression), 1, ConvertFlags.Field)[0].Sql;
 
-						operation.Items.Add(new SqlSetExpression(field, expr));
+						operation.Items.Add(new SqlSetExpression(tgtExpr, srcExpr));
 					}
+
+					// skip empty Update operation with implicit setter
+					// per https://github.com/linq2db/linq2db/issues/2843
+					if (operation.Items.Count == 0)
+						return mergeContext;
 				}
+
+				statement.Operations.Add(operation);
 
 				if (!(predicate is ConstantExpression constPredicate) || constPredicate.Value != null)
 				{

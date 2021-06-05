@@ -28,7 +28,7 @@ namespace Tests.xUpdate
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
+				ProviderName.SqlServer2005,
 				TestProvName.AllSybase,
 				TestProvName.AllSapHana)]
 			string context)
@@ -47,7 +47,7 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				ProviderName.SqlServer2005)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -71,7 +71,7 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				ProviderName.SqlServer2005)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -95,7 +95,7 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				ProviderName.SqlServer2005)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -119,7 +119,7 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				ProviderName.SqlServer2005)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -143,7 +143,7 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				ProviderName.SqlServer2005)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -167,7 +167,7 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				ProviderName.SqlServer2005)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -192,7 +192,7 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				ProviderName.SqlServer2005)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -219,7 +219,7 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				ProviderName.SqlServer2005)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -250,7 +250,7 @@ namespace Tests.xUpdate
 				TestProvName.AllSybase,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				ProviderName.SqlServer2005)]
 			string context)
 		{
 			ResetAllTypesIdentity(context);
@@ -282,7 +282,7 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				ProviderName.SqlServer2005)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))

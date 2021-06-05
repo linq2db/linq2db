@@ -431,7 +431,8 @@ namespace LinqToDB
 				var part    = builder.GetValue<Sql.DateParts>("part");
 				var partStr = DatePartBuilder.DatePartToStr(part);
 				var date    = builder.GetExpression("date");
-				var number  = builder.GetExpression("number");
+				var number  = builder.GetExpression("number", true);
+
 				builder.ResultExpression = new SqlFunction(typeof(DateTime?), builder.Expression,
 					new SqlExpression(partStr, Precedence.Primary), number, date);
 			}
@@ -441,9 +442,9 @@ namespace LinqToDB
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				var part    = builder.GetValue<Sql.DateParts>("part");
-				var date    = builder.GetExpression("date");
-				var number  = builder.GetExpression("number");
+				var part   = builder.GetValue<Sql.DateParts>("part");
+				var date   = builder.GetExpression("date");
+				var number = builder.GetExpression("number", true);
 
 				string expStr;
 				switch (part)
@@ -474,9 +475,9 @@ namespace LinqToDB
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				var part    = builder.GetValue<Sql.DateParts>("part");
-				var date    = builder.GetExpression("date");
-				var number  = builder.GetExpression("number");
+				var part   = builder.GetValue<Sql.DateParts>("part");
+				var date   = builder.GetExpression("date");
+				var number = builder.GetExpression("number", true);
 
 				string expStr;
 
@@ -508,9 +509,9 @@ namespace LinqToDB
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				var part    = builder.GetValue<Sql.DateParts>("part");
-				var date    = builder.GetExpression("date");
-				var number  = builder.GetExpression("number");
+				var part   = builder.GetValue<Sql.DateParts>("part");
+				var date   = builder.GetExpression("date");
+				var number = builder.GetExpression("number", true);
 
 				string expStr;
 				switch (part)
@@ -538,9 +539,9 @@ namespace LinqToDB
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				var part    = builder.GetValue<Sql.DateParts>("part");
-				var date    = builder.GetExpression("date");
-				var number  = builder.GetExpression("number");
+				var part   = builder.GetValue<Sql.DateParts>("part");
+				var date   = builder.GetExpression("date");
+				var number = builder.GetExpression("number", true);
 
 				string expStr;
 				switch (part)
@@ -571,9 +572,9 @@ namespace LinqToDB
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				var part    = builder.GetValue<Sql.DateParts>("part");
-				var date    = builder.GetExpression("date");
-				var number  = builder.GetExpression("number");
+				var part   = builder.GetValue<Sql.DateParts>("part");
+				var date   = builder.GetExpression("date");
+				var number = builder.GetExpression("number", true);
 
 				string expStr;
 				switch (part)
@@ -602,9 +603,9 @@ namespace LinqToDB
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				var part    = builder.GetValue<Sql.DateParts>("part");
-				var date    = builder.GetExpression("date");
-				var number  = builder.GetExpression("number");
+				var part   = builder.GetValue<Sql.DateParts>("part");
+				var date   = builder.GetExpression("date");
+				var number = builder.GetExpression("number", true);
 
 				string expStr = "strftime('%Y-%m-%d %H:%M:%f', {0},";
 				switch (part)
@@ -632,9 +633,10 @@ namespace LinqToDB
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				var part    = builder.GetValue<Sql.DateParts>("part");
-				var date    = builder.GetExpression("date");
-				var number  = builder.GetExpression("number");
+				var part   = builder.GetValue<Sql.DateParts>("part");
+				var date   = builder.GetExpression("date");
+				var number = builder.GetExpression("number", true);
+
 				var partStr = part switch
 				{
 					Sql.DateParts.Year      => "yyyy",
@@ -658,9 +660,9 @@ namespace LinqToDB
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				var part    = builder.GetValue<Sql.DateParts>("part");
-				var date    = builder.GetExpression("date");
-				var number  = builder.GetExpression("number");
+				var part   = builder.GetValue<Sql.DateParts>("part");
+				var date   = builder.GetExpression("date");
+				var number = builder.GetExpression("number", true);
 
 				string function;
 				switch (part)
@@ -703,9 +705,9 @@ namespace LinqToDB
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				var part    = builder.GetValue<Sql.DateParts>("part");
-				var date    = builder.GetExpression("date");
-				var number  = builder.GetExpression("number");
+				var part   = builder.GetValue<Sql.DateParts>("part");
+				var date   = builder.GetExpression("date");
+				var number = builder.GetExpression("number", true);
 
 				switch (part)
 				{

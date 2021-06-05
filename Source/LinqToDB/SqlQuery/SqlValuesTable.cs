@@ -24,7 +24,7 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Constructor for convert visitor.
 		/// </summary>
-		internal SqlValuesTable(ISqlExpression source, Dictionary<string, Func<object, IDictionary<Expression, ISqlExpression>, ISqlExpression>> valueBuilders, SqlField[] fields, IReadOnlyList<ISqlExpression[]>? rows)
+		internal SqlValuesTable(ISqlExpression source, Dictionary<string, Func<object, IDictionary<Expression, ISqlExpression>, ISqlExpression>> valueBuilders, IEnumerable<SqlField> fields, IReadOnlyList<ISqlExpression[]>? rows)
 		{
 			Source        = source;
 			ValueBuilders = valueBuilders;
@@ -67,10 +67,10 @@ namespace LinqToDB.SqlQuery
 		/// </summary>
 		internal Dictionary<string, SqlField>? FieldsLookup { get; }
 
-		private readonly List<SqlField> _fields = new List<SqlField>();
+		private readonly List<SqlField> _fields = new ();
 
 		// Fields from source, used in query. Columns in rows should have same order.
-		public IList<SqlField> Fields => _fields;
+		public List<SqlField> Fields => _fields;
 
 		internal Dictionary<string, Func<object, IDictionary<Expression, ISqlExpression>, ISqlExpression>>? ValueBuilders { get; }
 
@@ -144,10 +144,6 @@ namespace LinqToDB.SqlQuery
 
 		bool ISqlExpression.Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer) => throw new NotImplementedException();
 
-		#endregion
-
-		#region ICloneableElement
-		ICloneableElement ICloneableElement.Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone) => throw new NotImplementedException();
 		#endregion
 
 		#region IQueryElement

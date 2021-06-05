@@ -15,85 +15,81 @@ using LinqToDB.SqlQuery;
 
 namespace Tests
 {
-	internal class TestNoopConnection : IDbConnection
+	internal class TestNoopConnection : DbConnection
 	{
+		private ConnectionState _state;
+
 		public TestNoopConnection(string connectionString)
 		{
 			ConnectionString = connectionString;
 		}
 
-		public bool            Disposed          { get; private set; }
 		[AllowNull]
-		public string          ConnectionString  { get; set; }
-		public int             ConnectionTimeout { get; }
-		public string          Database          { get; } = null!;
-		public ConnectionState State             { get; private set; }
+		public override string          ConnectionString { get; set; }
+		public override string          Database         { get; } = null!;
+		public override string          DataSource       => throw new NotImplementedException();
+		public override string          ServerVersion    => throw new NotImplementedException();
+		public override ConnectionState State            => _state;
 
-		public IDbTransaction BeginTransaction(                   ) => throw new NotImplementedException();
-		public IDbTransaction BeginTransaction(IsolationLevel il  ) => throw new NotImplementedException();
-		public void           ChangeDatabase  (string databaseName) => throw new NotImplementedException();
+		public bool IsDisposed { get; private set; }
 
-		public void Close()
+		public override void Close()
 		{
-			State = ConnectionState.Closed;
+			_state = ConnectionState.Closed;
 		}
 
-		public IDbCommand CreateCommand()
+		public override void Open()
 		{
-			return new TestNoopDbCommand();
+			_state = ConnectionState.Open;
 		}
 
-		public void Open()
-		{
-			State = ConnectionState.Open;
-		}
+		public    override void          ChangeDatabase    (string databaseName          ) => throw new NotImplementedException();
+		protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel) => throw new NotImplementedException();
+		protected override DbCommand     CreateDbCommand   (                             ) => new TestNoopDbCommand();
 
-		public void Dispose()
+		protected override void Dispose(bool disposing)
 		{
 			Close();
-			Disposed = true;
+			base.Dispose(disposing);
+			IsDisposed = true;
 		}
 	}
 
-	internal class TestNoopDataReader : IDataReader
+	internal class TestNoopDataReader : DbDataReader
 	{
-		int  IDataReader.Depth           => throw new NotImplementedException();
-		bool IDataReader.IsClosed        => throw new NotImplementedException();
-		int  IDataReader.RecordsAffected => throw new NotImplementedException();
-		int  IDataRecord.FieldCount      => throw new NotImplementedException();
+		public override object this[int ordinal] => throw new NotImplementedException();
+		public override object this[string name] => throw new NotImplementedException();
 
-		object IDataRecord.this[string name] => throw new NotImplementedException();
-		object IDataRecord.this[int i      ] => throw new NotImplementedException();
+		public override int  Depth           => throw new NotImplementedException();
+		public override int  FieldCount      => throw new NotImplementedException();
+		public override bool HasRows         => throw new NotImplementedException();
+		public override bool IsClosed        => throw new NotImplementedException();
+		public override int  RecordsAffected => throw new NotImplementedException();
 
-		void        IDataReader.Close          (                                                                    ) => throw new NotImplementedException();
-		DataTable   IDataReader.GetSchemaTable (                                                                    ) => throw new NotImplementedException();
-		bool        IDataReader.NextResult     (                                                                    ) => throw new NotImplementedException();
-		bool        IDataReader.Read           (                                                                    ) => throw new NotImplementedException();
-
-		bool        IDataRecord.GetBoolean     (int i                                                               ) => throw new NotImplementedException();
-		byte        IDataRecord.GetByte        (int i                                                               ) => throw new NotImplementedException();
-		long        IDataRecord.GetBytes       (int i, long fieldOffset, byte[] buffer, int bufferoffset, int length) => throw new NotImplementedException();
-		char        IDataRecord.GetChar        (int i                                                               ) => throw new NotImplementedException();
-		long        IDataRecord.GetChars       (int i, long fieldoffset, char[] buffer, int bufferoffset, int length) => throw new NotImplementedException();
-		IDataReader IDataRecord.GetData        (int i                                                               ) => throw new NotImplementedException();
-		string      IDataRecord.GetDataTypeName(int i                                                               ) => throw new NotImplementedException();
-		DateTime    IDataRecord.GetDateTime    (int i                                                               ) => throw new NotImplementedException();
-		decimal     IDataRecord.GetDecimal     (int i                                                               ) => throw new NotImplementedException();
-		double      IDataRecord.GetDouble      (int i                                                               ) => throw new NotImplementedException();
-		Type        IDataRecord.GetFieldType   (int i                                                               ) => throw new NotImplementedException();
-		float       IDataRecord.GetFloat       (int i                                                               ) => throw new NotImplementedException();
-		Guid        IDataRecord.GetGuid        (int i                                                               ) => throw new NotImplementedException();
-		short       IDataRecord.GetInt16       (int i                                                               ) => throw new NotImplementedException();
-		int         IDataRecord.GetInt32       (int i                                                               ) => throw new NotImplementedException();
-		long        IDataRecord.GetInt64       (int i                                                               ) => throw new NotImplementedException();
-		string      IDataRecord.GetName        (int i                                                               ) => throw new NotImplementedException();
-		int         IDataRecord.GetOrdinal     (string name                                                         ) => throw new NotImplementedException();
-		string      IDataRecord.GetString      (int i                                                               ) => throw new NotImplementedException();
-		object      IDataRecord.GetValue       (int i                                                               ) => throw new NotImplementedException();
-		int         IDataRecord.GetValues      (object[] values                                                     ) => throw new NotImplementedException();
-		bool        IDataRecord.IsDBNull       (int i                                                               ) => throw new NotImplementedException();
-
-		void        IDisposable.Dispose        (                                                                    ) => throw new NotImplementedException();
+		public override bool        GetBoolean     (int ordinal)                                                                => throw new NotImplementedException();
+		public override byte        GetByte        (int ordinal)                                                                => throw new NotImplementedException();
+		public override long        GetBytes       (int ordinal, long dataOffset, byte[]? buffer, int bufferOffset, int length) => throw new NotImplementedException();
+		public override char        GetChar        (int ordinal)                                                                => throw new NotImplementedException();
+		public override long        GetChars       (int ordinal, long dataOffset, char[]? buffer, int bufferOffset, int length) => throw new NotImplementedException();
+		public override string      GetDataTypeName(int ordinal)                                                                => throw new NotImplementedException();
+		public override DateTime    GetDateTime    (int ordinal)                                                                => throw new NotImplementedException();
+		public override decimal     GetDecimal     (int ordinal)                                                                => throw new NotImplementedException();
+		public override double      GetDouble      (int ordinal)                                                                => throw new NotImplementedException();
+		public override IEnumerator GetEnumerator  ()                                                                           => throw new NotImplementedException();
+		public override Type        GetFieldType   (int ordinal)                                                                => throw new NotImplementedException();
+		public override float       GetFloat       (int ordinal)                                                                => throw new NotImplementedException();
+		public override Guid        GetGuid        (int ordinal)                                                                => throw new NotImplementedException();
+		public override short       GetInt16       (int ordinal)                                                                => throw new NotImplementedException();
+		public override int         GetInt32       (int ordinal)                                                                => throw new NotImplementedException();
+		public override long        GetInt64       (int ordinal)                                                                => throw new NotImplementedException();
+		public override string      GetName        (int ordinal)                                                                => throw new NotImplementedException();
+		public override int         GetOrdinal     (string name)                                                                => throw new NotImplementedException();
+		public override string      GetString      (int ordinal)                                                                => throw new NotImplementedException();
+		public override object      GetValue       (int ordinal)                                                                => throw new NotImplementedException();
+		public override int         GetValues      (object[] values)                                                            => throw new NotImplementedException();
+		public override bool        IsDBNull       (int ordinal)                                                                => throw new NotImplementedException();
+		public override bool        NextResult     ()                                                                           => throw new NotImplementedException();
+		public override bool        Read           ()                                                                           => throw new NotImplementedException();
 	}
 
 	internal class TestNoopDbCommand : DbCommand

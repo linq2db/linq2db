@@ -490,6 +490,8 @@ namespace LinqToDB.Mapping
 
 			if (dataType == DataType.Undefined)
 				dataType = mappingSchema.GetDataType(systemType).Type.DataType;
+			if (dataType == DataType.Undefined)
+				dataType = mappingSchema.GetUnderlyingDataType(systemType, out var _).Type.DataType;
 
 			return dataType;
 		}

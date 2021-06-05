@@ -479,6 +479,9 @@ namespace Tests.Linq
 		{
 			using (var db = new TestDataConnection(context))
 			{
+				var commandInterceptor = new SaveCommandInterceptor();
+				db.AddInterceptor(commandInterceptor);
+
 				db.AddMappingSchema(SetupFtsMapping(SQLiteFTS.FTS5));
 
 				try
@@ -499,9 +502,9 @@ namespace Tests.Linq
 				{
 					Assert.AreEqual("INSERT INTO [FTS5_TABLE]([FTS5_TABLE], rowid, [text1], [text2]) VALUES('delete', 2, @p0, @p1)", db.LastQuery);
 
-					Assert.AreEqual(2, db.Command.Parameters.Count);
-					Assert.AreEqual("one", ((DbParameter)db.Command.Parameters[0]!).Value);
-					Assert.AreEqual("two", ((DbParameter)db.Command.Parameters[1]!).Value);
+					Assert.AreEqual(2, commandInterceptor.Parameters.Length);
+					Assert.True(commandInterceptor.Parameters.Any(p => p.Value!.Equals("one")));
+					Assert.True(commandInterceptor.Parameters.Any(p => p.Value!.Equals("two")));
 				}
 			}
 		}
@@ -621,6 +624,9 @@ namespace Tests.Linq
 		{
 			using (var db = new TestDataConnection(context))
 			{
+				var commandInterceptor = new SaveCommandInterceptor();
+				db.AddInterceptor(commandInterceptor);
+
 				db.AddMappingSchema(SetupFtsMapping(SQLiteFTS.FTS5));
 
 				try
@@ -635,8 +641,8 @@ namespace Tests.Linq
 				{
 					Assert.AreEqual("INSERT INTO [FTS5_TABLE]([FTS5_TABLE], rank) VALUES('rank', @rank)", db.LastQuery);
 
-					Assert.AreEqual(1, db.Command.Parameters.Count);
-					Assert.AreEqual("strange('function\")", ((DbParameter)db.Command.Parameters[0]!).Value);
+					Assert.AreEqual(1, commandInterceptor.Parameters.Length);
+					Assert.AreEqual("strange('function\")", commandInterceptor.Parameters[0].Value);
 				}
 			}
 		}

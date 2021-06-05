@@ -31,8 +31,8 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
-			var views =  ((DbConnection)dataConnection.Connection).GetSchema("Views");
+			var tables = dataConnection.Connection.GetSchema("Tables");
+			var views =  dataConnection.Connection.GetSchema("Views");
 
 			return Enumerable
 				.Empty<TableInfo>()
@@ -72,7 +72,7 @@ namespace LinqToDB.DataProvider.SQLite
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var dbConnection = (DbConnection)dataConnection.Connection;
+			var dbConnection = dataConnection.Connection;
 			var pks          = dbConnection.GetSchema("IndexColumns");
 			var idxs         = dbConnection.GetSchema("Indexes");
 
@@ -94,7 +94,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var cs = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
+			var cs = dataConnection.Connection.GetSchema("Columns");
 
 			return
 			(
@@ -122,7 +122,7 @@ namespace LinqToDB.DataProvider.SQLite
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var fks = ((DbConnection)dataConnection.Connection).GetSchema("ForeignKeys");
+			var fks = dataConnection.Connection.GetSchema("ForeignKeys");
 
 			var result =
 			(
@@ -155,7 +155,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override string GetDatabaseName(DataConnection dbConnection)
 		{
-			return ((DbConnection)dbConnection.Connection).DataSource;
+			return dbConnection.Connection.DataSource;
 		}
 
 		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)

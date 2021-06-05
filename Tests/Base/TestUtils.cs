@@ -109,17 +109,16 @@ namespace Tests
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:
 				case ProviderName.SqlServer2014:
-				case TestProvName.SqlServer2016:
+				case ProviderName.SqlServer2016:
 				case ProviderName.SqlServer2017:
 				case TestProvName.SqlServer2019:
 				case TestProvName.SqlServer2019SequentialAccess:
 				case TestProvName.SqlServer2019FastExpressionCompiler:
+				case TestProvName.SqlServerContained                 :
 				case TestProvName.SqlAzure:
 				case ProviderName.SapHanaNative:
 				case ProviderName.SapHanaOdbc:
 					return db.GetTable<LinqDataTypes>().Select(_ => SchemaName()).First();
-				case ProviderName.SqlServer2000:
-					return db.FromSql<string>($"SELECT TABLE_SCHEMA FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = {nameof(LinqDataTypes)}").First();
 			}
 
 			return NO_SCHEMA_NAME;
@@ -134,16 +133,16 @@ namespace Tests
 			switch (GetContextName(db))
 			{
 				case ProviderName.SybaseManaged:
-				case ProviderName.SqlServer2000:
 				case ProviderName.SqlServer2005:
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:
 				case ProviderName.SqlServer2014:
-				case TestProvName.SqlServer2016:
+				case ProviderName.SqlServer2016:
 				case ProviderName.SqlServer2017:
 				case TestProvName.SqlServer2019:
 				case TestProvName.SqlServer2019SequentialAccess:
 				case TestProvName.SqlServer2019FastExpressionCompiler:
+				case TestProvName.SqlServerContained                     :
 				case TestProvName.SqlAzure:
 				case ProviderName.OracleManaged:
 				case ProviderName.OracleNative:
@@ -218,16 +217,16 @@ namespace Tests
 				case ProviderName.DB2:
 				case ProviderName.Sybase:
 				case ProviderName.SybaseManaged:
-				case ProviderName.SqlServer2000:
 				case ProviderName.SqlServer2005:
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:
 				case ProviderName.SqlServer2014:
-				case TestProvName.SqlServer2016:
+				case ProviderName.SqlServer2016:
 				case ProviderName.SqlServer2017:
 				case TestProvName.SqlServer2019:
 				case TestProvName.SqlServer2019SequentialAccess:
 				case TestProvName.SqlServer2019FastExpressionCompiler:
+				case TestProvName.SqlServerContained                 :
 				case TestProvName.SqlAzure:
 					return db.GetTable<LinqDataTypes>().Select(_ => DbName()).First();
 				case ProviderName.Informix:
@@ -269,6 +268,7 @@ namespace Tests
 		}
 
 		class FirebirdTempTable<T> : TempTable<T>
+			where T : notnull
 		{
 			public FirebirdTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null, TableOptions tableOptions = TableOptions.NotSet)
 				: base(db, tableName, databaseName, schemaName, tableOptions : tableOptions)
@@ -288,7 +288,8 @@ namespace Tests
 			}
 		}
 
-		static TempTable<T> CreateTable<T>(IDataContext db, string? tableName, TableOptions tableOptions = TableOptions.NotSet) =>
+		static TempTable<T> CreateTable<T>(IDataContext db, string? tableName, TableOptions tableOptions = TableOptions.NotSet)
+			where T : notnull =>
 			db.CreateSqlProvider() is FirebirdSqlBuilder ?
 				new FirebirdTempTable<T>(db, tableName, tableOptions : tableOptions) :
 				new         TempTable<T>(db, tableName, tableOptions : tableOptions);
@@ -303,6 +304,7 @@ namespace Tests
 		}
 
 		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName = null, TableOptions tableOptions = TableOptions.NotSet)
+			where T : notnull
 		{
 			try
 			{
@@ -319,6 +321,7 @@ namespace Tests
 		}
 
 		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName, IEnumerable<T> items, bool insertInTransaction = false)
+			where T : notnull
 		{
 			var table = CreateLocalTable<T>(db, tableName, TableOptions.CheckExistence);
 
@@ -344,8 +347,58 @@ namespace Tests
 		}
 
 		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, IEnumerable<T> items, bool insertInTransaction = false)
+			where T : notnull
 		{
 			return CreateLocalTable(db, null, items, insertInTransaction);
+		}
+
+		public static string GetValidCollationName(string providerName)
+		{
+			switch (providerName)
+			{
+				case ProviderName.OracleNative                       :
+				case ProviderName.OracleManaged                      :
+					return "latin_AI";
+				case ProviderName.DB2                                :
+					return "SYSTEM_923_DE";
+				case ProviderName.PostgreSQL                         :
+				case ProviderName.PostgreSQL92                       :
+				case ProviderName.PostgreSQL93                       :
+				case ProviderName.PostgreSQL95                       :
+				case TestProvName.PostgreSQL10                       :
+				case TestProvName.PostgreSQL11                       :
+				case TestProvName.PostgreSQL12                       :
+				case TestProvName.PostgreSQL13                       :
+					return "POSIX";
+				case ProviderName.SQLiteClassic                      :
+				case ProviderName.SQLiteMS                           :
+				case TestProvName.SQLiteClassicMiniProfilerMapped    :
+				case TestProvName.SQLiteClassicMiniProfilerUnmapped  :
+					return "NOCASE";
+				case ProviderName.Firebird                           :
+				case TestProvName.Firebird3                          :
+				case TestProvName.Firebird4                          :
+					return "UNICODE_FSS";
+				case ProviderName.MySql                              :
+				case ProviderName.MySqlConnector                     :
+				case TestProvName.MySql55                            :
+				case TestProvName.MariaDB                            :
+					return "utf8_bin";
+				case TestProvName.SqlAzure                           :
+				case ProviderName.SqlServer2005                      :
+				case ProviderName.SqlServer2008                      :
+				case ProviderName.SqlServer2012                      :
+				case ProviderName.SqlServer2014                      :
+				case ProviderName.SqlServer2016                      :
+				case ProviderName.SqlServer2017                      :
+				case TestProvName.SqlServer2019                      :
+				case TestProvName.SqlServer2019SequentialAccess      :
+				case TestProvName.SqlServer2019FastExpressionCompiler:
+				case TestProvName.SqlServerContained                 :
+					return "Albanian_CI_AS";
+				default                                              :
+					return "whatever";
+			}
 		}
 	}
 }

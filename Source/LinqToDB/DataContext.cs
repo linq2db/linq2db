@@ -15,6 +15,8 @@ namespace LinqToDB
 	using Async;
 	using Mapping;
 	using SqlProvider;
+	using LinqToDB.Interceptors;
+	using System.Data.Common;
 
 	/// <summary>
 	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
@@ -247,6 +249,11 @@ namespace LinqToDB
 			{
 				_dataConnection = CreateDataConnection();
 
+				if (_commandInterceptors != null)
+					_dataConnection.AddInterceptor(_commandInterceptors);
+				if (_connectionInterceptors != null)
+					_dataConnection.AddInterceptor(_connectionInterceptors);
+
 				if (_commandTimeout != null)
 					_dataConnection.CommandTimeout = CommandTimeout;
 
@@ -306,12 +313,12 @@ namespace LinqToDB
 		SqlProviderFlags    IDataContext.SqlProviderFlags      => DataProvider.SqlProviderFlags;
 		TableOptions        IDataContext.SupportedTableOptions => DataProvider.SupportedTableOptions;
 
-		Expression IDataContext.GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
+		Expression IDataContext.GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
 			return DataProvider.GetReaderExpression(reader, idx, readerExpression, toType);
 		}
 
-		bool? IDataContext.IsDBNullAllowed(IDataReader reader, int idx)
+		bool? IDataContext.IsDBNullAllowed(DbDataReader reader, int idx)
 		{
 			return DataProvider.IsDBNullAllowed(reader, idx);
 		}
@@ -345,8 +352,8 @@ namespace LinqToDB
 			// are internal and it is not possible to access them in derived class. And we definitely don't want them
 			// to be public.
 			return dbTransaction != null
-				? new DataConnection(DataProvider, dbTransaction)
-				: new DataConnection(DataProvider, dbConnection!);
+				? new DataConnection(DataProvider, dbTransaction.Transaction)
+				: new DataConnection(DataProvider, dbConnection!.Connection);
 		}
 
 		IDataContext IDataContext.Clone(bool forNestedQuery)
@@ -355,20 +362,29 @@ namespace LinqToDB
 
 			var dc = new DataContext(0)
 			{
-				ConfigurationString = ConfigurationString,
-				ConnectionString    = ConnectionString,
-				KeepConnectionAlive = KeepConnectionAlive,
-				DataProvider        = DataProvider,
-				ContextID           = ContextID,
-				MappingSchema       = MappingSchema,
-				InlineParameters    = InlineParameters,
+				ConfigurationString     = ConfigurationString,
+				ConnectionString        = ConnectionString,
+				KeepConnectionAlive     = KeepConnectionAlive,
+				DataProvider            = DataProvider,
+				ContextID               = ContextID,
+				MappingSchema           = MappingSchema,
+				InlineParameters        = InlineParameters,
+				_commandInterceptors    = _commandInterceptors?.Clone(),
+				_connectionInterceptors = _connectionInterceptors?.Clone(),
 			};
 
 			if (forNestedQuery && _dataConnection != null && _dataConnection.IsMarsEnabled)
+			{
 				dc._dataConnection = CloneDataConnection(
 					_dataConnection,
 					_dataConnection.TransactionAsync,
 					_dataConnection.TransactionAsync == null ? _dataConnection.EnsureConnection() : null);
+
+				if (dc._commandInterceptors != null)
+					_dataConnection.AddInterceptor(dc._commandInterceptors);
+				if (dc._connectionInterceptors != null)
+					_dataConnection.AddInterceptor(dc._connectionInterceptors);
+			}
 
 
 			dc.QueryHints.    AddRange(QueryHints);
@@ -388,8 +404,44 @@ namespace LinqToDB
 
 		void IDisposable.Dispose()
 		{
+			Dispose(disposing: true);
+			GC.SuppressFinalize(this);
+		}
+
+		/// <summary>
+		/// Closes underlying connection and fires <see cref="OnClosing"/> event (only if connection existed).
+		/// </summary>
+		protected virtual void Dispose(bool disposing)
+		{
 			_disposed = true;
 			Close();
+		}
+
+#if NATIVE_ASYNC
+		async ValueTask IAsyncDisposable.DisposeAsync()
+#else
+		async Task IAsyncDisposable.DisposeAsync()
+#endif
+		{
+			await DisposeAsync(disposing: true).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			GC.SuppressFinalize(this);
+		}
+
+		/// <summary>
+		/// Closes underlying connection and fires <see cref="OnClosing"/> event (only if connection existed).
+		/// </summary>
+#if NATIVE_ASYNC
+		protected virtual ValueTask DisposeAsync(bool disposing)
+#else
+		protected virtual Task DisposeAsync(bool disposing)
+#endif
+		{
+			_disposed = true;
+#if NATIVE_ASYNC
+			return new ValueTask(((IDataContext)this).CloseAsync());
+#else
+			return ((IDataContext)this).CloseAsync();
+#endif
 		}
 
 		/// <summary>
@@ -412,6 +464,20 @@ namespace LinqToDB
 		void IDataContext.Close()
 		{
 			Close();
+		}
+
+		async Task IDataContext.CloseAsync()
+		{
+			if (_dataConnection != null)
+			{
+				OnClosing?.Invoke(this, EventArgs.Empty);
+
+				if (_dataConnection.QueryHints.    Count > 0) QueryHints.AddRange(_queryHints!);
+				if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_nextQueryHints!);
+
+				await _dataConnection.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				_dataConnection = null;
+			}
 		}
 
 		/// <summary>
@@ -500,6 +566,19 @@ namespace LinqToDB
 				_dataContext = null;
 			}
 
+#if NATIVE_ASYNC
+			public async ValueTask DisposeAsync()
+#else
+			public async Task DisposeAsync()
+#endif
+			{
+				await _queryRunner!.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				_dataContext!.ReleaseQuery();
+
+				_queryRunner = null;
+				_dataContext = null;
+			}
+
 			public int ExecuteNonQuery()
 			{
 				return _queryRunner!.ExecuteNonQuery();
@@ -510,7 +589,7 @@ namespace LinqToDB
 				return _queryRunner!.ExecuteScalar();
 			}
 
-			public IDataReader ExecuteReader()
+			public DataReaderWrapper ExecuteReader()
 			{
 				return _queryRunner!.ExecuteReader();
 			}
@@ -535,7 +614,7 @@ namespace LinqToDB
 				return _queryRunner!.GetSqlText();
 			}
 
-			public IDataContext DataContext      { get => _queryRunner!.DataContext;      set => _queryRunner!.DataContext      = value; }
+			public IDataContext DataContext      { get => _dataContext!;                  set => _queryRunner!.DataContext      = value; }
 			public Expression   Expression       { get => _queryRunner!.Expression;       set => _queryRunner!.Expression       = value; }
 			public object?[]?   Parameters       { get => _queryRunner!.Parameters;       set => _queryRunner!.Parameters       = value; }
 			public object?[]?   Preambles        { get => _queryRunner!.Preambles;        set => _queryRunner!.Preambles        = value; }
@@ -543,5 +622,37 @@ namespace LinqToDB
 			public int          RowsCount        { get => _queryRunner!.RowsCount;        set => _queryRunner!.RowsCount        = value; }
 			public int          QueryNumber      { get => _queryRunner!.QueryNumber;      set => _queryRunner!.QueryNumber      = value; }
 		}
+
+		#region Interceptors
+		private  AggregatedInterceptor<ICommandInterceptor>?    _commandInterceptors;
+		private  AggregatedInterceptor<IConnectionInterceptor>? _connectionInterceptors;
+
+		public void AddInterceptor(IInterceptor interceptor)
+		{
+			if (interceptor is ICommandInterceptor commandInterceptor)
+			{
+				if (_commandInterceptors == null)
+				{
+					_commandInterceptors = new AggregatedInterceptor<ICommandInterceptor>();
+					if (_dataConnection != null)
+						_dataConnection.AddInterceptor(_commandInterceptors);
+				}
+
+				_commandInterceptors.Add(commandInterceptor);
+			}
+
+			if (interceptor is IConnectionInterceptor connectionInterceptor)
+			{
+				if (_connectionInterceptors == null)
+				{
+					_connectionInterceptors = new AggregatedInterceptor<IConnectionInterceptor>();
+					if (_dataConnection != null)
+						_dataConnection.AddInterceptor(_connectionInterceptors);
+				}
+
+				_connectionInterceptors.Add(connectionInterceptor);
+			}
+		}
+		#endregion
 	}
 }

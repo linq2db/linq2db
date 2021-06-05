@@ -7,6 +7,8 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
+	using System.Data.Common;
+	using System.Threading.Tasks;
 	using Linq;
 	using Mapping;
 	using SqlProvider;
@@ -16,6 +18,11 @@ namespace LinqToDB
 	/// </summary>
 	[PublicAPI]
 	public interface IDataContext : IEntityServices, IDisposable
+#if NATIVE_ASYNC
+		, IAsyncDisposable
+#else
+		, Async.IAsyncDisposable
+#endif
 	{
 		/// <summary>
 		/// Provider identifier.
@@ -71,14 +78,14 @@ namespace LinqToDB
 		/// <param name="readerExpression">Data reader accessor expression.</param>
 		/// <param name="toType">Expected value type.</param>
 		/// <returns>Column read expression.</returns>
-		Expression          GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType);
+		Expression          GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType);
 		/// <summary>
 		/// Returns true, of data reader column could contain <see cref="DBNull"/> value.
 		/// </summary>
 		/// <param name="reader">Data reader instance.</param>
 		/// <param name="idx">Column index.</param>
 		/// <returns><c>true</c> or <c>null</c> if column could contain <see cref="DBNull"/>.</returns>
-		bool?               IsDBNullAllowed    (IDataReader reader, int idx);
+		bool?               IsDBNullAllowed    (DbDataReader reader, int idx);
 
 		/// <summary>
 		/// Clones current context.
@@ -90,6 +97,11 @@ namespace LinqToDB
 		/// Closes context connection and disposes underlying resources.
 		/// </summary>
 		void                Close              ();
+
+		/// <summary>
+		/// Closes context connection and disposes underlying resources.
+		/// </summary>
+		Task                CloseAsync         ();
 
 		/// <summary>
 		/// Event, triggered before context connection closed using <see cref="Close"/> method.

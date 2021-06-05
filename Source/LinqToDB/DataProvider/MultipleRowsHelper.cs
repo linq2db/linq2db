@@ -13,9 +13,10 @@ namespace LinqToDB.DataProvider
 	using System.Threading.Tasks;
 
 	public class MultipleRowsHelper<T> : MultipleRowsHelper
+		where T : notnull
 	{
 		public MultipleRowsHelper(ITable<T> table, BulkCopyOptions options)
-			: base((DataConnection)table.DataContext, options, typeof(T))
+			: base(table.DataContext, options, typeof(T))
 		{
 			TableName = BasicBulkCopy.GetTableName(SqlBuilder, options, table);
 		}
@@ -23,13 +24,19 @@ namespace LinqToDB.DataProvider
 
 	public abstract class MultipleRowsHelper
 	{
-		protected MultipleRowsHelper(DataConnection dataConnection, BulkCopyOptions options, Type entityType)
+		protected MultipleRowsHelper(IDataContext dataConnection, BulkCopyOptions options, Type entityType)
 		{
-			DataConnection = dataConnection;
+			DataConnection = dataConnection is DataConnection dc
+				? dc
+				: dataConnection is DataContext dx
+					? dx.GetDataConnection()
+					: throw new ArgumentException($"Must be of {nameof(DataConnection)} or {nameof(DataContext)} type but was {dataConnection.GetType()}", nameof(dataConnection));
+
+			MappingSchema  = dataConnection.MappingSchema;
 			Options        = options;
-			SqlBuilder     = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
-			ValueConverter = dataConnection.MappingSchema.ValueToSqlConverter;
-			Descriptor     = dataConnection.MappingSchema.GetEntityDescriptor(entityType);
+			SqlBuilder     = DataConnection.DataProvider.CreateSqlBuilder(MappingSchema);
+			ValueConverter = MappingSchema.ValueToSqlConverter;
+			Descriptor     = MappingSchema.GetEntityDescriptor(entityType);
 			Columns        = Descriptor.Columns
 				.Where(c => !c.SkipOnInsert || c.IsIdentity && options.KeepIdentity == true)
 				.ToArray();
@@ -37,9 +44,9 @@ namespace LinqToDB.DataProvider
 			ParameterName  = SqlBuilder.ConvertInline("p", ConvertType.NameToQueryParameter);
 			BatchSize      = Math.Max(10, Options.MaxBatchSize ?? 1000);
 		}
-
 		public readonly ISqlBuilder         SqlBuilder;
 		public readonly DataConnection      DataConnection;
+		public readonly MappingSchema       MappingSchema;
 		public readonly BulkCopyOptions     Options;
 		public readonly ValueToSqlConverter ValueConverter;
 		public readonly EntityDescriptor    Descriptor;
@@ -48,34 +55,50 @@ namespace LinqToDB.DataProvider
 		public          string?             TableName;
 		public readonly string              ParameterName;
 
-		public readonly List<DataParameter> Parameters    = new List<DataParameter>();
-		public readonly StringBuilder       StringBuilder = new StringBuilder();
-		public readonly BulkCopyRowsCopied  RowsCopied    = new BulkCopyRowsCopied();
+		public readonly List<DataParameter> Parameters    = new ();
+		public readonly StringBuilder       StringBuilder = new ();
+		public readonly BulkCopyRowsCopied  RowsCopied    = new ();
 
 		public int CurrentCount;
 		public int ParameterIndex;
 		public int HeaderSize;
 		public int BatchSize;
+		public int LastRowStringIndex;
+		public int LastRowParameterIndex;
 
 		public void SetHeader()
 		{
 			HeaderSize = StringBuilder.Length;
 		}
 
-		public virtual void BuildColumns(object item, Func<ColumnDescriptor, bool>? skipConvert = null)
+		private static Func<ColumnDescriptor, bool> defaultSkipConvert = (_ => false);
+
+		public virtual void BuildColumns(
+			object                        item,
+			Func<ColumnDescriptor, bool>? skipConvert    = null,
+			bool                          castParameters = false,
+			bool                          castAllRows    = false)
 		{
-			skipConvert ??= (_ => false);
+			skipConvert ??= defaultSkipConvert;
 
 			for (var i = 0; i < Columns.Length; i++)
 			{
 				var column = Columns[i];
 				var value  = column.GetValue(item);
 
-				if (skipConvert(column) || !ValueConverter.TryConvert(StringBuilder, ColumnTypes[i], value))
+				if (Options.UseParameters || skipConvert(column) || !ValueConverter.TryConvert(StringBuilder, ColumnTypes[i], value))
 				{
 					var name = ParameterName == "?" ? ParameterName : ParameterName + ++ParameterIndex;
 
-					StringBuilder.Append(name);
+					if (castParameters && (CurrentCount == 0 || castAllRows))
+					{
+						AddParameterCasted(name, ColumnTypes[i]);
+					}
+					else
+					{
+						StringBuilder.Append(name);	
+					}
+					
 
 					if (value is DataParameter dataParameter)
 						value = dataParameter.Value;
@@ -95,6 +118,15 @@ namespace LinqToDB.DataProvider
 			StringBuilder.Length--;
 		}
 
+		private void AddParameterCasted(string name, SqlDataType type)
+		{
+			StringBuilder.Append("CAST(");
+			StringBuilder.Append(name);
+			StringBuilder.Append(" AS ");
+			SqlBuilder.BuildDataType(StringBuilder, type);
+			StringBuilder.Append(')');
+		}
+
 		public bool Execute()
 		{
 			DataConnection.Execute(StringBuilder.AppendLine().ToString(), Parameters.ToArray());
@@ -108,9 +140,11 @@ namespace LinqToDB.DataProvider
 			}
 
 			Parameters.Clear();
-			ParameterIndex       = 0;
-			CurrentCount         = 0;
-			StringBuilder.Length = HeaderSize;
+			ParameterIndex        = 0;
+			CurrentCount          = 0;
+			LastRowParameterIndex = 0;
+			LastRowStringIndex    = HeaderSize;
+			StringBuilder.Length  = HeaderSize;
 
 			return true;
 		}
@@ -129,9 +163,11 @@ namespace LinqToDB.DataProvider
 			}
 
 			Parameters.Clear();
-			ParameterIndex       = 0;
-			CurrentCount         = 0;
-			StringBuilder.Length = HeaderSize;
+			ParameterIndex        = 0;
+			CurrentCount          = 0;
+			LastRowParameterIndex = 0;
+			LastRowStringIndex    = HeaderSize;
+			StringBuilder.Length  = HeaderSize;
 
 			return true;
 		}

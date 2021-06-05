@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
@@ -7,12 +6,13 @@ using System.Reflection;
 
 namespace LinqToDB.Data
 {
+	using System.Data.Common;
 	using DataProvider;
 	using Linq;
-	using SqlQuery;
 	using SqlProvider;
+	using SqlQuery;
 
-	public partial class DataConnection : IDataContext
+	public partial class DataConnection
 	{
 		/// <summary>
 		/// Returns queryable source for specified mapping class for current connection, mapped to database table or view.
@@ -31,7 +31,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <typeparam name="T">Mapping class type.</typeparam>
 		/// <param name="instance">Instance object for <paramref name="methodInfo"/> method or null for static method.</param>
-		/// <param name="methodInfo">Method, decorated with expression attribute, based on <see cref="LinqToDB.Sql.TableFunctionAttribute"/>.</param>
+		/// <param name="methodInfo">Method, decorated with expression attribute, based on <see cref="Sql.TableFunctionAttribute"/>.</param>
 		/// <param name="parameters">Parameters for <paramref name="methodInfo"/> method.</param>
 		/// <returns>Queryable source.</returns>
 		public ITable<T> GetTable<T>(object instance, MethodInfo methodInfo, params object?[] parameters)
@@ -53,12 +53,12 @@ namespace LinqToDB.Data
 
 		bool             IDataContext.CloseAfterUse    { get; set; }
 
-		Expression IDataContext.GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
+		Expression IDataContext.GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
 			return DataProvider.GetReaderExpression(reader, idx, readerExpression, toType);
 		}
 
-		bool? IDataContext.IsDBNullAllowed(IDataReader reader, int idx)
+		bool? IDataContext.IsDBNullAllowed(DbDataReader reader, int idx)
 		{
 			return DataProvider.IsDBNullAllowed(reader, idx);
 		}
@@ -68,7 +68,7 @@ namespace LinqToDB.Data
 			CheckAndThrowOnDisposed();
 
 			if (forNestedQuery && _connection != null && IsMarsEnabled)
-				return new DataConnection(DataProvider, _connection)
+				return new DataConnection(DataProvider, _connection.Connection)
 				{
 					MappingSchema               = MappingSchema,
 					TransactionAsync            = TransactionAsync,
@@ -83,10 +83,8 @@ namespace LinqToDB.Data
 					OnTraceConnection           = OnTraceConnection,
 					OnClosed                    = OnClosed,
 					OnClosing                   = OnClosing,
-					OnBeforeConnectionOpen      = OnBeforeConnectionOpen,
-					OnConnectionOpened          = OnConnectionOpened,
-					OnBeforeConnectionOpenAsync = OnBeforeConnectionOpenAsync,
-					OnConnectionOpenedAsync     = OnConnectionOpenedAsync,
+					_commandInterceptors        = _commandInterceptors?.Clone(),
+					_connectionInterceptors     = _connectionInterceptors?.Clone()
 				};
 
 			return (DataConnection)Clone();

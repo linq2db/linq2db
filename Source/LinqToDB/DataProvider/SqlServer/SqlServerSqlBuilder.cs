@@ -9,6 +9,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using SqlQuery;
 	using SqlProvider;
 	using Mapping;
+	using System.Data.Common;
 
 	abstract class SqlServerSqlBuilder : BasicSqlBuilder
 	{
@@ -182,6 +183,14 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
+		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
+		{
+			base.BuildUpdateClause(statement, selectQuery, updateClause);
+
+			var output = statement.GetOutputClause();
+			BuildOutputSubclause(output);
+		}
+
 		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
 		{
 			var table = deleteStatement.Table != null ?
@@ -343,7 +352,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			AppendIndent();
 
-			if (!pkName.StartsWith("[PK_#"))
+			if (!pkName.StartsWith("[PK_#") && !createTable.Table.TableOptions.IsTemporaryOptionSet())
 				StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(' ');
 
 			StringBuilder.Append("PRIMARY KEY CLUSTERED (");
@@ -354,6 +363,8 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
 			var table = dropTable.Table!;
+
+			BuildTag(dropTable);
 
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
@@ -419,7 +430,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			base.BuildDataTypeFromDataType(type, forCreateTable);
 		}
 
-		protected override string? GetTypeName(IDbDataParameter parameter)
+		protected override string? GetTypeName(DbParameter parameter)
 		{
 			if (Provider != null)
 			{
@@ -431,7 +442,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return base.GetTypeName(parameter);
 		}
 
-		protected override string? GetUdtTypeName(IDbDataParameter parameter)
+		protected override string? GetUdtTypeName(DbParameter parameter)
 		{
 			if (Provider != null)
 			{
@@ -443,7 +454,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return base.GetUdtTypeName(parameter);
 		}
 
-		protected override string? GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(DbParameter parameter)
 		{
 			if (Provider != null)
 			{
@@ -498,5 +509,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				Indent--;
 			}
 		}
+
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
 	}
 }

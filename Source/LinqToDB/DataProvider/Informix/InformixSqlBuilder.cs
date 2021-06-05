@@ -10,6 +10,7 @@ namespace LinqToDB.DataProvider.Informix
 	using SqlProvider;
 	using System.Globalization;
 	using Mapping;
+	using System.Data.Common;
 
 	partial class InformixSqlBuilder : BasicSqlBuilder
 	{
@@ -33,6 +34,8 @@ namespace LinqToDB.DataProvider.Informix
 			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
+
+		protected override bool SupportsNullInColumn => false;
 
 		public override int CommandCount(SqlStatement statement)
 		{
@@ -82,9 +85,9 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			if (selectQuery.From.Tables.Count == 0)
 			{
-				AppendIndent().Append("SELECT FIRST 1").AppendLine();
+				AppendIndent().Append("SELECT").AppendLine();
 				BuildColumns(selectQuery);
-				AppendIndent().Append("FROM SYSTABLES").AppendLine();
+				AppendIndent().Append("FROM ").Append(FakeTable).AppendLine();
 			}
 			else if (selectQuery.Select.IsDistinct)
 			{
@@ -101,6 +104,8 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override string FirstFormat(SelectQuery selectQuery) => "FIRST {0}";
 		protected override string SkipFormat  => "SKIP {0}";
+
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
 
 		protected override void BuildLikePredicate(SqlPredicate.Like predicate)
 		{
@@ -258,7 +263,7 @@ namespace LinqToDB.DataProvider.Informix
 			return sb.Append(table);
 		}
 
-		protected override string? GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(DbParameter parameter)
 		{
 			if (_provider != null)
 			{
@@ -316,5 +321,18 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			BuildDropTableStatementIfExists(dropTable);
 		}
+
+		protected override ISqlExpression WrapBooleanExpression(ISqlExpression expr)
+		{
+			var newExpr = base.WrapBooleanExpression(expr);
+			if (!ReferenceEquals(newExpr, expr))
+			{
+				return new SqlFunction(typeof(bool), "Convert", false, new SqlDataType(DataType.Boolean),
+					newExpr);
+			}
+
+			return newExpr;
+		}
+
 	}
 }

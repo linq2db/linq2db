@@ -49,7 +49,7 @@ namespace LinqToDB.Reflection
 			//
 			if (!type.IsInterface && !type.IsArray)
 			{
-				var interfaceMethods = type.GetInterfaces().SelectMany(ti => type.GetInterfaceMap(ti).TargetMethods)
+				var interfaceMethods = type.GetInterfaces().SelectMany(ti => type.GetInterfaceMapEx(ti).TargetMethods)
 					.ToList();
 
 				if (interfaceMethods.Count > 0)
@@ -89,7 +89,7 @@ namespace LinqToDB.Reflection
 			throw new LinqToDBException($"Cant create an instance of abstract class '{typeof(T).FullName}'.");
 		}
 
-		static readonly List<MemberInfo> _members = new List<MemberInfo>();
+		static readonly List<MemberInfo> _members = new();
 		static readonly IObjectFactory?  _objectFactory;
 
 		internal TypeAccessor()

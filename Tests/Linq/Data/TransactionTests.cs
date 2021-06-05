@@ -112,6 +112,24 @@ namespace Tests.Data
 		}
 
 		[Test]
+		public async Task DataConnectionDisposeAsyncTransaction([DataSources(false)] string context)
+		{
+			var tid = Thread.CurrentThread.ManagedThreadId;
+
+			using (var db = new DataConnection(context))
+			{
+				await using (db.BeginTransaction())
+				{
+					// perform synchonously to not mess with DisposeAsync testing
+					db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
+
+					if (tid == Thread.CurrentThread.ManagedThreadId)
+						Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
+				}
+			}
+		}
+
+		[Test]
 		public async Task DataConnectionCommitTransactionAsync([DataSources(false)] string context)
 		{
 			using (var db = new DataConnection(context))

@@ -126,28 +126,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				objectTree.Add(this, clone = new SqlBinaryExpression(
-					SystemType,
-					(ISqlExpression)Expr1.Clone(objectTree, doClone),
-					Operation,
-					(ISqlExpression)Expr2.Clone(objectTree, doClone),
-					Precedence));
-			}
-
-			return clone;
-		}
-
-		#endregion
-
 		#region IQueryElement Members
 
 		public QueryElementType ElementType => QueryElementType.SqlBinaryExpression;

@@ -16,7 +16,7 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-	using System.Diagnostics.CodeAnalysis;
+	using System.Runtime.InteropServices;
 	using System.Threading.Tasks;
 	using Model;
 
@@ -37,7 +37,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		static void TestType<T>(DataConnection connection, string dataTypeName, [DisallowNull] T value, string tableName = "AllTypes", bool convertToString = false)
+		static void TestType<T>(DataConnection connection, string dataTypeName, T value, string tableName = "AllTypes", bool convertToString = false)
+			where T : notnull
 		{
 			Assert.That(connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 1", dataTypeName, tableName)),
 				Is.EqualTo(connection.MappingSchema.GetDefaultValue(typeof(T))));
@@ -152,7 +153,7 @@ namespace Tests.DataProvider
 		public void TestNumerics([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			// culture region needed if tests run on system with non-dot decimal separator, e.g. nl-NL
-			using (new InvariantCultureRegion())
+			using (new InvariantCultureRegion(null))
 			using (var conn = new DataConnection(context))
 			{
 				TestSimple<bool>   (conn, true, DataType.Boolean);
@@ -212,15 +213,13 @@ namespace Tests.DataProvider
 		{
 			using (var conn = new DataConnection(context))
 			{
-				var cmd = conn.CreateCommand();
 				var value = -1.7900000000000002E+308;
 
 				// SELECT CAST(-1.7900000000000002E+308 as real)
-				cmd.CommandText = FormattableString.Invariant($"SELECT CAST({value:G17} as real)");
-				using (var rd = cmd.ExecuteReader())
+				using (var rd = conn.ExecuteReader(FormattableString.Invariant($"SELECT CAST({value:G17} as real)")))
 				{
-					rd.Read();
-					var valueFromDB = rd.GetDouble(0);
+					rd.Reader!.Read();
+					var valueFromDB = rd.Reader.GetDouble(0);
 
 					// -1.790000000000001E+308d != -1.7900000000000002E+308
 					Assert.AreEqual(value, valueFromDB);
@@ -598,7 +597,7 @@ namespace Tests.DataProvider
 				case ProviderName.SQLiteClassic:
 				case TestProvName.SQLiteClassicMiniProfilerMapped:
 				case TestProvName.SQLiteClassicMiniProfilerUnmapped:
-					expectedVersion = "3.32.1";
+					expectedVersion = "3.35.5";
 					break;
 				case ProviderName.SQLiteMS:
 #if NET472
@@ -611,11 +610,11 @@ namespace Tests.DataProvider
 					throw new InvalidOperationException();
 			}
 
-			using (var db  = new TestDataConnection(context))
-			using (var cmd = db.CreateCommand())
+			using (var db = new TestDataConnection(context))
+			using (var rd = db.ExecuteReader("select sqlite_version()"))
 			{
-				cmd.CommandText = "select sqlite_version();";
-				var version     = (string)cmd.ExecuteScalar()!;
+				rd.Reader!.Read();
+				var version = rd.Reader.GetString(0);
 
 				Assert.AreEqual(expectedVersion, version);
 			}

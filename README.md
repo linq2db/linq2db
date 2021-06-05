@@ -1,7 +1,7 @@
 ## LINQ to DB
 
 <a href="https://dotnetfoundation.org/projects/linq2db">
-<img align="right" alt=".NET Foundation Logo" src="https://github.com/dotnet/swag/blob/master/logo/dotnetfoundation_v4_horizontal.png" width="250px" ></a>
+<img align="right" alt=".NET Foundation Logo" src="https://raw.githubusercontent.com/dotnet-foundation/swag/master/logo/dotnetfoundation_v4_horizontal.png" width="250px" ></a>
 
 [![NuGet Version and Downloads count](https://buildstats.info/nuget/linq2db?includePreReleases=true)](https://www.nuget.org/profiles/LinqToDB) [![License](https://img.shields.io/github/license/linq2db/linq2db)](MIT-LICENSE.txt)
 
@@ -579,10 +579,10 @@ public class DbDataContext : DataConnection
     // here we tell linq2db how to access underlying ADO.NET classes of used provider
     // if you don't configure those mappings, linq2db will be unable to use provider-specific functionality
     // which could lead to loss or unavailability of some functionality when profiled connection enabled
-    MappingSchema.SetConvertExpression<ProfiledDbConnection,  IDbConnection> (db => db.WrappedConnection);
-    MappingSchema.SetConvertExpression<ProfiledDbDataReader,  IDataReader>   (db => db.WrappedReader);
-    MappingSchema.SetConvertExpression<ProfiledDbTransaction, IDbTransaction>(db => db.WrappedTransaction);
-    MappingSchema.SetConvertExpression<ProfiledDbCommand,     IDbCommand>    (db => db.InternalCommand);
+    MappingSchema.SetConvertExpression<ProfiledDbConnection,  DbConnection> (db => db.WrappedConnection);
+    MappingSchema.SetConvertExpression<ProfiledDbDataReader,  DbDataReader> (db => db.WrappedReader);
+    MappingSchema.SetConvertExpression<ProfiledDbTransaction, DbTransaction>(db => db.WrappedTransaction);
+    MappingSchema.SetConvertExpression<ProfiledDbCommand,     DbCommand>    (db => db.InternalCommand);
   }
 #else
   public DbDataContext() : base(GetDataProvider(), GetConnection()) { }
@@ -593,7 +593,7 @@ public class DbDataContext : DataConnection
      return new SqlServerDataProvider("", SqlServerVersion.v2012);
   }
 
-  private static IDbConnection GetConnection()
+  private static DbConnection GetConnection()
   {
      // create provider-specific connection instance. SqlConnection in our case
      var dbConnection = new SqlConnection(@"Server=.\SQL;Database=Northwind;Trusted_Connection=True;Enlist=False;");

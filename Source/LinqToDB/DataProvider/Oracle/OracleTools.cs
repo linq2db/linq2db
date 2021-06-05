@@ -6,6 +6,7 @@ using System.Reflection;
 
 namespace LinqToDB.DataProvider.Oracle
 {
+	using System.Data.Common;
 	using Common;
 	using Configuration;
 	using Data;
@@ -205,23 +206,25 @@ namespace LinqToDB.DataProvider.Oracle
 #endif
 		}
 
-		public static IDataProvider GetDataProvider(string? providerName = null, string? assemblyName = null)
+		public static IDataProvider GetDataProvider(string? providerName = null, string? assemblyName = null, OracleVersion? version = null)
 		{
+			version ??= DefaultVersion;
+
 #if NETFRAMEWORK
-			if (assemblyName == OracleProviderAdapter.NativeAssemblyName ) return GetVersionedDataProvider(DefaultVersion, false);
-			if (assemblyName == OracleProviderAdapter.ManagedAssemblyName) return GetVersionedDataProvider(DefaultVersion, true);
+			if (assemblyName == OracleProviderAdapter.NativeAssemblyName ) return GetVersionedDataProvider(version.Value, false);
+			if (assemblyName == OracleProviderAdapter.ManagedAssemblyName) return GetVersionedDataProvider(version.Value, true);
 
 			return providerName switch
 			{
-				ProviderName.OracleNative  => GetVersionedDataProvider(DefaultVersion, false),
-				ProviderName.OracleManaged => GetVersionedDataProvider(DefaultVersion, true),
+				ProviderName.OracleNative  => GetVersionedDataProvider(version.Value, false),
+				ProviderName.OracleManaged => GetVersionedDataProvider(version.Value, true),
 				_						   => 
 					DetectedProviderName == ProviderName.OracleNative
-					? GetVersionedDataProvider(DefaultVersion, false)
-					: GetVersionedDataProvider(DefaultVersion, true),
+					? GetVersionedDataProvider(version.Value, false)
+					: GetVersionedDataProvider(version.Value, true),
 			};
 #else
-			return GetVersionedDataProvider(DefaultVersion, true);
+			return GetVersionedDataProvider(version.Value, true);
 #endif
 		}
 
@@ -245,12 +248,12 @@ namespace LinqToDB.DataProvider.Oracle
 			return new DataConnection(GetDataProvider(providerName), connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection, string? providerName = null)
+		public static DataConnection CreateDataConnection(DbConnection connection, string? providerName = null)
 		{
 			return new DataConnection(GetDataProvider(providerName), connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction, string? providerName = null)
+		public static DataConnection CreateDataConnection(DbTransaction transaction, string? providerName = null)
 		{
 			return new DataConnection(GetDataProvider(providerName), transaction);
 		}
@@ -261,56 +264,14 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
 
-		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
-		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			this DataConnection          dataConnection,
-			IEnumerable<T>               source,
-			int                          maxBatchSize       = 1000,
-			Action<BulkCopyRowsCopied>?  rowsCopiedCallback = null)
-			where T : class
-		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.MultipleRows,
-					MaxBatchSize       = maxBatchSize,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
-		}
-
-		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
-		public static BulkCopyRowsCopied ProviderSpecificBulkCopy<T>(
-			DataConnection               dataConnection,
-			IEnumerable<T>               source,
-			int?                         maxBatchSize       = null,
-			int?                         bulkCopyTimeout    = null,
-			int                          notifyAfter        = 0,
-			Action<BulkCopyRowsCopied>?  rowsCopiedCallback = null)
-			where T : class
-		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.ProviderSpecific,
-					MaxBatchSize       = maxBatchSize,
-					BulkCopyTimeout    = bulkCopyTimeout,
-					NotifyAfter        = notifyAfter,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
-		}
-
 #endregion
 
 		public static AlternativeBulkCopy UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
 
-		[Obsolete("This field is not used by linq2db. Configure reader expressions on DataProvider directly")]
-		public static Func<IDataReader,int,decimal> DataReaderGetDecimal = (dr, i) => dr.GetDecimal(i);
-
 		/// <summary>
 		/// Gets or sets flag to tell LinqToDB to quote identifiers, if they contain lowercase letters.
 		/// Default value: <c>false</c>.
-		/// This flag is added for backward compatibility and will be removed later, so it is recommended to
-		/// leave it as <c>false</c> and fix mappings to use uppercase letters for non-quoted identifiers.
+		/// This flag is added for backward compatibility and not recommended for use with new applications.
 		/// </summary>
 		public static bool DontEscapeLowercaseIdentifiers { get; set; }
 	}

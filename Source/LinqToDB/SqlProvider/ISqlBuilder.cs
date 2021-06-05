@@ -5,6 +5,7 @@ using System.Text;
 
 namespace LinqToDB.SqlProvider
 {
+	using System.Data.Common;
 	using Mapping;
 	using SqlQuery;
 
@@ -15,6 +16,7 @@ namespace LinqToDB.SqlProvider
 
 		StringBuilder    ConvertTableName     (StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions);
 		StringBuilder    BuildTableName       (StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions);
+		StringBuilder    BuildDataType        (StringBuilder sb, SqlDataType dataType);
 		string?          GetTableServerName   (SqlTable table);
 		string?          GetTableDatabaseName (SqlTable table);
 		string?          GetTableSchemaName   (SqlTable table);
@@ -23,7 +25,7 @@ namespace LinqToDB.SqlProvider
 		StringBuilder    Convert              (StringBuilder sb, string value, ConvertType convertType);
 		ISqlExpression?  GetIdentityExpression(SqlTable table);
 
-		StringBuilder    PrintParameters      (StringBuilder sb, IEnumerable<IDbDataParameter>? parameters);
+		StringBuilder    PrintParameters      (StringBuilder sb, IEnumerable<DbParameter>? parameters);
 		string           ApplyQueryHints      (string sqlText, List<string> queryHints);
 
 		string           GetReserveSequenceValuesSql(int count, string sequenceName);

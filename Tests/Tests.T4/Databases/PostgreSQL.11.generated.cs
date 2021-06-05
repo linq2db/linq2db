@@ -50,6 +50,9 @@ namespace PostreSQL11DataContext
 		/// This is the Person table
 		/// </summary>
 		public ITable<Person>                         People                    { get { return this.GetTable<Person>(); } }
+		public ITable<SameName>                       SameNames                 { get { return this.GetTable<SameName>(); } }
+		public ITable<SameName1>                      SameName1                 { get { return this.GetTable<SameName1>(); } }
+		public ITable<SameName2>                      SameName2                 { get { return this.GetTable<SameName2>(); } }
 		public ITable<SequenceCustomNamingTest>       SequenceCustomNamingTests { get { return this.GetTable<SequenceCustomNamingTest>(); } }
 		public ITable<SequenceTest1>                  SequenceTest1             { get { return this.GetTable<SequenceTest1>(); } }
 		public ITable<SequenceTest2>                  SequenceTest2             { get { return this.GetTable<SequenceTest2>(); } }
@@ -415,6 +418,62 @@ namespace PostreSQL11DataContext
 		#endregion
 	}
 
+	[Table(Schema="public", Name="same_name")]
+	public partial class SameName
+	{
+		[Column("id", DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), PrimaryKey, NotNull] public int Id { get; set; } // integer
+
+		#region Associations
+
+		/// <summary>
+		/// same_name_BackReference
+		/// </summary>
+		[Association(ThisKey="Id", OtherKey="SameName", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		public IEnumerable<SameName2> SameNameBackReferences { get; set; } = null!;
+
+		/// <summary>
+		/// same_name_BackReference
+		/// </summary>
+		[Association(ThisKey="Id", OtherKey="SameName", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		public IEnumerable<SameName1> Samenames { get; set; } = null!;
+
+		#endregion
+	}
+
+	[Table(Schema="public", Name="same_name1")]
+	public partial class SameName1
+	{
+		[Column("id",        DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), PrimaryKey,  NotNull] public int  Id       { get; set; } // integer
+		[Column("same_name", DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0),    Nullable         ] public int? SameName { get; set; } // integer
+
+		#region Associations
+
+		/// <summary>
+		/// same_name
+		/// </summary>
+		[Association(ThisKey="SameName", OtherKey="Id", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="same_name", BackReferenceName="Samenames")]
+		public SameName? Samename { get; set; }
+
+		#endregion
+	}
+
+	[Table(Schema="public", Name="same_name2")]
+	public partial class SameName2
+	{
+		[Column("id",        DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), PrimaryKey,  NotNull] public int  Id       { get; set; } // integer
+		[Column("same_name", DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0),    Nullable         ] public int? SameName { get; set; } // integer
+
+		#region Associations
+
+		/// <summary>
+		/// same_name
+		/// </summary>
+		[Association(ThisKey="SameName", OtherKey="Id", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="same_name", BackReferenceName="SameNameBackReferences")]
+		public SameName? Samename { get; set; }
+
+		#endregion
+	}
+
 	[Table(Schema="public", Name="SequenceCustomNamingTest")]
 	public partial class SequenceCustomNamingTest
 	{
@@ -694,6 +753,24 @@ namespace PostreSQL11DataContext
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
+		}
+
+		public static SameName? Find(this ITable<SameName> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
+		public static SameName1? Find(this ITable<SameName1> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
+		public static SameName2? Find(this ITable<SameName2> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
 		}
 
 		public static SequenceCustomNamingTest? Find(this ITable<SequenceCustomNamingTest> table, int ID)

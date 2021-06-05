@@ -24,6 +24,18 @@
 		{
 		}
 
+		protected override bool CanSkipRootAliases(SqlStatement statement)
+		{
+			if (statement.SelectQuery != null)
+			{
+				// https://github.com/linq2db/linq2db/issues/2785
+				// https://stackoverflow.com/questions/57787579/
+				return statement.SelectQuery.Select.TakeValue == null && statement.SelectQuery.Select.SkipValue == null;
+			}
+
+			return true;
+		}
+
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
 			return new Oracle12SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags);

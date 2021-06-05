@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Informix
 {
+	using System.Data.Common;
 	using Common;
 	using Data;
 	using LinqToDB.Linq.Internal;
@@ -38,13 +39,13 @@ namespace LinqToDB.DataProvider.Informix
 			SetCharFieldToType<char>("CHAR",  DataTools.GetCharExpression);
 			SetCharFieldToType<char>("NCHAR", DataTools.GetCharExpression);
 
-			SetProviderField<IDataReader,float,  float  >((r,i) => GetFloat  (r, i));
-			SetProviderField<IDataReader,double, double >((r,i) => GetDouble (r, i));
-			SetProviderField<IDataReader,decimal,decimal>((r,i) => GetDecimal(r, i));
+			SetProviderField<DbDataReader, float,  float  >((r,i) => GetFloat  (r, i));
+			SetProviderField<DbDataReader, double, double >((r,i) => GetDouble (r, i));
+			SetProviderField<DbDataReader, decimal,decimal>((r,i) => GetDecimal(r, i));
 
-			SetField<IDataReader, float  >((r, i) => GetFloat  (r, i));
-			SetField<IDataReader, double >((r, i) => GetDouble (r, i));
-			SetField<IDataReader, decimal>((r, i) => GetDecimal(r, i));
+			SetField<DbDataReader, float  >((r, i) => GetFloat  (r, i));
+			SetField<DbDataReader, double >((r, i) => GetDouble (r, i));
+			SetField<DbDataReader, decimal>((r, i) => GetDecimal(r, i));
 
 			_sqlOptimizer = new InformixSqlOptimizer(SqlProviderFlags);
 
@@ -58,30 +59,27 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 		[ColumnReader(1)]
-		static float GetFloat(IDataReader dr, int idx)
+		static float GetFloat(DbDataReader dr, int idx)
 		{
-			using (new InvariantCultureRegion())
+			using (new InvariantCultureRegion(null))
 				return dr.GetFloat(idx);
 		}
 
 		[ColumnReader(1)]
-		static double GetDouble(IDataReader dr, int idx)
+		static double GetDouble(DbDataReader dr, int idx)
 		{
-			using (new InvariantCultureRegion())
+			using (new InvariantCultureRegion(null))
 				return dr.GetDouble(idx);
 		}
 
 		[ColumnReader(1)]
-		static decimal GetDecimal(IDataReader dr, int idx)
+		static decimal GetDecimal(DbDataReader dr, int idx)
 		{
-			using (new InvariantCultureRegion())
+			using (new InvariantCultureRegion(null))
 				return dr.GetDecimal(idx);
 		}
 
-		public override IDisposable ExecuteScope(DataConnection dataConnection)
-		{
-			return new InvariantCultureRegion();
-		}
+		public override IDisposable ExecuteScope(DataConnection dataConnection) => new InvariantCultureRegion(base.ExecuteScope(dataConnection));
 
 		public override TableOptions SupportedTableOptions =>
 			TableOptions.IsTemporary               |
@@ -107,7 +105,7 @@ namespace LinqToDB.DataProvider.Informix
 			return new InformixSchemaProvider(this);
 		}
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			if (value is TimeSpan ts)
 			{
@@ -139,7 +137,7 @@ namespace LinqToDB.DataProvider.Informix
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;
@@ -230,7 +228,7 @@ namespace LinqToDB.DataProvider.Informix
 				cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

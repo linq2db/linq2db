@@ -57,8 +57,7 @@ namespace LinqToDB.Tools.EntityServices
 			return (EntityMap<T>)GetOrAddEntityMap(typeof(T));
 		}
 
-		[return: MaybeNull]
-		public T GetEntity<T>(object key)
+		public T? GetEntity<T>(object key)
 			where T : class, new()
 		{
 			return GetEntityMap<T>().GetEntity(_dataContext, key);

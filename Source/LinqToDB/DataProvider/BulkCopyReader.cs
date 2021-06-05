@@ -5,22 +5,28 @@ using System.Data;
 using System.Data.Common;
 using System.Globalization;
 using System.Linq;
+#if NATIVE_ASYNC
+using System.Threading;
+#endif
 
 namespace LinqToDB.DataProvider
 {
+	using System.Diagnostics.CodeAnalysis;
+	using System.Threading.Tasks;
 	using Common;
+	using LinqToDB.Async;
 	using LinqToDB.Data;
 	using Mapping;
-	using System.Threading;
-	using System.Threading.Tasks;
 
-	public class BulkCopyReader<T> : BulkCopyReader
-#if !NETFRAMEWORK
-		, IAsyncDisposable
+	public class BulkCopyReader<T> : BulkCopyReader,
+#if NATIVE_ASYNC
+		IAsyncDisposable
+#else
+		Async.IAsyncDisposable
 #endif
 	{
 		readonly IEnumerator<T>?      _enumerator;
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		readonly IAsyncEnumerator<T>? _asyncEnumerator;
 #endif
 
@@ -30,7 +36,7 @@ namespace LinqToDB.DataProvider
 			_enumerator = collection.GetEnumerator();
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		public BulkCopyReader(DataConnection dataConnection, List<ColumnDescriptor> columns, IAsyncEnumerable<T> collection, CancellationToken cancellationToken)
 			: base(dataConnection, columns)
 		{
@@ -42,12 +48,8 @@ namespace LinqToDB.DataProvider
 			if (_enumerator != null)
 				return _enumerator.MoveNext();
 			
-			var result = _asyncEnumerator!.MoveNextAsync();
-			return result.IsCompleted ? result.Result : result.AsTask().GetAwaiter().GetResult();
+			return SafeAwaiter.Run(() => _asyncEnumerator!.MoveNextAsync());
 		}
-
-		protected override ValueTask<bool> MoveNextAsync()
-			=> _enumerator != null ? new ValueTask<bool>(_enumerator.MoveNext()) : _asyncEnumerator!.MoveNextAsync();
 
 		protected override object Current
 			=> (_enumerator != null ? _enumerator.Current : _asyncEnumerator!.Current)!;
@@ -59,22 +61,26 @@ namespace LinqToDB.DataProvider
 			=> _enumerator!.Current!;
 #endif
 
-		#region Implementation of IDisposable
+#if NATIVE_ASYNC
+		protected override ValueTask<bool> MoveNextAsync()
+			=> _enumerator != null ? new ValueTask<bool>(_enumerator.MoveNext()) : _asyncEnumerator!.MoveNextAsync();
+#endif
 
-#if !NETFRAMEWORK
+#region Implementation of IDisposable
+
+#if NATIVE_ASYNC
 #pragma warning disable CA2215 // CA2215: Dispose methods should call base class dispose
 		protected override void Dispose(bool disposing)
 #pragma warning restore CA2215 // CA2215: Dispose methods should call base class dispose
 		{
 			if (disposing && _asyncEnumerator != null)
 			{
-				var result = _asyncEnumerator.DisposeAsync();
-
-				if (!result.IsCompleted)
-					result.AsTask().GetAwaiter().GetResult();
+				SafeAwaiter.Run(() => _asyncEnumerator.DisposeAsync());
 			}
 		}
+#endif
 
+#if NATIVE_ASYNC
 #if NETSTANDARD2_1PLUS
 #pragma warning disable CA2215 // CA2215: Dispose methods should call base class dispose
 		public override ValueTask DisposeAsync()
@@ -83,27 +89,32 @@ namespace LinqToDB.DataProvider
 		public ValueTask DisposeAsync()
 #endif
 		{
-			return _asyncEnumerator?.DisposeAsync() ?? new ValueTask(Task.CompletedTask);
+			return _asyncEnumerator?.DisposeAsync() ?? default;
 		}
-
+#else
+		public Task DisposeAsync()
+		{
+			Dispose(true);
+			return TaskEx.CompletedTask;
+		}
 #endif
 
-		#endregion
+#endregion
 
 	}
 
-	public abstract class BulkCopyReader : DbDataReader, IDataReader, IDataRecord
+	public abstract class BulkCopyReader : DbDataReader
 	{
 		public int Count;
 
 		readonly DataConnection                   _dataConnection;
 		readonly DbDataType[]                     _columnTypes;
 		readonly List<ColumnDescriptor>           _columns;
-		readonly Parameter                        _valueConverter = new Parameter();
+		readonly Parameter                        _valueConverter = new ();
 		readonly IReadOnlyDictionary<string, int> _ordinals;
 
 		protected abstract bool MoveNext();
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		protected abstract ValueTask<bool> MoveNextAsync();
 #endif
 		protected abstract object Current { get; }
@@ -116,18 +127,21 @@ namespace LinqToDB.DataProvider
 			_ordinals       = _columns.Select((c, i) => new { c, i }).ToDictionary(_ => _.c.ColumnName, _ => _.i);
 		}
 
-		public class Parameter : IDbDataParameter
+		public class Parameter : DbParameter
 		{
-			public DbType             DbType        { get; set; }
-			public ParameterDirection Direction     { get; set; }
-			public bool               IsNullable    { get { return Value == null || Value is DBNull; } }
-			public string?            ParameterName { get; set; }
-			public string?            SourceColumn  { get; set; }
-			public DataRowVersion     SourceVersion { get; set; }
-			public object?            Value         { get; set; }
-			public byte               Precision     { get; set; }
-			public byte               Scale         { get; set; }
-			public int                Size          { get; set; }
+			public override DbType             DbType                  { get; set; }
+			public override ParameterDirection Direction               { get; set; }
+			public override bool               IsNullable              { get => Value == null || Value is DBNull; set { } }
+			[AllowNull]
+			public override string             ParameterName           { get; set; }
+			public override int                Size                    { get; set; }
+			[AllowNull]
+			public override string             SourceColumn            { get; set; }
+			public override DataRowVersion     SourceVersion           { get; set; }
+			public override bool               SourceColumnNullMapping { get; set; }
+			public override object?            Value                   { get; set; }
+
+			public override void ResetDbType() { }
 		}
 
 		#region Implementation of IDataRecord
@@ -197,9 +211,9 @@ namespace LinqToDB.DataProvider
 		public override object this[int i]       => throw new NotImplementedException();
 		public override object this[string name] => throw new NotImplementedException();
 
-		#endregion
+#endregion
 
-		#region Implementation of IDataReader
+#region Implementation of IDataReader
 
 		public override void Close()
 		{
@@ -277,10 +291,10 @@ namespace LinqToDB.DataProvider
 			return b;
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		public override async Task<bool> ReadAsync(CancellationToken cancellationToken)
 		{
-			var b = await MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			var b = await MoveNextAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			if (b)
 				Count++;
@@ -295,7 +309,7 @@ namespace LinqToDB.DataProvider
 
 		public override int RecordsAffected => throw new NotImplementedException();
 
-		#endregion
+#endregion
 
 		public override IEnumerator GetEnumerator() => throw new NotImplementedException();
 

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,6 +9,7 @@ namespace LinqToDB.Linq
 	static partial class QueryRunner
 	{
 		public static class CreateTable<T>
+			where T : notnull
 		{
 			public static ITable<T> Query(
 				IDataContext    dataContext,

@@ -6,14 +6,16 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using System.Threading.Tasks;
 	using LinqToDB;
+	using LinqToDB.Tools;
 	using Model;
 
 	[TestFixture]
 	public class SetTests : TestBase
 	{
 		[Test]
-		public void Except1([DataSources(ProviderName.SqlServer2000)] string context)
+		public void Except1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -22,7 +24,7 @@ namespace Tests.Linq
 		}
 
 		//[Test]
-		public void Except2([DataSources(ProviderName.SqlServer2000)] string context)
+		public void Except2([DataSources] string context)
 		{
 			var ids = new[] { 1, 2 };
 
@@ -33,7 +35,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Intersect([DataSources(ProviderName.SqlServer2000)] string context)
+		public void Intersect([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -384,6 +386,37 @@ namespace Tests.Linq
 			{
 				GetData(db, new List<int?> { 2 });
 				GetData(db, new List<int?> { 3 });
+			}
+		}
+
+		[Test]
+		public void Issue3017([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		{
+			using var scope = new DisableBaseline("Multithreading");
+
+			var tasks = new List<Task>();
+
+			for (var i = 0; i < 30; i++)
+			{
+				var local = i;
+				tasks.Add(Task.Run(() => Issue3017Action(context)));
+			}
+
+			Task.WaitAll(tasks.ToArray());
+
+			foreach (var task in tasks)
+				Assert.False(task.IsFaulted);
+		}
+
+		private async Task Issue3017Action(string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var targets = db.Person.ToArray();
+
+				var keys = targets.Select(r => new { r.ID, r.FirstName, r.LastName });
+
+				await db.Person.Where(r => new { r.ID, r.FirstName, r.LastName }.In(keys)).ToListAsync();
 			}
 		}
 	}

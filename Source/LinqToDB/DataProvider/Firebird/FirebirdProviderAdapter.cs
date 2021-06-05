@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Data;
-using System.Text;
+using System.Data.Common;
 
 namespace LinqToDB.DataProvider.Firebird
 {
@@ -11,11 +11,12 @@ namespace LinqToDB.DataProvider.Firebird
 
 	public class FirebirdProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _syncRoot = new object();
+		private static readonly object _syncRoot = new ();
 		private static FirebirdProviderAdapter? _instance;
 
 		public const string AssemblyName    = "FirebirdSql.Data.FirebirdClient";
 		public const string ClientNamespace = "FirebirdSql.Data.FirebirdClient";
+		public const string TypesNamespace  = "FirebirdSql.Data.Types";
 
 		private FirebirdProviderAdapter(
 			Type connectionType,
@@ -23,9 +24,13 @@ namespace LinqToDB.DataProvider.Firebird
 			Type parameterType,
 			Type commandType,
 			Type transactionType,
-			Func<IDbDataParameter, FbDbType> dbTypeGetter,
-			Action clearAllPulls,
-			MappingSchema mappingSchema)
+			Type?                              fbDecFloatType,
+			Type?                              fbZonedDateTimeType,
+			Type?                              fbZonedTimeType,
+			MappingSchema?                     mappingSchema,
+			Action<DbParameter, FbDbType>     dbTypeSetter,
+			Func<DbParameter, FbDbType>        dbTypeGetter,
+			Action clearAllPulls)
 		{
 			ConnectionType  = connectionType;
 			DataReaderType  = dataReaderType;
@@ -33,10 +38,14 @@ namespace LinqToDB.DataProvider.Firebird
 			CommandType     = commandType;
 			TransactionType = transactionType;
 
+			FbDecFloatType      = fbDecFloatType;
+			FbZonedDateTimeType = fbZonedDateTimeType;
+			FbZonedTimeType     = fbZonedTimeType;
+			MappingSchema       = mappingSchema;
+
+			SetDbType = dbTypeSetter;
 			GetDbType     = dbTypeGetter;
 			ClearAllPools = clearAllPulls;
-
-			MappingSchema = mappingSchema;
 		}
 
 		public Type ConnectionType  { get; }
@@ -45,10 +54,21 @@ namespace LinqToDB.DataProvider.Firebird
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
 
-		public Func<IDbDataParameter, FbDbType> GetDbType { get; }
-		public Action ClearAllPools { get; }
+		/// <summary>
+		/// FB client 7.10.0+.
+		/// </summary>
+		public Type? FbDecFloatType      { get; }
+		public Type? FbZonedDateTimeType { get; }
+		public Type? FbZonedTimeType     { get; }
 
-		public MappingSchema MappingSchema { get; }
+		public string? ProviderTypesNamespace => FbDecFloatType != null || FbZonedDateTimeType != null || FbZonedTimeType != null ? TypesNamespace : null;
+
+		public MappingSchema? MappingSchema { get; }
+
+		public Action<DbParameter, FbDbType> SetDbType { get; }
+		public Func<DbParameter, FbDbType> GetDbType { get; }
+
+		public Action ClearAllPools { get; }
 
 		public static FirebirdProviderAdapter GetInstance()
 		{
@@ -56,7 +76,7 @@ namespace LinqToDB.DataProvider.Firebird
 				lock (_syncRoot)
 					if (_instance == null)
 					{
-						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, null);
+						var assembly = Tools.TryLoadAssembly(AssemblyName, null);
 						if (assembly == null)
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 
@@ -67,32 +87,83 @@ namespace LinqToDB.DataProvider.Firebird
 						var transactionType = assembly.GetType($"{ClientNamespace}.FbTransaction", true)!;
 						var dbType          = assembly.GetType($"{ClientNamespace}.FbDbType"     , true)!;
 
+						var fbDecFloatType  = assembly.GetType($"{TypesNamespace}.FbDecFloat"       , false);
+						var fbZonedDateTime = assembly.GetType($"{TypesNamespace}.FbZonedDateTime"  , false);
+						var fbZonedTimeType = assembly.GetType($"{TypesNamespace}.FbZonedTime"      , false);
+						var decimalTypeType = assembly.GetType("FirebirdSql.Data.Common.DecimalType", false)!;
+
 						var typeMapper = new TypeMapper();
 
 						typeMapper.RegisterTypeWrapper<FbConnection>(connectionType);
 						typeMapper.RegisterTypeWrapper<FbParameter>(parameterType);
 						typeMapper.RegisterTypeWrapper<FbDbType>(dbType);
 
+						MappingSchema? mappingSchema = new MappingSchema();
+
+						// we don't provide default mappings to non-provider types
+						// as it looks like there is no suitable .net types
+						// such mappings could be added by user manually
+						if (fbDecFloatType != null)
+						{
+							typeMapper.RegisterTypeWrapper<FbDecFloat>(fbDecFloatType);
+							mappingSchema ??= new MappingSchema();
+
+							mappingSchema.SetDataType(fbDecFloatType, new SqlDataType(DataType.DecFloat, fbDecFloatType, "DECFLOAT"));
+							// we don't register literal generation for decfloat as it looks like special values (inf, (s)nan are not supported in literals)
+						}
+						if (fbZonedDateTime != null)
+						{
+							typeMapper.RegisterTypeWrapper<FbZonedDateTime>(fbZonedDateTime);
+							mappingSchema ??= new MappingSchema();
+							mappingSchema.SetDataType(fbZonedDateTime, new SqlDataType(DataType.DateTimeOffset, fbZonedDateTime, "TIMESPAN WITH TIME ZONE"));
+						}
+						if (fbZonedTimeType != null)
+						{
+							typeMapper.RegisterTypeWrapper<FbZonedTime>(fbZonedTimeType);
+							mappingSchema ??= new MappingSchema();
+							mappingSchema.SetDataType(fbZonedTimeType, new SqlDataType(DataType.TimeTZ, fbZonedTimeType, "TIME WITH TIME ZONE"));
+						}
+
 						typeMapper.FinalizeMappings();
 
-						var typeGetter    = typeMapper.Type<FbParameter>().Member(p => p.FbDbType).BuildGetter<IDbDataParameter>();
+						var dbTypeBuilder = typeMapper.Type<FbParameter>().Member(p => p.FbDbType);
 						var clearAllPools = typeMapper.BuildAction(typeMapper.MapActionLambda(() => FbConnection.ClearAllPools()));
-						var useLegacyGuidEncoding = assembly.GetName().Version < new Version(6, 0, 0, 0);						
-
+						var useLegacyGuidEncoding = assembly.GetName().Version < new Version(6, 0, 0, 0);
+TODO
 						_instance = new FirebirdProviderAdapter(
 							connectionType,
 							dataReaderType,
 							parameterType,
 							commandType,
 							transactionType,
-							typeGetter,
-							clearAllPools, FirebirdMappingSchema.GetMappingSchema(useLegacyGuidEncoding));
+							fbDecFloatType,
+							fbZonedDateTime,
+							fbZonedTimeType,
+							mappingSchema,
+							dbTypeBuilder.BuildSetter<IDbDataParameter>(),
+							dbTypeBuilder.BuildGetter<IDbDataParameter>(),
+							clearAllPools);
 					}
 
 			return _instance;
 		}
 
 		#region Wrappers
+		[Wrapper]
+		private class FbDecFloat
+		{
+		}
+
+		[Wrapper]
+		private class FbZonedDateTime
+		{
+		}
+
+		[Wrapper]
+		private class FbZonedTime
+		{
+		}
+
 		[Wrapper]
 		private class FbConnection
 		{
@@ -124,7 +195,16 @@ namespace LinqToDB.DataProvider.Firebird
 			Text      = 13,
 			Time      = 14,
 			TimeStamp = 15,
-			VarChar   = 16
+			VarChar       = 16,
+
+			// new in 7.10.0
+			TimeStampTZ   = 17,
+			TimeStampTZEx = 18,
+			TimeTZ        = 19,
+			TimeTZEx      = 20,
+			Dec16         = 21,
+			Dec34         = 22,
+			Int128        = 23,
 		}
 		#endregion
 	}

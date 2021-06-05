@@ -12,15 +12,9 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
+		
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
-	  <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="1.1.1" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="1.1.2" />
-	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-	  <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.11" />
-	  <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
-	</ItemGroup>
 </Project>

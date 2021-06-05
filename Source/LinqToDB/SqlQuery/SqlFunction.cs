@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -54,7 +53,7 @@ namespace LinqToDB.SqlQuery
 
 		public bool DoNotOptimize { get; set; }
 
-		public static SqlFunction CreateCount (Type type, ISqlTableSource table) { return new SqlFunction(type, "Count", true, new SqlExpression("*")); }
+		public static SqlFunction CreateCount (Type type, ISqlTableSource table) { return new SqlFunction(type, "Count", true, new SqlExpression("*", new SqlValue(table.SourceID))); }
 
 		public static SqlFunction CreateAll   (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "ALL",    false, SqlQuery.Precedence.Comparison, subQuery); }
 		public static SqlFunction CreateSome  (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "SOME",   false, SqlQuery.Precedence.Comparison, subQuery); }
@@ -106,28 +105,7 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				objectTree.Add(this, clone = new SqlFunction(
-					SystemType,
-					Name,
-					IsAggregate,
-					Precedence,
-					Parameters.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray())
-				{
-					CanBeNull = CanBeNull, DoNotOptimize = DoNotOptimize
-				});
-			}
-
-			return clone;
-		}
+		#region Equals Members
 
 		int? _hashCode;
 
@@ -191,8 +169,5 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
-
-
-
 	}
 }

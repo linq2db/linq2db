@@ -138,6 +138,7 @@ namespace LinqToDB.Tools
 		public static IEqualityComparer<T> GetEqualityComparer<T>(
 			this ITable<T> table,
 			[InstantHandle] Func<ColumnDescriptor,bool> columnPredicate)
+			where T : notnull
 		{
 			if (table           == null) throw new ArgumentNullException(nameof(table));
 			if (columnPredicate == null) throw new ArgumentNullException(nameof(columnPredicate));
@@ -154,6 +155,7 @@ namespace LinqToDB.Tools
 		/// <typeparam name="T">The type of entity to compare.</typeparam>
 		[Pure]
 		public static IEqualityComparer<T> GetEntityEqualityComparer<T>(this ITable<T> table)
+			where T : notnull
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
@@ -169,6 +171,7 @@ namespace LinqToDB.Tools
 		/// <typeparam name="T">The type of entity to compare.</typeparam>
 		[Pure]
 		public static IEqualityComparer<T> GetKeyEqualityComparer<T>(this ITable<T> table)
+			where T : notnull
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 

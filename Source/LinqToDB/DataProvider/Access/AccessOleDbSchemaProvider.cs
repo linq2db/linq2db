@@ -66,7 +66,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var tables = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Tables"));
+			var tables = ExecuteOnNewConnection(dataConnection, cn => cn.Connection.GetSchema("Tables"));
 
 			return
 			(
@@ -93,7 +93,7 @@ namespace LinqToDB.DataProvider.Access
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var idxs = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Indexes"));
+			var idxs = ExecuteOnNewConnection(dataConnection, cn => cn.Connection.GetSchema("Indexes"));
 
 			return
 			(
@@ -111,7 +111,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var cs = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Columns"));
+			var cs = ExecuteOnNewConnection(dataConnection, cn => cn.Connection.GetSchema("Columns"));
 
 			return
 			(
@@ -160,7 +160,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var ps = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Procedures"));
+			var ps = ExecuteOnNewConnection(dataConnection, cn => cn.Connection.GetSchema("Procedures"));
 
 			return
 			(

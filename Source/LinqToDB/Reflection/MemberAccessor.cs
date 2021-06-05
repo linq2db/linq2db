@@ -6,7 +6,6 @@ using System.Linq;
 
 namespace LinqToDB.Reflection
 {
-	using System.Diagnostics.CodeAnalysis;
 	using Common;
 	using Expressions;
 	using Extensions;
@@ -309,7 +308,6 @@ namespace LinqToDB.Reflection
 		static T ThrowOnDynamicStoreMissing<T>()
 		{
 			throw new ArgumentException("Tried getting dynamic column value, without setting dynamic column store on type.");
-
 		}
 
 		#region Public Properties
@@ -334,8 +332,7 @@ namespace LinqToDB.Reflection
 
 		#region Public Methods
 
-		[return: MaybeNull]
-		public T GetAttribute<T>() where T : Attribute
+		public T? GetAttribute<T>() where T : Attribute
 		{
 			var attrs = MemberInfo.GetCustomAttributes(typeof(T), true);
 

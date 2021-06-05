@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,27 +12,10 @@ namespace LinqToDB
 	using LinqToDB.Async;
 	using System.Collections.Generic;
 
+	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
+
 	public static partial class LinqExtensions
 	{
-		#region MethodInfo
-
-		internal static readonly MethodInfo MergeMethodInfo                           = MemberHelper.MethodOf(() => Merge<int>(null!, null!))                                            .GetGenericMethodDefinition();
-		internal static readonly MethodInfo MergeIntoMethodInfo                       = MemberHelper.MethodOf(() => MergeInto<int, int>(null!, null!, null!))                            .GetGenericMethodDefinition();
-		internal static readonly MethodInfo UsingMethodInfo1                          = MemberHelper.MethodOf(() => Using<int, int>(null!, (IQueryable<int>)null!))                      .GetGenericMethodDefinition();
-		internal static readonly MethodInfo UsingMethodInfo2                          = MemberHelper.MethodOf(() => Using<int, int>(null!, (IEnumerable<int>)null!))                     .GetGenericMethodDefinition();
-		internal static readonly MethodInfo UsingTargetMethodInfo                     = MemberHelper.MethodOf(() => UsingTarget<int>(null!))                                             .GetGenericMethodDefinition();
-		internal static readonly MethodInfo OnMethodInfo1                             = MemberHelper.MethodOf(() => On<int, int, int>(null!, null!, null!))                              .GetGenericMethodDefinition();
-		internal static readonly MethodInfo OnMethodInfo2                             = MemberHelper.MethodOf(() => On<int, int>(null!, null!))                                          .GetGenericMethodDefinition();
-		internal static readonly MethodInfo OnTargetKeyMethodInfo                     = MemberHelper.MethodOf(() => OnTargetKey<int>(null!))                                             .GetGenericMethodDefinition();
-		internal static readonly MethodInfo InsertWhenNotMatchedAndMethodInfo         = MemberHelper.MethodOf(() => InsertWhenNotMatchedAnd<int, int>(null!, null!, null!))              .GetGenericMethodDefinition();
-		internal static readonly MethodInfo UpdateWhenMatchedAndMethodInfo            = MemberHelper.MethodOf(() => UpdateWhenMatchedAnd<int, int>(null!, null!, null!))                 .GetGenericMethodDefinition();
-		internal static readonly MethodInfo UpdateWhenMatchedAndThenDeleteMethodInfo  = MemberHelper.MethodOf(() => UpdateWhenMatchedAndThenDelete<int, int>(null!, null!, null!, null!)).GetGenericMethodDefinition();
-		internal static readonly MethodInfo DeleteWhenMatchedAndMethodInfo            = MemberHelper.MethodOf(() => DeleteWhenMatchedAnd<int, int>(null!, null!))                        .GetGenericMethodDefinition();
-		internal static readonly MethodInfo UpdateWhenNotMatchedBySourceAndMethodInfo = MemberHelper.MethodOf(() => UpdateWhenNotMatchedBySourceAnd<int, int>(null!, null!, null!))      .GetGenericMethodDefinition();
-		internal static readonly MethodInfo DeleteWhenNotMatchedBySourceAndMethodInfo = MemberHelper.MethodOf(() => DeleteWhenNotMatchedBySourceAnd<int, int>(null!, null!))             .GetGenericMethodDefinition();
-		internal static readonly MethodInfo ExecuteMergeMethodInfo                    = MemberHelper.MethodOf(() => Merge<int, int>(null!))                                              .GetGenericMethodDefinition();
-
-		#endregion
 
 		private class MergeQuery<TTarget, TSource> :
 			IMergeableUsing<TTarget>,
@@ -50,6 +32,28 @@ namespace LinqToDB
 		}
 
 		#region source/target configuration
+
+		/// <summary>
+		/// Starts merge operation definition from a subquery. If the query is not a table or a cte, it will be converted into a cte as the merge target.
+		/// </summary>
+		/// <typeparam name="TTarget">Target record type.</typeparam>
+		/// <param name="target">Target table.</param>
+		/// <returns>Returns merge command builder, that contains only target.</returns>
+		[Pure, LinqTunnel]
+		public static IMergeableUsing<TTarget> Merge<TTarget>(
+			 this IQueryable<TTarget> target)
+		{
+			if (target == null) throw new ArgumentNullException(nameof(target));
+
+			var query = target.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					MergeMethodInfo2.MakeGenericMethod(typeof(TTarget)),
+					target.Expression));
+
+			return new MergeQuery<TTarget, TTarget>(query);
+		}
+
 		/// <summary>
 		/// Starts merge operation definition from target table.
 		/// </summary>
@@ -59,13 +63,14 @@ namespace LinqToDB
 		[Pure, LinqTunnel]
 		public static IMergeableUsing<TTarget> Merge<TTarget>(
 			 this ITable<TTarget> target)
+			where TTarget : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 
 			var query = target.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					MergeMethodInfo.MakeGenericMethod(typeof(TTarget)),
+					MergeMethodInfo1.MakeGenericMethod(typeof(TTarget)),
 					target.Expression, Expression.Constant(null, typeof(string))));
 
 			return new MergeQuery<TTarget, TTarget>(query);
@@ -82,6 +87,7 @@ namespace LinqToDB
 		public static IMergeableUsing<TTarget> Merge<TTarget>(
 			                    this ITable<TTarget> target,
 			[SqlQueryDependent]      string          hint)
+			where TTarget : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (hint   == null) throw new ArgumentNullException(nameof(hint));
@@ -89,10 +95,35 @@ namespace LinqToDB
 			var query = target.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					MergeMethodInfo.MakeGenericMethod(typeof(TTarget)),
+					MergeMethodInfo1.MakeGenericMethod(typeof(TTarget)),
 					target.Expression, Expression.Constant(hint)));
 
 			return new MergeQuery<TTarget, TTarget>(query);
+		}
+
+		/// <summary>
+		/// Starts merge operation definition from source query.
+		/// </summary>
+		/// <typeparam name="TTarget">Target record type.</typeparam>
+		/// <typeparam name="TSource">Source record type.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <param name="target">Target query. If the query is not a table or a cte, it will be converted into a cte as the merge target.</param>
+		/// <returns>Returns merge command builder with source and target set.</returns>
+		[Pure, LinqTunnel]
+		public static IMergeableOn<TTarget, TSource> MergeInto<TTarget, TSource>(
+			 this IQueryable<TSource> source,
+			      IQueryable<TTarget> target)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+
+			var query = target.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					MergeIntoMethodInfo2.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					source.Expression, target.Expression));
+
+			return new MergeQuery<TTarget, TSource>(query);
 		}
 
 		/// <summary>
@@ -107,6 +138,7 @@ namespace LinqToDB
 		public static IMergeableOn<TTarget, TSource> MergeInto<TTarget, TSource>(
 			 this IQueryable<TSource> source,
 			      ITable<TTarget>     target)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -114,7 +146,7 @@ namespace LinqToDB
 			var query = target.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					MergeIntoMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					MergeIntoMethodInfo1.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
 					source.Expression, target.Expression, Expression.Constant(null, typeof(string))));
 
 			return new MergeQuery<TTarget, TSource>(query);
@@ -134,6 +166,7 @@ namespace LinqToDB
 			                    this IQueryable<TSource> source,
 			                         ITable<TTarget>     target,
 			[SqlQueryDependent]      string              hint)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -142,7 +175,7 @@ namespace LinqToDB
 			var query = target.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
-					MergeIntoMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					MergeIntoMethodInfo1.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
 					source.Expression, target.Expression, Expression.Constant(hint)));
 
 			return new MergeQuery<TTarget, TSource>(query);

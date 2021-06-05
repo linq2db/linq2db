@@ -7,4 +7,3 @@
 [assembly: AssemblyProduct("UnitTests.Linq")]
 [assembly: AssemblyCopyright("\xA9 2002-2021 www.LinqToDB.net")]
 [assembly: AssemblyCulture("")]
-//[assembly: System.Security.AllowPartiallyTrustedCallers]

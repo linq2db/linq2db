@@ -6,6 +6,7 @@
 		<RootNamespace>LinqToDB</RootNamespace>
 
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.xml</DocumentationFile>
+		<TargetFrameworks>net472;net45;net46;netstandard2.0;netcoreapp2.1;netstandard2.1;netcoreapp3.1</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -15,6 +16,10 @@
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
 		<DefineConstants>OVERRIDETOSTRING;$(DefineConstants)</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(TargetFramework)' != 'net45' AND '$(TargetFramework)' != 'net46' ">
+		<DefineConstants>NATIVE_ASYNC;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -45,7 +50,7 @@
 	</ItemGroup>
 
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net472' ">
 		<Reference Include="Microsoft.CSharp" />
 		<Reference Include="System.Configuration" />
 		<Reference Include="System.Data.DataSetExtensions" />
@@ -57,15 +62,17 @@
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.1' ">
-		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+		<PackageReference Include="System.Data.DataSetExtensions" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1' ">
-		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+		<PackageReference Include="Microsoft.CSharp" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' OR '$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netcoreapp2.1' ">
-		<PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
-		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="5.0.0" />
+		<PackageReference Include="System.ComponentModel.Annotations" />
+	</ItemGroup>
+	<ItemGroup Condition=" '$(TargetFramework)' != 'net45' AND '$(TargetFramework)' != 'net46' ">
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
 	</ItemGroup>
 </Project>

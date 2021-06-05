@@ -7,6 +7,7 @@ using OleDbType = LinqToDB.DataProvider.OleDbProviderAdapter.OleDbType;
 
 namespace LinqToDB.DataProvider.Access
 {
+	using System.Data.Common;
 	using Common;
 	using Data;
 	using Mapping;
@@ -39,7 +40,7 @@ namespace LinqToDB.DataProvider.Access
 			SetCharField            ("DBTYPE_WCHAR", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("DBTYPE_WCHAR", DataTools.GetCharExpression);
 
-			SetProviderField<IDataReader, TimeSpan, DateTime>((r, i) => r.GetDateTime(i) - new DateTime(1899, 12, 30));
+			SetProviderField<DbDataReader, TimeSpan, DateTime>((r, i) => r.GetDateTime(i) - new DateTime(1899, 12, 30));
 
 			_sqlOptimizer = new AccessSqlOptimizer(SqlProviderFlags);
 		}
@@ -63,7 +64,7 @@ namespace LinqToDB.DataProvider.Access
 			return new AccessOleDbSchemaProvider(this);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
 			OleDbType? type = null;
 			switch (dataType.DataType)
@@ -127,7 +128,7 @@ namespace LinqToDB.DataProvider.Access
 				cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

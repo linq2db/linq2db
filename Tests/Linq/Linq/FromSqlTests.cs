@@ -51,6 +51,7 @@ namespace Tests.Linq
 		}
 
 		class ToTableName<T> : IToSqlConverter
+			where T : notnull
 		{
 			public ToTableName(ITable<T> table)
 			{
@@ -69,6 +70,7 @@ namespace Tests.Linq
 		}
 
 		ToTableName<T> GetName<T>(ITable<T> table)
+			where T : notnull
 		{
 			return new ToTableName<T>(table);
 		}
@@ -535,6 +537,7 @@ namespace Tests.Linq
 				Assert.False(ReferenceEquals(query1, query2));
 
 				IQueryable<SampleClass> GetQuery<T>(ITable<T> table, int startId, int endId)
+					where T : notnull
 				{
 					return db.FromSql<SampleClass>(
 						$"SELECT * FROM {GetName(table)} where id >= {DataParameter.Int32("startId", startId)} and id < {DataParameter.Int32("endId", endId)}");
@@ -617,6 +620,7 @@ namespace Tests.Linq
 				Assert.False(ReferenceEquals(query1, query2));
 
 				IQueryable<SampleClass> GetQuery<T>(ITable<T> table, int startId, int endId)
+					where T : notnull
 				{
 					return db.FromSql<SampleClass>(
 						"SELECT * FROM {0} where id >= {1} and id < {2}",

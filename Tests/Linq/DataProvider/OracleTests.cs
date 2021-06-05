@@ -9,6 +9,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -22,6 +23,7 @@ using Oracle.ManagedDataAccess.Types;
 
 namespace Tests.DataProvider
 {
+	using System.Data.Common;
 	using System.Diagnostics.CodeAnalysis;
 	using System.Threading;
 	using System.Threading.Tasks;
@@ -64,10 +66,11 @@ namespace Tests.DataProvider
 		static void TestType<T>(
 			DataConnection   connection,
 			string           dataTypeName,
-			[DisallowNull] T value,
+			T              value,
 			string           tableName       = "\"AllTypes\"",
 			bool             convertToString = false,
 			bool             throwException  = false)
+			where T : notnull
 		{
 			Assert.That(connection.Execute<T>($"SELECT {dataTypeName} FROM {tableName} WHERE ID = 1"),
 				Is.EqualTo(connection.MappingSchema.GetDefaultValue(typeof(T))));
@@ -866,16 +869,22 @@ namespace Tests.DataProvider
 			var date = TestData.Date;
 			using (var db = new DataConnection(context))
 			{
+				DbParameter[] parameters = null!;
+				db.OnNextCommandInitialized((args, cmd) =>
+				{
+					parameters = cmd.Parameters.Cast<DbParameter>().ToArray();
+					return cmd;
+				});
+
 				var query = from a in db.GetTable<AllTypes>()
 							where a.datetimeDataType == date
 							select a;
 
 				query.FirstOrDefault();
 
-				Assert.That(db.Command.Parameters.Count, Is.EqualTo(2));
+				Assert.That(parameters.Length, Is.EqualTo(2));
 
-				var parm = (IDbDataParameter)db.Command.Parameters[0]!;
-				Assert.That(parm.DbType, Is.EqualTo(DbType.Date));
+				Assert.True(parameters.Any(p => p.DbType == DbType.Date));
 			}
 		}
 
@@ -885,6 +894,13 @@ namespace Tests.DataProvider
 			var date = TestData.Date;
 			using (var db = new DataConnection(context))
 			{
+				DbParameter[] parameters = null!;
+				db.OnNextCommandInitialized((args, cmd) =>
+				{
+					parameters = cmd.Parameters.Cast<DbParameter>().ToArray();
+					return cmd;
+				});
+
 				var query = from a in db.GetTable<AllTypes>()
 							join b in db.GetTable<AllTypes>() on a.ID equals b.ID
 							where a.datetimeDataType == date
@@ -892,10 +908,9 @@ namespace Tests.DataProvider
 
 				query.FirstOrDefault();
 
-				Assert.That(db.Command.Parameters.Count, Is.EqualTo(2));
+				Assert.That(parameters.Length, Is.EqualTo(2));
 
-				var parm = (IDbDataParameter)db.Command.Parameters[0]!;
-				Assert.That(parm.DbType, Is.EqualTo(DbType.Date));
+				Assert.True(parameters.Any(p => p.DbType == DbType.Date));
 			}
 		}
 
@@ -2175,7 +2190,7 @@ namespace Tests.DataProvider
 				provider = new OracleDataProvider(db.DataProvider.Name, ((OracleDataProvider)db.DataProvider).Version);
 			}
 
-			provider.ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal) }] = (Expression<Func<IDataReader, int, decimal>>)((r,i) => GetDecimal(r, i));
+			provider.ReaderExpressions[new ReaderInfo { FieldType = typeof(decimal) }] = (Expression<Func<DbDataReader, int, decimal>>)((r,i) => GetDecimal(r, i));
 
 			using (var db = new DataConnection(provider, DataConnection.GetConnectionString(context)))
 			{
@@ -2186,7 +2201,7 @@ namespace Tests.DataProvider
 		const int ClrPrecision = 29;
 
 		[ColumnReader(1)]
-		static decimal GetDecimal(IDataReader rd, int idx)
+		static decimal GetDecimal(DbDataReader rd, int idx)
 		{
 			if (rd is Oracle.ManagedDataAccess.Client.OracleDataReader reader)
 			{
@@ -3093,11 +3108,11 @@ namespace Tests.DataProvider
 			{
 			}
 
-			protected override IDataReader ExecuteReader(IDbCommand command, CommandBehavior commandBehavior)
+			protected override DataReaderWrapper ExecuteReader(CommandBehavior commandBehavior)
 			{
-				var reader = base.ExecuteReader(command, commandBehavior);
+				var reader = base.ExecuteReader(commandBehavior);
 
-				if (reader is OracleDataReader or1 && command is OracleCommand oc1)
+				if (reader.DataReader is OracleDataReader or1 && CurrentCommand is OracleCommand oc1)
 				{
 					or1.FetchSize = oc1.RowSize * 10000;
 				}
@@ -3386,37 +3401,37 @@ namespace Tests.DataProvider
 				var pDateTimeOffset = new DateTimeOffset(2020, 1, 3, 4, 5, 6, 789, TimeSpan.FromMinutes(45)).AddTicks(1234);
 
 				var results = table.Where(r => r.Date == pDate).ToArray();
-				assert("TO_DATE('2020-01-03', 'YYYY-MM-DD')");
+				assert("DATE '2020-01-03'");
 
 				results = table.Where(r => r.DateTime == pDateTime).ToArray();
-				assert("TO_TIMESTAMP('2020-01-03 04:05:06.789123', 'YYYY-MM-DD HH24:MI:SS.FF6')");
+				assert("TIMESTAMP '2020-01-03 04:05:06.789123'");
 
 				results = table.Where(r => r.DateTime_ == pDateTime).ToArray();
 				assert("TO_DATE('2020-01-03 04:05:06', 'YYYY-MM-DD HH24:MI:SS')");
 
 				results = table.Where(r => r.DateTime2 == pDateTime).ToArray();
-				assert("TO_TIMESTAMP('2020-01-03 04:05:06.789123', 'YYYY-MM-DD HH24:MI:SS.FF6')");
+				assert("TIMESTAMP '2020-01-03 04:05:06.789123'");
 
 				results = table.Where(r => r.DateTime2_0 == pDateTime).ToArray();
-				assert("TO_TIMESTAMP('2020-01-03 04:05:06', 'YYYY-MM-DD HH24:MI:SS')");
+				assert("TIMESTAMP '2020-01-03 04:05:06'");
 
 				results = table.Where(r => r.DateTime2_1 == pDateTime).ToArray();
-				assert("TO_TIMESTAMP('2020-01-03 04:05:06.7', 'YYYY-MM-DD HH24:MI:SS.FF1')");
+				assert("TIMESTAMP '2020-01-03 04:05:06.7'");
 
 				results = table.Where(r => r.DateTime2_9 == pDateTime).ToArray();
-				assert("TO_TIMESTAMP('2020-01-03 04:05:06.7891234', 'YYYY-MM-DD HH24:MI:SS.FF7')");
+				assert("TIMESTAMP '2020-01-03 04:05:06.7891234'");
 
 				results = table.Where(r => r.DateTimeOffset_ == pDateTimeOffset).ToArray();
-				assert("TO_TIMESTAMP_TZ('2020-01-03 03:20:06.789123 00:00', 'YYYY-MM-DD HH24:MI:SS.FF6 TZH:TZM')");
+				assert("TIMESTAMP '2020-01-03 03:20:06.789123 +00:00'");
 
 				results = table.Where(r => r.DateTimeOffset_0 == pDateTimeOffset).ToArray();
-				assert("TO_TIMESTAMP_TZ('2020-01-03 03:20:06 00:00', 'YYYY-MM-DD HH24:MI:SS TZH:TZM')");
+				assert("TIMESTAMP '2020-01-03 03:20:06 +00:00'");
 
 				results = table.Where(r => r.DateTimeOffset_1 == pDateTimeOffset).ToArray();
-				assert("TO_TIMESTAMP_TZ('2020-01-03 03:20:06.7 00:00', 'YYYY-MM-DD HH24:MI:SS.FF1 TZH:TZM')");
+				assert("TIMESTAMP '2020-01-03 03:20:06.7 +00:00'");
 
 				results = table.Where(r => r.DateTimeOffset_9 == pDateTimeOffset).ToArray();
-				assert("TO_TIMESTAMP_TZ('2020-01-03 03:20:06.7891234 00:00', 'YYYY-MM-DD HH24:MI:SS.FF7 TZH:TZM')");
+				assert("TIMESTAMP '2020-01-03 03:20:06.7891234 +00:00'");
 
 				void assert(string function)
 				{
@@ -3734,9 +3749,9 @@ namespace Tests.DataProvider
 		{
 			using (var db = new TestDataConnection(context))
 			{
-				db.Execute("CREATE SEQUENCE SEQ_A START WITH 1 MINVALUE 0");
 				try
 				{
+					db.Execute("CREATE SEQUENCE SEQ_A START WITH 1 MINVALUE 0");
 					db.Execute(@"
 CREATE TABLE ""TABLE_A""(
 	""COLUMN_A"" NUMBER(20, 0) NOT NULL,
@@ -3763,7 +3778,7 @@ CREATE TABLE ""TABLE_A""(
 				}
 				finally
 				{
-					try { db.Execute("DROP SEQUENCE SEQ_A"); } catch { }
+					try { db.Execute("DROP SEQUENCE SEQ_A");    } catch { }
 					try { db.Execute("DROP TABLE \"TABLE_A\""); } catch { }
 				}
 			}
@@ -3815,5 +3830,79 @@ CREATE TABLE ""TABLE_A""(
 					).Select(x => x.ID).ToArray();
 			}
 		}
+	
+		[Table("LinqDataTypes", IsColumnAttributeRequired = false)]
+		class LinqDataTypesBlobs
+		{
+			public int ID { get; set; }
+			// Implicit OracleBlob support, no attribute
+			public OracleBlob? BinaryValue { get; set; }
+			// Explicit attribute with DataType = Blob
+			[Column("BinaryValue", DataType = DataType.Blob)]
+			public OracleBlob? Blob { get; set; }
+		}
+		
+		[Test]
+		public void TestBlob([IncludeDataSources(TestProvName.AllOracleManaged)] string context)
+		{
+			using var db = GetDataContext(context);
+			if (db is not DataConnection dc) return;
+
+			using var tx = dc.BeginTransaction();
+
+			using var blob = new OracleBlob((OracleConnection)dc.Connection);
+			blob.WriteByte(1);
+
+			db.GetTable<LinqDataTypesBlobs>().Insert(() => new LinqDataTypesBlobs { ID = -10, BinaryValue = blob });
+			db.GetTable<LinqDataTypesBlobs>().Insert(() => new LinqDataTypesBlobs { ID = -20, Blob = blob });
+
+			var inserted = db
+				.GetTable<LinqDataTypesBlobs>()
+				.Where(x => x.ID.In(-10, -20))
+				.Select(x => Sql.Expr<int>("LENGTH(\"BinaryValue\")"))
+				.ToList();
+
+			tx.Rollback();
+
+			inserted.Should().Equal(1, 1);
+		}
+
+#if NETFRAMEWORK
+		[Table("LinqDataTypes", IsColumnAttributeRequired = false)]
+		class LinqDataTypesBlobsNative
+		{
+			public int ID { get; set; }
+			// Implicit OracleBlob support, no attribute
+			public Oracle.DataAccess.Types.OracleBlob? BinaryValue { get; set; }
+			// Explicit attribute with DataType = Blob
+			[Column("BinaryValue", DataType = DataType.Blob)]
+			public Oracle.DataAccess.Types.OracleBlob? Blob { get; set; }
+		}
+
+		[Test]
+		public void TestBlobNative([IncludeDataSources(TestProvName.AllOracleNative)] string context)
+		{
+			using var db = GetDataContext(context);
+			if (db is not DataConnection dc) return;
+
+			using var tx = dc.BeginTransaction();
+
+			using var blob = new Oracle.DataAccess.Types.OracleBlob((Oracle.DataAccess.Client.OracleConnection)dc.Connection);
+			blob.WriteByte(1);
+
+			db.GetTable<LinqDataTypesBlobsNative>().Insert(() => new LinqDataTypesBlobsNative { ID = -10, BinaryValue = blob });
+			db.GetTable<LinqDataTypesBlobsNative>().Insert(() => new LinqDataTypesBlobsNative { ID = -20, Blob = blob });
+
+			var inserted = db
+				.GetTable<LinqDataTypesBlobsNative>()
+				.Where(x => x.ID.In(-10, -20))
+				.Select(x => Sql.Expr<int>("LENGTH(\"BinaryValue\")"))
+				.ToList();
+
+			tx.Rollback();
+
+			inserted.Should().Equal(1, 1);
+		}
+#endif
 	}
 }
