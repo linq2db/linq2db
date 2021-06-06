@@ -131,6 +131,7 @@ namespace LinqToDB.DataProvider.Firebird
 					else
 						StringBuilder.Append($"({type.Type.Length})");
 
+					// type for UUID, e.g. see https://firebirdsql.org/refdocs/langrefupd25-intfunc-gen_uuid.html
 					StringBuilder.Append(" CHARACTER SET UNICODE_FSS");
 					                                                                                      break;
 
