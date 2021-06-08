@@ -131,14 +131,14 @@ namespace LinqToDB.Linq.Builder
 						{
 							var e = (MethodCallExpression)expr;
 
-						if (Expressions.ConvertMember(context.Builder.MappingSchema, e.Object?.Type, e.Method) != null)
-								return true;
+							if (Expressions.ConvertMember(context.Builder.MappingSchema, e.Object?.Type, e.Method) != null)
+									return true;
 
-						if (context.Builder.IsGrouping(e, context.Builder.MappingSchema))
-						{
-							context.IsHaving = true;
-							return false;
-						}
+							if (context.Builder.IsGrouping(e, context.Builder.MappingSchema))
+							{
+								context.IsHaving = true;
+								return false;
+							}
 
 							break;
 						}
