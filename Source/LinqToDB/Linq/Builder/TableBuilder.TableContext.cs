@@ -11,11 +11,10 @@ namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
 	using LinqToDB.Expressions;
-	using LinqToDB.Interceptors;
+	using Interceptors;
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
-	using Tools;
 
 	partial class TableBuilder
 	{
