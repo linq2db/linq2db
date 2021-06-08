@@ -133,9 +133,9 @@ namespace LinqToDB.Linq.Builder
 
 								var cex = (UnaryExpression)expr;
 
-										context.builder._convertedExpressions.Add(cex.Operand, cex);
+								context.builder._convertedExpressions.Add(cex.Operand, cex);
 
-										var newOperand = context.builder.BuildExpression(context.context, cex.Operand, context.enforceServerSide);
+								var newOperand = context.builder.BuildExpression(context.context, cex.Operand, context.enforceServerSide);
 
 								if (newOperand.Type != cex.Type)
 								{
@@ -148,7 +148,7 @@ namespace LinqToDB.Linq.Builder
 								}
 								var ret = new TransformInfo(newOperand, true);
 
-										context.builder.RemoveConvertedExpression(cex.Operand);
+								context.builder.RemoveConvertedExpression(cex.Operand);
 
 								return ret;
 							}
@@ -157,17 +157,17 @@ namespace LinqToDB.Linq.Builder
 							{
 								var ma = (MemberExpression)expr;
 
-										if (context.builder.IsServerSideOnly(ma) || context.builder.PreferServerSide(ma, context.enforceServerSide) && !context.builder.HasNoneSqlMember(ma))
+								if (context.builder.IsServerSideOnly(ma) || context.builder.PreferServerSide(ma, context.enforceServerSide) && !context.builder.HasNoneSqlMember(ma))
 								{
-											return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
+									return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
 								}
 
 								var l  = Expressions.ConvertMember(context.builder.MappingSchema, ma.Expression?.Type, ma.Member);
 								if (l != null)
 								{
 									// In Grouping KeyContext we have to perform calculation on server side
-											if (context.builder.Contexts.Any(c => c is GroupByBuilder.KeyContext))
-												return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
+									if (context.builder.Contexts.Any(c => c is GroupByBuilder.KeyContext))
+										return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
 									break;
 								}
 
