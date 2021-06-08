@@ -135,25 +135,25 @@ namespace LinqToDB.Linq.Builder
 								return true;
 
 						if (context.Builder.IsGrouping(e, context.Builder.MappingSchema))
-							{
+						{
 							context.IsHaving = true;
-								return false;
-							}
+							return false;
+						}
 
 							break;
 						}
 
 					case ExpressionType.Parameter:
 						{
-						var ctx = context.Builder.GetContext(context.BuildContext, expr);
+							var ctx = context.Builder.GetContext(context.BuildContext, expr);
 
 							if (ctx != null)
 							{
 								if (ctx.IsExpression(expr, 0, RequestFor.Expression).Result)
-								context.MakeSubQuery = true;
+									context.MakeSubQuery = true;
 							}
 
-						context.IsWhere = true;
+							context.IsWhere = true;
 
 							break;
 						}
@@ -394,183 +394,183 @@ namespace LinqToDB.Linq.Builder
 		private TransformInfoVisitor<ExpressionBuilder>? _convertExpressionTransformer;
 
 		private TransformInfo ConvertExpressionTransformer(Expression e)
+		{
+			if (CanBeConstant(e) || CanBeCompiled(e))
+			//if ((CanBeConstant(e) || CanBeCompiled(e)) && !PreferServerSide(e))
+				return new TransformInfo(e, true);
+
+			switch (e.NodeType)
 			{
-				if (CanBeConstant(e) || CanBeCompiled(e))
-				//if ((CanBeConstant(e) || CanBeCompiled(e)) && !PreferServerSide(e))
-					return new TransformInfo(e, true);
+				//This is to handle VB's weird expression generation when dealing with nullable properties.
+				case ExpressionType.Coalesce:
+					{
+						var b = (BinaryExpression)e;
 
-				switch (e.NodeType)
-				{
-					//This is to handle VB's weird expression generation when dealing with nullable properties.
-					case ExpressionType.Coalesce:
+						if (b.Left is BinaryExpression equalityLeft && b.Right is ConstantExpression constantRight)
+							if (equalityLeft.Type.GetGenericTypeDefinition() == typeof(Nullable<>))
+								if (equalityLeft.NodeType == ExpressionType.Equal && equalityLeft.Left.Type == equalityLeft.Right.Type)
+									if (constantRight.Value is bool val && val == false)
+										return new TransformInfo(equalityLeft, false);
+
+						break;
+					}
+
+				case ExpressionType.New:
+					{
+						var ex = ConvertNew((NewExpression)e);
+						if (ex != null)
+							return new TransformInfo(ConvertExpression(ex));
+						break;
+					}
+
+				case ExpressionType.Call:
+					{
+						var expr = (MethodCallExpression)e;
+
+						if (expr.Method.IsSqlPropertyMethodEx())
 						{
-							var b = (BinaryExpression)e;
+							// transform Sql.Property into member access
+							if (expr.Arguments[1].Type != typeof(string))
+								throw new ArgumentException("Only strings are allowed for member name in Sql.Property expressions.");
 
-							if (b.Left is BinaryExpression equalityLeft && b.Right is ConstantExpression constantRight)
-								if (equalityLeft.Type.GetGenericTypeDefinition() == typeof(Nullable<>))
-									if (equalityLeft.NodeType == ExpressionType.Equal && equalityLeft.Left.Type == equalityLeft.Right.Type)
-										if (constantRight.Value is bool val && val == false)
-											return new TransformInfo(equalityLeft, false);
+							var entity           = ConvertExpression(expr.Arguments[0]);
+							var memberName       = (string)expr.Arguments[1].EvaluateExpression()!;
+							var entityDescriptor = MappingSchema.GetEntityDescriptor(entity.Type);
 
-							break;
+							var memberInfo = entityDescriptor[memberName]?.MemberInfo ?? entityDescriptor.Associations
+												 .SingleOrDefault(a => a.MemberInfo.Name == memberName)?.MemberInfo;
+							if (memberInfo == null)
+								memberInfo = MemberHelper.GetMemberInfo(expr);
+
+							return new TransformInfo(ConvertExpression(Expression.MakeMemberAccess(entity, memberInfo)));
 						}
 
-					case ExpressionType.New:
+						var cm = ConvertMethod(expr);
+						if (cm != null)
+							//TODO: looks like a mess: ConvertExpression can not work without OptimizeExpression
+							return new TransformInfo(OptimizeExpression(ConvertExpression(cm)));
+						break;
+					}
+
+				case ExpressionType.MemberAccess:
+					{
+						var ma = (MemberExpression)e;
+						var l  = Expressions.ConvertMember(MappingSchema, ma.Expression?.Type, ma.Member);
+
+						if (l != null)
 						{
-							var ex = ConvertNew((NewExpression)e);
-							if (ex != null)
-								return new TransformInfo(ConvertExpression(ex));
-							break;
+							var body = l.Body.Unwrap();
+							var expr = body.Transform(ma, static (ma, wpi) => wpi.NodeType == ExpressionType.Parameter ? ma.Expression! : wpi);
+
+							if (expr.Type != e.Type)
+								expr = new ChangeTypeExpression(expr, e.Type);
+
+							//TODO: looks like a mess: ConvertExpression can not work without OptimizeExpression
+							return new TransformInfo(OptimizeExpression(ConvertExpression(expr)));
 						}
 
-					case ExpressionType.Call:
+						if (ma.Member.IsNullableValueMember())
 						{
-							var expr = (MethodCallExpression)e;
+							var ntype  = typeof(ConvertHelper<>).MakeGenericType(ma.Type);
+							var helper = (IConvertHelper)Activator.CreateInstance(ntype)!;
+							var expr   = helper.ConvertNull(ma);
 
-							if (expr.Method.IsSqlPropertyMethodEx())
+							return new TransformInfo(ConvertExpression(expr));
+						}
+
+						if (ma.Member.DeclaringType == typeof(TimeSpan))
+						{
+							switch (ma.Expression!.NodeType)
 							{
-								// transform Sql.Property into member access
-								if (expr.Arguments[1].Type != typeof(string))
-									throw new ArgumentException("Only strings are allowed for member name in Sql.Property expressions.");
+								case ExpressionType.Subtract       :
+								case ExpressionType.SubtractChecked:
 
-								var entity           = ConvertExpression(expr.Arguments[0]);
-								var memberName       = (string)expr.Arguments[1].EvaluateExpression()!;
-								var entityDescriptor = MappingSchema.GetEntityDescriptor(entity.Type);
+									Sql.DateParts datePart;
 
-								var memberInfo = entityDescriptor[memberName]?.MemberInfo ?? entityDescriptor.Associations
-													 .SingleOrDefault(a => a.MemberInfo.Name == memberName)?.MemberInfo;
-								if (memberInfo == null)
-									memberInfo = MemberHelper.GetMemberInfo(expr);
+									switch (ma.Member.Name)
+									{
+										case "TotalMilliseconds" : datePart = Sql.DateParts.Millisecond; break;
+										case "TotalSeconds"      : datePart = Sql.DateParts.Second;      break;
+										case "TotalMinutes"      : datePart = Sql.DateParts.Minute;      break;
+										case "TotalHours"        : datePart = Sql.DateParts.Hour;        break;
+										case "TotalDays"         : datePart = Sql.DateParts.Day;         break;
+										default                  : return new TransformInfo(e);
+									}
 
-								return new TransformInfo(ConvertExpression(Expression.MakeMemberAccess(entity, memberInfo)));
+									var ex = (BinaryExpression)ma.Expression;
+									if (ex.Left.Type == typeof(DateTime)
+										&& ex.Right.Type == typeof(DateTime))
+									{
+										var method = MemberHelper.MethodOf(
+											() => Sql.DateDiff(Sql.DateParts.Day, DateTime.MinValue, DateTime.MinValue));
+
+										var call   =
+											Expression.Convert(
+												Expression.Call(
+													null,
+													method,
+													Expression.Constant(datePart),
+													Expression.Convert(ex.Right, typeof(DateTime?)),
+													Expression.Convert(ex.Left,  typeof(DateTime?))),
+												typeof(double));
+
+										return new TransformInfo(ConvertExpression(call));
+									}
+									else
+									{
+										var method = MemberHelper.MethodOf(
+											() => Sql.DateDiff(Sql.DateParts.Day, DateTimeOffset.MinValue, DateTimeOffset.MinValue));
+
+										var call   =
+											Expression.Convert(
+												Expression.Call(
+													null,
+													method,
+													Expression.Constant(datePart),
+													Expression.Convert(ex.Right, typeof(DateTimeOffset?)),
+													Expression.Convert(ex.Left,  typeof(DateTimeOffset?))),
+												typeof(double));
+
+										return new TransformInfo(ConvertExpression(call));
+									}
 							}
-
-							var cm = ConvertMethod(expr);
-							if (cm != null)
-								//TODO: looks like a mess: ConvertExpression can not work without OptimizeExpression
-								return new TransformInfo(OptimizeExpression(ConvertExpression(cm)));
-							break;
 						}
 
-					case ExpressionType.MemberAccess:
-						{
-							var ma = (MemberExpression)e;
-							var l  = Expressions.ConvertMember(MappingSchema, ma.Expression?.Type, ma.Member);
+						break;
+					}
 
+				default:
+					{
+						if (e is BinaryExpression binary)
+						{
+							var l = Expressions.ConvertBinary(MappingSchema, binary);
 							if (l != null)
 							{
 								var body = l.Body.Unwrap();
-						var expr = body.Transform(ma, static (ma, wpi) => wpi.NodeType == ExpressionType.Parameter ? ma.Expression! : wpi);
-
-								if (expr.Type != e.Type)
-									expr = new ChangeTypeExpression(expr, e.Type);
-
-								//TODO: looks like a mess: ConvertExpression can not work without OptimizeExpression
-								return new TransformInfo(OptimizeExpression(ConvertExpression(expr)));
-							}
-
-							if (ma.Member.IsNullableValueMember())
-							{
-								var ntype  = typeof(ConvertHelper<>).MakeGenericType(ma.Type);
-								var helper = (IConvertHelper)Activator.CreateInstance(ntype)!;
-								var expr   = helper.ConvertNull(ma);
-
-								return new TransformInfo(ConvertExpression(expr));
-							}
-
-							if (ma.Member.DeclaringType == typeof(TimeSpan))
-							{
-								switch (ma.Expression!.NodeType)
+								var expr = body.Transform((l, binary), static (context, wpi) =>
 								{
-									case ExpressionType.Subtract       :
-									case ExpressionType.SubtractChecked:
-
-										Sql.DateParts datePart;
-
-										switch (ma.Member.Name)
-										{
-											case "TotalMilliseconds" : datePart = Sql.DateParts.Millisecond; break;
-											case "TotalSeconds"      : datePart = Sql.DateParts.Second;      break;
-											case "TotalMinutes"      : datePart = Sql.DateParts.Minute;      break;
-											case "TotalHours"        : datePart = Sql.DateParts.Hour;        break;
-											case "TotalDays"         : datePart = Sql.DateParts.Day;         break;
-											default                  : return new TransformInfo(e);
-										}
-
-										var ex = (BinaryExpression)ma.Expression;
-										if (ex.Left.Type == typeof(DateTime)
-											&& ex.Right.Type == typeof(DateTime))
-										{
-											var method = MemberHelper.MethodOf(
-												() => Sql.DateDiff(Sql.DateParts.Day, DateTime.MinValue, DateTime.MinValue));
-
-											var call   =
-												Expression.Convert(
-													Expression.Call(
-														null,
-														method,
-														Expression.Constant(datePart),
-														Expression.Convert(ex.Right, typeof(DateTime?)),
-														Expression.Convert(ex.Left,  typeof(DateTime?))),
-													typeof(double));
-
-											return new TransformInfo(ConvertExpression(call));
-										}
-										else
-										{
-											var method = MemberHelper.MethodOf(
-												() => Sql.DateDiff(Sql.DateParts.Day, DateTimeOffset.MinValue, DateTimeOffset.MinValue));
-
-											var call   =
-												Expression.Convert(
-													Expression.Call(
-														null,
-														method,
-														Expression.Constant(datePart),
-														Expression.Convert(ex.Right, typeof(DateTimeOffset?)),
-														Expression.Convert(ex.Left,  typeof(DateTimeOffset?))),
-													typeof(double));
-
-											return new TransformInfo(ConvertExpression(call));
-										}
-								}
-							}
-
-							break;
-						}
-
-					default:
-						{
-							if (e is BinaryExpression binary)
-							{
-								var l = Expressions.ConvertBinary(MappingSchema, binary);
-								if (l != null)
-								{
-									var body = l.Body.Unwrap();
-							var expr = body.Transform((l, binary), static (context, wpi) =>
+									if (wpi.NodeType == ExpressionType.Parameter)
 									{
-										if (wpi.NodeType == ExpressionType.Parameter)
-										{
 										if (context.l.Parameters[0] == wpi)
 											return context.binary.Left;
 										if (context.l.Parameters[1] == wpi)
 											return context.binary.Right;
-										}
+									}
 
-										return wpi;
-									});
+									return wpi;
+								});
 
-									if (expr.Type != e.Type)
-										expr = new ChangeTypeExpression(expr, e.Type);
+								if (expr.Type != e.Type)
+									expr = new ChangeTypeExpression(expr, e.Type);
 
-									return new TransformInfo(ConvertExpression(expr));
-								}
+								return new TransformInfo(ConvertExpression(expr));
 							}
-							break;
 						}
-				}
+						break;
+					}
+			}
 
-				return new TransformInfo(e);
+			return new TransformInfo(e);
 		}
 
 		Expression? ConvertMethod(MethodCallExpression pi)
@@ -1207,7 +1207,7 @@ namespace LinqToDB.Linq.Builder
 							for (var i = 0; i < l.Parameters.Count; i++)
 								dic.Add(l.Parameters[i], pi.Arguments[i]);
 
-						var pie = l.Body.Transform(dic, static (dic, wpi) => dic.TryGetValue(wpi, out var ppi) ? ppi : wpi);
+							var pie = l.Body.Transform(dic, static (dic, wpi) => dic.TryGetValue(wpi, out var ppi) ? ppi : wpi);
 
 							return ConvertToSql(context, pie);
 						}
@@ -1629,39 +1629,37 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (expr.NodeType == ExpressionType.Constant)
 				{
-					var c = (ConstantExpression)expr;
-
-						if (context.forceConstant || !expr.Type.IsConstantable(false))
+					if (context.forceConstant || !expr.Type.IsConstantable(false))
 					{
-							if (context.expressionAccessors.TryGetValue(expr, out var val))
+						if (context.expressionAccessors.TryGetValue(expr, out var val))
 						{
 							expr = Expression.Convert(val, expr.Type);
 
-								if (context.expression.NodeType == ExpressionType.MemberAccess)
+							if (context.expression.NodeType == ExpressionType.MemberAccess)
 							{
-									var ma = (MemberExpression)context.expression;
+								var ma = (MemberExpression)context.expression;
 
-									var mt = context.builder.GetMemberDataType(ma.Member);
+								var mt = context.builder.GetMemberDataType(ma.Member);
 
 								if (mt.DataType != DataType.Undefined)
 								{
-										context.result.DataType = context.result.DataType.WithDataType(mt.DataType);
-										context.result.DbDataTypeExpression = Expression.Constant(mt);
+									context.result.DataType = context.result.DataType.WithDataType(mt.DataType);
+									context.result.DbDataTypeExpression = Expression.Constant(mt);
 								}
 
 								if (mt.DbType != null)
 								{
-										context.result.DataType = context.result.DataType.WithDbType(mt.DbType);
-										context.result.DbDataTypeExpression = Expression.Constant(mt);
+									context.result.DataType = context.result.DataType.WithDbType(mt.DbType);
+									context.result.DbDataTypeExpression = Expression.Constant(mt);
 								}
 
 								if (mt.Length != null)
 								{
-										context.result.DataType = context.result.DataType.WithLength(mt.Length);
-										context.result.DbDataTypeExpression = Expression.Constant(mt);
+									context.result.DataType = context.result.DataType.WithLength(mt.Length);
+									context.result.DbDataTypeExpression = Expression.Constant(mt);
 								}
 
-									context.setName?.Invoke(ma.Member.Name);
+								context.setName?.Invoke(ma.Member.Name);
 							}
 						}
 					}

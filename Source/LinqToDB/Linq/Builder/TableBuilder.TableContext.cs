@@ -304,8 +304,8 @@ namespace LinqToDB.Linq.Builder
 				DataContextEventData? args = null;
 				foreach (var interceptor in context.GetInterceptors<IDataContextInterceptor>())
 				{
-					args   = args ?? new DataContextEventData(context);
-					entity = interceptor.EntityCreated(args.Value, entity);
+					args   ??= new DataContextEventData(context);
+					entity =   interceptor.EntityCreated(args.Value, entity);
 				}
 
 				return entity;

@@ -205,7 +205,7 @@ namespace LinqToDB.ServiceModel
 												typeof(MappingSchema),
 												typeof(ISqlOptimizer),
 												typeof(SqlProviderFlags)
-											}),
+											}) ?? throw new InvalidOperationException($"Constructor for type '{type.Name}' not found."),
 											new Expression[]
 											{
 												Expression.Constant(((IDataContext)this).MappingSchema),
@@ -236,15 +236,12 @@ namespace LinqToDB.ServiceModel
 							if (!_sqlOptimizers.TryGetValue(key, out _getSqlOptimizer))
 								_sqlOptimizers.Add(key, _getSqlOptimizer =
 									Expression.Lambda<Func<ISqlOptimizer>>(
-										Expression.New(
-											type.GetConstructor(new[]
-											{
-												typeof(SqlProviderFlags)
-											}),
-											new Expression[]
-											{
-												Expression.Constant(((IDataContext)this).SqlProviderFlags)
-											})).CompileExpression());
+											Expression.New(
+												type.GetConstructor(new[] {typeof(SqlProviderFlags)}) ??
+												throw new InvalidOperationException(
+													$"Constructor for type '{type.Name}' not found."),
+												Expression.Constant(((IDataContext)this).SqlProviderFlags)))
+										.CompileExpression());
 				}
 
 				return _getSqlOptimizer;

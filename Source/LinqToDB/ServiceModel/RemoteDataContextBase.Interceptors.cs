@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace LinqToDB.ServiceModel
 {
 	using System;
-	using LinqToDB.Interceptors;
+	using Interceptors;
 
 	public abstract partial class RemoteDataContextBase
 	{
@@ -19,8 +19,7 @@ namespace LinqToDB.ServiceModel
 			{
 				if (_contextInterceptors != null)
 					throw new InvalidOperationException($"{nameof(AggregatedInterceptor<IDataContextInterceptor>)}<{nameof(IDataContextInterceptor)}> already exists");
-				else
-					_contextInterceptors = aggregateContextInterceptor;
+				_contextInterceptors = aggregateContextInterceptor;
 			}
 
 			if (interceptor is IDataContextInterceptor contextInterceptor)
@@ -39,8 +38,6 @@ namespace LinqToDB.ServiceModel
 				foreach (var interceptor in _contextInterceptors.GetInterceptors())
 					yield return (TInterceptor)interceptor;
 			}
-
-			yield break;
 		}
 	}
 }

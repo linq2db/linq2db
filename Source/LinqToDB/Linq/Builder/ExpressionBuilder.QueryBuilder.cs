@@ -121,161 +121,164 @@ namespace LinqToDB.Linq.Builder
 				static (context, expr) =>
 				{
 					if (context.builder._skippedExpressions.Contains(expr))
-				return new TransformInfo(expr, true);
+						return new TransformInfo(expr, true);
 
-			switch (expr.NodeType)
-			{
-				case ExpressionType.Convert       :
-				case ExpressionType.ConvertChecked:
+					switch (expr.NodeType)
 					{
-						if (expr.Type == typeof(object))
-							break;
-
-						var cex = (UnaryExpression)expr;
-
-								context.builder._convertedExpressions.Add(cex.Operand, cex);
-
-								var newOperand = context.builder.BuildExpression(context.context, cex.Operand, context.enforceServerSide);
-
-						if (newOperand.Type != cex.Type)
-						{
-							if (cex.Type.IsNullable() && newOperand is ConvertFromDataReaderExpression readerExpression)
+						case ExpressionType.Convert       :
+						case ExpressionType.ConvertChecked:
 							{
-								newOperand = readerExpression.MakeNullable();
+								if (expr.Type == typeof(object))
+									break;
+
+								var cex = (UnaryExpression)expr;
+
+										context.builder._convertedExpressions.Add(cex.Operand, cex);
+
+										var newOperand = context.builder.BuildExpression(context.context, cex.Operand, context.enforceServerSide);
+
+								if (newOperand.Type != cex.Type)
+								{
+									if (cex.Type.IsNullable() && newOperand is ConvertFromDataReaderExpression readerExpression)
+									{
+										newOperand = readerExpression.MakeNullable();
+									}
+
+									newOperand = cex.Update(newOperand);
+								}
+								var ret = new TransformInfo(newOperand, true);
+
+										context.builder.RemoveConvertedExpression(cex.Operand);
+
+								return ret;
 							}
 
-							newOperand = cex.Update(newOperand);
-						}
-						var ret = new TransformInfo(newOperand, true);
+						case ExpressionType.MemberAccess:
+							{
+								var ma = (MemberExpression)expr;
 
-								context.builder.RemoveConvertedExpression(cex.Operand);
-
-						return ret;
-					}
-
-				case ExpressionType.MemberAccess:
-					{
-						var ma = (MemberExpression)expr;
-
-								if (context.builder.IsServerSideOnly(ma) || context.builder.PreferServerSide(ma, context.enforceServerSide) && !context.builder.HasNoneSqlMember(ma))
-						{
-									return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
-						}
+										if (context.builder.IsServerSideOnly(ma) || context.builder.PreferServerSide(ma, context.enforceServerSide) && !context.builder.HasNoneSqlMember(ma))
+								{
+											return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
+								}
 
 								var l  = Expressions.ConvertMember(context.builder.MappingSchema, ma.Expression?.Type, ma.Member);
-						if (l != null)
-						{
-							// In Grouping KeyContext we have to perform calculation on server side
-									if (context.builder.Contexts.Any(c => c is GroupByBuilder.KeyContext))
-										return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
-							break;
-						}
+								if (l != null)
+								{
+									// In Grouping KeyContext we have to perform calculation on server side
+											if (context.builder.Contexts.Any(c => c is GroupByBuilder.KeyContext))
+												return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
+									break;
+								}
 
-						if (ma.Member.IsNullableValueMember())
-							break;
+								if (ma.Member.IsNullableValueMember())
+									break;
 
 								var ctx = context.builder.GetContext(context.context, ma);
 
-						if (ctx != null)
-						{
-							var prevCount  = ctx.SelectQuery.Select.Columns.Count;
+								if (ctx != null)
+								{
+									var prevCount  = ctx.SelectQuery.Select.Columns.Count;
 									var expression = ctx.BuildExpression(ma, 0, context.enforceServerSide);
 
-							if (expression.NodeType == ExpressionType.Extension && expression is DefaultValueExpression 
-							                                                    && ma.Expression?.NodeType == ExpressionType.Parameter)
-							{
+									if (expression.NodeType == ExpressionType.Extension && expression is DefaultValueExpression 
+									                                                    && ma.Expression?.NodeType == ExpressionType.Parameter)
+									{
 										var objExpression = context.builder.BuildExpression(ctx, ma.Expression, context.enforceServerSide, context.alias);
-								var varTempVar    = objExpression.NodeType == ExpressionType.Parameter
-									? objExpression
-											: context.builder.BuildVariable(objExpression, ((ParameterExpression)ma.Expression).Name);
+										var varTempVar    = objExpression.NodeType == ExpressionType.Parameter
+											? objExpression
+													: context.builder.BuildVariable(objExpression, ((ParameterExpression)ma.Expression).Name);
 
-								var condition = Expression.Condition(
-									Expression.Equal(varTempVar,
-												new DefaultValueExpression(context.builder.MappingSchema, ma.Expression.Type)), expression,
-									Expression.MakeMemberAccess(varTempVar, ma.Member));
-								expression = condition;
-							}
-							else if (!string.IsNullOrEmpty(context.alias) && (ctx.SelectQuery.Select.Columns.Count - prevCount) == 1)
-							{
-								ctx.SelectQuery.Select.Columns[ctx.SelectQuery.Select.Columns.Count - 1].Alias = context.alias;
-							}
-							return new TransformInfo(expression);
-						}
+										var condition = Expression.Condition(
+											Expression.Equal(varTempVar,
+												new DefaultValueExpression(context.builder.MappingSchema,
+													ma.Expression.Type)), expression,
+											Expression.MakeMemberAccess(varTempVar, ma.Member));
 
-						var ex = ma.Expression;
+										expression = condition;
+									}
+									else if (!string.IsNullOrEmpty(context.alias) && (ctx.SelectQuery.Select.Columns.Count - prevCount) == 1)
+									{
+										ctx.SelectQuery.Select.Columns[ctx.SelectQuery.Select.Columns.Count - 1].Alias = context.alias;
+									}
+									return new TransformInfo(expression);
+								}
 
-						while (ex is MemberExpression memberExpression)
-							ex = memberExpression.Expression;
+								var ex = ma.Expression;
 
-						if (ex is MethodCallExpression ce)
-						{
-									if (context.builder.IsSubQuery(context.context, ce))
-							{
-										if (!IsMultipleQuery(ce, context.context.Builder.MappingSchema))
+								while (ex is MemberExpression memberExpression)
+									ex = memberExpression.Expression;
+
+								if (ex is MethodCallExpression ce)
 								{
+									if (context.builder.IsSubQuery(context.context, ce))
+									{
+										if (!IsMultipleQuery(ce, context.context.Builder.MappingSchema))
+										{
 											var info = context.builder.GetSubQueryContext(context.context, ce);
 											if (context.alias != null)
 												info.Context.SetAlias(context.alias);
-									var par  = Expression.Parameter(ex.Type);
+
+											var par  = Expression.Parameter(ex.Type);
 											var bex  = info.Context.BuildExpression(ma.Replace(ex, par), 0, context.enforceServerSide);
 
-									if (bex != null)
-										return new TransformInfo(bex);
+											if (bex != null)
+												return new TransformInfo(bex);
+										}
+									}
 								}
-							}
-						}
 
-						ex = ma.Expression;
+								ex = ma.Expression;
 
-						if (ex != null && ex.NodeType == ExpressionType.Constant)
-						{
-							// field = localVariable
-							//
+								if (ex != null && ex.NodeType == ExpressionType.Constant)
+								{
+									// field = localVariable
+									//
 									if (!context.builder._expressionAccessors.TryGetValue(ex, out var c))
-								return new TransformInfo(ma);
-							return new TransformInfo(Expression.MakeMemberAccess(Expression.Convert(c, ex.Type), ma.Member));
-						}
+										return new TransformInfo(ma);
+									return new TransformInfo(Expression.MakeMemberAccess(Expression.Convert(c, ex.Type), ma.Member));
+								}
 
-						break;
-					}
+								break;
+							}
 
-				case ExpressionType.Parameter:
-					{
-						if (expr == ParametersParam || expr == PreambleParam)
-							break;
+						case ExpressionType.Parameter:
+							{
+								if (expr == ParametersParam || expr == PreambleParam)
+									break;
 
 								var ctx = context.builder.GetContext(context.context, expr);
 
-						if (ctx != null)
-						{
+								if (ctx != null)
+								{
 									var buildExpr = ctx.BuildExpression(expr, 0, context.enforceServerSide);
-							if (buildExpr.Type != expr.Type)
-							{
-								buildExpr = Expression.Convert(buildExpr, expr.Type);
+									if (buildExpr.Type != expr.Type)
+									{
+										buildExpr = Expression.Convert(buildExpr, expr.Type);
+									}
+									return new TransformInfo(buildExpr);
+								}
+
+								break;
 							}
-							return new TransformInfo(buildExpr);
-						}
 
-						break;
-					}
-
-				case ExpressionType.Constant:
-					{
-						if (expr.Type.IsConstantable(true))
-							break;
+						case ExpressionType.Constant:
+							{
+								if (expr.Type.IsConstantable(true))
+									break;
 
 								if ((context.builder._buildMultipleQueryExpressions == null || !context.builder._buildMultipleQueryExpressions.Contains(expr)) && context.builder.IsSequence(new BuildInfo(context.context, expr, new SelectQuery())))
-						{
+								{
 									return new TransformInfo(context.builder.BuildMultipleQuery(context.context, expr, context.enforceServerSide));
-						}
+								}
 
 								if (context.builder._expressionAccessors.TryGetValue(expr, out var accessor))
-							return new TransformInfo(Expression.Convert(accessor, expr.Type));
+									return new TransformInfo(Expression.Convert(accessor, expr.Type));
 
-						break;
-					}
+								break;
+							}
 
-				case ExpressionType.Coalesce:
+						case ExpressionType.Coalesce:
 
 							if (expr.Type == typeof(string) && context.builder.MappingSchema.GetDefaultValue(typeof(string)) != null)
 								return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
@@ -283,142 +286,147 @@ namespace LinqToDB.Linq.Builder
 							if (context.builder.CanBeTranslatedToSql(context.context, context.builder.ConvertExpression(expr), true))
 								return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
 
-					break;
+							break;
 
-				case ExpressionType.Call:
-					{
-						var ce = (MethodCallExpression)expr;
+						case ExpressionType.Call:
+							{
+								var ce = (MethodCallExpression)expr;
 
 								if (context.builder.IsGroupJoinSource(context.context, ce))
-						{
-							foreach (var arg in ce.Arguments.Skip(1))
+								{
+									foreach (var arg in ce.Arguments.Skip(1))
 										if (!context.builder._skippedExpressions.Contains(arg))
-										context.builder._skippedExpressions.Add(arg);
+											context.builder._skippedExpressions.Add(arg);
 
 									if (context.builder.IsSubQuery(context.context, ce))
-							{
-								if (ce.IsQueryable())
-								//if (!typeof(IEnumerable).IsSameOrParentOf(expr.Type) || expr.Type == typeof(string) || expr.Type.IsArray)
-								{
+									{
+										if (ce.IsQueryable())
+										//if (!typeof(IEnumerable).IsSameOrParentOf(expr.Type) || expr.Type == typeof(string) || expr.Type.IsArray)
+										{
 											var ctx = context.builder.GetContext(context.context, expr);
 
-									if (ctx != null)
+											if (ctx != null)
 												return new TransformInfo(ctx.BuildExpression(expr, 0, context.enforceServerSide));
-								}
-							}
+										}
+									}
 
-							break;
-						}
+									break;
+								}
 
 								if (ce.IsAssociation(context.builder.MappingSchema))
-						{
-									var ctx = context.builder.GetContext(context.context, ce);
-							if (ctx == null)
-								throw new InvalidOperationException();
+								{
+											var ctx = context.builder.GetContext(context.context, ce);
+									if (ctx == null)
+										throw new InvalidOperationException();
 
-									return new TransformInfo(ctx.BuildExpression(ce, 0, context.enforceServerSide));
-						}
+											return new TransformInfo(ctx.BuildExpression(ce, 0, context.enforceServerSide));
+								}
 
 								if ((context.builder._buildMultipleQueryExpressions == null || !context.builder._buildMultipleQueryExpressions.Contains(ce)) && context.builder.IsSubQuery(context.context, ce))
-						{
+								{
 									if (IsMultipleQuery(ce, context.builder.MappingSchema))
 										return new TransformInfo(context.builder.BuildMultipleQuery(context.context, ce, context.enforceServerSide));
 
 									return new TransformInfo(context.builder.GetSubQueryExpression(context.context, ce, context.enforceServerSide, context.alias));
-						}
+								}
 
-						if (ce.IsSameGenericMethod(Methods.LinqToDB.SqlExt.Alias))
-						{
+								if (ce.IsSameGenericMethod(Methods.LinqToDB.SqlExt.Alias))
+								{
 									return new TransformInfo(context.builder.BuildSql(context.context, ce.Arguments[0], context.alias ?? ce.Arguments[1].EvaluateExpression<string>()));
-						}
+								}
 
 
 								if (context.builder.IsServerSideOnly(expr) || context.builder.PreferServerSide(expr, context.enforceServerSide) || ce.Method.IsSqlPropertyMethodEx())
 										return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
 
-						break;
-					}
+								break;
+							}
 
-				case ExpressionType.New:
-					{
-						var ne = (NewExpression)expr;
+						case ExpressionType.New:
+							{
+								var ne = (NewExpression)expr;
 
-						List<Expression>? arguments = null;
-						for (var i = 0; i < ne.Arguments.Count; i++)
-						{
-							var argument    = ne.Arguments[i];
-							var memberAlias = ne.Members?[i].Name;
+								List<Expression>? arguments = null;
+								for (var i = 0; i < ne.Arguments.Count; i++)
+								{
+									var argument    = ne.Arguments[i];
+									var memberAlias = ne.Members?[i].Name;
 
 									var newArgument = context.builder.ConvertAssignmentArgument(context.context, argument, ne.Members?[i], context.enforceServerSide, memberAlias);
-							if (newArgument != argument)
-							{
-								if (arguments == null)
-									arguments = ne.Arguments.Take(i).ToList();
-							}
-							arguments?.Add(newArgument);
-						}
-
-						if (arguments != null)
-						{
-							ne = ne.Update(arguments);
-						}
-
-						return new TransformInfo(ne, true);
-					}
-
-				case ExpressionType.MemberInit:
-					{
-						var mi      = (MemberInitExpression)expr;
-								var newPart = (NewExpression)context.builder.BuildExpression(context.context, mi.NewExpression, context.enforceServerSide);
-						List<MemberBinding>? bindings = null;
-						for (var i = 0; i < mi.Bindings.Count; i++)
-						{
-							var binding    = mi.Bindings[i];
-							var newBinding = binding;
-							if (binding is MemberAssignment assignment)
-							{
-										var argument = context.builder.ConvertAssignmentArgument(context.context, assignment.Expression,
-											assignment.Member, context.enforceServerSide, assignment.Member.Name);
-								if (argument != assignment.Expression)
-								{
-									newBinding = Expression.Bind(assignment.Member, argument);
+									if (newArgument != argument)
+									{
+										if (arguments == null)
+											arguments = ne.Arguments.Take(i).ToList();
+									}
+									arguments?.Add(newArgument);
 								}
+
+								if (arguments != null)
+								{
+									ne = ne.Update(arguments);
+								}
+
+								return new TransformInfo(ne, true);
 							}
 
-							if (newBinding != binding)
+						case ExpressionType.MemberInit:
 							{
-								if (bindings == null)
-									bindings = mi.Bindings.Take(i).ToList();
+								var mi      = (MemberInitExpression)expr;
+								var newPart = (NewExpression)context.builder.BuildExpression(context.context, mi.NewExpression, context.enforceServerSide);
+								List<MemberBinding>? bindings = null;
+								for (var i = 0; i < mi.Bindings.Count; i++)
+								{
+									var binding    = mi.Bindings[i];
+									var newBinding = binding;
+									if (binding is MemberAssignment assignment)
+									{
+										var argument = context.builder.ConvertAssignmentArgument(context.context,
+											assignment.Expression,
+											assignment.Member, context.enforceServerSide, assignment.Member.Name);
+
+										if (argument != assignment.Expression)
+										{
+											newBinding = Expression.Bind(assignment.Member, argument);
+										}
+									}
+
+									if (newBinding != binding)
+									{
+										if (bindings == null)
+											bindings = mi.Bindings.Take(i).ToList();
+									}
+
+									bindings?.Add(newBinding);
+								}
+
+								if (mi.NewExpression != newPart || bindings != null)
+								{
+									mi = mi.Update(newPart, bindings ?? mi.Bindings.AsEnumerable());
+								}
+
+								return new TransformInfo(mi, true);
 							}
-
-							bindings?.Add(newBinding);
-						}
-
-						if (mi.NewExpression != newPart || bindings != null)
-						{
-							mi = mi.Update(newPart, bindings ?? mi.Bindings.AsEnumerable());
-						}
-
-						return new TransformInfo(mi, true);
 					}
-			}
 
 					if (context.enforceServerSide || EnforceServerSide(context.context))
-			{
-				switch (expr.NodeType)
-				{
-					case ExpressionType.MemberInit :
-					case ExpressionType.Convert    :
-						break;
+					{
+						switch (expr.NodeType)
+						{
+							case ExpressionType.MemberInit :
+							case ExpressionType.Convert    :
+								break;
 
-					default                        :
+							default                        :
+							{
 								if (!context.enforceServerSide && context.builder.CanBeCompiled(expr))
-							break;
-								return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
-				}
-			}
+									break;
+								return new TransformInfo(context.builder.BuildSql(context.context, expr,
+									context.alias));
+							}
+						}
+					}
 
-			return new TransformInfo(expr);
+					return new TransformInfo(expr);
 				});
 		}
 
@@ -624,30 +632,30 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		private bool HasNoneSqlMemberFind(WritableContext<bool, ExpressionBuilder> context, Expression e)
+		{
+			switch (e.NodeType)
 			{
-				switch (e.NodeType)
-				{
-					case ExpressionType.MemberAccess:
-						{
-							var me = (MemberExpression)e;
+				case ExpressionType.MemberAccess:
+					{
+						var me = (MemberExpression)e;
 
-							var om = (
-								from c in Contexts.OfType<TableBuilder.TableContext>()
-								where c.ObjectType == me.Member.DeclaringType
-								select c.EntityDescriptor
-							).FirstOrDefault();
+						var om = (
+							from c in Contexts.OfType<TableBuilder.TableContext>()
+							where c.ObjectType == me.Member.DeclaringType
+							select c.EntityDescriptor
+						).FirstOrDefault();
 
-							return om != null && om.Associations.All(a => !a.MemberInfo.EqualsTo(me.Member)) &&
-							       om[me.Member.Name] == null;
-						}
-					case ExpressionType.Call:
-						{
-							var mc = (MethodCallExpression)e;
-							if (mc.IsCte(MappingSchema))
-						context.WriteableValue = true;
-							break;
-						}
-				}
+						return om != null && om.Associations.All(a => !a.MemberInfo.EqualsTo(me.Member)) &&
+						       om[me.Member.Name] == null;
+					}
+				case ExpressionType.Call:
+					{
+						var mc = (MethodCallExpression)e;
+						if (mc.IsCte(MappingSchema))
+							context.WriteableValue = true;
+						break;
+					}
+			}
 
 			return context.WriteableValue;
 		}
