@@ -33,7 +33,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// </summary>
 		protected SqlStatement AddOrderByForSkip(SqlStatement statement)
 		{
-			statement = ConvertVisitor.Convert(statement, (visitor, element) => 
+			statement = statement.Convert(static (visitor, element) => 
 			{
 				if (element.ElementType == QueryElementType.OrderByClause)
 				{
@@ -42,7 +42,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					{
 						return new SqlOrderByClause(new[] { new SqlOrderByItem(new SqlValue(typeof(int), 1), false) });
 					}
-				}	
+				}
 				return element;
 			});
 			return statement;

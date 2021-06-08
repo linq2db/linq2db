@@ -8,9 +8,13 @@ namespace LinqToDB.DataProvider.Access
 	using Mapping;
 	using SqlQuery;
 	using System.Data.Linq;
+	using System.Globalization;
 
 	public class AccessMappingSchema : MappingSchema
 	{
+		private const string DATE_FORMAT     = "#{0:yyyy-MM-dd}#";
+		private const string DATETIME_FORMAT = "#{0:yyyy-MM-dd HH:mm:ss}#";
+
 		public AccessMappingSchema() : this(ProviderName.Access)
 		{
 		}
@@ -39,6 +43,8 @@ namespace LinqToDB.DataProvider.Access
 			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 		}
 
+		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
+
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			stringBuilder
@@ -50,24 +56,22 @@ namespace LinqToDB.DataProvider.Access
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "+", null, AppendConversion, value, null);
+			DataTools.ConvertStringToSql(stringBuilder, "+", null, AppendConversionAction, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
-			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
+			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversionAction, value);
 		}
 
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, DateTime value)
 		{
-			var format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
-				"#{0:yyyy-MM-dd}#" :
-				"#{0:yyyy-MM-dd HH:mm:ss}#";
+			var format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ? DATE_FORMAT : DATETIME_FORMAT;
 
-			stringBuilder.AppendFormat(format, value);
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
 
-		internal static readonly AccessMappingSchema Instance = new AccessMappingSchema();
+		internal static readonly AccessMappingSchema Instance = new ();
 
 		public class OleDbMappingSchema : MappingSchema
 		{

@@ -13,6 +13,7 @@ namespace Tests.Model
 		public DateTime  DateTimeValue;
 		[Column(DataType = DataType.Int16, Configuration = ProviderName.Oracle)]
 		public bool      BoolValue;
+		[Column(DataType = DataType.Char, Length = 36, Configuration = ProviderName.Informix)]
 		public Guid      GuidValue;
 		public Binary?   BinaryValue;
 		public short     SmallIntValue;
@@ -85,6 +86,7 @@ namespace Tests.Model
 		[Column]                                        public DateTime? DateTimeValue2;
 		[Column(DataType = DataType.Int16, Configuration = ProviderName.Oracle)]
 		[Column]                                        public bool?     BoolValue;
+		[Column(DataType = DataType.Char, Length = 36, Configuration = ProviderName.Informix)]
 		[Column]                                        public Guid?     GuidValue;
 		[Column]                                        public short?    SmallIntValue;
 		[Column]                                        public int?      IntValue;

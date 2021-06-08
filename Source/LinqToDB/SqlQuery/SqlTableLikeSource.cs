@@ -7,14 +7,14 @@ using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlMergeSourceTable : ISqlTableSource
+	public class SqlTableLikeSource : ISqlTableSource
 	{
-		public SqlMergeSourceTable()
+		public SqlTableLikeSource()
 		{
 			SourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
 		}
 
-		internal SqlMergeSourceTable(
+		internal SqlTableLikeSource(
 			int id,
 			SqlValuesTable sourceEnumerable,
 			SelectQuery sourceQuery,
@@ -93,7 +93,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement
 
-		QueryElementType IQueryElement.ElementType => QueryElementType.MergeSourceTable;
+		QueryElementType IQueryElement.ElementType => QueryElementType.SqlTableLikeSource;
 
 		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
@@ -135,12 +135,6 @@ namespace LinqToDB.SqlQuery
 
 		bool ISqlExpression.Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer) => throw new NotImplementedException();
 		
-		#endregion
-
-		#region ICloneableElement
-
-		ICloneableElement ICloneableElement.Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone) => throw new NotImplementedException();
-
 		#endregion
 
 		#region IEquatable

@@ -8,11 +8,14 @@ namespace LinqToDB.Linq.Builder
 
 	class AllAnyBuilder : MethodCallBuilder
 	{
+		private static readonly string[] MethodNames      = { "All"     , "Any"      };
+		private static readonly string[] MethodNamesAsync = { "AllAsync", "AnyAsync" };
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			return
-				methodCall.IsQueryable     ("All", "Any") ||
-				methodCall.IsAsyncExtension("All", "Any");
+				methodCall.IsQueryable     (MethodNames     ) ||
+				methodCall.IsAsyncExtension(MethodNamesAsync);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -53,7 +56,9 @@ namespace LinqToDB.Linq.Builder
 
 				if (info != null)
 				{
-					info.Expression = methodCall.Transform(ex => ConvertMethod(methodCall, 0, info, predicate.Parameters[0], ex));
+					info.Expression = methodCall.Transform(
+						(methodCall, info, predicate),
+						static (context, ex) => ConvertMethod(context.methodCall, 0, context.info, context.predicate.Parameters[0], ex));
 					info.Parameter  = param;
 
 					return info;
@@ -65,7 +70,9 @@ namespace LinqToDB.Linq.Builder
 
 				if (info != null)
 				{
-					info.Expression = methodCall.Transform(ex => ConvertMethod(methodCall, 0, info, null, ex));
+					info.Expression = methodCall.Transform(
+						(methodCall, info),
+						static (context, ex) => ConvertMethod(context.methodCall, 0, context.info, null, ex));
 					info.Parameter  = param;
 
 					return info;

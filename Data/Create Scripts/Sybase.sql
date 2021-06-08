@@ -275,3 +275,11 @@ CREATE TABLE KeepIdentityTest (
 	Value INT            NULL
 )
 GO
+
+CREATE TABLE CollatedTable
+(
+	Id				INT NOT NULL,
+	CaseSensitive	NVARCHAR(20) NOT NULL,
+	CaseInsensitive	NVARCHAR(20) NOT NULL
+)
+GO

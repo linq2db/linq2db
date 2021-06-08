@@ -640,7 +640,7 @@ namespace LinqToDB.SchemaProvider
 				var ss = name.Split(new [] {' ', '\t'}, StringSplitOptions.RemoveEmptyEntries)
 					.Select(s => char.ToUpper(s[0]) + s.Substring(1));
 
-				name = string.Join("", ss.ToArray());
+				name = string.Concat(ss);
 			}
 
 			if (name.Length > 0 && char.IsDigit(name[0]))
@@ -787,12 +787,11 @@ namespace LinqToDB.SchemaProvider
 					if (name.EndsWith("_BackReference"))
 						name = name.Substring(0, name.Length - "_BackReference".Length);
 
-					name = string.Join("", name
+					name = string.Concat(name
 						.Split('_')
 						.Where(_ =>
 							_.Length > 0 && _ != table.TableName &&
-							(table.SchemaName == null || table.IsDefaultSchema || _ != table.SchemaName))
-						.ToArray());
+							(table.SchemaName == null || table.IsDefaultSchema || _ != table.SchemaName)));
 
 					var digitEnd = 0;
 					for (var i = name.Length - 1; i >= 0; i--)

@@ -7,7 +7,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using LinqToDB.Mapping;
 
@@ -300,7 +299,7 @@ namespace LinqToDB
 		[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true)]
 		public class ExtensionAttribute : ExpressionAttribute
 		{
-			private static readonly ConcurrentDictionary<Type, IExtensionCallBuilder> _builders = new ConcurrentDictionary<Type, IExtensionCallBuilder>();
+			private static readonly ConcurrentDictionary<Type, IExtensionCallBuilder> _builders = new ();
 
 			public string? TokenName { get; set; }
 
@@ -647,7 +646,6 @@ namespace LinqToDB
 							.Distinct()
 							.ToArray()!;
 
-						ColumnDescriptor? descriptor;
 						if (names.Length > 0)
 						{
 							if (method.IsGenericMethod)
@@ -655,12 +653,7 @@ namespace LinqToDB
 								var templateParam  = templateParameters[i];
 								var elementType    = templateParam.ParameterType!;
 								var argElementType = param.ParameterType;
-								if (elementType.IsArray && argElementType.IsArray)
-								{
-									elementType    = elementType.GetElementType()!;
-									argElementType = argElementType.GetElementType()!;
-								}
-								descriptorMapping.TryGetValue(elementType, out descriptor);
+								descriptorMapping.TryGetValue(elementType, out var descriptor);
 
 								ISqlExpression[] sqlExpressions;
 								if (arg is NewArrayExpression arrayInit)
@@ -676,7 +669,7 @@ namespace LinqToDB
 
 								if (descriptor == null)
 								{
-									descriptor = sqlExpressions.Select(e => QueryHelper.GetColumnDescriptor(e)).FirstOrDefault(d => d != null);
+									descriptor = sqlExpressions.Select(QueryHelper.GetColumnDescriptor).FirstOrDefault(d => d != null);
 									if (descriptor != null)
 									{
 										foreach (var pair

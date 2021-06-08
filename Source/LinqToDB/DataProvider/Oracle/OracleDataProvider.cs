@@ -250,6 +250,7 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.NText    : type = OracleProviderAdapter.OracleDbType.NClob       ; break;
 				case DataType.Image    :
 				case DataType.Binary   :
+				case DataType.Blob     :
 				case DataType.VarBinary: type = OracleProviderAdapter.OracleDbType.Blob        ; break;
 				case DataType.Cursor   : type = OracleProviderAdapter.OracleDbType.RefCursor   ; break;
 				case DataType.NVarChar : type = OracleProviderAdapter.OracleDbType.NVarchar2   ; break;

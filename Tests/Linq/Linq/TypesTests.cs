@@ -758,5 +758,145 @@ namespace Tests.Linq
 					from t in GetTypes(context) where (param1 == null || t.SmallIntValue == param1) && (param2 == null || t.BoolValue == param2) select t,
 					from t in db.Types          where (param1 == null || t.SmallIntValue == param1) && (param2 == null || t.BoolValue == param2) select t);
 		}
+
+		// AllTypes is mess...
+		[Table]
+		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
+		class AllTypes
+		{
+			[Column] public int     ID             { get; set; }
+
+			[Column]
+			[Column("REALDATATYPE", Configuration = ProviderName.DB2)]
+			[Column("realDataType", Configuration = ProviderName.Informix)]
+			[Column("realDataType", Configuration = ProviderName.Oracle)]
+			[Column("realDataType", Configuration = ProviderName.PostgreSQL)]
+			[Column("realDataType", Configuration = ProviderName.SapHana)]
+			[Column("realDataType", Configuration = ProviderName.SqlCe)]
+			[Column("realDataType", Configuration = ProviderName.SqlServer)]
+			[Column("realDataType", Configuration = ProviderName.Sybase)]
+			public float? floatDataType { get; set; }
+
+
+			[Column]
+			[Column("DOUBLEDATATYPE", Configuration = ProviderName.DB2)]
+			[Column("realDataType"  , Configuration = ProviderName.Access)]
+			[Column("realDataType"  , Configuration = ProviderName.SQLite)]
+			[Column("floatDataType" , Configuration = ProviderName.Informix)]
+			[Column("floatDataType" , Configuration = ProviderName.Oracle)]
+			[Column("floatDataType" , Configuration = ProviderName.SapHana)]
+			[Column("floatDataType" , Configuration = ProviderName.SqlCe)]
+			[Column("floatDataType" , Configuration = ProviderName.SqlServer)]
+			[Column("floatDataType" , Configuration = ProviderName.Sybase)]
+			public double? doubleDataType { get; set; }
+		}
+
+		[Test]
+		public void TestSpecialValues(
+			[DataSources(
+				TestProvName.AllSQLite,
+				TestProvName.AllAccess,
+				TestProvName.AllInformix,
+				TestProvName.AllSybase,
+				TestProvName.AllSqlServer,
+				TestProvName.AllMySql,
+				TestProvName.AllSapHana,
+				ProviderName.DB2,
+				// SQL CE allows special values using parameters, but no idea how to generate them as literal
+				ProviderName.SqlCe
+				)] string context,
+			[Values] bool inline)
+		{
+			// TODO: update condition to include only Firebird 2.5 when
+			// https://github.com/FirebirdSQL/firebird/issues/6750 releases
+			var skipFloatInf = context.Contains("Firebird") && inline;
+			var skipId       = context.StartsWith("DB2") || context.Contains("Sybase") || context.Contains("SqlCe");
+
+			using (var db = GetDataContext(context))
+			{
+				db.InlineParameters = inline;
+
+				var maxID = db.GetTable<AllTypes>().Select(_ => _.ID).Max();
+				try
+				{
+					var real  = float.NaN;
+					var dbl   = double.NaN;
+					if (skipId)
+						db.GetTable<AllTypes>().Insert(() => new AllTypes()
+						{
+							floatDataType  = real,
+							doubleDataType = dbl,
+						});
+					else
+						db.GetTable<AllTypes>().Insert(() => new AllTypes()
+						{
+							ID             = 1000,
+							floatDataType  = real,
+							doubleDataType = dbl,
+						});
+					real = skipFloatInf ? float.NaN : float.NegativeInfinity;
+					dbl  = double.NegativeInfinity;
+					if (skipId)
+						db.GetTable<AllTypes>().Insert(() => new AllTypes()
+						{
+							floatDataType  = real,
+							doubleDataType = dbl,
+						});
+					else
+						db.GetTable<AllTypes>().Insert(() => new AllTypes()
+						{
+							ID             = 1001,
+							floatDataType  = real,
+							doubleDataType = dbl,
+						});
+					real = skipFloatInf ? float.NaN : float.PositiveInfinity;
+					dbl  = double.PositiveInfinity;
+					if (skipId)
+						db.GetTable<AllTypes>().Insert(() => new AllTypes()
+						{
+							floatDataType  = real,
+							doubleDataType = dbl,
+						});
+					else
+						db.GetTable<AllTypes>().Insert(() => new AllTypes()
+						{
+							ID             = 1002,
+							floatDataType  = real,
+							doubleDataType = dbl,
+						});
+
+					var res = db.GetTable<AllTypes>()
+						.Where(_ => _.ID > maxID)
+						.OrderBy(_ => _.ID)
+						.Select(_ => new { _.floatDataType, _.doubleDataType})
+						.ToArray();
+
+					Assert.AreEqual (3   , res.Length);
+					Assert.IsNaN    (res[0].floatDataType);
+					Assert.IsNaN    (res[0].doubleDataType);
+
+					Assert.IsNotNull(res[1].floatDataType);
+					Assert.IsNotNull(res[1].doubleDataType);
+					if (skipFloatInf)
+						Assert.IsNaN(res[0].floatDataType);
+					else
+						Assert.True     (float.IsNegativeInfinity(res[1].floatDataType!.Value));
+					Assert.True     (double.IsNegativeInfinity(res[1].doubleDataType!.Value));
+
+					Assert.IsNotNull(res[2].floatDataType);
+					Assert.IsNotNull(res[2].doubleDataType);
+					if (skipFloatInf)
+						Assert.IsNaN(res[0].floatDataType);
+					else
+						Assert.True     (float.IsPositiveInfinity(res[2].floatDataType!.Value));
+					Assert.True     (double.IsPositiveInfinity(res[2].doubleDataType!.Value));
+				}
+				finally
+				{
+					db.GetTable<AllTypes>().Where(_ => _.ID > maxID).Delete();
+				}
+			}
+		}
+
 	}
 }

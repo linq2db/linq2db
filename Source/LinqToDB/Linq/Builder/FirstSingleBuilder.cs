@@ -11,13 +11,14 @@ namespace LinqToDB.Linq.Builder
 
 	class FirstSingleBuilder : MethodCallBuilder
 	{
-		public static string[] MethodNames = { "First", "FirstOrDefault", "Single", "SingleOrDefault" };
+		public  static readonly string[] MethodNames      = { "First"     , "FirstOrDefault"     , "Single"     , "SingleOrDefault"      };
+		private static readonly string[] MethodNamesAsync = { "FirstAsync", "FirstOrDefaultAsync", "SingleAsync", "SingleOrDefaultAsync" };
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			return
-				methodCall.IsQueryable     (MethodNames) && methodCall.Arguments.Count == 1 ||
-				methodCall.IsAsyncExtension(MethodNames) && methodCall.Arguments.Count == 2;
+				methodCall.IsQueryable     (MethodNames     ) && methodCall.Arguments.Count == 1 ||
+				methodCall.IsAsyncExtension(MethodNamesAsync) && methodCall.Arguments.Count == 2;
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -74,7 +75,9 @@ namespace LinqToDB.Linq.Builder
 
 				if (info != null)
 				{
-					info.Expression = methodCall.Transform(ex => ConvertMethod(methodCall, 0, info, predicate.Parameters[0], ex));
+					info.Expression = methodCall.Transform(
+						(methodCall, info, predicate),
+						static (context, ex) => ConvertMethod(context.methodCall, 0, context.info, context.predicate.Parameters[0], ex));
 					info.Parameter  = param;
 
 					return info;
@@ -86,7 +89,9 @@ namespace LinqToDB.Linq.Builder
 
 				if (info != null)
 				{
-					info.Expression = methodCall.Transform(ex => ConvertMethod(methodCall, 0, info, null, ex));
+					info.Expression = methodCall.Transform(
+						(methodCall, info),
+						static (context, ex) => ConvertMethod(context.methodCall, 0, context.info, null, ex));
 					info.Parameter  = param;
 
 					return info;
@@ -239,13 +244,59 @@ namespace LinqToDB.Linq.Builder
 				return _checkNullIndex;
 			}
 
+
+			static bool HasSubQuery(IBuildContext context)
+			{
+				//TODO: candidate for refactor. We need better way for detecting such cases.
+
+				Expression? expressionToCheck = null;
+
+				var ctx = context;
+
+				while (true)
+				{
+					if (ctx is SelectContext sc)
+					{
+						expressionToCheck = sc.Body;
+						break;
+					}
+
+					if (ctx is SubQueryContext sub)
+					{
+						ctx = sub.SubQuery;
+					}
+					else if (ctx is PassThroughContext pass)
+					{
+						ctx = pass.Context;
+					}
+					else
+					{
+						break;
+					}
+				}
+				if (expressionToCheck != null)
+				{
+					var found = null != expressionToCheck.Find(ctx, static(c, e) =>
+					{
+						if (e is MethodCallExpression mc && c.Builder.IsSubQuery(c, mc))
+							return true;
+						return false;
+					});
+
+					return found;
+				}
+
+				return false;
+			}
+
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				if (expression == null || level == 0)
 				{
 					if (Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported &&
-						Parent!.SelectQuery.GroupBy.IsEmpty &&
-						Parent.SelectQuery.From.Tables.Count > 0)
+					    Parent!.SelectQuery.GroupBy.IsEmpty                       &&
+					    Parent.SelectQuery.From.Tables.Count > 0                  &&
+					    !HasSubQuery(Sequence))
 					{
 						CreateJoin();
 
@@ -276,13 +327,13 @@ namespace LinqToDB.Linq.Builder
 					if (expression == null)
 					{
 						if (   !Builder.DataContext.SqlProviderFlags.IsSubQueryColumnSupported 
-						    || Sequence.IsExpression(null, level, RequestFor.Object).Result)
+						       || Sequence.IsExpression(null, level, RequestFor.Object).Result)
 						{
 							return Builder.BuildMultipleQuery(Parent!, _methodCall, enforceServerSide);
 						}
 
 						var idx = Parent!.SelectQuery.Select.Add(SelectQuery);
-						    idx = Parent.ConvertToParentIndex(idx, Parent);
+						idx = Parent.ConvertToParentIndex(idx, Parent);
 						return Builder.BuildSql(_methodCall.Type, idx, SelectQuery);
 					}
 

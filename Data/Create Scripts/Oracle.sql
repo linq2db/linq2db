@@ -1172,3 +1172,13 @@ COMMENT ON COLUMN "SchemaTestView"."Id" IS 'This is view column'
 /
 COMMENT ON COLUMN "SchemaTestMatView"."Id" IS 'This is matview column'
 /
+
+DROP TABLE "CollatedTable"
+/
+CREATE TABLE "CollatedTable"
+(
+	"Id"				INT NOT NULL,
+	"CaseSensitive"		VARCHAR2(20) NOT NULL,
+	"CaseInsensitive"	VARCHAR2(20) NOT NULL
+)
+/

@@ -43,7 +43,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression IBuildContext.Expression => Lambda;
 
-		public readonly Dictionary<MemberInfo,Expression> Members = new Dictionary<MemberInfo,Expression>(new MemberInfoComparer());
+		public readonly Dictionary<MemberInfo,Expression> Members = new (new MemberInfoComparer());
 
 		public SelectContext(IBuildContext? parent, ExpressionBuilder builder, LambdaExpression lambda, SelectQuery selectQuery)
 		{
@@ -394,8 +394,7 @@ namespace LinqToDB.Linq.Builder
 
 		SqlInfo[] ConvertExpressions(Expression expression, ConvertFlags flags, ColumnDescriptor? columnDescriptor)
 		{
-			return Builder.ConvertExpressions(this, expression, flags, columnDescriptor)
-				.ToArray();
+			return Builder.ConvertExpressions(this, expression, flags, columnDescriptor);
 		}
 
 		#endregion
@@ -1737,7 +1736,7 @@ namespace LinqToDB.Linq.Builder
 				return memberExpression;
 
 			return !ReferenceEquals(levelExpression, expression) ?
-				expression.Transform(ex => ReferenceEquals(ex, levelExpression) ? memberExpression : ex) :
+				expression.Replace(levelExpression, memberExpression) :
 				memberExpression;
 		}
 

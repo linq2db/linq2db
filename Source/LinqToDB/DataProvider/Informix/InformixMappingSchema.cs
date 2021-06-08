@@ -10,6 +10,12 @@ namespace LinqToDB.DataProvider.Informix
 
 	public class InformixMappingSchema : MappingSchema
 	{
+		private const string DATE_FORMAT               = "TO_DATE('{0:yyyy-MM-dd}', '%Y-%m-%d')";
+		private const string DATETIME_FORMAT           = "TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', '%Y-%m-%d %H:%M:%S')";
+		private const string DATETIME5_EXPLICIT_FORMAT = "TO_DATE('{0:yyyy-MM-dd HH:mm:ss.fffff}', '%Y-%m-%d %H:%M:%S.%F5')";
+		private const string DATETIME5_FORMAT          = "TO_DATE('{0:yyyy-MM-dd HH:mm:ss.fffff}', '%Y-%m-%d %H:%M:%S%F5')";
+		private const string INTERVAL5_FORMAT          = "INTERVAL({0} {1:00}:{2:00}:{3:00}.{4:00000}) DAY TO FRACTION(5)";
+
 		static readonly char[] _extraEscapes = { '\r', '\n' };
 
 		public InformixMappingSchema() : this(ProviderName.Informix)
@@ -37,7 +43,7 @@ namespace LinqToDB.DataProvider.Informix
 			var absoluteTs = interval < TimeSpan.Zero ? (TimeSpan.Zero - interval) : interval;
 			sb.AppendFormat(
 				CultureInfo.InvariantCulture,
-				"INTERVAL({0} {1:00}:{2:00}:{3:00}.{4:00000}) DAY TO FRACTION(5)",
+				INTERVAL5_FORMAT,
 				interval.Days,
 				absoluteTs.Hours,
 				absoluteTs.Minutes,
@@ -45,6 +51,7 @@ namespace LinqToDB.DataProvider.Informix
 				(absoluteTs.Ticks / 100) % 100000);
 		}
 
+		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			// chr works with values in 0..255 range, bigger/smaller values will be converted to byte
@@ -58,7 +65,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversion, value, _extraEscapes);
+			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversionAction, value, _extraEscapes);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
@@ -70,10 +77,11 @@ namespace LinqToDB.DataProvider.Informix
 					AppendConversion(stringBuilder, value);
 					break;
 				default:
-					DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
+					DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversionAction, value);
 					break;
 			}
 		}
+
 
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType dataType, DateTime value)
 		{
@@ -83,17 +91,17 @@ namespace LinqToDB.DataProvider.Informix
 			string format;
 			if ((value.Ticks % 10000000) / 100 != 0)
 				format = InformixConfiguration.ExplicitFractionalSecondsSeparator ?
-					"TO_DATE('{0:yyyy-MM-dd HH:mm:ss.fffff}', '%Y-%m-%d %H:%M:%S.%F5')" :
-					"TO_DATE('{0:yyyy-MM-dd HH:mm:ss.fffff}', '%Y-%m-%d %H:%M:%S%F5')";
+					DATETIME5_EXPLICIT_FORMAT :
+					DATETIME5_FORMAT;
 			else
 				format = value.Hour == 0 && value.Minute == 0 && value.Second == 0
-					? "TO_DATE('{0:yyyy-MM-dd}', '%Y-%m-%d')"
-					: "TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', '%Y-%m-%d %H:%M:%S')";
+					? DATE_FORMAT
+					: DATETIME_FORMAT;
 
-			stringBuilder.AppendFormat(format, value);
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
 
-		internal static readonly InformixMappingSchema Instance = new InformixMappingSchema();
+		internal static readonly InformixMappingSchema Instance = new ();
 
 		public class IfxMappingSchema : MappingSchema
 		{
