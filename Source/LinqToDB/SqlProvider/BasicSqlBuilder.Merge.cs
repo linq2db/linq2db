@@ -41,6 +41,7 @@ namespace LinqToDB.SqlProvider
 		{
 			BuildTag(merge);
 
+			BuildWithClause(merge.With);
 			BuildMergeInto(merge);
 			BuildMergeSource(merge);
 			BuildMergeOn(merge);

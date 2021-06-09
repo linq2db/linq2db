@@ -5,6 +5,7 @@ namespace LinqToDB.DataProvider.SapHana
 	using Common;
 	using Mapping;
 	using SqlQuery;
+	using System;
 	using System.Data.Linq;
 	using System.Text;
 
@@ -24,6 +25,7 @@ namespace LinqToDB.DataProvider.SapHana
 			SetValueToSqlConverter(typeof(Binary), (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 		}
 
+		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			// char works with values in 0..255 range
@@ -46,15 +48,15 @@ namespace LinqToDB.DataProvider.SapHana
 
 		internal static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversion, value, null);
+			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversionAction, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
-			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
+			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversionAction, value);
 		}
 
-		internal static readonly SapHanaMappingSchema Instance = new SapHanaMappingSchema();
+		internal static readonly SapHanaMappingSchema Instance = new ();
 
 #if NETFRAMEWORK || NETCOREAPP
 		public class NativeMappingSchema : MappingSchema

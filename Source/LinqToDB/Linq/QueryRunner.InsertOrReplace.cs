@@ -162,7 +162,7 @@ namespace LinqToDB.Linq
 				var ei = cacheDisabled
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schema, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-					new { Operation = "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, serverName, tableOptions, type },
+					(operation: "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, serverName, tableOptions, type),
 					new { dataContext, entityDescriptor, obj},
 					static (entry, key, context) =>
 					{
@@ -197,7 +197,7 @@ namespace LinqToDB.Linq
 				var ei = cacheDisabled
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schema, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-					new { Operation = "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, serverName, tableOptions, type },
+					(operation: "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, serverName, tableOptions, type),
 					new { dataContext, entityDescriptor, obj },
 					static (entry, key, context) =>
 					{
@@ -213,12 +213,9 @@ namespace LinqToDB.Linq
 
 		public static void MakeAlternativeInsertOrUpdate(Query query)
 		{
-			var dic = new Dictionary<ICloneableElement, ICloneableElement>();
-
 			var firstStatement = (SqlInsertOrUpdateStatement)query.Queries[0].Statement;
 
-			// Do not clone parameters
-			var cloned         = (SqlInsertOrUpdateStatement)firstStatement.Clone(dic, e => !(e is SqlParameter));
+			var cloned         = firstStatement.Clone();
 
 			var insertStatement = new SqlInsertStatement(cloned.SelectQuery) {Insert = cloned.Insert, Tag = cloned.Tag};
 			insertStatement.SelectQuery.From.Tables.Clear();

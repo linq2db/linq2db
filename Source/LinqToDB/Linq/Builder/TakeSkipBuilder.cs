@@ -11,9 +11,11 @@ namespace LinqToDB.Linq.Builder
 
 	class TakeSkipBuilder : MethodCallBuilder
 	{
+		private static readonly string[] MethodNames = { "Skip", "Take" };
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("Skip", "Take");
+			return methodCall.IsQueryable(MethodNames);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

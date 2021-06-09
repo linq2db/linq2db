@@ -397,8 +397,7 @@ namespace Tests.xUpdate
 
 			Assert.AreEqual(expected.FieldFloat, actual.FieldFloat);
 
-			if (   provider != ProviderName.Firebird
-				&& provider != TestProvName.Firebird3)
+			if (!provider.Contains("Firebird"))
 				Assert.AreEqual(expected.FieldDouble, actual.FieldDouble);
 
 			AssertDateTime(expected.FieldDateTime, actual.FieldDateTime, provider);
@@ -450,8 +449,7 @@ namespace Tests.xUpdate
 		{
 			if (provider.Contains(ProviderName.Informix)
 				|| provider.Contains("Oracle")
-				|| provider == ProviderName.Firebird
-				|| provider == TestProvName.Firebird3)
+				|| provider.Contains("Firebird"))
 				return;
 
 			if (expected != null)
@@ -481,8 +479,7 @@ namespace Tests.xUpdate
 				&& provider != ProviderName.SqlServer2005
 				&& provider != ProviderName.SqlCe
 				&& !provider.Contains(ProviderName.Informix)
-				&& provider != ProviderName.Firebird
-				&& provider != TestProvName.Firebird3
+				&& !provider.Contains(ProviderName.Firebird)
 				&& provider != ProviderName.MySql
 				&& provider != ProviderName.MySqlConnector
 				&& provider != TestProvName.MySql55
@@ -603,8 +600,7 @@ namespace Tests.xUpdate
 				|| provider == TestProvName.SQLiteClassicMiniProfilerUnmapped
 				|| provider == ProviderName.SQLiteMS
 				|| provider == TestProvName.MySql55
-				|| provider == ProviderName.Firebird
-				|| provider == TestProvName.Firebird3)
+				|| provider.Contains("Firebird"))
 				return;
 
 			if (expected != null)
@@ -637,6 +633,7 @@ namespace Tests.xUpdate
 						break;
 					case ProviderName.Firebird      :
 					case TestProvName.Firebird3     :
+					case TestProvName.Firebird4     :
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 1000) * 1000);
 						break;
 					case ProviderName.InformixDB2   :

@@ -16,6 +16,7 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using System.Runtime.InteropServices;
 	using System.Threading.Tasks;
 	using Model;
 
@@ -598,7 +599,7 @@ namespace Tests.DataProvider
 				case ProviderName.SQLiteClassic:
 				case TestProvName.SQLiteClassicMiniProfilerMapped:
 				case TestProvName.SQLiteClassicMiniProfilerUnmapped:
-					expectedVersion = "3.32.1";
+					expectedVersion = "3.35.5";
 					break;
 				case ProviderName.SQLiteMS:
 #if NET472

@@ -12,6 +12,10 @@ AppDomain.CurrentDomain.AssemblyResolve += (_, args) =>
 	// ignore version mismatch
 	return AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == requestedAssembly.Name);
 };
+
+var sharedPath = Path.GetDirectoryName(typeof(LinqToDB.Data.DataConnection).Assembly.CodeBase.Replace("file:///", ""));
+
+LoadAssembly("Microsoft.Bcl.AsyncInterfaces", sharedPath);
 #>
 
 <#+

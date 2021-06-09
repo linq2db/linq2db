@@ -224,8 +224,9 @@ namespace Tests.Linq
 			AreEqual(Parent.Where(x => x.ParentID > 1), list);
 		}
 
+		// TODO: Firebird disabled temporary due to bug in provider
 		[Test]
-		public void CancelableAsyncEnumerableTest([DataSources] string context)
+		public void CancelableAsyncEnumerableTest([DataSources(TestProvName.AllFirebird)] string context)
 		{
 			using var cts = new CancellationTokenSource();
 			var cancellationToken = cts.Token;

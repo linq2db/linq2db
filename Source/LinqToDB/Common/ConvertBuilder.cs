@@ -77,6 +77,21 @@ namespace LinqToDB.Common
 				return Expression.Convert(p, to, op);
 			}
 
+			op =
+				from.GetMethodEx(to, "op_Implicit", from) ??
+				from.GetMethodEx(to, "op_Explicit", from);
+
+			if (op != null)
+			{
+				Type oppt = op.GetParameters()[0].ParameterType;
+				Type pt   = p.Type;
+
+				if (oppt.IsNullable() && !pt.IsNullable())
+					p = GetCtor(pt, oppt, p)!;
+
+				return Expression.Convert(p, to, op);
+			}
+
 			return null;
 		}
 
@@ -363,7 +378,7 @@ namespace LinqToDB.Common
 						.ToList();
 
 					var dic = new Dictionary<EnumValues,EnumValues>();
-					var cl  = mappingSchema.ConfigurationList.Concat(new[] { "", null }).Select((c,i) => new { c, i }).ToArray();
+					var cl  = mappingSchema.ConfigurationList.Concat(new[] { "", null }).Select((c,i) => (c, i)).ToArray();
 
 					foreach (var toField in toFields)
 					{

@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using LinqToDB.Linq;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
+	using Linq;
+	using Mapping;
 
 	class PostgreSQLSqlOptimizer : BasicSqlOptimizer
 	{
@@ -229,10 +229,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				for (var i = 0; i < statement.Update.Items.Count; i++)
 				{
 					var item = statement.Update.Items[i];
-					var newItem = ConvertVisitor.Convert(item, (v, e) =>
+					var newItem = item.Convert((tableToCompare, tableToUpdate), static (v, e) =>
 					{
-						if (e is SqlField field && field.Table == tableToCompare)
-							return tableToUpdate[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {tableToUpdate}");
+						if (e is SqlField field && field.Table == v.Context.tableToCompare)
+							return v.Context.tableToUpdate[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {v.Context.tableToUpdate}");
 
 						return e;
 					});
@@ -273,7 +273,20 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor visitor,
+		public override ISqlPredicate ConvertSearchStringPredicate<TContext>(MappingSchema mappingSchema, SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext<TContext>> visitor,
+			OptimizationContext optimizationContext)
+		{
+			var searchPredicate = ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);
+
+			if (false == predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context) && searchPredicate is SqlPredicate.Like likePredicate)
+			{
+				searchPredicate = new SqlPredicate.Like(likePredicate.Expr1, likePredicate.IsNot, likePredicate.Expr2, likePredicate.Escape, "ILIKE");
+			}
+
+			return searchPredicate;
+		}
+
+		public override ISqlExpression ConvertExpressionImpl<TContext>(ISqlExpression expression, ConvertVisitor<TContext> visitor,
 			EvaluationContext context)
 		{
 			expression = base.ConvertExpressionImpl(expression, visitor, context);
@@ -310,12 +323,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							: Add<int>(
 								new SqlExpression(func.SystemType, "Position({0} in {1})", Precedence.Primary,
 									func.Parameters[0],
-									ConvertExpressionImpl(new SqlFunction(typeof(string), "Substring",
+									ConvertExpressionImpl(
+										new SqlFunction(typeof(string), "Substring",
 										func.Parameters[1],
 										func.Parameters[2],
 										Sub<int>(
 											ConvertExpressionImpl(
-												new SqlFunction(typeof(int), "Length", func.Parameters[1]), visitor, context), func.Parameters[2])), visitor, context)),
+													new SqlFunction(typeof(int), "Length", func.Parameters[1]), visitor, context), func.Parameters[2])),
+										visitor,
+										context)),
 								Sub(func.Parameters[2], 1));
 				}
 			}

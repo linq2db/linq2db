@@ -8,11 +8,12 @@ namespace LinqToDB.Linq.Builder
 
 	class CountBuilder : MethodCallBuilder
 	{
-		public static readonly string[] MethodNames = { "Count", "LongCount" };
+		public  static readonly string[] MethodNames      = { "Count"     , "LongCount"      };
+		private static readonly string[] MethodNamesAsync = { "CountAsync", "LongCountAsync" };
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable(MethodNames) || methodCall.IsAsyncExtension(MethodNames);
+			return methodCall.IsQueryable(MethodNames) || methodCall.IsAsyncExtension(MethodNamesAsync);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

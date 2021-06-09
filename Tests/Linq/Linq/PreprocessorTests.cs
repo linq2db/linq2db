@@ -22,7 +22,7 @@ namespace Tests.Linq
 
 			public Expression ProcessExpression(Expression expression)
 			{
-				var result = expression.Transform(e =>
+				var result = expression.Transform<object?>(null, static (_, e) =>
 				{
 					if (e.NodeType == ExpressionType.Constant)
 					{

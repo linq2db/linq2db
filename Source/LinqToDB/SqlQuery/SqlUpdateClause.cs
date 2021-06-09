@@ -4,7 +4,7 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlUpdateClause : IQueryElement, ISqlExpressionWalkable, ICloneableElement
+	public class SqlUpdateClause : IQueryElement, ISqlExpressionWalkable
 	{
 		public SqlUpdateClause()
 		{
@@ -26,31 +26,6 @@ namespace LinqToDB.SqlQuery
 		}
 
 #endif
-
-		#endregion
-
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			var clone = new SqlUpdateClause();
-
-			if (Table != null)
-				clone.Table = (SqlTable)Table.Clone(objectTree, doClone);
-
-			foreach (var item in Items)
-				clone.Items.Add((SqlSetExpression)item.Clone(objectTree, doClone));
-
-			foreach (var item in Keys)
-				clone.Keys.Add((SqlSetExpression)item.Clone(objectTree, doClone));
-
-			objectTree.Add(this, clone);
-
-			return clone;
-		}
 
 		#endregion
 

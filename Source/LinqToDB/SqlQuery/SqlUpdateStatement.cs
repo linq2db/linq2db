@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -10,6 +9,8 @@ namespace LinqToDB.SqlQuery
 		public override QueryType QueryType          => QueryType.Update;
 		public override QueryElementType ElementType => QueryElementType.UpdateStatement;
 
+		public SqlOutputClause? Output { get; set; }
+
 		private SqlUpdateClause? _update;
 
 		public SqlUpdateClause Update
@@ -17,6 +18,8 @@ namespace LinqToDB.SqlQuery
 			get => _update ??= new SqlUpdateClause();
 			set => _update = value;
 		}
+
+		internal bool HasUpdate => _update != null;
 
 		public SqlUpdateStatement(SelectQuery selectQuery) : base(selectQuery)
 		{
@@ -39,34 +42,11 @@ namespace LinqToDB.SqlQuery
 		{
 			With?.Walk(options, func);
 			((ISqlExpressionWalkable?)_update)?.Walk(options, func);
+			((ISqlExpressionWalkable?)Output)?.Walk(options, func);
 
 			SelectQuery = (SelectQuery)SelectQuery.Walk(options, func);
 
 			return null;
-		}
-
-		public override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			var clone = new SqlUpdateStatement((SelectQuery)SelectQuery.Clone(objectTree, doClone));
-
-			if (Tag != null)
-				clone.Tag = (SqlComment)Tag.Clone(objectTree, doClone);
-
-			if (_update != null)
-				clone._update = (SqlUpdateClause)_update.Clone(objectTree, doClone);
-
-			if (With != null)
-				clone.With = (SqlWithClause)With.Clone(objectTree, doClone);
-
-			objectTree.Add(this, clone);
-
-			return clone;
-		}
-
-		public override IEnumerable<IQueryElement> EnumClauses()
-		{
-			if (_update != null)
-				yield return _update;
 		}
 
 		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
@@ -89,7 +69,6 @@ namespace LinqToDB.SqlQuery
 						if (result != null)
 							return result;
 					}
-
 				}
 			}
 
@@ -102,7 +81,7 @@ namespace LinqToDB.SqlQuery
 			if (Update == null)
 				return false;
 
-			return null != new QueryVisitor().Find(Update, e =>
+			return null != Update.Find(table, static (table, e) =>
 			{
 				return e switch
 				{

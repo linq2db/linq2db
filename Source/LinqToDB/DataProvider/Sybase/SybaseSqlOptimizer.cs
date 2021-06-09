@@ -2,6 +2,7 @@
 {
 	using SqlProvider;
 	using SqlQuery;
+	using Mapping;
 
 	class SybaseSqlOptimizer : BasicSqlOptimizer
 	{

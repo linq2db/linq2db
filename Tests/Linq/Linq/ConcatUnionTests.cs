@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
 
@@ -998,5 +998,49 @@ namespace Tests.Linq
 				var f = q.Select(t => new { rn = Sql.Ext.DenseRank().Over().OrderBy(t.ID).ToValue(), t.ID }).ToList();
 			}
 		}
+
+		[Test]
+		public void SelectWithNulls([DataSources(TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.GetTable<LinqDataTypes>();
+			var query2 = db.GetTable<LinqDataTypes>().Select(d => new LinqDataTypes { });
+
+			var query = query1.UnionAll(query2);
+
+			query.Invoking(q => q.ToArray()).Should().NotThrow();
+		}
+
+		[Test]
+		public void SelectWithNulls2([DataSources(TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.GetTable<LinqDataTypes2>();
+			var query2 = db.GetTable<LinqDataTypes2>().Select(d => new LinqDataTypes2 { });
+
+			var query = query1.UnionAll(query2);
+
+			query.Invoking(q => q.ToArray()).Should().NotThrow();
+		}
+
+		[Test]
+		public void SelectWithBooleanNulls([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = from x in db.Parent
+				select new {a = db.Child.Any(), b = (bool?)(x.ParentID != 0)};
+
+			var query2 = from x in db.Parent
+				select new {a = db.Child.Any(), b = (bool?)null};
+
+			var query = query1.UnionAll(query2);
+
+			query.Invoking(q => q.ToList()).Should().NotThrow();
+		}		
+
+
 	}
 }
