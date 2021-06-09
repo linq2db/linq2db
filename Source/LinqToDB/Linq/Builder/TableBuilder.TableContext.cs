@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
@@ -12,10 +11,10 @@ namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
 	using LinqToDB.Expressions;
+	using Interceptors;
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
-	using Tools;
 
 	partial class TableBuilder
 	{
@@ -301,19 +300,11 @@ namespace LinqToDB.Linq.Builder
 			[UsedImplicitly]
 			static object OnEntityCreated(IDataContext context, object entity)
 			{
-				var onEntityCreated = context.OnEntityCreated;
-
-				if (onEntityCreated != null)
+				DataContextEventData? args = null;
+				foreach (var interceptor in context.GetInterceptors<IDataContextInterceptor>())
 				{
-					var args = new EntityCreatedEventArgs
-					{
-						Entity      = entity,
-						DataContext = context
-					};
-
-					onEntityCreated(args);
-
-					return args.Entity;
+					args   ??= new DataContextEventData(context);
+					entity =   interceptor.EntityCreated(args.Value, entity);
 				}
 
 				return entity;
@@ -321,17 +312,13 @@ namespace LinqToDB.Linq.Builder
 
 			Expression NotifyEntityCreated(Expression expr)
 			{
-				if (Builder.DataContext is IEntityServices)
-				{
-					expr =
-						Expression.Convert(
-							Expression.Call(
-								MemberHelper.MethodOf(() => OnEntityCreated(null!, null!)),
-								ExpressionBuilder.DataContextParam,
-								expr),
-							expr.Type);
-				}
-
+				expr =
+					Expression.Convert(
+						Expression.Call(
+							MemberHelper.MethodOf(() => OnEntityCreated(null!, null!)),
+							ExpressionBuilder.DataContextParam,
+							expr),
+						expr.Type);
 
 				return expr;
 			}
@@ -961,7 +948,7 @@ namespace LinqToDB.Linq.Builder
 
 			#region ConvertToIndex
 
-			readonly Dictionary<ISqlExpression,SqlInfo> _indexes = new Dictionary<ISqlExpression,SqlInfo>();
+			readonly Dictionary<ISqlExpression,SqlInfo> _indexes = new ();
 
 			protected virtual SqlInfo GetIndex(SqlInfo expr)
 			{

@@ -1,5 +1,4 @@
-﻿
-Imports Tests.Model
+﻿Imports Tests.Model
 
 Public Module CompilerServices
 

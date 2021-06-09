@@ -928,7 +928,7 @@ namespace Tests.xUpdate
 				TestProvName.AllSapHana)]
 			string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var ids = new[] { 10000, 20000 };
 

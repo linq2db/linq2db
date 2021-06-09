@@ -62,7 +62,7 @@ namespace Tests.UserTests
 			const int recordsCount = 20;
 
 			using (new DisableBaseline("Multi-threading"))
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable<InsertTable>())
 			{
 				var tasks = new List<Task>();
@@ -81,7 +81,7 @@ namespace Tests.UserTests
 
 		private void Insert(string context, int value)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.GetTable<InsertTable>().Insert(() => new InsertTable { Value = value });
 			}

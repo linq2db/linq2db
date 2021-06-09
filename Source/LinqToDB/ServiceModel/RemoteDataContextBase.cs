@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -15,6 +14,7 @@ namespace LinqToDB.ServiceModel
 	using Expressions;
 	using Extensions;
 	using LinqToDB.Common;
+	using LinqToDB.Interceptors;
 	using Mapping;
 	using SqlProvider;
 
@@ -204,7 +204,7 @@ namespace LinqToDB.ServiceModel
 												typeof(MappingSchema),
 												typeof(ISqlOptimizer),
 												typeof(SqlProviderFlags)
-											}),
+											}) ?? throw new InvalidOperationException($"Constructor for type '{type.Name}' not found."),
 											new Expression[]
 											{
 												Expression.Constant(((IDataContext)this).MappingSchema),
@@ -235,15 +235,12 @@ namespace LinqToDB.ServiceModel
 							if (!_sqlOptimizers.TryGetValue(key, out _getSqlOptimizer))
 								_sqlOptimizers.Add(key, _getSqlOptimizer =
 									Expression.Lambda<Func<ISqlOptimizer>>(
-										Expression.New(
-											type.GetConstructor(new[]
-											{
-												typeof(SqlProviderFlags)
-											}),
-											new Expression[]
-											{
-												Expression.Constant(((IDataContext)this).SqlProviderFlags)
-											})).CompileExpression());
+											Expression.New(
+												type.GetConstructor(new[] {typeof(SqlProviderFlags)}) ??
+												throw new InvalidOperationException(
+													$"Constructor for type '{type.Name}' not found."),
+												Expression.Constant(((IDataContext)this).SqlProviderFlags)))
+										.CompileExpression());
 				}
 
 				return _getSqlOptimizer;
@@ -313,13 +310,13 @@ namespace LinqToDB.ServiceModel
 		{
 			ThrowOnDisposed();
 
-			return Clone();
+			var ctx = Clone();
+
+			if (_contextInterceptors != null)
+				ctx.AddInterceptor(_contextInterceptors.Clone());
+
+			return ctx;
 		}
-
-		public event EventHandler? OnClosing;
-
-		/// <inheritdoc/>
-		public Action<EntityCreatedEventArgs>? OnEntityCreated { get; set; }
 
 		protected bool Disposed { get; private set; }
 
@@ -331,36 +328,40 @@ namespace LinqToDB.ServiceModel
 
 		void IDataContext.Close()
 		{
-			Close();
+			if (_contextInterceptors != null)
+				_contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosing(arg), new DataContextEventData(this));
+
+			if (_contextInterceptors != null)
+				_contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosed(arg), new DataContextEventData(this));
 		}
 
-		Task IDataContext.CloseAsync()
+		async Task IDataContext.CloseAsync()
 		{
-			Close();
-			return TaskEx.CompletedTask;
+			if (_contextInterceptors != null)
+				await _contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosingAsync(arg), new DataContextEventData(this))
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+			if (_contextInterceptors != null)
+				await _contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosedAsync(arg), new DataContextEventData(this))
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-		void Close()
-		{
-			OnClosing?.Invoke(this, EventArgs.Empty);
-		}
-
-		public void Dispose()
+		public virtual void Dispose()
 		{
 			Disposed = true;
 
-			Close();
+			((IDataContext)this).Close();
 		}
 
 #if !NATIVE_ASYNC
-		public Task DisposeAsync()
+		public virtual Task DisposeAsync()
 		{
 			Disposed = true;
 
 			return ((IDataContext)this).CloseAsync();
 		}
 #else
-		public ValueTask DisposeAsync()
+		public virtual ValueTask DisposeAsync()
 		{
 			Disposed = true;
 

@@ -10,7 +10,6 @@ using System.Text;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Data.DbCommandProcessor;
 using LinqToDB.DataProvider.Informix;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
@@ -31,6 +30,8 @@ using NUnit.Framework.Internal;
 
 namespace Tests
 {
+	using LinqToDB.Data.RetryPolicy;
+	using LinqToDB.Interceptors;
 	using Model;
 	using Tools;
 
@@ -229,7 +230,7 @@ namespace Tests
 
 			DefaultProvider = testSettings.DefaultConfiguration;
 
-			if (!DefaultProvider.IsNullOrEmpty())
+			if (!string.IsNullOrEmpty(DefaultProvider))
 			{
 				DataConnection.DefaultConfiguration = DefaultProvider;
 #if !NET472
@@ -338,8 +339,8 @@ namespace Tests
 #if NET472
 		const           int          IP = 22654;
 		static          bool         _isHostOpen;
-		static          LinqService? _service;
-		static readonly object       _syncRoot = new ();
+		static          TestLinqService? _service;
+		static readonly object           _syncRoot = new ();
 #endif
 
 		static void OpenHost(MappingSchema? ms)
@@ -361,7 +362,7 @@ namespace Tests
 					return;
 				}
 
-				host        = new ServiceHost(_service = new LinqService(ms) { AllowUpdates = true }, new Uri("net.tcp://localhost:" + (IP + TestExternals.RunID)));
+				host        = new ServiceHost(_service = new TestLinqService(ms, null, false) { AllowUpdates = true }, new Uri("net.tcp://localhost:" + (IP + TestExternals.RunID)));
 				_isHostOpen = true;
 			}
 
@@ -442,7 +443,12 @@ namespace Tests
 			ProviderName.SapHanaOdbc
 		}).ToList();
 
-		protected ITestDataContext GetDataContext(string configuration, MappingSchema? ms = null, bool testLinqService = true)
+		protected ITestDataContext GetDataContext(
+			string         configuration,
+			MappingSchema? ms                       = null,
+			bool           testLinqService          = true,
+			IInterceptor?  interceptor              = null,
+			bool           suppressSequentialAccess = false)
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
@@ -451,9 +457,25 @@ namespace Tests
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
 
-				var dx  = testLinqService
-					? new ServiceModel.TestLinqServiceDataContext(new LinqService(ms) { AllowUpdates = true }) { Configuration = str }
-					: new TestServiceModelDataContext(IP + TestExternals.RunID) { Configuration = str } as RemoteDataContextBase;
+				RemoteDataContextBase dx;
+
+				if (testLinqService)
+					dx = new ServiceModel.TestLinqServiceDataContext(new TestLinqService(ms, interceptor, suppressSequentialAccess) { AllowUpdates = true }) { Configuration = str };
+				else
+				{
+					_service!.SuppressSequentialAccess = suppressSequentialAccess;
+					if (interceptor != null)
+						_service!.AddInterceptor(interceptor);
+
+					dx = new TestServiceModelDataContext(
+						IP + TestExternals.RunID,
+						() =>
+						{
+							_service!.SuppressSequentialAccess = false;
+							if (interceptor != null)
+								_service!.RemoveInterceptor();
+						}) { Configuration = str };
+				}
 
 				Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
 
@@ -466,6 +488,21 @@ namespace Tests
 #endif
 			}
 
+			return GetDataConnection(configuration, ms, interceptor, suppressSequentialAccess: suppressSequentialAccess);
+		}
+
+		protected TestDataConnection GetDataConnection(
+			string         configuration,
+			MappingSchema? ms                       = null,
+			IInterceptor?  interceptor              = null,
+			IRetryPolicy?  retryPolicy              = null,
+			bool           suppressSequentialAccess = false)
+		{
+			if (configuration.EndsWith(".LinqService"))
+			{
+				throw new InvalidOperationException($"Call {nameof(GetDataContext)} for remote context creation");
+			}
+
 			Debug.WriteLine(configuration, "Provider ");
 
 			var res = new TestDataConnection(configuration);
@@ -475,9 +512,20 @@ namespace Tests
 			// add extra mapping schema to not share mappers with other sql2017/2019 providers
 			// use same schema to use cache within test provider scope
 			if (configuration == TestProvName.SqlServer2019SequentialAccess)
+			{
+				if (!suppressSequentialAccess)
+					res.AddInterceptor(SequentialAccessCommandInterceptor.Instance);
+
 				res.AddMappingSchema(_sequentialAccessSchema);
+			}
 			else if (configuration == TestProvName.SqlServer2019FastExpressionCompiler)
 				res.AddMappingSchema(_fecSchema);
+
+			if (interceptor != null)
+				res.AddInterceptor(interceptor);
+
+			if (retryPolicy != null)
+				res.RetryPolicy = retryPolicy;
 
 			return res;
 		}
@@ -1349,7 +1397,6 @@ namespace Tests
 			if (provider == TestProvName.SqlServer2019SequentialAccess)
 			{
 				Configuration.OptimizeForSequentialAccess = true;
-				DbCommandProcessorExtensions.Instance = new SequentialAccessCommandProcessor();
 			}
 			else if (provider == TestProvName.SqlServer2019FastExpressionCompiler)
 			{
@@ -1365,7 +1412,6 @@ namespace Tests
 			if (provider == TestProvName.SqlServer2019SequentialAccess)
 			{
 				Configuration.OptimizeForSequentialAccess = false;
-				DbCommandProcessorExtensions.Instance = null;
 			}
 			if (provider == TestProvName.SqlServer2019FastExpressionCompiler)
 			{
@@ -1687,20 +1733,6 @@ namespace Tests
 				_logWriter.WriteLine(text);
 				_logWriter.Flush();
 			}
-		}
-	}
-
-	public class CustomCommandProcessor : IDisposable
-	{
-		private readonly IDbCommandProcessor? _original = DbCommandProcessorExtensions.Instance;
-		public CustomCommandProcessor(IDbCommandProcessor? processor)
-		{
-			DbCommandProcessorExtensions.Instance = processor;
-		}
-
-		public void Dispose()
-		{
-			DbCommandProcessorExtensions.Instance = _original;
 		}
 	}
 

@@ -15,7 +15,9 @@ namespace Tests.Samples
 {
 	using System.Data.Common;
 	using System.Threading.Tasks;
-	using Model;
+	using LinqToDB.Data;
+	using LinqToDB.Interceptors;
+
 	/// <summary>
 	/// This sample demonstrates how can we use <see cref="IDataContext"/> decoration
 	/// to deal with different <see cref="MappingSchema"/> objects in one <see cref="DbConnection"/>.
@@ -49,12 +51,6 @@ namespace Tests.Samples
 			{
 				get => _context.InlineParameters;
 				set => _context.InlineParameters = value;
-			}
-
-			event EventHandler? IDataContext.OnClosing
-			{
-				add { }
-				remove { }
 			}
 
 			public IDataContext Clone(bool forNestedQuery)
@@ -97,7 +93,11 @@ namespace Tests.Samples
 				return _context.IsDBNullAllowed(reader, idx);
 			}
 
-			public Action<EntityCreatedEventArgs>? OnEntityCreated { get; set; }
+			public void AddInterceptor(IInterceptor interceptor) => _context.AddInterceptor(interceptor);
+
+			public IEnumerable<TInterceptor> GetInterceptors<TInterceptor>()
+				where TInterceptor : IInterceptor
+				=> _context.GetInterceptors<TInterceptor>();
 		}
 
 		public class Entity
@@ -109,7 +109,7 @@ namespace Tests.Samples
 //		[Test]
 		public void Sample()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var ms = new MappingSchema();
 				var b  = ms.GetFluentMappingBuilder();

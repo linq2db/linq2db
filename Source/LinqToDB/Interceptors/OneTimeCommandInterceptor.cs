@@ -5,13 +5,13 @@ namespace LinqToDB.Interceptors
 {
 	internal sealed class OneTimeCommandInterceptor : CommandInterceptor
 	{
-		private readonly Func<CommandInitializedEventData, DbCommand, DbCommand>? _onCommandInitialized;
-		public OneTimeCommandInterceptor(Func<CommandInitializedEventData, DbCommand, DbCommand> onCommandInitialized)
+		private readonly Func<CommandEventData, DbCommand, DbCommand>? _onCommandInitialized;
+		public OneTimeCommandInterceptor(Func<CommandEventData, DbCommand, DbCommand> onCommandInitialized)
 		{
 			_onCommandInitialized = onCommandInitialized;
 		}
 
-		public override DbCommand CommandInitialized(CommandInitializedEventData eventData, DbCommand command)
+		public override DbCommand CommandInitialized(CommandEventData eventData, DbCommand command)
 		{
 			if (_onCommandInitialized != null)
 			{

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.IO;
 using System.Linq;
 
@@ -57,7 +56,7 @@ namespace LinqToDB.DataProvider.SqlCe
 					CatalogName     = catalog,
 					SchemaName      = schema,
 					TableName       = name,
-					IsDefaultSchema = schema.IsNullOrEmpty(),
+					IsDefaultSchema = string.IsNullOrEmpty(schema),
 					IsView          = t.Field<string>("TABLE_TYPE") == "VIEW"
 				}
 			).ToList();

@@ -67,7 +67,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue60Test([IncludeDataSources(TestProvName.AllSqlServer, ProviderName.SqlCe)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var sp       = db.DataProvider.GetSchemaProvider();
 				var dbSchema = sp.GetSchema(db);

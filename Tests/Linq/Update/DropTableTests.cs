@@ -82,7 +82,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void DropSpecificDatabaseTableTest([DataSources(false, TestProvName.AllSapHana)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				// cleanup
 				db.DropTable<DropTableTest>(throwExceptionIfNotExists: false);

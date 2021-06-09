@@ -2,6 +2,7 @@
 using System;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
+using LinqToDB.Interceptors;
 
 namespace LinqToDB.ServiceModel
 {
@@ -73,7 +74,7 @@ namespace LinqToDB.ServiceModel
 				Binding                    = Binding,
 				_endpointConfigurationName = _endpointConfigurationName,
 				_remoteAddress             = _remoteAddress,
-				_endpointAddress           = _endpointAddress,
+				_endpointAddress           = _endpointAddress
 			};
 		}
 

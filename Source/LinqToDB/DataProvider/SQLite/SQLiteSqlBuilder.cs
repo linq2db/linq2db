@@ -130,7 +130,10 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			if (database != null && database.Length == 0) database = null;
 
-			if (database != null)
+			// either "temp", "main" or attached db name supported
+			if (tableOptions.IsTemporaryOptionSet())
+				sb.Append("temp.");
+			else if (database != null)
 				sb.Append(database).Append('.');
 
 			return sb.Append(table);

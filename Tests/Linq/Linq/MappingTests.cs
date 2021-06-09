@@ -180,7 +180,7 @@ namespace Tests.Linq
 		public class ParentObject
 		{
 			[Column]                      public int   ParentID;
-			[Column("Value1", ".Value1")] public Inner Value = new Inner();
+			[Column("Value1", ".Value1")] public Inner Value = new ();
 
 			public class Inner
 			{
@@ -252,7 +252,7 @@ namespace Tests.Linq
 			}
 		}
 
-		static readonly MyMappingSchema _myMappingSchema = new MyMappingSchema();
+		static readonly MyMappingSchema _myMappingSchema = new ();
 
 		[Test]
 		public void MyType1()
@@ -293,7 +293,7 @@ namespace Tests.Linq
 		[Test]
 		public void MyType4()
 		{
-			using (var db = (TestDataConnection) new TestDataConnection().AddMappingSchema(_myMappingSchema))
+			using (var db = (TestDataConnection)new TestDataConnection().AddMappingSchema(_myMappingSchema))
 			{
 				try
 				{
@@ -310,7 +310,7 @@ namespace Tests.Linq
 		[Test]
 		public void MyType5()
 		{
-			using (var db = (TestDataConnection) new TestDataConnection().AddMappingSchema(_myMappingSchema))
+			using (var db = (TestDataConnection)new TestDataConnection().AddMappingSchema(_myMappingSchema))
 			{
 				try
 				{
@@ -444,8 +444,7 @@ namespace Tests.Linq
 		{
 			GetProviderName(context, out var isLinqService);
 
-			using (new CustomCommandProcessor(null))
-			using (var db = GetDataContext(context, testLinqService : false))
+			using (var db = GetDataContext(context, testLinqService : false, suppressSequentialAccess: true))
 			{
 #if NET472
 				if (isLinqService)
@@ -468,8 +467,7 @@ namespace Tests.Linq
 		{
 			GetProviderName(context, out var isLinqService);
 
-			using (new CustomCommandProcessor(null))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, suppressSequentialAccess: true))
 			{
 				var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList())!;
 				Assert.AreEqual("lastname", ex.ColumnName!.ToLower());

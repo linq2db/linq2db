@@ -653,7 +653,7 @@ namespace Tests.Linq
 		[Test, ActiveIssue(1601)]
 		public void Issue1601([DataSources(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var query = from q in db.Types
 							let datePlus2 = q.DateTimeValue.AddDays(2)

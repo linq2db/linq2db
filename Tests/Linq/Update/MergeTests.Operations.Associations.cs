@@ -38,7 +38,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void TargetAssociation([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -67,7 +67,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void TargetQueryAssociation([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -96,7 +96,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void SourceAssociationAsInnerJoin1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -119,7 +119,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void SourceAssociationAsInnerJoin2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -142,7 +142,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void SourceAssociationAsOuterJoin([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -167,7 +167,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -203,7 +203,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -238,7 +238,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -289,7 +289,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -337,7 +337,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -385,7 +385,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -433,7 +433,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -475,7 +475,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -519,7 +519,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -566,7 +566,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -610,7 +610,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -646,7 +646,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -681,7 +681,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -734,7 +734,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -782,7 +782,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -832,7 +832,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -880,7 +880,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -920,7 +920,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void SameSourceAssociationInUpdateBySource([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -963,7 +963,7 @@ namespace Tests.xUpdate
 		public void SameSourceAssociationInUpdateBySourcePredicate(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -1011,7 +1011,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -1054,7 +1054,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -1090,7 +1090,7 @@ namespace Tests.xUpdate
 		public void SameSourceAssociationInUpdateWithDeleteDeletePredicate(
 			[IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -1127,7 +1127,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);

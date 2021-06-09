@@ -2,9 +2,7 @@
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Mapping;
 using NUnit.Framework;
-using System.Data.Common;
 using System.Linq;
-using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -358,7 +356,7 @@ namespace Tests.Linq
 		[Test]
 		public void Fts3CommandOptimize([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.AddMappingSchema(SetupFtsMapping(type));
 
@@ -373,7 +371,7 @@ namespace Tests.Linq
 		[Test]
 		public void Fts3CommandRebuild([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.AddMappingSchema(SetupFtsMapping(type));
 
@@ -388,7 +386,7 @@ namespace Tests.Linq
 		[Test]
 		public void Fts3CommandIntegrityCheck([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.AddMappingSchema(SetupFtsMapping(type));
 
@@ -403,7 +401,7 @@ namespace Tests.Linq
 		[Test]
 		public void Fts3CommandMerge([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.AddMappingSchema(SetupFtsMapping(type));
 
@@ -418,7 +416,7 @@ namespace Tests.Linq
 		[Test]
 		public void Fts3CommandAutoMerge([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(SQLiteFTS.FTS3, SQLiteFTS.FTS4)] SQLiteFTS type)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.AddMappingSchema(SetupFtsMapping(type));
 
@@ -433,7 +431,7 @@ namespace Tests.Linq
 		[Test]
 		public void Fts5CommandAutoMerge([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.AddMappingSchema(SetupFtsMapping(SQLiteFTS.FTS5));
 
@@ -455,7 +453,7 @@ namespace Tests.Linq
 		[Test]
 		public void Fts5CommandCrisisMerge([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.AddMappingSchema(SetupFtsMapping(SQLiteFTS.FTS5));
 
@@ -477,7 +475,7 @@ namespace Tests.Linq
 		[Test]
 		public void Fts5CommandDelete([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var commandInterceptor = new SaveCommandInterceptor();
 				db.AddInterceptor(commandInterceptor);
@@ -512,7 +510,7 @@ namespace Tests.Linq
 		[Test]
 		public void Fts5CommandDeleteAll([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.AddMappingSchema(SetupFtsMapping(SQLiteFTS.FTS5));
 
@@ -534,7 +532,7 @@ namespace Tests.Linq
 		[Test]
 		public void Fts5CommandIntegrityCheck([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.AddMappingSchema(SetupFtsMapping(SQLiteFTS.FTS5));
 
@@ -556,7 +554,7 @@ namespace Tests.Linq
 		[Test]
 		public void Fts5CommandMerge([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.AddMappingSchema(SetupFtsMapping(SQLiteFTS.FTS5));
 
@@ -578,7 +576,7 @@ namespace Tests.Linq
 		[Test]
 		public void Fts5CommandOptimize([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.AddMappingSchema(SetupFtsMapping(SQLiteFTS.FTS5));
 
@@ -600,7 +598,7 @@ namespace Tests.Linq
 		[Test]
 		public void Fts5CommandPgsz([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.AddMappingSchema(SetupFtsMapping(SQLiteFTS.FTS5));
 
@@ -622,7 +620,7 @@ namespace Tests.Linq
 		[Test]
 		public void Fts5CommandRank([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var commandInterceptor = new SaveCommandInterceptor();
 				db.AddInterceptor(commandInterceptor);
@@ -650,7 +648,7 @@ namespace Tests.Linq
 		[Test]
 		public void Fts5CommandRebuild([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.AddMappingSchema(SetupFtsMapping(SQLiteFTS.FTS5));
 
@@ -672,7 +670,7 @@ namespace Tests.Linq
 		[Test]
 		public void Fts5CommandUserMerge([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.AddMappingSchema(SetupFtsMapping(SQLiteFTS.FTS5));
 
@@ -711,7 +709,7 @@ namespace Tests.Linq
 		[Test]
 		public void Fts3SegDirTableQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.GetTable<FTS3_TABLE_segdir>().ToList();
 			}

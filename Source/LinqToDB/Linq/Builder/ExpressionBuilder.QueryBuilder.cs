@@ -7,6 +7,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
+using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -16,7 +17,6 @@ namespace LinqToDB.Linq.Builder
 	using Common;
 	using Reflection;
 	using SqlQuery;
-	using System.Runtime.CompilerServices;
 
 	partial class ExpressionBuilder
 	{
@@ -182,20 +182,22 @@ namespace LinqToDB.Linq.Builder
 									var expression = ctx.BuildExpression(ma, 0, context.enforceServerSide);
 
 									if (expression.NodeType == ExpressionType.Extension && expression is DefaultValueExpression 
-																						&& ma.Expression?.NodeType == ExpressionType.Parameter)
+									                                                    && ma.Expression?.NodeType == ExpressionType.Parameter)
 									{
 										var objExpression = context.builder.BuildExpression(ctx, ma.Expression, context.enforceServerSide, context.alias);
 										var varTempVar    = objExpression.NodeType == ExpressionType.Parameter
 											? objExpression
-											: context.builder.BuildVariable(objExpression, ((ParameterExpression)ma.Expression).Name);
+													: context.builder.BuildVariable(objExpression, ((ParameterExpression)ma.Expression).Name);
 
 										var condition = Expression.Condition(
 											Expression.Equal(varTempVar,
-												new DefaultValueExpression(context.builder.MappingSchema, ma.Expression.Type)), expression,
+												new DefaultValueExpression(context.builder.MappingSchema,
+													ma.Expression.Type)), expression,
 											Expression.MakeMemberAccess(varTempVar, ma.Member));
+
 										expression = condition;
 									}
-									else if (!context.alias.IsNullOrEmpty() && (ctx.SelectQuery.Select.Columns.Count - prevCount) == 1)
+									else if (!string.IsNullOrEmpty(context.alias) && (ctx.SelectQuery.Select.Columns.Count - prevCount) == 1)
 									{
 										ctx.SelectQuery.Select.Columns[ctx.SelectQuery.Select.Columns.Count - 1].Alias = context.alias;
 									}
@@ -216,6 +218,7 @@ namespace LinqToDB.Linq.Builder
 											var info = context.builder.GetSubQueryContext(context.context, ce);
 											if (context.alias != null)
 												info.Context.SetAlias(context.alias);
+
 											var par  = Expression.Parameter(ex.Type);
 											var bex  = info.Context.BuildExpression(ma.Replace(ex, par), 0, context.enforceServerSide);
 
@@ -293,7 +296,7 @@ namespace LinqToDB.Linq.Builder
 								{
 									foreach (var arg in ce.Arguments.Skip(1))
 										if (!context.builder._skippedExpressions.Contains(arg))
-										context.builder._skippedExpressions.Add(arg);
+											context.builder._skippedExpressions.Add(arg);
 
 									if (context.builder.IsSubQuery(context.context, ce))
 									{
@@ -312,11 +315,11 @@ namespace LinqToDB.Linq.Builder
 
 								if (ce.IsAssociation(context.builder.MappingSchema))
 								{
-									var ctx = context.builder.GetContext(context.context, ce);
+											var ctx = context.builder.GetContext(context.context, ce);
 									if (ctx == null)
 										throw new InvalidOperationException();
 
-									return new TransformInfo(ctx.BuildExpression(ce, 0, context.enforceServerSide));
+											return new TransformInfo(ctx.BuildExpression(ce, 0, context.enforceServerSide));
 								}
 
 								if ((context.builder._buildMultipleQueryExpressions == null || !context.builder._buildMultipleQueryExpressions.Contains(ce)) && context.builder.IsSubQuery(context.context, ce))
@@ -377,8 +380,10 @@ namespace LinqToDB.Linq.Builder
 									var newBinding = binding;
 									if (binding is MemberAssignment assignment)
 									{
-										var argument = context.builder.ConvertAssignmentArgument(context.context, assignment.Expression,
+										var argument = context.builder.ConvertAssignmentArgument(context.context,
+											assignment.Expression,
 											assignment.Member, context.enforceServerSide, assignment.Member.Name);
+
 										if (argument != assignment.Expression)
 										{
 											newBinding = Expression.Bind(assignment.Member, argument);
@@ -412,9 +417,12 @@ namespace LinqToDB.Linq.Builder
 								break;
 
 							default                        :
+							{
 								if (!context.enforceServerSide && context.builder.CanBeCompiled(expr))
 									break;
-								return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
+								return new TransformInfo(context.builder.BuildSql(context.context, expr,
+									context.alias));
+							}
 						}
 					}
 
@@ -429,9 +437,9 @@ namespace LinqToDB.Linq.Builder
 
 			var cond = (ConditionalExpression)expr;
 
-			if (cond.Test.NodeType == ExpressionType.Equal || cond.Test.NodeType == ExpressionType.NotEqual)
-			{
-				var b = (BinaryExpression)cond.Test;
+					if (cond.Test.NodeType == ExpressionType.Equal || cond.Test.NodeType == ExpressionType.NotEqual)
+					{
+						var b = (BinaryExpression)cond.Test;
 
 				Expression? cnt = null;
 				Expression? obj = null;
@@ -501,8 +509,8 @@ namespace LinqToDB.Linq.Builder
 		static bool IsMultipleQuery(MethodCallExpression ce, MappingSchema mappingSchema)
 		{
 			//TODO: Multiply query check should be smarter, possibly not needed if we create fallback mechanism
-			return !ce.IsQueryable(FirstSingleBuilder.MethodNames)
-			       && typeof(IEnumerable).IsSameOrParentOf(ce.Type)
+			return !ce.IsQueryable(FirstSingleBuilder.MethodNames) 
+			       && typeof(IEnumerable).IsSameOrParentOf(ce.Type) 
 			       && ce.Type != typeof(string) 
 			       && !ce.Type.IsArray 
 			       && !ce.IsAggregate(mappingSchema);
@@ -543,8 +551,8 @@ namespace LinqToDB.Linq.Builder
 			if (info.Expression == null)
 				info.Expression = info.Context.BuildExpression(null, 0, enforceServerSide);
 
-			if (!alias.IsNullOrEmpty())
-				info.Context.SetAlias(alias);
+			if (!string.IsNullOrEmpty(alias))
+				info.Context.SetAlias(alias!);
 			return info.Expression;
 		}
 
@@ -628,25 +636,25 @@ namespace LinqToDB.Linq.Builder
 			switch (e.NodeType)
 			{
 				case ExpressionType.MemberAccess:
-				{
-					var me = (MemberExpression)e;
+					{
+						var me = (MemberExpression)e;
 
-					var om = (
-								from c in Contexts.OfType<TableBuilder.TableContext>()
-								where c.ObjectType == me.Member.DeclaringType
-								select c.EntityDescriptor
-							).FirstOrDefault();
+						var om = (
+							from c in Contexts.OfType<TableBuilder.TableContext>()
+							where c.ObjectType == me.Member.DeclaringType
+							select c.EntityDescriptor
+						).FirstOrDefault();
 
-					return om != null && om.Associations.All(a => !a.MemberInfo.EqualsTo(me.Member)) &&
-						   om[me.Member.Name] == null;
-				}
+						return om != null && om.Associations.All(a => !a.MemberInfo.EqualsTo(me.Member)) &&
+						       om[me.Member.Name] == null;
+					}
 				case ExpressionType.Call:
-				{
-					var mc = (MethodCallExpression)e;
-					if (mc.IsCte(MappingSchema))
-						context.WriteableValue = true;
-					break;
-				}
+					{
+						var mc = (MethodCallExpression)e;
+						if (mc.IsCte(MappingSchema))
+							context.WriteableValue = true;
+						break;
+					}
 			}
 
 			return context.WriteableValue;

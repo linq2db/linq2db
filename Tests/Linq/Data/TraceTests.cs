@@ -14,7 +14,7 @@ namespace Tests.Data
 	using Model;
 
 	[TestFixture]
-	public class TraceTests
+	public class TraceTests : TestBase
 	{
 		private TraceLevel                           OriginalTraceLevel { get; set; }
 		private Action<TraceInfo>                    OriginalOnTrace    { get; set; } = null!;
@@ -63,7 +63,7 @@ namespace Tests.Data
 			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.OnTraceConnection = e =>
 				{
@@ -96,7 +96,7 @@ namespace Tests.Data
 			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var sql = db.GetTable<Northwind.Category>().SqlText;
 				db.OnTraceConnection = e =>
@@ -133,7 +133,7 @@ namespace Tests.Data
 			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var sql = db.GetTable<Northwind.Category>().SqlText;
 				db.OnTraceConnection = e =>

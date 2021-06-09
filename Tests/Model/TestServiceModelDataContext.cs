@@ -1,7 +1,7 @@
 ﻿#if NET472
 using System;
 using System.ServiceModel;
-
+using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.ServiceModel;
 
@@ -9,7 +9,9 @@ namespace Tests.Model
 {
 	public class TestServiceModelDataContext : ServiceModelDataContext, ITestDataContext
 	{
-		public TestServiceModelDataContext(int ip) : base(
+		private readonly Action? _onDispose;
+
+		public TestServiceModelDataContext(int ip, Action? onDispose = null) : base(
 			new NetTcpBinding(SecurityMode.None)
 			{
 				MaxReceivedMessageSize = 10000000,
@@ -23,6 +25,7 @@ namespace Tests.Model
 			new EndpointAddress("net.tcp://localhost:" + ip + "/LinqOverWCF"))
 		{
 			((NetTcpBinding)Binding!).ReaderQuotas.MaxStringContentLength = 1000000;
+			_onDispose = onDispose;
 		}
 
 		public ITable<Person>                 Person                 => this.GetTable<Person>();
@@ -52,6 +55,18 @@ namespace Tests.Model
 		public ITable<Parent> GetParentByID(int? id)
 		{
 			throw new NotImplementedException();
+		}
+
+		public override void Dispose()
+		{
+			_onDispose?.Invoke();
+			base.Dispose();
+		}
+
+		public override ValueTask DisposeAsync()
+		{
+			_onDispose?.Invoke();
+			return base.DisposeAsync();
 		}
 	}
 }

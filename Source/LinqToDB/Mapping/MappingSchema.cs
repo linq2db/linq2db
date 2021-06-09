@@ -76,7 +76,7 @@ namespace LinqToDB.Mapping
 		/// mappings for same type.</remarks>
 		public MappingSchema(string? configuration, params MappingSchema[]? schemas)
 		{
-			if (configuration.IsNullOrEmpty() && (schemas == null || schemas.Length == 0))
+			if (string.IsNullOrEmpty(configuration) && (schemas == null || schemas.Length == 0))
 				configuration = "auto_" + Interlocked.Increment(ref _configurationCounter);
 
 			var schemaInfo = new MappingSchemaInfo(configuration);
@@ -167,7 +167,7 @@ namespace LinqToDB.Mapping
 			foreach (var info in Schemas)
 			{
 				var o = info.GetDefaultValue(type);
-				if (o.IsSome)
+				if (o.HasValue)
 					return o.Value;
 			}
 
@@ -219,7 +219,7 @@ namespace LinqToDB.Mapping
 			foreach (var info in Schemas)
 			{
 				var o = info.GetCanBeNull(type);
-				if (o.IsSome)
+				if (o.HasValue)
 					return o.Value;
 			}
 
@@ -1190,8 +1190,8 @@ namespace LinqToDB.Mapping
 					var list = new List<string>();
 
 					foreach (var s in Schemas)
-						if (!s.Configuration.IsNullOrEmpty() && hash.Add(s.Configuration))
-							list.Add(s.Configuration);
+						if (!string.IsNullOrEmpty(s.Configuration) && hash.Add(s.Configuration!))
+							list.Add(s.Configuration!);
 
 					_configurationList = list.ToArray();
 				}
@@ -1284,7 +1284,7 @@ namespace LinqToDB.Mapping
 			foreach (var info in Schemas)
 			{
 				var o = info.GetScalarType(type);
-				if (o.IsSome)
+				if (o.HasValue)
 					return o.Value;
 			}
 
@@ -1387,7 +1387,7 @@ namespace LinqToDB.Mapping
 			foreach (var info in Schemas)
 			{
 				var o = info.GetDataType(type);
-				if (o.IsSome)
+				if (o.HasValue)
 					return o.Value;
 			}
 

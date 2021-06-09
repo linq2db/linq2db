@@ -8,7 +8,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 using LinqToDB.Common.Internal.Cache;
@@ -19,7 +18,6 @@ namespace LinqToDB.Data
 	using Common;
 	using Configuration;
 	using DataProvider;
-	using DbCommandProcessor;
 	using Expressions;
 	using LinqToDB.Interceptors;
 	using Mapping;
@@ -223,7 +221,7 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Creates database connection object that uses a LinqToDbConnectionOptions to configure the connection.
+		/// Creates database connection object that uses a <see cref="LinqToDbConnectionOptions"/> to configure the connection.
 		/// </summary>
 		/// <param name="options">Options, setup ahead of time.</param>
 		public DataConnection(LinqToDbConnectionOptions options)
@@ -705,8 +703,8 @@ namespace LinqToDB.Data
 					var dataProviderType = Type.GetType(provider.TypeName, true)!;
 					var providerInstance = (IDataProviderFactory)Activator.CreateInstance(dataProviderType)!;
 
-					if (!provider.Name.IsNullOrEmpty())
-						AddDataProvider(provider.Name, providerInstance.GetDataProvider(provider.Attributes));
+					if (!string.IsNullOrEmpty(provider.Name))
+						AddDataProvider(provider.Name!, providerInstance.GetDataProvider(provider.Attributes));
 				}
 			}
 		}
@@ -904,9 +902,9 @@ namespace LinqToDB.Data
 					if (DefaultDataProvider != null)
 						_dataProviders.TryGetValue(DefaultDataProvider, out defaultDataProvider);
 
-					if (providerName.IsNullOrEmpty())
+					if (string.IsNullOrEmpty(providerName))
 						dataProvider = FindProvider(configuration, _dataProviders, defaultDataProvider);
-					else if (_dataProviders.TryGetValue(providerName, out dataProvider)
+					else if (_dataProviders.TryGetValue(providerName!, out dataProvider)
 							|| _dataProviders.TryGetValue(configuration, out dataProvider))
 					{ }
 					else
@@ -1110,23 +1108,12 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
-		/// Event, triggered before connection closed using <see cref="Close"/> method.
-		/// </summary>
-		public event EventHandler? OnClosing;
-		/// <summary>
-		/// Event, triggered after connection closed using <see cref="Close"/> method.
-		/// </summary>
-		public event EventHandler? OnClosed;
-
-		/// <inheritdoc />
-		public Action<EntityCreatedEventArgs>? OnEntityCreated    { get; set; }
-
-		/// <summary>
 		/// Closes and dispose associated underlying database transaction/connection.
 		/// </summary>
 		public virtual void Close()
 		{
-			OnClosing?.Invoke(this, EventArgs.Empty);
+			if (_contextInterceptors != null)
+				_contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosing(arg), new DataContextEventData(this));
 
 			DisposeCommand();
 
@@ -1147,7 +1134,8 @@ namespace LinqToDB.Data
 					_connection.Close();
 			}
 
-			OnClosed?.Invoke(this, EventArgs.Empty);
+			if (_contextInterceptors != null)
+				_contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosed(arg), new DataContextEventData(this));
 		}
 
 		#endregion
@@ -1185,7 +1173,7 @@ namespace LinqToDB.Data
 		internal void CommitCommandInit()
 		{
 			if (_commandInterceptors != null)
-				_command = _commandInterceptors.Apply((interceptor, arg1, arg2) => interceptor.CommandInitialized(arg1, arg2), new CommandInitializedEventData(this), _command!);
+				_command = _commandInterceptors.Apply((interceptor, arg1, arg2) => interceptor.CommandInitialized(arg1, arg2), new CommandEventData(this), _command!);
 
 			LastQuery = _command!.CommandText;
 		}
@@ -1249,7 +1237,14 @@ namespace LinqToDB.Data
 
 		protected virtual int ExecuteNonQuery(DbCommand command)
 		{
-			return command.ExecuteNonQueryExt();
+			var result = Option<int>.None;
+
+			if (_commandInterceptors != null)
+				result = _commandInterceptors.Apply((interceptor, arg1, arg2, arg3) => interceptor.ExecuteNonQuery(arg1, arg2, arg3), new CommandEventData(this), command, result);
+
+			return result.HasValue
+				? result.Value
+				: command.ExecuteNonQuery();
 		}
 
 		internal int ExecuteNonQuery()
@@ -1315,7 +1310,14 @@ namespace LinqToDB.Data
 
 		protected virtual object? ExecuteScalar(DbCommand command)
 		{
-			return CurrentCommand!.ExecuteScalarExt();
+			var result = Option<object?>.None;
+
+			if (_commandInterceptors != null)
+				result = _commandInterceptors.Apply((interceptor, arg1, arg2, arg3) => interceptor.ExecuteScalar(arg1, arg2, arg3), new CommandEventData(this), command, result);
+
+			return result.HasValue
+				? result.Value
+				: command.ExecuteScalar();
 		}
 
 		object? ExecuteScalar()
@@ -1380,7 +1382,16 @@ namespace LinqToDB.Data
 
 		protected virtual DataReaderWrapper ExecuteReader(CommandBehavior commandBehavior)
 		{
-			var wrapper = new DataReaderWrapper(this, _command!.ExecuteReaderExt(commandBehavior), _command!);
+			var result = Option<DbDataReader>.None;
+
+			if (_commandInterceptors != null)
+				result = _commandInterceptors.Apply((interceptor, arg1, arg2, arg3, arg4) => interceptor.ExecuteReader(arg1, arg2, arg3, arg4), new CommandEventData(this), _command!, commandBehavior, result);
+
+			var rd = result.HasValue
+				? result.Value
+				: _command!.ExecuteReader(commandBehavior);
+
+			var wrapper = new DataReaderWrapper(this, rd, _command!);
 			_command    = null;
 
 			return wrapper;
@@ -1641,17 +1652,15 @@ namespace LinqToDB.Data
 
 			return new DataConnection(ConfigurationString, DataProvider, connectionString, connection, MappingSchema)
 			{
-				OnEntityCreated             = OnEntityCreated,
 				RetryPolicy                 = RetryPolicy,
 				CommandTimeout              = CommandTimeout,
 				InlineParameters            = InlineParameters,
 				ThrowOnDisposed             = ThrowOnDisposed,
 				_queryHints                 = _queryHints?.Count > 0 ? _queryHints.ToList() : null,
 				OnTraceConnection           = OnTraceConnection,
-				OnClosed                    = OnClosed,
-				OnClosing                   = OnClosing,
 				_commandInterceptors        = _commandInterceptors?.Clone(),
-				_connectionInterceptors     = _connectionInterceptors?.Clone()
+				_connectionInterceptors     = _connectionInterceptors?.Clone(),
+				_contextInterceptors        = _contextInterceptors?.Clone(),
 			};
 		}
 

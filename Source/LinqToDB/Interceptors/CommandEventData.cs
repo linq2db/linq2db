@@ -3,11 +3,11 @@
 namespace LinqToDB.Interceptors
 {
 	/// <summary>
-	/// Event arguments for <see cref="ICommandInterceptor.CommandInitialized"/> event.
+	/// Event arguments for <see cref="ICommandInterceptor"/> events.
 	/// </summary>
-	public readonly struct CommandInitializedEventData
+	public readonly struct CommandEventData
 	{
-		internal CommandInitializedEventData(DataConnection dataConnection)
+		internal CommandEventData(DataConnection dataConnection)
 		{
 			DataConnection = dataConnection;
 		}

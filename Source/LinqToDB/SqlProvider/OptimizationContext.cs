@@ -109,8 +109,8 @@ namespace LinqToDB.SqlProvider
 			{
 				Utils.MakeUniqueNames(new[] {parameter}, _usedParameterNames, p => p.Name,
 					(p, v, s) => p.Name = v,
-					p => p.Name.IsNullOrEmpty() ? "p_1" :
-						char.IsDigit(p.Name[p.Name.Length - 1]) ? p.Name : p.Name + "_1",
+					p => string.IsNullOrEmpty(p.Name) ? "p_1" :
+						char.IsDigit(p.Name![p.Name.Length - 1]) ? p.Name : p.Name + "_1",
 					StringComparer.InvariantCultureIgnoreCase);
 
 			}

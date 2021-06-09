@@ -413,7 +413,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void ContainsJoin1([DataSources(false, TestProvName.AllInformix)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.Child. Delete(c => c.ParentID >= 1000);
 				db.Parent.Delete(c => c.ParentID >= 1000);
@@ -443,7 +443,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void MultipleDelete([DataSources(false, TestProvName.AllInformix)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.Parent.Delete(c => c.ParentID >= 1000);
 
