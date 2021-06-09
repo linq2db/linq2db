@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
-
+using LinqToDB.Mapping;
 using NUnit.Framework;
 using Tests.Model;
 
@@ -156,8 +156,10 @@ namespace Tests.xUpdate
 			}
 		}
 
+
+		// TODO: Firebird disabled temporary due to bug in provider
 		[Test]
-		public async Task CreateTableAsyncCanceled([DataSources(false)] string context)
+		public async Task CreateTableAsyncCanceled([DataSources(false, TestProvName.AllFirebird)] string context)
 		{
 			var cts = new CancellationTokenSource();
 			cts.Cancel();
@@ -197,8 +199,9 @@ namespace Tests.xUpdate
 			}
 		}
 
+		// TODO: Firebird disabled temporary due to bug in provider
 		[Test]
-		public async Task CreateTableAsyncCanceled2([DataSources(false)] string context)
+		public async Task CreateTableAsyncCanceled2([DataSources(false, TestProvName.AllFirebird)] string context)
 		{
 			var cts = new CancellationTokenSource();
 			using (var db = GetDataContext(context))
@@ -259,7 +262,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void CreateTable_NoDisposeError([DataSources(false)] string context)
 		{
-			using var db = new TestDataConnection(context);
+			using var db = GetDataConnection(context);
 			db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
 
 			var tempTable = db.CreateTempTable<IDTable>("TempTable");
@@ -272,7 +275,7 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task CreateTable_NoDisposeErrorAsync([DataSources(false)] string context)
 		{
-			using var db = new TestDataConnection(context);
+			using var db = GetDataConnection(context);
 			await db.DropTableAsync<int>("TempTable", throwExceptionIfNotExists: false);
 
 			var tempTable = await db.CreateTempTableAsync<IDTable>("TempTable");
@@ -281,5 +284,27 @@ namespace Tests.xUpdate
 			await tempTable.DisposeAsync();
 		}
 #endif
+
+		[Table]
+		public class TableWithPrimaryKey
+		{
+			[PrimaryKey] public int Key { get; set; }
+		}
+
+		[Test]
+		public void CreateTempTableWithPrimaryKey([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateTempTable<TableWithPrimaryKey>(tableOptions: TableOptions.IsTemporary);
+		}
+
+		[Test]
+		public void InsertIntoTempTableWithPrimaryKey([DataSources(false)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var t = new[] { new TableWithPrimaryKey() { Key = 1 } }
+				.IntoTempTable(db, tableOptions: TableOptions.IsTemporary);
+		}
 	}
 }

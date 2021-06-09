@@ -13,19 +13,6 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		internal SqlSelectClause(
-			SelectQuery     selectQuery,
-			SqlSelectClause clone,
-			Dictionary<ICloneableElement,ICloneableElement> objectTree,
-			Predicate<ICloneableElement> doClone)
-			: base(selectQuery)
-		{
-			Columns.AddRange(clone.Columns.Select(c => (SqlColumn)c.Clone(objectTree, doClone)));
-			IsDistinct = clone.IsDistinct;
-			TakeValue  = (ISqlExpression?)clone.TakeValue?.Clone(objectTree, doClone);
-			SkipValue  = (ISqlExpression?)clone.SkipValue?.Clone(objectTree, doClone);
-		}
-
 		internal SqlSelectClause(bool isDistinct, ISqlExpression? takeValue, TakeHints? takeHints, ISqlExpression? skipValue, IEnumerable<SqlColumn> columns)
 			: base(null)
 		{
@@ -278,7 +265,7 @@ namespace LinqToDB.SqlQuery
 			return this;
 		}
 
-		public ISqlExpression? TakeValue { get; private set; }
+		public ISqlExpression? TakeValue { get; internal set; }
 		public TakeHints?      TakeHints { get; private set; }
 
 		#endregion

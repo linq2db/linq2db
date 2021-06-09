@@ -16,7 +16,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -60,12 +60,12 @@ namespace Tests.xUpdate
 		[Test]
 		public void ExplicitIdentityInsert([IdentityInsertMergeDataContextSource(
 			false,
-			ProviderName.Sybase, ProviderName.SybaseManaged)]
+			TestProvName.AllSybase)]
 			string context)
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -112,12 +112,12 @@ namespace Tests.xUpdate
 		[Test]
 		public void ExplicitNoIdentityInsert([IdentityInsertMergeDataContextSource(
 			false,
-			ProviderName.Sybase, ProviderName.SybaseManaged)]
+			TestProvName.AllSybase)]
 			string context)
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);

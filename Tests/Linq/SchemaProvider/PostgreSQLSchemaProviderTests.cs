@@ -438,7 +438,7 @@ namespace Tests.SchemaProvider
 		[Test]
 		public void DescriptionTest([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 
@@ -453,7 +453,7 @@ namespace Tests.SchemaProvider
 		[Test]
 		public void TestMaterializedViewSchema([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 

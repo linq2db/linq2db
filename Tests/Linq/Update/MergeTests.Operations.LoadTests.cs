@@ -27,7 +27,8 @@ namespace Tests.xUpdate
 				case ProviderName.Firebird       : batchSize = 100; break;
 
 				// hard limit around 250 records
-				case TestProvName.Firebird3      : batchSize = 250; break;
+				case TestProvName.Firebird3      :
+				case TestProvName.Firebird4      : batchSize = 250; break;
 
 				// takes too long
 				case ProviderName.Informix       : batchSize = 500; break;

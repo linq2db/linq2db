@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Linq;
 using System.Text;
 
@@ -95,7 +94,7 @@ namespace LinqToDB.SchemaProvider
 			ExcludedCatalogs      = GetHashSet(options.ExcludedCatalogs, options.StringComparer);
 			GenerateChar1AsString = options.GenerateChar1AsString;
 
-			var dbConnection = (DbConnection)dataConnection.Connection;
+			var dbConnection = dataConnection.Connection;
 
 			InitProvider(dataConnection);
 
@@ -511,7 +510,7 @@ namespace LinqToDB.SchemaProvider
 				return null;
 
 			return
-				options.PreferProviderSpecificTypes == true
+				options.PreferProviderSpecificTypes
 				? (ProviderSpecificDataTypesDic.TryGetValue(typeName, out var dt) ? dt : DataTypesDic                .TryGetValue(typeName, out dt) ? dt : null)
 				: (DataTypesDic                .TryGetValue(typeName, out dt)     ? dt : ProviderSpecificDataTypesDic.TryGetValue(typeName, out dt) ? dt : null);
 		}
@@ -519,7 +518,7 @@ namespace LinqToDB.SchemaProvider
 		protected DataTypeInfo? GetDataTypeByProviderDbType(int typeId, GetSchemaOptions options)
 		{
 			return
-				options.PreferProviderSpecificTypes == true
+				options.PreferProviderSpecificTypes
 				? (ProviderSpecificDataTypesByProviderDbTypeDic.TryGetValue(typeId, out var dt) ? dt : DataTypesByProviderDbTypeDic                .TryGetValue(typeId, out dt) ? dt : null)
 				: (DataTypesByProviderDbTypeDic                .TryGetValue(typeId, out dt)     ? dt : ProviderSpecificDataTypesByProviderDbTypeDic.TryGetValue(typeId, out dt) ? dt : null);
 		}
@@ -560,8 +559,8 @@ namespace LinqToDB.SchemaProvider
 			).ToList();
 		}
 
-		protected virtual string GetDataSourceName(DataConnection dbConnection) => ((DbConnection)dbConnection.Connection).DataSource;
-		protected virtual string GetDatabaseName  (DataConnection dbConnection) => ((DbConnection)dbConnection.Connection).Database;
+		protected virtual string GetDataSourceName(DataConnection dbConnection) => dbConnection.Connection.DataSource;
+		protected virtual string GetDatabaseName  (DataConnection dbConnection) => dbConnection.Connection.Database;
 
 		protected virtual void InitProvider(DataConnection dataConnection)
 		{
@@ -574,7 +573,7 @@ namespace LinqToDB.SchemaProvider
 		/// <returns>List of database data types.</returns>
 		protected virtual List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			DataTypesSchema = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
+			DataTypesSchema = dataConnection.Connection.GetSchema("DataTypes");
 
 			return DataTypesSchema.AsEnumerable()
 				.Select(t => new DataTypeInfo
@@ -607,9 +606,9 @@ namespace LinqToDB.SchemaProvider
 				var format = dataType.CreateFormat;
 				var parms  = dataType.CreateParameters;
 
-				if (!string.IsNullOrWhiteSpace(format) && !parms.IsNullOrWhiteSpace())
+				if (!string.IsNullOrWhiteSpace(format) && !string.IsNullOrWhiteSpace(parms))
 				{
-					var paramNames  = parms.Split(',');
+					var paramNames  = parms!.Split(',');
 					var paramValues = new object?[paramNames.Length];
 
 					for (var i = 0; i < paramNames.Length; i++)
@@ -640,7 +639,7 @@ namespace LinqToDB.SchemaProvider
 				var ss = name.Split(new [] {' ', '\t'}, StringSplitOptions.RemoveEmptyEntries)
 					.Select(s => char.ToUpper(s[0]) + s.Substring(1));
 
-				name = string.Join("", ss.ToArray());
+				name = string.Concat(ss);
 			}
 
 			if (name.Length > 0 && char.IsDigit(name[0]))
@@ -787,12 +786,11 @@ namespace LinqToDB.SchemaProvider
 					if (name.EndsWith("_BackReference"))
 						name = name.Substring(0, name.Length - "_BackReference".Length);
 
-					name = string.Join("", name
+					name = string.Concat(name
 						.Split('_')
 						.Where(_ =>
 							_.Length > 0 && _ != table.TableName &&
-							(table.SchemaName == null || table.IsDefaultSchema || _ != table.SchemaName))
-						.ToArray());
+							(table.SchemaName == null || table.IsDefaultSchema || _ != table.SchemaName)));
 
 					var digitEnd = 0;
 					for (var i = name.Length - 1; i >= 0; i--)

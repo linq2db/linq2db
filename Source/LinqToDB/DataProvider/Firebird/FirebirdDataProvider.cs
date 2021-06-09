@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,17 +16,17 @@ namespace LinqToDB.DataProvider.Firebird
 	public class FirebirdDataProvider : DynamicDataProviderBase<FirebirdProviderAdapter>
 	{
 		public FirebirdDataProvider()
-			: this(ProviderName.Firebird, new FirebirdMappingSchema(), null)
+			: this(ProviderName.Firebird, null, null)
 		{
 		}
 
 		public FirebirdDataProvider(ISqlOptimizer sqlOptimizer)
-			: this(ProviderName.Firebird, new FirebirdMappingSchema(), sqlOptimizer)
+			: this(ProviderName.Firebird, null, sqlOptimizer)
 		{
 		}
 
-		protected FirebirdDataProvider(string name, MappingSchema mappingSchema, ISqlOptimizer? sqlOptimizer)
-			: base(name, mappingSchema, FirebirdProviderAdapter.GetInstance())
+		protected FirebirdDataProvider(string name, MappingSchema? mappingSchema, ISqlOptimizer? sqlOptimizer)
+			: base(name, GetMappingSchema(mappingSchema, FirebirdProviderAdapter.GetInstance().MappingSchema), FirebirdProviderAdapter.GetInstance())
 		{
 			SqlProviderFlags.IsIdentityParameterRequired       = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
@@ -35,8 +37,8 @@ namespace LinqToDB.DataProvider.Firebird
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);
 
-			SetProviderField<IDataReader,TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1970, 1, 1));
-			SetProviderField<IDataReader,DateTime,DateTime>((r,i) => GetDateTime(r.GetDateTime(i)));
+			SetProviderField<DbDataReader, TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1970, 1, 1));
+			SetProviderField<DbDataReader, DateTime,DateTime>((r,i) => GetDateTime(r.GetDateTime(i)));
 
 			_sqlOptimizer = sqlOptimizer ?? new FirebirdSqlOptimizer(SqlProviderFlags);
 		}
@@ -71,15 +73,15 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
-			return new FirebirdSchemaProvider();
+			return new FirebirdSchemaProvider(this);
 		}
 
-		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
+		public override bool? IsDBNullAllowed(DbDataReader reader, int idx)
 		{
 			return true;
 		}
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			if (value is bool boolVal)
 			{
@@ -90,8 +92,24 @@ namespace LinqToDB.DataProvider.Firebird
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
+			FirebirdProviderAdapter.FbDbType? type = null;
+			switch (dataType.DataType)
+			{
+				case DataType.DateTimeOffset     : type = FirebirdProviderAdapter.FbDbType.TimeStampTZ; break;
+			}
+
+			if (type != null)
+			{
+				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				if (param != null)
+				{
+					Adapter.SetDbType(param, type.Value);
+					return;
+				}
+			}
+
 			switch (dataType.DataType)
 			{
 				case DataType.SByte      : dataType = dataType.WithDataType(DataType.Int16);    break;
@@ -103,6 +121,11 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 
 			base.SetParameterType(dataConnection, parameter, dataType);
+		}
+
+		private static MappingSchema GetMappingSchema(params MappingSchema?[] schemas)
+		{
+			return new FirebirdProviderMappingSchema(schemas.Where(s => s != null).ToArray()!);
 		}
 
 		#region BulkCopy

@@ -1363,7 +1363,7 @@ namespace LinqToDB
 		/// </summary>
 		public class SqlFormattableComparerAttribute : SqlQueryDependentAttribute
 		{
-			public override bool ExpressionsEqual(Expression expr1, Expression expr2, Func<Expression, Expression, bool> comparer)
+			public override bool ExpressionsEqual<TContext>(TContext context, Expression expr1, Expression expr2, Func<TContext, Expression, Expression, bool> comparer)
 			{
 				if (expr1.NodeType != expr2.NodeType)
 					return false;
@@ -1374,7 +1374,7 @@ namespace LinqToDB
 					var mc2 = (MethodCallExpression)expr2;
 					if (!ObjectsEqual(mc1.Arguments[0].EvaluateExpression(), mc2.Arguments[0].EvaluateExpression()))
 						return false;
-					return comparer(mc1.Arguments[1], mc2.Arguments[1]);
+					return comparer(context, mc1.Arguments[1], mc2.Arguments[1]);
 				}
 
 				if (expr1.NodeType == ExpressionType.Constant)
@@ -1388,14 +1388,14 @@ namespace LinqToDB
 							return false;
 
 						for (var i = 0; i < str1.ArgumentCount; i++)
-							if (!comparer(Expression.Constant(str1.GetArgument(i)), Expression.Constant(str2.GetArgument(i))))
+							if (!comparer(context, Expression.Constant(str1.GetArgument(i)), Expression.Constant(str2.GetArgument(i))))
 								return false;
 
 						return true;
 					}
 				}
 
-				return base.ExpressionsEqual(expr1, expr2, comparer);
+				return base.ExpressionsEqual(context, expr1, expr2, comparer);
 			}
 
 			public override Expression PrepareForCache(Expression expression)

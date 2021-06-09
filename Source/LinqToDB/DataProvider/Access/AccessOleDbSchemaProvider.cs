@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -66,7 +65,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var tables = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Tables"));
+			var tables = ExecuteOnNewConnection(dataConnection, cn => cn.Connection.GetSchema("Tables"));
 
 			return
 			(
@@ -82,7 +81,7 @@ namespace LinqToDB.DataProvider.Access
 					CatalogName        = catalog,
 					SchemaName         = schema,
 					TableName          = name,
-					IsDefaultSchema    = schema.IsNullOrEmpty(),
+					IsDefaultSchema    = string.IsNullOrEmpty(schema),
 					IsView             = t.Field<string>("TABLE_TYPE") == "VIEW",
 					IsProviderSpecific = system,
 					Description        = t.Field<string>("DESCRIPTION")
@@ -93,7 +92,7 @@ namespace LinqToDB.DataProvider.Access
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var idxs = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Indexes"));
+			var idxs = ExecuteOnNewConnection(dataConnection, cn => cn.Connection.GetSchema("Indexes"));
 
 			return
 			(
@@ -111,7 +110,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var cs = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Columns"));
+			var cs = ExecuteOnNewConnection(dataConnection, cn => cn.Connection.GetSchema("Columns"));
 
 			return
 			(
@@ -160,7 +159,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var ps = ExecuteOnNewConnection(dataConnection, cn => ((DbConnection)cn.Connection).GetSchema("Procedures"));
+			var ps = ExecuteOnNewConnection(dataConnection, cn => cn.Connection.GetSchema("Procedures"));
 
 			return
 			(
@@ -174,13 +173,13 @@ namespace LinqToDB.DataProvider.Access
 					CatalogName         = catalog,
 					SchemaName          = schema,
 					ProcedureName       = name,
-					IsDefaultSchema     = schema.IsNullOrEmpty(),
+					IsDefaultSchema     = string.IsNullOrEmpty(schema),
 					ProcedureDefinition = p.Field<string>("PROCEDURE_DEFINITION")
 				}
 			).ToList();
 		}
 
-		static readonly Regex _paramsExp = new Regex(@"PARAMETERS ((\[(?<name>[^\]]+)\]|(?<name>[^\s]+))\s(?<type>[^,;\s]+(\s\([^\)]+\))?)[,;]\s)*", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+		static readonly Regex _paramsExp = new (@"PARAMETERS ((\[(?<name>[^\]]+)\]|(?<name>[^\s]+))\s(?<type>[^,;\s]+(\s\([^\)]+\))?)[,;]\s)*", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
 			var list = new List<ProcedureParameterInfo>();
@@ -277,9 +276,9 @@ namespace LinqToDB.DataProvider.Access
 			{
 				var parms = dataType.CreateParameters;
 
-				if (!parms.IsNullOrWhiteSpace())
+				if (!string.IsNullOrWhiteSpace(parms))
 				{
-					var paramNames  = parms.Split(',');
+					var paramNames  = parms!.Split(',');
 					var paramValues = new object?[paramNames.Length];
 
 					for (var i = 0; i < paramNames.Length; i++)

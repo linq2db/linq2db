@@ -91,7 +91,7 @@ namespace Tests.Data
 			var ret = new Retry();
 			Assert.Throws<TestException>(() =>
 			{
-				using (var db = new DataConnection(context) { RetryPolicy = ret })
+				using (var db = GetDataConnection(context, retryPolicy: ret))
 				{
 					// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
 					db.GetTable<FakeClass>().ToList();
@@ -106,7 +106,7 @@ namespace Tests.Data
 		{
 			var ret = new Retry();
 
-			using (var db = new DataConnection(context) { RetryPolicy = new SqlServerRetryPolicy() })
+			using (var db = GetDataConnection(context, retryPolicy: new SqlServerRetryPolicy()))
 			{
 				var i = await db.ExecuteAsync("SELECT 1");
 
@@ -121,7 +121,7 @@ namespace Tests.Data
 
 			try
 			{
-				using (var db = new DataConnection(context) { RetryPolicy = ret })
+				using (var db = GetDataConnection(context, retryPolicy: ret))
 				{
 					var r = db.GetTable<FakeClass>().ToListAsync();
 					r.Wait();
@@ -141,7 +141,7 @@ namespace Tests.Data
 			try
 			{
 				Configuration.RetryPolicy.Factory = cn => new DummyRetryPolicy();
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				using (db.CreateLocalTable<MyEntity>())
 				{
 					Assert.Fail("Exception expected");
@@ -160,7 +160,7 @@ namespace Tests.Data
 		[Test]
 		public void Issue2672_ExternalConnection([DataSources(false)] string context)
 		{
-			using (var db1 = new DataConnection(context))
+			using (var db1 = GetDataConnection(context))
 			{
 				try
 				{

@@ -14,10 +14,10 @@ namespace LinqToDB.SqlQuery
 		public ISqlExpression[] Parameters { get; }
 
 		public SqlRawSqlTable(
-			MappingSchema mappingSchema,
-			Type objectType,
-			string sql,
-			params ISqlExpression[] parameters)
+			MappingSchema    mappingSchema,
+			Type             objectType,
+			string           sql,
+			ISqlExpression[] parameters)
 			: base(mappingSchema, objectType)
 		{
 			SQL        = sql        ?? throw new ArgumentNullException(nameof(sql));
@@ -38,7 +38,7 @@ namespace LinqToDB.SqlQuery
 			Parameters = parameters;
 		}
 
-		public SqlRawSqlTable(SqlRawSqlTable table, IEnumerable<SqlField> fields, ISqlExpression[] parameters)
+		public SqlRawSqlTable(SqlRawSqlTable table, ISqlExpression[] parameters)
 		{
 			Alias              = table.Alias;
 			Server             = table.Server;
@@ -51,8 +51,6 @@ namespace LinqToDB.SqlQuery
 
 			SQL                = table.SQL;
 			Parameters         = parameters;
-
-			AddRange(fields);
 		}
 
 		public override QueryElementType ElementType  => QueryElementType.SqlRawSqlTable;

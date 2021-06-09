@@ -276,6 +276,21 @@ namespace LinqToDB
 		/// <summary>
 		/// Oracle BFILE data type.
 		/// </summary>
-		BFile
+		BFile,
+
+		/// <summary>
+		/// Type representing number with fixed precision and floating scale.
+		/// </summary>
+		DecFloat,
+
+		/// <summary>
+		/// Type representing a time value with timezone or offset.
+		/// </summary>
+		TimeTZ,
+
+		/// <summary>
+		/// An integral type representing signed 128-bit integers with values between -170141183460469231731687303715884105728 and 170141183460469231731687303715884105727.
+		/// </summary>
+		Int128,
 	}
 }

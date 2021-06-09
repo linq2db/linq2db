@@ -12,10 +12,11 @@ namespace LinqToDB.Common.Internal.Cache
 		/// </summary>
 		/// <param name="options">The option on which to set the priority.</param>
 		/// <param name="priority">The <see cref="CacheItemPriority"/> to set on the option.</param>
-		/// <returns>The <see cref="MemoryCacheEntryOptions"/> so that additional calls can be chained.</returns>
-		public static MemoryCacheEntryOptions SetPriority(
-			this MemoryCacheEntryOptions options,
+		/// <returns>The <see cref="MemoryCacheEntryOptions{TKey}"/> so that additional calls can be chained.</returns>
+		public static MemoryCacheEntryOptions<TKey> SetPriority<TKey>(
+			this MemoryCacheEntryOptions<TKey> options,
 			CacheItemPriority priority)
+			where TKey: notnull
 		{
 			options.Priority = priority;
 			return options;
@@ -25,11 +26,12 @@ namespace LinqToDB.Common.Internal.Cache
 		/// Sets the size of the cache entry value.
 		/// </summary>
 		/// <param name="options">The options to set the entry size on.</param>
-		/// <param name="size">The size to set on the <see cref="MemoryCacheEntryOptions"/>.</param>
-		/// <returns>The <see cref="MemoryCacheEntryOptions"/> so that additional calls can be chained.</returns>
-		public static MemoryCacheEntryOptions SetSize(
-			this MemoryCacheEntryOptions options,
+		/// <param name="size">The size to set on the <see cref="MemoryCacheEntryOptions{TKey}"/>.</param>
+		/// <returns>The <see cref="MemoryCacheEntryOptions{TKey}"/> so that additional calls can be chained.</returns>
+		public static MemoryCacheEntryOptions<TKey> SetSize<TKey>(
+			this MemoryCacheEntryOptions<TKey> options,
 			long size)
+			where TKey : notnull
 		{
 			if (size < 0)
 			{
@@ -43,12 +45,13 @@ namespace LinqToDB.Common.Internal.Cache
 		/// <summary>
 		/// Expire the cache entry if the given <see cref="IChangeToken"/> expires.
 		/// </summary>
-		/// <param name="options">The <see cref="MemoryCacheEntryOptions"/>.</param>
+		/// <param name="options">The <see cref="MemoryCacheEntryOptions{TKey}"/>.</param>
 		/// <param name="expirationToken">The <see cref="IChangeToken"/> that causes the cache entry to expire.</param>
-		/// <returns>The <see cref="MemoryCacheEntryOptions"/> so that additional calls can be chained.</returns>
-		public static MemoryCacheEntryOptions AddExpirationToken(
-			this MemoryCacheEntryOptions options,
+		/// <returns>The <see cref="MemoryCacheEntryOptions{TKey}"/> so that additional calls can be chained.</returns>
+		public static MemoryCacheEntryOptions<TKey> AddExpirationToken<TKey>(
+			this MemoryCacheEntryOptions<TKey> options,
 			IChangeToken expirationToken)
+			where TKey : notnull
 		{
 			if (expirationToken == null)
 			{
@@ -62,12 +65,13 @@ namespace LinqToDB.Common.Internal.Cache
 		/// <summary>
 		/// Sets an absolute expiration time, relative to now.
 		/// </summary>
-		/// <param name="options">The <see cref="MemoryCacheEntryOptions"/>.</param>
+		/// <param name="options">The <see cref="MemoryCacheEntryOptions{TKey}"/>.</param>
 		/// <param name="relative">The expiration time, relative to now.</param>
-		/// <returns>The <see cref="MemoryCacheEntryOptions"/> so that additional calls can be chained.</returns>
-		public static MemoryCacheEntryOptions SetAbsoluteExpiration(
-			this MemoryCacheEntryOptions options,
+		/// <returns>The <see cref="MemoryCacheEntryOptions{TKey}"/> so that additional calls can be chained.</returns>
+		public static MemoryCacheEntryOptions<TKey> SetAbsoluteExpiration<TKey>(
+			this MemoryCacheEntryOptions<TKey> options,
 			TimeSpan relative)
+			where TKey : notnull
 		{
 			options.AbsoluteExpirationRelativeToNow = relative;
 			return options;
@@ -76,12 +80,13 @@ namespace LinqToDB.Common.Internal.Cache
 		/// <summary>
 		/// Sets an absolute expiration date for the cache entry.
 		/// </summary>
-		/// <param name="options">The <see cref="MemoryCacheEntryOptions"/>.</param>
+		/// <param name="options">The <see cref="MemoryCacheEntryOptions{TKey}"/>.</param>
 		/// <param name="absolute">The expiration time, in absolute terms.</param>
-		/// <returns>The <see cref="MemoryCacheEntryOptions"/> so that additional calls can be chained.</returns>
-		public static MemoryCacheEntryOptions SetAbsoluteExpiration(
-			this MemoryCacheEntryOptions options,
+		/// <returns>The <see cref="MemoryCacheEntryOptions{TKey}"/> so that additional calls can be chained.</returns>
+		public static MemoryCacheEntryOptions<TKey> SetAbsoluteExpiration<TKey>(
+			this MemoryCacheEntryOptions<TKey> options,
 			DateTimeOffset absolute)
+			where TKey : notnull
 		{
 			options.AbsoluteExpiration = absolute;
 			return options;
@@ -91,12 +96,13 @@ namespace LinqToDB.Common.Internal.Cache
 		/// Sets how long the cache entry can be inactive (e.g. not accessed) before it will be removed.
 		/// This will not extend the entry lifetime beyond the absolute expiration (if set).
 		/// </summary>
-		/// <param name="options">The <see cref="MemoryCacheEntryOptions"/>.</param>
+		/// <param name="options">The <see cref="MemoryCacheEntryOptions{TKey}"/>.</param>
 		/// <param name="offset">The sliding expiration time.</param>
-		/// <returns>The <see cref="MemoryCacheEntryOptions"/> so that additional calls can be chained.</returns>
-		public static MemoryCacheEntryOptions SetSlidingExpiration(
-			this MemoryCacheEntryOptions options,
+		/// <returns>The <see cref="MemoryCacheEntryOptions{TKey}"/> so that additional calls can be chained.</returns>
+		public static MemoryCacheEntryOptions<TKey> SetSlidingExpiration<TKey>(
+			this MemoryCacheEntryOptions<TKey> options,
 			TimeSpan offset)
+			where TKey : notnull
 		{
 			options.SlidingExpiration = offset;
 			return options;
@@ -105,12 +111,13 @@ namespace LinqToDB.Common.Internal.Cache
 		/// <summary>
 		/// The given callback will be fired after the cache entry is evicted from the cache.
 		/// </summary>
-		/// <param name="options">The <see cref="MemoryCacheEntryOptions"/>.</param>
+		/// <param name="options">The <see cref="MemoryCacheEntryOptions{TKey}"/>.</param>
 		/// <param name="callback">The callback to register for calling after an entry is evicted.</param>
-		/// <returns>The <see cref="MemoryCacheEntryOptions"/> so that additional calls can be chained.</returns>
-		public static MemoryCacheEntryOptions RegisterPostEvictionCallback(
-			this MemoryCacheEntryOptions options,
-			PostEvictionDelegate callback)
+		/// <returns>The <see cref="MemoryCacheEntryOptions{TKey}"/> so that additional calls can be chained.</returns>
+		public static MemoryCacheEntryOptions<TKey> RegisterPostEvictionCallback<TKey>(
+			this MemoryCacheEntryOptions<TKey> options,
+			PostEvictionDelegate<TKey> callback)
+			where TKey : notnull
 		{
 			if (callback == null)
 			{
@@ -123,21 +130,22 @@ namespace LinqToDB.Common.Internal.Cache
 		/// <summary>
 		/// The given callback will be fired after the cache entry is evicted from the cache.
 		/// </summary>
-		/// <param name="options">The <see cref="MemoryCacheEntryOptions"/>.</param>
+		/// <param name="options">The <see cref="MemoryCacheEntryOptions{TKey}"/>.</param>
 		/// <param name="callback">The callback to register for calling after an entry is evicted.</param>
 		/// <param name="state">The state to pass to the callback.</param>
-		/// <returns>The <see cref="MemoryCacheEntryOptions"/> so that additional calls can be chained.</returns>
-		public static MemoryCacheEntryOptions RegisterPostEvictionCallback(
-			this MemoryCacheEntryOptions options,
-			PostEvictionDelegate callback,
+		/// <returns>The <see cref="MemoryCacheEntryOptions{TKey}"/> so that additional calls can be chained.</returns>
+		public static MemoryCacheEntryOptions<TKey> RegisterPostEvictionCallback<TKey>(
+			this MemoryCacheEntryOptions<TKey> options,
+			PostEvictionDelegate<TKey> callback,
 			object? state)
+			where TKey : notnull
 		{
 			if (callback == null)
 			{
 				throw new ArgumentNullException(nameof(callback));
 			}
 
-			options.PostEvictionCallbacks.Add(new PostEvictionCallbackRegistration()
+			options.PostEvictionCallbacks.Add(new PostEvictionCallbackRegistration<TKey>()
 			{
 				EvictionCallback = callback,
 				State = state

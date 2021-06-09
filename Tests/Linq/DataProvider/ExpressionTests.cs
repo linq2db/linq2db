@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 using System.Linq.Expressions;
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -18,29 +19,24 @@ namespace Tests.DataProvider
 
 
 			using (var conn = new DataConnection(dataProvider, connectionString))
+			using (var rd = conn.ExecuteReader("SELECT 1"))
 			{
-				conn.InitCommand(CommandType.Text, "SELECT 1", null, null, false);
-
-				var rd = conn.Command.ExecuteReader();
-
-				if (rd.Read())
+				if (rd.Reader!.Read())
 				{
 					var dp   = conn.DataProvider;
-					var p    = Expression.Parameter(typeof(IDataReader));
+					var p    = Expression.Parameter(typeof(DbDataReader));
 					var dr   = Expression.Convert(p, dp.DataReaderType);
-					var ex   = (Expression<Func<IDataReader,int,int>>)dp.GetReaderExpression(rd, 0, dr, typeof(int));
+					var ex   = (Expression<Func<DbDataReader,int,int>>)dp.GetReaderExpression(rd.Reader, 0, dr, typeof(int));
 					var func = ex.CompileExpression();
 
 					do
 					{
-						var value = func(rd, 0);
+						var value = func(rd.Reader, 0);
 						Assert.AreEqual(1, value);
-					} while (rd.Read());
+					} while (rd.Reader!.Read());
 				}
 				else
-				{
 					Assert.Fail();
-				}
 			}
 		}
 	}

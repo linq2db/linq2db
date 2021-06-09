@@ -31,13 +31,15 @@ namespace LinqToDB.Linq.Builder
 				insertOrUpdateStatement.Insert.Items,
 				sequence);
 
-			UpdateBuilder.BuildSetter(
-				builder,
-				buildInfo,
-				(LambdaExpression)methodCall.Arguments[2].Unwrap(),
-				sequence,
-				insertOrUpdateStatement.Update.Items,
-				sequence);
+			var updateExpr = methodCall.Arguments[2].Unwrap();
+			if (!(updateExpr is ConstantExpression constant && constant.Value == null))
+				UpdateBuilder.BuildSetter(
+					builder,
+					buildInfo,
+					(LambdaExpression)updateExpr,
+					sequence,
+					insertOrUpdateStatement.Update.Items,
+					sequence);
 
 			insertOrUpdateStatement.Insert.Into  = ((TableBuilder.TableContext)sequence).SqlTable;
 			insertOrUpdateStatement.Update.Table = ((TableBuilder.TableContext)sequence).SqlTable;

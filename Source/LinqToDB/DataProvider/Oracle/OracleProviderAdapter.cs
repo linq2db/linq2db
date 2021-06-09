@@ -3,6 +3,7 @@ using System.Data;
 
 namespace LinqToDB.DataProvider.Oracle
 {
+	using System.Data.Common;
 	using System.Linq.Expressions;
 	using LinqToDB.Common;
 	using LinqToDB.Expressions;
@@ -13,7 +14,7 @@ namespace LinqToDB.DataProvider.Oracle
 		const int NanosecondsPerTick = 100;
 
 #if NETFRAMEWORK
-		private static readonly object _nativeSyncRoot = new object();
+		private static readonly object _nativeSyncRoot = new ();
 
 		public const string NativeAssemblyName        = "Oracle.DataAccess";
 		public const string NativeProviderFactoryName = "Oracle.DataAccess.Client";
@@ -23,7 +24,7 @@ namespace LinqToDB.DataProvider.Oracle
 		private static OracleProviderAdapter? _nativeAdapter;
 #endif
 
-		private static readonly object _managedSyncRoot = new object();
+		private static readonly object _managedSyncRoot = new ();
 
 		public const string ManagedAssemblyName    = "Oracle.ManagedDataAccess";
 		public const string ManagedClientNamespace = "Oracle.ManagedDataAccess.Client";
@@ -61,24 +62,24 @@ namespace LinqToDB.DataProvider.Oracle
 
 			string typesNamespace,
 
-			Action<IDbDataParameter, OracleDbType> dbTypeSetter,
-			Func  <IDbDataParameter, OracleDbType> dbTypeGetter,
+			Action<DbParameter, OracleDbType> dbTypeSetter,
+			Func  <DbParameter, OracleDbType> dbTypeGetter,
 
-			Func<IDbConnection, string> hostNameGetter,
-			Func<IDbConnection, string> databaseNameGetter,
+			Func<DbConnection, string> hostNameGetter,
+			Func<DbConnection, string> databaseNameGetter,
 
-			Action<IDbCommand, bool> bindByNameSetter,
-			Action<IDbCommand, int> arrayBindCountSetter,
-			Action<IDbCommand, int> initialLONGFetchSizeSetter,
+			Action<DbCommand, bool> bindByNameSetter,
+			Action<DbCommand, int>  arrayBindCountSetter,
+			Action<DbCommand, int>  initialLONGFetchSizeSetter,
 
 			Func<DateTimeOffset, string, object> createOracleTimeStampTZ,
 
-			Expression<Func<IDataReader, int, DateTimeOffset>> readDateTimeOffsetFromOracleTimeStampTZ,
-			Expression<Func<IDataReader, int, DateTimeOffset>> readDateTimeOffsetFromOracleTimeStampLTZ,
-			Expression<Func<IDataReader, int, decimal>> readOracleDecimalToDecimalAdv,
-			Expression<Func<IDataReader, int, int>> readOracleDecimalToInt,
-			Expression<Func<IDataReader, int, long>> readOracleDecimalToLong,
-			Expression<Func<IDataReader, int, decimal>> readOracleDecimalToDecimal,
+			Expression<Func<DbDataReader, int, DateTimeOffset>> readDateTimeOffsetFromOracleTimeStampTZ,
+			Expression<Func<DbDataReader, int, DateTimeOffset>> readDateTimeOffsetFromOracleTimeStampLTZ,
+			Expression<Func<DbDataReader, int, decimal>> readOracleDecimalToDecimalAdv,
+			Expression<Func<DbDataReader, int, int>> readOracleDecimalToInt,
+			Expression<Func<DbDataReader, int, long>> readOracleDecimalToLong,
+			Expression<Func<DbDataReader, int, decimal>> readOracleDecimalToDecimal,
 
 			BulkCopyAdapter? bulkCopy)
 		{
@@ -175,22 +176,22 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public string ProviderTypesNamespace { get; }
 
-		public Action<IDbDataParameter, OracleDbType> SetDbType { get; }
-		public Func  <IDbDataParameter, OracleDbType> GetDbType { get; }
+		public Action<DbParameter, OracleDbType> SetDbType { get; }
+		public Func  <DbParameter, OracleDbType> GetDbType { get; }
 
-		public Func<IDbConnection, string> GetHostName     { get; }
-		public Func<IDbConnection, string> GetDatabaseName { get; }
+		public Func<DbConnection, string> GetHostName     { get; }
+		public Func<DbConnection, string> GetDatabaseName { get; }
 
-		public Action<IDbCommand, bool> SetBindByName           { get; }
-		public Action<IDbCommand, int>  SetArrayBindCount       { get; }
-		public Action<IDbCommand, int>  SetInitialLONGFetchSize { get; }
+		public Action<DbCommand, bool> SetBindByName           { get; }
+		public Action<DbCommand, int>  SetArrayBindCount       { get; }
+		public Action<DbCommand, int>  SetInitialLONGFetchSize { get; }
 
-		public Expression<Func<IDataReader, int, DateTimeOffset>> ReadDateTimeOffsetFromOracleTimeStampTZ  { get; }
-		public Expression<Func<IDataReader, int, DateTimeOffset>> ReadDateTimeOffsetFromOracleTimeStampLTZ { get; }
-		public Expression<Func<IDataReader, int, decimal>>        ReadOracleDecimalToDecimalAdv            { get; }
-		public Expression<Func<IDataReader, int, int>>            ReadOracleDecimalToInt                   { get; }
-		public Expression<Func<IDataReader, int, long>>           ReadOracleDecimalToLong                  { get; }
-		public Expression<Func<IDataReader, int, decimal>>        ReadOracleDecimalToDecimal               { get; }
+		public Expression<Func<DbDataReader, int, DateTimeOffset>> ReadDateTimeOffsetFromOracleTimeStampTZ  { get; }
+		public Expression<Func<DbDataReader, int, DateTimeOffset>> ReadDateTimeOffsetFromOracleTimeStampLTZ { get; }
+		public Expression<Func<DbDataReader, int, decimal>>        ReadOracleDecimalToDecimalAdv            { get; }
+		public Expression<Func<DbDataReader, int, int>>            ReadOracleDecimalToInt                   { get; }
+		public Expression<Func<DbDataReader, int, long>>           ReadOracleDecimalToLong                  { get; }
+		public Expression<Func<DbDataReader, int, decimal>>        ReadOracleDecimalToDecimal               { get; }
 
 		private readonly Func<DateTimeOffset, string, object> _createOracleTimeStampTZ;
 		public object CreateOracleTimeStampTZ(DateTimeOffset dto, string offset) => _createOracleTimeStampTZ(dto, offset);
@@ -203,14 +204,14 @@ namespace LinqToDB.DataProvider.Oracle
 		public class BulkCopyAdapter
 		{
 			internal BulkCopyAdapter(
-				Func<IDbConnection, OracleBulkCopyOptions, OracleBulkCopy> bulkCopyCreator,
+				Func<DbConnection, OracleBulkCopyOptions, OracleBulkCopy> bulkCopyCreator,
 				Func<int, string, OracleBulkCopyColumnMapping> bulkCopyColumnMappingCreator)
 			{
 				Create = bulkCopyCreator;
 				CreateColumnMapping = bulkCopyColumnMappingCreator;
 			}
 
-			public Func<IDbConnection, OracleBulkCopyOptions, OracleBulkCopy> Create { get; }
+			public Func<DbConnection, OracleBulkCopyOptions, OracleBulkCopy> Create { get; }
 			public Func<int, string, OracleBulkCopyColumnMapping> CreateColumnMapping { get; }
 		}
 
@@ -240,7 +241,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		private static OracleProviderAdapter CreateAdapter(string assemblyName, string clientNamespace, string typesNamespace, string? factoryName)
 		{
-			var assembly = Common.Tools.TryLoadAssembly(assemblyName, factoryName);
+			var assembly = Tools.TryLoadAssembly(assemblyName, factoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
 
@@ -302,7 +303,7 @@ namespace LinqToDB.DataProvider.Oracle
 				typeMapper.FinalizeMappings();
 
 				bulkCopy = new BulkCopyAdapter(
-					typeMapper.BuildWrappedFactory((IDbConnection connection, OracleBulkCopyOptions options) => new OracleBulkCopy((OracleConnection)connection, options)),
+					typeMapper.BuildWrappedFactory((DbConnection connection, OracleBulkCopyOptions options) => new OracleBulkCopy((OracleConnection)(object)connection, options)),
 					typeMapper.BuildWrappedFactory((int source, string destination) => new OracleBulkCopyColumnMapping(source, destination)));
 			}
 			else
@@ -316,9 +317,9 @@ namespace LinqToDB.DataProvider.Oracle
 			// data reader expressions
 			// rd.GetOracleTimeStampTZ(i) => DateTimeOffset
 			var generator    = new ExpressionGenerator(typeMapper);
-			var rdParam      = Expression.Parameter(typeof(IDataReader), "rd");
+			var rdParam      = Expression.Parameter(typeof(DbDataReader), "rd");
 			var indexParam   = Expression.Parameter(typeof(int), "i");
-			var tstzExpr     = generator.MapExpression((IDataReader rd, int i) => ((OracleDataReader)rd).GetOracleTimeStampTZ(i), rdParam, indexParam);
+			var tstzExpr     = generator.MapExpression((DbDataReader rd, int i) => ((OracleDataReader)(object)rd).GetOracleTimeStampTZ(i), rdParam, indexParam);
 			var tstzVariable = generator.AssignToVariable(tstzExpr, "tstz");
 			var expr         = generator.MapExpression((OracleTimeStampTZ tstz) => new DateTimeOffset(
 				tstz.Year, tstz.Month, tstz.Day,
@@ -326,11 +327,11 @@ namespace LinqToDB.DataProvider.Oracle
 				tstz.GetTimeZoneOffset()).AddTicks(tstz.Nanosecond / NanosecondsPerTick), tstzVariable);
 			generator.AddExpression(expr);
 			var body = generator.Build();
-			var readDateTimeOffsetFromOracleTimeStampTZ = (Expression<Func<IDataReader, int, DateTimeOffset>>)Expression.Lambda(body, rdParam, indexParam);
+			var readDateTimeOffsetFromOracleTimeStampTZ = (Expression<Func<DbDataReader, int, DateTimeOffset>>)Expression.Lambda(body, rdParam, indexParam);
 
 			// rd.GetOracleTimeStampLTZ(i) => DateTimeOffset
 			generator    = new ExpressionGenerator(typeMapper);
-			tstzExpr     = generator.MapExpression((IDataReader rd, int i) => ((OracleDataReader)rd).GetOracleTimeStampLTZ(i).ToOracleTimeStampTZ(), rdParam, indexParam);
+			tstzExpr     = generator.MapExpression((DbDataReader rd, int i) => ((OracleDataReader)(object)rd).GetOracleTimeStampLTZ(i).ToOracleTimeStampTZ(), rdParam, indexParam);
 			tstzVariable = generator.AssignToVariable(tstzExpr, "tstz");
 			expr         = generator.MapExpression((OracleTimeStampTZ tstz) => new DateTimeOffset(
 				tstz.Year, tstz.Month, tstz.Day,
@@ -338,10 +339,10 @@ namespace LinqToDB.DataProvider.Oracle
 				tstz.GetTimeZoneOffset()).AddTicks(tstz.Nanosecond / NanosecondsPerTick), tstzVariable);
 			generator.AddExpression(expr);
 			body = generator.Build();
-			var readDateTimeOffsetFromOracleTimeStampLTZ = (Expression<Func<IDataReader, int, DateTimeOffset>>)Expression.Lambda(body, rdParam, indexParam);
+			var readDateTimeOffsetFromOracleTimeStampLTZ = (Expression<Func<DbDataReader, int, DateTimeOffset>>)Expression.Lambda(body, rdParam, indexParam);
 
 			// rd.GetOracleDecimal(i) => decimal
-			var readOracleDecimal  = typeMapper.MapLambda<IDataReader, int, OracleDecimal>((rd, i) => ((OracleDataReader)rd).GetOracleDecimal(i));
+			var readOracleDecimal  = typeMapper.MapLambda<DbDataReader, int, OracleDecimal>((rd, i) => ((OracleDataReader)(object)rd).GetOracleDecimal(i));
 			var oracleDecimalParam = Expression.Parameter(readOracleDecimal.ReturnType, "dec");
 
 			generator      = new ExpressionGenerator(typeMapper);
@@ -369,16 +370,16 @@ namespace LinqToDB.DataProvider.Oracle
 			// workaround for mapper issue with complex reader expressions handling
 			// https://github.com/linq2db/linq2db/issues/2032
 			var compiledReader                = Expression.Lambda(body, oracleDecimalParam).CompileExpression();
-			var readOracleDecimalToDecimalAdv = (Expression<Func<IDataReader, int, decimal>>)Expression.Lambda(
+			var readOracleDecimalToDecimalAdv = (Expression<Func<DbDataReader, int, decimal>>)Expression.Lambda(
 				Expression.Invoke(
 					Expression.Constant(compiledReader),
 					readOracleDecimal.GetBody(rdParam, indexParam)),
 				rdParam,
 				indexParam);
 
-			var readOracleDecimalToInt     = (Expression<Func<IDataReader, int, int>>)typeMapper.MapLambda<IDataReader, int, int>((rd, i) => (int)(decimal)OracleDecimal.SetPrecision(((OracleDataReader)rd).GetOracleDecimal(i), 27));
-			var readOracleDecimalToLong    = (Expression<Func<IDataReader, int, long>>)typeMapper.MapLambda<IDataReader, int, long>((rd, i) => (long)(decimal)OracleDecimal.SetPrecision(((OracleDataReader)rd).GetOracleDecimal(i), 27));
-			var readOracleDecimalToDecimal = (Expression<Func<IDataReader, int, decimal>>)typeMapper.MapLambda<IDataReader, int, decimal>((rd, i) => (decimal)OracleDecimal.SetPrecision(((OracleDataReader)rd).GetOracleDecimal(i), 27));
+			var readOracleDecimalToInt     = (Expression<Func<DbDataReader, int, int>>)typeMapper.MapLambda<DbDataReader, int, int>((rd, i) => (int)(decimal)OracleDecimal.SetPrecision(((OracleDataReader)(object)rd).GetOracleDecimal(i), 27));
+			var readOracleDecimalToLong    = (Expression<Func<DbDataReader, int, long>>)typeMapper.MapLambda<DbDataReader, int, long>((rd, i) => (long)(decimal)OracleDecimal.SetPrecision(((OracleDataReader)(object)rd).GetOracleDecimal(i), 27));
+			var readOracleDecimalToDecimal = (Expression<Func<DbDataReader, int, decimal>>)typeMapper.MapLambda<DbDataReader, int, decimal>((rd, i) => (decimal)OracleDecimal.SetPrecision(((OracleDataReader)(object)rd).GetOracleDecimal(i), 27));
 
 			return new OracleProviderAdapter(
 				connectionType,
@@ -409,16 +410,16 @@ namespace LinqToDB.DataProvider.Oracle
 
 				typesNamespace,
 
-				dbTypeBuilder.BuildSetter<IDbDataParameter>(),
-				dbTypeBuilder.BuildGetter<IDbDataParameter>(),
+				dbTypeBuilder.BuildSetter<DbParameter>(),
+				dbTypeBuilder.BuildGetter<DbParameter>(),
 
-				connectionMapper.Member(c => c.HostName).BuildGetter<IDbConnection>(),
-				connectionMapper.Member(c => c.DatabaseName).BuildGetter<IDbConnection>(),
+				connectionMapper.Member(c => c.HostName).BuildGetter<DbConnection>(),
+				connectionMapper.Member(c => c.DatabaseName).BuildGetter<DbConnection>(),
 
 
-				commandMapper.Member(p => p.BindByName).BuildSetter<IDbCommand>(),
-				commandMapper.Member(p => p.ArrayBindCount).BuildSetter<IDbCommand>(),
-				commandMapper.Member(p => p.InitialLONGFetchSize).BuildSetter<IDbCommand>(),
+				commandMapper.Member(p => p.BindByName).BuildSetter<DbCommand>(),
+				commandMapper.Member(p => p.ArrayBindCount).BuildSetter<DbCommand>(),
+				commandMapper.Member(p => p.InitialLONGFetchSize).BuildSetter<DbCommand>(),
 
 				typeMapper.BuildFactory((DateTimeOffset dto, string offset) => new OracleTimeStampTZ(dto.Year, dto.Month, dto.Day, dto.Hour, dto.Minute, dto.Second, GetDateTimeOffsetNanoseconds(dto), offset)),
 
@@ -563,11 +564,11 @@ namespace LinqToDB.DataProvider.Oracle
 				= new LambdaExpression[]
 			{
 				// [0]: Open
-				(Expression<Action<OracleConnection>>          )((OracleConnection this_) => this_.Open()),
+				(Expression<Action<OracleConnection>>         )((OracleConnection this_) => this_.Open()),
 				// [1]: CreateCommand
-				(Expression<Func<OracleConnection, IDbCommand>>)((OracleConnection this_) => this_.CreateCommand()),
+				(Expression<Func<OracleConnection, DbCommand>>)((OracleConnection this_) => this_.CreateCommand()),
 				// [2]: Dispose
-				(Expression<Action<OracleConnection>>          )((OracleConnection this_) => this_.Dispose()),
+				(Expression<Action<OracleConnection>>         )((OracleConnection this_) => this_.Dispose()),
 			};
 
 			public OracleConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -580,9 +581,9 @@ namespace LinqToDB.DataProvider.Oracle
 			public string HostName     => throw new NotImplementedException();
 			public string DatabaseName => throw new NotImplementedException();
 
-			public void       Open         () => ((Action<OracleConnection>          )CompiledWrappers[0])(this);
-			public IDbCommand CreateCommand() => ((Func<OracleConnection, IDbCommand>)CompiledWrappers[1])(this);
-			public void       Dispose      () => ((Action<OracleConnection>          )CompiledWrappers[2])(this);
+			public void      Open         () => ((Action<OracleConnection>         )CompiledWrappers[0])(this);
+			public DbCommand CreateCommand() => ((Func<OracleConnection, DbCommand>)CompiledWrappers[1])(this);
+			public void      Dispose      () => ((Action<OracleConnection>         )CompiledWrappers[2])(this);
 		}
 
 		[Wrapper]
@@ -673,7 +674,9 @@ namespace LinqToDB.DataProvider.Oracle
 			public OracleBulkCopy(OracleConnection connection, OracleBulkCopyOptions options) => throw new NotImplementedException();
 
 			public void Dispose      ()                       => ((Action<OracleBulkCopy>)CompiledWrappers[0])(this);
+#pragma warning disable RS0030 // API mapping must preserve type
 			public void WriteToServer(IDataReader dataReader) => ((Action<OracleBulkCopy, IDataReader>)CompiledWrappers[1])(this, dataReader);
+#pragma warning restore RS0030 //  API mapping must preserve type
 
 			public int NotifyAfter
 			{

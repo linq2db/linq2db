@@ -43,7 +43,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression IBuildContext.Expression => Lambda;
 
-		public readonly Dictionary<MemberInfo,Expression> Members = new Dictionary<MemberInfo,Expression>(new MemberInfoComparer());
+		public readonly Dictionary<MemberInfo,Expression> Members = new (new MemberInfoComparer());
 
 		public SelectContext(IBuildContext? parent, ExpressionBuilder builder, LambdaExpression lambda, SelectQuery selectQuery)
 		{
@@ -195,39 +195,9 @@ namespace LinqToDB.Linq.Builder
 									{
 										case ExpressionType.New        :
 										case ExpressionType.MemberInit :
-											{
-												var resultExpression = memberExpression.Transform(e =>
-												{
-													if (!ReferenceEquals(e, memberExpression))
-													{
-														switch (e.NodeType)
-														{
-															case ExpressionType.MemberAccess :
-															case ExpressionType.Parameter :
-																{
-																	var sequence = GetSequence(e, 0)!;
-																	return Builder.BuildExpression(sequence, e, enforceServerSide);
-																}
-															default:
-																{
-																	if (e is ContextRefExpression refExpression)
-																	{
-																		return Builder.BuildExpression(refExpression.BuildContext, e, enforceServerSide);
-																	}
-
-																	break;
-																}
-														}
-
-														if (enforceServerSide)
-															return Builder.BuildExpression(this, e, true);
-													}
-
-													return e;
-												});
-
-												return resultExpression;
-											}
+										{
+											return Builder.BuildExpression(this, memberExpression, enforceServerSide);
+										}
 									}
 
 									var me = memberExpression.NodeType == ExpressionType.Parameter ? null : memberExpression;
@@ -276,7 +246,7 @@ namespace LinqToDB.Linq.Builder
 										}
 								}
 
-								var expr = expression.Transform(ex => ReferenceEquals(ex, levelExpression) ? memberExpression : ex);
+								var expr = expression.Replace(levelExpression, memberExpression);
 
 								if (sequence == null)
 									return Builder.BuildExpression(this, expr, enforceServerSide);
@@ -464,15 +434,14 @@ namespace LinqToDB.Linq.Builder
 
 		SqlInfo[] ConvertExpressions(Expression expression, ConvertFlags flags, ColumnDescriptor? columnDescriptor)
 		{
-			return Builder.ConvertExpressions(this, expression, flags, columnDescriptor)
-				.ToArray();
+			return Builder.ConvertExpressions(this, expression, flags, columnDescriptor);
 		}
 
 		#endregion
 
 		#region ConvertToIndex
 
-		readonly Dictionary<Tuple<Expression?,int,ConvertFlags>,SqlInfo[]> _expressionIndex = new Dictionary<Tuple<Expression?,int,ConvertFlags>,SqlInfo[]>();
+		readonly Dictionary<Tuple<Expression?,int,ConvertFlags>,SqlInfo[]> _expressionIndex = new ();
 
 		public virtual SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 		{
@@ -502,7 +471,7 @@ namespace LinqToDB.Linq.Builder
 			return info;
 		}
 
-		readonly Dictionary<Tuple<MemberInfo?,ConvertFlags>,SqlInfo[]> _memberIndex = new Dictionary<Tuple<MemberInfo?,ConvertFlags>,SqlInfo[]>();
+		readonly Dictionary<Tuple<MemberInfo?,ConvertFlags>,SqlInfo[]> _memberIndex = new ();
 
 		class SqlData
 		{
@@ -981,7 +950,7 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual void SetAlias(string alias)
 		{
-			if (!alias.IsNullOrEmpty() && !alias.Contains('<') && SelectQuery.Select.From.Tables.Count == 1)
+			if (!string.IsNullOrEmpty(alias) && !alias.Contains('<') && SelectQuery.Select.From.Tables.Count == 1)
 			{
 				SelectQuery.Select.From.Tables[0].Alias = alias;
 			}
@@ -1247,11 +1216,11 @@ namespace LinqToDB.Linq.Builder
 					return memberExpression;
 			}
 
-			if (!memberExpression.Type.IsAssignableFrom(levelExpression.Type))
+			if (!memberExpression.Type.IsAssignableFrom(levelExpression.Type) && !levelExpression.Type.IsAssignableFrom(memberExpression.Type))
 				return memberExpression;
 
 			return !ReferenceEquals(levelExpression, expression) ?
-				expression.Transform(ex => ReferenceEquals(ex, levelExpression) ? memberExpression : ex) :
+				expression.Replace(levelExpression, memberExpression) :
 				memberExpression;
 		}
 

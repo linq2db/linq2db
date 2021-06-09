@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 
 namespace Tests
 {
@@ -90,10 +91,10 @@ namespace Tests
 		public string ConfigString { get; }
 		public string Divider { get; }
 		public string Name { get; }
-		public Action<IDbConnection>? Action { get; }
+		public Action<DbConnection>? Action { get; }
 		public string? Database { get; }
 
-		public CreateDataScript(string configString, string divider, string name, Action<IDbConnection>? action = null, string? database = null)
+		public CreateDataScript(string configString, string divider, string name, Action<DbConnection>? action = null, string? database = null)
 		{
 			ConfigString = configString;
 			Divider = divider;

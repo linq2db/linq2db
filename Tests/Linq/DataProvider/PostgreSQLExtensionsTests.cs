@@ -209,6 +209,7 @@ namespace Tests.DataProvider
 		public void ArrayFunctions([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)]
 			string context)
 		{
+			var arr = new int [] { 1, 2, 3 };
 			var testData = SampleClass.Seed();
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(testData))
@@ -235,6 +236,13 @@ namespace Tests.DataProvider
 						|| Sql.Ext.PostgreSQL().ValueIsGreaterThanAny(t1.IntValue, t2.IntArray)
 						|| Sql.Ext.PostgreSQL().ValueIsGreaterThanOrEqualToAny(t1.IntValue, t2.IntArray)
 						|| Sql.Ext.PostgreSQL().ValueIsNotEqualToAny(t1.IntValue, t2.IntArray)
+
+						|| Sql.Ext.PostgreSQL().ValueIsEqualToAny(t1.IntValue, arr)
+						|| Sql.Ext.PostgreSQL().ValueIsLessThanAny(t1.IntValue, arr)
+						|| Sql.Ext.PostgreSQL().ValueIsLessThanOrEqualToAny(t1.IntValue, arr)
+						|| Sql.Ext.PostgreSQL().ValueIsGreaterThanAny(t1.IntValue, arr)
+						|| Sql.Ext.PostgreSQL().ValueIsGreaterThanOrEqualToAny(t1.IntValue, arr)
+						|| Sql.Ext.PostgreSQL().ValueIsNotEqualToAny(t1.IntValue, arr)
 
 					select new
 					{

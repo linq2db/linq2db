@@ -27,9 +27,12 @@ namespace Tests.Linq
 			if (!(dc is DataConnection db))
 				return;
 
+			var commandInterceptor = new SaveCommandInterceptor();
+			db.AddInterceptor(commandInterceptor);
+
 			// check only strong providers
 			if (!inline && db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameter && db.DataProvider.SqlProviderFlags.AcceptsTakeAsParameterIfSkip)
-				Assert.That(db.Command.Parameters.Count, Is.GreaterThan(additional));
+				Assert.That(commandInterceptor.Parameters.Length, Is.GreaterThan(additional));
 		}
 
 		static void CheckTakeSkipParameterized(IDataContext dc, int additional = 0)
@@ -243,7 +246,6 @@ namespace Tests.Linq
 
 		[Test]
 		public void SkipCount([DataSources(
-			ProviderName.SqlServer2000,
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
 			TestProvName.AllAccess)]
@@ -395,7 +397,7 @@ namespace Tests.Linq
 
 			void execute(string context, bool inline)
 			{
-				using (var db = new TestDataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					db.InlineParameters = inline;
 					var skip = 2;
@@ -419,7 +421,7 @@ namespace Tests.Linq
 
 			void execute(string context, bool inline)
 			{
-				using (var db = new TestDataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					db.InlineParameters = inline;
 					var skip = 2;
@@ -443,7 +445,7 @@ namespace Tests.Linq
 
 			void execute(string context, bool inline)
 			{
-				using (var db = new TestDataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					db.InlineParameters = inline;
 					var skip1 = 1;
@@ -462,7 +464,6 @@ namespace Tests.Linq
 		[Test]
 		public void SkipTake4([DataSources(
 			TestProvName.AllSQLite,
-			ProviderName.SqlServer2000,
 			TestProvName.AllSybase,
 			TestProvName.AllAccess)]
 			string context, 
@@ -522,7 +523,6 @@ namespace Tests.Linq
 		[Test]
 		public void SkipTake6([DataSources(
 			ProviderName.SqlCe,
-			ProviderName.SqlServer2000,
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
 			TestProvName.AllAccess)]
@@ -543,7 +543,6 @@ namespace Tests.Linq
 		[Test]
 		public void SkipTakeCount([DataSources(
 			ProviderName.SqlCe,
-			ProviderName.SqlServer2000,
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
 			TestProvName.AllAccess)]

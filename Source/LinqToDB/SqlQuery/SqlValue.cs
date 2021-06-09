@@ -131,21 +131,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-				objectTree.Add(this, clone = new SqlValue(ValueType, Value));
-
-			return clone;
-		}
-
-		#endregion
-
 		#region IQueryElement Members
 
 		public QueryElementType ElementType => QueryElementType.SqlValue;

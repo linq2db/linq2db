@@ -130,7 +130,10 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			if (database != null && database.Length == 0) database = null;
 
-			if (database != null)
+			// either "temp", "main" or attached db name supported
+			if (tableOptions.IsTemporaryOptionSet())
+				sb.Append("temp.");
+			else if (database != null)
 				sb.Append(database).Append('.');
 
 			return sb.Append(table);
@@ -176,6 +179,13 @@ namespace LinqToDB.DataProvider.SQLite
 
 			if (table.TableOptions.HasCreateIfNotExists())
 				StringBuilder.Append("IF NOT EXISTS ");
+		}
+
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
+		{
+			BuildExpression(GetPrecedence(expr), expr.Expr1);
+			StringBuilder.Append(expr.IsNot ? " IS " : " IS NOT ");
+			BuildExpression(GetPrecedence(expr), expr.Expr2);
 		}
 	}
 }

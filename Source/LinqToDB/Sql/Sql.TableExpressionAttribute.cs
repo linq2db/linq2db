@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using LinqToDB.Mapping;
 
 // ReSharper disable CheckNamespace
@@ -61,7 +59,7 @@ namespace LinqToDB
 				knownExpressions.Insert(0, null);
 				knownExpressions.Insert(0, null);
 
-				table.TableArguments = ExpressionAttribute.PrepareArguments(expressionStr!, ArgIndices, knownExpressions, genericTypes, converter).Skip(2).ToArray();
+				table.TableArguments = ExpressionAttribute.PrepareArguments(expressionStr!, ArgIndices, addDefault: false, knownExpressions, genericTypes, converter).Skip(2).ToArray();
 
 				if (Schema   != null) table.Schema   = Schema;
 				if (Database != null) table.Database = Database;

@@ -69,19 +69,19 @@ namespace LinqToDB
 
 		static Func<object?[],object?[]?,object?> CompileQuery(LambdaExpression query)
 		{
-			var ps = Expression.Parameter(typeof(object[]), "ps");
+			var ps        = Expression.Parameter(typeof(object[]), "ps");
 			var preambles = Expression.Parameter(typeof(object[]), "preambles");
 
-			var info = query.Body.Transform(pi =>
+			var info = query.Body.Transform((query, ps, preambles), static (context, pi) =>
 			{
 				switch (pi.NodeType)
 				{
 					case ExpressionType.Parameter :
 						{
-							var idx = query.Parameters.IndexOf((ParameterExpression)pi);
+							var idx = context.query.Parameters.IndexOf((ParameterExpression)pi);
 
 							if (idx >= 0)
-								return Expression.Convert(Expression.ArrayIndex(ps, Expression.Constant(idx)), pi.Type);
+								return Expression.Convert(Expression.ArrayIndex(context.ps, Expression.Constant(idx)), pi.Type);
 
 							break;
 						}
@@ -97,7 +97,7 @@ namespace LinqToDB
 
 								var helper = (ITableHelper)Activator.CreateInstance(typeof(TableHelper<>).MakeGenericType(type))!;
 
-								return helper.CallTable(query, expr, ps, preambles, MethodType.ElementAsync);
+								return helper.CallTable(context.query, expr, context.ps, context.preambles, MethodType.ElementAsync);
 							}
 							else if (expr.IsQueryable())
 							{
@@ -109,7 +109,7 @@ namespace LinqToDB
 								var helper = (ITableHelper)Activator.CreateInstance(
 									typeof(TableHelper<>).MakeGenericType(qtype == null ? expr.Type : qtype.GetGenericArguments()[0]))!;
 
-								return helper.CallTable(query, expr, ps, preambles, qtype != null ? MethodType.Queryable : MethodType.Element);
+								return helper.CallTable(context.query, expr, context.ps, context.preambles, qtype != null ? MethodType.Queryable : MethodType.Element);
 							}
 
 							if (expr.Method.Name == "GetTable" && expr.Method.DeclaringType == typeof(DataExtensions))
@@ -124,7 +124,7 @@ namespace LinqToDB
 							var helper = (ITableHelper)Activator
 								.CreateInstance(typeof(TableHelper<>)
 								.MakeGenericType(pi.Type.GetGenericArguments()[0]))!;
-							return helper.CallTable(query, pi, ps, preambles, MethodType.Queryable);
+							return helper.CallTable(context.query, pi, context.ps, context.preambles, MethodType.Queryable);
 						}
 
 						break;

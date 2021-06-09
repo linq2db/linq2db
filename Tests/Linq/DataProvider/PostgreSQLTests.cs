@@ -51,9 +51,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestParameters([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			// mapping fails and fallbacks to slow-mapper
-			using (new CustomCommandProcessor(null))
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context, suppressSequentialAccess: true))
 			{
 				Assert.That(conn.Execute<string>("SELECT :p"       , new { p = "1" }),                                Is.EqualTo("1"));
 				Assert.That(conn.Execute<int>   ("SELECT :p"       , new { p = new DataParameter { Value = 1 } }),    Is.EqualTo(1));
@@ -203,7 +201,7 @@ namespace Tests.DataProvider
 		[Test, TestDataType(ProviderName.PostgreSQL)]
 		public void TestDataTypes(string typeName, int id, TypeTestData data, string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var value = data.Func(typeName, this, conn);
 				if (data.Result is NpgsqlPoint)
@@ -262,7 +260,7 @@ namespace Tests.DataProvider
 		//[Test]
 		public void TestNumerics([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				TestSimple<short> (conn, 1,   DataType.Int16);
 				TestSimple        (conn, 1,   DataType.Int32);
@@ -311,7 +309,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDate([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12);
 
@@ -329,7 +327,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestJson([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var testJson = "{\"name\":\"bob\", \"age\":10}";
 
@@ -345,7 +343,7 @@ namespace Tests.DataProvider
 		public void TestJsonb([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			var json = new { name = "bob", age = 10 };
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				//properties come back out in potentially diff order as its being
 				//converted between a binary json format and the string representation
@@ -360,7 +358,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDateTime([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
 
@@ -376,7 +374,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestChar([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<char>("SELECT Cast('1' as char)"), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT Cast('1' as char)"), Is.EqualTo('1'));
@@ -412,7 +410,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestString([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20))"), Is.EqualTo("12345"));
 				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as char(20))"), Is.Null);
@@ -441,7 +439,7 @@ namespace Tests.DataProvider
 		{
 			var arr1 = new byte[] { 48, 57 };
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<byte[]>("SELECT E'\\060\\071'::bytea"), Is.EqualTo(arr1));
 
@@ -460,7 +458,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestGuid([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(
 					conn.Execute<Guid>("SELECT Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uuid)"),
@@ -480,7 +478,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestXml([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT XMLPARSE (DOCUMENT'<xml/>')"), Is.EqualTo("<xml/>"));
 				Assert.That(conn.Execute<XDocument>("SELECT XMLPARSE (DOCUMENT'<xml/>')").ToString(), Is.EqualTo("<xml />"));
@@ -506,7 +504,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum1([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<TestEnum>("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
 				Assert.That(conn.Execute<TestEnum?>("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
@@ -518,7 +516,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum2([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = TestEnum.AA }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = (TestEnum?)TestEnum.BB }), Is.EqualTo("B"));
@@ -582,7 +580,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void SequenceInsertWithIdentity_CustomNaming([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.GetTable<PostgreSQLSpecific.SequenceCustomNamingTest>().Where(_ => _.Value == "SeqValue").Delete();
 
@@ -600,7 +598,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void SequenceInsertWithUserDefinedSequenceNameAttribute([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var table = new LinqToDB.SqlQuery.SqlTable(db.MappingSchema, typeof(PostgreSQLSpecific.SequenceTest1));
 				Assert.That(table.SequenceAttributes, Is.Not.Null);
@@ -614,7 +612,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void SequenceInsertWithoutSequenceNameAttribute([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var table = new LinqToDB.SqlQuery.SqlTable(db.MappingSchema, typeof(PostgreSQLSpecific.SequenceTest2));
 				Assert.That(table.SequenceAttributes.IsNullOrEmpty());
@@ -718,7 +716,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					try
 					{
@@ -749,7 +747,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					try
 					{
@@ -784,7 +782,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Issue140([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var list = db.Query<TestTeamplate>("select 1 as cdni_cd_cod_numero_item1").ToList();
 
@@ -979,7 +977,7 @@ namespace Tests.DataProvider
 				}
 			};
 
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.AddMappingSchema(new MappingSchema(context));
 				// color enum type will not work without this call if _create test was run in the same session
@@ -1129,7 +1127,7 @@ namespace Tests.DataProvider
 				}
 			};
 
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.AddMappingSchema(new MappingSchema(context));
 				// color enum type will not work without this call if _create test was run in the same session
@@ -1229,7 +1227,7 @@ namespace Tests.DataProvider
 		{
 				var data = Enumerable.Range(1, 40).Select(i => new SequenceTest { Value = $"SeqValue{i}" }).ToArray();
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				try
 				{
@@ -1321,7 +1319,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestTableFunction([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				// needed for proper AllTypes columns mapping
 				db.AddMappingSchema(new MappingSchema(context));
@@ -1580,6 +1578,129 @@ namespace Tests.DataProvider
 				await db.BulkCopyAsync(items);
 
 				var loadedItems = table.ToArray();
+			}
+		}
+
+		[Table]
+		public class UIntTable
+		{
+			[Column] public ushort  Field16  { get; set; }
+			[Column] public uint    Field32  { get; set; }
+			[Column] public ulong   Field64  { get; set; }
+			[Column] public ushort? Field16N { get; set; }
+			[Column] public uint?   Field32N { get; set; }
+			[Column] public ulong?  Field64N { get; set; }
+		}
+
+		[Test]
+		public void UIntXXMappingTest([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			using (var table = db.CreateLocalTable<UIntTable>())
+			{
+				// test create table
+				Assert.True(db.LastQuery!.Contains("\"Field16\"  Int"));
+				Assert.True(db.LastQuery!.Contains("\"Field32\"  BigInt"));
+				Assert.True(db.LastQuery!.Contains("\"Field64\"  decimal(20)"));
+				Assert.True(db.LastQuery!.Contains("\"Field16N\" Int"));
+				Assert.True(db.LastQuery!.Contains("\"Field32N\" BigInt"));
+				Assert.True(db.LastQuery!.Contains("\"Field64N\" decimal(20)"));
+
+				var value16      = ushort.MaxValue;
+				var value32      = uint.MaxValue;
+				var value64      = ulong.MaxValue;
+				ushort? value16N = ushort.MaxValue;
+				uint? value32N   = uint.MaxValue;
+				ulong? value64N  = ulong.MaxValue;
+
+				// test literal (+materialization)
+				db.InlineParameters = true;
+				table.Insert(() => new UIntTable() { Field16 = value16, Field32 = value32, Field64 = value64, Field16N = value16N, Field32N = value32N, Field64N = value64N });
+				Assert.True(db.LastQuery!.Contains("\t65535,"));
+				Assert.True(db.LastQuery!.Contains("\t4294967295,"));
+				Assert.True(db.LastQuery!.Contains("18446744073709551615"));
+				var res = table.ToArray();
+				Assert.AreEqual(1, res.Length);
+				Assert.AreEqual(ushort.MaxValue, res[0].Field16);
+				Assert.AreEqual(uint.MaxValue  , res[0].Field32);
+				Assert.AreEqual(ulong.MaxValue , res[0].Field64);
+				Assert.AreEqual(ushort.MaxValue, res[0].Field16N);
+				Assert.AreEqual(uint.MaxValue  , res[0].Field32N);
+				Assert.AreEqual(ulong.MaxValue , res[0].Field64N);
+				table.Delete();
+
+				// test parameter (+materialization)
+				db.InlineParameters = false;
+				table.Insert(() => new UIntTable() { Field16 = value16, Field32 = value32, Field64 = value64, Field16N = value16N, Field32N = value32N, Field64N = value64N });
+				Assert.False(db.LastQuery!.Contains("65535"));
+				Assert.False(db.LastQuery!.Contains("4294967295"));
+				Assert.False(db.LastQuery!.Contains("18446744073709551615"));
+				res = table.ToArray();
+				Assert.AreEqual(1, res.Length);
+				Assert.AreEqual(ushort.MaxValue, res[0].Field16);
+				Assert.AreEqual(uint.MaxValue  , res[0].Field32);
+				Assert.AreEqual(ulong.MaxValue , res[0].Field64);
+				Assert.AreEqual(ushort.MaxValue, res[0].Field16N);
+				Assert.AreEqual(uint.MaxValue  , res[0].Field32N);
+				Assert.AreEqual(ulong.MaxValue , res[0].Field64N);
+
+				// test schema
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new LinqToDB.SchemaProvider.GetSchemaOptions()
+				{
+					GetProcedures = false,
+					GetTables     = true,
+					LoadTable     = t => t.Name == nameof(UIntTable)
+				});
+
+				Assert.AreEqual(1                , schema.Tables.Count);
+				Assert.AreEqual(nameof(UIntTable), schema.Tables[0].TableName);
+				Assert.AreEqual(6                , schema.Tables[0].Columns.Count);
+
+				var column = schema.Tables[0].Columns.Where(c => c.ColumnName == nameof(UIntTable.Field16)).Single();
+
+				Assert.AreEqual("integer"     , column.ColumnType);
+				Assert.AreEqual(DataType.Int32, column.DataType);
+				Assert.AreEqual("int"         , column.MemberType);
+				Assert.AreEqual(typeof(int)   , column.SystemType);
+
+				column = schema.Tables[0].Columns.Where(c => c.ColumnName == nameof(UIntTable.Field32)).Single();
+
+				Assert.AreEqual("bigint"      , column.ColumnType);
+				Assert.AreEqual(DataType.Int64, column.DataType);
+				Assert.AreEqual("long"        , column.MemberType);
+				Assert.AreEqual(typeof(long)  , column.SystemType);
+
+				column = schema.Tables[0].Columns.Where(c => c.ColumnName == nameof(UIntTable.Field64)).Single();
+
+				Assert.AreEqual("numeric(20,0)" , column.ColumnType);
+				Assert.AreEqual(DataType.Decimal, column.DataType);
+				Assert.AreEqual("decimal"       , column.MemberType);
+				Assert.AreEqual(20              , column.Precision);
+				Assert.AreEqual(0               , column.Scale);
+				Assert.AreEqual(typeof(decimal) , column.SystemType);
+
+				column = schema.Tables[0].Columns.Where(c => c.ColumnName == nameof(UIntTable.Field16N)).Single();
+
+				Assert.AreEqual("integer"     , column.ColumnType);
+				Assert.AreEqual(DataType.Int32, column.DataType);
+				Assert.AreEqual("int?"        , column.MemberType);
+				Assert.AreEqual(typeof(int)   , column.SystemType);
+
+				column = schema.Tables[0].Columns.Where(c => c.ColumnName == nameof(UIntTable.Field32N)).Single();
+
+				Assert.AreEqual("bigint"      , column.ColumnType);
+				Assert.AreEqual(DataType.Int64, column.DataType);
+				Assert.AreEqual("long?"       , column.MemberType);
+				Assert.AreEqual(typeof(long)  , column.SystemType);
+
+				column = schema.Tables[0].Columns.Where(c => c.ColumnName == nameof(UIntTable.Field64N)).Single();
+
+				Assert.AreEqual("numeric(20,0)" , column.ColumnType);
+				Assert.AreEqual(DataType.Decimal, column.DataType);
+				Assert.AreEqual("decimal?"      , column.MemberType);
+				Assert.AreEqual(20              , column.Precision);
+				Assert.AreEqual(0               , column.Scale);
+				Assert.AreEqual(typeof(decimal) , column.SystemType);
 			}
 		}
 
@@ -2088,7 +2209,6 @@ namespace Tests.DataProvider
 				TestContext.WriteLine(str);
 			}
 		}
-
 	}
 
 	public static class TestPgAggregates

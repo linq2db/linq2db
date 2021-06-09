@@ -8,9 +8,11 @@ namespace LinqToDB.Linq.Builder
 
 	class WithTableExpressionBuilder : MethodCallBuilder
 	{
+		private static readonly string[] MethodNames = { "With", "WithTableExpression" };
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("With", "WithTableExpression");
+			return methodCall.IsQueryable(MethodNames);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

@@ -114,12 +114,11 @@ namespace Tests
 				case TestProvName.SqlServer2019:
 				case TestProvName.SqlServer2019SequentialAccess:
 				case TestProvName.SqlServer2019FastExpressionCompiler:
+				case TestProvName.SqlServerContained                 :
 				case TestProvName.SqlAzure:
 				case ProviderName.SapHanaNative:
 				case ProviderName.SapHanaOdbc:
 					return db.GetTable<LinqDataTypes>().Select(_ => SchemaName()).First();
-				case ProviderName.SqlServer2000:
-					return db.FromSql<string>($"SELECT TABLE_SCHEMA FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = {nameof(LinqDataTypes)}").First();
 			}
 
 			return NO_SCHEMA_NAME;
@@ -134,7 +133,6 @@ namespace Tests
 			switch (GetContextName(db))
 			{
 				case ProviderName.SybaseManaged:
-				case ProviderName.SqlServer2000:
 				case ProviderName.SqlServer2005:
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:
@@ -144,6 +142,7 @@ namespace Tests
 				case TestProvName.SqlServer2019:
 				case TestProvName.SqlServer2019SequentialAccess:
 				case TestProvName.SqlServer2019FastExpressionCompiler:
+				case TestProvName.SqlServerContained                     :
 				case TestProvName.SqlAzure:
 				case ProviderName.OracleManaged:
 				case ProviderName.OracleNative:
@@ -218,7 +217,6 @@ namespace Tests
 				case ProviderName.DB2:
 				case ProviderName.Sybase:
 				case ProviderName.SybaseManaged:
-				case ProviderName.SqlServer2000:
 				case ProviderName.SqlServer2005:
 				case ProviderName.SqlServer2008:
 				case ProviderName.SqlServer2012:
@@ -228,6 +226,7 @@ namespace Tests
 				case TestProvName.SqlServer2019:
 				case TestProvName.SqlServer2019SequentialAccess:
 				case TestProvName.SqlServer2019FastExpressionCompiler:
+				case TestProvName.SqlServerContained                 :
 				case TestProvName.SqlAzure:
 					return db.GetTable<LinqDataTypes>().Select(_ => DbName()).First();
 				case ProviderName.Informix:
@@ -378,6 +377,7 @@ namespace Tests
 					return "NOCASE";
 				case ProviderName.Firebird                           :
 				case TestProvName.Firebird3                          :
+				case TestProvName.Firebird4                          :
 					return "UNICODE_FSS";
 				case ProviderName.MySql                              :
 				case ProviderName.MySqlConnector                     :
@@ -385,7 +385,6 @@ namespace Tests
 				case TestProvName.MariaDB                            :
 					return "utf8_bin";
 				case TestProvName.SqlAzure                           :
-				case ProviderName.SqlServer2000                      :
 				case ProviderName.SqlServer2005                      :
 				case ProviderName.SqlServer2008                      :
 				case ProviderName.SqlServer2012                      :
@@ -395,6 +394,7 @@ namespace Tests
 				case TestProvName.SqlServer2019                      :
 				case TestProvName.SqlServer2019SequentialAccess      :
 				case TestProvName.SqlServer2019FastExpressionCompiler:
+				case TestProvName.SqlServerContained                 :
 					return "Albanian_CI_AS";
 				default                                              :
 					return "whatever";

@@ -6,6 +6,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Benchmarks.TestProvider;
 using System;
+using System.Data.Common;
 
 namespace LinqToDB.Benchmarks.Queries
 {
@@ -14,7 +15,7 @@ namespace LinqToDB.Benchmarks.Queries
 		private const int      _iterations = 2;
 		private long           _userId = 100500;
 		private DataConnection _db     = null!;
-		private IDbConnection  _cn     = null!;
+		private DbConnection   _cn     = null!;
 		private Func<DataConnection, long, IQueryable<User>> _compiled = null!;
 
 		[GlobalSetup]

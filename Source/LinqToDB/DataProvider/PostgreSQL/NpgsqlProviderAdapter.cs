@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
+	using System.Data.Common;
 	using Common;
 	using Data;
 	using Expressions;
@@ -54,10 +55,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			Func<string, NpgsqlConnection> connectionCreator,
 
-			Action<IDbDataParameter, NpgsqlDbType> dbTypeSetter,
-			Func  <IDbDataParameter, NpgsqlDbType> dbTypeGetter,
+			Action<DbParameter, NpgsqlDbType> dbTypeSetter,
+			Func  <DbParameter, NpgsqlDbType> dbTypeGetter,
 
-			Func<IDbConnection, string, NpgsqlBinaryImporter> beginBinaryImport)
+			Func<DbConnection, string, NpgsqlBinaryImporter> beginBinaryImport)
 		{
 			ConnectionType  = connectionType;
 			DataReaderType  = dataReaderType;
@@ -124,8 +125,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public string ProviderTypesNamespace => TypesNamespace;
 
-		public Action<IDbDataParameter, NpgsqlDbType> SetDbType { get; }
-		public Func  <IDbDataParameter, NpgsqlDbType> GetDbType { get; }
+		public Action<DbParameter, NpgsqlDbType> SetDbType { get; }
+		public Func  <DbParameter, NpgsqlDbType> GetDbType { get; }
 
 		public bool IsDbTypeSupported(NpgsqlDbType type) => _knownDbTypes.ContainsKey(type);
 
@@ -148,7 +149,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		private readonly Func<string, NpgsqlConnection> _connectionCreator;
 		public NpgsqlConnection CreateConnection(string connectionString) => _connectionCreator(connectionString);
 
-		public Func<IDbConnection, string, NpgsqlBinaryImporter> BeginBinaryImport { get; }
+		public Func<DbConnection, string, NpgsqlBinaryImporter> BeginBinaryImport { get; }
 
 		public MappingSchema MappingSchema { get; }
 
@@ -193,11 +194,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						var paramMapper   = typeMapper.Type<NpgsqlParameter>();
 						var dbTypeBuilder = paramMapper.Member(p => p.NpgsqlDbType);
 
-						var pConnection = Expression.Parameter(typeof(IDbConnection));
+						var pConnection = Expression.Parameter(typeof(DbConnection));
 						var pCommand    = Expression.Parameter(typeof(string));
 
-						var beginBinaryImport = Expression.Lambda<Func<IDbConnection, string, NpgsqlBinaryImporter>>(
-								typeMapper.MapExpression((IDbConnection conn, string command) => typeMapper.Wrap<NpgsqlBinaryImporter>(((NpgsqlConnection)conn).BeginBinaryImport(command)), pConnection, pCommand),
+						var beginBinaryImport = Expression.Lambda<Func<DbConnection, string, NpgsqlBinaryImporter>>(
+								typeMapper.MapExpression((DbConnection conn, string command) => typeMapper.Wrap<NpgsqlBinaryImporter>(((NpgsqlConnection)(object)conn).BeginBinaryImport(command)), pConnection, pCommand),
 								pConnection, pCommand)
 							.CompileExpression();
 
@@ -330,8 +331,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 							typeMapper.BuildWrappedFactory((string connectionString) => new NpgsqlConnection(connectionString)),
 
-							dbTypeBuilder.BuildSetter<IDbDataParameter>(),
-							dbTypeBuilder.BuildGetter<IDbDataParameter>(),
+							dbTypeBuilder.BuildSetter<DbParameter>(),
+							dbTypeBuilder.BuildGetter<DbParameter>(),
 
 							beginBinaryImport);
 

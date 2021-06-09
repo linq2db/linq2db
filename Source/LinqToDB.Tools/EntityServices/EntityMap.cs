@@ -7,7 +7,6 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Tools.EntityServices
 {
-	using System.Diagnostics.CodeAnalysis;
 	using Common;
 	using LinqToDB.Expressions;
 	using Mapper;

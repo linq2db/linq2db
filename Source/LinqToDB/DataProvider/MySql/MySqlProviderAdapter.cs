@@ -4,6 +4,7 @@ using System.Data;
 namespace LinqToDB.DataProvider.MySql
 {
 	using System.Collections.Generic;
+	using System.Data.Common;
 	using System.Linq.Expressions;
 	using System.Threading;
 	using System.Threading.Tasks;
@@ -12,8 +13,8 @@ namespace LinqToDB.DataProvider.MySql
 
 	public class MySqlProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _mysqlDataSyncRoot      = new object();
-		private static readonly object _mysqlConnectorSyncRoot = new object();
+		private static readonly object _mysqlDataSyncRoot      = new ();
+		private static readonly object _mysqlConnectorSyncRoot = new ();
 
 		private static MySqlProviderAdapter? _mysqlDataInstance;
 		private static MySqlProviderAdapter? _mysqlConnectorInstance;
@@ -51,7 +52,7 @@ namespace LinqToDB.DataProvider.MySql
 
 			Func<object, decimal>? mySqlDecimalGetter,
 
-			Func<IDbDataParameter, object> dbTypeGetter,
+			Func<DbParameter, object> dbTypeGetter,
 
 			string? getMySqlDecimalMethodName,
 			string? getDateTimeOffsetMethodName,
@@ -125,22 +126,22 @@ namespace LinqToDB.DataProvider.MySql
 		/// <summary>
 		/// Returns object, because both providers use different enums and we anyway don't need typed value.
 		/// </summary>
-		public Func<IDbDataParameter, object> GetDbType { get; }
+		public Func<DbParameter, object> GetDbType { get; }
 
 		internal BulkCopyAdapter? BulkCopy { get; }
 
 		internal class BulkCopyAdapter
 		{
 			internal BulkCopyAdapter(
-				Func<IDbConnection, IDbTransaction?, MySqlConnector.MySqlBulkCopy> bulkCopyCreator,
-				Func<int, string, MySqlBulkCopyColumnMapping>                      bulkCopyColumnMappingCreator)
+				Func<DbConnection, DbTransaction?, MySqlConnector.MySqlBulkCopy> bulkCopyCreator,
+				Func<int, string, MySqlBulkCopyColumnMapping>                    bulkCopyColumnMappingCreator)
 			{
 				Create              = bulkCopyCreator;
 				CreateColumnMapping = bulkCopyColumnMappingCreator;
 			}
 
-			public Func<IDbConnection, IDbTransaction?, MySqlConnector.MySqlBulkCopy> Create              { get; }
-			public Func<int, string, MySqlBulkCopyColumnMapping>                      CreateColumnMapping { get; }
+			public Func<DbConnection, DbTransaction?, MySqlConnector.MySqlBulkCopy> Create              { get; }
+			public Func<int, string, MySqlBulkCopyColumnMapping>                    CreateColumnMapping { get; }
 		}
 
 		public static MySqlProviderAdapter GetInstance(string name)
@@ -189,7 +190,7 @@ namespace LinqToDB.DataProvider.MySql
 				typeMapper.RegisterTypeWrapper<MySqlDateTime>(mySqlDateTimeType);
 				typeMapper.RegisterTypeWrapper<MySqlDecimal>(mySqlDecimalType);
 
-				var dbTypeGetter      = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType).BuildGetter<IDbDataParameter>();
+				var dbTypeGetter      = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType).BuildGetter<DbParameter>();
 				var decimalGetter     = typeMapper.Type<MySqlDecimal>().Member(p => p.Value).BuildGetter<object>();
 				var dateTimeConverter = typeMapper.MapLambda((MySqlDateTime dt) => dt.GetDateTime());
 
@@ -284,8 +285,8 @@ namespace LinqToDB.DataProvider.MySql
 
 		internal class MySqlConnector
 		{
-			private static readonly Version MinBulkCopyVersion = new Version(0, 67);
-			private static readonly Version MinModernVersion   = new Version(1, 0);
+			private static readonly Version MinBulkCopyVersion = new (0, 67);
+			private static readonly Version MinModernVersion   = new (1, 0);
 
 			internal static MySqlProviderAdapter CreateAdapter()
 			{
@@ -331,13 +332,13 @@ namespace LinqToDB.DataProvider.MySql
 					typeMapper.FinalizeMappings();
 
 					bulkCopy = new BulkCopyAdapter(
-						typeMapper.BuildWrappedFactory((IDbConnection connection, IDbTransaction? transaction) => new MySqlBulkCopy((MySqlConnection)connection, (MySqlTransaction?)transaction)),
+						typeMapper.BuildWrappedFactory((DbConnection connection, DbTransaction? transaction) => new MySqlBulkCopy((MySqlConnection)(object)connection, (MySqlTransaction?)(object?)transaction)),
 						typeMapper.BuildWrappedFactory((int source, string destination) => new MySqlBulkCopyColumnMapping(source, destination, null)));
 				}
 				else
 					typeMapper.FinalizeMappings();
 
-				var typeGetter        = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType).BuildGetter<IDbDataParameter>();
+				var typeGetter        = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType).BuildGetter<DbParameter>();
 				var dateTimeConverter = typeMapper.MapLambda((MySqlDateTime dt) => dt.GetDateTime());
 
 				var mappingSchema = new MappingSchema();
@@ -479,12 +480,16 @@ namespace LinqToDB.DataProvider.MySql
 
 				public MySqlBulkCopy(MySqlConnection connection, MySqlTransaction? transaction) => throw new NotImplementedException();
 
+#pragma warning disable RS0030 // API mapping must preserve type
 				public void WriteToServer(IDataReader dataReader) => ((Action<MySqlBulkCopy, IDataReader>)CompiledWrappers[0])(this, dataReader);
 				public Task WriteToServerAsync      (IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken,      Task>)CompiledWrappers[8])(this, dataReader, cancellationToken);
+#pragma warning restore RS0030 //  API mapping must preserve type
 				public bool CanWriteToServerAsync => CompiledWrappers[8] != null;
 #if !NETFRAMEWORK
 				[TypeWrapperName("WriteToServerAsync")]
+#pragma warning disable RS0030 // API mapping must preserve type
 				public ValueTask WriteToServerAsync2(IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask>)CompiledWrappers[9])(this, dataReader, cancellationToken);
+#pragma warning restore RS0030 //  API mapping must preserve type
 				public bool CanWriteToServerAsync2 => CompiledWrappers[9] != null;
 #else
 				[TypeWrapperName("WriteToServerAsync")]

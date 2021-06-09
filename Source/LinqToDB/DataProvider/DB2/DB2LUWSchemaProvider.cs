@@ -25,7 +25,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			DataTypesSchema = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
+			DataTypesSchema = dataConnection.Connection.GetSchema("DataTypes");
 
 			return DataTypesSchema.AsEnumerable()
 				.Select(t => new DataTypeInfo
@@ -48,7 +48,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			LoadCurrentSchema(dataConnection);
 
-			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
+			var tables = dataConnection.Connection.GetSchema("Tables");
 
 			return
 			(
@@ -66,7 +66,7 @@ namespace LinqToDB.DataProvider.DB2
 					CatalogName        = catalog,
 					SchemaName         = schema,
 					TableName          = name,
-					IsDefaultSchema    = schema.IsNullOrEmpty(),
+					IsDefaultSchema    = string.IsNullOrEmpty(schema),
 					IsView             = t.Field<string>("TABLE_TYPE") == "VIEW",
 					Description        = t.Field<string>("REMARKS"),
 					IsProviderSpecific = system || _systemSchemas.Contains(schema)
@@ -287,8 +287,7 @@ WHERE
 							var format = string.Join(",",
 								type.CreateParameters
 									.Split(',')
-									.Select((p,i) => "{" + i + "}")
-									.ToArray());
+									.Select((p,i) => "{" + i + "}"));
 
 							type.CreateFormat = type.TypeName + "(" + format + ")";
 						}
@@ -379,7 +378,7 @@ WHERE
 
 		protected override string GetDataSourceName(DataConnection dbConnection)
 		{
-			var str = ((DbConnection)dbConnection.Connection).ConnectionString;
+			var str = dbConnection.Connection.ConnectionString;
 
 			var host = str?.Split(';')
 				.Select(s =>
@@ -516,7 +515,7 @@ WHERE
 
 	static class DB2Extensions
 	{
-		public static string? ToString(this IDataReader reader, int i)
+		public static string? ToString(this DbDataReader reader, int i)
 		{
 			var value = Converter.ChangeTypeTo<string?>(reader[i]);
 			return value?.TrimEnd();

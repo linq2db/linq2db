@@ -20,7 +20,7 @@ namespace Tests.SchemaProvider
 		[Test]
 		public void TestApiImplemented([DataSources(false)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var options = new GetSchemaOptions()
 				{
@@ -38,7 +38,7 @@ namespace Tests.SchemaProvider
 		public void Test([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector, TestProvName.AllOracle12)]
 			string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var sp         = conn.DataProvider.GetSchemaProvider();
 				var schemaName = TestUtils.GetSchemaName(conn);
@@ -88,7 +88,6 @@ namespace Tests.SchemaProvider
 
 				switch (context)
 				{
-					case ProviderName.SqlServer2000                       :
 					case ProviderName.SqlServer2005                       :
 					case ProviderName.SqlServer2008                       :
 					case ProviderName.SqlServer2012                       :
@@ -98,6 +97,7 @@ namespace Tests.SchemaProvider
 					case TestProvName.SqlServer2019                       :
 					case TestProvName.SqlServer2019SequentialAccess       :
 					case TestProvName.SqlServer2019FastExpressionCompiler :
+					case TestProvName.SqlServerContained                  :
 					case TestProvName.SqlAzure                            :
 						{
 							var indexTable = dbSchema.Tables.Single(t => t.TableName == "IndexTable");
@@ -126,6 +126,7 @@ namespace Tests.SchemaProvider
 					case TestProvName.SqlServer2019                       :
 					case TestProvName.SqlServer2019SequentialAccess       :
 					case TestProvName.SqlServer2019FastExpressionCompiler :
+					case TestProvName.SqlServerContained                  :
 					case TestProvName.SqlAzure                            :
 						{
 							var tbl = dbSchema.Tables.Single(at => at.TableName == "AllTypes");
@@ -166,7 +167,7 @@ namespace Tests.SchemaProvider
 		[Test]
 		public void NorthwindTest([NorthwindDataContext(false, true)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var sp       = conn.DataProvider.GetSchemaProvider();
 				var dbSchema = sp.GetSchema(conn);
@@ -178,7 +179,7 @@ namespace Tests.SchemaProvider
 		[Test]
 		public void MySqlTest([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var sp       = conn.DataProvider.GetSchemaProvider();
 				var dbSchema = sp.GetSchema(conn);
@@ -198,7 +199,7 @@ namespace Tests.SchemaProvider
 		public void MySqlPKTest([IncludeDataSources(TestProvName.AllMySql)]
 			string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var sp       = conn.DataProvider.GetSchemaProvider();
 				var dbSchema = sp.GetSchema(conn);
@@ -228,7 +229,7 @@ namespace Tests.SchemaProvider
 		[Test]
 		public void PostgreSQLTest([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			using (conn.CreateLocalTable<ArrayTest>())
 			{
 				var sp       = conn.DataProvider.GetSchemaProvider();
@@ -240,7 +241,7 @@ namespace Tests.SchemaProvider
 		[Test]
 		public void DB2Test([IncludeDataSources(ProviderName.DB2)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var sp       = conn.DataProvider.GetSchemaProvider();
 				var dbSchema = sp.GetSchema(conn);
@@ -263,7 +264,7 @@ namespace Tests.SchemaProvider
 		public void IncludeExcludeCatalogTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector)]
 			string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var exclude = conn.DataProvider.GetSchemaProvider().GetSchema(conn).Tables.Select(_ => _.CatalogName).Distinct().ToList();
 				exclude.Add(null);
@@ -282,7 +283,7 @@ namespace Tests.SchemaProvider
 			string context)
 		{
 			using (new DisableBaseline("TODO: exclude schema list is not stable, db2 schema provider needs refactoring", GetProviderName(context, out var _) == ProviderName.DB2))
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var exclude = conn.DataProvider.GetSchemaProvider()
 					.GetSchema(conn, new GetSchemaOptions {ExcludedSchemas = new string?[] { null }})
@@ -346,7 +347,7 @@ namespace Tests.SchemaProvider
 		public void PrimaryForeignKeyTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector, TestProvName.AllOracle12, ProviderName.AccessOdbc)]
 			string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var p = db.DataProvider.GetSchemaProvider();
 				var schemaName = TestUtils.GetSchemaName(db);
@@ -372,7 +373,7 @@ namespace Tests.SchemaProvider
 		[Test]
 		public void ForeignKeyMemberNameTest1([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var p = db.DataProvider.GetSchemaProvider();
 				var s = p.GetSchema(db);
@@ -393,7 +394,7 @@ namespace Tests.SchemaProvider
 		public void ForeignKeyMemberNameTest2([IncludeDataSources(TestProvName.Northwind)]
 			string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var p = db.DataProvider.GetSchemaProvider();
 				var s = p.GetSchema(db);

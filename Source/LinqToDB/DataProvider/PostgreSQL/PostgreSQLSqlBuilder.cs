@@ -13,6 +13,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using SqlProvider;
 	using Extensions;
 	using Mapping;
+	using System.Data.Common;
 
 	public class PostgreSQLSqlBuilder : BasicSqlBuilder
 	{
@@ -38,6 +39,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		protected override bool IsRecursiveCteKeywordRequired => true;
+		protected override bool SupportsNullInColumn          => false;
 
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
@@ -71,6 +73,21 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			switch (type.Type.DataType)
 			{
+				case DataType.Decimal       :
+					StringBuilder.Append("decimal");
+					if (type.Type.Precision > 0)
+					{
+						StringBuilder
+							.Append('(')
+							.Append(type.Type.Precision.Value.ToString(NumberFormatInfo.InvariantInfo));
+						if (type.Type.Scale > 0)
+							StringBuilder
+								.Append(", ")
+								.Append(type.Type.Scale.Value.ToString(NumberFormatInfo.InvariantInfo));
+						StringBuilder
+							.Append(')');
+					}
+					break;
 				case DataType.SByte         :
 				case DataType.Byte          : StringBuilder.Append("SmallInt");       break;
 				case DataType.Money         : StringBuilder.Append("money");          break;
@@ -294,7 +311,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return base.BuildTableName(sb, null, database, schema, table, tableOptions);
 		}
 
-		protected override string? GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(DbParameter parameter)
 		{
 			if (_provider != null)
 			{
@@ -310,6 +327,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			var table = truncateTable.Table;
 
+			BuildTag(truncateTable);
 			AppendIndent();
 			StringBuilder.Append("TRUNCATE TABLE ");
 			BuildPhysicalTable(table!, null);

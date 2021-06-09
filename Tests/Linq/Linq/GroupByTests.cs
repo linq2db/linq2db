@@ -1458,7 +1458,7 @@ namespace Tests.Linq
 			// extra field is generated in the GROUP BY clause, for example:
 			// GROUP BY p.LastName, p.LastName <--- the second one is redundant
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var q =
 					from d in db.Doctor
@@ -2041,7 +2041,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue680Test([DataSources(false)] string context)
 		{
-			using (var db    = new TestDataConnection(context))
+			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<Issue680Table>())
 			{
 				var result = (from record in table
@@ -2106,14 +2106,6 @@ namespace Tests.Linq
 			[MapValue("D")] Delisted,
 		}
 
-		[ActiveIssue(913, Configurations = new[]
-		{
-			TestProvName.AllAccess,
-			TestProvName.AllInformix,
-			TestProvName.AllMySql,
-			TestProvName.AllPostgreSQL,
-			TestProvName.AllSQLite
-		})]
 		[Test]
 		public void Issue913Test([DataSources] string context)
 		{
