@@ -618,41 +618,55 @@ namespace LinqToDB.Mapping
 			return expr;
 		}
 
-		static bool IsSimple (ref DbDataType type)
-			=> type.DataType == DataType.Undefined && string.IsNullOrEmpty(type.DbType) && type.Length == null;
-
-		static void Simplify(ref DbDataType type)
+		static bool Simplify(ref DbDataType type)
 		{
 			if (!string.IsNullOrEmpty(type.DbType))
+			{
 				type = type.WithDbType(null);
+				return true;
+			}
+
+			if (type.Precision != null || type.Scale != null)
+			{
+				type = type.WithScale(null).WithPrecision(null);
+				return true;
+			}
+			
+			if (type.Length != null)
+			{
+				type = type.WithLength(null);
+				return true;
+			}
 
 			if (type.DataType != DataType.Undefined)
+			{
 				type = type.WithDataType(DataType.Undefined);
+				return true;
+			}
 
-			if (type.Length != null)
-				type = type.WithLength(null);
+			return false;
 		}
 
 		internal ConvertInfo.LambdaInfo? GetConverter(DbDataType from, DbDataType to, bool create)
 		{
+			var currentFrom = from;
 			do
 			{
-				for (var i = 0; i < Schemas.Length; i++)
+				var currentTo = to;
+				do
 				{
-					var info = Schemas[i];
-					var li   = info.GetConvertInfo(from, to);
+					for (var i = 0; i < Schemas.Length; i++)
+					{
+						var info = Schemas[i];
+						var li   = info.GetConvertInfo(currentFrom, currentTo);
 
-					if (li != null && (i == 0 || !li.IsSchemaSpecific))
-						return i == 0 ? li : new ConvertInfo.LambdaInfo(li.CheckNullLambda, li.Lambda, null, false);
-				}
+						if (li != null && (i == 0 || !li.IsSchemaSpecific))
+							return i == 0 ? li : new ConvertInfo.LambdaInfo(li.CheckNullLambda, li.Lambda, null, false);
+					}
 
-				if (!IsSimple(ref from))
-					Simplify(ref from);
-				else if (!IsSimple(ref to))
-					Simplify(ref to);
-				else break;
+				} while (Simplify(ref currentTo));
 
-			} while (true);
+			} while (Simplify(ref currentFrom));
 
 			var isFromGeneric = from.SystemType.IsGenericType && !from.SystemType.IsGenericTypeDefinition;
 			var isToGeneric   = to.SystemType.  IsGenericType && !to.SystemType.  IsGenericTypeDefinition;
