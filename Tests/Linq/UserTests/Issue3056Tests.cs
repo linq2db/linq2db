@@ -55,7 +55,7 @@ namespace Tests.UserTests
 			[Column(DataType = DataType.VarChar, Length = 100)]
 			public string? Name;
 
-			[Column(DataType = DataType.VarChar, Length = 500)]
+			[Column(DataType = DataType.VarChar, Length = 200)]
 			public string? Description;
 
 		}
