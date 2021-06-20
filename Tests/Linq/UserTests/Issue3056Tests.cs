@@ -11,29 +11,31 @@ namespace Tests.UserTests
 	public class Issue3056Tests : TestBase
 	{
 		[Test]
-		public void DataModelDynamicTableTest2([DataSources(false)] string context)
+		public void DataModelDynamicTableTest2([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			var mappingSchema =  new MappingSchema();
+			var fm            =mappingSchema.GetFluentMappingBuilder();
+
+			fm.Entity<DynamicTableRow>()
+				//.HasIdentity(x => Sql.Property<int>(x, "Id"))
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Property(x => Sql.Property<string>(x, "Description"));
+
+			var rows = new List<DynamicTableRow>();
+			var drow = new DynamicTableRow();
+			drow.Properties.Add("Id", 1);
+			drow.Properties.Add("Name", "n1");
+			drow.Properties.Add("Description", "d0");
+			rows.Add(drow);
+			drow = new DynamicTableRow();
+			drow.Properties.Add("Id", 2);
+			drow.Properties.Add("Name", "n2");
+			drow.Properties.Add("Description", "d00");
+			rows.Add(drow);
+			using (var db = new TestDataConnection(context, mappingSchema))
 			using (db.CreateLocalTable<TestRow>())
 			{
-				var fm = MappingSchema.Default.GetFluentMappingBuilder();
-
-				fm.Entity<DynamicTableRow>()
-					//.HasIdentity(x => Sql.Property<int>(x, "Id"))
-					.Property(x => Sql.Property<string>(x, "Name"))
-					.Property(x => Sql.Property<string>(x, "Description"));
-
-				var rows = new List<DynamicTableRow>();
-				var drow = new DynamicTableRow();
-				drow.Properties.Add("Id", 1);
-				drow.Properties.Add("Name", "n1");
-				drow.Properties.Add("Description", "d0");
-				rows.Add(drow);
-				drow = new DynamicTableRow();
-				drow.Properties.Add("Id", 2);
-				drow.Properties.Add("Name", "n2");
-				drow.Properties.Add("Description", "d00");
-				rows.Add(drow);
+				
 
 				db.BulkCopy(new BulkCopyOptions
 					{
