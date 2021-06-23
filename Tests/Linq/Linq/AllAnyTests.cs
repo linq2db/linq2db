@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-
+using FluentAssertions;
 using LinqToDB;
 using NUnit.Framework;
 
@@ -291,27 +291,6 @@ namespace Tests.Linq
 			}
 		}
 
-		//[Test]
-		//public void StackOverflowRegressionTest([DataSources] string context)
-		//{
-		//	using (var db = GetDataContext(context))
-		//	{
-		//		var p1 = "";
-		//		var p2 = 2;
-
-		//		var query1 = db.Person
-		//			.Where(_ => _.FirstName == p1)
-		//			.Select(_ => _.ID);
-
-		//		db.Person
-		//			.Where(_ => query1.Contains(_.ID))
-		//			.Select(_ => _.Patient)
-		//			.Where(_ => _ != null)
-		//			.Any(_ => _!.PersonID == p2);
-		//	}
-		//}
-
-		// reduced query from test above
 		[Test]
 		public void StackOverflowRegressionTest([DataSources] string context)
 		{
@@ -319,7 +298,7 @@ namespace Tests.Linq
 			{
 				db.Person
 					.Select(_ => _.Patient)
-					.Any();
+					.Any().Should().BeTrue();
 			}
 		}
 	}
