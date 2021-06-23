@@ -5,6 +5,7 @@ using System.Text;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
@@ -19,6 +20,12 @@ namespace Tests.Model
 		{
 //			if (configString == ProviderName.SqlServer2008 && ++_counter > 1000)
 //				OnClosing += TestDataConnection_OnClosing;
+		}
+		
+		public TestDataConnection(string configString, MappingSchema mappingSchema)
+			: base(configString, mappingSchema)
+		{
+
 		}
 
 		public TestDataConnection()

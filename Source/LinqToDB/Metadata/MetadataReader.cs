@@ -120,9 +120,9 @@ namespace LinqToDB.Metadata
 				cols[i] = readers[i].GetDynamicColumns(type);
 				length  += cols[i].Length;
 			}
-
-			length = 0;
+			
 			var columns = new MemberInfo[length];
+			length = 0;
 			for (var i = 0; i < cols.Length; i++)
 			{
 				if (cols[i].Length > 0)
