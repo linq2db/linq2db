@@ -32,7 +32,7 @@ namespace Tests.UserTests
 			drow.Properties.Add("Name", "n2");
 			drow.Properties.Add("Description", "d00");
 			rows.Add(drow);
-			using (var db = new TestDataConnection(context, mappingSchema))
+			using (var db = (DataConnection)GetDataContext(context, mappingSchema))
 			using (db.CreateLocalTable<TestRow>())
 			{
 				

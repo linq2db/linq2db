@@ -72,8 +72,8 @@ namespace Tests.UserTests
 					.Where(x => x.Id.In(1, 2))
 					.Select(x => new
 					{
-						CaseNumber     = x.CaseLogProperties.FirstOrDefault().CaseLog.Number,
-						IncidentNumber = x.IncidentProperties.FirstOrDefault().Incident.EventNumber
+						CaseNumber     = x.CaseLogProperties.FirstOrDefault()!.CaseLog.Number,
+						IncidentNumber = x.IncidentProperties.FirstOrDefault()!.Incident.EventNumber
 					});
 
 				TestContext.WriteLine(query.ToString());

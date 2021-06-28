@@ -5,7 +5,6 @@ using System.Text;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
@@ -22,17 +21,11 @@ namespace Tests.Model
 //				OnClosing += TestDataConnection_OnClosing;
 		}
 		
-		public TestDataConnection(string configString, MappingSchema mappingSchema)
-			: base(configString, mappingSchema)
-		{
-
-		}
-
 		public TestDataConnection()
 		{
 		}
 
-		static object _sync = new object();
+		static object _sync = new ();
 
 //		[Table("AllTypes")]
 //		class AllTypes

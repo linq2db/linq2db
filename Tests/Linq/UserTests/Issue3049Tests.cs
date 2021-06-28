@@ -40,7 +40,7 @@ namespace Tests.UserTests
 			{
 				db.Nesto.Add(currentKey, "fake");
 
-				AssertQuery(table.Where(t => db.Nesto.ContainsKey(t.Value)).Select(t => t.Value));
+				AssertQuery(table.Where(t => db.Nesto.ContainsKey(t.Value!)).Select(t => t.Value));
 			}
 		}
 	}
