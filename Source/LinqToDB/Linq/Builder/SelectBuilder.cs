@@ -289,10 +289,12 @@ namespace LinqToDB.Linq.Builder
 					yield return new SequenceConvertPath { Path = path, Expr = expression, Level = level };
 					break;
 
-				// Queriable method.
+				// Queryable method.
 				//
 				case ExpressionType.Call       :
 					{
+						//TODO: Remove this code, it breaks Eager Loading.
+						/*
 						var call = (MethodCallExpression)expression;
 
 						if (call.IsQueryable())
@@ -300,6 +302,7 @@ namespace LinqToDB.Linq.Builder
 							    typeof(IQueryable). IsSameOrParentOf(call.Type) ||
 							    FirstSingleBuilder.MethodNames.Contains(call.Method.Name))
 								yield return new SequenceConvertPath { Path = path, Expr = expression, Level = level };
+								*/
 
 						break;
 					}
