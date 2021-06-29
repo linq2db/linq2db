@@ -98,17 +98,27 @@ namespace LinqToDB.Linq.Builder
 					if (genericType == null || prevGenericType == null)
 						throw new InvalidOperationException();
 
-					var selectMethod = typeof(IQueryable<>).IsSameOrParentOf(info.Expression.Type)
-						? Methods.Queryable.Select
-						: Methods.Enumerable.Select;
+					var newArgument = info.Expression;
+					var elementType = genericType.GetGenericArguments()[0];
 
-					var entityParam = Expression.Parameter(genericType.GetGenericArguments()[0]);
-					var selectCall  = TypeHelper.MakeMethodCall(selectMethod, info.Expression,
-						Expression.Quote(
-							Expression.Lambda(Expression.PropertyOrField(entityParam, nameof(ExpressionHolder<int,int>.ex)), entityParam)
-						));
+					if (typeof(ExpressionHolder<,>).IsSameOrParentOf(elementType))
+					{
+						var selectMethod = typeof(IQueryable<>).IsSameOrParentOf(info.Expression.Type)
+							? Methods.Queryable.Select
+							: Methods.Enumerable.Select;
 
-					info.Expression = methodCall.Update(methodCall.Object, new[] {selectCall});
+						var entityParam     = Expression.Parameter(elementType);
+						var selectCall = TypeHelper.MakeMethodCall(selectMethod, info.Expression,
+							Expression.Quote(
+								Expression.Lambda(
+									Expression.PropertyOrField(entityParam, nameof(ExpressionHolder<int, int>.ex)),
+									entityParam)
+							));
+
+						newArgument = selectCall;
+					}
+
+					info.Expression = methodCall.Update(methodCall.Object, new[] {newArgument});
 
 					info.Parameter = param;
 
