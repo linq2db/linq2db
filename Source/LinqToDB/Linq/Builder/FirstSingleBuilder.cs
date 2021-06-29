@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -8,6 +9,7 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using SqlQuery;
 	using Common;
+	using Reflection;
 
 	class FirstSingleBuilder : MethodCallBuilder
 	{
@@ -85,14 +87,30 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				var info = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), null, true);
+				var argument = methodCall.Arguments[0];
+				var info     = builder.ConvertSequence(new BuildInfo(buildInfo, argument), null, true);
 
 				if (info != null)
 				{
-					info.Expression = methodCall.Transform(
-						(methodCall, info),
-						static (context, ex) => ConvertMethod(context.methodCall, 0, context.info, null, ex));
-					info.Parameter  = param;
+					var prevGenericType = typeof(IEnumerable<>).GetGenericType(argument.Type);
+					var genericType     = typeof(IEnumerable<>).GetGenericType(info.Expression.Type);
+
+					if (genericType == null || prevGenericType == null)
+						throw new InvalidOperationException();
+
+					var selectMethod = typeof(IQueryable<>).IsSameOrParentOf(info.Expression.Type)
+						? Methods.Queryable.Select
+						: Methods.Enumerable.Select;
+
+					var entityParam = Expression.Parameter(genericType.GetGenericArguments()[0]);
+					var selectCall  = TypeHelper.MakeMethodCall(selectMethod, info.Expression,
+						Expression.Quote(
+							Expression.Lambda(Expression.PropertyOrField(entityParam, nameof(ExpressionHolder<int,int>.ex)), entityParam)
+						));
+
+					info.Expression = methodCall.Update(methodCall.Object, new[] {selectCall});
+
+					info.Parameter = param;
 
 					return info;
 				}

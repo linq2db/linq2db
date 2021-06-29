@@ -293,8 +293,6 @@ namespace LinqToDB.Linq.Builder
 				//
 				case ExpressionType.Call       :
 					{
-						//TODO: Remove this code, it breaks Eager Loading.
-						/*
 						var call = (MethodCallExpression)expression;
 
 						if (call.IsQueryable())
@@ -302,8 +300,7 @@ namespace LinqToDB.Linq.Builder
 							    typeof(IQueryable). IsSameOrParentOf(call.Type) ||
 							    FirstSingleBuilder.MethodNames.Contains(call.Method.Name))
 								yield return new SequenceConvertPath { Path = path, Expr = expression, Level = level };
-								*/
-
+						
 						break;
 					}
 			}
