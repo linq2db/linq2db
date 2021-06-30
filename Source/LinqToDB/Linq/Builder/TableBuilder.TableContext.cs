@@ -276,7 +276,7 @@ namespace LinqToDB.Linq.Builder
 						return true;
 				}
 
-				return false;
+				return constructors.Length == 0;
 			}
 
 			ParameterExpression? _variable;
@@ -573,8 +573,6 @@ namespace LinqToDB.Linq.Builder
 
 			Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, Type objectType, Tuple<int, SqlField?>[] index, bool isRecord)
 			{
-				var ctor = objectType.GetConstructors().Single();
-
 				var exprs = GetExpressions(entityDescriptor.TypeAccessor, isRecord,
 					(
 						from idx in index
