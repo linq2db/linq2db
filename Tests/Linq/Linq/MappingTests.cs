@@ -577,7 +577,7 @@ namespace Tests.Linq
 				db.Insert(new Record(1, "One", "OneBase"));
 				db.Insert(new Record(2, "Two", "TwoBase"));
 
-				var data = table.OrderBy(_ => _.Id).ToArray();
+				var data = table.OrderBy(r => r.Id).ToArray();
 
 				Assert.AreEqual(2        , data.Length);
 				Assert.AreEqual(1        , data[0].Id);
@@ -587,7 +587,7 @@ namespace Tests.Linq
 				Assert.AreEqual("Two"    , data[1].Value);
 				Assert.AreEqual("TwoBase", data[1].BaseValue);
 
-				var proj = table.OrderBy(_ => _.Id).Select(_ => new { _.Id, _.Value, _.BaseValue }).ToArray();
+				var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
 
 				Assert.AreEqual(2        , proj.Length);
 				Assert.AreEqual(1        , proj[0].Id);
@@ -614,7 +614,7 @@ namespace Tests.Linq
 				db.Insert(new RecordLike(1, "One", "OneBase"));
 				db.Insert(new RecordLike(2, "Two", "TwoBase"));
 
-				var data = table.OrderBy(_ => _.Id).ToArray();
+				var data = table.OrderBy(r => r.Id).ToArray();
 
 				Assert.AreEqual(2        , data.Length);
 				Assert.AreEqual(1        , data[0].Id);
@@ -624,7 +624,7 @@ namespace Tests.Linq
 				Assert.AreEqual("Two"    , data[1].Value);
 				Assert.AreEqual("TwoBase", data[1].BaseValue);
 
-				var proj = table.OrderBy(_ => _.Id).Select(_ => new { _.Id, _.Value, _.BaseValue }).ToArray();
+				var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
 
 				Assert.AreEqual(2        , proj.Length);
 				Assert.AreEqual(1        , proj[0].Id);

@@ -388,16 +388,49 @@ namespace LinqToDB.Linq.Builder
 					}
 				).ToList();
 
-				var initExpr = Expression.MemberInit(
-					Expression.New(objectType),
+
+				Expression? expr = null;
+
+				var hasComplex   = false;
+				var constructors = objectType.GetConstructors();
+
+				if (constructors.Length == 1)
+				{
+					var constructorInfo = constructors[0];
+					var parameters      = constructorInfo.GetParameters();
+					if (parameters.Length > 0)
+					{
+						var args = new Expression?[parameters.Length];
+						for (int i = 0; i < parameters.Length; i++)
+						{
+							var param = parameters[i];
+							var member = 
+								members.FirstOrDefault(m => m.Column.MemberType == param.ParameterType && m.Column.MemberName == param.Name) ??
+							    members.FirstOrDefault(m => m.Column.MemberType == param.ParameterType && m.Column.MemberName.Equals(param.Name, StringComparison.OrdinalIgnoreCase));
+
+							var arg = member?.Expr ?? (Expression?)new DefaultValueExpression(Builder.MappingSchema, param.ParameterType);
+
+							args[i] = arg;
+						}
+
+						var newExpression = Expression.New(constructorInfo, args);
+						expr = newExpression;
+					}
+				}
+
+				if (expr == null)
+				{
+					var initExpr = Expression.MemberInit(Expression.New(objectType),
 						members
 							// IMPORTANT: refactoring this condition will affect hasComplex variable calculation below
-							.Where (m => !m.Column.MemberAccessor.IsComplex)
-							.Select(m => (MemberBinding)Expression.Bind(m.Column.StorageInfo, m.Expr)));
+							.Where(m => !m.Column.MemberAccessor.IsComplex)
+							.Select(m => (MemberBinding)Expression.Bind(m.Column.StorageInfo, m.Expr))
+					);
 
-				Expression expr = initExpr;
+					expr = initExpr;
+					hasComplex = members.Count > initExpr.Bindings.Count;
+				}
 
-				var hasComplex = members.Count > initExpr.Bindings.Count;
 				var loadWith   = GetLoadWith();
 
 				if (hasComplex || loadWith != null)
