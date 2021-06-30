@@ -398,6 +398,8 @@ namespace LinqToDB.Linq.Builder
 				{
 					var constructorInfo = constructors[0];
 					var parameters      = constructorInfo.GetParameters();
+					var argFound        = false;
+
 					if (parameters.Length > 0)
 					{
 						var args = new Expression?[parameters.Length];
@@ -408,13 +410,23 @@ namespace LinqToDB.Linq.Builder
 								members.FirstOrDefault(m => m.Column.MemberType == param.ParameterType && m.Column.MemberName == param.Name) ??
 							    members.FirstOrDefault(m => m.Column.MemberType == param.ParameterType && m.Column.MemberName.Equals(param.Name, StringComparison.OrdinalIgnoreCase));
 
-							var arg = member?.Expr ?? (Expression?)new DefaultValueExpression(Builder.MappingSchema, param.ParameterType);
+							Expression? arg = member?.Expr;
+							argFound = argFound || arg != null;
+
+							arg ??= new DefaultValueExpression(Builder.MappingSchema, param.ParameterType);
 
 							args[i] = arg;
 						}
 
-						var newExpression = Expression.New(constructorInfo, args);
-						expr = newExpression;
+						if (argFound)
+						{
+							var newExpression = Expression.New(constructorInfo, args);
+							expr = newExpression;
+						}
+						else
+						{
+							throw new InvalidOperationException($"{objectType.Name} has not suitable constructor.");
+						}
 					}
 				}
 
