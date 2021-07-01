@@ -127,7 +127,7 @@ namespace Tests.UserTests
 							 };
 
 				// because for k we need default constructor, which is missing
-				Assert.Throws<ArgumentException>(() => result.ToList());
+				Assert.Throws<InvalidOperationException>(() => result.ToList());
 			}
 		}
 

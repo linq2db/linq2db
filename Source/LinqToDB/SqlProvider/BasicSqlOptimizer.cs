@@ -88,6 +88,7 @@ namespace LinqToDB.SqlProvider
 			}
 
 			statement = CorrectUnionOrderBy(statement);
+			statement = FixSetOperationNulls(statement);
 
 			// provider specific query correction
 			statement = FinalizeStatement(statement, evaluationContext);
@@ -127,6 +128,65 @@ namespace LinqToDB.SqlProvider
 				},
 				(p, q) => { }, 
 				allowMutation: true);
+		}
+
+		static void CorrelateNullValueTypes(ref ISqlExpression toCorrect, ISqlExpression reference)
+		{
+			if (toCorrect.ElementType == QueryElementType.Column)
+			{
+				var column     = (SqlColumn)toCorrect;
+				var columnExpr = column.Expression;
+				CorrelateNullValueTypes(ref columnExpr, reference);
+				column.Expression = columnExpr;
+			}
+			else if (toCorrect.ElementType == QueryElementType.SqlValue)
+			{
+				var value = (SqlValue)toCorrect;
+				if (value.Value == null)
+				{
+					var suggested = QueryHelper.SuggestDbDataType(reference);
+					if (suggested != null)
+					{
+						toCorrect = new SqlValue(suggested.Value, null);
+					}
+				}
+			}
+		}
+
+		protected virtual SqlStatement FixSetOperationNulls(SqlStatement statement)
+		{
+			statement.VisitParentFirst(static e =>
+			{
+				if (e.ElementType == QueryElementType.SqlQuery)
+				{
+					var query = (SelectQuery)e;
+					if (query.HasSetOperators)
+					{
+						for (int i = 0; i < query.Select.Columns.Count; i++)
+						{
+							var column     = query.Select.Columns[i];
+							var columnExpr = column.Expression;
+
+							foreach (var setOperator in query.SetOperators)
+							{
+								var otherColumn = setOperator.SelectQuery.Select.Columns[i];
+								var otherExpr   = otherColumn.Expression;
+
+								CorrelateNullValueTypes(ref columnExpr, otherExpr);
+								CorrelateNullValueTypes(ref otherExpr, columnExpr);
+
+								otherColumn.Expression = otherExpr;
+							}
+
+							column.Expression = columnExpr;
+						}
+					}
+				}
+
+				return true;
+			});
+
+			return statement;
 		}
 
 

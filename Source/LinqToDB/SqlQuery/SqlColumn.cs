@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Text;
+using LinqToDB.Linq;
 
 namespace LinqToDB.SqlQuery
 {
@@ -61,10 +63,14 @@ namespace LinqToDB.SqlQuery
 
 		public ISqlExpression UnderlyingExpression()
 		{
-			var current = Expression;
+			var current = QueryHelper.UnwrapExpression(Expression);
 			while (current.ElementType == QueryElementType.Column)
 			{
-				current = ((SqlColumn)current).Expression;
+				var column      = (SqlColumn)current;
+				var columnQuery = column.Parent;
+				if (columnQuery == null || columnQuery.HasSetOperators || QueryHelper.EnumerateLevelSources(columnQuery).Take(2).Count() > 1)
+					break;
+				current = QueryHelper.UnwrapExpression(column.Expression);
 			}
 
 			return current;

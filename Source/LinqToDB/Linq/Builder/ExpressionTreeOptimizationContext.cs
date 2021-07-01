@@ -556,9 +556,6 @@ namespace LinqToDB.Linq.Builder
 
 		private TransformInfo ExposeExpressionTransformer(Expression expr)
 		{
-			if (_exposedCache.TryGetValue(expr, out var aleradyExposed))
-				return new TransformInfo(aleradyExposed, true);
-
 			switch (expr.NodeType)
 			{
 				case ExpressionType.ArrayLength:
@@ -571,6 +568,7 @@ namespace LinqToDB.Linq.Builder
 
 						return new TransformInfo(ex, false, true);
 					}
+
 					break;
 				}
 				case ExpressionType.MemberAccess:
@@ -609,6 +607,7 @@ namespace LinqToDB.Linq.Builder
 							return new TransformInfo(exposed, false, true);
 						}
 					}
+
 					break;
 				}
 
@@ -668,8 +667,6 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			_exposedCache.Add(expr, expr);
-
 			return new TransformInfo(expr, false);
 		}
 
@@ -678,7 +675,9 @@ namespace LinqToDB.Linq.Builder
 			if (_exposedCache.TryGetValue(expression, out var result))
 				return result;
 
-			result = (_exposeExpressionTransformer ??= TransformInfoVisitor<ExpressionTreeOptimizationContext>.Create(this, static (ctx, e) => ctx.ExposeExpressionTransformer(e))).Transform(expression);
+			result = (_exposeExpressionTransformer ??=
+				TransformInfoVisitor<ExpressionTreeOptimizationContext>.Create(this,
+					static(ctx, e) => ctx.ExposeExpressionTransformer(e))).Transform(expression);
 
 			_exposedCache[expression] = result;
 

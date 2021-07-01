@@ -171,16 +171,14 @@ namespace LinqToDB.SqlQuery
 		/// <returns>Returns index of column in Columns list.</returns>
 		int AddOrFindColumn(SqlColumn col)
 		{
+			var colExpression = col.Expression;
+
 			for (var i = 0; i < Columns.Count; i++)
 			{
-				var expr1 = Columns[i].Expression;
-				var expr2 = col.Expression;
-				if (expr1.CanBeNull == expr2.CanBeNull && QueryHelper.UnwrapExpression(expr1).Equals(QueryHelper.UnwrapExpression(expr2)))
-				{
-					return i;
-				}
+				var column           = Columns[i];
+				var columnExpression = column.Expression;
 
-				if (Columns[i].UnderlyingExpression().Equals(col.UnderlyingExpression()))
+				if (columnExpression.CanBeNull == colExpression.CanBeNull && column.UnderlyingExpression().Equals(col.UnderlyingExpression()))
 				{
 					return i;
 				}

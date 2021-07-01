@@ -20,12 +20,12 @@ namespace Tests.Model
 //			if (configString == ProviderName.SqlServer2008 && ++_counter > 1000)
 //				OnClosing += TestDataConnection_OnClosing;
 		}
-
+		
 		public TestDataConnection()
 		{
 		}
 
-		static object _sync = new object();
+		static object _sync = new ();
 
 //		[Table("AllTypes")]
 //		class AllTypes
