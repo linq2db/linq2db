@@ -26,7 +26,6 @@ namespace LinqToDB.DataProvider.MySql
 					: GetMappingSchema(name, MySqlProviderAdapter.GetInstance(name).MappingSchema),
 				  MySqlProviderAdapter.GetInstance(name))
 		{
-			SqlProviderFlags.IsDistinctOrderBySupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = false;
