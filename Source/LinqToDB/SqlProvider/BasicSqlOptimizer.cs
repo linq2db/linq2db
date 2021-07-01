@@ -130,13 +130,13 @@ namespace LinqToDB.SqlProvider
 				allowMutation: true);
 		}
 
-		static void CorrelateNullValueTypes(ref ISqlExpression toCorrect, ISqlExpression ethalon)
+		static void CorrelateNullValueTypes(ref ISqlExpression toCorrect, ISqlExpression reference)
 		{
 			if (toCorrect.ElementType == QueryElementType.Column)
 			{
 				var column     = (SqlColumn)toCorrect;
 				var columnExpr = column.Expression;
-				CorrelateNullValueTypes(ref columnExpr, ethalon);
+				CorrelateNullValueTypes(ref columnExpr, reference);
 				column.Expression = columnExpr;
 			}
 			else if (toCorrect.ElementType == QueryElementType.SqlValue)
@@ -144,7 +144,7 @@ namespace LinqToDB.SqlProvider
 				var value = (SqlValue)toCorrect;
 				if (value.Value == null)
 				{
-					var suggested = QueryHelper.SuggestDbDataType(ethalon);
+					var suggested = QueryHelper.SuggestDbDataType(reference);
 					if (suggested != null)
 					{
 						toCorrect = new SqlValue(suggested.Value, null);
