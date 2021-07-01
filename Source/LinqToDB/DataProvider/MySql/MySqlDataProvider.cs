@@ -27,7 +27,6 @@ namespace LinqToDB.DataProvider.MySql
 				  MySqlProviderAdapter.GetInstance(name))
 		{
 
-			SqlProviderFlags.IsDistinctOrderBySupported        = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = false;
