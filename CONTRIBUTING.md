@@ -267,7 +267,7 @@ Also - if your test changes database data, be sure to revert those changes (!) t
 
 We do run builds and tests with:
 
-* [Azure Pipelines](https://dev.azure.com/linq2db/linq2db/_build?definitionId=1) [azure-pipelines.yml](https://github.com/linq2db/linq2db/blob/master/azure-pipelines.yml).
+* [Azure Pipelines](https://dev.azure.com/linq2db/linq2db/_build?definitionId=3) [pipelines/default.yml](https://github.com/linq2db/linq2db/blob/master/Build/Azure/pipelines/default.yml).
 It builds solution, generate and publish nugets and runs tests for:
   * .Net 4.7.2
   * .Net Core 2.1 (Windows/Linux and MacOS)

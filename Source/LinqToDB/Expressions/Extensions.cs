@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
@@ -148,6 +149,14 @@ namespace LinqToDB.Expressions
 				expression,
 				(toReplace, replacedBy),
 				static (context, e) => e == context.toReplace ? context.replacedBy : e);
+		}
+
+		public static Expression Replace(this Expression expression, Expression toReplace, Expression replacedBy, IEqualityComparer<Expression> equalityComparer)
+		{
+			return Transform(
+				expression,
+				(toReplace, replacedBy, equalityComparer),
+				static (context, e) => context.equalityComparer.Equals(e, context.toReplace) ? context.replacedBy : e);
 		}
 
 		/// <summary>

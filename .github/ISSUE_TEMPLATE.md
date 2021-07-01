@@ -1,6 +1,8 @@
 Describe your issue.
 
-If you have a question, first try to check our [documentation](https://linq2db.github.io/), especially [FAQ](https://linq2db.github.io/articles/FAQ.html) and search in [issues](https://github.com/linq2db/linq2db/issues) - maybe your question already answered there.
+If you have a question, first try to check our [documentation](https://linq2db.github.io/), especially [FAQ](https://linq2db.github.io/articles/FAQ.html) and search in [issues](https://github.com/linq2db/linq2db/issues) and [discussions](https://github.com/linq2db/linq2db/discussions) - maybe your question already answered there.
+
+If you still have questions or want to start general discussion, please create new topic in [discussions](https://github.com/linq2db/linq2db/discussions).
 
 If you are seeing an exception, include the full exceptions details (message and stack trace).
 

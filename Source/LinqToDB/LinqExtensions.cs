@@ -3432,8 +3432,8 @@ namespace LinqToDB
 		/// <summary>
 		/// Adds a tag comment before generated query.
 		/// <code>
-		/// The example below will produce following code before generated query: -- my tag\r\n
-		/// db.Table.TagWith("my tag");
+		/// The example below will produce following code before generated query: /* my tag */\r\n
+		/// db.Table.TagQuery("my tag");
 		/// </code>
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
@@ -3458,8 +3458,8 @@ namespace LinqToDB
 		/// <summary>
 		/// Adds a tag comment before generated query for table.
 		/// <code>
-		/// The example below will produce following code before generated query: -- my tag\r\n
-		/// db.Table.TagWith("my tag");
+		/// The example below will produce following code before generated query: /* my tag */\r\n
+		/// db.Table.TagQuery("my tag");
 		/// </code>
 		/// </summary>
 		/// <typeparam name="T">Table record mapping class.</typeparam>
