@@ -264,6 +264,19 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				return false;
+			}			
+			
+			bool HasDefaultConstructor(Type type)
+			{
+				var constructors = type.GetConstructors();
+
+				foreach (var constructor in constructors)
+				{
+					if (constructor.GetParameters().Length == 0)
+						return true;
+				}
+
+				return constructors.Length == 0;
 			}
 
 			ParameterExpression? _variable;
@@ -284,7 +297,7 @@ namespace LinqToDB.Linq.Builder
 				var expr =
 					IsRecord(Builder.MappingSchema.GetAttributes<Attribute>(objectType), out var _) ?
 						BuildRecordConstructor (entityDescriptor, objectType, index, true) :
-					IsAnonymous(objectType) ?
+					IsAnonymous(objectType) || !HasDefaultConstructor(objectType) ?
 						BuildRecordConstructor (entityDescriptor, objectType, index, false) :
 						BuildDefaultConstructor(entityDescriptor, objectType, index);
 
@@ -388,16 +401,17 @@ namespace LinqToDB.Linq.Builder
 					}
 				).ToList();
 
-				var initExpr = Expression.MemberInit(
-					Expression.New(objectType),
-						members
-							// IMPORTANT: refactoring this condition will affect hasComplex variable calculation below
-							.Where (m => !m.Column.MemberAccessor.IsComplex)
-							.Select(m => (MemberBinding)Expression.Bind(m.Column.StorageInfo, m.Expr)));
 
-				Expression expr = initExpr;
+				var initExpr = Expression.MemberInit(Expression.New(objectType),
+					members
+						// IMPORTANT: refactoring this condition will affect hasComplex variable calculation below
+						.Where(m => !m.Column.MemberAccessor.IsComplex)
+						.Select(m => (MemberBinding)Expression.Bind(m.Column.StorageInfo, m.Expr))
+				);
 
-				var hasComplex = members.Count > initExpr.Bindings.Count;
+				var        hasComplex = members.Count > initExpr.Bindings.Count;
+				Expression expr       = initExpr;
+
 				var loadWith   = GetLoadWith();
 
 				if (hasComplex || loadWith != null)
@@ -432,7 +446,7 @@ namespace LinqToDB.Linq.Builder
 				public Expression Expression = null!;
 			}
 
-			IEnumerable<Expression?> GetExpressions(TypeAccessor typeAccessor, bool isRecordType, List<ColumnInfo> columns)
+			IEnumerable<(string Name, Expression? Expr)> GetExpressions(TypeAccessor typeAccessor, bool isRecordType, List<ColumnInfo> columns)
 			{
 				var members = isRecordType ?
 					typeAccessor.Members.Select(m =>
@@ -453,7 +467,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (column != null)
 					{
-						yield return column.Expression;
+						yield return (member.Name, column.Expression);
 					}
 					else
 					{
@@ -466,7 +480,7 @@ namespace LinqToDB.Linq.Builder
 							if (loadWithItem != null)
 							{
 								var ma = Expression.MakeMemberAccess(Expression.Constant(null, typeAccessor.Type), member.MemberInfo);
-								yield return BuildExpression(ma, 1, false);
+								yield return (member.Name, BuildExpression(ma, 1, false));
 							}
 						}
 						else
@@ -476,7 +490,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (cols.Count == 0)
 							{
-								yield return null;
+								yield return (member.Name, null);
 							}
 							else
 							{
@@ -487,35 +501,25 @@ namespace LinqToDB.Linq.Builder
 								}
 
 								var typeAcc  = TypeAccessor.GetAccessor(member.Type);
-								var isRecord = IsRecord(Builder.MappingSchema.GetAttributes<Attribute>(member.Type), out var _);
+								var isRecord = IsRecord(Builder.MappingSchema.GetAttributes<Attribute>(member.Type), out _);
 
 								var exprs = GetExpressions(typeAcc, isRecord, cols).ToList();
 
-								if (isRecord)
+								if (isRecord || !HasDefaultConstructor(member.Type))
 								{
-									var ctor      = member.Type.GetConstructors().Single();
-									var ctorParms = ctor.GetParameters();
+									var expr = BuildFromParametrizedConstructor(member.Type, exprs);
 
-									var parms =
-										(
-										from p in ctorParms.Select((p, i) => new { p, i })
-										join e in exprs.Select((e, i) => new { e, i }) on p.i equals e.i into j
-											from e in j.DefaultIfEmpty()
-											select
-											e?.e ?? Expression.Constant(p.p.DefaultValue ?? Builder.MappingSchema.GetDefaultValue(p.p.ParameterType), p.p.ParameterType)
-										).ToList();
-
-									yield return Expression.New(ctor, parms);
+									yield return (member.Name, expr);
 								}
 								else
 								{
 									var expr = Expression.MemberInit(
 										Expression.New(member.Type),
 										from m in typeAcc.Members.Zip(exprs, (m,e) => new { m, e })
-										where m.e != null
-										select (MemberBinding)Expression.Bind(m.m.MemberInfo, m.e));
+										where m.e.Expr != null
+										select (MemberBinding)Expression.Bind(m.m.MemberInfo, m.e.Expr));
 
-									yield return expr;
+									yield return (member.Name, expr);
 								}
 							}
 						}
@@ -523,10 +527,52 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+
+			Expression BuildFromParametrizedConstructor(Type objectType,
+				IList<(string Name, Expression? Expr)> expressions)
+			{
+				var constructors = objectType.GetConstructors();
+
+				if (constructors.Length == 0)
+					throw new InvalidOperationException($"Type '{objectType.Namespace}' has no constructors.");
+
+				if (constructors.Length > 1)
+					throw new InvalidOperationException($"Type '{objectType.Namespace}' has ambiguous constructors.");
+
+				var ctor = constructors[0];
+
+				var parameters = ctor.GetParameters();
+				var argFound   = false;
+
+				var args = new Expression?[parameters.Length];
+				for (int i = 0; i < parameters.Length; i++)
+				{
+					var param = parameters[i];
+					var memberExpr =
+						expressions.FirstOrDefault(m => m.Name == param.Name).Expr ??
+						expressions.FirstOrDefault(m => m.Name.Equals(param.Name, StringComparison.OrdinalIgnoreCase))
+							.Expr;
+
+					var arg = memberExpr;
+					argFound = argFound || arg != null;
+
+					arg ??= new DefaultValueExpression(Builder.MappingSchema, param.ParameterType);
+
+					args[i] = arg;
+				}
+
+				if (!argFound)
+				{
+					throw new InvalidOperationException($"Type '{objectType.Name}' has no suitable constructor.");
+				}
+
+				var expr = Expression.New(ctor, args);
+
+				return expr;
+			}
+
 			Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, Type objectType, Tuple<int, SqlField?>[] index, bool isRecord)
 			{
-				var ctor = objectType.GetConstructors().Single();
-
 				var exprs = GetExpressions(entityDescriptor.TypeAccessor, isRecord,
 					(
 						from idx in index
@@ -540,17 +586,7 @@ namespace LinqToDB.Linq.Builder
 						}
 					).ToList()).ToList();
 
-				var parms =
-				(
-					from p in ctor.GetParameters().Select((p,i) => new { p, i })
-					join e in exprs.Select((e,i) => new { e, i }) on p.i equals e.i into j
-					from e in j.DefaultIfEmpty()
-					select e?.e ?? Expression.Constant(Builder.MappingSchema.GetDefaultValue(p.p.ParameterType), p.p.ParameterType)
-				).ToList();
-
-				var expr = Expression.New(ctor, parms);
-
-				return expr;
+				return BuildFromParametrizedConstructor(objectType, exprs);
 			}
 
 			protected virtual Expression ProcessExpression(Expression expression)
