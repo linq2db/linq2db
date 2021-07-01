@@ -533,5 +533,156 @@ namespace Tests.Linq
 				Assert.IsTrue(result);
 			}
 		}
+
+		#region Records
+
+		public record Record(int Id, string Value, string BaseValue) : RecordBase(Id, BaseValue);
+		public abstract record RecordBase(int Id, string BaseValue);
+
+		public class RecordLike : RecordLikeBase
+		{
+			public RecordLike(int Id, string Value, string BaseValue)
+				: base(Id, BaseValue)
+			{
+				this.Value = Value;
+			}
+
+			public string Value { get; init; }
+		}
+
+		public abstract class RecordLikeBase
+		{
+			public RecordLikeBase(int Id, string BaseValue)
+			{
+				this.Id = Id;
+				this.BaseValue = BaseValue;
+			}
+
+			public int    Id        { get; init; }
+			public string BaseValue { get; init; }
+		}
+
+		public class WithInitOnly : WithInitOnlyBase
+		{
+			public string? Value { get; init; }
+		}
+
+		public abstract class WithInitOnlyBase
+		{
+			public int     Id        { get; init; }
+			public string? BaseValue { get; init; }
+		}
+
+		[Test]
+		public void TestRecordMapping([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.GetFluentMappingBuilder().Entity<Record>()
+				.Property(p => p.Id).IsPrimaryKey()
+				.Property(p => p.Value)
+				.Property(p => p.BaseValue);
+
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable<Record>())
+			{
+				db.Insert(new Record(1, "One", "OneBase"));
+				db.Insert(new Record(2, "Two", "TwoBase"));
+
+				var data = table.OrderBy(r => r.Id).ToArray();
+
+				Assert.AreEqual(2        , data.Length);
+				Assert.AreEqual(1        , data[0].Id);
+				Assert.AreEqual("One"    , data[0].Value);
+				Assert.AreEqual("OneBase", data[0].BaseValue );
+				Assert.AreEqual(2        , data[1].Id);
+				Assert.AreEqual("Two"    , data[1].Value);
+				Assert.AreEqual("TwoBase", data[1].BaseValue);
+
+				var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
+
+				Assert.AreEqual(2        , proj.Length);
+				Assert.AreEqual(1        , proj[0].Id);
+				Assert.AreEqual("One"    , proj[0].Value);
+				Assert.AreEqual("OneBase", proj[0].BaseValue );
+				Assert.AreEqual(2        , proj[1].Id);
+				Assert.AreEqual("Two"    , proj[1].Value);
+				Assert.AreEqual("TwoBase", proj[1].BaseValue);
+			}
+		}
+
+		[Test]
+		public void TestRecordLikeMapping([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.GetFluentMappingBuilder().Entity<RecordLike>()
+				.Property(p => p.Id).IsPrimaryKey()
+				.Property(p => p.Value)
+				.Property(p => p.BaseValue);
+
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable<RecordLike>())
+			{
+				db.Insert(new RecordLike(1, "One", "OneBase"));
+				db.Insert(new RecordLike(2, "Two", "TwoBase"));
+
+				var data = table.OrderBy(r => r.Id).ToArray();
+
+				Assert.AreEqual(2        , data.Length);
+				Assert.AreEqual(1        , data[0].Id);
+				Assert.AreEqual("One"    , data[0].Value);
+				Assert.AreEqual("OneBase", data[0].BaseValue );
+				Assert.AreEqual(2        , data[1].Id);
+				Assert.AreEqual("Two"    , data[1].Value);
+				Assert.AreEqual("TwoBase", data[1].BaseValue);
+
+				var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
+
+				Assert.AreEqual(2        , proj.Length);
+				Assert.AreEqual(1        , proj[0].Id);
+				Assert.AreEqual("One"    , proj[0].Value);
+				Assert.AreEqual("OneBase", proj[0].BaseValue );
+				Assert.AreEqual(2        , proj[1].Id);
+				Assert.AreEqual("Two"    , proj[1].Value);
+				Assert.AreEqual("TwoBase", proj[1].BaseValue);
+			}
+		}
+
+		[Test]
+		public void TestInitOnly([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.GetFluentMappingBuilder().Entity<WithInitOnly>()
+				.Property(p => p.Id).IsPrimaryKey()
+				.Property(p => p.Value);
+
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable<WithInitOnly>())
+			{
+				db.Insert(new WithInitOnly{Id = 1, Value = "One", BaseValue = "OneBase"});
+				db.Insert(new WithInitOnly{Id = 2, Value = "Two", BaseValue = "TwoBase"});
+
+				var data = table.OrderBy(r => r.Id).ToArray();
+
+				Assert.AreEqual(2        , data.Length);
+				Assert.AreEqual(1        , data[0].Id);
+				Assert.AreEqual("One"    , data[0].Value);
+				Assert.AreEqual("OneBase", data[0].BaseValue );
+				Assert.AreEqual(2        , data[1].Id);
+				Assert.AreEqual("Two"    , data[1].Value);
+				Assert.AreEqual("TwoBase", data[1].BaseValue);
+
+				var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
+
+				Assert.AreEqual(2        , proj.Length);
+				Assert.AreEqual(1        , proj[0].Id);
+				Assert.AreEqual("One"    , proj[0].Value);
+				Assert.AreEqual("OneBase", proj[0].BaseValue );
+				Assert.AreEqual(2        , proj[1].Id);
+				Assert.AreEqual("Two"    , proj[1].Value);
+				Assert.AreEqual("TwoBase", proj[1].BaseValue);
+			}
+		}
+
+		#endregion
 	}
 }

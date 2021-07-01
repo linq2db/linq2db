@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -15,7 +16,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (refExpression.BuildContext == current)
 					{
-						expression = expression.Replace(root, new ContextRefExpression(root.Type, underlying));
+						expression = expression.Replace(root, new ContextRefExpression(root.Type, underlying), EqualityComparer<Expression>.Default);
 					}
 				}
 			}

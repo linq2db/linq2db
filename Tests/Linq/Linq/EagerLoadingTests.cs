@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Mapping;
@@ -1030,6 +1031,48 @@ FROM
 				var expected = expectedQuery.Select(m => m.Details).ToList();
 
 				AreEqual(expected, result);
+			}
+		}
+
+		[Test]
+		public void FirstSingleWithFilter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = master.Select(x => new
+				{
+					x.Id1,
+					Details = x.Details.Select(d => d.DetailValue)
+				});
+
+				FluentActions.Invoking(() => query.FirstOrDefault(x => x.Id1 == 1)).Should().NotThrow();
+				FluentActions.Invoking(() => query.First(x => x.Id1          == 1)).Should().NotThrow();
+				FluentActions.Invoking(() => query.Single(x => x.Id1         == 1)).Should().NotThrow();
+			}
+		}
+
+		[Test]
+		public async Task FirstSingleWithFilterAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = master.Select(x => new
+				{
+					x.Id1,
+					Details = x.Details.Select(d => d.DetailValue)
+				});
+
+				await FluentActions.Awaiting(() => query.FirstOrDefaultAsync(x => x.Id1 == 1)).Should().NotThrowAsync();
+				await FluentActions.Awaiting(() => query.FirstAsync(x => x.Id1          == 1)).Should().NotThrowAsync();
+				await FluentActions.Awaiting(() => query.SingleAsync(x => x.Id1         == 1)).Should().NotThrowAsync();
 			}
 		}
 

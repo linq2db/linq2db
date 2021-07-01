@@ -73,13 +73,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			AddScalarType(typeof(ulong ), ulongType);
 			AddScalarType(typeof(ulong?), ulongType);
 
+			var ulongDbType = new DbDataType(typeof(ulong), DataType.Decimal);
+
 			SetConvertExpression(
-				ulongType.Type.WithSystemType(typeof(ulong)),
-				ulongType.Type.WithSystemType(typeof(DataParameter)),
+				ulongDbType,
+				new DbDataType(typeof(DataParameter)),
 				(Expression<Func<ulong, DataParameter>>)((ulong value) => new DataParameter(null, (decimal)value, DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/));
 			SetConvertExpression(
-				ulongType.Type.WithSystemType(typeof(ulong?)),
-				ulongType.Type.WithSystemType(typeof(DataParameter)),
+				ulongDbType.WithSystemType(typeof(ulong?)),
+				new DbDataType(typeof(DataParameter)),
 				(Expression<Func<ulong?, DataParameter>>)((ulong? value) => new DataParameter(null, (decimal?)value, DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/), addNullCheck: false);
 		}
 
