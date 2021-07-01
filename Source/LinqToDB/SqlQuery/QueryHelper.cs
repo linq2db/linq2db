@@ -191,6 +191,69 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
+		public static DbDataType? SuggestDbDataType(ISqlExpression expr)
+		{
+			switch (expr.ElementType)
+			{
+				case QueryElementType.Column:
+				{
+					var column = (SqlColumn)expr;
+
+					var suggested = SuggestDbDataType(column.Expression);
+					if (suggested != null)
+						return suggested;
+
+					if (column.Parent?.HasSetOperators == true)
+					{
+						var idx = column.Parent.Select.Columns.IndexOf(column);
+						if (idx >= 0)
+						{
+							foreach (var setOperator in column.Parent.SetOperators)
+							{
+								suggested = SuggestDbDataType(setOperator.SelectQuery.Select.Columns[idx].Expression);
+								if (suggested != null)
+									return suggested;
+							}
+						}
+					}
+
+					break;
+				}
+				case QueryElementType.SqlField:
+				{
+					return ((SqlField)expr).ColumnDescriptor.GetDbDataType(true);
+				}
+				case QueryElementType.SqlExpression:
+				{
+					var sqlExpr = (SqlExpression)expr;
+					if (sqlExpr.Parameters.Length == 1 && sqlExpr.Expr == "{0}")
+						return SuggestDbDataType(sqlExpr.Parameters[0]);
+					break;
+				}
+				case QueryElementType.SqlQuery:
+				{
+					var query = (SelectQuery)expr;
+					if (query.Select.Columns.Count == 1)
+						return SuggestDbDataType(query.Select.Columns[0]);
+					break;
+				}
+				case QueryElementType.SqlBinaryExpression:
+				{
+					var binary = (SqlBinaryExpression)expr;
+					return SuggestDbDataType(binary.Expr1) ?? SuggestDbDataType(binary.Expr2);
+				}
+				case QueryElementType.SqlValue:
+				{
+					var sqlValue = (SqlValue)expr;
+					if (sqlValue.ValueType.DbType != null || sqlValue.ValueType.DataType != DataType.Undefined)
+						return sqlValue.ValueType;
+					break;
+				}
+			}
+
+			return null;
+		}
+
 		public static DbDataType GetDbDataType(ISqlExpression? expr)
 		{
 			if (expr == null)
