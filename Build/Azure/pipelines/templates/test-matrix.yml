@@ -75,7 +75,9 @@ jobs:
       enabled: ${{ parameters.enabled }}
       experimental: ${{ parameters.experimental }}
       with_baselines: ${{ parameters.with_baselines }}
-      mac_enabled: ${{ parameters.mac_enabled }}
+#      mac_enabled: ${{ parameters.mac_enabled }}
+# TODO: disable for now as it fails always due to small stack
+      mac_enabled: false
       test_matrix:
 # SQLite
         - name: SQLite
