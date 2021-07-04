@@ -24,6 +24,7 @@ namespace AccessODBCDataContext
 	{
 		public ITable<AllType>             AllTypes             { get { return this.GetTable<AllType>(); } }
 		public ITable<Child>               Children             { get { return this.GetTable<Child>(); } }
+		public ITable<CollatedTable>       CollatedTables       { get { return this.GetTable<CollatedTable>(); } }
 		public ITable<DataTypeTest>        DataTypeTests        { get { return this.GetTable<DataTypeTest>(); } }
 		public ITable<Doctor>              Doctors              { get { return this.GetTable<Doctor>(); } }
 		public ITable<Dual>                Duals                { get { return this.GetTable<Dual>(); } }
@@ -59,6 +60,13 @@ namespace AccessODBCDataContext
 		}
 
 		public TestDataDB(LinqToDbConnectionOptions options)
+			: base(options)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
+		public TestDataDB(LinqToDbConnectionOptions<TestDataDB> options)
 			: base(options)
 		{
 			InitDataContext();
@@ -101,6 +109,14 @@ namespace AccessODBCDataContext
 	{
 		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? ParentID { get; set; } // INTEGER
 		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? ChildID  { get; set; } // INTEGER
+	}
+
+	[Table("CollatedTable")]
+	public partial class CollatedTable
+	{
+		[Column(DbType="INTEGER",     DataType=LinqToDB.DataType.Int32),              Nullable] public int?    Id              { get; set; } // INTEGER
+		[Column(DbType="VARCHAR(20)", DataType=LinqToDB.DataType.VarChar, Length=20), Nullable] public string? CaseSensitive   { get; set; } // VARCHAR(20)
+		[Column(DbType="VARCHAR(20)", DataType=LinqToDB.DataType.VarChar, Length=20), Nullable] public string? CaseInsensitive { get; set; } // VARCHAR(20)
 	}
 
 	[Table("DataTypeTest")]

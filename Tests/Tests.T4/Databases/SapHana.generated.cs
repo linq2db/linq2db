@@ -30,6 +30,7 @@ namespace SapHanaDataContext
 		public ITable<BulkInsertLowerCaseColumn> BulkInsertLowerCaseColumns { get { return this.GetTable<BulkInsertLowerCaseColumn>(); } }
 		public ITable<BulkInsertUpperCaseColumn> BulkInsertUpperCaseColumns { get { return this.GetTable<BulkInsertUpperCaseColumn>(); } }
 		public ITable<Child>                     Children                   { get { return this.GetTable<Child>(); } }
+		public ITable<CollatedTable>             CollatedTables             { get { return this.GetTable<CollatedTable>(); } }
 		public ITable<Doctor>                    Doctors                    { get { return this.GetTable<Doctor>(); } }
 		public ITable<GrandChild>                GrandChildren              { get { return this.GetTable<GrandChild>(); } }
 		public ITable<IndexTable>                IndexTables                { get { return this.GetTable<IndexTable>(); } }
@@ -61,6 +62,13 @@ namespace SapHanaDataContext
 		}
 
 		public HXEDB(LinqToDbConnectionOptions options)
+			: base(options)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
+		public HXEDB(LinqToDbConnectionOptions<HXEDB> options)
 			: base(options)
 		{
 			InitDataContext();
@@ -159,6 +167,14 @@ namespace SapHanaDataContext
 	{
 		[Column, Nullable] public int? ParentID { get; set; } // INTEGER
 		[Column, Nullable] public int? ChildID  { get; set; } // INTEGER
+	}
+
+	[Table(Schema="TESTHANA", Name="CollatedTable")]
+	public partial class CollatedTable
+	{
+		[Column, NotNull] public int    Id              { get; set; } // INTEGER
+		[Column, NotNull] public string CaseSensitive   { get; set; } = null!; // NVARCHAR(20)
+		[Column, NotNull] public string CaseInsensitive { get; set; } = null!; // NVARCHAR(20)
 	}
 
 	[Table(Schema="TESTHANA", Name="Doctor")]

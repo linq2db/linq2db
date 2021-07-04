@@ -56,8 +56,13 @@
 		<PackageVersion Include="NodaTime" Version="3.0.5" />
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.2" />
 
-		<!--nuget doesn't have strong name, so we use local self-signed copy-->
-		<!--<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types" Version="1.3.0" />-->
+		<!--nuget doesn't have strong name, so we use local self-signed copy for signed projects-->
+		<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types" Version="1.3.0" />
+
+		<PackageVersion Include="Microsoft.Extensions.Configuration" Version="5.0.0" />
+		<PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="5.0.0" />
+		<PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="5.0.0" />
+		<PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">

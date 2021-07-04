@@ -25,6 +25,7 @@ namespace SybaseDataContext
 	{
 		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
 		public ITable<Child>             Children            { get { return this.GetTable<Child>(); } }
+		public ITable<CollatedTable>     CollatedTables      { get { return this.GetTable<CollatedTable>(); } }
 		public ITable<Doctor>            Doctors             { get { return this.GetTable<Doctor>(); } }
 		public ITable<GrandChild>        GrandChildren       { get { return this.GetTable<GrandChild>(); } }
 		public ITable<InheritanceChild>  InheritanceChildren { get { return this.GetTable<InheritanceChild>(); } }
@@ -55,6 +56,13 @@ namespace SybaseDataContext
 		}
 
 		public TestDataDB(LinqToDbConnectionOptions options)
+			: base(options)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
+		public TestDataDB(LinqToDbConnectionOptions<TestDataDB> options)
 			: base(options)
 		{
 			InitDataContext();
@@ -105,6 +113,14 @@ namespace SybaseDataContext
 	{
 		[Column, Nullable] public int? ParentID { get; set; } // int
 		[Column, Nullable] public int? ChildID  { get; set; } // int
+	}
+
+	[Table(Schema="dbo", Name="CollatedTable")]
+	public partial class CollatedTable
+	{
+		[Column, NotNull] public int    Id              { get; set; } // int
+		[Column, NotNull] public string CaseSensitive   { get; set; } = null!; // nvarchar(60)
+		[Column, NotNull] public string CaseInsensitive { get; set; } = null!; // nvarchar(60)
 	}
 
 	[Table(Schema="dbo", Name="Doctor")]

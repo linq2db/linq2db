@@ -25,6 +25,7 @@ namespace AccessDataContext
 	{
 		public ITable<AllType>             AllTypes             { get { return this.GetTable<AllType>(); } }
 		public ITable<Child>               Children             { get { return this.GetTable<Child>(); } }
+		public ITable<CollatedTable>       CollatedTables       { get { return this.GetTable<CollatedTable>(); } }
 		public ITable<DataTypeTest>        DataTypeTests        { get { return this.GetTable<DataTypeTest>(); } }
 		public ITable<Doctor>              Doctors              { get { return this.GetTable<Doctor>(); } }
 		public ITable<Dual>                Duals                { get { return this.GetTable<Dual>(); } }
@@ -109,6 +110,14 @@ namespace AccessDataContext
 	{
 		[Column(DbType="Long", DataType=LinqToDB.DataType.Int32), Nullable] public int? ParentID { get; set; } // Long
 		[Column(DbType="Long", DataType=LinqToDB.DataType.Int32), Nullable] public int? ChildID  { get; set; } // Long
+	}
+
+	[Table("CollatedTable")]
+	public partial class CollatedTable
+	{
+		[Column(DbType="Long",        DataType=LinqToDB.DataType.Int32),              Identity] public int    Id              { get; set; } // Long
+		[Column(DbType="VarChar(20)", DataType=LinqToDB.DataType.VarChar, Length=20), NotNull ] public string CaseSensitive   { get; set; } = null!; // VarChar(20)
+		[Column(DbType="VarChar(20)", DataType=LinqToDB.DataType.VarChar, Length=20), NotNull ] public string CaseInsensitive { get; set; } = null!; // VarChar(20)
 	}
 
 	[Table("DataTypeTest")]

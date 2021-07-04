@@ -1138,6 +1138,7 @@ namespace DataContextMS
 		public ITable<AllType>                 AllTypes                 { get { return this.GetTable<AllType>(); } }
 		public ITable<AllTypes2>               AllTypes2                { get { return this.GetTable<AllTypes2>(); } }
 		public ITable<Child>                   Children                 { get { return this.GetTable<Child>(); } }
+		public ITable<CollatedTable>           CollatedTables           { get { return this.GetTable<CollatedTable>(); } }
 		public ITable<Customer0>               Customers                { get { return this.GetTable<Customer0>(); } }
 		public ITable<DataType>                DataTypes                { get { return this.GetTable<DataType>(); } }
 		public ITable<DecimalOverflow>         DecimalOverflows         { get { return this.GetTable<DecimalOverflow>(); } }
@@ -1326,6 +1327,14 @@ namespace DataContextMS
 		/// </summary>
 		[Column(       DbType="int", DataType=LinqToDB.DataType.Int32), Nullable            ] public int? ChildID  { get; set; } // int
 		[Column("_ID", DbType="int", DataType=LinqToDB.DataType.Int32), PrimaryKey, Identity] public int  Id       { get; set; } // int
+	}
+
+	[Table("CollatedTable")]
+	public partial class CollatedTable
+	{
+		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               NotNull] public int    Id              { get; set; } // int
+		[Column(DbType="nvarchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20), NotNull] public string CaseSensitive   { get; set; } = null!; // nvarchar(20)
+		[Column(DbType="nvarchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20), NotNull] public string CaseInsensitive { get; set; } = null!; // nvarchar(20)
 	}
 
 	[Table("Customer")]

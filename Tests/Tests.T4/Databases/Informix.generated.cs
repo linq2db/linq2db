@@ -22,6 +22,7 @@ namespace InformixDataContext
 	{
 		public ITable<Alltype>           Alltypes           { get { return this.GetTable<Alltype>(); } }
 		public ITable<Child>             Children           { get { return this.GetTable<Child>(); } }
+		public ITable<Collatedtable>     Collatedtables     { get { return this.GetTable<Collatedtable>(); } }
 		public ITable<Doctor>            Doctors            { get { return this.GetTable<Doctor>(); } }
 		public ITable<Grandchild>        Grandchilds        { get { return this.GetTable<Grandchild>(); } }
 		public ITable<Inheritancechild>  Inheritancechilds  { get { return this.GetTable<Inheritancechild>(); } }
@@ -51,6 +52,13 @@ namespace InformixDataContext
 		}
 
 		public TestdataidsDB(LinqToDbConnectionOptions options)
+			: base(options)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
+		public TestdataidsDB(LinqToDbConnectionOptions<TestdataidsDB> options)
 			: base(options)
 		{
 			InitDataContext();
@@ -92,6 +100,14 @@ namespace InformixDataContext
 	{
 		[Column("parentid"), Nullable] public int? Parentid { get; set; } // INTEGER
 		[Column("childid"),  Nullable] public int? Childid  { get; set; } // INTEGER
+	}
+
+	[Table(Schema="informix", Name="collatedtable")]
+	public partial class Collatedtable
+	{
+		[Column("id"),              NotNull] public int    Id              { get; set; } // INTEGER
+		[Column("casesensitive"),   NotNull] public string Casesensitive   { get; set; } = null!; // VARCHAR(20)
+		[Column("caseinsensitive"), NotNull] public string Caseinsensitive { get; set; } = null!; // NVARCHAR(20)
 	}
 
 	[Table(Schema="informix", Name="doctor")]

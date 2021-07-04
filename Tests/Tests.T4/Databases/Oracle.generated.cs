@@ -26,6 +26,7 @@ namespace OracleDataContext
 		public ITable<AllType>                 AllTypes                 { get { return this.GetTable<AllType>(); } }
 		public ITable<BINARYDATA>              Binarydatas              { get { return this.GetTable<BINARYDATA>(); } }
 		public ITable<Child>                   Children                 { get { return this.GetTable<Child>(); } }
+		public ITable<CollatedTable>           CollatedTables           { get { return this.GetTable<CollatedTable>(); } }
 		public ITable<DataTypeTest>            DataTypeTests            { get { return this.GetTable<DataTypeTest>(); } }
 		public ITable<DecimalOverflow>         DecimalOverflows         { get { return this.GetTable<DecimalOverflow>(); } }
 		public ITable<Doctor>                  Doctors                  { get { return this.GetTable<Doctor>(); } }
@@ -73,6 +74,13 @@ namespace OracleDataContext
 		}
 
 		public XEDB(LinqToDbConnectionOptions options)
+			: base(options)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
+		public XEDB(LinqToDbConnectionOptions<XEDB> options)
 			: base(options)
 		{
 			InitDataContext();
@@ -130,6 +138,14 @@ namespace OracleDataContext
 	{
 		[Column(DbType="NUMBER", DataType=LinqToDB.DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? ParentID { get; set; } // NUMBER
 		[Column(DbType="NUMBER", DataType=LinqToDB.DataType.Decimal, Length=22, Scale=0), Nullable] public decimal? ChildID  { get; set; } // NUMBER
+	}
+
+	[Table(Schema="MANAGED", Name="CollatedTable")]
+	public partial class CollatedTable
+	{
+		[Column(DbType="NUMBER",       DataType=LinqToDB.DataType.Decimal, Length=22, Scale=0), NotNull] public decimal Id              { get; set; } // NUMBER
+		[Column(DbType="VARCHAR2(20)", DataType=LinqToDB.DataType.VarChar, Length=20),          NotNull] public string  CaseSensitive   { get; set; } = null!; // VARCHAR2(20)
+		[Column(DbType="VARCHAR2(20)", DataType=LinqToDB.DataType.VarChar, Length=20),          NotNull] public string  CaseInsensitive { get; set; } = null!; // VARCHAR2(20)
 	}
 
 	[Table(Schema="MANAGED", Name="DataTypeTest")]
@@ -452,7 +468,7 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C00819237_BackReference
+		/// SYS_C00886855_BackReference
 		/// </summary>
 		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<TTestUserContract> Syscs { get; set; } = null!;
@@ -471,9 +487,9 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C00819237
+		/// SYS_C00886855
 		/// </summary>
-		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="SYS_C00819237", BackReferenceName="Syscs")]
+		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="SYS_C00886855", BackReferenceName="Syscs")]
 		public TTestUser User { get; set; } = null!;
 
 		#endregion

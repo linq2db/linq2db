@@ -4,6 +4,7 @@
 <#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.PostgreSQL.ttinclude" once="true" #>
 <#@ include file="..\Shared.ttinclude"                                              once="true" #>
 <#
+	GenerateSchemaAsType = true;
 	NamespaceName = "PostreSQL11DataContext";
 
 	LoadPostgreSQLMetadata(GetConnectionString("PostgreSQL.11"));
@@ -12,7 +13,6 @@
 	GetTable("testsamename").DataContextPropertyName = "_testsamename";
 
 	GenerateDataTypes = true;
-
 	GenerateModel();
 
 //	GenerationEnvironment.Replace(

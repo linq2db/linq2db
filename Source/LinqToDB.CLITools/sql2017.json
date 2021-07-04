@@ -1,0 +1,8 @@
+{
+	"provider": "System.Data.SqlClient",
+	"connectionString": "Server=.\\SQL2019;Database=TestData2017;User Id=sa;Password=p@zzw0rd;MultipleActiveResultSets=True;",
+	"schemas": {
+		"include": false,
+		"list": []
+	}
+}

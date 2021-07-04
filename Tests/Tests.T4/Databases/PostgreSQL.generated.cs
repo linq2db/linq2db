@@ -34,6 +34,7 @@ namespace PostreSQLDataContext
 		public ITable<AllType>                        AllTypes                  { get { return this.GetTable<AllType>(); } }
 		public ITable<Book>                           Books                     { get { return this.GetTable<Book>(); } }
 		public ITable<Child>                          Children                  { get { return this.GetTable<Child>(); } }
+		public ITable<CollatedTable>                  CollatedTables            { get { return this.GetTable<CollatedTable>(); } }
 		public ITable<CreateIfNotExistsTable>         CreateIfNotExistsTables   { get { return this.GetTable<CreateIfNotExistsTable>(); } }
 		public ITable<Doctor>                         Doctors                   { get { return this.GetTable<Doctor>(); } }
 		public ITable<Entity>                         Entities                  { get { return this.GetTable<Entity>(); } }
@@ -61,6 +62,7 @@ namespace PostreSQLDataContext
 		public ITable<SequenceTest1>                  SequenceTest1             { get { return this.GetTable<SequenceTest1>(); } }
 		public ITable<SequenceTest2>                  SequenceTest2             { get { return this.GetTable<SequenceTest2>(); } }
 		public ITable<SequenceTest3>                  SequenceTest3             { get { return this.GetTable<SequenceTest3>(); } }
+		public ITable<TagTestTable>                   TagTestTables             { get { return this.GetTable<TagTestTable>(); } }
 		public ITable<Test>                           Tests                     { get { return this.GetTable<Test>(); } }
 		public ITable<TestIdentity>                   TestIdentities            { get { return this.GetTable<TestIdentity>(); } }
 		public ITable<TestMerge1>                     TestMerge1                { get { return this.GetTable<TestMerge1>(); } }
@@ -107,10 +109,10 @@ namespace PostreSQLDataContext
 		#region Skeys
 
 		[Sql.TableFunction(Schema="public", Name="skeys")]
-		public ITable<SkeysResult> Skeys(object? par152)
+		public ITable<SkeysResult> Skeys(object? par159)
 		{
 			return this.GetTable<SkeysResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				par152);
+				par159);
 		}
 
 		public partial class SkeysResult
@@ -123,10 +125,10 @@ namespace PostreSQLDataContext
 		#region Svals
 
 		[Sql.TableFunction(Schema="public", Name="svals")]
-		public ITable<SvalsResult> Svals(object? par159)
+		public ITable<SvalsResult> Svals(object? par166)
 		{
 			return this.GetTable<SvalsResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				par159);
+				par166);
 		}
 
 		public partial class SvalsResult
@@ -310,6 +312,14 @@ namespace PostreSQLDataContext
 	{
 		[Column(DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), Nullable] public int? ParentID { get; set; } // integer
 		[Column(DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), Nullable] public int? ChildID  { get; set; } // integer
+	}
+
+	[Table(Schema="public", Name="CollatedTable")]
+	public partial class CollatedTable
+	{
+		[Column(DataType=LinqToDB.DataType.Int32,    Precision=32, Scale=0), NotNull] public int    Id              { get; set; } // integer
+		[Column(DataType=LinqToDB.DataType.NVarChar, Length=20),             NotNull] public string CaseSensitive   { get; set; } = null!; // character varying(20)
+		[Column(DataType=LinqToDB.DataType.NVarChar, Length=20),             NotNull] public string CaseInsensitive { get; set; } = null!; // character varying(20)
 	}
 
 	[Table(Schema="public", Name="CreateIfNotExistsTable")]
@@ -572,6 +582,13 @@ namespace PostreSQLDataContext
 		[Column(DataType=LinqToDB.DataType.NVarChar, Length=50),             Nullable            ] public string? Value { get; set; } // character varying(50)
 	}
 
+	[Table(Schema="public", Name="TagTestTable")]
+	public partial class TagTestTable
+	{
+		[Column(DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), NotNull    ] public int     ID   { get; set; } // integer
+		[Column(DataType=LinqToDB.DataType.Text),                            Nullable] public string? Name { get; set; } // text
+	}
+
 	[Table(Schema="public", Name="test")]
 	public partial class Test
 	{
@@ -770,10 +787,20 @@ namespace PostreSQLDataContext
 
 		#endregion
 
+		#region Floatrange
+
+		[Sql.Function(Name="public.floatrange", ServerSideOnly=true)]
+		public static object? Floatrange(double? par34, double? par35, string? par36)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
 		#region GhstoreCompress
 
 		[Sql.Function(Name="public.ghstore_compress", ServerSideOnly=true)]
-		public static object? GhstoreCompress(object? par31)
+		public static object? GhstoreCompress(object? par38)
 		{
 			throw new InvalidOperationException();
 		}
@@ -783,7 +810,7 @@ namespace PostreSQLDataContext
 		#region GhstoreConsistent
 
 		[Sql.Function(Name="public.ghstore_consistent", ServerSideOnly=true)]
-		public static bool? GhstoreConsistent(object? par33, object? par34, short? par35, int? par36, object? par37)
+		public static bool? GhstoreConsistent(object? par40, object? par41, short? par42, int? par43, object? par44)
 		{
 			throw new InvalidOperationException();
 		}
@@ -793,7 +820,7 @@ namespace PostreSQLDataContext
 		#region GhstoreDecompress
 
 		[Sql.Function(Name="public.ghstore_decompress", ServerSideOnly=true)]
-		public static object? GhstoreDecompress(object? par39)
+		public static object? GhstoreDecompress(object? par46)
 		{
 			throw new InvalidOperationException();
 		}
@@ -803,7 +830,7 @@ namespace PostreSQLDataContext
 		#region GhstoreIn
 
 		[Sql.Function(Name="public.ghstore_in", ServerSideOnly=true)]
-		public static object? GhstoreIn(object? par41)
+		public static object? GhstoreIn(object? par48)
 		{
 			throw new InvalidOperationException();
 		}
@@ -813,7 +840,7 @@ namespace PostreSQLDataContext
 		#region GhstoreOut
 
 		[Sql.Function(Name="public.ghstore_out", ServerSideOnly=true)]
-		public static object? GhstoreOut(object? par43)
+		public static object? GhstoreOut(object? par50)
 		{
 			throw new InvalidOperationException();
 		}
@@ -823,7 +850,7 @@ namespace PostreSQLDataContext
 		#region GhstorePenalty
 
 		[Sql.Function(Name="public.ghstore_penalty", ServerSideOnly=true)]
-		public static object? GhstorePenalty(object? par45, object? par46, object? par47)
+		public static object? GhstorePenalty(object? par52, object? par53, object? par54)
 		{
 			throw new InvalidOperationException();
 		}
@@ -833,7 +860,7 @@ namespace PostreSQLDataContext
 		#region GhstorePicksplit
 
 		[Sql.Function(Name="public.ghstore_picksplit", ServerSideOnly=true)]
-		public static object? GhstorePicksplit(object? par49, object? par50)
+		public static object? GhstorePicksplit(object? par56, object? par57)
 		{
 			throw new InvalidOperationException();
 		}
@@ -843,7 +870,7 @@ namespace PostreSQLDataContext
 		#region GhstoreSame
 
 		[Sql.Function(Name="public.ghstore_same", ServerSideOnly=true)]
-		public static object? GhstoreSame(object? par52, object? par53, object? par54)
+		public static object? GhstoreSame(object? par59, object? par60, object? par61)
 		{
 			throw new InvalidOperationException();
 		}
@@ -853,7 +880,7 @@ namespace PostreSQLDataContext
 		#region GhstoreUnion
 
 		[Sql.Function(Name="public.ghstore_union", ServerSideOnly=true)]
-		public static object? GhstoreUnion(object? par56, object? par57)
+		public static object? GhstoreUnion(object? par63, object? par64)
 		{
 			throw new InvalidOperationException();
 		}
@@ -863,7 +890,7 @@ namespace PostreSQLDataContext
 		#region GinConsistentHstore
 
 		[Sql.Function(Name="public.gin_consistent_hstore", ServerSideOnly=true)]
-		public static bool? GinConsistentHstore(object? par59, short? par60, object? par61, int? par62, object? par63, object? par64)
+		public static bool? GinConsistentHstore(object? par66, short? par67, object? par68, int? par69, object? par70, object? par71)
 		{
 			throw new InvalidOperationException();
 		}
@@ -873,7 +900,7 @@ namespace PostreSQLDataContext
 		#region GinExtractHstore
 
 		[Sql.Function(Name="public.gin_extract_hstore", ServerSideOnly=true)]
-		public static object? GinExtractHstore(object? par66, object? par67)
+		public static object? GinExtractHstore(object? par73, object? par74)
 		{
 			throw new InvalidOperationException();
 		}
@@ -883,7 +910,7 @@ namespace PostreSQLDataContext
 		#region GinExtractHstoreQuery
 
 		[Sql.Function(Name="public.gin_extract_hstore_query", ServerSideOnly=true)]
-		public static object? GinExtractHstoreQuery(object? par69, object? par70, short? par71, object? par72, object? par73)
+		public static object? GinExtractHstoreQuery(object? par76, object? par77, short? par78, object? par79, object? par80)
 		{
 			throw new InvalidOperationException();
 		}
@@ -893,7 +920,7 @@ namespace PostreSQLDataContext
 		#region HsConcat
 
 		[Sql.Function(Name="public.hs_concat", ServerSideOnly=true)]
-		public static object? HsConcat(object? par75, object? par76)
+		public static object? HsConcat(object? par82, object? par83)
 		{
 			throw new InvalidOperationException();
 		}
@@ -903,7 +930,7 @@ namespace PostreSQLDataContext
 		#region HsContained
 
 		[Sql.Function(Name="public.hs_contained", ServerSideOnly=true)]
-		public static bool? HsContained(object? par78, object? par79)
+		public static bool? HsContained(object? par85, object? par86)
 		{
 			throw new InvalidOperationException();
 		}
@@ -913,7 +940,7 @@ namespace PostreSQLDataContext
 		#region HsContains
 
 		[Sql.Function(Name="public.hs_contains", ServerSideOnly=true)]
-		public static bool? HsContains(object? par81, object? par82)
+		public static bool? HsContains(object? par88, object? par89)
 		{
 			throw new InvalidOperationException();
 		}
@@ -923,7 +950,7 @@ namespace PostreSQLDataContext
 		#region Hstore
 
 		[Sql.Function(Name="public.hstore", ServerSideOnly=true)]
-		public static object? Hstore(object? par92)
+		public static object? Hstore(object? par99)
 		{
 			throw new InvalidOperationException();
 		}
@@ -933,7 +960,7 @@ namespace PostreSQLDataContext
 		#region HstoreCmp
 
 		[Sql.Function(Name="public.hstore_cmp", ServerSideOnly=true)]
-		public static int? HstoreCmp(object? par94, object? par95)
+		public static int? HstoreCmp(object? par101, object? par102)
 		{
 			throw new InvalidOperationException();
 		}
@@ -943,7 +970,7 @@ namespace PostreSQLDataContext
 		#region HstoreEq
 
 		[Sql.Function(Name="public.hstore_eq", ServerSideOnly=true)]
-		public static bool? HstoreEq(object? par97, object? par98)
+		public static bool? HstoreEq(object? par104, object? par105)
 		{
 			throw new InvalidOperationException();
 		}
@@ -953,7 +980,7 @@ namespace PostreSQLDataContext
 		#region HstoreGe
 
 		[Sql.Function(Name="public.hstore_ge", ServerSideOnly=true)]
-		public static bool? HstoreGe(object? par100, object? par101)
+		public static bool? HstoreGe(object? par107, object? par108)
 		{
 			throw new InvalidOperationException();
 		}
@@ -963,7 +990,7 @@ namespace PostreSQLDataContext
 		#region HstoreGt
 
 		[Sql.Function(Name="public.hstore_gt", ServerSideOnly=true)]
-		public static bool? HstoreGt(object? par103, object? par104)
+		public static bool? HstoreGt(object? par110, object? par111)
 		{
 			throw new InvalidOperationException();
 		}
@@ -973,7 +1000,7 @@ namespace PostreSQLDataContext
 		#region HstoreHash
 
 		[Sql.Function(Name="public.hstore_hash", ServerSideOnly=true)]
-		public static int? HstoreHash(object? par106)
+		public static int? HstoreHash(object? par113)
 		{
 			throw new InvalidOperationException();
 		}
@@ -983,7 +1010,7 @@ namespace PostreSQLDataContext
 		#region HstoreIn
 
 		[Sql.Function(Name="public.hstore_in", ServerSideOnly=true)]
-		public static object? HstoreIn(object? par108)
+		public static object? HstoreIn(object? par115)
 		{
 			throw new InvalidOperationException();
 		}
@@ -993,7 +1020,7 @@ namespace PostreSQLDataContext
 		#region HstoreLe
 
 		[Sql.Function(Name="public.hstore_le", ServerSideOnly=true)]
-		public static bool? HstoreLe(object? par110, object? par111)
+		public static bool? HstoreLe(object? par117, object? par118)
 		{
 			throw new InvalidOperationException();
 		}
@@ -1003,7 +1030,7 @@ namespace PostreSQLDataContext
 		#region HstoreLt
 
 		[Sql.Function(Name="public.hstore_lt", ServerSideOnly=true)]
-		public static bool? HstoreLt(object? par113, object? par114)
+		public static bool? HstoreLt(object? par120, object? par121)
 		{
 			throw new InvalidOperationException();
 		}
@@ -1013,7 +1040,7 @@ namespace PostreSQLDataContext
 		#region HstoreNe
 
 		[Sql.Function(Name="public.hstore_ne", ServerSideOnly=true)]
-		public static bool? HstoreNe(object? par116, object? par117)
+		public static bool? HstoreNe(object? par123, object? par124)
 		{
 			throw new InvalidOperationException();
 		}
@@ -1023,7 +1050,7 @@ namespace PostreSQLDataContext
 		#region HstoreOut
 
 		[Sql.Function(Name="public.hstore_out", ServerSideOnly=true)]
-		public static object? HstoreOut(object? par119)
+		public static object? HstoreOut(object? par126)
 		{
 			throw new InvalidOperationException();
 		}
@@ -1033,7 +1060,7 @@ namespace PostreSQLDataContext
 		#region HstoreRecv
 
 		[Sql.Function(Name="public.hstore_recv", ServerSideOnly=true)]
-		public static object? HstoreRecv(object? par121)
+		public static object? HstoreRecv(object? par128)
 		{
 			throw new InvalidOperationException();
 		}
@@ -1043,7 +1070,7 @@ namespace PostreSQLDataContext
 		#region HstoreSend
 
 		[Sql.Function(Name="public.hstore_send", ServerSideOnly=true)]
-		public static byte[]? HstoreSend(object? par123)
+		public static byte[]? HstoreSend(object? par130)
 		{
 			throw new InvalidOperationException();
 		}
@@ -1053,7 +1080,7 @@ namespace PostreSQLDataContext
 		#region HstoreToArray
 
 		[Sql.Function(Name="public.hstore_to_array", ServerSideOnly=true)]
-		public static object? HstoreToArray(object? par125)
+		public static object? HstoreToArray(object? par132)
 		{
 			throw new InvalidOperationException();
 		}
@@ -1063,7 +1090,7 @@ namespace PostreSQLDataContext
 		#region HstoreToJson
 
 		[Sql.Function(Name="public.hstore_to_json", ServerSideOnly=true)]
-		public static string? HstoreToJson(object? par127)
+		public static string? HstoreToJson(object? par134)
 		{
 			throw new InvalidOperationException();
 		}
@@ -1073,7 +1100,7 @@ namespace PostreSQLDataContext
 		#region HstoreToJsonLoose
 
 		[Sql.Function(Name="public.hstore_to_json_loose", ServerSideOnly=true)]
-		public static string? HstoreToJsonLoose(object? par129)
+		public static string? HstoreToJsonLoose(object? par136)
 		{
 			throw new InvalidOperationException();
 		}
@@ -1083,7 +1110,7 @@ namespace PostreSQLDataContext
 		#region HstoreToJsonb
 
 		[Sql.Function(Name="public.hstore_to_jsonb", ServerSideOnly=true)]
-		public static string? HstoreToJsonb(object? par131)
+		public static string? HstoreToJsonb(object? par138)
 		{
 			throw new InvalidOperationException();
 		}
@@ -1093,7 +1120,7 @@ namespace PostreSQLDataContext
 		#region HstoreToJsonbLoose
 
 		[Sql.Function(Name="public.hstore_to_jsonb_loose", ServerSideOnly=true)]
-		public static string? HstoreToJsonbLoose(object? par133)
+		public static string? HstoreToJsonbLoose(object? par140)
 		{
 			throw new InvalidOperationException();
 		}
@@ -1103,7 +1130,7 @@ namespace PostreSQLDataContext
 		#region HstoreToMatrix
 
 		[Sql.Function(Name="public.hstore_to_matrix", ServerSideOnly=true)]
-		public static object? HstoreToMatrix(object? par135)
+		public static object? HstoreToMatrix(object? par142)
 		{
 			throw new InvalidOperationException();
 		}
@@ -1113,7 +1140,7 @@ namespace PostreSQLDataContext
 		#region HstoreVersionDiag
 
 		[Sql.Function(Name="public.hstore_version_diag", ServerSideOnly=true)]
-		public static int? HstoreVersionDiag(object? par137)
+		public static int? HstoreVersionDiag(object? par144)
 		{
 			throw new InvalidOperationException();
 		}
@@ -1123,7 +1150,7 @@ namespace PostreSQLDataContext
 		#region Isdefined
 
 		[Sql.Function(Name="public.isdefined", ServerSideOnly=true)]
-		public static bool? Isdefined(object? par139, string? par140)
+		public static bool? Isdefined(object? par146, string? par147)
 		{
 			throw new InvalidOperationException();
 		}
@@ -1133,7 +1160,7 @@ namespace PostreSQLDataContext
 		#region Isexists
 
 		[Sql.Function(Name="public.isexists", ServerSideOnly=true)]
-		public static bool? Isexists(object? par142, string? par143)
+		public static bool? Isexists(object? par149, string? par150)
 		{
 			throw new InvalidOperationException();
 		}
@@ -1173,7 +1200,7 @@ namespace PostreSQLDataContext
 		#region PopulateRecord
 
 		[Sql.Function(Name="public.populate_record", ServerSideOnly=true)]
-		public static object? PopulateRecord(object? par148, object? par149)
+		public static object? PopulateRecord(object? par155, object? par156)
 		{
 			throw new InvalidOperationException();
 		}
@@ -1183,7 +1210,7 @@ namespace PostreSQLDataContext
 		#region Reverse
 
 		[Sql.Function(Name="public.reverse", ServerSideOnly=true)]
-		public static string? Reverse(string? par151)
+		public static string? Reverse(string? par158)
 		{
 			throw new InvalidOperationException();
 		}
@@ -1193,7 +1220,7 @@ namespace PostreSQLDataContext
 		#region Slice
 
 		[Sql.Function(Name="public.slice", ServerSideOnly=true)]
-		public static object? Slice(object? par154, object? par155)
+		public static object? Slice(object? par161, object? par162)
 		{
 			throw new InvalidOperationException();
 		}
@@ -1203,7 +1230,7 @@ namespace PostreSQLDataContext
 		#region SliceArray
 
 		[Sql.Function(Name="public.slice_array", ServerSideOnly=true)]
-		public static object? SliceArray(object? par157, object? par158)
+		public static object? SliceArray(object? par164, object? par165)
 		{
 			throw new InvalidOperationException();
 		}
@@ -1213,7 +1240,7 @@ namespace PostreSQLDataContext
 		#region Tconvert
 
 		[Sql.Function(Name="public.tconvert", ServerSideOnly=true)]
-		public static object? Tconvert(string? par161, string? par162)
+		public static object? Tconvert(string? par168, string? par169)
 		{
 			throw new InvalidOperationException();
 		}
@@ -1223,7 +1250,7 @@ namespace PostreSQLDataContext
 		#region TestAvg
 
 		[Sql.Function(Name="public.test_avg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par164)
+		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par171)
 		{
 			throw new InvalidOperationException();
 		}
