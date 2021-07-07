@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Linq;
@@ -130,6 +131,7 @@ namespace Tests.Linq
 			var resultFiltered1 = query.ToArray();
 
 			db.IsSoftDeleteFilterEnabled = false;
+			query                        = Internals.CreateExpressionQueryInstance<T>(db, query.Expression);
 			var resultNotFiltered1 = query.ToArray();
 
 			Assert.That(resultFiltered1.Length, Is.LessThan(resultNotFiltered1.Length));
@@ -137,9 +139,11 @@ namespace Tests.Linq
 			var currentMissCount = Query<T>.CacheMissCount;
 
 			db.IsSoftDeleteFilterEnabled = true;
+			query                        = Internals.CreateExpressionQueryInstance<T>(db, query.Expression);
 			var resultFiltered2 = query.ToArray();
 
 			db.IsSoftDeleteFilterEnabled = false;
+			query                        = Internals.CreateExpressionQueryInstance<T>(db, query.Expression);
 			var resultNotFiltered2 = query.ToArray();
 
 			Assert.That(resultFiltered2.Length, Is.LessThan(resultNotFiltered2.Length));
@@ -149,6 +153,34 @@ namespace Tests.Linq
 
 			Assert.That(currentMissCount, Is.EqualTo(Query<T>.CacheMissCount), () => "Caching is wrong.");
 
+		}
+
+		[Test]
+		public void EntityFilterTestsCache([IncludeDataSources(false, TestProvName.AllSQLite)] string context, [Values] bool filtered, [Values(1, 2)] int iteration)
+		{
+			var testData = GenerateTestData();
+
+			var builder = new MappingSchema().GetFluentMappingBuilder();
+
+			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted));
+
+			var ms = builder.MappingSchema;
+
+			using (var db = new MyDataContext(context, ms))
+			using (db.CreateLocalTable(testData.Item1))
+			{
+				var query = from m in db.GetTable<MasterClass>()
+					select m;
+
+				db.IsSoftDeleteFilterEnabled = filtered;
+
+				var result = query.ToList();
+
+				if (filtered)
+					result.Count.Should().BeLessThan(testData.Item1.Length);
+				else
+					result.Count.Should().Be(testData.Item1.Length);
+			}
 		}
 
 		[Test]
