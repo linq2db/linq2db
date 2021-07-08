@@ -55,6 +55,19 @@ namespace Tests.Linq
 			[Column] public int? MasterId { get; set; }
 		}
 
+
+		static MappingSchema _filterMappingSchema;
+
+		static QueryFilterTests()
+		{
+			var builder = new MappingSchema().GetFluentMappingBuilder();
+
+			builder.Entity<MasterClass>().HasQueryFilter((q, dc) => q.Where(e => !((DcParams)((MyDataContext)dc).Params).IsSoftDeleteFilterEnabled || !e.IsDeleted));
+
+			_filterMappingSchema = builder.MappingSchema;
+		}
+
+
 		static Tuple<MasterClass[], InfoClass[], DetailClass[]> GenerateTestData()
 		{
 			var masterRecords = Enumerable.Range(1, 10)
@@ -98,6 +111,13 @@ namespace Tests.Linq
 				
 			}
 
+			public bool IsSoftDeleteFilterEnabled { get; set; } = true;
+
+			public object Params { get; } = new DcParams();
+		}
+
+		class DcParams
+		{
 			public bool IsSoftDeleteFilterEnabled { get; set; } = true;
 		}
 
@@ -156,23 +176,20 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void EntityFilterTestsCache([IncludeDataSources(false, TestProvName.AllSQLite)] string context, [Values] bool filtered, [Values(1, 2)] int iteration)
+		public void EntityFilterTestsCache([IncludeDataSources(false, TestProvName.AllSQLite)] string context, [Values(1, 2, 3)] int iteration, [Values] bool filtered)
 		{
 			var testData = GenerateTestData();
 
-			var builder = new MappingSchema().GetFluentMappingBuilder();
-
-			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted));
-
-			var ms = builder.MappingSchema;
-
-			using (var db = new MyDataContext(context, ms))
+			using (var db = new MyDataContext(context, _filterMappingSchema))
 			using (db.CreateLocalTable(testData.Item1))
 			{
+
+				var currentMissCount = Query<MasterClass>.CacheMissCount;
+
 				var query = from m in db.GetTable<MasterClass>()
 					select m;
 
-				db.IsSoftDeleteFilterEnabled = filtered;
+				((DcParams)db.Params).IsSoftDeleteFilterEnabled = filtered;
 
 				var result = query.ToList();
 
@@ -180,11 +197,16 @@ namespace Tests.Linq
 					result.Count.Should().BeLessThan(testData.Item1.Length);
 				else
 					result.Count.Should().Be(testData.Item1.Length);
+
+				if (iteration > 1)
+				{
+					Query<MasterClass>.CacheMissCount.Should().Be(currentMissCount);
+				}
 			}
 		}
 
 		[Test]
-		public void AssociationToFilteredEntity([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public void AssociationToFilteredEntity([IncludeDataSources(false, ProviderName.SQLiteMS)] string context)
 		{
 			var testData = GenerateTestData();
 
