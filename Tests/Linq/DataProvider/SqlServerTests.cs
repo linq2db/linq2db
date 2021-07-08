@@ -1982,33 +1982,45 @@ AS
 			{
 				var person = db.Person.First();
 
-				db.Execute(@"
+				void DropTableFunction()
+				{
+					db.Execute(@"
 IF EXISTS (SELECT * FROM sys.objects WHERE type = 'IF' AND name = 'PersonTableFunction')
 	BEGIN DROP FUNCTION PersonTableFunction
 END
 ");
+				}
 
-				db.Execute(@"
+				DropTableFunction();
+
+				try
+				{
+					db.Execute(@"
 CREATE FUNCTION dbo.PersonTableFunction( @ID int, @FirstName varchar(50))
 RETURNS TABLE
 AS
 	RETURN ( SELECT * FROM dbo.Person WHERE PersonID = @ID AND FirstName = @FirstName )
 ");
-				PersonTableFunction(db, null, person.ID, person.FirstName).First().Should().Be(person);
-				PersonTableFunctionTable(db, null, person.ID, person.FirstName).First().Should().Be(person);
+					PersonTableFunction(db, null, person.ID, person.FirstName).First().Should().Be(person);
+					PersonTableFunctionTable(db, null, person.ID, person.FirstName).First().Should().Be(person);
 
-				PersonTableFunction(db, null, person.ID, person.FirstName).First().Should().Be(person);
-				PersonTableFunctionTable(db, null, person.ID, person.FirstName).First().Should().Be(person);
+					PersonTableFunction(db, null, person.ID, person.FirstName).First().Should().Be(person);
+					PersonTableFunctionTable(db, null, person.ID, person.FirstName).First().Should().Be(person);
 
-				var query =
-					from p in db.Person
-					from tf in PersonTableFunction(db, null, person.ID, person.FirstName).InnerJoin(tf => tf.ID           == p.ID)
-					from tft in PersonTableFunctionTable(db, null, person.ID, person.FirstName).InnerJoin(tft => tft.ID   == p.ID)
-					from te in PersonTableExpression(db, null, person.ID, person.FirstName).InnerJoin(te => te.ID         == p.ID)
-					from tet in PersonTableExpressionTable(db, null, person.ID, person.FirstName).InnerJoin(tet => tet.ID == p.ID)
-					select p;
+					var query =
+						from p in db.Person
+						from tf in PersonTableFunction(db, null, person.ID, person.FirstName).InnerJoin(tf => tf.ID           == p.ID)
+						from tft in PersonTableFunctionTable(db, null, person.ID, person.FirstName).InnerJoin(tft => tft.ID   == p.ID)
+						from te in PersonTableExpression(db, null, person.ID, person.FirstName).InnerJoin(te => te.ID         == p.ID)
+						from tet in PersonTableExpressionTable(db, null, person.ID, person.FirstName).InnerJoin(tet => tet.ID == p.ID)
+						select p;
 
-				query.First().Should().Be(person);;
+					query.First().Should().Be(person);;
+				}
+				finally
+				{
+					DropTableFunction();
+				}
 			}
 		}
 	}
