@@ -330,6 +330,7 @@ namespace LinqToDB
 				var parms = new List<ISqlExpression?>();
 
 				var foundPosition = false;
+
 				_ = ResolveExpressionValues(expressionStr!,
 					(v, d) =>
 					{

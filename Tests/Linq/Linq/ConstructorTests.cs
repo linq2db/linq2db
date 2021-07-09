@@ -1,0 +1,146 @@
+﻿using System;
+using System.Linq;
+using FluentAssertions;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
+
+namespace Tests.Linq
+{
+	[TestFixture]
+	public class ConstructorTests : TestBase
+	{
+		[Table("ConstructorTestTable")]
+		public abstract class AbstractEntity
+		{
+			[Column(IsPrimaryKey = true)]
+			public int Id { get; set; }
+
+			[Column]
+			public string? Value { get; set; }
+		}
+
+		public class WithPublicConstructor : AbstractEntity
+		{
+			private WithPublicConstructor()
+			{
+			}
+
+			public WithPublicConstructor(int some)
+			{
+			}
+		}
+
+		public class WithPrivateConstructor : AbstractEntity
+		{
+			private WithPrivateConstructor()
+			{
+			}
+
+			public WithPrivateConstructor(int some)
+			{
+			}
+		}
+
+		public class WithProtectedConstructor : AbstractEntity
+		{
+			protected WithProtectedConstructor()
+			{
+			}
+
+			public WithProtectedConstructor(int some)
+			{
+			}
+		}
+
+		public class WithAmbiguousConstructor : AbstractEntity
+		{
+			public WithAmbiguousConstructor(int id)
+			{
+				Id = id;
+			}
+
+			public WithAmbiguousConstructor(string value)
+			{
+				Value = value;
+			}
+		}
+
+		public class WithManyConstructors : AbstractEntity
+		{
+			public WithManyConstructors()
+			{
+
+			}
+
+			public WithManyConstructors(int id)
+			{
+				Id = id;
+			}
+
+			public WithManyConstructors(string value)
+			{
+				Value = value;
+			}
+		}
+
+		[Test]
+		public void TestPublicConstructor([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(new []{ new WithPublicConstructor(0) {Id = 1, Value = "Some"}}))
+			{
+				var obj = table.First();
+				obj.Id.Should().Be(1);
+				obj.Value.Should().Be("Some");
+			}
+		}
+
+		[Test]
+		public void TestPrivateConstructor([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(new []{ new WithPrivateConstructor(0) {Id = 1, Value = "Some"}}))
+			{
+				var obj = table.First();
+				obj.Id.Should().Be(1);
+				obj.Value.Should().Be("Some");
+			}
+		}
+
+		[Test]
+		public void TestProtectedConstructor([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(new []{ new WithProtectedConstructor(0) {Id = 1, Value = "Some"}}))
+			{
+				var obj = table.First();
+				obj.Id.Should().Be(1);
+				obj.Value.Should().Be("Some");
+			}
+		}
+
+		[Test]
+		public void TestAmbiguousConstructor([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(new []{ new WithAmbiguousConstructor(0) {Id = 1, Value = "Some"}}))
+			{
+				FluentActions.Invoking(() => table.First()).Should().Throw<InvalidOperationException>();
+			}
+		}
+
+		[Test]
+		public void TestManyConstructors([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(new []{ new WithManyConstructors(0) {Id = 1, Value = "Some"}}))
+			{
+				var obj = table.First();
+				obj.Id.Should().Be(1);
+				obj.Value.Should().Be("Some");
+			}
+		}
+
+	}
+}
