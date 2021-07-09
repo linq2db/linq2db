@@ -125,8 +125,8 @@ namespace LinqToDB.Linq.Builder
 				var mc   = (MethodCallExpression)Expression;
 				var attr = builder.GetTableFunctionAttribute(mc.Method)!;
 
-				if (!typeof(ITable<>).IsSameOrParentOf(mc.Method.ReturnType))
-					throw new LinqException("Table function has to return Table<T>.");
+				if (!typeof(IQueryable<>).IsSameOrParentOf(mc.Method.ReturnType))
+					throw new LinqException("Table function has to return IQueryable<T>.");
 
 				OriginalType     = mc.Method.ReturnType.GetGenericArguments()[0];
 				ObjectType       = GetObjectType();
@@ -268,7 +268,7 @@ namespace LinqToDB.Linq.Builder
 			
 			bool HasDefaultConstructor(Type type)
 			{
-				var constructors = type.GetConstructors();
+				var constructors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
 				foreach (var constructor in constructors)
 				{
