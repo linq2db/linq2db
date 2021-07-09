@@ -268,7 +268,7 @@ namespace LinqToDB.Linq.Builder
 			
 			bool HasDefaultConstructor(Type type)
 			{
-				var constructors = type.GetConstructors();
+				var constructors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
 				foreach (var constructor in constructors)
 				{
