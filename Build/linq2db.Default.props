@@ -33,7 +33,7 @@
 
 		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
 	</PropertyGroup>
-	
+
 	<PropertyGroup>
 		<AnalysisLevel>preview</AnalysisLevel>
 		<EnableNETAnalyzers>true</EnableNETAnalyzers>

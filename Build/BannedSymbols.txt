@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 T:System.Data.IColumnMapping;Use DataColumnMapping class instead of ADO.NET interfaces
 T:System.Data.IColumnMappingCollection;Use ColumnMappingCollection class instead of ADO.NET interfaces
 T:System.Data.IDataAdapter;Use DataAdapter class instead of ADO.NET interfaces
@@ -11,3 +12,6 @@ T:System.Data.IDbDataAdapter;Use DbDataAdapter class instead of ADO.NET interfac
 T:System.Data.IDbDataParameter;Use DbParameter class instead of ADO.NET interfaces
 T:System.Data.IDbTransaction;Use DbTransaction class instead of ADO.NET interfaces
 ;T:System.Linq.Expressions.LambdaExpression;just test comments
+=======
+T:System.ThreadStaticAttribute;don't do it
+>>>>>>> master
