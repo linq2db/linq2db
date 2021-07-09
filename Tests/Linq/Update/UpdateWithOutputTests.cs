@@ -29,7 +29,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table]
-		class TableWithData
+		record TableWithData
 		{
 			[Column]              public int     Id       { get; set; }
 			[Column]              public int     Value    { get; set; }
@@ -37,7 +37,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table(Schema = "TestSchema")]
-		class TableWithDataAndSchema
+		record TableWithDataAndSchema
 		{
 			[Column]              public int     Id       { get; set; }
 			[Column]              public int     Value    { get; set; }
@@ -45,7 +45,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table]
-		class DestinationTable
+		record DestinationTable
 		{
 			[Column]              public int     Id       { get; set; }
 			[Column]              public int     Value    { get; set; }
@@ -1027,6 +1027,90 @@ namespace Tests.xUpdate
 			}
 		}
 
+		#endregion
+
+		#region Issues
+		[Test]
+		public void Issue3044UpdateOutputWithTake([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var output = source
+					.Where(i => i.Id >= 7)
+					.OrderBy(i => i.Id)
+					.Take(1)
+					.UpdateWithOutput(x => new TableWithData { Id = 20, });
+
+				AreEqual(
+					new[]
+					{
+						new UpdateOutput<TableWithData>
+						{
+							Deleted = sourceData[6],
+							Inserted = sourceData[6] with { Id = 7 },
+						}
+					},
+					output,
+					new UpdateOutputComparer<TableWithData>());
+			}
+		}
+
+		[Test]
+		public void Issue3044UpdateOutputWithTakeSubquery([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var output = source
+					.Where(i => i.Id >= 7)
+					.OrderBy(i => i.Id)
+					.Take(1)
+					.UpdateWithOutput(x => new TableWithData { Id = 20, });
+
+				AreEqual(
+					new[]
+					{
+						new UpdateOutput<TableWithData>
+						{
+							Deleted = sourceData[6],
+							Inserted = sourceData[6] with { Id = 7 },
+						}
+					},
+					output,
+					new UpdateOutputComparer<TableWithData>());
+			}
+		}
+
+		[Test]
+		public void Issue3044UpdateOutputWithTakeCte([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var output = source
+					.Where(i => i.Id >= 7)
+					.OrderBy(i => i.Id)
+					.Take(1)
+					.AsCte()
+					.UpdateWithOutput(x => new TableWithData { Id = 20, });
+
+				AreEqual(
+					new[]
+					{
+						new UpdateOutput<TableWithData>
+						{
+							Deleted = sourceData[6],
+							Inserted = sourceData[6] with { Id = 7 },
+						}
+					},
+					output,
+					new UpdateOutputComparer<TableWithData>());
+			}
+		}
 		#endregion
 	}
 }
