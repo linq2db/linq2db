@@ -16,6 +16,7 @@ namespace LinqToDB.SqlProvider
 	using Mapping;
 	using DataProvider;
 	using Common.Internal;
+	using static LinqToDB.SqlQuery.SqlPredicate;
 
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{
@@ -1192,6 +1193,9 @@ namespace LinqToDB.SqlProvider
 						}
 					}
 
+					if (IsSqlRow(expr.Expr1))
+						return OptimizeRowExprExpr(expr, context);
+
 					switch (expr.Operator)
 					{
 						case SqlPredicate.Operator.Equal          :
@@ -1235,6 +1239,14 @@ namespace LinqToDB.SqlProvider
 					break;
 				}
 
+				case QueryElementType.InListPredicate:
+				{
+					var inList = (InList)predicate;
+					if (IsSqlRow(inList.Expr1))
+						return OptimizeRowInList(inList);
+					break;
+				}
+
 				case QueryElementType.IsDistinctPredicate:
 				{
 					var expr = (SqlPredicate.IsDistinct)predicate;
@@ -1263,6 +1275,128 @@ namespace LinqToDB.SqlProvider
 
 			return predicate;
 		}
+
+		#region SqlRow
+
+		[Flags]
+		protected enum RowFeature
+		{
+			IsNull      = 0x01,
+			Comparisons = 0x02,
+			In          = 0x04,
+			Between     = 0x08,
+			Overlaps    = 0x10,
+			Update      = 0x11,
+		}
+
+		protected virtual RowFeature SupportedRowFeatures => 0;
+
+		protected bool IsSqlRow(ISqlExpression expression)
+		{
+			return expression.SystemType?.IsGenericType == true 
+			    && expression.SystemType.GetGenericTypeDefinition() == typeof(Sql.SqlRow<,>);
+		}
+
+		protected virtual ISqlPredicate OptimizeRowExprExpr(ExprExpr predicate, EvaluationContext context)
+		{
+			var op      = predicate.Operator;
+			var values1 = GetSqlRowValues(predicate.Expr1) ?? throw new LinqException("Null SqlRow values are only allowed on the right-hand side.");			
+			var values2 = GetSqlRowValues(predicate.Expr2);
+
+			if (values2 == null)
+			{
+				if (op is Operator.Equal or Operator.NotEqual)
+				{
+					if ((SupportedRowFeatures & RowFeature.IsNull) == 0)
+						return RowIsNullFallback(values1, op == Operator.NotEqual);
+				}
+				else
+					throw new LinqException("Null SqlRow is only allowed in equality comparisons");
+			}
+			else if ((SupportedRowFeatures & RowFeature.Comparisons) == 0)
+				return RowComparisonFallback(op, values1, values2);
+
+			// Default ExprExpr translation is ok
+			// We always disable CompareNullsAsValues behavior when comparing SqlRow.
+			return predicate.WithNull == null
+				? predicate
+				: new ExprExpr(predicate.Expr1, predicate.Operator, predicate.Expr2, withNull: null);
+		}
+
+		protected virtual ISqlPredicate OptimizeRowInList(InList predicate)
+		{
+			if ((SupportedRowFeatures & RowFeature.In) == 0)
+			{			
+				var left = predicate.Expr1; 
+				var op = predicate.IsNot ? Operator.NotEqual : Operator.Equal;
+				var isOr = !predicate.IsNot;
+				var rewrite = new SqlSearchCondition();
+				foreach (var item in predicate.Values)
+					rewrite.Conditions.Add(new SqlCondition(false, new ExprExpr(left, op, item, withNull: null), isOr));
+				return rewrite;
+			}
+
+			// Default InList translation is ok
+			// We always disable CompareNullsAsValues behavior when comparing SqlRow.
+			return predicate.WithNull == null
+				? predicate
+				: new InList(predicate.Expr1, withNull: null, predicate.IsNot, predicate.Values);
+		}
+
+		protected ISqlPredicate RowIsNullFallback(ISqlExpression[] values1, bool isNot)
+		{
+			var rewrite = new SqlSearchCondition();
+			// (a, b) is null     => a is null     and b is null
+			// (a, b) is not null => a is not null and b is not null
+			for (int i = 0; i < values1.Length; ++i)
+				rewrite.Conditions.Add(new SqlCondition(false, new IsNull(values1[i], isNot)));
+			return rewrite;
+		}
+
+		protected ISqlPredicate RowComparisonFallback(Operator op, ISqlExpression[] values1, ISqlExpression[] values2)
+		{
+			var rewrite = new SqlSearchCondition();
+						
+			if (op is Operator.Equal or Operator.NotEqual)
+			{			
+				// (a1, a2) =  (b1, b2) => a1 =  b1 and a2 = b2
+				// (a1, a2) <> (b1, b2) => a1 <> b1 or  a2 <> b2
+				Console.WriteLine("Length1 = {0}, Length2 = {1}", values1.Length, values2.Length);
+				for (int i = 0; i < values1.Length; ++i)
+					rewrite.Conditions.Add(new SqlCondition(false, new ExprExpr(values1[i], op, values2[i], withNull: null), isOr: op == Operator.NotEqual ));
+				return rewrite;
+			}
+
+			if (op is Operator.Greater or Operator.GreaterOrEqual or Operator.Less or Operator.LessOrEqual)
+			{
+				// (a1, a2, a3) >  (b1, b2, b3) => a1 > b1 or (a1 = b1 and a2 > b2) or (a1 = b1 and a2 = b2 and a3 >  b3)
+				// (a1, a2, a3) >= (b1, b2, b3) => a1 > b1 or (a1 = b1 and a2 > b2) or (a1 = b1 and a2 = b2 and a3 >= b3)
+				// (a1, a2, a3) <  (b1, b2, b3) => a1 < b1 or (a1 = b1 and a2 < b2) or (a1 = b1 and a2 = b2 and a3 <  b3)
+				// (a1, a2, a3) <= (b1, b2, b3) => a1 < b1 or (a1 = b1 and a2 < b2) or (a1 = b1 and a2 = b2 and a3 <= b3)
+				var strictOp = op is Operator.Greater or Operator.GreaterOrEqual ? Operator.Greater : Operator.Less;
+				for (int i = 0; i < values1.Length; ++i)
+				{
+					for (int j = 0; j < i; j++)
+						rewrite.Conditions.Add(new SqlCondition(false, new ExprExpr(values1[j], Operator.Equal, values2[j], withNull: null), isOr: false));
+					rewrite.Conditions.Add(new SqlCondition(false, new ExprExpr(values1[i], i == values1.Length - 1 ? op : strictOp, values2[i], withNull: null), isOr: true));
+				}
+				return rewrite;
+			}
+
+			throw new LinqException("Unsupported SqlRow operator: " + op);
+		}
+
+		protected ISqlExpression[]? GetSqlRowValues(ISqlExpression expr)
+		{
+			if (expr is SqlValue { Value: null })
+				return null;
+			if (expr is not SqlExpression row)
+				throw new LinqException("Calls to Sql.Row() are the only accepted expression of type SqlRow.");
+			
+			return row.Parameters;
+		}
+
+		#endregion
 
 		public virtual IQueryElement OptimizeQueryElement<TContext>(ConvertVisitor<TContext> visitor, IQueryElement root,
 			IQueryElement element, EvaluationContext context)
