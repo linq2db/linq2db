@@ -1,0 +1,8 @@
+{
+	"provider": "Npgsql",
+	"connectionString": "Server=localhost;Port=5411;Database=testdb;User Id=postgres;Password=p@zzw0rd;Pooling=true;MinPoolSize=10;MaxPoolSize=100;",
+	"schemas": {
+		"include": false,
+		"list": []
+	}
+}

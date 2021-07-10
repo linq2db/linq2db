@@ -29,6 +29,7 @@ namespace TestAzureSQL
 		public ITable<AllType>                  AllTypes                 { get { return this.GetTable<AllType>(); } }
 		public ITable<AllTypes2>                AllTypes2                { get { return this.GetTable<AllTypes2>(); } }
 		public ITable<Child>                    Children                 { get { return this.GetTable<Child>(); } }
+		public ITable<CollatedTable>            CollatedTables           { get { return this.GetTable<CollatedTable>(); } }
 		public ITable<sys_DatabaseFirewallRule> DatabaseFirewallRules    { get { return this.GetTable<sys_DatabaseFirewallRule>(); } }
 		public ITable<DataType>                 DataTypes                { get { return this.GetTable<DataType>(); } }
 		public ITable<DecimalOverflow>          DecimalOverflows         { get { return this.GetTable<DecimalOverflow>(); } }
@@ -200,6 +201,14 @@ namespace TestAzureSQL
 		[Column(),      Nullable            ] public int? ParentID { get; set; } // int
 		[Column(),      Nullable            ] public int? ChildID  { get; set; } // int
 		[Column("_ID"), PrimaryKey, Identity] public int  Id       { get; set; } // int
+	}
+
+	[Table(Schema="dbo", Name="CollatedTable")]
+	public partial class CollatedTable
+	{
+		[Column, NotNull] public int    Id              { get; set; } // int
+		[Column, NotNull] public string CaseSensitive   { get; set; } = null!; // nvarchar(20)
+		[Column, NotNull] public string CaseInsensitive { get; set; } = null!; // nvarchar(20)
 	}
 
 	[Table(Schema="sys", Name="database_firewall_rules", IsView=true)]

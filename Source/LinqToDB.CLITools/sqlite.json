@@ -1,0 +1,8 @@
+{
+	"provider": "System.Data.SQLite",
+	"connectionString": "Data Source=c:\\1-jink\\CODEGEN_TMP\\TestData.sqlite",
+	"schemas": {
+		"include": false,
+		"list": []
+	}
+}

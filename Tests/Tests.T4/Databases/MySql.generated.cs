@@ -26,6 +26,7 @@ namespace MySqlDataContext
 		public ITable<Alltype>           Alltypes           { get { return this.GetTable<Alltype>(); } }
 		public ITable<Alltypesnoyear>    Alltypesnoyears    { get { return this.GetTable<Alltypesnoyear>(); } }
 		public ITable<Child>             Children           { get { return this.GetTable<Child>(); } }
+		public ITable<Collatedtable>     Collatedtables     { get { return this.GetTable<Collatedtable>(); } }
 		public ITable<Datatypetest>      Datatypetests      { get { return this.GetTable<Datatypetest>(); } }
 		public ITable<Doctor>            Doctors            { get { return this.GetTable<Doctor>(); } }
 		public ITable<Fulltextindextest> Fulltextindextests { get { return this.GetTable<Fulltextindextest>(); } }
@@ -60,6 +61,13 @@ namespace MySqlDataContext
 		}
 
 		public TestdbDB(LinqToDbConnectionOptions options)
+			: base(options)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
+		public TestdbDB(LinqToDbConnectionOptions<TestdbDB> options)
 			: base(options)
 		{
 			InitDataContext();
@@ -140,6 +148,14 @@ namespace MySqlDataContext
 	{
 		[Column, Nullable] public int? ParentID { get; set; } // int
 		[Column, Nullable] public int? ChildID  { get; set; } // int
+	}
+
+	[Table("collatedtable")]
+	public partial class Collatedtable
+	{
+		[Column, NotNull] public int    Id              { get; set; } // int
+		[Column, NotNull] public string CaseSensitive   { get; set; } = null!; // varchar(20)
+		[Column, NotNull] public string CaseInsensitive { get; set; } = null!; // varchar(20)
 	}
 
 	[Table("datatypetest")]

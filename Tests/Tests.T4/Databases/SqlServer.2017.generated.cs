@@ -1137,7 +1137,9 @@ namespace Sql2017
 	{
 		public ITable<AllType>                 AllTypes                 { get { return this.GetTable<AllType>(); } }
 		public ITable<AllTypes2>               AllTypes2                { get { return this.GetTable<AllTypes2>(); } }
+		public ITable<AssociatedTable>         AssociatedTables         { get { return this.GetTable<AssociatedTable>(); } }
 		public ITable<Child>                   Children                 { get { return this.GetTable<Child>(); } }
+		public ITable<CollatedTable>           CollatedTables           { get { return this.GetTable<CollatedTable>(); } }
 		public ITable<CreateIfNotExistsTable>  CreateIfNotExistsTables  { get { return this.GetTable<CreateIfNotExistsTable>(); } }
 		public ITable<DataType>                DataTypes                { get { return this.GetTable<DataType>(); } }
 		public ITable<DecimalOverflow>         DecimalOverflows         { get { return this.GetTable<DecimalOverflow>(); } }
@@ -1151,7 +1153,10 @@ namespace Sql2017
 		public ITable<InheritanceParent>       InheritanceParents       { get { return this.GetTable<InheritanceParent>(); } }
 		public ITable<Issue1115>               Issue1115                { get { return this.GetTable<Issue1115>(); } }
 		public ITable<Issue1144>               Issue1144                { get { return this.GetTable<Issue1144>(); } }
+		public ITable<Issue2981Entity>         Issue2981Entities        { get { return this.GetTable<Issue2981Entity>(); } }
+		public ITable<Issue2981OwnerEntity>    Issue2981OwnerEntities   { get { return this.GetTable<Issue2981OwnerEntity>(); } }
 		public ITable<LinqDataType>            LinqDataTypes            { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<MainTable>               MainTables               { get { return this.GetTable<MainTable>(); } }
 		public ITable<NameTest>                NameTests                { get { return this.GetTable<NameTest>(); } }
 		/// <summary>
 		/// This is Parent table
@@ -1315,6 +1320,12 @@ namespace Sql2017
 		[Column("geometryDataType",       DbType="geometry",          DataType=LinqToDB.DataType.Udt),                         Nullable            ] public SqlGeometry?    GeometryDataType       { get; set; } // geometry
 	}
 
+	[Table("AssociatedTable")]
+	public partial class AssociatedTable
+	{
+		[Column(DbType="int", DataType=LinqToDB.DataType.Int32), NotNull] public int Id { get; set; } // int
+	}
+
 	[Table("Child")]
 	public partial class Child
 	{
@@ -1324,6 +1335,14 @@ namespace Sql2017
 		/// </summary>
 		[Column(       DbType="int", DataType=LinqToDB.DataType.Int32), Nullable            ] public int? ChildID  { get; set; } // int
 		[Column("_ID", DbType="int", DataType=LinqToDB.DataType.Int32), PrimaryKey, Identity] public int  Id       { get; set; } // int
+	}
+
+	[Table("CollatedTable")]
+	public partial class CollatedTable
+	{
+		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               NotNull] public int    Id              { get; set; } // int
+		[Column(DbType="nvarchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20), NotNull] public string CaseSensitive   { get; set; } = null!; // nvarchar(20)
+		[Column(DbType="nvarchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20), NotNull] public string CaseInsensitive { get; set; } = null!; // nvarchar(20)
 	}
 
 	[Table("CreateIfNotExistsTable")]
@@ -1446,6 +1465,18 @@ namespace Sql2017
 		[Column("id", DbType="int", DataType=LinqToDB.DataType.Int32), PrimaryKey, NotNull] public int Id { get; set; } // int
 	}
 
+	[Table("Issue2981Entity")]
+	public partial class Issue2981Entity
+	{
+		[Column(DbType="int", DataType=LinqToDB.DataType.Int32), NotNull] public int OwnerId { get; set; } // int
+	}
+
+	[Table("Issue2981OwnerEntity")]
+	public partial class Issue2981OwnerEntity
+	{
+		[Column(DbType="int", DataType=LinqToDB.DataType.Int32), NotNull] public int Id { get; set; } // int
+	}
+
 	[Table("LinqDataTypes")]
 	public partial class LinqDataType
 	{
@@ -1461,6 +1492,13 @@ namespace Sql2017
 		[Column(       DbType="int",              DataType=LinqToDB.DataType.Int32),                            Nullable            ] public int?      IntValue       { get; set; } // int
 		[Column(       DbType="bigint",           DataType=LinqToDB.DataType.Int64),                            Nullable            ] public long?     BigIntValue    { get; set; } // bigint
 		[Column(       DbType="nvarchar(50)",     DataType=LinqToDB.DataType.NVarChar,  Length=50),             Nullable            ] public string?   StringValue    { get; set; } // nvarchar(50)
+	}
+
+	[Table("MainTable")]
+	public partial class MainTable
+	{
+		[Column(DbType="int",            DataType=LinqToDB.DataType.Int32),                 NotNull    ] public int     Id    { get; set; } // int
+		[Column(DbType="nvarchar(4000)", DataType=LinqToDB.DataType.NVarChar, Length=4000),    Nullable] public string? Field { get; set; } // nvarchar(4000)
 	}
 
 	[Table("Name.Test")]

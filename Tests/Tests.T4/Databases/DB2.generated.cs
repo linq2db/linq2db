@@ -25,6 +25,7 @@ namespace DB2DataContext
 	{
 		public ITable<DB2ADMIN_ALLTYPE>                ALLTYPES                { get { return this.GetTable<DB2ADMIN_ALLTYPE>(); } }
 		public ITable<DB2ADMIN_Child>                  Children                { get { return this.GetTable<DB2ADMIN_Child>(); } }
+		public ITable<DB2ADMIN_CollatedTable>          CollatedTables          { get { return this.GetTable<DB2ADMIN_CollatedTable>(); } }
 		public ITable<DB2ADMIN_CreateIfNotExistsTable> CreateIfNotExistsTables { get { return this.GetTable<DB2ADMIN_CreateIfNotExistsTable>(); } }
 		public ITable<DB2ADMIN_Doctor>                 Doctors                 { get { return this.GetTable<DB2ADMIN_Doctor>(); } }
 		public ITable<DB2ADMIN_GrandChild>             GrandChildren           { get { return this.GetTable<DB2ADMIN_GrandChild>(); } }
@@ -38,6 +39,7 @@ namespace DB2DataContext
 		public ITable<DB2ADMIN_Person>                 People                  { get { return this.GetTable<DB2ADMIN_Person>(); } }
 		public ITable<DB2ADMIN_PERSONVIEW>             Personviews             { get { return this.GetTable<DB2ADMIN_PERSONVIEW>(); } }
 		public ITable<DB2ADMIN_SLAVETABLE>             Slavetables             { get { return this.GetTable<DB2ADMIN_SLAVETABLE>(); } }
+		public ITable<DB2ADMIN_TagTestTable>           TagTestTables           { get { return this.GetTable<DB2ADMIN_TagTestTable>(); } }
 		public ITable<DB2ADMIN_Test>                   Tests                   { get { return this.GetTable<DB2ADMIN_Test>(); } }
 		public ITable<DB2ADMIN_TestIdentity>           TestIdentities          { get { return this.GetTable<DB2ADMIN_TestIdentity>(); } }
 		public ITable<DB2ADMIN_Testmerge1>             Testmerge1              { get { return this.GetTable<DB2ADMIN_Testmerge1>(); } }
@@ -59,6 +61,13 @@ namespace DB2DataContext
 		}
 
 		public TESTDATADB(LinqToDbConnectionOptions options)
+			: base(options)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
+		public TESTDATADB(LinqToDbConnectionOptions<TESTDATADB> options)
 			: base(options)
 		{
 			InitDataContext();
@@ -100,6 +109,14 @@ namespace DB2DataContext
 	{
 		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? ParentID { get; set; } // INTEGER
 		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? ChildID  { get; set; } // INTEGER
+	}
+
+	[Table(Schema="DB2ADMIN", Name="CollatedTable")]
+	public partial class DB2ADMIN_CollatedTable
+	{
+		[Column(DbType="INTEGER",     DataType=LinqToDB.DataType.Int32),              NotNull] public int    Id              { get; set; } // INTEGER
+		[Column(DbType="VARCHAR(80)", DataType=LinqToDB.DataType.VarChar, Length=80), NotNull] public string CaseSensitive   { get; set; } = null!; // VARCHAR(80)
+		[Column(DbType="VARCHAR(80)", DataType=LinqToDB.DataType.VarChar, Length=80), NotNull] public string CaseInsensitive { get; set; } = null!; // VARCHAR(80)
 	}
 
 	[Table(Schema="DB2ADMIN", Name="CreateIfNotExistsTable")]
@@ -267,6 +284,13 @@ namespace DB2DataContext
 		public DB2ADMIN_MASTERTABLE MASTERTABLE { get; set; } = null!;
 
 		#endregion
+	}
+
+	[Table(Schema="DB2ADMIN", Name="TagTestTable")]
+	public partial class DB2ADMIN_TagTestTable
+	{
+		[Column(DbType="INTEGER",       DataType=LinqToDB.DataType.Int32),                NotNull    ] public int     ID   { get; set; } // INTEGER
+		[Column(DbType="VARCHAR(1020)", DataType=LinqToDB.DataType.VarChar, Length=1020),    Nullable] public string? Name { get; set; } // VARCHAR(1020)
 	}
 
 	[Table(Schema="DB2ADMIN", Name="Test")]

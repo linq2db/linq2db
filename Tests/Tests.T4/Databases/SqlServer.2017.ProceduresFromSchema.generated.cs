@@ -8,6 +8,7 @@
 #pragma warning disable 1591
 #nullable enable
 
+using Microsoft.SqlServer.Types;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -18,1170 +19,63 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Configuration;
 using LinqToDB.Data;
+using LinqToDB.Expressions;
 using LinqToDB.Mapping;
-
-using Microsoft.SqlServer.Types;
 
 namespace Sql2017ProcSchema
 {
-	public partial class NorthwindDB : LinqToDB.Data.DataConnection
+	public partial class TestData2017DB : DataConnection
 	{
-		public ITable<AlphabeticalListOfProduct>  AlphabeticalListOfProducts   { get { return this.GetTable<AlphabeticalListOfProduct>(); } }
-		public ITable<Category>                   Categories                   { get { return this.GetTable<Category>(); } }
-		public ITable<CategorySalesFor1997>       CategorySalesFor1997         { get { return this.GetTable<CategorySalesFor1997>(); } }
-		public ITable<CurrentProductList>         CurrentProductLists          { get { return this.GetTable<CurrentProductList>(); } }
-		public ITable<Customer>                   Customers                    { get { return this.GetTable<Customer>(); } }
-		public ITable<CustomerAndSuppliersByCity> CustomerAndSuppliersByCities { get { return this.GetTable<CustomerAndSuppliersByCity>(); } }
-		public ITable<CustomerCustomerDemo>       CustomerCustomerDemoes       { get { return this.GetTable<CustomerCustomerDemo>(); } }
-		public ITable<CustomerDemographic>        CustomerDemographics         { get { return this.GetTable<CustomerDemographic>(); } }
-		public ITable<Employee>                   Employees                    { get { return this.GetTable<Employee>(); } }
-		public ITable<EmployeeTerritory>          EmployeeTerritories          { get { return this.GetTable<EmployeeTerritory>(); } }
-		public ITable<Invoice>                    Invoices                     { get { return this.GetTable<Invoice>(); } }
-		public ITable<Order>                      Orders                       { get { return this.GetTable<Order>(); } }
-		public ITable<OrderDetail>                OrderDetails                 { get { return this.GetTable<OrderDetail>(); } }
-		public ITable<OrderDetailsExtended>       OrderDetailsExtendeds        { get { return this.GetTable<OrderDetailsExtended>(); } }
-		public ITable<OrdersQry>                  OrdersQries                  { get { return this.GetTable<OrdersQry>(); } }
-		public ITable<OrderSubtotal>              OrderSubtotals               { get { return this.GetTable<OrderSubtotal>(); } }
-		public ITable<ProductsAboveAveragePrice>  ProductsAboveAveragePrices   { get { return this.GetTable<ProductsAboveAveragePrice>(); } }
-		public ITable<ProductSalesFor1997>        ProductSalesFor1997          { get { return this.GetTable<ProductSalesFor1997>(); } }
-		public ITable<ProductsByCategory>         ProductsByCategories         { get { return this.GetTable<ProductsByCategory>(); } }
-		public ITable<QuarterlyOrder>             QuarterlyOrders              { get { return this.GetTable<QuarterlyOrder>(); } }
-		public ITable<Region>                     Regions                      { get { return this.GetTable<Region>(); } }
-		public ITable<SalesByCategory>            SalesByCategories            { get { return this.GetTable<SalesByCategory>(); } }
-		public ITable<SalesTotalsByAmount>        SalesTotalsByAmounts         { get { return this.GetTable<SalesTotalsByAmount>(); } }
-		public ITable<Shipper>                    Shippers                     { get { return this.GetTable<Shipper>(); } }
-		public ITable<SummaryOfSalesByQuarter>    SummaryOfSalesByQuarters     { get { return this.GetTable<SummaryOfSalesByQuarter>(); } }
-		public ITable<SummaryOfSalesByYear>       SummaryOfSalesByYears        { get { return this.GetTable<SummaryOfSalesByYear>(); } }
-		public ITable<Supplier>                   Suppliers                    { get { return this.GetTable<Supplier>(); } }
-		public ITable<Territory>                  Territories                  { get { return this.GetTable<Territory>(); } }
-
-		public NorthwindDB(int i)
-		{
-			InitDataContext();
-			InitMappingSchema();
-		}
-
-		public NorthwindDB(string configuration)
-			: base(configuration)
-		{
-			InitDataContext();
-			InitMappingSchema();
-		}
-
-		partial void InitDataContext  ();
-		partial void InitMappingSchema();
-
-		#region Alias members
-
-		[Obsolete("Use Categories instead.")  ] public ITable<Category>    CATEG         { get { return Categories; } }
-		[Obsolete("Use OrderDetails instead.")] public ITable<OrderDetail> Order_Details { get { return OrderDetails; } }
-
-		#endregion
-
-		#region Table Functions
-
-		#region Issue449
-
-		#endregion
-
-		#endregion
-	}
-
-	[Table("Alphabetical list of products", IsView=true)]
-	public partial class AlphabeticalListOfProduct
-	{
-		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               NotNull    ] public int      ProductID       { get; set; } // int
-		[Column(DbType="nvarchar(40)", DataType=LinqToDB.DataType.NVarChar, Length=40), NotNull    ] public string   ProductName     { get; set; } = null!; // nvarchar(40)
-		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),                  Nullable] public int?     SupplierID      { get; set; } // int
-		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),                  Nullable] public int?     CategoryID      { get; set; } // int
-		[Column(DbType="nvarchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20),    Nullable] public string?  QuantityPerUnit { get; set; } // nvarchar(20)
-		[Column(DbType="money",        DataType=LinqToDB.DataType.Money),                  Nullable] public decimal? UnitPrice       { get; set; } // money
-		[Column(DbType="smallint",     DataType=LinqToDB.DataType.Int16),                  Nullable] public short?   UnitsInStock    { get; set; } // smallint
-		[Column(DbType="smallint",     DataType=LinqToDB.DataType.Int16),                  Nullable] public short?   UnitsOnOrder    { get; set; } // smallint
-		[Column(DbType="smallint",     DataType=LinqToDB.DataType.Int16),                  Nullable] public short?   ReorderLevel    { get; set; } // smallint
-		[Column(DbType="bit",          DataType=LinqToDB.DataType.Boolean),             NotNull    ] public bool     Discontinued    { get; set; } // bit
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15), NotNull    ] public string   CategoryName    { get; set; } = null!; // nvarchar(15)
-	}
-
-	[Table("Categories")]
-	public partial class Category
-	{
-		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               SequenceName("https://github.com/linq2db/linq2db/issues/1866"), PrimaryKey, Identity] public int     CategoryID   { get; set; } // int
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15), NotNull                                                                             ] public string  CategoryName { get; set; } = null!; // nvarchar(15)
-		[Column(DbType="ntext",        DataType=LinqToDB.DataType.NText),                  Nullable                                                                         ] public string? Description  { get; set; } // ntext
-		[Column(DbType="image",        DataType=LinqToDB.DataType.Image),                  Nullable                                                                         ] public byte[]? Picture      { get; set; } // image
-	}
-
-	[Obsolete("Use Category instead.")]
-	public partial class CATEG : Category
-	{
-	}
-
-	[Table("Category Sales for 1997", IsView=true)]
-	public partial class CategorySalesFor1997
-	{
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15), NotNull    ] public string   CategoryName  { get; set; } = null!; // nvarchar(15)
-		[Column(DbType="money",        DataType=LinqToDB.DataType.Money),                  Nullable] public decimal? CategorySales { get; set; } // money
-	}
-
-	[Table("Current Product List", IsView=true)]
-	public partial class CurrentProductList
-	{
-		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               Identity] public int    ProductID   { get; set; } // int
-		[Column(DbType="nvarchar(40)", DataType=LinqToDB.DataType.NVarChar, Length=40), NotNull ] public string ProductName { get; set; } = null!; // nvarchar(40)
-	}
-
-	[Table("Customers")]
-	public partial class Customer
-	{
-		[Column(DbType="nchar(5)",     DataType=LinqToDB.DataType.NChar,    Length=5),  PrimaryKey,  NotNull] public string  CustomerID   { get; set; } = null!; // nchar(5)
-		[Column(DbType="nvarchar(40)", DataType=LinqToDB.DataType.NVarChar, Length=40),              NotNull] public string  CompanyName  { get; set; } = null!; // nvarchar(40)
-		[Column(DbType="nvarchar(30)", DataType=LinqToDB.DataType.NVarChar, Length=30),    Nullable         ] public string? ContactName  { get; set; } // nvarchar(30)
-		[Column(DbType="nvarchar(30)", DataType=LinqToDB.DataType.NVarChar, Length=30),    Nullable         ] public string? ContactTitle { get; set; } // nvarchar(30)
-		[Column(DbType="nvarchar(60)", DataType=LinqToDB.DataType.NVarChar, Length=60),    Nullable         ] public string? Address      { get; set; } // nvarchar(60)
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15),    Nullable         ] public string? City         { get; set; } // nvarchar(15)
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15),    Nullable         ] public string? Region       { get; set; } // nvarchar(15)
-		[Column(DbType="nvarchar(10)", DataType=LinqToDB.DataType.NVarChar, Length=10),    Nullable         ] public string? PostalCode   { get; set; } // nvarchar(10)
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15),    Nullable         ] public string? Country      { get; set; } // nvarchar(15)
-		[Column(DbType="nvarchar(24)", DataType=LinqToDB.DataType.NVarChar, Length=24),    Nullable         ] public string? Phone        { get; set; } // nvarchar(24)
-		[Column(DbType="nvarchar(24)", DataType=LinqToDB.DataType.NVarChar, Length=24),    Nullable         ] public string? Fax          { get; set; } // nvarchar(24)
-
-		#region Associations
-
-		/// <summary>
-		/// FK_CustomerCustomerDemo_Customers_BackReference
-		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-		public List<CustomerCustomerDemo> CustomerCustomerDemoes { get; set; } = null!;
-
-		/// <summary>
-		/// FK_Orders_Customers_BackReference
-		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-		public List<Order> Orders { get; set; } = null!;
-
-		#endregion
-	}
-
-	[Table("Customer and Suppliers by City", IsView=true)]
-	public partial class CustomerAndSuppliersByCity
-	{
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15),    Nullable] public string? City         { get; set; } // nvarchar(15)
-		[Column(DbType="nvarchar(40)", DataType=LinqToDB.DataType.NVarChar, Length=40), NotNull    ] public string  CompanyName  { get; set; } = null!; // nvarchar(40)
-		[Column(DbType="nvarchar(30)", DataType=LinqToDB.DataType.NVarChar, Length=30),    Nullable] public string? ContactName  { get; set; } // nvarchar(30)
-		[Column(DbType="varchar(9)",   DataType=LinqToDB.DataType.VarChar,  Length=9),  NotNull    ] public string  Relationship { get; set; } = null!; // varchar(9)
-	}
-
-	[Table("CustomerCustomerDemo")]
-	public partial class CustomerCustomerDemo
-	{
-		[Column(DbType="nchar(5)",  DataType=LinqToDB.DataType.NChar, Length=5),  PrimaryKey(1), NotNull] public string CustomerID     { get; set; } = null!; // nchar(5)
-		[Column(DbType="nchar(10)", DataType=LinqToDB.DataType.NChar, Length=10), PrimaryKey(2), NotNull] public string CustomerTypeID { get; set; } = null!; // nchar(10)
-
-		#region Associations
-
-		/// <summary>
-		/// FK_CustomerCustomerDemo_Customers
-		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_CustomerCustomerDemo_Customers", BackReferenceName="CustomerCustomerDemoes")]
-		public Customer Customer { get; set; } = null!;
-
-		/// <summary>
-		/// FK_CustomerCustomerDemo
-		/// </summary>
-		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_CustomerCustomerDemo", BackReferenceName="CustomerCustomerDemoes")]
-		public CustomerDemographic CustomerType { get; set; } = null!;
-
-		#endregion
-	}
-
-	[Table("CustomerDemographics")]
-	public partial class CustomerDemographic
-	{
-		[Column(DbType="nchar(10)", DataType=LinqToDB.DataType.NChar, Length=10), PrimaryKey,  NotNull] public string  CustomerTypeID { get; set; } = null!; // nchar(10)
-		[Column(DbType="ntext",     DataType=LinqToDB.DataType.NText),               Nullable         ] public string? CustomerDesc   { get; set; } // ntext
-
-		#region Associations
-
-		/// <summary>
-		/// FK_CustomerCustomerDemo_BackReference
-		/// </summary>
-		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-		public List<CustomerCustomerDemo> CustomerCustomerDemoes { get; set; } = null!;
-
-		#endregion
-	}
-
-	[Table("Employees")]
-	public partial class Employee
-	{
-		[Column(DbType="int",           DataType=LinqToDB.DataType.Int32),                PrimaryKey,  Identity] public int       EmployeeID      { get; set; } // int
-		[Column(DbType="nvarchar(20)",  DataType=LinqToDB.DataType.NVarChar, Length=20),  NotNull              ] public string    LastName        { get; set; } = null!; // nvarchar(20)
-		[Column(DbType="nvarchar(10)",  DataType=LinqToDB.DataType.NVarChar, Length=10),  NotNull              ] public string    FirstName       { get; set; } = null!; // nvarchar(10)
-		[Column(DbType="nvarchar(30)",  DataType=LinqToDB.DataType.NVarChar, Length=30),     Nullable          ] public string?   Title           { get; set; } // nvarchar(30)
-		[Column(DbType="nvarchar(25)",  DataType=LinqToDB.DataType.NVarChar, Length=25),     Nullable          ] public string?   TitleOfCourtesy { get; set; } // nvarchar(25)
-		[Column(DbType="datetime",      DataType=LinqToDB.DataType.DateTime),                Nullable          ] public DateTime? BirthDate       { get; set; } // datetime
-		[Column(DbType="datetime",      DataType=LinqToDB.DataType.DateTime),                Nullable          ] public DateTime? HireDate        { get; set; } // datetime
-		[Column(DbType="nvarchar(60)",  DataType=LinqToDB.DataType.NVarChar, Length=60),     Nullable          ] public string?   Address         { get; set; } // nvarchar(60)
-		[Column(DbType="nvarchar(15)",  DataType=LinqToDB.DataType.NVarChar, Length=15),     Nullable          ] public string?   City            { get; set; } // nvarchar(15)
-		[Column(DbType="nvarchar(15)",  DataType=LinqToDB.DataType.NVarChar, Length=15),     Nullable          ] public string?   Region          { get; set; } // nvarchar(15)
-		[Column(DbType="nvarchar(10)",  DataType=LinqToDB.DataType.NVarChar, Length=10),     Nullable          ] public string?   PostalCode      { get; set; } // nvarchar(10)
-		[Column(DbType="nvarchar(15)",  DataType=LinqToDB.DataType.NVarChar, Length=15),     Nullable          ] public string?   Country         { get; set; } // nvarchar(15)
-		[Column(DbType="nvarchar(24)",  DataType=LinqToDB.DataType.NVarChar, Length=24),     Nullable          ] public string?   HomePhone       { get; set; } // nvarchar(24)
-		[Column(DbType="nvarchar(4)",   DataType=LinqToDB.DataType.NVarChar, Length=4),      Nullable          ] public string?   Extension       { get; set; } // nvarchar(4)
-		[Column(DbType="image",         DataType=LinqToDB.DataType.Image),                   Nullable          ] public byte[]?   Photo           { get; set; } // image
-		[Column(DbType="ntext",         DataType=LinqToDB.DataType.NText),                   Nullable          ] public string?   Notes           { get; set; } // ntext
-		[Column(DbType="int",           DataType=LinqToDB.DataType.Int32),                   Nullable          ] public int?      ReportsTo       { get; set; } // int
-		[Column(DbType="nvarchar(255)", DataType=LinqToDB.DataType.NVarChar, Length=255),    Nullable          ] public string?   PhotoPath       { get; set; } // nvarchar(255)
-
-		#region Associations
-
-		/// <summary>
-		/// FK_EmployeeTerritories_Employees_BackReference
-		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-		public List<EmployeeTerritory> EmployeeTerritories { get; set; } = null!;
-
-		/// <summary>
-		/// FK_Employees_Employees
-		/// </summary>
-		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Employees_Employees", BackReferenceName="FkEmployeesEmployeesBackReferences")]
-		public Employee? FkEmployeesEmployee { get; set; }
-
-		/// <summary>
-		/// FK_Employees_Employees_BackReference
-		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="ReportsTo", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-		public List<Employee> FkEmployeesEmployeesBackReferences { get; set; } = null!;
-
-		/// <summary>
-		/// FK_Orders_Employees_BackReference
-		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-		public List<Order> Orders { get; set; } = null!;
-
-		#endregion
-	}
-
-	[Table("EmployeeTerritories")]
-	public partial class EmployeeTerritory
-	{
-		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               PrimaryKey(1), NotNull] public int    EmployeeID  { get; set; } // int
-		[Column(DbType="nvarchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20), PrimaryKey(2), NotNull] public string TerritoryID { get; set; } = null!; // nvarchar(20)
-
-		#region Associations
-
-		/// <summary>
-		/// FK_EmployeeTerritories_Employees
-		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_EmployeeTerritories_Employees", BackReferenceName="EmployeeTerritories")]
-		public Employee Employee { get; set; } = null!;
-
-		/// <summary>
-		/// FK_EmployeeTerritories_Territories
-		/// </summary>
-		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_EmployeeTerritories_Territories", BackReferenceName="EmployeeTerritories")]
-		public Territory Territory { get; set; } = null!;
-
-		#endregion
-	}
-
-	[Table("Invoices", IsView=true)]
-	public partial class Invoice
-	{
-		[Column(DbType="nvarchar(40)", DataType=LinqToDB.DataType.NVarChar, Length=40),    Nullable] public string?   ShipName       { get; set; } // nvarchar(40)
-		[Column(DbType="nvarchar(60)", DataType=LinqToDB.DataType.NVarChar, Length=60),    Nullable] public string?   ShipAddress    { get; set; } // nvarchar(60)
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15),    Nullable] public string?   ShipCity       { get; set; } // nvarchar(15)
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15),    Nullable] public string?   ShipRegion     { get; set; } // nvarchar(15)
-		[Column(DbType="nvarchar(10)", DataType=LinqToDB.DataType.NVarChar, Length=10),    Nullable] public string?   ShipPostalCode { get; set; } // nvarchar(10)
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15),    Nullable] public string?   ShipCountry    { get; set; } // nvarchar(15)
-		[Column(DbType="nchar(5)",     DataType=LinqToDB.DataType.NChar,    Length=5),     Nullable] public string?   CustomerID     { get; set; } // nchar(5)
-		[Column(DbType="nvarchar(40)", DataType=LinqToDB.DataType.NVarChar, Length=40), NotNull    ] public string    CustomerName   { get; set; } = null!; // nvarchar(40)
-		[Column(DbType="nvarchar(60)", DataType=LinqToDB.DataType.NVarChar, Length=60),    Nullable] public string?   Address        { get; set; } // nvarchar(60)
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15),    Nullable] public string?   City           { get; set; } // nvarchar(15)
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15),    Nullable] public string?   Region         { get; set; } // nvarchar(15)
-		[Column(DbType="nvarchar(10)", DataType=LinqToDB.DataType.NVarChar, Length=10),    Nullable] public string?   PostalCode     { get; set; } // nvarchar(10)
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15),    Nullable] public string?   Country        { get; set; } // nvarchar(15)
-		[Column(DbType="nvarchar(31)", DataType=LinqToDB.DataType.NVarChar, Length=31), NotNull    ] public string    Salesperson    { get; set; } = null!; // nvarchar(31)
-		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               NotNull    ] public int       OrderID        { get; set; } // int
-		[Column(DbType="datetime",     DataType=LinqToDB.DataType.DateTime),               Nullable] public DateTime? OrderDate      { get; set; } // datetime
-		[Column(DbType="datetime",     DataType=LinqToDB.DataType.DateTime),               Nullable] public DateTime? RequiredDate   { get; set; } // datetime
-		[Column(DbType="datetime",     DataType=LinqToDB.DataType.DateTime),               Nullable] public DateTime? ShippedDate    { get; set; } // datetime
-		[Column(DbType="nvarchar(40)", DataType=LinqToDB.DataType.NVarChar, Length=40), NotNull    ] public string    ShipperName    { get; set; } = null!; // nvarchar(40)
-		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               NotNull    ] public int       ProductID      { get; set; } // int
-		[Column(DbType="nvarchar(40)", DataType=LinqToDB.DataType.NVarChar, Length=40), NotNull    ] public string    ProductName    { get; set; } = null!; // nvarchar(40)
-		[Column(DbType="money",        DataType=LinqToDB.DataType.Money),               NotNull    ] public decimal   UnitPrice      { get; set; } // money
-		[Column(DbType="smallint",     DataType=LinqToDB.DataType.Int16),               NotNull    ] public short     Quantity       { get; set; } // smallint
-		[Column(DbType="real",         DataType=LinqToDB.DataType.Single),              NotNull    ] public float     Discount       { get; set; } // real
-		[Column(DbType="money",        DataType=LinqToDB.DataType.Money),                  Nullable] public decimal?  ExtendedPrice  { get; set; } // money
-		[Column(DbType="money",        DataType=LinqToDB.DataType.Money),                  Nullable] public decimal?  Freight        { get; set; } // money
-	}
-
-	[Table("Orders")]
-	public partial class Order
-	{
-		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               PrimaryKey, Identity] public int       OrderID        { get; set; } // int
-		[Column(DbType="nchar(5)",     DataType=LinqToDB.DataType.NChar,    Length=5),  Nullable            ] public string?   CustomerID     { get; set; } // nchar(5)
-		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               Nullable            ] public int?      EmployeeID     { get; set; } // int
-		[Column(DbType="datetime",     DataType=LinqToDB.DataType.DateTime),            Nullable            ] public DateTime? OrderDate      { get; set; } // datetime
-		[Column(DbType="datetime",     DataType=LinqToDB.DataType.DateTime),            Nullable            ] public DateTime? RequiredDate   { get; set; } // datetime
-		[Column(DbType="datetime",     DataType=LinqToDB.DataType.DateTime),            Nullable            ] public DateTime? ShippedDate    { get; set; } // datetime
-		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               Nullable            ] public int?      ShipVia        { get; set; } // int
-		[Column(DbType="money",        DataType=LinqToDB.DataType.Money),               Nullable            ] public decimal?  Freight        { get; set; } // money
-		[Column(DbType="nvarchar(40)", DataType=LinqToDB.DataType.NVarChar, Length=40), Nullable            ] public string?   ShipName       { get; set; } // nvarchar(40)
-		[Column(DbType="nvarchar(60)", DataType=LinqToDB.DataType.NVarChar, Length=60), Nullable            ] public string?   ShipAddress    { get; set; } // nvarchar(60)
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15), Nullable            ] public string?   ShipCity       { get; set; } // nvarchar(15)
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15), Nullable            ] public string?   ShipRegion     { get; set; } // nvarchar(15)
-		[Column(DbType="nvarchar(10)", DataType=LinqToDB.DataType.NVarChar, Length=10), Nullable            ] public string?   ShipPostalCode { get; set; } // nvarchar(10)
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15), Nullable            ] public string?   ShipCountry    { get; set; } // nvarchar(15)
-
-		#region Associations
-
-		/// <summary>
-		/// FK_Orders_Customers
-		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Orders_Customers", BackReferenceName="Orders")]
-		public Customer? Customer { get; set; }
-
-		/// <summary>
-		/// FK_Orders_Employees
-		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Orders_Employees", BackReferenceName="Orders")]
-		public Employee? Employee { get; set; }
-
-		/// <summary>
-		/// FK_Order_Details_Orders_BackReference
-		/// </summary>
-		[Association(ThisKey="OrderID", OtherKey="ID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-		public List<OrderDetail> OrderDetails { get; set; } = null!;
-
-		/// <summary>
-		/// FK_Orders_Shippers
-		/// </summary>
-		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Orders_Shippers", BackReferenceName="Orders")]
-		public Shipper? Shipper { get; set; }
-
-		#endregion
-	}
-
-	[Table("Order Details")]
-	public partial class OrderDetail
-	{
-		[Column("OrderID", DbType="int",      DataType=LinqToDB.DataType.Int32),  PrimaryKey(1), NotNull] public int     ID        { get; set; } // int
-		[Column(           DbType="int",      DataType=LinqToDB.DataType.Int32),  PrimaryKey(2), NotNull] public int     ProductID { get; set; } // int
-		[Column(           DbType="money",    DataType=LinqToDB.DataType.Money),                 NotNull] public decimal UnitPrice { get; set; } // money
-		[Column(           DbType="smallint", DataType=LinqToDB.DataType.Int16),                 NotNull] public short   Quantity  { get; set; } // smallint
-		[Column(           DbType="real",     DataType=LinqToDB.DataType.Single),                NotNull] public float   Discount  { get; set; } // real
-
-		#region Associations
-
-		/// <summary>
-		/// FK_Order_Details_Orders
-		/// </summary>
-		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Order_Details_Orders", BackReferenceName="OrderDetails")]
-		public Order Order { get; set; } = null!;
-
-		#endregion
-	}
-
-	[Obsolete("Use OrderDetail instead.")]
-	public partial class ORD_DET : OrderDetail
-	{
-	}
-
-	[Table("Order Details Extended", IsView=true)]
-	public partial class OrderDetailsExtended
-	{
-		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               NotNull    ] public int      OrderID       { get; set; } // int
-		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               NotNull    ] public int      ProductID     { get; set; } // int
-		[Column(DbType="nvarchar(40)", DataType=LinqToDB.DataType.NVarChar, Length=40), NotNull    ] public string   ProductName   { get; set; } = null!; // nvarchar(40)
-		[Column(DbType="money",        DataType=LinqToDB.DataType.Money),               NotNull    ] public decimal  UnitPrice     { get; set; } // money
-		[Column(DbType="smallint",     DataType=LinqToDB.DataType.Int16),               NotNull    ] public short    Quantity      { get; set; } // smallint
-		[Column(DbType="real",         DataType=LinqToDB.DataType.Single),              NotNull    ] public float    Discount      { get; set; } // real
-		[Column(DbType="money",        DataType=LinqToDB.DataType.Money),                  Nullable] public decimal? ExtendedPrice { get; set; } // money
-	}
-
-	[Table("Orders Qry", IsView=true)]
-	public partial class OrdersQry
-	{
-		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               NotNull    ] public int       OrderID        { get; set; } // int
-		[Column(DbType="nchar(5)",     DataType=LinqToDB.DataType.NChar,    Length=5),     Nullable] public string?   CustomerID     { get; set; } // nchar(5)
-		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),                  Nullable] public int?      EmployeeID     { get; set; } // int
-		[Column(DbType="datetime",     DataType=LinqToDB.DataType.DateTime),               Nullable] public DateTime? OrderDate      { get; set; } // datetime
-		[Column(DbType="datetime",     DataType=LinqToDB.DataType.DateTime),               Nullable] public DateTime? RequiredDate   { get; set; } // datetime
-		[Column(DbType="datetime",     DataType=LinqToDB.DataType.DateTime),               Nullable] public DateTime? ShippedDate    { get; set; } // datetime
-		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),                  Nullable] public int?      ShipVia        { get; set; } // int
-		[Column(DbType="money",        DataType=LinqToDB.DataType.Money),                  Nullable] public decimal?  Freight        { get; set; } // money
-		[Column(DbType="nvarchar(40)", DataType=LinqToDB.DataType.NVarChar, Length=40),    Nullable] public string?   ShipName       { get; set; } // nvarchar(40)
-		[Column(DbType="nvarchar(60)", DataType=LinqToDB.DataType.NVarChar, Length=60),    Nullable] public string?   ShipAddress    { get; set; } // nvarchar(60)
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15),    Nullable] public string?   ShipCity       { get; set; } // nvarchar(15)
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15),    Nullable] public string?   ShipRegion     { get; set; } // nvarchar(15)
-		[Column(DbType="nvarchar(10)", DataType=LinqToDB.DataType.NVarChar, Length=10),    Nullable] public string?   ShipPostalCode { get; set; } // nvarchar(10)
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15),    Nullable] public string?   ShipCountry    { get; set; } // nvarchar(15)
-		[Column(DbType="nvarchar(40)", DataType=LinqToDB.DataType.NVarChar, Length=40), NotNull    ] public string    CompanyName    { get; set; } = null!; // nvarchar(40)
-		[Column(DbType="nvarchar(60)", DataType=LinqToDB.DataType.NVarChar, Length=60),    Nullable] public string?   Address        { get; set; } // nvarchar(60)
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15),    Nullable] public string?   City           { get; set; } // nvarchar(15)
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15),    Nullable] public string?   Region         { get; set; } // nvarchar(15)
-		[Column(DbType="nvarchar(10)", DataType=LinqToDB.DataType.NVarChar, Length=10),    Nullable] public string?   PostalCode     { get; set; } // nvarchar(10)
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15),    Nullable] public string?   Country        { get; set; } // nvarchar(15)
-	}
-
-	[Table("Order Subtotals", IsView=true)]
-	public partial class OrderSubtotal
-	{
-		[Column(DbType="int",   DataType=LinqToDB.DataType.Int32), NotNull    ] public int      OrderID  { get; set; } // int
-		[Column(DbType="money", DataType=LinqToDB.DataType.Money),    Nullable] public decimal? Subtotal { get; set; } // money
-	}
-
-	[Table("Products Above Average Price", IsView=true)]
-	public partial class ProductsAboveAveragePrice
-	{
-		[Column(DbType="nvarchar(40)", DataType=LinqToDB.DataType.NVarChar, Length=40), NotNull    ] public string   ProductName { get; set; } = null!; // nvarchar(40)
-		[Column(DbType="money",        DataType=LinqToDB.DataType.Money),                  Nullable] public decimal? UnitPrice   { get; set; } // money
-	}
-
-	[Table("Product Sales for 1997", IsView=true)]
-	public partial class ProductSalesFor1997
-	{
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15), NotNull    ] public string   CategoryName { get; set; } = null!; // nvarchar(15)
-		[Column(DbType="nvarchar(40)", DataType=LinqToDB.DataType.NVarChar, Length=40), NotNull    ] public string   ProductName  { get; set; } = null!; // nvarchar(40)
-		[Column(DbType="money",        DataType=LinqToDB.DataType.Money),                  Nullable] public decimal? ProductSales { get; set; } // money
-	}
-
-	[Table("Products by Category", IsView=true)]
-	public partial class ProductsByCategory
-	{
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15), NotNull    ] public string  CategoryName    { get; set; } = null!; // nvarchar(15)
-		[Column(DbType="nvarchar(40)", DataType=LinqToDB.DataType.NVarChar, Length=40), NotNull    ] public string  ProductName     { get; set; } = null!; // nvarchar(40)
-		[Column(DbType="nvarchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20),    Nullable] public string? QuantityPerUnit { get; set; } // nvarchar(20)
-		[Column(DbType="smallint",     DataType=LinqToDB.DataType.Int16),                  Nullable] public short?  UnitsInStock    { get; set; } // smallint
-		[Column(DbType="bit",          DataType=LinqToDB.DataType.Boolean),             NotNull    ] public bool    Discontinued    { get; set; } // bit
-	}
-
-	[Table("Quarterly Orders", IsView=true)]
-	public partial class QuarterlyOrder
-	{
-		[Column(DbType="nchar(5)",     DataType=LinqToDB.DataType.NChar,    Length=5),  Nullable] public string? CustomerID  { get; set; } // nchar(5)
-		[Column(DbType="nvarchar(40)", DataType=LinqToDB.DataType.NVarChar, Length=40), Nullable] public string? CompanyName { get; set; } // nvarchar(40)
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15), Nullable] public string? City        { get; set; } // nvarchar(15)
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15), Nullable] public string? Country     { get; set; } // nvarchar(15)
-	}
-
-	[Table("Region")]
-	public partial class Region
-	{
-		[Column(DbType="int",       DataType=LinqToDB.DataType.Int32),            PrimaryKey, NotNull] public int    RegionID          { get; set; } // int
-		[Column(DbType="nchar(50)", DataType=LinqToDB.DataType.NChar, Length=50),             NotNull] public string RegionDescription { get; set; } = null!; // nchar(50)
-
-		#region Associations
-
-		/// <summary>
-		/// FK_Territories_Region_BackReference
-		/// </summary>
-		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-		public List<Territory> Territories { get; set; } = null!;
-
-		#endregion
-	}
-
-	[Table("Sales by Category", IsView=true)]
-	public partial class SalesByCategory
-	{
-		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               NotNull    ] public int      CategoryID   { get; set; } // int
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15), NotNull    ] public string   CategoryName { get; set; } = null!; // nvarchar(15)
-		[Column(DbType="nvarchar(40)", DataType=LinqToDB.DataType.NVarChar, Length=40), NotNull    ] public string   ProductName  { get; set; } = null!; // nvarchar(40)
-		[Column(DbType="money",        DataType=LinqToDB.DataType.Money),                  Nullable] public decimal? ProductSales { get; set; } // money
-	}
-
-	[Table("Sales Totals by Amount", IsView=true)]
-	public partial class SalesTotalsByAmount
-	{
-		[Column(DbType="money",        DataType=LinqToDB.DataType.Money),                  Nullable] public decimal?  SaleAmount  { get; set; } // money
-		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               NotNull    ] public int       OrderID     { get; set; } // int
-		[Column(DbType="nvarchar(40)", DataType=LinqToDB.DataType.NVarChar, Length=40), NotNull    ] public string    CompanyName { get; set; } = null!; // nvarchar(40)
-		[Column(DbType="datetime",     DataType=LinqToDB.DataType.DateTime),               Nullable] public DateTime? ShippedDate { get; set; } // datetime
-	}
-
-	[Table("Shippers")]
-	public partial class Shipper
-	{
-		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               PrimaryKey,  Identity] public int     ShipperID   { get; set; } // int
-		[Column(DbType="nvarchar(40)", DataType=LinqToDB.DataType.NVarChar, Length=40), NotNull              ] public string  CompanyName { get; set; } = null!; // nvarchar(40)
-		[Column(DbType="nvarchar(24)", DataType=LinqToDB.DataType.NVarChar, Length=24),    Nullable          ] public string? Phone       { get; set; } // nvarchar(24)
-
-		#region Associations
-
-		/// <summary>
-		/// FK_Orders_Shippers_BackReference
-		/// </summary>
-		[Association(ThisKey="ShipperID", OtherKey="ShipVia", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-		public List<Order> Orders { get; set; } = null!;
-
-		#endregion
-	}
-
-	[Table("Summary of Sales by Quarter", IsView=true)]
-	public partial class SummaryOfSalesByQuarter
-	{
-		[Column(DbType="datetime", DataType=LinqToDB.DataType.DateTime),    Nullable] public DateTime? ShippedDate { get; set; } // datetime
-		[Column(DbType="int",      DataType=LinqToDB.DataType.Int32),    NotNull    ] public int       OrderID     { get; set; } // int
-		[Column(DbType="money",    DataType=LinqToDB.DataType.Money),       Nullable] public decimal?  Subtotal    { get; set; } // money
-	}
-
-	[Table("Summary of Sales by Year", IsView=true)]
-	public partial class SummaryOfSalesByYear
-	{
-		[Column(DbType="datetime", DataType=LinqToDB.DataType.DateTime),    Nullable] public DateTime? ShippedDate { get; set; } // datetime
-		[Column(DbType="int",      DataType=LinqToDB.DataType.Int32),    NotNull    ] public int       OrderID     { get; set; } // int
-		[Column(DbType="money",    DataType=LinqToDB.DataType.Money),       Nullable] public decimal?  Subtotal    { get; set; } // money
-	}
-
-	[Table("Suppliers")]
-	public partial class Supplier
-	{
-		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               PrimaryKey,  Identity] public int     SupplierID   { get; set; } // int
-		[Column(DbType="nvarchar(40)", DataType=LinqToDB.DataType.NVarChar, Length=40), NotNull              ] public string  CompanyName  { get; set; } = null!; // nvarchar(40)
-		[Column(DbType="nvarchar(30)", DataType=LinqToDB.DataType.NVarChar, Length=30),    Nullable          ] public string? ContactName  { get; set; } // nvarchar(30)
-		[Column(DbType="nvarchar(30)", DataType=LinqToDB.DataType.NVarChar, Length=30),    Nullable          ] public string? ContactTitle { get; set; } // nvarchar(30)
-		[Column(DbType="nvarchar(60)", DataType=LinqToDB.DataType.NVarChar, Length=60),    Nullable          ] public string? Address      { get; set; } // nvarchar(60)
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15),    Nullable          ] public string? City         { get; set; } // nvarchar(15)
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15),    Nullable          ] public string? Region       { get; set; } // nvarchar(15)
-		[Column(DbType="nvarchar(10)", DataType=LinqToDB.DataType.NVarChar, Length=10),    Nullable          ] public string? PostalCode   { get; set; } // nvarchar(10)
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15),    Nullable          ] public string? Country      { get; set; } // nvarchar(15)
-		[Column(DbType="nvarchar(24)", DataType=LinqToDB.DataType.NVarChar, Length=24),    Nullable          ] public string? Phone        { get; set; } // nvarchar(24)
-		[Column(DbType="nvarchar(24)", DataType=LinqToDB.DataType.NVarChar, Length=24),    Nullable          ] public string? Fax          { get; set; } // nvarchar(24)
-		[Column(DbType="ntext",        DataType=LinqToDB.DataType.NText),                  Nullable          ] public string? HomePage     { get; set; } // ntext
-	}
-
-	[Table("Territories")]
-	public partial class Territory
-	{
-		[Column(DbType="nvarchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20), PrimaryKey, NotNull] public string TerritoryID          { get; set; } = null!; // nvarchar(20)
-		[Column(DbType="nchar(50)",    DataType=LinqToDB.DataType.NChar,    Length=50),             NotNull] public string TerritoryDescription { get; set; } = null!; // nchar(50)
-		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),                           NotNull] public int    RegionID             { get; set; } // int
-
-		#region Associations
-
-		/// <summary>
-		/// FK_EmployeeTerritories_Territories_BackReference
-		/// </summary>
-		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-		public List<EmployeeTerritory> EmployeeTerritories { get; set; } = null!;
-
-		/// <summary>
-		/// FK_Territories_Region
-		/// </summary>
-		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Territories_Region", BackReferenceName="Territories")]
-		public Region Region { get; set; } = null!;
-
-		#endregion
-	}
-
-	public static partial class NorthwindDBStoredProcedures
-	{
-		#region CustOrderHist
-
-		public static List<CustOrderHistResult> CustOrderHist(this NorthwindDB dataConnection, string? @CustomerID)
-		{
-			var parameters = new []
-			{
-				new DataParameter("@CustomerID", @CustomerID, LinqToDB.DataType.NChar)
-				{
-					Size = 5
-				}
-			};
-
-			return dataConnection.QueryProc<CustOrderHistResult>("[CustOrderHist]", parameters).ToList();
-		}
-
-		public partial class CustOrderHistResult
-		{
-			public string ProductName { get; set; } = null!;
-			public int?   Total       { get; set; }
-		}
-
-		#endregion
-
-		#region CustOrdersDetail
-
-		public static List<CustOrdersDetailResult> CustOrdersDetail(this NorthwindDB dataConnection, int? @OrderID)
-		{
-			var parameters = new []
-			{
-				new DataParameter("@OrderID", @OrderID, LinqToDB.DataType.Int32)
-			};
-
-			return dataConnection.QueryProc<CustOrdersDetailResult>("[CustOrdersDetail]", parameters).ToList();
-		}
-
-		public partial class CustOrdersDetailResult
-		{
-			public string   ProductName   { get; set; } = null!;
-			public decimal  UnitPrice     { get; set; }
-			public short    Quantity      { get; set; }
-			public int?     Discount      { get; set; }
-			public decimal? ExtendedPrice { get; set; }
-		}
-
-		#endregion
-
-		#region CustOrdersOrders
-
-		public static List<CustOrdersOrdersResult> CustOrdersOrders(this NorthwindDB dataConnection, string? @CustomerID)
-		{
-			var parameters = new []
-			{
-				new DataParameter("@CustomerID", @CustomerID, LinqToDB.DataType.NChar)
-				{
-					Size = 5
-				}
-			};
-
-			return dataConnection.QueryProc<CustOrdersOrdersResult>("[CustOrdersOrders]", parameters).ToList();
-		}
-
-		public partial class CustOrdersOrdersResult
-		{
-			public int       OrderID      { get; set; }
-			public DateTime? OrderDate    { get; set; }
-			public DateTime? RequiredDate { get; set; }
-			public DateTime? ShippedDate  { get; set; }
-		}
-
-		#endregion
-
-		#region EmployeeSalesByCountry
-
-		public static List<EmployeeSalesByCountryResult> EmployeeSalesByCountry(this NorthwindDB dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
-		{
-			var parameters = new []
-			{
-				new DataParameter("@Beginning_Date", @Beginning_Date, LinqToDB.DataType.DateTime),
-				new DataParameter("@Ending_Date",    @Ending_Date,    LinqToDB.DataType.DateTime)
-			};
-
-			return dataConnection.QueryProc<EmployeeSalesByCountryResult>("[Employee Sales by Country]", parameters).ToList();
-		}
-
-		public partial class EmployeeSalesByCountryResult
-		{
-			public string?   Country     { get; set; }
-			public string    LastName    { get; set; } = null!;
-			public string    FirstName   { get; set; } = null!;
-			public DateTime? ShippedDate { get; set; }
-			public int       OrderID     { get; set; }
-			public decimal?  SaleAmount  { get; set; }
-		}
-
-		#endregion
-
-		#region SalesByYear
-
-		public static List<SalesByYearResult> SalesByYear(this NorthwindDB dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
-		{
-			var parameters = new []
-			{
-				new DataParameter("@Beginning_Date", @Beginning_Date, LinqToDB.DataType.DateTime),
-				new DataParameter("@Ending_Date",    @Ending_Date,    LinqToDB.DataType.DateTime)
-			};
-
-			return dataConnection.QueryProc<SalesByYearResult>("[Sales by Year]", parameters).ToList();
-		}
-
-		public partial class SalesByYearResult
-		{
-			public DateTime? ShippedDate { get; set; }
-			public int       OrderID     { get; set; }
-			public decimal?  Subtotal    { get; set; }
-			public string?   Year        { get; set; }
-		}
-
-		#endregion
-
-		#region SalesByCategory
-
-		public static List<SalesByCategoryResult> SalesByCategory(this NorthwindDB dataConnection, string? @CategoryName, string? @OrdYear)
-		{
-			var parameters = new []
-			{
-				new DataParameter("@CategoryName", @CategoryName, LinqToDB.DataType.NVarChar)
-				{
-					Size = 15
-				},
-				new DataParameter("@OrdYear",      @OrdYear,      LinqToDB.DataType.NVarChar)
-				{
-					Size = 4
-				}
-			};
-
-			return dataConnection.QueryProc<SalesByCategoryResult>("[SalesByCategory]", parameters).ToList();
-		}
-
-		public partial class SalesByCategoryResult
-		{
-			public string   ProductName   { get; set; } = null!;
-			public decimal? TotalPurchase { get; set; }
-		}
-
-		#endregion
-
-		#region TenMostExpensiveProducts
-
-		public static List<TenMostExpensiveProductsResult> TenMostExpensiveProducts(this NorthwindDB dataConnection)
-		{
-			return dataConnection.QueryProc<TenMostExpensiveProductsResult>("[Ten Most Expensive Products]").ToList();
-		}
-
-		public partial class TenMostExpensiveProductsResult
-		{
-			public string   TenMostExpensiveProducts { get; set; } = null!;
-			public decimal? UnitPrice                { get; set; }
-		}
-
-		#endregion
-	}
-
-	public static partial class TableExtensions
-	{
-		public static Category? Find(this ITable<Category> table, int CategoryID)
-		{
-			return table.FirstOrDefault(t =>
-				t.CategoryID == CategoryID);
-		}
-
-		public static Customer? Find(this ITable<Customer> table, string CustomerID)
-		{
-			return table.FirstOrDefault(t =>
-				t.CustomerID == CustomerID);
-		}
-
-		public static CustomerCustomerDemo? Find(this ITable<CustomerCustomerDemo> table, string CustomerID, string CustomerTypeID)
-		{
-			return table.FirstOrDefault(t =>
-				t.CustomerID     == CustomerID &&
-				t.CustomerTypeID == CustomerTypeID);
-		}
-
-		public static CustomerDemographic? Find(this ITable<CustomerDemographic> table, string CustomerTypeID)
-		{
-			return table.FirstOrDefault(t =>
-				t.CustomerTypeID == CustomerTypeID);
-		}
-
-		public static Employee? Find(this ITable<Employee> table, int EmployeeID)
-		{
-			return table.FirstOrDefault(t =>
-				t.EmployeeID == EmployeeID);
-		}
-
-		public static EmployeeTerritory? Find(this ITable<EmployeeTerritory> table, int EmployeeID, string TerritoryID)
-		{
-			return table.FirstOrDefault(t =>
-				t.EmployeeID  == EmployeeID &&
-				t.TerritoryID == TerritoryID);
-		}
-
-		public static Order? Find(this ITable<Order> table, int OrderID)
-		{
-			return table.FirstOrDefault(t =>
-				t.OrderID == OrderID);
-		}
-
-		public static OrderDetail? Find(this ITable<OrderDetail> table, int ID, int ProductID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID        == ID &&
-				t.ProductID == ProductID);
-		}
-
-		public static Region? Find(this ITable<Region> table, int RegionID)
-		{
-			return table.FirstOrDefault(t =>
-				t.RegionID == RegionID);
-		}
-
-		public static Shipper? Find(this ITable<Shipper> table, int ShipperID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ShipperID == ShipperID);
-		}
-
-		public static Supplier? Find(this ITable<Supplier> table, int SupplierID)
-		{
-			return table.FirstOrDefault(t =>
-				t.SupplierID == SupplierID);
-		}
-
-		public static Territory? Find(this ITable<Territory> table, string TerritoryID)
-		{
-			return table.FirstOrDefault(t =>
-				t.TerritoryID == TerritoryID);
-		}
-
-		#region Associations
-
-		#region Customer Associations
-
-		/// <summary>
-		/// FK_CustomerCustomerDemo_Customers_BackReference
-		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-		public static IQueryable<CustomerCustomerDemo> CustomerCustomerDemoes(this Customer obj, IDataContext db)
-		{
-			return db.GetTable<CustomerCustomerDemo>().Where(c => c.CustomerID == obj.CustomerID);
-		}
-
-		/// <summary>
-		/// FK_Orders_Customers_BackReference
-		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-		public static IQueryable<Order> Orders(this Customer obj, IDataContext db)
-		{
-			return db.GetTable<Order>().Where(c => c.CustomerID == obj.CustomerID);
-		}
-
-		#endregion
-
-		#region CustomerCustomerDemo Associations
-
-		/// <summary>
-		/// FK_CustomerCustomerDemo_Customers
-		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_CustomerCustomerDemo_Customers", BackReferenceName="CustomerCustomerDemoes")]
-		public static IQueryable<Customer> Customers(this CustomerCustomerDemo obj, IDataContext db)
-		{
-			return db.GetTable<Customer>().Where(c => c.CustomerID == obj.CustomerID);
-		}
-
-		/// <summary>
-		/// FK_CustomerCustomerDemo_Customers
-		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_CustomerCustomerDemo_Customers", BackReferenceName="CustomerCustomerDemoes")]
-		public static CustomerCustomerDemo Customer(this Customer obj, IDataContext db)
-		{
-			return db.GetTable<CustomerCustomerDemo>().Where(c => c.CustomerID == obj.CustomerID).First();
-		}
-
-		/// <summary>
-		/// FK_CustomerCustomerDemo
-		/// </summary>
-		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_CustomerCustomerDemo", BackReferenceName="CustomerCustomerDemoes")]
-		public static IQueryable<CustomerDemographic> CustomerTypes(this CustomerCustomerDemo obj, IDataContext db)
-		{
-			return db.GetTable<CustomerDemographic>().Where(c => c.CustomerTypeID == obj.CustomerTypeID);
-		}
-
-		/// <summary>
-		/// FK_CustomerCustomerDemo
-		/// </summary>
-		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_CustomerCustomerDemo", BackReferenceName="CustomerCustomerDemoes")]
-		public static CustomerCustomerDemo CustomerType(this CustomerDemographic obj, IDataContext db)
-		{
-			return db.GetTable<CustomerCustomerDemo>().Where(c => c.CustomerTypeID == obj.CustomerTypeID).First();
-		}
-
-		#endregion
-
-		#region CustomerDemographic Associations
-
-		/// <summary>
-		/// FK_CustomerCustomerDemo_BackReference
-		/// </summary>
-		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-		public static IQueryable<CustomerCustomerDemo> CustomerCustomerDemoes0(this CustomerDemographic obj, IDataContext db)
-		{
-			return db.GetTable<CustomerCustomerDemo>().Where(c => c.CustomerTypeID == obj.CustomerTypeID);
-		}
-
-		#endregion
-
-		#region Employee Associations
-
-		/// <summary>
-		/// FK_EmployeeTerritories_Employees_BackReference
-		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-		public static IQueryable<EmployeeTerritory> EmployeeTerritories(this Employee obj, IDataContext db)
-		{
-			return db.GetTable<EmployeeTerritory>().Where(c => c.EmployeeID == obj.EmployeeID);
-		}
-
-		/// <summary>
-		/// FK_Employees_Employees
-		/// </summary>
-		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Employees_Employees", BackReferenceName="FkEmployeesEmployeesBackReferences")]
-		public static IQueryable<Employee> FkEmployeesEmployees(this Employee obj, IDataContext db)
-		{
-			return db.GetTable<Employee>().Where(c => c.EmployeeID == obj.ReportsTo);
-		}
-
-		/// <summary>
-		/// FK_Employees_Employees
-		/// </summary>
-		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Employees_Employees", BackReferenceName="FkEmployeesEmployeesBackReferences")]
-		public static Employee? FkEmployeesEmployee(this Employee obj, IDataContext db)
-		{
-			return db.GetTable<Employee>().Where(c => c.ReportsTo == obj.EmployeeID).FirstOrDefault();
-		}
-
-		/// <summary>
-		/// FK_Employees_Employees_BackReference
-		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="ReportsTo", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-		public static IQueryable<Employee> FkEmployeesEmployeesBackReferences(this Employee obj, IDataContext db)
-		{
-			return db.GetTable<Employee>().Where(c => c.ReportsTo == obj.EmployeeID);
-		}
-
-		/// <summary>
-		/// FK_Orders_Employees_BackReference
-		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-		public static IQueryable<Order> Orders0(this Employee obj, IDataContext db)
-		{
-			return db.GetTable<Order>().Where(c => c.EmployeeID == obj.EmployeeID);
-		}
-
-		#endregion
-
-		#region EmployeeTerritory Associations
-
-		/// <summary>
-		/// FK_EmployeeTerritories_Employees
-		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_EmployeeTerritories_Employees", BackReferenceName="EmployeeTerritories")]
-		public static IQueryable<Employee> Employees(this EmployeeTerritory obj, IDataContext db)
-		{
-			return db.GetTable<Employee>().Where(c => c.EmployeeID == obj.EmployeeID);
-		}
-
-		/// <summary>
-		/// FK_EmployeeTerritories_Employees
-		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_EmployeeTerritories_Employees", BackReferenceName="EmployeeTerritories")]
-		public static EmployeeTerritory Employee(this Employee obj, IDataContext db)
-		{
-			return db.GetTable<EmployeeTerritory>().Where(c => c.EmployeeID == obj.EmployeeID).First();
-		}
-
-		/// <summary>
-		/// FK_EmployeeTerritories_Territories
-		/// </summary>
-		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_EmployeeTerritories_Territories", BackReferenceName="EmployeeTerritories")]
-		public static IQueryable<Territory> Territories(this EmployeeTerritory obj, IDataContext db)
-		{
-			return db.GetTable<Territory>().Where(c => c.TerritoryID == obj.TerritoryID);
-		}
-
-		/// <summary>
-		/// FK_EmployeeTerritories_Territories
-		/// </summary>
-		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_EmployeeTerritories_Territories", BackReferenceName="EmployeeTerritories")]
-		public static EmployeeTerritory Territory(this Territory obj, IDataContext db)
-		{
-			return db.GetTable<EmployeeTerritory>().Where(c => c.TerritoryID == obj.TerritoryID).First();
-		}
-
-		#endregion
-
-		#region Order Associations
-
-		/// <summary>
-		/// FK_Orders_Customers
-		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Orders_Customers", BackReferenceName="Orders")]
-		public static IQueryable<Customer> Customers0(this Order obj, IDataContext db)
-		{
-			return db.GetTable<Customer>().Where(c => c.CustomerID == obj.CustomerID);
-		}
-
-		/// <summary>
-		/// FK_Orders_Customers
-		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Orders_Customers", BackReferenceName="Orders")]
-		public static Order? Customer0(this Customer obj, IDataContext db)
-		{
-			return db.GetTable<Order>().Where(c => c.CustomerID == obj.CustomerID).FirstOrDefault();
-		}
-
-		/// <summary>
-		/// FK_Orders_Employees
-		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Orders_Employees", BackReferenceName="Orders")]
-		public static IQueryable<Employee> Employees0(this Order obj, IDataContext db)
-		{
-			return db.GetTable<Employee>().Where(c => c.EmployeeID == obj.EmployeeID);
-		}
-
-		/// <summary>
-		/// FK_Orders_Employees
-		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Orders_Employees", BackReferenceName="Orders")]
-		public static Order? Employee0(this Employee obj, IDataContext db)
-		{
-			return db.GetTable<Order>().Where(c => c.EmployeeID == obj.EmployeeID).FirstOrDefault();
-		}
-
-		/// <summary>
-		/// FK_Order_Details_Orders_BackReference
-		/// </summary>
-		[Association(ThisKey="OrderID", OtherKey="ID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-		public static IQueryable<OrderDetail> OrderDetails(this Order obj, IDataContext db)
-		{
-			return db.GetTable<OrderDetail>().Where(c => c.ID == obj.OrderID);
-		}
-
-		/// <summary>
-		/// FK_Orders_Shippers
-		/// </summary>
-		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Orders_Shippers", BackReferenceName="Orders")]
-		public static IQueryable<Shipper> Shippers(this Order obj, IDataContext db)
-		{
-			return db.GetTable<Shipper>().Where(c => c.ShipperID == obj.ShipVia);
-		}
-
-		/// <summary>
-		/// FK_Orders_Shippers
-		/// </summary>
-		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Orders_Shippers", BackReferenceName="Orders")]
-		public static Order? Shipper(this Shipper obj, IDataContext db)
-		{
-			return db.GetTable<Order>().Where(c => c.ShipVia == obj.ShipperID).FirstOrDefault();
-		}
-
-		#endregion
-
-		#region OrderDetail Associations
-
-		/// <summary>
-		/// FK_Order_Details_Orders
-		/// </summary>
-		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Order_Details_Orders", BackReferenceName="OrderDetails")]
-		public static IQueryable<Order> Orders1(this OrderDetail obj, IDataContext db)
-		{
-			return db.GetTable<Order>().Where(c => c.OrderID == obj.ID);
-		}
-
-		/// <summary>
-		/// FK_Order_Details_Orders
-		/// </summary>
-		[Association(ThisKey="ID", OtherKey="OrderID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Order_Details_Orders", BackReferenceName="OrderDetails")]
-		public static OrderDetail Order(this Order obj, IDataContext db)
-		{
-			return db.GetTable<OrderDetail>().Where(c => c.ID == obj.OrderID).First();
-		}
-
-		#endregion
-
-		#region Region Associations
-
-		/// <summary>
-		/// FK_Territories_Region_BackReference
-		/// </summary>
-		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-		public static IQueryable<Territory> Territories0(this Region obj, IDataContext db)
-		{
-			return db.GetTable<Territory>().Where(c => c.RegionID == obj.RegionID);
-		}
-
-		#endregion
-
-		#region Shipper Associations
-
-		/// <summary>
-		/// FK_Orders_Shippers_BackReference
-		/// </summary>
-		[Association(ThisKey="ShipperID", OtherKey="ShipVia", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-		public static IQueryable<Order> Orders2(this Shipper obj, IDataContext db)
-		{
-			return db.GetTable<Order>().Where(c => c.ShipVia == obj.ShipperID);
-		}
-
-		#endregion
-
-		#region Territory Associations
-
-		/// <summary>
-		/// FK_EmployeeTerritories_Territories_BackReference
-		/// </summary>
-		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-		public static IQueryable<EmployeeTerritory> EmployeeTerritories0(this Territory obj, IDataContext db)
-		{
-			return db.GetTable<EmployeeTerritory>().Where(c => c.TerritoryID == obj.TerritoryID);
-		}
-
-		/// <summary>
-		/// FK_Territories_Region
-		/// </summary>
-		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Territories_Region", BackReferenceName="Territories")]
-		public static IQueryable<Region> Regions(this Territory obj, IDataContext db)
-		{
-			return db.GetTable<Region>().Where(c => c.RegionID == obj.RegionID);
-		}
-
-		/// <summary>
-		/// FK_Territories_Region
-		/// </summary>
-		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_Territories_Region", BackReferenceName="Territories")]
-		public static Territory Region(this Region obj, IDataContext db)
-		{
-			return db.GetTable<Territory>().Where(c => c.RegionID == obj.RegionID).First();
-		}
-
-		#endregion
-
-		#endregion
-	}
-
-	public partial class TestData2017DB : LinqToDB.Data.DataConnection
-	{
-		public ITable<AllType>                 AllTypes                 { get { return this.GetTable<AllType>(); } }
-		public ITable<AllTypes2>               AllTypes2                { get { return this.GetTable<AllTypes2>(); } }
-		public ITable<Child>                   Children                 { get { return this.GetTable<Child>(); } }
-		public ITable<CreateIfNotExistsTable>  CreateIfNotExistsTables  { get { return this.GetTable<CreateIfNotExistsTable>(); } }
-		public ITable<DataType>                DataTypes                { get { return this.GetTable<DataType>(); } }
-		public ITable<DecimalOverflow>         DecimalOverflows         { get { return this.GetTable<DecimalOverflow>(); } }
-		public ITable<Doctor>                  Doctors                  { get { return this.GetTable<Doctor>(); } }
-		public ITable<GrandChild>              GrandChildren            { get { return this.GetTable<GrandChild>(); } }
-		public ITable<GuidID>                  GuidIds                  { get { return this.GetTable<GuidID>(); } }
-		public ITable<GuidID2>                 GuidID2                  { get { return this.GetTable<GuidID2>(); } }
-		public ITable<IndexTable>              IndexTables              { get { return this.GetTable<IndexTable>(); } }
-		public ITable<IndexTable2>             IndexTable2              { get { return this.GetTable<IndexTable2>(); } }
-		public ITable<InheritanceChild>        InheritanceChildren      { get { return this.GetTable<InheritanceChild>(); } }
-		public ITable<InheritanceParent>       InheritanceParents       { get { return this.GetTable<InheritanceParent>(); } }
-		public ITable<Issue1115>               Issue1115                { get { return this.GetTable<Issue1115>(); } }
-		public ITable<Issue1144>               Issue1144                { get { return this.GetTable<Issue1144>(); } }
-		public ITable<LinqDataType>            LinqDataTypes            { get { return this.GetTable<LinqDataType>(); } }
-		public ITable<NameTest>                NameTests                { get { return this.GetTable<NameTest>(); } }
+		public ITable<AllType>                 AllTypes                 => this.GetTable<AllType>();
+		public ITable<AllTypes2>               AllTypes2                => this.GetTable<AllTypes2>();
+		public ITable<AssociatedTable>         AssociatedTables         => this.GetTable<AssociatedTable>();
+		public ITable<Child>                   Children                 => this.GetTable<Child>();
+		public ITable<CollatedTable>           CollatedTables           => this.GetTable<CollatedTable>();
+		public ITable<CreateIfNotExistsTable>  CreateIfNotExistsTables  => this.GetTable<CreateIfNotExistsTable>();
+		public ITable<DataType>                DataTypes                => this.GetTable<DataType>();
+		public ITable<DecimalOverflow>         DecimalOverflows         => this.GetTable<DecimalOverflow>();
+		public ITable<Doctor>                  Doctors                  => this.GetTable<Doctor>();
+		public ITable<GrandChild>              GrandChildren            => this.GetTable<GrandChild>();
+		public ITable<GuidID>                  GuidIds                  => this.GetTable<GuidID>();
+		public ITable<GuidID2>                 GuidID2                  => this.GetTable<GuidID2>();
+		public ITable<IndexTable>              IndexTables              => this.GetTable<IndexTable>();
+		public ITable<IndexTable2>             IndexTable2              => this.GetTable<IndexTable2>();
+		public ITable<InheritanceChild>        InheritanceChildren      => this.GetTable<InheritanceChild>();
+		public ITable<InheritanceParent>       InheritanceParents       => this.GetTable<InheritanceParent>();
+		public ITable<Issue1115>               Issue1115                => this.GetTable<Issue1115>();
+		public ITable<Issue1144>               Issue1144                => this.GetTable<Issue1144>();
+		public ITable<Issue2981Entity>         Issue2981Entities        => this.GetTable<Issue2981Entity>();
+		public ITable<Issue2981OwnerEntity>    Issue2981OwnerEntities   => this.GetTable<Issue2981OwnerEntity>();
+		public ITable<LinqDataType>            LinqDataTypes            => this.GetTable<LinqDataType>();
+		public ITable<MainTable>               MainTables               => this.GetTable<MainTable>();
+		public ITable<NameTest>                NameTests                => this.GetTable<NameTest>();
 		/// <summary>
 		/// This is Parent table
 		/// </summary>
-		public ITable<Parent>                  Parents                  { get { return this.GetTable<Parent>(); } }
-		public ITable<ParentChildView>         ParentChildViews         { get { return this.GetTable<ParentChildView>(); } }
-		public ITable<ParentView>              ParentViews              { get { return this.GetTable<ParentView>(); } }
-		public ITable<Patient>                 Patients                 { get { return this.GetTable<Patient>(); } }
-		public ITable<SameTableName>           SameTableNames           { get { return this.GetTable<SameTableName>(); } }
-		public ITable<SqlType>                 SqlTypes                 { get { return this.GetTable<SqlType>(); } }
-		public ITable<TestIdentity>            TestIdentities           { get { return this.GetTable<TestIdentity>(); } }
-		public ITable<TestMerge1>              TestMerge1               { get { return this.GetTable<TestMerge1>(); } }
-		public ITable<TestMerge2>              TestMerge2               { get { return this.GetTable<TestMerge2>(); } }
-		public ITable<TestMergeIdentity>       TestMergeIdentities      { get { return this.GetTable<TestMergeIdentity>(); } }
-		public ITable<TestSchemaSameTableName> TestSchemaSameTableNames { get { return this.GetTable<TestSchemaSameTableName>(); } }
-		public ITable<TestSchemaX>             TestSchemaX              { get { return this.GetTable<TestSchemaX>(); } }
-		public ITable<TestSchemaY>             TestSchemaY              { get { return this.GetTable<TestSchemaY>(); } }
+		public ITable<Parent>                  Parents                  => this.GetTable<Parent>();
+		public ITable<ParentChildView>         ParentChildViews         => this.GetTable<ParentChildView>();
+		public ITable<ParentView>              ParentViews              => this.GetTable<ParentView>();
+		public ITable<Patient>                 Patients                 => this.GetTable<Patient>();
+		public ITable<SameTableName>           SameTableNames           => this.GetTable<SameTableName>();
+		public ITable<SqlType>                 SqlTypes                 => this.GetTable<SqlType>();
+		public ITable<TestIdentity>            TestIdentities           => this.GetTable<TestIdentity>();
+		public ITable<TestMerge1>              TestMerge1               => this.GetTable<TestMerge1>();
+		public ITable<TestMerge2>              TestMerge2               => this.GetTable<TestMerge2>();
+		public ITable<TestMergeIdentity>       TestMergeIdentities      => this.GetTable<TestMergeIdentity>();
+		public ITable<TestSchemaSameTableName> TestSchemaSameTableNames => this.GetTable<TestSchemaSameTableName>();
+		public ITable<TestSchemaX>             TestSchemaXes            => this.GetTable<TestSchemaX>();
+		public ITable<TestSchemaY>             TestSchemaYs             => this.GetTable<TestSchemaY>();
 
 		#region Schemas
-
 		public MySchemaSchema.DataContext MySchema { get; set; } = null!;
 
 		public void InitSchemas()
 		{
 			MySchema = new MySchemaSchema.DataContext(this);
 		}
-
 		#endregion
 
-		public TestData2017DB(int i)
+		public TestData2017DB()
 		{
 			InitSchemas();
 			InitDataContext();
@@ -1196,245 +90,266 @@ namespace Sql2017ProcSchema
 			InitMappingSchema();
 		}
 
+		public TestData2017DB(LinqToDbConnectionOptions options)
+			: base(options)
+		{
+			InitSchemas();
+			InitDataContext();
+			InitMappingSchema();
+		}
+
+		public TestData2017DB(LinqToDbConnectionOptions<TestData2017DB> options)
+			: base(options)
+		{
+			InitSchemas();
+			InitDataContext();
+			InitMappingSchema();
+		}
+
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
 
 		#region Table Functions
-
 		#region GetParentByID
+		private static readonly MethodInfo _getParentById = MemberHelper.MethodOf<TestData2017DB>(ctx => ctx.GetParentByID(default));
 
 		/// <summary>
 		/// This is &lt;test&gt; table function!
 		/// </summary>
-		/// <param name="@id">
+		/// <param name="id">
 		/// This is &lt;test&gt; table function parameter!
 		/// </param>
-		[Sql.TableFunction(Name="GetParentByID")]
-		public ITable<Parent> GetParentByID(int? @id)
+		[Sql.TableFunction]
+		public ITable<Parent> GetParentByID(int? id)
 		{
-			return this.GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				@id);
+			return this.GetTable<Parent>(this, _getParentById, id);
 		}
-
 		#endregion
 
 		#region Issue1294
+		private static readonly MethodInfo _issue1294 = MemberHelper.MethodOf<TestData2017DB>(ctx => ctx.Issue1294(default, default));
 
-		[Sql.TableFunction(Name="Issue1294")]
-		public ITable<Issue1294Result> Issue1294(int? @p1, int? @p2)
+		[Sql.TableFunction]
+		public ITable<Issue1294Result> Issue1294(int? p1, int? p2)
 		{
-			return this.GetTable<Issue1294Result>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				@p1,
-				@p2);
+			return this.GetTable<Issue1294Result>(this, _issue1294, p1, p2);
 		}
 
 		public partial class Issue1294Result
 		{
-			public int? Id { get; set; }
+			[Column("Id", CanBeNull = true, DbType = "int", DataType = DataType.Int32)] public int? Id { get;set; }
 		}
-
 		#endregion
 
 		#region Issue1921
+		private static readonly MethodInfo _issue1921 = MemberHelper.MethodOf<TestData2017DB>(ctx => ctx.Issue1921());
 
-		[Sql.TableFunction(Name="Issue1921")]
+		[Sql.TableFunction]
 		public ITable<Issue1921Result> Issue1921()
 		{
-			return this.GetTable<Issue1921Result>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
+			return this.GetTable<Issue1921Result>(this, _issue1921);
 		}
 
 		public partial class Issue1921Result
 		{
-			public string name  { get; set; } = null!;
-			public int?   objid { get; set; }
+			[Column("name",  CanBeNull = false, DbType = "nvarchar(128)", DataType = DataType.NVarChar)] public string name  { get;set; } = null!;
+			[Column("objid", CanBeNull = true,  DbType = "int",           DataType = DataType.Int32   )] public int?   objid { get;set; }
 		}
-
 		#endregion
-
 		#endregion
 	}
 
 	[Table("AllTypes")]
 	public partial class AllType
 	{
-		[Column(                            DbType="int",               DataType=LinqToDB.DataType.Int32),                                                PrimaryKey, Identity] public int             ID                       { get; set; } // int
-		[Column("bigintDataType",           DbType="bigint",            DataType=LinqToDB.DataType.Int64),                                                Nullable            ] public long?           BigintDataType           { get; set; } // bigint
-		[Column("numericDataType",          DbType="numeric(18, 1)",    DataType=LinqToDB.DataType.Decimal,        Precision=18, Scale=1),                Nullable            ] public decimal?        NumericDataType          { get; set; } // numeric(18, 1)
-		[Column("bitDataType",              DbType="bit",               DataType=LinqToDB.DataType.Boolean),                                              Nullable            ] public bool?           BitDataType              { get; set; } // bit
-		[Column("smallintDataType",         DbType="smallint",          DataType=LinqToDB.DataType.Int16),                                                Nullable            ] public short?          SmallintDataType         { get; set; } // smallint
-		[Column("decimalDataType",          DbType="decimal(18, 1)",    DataType=LinqToDB.DataType.Decimal,        Precision=18, Scale=1),                Nullable            ] public decimal?        DecimalDataType          { get; set; } // decimal(18, 1)
-		[Column("smallmoneyDataType",       DbType="smallmoney",        DataType=LinqToDB.DataType.SmallMoney),                                           Nullable            ] public decimal?        SmallmoneyDataType       { get; set; } // smallmoney
-		[Column("intDataType",              DbType="int",               DataType=LinqToDB.DataType.Int32),                                                Nullable            ] public int?            IntDataType              { get; set; } // int
-		[Column("tinyintDataType",          DbType="tinyint",           DataType=LinqToDB.DataType.Byte),                                                 Nullable            ] public byte?           TinyintDataType          { get; set; } // tinyint
-		[Column("moneyDataType",            DbType="money",             DataType=LinqToDB.DataType.Money),                                                Nullable            ] public decimal?        MoneyDataType            { get; set; } // money
-		[Column("floatDataType",            DbType="float",             DataType=LinqToDB.DataType.Double),                                               Nullable            ] public double?         FloatDataType            { get; set; } // float
-		[Column("realDataType",             DbType="real",              DataType=LinqToDB.DataType.Single),                                               Nullable            ] public float?          RealDataType             { get; set; } // real
-		[Column("datetimeDataType",         DbType="datetime",          DataType=LinqToDB.DataType.DateTime),                                             Nullable            ] public DateTime?       DatetimeDataType         { get; set; } // datetime
-		[Column("smalldatetimeDataType",    DbType="smalldatetime",     DataType=LinqToDB.DataType.SmallDateTime),                                        Nullable            ] public DateTime?       SmalldatetimeDataType    { get; set; } // smalldatetime
-		[Column("charDataType",             DbType="char(1)",           DataType=LinqToDB.DataType.Char,           Length=1),                             Nullable            ] public char?           CharDataType             { get; set; } // char(1)
-		[Column("char20DataType",           DbType="char(20)",          DataType=LinqToDB.DataType.Char,           Length=20),                            Nullable            ] public string?         Char20DataType           { get; set; } // char(20)
-		[Column("varcharDataType",          DbType="varchar(20)",       DataType=LinqToDB.DataType.VarChar,        Length=20),                            Nullable            ] public string?         VarcharDataType          { get; set; } // varchar(20)
-		[Column("textDataType",             DbType="text",              DataType=LinqToDB.DataType.Text),                                                 Nullable            ] public string?         TextDataType             { get; set; } // text
-		[Column("ncharDataType",            DbType="nchar(20)",         DataType=LinqToDB.DataType.NChar,          Length=20),                            Nullable            ] public string?         NcharDataType            { get; set; } // nchar(20)
-		[Column("nvarcharDataType",         DbType="nvarchar(20)",      DataType=LinqToDB.DataType.NVarChar,       Length=20),                            Nullable            ] public string?         NvarcharDataType         { get; set; } // nvarchar(20)
-		[Column("ntextDataType",            DbType="ntext",             DataType=LinqToDB.DataType.NText),                                                Nullable            ] public string?         NtextDataType            { get; set; } // ntext
-		[Column("binaryDataType",           DbType="binary(1)",         DataType=LinqToDB.DataType.Binary,         Length=1),                             Nullable            ] public byte[]?         BinaryDataType           { get; set; } // binary(1)
-		[Column("varbinaryDataType",        DbType="varbinary(1)",      DataType=LinqToDB.DataType.VarBinary,      Length=1),                             Nullable            ] public byte[]?         VarbinaryDataType        { get; set; } // varbinary(1)
-		[Column("imageDataType",            DbType="image",             DataType=LinqToDB.DataType.Image),                                                Nullable            ] public byte[]?         ImageDataType            { get; set; } // image
-		[Column("timestampDataType",        DbType="timestamp",         DataType=LinqToDB.DataType.Timestamp,      SkipOnInsert=true, SkipOnUpdate=true), Nullable            ] public byte[]?         TimestampDataType        { get; set; } // timestamp
-		[Column("uniqueidentifierDataType", DbType="uniqueidentifier",  DataType=LinqToDB.DataType.Guid),                                                 Nullable            ] public Guid?           UniqueidentifierDataType { get; set; } // uniqueidentifier
-		[Column("sql_variantDataType",      DbType="sql_variant",       DataType=LinqToDB.DataType.Variant),                                              Nullable            ] public object?         SqlVariantDataType       { get; set; } // sql_variant
-		[Column("nvarchar_max_DataType",    DbType="nvarchar(max)",     DataType=LinqToDB.DataType.NVarChar,       Length=int.MaxValue),                  Nullable            ] public string?         NvarcharMaxDataType      { get; set; } // nvarchar(max)
-		[Column("varchar_max_DataType",     DbType="varchar(max)",      DataType=LinqToDB.DataType.VarChar,        Length=int.MaxValue),                  Nullable            ] public string?         VarcharMaxDataType       { get; set; } // varchar(max)
-		[Column("varbinary_max_DataType",   DbType="varbinary(max)",    DataType=LinqToDB.DataType.VarBinary,      Length=int.MaxValue),                  Nullable            ] public byte[]?         VarbinaryMaxDataType     { get; set; } // varbinary(max)
-		[Column("xmlDataType",              DbType="xml",               DataType=LinqToDB.DataType.Xml),                                                  Nullable            ] public string?         XmlDataType              { get; set; } // xml
-		[Column("datetime2DataType",        DbType="datetime2(7)",      DataType=LinqToDB.DataType.DateTime2,      Precision=7),                          Nullable            ] public DateTime?       Datetime2DataType        { get; set; } // datetime2(7)
-		[Column("datetimeoffsetDataType",   DbType="datetimeoffset(7)", DataType=LinqToDB.DataType.DateTimeOffset, Precision=7),                          Nullable            ] public DateTimeOffset? DatetimeoffsetDataType   { get; set; } // datetimeoffset(7)
-		[Column("datetimeoffset0DataType",  DbType="datetimeoffset(0)", DataType=LinqToDB.DataType.DateTimeOffset, Precision=0),                          Nullable            ] public DateTimeOffset? Datetimeoffset0DataType  { get; set; } // datetimeoffset(0)
-		[Column("datetimeoffset1DataType",  DbType="datetimeoffset(1)", DataType=LinqToDB.DataType.DateTimeOffset, Precision=1),                          Nullable            ] public DateTimeOffset? Datetimeoffset1DataType  { get; set; } // datetimeoffset(1)
-		[Column("datetimeoffset2DataType",  DbType="datetimeoffset(2)", DataType=LinqToDB.DataType.DateTimeOffset, Precision=2),                          Nullable            ] public DateTimeOffset? Datetimeoffset2DataType  { get; set; } // datetimeoffset(2)
-		[Column("datetimeoffset3DataType",  DbType="datetimeoffset(3)", DataType=LinqToDB.DataType.DateTimeOffset, Precision=3),                          Nullable            ] public DateTimeOffset? Datetimeoffset3DataType  { get; set; } // datetimeoffset(3)
-		[Column("datetimeoffset4DataType",  DbType="datetimeoffset(4)", DataType=LinqToDB.DataType.DateTimeOffset, Precision=4),                          Nullable            ] public DateTimeOffset? Datetimeoffset4DataType  { get; set; } // datetimeoffset(4)
-		[Column("datetimeoffset5DataType",  DbType="datetimeoffset(5)", DataType=LinqToDB.DataType.DateTimeOffset, Precision=5),                          Nullable            ] public DateTimeOffset? Datetimeoffset5DataType  { get; set; } // datetimeoffset(5)
-		[Column("datetimeoffset6DataType",  DbType="datetimeoffset(6)", DataType=LinqToDB.DataType.DateTimeOffset, Precision=6),                          Nullable            ] public DateTimeOffset? Datetimeoffset6DataType  { get; set; } // datetimeoffset(6)
-		[Column("datetimeoffset7DataType",  DbType="datetimeoffset(7)", DataType=LinqToDB.DataType.DateTimeOffset, Precision=7),                          Nullable            ] public DateTimeOffset? Datetimeoffset7DataType  { get; set; } // datetimeoffset(7)
-		[Column("dateDataType",             DbType="date",              DataType=LinqToDB.DataType.Date),                                                 Nullable            ] public DateTime?       DateDataType             { get; set; } // date
-		[Column("timeDataType",             DbType="time(7)",           DataType=LinqToDB.DataType.Time,           Precision=7),                          Nullable            ] public TimeSpan?       TimeDataType             { get; set; } // time(7)
+		[Column("ID",                       CanBeNull = false, DbType = "int",               DataType = DataType.Int32,          IsPrimaryKey = true)           ] public int             ID                       { get;set; } // int
+		[Column("bigintDataType",           CanBeNull = true,  DbType = "bigint",            DataType = DataType.Int64         )                                ] public long?           BigintDataType           { get;set; } // bigint
+		[Column("numericDataType",          CanBeNull = true,  DbType = "numeric(18, 1)",    DataType = DataType.Decimal,        Precision    = 18,   Scale = 1)] public decimal?        NumericDataType          { get;set; } // numeric(18, 1)
+		[Column("bitDataType",              CanBeNull = true,  DbType = "bit",               DataType = DataType.Boolean       )                                ] public bool?           BitDataType              { get;set; } // bit
+		[Column("smallintDataType",         CanBeNull = true,  DbType = "smallint",          DataType = DataType.Int16         )                                ] public short?          SmallintDataType         { get;set; } // smallint
+		[Column("decimalDataType",          CanBeNull = true,  DbType = "decimal(18, 1)",    DataType = DataType.Decimal,        Precision    = 18,   Scale = 1)] public decimal?        DecimalDataType          { get;set; } // decimal(18, 1)
+		[Column("smallmoneyDataType",       CanBeNull = true,  DbType = "smallmoney",        DataType = DataType.SmallMoney    )                                ] public decimal?        SmallmoneyDataType       { get;set; } // smallmoney
+		[Column("intDataType",              CanBeNull = true,  DbType = "int",               DataType = DataType.Int32         )                                ] public int?            IntDataType              { get;set; } // int
+		[Column("tinyintDataType",          CanBeNull = true,  DbType = "tinyint",           DataType = DataType.Byte          )                                ] public byte?           TinyintDataType          { get;set; } // tinyint
+		[Column("moneyDataType",            CanBeNull = true,  DbType = "money",             DataType = DataType.Money         )                                ] public decimal?        MoneyDataType            { get;set; } // money
+		[Column("floatDataType",            CanBeNull = true,  DbType = "float",             DataType = DataType.Double        )                                ] public double?         FloatDataType            { get;set; } // float
+		[Column("realDataType",             CanBeNull = true,  DbType = "real",              DataType = DataType.Single        )                                ] public float?          RealDataType             { get;set; } // real
+		[Column("datetimeDataType",         CanBeNull = true,  DbType = "datetime",          DataType = DataType.DateTime      )                                ] public DateTime?       DatetimeDataType         { get;set; } // datetime
+		[Column("smalldatetimeDataType",    CanBeNull = true,  DbType = "smalldatetime",     DataType = DataType.SmallDateTime )                                ] public DateTime?       SmalldatetimeDataType    { get;set; } // smalldatetime
+		[Column("charDataType",             CanBeNull = true,  DbType = "char(1)",           DataType = DataType.Char,           Length       = 1   )           ] public char?           CharDataType             { get;set; } // char(1)
+		[Column("char20DataType",           CanBeNull = true,  DbType = "char(20)",          DataType = DataType.Char,           Length       = 20  )           ] public string?         Char20DataType           { get;set; } // char(20)
+		[Column("varcharDataType",          CanBeNull = true,  DbType = "varchar(20)",       DataType = DataType.VarChar,        Length       = 20  )           ] public string?         VarcharDataType          { get;set; } // varchar(20)
+		[Column("textDataType",             CanBeNull = true,  DbType = "text",              DataType = DataType.Text          )                                ] public string?         TextDataType             { get;set; } // text
+		[Column("ncharDataType",            CanBeNull = true,  DbType = "nchar(20)",         DataType = DataType.NChar,          Length       = 20  )           ] public string?         NcharDataType            { get;set; } // nchar(20)
+		[Column("nvarcharDataType",         CanBeNull = true,  DbType = "nvarchar(20)",      DataType = DataType.NVarChar,       Length       = 20  )           ] public string?         NvarcharDataType         { get;set; } // nvarchar(20)
+		[Column("ntextDataType",            CanBeNull = true,  DbType = "ntext",             DataType = DataType.NText         )                                ] public string?         NtextDataType            { get;set; } // ntext
+		[Column("binaryDataType",           CanBeNull = true,  DbType = "binary(1)",         DataType = DataType.Binary,         Length       = 1   )           ] public byte[]?         BinaryDataType           { get;set; } // binary(1)
+		[Column("varbinaryDataType",        CanBeNull = true,  DbType = "varbinary(1)",      DataType = DataType.VarBinary,      Length       = 1   )           ] public byte[]?         VarbinaryDataType        { get;set; } // varbinary(1)
+		[Column("imageDataType",            CanBeNull = true,  DbType = "image",             DataType = DataType.Image         )                                ] public byte[]?         ImageDataType            { get;set; } // image
+		[Column("timestampDataType",        CanBeNull = true,  DbType = "timestamp",         DataType = DataType.Timestamp     )                                ] public byte[]?         TimestampDataType        { get;set; } // timestamp
+		[Column("uniqueidentifierDataType", CanBeNull = true,  DbType = "uniqueidentifier",  DataType = DataType.Guid          )                                ] public Guid?           UniqueidentifierDataType { get;set; } // uniqueidentifier
+		[Column("sql_variantDataType",      CanBeNull = true,  DbType = "sql_variant",       DataType = DataType.Variant       )                                ] public object?         SqlVariantDataType       { get;set; } // sql_variant
+		[Column("nvarchar_max_DataType",    CanBeNull = true,  DbType = "nvarchar(max)",     DataType = DataType.NVarChar      )                                ] public string?         NvarcharMaxDataType      { get;set; } // nvarchar(max)
+		[Column("varchar_max_DataType",     CanBeNull = true,  DbType = "varchar(max)",      DataType = DataType.VarChar       )                                ] public string?         VarcharMaxDataType       { get;set; } // varchar(max)
+		[Column("varbinary_max_DataType",   CanBeNull = true,  DbType = "varbinary(max)",    DataType = DataType.VarBinary     )                                ] public byte[]?         VarbinaryMaxDataType     { get;set; } // varbinary(max)
+		[Column("xmlDataType",              CanBeNull = true,  DbType = "xml",               DataType = DataType.Xml           )                                ] public string?         XmlDataType              { get;set; } // xml
+		[Column("datetime2DataType",        CanBeNull = true,  DbType = "datetime2(7)",      DataType = DataType.DateTime2,      Precision    = 7   )           ] public DateTime?       Datetime2DataType        { get;set; } // datetime2(7)
+		[Column("datetimeoffsetDataType",   CanBeNull = true,  DbType = "datetimeoffset(7)", DataType = DataType.DateTimeOffset, Precision    = 7   )           ] public DateTimeOffset? DatetimeoffsetDataType   { get;set; } // datetimeoffset(7)
+		[Column("datetimeoffset0DataType",  CanBeNull = true,  DbType = "datetimeoffset(0)", DataType = DataType.DateTimeOffset, Precision    = 0   )           ] public DateTimeOffset? Datetimeoffset0DataType  { get;set; } // datetimeoffset(0)
+		[Column("datetimeoffset1DataType",  CanBeNull = true,  DbType = "datetimeoffset(1)", DataType = DataType.DateTimeOffset, Precision    = 1   )           ] public DateTimeOffset? Datetimeoffset1DataType  { get;set; } // datetimeoffset(1)
+		[Column("datetimeoffset2DataType",  CanBeNull = true,  DbType = "datetimeoffset(2)", DataType = DataType.DateTimeOffset, Precision    = 2   )           ] public DateTimeOffset? Datetimeoffset2DataType  { get;set; } // datetimeoffset(2)
+		[Column("datetimeoffset3DataType",  CanBeNull = true,  DbType = "datetimeoffset(3)", DataType = DataType.DateTimeOffset, Precision    = 3   )           ] public DateTimeOffset? Datetimeoffset3DataType  { get;set; } // datetimeoffset(3)
+		[Column("datetimeoffset4DataType",  CanBeNull = true,  DbType = "datetimeoffset(4)", DataType = DataType.DateTimeOffset, Precision    = 4   )           ] public DateTimeOffset? Datetimeoffset4DataType  { get;set; } // datetimeoffset(4)
+		[Column("datetimeoffset5DataType",  CanBeNull = true,  DbType = "datetimeoffset(5)", DataType = DataType.DateTimeOffset, Precision    = 5   )           ] public DateTimeOffset? Datetimeoffset5DataType  { get;set; } // datetimeoffset(5)
+		[Column("datetimeoffset6DataType",  CanBeNull = true,  DbType = "datetimeoffset(6)", DataType = DataType.DateTimeOffset, Precision    = 6   )           ] public DateTimeOffset? Datetimeoffset6DataType  { get;set; } // datetimeoffset(6)
+		[Column("datetimeoffset7DataType",  CanBeNull = true,  DbType = "datetimeoffset(7)", DataType = DataType.DateTimeOffset, Precision    = 7   )           ] public DateTimeOffset? Datetimeoffset7DataType  { get;set; } // datetimeoffset(7)
+		[Column("dateDataType",             CanBeNull = true,  DbType = "date",              DataType = DataType.Date          )                                ] public DateTime?       DateDataType             { get;set; } // date
+		[Column("timeDataType",             CanBeNull = true,  DbType = "time(7)",           DataType = DataType.Time,           Precision    = 7   )           ] public TimeSpan?       TimeDataType             { get;set; } // time(7)
 	}
 
 	[Table("AllTypes2")]
 	public partial class AllTypes2
 	{
-		[Column(                          DbType="int",               DataType=LinqToDB.DataType.Int32),                       PrimaryKey, Identity] public int             ID                     { get; set; } // int
-		[Column("dateDataType",           DbType="date",              DataType=LinqToDB.DataType.Date),                        Nullable            ] public DateTime?       DateDataType           { get; set; } // date
-		[Column("datetimeoffsetDataType", DbType="datetimeoffset(7)", DataType=LinqToDB.DataType.DateTimeOffset, Precision=7), Nullable            ] public DateTimeOffset? DatetimeoffsetDataType { get; set; } // datetimeoffset(7)
-		[Column("datetime2DataType",      DbType="datetime2(7)",      DataType=LinqToDB.DataType.DateTime2,      Precision=7), Nullable            ] public DateTime?       Datetime2DataType      { get; set; } // datetime2(7)
-		[Column("timeDataType",           DbType="time(7)",           DataType=LinqToDB.DataType.Time,           Precision=7), Nullable            ] public TimeSpan?       TimeDataType           { get; set; } // time(7)
-		[Column("hierarchyidDataType",    DbType="hierarchyid",       DataType=LinqToDB.DataType.Udt),                         Nullable            ] public SqlHierarchyId? HierarchyidDataType    { get; set; } // hierarchyid
-		[Column("geographyDataType",      DbType="geography",         DataType=LinqToDB.DataType.Udt),                         Nullable            ] public SqlGeography?   GeographyDataType      { get; set; } // geography
-		[Column("geometryDataType",       DbType="geometry",          DataType=LinqToDB.DataType.Udt),                         Nullable            ] public SqlGeometry?    GeometryDataType       { get; set; } // geometry
+		[Column("ID",                     CanBeNull = false, DbType = "int",               DataType = DataType.Int32,          IsPrimaryKey = true)] public int             ID                     { get;set; } // int
+		[Column("dateDataType",           CanBeNull = true,  DbType = "date",              DataType = DataType.Date          )                     ] public DateTime?       DateDataType           { get;set; } // date
+		[Column("datetimeoffsetDataType", CanBeNull = true,  DbType = "datetimeoffset(7)", DataType = DataType.DateTimeOffset, Precision    = 7   )] public DateTimeOffset? DatetimeoffsetDataType { get;set; } // datetimeoffset(7)
+		[Column("datetime2DataType",      CanBeNull = true,  DbType = "datetime2(7)",      DataType = DataType.DateTime2,      Precision    = 7   )] public DateTime?       Datetime2DataType      { get;set; } // datetime2(7)
+		[Column("timeDataType",           CanBeNull = true,  DbType = "time(7)",           DataType = DataType.Time,           Precision    = 7   )] public TimeSpan?       TimeDataType           { get;set; } // time(7)
+		[Column("hierarchyidDataType",    CanBeNull = true,  DbType = "hierarchyid",       DataType = DataType.Udt           )                     ] public SqlHierarchyId? HierarchyidDataType    { get;set; } // hierarchyid
+		[Column("geographyDataType",      CanBeNull = true,  DbType = "geography",         DataType = DataType.Udt           )                     ] public SqlGeography?   GeographyDataType      { get;set; } // geography
+		[Column("geometryDataType",       CanBeNull = true,  DbType = "geometry",          DataType = DataType.Udt           )                     ] public SqlGeometry?    GeometryDataType       { get;set; } // geometry
+	}
+
+	[Table("AssociatedTable")]
+	public partial class AssociatedTable
+	{
+		[Column("Id", CanBeNull = false, DbType = "int", DataType = DataType.Int32)] public int Id { get;set; } // int
 	}
 
 	[Table("Child")]
 	public partial class Child
 	{
-		[Column(       DbType="int", DataType=LinqToDB.DataType.Int32), Nullable            ] public int? ParentID { get; set; } // int
+		[Column("ParentID", CanBeNull = true,  DbType = "int", DataType = DataType.Int32)                     ] public int? ParentID { get;set; } // int
 		/// <summary>
 		/// This ChildID column
 		/// </summary>
-		[Column(       DbType="int", DataType=LinqToDB.DataType.Int32), Nullable            ] public int? ChildID  { get; set; } // int
-		[Column("_ID", DbType="int", DataType=LinqToDB.DataType.Int32), PrimaryKey, Identity] public int  Id       { get; set; } // int
+		[Column("ChildID",  CanBeNull = true,  DbType = "int", DataType = DataType.Int32)                     ] public int? ChildID  { get;set; } // int
+		[Column("_ID", CanBeNull = false, DbType = "int", DataType = DataType.Int32, IsPrimaryKey = true)] public int  Id       { get;set; } // int
+	}
+
+	[Table("CollatedTable")]
+	public partial class CollatedTable
+	{
+		[Column("Id",              CanBeNull = false, DbType = "int",          DataType = DataType.Int32   )             ] public int    Id              { get;set; } // int
+		[Column("CaseSensitive",   CanBeNull = false, DbType = "nvarchar(20)", DataType = DataType.NVarChar, Length = 20)] public string CaseSensitive   { get;set; } = null!; // nvarchar(20)
+		[Column("CaseInsensitive", CanBeNull = false, DbType = "nvarchar(20)", DataType = DataType.NVarChar, Length = 20)] public string CaseInsensitive { get;set; } = null!; // nvarchar(20)
 	}
 
 	[Table("CreateIfNotExistsTable")]
 	public partial class CreateIfNotExistsTable
 	{
-		[Column(DbType="int", DataType=LinqToDB.DataType.Int32), NotNull] public int Id    { get; set; } // int
-		[Column(DbType="int", DataType=LinqToDB.DataType.Int32), NotNull] public int Value { get; set; } // int
+		[Column("Id",    CanBeNull = false, DbType = "int", DataType = DataType.Int32)] public int Id    { get;set; } // int
+		[Column("Value", CanBeNull = false, DbType = "int", DataType = DataType.Int32)] public int Value { get;set; } // int
 	}
 
 	[Table("DataType")]
 	public partial class DataType
 	{
-		[Column("id", DbType="int", DataType=LinqToDB.DataType.Int32), NotNull] public int Id { get; set; } // int
+		[Column("id", CanBeNull = false, DbType = "int", DataType = DataType.Int32)] public int Id { get;set; } // int
 	}
 
 	[Table("DecimalOverflow")]
 	public partial class DecimalOverflow
 	{
-		[Column(DbType="decimal(38, 20)", DataType=LinqToDB.DataType.Decimal, Precision=38, Scale=20), PrimaryKey,  NotNull] public decimal  Decimal1 { get; set; } // decimal(38, 20)
-		[Column(DbType="decimal(31, 2)",  DataType=LinqToDB.DataType.Decimal, Precision=31, Scale=2),     Nullable         ] public decimal? Decimal2 { get; set; } // decimal(31, 2)
-		[Column(DbType="decimal(38, 36)", DataType=LinqToDB.DataType.Decimal, Precision=38, Scale=36),    Nullable         ] public decimal? Decimal3 { get; set; } // decimal(38, 36)
-		[Column(DbType="decimal(29, 0)",  DataType=LinqToDB.DataType.Decimal, Precision=29, Scale=0),     Nullable         ] public decimal? Decimal4 { get; set; } // decimal(29, 0)
-		[Column(DbType="decimal(38, 38)", DataType=LinqToDB.DataType.Decimal, Precision=38, Scale=38),    Nullable         ] public decimal? Decimal5 { get; set; } // decimal(38, 38)
+		[Column("Decimal1", CanBeNull = false, DbType = "decimal(38, 20)", DataType = DataType.Decimal, Precision = 38, Scale = 20, IsPrimaryKey = true)] public decimal  Decimal1 { get;set; } // decimal(38, 20)
+		[Column("Decimal2", CanBeNull = true,  DbType = "decimal(31, 2)",  DataType = DataType.Decimal, Precision = 31, Scale = 2 )                     ] public decimal? Decimal2 { get;set; } // decimal(31, 2)
+		[Column("Decimal3", CanBeNull = true,  DbType = "decimal(38, 36)", DataType = DataType.Decimal, Precision = 38, Scale = 36)                     ] public decimal? Decimal3 { get;set; } // decimal(38, 36)
+		[Column("Decimal4", CanBeNull = true,  DbType = "decimal(29, 0)",  DataType = DataType.Decimal, Precision = 29, Scale = 0 )                     ] public decimal? Decimal4 { get;set; } // decimal(29, 0)
+		[Column("Decimal5", CanBeNull = true,  DbType = "decimal(38, 38)", DataType = DataType.Decimal, Precision = 38, Scale = 38)                     ] public decimal? Decimal5 { get;set; } // decimal(38, 38)
 	}
 
 	[Table("Doctor")]
 	public partial class Doctor
 	{
-		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               PrimaryKey, NotNull] public int    PersonID { get; set; } // int
-		[Column(DbType="nvarchar(50)", DataType=LinqToDB.DataType.NVarChar, Length=50),             NotNull] public string Taxonomy { get; set; } = null!; // nvarchar(50)
+		[Column("PersonID", CanBeNull = false, DbType = "int",          DataType = DataType.Int32,    IsPrimaryKey = true)] public int    PersonID { get;set; } // int
+		[Column("Taxonomy", CanBeNull = false, DbType = "nvarchar(50)", DataType = DataType.NVarChar, Length       = 50  )] public string Taxonomy { get;set; } = null!; // nvarchar(50)
 	}
 
 	[Table("GrandChild")]
 	public partial class GrandChild
 	{
-		[Column(       DbType="int", DataType=LinqToDB.DataType.Int32), Nullable            ] public int? ParentID     { get; set; } // int
-		[Column(       DbType="int", DataType=LinqToDB.DataType.Int32), Nullable            ] public int? ChildID      { get; set; } // int
-		[Column(       DbType="int", DataType=LinqToDB.DataType.Int32), Nullable            ] public int? GrandChildID { get; set; } // int
-		[Column("_ID", DbType="int", DataType=LinqToDB.DataType.Int32), PrimaryKey, Identity] public int  Id           { get; set; } // int
+		[Column("ParentID",     CanBeNull = true,  DbType = "int", DataType = DataType.Int32)                     ] public int? ParentID     { get;set; } // int
+		[Column("ChildID",      CanBeNull = true,  DbType = "int", DataType = DataType.Int32)                     ] public int? ChildID      { get;set; } // int
+		[Column("GrandChildID", CanBeNull = true,  DbType = "int", DataType = DataType.Int32)                     ] public int? GrandChildID { get;set; } // int
+		[Column("_ID", CanBeNull = false, DbType = "int", DataType = DataType.Int32, IsPrimaryKey = true)] public int  Id           { get;set; } // int
 	}
 
 	[Table("GuidID")]
 	public partial class GuidID
 	{
-		[Column(DbType="uniqueidentifier", DataType=LinqToDB.DataType.Guid),  PrimaryKey,  NotNull] public Guid ID     { get; set; } // uniqueidentifier
-		[Column(DbType="int",              DataType=LinqToDB.DataType.Int32),    Nullable         ] public int? Field1 { get; set; } // int
+		[Column("ID",     CanBeNull = false, DbType = "uniqueidentifier", DataType = DataType.Guid,  IsPrimaryKey = true)] public Guid ID     { get;set; } // uniqueidentifier
+		[Column("Field1", CanBeNull = true,  DbType = "int",              DataType = DataType.Int32)                     ] public int? Field1 { get;set; } // int
 	}
 
 	[Table("GuidID2")]
 	public partial class GuidID2
 	{
-		[Column(DbType="uniqueidentifier", DataType=LinqToDB.DataType.Guid), PrimaryKey, NotNull] public Guid ID { get; set; } // uniqueidentifier
+		[Column("ID", CanBeNull = false, DbType = "uniqueidentifier", DataType = DataType.Guid, IsPrimaryKey = true)] public Guid ID { get;set; } // uniqueidentifier
 	}
 
 	[Table("IndexTable")]
 	public partial class IndexTable
 	{
-		[Column(DbType="int", DataType=LinqToDB.DataType.Int32), PrimaryKey(2), NotNull] public int PKField1    { get; set; } // int
-		[Column(DbType="int", DataType=LinqToDB.DataType.Int32), PrimaryKey(1), NotNull] public int PKField2    { get; set; } // int
-		[Column(DbType="int", DataType=LinqToDB.DataType.Int32),                NotNull] public int UniqueField { get; set; } // int
-		[Column(DbType="int", DataType=LinqToDB.DataType.Int32),                NotNull] public int IndexField  { get; set; } // int
+		[Column("PKField1",    CanBeNull = false, DbType = "int", DataType = DataType.Int32, IsPrimaryKey = true, PrimaryKeyOrder = 1)] public int PKField1    { get;set; } // int
+		[Column("PKField2",    CanBeNull = false, DbType = "int", DataType = DataType.Int32, IsPrimaryKey = true, PrimaryKeyOrder = 0)] public int PKField2    { get;set; } // int
+		[Column("UniqueField", CanBeNull = false, DbType = "int", DataType = DataType.Int32)                                          ] public int UniqueField { get;set; } // int
+		[Column("IndexField",  CanBeNull = false, DbType = "int", DataType = DataType.Int32)                                          ] public int IndexField  { get;set; } // int
 
 		#region Associations
-
 		/// <summary>
 		/// FK_Patient2_IndexTable_BackReference
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+		[Association(CanBeNull = true, ThisKey = "PKField2,PKField1", OtherKey = "PKField2,PKField1")]
 		public IndexTable2? Patient { get; set; }
-
 		#endregion
 	}
 
 	[Table("IndexTable2")]
 	public partial class IndexTable2
 	{
-		[Column(DbType="int", DataType=LinqToDB.DataType.Int32), PrimaryKey(2), NotNull] public int PKField1 { get; set; } // int
-		[Column(DbType="int", DataType=LinqToDB.DataType.Int32), PrimaryKey(1), NotNull] public int PKField2 { get; set; } // int
+		[Column("PKField1", CanBeNull = false, DbType = "int", DataType = DataType.Int32, IsPrimaryKey = true, PrimaryKeyOrder = 1)] public int PKField1 { get;set; } // int
+		[Column("PKField2", CanBeNull = false, DbType = "int", DataType = DataType.Int32, IsPrimaryKey = true, PrimaryKeyOrder = 0)] public int PKField2 { get;set; } // int
 
 		#region Associations
-
 		/// <summary>
 		/// FK_Patient2_IndexTable
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Patient2_IndexTable", BackReferenceName="Patient")]
+		[Association(CanBeNull = false, ThisKey = "PKField2,PKField1", OtherKey = "PKField2,PKField1")]
 		public IndexTable Patient2IndexTable { get; set; } = null!;
-
 		#endregion
 	}
 
 	[Table("InheritanceChild")]
 	public partial class InheritanceChild
 	{
-		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               PrimaryKey,  NotNull] public int     InheritanceChildId  { get; set; } // int
-		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),                            NotNull] public int     InheritanceParentId { get; set; } // int
-		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),                  Nullable         ] public int?    TypeDiscriminator   { get; set; } // int
-		[Column(DbType="nvarchar(50)", DataType=LinqToDB.DataType.NVarChar, Length=50),    Nullable         ] public string? Name                { get; set; } // nvarchar(50)
+		[Column("InheritanceChildId",  CanBeNull = false, DbType = "int",          DataType = DataType.Int32,    IsPrimaryKey = true)] public int     InheritanceChildId  { get;set; } // int
+		[Column("InheritanceParentId", CanBeNull = false, DbType = "int",          DataType = DataType.Int32   )                     ] public int     InheritanceParentId { get;set; } // int
+		[Column("TypeDiscriminator",   CanBeNull = true,  DbType = "int",          DataType = DataType.Int32   )                     ] public int?    TypeDiscriminator   { get;set; } // int
+		[Column("Name",                CanBeNull = true,  DbType = "nvarchar(50)", DataType = DataType.NVarChar, Length       = 50  )] public string? Name                { get;set; } // nvarchar(50)
 	}
 
 	[Table("InheritanceParent")]
 	public partial class InheritanceParent
 	{
-		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               PrimaryKey,  NotNull] public int     InheritanceParentId { get; set; } // int
-		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),                  Nullable         ] public int?    TypeDiscriminator   { get; set; } // int
-		[Column(DbType="nvarchar(50)", DataType=LinqToDB.DataType.NVarChar, Length=50),    Nullable         ] public string? Name                { get; set; } // nvarchar(50)
+		[Column("InheritanceParentId", CanBeNull = false, DbType = "int",          DataType = DataType.Int32,    IsPrimaryKey = true)] public int     InheritanceParentId { get;set; } // int
+		[Column("TypeDiscriminator",   CanBeNull = true,  DbType = "int",          DataType = DataType.Int32   )                     ] public int?    TypeDiscriminator   { get;set; } // int
+		[Column("Name",                CanBeNull = true,  DbType = "nvarchar(50)", DataType = DataType.NVarChar, Length       = 50  )] public string? Name                { get;set; } // nvarchar(50)
 	}
 
 	[Table("Issue1115")]
 	public partial class Issue1115
 	{
-		[Column("id", DbType="hierarchyid", DataType=LinqToDB.DataType.Udt), PrimaryKey, NotNull] public SqlHierarchyId Id { get; set; } // hierarchyid
+		[Column("id", CanBeNull = false, DbType = "hierarchyid", DataType = DataType.Udt, IsPrimaryKey = true)] public SqlHierarchyId Id { get;set; } // hierarchyid
 	}
 
 	[Table("Issue1144")]
@@ -1443,30 +358,49 @@ namespace Sql2017ProcSchema
 		/// <summary>
 		/// Column description
 		/// </summary>
-		[Column("id", DbType="int", DataType=LinqToDB.DataType.Int32), PrimaryKey, NotNull] public int Id { get; set; } // int
+		[Column("id", CanBeNull = false, DbType = "int", DataType = DataType.Int32, IsPrimaryKey = true)] public int Id { get;set; } // int
+	}
+
+	[Table("Issue2981Entity")]
+	public partial class Issue2981Entity
+	{
+		[Column("OwnerId", CanBeNull = false, DbType = "int", DataType = DataType.Int32)] public int OwnerId { get;set; } // int
+	}
+
+	[Table("Issue2981OwnerEntity")]
+	public partial class Issue2981OwnerEntity
+	{
+		[Column("Id", CanBeNull = false, DbType = "int", DataType = DataType.Int32)] public int Id { get;set; } // int
 	}
 
 	[Table("LinqDataTypes")]
 	public partial class LinqDataType
 	{
-		[Column("_ID", DbType="int",              DataType=LinqToDB.DataType.Int32),                            PrimaryKey, Identity] public int       Id             { get; set; } // int
-		[Column(       DbType="int",              DataType=LinqToDB.DataType.Int32),                            Nullable            ] public int?      ID             { get; set; } // int
-		[Column(       DbType="decimal(10, 4)",   DataType=LinqToDB.DataType.Decimal,   Precision=10, Scale=4), Nullable            ] public decimal?  MoneyValue     { get; set; } // decimal(10, 4)
-		[Column(       DbType="datetime",         DataType=LinqToDB.DataType.DateTime),                         Nullable            ] public DateTime? DateTimeValue  { get; set; } // datetime
-		[Column(       DbType="datetime2(7)",     DataType=LinqToDB.DataType.DateTime2, Precision=7),           Nullable            ] public DateTime? DateTimeValue2 { get; set; } // datetime2(7)
-		[Column(       DbType="bit",              DataType=LinqToDB.DataType.Boolean),                          Nullable            ] public bool?     BoolValue      { get; set; } // bit
-		[Column(       DbType="uniqueidentifier", DataType=LinqToDB.DataType.Guid),                             Nullable            ] public Guid?     GuidValue      { get; set; } // uniqueidentifier
-		[Column(       DbType="varbinary(5000)",  DataType=LinqToDB.DataType.VarBinary, Length=5000),           Nullable            ] public byte[]?   BinaryValue    { get; set; } // varbinary(5000)
-		[Column(       DbType="smallint",         DataType=LinqToDB.DataType.Int16),                            Nullable            ] public short?    SmallIntValue  { get; set; } // smallint
-		[Column(       DbType="int",              DataType=LinqToDB.DataType.Int32),                            Nullable            ] public int?      IntValue       { get; set; } // int
-		[Column(       DbType="bigint",           DataType=LinqToDB.DataType.Int64),                            Nullable            ] public long?     BigIntValue    { get; set; } // bigint
-		[Column(       DbType="nvarchar(50)",     DataType=LinqToDB.DataType.NVarChar,  Length=50),             Nullable            ] public string?   StringValue    { get; set; } // nvarchar(50)
+		[Column("_ID", CanBeNull = false, DbType = "int",              DataType = DataType.Int32,     IsPrimaryKey = true)           ] public int       Id             { get;set; } // int
+		[Column("ID",             CanBeNull = true,  DbType = "int",              DataType = DataType.Int32    )                                ] public int?      ID             { get;set; } // int
+		[Column("MoneyValue",     CanBeNull = true,  DbType = "decimal(10, 4)",   DataType = DataType.Decimal,   Precision    = 10,   Scale = 4)] public decimal?  MoneyValue     { get;set; } // decimal(10, 4)
+		[Column("DateTimeValue",  CanBeNull = true,  DbType = "datetime",         DataType = DataType.DateTime )                                ] public DateTime? DateTimeValue  { get;set; } // datetime
+		[Column("DateTimeValue2", CanBeNull = true,  DbType = "datetime2(7)",     DataType = DataType.DateTime2, Precision    = 7   )           ] public DateTime? DateTimeValue2 { get;set; } // datetime2(7)
+		[Column("BoolValue",      CanBeNull = true,  DbType = "bit",              DataType = DataType.Boolean  )                                ] public bool?     BoolValue      { get;set; } // bit
+		[Column("GuidValue",      CanBeNull = true,  DbType = "uniqueidentifier", DataType = DataType.Guid     )                                ] public Guid?     GuidValue      { get;set; } // uniqueidentifier
+		[Column("BinaryValue",    CanBeNull = true,  DbType = "varbinary(5000)",  DataType = DataType.VarBinary, Length       = 5000)           ] public byte[]?   BinaryValue    { get;set; } // varbinary(5000)
+		[Column("SmallIntValue",  CanBeNull = true,  DbType = "smallint",         DataType = DataType.Int16    )                                ] public short?    SmallIntValue  { get;set; } // smallint
+		[Column("IntValue",       CanBeNull = true,  DbType = "int",              DataType = DataType.Int32    )                                ] public int?      IntValue       { get;set; } // int
+		[Column("BigIntValue",    CanBeNull = true,  DbType = "bigint",           DataType = DataType.Int64    )                                ] public long?     BigIntValue    { get;set; } // bigint
+		[Column("StringValue",    CanBeNull = true,  DbType = "nvarchar(50)",     DataType = DataType.NVarChar,  Length       = 50  )           ] public string?   StringValue    { get;set; } // nvarchar(50)
+	}
+
+	[Table("MainTable")]
+	public partial class MainTable
+	{
+		[Column("Id",    CanBeNull = false, DbType = "int",            DataType = DataType.Int32   )               ] public int     Id    { get;set; } // int
+		[Column("Field", CanBeNull = true,  DbType = "nvarchar(4000)", DataType = DataType.NVarChar, Length = 4000)] public string? Field { get;set; } // nvarchar(4000)
 	}
 
 	[Table("Name.Test")]
 	public partial class NameTest
 	{
-		[Column("Name.Test", DbType="int", DataType=LinqToDB.DataType.Int32), Nullable] public int? NameTestColumn { get; set; } // int
+		[Column("Name.Test", CanBeNull = true, DbType = "int", DataType = DataType.Int32)] public int? NameTestColumn { get;set; } // int
 	}
 
 	/// <summary>
@@ -1475,375 +409,353 @@ namespace Sql2017ProcSchema
 	[Table("Parent")]
 	public partial class Parent
 	{
-		[Column(       DbType="int", DataType=LinqToDB.DataType.Int32), Nullable            ] public int? ParentID { get; set; } // int
-		[Column(       DbType="int", DataType=LinqToDB.DataType.Int32), Nullable            ] public int? Value1   { get; set; } // int
-		[Column("_ID", DbType="int", DataType=LinqToDB.DataType.Int32), PrimaryKey, Identity] public int  Id       { get; set; } // int
+		[Column("ParentID", CanBeNull = true,  DbType = "int", DataType = DataType.Int32)                     ] public int? ParentID { get;set; } // int
+		[Column("Value1",   CanBeNull = true,  DbType = "int", DataType = DataType.Int32)                     ] public int? Value1   { get;set; } // int
+		[Column("_ID", CanBeNull = false, DbType = "int", DataType = DataType.Int32, IsPrimaryKey = true)] public int  Id       { get;set; } // int
 	}
 
 	[Table("ParentChildView", IsView=true)]
 	public partial class ParentChildView
 	{
-		[Column(DbType="int", DataType=LinqToDB.DataType.Int32), Nullable] public int? ParentID { get; set; } // int
-		[Column(DbType="int", DataType=LinqToDB.DataType.Int32), Nullable] public int? Value1   { get; set; } // int
-		[Column(DbType="int", DataType=LinqToDB.DataType.Int32), Nullable] public int? ChildID  { get; set; } // int
+		[Column("ParentID", CanBeNull = true, DbType = "int", DataType = DataType.Int32)] public int? ParentID { get;set; } // int
+		[Column("Value1",   CanBeNull = true, DbType = "int", DataType = DataType.Int32)] public int? Value1   { get;set; } // int
+		[Column("ChildID",  CanBeNull = true, DbType = "int", DataType = DataType.Int32)] public int? ChildID  { get;set; } // int
 	}
 
 	[Table("ParentView", IsView=true)]
 	public partial class ParentView
 	{
-		[Column(       DbType="int", DataType=LinqToDB.DataType.Int32), Nullable] public int? ParentID { get; set; } // int
-		[Column(       DbType="int", DataType=LinqToDB.DataType.Int32), Nullable] public int? Value1   { get; set; } // int
-		[Column("_ID", DbType="int", DataType=LinqToDB.DataType.Int32), Identity] public int  Id       { get; set; } // int
+		[Column("ParentID", CanBeNull = true,  DbType = "int", DataType = DataType.Int32)] public int? ParentID { get;set; } // int
+		[Column("Value1",   CanBeNull = true,  DbType = "int", DataType = DataType.Int32)] public int? Value1   { get;set; } // int
+		[Column("_ID", CanBeNull = false, DbType = "int", DataType = DataType.Int32)] public int  Id       { get;set; } // int
 	}
 
 	[Table("Patient")]
 	public partial class Patient
 	{
-		[Column(DbType="int",           DataType=LinqToDB.DataType.Int32),                PrimaryKey, NotNull] public int    PersonID  { get; set; } // int
-		[Column(DbType="nvarchar(256)", DataType=LinqToDB.DataType.NVarChar, Length=256),             NotNull] public string Diagnosis { get; set; } = null!; // nvarchar(256)
+		[Column("PersonID",  CanBeNull = false, DbType = "int",           DataType = DataType.Int32,    IsPrimaryKey = true)] public int    PersonID  { get;set; } // int
+		[Column("Diagnosis", CanBeNull = false, DbType = "nvarchar(256)", DataType = DataType.NVarChar, Length       = 256 )] public string Diagnosis { get;set; } = null!; // nvarchar(256)
 	}
 
 	[Table("SameTableName")]
 	public partial class SameTableName
 	{
-		[Column("id", DbType="int", DataType=LinqToDB.DataType.Int32), Nullable] public int? Id { get; set; } // int
+		[Column("id", CanBeNull = true, DbType = "int", DataType = DataType.Int32)] public int? Id { get;set; } // int
 	}
 
 	[Table("SqlTypes")]
 	public partial class SqlType
 	{
-		[Column(DbType="int",         DataType=LinqToDB.DataType.Int32), PrimaryKey,  NotNull] public int             ID  { get; set; } // int
-		[Column(DbType="hierarchyid", DataType=LinqToDB.DataType.Udt),      Nullable         ] public SqlHierarchyId? HID { get; set; } // hierarchyid
+		[Column("ID",  CanBeNull = false, DbType = "int",         DataType = DataType.Int32, IsPrimaryKey = true)] public int             ID  { get;set; } // int
+		[Column("HID", CanBeNull = true,  DbType = "hierarchyid", DataType = DataType.Udt  )                     ] public SqlHierarchyId? HID { get;set; } // hierarchyid
 	}
 
 	[Table("TestIdentity")]
 	public partial class TestIdentity
 	{
-		[Column(DbType="int", DataType=LinqToDB.DataType.Int32), PrimaryKey, Identity] public int ID { get; set; } // int
+		[Column("ID", CanBeNull = false, DbType = "int", DataType = DataType.Int32, IsPrimaryKey = true)] public int ID { get;set; } // int
 	}
 
 	[Table("TestMerge1")]
 	public partial class TestMerge1
 	{
-		[Column(DbType="int",               DataType=LinqToDB.DataType.Int32),                                  PrimaryKey,  NotNull] public int             Id              { get; set; } // int
-		[Column(DbType="int",               DataType=LinqToDB.DataType.Int32),                                     Nullable         ] public int?            Field1          { get; set; } // int
-		[Column(DbType="int",               DataType=LinqToDB.DataType.Int32),                                     Nullable         ] public int?            Field2          { get; set; } // int
-		[Column(DbType="int",               DataType=LinqToDB.DataType.Int32),                                     Nullable         ] public int?            Field3          { get; set; } // int
-		[Column(DbType="int",               DataType=LinqToDB.DataType.Int32),                                     Nullable         ] public int?            Field4          { get; set; } // int
-		[Column(DbType="int",               DataType=LinqToDB.DataType.Int32),                                     Nullable         ] public int?            Field5          { get; set; } // int
-		[Column(DbType="bigint",            DataType=LinqToDB.DataType.Int64),                                     Nullable         ] public long?           FieldInt64      { get; set; } // bigint
-		[Column(DbType="bit",               DataType=LinqToDB.DataType.Boolean),                                   Nullable         ] public bool?           FieldBoolean    { get; set; } // bit
-		[Column(DbType="varchar(20)",       DataType=LinqToDB.DataType.VarChar,        Length=20),                 Nullable         ] public string?         FieldString     { get; set; } // varchar(20)
-		[Column(DbType="nvarchar(20)",      DataType=LinqToDB.DataType.NVarChar,       Length=20),                 Nullable         ] public string?         FieldNString    { get; set; } // nvarchar(20)
-		[Column(DbType="char(1)",           DataType=LinqToDB.DataType.Char,           Length=1),                  Nullable         ] public char?           FieldChar       { get; set; } // char(1)
-		[Column(DbType="nchar(1)",          DataType=LinqToDB.DataType.NChar,          Length=1),                  Nullable         ] public char?           FieldNChar      { get; set; } // nchar(1)
-		[Column(DbType="real",              DataType=LinqToDB.DataType.Single),                                    Nullable         ] public float?          FieldFloat      { get; set; } // real
-		[Column(DbType="float",             DataType=LinqToDB.DataType.Double),                                    Nullable         ] public double?         FieldDouble     { get; set; } // float
-		[Column(DbType="datetime",          DataType=LinqToDB.DataType.DateTime),                                  Nullable         ] public DateTime?       FieldDateTime   { get; set; } // datetime
-		[Column(DbType="datetimeoffset(7)", DataType=LinqToDB.DataType.DateTimeOffset, Precision=7),               Nullable         ] public DateTimeOffset? FieldDateTime2  { get; set; } // datetimeoffset(7)
-		[Column(DbType="varbinary(20)",     DataType=LinqToDB.DataType.VarBinary,      Length=20),                 Nullable         ] public byte[]?         FieldBinary     { get; set; } // varbinary(20)
-		[Column(DbType="uniqueidentifier",  DataType=LinqToDB.DataType.Guid),                                      Nullable         ] public Guid?           FieldGuid       { get; set; } // uniqueidentifier
-		[Column(DbType="decimal(24, 10)",   DataType=LinqToDB.DataType.Decimal,        Precision=24, Scale=10),    Nullable         ] public decimal?        FieldDecimal    { get; set; } // decimal(24, 10)
-		[Column(DbType="date",              DataType=LinqToDB.DataType.Date),                                      Nullable         ] public DateTime?       FieldDate       { get; set; } // date
-		[Column(DbType="time(7)",           DataType=LinqToDB.DataType.Time,           Precision=7),               Nullable         ] public TimeSpan?       FieldTime       { get; set; } // time(7)
-		[Column(DbType="varchar(20)",       DataType=LinqToDB.DataType.VarChar,        Length=20),                 Nullable         ] public string?         FieldEnumString { get; set; } // varchar(20)
-		[Column(DbType="int",               DataType=LinqToDB.DataType.Int32),                                     Nullable         ] public int?            FieldEnumNumber { get; set; } // int
+		[Column("Id",              CanBeNull = false, DbType = "int",               DataType = DataType.Int32,          IsPrimaryKey = true)            ] public int             Id              { get;set; } // int
+		[Column("Field1",          CanBeNull = true,  DbType = "int",               DataType = DataType.Int32         )                                 ] public int?            Field1          { get;set; } // int
+		[Column("Field2",          CanBeNull = true,  DbType = "int",               DataType = DataType.Int32         )                                 ] public int?            Field2          { get;set; } // int
+		[Column("Field3",          CanBeNull = true,  DbType = "int",               DataType = DataType.Int32         )                                 ] public int?            Field3          { get;set; } // int
+		[Column("Field4",          CanBeNull = true,  DbType = "int",               DataType = DataType.Int32         )                                 ] public int?            Field4          { get;set; } // int
+		[Column("Field5",          CanBeNull = true,  DbType = "int",               DataType = DataType.Int32         )                                 ] public int?            Field5          { get;set; } // int
+		[Column("FieldInt64",      CanBeNull = true,  DbType = "bigint",            DataType = DataType.Int64         )                                 ] public long?           FieldInt64      { get;set; } // bigint
+		[Column("FieldBoolean",    CanBeNull = true,  DbType = "bit",               DataType = DataType.Boolean       )                                 ] public bool?           FieldBoolean    { get;set; } // bit
+		[Column("FieldString",     CanBeNull = true,  DbType = "varchar(20)",       DataType = DataType.VarChar,        Length       = 20  )            ] public string?         FieldString     { get;set; } // varchar(20)
+		[Column("FieldNString",    CanBeNull = true,  DbType = "nvarchar(20)",      DataType = DataType.NVarChar,       Length       = 20  )            ] public string?         FieldNString    { get;set; } // nvarchar(20)
+		[Column("FieldChar",       CanBeNull = true,  DbType = "char(1)",           DataType = DataType.Char,           Length       = 1   )            ] public char?           FieldChar       { get;set; } // char(1)
+		[Column("FieldNChar",      CanBeNull = true,  DbType = "nchar(1)",          DataType = DataType.NChar,          Length       = 1   )            ] public char?           FieldNChar      { get;set; } // nchar(1)
+		[Column("FieldFloat",      CanBeNull = true,  DbType = "real",              DataType = DataType.Single        )                                 ] public float?          FieldFloat      { get;set; } // real
+		[Column("FieldDouble",     CanBeNull = true,  DbType = "float",             DataType = DataType.Double        )                                 ] public double?         FieldDouble     { get;set; } // float
+		[Column("FieldDateTime",   CanBeNull = true,  DbType = "datetime",          DataType = DataType.DateTime      )                                 ] public DateTime?       FieldDateTime   { get;set; } // datetime
+		[Column("FieldDateTime2",  CanBeNull = true,  DbType = "datetimeoffset(7)", DataType = DataType.DateTimeOffset, Precision    = 7   )            ] public DateTimeOffset? FieldDateTime2  { get;set; } // datetimeoffset(7)
+		[Column("FieldBinary",     CanBeNull = true,  DbType = "varbinary(20)",     DataType = DataType.VarBinary,      Length       = 20  )            ] public byte[]?         FieldBinary     { get;set; } // varbinary(20)
+		[Column("FieldGuid",       CanBeNull = true,  DbType = "uniqueidentifier",  DataType = DataType.Guid          )                                 ] public Guid?           FieldGuid       { get;set; } // uniqueidentifier
+		[Column("FieldDecimal",    CanBeNull = true,  DbType = "decimal(24, 10)",   DataType = DataType.Decimal,        Precision    = 24,   Scale = 10)] public decimal?        FieldDecimal    { get;set; } // decimal(24, 10)
+		[Column("FieldDate",       CanBeNull = true,  DbType = "date",              DataType = DataType.Date          )                                 ] public DateTime?       FieldDate       { get;set; } // date
+		[Column("FieldTime",       CanBeNull = true,  DbType = "time(7)",           DataType = DataType.Time,           Precision    = 7   )            ] public TimeSpan?       FieldTime       { get;set; } // time(7)
+		[Column("FieldEnumString", CanBeNull = true,  DbType = "varchar(20)",       DataType = DataType.VarChar,        Length       = 20  )            ] public string?         FieldEnumString { get;set; } // varchar(20)
+		[Column("FieldEnumNumber", CanBeNull = true,  DbType = "int",               DataType = DataType.Int32         )                                 ] public int?            FieldEnumNumber { get;set; } // int
 	}
 
 	[Table("TestMerge2")]
 	public partial class TestMerge2
 	{
-		[Column(DbType="int",               DataType=LinqToDB.DataType.Int32),                                  PrimaryKey,  NotNull] public int             Id              { get; set; } // int
-		[Column(DbType="int",               DataType=LinqToDB.DataType.Int32),                                     Nullable         ] public int?            Field1          { get; set; } // int
-		[Column(DbType="int",               DataType=LinqToDB.DataType.Int32),                                     Nullable         ] public int?            Field2          { get; set; } // int
-		[Column(DbType="int",               DataType=LinqToDB.DataType.Int32),                                     Nullable         ] public int?            Field3          { get; set; } // int
-		[Column(DbType="int",               DataType=LinqToDB.DataType.Int32),                                     Nullable         ] public int?            Field4          { get; set; } // int
-		[Column(DbType="int",               DataType=LinqToDB.DataType.Int32),                                     Nullable         ] public int?            Field5          { get; set; } // int
-		[Column(DbType="bigint",            DataType=LinqToDB.DataType.Int64),                                     Nullable         ] public long?           FieldInt64      { get; set; } // bigint
-		[Column(DbType="bit",               DataType=LinqToDB.DataType.Boolean),                                   Nullable         ] public bool?           FieldBoolean    { get; set; } // bit
-		[Column(DbType="varchar(20)",       DataType=LinqToDB.DataType.VarChar,        Length=20),                 Nullable         ] public string?         FieldString     { get; set; } // varchar(20)
-		[Column(DbType="nvarchar(20)",      DataType=LinqToDB.DataType.NVarChar,       Length=20),                 Nullable         ] public string?         FieldNString    { get; set; } // nvarchar(20)
-		[Column(DbType="char(1)",           DataType=LinqToDB.DataType.Char,           Length=1),                  Nullable         ] public char?           FieldChar       { get; set; } // char(1)
-		[Column(DbType="nchar(1)",          DataType=LinqToDB.DataType.NChar,          Length=1),                  Nullable         ] public char?           FieldNChar      { get; set; } // nchar(1)
-		[Column(DbType="real",              DataType=LinqToDB.DataType.Single),                                    Nullable         ] public float?          FieldFloat      { get; set; } // real
-		[Column(DbType="float",             DataType=LinqToDB.DataType.Double),                                    Nullable         ] public double?         FieldDouble     { get; set; } // float
-		[Column(DbType="datetime",          DataType=LinqToDB.DataType.DateTime),                                  Nullable         ] public DateTime?       FieldDateTime   { get; set; } // datetime
-		[Column(DbType="datetimeoffset(7)", DataType=LinqToDB.DataType.DateTimeOffset, Precision=7),               Nullable         ] public DateTimeOffset? FieldDateTime2  { get; set; } // datetimeoffset(7)
-		[Column(DbType="varbinary(20)",     DataType=LinqToDB.DataType.VarBinary,      Length=20),                 Nullable         ] public byte[]?         FieldBinary     { get; set; } // varbinary(20)
-		[Column(DbType="uniqueidentifier",  DataType=LinqToDB.DataType.Guid),                                      Nullable         ] public Guid?           FieldGuid       { get; set; } // uniqueidentifier
-		[Column(DbType="decimal(24, 10)",   DataType=LinqToDB.DataType.Decimal,        Precision=24, Scale=10),    Nullable         ] public decimal?        FieldDecimal    { get; set; } // decimal(24, 10)
-		[Column(DbType="date",              DataType=LinqToDB.DataType.Date),                                      Nullable         ] public DateTime?       FieldDate       { get; set; } // date
-		[Column(DbType="time(7)",           DataType=LinqToDB.DataType.Time,           Precision=7),               Nullable         ] public TimeSpan?       FieldTime       { get; set; } // time(7)
-		[Column(DbType="varchar(20)",       DataType=LinqToDB.DataType.VarChar,        Length=20),                 Nullable         ] public string?         FieldEnumString { get; set; } // varchar(20)
-		[Column(DbType="int",               DataType=LinqToDB.DataType.Int32),                                     Nullable         ] public int?            FieldEnumNumber { get; set; } // int
+		[Column("Id",              CanBeNull = false, DbType = "int",               DataType = DataType.Int32,          IsPrimaryKey = true)            ] public int             Id              { get;set; } // int
+		[Column("Field1",          CanBeNull = true,  DbType = "int",               DataType = DataType.Int32         )                                 ] public int?            Field1          { get;set; } // int
+		[Column("Field2",          CanBeNull = true,  DbType = "int",               DataType = DataType.Int32         )                                 ] public int?            Field2          { get;set; } // int
+		[Column("Field3",          CanBeNull = true,  DbType = "int",               DataType = DataType.Int32         )                                 ] public int?            Field3          { get;set; } // int
+		[Column("Field4",          CanBeNull = true,  DbType = "int",               DataType = DataType.Int32         )                                 ] public int?            Field4          { get;set; } // int
+		[Column("Field5",          CanBeNull = true,  DbType = "int",               DataType = DataType.Int32         )                                 ] public int?            Field5          { get;set; } // int
+		[Column("FieldInt64",      CanBeNull = true,  DbType = "bigint",            DataType = DataType.Int64         )                                 ] public long?           FieldInt64      { get;set; } // bigint
+		[Column("FieldBoolean",    CanBeNull = true,  DbType = "bit",               DataType = DataType.Boolean       )                                 ] public bool?           FieldBoolean    { get;set; } // bit
+		[Column("FieldString",     CanBeNull = true,  DbType = "varchar(20)",       DataType = DataType.VarChar,        Length       = 20  )            ] public string?         FieldString     { get;set; } // varchar(20)
+		[Column("FieldNString",    CanBeNull = true,  DbType = "nvarchar(20)",      DataType = DataType.NVarChar,       Length       = 20  )            ] public string?         FieldNString    { get;set; } // nvarchar(20)
+		[Column("FieldChar",       CanBeNull = true,  DbType = "char(1)",           DataType = DataType.Char,           Length       = 1   )            ] public char?           FieldChar       { get;set; } // char(1)
+		[Column("FieldNChar",      CanBeNull = true,  DbType = "nchar(1)",          DataType = DataType.NChar,          Length       = 1   )            ] public char?           FieldNChar      { get;set; } // nchar(1)
+		[Column("FieldFloat",      CanBeNull = true,  DbType = "real",              DataType = DataType.Single        )                                 ] public float?          FieldFloat      { get;set; } // real
+		[Column("FieldDouble",     CanBeNull = true,  DbType = "float",             DataType = DataType.Double        )                                 ] public double?         FieldDouble     { get;set; } // float
+		[Column("FieldDateTime",   CanBeNull = true,  DbType = "datetime",          DataType = DataType.DateTime      )                                 ] public DateTime?       FieldDateTime   { get;set; } // datetime
+		[Column("FieldDateTime2",  CanBeNull = true,  DbType = "datetimeoffset(7)", DataType = DataType.DateTimeOffset, Precision    = 7   )            ] public DateTimeOffset? FieldDateTime2  { get;set; } // datetimeoffset(7)
+		[Column("FieldBinary",     CanBeNull = true,  DbType = "varbinary(20)",     DataType = DataType.VarBinary,      Length       = 20  )            ] public byte[]?         FieldBinary     { get;set; } // varbinary(20)
+		[Column("FieldGuid",       CanBeNull = true,  DbType = "uniqueidentifier",  DataType = DataType.Guid          )                                 ] public Guid?           FieldGuid       { get;set; } // uniqueidentifier
+		[Column("FieldDecimal",    CanBeNull = true,  DbType = "decimal(24, 10)",   DataType = DataType.Decimal,        Precision    = 24,   Scale = 10)] public decimal?        FieldDecimal    { get;set; } // decimal(24, 10)
+		[Column("FieldDate",       CanBeNull = true,  DbType = "date",              DataType = DataType.Date          )                                 ] public DateTime?       FieldDate       { get;set; } // date
+		[Column("FieldTime",       CanBeNull = true,  DbType = "time(7)",           DataType = DataType.Time,           Precision    = 7   )            ] public TimeSpan?       FieldTime       { get;set; } // time(7)
+		[Column("FieldEnumString", CanBeNull = true,  DbType = "varchar(20)",       DataType = DataType.VarChar,        Length       = 20  )            ] public string?         FieldEnumString { get;set; } // varchar(20)
+		[Column("FieldEnumNumber", CanBeNull = true,  DbType = "int",               DataType = DataType.Int32         )                                 ] public int?            FieldEnumNumber { get;set; } // int
 	}
 
 	[Table("TestMergeIdentity")]
 	public partial class TestMergeIdentity
 	{
-		[Column(DbType="int", DataType=LinqToDB.DataType.Int32), PrimaryKey, Identity] public int  Id    { get; set; } // int
-		[Column(DbType="int", DataType=LinqToDB.DataType.Int32), Nullable            ] public int? Field { get; set; } // int
+		[Column("Id",    CanBeNull = false, DbType = "int", DataType = DataType.Int32, IsPrimaryKey = true)] public int  Id    { get;set; } // int
+		[Column("Field", CanBeNull = true,  DbType = "int", DataType = DataType.Int32)                     ] public int? Field { get;set; } // int
 	}
 
 	[Table("TestSchema_SameTableName")]
 	public partial class TestSchemaSameTableName
 	{
-		[Column("id", DbType="int", DataType=LinqToDB.DataType.Int32), Nullable] public int? Id { get; set; } // int
+		[Column("id", CanBeNull = true, DbType = "int", DataType = DataType.Int32)] public int? Id { get;set; } // int
 	}
 
 	[Table("TestSchemaX")]
 	public partial class TestSchemaX
 	{
-		[Column(DbType="int", DataType=LinqToDB.DataType.Int32), PrimaryKey, NotNull] public int TestSchemaXID { get; set; } // int
-		[Column(DbType="int", DataType=LinqToDB.DataType.Int32),             NotNull] public int Field1        { get; set; } // int
+		[Column("TestSchemaXID", CanBeNull = false, DbType = "int", DataType = DataType.Int32, IsPrimaryKey = true)] public int TestSchemaXID { get;set; } // int
+		[Column("Field1",        CanBeNull = false, DbType = "int", DataType = DataType.Int32)                     ] public int Field1        { get;set; } // int
 
 		#region Associations
-
 		/// <summary>
 		/// FK_TestSchemaY_TestSchemaX_BackReference
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(CanBeNull = true, ThisKey = nameof(TestSchemaXID), OtherKey = nameof(TestSchemaY.TestSchemaXID))]
 		public List<TestSchemaY> TestSchemaY { get; set; } = null!;
-
-		/// <summary>
-		/// FK_TestSchemaY_OtherID_BackReference
-		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-		public List<TestSchemaY> TestSchemaYOtherIds { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX_BackReference
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="ParentTestSchemaXID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(CanBeNull = true, ThisKey = nameof(TestSchemaXID), OtherKey = nameof(TestSchemaY.ParentTestSchemaXID))]
 		public List<TestSchemaY> TestSchemaYParentTestSchemaX { get; set; } = null!;
 
+		/// <summary>
+		/// FK_TestSchemaY_OtherID_BackReference
+		/// </summary>
+		[Association(CanBeNull = true, ThisKey = nameof(TestSchemaXID), OtherKey = nameof(TestSchemaY.TestSchemaXID))]
+		public List<TestSchemaY> TestSchemaYOtherIds { get; set; } = null!;
 		#endregion
 	}
 
 	[Table("TestSchemaY")]
 	public partial class TestSchemaY
 	{
-		[Column(DbType="int", DataType=LinqToDB.DataType.Int32), NotNull] public int TestSchemaXID       { get; set; } // int
-		[Column(DbType="int", DataType=LinqToDB.DataType.Int32), NotNull] public int ParentTestSchemaXID { get; set; } // int
-		[Column(DbType="int", DataType=LinqToDB.DataType.Int32), NotNull] public int OtherID             { get; set; } // int
+		[Column("TestSchemaXID",       CanBeNull = false, DbType = "int", DataType = DataType.Int32)] public int TestSchemaXID       { get;set; } // int
+		[Column("ParentTestSchemaXID", CanBeNull = false, DbType = "int", DataType = DataType.Int32)] public int ParentTestSchemaXID { get;set; } // int
+		[Column("OtherID",             CanBeNull = false, DbType = "int", DataType = DataType.Int32)] public int OtherID             { get;set; } // int
 
 		#region Associations
+		/// <summary>
+		/// FK_TestSchemaY_TestSchemaX
+		/// </summary>
+		[Association(CanBeNull = false, ThisKey = nameof(TestSchemaXID), OtherKey = nameof(TestSchemaX.TestSchemaXID))]
+		public TestSchemaX TestSchemaX { get; set; } = null!;
+
+		/// <summary>
+		/// FK_TestSchemaY_ParentTestSchemaX
+		/// </summary>
+		[Association(CanBeNull = false, ThisKey = nameof(ParentTestSchemaXID), OtherKey = nameof(TestSchemaX.TestSchemaXID))]
+		public TestSchemaX ParentTestSchemaX { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchemaY_OtherID
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_OtherID", BackReferenceName="TestSchemaYOtherIds")]
 		public TestSchemaX FkTestSchemaYOtherID { get; set; } = null!;
-
-		/// <summary>
-		/// FK_TestSchemaY_ParentTestSchemaX
-		/// </summary>
-		[Association(ThisKey="ParentTestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_ParentTestSchemaX", BackReferenceName="TestSchemaYParentTestSchemaX")]
-		public TestSchemaX ParentTestSchemaX { get; set; } = null!;
-
-		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX
-		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_TestSchemaX", BackReferenceName="TestSchemaY")]
-		public TestSchemaX TestSchemaX { get; set; } = null!;
-
 		#endregion
 	}
 
 	public static partial class TestData2017DBStoredProcedures
 	{
 		#region AddIssue792Record
-
 		public static int AddIssue792Record(this TestData2017DB dataConnection)
 		{
 			return dataConnection.ExecuteProc("[AddIssue792Record]");
 		}
-
 		#endregion
 
 		#region DuplicateColumnNames
-
 		public static List<DuplicateColumnNamesResult> DuplicateColumnNames(this TestData2017DB dataConnection)
 		{
-			var ms = dataConnection.MappingSchema;
-
-			return dataConnection.QueryProc(dataReader =>
-				new DuplicateColumnNamesResult
+			return dataConnection.QueryProc(dataReader => new DuplicateColumnNamesResult()
 				{
-					id      = Converter.ChangeTypeTo<int>   (dataReader.GetValue(0), ms),
-					Column2 = Converter.ChangeTypeTo<string>(dataReader.GetValue(1), ms),
-				},
-				"[DuplicateColumnNames]").ToList();
+				id = Converter.ChangeTypeTo<int>(dataReader.GetValue(0), dataConnection.MappingSchema),
+				Column2 = Converter.ChangeTypeTo<string>(dataReader.GetValue(1), dataConnection.MappingSchema)
+			}, "[DuplicateColumnNames]").ToList();
 		}
 
 		public partial class DuplicateColumnNamesResult
 		{
-			               public int    id      { get; set; }
-			[Column("id")] public string Column2 { get; set; } = null!;
+			public int    id      { get;set; }
+			public string Column2 { get;set; } = null!;
 		}
-
 		#endregion
 
 		#region ExecuteProcIntParameters
-
-		public static int ExecuteProcIntParameters(this TestData2017DB dataConnection, int? @input, ref int? @output)
+		public static int ExecuteProcIntParameters(this TestData2017DB dataConnection, int? input, ref int? output)
 		{
 			var parameters = new []
 			{
-				new DataParameter("@input",  @input,  LinqToDB.DataType.Int32),
-				new DataParameter("@output", @output, LinqToDB.DataType.Int32)
+				new DataParameter("@input", input, DataType.Int32)
 				{
-					Direction = ParameterDirection.InputOutput
+					DbType = "int"
+				},
+				new DataParameter("@output", output, DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput,
+					DbType = "int"
 				}
 			};
-
 			var ret = dataConnection.ExecuteProc("[ExecuteProcIntParameters]", parameters);
-
-			@output = Converter.ChangeTypeTo<int?>(parameters[1].Value);
-
+			output = Converter.ChangeTypeTo<int?>(parameters[1].Value);
 			return ret;
 		}
-
 		#endregion
 
 		#region ExecuteProcStringParameters
-
 		/// <summary>
 		/// This is &lt;test&gt; procedure!
 		/// </summary>
-		/// <param name="@input">
+		/// <param name="input">
 		/// This is &lt;test&gt; procedure parameter!
 		/// </param>
-		public static List<ExecuteProcStringParametersResult> ExecuteProcStringParameters(this TestData2017DB dataConnection, int? @input, ref int? @output)
+		public static List<ExecuteProcStringParametersResult> ExecuteProcStringParameters(this TestData2017DB dataConnection, int? input, ref int? output)
 		{
 			var parameters = new []
 			{
-				new DataParameter("@input",  @input,  LinqToDB.DataType.Int32),
-				new DataParameter("@output", @output, LinqToDB.DataType.Int32)
+				new DataParameter("@input", input, DataType.Int32)
 				{
-					Direction = ParameterDirection.InputOutput
+					DbType = "int"
+				},
+				new DataParameter("@output", output, DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput,
+					DbType = "int"
 				}
 			};
-
-			var ms = dataConnection.MappingSchema;
-
-			var ret = dataConnection.QueryProc(dataReader =>
-				new ExecuteProcStringParametersResult
+			var ret = dataConnection.QueryProc(dataReader => new ExecuteProcStringParametersResult()
 				{
-					Column1 = Converter.ChangeTypeTo<string>(dataReader.GetValue(0), ms),
-				},
-				"[ExecuteProcStringParameters]", parameters).ToList();
-
-			@output = Converter.ChangeTypeTo<int?>(parameters[1].Value);
-
+				Column1 = Converter.ChangeTypeTo<string>(dataReader.GetValue(0), dataConnection.MappingSchema)
+			}, "[ExecuteProcStringParameters]", parameters).ToList();
+			output = Converter.ChangeTypeTo<int?>(parameters[1].Value);
 			return ret;
 		}
 
 		public partial class ExecuteProcStringParametersResult
 		{
-			[Column("")] public string Column1 { get; set; } = null!;
+			public string Column1 { get;set; } = null!;
 		}
-
 		#endregion
 
 		#region Issue1897
-
 		public static int Issue1897(this TestData2017DB dataConnection, out int @return)
 		{
 			var parameters = new []
 			{
-				new DataParameter("@return", null, LinqToDB.DataType.Int32)
+				new DataParameter("@return", null, DataType.Int32)
 				{
-					Direction = ParameterDirection.ReturnValue
+					Direction = ParameterDirection.ReturnValue,
+					DbType = "int"
 				}
 			};
-
 			var ret = dataConnection.ExecuteProc("[Issue1897]", parameters);
-
 			@return = Converter.ChangeTypeTo<int>(parameters[0].Value);
-
 			return ret;
 		}
-
 		#endregion
 
 		#region OutRefEnumTest
-
-		public static int OutRefEnumTest(this TestData2017DB dataConnection, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
+		public static int OutRefEnumTest(this TestData2017DB dataConnection, string? str, ref string? outputStr, ref string? inputOutputStr)
 		{
 			var parameters = new []
 			{
-				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar)
+				new DataParameter("@str", str, DataType.VarChar)
 				{
+					DbType = "varchar(50)",
 					Size = 50
 				},
-				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar)
+				new DataParameter("@outputStr", outputStr, DataType.VarChar)
 				{
 					Direction = ParameterDirection.InputOutput,
+					DbType = "varchar(50)",
 					Size      = 50
 				},
-				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar)
+				new DataParameter("@inputOutputStr", inputOutputStr, DataType.VarChar)
 				{
 					Direction = ParameterDirection.InputOutput,
+					DbType = "varchar(50)",
 					Size      = 50
 				}
 			};
-
 			var ret = dataConnection.ExecuteProc("[OutRefEnumTest]", parameters);
-
-			@outputStr      = Converter.ChangeTypeTo<string?>(parameters[1].Value);
-			@inputOutputStr = Converter.ChangeTypeTo<string?>(parameters[2].Value);
-
+			outputStr = Converter.ChangeTypeTo<string?>(parameters[1].Value);
+			inputOutputStr = Converter.ChangeTypeTo<string?>(parameters[2].Value);
 			return ret;
 		}
-
 		#endregion
 
 		#region OutRefTest
-
-		public static int OutRefTest(this TestData2017DB dataConnection, int? @ID, ref int? @outputID, ref int? @inputOutputID, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
+		public static int OutRefTest(this TestData2017DB dataConnection, int? id, ref int? outputId, ref int? inputOutputId, string? str, ref string? outputStr, ref string? inputOutputStr)
 		{
 			var parameters = new []
 			{
-				new DataParameter("@ID",             @ID,             LinqToDB.DataType.Int32),
-				new DataParameter("@outputID",       @outputID,       LinqToDB.DataType.Int32)
+				new DataParameter("@ID", id, DataType.Int32)
 				{
-					Direction = ParameterDirection.InputOutput
+					DbType = "int"
 				},
-				new DataParameter("@inputOutputID",  @inputOutputID,  LinqToDB.DataType.Int32)
+				new DataParameter("@outputID", outputId, DataType.Int32)
 				{
-					Direction = ParameterDirection.InputOutput
+					Direction = ParameterDirection.InputOutput,
+					DbType = "int"
 				},
-				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar)
+				new DataParameter("@inputOutputID", inputOutputId, DataType.Int32)
 				{
+					Direction = ParameterDirection.InputOutput,
+					DbType = "int"
+				},
+				new DataParameter("@str", str, DataType.VarChar)
+				{
+					DbType = "varchar(50)",
 					Size = 50
 				},
-				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar)
+				new DataParameter("@outputStr", outputStr, DataType.VarChar)
 				{
 					Direction = ParameterDirection.InputOutput,
+					DbType = "varchar(50)",
 					Size      = 50
 				},
-				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar)
+				new DataParameter("@inputOutputStr", inputOutputStr, DataType.VarChar)
 				{
 					Direction = ParameterDirection.InputOutput,
+					DbType = "varchar(50)",
 					Size      = 50
 				}
 			};
-
 			var ret = dataConnection.ExecuteProc("[OutRefTest]", parameters);
-
-			@outputID       = Converter.ChangeTypeTo<int?>   (parameters[1].Value);
-			@inputOutputID  = Converter.ChangeTypeTo<int?>   (parameters[2].Value);
-			@outputStr      = Converter.ChangeTypeTo<string?>(parameters[4].Value);
-			@inputOutputStr = Converter.ChangeTypeTo<string?>(parameters[5].Value);
-
+			outputId = Converter.ChangeTypeTo<int?>(parameters[1].Value);
+			inputOutputId = Converter.ChangeTypeTo<int?>(parameters[2].Value);
+			outputStr = Converter.ChangeTypeTo<string?>(parameters[4].Value);
+			inputOutputStr = Converter.ChangeTypeTo<string?>(parameters[5].Value);
 			return ret;
 		}
-
 		#endregion
 
 		#region PatientSelectAll
-
 		public static List<PatientSelectAllResult> PatientSelectAll(this TestData2017DB dataConnection)
 		{
 			return dataConnection.QueryProc<PatientSelectAllResult>("[Patient_SelectAll]").ToList();
@@ -1851,134 +763,132 @@ namespace Sql2017ProcSchema
 
 		public partial class PatientSelectAllResult
 		{
-			public int     PersonID   { get; set; }
-			public string  FirstName  { get; set; } = null!;
-			public string  LastName   { get; set; } = null!;
-			public string? MiddleName { get; set; }
-			public char    Gender     { get; set; }
-			public string  Diagnosis  { get; set; } = null!;
+			[Column("PersonID",   CanBeNull = false, DbType = "int",           DataType = DataType.Int32   )] public int     PersonID   { get;set; }
+			[Column("FirstName",  CanBeNull = false, DbType = "nvarchar(50)",  DataType = DataType.NVarChar)] public string  FirstName  { get;set; } = null!;
+			[Column("LastName",   CanBeNull = false, DbType = "nvarchar(50)",  DataType = DataType.NVarChar)] public string  LastName   { get;set; } = null!;
+			[Column("MiddleName", CanBeNull = true,  DbType = "nvarchar(50)",  DataType = DataType.NVarChar)] public string? MiddleName { get;set; }
+			[Column("Gender",     CanBeNull = false, DbType = "char(1)",       DataType = DataType.Char    )] public char    Gender     { get;set; }
+			[Column("Diagnosis",  CanBeNull = false, DbType = "nvarchar(256)", DataType = DataType.NVarChar)] public string  Diagnosis  { get;set; } = null!;
 		}
-
 		#endregion
 
 		#region PatientSelectByName
-
-		public static List<PatientSelectByNameResult> PatientSelectByName(this TestData2017DB dataConnection, string? @firstName, string? @lastName)
+		public static List<PatientSelectByNameResult> PatientSelectByName(this TestData2017DB dataConnection, string? firstName, string? lastName)
 		{
 			var parameters = new []
 			{
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar)
+				new DataParameter("@firstName", firstName, DataType.NVarChar)
 				{
+					DbType = "nvarchar(50)",
 					Size = 50
 				},
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar)
+				new DataParameter("@lastName", lastName, DataType.NVarChar)
 				{
+					DbType = "nvarchar(50)",
 					Size = 50
 				}
 			};
-
 			return dataConnection.QueryProc<PatientSelectByNameResult>("[Patient_SelectByName]", parameters).ToList();
 		}
 
 		public partial class PatientSelectByNameResult
 		{
-			public int     PersonID   { get; set; }
-			public string  FirstName  { get; set; } = null!;
-			public string  LastName   { get; set; } = null!;
-			public string? MiddleName { get; set; }
-			public char    Gender     { get; set; }
-			public string  Diagnosis  { get; set; } = null!;
+			[Column("PersonID",   CanBeNull = false, DbType = "int",           DataType = DataType.Int32   )] public int     PersonID   { get;set; }
+			[Column("FirstName",  CanBeNull = false, DbType = "nvarchar(50)",  DataType = DataType.NVarChar)] public string  FirstName  { get;set; } = null!;
+			[Column("LastName",   CanBeNull = false, DbType = "nvarchar(50)",  DataType = DataType.NVarChar)] public string  LastName   { get;set; } = null!;
+			[Column("MiddleName", CanBeNull = true,  DbType = "nvarchar(50)",  DataType = DataType.NVarChar)] public string? MiddleName { get;set; }
+			[Column("Gender",     CanBeNull = false, DbType = "char(1)",       DataType = DataType.Char    )] public char    Gender     { get;set; }
+			[Column("Diagnosis",  CanBeNull = false, DbType = "nvarchar(256)", DataType = DataType.NVarChar)] public string  Diagnosis  { get;set; } = null!;
 		}
-
 		#endregion
 
 		#region PersonDelete
-
-		public static int PersonDelete(this TestData2017DB dataConnection, int? @PersonID)
+		public static int PersonDelete(this TestData2017DB dataConnection, int? personId)
 		{
 			var parameters = new []
 			{
-				new DataParameter("@PersonID", @PersonID, LinqToDB.DataType.Int32)
+				new DataParameter("@PersonID", personId, DataType.Int32)
+				{
+					DbType = "int"
+				}
 			};
-
 			return dataConnection.ExecuteProc("[Person_Delete]", parameters);
 		}
-
 		#endregion
 
 		#region PersonInsert
-
-		public static List<PersonInsertResult> PersonInsert(this TestData2017DB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
+		public static List<PersonInsertResult> PersonInsert(this TestData2017DB dataConnection, string? firstName, string? lastName, string? middleName, char? gender)
 		{
 			var parameters = new []
 			{
-				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar)
+				new DataParameter("@FirstName", firstName, DataType.NVarChar)
 				{
+					DbType = "nvarchar(50)",
 					Size = 50
 				},
-				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar)
+				new DataParameter("@LastName", lastName, DataType.NVarChar)
 				{
+					DbType = "nvarchar(50)",
 					Size = 50
 				},
-				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar)
+				new DataParameter("@MiddleName", middleName, DataType.NVarChar)
 				{
+					DbType = "nvarchar(50)",
 					Size = 50
 				},
-				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char)
+				new DataParameter("@Gender", gender, DataType.Char)
 				{
+					DbType = "char(1)",
 					Size = 1
 				}
 			};
-
 			return dataConnection.QueryProc<PersonInsertResult>("[Person_Insert]", parameters).ToList();
 		}
 
 		public partial class PersonInsertResult
 		{
-			public int? PersonID { get; set; }
+			[Column("PersonID", CanBeNull = true, DbType = "int", DataType = DataType.Int32)] public int? PersonID { get;set; }
 		}
-
 		#endregion
 
 		#region PersonInsertOutputParameter
-
-		public static int PersonInsertOutputParameter(this TestData2017DB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender, ref int? @PersonID)
+		public static int PersonInsertOutputParameter(this TestData2017DB dataConnection, string? firstName, string? lastName, string? middleName, char? gender, ref int? personId)
 		{
 			var parameters = new []
 			{
-				new DataParameter("@FirstName", @FirstName, LinqToDB.DataType.NVarChar)
+				new DataParameter("@FirstName", firstName, DataType.NVarChar)
 				{
+					DbType = "nvarchar(50)",
 					Size = 50
 				},
-				new DataParameter("@LastName", @LastName, LinqToDB.DataType.NVarChar)
+				new DataParameter("@LastName", lastName, DataType.NVarChar)
 				{
+					DbType = "nvarchar(50)",
 					Size = 50
 				},
-				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar)
+				new DataParameter("@MiddleName", middleName, DataType.NVarChar)
 				{
+					DbType = "nvarchar(50)",
 					Size = 50
 				},
-				new DataParameter("@Gender",   @Gender,   LinqToDB.DataType.Char)
+				new DataParameter("@Gender", gender, DataType.Char)
 				{
+					DbType = "char(1)",
 					Size = 1
 				},
-				new DataParameter("@PersonID", @PersonID, LinqToDB.DataType.Int32)
+				new DataParameter("@PersonID", personId, DataType.Int32)
 				{
-					Direction = ParameterDirection.InputOutput
+					Direction = ParameterDirection.InputOutput,
+					DbType = "int"
 				}
 			};
-
 			var ret = dataConnection.ExecuteProc("[Person_Insert_OutputParameter]", parameters);
-
-			@PersonID = Converter.ChangeTypeTo<int?>(parameters[4].Value);
-
+			personId = Converter.ChangeTypeTo<int?>(parameters[4].Value);
 			return ret;
 		}
-
 		#endregion
 
 		#region PersonSelectAll
-
 		public static List<PersonSelectAllResult> PersonSelectAll(this TestData2017DB dataConnection)
 		{
 			return dataConnection.QueryProc<PersonSelectAllResult>("[Person_SelectAll]").ToList();
@@ -1986,676 +896,571 @@ namespace Sql2017ProcSchema
 
 		public partial class PersonSelectAllResult
 		{
-			public int     PersonID   { get; set; }
-			public string  FirstName  { get; set; } = null!;
-			public string  LastName   { get; set; } = null!;
-			public string? MiddleName { get; set; }
-			public char    Gender     { get; set; }
+			[Column("PersonID",   CanBeNull = false, DbType = "int",          DataType = DataType.Int32   )] public int     PersonID   { get;set; }
+			[Column("FirstName",  CanBeNull = false, DbType = "nvarchar(50)", DataType = DataType.NVarChar)] public string  FirstName  { get;set; } = null!;
+			[Column("LastName",   CanBeNull = false, DbType = "nvarchar(50)", DataType = DataType.NVarChar)] public string  LastName   { get;set; } = null!;
+			[Column("MiddleName", CanBeNull = true,  DbType = "nvarchar(50)", DataType = DataType.NVarChar)] public string? MiddleName { get;set; }
+			[Column("Gender",     CanBeNull = false, DbType = "char(1)",      DataType = DataType.Char    )] public char    Gender     { get;set; }
 		}
-
 		#endregion
 
 		#region PersonSelectByKey
-
-		public static List<PersonSelectByKeyResult> PersonSelectByKey(this TestData2017DB dataConnection, int? @id)
+		public static List<PersonSelectByKeyResult> PersonSelectByKey(this TestData2017DB dataConnection, int? id)
 		{
 			var parameters = new []
 			{
-				new DataParameter("@id", @id, LinqToDB.DataType.Int32)
+				new DataParameter("@id", id, DataType.Int32)
+				{
+					DbType = "int"
+				}
 			};
-
 			return dataConnection.QueryProc<PersonSelectByKeyResult>("[Person_SelectByKey]", parameters).ToList();
 		}
 
 		public partial class PersonSelectByKeyResult
 		{
-			public int     PersonID   { get; set; }
-			public string  FirstName  { get; set; } = null!;
-			public string  LastName   { get; set; } = null!;
-			public string? MiddleName { get; set; }
-			public char    Gender     { get; set; }
+			[Column("PersonID",   CanBeNull = false, DbType = "int",          DataType = DataType.Int32   )] public int     PersonID   { get;set; }
+			[Column("FirstName",  CanBeNull = false, DbType = "nvarchar(50)", DataType = DataType.NVarChar)] public string  FirstName  { get;set; } = null!;
+			[Column("LastName",   CanBeNull = false, DbType = "nvarchar(50)", DataType = DataType.NVarChar)] public string  LastName   { get;set; } = null!;
+			[Column("MiddleName", CanBeNull = true,  DbType = "nvarchar(50)", DataType = DataType.NVarChar)] public string? MiddleName { get;set; }
+			[Column("Gender",     CanBeNull = false, DbType = "char(1)",      DataType = DataType.Char    )] public char    Gender     { get;set; }
 		}
-
 		#endregion
 
 		#region PersonSelectByKeyLowercase
-
-		public static List<PersonSelectByKeyLowercaseResult> PersonSelectByKeyLowercase(this TestData2017DB dataConnection, int? @id)
+		public static List<PersonSelectByKeyLowercaseResult> PersonSelectByKeyLowercase(this TestData2017DB dataConnection, int? id)
 		{
 			var parameters = new []
 			{
-				new DataParameter("@id", @id, LinqToDB.DataType.Int32)
+				new DataParameter("@id", id, DataType.Int32)
+				{
+					DbType = "int"
+				}
 			};
-
 			return dataConnection.QueryProc<PersonSelectByKeyLowercaseResult>("[Person_SelectByKeyLowercase]", parameters).ToList();
 		}
 
 		public partial class PersonSelectByKeyLowercaseResult
 		{
-			public int    PersonID  { get; set; }
-			public string FirstName { get; set; } = null!;
+			[Column("PersonID",  CanBeNull = false, DbType = "int",          DataType = DataType.Int32   )] public int    PersonID  { get;set; }
+			[Column("FirstName", CanBeNull = false, DbType = "nvarchar(50)", DataType = DataType.NVarChar)] public string FirstName { get;set; } = null!;
 		}
-
 		#endregion
 
 		#region PersonSelectByName
-
-		public static List<PersonSelectByNameResult> PersonSelectByName(this TestData2017DB dataConnection, string? @firstName, string? @lastName)
+		public static List<PersonSelectByNameResult> PersonSelectByName(this TestData2017DB dataConnection, string? firstName, string? lastName)
 		{
 			var parameters = new []
 			{
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar)
+				new DataParameter("@firstName", firstName, DataType.NVarChar)
 				{
+					DbType = "nvarchar(50)",
 					Size = 50
 				},
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar)
+				new DataParameter("@lastName", lastName, DataType.NVarChar)
 				{
+					DbType = "nvarchar(50)",
 					Size = 50
 				}
 			};
-
 			return dataConnection.QueryProc<PersonSelectByNameResult>("[Person_SelectByName]", parameters).ToList();
 		}
 
 		public partial class PersonSelectByNameResult
 		{
-			public int     PersonID   { get; set; }
-			public string  FirstName  { get; set; } = null!;
-			public string  LastName   { get; set; } = null!;
-			public string? MiddleName { get; set; }
-			public char    Gender     { get; set; }
+			[Column("PersonID",   CanBeNull = false, DbType = "int",          DataType = DataType.Int32   )] public int     PersonID   { get;set; }
+			[Column("FirstName",  CanBeNull = false, DbType = "nvarchar(50)", DataType = DataType.NVarChar)] public string  FirstName  { get;set; } = null!;
+			[Column("LastName",   CanBeNull = false, DbType = "nvarchar(50)", DataType = DataType.NVarChar)] public string  LastName   { get;set; } = null!;
+			[Column("MiddleName", CanBeNull = true,  DbType = "nvarchar(50)", DataType = DataType.NVarChar)] public string? MiddleName { get;set; }
+			[Column("Gender",     CanBeNull = false, DbType = "char(1)",      DataType = DataType.Char    )] public char    Gender     { get;set; }
 		}
-
 		#endregion
 
 		#region PersonSelectListByName
-
-		public static List<PersonSelectListByNameResult> PersonSelectListByName(this TestData2017DB dataConnection, string? @firstName, string? @lastName)
+		public static List<PersonSelectListByNameResult> PersonSelectListByName(this TestData2017DB dataConnection, string? firstName, string? lastName)
 		{
 			var parameters = new []
 			{
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar)
+				new DataParameter("@firstName", firstName, DataType.NVarChar)
 				{
+					DbType = "nvarchar(50)",
 					Size = 50
 				},
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar)
+				new DataParameter("@lastName", lastName, DataType.NVarChar)
 				{
+					DbType = "nvarchar(50)",
 					Size = 50
 				}
 			};
-
 			return dataConnection.QueryProc<PersonSelectListByNameResult>("[Person_SelectListByName]", parameters).ToList();
 		}
 
 		public partial class PersonSelectListByNameResult
 		{
-			public int     PersonID   { get; set; }
-			public string  FirstName  { get; set; } = null!;
-			public string  LastName   { get; set; } = null!;
-			public string? MiddleName { get; set; }
-			public char    Gender     { get; set; }
+			[Column("PersonID",   CanBeNull = false, DbType = "int",          DataType = DataType.Int32   )] public int     PersonID   { get;set; }
+			[Column("FirstName",  CanBeNull = false, DbType = "nvarchar(50)", DataType = DataType.NVarChar)] public string  FirstName  { get;set; } = null!;
+			[Column("LastName",   CanBeNull = false, DbType = "nvarchar(50)", DataType = DataType.NVarChar)] public string  LastName   { get;set; } = null!;
+			[Column("MiddleName", CanBeNull = true,  DbType = "nvarchar(50)", DataType = DataType.NVarChar)] public string? MiddleName { get;set; }
+			[Column("Gender",     CanBeNull = false, DbType = "char(1)",      DataType = DataType.Char    )] public char    Gender     { get;set; }
 		}
-
 		#endregion
 
 		#region PersonUpdate
-
-		public static int PersonUpdate(this TestData2017DB dataConnection, int? @PersonID, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
+		public static int PersonUpdate(this TestData2017DB dataConnection, int? personId, string? firstName, string? lastName, string? middleName, char? gender)
 		{
 			var parameters = new []
 			{
-				new DataParameter("@PersonID",   @PersonID,   LinqToDB.DataType.Int32),
-				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar)
+				new DataParameter("@PersonID", personId, DataType.Int32)
 				{
+					DbType = "int"
+				},
+				new DataParameter("@FirstName", firstName, DataType.NVarChar)
+				{
+					DbType = "nvarchar(50)",
 					Size = 50
 				},
-				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar)
+				new DataParameter("@LastName", lastName, DataType.NVarChar)
 				{
+					DbType = "nvarchar(50)",
 					Size = 50
 				},
-				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar)
+				new DataParameter("@MiddleName", middleName, DataType.NVarChar)
 				{
+					DbType = "nvarchar(50)",
 					Size = 50
 				},
-				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char)
+				new DataParameter("@Gender", gender, DataType.Char)
 				{
+					DbType = "char(1)",
 					Size = 1
 				}
 			};
-
 			return dataConnection.ExecuteProc("[Person_Update]", parameters);
 		}
-
 		#endregion
 
-		#region QueryProcMultipleParameters
-
-		public static List<QueryProcMultipleParametersResult> QueryProcMultipleParameters(this TestData2017DB dataConnection, int? @input, ref int? @output1, ref int? @output2, ref int? @output3)
+		#region PersonSearch
+		public static int PersonSearch(this TestData2017DB dataConnection, string? nameFilter)
 		{
 			var parameters = new []
 			{
-				new DataParameter("@input",   @input,   LinqToDB.DataType.Int32),
-				new DataParameter("@output1", @output1, LinqToDB.DataType.Int32)
+				new DataParameter("@nameFilter", nameFilter, DataType.NVarChar)
 				{
-					Direction = ParameterDirection.InputOutput
-				},
-				new DataParameter("@output2", @output2, LinqToDB.DataType.Int32)
-				{
-					Direction = ParameterDirection.InputOutput
-				},
-				new DataParameter("@output3", @output3, LinqToDB.DataType.Int32)
-				{
-					Direction = ParameterDirection.InputOutput
+					DbType = "nvarchar(512)",
+					Size = 512
 				}
 			};
+			return dataConnection.ExecuteProc("[PersonSearch]", parameters);
+		}
+		#endregion
 
+		#region QueryProcMultipleParameters
+		public static List<QueryProcMultipleParametersResult> QueryProcMultipleParameters(this TestData2017DB dataConnection, int? input, ref int? output1, ref int? output2, ref int? output3)
+		{
+			var parameters = new []
+			{
+				new DataParameter("@input", input, DataType.Int32)
+				{
+					DbType = "int"
+				},
+				new DataParameter("@output1", output1, DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput,
+					DbType = "int"
+				},
+				new DataParameter("@output2", output2, DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput,
+					DbType = "int"
+				},
+				new DataParameter("@output3", output3, DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput,
+					DbType = "int"
+				}
+			};
 			var ret = dataConnection.QueryProc<QueryProcMultipleParametersResult>("[QueryProcMultipleParameters]", parameters).ToList();
-
-			@output1 = Converter.ChangeTypeTo<int?>(parameters[1].Value);
-			@output2 = Converter.ChangeTypeTo<int?>(parameters[2].Value);
-			@output3 = Converter.ChangeTypeTo<int?>(parameters[3].Value);
-
+			output1 = Converter.ChangeTypeTo<int?>(parameters[1].Value);
+			output2 = Converter.ChangeTypeTo<int?>(parameters[2].Value);
+			output3 = Converter.ChangeTypeTo<int?>(parameters[3].Value);
 			return ret;
 		}
 
 		public partial class QueryProcMultipleParametersResult
 		{
-			public int     PersonID   { get; set; }
-			public string  FirstName  { get; set; } = null!;
-			public string  LastName   { get; set; } = null!;
-			public string? MiddleName { get; set; }
-			public char    Gender     { get; set; }
+			[Column("PersonID",   CanBeNull = false, DbType = "int",          DataType = DataType.Int32   )] public int     PersonID   { get;set; }
+			[Column("FirstName",  CanBeNull = false, DbType = "nvarchar(50)", DataType = DataType.NVarChar)] public string  FirstName  { get;set; } = null!;
+			[Column("LastName",   CanBeNull = false, DbType = "nvarchar(50)", DataType = DataType.NVarChar)] public string  LastName   { get;set; } = null!;
+			[Column("MiddleName", CanBeNull = true,  DbType = "nvarchar(50)", DataType = DataType.NVarChar)] public string? MiddleName { get;set; }
+			[Column("Gender",     CanBeNull = false, DbType = "char(1)",      DataType = DataType.Char    )] public char    Gender     { get;set; }
 		}
-
 		#endregion
 
 		#region QueryProcParameters
-
-		public static List<QueryProcParametersResult> QueryProcParameters(this TestData2017DB dataConnection, int? @input, ref int? @output1, ref int? @output2)
+		public static List<QueryProcParametersResult> QueryProcParameters(this TestData2017DB dataConnection, int? input, ref int? output1, ref int? output2)
 		{
 			var parameters = new []
 			{
-				new DataParameter("@input",   @input,   LinqToDB.DataType.Int32),
-				new DataParameter("@output1", @output1, LinqToDB.DataType.Int32)
+				new DataParameter("@input", input, DataType.Int32)
 				{
-					Direction = ParameterDirection.InputOutput
+					DbType = "int"
 				},
-				new DataParameter("@output2", @output2, LinqToDB.DataType.Int32)
+				new DataParameter("@output1", output1, DataType.Int32)
 				{
-					Direction = ParameterDirection.InputOutput
+					Direction = ParameterDirection.InputOutput,
+					DbType = "int"
+				},
+				new DataParameter("@output2", output2, DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput,
+					DbType = "int"
 				}
 			};
-
 			var ret = dataConnection.QueryProc<QueryProcParametersResult>("[QueryProcParameters]", parameters).ToList();
-
-			@output1 = Converter.ChangeTypeTo<int?>(parameters[1].Value);
-			@output2 = Converter.ChangeTypeTo<int?>(parameters[2].Value);
-
+			output1 = Converter.ChangeTypeTo<int?>(parameters[1].Value);
+			output2 = Converter.ChangeTypeTo<int?>(parameters[2].Value);
 			return ret;
 		}
 
 		public partial class QueryProcParametersResult
 		{
-			public int     PersonID   { get; set; }
-			public string  FirstName  { get; set; } = null!;
-			public string  LastName   { get; set; } = null!;
-			public string? MiddleName { get; set; }
-			public char    Gender     { get; set; }
+			[Column("PersonID",   CanBeNull = false, DbType = "int",          DataType = DataType.Int32   )] public int     PersonID   { get;set; }
+			[Column("FirstName",  CanBeNull = false, DbType = "nvarchar(50)", DataType = DataType.NVarChar)] public string  FirstName  { get;set; } = null!;
+			[Column("LastName",   CanBeNull = false, DbType = "nvarchar(50)", DataType = DataType.NVarChar)] public string  LastName   { get;set; } = null!;
+			[Column("MiddleName", CanBeNull = true,  DbType = "nvarchar(50)", DataType = DataType.NVarChar)] public string? MiddleName { get;set; }
+			[Column("Gender",     CanBeNull = false, DbType = "char(1)",      DataType = DataType.Char    )] public char    Gender     { get;set; }
 		}
-
 		#endregion
 
 		#region SelectImplicitColumn
-
 		public static List<SelectImplicitColumnResult> SelectImplicitColumn(this TestData2017DB dataConnection)
 		{
-			var ms = dataConnection.MappingSchema;
-
-			return dataConnection.QueryProc(dataReader =>
-				new SelectImplicitColumnResult
+			return dataConnection.QueryProc(dataReader => new SelectImplicitColumnResult()
 				{
-					Column1 = Converter.ChangeTypeTo<int>(dataReader.GetValue(0), ms),
-				},
-				"[SelectImplicitColumn]").ToList();
+				Column1 = Converter.ChangeTypeTo<int>(dataReader.GetValue(0), dataConnection.MappingSchema)
+			}, "[SelectImplicitColumn]").ToList();
 		}
 
 		public partial class SelectImplicitColumnResult
 		{
-			[Column("")] public int Column1 { get; set; }
+			public int Column1 { get;set; }
 		}
-
 		#endregion
 
 		#region TableTypeTestProc
-
-		public static List<TableTypeTestProcResult> TableTypeTestProc(this TestData2017DB dataConnection, DataTable? @table)
+		public static List<TableTypeTestProcResult> TableTypeTestProc(this TestData2017DB dataConnection, DataTable? table)
 		{
 			var parameters = new []
 			{
-				new DataParameter("@table", @table, LinqToDB.DataType.Structured)
+				new DataParameter("@table", table, DataType.Structured)
 				{
 					DbType = "[dbo].[TestTableType]"
 				}
 			};
-
 			return dataConnection.QueryProc<TableTypeTestProcResult>("[TableTypeTestProc]", parameters).ToList();
 		}
 
 		public partial class TableTypeTestProcResult
 		{
-			public int?    Id   { get; set; }
-			public string? Name { get; set; }
+			[Column("Id",   CanBeNull = true, DbType = "int",          DataType = DataType.Int32   )] public int?    Id   { get;set; }
+			[Column("Name", CanBeNull = true, DbType = "nvarchar(10)", DataType = DataType.NVarChar)] public string? Name { get;set; }
 		}
-
 		#endregion
 
 		#region VariableResults
-
-		public static List<VariableResultsResult> VariableResults(this TestData2017DB dataConnection, bool? @ReturnFullRow)
+		public static List<VariableResultsResult> VariableResults(this TestData2017DB dataConnection, bool? returnFullRow)
 		{
 			var parameters = new []
 			{
-				new DataParameter("@ReturnFullRow", @ReturnFullRow, LinqToDB.DataType.Boolean)
+				new DataParameter("@ReturnFullRow", returnFullRow, DataType.Boolean)
+				{
+					DbType = "bit"
+				}
 			};
-
 			return dataConnection.QueryProc<VariableResultsResult>("[VariableResults]", parameters).ToList();
 		}
 
 		public partial class VariableResultsResult
 		{
-			public int    Code   { get; set; }
-			public string Value1 { get; set; } = null!;
-			public string Value2 { get; set; } = null!;
+			[Column("Code",   CanBeNull = false, DbType = "int",        DataType = DataType.Int32  )] public int    Code   { get;set; }
+			[Column("Value1", CanBeNull = false, DbType = "varchar(4)", DataType = DataType.VarChar)] public string Value1 { get;set; } = null!;
+			[Column("Value2", CanBeNull = false, DbType = "varchar(4)", DataType = DataType.VarChar)] public string Value2 { get;set; } = null!;
 		}
-
 		#endregion
 	}
 
 	public static partial class SqlFunctions
 	{
 		#region ScalarFunction
-
 		/// <summary>
 		/// This is &lt;test&gt; scalar function!
 		/// </summary>
-		/// <param name="@value">
+		/// <param name="value">
 		/// This is &lt;test&gt; scalar function parameter!
 		/// </param>
-		[Sql.Function(Name="ScalarFunction", ServerSideOnly=true)]
+		[Sql.Function("[ScalarFunction]", ServerSideOnly = true)]
 		public static int? ScalarFunction(int? @value)
 		{
 			throw new InvalidOperationException();
 		}
-
 		#endregion
 	}
 
 	public static partial class TableExtensions
 	{
-		public static AllType? Find(this ITable<AllType> table, int ID)
+		public static AllType? Find(this ITable<AllType> table, int id)
 		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
+			return table.FirstOrDefault(t => t.ID == id);
 		}
 
-		public static AllTypes2? Find(this ITable<AllTypes2> table, int ID)
+		public static AllTypes2? Find(this ITable<AllTypes2> table, int id)
 		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
+			return table.FirstOrDefault(t => t.ID == id);
 		}
 
-		public static Child? Find(this ITable<Child> table, int Id)
+		public static Child? Find(this ITable<Child> table, int id)
 		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
+			return table.FirstOrDefault(t => t.Id == id);
 		}
 
-		public static DecimalOverflow? Find(this ITable<DecimalOverflow> table, decimal Decimal1)
+		public static DecimalOverflow? Find(this ITable<DecimalOverflow> table, decimal decimal1)
 		{
-			return table.FirstOrDefault(t =>
-				t.Decimal1 == Decimal1);
+			return table.FirstOrDefault(t => t.Decimal1 == decimal1);
 		}
 
-		public static Doctor? Find(this ITable<Doctor> table, int PersonID)
+		public static Doctor? Find(this ITable<Doctor> table, int personId)
 		{
-			return table.FirstOrDefault(t =>
-				t.PersonID == PersonID);
+			return table.FirstOrDefault(t => t.PersonID == personId);
 		}
 
-		public static GrandChild? Find(this ITable<GrandChild> table, int Id)
+		public static GrandChild? Find(this ITable<GrandChild> table, int id)
 		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
+			return table.FirstOrDefault(t => t.Id == id);
 		}
 
-		public static GuidID? Find(this ITable<GuidID> table, Guid ID)
+		public static GuidID? Find(this ITable<GuidID> table, Guid id)
 		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
+			return table.FirstOrDefault(t => t.ID == id);
 		}
 
-		public static GuidID2? Find(this ITable<GuidID2> table, Guid ID)
+		public static GuidID2? Find(this ITable<GuidID2> table, Guid id)
 		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
+			return table.FirstOrDefault(t => t.ID == id);
 		}
 
-		public static IndexTable? Find(this ITable<IndexTable> table, int PKField1, int PKField2)
+		public static IndexTable? Find(this ITable<IndexTable> table, int pkField1, int pkField2)
 		{
-			return table.FirstOrDefault(t =>
-				t.PKField1 == PKField1 &&
-				t.PKField2 == PKField2);
+			return table.FirstOrDefault(t => t.PKField2 == pkField2 && t.PKField1 == pkField1);
 		}
 
-		public static IndexTable2? Find(this ITable<IndexTable2> table, int PKField1, int PKField2)
+		public static IndexTable2? Find(this ITable<IndexTable2> table, int pkField1, int pkField2)
 		{
-			return table.FirstOrDefault(t =>
-				t.PKField1 == PKField1 &&
-				t.PKField2 == PKField2);
+			return table.FirstOrDefault(t => t.PKField2 == pkField2 && t.PKField1 == pkField1);
 		}
 
-		public static InheritanceChild? Find(this ITable<InheritanceChild> table, int InheritanceChildId)
+		public static InheritanceChild? Find(this ITable<InheritanceChild> table, int inheritanceChildId)
 		{
-			return table.FirstOrDefault(t =>
-				t.InheritanceChildId == InheritanceChildId);
+			return table.FirstOrDefault(t => t.InheritanceChildId == inheritanceChildId);
 		}
 
-		public static InheritanceParent? Find(this ITable<InheritanceParent> table, int InheritanceParentId)
+		public static InheritanceParent? Find(this ITable<InheritanceParent> table, int inheritanceParentId)
 		{
-			return table.FirstOrDefault(t =>
-				t.InheritanceParentId == InheritanceParentId);
+			return table.FirstOrDefault(t => t.InheritanceParentId == inheritanceParentId);
 		}
 
-		public static Issue1115? Find(this ITable<Issue1115> table, SqlHierarchyId Id)
+		public static Issue1115? Find(this ITable<Issue1115> table, SqlHierarchyId id)
 		{
-			return table.FirstOrDefault(t =>
-				(bool)(t.Id == Id));
+			return table.FirstOrDefault(t => t.Id == id);
 		}
 
-		public static Issue1144? Find(this ITable<Issue1144> table, int Id)
+		public static Issue1144? Find(this ITable<Issue1144> table, int id)
 		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
+			return table.FirstOrDefault(t => t.Id == id);
 		}
 
-		public static LinqDataType? Find(this ITable<LinqDataType> table, int Id)
+		public static LinqDataType? Find(this ITable<LinqDataType> table, int id)
 		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
+			return table.FirstOrDefault(t => t.Id == id);
 		}
 
-		public static Parent? Find(this ITable<Parent> table, int Id)
+		public static Parent? Find(this ITable<Parent> table, int id)
 		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
+			return table.FirstOrDefault(t => t.Id == id);
 		}
 
-		public static Patient? Find(this ITable<Patient> table, int PersonID)
+		public static Patient? Find(this ITable<Patient> table, int personId)
 		{
-			return table.FirstOrDefault(t =>
-				t.PersonID == PersonID);
+			return table.FirstOrDefault(t => t.PersonID == personId);
 		}
 
-		public static SqlType? Find(this ITable<SqlType> table, int ID)
+		public static SqlType? Find(this ITable<SqlType> table, int id)
 		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
+			return table.FirstOrDefault(t => t.ID == id);
 		}
 
-		public static TestIdentity? Find(this ITable<TestIdentity> table, int ID)
+		public static TestIdentity? Find(this ITable<TestIdentity> table, int id)
 		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
+			return table.FirstOrDefault(t => t.ID == id);
 		}
 
-		public static TestMerge1? Find(this ITable<TestMerge1> table, int Id)
+		public static TestMerge1? Find(this ITable<TestMerge1> table, int id)
 		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
+			return table.FirstOrDefault(t => t.Id == id);
 		}
 
-		public static TestMerge2? Find(this ITable<TestMerge2> table, int Id)
+		public static TestMerge2? Find(this ITable<TestMerge2> table, int id)
 		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
+			return table.FirstOrDefault(t => t.Id == id);
 		}
 
-		public static TestMergeIdentity? Find(this ITable<TestMergeIdentity> table, int Id)
+		public static TestMergeIdentity? Find(this ITable<TestMergeIdentity> table, int id)
 		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
+			return table.FirstOrDefault(t => t.Id == id);
 		}
 
-		public static TestSchemaX? Find(this ITable<TestSchemaX> table, int TestSchemaXID)
+		public static TestSchemaX? Find(this ITable<TestSchemaX> table, int testSchemaXid)
 		{
-			return table.FirstOrDefault(t =>
-				t.TestSchemaXID == TestSchemaXID);
+			return table.FirstOrDefault(t => t.TestSchemaXID == testSchemaXid);
 		}
 
 		#region Associations
-
-		#region IndexTable Associations
-
-		/// <summary>
-		/// FK_Patient2_IndexTable_BackReference
-		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
-		public static IQueryable<IndexTable2> Patients(this IndexTable obj, IDataContext db)
-		{
-			return db.GetTable<IndexTable2>().Where(c => c.PKField2 == obj.PKField2 && c.PKField1 == obj.PKField1);
-		}
-
-		/// <summary>
-		/// FK_Patient2_IndexTable_BackReference
-		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
-		public static IndexTable? Patient(this IndexTable2 obj, IDataContext db)
-		{
-			return db.GetTable<IndexTable>().Where(c => c.PKField2 == obj.PKField2 && c.PKField1 == obj.PKField1).FirstOrDefault();
-		}
-
-		#endregion
-
 		#region IndexTable2 Associations
-
 		/// <summary>
 		/// FK_Patient2_IndexTable
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Patient2_IndexTable", BackReferenceName="Patient")]
-		public static IQueryable<IndexTable> Patient2IndexTables(this IndexTable2 obj, IDataContext db)
-		{
-			return db.GetTable<IndexTable>().Where(c => c.PKField2 == obj.PKField2 && c.PKField1 == obj.PKField1);
-		}
-
-		/// <summary>
-		/// FK_Patient2_IndexTable
-		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="FK_Patient2_IndexTable", BackReferenceName="Patient")]
-		public static IndexTable2 Patient2IndexTable(this IndexTable obj, IDataContext db)
+		[Association(CanBeNull = false, ThisKey = "PKField2,PKField1", OtherKey = "PKField2,PKField1")]
+		public static IndexTable Patient2IndexTable(this IndexTable2 obj, IDataContext db)
 		{
 			return db.GetTable<IndexTable2>().Where(c => c.PKField2 == obj.PKField2 && c.PKField1 == obj.PKField1).First();
 		}
-
 		#endregion
 
-		#region TestSchemaA Associations
-
+		#region IndexTable Associations
 		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2_BackReference
+		/// FK_Patient2_IndexTable_BackReference
 		/// </summary>
-		[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAId", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-		public static IQueryable<MySchemaSchema.TestSchemaB> FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences(this MySchemaSchema.TestSchemaA obj, IDataContext db)
+		[Association(CanBeNull = true, ThisKey = "PKField2,PKField1", OtherKey = "PKField2,PKField1")]
+		public static IndexTable2? Patient(this IndexTable obj, IDataContext db)
 		{
-			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.TargetTestSchemaAId == obj.TestSchemaAID);
+			return db.GetTable<IndexTable>().Where(c => c.PKField2 == obj.PKField2 && c.PKField1 == obj.PKField1).FirstOrDefault();
 		}
-
-		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA_BackReference
-		/// </summary>
-		[Association(ThisKey="TestSchemaAID", OtherKey="OriginTestSchemaAID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-		public static IQueryable<MySchemaSchema.TestSchemaB> TestSchemaBYOriginTestSchemaA(this MySchemaSchema.TestSchemaA obj, IDataContext db)
-		{
-			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.OriginTestSchemaAID == obj.TestSchemaAID);
-		}
-
-		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA_BackReference
-		/// </summary>
-		[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-		public static IQueryable<MySchemaSchema.TestSchemaB> TestSchemaBYTargetTestSchemaA(this MySchemaSchema.TestSchemaA obj, IDataContext db)
-		{
-			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.TargetTestSchemaAID == obj.TestSchemaAID);
-		}
-
 		#endregion
 
-		#region TestSchemaB Associations
-
+		#region TestSchemaY Associations
 		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA
+		/// FK_TestSchemaY_TestSchemaX
 		/// </summary>
-		[Association(ThisKey="TargetTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA", BackReferenceName="TestSchemaBYTargetTestSchemaA")]
-		public static IQueryable<MySchemaSchema.TestSchemaA> FKTargetTestSchemaA(this MySchemaSchema.TestSchemaB obj, IDataContext db)
+		[Association(CanBeNull = false, ThisKey = nameof(TestSchemaY.TestSchemaXID), OtherKey = nameof(TestSchemaX.TestSchemaXID))]
+		public static TestSchemaX TestSchemaX(this TestSchemaY obj, IDataContext db)
 		{
-			return db.GetTable<MySchemaSchema.TestSchemaA>().Where(c => c.TestSchemaAID == obj.TargetTestSchemaAID);
+			return db.GetTable<TestSchemaY>().Where(c => c.TestSchemaXID == obj.TestSchemaXID).First();
 		}
 
 		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA
+		/// FK_TestSchemaY_ParentTestSchemaX
 		/// </summary>
-		[Association(ThisKey="TargetTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA", BackReferenceName="TestSchemaBYTargetTestSchemaA")]
-		public static MySchemaSchema.TestSchemaB FKTargetTestSchemaA0(this MySchemaSchema.TestSchemaA obj, IDataContext db)
+		[Association(CanBeNull = false, ThisKey = nameof(TestSchemaY.ParentTestSchemaXID), OtherKey = nameof(TestSchemaX.TestSchemaXID))]
+		public static TestSchemaX ParentTestSchemaX(this TestSchemaY obj, IDataContext db)
 		{
-			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.TargetTestSchemaAID == obj.TestSchemaAID).First();
+			return db.GetTable<TestSchemaY>().Where(c => c.ParentTestSchemaXID == obj.ParentTestSchemaXID).First();
 		}
 
 		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA
+		/// FK_TestSchemaY_OtherID
 		/// </summary>
-		[Association(ThisKey="OriginTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_OriginTestSchemaA", BackReferenceName="TestSchemaBYOriginTestSchemaA")]
-		public static IQueryable<MySchemaSchema.TestSchemaA> OriginTestSchemaA(this MySchemaSchema.TestSchemaB obj, IDataContext db)
+		[Association(CanBeNull = false, ThisKey = nameof(TestSchemaY.TestSchemaXID), OtherKey = nameof(TestSchemaX.TestSchemaXID))]
+		public static TestSchemaX OtherId(this TestSchemaY obj, IDataContext db)
 		{
-			return db.GetTable<MySchemaSchema.TestSchemaA>().Where(c => c.TestSchemaAID == obj.OriginTestSchemaAID);
+			return db.GetTable<TestSchemaY>().Where(c => c.TestSchemaXID == obj.TestSchemaXID).First();
 		}
-
-		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA
-		/// </summary>
-		[Association(ThisKey="OriginTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_OriginTestSchemaA", BackReferenceName="TestSchemaBYOriginTestSchemaA")]
-		public static MySchemaSchema.TestSchemaB OriginTestSchemaA0(this MySchemaSchema.TestSchemaA obj, IDataContext db)
-		{
-			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.OriginTestSchemaAID == obj.TestSchemaAID).First();
-		}
-
-		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2
-		/// </summary>
-		[Association(ThisKey="TargetTestSchemaAId", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA2", BackReferenceName="FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences")]
-		public static IQueryable<MySchemaSchema.TestSchemaA> TargetTestSchemaA(this MySchemaSchema.TestSchemaB obj, IDataContext db)
-		{
-			return db.GetTable<MySchemaSchema.TestSchemaA>().Where(c => c.TestSchemaAID == obj.TargetTestSchemaAId);
-		}
-
-		/// <summary>
-		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2
-		/// </summary>
-		[Association(ThisKey="TargetTestSchemaAId", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA2", BackReferenceName="FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences")]
-		public static MySchemaSchema.TestSchemaB TargetTestSchemaA0(this MySchemaSchema.TestSchemaA obj, IDataContext db)
-		{
-			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.TargetTestSchemaAId == obj.TestSchemaAID).First();
-		}
-
 		#endregion
 
 		#region TestSchemaX Associations
-
 		/// <summary>
 		/// FK_TestSchemaY_TestSchemaX_BackReference
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(CanBeNull = true, ThisKey = nameof(TestSchemaX.TestSchemaXID), OtherKey = nameof(TestSchemaY.TestSchemaXID))]
 		public static IQueryable<TestSchemaY> TestSchemaY(this TestSchemaX obj, IDataContext db)
 		{
-			return db.GetTable<TestSchemaY>().Where(c => c.TestSchemaXID == obj.TestSchemaXID);
-		}
-
-		/// <summary>
-		/// FK_TestSchemaY_OtherID_BackReference
-		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-		public static IQueryable<TestSchemaY> TestSchemaYOtherIds(this TestSchemaX obj, IDataContext db)
-		{
-			return db.GetTable<TestSchemaY>().Where(c => c.TestSchemaXID == obj.TestSchemaXID);
+			return db.GetTable<TestSchemaX>().Where(c => c.TestSchemaXID == obj.TestSchemaXID);
 		}
 
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX_BackReference
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="ParentTestSchemaXID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+		[Association(CanBeNull = true, ThisKey = nameof(TestSchemaX.TestSchemaXID), OtherKey = nameof(TestSchemaY.ParentTestSchemaXID))]
 		public static IQueryable<TestSchemaY> TestSchemaYParentTestSchemaX(this TestSchemaX obj, IDataContext db)
 		{
-			return db.GetTable<TestSchemaY>().Where(c => c.ParentTestSchemaXID == obj.TestSchemaXID);
-		}
-
-		#endregion
-
-		#region TestSchemaY Associations
-
-		/// <summary>
-		/// FK_TestSchemaY_OtherID
-		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_OtherID", BackReferenceName="TestSchemaYOtherIds")]
-		public static IQueryable<TestSchemaX> FkTestSchemaYOtherIds(this TestSchemaY obj, IDataContext db)
-		{
 			return db.GetTable<TestSchemaX>().Where(c => c.TestSchemaXID == obj.TestSchemaXID);
 		}
 
 		/// <summary>
-		/// FK_TestSchemaY_OtherID
+		/// FK_TestSchemaY_OtherID_BackReference
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_OtherID", BackReferenceName="TestSchemaYOtherIds")]
-		public static TestSchemaY FkTestSchemaYOtherID(this TestSchemaX obj, IDataContext db)
-		{
-			return db.GetTable<TestSchemaY>().Where(c => c.TestSchemaXID == obj.TestSchemaXID).First();
-		}
-
-		/// <summary>
-		/// FK_TestSchemaY_ParentTestSchemaX
-		/// </summary>
-		[Association(ThisKey="ParentTestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_ParentTestSchemaX", BackReferenceName="TestSchemaYParentTestSchemaX")]
-		public static IQueryable<TestSchemaX> ParentTestSchemaX(this TestSchemaY obj, IDataContext db)
-		{
-			return db.GetTable<TestSchemaX>().Where(c => c.TestSchemaXID == obj.ParentTestSchemaXID);
-		}
-
-		/// <summary>
-		/// FK_TestSchemaY_ParentTestSchemaX
-		/// </summary>
-		[Association(ThisKey="ParentTestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_ParentTestSchemaX", BackReferenceName="TestSchemaYParentTestSchemaX")]
-		public static TestSchemaY ParentTestSchemaX0(this TestSchemaX obj, IDataContext db)
-		{
-			return db.GetTable<TestSchemaY>().Where(c => c.ParentTestSchemaXID == obj.TestSchemaXID).First();
-		}
-
-		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX
-		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_TestSchemaX", BackReferenceName="TestSchemaY")]
-		public static IQueryable<TestSchemaX> TestSchemaX(this TestSchemaY obj, IDataContext db)
+		[Association(CanBeNull = true, ThisKey = nameof(TestSchemaX.TestSchemaXID), OtherKey = nameof(TestSchemaY.TestSchemaXID))]
+		public static IQueryable<TestSchemaY> TestSchemaYOtherIds(this TestSchemaX obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaX>().Where(c => c.TestSchemaXID == obj.TestSchemaXID);
 		}
-
-		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX
-		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchemaY_TestSchemaX", BackReferenceName="TestSchemaY")]
-		public static TestSchemaY TestSchemaX0(this TestSchemaX obj, IDataContext db)
-		{
-			return db.GetTable<TestSchemaY>().Where(c => c.TestSchemaXID == obj.TestSchemaXID).First();
-		}
-
 		#endregion
 
+		#region TestSchemaB Associations
+		/// <summary>
+		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA
+		/// </summary>
+		[Association(CanBeNull = false, ThisKey = nameof(MySchemaSchema.TestSchemaB.OriginTestSchemaAID), OtherKey = nameof(MySchemaSchema.TestSchemaA.TestSchemaAID))]
+		public static MySchemaSchema.TestSchemaA TestSchemaByOriginTestSchemaA(this MySchemaSchema.TestSchemaB obj, IDataContext db)
+		{
+			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.OriginTestSchemaAID == obj.OriginTestSchemaAID).First();
+		}
+
+		/// <summary>
+		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA
+		/// </summary>
+		[Association(CanBeNull = false, ThisKey = nameof(MySchemaSchema.TestSchemaB.TargetTestSchemaAID), OtherKey = nameof(MySchemaSchema.TestSchemaA.TestSchemaAID))]
+		public static MySchemaSchema.TestSchemaA TestSchemaByTargetTestSchemaA(this MySchemaSchema.TestSchemaB obj, IDataContext db)
+		{
+			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.TargetTestSchemaAID == obj.TargetTestSchemaAID).First();
+		}
+
+		/// <summary>
+		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2
+		/// </summary>
+		[Association(CanBeNull = false, ThisKey = nameof(MySchemaSchema.TestSchemaB.TargetTestSchemaAIDColumn), OtherKey = nameof(MySchemaSchema.TestSchemaA.TestSchemaAID))]
+		public static MySchemaSchema.TestSchemaA TestSchemaByTargetTestSchemaA1(this MySchemaSchema.TestSchemaB obj, IDataContext db)
+		{
+			return db.GetTable<MySchemaSchema.TestSchemaB>().Where(c => c.TargetTestSchemaAID == obj.TargetTestSchemaAID).First();
+		}
+		#endregion
+
+		#region TestSchemaA Associations
+		/// <summary>
+		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA_BackReference
+		/// </summary>
+		[Association(CanBeNull = true, ThisKey = nameof(MySchemaSchema.TestSchemaA.TestSchemaAID), OtherKey = nameof(MySchemaSchema.TestSchemaB.OriginTestSchemaAID))]
+		public static IQueryable<MySchemaSchema.TestSchemaB> TestSchemaByOriginTestSchemaA(this MySchemaSchema.TestSchemaA obj, IDataContext db)
+		{
+			return db.GetTable<MySchemaSchema.TestSchemaA>().Where(c => c.TestSchemaAID == obj.TestSchemaAID);
+		}
+
+		/// <summary>
+		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA_BackReference
+		/// </summary>
+		[Association(CanBeNull = true, ThisKey = nameof(MySchemaSchema.TestSchemaA.TestSchemaAID), OtherKey = nameof(MySchemaSchema.TestSchemaB.TargetTestSchemaAID))]
+		public static IQueryable<MySchemaSchema.TestSchemaB> TestSchemaByTargetTestSchemaA(this MySchemaSchema.TestSchemaA obj, IDataContext db)
+		{
+			return db.GetTable<MySchemaSchema.TestSchemaA>().Where(c => c.TestSchemaAID == obj.TestSchemaAID);
+		}
+
+		/// <summary>
+		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2_BackReference
+		/// </summary>
+		[Association(CanBeNull = true, ThisKey = nameof(MySchemaSchema.TestSchemaA.TestSchemaAID), OtherKey = nameof(MySchemaSchema.TestSchemaB.TargetTestSchemaAIDColumn))]
+		public static IQueryable<MySchemaSchema.TestSchemaB> TestSchemaByTargetTestSchemaA12(this MySchemaSchema.TestSchemaA obj, IDataContext db)
+		{
+			return db.GetTable<MySchemaSchema.TestSchemaA>().Where(c => c.TestSchemaAID == obj.TestSchemaAID);
+		}
+		#endregion
 		#endregion
 	}
 
@@ -2663,7 +1468,7 @@ namespace Sql2017ProcSchema
 	{
 		public partial class DataContext
 		{
-			public ITable<SameTableName> SameTableNames { get { return _dataContext.GetTable<SameTableName>(); } }
+			public ITable<SameTableName> SameTableNames => _dataContext.GetTable<SameTableName>();
 			public ITable<TestSchemaA>   TestSchemaA    { get { return _dataContext.GetTable<TestSchemaA>(); } }
 			public ITable<TestSchemaB>   TestSchemaB    { get { return _dataContext.GetTable<TestSchemaB>(); } }
 
@@ -2675,68 +1480,65 @@ namespace Sql2017ProcSchema
 			}
 		}
 
-		[Table(Schema="TestSchema", Name="SameTableName")]
+		[Table("SameTableName", Schema = "TestSchema")]
 		public partial class SameTableName
 		{
-			[Column("id", DbType="int", DataType=LinqToDB.DataType.Int32), Nullable] public int? Id { get; set; } // int
+			[Column("id", CanBeNull = true, DbType = "int", DataType = DataType.Int32)] public int? Id { get;set; } // int
 		}
 
-		[Table(Schema="TestSchema", Name="TestSchemaA")]
+		[Table("TestSchemaA", Schema = "TestSchema")]
 		public partial class TestSchemaA
 		{
-			[Column(DbType="int", DataType=LinqToDB.DataType.Int32), PrimaryKey, NotNull] public int TestSchemaAID { get; set; } // int
-			[Column(DbType="int", DataType=LinqToDB.DataType.Int32),             NotNull] public int Field1        { get; set; } // int
+			[Column("TestSchemaAID", CanBeNull = false, DbType = "int", DataType = DataType.Int32, IsPrimaryKey = true)] public int TestSchemaAID { get;set; } // int
+			[Column("Field1",        CanBeNull = false, DbType = "int", DataType = DataType.Int32)                     ] public int Field1        { get;set; } // int
 
 			#region Associations
+			/// <summary>
+			/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA_BackReference
+			/// </summary>
+			[Association(CanBeNull = true, ThisKey = nameof(TestSchemaAID), OtherKey = nameof(TestSchemaB.OriginTestSchemaAID))]
+			public List<TestSchemaB> TestSchemaBYOriginTestSchemaA { get; set; } = null!;
+
+			/// <summary>
+			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA_BackReference
+			/// </summary>
+			[Association(CanBeNull = true, ThisKey = nameof(TestSchemaAID), OtherKey = nameof(TestSchemaB.TargetTestSchemaAID))]
+			public List<TestSchemaB> TestSchemaBYTargetTestSchemaA { get; set; } = null!;
 
 			/// <summary>
 			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2_BackReference
 			/// </summary>
 			[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAId", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public List<MySchemaSchema.TestSchemaB> FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences { get; set; } = null!;
-
-			/// <summary>
-			/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA_BackReference
-			/// </summary>
-			[Association(ThisKey="TestSchemaAID", OtherKey="OriginTestSchemaAID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public List<MySchemaSchema.TestSchemaB> TestSchemaBYOriginTestSchemaA { get; set; } = null!;
-
-			/// <summary>
-			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA_BackReference
-			/// </summary>
-			[Association(ThisKey="TestSchemaAID", OtherKey="TargetTestSchemaAID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public List<MySchemaSchema.TestSchemaB> TestSchemaBYTargetTestSchemaA { get; set; } = null!;
-
 			#endregion
 		}
 
-		[Table(Schema="TestSchema", Name="TestSchemaB")]
+		[Table("TestSchemaB", Schema = "TestSchema")]
 		public partial class TestSchemaB
 		{
-			[Column(                           DbType="int", DataType=LinqToDB.DataType.Int32), PrimaryKey, NotNull] public int TestSchemaBID       { get; set; } // int
-			[Column(                           DbType="int", DataType=LinqToDB.DataType.Int32),             NotNull] public int OriginTestSchemaAID { get; set; } // int
-			[Column(                           DbType="int", DataType=LinqToDB.DataType.Int32),             NotNull] public int TargetTestSchemaAID { get; set; } // int
+			[Column("TestSchemaBID",           CanBeNull = false, DbType = "int", DataType = DataType.Int32, IsPrimaryKey = true)] public int TestSchemaBID             { get;set; } // int
+			[Column("OriginTestSchemaAID",     CanBeNull = false, DbType = "int", DataType = DataType.Int32)                     ] public int OriginTestSchemaAID       { get;set; } // int
+			[Column("TargetTestSchemaAID",     CanBeNull = false, DbType = "int", DataType = DataType.Int32)                     ] public int TargetTestSchemaAID       { get;set; } // int
 			[Column("Target_Test_Schema_A_ID", DbType="int", DataType=LinqToDB.DataType.Int32),             NotNull] public int TargetTestSchemaAId { get; set; } // int
 
 			#region Associations
+			/// <summary>
+			/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA
+			/// </summary>
+			[Association(ThisKey="OriginTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_OriginTestSchemaA", BackReferenceName="TestSchemaBYOriginTestSchemaA")]
+			public TestSchemaA OriginTestSchemaA { get; set; } = null!;
 
 			/// <summary>
 			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA
 			/// </summary>
 			[Association(ThisKey="TargetTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA", BackReferenceName="TestSchemaBYTargetTestSchemaA")]
-			public MySchemaSchema.TestSchemaA FKTargetTestSchemaA { get; set; } = null!;
-
-			/// <summary>
-			/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA
-			/// </summary>
-			[Association(ThisKey="OriginTestSchemaAID", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_OriginTestSchemaA", BackReferenceName="TestSchemaBYOriginTestSchemaA")]
-			public MySchemaSchema.TestSchemaA OriginTestSchemaA { get; set; } = null!;
+			public TestSchemaA FKTargetTestSchemaA { get; set; } = null!;
 
 			/// <summary>
 			/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2
 			/// </summary>
 			[Association(ThisKey="TargetTestSchemaAId", OtherKey="TestSchemaAID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="FK_TestSchema_TestSchemaBY_TargetTestSchemaA2", BackReferenceName="FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences")]
-			public MySchemaSchema.TestSchemaA TargetTestSchemaA { get; set; } = null!;
+			public TestSchemaA TargetTestSchemaA { get; set; } = null!;
 
 			#endregion
 		}
@@ -2744,43 +1546,31 @@ namespace Sql2017ProcSchema
 		public static partial class TestData2017DBStoredProcedures
 		{
 			#region TestProcedure
-
 			public static List<TestProcedureResult> TestProcedure(TestData2017DB dataConnection)
 			{
-				var ms = dataConnection.MappingSchema;
-
-				return dataConnection.QueryProc(dataReader =>
-					new TestProcedureResult
+				return dataConnection.QueryProc(dataReader => new TestProcedureResult()
 					{
-						Column1 = Converter.ChangeTypeTo<int>(dataReader.GetValue(0), ms),
-					},
-					"[TestSchema].[TestProcedure]").ToList();
+					Column1 = Converter.ChangeTypeTo<int>(dataReader.GetValue(0), dataConnection.MappingSchema)
+				}, "[TestSchema].[TestProcedure]").ToList();
 			}
 
 			public partial class TestProcedureResult
 			{
-				[Column("")] public int Column1 { get; set; }
+				public int Column1 { get;set; }
 			}
-
 			#endregion
 		}
 
 		#region Table Extensions
-
-		public static TestSchemaA? Find(this ITable<TestSchemaA> table, int TestSchemaAID)
+		public static TestSchemaA? Find(this ITable<TestSchemaA> table, int testSchemaAid)
 		{
-			return table.FirstOrDefault(t =>
-				t.TestSchemaAID == TestSchemaAID);
+			return table.FirstOrDefault(t => t.TestSchemaAID == testSchemaAid);
 		}
 
-		public static TestSchemaB? Find(this ITable<TestSchemaB> table, int TestSchemaBID)
+		public static TestSchemaB? Find(this ITable<TestSchemaB> table, int testSchemaBid)
 		{
-			return table.FirstOrDefault(t =>
-				t.TestSchemaBID == TestSchemaBID);
+			return table.FirstOrDefault(t => t.TestSchemaBID == testSchemaBid);
 		}
-
 		#endregion
 	}
 }
-
-#pragma warning restore 1591
