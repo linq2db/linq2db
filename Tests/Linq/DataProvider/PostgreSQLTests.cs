@@ -2275,9 +2275,6 @@ namespace Tests.DataProvider
 		}
 
 		// see https://github.com/linq2db/linq2db/issues/3130
-		// tests:
-		// - DataType.Binary support
-		// - fluent mapping override by configuration name
 		[Test]
 		public void DataTypeBinaryMappingTest([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
@@ -2285,8 +2282,6 @@ namespace Tests.DataProvider
 
 			ms.GetFluentMappingBuilder()
 				.Entity<DataTypeBinaryMapping>()
-					.Property(p => p.Binary).HasDataType(DataType.Int128).IsNullable(false)
-				.Entity<DataTypeBinaryMapping>(context)//(ProviderName.PostgreSQL)
 					.Property(p => p.Binary).HasDataType(DataType.Binary).IsNullable(false);
 
 			using (var db = (DataConnection)GetDataContext(context, ms))
