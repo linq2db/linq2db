@@ -10,7 +10,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Mapping;
 	using System.Data.Linq;
 	using System.Globalization;
-	using System.Linq.Expressions;
 
 	public class PostgreSQLMappingSchema : MappingSchema
 	{
