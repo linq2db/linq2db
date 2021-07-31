@@ -21,7 +21,7 @@ string   NamespaceName
 public string   ServerName;
 public string   DatabaseName;
 public string   DataContextName;
-public string   BaseDataContextClass;
+public static string BaseDataContextClass;
 public string   BaseEntityClass;
 public string   OneToManyAssociationType      = "IEnumerable<{0}>";
 
