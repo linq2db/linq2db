@@ -1,10 +1,11 @@
 ﻿using System.Linq;
-
+using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -105,6 +106,43 @@ namespace Tests.Linq
 				if (ctx != null)
 				{
 					Assert.That(ctx.LastQuery, Is.Not.Contains("OPTION"));
+				}
+			}
+		}
+
+		[Repeat(100)]
+		[Test]
+		public async Task Issue3137([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var _ = new DisableBaseline("multi-threading");
+
+			const int runs = 10;
+
+			var tasks = new Task[runs];
+
+			for (int i = 0; i < tasks.Length; i++)
+				tasks[i] = Task.Run(execute);
+
+			await Task.WhenAll(tasks);
+
+			async Task execute()
+			{
+				using (var db = new TestDataConnection(context))
+				{
+					db.QueryHints.Add("-- many");
+					db.NextQueryHints.Add("-- once");
+
+					await db.Parent.Where(r => r.ParentID == 11).SingleOrDefaultAsync();
+					var sql = db.LastQuery!;
+
+					Assert.True(sql.Contains("-- many"));
+					Assert.True(sql.Contains("-- once"));
+
+					await db.Parent.Where(r => r.ParentID == 11).SingleOrDefaultAsync();
+					sql = db.LastQuery!;
+
+					Assert.True(sql.Contains("-- many"));
+					Assert.False(sql.Contains("-- once"));
 				}
 			}
 		}
