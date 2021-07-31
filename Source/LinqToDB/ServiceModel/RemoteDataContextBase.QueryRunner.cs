@@ -40,7 +40,7 @@ namespace LinqToDB.ServiceModel
 
 			public override Expression? MapperExpression { get; set; }
 
-			protected override void SetQuery(IReadOnlyParameterValues parameterValues)
+			protected override void SetQuery(IReadOnlyParameterValues parameterValues, bool forGetSqlText)
 			{
 				_evaluationContext = new EvaluationContext(parameterValues);
 			}
@@ -49,14 +49,14 @@ namespace LinqToDB.ServiceModel
 
 			public override string GetSqlText()
 			{
-				SetCommand(false);
+				SetCommand(true);
 
-				var sb = new StringBuilder();
-				var query = Query.Queries[QueryNumber];
-				var sqlBuilder   = DataContext.CreateSqlProvider();
-				var sqlOptimizer = DataContext.GetSqlOptimizer();
+				var sb               = new StringBuilder();
+				var query            = Query.Queries[QueryNumber];
+				var sqlBuilder       = DataContext.CreateSqlProvider();
+				var sqlOptimizer     = DataContext.GetSqlOptimizer();
 				var sqlStringBuilder = new StringBuilder();
-				var cc = sqlBuilder.CommandCount(query.Statement);
+				var cc               = sqlBuilder.CommandCount(query.Statement);
 
 				var optimizationContext = new OptimizationContext(_evaluationContext, query.Aliases!, false);
 
@@ -65,13 +65,17 @@ namespace LinqToDB.ServiceModel
 					var statement = sqlOptimizer.PrepareStatementForSql(query.Statement, DataContext.MappingSchema, optimizationContext);
 					sqlBuilder.BuildSql(i, statement, sqlStringBuilder, optimizationContext);
 
-					if (i == 0 && query.QueryHints != null && query.QueryHints.Count > 0)
+					if (i == 0)
 					{
-						var sql = sqlStringBuilder.ToString();
+						var queryHints = DataContext.GetNextCommandHints(false);
+						if (queryHints != null)
+						{
+							var sql = sqlStringBuilder.ToString();
 
-						sql = sqlBuilder.ApplyQueryHints(sql, query.QueryHints);
+							sql = sqlBuilder.ApplyQueryHints(sql, queryHints);
 
-						sqlStringBuilder.Append(sql);
+							sqlStringBuilder.Append(sql);
+						}
 					}
 
 					sb
@@ -144,7 +148,7 @@ namespace LinqToDB.ServiceModel
 			{
 				string data;
 
-				SetCommand(true);
+				SetCommand(false);
 
 				var queryContext = Query.Queries[QueryNumber];
 
@@ -155,7 +159,7 @@ namespace LinqToDB.ServiceModel
 					_dataContext.SerializationMappingSchema,
 					q,
 					_evaluationContext.ParameterValues,
-					QueryHints);
+					_dataContext.GetNextCommandHints(true));
 
 				if (_dataContext._batchCounter > 0)
 				{
@@ -175,7 +179,7 @@ namespace LinqToDB.ServiceModel
 
 				string data;
 
-				SetCommand(true);
+				SetCommand(false);
 
 				var queryContext = Query.Queries[QueryNumber];
 
@@ -185,7 +189,8 @@ namespace LinqToDB.ServiceModel
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
-					_evaluationContext.ParameterValues, QueryHints);
+					_evaluationContext.ParameterValues,
+					_dataContext.GetNextCommandHints(true));
 
 				_client = _dataContext.GetClient();
 
@@ -201,7 +206,7 @@ namespace LinqToDB.ServiceModel
 
 				string data;
 
-				SetCommand(true);
+				SetCommand(false);
 
 				var queryContext = Query.Queries[QueryNumber];
 
@@ -211,7 +216,7 @@ namespace LinqToDB.ServiceModel
 					_dataContext.SerializationMappingSchema,
 					q,
 					_evaluationContext.ParameterValues,
-					QueryHints);
+					_dataContext.GetNextCommandHints(true));
 
 				_client = _dataContext.GetClient();
 
@@ -279,7 +284,7 @@ namespace LinqToDB.ServiceModel
 
 				string data;
 
-				SetCommand(true);
+				SetCommand(false);
 
 				var queryContext = Query.Queries[QueryNumber];
 
@@ -289,7 +294,7 @@ namespace LinqToDB.ServiceModel
 					_dataContext.SerializationMappingSchema,
 					q,
 					_evaluationContext.ParameterValues,
-					QueryHints);
+					_dataContext.GetNextCommandHints(true));
 
 				_client = _dataContext.GetClient();
 
@@ -308,7 +313,7 @@ namespace LinqToDB.ServiceModel
 
 				string data;
 
-				SetCommand(true);
+				SetCommand(false);
 
 				var queryContext = Query.Queries[QueryNumber];
 
@@ -318,7 +323,7 @@ namespace LinqToDB.ServiceModel
 					_dataContext.SerializationMappingSchema,
 					q,
 					_evaluationContext.ParameterValues,
-					QueryHints);
+					_dataContext.GetNextCommandHints(true));
 
 				_client = _dataContext.GetClient();
 
@@ -329,7 +334,7 @@ namespace LinqToDB.ServiceModel
 			{
 				string data;
 
-				SetCommand(true);
+				SetCommand(false);
 
 				var queryContext = Query.Queries[QueryNumber];
 
@@ -339,7 +344,7 @@ namespace LinqToDB.ServiceModel
 					_dataContext.SerializationMappingSchema,
 					q,
 					_evaluationContext.ParameterValues,
-					QueryHints);
+					_dataContext.GetNextCommandHints(true));
 
 				if (_dataContext._batchCounter > 0)
 				{

@@ -1178,17 +1178,16 @@ namespace LinqToDB.Data
 		/// </summary>
 		public IDataParameterCollection? LastParameters;
 
-		internal void InitCommand(CommandType commandType, string sql, DataParameter[]? parameters, List<string>? queryHints, bool withParameters)
+		internal void InitCommand(CommandType commandType, string sql, DataParameter[]? parameters, IReadOnlyCollection<string>? queryHints, bool withParameters)
 		{
 			if (queryHints?.Count > 0)
 			{
 				var sqlProvider = DataProvider.CreateSqlBuilder(MappingSchema);
-				sql = sqlProvider.ApplyQueryHints(sql, queryHints);
-				queryHints.Clear();
+				sql             = sqlProvider.ApplyQueryHints(sql, queryHints);
 			}
 
 			DataProvider.InitCommand(this, commandType, sql, parameters, withParameters);
-			LastQuery = Command.CommandText;
+			LastQuery      = Command.CommandText;
 			LastParameters = Command.Parameters;
 		}
 

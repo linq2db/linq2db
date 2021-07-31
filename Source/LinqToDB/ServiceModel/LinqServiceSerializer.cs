@@ -19,7 +19,7 @@ namespace LinqToDB.ServiceModel
 	{
 		#region Public Members
 
-		public static string Serialize(MappingSchema serializationSchema, SqlStatement statement, IReadOnlyParameterValues? parameterValues, List<string>? queryHints)
+		public static string Serialize(MappingSchema serializationSchema, SqlStatement statement, IReadOnlyParameterValues? parameterValues, IReadOnlyCollection<string>? queryHints)
 		{
 			return new QuerySerializer(serializationSchema).Serialize(statement, parameterValues, queryHints);
 		}
@@ -629,7 +629,7 @@ namespace LinqToDB.ServiceModel
 			{
 			}
 
-			public string Serialize(SqlStatement statement, IReadOnlyParameterValues? parameterValues, List<string>? queryHints)
+			public string Serialize(SqlStatement statement, IReadOnlyParameterValues? parameterValues, IReadOnlyCollection<string>? queryHints)
 			{
 				var queryHintCount = queryHints?.Count ?? 0;
 

@@ -65,7 +65,7 @@ namespace LinqToDB.Data
 
 			public override string GetSqlText()
 			{
-				SetCommand(false);
+				SetCommand(true);
 
 				var sqlProvider = _dataConnection.DataProvider.CreateSqlBuilder(_dataConnection.MappingSchema);
 
@@ -85,12 +85,12 @@ namespace LinqToDB.Data
 
 				for (var index = 0; index < _executionQuery!.PreparedQuery.Commands.Length; index++)
 				{
-					var queryCommand = _executionQuery!.PreparedQuery.Commands[index];
-					sqlProvider.PrintParameters(sb, _executionQuery!.CommandsParameters[index]);
+					var queryCommand = _executionQuery.PreparedQuery.Commands[index];
+					sqlProvider.PrintParameters(sb, _executionQuery.CommandsParameters[index]);
 
 					sb.AppendLine(queryCommand.Command);
 
-					if (isFirst && _executionQuery.PreparedQuery.QueryHints != null && _executionQuery.PreparedQuery.QueryHints.Count > 0)
+					if (isFirst && _executionQuery.PreparedQuery.QueryHints != null)
 					{
 						isFirst = false;
 
@@ -176,16 +176,16 @@ namespace LinqToDB.Data
 
 			public class PreparedQuery
 			{
-				public CommandWithParameters[]          Commands      = null!;
-				public SqlStatement                     Statement     = null!;
-				public List<string>?                    QueryHints;
+				public CommandWithParameters[]      Commands      = null!;
+				public SqlStatement                 Statement     = null!;
+				public IReadOnlyCollection<string>? QueryHints;
 			}
 
 			public class ExecutionPreparedQuery
 			{
 				public ExecutionPreparedQuery(PreparedQuery preparedQuery, IDbDataParameter[]?[] commandsParameters)
 				{
-					PreparedQuery = preparedQuery;
+					PreparedQuery      = preparedQuery;
 					CommandsParameters = commandsParameters;
 				}
 
@@ -195,24 +195,27 @@ namespace LinqToDB.Data
 
 			ExecutionPreparedQuery? _executionQuery;
 
-			static ExecutionPreparedQuery CreateExecutionQuery(DataConnection dataConnection, IQueryContext context,
-				IReadOnlyParameterValues? parameterValues)
+			static ExecutionPreparedQuery CreateExecutionQuery(
+				DataConnection            dataConnection,
+				IQueryContext             context,
+				IReadOnlyParameterValues? parameterValues,
+				bool                      forGetSqlText)
 			{
-				var preparedQuery      = GetCommand(dataConnection, context, parameterValues);
+				var preparedQuery      = GetCommand(dataConnection, context, parameterValues, forGetSqlText);
 				var commandsParameters = GetParameters(dataConnection, preparedQuery, parameterValues);
 				var executionQuery     = new ExecutionPreparedQuery(preparedQuery, commandsParameters);
 				return executionQuery;
 			}
 
-			static PreparedQuery GetCommand(DataConnection dataConnection, IQueryContext query, IReadOnlyParameterValues? parameterValues, int startIndent = 0)
+			static PreparedQuery GetCommand(DataConnection dataConnection, IQueryContext query, IReadOnlyParameterValues? parameterValues, bool forGetSqlText, int startIndent = 0)
 			{
 				if (query.Context != null)
 				{
 					return new PreparedQuery
 					{
-						Commands      = (CommandWithParameters[])query.Context,
-						Statement     = query.Statement,
-						QueryHints    = query.QueryHints,
+						Commands   = (CommandWithParameters[])query.Context,
+						Statement  = query.Statement,
+						QueryHints = dataConnection.GetNextCommandHints(!forGetSqlText),
 					};
 				}
 
@@ -270,9 +273,9 @@ namespace LinqToDB.Data
 
 				return new PreparedQuery
 				{
-					Commands      = commands,
-					Statement     = sql,
-					QueryHints    = query.QueryHints,
+					Commands   = commands,
+					Statement  = sql,
+					QueryHints = dataConnection.GetNextCommandHints(!forGetSqlText)
 				};
 			}
 
@@ -320,15 +323,14 @@ namespace LinqToDB.Data
 				return p;
 			}
 
-			protected override void SetQuery(IReadOnlyParameterValues parameterValues)
+			protected override void SetQuery(IReadOnlyParameterValues parameterValues, bool forGetSqlText)
 			{
-				_executionQuery = CreateExecutionQuery(_dataConnection, Query.Queries[QueryNumber], parameterValues);
+				_executionQuery = CreateExecutionQuery(_dataConnection, Query.Queries[QueryNumber], parameterValues, forGetSqlText);
 			}
 
 			void SetCommand()
 			{
-				SetCommand(true);
-
+				SetCommand(false);
 				InitFirstCommand(_dataConnection, _executionQuery!);
 			}
 
@@ -373,13 +375,13 @@ namespace LinqToDB.Data
 
 			public override int ExecuteNonQuery()
 			{
-				SetCommand(true);
+				SetCommand(false);
 				return ExecuteNonQueryImpl(_dataConnection, _executionQuery!);
 			}
 
 			public static int ExecuteNonQuery(DataConnection dataConnection, IQueryContext context, IReadOnlyParameterValues? parameterValues)
 			{
-				var preparedQuery      = GetCommand(dataConnection, context, parameterValues);
+				var preparedQuery      = GetCommand(dataConnection, context, parameterValues, false);
 				var commandsParameters = GetParameters(dataConnection, preparedQuery, parameterValues);
 				var executionQuery     = new ExecutionPreparedQuery(preparedQuery, commandsParameters);
 
@@ -431,7 +433,7 @@ namespace LinqToDB.Data
 
 			public static object? ExecuteScalar(DataConnection dataConnection, IQueryContext context, IReadOnlyParameterValues? parameterValues)
 			{
-				var preparedQuery      = GetCommand(dataConnection, context, parameterValues);
+				var preparedQuery      = GetCommand(dataConnection, context, parameterValues, false);
 				var commandsParameters = GetParameters(dataConnection, preparedQuery, parameterValues);
 				var executionQuery     = new ExecutionPreparedQuery(preparedQuery, commandsParameters);
 
@@ -464,7 +466,7 @@ namespace LinqToDB.Data
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			static void InitCommand(DataConnection dataConnection, CommandWithParameters queryCommand, IDbDataParameter[]? dbParameters, List<string>? queryHints)
+			static void InitCommand(DataConnection dataConnection, CommandWithParameters queryCommand, IDbDataParameter[]? dbParameters, IReadOnlyCollection<string>? queryHints)
 			{
 				var hasParameters = dbParameters?.Length > 0;
 
@@ -479,7 +481,7 @@ namespace LinqToDB.Data
 
 			public static IDataReader ExecuteReader(DataConnection dataConnection, IQueryContext context, IReadOnlyParameterValues? parameterValues)
 			{
-				var executionQuery = CreateExecutionQuery(dataConnection, context, parameterValues);
+				var executionQuery = CreateExecutionQuery(dataConnection, context, parameterValues, false);
 
 				InitFirstCommand(dataConnection, executionQuery);
 
@@ -488,7 +490,7 @@ namespace LinqToDB.Data
 
 			public override IDataReader ExecuteReader()
 			{
-				SetCommand(true);
+				SetCommand(false);
 
 				InitFirstCommand(_dataConnection, _executionQuery!);
 
@@ -546,7 +548,7 @@ namespace LinqToDB.Data
 
 				await _dataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
-				base.SetCommand(true);
+				base.SetCommand(false);
 
 				InitFirstCommand(_dataConnection, _executionQuery!);
 
@@ -561,7 +563,7 @@ namespace LinqToDB.Data
 
 				await _dataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
-				base.SetCommand(true);
+				base.SetCommand(false);
 
 				if (_executionQuery!.PreparedQuery.Commands.Length == 1)
 				{
