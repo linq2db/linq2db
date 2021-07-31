@@ -1954,25 +1954,25 @@ AS
 		[Sql.TableFunction("PersonTableFunction", argIndices: new []{2, 3})]
 		static IQueryable<Person> PersonTableFunction(IDataContext dc, object? fake, int? id, string? firstName)
 		{
-			return dc.GetTable<Person>(null, (MethodInfo)MethodBase.GetCurrentMethod(), dc, fake, id, firstName);
+			return dc.GetTable<Person>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, dc, fake, id, firstName);
 		}
 
 		[Sql.TableFunction("PersonTableFunction", argIndices: new []{2, 3})]
 		static LinqToDB.ITable<Person> PersonTableFunctionTable(IDataContext dc, object? fake, int? id, string? firstName)
 		{
-			return dc.GetTable<Person>(null, (MethodInfo)MethodBase.GetCurrentMethod(), dc, fake, id, firstName);
+			return dc.GetTable<Person>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, dc, fake, id, firstName);
 		}
 
 		[Sql.TableExpression("PersonTableFunction({4}, {5}) {1}")]
 		static IQueryable<Person> PersonTableExpression(IDataContext dc, object? fake, int? id, string? firstName)
 		{
-			return dc.GetTable<Person>(null, (MethodInfo)MethodBase.GetCurrentMethod(), dc, fake, id, firstName);
+			return dc.GetTable<Person>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, dc, fake, id, firstName);
 		}
 
 		[Sql.TableExpression("PersonTableFunction({4}, {5}) {1}")]
 		static LinqToDB.ITable<Person> PersonTableExpressionTable(IDataContext dc, object? fake, int? id, string? firstName)
 		{
-			return dc.GetTable<Person>(null, (MethodInfo)MethodBase.GetCurrentMethod(), dc, fake, id, firstName);
+			return dc.GetTable<Person>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, dc, fake, id, firstName);
 		}
 
 		[Test]
