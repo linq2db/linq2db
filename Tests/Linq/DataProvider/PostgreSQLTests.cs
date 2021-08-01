@@ -1658,21 +1658,21 @@ namespace Tests.DataProvider
 				Assert.AreEqual(nameof(UIntTable), schema.Tables[0].TableName);
 				Assert.AreEqual(6                , schema.Tables[0].Columns.Count);
 
-				var column = schema.Tables[0].Columns.Where(c => c.ColumnName == nameof(UIntTable.Field16)).Single();
+				var column = schema.Tables[0].Columns.Single(c => c.ColumnName == nameof(UIntTable.Field16));
 
 				Assert.AreEqual("integer"     , column.ColumnType);
 				Assert.AreEqual(DataType.Int32, column.DataType);
 				Assert.AreEqual("int"         , column.MemberType);
 				Assert.AreEqual(typeof(int)   , column.SystemType);
 
-				column = schema.Tables[0].Columns.Where(c => c.ColumnName == nameof(UIntTable.Field32)).Single();
+				column = schema.Tables[0].Columns.Single(c => c.ColumnName == nameof(UIntTable.Field32));
 
 				Assert.AreEqual("bigint"      , column.ColumnType);
 				Assert.AreEqual(DataType.Int64, column.DataType);
 				Assert.AreEqual("long"        , column.MemberType);
 				Assert.AreEqual(typeof(long)  , column.SystemType);
 
-				column = schema.Tables[0].Columns.Where(c => c.ColumnName == nameof(UIntTable.Field64)).Single();
+				column = schema.Tables[0].Columns.Single(c => c.ColumnName == nameof(UIntTable.Field64));
 
 				Assert.AreEqual("numeric(20,0)" , column.ColumnType);
 				Assert.AreEqual(DataType.Decimal, column.DataType);
@@ -1681,21 +1681,21 @@ namespace Tests.DataProvider
 				Assert.AreEqual(0               , column.Scale);
 				Assert.AreEqual(typeof(decimal) , column.SystemType);
 
-				column = schema.Tables[0].Columns.Where(c => c.ColumnName == nameof(UIntTable.Field16N)).Single();
+				column = schema.Tables[0].Columns.Single(c => c.ColumnName == nameof(UIntTable.Field16N));
 
 				Assert.AreEqual("integer"     , column.ColumnType);
 				Assert.AreEqual(DataType.Int32, column.DataType);
 				Assert.AreEqual("int?"        , column.MemberType);
 				Assert.AreEqual(typeof(int)   , column.SystemType);
 
-				column = schema.Tables[0].Columns.Where(c => c.ColumnName == nameof(UIntTable.Field32N)).Single();
+				column = schema.Tables[0].Columns.Single(c => c.ColumnName == nameof(UIntTable.Field32N));
 
 				Assert.AreEqual("bigint"      , column.ColumnType);
 				Assert.AreEqual(DataType.Int64, column.DataType);
 				Assert.AreEqual("long?"       , column.MemberType);
 				Assert.AreEqual(typeof(long)  , column.SystemType);
 
-				column = schema.Tables[0].Columns.Where(c => c.ColumnName == nameof(UIntTable.Field64N)).Single();
+				column = schema.Tables[0].Columns.Single(c => c.ColumnName == nameof(UIntTable.Field64N));
 
 				Assert.AreEqual("numeric(20,0)" , column.ColumnType);
 				Assert.AreEqual(DataType.Decimal, column.DataType);
@@ -1708,15 +1708,23 @@ namespace Tests.DataProvider
 
 		class ExtraBulkCopyTypesTable
 		{
-			[Column] public int     Id     { get; set; }
-			[Column] public byte?   Byte   { get; set; }
-			[Column] public sbyte?  SByte  { get; set; }
-			[Column] public short?  Int16  { get; set; }
-			[Column] public ushort? UInt16 { get; set; }
-			[Column] public int?    Int32  { get; set; }
-			[Column] public uint?   UInt32 { get; set; }
-			[Column] public long?   Int64  { get; set; }
-			[Column] public ulong?  UInt64 { get; set; }
+			[Column                            ] public int     Id      { get; set; }
+			[Column                            ] public byte?   Byte    { get; set; }
+			[Column                            ] public sbyte?  SByte   { get; set; }
+			[Column                            ] public short?  Int16   { get; set; }
+			[Column                            ] public ushort? UInt16  { get; set; }
+			[Column                            ] public int?    Int32   { get; set; }
+			[Column                            ] public uint?   UInt32  { get; set; }
+			[Column                            ] public long?   Int64   { get; set; }
+			[Column                            ] public ulong?  UInt64  { get; set; }
+			[Column(DataType = DataType.Byte)  ] public byte?   ByteT   { get; set; }
+			[Column(DataType = DataType.SByte) ] public sbyte?  SByteT  { get; set; }
+			[Column(DataType = DataType.Int16) ] public short?  Int16T  { get; set; }
+			[Column(DataType = DataType.UInt16)] public ushort? UInt16T { get; set; }
+			[Column(DataType = DataType.Int32) ] public int?    Int32T  { get; set; }
+			[Column(DataType = DataType.UInt32)] public uint?   UInt32T { get; set; }
+			[Column(DataType = DataType.Int64) ] public long?   Int64T  { get; set; }
+			[Column(DataType = DataType.UInt64)] public ulong?  UInt64T { get; set; }
 		}
 
 		[Test]
@@ -1730,15 +1738,24 @@ namespace Tests.DataProvider
 					new ExtraBulkCopyTypesTable() { Id = 1 },
 					new ExtraBulkCopyTypesTable()
 					{
-						Id     = 2,
-						Byte   = byte.MaxValue,
-						SByte  = sbyte.MaxValue,
-						Int16  = short.MaxValue,
-						UInt16 = ushort.MaxValue,
-						Int32  = int.MaxValue,
-						UInt32 = uint.MaxValue,
-						Int64  = long.MaxValue,
-						UInt64 = ulong.MaxValue,
+						Id          = 2,
+
+						Byte        = byte.MaxValue,
+						SByte       = sbyte.MaxValue,
+						Int16       = short.MaxValue,
+						UInt16      = ushort.MaxValue,
+						Int32       = int.MaxValue,
+						UInt32      = uint.MaxValue,
+						Int64       = long.MaxValue,
+						UInt64      = ulong.MaxValue,
+						ByteT       = byte.MaxValue,
+						SByteT      = sbyte.MaxValue,
+						Int16T      = short.MaxValue,
+						UInt16T     = ushort.MaxValue,
+						Int32T      = int.MaxValue,
+						UInt32T     = uint.MaxValue,
+						Int64T      = long.MaxValue,
+						UInt64T     = ulong.MaxValue,
 					}
 				};
 
@@ -1757,6 +1774,14 @@ namespace Tests.DataProvider
 				Assert.IsNull(result[0].UInt32);
 				Assert.IsNull(result[0].Int64);
 				Assert.IsNull(result[0].UInt64);
+				Assert.IsNull(result[0].ByteT);
+				Assert.IsNull(result[0].SByteT);
+				Assert.IsNull(result[0].Int16T);
+				Assert.IsNull(result[0].UInt16T);
+				Assert.IsNull(result[0].Int32T);
+				Assert.IsNull(result[0].UInt32T);
+				Assert.IsNull(result[0].Int64T);
+				Assert.IsNull(result[0].UInt64T);
 
 				Assert.AreEqual(2              , result[1].Id);
 				Assert.AreEqual(byte.MaxValue  , result[1].Byte);
@@ -1767,6 +1792,14 @@ namespace Tests.DataProvider
 				Assert.AreEqual(uint.MaxValue  , result[1].UInt32);
 				Assert.AreEqual(long.MaxValue  , result[1].Int64);
 				Assert.AreEqual(ulong.MaxValue , result[1].UInt64);
+				Assert.AreEqual(byte.MaxValue  , result[1].ByteT);
+				Assert.AreEqual(sbyte.MaxValue , result[1].SByteT);
+				Assert.AreEqual(short.MaxValue , result[1].Int16T);
+				Assert.AreEqual(ushort.MaxValue, result[1].UInt16T);
+				Assert.AreEqual(int.MaxValue   , result[1].Int32T);
+				Assert.AreEqual(uint.MaxValue  , result[1].UInt32T);
+				Assert.AreEqual(long.MaxValue  , result[1].Int64T);
+				Assert.AreEqual(ulong.MaxValue , result[1].UInt64T);
 			}
 		}
 
@@ -1781,15 +1814,23 @@ namespace Tests.DataProvider
 					new ExtraBulkCopyTypesTable() { Id = 1 },
 					new ExtraBulkCopyTypesTable()
 					{
-						Id     = 2,
-						Byte   = byte.MaxValue,
-						SByte  = sbyte.MaxValue,
-						Int16  = short.MaxValue,
-						UInt16 = ushort.MaxValue,
-						Int32  = int.MaxValue,
-						UInt32 = uint.MaxValue,
-						Int64  = long.MaxValue,
-						UInt64 = ulong.MaxValue,
+						Id      = 2,
+						Byte    = byte.MaxValue,
+						SByte   = sbyte.MaxValue,
+						Int16   = short.MaxValue,
+						UInt16  = ushort.MaxValue,
+						Int32   = int.MaxValue,
+						UInt32  = uint.MaxValue,
+						Int64   = long.MaxValue,
+						UInt64  = ulong.MaxValue,
+						ByteT   = byte.MaxValue,
+						SByteT  = sbyte.MaxValue,
+						Int16T  = short.MaxValue,
+						UInt16T = ushort.MaxValue,
+						Int32T  = int.MaxValue,
+						UInt32T = uint.MaxValue,
+						Int64T  = long.MaxValue,
+						UInt64T = ulong.MaxValue,
 					}
 				};
 
@@ -1808,6 +1849,14 @@ namespace Tests.DataProvider
 				Assert.IsNull(result[0].UInt32);
 				Assert.IsNull(result[0].Int64);
 				Assert.IsNull(result[0].UInt64);
+				Assert.IsNull(result[0].ByteT);
+				Assert.IsNull(result[0].SByteT);
+				Assert.IsNull(result[0].Int16T);
+				Assert.IsNull(result[0].UInt16T);
+				Assert.IsNull(result[0].Int32T);
+				Assert.IsNull(result[0].UInt32T);
+				Assert.IsNull(result[0].Int64T);
+				Assert.IsNull(result[0].UInt64T);
 
 				Assert.AreEqual(2              , result[1].Id);
 				Assert.AreEqual(byte.MaxValue  , result[1].Byte);
@@ -1818,6 +1867,14 @@ namespace Tests.DataProvider
 				Assert.AreEqual(uint.MaxValue  , result[1].UInt32);
 				Assert.AreEqual(long.MaxValue  , result[1].Int64);
 				Assert.AreEqual(ulong.MaxValue , result[1].UInt64);
+				Assert.AreEqual(byte.MaxValue  , result[1].ByteT);
+				Assert.AreEqual(sbyte.MaxValue , result[1].SByteT);
+				Assert.AreEqual(short.MaxValue , result[1].Int16T);
+				Assert.AreEqual(ushort.MaxValue, result[1].UInt16T);
+				Assert.AreEqual(int.MaxValue   , result[1].Int32T);
+				Assert.AreEqual(uint.MaxValue  , result[1].UInt32T);
+				Assert.AreEqual(long.MaxValue  , result[1].Int64T);
+				Assert.AreEqual(ulong.MaxValue , result[1].UInt64T);
 			}
 		}
 
@@ -2209,6 +2266,36 @@ namespace Tests.DataProvider
 
 				var str = query.ToString();
 				TestContext.WriteLine(str);
+			}
+		}
+
+		public class DataTypeBinaryMapping
+		{
+			public byte[] Binary { get; set; } = null!;
+		}
+
+		// see https://github.com/linq2db/linq2db/issues/3130
+		[Test]
+		public void DataTypeBinaryMappingTest([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var ms = new MappingSchema();
+
+			ms.GetFluentMappingBuilder()
+				.Entity<DataTypeBinaryMapping>()
+					.Property(p => p.Binary).HasDataType(DataType.Binary).IsNullable(false);
+
+			using (var db = (DataConnection)GetDataContext(context, ms))
+			using (db.CreateLocalTable<DataTypeBinaryMapping>())
+			{
+				var data = new byte[] { 1, 2, 3 };
+
+				db.BulkCopy(
+					new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific },
+					new[] { new DataTypeBinaryMapping() { Binary = data } });
+
+				var res = db.GetTable<DataTypeBinaryMapping>().Select(_ => _.Binary).Single();
+
+				Assert.True(data.SequenceEqual(res));
 			}
 		}
 	}
