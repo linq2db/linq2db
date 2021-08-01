@@ -1062,7 +1062,7 @@ namespace LinqToDB.SqlProvider
 			}
 
 
-			if (!expr.Expr1.CanBeNull && !expr.Expr2.CanBeNull && expr.Expr1.SystemType.IsSignedType() && expr.Expr2.SystemType.IsSignedType())
+			if (!expr.Expr1.CanBeNull && !expr.Expr2.CanBeNull && expr.Expr1.SystemType != null && expr.Expr1.SystemType.IsSignedInteger() && expr.Expr2.SystemType != null && expr.Expr2.SystemType.IsSignedInteger())
 			{
 				var newExpr = expr switch
 				{
