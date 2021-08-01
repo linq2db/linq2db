@@ -1107,6 +1107,7 @@ namespace Tests.Data
 				context == ProviderName.DB2            ||
 				context == ProviderName.InformixDB2    ||
 				context == ProviderName.MySqlConnector ||
+				context == TestProvName.MariaDB        ||
 				context == ProviderName.SapHanaNative  ||
 				context == ProviderName.SqlCe          ||
 				context == ProviderName.Sybase         ||
