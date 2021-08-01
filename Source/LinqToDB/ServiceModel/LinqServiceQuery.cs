@@ -7,8 +7,8 @@ namespace LinqToDB.ServiceModel
 
 	public class LinqServiceQuery
 	{
-		public SqlStatement   Statement  { get; set; } = null!;
-		public List<string>?  QueryHints { get; set; }
+		public SqlStatement                 Statement  { get; set; } = null!;
+		public IReadOnlyCollection<string>? QueryHints { get; set; }
 	}
 }
 #endif
