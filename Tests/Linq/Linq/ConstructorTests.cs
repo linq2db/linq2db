@@ -84,6 +84,42 @@ namespace Tests.Linq
 			}
 		}
 
+		[Table("ConstructorTestTable")]
+		public class WithOnlyPrivateConstructor
+		{
+			[Column(IsPrimaryKey = true)]
+			public int Id { get; }
+
+			[Column]
+			public string? Value { get; }
+
+			private WithOnlyPrivateConstructor(int id, string value)
+			{
+				Id    = id;
+				Value = value;
+			}
+
+			public static WithOnlyPrivateConstructor Create(int id) => new(id, "Some");
+		}
+
+		[Table("ConstructorTestTable")]
+		public class WithOnlyProtectedConstructor
+		{
+			[Column(IsPrimaryKey = true)]
+			public int Id { get; }
+
+			[Column]
+			public string? Value { get; }
+
+			protected WithOnlyProtectedConstructor(int id, string value)
+			{
+				Id    = id;
+				Value = value;
+			}
+
+			public static WithOnlyProtectedConstructor Create(int id) => new(id, "Some");
+		}
+
 		[Test]
 		public void TestPublicConstructor([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -142,5 +178,26 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void TestPrivateParameterizedConstructor([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(new []{ WithOnlyPrivateConstructor.Create(5)});
+
+			var obj = table.First();
+			obj.Id.Should().Be(5);
+			obj.Value.Should().Be("Some");
+		}
+
+		[Test]
+		public void TestProtectedParameterizedConstructor([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(new []{ WithOnlyProtectedConstructor.Create(5)});
+
+			var obj = table.First();
+			obj.Id.Should().Be(5);
+			obj.Value.Should().Be("Some");
+		}
 	}
 }

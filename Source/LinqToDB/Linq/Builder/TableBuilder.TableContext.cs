@@ -531,13 +531,13 @@ namespace LinqToDB.Linq.Builder
 			Expression BuildFromParametrizedConstructor(Type objectType,
 				IList<(string Name, Expression? Expr)> expressions)
 			{
-				var constructors = objectType.GetConstructors();
+				var constructors = objectType.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
 
 				if (constructors.Length == 0)
-					throw new InvalidOperationException($"Type '{objectType.Namespace}' has no constructors.");
+					throw new InvalidOperationException($"Type '{objectType.Name}' has no constructors.");
 
 				if (constructors.Length > 1)
-					throw new InvalidOperationException($"Type '{objectType.Namespace}' has ambiguous constructors.");
+					throw new InvalidOperationException($"Type '{objectType.Name}' has ambiguous constructors.");
 
 				var ctor = constructors[0];
 
