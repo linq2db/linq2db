@@ -126,8 +126,10 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 				AreEqual(
+#pragma warning disable CA1841 // Prefer Dictionary.Contains methods : suppressed as we test this method
 					from p in    Parent where arr.Keys.Contains(p.ParentID) select p,
 					from p in db.Parent where arr.Keys.Contains(p.ParentID) select p);
+#pragma warning restore CA1841 // Prefer Dictionary.Contains methods
 		}
 
 		[Test]
@@ -156,8 +158,10 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 				AreEqual(
+#pragma warning disable CA1841 // Prefer Dictionary.Contains methods : suppressed as we test this method
 					from p in    Parent where arr.Values.Contains(p.ParentID) select p,
 					from p in db.Parent where arr.Values.Contains(p.ParentID) select p);
+#pragma warning restore CA1841 // Prefer Dictionary.Contains methods
 		}
 
 		[Test]

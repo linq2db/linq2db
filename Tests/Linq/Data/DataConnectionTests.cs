@@ -367,13 +367,13 @@ namespace Tests.Data
 			}
 			finally
 			{
-				var tid = Thread.CurrentThread.ManagedThreadId;
+				var tid = Environment.CurrentManagedThreadId;
 
 				await db.CloseAsync();
 
 				db.Dispose();
 
-				if (tid == Thread.CurrentThread.ManagedThreadId)
+				if (tid == Environment.CurrentManagedThreadId)
 					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
 			}
 		}
@@ -389,11 +389,11 @@ namespace Tests.Data
 			}
 			finally
 			{
-				var tid = Thread.CurrentThread.ManagedThreadId;
+				var tid = Environment.CurrentManagedThreadId;
 
 				await db.DisposeAsync();
 
-				if (tid == Thread.CurrentThread.ManagedThreadId)
+				if (tid == Environment.CurrentManagedThreadId)
 					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
 			}
 		}
