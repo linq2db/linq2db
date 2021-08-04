@@ -120,6 +120,29 @@ namespace Tests.Linq
 			public static WithOnlyProtectedConstructor Create(int id) => new(id, "Some");
 		}
 
+		[Table("ConstructorTestTable")]
+		public class WithPublicAndProtectedConstructor
+		{
+			[Column(IsPrimaryKey = true)]
+			public int Id { get; }
+
+			[Column]
+			public string? Value { get; }
+
+			protected WithPublicAndProtectedConstructor(int id)
+			{
+				Id    = id;
+			}
+			
+			public WithPublicAndProtectedConstructor(int id, string value)
+			{
+				Id    = id;
+				Value = value;
+			}
+
+			public static WithPublicAndProtectedConstructor Create(int id) => new(id, "Some");
+		}
+
 		[Test]
 		public void TestPublicConstructor([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -194,6 +217,17 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(new []{ WithOnlyProtectedConstructor.Create(5)});
+
+			var obj = table.First();
+			obj.Id.Should().Be(5);
+			obj.Value.Should().Be("Some");
+		}
+
+		[Test]
+		public void TestPublicAndProtectedParameterizedConstructors([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(new []{ WithPublicAndProtectedConstructor.Create(5)});
 
 			var obj = table.First();
 			obj.Id.Should().Be(5);

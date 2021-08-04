@@ -527,19 +527,28 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-
-			Expression BuildFromParametrizedConstructor(Type objectType,
-				IList<(string Name, Expression? Expr)> expressions)
+			ConstructorInfo SelectParametrizedConstructor(Type objectType)
 			{
-				var constructors = objectType.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+				var constructors = objectType.GetConstructors();
 
 				if (constructors.Length == 0)
-					throw new InvalidOperationException($"Type '{objectType.Name}' has no constructors.");
+				{
+					constructors = objectType.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic);
+
+					if (constructors.Length == 0)
+						throw new InvalidOperationException($"Type '{objectType.Name}' has no constructors.");
+				}
 
 				if (constructors.Length > 1)
 					throw new InvalidOperationException($"Type '{objectType.Name}' has ambiguous constructors.");
 
-				var ctor = constructors[0];
+				return constructors[0];
+			}
+
+			Expression BuildFromParametrizedConstructor(Type objectType,
+				IList<(string Name, Expression? Expr)> expressions)
+			{
+				var ctor = SelectParametrizedConstructor(objectType);
 
 				var parameters = ctor.GetParameters();
 				var argFound   = false;
