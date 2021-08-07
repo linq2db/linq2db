@@ -316,26 +316,38 @@ namespace Tests.UserTests
 				.Select(t1 => new Dictionary<string, object?>()
 				{
 					{
-						t1.Name,
+						"t1",
 						db.GetTable<Table2>()
 							.Where(x => x.ParentId == t1.Id)
 							.Select(t2 => new Dictionary<string, object?>()
 							{
 								{
-									t2.Name,
+									"t2",
 									db.GetTable<Table3>()
 										.Where(x => x.ParentId == t2.Id)
 										.Select(t3 => new Dictionary<string, object>()
 										{
 											{
-												t3.Name,
+												"t3",
 												t3.Id
+											},
+											{
+												"name",
+												t3.Name
 											}
 										})
 										.FirstOrDefault()
+								},
+								{
+									"name",
+									t2.Name
 								}
 							})
 							.FirstOrDefault()
+					},
+					{
+						"name",
+						t1.Name
 					}
 				})
 				.ToList();
