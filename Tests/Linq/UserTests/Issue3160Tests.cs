@@ -292,6 +292,57 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		public void NestedDictionaryTest3CrossApply([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tbl1 = db.CreateLocalTable(new[]
+			{
+				new Table1 { Id = 1, Name = "Some1" },
+				new Table1 { Id = 2, Name = "Some2" },
+			});
+			using var tbl2 = db.CreateLocalTable(new[]
+			{
+				new Table2 { Id = 11, ParentId = 1, Name = "Child11" },
+				new Table2 { Id = 12, ParentId = 1, Name = "Child12" },
+				new Table2 { Id = 13, ParentId = 2, Name = "Child13" },
+			});
+			using var tbl3 = db.CreateLocalTable(new[]
+			{
+				new Table3 { Id = 21, ParentId = 11, Name = "Child21" },
+				new Table3 { Id = 22, ParentId = 11, Name = "Child22" },
+				new Table3 { Id = 23, ParentId = 12, Name = "Child23" },
+			});
+			var ret = db.GetTable<Table1>()
+				.Select(t1 => new Dictionary<string, object?>()
+				{
+					{
+						t1.Name,
+						db.GetTable<Table2>()
+							.Where(x => x.ParentId == t1.Id)
+							.Select(t2 => new Dictionary<string, object?>()
+							{
+								{
+									t2.Name,
+									db.GetTable<Table3>()
+										.Where(x => x.ParentId == t2.Id)
+										.Select(t3 => new Dictionary<string, object>()
+										{
+											{
+												t3.Name,
+												t3.Id
+											}
+										})
+										.FirstOrDefault()
+								}
+							})
+							.FirstOrDefault()
+					}
+				})
+				.ToList();
+			Assert.That(ret.Count, Is.EqualTo(2));
+		}
+
+		[Test]
 		public void OuterDictionaryTest1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var db = GetDataContext(context);
