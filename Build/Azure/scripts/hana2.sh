@@ -51,6 +51,7 @@ cat <<-EOJSON > UserDataProviders.json
         "TraceLevel": "Info",
         "Connections": {
             "SapHana.Odbc": {
+                "Provider": "SapHana.2sps04.Odbc",
                 "ConnectionString": "Driver=$HOME/linq2db_ci/providers/saphana/linux/ODBC/libodbcHDB.so;SERVERNODE=localhost:39017;databaseName=HXE;CS=TESTDB;UID=SYSTEM;PWD=Passw0rd;"
             }
         }

@@ -56,14 +56,13 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Issue1298Test([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void Issue1298Test([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllMySql, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = new DataConnection(context))
 			using (db.BeginTransaction())
+			using (db.CreateLocalTable<mega_composites>())
+			using (db.CreateLocalTable<qwerty>())
 			{
-				db.CreateTable<mega_composites>();
-				db.CreateTable<qwerty>();
-
 				db.Insert(new qwerty() { Id = 1, asdfgh = "res1" });
 				db.Insert(new qwerty() { Id = 100500, asdfgh = "res100500" });
 

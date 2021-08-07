@@ -195,7 +195,7 @@
 			"Informix"            : { "Provider": "Informix",                        "ConnectionString": "Server=localhost:9089;Database=testdb;userid=informix;password=in4mix"                                                                                    },
 			"Informix.DB2"        : {                                                "ConnectionString": "Server=localhost:9089;Database=testdb;userid=informix;password=in4mix"                                                                                    },
 			"DB2"                 : { "Provider": "IBM.Data.DB2.Core",               "ConnectionString": "Server=localhost:50000;Database=testdb;UID=db2inst1;PWD=Password12!"                                                                                      },
-			"SapHana.Odbc"        : { "Provider": "SapHana.Odbc",                    "ConnectionString": "<SET BY SCRIPT>"                                                                                                                                          },
+			"SapHana.Odbc"        : { "Provider": "SapHana.2sps04.Odbc",             "ConnectionString": "<SET BY SCRIPT>"                                                                                                                                          },
 		}
 	},
 

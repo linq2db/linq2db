@@ -374,31 +374,31 @@
 			return builder.UseConnectionString(ProviderName.SapHana, connectionString);
 		}
 
-#if NETFRAMEWORK || NETCOREAPP
 		/// <summary>
 		/// Configure connection to use native SAP HANA provider and connection string.
 		/// </summary>
 		/// <param name="builder">Instance of <see cref="LinqToDbConnectionOptionsBuilder"/>.</param>
 		/// <param name="connectionString">SAP HANA connection string.</param>
+		/// <param name="version">SAP HANA SQL dialect version.</param>
 		/// <returns>The builder instance so calls can be chained.</returns>
-		public static LinqToDbConnectionOptionsBuilder UseSapHanaNative(this LinqToDbConnectionOptionsBuilder builder, string connectionString)
+		public static LinqToDbConnectionOptionsBuilder UseSapHanaNative(this LinqToDbConnectionOptionsBuilder builder, string connectionString, SapHanaVersion version = SapHanaVersion.SapHana1)
 		{
 			return builder.UseConnectionString(
-				SapHanaTools.GetDataProvider(ProviderName.SapHanaNative),
+				SapHanaTools.GetDataProvider(version: version, provider: SapHanaProvider.Native),
 				connectionString);
 		}
-#endif
 
 		/// <summary>
 		/// Configure connection to use SAP HANA ODBC provider and connection string.
 		/// </summary>
 		/// <param name="builder">Instance of <see cref="LinqToDbConnectionOptionsBuilder"/>.</param>
 		/// <param name="connectionString">SAP HANA connection string.</param>
+		/// <param name="version">SAP HANA SQL dialect version.</param>
 		/// <returns>The builder instance so calls can be chained.</returns>
-		public static LinqToDbConnectionOptionsBuilder UseSapHanaODBC(this LinqToDbConnectionOptionsBuilder builder, string connectionString)
+		public static LinqToDbConnectionOptionsBuilder UseSapHanaODBC(this LinqToDbConnectionOptionsBuilder builder, string connectionString, SapHanaVersion version = SapHanaVersion.SapHana1)
 		{
 			return builder.UseConnectionString(
-				SapHanaTools.GetDataProvider(ProviderName.SapHanaOdbc),
+				SapHanaTools.GetDataProvider(version: version, provider: SapHanaProvider.Odbc),
 				connectionString);
 		}
 		#endregion

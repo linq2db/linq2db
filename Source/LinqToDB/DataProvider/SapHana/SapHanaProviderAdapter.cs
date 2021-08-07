@@ -1,10 +1,8 @@
-﻿#if NETFRAMEWORK || NETCOREAPP
-using System;
+﻿using System;
 using System.Data;
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using System.Data.Common;
 	using System.Linq.Expressions;
 	using System.Threading;
 	using System.Threading.Tasks;
@@ -12,7 +10,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 	public class SapHanaProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _syncRoot = new object();
+		private static readonly object _syncRoot = new ();
 		private static SapHanaProviderAdapter? _instance;
 
 #if NETFRAMEWORK
@@ -32,6 +30,7 @@ namespace LinqToDB.DataProvider.SapHana
 			Type transactionType,
 
 			Action<IDbDataParameter, HanaDbType> dbTypeSetter,
+			Func<string, HanaConnection>         createConnection,
 
 			Func<IDbConnection, HanaBulkCopyOptions, IDbTransaction?, HanaBulkCopy> bulkCopyCreator,
 			Func<int, string, HanaBulkCopyColumnMapping> bulkCopyColumnMappingCreator)
@@ -44,6 +43,8 @@ namespace LinqToDB.DataProvider.SapHana
 
 			SetDbType = dbTypeSetter;
 
+			_createConnection = createConnection;
+
 			CreateBulkCopy              = bulkCopyCreator;
 			CreateBulkCopyColumnMapping = bulkCopyColumnMappingCreator;
 		}
@@ -55,6 +56,9 @@ namespace LinqToDB.DataProvider.SapHana
 		public Type TransactionType { get; }
 
 		public Action<IDbDataParameter, HanaDbType> SetDbType { get; }
+
+		private readonly Func<string, HanaConnection> _createConnection;
+		public HanaConnection CreateConnection(string connectionString) => _createConnection(connectionString);
 
 		public Func<IDbConnection, HanaBulkCopyOptions, IDbTransaction?, HanaBulkCopy> CreateBulkCopy              { get; }
 		public Func<int, string, HanaBulkCopyColumnMapping>                            CreateBulkCopyColumnMapping { get; }
@@ -109,6 +113,7 @@ namespace LinqToDB.DataProvider.SapHana
 							commandType,
 							transactionType,
 							typeSetter,
+							typeMapper.BuildWrappedFactory((string connectionString) => new HanaConnection(connectionString)),
 							typeMapper.BuildWrappedFactory((IDbConnection connection, HanaBulkCopyOptions options, IDbTransaction? transaction) => new HanaBulkCopy((HanaConnection)connection, options, (HanaTransaction?)transaction)),
 							typeMapper.BuildWrappedFactory((int source, string destination) => new HanaBulkCopyColumnMapping(source, destination)));
 					}
@@ -122,8 +127,28 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 
 		[Wrapper]
-		public class HanaConnection
+		public class HanaConnection : TypeWrapper, IDisposable
 		{
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: CreateCommand
+				(Expression<Func<HanaConnection, IDbCommand>>)((HanaConnection this_) => this_.CreateCommand()),
+				// [1]: Open
+				(Expression<Action<HanaConnection>>          )((HanaConnection this_) => this_.Open()),
+				// [2]: Dispose
+				(Expression<Action<HanaConnection>>          )((HanaConnection this_) => this_.Dispose()),
+			};
+
+			public HanaConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
+			{
+			}
+
+			public HanaConnection(string connectionString) => throw new NotImplementedException();
+
+			public IDbCommand CreateCommand() => ((Func<HanaConnection, IDbCommand>)CompiledWrappers[0])(this);
+			public void Open()                => ((Action<HanaConnection>)CompiledWrappers[1])(this);
+			public void Dispose()             => ((Action<HanaConnection>)CompiledWrappers[2])(this);
 		}
 
 		[Wrapper]
@@ -316,4 +341,3 @@ namespace LinqToDB.DataProvider.SapHana
 		#endregion
 	}
 }
-#endif

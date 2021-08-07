@@ -12,12 +12,12 @@ namespace LinqToDB.DataProvider.SapHana
 
 	public class SapHanaOdbcDataProvider : DynamicDataProviderBase<OdbcProviderAdapter>
 	{
-		public SapHanaOdbcDataProvider()
-			: this(ProviderName.SapHanaOdbc, MappingSchemaInstance)
+		public SapHanaOdbcDataProvider(SapHanaVersion version = SapHanaVersion.SapHana1)
+			: this(GetProviderName(version), GetMappingSchema(version), version)
 		{
 		}
 
-		protected SapHanaOdbcDataProvider(string name, MappingSchema mappingSchema)
+		protected SapHanaOdbcDataProvider(string name, MappingSchema mappingSchema, SapHanaVersion version)
 			: base(name, mappingSchema, OdbcProviderAdapter.GetInstance())
 		{
 			//supported flags
@@ -34,10 +34,10 @@ namespace LinqToDB.DataProvider.SapHana
 			SqlProviderFlags.IsSubQueryColumnSupported  = true;
 			SqlProviderFlags.IsTakeSupported            = true;
 			SqlProviderFlags.IsDistinctOrderBySupported = false;
+			SqlProviderFlags.IsApplyJoinSupported       = version != SapHanaVersion.SapHana1;
 
 			//not supported flags
 			SqlProviderFlags.IsSubQueryTakeSupported     = false;
-			SqlProviderFlags.IsApplyJoinSupported        = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported   = false;
 
 			_sqlOptimizer = new SapHanaSqlOptimizer(SqlProviderFlags);
@@ -130,8 +130,6 @@ namespace LinqToDB.DataProvider.SapHana
 			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
-		private static readonly MappingSchema MappingSchemaInstance = new SapHanaMappingSchema.OdbcMappingSchema();
-
 		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
 		{
 			try
@@ -143,6 +141,24 @@ namespace LinqToDB.DataProvider.SapHana
 				// https://github.com/dotnet/runtime/issues/40654
 				return true;
 			}
+		}
+
+		private static string GetProviderName(SapHanaVersion version)
+		{
+			return version switch
+			{
+				SapHanaVersion.SapHana2sps04 => ProviderName.SapHana2SPS04Odbc,
+				_                            => ProviderName.SapHanaOdbc,
+			};
+		}
+
+		private static MappingSchema GetMappingSchema(SapHanaVersion version)
+		{
+			return version switch
+			{
+				SapHanaVersion.SapHana2sps04 => SapHanaMappingSchema.Odbc2SPS04MappingSchema.Instance,
+				_                            => SapHanaMappingSchema.OdbcMappingSchema.Instance,
+			};
 		}
 	}
 }

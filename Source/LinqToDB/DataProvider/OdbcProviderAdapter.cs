@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Data;
+using System.Linq.Expressions;
 using LinqToDB.Expressions;
 
 namespace LinqToDB.DataProvider
 {
 	public class OdbcProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _syncRoot = new object();
+		private static readonly object _syncRoot = new ();
 		private static OdbcProviderAdapter? _instance;
 
 		public const string AssemblyName    = "System.Data.Odbc";
@@ -18,6 +19,7 @@ namespace LinqToDB.DataProvider
 			Type parameterType,
 			Type commandType,
 			Type transactionType,
+			Func<string, OdbcConnection>       createConnection,
 			Action<IDbDataParameter, OdbcType> dbTypeSetter,
 			Func  <IDbDataParameter, OdbcType> dbTypeGetter)
 		{
@@ -26,6 +28,8 @@ namespace LinqToDB.DataProvider
 			ParameterType   = parameterType;
 			CommandType     = commandType;
 			TransactionType = transactionType;
+
+			_createConnection = createConnection;
 
 			SetDbType = dbTypeSetter;
 			GetDbType = dbTypeGetter;
@@ -39,6 +43,9 @@ namespace LinqToDB.DataProvider
 
 		public Action<IDbDataParameter, OdbcType> SetDbType { get; }
 		public Func  <IDbDataParameter, OdbcType> GetDbType { get; }
+
+		private readonly Func<string, OdbcConnection> _createConnection;
+		public OdbcConnection CreateConnection(string connectionString) => _createConnection(connectionString);
 
 		public static OdbcProviderAdapter GetInstance()
 		{
@@ -62,6 +69,7 @@ namespace LinqToDB.DataProvider
 						var dbType          = assembly.GetType($"{ClientNamespace}.OdbcType", true)!;
 
 						var typeMapper = new TypeMapper();
+						typeMapper.RegisterTypeWrapper<OdbcConnection>(connectionType);
 						typeMapper.RegisterTypeWrapper<OdbcType>(dbType);
 						typeMapper.RegisterTypeWrapper<OdbcParameter>(parameterType);
 						typeMapper.FinalizeMappings();
@@ -76,6 +84,7 @@ namespace LinqToDB.DataProvider
 							parameterType,
 							commandType,
 							transactionType,
+							typeMapper.BuildWrappedFactory((string connectionString) => new OdbcConnection(connectionString)),
 							typeSetter,
 							typeGetter);
 					}
@@ -118,6 +127,31 @@ namespace LinqToDB.DataProvider
 			UniqueIdentifier = 15,
 			VarBinary        = 21,
 			VarChar          = 22
+		}
+
+		[Wrapper]
+		public class OdbcConnection : TypeWrapper, IDisposable
+		{
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+				// [0]: CreateCommand
+				(Expression<Func<OdbcConnection, IDbCommand>>)((OdbcConnection this_) => this_.CreateCommand()),
+				// [1]: Open
+				(Expression<Action<OdbcConnection>>          )((OdbcConnection this_) => this_.Open()),
+				// [2]: Dispose
+				(Expression<Action<OdbcConnection>>          )((OdbcConnection this_) => this_.Dispose()),
+			};
+
+			public OdbcConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
+			{
+			}
+
+			public OdbcConnection(string connectionString) => throw new NotImplementedException();
+
+			public IDbCommand CreateCommand() => ((Func<OdbcConnection, IDbCommand>)CompiledWrappers[0])(this);
+			public void Open()                => ((Action<OdbcConnection>)CompiledWrappers[1])(this);
+			public void Dispose()             => ((Action<OdbcConnection>)CompiledWrappers[2])(this);
 		}
 		#endregion
 	}

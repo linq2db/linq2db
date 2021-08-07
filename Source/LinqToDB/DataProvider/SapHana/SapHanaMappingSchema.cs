@@ -1,13 +1,12 @@
-﻿
+﻿using System;
+using System.Data.Linq;
+using System.Text;
 
 namespace LinqToDB.DataProvider.SapHana
 {
 	using Common;
 	using Mapping;
 	using SqlQuery;
-	using System;
-	using System.Data.Linq;
-	using System.Text;
 
 	public class SapHanaMappingSchema : MappingSchema
 	{
@@ -58,22 +57,44 @@ namespace LinqToDB.DataProvider.SapHana
 
 		internal static readonly SapHanaMappingSchema Instance = new ();
 
-#if NETFRAMEWORK || NETCOREAPP
 		public class NativeMappingSchema : MappingSchema
 		{
 			public NativeMappingSchema()
-				: base(ProviderName.SapHanaNative, Instance)
+				: base(ProviderName.SapHanaNative, SapHanaMappingSchema.Instance)
 			{
 			}
+
+			public static NativeMappingSchema Instance { get; } = new();
 		}
-#endif
 
 		public class OdbcMappingSchema : MappingSchema
 		{
 			public OdbcMappingSchema()
-				: base(ProviderName.SapHanaOdbc, Instance)
+				: base(ProviderName.SapHanaOdbc, SapHanaMappingSchema.Instance)
 			{
 			}
+
+			public static OdbcMappingSchema Instance { get; } = new();
+		}
+
+		public class Native2SPS04MappingSchema : MappingSchema
+		{
+			public Native2SPS04MappingSchema()
+				: base(ProviderName.SapHana2SPS04Native, SapHanaMappingSchema.Instance)
+			{
+			}
+
+			public static Native2SPS04MappingSchema Instance { get; } = new();
+		}
+
+		public class Odbc2SPS04MappingSchema : MappingSchema
+		{
+			public Odbc2SPS04MappingSchema()
+				: base(ProviderName.SapHana2SPS04Odbc, SapHanaMappingSchema.Instance)
+			{
+			}
+
+			public static Odbc2SPS04MappingSchema Instance { get; } = new();
 		}
 	}
 }
