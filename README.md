@@ -70,6 +70,14 @@ From **NuGet**:
 
 ## Configuring connection strings
 
+### Passing Into Constructor
+
+You can simply pass provider name and connection string into `DataConnection` constructor:
+
+```cs
+var db = new LinqToDB.Data.DataConnection(LinqToDB.ProviderName.SqlServer2012,
+   "Server=.\;Database=Northwind;Trusted_Connection=True;Enlist=False;");
+```
 
 ### Using Connection Options Builder
 
@@ -178,6 +186,36 @@ public class Product
   // ... other columns ...
 }
 ```
+
+There is two other ways to configure POCOs: no configuration at all and using Fluent configuration (also known as Code First).
+
+The first one involves no attributes. In this case Linq2Db will use POCO's name as table name and property names as column names. This might seem to be convenient, but there some moments: Linq2Db will not infer primary key even if class has property called "ID", and it will not infer nullability of string properties as there is no way to do so. Also, there will be no associations configured. In most cases the approach is pretty useless.
+
+The second way lets you configure your mapping dynamically, at runtime. Furthermore, it lets you to have several different configurations if you need so. This kind of configuration is done through class `MappingSchema`. There is static property `LinqToDB.Mapping.MappingSchema.Default` which might be used to one-time, global configuration. This mapping is used by default if no mapping schema provided explicitly. The other way is to pass instance of `MappingSchema` into constructor alongside with connection string. 
+
+Code First approach lets you to use all configuration abilities available with attributes. These two approaches are interchangeable in its abilities.
+
+There one thing which differs these approaches. If you add at least one attribute into POCO, all other properties should also have attributes, otherwise they will be ignored. With Code First approach you can configure only thing that require it explicitly. All other properties will be inferred by Linq2Db:
+
+```c#
+var builder = MappingSchema.Default.GetFluentMappingBuilder();
+
+builder.Entity<Product>()
+    .HasTableName("Products")
+    .HasSchemaName("dbo")
+    .HasIdentity(x => x.Id)
+    .HasPrimaryKey(x => x.Id)
+    .Ignore(x => x.SomeNonDbProperty)
+    .Property(x => x.TimeStamp)
+        .HasSkipOnInsert()
+        .HasSkipOnUpdate()
+    .Association(x => x.Vendor, x => x.VendorId, x => x.Id, canBeNull: false)
+    ;
+
+//... other mapping configurations
+```
+
+In this example we configured only three properties and one association. We let Linq2Db to infer all other properties which have to match with column names.
 
 At this point LINQ to DB doesn't know how to connect to our database or which POCOs go with what database. All this mapping is done through a `DataConnection` class:
 
@@ -552,6 +590,42 @@ using (var transaction = new TransactionScope())
     ...
   }
   transaction.Complete();
+}
+```
+
+It should be noted, than there are two base classes for your "context" class: `LinqToDB.Data.DataConnection` and `LinqToDB.DataContext`. The key difference between them is in connection retention behaviour. `DataConnection` opens connection with first query and holds it open until dispose happens. `DataContext` behaves the way you might used to with Entity Framework: it opens connection per query and closes it right after query is done.
+
+This difference in behavior matters when used with TransactionScope:
+
+```c#
+using var db = new LinqToDB.Data.DataConnection("provider name", "connection string");
+
+var product = db.GetTable<Product>()
+  .FirstOrDefault(); // connection opened here
+
+var scope = new TransactionScope();
+// this transaction was not attached to connection
+// because it was opened earlier
+
+product.Name = "Lollipop";
+db.Update(product);
+
+scope.Dispose();
+
+// no transaction rollback happed, "Lollipop" has been saved
+```
+
+Connection is attached with ambient transaction in moment it opened. `TransactionScope` created after this moment have no effect on this connection. Changing `DataConnection` with `DataContext` in code shown earlier will make transaction scope work as expected: no record will be updated.
+
+Althou, `DataContext` seems to be the right class to choose, it strongly recommended to use `DataConnection` instead. It's behaviour might be corrected with setting `CloseAfterUse` property to `true`:
+
+```c#
+public class DbNorthwind : LinqToDB.Data.DataConnection
+{
+  public DbNorthwind() : base("Northwind")
+  {
+    (this as IDataContext).CloseAfterUse = true;
+  }
 }
 ```
 
