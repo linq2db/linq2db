@@ -187,15 +187,15 @@ public class Product
 }
 ```
 
-There is two other ways to configure POCOs: no configuration at all and using Fluent configuration (also known as Code First).
+There is two other ways to configure POCOs: no configuration at all and using Fluent configuration.
 
 The first one involves no attributes. In this case Linq2Db will use POCO's name as table name and property names as column names. This might seem to be convenient, but there some moments: Linq2Db will not infer primary key even if class has property called "ID", and it will not infer nullability of string properties as there is no way to do so. Also, there will be no associations configured. In most cases the approach is pretty useless.
 
 The second way lets you configure your mapping dynamically, at runtime. Furthermore, it lets you to have several different configurations if you need so. This kind of configuration is done through class `MappingSchema`. There is static property `LinqToDB.Mapping.MappingSchema.Default` which might be used to one-time, global configuration. This mapping is used by default if no mapping schema provided explicitly. The other way is to pass instance of `MappingSchema` into constructor alongside with connection string. 
 
-Code First approach lets you to use all configuration abilities available with attributes. These two approaches are interchangeable in its abilities.
+Fluent approach lets you to use all configuration abilities available with attributes. These two approaches are interchangeable in its abilities.
 
-There one thing which differs these approaches. If you add at least one attribute into POCO, all other properties should also have attributes, otherwise they will be ignored. With Code First approach you can configure only thing that require it explicitly. All other properties will be inferred by Linq2Db:
+There one thing which differs these approaches. If you add at least one attribute into POCO, all other properties should also have attributes, otherwise they will be ignored. With Fluent approach you can configure only thing that require it explicitly. All other properties will be inferred by Linq2Db:
 
 ```c#
 var builder = MappingSchema.Default.GetFluentMappingBuilder();
