@@ -75,8 +75,9 @@ From **NuGet**:
 You can simply pass provider name and connection string into `DataConnection` constructor:
 
 ```cs
-var db = new LinqToDB.Data.DataConnection(LinqToDB.ProviderName.SqlServer2012,
-   "Server=.\;Database=Northwind;Trusted_Connection=True;Enlist=False;");
+var db = new LinqToDB.Data.DataConnection(
+  LinqToDB.ProviderName.SqlServer2012,
+  "Server=.\;Database=Northwind;Trusted_Connection=True;Enlist=False;");
 ```
 
 ### Using Connection Options Builder
@@ -168,35 +169,9 @@ See [article](https://linq2db.github.io/articles/get-started/asp-dotnet-core/ind
 
 ## Now let's create a **POCO** class
 
-You can generate those classes from your database using [T4 templates](https://linq2db.github.io/articles/T4.html). Demonstration video could be found [here](https://linq2db.github.io/articles/general/Video.html). Or you can write them manually, using `Fluent configuration`, `Attribute configuration`, or inferring.
+You can generate POCO classes from your database using [T4 templates](https://linq2db.github.io/articles/T4.html).  These classes will be generated using the `Attribute configuration`. Demonstration video could be found [here](https://linq2db.github.io/articles/general/Video.html). 
 
-### Fluent Configuration
-
-This method lets you configure your mapping dynamically at runtime. Furthermore, it lets you to have several different configurations if you need so. This kind of configuration is done through the class `MappingSchema`. 
-
-With Fluent approach you can configure only thing that require it explicitly. All other properties will be inferred by linq2db:
-
-```c#
-var builder = MappingSchema.Default.GetFluentMappingBuilder();
-
-builder.Entity<Product>()
-    .HasTableName("Products")
-    .HasSchemaName("dbo")
-    .HasIdentity(x => x.ProductID)
-    .HasPrimaryKey(x => x.ProductID)
-    .Ignore(x => x.SomeNonDbProperty)
-    .Property(x => x.TimeStamp)
-        .HasSkipOnInsert()
-        .HasSkipOnUpdate()
-    .Association(x => x.Vendor, x => x.VendorID, x => x.VendorID, canBeNull: false)
-    ;
-
-//... other mapping configurations
-```
-
-In this example we configured only three properties and one association. We let linq2db to infer all other properties which have to match with column names. However, other associations will not get configured automatically.
-
-There is a static property `LinqToDB.Mapping.MappingSchema.Default` which may be used to define a global configuration. This mapping is used by default if no mapping schema provided explicitly. The other way is to pass instance of `MappingSchema` into constructor alongside with connection string. 
+Alternatively, you can write them manually, using `Attribute configuration`, `Fluent configuration`, or inferring.
 
 ### Attribute configuration
 
@@ -223,7 +198,7 @@ public class Product
 }
 ```
 
-This approach involves attributes on all properties that should be mapped. This way lets you to configure all possible things linq2db ever supports. You will get all configuration abilities available with fluent configuration. These two approaches are interchangeable in its abilities. There one thing to mention: if you add at least one attribute into POCO, all other properties should also have attributes, otherwise they will be ignored:
+This approach involves attributes on all properties that should be mapped. This way lets you to configure all possible things linq2db ever supports. There one thing to mention: if you add at least one attribute into POCO, all other properties should also have attributes, otherwise they will be ignored:
 
 ```c#
 using System;
@@ -240,6 +215,34 @@ public class Product
 ```
 
 Property `Name` will be ignored as it lacks `Column` attibute. 
+
+### Fluent Configuration
+
+This method lets you configure your mapping dynamically at runtime. Furthermore, it lets you to have several different configurations if you need so. You will get all configuration abilities available with attribute configuration. These two approaches are interchangeable in its abilities. This kind of configuration is done through the class `MappingSchema`. 
+
+With Fluent approach you can configure only things that require it explicitly. All other properties will be inferred by linq2db:
+
+```c#
+var builder = MappingSchema.Default.GetFluentMappingBuilder();
+
+builder.Entity<Product>()
+    .HasTableName("Products")
+    .HasSchemaName("dbo")
+    .HasIdentity(x => x.ProductID)
+    .HasPrimaryKey(x => x.ProductID)
+    .Ignore(x => x.SomeNonDbProperty)
+    .Property(x => x.TimeStamp)
+        .HasSkipOnInsert()
+        .HasSkipOnUpdate()
+    .Association(x => x.Vendor, x => x.VendorID, x => x.VendorID, canBeNull: false)
+    ;
+
+//... other mapping configurations
+```
+
+In this example we configured only three properties and one association. We let linq2db to infer all other properties which have to match with column names. However, other associations will not get configured automatically.
+
+There is a static property `LinqToDB.Mapping.MappingSchema.Default` which may be used to define a global configuration. This mapping is used by default if no mapping schema provided explicitly. The other way is to pass instance of `MappingSchema` into constructor alongside with connection string.
 
 ### Inferred Configuration
 
@@ -263,7 +266,7 @@ public class Product
 }
 ```
 
-This way linq2db will auto-configure `Product` class to map to `Product` table with fields `ProductID`, `Name`, and `VendorID`. This POCO will have not treat `ProductID` property as primary key. And there will be no association with `Vendor`.
+This way linq2db will auto-configure `Product` class to map to `Product` table with fields `ProductID`, `Name`, and `VendorID`. POCO will not get `ProductID` property treated as primary key. And there will be no association with `Vendor`.
 
 This approach is not generally recommended.
 
