@@ -246,7 +246,7 @@ There is a static property `LinqToDB.Mapping.MappingSchema.Default` which may be
 
 ### Inferred Configuration
 
-This approach involves no attributes at all. In this case linq2db will use POCO's name as table name and property names as column names (with exact same casing, which could be important for case-sensitive databases). This might seem to be convenient, but there are some moments: linq2db will not infer primary key even if class has property called "ID"; it will not infer nullability of string properties as there is no way to do so; and associations will not be automatically configured.
+This approach involves no attributes at all. In this case linq2db will use POCO's name as table name and property names as column names (with exact same casing, which could be important for case-sensitive databases). This might seem to be convenient, but there are some restrictions: linq2db will not infer primary key even if class has property called "ID"; it will not infer nullability of string properties as there is no way to do so; and associations will not be automatically configured.
 
 ```c#
 using System;
