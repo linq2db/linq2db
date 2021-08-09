@@ -168,7 +168,37 @@ See [article](https://linq2db.github.io/articles/get-started/asp-dotnet-core/ind
 
 ## Now let's create a **POCO** class
 
-Important: you also can generate those classes from your database using [T4 templates](https://linq2db.github.io/articles/T4.html). Demonstration video could be found [here](https://linq2db.github.io/articles/general/Video.html).
+You can generate those classes from your database using [T4 templates](https://linq2db.github.io/articles/T4.html). Demonstration video could be found [here](https://linq2db.github.io/articles/general/Video.html). Or you can write them manually, using `Fluent configuration`, `Attribute configuration`, or inferring.
+
+### Fluent Configuration
+
+This method lets you configure your mapping dynamically at runtime. Furthermore, it lets you to have several different configurations if you need so. This kind of configuration is done through the class `MappingSchema`. 
+
+With Fluent approach you can configure only thing that require it explicitly. All other properties will be inferred by linq2db:
+
+```c#
+var builder = MappingSchema.Default.GetFluentMappingBuilder();
+
+builder.Entity<Product>()
+    .HasTableName("Products")
+    .HasSchemaName("dbo")
+    .HasIdentity(x => x.ProductID)
+    .HasPrimaryKey(x => x.ProductID)
+    .Ignore(x => x.SomeNonDbProperty)
+    .Property(x => x.TimeStamp)
+        .HasSkipOnInsert()
+        .HasSkipOnUpdate()
+    .Association(x => x.Vendor, x => x.VendorID, x => x.VendorID, canBeNull: false)
+    ;
+
+//... other mapping configurations
+```
+
+In this example we configured only three properties and one association. We let linq2db to infer all other properties which have to match with column names. However, other associations will not get configured automatically.
+
+There is a static property `LinqToDB.Mapping.MappingSchema.Default` which may be used to define a global configuration. This mapping is used by default if no mapping schema provided explicitly. The other way is to pass instance of `MappingSchema` into constructor alongside with connection string. 
+
+### Attribute configuration
 
 ```c#
 using System;
@@ -183,39 +213,61 @@ public class Product
   [Column(Name = "ProductName"), NotNull]
   public string Name { get; set; }
 
+  [Column]
+  public int VendorID { get; set; }
+
+  [Association(ThisKey = nameof(VendorID), OtherKey=nameof(Vendor.ID))]
+  public Vendor Vendor { get; set; }
+
   // ... other columns ...
 }
 ```
 
-There is two other ways to configure POCOs: no configuration at all and using Fluent configuration.
-
-The first one involves no attributes. In this case Linq2Db will use POCO's name as table name and property names as column names. This might seem to be convenient, but there some moments: Linq2Db will not infer primary key even if class has property called "ID", and it will not infer nullability of string properties as there is no way to do so. Also, there will be no associations configured. In most cases the approach is pretty useless.
-
-The second way lets you configure your mapping dynamically, at runtime. Furthermore, it lets you to have several different configurations if you need so. This kind of configuration is done through class `MappingSchema`. There is static property `LinqToDB.Mapping.MappingSchema.Default` which might be used to one-time, global configuration. This mapping is used by default if no mapping schema provided explicitly. The other way is to pass instance of `MappingSchema` into constructor alongside with connection string. 
-
-Fluent approach lets you to use all configuration abilities available with attributes. These two approaches are interchangeable in its abilities.
-
-There one thing which differs these approaches. If you add at least one attribute into POCO, all other properties should also have attributes, otherwise they will be ignored. With Fluent approach you can configure only thing that require it explicitly. All other properties will be inferred by Linq2Db:
+This approach involves attributes on all properties that should be mapped. This way lets you to configure all possible things linq2db ever supports. You will get all configuration abilities available with fluent configuration. These two approaches are interchangeable in its abilities. There one thing to mention: if you add at least one attribute into POCO, all other properties should also have attributes, otherwise they will be ignored:
 
 ```c#
-var builder = MappingSchema.Default.GetFluentMappingBuilder();
+using System;
+using LinqToDB.Mapping;
 
-builder.Entity<Product>()
-    .HasTableName("Products")
-    .HasSchemaName("dbo")
-    .HasIdentity(x => x.Id)
-    .HasPrimaryKey(x => x.Id)
-    .Ignore(x => x.SomeNonDbProperty)
-    .Property(x => x.TimeStamp)
-        .HasSkipOnInsert()
-        .HasSkipOnUpdate()
-    .Association(x => x.Vendor, x => x.VendorId, x => x.Id, canBeNull: false)
-    ;
+[Table(Name = "Products")]
+public class Product
+{
+  [PrimaryKey, Identity]
+  public int ProductID { get; set; }
 
-//... other mapping configurations
+  public string Name { get; set; }
+}
 ```
 
-In this example we configured only three properties and one association. We let Linq2Db to infer all other properties which have to match with column names.
+Property `Name` will be ignored as it lacks `Column` attibute. 
+
+### Inferred Configuration
+
+This approach involves no attributes at all. In this case linq2db will use POCO's name as table name and property names as column names (with exact same casing, which could be important for case-sensitive databases). This might seem to be convenient, but there are some moments: linq2db will not infer primary key even if class has property called "ID"; it will not infer nullability of string properties as there is no way to do so; and associations will not be automatically configured.
+
+```c#
+using System;
+using LinqToDB.Mapping;
+
+public class Product
+{
+  public int ProductID { get; set; }
+
+  public string Name { get; set; }
+
+  public int VendorID { get; set; }
+
+  public Vendor Vendor { get; set; }
+
+  // ... other columns ...
+}
+```
+
+This way linq2db will auto-configure `Product` class to map to `Product` table with fields `ProductID`, `Name`, and `VendorID`. This POCO will have not treat `ProductID` property as primary key. And there will be no association with `Vendor`.
+
+This approach is not generally recommended.
+
+### DataConnection class
 
 At this point LINQ to DB doesn't know how to connect to our database or which POCOs go with what database. All this mapping is done through a `DataConnection` class:
 
@@ -593,9 +645,9 @@ using (var transaction = new TransactionScope())
 }
 ```
 
-It should be noted, than there are two base classes for your "context" class: `LinqToDB.Data.DataConnection` and `LinqToDB.DataContext`. The key difference between them is in connection retention behaviour. `DataConnection` opens connection with first query and holds it open until dispose happens. `DataContext` behaves the way you might used to with Entity Framework: it opens connection per query and closes it right after query is done.
+It should be noted that there are two base classes for your "context" class: `LinqToDB.Data.DataConnection` and `LinqToDB.DataContext`. The key difference between them is in connection retention behaviour. `DataConnection` opens connection with first query and holds it open until dispose happens. `DataContext` behaves the way you might used to with Entity Framework: it opens connection per query and closes it right after query is done.
 
-This difference in behavior matters when used with TransactionScope:
+This difference in behavior matters when used with `TransactionScope`:
 
 ```c#
 using var db = new LinqToDB.Data.DataConnection("provider name", "connection string");
@@ -615,9 +667,9 @@ scope.Dispose();
 // no transaction rollback happed, "Lollipop" has been saved
 ```
 
-Connection is attached with ambient transaction in moment it opened. `TransactionScope` created after this moment have no effect on this connection. Changing `DataConnection` with `DataContext` in code shown earlier will make transaction scope work as expected: no record will be updated.
+A `DataConnection` is attached with ambient transaction in moment it is opened. Any `TransactionScope`s created after the connection is created will no effect on that connection. Replacing `DataConnection` with `DataContext` in code shown earlier will make transaction scope work as expected: the created record will be discarded with the transaction.
 
-Althou, `DataContext` seems to be the right class to choose, it strongly recommended to use `DataConnection` instead. It's behaviour might be corrected with setting `CloseAfterUse` property to `true`:
+Although, `DataContext` appears to be the right class to choose, it is strongly recommended to use `DataConnection` instead. It's default behaviour might be changed with setting `CloseAfterUse` property to `true`:
 
 ```c#
 public class DbNorthwind : LinqToDB.Data.DataConnection
