@@ -312,7 +312,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			[UsedImplicitly]
-			static object OnEntityCreated(IDataContext context, object entity)
+			static object OnEntityCreated(IDataContext context, object entity, TableOptions tableOptions, string? tableName, string? schemaName, string? databaseName, string? serverName)
 			{
 				var onEntityCreated = context.OnEntityCreated;
 
@@ -320,8 +320,13 @@ namespace LinqToDB.Linq.Builder
 				{
 					var args = new EntityCreatedEventArgs
 					{
-						Entity      = entity,
-						DataContext = context
+						Entity       = entity,
+						DataContext  = context,
+						TableOptions = tableOptions,
+						TableName    = tableName,
+						SchemaName   = schemaName,
+						DatabaseName = databaseName,
+						ServerName   = serverName
 					};
 
 					onEntityCreated(args);
@@ -332,6 +337,9 @@ namespace LinqToDB.Linq.Builder
 				return entity;
 			}
 
+			private static readonly MethodInfo _onEntityCreatedMethodInfo = MemberHelper.MethodOf(() =>
+				OnEntityCreated(null!, null!, TableOptions.NotSet, null, null, null, null));
+
 			Expression NotifyEntityCreated(Expression expr)
 			{
 				if (Builder.DataContext is IEntityServices)
@@ -339,9 +347,15 @@ namespace LinqToDB.Linq.Builder
 					expr =
 						Expression.Convert(
 							Expression.Call(
-								MemberHelper.MethodOf(() => OnEntityCreated(null!, null!)),
+								_onEntityCreatedMethodInfo,
 								ExpressionBuilder.DataContextParam,
-								expr),
+								expr,
+								Expression.Constant(SqlTable.TableOptions),
+								Expression.Constant(SqlTable.PhysicalName, typeof(string)),
+								Expression.Constant(SqlTable.Schema,       typeof(string)),
+								Expression.Constant(SqlTable.Database,     typeof(string)),
+								Expression.Constant(SqlTable.Server,       typeof(string))
+							),
 							expr.Type);
 				}
 
