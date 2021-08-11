@@ -631,5 +631,16 @@ namespace LinqToDB.DataProvider.MySql
 			if (table.TableOptions.HasCreateIfNotExists())
 				StringBuilder.Append("IF NOT EXISTS ");
 		}
+
+		protected override bool BuildJoinType(JoinType joinType, SqlSearchCondition condition)
+		{
+			switch (joinType)
+			{
+				case JoinType.CrossApply : StringBuilder.Append("INNER JOIN LATERAL ");       return true;
+				case JoinType.OuterApply : StringBuilder.Append("LEFT OUTER JOIN LATERAL ");  return true;
+			}
+
+			return base.BuildJoinType(joinType, condition);
+		}
 	}
 }

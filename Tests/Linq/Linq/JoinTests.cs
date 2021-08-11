@@ -8,6 +8,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using System.Linq.Expressions;
 	using LinqToDB.Common;
 	using Model;
 
@@ -118,7 +119,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				TestJohn(
 					from p1 in db.Person
-						join p2 in db.Person on p1.ID equals p2.ID
+					join p2 in db.Person on p1.ID equals p2.ID
 					where p1.ID == 1
 					select new Person { ID = p1.ID, FirstName = p2.FirstName });
 		}
@@ -129,7 +130,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				TestJohn(
 					from p1 in db.Person
-						join p2 in db.Person on new { p1.ID, p1.FirstName } equals new { p2.ID, p2.FirstName }
+					join p2 in db.Person on new { p1.ID, p1.FirstName } equals new { p2.ID, p2.FirstName }
 					where p1.ID == 1
 					select new Person { ID = p1.ID, FirstName = p2.FirstName });
 		}
@@ -140,9 +141,9 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				TestJohn(
 					from p1 in db.Person
-						join p2 in
-							from p2 in db.Person join p3 in db.Person on new { p2.ID, p2.LastName } equals new { p3.ID, p3.LastName } select new { p2, p3 }
-						on new { p1.ID, p1.FirstName } equals new { p2.p2.ID, p2.p2.FirstName }
+					join p2 in
+						from p2 in db.Person join p3 in db.Person on new { p2.ID, p2.LastName } equals new { p3.ID, p3.LastName } select new { p2, p3 }
+					on new { p1.ID, p1.FirstName } equals new { p2.p2.ID, p2.p2.FirstName }
 					where p1.ID == 1
 					select new Person { ID = p1.ID, FirstName = p2.p2.FirstName, LastName = p2.p3.LastName });
 		}
@@ -153,8 +154,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				TestJohn(
 					from p1 in db.Person
-						join p2 in db.Person on new { p1.ID, p1.FirstName } equals new { p2.ID, p2.FirstName }
-							join p3 in db.Person on new { p2.ID, p2.LastName } equals new { p3.ID, p3.LastName }
+					join p2 in db.Person on new { p1.ID, p1.FirstName } equals new { p2.ID, p2.FirstName }
+					join p3 in db.Person on new { p2.ID, p2.LastName } equals new { p3.ID, p3.LastName }
 					where p1.ID == 1
 					select new Person { ID = p1.ID, FirstName = p2.FirstName, LastName = p3.LastName });
 		}
@@ -166,7 +167,7 @@ namespace Tests.Linq
 				TestJohn(
 					from p1 in db.Person
 					join p2 in db.Person on new { p1.ID, p1.FirstName } equals new { p2.ID, p2.FirstName }
-					join p3 in db.Person on new { p1.ID, p2.LastName  } equals new { p3.ID, p3.LastName  }
+					join p3 in db.Person on new { p1.ID, p2.LastName } equals new { p3.ID, p3.LastName }
 					where p1.ID == 1
 					select new Person { ID = p1.ID, FirstName = p2.FirstName, LastName = p3.LastName });
 		}
@@ -177,7 +178,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				TestJohn(
 					from p1 in db.Person
-						join p2 in from p3 in db.Person select new { ID = p3.ID + 1, p3.FirstName } on p1.ID equals p2.ID - 1
+					join p2 in from p3 in db.Person select new { ID = p3.ID + 1, p3.FirstName } on p1.ID equals p2.ID - 1
 					where p1.ID == 1
 					select new Person { ID = p1.ID, FirstName = p2.FirstName });
 		}
@@ -189,14 +190,14 @@ namespace Tests.Linq
 				AreEqual(
 					from t in
 						from ch in Child
-							join p in Parent on ch.ParentID equals p.ParentID
+						join p in Parent on ch.ParentID equals p.ParentID
 						select ch.ParentID + p.ParentID
 					where t > 2
 					select t
 					,
 					from t in
 						from ch in db.Child
-							join p in db.Parent on ch.ParentID equals p.ParentID
+						join p in db.Parent on ch.ParentID equals p.ParentID
 						select ch.ParentID + p.ParentID
 					where t > 2
 					select t);
@@ -209,13 +210,13 @@ namespace Tests.Linq
 				AreEqual(
 					from t in
 						from ch in Child
-							join p in Parent on ch.ParentID equals p.ParentID
+						join p in Parent on ch.ParentID equals p.ParentID
 						select new { ID = ch.ParentID + p.ParentID }
 					where t.ID > 2
 					select t,
 					from t in
 						from ch in db.Child
-							join p in db.Parent on ch.ParentID equals p.ParentID
+						join p in db.Parent on ch.ParentID equals p.ParentID
 						select new { ID = ch.ParentID + p.ParentID }
 					where t.ID > 2
 					select t);
@@ -241,8 +242,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in    Parent
-					join g in    GrandChild on p.ParentID equals g.ParentID into q
+					from p in Parent
+					join g in GrandChild on p.ParentID equals g.ParentID into q
 					from q1 in q
 					select new { p.ParentID, q1.GrandChildID },
 					from p in db.Parent
@@ -257,11 +258,11 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
-						join ch in Child on p.ParentID equals ch.ParentID into lj1
+					join ch in Child on p.ParentID equals ch.ParentID into lj1
 					where p.ParentID == 1
 					select p,
 					from p in db.Parent
-						join ch in db.Child on p.ParentID equals ch.ParentID into lj1
+					join ch in db.Child on p.ParentID equals ch.ParentID into lj1
 					where p.ParentID == 1
 					select p);
 		}
@@ -273,7 +274,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from p in db.Parent
-						join c in db.Child on p.ParentID equals c.ParentID into lj
+					join c in db.Child on p.ParentID equals c.ParentID into lj
 					where p.ParentID == 1
 					select new { p, lj };
 
@@ -285,7 +286,7 @@ namespace Tests.Linq
 
 				var ch = list[0].lj.ToList();
 
-				Assert.AreEqual( 1, ch[0].ParentID);
+				Assert.AreEqual(1, ch[0].ParentID);
 				Assert.AreEqual(11, ch[0].ChildID);
 			}
 		}
@@ -319,8 +320,8 @@ namespace Tests.Linq
 
 				var list2 = q2.ToList();
 
-				Assert.AreEqual(list1.Count,              list2.Count);
-				Assert.AreEqual(list1[0].p.ParentID,      list2[0].p.ParentID);
+				Assert.AreEqual(list1.Count, list2.Count);
+				Assert.AreEqual(list1[0].p.ParentID, list2[0].p.ParentID);
 				Assert.AreEqual(list1[0].lj1.lj1.Count(), list2[0].lj1.lj1.Count());
 			}
 		}
@@ -332,7 +333,7 @@ namespace Tests.Linq
 			{
 				var q1 =
 					from p in Parent
-						join ch in
+					join ch in
 							from c in Child select new { c.ParentID, c.ChildID }
 						on p.ParentID equals ch.ParentID into lj1
 					where p.ParentID == 3
@@ -342,7 +343,7 @@ namespace Tests.Linq
 
 				var q2 =
 					from p in db.Parent
-						join ch in
+					join ch in
 							from c in db.Child select new { c.ParentID, c.ChildID }
 						on p.ParentID equals ch.ParentID into lj1
 					where p.ParentID == 3
@@ -350,8 +351,8 @@ namespace Tests.Linq
 
 				var list2 = q2.ToList();
 
-				Assert.AreEqual(list1.Count,          list2.Count);
-				Assert.AreEqual(list1[0].p.ParentID,  list2[0].p.ParentID);
+				Assert.AreEqual(list1.Count, list2.Count);
+				Assert.AreEqual(list1[0].p.ParentID, list2[0].p.ParentID);
 				Assert.AreEqual(list1[0].lj1.Count(), list2[0].lj1.Count());
 			}
 		}
@@ -362,16 +363,16 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var expectedQuery = from p in Parent
-					join ch in Child on p.ParentID equals ch.ParentID into lj1
-					orderby p.ParentID
-					where p.ParentID >= 1
-					select lj1.OrderBy(c => c.ChildID).FirstOrDefault();
+									join ch in Child on p.ParentID equals ch.ParentID into lj1
+									orderby p.ParentID
+									where p.ParentID >= 1
+									select lj1.OrderBy(c => c.ChildID).FirstOrDefault();
 
 				var actualQuery = from p in db.Parent
-					join ch in db.Child on p.ParentID equals ch.ParentID into lj1
-					orderby p.ParentID
-					where p.ParentID >= 1
-					select lj1.OrderBy(c => c.ChildID).FirstOrDefault();
+								  join ch in db.Child on p.ParentID equals ch.ParentID into lj1
+								  orderby p.ParentID
+								  where p.ParentID >= 1
+								  select lj1.OrderBy(c => c.ChildID).FirstOrDefault();
 
 				var expected = expectedQuery.ToArray();
 				var actual   = actualQuery.ToArray();
@@ -388,7 +389,7 @@ namespace Tests.Linq
 				var result =
 				(
 					from p in db.Parent
-						join ch in db.Child on p.ParentID equals ch.ParentID into lj1
+					join ch in db.Child on p.ParentID equals ch.ParentID into lj1
 					where p.ParentID == 1
 					select new { p1 = lj1, p2 = lj1.OrderByDescending(e => e.ChildID).First() }
 				).ToList();
@@ -396,7 +397,7 @@ namespace Tests.Linq
 				var expected =
 				(
 					from p in Parent
-						join ch in Child on p.ParentID equals ch.ParentID into lj1
+					join ch in Child on p.ParentID equals ch.ParentID into lj1
 					where p.ParentID == 1
 					select new { p1 = lj1, p2 = lj1.OrderByDescending(e => e.ChildID).First() }
 				).ToList();
@@ -412,12 +413,12 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
-						join ch in Child on p.ParentID equals ch.ParentID into lj1
+					join ch in Child on p.ParentID equals ch.ParentID into lj1
 					where p.ParentID == 1
 					select lj1.First().ParentID
 					,
 					from p in db.Parent
-						join ch in db.Child on p.ParentID equals ch.ParentID into lj1
+					join ch in db.Child on p.ParentID equals ch.ParentID into lj1
 					where p.ParentID == 1
 					select lj1.First().ParentID);
 		}
@@ -428,12 +429,12 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
-						join ch in Child on p.ParentID equals ch.ParentID into lj1
+					join ch in Child on p.ParentID equals ch.ParentID into lj1
 					where p.ParentID == 1
 					select lj1.Select(_ => _.ParentID).First()
 					,
 					from p in db.Parent
-						join ch in db.Child on p.ParentID equals ch.ParentID into lj1
+					join ch in db.Child on p.ParentID equals ch.ParentID into lj1
 					where p.ParentID == 1
 					select lj1.Select(_ => _.ParentID).First());
 		}
@@ -444,12 +445,12 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
-						join ch in Child on p.ParentID equals ch.ParentID into lj1
+					join ch in Child on p.ParentID equals ch.ParentID into lj1
 					where p.ParentID == 1
 					select new { p1 = lj1.Count(), p2 = lj1.First() }
 					,
 					from p in db.Parent
-						join ch in db.Child on p.ParentID equals ch.ParentID into lj1
+					join ch in db.Child on p.ParentID equals ch.ParentID into lj1
 					where p.ParentID == 1
 					select new { p1 = lj1.Count(), p2 = lj1.First() });
 		}
@@ -463,7 +464,7 @@ namespace Tests.Linq
 			{
 				var q1 =
 					from p in Parent
-						join c in Child on p.ParentID + n equals c.ParentID into lj
+					join c in Child on p.ParentID + n equals c.ParentID into lj
 					where p.ParentID == 1
 					select new { p, lj };
 
@@ -472,20 +473,20 @@ namespace Tests.Linq
 
 				var q2 =
 					from p in db.Parent
-						join c in db.Child on p.ParentID + n equals c.ParentID into lj
+					join c in db.Child on p.ParentID + n equals c.ParentID into lj
 					where p.ParentID == 1
 					select new { p, lj };
 
 				var list2 = q2.ToList();
 
-				Assert.AreEqual(list1.Count,         list2.Count);
+				Assert.AreEqual(list1.Count, list2.Count);
 				Assert.AreEqual(list1[0].p.ParentID, list2[0].p.ParentID);
 				Assert.AreEqual(list1[0].lj.Count(), list2[0].lj.Count());
 
 				var ch2 = list2[0].lj.ToList();
 
 				Assert.AreEqual(ch1[0].ParentID, ch2[0].ParentID);
-				Assert.AreEqual(ch1[0].ChildID,  ch2[0].ChildID);
+				Assert.AreEqual(ch1[0].ChildID, ch2[0].ChildID);
 			}
 		}
 
@@ -498,7 +499,7 @@ namespace Tests.Linq
 			{
 				var q1 =
 					from p in Parent
-						join c in Child on new { id = p.ParentID } equals new { id = c.ParentID - n } into j
+					join c in Child on new { id = p.ParentID } equals new { id = c.ParentID - n } into j
 					where p.ParentID == 1
 					select new { p, j };
 
@@ -507,20 +508,20 @@ namespace Tests.Linq
 
 				var q2 =
 					from p in db.Parent
-						join c in db.Child on new { id = p.ParentID } equals new { id = c.ParentID - n } into j
+					join c in db.Child on new { id = p.ParentID } equals new { id = c.ParentID - n } into j
 					where p.ParentID == 1
 					select new { p, j };
 
 				var list2 = q2.ToList();
 
-				Assert.AreEqual(list1.Count,         list2.Count);
+				Assert.AreEqual(list1.Count, list2.Count);
 				Assert.AreEqual(list1[0].p.ParentID, list2[0].p.ParentID);
-				Assert.AreEqual(list1[0].j.Count(),  list2[0].j.Count());
+				Assert.AreEqual(list1[0].j.Count(), list2[0].j.Count());
 
 				var ch2 = list2[0].j.OrderBy(_ => _.ChildID).ThenBy(_ => _.ParentID).ToList();
 
 				Assert.AreEqual(ch1[0].ParentID, ch2[0].ParentID);
-				Assert.AreEqual(ch1[0].ChildID,  ch2[0].ChildID);
+				Assert.AreEqual(ch1[0].ChildID, ch2[0].ChildID);
 			}
 		}
 
@@ -559,7 +560,7 @@ namespace Tests.Linq
 						.GroupJoin(
 							Parent,
 							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.ParentID     },
+							y => new { Id = y.ParentID },
 							(x2, y) => new { x2.xid, x2.y, h = y }
 						)
 						.SelectMany(
@@ -569,7 +570,7 @@ namespace Tests.Linq
 						.GroupJoin(
 							Parent,
 							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.ParentID     },
+							y => new { Id = y.ParentID },
 							(x4, y) => new { x4.xid, x4.y, x4.a, p = y }
 						)
 						.SelectMany(
@@ -589,7 +590,7 @@ namespace Tests.Linq
 						.GroupJoin(
 							Parent,
 							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.ParentID     },
+							y => new { Id = y.ParentID },
 							(x8, y) => new { x8.xid, x8.z, x8.xy, x8.a, x8.xz, y }
 						)
 						.SelectMany(
@@ -610,7 +611,7 @@ namespace Tests.Linq
 						.GroupJoin(
 							db.Parent,
 							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.ParentID     },
+							y => new { Id = y.ParentID },
 							(x2, y) => new { x2.xid, x2.y, h = y }
 						)
 						.SelectMany(
@@ -620,7 +621,7 @@ namespace Tests.Linq
 						.GroupJoin(
 							db.Parent,
 							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.ParentID     },
+							y => new { Id = y.ParentID },
 							(x4, y) => new { x4.xid, x4.y, x4.a, p = y }
 						)
 						.SelectMany(
@@ -640,7 +641,7 @@ namespace Tests.Linq
 						.GroupJoin(
 							db.Parent,
 							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.ParentID     },
+							y => new { Id = y.ParentID },
 							(x8, y) => new { x8.xid, x8.z, x8.xy, x8.a, x8.xz, y }
 						)
 						.SelectMany(
@@ -655,8 +656,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in    Parent
-					join c in    Child on p.ParentID equals c.ParentID into t
+					from p in Parent
+					join c in Child on p.ParentID equals c.ParentID into t
 					select new { p.ParentID, n = t.Any() },
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID into t
@@ -668,8 +669,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in    Parent
-					join c in    Child on p.ParentID equals c.ParentID into t
+					from p in Parent
+					join c in Child on p.ParentID equals c.ParentID into t
 					select new { p.ParentID, n = t.Select(t1 => t1.ChildID > 0).Any() },
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID into t
@@ -681,8 +682,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in    Parent
-					let c = from c in    Child where p.ParentID == c.ParentID select c
+					from p in Parent
+					let c = from c in Child where p.ParentID == c.ParentID select c
 					select new { p.ParentID, n = c.Any() },
 					from p in db.Parent
 					let c = from c in db.Child where p.ParentID == c.ParentID select c
@@ -694,8 +695,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in    Parent
-					select new { p.ParentID, n = (from c in    Child where p.ParentID == c.ParentID select c).Any() },
+					from p in Parent
+					select new { p.ParentID, n = (from c in Child where p.ParentID == c.ParentID select c).Any() },
 					from p in db.Parent
 					select new { p.ParentID, n = (from c in db.Child where p.ParentID == c.ParentID select c).Any() });
 		}
@@ -705,8 +706,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in    Parent
-					join c in    Child on p.ParentID equals c.ParentID into t
+					from p in Parent
+					join c in Child on p.ParentID equals c.ParentID into t
 					select new { n = t.Any() },
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID into t
@@ -720,14 +721,14 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
-						join ch in Child on p.ParentID equals ch.ParentID into lj1
-						from ch in lj1.DefaultIfEmpty()
+					join ch in Child on p.ParentID equals ch.ParentID into lj1
+					from ch in lj1.DefaultIfEmpty()
 					where p.ParentID >= 4
 					select new { p, ch }
 					,
 					from p in db.Parent
-						join ch in db.Child on p.ParentID equals ch.ParentID into lj1
-						from ch in lj1.DefaultIfEmpty()
+					join ch in db.Child on p.ParentID equals ch.ParentID into lj1
+					from ch in lj1.DefaultIfEmpty()
 					where p.ParentID >= 4
 					select new { p, ch });
 		}
@@ -738,13 +739,13 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
-						join ch in Child on p.ParentID equals ch.ParentID into lj1
-						from ch in lj1.DefaultIfEmpty()
+					join ch in Child on p.ParentID equals ch.ParentID into lj1
+					from ch in lj1.DefaultIfEmpty()
 					select new { p, ch }
 					,
 					from p in db.Parent
-						join ch in db.Child on p.ParentID equals ch.ParentID into lj1
-						from ch in lj1.DefaultIfEmpty()
+					join ch in db.Child on p.ParentID equals ch.ParentID into lj1
+					from ch in lj1.DefaultIfEmpty()
 					select new { p, ch });
 		}
 
@@ -753,7 +754,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from c in    Child select c.Parent,
+					from c in Child select c.Parent,
 					from c in db.Child select c.Parent);
 		}
 
@@ -806,8 +807,8 @@ namespace Tests.Linq
 			{
 				var q =
 					from p in db.Parent
-						join ch in db.GetTable<CountedChild>() on p.ParentID equals ch.ParentID into lj1
-						from ch in lj1.DefaultIfEmpty()
+					join ch in db.GetTable<CountedChild>() on p.ParentID equals ch.ParentID into lj1
+					from ch in lj1.DefaultIfEmpty()
 					where ch == null
 					select new { p, ch, ch1 = ch };
 
@@ -866,21 +867,21 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
-						join ch in
-							from c in Child
-							where c.ParentID > 0
-							select new { c.ParentID, c.ChildID }
-						on p.ParentID equals ch.ParentID into lj1
-						from ch in lj1.DefaultIfEmpty()
+					join ch in
+						from c in Child
+						where c.ParentID > 0
+						select new { c.ParentID, c.ChildID }
+					on p.ParentID equals ch.ParentID into lj1
+					from ch in lj1.DefaultIfEmpty()
 					select p
 					,
 					from p in db.Parent
-						join ch in
-							from c in db.Child
-							where c.ParentID > 0
-							select new { c.ParentID, c.ChildID }
-						on p.ParentID equals ch.ParentID into lj1
-						from ch in lj1.DefaultIfEmpty()
+					join ch in
+						from c in db.Child
+						where c.ParentID > 0
+						select new { c.ParentID, c.ChildID }
+					on p.ParentID equals ch.ParentID into lj1
+					from ch in lj1.DefaultIfEmpty()
 					select p);
 		}
 
@@ -889,7 +890,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from c in    Child join g in    GrandChild on c equals g.Child select new { c.ParentID, g.GrandChildID },
+					from c in Child join g in GrandChild on c equals g.Child select new { c.ParentID, g.GrandChildID },
 					from c in db.Child join g in db.GrandChild on c equals g.Child select new { c.ParentID, g.GrandChildID });
 		}
 
@@ -898,11 +899,11 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from g in    GrandChild
-						join c in    Child on g.Child equals c
+					from g in GrandChild
+					join c in Child on g.Child equals c
 					select new { c.ParentID, g.GrandChildID },
 					from g in db.GrandChild
-						join c in db.Child on g.Child equals c
+					join c in db.Child on g.Child equals c
 					select new { c.ParentID, g.GrandChildID });
 		}
 
@@ -911,8 +912,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in    Parent
-					join c in    Child on new { Parent = p, p.ParentID } equals new { c.Parent, c.ParentID }
+					from p in Parent
+					join c in Child on new { Parent = p, p.ParentID } equals new { c.Parent, c.ParentID }
 					select new { p.ParentID, c.ChildID },
 					from p in db.Parent
 					join c in db.Child on new { Parent = p, p.ParentID } equals new { c.Parent, c.ParentID }
@@ -925,13 +926,13 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
-					join c1 in Child      on p.ParentID  equals c1.ParentID
+					join c1 in Child on p.ParentID equals c1.ParentID
 					join c2 in GrandChild on c1.ParentID equals c2.ParentID
 					join c3 in GrandChild on c2.ParentID equals c3.ParentID
 					select new { p, c1Key = c1.ChildID, c2Key = c2.GrandChildID, c3Key = c3.GrandChildID }
 					,
 					from p in db.Parent
-					join c1 in db.Child      on p.ParentID  equals c1.ParentID
+					join c1 in db.Child on p.ParentID equals c1.ParentID
 					join c2 in db.GrandChild on c1.ParentID equals c2.ParentID
 					join c3 in db.GrandChild on c2.ParentID equals c3.ParentID
 					select new { p, c1Key = c1.ChildID, c2Key = c2.GrandChildID, c3Key = c3.GrandChildID });
@@ -1016,7 +1017,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ApplyJoin([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus)] string context)
+		public void ApplyJoin([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus, TestProvName.AllMySql, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1036,7 +1037,7 @@ namespace Tests.Linq
 			{
 				var q =
 					from m in db.Types
-						join p in db.Parent on m.ID equals p.ParentID
+					join p in db.Parent on m.ID equals p.ParentID
 					group m by new
 					{
 						m.DateTimeValue.Date
@@ -1057,8 +1058,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p1 in    Parent
-					join p2 in    Parent on new { p1.ParentID, p1.Value1 } equals new { p2.ParentID, p2.Value1 }
+					from p1 in Parent
+					join p2 in Parent on new { p1.ParentID, p1.Value1 } equals new { p2.ParentID, p2.Value1 }
 					select p2
 					,
 					from p1 in db.Parent
@@ -1071,15 +1072,15 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p1 in    Parent
-					join p2 in    Parent
-						on     new { a = new { p1.ParentID, p1.Value1 } }
+					from p1 in Parent
+					join p2 in Parent
+						on new { a = new { p1.ParentID, p1.Value1 } }
 						equals new { a = new { p2.ParentID, p2.Value1 } }
 					select p2
 					,
 					from p1 in db.Parent
 					join p2 in db.Parent
-						on     new { a = new { p1.ParentID, p1.Value1 } }
+						on new { a = new { p1.ParentID, p1.Value1 } }
 						equals new { a = new { p2.ParentID, p2.Value1 } }
 					select p2);
 		}
@@ -1089,8 +1090,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p1 in    Parent
-					from p2 in    Parent.Where(p => p1.ParentID == p.ParentID && p1.Value1 == p.Value1)
+					from p1 in Parent
+					from p2 in Parent.Where(p => p1.ParentID == p.ParentID && p1.Value1 == p.Value1)
 					select p2
 					,
 					from p1 in db.Parent
@@ -1107,7 +1108,7 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in    Parent
+					from p in Parent
 					where p.ParentID > 0
 					join c in Child on p.ParentID equals c.ParentID into t
 					//select new { p.ParentID, count = t.Count() }
@@ -1126,7 +1127,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in    Parent
+					from p in Parent
 					where p.ParentID > 0
 					join c in Child on p.ParentID equals c.ParentID into t
 					//select new { p.ParentID, count = t.Count() }
@@ -1179,11 +1180,11 @@ namespace Tests.Linq
 			{
 				var expected = from p in Parent
 						.SqlJoinInternal(Child, joinType, (p, c) => p.ParentID == c.ParentID, (p, c) => new {p, c})
-					select new { ParentID = p.p == null ? (int?) null : p.p.ParentID, ChildID = p.c == null ? (int?) null : p.c.ChildID};
+							   select new { ParentID = p.p == null ? (int?) null : p.p.ParentID, ChildID = p.c == null ? (int?) null : p.c.ChildID};
 
 				var actual = from p in db.Parent
-					from c in db.Child.Join(joinType, r => p.ParentID == r.ParentID)
-					select new {ParentID = (int?) p.ParentID, ChildID = (int?) c.ChildID};
+							 from c in db.Child.Join(joinType, r => p.ParentID == r.ParentID)
+							 select new {ParentID = (int?) p.ParentID, ChildID = (int?) c.ChildID};
 
 				AreEqual(expected.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.ChildID),
 					actual.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.ChildID));
@@ -1235,11 +1236,11 @@ namespace Tests.Linq
 			{
 				var expected = from p in Parent.Where(p => p.ParentID > 0).Take(10)
 						.SqlJoinInternal(Child, joinType, (p, c) => p.ParentID == c.ParentID, (p, c) => new { p, c })
-					select new { ParentID = p.p == null ? (int?)null : p.p.ParentID, ChildID = p.c == null ? (int?)null : p.c.ChildID };
+							   select new { ParentID = p.p == null ? (int?)null : p.p.ParentID, ChildID = p.c == null ? (int?)null : p.c.ChildID };
 
 				var actual = from p in db.Parent.Where(p => p.ParentID > 0).Take(10)
-					from c in db.Child.Join(joinType, r => p.ParentID == r.ParentID)
-					select new { ParentID = (int?)p.ParentID, ChildID = (int?)c.ChildID };
+							 from c in db.Child.Join(joinType, r => p.ParentID == r.ParentID)
+							 select new { ParentID = (int?)p.ParentID, ChildID = (int?)c.ChildID };
 
 				AreEqual(expected.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.ChildID),
 					actual.ToList().OrderBy(r => r.ParentID).ThenBy(r => r.ChildID));
@@ -1287,7 +1288,7 @@ namespace Tests.Linq
 			{
 				var expected = from p in Parent
 						.SqlJoinInternal(Child, joinType, (p, c) => p.ParentID == c.ParentID, (p, c) => new {p, c})
-					select new { ParentID = p.p == null ? (int?) null : p.p.ParentID, ChildID = p.c == null ? (int?) null : p.c.ChildID};
+							   select new { ParentID = p.p == null ? (int?) null : p.p.ParentID, ChildID = p.c == null ? (int?) null : p.c.ChildID};
 
 				var actual = db.Parent.Join(db.Child, joinType, (p, c) => p.ParentID == c.ParentID,
 					(p, c) => new {ParentID = (int?)p.ParentID, ChildID = (int?)c.ChildID});
@@ -1338,7 +1339,7 @@ namespace Tests.Linq
 			{
 				var expected = from p in Parent.Where(p => p.ParentID > 0).Take(10)
 						.SqlJoinInternal(Child, joinType, (p, c) => p.ParentID == c.ParentID, (p, c) => new { p, c })
-					select new { ParentID = p.p == null ? (int?)null : p.p.ParentID, ChildID = p.c == null ? (int?)null : p.c.ChildID };
+							   select new { ParentID = p.p == null ? (int?)null : p.p.ParentID, ChildID = p.c == null ? (int?)null : p.c.ChildID };
 
 				var actual = db.Parent.Where(p => p.ParentID > 0).Take(10)
 					.Join(db.Child, joinType, (p, c) => p.ParentID == c.ParentID,
@@ -1383,7 +1384,7 @@ namespace Tests.Linq
 		// https://imgflip.com/i/2a6oc8
 		[ActiveIssue(
 			Configuration = TestProvName.AllSybase,
-			Details       = "Cross-join doesn't work in Sybase")]
+			Details = "Cross-join doesn't work in Sybase")]
 		[Test]
 		public void SqlLinqCrossJoinSubQuery([DataSources] string context)
 		{
@@ -1391,7 +1392,7 @@ namespace Tests.Linq
 			{
 				var expected = from p in Parent.Where(p => p.ParentID > 0).Take(10)
 						.SqlJoinInternal(Child.Take(10), SqlJoinType.Inner, (p, c) => true, (p, c) => new { p, c })
-					select new { ParentID = p.p == null ? (int?)null : p.p.ParentID, ChildID = p.c == null ? (int?)null : p.c.ChildID };
+							   select new { ParentID = p.p == null ? (int?)null : p.p.ParentID, ChildID = p.c == null ? (int?)null : p.c.ChildID };
 
 				var actual = db.Parent.Where(p => p.ParentID > 0).Take(10)
 					.CrossJoin(db.Child.Take(10), (p, c) => new { ParentID = (int?)p.ParentID, ChildID = (int?)c.ChildID });
@@ -1413,8 +1414,8 @@ namespace Tests.Linq
 			{
 				var areEqual =
 					(from left in db.Parent
-					from right in db.Parent.FullJoin(p => p.ParentID == left.ParentID)
-					select Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count(right.ParentID, Sql.AggregateModifier.None).ToValue()
+					 from right in db.Parent.FullJoin(p => p.ParentID == left.ParentID)
+					 select Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count(right.ParentID, Sql.AggregateModifier.None).ToValue()
 					&& Sql.Ext.Count(left.ParentID, Sql.AggregateModifier.None).ToValue() == Sql.Ext.Count().ToValue())
 					.Single();
 
@@ -2119,12 +2120,12 @@ namespace Tests.Linq
 				var result1 = query1.ToArray();
 
 				var query2 = from p in db.Parent
-					join c in db.Child on p.ParentID equals c.ChildID
-					select new
-					{
-						p,
-						c
-					};
+							 join c in db.Child on p.ParentID equals c.ChildID
+							 select new
+							 {
+								 p,
+								 c
+							 };
 
 				var result2 = query2.ToArray();
 			}
@@ -2149,9 +2150,9 @@ namespace Tests.Linq
 		[Table]
 		public partial class Tag
 		{
-			[PrimaryKey]      public int    Id     { get; set; }
-			[Column]          public int    FactId { get; set; }
-			[Column, NotNull] public string Name   { get; set; } = null!;
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public int FactId { get; set; }
+			[Column, NotNull] public string Name { get; set; } = null!;
 
 			public static readonly Tag[] Data = new[]
 			{
@@ -2174,9 +2175,9 @@ namespace Tests.Linq
 		[Test]
 		public void LeftJoinWithRecordSelection1([DataSources] string context)
 		{
-			using (var db        = GetDataContext(context))
+			using (var db = GetDataContext(context))
 			using (var factTable = db.CreateLocalTable(Fact.Data))
-			using (var tagTable  = db.CreateLocalTable(Tag.Data))
+			using (var tagTable = db.CreateLocalTable(Tag.Data))
 			{
 				var t =
 					from fact in factTable
@@ -2198,9 +2199,9 @@ namespace Tests.Linq
 		[Test]
 		public void LeftJoinWithRecordSelection2([DataSources] string context)
 		{
-			using (var db        = GetDataContext(context))
+			using (var db = GetDataContext(context))
 			using (var factTable = db.CreateLocalTable(Fact.Data))
-			using (var tagTable  = db.CreateLocalTable(Tag.Data))
+			using (var tagTable = db.CreateLocalTable(Tag.Data))
 			{
 				var t =
 					from fact in factTable
@@ -2221,9 +2222,9 @@ namespace Tests.Linq
 		[Test]
 		public void LeftJoinWithRecordSelection3([DataSources] string context)
 		{
-			using (var db        = GetDataContext(context))
+			using (var db = GetDataContext(context))
 			using (var factTable = db.CreateLocalTable(Fact.Data))
-			using (var tagTable  = db.CreateLocalTable(Tag.Data))
+			using (var tagTable = db.CreateLocalTable(Tag.Data))
 			{
 				var t =
 					from fact in factTable
@@ -2244,9 +2245,9 @@ namespace Tests.Linq
 		[Test]
 		public void LeftJoinWithRecordSelection4([DataSources] string context)
 		{
-			using (var db        = GetDataContext(context))
+			using (var db = GetDataContext(context))
 			using (var factTable = db.CreateLocalTable(Fact.Data))
-			using (var tagTable  = db.CreateLocalTable(Tag.Data))
+			using (var tagTable = db.CreateLocalTable(Tag.Data))
 			{
 				var t =
 					from fact in factTable
@@ -2530,9 +2531,9 @@ namespace Tests.Linq
 		[Table]
 		public class StLink
 		{
-			[PrimaryKey] public int     InId          { get; set; }
-			[Column]     public double? InMaxQuantity { get; set; }
-			[Column]     public double? InMinQuantity { get; set; }
+			[PrimaryKey] public int InId { get; set; }
+			[Column] public double? InMaxQuantity { get; set; }
+			[Column] public double? InMinQuantity { get; set; }
 
 			public static StLink[] Data = new[]
 			{
@@ -2544,9 +2545,9 @@ namespace Tests.Linq
 		[Table]
 		public class EdtLink
 		{
-			[PrimaryKey] public int     InId          { get; set; }
-			[Column]     public double? InMaxQuantity { get; set; }
-			[Column]     public double? InMinQuantity { get; set; }
+			[PrimaryKey] public int InId { get; set; }
+			[Column] public double? InMaxQuantity { get; set; }
+			[Column] public double? InMinQuantity { get; set; }
 
 			public static EdtLink[] Data = new[]
 			{
@@ -2558,7 +2559,7 @@ namespace Tests.Linq
 		public void Issue1815([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var stLinks  = db.CreateLocalTable(StLink.Data))
+			using (var stLinks = db.CreateLocalTable(StLink.Data))
 			using (var edtLinks = db.CreateLocalTable(EdtLink.Data))
 			{
 				var query1 = from l in stLinks
@@ -2666,7 +2667,7 @@ namespace Tests.Linq
 		public class StVersion
 		{
 			[Column("inId"), PrimaryKey] public int InId { get; set; }
-			[Column("inIdMain")]         public int InIdMain { get; set; }
+			[Column("inIdMain")] public int InIdMain { get; set; }
 
 			[Association(ThisKey = "InIdMain", OtherKey = "InId", CanBeNull = false, Relationship = Relationship.ManyToOne)]
 			public StMain Main { get; set; } = null!;
@@ -2678,7 +2679,7 @@ namespace Tests.Linq
 		public class RlStatesTypesAndUserGroup
 		{
 			[Column("inIdState"), PrimaryKey(1)] public int InIdState { get; set; }
-			[Column("inIdType"),  PrimaryKey(2)] public int InIdType { get; set; }
+			[Column("inIdType"), PrimaryKey(2)] public int InIdType { get; set; }
 
 			public static RlStatesTypesAndUserGroup[] Data = Array<RlStatesTypesAndUserGroup>.Empty;
 		}
@@ -2686,8 +2687,8 @@ namespace Tests.Linq
 		[Table("stMain")]
 		public class StMain
 		{
-			[Column("inId"), PrimaryKey]  public int InId { get; set; }
-			[Column("inIdType")]          public int InIdType { get; set; }
+			[Column("inId"), PrimaryKey] public int InId { get; set; }
+			[Column("inIdType")] public int InIdType { get; set; }
 
 			public static StMain[] Data = Array<StMain>.Empty;
 		}
@@ -2695,10 +2696,10 @@ namespace Tests.Linq
 		[Test]
 		public void Issue1816v1([DataSources] string context)
 		{
-			using (var db                        = GetDataContext(context))
-			using (var stVersion                 = db.CreateLocalTable(StVersion.Data))
+			using (var db = GetDataContext(context))
+			using (var stVersion = db.CreateLocalTable(StVersion.Data))
 			using (var rlStatesTypesAndUserGroup = db.CreateLocalTable(RlStatesTypesAndUserGroup.Data))
-			using (var stMain                    = db.CreateLocalTable(StMain.Data))
+			using (var stMain = db.CreateLocalTable(StMain.Data))
 			{
 				var q = from v in stVersion
 						from t in rlStatesTypesAndUserGroup.Where(r => r.InIdType == v.Main.InIdType).DefaultIfEmpty()
@@ -2715,10 +2716,10 @@ namespace Tests.Linq
 		[Test]
 		public void Issue1816v2([DataSources] string context)
 		{
-			using (var db                        = GetDataContext(context))
-			using (var stVersion                 = db.CreateLocalTable(StVersion.Data))
+			using (var db = GetDataContext(context))
+			using (var stVersion = db.CreateLocalTable(StVersion.Data))
 			using (var rlStatesTypesAndUserGroup = db.CreateLocalTable(RlStatesTypesAndUserGroup.Data))
-			using (var stMain                    = db.CreateLocalTable(StMain.Data))
+			using (var stMain = db.CreateLocalTable(StMain.Data))
 			{
 				var q = from v in stVersion
 						from t in rlStatesTypesAndUserGroup.Where(r => r.InIdType == v.Main.InIdType).DefaultIfEmpty()
@@ -2736,8 +2737,8 @@ namespace Tests.Linq
 		#region issue 1455
 		public class Alert
 		{
-			public string?   AlertKey     { get; set; }
-			public string?   AlertCode    { get; set; }
+			public string? AlertKey { get; set; }
+			public string? AlertCode { get; set; }
 			public DateTime? CreationDate { get { return DateTime.Today; } }
 		}
 		public class AuditAlert : Alert
@@ -2746,27 +2747,27 @@ namespace Tests.Linq
 		}
 		public class Trade
 		{
-			public int     DealId       { get; set; }
-			public int     ParcelId     { get; set; }
+			public int DealId { get; set; }
+			public int ParcelId { get; set; }
 			public string? CounterParty { get; set; }
 		}
 		public class Nomin
 		{
-			public int     CargoId              { get; set; }
-			public int     DeliveryId           { get; set; }
+			public int CargoId { get; set; }
+			public int DeliveryId { get; set; }
 			public string? DeliveryCounterParty { get; set; }
 		}
 		public class Flat
 		{
-			public string?   AlertKey             { get; set; }
-			public string?   AlertCode            { get; set; }
-			public int?      CargoId              { get; set; }
-			public int?      DeliveryId           { get; set; }
-			public string?   DeliveryCounterParty { get; set; }
-			public int?      DealId               { get; set; }
-			public int?      ParcelId             { get; set; }
-			public string?   CounterParty         { get; set; }
-			public DateTime? TransactionDate      { get; set; }
+			public string? AlertKey { get; set; }
+			public string? AlertCode { get; set; }
+			public int? CargoId { get; set; }
+			public int? DeliveryId { get; set; }
+			public string? DeliveryCounterParty { get; set; }
+			public int? DealId { get; set; }
+			public int? ParcelId { get; set; }
+			public string? CounterParty { get; set; }
+			public DateTime? TransactionDate { get; set; }
 		}
 
 		[Test]
@@ -2814,15 +2815,15 @@ namespace Tests.Linq
 				extract
 					.Select(sql => new Flat()
 					{
-						AlertCode            = sql.alert.AlertCode,
-						AlertKey             = sql.alert.AlertKey,
-						TransactionDate      = sql.first?.LastUpdate,
-						CargoId              = sql.first?.nomin?.CargoId,
-						DeliveryId           = sql.first?.nomin?.DeliveryId,
+						AlertCode = sql.alert.AlertCode,
+						AlertKey = sql.alert.AlertKey,
+						TransactionDate = sql.first?.LastUpdate,
+						CargoId = sql.first?.nomin?.CargoId,
+						DeliveryId = sql.first?.nomin?.DeliveryId,
 						DeliveryCounterParty = sql.first?.nomin?.DeliveryCounterParty,
-						DealId               = sql.first?.trade?.DealId,
-						ParcelId             = sql.first?.trade?.ParcelId,
-						CounterParty         = sql.first?.trade?.CounterParty
+						DealId = sql.first?.trade?.DealId,
+						ParcelId = sql.first?.trade?.ParcelId,
+						CounterParty = sql.first?.trade?.CounterParty
 					}).ToArray();
 			}
 		}
@@ -2872,22 +2873,21 @@ namespace Tests.Linq
 				extract
 					.Select(sql => new Flat()
 					{
-						AlertCode            = sql.alert.AlertCode,
-						AlertKey             = sql.alert.AlertKey,
-						TransactionDate      = sql.first?.LastUpdate,
-						CargoId              = sql.first?.nomin?.CargoId,
-						DeliveryId           = sql.first?.nomin?.DeliveryId,
+						AlertCode = sql.alert.AlertCode,
+						AlertKey = sql.alert.AlertKey,
+						TransactionDate = sql.first?.LastUpdate,
+						CargoId = sql.first?.nomin?.CargoId,
+						DeliveryId = sql.first?.nomin?.DeliveryId,
 						DeliveryCounterParty = sql.first?.nomin?.DeliveryCounterParty,
-						DealId               = sql.first?.trade?.DealId,
-						ParcelId             = sql.first?.trade?.ParcelId,
-						CounterParty         = sql.first?.trade?.CounterParty
+						DealId = sql.first?.trade?.DealId,
+						ParcelId = sql.first?.trade?.ParcelId,
+						CounterParty = sql.first?.trade?.CounterParty
 					}).ToArray();
 			}
 		}
 		#endregion
 
-
-		[ActiveIssue(1224, Configurations = new[] 
+		[ActiveIssue(1224, Configurations = new[]
 		{
 			TestProvName.AllSQLite,
 			TestProvName.AllAccess,
@@ -2913,6 +2913,5 @@ namespace Tests.Linq
 				Assert.AreNotEqual(0, count);
 			}
 		}
-
 	}
 }

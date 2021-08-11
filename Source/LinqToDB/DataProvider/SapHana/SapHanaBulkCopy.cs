@@ -1,5 +1,4 @@
-﻿#if NETFRAMEWORK || NETCOREAPP
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -20,9 +19,9 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
-			ITable<T> table,
+			ITable<T>       table,
 			BulkCopyOptions options,
-			IEnumerable<T> source)
+			IEnumerable<T>  source)
 		{
 			var connections = TryGetProviderConnections(table);
 			if (connections.HasValue)
@@ -38,9 +37,9 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
-			ITable<T> table,
-			BulkCopyOptions options,
-			IEnumerable<T> source,
+			ITable<T>         table,
+			BulkCopyOptions   options,
+			IEnumerable<T>    source,
 			CancellationToken cancellationToken)
 		{
 			var connections = TryGetProviderConnections(table);
@@ -59,10 +58,10 @@ namespace LinqToDB.DataProvider.SapHana
 
 #if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
-			ITable<T> table,
-			BulkCopyOptions options,
+			ITable<T>           table,
+			BulkCopyOptions     options,
 			IAsyncEnumerable<T> source,
-			CancellationToken cancellationToken)
+			CancellationToken   cancellationToken)
 		{
 			var connections = TryGetProviderConnections(table);
 			if (connections.HasValue)
@@ -253,4 +252,3 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 	}
 }
-#endif

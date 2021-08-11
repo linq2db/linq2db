@@ -1,5 +1,4 @@
-﻿#if NETFRAMEWORK || NETCOREAPP
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Threading;
@@ -15,16 +14,17 @@ namespace LinqToDB.DataProvider.SapHana
 
 	public class SapHanaDataProvider : DynamicDataProviderBase<SapHanaProviderAdapter>
 	{
-		public SapHanaDataProvider()
-			: this(ProviderName.SapHanaNative)
+		public SapHanaDataProvider(SapHanaVersion version = SapHanaVersion.SapHana1)
+			: this(GetProviderName(version), version)
 		{
 		}
 
-		public SapHanaDataProvider(string name)
-			: this(name, MappingSchemaInstance)
+		public SapHanaDataProvider(string name, SapHanaVersion version = SapHanaVersion.SapHana1)
+			: this(name, GetMappingSchema(version), version)
 		{
 		}
-		protected SapHanaDataProvider(string name, MappingSchema mappingSchema)
+
+		protected SapHanaDataProvider(string name, MappingSchema mappingSchema, SapHanaVersion version)
 			: base(name, mappingSchema, SapHanaProviderAdapter.GetInstance())
 		{
 			SqlProviderFlags.IsParameterOrderDependent = true;
@@ -41,10 +41,10 @@ namespace LinqToDB.DataProvider.SapHana
 
 			SqlProviderFlags.IsTakeSupported            = true;
 			SqlProviderFlags.IsDistinctOrderBySupported = false;
+			SqlProviderFlags.IsApplyJoinSupported       = version != SapHanaVersion.SapHana1;
 
 			//not supported flags
 			SqlProviderFlags.IsSubQueryTakeSupported   = false;
-			SqlProviderFlags.IsApplyJoinSupported      = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported = false;
 			SqlProviderFlags.IsUpdateFromSupported     = false;
 
@@ -187,7 +187,22 @@ namespace LinqToDB.DataProvider.SapHana
 			return true;
 		}
 
-		private static readonly MappingSchema MappingSchemaInstance = new SapHanaMappingSchema.NativeMappingSchema();
+		private static string GetProviderName(SapHanaVersion version)
+		{
+			return version switch
+			{
+				SapHanaVersion.SapHana2sps04 => ProviderName.SapHana2SPS04Native,
+				_                            => ProviderName.SapHanaNative,
+			};
+		}
+
+		private static MappingSchema GetMappingSchema(SapHanaVersion version)
+		{
+			return version switch
+			{
+				SapHanaVersion.SapHana2sps04 => SapHanaMappingSchema.Native2SPS04MappingSchema.Instance,
+				_                            => SapHanaMappingSchema.NativeMappingSchema.Instance,
+			};
+		}
 	}
 }
-#endif

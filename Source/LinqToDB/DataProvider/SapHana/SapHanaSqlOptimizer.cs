@@ -10,7 +10,6 @@ namespace LinqToDB.DataProvider.SapHana
 	{
 		public SapHanaSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
-
 		}
 
 		public override SqlStatement TransformStatement(SqlStatement statement)
