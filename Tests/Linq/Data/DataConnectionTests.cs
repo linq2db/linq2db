@@ -600,7 +600,7 @@ namespace Tests.Data
 		private class TestDataContextInterceptor : DataContextInterceptor
 		{
 			public int EntityCreatedCallCounter { get; set; }
-			public override object EntityCreated(DataContextEventData eventData, object entity)
+			public override object EntityCreated(EntityCreatedEventData eventData, object entity)
 			{
 				EntityCreatedCallCounter++;
 				return base.EntityCreated(eventData, entity);

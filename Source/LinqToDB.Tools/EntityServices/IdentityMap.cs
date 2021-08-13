@@ -66,7 +66,7 @@ namespace LinqToDB.Tools.EntityServices
 			_dataContext = null;
 		}
 
-		public override object EntityCreated(DataContextEventData eventData, object entity)
+		public override object EntityCreated(EntityCreatedEventData eventData, object entity)
 		{
 			if (_dataContext != null)
 			{

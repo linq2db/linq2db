@@ -24,7 +24,7 @@ namespace LinqToDB.Interceptors
 		/// <param name="eventData">Additional data for event.</param>
 		/// <param name="entity">Materialized entity instance.</param>
 		/// <returns>Returns entity instace.</returns>
-		object EntityCreated(DataContextEventData eventData, object entity);
+		object EntityCreated(EntityCreatedEventData eventData, object entity);
 
 		/// <summary>
 		/// Event, triggered before <see cref="IDataContext" /> instance closed by <see cref="IDataContext.Close"/> call.

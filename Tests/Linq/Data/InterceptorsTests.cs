@@ -1718,7 +1718,7 @@ namespace Tests.Data
 		{
 			public List<IDataContext> EntityCreatedContexts { get; } = new ();
 
-			public override object EntityCreated(DataContextEventData eventData, object entity)
+			public override object EntityCreated(EntityCreatedEventData eventData, object entity)
 			{
 				EntityCreatedContexts.Add(eventData.Context);
 				return base.EntityCreated(eventData, entity);

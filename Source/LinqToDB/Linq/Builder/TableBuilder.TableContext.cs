@@ -313,11 +313,11 @@ namespace LinqToDB.Linq.Builder
 			[UsedImplicitly]
 			static object OnEntityCreated(IDataContext context, object entity, TableOptions tableOptions, string? tableName, string? schemaName, string? databaseName, string? serverName)
 			{
-				DataContextEventData? args = null;
+				EntityCreatedEventData? args = null;
 				foreach (var interceptor in context.GetInterceptors<IDataContextInterceptor>())
-					{
-					args   ??= new DataContextEventData(context);
-					entity =   interceptor.EntityCreated(args.Value, entity);
+				{
+					args   ??= new EntityCreatedEventData(context, tableOptions, tableName, schemaName, databaseName, serverName);
+					entity   = interceptor.EntityCreated(args.Value, entity);
 				}
 
 				return entity;
@@ -328,23 +328,19 @@ namespace LinqToDB.Linq.Builder
 
 			Expression NotifyEntityCreated(Expression expr)
 			{
-				if (Builder.DataContext is IEntityServices)
-				{
-					expr =
-						Expression.Convert(
-							Expression.Call(
-								_onEntityCreatedMethodInfo,
-								ExpressionBuilder.DataContextParam,
-								expr,
-								Expression.Constant(SqlTable.TableOptions),
-								Expression.Constant(SqlTable.PhysicalName, typeof(string)),
-								Expression.Constant(SqlTable.Schema,       typeof(string)),
-								Expression.Constant(SqlTable.Database,     typeof(string)),
-								Expression.Constant(SqlTable.Server,       typeof(string))
-							),
-							expr.Type);
-				}
-
+				expr =
+					Expression.Convert(
+						Expression.Call(
+							_onEntityCreatedMethodInfo,
+							ExpressionBuilder.DataContextParam,
+							expr,
+							Expression.Constant(SqlTable.TableOptions),
+							Expression.Constant(SqlTable.PhysicalName, typeof(string)),
+							Expression.Constant(SqlTable.Schema,       typeof(string)),
+							Expression.Constant(SqlTable.Database,     typeof(string)),
+							Expression.Constant(SqlTable.Server,       typeof(string))
+						),
+						expr.Type);
 
 				return expr;
 			}
