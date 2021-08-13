@@ -128,7 +128,7 @@ namespace LinqToDB
 			// interceptors magic
 			// as we need to aggregate interceptors, we don't pass them as-is from options to builder but manage separately
 			if (options.Interceptors != null)
-			{
+		{
 				foreach (var interceptor in options.Interceptors)
 					AddInterceptor(interceptor);
 			}
@@ -315,13 +315,13 @@ namespace LinqToDB
 				if (_commandTimeout != null)
 					_dataConnection.CommandTimeout = CommandTimeout;
 
-				if (_queryHints != null && _queryHints.Count > 0)
+				if (_queryHints?.Count > 0)
 				{
 					_dataConnection.QueryHints.AddRange(_queryHints);
 					_queryHints = null;
 				}
 
-				if (_nextQueryHints != null && _nextQueryHints.Count > 0)
+				if (_nextQueryHints?.Count > 0)
 				{
 					_dataConnection.NextQueryHints.AddRange(_nextQueryHints);
 					_nextQueryHints = null;
@@ -354,8 +354,8 @@ namespace LinqToDB
 
 				if (LockDbManagerCounter == 0 && KeepConnectionAlive == false)
 				{
-					if (_dataConnection.QueryHints.    Count > 0) QueryHints.    AddRange(_queryHints!);
-					if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_nextQueryHints!);
+					if (_dataConnection.QueryHints.    Count > 0) (_queryHints     ??= new List<string>()).AddRange(_dataConnection.QueryHints);
+					if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new List<string>()).AddRange(_dataConnection.NextQueryHints);
 
 					_dataConnection.Dispose();
 					_dataConnection = null;
@@ -409,8 +409,8 @@ namespace LinqToDB
 
 			var dc = new DataContext(_prebuiltOptions)
 			{
-				KeepConnectionAlive     = KeepConnectionAlive,
-				ContextID               = ContextID,
+				KeepConnectionAlive = KeepConnectionAlive,
+				ContextID           = ContextID,
 				InlineParameters        = InlineParameters
 			};
 
@@ -481,8 +481,8 @@ namespace LinqToDB
 
 			if (_dataConnection != null)
 			{
-				if (_dataConnection.QueryHints.Count > 0) QueryHints.AddRange(_queryHints!);
-				if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_nextQueryHints!);
+				if (_dataConnection.QueryHints.    Count > 0) (_queryHints     ??= new List<string>()).AddRange(_dataConnection.QueryHints);
+				if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new List<string>()).AddRange(_dataConnection.NextQueryHints);
 
 				_dataConnection.Dispose();
 				_dataConnection = null;
@@ -500,8 +500,8 @@ namespace LinqToDB
 
 			if (_dataConnection != null)
 			{
-				if (_dataConnection.QueryHints.    Count > 0) QueryHints.AddRange(_queryHints!);
-				if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_nextQueryHints!);
+				if (_dataConnection.QueryHints.    Count > 0) (_queryHints     ??= new List<string>()).AddRange(_dataConnection.QueryHints);
+				if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new List<string>()).AddRange(_dataConnection.NextQueryHints);
 
 				await _dataConnection.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				_dataConnection = null;

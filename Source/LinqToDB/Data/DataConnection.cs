@@ -127,9 +127,9 @@ namespace LinqToDB.Data
 		/// <param name="connectionFactory">Database connection factory method.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
 		public DataConnection(
-			IDataProvider      dataProvider,
+			IDataProvider       dataProvider,
 			Func<DbConnection> connectionFactory,
-			MappingSchema      mappingSchema)
+			MappingSchema       mappingSchema)
 			: this(new LinqToDbConnectionOptionsBuilder().UseConnectionFactory(dataProvider, connectionFactory).UseMappingSchema(mappingSchema))
 		{
 		}
@@ -140,7 +140,7 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="connectionFactory">Database connection factory method.</param>
 		public DataConnection(
-			IDataProvider      dataProvider,
+			IDataProvider       dataProvider,
 			Func<DbConnection> connectionFactory)
 			: this(new LinqToDbConnectionOptionsBuilder().UseConnectionFactory(dataProvider, connectionFactory))
 		{
@@ -197,9 +197,9 @@ namespace LinqToDB.Data
 		/// <param name="transaction">Existing database transaction to use.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
 		public DataConnection(
-			IDataProvider dataProvider,
+			IDataProvider  dataProvider,
 			DbTransaction transaction,
-			MappingSchema mappingSchema)
+			MappingSchema  mappingSchema)
 			: this(new LinqToDbConnectionOptionsBuilder().UseTransaction(dataProvider, transaction).UseMappingSchema(mappingSchema))
 		{
 		}
@@ -210,7 +210,7 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="transaction">Existing database transaction to use.</param>
 		public DataConnection(
-			IDataProvider dataProvider,
+			IDataProvider  dataProvider,
 			DbTransaction transaction)
 			: this(new LinqToDbConnectionOptionsBuilder().UseTransaction(dataProvider, transaction))
 		{
@@ -1158,13 +1158,12 @@ namespace LinqToDB.Data
 		/// </summary>
 		public string? LastQuery { get; private set; }
 
-		internal void InitCommand(CommandType commandType, string sql, DataParameter[]? parameters, List<string>? queryHints, bool withParameters)
+		internal void InitCommand(CommandType commandType, string sql, DataParameter[]? parameters, IReadOnlyCollection<string>? queryHints, bool withParameters)
 		{
 			if (queryHints?.Count > 0)
 			{
 				var sqlProvider = DataProvider.CreateSqlBuilder(MappingSchema);
 				sql = sqlProvider.ApplyQueryHints(sql, queryHints);
-				queryHints.Clear();
 			}
 
 			_command = DataProvider.InitCommand(this, GetOrCreateCommand(), commandType, sql, parameters, withParameters);

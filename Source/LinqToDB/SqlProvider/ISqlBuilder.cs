@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Text;
 
 namespace LinqToDB.SqlProvider
 {
-	using System.Data.Common;
 	using Mapping;
 	using SqlQuery;
 
@@ -26,7 +25,7 @@ namespace LinqToDB.SqlProvider
 		ISqlExpression?  GetIdentityExpression(SqlTable table);
 
 		StringBuilder    PrintParameters      (StringBuilder sb, IEnumerable<DbParameter>? parameters);
-		string           ApplyQueryHints      (string sqlText, List<string> queryHints);
+		string           ApplyQueryHints      (string sqlText, IReadOnlyCollection<string> queryHints);
 
 		string           GetReserveSequenceValuesSql(int count, string sequenceName);
 		string           GetMaxValueSql       (EntityDescriptor entity, ColumnDescriptor column);

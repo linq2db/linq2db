@@ -128,7 +128,10 @@ namespace LinqToDB.DataProvider.Access
 					Length      = dt?.CreateParameters != null && dt.CreateParameters.Contains("max length") ? Converter.ChangeTypeTo<long?>(c["CHARACTER_MAXIMUM_LENGTH"]) : null,
 					Precision   = dt?.CreateParameters != null && dt.CreateParameters.Contains("precision")  ? Converter.ChangeTypeTo<int?>(c["NUMERIC_PRECISION"])         : null,
 					Scale       = dt?.CreateParameters != null && dt.CreateParameters.Contains("scale")      ? Converter.ChangeTypeTo<int?>(c["NUMERIC_SCALE"])             : null,
-					IsIdentity  = dt?.ProviderDbType == 3 && flags == COUNTER_OR_BIT,
+					// ole db provider returns incorrect flags (reports INT NOT NULL columns as identity)
+					// https://github.com/linq2db/linq2db/issues/3149
+					//IsIdentity  = dt?.ProviderDbType == 3 && flags == COUNTER_OR_BIT,
+					IsIdentity  = false,
 					Description = c.Field<string>("DESCRIPTION")
 				}
 			).ToList();

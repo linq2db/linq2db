@@ -299,7 +299,7 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		class LoadWithContext : PassThroughContext
+		internal class LoadWithContext : PassThroughContext
 		{
 			private readonly TableBuilder.TableContext _tableContext;
 

@@ -106,6 +106,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.Json           : StringBuilder.Append("json");           break;
 				case DataType.BinaryJson     : StringBuilder.Append("jsonb");          break;
 				case DataType.Guid           : StringBuilder.Append("uuid");           break;
+				case DataType.Binary         :
 				case DataType.VarBinary      : StringBuilder.Append("bytea");          break;
 				case DataType.BitArray       :
 					if (type.Type.Length == 1)
