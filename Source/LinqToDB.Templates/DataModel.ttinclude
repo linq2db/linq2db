@@ -18,10 +18,12 @@ string   NamespaceName
 	set { Model.Namespace.Name = value; }
 }
 
+public static string BaseDataContextClass;
+public static bool   EnforceModelNullability = true;
+
 public string   ServerName;
 public string   DatabaseName;
 public string   DataContextName;
-public string   BaseDataContextClass;
 public string   BaseEntityClass;
 public string   OneToManyAssociationType      = "IEnumerable<{0}>";
 
@@ -44,7 +46,6 @@ public bool SingularizeDataContextPropertyNames;
 
 public bool NormalizeNames                      = true;
 public bool NormalizeNamesWithoutUnderscores;
-public static bool EnforceModelNullability      = true;
 
 private Func<string, bool, string> _toValidName;
 public Func<string, bool, string> ToValidName

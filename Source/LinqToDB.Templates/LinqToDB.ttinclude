@@ -13,23 +13,24 @@ Action AfterGenerateLinqToDBModel  = () => {};
 public Func<Table,MemberBase> GenerateProviderSpecificTable = _ => null;
 public Func<Parameter, bool>  GenerateProcedureDbType       = _ => false;
 
-bool   GenerateObsoleteAttributeForAliases = false;
-bool   GenerateFindExtensions              = true;
-bool   IsCompactColumns                    = true;
-bool   IsCompactColumnAliases              = true;
-bool   GenerateDataTypes                   = false;
-bool?  GenerateLengthProperty              = null;
-bool?  GeneratePrecisionProperty           = null;
-bool?  GenerateScaleProperty               = null;
-bool   GenerateDbTypes                     = false;
-bool   GenerateSchemaAsType                = false;
-bool   GenerateViews                       = true;
-bool   GenerateProcedureResultAsList       = false;
-bool   GenerateProceduresOnTypedContext    = true;
-bool   PrefixTableMappingWithSchema        = true;
-bool   PrefixTableMappingForDefaultSchema  = false;
-string SchemaNameSuffix                    = "Schema";
-string SchemaDataContextTypeName           = "DataContext";
+static bool GenerateLinqToDbConnectionOptionsConstructors = true;
+bool   GenerateObsoleteAttributeForAliases                = false;
+bool   GenerateFindExtensions                             = true;
+bool   IsCompactColumns                                   = true;
+bool   IsCompactColumnAliases                             = true;
+bool   GenerateDataTypes                                  = false;
+bool?  GenerateLengthProperty                             = null;
+bool?  GeneratePrecisionProperty                          = null;
+bool?  GenerateScaleProperty                              = null;
+bool   GenerateDbTypes                                    = false;
+bool   GenerateSchemaAsType                               = false;
+bool   GenerateViews                                      = true;
+bool   GenerateProcedureResultAsList                      = false;
+bool   GenerateProceduresOnTypedContext                   = true;
+bool   PrefixTableMappingWithSchema                       = true;
+bool   PrefixTableMappingForDefaultSchema                 = false;
+string SchemaNameSuffix                                   = "Schema";
+string SchemaDataContextTypeName                          = "DataContext";
 
 public Dictionary<string,string> SchemaNameMapping = new Dictionary<string,string>();
 
@@ -44,8 +45,12 @@ private static IEnumerable<Method> GetConstructorsImpl(string defaultConfigurati
 	else
 		yield return new Method(null, name) { AfterSignature = { ": base(\"" + defaultConfiguration + "\")" } };
 	yield return new Method(null, name, new Func<string>[] { () => "string configuration" }) { AfterSignature = { ": base(configuration)" } };
-	yield return new Method(null, name, new Func<string>[] { () => "LinqToDbConnectionOptions options" }) { AfterSignature = { ": base(options)" } };
-	yield return new Method(null, name, new Func<string>[] { () => string.Format("LinqToDbConnectionOptions<{0}> options", name) }) { AfterSignature = { ": base(options)" } };
+	// TODO: v4: remove BaseDataContextClass check against DataContext
+	if (BaseDataContextClass != "LinqToDB.DataContext" && GenerateLinqToDbConnectionOptionsConstructors)
+	{
+		yield return new Method(null, name, new Func<string>[] { () => "LinqToDbConnectionOptions options" }) { AfterSignature = { ": base(options)" } };
+		yield return new Method(null, name, new Func<string>[] { () => string.Format("LinqToDbConnectionOptions<{0}> options", name) }) { AfterSignature = { ": base(options)" } };
+	}
 }
 
 void GenerateTypesFromMetadata()

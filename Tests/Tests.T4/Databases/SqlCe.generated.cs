@@ -50,13 +50,6 @@ namespace SqlCeDataContext
 			InitMappingSchema();
 		}
 
-		public TestDataDB(LinqToDbConnectionOptions options)
-			: base(options)
-		{
-			InitDataContext();
-			InitMappingSchema();
-		}
-
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
 	}
