@@ -3,6 +3,11 @@ using System.Data.Linq;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
+using System.Collections;
+using System.Collections.Generic;
+using System.Data;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -10,6 +15,8 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using LinqToDB.Tools;
+using LinqToDB.DataProvider.MySql;
+using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
 
@@ -20,15 +27,7 @@ using MySqlConnectorDateTime = MySqlConnector.MySqlDateTime;
 
 namespace Tests.DataProvider
 {
-	using LinqToDB.DataProvider.MySql;
-	using LinqToDB.SqlProvider;
-	using LinqToDB.Tools.Comparers;
 	using Model;
-	using System.Collections;
-	using System.Collections.Generic;
-	using System.Data;
-	using System.Diagnostics;
-	using System.Threading.Tasks;
 
 	[TestFixture]
 	public class MySqlTests : DataProviderTestBase
@@ -90,7 +89,7 @@ namespace Tests.DataProvider
 				Assert.That(TestType<string>					(conn, "enumDataType"),                                    Is.EqualTo("Green"));
 				Assert.That(TestType<string>					(conn, "setDataType"),                                     Is.EqualTo("one"));
 
-				if (context != ProviderName.MySqlConnector)
+				if (context != ProviderName.MySqlConnector && context != TestProvName.MariaDB)
 				{
 					TestType<MySqlDataDecimal?>(conn, "decimalDataType", DataType.Decimal);
 
@@ -1822,7 +1821,7 @@ namespace Tests.DataProvider
 			{
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions() { GetTables = false });
 
-				var proc = schema.Procedures.Where(t => t.ProcedureName == "Issue2313Results").SingleOrDefault()!;
+				var proc = schema.Procedures.SingleOrDefault(t => t.ProcedureName == "Issue2313Results")!;
 
 				Assert.IsNotNull(proc);
 				Assert.IsNotNull(proc.ResultTable);
@@ -1868,7 +1867,7 @@ namespace Tests.DataProvider
 				assertColumn("Year"              , "int?"     , DataType.Int32);
 
 				// mysql.data cannot handle json procedure parameter
-				if (context == ProviderName.MySqlConnector)
+				if (context == ProviderName.MySqlConnector || context == TestProvName.MariaDB)
 				{
 					assertColumn("Point"               , "byte[]", DataType.Undefined);
 					assertColumn("LineString"          , "byte[]", DataType.Undefined);
@@ -1877,9 +1876,9 @@ namespace Tests.DataProvider
 					assertColumn("MultiLineString"     , "byte[]", DataType.Undefined);
 					assertColumn("MultiPolygon"        , "byte[]", DataType.Undefined);
 					assertColumn("Geometry"            , "byte[]", DataType.Undefined);
-					assertColumn("GeometryCollection", "byte[]", DataType.Undefined);
+					assertColumn("GeometryCollection"  , "byte[]", DataType.Undefined);
 
-					assertColumn("Json"    , "string", DataType.Json);
+					assertColumn("Json"    , "string", context == TestProvName.MariaDB ? DataType.Text : DataType.Json);
 					assertColumn("Enum"    , "string", DataType.VarChar);
 					assertColumn("Set"     , "string", DataType.VarChar);
 				}
@@ -1893,7 +1892,7 @@ namespace Tests.DataProvider
 				{
 					// m'kaaaay...
 					name       = "`" + name + "`";
-					var column = proc.ResultTable!.Columns.Where(c => c.ColumnName == name).SingleOrDefault()!;
+					var column = proc.ResultTable!.Columns.SingleOrDefault(c => c.ColumnName == name)!;
 
 					Assert.IsNotNull(column);
 

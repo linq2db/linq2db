@@ -1589,6 +1589,7 @@ namespace Tests.Linq
 			ProviderName.SQLiteMS,
 			ProviderName.DB2,
 			ProviderName.MySqlConnector,
+			TestProvName.MariaDB,
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllInformix,
 			TestProvName.AllSybase)] string context)

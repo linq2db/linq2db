@@ -311,26 +311,35 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			[UsedImplicitly]
-			static object OnEntityCreated(IDataContext context, object entity)
+			static object OnEntityCreated(IDataContext context, object entity, TableOptions tableOptions, string? tableName, string? schemaName, string? databaseName, string? serverName)
 			{
-				DataContextEventData? args = null;
+				EntityCreatedEventData? args = null;
 				foreach (var interceptor in context.GetInterceptors<IDataContextInterceptor>())
 				{
-					args   ??= new DataContextEventData(context);
-					entity =   interceptor.EntityCreated(args.Value, entity);
+					args   ??= new EntityCreatedEventData(context, tableOptions, tableName, schemaName, databaseName, serverName);
+					entity   = interceptor.EntityCreated(args.Value, entity);
 				}
 
 				return entity;
 			}
+
+			private static readonly MethodInfo _onEntityCreatedMethodInfo = MemberHelper.MethodOf(() =>
+				OnEntityCreated(null!, null!, TableOptions.NotSet, null, null, null, null));
 
 			Expression NotifyEntityCreated(Expression expr)
 			{
 				expr =
 					Expression.Convert(
 						Expression.Call(
-							MemberHelper.MethodOf(() => OnEntityCreated(null!, null!)),
+							_onEntityCreatedMethodInfo,
 							ExpressionBuilder.DataContextParam,
-							expr),
+							expr,
+							Expression.Constant(SqlTable.TableOptions),
+							Expression.Constant(SqlTable.PhysicalName, typeof(string)),
+							Expression.Constant(SqlTable.Schema,       typeof(string)),
+							Expression.Constant(SqlTable.Database,     typeof(string)),
+							Expression.Constant(SqlTable.Server,       typeof(string))
+						),
 						expr.Type);
 
 				return expr;
@@ -514,19 +523,28 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-
-			Expression BuildFromParametrizedConstructor(Type objectType,
-				IList<(string Name, Expression? Expr)> expressions)
+			ConstructorInfo SelectParametrizedConstructor(Type objectType)
 			{
 				var constructors = objectType.GetConstructors();
 
 				if (constructors.Length == 0)
-					throw new InvalidOperationException($"Type '{objectType.Namespace}' has no constructors.");
+			{
+					constructors = objectType.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic);
+
+				if (constructors.Length == 0)
+						throw new InvalidOperationException($"Type '{objectType.Name}' has no constructors.");
+				}
 
 				if (constructors.Length > 1)
-					throw new InvalidOperationException($"Type '{objectType.Namespace}' has ambiguous constructors.");
+					throw new InvalidOperationException($"Type '{objectType.Name}' has ambiguous constructors.");
 
-				var ctor = constructors[0];
+				return constructors[0];
+			}
+
+			Expression BuildFromParametrizedConstructor(Type objectType,
+				IList<(string Name, Expression? Expr)> expressions)
+			{
+				var ctor = SelectParametrizedConstructor(objectType);
 
 				var parameters = ctor.GetParameters();
 				var argFound   = false;

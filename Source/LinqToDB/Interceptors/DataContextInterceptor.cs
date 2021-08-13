@@ -4,7 +4,7 @@ namespace LinqToDB.Interceptors
 {
 	public abstract class DataContextInterceptor : IDataContextInterceptor
 	{
-		public virtual object EntityCreated(DataContextEventData eventData, object entity) => entity;
+		public virtual object EntityCreated(EntityCreatedEventData eventData, object entity) => entity;
 
 		public virtual void OnClosed(DataContextEventData eventData) { }
 

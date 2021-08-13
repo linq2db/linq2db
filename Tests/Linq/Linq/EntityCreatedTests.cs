@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-
+using FluentAssertions;
 using LinqToDB;
 
 using NUnit.Framework;
@@ -32,10 +32,13 @@ namespace Tests.Linq
 
 			public Dictionary<int, Parent> Parents { get; } = new();
 
-			public override object EntityCreated(DataContextEventData eventData, object entity)
+			public override object EntityCreated(EntityCreatedEventData eventData, object entity)
 			{
 				if (CheckEntityIdentity && entity is Parent p)
 				{
+					eventData.TableOptions.Should().Be(TableOptions.NotSet);
+					eventData.TableName.Should().Be(nameof(Parent));
+
 					if (Parents.TryGetValue(p.ParentID, out var pr))
 						return entity;
 

@@ -5,6 +5,7 @@
 <#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.SQLite.ttinclude" once="true"  #>
 <#
 	NamespaceName = "SQLiteDataContext";
+	BaseDataContextClass = "LinqToDB.DataContext";
 
 	GenerateAssociationExtensions = true;
 

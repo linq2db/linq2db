@@ -87,7 +87,6 @@ namespace LinqToDB.ServiceModel
 			public object?         Context     { get; set; }
 			public SqlParameter[]? Parameters  { get; set; }
 			public AliasesContext? Aliases     { get; set; }
-			public List<string>?   QueryHints  { get; set; }
 		}
 
 		[WebMethod]
@@ -102,10 +101,11 @@ namespace LinqToDB.ServiceModel
 				using var db = CreateDataContext(configuration);
 				using var _  = db.DataProvider.ExecuteScope(db);
 
+				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
+
 				return DataConnection.QueryRunner.ExecuteNonQuery(db, new QueryContext
 				{
-					Statement  = query.Statement,
-					QueryHints = query.QueryHints
+					Statement  = query.Statement
 				}, new SqlParameterValues());
 			}
 			catch (Exception exception)
@@ -127,10 +127,11 @@ namespace LinqToDB.ServiceModel
 				using var db = CreateDataContext(configuration);
 				using var _  = db.DataProvider.ExecuteScope(db);
 
+				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
+
 				return DataConnection.QueryRunner.ExecuteScalar(db, new QueryContext
 				{
-					Statement  = query.Statement,
-					QueryHints = query.QueryHints
+					Statement  = query.Statement
 				}, null);
 			}
 			catch (Exception exception)
@@ -151,10 +152,12 @@ namespace LinqToDB.ServiceModel
 
 				using var db = CreateDataContext(configuration);
 				using var _  = db.DataProvider.ExecuteScope(db);
+
+				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
+
 				using var rd = DataConnection.QueryRunner.ExecuteReader(db, new QueryContext
 				{
-					Statement  = query.Statement,
-					QueryHints = query.QueryHints,
+					Statement  = query.Statement
 				}, SqlParameterValues.Empty);
 
 				var reader = DataReaderWrapCache.TryUnwrapDataReader(db.MappingSchema, rd.DataReader!);
@@ -274,10 +277,11 @@ namespace LinqToDB.ServiceModel
 
 				foreach (var query in queries)
 				{
+					if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
+
 					DataConnection.QueryRunner.ExecuteNonQuery(db, new QueryContext
 					{
-						Statement  = query.Statement,
-						QueryHints = query.QueryHints
+						Statement  = query.Statement
 					}, null);
 				}
 
