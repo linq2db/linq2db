@@ -265,6 +265,8 @@ WHERE
 				let length     = r.Field<int> ("ColumnSize")
 				let precision  = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
 				let scale      = Converter.ChangeTypeTo<int>(r["NumericScale"])
+				let columnType = r.Field<string>("DataTypeName")
+				let dt         = GetDataType(columnType, options)
 
 				select new ColumnSchema
 				{
@@ -274,6 +276,7 @@ WHERE
 					MemberType = ToTypeName(systemType, isNullable),
 					SystemType = systemType ?? typeof(object),
 					IsIdentity = r.Field<bool>("IsIdentity"),
+					ColumnType = GetDbType(options, columnType, dt, length, precision, scale, null, null, null),
 				}
 			).ToList();
 		}
