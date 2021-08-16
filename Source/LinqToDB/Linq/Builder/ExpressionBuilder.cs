@@ -335,6 +335,27 @@ namespace LinqToDB.Linq.Builder
 			return expr;
 		}
 
+		public static Expression CorrectDataConnectionReference(Expression queryExpression, Expression dataContextExpression)
+		{
+			var result = queryExpression.Transform(dataContextExpression, static(dc, e) =>
+			{
+				if (e.NodeType != ExpressionType.Parameter && e.NodeType != ExpressionType.Convert &&
+				    e.NodeType != ExpressionType.ConvertChecked
+				    && dc.Type.IsSameOrParentOf(e.Type))
+				{
+					var newExpr = dc;
+					if (newExpr.Type != e.Type)
+						newExpr = Expression.Convert(newExpr, e.Type);
+					return newExpr;
+				}
+
+				return e;
+			});
+
+			return result;
+		}
+
+
 		#endregion
 
 		#region ConvertParameters

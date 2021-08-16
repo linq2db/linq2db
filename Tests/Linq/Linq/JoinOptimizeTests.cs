@@ -606,6 +606,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(2452, Details = "Enable when new hints design will be ready.")]
 		[Test]
 		public void SelfJoinWithHint([NorthwindDataContext] string context)
 		{

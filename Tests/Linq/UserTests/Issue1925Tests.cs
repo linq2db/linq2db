@@ -1,4 +1,5 @@
-﻿using System.Data.Odbc;
+﻿using System;
+using System.Data.Odbc;
 using System.Data.OleDb;
 using System.Linq;
 using LinqToDB;
@@ -55,8 +56,10 @@ namespace Tests.UserTests
 
 				if (context == ProviderName.Access)
 				{
+#pragma warning disable CA1416 // windows-specific API
 					Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList());
 					Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList());
+#pragma warning disable CA1416
 				}
 				else if (context == ProviderName.AccessOdbc)
 				{

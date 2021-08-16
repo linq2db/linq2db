@@ -22,8 +22,6 @@ namespace LinqToDB.Linq
 
 		protected readonly Query    Query;
 
-		protected List<string>?     QueryHints;
-
 		public IDataContext         DataContext      { get; set; }
 		public Expression           Expression       { get; set; }
 		public object?[]?           Parameters       { get; set; }
@@ -65,32 +63,16 @@ namespace LinqToDB.Linq
 #endif
 
 
-		protected virtual void SetCommand(bool clearQueryHints)
+		protected virtual void SetCommand(bool forGetSqlText)
 		{
-			if (QueryNumber == 0 && (DataContext.QueryHints.Count > 0 || DataContext.NextQueryHints.Count > 0))
-			{
-				var queryContext = Query.Queries[QueryNumber];
-
-				queryContext.QueryHints = new List<string>(DataContext.QueryHints);
-				queryContext.QueryHints.AddRange(DataContext.NextQueryHints);
-
-				if (QueryHints == null)
-					QueryHints = new List<string>(DataContext.QueryHints.Count + DataContext.NextQueryHints.Count);
-
-				QueryHints.AddRange(DataContext.QueryHints);
-				QueryHints.AddRange(DataContext.NextQueryHints);
-
-				if (clearQueryHints)
-					DataContext.NextQueryHints.Clear();
-			}
-
 			var parameterValues = new SqlParameterValues();
+
 			QueryRunner.SetParameters(Query, Expression, DataContext, Parameters, QueryNumber, parameterValues);
 
-			SetQuery(parameterValues);
+			SetQuery(parameterValues, forGetSqlText);
 		}
 
-		protected abstract void SetQuery(IReadOnlyParameterValues parameterValues);
+		protected abstract void SetQuery(IReadOnlyParameterValues parameterValues, bool forGetSqlText);
 
 		public    abstract string GetSqlText();
 	}

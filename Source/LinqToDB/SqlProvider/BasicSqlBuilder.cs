@@ -3273,7 +3273,7 @@ namespace LinqToDB.SqlProvider
 				sb.Append(value);
 		}
 
-		public string ApplyQueryHints(string sqlText, List<string> queryHints)
+		public string ApplyQueryHints(string sqlText, IReadOnlyCollection<string> queryHints)
 		{
 			var sb = new StringBuilder();
 

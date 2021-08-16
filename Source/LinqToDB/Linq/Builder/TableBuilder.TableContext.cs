@@ -125,8 +125,8 @@ namespace LinqToDB.Linq.Builder
 				var mc   = (MethodCallExpression)Expression;
 				var attr = builder.GetTableFunctionAttribute(mc.Method)!;
 
-				if (!typeof(ITable<>).IsSameOrParentOf(mc.Method.ReturnType))
-					throw new LinqException("Table function has to return Table<T>.");
+				if (!typeof(IQueryable<>).IsSameOrParentOf(mc.Method.ReturnType))
+					throw new LinqException("Table function has to return IQueryable<T>.");
 
 				OriginalType     = mc.Method.ReturnType.GetGenericArguments()[0];
 				ObjectType       = GetObjectType();
@@ -268,7 +268,7 @@ namespace LinqToDB.Linq.Builder
 			
 			bool HasDefaultConstructor(Type type)
 			{
-				var constructors = type.GetConstructors();
+				var constructors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
 				foreach (var constructor in constructors)
 				{
@@ -312,7 +312,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			[UsedImplicitly]
-			static object OnEntityCreated(IDataContext context, object entity)
+			static object OnEntityCreated(IDataContext context, object entity, TableOptions tableOptions, string? tableName, string? schemaName, string? databaseName, string? serverName)
 			{
 				var onEntityCreated = context.OnEntityCreated;
 
@@ -320,8 +320,13 @@ namespace LinqToDB.Linq.Builder
 				{
 					var args = new EntityCreatedEventArgs
 					{
-						Entity      = entity,
-						DataContext = context
+						Entity       = entity,
+						DataContext  = context,
+						TableOptions = tableOptions,
+						TableName    = tableName,
+						SchemaName   = schemaName,
+						DatabaseName = databaseName,
+						ServerName   = serverName
 					};
 
 					onEntityCreated(args);
@@ -332,6 +337,9 @@ namespace LinqToDB.Linq.Builder
 				return entity;
 			}
 
+			private static readonly MethodInfo _onEntityCreatedMethodInfo = MemberHelper.MethodOf(() =>
+				OnEntityCreated(null!, null!, TableOptions.NotSet, null, null, null, null));
+
 			Expression NotifyEntityCreated(Expression expr)
 			{
 				if (Builder.DataContext is IEntityServices)
@@ -339,9 +347,15 @@ namespace LinqToDB.Linq.Builder
 					expr =
 						Expression.Convert(
 							Expression.Call(
-								MemberHelper.MethodOf(() => OnEntityCreated(null!, null!)),
+								_onEntityCreatedMethodInfo,
 								ExpressionBuilder.DataContextParam,
-								expr),
+								expr,
+								Expression.Constant(SqlTable.TableOptions),
+								Expression.Constant(SqlTable.PhysicalName, typeof(string)),
+								Expression.Constant(SqlTable.Schema,       typeof(string)),
+								Expression.Constant(SqlTable.Database,     typeof(string)),
+								Expression.Constant(SqlTable.Server,       typeof(string))
+							),
 							expr.Type);
 				}
 
@@ -527,19 +541,28 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-
-			Expression BuildFromParametrizedConstructor(Type objectType,
-				IList<(string Name, Expression? Expr)> expressions)
+			ConstructorInfo SelectParametrizedConstructor(Type objectType)
 			{
 				var constructors = objectType.GetConstructors();
 
 				if (constructors.Length == 0)
-					throw new InvalidOperationException($"Type '{objectType.Namespace}' has no constructors.");
+				{
+					constructors = objectType.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic);
+
+					if (constructors.Length == 0)
+						throw new InvalidOperationException($"Type '{objectType.Name}' has no constructors.");
+				}
 
 				if (constructors.Length > 1)
-					throw new InvalidOperationException($"Type '{objectType.Namespace}' has ambiguous constructors.");
+					throw new InvalidOperationException($"Type '{objectType.Name}' has ambiguous constructors.");
 
-				var ctor = constructors[0];
+				return constructors[0];
+			}
+
+			Expression BuildFromParametrizedConstructor(Type objectType,
+				IList<(string Name, Expression? Expr)> expressions)
+			{
+				var ctor = SelectParametrizedConstructor(objectType);
 
 				var parameters = ctor.GetParameters();
 				var argFound   = false;

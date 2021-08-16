@@ -79,7 +79,7 @@ namespace AccessDataContext
 	[Table("AllTypes")]
 	public partial class AllType
 	{
-		[Column(                            DbType="Long",           DataType=LinqToDB.DataType.Int32),                            Identity   ] public int       ID                       { get; set; } // Long
+		[Column(                            DbType="Long",           DataType=LinqToDB.DataType.Int32),                            NotNull    ] public int       ID                       { get; set; } // Long
 		[Column("bitDataType",              DbType="Bit",            DataType=LinqToDB.DataType.Boolean),                          NotNull    ] public bool      BitDataType              { get; set; } // Bit
 		[Column("smallintDataType",         DbType="Short",          DataType=LinqToDB.DataType.Int16),                               Nullable] public short?    SmallintDataType         { get; set; } // Short
 		[Column("decimalDataType",          DbType="Decimal(18, 0)", DataType=LinqToDB.DataType.Decimal,   Precision=18, Scale=0),    Nullable] public decimal?  DecimalDataType          { get; set; } // Decimal(18, 0)
@@ -113,35 +113,35 @@ namespace AccessDataContext
 	[Table("DataTypeTest")]
 	public partial class DataTypeTest
 	{
-		[Column(             DbType="Long",        DataType=LinqToDB.DataType.Int32),               PrimaryKey, Identity] public int       DataTypeID { get; set; } // Long
-		[Column("Binary_",   DbType="LongBinary",  DataType=LinqToDB.DataType.Image),               Nullable            ] public byte[]?   Binary     { get; set; } // LongBinary
-		[Column("Boolean_",  DbType="Long",        DataType=LinqToDB.DataType.Int32),               Nullable            ] public int?      Boolean    { get; set; } // Long
-		[Column("Byte_",     DbType="Byte",        DataType=LinqToDB.DataType.Byte),                Nullable            ] public byte?     Byte       { get; set; } // Byte
-		[Column("Bytes_",    DbType="LongBinary",  DataType=LinqToDB.DataType.Image),               Nullable            ] public byte[]?   Bytes      { get; set; } // LongBinary
-		[Column("Char_",     DbType="VarChar(1)",  DataType=LinqToDB.DataType.VarChar,  Length=1),  Nullable            ] public char?     Char       { get; set; } // VarChar(1)
-		[Column("DateTime_", DbType="DateTime",    DataType=LinqToDB.DataType.DateTime),            Nullable            ] public DateTime? DateTime   { get; set; } // DateTime
-		[Column("Decimal_",  DbType="Currency",    DataType=LinqToDB.DataType.Money),               Nullable            ] public decimal?  Decimal    { get; set; } // Currency
-		[Column("Double_",   DbType="Double",      DataType=LinqToDB.DataType.Double),              Nullable            ] public double?   Double     { get; set; } // Double
-		[Column("Guid_",     DbType="GUID",        DataType=LinqToDB.DataType.Guid),                Nullable            ] public Guid?     Guid       { get; set; } // GUID
-		[Column("Int16_",    DbType="Short",       DataType=LinqToDB.DataType.Int16),               Nullable            ] public short?    Int16      { get; set; } // Short
-		[Column("Int32_",    DbType="Long",        DataType=LinqToDB.DataType.Int32),               Nullable            ] public int?      Int32      { get; set; } // Long
-		[Column("Int64_",    DbType="Long",        DataType=LinqToDB.DataType.Int32),               Nullable            ] public int?      Int64      { get; set; } // Long
-		[Column("Money_",    DbType="Currency",    DataType=LinqToDB.DataType.Money),               Nullable            ] public decimal?  Money      { get; set; } // Currency
-		[Column("SByte_",    DbType="Byte",        DataType=LinqToDB.DataType.Byte),                Nullable            ] public byte?     SByte      { get; set; } // Byte
-		[Column("Single_",   DbType="Single",      DataType=LinqToDB.DataType.Single),              Nullable            ] public float?    Single     { get; set; } // Single
-		[Column("Stream_",   DbType="LongBinary",  DataType=LinqToDB.DataType.Image),               Nullable            ] public byte[]?   Stream     { get; set; } // LongBinary
-		[Column("String_",   DbType="VarChar(50)", DataType=LinqToDB.DataType.VarChar,  Length=50), Nullable            ] public string?   String     { get; set; } // VarChar(50)
-		[Column("UInt16_",   DbType="Short",       DataType=LinqToDB.DataType.Int16),               Nullable            ] public short?    UInt16     { get; set; } // Short
-		[Column("UInt32_",   DbType="Long",        DataType=LinqToDB.DataType.Int32),               Nullable            ] public int?      UInt32     { get; set; } // Long
-		[Column("UInt64_",   DbType="Long",        DataType=LinqToDB.DataType.Int32),               Nullable            ] public int?      UInt64     { get; set; } // Long
-		[Column("Xml_",      DbType="LongText",    DataType=LinqToDB.DataType.NText),               Nullable            ] public string?   Xml        { get; set; } // LongText
+		[Column(             DbType="Long",        DataType=LinqToDB.DataType.Int32),               PrimaryKey,  NotNull] public int       DataTypeID { get; set; } // Long
+		[Column("Binary_",   DbType="LongBinary",  DataType=LinqToDB.DataType.Image),                  Nullable         ] public byte[]?   Binary     { get; set; } // LongBinary
+		[Column("Boolean_",  DbType="Long",        DataType=LinqToDB.DataType.Int32),                  Nullable         ] public int?      Boolean    { get; set; } // Long
+		[Column("Byte_",     DbType="Byte",        DataType=LinqToDB.DataType.Byte),                   Nullable         ] public byte?     Byte       { get; set; } // Byte
+		[Column("Bytes_",    DbType="LongBinary",  DataType=LinqToDB.DataType.Image),                  Nullable         ] public byte[]?   Bytes      { get; set; } // LongBinary
+		[Column("Char_",     DbType="VarChar(1)",  DataType=LinqToDB.DataType.VarChar,  Length=1),     Nullable         ] public char?     Char       { get; set; } // VarChar(1)
+		[Column("DateTime_", DbType="DateTime",    DataType=LinqToDB.DataType.DateTime),               Nullable         ] public DateTime? DateTime   { get; set; } // DateTime
+		[Column("Decimal_",  DbType="Currency",    DataType=LinqToDB.DataType.Money),                  Nullable         ] public decimal?  Decimal    { get; set; } // Currency
+		[Column("Double_",   DbType="Double",      DataType=LinqToDB.DataType.Double),                 Nullable         ] public double?   Double     { get; set; } // Double
+		[Column("Guid_",     DbType="GUID",        DataType=LinqToDB.DataType.Guid),                   Nullable         ] public Guid?     Guid       { get; set; } // GUID
+		[Column("Int16_",    DbType="Short",       DataType=LinqToDB.DataType.Int16),                  Nullable         ] public short?    Int16      { get; set; } // Short
+		[Column("Int32_",    DbType="Long",        DataType=LinqToDB.DataType.Int32),                  Nullable         ] public int?      Int32      { get; set; } // Long
+		[Column("Int64_",    DbType="Long",        DataType=LinqToDB.DataType.Int32),                  Nullable         ] public int?      Int64      { get; set; } // Long
+		[Column("Money_",    DbType="Currency",    DataType=LinqToDB.DataType.Money),                  Nullable         ] public decimal?  Money      { get; set; } // Currency
+		[Column("SByte_",    DbType="Byte",        DataType=LinqToDB.DataType.Byte),                   Nullable         ] public byte?     SByte      { get; set; } // Byte
+		[Column("Single_",   DbType="Single",      DataType=LinqToDB.DataType.Single),                 Nullable         ] public float?    Single     { get; set; } // Single
+		[Column("Stream_",   DbType="LongBinary",  DataType=LinqToDB.DataType.Image),                  Nullable         ] public byte[]?   Stream     { get; set; } // LongBinary
+		[Column("String_",   DbType="VarChar(50)", DataType=LinqToDB.DataType.VarChar,  Length=50),    Nullable         ] public string?   String     { get; set; } // VarChar(50)
+		[Column("UInt16_",   DbType="Short",       DataType=LinqToDB.DataType.Int16),                  Nullable         ] public short?    UInt16     { get; set; } // Short
+		[Column("UInt32_",   DbType="Long",        DataType=LinqToDB.DataType.Int32),                  Nullable         ] public int?      UInt32     { get; set; } // Long
+		[Column("UInt64_",   DbType="Long",        DataType=LinqToDB.DataType.Int32),                  Nullable         ] public int?      UInt64     { get; set; } // Long
+		[Column("Xml_",      DbType="LongText",    DataType=LinqToDB.DataType.NText),                  Nullable         ] public string?   Xml        { get; set; } // LongText
 	}
 
 	[Table("Doctor")]
 	public partial class Doctor
 	{
-		[Column(DbType="Long",        DataType=LinqToDB.DataType.Int32),              PrimaryKey, Identity] public int    PersonID { get; set; } // Long
-		[Column(DbType="VarChar(50)", DataType=LinqToDB.DataType.VarChar, Length=50), NotNull             ] public string Taxonomy { get; set; } = null!; // VarChar(50)
+		[Column(DbType="Long",        DataType=LinqToDB.DataType.Int32),              PrimaryKey, NotNull] public int    PersonID { get; set; } // Long
+		[Column(DbType="VarChar(50)", DataType=LinqToDB.DataType.VarChar, Length=50),             NotNull] public string Taxonomy { get; set; } = null!; // VarChar(50)
 
 		#region Associations
 
@@ -171,18 +171,18 @@ namespace AccessDataContext
 	[Table("InheritanceChild")]
 	public partial class InheritanceChild
 	{
-		[Column(DbType="Long",        DataType=LinqToDB.DataType.Int32),              PrimaryKey, Identity] public int     InheritanceChildId  { get; set; } // Long
-		[Column(DbType="Long",        DataType=LinqToDB.DataType.Int32),                          Identity] public int     InheritanceParentId { get; set; } // Long
-		[Column(DbType="Long",        DataType=LinqToDB.DataType.Int32),              Nullable            ] public int?    TypeDiscriminator   { get; set; } // Long
-		[Column(DbType="VarChar(50)", DataType=LinqToDB.DataType.VarChar, Length=50), Nullable            ] public string? Name                { get; set; } // VarChar(50)
+		[Column(DbType="Long",        DataType=LinqToDB.DataType.Int32),              PrimaryKey,  NotNull] public int     InheritanceChildId  { get; set; } // Long
+		[Column(DbType="Long",        DataType=LinqToDB.DataType.Int32),                           NotNull] public int     InheritanceParentId { get; set; } // Long
+		[Column(DbType="Long",        DataType=LinqToDB.DataType.Int32),                 Nullable         ] public int?    TypeDiscriminator   { get; set; } // Long
+		[Column(DbType="VarChar(50)", DataType=LinqToDB.DataType.VarChar, Length=50),    Nullable         ] public string? Name                { get; set; } // VarChar(50)
 	}
 
 	[Table("InheritanceParent")]
 	public partial class InheritanceParent
 	{
-		[Column(DbType="Long",        DataType=LinqToDB.DataType.Int32),              PrimaryKey, Identity] public int     InheritanceParentId { get; set; } // Long
-		[Column(DbType="Long",        DataType=LinqToDB.DataType.Int32),              Nullable            ] public int?    TypeDiscriminator   { get; set; } // Long
-		[Column(DbType="VarChar(50)", DataType=LinqToDB.DataType.VarChar, Length=50), Nullable            ] public string? Name                { get; set; } // VarChar(50)
+		[Column(DbType="Long",        DataType=LinqToDB.DataType.Int32),              PrimaryKey,  NotNull] public int     InheritanceParentId { get; set; } // Long
+		[Column(DbType="Long",        DataType=LinqToDB.DataType.Int32),                 Nullable         ] public int?    TypeDiscriminator   { get; set; } // Long
+		[Column(DbType="VarChar(50)", DataType=LinqToDB.DataType.VarChar, Length=50),    Nullable         ] public string? Name                { get; set; } // VarChar(50)
 	}
 
 	[Table("LinqDataTypes")]
@@ -229,8 +229,8 @@ namespace AccessDataContext
 	[Table("Patient")]
 	public partial class Patient
 	{
-		[Column(DbType="Long",         DataType=LinqToDB.DataType.Int32),               PrimaryKey, Identity] public int    PersonID  { get; set; } // Long
-		[Column(DbType="VarChar(255)", DataType=LinqToDB.DataType.VarChar, Length=255), NotNull             ] public string Diagnosis { get; set; } = null!; // VarChar(255)
+		[Column(DbType="Long",         DataType=LinqToDB.DataType.Int32),               PrimaryKey, NotNull] public int    PersonID  { get; set; } // Long
+		[Column(DbType="VarChar(255)", DataType=LinqToDB.DataType.VarChar, Length=255),             NotNull] public string Diagnosis { get; set; } = null!; // VarChar(255)
 
 		#region Associations
 
@@ -246,22 +246,22 @@ namespace AccessDataContext
 	[Table("Patient_SelectAll", IsView=true)]
 	public partial class PatientSelectAll
 	{
-		[Column(DbType="Long",         DataType=LinqToDB.DataType.Int32),               Identity] public int     PersonID   { get; set; } // Long
-		[Column(DbType="VarChar(50)",  DataType=LinqToDB.DataType.VarChar, Length=50),  Nullable] public string? FirstName  { get; set; } // VarChar(50)
-		[Column(DbType="VarChar(50)",  DataType=LinqToDB.DataType.VarChar, Length=50),  Nullable] public string? LastName   { get; set; } // VarChar(50)
-		[Column(DbType="VarChar(50)",  DataType=LinqToDB.DataType.VarChar, Length=50),  Nullable] public string? MiddleName { get; set; } // VarChar(50)
-		[Column(DbType="VarChar(1)",   DataType=LinqToDB.DataType.VarChar, Length=1),   Nullable] public char?   Gender     { get; set; } // VarChar(1)
-		[Column(DbType="VarChar(255)", DataType=LinqToDB.DataType.VarChar, Length=255), Nullable] public string? Diagnosis  { get; set; } // VarChar(255)
+		[Column(DbType="Long",         DataType=LinqToDB.DataType.Int32),               NotNull    ] public int     PersonID   { get; set; } // Long
+		[Column(DbType="VarChar(50)",  DataType=LinqToDB.DataType.VarChar, Length=50),     Nullable] public string? FirstName  { get; set; } // VarChar(50)
+		[Column(DbType="VarChar(50)",  DataType=LinqToDB.DataType.VarChar, Length=50),     Nullable] public string? LastName   { get; set; } // VarChar(50)
+		[Column(DbType="VarChar(50)",  DataType=LinqToDB.DataType.VarChar, Length=50),     Nullable] public string? MiddleName { get; set; } // VarChar(50)
+		[Column(DbType="VarChar(1)",   DataType=LinqToDB.DataType.VarChar, Length=1),      Nullable] public char?   Gender     { get; set; } // VarChar(1)
+		[Column(DbType="VarChar(255)", DataType=LinqToDB.DataType.VarChar, Length=255),    Nullable] public string? Diagnosis  { get; set; } // VarChar(255)
 	}
 
 	[Table("Person")]
 	public partial class Person
 	{
-		[Column(DbType="Long",        DataType=LinqToDB.DataType.Int32),              PrimaryKey,  Identity] public int     PersonID   { get; set; } // Long
-		[Column(DbType="VarChar(50)", DataType=LinqToDB.DataType.VarChar, Length=50), NotNull              ] public string  FirstName  { get; set; } = null!; // VarChar(50)
-		[Column(DbType="VarChar(50)", DataType=LinqToDB.DataType.VarChar, Length=50), NotNull              ] public string  LastName   { get; set; } = null!; // VarChar(50)
-		[Column(DbType="VarChar(50)", DataType=LinqToDB.DataType.VarChar, Length=50),    Nullable          ] public string? MiddleName { get; set; } // VarChar(50)
-		[Column(DbType="VarChar(1)",  DataType=LinqToDB.DataType.VarChar, Length=1),  NotNull              ] public char    Gender     { get; set; } // VarChar(1)
+		[Column(DbType="Long",        DataType=LinqToDB.DataType.Int32),              PrimaryKey,  NotNull] public int     PersonID   { get; set; } // Long
+		[Column(DbType="VarChar(50)", DataType=LinqToDB.DataType.VarChar, Length=50),              NotNull] public string  FirstName  { get; set; } = null!; // VarChar(50)
+		[Column(DbType="VarChar(50)", DataType=LinqToDB.DataType.VarChar, Length=50),              NotNull] public string  LastName   { get; set; } = null!; // VarChar(50)
+		[Column(DbType="VarChar(50)", DataType=LinqToDB.DataType.VarChar, Length=50),    Nullable         ] public string? MiddleName { get; set; } // VarChar(50)
+		[Column(DbType="VarChar(1)",  DataType=LinqToDB.DataType.VarChar, Length=1),               NotNull] public char    Gender     { get; set; } // VarChar(1)
 
 		#region Associations
 
@@ -283,11 +283,11 @@ namespace AccessDataContext
 	[Table("Person_SelectAll", IsView=true)]
 	public partial class PersonSelectAll
 	{
-		[Column(DbType="Long",        DataType=LinqToDB.DataType.Int32),              Identity] public int     PersonID   { get; set; } // Long
-		[Column(DbType="VarChar(50)", DataType=LinqToDB.DataType.VarChar, Length=50), Nullable] public string? FirstName  { get; set; } // VarChar(50)
-		[Column(DbType="VarChar(50)", DataType=LinqToDB.DataType.VarChar, Length=50), Nullable] public string? LastName   { get; set; } // VarChar(50)
-		[Column(DbType="VarChar(50)", DataType=LinqToDB.DataType.VarChar, Length=50), Nullable] public string? MiddleName { get; set; } // VarChar(50)
-		[Column(DbType="VarChar(1)",  DataType=LinqToDB.DataType.VarChar, Length=1),  Nullable] public char?   Gender     { get; set; } // VarChar(1)
+		[Column(DbType="Long",        DataType=LinqToDB.DataType.Int32),              NotNull    ] public int     PersonID   { get; set; } // Long
+		[Column(DbType="VarChar(50)", DataType=LinqToDB.DataType.VarChar, Length=50),    Nullable] public string? FirstName  { get; set; } // VarChar(50)
+		[Column(DbType="VarChar(50)", DataType=LinqToDB.DataType.VarChar, Length=50),    Nullable] public string? LastName   { get; set; } // VarChar(50)
+		[Column(DbType="VarChar(50)", DataType=LinqToDB.DataType.VarChar, Length=50),    Nullable] public string? MiddleName { get; set; } // VarChar(50)
+		[Column(DbType="VarChar(1)",  DataType=LinqToDB.DataType.VarChar, Length=1),     Nullable] public char?   Gender     { get; set; } // VarChar(1)
 	}
 
 	[Table("Scalar_DataReader", IsView=true)]
@@ -300,59 +300,59 @@ namespace AccessDataContext
 	[Table("TestIdentity")]
 	public partial class TestIdentity
 	{
-		[Column(DbType="Long", DataType=LinqToDB.DataType.Int32), PrimaryKey, Identity] public int ID { get; set; } // Long
+		[Column(DbType="Long", DataType=LinqToDB.DataType.Int32), PrimaryKey, NotNull] public int ID { get; set; } // Long
 	}
 
 	[Table("TestMerge1")]
 	public partial class TestMerge1
 	{
-		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                             PrimaryKey,  Identity] public int       Id              { get; set; } // Long
-		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                                Nullable          ] public int?      Field1          { get; set; } // Long
-		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                                Nullable          ] public int?      Field2          { get; set; } // Long
-		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                                Nullable          ] public int?      Field3          { get; set; } // Long
-		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                                Nullable          ] public int?      Field4          { get; set; } // Long
-		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                                Nullable          ] public int?      Field5          { get; set; } // Long
-		[Column(DbType="Bit",             DataType=LinqToDB.DataType.Boolean),                           NotNull              ] public bool      FieldBoolean    { get; set; } // Bit
-		[Column(DbType="VarChar(20)",     DataType=LinqToDB.DataType.VarChar,   Length=20),                 Nullable          ] public string?   FieldString     { get; set; } // VarChar(20)
-		[Column(DbType="VarChar(20)",     DataType=LinqToDB.DataType.VarChar,   Length=20),                 Nullable          ] public string?   FieldNString    { get; set; } // VarChar(20)
-		[Column(DbType="CHAR(1)",         DataType=LinqToDB.DataType.Char,      Length=1),                  Nullable          ] public char?     FieldChar       { get; set; } // CHAR(1)
-		[Column(DbType="CHAR(1)",         DataType=LinqToDB.DataType.Char,      Length=1),                  Nullable          ] public char?     FieldNChar      { get; set; } // CHAR(1)
-		[Column(DbType="Single",          DataType=LinqToDB.DataType.Single),                               Nullable          ] public float?    FieldFloat      { get; set; } // Single
-		[Column(DbType="Double",          DataType=LinqToDB.DataType.Double),                               Nullable          ] public double?   FieldDouble     { get; set; } // Double
-		[Column(DbType="DateTime",        DataType=LinqToDB.DataType.DateTime),                             Nullable          ] public DateTime? FieldDateTime   { get; set; } // DateTime
-		[Column(DbType="VARBINARY(20)",   DataType=LinqToDB.DataType.VarBinary, Length=20),                 Nullable          ] public byte[]?   FieldBinary     { get; set; } // VARBINARY(20)
-		[Column(DbType="GUID",            DataType=LinqToDB.DataType.Guid),                                 Nullable          ] public Guid?     FieldGuid       { get; set; } // GUID
-		[Column(DbType="Decimal(24, 10)", DataType=LinqToDB.DataType.Decimal,   Precision=24, Scale=10),    Nullable          ] public decimal?  FieldDecimal    { get; set; } // Decimal(24, 10)
-		[Column(DbType="DateTime",        DataType=LinqToDB.DataType.DateTime),                             Nullable          ] public DateTime? FieldDate       { get; set; } // DateTime
-		[Column(DbType="DateTime",        DataType=LinqToDB.DataType.DateTime),                             Nullable          ] public DateTime? FieldTime       { get; set; } // DateTime
-		[Column(DbType="VarChar(20)",     DataType=LinqToDB.DataType.VarChar,   Length=20),                 Nullable          ] public string?   FieldEnumString { get; set; } // VarChar(20)
-		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                                Nullable          ] public int?      FieldEnumNumber { get; set; } // Long
+		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                             PrimaryKey,  NotNull] public int       Id              { get; set; } // Long
+		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field1          { get; set; } // Long
+		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field2          { get; set; } // Long
+		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field3          { get; set; } // Long
+		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field4          { get; set; } // Long
+		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field5          { get; set; } // Long
+		[Column(DbType="Bit",             DataType=LinqToDB.DataType.Boolean),                                        NotNull] public bool      FieldBoolean    { get; set; } // Bit
+		[Column(DbType="VarChar(20)",     DataType=LinqToDB.DataType.VarChar,   Length=20),                 Nullable         ] public string?   FieldString     { get; set; } // VarChar(20)
+		[Column(DbType="VarChar(20)",     DataType=LinqToDB.DataType.VarChar,   Length=20),                 Nullable         ] public string?   FieldNString    { get; set; } // VarChar(20)
+		[Column(DbType="CHAR(1)",         DataType=LinqToDB.DataType.Char,      Length=1),                  Nullable         ] public char?     FieldChar       { get; set; } // CHAR(1)
+		[Column(DbType="CHAR(1)",         DataType=LinqToDB.DataType.Char,      Length=1),                  Nullable         ] public char?     FieldNChar      { get; set; } // CHAR(1)
+		[Column(DbType="Single",          DataType=LinqToDB.DataType.Single),                               Nullable         ] public float?    FieldFloat      { get; set; } // Single
+		[Column(DbType="Double",          DataType=LinqToDB.DataType.Double),                               Nullable         ] public double?   FieldDouble     { get; set; } // Double
+		[Column(DbType="DateTime",        DataType=LinqToDB.DataType.DateTime),                             Nullable         ] public DateTime? FieldDateTime   { get; set; } // DateTime
+		[Column(DbType="VARBINARY(20)",   DataType=LinqToDB.DataType.VarBinary, Length=20),                 Nullable         ] public byte[]?   FieldBinary     { get; set; } // VARBINARY(20)
+		[Column(DbType="GUID",            DataType=LinqToDB.DataType.Guid),                                 Nullable         ] public Guid?     FieldGuid       { get; set; } // GUID
+		[Column(DbType="Decimal(24, 10)", DataType=LinqToDB.DataType.Decimal,   Precision=24, Scale=10),    Nullable         ] public decimal?  FieldDecimal    { get; set; } // Decimal(24, 10)
+		[Column(DbType="DateTime",        DataType=LinqToDB.DataType.DateTime),                             Nullable         ] public DateTime? FieldDate       { get; set; } // DateTime
+		[Column(DbType="DateTime",        DataType=LinqToDB.DataType.DateTime),                             Nullable         ] public DateTime? FieldTime       { get; set; } // DateTime
+		[Column(DbType="VarChar(20)",     DataType=LinqToDB.DataType.VarChar,   Length=20),                 Nullable         ] public string?   FieldEnumString { get; set; } // VarChar(20)
+		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      FieldEnumNumber { get; set; } // Long
 	}
 
 	[Table("TestMerge2")]
 	public partial class TestMerge2
 	{
-		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                             PrimaryKey,  Identity] public int       Id              { get; set; } // Long
-		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                                Nullable          ] public int?      Field1          { get; set; } // Long
-		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                                Nullable          ] public int?      Field2          { get; set; } // Long
-		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                                Nullable          ] public int?      Field3          { get; set; } // Long
-		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                                Nullable          ] public int?      Field4          { get; set; } // Long
-		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                                Nullable          ] public int?      Field5          { get; set; } // Long
-		[Column(DbType="Bit",             DataType=LinqToDB.DataType.Boolean),                           NotNull              ] public bool      FieldBoolean    { get; set; } // Bit
-		[Column(DbType="VarChar(20)",     DataType=LinqToDB.DataType.VarChar,   Length=20),                 Nullable          ] public string?   FieldString     { get; set; } // VarChar(20)
-		[Column(DbType="VarChar(20)",     DataType=LinqToDB.DataType.VarChar,   Length=20),                 Nullable          ] public string?   FieldNString    { get; set; } // VarChar(20)
-		[Column(DbType="CHAR(1)",         DataType=LinqToDB.DataType.Char,      Length=1),                  Nullable          ] public char?     FieldChar       { get; set; } // CHAR(1)
-		[Column(DbType="CHAR(1)",         DataType=LinqToDB.DataType.Char,      Length=1),                  Nullable          ] public char?     FieldNChar      { get; set; } // CHAR(1)
-		[Column(DbType="Single",          DataType=LinqToDB.DataType.Single),                               Nullable          ] public float?    FieldFloat      { get; set; } // Single
-		[Column(DbType="Double",          DataType=LinqToDB.DataType.Double),                               Nullable          ] public double?   FieldDouble     { get; set; } // Double
-		[Column(DbType="DateTime",        DataType=LinqToDB.DataType.DateTime),                             Nullable          ] public DateTime? FieldDateTime   { get; set; } // DateTime
-		[Column(DbType="VARBINARY(20)",   DataType=LinqToDB.DataType.VarBinary, Length=20),                 Nullable          ] public byte[]?   FieldBinary     { get; set; } // VARBINARY(20)
-		[Column(DbType="GUID",            DataType=LinqToDB.DataType.Guid),                                 Nullable          ] public Guid?     FieldGuid       { get; set; } // GUID
-		[Column(DbType="Decimal(24, 10)", DataType=LinqToDB.DataType.Decimal,   Precision=24, Scale=10),    Nullable          ] public decimal?  FieldDecimal    { get; set; } // Decimal(24, 10)
-		[Column(DbType="DateTime",        DataType=LinqToDB.DataType.DateTime),                             Nullable          ] public DateTime? FieldDate       { get; set; } // DateTime
-		[Column(DbType="DateTime",        DataType=LinqToDB.DataType.DateTime),                             Nullable          ] public DateTime? FieldTime       { get; set; } // DateTime
-		[Column(DbType="VarChar(20)",     DataType=LinqToDB.DataType.VarChar,   Length=20),                 Nullable          ] public string?   FieldEnumString { get; set; } // VarChar(20)
-		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                                Nullable          ] public int?      FieldEnumNumber { get; set; } // Long
+		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                             PrimaryKey,  NotNull] public int       Id              { get; set; } // Long
+		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field1          { get; set; } // Long
+		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field2          { get; set; } // Long
+		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field3          { get; set; } // Long
+		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field4          { get; set; } // Long
+		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field5          { get; set; } // Long
+		[Column(DbType="Bit",             DataType=LinqToDB.DataType.Boolean),                                        NotNull] public bool      FieldBoolean    { get; set; } // Bit
+		[Column(DbType="VarChar(20)",     DataType=LinqToDB.DataType.VarChar,   Length=20),                 Nullable         ] public string?   FieldString     { get; set; } // VarChar(20)
+		[Column(DbType="VarChar(20)",     DataType=LinqToDB.DataType.VarChar,   Length=20),                 Nullable         ] public string?   FieldNString    { get; set; } // VarChar(20)
+		[Column(DbType="CHAR(1)",         DataType=LinqToDB.DataType.Char,      Length=1),                  Nullable         ] public char?     FieldChar       { get; set; } // CHAR(1)
+		[Column(DbType="CHAR(1)",         DataType=LinqToDB.DataType.Char,      Length=1),                  Nullable         ] public char?     FieldNChar      { get; set; } // CHAR(1)
+		[Column(DbType="Single",          DataType=LinqToDB.DataType.Single),                               Nullable         ] public float?    FieldFloat      { get; set; } // Single
+		[Column(DbType="Double",          DataType=LinqToDB.DataType.Double),                               Nullable         ] public double?   FieldDouble     { get; set; } // Double
+		[Column(DbType="DateTime",        DataType=LinqToDB.DataType.DateTime),                             Nullable         ] public DateTime? FieldDateTime   { get; set; } // DateTime
+		[Column(DbType="VARBINARY(20)",   DataType=LinqToDB.DataType.VarBinary, Length=20),                 Nullable         ] public byte[]?   FieldBinary     { get; set; } // VARBINARY(20)
+		[Column(DbType="GUID",            DataType=LinqToDB.DataType.Guid),                                 Nullable         ] public Guid?     FieldGuid       { get; set; } // GUID
+		[Column(DbType="Decimal(24, 10)", DataType=LinqToDB.DataType.Decimal,   Precision=24, Scale=10),    Nullable         ] public decimal?  FieldDecimal    { get; set; } // Decimal(24, 10)
+		[Column(DbType="DateTime",        DataType=LinqToDB.DataType.DateTime),                             Nullable         ] public DateTime? FieldDate       { get; set; } // DateTime
+		[Column(DbType="DateTime",        DataType=LinqToDB.DataType.DateTime),                             Nullable         ] public DateTime? FieldTime       { get; set; } // DateTime
+		[Column(DbType="VarChar(20)",     DataType=LinqToDB.DataType.VarChar,   Length=20),                 Nullable         ] public string?   FieldEnumString { get; set; } // VarChar(20)
+		[Column(DbType="Long",            DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      FieldEnumNumber { get; set; } // Long
 	}
 
 	public static partial class TestDataDBStoredProcedures

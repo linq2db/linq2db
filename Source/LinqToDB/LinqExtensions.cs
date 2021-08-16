@@ -55,11 +55,10 @@ namespace LinqToDB
 		/// <returns>Table-like query source with new database name.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static ITable<T> DatabaseName<T>(this ITable<T> table, [SqlQueryDependent] string name)
+		public static ITable<T> DatabaseName<T>(this ITable<T> table, [SqlQueryDependent] string? name)
 			where T : notnull
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
-			if (name  == null) throw new ArgumentNullException(nameof(name));
 
 			var result = ((ITableMutable<T>)table).ChangeDatabaseName(name);
 			return result;
@@ -76,11 +75,10 @@ namespace LinqToDB
 		/// <returns>Table-like query source with new linked server name.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static ITable<T> ServerName<T>(this ITable<T> table, [SqlQueryDependent] string name)
+		public static ITable<T> ServerName<T>(this ITable<T> table, [SqlQueryDependent] string? name)
 			where T : notnull
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
-			if (name  == null) throw new ArgumentNullException(nameof(name));
 
 			var result = ((ITableMutable<T>)table).ChangeServerName(name);
 			return result;
@@ -97,7 +95,7 @@ namespace LinqToDB
 		/// <returns>Table-like query source with new owner/schema name.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static ITable<T> SchemaName<T>(this ITable<T> table, [SqlQueryDependent] string name)
+		public static ITable<T> SchemaName<T>(this ITable<T> table, [SqlQueryDependent] string? name)
 			where T : notnull
 		{
 			var result = ((ITableMutable<T>)table).ChangeSchemaName(name);

@@ -961,8 +961,11 @@ namespace LinqToDB.SqlProvider
 			if (join.Table.Joins.Count != 0)
 				return false;
 
+			if (!(join.Table.Source is SqlTable t && t.SqlTableType == SqlTableType.Table))
+				return false;
+
 			// do not allow merging if table used in statement
-			if (join.Table.Source is SqlTable t && _statement.IsDependedOn(t))
+			if (_statement.IsDependedOn(t))
 				return false;
 
 			var hasLeftJoin = join.JoinType == JoinType.Left;
@@ -1044,8 +1047,12 @@ namespace LinqToDB.SqlProvider
 			SqlJoinedTable join1, SqlJoinedTable join2,
 			List<VirtualField[]> uniqueKeys)
 		{
+
+			if (!(join2.Table.Source is SqlTable t && t.SqlTableType == SqlTableType.Table))
+				return false;
+
 			// do not allow merging if table used in statement
-			if (join2.Table.Source is SqlTable t && _statement.IsDependedOn(t))
+			if (_statement.IsDependedOn(t))
 				return false;
 
 			var found1 = SearchForFields(manySource, join1);
@@ -1160,12 +1167,12 @@ namespace LinqToDB.SqlProvider
 			if (join.JoinType == JoinType.Inner)
 				return false;
 
-			if (join.Table.Source is SqlTable table)
-			{
-				// do not allow to remove JOIN if table used in statement
-				if (_statement.IsDependedOn(table))
-					return false;
-			}
+			if (!(join.Table.Source is SqlTable t && t.SqlTableType == SqlTableType.Table))
+				return false;
+
+			// do not allow to remove JOIN if table used in statement
+			if (_statement.IsDependedOn(t))
+				return false;
 
 			var found = SearchForFields(manySource, join);
 

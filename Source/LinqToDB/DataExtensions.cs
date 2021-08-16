@@ -63,9 +63,9 @@ namespace LinqToDB
 			if (methodInfo  == null) throw new ArgumentNullException(nameof(methodInfo));
 			if (parameters  == null) throw new ArgumentNullException(nameof(parameters));
 
-			if (!typeof(ITable<>).IsSameOrParentOf(methodInfo.ReturnType))
+			if (!typeof(IQueryable<>).IsSameOrParentOf(methodInfo.ReturnType))
 				throw new LinqException(
-					"Method '{0}.{1}' must return type 'ITable<{2}>'",
+					"Method '{0}.{1}' must return type 'IQueryable<{2}>'",
 					methodInfo.Name, methodInfo.DeclaringType!.FullName, typeof(T).FullName);
 
 			Expression expr;
