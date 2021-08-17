@@ -91,17 +91,15 @@ namespace Tests.Playground
 			using (db.CreateLocalTable(new[] { right }))
 			using (db.CreateLocalTable(new[] { leftRight }))
 			{
-				/*
+				
 				var leftRightItem = db.LeftRights
 					.LoadWith(x => x.Left)
 					.LoadWith(x => x.Right)
 					.First();
-					*/
 
-				//var leftItem      = db.Lefts.LoadWith(x => x.LeftRights).First();
+				var leftItem      = db.Lefts.LoadWith(x => x.LeftRights).First();
 				var rightItem     = db.Rights.LoadWith(x => x.LeftRights).First();
 
-				/*
 				if (leftRightItem.Left == null)
 				{
 					throw new InvalidOperationException("LeftRight type failed to load Left association.");
@@ -111,15 +109,12 @@ namespace Tests.Playground
 				{
 					throw new InvalidOperationException("LeftRight type failed to load Right association.");
 				}
-				*/
 
-				/*
-				if (leftItem.LeftRights.Count() != 1)
+				if (leftItem.LeftRights?.Count() != 1)
 				{
 					throw new InvalidOperationException("Left type failed to load LeftRight association.");
 				}
-				*/
-
+				
 				if (rightItem.LeftRights.Count() != 1)
 				{
 					throw new InvalidOperationException("Right type failed to load LeftRight association.");

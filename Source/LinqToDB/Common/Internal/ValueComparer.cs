@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -20,7 +21,7 @@ namespace LinqToDB.Common.Internal
 			= MemberHelper.MethodOf<IEqualityComparer>(e => e.GetHashCode(0));
 
 		internal static readonly MethodInfo EqualityComparerEqualsMethod
-			= MemberHelper.MethodOf<IEqualityComparer>(e => e.Equals(0));
+			= MemberHelper.MethodOf<IEqualityComparer>(c => c.Equals(0, 0));
 
 		internal static readonly MethodInfo ObjectEqualsMethod
 			= MemberHelper.MethodOf<object>(e => e.Equals(0));
@@ -123,6 +124,14 @@ namespace LinqToDB.Common.Internal
 			return (ValueComparer)Activator.CreateInstance(
 				comparerType.MakeGenericType(type),
 				new object[] { favorStructuralComparisons })!;
+		}
+
+		private static ConcurrentDictionary<(Type, bool), ValueComparer> _defaultValueComparers = new();
+
+		public static ValueComparer GetDefaultValueComparer(Type type, bool favorStructuralComparisons)
+		{
+			return _defaultValueComparers.GetOrAdd((type, favorStructuralComparisons),
+				t => CreateDefault(t.Item1, t.Item2));
 		}
 
 		internal class DefaultValueComparer<T> : ValueComparer<T>

@@ -74,9 +74,6 @@ namespace LinqToDB.Linq.Builder
 			if (count == 0)
 				throw new ArgumentOutOfRangeException(nameof(startIndex));
 
-			if (count == 1)
-				return members[startIndex];
-
 			Expression[] arguments;
 
 			if (count > MutableTuple.MaxMemberCount)

@@ -58,6 +58,8 @@ namespace LinqToDB.Common.Internal
 	{
 		public T1 Item1 { get; set; }
 	
+		static ValueComparer _item1ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T1), true);
+	
 		public override bool Equals(object other) 
 		{
 			if (other == null) return false;
@@ -67,17 +69,20 @@ namespace LinqToDB.Common.Internal
 			if (objTuple == null)
 				return false;
 
-			return Equals(Item1, objTuple.Item1);
+			return _item1ValueComparer.Equals(Item1, objTuple.Item1);
 		}
 
 		public override int GetHashCode() 
-			=> Item1?.GetHashCode() ?? 0;
+			=> _item1ValueComparer.GetHashCode(Item1);
 	}
 
 	internal class MTuple<T1, T2>
 	{
 		public T1 Item1 { get; set; }
 		public T2 Item2 { get; set; }
+	
+		static ValueComparer _item1ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T1), true);
+		static ValueComparer _item2ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T2), true);
 	
 		public override bool Equals(object other) 
 		{
@@ -88,13 +93,13 @@ namespace LinqToDB.Common.Internal
 			if (objTuple == null)
 				return false;
 
-			return Equals(Item1, objTuple.Item1)
-				&& Equals(Item2, objTuple.Item2);
+			return _item1ValueComparer.Equals(Item1, objTuple.Item1)
+				&& _item2ValueComparer.Equals(Item2, objTuple.Item2);
 		}
 
 		public override int GetHashCode() 
-			=> MutableTuple.CombineHashCodes(Item1?.GetHashCode() ?? 0,
-				Item2?.GetHashCode() ?? 0);
+			=> MutableTuple.CombineHashCodes(_item1ValueComparer.GetHashCode(Item1),
+				_item2ValueComparer.GetHashCode(Item2));
 	}
 
 	internal class MTuple<T1, T2, T3>
@@ -102,6 +107,10 @@ namespace LinqToDB.Common.Internal
 		public T1 Item1 { get; set; }
 		public T2 Item2 { get; set; }
 		public T3 Item3 { get; set; }
+	
+		static ValueComparer _item1ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T1), true);
+		static ValueComparer _item2ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T2), true);
+		static ValueComparer _item3ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T3), true);
 	
 		public override bool Equals(object other) 
 		{
@@ -112,15 +121,15 @@ namespace LinqToDB.Common.Internal
 			if (objTuple == null)
 				return false;
 
-			return Equals(Item1, objTuple.Item1)
-				&& Equals(Item2, objTuple.Item2)
-				&& Equals(Item3, objTuple.Item3);
+			return _item1ValueComparer.Equals(Item1, objTuple.Item1)
+				&& _item2ValueComparer.Equals(Item2, objTuple.Item2)
+				&& _item3ValueComparer.Equals(Item3, objTuple.Item3);
 		}
 
 		public override int GetHashCode() 
-			=> MutableTuple.CombineHashCodes(Item1?.GetHashCode() ?? 0,
-				Item2?.GetHashCode() ?? 0,
-				Item3?.GetHashCode() ?? 0);
+			=> MutableTuple.CombineHashCodes(_item1ValueComparer.GetHashCode(Item1),
+				_item2ValueComparer.GetHashCode(Item2),
+				_item3ValueComparer.GetHashCode(Item3));
 	}
 
 	internal class MTuple<T1, T2, T3, T4>
@@ -129,6 +138,11 @@ namespace LinqToDB.Common.Internal
 		public T2 Item2 { get; set; }
 		public T3 Item3 { get; set; }
 		public T4 Item4 { get; set; }
+	
+		static ValueComparer _item1ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T1), true);
+		static ValueComparer _item2ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T2), true);
+		static ValueComparer _item3ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T3), true);
+		static ValueComparer _item4ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T4), true);
 	
 		public override bool Equals(object other) 
 		{
@@ -139,17 +153,17 @@ namespace LinqToDB.Common.Internal
 			if (objTuple == null)
 				return false;
 
-			return Equals(Item1, objTuple.Item1)
-				&& Equals(Item2, objTuple.Item2)
-				&& Equals(Item3, objTuple.Item3)
-				&& Equals(Item4, objTuple.Item4);
+			return _item1ValueComparer.Equals(Item1, objTuple.Item1)
+				&& _item2ValueComparer.Equals(Item2, objTuple.Item2)
+				&& _item3ValueComparer.Equals(Item3, objTuple.Item3)
+				&& _item4ValueComparer.Equals(Item4, objTuple.Item4);
 		}
 
 		public override int GetHashCode() 
-			=> MutableTuple.CombineHashCodes(Item1?.GetHashCode() ?? 0,
-				Item2?.GetHashCode() ?? 0,
-				Item3?.GetHashCode() ?? 0,
-				Item4?.GetHashCode() ?? 0);
+			=> MutableTuple.CombineHashCodes(_item1ValueComparer.GetHashCode(Item1),
+				_item2ValueComparer.GetHashCode(Item2),
+				_item3ValueComparer.GetHashCode(Item3),
+				_item4ValueComparer.GetHashCode(Item4));
 	}
 
 	internal class MTuple<T1, T2, T3, T4, T5>
@@ -160,6 +174,12 @@ namespace LinqToDB.Common.Internal
 		public T4 Item4 { get; set; }
 		public T5 Item5 { get; set; }
 	
+		static ValueComparer _item1ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T1), true);
+		static ValueComparer _item2ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T2), true);
+		static ValueComparer _item3ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T3), true);
+		static ValueComparer _item4ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T4), true);
+		static ValueComparer _item5ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T5), true);
+	
 		public override bool Equals(object other) 
 		{
 			if (other == null) return false;
@@ -169,19 +189,19 @@ namespace LinqToDB.Common.Internal
 			if (objTuple == null)
 				return false;
 
-			return Equals(Item1, objTuple.Item1)
-				&& Equals(Item2, objTuple.Item2)
-				&& Equals(Item3, objTuple.Item3)
-				&& Equals(Item4, objTuple.Item4)
-				&& Equals(Item5, objTuple.Item5);
+			return _item1ValueComparer.Equals(Item1, objTuple.Item1)
+				&& _item2ValueComparer.Equals(Item2, objTuple.Item2)
+				&& _item3ValueComparer.Equals(Item3, objTuple.Item3)
+				&& _item4ValueComparer.Equals(Item4, objTuple.Item4)
+				&& _item5ValueComparer.Equals(Item5, objTuple.Item5);
 		}
 
 		public override int GetHashCode() 
-			=> MutableTuple.CombineHashCodes(Item1?.GetHashCode() ?? 0,
-				Item2?.GetHashCode() ?? 0,
-				Item3?.GetHashCode() ?? 0,
-				Item4?.GetHashCode() ?? 0,
-				Item5?.GetHashCode() ?? 0);
+			=> MutableTuple.CombineHashCodes(_item1ValueComparer.GetHashCode(Item1),
+				_item2ValueComparer.GetHashCode(Item2),
+				_item3ValueComparer.GetHashCode(Item3),
+				_item4ValueComparer.GetHashCode(Item4),
+				_item5ValueComparer.GetHashCode(Item5));
 	}
 
 	internal class MTuple<T1, T2, T3, T4, T5, T6>
@@ -193,6 +213,13 @@ namespace LinqToDB.Common.Internal
 		public T5 Item5 { get; set; }
 		public T6 Item6 { get; set; }
 	
+		static ValueComparer _item1ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T1), true);
+		static ValueComparer _item2ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T2), true);
+		static ValueComparer _item3ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T3), true);
+		static ValueComparer _item4ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T4), true);
+		static ValueComparer _item5ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T5), true);
+		static ValueComparer _item6ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T6), true);
+	
 		public override bool Equals(object other) 
 		{
 			if (other == null) return false;
@@ -202,21 +229,21 @@ namespace LinqToDB.Common.Internal
 			if (objTuple == null)
 				return false;
 
-			return Equals(Item1, objTuple.Item1)
-				&& Equals(Item2, objTuple.Item2)
-				&& Equals(Item3, objTuple.Item3)
-				&& Equals(Item4, objTuple.Item4)
-				&& Equals(Item5, objTuple.Item5)
-				&& Equals(Item6, objTuple.Item6);
+			return _item1ValueComparer.Equals(Item1, objTuple.Item1)
+				&& _item2ValueComparer.Equals(Item2, objTuple.Item2)
+				&& _item3ValueComparer.Equals(Item3, objTuple.Item3)
+				&& _item4ValueComparer.Equals(Item4, objTuple.Item4)
+				&& _item5ValueComparer.Equals(Item5, objTuple.Item5)
+				&& _item6ValueComparer.Equals(Item6, objTuple.Item6);
 		}
 
 		public override int GetHashCode() 
-			=> MutableTuple.CombineHashCodes(Item1?.GetHashCode() ?? 0,
-				Item2?.GetHashCode() ?? 0,
-				Item3?.GetHashCode() ?? 0,
-				Item4?.GetHashCode() ?? 0,
-				Item5?.GetHashCode() ?? 0,
-				Item6?.GetHashCode() ?? 0);
+			=> MutableTuple.CombineHashCodes(_item1ValueComparer.GetHashCode(Item1),
+				_item2ValueComparer.GetHashCode(Item2),
+				_item3ValueComparer.GetHashCode(Item3),
+				_item4ValueComparer.GetHashCode(Item4),
+				_item5ValueComparer.GetHashCode(Item5),
+				_item6ValueComparer.GetHashCode(Item6));
 	}
 
 	internal class MTuple<T1, T2, T3, T4, T5, T6, T7>
@@ -229,6 +256,14 @@ namespace LinqToDB.Common.Internal
 		public T6 Item6 { get; set; }
 		public T7 Item7 { get; set; }
 	
+		static ValueComparer _item1ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T1), true);
+		static ValueComparer _item2ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T2), true);
+		static ValueComparer _item3ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T3), true);
+		static ValueComparer _item4ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T4), true);
+		static ValueComparer _item5ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T5), true);
+		static ValueComparer _item6ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T6), true);
+		static ValueComparer _item7ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T7), true);
+	
 		public override bool Equals(object other) 
 		{
 			if (other == null) return false;
@@ -238,23 +273,23 @@ namespace LinqToDB.Common.Internal
 			if (objTuple == null)
 				return false;
 
-			return Equals(Item1, objTuple.Item1)
-				&& Equals(Item2, objTuple.Item2)
-				&& Equals(Item3, objTuple.Item3)
-				&& Equals(Item4, objTuple.Item4)
-				&& Equals(Item5, objTuple.Item5)
-				&& Equals(Item6, objTuple.Item6)
-				&& Equals(Item7, objTuple.Item7);
+			return _item1ValueComparer.Equals(Item1, objTuple.Item1)
+				&& _item2ValueComparer.Equals(Item2, objTuple.Item2)
+				&& _item3ValueComparer.Equals(Item3, objTuple.Item3)
+				&& _item4ValueComparer.Equals(Item4, objTuple.Item4)
+				&& _item5ValueComparer.Equals(Item5, objTuple.Item5)
+				&& _item6ValueComparer.Equals(Item6, objTuple.Item6)
+				&& _item7ValueComparer.Equals(Item7, objTuple.Item7);
 		}
 
 		public override int GetHashCode() 
-			=> MutableTuple.CombineHashCodes(Item1?.GetHashCode() ?? 0,
-				Item2?.GetHashCode() ?? 0,
-				Item3?.GetHashCode() ?? 0,
-				Item4?.GetHashCode() ?? 0,
-				Item5?.GetHashCode() ?? 0,
-				Item6?.GetHashCode() ?? 0,
-				Item7?.GetHashCode() ?? 0);
+			=> MutableTuple.CombineHashCodes(_item1ValueComparer.GetHashCode(Item1),
+				_item2ValueComparer.GetHashCode(Item2),
+				_item3ValueComparer.GetHashCode(Item3),
+				_item4ValueComparer.GetHashCode(Item4),
+				_item5ValueComparer.GetHashCode(Item5),
+				_item6ValueComparer.GetHashCode(Item6),
+				_item7ValueComparer.GetHashCode(Item7));
 	}
 
 	internal class MTuple<T1, T2, T3, T4, T5, T6, T7, T8>
@@ -268,6 +303,15 @@ namespace LinqToDB.Common.Internal
 		public T7 Item7 { get; set; }
 		public T8 Item8 { get; set; }
 	
+		static ValueComparer _item1ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T1), true);
+		static ValueComparer _item2ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T2), true);
+		static ValueComparer _item3ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T3), true);
+		static ValueComparer _item4ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T4), true);
+		static ValueComparer _item5ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T5), true);
+		static ValueComparer _item6ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T6), true);
+		static ValueComparer _item7ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T7), true);
+		static ValueComparer _item8ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T8), true);
+	
 		public override bool Equals(object other) 
 		{
 			if (other == null) return false;
@@ -277,25 +321,25 @@ namespace LinqToDB.Common.Internal
 			if (objTuple == null)
 				return false;
 
-			return Equals(Item1, objTuple.Item1)
-				&& Equals(Item2, objTuple.Item2)
-				&& Equals(Item3, objTuple.Item3)
-				&& Equals(Item4, objTuple.Item4)
-				&& Equals(Item5, objTuple.Item5)
-				&& Equals(Item6, objTuple.Item6)
-				&& Equals(Item7, objTuple.Item7)
-				&& Equals(Item8, objTuple.Item8);
+			return _item1ValueComparer.Equals(Item1, objTuple.Item1)
+				&& _item2ValueComparer.Equals(Item2, objTuple.Item2)
+				&& _item3ValueComparer.Equals(Item3, objTuple.Item3)
+				&& _item4ValueComparer.Equals(Item4, objTuple.Item4)
+				&& _item5ValueComparer.Equals(Item5, objTuple.Item5)
+				&& _item6ValueComparer.Equals(Item6, objTuple.Item6)
+				&& _item7ValueComparer.Equals(Item7, objTuple.Item7)
+				&& _item8ValueComparer.Equals(Item8, objTuple.Item8);
 		}
 
 		public override int GetHashCode() 
-			=> MutableTuple.CombineHashCodes(Item1?.GetHashCode() ?? 0,
-				Item2?.GetHashCode() ?? 0,
-				Item3?.GetHashCode() ?? 0,
-				Item4?.GetHashCode() ?? 0,
-				Item5?.GetHashCode() ?? 0,
-				Item6?.GetHashCode() ?? 0,
-				Item7?.GetHashCode() ?? 0,
-				Item8?.GetHashCode() ?? 0);
+			=> MutableTuple.CombineHashCodes(_item1ValueComparer.GetHashCode(Item1),
+				_item2ValueComparer.GetHashCode(Item2),
+				_item3ValueComparer.GetHashCode(Item3),
+				_item4ValueComparer.GetHashCode(Item4),
+				_item5ValueComparer.GetHashCode(Item5),
+				_item6ValueComparer.GetHashCode(Item6),
+				_item7ValueComparer.GetHashCode(Item7),
+				_item8ValueComparer.GetHashCode(Item8));
 	}
 
 	internal class MTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>
@@ -310,6 +354,16 @@ namespace LinqToDB.Common.Internal
 		public T8 Item8 { get; set; }
 		public T9 Item9 { get; set; }
 	
+		static ValueComparer _item1ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T1), true);
+		static ValueComparer _item2ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T2), true);
+		static ValueComparer _item3ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T3), true);
+		static ValueComparer _item4ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T4), true);
+		static ValueComparer _item5ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T5), true);
+		static ValueComparer _item6ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T6), true);
+		static ValueComparer _item7ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T7), true);
+		static ValueComparer _item8ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T8), true);
+		static ValueComparer _item9ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T9), true);
+	
 		public override bool Equals(object other) 
 		{
 			if (other == null) return false;
@@ -319,27 +373,27 @@ namespace LinqToDB.Common.Internal
 			if (objTuple == null)
 				return false;
 
-			return Equals(Item1, objTuple.Item1)
-				&& Equals(Item2, objTuple.Item2)
-				&& Equals(Item3, objTuple.Item3)
-				&& Equals(Item4, objTuple.Item4)
-				&& Equals(Item5, objTuple.Item5)
-				&& Equals(Item6, objTuple.Item6)
-				&& Equals(Item7, objTuple.Item7)
-				&& Equals(Item8, objTuple.Item8)
-				&& Equals(Item9, objTuple.Item9);
+			return _item1ValueComparer.Equals(Item1, objTuple.Item1)
+				&& _item2ValueComparer.Equals(Item2, objTuple.Item2)
+				&& _item3ValueComparer.Equals(Item3, objTuple.Item3)
+				&& _item4ValueComparer.Equals(Item4, objTuple.Item4)
+				&& _item5ValueComparer.Equals(Item5, objTuple.Item5)
+				&& _item6ValueComparer.Equals(Item6, objTuple.Item6)
+				&& _item7ValueComparer.Equals(Item7, objTuple.Item7)
+				&& _item8ValueComparer.Equals(Item8, objTuple.Item8)
+				&& _item9ValueComparer.Equals(Item9, objTuple.Item9);
 		}
 
 		public override int GetHashCode() 
-			=> MutableTuple.CombineHashCodes(Item1?.GetHashCode() ?? 0,
-				Item2?.GetHashCode() ?? 0,
-				Item3?.GetHashCode() ?? 0,
-				Item4?.GetHashCode() ?? 0,
-				Item5?.GetHashCode() ?? 0,
-				Item6?.GetHashCode() ?? 0,
-				Item7?.GetHashCode() ?? 0,
-				Item8?.GetHashCode() ?? 0,
-				Item9?.GetHashCode() ?? 0);
+			=> MutableTuple.CombineHashCodes(_item1ValueComparer.GetHashCode(Item1),
+				_item2ValueComparer.GetHashCode(Item2),
+				_item3ValueComparer.GetHashCode(Item3),
+				_item4ValueComparer.GetHashCode(Item4),
+				_item5ValueComparer.GetHashCode(Item5),
+				_item6ValueComparer.GetHashCode(Item6),
+				_item7ValueComparer.GetHashCode(Item7),
+				_item8ValueComparer.GetHashCode(Item8),
+				_item9ValueComparer.GetHashCode(Item9));
 	}
 
 	internal class MTuple<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
@@ -355,6 +409,17 @@ namespace LinqToDB.Common.Internal
 		public T9 Item9 { get; set; }
 		public T10 Item10 { get; set; }
 	
+		static ValueComparer _item1ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T1), true);
+		static ValueComparer _item2ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T2), true);
+		static ValueComparer _item3ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T3), true);
+		static ValueComparer _item4ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T4), true);
+		static ValueComparer _item5ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T5), true);
+		static ValueComparer _item6ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T6), true);
+		static ValueComparer _item7ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T7), true);
+		static ValueComparer _item8ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T8), true);
+		static ValueComparer _item9ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T9), true);
+		static ValueComparer _item10ValueComparer = ValueComparer.GetDefaultValueComparer(typeof(T10), true);
+	
 		public override bool Equals(object other) 
 		{
 			if (other == null) return false;
@@ -364,28 +429,28 @@ namespace LinqToDB.Common.Internal
 			if (objTuple == null)
 				return false;
 
-			return Equals(Item1, objTuple.Item1)
-				&& Equals(Item2, objTuple.Item2)
-				&& Equals(Item3, objTuple.Item3)
-				&& Equals(Item4, objTuple.Item4)
-				&& Equals(Item5, objTuple.Item5)
-				&& Equals(Item6, objTuple.Item6)
-				&& Equals(Item7, objTuple.Item7)
-				&& Equals(Item8, objTuple.Item8)
-				&& Equals(Item9, objTuple.Item9)
-				&& Equals(Item10, objTuple.Item10);
+			return _item1ValueComparer.Equals(Item1, objTuple.Item1)
+				&& _item2ValueComparer.Equals(Item2, objTuple.Item2)
+				&& _item3ValueComparer.Equals(Item3, objTuple.Item3)
+				&& _item4ValueComparer.Equals(Item4, objTuple.Item4)
+				&& _item5ValueComparer.Equals(Item5, objTuple.Item5)
+				&& _item6ValueComparer.Equals(Item6, objTuple.Item6)
+				&& _item7ValueComparer.Equals(Item7, objTuple.Item7)
+				&& _item8ValueComparer.Equals(Item8, objTuple.Item8)
+				&& _item9ValueComparer.Equals(Item9, objTuple.Item9)
+				&& _item10ValueComparer.Equals(Item10, objTuple.Item10);
 		}
 
 		public override int GetHashCode() 
-			=> MutableTuple.CombineHashCodes(Item1?.GetHashCode() ?? 0,
-				Item2?.GetHashCode() ?? 0,
-				Item3?.GetHashCode() ?? 0,
-				Item4?.GetHashCode() ?? 0,
-				Item5?.GetHashCode() ?? 0,
-				Item6?.GetHashCode() ?? 0,
-				Item7?.GetHashCode() ?? 0,
-				Item8?.GetHashCode() ?? 0,
-				Item9?.GetHashCode() ?? 0,
-				Item10?.GetHashCode() ?? 0);
+			=> MutableTuple.CombineHashCodes(_item1ValueComparer.GetHashCode(Item1),
+				_item2ValueComparer.GetHashCode(Item2),
+				_item3ValueComparer.GetHashCode(Item3),
+				_item4ValueComparer.GetHashCode(Item4),
+				_item5ValueComparer.GetHashCode(Item5),
+				_item6ValueComparer.GetHashCode(Item6),
+				_item7ValueComparer.GetHashCode(Item7),
+				_item8ValueComparer.GetHashCode(Item8),
+				_item9ValueComparer.GetHashCode(Item9),
+				_item10ValueComparer.GetHashCode(Item10));
 	}
 }
