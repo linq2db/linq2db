@@ -24,7 +24,7 @@ namespace LinqToDB.Common.Internal
 			= MemberHelper.MethodOf<IEqualityComparer>(c => c.Equals(0, 0));
 
 		internal static readonly MethodInfo ObjectEqualsMethod
-			= MemberHelper.MethodOf<object>(e => e.Equals(0));
+			= MemberHelper.MethodOf(() => object.Equals(0, 0));
 
 		internal static readonly MethodInfo ObjectGetHashCodeMethod
 			= MemberHelper.MethodOf<object>(e => e.GetHashCode());
