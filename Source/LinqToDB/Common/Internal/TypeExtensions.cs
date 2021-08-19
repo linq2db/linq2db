@@ -200,6 +200,16 @@ namespace LinqToDB.Common.Internal
 			       || type == typeof(sbyte);
 		}
 
+		public static bool IsSignedType(this Type? type)
+		{
+			return type != null &&
+			       (IsSignedInteger(type)
+			        || type == typeof(decimal)
+			        || type == typeof(double)
+			        || type == typeof(float)
+			       );
+		}
+
 		public static bool IsTupleType(this Type type)
 		{
 			if (type == typeof(Tuple))
