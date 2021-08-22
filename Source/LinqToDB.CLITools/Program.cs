@@ -17,14 +17,14 @@ namespace LinqToDB.Tools
 		{
 			Directory.CreateDirectory(@"..\..\..\Generated");
 
-			NameNormalizationTest.NormalizationTest();
-
 			//BuildModel("access.oledb");
 			//BuildModel("sql.2017");
 			//BuildModel("db2");
 			//BuildModel("pg10");
 
 			//if (args.Length == 0) return 0;
+
+			NameNormalizationTest.NormalizationTest();
 
 			BuildModel("sqlite.classic");
 			BuildModel("sqlite.ms");

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 
 namespace LinqToDB.CodeGen.Model
 {
@@ -597,7 +596,7 @@ namespace LinqToDB.CodeGen.Model
 		protected override void Visit(PropertyGroup group)
 		{
 			if (group.TableLayout)
-				WriteProperties(group.Members);
+				WritePropertiesAsTable(group.Members);
 			else
 				WriteNewLineDelimitedList(group.Members);
 		}
@@ -1257,322 +1256,225 @@ namespace LinqToDB.CodeGen.Model
 				Write('?');
 		}
 
+		// constants for attributes table layout columns
+		private const string ATTR_TABLE_ATTRIBUTES_GROUP       = "attributes";
+		private const string ATTR_TABLE_TYPE_COLUMN            = "type";
+		private const string ATTR_TABLE_PARAMETERS_GROUP       = "parameters";
+		private const string ATTR_TABLE_NAMED_PARAMETERS_GROUP = "named_parameters";
+		private const string ATTR_TABLE_NAMED_PROPERTY_COLUMN  = "name";
+		private const string ATTR_TABLE_PARAMETER_VALUE        = "value";
 
-
-
-
-
-
-
-
-		private string[] BuildAttributesAsTable<T>(List<T> owners)
+		/// <summary>
+		/// Generates attributes for code group of group owners (e.g. properties) using 'table' layout.
+		/// </summary>
+		/// <typeparam name="T">Attributes owner type.</typeparam>
+		/// <param name="owners">Attributes owners.</param>
+		/// <returns>Array of string with each string containing attributes code for corresponding attributes owner.</returns>
+		private IReadOnlyList<string> BuildAttributesAsTable<T>(List<T> owners)
 			where T : AttributeOwner
 		{
-			// I don't care enough about table layout to justify this abomination...
-			var generatedParts = new List<(string attr, List<string>? parameters, List<(string name, string value)>? namedParameters)>?[owners.Count];
+			var tableBuilder = new TableLayoutBuilder();
 
-			for (var i = 0; i < owners.Count; i++)
+			tableBuilder
+				.Layout()
+					// group of attributes, enclosed in [] with comma as separator
+					.Group(ATTR_TABLE_ATTRIBUTES_GROUP, "[", ", ", "] ")
+						// attribute type name column
+						.Column(ATTR_TABLE_TYPE_COLUMN)
+						// open bracket generated only if there is non-empty column in next 3 columns
+						.Fixed("(", 0, 3)
+						// group of attribute constructor parameters, separated by comma
+						.Group(ATTR_TABLE_PARAMETERS_GROUP, null, ", ", null)
+							.Column(ATTR_TABLE_PARAMETER_VALUE)
+						.EndGroup()
+						// separator between parameters and named parameters, generated if previous and next columns are not empty
+						.Fixed(", ", 1, 1)
+						// group of attribute named parameters, separated by comma
+						.Group(ATTR_TABLE_NAMED_PARAMETERS_GROUP, null, ", ", null)
+							.Column(ATTR_TABLE_NAMED_PROPERTY_COLUMN)
+							.Fixed(" = ", 0, 0)
+							.Column(ATTR_TABLE_PARAMETER_VALUE)
+						.EndGroup()
+						// open bracket generated only if there is non-empty column in previous 3 columns
+						.Fixed(")", 3, 0)
+					.EndGroup()
+				.End();
+
+			foreach (var owner in owners)
 			{
-				var attrs = owners[i].CustomAttributes;
-				if (attrs.Count > 0)
+				var row = tableBuilder.DataRow();
+
+				if (owner.CustomAttributes.Count > 0)
 				{
-					var list = generatedParts[i] = new List<(string attr, List<string>? parameters, List<(string name, string value)>? namedParameters)>();
-					foreach (var attr in attrs)
+					var rowAttributes = row.Group(ATTR_TABLE_ATTRIBUTES_GROUP);
+
+					foreach (var attribute in owner.CustomAttributes)
 					{
-						List<string>? parameters = null;
-						List<(string name, string value)>? namedParameters = null;
+						var attributeBuilder = rowAttributes.NewGroup();
 
-						var builtName = BuildFragment(b => WriteAttributeType(attr));
+						attributeBuilder.ColumnValue(ATTR_TABLE_TYPE_COLUMN, BuildFragment(b => WriteAttributeType(attribute)));
 
-						if (attr.Parameters.Count > 0)
+						if (attribute.Parameters.Count > 0 || attribute.NamedParameters.Count > 0)
 						{
-							parameters = new();
-							foreach (var param in attr.Parameters)
-								parameters.Add(BuildFragment(b => b.Visit(param)));
-						}
+							if (attribute.Parameters.Count > 0)
+							{
+								var regularParameters = attributeBuilder.Group(ATTR_TABLE_PARAMETERS_GROUP);
 
-						if (attr.NamedParameters.Count > 0)
-						{
-							namedParameters = new();
-							foreach (var (property, value) in attr.NamedParameters)
-								namedParameters.Add((
-									BuildFragment(b => b.Visit(property)),
-									BuildFragment(b => b.Visit(value))
-									));
-						}
+								foreach (var parameter in attribute.Parameters)
+									regularParameters
+										.NewGroup()
+										.ColumnValue(ATTR_TABLE_PARAMETER_VALUE, BuildFragment(b => b.Visit(parameter)));
+							}
+							if (attribute.NamedParameters.Count > 0)
+							{
+								var namedParameters = attributeBuilder.Group(ATTR_TABLE_NAMED_PARAMETERS_GROUP);
 
-						list.Add((builtName, parameters, namedParameters));
+								foreach (var (property, value) in attribute.NamedParameters)
+									namedParameters
+										.NewGroup()
+										.ColumnValue(ATTR_TABLE_NAMED_PROPERTY_COLUMN, BuildFragment(b => b.Visit(property)))
+										.ColumnValue(ATTR_TABLE_PARAMETER_VALUE, BuildFragment(b => b.Visit(value)));
+							}
+						}
 					}
 				}
 			}
 
-			var results = new string[owners.Count];
-
-			var maxAttributesCount = generatedParts.Max(p => p?.Count ?? 0);
-
-			// magic
-			var maxLengths = generatedParts.Where(p => p != null)
-				.SelectMany(p => p.Select((a, i) => (a, i)))
-				.GroupBy(a => a.i)
-				.OrderBy(g => g.Key)
-				.Select(g => (
-					attrNameLength: g.Max(r => r.a.attr.Length),
-					parametersLengths: g.Where(r => r.a.parameters != null)
-											.SelectMany(r => r.a.parameters.Select((p, i) => (p, i) ))
-											.GroupBy(a => a.i)
-											.OrderBy(g => g.Key)
-											.Select(g => g.Max(g => g.p.Length))
-											.ToArray(),
-					namedParametersLengths: g.Where(r => r.a.namedParameters != null)
-											.SelectMany(r => r.a.namedParameters.Select((p, i) => (p, i) ))
-											.GroupBy(a => a.i)
-											.OrderBy(g => g.Key)
-											.Select(g => (
-												name: g.Max(g => g.p.name.Length),
-												value: g.Max(g => g.p.value.Length)
-											))
-											.ToArray()
-					))
-				.ToList();
-
-
-			var totalWidth = maxAttributesCount == 0 ? 0 : 3; // "[] "
-			for (var i = 0; i < maxLengths.Count; i++)
-			{
-				if (i > 0)
-					totalWidth += 2; // ", "
-
-				var (attrNameLength, parametersLengths, namedParametersLengths) = maxLengths[i];
-				totalWidth += attrNameLength;
-
-				totalWidth += 2 * (parametersLengths.Length + namedParametersLengths.Length); // "()" + ", "
-				totalWidth += 3 * namedParametersLengths.Length; // " = "
-
-				totalWidth += parametersLengths.Sum();
-				totalWidth += namedParametersLengths.Sum(r => r.name + r.value);
-			}
-
-			for (var i = 0; i < owners.Count; i++)
-			{
-				var parts   = generatedParts[i];
-				var padding = totalWidth;
-
-				if (parts != null)
-				{
-					var result = new StringBuilder();
-					result.Append('[');
-					padding -= 3;
-
-					for (var j = 0; j < parts.Count; j++)
-					{
-						var (attrLen, paramLen, namedParamLen) = maxLengths[j];
-
-						var (attr, parameters, namedParameters) = parts[j];
-
-						result.Append(attr);
-						result.Append(' ', attrLen - attr.Length);
-						padding -= attrLen;
-
-						if (parameters != null || namedParameters != null)
-						{
-							result.Append('(');
-							padding -= 1;
-						}
-
-						var paramsPadding = paramLen.Sum() + 2 * (paramLen.Length == 0 ? 0 : ( namedParamLen.Length == 0 ? paramLen.Length - 1 : paramLen.Length));
-						padding -= paramsPadding;
-
-						if (parameters != null)
-						{
-							for (var k = 0; k < parameters.Count; k++)
-							{
-								var paramPadding = paramLen[k];
-								paramsPadding -= paramPadding;
-								result.Append(parameters[k]);
-								paramPadding -= parameters[k].Length;
-								if (k < parameters.Count - 1 || namedParameters != null)
-								{
-									result.Append(", ");
-									paramsPadding -= 2;
-								}
-
-								result.Append(' ', paramPadding);
-							}
-						}
-
-						result.Append(' ', paramsPadding);
-
-						var namedParamsPadding = namedParamLen.Sum(np => np.name + np.value + 3) + 2 * (namedParamLen.Length > 0 ? namedParamLen.Length - 1 : 0);
-						padding -= namedParamsPadding;
-
-						if (namedParameters != null)
-						{
-							for (var k = 0; k < namedParameters.Count; k++)
-							{
-								var (namePadding, valuePadding) = namedParamLen[k];
-								namedParamsPadding -= namePadding;
-								namedParamsPadding -= valuePadding;
-								namedParamsPadding -= 3;
-
-								result.Append(namedParameters[k].name);
-								namePadding -= namedParameters[k].name.Length;
-								result.Append(' ', namePadding);
-
-								result.Append(" = ");
-
-								result.Append(namedParameters[k].value);
-								valuePadding -= namedParameters[k].value.Length;
-
-								if (k < namedParameters.Count - 1)
-								{
-									result.Append(", ");
-									namedParamsPadding -= 2;
-								}
-
-								result.Append(' ', valuePadding);
-							}
-						}
-
-						if (parameters != null || namedParameters != null)
-						{
-							result.Append(')');
-							padding -= 1;
-						}
-
-						result.Append(' ', namedParamsPadding);
-					}
-
-					result.Append(' ', padding);
-					result.Append("] ");
-					results[i] = result.ToString();
-
-				}
-				else
-				{
-					results[i] = new string(' ', padding);
-				}
-			}
-
-			return results;
+			return tableBuilder.GetRows();
 		}
 
-		private void WriteProperties(List<CodeProperty> properties)
+		// constants for property group table layout columns
+		private const string PROP_TABLE_MODIFIER_COLUMN       = "modifier";
+		private const string PROP_TABLE_TYPE_COLUMN           = "type";
+		private const string PROP_TABLE_NAME_COLUMN           = "name";
+		private const string PROP_TABLE_OPEN_BRACKETS_COLUMN  = "open_brackets";
+		private const string PROP_TABLE_CLOSE_BRACKETS_COLUMN = "close_brackets";
+		private const string PROP_TABLE_GETTER_COLUMN         = "getter";
+		private const string PROP_TABLE_SETTER_COLUMN         = "setter";
+		private const string PROP_TABLE_INITIALIZER_COLUMN    = "initializer";
+
+		/// <summary>
+		/// Generate code for property group using 'table' layout.
+		/// </summary>
+		/// <param name="properties">Property group.</param>
+		private void WritePropertiesAsTable(List<CodeProperty> properties)
 		{
 			if (properties.Count == 0)
 				return;
 
-			// TODO: extract attributes build
-			// TODO: implement multiline
-			var multiline = new bool[properties.Count];
-			var modifier = new string[properties.Count];
-			var type = new string[properties.Count];
-			var name = new string[properties.Count];
-			var getter = new string[properties.Count];
-			var setter = new string[properties.Count];
-			var initializer = new string[properties.Count];
-			var maxModifier = 0;
-			var maxType = 0;
-			var maxName = 0;
-			var maxGetter = 0;
-			var maxSetter = 0;
-			var maxInitializer = 0;
-			var hasTrailingComment = false;
+			// we generate properties layout without:
+			// - attributes as attributes table generated by separate reusable method
+			// - trailing comment as we not align it vertically and it simplifies newline generation
+			var tableBuilder = new TableLayoutBuilder();
 
-			var attributes = BuildAttributesAsTable(properties);
+			tableBuilder
+				.Layout()
+					.Column(PROP_TABLE_MODIFIER_COLUMN      ) // access modifiers
+					.Column(PROP_TABLE_TYPE_COLUMN          ) // property type
+					.Column(PROP_TABLE_NAME_COLUMN          ) // property name
+					.Column(PROP_TABLE_OPEN_BRACKETS_COLUMN ) // { bracket for properties with setter or with complex getter
+					.Column(PROP_TABLE_GETTER_COLUMN        ) // getter code (or default "get")
+					.Column(PROP_TABLE_SETTER_COLUMN        ) // setter code (or default "set")
+					.Column(PROP_TABLE_CLOSE_BRACKETS_COLUMN) // } bracket for properties with setter or with complex getter
+					.Column(PROP_TABLE_INITIALIZER_COLUMN   ) // optional property initializer
+				.End();
 
-			for (var i = 0; i < properties.Count; i++)
+			foreach (var property in properties)
 			{
-				var prop = properties[i];
-				hasTrailingComment = hasTrailingComment || prop.TrailingComment != null;
+				var row = tableBuilder.DataRow();
 
-				modifier[i] = BuildFragment(b => b.WriteModifiers(prop.Attributes));
-				type[i] = BuildFragment(b =>
+				row.ColumnValue(PROP_TABLE_MODIFIER_COLUMN, BuildFragment(b => b.WriteModifiers(property.Attributes)));
+
+				row.ColumnValue(PROP_TABLE_TYPE_COLUMN, BuildFragment(b =>
 				{
-					b.Visit(prop.Type!);
+					b.Visit(property.Type);
+					// padding also could be implemented using fixed column
 					Write(' ');
-				});
-				name[i] = BuildFragment(b => b.Visit(prop.Name!));
-				getter[i] = !prop.HasGetter ? string.Empty : BuildFragment(b =>
+				}));
+
+				row.ColumnValue(PROP_TABLE_NAME_COLUMN, BuildFragment(b => b.Visit(property.Name)));
+
+				var needsBrackets = property.HasGetter && property.HasSetter;
+
+				row.ColumnValue(PROP_TABLE_OPEN_BRACKETS_COLUMN, BuildFragment(b =>
 				{
-					if (prop.Getter == null)
-					{
+					// includes padding after name
+					if (needsBrackets)
+						b.Write(" { ");
+				}));
+
+				// includes padding after name if no brackets used
+				row.ColumnValue(PROP_TABLE_GETTER_COLUMN, !property.HasGetter ? string.Empty : BuildFragment(b =>
+				{
+					if (property.Getter == null)
 						Write("get;");
-					}
 					else
 					{
-						if (prop.HasSetter)
+						if (property.HasSetter)
 						{
 							Write("get");
-							if (prop.Getter.Items.Count == 1)
+
+							if (property.Getter.Items.Count == 1)
 								Write(" =>");
 						}
 						else
 							Write(" =>");
-						b.WriteMethodBodyBlock(prop.Getter, true, false, true, false);
+
+						b.WriteMethodBodyBlock(property.Getter, true, false, true, false);
 					}
-				});
-				setter[i] = !prop.HasSetter ? string.Empty : BuildFragment(b =>
+				}));
+
+				row.ColumnValue(PROP_TABLE_CLOSE_BRACKETS_COLUMN, BuildFragment(b =>
 				{
-					if (prop.Setter == null)
-					{
+					if (needsBrackets)
+						b.Write(" }");
+				}));
+
+				row.ColumnValue(PROP_TABLE_SETTER_COLUMN, !property.HasSetter ? string.Empty : BuildFragment(b =>
+				{
+					if (property.HasGetter)
+						Write(' ');
+
+					if (property.Setter == null)
 						Write("set;");
-					}
 					else
 					{
 						Write("set");
-						if (prop.Setter.Items.Count == 1)
-							Write(" =>");
-						b.WriteMethodBodyBlock(prop.Setter, true, true, true, false);
-					}
-				});
 
-				initializer[i] = BuildFragment(b =>
+						if (property.Setter.Items.Count == 1)
+							Write(" =>");
+
+						b.WriteMethodBodyBlock(property.Setter, true, true, true, false);
+					}
+				}));
+
+				row.ColumnValue(PROP_TABLE_INITIALIZER_COLUMN, BuildFragment(b =>
 				{
-					if (prop.Initializer != null)
+					if (property.Initializer != null)
 					{
+						// includes padding after getter/setter block
 						Write(" = ");
-						Visit(prop.Initializer);
+						Visit(property.Initializer);
 						Write(';');
 					}
-					else if (_useNRT && prop.Getter == null && prop.Setter == null && !prop.Type.Type.IsNullable && !prop.Type.Type.IsValueType)
+					else if (_useNRT && property.Getter == null && property.Setter == null && !property.Type.Type.IsNullable && !property.Type.Type.IsValueType)
 						Write(" = null!;");
-				});
-
-				if (modifier[i].Length > maxModifier) maxModifier = modifier[i].Length;
-				if (type[i].Length > maxType) maxType = type[i].Length;
-				if (name[i].Length > maxName) maxName = name[i].Length;
-				if (getter[i].Length > maxGetter) maxGetter = getter[i].Length;
-				if (setter[i].Length > maxSetter) maxSetter = setter[i].Length;
-				if (initializer[i].Length > maxInitializer) maxInitializer = initializer[i].Length;
+				}));
 			}
 
-			var useBrackets = maxSetter != 0;
-			if (!hasTrailingComment)
-			{
-				if (!useBrackets)
-					maxGetter = 0;
-				else
-					maxSetter = 0;
-			}
+			var propertiesCode = tableBuilder.GetRows();
+			var attributes     = BuildAttributesAsTable(properties);
 
+			// write generated code : xml-doc, attributes, property itself and optional trailing comment
 			for (var i = 0; i < properties.Count; i++)
 			{
 				var prop = properties[i];
+
 				if (prop.XmlDoc != null)
 					Visit(prop.XmlDoc);
 
 				Write(attributes[i]);
-				PadWithSpaces(modifier[i], maxModifier);
-				PadWithSpaces(type[i], maxType);
-				PadWithSpaces(name[i], maxName);
-				if (useBrackets)
-					Write(" { ");
-				PadWithSpaces(getter[i], maxGetter);
-				PadWithSpaces(setter[i], maxSetter);
-				if (useBrackets)
-					Write(" }");
-
-				PadWithSpaces(initializer[i], maxInitializer);
+				Write(propertiesCode[i]);
 
 				if (prop.TrailingComment != null)
 				{
@@ -1583,7 +1485,6 @@ namespace LinqToDB.CodeGen.Model
 					WriteLine();
 			}
 		}
-
 		#endregion
 	}
 }
