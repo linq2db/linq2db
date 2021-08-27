@@ -84,7 +84,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void UpdatatbleTanbleSecond([DataSources] string context)
+		public void UpdateWhenTableSecond([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(element_services.TestData()))
@@ -106,7 +106,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void UpdatableTableFirst([DataSources] string context)
+		public void UpdateWhenTableFirst([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(element_services.TestData()))
@@ -128,7 +128,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void UpdatableTableFirstLeftJoin([DataSources] string context)
+		public void UpdateWhenTableFirstWithLeftJoin([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(element_services.TestData()))
