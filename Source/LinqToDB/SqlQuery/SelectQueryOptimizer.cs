@@ -695,7 +695,7 @@ namespace LinqToDB.SqlQuery
 
 						var current = (SqlSearchCondition)searchCondition.Conditions[i].Predicate;
 						searchCondition.Conditions.RemoveAt(i);
-						searchCondition.Conditions.AddRange(current.Conditions);
+						searchCondition.Conditions.InsertRange(i, current.Conditions);
 					}
 				}
 			}
