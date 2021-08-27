@@ -87,7 +87,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						{
 							// simplify all to FROM
 
-							var tableToUpdateSource = tableSource.Joins.FirstOrDefault(j => j.Table.Source == tableToCheck)?.Table;
+							var tableToUpdateSource = table == tableToUpdate
+								? tableSource
+								: tableSource.Joins.FirstOrDefault(j => j.Table.Source == tableToCheck)?.Table;
+
 							if (tableToUpdateSource != null)
 							{
 								processed = true;
@@ -108,6 +111,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 						if (!processed && (table == tableToUpdate || tableToUpdate == null))
 						{
+							processed = true;
+
 							tableToUpdate ??= table;
 							var joins = tableSource.Joins;
 
@@ -137,98 +142,96 @@ namespace LinqToDB.DataProvider.PostgreSQL
 								}
 							}
 						}
-						else 
+
+						if (!processed && tableToUpdate != null)
 						{
-							if (!processed)
+							for (int i = 0; i < tableSource.Joins.Count; i++)
 							{
-								for (int i = 0; i < tableSource.Joins.Count; i++)
+								var join = tableSource.Joins[i];
+								if (join.Table.Source == tableToUpdate)
 								{
-									var join = tableSource.Joins[i];
-									if (join.Table.Source == tableToUpdate)
-									{
-										var sources = new HashSet<ISqlTableSource> { join.Table.Source };
+									var sources = new HashSet<ISqlTableSource> { join.Table.Source };
 
-										if (tableSource.Joins.Skip(i + 1).Any(j => QueryHelper.IsDependsOn(j, sources)))
-											break;
-
-										processed = true;
-
-										statement.SelectQuery.Where.SearchCondition.EnsureConjunction().Conditions
-											.Add(new SqlCondition(false, join.Condition));
-
-										tableSource.Joins.RemoveAt(i);
-
+									if (tableSource.Joins.Skip(i + 1).Any(j => QueryHelper.IsDependsOn(j, sources)))
 										break;
-									}
+
+									processed = true;
+
+									statement.SelectQuery.Where.SearchCondition.EnsureConjunction().Conditions
+										.Add(new SqlCondition(false, join.Condition));
+
+									tableSource.Joins.RemoveAt(i);
+
+									break;
 								}
 							}
+						}
 
-							if (!processed)
+						if (!processed && tableToUpdate != null)
+						{
+							for (int i = 0; i < tableSource.Joins.Count; i++)
 							{
-								for (int i = 0; i < tableSource.Joins.Count; i++)
-								{
-									var join = tableSource.Joins[i];
-									if (join.Table.Source is SqlTable currentTable &&
-									    QueryHelper.IsEqualTables(currentTable, tableToUpdate))
-									{
-										processed = true;
-
-										var sources = new HashSet<ISqlTableSource> {join.Table.Source};
-
-										if (tableSource.Joins.Skip(i + 1).Any(j => QueryHelper.IsDependsOn(j, sources)))
-										{
-											tableToCompare = currentTable;
-											break;
-										}
-
-										statement.SelectQuery.Where.SearchCondition.EnsureConjunction().Conditions
-											.Add(new SqlCondition(false, join.Condition));
-
-										tableSource.Joins.RemoveAt(i);
-
-										ReplaceTable(statement, tableToUpdate, currentTable);
-
-										tableToUpdate = currentTable;
-
-										break;
-									}
-								}
-							}
-
-							if (!processed)
-							{
-								if (QueryHelper.IsEqualTables(table, tableToUpdate))
+								var join = tableSource.Joins[i];
+								if (join.Table.Source is SqlTable currentTable &&
+								    QueryHelper.IsEqualTables(currentTable, tableToUpdate))
 								{
 									processed = true;
 
-									var sources = new HashSet<ISqlTableSource> {tableSource.Source};
+									var sources = new HashSet<ISqlTableSource> { join.Table.Source };
 
-									if (tableSource.Joins.Any(j => QueryHelper.IsDependsOn(j, sources)))
+									if (tableSource.Joins.Skip(i + 1).Any(j => QueryHelper.IsDependsOn(j, sources)))
 									{
-										tableToCompare = table;
+										tableToCompare = currentTable;
 										break;
 									}
 
-									var joins = tableSource.Joins;
-									statement.SelectQuery.From.Tables.RemoveAt(0);
-									if (joins.Count > 0)
-									{
-										var firstJoin = joins[0];
-										statement.SelectQuery.From.Tables.Insert(0, firstJoin.Table);
-										statement.SelectQuery.Where.SearchCondition.EnsureConjunction().Conditions
-											.Add(new SqlCondition(false, firstJoin.Condition));
+									statement.SelectQuery.Where.SearchCondition.EnsureConjunction().Conditions
+										.Add(new SqlCondition(false, join.Condition));
 
-										firstJoin.Table.Joins.InsertRange(0, joins.Skip(1));
-									}
+									tableSource.Joins.RemoveAt(i);
 
-									ReplaceTable(statement, tableToUpdate, table);
-									tableToUpdate = table;
+									ReplaceTable(statement, tableToUpdate, currentTable);
+
+									tableToUpdate = currentTable;
+
+									break;
 								}
 							}
-
-							if (!processed)
-								throw new LinqToDBException("Can not decide which table to update");
 						}
+
+						if (!processed)
+						{
+							if (QueryHelper.IsEqualTables(table, tableToCheck))
+							{
+								processed = true;
+
+								var sources = new HashSet<ISqlTableSource> { tableSource.Source };
+
+								if (tableSource.Joins.Any(j => QueryHelper.IsDependsOn(j, sources)))
+								{
+									tableToCompare = table;
+									break;
+								}
+
+								var joins = tableSource.Joins;
+								statement.SelectQuery.From.Tables.RemoveAt(0);
+								if (joins.Count > 0)
+								{
+									var firstJoin = joins[0];
+									statement.SelectQuery.From.Tables.Insert(0, firstJoin.Table);
+									statement.SelectQuery.Where.SearchCondition.EnsureConjunction().Conditions
+										.Add(new SqlCondition(false, firstJoin.Condition));
+
+									firstJoin.Table.Joins.InsertRange(0, joins.Skip(1));
+								}
+
+								ReplaceTable(statement, tableToCheck, table);
+								tableToUpdate = table;
+							}
+						}
+
+						if (!processed)
+							throw new LinqToDBException("Can not decide which table to update");
 					}
 
 					break;
