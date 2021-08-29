@@ -102,6 +102,9 @@ namespace Tests.UserTests
 						(ct, cm) => ct
 					).Set(r => r.is_deleted, true)
 					.Update();
+
+				db.GetTable<component_categories>().Where(x => x.is_deleted && x.service_id == "TestProcessService").Should().HaveCount(2);
+				db.GetTable<component_categories>().Where(x => !x.is_deleted && x.service_id != "TestProcessService").Should().HaveCount(2);
 			}
 		}
 
@@ -124,6 +127,9 @@ namespace Tests.UserTests
 						(ct, cm) => ct
 					).Set(r => r.is_deleted, true)
 					.Update();
+
+				db.GetTable<component_categories>().Where(x => x.is_deleted && x.service_id == "TestProcessService").Should().HaveCount(2);
+				db.GetTable<component_categories>().Where(x => !x.is_deleted && x.service_id != "TestProcessService").Should().HaveCount(2);
 			}
 		}
 
@@ -146,6 +152,9 @@ namespace Tests.UserTests
 						(ct, cm) => ct
 					).Set(r => r.is_deleted, true)
 					.Update();
+
+				db.GetTable<component_categories>().Where(x => x.is_deleted && x.service_id == "TestProcessService").Should().HaveCount(2);
+				db.GetTable<component_categories>().Where(x => !x.is_deleted && x.service_id != "TestProcessService").Should().HaveCount(2);
 			}
 		}
 
