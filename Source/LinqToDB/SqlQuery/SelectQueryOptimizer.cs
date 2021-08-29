@@ -688,15 +688,6 @@ namespace LinqToDB.SqlQuery
 
 						--i;
 					}
-					else if (!cond.IsOr && !cond.IsNot && sc.Conditions.All(c => !c.IsOr))
-					{
-						// we can merge sub condition
-						EnsureCopy();
-
-						var current = (SqlSearchCondition)searchCondition.Conditions[i].Predicate;
-						searchCondition.Conditions.RemoveAt(i);
-						searchCondition.Conditions.InsertRange(i, current.Conditions);
-					}
 				}
 			}
 
