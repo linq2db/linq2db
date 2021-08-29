@@ -300,6 +300,25 @@ namespace LinqToDB.DataProvider.SqlCe
 			return expression;
 		}
 
+		public override ISqlPredicate ConvertPredicateImpl<TContext>(MappingSchema mappingSchema, ISqlPredicate predicate,
+			ConvertVisitor<RunOptimizationContext<TContext>> visitor, OptimizationContext optimizationContext)
+		{
+			if (optimizationContext.Context.ParameterValues == null && predicate is SqlPredicate.IsTrue isTruePredicate)
+			{
+				if (isTruePredicate.Expr1 is SelectQuery query && query.Select.Columns.Count == 1)
+				{
+					query.Select.Where.EnsureConjunction();
+					query.Select.Where.SearchCondition.Conditions.Add(new SqlCondition(false,
+						new SqlPredicate.IsTrue(query.Select.Columns[0].Expression, isTruePredicate.TrueValue,
+							isTruePredicate.FalseValue, isTruePredicate.WithNull, isTruePredicate.IsNot)));
+					query.Select.Columns.Clear();
+
+					predicate = new SqlPredicate.FuncLike(SqlFunction.CreateExists(query));
+				}
+			}
+			return base.ConvertPredicateImpl(mappingSchema, predicate, visitor, optimizationContext);
+		}
+
 		protected override ISqlExpression ConvertFunction(SqlFunction func)
 		{
 			func = ConvertFunctionParameters(func, false);
