@@ -150,6 +150,12 @@ namespace LinqToDB.Common.Internal
 						: Expression.Call(
 							Expression.Convert(param, typeof(object)), ObjectGetHashCodeMethod);
 
+			if (type != unwrappedType)
+			{
+				expression = Expression.Condition(Expression.Property(param, nameof(Nullable<int>.HasValue)),
+					expression, Expression.Constant(0, typeof(int)));
+			}
+
 			return Expression.Lambda<Func<T, int>>(expression, param);
 		}
 
