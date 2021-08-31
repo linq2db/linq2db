@@ -1966,12 +1966,6 @@ namespace LinqToDB.SqlProvider
 					}
 
 					break;
-				case QueryElementType.IsTruePredicate:
-					{
-						BuildPredicate(((SqlPredicate.IsTrue)predicate).Reduce());
-						break;
-					}
-
 				default:
 					throw new InvalidOperationException($"Unexpected predicate type {predicate.ElementType}");
 			}

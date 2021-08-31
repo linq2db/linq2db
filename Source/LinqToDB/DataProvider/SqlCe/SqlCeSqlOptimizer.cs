@@ -23,6 +23,8 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			CorrectFunctionParameters(statement);
 
+			statement = CorrectBooleanComparison(statement);
+
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete :
@@ -219,6 +221,31 @@ namespace LinqToDB.DataProvider.SqlCe
 			// already fixed by CorrectSkipAndColumns
 		}
 
+		protected SqlStatement CorrectBooleanComparison(SqlStatement statement)
+		{
+			statement = statement.ConvertAll(this, true, static (_, e) =>
+			{
+				if (e.ElementType == QueryElementType.IsTruePredicate)
+				{
+					var isTruePredicate = (SqlPredicate.IsTrue)e;
+					if (isTruePredicate.Expr1 is SelectQuery query && query.Select.Columns.Count == 1)
+					{
+						query.Select.Where.EnsureConjunction();
+						query.Select.Where.SearchCondition.Conditions.Add(new SqlCondition(false,
+							new SqlPredicate.IsTrue(query.Select.Columns[0].Expression, isTruePredicate.TrueValue,
+								isTruePredicate.FalseValue, isTruePredicate.WithNull, isTruePredicate.IsNot)));
+						query.Select.Columns.Clear();
+
+						return new SqlPredicate.FuncLike(SqlFunction.CreateExists(query));
+					}
+				}
+
+				return e;
+			});
+
+			return statement;
+		}
+
 		public override ISqlExpression ConvertExpressionImpl<TContext>(ISqlExpression expression, ConvertVisitor<TContext> visitor,
 			EvaluationContext context)
 		{
@@ -298,25 +325,6 @@ namespace LinqToDB.DataProvider.SqlCe
 			}
 
 			return expression;
-		}
-
-		public override ISqlPredicate ConvertPredicateImpl<TContext>(MappingSchema mappingSchema, ISqlPredicate predicate,
-			ConvertVisitor<RunOptimizationContext<TContext>> visitor, OptimizationContext optimizationContext)
-		{
-			if (optimizationContext.Context.ParameterValues == null && predicate is SqlPredicate.IsTrue isTruePredicate)
-			{
-				if (isTruePredicate.Expr1 is SelectQuery query && query.Select.Columns.Count == 1)
-				{
-					query.Select.Where.EnsureConjunction();
-					query.Select.Where.SearchCondition.Conditions.Add(new SqlCondition(false,
-						new SqlPredicate.IsTrue(query.Select.Columns[0].Expression, isTruePredicate.TrueValue,
-							isTruePredicate.FalseValue, isTruePredicate.WithNull, isTruePredicate.IsNot)));
-					query.Select.Columns.Clear();
-
-					predicate = new SqlPredicate.FuncLike(SqlFunction.CreateExists(query));
-				}
-			}
-			return base.ConvertPredicateImpl(mappingSchema, predicate, visitor, optimizationContext);
 		}
 
 		protected override ISqlExpression ConvertFunction(SqlFunction func)
