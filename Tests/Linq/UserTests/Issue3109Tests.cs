@@ -6,7 +6,7 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
-namespace Tests.Playground
+namespace Tests.UserTests
 {
 	[TestFixture]
 	public class Issue3109Tests : TestBase
