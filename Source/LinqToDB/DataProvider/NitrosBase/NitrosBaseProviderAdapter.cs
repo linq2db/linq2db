@@ -2,17 +2,13 @@
 
 namespace LinqToDB.DataProvider.NitrosBase
 {
-	using LinqToDB.Expressions;
-
 	public class NitrosBaseProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly object _syncRoot = new ();
 		private static NitrosBaseProviderAdapter? _instance;
 
-		// TODO: specify names, used in provider
-		public const string AssemblyName        = "TODO";
-		public const string ClientNamespace     = "TODO";
-		public const string ProviderFactoryName = "TODO";
+		public const string AssemblyName    = "Nitros.Net";
+		public const string ClientNamespace = "NitrosData.Nitros.Net";
 
 		private NitrosBaseProviderAdapter(
 			Type connectionType,
@@ -41,20 +37,15 @@ namespace LinqToDB.DataProvider.NitrosBase
 				lock (_syncRoot)
 					if (_instance == null)
 					{
-						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
+						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, null);
 						if (assembly == null)
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 
-						// TODO: specify real class names for provider
-						var connectionType  = assembly.GetType($"{ClientNamespace}.TODOConnection" , true)!;
-						var dataReaderType  = assembly.GetType($"{ClientNamespace}.TODODataReader" , true)!;
-						var parameterType   = assembly.GetType($"{ClientNamespace}.TODOParameter"  , true)!;
-						var commandType     = assembly.GetType($"{ClientNamespace}.TODOCommand"    , true)!;
-						var transactionType = assembly.GetType($"{ClientNamespace}.TODOTransaction", true)!;
-
-						var typeMapper = new TypeMapper();
-						// TODO: register type wrappers for additional non-ado.net functionality, used by linq2db
-						typeMapper.FinalizeMappings();
+						var connectionType  = assembly.GetType($"{ClientNamespace}.NitrosBaseConnection"   , true)!;
+						var dataReaderType  = assembly.GetType($"{ClientNamespace}.NitrosBaseDataReader"   , true)!;
+						var parameterType   = assembly.GetType($"{ClientNamespace}.NitrosBaseDataParameter", true)!;
+						var commandType     = assembly.GetType($"{ClientNamespace}.NitrosBaseCommand"      , true)!;
+						var transactionType = assembly.GetType($"{ClientNamespace}.NitrosBaseTransaction"  , true)!;
 
 						_instance = new NitrosBaseProviderAdapter(
 							connectionType,
@@ -66,9 +57,5 @@ namespace LinqToDB.DataProvider.NitrosBase
 
 			return _instance;
 		}
-
-		#region Wrappers
-		// TODO: add wrapper classes for additional functionality, used by linq2db
-		#endregion
 	}
 }
