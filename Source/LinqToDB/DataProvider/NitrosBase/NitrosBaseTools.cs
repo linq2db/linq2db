@@ -6,14 +6,8 @@ namespace LinqToDB.DataProvider.NitrosBase
 	using Data;
 	using LinqToDB.Configuration;
 
-	// stores provider instance and provides:
-	// - APIs to get provider instance
-	// - default bulk copy options
-	// also could contain other helpers if needed.
 	public static class NitrosBaseTools
 	{
-		// single instance of provider implementation
-		// self-registers in DataConnection on creation
 		private static readonly Lazy<IDataProvider> _nitrosBaseDataProvider = new (() =>
 		{
 			var provider = new NitrosBaseDataProvider();
@@ -23,13 +17,13 @@ namespace LinqToDB.DataProvider.NitrosBase
 			return provider;
 		}, true);
 
-		// this is important method that inspects connection settings and if they look like settings for current provider
-		// returns provider instance
-		// used by DataConnection to find corresponding provider
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
-			//if (/* TODO: add implementation */)
-			//	return _nitrosBaseDataProvider.Value;
+			if (css.ProviderName == ProviderName.NitrosBase
+				|| css.ProviderName == NitrosBaseProviderAdapter.ClientNamespace
+				|| css.ProviderName == NitrosBaseProviderAdapter.AssemblyName
+				|| css.Name.Contains(ProviderName.NitrosBase))
+				return _nitrosBaseDataProvider.Value;
 
 			return null;
 		}
