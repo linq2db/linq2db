@@ -181,5 +181,11 @@ namespace LinqToDB
 		/// Used as configuration name for SAP HANA mapping schema <see cref="DataProvider.SapHana.SapHanaMappingSchema.OdbcMappingSchema"/>.
 		/// </summary>
 		public const string SapHanaOdbc = "SapHana.Odbc";
+
+		/// <summary>
+		/// NitrosBase native provider.
+		/// Used as configuration name for NitrosBase mapping schema <see cref="DataProvider.NitrosBase.NitrosBaseMappingSchema.Instance"/>.
+		/// </summary>
+		public const string NitrosBase  = "NitrosBase";
 	}
 }
