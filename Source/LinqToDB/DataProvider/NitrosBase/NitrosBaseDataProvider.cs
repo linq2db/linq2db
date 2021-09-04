@@ -9,7 +9,6 @@ namespace LinqToDB.DataProvider.NitrosBase
 	using SchemaProvider;
 	using SqlProvider;
 
-	// data provider is used for all connections and must be thread-safe
 	public class NitrosBaseDataProvider : DynamicDataProviderBase<NitrosBaseProviderAdapter>
 	{
 		public NitrosBaseDataProvider()
@@ -20,28 +19,25 @@ namespace LinqToDB.DataProvider.NitrosBase
 		protected NitrosBaseDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema != NitrosBaseMappingSchema.Instance ? new NitrosBaseMappingSchema(mappingSchema) : mappingSchema, NitrosBaseProviderAdapter.GetInstance())
 		{
-			// TODO: setup sql flags here
+			SqlProviderFlags.IsSubQueryOrderBySupported     = true;
+			SqlProviderFlags.IsInsertOrUpdateSupported      = false;
+			SqlProviderFlags.IsUpdateSetTableAliasSupported = false;
+			SqlProviderFlags.IsCrossJoinSupported           = false;
+			SqlProviderFlags.IsCountDistinctSupported       = true;
+			SqlProviderFlags.IsUpdateFromSupported          = true;
 
 			_sqlOptimizer = new NitrosBaseSqlOptimizer(SqlProviderFlags);
 		}
 
 		#region Overrides
-		// TODO: specify flags for temporary tables and conditional table management support by database
-		public override TableOptions SupportedTableOptions => TableOptions.None;
+		// TODO: temporary table structure/data visibility not clear from documentation
+		public override TableOptions SupportedTableOptions => TableOptions.CheckExistence | TableOptions.IsTemporary;
 
-		// SQL builder is not thread-safe and we always create new instance on request
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
-		{
-			return new NitrosBaseSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
-		}
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema) => new NitrosBaseSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 
-		// sql optimizer must be thread-safe and we must use shared instance
 		readonly ISqlOptimizer _sqlOptimizer;
-
 		public override ISqlOptimizer GetSqlOptimizer() => _sqlOptimizer;
 
-		// schema provider is not thread-safe
-		// if database doesn't expose schema information this method should throw exception
 		public override ISchemaProvider GetSchemaProvider() => new NitrosBaseSchemaProvider();
 		#endregion
 
