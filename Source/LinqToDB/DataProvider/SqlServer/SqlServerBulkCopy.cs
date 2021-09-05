@@ -275,8 +275,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			switch (((SqlServerDataProvider)helper.DataConnection.DataProvider).Version)
 			{
 				case SqlServerVersion.v2000 :
-				case SqlServerVersion.v2005 : ret = MultipleRowsCopy2(helper, source, ""); break;
-				default                     : ret = MultipleRowsCopy1(helper, source);     break;
+				case SqlServerVersion.v2005 : ret = MultipleRowsCopy2(helper, source, null); break;
+				default                     : ret = MultipleRowsCopy1(helper, source);       break;
 			}
 
 			if (options.KeepIdentity == true)
@@ -300,7 +300,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				case SqlServerVersion.v2000:
 				case SqlServerVersion.v2005:
-					ret = await MultipleRowsCopy2Async(helper, source, "", cancellationToken)
+					ret = await MultipleRowsCopy2Async(helper, source, null, cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					break;
 				default:
@@ -332,7 +332,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				case SqlServerVersion.v2000:
 				case SqlServerVersion.v2005:
-					ret = await MultipleRowsCopy2Async(helper, source, "", cancellationToken)
+					ret = await MultipleRowsCopy2Async(helper, source, null, cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					break;
 				default:

@@ -16,7 +16,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			if (options.KeepIdentity == true)
 				helper.DataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " ON");
 
-			var ret = MultipleRowsCopy2(helper, source, "");
+			var ret = MultipleRowsCopy2(helper, source, null);
 
 			if (options.KeepIdentity == true)
 				helper.DataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " OFF");
@@ -33,7 +33,7 @@ namespace LinqToDB.DataProvider.SqlCe
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON", cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			var ret = await MultipleRowsCopy2Async(helper, source, "", cancellationToken)
+			var ret = await MultipleRowsCopy2Async(helper, source, null, cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			if (options.KeepIdentity == true)
@@ -53,7 +53,7 @@ namespace LinqToDB.DataProvider.SqlCe
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON", cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			var ret = await MultipleRowsCopy2Async(helper, source, "", cancellationToken)
+			var ret = await MultipleRowsCopy2Async(helper, source, null, cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			if (options.KeepIdentity == true)
