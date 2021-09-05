@@ -27,7 +27,6 @@
 
 		protected NitrosBaseMappingSchema(string configuration) : base(configuration)
 		{
-			// TODO: add/override default schema configuration
 		}
 
 		/// <summary>
