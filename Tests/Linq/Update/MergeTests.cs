@@ -20,6 +20,7 @@ namespace Tests.xUpdate
 			{
 				TestProvName.AllAccess,
 				ProviderName.SqlCe,
+				ProviderName.NitrosBase,
 				TestProvName.AllSQLite,
 				TestProvName.AllSqlServer2005Minus,
 				TestProvName.AllPostgreSQL,

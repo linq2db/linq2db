@@ -247,6 +247,7 @@ public class a_CreateData : TestBase
 	{
 		switch (context)
 		{
+			case ProviderName.NitrosBase                          : RunScript(context,          "\nGO\n", "NitrosBase");                   break;
 			case ProviderName.Firebird                            :
 			case TestProvName.Firebird3                           :
 			case TestProvName.Firebird4                           : RunScript(context,          "COMMIT;", "Firebird", FirebirdAction);    break;

@@ -11,6 +11,16 @@
 		<PackageReference Include="Microsoft.Data.SqlClient" />
 		<PackageReference Include="Microsoft.Data.SQLite" />
 		<PackageReference Include="Npgsql" />
+
+		<!--temporary local assembly reference, later we will switch to nuget-->
+		<Reference Include="Nitros.Net">
+			<HintPath>..\..\Redist\NitrosBase\Nitros.Net.dll</HintPath>
+		</Reference>
+		<Content Include="..\..\Redist\NitrosBase\nbclient.dll">
+			<Link>%(Filename)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<Visible>False</Visible>
+		</Content>
 	</ItemGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net472'">

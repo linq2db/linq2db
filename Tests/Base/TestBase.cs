@@ -437,7 +437,8 @@ namespace Tests
 			TestProvName.MariaDB,
 			ProviderName.SQLiteMS,
 			ProviderName.SapHanaNative,
-			ProviderName.SapHanaOdbc
+			ProviderName.SapHanaOdbc,
+			ProviderName.NitrosBase,
 		}).ToList();
 
 		protected ITestDataContext GetDataContext(string configuration, MappingSchema? ms = null, bool testLinqService = true)
@@ -1309,6 +1310,7 @@ namespace Tests
 			var finalTableName = tableName;
 			switch (GetProviderName(context, out var _))
 			{
+				case ProviderName.NitrosBase                         :
 				case TestProvName.SqlAzure                           :
 				case ProviderName.SqlServer                          :
 				case ProviderName.SqlServer2000                      :
