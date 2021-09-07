@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using LinqToDB.Common;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Metadata
 {
@@ -46,7 +47,17 @@ namespace LinqToDB.Metadata
 			//	{
 					var attrs = /*e.Key.*/memberInfo.GetCustomAttributes(/*e.Key.attribute*/typeof(T), /*e.Key.*/inherit);
 					if (attrs.Length == 0)
+					{
+						if (inherit && type.BaseType != null &&
+						    type.BaseType            != typeof(object))
+						{
+							var baseInfo = type.BaseType.GetMemberEx(memberInfo);
+							if (baseInfo != null)
+								return GetAttributes<T>(type.BaseType, baseInfo, true);
+						}
+
 						return Array<T>.Empty;
+					}
 
 					var arr   = new T[attrs.Length];
 

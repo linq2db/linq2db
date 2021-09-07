@@ -1461,13 +1461,14 @@ namespace LinqToDB.Linq.Builder
 										var newField = SqlTable[fieldName];
 										if (newField == null)
 										{
-											newField = new SqlField(new ColumnDescriptor(
-												Builder.MappingSchema,
-												new ColumnAttribute(fieldName),
-												new MemberAccessor(EntityDescriptor.TypeAccessor, memberExpression.Member, EntityDescriptor)))
-												{
-													IsDynamic        = true,
-												};
+											newField = new SqlField(
+												new ColumnDescriptor(
+													Builder.MappingSchema,
+													new ColumnAttribute(fieldName),
+													new MemberAccessor(EntityDescriptor.TypeAccessor,
+														memberExpression.Member, EntityDescriptor),
+													InheritanceMapping.Count > 0)
+											) { IsDynamic = true, };
 
 											SqlTable.Add(newField);
 										}

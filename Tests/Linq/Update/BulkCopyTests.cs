@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Informix;
@@ -367,5 +368,96 @@ namespace Tests.xUpdate
 			for (var i = 0; i < count; i++)
 				yield return new SimpleBulkCopyTable() { Id = start + i };
 		}
+
+		[Table("TPHTable")]
+		[InheritanceMapping(Code = 1, Type = typeof(Inherited1))]
+		[InheritanceMapping(Code = 2, Type = typeof(Inherited2))]
+		[InheritanceMapping(Code = 3, Type = typeof(Inherited3))]
+		abstract class BaseClass
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column(IsDiscriminator = true)]
+			public abstract int Discriminator { get; }
+		}
+
+		class Inherited1 : BaseClass
+		{
+			public override int Discriminator => 1;
+
+			[Column(Length = 50)]
+			public string? Value1 { get; set; }
+		}		
+		
+		class Inherited2 : BaseClass
+		{
+			public override int Discriminator => 2;
+
+			[Column(Length = 50)]
+			public string? Value2 { get; set; }
+		}		
+		
+		class Inherited3 : BaseClass
+		{
+			public override int Discriminator => 3;
+
+			[Column(Length = 50)]
+			public string? Value3 { get; set; }
+
+			public bool? NullableBool { get; set; }
+		}
+
+		[Test]
+		public void BulcopyTPH(
+			[DataSources(false)] string context,
+			[Values] BulkCopyType copyType)
+		{
+			var ms = new MappingSchema();
+
+			ms.GetFluentMappingBuilder()
+				.Entity<Inherited3>()
+				.Property(e => e.NullableBool)
+				.HasDataType(DataType.VarChar)
+				.HasLength(1)
+				.HasConversion(b => b.HasValue ? b.Value ? "Y" : "N" : null, s => s != null ? s == "Y" : null, true);
+
+			var data = new BaseClass[]
+			{
+				new Inherited1 { Id = 1, Value1 = "Str1" },
+				new Inherited2 { Id = 2, Value2 = "Str2" },
+				new Inherited3 { Id = 3, Value3 = "Str3", NullableBool = true },
+			};
+
+			using (var db = new DataConnection(context, ms))
+			using (var table = db.CreateLocalTable<BaseClass>())
+			{
+				table.BulkCopy(new BulkCopyOptions { BulkCopyType = copyType }, data);
+
+				var items = table.ToArray();
+
+				items[0].Id.Should().Be(1);
+				items[0].Discriminator.Should().Be(1);
+				((Inherited1)items[0]).Value1.Should().Be("Str1");
+
+				items[1].Id.Should().Be(2);
+				items[1].Discriminator.Should().Be(2);
+				((Inherited2)items[1]).Value2.Should().Be("Str2");
+
+				items[2].Id.Should().Be(3);
+				items[2].Discriminator.Should().Be(3);
+				((Inherited3)items[2]).Value3.Should().Be("Str3");
+
+				table.Single(x => x is Inherited1).Should().BeOfType(typeof(Inherited1));
+				table.Single(x => x is Inherited2).Should().BeOfType(typeof(Inherited2));
+				table.Single(x => x is Inherited3).Should().BeOfType(typeof(Inherited3));
+
+				table.Single(x => ((Inherited1)x).Value1 == "Str1").Should().BeOfType(typeof(Inherited1));
+				table.Single(x => ((Inherited2)x).Value2 == "Str2").Should().BeOfType(typeof(Inherited2));
+				table.Single(x => ((Inherited3)x).Value3 == "Str3").Should().BeOfType(typeof(Inherited3));
+
+			}
+		}
+
 	}
 }
