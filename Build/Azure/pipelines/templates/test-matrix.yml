@@ -933,8 +933,8 @@ jobs:
           config_macos: db2
           script_linux: db2.sh
           script_macos: mac.db2.sh
-          nuget_linux: IBM.Data.DB2.Core-lnx -Version 2.2.0.100
-          nuget_macos: IBM.Data.DB2.Core-osx -Version 2.0.0.100
+          nuget_linux: IBM.Data.DB2.Core-lnx -Version 3.1.0.500
+          nuget_macos: IBM.Data.DB2.Core-osx -Version 3.1.0.500
           install_docker_macos: true
           enable_os_win2016: false
           enable_os_win2019: false
@@ -942,9 +942,9 @@ jobs:
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: false
-          enable_fw_netcore21: true
+          enable_fw_netcore21: false
           enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]')) }}:
             enabled: true
@@ -958,8 +958,8 @@ jobs:
           config_macos: informix
           script_linux: informix12.sh
           script_macos: mac.informix12.sh
-          nuget_linux: IBM.Data.DB2.Core-lnx -Version 2.2.0.100
-          nuget_macos: IBM.Data.DB2.Core-osx -Version 2.0.0.100
+          nuget_linux: IBM.Data.DB2.Core-lnx -Version 3.1.0.500
+          nuget_macos: IBM.Data.DB2.Core-osx -Version 3.1.0.500
           install_docker_macos: true
           enable_os_win2016: false
           enable_os_win2019: false
@@ -967,9 +967,9 @@ jobs:
           enable_os_ubuntu20: false # true (needs working docker image)
           enable_os_macos: # false true (needs working docker image)
           enable_fw_net472: false
-          enable_fw_netcore21: true
+          enable_fw_netcore21: false
           enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[informix.all]')) }}:
             enabled: true
@@ -982,8 +982,8 @@ jobs:
           config_macos: informix
           script_linux: informix14.sh
           script_macos: mac.informix14.sh
-          nuget_linux: IBM.Data.DB2.Core-lnx -Version 2.2.0.100
-          nuget_macos: IBM.Data.DB2.Core-osx -Version 2.0.0.100
+          nuget_linux: IBM.Data.DB2.Core-lnx -Version 3.1.0.500
+          nuget_macos: IBM.Data.DB2.Core-osx -Version 3.1.0.500
           install_docker_macos: true
           enable_os_win2016: false
           enable_os_win2019: false
@@ -991,9 +991,9 @@ jobs:
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: false
-          enable_fw_netcore21: true
+          enable_fw_netcore21: false
           enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[informix.all]')) }}:
             enabled: true
