@@ -52,7 +52,7 @@
 		<PackageVersion Include="JetBrains.Profiler.Api" Version="1.1.7" />
 		<PackageVersion Include="Humanizer.Core" Version="2.11.10" />
 		<PackageVersion Include="FSharp.Core" Version="5.0.2" />
-		<PackageVersion Include="Microsoft.AspNet.OData" Version="7.5.9" />
+		<PackageVersion Include="Microsoft.AspNet.OData" Version="7.5.8" />
 		<PackageVersion Include="NodaTime" Version="3.0.5" />
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.2" />
 
