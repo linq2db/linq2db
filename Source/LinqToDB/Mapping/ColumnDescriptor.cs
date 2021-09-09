@@ -598,15 +598,13 @@ namespace LinqToDB.Mapping
 					// suggest default discriminator value
 
 					var defaultValue = current.InheritanceMapping.FirstOrDefault(m => m.IsDefault);
-					Expression valueExpr = defaultValue == null
-						? param
-						: Expression.Constant(Convert.ChangeType(defaultValue.Code, param.Type));
+					var valueExpr = MappingSchema.GenerateConvertedValueExpression(defaultValue?.Code, param.Type);
 
 					for (var index = current.InheritanceMapping.Count - 1; index >= 0; index--)
 					{
 						var mapping = current.InheritanceMapping[index];
 						valueExpr = Expression.Condition(Expression.TypeIs(objParam, mapping.Type),
-							Expression.Constant(Convert.ChangeType(mapping.Code, param.Type)), valueExpr);
+							MappingSchema.GenerateConvertedValueExpression(mapping.Code, param.Type), valueExpr);
 					}
 
 					Expression defaultCheckExpression = param.Type == typeof(string)
