@@ -21,12 +21,14 @@ namespace LinqToDB.Mapping
 		/// Creates descriptor instance.
 		/// </summary>
 		/// <param name="mappingSchema">Mapping schema, associated with descriptor.</param>
+		/// <param name="entityDescriptor">Entity descriptor.</param>
 		/// <param name="columnAttribute">Column attribute, from which descriptor data should be extracted.</param>
 		/// <param name="memberAccessor">Column mapping member accessor.</param>
-		/// <param name="hasInheritanceMapping">Owned entity included in inheritance mapping.</param>
-		public ColumnDescriptor(MappingSchema mappingSchema, ColumnAttribute? columnAttribute, MemberAccessor memberAccessor, bool hasInheritanceMapping)
+		/// <param name="hasInheritanceMapping">Owning entity included in inheritance mapping.</param>
+		public ColumnDescriptor(MappingSchema mappingSchema, EntityDescriptor entityDescriptor, ColumnAttribute? columnAttribute, MemberAccessor memberAccessor, bool hasInheritanceMapping)
 		{
 			MappingSchema         = mappingSchema;
+			EntityDescriptor      = entityDescriptor;
 			MemberAccessor        = memberAccessor;
 			MemberInfo            = memberAccessor.MemberInfo;
 			HasInheritanceMapping = hasInheritanceMapping;
@@ -179,12 +181,17 @@ namespace LinqToDB.Mapping
 		public MappingSchema  MappingSchema   { get; }
 
 		/// <summary>
+		/// Gets Entity descriptor.
+		/// </summary>
+		public EntityDescriptor EntityDescriptor { get; }
+
+		/// <summary>
 		/// Gets column mapping member accessor.
 		/// </summary>
 		public MemberAccessor MemberAccessor  { get; }
 
 		/// <summary>
-		/// Owned entity included in inheritance mapping.
+		/// Indicates that owning entity included in inheritance mapping.
 		/// </summary>
 		public bool HasInheritanceMapping { get; }
 
@@ -567,6 +574,58 @@ namespace LinqToDB.Mapping
 			var objParam   = Expression.Parameter(MemberAccessor.TypeAccessor.Type, "obj");
 			var getterExpr = MemberAccessor.GetterExpression.GetBody(objParam);
 			var dbDataType = GetDbDataType(true);
+
+			if (IsDiscriminator && MemberAccessor.HasSetter)
+			{
+				var param = Expression.Parameter(getterExpr.Type, "v");
+
+				var current = EntityDescriptor;
+				do
+				{
+					if (current.InheritanceMapping.Count > 0)
+						break;
+
+					if (current.ObjectType.BaseType == typeof(object) || current.ObjectType.BaseType == null)
+						break;
+
+					current = MappingSchema.GetEntityDescriptor(current.ObjectType.BaseType!);
+
+				} while (true);
+
+
+				if (current.InheritanceMapping.Count > 0)
+				{
+					// suggest default discriminator value
+
+					var defaultValue = current.InheritanceMapping.FirstOrDefault(m => m.IsDefault);
+					Expression valueExpr = defaultValue == null
+						? param
+						: Expression.Constant(Convert.ChangeType(defaultValue.Code, param.Type));
+
+					for (var index = current.InheritanceMapping.Count - 1; index >= 0; index--)
+					{
+						var mapping = current.InheritanceMapping[index];
+						valueExpr = Expression.Condition(Expression.TypeIs(objParam, mapping.Type),
+							Expression.Constant(Convert.ChangeType(mapping.Code, param.Type)), valueExpr);
+					}
+
+					Expression defaultCheckExpression = param.Type == typeof(string)
+						? Expression.Call(typeof(string), nameof(string.IsNullOrEmpty), Type.EmptyTypes, param)
+						: Expression.Equal(param, new DefaultValueExpression(MappingSchema, param.Type));
+
+					var suggestLambda = Expression.Lambda(
+						Expression.Condition(
+							defaultCheckExpression,
+							valueExpr,
+							param
+						),
+						param
+					);
+
+					getterExpr = InternalExtensions.ApplyLambdaToExpression(suggestLambda, getterExpr);
+				}
+
+			}
 
 			getterExpr = ApplyConversions(getterExpr, dbDataType, true);
 

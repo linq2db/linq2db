@@ -1464,6 +1464,7 @@ namespace LinqToDB.Linq.Builder
 											newField = new SqlField(
 												new ColumnDescriptor(
 													Builder.MappingSchema,
+													EntityDescriptor,
 													new ColumnAttribute(fieldName),
 													new MemberAccessor(EntityDescriptor.TypeAccessor,
 														memberExpression.Member, EntityDescriptor),

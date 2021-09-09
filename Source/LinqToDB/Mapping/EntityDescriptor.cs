@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace LinqToDB.Mapping
@@ -14,6 +15,7 @@ namespace LinqToDB.Mapping
 	/// <summary>
 	/// Stores mapping entity descriptor.
 	/// </summary>
+	[DebuggerDisplay("{TypeAccessor.Type.Name} (\"{TableName}\")")]
 	public class EntityDescriptor : IEntityChangeDescriptor
 	{
 		/// <summary>
@@ -244,7 +246,7 @@ namespace LinqToDB.Mapping
 							}
 							else
 							{
-								var cd = new ColumnDescriptor(MappingSchema, ca, member, hasInheritanceMapping);
+								var cd = new ColumnDescriptor(MappingSchema, this, ca, member, hasInheritanceMapping);
 								AddColumn(cd);
 								_columnNames.Add(member.Name, cd);
 							}
@@ -256,7 +258,7 @@ namespace LinqToDB.Mapping
 					MappingSchema.GetAttribute<IdentityAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration) != null ||
 					MappingSchema.GetAttribute<PrimaryKeyAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration) != null)
 				{
-					var cd = new ColumnDescriptor(MappingSchema, null, member, hasInheritanceMapping);
+					var cd = new ColumnDescriptor(MappingSchema, this, null, member, hasInheritanceMapping);
 					AddColumn(cd);
 					_columnNames.Add(member.Name, cd);
 				}
@@ -297,7 +299,7 @@ namespace LinqToDB.Mapping
 			if (attr.MemberName.IndexOf('.') < 0)
 			{
 				var ex = TypeAccessor[attr.MemberName];
-				var cd = new ColumnDescriptor(MappingSchema, attr, ex, hasInheritanceMapping);
+				var cd = new ColumnDescriptor(MappingSchema, this, attr, ex, hasInheritanceMapping);
 
 				if (_columnNames.Remove(attr.MemberName))
 					Columns.RemoveAll(c => c.MemberName == attr.MemberName);
@@ -307,7 +309,7 @@ namespace LinqToDB.Mapping
 			}
 			else
 			{
-				var cd = new ColumnDescriptor(MappingSchema, attr, new MemberAccessor(TypeAccessor, attr.MemberName, this), hasInheritanceMapping);
+				var cd = new ColumnDescriptor(MappingSchema, this, attr, new MemberAccessor(TypeAccessor, attr.MemberName, this), hasInheritanceMapping);
 
 				if (!string.IsNullOrWhiteSpace(attr.MemberName))
 				{
@@ -478,7 +480,7 @@ namespace LinqToDB.Mapping
 				if (dynamicStoreAttribute is DynamicColumnsStoreAttribute storeAttribute)
 				{
 					var member          = storeMembers[storeAttribute];
-					DynamicColumnsStore = new ColumnDescriptor(MappingSchema, new ColumnAttribute(member.Name), member, hasInheritanceMapping);
+					DynamicColumnsStore = new ColumnDescriptor(MappingSchema, this, new ColumnAttribute(member.Name), member, hasInheritanceMapping);
 
 					// getter expression
 					var storageType = member.MemberInfo.GetMemberType();

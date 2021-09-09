@@ -459,5 +459,78 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[Table("TPHTableDefault")]
+		[InheritanceMapping(Code = 1, Type = typeof(InheritedDefault1))]
+		[InheritanceMapping(Code = 2, Type = typeof(InheritedDefault2))]
+		[InheritanceMapping(Code = 3, Type = typeof(InheritedDefault3))]
+		abstract class BaseDefaultDiscriminator
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column(IsDiscriminator = true)]
+			public int Discriminator { get; set; }
+		}
+
+		class InheritedDefault1 : BaseDefaultDiscriminator
+		{
+			[Column(Length = 50)]
+			public string? Value1 { get; set; }
+		}		
+		
+		class InheritedDefault2 : BaseDefaultDiscriminator
+		{
+			[Column(Length = 50)]
+			public string? Value2 { get; set; }
+		}		
+		
+		class InheritedDefault3 : BaseDefaultDiscriminator
+		{
+			[Column(Length = 50)]
+			public string? Value3 { get; set; }
+		}
+
+		[Test]
+		public void BulcopyTPHDefault(
+			[IncludeDataSources(false, TestProvName.AllSQLite)] string context,
+			[Values] BulkCopyType copyType)
+		{
+			var data = new BaseDefaultDiscriminator[]
+			{
+				new InheritedDefault1 { Id = 1, Value1 = "Str1" },
+				new InheritedDefault2 { Id = 2, Value2 = "Str2" },
+				new InheritedDefault3 { Id = 3, Value3 = "Str3" },
+			};
+
+			using (var db = new DataConnection(context))
+			using (var table = db.CreateLocalTable<BaseDefaultDiscriminator>())
+			{
+				table.BulkCopy(new BulkCopyOptions { BulkCopyType = copyType }, data);
+
+				var items = table.ToArray();
+
+				items[0].Id.Should().Be(1);
+				items[0].Discriminator.Should().Be(1);
+				((InheritedDefault1)items[0]).Value1.Should().Be("Str1");
+
+				items[1].Id.Should().Be(2);
+				items[1].Discriminator.Should().Be(2);
+				((InheritedDefault2)items[1]).Value2.Should().Be("Str2");
+
+				items[2].Id.Should().Be(3);
+				items[2].Discriminator.Should().Be(3);
+				((InheritedDefault3)items[2]).Value3.Should().Be("Str3");
+
+				table.Single(x => x is InheritedDefault1).Should().BeOfType(typeof(InheritedDefault1));
+				table.Single(x => x is InheritedDefault2).Should().BeOfType(typeof(InheritedDefault2));
+				table.Single(x => x is InheritedDefault3).Should().BeOfType(typeof(InheritedDefault3));
+
+				table.Single(x => ((InheritedDefault1)x).Value1 == "Str1").Should().BeOfType(typeof(InheritedDefault1));
+				table.Single(x => ((InheritedDefault2)x).Value2 == "Str2").Should().BeOfType(typeof(InheritedDefault2));
+				table.Single(x => ((InheritedDefault3)x).Value3 == "Str3").Should().BeOfType(typeof(InheritedDefault3));
+			}
+		}
+
+
 	}
 }
