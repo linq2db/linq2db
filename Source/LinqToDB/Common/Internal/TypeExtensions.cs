@@ -154,40 +154,87 @@ namespace LinqToDB.Common.Internal
 			}
 		}
 
+		public static Type UnwrapNullableType(this Type type)
+			=> Nullable.GetUnderlyingType(type) ?? type;
+
+		public static bool IsNullableValueType(this Type type)
+			=> type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+
+		public static bool IsNullableType(this Type type)
+			=> !type.IsValueType || type.IsNullableValueType();
+
+
+		public static bool IsInteger(this Type type)
+		{
+			type = type.UnwrapNullableType();
+
+			return type    == typeof(int)
+			       || type == typeof(long)
+			       || type == typeof(short)
+			       || type == typeof(byte)
+			       || type == typeof(uint)
+			       || type == typeof(ulong)
+			       || type == typeof(ushort)
+			       || type == typeof(sbyte)
+			       || type == typeof(char);
+		}
+
 		public static bool IsNumericType(this Type? type)
 		{
-			return type != null && type.In(NumericTypes);
+			if (type == null)
+				return false;
+
+			type = type.UnwrapNullableType();
+
+			return type.IsInteger()
+			       || type == typeof(decimal)
+			       || type == typeof(float)
+			       || type == typeof(double);
+		}
+
+		public static bool IsSignedInteger(this Type type)
+		{
+			return type    == typeof(int)
+			       || type == typeof(long)
+			       || type == typeof(short)
+			       || type == typeof(sbyte);
 		}
 
 		public static bool IsSignedType(this Type? type)
 		{
-			return type != null && type.In(SignedTypes);
+			return type != null &&
+			       (IsSignedInteger(type)
+			        || type == typeof(decimal)
+			        || type == typeof(double)
+			        || type == typeof(float)
+			       );
 		}
 
-		private static readonly Type[] NumericTypes =
+		public static bool IsTupleType(this Type type)
+		{
+			if (type == typeof(Tuple))
 			{
-				typeof(byte),
-				typeof(decimal),
-				typeof(double),
-				typeof(float),
-				typeof(int),
-				typeof(long),
-				typeof(sbyte),
-				typeof(short),
-				typeof(uint),
-				typeof(ulong),
-				typeof(ushort)
-			};
+				return true;
+			}
 
-		private static readonly Type[] SignedTypes =
+			if (type.IsGenericType)
 			{
-				typeof(decimal),
-				typeof(double),
-				typeof(float),
-				typeof(int),
-				typeof(long),
-				typeof(short)
-			};
+				var genericDefinition = type.GetGenericTypeDefinition();
+				if (genericDefinition    == typeof(Tuple<>)
+				    || genericDefinition == typeof(Tuple<,>)
+				    || genericDefinition == typeof(Tuple<,,>)
+				    || genericDefinition == typeof(Tuple<,,,>)
+				    || genericDefinition == typeof(Tuple<,,,,>)
+				    || genericDefinition == typeof(Tuple<,,,,,>)
+				    || genericDefinition == typeof(Tuple<,,,,,,>)
+				    || genericDefinition == typeof(Tuple<,,,,,,,>)
+				    || genericDefinition == typeof(Tuple<,,,,,,,>))
+				{
+					return true;
+				}
+			}
 
+			return false;
+		}
 	}
 }

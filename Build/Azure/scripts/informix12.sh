@@ -2,8 +2,8 @@
 
 rm -rf ./clidriver/*
 rm ./IBM.Data.DB2.Core.dll
-cp -a ./IBM.Data.DB2.Core-lnx/build/clidriver/. ./clidriver/
-cp -f ./IBM.Data.DB2.Core-lnx/lib/netstandard2.0/IBM.Data.DB2.Core.dll ./IBM.Data.DB2.Core.dll
+cp -a ./IBM.Data.DB2.Core-lnx/buildTransitive/clidriver/. ./clidriver/
+cp -f ./IBM.Data.DB2.Core-lnx/lib/netstandard2.1/IBM.Data.DB2.Core.dll ./IBM.Data.DB2.Core.dll
 
 echo "##vso[task.setvariable variable=PATH]$PATH:$PWD/clidriver/bin:$PWD/clidriver/lib"
 echo "##vso[task.setvariable variable=LD_LIBRARY_PATH]$PWD/clidriver/lib/"

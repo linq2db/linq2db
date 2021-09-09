@@ -26,6 +26,10 @@ namespace LinqToDB.Linq.Builder
 		{
 			DataContext = dataContext;
 			MappingSchema = dataContext.MappingSchema;
+
+			_expandExpressionTransformer =
+				TransformVisitor<ExpressionTreeOptimizationContext>.Create(this,
+					static (ctx, expr) => ctx.ExpandExpressionTransformer(expr));
 		}
 
 		private EqualsToVisitor.EqualsToInfo? _equalsToContext;
@@ -166,7 +170,7 @@ namespace LinqToDB.Linq.Builder
 			return new TransformInfo(expr);
 		}
 
-		public static Expression ExpandExpression(Expression expression)
+		public Expression ExpandExpression(Expression expression)
 		{
 			expression = AggregateExpression(expression);
 
@@ -175,8 +179,9 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		private static readonly TransformVisitor<object?> _expandExpressionTransformer = TransformVisitor<object?>.Create(ExpandExpressionTransformer);
-		public static Expression ExpandExpressionTransformer(Expression expr)
+		private TransformVisitor<ExpressionTreeOptimizationContext> _expandExpressionTransformer;
+
+		public Expression ExpandExpressionTransformer(Expression expr)
 		{
 			switch (expr.NodeType)
 			{
@@ -255,6 +260,18 @@ namespace LinqToDB.Linq.Builder
 								return ExpandExpression(newBody);
 							}
 						}
+					}
+					break;
+				}
+
+				case ExpressionType.Conditional:
+				{
+					var conditional = (ConditionalExpression)expr;
+					if (CanBeCompiled(conditional.Test))
+					{
+						var testValue = conditional.Test.EvaluateExpression();
+						if (testValue is bool test)
+							return test ? ExpandExpression(conditional.IfTrue) : ExpandExpression(conditional.IfFalse);
 					}
 					break;
 				}

@@ -186,6 +186,7 @@ namespace LinqToDB.SqlQuery
 			{
 				case QueryElementType.SqlParameter:
 				case QueryElementType.SqlField    :
+				case QueryElementType.SqlQuery    :
 				case QueryElementType.Column      : return true;
 				case QueryElementType.SqlExpression:
 				{

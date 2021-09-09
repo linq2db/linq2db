@@ -525,7 +525,7 @@ namespace LinqToDB.DataProvider.Oracle
 			Varchar2     = 126,
 			XmlType      = 127,
 
-			// native provider-only
+			// native provider and recent managed (21.3.0)
 			Array        = 128,
 			Object       = 129,
 			Ref          = 130,
