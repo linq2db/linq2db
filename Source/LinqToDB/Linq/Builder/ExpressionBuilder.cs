@@ -115,10 +115,11 @@ namespace LinqToDB.Linq.Builder
 		public          SqlComment?                Tag;
 
 		public ExpressionBuilder(
-			Query                  query,
-			IDataContext           dataContext,
-			Expression             expression,
-			ParameterExpression[]? compiledParameters)
+			Query                             query,
+			ExpressionTreeOptimizationContext optimizationContext,
+			IDataContext                      dataContext,
+			Expression                        expression,
+			ParameterExpression[]?            compiledParameters)
 		{
 			_query               = query;
 
@@ -130,7 +131,7 @@ namespace LinqToDB.Linq.Builder
 			DataContext          = dataContext;
 			OriginalExpression   = expression;
 
-			_optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
+			_optimizationContext = optimizationContext;
 			Expression           = ConvertExpressionTree(expression);
 			_optimizationContext.ClearVisitedCache();
 			
