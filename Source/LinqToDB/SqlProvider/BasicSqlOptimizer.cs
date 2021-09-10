@@ -1834,7 +1834,7 @@ namespace LinqToDB.SqlProvider
 					}
 					
 					break;
-				}	
+				}
 				case QueryElementType.IsTruePredicate:
 					return ((SqlPredicate.IsTrue)predicate).Reduce();
 				case QueryElementType.LikePredicate:

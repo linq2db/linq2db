@@ -1967,7 +1967,6 @@ namespace LinqToDB.SqlProvider
 					}
 
 					break;
-
 				default:
 					throw new InvalidOperationException($"Unexpected predicate type {predicate.ElementType}");
 			}

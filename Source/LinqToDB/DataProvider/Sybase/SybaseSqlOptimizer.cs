@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.DataProvider.Sybase
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace LinqToDB.DataProvider.Sybase
 {
 	using SqlProvider;
 	using SqlQuery;
@@ -87,6 +90,9 @@
 					var join = sourceTable.Joins[i];
 					if (join.Table.Source == tableToUpdate)
 					{
+						var sources = new HashSet<ISqlTableSource>() { tableToUpdate };
+						if (sourceTable.Joins.Skip(i + 1).Any(j => QueryHelper.IsDependsOn(j, sources)))
+							break;
 						statement.SelectQuery.From.Tables.Insert(0, join.Table);
 						statement.SelectQuery.Where.SearchCondition.EnsureConjunction().Conditions
 							.Add(new SqlCondition(false, join.Condition));

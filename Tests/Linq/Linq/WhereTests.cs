@@ -1793,6 +1793,34 @@ namespace Tests.Linq
 			return value => value == "1" ? "test" : value;
 		}
 
+		class WhereWithBool
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column]
+			public bool BoolValue { get; set; }
+		}
+
+		[Test]
+		public void BooleanSubquery([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<WhereWithBool>(new List<WhereWithBool>(){new WhereWithBool()
+			{
+				Id = 1,
+				BoolValue = true
+			}}))
+			{
+				var query =
+					from t in table
+					where table.Single(x => x.Id == 1).BoolValue
+					select t;
+
+				var result = query.ToArray();
+			}
+		}
+
 		#region issue 2424
 		class Isue2424Table
 		{
