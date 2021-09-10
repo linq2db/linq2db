@@ -1,8 +1,8 @@
 #!/bin/bash
 
-cp -f ./IBM.Data.DB2.Core-osx/lib/netstandard2.0/IBM.Data.DB2.Core.dll ./IBM.Data.DB2.Core.dll
+cp -f ./IBM.Data.DB2.Core-osx/lib/netstandard2.1/IBM.Data.DB2.Core.dll ./IBM.Data.DB2.Core.dll
 rm -rf ./clidriver/
-cp -rf ./IBM.Data.DB2.Core-osx/build/clidriver/ ./clidriver/
+cp -rf ./IBM.Data.DB2.Core-osx/buildTransitive/clidriver/ ./clidriver/
 
 docker run -d --name informix -e INIT_FILE=linq2db.sql -e LICENSE=ACCEPT -p 9089:9089 ibmcom/informix-developer-database:latest
 

@@ -472,13 +472,14 @@ namespace LinqToDB.Linq
 
 		public static Query<T> GetQuery(IDataContext dataContext, ref Expression expr)
 		{
-			expr = ExpressionTreeOptimizationContext.ExpandExpression(expr);
+			var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
+			expr = optimizationContext.ExpandExpression(expr);
 
 			if (dataContext is IExpressionPreprocessor preprocessor)
 				expr = preprocessor.ProcessExpression(expr);
 
 			if (Configuration.Linq.DisableQueryCache)
-				return CreateQuery(dataContext, expr);
+				return CreateQuery(optimizationContext, dataContext, expr);
 
 			// calculate query flags
 			var flags = QueryFlags.None;
@@ -498,7 +499,7 @@ namespace LinqToDB.Linq
 
 			if (query == null)
 			{
-				query = CreateQuery(dataContext, expr);
+				query = CreateQuery(optimizationContext, dataContext, expr);
 
 				if (!query.DoNotCache)
 					_queryCache.TryAdd(dataContext, query, flags);
@@ -507,7 +508,7 @@ namespace LinqToDB.Linq
 			return query;
 		}
 
-		static Query<T> CreateQuery(IDataContext dataContext, Expression expr)
+		static Query<T> CreateQuery(ExpressionTreeOptimizationContext optimizationContext, IDataContext dataContext, Expression expr)
 		{
 			if (Configuration.Linq.GenerateExpressionTest)
 			{
@@ -524,7 +525,7 @@ namespace LinqToDB.Linq
 
 			try
 			{
-				query = new ExpressionBuilder(query, dataContext, expr, null).Build<T>();
+				query = new ExpressionBuilder(query, optimizationContext, dataContext, expr, null).Build<T>();
 			}
 			catch (Exception)
 			{

@@ -477,11 +477,11 @@ jobs:
       with_baselines: ${{ parameters.with_baselines }}
 
 ########################################
-#  Tests: Ubuntu 16.04 (NETCOREAPP2_1) #
+#  Tests: Ubuntu 18.04 (NETCOREAPP2_1) #
 ########################################
-- job: test_ubuntu_16_netcoreapp21_job
+- job: test_ubuntu_18_netcoreapp21_job
   pool:
-    vmImage: 'ubuntu-16.04'
+    vmImage: 'ubuntu-18.04'
   displayName: 'Tests: Lin / NETCOREAPP2.1 / '
   dependsOn: create_baselines_branch
   condition: ${{ parameters.enabled }}
@@ -491,7 +491,7 @@ jobs:
   strategy:
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
-        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_ubuntu16, 'true'), eq(test_config.enable_fw_netcore21, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_ubuntu18, 'true'), eq(test_config.enable_fw_netcore21, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_linux }}
@@ -626,7 +626,7 @@ jobs:
   - test_ubuntu_20_netcoreapp21_job
   - test_ubuntu_20_netcoreapp31_job
   - test_ubuntu_20_net50_job
-  - test_ubuntu_16_netcoreapp21_job
+  - test_ubuntu_18_netcoreapp21_job
   - test_macos_netcoreapp21_job
   - test_macos_netcoreapp31_job
   - test_macos_net50_job

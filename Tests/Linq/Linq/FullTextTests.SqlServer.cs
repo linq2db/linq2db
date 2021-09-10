@@ -2,6 +2,8 @@
 using LinqToDB.DataProvider.SqlServer;
 using NUnit.Framework;
 using System.Linq;
+using FluentAssertions;
+using FluentAssertions.Common;
 using Tests.Model;
 
 namespace Tests.Linq
@@ -2010,6 +2012,24 @@ namespace Tests.Linq
 				Assert.That(db.LastQuery!.Contains("CONTAINS(([c1].*), N'meat')"));
 			}
 		}
+
+		[Test]
+		public void ContainsWithWindowFunction([IncludeDataSources(TestProvName.Northwind)] string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var q =
+					from c1 in db.Category
+					from c in db.Category.InnerJoin(c => c.CategoryID == c1.CategoryID)
+					where Sql.Ext.SqlServer().Contains("candy OR meat", c)
+					select Sql.Ext.Max(c.CategoryName).Over().PartitionBy(c != null ? 1 : 0).ToValue();
+
+				q.Should().HaveCount(1);
+
+				db.LastQuery!.Should().Contain("*", Exactly.Once());
+			}
+		}
+
 
 		#endregion
 

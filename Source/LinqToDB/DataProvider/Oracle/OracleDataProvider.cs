@@ -180,7 +180,12 @@ namespace LinqToDB.DataProvider.Oracle
 					if (value is bool boolValue)
 						value = boolValue ? (byte)1 : (byte)0;
 					break;
-				case DataType.Guid:
+				case DataType.Guid     :
+				case DataType.Binary   :
+				case DataType.VarBinary:
+				case DataType.Blob     :
+				case DataType.Image    :
+					// https://github.com/linq2db/linq2db/issues/3207
 					if (value is Guid guid) value = guid.ToByteArray();
 					break;
 				case DataType.Time:
