@@ -3352,7 +3352,7 @@ namespace LinqToDB.Linq.Builder
 					var allAggregate = sql.All(s => QueryHelper.IsAggregationOrWindowFunction(s.Sql));
 					if (allAggregate)
 					{
-						query.Select.Add(sql[0].Sql);
+						query.Select.Add(sql[0].Sql, sql[0].MemberChain.FirstOrDefault()?.Name);
 					}
 				}
 			}

@@ -267,7 +267,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertToSql
 
-		readonly Dictionary<MemberInfo,SqlInfo[]> _sql = new(new MemberInfoComparer());
+		readonly Dictionary<(MemberInfo, ConvertFlags),SqlInfo[]> _sql = new();
 
 		public virtual SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 		{
@@ -345,7 +345,9 @@ namespace LinqToDB.Linq.Builder
 										{
 											var member = ((MemberExpression)levelExpression).Member;
 
-											if (!_sql.TryGetValue(member, out var sql))
+											var cacheKey = (member, flags);
+
+											if (!_sql.TryGetValue(cacheKey, out var sql))
 											{
 												var memberExpression = GetMemberExpression(
 													member, levelExpression == expression, levelExpression.Type, expression);
@@ -356,7 +358,7 @@ namespace LinqToDB.Linq.Builder
 												sql = ConvertExpressions(memberExpression, flags, descriptor)
 													.Select(si => si.Clone(member)).ToArray();
 
-												_sql.Add(member, sql);
+												_sql.Add(cacheKey, sql);
 											}
 
 											return sql;
