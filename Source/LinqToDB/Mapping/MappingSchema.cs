@@ -618,6 +618,23 @@ namespace LinqToDB.Mapping
 			return expr;
 		}
 
+		public Expression GenerateConvertedValueExpression(object? value, Type type)
+		{
+			if (value == null)
+				return new DefaultValueExpression(this, type);
+
+			var fromType  = value.GetType();
+			var valueExpr = (Expression)Expression.Constant(value);
+			if (fromType == type)
+				return valueExpr;
+
+			var convertLambda = GenerateSafeConvert(fromType, type);
+
+			valueExpr = InternalExtensions.ApplyLambdaToExpression(convertLambda, valueExpr);
+			return valueExpr;
+		}
+
+
 		static bool Simplify(ref DbDataType type)
 		{
 			if (!string.IsNullOrEmpty(type.DbType))
