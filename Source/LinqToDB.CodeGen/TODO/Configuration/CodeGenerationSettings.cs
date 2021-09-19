@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using LinqToDB.CodeGen.ContextModel;
+using LinqToDB.CodeGen.Naming;
 
 namespace LinqToDB.CodeGen.CodeGeneration
 {

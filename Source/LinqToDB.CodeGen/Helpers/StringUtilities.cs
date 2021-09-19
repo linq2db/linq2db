@@ -1,0 +1,31 @@
+﻿using System.Collections.Generic;
+using System.Globalization;
+
+namespace LinqToDB.CodeGen
+{
+	/// <summary>
+	/// Contains various text helpers.
+	/// </summary>
+	internal static class StringUtilities
+	{
+		/// <summary>
+		/// Splits string into code-points (including surrogate pairs) with corresponding <see cref="UnicodeCategory"/> for each code-point.
+		/// </summary>
+		/// <param name="str">String to split.</param>
+		/// <returns>Sequence of code point + unicode category for provided string.</returns>
+		public static IEnumerable<(string character, UnicodeCategory category)> EnumerateCharacters(this string str)
+		{
+			for (var i = 0; i < str.Length; i++)
+			{
+				var cat             = CharUnicodeInfo.GetUnicodeCategory(str, i);
+				var isSurrogatePair = char.IsHighSurrogate(str[i]) && cat != UnicodeCategory.Surrogate;
+
+				// we can safely use 2 here without checking string length as isSurrogatePair will be false otherwise
+				yield return (str.Substring(i, isSurrogatePair ? 2 : 1), cat);
+
+				if (isSurrogatePair)
+					i++;
+			}
+		}
+	}
+}

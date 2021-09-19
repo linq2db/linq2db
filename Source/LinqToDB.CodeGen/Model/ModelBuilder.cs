@@ -7,6 +7,7 @@ using LinqToDB.CodeGen.CodeGeneration;
 using LinqToDB.CodeGen.ContextModel;
 using LinqToDB.CodeGen.DataModel;
 using LinqToDB.CodeGen.Metadata;
+using LinqToDB.CodeGen.Naming;
 using LinqToDB.CodeGen.Schema;
 using LinqToDB.Data;
 

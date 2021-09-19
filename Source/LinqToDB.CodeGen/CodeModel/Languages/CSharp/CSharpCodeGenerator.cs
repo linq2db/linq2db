@@ -71,13 +71,13 @@ namespace LinqToDB.CodeGen.Model
 			string                                                                 indent,
 			bool                                                                   useNRT,
 			IReadOnlyDictionary<CodeIdentifier, ISet<IEnumerable<CodeIdentifier>>> knownTypes,
-			IReadOnlyDictionary<IEnumerable<CodeIdentifier>, ISet<CodeIdentifier>> sopedNames)
+			IReadOnlyDictionary<IEnumerable<CodeIdentifier>, ISet<CodeIdentifier>> scopedNames)
 			: base(newLine, indent)
 		{
 			_languageProvider = languageProvider;
 			_useNRT           = useNRT;
 			_knownTypes       = knownTypes;
-			_scopedNames      = sopedNames;
+			_scopedNames      = scopedNames;
 		}
 
 		protected override string[] NewLineSequences => _newLines;
@@ -1121,54 +1121,67 @@ namespace LinqToDB.CodeGen.Model
 
 			// identify wether it is necessary to generate parent type(s) for nested type
 			// skip generation for aliased types as they cannot be nested
-			if (type.Alias == null && type.Parent != null)
+			if (type.Alias == null && type.Name != null)
 			{
-				// skip parent types generation for types, directly nested into current class
-				// (class we currently generate AKA _currentType, not type we pass into this method)
-				// or parent classes of current class
-				// otherwise don't generate parent type name for type that present in current visibility scope
-				var t = _currentType;
-				var skipParentGeneration = false;
-				while (t != null)
+				var typeName = nameOverride ?? type.Name;
+
+				var scope = new List<CodeIdentifier>();
+				var ns = type.Namespace;
+				var parent = type.Parent;
+				while (parent != null)
 				{
-					// we use by-refrence comparison here as we don't create type duplicates for classes, defined
-					// in current AST (if this will happen, this comparison definitely will fails)
-					skipParentGeneration = t == type.Parent;
-					if (skipParentGeneration)
-						break;
-					t = t.Parent;
+					ns = parent.Namespace;
+					scope.Insert(0, parent.Name!);
+					parent = parent.Parent;
 				}
 
-				if (!skipParentGeneration)
+				if (ns != null)
+					scope.InsertRange(0, ns);
+
+				// flag, indicating that parent type or namespace should be generated for current type
+				var fullyQualify = false;
+
+				if (type.Parent != null)
 				{
-					RenderType(type.Parent, null, typeOnlyContext);
-					Write('.');
+					// skip parent types generation for types, directly nested into current class
+					// (class we currently generate AKA _currentType, not type we pass into this method)
+					// or parent classes of current class
+					// otherwise don't generate parent type name for type that present in current visibility scope
+					var t = _currentType;
+					fullyQualify = true;
+					while (t != null)
+					{
+						// we use by-refrence comparison here as we don't create type duplicates for classes, defined
+						// in current AST (if this will happen, this comparison definitely will fails)
+						fullyQualify = t != type.Parent;
+						if (!fullyQualify)
+							break;
+						t = t.Parent;
+					}
 				}
-			}
 
-			// identify wether we need to generate type namespace
-			// skip generation for aliased types
-			if (type.Alias == null && type.Namespace != null)
-			{
-				var generateNamespace = false;
-				var typeName = nameOverride ?? type.Name!;
+				// identify wether we need to generate type namespace
+				// skip generation for aliased types
+				if (type.Namespace != null)
+				{
 
-				// check if type with such name exists in multiple namespaces
-				if (_knownTypes.TryGetValue(typeName, out var namespaces))
-					// multiple namespaces || type with same name in other namespace
-					// second check could look unnecessary as in that case namespaces could have at least two items
-					// but actually it is valid case when nameOverride specified
-					generateNamespace = namespaces.Count > 1 || !namespaces.Contains(type.Namespace);
+					// check if type with such name exists in multiple namespaces
+					if (_knownTypes.TryGetValue(typeName, out var namespaces))
+						// multiple namespaces || type with same name in other namespace
+						// second check could look unnecessary as in that case namespaces could have at least two items
+						// but actually it is valid case when nameOverride specified
+						fullyQualify = namespaces.Count > 1 || !namespaces.Contains(type.Namespace);
+				}
 
 				// check that current type name doesn't conflict with names in current context
 				// such as namespaces, type members
-				if (!generateNamespace)
+				if (!fullyQualify)
 				{
 					// check current and parent scopes for name conflicts
 					for (var i = _currentScope.Count - 1; i >= 0; i--)
 					{
 						// type is from current scope, do nothing
-						if (_languageProvider.FullNameEqualityComparer.Equals(type.Namespace, _currentScope.Take(i)) && typeOnlyContext)
+						if (_languageProvider.FullNameEqualityComparer.Equals(scope, _currentScope.Take(i)) && typeOnlyContext)
 							break;
 
 						// type is not from current scope (by check above), but current scope contains such name
@@ -1177,17 +1190,17 @@ namespace LinqToDB.CodeGen.Model
 							|| (!typeOnlyContext && _languageProvider.IdentifierEqualityComparer.Equals(_currentScope[i], typeName)))
 						{
 							// name conflict detected
-							generateNamespace = true;
+							fullyQualify = true;
 							break;
 						}
 					}
 				}
 
-				if (!generateNamespace)
+				if (!fullyQualify)
 				{
 					// check namespaced type name conflict with top-level naming scope
 					if (_scopedNames.TryGetValue(Array.Empty<CodeIdentifier>(), out var names) && names.Contains(typeName))
-						generateNamespace = true;
+						fullyQualify = true;
 					else if (_currentImports != null)
 					{
 						// check that type name doesn't conflict with names in imported namespaces
@@ -1196,11 +1209,11 @@ namespace LinqToDB.CodeGen.Model
 						foreach (var import in _currentImports)
 						{
 							// ignore self
-							if (!_languageProvider.FullNameEqualityComparer.Equals(import.Namespace, type.Namespace))
+							if (!_languageProvider.FullNameEqualityComparer.Equals(import.Namespace, scope))
 							{
 								if (_scopedNames.TryGetValue(import.Namespace, out names) && names.Contains(typeName))
 								{
-									generateNamespace = true;
+									fullyQualify = true;
 									break;
 								}
 							}
@@ -1208,14 +1221,22 @@ namespace LinqToDB.CodeGen.Model
 					}
 				}
 
-				if (generateNamespace)
+				if (fullyQualify)
 				{
-					// TODO: detect how many namespace levels to generate
-					// for now we generate full namespace
-					foreach (var part in type.Namespace)
+					if (type.Parent != null)
 					{
-						WriteIdentifier(part.Name);
+						RenderType(type.Parent, null, typeOnlyContext);
 						Write('.');
+					}
+					else
+					{
+						// TODO: detect how many namespace levels to generate
+						// for now we generate full namespace
+						foreach (var part in type.Namespace!)
+						{
+							WriteIdentifier(part.Name);
+							Write('.');
+						}
 					}
 				}
 			}

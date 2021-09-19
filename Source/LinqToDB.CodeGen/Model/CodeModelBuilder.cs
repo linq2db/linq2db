@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using LinqToDB.CodeGen.ContextModel;
 using LinqToDB.CodeGen.Model;
+using LinqToDB.CodeGen.Naming;
 using LinqToDB.SqlProvider;
 
 namespace LinqToDB.CodeGen.CodeGeneration

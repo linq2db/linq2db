@@ -1,7 +1,7 @@
 ﻿using System;
 using Humanizer;
 
-namespace LinqToDB.CodeGen.ContextModel
+namespace LinqToDB.CodeGen.Naming
 {
 	public class HumanizerNameConverter : NameConverterBase
 	{

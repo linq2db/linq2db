@@ -7,6 +7,7 @@ using LinqToDB.CodeGen.ContextModel;
 using LinqToDB.CodeGen.DataModel;
 using LinqToDB.CodeGen.Metadata;
 using LinqToDB.CodeGen.Model;
+using LinqToDB.CodeGen.Naming;
 using LinqToDB.Data;
 using Microsoft.Extensions.Configuration;
 
@@ -18,12 +19,13 @@ namespace LinqToDB.Tools
 		{
 			Directory.CreateDirectory(@"..\..\..\Generated");
 
+			//BuildModel("mysql55");
 			//BuildModel("access.oledb");
-			BuildModel("sql.2017");
+			//BuildModel("sql.2017");
 			//BuildModel("db2");
 			//BuildModel("pg10");
 
-			if (args.Length == 0) return 0;
+			//if (args.Length == 0) return 0;
 
 			NameNormalizationTest.NormalizationTest();
 

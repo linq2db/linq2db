@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LinqToDB.CodeGen.ContextModel
+namespace LinqToDB.CodeGen.Naming
 {
 	public interface INameConverterProvider
 	{

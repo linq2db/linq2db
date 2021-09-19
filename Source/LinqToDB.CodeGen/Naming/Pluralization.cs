@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.CodeGen.ContextModel
+﻿namespace LinqToDB.CodeGen.Naming
 {
 	public enum Pluralization
 	{

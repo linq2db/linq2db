@@ -4,6 +4,7 @@ using System.Linq;
 using LinqToDB.CodeGen.CodeGeneration;
 using LinqToDB.CodeGen.ContextModel;
 using LinqToDB.CodeGen.Model;
+using LinqToDB.CodeGen.Naming;
 using LinqToDB.Data;
 using LinqToDB.SqlProvider;
 
