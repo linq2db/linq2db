@@ -1,11 +1,19 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿using System.Collections.Generic;
+
+namespace LinqToDB.CodeGen.Model
 {
 	/// <summary>
 	/// Group of compiler pragmas.
 	/// </summary>
 	public class PragmaGroup : MemberGroup<CodePragma>
 	{
+		public PragmaGroup(List<CodePragma>? members)
+			: base(members)
+		{
+		}
+
 		public PragmaGroup()
+			: this(null)
 		{
 		}
 

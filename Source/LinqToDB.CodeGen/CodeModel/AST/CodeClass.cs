@@ -2,17 +2,38 @@
 
 namespace LinqToDB.CodeGen.Model
 {
-	public class CodeClass : TypeBase, IGroupElement
+	public sealed class CodeClass : TypeBase, IGroupElement
 	{
+		public CodeClass(
+			List<CodeAttribute>? customAttributes,
+			Modifiers            attributes,
+			CodeXmlComment?      xmlDoc,
+			IType                type,
+			CodeIdentifier       name,
+			CodeClass?           parent,
+			CodeTypeToken?       inherits,
+			List<CodeTypeToken>? implements,
+			List<IMemberGroup>?  members,
+			CodeTypeInitializer? typeInitializer)
+			: base(customAttributes, attributes, xmlDoc, type, name)
+		{
+			Parent          = parent;
+			Inherits        = inherits;
+			Implements      = implements ?? new ();
+			Members         = members ?? new ();
+			TypeInitializer = typeInitializer;
+
+			This            = new CodeThis(this);
+		}
+
 		/// <summary>
 		/// Create top-level or namespace-scoped class.
 		/// </summary>
 		/// <param name="namespace">Optional namespace.</param>
 		/// <param name="name">Class name.</param>
-		public CodeClass(CodeIdentifier[]? @namespace, CodeIdentifier name)
+		public CodeClass(IReadOnlyList<CodeIdentifier>? @namespace, CodeIdentifier name)
+			: this(null, default, null, new RegularType(@namespace, name, null, false, false, false), name, null, null, null, null, null)
 		{
-			Name = name;
-			Type = new RegularType(@namespace, name, null, false, false, false);
 		}
 
 		/// <summary>
@@ -21,11 +42,9 @@ namespace LinqToDB.CodeGen.Model
 		/// <param name="parent">Parent class.</param>
 		/// <param name="name">Class name.</param>
 		public CodeClass(CodeClass parent, CodeIdentifier name)
-		{
-			Name   = name;
-			Parent = parent;
 			// regular type as we don't generate generic types for now
-			Type   = new RegularType(parent.Type, name, false, false, false);
+			: this(null, default, null, new RegularType(parent.Type, name, false, false, false), name, parent, null, null, null, null)
+		{
 		}
 
 		/// <summary>
@@ -39,15 +58,20 @@ namespace LinqToDB.CodeGen.Model
 		/// <summary>
 		/// Implemented interfaces.
 		/// </summary>
-		public List<CodeTypeToken>  Implements      { get; set; } = new();
+		public List<CodeTypeToken>  Implements      { get; }
 		/// <summary>
 		/// Class members (in groups).
 		/// </summary>
-		public List<IMemberGroup>   Members         { get; set; } = new();
+		public List<IMemberGroup>   Members         { get; }
 		/// <summary>
 		/// Static constructor.
 		/// </summary>
 		public CodeTypeInitializer? TypeInitializer { get; set; }
+
+		/// <summary>
+		/// <c>this</c> expression.
+		/// </summary>
+		public CodeThis             This            { get; }
 
 		public override CodeElementType ElementType => CodeElementType.Class;
 	}

@@ -1,13 +1,21 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿using System.Collections.Generic;
+
+namespace LinqToDB.CodeGen.Model
 {
 	/// <summary>
 	/// Group of methods.
 	/// </summary>
 	public class MethodGroup : MemberGroup<CodeMethod>
 	{
-		public MethodGroup(bool tableLayout)
+		public MethodGroup(List<CodeMethod>? members, bool tableLayout)
+			: base(members)
 		{
 			TableLayout = tableLayout;
+		}
+
+		public MethodGroup(bool tableLayout)
+			: this(null, tableLayout)
+		{
 		}
 
 		/// <summary>

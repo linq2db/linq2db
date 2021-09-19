@@ -3,7 +3,7 @@
 	/// <summary>
 	/// Compiler pragma directive.
 	/// </summary>
-	public class CodePragma : ITopLevelElement, IGroupElement
+	public sealed class CodePragma : ITopLevelElement, IGroupElement
 	{
 		public CodePragma(PragmaType type, string[] parameters)
 		{

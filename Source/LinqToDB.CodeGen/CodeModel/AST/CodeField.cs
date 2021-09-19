@@ -3,12 +3,21 @@
 	/// <summary>
 	/// Class field definition.
 	/// </summary>
-	public class CodeField : IGroupElement
+	public sealed class CodeField : IGroupElement, ITypedName
 	{
-		public CodeField(CodeIdentifier name, IType type)
+		public CodeField(CodeIdentifier name, CodeTypeToken type, Modifiers attributes, ICodeExpression? initializer)
 		{
-			Name = name;
-			Type = new (type);
+			Name        = name;
+			Type        = type;
+			Attributes  = attributes;
+			Initializer = initializer;
+
+			Reference = new CodeReference(this);
+		}
+
+		public CodeField(CodeIdentifier name, IType type)
+			: this(name, new CodeTypeToken(type), default, null)
+		{
 		}
 
 		/// <summary>
@@ -27,6 +36,11 @@
 		/// Optional field initializer.
 		/// </summary>
 		public ICodeExpression? Initializer { get; set; }
+
+		/// <summary>
+		/// Simple reference to current field.
+		/// </summary>
+		public CodeReference    Reference   { get; }
 
 		CodeElementType ICodeElement.ElementType => CodeElementType.Field;
 	}

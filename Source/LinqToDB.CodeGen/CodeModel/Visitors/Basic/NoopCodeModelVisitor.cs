@@ -53,7 +53,13 @@
 			VisitList(expression.Initializers);
 		}
 
-		protected override void Visit(CodeAssignment expression)
+		protected override void Visit(CodeAssignmentStatement statement)
+		{
+			Visit(statement.LValue);
+			Visit(statement.RValue);
+		}
+
+		protected override void Visit(CodeAssignmentExpression expression)
 		{
 			Visit(expression.LValue);
 			Visit(expression.RValue);
@@ -173,7 +179,15 @@
 				VisitList(ctor.Body);
 		}
 
-		protected override void Visit(CodeCall call)
+		protected override void Visit(CodeCallStatement call)
+		{
+			Visit(call.Callee);
+			Visit(call.MethodName);
+			VisitList(call.TypeArguments);
+			VisitList(call.Parameters);
+		}
+
+		protected override void Visit(CodeCallExpression call)
 		{
 			Visit(call.Callee);
 			Visit(call.MethodName);
@@ -266,7 +280,12 @@
 			VisitList(expression.Values);
 		}
 
-		protected override void Visit(CodeThrow expression)
+		protected override void Visit(CodeThrowStatement statement)
+		{
+			Visit(statement.Exception);
+		}
+
+		protected override void Visit(CodeThrowExpression expression)
 		{
 			Visit(expression.Exception);
 		}
@@ -281,6 +300,12 @@
 		{
 			Visit(expression.Type);
 			Visit(expression.Value);
+		}
+
+		protected override void Visit(CodeReference reference)
+		{
+			Visit(reference.Referenced.Name);
+			Visit(reference.Referenced.Type);
 		}
 	}
 }

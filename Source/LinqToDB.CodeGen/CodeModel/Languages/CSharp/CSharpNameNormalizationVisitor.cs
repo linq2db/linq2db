@@ -105,7 +105,7 @@ namespace LinqToDB.CodeGen.Model
 								break;
 							}
 
-							if (!_languageProvider.TypeComparerWithoutNRT.Equals(overload.Parameters[i].Type!.Type, method.Parameters[i].Type!.Type))
+							if (!_languageProvider.TypeEqualityComparerWithoutNRT.Equals(overload.Parameters[i].Type!.Type, method.Parameters[i].Type!.Type))
 							{
 								sameParameters = false;
 								break;
@@ -210,7 +210,7 @@ namespace LinqToDB.CodeGen.Model
 			// A
 			// A.B
 			// A.B.C
-			for (var i = 0; i < @namespace.Name.Length; i++)
+			for (var i = 0; i < @namespace.Name.Count; i++)
 			{
 				var name = @namespace.Name[i];
 				var fullName = FixName(_globalTypeNames, name, n => string.Join(".", @namespace.Name.Take(i)) + (i > 0 ? "." : null) + n, false);
@@ -237,7 +237,7 @@ namespace LinqToDB.CodeGen.Model
 
 
 			var oldOverloads = _overloads;
-			_overloads       = new Dictionary<string, List<CodeMethod>>(_languageProvider.RawIdentifierComparer);
+			_overloads       = new Dictionary<string, List<CodeMethod>>(_languageProvider.RawIdentifierEqualityComparer);
 
 			var oldMembers = _memberNames;
 			_memberNames   = CreateNewNamesSet();
@@ -414,8 +414,8 @@ namespace LinqToDB.CodeGen.Model
 		private ISet<string> CreateNewNamesSet(ISet<string>? initialData = null)
 		{
 			return initialData == null
-				? new HashSet<string>(_languageProvider.RawIdentifierComparer)
-				: new HashSet<string>(initialData, _languageProvider.RawIdentifierComparer);
+				? new HashSet<string>(_languageProvider.RawIdentifierEqualityComparer)
+				: new HashSet<string>(initialData, _languageProvider.RawIdentifierEqualityComparer);
 		}
 	}
 }

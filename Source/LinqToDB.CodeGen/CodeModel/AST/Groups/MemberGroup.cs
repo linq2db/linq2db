@@ -9,10 +9,15 @@ namespace LinqToDB.CodeGen.Model
 	public abstract class MemberGroup<TMember> : IMemberGroup
 		where TMember : IGroupElement
 	{
+		protected MemberGroup(List<TMember>? members)
+		{
+			Members = members ?? new List<TMember>();
+		}
+
 		/// <summary>
 		/// Group members.
 		/// </summary>
-		public List<TMember> Members { get; set; } = new();
+		public List<TMember> Members { get; set; }
 
 		public virtual bool IsEmpty => Members.Count == 0;
 

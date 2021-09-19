@@ -3,7 +3,7 @@
 	/// <summary>
 	/// <c>nameof(...)</c> expression.
 	/// </summary>
-	public class CodeNameOf : ICodeExpression
+	public sealed class CodeNameOf : ICodeExpression
 	{
 		public CodeNameOf(ICodeExpression expression)
 		{
@@ -15,6 +15,8 @@
 		/// <c>nameof</c> argument.
 		/// </summary>
 		public ICodeExpression Expression { get; }
+
+		IType ICodeExpression.Type => WellKnownTypes.String;
 
 		CodeElementType ICodeElement.ElementType => CodeElementType.NameOf;
 	}

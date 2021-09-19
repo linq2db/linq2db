@@ -1,6 +1,6 @@
 ﻿namespace LinqToDB.CodeGen.Model
 {
-	public class CodeComment : ITopLevelElement
+	public sealed class CodeComment : ITopLevelElement
 	{
 		public CodeComment(string text, bool inline)
 		{

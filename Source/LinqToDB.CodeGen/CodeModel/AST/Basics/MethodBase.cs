@@ -7,6 +7,20 @@ namespace LinqToDB.CodeGen.Model
 	/// </summary>
 	public abstract class MethodBase : AttributeOwner
 	{
+		protected MethodBase(
+			List<CodeAttribute>? customAttributes,
+			Modifiers            attributes,
+			CodeBlock?           body,
+			CodeXmlComment?      xmlDoc,
+			List<CodeParameter>? parameters)
+			: base(customAttributes)
+		{
+			Attributes = attributes;
+			Body       = body;
+			XmlDoc     = xmlDoc;
+			Parameters = parameters ?? new();
+		}
+
 		/// <summary>
 		/// Method modifiers.
 		/// </summary>
@@ -22,6 +36,6 @@ namespace LinqToDB.CodeGen.Model
 		/// <summary>
 		/// Parameters collection.
 		/// </summary>
-		public List<CodeParameter> Parameters       { get; } = new ();
+		public List<CodeParameter> Parameters       { get; }
 	}
 }

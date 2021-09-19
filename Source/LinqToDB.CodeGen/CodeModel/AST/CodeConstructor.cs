@@ -5,17 +5,33 @@ namespace LinqToDB.CodeGen.Model
 	/// <summary>
 	/// Class constructor.
 	/// </summary>
-	public class CodeConstructor : MethodBase, IGroupElement
+	public sealed class CodeConstructor : MethodBase, IGroupElement
 	{
-		public CodeConstructor(CodeClass type)
+		public CodeConstructor(
+			List<CodeAttribute>?   customAttributes,
+			Modifiers              attributes,
+			CodeBlock?             body,
+			CodeXmlComment?        xmlDoc,
+			List<CodeParameter>?   parameters,
+			CodeClass              @class,
+			bool                   thisCall,
+			List<ICodeExpression>? baseArguments)
+			: base(customAttributes, attributes, body, xmlDoc, parameters)
 		{
-			Type = type;
+			Class         = @class;
+			ThisCall      = thisCall;
+			BaseArguments = baseArguments ?? new();
+		}
+
+		public CodeConstructor(CodeClass @class)
+			: this(null, default, null, null, null, @class, default, null)
+		{
 		}
 
 		/// <summary>
 		/// Owner class.
 		/// </summary>
-		public CodeClass             Type          { get; }
+		public CodeClass             Class         { get; }
 		/// <summary>
 		/// Indicator wether constructor calls <c>this()</c> or <c>base</c> constructor.
 		/// </summary>
@@ -23,7 +39,7 @@ namespace LinqToDB.CodeGen.Model
 		/// <summary>
 		/// Parameters for <c>this()</c> or <c>base</c> constructor call.
 		/// </summary>
-		public List<ICodeExpression> BaseArguments { get; } = new();
+		public List<ICodeExpression> BaseArguments { get; }
 
 		public override CodeElementType ElementType => CodeElementType.Constructor;
 	}

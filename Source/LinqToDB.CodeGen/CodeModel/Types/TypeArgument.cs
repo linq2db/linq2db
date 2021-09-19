@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace LinqToDB.CodeGen.Model
 {
@@ -30,16 +31,16 @@ namespace LinqToDB.CodeGen.Model
 		}
 
 		// not applicable to current type
-		IType?            IType.ArrayElementType    => null;
-		int?[]?           IType.ArraySizes          => null;
-		int?              IType.OpenGenericArgCount => null;
-		IType[]?          IType.TypeArguments       => null;
-		bool              IType.External            => false;
-		bool              IType.IsValueType         => false;
-		CodeIdentifier[]? IType.Namespace           => null;
-		IType?            IType.Parent              => null;
-		string?           IType.Alias               => null;
+		IType?                         IType.ArrayElementType    => null;
+		IReadOnlyList<int?>?           IType.ArraySizes          => null;
+		int?                           IType.OpenGenericArgCount => null;
+		IReadOnlyList<IType>?          IType.TypeArguments       => null;
+		bool                           IType.External            => false;
+		bool                           IType.IsValueType         => false;
+		IReadOnlyList<CodeIdentifier>? IType.Namespace           => null;
+		IType?                         IType.Parent              => null;
+		string?                        IType.Alias               => null;
 
-		IType IType.WithTypeArguments(IType[] typeArguments) => throw new InvalidOperationException();
+		IType IType.WithTypeArguments(IReadOnlyList<IType> typeArguments) => throw new InvalidOperationException();
 	}
 }

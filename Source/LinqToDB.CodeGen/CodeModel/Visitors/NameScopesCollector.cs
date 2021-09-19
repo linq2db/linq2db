@@ -31,8 +31,8 @@ namespace LinqToDB.CodeGen.Model
 		public NameScopesCollector(ILanguageProvider languageProvider)
 		{
 			_languageProvider  = languageProvider;
-			_nameScopes        = new Dictionary<IEnumerable<CodeIdentifier>, ISet<CodeIdentifier>>(_languageProvider.FullNameComparer);
-			_typesNamespaces   = new Dictionary<CodeIdentifier, ISet<IEnumerable<CodeIdentifier>>>(_languageProvider.IdentifierComparer);
+			_nameScopes        = new Dictionary<IEnumerable<CodeIdentifier>, ISet<CodeIdentifier>>(_languageProvider.FullNameEqualityComparer);
+			_typesNamespaces   = new Dictionary<CodeIdentifier, ISet<IEnumerable<CodeIdentifier>>>(_languageProvider.IdentifierEqualityComparer);
 
 			SetNewScope(Array.Empty<CodeIdentifier>());
 		}
@@ -135,7 +135,7 @@ namespace LinqToDB.CodeGen.Model
 		private void SetNewScope(IEnumerable<CodeIdentifier> newScope)
 		{
 			if (!_nameScopes.ContainsKey(newScope))
-				_nameScopes.Add(newScope, new HashSet<CodeIdentifier>(_languageProvider.IdentifierComparer));
+				_nameScopes.Add(newScope, new HashSet<CodeIdentifier>(_languageProvider.IdentifierEqualityComparer));
 
 			_currentScope = newScope;
 		}
@@ -164,7 +164,7 @@ namespace LinqToDB.CodeGen.Model
 				var ns = type.Namespace ?? Array.Empty<CodeIdentifier>();
 
 				if (!_typesNamespaces.TryGetValue(type.Name!, out var namespaces))
-					_typesNamespaces.Add(type.Name!, namespaces = new HashSet<IEnumerable<CodeIdentifier>>(_languageProvider.FullNameComparer));
+					_typesNamespaces.Add(type.Name!, namespaces = new HashSet<IEnumerable<CodeIdentifier>>(_languageProvider.FullNameEqualityComparer));
 
 				namespaces.Add(ns);
 			}

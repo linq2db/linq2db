@@ -3,7 +3,7 @@
 	/// <summary>
 	/// Type, used in expression context.
 	/// </summary>
-	public class CodeTypeReference : ICodeExpression
+	public sealed class CodeTypeReference : ICodeExpression
 	{
 		public CodeTypeReference(IType type)
 		{

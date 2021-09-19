@@ -9,7 +9,12 @@ namespace LinqToDB.CodeGen.Model
 	public abstract class CodeElementList<TElement>
 		where TElement : ICodeElement
 	{
-		public List<TElement> Items { get; } = new();
+		protected CodeElementList(List<TElement>? items)
+		{
+			Items = items ?? new ();
+		}
+
+		public List<TElement> Items { get; }
 
 		public void Add(TElement element)
 		{

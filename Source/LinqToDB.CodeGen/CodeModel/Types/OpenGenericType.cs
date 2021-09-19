@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace LinqToDB.CodeGen.Model
 {
@@ -18,7 +19,13 @@ namespace LinqToDB.CodeGen.Model
 		/// <param name="isNullable">Nullability status.</param>
 		/// <param name="argCount">Number of type arguments.</param>
 		/// <param name="external">Type defined externally or in current AST.</param>
-		public OpenGenericType(CodeIdentifier[]? @namespace, CodeIdentifier name, bool isValueType, bool isNullable, int argCount, bool external)
+		public OpenGenericType(
+			IReadOnlyList<CodeIdentifier>? @namespace,
+			CodeIdentifier                 name,
+			bool                           isValueType,
+			bool                           isNullable,
+			int                            argCount,
+			bool                           external)
 			: base(@namespace, name, null, isValueType, isNullable, external)
 		{
 			_size = argCount;
@@ -33,7 +40,13 @@ namespace LinqToDB.CodeGen.Model
 		/// <param name="isNullable">Nullability status.</param>
 		/// <param name="argCount">Number of type arguments.</param>
 		/// <param name="external">Type defined externally or in current AST.</param>
-		public OpenGenericType(IType parent, CodeIdentifier name, bool isValueType, bool isNullable, int argCount, bool external)
+		public OpenGenericType(
+			IType          parent,
+			CodeIdentifier name,
+			bool           isValueType,
+			bool           isNullable,
+			int            argCount,
+			bool           external)
 			: base(parent, name, isValueType, isNullable, external)
 		{
 			_size = argCount;
@@ -54,9 +67,9 @@ namespace LinqToDB.CodeGen.Model
 			return new OpenGenericType(Namespace, Name, IsValueType, nullable, _size, External);
 		}
 
-		public override IType WithTypeArguments(IType[] typeArguments)
+		public override IType WithTypeArguments(IReadOnlyList<IType> typeArguments)
 		{
-			if (typeArguments.Length != _size)
+			if (typeArguments.Count != _size)
 				throw new InvalidOperationException();
 
 			return new GenericType(Namespace, Name, IsValueType, IsNullable, typeArguments, External);

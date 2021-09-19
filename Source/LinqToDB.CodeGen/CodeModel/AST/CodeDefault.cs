@@ -3,12 +3,17 @@
 	/// <summary>
 	/// Default value expression.
 	/// </summary>
-	public class CodeDefault : ICodeExpression
+	public sealed class CodeDefault : ICodeExpression
 	{
-		public CodeDefault(IType type, bool targetTyped)
+		public CodeDefault(CodeTypeToken type, bool targetTyped)
 		{
-			Type        = new (type);
+			Type        = type;
 			TargetTyped = targetTyped;
+		}
+
+		public CodeDefault(IType type, bool targetTyped)
+			: this(new CodeTypeToken(type), targetTyped)
+		{
 		}
 
 		/// <summary>
@@ -20,7 +25,8 @@
 		/// </summary>
 		public bool          TargetTyped { get; }
 
+		IType ICodeExpression.Type => Type.Type;
+
 		CodeElementType ICodeElement.ElementType => CodeElementType.Default;
 	}
-
 }

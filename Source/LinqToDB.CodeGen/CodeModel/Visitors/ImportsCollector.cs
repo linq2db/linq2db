@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LinqToDB.CodeGen.Model
 {
@@ -8,19 +9,19 @@ namespace LinqToDB.CodeGen.Model
 	/// </summary>
 	internal class ImportsCollector : NoopCodeModelVisitor
 	{
-		private readonly HashSet<CodeIdentifier[]> _imports;
-		private readonly HashSet<CodeIdentifier[]> _ignoredImports;
+		private readonly HashSet<IReadOnlyList<CodeIdentifier>> _imports;
+		private readonly HashSet<IReadOnlyList<CodeIdentifier>> _ignoredImports;
 
 		public ImportsCollector(ILanguageProvider languageProvider)
 		{
-			_imports        = new HashSet<CodeIdentifier[]>(languageProvider.FullNameComparer);
-			_ignoredImports = new HashSet<CodeIdentifier[]>(languageProvider.FullNameComparer);
+			_imports        = new HashSet<IReadOnlyList<CodeIdentifier>>(languageProvider.FullNameEqualityComparer);
+			_ignoredImports = new HashSet<IReadOnlyList<CodeIdentifier>>(languageProvider.FullNameEqualityComparer);
 		}
 
 		/// <summary>
 		/// Gets all discovered imports.
 		/// </summary>
-		public IReadOnlyCollection<CodeIdentifier[]> Imports => _imports;
+		public IReadOnlyCollection<IReadOnlyList<CodeIdentifier>> Imports => _imports;
 
 		/// <summary>
 		/// Reset visitor state.
@@ -51,7 +52,7 @@ namespace LinqToDB.CodeGen.Model
 
 			// create namespace array copy and add each sub-namespace to list of ignored imports
 			// namespaces ignored as imports only for types, used inside current namespace
-			var name = (CodeIdentifier[])@namespace.Name.Clone();
+			var name = @namespace.Name.ToArray();
 			while (name.Length > 0)
 			{
 				if (_ignoredImports.Add(name))

@@ -5,16 +5,21 @@ namespace LinqToDB.CodeGen.Model
 	/// <summary>
 	/// Constant expression. E.g. literal (including <c>null</c> literal) or enumeration value.
 	/// </summary>
-	public class CodeConstant : ICodeExpression
+	public sealed class CodeConstant : ICodeExpression
 	{
 		private readonly object?        _value;
 		private readonly Func<object?>? _delayedValue;
 
-		public CodeConstant(IType type, object? value, bool targetTyped)
+		internal CodeConstant(CodeTypeToken type, object? value, bool targetTyped)
 		{
-			Type        = new(type);
+			Type        = type;
 			_value      = value;
 			TargetTyped = targetTyped;
+		}
+
+		public CodeConstant(IType type, object? value, bool targetTyped)
+			: this(new CodeTypeToken(type), value, targetTyped)
+		{
 		}
 
 		/// <summary>
@@ -44,6 +49,8 @@ namespace LinqToDB.CodeGen.Model
 		/// and code generator could use it to ommit type information.
 		/// </summary>
 		public bool          TargetTyped { get; }
+
+		IType ICodeExpression.Type => Type.Type;
 
 		CodeElementType ICodeElement.ElementType => CodeElementType.Constant;
 	}

@@ -50,6 +50,9 @@ namespace LinqToDB.Tools
 		const string BASE = "base";
 
 		private static IType _type = null!;
+		private static IType _typeNotNull = null!;
+		private static IType _filterType = null!;
+		private static IType _enumerableType = null!;
 		private static IType _attributeType = null!;
 		private static ICodeExpression _value = null!;
 
@@ -62,6 +65,9 @@ namespace LinqToDB.Tools
 
 			_attributeType = builder.Type(typeof(DataTypeAttribute), false);
 			_type = builder.Type(typeof(DataType), true);
+			_typeNotNull = _type.WithNullability(false);
+			_filterType = WellKnownTypes.Func(WellKnownTypes.Boolean, _typeNotNull, WellKnownTypes.Int32);
+			_enumerableType = WellKnownTypes.Enumerable(_typeNotNull);
 			_value = builder.Constant(DataType.Int32, true);
 
 			// name
@@ -219,9 +225,9 @@ namespace LinqToDB.Tools
 
 			if (nestingLevel < 2)
 			{
-				var lambda = codeModel.Lambda();
-				lambda.Parameter(codeModel.LambdaParameter(codeModel.Identifier(name1)));
-				lambda.Parameter(codeModel.LambdaParameter(codeModel.Identifier(name1)));
+				var lambda = codeModel.Lambda(_filterType, true);
+				lambda.Parameter(codeModel.LambdaParameter(codeModel.Identifier(name1), _typeNotNull));
+				lambda.Parameter(codeModel.LambdaParameter(codeModel.Identifier(name1), WellKnownTypes.Int32));
 				CreateBody(codeModel, lambda.Body(), nestingLevel + 1, name1, name2)
 					.Append(codeModel.Return(codeModel.Equal(_value, _value)));
 				block.Append(
@@ -233,9 +239,10 @@ namespace LinqToDB.Tools
 							Array.Empty<IType>(),
 							new ICodeExpression[]
 							{
-								codeModel.Array(_type.WithNullability(false), true, new ICodeExpression[] { _value, _value }, false),
+								codeModel.Array(_typeNotNull, true, new ICodeExpression[] { _value, _value }, false),
 								lambda.Method
-							})));
+							},
+							_enumerableType)));
 			}
 
 			return block;
@@ -259,7 +266,7 @@ namespace LinqToDB.Tools
 			if (direction == ParameterDirection.Out)
 			{
 				method.Body()
-					.Append(codeModel.Assign(p.Name, _value));
+					.Append(codeModel.Assign(p.Reference, _value));
 			}
 			else
 				method.Body();

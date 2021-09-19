@@ -5,12 +5,18 @@ namespace LinqToDB.CodeGen.Model
 	/// <summary>
 	/// Code region.
 	/// </summary>
-	public class CodeRegion : ITopLevelElement, IGroupElement
+	public sealed class CodeRegion : ITopLevelElement, IGroupElement
 	{
-		public CodeRegion(CodeClass ownerType, string name)
+		internal CodeRegion(CodeClass ownerType, string name, List<IMemberGroup>? members)
 		{
-			Type = ownerType;
-			Name = name;
+			Type    = ownerType;
+			Name    = name;
+			Members = members ?? new ();
+		}
+
+		public CodeRegion(CodeClass ownerType, string name)
+			: this(ownerType, name, null)
+		{
 		}
 
 		/// <summary>
@@ -24,7 +30,7 @@ namespace LinqToDB.CodeGen.Model
 		/// <summary>
 		/// Region members (in groups).
 		/// </summary>
-		public List<IMemberGroup> Members { get; } = new();
+		public List<IMemberGroup> Members { get; }
 
 		CodeElementType ICodeElement.ElementType => CodeElementType.Region;
 

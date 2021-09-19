@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using LinqToDB.CodeGen.CodeGeneration;
 using LinqToDB.CodeGen.ContextModel;
+using LinqToDB.CodeGen.DataModel;
 using LinqToDB.CodeGen.Metadata;
 using LinqToDB.CodeGen.Schema;
 using LinqToDB.Data;
@@ -46,11 +47,14 @@ namespace LinqToDB.CodeGen.Model
 			_namingServices = namingServices;
 		}
 
-		public DataModel Build()
+		public DatabaseModel Build()
 		{
 			var dataContext = BuildDataContext();
 
-			var model = new DataModel(dataContext);
+			var model = new DatabaseModel(dataContext);
+
+			model.NRTEnabled = _languageProvider.NRTSupported && _codegenSettings.NullableReferenceTypes;
+			model.DisableXmlDocWarnings = _languageProvider.MissingXmlCommentWarnCodes.Length > 0 && _codegenSettings.SuppressMissingXmlCommentWarnings;
 
 			var defaultSchemas = _schemaProvider.GetDefaultSchemas();
 
@@ -117,7 +121,7 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 			return model;
 		}
 
-		private void BuildAggregateFunction(DataModel model, AggregateFunction func, ISet<string> defaultSchemas)
+		private void BuildAggregateFunction(DatabaseModel model, AggregateFunction func, ISet<string> defaultSchemas)
 		{
 			var (name, isNonDefaultSchema) = ProcessObjectName(func.Name, defaultSchemas);
 
@@ -155,7 +159,7 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 				model.DataContext.AggregateFunctions.Add(funcModel);
 		}
 
-		private void BuildScalarFunction(DataModel model, ScalarFunction func, ISet<string> defaultSchemas)
+		private void BuildScalarFunction(DatabaseModel model, ScalarFunction func, ISet<string> defaultSchemas)
 		{
 			var (name, isNonDefaultSchema) = ProcessObjectName(func.Name, defaultSchemas);
 
@@ -227,7 +231,7 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 				model.DataContext.ScalarFunctions.Add(funcModel);
 		}
 
-		private void BuildTableFunction(DataModel model, TableFunction func, ISet<string> defaultSchemas)
+		private void BuildTableFunction(DatabaseModel model, TableFunction func, ISet<string> defaultSchemas)
 		{
 			var (name, isNonDefaultSchema) = ProcessObjectName(func.Name, defaultSchemas);
 
@@ -255,7 +259,7 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 				model.DataContext.TableFunctions.Add(funcModel);
 		}
 
-		private void BuildStoredProcedure(DataModel model, StoredProcedure func, ISet<string> defaultSchemas)
+		private void BuildStoredProcedure(DatabaseModel model, StoredProcedure func, ISet<string> defaultSchemas)
 		{
 			var (name, isNonDefaultSchema) = ProcessObjectName(func.Name, defaultSchemas);
 
@@ -582,7 +586,7 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 				_contextSettings.DataContextClassNameNormalization,
 				_contextSettings.ContextClassName ?? _schemaProvider.DatabaseName ?? "MyDataContext");
 
-			var dataContextClass = new ClassModel(className)
+			var dataContextClass = new ClassModel(className, className)
 			{
 				IsPartial = true,
 				IsPublic = true,
@@ -617,7 +621,7 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 		}
 
 		private void BuildEntity(
-			DataModel model,
+			DatabaseModel model,
 			TableLikeObject table,
 			PrimaryKey? primaryKey,
 			Identity? identity,
@@ -649,14 +653,14 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 			if (!hasCustomClassName && !_contextSettings.GenerateSchemaAsType && isNonDefaultSchema)
 				className = table.Name.Schema + "_" + className;
 
-			var classModel = new ClassModel(className);
+			var classModel = new ClassModel(className, _codegenSettings.ClassPerFile ? className : model.DataContext.Class.FileName!);
 			classModel.Summary = table.Description;
 			classModel.BaseType = baseType;
 			classModel.IsPublic = true;
 			classModel.Namespace = _codegenSettings.Namespace;
 
 			var entity = new EntityModel(metadata, classModel, contextPropertyName);
-			entity.OrderFindParametersByOrdinal = _codegenSettings.OrderFindParametersByColumnOrdinal;
+			model.OrderFindParametersByOrdinal = _codegenSettings.OrderFindParametersByColumnOrdinal;
 			entity.HasFindExtension = _codegenSettings.GenerateFindExtensions;
 
 			_entities.Add(table.Name, (table, entity));
@@ -685,11 +689,6 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 				var columnModel = new ColumnModel(columnMetadata, columnProperty);
 				entity.Columns.Add(columnModel);
 				_columns.Add((entity, column.Name), columnModel);
-
-				if (_codegenSettings.EntityInSeparateFile)
-				{
-					entity.FileName = entity.Class.Name;
-				}
 
 				columnMetadata.DbType = column.Type;
 				if (!_codegenSettings.GenerateDbType)
@@ -726,7 +725,7 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 				model.DataContext.Entities.Add(entity);
 		}
 
-		private ExplicitSchemaModel GetOrAddSchemaType(DataModel model, string schemaName)
+		private AdditionalSchemaModel GetOrAddSchemaType(DatabaseModel model, string schemaName)
 		{
 			if (!model.DataContext.AdditionalSchemas.TryGetValue(schemaName, out var schemaModel))
 			{
@@ -740,7 +739,7 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 									_codegenSettings.SchemaPropertyNormalization,
 									baseName);
 
-				var wrapperClass = new ClassModel(schemaClassName)
+				var wrapperClass = new ClassModel(schemaClassName, _codegenSettings.ClassPerFile ? schemaClassName : model.DataContext.Class.FileName!)
 				{
 					IsPublic = true,
 					IsPartial = true,
@@ -752,7 +751,7 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 					IsPublic = true,
 					IsPartial = true
 				};
-				schemaModel = new ExplicitSchemaModel(contextPropertyName, wrapperClass, contextClass);
+				schemaModel = new AdditionalSchemaModel(contextPropertyName, wrapperClass, contextClass);
 				model.DataContext.AdditionalSchemas.Add(schemaName, schemaModel);
 			}
 

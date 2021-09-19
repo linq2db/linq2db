@@ -9,46 +9,56 @@ namespace LinqToDB.CodeGen.Model
 	public interface ILanguageProvider
 	{
 		/// <summary>
-		/// Gets identifier comparer for current language.
+		/// Gets identifier equality comparer for current language.
 		/// E.g. C# and F# use case-sensitive identifiers, but VB.NET works with case-insensitive identifiers.
 		/// </summary>
-		IEqualityComparer<CodeIdentifier>              IdentifierComparer        { get; }
+		IEqualityComparer<CodeIdentifier>              IdentifierEqualityComparer     { get; }
+
+		/// <summary>
+		/// Gets composite identifier equality comparer (e.g. namespace of full type name).
+		/// </summary>
+		IEqualityComparer<IEnumerable<CodeIdentifier>> FullNameEqualityComparer       { get; }
 
 		/// <summary>
 		/// Gets composite identifier comparer (e.g. namespace of full type name).
 		/// </summary>
-		IEqualityComparer<IEnumerable<CodeIdentifier>> FullNameComparer          { get; }
+		IComparer<IEnumerable<CodeIdentifier>>         FullNameComparer               { get; }
 
 		/// <summary>
-		/// Gets identifier comparer for current language.
+		/// Gets identifier equality comparer for current language.
 		/// E.g. C# and F# use case-sensitive identifiers, but VB.NET works with case-insensitive identifiers.
 		/// </summary>
-		IEqualityComparer<string>                      RawIdentifierComparer     { get; }
+		IEqualityComparer<string>                      RawIdentifierEqualityComparer  { get; }
 
 		/// <summary>
-		/// Gets <see cref="IType"/> comparer to compare types without taking into account NRT annotations on types.
+		/// Gets <see cref="IType"/> equality comparer to compare types with taking into account NRT annotations on types.
 		/// </summary>
-		IEqualityComparer<IType>                       TypeComparerWithoutNRT    { get; }
+		IEqualityComparer<IType>                       TypeEqualityComparerWithNRT    { get; }
+
+		/// <summary>
+		/// Gets <see cref="IType"/> equality comparer to compare types without taking into account NRT annotations on types.
+		/// </summary>
+		IEqualityComparer<IType>                       TypeEqualityComparerWithoutNRT { get; }
 
 		/// <summary>
 		/// Type and namespace parser service.
 		/// </summary>
-		ITypeParser                                    TypeParser                { get; }
+		ITypeParser                                    TypeParser                     { get; }
 
 		/// <summary>
 		/// Indicate that language supports nullable reference types annotations.
 		/// </summary>
-		bool                                           NRTSupported              { get; }
+		bool                                           NRTSupported                   { get; }
 
 		/// <summary>
-		/// Warning code for missing XML-doc comments warning (if supported by language).
+		/// Warning codes for missing XML-doc comments warnings (if supported by language).
 		/// </summary>
-		string?                                        MissingXmlCommentWarnCode { get; }
+		string[]                                       MissingXmlCommentWarnCodes     { get; }
 
 		/// <summary>
 		/// Default file extension (without leading dot) for source files for current language.
 		/// </summary>
-		string                                         FileExtension             { get; }
+		string                                         FileExtension                  { get; }
 
 		/// <summary>
 		/// Verify that provided character could start indentifier name for current language.

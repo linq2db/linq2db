@@ -1,7 +1,6 @@
 ﻿namespace LinqToDB.CodeGen.Model
 {
-	// types split into groups by node kind, but note that this mostly for convenience and is not precise
-	// as some nodes could have multiple kinds (e.g. statement and expression)
+	// Types split into groups by node kind.
 	// Also note that AST could miss many language elements, because they are not used by code generator right now
 	// and we definitely do not have a goal to provide full-scale code generation API for every purpose - we have
 	// quite clear scope for this API.
@@ -137,9 +136,21 @@
 		/// Return statement.
 		/// </summary>
 		ReturnStatement,
+		/// <summary>
+		/// Throw statement.
+		/// </summary>
+		ThrowStatement,
+		/// <summary>
+		/// Method call statement.
+		/// </summary>
+		CallStatement,
+		/// <summary>
+		/// Assignment statement.
+		/// </summary>
+		AssignmentStatement,
 
 		// expressions
-		
+
 		/// <summary>
 		/// Type reference, used in expression context (e.g. in nameof expression or as object element of static member access).
 		/// </summary>
@@ -165,6 +176,10 @@
 		/// </summary>
 		MemberAccess,
 		/// <summary>
+		/// Parameter or variable reference expression.
+		/// </summary>
+		Reference,
+		/// <summary>
 		/// Nameof expression.
 		/// </summary>
 		NameOf,
@@ -173,9 +188,9 @@
 		/// </summary>
 		New,
 		/// <summary>
-		/// Assignment expression or statement.
+		/// Assignment expression.
 		/// </summary>
-		Assignment,
+		AssignmentExpression,
 		/// <summary>
 		/// Default value expression.
 		/// </summary>
@@ -189,17 +204,17 @@
 		/// </summary>
 		Index,
 		/// <summary>
-		/// Throw expression/statement.
-		/// </summary>
-		Throw,
-		/// <summary>
 		/// Type cast expression.
 		/// </summary>
 		Cast,
 		/// <summary>
-		/// Method call expression/statement.
+		/// Method call expression.
 		/// </summary>
-		Call,
+		CallExpression,
+		/// <summary>
+		/// Throw expression.
+		/// </summary>
+		ThrowExpression,
 
 		// l-value nodes
 
@@ -207,5 +222,10 @@
 		/// Variable declaration.
 		/// </summary>
 		Variable,
+
+		/// <summary>
+		/// External property or field declaration.
+		/// </summary>
+		ExternalPropertyOrField,
 	}
 }

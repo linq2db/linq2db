@@ -5,11 +5,27 @@ namespace LinqToDB.CodeGen.Model
 	/// <summary>
 	/// Class method definition.
 	/// </summary>
-	public class CodeMethod : MethodBase, IGroupElement
+	public sealed class CodeMethod : MethodBase, IGroupElement
 	{
-		public CodeMethod(CodeIdentifier name)
+		public CodeMethod(
+			List<CodeAttribute>? customAttributes,
+			Modifiers            attributes,
+			CodeBlock?           body,
+			CodeXmlComment?      xmlDoc,
+			List<CodeParameter>? parameters,
+			CodeIdentifier       name,
+			CodeTypeToken?       returnType,
+			List<CodeTypeToken>? typeParameters)
+			: base(customAttributes, attributes, body, xmlDoc, parameters)
 		{
-			Name = name;
+			Name           = name;
+			ReturnType     = returnType;
+			TypeParameters = typeParameters ?? new();
+		}
+
+		public CodeMethod(CodeIdentifier name)
+			: this(null, default, null, null, null, name, null, null)
+		{
 		}
 
 		/// <summary>
@@ -24,7 +40,7 @@ namespace LinqToDB.CodeGen.Model
 		/// <summary>
 		/// Generic method type parameters.
 		/// </summary>
-		public List<CodeTypeToken> TypeParameters { get; } = new ();
+		public List<CodeTypeToken> TypeParameters { get; }
 
 		public override CodeElementType ElementType => CodeElementType.Method;
 	}

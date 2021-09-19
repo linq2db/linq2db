@@ -3,11 +3,16 @@
 	/// <summary>
 	/// <c>this</c> reference.
 	/// </summary>
-	public class CodeThis : ICodeExpression
+	public sealed class CodeThis : ICodeExpression
 	{
-		private CodeThis() { }
+		public CodeThis(CodeClass @class)
+		{
+			Class = @class;
+		}
 
-		public static readonly ICodeExpression Instance = new CodeThis();
+		public CodeClass Class { get; }
+
+		IType ICodeExpression.Type => Class.Type;
 
 		CodeElementType ICodeElement.ElementType => CodeElementType.This;
 	}

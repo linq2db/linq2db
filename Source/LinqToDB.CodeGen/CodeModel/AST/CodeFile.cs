@@ -8,13 +8,21 @@ namespace LinqToDB.CodeGen.Model
 	/// <summary>
 	/// File-level code unit.
 	/// </summary>
-	public class CodeFile : CodeElementList<ITopLevelElement>, ICodeElement
+	public sealed class CodeFile : CodeElementList<ITopLevelElement>, ICodeElement
 	{
 		private string _name;
 
-		public CodeFile(string fileName)
+		public CodeFile(string fileName, List<CodeComment>? header, List<CodeImport>? imports, List<ITopLevelElement>? items)
+			: base(items)
 		{
 			FileName = fileName;
+			Header   = header  ?? new();
+			Imports  = imports ?? new();
+		}
+
+		public CodeFile(string fileName)
+			: this(fileName, null, null, null)
+		{
 		}
 
 		/// <summary>
@@ -30,11 +38,11 @@ namespace LinqToDB.CodeGen.Model
 		/// <summary>
 		/// File header coomment(s).
 		/// </summary>
-		public List<CodeComment> Header { get; } = new ();
+		public List<CodeComment> Header { get; }
 		/// <summary>
 		/// File imports.
 		/// </summary>
-		public List<CodeImport> Imports { get; } = new ();
+		public List<CodeImport> Imports { get; }
 
 		CodeElementType ICodeElement.ElementType => CodeElementType.File;
 

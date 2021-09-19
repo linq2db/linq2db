@@ -7,10 +7,15 @@ namespace LinqToDB.CodeGen.Model
 	/// </summary>
 	public abstract class AttributeOwner : ICodeElement
 	{
+		protected AttributeOwner(List<CodeAttribute>? customAttributes)
+		{
+			CustomAttributes = customAttributes ?? new ();
+		}
+
 		/// <summary>
 		/// Custom attributes.
 		/// </summary>
-		public List<CodeAttribute> CustomAttributes { get; set; } = new();
+		public List<CodeAttribute> CustomAttributes { get; set; }
 
 		public abstract CodeElementType ElementType { get; }
 	}

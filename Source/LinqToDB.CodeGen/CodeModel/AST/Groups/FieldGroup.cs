@@ -1,13 +1,21 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿using System.Collections.Generic;
+
+namespace LinqToDB.CodeGen.Model
 {
 	/// <summary>
 	/// Group of fields.
 	/// </summary>
 	public class FieldGroup : MemberGroup<CodeField>
 	{
-		public FieldGroup(bool tableLayout)
+		public FieldGroup(List<CodeField>? members, bool tableLayout)
+			: base(members)
 		{
 			TableLayout = tableLayout;
+		}
+
+		public FieldGroup(bool tableLayout)
+			: this(null, tableLayout)
+		{
 		}
 
 		/// <summary>

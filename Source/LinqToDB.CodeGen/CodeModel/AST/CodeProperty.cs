@@ -1,14 +1,43 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿using System.Collections.Generic;
+
+namespace LinqToDB.CodeGen.Model
 {
 	/// <summary>
 	/// Class property declaration.
 	/// </summary>
-	public class CodeProperty : AttributeOwner, IGroupElement
+	public sealed class CodeProperty : AttributeOwner, IGroupElement, ITypedName
 	{
-		public CodeProperty(CodeIdentifier name, IType type)
+		public CodeProperty(
+			List<CodeAttribute>? customAttributes,
+			CodeIdentifier       name,
+			CodeTypeToken        type,
+			Modifiers            attributes,
+			bool                 hasGetter,
+			CodeBlock?           getter,
+			bool                 hasSetter,
+			CodeBlock?           setter,
+			CodeComment?         trailingComment,
+			CodeXmlComment?      xmlDoc,
+			ICodeExpression?     initializer)
+			: base(customAttributes)
 		{
-			Name = name;
-			Type = new (type);
+			Name            = name;
+			Type            = type;
+			Attributes      = attributes;
+			HasGetter       = hasGetter;
+			Getter          = getter;
+			HasSetter       = hasSetter;
+			Setter          = setter;
+			TrailingComment = trailingComment;
+			XmlDoc          = xmlDoc;
+			Initializer     = initializer;
+
+			Reference = new CodeReference(this);
+		}
+
+		public CodeProperty(CodeIdentifier name, IType type)
+			: this(null, name, new CodeTypeToken(type), default, default, null, default, null, null, null, null)
+		{
 		}
 
 		/// <summary>
@@ -51,6 +80,11 @@
 		/// Optional initializer.
 		/// </summary>
 		public ICodeExpression? Initializer     { get; internal set; }
+
+		/// <summary>
+		/// Simple reference to current property.
+		/// </summary>
+		public CodeReference    Reference       { get; }
 
 		public override CodeElementType ElementType => CodeElementType.Property;
 	}

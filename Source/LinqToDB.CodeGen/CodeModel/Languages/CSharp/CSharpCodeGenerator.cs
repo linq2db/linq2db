@@ -99,9 +99,18 @@ namespace LinqToDB.CodeGen.Model
 					break;
 				case PragmaType.DisableWarning:
 					WriteUnindented("#pragma warning disable");
+					var first = true;
 					foreach (var warn in pragma.Parameters)
 					{
-						Write(' ');
+
+						if (first)
+						{
+							Write(' ');
+							first = false;
+						}
+						else
+							Write(", ");
+
 						// remove any possible newlines to avoid invalid code generation
 						Write(string.Join(string.Empty, SplitByNewLine(warn)));
 					}
@@ -146,9 +155,17 @@ namespace LinqToDB.CodeGen.Model
 
 			// parameter list should be enclosed in brackets if there are more/less than 1 parameter or single
 			// parameter has type
-			var encloseParameters = method.Parameters.Count != 1 || method.Parameters[0].Type != null;
+			var encloseParameters = !method.CanOmmitTypes || method.Parameters.Count != 1;
 			if (encloseParameters) Write('(');
-			WriteDelimitedList(method.Parameters, ", ", false);
+			WriteDelimitedList(method.Parameters, p => {
+				if (!method.CanOmmitTypes)
+				{
+					Visit(p.Type);
+					Write(' ');
+				}
+
+				Visit(p.Name);
+			}, ", ", false);
 			if (encloseParameters) Write(')');
 
 			Write(" =>");
@@ -256,6 +273,11 @@ namespace LinqToDB.CodeGen.Model
 			WriteLine();
 		}
 
+		protected override void Visit(CodeReference reference)
+		{
+			Visit(reference.Referenced.Name);
+		}
+
 		protected override void Visit(CodeMethod method)
 		{
 			if (method.XmlDoc != null)
@@ -299,12 +321,8 @@ namespace LinqToDB.CodeGen.Model
 			else if (parameter.Direction == ParameterDirection.Out)
 				Write("out ");
 
-			if (parameter.Type != null)
-			{
-				Visit(parameter.Type);
-				Write(' ');
-			}
-
+			Visit(parameter.Type);
+			Write(' ');
 			Visit(parameter.Name);
 		}
 
@@ -373,7 +391,7 @@ namespace LinqToDB.CodeGen.Model
 			WriteCustomAttributes(ctor.CustomAttributes, false);
 			WriteModifiers(ctor.Attributes);
 
-			Visit(ctor.Type.Name);
+			Visit(ctor.Class.Name);
 
 			Write("(");
 			WriteDelimitedList(ctor.Parameters, ", ", false);
@@ -398,7 +416,9 @@ namespace LinqToDB.CodeGen.Model
 			Write("this");
 		}
 
-		protected override void Visit(CodeCall call)
+		protected override void Visit    (CodeCallStatement  call) => WriteCall(call);
+		protected override void Visit    (CodeCallExpression call) => WriteCall(call);
+		private            void WriteCall(CodeCallBase       call)
 		{
 			// TODO: check if we can ommit "this" or it will result in name conflicts
 			if (call.Callee != null && call.Callee.ElementType != CodeElementType.This)
@@ -413,7 +433,7 @@ namespace LinqToDB.CodeGen.Model
 
 			Visit(call.MethodName);
 
-			if (call.TypeArguments.Length > 0)
+			if (call.TypeArguments.Count > 0)
 			{
 				Write('<');
 				WriteDelimitedList(call.TypeArguments, ", ", false);
@@ -531,7 +551,7 @@ namespace LinqToDB.CodeGen.Model
 			WriteMemberGroups(@namespace.Members);
 			CloseBlock(false, true);
 
-			_currentScope.RemoveRange(_currentScope.Count - @namespace.Name.Length, @namespace.Name.Length);
+			_currentScope.RemoveRange(_currentScope.Count - @namespace.Name.Count, @namespace.Name.Count);
 		}
 
 		protected override void Visit(CodeClass @class)
@@ -634,7 +654,7 @@ namespace LinqToDB.CodeGen.Model
 			WriteDelimitedList(expression.Parameters, ", ", false);
 			Write(')');
 
-			if (expression.Initializers.Length > 0)
+			if (expression.Initializers.Count > 0)
 			{
 				WriteLine();
 				OpenBlock(false);
@@ -643,11 +663,13 @@ namespace LinqToDB.CodeGen.Model
 			}
 		}
 
-		protected override void Visit(CodeAssignment expression)
+		protected override void Visit          (CodeAssignmentStatement  statement ) => WriteAssignment(statement );
+		protected override void Visit          (CodeAssignmentExpression expression) => WriteAssignment(expression);
+		private            void WriteAssignment(CodeAssignmentBase       assignment)
 		{
-			Visit(expression.LValue);
+			Visit(assignment.LValue);
 			Write(" = ");
-			Visit(expression.RValue);
+			Visit(assignment.RValue);
 		}
 
 		protected override void Visit(FieldGroup group)
@@ -715,10 +737,10 @@ namespace LinqToDB.CodeGen.Model
 		{
 			Write("new ");
 
-			if (!expression.ValueTyped || expression.Values.Length == 0)
+			if (!expression.ValueTyped || expression.Values.Count == 0)
 				Visit(expression.Type);
 
-			if (expression.Values.Length == 0)
+			if (expression.Values.Count == 0)
 				// TODO: not used right now. Should generate Array.Empty when implemented
 				throw new NotImplementedException($"Generation of new array without items not supported by C# code generator");
 			{
@@ -751,11 +773,13 @@ namespace LinqToDB.CodeGen.Model
 			Write(')');
 		}
 
-		protected override void Visit(CodeThrow expression)
+		// we don't generate retrhow right now (and it will require try-catch support too by AST)
+		protected override void Visit     (CodeThrowStatement  statement ) => WriteThrow(statement );
+		protected override void Visit     (CodeThrowExpression expression) => WriteThrow(expression);
+		private            void WriteThrow(CodeThrowBase       @throw    )
 		{
-			// we don't generate retrhow right now (and it will require try-catch support too by AST)
 			Write("throw ");
-			Visit(expression.Exception);
+			Visit(@throw.Exception);
 		}
 
 		protected override void Visit(PragmaGroup group)
@@ -1144,13 +1168,13 @@ namespace LinqToDB.CodeGen.Model
 					for (var i = _currentScope.Count - 1; i >= 0; i--)
 					{
 						// type is from current scope, do nothing
-						if (_languageProvider.FullNameComparer.Equals(type.Namespace, _currentScope.Take(i)) && typeOnlyContext)
+						if (_languageProvider.FullNameEqualityComparer.Equals(type.Namespace, _currentScope.Take(i)) && typeOnlyContext)
 							break;
 
 						// type is not from current scope (by check above), but current scope contains such name
 						// or current scope have same name as type for type used in expressions
 						if (_scopedNames[_currentScope].Contains(typeName)
-							|| (!typeOnlyContext && _languageProvider.IdentifierComparer.Equals(_currentScope[i], typeName)))
+							|| (!typeOnlyContext && _languageProvider.IdentifierEqualityComparer.Equals(_currentScope[i], typeName)))
 						{
 							// name conflict detected
 							generateNamespace = true;
@@ -1172,7 +1196,7 @@ namespace LinqToDB.CodeGen.Model
 						foreach (var import in _currentImports)
 						{
 							// ignore self
-							if (!_languageProvider.FullNameComparer.Equals(import.Namespace, type.Namespace))
+							if (!_languageProvider.FullNameEqualityComparer.Equals(import.Namespace, type.Namespace))
 							{
 								if (_scopedNames.TryGetValue(import.Namespace, out names) && names.Contains(typeName))
 								{

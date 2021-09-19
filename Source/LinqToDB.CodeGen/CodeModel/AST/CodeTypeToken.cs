@@ -3,7 +3,7 @@
 	/// <summary>
 	/// Type reference, used in type-only context.
 	/// </summary>
-	public class CodeTypeToken : ICodeElement
+	public sealed class CodeTypeToken : ICodeElement
 	{
 		public CodeTypeToken(IType type)
 		{

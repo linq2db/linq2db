@@ -6,7 +6,7 @@ namespace LinqToDB.CodeGen.Model
 	/// <summary>
 	/// Identifier comparer.
 	/// </summary>
-	internal class CodeIdentifierComparer : IEqualityComparer<CodeIdentifier>
+	internal class CodeIdentifierComparer : IComparer<CodeIdentifier>
 	{
 		private readonly StringComparer _comparer;
 
@@ -15,7 +15,6 @@ namespace LinqToDB.CodeGen.Model
 			_comparer = comparer;
 		}
 
-		bool IEqualityComparer<CodeIdentifier>.Equals     (CodeIdentifier x, CodeIdentifier y) => _comparer.Equals(x.Name, y.Name);
-		int  IEqualityComparer<CodeIdentifier>.GetHashCode(CodeIdentifier obj                ) => _comparer.GetHashCode(obj.Name);
+		int IComparer<CodeIdentifier>.Compare(CodeIdentifier x, CodeIdentifier y) => _comparer.Compare(x.Name, y.Name);
 	}
 }

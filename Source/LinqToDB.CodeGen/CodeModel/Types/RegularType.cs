@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace LinqToDB.CodeGen.Model
 {
@@ -7,13 +8,13 @@ namespace LinqToDB.CodeGen.Model
 	/// </summary>
 	public class RegularType : IType
 	{
-		private readonly bool              _nullable;
-		private readonly string?           _alias;
-		private readonly bool              _valueType;
-		private readonly bool              _external;
-		private readonly CodeIdentifier[]? _ns;
-		private readonly CodeIdentifier    _name;
-		private readonly IType?            _parent;
+		private readonly bool                           _nullable;
+		private readonly string?                        _alias;
+		private readonly bool                           _valueType;
+		private readonly bool                           _external;
+		private readonly IReadOnlyList<CodeIdentifier>? _ns;
+		private readonly CodeIdentifier                 _name;
+		private readonly IType?                         _parent;
 
 		/// <summary>
 		/// Creates top-level (no namespace) or namespaced type descriptor.
@@ -24,7 +25,7 @@ namespace LinqToDB.CodeGen.Model
 		/// <param name="isValueType">Value or reference type.</param>
 		/// <param name="isNullable">Nullability status.</param>
 		/// <param name="external">Type defined externally or in current AST.</param>
-		public RegularType(CodeIdentifier[]? @namespace, CodeIdentifier name, string? alias, bool isValueType, bool isNullable, bool external)
+		public RegularType(IReadOnlyList<CodeIdentifier>? @namespace, CodeIdentifier name, string? alias, bool isValueType, bool isNullable, bool external)
 		{
 			_ns        = @namespace;
 			_name      = name;
@@ -51,14 +52,14 @@ namespace LinqToDB.CodeGen.Model
 			_external  = external;
 		}
 
-		public virtual TypeKind          Kind        => TypeKind.Regular;
-		public         bool              IsNullable  => _nullable;
-		public         IType?            Parent      => _parent;
-		public         CodeIdentifier    Name        => _name;
-		public         bool              IsValueType => _valueType;
-		public         string?           Alias       => _alias;
-		public         bool              External    => _external;
-		public         CodeIdentifier[]? Namespace   => _ns;
+		public virtual TypeKind                       Kind        => TypeKind.Regular;
+		public         bool                           IsNullable  => _nullable;
+		public         IType?                         Parent      => _parent;
+		public         CodeIdentifier                 Name        => _name;
+		public         bool                           IsValueType => _valueType;
+		public         string?                        Alias       => _alias;
+		public         bool                           External    => _external;
+		public         IReadOnlyList<CodeIdentifier>? Namespace   => _ns;
 
 		public virtual IType WithNullability(bool nullable)
 		{
@@ -72,12 +73,12 @@ namespace LinqToDB.CodeGen.Model
 		}
 
 		// not valid for current type kind
-		public virtual IType[]? TypeArguments       => null;
+		public virtual IReadOnlyList<IType>? TypeArguments       => null;
 		public virtual int?     OpenGenericArgCount => null;
 
-		IType?  IType.ArrayElementType => null;
-		int?[]? IType.ArraySizes       => null;
+		IType?               IType.ArrayElementType => null;
+		IReadOnlyList<int?>? IType.ArraySizes       => null;
 
-		public virtual IType WithTypeArguments(IType[] typeArguments) => throw new InvalidOperationException();
+		public virtual IType WithTypeArguments(IReadOnlyList<IType> typeArguments) => throw new InvalidOperationException();
 	}
 }

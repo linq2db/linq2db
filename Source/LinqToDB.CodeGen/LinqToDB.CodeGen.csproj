@@ -11,12 +11,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Remove="Metadata\**" />
-	  <EmbeddedResource Remove="Metadata\**" />
-	  <None Remove="Metadata\**" />
-	</ItemGroup>
-
-	<ItemGroup>
 	  <Compile Include="..\LinqToDB\Compatibility\System\Diagnostics\CodeAnalysis\NullableAttributes.cs" Link="Compat\NullableAttributes.cs" />
 	</ItemGroup>
 

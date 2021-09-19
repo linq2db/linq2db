@@ -4,7 +4,7 @@
 	/// <summary>
 	/// Empty line element. Used for explicit formatting.
 	/// </summary>
-	public class CodeEmptyLine : ITopLevelElement
+	public sealed class CodeEmptyLine : ITopLevelElement
 	{
 		public static readonly ITopLevelElement Instance = new CodeEmptyLine();
 		

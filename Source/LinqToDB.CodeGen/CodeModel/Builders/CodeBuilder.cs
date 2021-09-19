@@ -23,11 +23,6 @@ namespace LinqToDB.CodeGen.Model
 		public ITopLevelElement NewLine => CodeEmptyLine.Instance;
 
 		/// <summary>
-		/// Get <c>this</c> parameter reference.
-		/// </summary>
-		public ICodeExpression This => CodeThis.Instance;
-
-		/// <summary>
 		/// Add new file code unit.
 		/// </summary>
 		/// <param name="fileName">File name.</param>
@@ -72,7 +67,7 @@ namespace LinqToDB.CodeGen.Model
 		/// </summary>
 		/// <param name="namespace">Namespace to import.</param>
 		/// <returns>Import statement.</returns>
-		public CodeImport Import(CodeIdentifier[] @namespace) => new(@namespace);
+		public CodeImport Import(IReadOnlyList<CodeIdentifier> @namespace) => new(@namespace);
 
 		/// <summary>
 		/// Create namespace definition.
@@ -146,24 +141,46 @@ namespace LinqToDB.CodeGen.Model
 		}
 
 		/// <summary>
-		/// Create method call element.
+		/// Create method call expression.
+		/// </summary>
+		/// <param name="objOrType">Callee object or type in case of static method.</param>
+		/// <param name="method">Called method name.</param>
+		/// <param name="genericArguments">Generic method type arguments.</param>
+		/// <param name="parameters">Method parameters.</param>
+		/// <param name="returnType">Method return value type.</param>
+		/// <returns>Call element instance.</returns>
+		public CodeCallExpression Call(ICodeExpression objOrType, CodeIdentifier method, IType[] genericArguments, ICodeExpression[] parameters, IType returnType) => new(false, objOrType, method, genericArguments, parameters, returnType);
+
+		/// <summary>
+		/// Create method call statement.
 		/// </summary>
 		/// <param name="objOrType">Callee object or type in case of static method.</param>
 		/// <param name="method">Called method name.</param>
 		/// <param name="genericArguments">Generic method type arguments.</param>
 		/// <param name="parameters">Method parameters.</param>
 		/// <returns>Call element instance.</returns>
-		public CodeCall Call(ICodeExpression objOrType, CodeIdentifier method, IType[] genericArguments, ICodeExpression[] parameters) => new(false, objOrType, method, genericArguments, parameters);
+		public CodeCallStatement Call(ICodeExpression objOrType, CodeIdentifier method, IType[] genericArguments, ICodeExpression[] parameters) => new(false, objOrType, method, genericArguments, parameters);
 
 		/// <summary>
-		/// Create extension method call.
+		/// Create extension method call expression.
+		/// </summary>
+		/// <param name="type">Type, containing extension method.</param>
+		/// <param name="method">Called method name.</param>
+		/// <param name="genericArguments">Type arguments for generic method.</param>
+		/// <param name="parameters">Call parameters.</param>
+		/// <param name="returnType">Method return value type.</param>
+		/// <returns>Call element instance.</returns>
+		public CodeCallExpression ExtCall(IType type, CodeIdentifier method, IType[] genericArguments, ICodeExpression[] parameters, IType returnType) => new(true, new CodeTypeReference(type), method, genericArguments, parameters, returnType);
+
+		/// <summary>
+		/// Create extension method call statement.
 		/// </summary>
 		/// <param name="type">Type, containing extension method.</param>
 		/// <param name="method">Called method name.</param>
 		/// <param name="genericArguments">Type arguments for generic method.</param>
 		/// <param name="parameters">Call parameters.</param>
 		/// <returns>Call element instance.</returns>
-		public CodeCall ExtCall(IType type, CodeIdentifier method, IType[] genericArguments, ICodeExpression[] parameters) => new(true, new CodeTypeReference(type), method, genericArguments, parameters);
+		public CodeCallStatement ExtCall(IType type, CodeIdentifier method, IType[] genericArguments, ICodeExpression[] parameters) => new(true, new CodeTypeReference(type), method, genericArguments, parameters);
 
 		/// <summary>
 		/// Create method parameter.
@@ -186,8 +203,9 @@ namespace LinqToDB.CodeGen.Model
 		/// Creates lambda method parameter without explicit type.
 		/// </summary>
 		/// <param name="name">Parameter name.</param>
+		/// <param name="type">Parameter type.</param>
 		/// <returns>Parameter instance.</returns>
-		public CodeParameter LambdaParameter(CodeIdentifier name) => new(null, name, ParameterDirection.In);
+		public CodeParameter LambdaParameter(CodeIdentifier name, IType type) => new(type, name, ParameterDirection.In);
 
 		/// <summary>
 		/// Creates return statement/expression.
@@ -217,8 +235,25 @@ namespace LinqToDB.CodeGen.Model
 		/// </summary>
 		/// <param name="obj">Member owner instance.</param>
 		/// <param name="memberName">Member name.</param>
+		/// <param name="memberType">Member type.</param>
 		/// <returns>Member access expression.</returns>
-		public CodeMember Member(ICodeExpression obj, CodeIdentifier memberName) => new(obj, memberName);
+		public CodeMember Member(ICodeExpression obj, CodeIdentifier memberName, IType memberType) => new(obj, memberName, memberType);
+
+		/// <summary>
+		/// Creates property access expression.
+		/// </summary>
+		/// <param name="obj">Property owner instance.</param>
+		/// <param name="property">Property node.</param>
+		/// <returns>Property access expression.</returns>
+		public CodeMember Member(ICodeExpression obj, CodeProperty property) => new(obj, property.Name, property.Type.Type);
+
+		/// <summary>
+		/// Creates field access expression.
+		/// </summary>
+		/// <param name="obj">Field owner instance.</param>
+		/// <param name="field">Field node.</param>
+		/// <returns>Field access expression.</returns>
+		public CodeMember Member(ICodeExpression obj, CodeField field) => new(obj, field.Name, field.Type.Type);
 
 		/// <summary>
 		/// Creates new object expression.
@@ -227,14 +262,22 @@ namespace LinqToDB.CodeGen.Model
 		/// <param name="parameters">Constructor parameters.</param>
 		/// <param name="initializers">Field/property initializers.</param>
 		/// <returns>New object expression instance.</returns>
-		public CodeNew New(IType type, ICodeExpression[] parameters, CodeAssignment[] initializers) => new(type, parameters, initializers);
+		public CodeNew New(IType type, ICodeExpression[] parameters, CodeAssignmentStatement[] initializers) => new(type, parameters, initializers);
 
 		/// <summary>
-		/// Creates throw expression/statement.
+		/// Creates throw statement.
 		/// </summary>
 		/// <param name="exception">Exception object to throw.</param>
-		/// <returns>Throw expression/statement instance.</returns>
-		public CodeThrow Throw(ICodeExpression exception) => new(exception);
+		/// <returns>Throw statement instance.</returns>
+		public CodeThrowStatement Throw(ICodeExpression exception) => new(exception);
+
+		/// <summary>
+		/// Creates throw expression.
+		/// </summary>
+		/// <param name="exception">Exception object to throw.</param>
+		/// <param name="targetType">Type, expected from expression in throw location (not exception type!).</param>
+		/// <returns>Throw expression instance.</returns>
+		public CodeThrowExpression Throw(ICodeExpression exception, IType targetType) => new(exception, targetType);
 
 		/// <summary>
 		/// Creates generic type parameter descriptor.
@@ -244,12 +287,20 @@ namespace LinqToDB.CodeGen.Model
 		public IType TypeParameter(CodeIdentifier name) => new TypeArgument(name, false);
 
 		/// <summary>
-		/// Creates assignment statement/expression.
+		/// Creates assignment statement.
 		/// </summary>
 		/// <param name="lvalue">Assignee.</param>
 		/// <param name="rvalue">Assigned value.</param>
 		/// <returns>Assignment statement/expression instance.</returns>
-		public CodeAssignment Assign(ILValue lvalue, ICodeExpression rvalue) => new(lvalue, rvalue);
+		public CodeAssignmentStatement Assign(ILValue lvalue, ICodeExpression rvalue) => new(lvalue, rvalue);
+
+		/// <summary>
+		/// Creates assignment expression.
+		/// </summary>
+		/// <param name="lvalue">Assignee.</param>
+		/// <param name="rvalue">Assigned value.</param>
+		/// <returns>Assignment statement/expression instance.</returns>
+		public CodeAssignmentExpression AssignExpression(ILValue lvalue, ICodeExpression rvalue) => new(lvalue, rvalue);
 
 		/// <summary>
 		/// Creates variable declaration.
@@ -275,8 +326,9 @@ namespace LinqToDB.CodeGen.Model
 		/// </summary>
 		/// <param name="obj">Indexed object.</param>
 		/// <param name="index">Index parameter.</param>
+		/// <param name="returnType">Return value type.</param>
 		/// <returns>Indexed access expression.</returns>
-		public CodeIndex Index(ICodeExpression obj, ICodeExpression index) => new(obj, index);
+		public CodeIndex Index(ICodeExpression obj, ICodeExpression index, IType returnType) => new(obj, index, returnType);
 
 		/// <summary>
 		/// Creates type cast expression.
@@ -292,29 +344,43 @@ namespace LinqToDB.CodeGen.Model
 		/// <param name="type">Type of constant.</param>
 		/// <param name="targetTyped">Indicates that constant type could be inferred from context.</param>
 		/// <returns>Constant expression.</returns>
+#pragma warning disable IDE0004 // Remove Unnecessary Cast : https://github.com/dotnet/roslyn/issues/55621
 		public CodeConstant Null(IType type, bool targetTyped) => new (type, (object?)null, targetTyped);
+#pragma warning restore IDE0004 // Remove Unnecessary Cast
 
 		/// <summary>
 		/// Creates static member access expression (e.g. property or field accessor).
 		/// </summary>
 		/// <param name="type">Member owning type.</param>
 		/// <param name="memberName">Member name.</param>
+		/// <param name="memberType">Member type.</param>
 		/// <returns>Member access expression.</returns>
-		public CodeMember Member(IType type, CodeIdentifier memberName) => new(type, memberName);
+		public CodeMember Member(IType type, CodeIdentifier memberName, IType memberType) => new(type, memberName, memberType);
 
 		/// <summary>
 		/// Creates static member access expression (e.g. property or field accessor).
 		/// </summary>
 		/// <param name="type">Member owning type.</param>
 		/// <param name="memberName">Member name.</param>
+		/// <param name="memberType">Member type.</param>
 		/// <returns>Member access expression.</returns>
-		public CodeMember Member(IType type, string memberName) => new(type, new(memberName));
+		public CodeMember Member(IType type, string memberName, IType memberType) => new(type, new(memberName), memberType);
+
+		/// <summary>
+		/// Creates static property access expression.
+		/// </summary>
+		/// <param name="type">Property owner type.</param>
+		/// <param name="property">Property.</param>
+		/// <returns>Property access expression.</returns>
+		public CodeMember Member(IType type, CodeProperty property) => new(type, property.Name, property.Type.Type);
 
 		/// <summary>
 		/// Creates lambda method builder.
 		/// </summary>
+		/// <param name="lambdaType">Lambda method type (delegate).</param>
+		/// <param name="ommitTypes">Lambda method could skip generation of types for parameters.</param>
 		/// <returns>Lambda method builder instance.</returns>
-		public LambdaMethodBuilder Lambda() => new(new());
+		public LambdaMethodBuilder Lambda(IType lambdaType, bool ommitTypes) => new(new(lambdaType, ommitTypes));
 
 		/// <summary>
 		/// Creates code block builder.

@@ -3,23 +3,19 @@
 	/// <summary>
 	/// Method parameter.
 	/// </summary>
-	public class CodeParameter : ICodeElement
+	public sealed class CodeParameter : CodeTypedName, ICodeElement
 	{
-		public CodeParameter(IType? type, CodeIdentifier name, ParameterDirection direction)
+		internal CodeParameter(CodeTypeToken type, CodeIdentifier name, ParameterDirection direction)
+			: base(name, type)
 		{
-			Type      = type == null ? null : new (type);
-			Name      = name;
 			Direction = direction;
 		}
 
-		/// <summary>
-		/// Parameter type. Could be missing for lambda-methods.
-		/// </summary>
-		public CodeTypeToken?     Type      { get; }
-		/// <summary>
-		/// Parameter name.
-		/// </summary>
-		public CodeIdentifier     Name      { get; }
+		public CodeParameter(IType type, CodeIdentifier name, ParameterDirection direction)
+			: this(new CodeTypeToken(type), name, direction)
+		{
+		}
+
 		/// <summary>
 		/// Parameter direction.
 		/// </summary>
@@ -27,5 +23,4 @@
 
 		CodeElementType ICodeElement.ElementType => CodeElementType.Parameter;
 	}
-
 }

@@ -20,7 +20,7 @@ namespace LinqToDB.CodeGen.CodeGeneration
 		public string? AssociationCollectionType { get; set; }
 		public string NewLine { get; set; } = Environment.NewLine;
 
-		public bool EntityInSeparateFile { get; set; }
+		public bool ClassPerFile { get; set; }
 
 		public bool GenerateDbType { get; set; }
 		public bool GenerateDataType { get; set; }

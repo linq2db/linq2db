@@ -5,11 +5,21 @@ namespace LinqToDB.CodeGen.Model
 	/// <summary>
 	/// Custom attribute declaration.
 	/// </summary>
-	public class CodeAttribute : ITopLevelElement
+	public sealed class CodeAttribute : ITopLevelElement
 	{
-		public CodeAttribute(IType type)
+		internal CodeAttribute(
+			CodeTypeToken                                           type,
+			List<ICodeExpression>?                                  parameters,
+			List<(CodeIdentifier property, ICodeExpression value)>? namedParameters)
 		{
-			Type = new (type);
+			Type            = type;
+			Parameters      = parameters      ?? new ();
+			NamedParameters = namedParameters ?? new ();
+		}
+
+		public CodeAttribute(IType type)
+			: this(new (type), null, null)
+		{
 		}
 
 		/// <summary>

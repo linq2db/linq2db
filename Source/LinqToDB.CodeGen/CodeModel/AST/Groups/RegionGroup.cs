@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace LinqToDB.CodeGen.Model
 {
@@ -7,9 +8,15 @@ namespace LinqToDB.CodeGen.Model
 	/// </summary>
 	public class RegionGroup : MemberGroup<CodeRegion>
 	{
-		public RegionGroup(CodeClass @class)
+		public RegionGroup(List<CodeRegion>? members, CodeClass @class)
+			: base(members)
 		{
 			OwnerType = @class;
+		}
+
+		public RegionGroup(CodeClass @class)
+			: this(null, @class)
+		{
 		}
 
 		/// <summary>

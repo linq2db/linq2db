@@ -56,7 +56,7 @@
 		/// <returns>Returns new nested classes group in current region.</returns>
 		public ClassGroup Classes()
 		{
-			var group = new ClassGroup(Region.Type!);
+			var group = new ClassGroup(Region.Type);
 			Region.Members.Add(group);
 			return group;
 		}
@@ -67,7 +67,7 @@
 		/// <returns>Returns new regions group in current region.</returns>
 		public RegionGroup Regions()
 		{
-			var group = new RegionGroup(Region.Type!);
+			var group = new RegionGroup(Region.Type);
 			Region.Members.Add(group);
 			return group;
 		}

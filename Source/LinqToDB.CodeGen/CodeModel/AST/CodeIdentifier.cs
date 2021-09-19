@@ -4,7 +4,7 @@
 	/// Reference to identifier value. Used instead of string to allow identifier mutation in existing AST
 	/// (e.g. because initial value is not valid in target language or conflicts with existing identifiers).
 	/// </summary>
-	public class CodeIdentifier : ICodeExpression, ILValue
+	public sealed class CodeIdentifier : ICodeElement
 	{
 		public CodeIdentifier(string name)
 		{

@@ -3,28 +3,24 @@
 	/// <summary>
 	/// Variable declaration.
 	/// </summary>
-	public class CodeVariable : ILValue
+	public sealed class CodeVariable : CodeTypedName, ILValue
 	{
-		public CodeVariable(CodeIdentifier name, IType type, bool rvalueTyped)
+		public CodeVariable(CodeIdentifier name, CodeTypeToken type, bool rvalueTyped)
+			: base(name, type)
 		{
-			Name        = name;
-			Type        = new (type);
 			RValueTyped = rvalueTyped;
 		}
 
-		/// <summary>
-		/// Variable name.
-		/// </summary>
-		public CodeIdentifier Name        { get; }
-		/// <summary>
-		/// Variable type.
-		/// </summary>
-		public CodeTypeToken  Type        { get; }
+		public CodeVariable(CodeIdentifier name, IType type, bool rvalueTyped)
+			: this(name, new CodeTypeToken(type), rvalueTyped)
+		{
+		}
+
 		/// <summary>
 		/// Indicates that variable type could be infered from assigned value.
 		/// This could be used to generate <c>var</c> instead of specific type.
 		/// </summary>
-		public bool           RValueTyped { get; }
+		public bool RValueTyped { get; }
 
 		CodeElementType ICodeElement.ElementType => CodeElementType.Variable;
 	}

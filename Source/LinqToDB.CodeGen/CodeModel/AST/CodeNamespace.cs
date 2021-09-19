@@ -5,21 +5,27 @@ namespace LinqToDB.CodeGen.Model
 	/// <summary>
 	/// Namespace declaration.
 	/// </summary>
-	public class CodeNamespace : ITopLevelElement
+	public sealed class CodeNamespace : ITopLevelElement
 	{
-		public CodeNamespace(CodeIdentifier[] name)
+		internal CodeNamespace(IReadOnlyList<CodeIdentifier> name, List<IMemberGroup>? members)
 		{
-			Name = name;
+			Name    = name;
+			Members = members ?? new ();
+		}
+
+		public CodeNamespace(IReadOnlyList<CodeIdentifier> name)
+			: this(name, null)
+		{
 		}
 
 		/// <summary>
 		/// Namespace name.
 		/// </summary>
-		public CodeIdentifier[]   Name    { get; }
+		public IReadOnlyList<CodeIdentifier> Name    { get; }
 		/// <summary>
 		/// Namespace members (in groups).
 		/// </summary>
-		public List<IMemberGroup> Members { get; set; } = new();
+		public List<IMemberGroup>            Members { get; set; }
 
 		CodeElementType ICodeElement.ElementType => CodeElementType.Namespace;
 	}

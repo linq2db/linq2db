@@ -1,4 +1,0 @@
-﻿namespace LinqToDB.CodeGen.ContextModel
-{
-	
-}

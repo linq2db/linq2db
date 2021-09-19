@@ -1,11 +1,13 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿using System.Collections.Generic;
+
+namespace LinqToDB.CodeGen.Model
 {
 	/// <summary>
 	/// Implementation of generic type.
 	/// </summary>
 	public class GenericType : RegularType
 	{
-		private readonly IType[] _typeArguments;
+		private readonly IReadOnlyList<IType> _typeArguments;
 
 		/// <summary>
 		/// Creates top-level (no namespace) or namespaced type descriptor.
@@ -16,7 +18,13 @@
 		/// <param name="isNullable">Nullability status.</param>
 		/// <param name="typeArguments">Type arguments.</param>
 		/// <param name="external">Type defined externally or in current AST.</param>
-		public GenericType(CodeIdentifier[]? @namespace, CodeIdentifier name, bool isValueType, bool isNullable, IType[] typeArguments, bool external)
+		public GenericType(
+			IReadOnlyList<CodeIdentifier>? @namespace,
+			CodeIdentifier                 name,
+			bool                           isValueType,
+			bool                           isNullable,
+			IReadOnlyList<IType>           typeArguments,
+			bool                           external)
 			: base(@namespace, name, null, isValueType, isNullable, external)
 		{
 			_typeArguments = typeArguments;
@@ -31,14 +39,20 @@
 		/// <param name="isNullable">Nullability status.</param>
 		/// <param name="typeArguments">Type arguments.</param>
 		/// <param name="external">Type defined externally or in current AST.</param>
-		public GenericType(IType parent, CodeIdentifier name, bool isValueType, bool isNullable, IType[] typeArguments, bool external)
+		public GenericType(
+			IType                parent,
+			CodeIdentifier       name,
+			bool                 isValueType,
+			bool                 isNullable,
+			IReadOnlyList<IType> typeArguments,
+			bool                 external)
 			: base(parent, name, isValueType, isNullable, external)
 		{
 			_typeArguments = typeArguments;
 		}
 
-		public override TypeKind Kind          => TypeKind.Generic;
-		public override IType[]  TypeArguments => _typeArguments;
+		public override TypeKind             Kind          => TypeKind.Generic;
+		public override IReadOnlyList<IType> TypeArguments => _typeArguments;
 
 		// is it even valid on open generic?
 		public override IType WithNullability(bool nullable)

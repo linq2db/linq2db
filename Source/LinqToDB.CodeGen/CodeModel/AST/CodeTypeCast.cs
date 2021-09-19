@@ -3,12 +3,17 @@
 	/// <summary>
 	/// Type cast expression.
 	/// </summary>
-	public class CodeTypeCast : ICodeExpression
+	public sealed class CodeTypeCast : ICodeExpression
 	{
-		public CodeTypeCast(IType type, ICodeExpression value)
+		public CodeTypeCast(CodeTypeToken type, ICodeExpression value)
 		{
-			Type  = new (type);
+			Type  = type;
 			Value = value;
+		}
+
+		public CodeTypeCast(IType type, ICodeExpression value)
+			: this(new CodeTypeToken(type), value)
+		{
 		}
 
 		/// <summary>
@@ -19,6 +24,8 @@
 		/// Value (expression) to cast.
 		/// </summary>
 		public ICodeExpression Value { get; }
+
+		IType ICodeExpression.Type => Type.Type;
 
 		CodeElementType ICodeElement.ElementType => CodeElementType.Cast;
 	}

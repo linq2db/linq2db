@@ -1,13 +1,21 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿using System.Collections.Generic;
+
+namespace LinqToDB.CodeGen.Model
 {
 	/// <summary>
 	/// Group of properties.
 	/// </summary>
 	public class PropertyGroup : MemberGroup<CodeProperty>
 	{
-		public PropertyGroup(bool tableLayout)
+		public PropertyGroup(List<CodeProperty>? members, bool tableLayout)
+			: base(members)
 		{
 			TableLayout = tableLayout;
+		}
+
+		public PropertyGroup(bool tableLayout)
+			: this(null, tableLayout)
+		{
 		}
 
 		/// <summary>

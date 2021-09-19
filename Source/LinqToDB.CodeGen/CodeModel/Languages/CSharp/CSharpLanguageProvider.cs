@@ -9,6 +9,10 @@ namespace LinqToDB.CodeGen.Model
 	/// </summary>
 	internal class CSharpLanguageProvider : ILanguageProvider
 	{
+		// 1573: Parameter ? has no matching param tag in the XML comment https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/compiler-messages/cs1573
+		// 1591: Missing XML comment for publicly visible type or member https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/compiler-messages/cs1591
+		private static readonly string[] _xmlDocWarnings = new [] {"1573", "1591" };
+
 		private static readonly IReadOnlyDictionary<string, string> _aliasedTypes = new Dictionary<string, string>()
 		{
 			{ nameof(Byte)     , "byte"    },
@@ -34,27 +38,35 @@ namespace LinqToDB.CodeGen.Model
 			{ nameof(UIntPtr)  , "nuint"   },
 		};
 
-		private readonly IEqualityComparer<CodeIdentifier>              _identifierComparer;
-		private readonly IEqualityComparer<IEnumerable<CodeIdentifier>> _namespaceComparer;
-		private readonly IEqualityComparer<IType>                       _typeComparerWithoutNRT;
-		private readonly ITypeParser                                    _typeParser;
+		private readonly IEqualityComparer<CodeIdentifier>              _identifierEqualityComparer;
+		private readonly IComparer<CodeIdentifier>                      _identifierComparer;
+		private readonly IEqualityComparer<IEnumerable<CodeIdentifier>> _namespaceEqualityComparer;
+		private readonly IComparer<IEnumerable<CodeIdentifier>>         _namespaceComparer;
+		private readonly IEqualityComparer<IType>                       _typeEqualityComparerWithoutNRT;
+		private readonly IEqualityComparer<IType>                       _typeEqualityComparerWithNRT;
+		private readonly ITypeParser                                    _typeEqualityParser;
 
 		internal CSharpLanguageProvider()
 		{
-			_identifierComparer     = new CodeIdentifierComparer(StringComparer.Ordinal);
-			_namespaceComparer      = new NamespaceEqualityComparer(_identifierComparer);
-			_typeComparerWithoutNRT = new TypeWithoutNRTComparer(_identifierComparer, _namespaceComparer);
-			_typeParser             = new TypeParser(this);
+			_identifierEqualityComparer     = new CodeIdentifierEqualityComparer(StringComparer.Ordinal);
+			_identifierComparer             = new CodeIdentifierComparer(StringComparer.Ordinal);
+			_namespaceEqualityComparer      = new NamespaceEqualityComparer(_identifierEqualityComparer);
+			_namespaceComparer              = new NamespaceComparer(_identifierComparer);
+			_typeEqualityComparerWithoutNRT = new TypeEqualityComparer(_identifierEqualityComparer, _namespaceEqualityComparer, true);
+			_typeEqualityComparerWithNRT    = new TypeEqualityComparer(_identifierEqualityComparer, _namespaceEqualityComparer, false);
+			_typeEqualityParser             = new TypeParser(this);
 		}
 
-		IEqualityComparer<CodeIdentifier>              ILanguageProvider.IdentifierComparer        => _identifierComparer;
-		IEqualityComparer<IEnumerable<CodeIdentifier>> ILanguageProvider.FullNameComparer          => _namespaceComparer;
-		IEqualityComparer<string>                      ILanguageProvider.RawIdentifierComparer     => StringComparer.Ordinal;
-		IEqualityComparer<IType>                       ILanguageProvider.TypeComparerWithoutNRT    => _typeComparerWithoutNRT;
-		ITypeParser                                    ILanguageProvider.TypeParser                => _typeParser;
-		bool                                           ILanguageProvider.NRTSupported              => true;
-		string?                                        ILanguageProvider.MissingXmlCommentWarnCode => "1591";
-		string                                         ILanguageProvider.FileExtension             => "cs";
+		IEqualityComparer<CodeIdentifier>              ILanguageProvider.IdentifierEqualityComparer        => _identifierEqualityComparer;
+		IEqualityComparer<IEnumerable<CodeIdentifier>> ILanguageProvider.FullNameEqualityComparer          => _namespaceEqualityComparer;
+		IComparer<IEnumerable<CodeIdentifier>>         ILanguageProvider.FullNameComparer                  => _namespaceComparer;
+		IEqualityComparer<string>                      ILanguageProvider.RawIdentifierEqualityComparer     => StringComparer.Ordinal;
+		IEqualityComparer<IType>                       ILanguageProvider.TypeEqualityComparerWithNRT       => _typeEqualityComparerWithNRT;
+		IEqualityComparer<IType>                       ILanguageProvider.TypeEqualityComparerWithoutNRT    => _typeEqualityComparerWithoutNRT;
+		ITypeParser                                    ILanguageProvider.TypeParser                        => _typeEqualityParser;
+		bool                                           ILanguageProvider.NRTSupported                      => true;
+		string[]                                       ILanguageProvider.MissingXmlCommentWarnCodes        => _xmlDocWarnings;
+		string                                         ILanguageProvider.FileExtension                     => "cs";
 
 		bool ILanguageProvider.IsValidIdentifierFirstChar(string character, UnicodeCategory category)
 		{

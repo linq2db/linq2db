@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace LinqToDB.CodeGen.Model
 {
@@ -7,25 +8,38 @@ namespace LinqToDB.CodeGen.Model
 	/// </summary>
 	public class ClassGroup : MemberGroup<CodeClass>, ITopLevelElement
 	{
-		private readonly CodeClass?     _class;
-		private readonly CodeNamespace? _namespace;
+		public ClassGroup(List<CodeClass>? members, ITopLevelElement? owner)
+			: base(members)
+		{
+			Owner = owner;
+		}
 
 		public ClassGroup(ITopLevelElement? owner)
+			: this(null, owner)
 		{
-			if (owner is CodeClass @class)
-				_class = @class;
-			else if (owner is CodeNamespace ns)
-				_namespace = ns;
-			else if (owner != null)
-				throw new InvalidOperationException();
 		}
+
+		/// <summary>
+		/// Optional class parent: parent class or namespace.
+		/// </summary>
+		public ITopLevelElement? Owner { get; }
 
 		public override CodeElementType ElementType => CodeElementType.ClassGroup;
 
 		public ClassBuilder New(CodeIdentifier name)
 		{
-			var @class = _class != null ? new CodeClass(_class, name) : new CodeClass(_namespace?.Name, name);
+			CodeClass @class;
+			if (Owner is CodeClass parentClass)
+				@class = new CodeClass(parentClass, name);
+			else if (Owner is CodeNamespace ns)
+				@class = new CodeClass(ns.Name, name);
+			else if (Owner == null)
+				@class = new CodeClass((CodeIdentifier[]?)null, name);
+			else
+				throw new InvalidOperationException();
+
 			Members.Add(@class);
+
 			return new ClassBuilder(@class);
 		}
 	}

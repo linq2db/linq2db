@@ -3,7 +3,7 @@
 namespace LinqToDB.CodeGen.Model
 {
 	/// <summary>
-	/// Identifier comparer for namespaces (identifier sequences).
+	/// Identifier equality comparer for namespaces (identifier sequences).
 	/// </summary>
 	internal class NamespaceEqualityComparer : IEqualityComparer<IEnumerable<CodeIdentifier>>
 	{

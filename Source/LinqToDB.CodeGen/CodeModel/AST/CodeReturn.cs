@@ -3,7 +3,7 @@
 	/// <summary>
 	/// Return statement.
 	/// </summary>
-	public class CodeReturn : ICodeStatement
+	public sealed class CodeReturn : ICodeStatement
 	{
 		public CodeReturn(ICodeExpression? expression)
 		{
