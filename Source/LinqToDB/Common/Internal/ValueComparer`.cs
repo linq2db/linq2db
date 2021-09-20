@@ -150,9 +150,9 @@ namespace LinqToDB.Common.Internal
 						: Expression.Call(
 							Expression.Convert(param, typeof(object)), ObjectGetHashCodeMethod);
 
-			if (type != unwrappedType)
+			if (type != unwrappedType || type.IsClass || type.IsInterface)
 			{
-				expression = Expression.Condition(Expression.Property(param, nameof(Nullable<int>.HasValue)),
+				expression = Expression.Condition(Expression.NotEqual(param, Expression.Constant(null, param.Type)),
 					expression, Expression.Constant(0, typeof(int)));
 			}
 
