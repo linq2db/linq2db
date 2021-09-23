@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using System.Threading;
 using LinqToDB.Expressions;
 
 namespace LinqToDB.SqlQuery
@@ -19,6 +20,8 @@ namespace LinqToDB.SqlQuery
 			Source        = source;
 			ValueBuilders = new Dictionary<string, Func<object, IDictionary<Expression, ISqlExpression>, ISqlExpression>>();
 			FieldsLookup  = new Dictionary<string, SqlField>();
+
+			SourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
 		}
 
 		/// <summary>
@@ -28,18 +31,16 @@ namespace LinqToDB.SqlQuery
 		{
 			Source        = source;
 			ValueBuilders = valueBuilders;
+			Rows          = rows;
 
 			foreach (var field in fields)
 			{
 				if (field.Table != null) throw new InvalidOperationException("Invalid parent table.");
 				_fields.Add(field);
+				field.Table = this;
 			}
-
-			if (rows != null)
-			{
-				IsRowsBuilt = true;
-				Rows       = rows;
-			}
+	
+			SourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
 		}
 
 		/// <summary>
@@ -47,14 +48,16 @@ namespace LinqToDB.SqlQuery
 		/// </summary>
 		internal SqlValuesTable(SqlField[] fields, IReadOnlyList<ISqlExpression[]> rows)
 		{
-			IsRowsBuilt = true;
-			Rows       = rows;
+			Rows = rows;
 
 			foreach (var field in fields)
 			{
 				if (field.Table != null) throw new InvalidOperationException("Invalid parent table.");
 				_fields.Add(field);
+				field.Table = this;
 			}
+
+			SourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
 		}
 
 		/// <summary>
@@ -87,12 +90,10 @@ namespace LinqToDB.SqlQuery
 
 		internal IReadOnlyList<ISqlExpression[]>? Rows { get; }
 
-		public bool IsRowsBuilt { get; }
-
-		internal SqlValuesTable BuildRows(EvaluationContext context)
+		internal IReadOnlyList<ISqlExpression[]> BuildRows(EvaluationContext context)
 		{
-			if (IsRowsBuilt || context.ParameterValues == null)
-				return this;
+			if (Rows != null)
+				return Rows;
 
 			var parameters = new Dictionary<Expression, ISqlExpression>(ExpressionEqualityComparer.Instance);
 
@@ -119,19 +120,22 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-
-			return new SqlValuesTable(_fields.Select(f => new SqlField(f)).ToArray(), rows);
+			return rows;
 		}
 
 		#region ISqlTableSource
 		private SqlField? _all;
 		SqlField ISqlTableSource.All => _all ??= SqlField.All(this);
 
-		int ISqlTableSource.SourceID => throw new NotImplementedException();
+		public int SourceID { get; }
 
 		SqlTableType ISqlTableSource.SqlTableType => SqlTableType.Values;
 
-		IList<ISqlExpression> ISqlTableSource.GetKeys(bool allIfEmpty) => throw new NotImplementedException();
+		IList<ISqlExpression> ISqlTableSource.GetKeys(bool allIfEmpty)
+		{
+			return _fields.ToArray();
+		}
+
 		#endregion
 
 		#region ISqlExpression
@@ -151,36 +155,48 @@ namespace LinqToDB.SqlQuery
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
-			if (Rows == null)
-				return sb;
+			sb.Append("VALUES (...)");
 
-			sb.Append("\n\t");
-			var rows = Rows!;
-			for (var i = 0; i < rows.Count; i++)
+			var rows = Rows;
+			if (rows?.Count > 0)
 			{
-				// limit number of printed records
-				if (i == 10)
+				sb.AppendLine().Append('\t');
+				for (var i = 0; i < rows.Count; i++)
 				{
-					sb.Append($"-- skipping... total rows: {rows.Count}");
-					break;
+					// limit number of printed records
+					if (i == 10)
+					{
+						sb.Append($"-- skipping... total rows: {rows.Count}");
+						break;
+					}
+
+					if (i > 0)
+						sb.Append(",\n\t)");
+
+					sb.Append('(');
+					for (var j = 0; j < Fields.Count; j++)
+					{
+						if (j > 0)
+							sb.Append(", ");
+
+						sb = rows[i][j].ToString(sb, dic);
+					}
+
+					sb.Append(')');
 				}
-
-				if (i > 0)
-					sb.Append(",\n\t)");
-
-				sb.Append('(');
-				for (var j = 0; j < Fields.Count; j++)
-				{
-					if (j > 0)
-						sb.Append(", ");
-
-					sb = rows[i][j].ToString(sb, dic);
-				}
-
-				sb.Append(')');
+				sb.AppendLine();
 			}
 
-			sb.Append('\n');
+			sb.Append('[');
+
+			for (var i = 0; i < Fields.Count; i++)
+			{
+				if (i > 0)
+					sb.Append(", ");
+				sb.Append(Fields[i].PhysicalName);
+			}
+
+			sb.Append(']');
 
 			return sb;
 		}
@@ -191,7 +207,12 @@ namespace LinqToDB.SqlQuery
 		#endregion
 
 		#region ISqlExpressionWalkable
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func) => throw new NotImplementedException();
+
+		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		{
+			return this;
+		}
+
 		#endregion
 	}
 }

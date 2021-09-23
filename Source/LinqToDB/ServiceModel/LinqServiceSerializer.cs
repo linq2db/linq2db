@@ -135,7 +135,7 @@ namespace LinqToDB.ServiceModel
 
 			protected void Append(Type? value)
 			{
-				Builder.Append(' ').Append(value == null ? 0 : GetType(value));
+				Builder.Append(' ').Append(GetType(value));
 			}
 
 			protected void Append(bool value)
@@ -149,13 +149,6 @@ namespace LinqToDB.ServiceModel
 
 				if (value.HasValue)
 					Builder.Append(value.Value ? '1' : '0');
-			}
-
-			protected void Append(DbDataType? type)
-			{
-				Append(type != null);
-				if (type != null)
-					Append(type.Value);
 			}
 
 			protected void Append(DbDataType type)
@@ -450,6 +443,9 @@ namespace LinqToDB.ServiceModel
 			{
 				var idx = ReadInt();
 
+				if (idx == 0)
+					return null;
+
 				if (!ObjectIndices.TryGetValue(idx, out var type))
 				{
 					Pos++;
@@ -639,7 +635,8 @@ namespace LinqToDB.ServiceModel
 					foreach (var hint in queryHints!)
 						Builder.AppendLine(hint);
 
-				statement.Visit((serializer: this, parameterValues), static (context, e) => context.serializer.Visit(e, context.parameterValues));
+				statement.Visit((serializer: this, evaluationContext: new EvaluationContext(parameterValues)),
+					static (context, e) => context.serializer.Visit(e, context.evaluationContext));
 
 				if (DelayedObjects.Count > 0)
 					throw new LinqToDBException($"QuerySerializer error. Unknown object '{DelayedObjects.First().Key.GetType()}'.");
@@ -649,19 +646,23 @@ namespace LinqToDB.ServiceModel
 				return Builder.ToString();
 			}
 
-			void Visit(IQueryElement e, IReadOnlyParameterValues? parameterValues)
+			void Visit(IQueryElement e, EvaluationContext evaluationContext)
 			{
 				switch (e.ElementType)
 				{
 					case QueryElementType.SqlValuesTable :
 						{
 							var table = (SqlValuesTable)e;
-							var rows  = table.Rows!;
+
+							var rows  = table.BuildRows(evaluationContext);
 							EnumerableData.Add(table, rows);
+
 							foreach (var row in rows)
-								foreach (var item in row)
-									if (!ObjectIndices.ContainsKey(item))
-										Visit(item, parameterValues);
+							foreach (var item in row)
+							{
+								if (!ObjectIndices.ContainsKey(item))
+									Visit(item, evaluationContext);
+							}
 
 							break;
 						}
@@ -669,8 +670,8 @@ namespace LinqToDB.ServiceModel
 						{
 							var fld = (SqlField)e;
 
-							if (fld.Type != null)
-								GetType(fld.Type.Value.SystemType);
+							if (fld.Type.SystemType != null)
+								GetType(fld.Type.SystemType);
 
 							break;
 						}
@@ -679,9 +680,9 @@ namespace LinqToDB.ServiceModel
 						{
 							var p = (SqlParameter)e;
 
-							var pValue = p.GetParameterValue(parameterValues);
-							var v = pValue.Value;
-							var t = v == null ? pValue.DbDataType.SystemType : v.GetType();
+							var pValue = p.GetParameterValue(evaluationContext.ParameterValues);
+							var v      = pValue.Value;
+							var t      = v == null ? pValue.DbDataType.SystemType : v.GetType();
 
 							if (v == null || t.IsArray || t == typeof(string) || !(v is IEnumerable))
 							{
@@ -741,6 +742,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.IsDynamic);
 							Append(elem.CreateFormat);
 							Append(elem.CreateOrder);
+
 							AppendDelayed(elem.Table);
 
 							break;
@@ -765,7 +767,7 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SqlParameter :
 						{
 							var elem = (SqlParameter)e;
-							var paramValue = elem.GetParameterValue(parameterValues);
+							var paramValue = elem.GetParameterValue(evaluationContext.ParameterValues);
 
 							Append(elem.Name);
 							Append(elem.IsQueryParameter);
@@ -1538,7 +1540,7 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.SqlField :
 						{
-							var dbDataType       = ReadDbDataTypeNullable();
+							var dbDataType       = ReadDbDataType();
 							var name             = ReadString()!;
 							var physicalName     = ReadString()!;
 							var nullable         = ReadBool();
@@ -2159,8 +2161,8 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.DropTableStatement :
 					{
-						var tag         = Read<SqlComment>();
-						var table      = Read<SqlTable>()!;
+						var tag   = Read<SqlComment>();
+						var table = Read<SqlTable>()!;
 
 						obj = _statement = new SqlDropTableStatement(table)
 						{
@@ -2172,9 +2174,9 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.TruncateTableStatement :
 					{
-						var tag         = Read<SqlComment>();
-						var table      = Read<SqlTable>();
-						var reset      = ReadBool();
+						var tag   = Read<SqlComment>();
+						var table = Read<SqlTable>();
+						var reset = ReadBool();
 
 						obj = _statement = new SqlTruncateTableStatement
 						{

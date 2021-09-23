@@ -38,6 +38,7 @@ namespace LinqToDB.Linq.Builder
 			_elementType      = elementType;
 			_entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(elementType);
 			Table             = new SqlValuesTable(source);
+			SelectQuery.From.Table(Table);
 		}
 
 		public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
@@ -58,13 +59,25 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (expression == null)
 			{
-				var query = SelectQuery;
-				var sql   = SelectQuery.Select.Columns[0];
+				// Scalar
 
-				if (Parent != null)
-					query = Parent.SelectQuery;
+				SqlField field;
+				if (Table.Fields.Count > 0)
+				{
+					field = Table.Fields[0];
+				}
+				else 
+				{
+					field = new SqlField(_elementType, "item", true);
+					Table.Add(field, (record, parameters) =>
+					{
+						var valueExpr = Expression.Constant(record, _elementType);
+						var sql       = Builder.ConvertToSqlExpression(Parent!, valueExpr, null, false);
+						return sql;
+					});
+				}
 
-				return new[] { new SqlInfo(sql, query) };
+				return new[] { new SqlInfo(field, SelectQuery) };
 			}
 
 			switch (flags)
@@ -141,8 +154,12 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sql = ConvertToSql(expression, level, flags);
 
-			if (sql[0].Index < 0)
-				sql[0] = sql[0].WithIndex(sql[0].Query!.Select.Add(sql[0].Sql));
+			var sqlInfo = sql[0];
+			if (sqlInfo.Index < 0)
+			{
+				var idx = sqlInfo.Query!.Select.Add(sqlInfo.Sql);
+				sql[0] = sqlInfo.WithIndex(idx).WithSql(sqlInfo.Query!.Select.Columns[idx]);
+			}
 
 			return sql;
 		}

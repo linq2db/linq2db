@@ -795,11 +795,6 @@ namespace LinqToDB.SqlProvider
 
 					break;
 				}
-
-				case QueryElementType.SqlValuesTable:
-				{
-					return ReduceSqlValueTable((SqlValuesTable)expression, context);
-				}
 			}
 
 			return expression;
@@ -2712,7 +2707,7 @@ namespace LinqToDB.SqlProvider
 				}
 				case QueryElementType.SqlValuesTable:
 				{
-					return !((SqlValuesTable)element).IsRowsBuilt;
+					return ((SqlValuesTable)element).Rows == null;
 				}
 				case QueryElementType.SqlParameter:
 				{
@@ -2830,13 +2825,6 @@ namespace LinqToDB.SqlProvider
 			}
 
 			return newStatement;
-		}
-
-		static SqlValuesTable ReduceSqlValueTable(SqlValuesTable table, EvaluationContext context)
-		{
-			if (context == null)
-				return table;
-			return table.BuildRows(context);
 		}
 
 		public SqlStatement OptimizeAggregates(SqlStatement statement)

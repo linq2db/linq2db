@@ -5,7 +5,7 @@ namespace LinqToDB.DataProvider.Sybase
 	partial class SybaseSqlBuilder
 	{
 		// VALUES(...) syntax not supported in MERGE source
-		protected override bool MergeSupportsSourceDirectValues => false;
+		protected override bool SupportsSourceDirectValues => false;
 
 		protected override void BuildMergeTerminator(SqlMergeStatement merge)
 		{

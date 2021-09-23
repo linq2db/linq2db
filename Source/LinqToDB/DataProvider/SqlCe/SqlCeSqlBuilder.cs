@@ -45,7 +45,10 @@ namespace LinqToDB.DataProvider.SqlCe
 			return "OFFSET {0} ROWS";
 		}
 
-		protected override bool   OffsetFirst => true;
+		protected override bool OffsetFirst                   => true;
+		protected override bool SupportsSourceDirectValues    => false;
+		protected override bool SupportsColumnAliasesInSource => true;
+		protected override bool RequiresConstantColumnAliases => true;
 
 		public override int CommandCount(SqlStatement statement)
 		{

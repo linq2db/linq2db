@@ -265,19 +265,19 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			if (field.IsIdentity)
 			{
-				if (field.Type!.Value.DataType == DataType.Int16)
+				if (field.Type.DataType == DataType.Int16)
 				{
 					StringBuilder.Append("SMALLSERIAL");
 					return;
 				}
 
-				if (field.Type!.Value.DataType == DataType.Int32)
+				if (field.Type.DataType == DataType.Int32)
 				{
 					StringBuilder.Append("SERIAL");
 					return;
 				}
 
-				if (field.Type!.Value.DataType == DataType.Int64)
+				if (field.Type.DataType == DataType.Int64)
 				{
 					StringBuilder.Append("BIGSERIAL");
 					return;

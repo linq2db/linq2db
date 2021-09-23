@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.Informix
 	partial class InformixSqlBuilder
 	{
 		// VALUES(...) syntax not supported in MERGE source
-		protected override bool MergeSupportsSourceDirectValues => false;
+		protected override bool SupportsSourceDirectValues => false;
 
 		// or also we can use sysmaster:sysdual added in 11.70
 		// // but SET present even in ancient 9.x versions (but not it 7.x it seems)

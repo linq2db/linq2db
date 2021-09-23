@@ -1146,8 +1146,8 @@ namespace LinqToDB.SqlProvider
 			{
 				field.StringBuilder.Append(' ');
 
-				if (!string.IsNullOrEmpty(field.Field.Type!.Value.DbType))
-					field.StringBuilder.Append(field.Field.Type!.Value.DbType);
+				if (!string.IsNullOrEmpty(field.Field.Type.DbType))
+					field.StringBuilder.Append(field.Field.Type.DbType);
 				else
 				{
 					var sb = StringBuilder;
@@ -1452,12 +1452,114 @@ namespace LinqToDB.SqlProvider
 
 					break;
 
+				case QueryElementType.SqlValuesTable:
+				{
+					if (alias == null)
+						throw new LinqToDBException("Alias required for SqlValuesTable.");
+					BuildSqlValuesTable((SqlValuesTable)table, alias, out var aliasBuilt);
+					buildAlias = !aliasBuilt;
+					break;
+				}
+
 				default:
 					throw new InvalidOperationException($"Unexpected table type {table.ElementType}");
 			}
 
 			return buildAlias;
 		}
+
+		protected virtual void BuildSqlValuesTable(SqlValuesTable valuesTable, string alias, out bool aliasBuilt)
+		{
+			valuesTable = ConvertElement(valuesTable);
+			var rows = valuesTable.BuildRows(OptimizationContext.Context);
+			if (rows?.Count > 0)
+			{
+				StringBuilder.Append('(');
+
+				if (SupportsSourceDirectValues)
+					BuildValues(valuesTable, rows);
+				else
+					BuildValuesAsSelectsUnion(valuesTable.Fields, valuesTable, rows);
+
+				StringBuilder.Append(')');
+			}
+			else if (MergeEmptySourceSupported)
+				BuildEmptyValues(valuesTable);
+			else
+				throw new LinqToDBException($"{Name} doesn't support merge with empty source");
+
+			aliasBuilt = SupportsSourceDirectValues;
+			if (aliasBuilt)
+			{
+				BuildSqlValuesAlias(valuesTable, alias);
+			}
+		}
+
+		private void BuildSqlValuesAlias(SqlValuesTable valuesTable, string alias)
+		{
+			valuesTable = ConvertElement(valuesTable);
+			StringBuilder.Append(' ');
+
+			ConvertTableName(StringBuilder, null, null, null, alias, TableOptions.NotSet);
+
+			if (SupportsColumnAliasesInSource)
+			{
+				StringBuilder.Append(OpenParens);
+
+				var first = true;
+				foreach (var field in valuesTable.Fields)
+				{
+					if (!first)
+						StringBuilder.Append(Comma).Append(' ');
+
+					first = false;
+					Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+				}
+
+				StringBuilder.Append(')');
+			}
+		}
+
+		private void BuildEmptyValues(SqlValuesTable valuesTable)
+		{
+			StringBuilder
+				.AppendLine(OpenParens)
+				.Append("\tSELECT ")
+				;
+
+			for (var i = 0; i < valuesTable.Fields.Count; i++)
+			{
+				var field = valuesTable.Fields[i];
+
+				if (i > 0)
+					StringBuilder.Append(InlineComma);
+
+				if (MergeSourceValueTypeRequired(valuesTable, Array<ISqlExpression[]>.Empty, -1, i))
+					BuildTypedExpression(new SqlDataType(field), new SqlValue(field.Type, null));
+				else
+					BuildExpression(new SqlValue(field.Type, null));
+
+				if (!SupportsColumnAliasesInSource)
+				{
+					StringBuilder.Append(' ');
+					Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+				}
+			}
+
+			StringBuilder
+				.AppendLine()
+				.Append("\tFROM ");
+
+			if (!BuildFakeTableName())
+				// we don't select anything, so it is ok to use target table
+				// BuildTableName(merge.Target, true, false);
+				throw new NotImplementedException();
+
+			StringBuilder
+				.AppendLine("\tWHERE 1 = 0")
+				.AppendLine(")");
+		}
+
 
 		protected void BuildTableName(SqlTableSource ts, bool buildName, bool buildAlias)
 		{

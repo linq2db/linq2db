@@ -3,10 +3,10 @@
 	partial class SapHanaSqlBuilder
 	{
 		// TABLE_ALIAS(COLUMN_ALIAS, ...) syntax not supported
-		protected override bool MergeSupportsColumnAliasesInSource => false;
+		protected override bool SupportsColumnAliasesInSource => false;
 
 		// VALUES(...) syntax not supported in MERGE source
-		protected override bool MergeSupportsSourceDirectValues => false;
+		protected override bool SupportsSourceDirectValues => false;
 
 		// unfortunatelly, user could change this table
 		protected override string FakeTable => "DUMMY";

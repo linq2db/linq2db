@@ -25,31 +25,6 @@ namespace LinqToDB.Linq.Builder
 
 			switch (expression.NodeType)
 			{
-				case ExpressionType.Constant:
-					{
-						var c = (ConstantExpression)expression;
-
-						if (c.Value == null)
-							break;
-
-						var type = c.Value.GetType();
-
-						if (typeof(EnumerableQuery<>).IsSameOrParentOf(type))
-						{
-							// Avoiding collision with TableBuilder
-							var elementType = type.GetGenericArguments(typeof(EnumerableQuery<>))![0];
-							if (!builder.MappingSchema.IsScalarType(elementType))
-								break;
-
-							return action(1, elementType);
-						}
-
-						if (typeof(Array).IsSameOrParentOf(type))
-							return action(2, type.GetElementType());
-
-						break;
-					}
-
 				case ExpressionType.NewArrayInit:
 					{
 						var newArray = (NewArrayExpression)expression;

@@ -1072,43 +1072,56 @@ namespace LinqToDB.SqlQuery
 					{
 						var table = (SqlValuesTable)element;
 
-						List<ISqlExpression[]>? convertedRows = null;
-						var rowsConverted = false;
+						var converted = _convert(this, element);
 
-						if (table.Rows != null)
+						if (!ReferenceEquals(converted, element) && converted is SqlValuesTable table2)
 						{
-							convertedRows = new List<ISqlExpression[]>();
-							foreach (var row in table.Rows)
-							{
-								var convertedRow = ConvertSafe(row);
-								rowsConverted = rowsConverted || (convertedRow != null && !ReferenceEquals(convertedRow, row));
+							var fields1 = table.Fields;
+							var fields2 = table2.Fields;
 
-								convertedRows.Add(convertedRow ?? row!);
+							for (var i = 0; i < fields2.Count; i++)
+							{
+								var field = fields1[i];
+								//ReplaceVisited(field, fields2[i]);
+								VisitedElements[field] = fields2[i];
 							}
+
+							newElement = converted;
 						}
-
-						var fields1 = table.Fields;
-						var fields2 = Convert(table.Fields, static f => new SqlField(f));
-
-						var fieldsConverted = fields2 != null && !ReferenceEquals(fields1, fields2);
-
-						if (fieldsConverted || rowsConverted)
+						else
 						{
-							if (!fieldsConverted)
+							List<ISqlExpression[]>? convertedRows = null;
+							var                     rowsConverted = false;
+
+							if (table.Rows != null)
 							{
-								fields2 = fields1;
-
-								for (var i = 0; i < fields2.Count; i++)
+								convertedRows = new List<ISqlExpression[]>();
+								foreach (var row in table.Rows)
 								{
-									var field = fields2[i];
+									var convertedRow = ConvertSafe(row);
+									rowsConverted = rowsConverted || (convertedRow != null && !ReferenceEquals(convertedRow, row));
 
-									fields2[i] = new SqlField(field);
-
-									VisitedElements[field] = fields2[i];
+									convertedRows.Add(convertedRow ?? row!);
 								}
 							}
 
-							newElement = new SqlValuesTable(table.Source!, table.ValueBuilders!, fields2!, rowsConverted ? convertedRows : table.Rows);
+							if (rowsConverted)
+							{
+								var prevFields = table.Fields;
+								var newFields  = new SqlField[prevFields.Count];
+
+								for (var i = 0; i < prevFields.Count; i++)
+								{
+									var field = prevFields[i];
+
+									var newField = new SqlField(field);
+									newFields[i] = newField;
+
+									VisitedElements[field] = newField;
+								}
+
+								newElement = new SqlValuesTable(table.Source!, table.ValueBuilders!, newFields, rowsConverted ? convertedRows : table.Rows);
+							}
 						}
 
 						break;

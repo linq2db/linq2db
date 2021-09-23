@@ -87,6 +87,7 @@ namespace LinqToDB.Linq.Builder
 			new HasUniqueKeyBuilder        (),
 			new MultiInsertBuilder		   (),
 			new TagQueryBuilder            (),
+			new EnumerableBuilder          (),
 		};
 
 		public static void AddBuilder(ISequenceBuilder builder)
