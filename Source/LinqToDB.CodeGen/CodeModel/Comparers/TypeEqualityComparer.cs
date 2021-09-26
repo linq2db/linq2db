@@ -8,14 +8,16 @@ namespace LinqToDB.CodeGen.Model
 	internal class TypeEqualityComparer : IEqualityComparer<IType>
 	{
 		private readonly bool                                           _ignoreNRT;
+		private readonly bool                                           _ignoreNullability;
 		private readonly IEqualityComparer<CodeIdentifier>              _identifierComparer;
 		private readonly IEqualityComparer<IEnumerable<CodeIdentifier>> _namespaceComparer;
 
-		internal TypeEqualityComparer(IEqualityComparer<CodeIdentifier> identifierComparer, IEqualityComparer<IEnumerable<CodeIdentifier>> namespaceComparer, bool ignoreNRT)
+		internal TypeEqualityComparer(IEqualityComparer<CodeIdentifier> identifierComparer, IEqualityComparer<IEnumerable<CodeIdentifier>> namespaceComparer, bool ignoreNRT, bool ignoreNullability)
 		{
 			_identifierComparer = identifierComparer;
 			_namespaceComparer  = namespaceComparer;
-			_ignoreNRT          = ignoreNRT;
+			_ignoreNRT          = ignoreNRT || ignoreNullability;
+			_ignoreNullability  = ignoreNullability;
 		}
 
 		bool IEqualityComparer<IType>.Equals     (IType x, IType y) => EqualsImpl(x, y);
@@ -23,14 +25,15 @@ namespace LinqToDB.CodeGen.Model
 
 		private bool EqualsImpl(IType x, IType y)
 		{
+			if (x == y) return true;
+
 			if (x.Kind                != y.Kind               ) return false;
 			if (x.IsValueType         != y.IsValueType        ) return false;
 			if (x.External            != y.External           ) return false;
-			if (x.Alias               != y.Alias              ) return false;
 			if (x.OpenGenericArgCount != y.OpenGenericArgCount) return false;
 
 			// ignore nullability for reference types (when _ignoreNRT set)
-			if ((!_ignoreNRT || x.IsValueType) && x.IsNullable != y.IsNullable) return false;
+			if (!_ignoreNullability && (!_ignoreNRT || x.IsValueType) && x.IsNullable != y.IsNullable) return false;
 
 			if ((x.Name             == null ^ y.Name             == null) || (x.Name             != null && !_identifierComparer.Equals(x.Name, y.Name!         ))) return false;
 			if ((x.Namespace        == null ^ y.Namespace        == null) || (x.Namespace        != null && !_namespaceComparer.Equals(x.Namespace, y.Namespace!))) return false;
@@ -66,10 +69,10 @@ namespace LinqToDB.CodeGen.Model
 				   obj.Kind                .GetHashCode()
 				^  obj.IsValueType         .GetHashCode()
 				^  obj.External            .GetHashCode()
-				^  obj.Alias?              .GetHashCode() ?? 0
 				^  obj.OpenGenericArgCount?.GetHashCode() ?? 0
 
-				^ ((!_ignoreNRT || obj.IsValueType) ? obj.IsNullable.GetHashCode()                  : 0)
+				^ (!_ignoreNullability && (!_ignoreNRT || obj.IsValueType) ? obj.IsNullable.GetHashCode() : 0)
+
 				^ (obj.Name             != null     ? _identifierComparer.GetHashCode(obj.Name)     : 0)
 				^ (obj.Namespace        != null     ? _namespaceComparer.GetHashCode(obj.Namespace) : 0)
 				^ (obj.Parent           != null     ? GetHashCodeImpl(obj.Parent)                   : 0)

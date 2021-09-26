@@ -21,11 +21,11 @@ namespace LinqToDB.Tools
 
 			//BuildModel("mysql55");
 			//BuildModel("access.oledb");
-			//BuildModel("sql.2017");
+			BuildModel("sql.2017");
 			//BuildModel("db2");
-			//BuildModel("pg10");
+			BuildModel("pg10");
 
-			//if (args.Length == 0) return 0;
+			if (args.Length == 0) return 0;
 
 			NameNormalizationTest.NormalizationTest();
 
@@ -131,14 +131,19 @@ namespace LinqToDB.Tools
 				var builder = new CodeBuilder(languageProvider);
 				var metadata = new AttributeBasedMetadataBuilder(builder, sqlBuilder);
 
-				var generator = new DataModelGenerator(languageProvider, dataModel, metadata, namingServices, codegenSettings.ParameterNameNormalization, sqlBuilder);
+				var generator = new DataModelGenerator(
+					languageProvider,
+					dataModel,
+					metadata,
+					name => namingServices.NormalizeIdentifier(codegenSettings.ParameterNameNormalization, name),
+					sqlBuilder);
 				var files = generator.ConvertToCodeModel();
 
 				var equalityConverter = SqlBoolEqualityConverter.Create(languageProvider);
 				for (var i = 0; i < files.Length; i++)
 					files[i] = (CodeFile)equalityConverter.Visit(files[i]);
 
-				var codeBuilder = new CodeModelBuilder(codegenSettings, nameConverter, languageProvider, metadata, builder, namingServices, sqlBuilder);
+				var codeBuilder = new CodeModelBuilder(codegenSettings, languageProvider, builder);
 				var source = codeBuilder.GetSourceCode(files);
 
 				var root = $@"..\..\..\Generated\{configName}";

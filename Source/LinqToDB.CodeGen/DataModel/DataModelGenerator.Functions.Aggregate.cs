@@ -1,47 +1,75 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
 using LinqToDB.CodeGen.Model;
 
 namespace LinqToDB.CodeGen.DataModel
 {
+	// contains generation logic for aggregate function mappings
 	partial class DataModelGenerator
 	{
+		/// <summary>
+		/// Generates aggregate function mapping.
+		/// </summary>
+		/// <param name="aggregate">Aggrrgate function model.</param>
+		/// <param name="functionsGroup">Functions region.</param>
 		private void BuildAggregateFunction(AggregateFunctionModel aggregate, Func<RegionGroup> functionsGroup)
 		{
-			var region = functionsGroup().New(aggregate.Method.Name);
-			var method = DefineMethod(region.Methods(false), aggregate.Method, false);
-			method.Extension();
+			// generation sample:
+			/*
+			 * [Sql.Function("test_avg", ArgIndices = new []{ 1 }, ServerSideOnly = true, IsAggregate = true)]
+			 * public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double>> value)
+			 * {
+			 *     throw new InvalidOperationException("error message here");
+			 * }
+			 */
+			// where
+			// - src/TSource: any aggregated table-like source
+			// - value: actual aggregated value (value selector from source)
 
-			var body = method.Body().Append(
-					_code.Throw(_code.New(_code.Type(typeof(InvalidOperationException), false), Array.Empty<ICodeExpression>(), Array.Empty<CodeAssignmentStatement>())));
+			var method = DefineMethod(
+				functionsGroup().New(aggregate.Method.Name).Methods(false),
+				aggregate.Method);
 
+			// aggregates cannot be used outside of query context, so we throw exception from method
+			var body = method
+				.Body()
+				.Append(
+					_code.Throw(_code.New(
+						WellKnownTypes.System.InvalidOperationException,
+						_code.Constant(EXCEPTION_QUERY_ONLY_ASSOCATION_CALL, true))));
+
+			// build mappings
 			_metadataBuilder.BuildFunctionMetadata(aggregate.Metadata, method);
 
-			var source = _code.TypeParameter(_code.Identifier("TSource"));
+			var source = _code.TypeParameter(_code.Name(AGGREGATE_RECORD_TYPE));
 			method.TypeParameter(source);
 
 			method.Returns(aggregate.ReturnType);
 
-			var sourceParam = _code.Parameter(_code.Type(typeof(IEnumerable<>), false, new[] { source }), _code.Identifier("src"), ParameterDirection.In);
+			// define parameters
+			// aggregate has at least one parameter - collection of aggregated values
+			// and optionally could have one or more additional scalar parameters
+			var sourceParam = _code.Parameter(
+				WellKnownTypes.System.Collections.Generic.IEnumerable(source),
+				_code.Name(AGGREGATE_SOURCE_PARAMETER),
+				ParameterDirection.In);
 			method.Parameter(sourceParam);
 
 			if (aggregate.Parameters.Count > 0)
 			{
-				var argIndexes = new ICodeExpression[aggregate.Parameters.Count];
 				for (var i = 0; i < aggregate.Parameters.Count; i++)
 				{
-					var param = aggregate.Parameters[i];
-
-					argIndexes[i] = _code.Constant(i + 1, true);
-
+					var param         = aggregate.Parameters[i];
 					var parameterType = param.Parameter.Type;
 
-					parameterType = _code.Type(typeof(Func<,>), false, source, parameterType);
-					parameterType = _code.Type(typeof(Expression<>), false, parameterType);
+					// scalar parameters have following type:
+					// Expression<Func<TSource, param_type>>
+					// which allows user to specify aggregated value(s) selection from source record
+					parameterType = WellKnownTypes.System.Linq.Expressions.Expression(
+						WellKnownTypes.System.Func(parameterType, source));
 
-					var p = _code.Parameter(parameterType, _code.Identifier(param.Parameter.Name, null/*ctxModel.Parameter*/, i + 1), ParameterDirection.In);
+					var p = _code.Parameter(parameterType, _code.Name(param.Parameter.Name, null, i + 1), ParameterDirection.In);
 					method.Parameter(p);
+
 					if (param.Parameter.Description != null)
 						method.XmlComment().Parameter(p.Name, param.Parameter.Description);
 				}

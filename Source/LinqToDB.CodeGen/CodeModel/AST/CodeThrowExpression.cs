@@ -13,8 +13,7 @@
 			_targetType = targetType;
 		}
 
-		IType ICodeExpression.Type => _targetType;
-
-		CodeElementType ICodeElement.ElementType => CodeElementType.ThrowExpression;
+		IType           ICodeExpression.Type        => _targetType;
+		CodeElementType ICodeElement   .ElementType => CodeElementType.ThrowExpression;
 	}
 }

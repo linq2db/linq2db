@@ -9,13 +9,11 @@
 		/// Create instance member access expression.
 		/// </summary>
 		/// <param name="instance">Member owner instance.</param>
-		/// <param name="member">Member name.</param>
-		/// <param name="memberType">Member type.</param>
-		public CodeMember(ICodeExpression instance, CodeIdentifier member, IType memberType)
+		/// <param name="member">Member reference.</param>
+		public CodeMember(ICodeExpression instance, CodeReference member)
 		{
 			Instance   = instance;
 			Member     = member;
-			MemberType = memberType;
 		}
 
 		/// <summary>
@@ -23,12 +21,10 @@
 		/// </summary>
 		/// <param name="type">Member owner type.</param>
 		/// <param name="member">Member name.</param>
-		/// <param name="memberType">Member type.</param>
-		public CodeMember(IType type, CodeIdentifier member, IType memberType)
+		public CodeMember(IType type, CodeReference member)
 		{
 			Type       = new (type);
 			Member     = member;
-			MemberType = memberType;
 		}
 
 		/// <summary>
@@ -42,11 +38,9 @@
 		/// <summary>
 		/// Member to access.
 		/// </summary>
-		public CodeIdentifier     Member     { get; }
+		public CodeReference      Member     { get; }
 
-		public IType              MemberType { get; }
-
-		IType ICodeExpression.Type => MemberType;
+		IType ICodeExpression.Type => Member.Referenced.Type.Type;
 
 		CodeElementType ICodeElement.ElementType => CodeElementType.MemberAccess;
 	}

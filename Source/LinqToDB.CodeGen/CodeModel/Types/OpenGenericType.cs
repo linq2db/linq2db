@@ -26,7 +26,7 @@ namespace LinqToDB.CodeGen.Model
 			bool                           isNullable,
 			int                            argCount,
 			bool                           external)
-			: base(@namespace, name, null, isValueType, isNullable, external)
+			: base(@namespace, name, isValueType, isNullable, external)
 		{
 			_size = argCount;
 		}
@@ -67,9 +67,9 @@ namespace LinqToDB.CodeGen.Model
 			return new OpenGenericType(Namespace, Name, IsValueType, nullable, _size, External);
 		}
 
-		public override IType WithTypeArguments(IReadOnlyList<IType> typeArguments)
+		public override IType WithTypeArguments(params IType[] typeArguments)
 		{
-			if (typeArguments.Count != _size)
+			if (typeArguments.Length != _size)
 				throw new InvalidOperationException();
 
 			return new GenericType(Namespace, Name, IsValueType, IsNullable, typeArguments, External);

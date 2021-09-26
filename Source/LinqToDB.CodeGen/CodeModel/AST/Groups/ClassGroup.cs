@@ -40,7 +40,7 @@ namespace LinqToDB.CodeGen.Model
 
 			Members.Add(@class);
 
-			return new ClassBuilder(@class);
+			return new ClassBuilder(@class, this);
 		}
 	}
 }

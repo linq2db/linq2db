@@ -139,6 +139,11 @@ namespace LinqToDB.CodeGen.Schema
 
 		private (List<Parameter> parameters, Result result) ParseParameters(ProcedureSchema proc, bool onlyInputs)
 		{
+			// scalar pgsql function
+			var detectTuples = proc.IsFunction && !proc.IsTableFunction && !proc.IsAggregateFunction
+				&& _providerName.Contains(ProviderName.PostgreSQL);
+			List<ScalarResult>? tupleColumns = null;
+
 			var parameters = new List<Parameter>();
 			Result? result = null;
 			foreach (var param in proc.Parameters)
@@ -170,6 +175,15 @@ namespace LinqToDB.CodeGen.Schema
 					if (string.IsNullOrWhiteSpace(name))
 						throw new InvalidOperationException("Parameter name missing");
 
+					if (detectTuples && param.IsOut)
+					{
+						(tupleColumns ??= new()).Add(new ScalarResult(name, type, param.IsNullable));
+						if (param.IsIn)
+							param.IsOut = false;
+						else
+							continue;
+					}
+
 					var direction = !param.IsIn
 						? ParameterDirection.Output
 						: (!param.IsOut ? ParameterDirection.Input : ParameterDirection.InputOutput);
@@ -179,7 +193,18 @@ namespace LinqToDB.CodeGen.Schema
 			}
 
 			if (result == null)
-				result = new VoidResult();
+			{
+				if (tupleColumns != null)
+				{
+					if (tupleColumns.Count == 1)
+						result = tupleColumns[0];
+					else
+						// always nullable?
+						result = new TupleResult(tupleColumns, true);
+				}
+				else
+					result = new VoidResult();
+			}
 
 			return (parameters, result);
 		}
@@ -404,24 +429,24 @@ namespace LinqToDB.CodeGen.Schema
 					case "NpgsqlLine": type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlLine", true); break;
 					case "NpgsqlInet": type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlInet", true); break;
 
-					case "Microsoft.SqlServer.Types.SqlHierarchyId": type = _languageProvider.TypeParser.Parse("Microsoft.SqlServer.Types.SqlHierarchyId", true); break;
+					case "Microsoft.SqlServer.Types.SqlHierarchyId": type = WellKnownTypes.Microsoft.SqlServer.Types.SqlHierarchyId; break;
 					case "Microsoft.SqlServer.Types.SqlGeography": type = _languageProvider.TypeParser.Parse("Microsoft.SqlServer.Types.SqlGeography", false); break;
 					case "Microsoft.SqlServer.Types.SqlGeometry": type = _languageProvider.TypeParser.Parse("Microsoft.SqlServer.Types.SqlGeometry", false); break;
 
-					case "SqlString": type = _languageProvider.TypeParser.Parse<SqlString>(); break;
-					case "SqlByte": type = _languageProvider.TypeParser.Parse<SqlByte>(); break;
-					case "SqlInt16": type = _languageProvider.TypeParser.Parse<SqlInt16>(); break;
-					case "SqlInt32": type = _languageProvider.TypeParser.Parse<SqlInt32>(); break;
-					case "SqlInt64": type = _languageProvider.TypeParser.Parse<SqlInt64>(); break;
-					case "SqlDecimal": type = _languageProvider.TypeParser.Parse<SqlDecimal>(); break;
-					case "SqlMoney": type = _languageProvider.TypeParser.Parse<SqlMoney>(); break;
-					case "SqlSingle": type = _languageProvider.TypeParser.Parse<SqlSingle>(); break;
-					case "SqlDouble": type = _languageProvider.TypeParser.Parse<SqlDouble>(); break;
-					case "SqlBoolean": type = _languageProvider.TypeParser.Parse<SqlBoolean>(); break;
-					case "SqlDateTime": type = _languageProvider.TypeParser.Parse<SqlDateTime>(); break;
-					case "SqlBinary": type = _languageProvider.TypeParser.Parse<SqlBinary>(); break;
-					case "SqlGuid": type = _languageProvider.TypeParser.Parse<SqlGuid>(); break;
-					case "SqlXml": type = _languageProvider.TypeParser.Parse<SqlXml>(); break;
+					case "SqlString": type = WellKnownTypes.System.Data.SqlTypes.SqlString; break;
+					case "SqlByte": type = WellKnownTypes.System.Data.SqlTypes.SqlByte; break;
+					case "SqlInt16": type = WellKnownTypes.System.Data.SqlTypes.SqlInt16; break;
+					case "SqlInt32": type = WellKnownTypes.System.Data.SqlTypes.SqlInt32; break;
+					case "SqlInt64": type = WellKnownTypes.System.Data.SqlTypes.SqlInt64; break;
+					case "SqlDecimal": type = WellKnownTypes.System.Data.SqlTypes.SqlDecimal; break;
+					case "SqlMoney": type = WellKnownTypes.System.Data.SqlTypes.SqlMoney; break;
+					case "SqlSingle": type = WellKnownTypes.System.Data.SqlTypes.SqlSingle; break;
+					case "SqlDouble": type = WellKnownTypes.System.Data.SqlTypes.SqlDouble; break;
+					case "SqlBoolean": type = WellKnownTypes.System.Data.SqlTypes.SqlBoolean; break;
+					case "SqlDateTime": type = WellKnownTypes.System.Data.SqlTypes.SqlDateTime; break;
+					case "SqlBinary": type = WellKnownTypes.System.Data.SqlTypes.SqlBinary; break;
+					case "SqlGuid": type = WellKnownTypes.System.Data.SqlTypes.SqlGuid; break;
+					case "SqlXml": type = WellKnownTypes.System.Data.SqlTypes.SqlXml; break;
 
 					case "DB2Binary": type = _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Binary", true); break;
 					case "DB2Blob": type = _languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Blob", false); break;

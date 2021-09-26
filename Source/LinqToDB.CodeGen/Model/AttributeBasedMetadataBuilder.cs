@@ -21,7 +21,7 @@ namespace LinqToDB.CodeGen.CodeGeneration
 
 		void IMetadataBuilder.BuildAssociationMetadata(AssociationMetadata metadata, PropertyBuilder propertyBuilder)
 		{
-			BuildAssociationAttribute(metadata, propertyBuilder.AddAttribute(_builder.Type(typeof(AssociationAttribute), false)));
+			BuildAssociationAttribute(metadata, propertyBuilder.AddAttribute(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute));
 		}
 
 		private void BuildAssociationAttribute(AssociationMetadata metadata, AttributeBuilder attr)
@@ -108,74 +108,74 @@ namespace LinqToDB.CodeGen.CodeGeneration
 
 		void IMetadataBuilder.BuildAssociationMetadata(AssociationMetadata metadata, MethodBuilder methodBuilder)
 		{
-			BuildAssociationAttribute(metadata, methodBuilder.Attribute(_builder.Type(typeof(AssociationAttribute), false)));
+			BuildAssociationAttribute(metadata, methodBuilder.Attribute(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute));
 		}
 
 		void IMetadataBuilder.BuildColumnMetadata(ColumnMetadata metadata, PropertyBuilder propertyBuilder)
 		{
 			if (!metadata.IsColumn)
 			{
-				propertyBuilder.AddAttribute(_builder.Type(typeof(NotColumnAttribute), false));
+				propertyBuilder.AddAttribute(WellKnownTypes.LinqToDB.Mapping.NotColumnAttribute);
 				return;
 			}
 
 			// compared to old T4 implementation we use only ColumnAttribute
-			var attr = propertyBuilder.AddAttribute(_builder.Type(typeof(ColumnAttribute), false));
+			var attr = propertyBuilder.AddAttribute(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute);
 
 			// always add name as we can rename property (e.g. being invalid/duplicate in context)
 			if (metadata.Name != null)
 				attr.Parameter(_builder.Constant(metadata.Name, true));
 
-			attr.Parameter(_builder.Identifier(nameof(ColumnAttribute.CanBeNull)), _builder.Constant(metadata.CanBeNull, true));
+			attr.Parameter(_builder.Name(nameof(ColumnAttribute.CanBeNull)), _builder.Constant(metadata.CanBeNull, true));
 
 			if (metadata.DbType?.Name != null)
-				attr.Parameter(_builder.Identifier(nameof(ColumnAttribute.DbType)), _builder.Constant(metadata.DbType.Name, true));
+				attr.Parameter(_builder.Name(nameof(ColumnAttribute.DbType)), _builder.Constant(metadata.DbType.Name, true));
 			if (metadata.DataType != null)
-				attr.Parameter(_builder.Identifier(nameof(ColumnAttribute.DataType)), _builder.Constant(metadata.DataType.Value, true));
+				attr.Parameter(_builder.Name(nameof(ColumnAttribute.DataType)), _builder.Constant(metadata.DataType.Value, true));
 			// TODO: min/max check added to avoid issues with type inconsistance in schema API and metadata
 			if (metadata.DbType?.Length != null && metadata.DbType.Length >= int.MinValue && metadata.DbType.Length <= int.MaxValue)
-				attr.Parameter(_builder.Identifier(nameof(ColumnAttribute.Length)), _builder.Constant((int)metadata.DbType.Length.Value, true));
+				attr.Parameter(_builder.Name(nameof(ColumnAttribute.Length)), _builder.Constant((int)metadata.DbType.Length.Value, true));
 			if (metadata.DbType?.Precision != null)
-				attr.Parameter(_builder.Identifier(nameof(ColumnAttribute.Precision)), _builder.Constant(metadata.DbType.Precision.Value, true));
+				attr.Parameter(_builder.Name(nameof(ColumnAttribute.Precision)), _builder.Constant(metadata.DbType.Precision.Value, true));
 			if (metadata.DbType?.Scale != null)
-				attr.Parameter(_builder.Identifier(nameof(ColumnAttribute.Scale)), _builder.Constant(metadata.DbType.Scale.Value, true));
+				attr.Parameter(_builder.Name(nameof(ColumnAttribute.Scale)), _builder.Constant(metadata.DbType.Scale.Value, true));
 
 			if (metadata.IsPrimaryKey)
 			{
-				attr.Parameter(_builder.Identifier(nameof(ColumnAttribute.IsPrimaryKey)), _builder.Constant(true, true));
+				attr.Parameter(_builder.Name(nameof(ColumnAttribute.IsPrimaryKey)), _builder.Constant(true, true));
 				if (metadata.PrimaryKeyOrder != null)
-					attr.Parameter(_builder.Identifier(nameof(ColumnAttribute.PrimaryKeyOrder)), _builder.Constant(metadata.PrimaryKeyOrder.Value, true));
+					attr.Parameter(_builder.Name(nameof(ColumnAttribute.PrimaryKeyOrder)), _builder.Constant(metadata.PrimaryKeyOrder.Value, true));
 			}
 
 			if (metadata.IsIdentity)
-				attr.Parameter(_builder.Identifier(nameof(ColumnAttribute.IsIdentity)), _builder.Constant(true, true));
+				attr.Parameter(_builder.Name(nameof(ColumnAttribute.IsIdentity)), _builder.Constant(true, true));
 
 			if (metadata.SkipOnInsert)
-				attr.Parameter(_builder.Identifier(nameof(ColumnAttribute.SkipOnInsert)), _builder.Constant(true, true));
+				attr.Parameter(_builder.Name(nameof(ColumnAttribute.SkipOnInsert)), _builder.Constant(true, true));
 			if (metadata.SkipOnUpdate)
-				attr.Parameter(_builder.Identifier(nameof(ColumnAttribute.SkipOnUpdate)), _builder.Constant(true, true));
+				attr.Parameter(_builder.Name(nameof(ColumnAttribute.SkipOnUpdate)), _builder.Constant(true, true));
 
 			if (metadata.Configuration != null)
-				attr.Parameter(_builder.Identifier(nameof(ColumnAttribute.Configuration)), _builder.Constant(metadata.Configuration, true));
+				attr.Parameter(_builder.Name(nameof(ColumnAttribute.Configuration)), _builder.Constant(metadata.Configuration, true));
 			if (metadata.MemberName != null)
-				attr.Parameter(_builder.Identifier(nameof(ColumnAttribute.MemberName)), _builder.Constant(metadata.MemberName, true));
+				attr.Parameter(_builder.Name(nameof(ColumnAttribute.MemberName)), _builder.Constant(metadata.MemberName, true));
 			if (metadata.Storage != null)
-				attr.Parameter(_builder.Identifier(nameof(ColumnAttribute.Storage)), _builder.Constant(metadata.Storage, true));
+				attr.Parameter(_builder.Name(nameof(ColumnAttribute.Storage)), _builder.Constant(metadata.Storage, true));
 			if (metadata.CreateFormat != null)
-				attr.Parameter(_builder.Identifier(nameof(ColumnAttribute.CreateFormat)), _builder.Constant(metadata.CreateFormat, true));
+				attr.Parameter(_builder.Name(nameof(ColumnAttribute.CreateFormat)), _builder.Constant(metadata.CreateFormat, true));
 
 			if (metadata.IsDiscriminator)
-				attr.Parameter(_builder.Identifier(nameof(ColumnAttribute.IsDiscriminator)), _builder.Constant(true, true));
+				attr.Parameter(_builder.Name(nameof(ColumnAttribute.IsDiscriminator)), _builder.Constant(true, true));
 			if (metadata.SkipOnEntityFetch)
-				attr.Parameter(_builder.Identifier(nameof(ColumnAttribute.SkipOnEntityFetch)), _builder.Constant(true, true));
+				attr.Parameter(_builder.Name(nameof(ColumnAttribute.SkipOnEntityFetch)), _builder.Constant(true, true));
 
 			if (metadata.Order != null)
-				attr.Parameter(_builder.Identifier(nameof(ColumnAttribute.Order)), _builder.Constant(metadata.Order.Value, true));
+				attr.Parameter(_builder.Name(nameof(ColumnAttribute.Order)), _builder.Constant(metadata.Order.Value, true));
 		}
 
 		void IMetadataBuilder.BuildEntityMetadata(EntityMetadata metadata, ClassBuilder entityBuilder)
 		{
-			var attr = entityBuilder.AddAttribute(_builder.Type(typeof(TableAttribute), false));
+			var attr = entityBuilder.AddAttribute(WellKnownTypes.LinqToDB.Mapping.TableAttribute);
 			if (metadata.Name != null)
 			{
 				attr.Parameter(_builder.Constant(metadata.Name.Name, true));
@@ -202,7 +202,7 @@ namespace LinqToDB.CodeGen.CodeGeneration
 
 		void IMetadataBuilder.BuildFunctionMetadata(FunctionMetadata metadata, MethodBuilder methodBuilder)
 		{
-			var attr = methodBuilder.Attribute(_builder.Type(typeof(Sql.FunctionAttribute), false));
+			var attr = methodBuilder.Attribute(WellKnownTypes.LinqToDB.SqlFunctionAttribute);
 
 			if (metadata.Name != null)
 			{
@@ -214,7 +214,7 @@ namespace LinqToDB.CodeGen.CodeGeneration
 				var values = new ICodeExpression[metadata.ArgIndices.Length];
 				for (var i = 0; i < metadata.ArgIndices.Length; i++)
 					values[i] = _builder.Constant(metadata.ArgIndices[i], true);
-				attr.Parameter(new CodeIdentifier(nameof(Sql.FunctionAttribute.ArgIndices)), _builder.Array(_builder.Type(typeof(int), false), true, values, true));
+				attr.Parameter(new CodeIdentifier(nameof(Sql.FunctionAttribute.ArgIndices)), _builder.Array(WellKnownTypes.System.Int32, true, values, true));
 			}
 
 			if (metadata.ServerSideOnly != null)
@@ -245,7 +245,7 @@ namespace LinqToDB.CodeGen.CodeGeneration
 
 		void IMetadataBuilder.BuildTableFunctionMetadata(TableFunctionMetadata metadata, MethodBuilder methodBuilder)
 		{
-			var attr = methodBuilder.Attribute(_builder.Type(typeof(Sql.TableFunctionAttribute), false));
+			var attr = methodBuilder.Attribute(WellKnownTypes.LinqToDB.SqlTableFunctionAttribute);
 
 			if (metadata.Name != null)
 			{
@@ -265,7 +265,7 @@ namespace LinqToDB.CodeGen.CodeGeneration
 				var values = new ICodeExpression[metadata.ArgIndices.Length];
 				for (var i = 0; i < metadata.ArgIndices.Length; i++)
 					values[i] = _builder.Constant(metadata.ArgIndices[i], true);
-				attr.Parameter(new CodeIdentifier(nameof(Sql.TableFunctionAttribute.ArgIndices)), _builder.Array(_builder.Type(typeof(int), false), true, values, true));
+				attr.Parameter(new CodeIdentifier(nameof(Sql.TableFunctionAttribute.ArgIndices)), _builder.Array(WellKnownTypes.System.Int32, true, values, true));
 			}
 
 			if (metadata.Configuration != null)

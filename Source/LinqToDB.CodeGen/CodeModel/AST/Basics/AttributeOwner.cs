@@ -15,8 +15,8 @@ namespace LinqToDB.CodeGen.Model
 		/// <summary>
 		/// Custom attributes.
 		/// </summary>
-		public List<CodeAttribute> CustomAttributes { get; set; }
+		public          List<CodeAttribute> CustomAttributes { get; set; }
 
-		public abstract CodeElementType ElementType { get; }
+		public abstract CodeElementType     ElementType      { get; }
 	}
 }

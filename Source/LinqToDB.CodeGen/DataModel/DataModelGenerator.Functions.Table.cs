@@ -29,12 +29,12 @@ namespace LinqToDB.CodeGen.DataModel
 			if (customTable == null && entity == null)
 				return;
 
-			var methodInfo = region.Fields(false).New(_code.Identifier(tableFunction.MethodInfoFieldName), _code.Type(typeof(MethodInfo), false))
+			var methodInfo = region.Fields(false).New(_code.Name(tableFunction.MethodInfoFieldName), WellKnownTypes.System.Reflection.MethodInfo)
 				.Private()
 				.Static()
 				.ReadOnly();
 
-			var method = DefineMethod(region.Methods(false), tableFunction.Method, false);
+			var method = DefineMethod(region.Methods(false), tableFunction.Method);
 
 			_metadataBuilder.BuildTableFunctionMetadata(tableFunction.Metadata, method);
 
@@ -46,7 +46,9 @@ namespace LinqToDB.CodeGen.DataModel
 				returnEntity = BuildCustomResultClass(customTable!, region, true).resultClassBuilder.Type.Type;
 
 			// T4 used ITable<> here, but I don't see a good reason to generate it as ITable<>
-			var returnType = _code.Type(_dataModel.TableFunctionReturnsTable ? typeof(ITable<>) : typeof(IQueryable<>), false, returnEntity);
+			var returnType = _dataModel.TableFunctionReturnsTable
+				? WellKnownTypes.LinqToDB.ITable(returnEntity)
+				: WellKnownTypes.System.Linq.IQueryable(returnEntity);
 			method.Returns(returnType);
 
 			var parameters = new List<ICodeExpression>();
@@ -67,15 +69,15 @@ namespace LinqToDB.CodeGen.DataModel
 				.Append(
 					_code.Return(
 						_code.ExtCall(
-							_code.Type(typeof(DataExtensions), false),
-							_code.Identifier(nameof(DataExtensions.GetTable)),
+							WellKnownTypes.LinqToDB.DataExtensions,
+							_code.Name(nameof(DataExtensions.GetTable)),
 							new[] { returnEntity },
 							parameters.ToArray(),
 							WellKnownTypes.LinqToDB.ITable(returnEntity))));
 
-			var lambdaParam = _code.LambdaParameter(_code.Identifier("ctx"), context.Type);
+			var lambdaParam = _code.LambdaParameter(_code.Name("ctx"), context.Type);
 			// Expression<Func<context, returnType>>
-			var lambda = _code.Lambda(WellKnownTypes.Expression(WellKnownTypes.Func(returnType, context.Type)), true)
+			var lambda = _code.Lambda(WellKnownTypes.System.Linq.Expressions.Expression(WellKnownTypes.System.Func(returnType, context.Type)), true)
 				.Parameter(lambdaParam);
 			lambda.Body().
 				Append(_code.Return(_code.Call(
@@ -86,11 +88,11 @@ namespace LinqToDB.CodeGen.DataModel
 					returnType)));
 
 			methodInfo.AddInitializer(_code.Call(
-					new CodeTypeReference(_code.Type(typeof(MemberHelper), false)),
-					_code.Identifier(nameof(MemberHelper.MethodOf)),
+					new CodeTypeReference(WellKnownTypes.LinqToDB.Expressions.MemberHelper),
+					_code.Name(nameof(MemberHelper.MethodOf)),
 					new[] { functionsGroup.OwnerType.Type },
 					new ICodeExpression[] { lambda.Method },
-					WellKnownTypes.MethodInfo));
+					WellKnownTypes.System.Reflection.MethodInfo));
 
 			// TODO: similar tables
 		}

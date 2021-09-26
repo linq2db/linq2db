@@ -53,27 +53,5 @@ namespace LinqToDB.CodeGen.CodeGeneration
 		public bool GenerateProceduresSchemaError { get; set; }
 
 		public List<string> ConflictingNames { get; } = new();
-
-		// SqlHierarchyId returns SqlBoolean from operator== (－‸ლ)
-		// same for Sql<TYPE> structs, used by sql server and sql ce clients
-		public List<(string typeName, bool isValueType)> NonBooleanEqualityTypes { get; }
-			= new()
-			{
-				("Microsoft.SqlServer.Types.SqlHierarchyId", true),
-
-				("System.Data.SqlTypes.SqlBinary", true),
-				("System.Data.SqlTypes.SqlBoolean", true),
-				("System.Data.SqlTypes.SqlByte", true),
-				("System.Data.SqlTypes.SqlDateTime", true),
-				("System.Data.SqlTypes.SqlDecimal", true),
-				("System.Data.SqlTypes.SqlDouble", true),
-				("System.Data.SqlTypes.SqlGuid", true),
-				("System.Data.SqlTypes.SqlInt16", true),
-				("System.Data.SqlTypes.SqlInt32", true),
-				("System.Data.SqlTypes.SqlInt64", true),
-				("System.Data.SqlTypes.SqlMoney", true),
-				("System.Data.SqlTypes.SqlSingle", true),
-				("System.Data.SqlTypes.SqlString", true),
-			};
 	}
 }

@@ -11,6 +11,8 @@ namespace LinqToDB.CodeGen.Model
 		 where TBuilder : MethodBaseBuilder<TBuilder, TMethod>
 		 where TMethod : MethodBase
 	{
+		private BlockBuilder? _body;
+
 		protected MethodBaseBuilder(TMethod method)
 		{
 			Method = method;
@@ -53,14 +55,13 @@ namespace LinqToDB.CodeGen.Model
 		/// <returns>Method body builder instance.</returns>
 		public BlockBuilder Body()
 		{
-			if (Method.Body == null)
+			if (_body == null)
 			{
-				var builder = new BlockBuilder(new CodeBlock());
-				Method.Body = builder.Block;
-				return builder;
+				_body       = new BlockBuilder(new CodeBlock());
+				Method.Body = _body.Block;
 			}
 
-			return new BlockBuilder(Method.Body);
+			return _body;
 		}
 
 		/// <summary>

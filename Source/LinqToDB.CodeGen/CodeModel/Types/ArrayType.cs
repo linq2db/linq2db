@@ -34,8 +34,7 @@ namespace LinqToDB.CodeGen.Model
 		int?                           IType.OpenGenericArgCount => null;
 		IReadOnlyList<IType>?          IType.TypeArguments       => null;
 		IType?                         IType.Parent              => null;
-		string?                        IType.Alias               => null;
 
-		IType IType.WithTypeArguments(IReadOnlyList<IType> typeArguments) => throw new InvalidOperationException();
+		IType IType.WithTypeArguments(params IType[] typeArguments) => throw new InvalidOperationException();
 	}
 }

@@ -6,6 +6,8 @@ namespace LinqToDB.CodeGen.Model
 {
 	internal class TypeParser : ITypeParser
 	{
+		private static Dictionary<Type, IType> _typeCache { get; } = new ();
+
 		private readonly ILanguageProvider _languageProvider;
 
 		public TypeParser(ILanguageProvider languageProvider)
@@ -504,7 +506,6 @@ namespace LinqToDB.CodeGen.Model
 					parsedType = new RegularType(
 							@namespace,
 							name!,
-							_languageProvider.GetAlias(@namespace, name!),
 							valueType,
 							nullable,
 							true);
@@ -524,17 +525,20 @@ namespace LinqToDB.CodeGen.Model
 		/// </summary>
 		/// <param name="type">Type to parse.</param>
 		/// <returns>Parsed type token.</returns>
-		private IType ParseCLRType(Type type)
+		internal IType ParseCLRType(Type type)
 		{
+			if (_typeCache.TryGetValue(type, out var cachedType))
+				return cachedType;
+
 			// parse type wrapped in Nullable<T> wrapper
 			var isNullable = type.IsGenericType && !type.IsGenericTypeDefinition && type.GetGenericTypeDefinition() == typeof(Nullable<>);
 			if (isNullable)
-				return ParseCLRType(type.GenericTypeArguments[0]).WithNullability(true);
+				return _typeCache[type] = ParseCLRType(type.GenericTypeArguments[0]).WithNullability(true);
 
 			// parse array type
 			if (type.IsArray)
 				// we don't have sizes information in Type
-				return new ArrayType(ParseCLRType(type.GetElementType()), new int?[type.GetArrayRank()], false);
+				return _typeCache[type] = new ArrayType(ParseCLRType(type.GetElementType()), new int?[type.GetArrayRank()], false);
 
 			// current type is nested type, parse parent type first
 			IType? parent = null;
@@ -552,7 +556,6 @@ namespace LinqToDB.CodeGen.Model
 				ns = ((ITypeParser)this).ParseNamespace(type.Namespace);
 
 			var name  = new CodeIdentifier(type.IsGenericType ? type.Name.Substring(0, type.Name.IndexOf('`')) : type.Name);
-			var alias = type.IsGenericType ? null : _languageProvider.GetAlias(ns, name);
 
 			// generic/open generic type
 			if (type.IsGenericType)
@@ -563,9 +566,9 @@ namespace LinqToDB.CodeGen.Model
 				if (type.IsGenericTypeDefinition)
 				{
 					if (parent != null)
-						return new OpenGenericType(parent, name, type.IsValueType, isNullable, typeArgs.Length, true);
+						return _typeCache[type] = new OpenGenericType(parent, name, type.IsValueType, isNullable, typeArgs.Length, true);
 					else
-						return new OpenGenericType(ns, name, type.IsValueType, isNullable, typeArgs.Length, true);
+						return _typeCache[type] = new OpenGenericType(ns, name, type.IsValueType, isNullable, typeArgs.Length, true);
 				}
 
 				// generic type
@@ -575,16 +578,16 @@ namespace LinqToDB.CodeGen.Model
 					typeArguments[i] = ParseCLRType(typeArgs[i]);
 
 				if (parent != null)
-					return new GenericType(parent, name, type.IsValueType, isNullable, typeArguments, true);
+					return _typeCache[type] = new GenericType(parent, name, type.IsValueType, isNullable, typeArguments, true);
 				else
-					return new GenericType(ns, name, type.IsValueType, isNullable, typeArguments, true);
+					return _typeCache[type] = new GenericType(ns, name, type.IsValueType, isNullable, typeArguments, true);
 			}
 
 			// regular type
 			if (parent != null)
-				return new RegularType(parent, name, type.IsValueType, isNullable, true);
+				return _typeCache[type] = new RegularType(parent, name, type.IsValueType, isNullable, true);
 			else
-				return new RegularType(ns, name, alias, type.IsValueType, isNullable, true);
+				return _typeCache[type] = new RegularType(ns, name, type.IsValueType, isNullable, true);
 		}
 	}
 }

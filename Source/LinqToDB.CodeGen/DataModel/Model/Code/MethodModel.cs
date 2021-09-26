@@ -12,5 +12,6 @@
 		public bool Public { get; set; }
 		public bool Static { get; set; }
 		public bool Partial { get; set; }
+		public bool Extension { get; set; }
 	}
 }

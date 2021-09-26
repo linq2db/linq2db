@@ -16,7 +16,12 @@ namespace LinqToDB.CodeGen.Model
 			{
 				case BinaryOperation.Equal:
 				case BinaryOperation.And  :
-					_type = WellKnownTypes.Boolean;
+					_type = WellKnownTypes.System.Boolean;
+					break;
+				case BinaryOperation.Add  :
+					// this is not correct in general
+					// but for now we will stick to it while it doesn't give issues
+					_type = left.Type;
 					break;
 				default:
 					throw new NotImplementedException($"Type infer is not implemented for binary operation: {operation}");

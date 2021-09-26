@@ -16,6 +16,8 @@ namespace LinqToDB.CodeGen.Model
 
 		bool IEqualityComparer<IEnumerable<CodeIdentifier>>.Equals(IEnumerable<CodeIdentifier> x, IEnumerable<CodeIdentifier> y)
 		{
+			if (x == y) return true;
+
 			using var xe = x.GetEnumerator();
 			using var ye = y.GetEnumerator();
 

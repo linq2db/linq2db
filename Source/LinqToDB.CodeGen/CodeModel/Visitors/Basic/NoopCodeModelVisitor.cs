@@ -241,6 +241,10 @@
 				Visit(@class.Inherits);
 
 			VisitList(@class.Implements);
+
+			if (@class.TypeInitializer != null)
+				Visit(@class.TypeInitializer);
+
 			VisitList(@class.Members);
 		}
 

@@ -9,7 +9,6 @@ using LinqToDB.CodeGen.DataModel;
 using LinqToDB.CodeGen.Metadata;
 using LinqToDB.CodeGen.Naming;
 using LinqToDB.CodeGen.Schema;
-using LinqToDB.Data;
 
 namespace LinqToDB.CodeGen.Model
 {
@@ -130,7 +129,8 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 			{
 				Public = true,
 				Static = true,
-				Summary = func.Description
+				Summary = func.Description,
+				Extension = true
 			};
 
 			var metadata = new FunctionMetadata()
@@ -152,7 +152,9 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 
 			var typeMapping = _typeMappingsProvider.GetTypeMapping(scalarResult.Type);
 
-			var funcModel = new AggregateFunctionModel(name, method, metadata, (typeMapping?.clrType ?? _languageProvider.TypeParser.Parse<object>()).WithNullability(scalarResult.Nullable));
+			var funcModel = new AggregateFunctionModel(name, method, metadata, (typeMapping?.clrType ?? WellKnownTypes.System.Object).WithNullability(scalarResult.Nullable));
+
+			BuildParameters(func.Parameters, funcModel.Parameters);
 
 			if (isNonDefaultSchema && _contextSettings.GenerateSchemaAsType)
 				GetOrAddSchemaType(model, func.Name.Schema!).AggregateFunctions.Add(funcModel);
@@ -179,6 +181,8 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 
 			var funcModel = new ScalarFunctionModel(name, method, metadata);
 
+			BuildParameters(func.Parameters, funcModel.Parameters);
+
 			switch (func.Result.Kind)
 			{
 				case ResultKind.Dynamic:
@@ -188,7 +192,7 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 					var scalarResult = (ScalarResult)func.Result;
 					var typeMapping = _typeMappingsProvider.GetTypeMapping(scalarResult.Type);
 					//DataType not used by current mappings
-					funcModel.Return = (typeMapping?.clrType ?? _languageProvider.TypeParser.Parse<object>()).WithNullability(scalarResult.Nullable);
+					funcModel.Return = (typeMapping?.clrType ?? WellKnownTypes.System.Object).WithNullability(scalarResult.Nullable);
 					break;
 				}
 				case ResultKind.Tuple:
@@ -209,9 +213,11 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 					{
 						var typeMapping = _typeMappingsProvider.GetTypeMapping(field.Type);
 
-						var prop = new PropertyModel(_namingServices.NormalizeIdentifier(_contextSettings.FunctionTupleResultPropertyName, field.Name ?? "Field"), (typeMapping?.clrType ?? _languageProvider.TypeParser.Parse<object>()).WithNullability(field.Nullable))
+						var prop = new PropertyModel(_namingServices.NormalizeIdentifier(_contextSettings.FunctionTupleResultPropertyName, field.Name ?? "Field"), (typeMapping?.clrType ?? WellKnownTypes.System.Object).WithNullability(field.Nullable))
 						{
-							IsPublic = true
+							IsPublic = true,
+							IsDefault = true,
+							HasSetter = true
 						};
 						funcModel.ReturnTuple.Fields.Add(new TupleFieldModel(prop, field.Type)
 						{
@@ -222,7 +228,7 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 				}
 				case ResultKind.Void:
 
-					funcModel.Return = _languageProvider.TypeParser.Parse<object>().WithNullability(true);
+					funcModel.Return = WellKnownTypes.System.ObjectNullable;
 					break;
 			}
 
@@ -268,7 +274,8 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 			{
 				Public = true,
 				Static = true,
-				Summary = func.Description
+				Summary = func.Description,
+				Extension = true
 			};
 
 			var funcModel = new StoredProcedureModel(name, method)
@@ -292,7 +299,7 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 					var typeMapping = _typeMappingsProvider.GetTypeMapping(scalarResult.Type);
 
 					var paramName = _namingServices.NormalizeIdentifier(_contextSettings.ProcedureParameterNameNormalization, scalarResult.Name ?? "return");
-					funcModel.Return = new ReturnParameter(new ParameterModel(paramName, (typeMapping?.clrType ?? _languageProvider.TypeParser.Parse<object>()).WithNullability(scalarResult.Nullable), ParameterDirection.Out), scalarResult.Type)
+					funcModel.Return = new ReturnParameter(new ParameterModel(paramName, (typeMapping?.clrType ?? WellKnownTypes.System.Object).WithNullability(scalarResult.Nullable), ParameterDirection.Out), scalarResult.Type)
 					{
 						DataType = typeMapping?.dataType,
 						Name = scalarResult.Name,
@@ -358,7 +365,7 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 						throw new InvalidOperationException();
 				}
 
-				var parameterModel = new ParameterModel(paramName, (typeMapping?.clrType ?? _languageProvider.TypeParser.Parse<object>()).WithNullability(param.Nullable), direction)
+				var parameterModel = new ParameterModel(paramName, (typeMapping?.clrType ?? WellKnownTypes.System.Object).WithNullability(param.Nullable), direction)
 				{
 					Description = param.Description
 				};
@@ -437,7 +444,7 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 				};
 				var property  = new PropertyModel(
 					_namingServices.NormalizeIdentifier(_contextSettings.ProcedureResultColumnPropertyNameNormalization, col.Name ?? "Column"),
-					(typeMapping?.clrType ?? _languageProvider.TypeParser.Parse<object>()).WithNullability(col.Nullable))
+					(typeMapping?.clrType ?? WellKnownTypes.System.Object).WithNullability(col.Nullable))
 				{
 					IsPublic = true,
 					HasSetter = true,
@@ -482,8 +489,8 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 			association.FromColumns = fromColumns;
 			association.ToColumns = toColumns;
 
-			association.Summary = fk.Name;
-			association.BackreferenceSummary = $"{fk.Name} backreference";
+			var summary = fk.Name;
+			var backreferenceSummary = $"{fk.Name} backreference";
 
 			var sourceColumnName = fk.Relation.Count == 1 ? fk.Relation[0].SourceColumn : null;
 
@@ -496,14 +503,39 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 
 			if (_codegenSettings.GenerateAssociations)
 			{
-				association.PropertyName = fromAssociationName;
-				association.BackreferencePropertyName = toAssocationName;
+				association.Property = new PropertyModel(fromAssociationName)
+				{
+					IsPublic = true,
+					IsDefault = true,
+					HasSetter = true,
+					Summary = summary
+				};
+				association.BackreferenceProperty = new PropertyModel(toAssocationName)
+				{
+					IsPublic = true,
+					IsDefault = true,
+					HasSetter = true,
+					Summary = backreferenceSummary
+				};
 			}
 
 			if (_codegenSettings.GenerateAssociationExtensions)
 			{
-				association.ExtensionName = fromAssociationName;
-				association.BackreferenceExtensionName = toAssocationName;
+				association.Extension = new MethodModel(fromAssociationName)
+				{
+					Public = true,
+					Static = true,
+					Extension = true,
+					Summary = summary
+				};
+
+				association.BackreferenceExtension = new MethodModel(toAssocationName)
+				{
+					Public = true,
+					Static = true,
+					Extension = true,
+					Summary = backreferenceSummary
+				};
 			}
 
 			return association;
@@ -597,7 +629,7 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 			if (_codegenSettings.BaseContextClass != null)
 				dataContextClass.BaseType = _languageProvider.TypeParser.Parse(_codegenSettings.BaseContextClass, false);
 			else
-				dataContextClass.BaseType = _languageProvider.TypeParser.Parse<DataConnection>();
+				dataContextClass.BaseType = WellKnownTypes.LinqToDB.Data.DataConnection;
 
 			if (_codegenSettings.IncludeDatabaseInfo)
 			{
@@ -660,7 +692,15 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 			classModel.IsPublic = true;
 			classModel.Namespace = _codegenSettings.Namespace;
 
-			var entity = new EntityModel(metadata, classModel, contextPropertyName);
+			var entity = new EntityModel(metadata, classModel, contextPropertyName == null
+				? null
+				// type is open-generic
+				// type argument will be set later during ast generation
+				: new PropertyModel(contextPropertyName, WellKnownTypes.LinqToDB.ITableT)
+				{
+					IsPublic = true,
+					Summary = table.Description
+				});
 			model.OrderFindParametersByOrdinal = _codegenSettings.OrderFindParametersByColumnOrdinal;
 			entity.HasFindExtension = _codegenSettings.GenerateFindExtensions;
 
@@ -676,7 +716,7 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 					_contextSettings.EntityColumnPropertyNameNormalization,
 					column.Name);
 
-				var propertyType = (typeMapping?.clrType ?? _languageProvider.TypeParser.Parse<object>()).WithNullability(column.Nullable);
+				var propertyType = (typeMapping?.clrType ?? WellKnownTypes.System.Object).WithNullability(column.Nullable);
 
 				var columnProperty = new PropertyModel(propertyName, propertyType)
 				{

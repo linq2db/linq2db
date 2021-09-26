@@ -2,14 +2,14 @@
 {
 	// right now we don't need to differentiate between variable or parameter in reference
 	/// <summary>
-	/// Parameter or variable access expression.
+	/// Defines reference to parameter or variable inside of current method/property or simple (without owner type/instance) reference to field/property.
 	/// </summary>
 	public sealed class CodeReference : ICodeExpression, ILValue
 	{
 		/// <summary>
-		/// Create parameter or variable reference (access expression).
+		/// Create parameter, variable, field or property reference (access expression).
 		/// </summary>
-		/// <param name="referenced">Parameter or variable to reference.</param>
+		/// <param name="referenced">Parameter, variable, field or property to reference.</param>
 		public CodeReference(ITypedName referenced)
 		{
 			Referenced = referenced;

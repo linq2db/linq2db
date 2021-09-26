@@ -9,7 +9,6 @@ namespace LinqToDB.CodeGen.Model
 	public class RegularType : IType
 	{
 		private readonly bool                           _nullable;
-		private readonly string?                        _alias;
 		private readonly bool                           _valueType;
 		private readonly bool                           _external;
 		private readonly IReadOnlyList<CodeIdentifier>? _ns;
@@ -21,15 +20,13 @@ namespace LinqToDB.CodeGen.Model
 		/// </summary>
 		/// <param name="namespace">Optional containing namespace.</param>
 		/// <param name="name">Type name.</param>
-		/// <param name="alias">Language-specific type alias.</param>
 		/// <param name="isValueType">Value or reference type.</param>
 		/// <param name="isNullable">Nullability status.</param>
 		/// <param name="external">Type defined externally or in current AST.</param>
-		public RegularType(IReadOnlyList<CodeIdentifier>? @namespace, CodeIdentifier name, string? alias, bool isValueType, bool isNullable, bool external)
+		public RegularType(IReadOnlyList<CodeIdentifier>? @namespace, CodeIdentifier name, bool isValueType, bool isNullable, bool external)
 		{
 			_ns        = @namespace;
 			_name      = name;
-			_alias     = alias;
 			_valueType = isValueType;
 			_nullable  = isNullable;
 			_external  = external;
@@ -57,7 +54,6 @@ namespace LinqToDB.CodeGen.Model
 		public         IType?                         Parent      => _parent;
 		public         CodeIdentifier                 Name        => _name;
 		public         bool                           IsValueType => _valueType;
-		public         string?                        Alias       => _alias;
 		public         bool                           External    => _external;
 		public         IReadOnlyList<CodeIdentifier>? Namespace   => _ns;
 
@@ -69,7 +65,7 @@ namespace LinqToDB.CodeGen.Model
 			if (_parent != null)
 				return new RegularType(_parent, _name, _valueType, nullable, _external);
 
-			return new RegularType(_ns, _name, _alias, _valueType, nullable, _external);
+			return new RegularType(_ns, _name, _valueType, nullable, _external);
 		}
 
 		// not valid for current type kind
@@ -79,6 +75,6 @@ namespace LinqToDB.CodeGen.Model
 		IType?               IType.ArrayElementType => null;
 		IReadOnlyList<int?>? IType.ArraySizes       => null;
 
-		public virtual IType WithTypeArguments(IReadOnlyList<IType> typeArguments) => throw new InvalidOperationException();
+		public virtual IType WithTypeArguments(params IType[] typeArguments) => throw new InvalidOperationException();
 	}
 }

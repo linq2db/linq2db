@@ -2,41 +2,23 @@
 using System.Collections.Generic;
 using System.Linq;
 using LinqToDB.CodeGen.Model;
-using LinqToDB.CodeGen.Naming;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.CodeGen.CodeGeneration
 {
 	public class CodeModelBuilder
 	{
 		private readonly CodeGenerationSettings _settings;
-		private readonly INameConverterProvider _pluralizationProvider;
 		private readonly ILanguageProvider _languageProvider;
 		private readonly CodeBuilder _builder;
 
-		private readonly ISet<IType> _nonBooleanEqualityTypes;
-
-		private readonly NamingServices _namingServices;
-
 		public CodeModelBuilder(
 			CodeGenerationSettings settings,
-			INameConverterProvider pluralizationProvider,
 			ILanguageProvider languageProvider,
-			IMetadataBuilder metadataBuilder,
-			CodeBuilder codeBuilder,
-			NamingServices namingServices,
-			ISqlBuilder sqlBuilder)
+			CodeBuilder codeBuilder)
 		{
 			_settings              = settings;
-			_pluralizationProvider = pluralizationProvider;
 			_languageProvider      = languageProvider;
 			_builder               = codeBuilder;
-			_namingServices        = namingServices;
-
-			_nonBooleanEqualityTypes = new HashSet<IType>(languageProvider.TypeEqualityComparerWithoutNRT);
-
-			foreach (var (typeName, isValueType) in settings.NonBooleanEqualityTypes)
-				_nonBooleanEqualityTypes.Add(_languageProvider.TypeParser.Parse(typeName, isValueType));
 		}
 
 		public string[] GetSourceCode(IReadOnlyList<CodeFile> files)
@@ -90,14 +72,6 @@ namespace LinqToDB.CodeGen.CodeGeneration
 			}
 
 			return results;
-		}
-
-		private ICodeExpression CorrectEquality(IType type, CodeBinary expr)
-		{
-			if (expr.Operation == BinaryOperation.Equal && _nonBooleanEqualityTypes.Contains(type))
-				return _builder.Cast(_languageProvider.TypeParser.Parse<bool>(), expr);
-
-			return expr;
 		}
 	}
 }

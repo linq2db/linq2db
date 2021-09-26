@@ -39,8 +39,7 @@ namespace LinqToDB.CodeGen.Model
 		bool                           IType.IsValueType         => false;
 		IReadOnlyList<CodeIdentifier>? IType.Namespace           => null;
 		IType?                         IType.Parent              => null;
-		string?                        IType.Alias               => null;
 
-		IType IType.WithTypeArguments(IReadOnlyList<IType> typeArguments) => throw new InvalidOperationException();
+		IType IType.WithTypeArguments(params IType[] typeArguments) => throw new InvalidOperationException();
 	}
 }

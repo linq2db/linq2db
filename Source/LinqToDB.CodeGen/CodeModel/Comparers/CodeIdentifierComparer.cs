@@ -15,6 +15,6 @@ namespace LinqToDB.CodeGen.Model
 			_comparer = comparer;
 		}
 
-		int IComparer<CodeIdentifier>.Compare(CodeIdentifier x, CodeIdentifier y) => _comparer.Compare(x.Name, y.Name);
+		int IComparer<CodeIdentifier>.Compare(CodeIdentifier x, CodeIdentifier y) => x == y ? 0 : _comparer.Compare(x.Name, y.Name);
 	}
 }

@@ -32,7 +32,7 @@ namespace LinqToDB.CodeGen.Model
 		/// <param name="namespace">Optional namespace.</param>
 		/// <param name="name">Class name.</param>
 		public CodeClass(IReadOnlyList<CodeIdentifier>? @namespace, CodeIdentifier name)
-			: this(null, default, null, new RegularType(@namespace, name, null, false, false, false), name, null, null, null, null, null)
+			: this(null, default, null, new RegularType(@namespace, name, false, false, false), name, null, null, null, null, null)
 		{
 		}
 

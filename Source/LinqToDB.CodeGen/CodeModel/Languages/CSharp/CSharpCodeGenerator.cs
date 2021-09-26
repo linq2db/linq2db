@@ -17,6 +17,7 @@ namespace LinqToDB.CodeGen.Model
 		{
 			{ BinaryOperation.Equal, " == " },
 			{ BinaryOperation.And  , " && " },
+			{ BinaryOperation.Add  , " + "  },
 		};
 
 		// newline sequences according to language specs
@@ -487,9 +488,15 @@ namespace LinqToDB.CodeGen.Model
 					Write("get;");
 				else
 				{
-					Write("get");
-					if (property.Getter.Items.Count == 1)
+					if (property.HasSetter)
+					{
+						Write("get");
+						if (property.Getter.Items.Count == 1)
+							Write(" =>");
+					}
+					else
 						Write(" =>");
+					
 					WriteMethodBodyBlock(property.Getter, true, false, true, true);
 				}
 			}
@@ -590,7 +597,12 @@ namespace LinqToDB.CodeGen.Model
 			WriteLine();
 
 			OpenBlock(false);
+
+			if (@class.TypeInitializer != null)
+				Visit(@class.TypeInitializer);
+
 			WriteMemberGroups(@class.Members);
+
 			CloseBlock(false, true);
 
 			_currentType = oldType;
@@ -1114,6 +1126,7 @@ namespace LinqToDB.CodeGen.Model
 		/// <param name="typeOnlyContext">Indicates that type is rendered in type-only context. Otherwise it is rendered in expression context.</param>
 		private void RenderType(IType type, CodeIdentifier? nameOverride, bool typeOnlyContext)
 		{
+			var alias = _languageProvider.GetAlias(type);
 			// this method use various visibility/name conflict checks to identify wether we need to generate
 			// parent type prefix or namespace
 			// those checks are by no means complete and probably will fail in some complex cases
@@ -1121,7 +1134,7 @@ namespace LinqToDB.CodeGen.Model
 
 			// identify wether it is necessary to generate parent type(s) for nested type
 			// skip generation for aliased types as they cannot be nested
-			if (type.Alias == null && type.Name != null)
+			if (alias == null && type.Name != null)
 			{
 				var typeName = nameOverride ?? type.Name;
 
@@ -1248,9 +1261,9 @@ namespace LinqToDB.CodeGen.Model
 				{
 					// for regular type generate name or alias
 					var regType = (RegularType)type;
-					if (regType.Alias != null)
+					if (alias != null)
 						// for alias we emit type name as is, without verbatim identifier check
-						Write(regType.Alias);
+						Write(alias);
 					else
 						Visit(nameOverride ?? regType.Name);
 					break;
@@ -1278,7 +1291,7 @@ namespace LinqToDB.CodeGen.Model
 						else
 							Write(',');
 						if (size != null)
-							WriteLiteral(size.Value, _languageProvider.TypeParser.Parse<int>(), false);
+							WriteLiteral(size.Value, WellKnownTypes.System.Int32, false);
 					}
 					Write(']');
 					break;
@@ -1417,10 +1430,10 @@ namespace LinqToDB.CodeGen.Model
 					.Column(PROP_TABLE_MODIFIER_COLUMN      ) // access modifiers
 					.Column(PROP_TABLE_TYPE_COLUMN          ) // property type
 					.Column(PROP_TABLE_NAME_COLUMN          ) // property name
-					.Column(PROP_TABLE_OPEN_BRACKETS_COLUMN ) // { bracket for properties with setter or with complex getter
+					.Column(PROP_TABLE_OPEN_BRACKETS_COLUMN ) // { bracket for auto-properties or properties with setter or with complex getter
 					.Column(PROP_TABLE_GETTER_COLUMN        ) // getter code (or default "get")
 					.Column(PROP_TABLE_SETTER_COLUMN        ) // setter code (or default "set")
-					.Column(PROP_TABLE_CLOSE_BRACKETS_COLUMN) // } bracket for properties with setter or with complex getter
+					.Column(PROP_TABLE_CLOSE_BRACKETS_COLUMN) // } bracket for auto-properties or properties with setter or with complex getter
 					.Column(PROP_TABLE_INITIALIZER_COLUMN   ) // optional property initializer
 				.End();
 
@@ -1439,7 +1452,7 @@ namespace LinqToDB.CodeGen.Model
 
 				row.ColumnValue(PROP_TABLE_NAME_COLUMN, BuildFragment(b => b.Visit(property.Name)));
 
-				var needsBrackets = property.HasGetter && property.HasSetter;
+				var needsBrackets = (property.Getter == null && property.Setter == null) || property.Setter != null;
 
 				row.ColumnValue(PROP_TABLE_OPEN_BRACKETS_COLUMN, BuildFragment(b =>
 				{
@@ -1451,21 +1464,22 @@ namespace LinqToDB.CodeGen.Model
 				// includes padding after name if no brackets used
 				row.ColumnValue(PROP_TABLE_GETTER_COLUMN, !property.HasGetter ? string.Empty : BuildFragment(b =>
 				{
-					if (property.Getter == null)
-						Write("get;");
-					else
+					if (property.HasGetter)
 					{
-						if (property.HasSetter)
-						{
-							Write("get");
-
-							if (property.Getter.Items.Count == 1)
-								Write(" =>");
-						}
+						if (property.Getter == null)
+							Write("get;");
 						else
-							Write(" =>");
-
-						b.WriteMethodBodyBlock(property.Getter, true, false, true, false);
+						{
+							if (property.HasSetter)
+							{
+								Write("get");
+								if (property.Getter.Items.Count == 1)
+									Write(" =>");
+							}
+							else
+								Write(" =>");
+							WriteMethodBodyBlock(property.Getter, true, false, true, false);
+						}
 					}
 				}));
 

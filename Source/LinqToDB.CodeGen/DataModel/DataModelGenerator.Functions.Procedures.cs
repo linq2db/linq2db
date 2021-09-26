@@ -31,12 +31,12 @@ namespace LinqToDB.CodeGen.DataModel
 					return;
 			}
 
-			var method = DefineMethod((region ??= proceduresGroup().New(storedProcedure.Method.Name)).Methods(false), storedProcedure.Method, true);
+			var method = DefineMethod((region ??= proceduresGroup().New(storedProcedure.Method.Name)).Methods(false), storedProcedure.Method);
 
 			var ctxParam = _code.Parameter(
 					// see method notes
 					dataContextType,
-					_code.Identifier("dataConnection"),
+					_code.Name("dataConnection"),
 					Model.ParameterDirection.In);
 			method.Parameter(ctxParam);
 			var body = method.Body();
@@ -48,10 +48,10 @@ namespace LinqToDB.CodeGen.DataModel
 			if (hasParameters)
 			{
 				var parameterValues = new ICodeExpression[storedProcedure.Parameters.Count + (storedProcedure.Return != null ? 1 : 0)];
-				parametersVar = _code.Variable(_code.Identifier("parameters"), _code.Type(typeof(DataParameter[]), false), true);
+				parametersVar = _code.Variable(_code.Name("parameters"), WellKnownTypes.LinqToDB.Data.DataParameterArray, true);
 				var parametersArray = _code.Assign(
 					parametersVar,
-					_code.Array(_code.Type(typeof(DataParameter), false), true, parameterValues, false));
+					_code.Array(WellKnownTypes.LinqToDB.Data.DataParameter, true, parameterValues, false));
 				body.Append(parametersArray);
 
 				if (storedProcedure.Parameters.Count > 0)
@@ -106,10 +106,10 @@ namespace LinqToDB.CodeGen.DataModel
 				if (hasParameters)
 					executeProcParameters[2] = parametersVar!.Reference;
 
-				method.Returns(_code.Type(typeof(int), false));
+				method.Returns(WellKnownTypes.System.Int32);
 				returnValue = _code.ExtCall(
-					_code.Type(typeof(DataConnectionExtensions), false),
-					_code.Identifier(nameof(DataConnectionExtensions.ExecuteProc)),
+					WellKnownTypes.LinqToDB.Data.DataConnectionExtensions,
+					_code.Name(nameof(DataConnectionExtensions.ExecuteProc)),
 					Array.Empty<IType>(),
 					executeProcParameters,
 					method.Method.ReturnType!.Type);
@@ -143,9 +143,9 @@ namespace LinqToDB.CodeGen.DataModel
 
 					// generate positional mapping lambda
 					// TODO: switch to ColumnReader.GetValue in future to utilize more precise mapping based on column mapping attributes
-					var drParam = _code.LambdaParameter(_code.Identifier("dataReader"), WellKnownTypes.AdoNet.DbDataReader);
+					var drParam = _code.LambdaParameter(_code.Name("dataReader"), WellKnownTypes.System.Data.Common.DbDataReader);
 					var initializers = new CodeAssignmentStatement[customTable!.Columns.Count];
-					var lambda = _code.Lambda(WellKnownTypes.Func(returnElementType, WellKnownTypes.AdoNet.DbDataReader), true)
+					var lambda = _code.Lambda(WellKnownTypes.System.Func(returnElementType, WellKnownTypes.System.Data.Common.DbDataReader), true)
 						.Parameter(drParam);
 					queryProcParameters[1] = lambda.Method;
 					lambda.Body()
@@ -155,19 +155,19 @@ namespace LinqToDB.CodeGen.DataModel
 								Array.Empty<ICodeExpression>(),
 								initializers)));
 
-					var ms = _code.Member(ctxParam.Reference, _code.Identifier(nameof(DataConnection.MappingSchema)), ctxParam.Type!.Type);
+					var ms = _code.Member(ctxParam.Reference, WellKnownTypes.LinqToDB.IDataContext_MappingSchema);
 					for (var i = 0; i < customTable.Columns.Count; i++)
 					{
 						var prop = customProperties![i];
 						initializers[i] = _code.Assign(
 							prop.Reference,
 							_code.Call(
-								new CodeTypeReference(_code.Type(typeof(Common.Converter), false)),
-								_code.Identifier(nameof(Common.Converter.ChangeTypeTo)),
+								new CodeTypeReference(WellKnownTypes.LinqToDB.Common.Converter),
+								_code.Name(nameof(Common.Converter.ChangeTypeTo)),
 								new[] { prop.Type.Type },
 								new ICodeExpression[]
 								{
-										_code.Call(drParam.Reference, _code.Identifier(nameof(DbDataReader.GetValue)), Array.Empty<IType>(), new ICodeExpression[] { _code.Constant(i, true) }, WellKnownTypes.Object.WithNullability(true)),
+										_code.Call(drParam.Reference, _code.Name(nameof(DbDataReader.GetValue)), Array.Empty<IType>(), new ICodeExpression[] { _code.Constant(i, true) }, WellKnownTypes.System.ObjectNullable),
 										ms
 								},
 								prop.Type.Type));
@@ -186,30 +186,29 @@ namespace LinqToDB.CodeGen.DataModel
 					queryProcParameters[queryProcParameters.Length - 1] = parametersVar!.Reference;
 
 				method.Returns(
-					_code.Type(
-						_dataModel.GenerateProcedureResultAsList ? typeof(List<>) : typeof(IEnumerable<>),
-						false,
-						returnElementType));
+					_dataModel.GenerateProcedureResultAsList
+						? WellKnownTypes.System.Collections.Generic.List(returnElementType)
+						: WellKnownTypes.System.Collections.Generic.IEnumerable(returnElementType));
 
 				returnValue = _code.ExtCall(
-					_code.Type(typeof(Enumerable), false),
-					_code.Identifier(nameof(Enumerable.ToList)),
+					WellKnownTypes.System.Linq.Enumerable,
+					_code.Name(nameof(Enumerable.ToList)),
 					Array.Empty<IType>(),
 					new[]
 					{
 						_code.ExtCall(
-							_code.Type(typeof(DataConnectionExtensions), false),
-							_code.Identifier(nameof(DataConnectionExtensions.QueryProc)),
+							WellKnownTypes.LinqToDB.Data.DataConnectionExtensions,
+							_code.Name(nameof(DataConnectionExtensions.QueryProc)),
 							queryProcTypeArgs,
 							queryProcParameters,
-							WellKnownTypes.Enumerable(returnElementType))
+							WellKnownTypes.System.Collections.Generic.IEnumerable(returnElementType))
 					},
-					WellKnownTypes.List(returnElementType));
+					WellKnownTypes.System.Collections.Generic.List(returnElementType));
 			}
 
 			if (parameterRebinds.Count > 0)
 			{
-				var callProcVar = _code.Variable(_code.Identifier("ret"), method.Method.ReturnType!.Type, true);
+				var callProcVar = _code.Variable(_code.Name("ret"), method.Method.ReturnType!.Type, true);
 				body.Append(_code.Assign(callProcVar, returnValue!));
 				foreach (var rebind in parameterRebinds)
 					body.Append(rebind);
@@ -233,28 +232,28 @@ namespace LinqToDB.CodeGen.DataModel
 			var ctorInitializers = new List<CodeAssignmentStatement>();
 
 			ctorParams.Add(_code.Constant(parameterName ?? $"p{idx}", true));
-			ctorParams.Add(parameter.Direction == Model.ParameterDirection.In || parameter.Direction == Model.ParameterDirection.Ref ? parameter.Reference : _code.Null(_code.Type(typeof(object), true), true));
+			ctorParams.Add(parameter.Direction == Model.ParameterDirection.In || parameter.Direction == Model.ParameterDirection.Ref ? parameter.Reference : _code.Null(WellKnownTypes.System.ObjectNullable, true));
 			if (dataType != null)
 				ctorParams.Add(_code.Constant(dataType.Value, true));
 
 			if (parameter.Direction == Model.ParameterDirection.Out && !returnParameter)
-				ctorInitializers.Add(_code.Assign(WellKnownTypes.LinqToDB.DataParameter.Direction.Reference, _code.Constant(System.Data.ParameterDirection.Output, true)));
+				ctorInitializers.Add(_code.Assign(WellKnownTypes.LinqToDB.Data.DataParameter_Direction, _code.Constant(System.Data.ParameterDirection.Output, true)));
 			else if (parameter.Direction == Model.ParameterDirection.Ref)
-				ctorInitializers.Add(_code.Assign(WellKnownTypes.LinqToDB.DataParameter.Direction.Reference, _code.Constant(System.Data.ParameterDirection.InputOutput, true)));
+				ctorInitializers.Add(_code.Assign(WellKnownTypes.LinqToDB.Data.DataParameter_Direction, _code.Constant(System.Data.ParameterDirection.InputOutput, true)));
 			else if (returnParameter)
-				ctorInitializers.Add(_code.Assign(WellKnownTypes.LinqToDB.DataParameter.Direction.Reference, _code.Constant(System.Data.ParameterDirection.ReturnValue, true)));
+				ctorInitializers.Add(_code.Assign(WellKnownTypes.LinqToDB.Data.DataParameter_Direction, _code.Constant(System.Data.ParameterDirection.ReturnValue, true)));
 
 			if (dbType != null)
 			{
 				if (dbType.Name != null && _dataModel.GenerateProcedureParameterDbType)
-					ctorInitializers.Add(_code.Assign(WellKnownTypes.LinqToDB.DataParameter.DbType.Reference, _code.Constant(dbType.Name!, true)));
+					ctorInitializers.Add(_code.Assign(WellKnownTypes.LinqToDB.Data.DataParameter_DbType, _code.Constant(dbType.Name!, true)));
 				// TODO: min/max check added to avoid issues with type inconsistance in schema API and metadata
 				if (dbType.Length != null && dbType.Length >= int.MinValue && dbType.Length <= int.MaxValue)
-					ctorInitializers.Add(_code.Assign(WellKnownTypes.LinqToDB.DataParameter.Size.Reference, _code.Constant((int)dbType.Length.Value, true)));
+					ctorInitializers.Add(_code.Assign(WellKnownTypes.LinqToDB.Data.DataParameter_Size, _code.Constant((int)dbType.Length.Value, true)));
 				if (dbType.Precision != null)
-					ctorInitializers.Add(_code.Assign(WellKnownTypes.LinqToDB.DataParameter.Precision.Reference, _code.Constant(dbType.Precision.Value, true)));
+					ctorInitializers.Add(_code.Assign(WellKnownTypes.LinqToDB.Data.DataParameter_Precision, _code.Constant(dbType.Precision.Value, true)));
 				if (dbType.Scale != null)
-					ctorInitializers.Add(_code.Assign(WellKnownTypes.LinqToDB.DataParameter.Scale.Reference, _code.Constant(dbType.Scale.Value, true)));
+					ctorInitializers.Add(_code.Assign(WellKnownTypes.LinqToDB.Data.DataParameter_Scale, _code.Constant(dbType.Scale.Value, true)));
 			}
 
 			if (parameter.Direction != Model.ParameterDirection.In)
@@ -263,14 +262,14 @@ namespace LinqToDB.CodeGen.DataModel
 					_code.Assign(
 						parameter.Reference,
 						_code.Call(
-							new CodeTypeReference(_code.Type(typeof(Common.Converter), false)),
-							_code.Identifier(nameof(Common.Converter.ChangeTypeTo)),
+							new CodeTypeReference(WellKnownTypes.LinqToDB.Common.Converter),
+							_code.Name(nameof(Common.Converter.ChangeTypeTo)),
 							new[] { parameter.Type!.Type },
-							new ICodeExpression[] { _code.Member(_code.Index(parametersVar.Reference, _code.Constant(idx, true), WellKnownTypes.LinqToDB.DataParameter.Type), _code.Identifier(nameof(DataParameter.Value)), WellKnownTypes.Object.WithNullability(true)) },
+							new ICodeExpression[] { _code.Member(_code.Index(parametersVar.Reference, _code.Constant(idx, true), WellKnownTypes.LinqToDB.Data.DataParameter), WellKnownTypes.LinqToDB.Data.DataParameter_Value) },
 							parameter.Type!.Type)));
 			}
 
-			return _code.New(_code.Type(typeof(DataParameter), false), ctorParams.ToArray(), ctorInitializers.ToArray());
+			return _code.New(WellKnownTypes.LinqToDB.Data.DataParameter, ctorParams.ToArray(), ctorInitializers.ToArray());
 		}
 	}
 }

@@ -16,7 +16,7 @@
 		/// </summary>
 		public ICodeExpression Expression { get; }
 
-		IType ICodeExpression.Type => WellKnownTypes.String;
+		IType ICodeExpression.Type => WellKnownTypes.System.String;
 
 		CodeElementType ICodeElement.ElementType => CodeElementType.NameOf;
 	}

@@ -76,12 +76,12 @@ namespace LinqToDB.CodeGen.Model
 		bool IsValidIdentifierNonFirstChar(string character, UnicodeCategory category);
 
 		/// <summary>
-		/// Returns language-specific type alias (if any) for type with provided namespace and name.
+		/// Returns language-specific type alias (if any) for provided type.
+		/// For nullable type returns alias without nullability annotations.
 		/// </summary>
-		/// <param name="namespace">Type namespace.</param>
-		/// <param name="typeName">Type name.</param>
+		/// <param name="type">Type to check for alias. Could be nullable type.</param>
 		/// <returns>Type alias if provided type has it.</returns>
-		string? GetAlias(CodeIdentifier[]? @namespace, CodeIdentifier typeName);
+		string? GetAlias(IType type);
 
 		/// <summary>
 		/// Returns visitor that could be used to fix identifiers in code model.

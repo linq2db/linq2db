@@ -5,8 +5,8 @@
 	/// </summary>
 	public class ClassBuilder : TypeBuilder<ClassBuilder, CodeClass>
 	{
-		internal ClassBuilder(CodeClass @class)
-			: base(@class)
+		internal ClassBuilder(CodeClass @class, ClassGroup group)
+			: base(@class, group)
 		{
 		}
 

@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using SDST  = System.Data.SqlTypes;
-using SD   = System.Data;
-using SDC   = System.Data.Common;
-using L2DBD = LinqToDB.Data;
-using SLE = System.Linq.Expressions;
+using System.Data.Common;
+using System.Data.SqlTypes;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Common;
+using LinqToDB.Configuration;
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.CodeGen.Model
 {
@@ -16,245 +19,315 @@ namespace LinqToDB.CodeGen.Model
 	/// </summary>
 	public static class WellKnownTypes
 	{
-		private static IReadOnlyList<CodeIdentifier> SystemNamespace { get; }
-		private static IReadOnlyList<CodeIdentifier> SystemReflectionNamespace { get; }
-		private static IReadOnlyList<CodeIdentifier> SystemLinqNamespace { get; }
-		private static IReadOnlyList<CodeIdentifier> SystemCollectionsGenericNamespace { get; }
-		private static IReadOnlyList<CodeIdentifier> SystemLinqExpressionsNamespace { get; }
+		// use C# type parser for known types parsing (it doesn't affect parsing of types in this file)
+		private static ITypeParser Parser => CSharpLanguageProvider.Instance.TypeParser;
 
-		internal static Dictionary<Type, IType> TypeCache { get; }
-
-		public static IType Boolean { get; }
-		public static IType String  { get; }
-		public static IType Object  { get; }
-		public static IType Int32   { get; }
-
-		public static IType MethodInfo { get; }
-
-		public static IType Func0 { get; }
-		public static IType Func1 { get; }
-		public static IType Func2 { get; }
-
-		public static IType IEnumerableT { get; }
-		public static IType ListT        { get; }
-
-		public static IType LambdaExpression { get; }
-		public static IType ExpressionT { get; }
-
-		public static IType IQueryableT { get; }
-
-		static WellKnownTypes()
+		public static class System
 		{
-			TypeCache = new();
+			public static IType Boolean { get; }
+			public static IType String { get; }
+			public static IType Object { get; }
+			public static IType Int32 { get; }
+			public static IType Int64 { get; }
 
-			SystemNamespace = new[]
+			public static IType ObjectNullable { get; }
+			public static IType ObjectArrayNullable { get; }
+
+			public static IType InvalidOperationException { get; }
+
+			//private static IType Func0 { get; }
+			private static IType Func1 { get; }
+			private static IType Func2 { get; }
+
+			static System()
 			{
-				new CodeIdentifier(nameof(System))
-			};
+				Boolean = Parser.Parse<bool>();
+				String = Parser.Parse<string>();
+				Object = Parser.Parse<object>();
+				Int32 = Parser.Parse<int>();
+				Int64 = Parser.Parse<long>();
 
-			SystemReflectionNamespace = new[]
+				ObjectNullable = Object.WithNullability(true);
+				ObjectArrayNullable = new ArrayType(Object, new int?[] { null }, true);
+
+				InvalidOperationException = Parser.Parse<InvalidOperationException>();
+
+
+				Func1 = Parser.Parse(typeof(Func<,>));
+				Func2 = Parser.Parse(typeof(Func<,,>));
+
+				//	Func0 = new OpenGenericType(SystemNamespace, new CodeIdentifier(nameof(Func<int>)), false, false, 1, true);
+
+			}
+
+			//public static IType Func(IType returnType           ) => Func0.WithTypeArguments(new[] { returnType      });
+			public static IType Func(IType returnType, IType arg0) => Func1.WithTypeArguments(arg0, returnType);
+			public static IType Func(IType returnType, IType arg0, IType arg1) => Func2.WithTypeArguments(arg0, arg1, returnType);
+
+			public class Reflection
 			{
-				SystemNamespace[0],
-				new CodeIdentifier(nameof(System.Reflection))
-			};
+				public static IType MethodInfo { get; }
 
-			Boolean = AddType(typeof(Boolean), new RegularType(SystemNamespace, new CodeIdentifier(nameof(Boolean)), "bool"  , true , false, true));
-			String  = AddType(typeof(String) , new RegularType(SystemNamespace, new CodeIdentifier(nameof(String )), "string", false, false, true));
-			Object  = AddType(typeof(Object) , new RegularType(SystemNamespace, new CodeIdentifier(nameof(Object )), "object", false, false, true));
-			Int32   = AddType(typeof(Int32)  , new RegularType(SystemNamespace, new CodeIdentifier(nameof(Int32  )), "int"   , true , false, true));
+				static Reflection()
+				{
+					MethodInfo = Parser.Parse<MethodInfo>();
+				}
+			}
 
-			MethodInfo = AddType(typeof(MethodInfo)  , new RegularType(SystemReflectionNamespace, new CodeIdentifier(nameof(MethodInfo)), null   , false, false, true));
-
-			Func0 = new OpenGenericType(SystemNamespace, new CodeIdentifier(nameof(Func<int>)), false, false, 1, true);
-			Func1 = new OpenGenericType(SystemNamespace, new CodeIdentifier(nameof(Func<int>)), false, false, 2, true);
-			Func2 = new OpenGenericType(SystemNamespace, new CodeIdentifier(nameof(Func<int>)), false, false, 3, true);
-
-			SystemCollectionsGenericNamespace = new[]
+			public static class Data
 			{
-				SystemNamespace[0],
-				new CodeIdentifier(nameof(System.Collections)),
-				new CodeIdentifier(nameof(System.Collections.Generic)),
-			};
+				public static class Common
+				{
+					public static IType DbDataReader { get; }
 
-			IEnumerableT = new OpenGenericType(SystemCollectionsGenericNamespace, new CodeIdentifier(nameof(IEnumerable<int>)), false, false, 1, true);
-			ListT = new OpenGenericType(SystemCollectionsGenericNamespace, new CodeIdentifier(nameof(List<int>)), false, false, 1, true);
+					static Common()
+					{
+						DbDataReader = Parser.Parse<DbDataReader>();
+					}
+				}
 
-			SystemLinqExpressionsNamespace = new[]
+				public static class SqlTypes
+				{
+					public static IType SqlBinary { get; }
+					public static IType SqlBoolean { get; }
+					public static IType SqlByte { get; }
+					public static IType SqlDateTime { get; }
+					public static IType SqlDecimal { get; }
+					public static IType SqlDouble { get; }
+					public static IType SqlGuid { get; }
+					public static IType SqlInt16 { get; }
+					public static IType SqlInt32 { get; }
+					public static IType SqlInt64 { get; }
+					public static IType SqlMoney { get; }
+					public static IType SqlSingle { get; }
+					public static IType SqlString { get; }
+					public static IType SqlXml { get; }
+
+					static SqlTypes()
+					{
+						SqlBinary = Parser.Parse<SqlBinary>();
+						SqlBoolean = Parser.Parse<SqlBoolean>();
+						SqlByte = Parser.Parse<SqlByte>();
+						SqlDateTime = Parser.Parse<SqlDateTime>();
+						SqlDecimal = Parser.Parse<SqlDecimal>();
+						SqlDouble = Parser.Parse<SqlDouble>();
+						SqlGuid = Parser.Parse<SqlGuid>();
+						SqlInt16 = Parser.Parse<SqlInt16>();
+						SqlInt32 = Parser.Parse<SqlInt32>();
+						SqlInt64 = Parser.Parse<SqlInt64>();
+						SqlMoney = Parser.Parse<SqlMoney>();
+						SqlSingle = Parser.Parse<SqlSingle>();
+						SqlString = Parser.Parse<SqlString>();
+						SqlXml = Parser.Parse<SqlXml>();
+					}
+				}
+			}
+
+			public static class Linq
 			{
-				SystemNamespace[0],
-				new CodeIdentifier(nameof(System.Linq)),
-				new CodeIdentifier(nameof(System.Linq.Expressions)),
-			};
+				private static IType IQueryableT { get; }
 
-			LambdaExpression = AddType(typeof(SLE.LambdaExpression) , new RegularType(SystemLinqExpressionsNamespace, new CodeIdentifier(nameof(SLE.LambdaExpression)), null, false, false, true));
-			ExpressionT = new OpenGenericType(SystemLinqExpressionsNamespace, new CodeIdentifier(nameof(SLE.Expression<int>)), false, false, 1, true);
+				public static IType Enumerable { get; }
+				public static IType Queryable { get; }
 
-			SystemLinqNamespace = new[]
+				public static CodeIdentifier Queryable_First { get; }
+				public static CodeIdentifier Queryable_FirstOrDefault { get; }
+				public static CodeIdentifier Queryable_Where { get; }
+
+				static Linq()
+				{
+					IQueryableT = Parser.Parse(typeof(IQueryable<>));
+					Enumerable = Parser.Parse(typeof(Enumerable));
+					Queryable = Parser.Parse(typeof(Queryable));
+
+					Queryable_First = new CodeIdentifier(nameof(global::System.Linq.Queryable.First));
+					Queryable_FirstOrDefault = new CodeIdentifier(nameof(global::System.Linq.Queryable.FirstOrDefault));
+					Queryable_Where = new CodeIdentifier(nameof(global::System.Linq.Queryable.Where));
+				}
+
+				public static IType IQueryable(IType elementType) => IQueryableT.WithTypeArguments(elementType);
+
+				public static class Expressions
+				{
+					public static IType LambdaExpression { get; }
+
+					private static IType ExpressionT { get; }
+
+					static Expressions()
+					{
+						ExpressionT = Parser.Parse(typeof(Expression<>));
+						LambdaExpression = Parser.Parse<LambdaExpression>();
+
+					}
+
+					public static IType Expression(IType expressionType) => ExpressionT.WithTypeArguments(expressionType);
+				}
+			}
+
+			public static class Collections
 			{
-				SystemNamespace[0],
-				new CodeIdentifier(nameof(System.Linq))
-			};
+				public static class Generic
+				{
+					private static IType IEnumerableT { get; }
+					private static IType ListT { get; }
 
-			IQueryableT = new OpenGenericType(SystemLinqNamespace, new CodeIdentifier(nameof(IQueryable<int>)), false, false, 1, true);
+					static Generic()
+					{
+						IEnumerableT = Parser.Parse(typeof(IEnumerable<>));
+						ListT = Parser.Parse(typeof(List<>));
+					}
+
+					public static IType IEnumerable(IType elementType) => IEnumerableT.WithTypeArguments(elementType);
+					public static IType List(IType elementType) => ListT.WithTypeArguments(elementType);
+				}
+			}
 		}
 
-		public static IType Queryable(IType elementType) => IQueryableT.WithTypeArguments(new[] { elementType });
-
-		public static IType Enumerable(IType elementType) => IEnumerableT.WithTypeArguments(new[] { elementType });
-		public static IType List(IType elementType) => ListT.WithTypeArguments(new[] { elementType });
-
-		public static IType Expression(IType expressionType) => ExpressionT.WithTypeArguments(new[] { expressionType });
-
-		public static IType Func(IType returnType           ) => Func0.WithTypeArguments(new[] { returnType      });
-		public static IType Func(IType returnType, IType arg0) => Func1.WithTypeArguments(new[] { arg0, returnType });
-		public static IType Func(IType returnType, IType arg0, IType arg1) => Func2.WithTypeArguments(new[] { arg0, arg1, returnType });
-
-		private static IType AddType(Type type, IType itype)
+		public static class Microsoft
 		{
-			TypeCache.Add(type, itype);
-			return itype;
-		}
-
-		public static class AdoNet
-		{
-			private static IReadOnlyList<CodeIdentifier> SystemData { get; }
-			private static IReadOnlyList<CodeIdentifier> SystemDataCommon { get; }
-
-			public static IType DbDataReader { get; }
-			public static IType ParameterDirection { get; }
-
-			static AdoNet()
+			public static class SqlServer
 			{
-				SystemData = new[]
+				public static class Types
 				{
-					SystemNamespace[0],
-					new CodeIdentifier(nameof(System.Data)),
-					new CodeIdentifier(nameof(SD.Common))
-				};
+					public static IType SqlHierarchyId { get; }
 
-				SystemDataCommon = new[]
-				{
-					SystemNamespace[0],
-					new CodeIdentifier(nameof(System.Data)),
-					new CodeIdentifier(nameof(SD.Common))
-				};
-
-				ParameterDirection = AddType(typeof(SDC.DbParameter), new RegularType(SystemData, new CodeIdentifier(nameof(SDC.DbParameter)), null, true, false, true));
-			
-				DbDataReader = AddType(typeof(SDC.DbDataReader), new RegularType(SystemDataCommon, new CodeIdentifier(nameof(SDC.DbDataReader)), null, false, false, true));
+					static Types()
+					{
+						SqlHierarchyId = Parser.Parse("Microsoft.SqlServer.Types.SqlHierarchyId", true);
+					}
+				}
 			}
 		}
 
 		public static class LinqToDB
 		{
-			private static IReadOnlyList<CodeIdentifier> Namespace { get; }
-			public static IReadOnlyList<CodeIdentifier> DataNamespace { get; }
-
-
 			public static IType ITableT { get; }
+			public static IType SqlFunctionAttribute { get; }
+			public static IType SqlTableFunctionAttribute { get; }
+			public static IType DataType { get; }
+			public static IType IDataContext { get; }
+			public static IType DataExtensions { get; }
+
+			public static CodeReference IDataContext_MappingSchema { get; }
+
+			public static CodeIdentifier DataExtensions_GetTable { get; }
 
 			static LinqToDB()
 			{
-				Namespace = new[]
-				{
-					new CodeIdentifier("LinqToDB")
-				};
+				ITableT = Parser.Parse(typeof(ITable<>));
+				SqlFunctionAttribute = Parser.Parse<Sql.FunctionAttribute>();
+				SqlTableFunctionAttribute = Parser.Parse<Sql.TableFunctionAttribute>();
+				DataType = Parser.Parse<DataType>();
+				IDataContext = Parser.Parse<IDataContext>();
+				DataExtensions = Parser.Parse(typeof(DataExtensions));
 
-				DataNamespace = new[]
-				{
-					Namespace[0],
-					new CodeIdentifier("Data"),
-				};
+				IDataContext_MappingSchema = PropertyOrField((IDataContext ctx) => ctx.MappingSchema, false);
 
-				ITableT = new OpenGenericType(Namespace, new CodeIdentifier(nameof(ITable<string>)), false, false, 1, true);
+				DataExtensions_GetTable = new CodeIdentifier(nameof(global::LinqToDB.DataExtensions.GetTable));
+			}
+
+			public static IType ITable(IType tableType) => ITableT.WithTypeArguments(tableType);
+
+			public static class Expressions
+			{
+				public static IType MemberHelper { get; }
+				static Expressions()
+				{
+					MemberHelper = Parser.Parse(typeof(MemberHelper));
+				}
+			}
+
+			public static class Common
+			{
+				public static IType Converter { get; }
+				static Common()
+				{
+					Converter = Parser.Parse(typeof(Converter));
+				}
+			}
+
+			public static class Configuration
+			{
+				public static IType LinqToDbConnectionOptions { get; }
+				private static IType LinqToDbConnectionOptionsT { get; }
+
+				static Configuration()
+				{
+					LinqToDbConnectionOptions = Parser.Parse<LinqToDbConnectionOptions>();
+					LinqToDbConnectionOptionsT = Parser.Parse(typeof(LinqToDbConnectionOptions<>));
+				}
+
+				public static IType LinqToDbConnectionOptionsWithType(IType contextType) => LinqToDbConnectionOptionsT.WithTypeArguments(contextType);
 
 			}
 
-			public static IType ITable(IType tableType) => ITableT.WithTypeArguments(new[] { tableType });
-
-			public static class DataParameter
+			public static class Mapping
 			{
-				public static IType Type { get; }
+				public static IType AssociationAttribute { get; }
+				public static IType NotColumnAttribute { get; }
+				public static IType ColumnAttribute { get; }
+				public static IType TableAttribute { get; }
+				public static IType MappingSchema { get; }
 
-				public static CodeExternalPropertyOrField Direction { get; }
-				public static CodeExternalPropertyOrField DbType { get; }
-				public static CodeExternalPropertyOrField Size { get; }
-				public static CodeExternalPropertyOrField Precision { get; }
-				public static CodeExternalPropertyOrField Scale { get; }
+				public static CodeIdentifier MappingSchema_SetConvertExpression { get; }
 
-				static DataParameter()
+				static Mapping()
 				{
-					Type = AddType(typeof(L2DBD.DataParameter), new RegularType(DataNamespace, new CodeIdentifier(nameof(L2DBD.DataParameter)), null, false, false, true));
+					AssociationAttribute = Parser.Parse<AssociationAttribute>();
+					NotColumnAttribute = Parser.Parse<NotColumnAttribute>();
+					ColumnAttribute = Parser.Parse<ColumnAttribute>();
+					TableAttribute = Parser.Parse<TableAttribute>();
+					MappingSchema = Parser.Parse<MappingSchema>();
 
-					Direction = new CodeExternalPropertyOrField(new CodeIdentifier(nameof(L2DBD.DataParameter.Direction)), new (AdoNet.ParameterDirection.WithNullability(true)));
-					DbType = new CodeExternalPropertyOrField(new CodeIdentifier(nameof(L2DBD.DataParameter.DbType)), new (String.WithNullability(true)));
-					Size = new CodeExternalPropertyOrField(new CodeIdentifier(nameof(L2DBD.DataParameter.Size)), new (Int32.WithNullability(true)));
-					Precision = new CodeExternalPropertyOrField(new CodeIdentifier(nameof(L2DBD.DataParameter.Precision)), new (Int32.WithNullability(true)));
-					Scale = new CodeExternalPropertyOrField(new CodeIdentifier(nameof(L2DBD.DataParameter.Scale)), new (Int32.WithNullability(true)));
+					MappingSchema_SetConvertExpression = new CodeIdentifier(nameof(global::LinqToDB.Mapping.MappingSchema.SetConvertExpression));
+				}
+			}
+
+			public static class Data
+			{
+				public static IType DataParameter { get; }
+				public static IType DataParameterArray { get; }
+				public static IType DataConnectionExtensions { get; }
+				public static IType DataConnection { get; }
+
+				public static CodeIdentifier DataConnection_GetTable { get; }
+
+				public static CodeReference DataParameter_Direction { get; }
+				public static CodeReference DataParameter_DbType { get; }
+				public static CodeReference DataParameter_Size { get; }
+				public static CodeReference DataParameter_Precision { get; }
+				public static CodeReference DataParameter_Scale { get; }
+				public static CodeReference DataParameter_Value { get; }
+
+				static Data()
+				{
+					DataParameter = Parser.Parse<DataParameter>();
+					DataParameterArray = new ArrayType(DataParameter, new int?[] { null }, false);
+					DataConnectionExtensions = Parser.Parse(typeof(DataConnectionExtensions));
+					DataConnection = Parser.Parse<DataConnection>();
+
+					DataParameter_Direction = PropertyOrField((DataParameter dp) => dp.Direction, false);
+					DataParameter_DbType = PropertyOrField((DataParameter dp) => dp.DbType, true);
+					DataParameter_Size = PropertyOrField((DataParameter dp) => dp.Size, false);
+					DataParameter_Precision = PropertyOrField((DataParameter dp) => dp.Precision, false);
+					DataParameter_Scale = PropertyOrField((DataParameter dp) => dp.Scale, false);
+					DataParameter_Value = PropertyOrField((DataParameter dp) => dp.Value, true);
+
+					DataConnection_GetTable = new CodeIdentifier(nameof(global::LinqToDB.Data.DataConnection.GetTable));
 				}
 			}
 		}
 
-		public static class SqlServerTypes
+		// TODO: replace forceNullable with NRT annotation lookup
+		private static CodeReference PropertyOrField<TObject, TProperty>(Expression<Func<TObject, TProperty>> accessor, bool forceNullable)
 		{
-			public static IReadOnlyList<CodeIdentifier> Namespace { get; }
+			var member = ((MemberExpression)accessor.Body).Member;
+			if (member is PropertyInfo pi)
+				return new CodeExternalPropertyOrField(new CodeIdentifier(member.Name), new(Parser.Parse(pi.PropertyType).WithNullability(forceNullable))).Reference;
+			if (member is FieldInfo fi)
+				return new CodeExternalPropertyOrField(new CodeIdentifier(member.Name), new(Parser.Parse(fi.FieldType).WithNullability(forceNullable))).Reference;
 
-			public static IType SqlHierarchyId { get; }
-
-			static SqlServerTypes()
-			{
-				Namespace = new[]
-				{
-					new CodeIdentifier("Microsoft"),
-					new CodeIdentifier("SqlServer"),
-					new CodeIdentifier("Types"),
-				};
-
-				SqlHierarchyId = new RegularType(Namespace, new CodeIdentifier("SqlHierarchyId"), null, true, false, true);
-			}
-		}
-
-		public static class SqlTypes
-		{
-			public static IReadOnlyList<CodeIdentifier> Namespace { get; }
-
-			public static IType SqlBinary   { get; }
-			public static IType SqlBoolean  { get; }
-			public static IType SqlByte     { get; }
-			public static IType SqlDateTime { get; }
-			public static IType SqlDecimal  { get; }
-			public static IType SqlDouble   { get; }
-			public static IType SqlGuid     { get; }
-			public static IType SqlInt16    { get; }
-			public static IType SqlInt32    { get; }
-			public static IType SqlInt64    { get; }
-			public static IType SqlMoney    { get; }
-			public static IType SqlSingle   { get; }
-			public static IType SqlString   { get; }
-
-			static SqlTypes()
-			{
-				Namespace = new[]
-				{
-					SystemNamespace[0],
-					new CodeIdentifier(nameof(System.Data)),
-					new CodeIdentifier(nameof(SD.SqlTypes)),
-				};
-
-				SqlBinary   = AddType(typeof(SDST.SqlBinary)  , new RegularType(Namespace, new CodeIdentifier(nameof(SDST.SqlBinary  )), null, true, false, true));
-				SqlBoolean  = AddType(typeof(SDST.SqlBoolean) , new RegularType(Namespace, new CodeIdentifier(nameof(SDST.SqlBoolean )), null, true, false, true));
-				SqlByte     = AddType(typeof(SDST.SqlByte)    , new RegularType(Namespace, new CodeIdentifier(nameof(SDST.SqlByte    )), null, true, false, true));
-				SqlDateTime = AddType(typeof(SDST.SqlDateTime), new RegularType(Namespace, new CodeIdentifier(nameof(SDST.SqlDateTime)), null, true, false, true));
-				SqlDecimal  = AddType(typeof(SDST.SqlDecimal) , new RegularType(Namespace, new CodeIdentifier(nameof(SDST.SqlDecimal )), null, true, false, true));
-				SqlDouble   = AddType(typeof(SDST.SqlDouble)  , new RegularType(Namespace, new CodeIdentifier(nameof(SDST.SqlDouble  )), null, true, false, true));
-				SqlGuid     = AddType(typeof(SDST.SqlGuid)    , new RegularType(Namespace, new CodeIdentifier(nameof(SDST.SqlGuid    )), null, true, false, true));
-				SqlInt16    = AddType(typeof(SDST.SqlInt16)   , new RegularType(Namespace, new CodeIdentifier(nameof(SDST.SqlInt16   )), null, true, false, true));
-				SqlInt32    = AddType(typeof(SDST.SqlInt32)   , new RegularType(Namespace, new CodeIdentifier(nameof(SDST.SqlInt32   )), null, true, false, true));
-				SqlInt64    = AddType(typeof(SDST.SqlInt64)   , new RegularType(Namespace, new CodeIdentifier(nameof(SDST.SqlInt64   )), null, true, false, true));
-				SqlMoney    = AddType(typeof(SDST.SqlMoney)   , new RegularType(Namespace, new CodeIdentifier(nameof(SDST.SqlMoney   )), null, true, false, true));
-				SqlSingle   = AddType(typeof(SDST.SqlSingle)  , new RegularType(Namespace, new CodeIdentifier(nameof(SDST.SqlSingle  )), null, true, false, true));
-				SqlString   = AddType(typeof(SDST.SqlString)  , new RegularType(Namespace, new CodeIdentifier(nameof(SDST.SqlString  )), null, true, false, true));
-			}
+			throw new InvalidOperationException();
 		}
 	}
 }

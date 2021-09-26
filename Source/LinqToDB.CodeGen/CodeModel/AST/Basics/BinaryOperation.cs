@@ -13,6 +13,10 @@
 		/// <summary>
 		/// Logical AND.
 		/// </summary>
-		And
+		And,
+		/// <summary>
+		/// Addition.
+		/// </summary>
+		Add,
 	}
 }

@@ -9,13 +9,15 @@ namespace LinqToDB.CodeGen.Model
 	/// </summary>
 	internal class ImportsCollector : NoopCodeModelVisitor
 	{
+		private readonly ILanguageProvider                      _languageProvider;
 		private readonly HashSet<IReadOnlyList<CodeIdentifier>> _imports;
 		private readonly HashSet<IReadOnlyList<CodeIdentifier>> _ignoredImports;
 
 		public ImportsCollector(ILanguageProvider languageProvider)
 		{
-			_imports        = new HashSet<IReadOnlyList<CodeIdentifier>>(languageProvider.FullNameEqualityComparer);
-			_ignoredImports = new HashSet<IReadOnlyList<CodeIdentifier>>(languageProvider.FullNameEqualityComparer);
+			_languageProvider = languageProvider;
+			_imports          = new HashSet<IReadOnlyList<CodeIdentifier>>(languageProvider.FullNameEqualityComparer);
+			_ignoredImports   = new HashSet<IReadOnlyList<CodeIdentifier>>(languageProvider.FullNameEqualityComparer);
 		}
 
 		/// <summary>
@@ -75,7 +77,7 @@ namespace LinqToDB.CodeGen.Model
 		private void CollectTypeImports(IType type)
 		{
 			// skip aliased types
-			if (type.Alias != null)
+			if (_languageProvider.GetAlias(type) != null)
 				return;
 
 			if (type.Kind == TypeKind.Array)

@@ -25,7 +25,7 @@ namespace LinqToDB.CodeGen.Model
 			bool                           isNullable,
 			IReadOnlyList<IType>           typeArguments,
 			bool                           external)
-			: base(@namespace, name, null, isValueType, isNullable, external)
+			: base(@namespace, name, isValueType, isNullable, external)
 		{
 			_typeArguments = typeArguments;
 		}

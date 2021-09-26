@@ -20,16 +20,14 @@ namespace LinqToDB.CodeGen.DataModel
 
 		public AssociationMetadata SourceMetadata { get; set; }
 		public EntityModel Source { get; set; }
-		public string? PropertyName { get; set; }
-		public string? ExtensionName { get; set; }
-		public string? Summary { get; set; }
+		public PropertyModel? Property { get; set; }
+		public MethodModel? Extension { get; set; }
 		public ColumnModel[]? FromColumns { get; set; }
 
 		public AssociationMetadata TargetMetadata { get; set; }
 		public EntityModel Target { get; set; }
-		public string? BackreferencePropertyName { get; set; }
-		public string? BackreferenceExtensionName { get; set; }
-		public string? BackreferenceSummary { get; set; }
+		public PropertyModel? BackreferenceProperty { get; set; }
+		public MethodModel? BackreferenceExtension { get; set; }
 		public ColumnModel[]? ToColumns { get; set; }
 
 		public bool ManyToOne { get; set; }

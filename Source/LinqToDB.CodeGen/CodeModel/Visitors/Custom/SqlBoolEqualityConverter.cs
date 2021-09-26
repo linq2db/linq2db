@@ -16,21 +16,21 @@ namespace LinqToDB.CodeGen.Model
 		{
 			_types = new HashSet<IType>(typeComparer)
 			{
-				WellKnownTypes.SqlTypes.SqlBinary,
-				WellKnownTypes.SqlTypes.SqlBoolean,
-				WellKnownTypes.SqlTypes.SqlByte,
-				WellKnownTypes.SqlTypes.SqlDateTime,
-				WellKnownTypes.SqlTypes.SqlDecimal,
-				WellKnownTypes.SqlTypes.SqlDouble,
-				WellKnownTypes.SqlTypes.SqlGuid,
-				WellKnownTypes.SqlTypes.SqlInt16,
-				WellKnownTypes.SqlTypes.SqlInt32,
-				WellKnownTypes.SqlTypes.SqlInt64,
-				WellKnownTypes.SqlTypes.SqlMoney,
-				WellKnownTypes.SqlTypes.SqlSingle,
-				WellKnownTypes.SqlTypes.SqlString,
+				WellKnownTypes.System.Data.SqlTypes.SqlBinary,
+				WellKnownTypes.System.Data.SqlTypes.SqlBoolean,
+				WellKnownTypes.System.Data.SqlTypes.SqlByte,
+				WellKnownTypes.System.Data.SqlTypes.SqlDateTime,
+				WellKnownTypes.System.Data.SqlTypes.SqlDecimal,
+				WellKnownTypes.System.Data.SqlTypes.SqlDouble,
+				WellKnownTypes.System.Data.SqlTypes.SqlGuid,
+				WellKnownTypes.System.Data.SqlTypes.SqlInt16,
+				WellKnownTypes.System.Data.SqlTypes.SqlInt32,
+				WellKnownTypes.System.Data.SqlTypes.SqlInt64,
+				WellKnownTypes.System.Data.SqlTypes.SqlMoney,
+				WellKnownTypes.System.Data.SqlTypes.SqlSingle,
+				WellKnownTypes.System.Data.SqlTypes.SqlString,
 
-				WellKnownTypes.SqlServerTypes.SqlHierarchyId,
+				WellKnownTypes.Microsoft.SqlServer.Types.SqlHierarchyId,
 			};
 		}
 
@@ -43,7 +43,7 @@ namespace LinqToDB.CodeGen.Model
 		{
 			if (expression.Operation == BinaryOperation.Equal
 				&& _types.Contains(expression.Left.Type))
-				return new CodeTypeCast(WellKnownTypes.Boolean, expression);
+				return new CodeTypeCast(WellKnownTypes.System.Boolean, expression);
 
 			return base.Visit(expression);
 		}

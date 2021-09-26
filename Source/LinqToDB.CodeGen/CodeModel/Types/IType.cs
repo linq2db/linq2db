@@ -32,12 +32,6 @@ namespace LinqToDB.CodeGen.Model
 		/// </summary>
 		IType?                         Parent              { get; }
 
-		// TODO: remove from type?
-		/// <summary>
-		/// Language-specic type alias.
-		/// </summary>
-		string?                        Alias               { get; }
-
 		/// <summary>
 		/// Type name.
 		/// </summary>
@@ -83,6 +77,6 @@ namespace LinqToDB.CodeGen.Model
 		/// </summary>
 		/// <param name="typeArguments">Types to use as generic type arguments.</param>
 		/// <returns>Generic type with provided type arguments.</returns>
-		IType WithTypeArguments(IReadOnlyList<IType> typeArguments);
+		IType WithTypeArguments(params IType[] typeArguments);
 	}
 }

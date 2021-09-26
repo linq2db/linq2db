@@ -4,6 +4,11 @@ namespace LinqToDB.CodeGen.DataModel
 {
 	public class PropertyModel
 	{
+		public PropertyModel(string name)
+		{
+			Name = name;
+		}
+
 		public PropertyModel(string name, IType type)
 		{
 			Name = name;
@@ -12,7 +17,7 @@ namespace LinqToDB.CodeGen.DataModel
 
 		public string Name { get; set; }
 
-		public IType Type { get; set; }
+		public IType? Type { get; set; }
 
 		public string? Summary { get; set; }
 

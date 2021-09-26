@@ -9,10 +9,16 @@
 		where TBuilder : TypeBuilder<TBuilder, TType>
 		where TType : TypeBase
 	{
-		protected TypeBuilder(TType type)
+		protected TypeBuilder(TType type, ClassGroup group)
 		{
-			Type = type;
+			Type  = type;
+			Group = group;
 		}
+
+		/// <summary>
+		/// Class group, to which current class belongs.
+		/// </summary>
+		public ClassGroup Group { get; }
 
 		/// <summary>
 		/// Built type type descriptor.

@@ -5,18 +5,18 @@ namespace LinqToDB.CodeGen.DataModel
 {
 	public class EntityModel
 	{
-		public EntityModel(EntityMetadata metadata, ClassModel @class, string? contextPropertyName)
+		public EntityModel(EntityMetadata metadata, ClassModel @class, PropertyModel? contextProperty)
 		{
 			Metadata = metadata;
 			Class = @class;
-			ContextPropertyName = contextPropertyName;
+			ContextProperty = contextProperty;
 		}
 
 		public EntityMetadata Metadata { get; set; }
 
 		public ClassModel Class { get; set; }
 
-		public string? ContextPropertyName { get; set; }
+		public PropertyModel? ContextProperty { get; set; }
 
 		public bool HasFindExtension { get; set; }
 

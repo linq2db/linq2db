@@ -64,10 +64,10 @@ namespace LinqToDB.Tools
 			var modelFile = builder.File("TestNormalization");
 
 			_attributeType = builder.Type(typeof(DataTypeAttribute), false);
-			_type = builder.Type(typeof(DataType), true);
-			_typeNotNull = _type.WithNullability(false);
-			_filterType = WellKnownTypes.Func(WellKnownTypes.Boolean, _typeNotNull, WellKnownTypes.Int32);
-			_enumerableType = WellKnownTypes.Enumerable(_typeNotNull);
+			_type = WellKnownTypes.LinqToDB.DataType.WithNullability(true);
+			_typeNotNull = WellKnownTypes.LinqToDB.DataType;
+			_filterType = WellKnownTypes.System.Func(WellKnownTypes.System.Boolean, _typeNotNull, WellKnownTypes.System.Int32);
+			_enumerableType = WellKnownTypes.System.Collections.Generic.IEnumerable(_typeNotNull);
 			_value = builder.Constant(DataType.Int32, true);
 
 			// name
@@ -77,13 +77,15 @@ namespace LinqToDB.Tools
 			modelFile.Add(CreateNamespace(builder, false, DUPLICATE_NAME1, DUPLICATE_NAME2, true));
 			modelFile.Add(CreateNamespace(builder, false, DUPLICATE_NAME2, DUPLICATE_NAME1, false));
 
-			modelFile.Add(CreateClass(builder, builder.Class(null, DUPLICATE_NAME1), false, false, DUPLICATE_NAME1, DUPLICATE_NAME2, true, true));
-			modelFile.Add(CreateClass(builder, builder.Class(null, DUPLICATE_NAME2), false, false, DUPLICATE_NAME2, DUPLICATE_NAME1, true, false));
+			var classes = new ClassGroup(null);
+			modelFile.Add(classes);
+			CreateClass(builder, classes.New(new(DUPLICATE_NAME1)), false, false, DUPLICATE_NAME1, DUPLICATE_NAME2, true, true);
+			CreateClass(builder, classes.New(new(DUPLICATE_NAME2)), false, false, DUPLICATE_NAME2, DUPLICATE_NAME1, true, false);
 
-			modelFile.Add(CreateClass(builder, builder.Class(null, DUPLICATE_NAME1), false, false, DUPLICATE_NAME1, DUPLICATE_NAME2, false, true));
-			modelFile.Add(CreateClass(builder, builder.Class(null, DUPLICATE_NAME2), false, false, DUPLICATE_NAME2, DUPLICATE_NAME1, false, false));
-			modelFile.Add(CreateClass(builder, builder.Class(null, DUPLICATE_NAME1), false, true, DUPLICATE_NAME1, DUPLICATE_NAME2, false, true));
-			modelFile.Add(CreateClass(builder, builder.Class(null, DUPLICATE_NAME2), false, true, DUPLICATE_NAME2, DUPLICATE_NAME1, false, false));
+			CreateClass(builder, classes.New(new(DUPLICATE_NAME1)), false, false, DUPLICATE_NAME1, DUPLICATE_NAME2, false, true);
+			CreateClass(builder, classes.New(new(DUPLICATE_NAME2)), false, false, DUPLICATE_NAME2, DUPLICATE_NAME1, false, false);
+			CreateClass(builder, classes.New(new(DUPLICATE_NAME1)), false, true, DUPLICATE_NAME1, DUPLICATE_NAME2, false, true);
+			CreateClass(builder, classes.New(new(DUPLICATE_NAME2)), false, true, DUPLICATE_NAME2, DUPLICATE_NAME1, false, false);
 
 			var namesNormalization = languageProvider.GetIdentifiersNormalizer();
 			namesNormalization.Visit(modelFile);
@@ -108,14 +110,14 @@ namespace LinqToDB.Tools
 
 			if (withEmptyClasses)
 			{
-				CreateClass(codeModel, ns.Classes().New(codeModel.Identifier(name1)), false, false, name1, name2, true, true);
-				CreateClass(codeModel, ns.Classes().New(codeModel.Identifier(name2)), false, false, name2, name1, true, false);
+				CreateClass(codeModel, ns.Classes().New(codeModel.Name(name1)), false, false, name1, name2, true, true);
+				CreateClass(codeModel, ns.Classes().New(codeModel.Name(name2)), false, false, name2, name1, true, false);
 			}
 
-			CreateClass(codeModel, ns.Classes().New(codeModel.Identifier(name1)), false, false, name1, name2, false, true);
-			CreateClass(codeModel, ns.Classes().New(codeModel.Identifier(name1)), false, true, name1, name2, false, false);
-			CreateClass(codeModel, ns.Classes().New(codeModel.Identifier(name2)), false, false, name1, name2, false, true);
-			CreateClass(codeModel, ns.Classes().New(codeModel.Identifier(name2)), false, true, name1, name2, false, false);
+			CreateClass(codeModel, ns.Classes().New(codeModel.Name(name1)), false, false, name1, name2, false, true);
+			CreateClass(codeModel, ns.Classes().New(codeModel.Name(name1)), false, true, name1, name2, false, false);
+			CreateClass(codeModel, ns.Classes().New(codeModel.Name(name2)), false, false, name1, name2, false, true);
+			CreateClass(codeModel, ns.Classes().New(codeModel.Name(name2)), false, true, name1, name2, false, false);
 
 			return ns.Namespace;
 		}
@@ -168,14 +170,14 @@ namespace LinqToDB.Tools
 				{
 					if (withEmptyClasses)
 					{
-						CreateClass(codeModel, builder.Classes().New(codeModel.Identifier(name1)), false, false, name1, name2, true, true);
-						CreateClass(codeModel, builder.Classes().New(codeModel.Identifier(name2)), false, false, name2, name1, true, false);
+						CreateClass(codeModel, builder.Classes().New(codeModel.Name(name1)), false, false, name1, name2, true, true);
+						CreateClass(codeModel, builder.Classes().New(codeModel.Name(name2)), false, false, name2, name1, true, false);
 					}
 
-					CreateClass(codeModel, builder.Classes().New(codeModel.Identifier(name1)), false, false, name1, name2, false, true);
-					CreateClass(codeModel, builder.Classes().New(codeModel.Identifier(name1)), false, true, name1, name2, false, false);
-					CreateClass(codeModel, builder.Classes().New(codeModel.Identifier(name2)), false, false, name2, name1, false, true);
-					CreateClass(codeModel, builder.Classes().New(codeModel.Identifier(name2)), false, true, name2, name1, false, false);
+					CreateClass(codeModel, builder.Classes().New(codeModel.Name(name1)), false, false, name1, name2, false, true);
+					CreateClass(codeModel, builder.Classes().New(codeModel.Name(name1)), false, true, name1, name2, false, false);
+					CreateClass(codeModel, builder.Classes().New(codeModel.Name(name2)), false, false, name2, name1, false, true);
+					CreateClass(codeModel, builder.Classes().New(codeModel.Name(name2)), false, true, name2, name1, false, false);
 				}
 			}
 
@@ -186,12 +188,12 @@ namespace LinqToDB.Tools
 		{
 			builder
 				.Parameter(_value)
-				.Parameter(codeModel.Identifier(nameof(DataTypeAttribute.DataType)), _value);
+				.Parameter(codeModel.Name(nameof(DataTypeAttribute.DataType)), _value);
 		}
 
 		private static void CreateField(CodeBuilder codeModel, ClassBuilder builder, string name1)
 		{
-			builder.Fields(false).New(codeModel.Identifier(name1), _type).Public()
+			builder.Fields(false).New(codeModel.Name(name1), _type).Public()
 				.AddInitializer(_value);
 
 			// TODO: not supported in code model now
@@ -200,7 +202,7 @@ namespace LinqToDB.Tools
 
 		private static void CreateProperty(CodeBuilder codeModel, ClassBuilder builder, string name1, string name2)
 		{
-			var prop = builder.Properties(false).New(codeModel.Identifier(name1), _type);
+			var prop = builder.Properties(false).New(codeModel.Name(name1), _type);
 
 			AddAttribute(codeModel, prop.AddAttribute(_attributeType));
 
@@ -212,30 +214,30 @@ namespace LinqToDB.Tools
 
 		private static BlockBuilder CreateBody(CodeBuilder codeModel, BlockBuilder block, int nestingLevel, string name1, string name2)
 		{
-			block.Append(codeModel.Assign(codeModel.Variable(codeModel.Identifier(name1), _type, false), _value))
-				.Append(codeModel.Assign(codeModel.Variable(codeModel.Identifier(name1), _type, false), _value))
-				.Append(codeModel.Assign(codeModel.Variable(codeModel.Identifier(name2), _type, false), _value))
-				.Append(codeModel.Assign(codeModel.Variable(codeModel.Identifier(name2), _type, false), _value))
-				.Append(codeModel.Assign(codeModel.Variable(codeModel.Identifier(VALUE), _type, false), _value))
-				.Append(codeModel.Assign(codeModel.Variable(codeModel.Identifier(VALUE), _type, false), _value))
-				.Append(codeModel.Assign(codeModel.Variable(codeModel.Identifier(THIS), _type, false), _value))
-				.Append(codeModel.Assign(codeModel.Variable(codeModel.Identifier(THIS), _type, false), _value))
-				.Append(codeModel.Assign(codeModel.Variable(codeModel.Identifier(BASE), _type, false), _value))
-				.Append(codeModel.Assign(codeModel.Variable(codeModel.Identifier(BASE), _type, false), _value));
+			block.Append(codeModel.Assign(codeModel.Variable(codeModel.Name(name1), _type, false), _value))
+				.Append(codeModel.Assign(codeModel.Variable(codeModel.Name(name1), _type, false), _value))
+				.Append(codeModel.Assign(codeModel.Variable(codeModel.Name(name2), _type, false), _value))
+				.Append(codeModel.Assign(codeModel.Variable(codeModel.Name(name2), _type, false), _value))
+				.Append(codeModel.Assign(codeModel.Variable(codeModel.Name(VALUE), _type, false), _value))
+				.Append(codeModel.Assign(codeModel.Variable(codeModel.Name(VALUE), _type, false), _value))
+				.Append(codeModel.Assign(codeModel.Variable(codeModel.Name(THIS), _type, false), _value))
+				.Append(codeModel.Assign(codeModel.Variable(codeModel.Name(THIS), _type, false), _value))
+				.Append(codeModel.Assign(codeModel.Variable(codeModel.Name(BASE), _type, false), _value))
+				.Append(codeModel.Assign(codeModel.Variable(codeModel.Name(BASE), _type, false), _value));
 
 			if (nestingLevel < 2)
 			{
 				var lambda = codeModel.Lambda(_filterType, true);
-				lambda.Parameter(codeModel.LambdaParameter(codeModel.Identifier(name1), _typeNotNull));
-				lambda.Parameter(codeModel.LambdaParameter(codeModel.Identifier(name1), WellKnownTypes.Int32));
+				lambda.Parameter(codeModel.LambdaParameter(codeModel.Name(name1), _typeNotNull));
+				lambda.Parameter(codeModel.LambdaParameter(codeModel.Name(name1), WellKnownTypes.System.Int32));
 				CreateBody(codeModel, lambda.Body(), nestingLevel + 1, name1, name2)
 					.Append(codeModel.Return(codeModel.Equal(_value, _value)));
 				block.Append(
 					codeModel.Assign(
-						codeModel.Variable(codeModel.Identifier(BASE), codeModel.Type(typeof(IEnumerable<DataType>), false), true),
+						codeModel.Variable(codeModel.Name(BASE), codeModel.Type(typeof(IEnumerable<DataType>), false), true),
 						codeModel.ExtCall(
-							codeModel.Type(typeof(Enumerable), false),
-							codeModel.Identifier(nameof(Enumerable.Where)),
+							WellKnownTypes.System.Linq.Enumerable,
+							codeModel.Name(nameof(Enumerable.Where)),
 							Array.Empty<IType>(),
 							new ICodeExpression[]
 							{
@@ -250,7 +252,7 @@ namespace LinqToDB.Tools
 
 		private static void CreateOverloadMethod(CodeBuilder codeModel, ClassBuilder builder, bool isStatic, ParameterDirection direction, string name)
 		{
-			var method = builder.Methods(false).New(codeModel.Identifier(OVERLOAD));
+			var method = builder.Methods(false).New(codeModel.Name(OVERLOAD));
 
 			// TODO: not supported in code model now
 			//AddAttribute(codeModel, method.AddAttribute(_attributeType));
@@ -260,7 +262,7 @@ namespace LinqToDB.Tools
 				method.Static();
 			}
 
-			var p = codeModel.Parameter(_type, codeModel.Identifier(name), direction);
+			var p = codeModel.Parameter(_type, codeModel.Name(name), direction);
 			method.Parameter(p);
 
 			if (direction == ParameterDirection.Out)
@@ -274,7 +276,7 @@ namespace LinqToDB.Tools
 
 		private static void CreateMethod(CodeBuilder codeModel, ClassBuilder builder, bool isStatic, string name1, string name2)
 		{
-			var method = builder.Methods(false).New(codeModel.Identifier(name1));
+			var method = builder.Methods(false).New(codeModel.Name(name1));
 
 			// TODO: not supported in code model now
 			//AddAttribute(codeModel, method.AddAttribute(_attributeType));
@@ -284,10 +286,10 @@ namespace LinqToDB.Tools
 				method.Static();
 			}
 
-			method.Parameter(codeModel.Parameter(_type, codeModel.Identifier(name1), ParameterDirection.In));
-			method.Parameter(codeModel.Parameter(_type, codeModel.Identifier(name1), ParameterDirection.In));
-			method.Parameter(codeModel.Parameter(_type, codeModel.Identifier(name2), ParameterDirection.In));
-			method.Parameter(codeModel.Parameter(_type, codeModel.Identifier(name2), ParameterDirection.In));
+			method.Parameter(codeModel.Parameter(_type, codeModel.Name(name1), ParameterDirection.In));
+			method.Parameter(codeModel.Parameter(_type, codeModel.Name(name1), ParameterDirection.In));
+			method.Parameter(codeModel.Parameter(_type, codeModel.Name(name2), ParameterDirection.In));
+			method.Parameter(codeModel.Parameter(_type, codeModel.Name(name2), ParameterDirection.In));
 
 			CreateBody(codeModel, method.Body(), 0, name1, name2);
 		}
@@ -298,10 +300,10 @@ namespace LinqToDB.Tools
 			// TODO: not supported in code model now
 			//AddAttribute(codeModel, method.AddAttribute(_attributeType));
 
-			method.Parameter(codeModel.Parameter(_type, codeModel.Identifier(name1), ParameterDirection.In));
-			method.Parameter(codeModel.Parameter(_type, codeModel.Identifier(name1), ParameterDirection.In));
-			method.Parameter(codeModel.Parameter(_type, codeModel.Identifier(name2), ParameterDirection.In));
-			method.Parameter(codeModel.Parameter(_type, codeModel.Identifier(name2), ParameterDirection.In));
+			method.Parameter(codeModel.Parameter(_type, codeModel.Name(name1), ParameterDirection.In));
+			method.Parameter(codeModel.Parameter(_type, codeModel.Name(name1), ParameterDirection.In));
+			method.Parameter(codeModel.Parameter(_type, codeModel.Name(name2), ParameterDirection.In));
+			method.Parameter(codeModel.Parameter(_type, codeModel.Name(name2), ParameterDirection.In));
 
 			CreateBody(codeModel, method.Body(), 0, name1, name2);
 		}

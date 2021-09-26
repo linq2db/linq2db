@@ -18,6 +18,8 @@ namespace LinqToDB.CodeGen.Model
 
 		bool IEqualityComparer<IType>.Equals(IType x, IType y)
 		{
+			if (x == y) return true;
+
 			using var xe = EnumerateParts(x).GetEnumerator();
 			using var ye = EnumerateParts(x).GetEnumerator();
 

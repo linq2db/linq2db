@@ -13,49 +13,52 @@ namespace LinqToDB.CodeGen.Model
 		// 1591: Missing XML comment for publicly visible type or member https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/compiler-messages/cs1591
 		private static readonly string[] _xmlDocWarnings = new [] {"1573", "1591" };
 
-		private static readonly IReadOnlyDictionary<string, string> _aliasedTypes = new Dictionary<string, string>()
-		{
-			{ nameof(Byte)     , "byte"    },
-			{ nameof(SByte)    , "sbyte"   },
-			{ nameof(Int16)    , "short"   },
-			{ nameof(UInt16)   , "ushort"  },
-			{ nameof(Int32)    , "int"     },
-			{ nameof(UInt32)   , "uint"    },
-			{ nameof(Int64)    , "long"    },
-			{ nameof(UInt64)   , "ulong"   },
-			{ nameof(Decimal)  , "decimal" },
-			{ nameof(Single)   , "float"   },
-			{ nameof(Double)   , "double"  },
-			{ nameof(Object)   , "object"  },
-			{ nameof(Boolean)  , "bool"    },
-			{ nameof(Char)     , "char"    },
-			{ nameof(String)   , "string"  },
-			// https://github.com/dotnet/roslyn/issues/54233
-#pragma warning disable IDE0082 // 'typeof' can be converted  to 'nameof'
-			{ typeof(void).Name, "void"    },
-#pragma warning restore IDE0082 // 'typeof' can be converted  to 'nameof'
-			{ nameof(IntPtr)   , "nint"    },
-			{ nameof(UIntPtr)  , "nuint"   },
-		};
-
+		private readonly IReadOnlyDictionary<IType, string>             _aliasedTypes;
 		private readonly IEqualityComparer<CodeIdentifier>              _identifierEqualityComparer;
 		private readonly IComparer<CodeIdentifier>                      _identifierComparer;
 		private readonly IEqualityComparer<IEnumerable<CodeIdentifier>> _namespaceEqualityComparer;
 		private readonly IComparer<IEnumerable<CodeIdentifier>>         _namespaceComparer;
 		private readonly IEqualityComparer<IType>                       _typeEqualityComparerWithoutNRT;
+		private readonly IEqualityComparer<IType>                       _typeEqualityComparerWithoutNullability;
 		private readonly IEqualityComparer<IType>                       _typeEqualityComparerWithNRT;
-		private readonly ITypeParser                                    _typeEqualityParser;
+		private readonly ITypeParser                                    _typeParser;
 
-		internal CSharpLanguageProvider()
+		private CSharpLanguageProvider()
 		{
-			_identifierEqualityComparer     = new CodeIdentifierEqualityComparer(StringComparer.Ordinal);
-			_identifierComparer             = new CodeIdentifierComparer(StringComparer.Ordinal);
-			_namespaceEqualityComparer      = new NamespaceEqualityComparer(_identifierEqualityComparer);
-			_namespaceComparer              = new NamespaceComparer(_identifierComparer);
-			_typeEqualityComparerWithoutNRT = new TypeEqualityComparer(_identifierEqualityComparer, _namespaceEqualityComparer, true);
-			_typeEqualityComparerWithNRT    = new TypeEqualityComparer(_identifierEqualityComparer, _namespaceEqualityComparer, false);
-			_typeEqualityParser             = new TypeParser(this);
+			_identifierEqualityComparer             = new CodeIdentifierEqualityComparer(StringComparer.Ordinal);
+			_identifierComparer                     = new CodeIdentifierComparer(StringComparer.Ordinal);
+			_namespaceEqualityComparer              = new NamespaceEqualityComparer(_identifierEqualityComparer);
+			_namespaceComparer                      = new NamespaceComparer(_identifierComparer);
+			_typeEqualityComparerWithoutNRT         = new TypeEqualityComparer(_identifierEqualityComparer, _namespaceEqualityComparer, true , false);
+			_typeEqualityComparerWithoutNullability = new TypeEqualityComparer(_identifierEqualityComparer, _namespaceEqualityComparer, true , true );
+			_typeEqualityComparerWithNRT            = new TypeEqualityComparer(_identifierEqualityComparer, _namespaceEqualityComparer, false, false);
+			_typeParser                             = new TypeParser(this);
+
+			var aliasedTypes = new Dictionary<IType, string>(_typeEqualityComparerWithoutNullability);
+			_aliasedTypes    = aliasedTypes;
+
+			// don't use WellKnownTypes here to avoid circular dependency
+			aliasedTypes.Add(_typeParser.Parse<byte   >()   , "byte"   );
+			aliasedTypes.Add(_typeParser.Parse<sbyte  >()   , "sbyte"  );
+			aliasedTypes.Add(_typeParser.Parse<short  >()   , "short"  );
+			aliasedTypes.Add(_typeParser.Parse<ushort >()   , "ushort" );
+			aliasedTypes.Add(_typeParser.Parse<int    >()   , "int"    );
+			aliasedTypes.Add(_typeParser.Parse<uint   >()   , "uint"   );
+			aliasedTypes.Add(_typeParser.Parse<long   >()   , "long"   );
+			aliasedTypes.Add(_typeParser.Parse<ulong  >()   , "ulong"  );
+			aliasedTypes.Add(_typeParser.Parse<decimal>()   , "decimal");
+			aliasedTypes.Add(_typeParser.Parse<float  >()   , "float"  );
+			aliasedTypes.Add(_typeParser.Parse<double >()   , "double" );
+			aliasedTypes.Add(_typeParser.Parse<object >()   , "object" );
+			aliasedTypes.Add(_typeParser.Parse<bool   >()   , "bool"   );
+			aliasedTypes.Add(_typeParser.Parse<char   >()   , "char"   );
+			aliasedTypes.Add(_typeParser.Parse<string >()   , "string" );
+			aliasedTypes.Add(_typeParser.Parse<nint   >()   , "nint"   );
+			aliasedTypes.Add(_typeParser.Parse<nuint  >()   , "nuint"  );
+			aliasedTypes.Add(_typeParser.Parse(typeof(void)), "void"   );
 		}
+
+		public static ILanguageProvider Instance { get; } = new CSharpLanguageProvider();
 
 		IEqualityComparer<CodeIdentifier>              ILanguageProvider.IdentifierEqualityComparer        => _identifierEqualityComparer;
 		IEqualityComparer<IEnumerable<CodeIdentifier>> ILanguageProvider.FullNameEqualityComparer          => _namespaceEqualityComparer;
@@ -63,7 +66,7 @@ namespace LinqToDB.CodeGen.Model
 		IEqualityComparer<string>                      ILanguageProvider.RawIdentifierEqualityComparer     => StringComparer.Ordinal;
 		IEqualityComparer<IType>                       ILanguageProvider.TypeEqualityComparerWithNRT       => _typeEqualityComparerWithNRT;
 		IEqualityComparer<IType>                       ILanguageProvider.TypeEqualityComparerWithoutNRT    => _typeEqualityComparerWithoutNRT;
-		ITypeParser                                    ILanguageProvider.TypeParser                        => _typeEqualityParser;
+		ITypeParser                                    ILanguageProvider.TypeParser                        => _typeParser;
 		bool                                           ILanguageProvider.NRTSupported                      => true;
 		string[]                                       ILanguageProvider.MissingXmlCommentWarnCodes        => _xmlDocWarnings;
 		string                                         ILanguageProvider.FileExtension                     => "cs";
@@ -106,11 +109,9 @@ namespace LinqToDB.CodeGen.Model
 			return false;
 		}
 
-		string? ILanguageProvider.GetAlias(CodeIdentifier[]? @namespace, CodeIdentifier typeName)
+		string? ILanguageProvider.GetAlias(IType type)
 		{
-			if (@namespace?.Length == 1
-				&& @namespace[0].Name == "System"
-				&& _aliasedTypes.TryGetValue(typeName.Name, out var alias))
+			if (_aliasedTypes.TryGetValue(type, out var alias))
 				return alias;
 
 			return null;
