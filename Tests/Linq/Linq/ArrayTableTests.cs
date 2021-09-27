@@ -3,6 +3,7 @@
 using LinqToDB;
 
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -237,6 +238,60 @@ namespace Tests.Linq
 						new { ID = 1, Name = "Janet" },
 						new { ID = 1, Name = "Doe" },
 					} on p.LastName equals n.Name
+					select p;
+
+				AreEqual(expected, result);
+			}
+		}
+
+		[Test]
+		public void InnerJoinAnonymousClassRecords([DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var records = new[]
+				{
+					new { ID = 1, Name = "Janet" },
+					new { ID = 1, Name = "Doe" },
+				};
+
+				var q =
+					from p in db.Person
+					join n in records on p.LastName equals n.Name
+					select p;
+
+				var result = q.ToList();
+
+				var expected =
+					from p in Person
+					join n in records on p.LastName equals n.Name
+					select p;
+
+				AreEqual(expected, result);
+			}
+		}
+
+		[Test]
+		public void InnerJoinClassRecords([DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var records = new Person[]
+				{
+					new() { ID = 1, FirstName = "Janet" },
+					new() { ID = 2, FirstName = "Doe" },
+				};
+
+				var q =
+					from p in db.Person
+					join n in records on p equals n
+					select p;
+
+				var result = q.ToList();
+
+				var expected =
+					from p in Person
+					join n in records on p.ID equals n.ID
 					select p;
 
 				AreEqual(expected, result);

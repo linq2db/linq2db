@@ -80,7 +80,7 @@ namespace LinqToDB.Linq.Builder
 			new MergeBuilder.Using                       (),
 			new MergeBuilder.UsingTarget                 (),
 			new ContextParser              (),
-			new ArrayBuilder               (),
+			//new ArrayBuilder               (),
 			new AsSubQueryBuilder          (),
 			new DisableGroupingGuardBuilder(),
 			new InlineParametersBuilder    (),

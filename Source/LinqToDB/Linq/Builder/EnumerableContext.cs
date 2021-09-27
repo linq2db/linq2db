@@ -1,13 +1,18 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Extensions;
-using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common;
+	using Data;
+	using LinqToDB.Expressions;
+	using Extensions;
+	using Mapping;
+	using SqlQuery;
+
 	// based on ArrayContext
 	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 	class EnumerableContext : IBuildContext
@@ -59,25 +64,40 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (expression == null)
 			{
-				// Scalar
-
-				SqlField field;
-				if (Table.Fields.Count > 0)
+				SqlInfo[] sql;
+				if (Builder.MappingSchema.IsScalarType(_elementType))
 				{
-					field = Table.Fields[0];
-				}
-				else 
-				{
-					field = new SqlField(_elementType, "item", true);
-					Table.Add(field, (record, parameters) =>
+					SqlField field;
+					if (Table.Fields.Count > 0)
 					{
-						var valueExpr = Expression.Constant(record, _elementType);
-						var sql       = Builder.ConvertToSqlExpression(Parent!, valueExpr, null, false);
-						return sql;
-					});
+						field = Table.Fields[0];
+					}
+					else
+					{
+						field = new SqlField(_elementType, "item", true);
+						var param = Expression.Parameter(typeof(object), "record");
+						var body = Expression.New(_sqlValueconstructor,
+							Expression.Constant(new DbDataType(_elementType,
+								ColumnDescriptor.CalculateDataType(Builder.MappingSchema, _elementType))),
+							param);
+
+						var getterLambda = Expression.Lambda<Func<object, ISqlExpression>>(body, param);
+						var getterFunc   = getterLambda.Compile();
+						Table.Add(field, getterFunc);
+					}
+
+					sql = new[] { new SqlInfo(field, SelectQuery) };
+				}
+				else
+				{
+					sql = _entityDescriptor.Columns
+						.Select(c => new SqlInfo(c.MemberInfo, BuildField(c), SelectQuery)).ToArray();
+
+					if (sql.Length == 0)
+						throw new LinqToDBException($"Entity of type '{_elementType.Name}' as no defined columns.");
 				}
 
-				return new[] { new SqlInfo(field, SelectQuery) };
+				return sql;
 			}
 
 			switch (flags)
@@ -92,53 +112,12 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (column.MemberInfo.EqualsTo(memberExpression.Member, _elementType))
 							{
-								if (!Table.FieldsLookup!.TryGetValue(column.MemberInfo.Name, out var newField))
-								{
-									Table.Add(newField = new SqlField(column), (record, parameters) =>
-									{
-										// TODO: improve this place to avoid closures
-										object? value;
-										if (column.MemberInfo.IsPropertyEx())
-											value = ((PropertyInfo)column.MemberInfo).GetValue(record);
-										else if (column.MemberInfo.IsFieldEx())
-											value = ((FieldInfo)column.MemberInfo).GetValue(record);
-										else
-											throw new InvalidOperationException();
-
-										var valueExpr = Expression.Constant(value, column.MemberType);
-										if (parameters.TryGetValue(valueExpr, out var parameter))
-											return parameter;
-
-										// TODO: parameter accessor is overkill here for disposable parameter
-										// we need method to create parameter value directly with all conversions
-										var sql = Builder.ConvertToSqlExpression(Parent!, valueExpr, column, false);
-										if (sql is SqlParameter p)
-										{
-											p.IsQueryParameter = !Builder.MappingSchema.ValueToSqlConverter.CanConvert(p.Type.SystemType);
-											foreach (var pa in Builder._parameters.Values)
-											{
-												if (pa.SqlParameter == p)
-												{
-													// Mimic QueryRunner.SetParameters
-													p.Value        = pa.ValueAccessor(Builder.Expression, Builder.DataContext, null);
-													var dbDataType = pa.DbDataTypeAccessor(Builder.Expression, Builder.DataContext, null);
-													p.Type         = p.Type.WithSetValues(dbDataType);
-													break;
-												}
-											}
-										}
-
-										parameters.Add(valueExpr, sql);
-
-										return sql;
-									});
-								}
+								var newField = BuildField(column);
 
 								return new[]
 								{
 									new SqlInfo(column.MemberInfo, newField, SelectQuery)
 								};
-
 							}
 						}
 					}
@@ -148,6 +127,51 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			throw new NotImplementedException();
+		}
+
+		private static ConstructorInfo _parameterConstructor =
+			MemberHelper.ConstructorOf(() => new SqlParameter(new DbDataType(typeof(object)), "", null));
+
+		private static ConstructorInfo _sqlValueconstructor =
+			MemberHelper.ConstructorOf(() => new SqlValue(new DbDataType(typeof(object)), null));
+
+		private SqlField BuildField(ColumnDescriptor column)
+		{
+			var memberName = column.MemberName;
+			if (!Table.FieldsLookup!.TryGetValue(memberName, out var newField))
+			{
+				var getter = column.GetDbParamLambda();
+
+				var generator = new ExpressionGenerator();
+				if (typeof(DataParameter).IsSameOrParentOf(getter.Body.Type))
+				{
+					
+					var variable  = generator.AssignToVariable(getter.Body);
+					generator.AddExpression(Expression.New(_parameterConstructor,
+						Expression.Property(variable, nameof(DataParameter.DataType),
+							Expression.Constant(memberName),
+							Expression.Property(variable, nameof(DataParameter.Value))
+						)));
+				}
+				else
+				{
+					generator.AddExpression(Expression.New(_sqlValueconstructor,
+						Expression.Constant(column.GetDbDataType(true)),
+						Expression.Convert(getter.Body, typeof(object))));
+				}
+
+				var param = Expression.Parameter(typeof(object), "e");
+
+				var body = generator.Build();
+				body = body.Replace(getter.Parameters[0], Expression.Convert(param, _elementType));
+
+				var getterLambda = Expression.Lambda<Func<object, ISqlExpression>>(body, param);
+				var getterFunc   = getterLambda.Compile();
+
+				Table.Add(newField = new SqlField(column), getterFunc);
+			}
+
+			return newField;
 		}
 
 		public SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
@@ -172,6 +196,8 @@ namespace LinqToDB.Linq.Builder
 				{
 					case RequestFor.Expression:
 					case RequestFor.Field: return IsExpressionResult.False;
+					case RequestFor.Object:
+						return new IsExpressionResult(!Builder.MappingSchema.IsScalarType(_elementType));
 				}
 			}
 

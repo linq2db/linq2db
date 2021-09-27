@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Text;
 using System.Threading;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.SqlQuery
 {
@@ -18,7 +15,7 @@ namespace LinqToDB.SqlQuery
 		internal SqlValuesTable(ISqlExpression source)
 		{
 			Source        = source;
-			ValueBuilders = new Dictionary<string, Func<object, IDictionary<Expression, ISqlExpression>, ISqlExpression>>();
+			ValueBuilders = new();
 			FieldsLookup  = new Dictionary<string, SqlField>();
 
 			SourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
@@ -27,7 +24,7 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Constructor for convert visitor.
 		/// </summary>
-		internal SqlValuesTable(ISqlExpression source, Dictionary<string, Func<object, IDictionary<Expression, ISqlExpression>, ISqlExpression>> valueBuilders, IEnumerable<SqlField> fields, IReadOnlyList<ISqlExpression[]>? rows)
+		internal SqlValuesTable(ISqlExpression source, Dictionary<string, Func<object, ISqlExpression>> valueBuilders, IEnumerable<SqlField> fields, IReadOnlyList<ISqlExpression[]>? rows)
 		{
 			Source        = source;
 			ValueBuilders = valueBuilders;
@@ -75,9 +72,9 @@ namespace LinqToDB.SqlQuery
 		// Fields from source, used in query. Columns in rows should have same order.
 		public List<SqlField> Fields => _fields;
 
-		internal Dictionary<string, Func<object, IDictionary<Expression, ISqlExpression>, ISqlExpression>>? ValueBuilders { get; }
+		internal Dictionary<string, Func<object, ISqlExpression>>? ValueBuilders { get; }
 
-		internal void Add(SqlField field, Func<object, IDictionary<Expression, ISqlExpression>, ISqlExpression> valueBuilder)
+		internal void Add(SqlField field, Func<object, ISqlExpression> valueBuilder)
 		{
 			if (field.Table != null) throw new InvalidOperationException("Invalid parent table.");
 
@@ -95,12 +92,10 @@ namespace LinqToDB.SqlQuery
 			if (Rows != null)
 				return Rows;
 
-			var parameters = new Dictionary<Expression, ISqlExpression>(ExpressionEqualityComparer.Instance);
-
 			// rows pre-build for remote context
 
 			if (!(Source?.EvaluateExpression(context) is IEnumerable source))
-				throw new LinqToDBException($"Merge source must be enumerable: {Source}");
+				throw new LinqToDBException($"Source must be enumerable: {Source}");
 
 			var rows = new List<ISqlExpression[]>();
 
@@ -115,7 +110,7 @@ namespace LinqToDB.SqlQuery
 
 				foreach (var valueBuilder in ValueBuilders!.Values)
 				{
-					row[idx] = valueBuilder(record, parameters);
+					row[idx] = valueBuilder(record);
 					idx++;
 				}
 			}

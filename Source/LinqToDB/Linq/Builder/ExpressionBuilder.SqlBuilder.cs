@@ -1334,7 +1334,7 @@ namespace LinqToDB.Linq.Builder
 				MappingSchema.ValueToSqlConverter.CanConvert(unwrapped.Type))
 			{
 				dbType = dbType.WithSystemType(unwrapped.Type);
-				expr = unwrapped;
+				expr   = unwrapped;
 			}
 
 			dbType = dbType.WithSystemType(expr.Type);
