@@ -1,7 +1,7 @@
 ﻿using System.Linq;
-
+using FluentAssertions;
 using LinqToDB;
-
+using LinqToDB.Linq;
 using NUnit.Framework;
 using Tests.Model;
 
@@ -356,38 +356,46 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InnerJoinClassRecordsCache([DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context)
+		public void InnerJoinClassRecordsCache([DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var records = new Person[]
+				var records1 = new Person[]
 				{
-					new() { ID = 1, FirstName = "Janet" },
-					new() { ID = 2, FirstName = "Doe" },
+					new() { ID = 1 + iteration, FirstName = "Janet" },
+					new() { ID = 2 + iteration, FirstName  = "Doe" },
 				};
 
-				var q =
+				var cacheMiss = Query<Person>.CacheMissCount;
+
+				var q1 =
 					from p in db.Person
-					join n in records on p equals n
+					join n in records1 on p.ID equals n.ID
 					select p;
 
-				var result = q.ToList();
+				var result1 = q1.ToList();
 
-				records = new Person[]
+				if (iteration > 1)
+					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+
+				cacheMiss = Query<Person>.CacheMissCount;
+
+				var records2 = new Person[]
 				{
-					new() { ID = 3, FirstName = "Janet" },
-					new() { ID = 4, FirstName = "Doe" },
+					new() { ID = 3 + iteration, FirstName = "Janet" },
+					new() { ID = 4 + iteration, FirstName = "Doe" },
 				};
 
-				var result2 = q.ToList();
-
-				/*
-				var expected =
-					from p in Person
-					join n in records on p.ID equals n.ID
+				var q2 =
+					from p in db.Person
+					join n in records2 on p.ID equals n.ID
 					select p;
-					*/
 
+				var result2 = q2.ToList();
+
+				Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+
+				result2.Count.Should().NotBe(result1.Count);
 			}
 		}
 
