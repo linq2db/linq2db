@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using LinqToDB.Extensions;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -13,6 +12,11 @@ namespace LinqToDB.Linq.Builder
 		public bool CanBuild(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			var expr = buildInfo.Expression;
+
+			if (expr.NodeType == ExpressionType.NewArrayInit)
+			{
+				return true;
+			}
 
 			if (buildInfo.IsSubQuery)
 				return false;
@@ -51,8 +55,7 @@ namespace LinqToDB.Linq.Builder
 			var collectionType = typeof(IEnumerable<>).GetGenericType(buildInfo.Expression.Type) ??
 			                     throw new InvalidOperationException();
 
-			var enumerableContext = new EnumerableContext(builder, buildInfo, new SelectQuery(), collectionType.GetGenericArguments()[0],
-				builder.ConvertToSql(buildInfo.Parent, buildInfo.Expression));
+			var enumerableContext = new EnumerableContext(builder, buildInfo, buildInfo.SelectQuery, collectionType.GetGenericArguments()[0]);
 
 			return enumerableContext;
 		}

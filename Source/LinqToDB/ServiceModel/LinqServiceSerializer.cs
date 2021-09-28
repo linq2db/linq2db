@@ -2288,7 +2288,7 @@ namespace LinqToDB.ServiceModel
 							for (var i = 0; i < rowsCount; i++)
 								rows[i] = ReadArray<ISqlExpression>()!;
 
-							obj = new SqlValuesTable(fields, rows);
+							obj = new SqlValuesTable(fields, null, rows);
 
 							break;
 						}

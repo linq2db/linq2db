@@ -8,7 +8,7 @@ using Tests.Model;
 namespace Tests.Linq
 {
 	[TestFixture]
-	public class ArrayTableTests : TestBase
+	public class EnuemrableSourceTests : TestBase
 	{
 		[Test]
 		public void ApplyJoinArray(
@@ -214,7 +214,64 @@ namespace Tests.Linq
 		}
 
 
-		[ActiveIssue(Details = "It is more complicated and needs analysis")]
+		[Test]
+		public void ApplyJoinAnonymousClassArray([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus, TestProvName.AllOracle12)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from p in db.Person
+					from n in (new[]
+					{
+						new { ID = 1, Name = "Janet", Sub = p.LastName },
+						new { ID = 1, Name = "Doe",   Sub = p.LastName },
+					}).Where(n => p.LastName == n.Name)
+					select p;
+
+				var result = q.ToList();
+
+				var expected =
+					from p in Person
+					from n in (new[]
+					{
+						new { ID = 1, Name = "Janet", Sub = p.LastName },
+						new { ID = 1, Name = "Doe",   Sub = p.LastName },
+					}).Where(n => p.LastName == n.Name)
+					select p;
+
+				AreEqual(expected, result);
+			}
+		}
+
+		[Test]
+		public void ApplyJoinClassArray([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus, TestProvName.AllOracle12)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var q =
+					from p in db.Person
+					from n in new Person[]
+					{
+						new() { ID = 1, LastName = "Janet", FirstName = p.FirstName },
+						new() { ID = 2, LastName = "Doe", },
+					}.Where(n => p.LastName == n.LastName)
+					select p;
+
+				var result = q.ToList();
+
+				var expected =
+					from p in Person
+					from n in new Person[]
+					{
+						new() { ID = 1, LastName = "Janet", FirstName = p.FirstName },
+						new() { ID = 2, LastName = "Doe", },
+					}.Where(n => p.LastName == n.LastName)
+					select p;
+
+				AreEqual(expected, result);
+			}
+		}
+
 		[Test]
 		public void InnerJoinClassArray([DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context)
 		{
@@ -295,6 +352,42 @@ namespace Tests.Linq
 					select p;
 
 				AreEqual(expected, result);
+			}
+		}
+
+		[Test]
+		public void InnerJoinClassRecordsCache([DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var records = new Person[]
+				{
+					new() { ID = 1, FirstName = "Janet" },
+					new() { ID = 2, FirstName = "Doe" },
+				};
+
+				var q =
+					from p in db.Person
+					join n in records on p equals n
+					select p;
+
+				var result = q.ToList();
+
+				records = new Person[]
+				{
+					new() { ID = 3, FirstName = "Janet" },
+					new() { ID = 4, FirstName = "Doe" },
+				};
+
+				var result2 = q.ToList();
+
+				/*
+				var expected =
+					from p in Person
+					join n in records on p.ID equals n.ID
+					select p;
+					*/
+
 			}
 		}
 

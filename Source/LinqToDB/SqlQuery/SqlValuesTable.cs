@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 
@@ -16,7 +17,7 @@ namespace LinqToDB.SqlQuery
 		{
 			Source        = source;
 			ValueBuilders = new();
-			FieldsLookup  = new Dictionary<string, SqlField>();
+			FieldsLookup  = new();
 
 			SourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
 		}
@@ -24,7 +25,7 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Constructor for convert visitor.
 		/// </summary>
-		internal SqlValuesTable(ISqlExpression source, Dictionary<string, Func<object, ISqlExpression>> valueBuilders, IEnumerable<SqlField> fields, IReadOnlyList<ISqlExpression[]>? rows)
+		internal SqlValuesTable(ISqlExpression source, List<Func<object, ISqlExpression>> valueBuilders, IEnumerable<SqlField> fields, IReadOnlyList<ISqlExpression[]>? rows)
 		{
 			Source        = source;
 			ValueBuilders = valueBuilders;
@@ -43,15 +44,25 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Constructor for remote context.
 		/// </summary>
-		internal SqlValuesTable(SqlField[] fields, IReadOnlyList<ISqlExpression[]> rows)
+		internal SqlValuesTable(SqlField[] fields, MemberInfo[]? members, IReadOnlyList<ISqlExpression[]> rows)
 		{
-			Rows = rows;
+			Rows         = rows;
+			FieldsLookup = new();
 
 			foreach (var field in fields)
 			{
 				if (field.Table != null) throw new InvalidOperationException("Invalid parent table.");
 				_fields.Add(field);
 				field.Table = this;
+			}
+
+			if (members != null)
+			{
+				for (var index = 0; index < fields.Length; index++)
+				{
+					var field = fields[index];
+					FieldsLookup.Add(members[index], field);
+				}
 			}
 
 			SourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
@@ -65,24 +76,26 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Used only during build.
 		/// </summary>
-		internal Dictionary<string, SqlField>? FieldsLookup { get; }
+		internal Dictionary<MemberInfo, SqlField>? FieldsLookup { get; }
 
 		private readonly List<SqlField> _fields = new ();
 
 		// Fields from source, used in query. Columns in rows should have same order.
 		public List<SqlField> Fields => _fields;
 
-		internal Dictionary<string, Func<object, ISqlExpression>>? ValueBuilders { get; }
+		internal List<Func<object, ISqlExpression>>? ValueBuilders { get; }
 
-		internal void Add(SqlField field, Func<object, ISqlExpression> valueBuilder)
+		internal void Add(SqlField field, MemberInfo? memberInfo, Func<object, ISqlExpression> valueBuilder)
 		{
 			if (field.Table != null) throw new InvalidOperationException("Invalid parent table.");
 
 			field.Table = this;
 			_fields.Add(field);
 
-			FieldsLookup !.Add(field.Name, field);
-			ValueBuilders!.Add(field.Name, valueBuilder);
+			if (memberInfo != null)
+				FieldsLookup!.Add(memberInfo, field);
+
+			ValueBuilders!.Add(valueBuilder);
 		}
 
 		internal IReadOnlyList<ISqlExpression[]>? Rows { get; }
@@ -108,7 +121,7 @@ namespace LinqToDB.SqlQuery
 				var idx = 0;
 				rows.Add(row);
 
-				foreach (var valueBuilder in ValueBuilders!.Values)
+				foreach (var valueBuilder in ValueBuilders!)
 				{
 					row[idx] = valueBuilder(record);
 					idx++;
@@ -150,11 +163,10 @@ namespace LinqToDB.SqlQuery
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
-			sb.Append("VALUES (...)");
-
 			var rows = Rows;
 			if (rows?.Count > 0)
 			{
+				sb.Append("VALUES");
 				sb.AppendLine().Append('\t');
 				for (var i = 0; i < rows.Count; i++)
 				{
@@ -166,7 +178,7 @@ namespace LinqToDB.SqlQuery
 					}
 
 					if (i > 0)
-						sb.Append(",\n\t)");
+						sb.Append(",\n\t");
 
 					sb.Append('(');
 					for (var j = 0; j < Fields.Count; j++)
@@ -180,6 +192,10 @@ namespace LinqToDB.SqlQuery
 					sb.Append(')');
 				}
 				sb.AppendLine();
+			}
+			else
+			{
+				sb.Append("VALUES (...)");
 			}
 
 			sb.Append('[');
@@ -205,7 +221,18 @@ namespace LinqToDB.SqlQuery
 
 		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
 		{
-			return this;
+			if (Rows != null)
+			{
+				foreach (var row in Rows)
+				{
+					for (var i = 0; i < row.Length; i++)
+					{
+						row[i] = func(row[i]);
+					}
+				}
+			}
+
+			return func(this);
 		}
 
 		#endregion

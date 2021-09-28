@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
@@ -13,7 +14,6 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 
-	// based on ArrayContext
 	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 	class EnumerableContext : IBuildContext
 	{
@@ -33,8 +33,7 @@ namespace LinqToDB.Linq.Builder
 
 		public SqlValuesTable Table { get; }
 
-		public EnumerableContext(ExpressionBuilder builder, BuildInfo buildInfo, SelectQuery query, Type elementType,
-			ISqlExpression source)
+		public EnumerableContext(ExpressionBuilder builder, BuildInfo buildInfo, SelectQuery query, Type elementType)
 		{
 			Parent            = buildInfo.Parent;
 			Builder           = builder;
@@ -42,8 +41,91 @@ namespace LinqToDB.Linq.Builder
 			SelectQuery       = query;
 			_elementType      = elementType;
 			_entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(elementType);
-			Table             = new SqlValuesTable(source);
+			Table             = BuildValuesTable();
+
+			foreach (var field in Table.Fields)
+			{
+				SelectQuery.Select.AddNew(field);
+			}
+
 			SelectQuery.From.Table(Table);
+		}
+
+		SqlValuesTable BuildValuesTable()
+		{
+			if (Expression.NodeType == ExpressionType.NewArrayInit)
+				return BuildValuesTableFromArray((NewArrayExpression)Expression);
+
+			return new SqlValuesTable(Builder.ConvertToSql(Parent, Expression));
+		}
+
+		SqlValuesTable BuildValuesTableFromArray(NewArrayExpression arrayExpression)
+		{
+			if (Builder.MappingSchema.IsScalarType(_elementType))
+			{
+				var rows  = arrayExpression.Expressions.Select(e => new[] {Builder.ConvertToSql(Parent, e)}).ToList();
+				var field = new SqlField(Table, "item");
+				return new SqlValuesTable(new[] { field }, null, rows);
+			}
+
+
+			var knownMembers = new HashSet<MemberInfo>();
+
+			foreach (var row in arrayExpression.Expressions)
+			{
+				var members = new Dictionary<MemberInfo, Expression>();
+				Builder.ProcessProjection(members, row);
+
+				knownMembers.AddRange(members.Keys);
+			}
+
+			var ed = Builder.MappingSchema.GetEntityDescriptor(_elementType);
+
+			var builtRows = new List<ISqlExpression[]>(arrayExpression.Expressions.Count);
+
+			var columnsInfo = knownMembers.Select(m => (Member: m, Column: ed.Columns.Find(c => c.MemberInfo == m)))
+				.ToList();
+
+			foreach (var row in arrayExpression.Expressions)
+			{
+				var members = new Dictionary<MemberInfo, Expression>();
+				Builder.ProcessProjection(members, row);
+
+				var rowValues = new ISqlExpression[columnsInfo.Count];
+
+				var idx = 0;
+				foreach (var info in columnsInfo)
+				{
+					ISqlExpression sql;
+					if (members.TryGetValue(info.Member, out var accessExpr))
+					{
+						sql = Builder.ConvertToSql(Parent, accessExpr, columnDescriptor: info.Column);
+					}
+					else
+					{
+						var nullValue = Expression.Constant(Builder.MappingSchema.GetDefaultValue(_elementType), _elementType);
+						sql = Builder.ConvertToSql(Parent, nullValue, columnDescriptor: info.Column);
+					}
+
+					rowValues[idx] = sql;
+					++idx;
+				}
+
+				builtRows.Add(rowValues);
+			}
+
+			var fields = new SqlField[columnsInfo.Count];
+
+			for (var index = 0; index < columnsInfo.Count; index++)
+			{
+				var info  = columnsInfo[index];
+				var field = info.Column != null
+					? new SqlField(info.Column)
+					: new SqlField(info.Member.GetMemberType(), "item" + (index + 1), true);
+				fields[index] = field;
+			}
+
+			return new SqlValuesTable(fields, columnsInfo.Select(ci => ci.Member).ToArray(), builtRows);
 		}
 
 		public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
@@ -83,15 +165,22 @@ namespace LinqToDB.Linq.Builder
 
 						var getterLambda = Expression.Lambda<Func<object, ISqlExpression>>(body, param);
 						var getterFunc   = getterLambda.Compile();
-						Table.Add(field, getterFunc);
+						Table.Add(field, null, getterFunc);
 					}
 
 					sql = new[] { new SqlInfo(field, SelectQuery) };
 				}
 				else
 				{
-					sql = _entityDescriptor.Columns
-						.Select(c => new SqlInfo(c.MemberInfo, BuildField(c), SelectQuery)).ToArray();
+					if (Table.Rows != null)
+					{
+						sql = Table.Fields.Select(f => new SqlInfo(f.ColumnDescriptor.MemberInfo, f, SelectQuery)).ToArray();
+					}
+					else
+					{
+						sql = _entityDescriptor.Columns
+							.Select(c => new SqlInfo(c.MemberInfo, BuildField(c), SelectQuery)).ToArray();
+					}
 
 					if (sql.Length == 0)
 						throw new LinqToDBException($"Entity of type '{_elementType.Name}' as no defined columns.");
@@ -138,7 +227,7 @@ namespace LinqToDB.Linq.Builder
 		private SqlField BuildField(ColumnDescriptor column)
 		{
 			var memberName = column.MemberName;
-			if (!Table.FieldsLookup!.TryGetValue(memberName, out var newField))
+			if (!Table.FieldsLookup!.TryGetValue(column.MemberInfo, out var newField))
 			{
 				var getter = column.GetDbParamLambda();
 
@@ -168,7 +257,7 @@ namespace LinqToDB.Linq.Builder
 				var getterLambda = Expression.Lambda<Func<object, ISqlExpression>>(body, param);
 				var getterFunc   = getterLambda.Compile();
 
-				Table.Add(newField = new SqlField(column), getterFunc);
+				Table.Add(newField = new SqlField(column), column.MemberInfo, getterFunc);
 			}
 
 			return newField;
@@ -211,7 +300,10 @@ namespace LinqToDB.Linq.Builder
 
 		public int ConvertToParentIndex(int index, IBuildContext context)
 		{
-			throw new NotImplementedException();
+			if (Parent == null)
+				return index;
+
+			return Parent.ConvertToParentIndex(index, this);
 		}
 
 		public void SetAlias(string alias)
