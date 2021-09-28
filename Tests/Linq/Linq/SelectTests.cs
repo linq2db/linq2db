@@ -1072,18 +1072,29 @@ namespace Tests.Linq
 
 			var cacheMissCount = Query<IntermediateChildResult>.CacheMissCount;
 
-			var result = query.First();
+			var result = query.ToArray().First();
 
-			if (includeChild)
+			void CheckResult()
 			{
-				result.Child.Should().NotBeNull();
-			}
-			else
-			{
-				result.Child.Should().BeNull();
+				if (includeChild)
+				{
+					result.Child.Should().NotBeNull();
+				}
+				else
+				{
+					result.Child.Should().BeNull();
 
-				((DataConnection)db).LastQuery.Should().NotContain("ChildID");
+					((DataConnection)db).LastQuery.Should().NotContain("ChildID");
+				}
 			}
+
+			CheckResult();
+
+			includeChild = !includeChild;
+
+			result = query.ToArray().First();
+
+			CheckResult();
 
 			if (iteration > 1)
 			{

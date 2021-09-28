@@ -181,6 +181,10 @@ namespace LinqToDB.Linq.Builder
 
 		private TransformVisitor<ExpressionTreeOptimizationContext> _expandExpressionTransformer;
 
+		private bool _expressionDependsOnParameters;
+
+		public bool IsDependsOnParameters() => _expressionDependsOnParameters;
+
 		public Expression ExpandExpressionTransformer(Expression expr)
 		{
 			switch (expr.NodeType)
@@ -271,7 +275,10 @@ namespace LinqToDB.Linq.Builder
 					{
 						var testValue = conditional.Test.EvaluateExpression();
 						if (testValue is bool test)
+						{
+							_expressionDependsOnParameters = true;
 							return test ? ExpandExpression(conditional.IfTrue) : ExpandExpression(conditional.IfFalse);
+						}
 					}
 					break;
 				}

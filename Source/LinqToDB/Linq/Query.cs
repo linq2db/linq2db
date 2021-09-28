@@ -470,10 +470,13 @@ namespace LinqToDB.Linq
 
 		public static long CacheMissCount => _queryCache.CacheMissCount;
 
-		public static Query<T> GetQuery(IDataContext dataContext, ref Expression expr)
+		public static Query<T> GetQuery(IDataContext dataContext, ref Expression expr, out bool dependsOnParameters)
 		{
 			var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
+
 			expr = optimizationContext.ExpandExpression(expr);
+
+			dependsOnParameters = optimizationContext.IsDependsOnParameters();
 
 			if (dataContext is IExpressionPreprocessor preprocessor)
 				expr = preprocessor.ProcessExpression(expr);
