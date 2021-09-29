@@ -6,7 +6,7 @@
 		protected override bool SupportsColumnAliasesInSource => false;
 
 		// VALUES(...) syntax not supported in MERGE source
-		protected override bool SupportsSourceDirectValues => false;
+		protected override bool IsValuesSyntaxSupported => false;
 
 		// unfortunatelly, user could change this table
 		protected override string FakeTable => "DUMMY";

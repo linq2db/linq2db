@@ -13,7 +13,7 @@
 		protected override bool MergeEmptySourceSupported => false;
 
 		// VALUES(...) syntax not supported by Oracle
-		protected override bool SupportsSourceDirectValues => false;
+		protected override bool IsValuesSyntaxSupported => false;
 
 		// bad thing that user can change this table, but broken merge will be minor issue in this case
 		protected override string FakeTable => "dual";

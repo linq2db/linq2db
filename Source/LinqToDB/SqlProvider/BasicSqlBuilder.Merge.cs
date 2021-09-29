@@ -249,7 +249,7 @@ namespace LinqToDB.SqlProvider
 		/// <param name="row">Index of data row to check. Could contain -1 to indicate that this is a check for empty source NULL value.</param>
 		/// <param name="column">Index of data column to check in row.</param>
 		/// <returns>Returns <c>true</c>, if generated SQL should include type information for value at specified position, otherwise <c>false</c> returned.</returns>
-		protected virtual bool MergeSourceValueTypeRequired(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows, int row, int column) => false;
+		protected virtual bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows, int row, int column) => false;
 
 		private void BuildValuesAsSelectsUnion(IList<SqlField> sourceFields, SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows)
 		{
@@ -282,7 +282,7 @@ namespace LinqToDB.SqlProvider
 					if (j > 0)
 						StringBuilder.Append(InlineComma);
 
-					if (MergeSourceValueTypeRequired(source, rows, i, j))
+					if (IsSqlValuesTableValueTypeRequired(source, rows, i, j))
 						BuildTypedExpression(columnTypes[j], value);
 					else
 						BuildExpression(value);
@@ -317,7 +317,7 @@ namespace LinqToDB.SqlProvider
 				if (i > 0)
 					StringBuilder.Append(InlineComma);
 
-				if (MergeSourceValueTypeRequired(merge.Source.SourceEnumerable!, Array<ISqlExpression[]>.Empty, -1, i))
+				if (IsSqlValuesTableValueTypeRequired(merge.Source.SourceEnumerable!, Array<ISqlExpression[]>.Empty, -1, i))
 					BuildTypedExpression(new SqlDataType(field), new SqlValue(field.Type, null));
 				else
 					BuildExpression(new SqlValue(field.Type, null));
@@ -380,7 +380,7 @@ namespace LinqToDB.SqlProvider
 					if (j > 0)
 						StringBuilder.Append(Comma);
 
-					if (MergeSourceValueTypeRequired(source, rows, i, j))
+					if (IsSqlValuesTableValueTypeRequired(source, rows, i, j))
 						BuildTypedExpression(columnTypes[j], value);
 					else
 						BuildExpression(value);

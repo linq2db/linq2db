@@ -44,9 +44,9 @@ namespace LinqToDB.DataProvider.Access
 			}
 		}
 
-		public override    bool IsNestedJoinSupported      => false;
-		public override    bool WrapJoinCondition          => true;
-		protected override bool SupportsSourceDirectValues => false;
+		public override    bool IsNestedJoinSupported   => false;
+		public override    bool WrapJoinCondition       => true;
+		protected override bool IsValuesSyntaxSupported => false;
 
 		#region Skip / Take Support
 

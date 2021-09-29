@@ -21,7 +21,7 @@
 			return new SqlServer2005SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
-		protected override bool SupportsSourceDirectValues => false;
+		protected override bool IsValuesSyntaxSupported => false;
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{

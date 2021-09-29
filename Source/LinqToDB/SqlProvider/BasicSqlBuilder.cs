@@ -1534,7 +1534,7 @@ namespace LinqToDB.SqlProvider
 				if (i > 0)
 					StringBuilder.Append(InlineComma);
 
-				if (MergeSourceValueTypeRequired(valuesTable, Array<ISqlExpression[]>.Empty, -1, i))
+				if (IsSqlValuesTableValueTypeRequired(valuesTable, Array<ISqlExpression[]>.Empty, -1, i))
 					BuildTypedExpression(new SqlDataType(field), new SqlValue(field.Type, null));
 				else
 					BuildExpression(new SqlValue(field.Type, null));
@@ -2704,25 +2704,9 @@ namespace LinqToDB.SqlProvider
 		protected void BuildValue(SqlDataType? dataType, object? value)
 		{
 			if (dataType != null)
-			{
-				if (!ValueToSqlConverter.TryConvert(StringBuilder, dataType, value))
-				{
-					// converting to SQL Parameter
-					var param = new SqlParameter(dataType.Type, "value", value);
-					BuildExpression(param);
-				}
-			}
+				ValueToSqlConverter.Convert(StringBuilder, dataType, value);
 			else
-			{
-				if (!ValueToSqlConverter.TryConvert(StringBuilder, value))
-				{
-					// converting to SQL Parameter
-					var valueType = value!.GetType();
-					var dbType    = new DbDataType(valueType, ColumnDescriptor.CalculateDataType(MappingSchema, valueType));
-					var param     = new SqlParameter(dbType, "value", value);
-					BuildExpression(param);
-				}
-			}
+				ValueToSqlConverter.Convert(StringBuilder, value);
 		}
 
 		#endregion
