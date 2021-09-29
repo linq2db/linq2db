@@ -98,7 +98,7 @@ namespace LinqToDB.SqlProvider
 		{
 			var key = (dbDataType, name, value);
 
-			if (_dynamicParameters == null || !_dynamicParameters.TryGetValue(key, out SqlParameter param))
+			if (_dynamicParameters == null || !_dynamicParameters.TryGetValue(key, out var param))
 			{
 				// converting to SQL Parameter
 				param = new SqlParameter(dbDataType, name, value);

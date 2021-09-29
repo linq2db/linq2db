@@ -1476,7 +1476,7 @@ namespace LinqToDB.SqlProvider
 			{
 				StringBuilder.Append('(');
 
-				if (SupportsSourceDirectValues)
+				if (IsValuesSyntaxSupported)
 					BuildValues(valuesTable, rows);
 				else
 					BuildValuesAsSelectsUnion(valuesTable.Fields, valuesTable, rows);
@@ -1488,7 +1488,7 @@ namespace LinqToDB.SqlProvider
 			else
 				throw new LinqToDBException($"{Name} doesn't support merge with empty source");
 
-			aliasBuilt = SupportsSourceDirectValues;
+			aliasBuilt = IsValuesSyntaxSupported;
 			if (aliasBuilt)
 			{
 				BuildSqlValuesAlias(valuesTable, alias);

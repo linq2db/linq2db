@@ -17,7 +17,7 @@
 		//Data type unknown
 
 		// VALUES(...) syntax not supported in MERGE source
-		protected override bool SupportsSourceDirectValues => false;
+		protected override bool IsValuesSyntaxSupported => false;
 
 		protected override string FakeTable => "rdb$database";
 

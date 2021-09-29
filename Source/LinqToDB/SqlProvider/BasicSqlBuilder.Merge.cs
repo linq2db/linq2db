@@ -23,7 +23,7 @@ namespace LinqToDB.SqlProvider
 		/// <summary>
 		/// If true, provider supports list of VALUES as a source element of merge command.
 		/// </summary>
-		protected virtual bool SupportsSourceDirectValues => true;
+		protected virtual bool IsValuesSyntaxSupported => true;
 
 		/// <summary>
 		/// If true, builder will generate command for empty enumerable source;
@@ -32,13 +32,13 @@ namespace LinqToDB.SqlProvider
 		protected virtual bool MergeEmptySourceSupported => true;
 
 		/// <summary>
-		/// If <see cref="SupportsSourceDirectValues"/> set to false and provider doesn't support SELECTs without
+		/// If <see cref="IsValuesSyntaxSupported"/> set to false and provider doesn't support SELECTs without
 		/// FROM clause, this property should contain name of table with single record.
 		/// </summary>
 		protected virtual string? FakeTable => null;
 
 		/// <summary>
-		/// If <see cref="SupportsSourceDirectValues"/> set to false and provider doesn't support SELECTs without
+		/// If <see cref="IsValuesSyntaxSupported"/> set to false and provider doesn't support SELECTs without
 		/// FROM clause, this property could contain name of schema for table with single record.
 		/// </summary>
 		protected virtual string? FakeTableSchema => null;
@@ -226,7 +226,7 @@ namespace LinqToDB.SqlProvider
 			{
 				StringBuilder.Append('(');
 
-				if (SupportsSourceDirectValues)
+				if (IsValuesSyntaxSupported)
 					BuildValues(merge.Source.SourceEnumerable, rows);
 				else
 					BuildValuesAsSelectsUnion(merge.Source.SourceFields, merge.Source.SourceEnumerable, rows);

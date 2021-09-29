@@ -5,7 +5,7 @@
 		// TABLE_ALIAS(COLUMN_ALIAS, ...) syntax not supported
 		protected override bool SupportsColumnAliasesInSource => false;
 
-		// VALUES(...) syntax not supported in MERGE source
+		// VALUES(...) syntax not supported
 		protected override bool IsValuesSyntaxSupported => false;
 
 		// unfortunatelly, user could change this table
