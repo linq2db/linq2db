@@ -2704,9 +2704,25 @@ namespace LinqToDB.SqlProvider
 		protected void BuildValue(SqlDataType? dataType, object? value)
 		{
 			if (dataType != null)
-				ValueToSqlConverter.Convert(StringBuilder, dataType, value);
+			{
+				if (!ValueToSqlConverter.TryConvert(StringBuilder, dataType, value))
+				{
+					// converting to SQL Parameter
+					var param = new SqlParameter(dataType.Type, "value", value);
+					BuildExpression(param);
+				}
+			}
 			else
-				ValueToSqlConverter.Convert(StringBuilder, value);
+			{
+				if (!ValueToSqlConverter.TryConvert(StringBuilder, value))
+				{
+					// converting to SQL Parameter
+					var valueType = value!.GetType();
+					var dbType    = new DbDataType(valueType, ColumnDescriptor.CalculateDataType(MappingSchema, valueType));
+					var param     = new SqlParameter(dbType, "value", value);
+					BuildExpression(param);
+				}
+			}
 		}
 
 		#endregion

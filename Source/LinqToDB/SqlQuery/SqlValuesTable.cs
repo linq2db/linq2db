@@ -16,7 +16,6 @@ namespace LinqToDB.SqlQuery
 		internal SqlValuesTable(ISqlExpression source)
 		{
 			Source        = source;
-			ValueBuilders = new();
 			FieldsLookup  = new();
 
 			SourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
@@ -44,7 +43,7 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Constructor for remote context.
 		/// </summary>
-		internal SqlValuesTable(SqlField[] fields, MemberInfo[]? members, IReadOnlyList<ISqlExpression[]> rows)
+		internal SqlValuesTable(SqlField[] fields, MemberInfo?[]? members, IReadOnlyList<ISqlExpression[]> rows)
 		{
 			Rows         = rows;
 			FieldsLookup = new();
@@ -60,8 +59,12 @@ namespace LinqToDB.SqlQuery
 			{
 				for (var index = 0; index < fields.Length; index++)
 				{
-					var field = fields[index];
-					FieldsLookup.Add(members[index], field);
+					var member = members[index];
+					if (member != null)
+					{
+						var field = fields[index];
+						FieldsLookup.Add(member, field);
+					}
 				}
 			}
 
@@ -83,7 +86,7 @@ namespace LinqToDB.SqlQuery
 		// Fields from source, used in query. Columns in rows should have same order.
 		public List<SqlField> Fields => _fields;
 
-		internal List<Func<object, ISqlExpression>>? ValueBuilders { get; }
+		internal List<Func<object, ISqlExpression>>? ValueBuilders { get; set; }
 
 		internal void Add(SqlField field, MemberInfo? memberInfo, Func<object, ISqlExpression> valueBuilder)
 		{
@@ -95,7 +98,8 @@ namespace LinqToDB.SqlQuery
 			if (memberInfo != null)
 				FieldsLookup!.Add(memberInfo, field);
 
-			ValueBuilders!.Add(valueBuilder);
+			ValueBuilders ??= new List<Func<object, ISqlExpression>>();
+			ValueBuilders.Add(valueBuilder);
 		}
 
 		internal IReadOnlyList<ISqlExpression[]>? Rows { get; }
@@ -112,19 +116,22 @@ namespace LinqToDB.SqlQuery
 
 			var rows = new List<ISqlExpression[]>();
 
-			foreach (var record in source)
+			if (ValueBuilders != null)
 			{
-				if (record == null)
-					throw new LinqToDBException("Merge source cannot hold null records");
-
-				var row = new ISqlExpression[ValueBuilders!.Count];
-				var idx = 0;
-				rows.Add(row);
-
-				foreach (var valueBuilder in ValueBuilders!)
+				foreach (var record in source)
 				{
-					row[idx] = valueBuilder(record);
-					idx++;
+					if (record == null)
+						throw new LinqToDBException("Merge source cannot hold null records");
+
+					var row = new ISqlExpression[ValueBuilders!.Count];
+					var idx = 0;
+					rows.Add(row);
+
+					foreach (var valueBuilder in ValueBuilders!)
+					{
+						row[idx] = valueBuilder(record);
+						idx++;
+					}
 				}
 			}
 
