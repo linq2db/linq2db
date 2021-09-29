@@ -550,6 +550,33 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void CTETest([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int iteration)
+		{
+			var records = new TableToInsert[]
+			{
+				new() { Id = 1 + iteration, Value = "Janet" },
+				new() { Id = 2 + iteration, Value = "Doe" },
+			};
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(records))
+			{
+				var cacheMiss = Query<Person>.CacheMissCount;
+
+				var queryToSelect =
+					from r in records.AsQueryable(db).AsCte()
+					from t in table.InnerJoin(t => t.Id == r.Id && t.Value == r.Value)
+					select t;
+
+				var result = queryToSelect.ToArray();
+
+				AreEqual(table, result);
+
+				if (iteration > 1)
+					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+			}
+		}
 
 	}
 }
