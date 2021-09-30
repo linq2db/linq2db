@@ -313,7 +313,8 @@ namespace LinqToDB.Linq.Builder
 
 		public void SetAlias(string alias)
 		{
-			SelectQuery.Select.Columns[0].Alias = alias;
+			if (SelectQuery.Select.Columns.Count == 1)
+				SelectQuery.Select.Columns[0].Alias = alias;
 		}
 
 		public ISqlExpression GetSubQuery(IBuildContext context)

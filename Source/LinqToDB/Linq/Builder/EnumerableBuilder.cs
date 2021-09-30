@@ -18,9 +18,6 @@ namespace LinqToDB.Linq.Builder
 				return true;
 			}
 
-			if (buildInfo.IsSubQuery)
-				return false;
-
 			if (!typeof(IEnumerable<>).IsSameOrParentOf(expr.Type))
 				return false;
 

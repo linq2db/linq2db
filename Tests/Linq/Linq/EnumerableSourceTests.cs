@@ -578,5 +578,33 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void SubQuery([DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
+		{
+			var records = new TableToInsert[]
+			{
+				new() { Id = 1 + iteration, Value = "Janet" },
+				new() { Id = 2 + iteration, Value = "Doe" },
+			};
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(records))
+			{
+				var cacheMiss = Query<Person>.CacheMissCount;
+
+				var queryToSelect =
+					from t in table
+					where records.Any(r => t.Id == r.Id && t.Value == r.Value)
+					select t;
+
+				var result = queryToSelect.ToArray();
+
+				AreEqual(table, result);
+
+				if (iteration > 1)
+					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+			}
+		}
+
 	}
 }
