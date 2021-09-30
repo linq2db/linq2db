@@ -72,32 +72,32 @@ namespace LinqToDB.SqlQuery
 
 				Add(field);
 
-				if (field.Type!.Value.DataType == DataType.Undefined)
+				if (field.Type.DataType == DataType.Undefined)
 				{
-					var dataType = mappingSchema.GetDataType(field.Type!.Value.SystemType);
+					var dataType = mappingSchema.GetDataType(field.Type.SystemType);
 
 					if (dataType.Type.DataType == DataType.Undefined)
 					{
-						dataType = mappingSchema.GetUnderlyingDataType(field.Type!.Value.SystemType, out var canBeNull);
+						dataType = mappingSchema.GetUnderlyingDataType(field.Type.SystemType, out var canBeNull);
 
 						if (canBeNull)
 							field.CanBeNull = true;
 					}
 
-					field.Type = field.Type!.Value.WithDataType(dataType.Type.DataType);
+					field.Type = field.Type.WithDataType(dataType.Type.DataType);
 
 					// try to get type from converter
-					if (field.Type!.Value.DataType == DataType.Undefined)
+					if (field.Type.DataType == DataType.Undefined)
 					{
 						try
 						{
 							var converter = mappingSchema.GetConverter(
-								field.Type!.Value,
+								field.Type,
 								new DbDataType(typeof(DataParameter)), true);
 
-							var parameter = converter?.ConvertValueToParameter?.Invoke(DefaultValue.GetValue(field.Type!.Value.SystemType, mappingSchema));
+							var parameter = converter?.ConvertValueToParameter?.Invoke(DefaultValue.GetValue(field.Type.SystemType, mappingSchema));
 							if (parameter != null)
-								field.Type = field.Type!.Value.WithDataType(parameter.DataType);
+								field.Type = field.Type.WithDataType(parameter.DataType);
 						}
 						catch
 						{
@@ -105,9 +105,9 @@ namespace LinqToDB.SqlQuery
 						}
 					}
 
-					if (field.Type!.Value.Length    == null) field.Type = field.Type!.Value.WithLength   (dataType.Type.Length);
-					if (field.Type!.Value.Precision == null) field.Type = field.Type!.Value.WithPrecision(dataType.Type.Precision);
-					if (field.Type!.Value.Scale     == null) field.Type = field.Type!.Value.WithScale    (dataType.Type.Scale);
+					if (field.Type.Length    == null) field.Type = field.Type.WithLength   (dataType.Type.Length);
+					if (field.Type.Precision == null) field.Type = field.Type.WithPrecision(dataType.Type.Precision);
+					if (field.Type.Scale     == null) field.Type = field.Type.WithScale    (dataType.Type.Scale);
 				}
 			}
 
