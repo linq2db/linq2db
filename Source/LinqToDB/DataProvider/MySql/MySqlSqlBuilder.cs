@@ -10,7 +10,6 @@ namespace LinqToDB.DataProvider.MySql
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
-	using Tools;
 
 	class MySqlSqlBuilder : BasicSqlBuilder
 	{
@@ -42,6 +41,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override bool IsRecursiveCteKeywordRequired   => true;
 		public    override bool IsNestedJoinParenthesisRequired => true;
+		protected override bool IsValuesSyntaxSupported         => false;
 
 		protected override bool CanSkipRootAliases(SqlStatement statement)
 		{

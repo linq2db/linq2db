@@ -18,6 +18,8 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 		}
 
+		protected override bool SupportsColumnAliasesInSource => false;
+
 		public override int CommandCount(SqlStatement statement)
 		{
 			if (statement is SqlTruncateTableStatement trun)
@@ -183,6 +185,48 @@ namespace LinqToDB.DataProvider.SQLite
 			BuildExpression(GetPrecedence(expr), expr.Expr1);
 			StringBuilder.Append(expr.IsNot ? " IS " : " IS NOT ");
 			BuildExpression(GetPrecedence(expr), expr.Expr2);
+		}
+
+		protected override void BuildSqlValuesTable(SqlValuesTable valuesTable, string alias, out bool aliasBuilt)
+		{
+			valuesTable = ConvertElement(valuesTable);
+
+			StringBuilder.Append(OpenParens);
+
+			++Indent;
+
+			StringBuilder.AppendLine();
+			AppendIndent();
+			StringBuilder.Append("SELECT ");
+			for (var i = 0; i < valuesTable.Fields.Count; i++)
+			{
+				if (i > 0)
+					StringBuilder.Append(InlineComma);
+				var field = valuesTable.Fields[i];
+				StringBuilder.Append("NULL AS ");
+				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+			}
+
+			StringBuilder
+				.Append(" WHERE 0")
+				.AppendLine();
+
+			AppendIndent();
+
+			var rows = valuesTable.BuildRows(OptimizationContext.Context);
+			if (rows?.Count > 0)
+			{
+				StringBuilder.AppendLine("UNION ALL");
+				AppendIndent();
+
+				BuildValues(valuesTable, rows);
+			}
+
+			StringBuilder.Append(')');
+
+			aliasBuilt = false;
+
+			--Indent;
 		}
 	}
 }
