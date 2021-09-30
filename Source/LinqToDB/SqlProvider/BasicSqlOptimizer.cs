@@ -945,6 +945,28 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
+		ISqlPredicate OptimizeCase(SqlPredicate.IsTrue isTrue, EvaluationContext context)
+		{
+			//TODO: refactor CASE optimization
+
+			if ((isTrue.WithNull == null || isTrue.WithNull == false) && isTrue.Expr1 is SqlFunction func && func.Name == "CASE")
+			{
+				if (func.Parameters.Length == 3)
+				{
+					// It handles one specific case for OData
+					if (func.Parameters[0] is SqlSearchCondition &&
+					    func.Parameters[2] is SqlSearchCondition sc &&
+					    func.Parameters[1].TryEvaluateExpression(context, out var v1) && v1 is null)
+					{
+						if (isTrue.IsNot)
+							return new SqlPredicate.NotExpr(sc, true, Precedence.LogicalNegation);
+						return sc;
+					}
+				}				
+			}
+			return isTrue;
+		}
+
 		ISqlPredicate OptimizeCase(SqlPredicate.ExprExpr expr, EvaluationContext context)
 		{
 			SqlFunction? func;
@@ -1150,6 +1172,13 @@ namespace LinqToDB.SqlProvider
 			{
 				case QueryElementType.SearchCondition:
 					return SelectQueryOptimizer.OptimizeSearchCondition((SqlSearchCondition)predicate, context);
+
+				case QueryElementType.IsTruePredicate:
+				{
+					var isTrue = (SqlPredicate.IsTrue)predicate;
+					predicate = OptimizeCase(isTrue, context);
+					break;
+				}
 
 				case QueryElementType.ExprExprPredicate:
 				{

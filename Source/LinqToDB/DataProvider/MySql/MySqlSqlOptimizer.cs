@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace LinqToDB.DataProvider.MySql
 {
@@ -111,16 +112,54 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			var caseSensitive = predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context);
 
-			if (caseSensitive == false)
+			if (caseSensitive == null || caseSensitive == false)
 			{
-				predicate = new SqlPredicate.SearchString(
-					new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1),
-					predicate.IsNot,
-					new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2),
-					predicate.Kind,
-					new SqlValue(false));
+				var searchExpr = predicate.Expr2;
+				var dataExpr = predicate.Expr1;
+
+				if (caseSensitive == false)
+				{
+					searchExpr = new SqlFunction(typeof(string), "$ToLower$", searchExpr);
+					dataExpr   = new SqlFunction(typeof(string), "$ToLower$", dataExpr);
+				}
+
+				ISqlPredicate newPredicate = predicate.Kind switch
+				{
+					SqlPredicate.SearchString.SearchKind.Contains =>
+						new SqlPredicate.ExprExpr(
+							new SqlFunction(typeof(int), "LOCATE", searchExpr, dataExpr),
+							SqlPredicate.Operator.Greater, new SqlValue(0), null),
+					SqlPredicate.SearchString.SearchKind.StartsWith =>
+						new SqlPredicate.ExprExpr(
+							new SqlFunction(typeof(int), "LOCATE", searchExpr, dataExpr),
+							SqlPredicate.Operator.Equal, new SqlValue(1), null),
+					SqlPredicate.SearchString.SearchKind.EndsWith =>
+						new SqlPredicate.ExprExpr(
+							new SqlFunction(typeof(int), "LOCATE",
+								searchExpr,
+								dataExpr,
+								new SqlBinaryExpression(typeof(int),
+									new SqlFunction(typeof(int), "Length", predicate.Expr1), "-",
+									new SqlBinaryExpression(typeof(int),
+										new SqlFunction(typeof(int), "Length", predicate.Expr2), "-", new SqlValue(1)))
+							),
+							SqlPredicate.Operator.Equal, new SqlBinaryExpression(typeof(int),
+								new SqlFunction(typeof(int), "Length", predicate.Expr1), "-",
+								new SqlBinaryExpression(typeof(int),
+									new SqlFunction(typeof(int), "Length", predicate.Expr2), "-", new SqlValue(1))),
+							null),
+					_ => throw new ArgumentException($"Unknown SearchKind: {predicate.Kind}]")
+				};
+
+				if (predicate.IsNot)
+				{
+					newPredicate = new SqlSearchCondition(new SqlCondition(true, newPredicate));
+				}
+				
+				return newPredicate;
 			}
-			else if (caseSensitive == true)
+
+			if (caseSensitive == true)
 			{
 				predicate = new SqlPredicate.SearchString(
 					new SqlExpression(typeof(string), $"{{0}} COLLATE utf8_bin", Precedence.Primary, predicate.Expr1),
