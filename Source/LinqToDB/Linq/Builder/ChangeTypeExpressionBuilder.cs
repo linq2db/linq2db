@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
 
@@ -16,8 +17,7 @@ namespace LinqToDB.Linq.Builder
 		//ISequenceBuilder _builder;
 		ISequenceBuilder GetBuilder(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			//return _builder ?? (_builder = builder.GetBuilder(buildInfo));
-			return builder.GetBuilder(buildInfo);
+			return builder.GetBuilder(buildInfo) ?? throw new InvalidOperationException();
 		}
 
 		public IBuildContext? BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)

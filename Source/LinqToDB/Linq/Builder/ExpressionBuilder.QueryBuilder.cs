@@ -208,9 +208,9 @@ namespace LinqToDB.Linq.Builder
 
 								if (ex is MethodCallExpression ce)
 								{
-									if (context.builder.IsSubQuery(context.context, ce))
+									if (!context.builder.IsEnumerableSource(ce) && context.builder.IsSubQuery(context.context, ce))
 									{
-										if (!IsMultipleQuery(ce, context.context.Builder.MappingSchema))
+										if (!context.context.Builder.IsMultipleQuery(ce, context.context.Builder.MappingSchema))
 										{
 											var info = context.builder.GetSubQueryContext(context.context, ce);
 											if (context.alias != null)
@@ -288,6 +288,9 @@ namespace LinqToDB.Linq.Builder
 							{
 								var ce = (MethodCallExpression)expr;
 
+								if (context.builder.IsEnumerableSource(ce))
+									break;
+
 								if (context.builder.IsGroupJoinSource(context.context, ce))
 								{
 									foreach (var arg in ce.Arguments.Skip(1))
@@ -320,7 +323,7 @@ namespace LinqToDB.Linq.Builder
 
 								if ((context.builder._buildMultipleQueryExpressions == null || !context.builder._buildMultipleQueryExpressions.Contains(ce)) && context.builder.IsSubQuery(context.context, ce))
 								{
-									if (IsMultipleQuery(ce, context.builder.MappingSchema))
+									if (context.builder.IsMultipleQuery(ce, context.builder.MappingSchema))
 										return new TransformInfo(context.builder.BuildMultipleQuery(context.context, ce, context.enforceServerSide));
 
 									return new TransformInfo(context.builder.GetSubQueryExpression(context.context, ce, context.enforceServerSide, context.alias));
@@ -497,14 +500,46 @@ namespace LinqToDB.Linq.Builder
 			return expr;
 		}
 
-		static bool IsMultipleQuery(MethodCallExpression ce, MappingSchema mappingSchema)
+		bool IsEnumerableSource(Expression expr)
+		{
+			if (!CanBeCompiled(expr))
+				return false;
+
+			var selectQuery = new SelectQuery();
+			while (expr != null)
+			{
+				var buildInfo = new BuildInfo((IBuildContext?)null, expr, selectQuery);
+				if (GetBuilder(buildInfo, false) is EnumerableBuilder)
+				{
+					return true;
+				}
+
+				switch (expr)
+				{
+					case MemberExpression me:
+						expr = me.Expression;
+						continue;
+					case MethodCallExpression mc when mc.IsQueryable():
+						expr = mc.Arguments[0];
+						continue;
+				}
+
+				break;
+			}
+
+			return false;
+		}
+
+		bool IsMultipleQuery(MethodCallExpression ce, MappingSchema mappingSchema)
 		{
 			//TODO: Multiply query check should be smarter, possibly not needed if we create fallback mechanism
-			return !ce.IsQueryable(FirstSingleBuilder.MethodNames)
+			var result = !ce.IsQueryable(FirstSingleBuilder.MethodNames)
 			       && typeof(IEnumerable).IsSameOrParentOf(ce.Type)
 			       && ce.Type != typeof(string) 
 			       && !ce.Type.IsArray 
 			       && !ce.IsAggregate(mappingSchema);
+
+			return result;
 		}
 
 		class SubQueryContextInfo

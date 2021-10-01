@@ -135,16 +135,18 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 		{
-			if (!Builder.MappingSchema.IsScalarType(_elementType))
-				throw new NotImplementedException("Projection of in-memory collections is not implemented");
+			if (Builder.MappingSchema.IsScalarType(_elementType))
+			{
+				var info  = ConvertToIndex(expression, level, ConvertFlags.Field)[0];
+				var index = info.Index;
+				if (Parent != null)
+					index = ConvertToParentIndex(index, Parent);
 
-			var info  = ConvertToIndex(expression, level, ConvertFlags.Field)[0];
-			var index = info.Index;
-			if (Parent != null)
-				index = ConvertToParentIndex(index, Parent);
 
+				return Builder.BuildSql(_elementType, index, info.Sql);
+			}
 
-			return Builder.BuildSql(_elementType, index, info.Sql);
+			throw new NotImplementedException("Projection of in-memory collections is not implemented");
 		}
 
 		public SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
