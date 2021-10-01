@@ -123,40 +123,37 @@ namespace LinqToDB.DataProvider.MySql
 					dataExpr   = new SqlFunction(typeof(string), "$ToLower$", dataExpr);
 				}
 
-				ISqlPredicate newPredicate = predicate.Kind switch
+				ISqlPredicate? newPredicate = null;
+				switch (predicate.Kind)
 				{
-					SqlPredicate.SearchString.SearchKind.Contains =>
-						new SqlPredicate.ExprExpr(
-							new SqlFunction(typeof(int), "LOCATE", searchExpr, dataExpr),
-							SqlPredicate.Operator.Greater, new SqlValue(0), null),
-					SqlPredicate.SearchString.SearchKind.StartsWith =>
-						new SqlPredicate.ExprExpr(
-							new SqlFunction(typeof(int), "LOCATE", searchExpr, dataExpr),
-							SqlPredicate.Operator.Equal, new SqlValue(1), null),
-					SqlPredicate.SearchString.SearchKind.EndsWith =>
-						new SqlPredicate.ExprExpr(
-							new SqlFunction(typeof(int), "LOCATE",
-								searchExpr,
-								dataExpr,
-								new SqlBinaryExpression(typeof(int),
-									new SqlFunction(typeof(int), "Length", predicate.Expr1), "-",
-									new SqlBinaryExpression(typeof(int),
-										new SqlFunction(typeof(int), "Length", predicate.Expr2), "-", new SqlValue(1)))
-							),
-							SqlPredicate.Operator.Equal, new SqlBinaryExpression(typeof(int),
-								new SqlFunction(typeof(int), "Length", predicate.Expr1), "-",
-								new SqlBinaryExpression(typeof(int),
-									new SqlFunction(typeof(int), "Length", predicate.Expr2), "-", new SqlValue(1))),
-							null),
-					_ => throw new ArgumentException($"Unknown SearchKind: {predicate.Kind}]")
-				};
-
-				if (predicate.IsNot)
-				{
-					newPredicate = new SqlSearchCondition(new SqlCondition(true, newPredicate));
+					case SqlPredicate.SearchString.SearchKind.Contains:
+					{
+						newPredicate = new SqlPredicate.ExprExpr(
+							new SqlFunction(typeof(int), "LOCATE", searchExpr, dataExpr), SqlPredicate.Operator.Greater,
+							new SqlValue(0), null);
+						break;
+					}
 				}
-				
-				return newPredicate;
+
+				if (newPredicate != null)
+				{
+					if (predicate.IsNot)
+					{
+						newPredicate = new SqlSearchCondition(new SqlCondition(true, newPredicate));
+					}
+
+					return newPredicate;
+				}
+
+				if (caseSensitive == false)
+				{
+					predicate = new SqlPredicate.SearchString(
+						new SqlFunction(typeof(string), "$ToLower$", dataExpr),
+						predicate.IsNot,
+						new SqlFunction(typeof(string), "$ToLower$", searchExpr),
+						predicate.Kind,
+						new SqlValue(false));
+				}
 			}
 
 			if (caseSensitive == true)
