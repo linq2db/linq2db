@@ -148,9 +148,9 @@ namespace LinqToDB.DataProvider.MySql
 				if (caseSensitive == false)
 				{
 					predicate = new SqlPredicate.SearchString(
-						new SqlFunction(typeof(string), "$ToLower$", dataExpr),
+						dataExpr,
 						predicate.IsNot,
-						new SqlFunction(typeof(string), "$ToLower$", searchExpr),
+						searchExpr,
 						predicate.Kind,
 						new SqlValue(false));
 				}
