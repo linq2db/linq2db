@@ -503,7 +503,11 @@ namespace LinqToDB.Linq.Builder
 		bool IsEnumerableSource(Expression expr)
 		{
 			if (!CanBeCompiled(expr))
-				return false;
+			{
+				// Special case, contains has it's own translation
+				if (!(expr is MethodCallExpression mce && mce.IsQueryable("Contains")))
+					return false;
+			}
 
 			var selectQuery = new SelectQuery();
 			while (expr != null)

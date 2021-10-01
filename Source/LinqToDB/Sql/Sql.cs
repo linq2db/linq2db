@@ -602,9 +602,10 @@ namespace LinqToDB
 		}
 
 		[Function]
-		[Function(PN.DB2,     "Locate")]
-		[Function(PN.MySql,   "Locate")]
-		[Function(PN.SapHana, "Locate")]
+		[Function(PN.DB2,      "Locate")]
+		[Function(PN.MySql,    "Locate")]
+		[Function(PN.SapHana,  "Locate")]
+		[Function(PN.Firebird, "Position")]
 		public static int? CharIndex(char? value, string? str)
 		{
 			if (value == null || str == null) return null;
@@ -613,9 +614,10 @@ namespace LinqToDB
 		}
 
 		[Function]
-		[Function(PN.DB2,     "Locate")]
-		[Function(PN.MySql,   "Locate")]
-		[Function(PN.SapHana, "Locate")]
+		[Function(PN.DB2,      "Locate")]
+		[Function(PN.MySql,    "Locate")]
+		[Function(PN.SapHana,  "Locate")]
+		[Function(PN.Firebird, "Position")]
 		public static int? CharIndex(char? value, string? str, int? start)
 		{
 			if (str == null || value == null || start == null) return null;
