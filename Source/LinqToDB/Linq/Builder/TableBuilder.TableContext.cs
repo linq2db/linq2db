@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
@@ -15,7 +14,7 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
-	using Tools;
+	using Common;
 
 	partial class TableBuilder
 	{
@@ -490,7 +489,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (isAssociation)
 						{
-							var loadWithItem = loadWithItems.FirstOrDefault(_ => _.Info.MemberInfo == member.MemberInfo);
+							var loadWithItem = loadWithItems.FirstOrDefault(_ => MemberInfoEqualityComparer.Default.Equals(_.Info.MemberInfo, member.MemberInfo));
 							if (loadWithItem != null)
 							{
 								var ma = Expression.MakeMemberAccess(Expression.Constant(null, typeAccessor.Type), member.MemberInfo);
@@ -670,8 +669,8 @@ namespace LinqToDB.Linq.Builder
 							if (!found)
 							{
 								found = EntityDescriptor.Aliases != null &&
-								        EntityDescriptor.Aliases.TryGetValue(field.Name, out var alias) &&
-								        alias == sqlField.Name;
+										EntityDescriptor.Aliases.TryGetValue(field.Name, out var alias) &&
+										alias == sqlField.Name;
 							}
 
 							if (found)
@@ -1090,7 +1089,7 @@ namespace LinqToDB.Linq.Builder
 								return IsExpressionResult.True;
 
 							if (contextInfo.CurrentExpression == null
-							    || contextInfo.CurrentExpression.GetLevel(Builder.MappingSchema) == contextInfo.CurrentLevel)
+								|| contextInfo.CurrentExpression.GetLevel(Builder.MappingSchema) == contextInfo.CurrentLevel)
 								return IsExpressionResult.False;
 
 							return contextInfo.Context.IsExpression(contextInfo.CurrentExpression,
@@ -1115,7 +1114,7 @@ namespace LinqToDB.Linq.Builder
 								return IsExpressionResult.False;
 
 							if (contextInfo.CurrentExpression == null
-							    || contextInfo.CurrentExpression.GetLevel(Builder.MappingSchema) == contextInfo.CurrentLevel)
+								|| contextInfo.CurrentExpression.GetLevel(Builder.MappingSchema) == contextInfo.CurrentLevel)
 								return new IsExpressionResult(true, contextInfo.Context);
 
 							return contextInfo.Context.IsExpression(contextInfo.CurrentExpression,
@@ -1208,7 +1207,7 @@ namespace LinqToDB.Linq.Builder
 						var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 						if (levelExpression == expression && expression.NodeType == ExpressionType.MemberAccess ||
-						    expression.NodeType == ExpressionType.Call)
+							expression.NodeType == ExpressionType.Call)
 						{
 							var tableLevel  = FindContextExpression(expression, level, true, true)!;
 
@@ -1554,7 +1553,7 @@ namespace LinqToDB.Linq.Builder
 								if (!descriptor.IsList && !AssociationsToSubQueries)
 								{
 									if (_associationContexts == null ||
-									    !_associationContexts.TryGetValue(accessorMember, out var foundInfo))
+										!_associationContexts.TryGetValue(accessorMember, out var foundInfo))
 									{
 
 										if (forceInner)
