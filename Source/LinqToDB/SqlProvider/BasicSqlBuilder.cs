@@ -1474,7 +1474,7 @@ namespace LinqToDB.SqlProvider
 			var rows = valuesTable.BuildRows(OptimizationContext.Context);
 			if (rows?.Count > 0)
 			{
-				StringBuilder.Append('(');
+				StringBuilder.Append(OpenParens);
 
 				if (IsValuesSyntaxSupported)
 					BuildValues(valuesTable, rows);
@@ -1483,10 +1483,14 @@ namespace LinqToDB.SqlProvider
 
 				StringBuilder.Append(')');
 			}
-			else if (MergeEmptySourceSupported)
+			else if (isEmptyValuesSourceSupported)
+			{
+				StringBuilder.Append(OpenParens);
 				BuildEmptyValues(valuesTable);
+				StringBuilder.Append(')');
+			}
 			else
-				throw new LinqToDBException($"{Name} doesn't support merge with empty source");
+				throw new LinqToDBException($"{Name} doesn't support values with empty source");
 
 			aliasBuilt = IsValuesSyntaxSupported;
 			if (aliasBuilt)
@@ -1520,46 +1524,30 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		private void BuildEmptyValues(SqlValuesTable valuesTable)
+		protected void BuildEmptyValues(SqlValuesTable valuesTable)
 		{
-			StringBuilder
-				.AppendLine(OpenParens)
-				.Append("\tSELECT ")
-				;
-
+			StringBuilder.Append("SELECT ");
 			for (var i = 0; i < valuesTable.Fields.Count; i++)
 			{
-				var field = valuesTable.Fields[i];
-
 				if (i > 0)
 					StringBuilder.Append(InlineComma);
-
+				var field = valuesTable.Fields[i];
 				if (IsSqlValuesTableValueTypeRequired(valuesTable, Array<ISqlExpression[]>.Empty, -1, i))
 					BuildTypedExpression(new SqlDataType(field), new SqlValue(field.Type, null));
 				else
 					BuildExpression(new SqlValue(field.Type, null));
+				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+			}
 
-				if (!SupportsColumnAliasesInSource)
-				{
-					StringBuilder.Append(' ');
-					Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
-				}
+			if (FakeTable != null)
+			{
+				StringBuilder.Append(" FROM ");
+				BuildFakeTableName();
 			}
 
 			StringBuilder
-				.AppendLine()
-				.Append("\tFROM ");
-
-			if (!BuildFakeTableName())
-				// we don't select anything, so it is ok to use target table
-				// BuildTableName(merge.Target, true, false);
-				throw new NotImplementedException();
-
-			StringBuilder
-				.AppendLine("\tWHERE 1 = 0")
-				.AppendLine(")");
+				.Append(" WHERE 1 = 0");
 		}
-
 
 		protected void BuildTableName(SqlTableSource ts, bool buildName, bool buildAlias)
 		{

@@ -10,7 +10,7 @@
 
 		// NULL value in sort leads to "cannot insert NULL into (TARGET.NON_NULL_COLUMN)" error in insert command
 		// TODO: find a way to workaround it
-		protected override bool MergeEmptySourceSupported => false;
+		protected override bool isEmptyValuesSourceSupported => true;
 
 		// VALUES(...) syntax not supported by Oracle
 		protected override bool IsValuesSyntaxSupported => false;

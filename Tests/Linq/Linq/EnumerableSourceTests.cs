@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Linq;
@@ -579,6 +580,29 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void EmptyValues([DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
+		{
+			var records = Array.Empty<TableToInsert>();
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<TableToInsert>())
+			{
+				var cacheMiss = Query<Person>.CacheMissCount;
+
+				var queryToSelect =
+					from t in table
+					join r in records on new {t.Id, t.Value} equals new {r.Id, r.Value}
+					select t;
+
+				queryToSelect.ToArray().Should().HaveCount(0);
+
+				if (iteration > 1)
+					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+			}
+		}
+
+
+		[Test]
 		public void SubQuery([DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
 			var records = new TableToInsert[]
@@ -600,6 +624,28 @@ namespace Tests.Linq
 				var result = queryToSelect.ToArray();
 
 				AreEqual(table, result);
+
+				if (iteration > 1)
+					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+			}
+		}
+
+		[Test]
+		public void EmptySubQuery([DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
+		{
+			var records = Array.Empty<TableToInsert>();
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<TableToInsert>())
+			{
+				var cacheMiss = Query<Person>.CacheMissCount;
+
+				var queryToSelect =
+					from t in table
+					where records.Any(r => t.Id == r.Id && t.Value == r.Value)
+					select t;
+
+				queryToSelect.ToArray().Should().HaveCount(0);
 
 				if (iteration > 1)
 					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
