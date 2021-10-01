@@ -604,7 +604,9 @@ namespace LinqToDB
 		[Function]
 		[Function(PN.DB2,      "Locate")]
 		[Function(PN.MySql,    "Locate")]
-		[Function(PN.SapHana,  "Locate")]
+#pragma warning disable CS3016 // Arrays as attribute arguments is not CLS-compliant
+		[Function(PN.SapHana,  "Locate", 1, 0)]
+#pragma warning restore CS3016 // Arrays as attribute arguments is not CLS-compliant
 		[Function(PN.Firebird, "Position")]
 		public static int? CharIndex(char? value, string? str)
 		{
@@ -616,7 +618,9 @@ namespace LinqToDB
 		[Function]
 		[Function(PN.DB2,      "Locate")]
 		[Function(PN.MySql,    "Locate")]
-		[Function(PN.SapHana,  "Locate")]
+#pragma warning disable CS3016 // Arrays as attribute arguments is not CLS-compliant
+		[Function(PN.SapHana,  "Locate", 1, 0, 2)]
+#pragma warning restore CS3016 // Arrays as attribute arguments is not CLS-compliant
 		[Function(PN.Firebird, "Position")]
 		public static int? CharIndex(char? value, string? str, int? start)
 		{
