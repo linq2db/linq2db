@@ -150,7 +150,7 @@ namespace LinqToDB.Common.Internal
 						: Expression.Call(
 							Expression.Convert(param, typeof(object)), ObjectGetHashCodeMethod);
 
-			if (type != unwrappedType || type.IsClass || type.IsInterface)
+			if (type != unwrappedType || !type.IsValueType)
 			{
 				expression = Expression.Condition(Expression.NotEqual(param, Expression.Constant(null, param.Type)),
 					expression, Expression.Constant(0, typeof(int)));
