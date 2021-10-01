@@ -3148,8 +3148,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AsQueryable, source, dataContext),
-					Expression.NewArrayInit(typeof(TElement),
-						source.Select(i => Expression.Constant(i, typeof(TElement)))),
+					Expression.Constant(source),
 					Expression.Constant(dataContext)
 				));
 
