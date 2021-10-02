@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Common;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
@@ -176,8 +177,8 @@ namespace LinqToDB.Linq.Builder
 
 			if (loadWith != null)
 			{
-				var associationLoadWith = GetLoadWith(loadWith)?
-					.FirstOrDefault(li => li.Info.MemberInfo == association.MemberInfo);
+				var associationLoadWith = GetLoadWith(loadWith)
+					.FirstOrDefault(li => MemberInfoEqualityComparer.Default.Equals(li.Info.MemberInfo, association.MemberInfo));
 
 				if (associationLoadWith != null &&
 				    (associationLoadWith.Info.MemberFilter != null || associationLoadWith.Info.FilterFunc != null))
@@ -207,11 +208,11 @@ namespace LinqToDB.Linq.Builder
 						else
 						{
 							var filterDelegate = loadWithFunc.EvaluateExpression<Delegate>() ??
-							                     throw new LinqException("Cannot convert filter function '{loadWithFunc}' to Delegate.");
+							                     throw new LinqException($"Cannot convert filter function '{loadWithFunc}' to Delegate.");
 
-							var arumentType = filterDelegate.GetType().GetGenericArguments()[0].GetGenericArguments()[0];
+							var argumentType = filterDelegate.GetType().GetGenericArguments()[0].GetGenericArguments()[0];
 							// check for fake argument q => q
-							if (arumentType.IsSameOrParentOf(objectType))
+							if (argumentType.IsSameOrParentOf(objectType))
 							{
 								
 								var query = ExpressionQueryImpl.CreateQuery(objectType, builder.DataContext, body);
@@ -453,7 +454,7 @@ namespace LinqToDB.Linq.Builder
 			if (loadWith != null)
 			{
 				loadWithFunc = GetLoadWith(loadWith)?
-					.FirstOrDefault(li => li.Info.MemberInfo == memberInfo)?.Info.FilterFunc?.EvaluateExpression() as Delegate;
+					.FirstOrDefault(li => MemberInfoEqualityComparer.Default.Equals(li.Info.MemberInfo, memberInfo))?.Info.FilterFunc?.EvaluateExpression() as Delegate;
 			}
 
 			return loadWithFunc;
