@@ -1146,8 +1146,8 @@ namespace LinqToDB.SqlProvider
 			{
 				field.StringBuilder.Append(' ');
 
-				if (!string.IsNullOrEmpty(field.Field.Type!.Value.DbType))
-					field.StringBuilder.Append(field.Field.Type!.Value.DbType);
+				if (!string.IsNullOrEmpty(field.Field.Type.DbType))
+					field.StringBuilder.Append(field.Field.Type.DbType);
 				else
 				{
 					var sb = StringBuilder;
@@ -1452,11 +1452,101 @@ namespace LinqToDB.SqlProvider
 
 					break;
 
+				case QueryElementType.SqlValuesTable:
+				{
+					if (alias == null)
+						throw new LinqToDBException("Alias required for SqlValuesTable.");
+					BuildSqlValuesTable((SqlValuesTable)table, alias, out var aliasBuilt);
+					buildAlias = !aliasBuilt;
+					break;
+				}
+
 				default:
 					throw new InvalidOperationException($"Unexpected table type {table.ElementType}");
 			}
 
 			return buildAlias;
+		}
+
+		protected virtual void BuildSqlValuesTable(SqlValuesTable valuesTable, string alias, out bool aliasBuilt)
+		{
+			valuesTable = ConvertElement(valuesTable);
+			var rows = valuesTable.BuildRows(OptimizationContext.Context);
+			if (rows?.Count > 0)
+			{
+				StringBuilder.Append(OpenParens);
+
+				if (IsValuesSyntaxSupported)
+					BuildValues(valuesTable, rows);
+				else
+					BuildValuesAsSelectsUnion(valuesTable.Fields, valuesTable, rows);
+
+				StringBuilder.Append(')');
+			}
+			else if (isEmptyValuesSourceSupported)
+			{
+				StringBuilder.Append(OpenParens);
+				BuildEmptyValues(valuesTable);
+				StringBuilder.Append(')');
+			}
+			else
+				throw new LinqToDBException($"{Name} doesn't support values with empty source");
+
+			aliasBuilt = IsValuesSyntaxSupported;
+			if (aliasBuilt)
+			{
+				BuildSqlValuesAlias(valuesTable, alias);
+			}
+		}
+
+		private void BuildSqlValuesAlias(SqlValuesTable valuesTable, string alias)
+		{
+			valuesTable = ConvertElement(valuesTable);
+			StringBuilder.Append(' ');
+
+			ConvertTableName(StringBuilder, null, null, null, alias, TableOptions.NotSet);
+
+			if (SupportsColumnAliasesInSource)
+			{
+				StringBuilder.Append(OpenParens);
+
+				var first = true;
+				foreach (var field in valuesTable.Fields)
+				{
+					if (!first)
+						StringBuilder.Append(Comma).Append(' ');
+
+					first = false;
+					Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+				}
+
+				StringBuilder.Append(')');
+			}
+		}
+
+		protected void BuildEmptyValues(SqlValuesTable valuesTable)
+		{
+			StringBuilder.Append("SELECT ");
+			for (var i = 0; i < valuesTable.Fields.Count; i++)
+			{
+				if (i > 0)
+					StringBuilder.Append(InlineComma);
+				var field = valuesTable.Fields[i];
+				if (IsSqlValuesTableValueTypeRequired(valuesTable, Array<ISqlExpression[]>.Empty, -1, i))
+					BuildTypedExpression(new SqlDataType(field), new SqlValue(field.Type, null));
+				else
+					BuildExpression(new SqlValue(field.Type, null));
+				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+			}
+
+			if (FakeTable != null)
+			{
+				StringBuilder.Append(" FROM ");
+				BuildFakeTableName();
+			}
+
+			StringBuilder
+				.Append(" WHERE 1 = 0");
 		}
 
 		protected void BuildTableName(SqlTableSource ts, bool buildName, bool buildAlias)

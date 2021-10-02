@@ -87,7 +87,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal SqlDataType(SqlField field)
-			: this(field.Type!.Value)
+			: this(field.Type)
 		{
 		}
 

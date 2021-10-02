@@ -78,7 +78,7 @@ namespace LinqToDB.SqlQuery
 			ColumnDescriptor  = column;
 		}
 
-		public DbDataType?       Type              { get; set; }
+		public DbDataType        Type              { get; set; }
 		public string?           Alias             { get; set; }
 		public string            Name              { get; set; } = null!; // not always true, see ColumnDescriptor notes
 		public bool              IsPrimaryKey      { get; set; }
@@ -94,7 +94,7 @@ namespace LinqToDB.SqlQuery
 		public ISqlTableSource?  Table             { get; set; }
 		public ColumnDescriptor  ColumnDescriptor  { get; set; } = null!; // TODO: not true, we probably should introduce something else for non-column fields
 
-		Type ISqlExpression.SystemType => Type?.SystemType!; // !!!
+		Type ISqlExpression.SystemType => Type.SystemType; 
 
 		private string? _physicalName;
 		public  string   PhysicalName

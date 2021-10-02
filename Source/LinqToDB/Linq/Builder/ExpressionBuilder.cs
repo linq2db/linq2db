@@ -80,13 +80,13 @@ namespace LinqToDB.Linq.Builder
 			new MergeBuilder.Using                       (),
 			new MergeBuilder.UsingTarget                 (),
 			new ContextParser              (),
-			new ArrayBuilder               (),
 			new AsSubQueryBuilder          (),
 			new DisableGroupingGuardBuilder(),
 			new InlineParametersBuilder    (),
 			new HasUniqueKeyBuilder        (),
 			new MultiInsertBuilder		   (),
 			new TagQueryBuilder            (),
+			new EnumerableBuilder          (),
 		};
 
 		public static void AddBuilder(ISequenceBuilder builder)
@@ -234,7 +234,7 @@ namespace LinqToDB.Linq.Builder
 			throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
 		}
 
-		public ISequenceBuilder GetBuilder(BuildInfo buildInfo)
+		public ISequenceBuilder? GetBuilder(BuildInfo buildInfo, bool throwIfNotFound = true)
 		{
 			buildInfo.Expression = buildInfo.Expression.Unwrap();
 
@@ -242,7 +242,9 @@ namespace LinqToDB.Linq.Builder
 				if (builder.CanBuild(this, buildInfo))
 					return builder;
 
-			throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
+			if (throwIfNotFound)
+				throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
+			return null;
 		}
 
 		public SequenceConvertInfo? ConvertSequence(BuildInfo buildInfo, ParameterExpression? param, bool throwExceptionIfCantConvert)

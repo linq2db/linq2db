@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Threading;
 using LinqToDB.Common;
 using LinqToDB.Linq.Builder;
@@ -48,7 +49,7 @@ namespace LinqToDB.SqlQuery
 			return newArr;
 		}
 
-		private void CloneInto<T>(IList<T> target, IList<T>? source)
+		private void CloneInto<T>(IList<T> target, IReadOnlyList<T>? source)
 			where T : class, IQueryElement
 		{
 			if (source == null)
@@ -58,7 +59,7 @@ namespace LinqToDB.SqlQuery
 				target!.Add(Clone(item));
 		}
 
-		private void CloneInto<T>(IList<T[]> target, IList<T[]>? source)
+		private void CloneInto<T>(IList<T[]> target, IReadOnlyList<T[]>? source)
 			where T : class, IQueryElement
 		{
 			if (source == null)
@@ -754,13 +755,32 @@ namespace LinqToDB.SqlQuery
 					break;
 				}
 
+				case QueryElementType.SqlValuesTable:
+				{
+					var values = (SqlValuesTable)(IQueryElement)element;
+
+					if (values.Rows == null)
+					{
+						// do nothing
+						clone = values;
+					}
+					else
+					{
+						var fields = values.Fields.Select(f => new SqlField(f)).ToArray();
+						var rows   = new List<ISqlExpression[]>(values.Rows.Count);
+						CloneInto(rows, values.Rows);
+						clone = new SqlValuesTable(fields, fields.Select(f => f.ColumnDescriptor?.MemberInfo).ToArray(), rows);
+					}	
+					break;
+
+				}
+
 				// types below had explicit NOT IMPLEMENTED implementation
 				//case QueryElementType.ConditionalInsertClause:
 				//case QueryElementType.MergeOperationClause;
 				//case QueryElementType.MergeStatement:
 				//case QueryElementType.MultiInsertStatement:
 				//case QueryElementType.MergeSourceTable:
-				//case QueryElementType.SqlValuesTable:
 				default:
 					throw new NotImplementedException($"Unsupported query element type: {element.GetType()} ({element.ElementType})");
 			}

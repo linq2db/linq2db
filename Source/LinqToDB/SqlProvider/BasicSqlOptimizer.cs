@@ -795,11 +795,6 @@ namespace LinqToDB.SqlProvider
 
 					break;
 				}
-
-				case QueryElementType.SqlValuesTable:
-				{
-					return ReduceSqlValueTable((SqlValuesTable)expression, context);
-				}
 			}
 
 			return expression;
@@ -943,6 +938,28 @@ namespace LinqToDB.SqlProvider
 				case SqlPredicate.Operator.LessOrEqual    : return preserveEqual ? SqlPredicate.Operator.GreaterOrEqual : SqlPredicate.Operator.Greater;
 				default: throw new InvalidOperationException();
 			}
+		}
+
+		ISqlPredicate OptimizeCase(SqlPredicate.IsTrue isTrue, EvaluationContext context)
+		{
+			//TODO: refactor CASE optimization
+
+			if ((isTrue.WithNull == null || isTrue.WithNull == false) && isTrue.Expr1 is SqlFunction func && func.Name == "CASE")
+			{
+				if (func.Parameters.Length == 3)
+				{
+					// It handles one specific case for OData
+					if (func.Parameters[0] is SqlSearchCondition &&
+					    func.Parameters[2] is SqlSearchCondition sc &&
+					    func.Parameters[1].TryEvaluateExpression(context, out var v1) && v1 is null)
+					{
+						if (isTrue.IsNot)
+							return new SqlPredicate.NotExpr(sc, true, Precedence.LogicalNegation);
+						return sc;
+					}
+				}				
+			}
+			return isTrue;
 		}
 
 		ISqlPredicate OptimizeCase(SqlPredicate.ExprExpr expr, EvaluationContext context)
@@ -1151,6 +1168,13 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.SearchCondition:
 					return SelectQueryOptimizer.OptimizeSearchCondition((SqlSearchCondition)predicate, context);
 
+				case QueryElementType.IsTruePredicate:
+				{
+					var isTrue = (SqlPredicate.IsTrue)predicate;
+					predicate = OptimizeCase(isTrue, context);
+					break;
+				}
+
 				case QueryElementType.ExprExprPredicate:
 				{
 					var expr = (SqlPredicate.ExprExpr)predicate;
@@ -1265,7 +1289,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 		public virtual IQueryElement OptimizeQueryElement<TContext>(ConvertVisitor<TContext> visitor, IQueryElement root,
-			IQueryElement element, EvaluationContext context)
+			IQueryElement element, OptimizationContext context, MappingSchema? mappingSchema)
 		{
 			switch (element.ElementType)
 			{
@@ -1274,6 +1298,23 @@ namespace LinqToDB.SqlProvider
 					var condition = (SqlCondition)element;
 
 					return SelectQueryOptimizer.OptimizeCondition(condition);
+				}
+
+				case QueryElementType.SqlValue:
+				{
+					var value = (SqlValue)element;
+					if (mappingSchema != null)
+					{
+						var dataType = new SqlDataType(value.ValueType);
+						if (!mappingSchema.ValueToSqlConverter.CanConvert(dataType, value.Value))
+						{
+							// we cannot generate SQL literal, so just convert to parameter
+							var param = context.SuggestDynamicParameter(value.ValueType, "value", value.Value);
+							return param;
+						}
+					}
+
+					break;
 				}
 			}
 
@@ -1718,33 +1759,33 @@ namespace LinqToDB.SqlProvider
 				var newElement = element.ConvertAll(
 					ctx,
 					static (visitor, e) =>
-				{
-					var prev = e;
-					var ne   = e;
-					for (;;)
 					{
-							ne = visitor.Context.Func(visitor.Context.OptimizationContext, visitor.Context.Optimizer, visitor, visitor.Context.Context, e);
+						var prev = e;
+						var ne   = e;
+						for (;;)
+						{
+								ne = visitor.Context.Func(visitor.Context.OptimizationContext, visitor.Context.Optimizer, visitor, visitor.Context.Context, e);
 
-						if (ReferenceEquals(ne, e))
-							break;
+							if (ReferenceEquals(ne, e))
+								break;
 
-						e = ne;
-					}
+							e = ne;
+						}
 
 						if (visitor.Context.Register)
 							visitor.Context.OptimizationContext.RegisterOptimized(prev, e);
 
-					return e;
+						return e;
 					},
 					static args =>
-				{
-						if (args.Visitor.Context.OptimizationContext.IsOptimized(args.Element, out var expr))
 					{
-						args.Element = expr;
-						return false;
-					}	
-					return true;
-				});
+						if (args.Visitor.Context.OptimizationContext.IsOptimized(args.Element, out var expr))
+						{
+							args.Element = expr;
+							return false;
+						}	
+						return true;
+					});
 
 				if (ReferenceEquals(newElement, element))
 					return element;
@@ -1774,7 +1815,7 @@ namespace LinqToDB.SqlProvider
 					if (!ReferenceEquals(ne, e))
 						return ne;
 
-					ne = opt.OptimizeQueryElement(visitor, pc.root, ne, ctx.Context);
+					ne = opt.OptimizeQueryElement(visitor, pc.root, ne, ctx, pc.mappingSchema);
 
 					return ne;
 				});
@@ -2712,7 +2753,7 @@ namespace LinqToDB.SqlProvider
 				}
 				case QueryElementType.SqlValuesTable:
 				{
-					return !((SqlValuesTable)element).IsRowsBuilt;
+					return ((SqlValuesTable)element).Rows == null;
 				}
 				case QueryElementType.SqlParameter:
 				{
@@ -2830,13 +2871,6 @@ namespace LinqToDB.SqlProvider
 			}
 
 			return newStatement;
-		}
-
-		static SqlValuesTable ReduceSqlValueTable(SqlValuesTable table, EvaluationContext context)
-		{
-			if (context == null)
-				return table;
-			return table.BuildRows(context);
 		}
 
 		public SqlStatement OptimizeAggregates(SqlStatement statement)

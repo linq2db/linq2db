@@ -24,7 +24,7 @@ namespace LinqToDB.Common
 			}
 			catch (Exception ex)
 			{
-				throw new LinqToDBConvertException($"Cannot convert value '{value}' to type '{conversionType.FullName}'", ex);
+				throw new LinqToDBConvertException($"Cannot convert value '{value}: {value.GetType().FullName}' to type '{conversionType.FullName}'", ex);
 			}
 		}
 
