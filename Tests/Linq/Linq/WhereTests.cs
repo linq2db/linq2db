@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
@@ -1820,6 +1820,39 @@ namespace Tests.Linq
 				var result = query.ToArray();
 			}
 		}
+
+		class WhereWithString
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column]
+			public string? StringValue { get; set; }
+		}
+
+		[Test]
+		public void CaseOptimization([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(new List<WhereWithString>{new()
+			{
+				Id        = 1,
+				StringValue = "Str1"
+			}}))
+			{
+				// ReSharper disable RedundantCast
+				var query = table.Where(x =>
+					(x.StringValue == null ? (bool?)null : (bool?)x.StringValue.Contains("Str")) == true);
+				// ReSharper restore RedundantCast
+
+				var result = query.ToArray();
+
+				var str = query.ToString();
+
+				str.Should().NotContain("NULL");
+			}
+		}
+
 
 		#region issue 2424
 		class Isue2424Table

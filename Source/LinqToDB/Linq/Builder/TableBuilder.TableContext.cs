@@ -15,6 +15,7 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
+	using Common;
 
 	partial class TableBuilder
 	{
@@ -315,7 +316,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				EntityCreatedEventData? args = null;
 				foreach (var interceptor in context.GetInterceptors<IDataContextInterceptor>())
-				{
+					{
 					args   ??= new EntityCreatedEventData(context, tableOptions, tableName, schemaName, databaseName, serverName);
 					entity   = interceptor.EntityCreated(args.Value, entity);
 				}
@@ -328,19 +329,19 @@ namespace LinqToDB.Linq.Builder
 
 			Expression NotifyEntityCreated(Expression expr)
 			{
-				expr =
-					Expression.Convert(
-						Expression.Call(
-							_onEntityCreatedMethodInfo,
-							ExpressionBuilder.DataContextParam,
-							expr,
-							Expression.Constant(SqlTable.TableOptions),
-							Expression.Constant(SqlTable.PhysicalName, typeof(string)),
-							Expression.Constant(SqlTable.Schema,       typeof(string)),
-							Expression.Constant(SqlTable.Database,     typeof(string)),
-							Expression.Constant(SqlTable.Server,       typeof(string))
-						),
-						expr.Type);
+					expr =
+						Expression.Convert(
+							Expression.Call(
+								_onEntityCreatedMethodInfo,
+								ExpressionBuilder.DataContextParam,
+								expr,
+								Expression.Constant(SqlTable.TableOptions),
+								Expression.Constant(SqlTable.PhysicalName, typeof(string)),
+								Expression.Constant(SqlTable.Schema,       typeof(string)),
+								Expression.Constant(SqlTable.Database,     typeof(string)),
+								Expression.Constant(SqlTable.Server,       typeof(string))
+							),
+							expr.Type);
 
 				return expr;
 			}
@@ -472,7 +473,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (isAssociation)
 						{
-							var loadWithItem = loadWithItems.FirstOrDefault(_ => _.Info.MemberInfo == member.MemberInfo);
+							var loadWithItem = loadWithItems.FirstOrDefault(_ => MemberInfoEqualityComparer.Default.Equals(_.Info.MemberInfo, member.MemberInfo));
 							if (loadWithItem != null)
 							{
 								var ma = Expression.MakeMemberAccess(Expression.Constant(null, typeAccessor.Type), member.MemberInfo);
@@ -528,10 +529,10 @@ namespace LinqToDB.Linq.Builder
 				var constructors = objectType.GetConstructors();
 
 				if (constructors.Length == 0)
-			{
+				{
 					constructors = objectType.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic);
 
-				if (constructors.Length == 0)
+					if (constructors.Length == 0)
 						throw new InvalidOperationException($"Type '{objectType.Name}' has no constructors.");
 				}
 

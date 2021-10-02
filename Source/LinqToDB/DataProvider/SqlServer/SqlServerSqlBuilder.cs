@@ -42,7 +42,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				var identityField = insertClause.Into!.GetIdentityField();
 
-				if (identityField != null && (identityField.Type!.Value.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
+				if (identityField != null && (identityField.Type.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
 				{
 					AppendIndent()
 						.Append("DECLARE ");
@@ -66,7 +66,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				var identityField = insertClause.Into!.GetIdentityField();
 
-				if (identityField != null && (identityField.Type!.Value.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
+				if (identityField != null && (identityField.Type.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
 				{
 					StringBuilder
 						.Append("OUTPUT [INSERTED].");
@@ -164,7 +164,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var identityField = insertClause.Into!.GetIdentityField();
 
-			if (identityField != null && (identityField.Type!.Value.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
+			if (identityField != null && (identityField.Type.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
 			{
 				StringBuilder
 					.AppendLine();

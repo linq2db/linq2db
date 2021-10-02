@@ -465,7 +465,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			LQuery                         = 61,
 			LTree                          = 60,
 			LTxtQuery                      = 62,
-			PgLsn                          = 59
+			PgLsn                          = 59,
+			// v5.0.10+
+			Xid8                           = 64
 
 		}
 

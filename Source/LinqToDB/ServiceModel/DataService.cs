@@ -185,7 +185,7 @@ namespace LinqToDB.ServiceModel
 							continue;
 
 						var kind  = ResourcePropertyKind.Primitive;
-						var ptype = ResourceType.GetPrimitiveResourceType(field.Type!.Value.SystemType);
+						var ptype = ResourceType.GetPrimitiveResourceType(field.Type.SystemType);
 
 						if (baseType == null && field.IsPrimaryKey)
 							kind |= ResourcePropertyKind.Key;

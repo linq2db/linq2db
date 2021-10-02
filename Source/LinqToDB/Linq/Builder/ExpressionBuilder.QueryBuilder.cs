@@ -182,12 +182,12 @@ namespace LinqToDB.Linq.Builder
 									var expression = ctx.BuildExpression(ma, 0, context.enforceServerSide);
 
 									if (expression.NodeType == ExpressionType.Extension && expression is DefaultValueExpression 
-									                                                    && ma.Expression?.NodeType == ExpressionType.Parameter)
+																						&& ma.Expression?.NodeType == ExpressionType.Parameter)
 									{
 										var objExpression = context.builder.BuildExpression(ctx, ma.Expression, context.enforceServerSide, context.alias);
 										var varTempVar    = objExpression.NodeType == ExpressionType.Parameter
 											? objExpression
-													: context.builder.BuildVariable(objExpression, ((ParameterExpression)ma.Expression).Name);
+											: context.builder.BuildVariable(objExpression, ((ParameterExpression)ma.Expression).Name);
 
 										var condition = Expression.Condition(
 											Expression.Equal(varTempVar,
@@ -211,9 +211,9 @@ namespace LinqToDB.Linq.Builder
 
 								if (ex is MethodCallExpression ce)
 								{
-									if (context.builder.IsSubQuery(context.context, ce))
+									if (!context.builder.IsEnumerableSource(ce) && context.builder.IsSubQuery(context.context, ce))
 									{
-										if (!IsMultipleQuery(ce, context.context.Builder.MappingSchema))
+										if (!context.context.Builder.IsMultipleQuery(ce, context.context.Builder.MappingSchema))
 										{
 											var info = context.builder.GetSubQueryContext(context.context, ce);
 											if (context.alias != null)
@@ -292,11 +292,14 @@ namespace LinqToDB.Linq.Builder
 							{
 								var ce = (MethodCallExpression)expr;
 
+								if (context.builder.IsEnumerableSource(ce))
+									break;
+
 								if (context.builder.IsGroupJoinSource(context.context, ce))
 								{
 									foreach (var arg in ce.Arguments.Skip(1))
 										if (!context.builder._skippedExpressions.Contains(arg))
-											context.builder._skippedExpressions.Add(arg);
+										context.builder._skippedExpressions.Add(arg);
 
 									if (context.builder.IsSubQuery(context.context, ce))
 									{
@@ -315,16 +318,16 @@ namespace LinqToDB.Linq.Builder
 
 								if (ce.IsAssociation(context.builder.MappingSchema))
 								{
-											var ctx = context.builder.GetContext(context.context, ce);
+									var ctx = context.builder.GetContext(context.context, ce);
 									if (ctx == null)
 										throw new InvalidOperationException();
 
-											return new TransformInfo(ctx.BuildExpression(ce, 0, context.enforceServerSide));
+									return new TransformInfo(ctx.BuildExpression(ce, 0, context.enforceServerSide));
 								}
 
 								if ((context.builder._buildMultipleQueryExpressions == null || !context.builder._buildMultipleQueryExpressions.Contains(ce)) && context.builder.IsSubQuery(context.context, ce))
 								{
-									if (IsMultipleQuery(ce, context.builder.MappingSchema))
+									if (context.builder.IsMultipleQuery(ce, context.builder.MappingSchema))
 										return new TransformInfo(context.builder.BuildMultipleQuery(context.context, ce, context.enforceServerSide));
 
 									return new TransformInfo(context.builder.GetSubQueryExpression(context.context, ce, context.enforceServerSide, context.alias));
@@ -437,9 +440,9 @@ namespace LinqToDB.Linq.Builder
 
 			var cond = (ConditionalExpression)expr;
 
-					if (cond.Test.NodeType == ExpressionType.Equal || cond.Test.NodeType == ExpressionType.NotEqual)
-					{
-						var b = (BinaryExpression)cond.Test;
+			if (cond.Test.NodeType == ExpressionType.Equal || cond.Test.NodeType == ExpressionType.NotEqual)
+			{
+				var b = (BinaryExpression)cond.Test;
 
 				Expression? cnt = null;
 				Expression? obj = null;
@@ -506,14 +509,50 @@ namespace LinqToDB.Linq.Builder
 			return expr;
 		}
 
-		static bool IsMultipleQuery(MethodCallExpression ce, MappingSchema mappingSchema)
+		bool IsEnumerableSource(Expression expr)
+		{
+			if (!CanBeCompiled(expr))
+			{
+				// Special case, contains has it's own translation
+				if (!(expr is MethodCallExpression mce && mce.IsQueryable("Contains")))
+					return false;
+			}
+
+			var selectQuery = new SelectQuery();
+			while (expr != null)
+			{
+				var buildInfo = new BuildInfo((IBuildContext?)null, expr, selectQuery);
+				if (GetBuilder(buildInfo, false) is EnumerableBuilder)
+				{
+					return true;
+				}
+
+				switch (expr)
+				{
+					case MemberExpression me:
+						expr = me.Expression;
+						continue;
+					case MethodCallExpression mc when mc.IsQueryable():
+						expr = mc.Arguments[0];
+						continue;
+				}
+
+				break;
+			}
+
+			return false;
+		}
+
+		bool IsMultipleQuery(MethodCallExpression ce, MappingSchema mappingSchema)
 		{
 			//TODO: Multiply query check should be smarter, possibly not needed if we create fallback mechanism
-			return !ce.IsQueryable(FirstSingleBuilder.MethodNames) 
-			       && typeof(IEnumerable).IsSameOrParentOf(ce.Type) 
+			var result = !ce.IsQueryable(FirstSingleBuilder.MethodNames)
+			       && typeof(IEnumerable).IsSameOrParentOf(ce.Type)
 			       && ce.Type != typeof(string) 
 			       && !ce.Type.IsArray 
 			       && !ce.IsAggregate(mappingSchema);
+
+			return result;
 		}
 
 		class SubQueryContextInfo
@@ -636,25 +675,25 @@ namespace LinqToDB.Linq.Builder
 			switch (e.NodeType)
 			{
 				case ExpressionType.MemberAccess:
-					{
-						var me = (MemberExpression)e;
+				{
+					var me = (MemberExpression)e;
 
-						var om = (
-							from c in Contexts.OfType<TableBuilder.TableContext>()
-							where c.ObjectType == me.Member.DeclaringType
-							select c.EntityDescriptor
-						).FirstOrDefault();
+					var om = (
+								from c in Contexts.OfType<TableBuilder.TableContext>()
+								where c.ObjectType == me.Member.DeclaringType
+								select c.EntityDescriptor
+							).FirstOrDefault();
 
-						return om != null && om.Associations.All(a => !a.MemberInfo.EqualsTo(me.Member)) &&
-						       om[me.Member.Name] == null;
-					}
+					return om != null && om.Associations.All(a => !a.MemberInfo.EqualsTo(me.Member)) &&
+						   om[me.Member.Name] == null;
+				}
 				case ExpressionType.Call:
-					{
-						var mc = (MethodCallExpression)e;
-						if (mc.IsCte(MappingSchema))
-							context.WriteableValue = true;
-						break;
-					}
+				{
+					var mc = (MethodCallExpression)e;
+					if (mc.IsCte(MappingSchema))
+						context.WriteableValue = true;
+					break;
+				}
 			}
 
 			return context.WriteableValue;

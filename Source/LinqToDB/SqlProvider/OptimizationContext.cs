@@ -15,7 +15,10 @@ namespace LinqToDB.SqlProvider
 			new(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
 
 		private List<SqlParameter>? _actualParameters;
-		private HashSet<string>? _usedParameterNames;
+		private HashSet<string>?    _usedParameterNames;
+
+		private Dictionary<(DbDataType, string, object?), SqlParameter>? _dynamicParameters;
+
 		
 		public OptimizationContext(EvaluationContext context, AliasesContext aliases, 
 			bool isParameterOrderDepended)
@@ -89,6 +92,22 @@ namespace LinqToDB.SqlProvider
 			}
 
 			return parameter;
+		}
+
+		public SqlParameter SuggestDynamicParameter(DbDataType dbDataType, string name, object? value)
+		{
+			var key = (dbDataType, name, value);
+
+			if (_dynamicParameters == null || !_dynamicParameters.TryGetValue(key, out var param))
+			{
+				// converting to SQL Parameter
+				param = new SqlParameter(dbDataType, name, value);
+
+				_dynamicParameters ??= new();
+				_dynamicParameters.Add(key, param);
+			}
+
+			return param;
 		}
 
 		private void CorrectParamName(SqlParameter parameter)
