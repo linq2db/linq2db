@@ -107,6 +107,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			mapType("oid"                     , NpgsqlProviderAdapter.NpgsqlDbType.Oid);
 			mapType("regtype"                 , NpgsqlProviderAdapter.NpgsqlDbType.Regtype);
 			mapType("xid"                     , NpgsqlProviderAdapter.NpgsqlDbType.Xid);
+			mapType("xid8"                    , NpgsqlProviderAdapter.NpgsqlDbType.Xid8);
 			mapType("cid"                     , NpgsqlProviderAdapter.NpgsqlDbType.Cid);
 			mapType("tid"                     , NpgsqlProviderAdapter.NpgsqlDbType.Tid);
 			// other types
