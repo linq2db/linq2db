@@ -439,7 +439,7 @@ namespace LinqToDB.SqlQuery
 						sb.Append(" STARTS_WITH ");
 						break;
 					case SearchKind.EndsWith:
-						sb.Append(" ENS_WITH ");
+						sb.Append(" ENDS_WITH ");
 						break;
 					case SearchKind.Contains:
 						sb.Append(" CONTAINS ");
