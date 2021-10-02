@@ -3132,8 +3132,8 @@ namespace LinqToDB
 		/// <exception cref="ArgumentNullException">
 		/// <paramref name="source" /> is <see langword="null" />.</exception>
 		public static IQueryable<TElement> AsQueryable<TElement>(
-			[SqlQueryDependent]  this IEnumerable<TElement> source,
-			                          IDataContext          dataContext)
+			this IEnumerable<TElement> source,
+			IDataContext               dataContext)
 		{
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));

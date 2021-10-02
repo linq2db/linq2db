@@ -39,9 +39,10 @@ namespace LinqToDB.DataProvider.MySql
 			ParameterSymbol = '@';
 		}
 
-		protected override bool IsRecursiveCteKeywordRequired   => true;
-		public    override bool IsNestedJoinParenthesisRequired => true;
-		protected override bool IsValuesSyntaxSupported         => false;
+		protected override bool   IsRecursiveCteKeywordRequired   => true;
+		public    override bool   IsNestedJoinParenthesisRequired => true;
+		protected override bool   IsValuesSyntaxSupported         => false;
+		protected override string FakeTable                       => "DUAL";
 
 		protected override bool CanSkipRootAliases(SqlStatement statement)
 		{

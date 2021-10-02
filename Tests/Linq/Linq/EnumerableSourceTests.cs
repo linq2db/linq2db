@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Linq;
@@ -15,7 +16,7 @@ namespace Tests.Linq
 		public void ApplyJoinArray(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus,
 				TestProvName.AllOracle12)]
-			string context)
+			string context, [Values(1, 2)] int iteration)
 		{
 			var doe = "Doe";
 			using (var db = GetDataContext(context))
@@ -25,12 +26,17 @@ namespace Tests.Linq
 					if (i > 0)
 						doe += i;
 
+					var cacheMiss = Query<Person>.CacheMissCount;
+
 					var q =
 						from p in db.Person
 						from n in new[] { p.FirstName, p.LastName, "John", doe }
 						select n;
 
 					var result = q.ToList();
+
+					if (iteration > 1)
+						Query<Person>.CacheMissCount.Should().Be(cacheMiss);
 
 					var expected =
 						from p in Person
@@ -44,17 +50,22 @@ namespace Tests.Linq
 
 		[Test]
 		public void InnerJoinArray(
-			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context)
+			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
 			var doe = "Doe";
 			using (var db = GetDataContext(context))
 			{
+				var cacheMiss = Query<Person>.CacheMissCount;
+
 				var q =
 					from p in db.Person
 					join n in new[] { "Janet", "Doe", "John", doe }.AsQueryable() on p.LastName equals n
 					select p;
 
 				var result = q.ToList();
+
+				if (iteration > 1)
+					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -67,17 +78,22 @@ namespace Tests.Linq
 
 		[Test]
 		public void InnerJoinArray2(
-			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context)
+			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
 			var doe = "Doe";
 			using (var db = GetDataContext(context))
 			{
+				var cacheMiss = Query<Person>.CacheMissCount;
+
 				var q =
 					from p in db.Person
 					join n in new[] { "Janet", "Doe", "John", doe } on p.LastName equals n
 					select p;
 
 				var result = q.ToList();
+
+				if (iteration > 1)
+					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -90,7 +106,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void InnerJoinArray3(
-			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context)
+			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
 			var doe = "Doe";
 
@@ -101,12 +117,17 @@ namespace Tests.Linq
 					if (i > 0)
 						doe += i;
 
+					var cacheMiss = Query<Person>.CacheMissCount;
+
 					var q =
 						from p in db.Person
 						join n in new[] { "Janet", "Doe", "John", doe } on p.LastName equals n
 						select p;
 
 					var result = q.ToList();
+
+					if (iteration > 1)
+						Query<Person>.CacheMissCount.Should().Be(cacheMiss);
 
 					var expected =
 						from p in Person
@@ -120,7 +141,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void InnerJoinArray4(
-			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context)
+			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
 			var doe = "Doe";
 			var arr = new[] { "Janet", "Doe", "John", doe };
@@ -132,12 +153,17 @@ namespace Tests.Linq
 					if (i > 0)
 						arr[1] += i;
 
+					var cacheMiss = Query<Person>.CacheMissCount;
+
 					var q =
 						from p in db.Person
 						join n in arr on p.LastName equals n
 						select p;
 
 					var result = q.ToList();
+
+					if (iteration > 1)
+						Query<Person>.CacheMissCount.Should().Be(cacheMiss);
 
 					var expected =
 						from p in Person
@@ -151,12 +177,14 @@ namespace Tests.Linq
 
 		[Test]
 		public void InnerJoinArray5(
-			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context)
+			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
 			var doe = "Doe";
 
 			using (var db = GetDataContext(context))
 			{
+				var cacheMiss = Query<Person>.CacheMissCount;
+
 				var q =
 					from n in new[] { "Janet", "Doe", "John", doe }.AsQueryable(db)
 					join p in db.Person on n equals p.LastName
@@ -164,6 +192,9 @@ namespace Tests.Linq
 
 				var result = q.ToList();
 				var sql    = q.ToString();
+
+				if (iteration > 1)
+					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
 
 				Assert.That(sql, Contains.Substring("JOIN"));
 
@@ -178,16 +209,21 @@ namespace Tests.Linq
 
 		[Test]
 		public void InnerJoinArray6(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllPostgreSQLLess10)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllPostgreSQLLess10)] string context, [Values(1, 2)] int iteration)
 		{
 			using (var db = GetDataContext(context))
 			{
+				var cacheMiss = Query<Person>.CacheMissCount;
+
 				var q =
 					from p in db.Person
 					join n in new[] { "Doe" } on p.LastName equals n
 					select p;
 
 				var result = q.ToList();
+
+				if (iteration > 1)
+					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -200,16 +236,21 @@ namespace Tests.Linq
 
 		[ActiveIssue("PosgreSql needs type for literals. We have to rewise literals generation.")]
 		[Test]
-		public void InnerJoinArray6Postgres([IncludeDataSources(TestProvName.AllPostgreSQLLess10)] string context)
+		public void InnerJoinArray6Postgres([IncludeDataSources(TestProvName.AllPostgreSQLLess10)] string context, [Values(1, 2)] int iteration)
 		{
 			using (var db = GetDataContext(context))
 			{
+				var cacheMiss = Query<Person>.CacheMissCount;
+
 				var q =
 					from p in db.Person
 					join n in new[] { "Doe" } on p.LastName equals n
 					select p;
 
 				var result = q.ToList();
+
+				if (iteration > 1)
+					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -225,10 +266,12 @@ namespace Tests.Linq
 		public void ApplyJoinAnonymousClassArray(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus,
 				TestProvName.AllOracle12)]
-			string context)
+			string context, [Values(1, 2)] int iteration)
 		{
 			using (var db = GetDataContext(context))
 			{
+				var cacheMiss = Query<Person>.CacheMissCount;
+
 				var q =
 					from p in db.Person
 					from n in (new[]
@@ -239,6 +282,9 @@ namespace Tests.Linq
 					select p;
 
 				var result = q.ToList();
+
+				if (iteration > 1)
+					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -257,10 +303,12 @@ namespace Tests.Linq
 		public void ApplyJoinClassArray(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus,
 				TestProvName.AllOracle12)]
-			string context)
+			string context, [Values(1, 2)] int iteration)
 		{
 			using (var db = GetDataContext(context))
 			{
+				var cacheMiss = Query<Person>.CacheMissCount;
+
 				var q =
 					from p in db.Person
 					from n in new Person[]
@@ -271,6 +319,9 @@ namespace Tests.Linq
 					select p;
 
 				var result = q.ToList();
+
+				if (iteration > 1)
+					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -287,10 +338,12 @@ namespace Tests.Linq
 
 		[Test]
 		public void InnerJoinClassArray(
-			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context)
+			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
 			using (var db = GetDataContext(context))
 			{
+				var cacheMiss = Query<Person>.CacheMissCount;
+
 				var q =
 					from p in db.Person
 					join n in new[] { new { ID = 1, Name = "Janet" }, new { ID = 1, Name = "Doe" }, } on p.LastName
@@ -298,6 +351,9 @@ namespace Tests.Linq
 					select p;
 
 				var result = q.ToList();
+
+				if (iteration > 1)
+					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -311,11 +367,13 @@ namespace Tests.Linq
 
 		[Test]
 		public void InnerJoinAnonymousClassRecords(
-			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context)
+			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var records = new[] { new { ID = 1, Name = "Janet" }, new { ID = 1, Name = "Doe" }, };
+				var cacheMiss = Query<Person>.CacheMissCount;
+
+				var records   = new[] { new { ID = 1, Name = "Janet" }, new { ID = 1, Name = "Doe" }, };
 
 				var q =
 					from p in db.Person
@@ -323,6 +381,9 @@ namespace Tests.Linq
 					select p;
 
 				var result = q.ToList();
+
+				if (iteration > 1)
+					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -335,10 +396,12 @@ namespace Tests.Linq
 
 		[Test]
 		public void InnerJoinClassRecords(
-			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context)
+			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
 			using (var db = GetDataContext(context))
 			{
+				var cacheMiss = Query<Person>.CacheMissCount;
+
 				var records = new Person[]
 				{
 					new() { ID = 1, FirstName = "Janet" }, new() { ID = 2, FirstName = "Doe" },
@@ -350,6 +413,9 @@ namespace Tests.Linq
 					select p;
 
 				var result = q.ToList();
+
+				if (iteration > 1)
+					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
 
 				var expected =
 					from p in Person
@@ -454,7 +520,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<TableToInsert>())
 			{
-				var cacheMiss = Query<Person>.CacheMissCount;
+				var cacheMiss = Query<TableToInsert>.CacheMissCount;
 
 				var records = new TableToInsert[]
 				{
@@ -472,7 +538,7 @@ namespace Tests.Linq
 				table.Insert(queryToInsert).Should().Be(0);
 
 				if (iteration > 1)
-					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+					Query<TableToInsert>.CacheMissCount.Should().Be(cacheMiss);
 			}
 		}
 
@@ -495,7 +561,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(records))
 			{
-				var cacheMiss = Query<Person>.CacheMissCount;
+				var cacheMiss = Query<TableToInsert>.CacheMissCount;
 
 				var upadedValue = new TableToInsert[]
 				{
@@ -512,7 +578,7 @@ namespace Tests.Linq
 					.Update().Should().Be(2);
 
 				if (iteration > 1)
-					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+					Query<TableToInsert>.CacheMissCount.Should().Be(cacheMiss);
 
 				AreEqual(table, upadedValue);
 			}
@@ -530,7 +596,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(records))
 			{
-				var cacheMiss = Query<Person>.CacheMissCount;
+				var cacheMiss = Query<TableToInsert>.CacheMissCount;
 
 				var deleteValue = new TableToInsert[]
 				{
@@ -546,7 +612,7 @@ namespace Tests.Linq
 				queryToDelete.Delete().Should().Be(2);
 
 				if (iteration > 1)
-					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+					Query<TableToInsert>.CacheMissCount.Should().Be(cacheMiss);
 			}
 		}
 
@@ -562,7 +628,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(records))
 			{
-				var cacheMiss = Query<Person>.CacheMissCount;
+				var cacheMiss = Query<TableToInsert>.CacheMissCount;
 
 				var queryToSelect =
 					from r in records.AsQueryable(db).AsCte()
@@ -574,9 +640,108 @@ namespace Tests.Linq
 				AreEqual(table, result);
 
 				if (iteration > 1)
+					Query<TableToInsert>.CacheMissCount.Should().Be(cacheMiss);
+			}
+		}
+
+		[Test]
+		public void EmptyValues([DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
+		{
+			var records = Array.Empty<TableToInsert>();
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<TableToInsert>())
+			{
+				var cacheMiss = Query<TableToInsert>.CacheMissCount;
+
+				var queryToSelect =
+					from t in table
+					join r in records on new {t.Id, t.Value} equals new {r.Id, r.Value}
+					select t;
+
+				queryToSelect.ToArray().Should().HaveCount(0);
+
+				if (iteration > 1)
+					Query<TableToInsert>.CacheMissCount.Should().Be(cacheMiss);
+			}
+		}
+
+
+		[Test]
+		public void SubQuery([DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
+		{
+			var records = new TableToInsert[]
+			{
+				new() { Id = 1 + iteration, Value = "Janet" },
+				new() { Id = 2 + iteration, Value = "Doe" },
+			};
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(records))
+			{
+				var cacheMiss = Query<TableToInsert>.CacheMissCount;
+
+				var queryToSelect =
+					from t in table
+					where records.Any(r => t.Id == r.Id && t.Value == r.Value)
+					select t;
+
+				var result = queryToSelect.ToArray();
+
+				AreEqual(table, result);
+
+				if (iteration > 1)
+					Query<TableToInsert>.CacheMissCount.Should().Be(cacheMiss);
+			}
+		}
+
+		[Test]
+		public void EmptySubQuery([DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
+		{
+			var records = Array.Empty<TableToInsert>();
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<TableToInsert>())
+			{
+				var cacheMiss = Query<TableToInsert>.CacheMissCount;
+
+				var queryToSelect =
+					from t in table
+					where records.Any(r => t.Id == r.Id && t.Value == r.Value)
+					select t;
+
+				queryToSelect.ToArray().Should().HaveCount(0);
+
+				if (iteration > 1)
+					Query<TableToInsert>.CacheMissCount.Should().Be(cacheMiss);
+			}
+		}
+
+
+		[Test]
+		public void StringSubQuery(
+			[DataSources(ProviderName.SQLiteMS, TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase,
+				TestProvName.AllSybase, TestProvName.AllInformix)]
+			string context, [Values(1, 2)] int iteration)
+		{
+			string searchStr = "john";
+
+			using (var db = GetDataContext(context))
+			{
+				var cacheMiss = Query<Person>.CacheMissCount;
+
+				var queryToSelect =
+					from t in db.Person
+					where searchStr.Any(x => t.FirstName.IndexOf(x) > 0)
+					select t;
+
+				 queryToSelect.ToArray().Should().HaveCountGreaterThan(0);
+
+				if (iteration > 1)
 					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
 			}
 		}
+
 
 	}
 }

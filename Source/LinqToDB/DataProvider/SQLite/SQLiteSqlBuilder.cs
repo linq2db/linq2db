@@ -190,43 +190,41 @@ namespace LinqToDB.DataProvider.SQLite
 		protected override void BuildSqlValuesTable(SqlValuesTable valuesTable, string alias, out bool aliasBuilt)
 		{
 			valuesTable = ConvertElement(valuesTable);
-
-			StringBuilder.Append(OpenParens);
-
-			++Indent;
-
-			StringBuilder.AppendLine();
-			AppendIndent();
-			StringBuilder.Append("SELECT ");
-			for (var i = 0; i < valuesTable.Fields.Count; i++)
-			{
-				if (i > 0)
-					StringBuilder.Append(InlineComma);
-				var field = valuesTable.Fields[i];
-				StringBuilder.Append("NULL AS ");
-				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
-			}
-
-			StringBuilder
-				.Append(" WHERE 0")
-				.AppendLine();
-
-			AppendIndent();
-
 			var rows = valuesTable.BuildRows(OptimizationContext.Context);
-			if (rows?.Count > 0)
+
+			if (rows.Count == 0)
 			{
-				StringBuilder.AppendLine("UNION ALL");
+				StringBuilder.Append(OpenParens);
+				BuildEmptyValues(valuesTable);
+				StringBuilder.Append(')');
+			}
+			else 
+			{
+				StringBuilder.Append(OpenParens);
+
+				++Indent;
+
+				StringBuilder.AppendLine();
+				AppendIndent();
+				BuildEmptyValues(valuesTable);
+				StringBuilder.AppendLine();
+
 				AppendIndent();
 
-				BuildValues(valuesTable, rows);
+				if (rows?.Count > 0)
+				{
+					StringBuilder.AppendLine("UNION ALL");
+					AppendIndent();
+
+					BuildValues(valuesTable, rows);
+				}
+
+				StringBuilder.Append(')');
+
+				--Indent;
 			}
 
-			StringBuilder.Append(')');
-
 			aliasBuilt = false;
-
-			--Indent;
 		}
 	}
 }

@@ -13,18 +13,12 @@ using LinqToDB.Extensions;
 using LinqToDB.Linq;
 using LinqToDB.Reflection;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using System.Data;
-	using System.Data.Common;
-	using System.Threading;
-	using System.Threading.Tasks;
 	using LinqToDB.Common;
-	using LinqToDB.Data.DbCommandProcessor;
 	using Model;
 
 	[TestFixture]

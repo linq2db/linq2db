@@ -29,7 +29,7 @@ namespace LinqToDB.SqlProvider
 		/// If true, builder will generate command for empty enumerable source;
 		/// Otherwise exception will be generated.
 		/// </summary>
-		protected virtual bool MergeEmptySourceSupported => true;
+		protected virtual bool isEmptyValuesSourceSupported => true;
 
 		/// <summary>
 		/// If <see cref="IsValuesSyntaxSupported"/> set to false and provider doesn't support SELECTs without
@@ -233,7 +233,7 @@ namespace LinqToDB.SqlProvider
 
 				StringBuilder.Append(')');
 			}
-			else if (MergeEmptySourceSupported)
+			else if (isEmptyValuesSourceSupported)
 				BuildMergeEmptySource(merge);
 			else
 				throw new LinqToDBException($"{Name} doesn't support merge with empty source");
