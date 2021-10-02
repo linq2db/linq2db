@@ -1310,7 +1310,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region CanBeCompiled
 
-		bool CanBeCompiled(Expression expr)
+		public bool CanBeCompiled(Expression expr)
 		{
 			return _optimizationContext.CanBeCompiled(expr);
 		}
@@ -1334,7 +1334,7 @@ namespace LinqToDB.Linq.Builder
 			    MappingSchema.ValueToSqlConverter.CanConvert(unwrapped.Type))
 			{
 				dbType = dbType.WithSystemType(unwrapped.Type);
-				expr = unwrapped;
+				expr   = unwrapped;
 			}
 
 			dbType = dbType.WithSystemType(expr.Type);
@@ -2538,14 +2538,11 @@ namespace LinqToDB.Linq.Builder
 					case QueryElementType.SqlField:
 						{
 							var fld = (SqlField)e;
-							if (fld.Type != null)
-							{
-								context.DataType     = fld.Type.Value.DataType;
-								context.DbType       = fld.Type.Value.DbType;
-								context.Length       = fld.Type.Value.Length;
-								context.Precision    = fld.Type.Value.Precision;
-								context.Scale        = fld.Type.Value.Scale;
-							}
+							context.DataType     = fld.Type.DataType;
+							context.DbType       = fld.Type.DbType;
+							context.Length       = fld.Type.Length;
+							context.Precision    = fld.Type.Precision;
+							context.Scale        = fld.Type.Scale;
 							return true;
 						}
 					case QueryElementType.SqlParameter:

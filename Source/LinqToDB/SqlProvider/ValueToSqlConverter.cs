@@ -169,11 +169,16 @@ namespace LinqToDB.SqlProvider
 			return TryConvertImpl(stringBuilder, dataType, value, true);
 		}
 
-		bool TryConvertImpl(StringBuilder stringBuilder, SqlDataType dataType, object? value, bool tryBase)
+		public bool CanConvert(SqlDataType dataType, object? value)
+		{
+			return TryConvertImpl(null, dataType, value, true);
+		}
+
+		bool TryConvertImpl(StringBuilder? stringBuilder, SqlDataType dataType, object? value, bool tryBase)
 		{
 			if (value == null || value is INullable nullable && nullable.IsNull)
 			{
-				stringBuilder.Append("NULL");
+				stringBuilder?.Append("NULL");
 				return true;
 			}
 
@@ -187,7 +192,7 @@ namespace LinqToDB.SqlProvider
 				{
 					switch (type.GetTypeCodeEx())
 					{
-						case TypeCode.DBNull  : stringBuilder.Append("NULL")  ; return true;
+						case TypeCode.DBNull  : stringBuilder?.Append("NULL")  ; return true;
 						case TypeCode.Boolean : converter = _booleanConverter ; break;
 						case TypeCode.Char    : converter = _charConverter    ; break;
 						case TypeCode.SByte   : converter = _sByteConverter   ; break;
@@ -209,7 +214,8 @@ namespace LinqToDB.SqlProvider
 
 			if (converter != null)
 			{
-				converter(stringBuilder, dataType, value);
+				if (stringBuilder != null)
+					converter(stringBuilder, dataType, value);
 				return true;
 			}
 

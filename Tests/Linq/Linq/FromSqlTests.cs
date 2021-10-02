@@ -479,8 +479,8 @@ namespace Tests.Linq
 				var expr1 = qry1.Expression;
 				var expr2 = qry2.Expression;
 
-				var query1 = Query<SampleClass>.GetQuery(db, ref expr1);
-				var query2 = Query<SampleClass>.GetQuery(db, ref expr2);
+				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
+				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
 
 				Assert.True(ReferenceEquals(query1, query2));
 
@@ -505,8 +505,8 @@ namespace Tests.Linq
 				var expr1 = qry1.Expression;
 				var expr2 = qry2.Expression;
 
-				var query1 = Query<SampleClass>.GetQuery(db, ref expr1);
-				var query2 = Query<SampleClass>.GetQuery(db, ref expr2);
+				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
+				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
 
 				Assert.False(ReferenceEquals(query1, query2));
 
@@ -531,8 +531,8 @@ namespace Tests.Linq
 				var expr1 = qry1.Expression;
 				var expr2 = qry2.Expression;
 
-				var query1 = Query<SampleClass>.GetQuery(db, ref expr1);
-				var query2 = Query<SampleClass>.GetQuery(db, ref expr2);
+				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
+				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
 
 				Assert.False(ReferenceEquals(query1, query2));
 
@@ -557,8 +557,8 @@ namespace Tests.Linq
 				var expr1 = qry1.Expression;
 				var expr2 = qry2.Expression;
 
-				var query1 = Query<SampleClass>.GetQuery(db, ref expr1);
-				var query2 = Query<SampleClass>.GetQuery(db, ref expr2);
+				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
+				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
 
 				Assert.True(ReferenceEquals(query1, query2));
 
@@ -585,8 +585,8 @@ namespace Tests.Linq
 				var expr1 = qry1.Expression;
 				var expr2 = qry2.Expression;
 
-				var query1 = Query<SampleClass>.GetQuery(db, ref expr1);
-				var query2 = Query<SampleClass>.GetQuery(db, ref expr2);
+				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
+				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
 
 				Assert.False(ReferenceEquals(query1, query2));
 
@@ -614,8 +614,8 @@ namespace Tests.Linq
 				var expr1 = qry1.Expression;
 				var expr2 = qry2.Expression;
 
-				var query1 = Query<SampleClass>.GetQuery(db, ref expr1);
-				var query2 = Query<SampleClass>.GetQuery(db, ref expr2);
+				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
+				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
 
 				Assert.False(ReferenceEquals(query1, query2));
 

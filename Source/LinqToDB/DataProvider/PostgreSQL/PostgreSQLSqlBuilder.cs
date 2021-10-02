@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
@@ -266,19 +267,19 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			if (field.IsIdentity)
 			{
-				if (field.Type!.Value.DataType == DataType.Int16)
+				if (field.Type.DataType == DataType.Int16)
 				{
 					StringBuilder.Append("SMALLSERIAL");
 					return;
 				}
 
-				if (field.Type!.Value.DataType == DataType.Int32)
+				if (field.Type.DataType == DataType.Int32)
 				{
 					StringBuilder.Append("SERIAL");
 					return;
 				}
 
-				if (field.Type!.Value.DataType == DataType.Int64)
+				if (field.Type.DataType == DataType.Int64)
 				{
 					StringBuilder.Append("BIGSERIAL");
 					return;
@@ -439,6 +440,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public override string GetReserveSequenceValuesSql(int count, string sequenceName)
 		{
 			return $"SELECT nextval('{ConvertInline(sequenceName, ConvertType.SequenceName)}') FROM generate_series(1, {count.ToString(CultureInfo.InvariantCulture)})";
+		}
+
+		
+		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source,
+			IReadOnlyList<ISqlExpression[]> rows, int row, int column)
+		{
+			return row < 0;
 		}
 	}
 }

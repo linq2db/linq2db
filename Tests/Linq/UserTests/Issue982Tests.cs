@@ -68,7 +68,7 @@ namespace Tests.UserTests
 
 				foreach (var key in keys.OfType<SqlField>())
 				{
-					var maxValue = GetMaxValue(key.Type!.Value.DataType);
+					var maxValue = GetMaxValue(key.Type!.DataType);
 					if (maxValue == null)
 						continue;
 

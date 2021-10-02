@@ -214,13 +214,13 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			if (field.IsIdentity)
 			{
-				if (field.Type!.Value.DataType == DataType.Int32)
+				if (field.Type.DataType == DataType.Int32)
 				{
 					StringBuilder.Append("SERIAL");
 					return;
 				}
 
-				if (field.Type!.Value.DataType == DataType.Int64)
+				if (field.Type.DataType == DataType.Int64)
 				{
 					StringBuilder.Append("SERIAL8");
 					return;

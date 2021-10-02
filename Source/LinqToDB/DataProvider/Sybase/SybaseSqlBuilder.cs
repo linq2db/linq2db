@@ -40,6 +40,8 @@ namespace LinqToDB.DataProvider.Sybase
 				.AppendLine("SELECT @@IDENTITY");
 		}
 
+		protected override bool SupportsColumnAliasesInSource => true;
+
 		protected override string FirstFormat(SelectQuery selectQuery)
 		{
 			return "TOP {0}";
