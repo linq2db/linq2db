@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
 
@@ -14,10 +13,9 @@ namespace LinqToDB.Linq.Builder
 			return buildInfo.Expression is ChangeTypeExpression;
 		}
 
-		//ISequenceBuilder _builder;
 		ISequenceBuilder GetBuilder(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			return builder.GetBuilder(buildInfo) ?? throw new InvalidOperationException();
+			return builder.GetBuilder(buildInfo)!;
 		}
 
 		public IBuildContext? BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
