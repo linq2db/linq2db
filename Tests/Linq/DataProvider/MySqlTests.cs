@@ -1247,65 +1247,66 @@ namespace Tests.DataProvider
 		[Table]
 		public class CreateTable
 		{
-			[Column                                                            ] public string? VarChar255;
-			[Column(Length = 1)                                                ] public string? VarChar1;
-			[Column(Length = 112)                                              ] public string? VarChar112;
-			[Column                                                            ] public char    Char;
-			[Column(DataType = DataType.Char)                                  ] public string? Char255;
-			[Column(DataType = DataType.Char, Length = 1)                      ] public string? Char1;
-			[Column(DataType = DataType.Char, Length = 112)                    ] public string? Char112;
-			[Column(Length = 1)                                                ] public byte[]? VarBinary1;
-			[Column                                                            ] public byte[]? VarBinary255;
-			[Column(Length = 3)                                                ] public byte[]? VarBinary3;
-			[Column(DataType = DataType.Binary, Length = 1)                    ] public byte[]? Binary1;
-			[Column(DataType = DataType.Binary)                                ] public byte[]? Binary255;
-			[Column(DataType = DataType.Binary, Length = 3)                    ] public byte[]? Binary3;
-			[Column(DataType = DataType.Blob, Length = 200)                    ] public byte[]? TinyBlob;
-			[Column(DataType = DataType.Blob, Length = 2000)                   ] public byte[]? Blob;
-			[Column(DataType = DataType.Blob, Length = 200000)                 ] public byte[]? MediumBlob;
-			[Column(DataType = DataType.Blob)                                  ] public byte[]? BlobDefault;
-			[Column(DataType = DataType.Blob, Length = int.MaxValue)           ] public byte[]? LongBlob;
-			[Column(DataType = DataType.Text, Length = 200)                    ] public string? TinyText;
-			[Column(DataType = DataType.Text, Length = 2000)                   ] public string? Text;
-			[Column(DataType = DataType.Text, Length = 200000)                 ] public string? MediumText;
-			[Column(DataType = DataType.Text, Length = int.MaxValue)           ] public string? LongText;
-			[Column(DataType = DataType.Text)                                  ] public string? TextDefault;
-			[Column(DataType = DataType.Date)                                  ] public DateTime Date;
-			[Column                                                            ] public DateTime DateTime;
+			[Column                                                            ] public string?        VarChar255;
+			[Column(Length = 1)                                                ] public string?        VarChar1;
+			[Column(Length = 112)                                              ] public string?        VarChar112;
+			[Column                                                            ] public char              Char;
+			[Column(DataType = DataType.Char)                                  ] public string?        Char255;
+			[Column(DataType = DataType.Char, Length = 1)                      ] public string?        Char1;
+			[Column(DataType = DataType.Char, Length = 112)                    ] public string?        Char112;
+			[Column(Length = 1)                                                ] public byte[]?        VarBinary1;
+			[Column                                                            ] public byte[]?        VarBinary255;
+			[Column(Length = 3)                                                ] public byte[]?        VarBinary3;
+			[Column(DataType = DataType.Binary, Length = 1)                    ] public byte[]?        Binary1;
+			[Column(DataType = DataType.Binary)                                ] public byte[]?        Binary255;
+			[Column(DataType = DataType.Binary, Length = 3)                    ] public byte[]?        Binary3;
+			[Column(DataType = DataType.Blob, Length = 200)                    ] public byte[]?        TinyBlob;
+			[Column(DataType = DataType.Blob, Length = 2000)                   ] public byte[]?        Blob;
+			[Column(DataType = DataType.Blob, Length = 200000)                 ] public byte[]?        MediumBlob;
+			[Column(DataType = DataType.Blob)                                  ] public byte[]?        BlobDefault;
+			[Column(DataType = DataType.Blob, Length = int.MaxValue)           ] public byte[]?        LongBlob;
+			[Column(DataType = DataType.Text, Length = 200)                    ] public string?        TinyText;
+			[Column(DataType = DataType.Text, Length = 2000)                   ] public string?        Text;
+			[Column(DataType = DataType.Text, Length = 200000)                 ] public string?        MediumText;
+			[Column(DataType = DataType.Text, Length = int.MaxValue)           ] public string?        LongText;
+			[Column(DataType = DataType.Text)                                  ] public string?        TextDefault;
+			[Column(DataType = DataType.Date)                                  ] public DateTime       Date;
+			[Column                                                            ] public DateTime       DateTime;
 			[NotColumn(Configuration = TestProvName.MySql55)                   ]
-			[Column(Precision = 3)                                             ] public DateTime DateTime3;
+			[Column(Precision = 3)                                             ] public DateTime       DateTime3;
 			[Column                                                            ] public DateTimeOffset TimeStamp;
+			[NotColumn(Configuration = TestProvName.MySql55)                   ]
 			[Column(Precision = 5)                                             ] public DateTimeOffset TimeStamp5;
-			[Column                                                            ] public TimeSpan Time;
+			[Column                                                            ] public TimeSpan       Time;
 			[NotColumn(Configuration = TestProvName.MySql55)                   ]
-			[Column(Precision = 2)                                             ] public TimeSpan Time2;
-			[Column                                                            ] public sbyte TinyInt;
-			[Column                                                            ] public byte UnsignedTinyInt;
-			[Column                                                            ] public short SmallInt;
-			[Column                                                            ] public ushort UnsignedSmallInt;
-			[Column                                                            ] public int Int;
-			[Column                                                            ] public uint UnsignedInt;
-			[Column                                                            ] public long BigInt;
-			[Column                                                            ] public ulong UnsignedBigInt;
-			[Column                                                            ] public decimal Decimal;
-			[Column(Precision = 15)                                            ] public decimal Decimal15_0;
-			[Column(Scale = 5)                                                 ] public decimal Decimal10_5;
-			[Column(Precision = 20, Scale = 2)                                 ] public decimal Decimal20_2;
-			[Column                                                            ] public float Float;
-			[Column(Precision = 10)                                            ] public float Float10;
-			[Column                                                            ] public double Double;
-			[Column(Precision = 30)                                            ] public double Float30;
-			[Column                                                            ] public bool Bool;
-			[Column(DataType = DataType.BitArray)                              ] public bool Bit1;
-			[Column(DataType = DataType.BitArray)                              ] public byte Bit8;
-			[Column(DataType = DataType.BitArray)                              ] public short Bit16;
-			[Column(DataType = DataType.BitArray)                              ] public int Bit32;
-			[Column(DataType = DataType.BitArray, Length = 10)                 ] public int Bit10;
-			[Column(DataType = DataType.BitArray)                              ] public long Bit64;
+			[Column(Precision = 2)                                             ] public TimeSpan       Time2;
+			[Column                                                            ] public sbyte          TinyInt;
+			[Column                                                            ] public byte           UnsignedTinyInt;
+			[Column                                                            ] public short          SmallInt;
+			[Column                                                            ] public ushort         UnsignedSmallInt;
+			[Column                                                            ] public int            Int;
+			[Column                                                            ] public uint           UnsignedInt;
+			[Column                                                            ] public long           BigInt;
+			[Column                                                            ] public ulong          UnsignedBigInt;
+			[Column                                                            ] public decimal        Decimal;
+			[Column(Precision = 15)                                            ] public decimal        Decimal15_0;
+			[Column(Scale = 5)                                                 ] public decimal        Decimal10_5;
+			[Column(Precision = 20, Scale = 2)                                 ] public decimal        Decimal20_2;
+			[Column                                                            ] public float          Float;
+			[Column(Precision = 10)                                            ] public float          Float10;
+			[Column                                                            ] public double         Double;
+			[Column(Precision = 30)                                            ] public double         Float30;
+			[Column                                                            ] public bool           Bool;
+			[Column(DataType = DataType.BitArray)                              ] public bool           Bit1;
+			[Column(DataType = DataType.BitArray)                              ] public byte           Bit8;
+			[Column(DataType = DataType.BitArray)                              ] public short          Bit16;
+			[Column(DataType = DataType.BitArray)                              ] public int            Bit32;
+			[Column(DataType = DataType.BitArray, Length = 10)                 ] public int            Bit10;
+			[Column(DataType = DataType.BitArray)                              ] public long           Bit64;
 			[NotColumn(Configuration = TestProvName.MySql55)                   ]
-			[Column(DataType = DataType.Json)                                  ] public string? Json;
+			[Column(DataType = DataType.Json)                                  ] public string?        Json;
 			// not mysql type, just mapping testing
-			[Column                                                            ] public Guid Guid;
+			[Column                                                            ] public Guid           Guid;
 		}
 
 		[Test]
@@ -1365,9 +1366,9 @@ namespace Tests.DataProvider
 						Assert.True(sql.Contains("\t`DateTime3`        DATETIME(3)       NOT NULL"));
 						Assert.True(sql.Contains("\t`Time2`            TIME(2)           NOT NULL"));
 						Assert.True(sql.Contains("\t`Json`             JSON                  NULL"));
+						Assert.True(sql.Contains("\t`TimeStamp5`       TIMESTAMP(5)      NOT NULL"));
 					}
 					Assert.True(sql.Contains("\t`TimeStamp`        TIMESTAMP         NOT NULL"));
-					Assert.True(sql.Contains("\t`TimeStamp5`       TIMESTAMP(5)      NOT NULL"));
 					Assert.True(sql.Contains("\t`Time`             TIME              NOT NULL"));
 					Assert.True(sql.Contains("\t`TinyInt`          TINYINT           NOT NULL"));
 					Assert.True(sql.Contains("\t`UnsignedTinyInt`  TINYINT UNSIGNED  NOT NULL"));
@@ -1487,9 +1488,9 @@ namespace Tests.DataProvider
 						Assert.AreEqual(testRecord.DateTime3   , readRecord.DateTime3);
 						Assert.AreEqual(testRecord.Time2       , readRecord.Time2);
 						Assert.AreEqual(testRecord.Json        , readRecord.Json);
+						Assert.AreEqual(testRecord.TimeStamp5  , readRecord.TimeStamp5);
 					}
 					Assert.AreEqual(testRecord.TimeStamp       , readRecord.TimeStamp);
-					Assert.AreEqual(testRecord.TimeStamp5      , readRecord.TimeStamp5);
 					Assert.AreEqual(testRecord.Time            , readRecord.Time);
 					Assert.AreEqual(testRecord.TinyInt         , readRecord.TinyInt);
 					Assert.AreEqual(testRecord.UnsignedTinyInt , readRecord.UnsignedTinyInt);

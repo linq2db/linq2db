@@ -683,9 +683,6 @@ BEGIN
 	`Enum`,
 	`Set`,
 	`Year`,
--- SKIP MySql55 BEGIN
-	`Json`,
--- SKIP MySql55 END
 	`Geometry`,
 	`Point`,
 	`LineString`,
@@ -694,6 +691,9 @@ BEGIN
 	`MultiLineString`,
 	`MultiPolygon`,
 	`GeometryCollection`
+-- SKIP MySql55 BEGIN
+	,`Json`
+-- SKIP MySql55 END
 
 	FROM Person;
 END
