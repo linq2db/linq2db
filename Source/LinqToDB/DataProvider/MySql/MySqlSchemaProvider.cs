@@ -376,7 +376,6 @@ SELECT
 			switch (dataType?.ToLower())
 			{
 				case "geometry"  : return _provider.Adapter.MySqlGeometryType.Name;
-				case "decimal"   : return _provider.Adapter.MySqlDecimalType?.Name;
 				case "date"      :
 				case "newdate"   :
 				case "datetime"  :

@@ -171,11 +171,9 @@ CREATE TABLE `AllTypes`
 	timeDataType        time                         NULL,
 	yearDataType        year                         NULL,
 -- SKIP MySql BEGIN
--- SKIP MySqlConnector BEGIN
 -- SKIP MariaDB BEGIN
 	year2DataType       year(2)                      NULL,
 -- SKIP MySql END
--- SKIP MySqlConnector END
 -- SKIP MariaDB END
 -- SKIP MySql55 BEGIN
 	year2DataType       year(4)                      NULL,
@@ -463,11 +461,9 @@ CREATE TABLE FullTextIndexTest (
 )
 -- SKIP MySql BEGIN
 -- SKIP MariaDB BEGIN
--- SKIP MySqlConnector BEGIN
 	ENGINE=MyISAM
 -- SKIP MySql END
 -- SKIP MariaDB END
--- SKIP MySqlConnector END
 ;
 GO
 INSERT INTO FullTextIndexTest(TestField1, TestField2) VALUES('this is text1', 'this is text2');
@@ -631,10 +627,9 @@ CREATE PROCEDURE `Issue2313Results`(
 	IN `Bit64` BIT(64),
 	IN `Enum` ENUM('one', 'two'),
 	IN `Set` ENUM('one', 'two'),
-
 -- SKIP MySql55 BEGIN
--- SKIP MySql BEGIN
 	IN `Json` JSON,
+-- SKIP MySql55 END
 	IN `Geometry` GEOMETRY,
 	IN `Point` POINT,
 	IN `LineString` LINESTRING,
@@ -643,9 +638,6 @@ CREATE PROCEDURE `Issue2313Results`(
 	IN `MultiLineString` MULTILINESTRING,
 	IN `MultiPolygon` MULTIPOLYGON,
 	IN `GeometryCollection` GEOMETRYCOLLECTION,
--- SKIP MySql END
--- SKIP MySql55 END
-
 	IN `Year` YEAR
 )
 BEGIN
@@ -690,11 +682,10 @@ BEGIN
 	`Bit64`,
 	`Enum`,
 	`Set`,
-	`Year`
-
+	`Year`,
 -- SKIP MySql55 BEGIN
--- SKIP MySql BEGIN
-	,`Json`,
+	`Json`,
+-- SKIP MySql55 END
 	`Geometry`,
 	`Point`,
 	`LineString`,
@@ -703,9 +694,6 @@ BEGIN
 	`MultiLineString`,
 	`MultiPolygon`,
 	`GeometryCollection`
--- SKIP MySql END
--- SKIP MySql55 END
-
 
 	FROM Person;
 END

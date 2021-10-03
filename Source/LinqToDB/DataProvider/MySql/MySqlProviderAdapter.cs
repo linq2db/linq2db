@@ -13,81 +13,49 @@ namespace LinqToDB.DataProvider.MySql
 
 	public class MySqlProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _mysqlDataSyncRoot      = new ();
 		private static readonly object _mysqlConnectorSyncRoot = new ();
 
-		private static MySqlProviderAdapter? _mysqlDataInstance;
 		private static MySqlProviderAdapter? _mysqlConnectorInstance;
 
-		public const string MySqlConnectorAssemblyName = "MySqlConnector";
-		public const string MySqlDataAssemblyName      = "MySql.Data";
+		public const string MySqlConnectorAssemblyName         = "MySqlConnector";
 
-		public const string MySqlDataClientNamespace = "MySql.Data.MySqlClient";
-		public const string MySqlDataTypesNamespace  = "MySql.Data.Types";
-
-		public const string MySqlConnectorNamespace      = "MySqlConnector";
-		public const string MySqlConnectorTypesNamespace = "MySqlConnector";
-
-		public const string OldMySqlConnectorNamespace       = "MySql.Data.MySqlClient";
-		public const string OldMySqlConnectorTypesNamespace  = "MySql.Data.Types";
-
-		internal enum MySqlProvider
-		{
-			MySqlData,
-			MySqlConnector
-		}
+		private  const string MySqlConnectorNamespace          = "MySqlConnector";
+		private  const string MySqlConnectorTypesNamespace     = "MySqlConnector";
+		internal const string OldMySqlConnectorNamespace       = "MySql.Data.MySqlClient";
+		private  const string OldMySqlConnectorTypesNamespace  = "MySql.Data.Types";
 
 		private MySqlProviderAdapter(
-			MySqlProvider provider,
-
 			Type connectionType,
 			Type dataReaderType,
 			Type parameterType,
 			Type commandType,
 			Type transactionType,
 
-			Type? mySqlDecimalType,
 			Type  mySqlDateTimeType,
 			Type  mySqlGeometryType,
 
-			Func<object, decimal>? mySqlDecimalGetter,
-
 			Func<DbParameter, object> dbTypeGetter,
-
-			string? getMySqlDecimalMethodName,
-			string? getDateTimeOffsetMethodName,
-			string  getMySqlDateTimeMethodName,
 
 			string  providerTypesNamespace,
 			MappingSchema    mappingSchema,
 			BulkCopyAdapter? bulkCopy)
 		{
-			ProviderType = provider;
-
 			ConnectionType  = connectionType;
 			DataReaderType  = dataReaderType;
 			ParameterType   = parameterType;
 			CommandType     = commandType;
 			TransactionType = transactionType;
 
-			MySqlDecimalType  = mySqlDecimalType;
 			MySqlDateTimeType = mySqlDateTimeType;
 			MySqlGeometryType = mySqlGeometryType;
 
-			MySqlDecimalGetter = mySqlDecimalGetter;
-
 			GetDbType = dbTypeGetter;
 
-			GetMySqlDecimalMethodName   = getMySqlDecimalMethodName;
-			GetDateTimeOffsetMethodName = getDateTimeOffsetMethodName;
-			GetMySqlDateTimeMethodName  = getMySqlDateTimeMethodName;
 			ProviderTypesNamespace      = providerTypesNamespace;
 
 			MappingSchema = mappingSchema;
 			BulkCopy      = bulkCopy;
 		}
-
-		internal MySqlProvider ProviderType { get; }
 
 		public Type ConnectionType  { get; }
 		public Type DataReaderType  { get; }
@@ -97,31 +65,15 @@ namespace LinqToDB.DataProvider.MySql
 
 		public MappingSchema MappingSchema { get; }
 
-		/// <summary>
-		/// Not supported by MySqlConnector.
-		/// </summary>
-		public Type? MySqlDecimalType  { get; }
 		public Type  MySqlDateTimeType { get; }
 		public Type  MySqlGeometryType { get; }
 
-		/// <summary>
-		/// Not supported by MySqlConnector.
-		/// </summary>
-		public Func<object, decimal>? MySqlDecimalGetter { get; }
 
-		/// <summary>
-		/// Not supported by MySqlConnector.
-		/// </summary>
-		public string? GetMySqlDecimalMethodName { get; }
+		public string GetDateTimeOffsetMethodName => "GetDateTimeOffset";
 
-		/// <summary>
-		/// MySqlConnector-only.
-		/// </summary>
-		public string? GetDateTimeOffsetMethodName { get; }
+		public string GetMySqlDateTimeMethodName  => "GetMySqlDateTime";
 
-		public string GetMySqlDateTimeMethodName   { get; }
-
-		public string ProviderTypesNamespace       { get; }
+		public string ProviderTypesNamespace      { get; }
 
 		/// <summary>
 		/// Returns object, because both providers use different enums and we anyway don't need typed value.
@@ -144,143 +96,14 @@ namespace LinqToDB.DataProvider.MySql
 			public Func<int, string, MySqlBulkCopyColumnMapping>                    CreateColumnMapping { get; }
 		}
 
-		public static MySqlProviderAdapter GetInstance(string name)
+		public static MySqlProviderAdapter GetInstance()
 		{
-			if (name == ProviderName.MySqlConnector)
-			{
-				if (_mysqlConnectorInstance == null)
-					lock (_mysqlConnectorSyncRoot)
-						if (_mysqlConnectorInstance == null)
-							_mysqlConnectorInstance = MySqlConnector.CreateAdapter();
+			if (_mysqlConnectorInstance == null)
+				lock (_mysqlConnectorSyncRoot)
+					if (_mysqlConnectorInstance == null)
+						_mysqlConnectorInstance = MySqlConnector.CreateAdapter();
 
-				return _mysqlConnectorInstance;
-			}
-			else
-			{
-				if (_mysqlDataInstance == null)
-					lock (_mysqlDataSyncRoot)
-						if (_mysqlDataInstance == null)
-							_mysqlDataInstance = MySqlData.CreateAdapter();
-
-				return _mysqlDataInstance;
-			}
-		}
-
-		private class MySqlData
-		{
-			internal static MySqlProviderAdapter CreateAdapter()
-			{
-				var assembly = Common.Tools.TryLoadAssembly(MySqlDataAssemblyName, null);
-				if (assembly == null)
-					throw new InvalidOperationException($"Cannot load assembly {MySqlDataAssemblyName}");
-
-				var connectionType    = assembly.GetType($"{MySqlDataClientNamespace}.MySqlConnection" , true)!;
-				var dataReaderType    = assembly.GetType($"{MySqlDataClientNamespace}.MySqlDataReader" , true)!;
-				var parameterType     = assembly.GetType($"{MySqlDataClientNamespace}.MySqlParameter"  , true)!;
-				var commandType       = assembly.GetType($"{MySqlDataClientNamespace}.MySqlCommand"    , true)!;
-				var transactionType   = assembly.GetType($"{MySqlDataClientNamespace}.MySqlTransaction", true)!;
-				var dbType            = assembly.GetType($"{MySqlDataClientNamespace}.MySqlDbType"     , true)!;
-				var mySqlDecimalType  = assembly.GetType($"{MySqlDataTypesNamespace}.MySqlDecimal"     , true)!;
-				var mySqlDateTimeType = assembly.GetType($"{MySqlDataTypesNamespace}.MySqlDateTime"    , true)!;
-				var mySqlGeometryType = assembly.GetType($"{MySqlDataTypesNamespace}.MySqlGeometry"    , true)!;
-
-				var typeMapper = new TypeMapper();
-				typeMapper.RegisterTypeWrapper<MySqlParameter>(parameterType);
-				typeMapper.RegisterTypeWrapper<MySqlDbType>(dbType);
-				typeMapper.RegisterTypeWrapper<MySqlDateTime>(mySqlDateTimeType);
-				typeMapper.RegisterTypeWrapper<MySqlDecimal>(mySqlDecimalType);
-
-				var dbTypeGetter      = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType).BuildGetter<DbParameter>();
-				var decimalGetter     = typeMapper.Type<MySqlDecimal>().Member(p => p.Value).BuildGetter<object>();
-				var dateTimeConverter = typeMapper.MapLambda((MySqlDateTime dt) => dt.GetDateTime());
-
-				var mappingSchema = new MappingSchema();
-				mappingSchema.SetDataType(mySqlDecimalType, DataType.Decimal);
-				mappingSchema.SetDataType(mySqlDateTimeType, DataType.DateTime2);
-				mappingSchema.SetConvertExpression(mySqlDateTimeType, typeof(DateTime), dateTimeConverter);
-
-				return new MySqlProviderAdapter(
-					MySqlProvider.MySqlData,
-					connectionType,
-					dataReaderType,
-					parameterType,
-					commandType,
-					transactionType,
-					mySqlDecimalType,
-					mySqlDateTimeType,
-					mySqlGeometryType,
-					decimalGetter,
-					p => dbTypeGetter(p),
-					"GetMySqlDecimal",
-					null,
-					"GetMySqlDateTime",
-					MySqlDataTypesNamespace,
-					mappingSchema,
-					null);
-			}
-
-			[Wrapper]
-			private class MySqlDateTime
-			{
-				public DateTime GetDateTime() => throw new NotImplementedException();
-			}
-
-			[Wrapper]
-			private class MySqlDecimal
-			{
-				public decimal Value { get; }
-			}
-
-			[Wrapper]
-			private class MySqlParameter
-			{
-				public MySqlDbType MySqlDbType { get; set; }
-			}
-
-			[Wrapper]
-			internal enum MySqlDbType
-			{
-				Binary     = 754,
-				Bit        = 16,
-				Blob       = 252,
-				Byte       = 1,
-				Date       = 10,
-				Datetime   = 12,
-				DateTime   = 12,
-				Decimal    = 0,
-				Double     = 5,
-				Enum       = 247,
-				Float      = 4,
-				Geometry   = 255,
-				Guid       = 854,
-				Int16      = 2,
-				Int24      = 9,
-				Int32      = 3,
-				Int64      = 8,
-				JSON       = 245,
-				LongBlob   = 251,
-				LongText   = 751,
-				MediumBlob = 250,
-				MediumText = 750,
-				Newdate    = 14,
-				NewDecimal = 246,
-				Set        = 248,
-				String     = 254,
-				Text       = 752,
-				Time       = 11,
-				Timestamp  = 7,
-				TinyBlob   = 249,
-				TinyText   = 749,
-				UByte      = 501,
-				UInt16     = 502,
-				UInt24     = 509,
-				UInt32     = 503,
-				UInt64     = 508,
-				VarBinary  = 753,
-				VarChar    = 253,
-				VarString  = 15,
-				Year       = 13
-			}
+			return _mysqlConnectorInstance;
 		}
 
 		internal class MySqlConnector
@@ -346,20 +169,14 @@ namespace LinqToDB.DataProvider.MySql
 				mappingSchema.SetConvertExpression(mySqlDateTimeType, typeof(DateTime), dateTimeConverter);
 
 				return new MySqlProviderAdapter(
-					MySqlProvider.MySqlConnector,
 					connectionType,
 					dataReaderType,
 					parameterType,
 					commandType,
 					transactionType,
-					null,
 					mySqlDateTimeType,
 					mySqlGeometryType,
-					null,
 					p => typeGetter(p),
-					null,
-					"GetDateTimeOffset",
-					"GetMySqlDateTime",
 					typesNamespace,
 					mappingSchema,
 					bulkCopy);

@@ -256,7 +256,6 @@ public class a_CreateData : TestBase
 			case TestProvName.PostgreSQL12                        :
 			case TestProvName.PostgreSQL13                        : RunScript(context,          "\nGO\n",  "PostgreSQL");                  break;
 			case ProviderName.MySql                               :
-			case ProviderName.MySqlConnector                      :
 			case TestProvName.MySql55                             :
 			case TestProvName.MariaDB                             : RunScript(context,          "\nGO\n",  "MySql");                       break;
 			case ProviderName.SqlServer2005                       :

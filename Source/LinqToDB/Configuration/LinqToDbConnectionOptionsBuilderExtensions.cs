@@ -153,42 +153,14 @@
 
 		#region UseMySql
 		/// <summary>
-		/// Configure connection to use MySql default provider and connection string.
+		/// Configure connection to use MySql provider (MySqlConnector) and connection string.
 		/// </summary>
 		/// <param name="builder">Instance of <see cref="LinqToDbConnectionOptionsBuilder"/>.</param>
 		/// <param name="connectionString">MySql connection string.</param>
 		/// <returns>The builder instance so calls can be chained.</returns>
-		/// <remarks>
-		/// <para>
-		/// Default provider will be choosen by probing current folder for provider assembly and if it is not found, default to <c>MySql.Data</c> provider.
-		/// </para>
-		/// For more fine-grained configuration see <see cref="UseMySqlData(LinqToDbConnectionOptionsBuilder, string)"/> and <see cref="UseMySqlConnector(LinqToDbConnectionOptionsBuilder, string)"/> methods.
-		/// </remarks>
 		public static LinqToDbConnectionOptionsBuilder UseMySql(this LinqToDbConnectionOptionsBuilder builder, string connectionString)
 		{
 			return builder.UseConnectionString(ProviderName.MySql, connectionString);
-		}
-
-		/// <summary>
-		/// Configure connection to use <c>MySql.Data</c> MySql provider and connection string.
-		/// </summary>
-		/// <param name="builder">Instance of <see cref="LinqToDbConnectionOptionsBuilder"/>.</param>
-		/// <param name="connectionString">MySql connection string.</param>
-		/// <returns>The builder instance so calls can be chained.</returns>
-		public static LinqToDbConnectionOptionsBuilder UseMySqlData(this LinqToDbConnectionOptionsBuilder builder, string connectionString)
-		{
-			return builder.UseConnectionString(ProviderName.MySqlOfficial, connectionString);
-		}
-
-		/// <summary>
-		/// Configure connection to use <c>MySqlConnector</c> MySql provider and connection string.
-		/// </summary>
-		/// <param name="builder">Instance of <see cref="LinqToDbConnectionOptionsBuilder"/>.</param>
-		/// <param name="connectionString">MySql connection string.</param>
-		/// <returns>The builder instance so calls can be chained.</returns>
-		public static LinqToDbConnectionOptionsBuilder UseMySqlConnector(this LinqToDbConnectionOptionsBuilder builder, string connectionString)
-		{
-			return builder.UseConnectionString(ProviderName.MySqlConnector, connectionString);
 		}
 		#endregion
 

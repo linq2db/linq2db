@@ -20,14 +20,10 @@ using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
 
-using MySqlDataDateTime = MySql.Data.Types.MySqlDateTime;
-using MySqlDataDecimal  = MySql.Data.Types.MySqlDecimal;
-
-using MySqlConnectorDateTime = MySqlConnector.MySqlDateTime;
-
 namespace Tests.DataProvider
 {
 	using Model;
+	using MySqlConnector;
 
 	[TestFixture]
 	public class MySqlTests : DataProviderTestBase
@@ -89,23 +85,8 @@ namespace Tests.DataProvider
 				Assert.That(TestType<string>					(conn, "enumDataType"),                                    Is.EqualTo("Green"));
 				Assert.That(TestType<string>					(conn, "setDataType"),                                     Is.EqualTo("one"));
 
-				if (context != ProviderName.MySqlConnector && context != TestProvName.MariaDB)
-				{
-					TestType<MySqlDataDecimal?>(conn, "decimalDataType", DataType.Decimal);
-
-					var dt1 = TestType<MySqlDataDateTime?>(conn, "datetimeDataType", DataType.DateTime);
-					var dt2 = new MySqlDataDateTime(2012, 12, 12, 12, 12, 12, 0)
-					{
-						TimezoneOffset = dt1!.Value.TimezoneOffset
-					};
-
-					Assert.That(dt1, Is.EqualTo(dt2));
-				}
-				else
-				{
-					using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
-						Assert.That(TestType<MySqlConnectorDateTime?>(conn, "datetimeDataType", DataType.DateTime), Is.EqualTo(new MySqlConnectorDateTime(2012, 12, 12, 12, 12, 12, 0)));
-				}
+				using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
+					Assert.That(TestType<MySqlDateTime?>(conn, "datetimeDataType", DataType.DateTime), Is.EqualTo(new MySqlDateTime(2012, 12, 12, 12, 12, 12, 0)));
 			}
 		}
 
@@ -525,8 +506,7 @@ namespace Tests.DataProvider
 
 		public static void EnableNativeBulk(DataConnection db, string context)
 		{
-			if (context == ProviderName.MySqlConnector)
-				db.Execute("SET GLOBAL local_infile=ON");
+			db.Execute("SET GLOBAL local_infile=ON");
 		}
 
 		[Table("NeedS.esca Pin`g")]
@@ -1082,7 +1062,7 @@ namespace Tests.DataProvider
 				Assert.AreEqual(expectedProc.IsAggregateFunction,   procedure.IsAggregateFunction);
 				Assert.AreEqual(expectedProc.IsDefaultSchema,       procedure.IsDefaultSchema);
 
-				if (GetProviderName(context, out _) == ProviderName.MySqlConnector && procedure.ResultException != null)
+				if (procedure.ResultException != null)
 				{
 					Assert.False       (procedure.IsLoaded);
 					Assert.IsInstanceOf(typeof(InvalidOperationException), procedure.ResultException);
@@ -1148,9 +1128,7 @@ namespace Tests.DataProvider
 
 					foreach (var actualColumn in actualTable.Columns)
 					{
-						var expectedColumn = expectedTable.Columns
-							.Where(_ => _.ColumnName == actualColumn.ColumnName)
-							.SingleOrDefault()!;
+						var expectedColumn = expectedTable.Columns.SingleOrDefault(_ => _.ColumnName == actualColumn.ColumnName)!;
 
 						Assert.IsNotNull(expectedColumn);
 
@@ -1296,10 +1274,8 @@ namespace Tests.DataProvider
 			[Column                                                            ] public DateTime DateTime;
 			[NotColumn(Configuration = TestProvName.MySql55)                   ]
 			[Column(Precision = 3)                                             ] public DateTime DateTime3;
-			// MySQL.Data provider has issues with timestamps
-			// TODO: look into it later
-			[Column(Configuration = ProviderName.MySqlConnector)               ] public DateTimeOffset TimeStamp;
-			[Column(Precision = 5, Configuration = ProviderName.MySqlConnector)] public DateTimeOffset TimeStamp5;
+			[Column                                                            ] public DateTimeOffset TimeStamp;
+			[Column(Precision = 5)                                             ] public DateTimeOffset TimeStamp5;
 			[Column                                                            ] public TimeSpan Time;
 			[NotColumn(Configuration = TestProvName.MySql55)                   ]
 			[Column(Precision = 2)                                             ] public TimeSpan Time2;
@@ -1335,8 +1311,6 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestCreateTable([IncludeDataSources(false, TestProvName.AllMySql)] string context)
 		{
-			var isMySqlConnector = context == ProviderName.MySqlConnector;
-
 			// TODO: Following types not mapped to DataType enum now and should be defined explicitly using DbType:
 			// - ENUM      : https://dev.mysql.com/doc/refman/8.0/en/enum.html
 			// - SET       : https://dev.mysql.com/doc/refman/8.0/en/set.html
@@ -1392,11 +1366,8 @@ namespace Tests.DataProvider
 						Assert.True(sql.Contains("\t`Time2`            TIME(2)           NOT NULL"));
 						Assert.True(sql.Contains("\t`Json`             JSON                  NULL"));
 					}
-					if (isMySqlConnector)
-					{
-						Assert.True(sql.Contains("\t`TimeStamp`        TIMESTAMP         NOT NULL"));
-						Assert.True(sql.Contains("\t`TimeStamp5`       TIMESTAMP(5)      NOT NULL"));
-					}
+					Assert.True(sql.Contains("\t`TimeStamp`        TIMESTAMP         NOT NULL"));
+					Assert.True(sql.Contains("\t`TimeStamp5`       TIMESTAMP(5)      NOT NULL"));
 					Assert.True(sql.Contains("\t`Time`             TIME              NOT NULL"));
 					Assert.True(sql.Contains("\t`TinyInt`          TINYINT           NOT NULL"));
 					Assert.True(sql.Contains("\t`UnsignedTinyInt`  TINYINT UNSIGNED  NOT NULL"));
@@ -1517,11 +1488,8 @@ namespace Tests.DataProvider
 						Assert.AreEqual(testRecord.Time2       , readRecord.Time2);
 						Assert.AreEqual(testRecord.Json        , readRecord.Json);
 					}
-					if (isMySqlConnector)
-					{
-						Assert.AreEqual(testRecord.TimeStamp,  readRecord.TimeStamp);
-						Assert.AreEqual(testRecord.TimeStamp5, readRecord.TimeStamp5);
-					}
+					Assert.AreEqual(testRecord.TimeStamp       , readRecord.TimeStamp);
+					Assert.AreEqual(testRecord.TimeStamp5      , readRecord.TimeStamp5);
 					Assert.AreEqual(testRecord.Time            , readRecord.Time);
 					Assert.AreEqual(testRecord.TinyInt         , readRecord.TinyInt);
 					Assert.AreEqual(testRecord.UnsignedTinyInt , readRecord.UnsignedTinyInt);
@@ -1642,7 +1610,7 @@ namespace Tests.DataProvider
 				{
 					var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions() { GetProcedures = false });
 
-					var tableSchema = schema.Tables.Where(t => t.TableName!.ToLower() == "testschematypestable").SingleOrDefault()!;
+					var tableSchema = schema.Tables.SingleOrDefault(t => t.TableName!.ToLower() == "testschematypestable")!;
 					Assert.IsNotNull(tableSchema);
 
 					assertColumn("VarChar255"        , "string"  , DataType.VarChar);
@@ -1724,7 +1692,7 @@ namespace Tests.DataProvider
 
 					void assertColumn(string name, string type, DataType dataType)
 					{
-						var column = tableSchema.Columns.Where(c => c.ColumnName == name).SingleOrDefault()!;
+						var column = tableSchema.Columns.SingleOrDefault(c => c.ColumnName == name)!;
 						Assert.IsNotNull(column);
 						Assert.AreEqual(type, column.MemberType);
 						Assert.AreEqual(dataType, column.DataType);
@@ -1740,7 +1708,7 @@ namespace Tests.DataProvider
 			{
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions() { GetTables = false });
 
-				var proc = schema.Procedures.Where(t => t.ProcedureName == "Issue2313Parameters").SingleOrDefault()!;
+				var proc = schema.Procedures.SingleOrDefault(t => t.ProcedureName == "Issue2313Parameters")!;
 
 				Assert.IsNotNull(proc);
 
@@ -1804,7 +1772,7 @@ namespace Tests.DataProvider
 
 				void assertParameter(string name, string type, DataType dataType)
 				{
-					var parameter = proc.Parameters.Where(c => c.ParameterName == name).SingleOrDefault()!;
+					var parameter = proc.Parameters.SingleOrDefault(c => c.ParameterName == name)!;
 
 					Assert.IsNotNull(parameter);
 
@@ -1866,27 +1834,20 @@ namespace Tests.DataProvider
 				assertColumn("Bit64"             , "ulong?"   , DataType.BitArray);
 				assertColumn("Year"              , "int?"     , DataType.Int32);
 
-				// mysql.data cannot handle json procedure parameter
-				if (context == ProviderName.MySqlConnector || context == TestProvName.MariaDB)
-				{
-					assertColumn("Point"               , "byte[]", DataType.Undefined);
-					assertColumn("LineString"          , "byte[]", DataType.Undefined);
-					assertColumn("Polygon"             , "byte[]", DataType.Undefined);
-					assertColumn("MultiPoint"          , "byte[]", DataType.Undefined);
-					assertColumn("MultiLineString"     , "byte[]", DataType.Undefined);
-					assertColumn("MultiPolygon"        , "byte[]", DataType.Undefined);
-					assertColumn("Geometry"            , "byte[]", DataType.Undefined);
-					assertColumn("GeometryCollection"  , "byte[]", DataType.Undefined);
+				assertColumn("Point"               , "byte[]", DataType.Undefined);
+				assertColumn("LineString"          , "byte[]", DataType.Undefined);
+				assertColumn("Polygon"             , "byte[]", DataType.Undefined);
+				assertColumn("MultiPoint"          , "byte[]", DataType.Undefined);
+				assertColumn("MultiLineString"     , "byte[]", DataType.Undefined);
+				assertColumn("MultiPolygon"        , "byte[]", DataType.Undefined);
+				assertColumn("Geometry"            , "byte[]", DataType.Undefined);
+				assertColumn("GeometryCollection"  , "byte[]", DataType.Undefined);
 
-					assertColumn("Json"    , "string", context == TestProvName.MariaDB ? DataType.Text : DataType.Json);
-					assertColumn("Enum"    , "string", DataType.VarChar);
-					assertColumn("Set"     , "string", DataType.VarChar);
-				}
-				else
-				{
-					assertColumn("Enum", "string", DataType.Char);
-					assertColumn("Set" , "string", DataType.Char);
-				}
+				assertColumn("Enum"    , "string", DataType.VarChar);
+				assertColumn("Set"     , "string", DataType.VarChar);
+
+				if (context != TestProvName.MySql55)
+					assertColumn("Json", "string", context == TestProvName.MariaDB ? DataType.Text : DataType.Json);
 
 				void assertColumn(string name, string type, DataType dataType)
 				{

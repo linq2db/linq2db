@@ -71,28 +71,15 @@ namespace LinqToDB.DataProvider.MySql
 
 		internal static readonly MappingSchema Instance = new MySqlMappingSchema();
 
-		public class MySqlOfficialMappingSchema : MappingSchema
-		{
-			public MySqlOfficialMappingSchema()
-				: base(ProviderName.MySqlOfficial, Instance)
-			{
-			}
-
-			public MySqlOfficialMappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.MySqlOfficial, Array<MappingSchema>.Append(schemas, Instance))
-			{
-			}
-		}
-
-		public class MySqlConnectorMappingSchema : MappingSchema
+		internal class MySqlConnectorMappingSchema : MappingSchema
 		{
 			public MySqlConnectorMappingSchema()
-				: base(ProviderName.MySqlConnector, Instance)
+				: base(ProviderName.MySql, Instance)
 			{
 			}
 
 			public MySqlConnectorMappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.MySqlConnector, Array<MappingSchema>.Append(schemas, Instance))
+				: base(ProviderName.MySql, Array<MappingSchema>.Append(schemas, Instance))
 			{
 			}
 		}

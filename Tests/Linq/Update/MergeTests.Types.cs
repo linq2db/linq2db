@@ -62,7 +62,6 @@ namespace Tests.xUpdate
 			[Column(IsColumn = false, Configuration = ProviderName.Firebird)]
 			[Column(IsColumn = false, Configuration = ProviderName.Access)]
 			[Column(IsColumn = false, Configuration = ProviderName.MySql)]
-			[Column(IsColumn = false, Configuration = ProviderName.MySqlConnector)]
 			[Column(IsColumn = false, Configuration = ProviderName.SQLite)]
 			[Column(IsColumn = false, Configuration = ProviderName.SapHana)]
 			[Column(Configuration = ProviderName.Oracle, Precision = 7)]
@@ -475,10 +474,7 @@ namespace Tests.xUpdate
 				&& provider != ProviderName.SqlCe
 				&& !provider.Contains(ProviderName.Informix)
 				&& !provider.Contains(ProviderName.Firebird)
-				&& provider != ProviderName.MySql
-				&& provider != ProviderName.MySqlConnector
-				&& provider != TestProvName.MySql55
-				&& provider != TestProvName.MariaDB
+				&& !TestProvName.AllMySql.Contains(provider)
 				&& !provider.StartsWith("Access")
 				&& provider != ProviderName.SQLiteClassic
 				&& provider != TestProvName.SQLiteClassicMiniProfilerMapped
@@ -496,10 +492,7 @@ namespace Tests.xUpdate
 			if (expected != null)
 			{
 				if (expected == ' '
-					&& (   provider == ProviderName.MySql
-						|| provider == ProviderName.MySqlConnector
-						|| provider == TestProvName.MariaDB
-						|| provider == TestProvName.MySql55
+					&& (TestProvName.AllMySql.Contains(provider)
 						// after migration to 2.4.126 provider + SPS4, hana or provider started to trim spaces on insert for some reason
 						|| provider.StartsWith(ProviderName.SapHana)))
 					expected = '\0';
@@ -513,10 +506,7 @@ namespace Tests.xUpdate
 			if (expected != null)
 			{
 				if (expected == ' '
-					&& (provider == ProviderName.MySql
-						|| provider == ProviderName.MySqlConnector
-						|| provider == TestProvName.MariaDB
-						|| provider == TestProvName.MySql55
+					&& (TestProvName.AllMySql.Contains(provider)
 						// after migration to 2.4.126 provider + SPS4, hana or provider started to trim spaces on insert for some reason
 						|| provider.StartsWith(ProviderName.SapHana)))
 					expected = '\0';
@@ -529,7 +519,7 @@ namespace Tests.xUpdate
 		{
 			if (expected != null)
 			{
-				if ((provider == ProviderName.MySql || provider == ProviderName.MySqlConnector)
+				if (TestProvName.AllMySqlServer57Plus.Contains(provider)
 					&& expected.Value.Millisecond > 500) expected = expected.Value.AddSeconds(1);
 
 				if (provider == ProviderName.Sybase || provider == ProviderName.SybaseManaged)
@@ -552,10 +542,7 @@ namespace Tests.xUpdate
 					}
 				}
 
-				if (   provider == ProviderName.MySql
-					|| provider == ProviderName.MySqlConnector
-					|| provider == TestProvName.MariaDB
-					|| provider == TestProvName.MySql55
+				if (TestProvName.AllMySql.Contains(provider)
 					|| provider == ProviderName.AccessOdbc
 					|| provider.Contains("Oracle"))
 					expected = expected.Value.AddMilliseconds(-expected.Value.Millisecond);
@@ -652,7 +639,6 @@ namespace Tests.xUpdate
 					case TestProvName.MariaDB       :
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10000000) * 10000000);
 						break;
-					case ProviderName.MySqlConnector:
 					case ProviderName.MySql         :
 						var msecs = expected.Value.Milliseconds;
 						if (msecs > 500)

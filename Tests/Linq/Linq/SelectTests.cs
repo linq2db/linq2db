@@ -1743,7 +1743,6 @@ namespace Tests.Linq
 		{
 			// providers that support SequentialAccess:
 			// Access (OleDb)
-			// MySql.Data
 			// npgsql
 			// System.Data.SqlClient
 			// Microsoft.Data.SqlClient

@@ -23,9 +23,9 @@ namespace LinqToDB.DataProvider.MySql
 			: base(
 				  name,
 				  mappingSchema != null
-					? new MappingSchema(mappingSchema, MySqlProviderAdapter.GetInstance(name).MappingSchema)
-					: GetMappingSchema(name, MySqlProviderAdapter.GetInstance(name).MappingSchema),
-				  MySqlProviderAdapter.GetInstance(name))
+					? new MappingSchema(mappingSchema, MySqlProviderAdapter.GetInstance().MappingSchema)
+					: GetMappingSchema(name, MySqlProviderAdapter.GetInstance().MappingSchema),
+				  MySqlProviderAdapter.GetInstance())
 		{
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
@@ -36,17 +36,8 @@ namespace LinqToDB.DataProvider.MySql
 			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
 
 			// configure provider-specific data readers
-			if (Adapter.GetMySqlDecimalMethodName != null)
-			{
-				// SetProviderField is not needed for this type
-				SetToTypeField(Adapter.MySqlDecimalType!, Adapter.GetMySqlDecimalMethodName, Adapter.DataReaderType);
-			}
-
-			if (Adapter.GetDateTimeOffsetMethodName != null)
-			{
-				SetProviderField(typeof(DateTimeOffset), Adapter.GetDateTimeOffsetMethodName, Adapter.DataReaderType);
-				SetToTypeField  (typeof(DateTimeOffset), Adapter.GetDateTimeOffsetMethodName, Adapter.DataReaderType);
-			}
+			SetProviderField(typeof(DateTimeOffset), Adapter.GetDateTimeOffsetMethodName, Adapter.DataReaderType);
+			SetToTypeField  (typeof(DateTimeOffset), Adapter.GetDateTimeOffsetMethodName, Adapter.DataReaderType);
 
 			SetProviderField(Adapter.MySqlDateTimeType, Adapter.GetMySqlDateTimeMethodName, Adapter.DataReaderType);
 			SetToTypeField  (Adapter.MySqlDateTimeType, Adapter.GetMySqlDateTimeMethodName, Adapter.DataReaderType);
@@ -69,14 +60,7 @@ namespace LinqToDB.DataProvider.MySql
 			return new MySqlSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
-		private static MappingSchema GetMappingSchema(string name, MappingSchema providerSchema)
-		{
-			return name switch
-			{
-				ProviderName.MySqlConnector => new MySqlMappingSchema.MySqlConnectorMappingSchema(providerSchema),
-				_                           => new MySqlMappingSchema.MySqlOfficialMappingSchema(providerSchema),
-			};
-		}
+		private static MappingSchema GetMappingSchema(string name, MappingSchema providerSchema) => new MySqlMappingSchema.MySqlConnectorMappingSchema(providerSchema);
 
 		readonly ISqlOptimizer _sqlOptimizer;
 
@@ -92,29 +76,14 @@ namespace LinqToDB.DataProvider.MySql
 		}
 #endif
 
-		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
-		{
-			switch (dataType.DataType)
-			{
-				case DataType.Decimal   :
-				case DataType.VarNumeric:
-					if (Adapter.MySqlDecimalGetter != null && value != null && value.GetType() == Adapter.MySqlDecimalType)
-						value = Adapter.MySqlDecimalGetter(value);
-					break;
-			}
-
-			base.SetParameter(dataConnection, parameter, name, dataType, value);
-		}
-
 		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
-			// VarNumeric - mysql.data trims fractional part
-			// Date/DateTime2 - mysql.data trims time part
 			switch (dataType.DataType)
 			{
-				case DataType.VarNumeric: parameter.DbType = DbType.Decimal;  return;
-				case DataType.Date:
-				case DataType.DateTime2 : parameter.DbType = DbType.DateTime; return;
+				// TODO: MySql.Data mappings, remove if MySqlConnector don't need them
+				//case DataType.VarNumeric: parameter.DbType = DbType.Decimal;  return;
+				//case DataType.Date:
+				//case DataType.DateTime2 : parameter.DbType = DbType.DateTime; return;
 				case DataType.BitArray  : parameter.DbType = DbType.UInt64;   return;
 			}
 

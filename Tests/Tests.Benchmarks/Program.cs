@@ -91,7 +91,7 @@ namespace LinqToDB.Benchmarks
 		static void TestVwSalesByYear()
 		{
 			var benchmark = new QueryGenerationBenchmark();
-			benchmark.DataProvider = ProviderName.MySqlConnector;
+			benchmark.DataProvider = ProviderName.MySql;
 
 			for (int i = 0; i < 100000; i++)
 			{

@@ -76,10 +76,6 @@
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>MariaDB.generated.cs</LastGenOutput>
 		</None>
-		<None Update="Databases\MySqlConnector.tt">
-			<LastGenOutput>MySqlConnector.generated.cs</LastGenOutput>
-			<Generator>TextTemplatingFileGenerator</Generator>
-		</None>
 		<None Update="Databases\MySql.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>MySql.generated.cs</LastGenOutput>
@@ -211,11 +207,6 @@
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
 			<DependentUpon>MySql.tt</DependentUpon>
-		</Compile>
-		<Compile Update="Databases\MySqlConnector.generated.cs">
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-			<DependentUpon>MySqlConnector.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Databases\Oracle.generated.cs">
 			<DesignTime>True</DesignTime>

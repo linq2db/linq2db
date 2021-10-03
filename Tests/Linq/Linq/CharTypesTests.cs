@@ -22,7 +22,6 @@ namespace Tests.Linq
 			[Column(Configuration = ProviderName.DB2,			 IsColumn = false)]
 			[Column(Configuration = ProviderName.PostgreSQL,	 IsColumn = false)]
 			[Column(Configuration = ProviderName.MySql,			 IsColumn = false)]
-			[Column(Configuration = ProviderName.MySqlConnector, IsColumn = false)]
 			[Column(Configuration = TestProvName.MySql55,        IsColumn = false)]
 			[Column(Configuration = TestProvName.MariaDB,        IsColumn = false)]
 			public string? String;
@@ -32,7 +31,6 @@ namespace Tests.Linq
 			[Column("CHAR20DATATYPE" , Configuration = ProviderName.DB2)]
 			[Column("char20DataType" , Configuration = ProviderName.PostgreSQL)]
 			[Column("char20DataType" , Configuration = ProviderName.MySql)]
-			[Column("char20DataType" , Configuration = ProviderName.MySqlConnector)]
 			[Column("char20DataType" , Configuration = TestProvName.MySql55)]
 			[Column("char20DataType" , Configuration = TestProvName.MariaDB)]
 			[Column(                   Configuration = ProviderName.Firebird, IsColumn = false)]
@@ -51,7 +49,6 @@ namespace Tests.Linq
 			[Column(Configuration = ProviderName.DB2,			 IsColumn = false)]
 			[Column(Configuration = ProviderName.PostgreSQL,	 IsColumn = false)]
 			[Column(Configuration = ProviderName.MySql,			 IsColumn = false)]
-			[Column(Configuration = ProviderName.MySqlConnector, IsColumn = false)]
 			[Column(Configuration = TestProvName.MySql55,		 IsColumn = false)]
 			[Column(Configuration = TestProvName.MariaDB,		 IsColumn = false)]
 			public char? Char;
@@ -61,7 +58,6 @@ namespace Tests.Linq
 			[Column("CHAR20DATATYPE" , DataType = DataType.NChar, Configuration = ProviderName.DB2)]
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = ProviderName.PostgreSQL)]
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = ProviderName.MySql)]
-			[Column("char20DataType" , DataType = DataType.NChar, Configuration = ProviderName.MySqlConnector)]
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = TestProvName.MySql55)]
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = TestProvName.MariaDB)]
 			[Column(                   Configuration = ProviderName.Firebird, IsColumn = false)]
@@ -101,6 +97,7 @@ namespace Tests.Linq
 		[Test]
 		public void StringTrimming([DataSources(TestProvName.AllInformix)] string context)
 		{
+			var provider  = GetProviderName(context, out _);
 			using (var db = GetDataContext(context))
 			{
 				var lastId = db.GetTable<StringTestTable>().Select(_ => _.Id).Max();
@@ -113,7 +110,7 @@ namespace Tests.Linq
 					{
 						var query = db.GetTable<StringTestTable>().Value(_ => _.NString, record.NString);
 
-						if (!SkipChar(context))
+						if (!SkipChar(context, provider))
 							query = query.Value(_ => _.String, record.String);
 
 						if (context.Contains("Firebird"))
@@ -128,7 +125,7 @@ namespace Tests.Linq
 
 					for (var i = 0; i < records.Length; i++)
 					{
-						if (!SkipChar(context))
+						if (!SkipChar(context, provider))
 						{
 							if (context.Contains("Sybase"))
 								Assert.AreEqual(testData[i].String?.TrimEnd(' ')?.TrimEnd('\0'), records[i].String);
@@ -232,6 +229,7 @@ namespace Tests.Linq
 		[Test]
 		public void CharTrimming([DataSources(TestProvName.AllInformix)] string context)
 		{
+			var provider  = GetProviderName(context, out _);
 			using (var db = GetDataContext(context))
 			{
 				var lastId = db.GetTable<CharTestTable>().Select(_ => _.Id).Max();
@@ -243,7 +241,7 @@ namespace Tests.Linq
 					foreach (var record in testData)
 					{
 						var query = db.GetTable<CharTestTable>().Value(_ => _.NChar, record.NChar);
-						if (!SkipChar(context))
+						if (!SkipChar(context, provider))
 							query = query.Value(_ => _.Char, record.Char);
 
 						if (context.Contains(ProviderName.Firebird))
@@ -275,7 +273,7 @@ namespace Tests.Linq
 							continue;
 						}
 
-						if (!SkipChar(context))
+						if (!SkipChar(context, provider))
 						{
 							if (context.Contains("Sybase"))
 								Assert.AreEqual(testData[i].Char == '\0' ? ' ' : testData[i].Char, records[i].Char);
@@ -283,14 +281,7 @@ namespace Tests.Linq
 								Assert.AreEqual(testData[i].Char, records[i].Char);
 						}
 
-						if (context == ProviderName.MySql
-							  || context == ProviderName.MySql + ".LinqService"
-							  || context == ProviderName.MySqlConnector
-							  || context == ProviderName.MySqlConnector + ".LinqService"
-							  || context == TestProvName.MySql55
-							  || context == TestProvName.MySql55 + ".LinqService"
-							  || context == TestProvName.MariaDB
-							  || context == TestProvName.MariaDB + ".LinqService")
+						if (TestProvName.AllMySql.Contains(provider))
 							// for some reason mysql doesn't insert space
 							Assert.AreEqual(testData[i].NChar == ' ' ? '\0' : testData[i].NChar, records[i].NChar);
 						else if (!context.Contains(ProviderName.Firebird))
@@ -309,21 +300,14 @@ namespace Tests.Linq
 			}
 		}
 
-		private static bool SkipChar([DataSources] string context)
+		private static bool SkipChar(string context, string provider)
 		{
 			return context == ProviderName.SqlCe
 				|| context == ProviderName.SqlCe      + ".LinqService"
 				|| context == ProviderName.DB2
 				|| context == ProviderName.DB2        + ".LinqService"
 				|| context.Contains(ProviderName.PostgreSQL)
-				|| context == ProviderName.MySql
-				|| context == ProviderName.MySql + ".LinqService"
-				|| context == ProviderName.MySqlConnector
-				|| context == ProviderName.MySqlConnector + ".LinqService"
-				|| context == TestProvName.MySql55
-				|| context == TestProvName.MySql55 + ".LinqService"
-				|| context == TestProvName.MariaDB
-				|| context == TestProvName.MariaDB    + ".LinqService";
+				|| TestProvName.AllMySql.Contains(provider);
 		}
 	}
 }
