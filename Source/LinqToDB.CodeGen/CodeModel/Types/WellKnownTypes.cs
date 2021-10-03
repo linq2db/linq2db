@@ -79,10 +79,12 @@ namespace LinqToDB.CodeGen.Model
 				public static class Common
 				{
 					public static IType DbDataReader { get; }
+					public static CodeIdentifier DbDataReader_GetValue { get; }
 
 					static Common()
 					{
 						DbDataReader = Parser.Parse<DbDataReader>();
+						DbDataReader_GetValue = new CodeIdentifier(nameof(global::System.Data.Common.DbDataReader.GetValue));
 					}
 				}
 
@@ -130,6 +132,7 @@ namespace LinqToDB.CodeGen.Model
 				public static IType Enumerable { get; }
 				public static IType Queryable { get; }
 
+				public static CodeIdentifier Enumerable_ToList { get; }
 				public static CodeIdentifier Queryable_First { get; }
 				public static CodeIdentifier Queryable_FirstOrDefault { get; }
 				public static CodeIdentifier Queryable_Where { get; }
@@ -140,6 +143,7 @@ namespace LinqToDB.CodeGen.Model
 					Enumerable = Parser.Parse(typeof(Enumerable));
 					Queryable = Parser.Parse(typeof(Queryable));
 
+					Enumerable_ToList = new CodeIdentifier(nameof(global::System.Linq.Enumerable.ToList));
 					Queryable_First = new CodeIdentifier(nameof(global::System.Linq.Queryable.First));
 					Queryable_FirstOrDefault = new CodeIdentifier(nameof(global::System.Linq.Queryable.FirstOrDefault));
 					Queryable_Where = new CodeIdentifier(nameof(global::System.Linq.Queryable.Where));
@@ -231,18 +235,25 @@ namespace LinqToDB.CodeGen.Model
 			public static class Expressions
 			{
 				public static IType MemberHelper { get; }
+				public static CodeIdentifier MemberHelper_MethodOf { get; }
+
 				static Expressions()
 				{
 					MemberHelper = Parser.Parse(typeof(MemberHelper));
+					MemberHelper_MethodOf = new CodeIdentifier(nameof(global::LinqToDB.Expressions.MemberHelper.MethodOf));
 				}
 			}
 
 			public static class Common
 			{
 				public static IType Converter { get; }
+				public static CodeIdentifier Converter_ChangeTypeTo { get; }
 				static Common()
 				{
 					Converter = Parser.Parse(typeof(Converter));
+
+					Converter_ChangeTypeTo = new CodeIdentifier(nameof(global::LinqToDB.Common.Converter.ChangeTypeTo));
+
 				}
 			}
 
@@ -291,6 +302,8 @@ namespace LinqToDB.CodeGen.Model
 				public static IType DataConnection { get; }
 
 				public static CodeIdentifier DataConnection_GetTable { get; }
+				public static CodeIdentifier DataConnectionExtensions_ExecuteProc { get; }
+				public static CodeIdentifier DataConnectionExtensions_QueryProc { get; }
 
 				public static CodeReference DataParameter_Direction { get; }
 				public static CodeReference DataParameter_DbType { get; }
@@ -314,6 +327,8 @@ namespace LinqToDB.CodeGen.Model
 					DataParameter_Value = PropertyOrField((DataParameter dp) => dp.Value, true);
 
 					DataConnection_GetTable = new CodeIdentifier(nameof(global::LinqToDB.Data.DataConnection.GetTable));
+					DataConnectionExtensions_ExecuteProc = new CodeIdentifier(nameof(global::LinqToDB.Data.DataConnectionExtensions.ExecuteProc));
+					DataConnectionExtensions_QueryProc = new CodeIdentifier(nameof(global::LinqToDB.Data.DataConnectionExtensions.QueryProc));
 				}
 			}
 		}

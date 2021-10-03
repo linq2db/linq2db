@@ -108,6 +108,16 @@ namespace LinqToDB.CodeGen.Model
 		public CodeCallExpression Call(ICodeExpression objOrType, CodeIdentifier method, IType returnType, IType[] genericArguments, params ICodeExpression[] parameters) => new(false, objOrType, method, genericArguments, parameters, returnType);
 
 		/// <summary>
+		/// Create method call expression.
+		/// </summary>
+		/// <param name="objOrType">Callee object or type in case of static method.</param>
+		/// <param name="method">Called method name.</param>
+		/// <param name="returnType">Method return value type.</param>
+		/// <param name="parameters">Method parameters.</param>
+		/// <returns>Call element instance.</returns>
+		public CodeCallExpression Call(ICodeExpression objOrType, CodeIdentifier method, IType returnType, params ICodeExpression[] parameters) => new(false, objOrType, method, System.Array.Empty<IType>(), parameters, returnType);
+
+		/// <summary>
 		/// Create method call statement.
 		/// </summary>
 		/// <param name="objOrType">Callee object or type in case of static method.</param>
@@ -146,6 +156,16 @@ namespace LinqToDB.CodeGen.Model
 		/// <param name="parameters">Call parameters.</param>
 		/// <returns>Call element instance.</returns>
 		public CodeCallExpression ExtCall(IType type, CodeIdentifier method, IType returnType, IType[] genericArguments, params ICodeExpression[] parameters) => new(true, new CodeTypeReference(type), method, genericArguments, parameters, returnType);
+
+		/// <summary>
+		/// Create extension method call expression.
+		/// </summary>
+		/// <param name="type">Type, containing extension method.</param>
+		/// <param name="method">Called method name.</param>
+		/// <param name="returnType">Method return value type.</param>
+		/// <param name="parameters">Call parameters.</param>
+		/// <returns>Call element instance.</returns>
+		public CodeCallExpression ExtCall(IType type, CodeIdentifier method, IType returnType, params ICodeExpression[] parameters) => new(true, new CodeTypeReference(type), method, System.Array.Empty<IType>(), parameters, returnType);
 
 		/// <summary>
 		/// Create method parameter.

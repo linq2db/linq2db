@@ -64,6 +64,12 @@
 	  <None Update="Configuration\db2.json">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
+	  <None Update="Configuration\pg10.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="Configuration\TEMPLATE.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	  <None Update="Configuration\sybase.managed.json">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>

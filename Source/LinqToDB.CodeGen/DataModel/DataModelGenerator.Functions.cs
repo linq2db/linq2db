@@ -136,7 +136,7 @@ namespace LinqToDB.CodeGen.DataModel
 		/// for stored procedures in cases when returned columns cannot be mapped due to duplicate/missing column names, which
 		/// is possible for stored procedures.</param>
 		/// <returns>Generated class and column properties.</returns>
-		private (ClassBuilder resultClassBuilder, CodeProperty[] properties) BuildCustomResultClass(
+		private (IType resultClassType, CodeProperty[] properties) BuildCustomResultClass(
 			ResultTableModel model,
 			RegionBuilder    region,
 			bool             withMapping)
@@ -158,7 +158,7 @@ namespace LinqToDB.CodeGen.DataModel
 				properties[i] = columnBuilder.Property;
 			}
 
-			return (resultClassBuilder, properties);
+			return (resultClassBuilder.Type.Type, properties);
 		}
 
 		/// <summary>

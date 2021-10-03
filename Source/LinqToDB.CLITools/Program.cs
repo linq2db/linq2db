@@ -75,6 +75,10 @@ namespace LinqToDB.Tools
 			return 0;
 		}
 
+		private static void ReadSettings()
+		{
+		}
+
 		private static void RegisterSapHanaFactory()
 		{
 			try
