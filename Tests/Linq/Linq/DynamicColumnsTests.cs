@@ -630,5 +630,19 @@ namespace Tests.Linq
 			}
 		}
 
+
+		[Test]
+		public void Issue3158([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.DoesNotThrow(() => {
+					(from p in db.Person
+					 from pa in db.Patient.LeftJoin(pa => pa.Diagnosis == Sql.Property<string>(p, "FirstName"))
+					 select new { p.ID, pa.Diagnosis })
+					.ToList();
+				});
+			}
+		}
 	}
 }
