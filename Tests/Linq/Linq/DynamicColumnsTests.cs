@@ -638,6 +638,7 @@ namespace Tests.Linq
 			{
 				Assert.DoesNotThrow(() => {
 					(from p in db.Person
+					 join d in db.Doctor on p.ID equals d.PersonID
 					 from pa in db.Patient.LeftJoin(pa => pa.Diagnosis == Sql.Property<string>(p, "FirstName"))
 					 select new { p.ID, pa.Diagnosis })
 					.ToList();
