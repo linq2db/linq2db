@@ -1,5 +1,8 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
+using LinqToDB.Common;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -11,17 +14,118 @@ namespace LinqToDB.Linq.Builder
 
 	internal partial class MergeBuilder : MethodCallBuilder
 	{
+		static readonly MethodInfo[] _supportedMethods = {ExecuteMergeMethodInfo, MergeWithOutput, MergeWithOutputInto};
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsSameGenericMethod(ExecuteMergeMethodInfo);
+			return methodCall.IsSameGenericMethod(_supportedMethods);
+		}
+
+		enum MergeKind
+		{
+			Merge,
+			MergeWithOutput,
+			MergeWithOutputInto
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var mergeContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var mergeContext = (MergeContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+
+			var kind = MergeKind.Merge; 
+
+			if (methodCall.IsSameGenericMethod(MergeWithOutputInto))
+				kind = MergeKind.MergeWithOutputInto;
+			else if (methodCall.IsSameGenericMethod(MergeWithOutput))
+			{
+				kind = MergeKind.MergeWithOutput;
+			}
+
+			if (kind != MergeKind.Merge)
+			{
+				var objectType = methodCall.Method.GetGenericArguments()[0];
+
+				var actionField   = SqlField.FakeField(new DbDataType(typeof(string)), "$action", false);
+				var insertedTable = SqlTable.Inserted(objectType);
+				var deletedTable  = SqlTable.Deleted(objectType);
+
+				mergeContext.Merge.Output = new SqlOutputClause()
+				{
+					InsertedTable = insertedTable,
+					DeletedTable  = deletedTable,
+				};
+
+				var selectQuery = new SelectQuery();
+
+				var actionFieldContext  = new SingleExpressionContext(null, builder, actionField, selectQuery);
+				var deletedTableContext = new TableBuilder.TableContext(builder, selectQuery, deletedTable);
+				var insertedTableConext = new TableBuilder.TableContext(builder, selectQuery, insertedTable);
+
+				if (kind == MergeKind.MergeWithOutput)
+				{
+					var outputExpression = (LambdaExpression)methodCall.Arguments[1].Unwrap();
+
+					var outputContext = new MergeOutputContext(
+						buildInfo.Parent,
+						outputExpression,
+						mergeContext,
+						actionFieldContext,
+						deletedTableContext,
+						insertedTableConext
+					);
+
+					return outputContext;
+				}
+				else
+				{
+					var outputExpression = (LambdaExpression)methodCall.Arguments[2].Unwrap();
+
+					var outputTable = methodCall.Arguments[1];
+					var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
+
+					UpdateBuilder.BuildSetterWithContext(
+						builder,
+						buildInfo,
+						outputExpression,
+						destination,
+						mergeContext.Merge.Output.OutputItems,
+						actionFieldContext,
+						deletedTableContext,
+						insertedTableConext
+					);
+
+					mergeContext.Merge.Output.OutputTable = ((TableBuilder.TableContext)destination).SqlTable;
+				}
+			}
 
 			return mergeContext;
 		}
+
+
+		class MergeOutputContext : SelectContext
+		{
+			public MergeOutputContext(IBuildContext? parent, LambdaExpression lambda, MergeContext mergeContext, IBuildContext emptyTable, IBuildContext deletedTable, IBuildContext insertedTable)
+				: base(parent, lambda, emptyTable, deletedTable, insertedTable)
+			{
+				Statement = mergeContext.Statement;
+				Sequence[0].SelectQuery.Select.Columns.Clear();
+				Sequence[1].SelectQuery = Sequence[0].SelectQuery;
+				Sequence[2].SelectQuery = Sequence[0].SelectQuery;
+			}
+
+			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+			{
+				var expr   = BuildExpression(null, 0, false);
+				var mapper = Builder.BuildMapper<T>(expr);
+
+				var mergeStatement = (SqlMergeStatement)Statement!;
+
+				mergeStatement.Output!.OutputQuery = Sequence[0].SelectQuery;
+
+				QueryRunner.SetRunQuery(query, mapper);
+			}
+		}
+
 
 		protected override SequenceConvertInfo? Convert(
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
