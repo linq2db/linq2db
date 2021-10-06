@@ -290,7 +290,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region IsServerSideOnly
 
-		ConcurenceDictionary<Expression, bool> _isServerSideOnlyCache = new ();
+		ConcurrentDictionary<Expression, bool> _isServerSideOnlyCache = new ();
 
 		private FindVisitor<ExpressionTreeOptimizationContext>? _isServerSideOnlyVisitor;
 		public bool IsServerSideOnly(Expression expr)
