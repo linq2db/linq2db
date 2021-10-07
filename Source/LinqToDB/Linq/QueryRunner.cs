@@ -9,7 +9,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq
 {
@@ -310,7 +309,7 @@ namespace LinqToDB.Linq
 				dbDataTypeExpression = Expression.Constant(dbDataType);
 			}
 
-			var param = ExpressionBuilder.CreateParameterAccessor(
+			var param = ParametersContext.CreateParameterAccessor(
 				dataContext, valueGetter, getter, dbDataTypeExpression, valueGetter, field.Name.Replace('.', '_'));
 
 			return param;

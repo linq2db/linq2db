@@ -32,14 +32,26 @@ namespace LinqToDB.Linq.Builder
 					static (ctx, expr) => ctx.ExpandExpressionTransformer(expr));
 		}
 
-		private EqualsToVisitor.EqualsToInfo? _equalsToContext;
-		private EqualsToVisitor.EqualsToInfo GetSimpleEqualsToContext()
+		private EqualsToVisitor.EqualsToInfo? _equalsToContextFalse;
+		private EqualsToVisitor.EqualsToInfo? _equalsToContextTrue;
+		internal EqualsToVisitor.EqualsToInfo GetSimpleEqualsToContext(bool compareConstantValues)
 		{
-			if (_equalsToContext == null)
-				_equalsToContext = EqualsToVisitor.PrepareEqualsInfo(DataContext, compareConstantValues: true);
+			if (compareConstantValues)
+			{
+				if (_equalsToContextTrue == null)
+					_equalsToContextTrue = EqualsToVisitor.PrepareEqualsInfo(DataContext, compareConstantValues: compareConstantValues);
+				else
+					_equalsToContextTrue.Reset();
+				return _equalsToContextTrue;
+			}
 			else
-				_equalsToContext.Reset();
-			return _equalsToContext;
+			{
+				if (_equalsToContextFalse == null)
+					_equalsToContextFalse = EqualsToVisitor.PrepareEqualsInfo(DataContext, compareConstantValues: compareConstantValues);
+				else
+					_equalsToContextFalse.Reset();
+				return _equalsToContextFalse;
+			}
 		}
 
 		public void ClearVisitedCache()
@@ -162,7 +174,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var queryable = (IQueryable)mc.EvaluateExpression()!;
 
-					if (!queryable.Expression.EqualsTo(mc, GetSimpleEqualsToContext()))
+					if (!queryable.Expression.EqualsTo(mc, GetSimpleEqualsToContext(compareConstantValues: true)))
 						return new TransformInfo(queryable.Expression, false, true);
 				}
 			}
@@ -781,6 +793,87 @@ namespace LinqToDB.Linq.Builder
 			alias = null;
 			return null;
 		}
+
+		#region PreferServerSide
+
+		private FindVisitor<ExpressionTreeOptimizationContext>? _enforceServerSideVisitorTrue;
+		private FindVisitor<ExpressionTreeOptimizationContext>? _enforceServerSideVisitorFalse;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private FindVisitor<ExpressionTreeOptimizationContext> GetVisitor(bool enforceServerSide)
+		{
+			if (enforceServerSide)
+				return _enforceServerSideVisitorTrue ??= FindVisitor<ExpressionTreeOptimizationContext>.Create(this, static (ctx, e) => ctx.PreferServerSide(e, true));
+			else
+				return _enforceServerSideVisitorFalse ??= FindVisitor<ExpressionTreeOptimizationContext>.Create(this, static (ctx, e) => ctx.PreferServerSide(e, false));
+		}
+
+		public bool PreferServerSide(Expression expr, bool enforceServerSide)
+		{
+			switch (expr.NodeType)
+			{
+				case ExpressionType.MemberAccess:
+					{
+						var pi = (MemberExpression)expr;
+						var l  = Expressions.ConvertMember(MappingSchema, pi.Expression?.Type, pi.Member);
+
+						if (l != null)
+						{
+							var info = l.Body.Unwrap();
+
+							if (l.Parameters.Count == 1 && pi.Expression != null)
+								info = info.Replace(l.Parameters[0], pi.Expression);
+
+							return GetVisitor(enforceServerSide).Find(info) != null;
+						}
+
+						var attr = GetExpressionAttribute(pi.Member);
+						return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr);
+					}
+
+				case ExpressionType.Call:
+					{
+						var pi = (MethodCallExpression)expr;
+						var l  = Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
+
+						if (l != null)
+							return GetVisitor(enforceServerSide).Find(l.Body.Unwrap()) != null;
+
+						var attr = GetExpressionAttribute(pi.Method);
+						return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr);
+					}
+				default:
+					{
+						if (expr is BinaryExpression binary)
+						{
+							var l = Expressions.ConvertBinary(MappingSchema, binary);
+							if (l != null)
+							{
+								var body = l.Body.Unwrap();
+								var newExpr = body.Transform((l, binary), static (context, wpi) =>
+								{
+									if (wpi.NodeType == ExpressionType.Parameter)
+									{
+										if (context.l.Parameters[0] == wpi)
+											return context.binary.Left;
+										if (context.l.Parameters[1] == wpi)
+											return context.binary.Right;
+									}
+
+									return wpi;
+								});
+
+								return PreferServerSide(newExpr, enforceServerSide);
+							}
+						}
+						break;
+					}
+			}
+
+			return false;
+		}
+
+		#endregion
 
 	}
 }

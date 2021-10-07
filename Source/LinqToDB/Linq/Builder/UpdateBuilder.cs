@@ -514,7 +514,7 @@ namespace LinqToDB.Linq.Builder
 
 			var columnDescriptor = QueryHelper.GetColumnDescriptor(columnSql);
 
-			var p = builder.BuildParameter(updateMethod.Arguments[valueIndex], columnDescriptor, true);
+			var p = builder.ParametersContext.BuildParameter(updateMethod.Arguments[valueIndex], columnDescriptor, true);
 
 			items.Add(new SqlSetExpression(columnSql, p.SqlParameter));
 		}

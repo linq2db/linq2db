@@ -1220,7 +1220,7 @@ namespace LinqToDB.Linq.Builder
 					foreach (var info in keysInfoByParams)
 					{
 						if (!keysInfo.Any(_ =>
-							_.ForSelect.EqualsTo(info.ForSelect, builder.GetSimpleEqualsToContext(false))))
+							_.ForSelect.EqualsTo(info.ForSelect, builder.OptimizationContext.GetSimpleEqualsToContext(false))))
 							keysInfo.Add(info);
 					}
 				}
@@ -1444,7 +1444,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			container           = new ParameterContainer();
 			var indexes         = new Dictionary<ParameterAccessor, Expression>();
-			var knownParameters = builder._parameters;
+			var knownParameters = builder.ParametersContext._parameters;
 			var containerLocal  = container;
 
 			correctedExpression = expr.Transform((knownParameters, builder, indexes, containerLocal), static (context, e) =>
@@ -1460,7 +1460,7 @@ namespace LinqToDB.Linq.Builder
 						}
 
 						// registering missed parameters
-						registered = context.builder.RegisterParameter(e);
+						registered = context.builder.ParametersContext.RegisterParameter(e);
 					}
 				}
 

@@ -230,7 +230,7 @@ namespace LinqToDB.Linq.Builder
 								{
 									// field = localVariable
 									//
-									if (!context.builder._expressionAccessors.TryGetValue(ex, out var c))
+									if (!context.builder.ParametersContext._expressionAccessors.TryGetValue(ex, out var c))
 										return new TransformInfo(ma);
 									return new TransformInfo(Expression.MakeMemberAccess(Expression.Convert(c, ex.Type), ma.Member));
 								}
@@ -268,7 +268,7 @@ namespace LinqToDB.Linq.Builder
 									return new TransformInfo(context.builder.BuildMultipleQuery(context.context, expr, context.enforceServerSide));
 								}
 
-								if (context.builder._expressionAccessors.TryGetValue(expr, out var accessor))
+								if (context.builder.ParametersContext._expressionAccessors.TryGetValue(expr, out var accessor))
 									return new TransformInfo(Expression.Convert(accessor, expr.Type));
 
 								break;
@@ -562,7 +562,7 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var item in sbi)
 			{
-				if (expr.EqualsTo(item.Method, GetSimpleEqualsToContext(false)))
+				if (expr.EqualsTo(item.Method, OptimizationContext.GetSimpleEqualsToContext(false)))
 					return item;
 			}
 

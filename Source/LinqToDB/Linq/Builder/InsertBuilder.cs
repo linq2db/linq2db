@@ -163,7 +163,7 @@ namespace LinqToDB.Linq.Builder
 									var pe = Expression.MakeMemberAccess(arg, c.MemberInfo);
 
 									var column    = into.ConvertToSql(pe, 1, ConvertFlags.Field);
-									var parameter = builder.BuildParameterFromArgumentProperty(methodCall, argIndex, field.ColumnDescriptor);
+									var parameter = builder.ParametersContext.BuildParameterFromArgumentProperty(methodCall, argIndex, field.ColumnDescriptor);
 
 									insertStatement.Insert.Items.Add(new SqlSetExpression(column[0].Sql, parameter.SqlParameter));
 								}
