@@ -85,7 +85,7 @@ namespace LinqToDB.Linq
 
 			using (await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 			{
-				Preambles = await query.InitPreamblesAsync(DataContext, expression, query.KnownParameters, Parameters, cancellationToken)
+				Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters, cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				var value = await query.GetElementAsync(DataContext, expression, Parameters, Preambles, cancellationToken)
@@ -162,7 +162,7 @@ namespace LinqToDB.Linq
 
 			using (await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 			{
-				Preambles = await query.InitPreamblesAsync(DataContext, expression, query.KnownParameters, Parameters, cancellationToken)
+				Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters, cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				return Query<TResult>.GetQuery(DataContext, ref expression, out _)
@@ -180,7 +180,7 @@ namespace LinqToDB.Linq
 
 			using (await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 			{
-				Preambles = await query.InitPreamblesAsync(DataContext, expression, query.KnownParameters, Parameters, cancellationToken)
+				Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters, cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				await query
@@ -221,7 +221,7 @@ namespace LinqToDB.Linq
 				var tr = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				try
 				{
-					Preambles = await query.InitPreamblesAsync(DataContext, expression, query.KnownParameters, Parameters, cancellationToken)
+					Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters, cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 #if !NATIVE_ASYNC
 					return Tuple.Create<IAsyncEnumerator<T>, IDisposable?>(
@@ -285,7 +285,7 @@ namespace LinqToDB.Linq
 
 			using (StartLoadTransaction(query))
 			{
-				Preambles = query.InitPreambles(DataContext, expression, query.KnownParameters, Parameters);
+				Preambles = query.InitPreambles(DataContext, expression, Parameters);
 
 				var getElement = query.GetElement;
 				if (getElement == null)
@@ -300,7 +300,7 @@ namespace LinqToDB.Linq
 			
 			using (StartLoadTransaction(query))
 			{
-				Preambles = query.InitPreambles(DataContext, expression, query.KnownParameters, Parameters);
+				Preambles = query.InitPreambles(DataContext, expression, Parameters);
 
 				var getElement = query.GetElement;
 				if (getElement == null)
@@ -323,7 +323,7 @@ namespace LinqToDB.Linq
 
 			using (StartLoadTransaction(query))
 			{
-				Preambles = query.InitPreambles(DataContext, expression, query.KnownParameters, Parameters);
+				Preambles = query.InitPreambles(DataContext, expression, Parameters);
 
 				return query.GetIEnumerable(DataContext, expression, Parameters, Preambles).GetEnumerator();
 			}
@@ -339,7 +339,7 @@ namespace LinqToDB.Linq
 
 			using (StartLoadTransaction(query))
 			{
-				Preambles = query.InitPreambles(DataContext, expression, query.KnownParameters, Parameters);
+				Preambles = query.InitPreambles(DataContext, expression, Parameters);
 
 				return query.GetIEnumerable(DataContext, expression, Parameters, Preambles).GetEnumerator();
 			}

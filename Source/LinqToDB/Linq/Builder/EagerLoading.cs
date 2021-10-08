@@ -16,7 +16,7 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
-	using LinqToDB.Async;
+	using Async;
 
 	internal class EagerLoading
 	{
@@ -1452,19 +1452,19 @@ namespace LinqToDB.Linq.Builder
 				detailQuery.Expression);
 
 			var idx = builder.RegisterPreamble(detailQueryPrepared, 
-				static (data, dc, rootExpression, expr, kp, ps) =>
+				static (data, dc, expr, ps) =>
 				{
 					var query      = (Query<TD>)data!;
-					var preambles  = query.InitPreambles(dc, expr, query.KnownParameters, ps);
+					var preambles  = query.InitPreambles(dc, expr, ps);
 					var enumerable = query.GetIEnumerable(dc, expr, ps, preambles);
 
 					var details = enumerable.ToList();
 					return details;
 				},
-				async static (data, dc, rootExpression, expr, kp, ps, ct) =>
+				async static (data, dc, expr, ps, ct) =>
 				{
 					var query      = (Query<TD>)data!;
-					var preambles  = await query.InitPreamblesAsync(dc, expr, query.KnownParameters, ps, ct).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					var preambles  = await query.InitPreamblesAsync(dc, expr, ps, ct).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 					var enumerable = query.GetIAsyncEnumerable(dc, expr, ps, preambles);
 
 					return await enumerable.ToListAsync(ct).ConfigureAwait(Configuration.ContinueOnCapturedContext);
@@ -1486,11 +1486,11 @@ namespace LinqToDB.Linq.Builder
 
 			// Filler code is duplicated for the future usage with IAsyncEnumerable
 			var idx = builder.RegisterPreamble(detailQueryPrepared, 
-				static (data, dc, rootExpression, expr, kp, ps) =>
+				static (data, dc, expr, ps) =>
 				{
 					var query       = (Query<KeyDetailEnvelope<TKey, TD>>)data!;
 
-					var preambles = query.InitPreambles(dc, expr, query.KnownParameters, ps);
+					var preambles = query.InitPreambles(dc, expr, ps);
 					var enumerable = query.GetIEnumerable(dc, expr, ps, preambles);
 
 					var eagerLoadingContext = new EagerLoadingContext<TD, TKey>();
@@ -1502,11 +1502,11 @@ namespace LinqToDB.Linq.Builder
 
 					return eagerLoadingContext;
 				},
-				static async (data, dc, rootExpression, expr, kp, ps, ct) =>
+				static async (data, dc, expr, ps, ct) =>
 				{
 					var query = (Query<KeyDetailEnvelope<TKey, TD>>)data!;
 
-					var preambles  = await query.InitPreamblesAsync(dc, expr, query.KnownParameters, ps, ct).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					var preambles  = await query.InitPreamblesAsync(dc, expr, ps, ct).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 					var enumerable = query.GetIAsyncEnumerable(dc, expr, ps, preambles)!;
 
 					var eagerLoadingContext = new EagerLoadingContext<TD, TKey>();

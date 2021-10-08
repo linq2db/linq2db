@@ -185,15 +185,15 @@ namespace LinqToDB.Linq
 
 		private Tuple<
 			object?,
-			Func<object?, IDataContext, Expression, Expression, IReadOnlyDictionary<Expression, ParameterAccessor>?, object?[]?, object?>,
-			Func<object?, IDataContext, Expression, Expression, IReadOnlyDictionary<Expression, ParameterAccessor>?, object?[]?, CancellationToken,
+			Func<object?, IDataContext, Expression, object?[]?, object?>,
+			Func<object?, IDataContext, Expression, object?[]?, CancellationToken,
 				Task<object?>>>[]? _preambles;
 
 		internal void SetPreambles(
 			IEnumerable<Tuple<
 				object?,
-				Func<object?, IDataContext, Expression, Expression, IReadOnlyDictionary<Expression, ParameterAccessor>?, object?[]?, object?>,
-				Func<object?, IDataContext, Expression, Expression, IReadOnlyDictionary<Expression, ParameterAccessor>?, object?[]?, CancellationToken, Task<object?>>>>? preambles)
+				Func<object?, IDataContext, Expression, object?[]?, object?>,
+				Func<object?, IDataContext, Expression, object?[]?, CancellationToken, Task<object?>>>>? preambles)
 		{
 			_preambles = preambles?.ToArray();
 		}
@@ -208,7 +208,7 @@ namespace LinqToDB.Linq
 			return _preambles?.Length ?? 0;
 		}
 
-		internal object?[]? InitPreambles(IDataContext dc, Expression rootExpression, IReadOnlyDictionary<Expression, ParameterAccessor>? knownParameters, object?[]? ps)
+		internal object?[]? InitPreambles(IDataContext dc, Expression rootExpression, object?[]? ps)
 		{
 			if (_preambles == null)
 				return null;
@@ -216,13 +216,13 @@ namespace LinqToDB.Linq
 			var preambles = new object?[_preambles.Length];
 			for (var i = 0; i < preambles.Length; i++)
 			{
-				preambles[i] = _preambles[i].Item2(_preambles[i].Item1, dc, null!, rootExpression, knownParameters, ps);
+				preambles[i] = _preambles[i].Item2(_preambles[i].Item1, dc, rootExpression, ps);
 			}
 
 			return preambles;
 		}
 
-		internal async Task<object?[]?> InitPreamblesAsync(IDataContext dc, Expression rootExpression, IReadOnlyDictionary<Expression, ParameterAccessor>? knownParameters, object?[]? ps, CancellationToken cancellationToken)
+		internal async Task<object?[]?> InitPreamblesAsync(IDataContext dc, Expression rootExpression, object?[]? ps, CancellationToken cancellationToken)
 		{
 			if (_preambles == null)
 				return null;
@@ -230,7 +230,7 @@ namespace LinqToDB.Linq
 			var preambles = new object?[_preambles.Length];
 			for (var i = 0; i < preambles.Length; i++)
 			{
-				preambles[i] = await _preambles[i].Item3(_preambles[i].Item1, dc, null!, rootExpression, knownParameters, ps, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				preambles[i] = await _preambles[i].Item3(_preambles[i].Item1, dc, rootExpression, ps, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 
 			return preambles;

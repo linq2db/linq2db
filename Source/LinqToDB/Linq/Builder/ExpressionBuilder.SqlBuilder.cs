@@ -2993,28 +2993,28 @@ namespace LinqToDB.Linq.Builder
 
 		private List<Tuple<
 			object?,
-			Func<object?, IDataContext, Expression, Expression, IReadOnlyDictionary<Expression, ParameterAccessor>?, object?[]?, object?>,
-			Func<object?, IDataContext, Expression, Expression, IReadOnlyDictionary<Expression, ParameterAccessor>?, object?[]?, CancellationToken, Task<object?>>>>? _preambles;
+			Func<object?, IDataContext, Expression, object?[]?, object?>,
+			Func<object?, IDataContext, Expression, object?[]?, CancellationToken, Task<object?>>>>? _preambles;
 
 		public static readonly ParameterExpression PreambleParam =
 			Expression.Parameter(typeof(object[]), "preamble");
 
 		public int RegisterPreamble<T>(
 			object? data,
-			Func<object?, IDataContext, Expression, Expression, IReadOnlyDictionary<Expression, ParameterAccessor>?, object?[]?, T> func,
-			Func<object?, IDataContext, Expression, Expression, IReadOnlyDictionary<Expression, ParameterAccessor>?, object?[]?, CancellationToken, Task<T>> funcAsync
+			Func<object?, IDataContext, Expression, object?[]?, T> func,
+			Func<object?, IDataContext, Expression, object?[]?, CancellationToken, Task<T>> funcAsync
 			)
 		{
 			_preambles ??= new();
 			_preambles.Add(
 				Tuple.Create<object?, 
-					Func<object?, IDataContext, Expression, Expression, IReadOnlyDictionary<Expression, ParameterAccessor>?, object?[]?, object?>, 
-					Func<object?, IDataContext, Expression, Expression, IReadOnlyDictionary<Expression, ParameterAccessor>?, object?[]?, CancellationToken, Task<object?>>
+					Func<object?, IDataContext, Expression, object?[]?, object?>, 
+					Func<object?, IDataContext, Expression, object?[]?, CancellationToken, Task<object?>>
 				>
 				(
 					data,
-					(data, dc, re, e, kp, ps) => func(data, dc, re, e, kp, ps),
-					async (data,dc, re, e, kp, ps, ct) => await funcAsync(data, dc, re, e, kp, ps, ct).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					(d, dc, e, ps) => func(d, dc, e, ps),
+					async (d, dc, e, ps, ct) => await funcAsync(d, dc, e, ps, ct).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				);
 			return _preambles.Count - 1;
 		}

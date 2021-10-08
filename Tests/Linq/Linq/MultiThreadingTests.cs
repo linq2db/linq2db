@@ -250,7 +250,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void EagerLoading([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void EagerLoadMultiLevel([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();
