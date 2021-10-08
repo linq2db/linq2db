@@ -36,7 +36,7 @@ namespace LinqToDB.Linq
 
 				var insertStatement = new SqlInsertStatement { Insert = { Into = sqlTable } };
 
-				var ei = new Query<int>(dataContext, null, null)
+				var ei = new Query<int>(dataContext, null)
 				{
 					Queries = { new QueryInfo { Statement = insertStatement } }
 				};

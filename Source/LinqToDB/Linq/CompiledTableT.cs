@@ -32,7 +32,7 @@ namespace LinqToDB.Linq
 				{
 					o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
 
-					var query = new Query<T>(ctx.dataContext, key.expression, null);
+					var query = new Query<T>(ctx.dataContext, key.expression);
 
 					var optimizationContext = new ExpressionTreeOptimizationContext(ctx.dataContext);
 					var parametersContext = new ParametersContext(key.expression, optimizationContext, ctx.dataContext);

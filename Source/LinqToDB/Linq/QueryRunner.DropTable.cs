@@ -31,7 +31,7 @@ namespace LinqToDB.Linq
 
 				sqlTable.Set(ifExists, TableOptions.DropIfExists);
 
-				var query = new Query<int>(dataContext, null, null)
+				var query = new Query<int>(dataContext, null)
 				{
 					Queries = { new QueryInfo { Statement = dropTable } }
 				};
@@ -62,7 +62,7 @@ namespace LinqToDB.Linq
 
 				sqlTable.Set(ifExists, TableOptions.DropIfExists);
 
-				var query = new Query<int>(dataContext, null, null)
+				var query = new Query<int>(dataContext, null)
 				{
 					Queries = { new QueryInfo { Statement = dropTable, } }
 				};

@@ -35,7 +35,7 @@ namespace LinqToDB.Linq
 				createTable.StatementFooter = statementFooter;
 				createTable.DefaultNullable = defaultNullable;
 
-				var query = new Query<int>(dataContext, null, null)
+				var query = new Query<int>(dataContext, null)
 				{
 					Queries = { new QueryInfo { Statement = createTable, } }
 				};
@@ -80,7 +80,7 @@ namespace LinqToDB.Linq
 				createTable.StatementFooter = statementFooter;
 				createTable.DefaultNullable = defaultNullable;
 
-				var query = new Query<int>(dataContext, null, null)
+				var query = new Query<int>(dataContext, null)
 				{
 					Queries = { new QueryInfo { Statement = createTable, } }
 				};

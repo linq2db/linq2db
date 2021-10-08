@@ -34,7 +34,7 @@ namespace LinqToDB.Linq
 
 				deleteStatement.SelectQuery.From.Table(sqlTable);
 
-				var ei = new Query<int>(dataContext, null, null)
+				var ei = new Query<int>(dataContext, null)
 				{
 					Queries = { new QueryInfo { Statement = deleteStatement, } }
 				};

@@ -34,7 +34,7 @@ namespace LinqToDB.Linq
 
 		internal abstract void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters);
 
-		internal Query(IDataContext dataContext, Expression? expression, IReadOnlyDictionary<Expression, ParameterAccessor>? knownParameters)
+		internal Query(IDataContext dataContext, Expression? expression)
 		{
 			ContextID        = dataContext.ContextID;
 			ContextType      = dataContext.GetType();
@@ -44,7 +44,6 @@ namespace LinqToDB.Linq
 			SqlOptimizer     = dataContext.GetSqlOptimizer();
 			SqlProviderFlags = dataContext.SqlProviderFlags;
 			InlineParameters = dataContext.InlineParameters;
-			KnownParameters  = knownParameters;
 		}
 
 #endregion
@@ -76,8 +75,6 @@ namespace LinqToDB.Linq
 		private  Dictionary<MemberInfo, QueryableMemberAccessor>? _queryableMemberAccessorDic;
 		readonly List<QueryableAccessor>                  _queryableAccessorList = new ();
 		readonly Dictionary<Expression,Expression>        _queryDependedObjects  = new ();
-
-		internal IReadOnlyDictionary<Expression, ParameterAccessor>? KnownParameters;
 
 		public bool IsFastCacheable => _queryableMemberAccessorDic == null;
 
@@ -243,8 +240,8 @@ namespace LinqToDB.Linq
 	{
 #region Init
 
-		internal Query(IDataContext dataContext, Expression? expression, IReadOnlyDictionary<Expression, ParameterAccessor>? knownParameters)
-			: base(dataContext, expression, knownParameters)
+		internal Query(IDataContext dataContext, Expression? expression)
+			: base(dataContext, expression)
 		{
 			DoNotCache = NoLinqCache.IsNoCache;
 		}
@@ -536,7 +533,7 @@ namespace LinqToDB.Linq
 						TraceLevel.Info);
 			}
 
-			var query = new Query<T>(dataContext, expr, parametersContext._parameters);
+			var query = new Query<T>(dataContext, expr);
 
 			try
 			{
