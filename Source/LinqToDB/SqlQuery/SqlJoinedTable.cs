@@ -6,13 +6,19 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlJoinedTable : IQueryElement, ISqlExpressionWalkable
 	{
-		public SqlJoinedTable(JoinType joinType, SqlTableSource table, bool isWeak, SqlSearchCondition searchCondition)
+		public SqlJoinedTable(JoinType joinType, SqlTableSource table, bool isWeak, SqlSearchCondition searchCondition, JoinHint joinHint)
 		{
 			JoinType        = joinType;
 			Table           = table;
 			IsWeak          = isWeak;
 			Condition       = searchCondition;
 			CanConvertApply = true;
+			JoinHint        = joinHint;
+		}
+		
+		public SqlJoinedTable(JoinType joinType, SqlTableSource table, bool isWeak, SqlSearchCondition searchCondition)
+			: this(joinType, table, isWeak, searchCondition, JoinHint.None)
+		{
 		}
 
 		public SqlJoinedTable(JoinType joinType, SqlTableSource table, bool isWeak)
@@ -20,8 +26,8 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public SqlJoinedTable(JoinType joinType, ISqlTableSource table, string? alias, bool isWeak)
-			: this(joinType, new SqlTableSource(table, alias), isWeak)
+		public SqlJoinedTable(JoinType joinType, ISqlTableSource table, string? alias, bool isWeak, JoinHint joinHint)
+			: this(joinType, new SqlTableSource(table, alias), isWeak, new SqlSearchCondition(), joinHint)
 		{
 		}
 
@@ -30,6 +36,7 @@ namespace LinqToDB.SqlQuery
 		public SqlSearchCondition Condition       { get; private set; }
 		public bool               IsWeak          { get; set; }
 		public bool               CanConvertApply { get; set; }
+		public JoinHint           JoinHint        { get; set; }
 
 #if OVERRIDETOSTRING
 

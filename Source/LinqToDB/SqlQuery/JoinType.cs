@@ -12,4 +12,9 @@ namespace LinqToDB.SqlQuery
 		Right,
 		Full
 	}
+
+	public enum JoinHint
+	{
+		None, Loop, Merge, Hash, Remote
+	}
 }

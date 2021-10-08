@@ -20,6 +20,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			return
 				methodCall.IsQueryable("Join") && methodCall.Arguments.Count == 3
+				|| methodCall.IsQueryable("Join") && methodCall.Arguments.Count == 4
 				|| !rightNullableOnly && methodCall.IsQueryable(NotRightNullableOnlyMethodNames) && methodCall.Arguments.Count == 2
 				|| rightNullableOnly  && methodCall.IsQueryable(RightNullableOnlyMethodNames)    && methodCall.Arguments.Count == 2;
 		}
@@ -28,8 +29,15 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
+			var hasJointHint = 
+				methodCall.Arguments.Count == 4 &&
+				methodCall.Arguments[2].NodeType == ExpressionType.Constant && 
+				methodCall.Arguments[2].Type == typeof(SqlJoinHint);
+			
 			JoinType joinType;
-			var conditionIndex = 1;
+			var conditionIndex = hasJointHint 
+				? 2
+				: 1;
 
 			switch (methodCall.Method.Name)
 			{
@@ -38,7 +46,9 @@ namespace LinqToDB.Linq.Builder
 				case "RightJoin" : joinType = JoinType.Right; break;
 				case "FullJoin"  : joinType = JoinType.Full;  break;
 				default:
-					conditionIndex = 2;
+					conditionIndex = hasJointHint 
+						? 3
+						: 2;
 
 					joinType = (SqlJoinType) methodCall.Arguments[1].EvaluateExpression()! switch
 					{
@@ -51,8 +61,22 @@ namespace LinqToDB.Linq.Builder
 					break;
 			}
 
+			var joinHint = JoinHint.None;
+			if (hasJointHint)
+			{
+				joinHint = (SqlJoinHint) methodCall.Arguments[2].EvaluateExpression()! switch
+				{
+					SqlJoinHint.Loop  => JoinHint.Loop,
+					SqlJoinHint.Hash  => JoinHint.Hash,
+					SqlJoinHint.Merge => JoinHint.Merge,
+					SqlJoinHint.Remote => JoinHint.Remote,
+					_                 => throw new InvalidOperationException($"Unexpected join hint type: {(SqlJoinType)methodCall.Arguments[2].EvaluateExpression()!}"),
+				};
+			}
+			
 			buildInfo.JoinType = joinType;
-
+			buildInfo.JoinHint = joinHint;
+			
 			if (joinType == JoinType.Left || joinType == JoinType.Full)
 				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null);
 			sequence = new SubQueryContext(sequence);

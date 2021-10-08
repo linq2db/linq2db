@@ -37,8 +37,13 @@ namespace LinqToDB.SqlQuery
 			}
 
 			internal Join(JoinType joinType, ISqlTableSource table, string? alias, bool isWeak, ICollection<Join>? joins)
+				: this(joinType, table, alias, isWeak, JoinHint.None, joins)
 			{
-				JoinedTable = new SqlJoinedTable(joinType, table, alias, isWeak);
+			}
+			
+			internal Join(JoinType joinType, ISqlTableSource table, string? alias, bool isWeak, JoinHint joinHint, ICollection<Join>? joins)
+			{
+				JoinedTable = new SqlJoinedTable(joinType, table, alias, isWeak, joinHint);
 
 				if (joins != null && joins.Count > 0)
 					foreach (var join in joins)

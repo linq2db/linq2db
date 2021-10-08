@@ -135,7 +135,7 @@ namespace LinqToDB.Linq.Builder
 						: (leftJoin ? JoinType.Left : JoinType.Inner);
 				}
 
-				var join = CreateJoin(joinType, sql);
+				var join = CreateJoin(joinType, collectionInfo.JoinHint, sql);
 				join.JoinedTable.CanConvertApply = false;
 
 				if (!(joinType == JoinType.CrossApply || joinType == JoinType.OuterApply))
@@ -174,7 +174,7 @@ namespace LinqToDB.Linq.Builder
 				if (joinType == JoinType.Auto)
 					joinType = leftJoin ? JoinType.OuterApply : JoinType.CrossApply;
 
-				var join = CreateJoin(joinType, sql);
+				var join = CreateJoin(joinType, collectionInfo.JoinHint, sql);
 
 				if (!(joinType == JoinType.CrossApply || joinType == JoinType.OuterApply))
 				{
@@ -188,9 +188,9 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		static SqlFromClause.Join CreateJoin(JoinType joinType, SelectQuery sql)
+		static SqlFromClause.Join CreateJoin(JoinType joinType, JoinHint joinHint, SelectQuery sql)
 		{
-			return new SqlFromClause.Join(joinType, sql, null, false, null);
+			return new SqlFromClause.Join(joinType, sql, null, false, joinHint, null);
 		}
 
 		protected override SequenceConvertInfo? Convert(

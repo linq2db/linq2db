@@ -288,7 +288,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			base.BuildCreateTableFieldType(field);
 		}
 
-		protected override bool BuildJoinType(JoinType joinType, SqlSearchCondition condition)
+		protected override bool BuildJoinType(JoinType joinType, SqlSearchCondition condition, JoinHint joinHint)
 		{
 			switch (joinType)
 			{
@@ -296,7 +296,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case JoinType.OuterApply : StringBuilder.Append("LEFT JOIN LATERAL ");  return true;
 			}
 
-			return base.BuildJoinType(joinType, condition);
+			return base.BuildJoinType(joinType, condition, joinHint);
 		}
 
 		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)

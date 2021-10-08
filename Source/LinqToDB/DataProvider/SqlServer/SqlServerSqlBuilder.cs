@@ -510,5 +510,29 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
+
+		protected override bool BuildJoinType(JoinType joinType, SqlSearchCondition condition, JoinHint joinHint)
+		{
+			if (joinHint == JoinHint.None)
+				return base.BuildJoinType(joinType, condition, joinHint);
+
+			var hint = joinHint switch
+			{
+				JoinHint.Hash => "HASH ",
+				JoinHint.Loop => "LOOP ",
+				JoinHint.Merge => "MERGE ",
+				JoinHint.Remote => "REMOTE ",
+				_ => throw new InvalidOperationException()
+			};
+			
+			switch (joinType)
+			{
+				case JoinType.Inner     : StringBuilder.Append("INNER ").Append(hint).Append("JOIN ");  return true;
+				case JoinType.Left      : StringBuilder.Append("LEFT ").Append(hint).Append("JOIN ");   return true;
+				case JoinType.Right     : StringBuilder.Append("RIGHT ").Append(hint).Append("JOIN ");  return true;
+				case JoinType.Full      : StringBuilder.Append("FULL ").Append(hint).Append("JOIN ");   return true;
+				default: throw new InvalidOperationException();
+			}
+		}
 	}
 }

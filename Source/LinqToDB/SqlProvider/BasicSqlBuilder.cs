@@ -1582,7 +1582,7 @@ namespace LinqToDB.SqlProvider
 			AppendIndent();
 
 			var condition = ConvertElement(join.Condition);
-			var buildOn = BuildJoinType(join.JoinType, condition);
+			var buildOn = BuildJoinType(join.JoinType, condition, join.JoinHint);
 
 			if (IsNestedJoinParenthesisRequired && join.Table.Joins.Count != 0)
 				StringBuilder.Append('(');
@@ -1634,7 +1634,7 @@ namespace LinqToDB.SqlProvider
 			Indent--;
 		}
 
-		protected virtual bool BuildJoinType(JoinType joinType, SqlSearchCondition condition)
+		protected virtual bool BuildJoinType(JoinType joinType, SqlSearchCondition condition, JoinHint joinHint)
 		{
 			switch (joinType)
 			{

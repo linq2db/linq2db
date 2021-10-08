@@ -19,6 +19,7 @@ namespace LinqToDB.Linq.Builder
 
 			return
 				methodCall.IsQueryable("Join"      ) && methodCall.Arguments.Count == 5 ||
+				methodCall.IsQueryable("Join"      ) && methodCall.Arguments.Count == 6 ||
 				methodCall.IsQueryable(MethodNames4) && methodCall.Arguments.Count == 4 ||
 				methodCall.IsQueryable("CrossJoin" ) && methodCall.Arguments.Count == 3;
 		}
@@ -28,9 +29,16 @@ namespace LinqToDB.Linq.Builder
 			var outerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var innerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 
+			var hasJointHint =
+				methodCall.Arguments.Count == 6 &&
+				methodCall.Arguments[3].NodeType == ExpressionType.Constant &&
+			    methodCall.Arguments[3].Type == typeof(SqlJoinHint);
+			
 			JoinType joinType;
-			var conditionIndex = 2;
-
+			var conditionIndex = hasJointHint 
+				? 3 
+				: 2;
+			
 			switch (methodCall.Method.Name)
 			{
 				case "InnerJoin" : joinType = JoinType.Inner; break;
@@ -39,7 +47,9 @@ namespace LinqToDB.Linq.Builder
 				case "RightJoin" : joinType = JoinType.Right; break;
 				case "FullJoin"  : joinType = JoinType.Full;  break;
 				default:
-					conditionIndex = 3;
+					conditionIndex = hasJointHint 
+						? 4
+						: 3;
 
 					joinType = (SqlJoinType) methodCall.Arguments[2].EvaluateExpression()! switch
 					{
@@ -81,7 +91,20 @@ namespace LinqToDB.Linq.Builder
 
 				conditionExpr = builder.ConvertExpression(conditionExpr);
 
-				var join  = new SqlFromClause.Join(joinType, innerContext.SelectQuery, null, false,
+				var joinHint = JoinHint.None;
+				if (hasJointHint)
+				{
+					joinHint = (SqlJoinHint) methodCall.Arguments[3].EvaluateExpression()! switch
+					{
+						SqlJoinHint.Loop  => JoinHint.Loop,
+						SqlJoinHint.Hash  => JoinHint.Hash,
+						SqlJoinHint.Merge => JoinHint.Merge,
+						SqlJoinHint.Remote => JoinHint.Remote,
+						_                 => throw new InvalidOperationException($"Unexpected join hint type: {(SqlJoinType)methodCall.Arguments[3].EvaluateExpression()!}"),
+					};
+				}
+				
+				var join  = new SqlFromClause.Join(joinType, innerContext.SelectQuery, null, false, joinHint,
 					Array<SqlFromClause.Join>.Empty);
 
 				outerContext.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
