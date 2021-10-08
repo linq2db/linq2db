@@ -118,6 +118,7 @@ namespace LinqToDB.Linq.Builder
 		public ExpressionBuilder(
 			Query                             query,
 			ExpressionTreeOptimizationContext optimizationContext,
+			ParametersContext                 parametersContext,
 			IDataContext                      dataContext,
 			Expression                        expression,
 			ParameterExpression[]?            compiledParameters)
@@ -131,7 +132,7 @@ namespace LinqToDB.Linq.Builder
 			OriginalExpression   = expression;
 
 			_optimizationContext = optimizationContext;
-			_parametersContext   = new ParametersContext(expression, optimizationContext, dataContext);
+			_parametersContext   = parametersContext;
 			Expression           = ConvertExpressionTree(expression);
 			_optimizationContext.ClearVisitedCache();
 			

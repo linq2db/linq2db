@@ -40,7 +40,7 @@ namespace LinqToDB.Linq
 
 				sqlQuery.From.Table(sqlTable);
 
-				var ei = new Query<int>(dataContext, null)
+				var ei = new Query<int>(dataContext, null, null)
 				{
 					Queries = { new QueryInfo { Statement = updateStatement, } }
 				};

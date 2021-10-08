@@ -698,6 +698,10 @@ namespace LinqToDB.Linq.Builder
 
 							var descriptor = ed.FindColumnDescriptor(mi);
 
+							if (descriptor == null && EagerLoading.IsDetailsMember(context, arg))
+								return Array<SqlInfo>.Empty;
+
+
 							return ConvertExpressions(context, arg.UnwrapConvertToObject(), queryConvertFlag, descriptor).Select(si => si.Clone(mi));
 						})
 						.SelectMany(si => si)
@@ -723,6 +727,9 @@ namespace LinqToDB.Linq.Builder
 								mi = info.GetPropertyInfo();
 
 							var descriptor = ed.FindColumnDescriptor(mi);
+
+							if (descriptor == null && EagerLoading.IsDetailsMember(context, a.Expression))
+								return Array<SqlInfo>.Empty;
 
 							return ConvertExpressions(context, a.Expression, queryConvertFlag, descriptor).Select(si => si.Clone(mi));
 						})
@@ -2984,19 +2991,31 @@ namespace LinqToDB.Linq.Builder
 
 		#region Eager Loading
 
-		private List<Tuple<Func<IDataContext, Expression, object?[]?, object?>, Func<IDataContext, Expression, object?[]?, CancellationToken, Task<object?>>>>? _preambles;
+		private List<Tuple<
+			object?,
+			Func<object?, IDataContext, Expression, Expression, IReadOnlyDictionary<Expression, ParameterAccessor>?, object?[]?, object?>,
+			Func<object?, IDataContext, Expression, Expression, IReadOnlyDictionary<Expression, ParameterAccessor>?, object?[]?, CancellationToken, Task<object?>>>>? _preambles;
 
 		public static readonly ParameterExpression PreambleParam =
 			Expression.Parameter(typeof(object[]), "preamble");
 
-		public int RegisterPreamble<T>(Func<IDataContext, Expression, object?[]?, T> func, Func<IDataContext, Expression, object?[]?, CancellationToken, Task<T>> funcAsync)
+		public int RegisterPreamble<T>(
+			object? data,
+			Func<object?, IDataContext, Expression, Expression, IReadOnlyDictionary<Expression, ParameterAccessor>?, object?[]?, T> func,
+			Func<object?, IDataContext, Expression, Expression, IReadOnlyDictionary<Expression, ParameterAccessor>?, object?[]?, CancellationToken, Task<T>> funcAsync
+			)
 		{
-			if (_preambles == null)
-				_preambles = new List<Tuple<Func<IDataContext, Expression, object?[]?, object?>,Func<IDataContext, Expression, object?[]?, CancellationToken, Task<object?>>>>();
+			_preambles ??= new();
 			_preambles.Add(
-				Tuple.Create< Func<IDataContext, Expression, object?[]?, object?>, Func<IDataContext, Expression, object?[]?, CancellationToken, Task<object?>>>(
-					(dc, e, ps) => func(dc, e, ps),
-					async (dc, e, ps, ct) => await funcAsync(dc, e, ps, ct).ConfigureAwait(Configuration.ContinueOnCapturedContext)));
+				Tuple.Create<object?, 
+					Func<object?, IDataContext, Expression, Expression, IReadOnlyDictionary<Expression, ParameterAccessor>?, object?[]?, object?>, 
+					Func<object?, IDataContext, Expression, Expression, IReadOnlyDictionary<Expression, ParameterAccessor>?, object?[]?, CancellationToken, Task<object?>>
+				>
+				(
+					data,
+					(data, dc, re, e, kp, ps) => func(data, dc, re, e, kp, ps),
+					async (data,dc, re, e, kp, ps, ct) => await funcAsync(data, dc, re, e, kp, ps, ct).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				);
 			return _preambles.Count - 1;
 		}
 

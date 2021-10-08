@@ -34,7 +34,7 @@ namespace LinqToDB.Linq
 
 		internal abstract void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters);
 
-		protected Query(IDataContext dataContext, Expression? expression)
+		internal Query(IDataContext dataContext, Expression? expression, IReadOnlyDictionary<Expression, ParameterAccessor>? knownParameters)
 		{
 			ContextID        = dataContext.ContextID;
 			ContextType      = dataContext.GetType();
@@ -44,6 +44,7 @@ namespace LinqToDB.Linq
 			SqlOptimizer     = dataContext.GetSqlOptimizer();
 			SqlProviderFlags = dataContext.SqlProviderFlags;
 			InlineParameters = dataContext.InlineParameters;
+			KnownParameters  = knownParameters;
 		}
 
 #endregion
@@ -75,6 +76,8 @@ namespace LinqToDB.Linq
 		private  Dictionary<MemberInfo, QueryableMemberAccessor>? _queryableMemberAccessorDic;
 		readonly List<QueryableAccessor>                  _queryableAccessorList = new ();
 		readonly Dictionary<Expression,Expression>        _queryDependedObjects  = new ();
+
+		internal IReadOnlyDictionary<Expression, ParameterAccessor>? KnownParameters;
 
 		public bool IsFastCacheable => _queryableMemberAccessorDic == null;
 
@@ -180,10 +183,17 @@ namespace LinqToDB.Linq
 
 #region Eager Loading
 
-		Tuple<Func<IDataContext, Expression, object?[]?, object?>, Func<IDataContext, Expression, object?[]?, CancellationToken, Task<object?>>>[]? _preambles;
+		private Tuple<
+			object?,
+			Func<object?, IDataContext, Expression, Expression, IReadOnlyDictionary<Expression, ParameterAccessor>?, object?[]?, object?>,
+			Func<object?, IDataContext, Expression, Expression, IReadOnlyDictionary<Expression, ParameterAccessor>?, object?[]?, CancellationToken,
+				Task<object?>>>[]? _preambles;
 
-		public void SetPreambles(
-			IEnumerable<Tuple<Func<IDataContext, Expression, object?[]?, object?>, Func<IDataContext, Expression, object?[]?, CancellationToken, Task<object?>>>>? preambles)
+		internal void SetPreambles(
+			IEnumerable<Tuple<
+				object?,
+				Func<object?, IDataContext, Expression, Expression, IReadOnlyDictionary<Expression, ParameterAccessor>?, object?[]?, object?>,
+				Func<object?, IDataContext, Expression, Expression, IReadOnlyDictionary<Expression, ParameterAccessor>?, object?[]?, CancellationToken, Task<object?>>>>? preambles)
 		{
 			_preambles = preambles?.ToArray();
 		}
@@ -198,7 +208,7 @@ namespace LinqToDB.Linq
 			return _preambles?.Length ?? 0;
 		}
 
-		public object?[]? InitPreambles(IDataContext dc, Expression rootExpression, object?[]? ps)
+		internal object?[]? InitPreambles(IDataContext dc, Expression rootExpression, IReadOnlyDictionary<Expression, ParameterAccessor>? knownParameters, object?[]? ps)
 		{
 			if (_preambles == null)
 				return null;
@@ -206,13 +216,13 @@ namespace LinqToDB.Linq
 			var preambles = new object?[_preambles.Length];
 			for (var i = 0; i < preambles.Length; i++)
 			{
-				preambles[i] = _preambles[i].Item1(dc, rootExpression, ps);
+				preambles[i] = _preambles[i].Item2(_preambles[i].Item1, dc, null!, rootExpression, knownParameters, ps);
 			}
 
 			return preambles;
 		}
 
-		public async Task<object?[]?> InitPreamblesAsync(IDataContext dc, Expression rootExpression, object?[]? ps, CancellationToken cancellationToken)
+		internal async Task<object?[]?> InitPreamblesAsync(IDataContext dc, Expression rootExpression, IReadOnlyDictionary<Expression, ParameterAccessor>? knownParameters, object?[]? ps, CancellationToken cancellationToken)
 		{
 			if (_preambles == null)
 				return null;
@@ -220,7 +230,7 @@ namespace LinqToDB.Linq
 			var preambles = new object?[_preambles.Length];
 			for (var i = 0; i < preambles.Length; i++)
 			{
-				preambles[i] = await _preambles[i].Item2(dc, rootExpression, ps, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				preambles[i] = await _preambles[i].Item3(_preambles[i].Item1, dc, null!, rootExpression, knownParameters, ps, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 
 			return preambles;
@@ -233,8 +243,8 @@ namespace LinqToDB.Linq
 	{
 #region Init
 
-		public Query(IDataContext dataContext, Expression? expression)
-			: base(dataContext, expression)
+		internal Query(IDataContext dataContext, Expression? expression, IReadOnlyDictionary<Expression, ParameterAccessor>? knownParameters)
+			: base(dataContext, expression, knownParameters)
 		{
 			DoNotCache = NoLinqCache.IsNoCache;
 		}
@@ -481,8 +491,10 @@ namespace LinqToDB.Linq
 			if (dataContext is IExpressionPreprocessor preprocessor)
 				expr = preprocessor.ProcessExpression(expr);
 
+			var parametersContext = new ParametersContext(expr, optimizationContext, dataContext);
+
 			if (Configuration.Linq.DisableQueryCache)
-				return CreateQuery(optimizationContext, dataContext, expr);
+				return CreateQuery(optimizationContext, parametersContext, dataContext, expr);
 
 			// calculate query flags
 			var flags = QueryFlags.None;
@@ -502,7 +514,7 @@ namespace LinqToDB.Linq
 
 			if (query == null)
 			{
-				query = CreateQuery(optimizationContext, dataContext, expr);
+				query = CreateQuery(optimizationContext, parametersContext, dataContext, expr);
 
 				if (!query.DoNotCache)
 					_queryCache.TryAdd(dataContext, query, flags);
@@ -511,7 +523,7 @@ namespace LinqToDB.Linq
 			return query;
 		}
 
-		static Query<T> CreateQuery(ExpressionTreeOptimizationContext optimizationContext, IDataContext dataContext, Expression expr)
+		internal static Query<T> CreateQuery(ExpressionTreeOptimizationContext optimizationContext, ParametersContext parametersContext, IDataContext dataContext, Expression expr)
 		{
 			if (Configuration.Linq.GenerateExpressionTest)
 			{
@@ -524,11 +536,11 @@ namespace LinqToDB.Linq
 						TraceLevel.Info);
 			}
 
-			var query = new Query<T>(dataContext, expr);
+			var query = new Query<T>(dataContext, expr, parametersContext._parameters);
 
 			try
 			{
-				query = new ExpressionBuilder(query, optimizationContext, dataContext, expr, null).Build<T>();
+				query = new ExpressionBuilder(query, optimizationContext, parametersContext, dataContext, expr, null).Build<T>();
 			}
 			catch (Exception)
 			{
@@ -565,7 +577,7 @@ namespace LinqToDB.Linq
 		}
 	}
 
-	class ParameterAccessor
+	internal class ParameterAccessor
 	{
 		public ParameterAccessor(
 			Expression                             expression,

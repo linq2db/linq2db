@@ -40,7 +40,7 @@ namespace LinqToDB.Linq
 					Insert = { Into = sqlTable, WithIdentity = true }
 				};
 
-				var ei = new Query<object>(dataContext, null)
+				var ei = new Query<object>(dataContext, null, null)
 				{
 					Queries = { new QueryInfo { Statement = insertStatement, } }
 				};
