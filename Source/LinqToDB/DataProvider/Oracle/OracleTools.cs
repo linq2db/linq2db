@@ -30,7 +30,7 @@ namespace LinqToDB.DataProvider.Oracle
 		/// This mode performs regular INSERT INTO query with array of values for each column.
 		/// <code>
 		/// INSERT INTO target_table(/*columns*/)
-		///     VALUES(:col1ArrayParameter, ..., colXArrayParameter)
+		///     VALUES(:column1ArrayParameter, ..., :columnXArrayParameter)
 		/// </code>
 		/// </summary>
 		InsertInto,

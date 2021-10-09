@@ -3630,8 +3630,8 @@ CREATE TABLE ""TABLE_A""(
 		{
 			if (copyType == BulkCopyType.RowByRow && keepIdentity)
 				Assert.Inconclusive($"{nameof(BulkCopyType.RowByRow)} doesn't support {nameof(BulkCopyOptions.KeepIdentity)} = true mode");
-			if (copyType == BulkCopyType.RowByRow && multipeRowsMode == AlternativeBulkCopy.InsertAll && !keepIdentity)
-				Assert.Inconclusive($"{nameof(BulkCopyType.RowByRow)} doesn't support {nameof(BulkCopyOptions.KeepIdentity)} = false with {nameof(AlternativeBulkCopy.InsertAll)} mode");
+			if (copyType == BulkCopyType.MultipleRows && multipeRowsMode == AlternativeBulkCopy.InsertAll && !keepIdentity)
+				Assert.Inconclusive($"{nameof(BulkCopyType.MultipleRows)} doesn't support {nameof(BulkCopyOptions.KeepIdentity)} = false with {nameof(AlternativeBulkCopy.InsertAll)} mode");
 			if ((copyType == BulkCopyType.ProviderSpecific || copyType == BulkCopyType.Default) && !keepIdentity)
 				Assert.Inconclusive($"{nameof(BulkCopyType.ProviderSpecific)} doesn't support {nameof(BulkCopyOptions.KeepIdentity)} = false mode");
 
