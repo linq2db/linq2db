@@ -24,7 +24,7 @@ namespace LinqToDB.DataProvider.MySql
 				  name,
 				  mappingSchema != null
 					? new MappingSchema(mappingSchema, MySqlProviderAdapter.GetInstance().MappingSchema)
-					: GetMappingSchema(name, MySqlProviderAdapter.GetInstance().MappingSchema),
+					: GetMappingSchema(MySqlProviderAdapter.GetInstance().MappingSchema),
 				  MySqlProviderAdapter.GetInstance())
 		{
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
@@ -60,7 +60,7 @@ namespace LinqToDB.DataProvider.MySql
 			return new MySqlSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
-		private static MappingSchema GetMappingSchema(string name, MappingSchema providerSchema) => new MySqlMappingSchema.MySqlConnectorMappingSchema(providerSchema);
+		private static MappingSchema GetMappingSchema(MappingSchema providerSchema) => new MySqlMappingSchema.MySqlConnectorMappingSchema(providerSchema);
 
 		readonly ISqlOptimizer _sqlOptimizer;
 
