@@ -1042,212 +1042,92 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void BulkCopyLinqTypesMultipleRows(
-			[IncludeDataSources(TestProvName.AllOracle)] string context,
-			[Values(
-				AlternativeBulkCopy.InsertAll,
-				AlternativeBulkCopy.InsertDual,
-				AlternativeBulkCopy.InsertInto)]
-			AlternativeBulkCopy useAlternativeBulkCopy)
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			try
-			{
-				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
-
+			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
 				BulkCopyLinqTypes(context, BulkCopyType.MultipleRows);
-			}
-			finally
-			{
-				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
-			}
 		}
 
 		[Test]
 		public async Task BulkCopyLinqTypesMultipleRowsAsync(
-			[IncludeDataSources(TestProvName.AllOracle)] string context,
-			[Values(
-				AlternativeBulkCopy.InsertAll,
-				AlternativeBulkCopy.InsertDual,
-				AlternativeBulkCopy.InsertInto)]
-			AlternativeBulkCopy useAlternativeBulkCopy)
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			try
-			{
-				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
-
+			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
 				await BulkCopyLinqTypesAsync(context, BulkCopyType.MultipleRows);
-			}
-			finally
-			{
-				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
-			}
 		}
 
 		[Test]
 		public void BulkCopyLinqTypesProviderSpecific(
-			[IncludeDataSources(TestProvName.AllOracle)] string context,
-			[Values(
-				AlternativeBulkCopy.InsertAll,
-				AlternativeBulkCopy.InsertDual,
-				AlternativeBulkCopy.InsertInto)]
-			AlternativeBulkCopy useAlternativeBulkCopy)
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			try
-			{
-				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
-
+			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
 				BulkCopyLinqTypes(context, BulkCopyType.ProviderSpecific);
-			}
-			finally
-			{
-				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
-			}
 		}
 
 		[Test]
 		public async Task BulkCopyLinqTypesProviderSpecificAsync(
-			[IncludeDataSources(TestProvName.AllOracle)] string context,
-			[Values(
-				AlternativeBulkCopy.InsertAll,
-				AlternativeBulkCopy.InsertDual,
-				AlternativeBulkCopy.InsertInto)]
-			AlternativeBulkCopy useAlternativeBulkCopy)
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			try
-			{
-				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
-
+			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
 				await BulkCopyLinqTypesAsync(context, BulkCopyType.ProviderSpecific);
-			}
-			finally
-			{
-				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
-			}
 		}
 
 		[Test]
 		public void BulkCopyRetrieveSequencesProviderSpecific(
-			[IncludeDataSources(TestProvName.AllOracle)] string context,
-			[Values(
-				AlternativeBulkCopy.InsertAll,
-				AlternativeBulkCopy.InsertDual,
-				AlternativeBulkCopy.InsertInto)]
-			AlternativeBulkCopy useAlternativeBulkCopy)
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			try
-			{
-				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
-
+			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
 				BulkCopyRetrieveSequence(context, BulkCopyType.ProviderSpecific);
-			}
-			finally
-			{
-				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
-			}
 		}
 
 		[Test]
 		public async Task BulkCopyRetrieveSequencesProviderSpecificAsync(
-			[IncludeDataSources(TestProvName.AllOracle)] string context,
-			[Values(
-				AlternativeBulkCopy.InsertAll,
-				AlternativeBulkCopy.InsertDual,
-				AlternativeBulkCopy.InsertInto)]
-			AlternativeBulkCopy useAlternativeBulkCopy)
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			try
-			{
-				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
-
+			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
 				await BulkCopyRetrieveSequenceAsync(context, BulkCopyType.ProviderSpecific);
-			}
-			finally
-			{
-				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
-			}
 		}
 
 		[Test]
 		public void BulkCopyRetrieveSequencesMultipleRows(
-			[IncludeDataSources(TestProvName.AllOracle)] string context,
-			[Values(
-				AlternativeBulkCopy.InsertAll,
-				AlternativeBulkCopy.InsertDual,
-				AlternativeBulkCopy.InsertInto)]
-			AlternativeBulkCopy useAlternativeBulkCopy)
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			try
-			{
-				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
-
+			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
 				BulkCopyRetrieveSequence(context, BulkCopyType.MultipleRows);
-			}
-			finally
-			{
-				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
-			}
 		}
 
 		[Test]
 		public async Task BulkCopyRetrieveSequencesMultipleRowsAsync(
-			[IncludeDataSources(TestProvName.AllOracle)] string context,
-			[Values(
-				AlternativeBulkCopy.InsertAll,
-				AlternativeBulkCopy.InsertDual,
-				AlternativeBulkCopy.InsertInto)]
-			AlternativeBulkCopy useAlternativeBulkCopy)
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			try
-			{
-				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
-
+			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
 				await BulkCopyRetrieveSequenceAsync(context, BulkCopyType.MultipleRows);
-			}
-			finally
-			{
-				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
-			}
 		}
 
 		[Test]
 		public void BulkCopyRetrieveSequencesRowByRow(
-			[IncludeDataSources(TestProvName.AllOracle)] string context,
-			[Values(
-				AlternativeBulkCopy.InsertAll,
-				AlternativeBulkCopy.InsertDual,
-				AlternativeBulkCopy.InsertInto)]
-			AlternativeBulkCopy useAlternativeBulkCopy)
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			try
-			{
-				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
-
+			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
 				BulkCopyRetrieveSequence(context, BulkCopyType.RowByRow);
-			}
-			finally
-			{
-				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
-			}
 		}
 
 		[Test]
 		public async Task BulkCopyRetrieveSequencesRowByRowAsync(
-			[IncludeDataSources(TestProvName.AllOracle)] string context,
-			[Values(
-				AlternativeBulkCopy.InsertAll,
-				AlternativeBulkCopy.InsertDual,
-				AlternativeBulkCopy.InsertInto)]
-			AlternativeBulkCopy useAlternativeBulkCopy)
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			try
-			{
-				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
-
+			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
 				await BulkCopyRetrieveSequenceAsync(context, BulkCopyType.RowByRow);
-			}
-			finally
-			{
-				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
-			}
 		}
 
 		static void BulkCopyRetrieveSequence(string context, BulkCopyType bulkCopyType)
@@ -1394,86 +1274,38 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void BulkCopy1MultipleRows(
-			[IncludeDataSources(TestProvName.AllOracle)] string context,
-			[Values(
-				AlternativeBulkCopy.InsertAll,
-				AlternativeBulkCopy.InsertDual,
-				AlternativeBulkCopy.InsertInto)]
-			AlternativeBulkCopy useAlternativeBulkCopy)
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			try
-			{
-				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
-
+			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
 				BulkCopy1(context, BulkCopyType.MultipleRows);
-			}
-			finally
-			{
-				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
-			}
 		}
 
 		[Test]
 		public async Task BulkCopy1MultipleRowsAsync(
-			[IncludeDataSources(TestProvName.AllOracle)] string context,
-			[Values(
-				AlternativeBulkCopy.InsertAll,
-				AlternativeBulkCopy.InsertDual,
-				AlternativeBulkCopy.InsertInto)]
-			AlternativeBulkCopy useAlternativeBulkCopy)
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			try
-			{
-				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
-
+			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
 				await BulkCopy1Async(context, BulkCopyType.MultipleRows);
-			}
-			finally
-			{
-				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
-			}
 		}
 
 		[Test]
 		public void BulkCopy1ProviderSpecific(
-			[IncludeDataSources(TestProvName.AllOracle)] string context,
-			[Values(
-				AlternativeBulkCopy.InsertAll,
-				AlternativeBulkCopy.InsertDual,
-				AlternativeBulkCopy.InsertInto)]
-			AlternativeBulkCopy useAlternativeBulkCopy)
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			try
-			{
-				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
-
+			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
 				BulkCopy1(context, BulkCopyType.ProviderSpecific);
-			}
-			finally
-			{
-				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
-			}
 		}
 
 		[Test]
 		public async Task BulkCopy1ProviderSpecificAsync(
-			[IncludeDataSources(TestProvName.AllOracle)] string context,
-			[Values(
-				AlternativeBulkCopy.InsertAll,
-				AlternativeBulkCopy.InsertDual,
-				AlternativeBulkCopy.InsertInto)]
-			AlternativeBulkCopy useAlternativeBulkCopy)
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			try
-			{
-				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
-
+			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
 				await BulkCopy1Async(context, BulkCopyType.ProviderSpecific);
-			}
-			finally
-			{
-				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
-			}
 		}
 
 		// we use copy of table with all-uppercase names to be able to use it with native
@@ -1571,86 +1403,38 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void BulkCopy21MultipleRows(
-			[IncludeDataSources(TestProvName.AllOracle)] string context,
-			[Values(
-				AlternativeBulkCopy.InsertAll,
-				AlternativeBulkCopy.InsertDual,
-				AlternativeBulkCopy.InsertInto)]
-			AlternativeBulkCopy useAlternativeBulkCopy)
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			try
-			{
-				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
-
+			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
 				BulkCopy21(context, BulkCopyType.MultipleRows);
-			}
-			finally
-			{
-				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
-			}
 		}
 
 		[Test]
 		public async Task BulkCopy21MultipleRowsAsync(
-			[IncludeDataSources(TestProvName.AllOracle)] string context,
-			[Values(
-				AlternativeBulkCopy.InsertAll,
-				AlternativeBulkCopy.InsertDual,
-				AlternativeBulkCopy.InsertInto)]
-			AlternativeBulkCopy useAlternativeBulkCopy)
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			try
-			{
-				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
-
+			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
 				await BulkCopy21Async(context, BulkCopyType.MultipleRows);
-			}
-			finally
-			{
-				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
-			}
 		}
 
 		[Test]
 		public void BulkCopy21ProviderSpecific(
-			[IncludeDataSources(TestProvName.AllOracle)] string context,
-			[Values(
-				AlternativeBulkCopy.InsertAll,
-				AlternativeBulkCopy.InsertDual,
-				AlternativeBulkCopy.InsertInto)]
-			AlternativeBulkCopy useAlternativeBulkCopy)
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			try
-			{
-				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
-
+			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
 				BulkCopy21(context, BulkCopyType.ProviderSpecific);
-			}
-			finally
-			{
-				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
-			}
 		}
 
 		[Test]
 		public async Task BulkCopy21ProviderSpecificAsync(
-			[IncludeDataSources(TestProvName.AllOracle)] string context,
-			[Values(
-				AlternativeBulkCopy.InsertAll,
-				AlternativeBulkCopy.InsertDual,
-				AlternativeBulkCopy.InsertInto)]
-			AlternativeBulkCopy useAlternativeBulkCopy)
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			try
-			{
-				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
-
+			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
 				await BulkCopy21Async(context, BulkCopyType.ProviderSpecific);
-			}
-			finally
-			{
-				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
-			}
 		}
 
 		static void BulkCopy22(string context, BulkCopyType bulkCopyType)
@@ -1725,86 +1509,38 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void BulkCopy22MultipleRows(
-			[IncludeDataSources(TestProvName.AllOracle)] string context,
-			[Values(
-				AlternativeBulkCopy.InsertAll,
-				AlternativeBulkCopy.InsertDual,
-				AlternativeBulkCopy.InsertInto)]
-			AlternativeBulkCopy useAlternativeBulkCopy)
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			try
-			{
-				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
-
+			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
 				BulkCopy22(context, BulkCopyType.MultipleRows);
-			}
-			finally
-			{
-				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
-			}
 		}
 
 		[Test]
 		public async Task BulkCopy22MultipleRowsAsync(
-			[IncludeDataSources(TestProvName.AllOracle)] string context,
-			[Values(
-				AlternativeBulkCopy.InsertAll,
-				AlternativeBulkCopy.InsertDual,
-				AlternativeBulkCopy.InsertInto)]
-			AlternativeBulkCopy useAlternativeBulkCopy)
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			try
-			{
-				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
-
+			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
 				await BulkCopy22Async(context, BulkCopyType.MultipleRows);
-			}
-			finally
-			{
-				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
-			}
 		}
 
 		[Test]
 		public void BulkCopy22ProviderSpecific(
-			[IncludeDataSources(TestProvName.AllOracle)] string context,
-			[Values(
-				AlternativeBulkCopy.InsertAll,
-				AlternativeBulkCopy.InsertDual,
-				AlternativeBulkCopy.InsertInto)]
-			AlternativeBulkCopy useAlternativeBulkCopy)
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			try
-			{
-				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
-
+			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
 				BulkCopy22(context, BulkCopyType.ProviderSpecific);
-			}
-			finally
-			{
-				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
-			}
 		}
 
 		[Test]
 		public async Task BulkCopy22ProviderSpecificAsync(
-			[IncludeDataSources(TestProvName.AllOracle)] string context,
-			[Values(
-				AlternativeBulkCopy.InsertAll,
-				AlternativeBulkCopy.InsertDual,
-				AlternativeBulkCopy.InsertInto)]
-			AlternativeBulkCopy useAlternativeBulkCopy)
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			try
-			{
-				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
-
+			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
 				await BulkCopy22Async(context, BulkCopyType.ProviderSpecific);
-			}
-			finally
-			{
-				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
-			}
 		}
 
 		#endregion
@@ -2246,9 +1982,9 @@ namespace Tests.DataProvider
 			for (var i = 0; i < 100; i++)
 				data.Add(new UseAlternativeBulkCopy() { Id = i, Value = i });
 
+			using (new OracleAlternativeBulkCopyMode(AlternativeBulkCopy.InsertInto))
 			using (var db = new DataConnection(context))
 			{
-				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertInto;
 				db.CreateTable<UseAlternativeBulkCopy>();
 				try
 				{
@@ -2259,7 +1995,6 @@ namespace Tests.DataProvider
 				}
 				finally
 				{
-					OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
 					db.DropTable<UseAlternativeBulkCopy>();
 				}
 			}
@@ -2272,9 +2007,9 @@ namespace Tests.DataProvider
 			for (var i = 0; i < 100; i++)
 				data.Add(new UseAlternativeBulkCopy() { Id = i, Value = i });
 
+			using (new OracleAlternativeBulkCopyMode(AlternativeBulkCopy.InsertInto))
 			using (var db = new DataConnection(context))
 			{
-				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertInto;
 				await db.CreateTableAsync<UseAlternativeBulkCopy>();
 				try
 				{
@@ -2285,7 +2020,6 @@ namespace Tests.DataProvider
 				}
 				finally
 				{
-					OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
 					await db.DropTableAsync<UseAlternativeBulkCopy>();
 				}
 			}
@@ -2298,9 +2032,9 @@ namespace Tests.DataProvider
 			for (var i = 0; i < 100; i++)
 				data.Add(new UseAlternativeBulkCopy() { Id = i, Value = i });
 
+			using (new OracleAlternativeBulkCopyMode(AlternativeBulkCopy.InsertDual))
 			using (var db = new DataConnection(context))
 			{
-				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertDual;
 				db.CreateTable<UseAlternativeBulkCopy>();
 				try
 				{
@@ -2311,7 +2045,6 @@ namespace Tests.DataProvider
 				}
 				finally
 				{
-					OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
 					db.DropTable<UseAlternativeBulkCopy>();
 				}
 			}
@@ -2324,9 +2057,9 @@ namespace Tests.DataProvider
 			for (var i = 0; i < 100; i++)
 				data.Add(new UseAlternativeBulkCopy() { Id = i, Value = i });
 
+			using (new OracleAlternativeBulkCopyMode(AlternativeBulkCopy.InsertDual))
 			using (var db = new DataConnection(context))
 			{
-				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertDual;
 				await db.CreateTableAsync<UseAlternativeBulkCopy>();
 				try
 				{
@@ -2337,7 +2070,6 @@ namespace Tests.DataProvider
 				}
 				finally
 				{
-					OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
 					await db.DropTableAsync<UseAlternativeBulkCopy>();
 				}
 			}
@@ -2399,19 +2131,14 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void ClobBulkCopyTest(
-			[IncludeDataSources(TestProvName.AllOracle)] string context,
-			[Values(
-				AlternativeBulkCopy.InsertAll,
-				AlternativeBulkCopy.InsertDual,
-				AlternativeBulkCopy.InsertInto)]
-			AlternativeBulkCopy useAlternativeBulkCopy)
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
 		{
 			var data = new List<ClobEntity>(new[] { new ClobEntity(1), new ClobEntity(2) });
 
+			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
 			using (var db = new DataConnection(context))
 			{
-				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
-
 				try
 				{
 					db.CreateTable<ClobEntity>();
@@ -2422,7 +2149,6 @@ namespace Tests.DataProvider
 				}
 				finally
 				{
-					OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
 					db.DropTable<ClobEntity>();
 				}
 
@@ -2431,19 +2157,14 @@ namespace Tests.DataProvider
 
 		[Test]
 		public async Task ClobBulkCopyTestAsync(
-			[IncludeDataSources(TestProvName.AllOracle)] string context,
-			[Values(
-				AlternativeBulkCopy.InsertAll,
-				AlternativeBulkCopy.InsertDual,
-				AlternativeBulkCopy.InsertInto)]
-			AlternativeBulkCopy useAlternativeBulkCopy)
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
 		{
 			var data = new List<ClobEntity>(new[] { new ClobEntity(1), new ClobEntity(2) });
 
+			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
 			using (var db = new DataConnection(context))
 			{
-				OracleTools.UseAlternativeBulkCopy = useAlternativeBulkCopy;
-
 				try
 				{
 					await db.CreateTableAsync<ClobEntity>();
@@ -2454,7 +2175,6 @@ namespace Tests.DataProvider
 				}
 				finally
 				{
-					OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
 					await db.DropTableAsync<ClobEntity>();
 				}
 
@@ -3488,7 +3208,7 @@ namespace Tests.DataProvider
 					GetProcedures = false
 				});
 
-				var table = schema.Tables.Where(t => t.TableName == nameof(TypesTest).ToUpperInvariant()).SingleOrDefault()!;
+				var table = schema.Tables.SingleOrDefault(t => t.TableName == nameof(TypesTest).ToUpperInvariant())!;
 				Assert.IsNotNull(table);
 				Assert.AreEqual(5, table.Columns.Count);
 
@@ -3647,26 +3367,26 @@ namespace Tests.DataProvider
 		[Test]
 		public void Issue2342Test([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
-			var oldMode = OracleTools.UseAlternativeBulkCopy;
-			try
+			using (new OracleAlternativeBulkCopyMode(AlternativeBulkCopy.InsertInto))
 			{
-				OracleTools.UseAlternativeBulkCopy = AlternativeBulkCopy.InsertInto;
-				Configuration.RetryPolicy.Factory  = connection => new DummyRetryPolicy();
-
-				using var db    = new TestDataConnection(context);
-				using var table = db.CreateLocalTable<Issue2342Entity>();
-
-				using (db.BeginTransaction())
+				try
 				{
-					table.BulkCopy(Enumerable.Range(1, 10).Select(id => new Issue2342Entity { Id = id, Name = $"Name_{id}" }));
-				}
+					Configuration.RetryPolicy.Factory = connection => new DummyRetryPolicy();
 
-				table.Truncate();
-			}
-			finally
-			{
-				OracleTools.UseAlternativeBulkCopy = oldMode;
-				Configuration.RetryPolicy.Factory  = null;
+					using var db    = new TestDataConnection(context);
+					using var table = db.CreateLocalTable<Issue2342Entity>();
+
+					using (db.BeginTransaction())
+					{
+						table.BulkCopy(Enumerable.Range(1, 10).Select(id => new Issue2342Entity { Id = id, Name = $"Name_{id}" }));
+					}
+
+					table.Truncate();
+				}
+				finally
+				{
+					Configuration.RetryPolicy.Factory = null;
+				}
 			}
 		}
 
@@ -3697,10 +3417,10 @@ namespace Tests.DataProvider
 
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, options);
 
-				var table        = schema.Tables.Where(t => t.TableName == "SchemaTestTable").FirstOrDefault()!;
-				var view         = schema.Tables.Where(t => t.TableName == "SchemaTestView").FirstOrDefault()!;
-				var matView      = schema.Tables.Where(t => t.TableName == "SchemaTestMatView" && t.IsView).FirstOrDefault()!;
-				var matViewTable = schema.Tables.Where(t => t.TableName == "SchemaTestMatView" && !t.IsView).FirstOrDefault();
+				var table        = schema.Tables.FirstOrDefault(t => t.TableName == "SchemaTestTable")!;
+				var view         = schema.Tables.FirstOrDefault(t => t.TableName == "SchemaTestView")!;
+				var matView      = schema.Tables.FirstOrDefault(t => t.TableName == "SchemaTestMatView" && t.IsView)!;
+				var matViewTable = schema.Tables.FirstOrDefault(t => t.TableName == "SchemaTestMatView" && !t.IsView);
 
 				Assert.IsNotNull(table);
 				Assert.AreEqual("This is table", table.Description);
@@ -3904,9 +3624,18 @@ CREATE TABLE ""TABLE_A""(
 		[Test]
 		public void TestNativeIdentityBulkCopy(
 			[IncludeDataSources(TestProvName.AllOracle12)] string context,
-			[Values] BulkCopyType copyType,
-			[Values] bool         keepIdentity)
+			[Values] BulkCopyType        copyType,
+			[Values] bool                keepIdentity,
+			[Values] AlternativeBulkCopy multipeRowsMode)
 		{
+			if (copyType == BulkCopyType.RowByRow && keepIdentity)
+				Assert.Inconclusive($"{nameof(BulkCopyType.RowByRow)} doesn't support {nameof(BulkCopyOptions.KeepIdentity)} = true mode");
+			if (copyType == BulkCopyType.RowByRow && multipeRowsMode == AlternativeBulkCopy.InsertAll && !keepIdentity)
+				Assert.Inconclusive($"{nameof(BulkCopyType.RowByRow)} doesn't support {nameof(BulkCopyOptions.KeepIdentity)} = false with {nameof(AlternativeBulkCopy.InsertAll)} mode");
+			if ((copyType == BulkCopyType.ProviderSpecific || copyType == BulkCopyType.Default) && !keepIdentity)
+				Assert.Inconclusive($"{nameof(BulkCopyType.ProviderSpecific)} doesn't support {nameof(BulkCopyOptions.KeepIdentity)} = false mode");
+
+			using (new OracleAlternativeBulkCopyMode(multipeRowsMode))
 			using (var db    = new DataConnection(context))
 			using (var table = db.CreateLocalTable<NativeIdentity>())
 			{
@@ -3931,7 +3660,7 @@ CREATE TABLE ""TABLE_A""(
 
 				var insertedData = table.OrderBy(_ => _.Field).ToArray();
 
-				Assert.AreEqual(2 , insertedData.Length  );
+				Assert.AreEqual(2, insertedData.Length);
 				Assert.AreEqual(11, insertedData[0].Field);
 				Assert.AreEqual(12, insertedData[1].Field);
 
