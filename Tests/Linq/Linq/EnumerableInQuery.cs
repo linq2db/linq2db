@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
@@ -50,6 +52,18 @@ namespace Tests.Linq
 				var result = itemsQuery!.AsCte().ToArray();
 
 				AreEqual(items, result, ComparerBuilder.GetEqualityComparer<SampleClass>());
+			}
+		}
+
+		[Test]
+		public void RegressionTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var collection = db.Person.ToList();
+				db.Person
+					.Select(_ => collection.First(r => r.ID == _.ID).ID)
+					.ToList();
 			}
 		}
 	}
