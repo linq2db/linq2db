@@ -2,7 +2,6 @@
 	<Import Project="linq2db.Tests.props" />
 
 	<ItemGroup>
-		<PackageReference Include="MySql.Data" />
 		<PackageReference Include="System.Data.SQLite.Core" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
 		<PackageReference Include="MySqlConnector" />

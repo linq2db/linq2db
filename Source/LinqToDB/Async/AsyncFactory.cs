@@ -168,7 +168,6 @@ namespace LinqToDB.Async
 #endif
 			// Task<DbTransaction> BeginTransactionAsync(CancellationToken)
 			// Availability:
-			// - MySql.Data
 			// - MySqlConnector < 0.57
 			// - FirebirdSql.Data.FirebirdClient 8+
 #if !NATIVE_ASYNC
@@ -189,7 +188,6 @@ namespace LinqToDB.Async
 #endif
 			// Task<DbTransaction> BeginTransactionAsync(IsolationLevel, CancellationToken)
 			// Availability:
-			// - MySql.Data
 			// - MySqlConnector < 0.57
 			// - FirebirdSql.Data.FirebirdClient 8+
 #if !NATIVE_ASYNC
@@ -209,7 +207,6 @@ namespace LinqToDB.Async
 			// Task CloseAsync()
 			// Availability:
 			// - (stub) DbConnection (netstandard2.1, netcoreapp3.0)
-			// - MySql.Data
 			// - MySqlConnector 0.57+
 			// - npgsql 4.1.0+
 			// - FirebirdSql.Data.FirebirdClient 8+

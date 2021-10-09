@@ -1,7 +1,5 @@
 ﻿using System.Linq;
-
-using MySql.Data.MySqlClient;
-
+using MySqlConnector;
 using NUnit.Framework;
 
 namespace Tests.Exceptions
@@ -11,8 +9,9 @@ namespace Tests.Exceptions
 	[TestFixture]
 	public class DataExceptionTests : TestBase
 	{
+		// TODO: what we even test here? remove?
 		[Test]
-		public void ParameterPrefixTest([IncludeDataSources(TestProvName.AllMySqlData)] string context)
+		public void ParameterPrefixTest([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
 			try
 			{

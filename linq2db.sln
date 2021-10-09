@@ -98,7 +98,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 		NuGet\linq2db.Informix.Core.nuspec = NuGet\linq2db.Informix.Core.nuspec
 		NuGet\linq2db.Informix.nuspec = NuGet\linq2db.Informix.nuspec
 		NuGet\linq2db.MySql.nuspec = NuGet\linq2db.MySql.nuspec
-		NuGet\linq2db.MySqlConnector.nuspec = NuGet\linq2db.MySqlConnector.nuspec
 		NuGet\linq2db.nuspec = NuGet\linq2db.nuspec
 		NuGet\linq2db.Oracle.Managed.nuspec = NuGet\linq2db.Oracle.Managed.nuspec
 		NuGet\linq2db.Oracle.Unmanaged.nuspec = NuGet\linq2db.Oracle.Unmanaged.nuspec
@@ -229,12 +228,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sybase.DataAction", "Sybase
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests.Playground", "Tests\Tests.Playground\Tests.Playground.csproj", "{4E3D4705-F037-4536-A45D-7AF52BB017DC}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MySqlConnector", "MySqlConnector", "{B4080869-A89C-4996-938C-D7F42E9AA3CB}"
-	ProjectSection(SolutionItems) = preProject
-		NuGet\MySqlConnector\CopyMe.MySqlConnector.tt.txt = NuGet\MySqlConnector\CopyMe.MySqlConnector.tt.txt
-		NuGet\MySqlConnector\linq2db.MySqlConnector.props = NuGet\MySqlConnector\linq2db.MySqlConnector.props
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.Tools", "Source\LinqToDB.Tools\LinqToDB.Tools.csproj", "{B6D0309F-61AA-4F2B-B918-5446609CBECD}"
 EndProject
@@ -634,7 +627,6 @@ Global
 		{7FEE7809-27BB-432A-8920-D0DC56F13A62} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
 		{1FC89283-09FB-444B-BF70-F76B3E3A83BB} = {3A081B6E-D3B3-433F-A3CA-EE29CD24C324}
 		{4E3D4705-F037-4536-A45D-7AF52BB017DC} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
-		{B4080869-A89C-4996-938C-D7F42E9AA3CB} = {3A081B6E-D3B3-433F-A3CA-EE29CD24C324}
 		{B6D0309F-61AA-4F2B-B918-5446609CBECD} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 		{52EABB0B-0C56-43F1-B98B-6461FA841E5F} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 		{51E64464-E257-4984-A4D5-BF9FF8B7DF1D} = {885042E3-18EA-4927-B1CF-5E0E3DBD1C00}

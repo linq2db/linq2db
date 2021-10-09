@@ -19,10 +19,6 @@ using StackExchange.Profiling;
 using StackExchange.Profiling.Data;
 using Tests.Model;
 
-using MySqlDataDateTime           = MySql.Data.Types.MySqlDateTime;
-using MySqlDataDecimal            = MySql.Data.Types.MySqlDecimal;
-using MySqlConnectorDateTime      = MySqlConnector.MySqlDateTime;
-using MySqlDataMySqlConnection    = MySql.Data.MySqlClient.MySqlConnection;
 using System.Globalization;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.DB2;
@@ -38,6 +34,7 @@ using System.Threading.Tasks;
 using LinqToDB.Common;
 using FirebirdSql.Data.Types;
 using System.Numerics;
+using MySqlConnector;
 #if NET472
 using IBM.Data.Informix;
 #endif
@@ -248,12 +245,12 @@ namespace Tests.Data
 
 		class MapperExpressionTest1
 		{
-			public DateTime Value { get; set; }
+			public DateTime      Value { get; set; }
 		}
 
 		class MapperExpressionTest2
 		{
-			public MySqlDataDateTime Value { get; set; }
+			public MySqlDateTime Value { get; set; }
 		}
 
 		class MapperExpressionTest3
@@ -261,21 +258,21 @@ namespace Tests.Data
 			public object? Value { get; set; }
 		}
 
-		// tests support of data reader methods by Mapper.Map (using MySql.Data provider only)
+		// tests support of data reader methods by Mapper.Map (using MySqlConnector provider only)
 		[Test]
-		public void TestMapperMap([IncludeDataSources(TestProvName.AllMySqlData)] string context, [Values] ConnectionType type)
+		public void TestMapperMap([IncludeDataSources(ProviderName.MySql)] string context, [Values] ConnectionType type)
 		{
 			// AllowZeroDateTime is to enable MySqlDateTime type
-			using (var db = CreateDataConnection(new MySqlDataProvider(ProviderName.MySqlOfficial), context, type, "MySql.Data.MySqlClient.MySqlConnection, MySql.Data", ";AllowZeroDateTime=true"))
+			using (var db = CreateDataConnection(new MySqlDataProvider(context), context, type, "MySqlConnector.MySqlConnection, MySqlConnector", ";AllowZeroDateTime=true"))
 			{
 				var dtValue = new DateTime(2012, 12, 12, 12, 12, 12, 0);
 
 				Assert.AreEqual(dtValue, db.FromSql<MapperExpressionTest1>("SELECT Cast({0} as datetime) as Value", new DataParameter("p", dtValue, DataType.DateTime)).Single().Value);
-				Assert.AreEqual(dtValue, db.FromSql<MapperExpressionTest2>("SELECT Cast({0} as datetime) as Value", new DataParameter("p", dtValue, DataType.DateTime)).Single().Value.Value);
+				Assert.AreEqual(dtValue, db.FromSql<MapperExpressionTest2>("SELECT Cast({0} as datetime) as Value", new DataParameter("p", dtValue, DataType.DateTime)).Single().Value.GetDateTime());
 
 				var rawDtValue = db.FromSql<MapperExpressionTest3>("SELECT Cast({0} as datetime) as Value", new DataParameter("p", dtValue, DataType.DateTime)).Single().Value;
-				Assert.True    (rawDtValue is MySqlDataDateTime);
-				Assert.AreEqual(dtValue, ((MySqlDataDateTime)rawDtValue!).Value);
+				Assert.True    (rawDtValue is MySqlDateTime);
+				Assert.AreEqual(dtValue, ((MySqlDateTime)rawDtValue!).GetDateTime());
 			}
 		}
 
@@ -283,7 +280,7 @@ namespace Tests.Data
 		{
 			private readonly Func<string, DbConnection> _connectionFactory;
 			public LinqMySqlDataProvider(Func<string, DbConnection> connectionFactory)
-				: base(ProviderName.MySqlOfficial)
+				: base(ProviderName.MySql)
 			{
 				_connectionFactory = connectionFactory;
 			}
@@ -308,7 +305,7 @@ namespace Tests.Data
 			DataConnection.AddOrSetConfiguration(testContext, cs + ";AllowZeroDateTime=true", testContext);
 			DataConnection.AddDataProvider(testContext,  new LinqMySqlDataProvider(cs =>
 			{
-				var cn = new MySqlDataMySqlConnection(cs);
+				var cn = new MySqlConnection(cs);
 
 				switch (type)
 				{
@@ -323,8 +320,8 @@ namespace Tests.Data
 
 			// TODO: probably we should add serialization for supported provider-specific types to provider's mapping schema
 			var ms = new MappingSchema();
-			ms.SetConvertExpression<MySqlDataDateTime, string>(value => value.Value.ToBinary().ToString(CultureInfo.InvariantCulture));
-			ms.SetConvertExpression<string, MySqlDataDateTime>(value => new MySqlDataDateTime(DateTime.FromBinary(long.Parse(value, CultureInfo.InvariantCulture))));
+			ms.SetConvertExpression<MySqlDateTime, string>(value => value.GetDateTime().ToBinary().ToString(CultureInfo.InvariantCulture));
+			ms.SetConvertExpression<string, MySqlDateTime>(value => new MySqlDateTime(DateTime.FromBinary(long.Parse(value, CultureInfo.InvariantCulture))));
 			switch (type)
 			{
 				case ConnectionType.MiniProfiler:
@@ -339,82 +336,20 @@ namespace Tests.Data
 
 				// ExecuteReader
 				Assert.AreEqual(dtValue, db.FromSql<MapperExpressionTest1>("SELECT Cast({0} as datetime) as Value", new DataParameter("p", dtValue, DataType.DateTime)).Single().Value);
-				Assert.AreEqual(dtValue, db.FromSql<MapperExpressionTest2>("SELECT Cast({0} as datetime) as Value", new DataParameter("p", dtValue, DataType.DateTime)).Single().Value.Value);
+				Assert.AreEqual(dtValue, db.FromSql<MapperExpressionTest2>("SELECT Cast({0} as datetime) as Value", new DataParameter("p", dtValue, DataType.DateTime)).Single().Value.GetDateTime());
 
 				// TODO: doesn't work due to object use, probably we should add type to remote context data
 				//var rawDtValue = db.FromSql<MapperExpressionTest3>("SELECT Cast(@p as datetime) as Value", new DataParameter("@p", dtValue, DataType.DateTime)).Single().Value;
-				//Assert.True(rawDtValue is MySqlDataDateTime);
-				//Assert.AreEqual(dtValue, ((MySqlDataDateTime)rawDtValue).Value);
+				//Assert.True(rawDtValue is MySqlDateTime);
+				//Assert.AreEqual(dtValue, ((MySqlDateTime)rawDtValue).GetDateTime());
 			}
 		}
 
 		[Test]
-		public void TestMySqlData([IncludeDataSources(TestProvName.AllMySqlData)] string context, [Values] ConnectionType type)
+		public async Task TestMySqlConnector([IncludeDataSources(ProviderName.MySql)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-			// AllowZeroDateTime is to enable MySqlDateTime type
-			using (var db = CreateDataConnection(new MySqlDataProvider(ProviderName.MySqlOfficial), context, type, "MySql.Data.MySqlClient.MySqlConnection, MySql.Data", ";AllowZeroDateTime=true"))
-			{
-				var trace = string.Empty;
-				db.OnTraceConnection += (TraceInfo ti) =>
-				{
-					if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-						trace = ti.SqlText;
-				};
-
-				// test provider-specific type readers
-				// (using both SetProviderField and SetToTypeField registrations)
-				var decValue = 123.456m;
-
-				// not valid for wrapped reader, because MySqlDataDecimal cannot be constructed
-				MySqlDataDecimal mysqlDecValue = default;
-				if (type != ConnectionType.MiniProfilerNoMappings)
-				{
-					mysqlDecValue = db.Execute<MySqlDataDecimal>("SELECT Cast(@p as decimal(6, 3))", new DataParameter("@p", decValue, DataType.Decimal));
-					Assert.AreEqual(decValue, mysqlDecValue.Value);
-				}
-
-				var rawDecValue = db.Execute<object>("SELECT Cast(@p as decimal(6, 3))", new DataParameter("@p", decValue, DataType.Decimal));
-				Assert.True    (rawDecValue is decimal);
-				Assert.AreEqual(decValue, (decimal)rawDecValue);
-
-				var dtValue = new DateTime(2012, 12, 12, 12, 12, 12, 0);
-				Assert.AreEqual(dtValue, db.Execute<MySqlDataDateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", dtValue, DataType.DateTime)).Value);
-				var rawDtValue = db.Execute<object>("SELECT Cast(@p as datetime)", new DataParameter("@p", dtValue, DataType.DateTime));
-				Assert.True    (rawDtValue is MySqlDataDateTime);
-				Assert.AreEqual(dtValue, ((MySqlDataDateTime)rawDtValue).Value);
-
-				// test readers + mapper.map
-				Assert.AreEqual(dtValue, db.FromSql<MapperExpressionTest1>("SELECT Cast(@p as datetime) as Value", new DataParameter("@p", dtValue, DataType.DateTime)).Single().Value);
-				Assert.AreEqual(dtValue, db.FromSql<MapperExpressionTest2>("SELECT Cast(@p as datetime) as Value", new DataParameter("@p", dtValue, DataType.DateTime)).Single().Value.Value);
-				rawDtValue = db.FromSql<MapperExpressionTest3>("SELECT Cast(@p as datetime) as Value", new DataParameter("@p", dtValue, DataType.DateTime)).Single().Value!;
-				Assert.True    (rawDtValue is MySqlDataDateTime);
-				Assert.AreEqual(dtValue, ((MySqlDataDateTime)rawDtValue).Value);
-
-				// test provider-specific parameter values
-				if (type == ConnectionType.MiniProfilerNoMappings)
-					decValue = 0;
-
-				Assert.AreEqual(decValue, db.Execute<decimal>("SELECT Cast(@p as decimal(6, 3))", new DataParameter("@p", mysqlDecValue, DataType.Decimal)));
-				Assert.AreEqual(decValue, db.Execute<decimal>("SELECT Cast(@p as decimal(6, 3))", new DataParameter("@p", mysqlDecValue, DataType.VarNumeric)));
-				Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlDataDateTime(dtValue), DataType.Date)));
-				Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlDataDateTime(dtValue), DataType.DateTime)));
-				Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlDataDateTime(dtValue), DataType.DateTime2)));
-
-				// assert provider-specific parameter type name
-				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE tinyintDataType = @p", new DataParameter("@p", (sbyte)111, DataType.SByte)));
-				Assert.True(trace.Contains("DECLARE @p Byte "));
-
-				// just check schema (no api used)
-				db.DataProvider.GetSchemaProvider().GetSchema(db);
-			}
-		}
-
-		[Test]
-		public async Task TestMySqlConnector([IncludeDataSources(ProviderName.MySqlConnector)] string context, [Values] ConnectionType type)
-		{
-			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-			using (var db = CreateDataConnection(new MySqlDataProvider(ProviderName.MySqlConnector), context, type, "MySqlConnector.MySqlConnection, MySqlConnector", ";AllowZeroDateTime=true"))
+			using (var db = CreateDataConnection(new MySqlDataProvider(ProviderName.MySql), context, type, "MySqlConnector.MySqlConnection, MySqlConnector", ";AllowZeroDateTime=true"))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -425,18 +360,18 @@ namespace Tests.Data
 
 				// test provider-specific type readers
 				var dtValue = new DateTime(2012, 12, 12, 12, 12, 12, 0);
-				Assert.AreEqual(dtValue, db.Execute<MySqlConnectorDateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", dtValue, DataType.DateTime)).GetDateTime());
-				Assert.AreEqual(dtValue, db.Execute<MySqlConnectorDateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", dtValue, DataType.DateTime)).GetDateTime());
+				Assert.AreEqual(dtValue, db.Execute<MySqlDateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", dtValue, DataType.DateTime)).GetDateTime());
+				Assert.AreEqual(dtValue, db.Execute<MySqlDateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", dtValue, DataType.DateTime)).GetDateTime());
 				var rawDtValue = db.Execute<object>("SELECT Cast(@p as datetime)", new DataParameter("@p", dtValue, DataType.DateTime));
-				Assert.True    (rawDtValue is MySqlConnectorDateTime);
-				Assert.AreEqual(dtValue, ((MySqlConnectorDateTime)rawDtValue).GetDateTime());
+				Assert.True    (rawDtValue is MySqlDateTime);
+				Assert.AreEqual(dtValue, ((MySqlDateTime)rawDtValue).GetDateTime());
 
 				// test provider-specific parameter values
 				using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
 				{
-					Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.Date)));
-					Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.DateTime)));
-					Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.DateTime2)));
+					Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlDateTime(dtValue), DataType.Date)));
+					Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlDateTime(dtValue), DataType.DateTime)));
+					Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlDateTime(dtValue), DataType.DateTime2)));
 				}
 
 				// assert provider-specific parameter type name
@@ -1459,10 +1394,10 @@ namespace Tests.Data
 					await TestBulkCopyAsync();
 
 				// provider types support by schema
-				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
-				var allTypes = schema.Tables.Where(t => t.TableName == "AllTypes").SingleOrDefault()!;
+				var schema   = db.DataProvider.GetSchemaProvider().GetSchema(db);
+				var allTypes = schema.Tables.SingleOrDefault(t => t.TableName == "AllTypes")!;
 				Assert.NotNull (allTypes);
-				var tsColumn = allTypes.Columns.Where(c => c.ColumnName == "timestampDataType").SingleOrDefault()!;
+				var tsColumn = allTypes.Columns.SingleOrDefault(c => c.ColumnName == "timestampDataType")!;
 				Assert.NotNull (tsColumn);
 				Assert.AreEqual("NpgsqlDateTime", tsColumn.ProviderSpecificType);
 

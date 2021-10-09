@@ -91,10 +91,9 @@ Legend:
 |MS SQL Server 2019<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 3.0.1<br>with FTS Tests|:heavy_check_mark:<sup>[5](#notes)</sup>|:heavy_check_mark:<sup>[5](#notes)</sup>|:heavy_check_mark:|:heavy_check_mark:|
 |Azure SQL<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.3|:x:|:x:|:x:|:x:|
 |Azure SQL<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 3.0.1|:x:|:x:|:x:|:x:|
-|MySQL 5.6<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.26|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|MySQL 8<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.26|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|MySQL 5.6<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 1.3.12|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MySQL 8<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 1.3.12|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|MariaDB 10<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.26|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
+|MariaDB 10<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 1.3.12|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 9.2<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.1.9 (netfx) / 5.0.10 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 9.3<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.1.9 (netfx) / 5.0.10 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 9.5<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.1.9 (netfx) / 5.0.10 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
@@ -153,11 +152,9 @@ Legend:
 |`ProviderName.SqlServer2014`|SQL Server 2014||
 |`ProviderName.SqlServer2017`|SQL Server 2017||
 |`TestProvName.Northwind`|SQL Server FTS tests||
-|`ProviderName.MySql`|Latest MySQL using MySQL.Data||
+|`ProviderName.MySql`|Latest version of MySQL||
 |`TestProvName.MySql55`|MySQL 5.5||
-|`ProviderName.MySqlOfficial`|not used||
-|`ProviderName.MySqlConnector`|Latest MySQL using MySqlConnector||
-|`TestProvName.MariaDB`|Latest MariaDB using MySQL.Data||
+|`TestProvName.MariaDB`|Latest version of MariaDB||
 |`ProviderName.Oracle`|not used||
 |`ProviderName.OracleNative`|Oracle 12c using native provider||
 |`ProviderName.OracleManaged`|Oracle 12c using managed provider (core version for .net core)||

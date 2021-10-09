@@ -1,30 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.IO;
+using System.Data.Common;
 using System.Reflection;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using System.Data.Common;
-	using Common;
 	using Configuration;
 	using Data;
 
 	public static class MySqlTools
 	{
-		private static readonly Lazy<IDataProvider> _mySqlDataProvider = new Lazy<IDataProvider>(() =>
+		private static readonly Lazy<IDataProvider> _dataProvider = new (() =>
 		{
-			var provider = new MySqlDataProvider(ProviderName.MySqlOfficial);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
-
-		private static readonly Lazy<IDataProvider> _mySqlConnectorDataProvider = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new MySqlDataProvider(ProviderName.MySqlConnector);
+			var provider = new MySqlDataProvider(ProviderName.MySql);
 
 			DataConnection.AddDataProvider(provider);
 
@@ -38,80 +25,29 @@ namespace LinqToDB.DataProvider.MySql
 
 			switch (css.ProviderName)
 			{
-				case ProviderName.MySqlOfficial                :
-				case MySqlProviderAdapter.MySqlDataAssemblyName: return _mySqlDataProvider.Value;
-				case ProviderName.MySqlConnector               : return _mySqlConnectorDataProvider.Value;
+				// two names for v3 configurations backward compatibility (old provider names for MySql.Data-based providers)
+				case "MySql.Data"                                   :
+				case "MySql.Official"                               :
+				case MySqlProviderAdapter.OldMySqlConnectorNamespace:
+				case MySqlProviderAdapter.MySqlConnectorAssemblyName:
+				case ProviderName.MySql                             : return _dataProvider.Value;
 
 				case ""                         :
 				case null                       :
 					if (css.Name.Contains("MySql"))
-						goto case ProviderName.MySql;
+						return _dataProvider.Value;
 					break;
-				case MySqlProviderAdapter.MySqlDataClientNamespace:
-				case ProviderName.MySql                           :
-					if (css.Name.Contains(MySqlProviderAdapter.MySqlConnectorAssemblyName))
-						return _mySqlConnectorDataProvider.Value;
-
-					if (css.Name.Contains(MySqlProviderAdapter.MySqlDataAssemblyName))
-						return _mySqlDataProvider.Value;
-
-					return GetDataProvider();
-				case var providerName when providerName.Contains("MySql"):
-					if (providerName.Contains(MySqlProviderAdapter.MySqlConnectorAssemblyName))
-						return _mySqlConnectorDataProvider.Value;
-
-					if (providerName.Contains(MySqlProviderAdapter.MySqlDataAssemblyName))
-						return _mySqlDataProvider.Value;
-
-					goto case ProviderName.MySql;
 			}
 
 			return null;
 		}
 
-		public static IDataProvider GetDataProvider(string? providerName = null)
-		{
-			return providerName switch
-			{
-				ProviderName.MySqlOfficial  => _mySqlDataProvider.Value,
-				ProviderName.MySqlConnector => _mySqlConnectorDataProvider.Value,
-				_                           => 
-					DetectedProviderName == ProviderName.MySqlOfficial
-					? _mySqlDataProvider.Value
-					: _mySqlConnectorDataProvider.Value,
-			};
-		}
+		public static IDataProvider GetDataProvider(string? providerName = null) => _dataProvider.Value;
 
-		private static string? _detectedProviderName;
-		public  static string  DetectedProviderName =>
-			_detectedProviderName ??= DetectProviderName();
-
-		static string DetectProviderName()
-		{
-			try
-			{
-				var path = typeof(MySqlTools).Assembly.GetPath();
-
-				if (!File.Exists(Path.Combine(path, $"{MySqlProviderAdapter.MySqlDataAssemblyName}.dll")))
-					if (File.Exists(Path.Combine(path, $"{MySqlProviderAdapter.MySqlConnectorAssemblyName}.dll")))
-						return ProviderName.MySqlConnector;
-			}
-			catch (Exception)
-			{
-			}
-
-			return ProviderName.MySqlOfficial;
-		}
-
-		public static void ResolveMySql(string path, string? assemblyName)
+		public static void ResolveMySql(string path)
 		{
 			if (path == null) throw new ArgumentNullException(nameof(path));
-			new AssemblyResolver(
-				path,
-				assemblyName
-					?? (DetectedProviderName == ProviderName.MySqlOfficial
-						? MySqlProviderAdapter.MySqlDataAssemblyName
-						: MySqlProviderAdapter.MySqlConnectorAssemblyName));
+			new AssemblyResolver(path, MySqlProviderAdapter.MySqlConnectorAssemblyName);
 		}
 
 		public static void ResolveMySql(Assembly assembly)

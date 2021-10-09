@@ -435,7 +435,6 @@ namespace Tests
 			TestProvName.PostgreSQL12,
 			TestProvName.PostgreSQL13,
 			ProviderName.MySql,
-			ProviderName.MySqlConnector,
 			TestProvName.MySql55,
 			TestProvName.MariaDB,
 			ProviderName.SQLiteMS,

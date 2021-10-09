@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
 
@@ -153,7 +152,6 @@ namespace LinqToDB.Expressions
 				ex = ConvertExpressionToType(ex, type, mappingSchema)!;
 
 			// Try to search postprocessing converter TType -> TType
-			//
 			ex = ConvertExpressionToType(ex, ex.Type, mappingSchema)!;
 
 			// Add check null expression.
@@ -161,7 +159,7 @@ namespace LinqToDB.Expressions
 			// Note: some providers may return wrong IsDBNullAllowed, so we enforce null check in slow mode. E.g.:
 			// Microsoft.Data.SQLite
 			// Oracle (group by columns)
-			// MySql.Data and some other providers enforce null check in IsDBNullAllowed implementation
+			// some providers enforce null check in IsDBNullAllowed implementation
 			if (converter?.HandlesNulls != true &&
 			    (forceNullCheck || (dataContext.IsDBNullAllowed(dataReader, idx) ?? true)))
 			{

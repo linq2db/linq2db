@@ -1102,12 +1102,11 @@ namespace Tests.Data
 		// also some providers remove credentials from connection string in non-design mode
 		[ActiveIssue(Configurations = new[]
 		{
-			ProviderName.MySqlConnector,
 			ProviderName.SapHanaNative, // HanaException: error while parsing protocol
 			// Providers remove credentials in non-design mode:
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSqlServer,
-			TestProvName.AllMySqlData
+			TestProvName.AllMySql
 		})]
 		[Test]
 		public void TestDisposeFlagCloning([DataSources(false)] string context, [Values] bool dispose)
@@ -1205,19 +1204,19 @@ namespace Tests.Data
 		public void TestDisposeFlagCloning962Test1(
 			[DataSources(false)] string context, [Values] bool withScope)
 		{
+			var provider = GetProviderName(context, out _);
 			if (withScope && (
-				context == ProviderName.DB2            ||
-				context == ProviderName.InformixDB2    ||
-				context == ProviderName.MySqlConnector ||
-				context == TestProvName.MariaDB        ||
-				context == ProviderName.SapHanaNative  ||
-				context == ProviderName.SqlCe          ||
-				context == ProviderName.Sybase         ||
-				context.Contains("Firebird")           ||
-				context.Contains("Oracle")             ||
-				context.Contains("PostgreSQL")         ||
-				context.Contains("SqlServer")          ||
-				context.Contains("SqlAzure")           ||
+				context == ProviderName.DB2              ||
+				context == ProviderName.InformixDB2      ||
+				context == ProviderName.SapHanaNative    ||
+				context == ProviderName.SqlCe            ||
+				context == ProviderName.Sybase           ||
+				TestProvName.AllMySql.Contains(provider) ||
+				context.Contains("Firebird")             ||
+				context.Contains("Oracle")               ||
+				context.Contains("PostgreSQL")           ||
+				context.Contains("SqlServer")            ||
+				context.Contains("SqlAzure")             ||
 				context.Contains(ProviderName.SQLiteClassic)
 				))
 			{
@@ -1268,7 +1267,6 @@ namespace Tests.Data
 				(context.Contains("Oracle") && context.Contains("Managed")) ||
 				context == ProviderName.SapHanaNative       ||
 #endif
-				TestProvName.AllMySqlData.Contains(context) ||
 				context.StartsWith("Access")                ||
 				context.Contains("SqlServer")               ||
 				context.Contains("SqlAzure")                ||
@@ -1280,7 +1278,6 @@ namespace Tests.Data
 				// Access>ODBC: ERROR [HY092] [Microsoft][ODBC Microsoft Access Driver]Invalid attribute/option identifier
 				// DB2: ERROR [58005] [IBM][DB2/NT64] SQL0998N  Error occurred during transaction or heuristic processing.  Reason Code = "16". Subcode = "2-8004D026".
 				// Informix DB2: ERROR [2E000] [IBM] SQL1001N  "<DBNAME>" is not a valid database name.  SQLSTATE=2E000
-				// MySql.Data: Multiple simultaneous connections or connections with different connection strings inside the same transaction are not currently supported.
 				// PostgreSQL: 55000: prepared transactions are disabled
 				// SQLite.Classic: The operation is not valid for the state of the transaction.
 				// SAP HANA ODBC: ERROR [HYC00] [SAP AG][LIBODBCHDB32 DLL] Optional feature not implemented

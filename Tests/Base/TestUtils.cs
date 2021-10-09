@@ -203,7 +203,6 @@ namespace Tests
 				case ProviderName.AccessOdbc:
 					return "Database\\TestData";
 				case ProviderName.MySql:
-				case ProviderName.MySqlConnector:
 				case TestProvName.MariaDB:
 				case TestProvName.MySql55:
 				case ProviderName.PostgreSQL:
@@ -380,7 +379,6 @@ namespace Tests
 				case TestProvName.Firebird4                          :
 					return "UNICODE_FSS";
 				case ProviderName.MySql                              :
-				case ProviderName.MySqlConnector                     :
 				case TestProvName.MySql55                            :
 				case TestProvName.MariaDB                            :
 					return "utf8_bin";

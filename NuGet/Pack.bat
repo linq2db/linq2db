@@ -20,7 +20,6 @@ nuget.exe Pack ..\BuiltNuGet\linq2db.Firebird.nuspec -OutputDirectory ..\BuiltNu
 nuget.exe Pack ..\BuiltNuGet\linq2db.Informix.nuspec -OutputDirectory ..\BuiltNuGet\built
 nuget.exe Pack ..\BuiltNuGet\linq2db.Informix.Core.nuspec -OutputDirectory ..\BuiltNuGet\built
 nuget.exe Pack ..\BuiltNuGet\linq2db.MySql.nuspec -OutputDirectory ..\BuiltNuGet\built
-nuget.exe Pack ..\BuiltNuGet\linq2db.MySqlConnector.nuspec -OutputDirectory ..\BuiltNuGet\built
 nuget.exe Pack ..\BuiltNuGet\linq2db.Oracle.Managed.nuspec -OutputDirectory ..\BuiltNuGet\built
 nuget.exe Pack ..\BuiltNuGet\linq2db.Oracle.Unmanaged.nuspec -OutputDirectory ..\BuiltNuGet\built
 nuget.exe Pack ..\BuiltNuGet\linq2db.PostgreSQL.nuspec -OutputDirectory ..\BuiltNuGet\built
