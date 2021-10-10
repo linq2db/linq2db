@@ -73,8 +73,28 @@ namespace LinqToDB.Extensions
 		/// <returns><see cref="MemberInfo"/> or null</returns>
 		public static MemberInfo? GetMemberEx(this Type type, MemberInfo memberInfo)
 		{
+			if (memberInfo.DeclaringType == type)
+				return memberInfo;
+
 			if (memberInfo.IsPropertyEx())
-				return type.GetProperty(memberInfo.Name);
+			{
+				var props = type.GetProperties();
+
+				PropertyInfo? foundByName = null;
+				foreach (var prop in props)
+				{
+					if (prop.Name == memberInfo.Name)
+					{
+						foundByName ??= prop;
+						if (prop.GetMemberType() == memberInfo.GetMemberType())
+						{
+							return prop;
+						}
+					}
+				}
+
+				return foundByName;
+			}
 
 			if (memberInfo.IsFieldEx())
 				return type.GetField   (memberInfo.Name);
