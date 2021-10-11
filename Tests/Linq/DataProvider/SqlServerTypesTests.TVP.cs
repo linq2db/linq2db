@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
-
+using System.Runtime.CompilerServices;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using Microsoft.SqlServer.Server;
 
 using NUnit.Framework;
-
+using Tests.Model;
 using SqlDataRecordMS = Microsoft.Data.SqlClient.Server.SqlDataRecord;
 using SqlMetaDataMS   = Microsoft.Data.SqlClient.Server.SqlMetaData;
 
@@ -285,6 +286,75 @@ namespace Tests.DataProvider
 							 select new TVPRecord() { Id = record.Id, Name = record.Name };
 
 				Assert.AreEqual(0, result.ToList().Count);
+			}
+		}
+
+		public class Result
+		{
+			public int[]? Ints { get; set; }
+		}
+		
+		[Test]
+		public void TVPCachingIssue(
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var external = new DataConnection(context))
+			using (var db = new DataConnection(context))
+			{
+				Result[] GetResult(params int[] values)
+				{
+					var table = new DataTable();
+            
+					table.Columns.Add("Id", typeof(int));
+					table.Columns.Add("Name", typeof(string));
+				
+					foreach (var value in values)
+						table.Rows.Add(value, "_");	
+            			
+					var    parameter = new DataParameter("table", table, DataType.Structured) { DbType = TYPE_NAME };
+
+					var query = from x in db.FromSql<TVPRecord>($"{parameter}") select x.Id.Value;
+					
+					return db.GetTable<Person>()
+						.Where(p => query.Contains(p.ID))
+						.Select(p1 => new Result
+						{
+							Ints = db.GetTable<Person>()
+								.Where(p2 => p2.ID > p1.ID)
+								.Select(p => p.ID)
+								.ToArray()
+						}).ToArray();
+				}
+
+				void AssertResult(Result[] r1, Result[] r2)
+				{
+					Assert.AreEqual(r1.Length, r2.Length);
+					for (var i = 0; i < r1.Length; i++)
+					{
+						var ints1 = r1[i].Ints!;
+						var ints2 = r2[i].Ints!;
+						Assert.AreEqual(ints1.Length, ints2.Length);
+					
+						for (var j = 0; j < ints1.Length; j++)
+							Assert.AreEqual(ints1[j], ints2[j]);
+					}
+				}
+				
+				Result[] res1;
+				Result[] res2;
+				
+				// workaround
+				using (NoLinqCache.Scope())
+				{
+					res1 = GetResult(1, 2);
+					res2 = GetResult(2, 3); 
+				}
+				
+				var res3 = GetResult(1, 2);
+				var res4 = GetResult(2, 3);
+				
+				AssertResult(res1, res3); // pass
+				AssertResult(res2, res4); // fail
 			}
 		}
 
