@@ -37,7 +37,7 @@ namespace Tests.UserTests
 
 
 			var newMs = new MappingSchema(ms);
-			var mb2 = ms.GetFluentMappingBuilder();
+			var mb2 = newMs.GetFluentMappingBuilder();
 			mb2.Entity<Class2>().HasTableName("Class2Table");
 			using (var db = new DataConnection("SQLite.MS", newMs))
 			{
