@@ -87,6 +87,7 @@ namespace LinqToDB.Linq.Builder
 			new MultiInsertBuilder		   (),
 			new TagQueryBuilder            (),
 			new EnumerableBuilder          (),
+			new QueryExtensionBuilder      (),
 		};
 
 		public static void AddBuilder(ISequenceBuilder builder)
@@ -134,7 +135,7 @@ namespace LinqToDB.Linq.Builder
 			_optimizationContext = optimizationContext;
 			Expression           = ConvertExpressionTree(expression);
 			_optimizationContext.ClearVisitedCache();
-			
+
 			DataReaderLocal      = BuildVariable(DataReaderParam, "ldr");
 		}
 

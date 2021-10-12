@@ -16,7 +16,6 @@
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net472'">
 		<!--Cannot use Any CPU due to native providers-->
 		<PlatformTarget>x86</PlatformTarget>
-
 	</PropertyGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
@@ -53,7 +52,7 @@
 		<PackageReference Include="System.Data.OleDb" />
 		<PackageReference Include="MiniProfiler.Shared" />
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
-		
+
 		<!--magic-->
 		<PackageReference Include="IBM.Data.DB2.Core" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
 		<PackageReference Include="IBM.Data.DB2.Core-lnx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
@@ -65,5 +64,4 @@
 			<HintPath>..\..\Redist\dotMorten.Microsoft.SqlServer.Types\Microsoft.SqlServer.Types.dll</HintPath>
 		</Reference>
 	</ItemGroup>
-
 </Project>

@@ -158,7 +158,7 @@ namespace LinqToDB.Expressions
 					break;
 				}
 			}
-			
+
 			return expr;
 		}
 
@@ -568,7 +568,7 @@ namespace LinqToDB.Expressions
 								return null;
 							return ((PropertyInfo)member.Member).GetValue(obj, null);
 						}
-						
+
 						break;
 					}
 				case ExpressionType.Call:
@@ -579,7 +579,7 @@ namespace LinqToDB.Expressions
 
 						if (instance == null && mc.Method.IsNullableGetValueOrDefault())
 							return null;
-						
+
 						return mc.Method.Invoke(instance, arguments);
 					}
 			}

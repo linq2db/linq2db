@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using LinqToDB.Common;
+
 using LinqToDB.Extensions;
 using LinqToDB.SqlQuery;
 
@@ -38,7 +37,7 @@ namespace LinqToDB.Linq.Builder
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, root) { CreateSubQuery = true });
 
 			var finalFunction = functions.First();
-				
+
 			var sqlExpression = finalFunction.GetExpression(builder.DataContext, buildInfo.SelectQuery, methodCall,
 				(e, descriptor) => builder.ConvertToExtensionSql(sequence, e, descriptor));
 
