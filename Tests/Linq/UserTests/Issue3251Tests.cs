@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -35,7 +36,6 @@ namespace Tests.UserTests
 				}
 			}
 
-
 			var newMs = new MappingSchema(ms);
 			var mb2 = newMs.GetFluentMappingBuilder();
 			mb2.Entity<Class2>().HasTableName("Class2Table");
@@ -44,7 +44,15 @@ namespace Tests.UserTests
 				var ed1 = newMs.GetEntityDescriptor(typeof(Class2));
 				var ed2 = db.MappingSchema.GetEntityDescriptor(typeof(Class2));
 
-				var l = db.GetTable<Class2>().ToList();
+				try
+				{
+					var l = db.GetTable<Class2>().ToList();
+				}
+				catch(Exception ex)
+				{
+					var msg = ex.Message;
+					StringAssert.Contains("Class2Table", msg);
+				}
 			}
 		}
 	}
