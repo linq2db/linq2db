@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
@@ -304,17 +303,17 @@ namespace Tests.DataProvider
 				Result[] GetResult(params int[] values)
 				{
 					var table = new DataTable();
-            
+
 					table.Columns.Add("Id", typeof(int));
 					table.Columns.Add("Name", typeof(string));
 				
 					foreach (var value in values)
-						table.Rows.Add(value, "_");	
-            			
-					var    parameter = new DataParameter("table", table, DataType.Structured) { DbType = TYPE_NAME };
+						table.Rows.Add(value, "_");
 
-					var query = from x in db.FromSql<TVPRecord>($"{parameter}") select x.Id.Value;
-					
+					var parameter = new DataParameter("table", table, DataType.Structured) { DbType = TYPE_NAME };
+
+					var query = from x in db.FromSql<TVPRecord>($"{parameter}") select x.Id!.Value;
+
 					return db.GetTable<Person>()
 						.Where(p => query.Contains(p.ID))
 						.Select(p1 => new Result
