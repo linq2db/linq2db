@@ -114,7 +114,7 @@ namespace LinqToDB.Linq.Builder
 				else
 				{
 					expr = Expression.Block(
-						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(false, null!)), Expression.Call(ExpressionBuilder.DataReaderParam, Methods.ADONet.IsDBNull, Expression.Constant(0)), Expression.Constant(_methodName)),
+						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(false, null!)), Expression.Call(ExpressionBuilder.DataReaderParam, Methods.ADONet.IsDBNull, ExpressionHelper.Constant(0)), Expression.Constant(_methodName)),
 						Builder.BuildSql(_returnType, fieldIndex, sqlExpression));
 				}
 

@@ -467,7 +467,7 @@ namespace LinqToDB.Expressions
 					return attributes;
 				});
 
-			var skipContantArguments = _skipContantArgumentsMethods.GetOrAdd(
+			var skipConstantArguments = _skipContantArgumentsMethods.GetOrAdd(
 				mi, static mi =>
 				{
 					var parameters = mi.GetParameters();
@@ -487,7 +487,7 @@ namespace LinqToDB.Expressions
 			{
 				for (var i = 0; i < expr1.Arguments.Count; i++)
 				{
-					if (skipContantArguments[i]
+					if (skipConstantArguments[i]
 						&& expr1.Arguments[i].NodeType == ExpressionType.Constant
 						&& expr2.Arguments[i].NodeType == ExpressionType.Constant)
 						continue;
@@ -528,7 +528,7 @@ namespace LinqToDB.Expressions
 					}
 					else
 					{
-						if (skipContantArguments[i]
+						if (skipConstantArguments[i]
 							&& expr1.Arguments[i].NodeType == ExpressionType.Constant
 							&& expr2.Arguments[i].NodeType == ExpressionType.Constant)
 							continue;

@@ -1103,7 +1103,7 @@ namespace LinqToDB.Extensions
 			if (!method.IsGenericMethod || method.IsGenericMethodDefinition)
 				return method;
 
-			return _methodDefinitionCache.GetOrAdd(method, mi => mi.GetGenericMethodDefinition());
+			return _methodDefinitionCache.GetOrAdd(method, static mi => mi.GetGenericMethodDefinition());
 		}
 	}
 }

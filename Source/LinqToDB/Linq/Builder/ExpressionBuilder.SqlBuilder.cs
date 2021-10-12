@@ -2413,7 +2413,7 @@ namespace LinqToDB.Linq.Builder
 		ISqlPredicate MakeIsPredicate(IBuildContext context, TypeBinaryExpression expression)
 		{
 			var typeOperand = expression.TypeOperand;
-			var table       = new TableBuilder.TableContext(this, new BuildInfo((IBuildContext?)null, Expression.Constant(null), new SelectQuery()), typeOperand);
+			var table       = new TableBuilder.TableContext(this, new BuildInfo((IBuildContext?)null, ExpressionHelper.UntypedNull, new SelectQuery()), typeOperand);
 
 			if (typeOperand == table.ObjectType && table.InheritanceMapping.All(m => m.Type != typeOperand))
 				return new SqlPredicate.Expr(new SqlValue(true));

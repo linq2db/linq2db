@@ -355,7 +355,7 @@ namespace LinqToDB.Linq.Builder
 									Expression.Convert(
 										Expression.ArrayIndex(
 											ParametersParam,
-											Expression.Constant(Array.IndexOf(compiledParameters, (ParameterExpression)expr))),
+											ExpressionHelper.Constant(Array.IndexOf(compiledParameters, (ParameterExpression)expr))),
 										expr.Type);
 						}
 
@@ -1380,7 +1380,7 @@ namespace LinqToDB.Linq.Builder
 					Expression.Call(
 						Expression.Constant(_query),
 						MemberHelper.MethodOf<Query>(a => a.GetIQueryable(0, null!)),
-						Expression.Constant(n), accessor ?? Expression.Constant(null, typeof(Expression)));
+						ExpressionHelper.Constant(n), accessor ?? Expression.Constant(null, typeof(Expression)));
 
 				var qex = _query.GetIQueryable(n, expression);
 

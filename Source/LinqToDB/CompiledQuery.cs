@@ -81,7 +81,7 @@ namespace LinqToDB
 							var idx = context.query.Parameters.IndexOf((ParameterExpression)pi);
 
 							if (idx >= 0)
-								return Expression.Convert(Expression.ArrayIndex(context.ps, Expression.Constant(idx)), pi.Type);
+								return Expression.Convert(Expression.ArrayIndex(context.ps, ExpressionHelper.Constant(idx)), pi.Type);
 
 							break;
 						}

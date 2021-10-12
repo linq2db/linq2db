@@ -345,7 +345,7 @@ namespace LinqToDB.DataProvider.Oracle
 			var oracleDecimalParam = Expression.Parameter(readOracleDecimal.ReturnType, "dec");
 
 			generator      = new ExpressionGenerator(typeMapper);
-			var precision  = generator.AssignToVariable(Expression.Constant(29), "precision");
+			var precision  = generator.AssignToVariable(ExpressionHelper.Constant(29), "precision");
 			var decimalVar = generator.AddVariable(Expression.Parameter(typeof(decimal), "dec"));
 			var label      = Expression.Label(typeof(decimal));
 
@@ -360,7 +360,7 @@ namespace LinqToDB.DataProvider.Oracle
 							typeof(OverflowException),
 							Expression.Block(
 								Expression.IfThen(
-									Expression.LessThanOrEqual(Expression.SubtractAssign(precision, Expression.Constant(1)), Expression.Constant(26)),
+									Expression.LessThanOrEqual(Expression.SubtractAssign(precision, ExpressionHelper.Constant(1)), ExpressionHelper.Constant(26)),
 									Expression.Rethrow())))),
 					label));
 

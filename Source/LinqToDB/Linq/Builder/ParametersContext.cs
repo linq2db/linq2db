@@ -8,6 +8,7 @@ using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
+using LinqToDB.Reflection;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
@@ -80,8 +81,7 @@ namespace LinqToDB.Linq.Builder
 
 			string? name = null;
 
-			ValueTypeExpression newExpr;
-			newExpr = ReplaceParameter(_expressionAccessors, expr, forceConstant, nm => name = nm);
+			var newExpr = ReplaceParameter(_expressionAccessors, expr, forceConstant, nm => name = nm);
 
 			p = PrepareConvertersAndCreateParameter(newExpr, expr, name, columnDescriptor, buildParameterType);
 
@@ -199,12 +199,12 @@ namespace LinqToDB.Linq.Builder
 
 			var prop = Expression.Property(methodAccessor, ReflectionHelper.MethodCall.Arguments);
 			var valueAccessorExpr = Expression.Call(prop, ReflectionHelper.IndexExpressor<Expression>.Item,
-				Expression.Constant(argumentIndex));
+				ExpressionHelper.Constant(argumentIndex));
 
 			var expectedType = columnDescriptor?.MemberType ?? arg.Type;
 
 			var evaluatedExpr = Expression.Call(null,
-				MemberHelper.MethodOf(() => InternalExtensions.EvaluateExpression(null)),
+				Methods.LinqToDB.EvaluateExpression,
 				valueAccessorExpr);
 
 			var valueAccessor = (Expression)evaluatedExpr;

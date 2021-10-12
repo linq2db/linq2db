@@ -251,7 +251,7 @@ namespace LinqToDB.DataProvider
 
 			var getValueMethodInfo = MemberHelper.MethodOf<IDataReader>(r => r.GetValue(0));
 			return Expression.Convert(
-				Expression.Call(readerExpression, getValueMethodInfo, Expression.Constant(idx)),
+				Expression.Call(readerExpression, getValueMethodInfo, ExpressionHelper.Constant(idx)),
 				fieldType);
 		}
 

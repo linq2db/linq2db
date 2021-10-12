@@ -6,9 +6,35 @@ namespace LinqToDB.Expressions
 {
 	public static class ExpressionHelper
 	{
-		public static Expression TrueConstant  = Expression.Constant(true);
-		public static Expression FalseConstant = Expression.Constant(false);
-		
+		// some frequently used expression constants to save alocations on constant creation and boxing
+		public static readonly ConstantExpression TrueConstant  = Expression.Constant(true);
+		public static readonly ConstantExpression FalseConstant = Expression.Constant(false);
+		public static readonly ConstantExpression UntypedNull   = Expression.Constant(null);
+
+		private static readonly ConstantExpression[] _int32Constants = new ConstantExpression[]
+		{
+			Expression.Constant(0),
+			Expression.Constant(1),
+			Expression.Constant(2),
+			Expression.Constant(3),
+			Expression.Constant(4),
+			Expression.Constant(5),
+			Expression.Constant(6),
+			Expression.Constant(7),
+			Expression.Constant(8),
+			Expression.Constant(9),
+			Expression.Constant(10),
+		};
+
+		internal static ConstantExpression Constant(int value)
+		{
+			return value >= 0 && value < _int32Constants.Length
+				? _int32Constants[value]
+				: Expression.Constant(value);
+		}
+
+		internal static ConstantExpression Constant(bool value) => value ? TrueConstant : FalseConstant;
+
 		/// <summary>
 		/// Compared to <see cref="Expression.Field(Expression, string)"/>, performs case-sensitive field search.
 		/// </summary>

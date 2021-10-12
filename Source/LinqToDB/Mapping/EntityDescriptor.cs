@@ -8,6 +8,7 @@ namespace LinqToDB.Mapping
 	using Common;
 	using Extensions;
 	using Linq;
+	using LinqToDB.Expressions;
 	using Reflection;
 	using System.Linq.Expressions;
 	using System.Reflection;
@@ -519,7 +520,7 @@ namespace LinqToDB.Mapping
 								Expression.IfThen(
 									Expression.ReferenceEqual(
 										Expression.MakeMemberAccess(objParam, member.MemberInfo),
-										Expression.Constant(null)),
+										ExpressionHelper.UntypedNull),
 									Expression.Assign(
 										Expression.MakeMemberAccess(objParam, member.MemberInfo),
 										Expression.New(typeof(Dictionary<string, object>)))),
