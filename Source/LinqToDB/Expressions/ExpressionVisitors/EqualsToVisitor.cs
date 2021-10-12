@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using LinqToDB.Common;
 using LinqToDB.Extensions;
 using LinqToDB.Linq;
 using LinqToDB.Reflection;
@@ -15,7 +15,22 @@ namespace LinqToDB.Expressions
 	internal static class EqualsToVisitor
 	{
 		#region Cache
-		static readonly ConcurrentDictionary<MethodInfo,IList<SqlQueryDependentAttribute?>?> _queryDependentMethods = new ();
+		static readonly ConcurrentDictionary<MethodInfo,IList<SqlQueryDependentAttribute?>?> _queryDependentMethods       = new ();
+		static readonly ConcurrentDictionary<MethodInfo,bool[]>                              _skipContantArgumentsMethods = new ();
+
+		static EqualsToVisitor()
+		{
+			// prefill with supported external methods as we cannot add attributes to them
+			var arr = new [] { false, true };
+			_skipContantArgumentsMethods[Methods.Queryable.Take               ] = arr;
+			_skipContantArgumentsMethods[Methods.Queryable.Skip               ] = arr;
+			_skipContantArgumentsMethods[Methods.Queryable.ElementAt          ] = arr;
+			_skipContantArgumentsMethods[Methods.Queryable.ElementAtOrDefault ] = arr;
+			_skipContantArgumentsMethods[Methods.Enumerable.Take              ] = arr;
+			_skipContantArgumentsMethods[Methods.Enumerable.Skip              ] = arr;
+			_skipContantArgumentsMethods[Methods.Enumerable.ElementAt         ] = arr;
+			_skipContantArgumentsMethods[Methods.Enumerable.ElementAtOrDefault] = arr;
+		}
 
 		public static void ClearCaches()
 		{
@@ -419,14 +434,6 @@ namespace LinqToDB.Expressions
 			return !info.CompareConstantValues || expr1.Value == expr2.Value;
 		}
 
-		private static readonly MethodInfo[] SkipSecondArgumentMethods = new []
-		{
-			Methods.Queryable.Take      , Methods.Queryable.Skip,
-			Methods.Enumerable.Take     , Methods.Enumerable.Skip,
-			Methods.Queryable.ElementAt , Methods.Queryable.ElementAtOrDefault,
-			Methods.Enumerable.ElementAt, Methods.Enumerable.ElementAtOrDefault
-		};
-
 		static bool EqualsToX(MethodCallExpression expr1, MethodCallExpression expr2, EqualsToInfo info)
 		{
 			if (expr1.Arguments.Count != expr2.Arguments.Count || expr1.Method != expr2.Method)
@@ -435,28 +442,56 @@ namespace LinqToDB.Expressions
 			if (!expr1.Object.EqualsTo(expr2.Object, info))
 				return false;
 
-			if (expr1.IsSameGenericMethod(SkipSecondArgumentMethods)
-				&& expr1.Arguments[1].NodeType == ExpressionType.Constant && expr2.Arguments[1].NodeType == ExpressionType.Constant)
-			{
-				// We do not compare last argument
-				return expr1.Arguments[0].EqualsTo(expr2.Arguments[0], info);
-			}
-
+			var mi = expr1.Method.GetGenericMethodDefinitionCached();
 			var dependentParameters = _queryDependentMethods.GetOrAdd(
-				expr1.Method, static mi =>
+				mi, static mi =>
 				{
-					var arr = mi
-						.GetParameters()
-						.Select(static p => (SqlQueryDependentAttribute?)p.GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).OfType<SqlQueryDependentAttribute>().FirstOrDefault())
-						.ToList();
+					var parameters = mi.GetParameters();
 
-					return arr.Any(static a => a != null) ? arr : null;
+					if (parameters.Length == 0)
+						return null;
+
+					SqlQueryDependentAttribute?[]? attributes = null;
+
+					for (var i = 0; i < parameters.Length; i++)
+					{
+						var attr = parameters[i].GetCustomAttribute<SqlQueryDependentAttribute>(false);
+						if (attr != null)
+						{
+							if (attributes == null)
+								attributes = new SqlQueryDependentAttribute[parameters.Length];
+							attributes[i] = attr;
+						}
+					}
+
+					return attributes;
+				});
+
+			var skipContantArguments = _skipContantArgumentsMethods.GetOrAdd(
+				mi, static mi =>
+				{
+					var parameters = mi.GetParameters();
+
+					if (parameters.Length == 0)
+						return Array<bool>.Empty;
+
+					var flags = new bool[parameters.Length];
+
+					for (var i = 0; i < parameters.Length; i++)
+						flags[i] = parameters[i].GetCustomAttribute<SkipIfConstantAttribute>(false) != null;
+
+					return flags;
 				});
 
 			if (dependentParameters == null)
 			{
 				for (var i = 0; i < expr1.Arguments.Count; i++)
 				{
+					if (skipContantArguments[i]
+						&& expr1.Arguments[i].NodeType == ExpressionType.Constant
+						&& expr2.Arguments[i].NodeType == ExpressionType.Constant)
+						continue;
+
 					if (!DefaultCompareArguments(expr1.Arguments[i], expr2.Arguments[i], info))
 						return false;
 				}
@@ -493,6 +528,11 @@ namespace LinqToDB.Expressions
 					}
 					else
 					{
+						if (skipContantArguments[i]
+							&& expr1.Arguments[i].NodeType == ExpressionType.Constant
+							&& expr2.Arguments[i].NodeType == ExpressionType.Constant)
+							continue;
+
 						if (!DefaultCompareArguments(expr1.Arguments[i], expr2.Arguments[i], info))
 							return false;
 					}

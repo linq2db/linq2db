@@ -804,9 +804,9 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static IUpdatable<T> Set<T,TV>(
-			                this IUpdatable<T>     source,
-			[InstantHandle] Expression<Func<T,TV>> extract,
-			TV                                     value)
+			                 this IUpdatable<T>     source,
+			[InstantHandle]  Expression<Func<T,TV>> extract,
+			[SkipIfConstant] TV                     value)
 		{
 			if (source  == null) throw new ArgumentNullException(nameof(source));
 			if (extract == null) throw new ArgumentNullException(nameof(extract));
