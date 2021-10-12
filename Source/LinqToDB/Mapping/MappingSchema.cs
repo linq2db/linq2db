@@ -30,6 +30,20 @@ namespace LinqToDB.Mapping
 	[PublicAPI]
 	public class MappingSchema
 	{
+		private static readonly MemoryCache<(string baseSchemaId, string addedSchemaId)> _combinedSchemasCache = new (new ());
+
+		internal static MappingSchema CombineSchemas(MappingSchema mappingSchema1, MappingSchema mappingSchema2)
+		{
+			return _combinedSchemasCache.GetOrCreate(
+				(mappingSchema1.ConfigurationID, mappingSchema2.ConfigurationID),
+				new { BaseSchema = mappingSchema1, AddedSchema = mappingSchema2 },
+				static (entry, context) =>
+				{
+					entry.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+					return new MappingSchema(context.AddedSchema, context.BaseSchema);
+				});
+		}
+
 		#region Init
 
 		/// <summary>
