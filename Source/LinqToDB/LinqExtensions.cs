@@ -774,9 +774,9 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static IUpdatable<T> Set<T,TV>(
-			                this IQueryable<T>     source,
-			[InstantHandle] Expression<Func<T,TV>> extract,
-			TV                                     value)
+			                 this IQueryable<T>     source,
+			[InstantHandle]  Expression<Func<T,TV>> extract,
+			[SkipIfConstant] TV                     value)
 		{
 			if (source  == null) throw new ArgumentNullException(nameof(source));
 			if (extract == null) throw new ArgumentNullException(nameof(extract));
@@ -1195,9 +1195,9 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static IValueInsertable<T> Value<T,TV>(
-			                this ITable<T>         source,
-			[InstantHandle] Expression<Func<T,TV>> field,
-			TV                                     value)
+			                 this ITable<T>         source,
+			[InstantHandle]  Expression<Func<T,TV>> field,
+			[SkipIfConstant] TV                     value)
 			where T : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -1257,9 +1257,9 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static IValueInsertable<T> Value<T,TV>(
-			                this IValueInsertable<T> source,
-			[InstantHandle] Expression<Func<T,TV>>   field,
-			TV                                       value)
+			                 this IValueInsertable<T> source,
+			[InstantHandle]  Expression<Func<T,TV>>   field,
+			[SkipIfConstant] TV                       value)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (field  == null) throw new ArgumentNullException(nameof(field));

@@ -63,6 +63,8 @@ namespace LinqToDB.Benchmarks
 					//		b7.VwSalesByYear();
 					//		b7.VwSalesByYearMutation();
 
+					b8.Small_InsertStatement_With_Variable_Parameters();
+					//b8.Small_InsertStatement_With_Variable_Parameters_Async();
 					b8.Small_UpdateStatement_With_Variable_Parameters();
 					//b8.Small_UpdateStatement_With_Variable_Parameters_Async();
 					b8.Small_UpdateStatement_With_Static_Parameters();

@@ -70,6 +70,30 @@ namespace LinqToDB.Benchmarks.Queries
 		}
 
 		[Benchmark]
+		public void Small_InsertStatement_With_Variable_Parameters()
+		{
+			for (var i = 0; i < _iterations;)
+			{
+				var query = _db.GetTable<TESTTABLE>()
+					.Value(i => i.COLUMN15, i)
+					.Value(i => i.COLUMN16, ++i)
+					.Insert();
+			}
+		}
+
+		[Benchmark]
+		public async Task Small_InsertStatement_With_Variable_Parameters_Async()
+		{
+			for (var i = 0; i < _iterations;)
+			{
+				var query = await _db.GetTable<TESTTABLE>()
+					.Value(i => i.COLUMN15, i)
+					.Value(i => i.COLUMN16, ++i)
+					.InsertAsync();
+			}
+		}
+
+		[Benchmark]
 		public void Small_UpdateStatement_With_Static_Parameters()
 		{
 			for (var i = 0; i < _iterations; i++)
