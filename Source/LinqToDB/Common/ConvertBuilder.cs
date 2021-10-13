@@ -616,10 +616,7 @@ namespace LinqToDB.Common
 					var attrs = mappingSchema.GetAttributes<MapValueAttribute>(type, field, static a => a.Configuration);
 
 					if (attrs.Length == 0)
-					{
 						allFieldsMapped = false;
-						hasNullValue    = true;
-					}
 					else
 					{
 						// we don't just take first attribute to not break previous implementation
