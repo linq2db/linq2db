@@ -58,7 +58,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Build Parameter
 
-		internal readonly Dictionary<Expression,ParameterAccessor> _parameters = new ();
+		internal Dictionary<Expression,ParameterAccessor>? _parameters;
 
 		internal void AddCurrentSqlParameter(ParameterAccessor parameterAccessor)
 		{
@@ -76,7 +76,7 @@ namespace LinqToDB.Linq.Builder
 		public ParameterAccessor BuildParameter(Expression expr, ColumnDescriptor? columnDescriptor, bool forceConstant = false,
 			BuildParameterType buildParameterType = BuildParameterType.Default)
 		{
-			if (_parameters.TryGetValue(expr, out var p))
+			if (_parameters != null && _parameters.TryGetValue(expr, out var p))
 				return p;
 
 			string? name = null;
@@ -86,15 +86,18 @@ namespace LinqToDB.Linq.Builder
 			p = PrepareConvertersAndCreateParameter(newExpr, expr, name, columnDescriptor, buildParameterType);
 
 			var found = p;
-			foreach (var accessor in _parameters)
+			if (_parameters != null)
 			{
-				if (accessor.Value.SqlParameter.Type.Equals(p.SqlParameter.Type))
-					continue;
-
-				if (accessor.Key.EqualsTo(expr, OptimizationContext.GetSimpleEqualsToContext(true)))
+				foreach (var accessor in _parameters)
 				{
-					found = accessor.Value;
-					break;
+					if (accessor.Value.SqlParameter.Type.Equals(p.SqlParameter.Type))
+						continue;
+
+					if (accessor.Key.EqualsTo(expr, OptimizationContext.GetSimpleEqualsToContext(true)))
+					{
+						found = accessor.Value;
+						break;
+					}
 				}
 			}
 
@@ -103,7 +106,7 @@ namespace LinqToDB.Linq.Builder
 			if (!ReferenceEquals(found, p))
 				return found;
 
-			_parameters.Add(expr, p);
+			(_parameters ??= new()).Add(expr, p);
 			AddCurrentSqlParameter(p);
 
 			return p;
@@ -488,7 +491,7 @@ namespace LinqToDB.Linq.Builder
 
 			var p = PrepareConvertersAndCreateParameter(vte, expr, member?.Name, columnDescriptor, BuildParameterType.Default);
 
-			_parameters.Add(expr, p);
+			(_parameters ??= new()).Add(expr, p);
 			AddCurrentSqlParameter(p);
 
 			return p.SqlParameter;
