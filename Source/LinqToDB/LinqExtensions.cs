@@ -348,7 +348,7 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					Methods.LinqToDB.Update.UpdateTargetFuncSetter.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
+					Methods.LinqToDB.Update.UpdateTarget.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
 					currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter)));
 		}
 
@@ -377,7 +377,7 @@ namespace LinqToDB
 
 			var expr = Expression.Call(
 				null,
-				Methods.LinqToDB.Update.UpdateTargetFuncSetter.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
+				Methods.LinqToDB.Update.UpdateTarget.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
 				currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter));
 
 			if (currentSource is IQueryProviderAsync query)

@@ -985,13 +985,8 @@ namespace LinqToDB.SqlQuery
 
 							// update visited in case if columns were cloned
 							if (objTree != null)
-							{
 								foreach (var pair in objTree)
-								{
-									if (pair.Key is IQueryElement queryElement)
-										AddVisited(queryElement, pair.Value);
-								}
-							}
+									AddVisited(pair.Key, pair.Value);
 
 							newElement = nq;
 						}
