@@ -1378,8 +1378,9 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Source);
 							Append(elem.On);
 							Append(elem.Operations);
+							Append(elem.Output);
 
-							break;
+						break;
 						}
 
 					case QueryElementType.MultiInsertStatement:
@@ -2248,10 +2249,12 @@ namespace LinqToDB.ServiceModel
 							var source     = Read<SqlTableLikeSource>()!;
 							var on         = Read<SqlSearchCondition>()!;
 							var operations = ReadArray<SqlMergeOperationClause>()!;
+							var output     = Read<SqlOutputClause>();
 
 							obj = _statement = new SqlMergeStatement(with, hint, target, source, on, operations)
 							{
-								Tag = tag
+								Tag    = tag,
+								Output = output
 							};
 
 							break;

@@ -1033,7 +1033,7 @@ namespace LinqToDB
 		public static Task<int> MergeWithOutputIntoAsync<TTarget, TSource, TOutput>(
 			this IMergeable<TTarget, TSource>                merge,
 			ITable<TOutput>                                  outputTable,
-			Expression<Func<string,TTarget,TTarget,TOutput>> outputExpression, 
+			Expression<Func<string,TTarget,TTarget,TOutput>> outputExpression,
 			CancellationToken                                token = default
 		) 
 			where TOutput: notnull

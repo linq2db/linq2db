@@ -10,7 +10,7 @@ namespace Tests.xUpdate
 	public partial class MergeTests
 	{
 		[Test]
-		public void MergeWithOutputFull([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithOutputFull([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -40,7 +40,7 @@ namespace Tests.xUpdate
 		}
 		
 		[Test]
-		public async Task MergeWithOutputFullAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task MergeWithOutputFullAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -70,7 +70,7 @@ namespace Tests.xUpdate
 		}
 		
 		[Test]
-		public void MergeWithOutputProjected([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithOutputProjected([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -112,6 +112,41 @@ namespace Tests.xUpdate
 			{
 				var temp = db.CreateTempTable<InsertTempTable>("#InsertTempTable");
 
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var affected = table
+					.Merge()
+					.Using(GetSource1(db).Where(_ => _.Id == 5))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.MergeWithOutputInto(temp,
+						(a, deleted, inserted) => new InsertTempTable { Action = a, NewId = inserted.Id, DeletedId = deleted.Id }
+					);
+
+				affected.Should().Be(1);
+
+				var result = temp.ToArray();
+
+				result.Should().HaveCount(1);
+				result.Should().HaveCount(1);
+
+				var record = result[0];
+
+				record.Action.Should().Be("INSERT");
+
+				record.NewId.Should().Be(5);
+				record.DeletedId.Should().BeNull();
+			}
+		}
+
+		[Test]
+		public void MergeWithOutputIntoNonTemp([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var temp = db.CreateLocalTable<InsertTempTable>())
+			{
 				PrepareData(db);
 
 				var table = GetTarget(db);
