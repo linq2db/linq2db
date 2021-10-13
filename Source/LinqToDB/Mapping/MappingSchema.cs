@@ -30,6 +30,20 @@ namespace LinqToDB.Mapping
 	[PublicAPI]
 	public class MappingSchema
 	{
+		private static readonly MemoryCache<(string baseSchemaId, string addedSchemaId)> _combinedSchemasCache = new (new ());
+
+		internal static MappingSchema CombineSchemas(MappingSchema mappingSchema1, MappingSchema mappingSchema2)
+		{
+			return _combinedSchemasCache.GetOrCreate(
+				(mappingSchema1.ConfigurationID, mappingSchema2.ConfigurationID),
+				new { BaseSchema = mappingSchema1, AddedSchema = mappingSchema2 },
+				static (entry, context) =>
+				{
+					entry.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+					return new MappingSchema(context.AddedSchema, context.BaseSchema);
+				});
+		}
+
 		#region Init
 
 		/// <summary>
@@ -76,7 +90,9 @@ namespace LinqToDB.Mapping
 		/// mappings for same type.</remarks>
 		public MappingSchema(string? configuration, params MappingSchema[]? schemas)
 		{
-			if (configuration.IsNullOrEmpty() && (schemas == null || schemas.Length == 0))
+			// always generate "unique" configuration name, if name not provided to avoid duplicate names
+			// e.g. see https://github.com/linq2db/linq2db/issues/3251
+			if (configuration.IsNullOrEmpty())
 				configuration = "auto_" + Interlocked.Increment(ref _configurationCounter);
 
 			var schemaInfo = new MappingSchemaInfo(configuration);
