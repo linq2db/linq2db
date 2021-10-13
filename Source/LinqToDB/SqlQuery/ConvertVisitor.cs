@@ -1254,6 +1254,7 @@ namespace LinqToDB.SqlQuery
 					{
 						var cte = (CteClause)element;
 
+						// TODO: if we can remove this line, we can optimize visitor to create Stack only when it used by visit function
 						// for avoiding recursion
 						if (SecondParentElement?.ElementType != QueryElementType.WithClause)
 							break;

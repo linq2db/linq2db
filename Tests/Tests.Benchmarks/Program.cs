@@ -63,8 +63,6 @@ namespace LinqToDB.Benchmarks
 			//		//		b7.VwSalesByYear();
 			//		//		b7.VwSalesByYearMutation();
 
-			//		b8.Small_InsertStatement_With_Variable_Parameters();
-			//		//b8.Small_InsertStatement_With_Variable_Parameters_Async();
 			//		b8.Small_UpdateStatement_With_Variable_Parameters();
 			//		//b8.Small_UpdateStatement_With_Variable_Parameters_Async();
 			//		b8.Small_UpdateStatement_With_Static_Parameters();
@@ -75,6 +73,20 @@ namespace LinqToDB.Benchmarks
 			//		//b8.Large_UpdateStatement_With_Static_Parameters_Async();
 			//		b8.Large_UpdateStatement_With_Variable_Parameters_With_ClearCaches();
 			//		//b8.Large_UpdateStatement_With_Variable_Parameters_With_ClearCaches_Async();
+
+			//		b8.Small_InsertStatement_With_Variable_Parameters();
+			//		//b8.Small_InsertStatement_With_Variable_Parameters_Async();
+			//		b8.Small_InsertStatement_With_Static_Parameters();
+			//		//b8.Small_InsertStatement_With_Static_Parameters_Async();
+			//		b8.Large_InsertStatement_With_Variable_Parameters();
+			//		//b8.Large_InsertStatement_With_Variable_Parameters_Async();
+			//		b8.Large_InsertStatement_With_Static_Parameters();
+			//		//b8.Large_InsertStatement_With_Static_Parameters_Async();
+			//		b8.Large_InsertStatement_With_Variable_Parameters_With_ClearCaches();
+			//		//b8.Large_InsertStatement_With_Variable_Parameters_With_ClearCaches_Async();
+			//		b8.Large_Compiled_InsertStatement_With_Variable_Parameters();
+			//		b8.Large_InsertStatement_With_Variable_Parameters_Using_Expression_Overload();
+			//		//b8.Large_InsertStatement_With_Variable_Parameters_Using_Expression_Overload_Async();
 			//	}
 
 			//	return;

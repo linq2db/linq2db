@@ -17,6 +17,7 @@ namespace LinqToDB.Benchmarks.Queries
 		private const int      _iterations = 2;
 		private DataConnection _db     = null!;
 		private IDbConnection  _cn     = null!;
+		private Func<DataConnection, string, string, string, decimal, decimal, int> _compiledInsert = null!;
 
 		private readonly Workflow _record = new ()
 		{
@@ -37,6 +38,15 @@ namespace LinqToDB.Benchmarks.Queries
 		{
 			_cn = new MockDbConnection(new QueryResult() { Return = 1 }, ConnectionState.Open);
 			_db = new DataConnection(new SQLiteDataProvider(ProviderName.SQLiteMS), _cn);
+
+			_compiledInsert = CompiledQuery.Compile<DataConnection, string, string, string, decimal, decimal, int>((ctx, key, value1, value2, value3, value4) =>
+				ctx.GetTable<TESTTABLE>()
+					.Value(i => i.COLUMN1, key)
+					.Value(i => i.COLUMN2, value1)
+					.Value(i => i.COLUMN12, value2)
+					.Value(i => i.COLUMN15, value3)
+					.Value(i => i.COLUMN16, value4)
+					.Insert());
 		}
 
 		[Benchmark]
@@ -46,10 +56,10 @@ namespace LinqToDB.Benchmarks.Queries
 			{
 				var query = _db.GetTable<TESTTABLE>()
 					.Where(i => i.COLUMN1 == "61a018e7-6e43-44b7-ad53-5a55e626fbbe")
-					.Set(i => i.COLUMN2, "VALUE")
-					.Set(i => i.COLUMN12, "N")
 					.Set(i => i.COLUMN15, i)
 					.Set(i => i.COLUMN16, ++i)
+					.Set(i => i.COLUMN2, "VALUE")
+					.Set(i => i.COLUMN12, "N")
 					.Update();
 			}
 		}
@@ -61,35 +71,11 @@ namespace LinqToDB.Benchmarks.Queries
 			{
 				var query = await _db.GetTable<TESTTABLE>()
 					.Where(i => i.COLUMN1 == "61a018e7-6e43-44b7-ad53-5a55e626fbbe")
-					.Set(i => i.COLUMN2, "VALUE")
-					.Set(i => i.COLUMN12, "N")
 					.Set(i => i.COLUMN15, i)
 					.Set(i => i.COLUMN16, ++i)
+					.Set(i => i.COLUMN2, "VALUE")
+					.Set(i => i.COLUMN12, "N")
 					.UpdateAsync();
-			}
-		}
-
-		[Benchmark]
-		public void Small_InsertStatement_With_Variable_Parameters()
-		{
-			for (var i = 0; i < _iterations;)
-			{
-				var query = _db.GetTable<TESTTABLE>()
-					.Value(i => i.COLUMN15, i)
-					.Value(i => i.COLUMN16, ++i)
-					.Insert();
-			}
-		}
-
-		[Benchmark]
-		public async Task Small_InsertStatement_With_Variable_Parameters_Async()
-		{
-			for (var i = 0; i < _iterations;)
-			{
-				var query = await _db.GetTable<TESTTABLE>()
-					.Value(i => i.COLUMN15, i)
-					.Value(i => i.COLUMN16, ++i)
-					.InsertAsync();
 			}
 		}
 
@@ -284,6 +270,271 @@ namespace LinqToDB.Benchmarks.Queries
 				cmd.Parameters.Add(new MockDbParameter(":col15", 654645));
 				cmd.Parameters.Add(new MockDbParameter(":col16", 4547667897689));
 				cmd.ExecuteNonQuery();
+			}
+		}
+
+		[Benchmark]
+		public void Small_InsertStatement_With_Variable_Parameters()
+		{
+			for (var i = 0; i < _iterations;)
+			{
+				_db.GetTable<TESTTABLE>()
+					.Value(i => i.COLUMN15, i)
+					.Value(i => i.COLUMN16, ++i)
+					.Value(i => i.COLUMN1, "61a018e7-6e43-44b7-ad53-5a55e626fbbe")
+					.Value(i => i.COLUMN2, "VALUE")
+					.Value(i => i.COLUMN12, "N")
+					.Insert();
+			}
+		}
+
+		[Benchmark]
+		public async Task Small_InsertStatement_With_Variable_Parameters_Async()
+		{
+			for (var i = 0; i < _iterations;)
+			{
+				await _db.GetTable<TESTTABLE>()
+					.Value(i => i.COLUMN15, i)
+					.Value(i => i.COLUMN16, ++i)
+					.Value(i => i.COLUMN1, "61a018e7-6e43-44b7-ad53-5a55e626fbbe")
+					.Value(i => i.COLUMN2, "VALUE")
+					.Value(i => i.COLUMN12, "N")
+					.InsertAsync();
+			}
+		}
+
+		[Benchmark]
+		public void Small_InsertStatement_With_Static_Parameters()
+		{
+			for (var i = 0; i < _iterations; i++)
+			{
+				_db.GetTable<TESTTABLE>()
+					.Value(i => i.COLUMN1, "61a018e7-6e43-44b7-ad53-5a55e626fbbe")
+					.Value(i => i.COLUMN2, "VALUE")
+					.Value(i => i.COLUMN12, "N")
+					.Value(i => i.COLUMN15, 654645)
+					.Value(i => i.COLUMN16, 4547667897689)
+					.Insert();
+			}
+		}
+
+		[Benchmark]
+		public async Task Small_InsertStatement_With_Static_Parameters_Async()
+		{
+			for (var i = 0; i < _iterations; i++)
+			{
+				await _db.GetTable<TESTTABLE>()
+					.Value(i => i.COLUMN1, "61a018e7-6e43-44b7-ad53-5a55e626fbbe")
+					.Value(i => i.COLUMN2, "VALUE")
+					.Value(i => i.COLUMN12, "N")
+					.Value(i => i.COLUMN15, 654645)
+					.Value(i => i.COLUMN16, 4547667897689)
+					.InsertAsync();
+			}
+		}
+
+		[Benchmark]
+		public void Large_InsertStatement_With_Variable_Parameters()
+		{
+			for (var i = 0; i < _iterations;)
+			{
+				_db.GetTable<TESTTABLE>()
+					.Value(i => i.COLUMN1, "61a018e7-6e43-44b7-ad53-5a55e626fbbe")
+					.Value(i => i.COLUMN2, "VALUE")
+					.Value(i => i.COLUMN3, "VALUE2")
+					.Value(i => i.COLUMN4, "VALUE3")
+					.Value(i => i.COLUMN5, "VALUE4")
+					.Value(i => i.COLUMN6, "VALUE5")
+					.Value(i => i.COLUMN7, "")
+					.Value(i => i.COLUMN8, "")
+					.Value(i => i.COLUMN9, "VALUE6")
+					.Value(i => i.COLUMN10, "VALUE7")
+					.Value(i => i.COLUMN11, "Microsoft Windows 10 Enterprise")
+					.Value(i => i.COLUMN12, "N")
+					.Value(i => i.COLUMN15, i)
+					.Value(i => i.COLUMN16, ++i)
+					.Insert();
+			}
+		}
+
+		[Benchmark]
+		public async Task Large_InsertStatement_With_Variable_Parameters_Async()
+		{
+			for (var i = 0; i < _iterations;)
+			{
+				await _db.GetTable<TESTTABLE>()
+					.Value(i => i.COLUMN1, "61a018e7-6e43-44b7-ad53-5a55e626fbbe")
+					.Value(i => i.COLUMN2, "VALUE")
+					.Value(i => i.COLUMN3, "VALUE2")
+					.Value(i => i.COLUMN4, "VALUE3")
+					.Value(i => i.COLUMN5, "VALUE4")
+					.Value(i => i.COLUMN6, "VALUE5")
+					.Value(i => i.COLUMN7, "")
+					.Value(i => i.COLUMN8, "")
+					.Value(i => i.COLUMN9, "VALUE6")
+					.Value(i => i.COLUMN10, "VALUE7")
+					.Value(i => i.COLUMN11, "Microsoft Windows 10 Enterprise")
+					.Value(i => i.COLUMN12, "N")
+					.Value(i => i.COLUMN15, i)
+					.Value(i => i.COLUMN16, ++i)
+					.InsertAsync();
+			}
+		}
+
+		[Benchmark]
+		public void Large_InsertStatement_With_Static_Parameters()
+		{
+			for (var i = 0; i < _iterations; i++)
+			{
+				_db.GetTable<TESTTABLE>()
+					.Value(i => i.COLUMN1, "61a018e7-6e43-44b7-ad53-5a55e626fbbe")
+					.Value(i => i.COLUMN2, "VALUE")
+					.Value(i => i.COLUMN3, "VALUE2")
+					.Value(i => i.COLUMN4, "VALUE3")
+					.Value(i => i.COLUMN5, "VALUE4")
+					.Value(i => i.COLUMN6, "VALUE5")
+					.Value(i => i.COLUMN7, "")
+					.Value(i => i.COLUMN8, "")
+					.Value(i => i.COLUMN9, "VALUE6")
+					.Value(i => i.COLUMN10, "VALUE7")
+					.Value(i => i.COLUMN11, "Microsoft Windows 10 Enterprise")
+					.Value(i => i.COLUMN12, "N")
+					.Value(i => i.COLUMN15, 3)
+					.Value(i => i.COLUMN16, 4)
+					.Insert();
+			}
+		}
+
+		[Benchmark]
+		public async Task Large_InsertStatement_With_Static_Parameters_Async()
+		{
+			for (var i = 0; i < _iterations; i++)
+			{
+				await _db.GetTable<TESTTABLE>()
+					.Value(i => i.COLUMN1, "61a018e7-6e43-44b7-ad53-5a55e626fbbe")
+					.Value(i => i.COLUMN2, "VALUE")
+					.Value(i => i.COLUMN3, "VALUE2")
+					.Value(i => i.COLUMN4, "VALUE3")
+					.Value(i => i.COLUMN5, "VALUE4")
+					.Value(i => i.COLUMN6, "VALUE5")
+					.Value(i => i.COLUMN7, "")
+					.Value(i => i.COLUMN8, "")
+					.Value(i => i.COLUMN9, "VALUE6")
+					.Value(i => i.COLUMN10, "VALUE7")
+					.Value(i => i.COLUMN11, "Microsoft Windows 10 Enterprise")
+					.Value(i => i.COLUMN12, "N")
+					.Value(i => i.COLUMN15, 3)
+					.Value(i => i.COLUMN16, 4)
+					.InsertAsync();
+			}
+		}
+
+		[Benchmark]
+		public void Large_InsertStatement_With_Variable_Parameters_With_ClearCaches()
+		{
+			for (var i = 0; i < _iterations;)
+			{
+				_db.GetTable<TESTTABLE>()
+					.Value(i => i.COLUMN1, "61a018e7-6e43-44b7-ad53-5a55e626fbbe")
+					.Value(i => i.COLUMN2, "VALUE")
+					.Value(i => i.COLUMN3, "VALUE2")
+					.Value(i => i.COLUMN4, "VALUE3")
+					.Value(i => i.COLUMN5, "VALUE4")
+					.Value(i => i.COLUMN6, "VALUE5")
+					.Value(i => i.COLUMN7, "")
+					.Value(i => i.COLUMN8, "")
+					.Value(i => i.COLUMN9, "VALUE6")
+					.Value(i => i.COLUMN10, "VALUE7")
+					.Value(i => i.COLUMN11, "Microsoft Windows 10 Enterprise")
+					.Value(i => i.COLUMN12, "N")
+					.Value(i => i.COLUMN15, i)
+					.Value(i => i.COLUMN16, ++i)
+					.Insert();
+
+				Query.ClearCaches();
+			}
+		}
+
+		[Benchmark]
+		public async Task Large_InsertStatement_With_Variable_Parameters_With_ClearCaches_Async()
+		{
+			for (var i = 0; i < _iterations;)
+			{
+				await _db.GetTable<TESTTABLE>()
+					.Value(i => i.COLUMN1, "61a018e7-6e43-44b7-ad53-5a55e626fbbe")
+					.Value(i => i.COLUMN2, "VALUE")
+					.Value(i => i.COLUMN3, "VALUE2")
+					.Value(i => i.COLUMN4, "VALUE3")
+					.Value(i => i.COLUMN5, "VALUE4")
+					.Value(i => i.COLUMN6, "VALUE5")
+					.Value(i => i.COLUMN7, "")
+					.Value(i => i.COLUMN8, "")
+					.Value(i => i.COLUMN9, "VALUE6")
+					.Value(i => i.COLUMN10, "VALUE7")
+					.Value(i => i.COLUMN11, "Microsoft Windows 10 Enterprise")
+					.Value(i => i.COLUMN12, "N")
+					.Value(i => i.COLUMN15, i)
+					.Value(i => i.COLUMN16, ++i)
+					.InsertAsync();
+
+				Query.ClearCaches();
+			}
+		}
+
+		[Benchmark]
+		public void Large_Compiled_InsertStatement_With_Variable_Parameters()
+		{
+			for (var i = 0; i < _iterations; i++)
+			{
+				_compiledInsert(_db, "61a018e7-6e43-44b7-ad53-5a55e626fbbe", "VALUE", "N", 3479583475, 3845793);
+			}
+		}
+
+		[Benchmark]
+		public void Large_InsertStatement_With_Variable_Parameters_Using_Expression_Overload()
+		{
+			for (var i = 0; i < _iterations; i++)
+			{
+				_db.GetTable<TESTTABLE>()
+					.Value(i => i.COLUMN1, () => "61a018e7-6e43-44b7-ad53-5a55e626fbbe")
+					.Value(i => i.COLUMN2, () => "VALUE")
+					.Value(i => i.COLUMN3, () => "VALUE2")
+					.Value(i => i.COLUMN4, () => "VALUE3")
+					.Value(i => i.COLUMN5, () => "VALUE4")
+					.Value(i => i.COLUMN6, () => "VALUE5")
+					.Value(i => i.COLUMN7, () => "")
+					.Value(i => i.COLUMN8, () => "")
+					.Value(i => i.COLUMN9, () => "VALUE6")
+					.Value(i => i.COLUMN10, () => "VALUE7")
+					.Value(i => i.COLUMN11, () => "Microsoft Windows 10 Enterprise")
+					.Value(i => i.COLUMN12, () => "N")
+					.Value(i => i.COLUMN15, () => i)
+					.Value(i => i.COLUMN16, () => i + 1)
+					.Insert();
+			}
+		}
+
+		[Benchmark]
+		public async Task Large_InsertStatement_With_Variable_Parameters_Using_Expression_Overload_Async()
+		{
+			for (var i = 0; i < _iterations; i++)
+			{
+				await _db.GetTable<TESTTABLE>()
+					.Value(i => i.COLUMN1, () => "61a018e7-6e43-44b7-ad53-5a55e626fbbe")
+					.Value(i => i.COLUMN2, () => "VALUE")
+					.Value(i => i.COLUMN3, () => "VALUE2")
+					.Value(i => i.COLUMN4, () => "VALUE3")
+					.Value(i => i.COLUMN5, () => "VALUE4")
+					.Value(i => i.COLUMN6, () => "VALUE5")
+					.Value(i => i.COLUMN7, () => "")
+					.Value(i => i.COLUMN8, () => "")
+					.Value(i => i.COLUMN9, () => "VALUE6")
+					.Value(i => i.COLUMN10, () => "VALUE7")
+					.Value(i => i.COLUMN11, () => "Microsoft Windows 10 Enterprise")
+					.Value(i => i.COLUMN12, () => "N")
+					.Value(i => i.COLUMN15, () => i)
+					.Value(i => i.COLUMN16, () => i + 1)
+					.InsertAsync();
 			}
 		}
 
