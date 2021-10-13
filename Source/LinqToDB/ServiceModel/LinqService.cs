@@ -50,7 +50,10 @@ namespace LinqToDB.ServiceModel
 
 		public virtual DataConnection CreateDataContext(string? configuration)
 		{
-			return MappingSchema != null ? new DataConnection(configuration, MappingSchema) : new DataConnection(configuration);
+			var dc = new DataConnection(configuration);
+			if (MappingSchema != null)
+				dc.AddMappingSchema(MappingSchema);
+			return dc;
 		}
 
 		protected virtual void ValidateQuery(LinqServiceQuery query)
