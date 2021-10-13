@@ -56,14 +56,15 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RegressionTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void FieldProjection([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var collection = db.Person.ToList();
-				db.Person
-					.Select(_ => collection.First(r => r.ID == _.ID).ID)
-					.ToList();
+				var query = db.Person
+					.Select(x => collection.First(r => r.ID == x.ID).ID);
+
+				AssertQuery(query);
 			}
 		}
 	}

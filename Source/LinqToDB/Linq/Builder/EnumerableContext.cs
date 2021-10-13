@@ -274,11 +274,12 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sql = ConvertToSql(expression, level, flags);
 
-			var sqlInfo = sql[0];
-			if (sqlInfo.Index < 0)
+			for (var i = 0; i < sql.Length; i++)
 			{
-				var idx = sqlInfo.Query!.Select.Add(sqlInfo.Sql);
-				sql[0] = sqlInfo.WithIndex(idx).WithSql(sqlInfo.Query!.Select.Columns[idx]);
+				var info = sql[i];
+				var idx  = info.Query!.Select.Add(info.Sql);
+
+				sql[i] = info.WithIndex(idx).WithSql(info.Query!.Select.Columns[idx]);
 			}
 
 			return sql;
@@ -291,9 +292,43 @@ namespace LinqToDB.Linq.Builder
 				switch (requestFlag)
 				{
 					case RequestFor.Expression:
-					case RequestFor.Field: return IsExpressionResult.False;
+					case RequestFor.Field: return new IsExpressionResult(Builder.MappingSchema.IsScalarType(_elementType));
 					case RequestFor.Object:
 						return new IsExpressionResult(!Builder.MappingSchema.IsScalarType(_elementType));
+				}
+			}
+			else
+			{
+				switch (requestFlag)
+				{
+					case RequestFor.Expression:
+					case RequestFor.Field:
+					{
+						if (Builder.MappingSchema.IsScalarType(_elementType))
+						{
+							return IsExpressionResult.True;
+						}
+
+						if (expression is MemberExpression me)
+						{
+							if (Table.Rows != null)
+							{
+								if (Table.Fields.Any(f =>
+										MemberInfoComparer.Instance.Equals(f.ColumnDescriptor?.MemberInfo, me.Member)))
+								{
+									return IsExpressionResult.True;
+								}
+							}
+							else
+							if (_entityDescriptor.Columns.Any(c =>
+									MemberInfoComparer.Instance.Equals(c.MemberInfo, me.Member)))
+							{
+								return IsExpressionResult.True;
+							}
+						}
+
+						break;
+					}
 				}
 			}
 
