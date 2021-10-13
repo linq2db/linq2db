@@ -73,7 +73,7 @@ namespace LinqToDB.Extensions
 		/// <returns><see cref="MemberInfo"/> or null</returns>
 		public static MemberInfo? GetMemberEx(this Type type, MemberInfo memberInfo)
 		{
-			if (memberInfo.DeclaringType == type)
+			if (memberInfo.ReflectedType == type)
 				return memberInfo;
 
 			if (memberInfo.IsPropertyEx())
