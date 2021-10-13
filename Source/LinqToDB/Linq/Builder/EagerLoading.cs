@@ -1512,7 +1512,7 @@ namespace LinqToDB.Linq.Builder
 					var eagerLoadingContext = new EagerLoadingContext<TD, TKey>();
 #if NATIVE_ASYNC
 
-					await foreach (var d in enumerable.WithCancellation(ct))
+					await foreach (var d in enumerable.WithCancellation(ct).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
 						eagerLoadingContext.Add(d.Key, d.Detail);
 					}
