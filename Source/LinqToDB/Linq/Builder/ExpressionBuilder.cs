@@ -997,8 +997,8 @@ namespace LinqToDB.Linq.Builder
 			var gtype  = typeof(GroupByHelper<,,,>).MakeGenericType(
 				typeArgs[0]!,
 				typeArgs[1]!,
-				typeArgs[2] != null ? typeArgs[2]! : typeArgs[0]!,
-				typeArgs[3] != null ? typeArgs[3]! : typeArgs[0]!);
+				typeArgs[2] ?? typeArgs[0]!,
+				typeArgs[3] ?? typeArgs[0]!);
 
 			var helper =
 				//Expression.Lambda<Func<IGroupByHelper>>(

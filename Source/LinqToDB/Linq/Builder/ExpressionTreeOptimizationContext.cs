@@ -264,9 +264,7 @@ namespace LinqToDB.Linq.Builder
 								{
 									var map = new Dictionary<Expression, Expression>();
 									for (int i = 0; i < invocation.Arguments.Count; i++)
-									{
 										map.Add(lambda.Parameters[i], invocation.Arguments[i]);
-									}
 
 									newBody = lambda.Body.Transform(map, static (map, se) =>
 									{
@@ -690,9 +688,7 @@ namespace LinqToDB.Linq.Builder
 								{
 									var map = new Dictionary<Expression, Expression>();
 									for (int i = 0; i < invocation.Arguments.Count; i++)
-									{
 										map.Add(lambds.Parameters[i], invocation.Arguments[i]);
-									}
 
 									newBody = lambds.Body.Transform(map, static (map, se) =>
 									{
