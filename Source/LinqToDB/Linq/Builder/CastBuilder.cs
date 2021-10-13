@@ -18,12 +18,6 @@ namespace LinqToDB.Linq.Builder
 			return new CastContext(sequence, methodCall);
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
 		class CastContext : PassThroughContext
 		{
 			public CastContext(IBuildContext context, MethodCallExpression methodCall)

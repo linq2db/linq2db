@@ -25,7 +25,7 @@ namespace LinqToDB.Linq.Builder
 			var propType = expectedType;
 			if (EagerLoading.IsEnumerableType(expectedType, mappingSchema))
 				propType = EagerLoading.GetEnumerableElementType(expectedType, mappingSchema);
-			var itemType = typeof(Expression<>).IsSameOrParentOf(filterType) ? 
+			var itemType = typeof(Expression<>).IsSameOrParentOf(filterType) ?
 				filterType.GetGenericArguments()[0].GetGenericArguments()[0].GetGenericArguments()[0] :
 				filterType.GetGenericArguments()[0].GetGenericArguments()[0];
 			if (propType != itemType)
@@ -151,7 +151,7 @@ namespace LinqToDB.Linq.Builder
 
 			throw new LinqToDBException(
 				$"Unable to find table information for LoadWith. Consider moving LoadWith closer to GetTable<{expr.Type.Name}>() method.");
-	
+
 		}
 
 		static IEnumerable<LoadWithInfo> ExtractAssociations(ExpressionBuilder builder, Expression expression, Expression? stopExpression)
@@ -217,7 +217,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (lastMember == null)
 								goto default;
-							
+
 							var expr  = cexpr.Object;
 
 							if (expr == null)
@@ -251,7 +251,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								member = mexpr.Expression.Type.GetMemberEx(member)!;
 								attr = builder.MappingSchema.GetAttribute<AssociationAttribute>(mexpr.Expression.Type, member);
-							}	
+							}
 							if (attr == null)
 								throw new LinqToDBException($"Member '{expression}' is not an association.");
 
@@ -291,12 +291,6 @@ namespace LinqToDB.Linq.Builder
 						}
 				}
 			}
-		}
-
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
 		}
 
 		internal class LoadWithContext : PassThroughContext

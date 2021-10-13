@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -10,7 +9,7 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using Mapping;
 	using SqlQuery;
-	using LinqToDB.Reflection;
+	using Reflection;
 
 	class AggregationBuilder : MethodCallBuilder
 	{
@@ -80,12 +79,6 @@ namespace LinqToDB.Linq.Builder
 			return context;
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
 		class AggregationContext : SequenceContextBase
 		{
 			public AggregationContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall)
@@ -149,7 +142,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var exprVar = generator.AssignToVariable(expr, "nullable");
 							var resultVar = generator.AssignToVariable(defaultIfEmpty.DefaultValue, "result");
-							
+
 							generator.AddExpression(Expression.IfThen(
 								Expression.NotEqual(exprVar, Expression.Constant(null)),
 								Expression.Assign(resultVar, Expression.Convert(exprVar, resultVar.Type))));

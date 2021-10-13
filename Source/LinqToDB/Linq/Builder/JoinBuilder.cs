@@ -194,12 +194,6 @@ namespace LinqToDB.Linq.Builder
 			return subQueryContext;
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
 		internal static void BuildJoin(
 			ExpressionBuilder builder,
 			SqlSearchCondition condition,
@@ -216,7 +210,7 @@ namespace LinqToDB.Linq.Builder
 				predicate = new SqlPredicate.ExprExpr(
 					builder.ConvertToSql(outerKeyContext, outerKeySelector),
 					SqlPredicate.Operator.Equal,
-					builder.ConvertToSql(innerKeyContext, innerKeySelector), 
+					builder.ConvertToSql(innerKeyContext, innerKeySelector),
 					Common.Configuration.Linq.CompareNullsAsValues ? true : null);
 			}
 

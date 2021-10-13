@@ -30,16 +30,10 @@ namespace LinqToDB.Linq.Builder
 				sequence = new SubQueryContext(sequence);
 				sequence = new SelectContext(buildInfo.Parent, lambda, sequence);
 			}
-			else 
+			else
 				sequence = new SubQueryContext(sequence);
-			
-			return sequence;
-		}
 
-		protected override SequenceConvertInfo? Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo,
-			ParameterExpression? param)
-		{
-			return null;
+			return sequence;
 		}
 	}
 }

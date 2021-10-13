@@ -87,7 +87,7 @@ namespace LinqToDB.Linq.Builder
 				outerContext.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 
 				builder.BuildSearchCondition(
-					joinContext, 
+					joinContext,
 					conditionExpr,
 					@join.JoinedTable.Condition.Conditions);
 			}
@@ -97,12 +97,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return joinContext;
-		}
-
-		protected override SequenceConvertInfo? Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo,
-			ParameterExpression? param)
-		{
-			return null;
 		}
 
 		class JoinContext : SelectContext

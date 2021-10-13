@@ -23,12 +23,6 @@ namespace LinqToDB.Linq.Builder
 			return mergeContext;
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
 		private static SelectQuery RemoveContextFromQuery(TableBuilder.TableContext tableContext, SelectQuery query)
 		{
 			var clonedTableSource = tableContext.SelectQuery.From.Tables[0];
@@ -113,7 +107,7 @@ namespace LinqToDB.Linq.Builder
 				var sqlFlags = builder.DataContext.SqlProviderFlags;
 				new SelectQueryOptimizer(sqlFlags, query, query, 0, statement)
 					.FinalizeAndValidate(sqlFlags.IsApplyJoinSupported, sqlFlags.IsGroupByExpressionSupported);
-				
+
 				if (query.From.Tables.Count == 0)
 				{
 					result = query.Where.SearchCondition;

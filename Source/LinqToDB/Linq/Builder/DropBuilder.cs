@@ -35,12 +35,6 @@ namespace LinqToDB.Linq.Builder
 			return new DropContext(buildInfo.Parent, sequence);
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
 		#endregion
 
 		#region DropContext

@@ -48,7 +48,7 @@ namespace LinqToDB.Linq.Builder
 			static LambdaExpression? RewriteOutputExpression(LambdaExpression? expr)
 			{
 				if (expr == default) return default;
-				
+
 				var outputType = expr.Parameters[0].Type;
 				var param1 = Expression.Parameter(outputType, "source");
 				return Expression.Lambda(
@@ -282,12 +282,6 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 			}
-		}
-
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
 		}
 
 		#endregion
@@ -641,12 +635,6 @@ namespace LinqToDB.Linq.Builder
 				updateStatement.Update.Items.RemoveDuplicatesFromTail((s1, s2) => s1.Column.Equals(s2.Column));
 
 				return sequence;
-			}
-
-			protected override SequenceConvertInfo? Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-			{
-				return null;
 			}
 		}
 

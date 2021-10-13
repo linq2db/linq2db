@@ -182,7 +182,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
-				
+
 				context.Collection = new SubQueryContext(collection, sequence.SelectQuery, false);
 				return new SelectContext(buildInfo.Parent, resultSelector, sequence, context);
 			}
@@ -191,12 +191,6 @@ namespace LinqToDB.Linq.Builder
 		static SqlFromClause.Join CreateJoin(JoinType joinType, SelectQuery sql)
 		{
 			return new SqlFromClause.Join(joinType, sql, null, false, null);
-		}
-
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
 		}
 
 		public class SelectManyContext : SelectContext

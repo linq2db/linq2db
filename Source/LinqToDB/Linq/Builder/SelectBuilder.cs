@@ -300,7 +300,7 @@ namespace LinqToDB.Linq.Builder
 							    typeof(IQueryable). IsSameOrParentOf(call.Type) ||
 							    FirstSingleBuilder.MethodNames.Contains(call.Method.Name))
 								yield return new SequenceConvertPath { Path = path, Expr = expression, Level = level };
-						
+
 						break;
 					}
 			}
