@@ -38,7 +38,7 @@ namespace LinqToDB.Linq
 #if DEBUG
 		// This property is helpful in Debug Mode.
 		//
-		[UsedImplicitly]
+		[JetBrains.Annotations.UsedImplicitly]
 		// ReSharper disable once InconsistentNaming
 		public string _sqlText => SqlText;
 #endif
