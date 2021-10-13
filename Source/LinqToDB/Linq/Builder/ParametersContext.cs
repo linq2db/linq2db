@@ -202,7 +202,7 @@ namespace LinqToDB.Linq.Builder
 
 			var prop = Expression.Property(methodAccessor, ReflectionHelper.MethodCall.Arguments);
 			var valueAccessorExpr = Expression.Call(prop, ReflectionHelper.IndexExpressor<Expression>.Item,
-				ExpressionHelper.Constant(argumentIndex));
+				ExpressionInstances.Int32(argumentIndex));
 
 			var expectedType = columnDescriptor?.MemberType ?? arg.Type;
 

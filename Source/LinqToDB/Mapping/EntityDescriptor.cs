@@ -520,7 +520,7 @@ namespace LinqToDB.Mapping
 								Expression.IfThen(
 									Expression.ReferenceEqual(
 										Expression.MakeMemberAccess(objParam, member.MemberInfo),
-										ExpressionHelper.UntypedNull),
+										ExpressionInstances.UntypedNull),
 									Expression.Assign(
 										Expression.MakeMemberAccess(objParam, member.MemberInfo),
 										Expression.New(typeof(Dictionary<string, object>)))),

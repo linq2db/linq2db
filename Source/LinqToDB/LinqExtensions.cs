@@ -2299,7 +2299,7 @@ namespace LinqToDB
 			var expr = Expression.Call(
 				null,
 				_dropMethodInfo2.MakeGenericMethod(typeof(T)),
-				currentQuery.Expression, ExpressionHelper.Constant(throwExceptionIfNotExists));
+				currentQuery.Expression, ExpressionInstances.Boolean(throwExceptionIfNotExists));
 
 			if (throwExceptionIfNotExists)
 			{
@@ -2343,7 +2343,7 @@ namespace LinqToDB
 			var expr = Expression.Call(
 					null,
 					_dropMethodInfo2.MakeGenericMethod(typeof(T)),
-				currentSource.Expression, ExpressionHelper.Constant(throwExceptionIfNotExists));
+				currentSource.Expression, ExpressionInstances.Boolean(throwExceptionIfNotExists));
 
 			var query = currentSource as IQueryProviderAsync;
 
@@ -2394,7 +2394,7 @@ namespace LinqToDB
 			var expr = Expression.Call(
 				null,
 				_truncateMethodInfo.MakeGenericMethod(typeof(T)),
-				currentQuery.Expression, ExpressionHelper.Constant(resetIdentity));
+				currentQuery.Expression, ExpressionInstances.Boolean(resetIdentity));
 
 			return currentQuery.Provider.Execute<int>(expr);
 		}
@@ -2422,7 +2422,7 @@ namespace LinqToDB
 			var expr = Expression.Call(
 				null,
 				_truncateMethodInfo.MakeGenericMethod(typeof(T)),
-				currentSource.Expression, ExpressionHelper.Constant(resetIdentity));
+				currentSource.Expression, ExpressionInstances.Boolean(resetIdentity));
 
 			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -2517,7 +2517,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					_takeMethodInfo3.MakeGenericMethod(typeof(TSource)),
-					currentSource.Expression, ExpressionHelper.Constant(count), Expression.Constant(hints)));
+					currentSource.Expression, ExpressionInstances.Int32(count), Expression.Constant(hints)));
 		}
 
 		static readonly MethodInfo _skipMethodInfo = MemberHelper.MethodOf(() => Skip<int>(null!,null!)).GetGenericMethodDefinition();

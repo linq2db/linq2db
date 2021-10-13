@@ -292,9 +292,9 @@ namespace LinqToDB.Linq.Builder
 				switch (requestFlag)
 				{
 					case RequestFor.Expression:
-					case RequestFor.Field: return new IsExpressionResult(Builder.MappingSchema.IsScalarType(_elementType));
+					case RequestFor.Field: return IsExpressionResult.GetResult(Builder.MappingSchema.IsScalarType(_elementType));
 					case RequestFor.Object:
-						return new IsExpressionResult(!Builder.MappingSchema.IsScalarType(_elementType));
+						return IsExpressionResult.GetResult(!Builder.MappingSchema.IsScalarType(_elementType));
 				}
 			}
 			else

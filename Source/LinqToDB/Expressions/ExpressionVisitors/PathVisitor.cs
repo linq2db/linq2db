@@ -31,7 +31,7 @@ namespace LinqToDB.Expressions
 			var i    = 0;
 			foreach (var item in source)
 			{
-				_path = Expression.Call(prop, ReflectionHelper.IndexExpressor<T>.Item, ExpressionHelper.Constant(i++));
+				_path = Expression.Call(prop, ReflectionHelper.IndexExpressor<T>.Item, ExpressionInstances.Int32(i++));
 				func(item);
 			}
 		}
@@ -43,7 +43,7 @@ namespace LinqToDB.Expressions
 			var i    = 0;
 			foreach (var item in source)
 			{
-				_path = Expression.Call(prop, ReflectionHelper.IndexExpressor<T>.Item, ExpressionHelper.Constant(i++));
+				_path = Expression.Call(prop, ReflectionHelper.IndexExpressor<T>.Item, ExpressionInstances.Int32(i++));
 				Path(item);
 			}
 		}

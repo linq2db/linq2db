@@ -33,7 +33,7 @@ namespace LinqToDB.Data
 				if (currentDataProperty != null)
 				{
 					var body   = Expression.NotEqual(Expression.MakeMemberAccess(null, currentDataProperty),
-						ExpressionHelper.UntypedNull);
+						ExpressionInstances.UntypedNull);
 					var lambda = Expression.Lambda<Func<bool>>(body);
 					return lambda.CompileExpression();
 				}

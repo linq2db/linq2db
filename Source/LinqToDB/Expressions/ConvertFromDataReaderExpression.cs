@@ -52,7 +52,7 @@ namespace LinqToDB.Expressions
 			var columnReader = new ColumnReader(dataContext, dataContext.MappingSchema, _type, _idx, Converter, slowMode);
 
 			if (slowMode && Configuration.OptimizeForSequentialAccess)
-				return Convert(Call(Constant(columnReader), Methods.LinqToDB.ColumnReader.GetValueSequential, _dataReaderParam, Call(_dataReaderParam, Methods.ADONet.IsDBNull, ExpressionHelper.Constant(_idx)), Call(Methods.LinqToDB.ColumnReader.RawValuePlaceholder)), _type);
+				return Convert(Call(Constant(columnReader), Methods.LinqToDB.ColumnReader.GetValueSequential, _dataReaderParam, Call(_dataReaderParam, Methods.ADONet.IsDBNull, ExpressionInstances.Int32(_idx)), Call(Methods.LinqToDB.ColumnReader.RawValuePlaceholder)), _type);
 			else
 				return Convert(Call(Constant(columnReader), Methods.LinqToDB.ColumnReader.GetValue, _dataReaderParam), _type);
 		}
@@ -104,7 +104,7 @@ namespace LinqToDB.Expressions
 				switch (l.Parameters.Count)
 				{
 					case 1 : ex = l.GetBody(dataReaderExpr);                                 break;
-					case 2 : ex = l.GetBody(dataReaderExpr, ExpressionHelper.Constant(idx)); break;
+					case 2 : ex = l.GetBody(dataReaderExpr, ExpressionInstances.Int32(idx)); break;
 				}
 			}
 
@@ -117,7 +117,7 @@ namespace LinqToDB.Expressions
 				if (converter.HandlesNulls)
 				{
 					ex = Condition(
-						Call(dataReaderExpr, Methods.ADONet.IsDBNull, ExpressionHelper.Constant(idx)),
+						Call(dataReaderExpr, Methods.ADONet.IsDBNull, ExpressionInstances.Int32(idx)),
 						Constant(mappingSchema.GetDefaultValue(expectedType), expectedType),
 						ex);
 				}
@@ -165,7 +165,7 @@ namespace LinqToDB.Expressions
 			    (forceNullCheck || (dataContext.IsDBNullAllowed(dataReader, idx) ?? true)))
 			{
 				ex = Condition(
-					Call(dataReaderExpr, Methods.ADONet.IsDBNull, ExpressionHelper.Constant(idx)),
+					Call(dataReaderExpr, Methods.ADONet.IsDBNull, ExpressionInstances.Int32(idx)),
 					Constant(mappingSchema.GetDefaultValue(type), type),
 					ex);
 			}

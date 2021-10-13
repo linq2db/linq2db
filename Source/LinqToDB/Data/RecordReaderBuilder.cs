@@ -360,7 +360,7 @@ namespace LinqToDB.Data
 					var isNullExpr = Expression.Call(
 						DataReaderLocal,
 						ReflectionHelper.DataReader.IsDBNull,
-						ExpressionHelper.Constant(dindex));
+						ExpressionInstances.Int32(dindex));
 
 					if (mapping.m.Code == null)
 					{

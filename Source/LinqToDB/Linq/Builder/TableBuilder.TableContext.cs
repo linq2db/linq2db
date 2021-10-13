@@ -722,7 +722,7 @@ namespace LinqToDB.Linq.Builder
 					var isNullExpr = Expression.Call(
 						ExpressionBuilder.DataReaderParam,
 						ReflectionHelper.DataReader.IsDBNull,
-						ExpressionHelper.Constant(dindex));
+						ExpressionInstances.Int32(dindex));
 
 					if (mapping.m.Code == null)
 					{
@@ -1019,7 +1019,7 @@ namespace LinqToDB.Linq.Builder
 
 			#region ConvertToIndex
 
-			readonly Dictionary<ISqlExpression,SqlInfo> _indexes = new Dictionary<ISqlExpression,SqlInfo>();
+			readonly Dictionary<ISqlExpression,SqlInfo> _indexes = new ();
 
 			protected virtual SqlInfo GetIndex(SqlInfo expr)
 			{
@@ -1139,7 +1139,7 @@ namespace LinqToDB.Linq.Builder
 											return IsExpressionResult.False;
 
 										var contextInfo = FindContextExpression(expression, level, false, false);
-										return new IsExpressionResult(contextInfo?.Context == null);
+										return IsExpressionResult.GetResult(contextInfo?.Context == null);
 									}
 								case ExpressionType.Extension:
 									{

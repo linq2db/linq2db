@@ -39,7 +39,7 @@ namespace LinqToDB.Linq
 
 				SetNonQueryQuery(query);
 
-				query.GetElement(dataContext, ExpressionHelper.UntypedNull, null, null);
+				query.GetElement(dataContext, ExpressionInstances.UntypedNull, null, null);
 			}
 
 			public static async Task QueryAsync(
@@ -70,7 +70,7 @@ namespace LinqToDB.Linq
 
 				SetNonQueryQuery(query);
 
-				await query.GetElementAsync(dataContext, ExpressionHelper.UntypedNull, null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await query.GetElementAsync(dataContext, ExpressionInstances.UntypedNull, null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 		}
 	}

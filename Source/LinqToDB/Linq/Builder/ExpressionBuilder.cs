@@ -355,7 +355,7 @@ namespace LinqToDB.Linq.Builder
 									Expression.Convert(
 										Expression.ArrayIndex(
 											ParametersParam,
-											ExpressionHelper.Constant(Array.IndexOf(compiledParameters, (ParameterExpression)expr))),
+											ExpressionInstances.Int32(idx)),
 										expr.Type);
 						}
 
@@ -995,10 +995,10 @@ namespace LinqToDB.Linq.Builder
 				return method;
 
 			var gtype  = typeof(GroupByHelper<,,,>).MakeGenericType(
-				typeArgs[0],
-				typeArgs[1],
-				typeArgs[2] != null ? typeArgs[2] : typeArgs[0],
-				typeArgs[3] != null ? typeArgs[3] : typeArgs[0]);
+				typeArgs[0]!,
+				typeArgs[1]!,
+				typeArgs[2] != null ? typeArgs[2]! : typeArgs[0]!,
+				typeArgs[3] != null ? typeArgs[3]! : typeArgs[0]!);
 
 			var helper =
 				//Expression.Lambda<Func<IGroupByHelper>>(
@@ -1387,7 +1387,7 @@ namespace LinqToDB.Linq.Builder
 					Expression.Call(
 						Expression.Constant(_query),
 						MemberHelper.MethodOf<Query>(a => a.GetIQueryable(0, null!)),
-						ExpressionHelper.Constant(n), accessor ?? Expression.Constant(null, typeof(Expression)));
+						ExpressionInstances.Int32(n), accessor ?? Expression.Constant(null, typeof(Expression)));
 
 				var qex = _query.GetIQueryable(n, expression);
 

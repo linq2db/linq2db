@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -97,13 +96,13 @@ namespace LinqToDB.Linq.Builder
 			{
 				case RequestFor.Root        :
 					if (Lambda!.Parameters.Count == 1)
-						return new IsExpressionResult(ReferenceEquals(expression, Lambda.Parameters[0]));
+						return IsExpressionResult.GetResult(ReferenceEquals(expression, Lambda.Parameters[0]));
 
 					foreach (var param in Lambda.Parameters)
 						if (ReferenceEquals(expression, param))
-							return new IsExpressionResult(true);
+							return IsExpressionResult.True;
 
-					return new IsExpressionResult(false);
+					return IsExpressionResult.False;
 
 				case RequestFor.Table       :
 				case RequestFor.Association :

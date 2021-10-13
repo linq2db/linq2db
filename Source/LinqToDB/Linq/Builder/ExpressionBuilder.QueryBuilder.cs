@@ -1003,7 +1003,7 @@ namespace LinqToDB.Linq.Builder
 					context.parms.Add(ex);
 
 					return Expression.Convert(
-						Expression.ArrayIndex(context.paramex, ExpressionHelper.Constant(context.parms.Count - 1)),
+						Expression.ArrayIndex(context.paramex, ExpressionInstances.Int32(context.parms.Count - 1)),
 						e.Type);
 				}
 
