@@ -84,7 +84,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		private void BuildOutputSubclause(SqlOutputClause? output)
+		protected override void BuildOutputSubclause(SqlOutputClause? output)
 		{
 			if (output != null && output.HasOutputItems)
 			{
@@ -315,6 +315,9 @@ namespace LinqToDB.DataProvider.SqlServer
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
 					if (value.Length > 0 && value[0] == '[')
+						return sb.Append(value);
+
+					if (value == "$action")
 						return sb.Append(value);
 
 					return SqlServerTools.QuoteIdentifier(sb, value);
