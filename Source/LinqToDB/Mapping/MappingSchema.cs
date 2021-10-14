@@ -92,7 +92,7 @@ namespace LinqToDB.Mapping
 		{
 			// always generate "unique" configuration name, if name not provided to avoid duplicate names
 			// e.g. see https://github.com/linq2db/linq2db/issues/3251
-			if (configuration.IsNullOrEmpty())
+			if (string.IsNullOrEmpty(configuration))
 				configuration = "auto_" + Interlocked.Increment(ref _configurationCounter);
 
 			var schemaInfo = new MappingSchemaInfo(configuration);
