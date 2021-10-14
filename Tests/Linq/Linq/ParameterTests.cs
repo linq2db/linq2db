@@ -508,5 +508,300 @@ namespace Tests.Linq
 				.ToList();
 			}
 		}
+
+		[Table]
+		public class ParameterDeduplication
+		{
+			[Column                              ] public int     Id      { get; set; }
+			[Column                              ] public int     Int1    { get; set; }
+			[Column                              ] public int     Int2    { get; set; }
+			[Column(DataType = DataType.VarChar) ] public string? String1 { get; set; }
+			[Column(DataType = DataType.NVarChar)] public string? String2 { get; set; }
+			[Column(DataType = DataType.NVarChar)] public string? String3 { get; set; }
+		}
+
+		[Test]
+		public void ParameterDeduplication_Insert([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			using (var table = db.CreateLocalTable<ParameterDeduplication>())
+			{
+				var id   = 1;
+				var int1 = 2;
+				var int2 = 2;
+				var str1 = "str";
+				var str2 = "str";
+				var str3 = "str";
+
+				table.Insert(() => new ParameterDeduplication()
+				{
+					Id      = id,
+					Int1    = int1,
+					Int2    = int2,
+					String1 = str1,
+					String2 = str2,
+					String3 = str3,
+				});
+
+				var sql = db.LastQuery!;
+				Assert.True(sql.Contains("@id"));
+				Assert.True(sql.Contains("@int1"));
+				// deduplication here is fine, but not required
+				//Assert.True(sql.Contains("@int2"));
+				// strings have different types and shouldn't be merged into one parameter as it could affect execution plans
+				Assert.True(sql.Contains("@str1"));
+				Assert.True(sql.Contains("@str2"));
+				// deduplication here is fine, but not required
+				//Assert.True(sql.Contains("@str3"));
+
+				id   = 2;
+				int1 = 3;
+				int2 = 4;
+				str1 = "str1";
+				str2 = "str2";
+				str3 = "str3";
+
+				table.Insert(() => new ParameterDeduplication()
+				{
+					Id      = id,
+					Int1    = int1,
+					Int2    = int2,
+					String1 = str1,
+					String2 = str2,
+					String3 = str3,
+				});
+
+				sql = db.LastQuery!;
+				Assert.True(sql.Contains("@id"));
+				Assert.True(sql.Contains("@int1"));
+				Assert.True(sql.Contains("@int2"));
+				Assert.True(sql.Contains("@str1"));
+				Assert.True(sql.Contains("@str2"));
+				Assert.True(sql.Contains("@str3"));
+
+				var res = table.OrderBy(_ => _.Id).ToArray();
+
+				Assert.AreEqual(2, res.Length);
+
+				Assert.AreEqual(1    , res[0].Id);
+				Assert.AreEqual(2    , res[0].Int1);
+				Assert.AreEqual(2    , res[0].Int2);
+				Assert.AreEqual("str", res[0].String1);
+				Assert.AreEqual("str", res[0].String2);
+				Assert.AreEqual("str", res[0].String3);
+
+				Assert.AreEqual(2     , res[1].Id);
+				Assert.AreEqual(3     , res[1].Int1);
+				Assert.AreEqual(4     , res[1].Int2);
+				Assert.AreEqual("str1", res[1].String1);
+				Assert.AreEqual("str2", res[1].String2);
+				Assert.AreEqual("str3", res[1].String3);
+			}
+		}
+
+		[Test]
+		public void ParameterDeduplication_InsertObject([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			using (var table = db.CreateLocalTable<ParameterDeduplication>())
+			{
+				db.Insert(new ParameterDeduplication()
+				{
+					Id      = 1,
+					Int1    = 2,
+					Int2    = 2,
+					String1 = "str",
+					String2 = "str",
+					String3 = "str",
+				});
+
+				var sql = db.LastQuery!;
+				Assert.True(sql.Contains("@Id"));
+				Assert.True(sql.Contains("@Int1"));
+				// deduplication here is fine, but not required
+				//Assert.True(sql.Contains("@Int2"));
+				// strings have different types and shouldn't be merged into one parameter as it could affect execution plans
+				Assert.True(sql.Contains("@String1"));
+				Assert.True(sql.Contains("@String2"));
+				// deduplication here is fine, but not required
+				//Assert.True(sql.Contains("@String3"));
+
+				db.Insert(new ParameterDeduplication()
+				{
+					Id      = 2,
+					Int1    = 3,
+					Int2    = 4,
+					String1 = "str1",
+					String2 = "str2",
+					String3 = "str3",
+				});
+
+				sql = db.LastQuery!;
+				Assert.True(sql.Contains("@Id"));
+				Assert.True(sql.Contains("@Int1"));
+				Assert.True(sql.Contains("@Int2"));
+				Assert.True(sql.Contains("@String1"));
+				Assert.True(sql.Contains("@String2"));
+				Assert.True(sql.Contains("@String3"));
+
+				var res = table.OrderBy(_ => _.Id).ToArray();
+
+				Assert.AreEqual(2, res.Length);
+
+				Assert.AreEqual(1    , res[0].Id);
+				Assert.AreEqual(2    , res[0].Int1);
+				Assert.AreEqual(2    , res[0].Int2);
+				Assert.AreEqual("str", res[0].String1);
+				Assert.AreEqual("str", res[0].String2);
+				Assert.AreEqual("str", res[0].String3);
+
+				Assert.AreEqual(2     , res[1].Id);
+				Assert.AreEqual(3     , res[1].Int1);
+				Assert.AreEqual(4     , res[1].Int2);
+				Assert.AreEqual("str1", res[1].String1);
+				Assert.AreEqual("str2", res[1].String2);
+				Assert.AreEqual("str3", res[1].String3);
+			}
+		}
+
+		[Test]
+		public void ParameterDeduplication_ValueValue([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			using (var table = db.CreateLocalTable<ParameterDeduplication>())
+			{
+				table
+					.Value(_ => _.Id     , 1)
+					.Value(_ => _.Int1   , 2)
+					.Value(_ => _.Int2   , 2)
+					.Value(_ => _.String1, "str")
+					.Value(_ => _.String2, "str")
+					.Value(_ => _.String3, "str")
+					.Insert();
+
+				var sql = db.LastQuery!;
+				Assert.True(sql.Contains("@Id"));
+				Assert.True(sql.Contains("@Int1"));
+				// deduplication here is fine, but not required
+				//Assert.True(sql.Contains("@Int2"));
+				// strings have different types and shouldn't be merged into one parameter as it could affect execution plans
+				Assert.True(sql.Contains("@String1"));
+				Assert.True(sql.Contains("@String2"));
+				// deduplication here is fine, but not required
+				//Assert.True(sql.Contains("@String3"));
+
+				table
+					.Value(_ => _.Id     , 2)
+					.Value(_ => _.Int1   , 3)
+					.Value(_ => _.Int2   , 4)
+					.Value(_ => _.String1, "str1")
+					.Value(_ => _.String2, "str2")
+					.Value(_ => _.String3, "str3")
+					.Insert();
+
+				sql = db.LastQuery!;
+				Assert.True(sql.Contains("@Id"));
+				Assert.True(sql.Contains("@Int1"));
+				Assert.True(sql.Contains("@Int2"));
+				Assert.True(sql.Contains("@String1"));
+				Assert.True(sql.Contains("@String2"));
+				Assert.True(sql.Contains("@String3"));
+
+				var res = table.OrderBy(_ => _.Id).ToArray();
+
+				Assert.AreEqual(2, res.Length);
+
+				Assert.AreEqual(1    , res[0].Id);
+				Assert.AreEqual(2    , res[0].Int1);
+				Assert.AreEqual(2    , res[0].Int2);
+				Assert.AreEqual("str", res[0].String1);
+				Assert.AreEqual("str", res[0].String2);
+				Assert.AreEqual("str", res[0].String3);
+
+				Assert.AreEqual(2     , res[1].Id);
+				Assert.AreEqual(3     , res[1].Int1);
+				Assert.AreEqual(4     , res[1].Int2);
+				Assert.AreEqual("str1", res[1].String1);
+				Assert.AreEqual("str2", res[1].String2);
+				Assert.AreEqual("str3", res[1].String3);
+			}
+		}
+
+		[Test]
+		public void ParameterDeduplication_ValueExpr([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			using (var table = db.CreateLocalTable<ParameterDeduplication>())
+			{
+				var id   = 1;
+				var int1 = 2;
+				var int2 = 2;
+				var str1 = "str";
+				var str2 = "str";
+				var str3 = "str";
+
+				table
+					.Value(_ => _.Id     , () => id)
+					.Value(_ => _.Int1   , () => int1)
+					.Value(_ => _.Int2   , () => int2)
+					.Value(_ => _.String1, () => str1)
+					.Value(_ => _.String2, () => str2)
+					.Value(_ => _.String3, () => str3)
+					.Insert();
+
+				var sql = db.LastQuery!;
+				Assert.True(sql.Contains("@id"));
+				Assert.True(sql.Contains("@int1"));
+				// deduplication here is fine, but not required
+				//Assert.True(sql.Contains("@int2"));
+				// strings have different types and shouldn't be merged into one parameter as it could affect execution plans
+				Assert.True(sql.Contains("@str1"));
+				Assert.True(sql.Contains("@str2"));
+				// deduplication here is fine, but not required
+				//Assert.True(sql.Contains("@str3"));
+
+				id = 2;
+				int1 = 3;
+				int2 = 4;
+				str1 = "str1";
+				str2 = "str2";
+				str3 = "str3";
+
+				table
+					.Value(_ => _.Id, () => id)
+					.Value(_ => _.Int1, () => int1)
+					.Value(_ => _.Int2, () => int2)
+					.Value(_ => _.String1, () => str1)
+					.Value(_ => _.String2, () => str2)
+					.Value(_ => _.String3, () => str3)
+					.Insert();
+
+				sql = db.LastQuery!;
+				Assert.True(sql.Contains("@id"));
+				Assert.True(sql.Contains("@int1"));
+				Assert.True(sql.Contains("@int2"));
+				Assert.True(sql.Contains("@str1"));
+				Assert.True(sql.Contains("@str2"));
+				Assert.True(sql.Contains("@str3"));
+
+				var res = table.OrderBy(_ => _.Id).ToArray();
+
+				Assert.AreEqual(2, res.Length);
+
+				Assert.AreEqual(1    , res[0].Id);
+				Assert.AreEqual(2    , res[0].Int1);
+				Assert.AreEqual(2    , res[0].Int2);
+				Assert.AreEqual("str", res[0].String1);
+				Assert.AreEqual("str", res[0].String2);
+				Assert.AreEqual("str", res[0].String3);
+
+				Assert.AreEqual(2     , res[1].Id);
+				Assert.AreEqual(3     , res[1].Int1);
+				Assert.AreEqual(4     , res[1].Int2);
+				Assert.AreEqual("str1", res[1].String1);
+				Assert.AreEqual("str2", res[1].String2);
+				Assert.AreEqual("str3", res[1].String3);
+			}
+		}
 	}
 }
