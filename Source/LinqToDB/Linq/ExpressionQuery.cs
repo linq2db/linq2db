@@ -6,7 +6,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 
 namespace LinqToDB.Linq
 {
@@ -39,7 +38,7 @@ namespace LinqToDB.Linq
 #if DEBUG
 		// This property is helpful in Debug Mode.
 		//
-		[UsedImplicitly]
+		[JetBrains.Annotations.UsedImplicitly]
 		// ReSharper disable once InconsistentNaming
 		public string _sqlText => SqlText;
 #endif
@@ -85,7 +84,8 @@ namespace LinqToDB.Linq
 
 			using (await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 			{
-				Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters, cancellationToken)
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				var value = await query.GetElementAsync(DataContext, expression, Parameters, Preambles, cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -161,7 +161,8 @@ namespace LinqToDB.Linq
 
 			using (await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 			{
-				Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters, cancellationToken)
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				return Query<TResult>.GetQuery(DataContext, ref expression, out _)
 					.GetIAsyncEnumerable(DataContext, expression, Parameters, Preambles);
@@ -178,7 +179,8 @@ namespace LinqToDB.Linq
 
 			using (await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 			{
-				Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters, cancellationToken)
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				await query
 					.GetForEachAsync(DataContext, expression, Parameters, Preambles, r =>
@@ -218,7 +220,8 @@ namespace LinqToDB.Linq
 				var tr = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				try
 				{
-					Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters, cancellationToken)
+						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 #if !NATIVE_ASYNC
 					return Tuple.Create<IAsyncEnumerator<T>, IDisposable?>(
 #else

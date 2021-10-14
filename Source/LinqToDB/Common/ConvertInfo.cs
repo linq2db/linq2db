@@ -9,7 +9,7 @@ namespace LinqToDB.Common
 
 	class ConvertInfo
 	{
-		public static ConvertInfo Default = new ConvertInfo();
+		public static ConvertInfo Default = new ();
 
 		public class LambdaInfo
 		{
@@ -50,8 +50,7 @@ namespace LinqToDB.Common
 			}
 		}
 
-		readonly ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>> _expressions =
-			new ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>>();
+		readonly ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>> _expressions = new ();
 
 		public void Set(Type from, Type to, LambdaInfo expr)
 		{

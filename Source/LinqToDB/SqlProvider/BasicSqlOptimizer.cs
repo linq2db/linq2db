@@ -16,6 +16,7 @@ namespace LinqToDB.SqlProvider
 	using Mapping;
 	using DataProvider;
 	using Common.Internal;
+	using LinqToDB.Expressions;
 
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{
@@ -237,43 +238,44 @@ namespace LinqToDB.SqlProvider
 		{
 			if (statement is SqlStatementWithQueryBase select)
 			{
-				var foundCte  = new Dictionary<CteClause, HashSet<CteClause>>();
+				// one-field class is cheaper than dictionary instance
+				var cteHolder = new WritableContext<Dictionary<CteClause, HashSet<CteClause>>?>();
 
 				if (select is SqlMergeStatement merge)
 				{
-					merge.Target.Visit(foundCte, static (foundCte, e) =>
+					merge.Target.Visit(cteHolder, static (foundCte, e) =>
 						{
 							if (e.ElementType == QueryElementType.SqlCteTable)
 							{
 								var cte = ((SqlCteTable)e).Cte!;
-								RegisterDependency(cte, foundCte);
+								RegisterDependency(cte, foundCte.WriteableValue ??= new());
 							}
 						}
 					);
-					merge.Source.Visit(foundCte, static (foundCte, e) =>
+					merge.Source.Visit(cteHolder, static (foundCte, e) =>
 						{
 							if (e.ElementType == QueryElementType.SqlCteTable)
 							{
 								var cte = ((SqlCteTable)e).Cte!;
-								RegisterDependency(cte, foundCte);
+								RegisterDependency(cte, foundCte.WriteableValue ??= new());
 							}
 						}
 					);
 				}
 				else
 				{
-					select.SelectQuery.Visit(foundCte, static (foundCte, e) =>
+					select.SelectQuery.Visit(cteHolder, static (foundCte, e) =>
 						{
 							if (e.ElementType == QueryElementType.SqlCteTable)
 							{
 								var cte = ((SqlCteTable)e).Cte!;
-								RegisterDependency(cte, foundCte);
+								RegisterDependency(cte, foundCte.WriteableValue ??= new());
 							}
 						}
 					);
 				}
 
-				if (foundCte.Count == 0)
+				if (cteHolder.WriteableValue == null || cteHolder.WriteableValue.Count == 0)
 					select.With = null;
 				else
 				{
@@ -281,7 +283,7 @@ namespace LinqToDB.SqlProvider
 					if (!SqlProviderFlags.IsCommonTableExpressionsSupported)
 						throw new LinqToDBException("DataProvider do not supports Common Table Expressions.");
 
-					var ordered = TopoSorting.TopoSort(foundCte.Keys, i => foundCte[i]).ToList();
+					var ordered = TopoSorting.TopoSort(cteHolder.WriteableValue.Keys, i => cteHolder.WriteableValue[i]).ToList();
 
 					Utils.MakeUniqueNames(ordered, null, (n, a) => !ReservedWords.IsReserved(n), c => c.Name, (c, n, a) => c.Name = n,
 						c => string.IsNullOrEmpty(c.Name) ? "CTE_1" : c.Name, StringComparer.OrdinalIgnoreCase);

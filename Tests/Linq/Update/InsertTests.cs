@@ -1311,6 +1311,8 @@ namespace Tests.xUpdate
 
 				try
 				{
+					db.Person.Where(p => p.FirstName == "John" && p.LastName == "Shepard").Delete();
+
 					id = await db.Person.InsertWithInt32IdentityAsync(() => new Person
 					{
 						FirstName = "John",
@@ -1335,6 +1337,61 @@ namespace Tests.xUpdate
 							() => new Patient
 							{
 								PersonID  = id,
+								//Diagnosis = diagnosis,
+							});
+
+						diagnosis = (diagnosis.Length + i).ToString();
+					}
+
+					Assert.AreEqual("3", (await db.Patient.SingleAsync(p => p.PersonID == id)).Diagnosis);
+				}
+				finally
+				{
+					await db.Patient.DeleteAsync(p => p.PersonID == id);
+					await db.Person. DeleteAsync(p => p.ID       == id);
+				}
+			}
+		}
+
+		[Test]
+		public async Task InsertOrUpdate3xAsync([InsertOrUpdateDataSources] string context)
+		{
+			ResetPersonIdentity(context);
+
+			using (var db = GetDataContext(context))
+			{
+				var id = 0;
+
+				try
+				{
+					db.Person.Where(p => p.FirstName == "John" && p.LastName == "Shepard").Delete();
+
+					id = await db.Person.InsertWithInt32IdentityAsync(() => new Person
+					{
+						FirstName = "John",
+						LastName  = "Shepard",
+						Gender    = Gender.Male
+					});
+
+					var diagnosis = "abc";
+
+					var id2 = id;
+
+					for (var i = 0; i < 3; i++)
+					{
+						await db.Patient.InsertOrUpdateAsync(
+							() => new Patient
+							{
+								PersonID  = id,
+								Diagnosis = "abc",
+							},
+							p => new Patient
+							{
+								Diagnosis = (p.Diagnosis.Length + i).ToString(),
+							},
+							() => new Patient
+							{
+								PersonID = id2,
 								//Diagnosis = diagnosis,
 							});
 

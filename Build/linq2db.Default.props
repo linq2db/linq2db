@@ -32,6 +32,9 @@
 		<GenerateNeutralResourcesLanguageAttribute>false</GenerateNeutralResourcesLanguageAttribute>
 
 		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+
+		<!--disable whinings about netcoreapp2.1 EOL-->
+		<CheckEolTargetFramework>false</CheckEolTargetFramework>
 	</PropertyGroup>
 
 	<PropertyGroup>

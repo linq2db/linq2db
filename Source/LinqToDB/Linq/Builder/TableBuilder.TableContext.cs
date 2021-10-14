@@ -706,7 +706,7 @@ namespace LinqToDB.Linq.Builder
 					var isNullExpr = Expression.Call(
 						ExpressionBuilder.DataReaderParam,
 						ReflectionHelper.DataReader.IsDBNull,
-						Expression.Constant(dindex));
+						ExpressionInstances.Int32(dindex));
 
 					if (mapping.m.Code == null)
 					{
@@ -1123,7 +1123,7 @@ namespace LinqToDB.Linq.Builder
 											return IsExpressionResult.False;
 
 										var contextInfo = FindContextExpression(expression, level, false, false);
-										return new IsExpressionResult(contextInfo?.Context == null);
+										return IsExpressionResult.GetResult(contextInfo?.Context == null);
 									}
 								case ExpressionType.Extension:
 									{
@@ -1359,8 +1359,15 @@ namespace LinqToDB.Linq.Builder
 
 								if (!sameType)
 								{
-									var mi = SqlTable.ObjectType!.GetInstanceMemberEx(levelMember.Member.Name);
-									sameType = mi.Any(_ => _.DeclaringType == levelMember.Member.DeclaringType);
+									var members = SqlTable.ObjectType!.GetInstanceMemberEx(levelMember.Member.Name);
+									foreach (var mi in members)
+									{
+										if (mi.DeclaringType == levelMember.Member.DeclaringType)
+										{
+											sameType = true;
+											break;
+										}
+									}
 								}
 
 								if (sameType || InheritanceMapping.Count > 0)
@@ -1439,7 +1446,17 @@ namespace LinqToDB.Linq.Builder
 									var fieldName = memberExpression.Member.Name;
 
 									// do not add association columns
-									if (EntityDescriptor.Associations.All(a => a.MemberInfo != memberExpression.Member))
+									var flag = true;
+									foreach (var assoc in EntityDescriptor.Associations)
+									{
+										if (assoc.MemberInfo == memberExpression.Member)
+										{
+											flag = false;
+											break;
+										}
+									}
+
+									if (flag)
 									{
 										var newField = SqlTable[fieldName];
 										if (newField == null)

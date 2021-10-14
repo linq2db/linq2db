@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	static partial class QueryRunner
@@ -42,7 +43,7 @@ namespace LinqToDB.Linq
 
 				SetNonQueryQuery(query);
 
-				query.GetElement(dataContext, Expression.Constant(null), null, null);
+				query.GetElement(dataContext, ExpressionInstances.UntypedNull, null, null);
 
 				ITable<T> table = new Table<T>(dataContext);
 
@@ -87,7 +88,7 @@ namespace LinqToDB.Linq
 
 				SetNonQueryQuery(query);
 
-				await query.GetElementAsync(dataContext, Expression.Constant(null), null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await query.GetElementAsync(dataContext, ExpressionInstances.UntypedNull, null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				ITable<T> table = new Table<T>(dataContext);
 
