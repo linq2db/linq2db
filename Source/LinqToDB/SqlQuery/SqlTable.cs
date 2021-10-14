@@ -337,6 +337,7 @@ namespace LinqToDB.SqlQuery
 		#endregion
 
 		#region System tables
+
 		internal static SqlTable Inserted(Type objectType)
 			=> new (objectType)
 			{
@@ -347,6 +348,7 @@ namespace LinqToDB.SqlQuery
 				Server       = null,
 				SqlTableType = SqlTableType.SystemTable,
 			};
+
 		internal static SqlTable Deleted(Type objectType)
 			=> new (objectType)
 			{
@@ -357,6 +359,7 @@ namespace LinqToDB.SqlQuery
 				Server       = null,
 				SqlTableType = SqlTableType.SystemTable,
 			};
+
 		#endregion
 	}
 }

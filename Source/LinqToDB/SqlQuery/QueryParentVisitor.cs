@@ -580,6 +580,7 @@ namespace LinqToDB.SqlQuery
 			Visit(element.Target);
 			Visit(element.Source);
 			Visit(element.On);
+			Visit(element.Output);
 
 			foreach (var operation in element.Operations)
 				Visit(operation);

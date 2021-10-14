@@ -72,7 +72,7 @@ namespace LinqToDB.Reflection
 									new[] { local },
 									Expression.Assign(local, next),
 									Expression.IfThen(
-										Expression.NotEqual(local, Expression.Constant(null)),
+										Expression.NotEqual(local, ExpressionInstances.UntypedNull),
 										MakeGetter(local, i + 1)));
 							}
 
@@ -129,7 +129,7 @@ namespace LinqToDB.Reflection
 										exprs.Add(Expression.Assign(local, next));
 										exprs.Add(
 											Expression.IfThen(
-												Expression.Equal(local, Expression.Constant(null)),
+												Expression.Equal(local, ExpressionInstances.UntypedNull),
 												Expression.Block(
 													Expression.Assign(local, Expression.New(local.Type)),
 													Expression.Assign(next, local))));
@@ -164,7 +164,7 @@ namespace LinqToDB.Reflection
 						SetterExpression = Expression.Lambda(
 							Expression.Block(
 								new[] { fakeParam },
-								Expression.Assign(fakeParam, Expression.Constant(0))),
+								Expression.Assign(fakeParam, ExpressionInstances.Constant0)),
 							objParam,
 							valueParam);
 					}
@@ -277,7 +277,7 @@ namespace LinqToDB.Reflection
 					setterType,
 					Expression.Block(
 						new[] { fakeParam },
-						new Expression[] { Expression.Assign(fakeParam, Expression.Constant(0)) }),
+						new Expression[] { Expression.Assign(fakeParam, ExpressionInstances.Constant0) }),
 					objParam,
 					valueParam);
 			}

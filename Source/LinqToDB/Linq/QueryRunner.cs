@@ -309,7 +309,7 @@ namespace LinqToDB.Linq
 				dbDataTypeExpression = Expression.Constant(dbDataType);
 			}
 
-			var param = ExpressionBuilder.CreateParameterAccessor(
+			var param = ParametersContext.CreateParameterAccessor(
 				dataContext, valueGetter, getter, dbDataTypeExpression, valueGetter, field.Name.Replace('.', '_'));
 
 			return param;

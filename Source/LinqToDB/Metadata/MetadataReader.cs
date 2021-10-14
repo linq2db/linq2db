@@ -55,7 +55,7 @@ namespace LinqToDB.Metadata
 				length += attrs[i].Length;
 			}
 
-			var attributes = new T[length];
+			var attributes = length == 0 ? Array<T>.Empty : new T[length];
 			length = 0;
 
 			for (var i = 0; i < attrs.Length; i++)
@@ -88,7 +88,7 @@ namespace LinqToDB.Metadata
 				length += attrs[i].Length;
 			}
 
-			var attributes = new T[length];
+			var attributes = length == 0 ? Array<T>.Empty : new T[length];
 			length = 0;
 
 			for (var i = 0; i < attrs.Length; i++)
@@ -121,7 +121,7 @@ namespace LinqToDB.Metadata
 				length  += cols[i].Length;
 			}
 			
-			var columns = new MemberInfo[length];
+			var columns = length == 0 ? Array<MemberInfo>.Empty : new MemberInfo[length];
 			length = 0;
 			for (var i = 0; i < cols.Length; i++)
 			{

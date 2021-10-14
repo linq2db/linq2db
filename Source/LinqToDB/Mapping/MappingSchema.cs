@@ -30,6 +30,20 @@ namespace LinqToDB.Mapping
 	[PublicAPI]
 	public class MappingSchema
 	{
+		private static readonly MemoryCache<(string baseSchemaId, string addedSchemaId)> _combinedSchemasCache = new (new ());
+
+		internal static MappingSchema CombineSchemas(MappingSchema mappingSchema1, MappingSchema mappingSchema2)
+		{
+			return _combinedSchemasCache.GetOrCreate(
+				(mappingSchema1.ConfigurationID, mappingSchema2.ConfigurationID),
+				new { BaseSchema = mappingSchema1, AddedSchema = mappingSchema2 },
+				static (entry, context) =>
+				{
+					entry.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+					return new MappingSchema(context.AddedSchema, context.BaseSchema);
+				});
+		}
+
 		#region Init
 
 		/// <summary>
@@ -76,7 +90,9 @@ namespace LinqToDB.Mapping
 		/// mappings for same type.</remarks>
 		public MappingSchema(string? configuration, params MappingSchema[]? schemas)
 		{
-			if (string.IsNullOrEmpty(configuration) && (schemas == null || schemas.Length == 0))
+			// always generate "unique" configuration name, if name not provided to avoid duplicate names
+			// e.g. see https://github.com/linq2db/linq2db/issues/3251
+			if (string.IsNullOrEmpty(configuration))
 				configuration = "auto_" + Interlocked.Increment(ref _configurationCounter);
 
 			var schemaInfo = new MappingSchemaInfo(configuration);
@@ -693,8 +709,9 @@ namespace LinqToDB.Mapping
 				var fromGenericArgs = isFromGeneric ? from.SystemType.GetGenericArguments() : Array<Type>.Empty;
 				var toGenericArgs   = isToGeneric   ? to.SystemType.  GetGenericArguments() : Array<Type>.Empty;
 
-				var args = fromGenericArgs.SequenceEqual(toGenericArgs) ?
-					fromGenericArgs : fromGenericArgs.Concat(toGenericArgs).ToArray();
+				var args = fromGenericArgs.SequenceEqual(toGenericArgs)
+					? fromGenericArgs
+					: fromGenericArgs.Concat(toGenericArgs).ToArray();
 
 				if (InitGenericConvertProvider(args))
 					return GetConverter(from, to, create);
@@ -883,6 +900,8 @@ namespace LinqToDB.Mapping
 
 		void InitMetadataReaders()
 		{
+			if (Schemas.Length > 0)
+			{
 			var list = new List   <IMetadataReader>(Schemas.Length);
 			var hash = new HashSet<IMetadataReader>();
 
@@ -894,6 +913,9 @@ namespace LinqToDB.Mapping
 			}
 
 			_metadataReaders = list.ToArray();
+		}
+			else
+				_metadataReaders = Array<IMetadataReader>.Empty;
 		}
 
 #if NETFRAMEWORK
@@ -911,7 +933,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets or sets metadata attributes provider for current schema.
 		/// Metadata providers, shipped with LINQ to DB:
-		/// - <see cref="LinqToDB.Metadata.MetadataReader"/> - aggregation metadata provider over collection of other providers;
+		/// - <see cref="Metadata.MetadataReader"/> - aggregation metadata provider over collection of other providers;
 		/// - <see cref="AttributeReader"/> - .NET attributes provider;
 		/// - <see cref="FluentMetadataReader"/> - fluent mappings metadata provider;
 		/// - <see cref="SystemDataSqlServerAttributeReader"/> - metadata provider that converts Microsoft.SqlServer.Server attributes to LINQ to DB mapping attributes;
@@ -920,7 +942,7 @@ namespace LinqToDB.Mapping
 #endif
 		public IMetadataReader? MetadataReader
 		{
-			get { return Schemas[0].MetadataReader; }
+			get => Schemas[0].MetadataReader;
 			set
 			{
 				lock (_metadataReadersSyncRoot)
@@ -1177,12 +1199,16 @@ namespace LinqToDB.Mapping
 		/// <returns>All dynamic columns defined on given type.</returns>
 		public MemberInfo[] GetDynamicColumns(Type type)
 		{
-			var result = new List<MemberInfo>();
+			List<MemberInfo>? result = null;
 
 			foreach (var reader in MetadataReaders)
-				result.AddRange(reader.GetDynamicColumns(type));
+			{
+				var columns = reader.GetDynamicColumns(type);
+				if (columns.Length > 0)
+					(result ??= new()).AddRange(columns);
+			}
 
-			return result.ToArray();
+			return result == null ? Array<MemberInfo>.Empty : result.ToArray();
 		}
 
 		/// <summary>

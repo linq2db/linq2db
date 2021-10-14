@@ -57,7 +57,7 @@ namespace LinqToDB.Linq.Builder
 						if (typeof(ISqlExpression).IsAssignableFrom(type))
 							return Expression.Constant(a);
 
-						Expression expr = Expression.Call(formatArg, ReflectionHelper.Functions.FormattableString.GetArguments, Expression.Constant(i));
+						Expression expr = Expression.Call(formatArg, ReflectionHelper.Functions.FormattableString.GetArguments, ExpressionInstances.Int32(i));
 
 						if (type != typeof(object))
 							expr = Expression.Convert(expr, type);
@@ -87,7 +87,7 @@ namespace LinqToDB.Linq.Builder
 							if (typeof(ISqlExpression).IsAssignableFrom(type))
 								return Expression.Constant(a);
 
-							Expression expr = Expression.ArrayIndex(arrayExpr, Expression.Constant(i));
+							Expression expr = Expression.ArrayIndex(arrayExpr, ExpressionInstances.Int32(i));
 							if (type != typeof(object))
 								expr = Expression.Convert(expr, type);
 

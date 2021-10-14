@@ -676,7 +676,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				case RequestFor.SubQuery : return IsExpressionResult.False;
 				case RequestFor.Root     :
-					return new IsExpressionResult(Sequence.Length == 1 ?
+					return IsExpressionResult.GetResult(Sequence.Length == 1 ?
 						ReferenceEquals(expression, Lambda.Parameters[0]) :
 						Lambda.Parameters.Any(p => ReferenceEquals(p, expression)));
 			}
@@ -698,7 +698,7 @@ namespace LinqToDB.Linq.Builder
 							expression,
 							level,
 							(ctx, ex, l) => ctx == null ? IsExpressionResult.False : ctx.IsExpression(ex, l, requestFlag),
-							() => new IsExpressionResult(requestFlag == RequestFor.Expression), false);
+							() => IsExpressionResult.GetResult(requestFlag == RequestFor.Expression), false);
 					default                     : return IsExpressionResult.False;
 				}
 			}
@@ -716,9 +716,9 @@ namespace LinqToDB.Linq.Builder
 							if (expression == null)
 							{
 								if (requestFlag == RequestFor.Expression)
-									return new IsExpressionResult(Members.Values.Any(member => IsExpression(member, 0, requestFlag).Result));
+									return IsExpressionResult.GetResult(Members.Values.Any(member => IsExpression(member, 0, requestFlag).Result));
 
-								return new IsExpressionResult(requestFlag == RequestFor.Object);
+								return IsExpressionResult.GetResult(requestFlag == RequestFor.Object);
 							}
 
 							var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
@@ -749,7 +749,7 @@ namespace LinqToDB.Linq.Builder
 											}
 
 											if (memberExpression == null)
-												return new IsExpressionResult(requestFlag == RequestFor.Expression);
+												return IsExpressionResult.GetResult(requestFlag == RequestFor.Expression);
 											//throw new InvalidOperationException(
 											//	string.Format("Invalid member '{0}.{1}'", member.DeclaringType, member.Name));
 										}
@@ -760,7 +760,7 @@ namespace LinqToDB.Linq.Builder
 											{
 												case ExpressionType.New        :
 												case ExpressionType.MemberInit :
-													return new IsExpressionResult(requestFlag == RequestFor.Object);
+													return IsExpressionResult.GetResult(requestFlag == RequestFor.Object);
 											}
 										}
 
@@ -807,7 +807,7 @@ namespace LinqToDB.Linq.Builder
 									}
 
 								case ExpressionType.New          :
-								case ExpressionType.MemberInit   : return new IsExpressionResult(requestFlag == RequestFor.Object);
+								case ExpressionType.MemberInit   : return IsExpressionResult.GetResult(requestFlag == RequestFor.Object);
 								default:
 									{
 										if (levelExpression is ContextRefExpression refExpression)
@@ -816,7 +816,7 @@ namespace LinqToDB.Linq.Builder
 												return refExpression.BuildContext.IsExpression(null, 0, requestFlag);
 											return refExpression.BuildContext.IsExpression(expression, level + 1, requestFlag);
 										}
-										return new IsExpressionResult(requestFlag == RequestFor.Expression);
+										return IsExpressionResult.GetResult(requestFlag == RequestFor.Expression);
 									}
 							}
 

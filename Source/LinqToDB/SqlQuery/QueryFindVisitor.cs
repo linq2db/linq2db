@@ -340,6 +340,7 @@ namespace LinqToDB.SqlQuery
 							Find(((SqlMergeStatement)element).Source    ) ??
 							Find(((SqlMergeStatement)element).On        ) ??
 							Find(((SqlMergeStatement)element).Target    ) ??
+							Find(((SqlMergeStatement)element).Output    ) ??
 							Find(((SqlMergeStatement)element).Operations) ??
 							Find(((SqlMergeStatement)element).Tag       );
 					}
