@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Linq;
@@ -543,16 +544,15 @@ namespace Tests.Linq
 					String3 = str3,
 				});
 
-				var sql = db.LastQuery!;
-				Assert.True(sql.Contains("@id"));
-				Assert.True(sql.Contains("@int1"));
-				// deduplication here is fine, but not required
-				//Assert.True(sql.Contains("@int2"));
-				// strings have different types and shouldn't be merged into one parameter as it could affect execution plans
-				Assert.True(sql.Contains("@str1"));
-				Assert.True(sql.Contains("@str2"));
-				// deduplication here is fine, but not required
-				//Assert.True(sql.Contains("@str3"));
+				var cacheMiss = Query<ParameterDeduplication>.CacheMissCount;
+				var sql       = db.LastQuery!;
+
+				sql.Should().Contain("@id");
+				sql.Should().Contain("@int1");
+				sql.Should().Contain("@int2");
+				sql.Should().Contain("@str1");
+				sql.Should().Contain("@str2");
+				sql.Should().Contain("@str3");
 
 				id   = 2;
 				int1 = 3;
@@ -571,31 +571,33 @@ namespace Tests.Linq
 					String3 = str3,
 				});
 
+				Query<ParameterDeduplication>.CacheMissCount.Should().Be(cacheMiss);
 				sql = db.LastQuery!;
-				Assert.True(sql.Contains("@id"));
-				Assert.True(sql.Contains("@int1"));
-				Assert.True(sql.Contains("@int2"));
-				Assert.True(sql.Contains("@str1"));
-				Assert.True(sql.Contains("@str2"));
-				Assert.True(sql.Contains("@str3"));
+
+				sql.Should().Contain("@id");
+				sql.Should().Contain("@int1");
+				sql.Should().Contain("@int2");
+				sql.Should().Contain("@str1");
+				sql.Should().Contain("@str2");
+				sql.Should().Contain("@str3");
 
 				var res = table.OrderBy(_ => _.Id).ToArray();
 
-				Assert.AreEqual(2, res.Length);
+				res.Should().HaveCount(2);
 
-				Assert.AreEqual(1    , res[0].Id);
-				Assert.AreEqual(2    , res[0].Int1);
-				Assert.AreEqual(2    , res[0].Int2);
-				Assert.AreEqual("str", res[0].String1);
-				Assert.AreEqual("str", res[0].String2);
-				Assert.AreEqual("str", res[0].String3);
+				res[0].Id.Should().Be(1);
+				res[0].Int1.Should().Be(2);
+				res[0].Int2.Should().Be(2);
+				res[0].String1.Should().Be("str");
+				res[0].String2.Should().Be("str");
+				res[0].String3.Should().Be("str");
 
-				Assert.AreEqual(2     , res[1].Id);
-				Assert.AreEqual(3     , res[1].Int1);
-				Assert.AreEqual(4     , res[1].Int2);
-				Assert.AreEqual("str1", res[1].String1);
-				Assert.AreEqual("str2", res[1].String2);
-				Assert.AreEqual("str3", res[1].String3);
+				res[1].Id.Should().Be(2);
+				res[1].Int1.Should().Be(3);
+				res[1].Int2.Should().Be(4);
+				res[1].String1.Should().Be("str1");
+				res[1].String2.Should().Be("str2");
+				res[1].String3.Should().Be("str3");
 			}
 		}
 
@@ -615,16 +617,15 @@ namespace Tests.Linq
 					String3 = "str",
 				});
 
-				var sql = db.LastQuery!;
-				Assert.True(sql.Contains("@Id"));
-				Assert.True(sql.Contains("@Int1"));
-				// deduplication here is fine, but not required
-				//Assert.True(sql.Contains("@Int2"));
-				// strings have different types and shouldn't be merged into one parameter as it could affect execution plans
-				Assert.True(sql.Contains("@String1"));
-				Assert.True(sql.Contains("@String2"));
-				// deduplication here is fine, but not required
-				//Assert.True(sql.Contains("@String3"));
+				var cacheMiss = Query<ParameterDeduplication>.CacheMissCount;
+				var sql       = db.LastQuery!;
+
+				sql.Should().Contain("@Id");
+				sql.Should().Contain("@Int1");
+				sql.Should().Contain("@Int2");
+				sql.Should().Contain("@String1");
+				sql.Should().Contain("@String2");
+				sql.Should().Contain("@String3");
 
 				db.Insert(new ParameterDeduplication()
 				{
@@ -636,31 +637,33 @@ namespace Tests.Linq
 					String3 = "str3",
 				});
 
+				Query<ParameterDeduplication>.CacheMissCount.Should().Be(cacheMiss);
 				sql = db.LastQuery!;
-				Assert.True(sql.Contains("@Id"));
-				Assert.True(sql.Contains("@Int1"));
-				Assert.True(sql.Contains("@Int2"));
-				Assert.True(sql.Contains("@String1"));
-				Assert.True(sql.Contains("@String2"));
-				Assert.True(sql.Contains("@String3"));
+
+				sql.Should().Contain("@Id");
+				sql.Should().Contain("@Int1");
+				sql.Should().Contain("@Int2");
+				sql.Should().Contain("@String1");
+				sql.Should().Contain("@String2");
+				sql.Should().Contain("@String3");
 
 				var res = table.OrderBy(_ => _.Id).ToArray();
 
-				Assert.AreEqual(2, res.Length);
+				res.Should().HaveCount(2);
 
-				Assert.AreEqual(1    , res[0].Id);
-				Assert.AreEqual(2    , res[0].Int1);
-				Assert.AreEqual(2    , res[0].Int2);
-				Assert.AreEqual("str", res[0].String1);
-				Assert.AreEqual("str", res[0].String2);
-				Assert.AreEqual("str", res[0].String3);
+				res[0].Id.Should().Be(1);
+				res[0].Int1.Should().Be(2);
+				res[0].Int2.Should().Be(2);
+				res[0].String1.Should().Be("str");
+				res[0].String2.Should().Be("str");
+				res[0].String3.Should().Be("str");
 
-				Assert.AreEqual(2     , res[1].Id);
-				Assert.AreEqual(3     , res[1].Int1);
-				Assert.AreEqual(4     , res[1].Int2);
-				Assert.AreEqual("str1", res[1].String1);
-				Assert.AreEqual("str2", res[1].String2);
-				Assert.AreEqual("str3", res[1].String3);
+				res[1].Id.Should().Be(2);
+				res[1].Int1.Should().Be(3);
+				res[1].Int2.Should().Be(4);
+				res[1].String1.Should().Be("str1");
+				res[1].String2.Should().Be("str2");
+				res[1].String3.Should().Be("str3");
 			}
 		}
 
@@ -679,16 +682,15 @@ namespace Tests.Linq
 					.Value(_ => _.String3, "str")
 					.Insert();
 
-				var sql = db.LastQuery!;
-				Assert.True(sql.Contains("@Id"));
-				Assert.True(sql.Contains("@Int1"));
-				// deduplication here is fine, but not required
-				//Assert.True(sql.Contains("@Int2"));
-				// strings have different types and shouldn't be merged into one parameter as it could affect execution plans
-				Assert.True(sql.Contains("@String1"));
-				Assert.True(sql.Contains("@String2"));
-				// deduplication here is fine, but not required
-				//Assert.True(sql.Contains("@String3"));
+				var cacheMiss = Query<ParameterDeduplication>.CacheMissCount;
+				var sql       = db.LastQuery!;
+
+				sql.Should().Contain("@Id");
+				sql.Should().Contain("@Int1");
+				sql.Should().Contain("@Int2");
+				sql.Should().Contain("@String1");
+				sql.Should().Contain("@String2");
+				sql.Should().Contain("@String3");
 
 				table
 					.Value(_ => _.Id     , 2)
@@ -699,31 +701,33 @@ namespace Tests.Linq
 					.Value(_ => _.String3, "str3")
 					.Insert();
 
+				Query<ParameterDeduplication>.CacheMissCount.Should().Be(cacheMiss);
 				sql = db.LastQuery!;
-				Assert.True(sql.Contains("@Id"));
-				Assert.True(sql.Contains("@Int1"));
-				Assert.True(sql.Contains("@Int2"));
-				Assert.True(sql.Contains("@String1"));
-				Assert.True(sql.Contains("@String2"));
-				Assert.True(sql.Contains("@String3"));
+
+				sql.Should().Contain("@Id");
+				sql.Should().Contain("@Int1");
+				sql.Should().Contain("@Int2");
+				sql.Should().Contain("@String1");
+				sql.Should().Contain("@String2");
+				sql.Should().Contain("@String3");
 
 				var res = table.OrderBy(_ => _.Id).ToArray();
 
-				Assert.AreEqual(2, res.Length);
+				res.Should().HaveCount(2);
 
-				Assert.AreEqual(1    , res[0].Id);
-				Assert.AreEqual(2    , res[0].Int1);
-				Assert.AreEqual(2    , res[0].Int2);
-				Assert.AreEqual("str", res[0].String1);
-				Assert.AreEqual("str", res[0].String2);
-				Assert.AreEqual("str", res[0].String3);
+				res[0].Id.Should().Be(1);
+				res[0].Int1.Should().Be(2);
+				res[0].Int2.Should().Be(2);
+				res[0].String1.Should().Be("str");
+				res[0].String2.Should().Be("str");
+				res[0].String3.Should().Be("str");
 
-				Assert.AreEqual(2     , res[1].Id);
-				Assert.AreEqual(3     , res[1].Int1);
-				Assert.AreEqual(4     , res[1].Int2);
-				Assert.AreEqual("str1", res[1].String1);
-				Assert.AreEqual("str2", res[1].String2);
-				Assert.AreEqual("str3", res[1].String3);
+				res[1].Id.Should().Be(2);
+				res[1].Int1.Should().Be(3);
+				res[1].Int2.Should().Be(4);
+				res[1].String1.Should().Be("str1");
+				res[1].String2.Should().Be("str2");
+				res[1].String3.Should().Be("str3");
 			}
 		}
 
@@ -749,16 +753,15 @@ namespace Tests.Linq
 					.Value(_ => _.String3, () => str3)
 					.Insert();
 
-				var sql = db.LastQuery!;
-				Assert.True(sql.Contains("@id"));
-				Assert.True(sql.Contains("@int1"));
-				// deduplication here is fine, but not required
-				//Assert.True(sql.Contains("@int2"));
-				// strings have different types and shouldn't be merged into one parameter as it could affect execution plans
-				Assert.True(sql.Contains("@str1"));
-				Assert.True(sql.Contains("@str2"));
-				// deduplication here is fine, but not required
-				//Assert.True(sql.Contains("@str3"));
+				var cacheMiss = Query<ParameterDeduplication>.CacheMissCount;
+				var sql       = db.LastQuery!;
+
+				sql.Should().Contain("@id");
+				sql.Should().Contain("@int1");
+				sql.Should().Contain("@int2");
+				sql.Should().Contain("@str1");
+				sql.Should().Contain("@str2");
+				sql.Should().Contain("@str3");
 
 				id = 2;
 				int1 = 3;
@@ -776,31 +779,34 @@ namespace Tests.Linq
 					.Value(_ => _.String3, () => str3)
 					.Insert();
 
+				Query<ParameterDeduplication>.CacheMissCount.Should().Be(cacheMiss);
+
 				sql = db.LastQuery!;
-				Assert.True(sql.Contains("@id"));
-				Assert.True(sql.Contains("@int1"));
-				Assert.True(sql.Contains("@int2"));
-				Assert.True(sql.Contains("@str1"));
-				Assert.True(sql.Contains("@str2"));
-				Assert.True(sql.Contains("@str3"));
+
+				sql.Should().Contain("@id");
+				sql.Should().Contain("@int1");
+				sql.Should().Contain("@int2");
+				sql.Should().Contain("@str1");
+				sql.Should().Contain("@str2");
+				sql.Should().Contain("@str3");
 
 				var res = table.OrderBy(_ => _.Id).ToArray();
 
-				Assert.AreEqual(2, res.Length);
+				res.Should().HaveCount(2);
 
-				Assert.AreEqual(1    , res[0].Id);
-				Assert.AreEqual(2    , res[0].Int1);
-				Assert.AreEqual(2    , res[0].Int2);
-				Assert.AreEqual("str", res[0].String1);
-				Assert.AreEqual("str", res[0].String2);
-				Assert.AreEqual("str", res[0].String3);
+				res[0].Id.Should().Be(1);
+				res[0].Int1.Should().Be(2);
+				res[0].Int2.Should().Be(2);
+				res[0].String1.Should().Be("str");
+				res[0].String2.Should().Be("str");
+				res[0].String3.Should().Be("str");
 
-				Assert.AreEqual(2     , res[1].Id);
-				Assert.AreEqual(3     , res[1].Int1);
-				Assert.AreEqual(4     , res[1].Int2);
-				Assert.AreEqual("str1", res[1].String1);
-				Assert.AreEqual("str2", res[1].String2);
-				Assert.AreEqual("str3", res[1].String3);
+				res[1].Id.Should().Be(2);
+				res[1].Int1.Should().Be(3);
+				res[1].Int2.Should().Be(4);
+				res[1].String1.Should().Be("str1");
+				res[1].String2.Should().Be("str2");
+				res[1].String3.Should().Be("str3");
 			}
 		}
 	}

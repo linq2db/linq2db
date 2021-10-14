@@ -86,11 +86,11 @@ namespace LinqToDB.Linq.Builder
 			p = PrepareConvertersAndCreateParameter(newExpr, expr, name, columnDescriptor, buildParameterType);
 
 			var found = p;
-			if (_parameters != null)
+			if (_parameters != null && expr.NodeType != ExpressionType.Constant)
 			{
 				foreach (var accessor in _parameters)
 				{
-					if (accessor.Value.SqlParameter.Type.Equals(p.SqlParameter.Type))
+					if (!accessor.Value.SqlParameter.Type.Equals(p.SqlParameter.Type))
 						continue;
 
 					if (accessor.Key.EqualsTo(expr, OptimizationContext.GetSimpleEqualsToContext(true)))
