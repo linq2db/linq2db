@@ -1510,8 +1510,8 @@ namespace LinqToDB.Linq.Builder
 			if (SqlExpression.NeedsEqual(ex))
 			{
 				var descriptor = QueryHelper.GetColumnDescriptor(ex);
-				var trueValue  = ConvertToSql(context, ExpressionHelper.TrueConstant,  false, descriptor);
-				var falseValue = ConvertToSql(context, ExpressionHelper.FalseConstant, false, descriptor);
+				var trueValue  = ConvertToSql(context, ExpressionInstances.True,  false, descriptor);
+				var falseValue = ConvertToSql(context, ExpressionInstances.False, false, descriptor);
 
 				return new SqlPredicate.IsTrue(ex, trueValue, falseValue, Configuration.Linq.CompareNullsAsValues ? false : null, false);
 			}
@@ -1670,8 +1670,8 @@ namespace LinqToDB.Linq.Builder
 						withNull = true;
 					}
 					var descriptor = QueryHelper.GetColumnDescriptor(expression);
-					var trueValue  = ConvertToSql(context, ExpressionHelper.TrueConstant,  false, descriptor);
-					var falseValue = ConvertToSql(context, ExpressionHelper.FalseConstant, false, descriptor);
+					var trueValue  = ConvertToSql(context, ExpressionInstances.True,  false, descriptor);
+					var falseValue = ConvertToSql(context, ExpressionInstances.False, false, descriptor);
 
 					var withNullValue = Configuration.Linq.CompareNullsAsValues &&
 										(isNullable || NeedNullCheck(expression))
@@ -2413,7 +2413,7 @@ namespace LinqToDB.Linq.Builder
 		ISqlPredicate MakeIsPredicate(IBuildContext context, TypeBinaryExpression expression)
 		{
 			var typeOperand = expression.TypeOperand;
-			var table       = new TableBuilder.TableContext(this, new BuildInfo((IBuildContext?)null, Expression.Constant(null), new SelectQuery()), typeOperand);
+			var table       = new TableBuilder.TableContext(this, new BuildInfo((IBuildContext?)null, ExpressionInstances.UntypedNull, new SelectQuery()), typeOperand);
 
 			if (typeOperand == table.ObjectType && table.InheritanceMapping.All(m => m.Type != typeOperand))
 				return new SqlPredicate.Expr(new SqlValue(true));

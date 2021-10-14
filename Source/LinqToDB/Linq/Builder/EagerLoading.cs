@@ -274,7 +274,7 @@ namespace LinqToDB.Linq.Builder
 			if (!mc.IsQueryable() || !FirstSingleMethods.Contains(mc.Method.Name))
 				throw new LinqException($"Unsupported Method call '{mc.Method.Name}'");
 
-			var newExpr = TypeHelper.MakeMethodCall(Methods.Queryable.Take, mc.Arguments[0], Expression.Constant(1));
+			var newExpr = TypeHelper.MakeMethodCall(Methods.Queryable.Take, mc.Arguments[0], ExpressionInstances.Constant1);
 			return newExpr;
 		}
 
@@ -1398,7 +1398,7 @@ namespace LinqToDB.Linq.Builder
 			var idx = RegisterPreamblesDetached(builder, detailQuery);
 
 			var resultExpression = Expression.Convert(
-				Expression.ArrayIndex(ExpressionBuilder.PreambleParam, Expression.Constant(idx)),
+				Expression.ArrayIndex(ExpressionBuilder.PreambleParam, ExpressionInstances.Int32(idx)),
 				typeof(List<TD>));
 
 			return resultExpression;
@@ -1440,7 +1440,7 @@ namespace LinqToDB.Linq.Builder
 
 			var resultExpression =
 				Expression.Call(
-					Expression.Convert(Expression.ArrayIndex(ExpressionBuilder.PreambleParam, Expression.Constant(idx)),
+					Expression.Convert(Expression.ArrayIndex(ExpressionBuilder.PreambleParam, ExpressionInstances.Int32(idx)),
 						typeof(EagerLoadingContext<TD, TKey>)), getListMethod, compiledKeyExpression);
 
 			return resultExpression;
