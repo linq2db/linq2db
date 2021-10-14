@@ -43,9 +43,8 @@ namespace LinqToDB.SqlQuery
 
 		public void Register(IQueryElement expr, EvaluationInfo info)
 		{
-			_evaluationCache ??= new Dictionary<IQueryElement, EvaluationInfo>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+			_evaluationCache ??= new (Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
 			_evaluationCache.Add(expr, info);
 		}
-
 	}
 }

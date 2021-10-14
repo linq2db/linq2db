@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using LinqToDB.Data;
 
 namespace LinqToDB
 {
@@ -9,10 +10,12 @@ namespace LinqToDB
 	/// </summary>
 	internal class CallOnExceptionRegion : IDisposable
 	{
-		private readonly Action _action;
+		private readonly DataConnection         _dc;
+		private readonly Action<DataConnection> _action;
 
-		public CallOnExceptionRegion(Action action)
+		public CallOnExceptionRegion(DataConnection dataConnection, Action<DataConnection> action)
 		{
+			_dc     = dataConnection;
 			_action = action;
 		}
 
@@ -28,7 +31,7 @@ namespace LinqToDB
 #pragma warning disable CS0618 // GetExceptionCode obsolete
 				Marshal.GetExceptionCode() != 0)
 #pragma warning restore CS0618
-				_action();
+				_action(_dc);
 		}
 	}
 }

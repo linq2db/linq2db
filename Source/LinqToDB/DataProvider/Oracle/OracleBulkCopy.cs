@@ -279,9 +279,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			if (helper.CurrentCount > 0)
-			{
 				Execute(helper, list);
-			}
 
 			return helper.RowsCopied;
 		}
@@ -353,7 +351,11 @@ namespace LinqToDB.DataProvider.Oracle
 					? helper.MappingSchema.GetDataType(column.MemberType).Type.DataType
 					: column.DataType;
 
-				helper.Parameters.Add(new DataParameter(":p" + (i + 1), list.Select(o => column.GetValue(o)).ToArray(), dataType, column.DbType)
+				var value = new object?[list.Count];
+				for (var j = 0; j < value.Length; j++)
+					value[j] = column.GetValue(list[j]);
+
+				helper.Parameters.Add(new DataParameter(":p" + (i + 1), value, dataType, column.DbType)
 				{
 					Direction = ParameterDirection.Input,
 					IsArray   = true,
@@ -372,7 +374,11 @@ namespace LinqToDB.DataProvider.Oracle
 					? helper.MappingSchema.GetDataType(column.MemberType).Type.DataType
 					: column.DataType;
 
-				helper.Parameters.Add(new DataParameter(":p" + (i + 1), list.Select(o => column.GetValue(o)).ToArray(), dataType, column.DbType)
+				var value = new object?[list.Count];
+				for (var j = 0; j < value.Length; j++)
+					value[j] = column.GetValue(list[j]);
+
+				helper.Parameters.Add(new DataParameter(":p" + (i + 1), value, dataType, column.DbType)
 				{
 					Direction = ParameterDirection.Input,
 					IsArray   = true,

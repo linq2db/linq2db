@@ -472,6 +472,59 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void Projection(
+			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context,
+			[Values(1, 2)] int iteration)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var records = new Person[]
+				{
+					new() { ID = 1 + iteration, FirstName = "Janet" },
+					new() { ID = 2 + iteration, FirstName = "Doe" },
+				};
+
+				var cacheMiss = Query<Person>.CacheMissCount;
+
+				var result = records.AsQueryable(db).ToArray();
+
+				if (iteration > 1)
+					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+
+			}
+		}
+
+		[Test]
+		public void ExpressionProjection(
+			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context,
+			[Values(1, 2)] int iteration)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from p in db.Person
+					from n in new Person[]
+					{
+						new() { ID = 1 + iteration, FirstName = "Janet" },
+						new() { ID = 2 + iteration, FirstName = "Doe" },
+					}.Where(n => p.ID == n.ID)
+					select n;
+
+
+				var result = query.ToArray();
+
+				result.Should().HaveCount(2);
+
+				result.All(x => x.LastName == null).Should().BeTrue();
+
+				result[0].ID.Should().Be(1 + iteration);
+				result[0].FirstName.Should().Be("Janet");
+
+				result[1].ID.Should().Be(2 + iteration);
+				result[1].FirstName.Should().Be("Doe");
+			}
+		}
 
 		class TableToInsert
 		{

@@ -109,7 +109,7 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>()).ToString();
 		}
 
 //#endif
@@ -120,7 +120,7 @@ namespace LinqToDB.SqlQuery
 
 		public bool CanBeNull { get; set; }
 
-		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		public bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			return this == other;
 		}
@@ -131,7 +131,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
 		{
 			return func(this);
 		}
@@ -151,7 +151,7 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementType ElementType => QueryElementType.SqlField;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
 			if (Table != null)
 				sb
@@ -163,5 +163,12 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
+		internal static SqlField FakeField(DbDataType dataType, string fieldName, bool canBeNull)
+		{
+			var field = new SqlField(fieldName, fieldName);
+			field.Type = dataType;
+			return field;
+		}
 	}
 }

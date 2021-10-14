@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Linq;
@@ -506,6 +507,306 @@ namespace Tests.Linq
 					.Select(__ => __.Id)
 					.Any(__ => __.Equals(param)))
 				.ToList();
+			}
+		}
+
+		[Table]
+		public class ParameterDeduplication
+		{
+			[Column                              ] public int     Id      { get; set; }
+			[Column                              ] public int     Int1    { get; set; }
+			[Column                              ] public int     Int2    { get; set; }
+			[Column(DataType = DataType.VarChar) ] public string? String1 { get; set; }
+			[Column(DataType = DataType.NVarChar)] public string? String2 { get; set; }
+			[Column(DataType = DataType.NVarChar)] public string? String3 { get; set; }
+		}
+
+		[Test]
+		public void ParameterDeduplication_Insert([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			using (var table = db.CreateLocalTable<ParameterDeduplication>())
+			{
+				var id   = 1;
+				var int1 = 2;
+				var int2 = 2;
+				var str1 = "str";
+				var str2 = "str";
+				var str3 = "str";
+
+				table.Insert(() => new ParameterDeduplication()
+				{
+					Id      = id,
+					Int1    = int1,
+					Int2    = int2,
+					String1 = str1,
+					String2 = str2,
+					String3 = str3,
+				});
+
+				var cacheMiss = Query<ParameterDeduplication>.CacheMissCount;
+				var sql       = db.LastQuery!;
+
+				sql.Should().Contain("@id");
+				sql.Should().Contain("@int1");
+				sql.Should().Contain("@int2");
+				sql.Should().Contain("@str1");
+				sql.Should().Contain("@str2");
+				sql.Should().Contain("@str3");
+
+				id   = 2;
+				int1 = 3;
+				int2 = 4;
+				str1 = "str1";
+				str2 = "str2";
+				str3 = "str3";
+
+				table.Insert(() => new ParameterDeduplication()
+				{
+					Id      = id,
+					Int1    = int1,
+					Int2    = int2,
+					String1 = str1,
+					String2 = str2,
+					String3 = str3,
+				});
+
+				Query<ParameterDeduplication>.CacheMissCount.Should().Be(cacheMiss);
+				sql = db.LastQuery!;
+
+				sql.Should().Contain("@id");
+				sql.Should().Contain("@int1");
+				sql.Should().Contain("@int2");
+				sql.Should().Contain("@str1");
+				sql.Should().Contain("@str2");
+				sql.Should().Contain("@str3");
+
+				var res = table.OrderBy(_ => _.Id).ToArray();
+
+				res.Should().HaveCount(2);
+
+				res[0].Id.Should().Be(1);
+				res[0].Int1.Should().Be(2);
+				res[0].Int2.Should().Be(2);
+				res[0].String1.Should().Be("str");
+				res[0].String2.Should().Be("str");
+				res[0].String3.Should().Be("str");
+
+				res[1].Id.Should().Be(2);
+				res[1].Int1.Should().Be(3);
+				res[1].Int2.Should().Be(4);
+				res[1].String1.Should().Be("str1");
+				res[1].String2.Should().Be("str2");
+				res[1].String3.Should().Be("str3");
+			}
+		}
+
+		[Test]
+		public void ParameterDeduplication_InsertObject([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			using (var table = db.CreateLocalTable<ParameterDeduplication>())
+			{
+				db.Insert(new ParameterDeduplication()
+				{
+					Id      = 1,
+					Int1    = 2,
+					Int2    = 2,
+					String1 = "str",
+					String2 = "str",
+					String3 = "str",
+				});
+
+				var cacheMiss = Query<ParameterDeduplication>.CacheMissCount;
+				var sql       = db.LastQuery!;
+
+				sql.Should().Contain("@Id");
+				sql.Should().Contain("@Int1");
+				sql.Should().Contain("@Int2");
+				sql.Should().Contain("@String1");
+				sql.Should().Contain("@String2");
+				sql.Should().Contain("@String3");
+
+				db.Insert(new ParameterDeduplication()
+				{
+					Id      = 2,
+					Int1    = 3,
+					Int2    = 4,
+					String1 = "str1",
+					String2 = "str2",
+					String3 = "str3",
+				});
+
+				Query<ParameterDeduplication>.CacheMissCount.Should().Be(cacheMiss);
+				sql = db.LastQuery!;
+
+				sql.Should().Contain("@Id");
+				sql.Should().Contain("@Int1");
+				sql.Should().Contain("@Int2");
+				sql.Should().Contain("@String1");
+				sql.Should().Contain("@String2");
+				sql.Should().Contain("@String3");
+
+				var res = table.OrderBy(_ => _.Id).ToArray();
+
+				res.Should().HaveCount(2);
+
+				res[0].Id.Should().Be(1);
+				res[0].Int1.Should().Be(2);
+				res[0].Int2.Should().Be(2);
+				res[0].String1.Should().Be("str");
+				res[0].String2.Should().Be("str");
+				res[0].String3.Should().Be("str");
+
+				res[1].Id.Should().Be(2);
+				res[1].Int1.Should().Be(3);
+				res[1].Int2.Should().Be(4);
+				res[1].String1.Should().Be("str1");
+				res[1].String2.Should().Be("str2");
+				res[1].String3.Should().Be("str3");
+			}
+		}
+
+		[Test]
+		public void ParameterDeduplication_ValueValue([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			using (var table = db.CreateLocalTable<ParameterDeduplication>())
+			{
+				table
+					.Value(_ => _.Id     , 1)
+					.Value(_ => _.Int1   , 2)
+					.Value(_ => _.Int2   , 2)
+					.Value(_ => _.String1, "str")
+					.Value(_ => _.String2, "str")
+					.Value(_ => _.String3, "str")
+					.Insert();
+
+				var cacheMiss = Query<ParameterDeduplication>.CacheMissCount;
+				var sql       = db.LastQuery!;
+
+				sql.Should().Contain("@Id");
+				sql.Should().Contain("@Int1");
+				sql.Should().Contain("@Int2");
+				sql.Should().Contain("@String1");
+				sql.Should().Contain("@String2");
+				sql.Should().Contain("@String3");
+
+				table
+					.Value(_ => _.Id     , 2)
+					.Value(_ => _.Int1   , 3)
+					.Value(_ => _.Int2   , 4)
+					.Value(_ => _.String1, "str1")
+					.Value(_ => _.String2, "str2")
+					.Value(_ => _.String3, "str3")
+					.Insert();
+
+				Query<ParameterDeduplication>.CacheMissCount.Should().Be(cacheMiss);
+				sql = db.LastQuery!;
+
+				sql.Should().Contain("@Id");
+				sql.Should().Contain("@Int1");
+				sql.Should().Contain("@Int2");
+				sql.Should().Contain("@String1");
+				sql.Should().Contain("@String2");
+				sql.Should().Contain("@String3");
+
+				var res = table.OrderBy(_ => _.Id).ToArray();
+
+				res.Should().HaveCount(2);
+
+				res[0].Id.Should().Be(1);
+				res[0].Int1.Should().Be(2);
+				res[0].Int2.Should().Be(2);
+				res[0].String1.Should().Be("str");
+				res[0].String2.Should().Be("str");
+				res[0].String3.Should().Be("str");
+
+				res[1].Id.Should().Be(2);
+				res[1].Int1.Should().Be(3);
+				res[1].Int2.Should().Be(4);
+				res[1].String1.Should().Be("str1");
+				res[1].String2.Should().Be("str2");
+				res[1].String3.Should().Be("str3");
+			}
+		}
+
+		[Test]
+		public void ParameterDeduplication_ValueExpr([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			using (var table = db.CreateLocalTable<ParameterDeduplication>())
+			{
+				var id   = 1;
+				var int1 = 2;
+				var int2 = 2;
+				var str1 = "str";
+				var str2 = "str";
+				var str3 = "str";
+
+				table
+					.Value(_ => _.Id     , () => id)
+					.Value(_ => _.Int1   , () => int1)
+					.Value(_ => _.Int2   , () => int2)
+					.Value(_ => _.String1, () => str1)
+					.Value(_ => _.String2, () => str2)
+					.Value(_ => _.String3, () => str3)
+					.Insert();
+
+				var cacheMiss = Query<ParameterDeduplication>.CacheMissCount;
+				var sql       = db.LastQuery!;
+
+				sql.Should().Contain("@id");
+				sql.Should().Contain("@int1");
+				sql.Should().Contain("@int2");
+				sql.Should().Contain("@str1");
+				sql.Should().Contain("@str2");
+				sql.Should().Contain("@str3");
+
+				id = 2;
+				int1 = 3;
+				int2 = 4;
+				str1 = "str1";
+				str2 = "str2";
+				str3 = "str3";
+
+				table
+					.Value(_ => _.Id, () => id)
+					.Value(_ => _.Int1, () => int1)
+					.Value(_ => _.Int2, () => int2)
+					.Value(_ => _.String1, () => str1)
+					.Value(_ => _.String2, () => str2)
+					.Value(_ => _.String3, () => str3)
+					.Insert();
+
+				Query<ParameterDeduplication>.CacheMissCount.Should().Be(cacheMiss);
+
+				sql = db.LastQuery!;
+
+				sql.Should().Contain("@id");
+				sql.Should().Contain("@int1");
+				sql.Should().Contain("@int2");
+				sql.Should().Contain("@str1");
+				sql.Should().Contain("@str2");
+				sql.Should().Contain("@str3");
+
+				var res = table.OrderBy(_ => _.Id).ToArray();
+
+				res.Should().HaveCount(2);
+
+				res[0].Id.Should().Be(1);
+				res[0].Int1.Should().Be(2);
+				res[0].Int2.Should().Be(2);
+				res[0].String1.Should().Be("str");
+				res[0].String2.Should().Be("str");
+				res[0].String3.Should().Be("str");
+
+				res[1].Id.Should().Be(2);
+				res[1].Int1.Should().Be(3);
+				res[1].Int2.Should().Be(4);
+				res[1].String1.Should().Be("str1");
+				res[1].String2.Should().Be("str2");
+				res[1].String3.Should().Be("str3");
 			}
 		}
 	}
