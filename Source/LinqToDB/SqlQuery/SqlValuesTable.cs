@@ -159,7 +159,7 @@ namespace LinqToDB.SqlQuery
 
 		int ISqlExpression.Precedence => throw new NotImplementedException();
 
-		Type ISqlExpression.SystemType => throw new NotImplementedException();
+		Type ISqlExpression.SystemType => typeof(object);
 
 		bool ISqlExpression.Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer) => throw new NotImplementedException();
 

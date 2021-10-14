@@ -101,11 +101,12 @@ namespace LinqToDB.Linq.Builder
 		readonly Query                             _query;
 		readonly List<ISequenceBuilder>            _builders = _sequenceBuilders;
 		private  bool                              _reorder;
-		readonly Dictionary<Expression,Expression> _expressionAccessors;
 		private  HashSet<Expression>?              _subQueryExpressions;
-		readonly ExpressionTreeOptimizationContext  _optimizationContext;
+		readonly ExpressionTreeOptimizationContext _optimizationContext;
+		readonly ParametersContext                 _parametersContext;
 
-		public readonly List<ParameterAccessor>    CurrentSqlParameters = new ();
+		public ExpressionTreeOptimizationContext OptimizationContext => _optimizationContext;
+		public ParametersContext                 ParametersContext   => _parametersContext;
 
 		public readonly List<ParameterExpression>  BlockVariables       = new ();
 		public readonly List<Expression>           BlockExpressions     = new ();
@@ -117,13 +118,12 @@ namespace LinqToDB.Linq.Builder
 		public ExpressionBuilder(
 			Query                             query,
 			ExpressionTreeOptimizationContext optimizationContext,
+			ParametersContext                 parametersContext,
 			IDataContext                      dataContext,
 			Expression                        expression,
 			ParameterExpression[]?            compiledParameters)
 		{
 			_query               = query;
-
-			_expressionAccessors = expression.GetExpressionAccessors(ExpressionParam);
 
 			CollectQueryDepended(expression);
 
@@ -132,6 +132,7 @@ namespace LinqToDB.Linq.Builder
 			OriginalExpression   = expression;
 
 			_optimizationContext = optimizationContext;
+			_parametersContext   = parametersContext;
 			Expression           = ConvertExpressionTree(expression);
 			_optimizationContext.ClearVisitedCache();
 			
@@ -155,32 +156,7 @@ namespace LinqToDB.Linq.Builder
 		public static readonly ParameterExpression ParametersParam  = Expression.Parameter(typeof(object[]),     "ps");
 		public static readonly ParameterExpression ExpressionParam  = Expression.Parameter(typeof(Expression),   "expr");
 
-		private static ParameterExpression[] AccessorParameters = { ExpressionParam, DataContextParam, ParametersParam };
-
 		public MappingSchema MappingSchema => DataContext.MappingSchema;
-
-		private EqualsToVisitor.EqualsToInfo?  _equalsToContextFalse;
-		private EqualsToVisitor.EqualsToInfo?  _equalsToContextTrue;
-		internal EqualsToVisitor.EqualsToInfo GetSimpleEqualsToContext(bool compareConstantValues)
-		{
-			if (compareConstantValues)
-			{
-				if (_equalsToContextTrue == null)
-					_equalsToContextTrue = EqualsToVisitor.PrepareEqualsInfo(DataContext, compareConstantValues: compareConstantValues);
-				else
-					_equalsToContextTrue.Reset();
-				return _equalsToContextTrue;
-			}
-			else
-			{
-				if (_equalsToContextFalse == null)
-					_equalsToContextFalse = EqualsToVisitor.PrepareEqualsInfo(DataContext, compareConstantValues: compareConstantValues);
-				else
-					_equalsToContextFalse.Reset();
-				return _equalsToContextFalse;
-			}
-		}
-
 
 		#endregion
 
@@ -197,7 +173,7 @@ namespace LinqToDB.Linq.Builder
 					_sequenceBuilders = _sequenceBuilders.OrderByDescending(_ => _.BuildCounter).ToList();
 				}
 
-			_query.Init(sequence, CurrentSqlParameters);
+			_query.Init(sequence, _parametersContext.CurrentSqlParameters);
 
 			var param = Expression.Parameter(typeof(Query<T>), "info");
 
@@ -1362,7 +1338,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var p    = Expression.Parameter(typeof(Expression), "exp");
 				var exas = expression.GetExpressionAccessors(p);
-				var expr = ReplaceParameter(exas, expression, forceConstant: false, null).ValueExpression;
+				var expr = _parametersContext.ReplaceParameter(exas, expression, forceConstant: false, null).ValueExpression;
 
 				var allowedParameters = new HashSet<ParameterExpression>(currentParameters) { p };
 
@@ -1398,7 +1374,7 @@ namespace LinqToDB.Linq.Builder
 				var l    = Expression.Lambda<Func<Expression,IQueryable>>(Expression.Convert(expr, typeof(IQueryable)), parameters);
 				var n    = _query.AddQueryableAccessors(expression, l);
 
-				_expressionAccessors.TryGetValue(expression, out var accessor);
+				_parametersContext._expressionAccessors.TryGetValue(expression, out var accessor);
 
 				var path =
 					Expression.Call(
@@ -1418,8 +1394,8 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				foreach (var a in qex.GetExpressionAccessors(path))
-					if (!_expressionAccessors.ContainsKey(a.Key))
-						_expressionAccessors.Add(a.Key, a.Value);
+					if (!_parametersContext._expressionAccessors.ContainsKey(a.Key))
+						_parametersContext._expressionAccessors.Add(a.Key, a.Value);
 
 				return qex;
 			}
