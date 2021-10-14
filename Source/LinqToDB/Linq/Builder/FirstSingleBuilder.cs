@@ -345,7 +345,7 @@ namespace LinqToDB.Linq.Builder
 							Expression.Call(
 								ExpressionBuilder.DataReaderParam,
 								ReflectionHelper.DataReader.IsDBNull,
-								Expression.Constant(GetCheckNullIndex())),
+								ExpressionInstances.Int32(GetCheckNullIndex())),
 							defaultValue,
 							expr);
 

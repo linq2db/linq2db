@@ -333,7 +333,7 @@ namespace LinqToDB.Linq.Builder
 							if (context.parameters.TryGetValue(e, out var idx))
 							{
 								return Expression.Convert(
-									Expression.ArrayIndex(context.paramArray, Expression.Constant(idx)),
+									Expression.ArrayIndex(context.paramArray, ExpressionInstances.Int32(idx)),
 									e.Type);
 							}
 

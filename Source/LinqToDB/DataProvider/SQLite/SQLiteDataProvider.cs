@@ -169,7 +169,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public override IDisposable? ExecuteScope(DataConnection dataConnection)
 		{
 			if (Adapter.DisposeCommandOnError)
-				return new CallOnExceptionRegion(() => dataConnection.DisposeCommand());
+				return new CallOnExceptionRegion(dataConnection, static dc => dc.DisposeCommand());
 
 			return base.ExecuteScope(dataConnection);
 		}

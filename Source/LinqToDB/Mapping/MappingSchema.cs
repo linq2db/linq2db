@@ -709,8 +709,9 @@ namespace LinqToDB.Mapping
 				var fromGenericArgs = isFromGeneric ? from.SystemType.GetGenericArguments() : Array<Type>.Empty;
 				var toGenericArgs   = isToGeneric   ? to.SystemType.  GetGenericArguments() : Array<Type>.Empty;
 
-				var args = fromGenericArgs.SequenceEqual(toGenericArgs) ?
-					fromGenericArgs : fromGenericArgs.Concat(toGenericArgs).ToArray();
+				var args = fromGenericArgs.SequenceEqual(toGenericArgs)
+					? fromGenericArgs
+					: fromGenericArgs.Concat(toGenericArgs).ToArray();
 
 				if (InitGenericConvertProvider(args))
 					return GetConverter(from, to, create);
@@ -899,17 +900,22 @@ namespace LinqToDB.Mapping
 
 		void InitMetadataReaders()
 		{
-			var list = new List   <IMetadataReader>(Schemas.Length);
-			var hash = new HashSet<IMetadataReader>();
-
-			for (var i = 0; i < Schemas.Length; i++)
+			if (Schemas.Length > 0)
 			{
-				var s = Schemas[i];
-				if (s.MetadataReader != null && hash.Add(s.MetadataReader))
-					list.Add(s.MetadataReader);
-			}
+				var list = new List   <IMetadataReader>(Schemas.Length);
+				var hash = new HashSet<IMetadataReader>();
 
-			_metadataReaders = list.ToArray();
+				for (var i = 0; i < Schemas.Length; i++)
+				{
+					var s = Schemas[i];
+					if (s.MetadataReader != null && hash.Add(s.MetadataReader))
+						list.Add(s.MetadataReader);
+				}
+
+				_metadataReaders = list.ToArray();
+			}
+			else
+				_metadataReaders = Array<IMetadataReader>.Empty;
 		}
 
 #if NETFRAMEWORK
@@ -927,7 +933,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets or sets metadata attributes provider for current schema.
 		/// Metadata providers, shipped with LINQ to DB:
-		/// - <see cref="LinqToDB.Metadata.MetadataReader"/> - aggregation metadata provider over collection of other providers;
+		/// - <see cref="Metadata.MetadataReader"/> - aggregation metadata provider over collection of other providers;
 		/// - <see cref="AttributeReader"/> - .NET attributes provider;
 		/// - <see cref="FluentMetadataReader"/> - fluent mappings metadata provider;
 		/// - <see cref="SystemDataSqlServerAttributeReader"/> - metadata provider that converts Microsoft.SqlServer.Server attributes to LINQ to DB mapping attributes;
@@ -936,7 +942,7 @@ namespace LinqToDB.Mapping
 #endif
 		public IMetadataReader? MetadataReader
 		{
-			get { return Schemas[0].MetadataReader; }
+			get => Schemas[0].MetadataReader;
 			set
 			{
 				lock (_metadataReadersSyncRoot)
@@ -1193,12 +1199,16 @@ namespace LinqToDB.Mapping
 		/// <returns>All dynamic columns defined on given type.</returns>
 		public MemberInfo[] GetDynamicColumns(Type type)
 		{
-			var result = new List<MemberInfo>();
+			List<MemberInfo>? result = null;
 
 			foreach (var reader in MetadataReaders)
-				result.AddRange(reader.GetDynamicColumns(type));
+			{
+				var columns = reader.GetDynamicColumns(type);
+				if (columns.Length > 0)
+					(result ??= new()).AddRange(columns);
+			}
 
-			return result.ToArray();
+			return result == null ? Array<MemberInfo>.Empty : result.ToArray();
 		}
 
 		/// <summary>

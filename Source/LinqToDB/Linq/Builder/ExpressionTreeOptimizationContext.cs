@@ -17,9 +17,9 @@ namespace LinqToDB.Linq.Builder
 
 	public class ExpressionTreeOptimizationContext
 	{
-		readonly HashSet<Expression> _visitedExpressions = new ();
+		HashSet<Expression>? _visitedExpressions;
 
-		public IDataContext DataContext { get; }
+		public IDataContext  DataContext   { get; }
 		public MappingSchema MappingSchema { get; }
 
 		public ExpressionTreeOptimizationContext(IDataContext dataContext)
@@ -56,7 +56,7 @@ namespace LinqToDB.Linq.Builder
 
 		public void ClearVisitedCache()
 		{
-			_visitedExpressions.Clear();
+			_visitedExpressions?.Clear();
 		}
 
 		public static Expression AggregateExpression(Expression expression)
@@ -259,19 +259,21 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (mc.Object.EvaluateExpression() is LambdaExpression lambda)
 							{
-								var map = new Dictionary<Expression, Expression>();
-								for (int i = 0; i < invocation.Arguments.Count; i++)
+								var newBody = lambda.Body;
+								if (invocation.Arguments.Count > 0)
 								{
-									map.Add(lambda.Parameters[i], invocation.Arguments[i]);
-								}
+									var map = new Dictionary<Expression, Expression>();
+									for (int i = 0; i < invocation.Arguments.Count; i++)
+										map.Add(lambda.Parameters[i], invocation.Arguments[i]);
 
-								var newBody = lambda.Body.Transform(map, static (map, se) =>
+									newBody = lambda.Body.Transform(map, static (map, se) =>
 									{
 										if (se.NodeType == ExpressionType.Parameter &&
 												map.TryGetValue(se, out var newExpr))
 											return newExpr;
 										return se;
 									});
+								}
 
 								return ExpandExpression(newBody);
 							}
@@ -301,13 +303,15 @@ namespace LinqToDB.Linq.Builder
 
 		#region IsServerSideOnly
 
-		Dictionary<Expression, bool> _isServerSideOnlyCache = new ();
+		Dictionary<Expression, bool>? _isServerSideOnlyCache;
 
 		private FindVisitor<ExpressionTreeOptimizationContext>? _isServerSideOnlyVisitor;
 		public bool IsServerSideOnly(Expression expr)
 		{
-			if (_isServerSideOnlyCache.TryGetValue(expr, out var result))
+			if (_isServerSideOnlyCache != null && _isServerSideOnlyCache.TryGetValue(expr, out var result))
 				return result;
+
+			result = false;
 
 			switch (expr.NodeType)
 			{
@@ -370,7 +374,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			_isServerSideOnlyCache.Add(expr, result);
+			(_isServerSideOnlyCache ??= new()).Add(expr, result);
 			return result;
 		}
 
@@ -586,8 +590,6 @@ namespace LinqToDB.Linq.Builder
 				Expression.Constant(alias));
 		}
 
-		Dictionary<Expression, Expression> _exposedCache = new ();
-
 		private TransformInfoVisitor<ExpressionTreeOptimizationContext>? _exposeExpressionTransformer;
 
 		private TransformInfo ExposeExpressionTransformer(Expression expr)
@@ -660,9 +662,9 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = queryable.Expression;
 
-						if (!_visitedExpressions!.Contains(e))
+						if (!(_visitedExpressions ??= new ()).Contains(e))
 						{
-							_visitedExpressions!.Add(e);
+							_visitedExpressions.Add(e);
 							return new TransformInfo(e, false, true);
 						}
 					}
@@ -681,19 +683,21 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (mc.Object.EvaluateExpression() is LambdaExpression lambds)
 							{
-								var map = new Dictionary<Expression, Expression>();
-								for (int i = 0; i < invocation.Arguments.Count; i++)
+								var newBody = lambds.Body;
+								if (invocation.Arguments.Count > 0)
 								{
-									map.Add(lambds.Parameters[i], invocation.Arguments[i]);
-								}
+									var map = new Dictionary<Expression, Expression>();
+									for (int i = 0; i < invocation.Arguments.Count; i++)
+										map.Add(lambds.Parameters[i], invocation.Arguments[i]);
 
-								var newBody = lambds.Body.Transform(map, static (map, se) =>
-								{
-									if (se.NodeType == ExpressionType.Parameter &&
-												map.TryGetValue(se, out var newExpr))
-										return newExpr;
-									return se;
-								});
+									newBody = lambds.Body.Transform(map, static (map, se) =>
+									{
+										if (se.NodeType == ExpressionType.Parameter &&
+													map.TryGetValue(se, out var newExpr))
+											return newExpr;
+										return se;
+									});
+								}
 
 								return new TransformInfo(newBody, false, true);
 							}
@@ -706,16 +710,17 @@ namespace LinqToDB.Linq.Builder
 			return new TransformInfo(expr, false);
 		}
 
+		Dictionary<Expression, Expression>? _exposedCache;
 		public Expression ExposeExpression(Expression expression)
 		{
-			if (_exposedCache.TryGetValue(expression, out var result))
+			if (_exposedCache != null && _exposedCache.TryGetValue(expression, out var result))
 				return result;
 
 			result = (_exposeExpressionTransformer ??=
 				TransformInfoVisitor<ExpressionTreeOptimizationContext>.Create(this,
 					static(ctx, e) => ctx.ExposeExpressionTransformer(e))).Transform(expression);
 
-			_exposedCache[expression] = result;
+			(_exposedCache ??= new())[expression] = result;
 
 			return result;
 		}

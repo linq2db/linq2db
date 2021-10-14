@@ -6,7 +6,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 
 namespace LinqToDB.Linq
 {
@@ -39,7 +38,7 @@ namespace LinqToDB.Linq
 #if DEBUG
 		// This property is helpful in Debug Mode.
 		//
-		[UsedImplicitly]
+		[JetBrains.Annotations.UsedImplicitly]
 		// ReSharper disable once InconsistentNaming
 		public string _sqlText => SqlText;
 #endif

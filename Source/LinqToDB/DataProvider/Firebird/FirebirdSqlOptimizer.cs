@@ -269,47 +269,50 @@ namespace LinqToDB.DataProvider.Firebird
 						return e;
 
 					var replace = false;
-					for (var i = visitor.Stack.Count - 1; i >= 0; i--)
+					if (visitor.Stack != null)
 					{
-						// went outside of subquery, mission abort
-						if (visitor.Stack[i] is SelectQuery)
-							return e;
-
-						// part of select column
-						if (visitor.Stack[i] is SqlColumn)
+						for (var i = visitor.Stack.Count - 1; i >= 0; i--)
 						{
-							replace = true;
-							break;
-						}
+							// went outside of subquery, mission abort
+							if (visitor.Stack[i] is SelectQuery)
+								return e;
 
-						// insert or update keys used in merge source select query
-						if (visitor.Stack[i] is SqlSetExpression set
-							&& i == 2
-							&& visitor.Stack[i - 1] is SqlInsertClause
-							&& visitor.Stack[i - 2] is SqlInsertOrUpdateStatement insertOrUpdate
-							&& insertOrUpdate.Update.Keys.Any(k => k.Expression == set.Expression))
-						{
-							replace = true;
-							break;
-						}
+							// part of select column
+							if (visitor.Stack[i] is SqlColumn)
+							{
+								replace = true;
+								break;
+							}
 
-						// enumerable merge source
-						if (visitor.Stack[i] is SqlValuesTable)
-						{
-							replace = true;
-							break;
-						}
+							// insert or update keys used in merge source select query
+							if (visitor.Stack[i] is SqlSetExpression set
+								&& i == 2
+								&& visitor.Stack[i - 1] is SqlInsertClause
+								&& visitor.Stack[i - 2] is SqlInsertOrUpdateStatement insertOrUpdate
+								&& insertOrUpdate.Update.Keys.Any(k => k.Expression == set.Expression))
+							{
+								replace = true;
+								break;
+							}
 
-						// complex insert/update statement, including merge
-						if (visitor.Stack[i] is SqlSetExpression
-							&& i >= 2
-							&& i < visitor.Stack.Count - 1 // not just parameter setter
-							&& (visitor.Stack[i - 1] is SqlUpdateClause
-								|| visitor.Stack[i - 1] is SqlInsertClause
-								|| visitor.Stack[i - 1] is SqlMergeOperationClause))
-						{
-							replace = true;
-							break;
+							// enumerable merge source
+							if (visitor.Stack[i] is SqlValuesTable)
+							{
+								replace = true;
+								break;
+							}
+
+							// complex insert/update statement, including merge
+							if (visitor.Stack[i] is SqlSetExpression
+								&& i >= 2
+								&& i < visitor.Stack.Count - 1 // not just parameter setter
+								&& (visitor.Stack[i - 1] is SqlUpdateClause
+									|| visitor.Stack[i - 1] is SqlInsertClause
+									|| visitor.Stack[i - 1] is SqlMergeOperationClause))
+							{
+								replace = true;
+								break;
+							}
 						}
 					}
 
