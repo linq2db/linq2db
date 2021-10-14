@@ -1488,20 +1488,5 @@ FROM
 		}
 		#endregion
 
-		[Test]
-		public void ParametersRegressionTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				var collection = db.Parent.Select(_ => new { _.ParentID }).ToList();
-
-				db.Parent
-					.Select(_ => new
-					{
-						Children = collection.Where(c1 => c1.ParentID == _.ParentID).ToArray()
-					})
-					.ToArray();
-			}
-		}
 	}
 }

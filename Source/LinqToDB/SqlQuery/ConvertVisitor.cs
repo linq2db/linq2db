@@ -997,16 +997,18 @@ namespace LinqToDB.SqlQuery
 					{
 						var merge = (SqlMergeStatement)element;
 
-						var tag        = merge.Tag != null ? (SqlComment?)ConvertInternal(merge.Tag) : null;
-						var with       = (SqlWithClause?)      ConvertInternal(merge.With);
+						var tag        = merge.Tag != null    ? (SqlComment?)ConvertInternal(merge.Tag) : null;
+						var with       = (SqlWithClause?)     ConvertInternal(merge.With);
 						var target     = (SqlTableSource?)    ConvertInternal(merge.Target);
 						var source     = (SqlTableLikeSource?)ConvertInternal(merge.Source);
 						var on         = (SqlSearchCondition?)ConvertInternal(merge.On);
+						var output      = merge.Output != null ? (SqlOutputClause?)ConvertInternal(merge.Output) : null;
 						var operations = ConvertSafe(merge.Operations);
 
 						if (target     != null && !ReferenceEquals(merge.Target, target) ||
 							source     != null && !ReferenceEquals(merge.Source, source) ||
 							on         != null && !ReferenceEquals(merge.On, on)         ||
+							output     != null && !ReferenceEquals(merge.Output, output) ||
 							tag        != null && !ReferenceEquals(merge.Tag, tag)       ||
 							operations != null && !ReferenceEquals(merge.Operations, operations))
 						{
@@ -1018,7 +1020,8 @@ namespace LinqToDB.SqlQuery
 								on         ?? merge.On,
 								operations ?? merge.Operations)
 							{
-								Tag = tag ?? merge.Tag
+								Tag    = tag    ?? merge.Tag,
+								Output = output ?? merge.Output
 							};
 						}
 

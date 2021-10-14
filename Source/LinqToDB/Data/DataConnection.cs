@@ -1601,8 +1601,6 @@ namespace LinqToDB.Data
 		/// </summary>
 		public  List<string>  NextQueryHints => _nextQueryHints ??= new List<string>();
 		
-		private static readonly MemoryCache<(string baseSchemaId, string addedSchemaId)> _combinedSchemas = new (new ());
-
 		/// <summary>
 		/// Adds additional mapping schema to current connection.
 		/// </summary>
@@ -1611,15 +1609,8 @@ namespace LinqToDB.Data
 		/// <returns>Current connection object.</returns>
 		public DataConnection AddMappingSchema(MappingSchema mappingSchema)
 		{
-			MappingSchema = _combinedSchemas.GetOrCreate(
-				(MappingSchema.ConfigurationID, mappingSchema.ConfigurationID),
-				new { BaseSchema = MappingSchema, AddedSchema = mappingSchema },
-				static (entry, context) => 
-				{
-					entry.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
-					return new MappingSchema(context.AddedSchema, context.BaseSchema);
-				});
-			_id            = null;
+			MappingSchema = MappingSchema.CombineSchemas(MappingSchema, mappingSchema);
+			_id           = null;
 
 			return this;
 		}

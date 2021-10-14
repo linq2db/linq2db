@@ -55,6 +55,8 @@ namespace LinqToDB.SqlProvider
 			foreach (var operation in merge.Operations)
 				BuildMergeOperation(operation);
 
+			BuildOutputSubclause(merge.Output);
+
 			BuildMergeTerminator(merge);
 		}
 
