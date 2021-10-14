@@ -90,7 +90,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				foreach (var accessor in _parameters)
 				{
-					if (!accessor.Value.SqlParameter.Type.Equals(p.SqlParameter.Type))
+					if (!accessor.Value.SqlParameter.Type.SystemType.Equals(p.SqlParameter.Type.SystemType))
 						continue;
 
 					if (accessor.Key.EqualsTo(expr, OptimizationContext.GetSimpleEqualsToContext(true)))

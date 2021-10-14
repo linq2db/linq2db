@@ -287,7 +287,7 @@ namespace LinqToDB.DataProvider.Firebird
 							// insert or update keys used in merge source select query
 							if (visitor.Stack[i] is SqlSetExpression set
 								&& i == 2
-								&& visitor.Stack[i - 1] is SqlInsertClause
+								&& (visitor.Stack[i - 1] is SqlInsertClause || visitor.Stack[i - 1] is SqlUpdateClause)
 								&& visitor.Stack[i - 2] is SqlInsertOrUpdateStatement insertOrUpdate
 								&& insertOrUpdate.Update.Keys.Any(k => k.Expression == set.Expression))
 							{
