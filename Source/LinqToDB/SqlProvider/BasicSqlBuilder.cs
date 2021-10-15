@@ -156,7 +156,7 @@ namespace LinqToDB.SqlProvider
 
 						var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
 						sqlBuilder.BuildSql(commandNumber,
-							new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb, 
+							new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb,
 							optimizationContext, indent,
 							skipAlias);
 					}
@@ -529,6 +529,8 @@ namespace LinqToDB.SqlProvider
 			AppendIndent();
 			StringBuilder.Append("SELECT");
 
+			BuildSelectQueryExtensions(selectQuery);
+
 			if (selectQuery.Select.IsDistinct)
 				StringBuilder.Append(" DISTINCT");
 
@@ -536,6 +538,10 @@ namespace LinqToDB.SqlProvider
 
 			StringBuilder.AppendLine();
 			BuildColumns(selectQuery);
+		}
+
+		protected virtual void BuildSelectQueryExtensions(SelectQuery selectQuery)
+		{
 		}
 
 		protected virtual IEnumerable<SqlColumn> GetSelectedColumns(SelectQuery selectQuery)
@@ -789,7 +795,7 @@ namespace LinqToDB.SqlProvider
 
 				BuildOutputSubclause(statement, insertClause);
 
-				if (statement.QueryType == QueryType.InsertOrUpdate || 
+				if (statement.QueryType == QueryType.InsertOrUpdate ||
 					statement.QueryType == QueryType.MultiInsert ||
 					statement.EnsureQuery().From.Tables.Count == 0)
 				{
@@ -2089,7 +2095,7 @@ namespace LinqToDB.SqlProvider
 
 		protected void BuildIsDistinctPredicateFallback(SqlPredicate.IsDistinct expr)
 		{
-			// This is the fallback implementation of IS DISTINCT FROM 
+			// This is the fallback implementation of IS DISTINCT FROM
 			// for all providers that don't support the standard syntax
 			// nor have a proprietary alternative
 			expr.Expr1.ShouldCheckForNull();
@@ -2802,7 +2808,7 @@ namespace LinqToDB.SqlProvider
 		#endregion
 
 		#region BuildDataType
-		
+
 		/// <summary>
 		/// Appends an <see cref="SqlDataType"/>'s String to a provided <see cref="StringBuilder"/>
 		/// </summary>
@@ -3314,7 +3320,7 @@ namespace LinqToDB.SqlProvider
 						sb.Append(
 							$"-- value above truncated for logging, actual length is {binaryData.Length}");
 					}
-					else if (p.Value is string s && 
+					else if (p.Value is string s &&
 					         Configuration.MaxStringParameterLengthLogging >= 0 &&
 					         s.Length > Configuration.MaxStringParameterLengthLogging &&
 					         ValueToSqlConverter.CanConvert(typeof(string)))

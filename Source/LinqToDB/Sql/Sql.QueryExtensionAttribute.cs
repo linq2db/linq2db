@@ -12,16 +12,19 @@ namespace LinqToDB
 		[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true)]
 		public class QueryExtensionAttribute : Attribute
 		{
-			public QueryExtensionAttribute()
+			public QueryExtensionAttribute(QueryExtensionScope scope)
 			{
+				Scope = scope;
 			}
 
-			public QueryExtensionAttribute(string? configuration)
+			public QueryExtensionAttribute(string? configuration, QueryExtensionScope scope)
 			{
 				Configuration = configuration;
+				Scope         = scope;
 			}
 
-			public string? Configuration { get; }
+			public string?             Configuration { get; }
+			public QueryExtensionScope Scope         { get; }
 
 			public static QueryExtensionAttribute[] GetExtensionAttributes(Expression expression, MappingSchema mapping)
 			{

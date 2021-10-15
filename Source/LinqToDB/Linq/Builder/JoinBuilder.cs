@@ -18,7 +18,7 @@ namespace LinqToDB.Linq.Builder
 				return false;
 
 			// other overload for Join
-			if (!(methodCall.Arguments[2].Unwrap() is LambdaExpression lambda))
+			if (methodCall.Arguments[2].Unwrap() is not LambdaExpression lambda)
 				return false;
 
 			var body = lambda.Body.Unwrap();

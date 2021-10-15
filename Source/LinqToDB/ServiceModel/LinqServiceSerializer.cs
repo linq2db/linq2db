@@ -1589,7 +1589,7 @@ namespace LinqToDB.ServiceModel
 
 							obj = new SqlFunction(systemType, name, isAggregate, isPure, precedence, parameters)
 							{
-								CanBeNull = canBeNull, 
+								CanBeNull = canBeNull,
 								DoNotOptimize = doNotOptimize
 							};
 
@@ -1830,7 +1830,7 @@ namespace LinqToDB.ServiceModel
 							var trueValue  = Read<ISqlExpression>()!;
 							var falseValue = Read<ISqlExpression>()!;
 							var withNull   = ReadInt();
-							
+
 							obj = new SqlPredicate.IsTrue(expr1, trueValue, falseValue, withNull == 3 ? null : withNull == 1, isNot);
 
 							break;
@@ -2259,9 +2259,9 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.MultiInsertStatement :
 						{
-							var insertType   = (MultiInsertType)ReadInt();
-							var source       = Read<SqlTableLikeSource>()!;
-							var inserts      = ReadList<SqlConditionalInsertClause>()!;
+							var insertType = (MultiInsertType)ReadInt();
+							var source     = Read<SqlTableLikeSource>()!;
+							var inserts    = ReadList<SqlConditionalInsertClause>()!;
 
 							obj = _statement = new SqlMultiInsertStatement(insertType, source, inserts);
 

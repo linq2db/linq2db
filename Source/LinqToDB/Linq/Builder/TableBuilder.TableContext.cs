@@ -263,8 +263,8 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				return false;
-			}			
-			
+			}
+
 			bool HasDefaultConstructor(Type type)
 			{
 				var constructors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
@@ -1019,7 +1019,7 @@ namespace LinqToDB.Linq.Builder
 
 			#region ConvertToIndex
 
-			readonly Dictionary<ISqlExpression,SqlInfo> _indexes = new Dictionary<ISqlExpression,SqlInfo>();
+			readonly Dictionary<ISqlExpression,SqlInfo> _indexes = new();
 
 			protected virtual SqlInfo GetIndex(SqlInfo expr)
 			{

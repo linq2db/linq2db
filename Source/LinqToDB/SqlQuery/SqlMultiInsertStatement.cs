@@ -11,7 +11,7 @@ namespace LinqToDB.SqlQuery
 		public MultiInsertType                  InsertType { get; internal set; }
 
 		public SqlMultiInsertStatement(SqlTableLikeSource source)
-		{ 
+		{
 			Source = source;
 			Inserts = new List<SqlConditionalInsertClause>();
 		}
@@ -50,18 +50,18 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		public override bool IsParameterDependent 
-		{ 
-			get => Source.IsParameterDependent; 
-			set => Source.IsParameterDependent = value; 
+		public override bool IsParameterDependent
+		{
+			get => Source.IsParameterDependent;
+			set => Source.IsParameterDependent = value;
 		}
 
-		public override SelectQuery? SelectQuery 
-		{ 
-			get => null; 
+		public override SelectQuery? SelectQuery
+		{
+			get => null;
 			set => throw new InvalidOperationException();
 		}
-		
+
 		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
 		{
 			if (Source == table)

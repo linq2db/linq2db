@@ -68,7 +68,7 @@ namespace LinqToDB.Linq.Builder
 		SqlInfo[]          ConvertToIndex      (Expression? expression, int level, ConvertFlags flags);
 
 		/// <summary>
-		/// Returns information about expression according to <paramref name="requestFlag"/>. 
+		/// Returns information about expression according to <paramref name="requestFlag"/>.
 		/// </summary>
 		/// <param name="expression">Analyzed expression.</param>
 		/// <param name="level">Member level.</param>

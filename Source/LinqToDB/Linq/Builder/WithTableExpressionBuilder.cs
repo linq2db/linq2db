@@ -2,13 +2,17 @@
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Common;
+	using Common;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	class WithTableExpressionBuilder : MethodCallBuilder
 	{
-		private static readonly string[] MethodNames = { "With", "WithTableExpression" };
+		private static readonly string[] MethodNames =
+		{
+			nameof(LinqExtensions.With),
+			nameof(LinqExtensions.WithTableExpression)
+		};
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -26,8 +30,8 @@ namespace LinqToDB.Linq.Builder
 
 			switch (methodCall.Method.Name)
 			{
-				case "With"                : table.SqlTable.Name = $"{{0}} {{1}} WITH ({value})"; break;
-				case "WithTableExpression" : table.SqlTable.Name = value;                         break;
+				case nameof(LinqExtensions.With)                : table.SqlTable.Name = $"{{0}} {{1}} WITH ({value})"; break;
+				case nameof(LinqExtensions.WithTableExpression) : table.SqlTable.Name = value;                         break;
 			}
 
 			return sequence;

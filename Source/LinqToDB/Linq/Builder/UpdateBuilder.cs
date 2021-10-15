@@ -13,7 +13,7 @@ namespace LinqToDB.Linq.Builder
 
 	class UpdateBuilder : MethodCallBuilder
 	{
-		private static readonly string[] Methods = new []
+		private static readonly string[] Methods =
 		{
 			nameof(LinqExtensions.Update),
 			nameof(LinqExtensions.UpdateWithOutput),
