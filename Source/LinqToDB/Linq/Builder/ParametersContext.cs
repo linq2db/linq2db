@@ -237,7 +237,9 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (columnDescriptor != null && !(originalAccessor is BinaryExpression))
 					{
-						newExpr.DataType = columnDescriptor.GetDbDataType(true);
+						newExpr.DataType = columnDescriptor.GetDbDataType(true)
+							.WithSystemType(newExpr.ValueExpression.Type);
+
 						if (newExpr.ValueExpression.Type != columnDescriptor.MemberType)
 						{
 							newExpr.ValueExpression = newExpr.ValueExpression.UnwrapConvert()!;
