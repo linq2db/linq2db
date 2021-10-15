@@ -395,7 +395,7 @@ namespace LinqToDB.Linq.Builder
 										var assignment1 = (MemberAssignment)binding;
 										var assignment2 = (MemberAssignment)foundBinding;
 
-										if (!assignment1.Expression.EqualsTo(assignment2.Expression, Builder.GetSimpleEqualsToContext(false)) ||
+										if (!assignment1.Expression.EqualsTo(assignment2.Expression, Builder.OptimizationContext.GetSimpleEqualsToContext(false)) ||
 										    !(assignment1.Expression.NodeType == ExpressionType.MemberAccess || assignment1.Expression.NodeType == ExpressionType.Parameter))
 										{
 											needsRewrite = true;

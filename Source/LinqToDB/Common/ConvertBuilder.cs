@@ -604,42 +604,73 @@ namespace LinqToDB.Common
 			if (!type.IsEnum)
 				return null;
 
-			var fields =
-			(
-				from f in type.GetFields()
-				where (f.Attributes & EnumField) == EnumField
-				let attrs = mappingSchema.GetAttributes<MapValueAttribute>(type, f, a => a.Configuration)
-				select
-				(
-					from a in attrs
-					where a.Configuration == attrs[0].Configuration
-					orderby !a.IsDefault
-					select a
-				).ToList()
-			).ToList();
+			var allFieldsMapped      = true;
+			Type? valuesType         = null;
+			var allValuesHasSameType = true;
+			var hasNullValue         = false;
 
-			Type? defaultType = null;
-
-			if (fields.All(attrs => attrs.Count != 0))
+			foreach (var field in type.GetFields())
 			{
-				var attr = fields.FirstOrDefault(attrs => attrs[0].Value != null);
-
-				if (attr != null)
+				if ((field.Attributes & EnumField) == EnumField)
 				{
-					var valueType = attr[0].Value!.GetType();
+					var attrs = mappingSchema.GetAttributes<MapValueAttribute>(type, field, static a => a.Configuration);
 
-					if (fields.All(attrs => attrs[0].Value == null || attrs[0].Value!.GetType() == valueType))
-						defaultType = valueType;
+					if (attrs.Length == 0)
+						allFieldsMapped = false;
+					else
+					{
+						// we don't just take first attribute to not break previous implementation
+						// which prefered IsDefault=true value if many values specified
+						var isDefault = false;
+
+						// look for default value
+						foreach (var attr in attrs)
+						{
+							if (attr.IsDefault)
+							{
+								if (attr.Value != null)
+								{
+									if (valuesType == null)
+										valuesType = attr.Value.GetType();
+									else if (valuesType != attr.Value.GetType())
+										allValuesHasSameType = false;
+								}
+								else
+									hasNullValue = true;
+
+								isDefault = true;
+								break;
+							}
+						}
+
+						if (!isDefault)
+						{
+							var attr = attrs[0];
+							if (attr.Value != null)
+							{
+								if (valuesType == null)
+									valuesType = attr.Value.GetType();
+								else if (valuesType != attr.Value.GetType())
+									allValuesHasSameType = false;
+							}
+							else
+								hasNullValue = true;
+						}
+					}
 				}
 			}
 
-			if (defaultType == null)
+			Type defaultType;
+
+			if (allFieldsMapped && valuesType != null && allValuesHasSameType)
+				defaultType = valuesType;
+			else
 				defaultType =
 					   mappingSchema.GetDefaultFromEnumType(enumType)
 					?? mappingSchema.GetDefaultFromEnumType(typeof(Enum))
 					?? Enum.GetUnderlyingType(type);
 
-			if ((enumType.IsNullable() || fields.Any(attrs => attrs.Count != 0 && attrs[0].Value == null)) && !defaultType.IsClass && !defaultType.IsNullable())
+			if ((enumType.IsNullable() || hasNullValue) && defaultType.IsValueType && !defaultType.IsNullable())
 				defaultType = typeof(Nullable<>).MakeGenericType(defaultType);
 
 			return defaultType;

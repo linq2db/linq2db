@@ -1,0 +1,13 @@
+{
+  "solution": {
+    "path": "linq2db.sln",
+    "projects": [
+      "Source\\LinqToDB.Tools\\LinqToDB.Tools.csproj",
+      "Source\\LinqToDB\\LinqToDB.csproj",
+      "Tests\\Base\\Tests.Base.csproj",
+      "Tests\\Model\\Tests.Model.csproj",
+      "Tests\\Tests.Playground\\Tests.Playground.csproj",
+      "Tests\\VisualBasic\\Tests.VisualBasic.vbproj"
+    ]
+  }
+}

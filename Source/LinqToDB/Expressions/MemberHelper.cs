@@ -48,17 +48,14 @@ namespace LinqToDB.Expressions
 			if (expr is MethodCallExpression methodCall && methodCall.Method.IsSqlPropertyMethodEx())
 			{
 				// validate expression and get member name
-				var arg1 = methodCall.Arguments[0].NodeType == ExpressionType.Convert
-					? ((UnaryExpression)methodCall.Arguments[0]).Operand
-					: methodCall.Arguments[0];
-
-				if (arg1.NodeType != ExpressionType.Constant && arg1.NodeType != ExpressionType.Parameter)
-					throw new ArgumentException("Only simple, non-navigational, member names are supported in this context (e.g.: x => Sql.Property(x, \"SomeProperty\")).");
-
-				var memberName = (string)methodCall.Arguments[1].EvaluateExpression()!;
+				var objectExpr = methodCall.Arguments[0].UnwrapConvert();
+				var memberName = methodCall.Arguments[1].EvaluateExpression() as string
+#pragma warning disable CA2208 // Instantiate argument exceptions correctly
+					?? throw new ArgumentNullException("propertyName");
+#pragma warning restore CA2208 // Instantiate argument exceptions correctly
 
 				// check if member exists on type
-				var existingMember = TypeAccessor.GetAccessor(arg1.Type).Members.SingleOrDefault(m =>
+				var existingMember = TypeAccessor.GetAccessor(objectExpr.Type).Members.SingleOrDefault(m =>
 					m.Name == memberName &&
 					(m.MemberInfo.MemberType == MemberTypes.Property || m.MemberInfo.MemberType == MemberTypes.Field));
 
@@ -66,7 +63,7 @@ namespace LinqToDB.Expressions
 					return existingMember.MemberInfo;
 
 				// create dynamic column info
-				return new DynamicColumnInfo(arg1.Type, methodCall.Method.GetGenericArguments()[0], memberName);
+				return new DynamicColumnInfo(objectExpr.Type, methodCall.Method.GetGenericArguments()[0], memberName);
 			}
 
 			if (expr.NodeType == ExpressionType.ArrayLength)

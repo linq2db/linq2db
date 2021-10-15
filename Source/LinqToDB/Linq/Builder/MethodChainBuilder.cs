@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -107,7 +107,7 @@ namespace LinqToDB.Linq.Builder
 				else
 				{
 					expr = Expression.Block(
-						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(false, null!)), Expression.Call(ExpressionBuilder.DataReaderParam, Methods.ADONet.IsDBNull, Expression.Constant(0)), Expression.Constant(_methodName)),
+						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(false, null!)), Expression.Call(ExpressionBuilder.DataReaderParam, Methods.ADONet.IsDBNull, ExpressionInstances.Constant0), Expression.Constant(_methodName)),
 						Builder.BuildSql(_returnType, fieldIndex, sqlExpression));
 				}
 
@@ -143,7 +143,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				return requestFlag switch
 				{
-					RequestFor.Root       => new IsExpressionResult(Lambda != null && expression == Lambda.Parameters[0]),
+					RequestFor.Root       => IsExpressionResult.GetResult(Lambda != null && expression == Lambda.Parameters[0]),
 					RequestFor.Expression => IsExpressionResult.True,
 					_                     => IsExpressionResult.False,
 				};

@@ -84,7 +84,7 @@ namespace LinqToDB.Linq.Builder
 			new DisableGroupingGuardBuilder(),
 			new InlineParametersBuilder    (),
 			new HasUniqueKeyBuilder        (),
-			new MultiInsertBuilder		   (),
+			new MultiInsertBuilder         (),
 			new TagQueryBuilder            (),
 			new EnumerableBuilder          (),
 			new QueryExtensionBuilder      (),
@@ -102,11 +102,12 @@ namespace LinqToDB.Linq.Builder
 		readonly Query                             _query;
 		readonly List<ISequenceBuilder>            _builders = _sequenceBuilders;
 		private  bool                              _reorder;
-		readonly Dictionary<Expression,Expression> _expressionAccessors;
 		private  HashSet<Expression>?              _subQueryExpressions;
-		readonly ExpressionTreeOptimizationContext  _optimizationContext;
+		readonly ExpressionTreeOptimizationContext _optimizationContext;
+		readonly ParametersContext                 _parametersContext;
 
-		public readonly List<ParameterAccessor>    CurrentSqlParameters = new ();
+		public ExpressionTreeOptimizationContext OptimizationContext => _optimizationContext;
+		public ParametersContext                 ParametersContext   => _parametersContext;
 
 		public readonly List<ParameterExpression>  BlockVariables       = new ();
 		public readonly List<Expression>           BlockExpressions     = new ();
@@ -118,13 +119,12 @@ namespace LinqToDB.Linq.Builder
 		public ExpressionBuilder(
 			Query                             query,
 			ExpressionTreeOptimizationContext optimizationContext,
+			ParametersContext                 parametersContext,
 			IDataContext                      dataContext,
 			Expression                        expression,
 			ParameterExpression[]?            compiledParameters)
 		{
 			_query               = query;
-
-			_expressionAccessors = expression.GetExpressionAccessors(ExpressionParam);
 
 			CollectQueryDepended(expression);
 
@@ -133,6 +133,7 @@ namespace LinqToDB.Linq.Builder
 			OriginalExpression   = expression;
 
 			_optimizationContext = optimizationContext;
+			_parametersContext   = parametersContext;
 			Expression           = ConvertExpressionTree(expression);
 			_optimizationContext.ClearVisitedCache();
 
@@ -156,32 +157,7 @@ namespace LinqToDB.Linq.Builder
 		public static readonly ParameterExpression ParametersParam  = Expression.Parameter(typeof(object[]),     "ps");
 		public static readonly ParameterExpression ExpressionParam  = Expression.Parameter(typeof(Expression),   "expr");
 
-		private static ParameterExpression[] AccessorParameters = { ExpressionParam, DataContextParam, ParametersParam };
-
 		public MappingSchema MappingSchema => DataContext.MappingSchema;
-
-		private EqualsToVisitor.EqualsToInfo?  _equalsToContextFalse;
-		private EqualsToVisitor.EqualsToInfo?  _equalsToContextTrue;
-		internal EqualsToVisitor.EqualsToInfo GetSimpleEqualsToContext(bool compareConstantValues)
-		{
-			if (compareConstantValues)
-			{
-				if (_equalsToContextTrue == null)
-					_equalsToContextTrue = EqualsToVisitor.PrepareEqualsInfo(DataContext, compareConstantValues: compareConstantValues);
-				else
-					_equalsToContextTrue.Reset();
-				return _equalsToContextTrue;
-			}
-			else
-			{
-				if (_equalsToContextFalse == null)
-					_equalsToContextFalse = EqualsToVisitor.PrepareEqualsInfo(DataContext, compareConstantValues: compareConstantValues);
-				else
-					_equalsToContextFalse.Reset();
-				return _equalsToContextFalse;
-			}
-		}
-
 
 		#endregion
 
@@ -198,7 +174,7 @@ namespace LinqToDB.Linq.Builder
 					_sequenceBuilders = _sequenceBuilders.OrderByDescending(_ => _.BuildCounter).ToList();
 				}
 
-			_query.Init(sequence, CurrentSqlParameters);
+			_query.Init(sequence, _parametersContext.CurrentSqlParameters);
 
 			var param = Expression.Parameter(typeof(Query<T>), "info");
 
@@ -380,7 +356,7 @@ namespace LinqToDB.Linq.Builder
 									Expression.Convert(
 										Expression.ArrayIndex(
 											ParametersParam,
-											Expression.Constant(Array.IndexOf(compiledParameters, (ParameterExpression)expr))),
+											ExpressionInstances.Int32(idx)),
 										expr.Type);
 						}
 
@@ -411,7 +387,7 @@ namespace LinqToDB.Linq.Builder
 		private MethodInfo[]? _queryableMethods;
 		public  MethodInfo[]   QueryableMethods  => _queryableMethods  ??= typeof(Queryable). GetMethods();
 
-		readonly Dictionary<Expression, Expression> _optimizedExpressions = new ();
+		Dictionary<Expression, Expression>? _optimizedExpressions;
 
 		static void CollectLambdaParameters(Expression expression, HashSet<ParameterExpression> foundParameters)
 		{
@@ -424,7 +400,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression OptimizeExpression(Expression expression)
 		{
-			if (_optimizedExpressions.TryGetValue(expression, out var expr))
+			if (_optimizedExpressions != null && _optimizedExpressions.TryGetValue(expression, out var expr))
 				return expr;
 
 			expr = ExposeExpression(expression);
@@ -432,7 +408,7 @@ namespace LinqToDB.Linq.Builder
 			CollectLambdaParameters(expression, currentParameters);
 			expr = expr.Transform((builder: this, currentParameters), static (ctx, e) => ctx.builder.OptimizeExpressionImpl(ctx.currentParameters, e));
 
-			_optimizedExpressions[expression] = expr;
+			(_optimizedExpressions ??= new())[expression] = expr;
 
 			return expr;
 		}
@@ -708,9 +684,7 @@ namespace LinqToDB.Linq.Builder
 
 					dic.Add(exprs[i], ex);
 
-					if (_subQueryExpressions == null)
-						_subQueryExpressions = new HashSet<Expression>();
-					_subQueryExpressions.Add(ex);
+					(_subQueryExpressions ??= new()).Add(ex);
 				}
 
 				var newBody = lbody.Transform(dic, static (dic, ex) => dic.TryGetValue(ex, out var e) ? e : ex);
@@ -995,15 +969,26 @@ namespace LinqToDB.Linq.Builder
 			if (method.Arguments[method.Arguments.Count - 1].Unwrap().NodeType != ExpressionType.Lambda)
 				return method;
 
-			var types = method.Method.GetGenericMethodDefinition().GetGenericArguments()
-				.Zip(method.Method.GetGenericArguments(), (n, t) => new { n = n.Name, t })
-				.ToDictionary(_ => _.n, _ => _.t);
+			// TSource, TKey, TElement, TResult
+			var typeArgs = new Type?[4];
+			var args     = method.Method.GetGenericMethodDefinition().GetGenericArguments();
+			var argTypes = method.Method.GetGenericArguments();
+			for (var i = 0; i < args.Length; i++)
+			{
+				switch (args[i].Name)
+				{
+					case "TSource" : typeArgs[0] = argTypes[i]; break;
+					case "TKey"    : typeArgs[1] = argTypes[i]; break;
+					case "TElement": typeArgs[2] = argTypes[i]; break;
+					case "TResult" : typeArgs[3] = argTypes[i]; break;
+					default: throw new InvalidOperationException($"Unexpected GroupBy type parameter: {args[i].Name}");
+				}
+			}
 
 			var sourceExpression = OptimizeExpression(method.Arguments[0].Unwrap());
 			var keySelector      = (LambdaExpression)OptimizeExpression(method.Arguments[1].Unwrap());
-			var elementSelector  = types.ContainsKey("TElement") ? (LambdaExpression)OptimizeExpression(method.Arguments[2].Unwrap()) : null;
-			var resultSelector   = types.ContainsKey("TResult")  ?
-				(LambdaExpression)OptimizeExpression(method.Arguments[types.ContainsKey("TElement") ? 3 : 2].Unwrap()) : null;
+			var elementSelector  = typeArgs[2] != null ? (LambdaExpression)OptimizeExpression(method.Arguments[2].Unwrap())                     : null;
+			var resultSelector   = typeArgs[3] != null ? (LambdaExpression)OptimizeExpression(method.Arguments[typeArgs[2] != null ? 3 : 2].Unwrap()) : null;
 
 			var needSubQuery = null != (_isExpressionVisitor ??= FindVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.IsExpression(e))).Find(ConvertExpression(keySelector.Body.Unwrap()));
 
@@ -1011,10 +996,10 @@ namespace LinqToDB.Linq.Builder
 				return method;
 
 			var gtype  = typeof(GroupByHelper<,,,>).MakeGenericType(
-				types["TSource"],
-				types["TKey"],
-				types.ContainsKey("TElement") ? types["TElement"] : types["TSource"],
-				types.ContainsKey("TResult")  ? types["TResult"]  : types["TSource"]);
+				typeArgs[0]!,
+				typeArgs[1]!,
+				typeArgs[2] ?? typeArgs[0]!,
+				typeArgs[3] ?? typeArgs[0]!);
 
 			var helper =
 				//Expression.Lambda<Func<IGroupByHelper>>(
@@ -1137,14 +1122,12 @@ namespace LinqToDB.Linq.Builder
 			if (method.Arguments.Count != 2 || ((LambdaExpression)method.Arguments[1].Unwrap()).Parameters.Count != 1)
 				return method;
 
-			var types = method.Method.GetGenericMethodDefinition().GetGenericArguments()
-				.Zip(method.Method.GetGenericArguments(), (n, t) => new { n = n.Name, t })
-				.ToDictionary(_ => _.n, _ => _.t);
+			var args = method.Method.GetGenericArguments();
 
 			var sourceExpression = OptimizeExpression(method.Arguments[0].Unwrap());
 			var colSelector      = (LambdaExpression)OptimizeExpression(method.Arguments[1].Unwrap());
 
-			var gtype  = typeof(SelectManyHelper<,>).MakeGenericType(types["TSource"], types["TResult"]);
+			var gtype  = typeof(SelectManyHelper<,>).MakeGenericType(args[0], args[1]);
 			var helper =
 				//Expression.Lambda<Func<ISelectManyHelper>>(
 				//	Expression.Convert(Expression.New(gtype), typeof(ISelectManyHelper)))
@@ -1363,7 +1346,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var p    = Expression.Parameter(typeof(Expression), "exp");
 				var exas = expression.GetExpressionAccessors(p);
-				var expr = ReplaceParameter(exas, expression, forceConstant: false, null).ValueExpression;
+				var expr = _parametersContext.ReplaceParameter(exas, expression, forceConstant: false, null).ValueExpression;
 
 				var allowedParameters = new HashSet<ParameterExpression>(currentParameters) { p };
 
@@ -1399,13 +1382,13 @@ namespace LinqToDB.Linq.Builder
 				var l    = Expression.Lambda<Func<Expression,IQueryable>>(Expression.Convert(expr, typeof(IQueryable)), parameters);
 				var n    = _query.AddQueryableAccessors(expression, l);
 
-				_expressionAccessors.TryGetValue(expression, out var accessor);
+				_parametersContext._expressionAccessors.TryGetValue(expression, out var accessor);
 
 				var path =
 					Expression.Call(
 						Expression.Constant(_query),
 						MemberHelper.MethodOf<Query>(a => a.GetIQueryable(0, null!)),
-						Expression.Constant(n), accessor ?? Expression.Constant(null, typeof(Expression)));
+						ExpressionInstances.Int32(n), accessor ?? Expression.Constant(null, typeof(Expression)));
 
 				var qex = _query.GetIQueryable(n, expression);
 
@@ -1419,8 +1402,8 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				foreach (var a in qex.GetExpressionAccessors(path))
-					if (!_expressionAccessors.ContainsKey(a.Key))
-						_expressionAccessors.Add(a.Key, a.Value);
+					if (!_parametersContext._expressionAccessors.ContainsKey(a.Key))
+						_parametersContext._expressionAccessors.Add(a.Key, a.Value);
 
 				return qex;
 			}
@@ -1562,7 +1545,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 
-		Dictionary<Expression, Expression> _rootExpressions = new ();
+		Dictionary<Expression, Expression>? _rootExpressions;
 
 		[return: NotNullIfNotNull("expr")]
 		internal Expression? GetRootObject(Expression? expr)
@@ -1570,11 +1553,11 @@ namespace LinqToDB.Linq.Builder
 			if (expr == null)
 				return null;
 
-			if (_rootExpressions.TryGetValue(expr, out var root))
+			if (_rootExpressions != null && _rootExpressions.TryGetValue(expr, out var root))
 				return root;
 
 			root = InternalExtensions.GetRootObject(expr, MappingSchema);
-			_rootExpressions.Add(expr, root);
+			(_rootExpressions ??= new()).Add(expr, root);
 			return root;
 		}
 

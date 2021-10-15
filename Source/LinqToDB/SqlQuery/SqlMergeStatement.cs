@@ -34,21 +34,16 @@ namespace LinqToDB.SqlQuery
 				Operations.Add(operation);
 		}
 
-		public string?                        Hint       { get; internal set; }
+		public string?                       Hint       { get; internal set; }
+		public SqlTableSource                Target     { get; }
+		public SqlTableLikeSource            Source     { get; internal set; } = null!;
+		public SqlSearchCondition            On         { get; }               = new();
+		public List<SqlMergeOperationClause> Operations { get; }               = new();
+		public SqlOutputClause?              Output     { get; set; }
 
-		public SqlTableSource                 Target     { get; }
-
-		public SqlTableLikeSource             Source     { get; internal set; } = null!;
-
-		public SqlSearchCondition             On         { get; }               = new SqlSearchCondition();
-
-		public List<SqlMergeOperationClause>  Operations { get; }               = new List<SqlMergeOperationClause>();
-
-		public bool                           HasIdentityInsert             => Operations.Any(o => o.OperationType == MergeOperationType.Insert && o.Items.Any(item => item.Column is SqlField field && field.IsIdentity));
-
-		public override QueryType             QueryType                     => QueryType.Merge;
-
-		public override QueryElementType      ElementType                   => QueryElementType.MergeStatement;
+		public bool                          HasIdentityInsert => Operations.Any(o => o.OperationType == MergeOperationType.Insert && o.Items.Any(item => item.Column is SqlField field && field.IsIdentity));
+		public override QueryType            QueryType         => QueryType.Merge;
+		public override QueryElementType     ElementType       => QueryElementType.MergeStatement;
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{

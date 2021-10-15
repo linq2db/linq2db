@@ -735,6 +735,10 @@ namespace LinqToDB.SqlProvider
 		{
 		}
 
+		protected virtual void BuildOutputSubclause(SqlOutputClause? output)
+		{
+		}
+
 		protected virtual void BuildReturningSubclause(SqlStatement statement)
 		{
 		}

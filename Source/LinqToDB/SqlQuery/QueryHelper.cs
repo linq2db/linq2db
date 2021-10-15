@@ -1127,8 +1127,8 @@ namespace LinqToDB.SqlQuery
 						}
 
 						// correct mapping
-						visitor.VisitedElements[prevColumn] = newColumn;
-						visitor.VisitedElements[query.Select.Columns[index]] = newColumn;
+						visitor.AddVisited(prevColumn, newColumn);
+						visitor.AddVisited(query.Select.Columns[index], newColumn);
 					}
 
 					visitor.Context.OnWrap(queries);
@@ -1143,7 +1143,7 @@ namespace LinqToDB.SqlQuery
 					var toMap = levelTables.SelectMany(t => t.Fields);
 
 					foreach (var field in toMap)
-						visitor.VisitedElements.Remove(field);
+						visitor.RemoveVisited(field);
 
 					return resultQuery;
 				} 
