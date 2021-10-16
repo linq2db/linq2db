@@ -682,7 +682,7 @@ namespace LinqToDB.SqlQuery
 				var newOrderItems = new SqlOrderByItem[select.Select.OrderBy.Items.Count];
 				for (var i = 0; i < newOrderItems.Length; i++)
 				{
-					var oi = newOrderItems[i];
+					var oi = select.Select.OrderBy.Items[i];
 					newOrderItems[i] = !nonProjecting.Contains(oi.Expression)
 							? oi
 							: new SqlOrderByItem(

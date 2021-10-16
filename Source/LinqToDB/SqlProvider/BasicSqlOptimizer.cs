@@ -3215,39 +3215,35 @@ namespace LinqToDB.SqlProvider
 		{
 			if (func.Name == "CASE")
 			{
-				var hasBooleanParam = false;
+				ISqlExpression[]? parameters = null;
 				for (var i = 0; i < func.Parameters.Length; i++)
 				{
 					var p = func.Parameters[i];
 					if (IsBooleanParameter(p, func.Parameters.Length, i))
 					{
-						hasBooleanParam = true;
-						break;
+						if (parameters == null)
+						{
+							parameters = new ISqlExpression[func.Parameters.Length];
+							for (var j = 0; j < i; j++)
+								parameters[j] = func.Parameters[j];
+						}
+						parameters[i] = new SqlFunction(typeof(bool), "CASE", p, new SqlValue(true), new SqlValue(false))
+						{
+							CanBeNull     = false,
+							DoNotOptimize = true
+						};
 					}
+					else if (parameters != null)
+						parameters[i] = p;
 				}
 
-				if (hasBooleanParam)
-				{
-					var parameters = new ISqlExpression[func.Parameters.Length];
-					for (var i = 0; i < parameters.Length; i++)
-					{
-						var p = parameters[i];
-						parameters[i] = IsBooleanParameter(p, func.Parameters.Length, i) ?
-								new SqlFunction(typeof(bool), "CASE", p, new SqlValue(true), new SqlValue(false))
-								{
-									CanBeNull = false,
-									DoNotOptimize = true
-								} :
-								p;
-					}
-
+				if (parameters != null)
 					return new SqlFunction(
 						func.SystemType,
 						func.Name,
 						false,
 						func.Precedence,
 						parameters);
-				}
 			}
 
 			return func;
