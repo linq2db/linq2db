@@ -24,7 +24,7 @@ namespace LinqToDB.Expressions
 			_visited = null;
 		}
 
-		private void Path<T>(IEnumerable<T> source, MethodInfo property, Action<T> func)
+		private void Path<T>(IEnumerable<T> source, PropertyInfo property, Action<T> func)
 			where T : class
 		{
 			var prop = Expression.Property(_path, property);
@@ -36,7 +36,7 @@ namespace LinqToDB.Expressions
 			}
 		}
 
-		private void Path<T>(IEnumerable<T> source, MethodInfo property)
+		private void Path<T>(IEnumerable<T> source, PropertyInfo property)
 			where T : Expression
 		{
 			var prop = Expression.Property(_path, property);
@@ -48,7 +48,7 @@ namespace LinqToDB.Expressions
 			}
 		}
 
-		private void Path(Expression expr, MethodInfo property)
+		private void Path(Expression expr, PropertyInfo property)
 		{
 			_path = Expression.Property(_path, property);
 			Path(expr);
