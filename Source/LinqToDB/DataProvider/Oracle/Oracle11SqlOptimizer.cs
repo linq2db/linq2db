@@ -226,8 +226,10 @@ namespace LinqToDB.DataProvider.Oracle
 		/// <returns>The same <paramref name="statement"/> or modified statement when optimization has been performed.</returns>
 		protected SqlStatement ReplaceTakeSkipWithRowNum(SqlStatement statement, bool onlySubqueries)
 		{
-			return QueryHelper.WrapQuery(statement,
-				(query, _) =>
+			return QueryHelper.WrapQuery(
+				(object?)null,
+				statement,
+				static (_, query, _) =>
 				{
 					if (query.Select.TakeValue == null && query.Select.SkipValue == null)
 						return 0;
@@ -244,8 +246,8 @@ namespace LinqToDB.DataProvider.Oracle
 					}
 						
 					return 1;
-				}
-				, queries =>
+				},
+				static (_, queries) =>
 				{
 					var query = queries[queries.Count - 1];
 					var processingQuery = queries[queries.Count - 2];

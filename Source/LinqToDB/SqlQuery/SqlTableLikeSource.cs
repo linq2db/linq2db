@@ -42,10 +42,10 @@ namespace LinqToDB.SqlQuery
 		public SelectQuery?     SourceQuery      { get; internal set; }
 		public ISqlTableSource  Source => (ISqlTableSource?)SourceQuery ?? SourceEnumerable!;
 
-		public void WalkQueries(Func<SelectQuery, SelectQuery> func)
+		public void WalkQueries<TContext>(TContext context, Func<TContext, SelectQuery, SelectQuery> func)
 		{
 			if (SourceQuery != null)
-				SourceQuery = func(SourceQuery);
+				SourceQuery = func(context, SourceQuery);
 		}
 
 		public bool IsParameterDependent

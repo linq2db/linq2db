@@ -76,7 +76,7 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		public override void WalkQueries(Func<SelectQuery, SelectQuery> func)
-			=> Source.WalkQueries(func);
+		public override void WalkQueries<TContext>(TContext context, Func<TContext, SelectQuery, SelectQuery> func)
+			=> Source.WalkQueries(context, func);
 	}
 }
