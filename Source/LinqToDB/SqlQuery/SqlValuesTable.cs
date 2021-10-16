@@ -226,20 +226,14 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			if (Rows != null)
-			{
 				foreach (var row in Rows)
-				{
 					for (var i = 0; i < row.Length; i++)
-					{
-						row[i] = func(row[i]);
-					}
-				}
-			}
+						row[i] = func(context, row[i]);
 
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion
