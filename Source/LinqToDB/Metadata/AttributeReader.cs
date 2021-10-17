@@ -43,7 +43,18 @@ namespace LinqToDB.Metadata
 						}
 					}
 
-					return (T[])attrs;
+					if (attrs.Length == 0)
+						return Array<T>.Empty;
+
+					// doesn't make sense, but:
+					// in some cases GetCustomAttributes returns untyped array (object[])
+					if (attrs is not T[] typedArr)
+					{
+						typedArr = new T[attrs.Length];
+						Array.Copy(attrs, typedArr, typedArr.Length);
+					}
+
+					return typedArr;
 				});
 		}
 
