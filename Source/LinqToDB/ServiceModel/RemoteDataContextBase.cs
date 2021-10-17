@@ -143,7 +143,7 @@ namespace LinqToDB.ServiceModel
 			var dataType   = reader.GetFieldType(idx);
 			var methodInfo = GetReaderMethodInfo(dataType);
 
-			Expression ex = Expression.Call(readerExpression, methodInfo, Expression.Constant(idx));
+			Expression ex = Expression.Call(readerExpression, methodInfo, ExpressionInstances.Int32Array(idx));
 
 			if (ex.Type != dataType)
 				ex = Expression.Convert(ex, dataType);
