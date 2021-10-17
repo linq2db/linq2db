@@ -130,11 +130,8 @@ namespace LinqToDB.Mapping
 			if (SequenceName != null)
 				IsIdentity = true;
 
-			if (columnAttribute != null)
-			{
-				SkipOnInsert = columnAttribute.HasSkipOnInsert() ? columnAttribute.SkipOnInsert : IsIdentity;
-				SkipOnUpdate = columnAttribute.HasSkipOnUpdate() ? columnAttribute.SkipOnUpdate : IsIdentity;
-			}
+			SkipOnInsert = columnAttribute?.HasSkipOnInsert() == true ? columnAttribute.SkipOnInsert : IsIdentity;
+			SkipOnUpdate = columnAttribute?.HasSkipOnUpdate() == true ? columnAttribute.SkipOnUpdate : IsIdentity;
 
 			if (defaultCanBeNull && IsIdentity)
 				CanBeNull = false;
