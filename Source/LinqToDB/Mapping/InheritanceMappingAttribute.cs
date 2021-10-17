@@ -13,7 +13,7 @@ namespace LinqToDB.Mapping
 	/// for a list of supported types.
 	/// </remarks>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple=true)]
-	public class InheritanceMappingAttribute : Attribute
+	public class InheritanceMappingAttribute : Attribute, IConfigurationProvider
 	{
 		/// <summary>
 		/// Gets or sets mapping schema configuration name, for which this attribute should be taken into account.

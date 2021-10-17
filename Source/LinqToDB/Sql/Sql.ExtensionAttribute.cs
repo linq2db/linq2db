@@ -485,8 +485,8 @@ namespace LinqToDB
 				}
 
 				var attributes =
-						mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedType!, memberInfo,
-							static a => a.Configuration, inherit: true, exactForConfiguration: true);
+						mapping.GetAttributesNew<ExtensionAttribute>(memberInfo.ReflectedType!, memberInfo,
+							inherit: true, exactForConfiguration: true);
 
 				if (attributes.Length == 0)
 				{

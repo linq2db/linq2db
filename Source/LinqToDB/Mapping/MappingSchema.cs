@@ -916,6 +916,11 @@ namespace LinqToDB.Mapping
 			}
 			else
 				_metadataReaders = Array<IMetadataReader>.Empty;
+
+			_typeAttributes.Clear();
+			_memberAttributes.Clear();
+			_typeAttributesByConfiguration.Clear();
+			_memberAttributesByConfiguration.Clear();
 		}
 
 #if NETFRAMEWORK
@@ -986,6 +991,9 @@ namespace LinqToDB.Mapping
 			}
 		}
 
+		private readonly ConcurrentDictionary<(Type type, Type attribute, bool inherit), Attribute[]>                        _typeAttributes = new ();
+		private readonly ConcurrentDictionary<(Type type, Type attribute, MemberInfo memberInfo, bool inherit), Attribute[]> _memberAttributes = new ();
+
 		/// <summary>
 		/// Gets attributes of specified type, associated with specified type.
 		/// </summary>
@@ -998,69 +1006,101 @@ namespace LinqToDB.Mapping
 		{
 			if (MetadataReaders.Length == 0)
 				return Array<T>.Empty;
-			if (MetadataReaders.Length == 1)
-				return MetadataReaders[0].GetAttributes<T>(type, inherit);
 
-			var length = 0;
-			var attrs = new T[MetadataReaders.Length][];
-
-			for (var i = 0; i < MetadataReaders.Length; i++)
-			{
-				attrs[i] = MetadataReaders[i].GetAttributes<T>(type, inherit);
-				length += attrs[i].Length;
-			}
-
-			var attributes = new T[length];
-			length = 0;
-			for (var i = 0; i < attrs.Length; i++)
-			{
-				if (attrs[i].Length > 0)
+			return (T[])_typeAttributes.GetOrAdd(
+				(type, typeof(T), inherit),
+#if !CDICTIONARY_ARG
+				key =>
 				{
-					Array.Copy(attrs[i], 0, attributes, length, attrs[i].Length);
-					length += attrs[i].Length;
+					var ms = this;
+#else
+				static (key, ms) =>
+				{
+#endif
+					if (ms.MetadataReaders.Length == 1)
+						return ms.MetadataReaders[0].GetAttributes<T>(key.type, key.inherit);
+
+					var length = 0;
+					var attrs = new T[ms.MetadataReaders.Length][];
+
+					for (var i = 0; i < ms.MetadataReaders.Length; i++)
+					{
+						attrs[i] = ms.MetadataReaders[i].GetAttributes<T>(key.type, key.inherit);
+						length += attrs[i].Length;
+					}
+
+					var attributes = new T[length];
+					length = 0;
+					for (var i = 0; i < attrs.Length; i++)
+					{
+						if (attrs[i].Length > 0)
+						{
+							Array.Copy(attrs[i], 0, attributes, length, attrs[i].Length);
+							length += attrs[i].Length;
+						}
+					}
+
+					return attributes;
 				}
+#if CDICTIONARY_ARG
+				, this
+#endif
+				);
 			}
 
-			return attributes;
-		}
-
-		/// <summary>
-		/// Gets attributes of specified type, associated with specified type member.
-		/// </summary>
-		/// <typeparam name="T">Attribute type.</typeparam>
-		/// <param name="type">Member's owner type.</param>
-		/// <param name="memberInfo">Attributes owner member.</param>
-		/// <param name="inherit">If <c>true</c> - include inherited attributes.</param>
-		/// <returns>Attributes of specified type.</returns>
-		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit = true)
+			/// <summary>
+			/// Gets attributes of specified type, associated with specified type member.
+			/// </summary>
+			/// <typeparam name="T">Attribute type.</typeparam>
+			/// <param name="type">Member's owner type.</param>
+			/// <param name="memberInfo">Attributes owner member.</param>
+			/// <param name="inherit">If <c>true</c> - include inherited attributes.</param>
+			/// <returns>Attributes of specified type.</returns>
+			public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute
 		{
 			if (MetadataReaders.Length == 0)
 				return Array<T>.Empty;
-			if (MetadataReaders.Length == 1)
-				return MetadataReaders[0].GetAttributes<T>(type, memberInfo, inherit);
 
-			var attrs = new T[MetadataReaders.Length][];
-			var length = 0;
-
-			for (var i = 0; i < MetadataReaders.Length; i++)
-			{
-				attrs[i] = MetadataReaders[i].GetAttributes<T>(type, memberInfo, inherit);
-				length += attrs[i].Length;
-			}
-
-			var attributes = new T[length];
-			length = 0;
-			for (var i = 0; i < attrs.Length; i++)
-			{
-				if (attrs[i].Length > 0)
+			return (T[])_memberAttributes.GetOrAdd(
+				(type, typeof(T), memberInfo, inherit),
+#if !CDICTIONARY_ARG
+				key =>
 				{
-					Array.Copy(attrs[i], 0, attributes, length, attrs[i].Length);
-					length += attrs[i].Length;
-				}
-			}
+					var ms = this;
+#else
+				static (key, ms) =>
+				{
+#endif
+					if (ms.MetadataReaders.Length == 1)
+						return ms.MetadataReaders[0].GetAttributes<T>(key.type, key.memberInfo, key.inherit);
 
-			return attributes;
+					var attrs = new T[ms.MetadataReaders.Length][];
+					var length = 0;
+
+					for (var i = 0; i < ms.MetadataReaders.Length; i++)
+					{
+						attrs[i] = ms.MetadataReaders[i].GetAttributes<T>(key.type, key.memberInfo, key.inherit);
+						length += attrs[i].Length;
+					}
+
+					var attributes = new T[length];
+					length = 0;
+					for (var i = 0; i < attrs.Length; i++)
+					{
+						if (attrs[i].Length > 0)
+						{
+							Array.Copy(attrs[i], 0, attributes, length, attrs[i].Length);
+							length += attrs[i].Length;
+						}
+					}
+
+					return attributes;
+				}
+#if CDICTIONARY_ARG
+				, this
+#endif
+				);
 		}
 
 		/// <summary>
@@ -1092,6 +1132,7 @@ namespace LinqToDB.Mapping
 			return attrs.Length == 0 ? null : attrs[0];
 		}
 
+		// TODO: v4: remove
 		/// <summary>
 		/// Gets attributes of specified type, associated with specified type.
 		/// Attributes filtered by schema's configuration names (see  <see cref="ConfigurationList"/>).
@@ -1125,6 +1166,57 @@ namespace LinqToDB.Mapping
 			return list.ToArray();
 		}
 
+		// TODO: v4
+		// methods made internal as I'm not happy with new method name
+		// we can remove old methods with callback in v4 and rename those methods to GetAttributes
+		/// <summary>
+		/// Gets attributes of specified type, associated with specified type.
+		/// Attributes filtered by schema's configuration names (see  <see cref="ConfigurationList"/>).
+		/// </summary>
+		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <param name="type">Attributes owner type.</param>
+		/// <param name="inherit">If <c>true</c> - include inherited attributes.</param>
+		/// <param name="exactForConfiguration">If <c>true</c> - only associated to configuration attributes will be returned.</param>
+		/// <returns>Attributes of specified type.</returns>
+		internal T[] GetAttributesNew<T>(Type type, bool inherit = true, bool exactForConfiguration = false)
+			where T : Attribute, IConfigurationProvider
+		{
+			return (T[])_typeAttributesByConfiguration.GetOrAdd(
+				(type, typeof(T), inherit, exactForConfiguration),
+#if !CDICTIONARY_ARG
+				key =>
+				{
+					var ms = this;
+#else
+				static (key, ms) =>
+				{
+#endif
+					var list  = new List<T>();
+					var attrs = ms.GetAttributes<T>(key.type, key.inherit);
+
+					foreach (var c in ms.ConfigurationList)
+					{
+						foreach (var a in attrs)
+							if (a.Configuration == c)
+								list.Add(a);
+						if (key.exactForConfiguration && list.Count > 0)
+							return list.ToArray();
+					}
+
+					foreach (var attribute in attrs)
+						if (string.IsNullOrEmpty(attribute.Configuration))
+							list.Add(attribute);
+
+					return list.ToArray();
+				}
+#if CDICTIONARY_ARG
+				, this
+#endif
+				);
+
+		}
+
+		// TODO: v4: remove
 		/// <summary>
 		/// Gets attributes of specified type, associated with specified type member.
 		/// Attributes filtered by schema's configuration names (see  <see cref="ConfigurationList"/>).
@@ -1159,6 +1251,61 @@ namespace LinqToDB.Mapping
 			return list.ToArray();
 		}
 
+		private readonly ConcurrentDictionary<(Type type, Type attribute, bool inherit, bool exactForConfiguration), Attribute[]>                        _typeAttributesByConfiguration   = new ();
+		private readonly ConcurrentDictionary<(Type type, Type attribute, MemberInfo memberInfo, bool inherit, bool exactForConfiguration), Attribute[]> _memberAttributesByConfiguration = new ();
+
+		// TODO: v4
+		// methods made internal as I'm not happy with new method name
+		// we can remove old methods with callback in v4 and rename those methods to GetAttributes
+		/// <summary>
+		/// Gets attributes of specified type, associated with specified type member.
+		/// Attributes filtered by schema's configuration names (see  <see cref="ConfigurationList"/>).
+		/// Requires that attribute implement <see cref="IConfigurationProvider"/> interface.
+		/// </summary>
+		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <param name="type">Member's owner type.</param>
+		/// <param name="memberInfo">Attributes owner member.</param>
+		/// <param name="inherit">If <c>true</c> - include inherited attributes.</param>
+		/// <param name="exactForConfiguration">If <c>true</c> - only associated to configuration attributes will be returned.</param>
+		/// <returns>Attributes of specified type.</returns>
+		internal T[] GetAttributesNew<T>(Type type, MemberInfo memberInfo, bool inherit = true, bool exactForConfiguration = false)
+			where T : Attribute, IConfigurationProvider
+		{
+			return (T[])_memberAttributesByConfiguration.GetOrAdd(
+				(type, typeof(T), memberInfo, inherit, exactForConfiguration),
+#if !CDICTIONARY_ARG
+				key =>
+				{
+					var ms = this;
+#else
+				static (key, ms) =>
+				{
+#endif
+					var list  = new List<T>();
+					var attrs = ms.GetAttributes<T>(key.type, key.memberInfo, key.inherit);
+
+					foreach (var c in ms.ConfigurationList)
+					{
+						foreach (var a in attrs)
+							if (a.Configuration == c)
+								list.Add(a);
+						if (key.exactForConfiguration && list.Count > 0)
+							return list.ToArray();
+					}
+
+					foreach (var attribute in attrs)
+						if (string.IsNullOrEmpty(attribute.Configuration))
+							list.Add(attribute);
+
+					return list.ToArray();
+				}
+#if CDICTIONARY_ARG
+				, this
+#endif
+				);
+		}
+
+		// TODO: v4: remove
 		/// <summary>
 		/// Gets attribute of specified type, associated with specified type.
 		/// Attributes filtered by schema's configuration names (see  <see cref="ConfigurationList"/>).
@@ -1175,6 +1322,41 @@ namespace LinqToDB.Mapping
 			return attrs.Length == 0 ? null : attrs[0];
 		}
 
+		// TODO: v4: make public and rename
+		/// <summary>
+		/// Gets attribute of specified type, associated with specified type.
+		/// Attributes filtered by schema's configuration names (see  <see cref="ConfigurationList"/>).
+		/// </summary>
+		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <param name="type">Attribute owner type.</param>
+		/// <param name="inherit">If <c>true</c> - include inherited attribute.</param>
+		/// <returns>First found attribute of specified type or <c>null</c>, if no attributes found.</returns>
+		internal T? GetAttributeNew<T>(Type type, bool inherit = true)
+			where T : Attribute, IConfigurationProvider
+		{
+			var attrs = GetAttributesNew<T>(type, inherit);
+			return attrs.Length == 0 ? null : attrs[0];
+		}
+
+		// TODO: v4: make public and rename
+		/// <summary>
+		/// Gets attribute of specified type, associated with specified type member.
+		/// Attributes filtered by schema's configuration names (see  <see cref="ConfigurationList"/>).
+		/// Requires that attribute implement <see cref="IConfigurationProvider"/> interface.
+		/// </summary>
+		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <param name="type">Member's owner type.</param>
+		/// <param name="memberInfo">Attribute owner member.</param>
+		/// <param name="inherit">If <c>true</c> - include inherited attribute.</param>
+		/// <returns>First found attribute of specified type or <c>null</c>, if no attributes found.</returns>
+		internal T? GetAttributeNew<T>(Type type, MemberInfo memberInfo, bool inherit = true)
+			where T : Attribute, IConfigurationProvider
+		{
+			var attrs = GetAttributesNew<T>(type, memberInfo, inherit);
+			return attrs.Length == 0 ? null : attrs[0];
+		}
+
+		// TODO: v4: remove
 		/// <summary>
 		/// Gets attribute of specified type, associated with specified type member.
 		/// Attributes filtered by schema's configuration names (see  <see cref="ConfigurationList"/>).
@@ -1185,7 +1367,7 @@ namespace LinqToDB.Mapping
 		/// <param name="configGetter">Attribute configuration name provider.</param>
 		/// <param name="inherit">If <c>true</c> - include inherited attribute.</param>
 		/// <returns>First found attribute of specified type or <c>null</c>, if no attributes found.</returns>
-		public T? GetAttribute<T>(Type type, MemberInfo memberInfo, Func<T,string?> configGetter, bool inherit = true)
+		public T? GetAttribute<T>(Type type, MemberInfo memberInfo, Func<T, string?> configGetter, bool inherit = true)
 			where T : Attribute
 		{
 			var attrs = GetAttributes(type, memberInfo, configGetter, inherit);
@@ -1220,9 +1402,9 @@ namespace LinqToDB.Mapping
 			return new FluentMappingBuilder(this);
 		}
 
-		#endregion
+#endregion
 
-		#region Configuration
+#region Configuration
 
 		private string? _configurationID;
 		/// <summary>
@@ -1257,9 +1439,9 @@ namespace LinqToDB.Mapping
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region DefaultMappingSchema
+#region DefaultMappingSchema
 
 		internal MappingSchema(MappingSchemaInfo mappingSchemaInfo)
 		{
@@ -1327,9 +1509,9 @@ namespace LinqToDB.Mapping
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region Scalar Types
+#region Scalar Types
 
 		/// <summary>
 		/// Returns <c>true</c>, if provided type mapped to scalar database type in current schema.
@@ -1345,7 +1527,7 @@ namespace LinqToDB.Mapping
 					return o.Value;
 			}
 
-			var attr = GetAttribute<ScalarTypeAttribute>(type, static a => a.Configuration);
+			var attr = GetAttributeNew<ScalarTypeAttribute>(type);
 			var ret  = false;
 
 			if (attr != null)
@@ -1430,9 +1612,9 @@ namespace LinqToDB.Mapping
 			SetDataType(type, dataType);
 		}
 
-		#endregion
+#endregion
 
-		#region DataTypes
+#region DataTypes
 
 		/// <summary>
 		/// Returns database type mapping information for specified type.
@@ -1491,7 +1673,7 @@ namespace LinqToDB.Mapping
 
 				foreach (var f in underlyingType.GetFields())
 					if ((f.Attributes & EnumField) == EnumField)
-						attrs.AddRange(GetAttributes<MapValueAttribute>(underlyingType, f, static a => a.Configuration));
+						attrs.AddRange(GetAttributesNew<MapValueAttribute>(underlyingType, f));
 
 				if (attrs.Count == 0)
 				{
@@ -1552,9 +1734,9 @@ namespace LinqToDB.Mapping
 		}
 
 
-		#endregion
+#endregion
 
-		#region GetMapValues
+#region GetMapValues
 
 		ConcurrentDictionary<Type,MapValue[]?>? _mapValues;
 
@@ -1582,7 +1764,7 @@ namespace LinqToDB.Mapping
 				foreach (var f in underlyingType.GetFields())
 					if ((f.Attributes & EnumField) == EnumField)
 					{
-						var attrs = GetAttributes<MapValueAttribute>(underlyingType, f, static a => a.Configuration);
+						var attrs = GetAttributesNew<MapValueAttribute>(underlyingType, f);
 						fields.Add(new MapValue(Enum.Parse(underlyingType, f.Name, false), attrs));
 					}
 
@@ -1595,9 +1777,9 @@ namespace LinqToDB.Mapping
 			return mapValues;
 		}
 
-		#endregion
+#endregion
 
-		#region Options
+#region Options
 
 		/// <summary>
 		/// Gets or sets column name comparison rules for comparison of column names in mapping with column name,
@@ -1622,9 +1804,9 @@ namespace LinqToDB.Mapping
 			set => Schemas[0].ColumnNameComparer = value;
 		}
 
-		#endregion
+#endregion
 
-		#region EntityDescriptor
+#region EntityDescriptor
 
 		/// <summary>
 		/// Gets or sets action, called when the EntityDescriptor is created.
@@ -1679,9 +1861,9 @@ namespace LinqToDB.Mapping
 			EntityDescriptorsCache.Remove((type, ConfigurationID));
 		}
 
-		#endregion
+#endregion
 
-		#region Enum
+#region Enum
 
 		/// <summary>
 		/// Returns type, to which provided enumeration type is mapped or <c>null</c>, if type is not configured.
@@ -1710,7 +1892,7 @@ namespace LinqToDB.Mapping
 			Schemas[0].SetDefaultFromEnumType(enumType, defaultFromType);
 		}
 
-		#endregion
+#endregion
 
 		internal IEnumerable<T> SortByConfiguration<T>(Func<T, string?> configGetter, IEnumerable<T> values)
 		{

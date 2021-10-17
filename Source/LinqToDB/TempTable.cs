@@ -463,47 +463,59 @@ namespace LinqToDB
 			var ed   = _table.DataContext.MappingSchema.GetEntityDescriptor(type);
 			var p    = Expression.Parameter(type, "t");
 
-			return _setterDic.GetOrAdd(type, t =>
-			{
-				if (t.IsAnonymous())
+			return _setterDic.GetOrAdd(
+				type,
+#if !CDICTIONARY_ARG
+				t =>
 				{
-					var nctor = (NewExpression?)items.Expression.Find(t, static (t, e) => e.NodeType == ExpressionType.New && e.Type == t);
-
-					MemberInfo[]    members;
-					ConstructorInfo ctor;
-
-					if (nctor == null)
+					var ctx = (items, p, ed);
+#else
+				static (t, ctx) =>
+				{
+#endif
+					if (t.IsAnonymous())
 					{
-						ctor    = t.GetConstructors().Single();
-						members = t.GetPublicInstanceValueMembers();
-					}
-					else
-					{
-						ctor    = nctor.Constructor;
-						members = nctor.Members
-							.Select(m => m is MethodInfo info ? info.GetPropertyInfo()! : m)
-							.ToArray();
+						var nctor = (NewExpression?)ctx.items.Expression.Find(t, static (t, e) => e.NodeType == ExpressionType.New && e.Type == t);
+
+						MemberInfo[]    members;
+						ConstructorInfo ctor;
+
+						if (nctor == null)
+						{
+							ctor = t.GetConstructors().Single();
+							members = t.GetPublicInstanceValueMembers();
+						}
+						else
+						{
+							ctor = nctor.Constructor;
+							members = nctor.Members
+								.Select(m => m is MethodInfo info ? info.GetPropertyInfo()! : m)
+								.ToArray();
+						}
+
+						return Expression.Lambda<Func<T, T>>(
+							Expression.New(
+								ctor,
+								members.Select(m => ExpressionHelper.PropertyOrField(ctx.p, m.Name)),
+								members),
+							ctx.p);
 					}
 
-					return Expression.Lambda<Func<T,T>>(
-						Expression.New(
-							ctor,
-							members.Select(m => ExpressionHelper.PropertyOrField(p, m.Name)),
-							members),
-						p);
+					return Expression.Lambda<Func<T, T>>(
+						Expression.MemberInit(
+							Expression.New(t),
+							ctx.ed.Columns.Select(c => Expression.Bind(c.MemberInfo, Expression.MakeMemberAccess(ctx.p, c.MemberInfo)))),
+						ctx.p);
 				}
-
-				return Expression.Lambda<Func<T,T>>(
-					Expression.MemberInit(
-						Expression.New(t),
-						ed.Columns.Select(c => Expression.Bind(c.MemberInfo, Expression.MakeMemberAccess(p, c.MemberInfo)))),
-					p);
-			});
+#if CDICTIONARY_ARG
+				, (items, p, ed)
+#endif
+				);
 		}
 
-		#region ITable<T> implementation
+	#region ITable<T> implementation
 
-		public string?      ServerName   => _table.ServerName;
+	public string?      ServerName   => _table.ServerName;
 		public string?      DatabaseName => _table.DatabaseName;
 		public string?      SchemaName   => _table.SchemaName;
 		public string       TableName    => _table.TableName;

@@ -19,9 +19,8 @@ namespace LinqToDB.Linq.Builder
 
 		public static Sql.ExpressionAttribute? GetAggregateDefinition(MethodCallExpression methodCall, MappingSchema mapping)
 		{
-			var functions = mapping.GetAttributes<Sql.ExpressionAttribute>(methodCall.Method.ReflectedType!,
-				methodCall.Method,
-				f => f.Configuration);
+			var functions = mapping.GetAttributesNew<Sql.ExpressionAttribute>(methodCall.Method.ReflectedType!,
+				methodCall.Method);
 			return functions.FirstOrDefault(f => f.IsAggregate || f.IsWindowFunction);
 		}
 

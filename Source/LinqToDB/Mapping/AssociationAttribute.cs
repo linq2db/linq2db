@@ -21,7 +21,7 @@ namespace LinqToDB.Mapping
 	/// </summary>
 	[PublicAPI]
 	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Field, AllowMultiple=false)]
-	public class AssociationAttribute : Attribute
+	public class AssociationAttribute : Attribute, IConfigurationProvider
 	{
 		/// <summary>
 		/// Creates attribute instance.

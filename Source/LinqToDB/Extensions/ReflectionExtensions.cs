@@ -315,7 +315,18 @@ namespace LinqToDB.Extensions
 
 		static IReadOnlyCollection<object> GetAttributesTreeInternal(Type type)
 		{
-			IReadOnlyCollection<object> attrs = _typeAttributesInternal.GetOrAdd(type, x => type.GetCustomAttributes(false));
+			IReadOnlyCollection<object> attrs = _typeAttributesInternal.GetOrAdd(
+				type,
+#if !CDICTIONARY_ARG
+				x
+#else
+				static (x, type)
+#endif
+				=> type.GetCustomAttributes(false)
+#if CDICTIONARY_ARG
+				, type
+#endif
+				);
 
 			if (type.IsInterface)
 				return attrs;

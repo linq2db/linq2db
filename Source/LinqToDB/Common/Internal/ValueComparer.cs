@@ -131,7 +131,7 @@ namespace LinqToDB.Common.Internal
 		public static ValueComparer GetDefaultValueComparer(Type type, bool favorStructuralComparisons)
 		{
 			return _defaultValueComparers.GetOrAdd((type, favorStructuralComparisons),
-				t => CreateDefault(t.Item1, t.Item2));
+				static t => CreateDefault(t.Item1, t.Item2));
 		}
 
 		public static ValueComparer<T> GetDefaultValueComparer<T>(bool favorStructuralComparisons)

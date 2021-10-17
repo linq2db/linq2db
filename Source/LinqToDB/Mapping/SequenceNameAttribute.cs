@@ -10,7 +10,7 @@ namespace LinqToDB.Mapping
 	/// - PostgreSQL serial pseudotypes/sequences;
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true)]
-	public class SequenceNameAttribute : Attribute
+	public class SequenceNameAttribute : Attribute, IConfigurationProvider
 	{
 		/// <summary>
 		/// Creates attribute instance.

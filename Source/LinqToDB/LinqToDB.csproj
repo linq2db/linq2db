@@ -22,6 +22,11 @@
 		<DefineConstants>NATIVE_ASYNC;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 
+	<PropertyGroup Condition=" '$(TargetFramework)' != 'net45' AND '$(TargetFramework)' != 'net46' AND '$(TargetFramework)' != 'netstandard2.0' ">
+		<!--defined for runtimes with TArg methods in ConcurrentDictionary-->
+		<DefineConstants>CDICTIONARY_ARG;$(DefineConstants)</DefineConstants>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<EmbeddedResource Include="SqlQuery\ReservedWords.txt" />
 		<EmbeddedResource Include="SqlQuery\ReservedWordsOracle.txt" />

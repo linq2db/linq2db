@@ -26,7 +26,7 @@ namespace LinqToDB.Mapping
 	/// Abstract Attribute to be used for skipping values
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]
-	public abstract class SkipBaseAttribute : Attribute
+	public abstract class SkipBaseAttribute : Attribute, IConfigurationProvider
 	{
 		/// <summary>
 		/// Check if object contains values that should be skipped.

@@ -9,7 +9,7 @@ namespace LinqToDB.Mapping
 	/// projection in your query explicitly, if you want to select data from such mapping.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true, Inherited = true)]
-	public class TableAttribute : Attribute
+	public class TableAttribute : Attribute, IConfigurationProvider
 	{
 		/// <summary>
 		/// Creates new table mapping attribute.

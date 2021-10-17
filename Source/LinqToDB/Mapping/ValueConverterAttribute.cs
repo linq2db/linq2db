@@ -5,7 +5,7 @@ using LinqToDB.Reflection;
 namespace LinqToDB.Mapping
 {
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, Inherited = true)]
-	public class ValueConverterAttribute : Attribute
+	public class ValueConverterAttribute : Attribute, IConfigurationProvider
 	{
 		/// <summary>
 		/// ValueConverter for mapping Database Values to Model values.

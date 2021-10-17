@@ -21,7 +21,20 @@ namespace LinqToDB.Metadata
 		{
 			return (T[])_typeAttributes.GetOrAdd(
 				(type, attribute: typeof(T), inherit),
-				static key => (T[])key.type.GetCustomAttributes(key.attribute, key.inherit));
+				static key =>
+				{
+					var attrs = key.type.GetCustomAttributes(key.attribute, key.inherit);
+					if (attrs.Length == 0)
+						return Array<T>.Empty;
+
+					if (attrs is not T[] typedArr)
+					{
+						typedArr = new T[attrs.Length];
+						Array.Copy(attrs, typedArr, typedArr.Length);
+					}
+
+					return typedArr;
+				});
 		}
 
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit = true)

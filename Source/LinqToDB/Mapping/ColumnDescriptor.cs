@@ -101,7 +101,7 @@ namespace LinqToDB.Mapping
 				CanBeNull = columnAttribute.CanBeNull;
 			else
 			{
-				var na = mappingSchema.GetAttribute<NullableAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
+				var na = mappingSchema.GetAttributeNew<NullableAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);
 
 				if (na != null)
 				{
@@ -120,12 +120,12 @@ namespace LinqToDB.Mapping
 			}
 			else if (MemberName.IndexOf(".") < 0)
 			{
-				var a = mappingSchema.GetAttribute<IdentityAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
+				var a = mappingSchema.GetAttributeNew<IdentityAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);
 				if (a != null)
 					IsIdentity = true;
 			}
 
-			SequenceName = mappingSchema.GetAttribute<SequenceNameAttribute>(memberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
+			SequenceName = mappingSchema.GetAttributeNew<SequenceNameAttribute>(memberAccessor.TypeAccessor.Type, MemberInfo);
 
 			if (SequenceName != null)
 				IsIdentity = true;
@@ -140,7 +140,7 @@ namespace LinqToDB.Mapping
 				IsPrimaryKey = columnAttribute.IsPrimaryKey;
 			else if (MemberName.IndexOf(".") < 0)
 			{
-				var a = mappingSchema.GetAttribute<PrimaryKeyAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
+				var a = mappingSchema.GetAttributeNew<PrimaryKeyAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);
 
 				if (a != null)
 				{
@@ -151,7 +151,7 @@ namespace LinqToDB.Mapping
 
 			if (DbType == null || DataType == DataType.Undefined)
 			{
-				var a = mappingSchema.GetAttribute<DataTypeAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
+				var a = mappingSchema.GetAttributeNew<DataTypeAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);
 
 				if (a != null)
 				{
@@ -163,13 +163,13 @@ namespace LinqToDB.Mapping
 				}
 			}
 
-			var vc = mappingSchema.GetAttribute<ValueConverterAttribute>(memberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
+			var vc = mappingSchema.GetAttributeNew<ValueConverterAttribute>(memberAccessor.TypeAccessor.Type, MemberInfo);
 			if (vc != null)
 			{
 				ValueConverter = vc.GetValueConverter(this);
 			}
 
-			var skipValueAttributes = mappingSchema.GetAttributes<SkipBaseAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
+			var skipValueAttributes = mappingSchema.GetAttributesNew<SkipBaseAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);
 			if (skipValueAttributes.Length > 0)
 			{
 				SkipBaseAttributes    = skipValueAttributes;

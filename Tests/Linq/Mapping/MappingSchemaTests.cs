@@ -211,10 +211,9 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema("2");
 
-			var attrs = ms.GetAttributes<MapValueAttribute>(
+			var attrs = ms.GetAttributesNew<MapValueAttribute>(
 				typeof(AttrTest),
-				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
-				a => a.Configuration);
+				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs.Length,   Is.EqualTo(2));
 			Assert.That(attrs[0].Value, Is.EqualTo(2));
@@ -226,10 +225,9 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema("2", new MappingSchema("3"));
 
-			var attrs = ms.GetAttributes<MapValueAttribute>(
+			var attrs = ms.GetAttributesNew<MapValueAttribute>(
 				typeof(AttrTest),
-				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
-				a => a.Configuration);
+				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs.Length,   Is.EqualTo(3));
 			Assert.That(attrs[0].Value, Is.EqualTo(2));
@@ -242,10 +240,9 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema("3", new MappingSchema("2"));
 
-			var attrs = ms.GetAttributes<MapValueAttribute>(
+			var attrs = ms.GetAttributesNew<MapValueAttribute>(
 				typeof(AttrTest),
-				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
-				a => a.Configuration);
+				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs.Length,   Is.EqualTo(3));
 			Assert.That(attrs[0].Value, Is.EqualTo(3));
@@ -266,10 +263,9 @@ namespace Tests.Mapping
 		[Test]
 		public void AttributeTest5()
 		{
-			var attrs = MappingSchema.Default.GetAttributes<MapValueAttribute>(
+			var attrs = MappingSchema.Default.GetAttributesNew<MapValueAttribute>(
 				typeof(AttrTest),
-				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
-				a => a.Configuration);
+				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs.Length,   Is.EqualTo(1));
 			Assert.That(attrs[0].Value, Is.EqualTo(1));
@@ -297,10 +293,9 @@ namespace Tests.Mapping
 					MetadataReader = new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)))
 				});
 
-			var attrs = ms.GetAttributes<MapValueAttribute>(
+			var attrs = ms.GetAttributesNew<MapValueAttribute>(
 				typeof(AttrTest),
-				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
-				a => a.Configuration);
+				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs.Length,   Is.EqualTo(4));
 			Assert.That(attrs[0].Value, Is.EqualTo(2));
@@ -321,10 +316,9 @@ namespace Tests.Mapping
 				MetadataReader = MappingSchema.Default.MetadataReader
 			};
 
-			var attrs = ms.GetAttributes<MapValueAttribute>(
+			var attrs = ms.GetAttributesNew<MapValueAttribute>(
 				typeof(AttrTest),
-				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
-				a => a.Configuration);
+				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs.Length,   Is.EqualTo(4));
 			Assert.That(attrs[0].Value, Is.EqualTo(2));
@@ -341,10 +335,9 @@ namespace Tests.Mapping
 				MetadataReader = new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data)))
 			};
 
-			var attrs = ms.GetAttributes<MapValueAttribute>(
+			var attrs = ms.GetAttributesNew<MapValueAttribute>(
 				typeof(AttrTest),
-				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
-				a => a.Configuration);
+				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs.Length,   Is.EqualTo(4));
 			Assert.That(attrs[0].Value, Is.EqualTo(30));

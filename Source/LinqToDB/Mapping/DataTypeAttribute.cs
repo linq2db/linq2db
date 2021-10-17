@@ -10,7 +10,7 @@ namespace LinqToDB.Mapping
 	[AttributeUsage(
 		AttributeTargets.Field | AttributeTargets.Property,
 		AllowMultiple = true, Inherited = true)]
-	public class DataTypeAttribute : Attribute
+	public class DataTypeAttribute : Attribute, IConfigurationProvider
 	{
 		/// <summary>
 		/// Creates attribute instance.

@@ -11,7 +11,7 @@ namespace LinqToDB.Mapping
 	/// that type and data parameter using <seealso cref="MappingSchema.SetConvertExpression(Type, Type, System.Linq.Expressions.LambdaExpression, bool)"/> methods.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true, Inherited = true)]
-	public class ScalarTypeAttribute : Attribute
+	public class ScalarTypeAttribute : Attribute, IConfigurationProvider
 	{
 		/// <summary>
 		/// Creates attribute instance.

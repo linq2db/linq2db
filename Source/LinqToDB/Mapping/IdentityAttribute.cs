@@ -9,7 +9,7 @@ namespace LinqToDB.Mapping
 	/// <see cref="DataExtensions.Update{T}(IDataContext, T, string?, string?, string?, string?, TableOptions)"/> methods.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]
-	public class IdentityAttribute : Attribute
+	public class IdentityAttribute : Attribute, IConfigurationProvider
 	{
 		/// <summary>
 		/// Creates attribute instance.

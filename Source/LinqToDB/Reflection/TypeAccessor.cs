@@ -50,12 +50,24 @@ namespace LinqToDB.Reflection
 		readonly ConcurrentDictionary<string,MemberAccessor> _membersByName = new();
 
 		public MemberAccessor this[string memberName] =>
-			_membersByName.GetOrAdd(memberName, name =>
-			{
-				var ma = new MemberAccessor(this, name, null);
-				Members.Add(ma);
-				return ma;
-			});
+			_membersByName.GetOrAdd(
+				memberName,
+#if !CDICTIONARY_ARG
+				name =>
+				{
+					var ta = this;
+#else
+				static (name, ta) =>
+				{
+#endif
+					var ma = new MemberAccessor(ta, name, null);
+					ta.Members.Add(ma);
+					return ma;
+				}
+#if CDICTIONARY_ARG
+				, this
+#endif
+				);
 
 		public MemberAccessor this[int index] => Members[index];
 

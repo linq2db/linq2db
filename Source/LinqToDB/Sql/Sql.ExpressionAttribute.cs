@@ -22,7 +22,7 @@ namespace LinqToDB
 		[PublicAPI]
 		[Serializable]
 		[AttributeUsage(AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
-		public class ExpressionAttribute : Attribute
+		public class ExpressionAttribute : Attribute, IConfigurationProvider
 		{
 			/// <summary>
 			/// Creates an Expression that will be used in SQL,

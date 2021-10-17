@@ -169,7 +169,7 @@ namespace LinqToDB.Mapping
 
 			while (currentType != null && currentType != typeof(object))
 			{
-				var mappingAttrs = MappingSchema.GetAttributes<InheritanceMappingAttribute>(currentType, a => a.Configuration, false);
+				var mappingAttrs = MappingSchema.GetAttributesNew<InheritanceMappingAttribute>(currentType, false);
 				if (mappingAttrs.Length > 0)
 					return true;
 
@@ -182,7 +182,7 @@ namespace LinqToDB.Mapping
 		void Init()
 		{
 			var hasInheritanceMapping = HasInheritanceMapping();
-			var ta = MappingSchema.GetAttribute<TableAttribute>(TypeAccessor.Type, a => a.Configuration);
+			var ta = MappingSchema.GetAttributeNew<TableAttribute>(TypeAccessor.Type);
 
 			string? tableName = null;
 
@@ -221,7 +221,7 @@ namespace LinqToDB.Mapping
 
 			foreach (var member in members)
 			{
-				var aa = MappingSchema.GetAttribute<AssociationAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+				var aa = MappingSchema.GetAttributeNew<AssociationAttribute>(TypeAccessor.Type, member.MemberInfo);
 
 				if (aa != null)
 				{
@@ -232,7 +232,7 @@ namespace LinqToDB.Mapping
 					continue;
 				}
 
-				var columnAttributes = MappingSchema.GetAttributes<ColumnAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+				var columnAttributes = MappingSchema.GetAttributesNew<ColumnAttribute>(TypeAccessor.Type, member.MemberInfo);
 
 				if (columnAttributes.Length > 0)
 				{
@@ -256,15 +256,15 @@ namespace LinqToDB.Mapping
 				}
 				else if (
 					!IsColumnAttributeRequired && MappingSchema.IsScalarType(member.Type) ||
-					MappingSchema.GetAttribute<IdentityAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration) != null ||
-					MappingSchema.GetAttribute<PrimaryKeyAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration) != null)
+					MappingSchema.GetAttributeNew<IdentityAttribute>(TypeAccessor.Type, member.MemberInfo) != null ||
+					MappingSchema.GetAttributeNew<PrimaryKeyAttribute>(TypeAccessor.Type, member.MemberInfo) != null)
 				{
 					var cd = new ColumnDescriptor(MappingSchema, this, null, member, hasInheritanceMapping);
 					AddColumn(cd);
 					_columnNames.Add(member.Name, cd);
 				}
 
-				var caa = MappingSchema.GetAttribute<ColumnAliasAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+				var caa = MappingSchema.GetAttributeNew<ColumnAliasAttribute>(TypeAccessor.Type, member.MemberInfo);
 
 				if (caa != null)
 				{
@@ -274,7 +274,7 @@ namespace LinqToDB.Mapping
 					Aliases.Add(member.Name, caa.MemberName);
 				}
 
-				var ma = MappingSchema.GetAttribute<ExpressionMethodAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+				var ma = MappingSchema.GetAttributeNew<ExpressionMethodAttribute>(TypeAccessor.Type, member.MemberInfo);
 				if (ma != null && ma.IsColumn)
 				{
 					if (CalculatedMembers == null)
@@ -283,7 +283,7 @@ namespace LinqToDB.Mapping
 				}
 			}
 
-			var typeColumnAttrs = MappingSchema.GetAttributes<ColumnAttribute>(TypeAccessor.Type, a => a.Configuration);
+			var typeColumnAttrs = MappingSchema.GetAttributesNew<ColumnAttribute>(TypeAccessor.Type);
 
 			foreach (var attr in typeColumnAttrs.Concat(attrs))
 				if (attr.IsColumn)
@@ -344,7 +344,7 @@ namespace LinqToDB.Mapping
 
 		internal void InitInheritanceMapping()
 		{
-			var mappingAttrs = MappingSchema.GetAttributes<InheritanceMappingAttribute>(ObjectType, a => a.Configuration, false);
+			var mappingAttrs = MappingSchema.GetAttributesNew<InheritanceMappingAttribute>(ObjectType, false);
 			var result = new List<InheritanceMapping>(mappingAttrs.Length);
 
 			if (mappingAttrs.Length > 0)
@@ -439,7 +439,7 @@ namespace LinqToDB.Mapping
 		{
 			// initialize dynamic columns store accessors
 			var dynamicStoreAttributes = new List<IConfigurationProvider>();
-			var accessors = MappingSchema.GetAttribute<DynamicColumnAccessorAttribute>(TypeAccessor.Type, attr => attr.Configuration);
+			var accessors = MappingSchema.GetAttributeNew<DynamicColumnAccessorAttribute>(TypeAccessor.Type);
 			if (accessors != null)
 			{
 				dynamicStoreAttributes.Add(accessors);
@@ -449,7 +449,7 @@ namespace LinqToDB.Mapping
 			foreach (var member in TypeAccessor.Members)
 			{
 				// dynamic columns store property
-				var dcsProp = MappingSchema.GetAttribute<DynamicColumnsStoreAttribute>(TypeAccessor.Type, member.MemberInfo, attr => attr.Configuration);
+				var dcsProp = MappingSchema.GetAttributeNew<DynamicColumnsStoreAttribute>(TypeAccessor.Type, member.MemberInfo);
 
 				if (dcsProp != null)
 				{

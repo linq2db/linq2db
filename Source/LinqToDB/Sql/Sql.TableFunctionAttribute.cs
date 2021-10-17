@@ -13,7 +13,7 @@ namespace LinqToDB
 	{
 		[Serializable]
 		[AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
-		public class TableFunctionAttribute : Attribute
+		public class TableFunctionAttribute : Attribute, IConfigurationProvider
 		{
 			public TableFunctionAttribute()
 			{

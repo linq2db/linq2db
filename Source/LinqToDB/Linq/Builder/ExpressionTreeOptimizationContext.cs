@@ -150,7 +150,7 @@ namespace LinqToDB.Linq.Builder
 
 		Sql.ExpressionAttribute? GetExpressionAttribute(MemberInfo member)
 		{
-			return MappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedType!, member, a => a.Configuration);
+			return MappingSchema.GetAttributeNew<Sql.ExpressionAttribute>(member.ReflectedType!, member);
 		}
 
 		public Expression ExpandQueryableMethods(Expression expression)
@@ -762,7 +762,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			mi = type.GetMemberOverride(mi);
 
-			var attr = MappingSchema.GetAttribute<ExpressionMethodAttribute>(type, mi, a => a.Configuration);
+			var attr = MappingSchema.GetAttributeNew<ExpressionMethodAttribute>(type, mi);
 
 			if (attr != null)
 			{

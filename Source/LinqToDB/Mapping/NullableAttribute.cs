@@ -9,7 +9,7 @@ namespace LinqToDB.Mapping
 	/// Using this attribute, you can allow <c>NULL</c> values for identity columns.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple=true)]
-	public class NullableAttribute : Attribute
+	public class NullableAttribute : Attribute, IConfigurationProvider
 	{
 		/// <summary>
 		/// Creates attribute isntance.

@@ -46,13 +46,13 @@ namespace LinqToDB.Metadata
 
 		public void AddAttribute(Type type, Attribute attribute)
 		{
-			var attrs = _types.GetOrAdd(type, t => new List<Attribute>());
+			var attrs = _types.GetOrAdd(type, static t => new List<Attribute>());
 
 			lock (attrs)
 				attrs.Add(attribute);
 		}
 
-		readonly ConcurrentDictionary<MemberInfo,List<Attribute>> _members = new ConcurrentDictionary<MemberInfo,List<Attribute>>();
+		readonly ConcurrentDictionary<MemberInfo,List<Attribute>> _members = new ();
 
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute
@@ -93,7 +93,7 @@ namespace LinqToDB.Metadata
 						dynamicColumns.Item2.Add(memberInfo);
 			}
 
-			_members.GetOrAdd(memberInfo, t => new List<Attribute>()).Add(attribute);
+			_members.GetOrAdd(memberInfo, static t => new List<Attribute>()).Add(attribute);
 		}
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>

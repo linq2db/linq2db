@@ -516,8 +516,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				var attribute =
-					Builder.MappingSchema.GetAttribute<Sql.ExpressionAttribute>(call.Method.DeclaringType!, call.Method,
-						c => c.Configuration);
+					Builder.MappingSchema.GetAttributeNew<Sql.ExpressionAttribute>(call.Method.DeclaringType!, call.Method);
 
 				if (attribute != null)
 				{

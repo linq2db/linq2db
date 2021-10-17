@@ -332,9 +332,8 @@ namespace LinqToDB.Expressions
 
 		public static bool IsExtensionMethod(this MethodCallExpression methodCall, MappingSchema mapping)
 		{
-			var functions = mapping.GetAttributes<Sql.ExtensionAttribute>(methodCall.Method.ReflectedType!,
-				methodCall.Method,
-				static f => f.Configuration);
+			var functions = mapping.GetAttributesNew<Sql.ExtensionAttribute>(methodCall.Method.ReflectedType!,
+				methodCall.Method);
 			return functions.Any();
 		}
 

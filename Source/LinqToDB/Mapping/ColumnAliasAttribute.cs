@@ -14,7 +14,7 @@ namespace LinqToDB.Mapping
 	[AttributeUsage(
 		AttributeTargets.Field | AttributeTargets.Property,
 		AllowMultiple = true, Inherited = true)]
-	public class ColumnAliasAttribute : Attribute
+	public class ColumnAliasAttribute : Attribute, IConfigurationProvider
 	{
 		/// <summary>
 		/// Use <see cref="ColumnAliasAttribute(string)"/> constructor or specify <see cref="MemberName"/> value.

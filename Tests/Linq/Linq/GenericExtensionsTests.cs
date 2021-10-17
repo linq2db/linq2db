@@ -9,10 +9,11 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Mapping;
 	using Model;
 
 	[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-	public class ExtensionChoiceAttribute : Attribute
+	public class ExtensionChoiceAttribute : Attribute, IConfigurationProvider
 	{
 		public ExtensionChoiceAttribute(string configuration, string expression, params Type?[] types)
 		{
@@ -70,7 +71,7 @@ namespace Tests.Linq
 			{
 				var typeParameters = method.GetGenericArguments();
 				builder.Expression = Match(typeParameters,
-					builder.Mapping.GetAttributes<ExtensionChoiceAttribute>(builder.Member.DeclaringType!, method, a => a.Configuration));
+					builder.Mapping.GetAttributesNew<ExtensionChoiceAttribute>(builder.Member.DeclaringType!, method));
 			}
 			else
 				throw new InvalidOperationException("This extension could be applied only to methods with type parameters.");

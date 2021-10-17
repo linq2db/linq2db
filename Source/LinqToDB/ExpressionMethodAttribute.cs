@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 using JetBrains.Annotations;
+using LinqToDB.Mapping;
 
 namespace LinqToDB
 {
@@ -30,7 +31,7 @@ namespace LinqToDB
 	/// </summary>
 	[PublicAPI]
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
-	public class ExpressionMethodAttribute : Attribute
+	public class ExpressionMethodAttribute : Attribute, IConfigurationProvider
 	{
 		/// <summary>
 		/// Creates instance of attribute.

@@ -21,7 +21,7 @@ namespace LinqToDB.Mapping
 	/// </para>
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Field, AllowMultiple=true)]
-	public class MapValueAttribute : Attribute
+	public class MapValueAttribute : Attribute, IConfigurationProvider
 	{
 		/// <summary>
 		/// Adds <see cref="MapValueAttribute"/> mapping to enum field. If you don't specify <see cref="Value"/> property,

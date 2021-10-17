@@ -2815,12 +2815,12 @@ namespace LinqToDB.Linq.Builder
 
 		Sql.ExpressionAttribute? GetExpressionAttribute(MemberInfo member)
 		{
-			return MappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedType!, member, static a => a.Configuration);
+			return MappingSchema.GetAttributeNew<Sql.ExpressionAttribute>(member.ReflectedType!, member);
 		}
 
 		internal Sql.TableFunctionAttribute? GetTableFunctionAttribute(MemberInfo member)
 		{
-			return MappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member.ReflectedType!, member, static a => a.Configuration);
+			return MappingSchema.GetAttributeNew<Sql.TableFunctionAttribute>(member.ReflectedType!, member);
 		}
 
 		bool IsNullConstant(Expression expr)
