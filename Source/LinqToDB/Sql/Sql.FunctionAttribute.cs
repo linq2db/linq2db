@@ -84,7 +84,7 @@ namespace LinqToDB
 			public string? Name
 			{
 				get => Expression;
-				set => Expression = value;
+				init => Expression = value;
 			}
 
 			public override ISqlExpression? GetExpression<TContext>(TContext context, IDataContext dataContext, SelectQuery query, Expression expression, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)

@@ -43,12 +43,12 @@ namespace LinqToDB
 				ArgIndices    = argIndices;
 			}
 
-			public string? Configuration { get; set; }
-			public string? Name          { get; set; }
-			public string? Schema        { get; set; }
-			public string? Database      { get; set; }
-			public string? Server        { get; set; }
-			public int[]?  ArgIndices    { get; set; }
+			public string? Configuration { get; init; }
+			public string? Name          { get; init; }
+			public string? Schema        { get; init; }
+			public string? Database      { get; init; }
+			public string? Server        { get; init; }
+			public int[]?  ArgIndices    { get; init; }
 
 			public virtual void SetTable<TContext>(TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{

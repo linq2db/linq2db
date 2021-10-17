@@ -8,22 +8,19 @@ namespace LinqToDB.Metadata
 
 	public class SystemComponentModelDataAnnotationsSchemaAttributeReader : IMetadataReader
 	{
-		readonly AttributeReader _reader = new AttributeReader();
-
 		public T[] GetAttributes<T>(Type type, bool inherit)
 			where T : Attribute
 		{
 			if (typeof(T) == typeof(TableAttribute))
 			{
-				var ta = _reader.GetAttributes<System.ComponentModel.DataAnnotations.Schema.TableAttribute>(type, inherit);
+				var ta = AttributeReader.Instance.GetAttributes<System.ComponentModel.DataAnnotations.Schema.TableAttribute>(type, inherit);
 
 				var t = ta.Length == 1 ? ta[0] : null;
 
 				if (t != null)
 				{
-					var attr = new TableAttribute();
-
-					var name = t.Name;
+					var     name   = t.Name;
+					string? schema = null;
 
 					if (name != null)
 					{
@@ -32,10 +29,10 @@ namespace LinqToDB.Metadata
 						switch (names.Length)
 						{
 							case 0  : break;
-							case 1  : attr.Name = names[0]; break;
+							case 1  : name = names[0]; break;
 							case 2  :
-								attr.Name   = names[0];
-								attr.Schema = names[1];
+								name   = names[0];
+								schema = names[1];
 								break;
 							default :
 								throw new MetadataException(string.Format(
@@ -44,7 +41,7 @@ namespace LinqToDB.Metadata
 						}
 					}
 
-					return new[] { (T)(Attribute)attr };
+					return new[] { (T)(Attribute)new TableAttribute(name) { Schema = schema } };
 				}
 			}
 
@@ -56,7 +53,7 @@ namespace LinqToDB.Metadata
 		{
 			if (typeof(T) == typeof(ColumnAttribute))
 			{
-				var attrs = _reader.GetAttributes<System.ComponentModel.DataAnnotations.Schema.ColumnAttribute>(type, memberInfo, inherit);
+				var attrs = AttributeReader.Instance.GetAttributes<System.ComponentModel.DataAnnotations.Schema.ColumnAttribute>(type, memberInfo, inherit);
 
 				if (attrs.Length == 1)
 				{
@@ -76,7 +73,6 @@ namespace LinqToDB.Metadata
 		}
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
-		public MemberInfo[] GetDynamicColumns(Type type)
-			=> Array<MemberInfo>.Empty;
+		public MemberInfo[] GetDynamicColumns(Type type) => Array<MemberInfo>.Empty;
 	}
 }

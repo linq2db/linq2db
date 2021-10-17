@@ -23,7 +23,7 @@ namespace LinqToDB.Mapping
 		/// Creates new table mapping attribute.
 		/// </summary>
 		/// <param name="tableName">Name of mapped table or view in database.</param>
-		public TableAttribute(string tableName) : this()
+		public TableAttribute(string? tableName) : this()
 		{
 			Name = tableName;
 		}
@@ -33,28 +33,28 @@ namespace LinqToDB.Mapping
 		/// <see cref="ProviderName"/> for standard names.
 		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
 		/// </summary>
-		public string? Configuration            { get; set; }
+		public string? Configuration            { get; init; }
 
 		/// <summary>
 		/// Gets or sets name of table or view in database.
 		/// When not specified, name of class or interface will be used.
 		/// </summary>
-		public string? Name                     { get; set; }
+		public string? Name                     { get; set; } // TODO: v4: init-only (blocked by fluent mapping builder)
 
 		/// <summary>
 		/// Gets or sets optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.
 		/// </summary>
-		public string? Schema                   { get; set; }
+		public string? Schema                   { get; set; } // TODO: v4: init-only (blocked by fluent mapping builder)
 
 		/// <summary>
 		/// Gets or sets optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.
 		/// </summary>
-		public string? Database                 { get; set; }
+		public string? Database                 { get; set; } // TODO: v4: init-only (blocked by fluent mapping builder)
 
 		/// <summary>
 		/// Gets or sets optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.
 		/// </summary>
-		public string? Server                   { get; set; }
+		public string? Server                   { get; set; } // TODO: v4: init-only (blocked by fluent mapping builder)
 
 		/// <summary>
 		/// Gets or sets IsTemporary flag. See <see cref="TableExtensions.IsTemporary{T}(ITable{T}, bool)"/> method for support information per provider.
@@ -68,13 +68,13 @@ namespace LinqToDB.Mapping
 					TableOptions |= TableOptions.IsTemporary;
 				else
 					TableOptions &= ~TableOptions.IsTemporary;
-			}
+			} // TODO: v4: init-only (blocked by fluent mapping builder)
 		}
 
 		/// <summary>
 		/// Gets or sets Table options. See <see cref="TableOptions"/> enum for support information per provider.
 		/// </summary>
-		public TableOptions TableOptions        { get; set; }
+		public TableOptions TableOptions        { get; set; } // TODO: v4: init-only (blocked by fluent mapping builder)
 
 		/// <summary>
 		/// Gets or sets column mapping rules for current class or interface.
@@ -86,14 +86,14 @@ namespace LinqToDB.Mapping
 		/// Otherwise all supported members of scalar type will be used:
 		/// - public instance fields and properties;
 		/// - explicit interface implementation properties.
-		/// Also see <seealso cref="LinqToDB.Common.Configuration.IsStructIsScalarType"/> and <seealso cref="ScalarTypeAttribute"/>.
+		/// Also see <seealso cref="Common.Configuration.IsStructIsScalarType"/> and <seealso cref="ScalarTypeAttribute"/>.
 		/// Default value: <c>true</c>.
 		/// </summary>
-		public bool   IsColumnAttributeRequired { get; set; }
+		public bool   IsColumnAttributeRequired { get; set; } // TODO: v4: init-only (blocked by fluent mapping builder)
 
 		/// <summary>
 		/// This property is not used by linq2db and could be used for informational purposes.
 		/// </summary>
-		public bool   IsView                    { get; set; }
+		public bool   IsView                    { get; init; }
 	}
 }

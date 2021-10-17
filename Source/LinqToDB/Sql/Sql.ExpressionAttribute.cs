@@ -87,58 +87,58 @@ namespace LinqToDB
 			/// <summary>
 			/// The expression to be used in building the SQL.
 			/// </summary>
-			public string?        Expression       { get; set; }
+			public string?        Expression       { get; init; }
 			/// <summary>
 			/// The order of Arguments to be passed
 			/// into the function from the method call.
 			/// </summary>
-			public int[]?         ArgIndices       { get; set; }
+			public int[]?         ArgIndices       { get; init; }
 			/// <summary>
 			/// Determines the priority of the expression in evaluation.
 			/// Refer to <see cref="SqlQuery.Precedence"/>.
 			/// </summary>
-			public int            Precedence       { get; set; }
+			public int            Precedence       { get; init; }
 			/// <summary>
 			/// If <c>null</c>, this will be treated as the default
 			/// evaluation for the expression. If set to a <see cref="ProviderName"/>,
 			/// It will only be used for that provider configuration.
 			/// </summary>
-			public string?        Configuration    { get; set; }
+			public string?        Configuration    { get; init; }
 			/// <summary>
 			/// If <c>true</c> The expression will only be evaluated on the
 			/// database server. If it cannot, an exception will
 			/// be thrown. 
 			/// </summary>
-			public bool           ServerSideOnly   { get; set; }
+			public bool           ServerSideOnly   { get; init; }
 			/// <summary>
 			/// If <c>true</c> a greater effort will be made to execute
 			/// the expression on the DB server instead of in .NET.
 			/// </summary>
-			public bool           PreferServerSide { get; set; }
+			public bool           PreferServerSide { get; init; }
 			/// <summary>
 			/// If <c>true</c> inline all parameters passed into the expression.
 			/// </summary>
-			public bool           InlineParameters { get; set; }
+			public bool           InlineParameters { get; init; }
 			/// <summary>
 			/// Used internally by <see cref="ExtensionAttribute"/>.
 			/// </summary>
-			public bool           ExpectExpression { get; set; }
+			public bool           ExpectExpression { get; init; }
 			/// <summary>
 			/// If <c>true</c> the expression is treated as a Predicate
 			/// And when used in a Where clause will not have
 			/// an added comparison to 'true' in the database.
 			/// </summary>
-			public bool           IsPredicate      { get; set; }
+			public bool           IsPredicate      { get; init; }
 			/// <summary>
 			/// If <c>true</c>, this expression represents an aggregate result
 			/// Examples would be SUM(),COUNT().
 			/// </summary>
-			public bool           IsAggregate      { get; set; }
+			public bool           IsAggregate      { get; init; }
 			/// <summary>
 			/// If <c>true</c>, this expression represents a Window Function
 			/// Examples would be SUM() OVER(), COUNT() OVER().
 			/// </summary>
-			public bool           IsWindowFunction { get; set; }
+			public bool           IsWindowFunction { get; init; }
 			/// <summary>
 			/// If <c>true</c>, it notifies SQL Optimizer that expression returns same result if the same values/parameters are used. It gives optimizer additional information how to simplify query.
 			/// For example ORDER BY PureFunction("Str") can be removed because PureFunction function uses constant value.
@@ -148,14 +148,14 @@ namespace LinqToDB
 			/// <see cref="DateAdd(DateParts,double?,System.DateTime?)"/> is also Pure function because it returns the same result with the same parameters.  
 			/// </example>
 			/// </summary>
-			public bool           IsPure          { get; set; }
+			public bool           IsPure          { get; init; }
 			/// <summary>
 			/// Used to determine whether the return type should be treated as
 			/// something that can be null If CanBeNull is not explicitly set.
 			/// <para>Default is <see cref="IsNullableType.Undefined"/>,
 			/// which will be treated as <c>true</c></para> 
 			/// </summary>
-			public IsNullableType IsNullable       { get; set; }
+			public IsNullableType IsNullable       { get; init; }
 
 			internal  bool? _canBeNull;
 			/// <summary>
@@ -164,7 +164,7 @@ namespace LinqToDB
 			public    bool   CanBeNull
 			{
 				get => _canBeNull ?? true;
-				set => _canBeNull = value;
+				init => _canBeNull = value;
 			}
 
 			protected bool GetCanBeNull(ISqlExpression[] parameters)

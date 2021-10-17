@@ -13,6 +13,6 @@ namespace LinqToDB.Mapping
 		/// Filter function of type <see cref="System.Func{System.Linq.IQueryable{T},LinqToDB.IDataContext,System.Linq.IQueryable{T}}"/>.
 		/// </summary>
 #pragma warning restore CS1658, CS1584
-		public Delegate? FilterFunc { get; set; }
+		public Delegate? FilterFunc { get; init; }
 	}
 }

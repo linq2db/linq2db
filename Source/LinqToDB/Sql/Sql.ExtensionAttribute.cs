@@ -300,7 +300,7 @@ namespace LinqToDB
 		{
 			private static readonly ConcurrentDictionary<Type, IExtensionCallBuilder> _builders = new ();
 
-			public string? TokenName { get; set; }
+			public string? TokenName { get; init; }
 
 			protected class ExtensionBuilder<TContext>: ISqExtensionBuilder
 			{
@@ -432,13 +432,13 @@ namespace LinqToDB
 
 			}
 
-			public Type?     BuilderType     { get; set; }
-			public object?   BuilderValue    { get; set; }
+			public Type?     BuilderType     { get; init; }
+			public object?   BuilderValue    { get; init; }
 
 			/// <summary>
 			/// Defines in which order process extensions. Items will be ordered Descending.
 			/// </summary>
-			public int       ChainPrecedence { get; set; }
+			public int       ChainPrecedence { get; init; }
 
 			public ExtensionAttribute(string expression): this(string.Empty, expression)
 			{

@@ -10,26 +10,26 @@ namespace LinqToDB.Metadata
 
 	public class SystemDataLinqAttributeReader : IMetadataReader
 	{
-		readonly AttributeReader _reader = new AttributeReader();
-
 		public T[] GetAttributes<T>(Type type, bool inherit)
 			where T : Attribute
 		{
 			if (typeof(T) == typeof(TableAttribute))
 			{
-				var ta = _reader.GetAttributes<System.Data.Linq.Mapping.TableAttribute>   (type, inherit);
-				var da = _reader.GetAttributes<System.Data.Linq.Mapping.DatabaseAttribute>(type, inherit);
+				var ta = AttributeReader.Instance.GetAttributes<System.Data.Linq.Mapping.TableAttribute>   (type, inherit);
+				var da = AttributeReader.Instance.GetAttributes<System.Data.Linq.Mapping.DatabaseAttribute>(type, inherit);
 
 				var t = ta.Length == 1 ? ta[0] : null;
 				var d = da.Length == 1 ? da[0] : null;
 
 				if (t != null || d != null)
 				{
-					var attr = new TableAttribute();
+					string? name     = null;
+					string? schema   = null;
+					string? database = null;
 
 					if (t != null)
 					{
-						var name = t.Name;
+						name = t.Name;
 
 						if (name != null)
 						{
@@ -38,10 +38,10 @@ namespace LinqToDB.Metadata
 							switch (names.Length)
 							{
 								case 0  : break;
-								case 1  : attr.Name = names[0]; break;
+								case 1  : name = names[0]; break;
 								case 2  :
-									attr.Name   = names[1];
-									attr.Schema = names[0];
+									name   = names[1];
+									schema = names[0];
 									break;
 								default :
 									throw new MetadataException(string.Format(
@@ -52,9 +52,9 @@ namespace LinqToDB.Metadata
 					}
 
 					if (d != null)
-						attr.Database = d.Name;
+						database = d.Name;
 
-					return new[] { (T)(Attribute)attr };
+					return new[] { (T)(Attribute)new TableAttribute(name) { Schema = schema, Database = database } };
 				}
 			}
 
@@ -66,7 +66,7 @@ namespace LinqToDB.Metadata
 		{
 			if (typeof(T) == typeof(ColumnAttribute))
 			{
-				var attrs = _reader.GetAttributes<System.Data.Linq.Mapping.ColumnAttribute>(type, memberInfo, inherit);
+				var attrs = AttributeReader.Instance.GetAttributes<System.Data.Linq.Mapping.ColumnAttribute>(type, memberInfo, inherit);
 
 				if (attrs.Length == 1)
 				{
@@ -88,11 +88,11 @@ namespace LinqToDB.Metadata
 			}
 			else if (typeof(T) == typeof(AssociationAttribute))
 			{
-				var ta = _reader.GetAttributes<System.Data.Linq.Mapping.TableAttribute>(type, memberInfo.DeclaringType, inherit);
+				var ta = AttributeReader.Instance.GetAttributes<System.Data.Linq.Mapping.TableAttribute>(type, memberInfo.DeclaringType, inherit);
 
 				if (ta.Length == 1)
 				{
-					return _reader
+					return AttributeReader.Instance
 						.GetAttributes<System.Data.Linq.Mapping.AssociationAttribute>(type, memberInfo, inherit)
 						.Select(a => (T)(Attribute)new AssociationAttribute { ThisKey = a.ThisKey, OtherKey = a.OtherKey, Storage = a.Storage })
 						.ToArray();
@@ -103,8 +103,7 @@ namespace LinqToDB.Metadata
 		}
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
-		public MemberInfo[] GetDynamicColumns(Type type)
-			=> _reader.GetDynamicColumns(type);
+		public MemberInfo[] GetDynamicColumns(Type type) => Array<MemberInfo>.Empty;
 	}
 }
 #endif
