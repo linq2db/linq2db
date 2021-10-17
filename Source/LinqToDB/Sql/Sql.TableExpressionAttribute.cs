@@ -41,7 +41,7 @@ namespace LinqToDB
 			public string? Expression
 			{
 				get => base.Name;
-				set => base.Name = value;
+				init => base.Name = value;
 			}
 
 			public override void SetTable<TContext>(TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)

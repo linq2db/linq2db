@@ -48,38 +48,40 @@ namespace LinqToDB.Mapping
 			if (dataType.Type.DataType == DataType.Undefined)
 				dataType = mappingSchema.GetUnderlyingDataType(MemberType, out var _);
 
-			if (columnAttribute == null)
+			MemberName = columnAttribute?.MemberName ?? MemberInfo.Name;
+			ColumnName = columnAttribute?.Name       ?? MemberInfo.Name;
+
+			if (columnAttribute != null)
 			{
-				columnAttribute = new ColumnAttribute();
+				Storage           = columnAttribute.Storage;
+				PrimaryKeyOrder   = columnAttribute.PrimaryKeyOrder;
+				IsDiscriminator   = columnAttribute.IsDiscriminator;
+				SkipOnEntityFetch = columnAttribute.SkipOnEntityFetch;
+				DataType          = columnAttribute.DataType;
+				DbType            = columnAttribute.DbType;
+				CreateFormat      = columnAttribute.CreateFormat;
 
-				columnAttribute.DataType  = dataType.Type.DataType;
-				columnAttribute.DbType    = dataType.Type.DbType;
+				if (columnAttribute.DataType == DataType.Undefined || columnAttribute.DataType == dataType.Type.DataType)
+				{
+					if (dataType.Type.Length    != null && !columnAttribute.HasLength()   ) Length    = dataType.Type.Length.Value;
+					if (dataType.Type.Precision != null && !columnAttribute.HasPrecision()) Precision = dataType.Type.Precision.Value;
+					if (dataType.Type.Scale     != null && !columnAttribute.HasScale()    ) Scale     = dataType.Type.Scale.Value;
+				}
 
-				if (dataType.Type.Length    != null) columnAttribute.Length    = dataType.Type.Length.Value;
-				if (dataType.Type.Precision != null) columnAttribute.Precision = dataType.Type.Precision.Value;
-				if (dataType.Type.Scale     != null) columnAttribute.Scale     = dataType.Type.Scale.Value;
+				if (columnAttribute.HasLength   ()) Length    = columnAttribute.Length;
+				if (columnAttribute.HasPrecision()) Precision = columnAttribute.Precision;
+				if (columnAttribute.HasScale    ()) Scale     = columnAttribute.Scale;
+				if (columnAttribute.HasOrder    ()) Order     = columnAttribute.Order;
 			}
-			else if (columnAttribute.DataType == DataType.Undefined || columnAttribute.DataType == dataType.Type.DataType)
+			else
 			{
-				if (dataType.Type.Length    != null && !columnAttribute.HasLength())    columnAttribute.Length    = dataType.Type.Length.Value;
-				if (dataType.Type.Precision != null && !columnAttribute.HasPrecision()) columnAttribute.Precision = dataType.Type.Precision.Value;
-				if (dataType.Type.Scale     != null && !columnAttribute.HasScale())     columnAttribute.Scale     = dataType.Type.Scale.Value;
+				DataType = dataType.Type.DataType;
+				DbType   = dataType.Type.DbType;
+
+				if (dataType.Type.Length    != null) Length    = dataType.Type.Length.Value;
+				if (dataType.Type.Precision != null) Precision = dataType.Type.Precision.Value;
+				if (dataType.Type.Scale     != null) Scale     = dataType.Type.Scale.Value;
 			}
-
-			MemberName        = columnAttribute.MemberName ?? MemberInfo.Name;
-			ColumnName        = columnAttribute.Name       ?? MemberInfo.Name;
-			Storage           = columnAttribute.Storage;
-			PrimaryKeyOrder   = columnAttribute.PrimaryKeyOrder;
-			IsDiscriminator   = columnAttribute.IsDiscriminator;
-			SkipOnEntityFetch = columnAttribute.SkipOnEntityFetch;
-			DataType          = columnAttribute.DataType;
-			DbType            = columnAttribute.DbType;
-			CreateFormat      = columnAttribute.CreateFormat;
-
-			if (columnAttribute.HasLength   ()) Length    = columnAttribute.Length;
-			if (columnAttribute.HasPrecision()) Precision = columnAttribute.Precision;
-			if (columnAttribute.HasScale    ()) Scale     = columnAttribute.Scale;
-			if (columnAttribute.HasOrder    ()) Order     = columnAttribute.Order;
 
 			if (Storage == null)
 			{
@@ -95,7 +97,7 @@ namespace LinqToDB.Mapping
 
 			var defaultCanBeNull = false;
 
-			if (columnAttribute.HasCanBeNull())
+			if (columnAttribute != null && columnAttribute.HasCanBeNull())
 				CanBeNull = columnAttribute.CanBeNull;
 			else
 			{
@@ -112,7 +114,7 @@ namespace LinqToDB.Mapping
 				}
 			}
 
-			if (columnAttribute.HasIsIdentity())
+			if (columnAttribute != null && columnAttribute.HasIsIdentity())
 			{
 				IsIdentity = columnAttribute.IsIdentity;
 			}
@@ -128,13 +130,16 @@ namespace LinqToDB.Mapping
 			if (SequenceName != null)
 				IsIdentity = true;
 
-			SkipOnInsert = columnAttribute.HasSkipOnInsert() ? columnAttribute.SkipOnInsert : IsIdentity;
-			SkipOnUpdate = columnAttribute.HasSkipOnUpdate() ? columnAttribute.SkipOnUpdate : IsIdentity;
+			if (columnAttribute != null)
+			{
+				SkipOnInsert = columnAttribute.HasSkipOnInsert() ? columnAttribute.SkipOnInsert : IsIdentity;
+				SkipOnUpdate = columnAttribute.HasSkipOnUpdate() ? columnAttribute.SkipOnUpdate : IsIdentity;
+			}
 
 			if (defaultCanBeNull && IsIdentity)
 				CanBeNull = false;
 
-			if (columnAttribute.HasIsPrimaryKey())
+			if (columnAttribute != null && columnAttribute.HasIsPrimaryKey())
 				IsPrimaryKey = columnAttribute.IsPrimaryKey;
 			else if (MemberName.IndexOf(".") < 0)
 			{

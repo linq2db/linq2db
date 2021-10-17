@@ -6,7 +6,7 @@ namespace LinqToDB.Mapping
 	/// Overrides default scalar detection for target class or structure.
 	/// By default linq2db treats primitives and structs as scalar types.
 	/// This attribute allows you to mark class or struct as scalar type or mark struct as non-scalar type.
-	/// Also see <seealso cref="LinqToDB.Common.Configuration.IsStructIsScalarType"/>.
+	/// Also see <seealso cref="Common.Configuration.IsStructIsScalarType"/>.
 	/// Note that if you marks some type as scalar, you will need to define custom mapping logic between object of
 	/// that type and data parameter using <seealso cref="MappingSchema.SetConvertExpression(Type, Type, System.Linq.Expressions.LambdaExpression, bool)"/> methods.
 	/// </summary>
@@ -56,12 +56,12 @@ namespace LinqToDB.Mapping
 		/// <see cref="ProviderName"/> for standard names.
 		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
 		/// </summary>
-		public string? Configuration { get; set; }
+		public string? Configuration { get; init; }
 
 		/// <summary>
 		/// Gets or sets scalar type flag.
 		/// Default value: <c>true</c>.
 		/// </summary>
-		public bool   IsScalar      { get; set; }
+		public bool   IsScalar      { get; init; }
 	}
 }

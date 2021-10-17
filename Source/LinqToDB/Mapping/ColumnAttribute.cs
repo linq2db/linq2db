@@ -87,13 +87,13 @@ namespace LinqToDB.Mapping
 		/// <see cref="ProviderName"/> for standard names.
 		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
 		/// </summary>
-		public string? Configuration { get; set; }
+		public string? Configuration { get; init; }
 
 		/// <summary>
 		/// Gets or sets the name of a column in database.
 		/// If not specified, member name will be used.
 		/// </summary>
-		public string? Name { get; set; }
+		public string? Name { get; set; } // TODO: v4: init-only (blocked by fluent mapping builder)
 
 		/// <summary>
 		/// Gets or sets the name of mapped member.
@@ -123,45 +123,45 @@ namespace LinqToDB.Mapping
 		/// </code>
 		/// </example>
 		/// </summary>
-		public string? MemberName { get; set; }
+		public string? MemberName { get; init; }
 
 		/// <summary>
 		/// Gets or sets linq2db type for column.
 		/// Default value: default type, defined for member type in mapping schema.
 		/// </summary>
-		public DataType DataType { get; set; }
+		public DataType DataType { get; set; } // TODO: v4: init-only (blocked by fluent mapping builder)
 
 		/// <summary>
 		/// Gets or sets the name of the database column type.
 		/// Default value: default type, defined for member type in mapping schema.
 		/// </summary>
-		public string? DbType { get; set; }
+		public string? DbType { get; set; } // TODO: v4: init-only (blocked by fluent mapping builder)
 
 		/// <summary>
 		/// Gets or sets flag that tells that current member should be included into mapping.
 		/// Use NonColumnAttribute instead as a shorthand.
 		/// Default value: <c>true</c>.
 		/// </summary>
-		public bool IsColumn { get; set; }
+		public bool IsColumn { get; set; } // TODO: v4: init-only (blocked by fluent mapping builder)
 
 		/// <summary>
 		/// Gets or sets a storage property or field to hold the value from a column.
 		/// Could be usefull e.g. in combination of private storage field and getter-only mapping property.
 		/// </summary>
-		public string? Storage { get; set; }
+		public string? Storage { get; set; } // TODO: v4: init-only (blocked by fluent mapping builder)
 
 		/// <summary>
 		/// Gets or sets whether a column contains a discriminator value for a LINQ to DB inheritance hierarchy.
 		/// <see cref="InheritanceMappingAttribute"/> for more details.
 		/// Default value: <c>false</c>.
 		/// </summary>
-		public bool IsDiscriminator { get; set; }
+		public bool IsDiscriminator { get; set; } // TODO: v4: init-only (blocked by fluent mapping builder)
 
 		/// <summary>
 		/// Gets or sets whether a column must be explicitly defined in a Select statement to be fetched. If <c>true</c>, a "SELECT *"-ish statement won't retrieve this column.
 		/// Default value: <c>false</c>.
 		/// </summary>
-		public bool SkipOnEntityFetch { get; set; }
+		public bool SkipOnEntityFetch { get; set; } // TODO: v4: init-only (blocked by fluent mapping builder)
 
 		private bool? _skipOnInsert;
 		/// <summary>
@@ -173,7 +173,7 @@ namespace LinqToDB.Mapping
 		public bool   SkipOnInsert
 		{
 			get => _skipOnInsert ?? false;
-			set => _skipOnInsert = value;
+			set => _skipOnInsert = value; // TODO: v4: init-only (blocked by fluent mapping builder)
 		}
 
 		/// <summary>
@@ -192,7 +192,7 @@ namespace LinqToDB.Mapping
 		public bool   SkipOnUpdate
 		{
 			get => _skipOnUpdate ?? false;
-			set => _skipOnUpdate = value;
+			set => _skipOnUpdate = value; // TODO: v4: init-only (blocked by fluent mapping builder)
 		}
 
 		/// <summary>
@@ -209,7 +209,7 @@ namespace LinqToDB.Mapping
 		public  bool   IsIdentity
 		{
 			get => _isIdentity ?? false;
-			set => _isIdentity = value;
+			init => _isIdentity = value;
 		}
 
 		/// <summary>
@@ -226,7 +226,7 @@ namespace LinqToDB.Mapping
 		public bool   IsPrimaryKey
 		{
 			get => _isPrimaryKey ?? false;
-			set => _isPrimaryKey = value;
+			init => _isPrimaryKey = value;
 		}
 
 		/// <summary>
@@ -239,7 +239,7 @@ namespace LinqToDB.Mapping
 		/// Gets or sets the Primary Key order.
 		/// See <see cref="PrimaryKeyAttribute.Order"/> for more details.
 		/// </summary>
-		public int PrimaryKeyOrder { get; set; }
+		public int PrimaryKeyOrder { get; init; }
 
 		private bool? _canBeNull;
 		/// <summary>
@@ -248,7 +248,7 @@ namespace LinqToDB.Mapping
 		public  bool   CanBeNull
 		{
 			get => _canBeNull ?? true;
-			set => _canBeNull = value;
+			set => _canBeNull = value; // TODO: v4: init-only (blocked by fluent mapping builder)
 		}
 
 		/// <summary>
@@ -265,7 +265,7 @@ namespace LinqToDB.Mapping
 		public  int   Length
 		{
 			get => _length ?? 0;
-			set => _length = value;
+			set => _length = value; // TODO: v4: init-only (blocked by fluent mapping builder)
 		}
 
 		/// <summary>
@@ -282,7 +282,7 @@ namespace LinqToDB.Mapping
 		public int   Precision
 		{
 			get => _precision ?? 0;
-			set => _precision = value;
+			set => _precision = value; // TODO: v4: init-only (blocked by fluent mapping builder)
 		}
 
 		/// <summary>
@@ -299,7 +299,7 @@ namespace LinqToDB.Mapping
 		public int   Scale
 		{
 			get => _scale ?? 0;
-			set => _scale = value;
+			set => _scale = value; // TODO: v4: init-only (blocked by fluent mapping builder)
 		}
 
 		/// <summary>
@@ -317,7 +317,7 @@ namespace LinqToDB.Mapping
 		/// - {2} - NULL specifier;
 		/// - {3} - identity specification.
 		/// </summary>
-		public string? CreateFormat { get; set; }
+		public string? CreateFormat { get; set; } // TODO: v4: init-only (blocked by fluent mapping builder)
 
 		private int? _order;
 		/// <summary>
@@ -330,7 +330,7 @@ namespace LinqToDB.Mapping
 		public int Order
 		{
 			get => _order ?? int.MaxValue;
-			set => _order = value;
+			set => _order = value; // TODO: v4: init-only (blocked by fluent mapping builder)
 		}
 
 		/// <summary>

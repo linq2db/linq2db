@@ -240,12 +240,12 @@ namespace LinqToDB.Mapping
 			_entity.SetAttribute(
 					getter,
 					false,
-					 _ =>
-					 {
+					_ =>
+					{
 						var a = new ColumnAttribute { Configuration = _entity.Configuration, MemberName = memberName};
 						setColumn(a);
 						return a;
-					 },
+					},
 					(_,a) => setColumn(a),
 					a     => a.Configuration,
 					a     => new ColumnAttribute(a),

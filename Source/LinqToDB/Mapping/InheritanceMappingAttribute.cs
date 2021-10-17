@@ -20,21 +20,21 @@ namespace LinqToDB.Mapping
 		/// <see cref="ProviderName"/> for standard names.
 		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
 		/// </summary>
-		public string? Configuration { get; set; }
+		public string? Configuration { get; init; }
 
 		/// <summary>
 		/// Gets or sets discriminator value.
 		/// </summary>
-		public object? Code          { get; set; }
+		public object? Code          { get; init; }
 
 		/// <summary>
 		/// Get or sets flag, that tells linq2db that current mapping should be used by default if suitable mapping type not found.
 		/// </summary>
-		public bool   IsDefault     { get; set; }
+		public bool   IsDefault     { get; init; }
 
 		/// <summary>
 		/// Gets or sets type, to which record with current discriminator value should be mapped.
 		/// </summary>
-		public Type   Type          { get; set; } = null!;
+		public Type   Type          { get; init; } = null!;
 	}
 }

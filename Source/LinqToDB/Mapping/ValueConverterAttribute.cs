@@ -10,7 +10,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// ValueConverter for mapping Database Values to Model values.
 		/// </summary>
-		public IValueConverter? ValueConverter { get; set; }
+		public IValueConverter? ValueConverter { get; init; }
 
 		/// <summary>
 		/// Returns <see cref="IValueConverter"/> for specific column.
@@ -32,11 +32,11 @@ namespace LinqToDB.Mapping
 		/// <see cref="ProviderName"/> for standard names.
 		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
 		/// </summary>
-		public string? Configuration { get; set; }
+		public string? Configuration { get; init; }
 
 		/// <summary>
 		/// Gets or sets converter type. ConverterType should implement <see cref="IValueConverter"/> interface, should have public constructor with no parameters.
 		/// </summary>
-		public Type? ConverterType { get; set; }
+		public Type? ConverterType { get; init; }
 	}
 }

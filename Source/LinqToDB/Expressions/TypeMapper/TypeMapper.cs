@@ -767,7 +767,7 @@ namespace LinqToDB.Expressions
 			if (lambda.Parameters.Count != paramTypes.Length)
 				throw new LinqToDBException("Invalid count of types.");
 
-			var parameters = new ParameterExpression[paramTypes.Length];
+			var parameters = paramTypes.Length == 0 ? Array<ParameterExpression>.Empty : new ParameterExpression[paramTypes.Length];
 			var generator  = new ExpressionGenerator(this);
 
 			for (int i = 0; i < paramTypes.Length; i++)

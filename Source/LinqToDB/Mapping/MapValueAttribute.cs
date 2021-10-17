@@ -82,18 +82,18 @@ namespace LinqToDB.Mapping
 		/// <see cref="ProviderName"/> for standard names.
 		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
 		/// </summary>
-		public string? Configuration { get; set; }
+		public string? Configuration { get; init; }
 
 		/// <summary>
 		/// Database value, to which current enumeration field will be mapped when used in query or saved to database.
 		/// This value, when loaded from database, will be converted to current enumeration field.
 		/// </summary>
-		public object? Value        { get; set; }
+		public object? Value        { get; init; }
 
 		/// <summary>
 		/// If <c>true</c>, <see cref="Value"/> property value will be used for conversion from enumeration to
 		/// database value.
 		/// </summary>
-		public bool   IsDefault     { get; set; }
+		public bool   IsDefault     { get; init; }
 	}
 }

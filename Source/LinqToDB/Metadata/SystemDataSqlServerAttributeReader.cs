@@ -17,8 +17,6 @@ namespace LinqToDB.Metadata
 	/// </summary>
 	public class SystemDataSqlServerAttributeReader : IMetadataReader
 	{
-		readonly AttributeReader _reader = new AttributeReader();
-
 		private static readonly Type[] _sqlMethodAttributes;
 		private static readonly Type[] _sqlUserDefinedTypeAttributes;
 
@@ -49,7 +47,7 @@ namespace LinqToDB.Metadata
 			return Array<T>.Empty;
 		}
 
-		static readonly ConcurrentDictionary<MemberInfo,object> _cache = new ConcurrentDictionary<MemberInfo,object>();
+		static readonly ConcurrentDictionary<MemberInfo,object> _cache = new ();
 
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit)
 			where T : Attribute
@@ -62,7 +60,7 @@ namespace LinqToDB.Metadata
 					{
 						if (memberInfo.IsMethodEx())
 						{
-							var ma = _reader.GetAttributes<Attribute>(type, memberInfo, inherit)
+							var ma = AttributeReader.Instance.GetAttributes<Attribute>(type, memberInfo, inherit)
 								.Where(a => _sqlMethodAttributes.Any(_ => _.IsAssignableFrom(a.GetType())))
 								.ToArray();
 
@@ -98,7 +96,7 @@ namespace LinqToDB.Metadata
 
 							if (gm != null)
 							{
-								var ma = _reader.GetAttributes<Attribute>(type, gm, inherit)
+								var ma = AttributeReader.Instance.GetAttributes<Attribute>(type, gm, inherit)
 									.Where(a => _sqlMethodAttributes.Any(_ => _.IsAssignableFrom(a.GetType())))
 									.ToArray();
 
@@ -130,7 +128,7 @@ namespace LinqToDB.Metadata
 
 			if (typeof(T) == typeof(DataTypeAttribute) && _sqlUserDefinedTypeAttributes.Length > 0)
 			{
-				var attrs = _reader.GetAttributes<Attribute>(memberInfo.GetMemberType(), inherit)
+				var attrs = AttributeReader.Instance.GetAttributes<Attribute>(memberInfo.GetMemberType(), inherit)
 					.Where(a => _sqlUserDefinedTypeAttributes.Any(_ => _.IsAssignableFrom(a.GetType())))
 					.ToArray();
 
@@ -152,7 +150,6 @@ namespace LinqToDB.Metadata
 		}
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
-		public MemberInfo[] GetDynamicColumns(Type type)
-			=> _reader.GetDynamicColumns(type);
+		public MemberInfo[] GetDynamicColumns(Type type) => Array<MemberInfo>.Empty;
 	}
 }

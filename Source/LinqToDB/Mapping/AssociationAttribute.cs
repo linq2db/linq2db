@@ -36,35 +36,35 @@ namespace LinqToDB.Mapping
 		/// <see cref="ProviderName"/> for standard names.
 		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
 		/// </summary>
-		public string?      Configuration       { get; set; }
+		public string?      Configuration       { get; init; }
 
 		/// <summary>
 		/// Gets or sets comma-separated list of association key members on this side of association.
 		/// Those keys will be used for join predicate generation and must be compatible with <see cref="OtherKey"/> keys.
 		/// You must specify keys it you do not use custom predicate (see <see cref="ExpressionPredicate"/>).
 		/// </summary>
-		public string?      ThisKey             { get; set; }
+		public string?      ThisKey             { get; init; }
 
 		/// <summary>
 		/// Gets or sets comma-separated list of association key members on another side of association.
 		/// Those keys will be used for join predicate generation and must be compatible with <see cref="ThisKey"/> keys.
 		/// You must specify keys it you do not use custom predicate (see <see cref="ExpressionPredicate"/>).
 		/// </summary>
-		public string?      OtherKey            { get; set; }
+		public string?      OtherKey            { get; init; }
 
 		/// <summary>
 		/// Specifies static property or method without parameters, that returns join predicate expression. This predicate will be used together with
 		/// <see cref="ThisKey"/>/<see cref="OtherKey"/> join keys, if they are specified.
 		/// Predicate expression lambda function takes two parameters: this record and other record and returns boolean result.
 		/// </summary>
-		public string?      ExpressionPredicate { get; set; }
+		public string?      ExpressionPredicate { get; init; }
 
 		/// <summary>
 		/// Specifies predicate expression. This predicate will be used together with
 		/// <see cref="ThisKey"/>/<see cref="OtherKey"/> join keys, if they are specified.
 		/// Predicate expression lambda function takes two parameters: this record and other record and returns boolean result.
 		/// </summary>
-		public Expression?  Predicate           { get; set; }
+		public Expression?  Predicate           { get; init; }
 
 
 		/// <summary>
@@ -87,7 +87,7 @@ namespace LinqToDB.Mapping
 		/// </example>
 		/// </para>
 		/// </summary>
-		public string?      QueryExpressionMethod { get; set; }
+		public string?      QueryExpressionMethod { get; init; }
 
 		/// <summary>
 		/// Specifies query expression. If is set, other association keys are ignored.
@@ -102,13 +102,13 @@ namespace LinqToDB.Mapping
 		/// </example>
 		/// </para>
 		/// </summary>
-		public Expression?  QueryExpression       { get; set; }
+		public Expression?  QueryExpression       { get; init; }
 
 		/// <summary>
 		/// Specify name of property or field to store association value, loaded using <see cref="LinqExtensions.LoadWith{TEntity,TProperty}(System.Linq.IQueryable{TEntity},System.Linq.Expressions.Expression{System.Func{TEntity,TProperty}})"/> method.
 		/// When not specified, current association member will be used.
 		/// </summary>
-		public string?      Storage             { get; set; }
+		public string?      Storage             { get; init; }
 
 		/// <summary>
 		/// Defines type of join:
@@ -116,32 +116,32 @@ namespace LinqToDB.Mapping
 		/// - left join for <c>CanBeNull = true</c>.
 		/// Default value: <c>true</c>.
 		/// </summary>
-		public bool         CanBeNull           { get; set; }
+		public bool         CanBeNull           { get; init; }
 
 		/// <summary>
 		/// This property is not used by linq2db and could be used for informational purposes.
 		/// </summary>
-		public string?      KeyName             { get; set; }
+		public string?      KeyName             { get; init; }
 
 		/// <summary>
 		/// This property is not used by linq2db and could be used for informational purposes.
 		/// </summary>
-		public string?      BackReferenceName   { get; set; }
+		public string?      BackReferenceName   { get; init; }
 
 		/// <summary>
 		/// This property is not used by linq2db and could be used for informational purposes.
 		/// </summary>
-		public bool         IsBackReference     { get; set; }
+		public bool         IsBackReference     { get; init; }
 
 		/// <summary>
 		/// This property is not used by linq2db and could be used for informational purposes.
 		/// </summary>
-		public Relationship Relationship        { get; set; }
+		public Relationship Relationship        { get; init; }
 
 		/// <summary>
 		/// Gets or sets alias for association. Used in SQL generation process.
 		/// </summary>
-		public string?      AliasName           { get; set; }
+		public string?      AliasName           { get; init; }
 
 		/// <summary>
 		/// Returns <see cref="ThisKey"/> value as a list of key member names.

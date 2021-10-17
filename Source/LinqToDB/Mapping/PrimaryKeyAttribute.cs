@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace LinqToDB.Mapping
 {
@@ -41,7 +41,7 @@ namespace LinqToDB.Mapping
 		/// <see cref="ProviderName"/> for standard names.
 		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
 		/// </summary>
-		public string? Configuration { get; set; }
+		public string? Configuration { get; init; }
 
 		/// <summary>
 		/// Gets or sets order of current column in composite primary key.
@@ -49,6 +49,6 @@ namespace LinqToDB.Mapping
 		/// from columns with smallest order value to greatest.
 		/// Default value: <c>-1</c>.
 		/// </summary>
-		public int    Order         { get; set; }
+		public int    Order         { get; set; } // TODO: v4: init-only (blocked by fluent mapping builder)
 	}
 }
