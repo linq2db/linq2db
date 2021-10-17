@@ -95,7 +95,7 @@ namespace LinqToDB.SqlQuery
 
 		#region Public Members
 
-		public DbDataType Type { get; }
+		public DbDataType Type { get; internal set; }
 
 		public static readonly SqlDataType Undefined = new (DataType.Undefined, typeof(object), (int?)null, (int?)null, null, null);
 
