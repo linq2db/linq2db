@@ -7,7 +7,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using SqlProvider;
 	using SqlQuery;
 	using Linq;
-	using Mapping;
 
 	class PostgreSQLSqlOptimizer : BasicSqlOptimizer
 	{
@@ -324,12 +323,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return statement;
 		}
 
-		public override ISqlPredicate ConvertSearchStringPredicate<TContext>(MappingSchema mappingSchema, SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext<TContext>> visitor,
-			OptimizationContext optimizationContext)
+		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext> visitor)
 		{
-			var searchPredicate = ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);
+			var searchPredicate = ConvertSearchStringPredicateViaLike(predicate, visitor);
 
-			if (false == predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context) && searchPredicate is SqlPredicate.Like likePredicate)
+			if (false == predicate.CaseSensitive.EvaluateBoolExpression(visitor.Context.OptimizationContext.Context) && searchPredicate is SqlPredicate.Like likePredicate)
 			{
 				searchPredicate = new SqlPredicate.Like(likePredicate.Expr1, likePredicate.IsNot, likePredicate.Expr2, likePredicate.Escape, "ILIKE");
 			}
@@ -337,10 +335,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return searchPredicate;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl<TContext>(ISqlExpression expression, ConvertVisitor<TContext> visitor,
-			EvaluationContext context)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
 		{
-			expression = base.ConvertExpressionImpl(expression, visitor, context);
+			expression = base.ConvertExpressionImpl(expression, visitor);
 
 			if (expression is SqlBinaryExpression be)
 			{
@@ -380,9 +377,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 										func.Parameters[2],
 										Sub<int>(
 											ConvertExpressionImpl(
-													new SqlFunction(typeof(int), "Length", func.Parameters[1]), visitor, context), func.Parameters[2])),
-										visitor,
-										context)),
+													new SqlFunction(typeof(int), "Length", func.Parameters[1]), visitor), func.Parameters[2])),
+										visitor)),
 								Sub(func.Parameters[2], 1));
 				}
 			}

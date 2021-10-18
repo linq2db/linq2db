@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Threading;
 using LinqToDB.Common;
 using LinqToDB.SqlQuery;
 
@@ -19,7 +20,6 @@ namespace LinqToDB.SqlProvider
 
 		private Dictionary<(DbDataType, string, object?), SqlParameter>? _dynamicParameters;
 
-		
 		public OptimizationContext(EvaluationContext context, AliasesContext aliases, 
 			bool isParameterOrderDepended)
 		{
@@ -31,7 +31,6 @@ namespace LinqToDB.SqlProvider
 		public EvaluationContext Context                  { get; }
 		public bool              IsParameterOrderDepended { get; }
 		public AliasesContext    Aliases                  { get; }
-
 
 		public bool IsOptimized(IQueryElement element, [NotNullWhen(true)] out IQueryElement? newExpr)
 		{
@@ -59,7 +58,6 @@ namespace LinqToDB.SqlProvider
 		{
 			_optimized[element] = newExpr;
 		}
-
 
 		public bool HasParameters() => _actualParameters != null && _actualParameters.Count > 0;
 
@@ -141,6 +139,30 @@ namespace LinqToDB.SqlProvider
 		{
 			_usedParameterNames = null;
 			_actualParameters = null;
+		}
+
+		private ConvertVisitor<BasicSqlOptimizer.RunOptimizationContext>? _visitor;
+
+		private int _nestingLevel;
+		public T ConvertAll<T>(
+			BasicSqlOptimizer.RunOptimizationContext context,
+			T element,
+			Func<ConvertVisitor<BasicSqlOptimizer.RunOptimizationContext>, IQueryElement, IQueryElement> convertAction,
+			Func<VisitArgs<BasicSqlOptimizer.RunOptimizationContext>, bool> parentAction)
+			where T : class, IQueryElement
+		{
+			if (_visitor == null)
+				_visitor = new ConvertVisitor<BasicSqlOptimizer.RunOptimizationContext>(context, convertAction, true, false, false, parentAction);
+			else
+				_visitor.Reset(context, convertAction, true, false, false, parentAction);
+
+			// temporary(?) guard
+			if (_nestingLevel > 0)
+				throw new InvalidOperationException("Nested optimization detected");
+			Interlocked.Increment(ref _nestingLevel);
+			var res = (T?)_visitor.ConvertInternal(element) ?? element;
+			Interlocked.Decrement(ref _nestingLevel);
+			return res;
 		}
 	}
 }

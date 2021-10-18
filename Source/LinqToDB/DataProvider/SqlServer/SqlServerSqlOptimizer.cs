@@ -5,7 +5,6 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
-	using Mapping;
 
 	abstract class SqlServerSqlOptimizer : BasicSqlOptimizer
 	{
@@ -33,12 +32,11 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 
-		public override ISqlPredicate ConvertSearchStringPredicate<TContext>(MappingSchema mappingSchema, SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext<TContext>> visitor,
-			OptimizationContext optimizationContext)
+		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext> visitor)
 		{
-			var like = base.ConvertSearchStringPredicate(mappingSchema, predicate, visitor, optimizationContext);
+			var like = base.ConvertSearchStringPredicate(predicate, visitor);
 
-			if (predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context) == true)
+			if (predicate.CaseSensitive.EvaluateBoolExpression(visitor.Context.OptimizationContext.Context) == true)
 			{
 				SqlPredicate.ExprExpr? subStrPredicate = null;
 
@@ -103,10 +101,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			return like;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl<TContext>(ISqlExpression expression, ConvertVisitor<TContext> visitor,
-			EvaluationContext context)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
 		{
-			expression = base.ConvertExpressionImpl(expression, visitor, context);
+			expression = base.ConvertExpressionImpl(expression, visitor);
 
 			switch (expression.ElementType)
 			{

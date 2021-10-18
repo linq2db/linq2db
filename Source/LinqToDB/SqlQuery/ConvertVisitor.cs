@@ -23,14 +23,14 @@ namespace LinqToDB.SqlQuery
 	{
 		// when true, only changed (and explicitly added) elements added to VisitedElements
 		// greatly reduce memory allocation for majority of cases, where there is nothing to replace
-		private readonly bool                                                       _visitAll;
-		private readonly Func<ConvertVisitor<TContext>,IQueryElement,IQueryElement> _convert;
-		private readonly Func<VisitArgs<TContext>, bool>?                           _parentAction;
-		private readonly VisitArgs<TContext>?                                       _visitArgs;
+		private bool                                                       _visitAll;
+		private Func<ConvertVisitor<TContext>,IQueryElement,IQueryElement> _convert;
+		private Func<VisitArgs<TContext>, bool>?                           _parentAction;
+		private VisitArgs<TContext>?                                       _visitArgs;
 
-		public readonly TContext Context;
-		public readonly bool     AllowMutation;
-		public readonly bool     HasStack;
+		public TContext Context;
+		public bool     AllowMutation;
+		public bool     HasStack;
 
 		delegate T Clone<T>(T obj);
 
@@ -57,6 +57,30 @@ namespace LinqToDB.SqlQuery
 
 			if (_parentAction != null)
 				_visitArgs = new VisitArgs<TContext>(this);
+		}
+
+		internal void Reset(
+			TContext                                                     context,
+			Func<ConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction,
+			bool                                                         visitAll,
+			bool                                                         allowMutation,
+			bool                                                         withStack,
+			Func<VisitArgs<TContext>, bool>?                             parentAction = default)
+		{
+			_visitAll     = visitAll;
+			_convert      = convertAction;
+			AllowMutation = allowMutation;
+			HasStack      = withStack;
+			_parentAction = parentAction;
+			Context       = context;
+
+			if (_parentAction != null)
+				_visitArgs = new VisitArgs<TContext>(this);
+			else
+				_visitArgs = null;
+
+			_visitedElements?.Clear();
+			_stack?          .Clear();
 		}
 
 		void CorrectQueryHierarchy(SelectQuery? parentQuery)
