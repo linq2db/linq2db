@@ -36,7 +36,6 @@ namespace LinqToDB.SqlQuery
 		private Dictionary<IQueryElement, IQueryElement?>? _visitedElements;
 		public List<IQueryElement>?                        Stack;
 		public IQueryElement?                              ParentElement       => Stack == null || Stack.Count == 0 ? null : Stack[Stack.Count - 1];
-		public IQueryElement?                              SecondParentElement => Stack == null || Stack.Count < 2  ? null : Stack[Stack.Count - 2];
 
 		internal ConvertVisitor(TContext context, Func<ConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction, bool visitAll, bool allowMutation, Func<VisitArgs<TContext>, bool>? parentAction = default)
 		{
@@ -1250,37 +1249,46 @@ namespace LinqToDB.SqlQuery
 
 					case QueryElementType.CteClause:
 					{
-						var cte = (CteClause)element;
+						// element converted by owner (QueryElementType.WithClause)
+						// to avoid conversion when used as table
+						break;
+					}
 
-						// TODO: if we can remove this line, we can optimize visitor to create Stack only when it used by visit function
-						// for avoiding recursion
-						if (SecondParentElement?.ElementType != QueryElementType.WithClause)
-							break;
+					case QueryElementType.WithClause:
+					{
+						var with = (SqlWithClause)element;
 
-						var body   = (SelectQuery?)ConvertInternal(cte.Body);
-
-						if (body != null && !ReferenceEquals(cte.Body, body))
+						List<CteClause>? newClauses = null;
+						for (var i = 0; i < with.Clauses.Count; i++)
 						{
-							var objTree = new Dictionary<IQueryElement, IQueryElement>();
+							var cte = with.Clauses[i];
+							Push(cte);
 
-							var clonedFields = cte.Fields!.Clone(objTree);
+							var body = (SelectQuery?)ConvertInternal(cte.Body);
 
-							newElement = new CteClause(
-								body,
-								clonedFields,
-								cte.ObjectType,
-								cte.IsRecursive,
-								cte.Name);
+							CteClause? newCte = null;
+							if (body != null && !ReferenceEquals(cte.Body, body))
+							{
+								var objTree = new Dictionary<IQueryElement, IQueryElement>();
 
-							var correctedBody = body.Convert(
-									(cte, newElement, objTree),
+								var clonedFields = cte.Fields!.Clone(objTree);
+
+								newCte = new CteClause(
+									body,
+									clonedFields,
+									cte.ObjectType,
+									cte.IsRecursive,
+									cte.Name);
+
+								var correctedBody = body.Convert(
+									(cte, newCte, objTree),
 									static (v, e) =>
 									{
 										if (e.ElementType == QueryElementType.CteClause)
 										{
 											var inner = (CteClause)e;
 											if (ReferenceEquals(inner, v.Context.cte))
-												return v.Context.newElement;
+												return v.Context.newCte;
 										}
 
 										if (v.Context.objTree.TryGetValue(e, out var newValue))
@@ -1289,36 +1297,40 @@ namespace LinqToDB.SqlQuery
 
 									});
 
-							// update visited for cloned fields
-							foreach (var pair in objTree)
-							{
-								if (pair.Key is IQueryElement queryElement)
-									AddVisited(queryElement, pair.Value);
+								// update visited for cloned fields
+								foreach (var pair in objTree)
+								{
+									if (pair.Key is IQueryElement queryElement)
+										AddVisited(queryElement, pair.Value);
+								}
+
+								AddVisited(cte, newCte);
+
+								newCte.Body = correctedBody;
+
+								if (newClauses == null)
+									newClauses = new(with.Clauses);
+
+								newClauses[i] = newCte;
 							}
 
-							AddVisited(element, newElement);
+							Pop();
 
-							((CteClause)newElement).Body = correctedBody;
-						}
+							newCte = (CteClause)_convert(this, newCte ?? cte);
 
-						break;
-					}
-
-					case QueryElementType.WithClause:
-					{
-						var with = (SqlWithClause)element;
-
-						var clauses = ConvertSafe(with.Clauses);
-
-						if (clauses != null && !ReferenceEquals(with.Clauses, clauses))
-						{
-							newElement = new SqlWithClause()
+							if (!_visitAll || !ReferenceEquals(cte, newCte))
 							{
-								Clauses = clauses
-							};
+								if (newClauses == null)
+									newClauses = new(with.Clauses);
+								newClauses[i] = newCte;
 
-							newElement = new SqlWithClause() { Clauses = clauses };
+								AddVisited(cte, newCte);
+							}
 						}
+
+						if (newClauses != null)
+							newElement = new SqlWithClause() { Clauses = newClauses };
+
 						break;
 					}
 
