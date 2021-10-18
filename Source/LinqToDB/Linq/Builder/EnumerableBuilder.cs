@@ -38,6 +38,9 @@ namespace LinqToDB.Linq.Builder
 					break;
 				}
 				case ExpressionType.Constant:
+					var ce = (ConstantExpression)expr;
+					if (ce.Value == null)
+						return false;
 					break;
 				default:
 					return false;

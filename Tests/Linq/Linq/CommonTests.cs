@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
-
+using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -582,8 +582,57 @@ namespace Tests.Linq
 				Debug.WriteLine(str);
 			}
 		}
+
+		[Test]
+		public async Task SelectNullEnumerableIssue([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var personWithArray = await db.GetTable<Person>()
+					.OrderBy(p => p.ID)
+					.Select(p =>
+						new PersonArrayProjection
+						{
+							Id = p.ID,
+							Name = p.Name,
+							SomeArray = null
+						}
+					).ToListAsync();
+				
+				Assert.IsNotEmpty(personWithArray);
+				Assert.True(personWithArray.All(p => p.SomeArray == null));
+				
+				var personWithList = await db.GetTable<Person>()
+					.OrderBy(p => p.ID)
+					.Select(p =>
+						new PersonListProjection
+						{
+							Id        = p.ID,
+							Name      = p.Name,
+							SomeList  = null
+						}
+					).ToListAsync();
+				
+				Assert.IsNotEmpty(personWithList);
+				Assert.True(personWithList.All(p => p.SomeList == null));
+			}
+		}
 	}
 
+	public class PersonListProjection
+	{
+		public int        Id             { get; set; }
+		public string?    Name           { get; set; }
+		public List<int>? SomeList { get; set; }
+	}
+
+	public class PersonArrayProjection
+	{
+		public int     Id             { get; set; }
+		public string? Name           { get; set; }
+		public int[]?  SomeArray { get; set; }
+	}
+	
 	static class Extender
 	{
 		public static ITable<Person> People(this DataConnection db)
