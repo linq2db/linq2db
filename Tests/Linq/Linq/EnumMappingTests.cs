@@ -225,6 +225,29 @@ namespace Tests.Linq
 			}
 		}
 
+		private static int[] IdValues = new[] { RID };
+
+		[Test]
+		public void ContainsIssue([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (new Cleaner(db))
+			{
+				db.GetTable<RawTable>().Insert(() => new RawTable
+				{
+					Id        = RID,
+					TestField = VAL2
+				});
+
+				var result = db.GetTable<TestTable2>()
+					.Select(r => new
+					{
+						IsActive = IdValues.Contains(r.Id)
+					});
+				Assert.IsNotEmpty(result);
+			}
+		}
+		
 		[Test]
 		public void EnumMapWhere3([DataSources] string context)
 		{
