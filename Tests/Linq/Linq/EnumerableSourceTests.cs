@@ -812,7 +812,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StaticEnumerable([DataSources] string context)
+		public void StaticEnumerable([DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
