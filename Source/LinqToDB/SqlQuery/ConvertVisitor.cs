@@ -30,18 +30,28 @@ namespace LinqToDB.SqlQuery
 
 		public readonly TContext Context;
 		public readonly bool     AllowMutation;
+		public readonly bool     HasStack;
 
 		delegate T Clone<T>(T obj);
 
 		private Dictionary<IQueryElement, IQueryElement?>? _visitedElements;
-		public List<IQueryElement>?                        Stack;
-		public IQueryElement?                              ParentElement       => Stack == null || Stack.Count == 0 ? null : Stack[Stack.Count - 1];
+		private List<IQueryElement>?                       _stack;
 
-		internal ConvertVisitor(TContext context, Func<ConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction, bool visitAll, bool allowMutation, Func<VisitArgs<TContext>, bool>? parentAction = default)
+		public List<IQueryElement> Stack         => _stack ??= (HasStack ? new () : throw new InvalidOperationException("Stack tracking is not enabled for current visitor instance"));
+		public IQueryElement?      ParentElement => Stack.Count == 0 ? null : Stack[Stack.Count - 1];
+
+		internal ConvertVisitor(
+			TContext                                                     context,
+			Func<ConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction,
+			bool                                                         visitAll,
+			bool                                                         allowMutation,
+			bool                                                         withStack,
+			Func<VisitArgs<TContext>, bool>?                             parentAction = default)
 		{
 			_visitAll     = visitAll;
 			_convert      = convertAction;
 			AllowMutation = allowMutation;
+			HasStack      = withStack;
 			_parentAction = parentAction;
 			Context       = context;
 
@@ -66,15 +76,16 @@ namespace LinqToDB.SqlQuery
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void Push(IQueryElement element)
 		{
-			(Stack ??= new()).Add(element);
+			if (HasStack)
+				(_stack ??= new()).Add(element);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void Pop()
 		{
 			// don't return last value as we don't need it at call sites
-			if (Stack != null && Stack.Count > 0)
-				Stack.RemoveAt(Stack.Count - 1);
+			if (_stack != null && _stack.Count > 0)
+				_stack.RemoveAt(_stack.Count - 1);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

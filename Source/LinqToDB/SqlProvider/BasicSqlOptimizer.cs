@@ -132,7 +132,8 @@ namespace LinqToDB.SqlProvider
 					return isUnionAll;
 				},
 				null,
-				allowMutation: true);
+				allowMutation: true,
+				withStack: true);
 		}
 
 		static void CorrelateNullValueTypes(ref ISqlExpression toCorrect, ISqlExpression reference)
@@ -3016,7 +3017,8 @@ namespace LinqToDB.SqlProvider
 
 					QueryHelper.MoveOrderByUp(p, q);
 				},
-				allowMutation: true);
+				allowMutation: true,
+				withStack: false);
 		}
 
 		/// <summary>
@@ -3110,7 +3112,8 @@ namespace LinqToDB.SqlProvider
 					query.Select.Take(null, null);
 
 				}, 
-				allowMutation: true);
+				allowMutation: true,
+				withStack: false);
 		}
 
 		/// <summary>
@@ -3187,7 +3190,8 @@ namespace LinqToDB.SqlProvider
 						QueryHelper.MoveOrderByUp(p, q);
 					}
 				},
-				allowMutation: true);
+				allowMutation: true,
+				withStack: false);
 		}
 
 		#region Helper functions

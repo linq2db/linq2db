@@ -28,8 +28,8 @@ namespace LinqToDB.DataProvider.SqlServer
 				                                        query.Select.TakeValue != null ||
 				                                        query.Select.TakeHints != null || !query.OrderBy.IsEmpty),
 				null,
-				allowMutation: true
-			);
+				allowMutation: true,
+				withStack: false);
 		}
 
 

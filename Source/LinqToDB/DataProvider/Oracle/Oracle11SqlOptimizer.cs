@@ -276,8 +276,8 @@ namespace LinqToDB.DataProvider.Oracle
 					query.Select.Take(null, null);
 
 				},
-				allowMutation: true
-				);
+				allowMutation: true,
+				withStack: false);
 		}
 
 		protected override ISqlExpression ConvertFunction(SqlFunction func)
