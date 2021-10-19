@@ -1304,6 +1304,7 @@ namespace LinqToDB.SqlProvider
 			return predicate;
 		}
 
+		private readonly SqlDataType _typeWrapper = new (default(DbDataType));
 		public virtual IQueryElement OptimizeQueryElement<TContext>(ConvertVisitor<TContext> visitor, IQueryElement root,
 			IQueryElement element, OptimizationContext context, MappingSchema? mappingSchema)
 		{
@@ -1321,8 +1322,12 @@ namespace LinqToDB.SqlProvider
 					var value = (SqlValue)element;
 					if (mappingSchema != null)
 					{
-						var dataType = new SqlDataType(value.ValueType);
-						if (!mappingSchema.ValueToSqlConverter.CanConvert(dataType, value.Value))
+						// TODO:
+						// this line produce insane amount of allocations
+						// as currently we cannot change ValueConverter signatures, we use pre-created instance of type wrapper
+						//var dataType = new SqlDataType(value.ValueType);
+						_typeWrapper.Type = value.ValueType;
+						if (!mappingSchema.ValueToSqlConverter.CanConvert(_typeWrapper, value.Value))
 						{
 							// we cannot generate SQL literal, so just convert to parameter
 							var param = context.SuggestDynamicParameter(value.ValueType, "value", value.Value);
