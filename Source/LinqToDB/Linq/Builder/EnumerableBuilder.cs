@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -53,6 +54,8 @@ namespace LinqToDB.Linq.Builder
 					break;
 				}
 				case ExpressionType.Constant:
+					if (((ConstantExpression)expr).Value is not IEnumerable)
+						return false;
 					break;
 				default:
 					return false;
