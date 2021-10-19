@@ -487,10 +487,9 @@ namespace LinqToDB.Linq
 			if (dataContext is IExpressionPreprocessor preprocessor)
 				expr = preprocessor.ProcessExpression(expr);
 
-			var parametersContext = new ParametersContext(expr, optimizationContext, dataContext);
 
 			if (Configuration.Linq.DisableQueryCache)
-				return CreateQuery(optimizationContext, parametersContext, dataContext, expr);
+				return CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
 
 			// calculate query flags
 			var flags = QueryFlags.None;
@@ -510,7 +509,7 @@ namespace LinqToDB.Linq
 
 			if (query == null)
 			{
-				query = CreateQuery(optimizationContext, parametersContext, dataContext, expr);
+				query = CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
 
 				if (!query.DoNotCache)
 					_queryCache.TryAdd(dataContext, query, flags);
