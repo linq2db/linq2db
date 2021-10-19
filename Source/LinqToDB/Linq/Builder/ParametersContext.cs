@@ -15,17 +15,19 @@ namespace LinqToDB.Linq.Builder
 {
 	class ParametersContext
 	{
-		public ParametersContext(Expression expression, ExpressionTreeOptimizationContext optimizationContext, IDataContext dataContext)
+		public ParametersContext(Expression parametersExpression, ExpressionTreeOptimizationContext optimizationContext, IDataContext dataContext)
 		{
-			OptimizationContext = optimizationContext;
-			DataContext         = dataContext;
+			ParametersExpression = parametersExpression;
+			OptimizationContext  = optimizationContext;
+			DataContext          = dataContext;
 
-			_expressionAccessors = expression.GetExpressionAccessors(ExpressionBuilder.ExpressionParam);
+			_expressionAccessors = parametersExpression.GetExpressionAccessors(ExpressionBuilder.ExpressionParam);
 		}
 
-		public ExpressionTreeOptimizationContext OptimizationContext { get; }
-		public IDataContext                      DataContext         { get; }
-		public MappingSchema                     MappingSchema       => DataContext.MappingSchema;
+		public Expression                        ParametersExpression { get; }
+		public ExpressionTreeOptimizationContext OptimizationContext  { get; }
+		public IDataContext                      DataContext          { get; }
+		public MappingSchema                     MappingSchema        => DataContext.MappingSchema;
 
 		private static ParameterExpression[] AccessorParameters = { ExpressionBuilder.ExpressionParam, ExpressionBuilder.DataContextParam, ExpressionBuilder.ParametersParam };
 
@@ -58,7 +60,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Build Parameter
 
-		internal Dictionary<Expression,ParameterAccessor>? _parameters;
+		internal List<(Expression Expression, ColumnDescriptor? Column, ParameterAccessor Accessor)>? _parameters;
 
 		internal void AddCurrentSqlParameter(ParameterAccessor parameterAccessor)
 		{
@@ -76,26 +78,36 @@ namespace LinqToDB.Linq.Builder
 		public ParameterAccessor BuildParameter(Expression expr, ColumnDescriptor? columnDescriptor, bool forceConstant = false,
 			BuildParameterType buildParameterType = BuildParameterType.Default)
 		{
-			if (_parameters != null && _parameters.TryGetValue(expr, out var p))
-				return p;
-
 			string? name = null;
 
 			var newExpr = ReplaceParameter(_expressionAccessors, expr, forceConstant, nm => name = nm);
 
-			p = PrepareConvertersAndCreateParameter(newExpr, expr, name, columnDescriptor, buildParameterType);
+			var newAccessor = PrepareConvertersAndCreateParameter(newExpr, expr, name, columnDescriptor, buildParameterType);
 
-			var found = p;
+			var found = newAccessor;
 			if (_parameters != null && expr.NodeType != ExpressionType.Constant)
 			{
-				foreach (var accessor in _parameters)
+				foreach (var (paramExpr, column, accessor) in _parameters)
 				{
-					if (!accessor.Value.SqlParameter.Type.SystemType.Equals(p.SqlParameter.Type.SystemType))
+					// build
+					if (!accessor.SqlParameter.Type.Equals(newAccessor.SqlParameter.Type))
 						continue;
 
-					if (accessor.Key.EqualsTo(expr, OptimizationContext.GetSimpleEqualsToContext(true)))
+					// we cannot merge parameters if they have defined ValueConverter
+					if (column != null && columnDescriptor != null)
 					{
-						found = accessor.Value;
+						if (!ReferenceEquals(column, columnDescriptor))
+						{
+							if (column.ValueConverter != null || columnDescriptor.ValueConverter != null)
+								continue;
+						}
+					}
+					else if (!ReferenceEquals(column, columnDescriptor))
+						continue;
+
+					if (paramExpr.EqualsTo(expr, OptimizationContext.GetSimpleEqualsToContext(true)))
+					{
+						found = accessor;
 						break;
 					}
 				}
@@ -103,13 +115,13 @@ namespace LinqToDB.Linq.Builder
 
 			// We already have registered parameter for the same expression
 			//
-			if (!ReferenceEquals(found, p))
+			if (!ReferenceEquals(found, newAccessor))
 				return found;
 
-			(_parameters ??= new()).Add(expr, p);
-			AddCurrentSqlParameter(p);
+			(_parameters ??= new()).Add((expr, columnDescriptor, newAccessor));
+			AddCurrentSqlParameter(newAccessor);
 
-			return p;
+			return newAccessor;
 		}
 
 		public ParameterAccessor BuildParameterFromArgumentProperty(MethodCallExpression methodCall, int argumentIndex, ColumnDescriptor columnDescriptor,
@@ -225,7 +237,9 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (columnDescriptor != null && !(originalAccessor is BinaryExpression))
 					{
-						newExpr.DataType = columnDescriptor.GetDbDataType(true);
+						newExpr.DataType = columnDescriptor.GetDbDataType(true)
+							.WithSystemType(newExpr.ValueExpression.Type);
+
 						if (newExpr.ValueExpression.Type != columnDescriptor.MemberType)
 						{
 							newExpr.ValueExpression = newExpr.ValueExpression.UnwrapConvert()!;
@@ -280,7 +294,7 @@ namespace LinqToDB.Linq.Builder
 			name ??= columnDescriptor?.MemberName;
 
 			var p = CreateParameterAccessor(
-				DataContext, newExpr.ValueExpression, originalAccessor, newExpr.DbDataTypeExpression, valueExpression, name);
+				DataContext, newExpr.ValueExpression, originalAccessor, newExpr.DbDataTypeExpression, valueExpression, ParametersExpression, name);
 
 			return p;
 		}
@@ -366,6 +380,7 @@ namespace LinqToDB.Linq.Builder
 			Expression          originalAccessorExpression,
 			Expression          dbDataTypeAccessorExpression,
 			Expression          expression,
+			Expression?         parametersExpression,
 			string?             name)
 		{
 			// Extracting name for parameter
@@ -393,13 +408,19 @@ namespace LinqToDB.Linq.Builder
 				Expression.Convert(dbDataTypeAccessorExpression, typeof(DbDataType)),
 				AccessorParameters);
 
+			var dataTypeAccessor = dbDataTypeAccessor.CompileExpression();
+
+			var parameterType = parametersExpression == null
+				? new DbDataType(accessorExpression.Type)
+				: dataTypeAccessor(parametersExpression, dataContext, null);
+
 			return new ParameterAccessor
 				(
 					expression,
 					mapper.CompileExpression(),
 					original.CompileExpression(),
-					dbDataTypeAccessor.CompileExpression(),
-					new SqlParameter(new DbDataType(accessorExpression.Type), name, null)
+					dataTypeAccessor,
+					new SqlParameter(parameterType, name, null)
 					{
 						IsQueryParameter = !dataContext.InlineParameters
 					}
@@ -491,7 +512,7 @@ namespace LinqToDB.Linq.Builder
 
 			var p = PrepareConvertersAndCreateParameter(vte, expr, member?.Name, columnDescriptor, BuildParameterType.Default);
 
-			(_parameters ??= new()).Add(expr, p);
+			(_parameters ??= new()).Add((expr, columnDescriptor, p));
 			AddCurrentSqlParameter(p);
 
 			return p.SqlParameter;
