@@ -1341,7 +1341,7 @@ namespace LinqToDB.SqlQuery
 								}
 
 								return e;
-							});
+							}, withStack: true);
 							condition.Predicate = newPredicate;
 						}
 					}

@@ -5,7 +5,6 @@ namespace LinqToDB.DataProvider.Oracle
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
-	using Mapping;
 
 	public class Oracle11SqlOptimizer : BasicSqlOptimizer
 	{
@@ -67,7 +66,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return false;
 		}
 
-		public override ISqlPredicate ConvertPredicateImpl<TContext>(MappingSchema mappingSchema, ISqlPredicate predicate, ConvertVisitor<RunOptimizationContext<TContext>> visitor, OptimizationContext optimizationContext)
+		public override ISqlPredicate ConvertPredicateImpl(ISqlPredicate predicate, ConvertVisitor<RunOptimizationContext> visitor)
 		{
 			switch (predicate.ElementType)
 			{
@@ -84,7 +83,7 @@ namespace LinqToDB.DataProvider.Oracle
 						 expr.Operator == SqlPredicate.Operator.LessOrEqual))
 					{
 						if (expr.Expr1.SystemType == typeof(string) &&
-						    expr.Expr1.TryEvaluateExpression(optimizationContext.Context, out var value1) && value1 is string string1)
+						    expr.Expr1.TryEvaluateExpression(visitor.Context.OptimizationContext.Context, out var value1) && value1 is string string1)
 						{
 							if (string1 == "")
 							{
@@ -96,7 +95,7 @@ namespace LinqToDB.DataProvider.Oracle
 						}
 
 						if (expr.Expr2.SystemType == typeof(string) &&
-						    expr.Expr2.TryEvaluateExpression(optimizationContext.Context, out var value2) && value2 is string string2)
+						    expr.Expr2.TryEvaluateExpression(visitor.Context.OptimizationContext.Context, out var value2) && value2 is string string2)
 						{
 							if (string2 == "")
 							{
@@ -111,15 +110,14 @@ namespace LinqToDB.DataProvider.Oracle
 				}
 			}
 
-			predicate = base.ConvertPredicateImpl(mappingSchema, predicate, visitor, optimizationContext);
+			predicate = base.ConvertPredicateImpl(predicate, visitor);
 
 			return predicate;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl<TContext>(ISqlExpression expression, ConvertVisitor<TContext> visitor,
-			EvaluationContext context)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
 		{
-			expression = base.ConvertExpressionImpl(expression, visitor, context);
+			expression = base.ConvertExpressionImpl(expression, visitor);
 
 			if (expression is SqlBinaryExpression be)
 			{
@@ -276,8 +274,8 @@ namespace LinqToDB.DataProvider.Oracle
 					query.Select.Take(null, null);
 
 				},
-				allowMutation: true
-				);
+				allowMutation: true,
+				withStack: false);
 		}
 
 		protected override ISqlExpression ConvertFunction(SqlFunction func)

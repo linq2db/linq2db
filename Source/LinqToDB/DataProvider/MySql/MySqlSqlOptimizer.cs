@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace LinqToDB.DataProvider.MySql
 {
 	using Extensions;
-	using LinqToDB.Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -38,10 +36,9 @@ namespace LinqToDB.DataProvider.MySql
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl<TContext>(ISqlExpression expression, ConvertVisitor<TContext> visitor,
-			EvaluationContext context)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
 		{
-			expression = base.ConvertExpressionImpl(expression, visitor, context);
+			expression = base.ConvertExpressionImpl(expression, visitor);
 
 			if (expression is SqlBinaryExpression be)
 			{
@@ -106,11 +103,9 @@ namespace LinqToDB.DataProvider.MySql
 			return expression;
 		}
 
-		public override ISqlPredicate ConvertSearchStringPredicate<TContext>(MappingSchema mappingSchema, SqlPredicate.SearchString predicate,
-			ConvertVisitor<RunOptimizationContext<TContext>> visitor,
-			OptimizationContext optimizationContext)
+		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext> visitor)
 		{
-			var caseSensitive = predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context);
+			var caseSensitive = predicate.CaseSensitive.EvaluateBoolExpression(visitor.Context.OptimizationContext.Context);
 
 			if (caseSensitive == null || caseSensitive == false)
 			{
@@ -166,7 +161,7 @@ namespace LinqToDB.DataProvider.MySql
 					new SqlValue(false));
 			}
 
-			return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);
+			return ConvertSearchStringPredicateViaLike(predicate, visitor);
 		}
 	}
 }

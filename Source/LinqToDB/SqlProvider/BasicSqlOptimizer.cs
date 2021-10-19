@@ -132,7 +132,8 @@ namespace LinqToDB.SqlProvider
 					return isUnionAll;
 				},
 				null,
-				allowMutation: true);
+				allowMutation: true,
+				withStack: true);
 		}
 
 		static void CorrelateNullValueTypes(ref ISqlExpression toCorrect, ISqlExpression reference)
@@ -783,14 +784,13 @@ namespace LinqToDB.SqlProvider
 			return new SqlValue(dbDataType, value);
 		}
 
-		public virtual ISqlExpression OptimizeExpression<TContext>(ISqlExpression expression, ConvertVisitor<TContext> convertVisitor,
-			EvaluationContext context)
+		public virtual ISqlExpression OptimizeExpression(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> convertVisitor)
 		{
 			switch (expression.ElementType)
 			{
 				case QueryElementType.SqlBinaryExpression :
 				{
-					return OptimizeBinaryExpression((SqlBinaryExpression)expression, context);
+					return OptimizeBinaryExpression((SqlBinaryExpression)expression, convertVisitor.Context.OptimizationContext.Context);
 				}
 
 				case QueryElementType.SqlFunction :
@@ -799,7 +799,7 @@ namespace LinqToDB.SqlProvider
 					if (func.DoNotOptimize)
 						break;
 
-					return OptimizeFunction(func, convertVisitor, context);
+					return OptimizeFunction(func, convertVisitor.Context.OptimizationContext.Context);
 				}
 
 				case QueryElementType.SqlExpression   :
@@ -816,8 +816,7 @@ namespace LinqToDB.SqlProvider
 			return expression;
 		}
 
-		public virtual ISqlExpression OptimizeFunction<TContext>(SqlFunction func, ConvertVisitor<TContext> convertVisitor,
-			EvaluationContext context)
+		public virtual ISqlExpression OptimizeFunction(SqlFunction func, EvaluationContext context)
 		{
 			if (func.TryEvaluateExpression(context, out var value))
 			{
@@ -1305,8 +1304,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 		private readonly SqlDataType _typeWrapper = new (default(DbDataType));
-		public virtual IQueryElement OptimizeQueryElement<TContext>(ConvertVisitor<TContext> visitor, IQueryElement root,
-			IQueryElement element, OptimizationContext context, MappingSchema? mappingSchema)
+		public virtual IQueryElement OptimizeQueryElement(ConvertVisitor<RunOptimizationContext> visitor, IQueryElement element)
 		{
 			switch (element.ElementType)
 			{
@@ -1320,17 +1318,17 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.SqlValue:
 				{
 					var value = (SqlValue)element;
-					if (mappingSchema != null)
+					if (visitor.Context.MappingSchema != null)
 					{
 						// TODO:
 						// this line produce insane amount of allocations
 						// as currently we cannot change ValueConverter signatures, we use pre-created instance of type wrapper
 						//var dataType = new SqlDataType(value.ValueType);
 						_typeWrapper.Type = value.ValueType;
-						if (!mappingSchema.ValueToSqlConverter.CanConvert(_typeWrapper, value.Value))
+						if (!visitor.Context.MappingSchema.ValueToSqlConverter.CanConvert(_typeWrapper, value.Value))
 						{
 							// we cannot generate SQL literal, so just convert to parameter
-							var param = context.SuggestDynamicParameter(value.ValueType, "value", value.Value);
+							var param = visitor.Context.OptimizationContext.SuggestDynamicParameter(value.ValueType, "value", value.Value);
 							return param;
 						}
 					}
@@ -1639,7 +1637,7 @@ namespace LinqToDB.SqlProvider
 			return OptimizeElement(mappingSchema, element, context, true);
 		}
 
-		public virtual ISqlExpression ConvertExpressionImpl<TContext>(ISqlExpression expression, ConvertVisitor<TContext> visitor, EvaluationContext context)
+		public virtual ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
 		{
 			switch (expression.ElementType)
 			{
@@ -1663,7 +1661,7 @@ namespace LinqToDB.SqlProvider
 									be.SystemType,
 									be.Expr1,
 									be.Operation,
-									ConvertExpressionImpl(new SqlFunction(typeof(string), "Convert", new SqlDataType(DataType.VarChar, len), be.Expr2), visitor, context),
+									ConvertExpressionImpl(new SqlFunction(typeof(string), "Convert", new SqlDataType(DataType.VarChar, len), be.Expr2), visitor),
 									be.Precedence);
 							}
 
@@ -1676,7 +1674,7 @@ namespace LinqToDB.SqlProvider
 
 								return new SqlBinaryExpression(
 									be.SystemType,
-									ConvertExpressionImpl(new SqlFunction(typeof(string), "Convert", new SqlDataType(DataType.VarChar, len), be.Expr1), visitor, context),
+									ConvertExpressionImpl(new SqlFunction(typeof(string), "Convert", new SqlDataType(DataType.VarChar, len), be.Expr1), visitor),
 									be.Operation,
 									be.Expr2,
 									be.Precedence);
@@ -1742,50 +1740,51 @@ namespace LinqToDB.SqlProvider
 			return func;
 		}
 
-		public readonly struct RunOptimizationContext<TContext>
+		public readonly struct RunOptimizationContext
 		{
 			public RunOptimizationContext(
 				OptimizationContext optimizationContext,
 				BasicSqlOptimizer   optimizer,
-				TContext            context,
+				MappingSchema?      mappingSchema,
 				bool                register,
-				Func<OptimizationContext, BasicSqlOptimizer, ConvertVisitor<RunOptimizationContext<TContext>>, TContext, IQueryElement, IQueryElement> func)
+				Func<ConvertVisitor<RunOptimizationContext>, IQueryElement, IQueryElement> func)
 			{
 				OptimizationContext = optimizationContext;
 				Optimizer           = optimizer;
-				Context             = context;
+				MappingSchema       = mappingSchema;
 				Register            = register;
 				Func                = func;
 			}
 
 			public readonly OptimizationContext OptimizationContext;
 			public readonly BasicSqlOptimizer   Optimizer;
-			public readonly TContext            Context;
 			public readonly bool                Register;
+			public readonly MappingSchema?      MappingSchema;
 
-			public readonly Func<OptimizationContext, BasicSqlOptimizer, ConvertVisitor<RunOptimizationContext<TContext>>, TContext, IQueryElement, IQueryElement> Func;
+			public readonly Func<ConvertVisitor<RunOptimizationContext>, IQueryElement, IQueryElement> Func;
 		}
 
-		static IQueryElement RunOptimization<TContext>(
+		static IQueryElement RunOptimization(
 			IQueryElement       element,
 			OptimizationContext optimizationContext,
 			BasicSqlOptimizer   optimizer,
-			TContext            context,
+			MappingSchema?      mappingSchema,
 			bool                register,
-			Func<OptimizationContext, BasicSqlOptimizer, ConvertVisitor<RunOptimizationContext<TContext>>, TContext, IQueryElement, IQueryElement> func)
+			Func<ConvertVisitor<RunOptimizationContext>, IQueryElement, IQueryElement> func)
 		{
-			var ctx = new RunOptimizationContext<TContext>(optimizationContext, optimizer, context, register, func);
+			var ctx = new RunOptimizationContext(optimizationContext, optimizer, mappingSchema, register, func);
 			for (; ; )
 			{
-				var newElement = element.ConvertAll(
+				var newElement = optimizationContext.ConvertAll(
 					ctx,
+					element,
 					static (visitor, e) =>
 					{
 						var prev = e;
 						var ne   = e;
 						for (;;)
 						{
-								ne = visitor.Context.Func(visitor.Context.OptimizationContext, visitor.Context.Optimizer, visitor, visitor.Context.Context, e);
+								ne = visitor.Context.Func(visitor, e);
 
 							if (ReferenceEquals(ne, e))
 								break;
@@ -1798,11 +1797,11 @@ namespace LinqToDB.SqlProvider
 
 						return e;
 					},
-					static args =>
+					static visitor =>
 					{
-						if (args.Visitor.Context.OptimizationContext.IsOptimized(args.Element, out var expr))
+						if (visitor.Context.OptimizationContext.IsOptimized(visitor.CurrentElement, out var expr))
 						{
-							args.Element = expr;
+							visitor.CurrentElement = expr;
 							return false;
 						}	
 						return true;
@@ -1823,20 +1822,20 @@ namespace LinqToDB.SqlProvider
 			if (optimizationContext.IsOptimized(element, out var newElement))
 				return newElement!;
 
-			newElement = RunOptimization(element, optimizationContext, this, (mappingSchema, root: element), !withConversion,
-				static (ctx, opt, visitor, pc, e) =>
+			newElement = RunOptimization(element, optimizationContext, this, mappingSchema, !withConversion,
+				static (visitor, e) =>
 				{
 					var ne = e;
 					if (ne is ISqlExpression expr1)
-						ne = opt.OptimizeExpression(expr1, visitor, ctx.Context);
+						ne = visitor.Context.Optimizer.OptimizeExpression(expr1, visitor);
 
 					if (ne is ISqlPredicate pred1)
-						ne = opt.OptimizePredicate(pred1, ctx.Context);
+						ne = visitor.Context.Optimizer.OptimizePredicate(pred1, visitor.Context.OptimizationContext.Context);
 
 					if (!ReferenceEquals(ne, e))
 						return ne;
 
-					ne = opt.OptimizeQueryElement(visitor, pc.root, ne, ctx, pc.mappingSchema);
+					ne = visitor.Context.Optimizer.OptimizeQueryElement(visitor, ne);
 
 					return ne;
 				});
@@ -1846,19 +1845,19 @@ namespace LinqToDB.SqlProvider
 				if (mappingSchema == null)
 					throw new InvalidOperationException("MappingSchema is required for conversion");
 				
-				newElement = RunOptimization(newElement, optimizationContext, this, (mappingSchema, root: element), true,
-					static(ctx, opt, visitor, pc, e) =>
+				newElement = RunOptimization(newElement, optimizationContext, this, mappingSchema, true,
+					static(visitor, e) =>
 					{
 						var ne = e;
 
 						if (ne is ISqlExpression expr2)
-							ne = opt.ConvertExpressionImpl(expr2, visitor, ctx.Context);
+							ne = visitor.Context.Optimizer.ConvertExpressionImpl(expr2, visitor);
 
 						if (!ReferenceEquals(ne, e))
 							return ne;
 
 						if (ne is ISqlPredicate pred3)
-							ne = opt.ConvertPredicateImpl(pc.mappingSchema!, pred3, visitor, ctx);
+							ne = visitor.Context.Optimizer.ConvertPredicateImpl(pred3, visitor);
 
 						return ne;
 					});
@@ -1869,14 +1868,14 @@ namespace LinqToDB.SqlProvider
 
 		public virtual bool CanCompareSearchConditions => false;
 
-		public virtual ISqlPredicate ConvertPredicateImpl<TContext>(MappingSchema mappingSchema, ISqlPredicate predicate, ConvertVisitor<RunOptimizationContext<TContext>> visitor, OptimizationContext optimizationContext)
+		public virtual ISqlPredicate ConvertPredicateImpl(ISqlPredicate predicate, ConvertVisitor<RunOptimizationContext> visitor)
 		{
 			switch (predicate.ElementType)
 			{
 				case QueryElementType.ExprExprPredicate:
 				{
 					var exprExpr = (SqlPredicate.ExprExpr)predicate;
-					var reduced = exprExpr.Reduce(optimizationContext.Context);
+					var reduced = exprExpr.Reduce(visitor.Context.OptimizationContext.Context);
 					if (!ReferenceEquals(reduced, exprExpr))
 					{
 						return reduced;
@@ -1900,18 +1899,17 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.IsTruePredicate:
 					return ((SqlPredicate.IsTrue)predicate).Reduce();
 				case QueryElementType.LikePredicate:
-					return ConvertLikePredicate(mappingSchema, (SqlPredicate.Like)predicate, optimizationContext.Context);
+					return ConvertLikePredicate(visitor.Context.MappingSchema!, (SqlPredicate.Like)predicate, visitor.Context.OptimizationContext.Context);
 				case QueryElementType.SearchStringPredicate:
-					return ConvertSearchStringPredicate(mappingSchema, (SqlPredicate.SearchString)predicate, visitor, optimizationContext);
+					return ConvertSearchStringPredicate((SqlPredicate.SearchString)predicate, visitor);
 				case QueryElementType.InListPredicate:
 				{
 					var inList = (SqlPredicate.InList)predicate;
-					return ConvertInListPredicate(mappingSchema, inList, optimizationContext.Context);
+					return ConvertInListPredicate(visitor.Context.MappingSchema!, inList, visitor.Context.OptimizationContext.Context);
 				}
 			}
 			return predicate;
 		}
-
 
 		public virtual string LikeEscapeCharacter         => "~";
 		public virtual string LikeWildcardCharacter       => "%";
@@ -1920,8 +1918,8 @@ namespace LinqToDB.SqlProvider
 		public virtual bool   LikeValueParameterSupport   => true;
 		public virtual bool   LikeIsEscapeSupported       => true;
 
-		protected static string[] StandardLikeCharactersToEscape = {"%", "_", "?", "*", "#", "[", "]"};
-		public virtual string[]   LikeCharactersToEscape => StandardLikeCharactersToEscape;
+		protected static  string[] StandardLikeCharactersToEscape = {"%", "_", "?", "*", "#", "[", "]"};
+		public    virtual string[] LikeCharactersToEscape => StandardLikeCharactersToEscape;
 
 		public virtual string EscapeLikeCharacters(string str, string escape)
 		{
@@ -1938,7 +1936,6 @@ namespace LinqToDB.SqlProvider
 
 			return newStr;
 		}
-
 
 		static ISqlExpression GenerateEscapeReplacement(ISqlExpression expression, ISqlExpression character, ISqlExpression escapeCharacter)
 		{
@@ -1989,18 +1986,19 @@ namespace LinqToDB.SqlProvider
 			return newExpr;
 		}
 
-		public virtual ISqlPredicate ConvertLikePredicate(MappingSchema mappingSchema, SqlPredicate.Like predicate,
+		public virtual ISqlPredicate ConvertLikePredicate(
+			MappingSchema     mappingSchema,
+			SqlPredicate.Like predicate,
 			EvaluationContext context)
 		{
 			return predicate;
 		}
 
-		protected ISqlPredicate ConvertSearchStringPredicateViaLike<TContext>(MappingSchema mappingSchema,
-			SqlPredicate.SearchString predicate,
-			ConvertVisitor<RunOptimizationContext<TContext>> visitor,
-			OptimizationContext optimizationContext)
+		protected ISqlPredicate ConvertSearchStringPredicateViaLike(
+			SqlPredicate.SearchString              predicate,
+			ConvertVisitor<RunOptimizationContext> visitor)
 		{
-			if (predicate.Expr2.TryEvaluateExpression(optimizationContext.Context, out var patternRaw)
+			if (predicate.Expr2.TryEvaluateExpression(visitor.Context.OptimizationContext.Context, out var patternRaw)
 				&& Converter.TryConvertToString(patternRaw, out var patternRawValue))
 			{
 				if (patternRawValue == null)
@@ -2051,18 +2049,18 @@ namespace LinqToDB.SqlProvider
 					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}")
 				};
 
-				patternExpr = OptimizeExpression(patternExpr, visitor, optimizationContext.Context);
+				patternExpr = OptimizeExpression(patternExpr, visitor);
 
 				return new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, patternExpr,
 					LikeIsEscapeSupported ? escape : null);
 			}
 		}
 
-		public virtual ISqlPredicate ConvertSearchStringPredicate<TContext>(MappingSchema mappingSchema, SqlPredicate.SearchString predicate,
-			ConvertVisitor<RunOptimizationContext<TContext>> visitor, 
-			OptimizationContext optimizationContext)
+		public virtual ISqlPredicate ConvertSearchStringPredicate(
+			SqlPredicate.SearchString              predicate,
+			ConvertVisitor<RunOptimizationContext> visitor)
 		{
-			if (predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context) == false)
+			if (predicate.CaseSensitive.EvaluateBoolExpression(visitor.Context.OptimizationContext.Context) == false)
 			{
 				predicate = new SqlPredicate.SearchString(
 					new SqlFunction(typeof(string), "$ToLower$", predicate.Expr1),
@@ -2072,7 +2070,7 @@ namespace LinqToDB.SqlProvider
 					new SqlValue(false));
 			}
 
-			return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);
+			return ConvertSearchStringPredicateViaLike(predicate, visitor);
 		}
 
 		static SqlField ExpectsUnderlyingField(ISqlExpression expr)
@@ -2204,7 +2202,6 @@ namespace LinqToDB.SqlProvider
 
 			return p;
 		}
-
 
 		protected ISqlExpression ConvertCoalesceToBinaryFunc(SqlFunction func, string funcName)
 		{
@@ -2539,7 +2536,6 @@ namespace LinqToDB.SqlProvider
 
 			return updateStatement;
 		}
-
 
 		/// <summary>
 		/// Corrects situation when update table is located in JOIN clause. 
@@ -2976,7 +2972,6 @@ namespace LinqToDB.SqlProvider
 				}
 				else if (skipExpr.ElementType != QueryElementType.SqlValue)
 					skipExpr = new SqlValue(skipExpr.EvaluateExpression(optimizationContext.Context)!);
-
 			}
 		}
 
@@ -3016,7 +3011,8 @@ namespace LinqToDB.SqlProvider
 
 					QueryHelper.MoveOrderByUp(p, q);
 				},
-				allowMutation: true);
+				allowMutation: true,
+				withStack: false);
 		}
 
 		/// <summary>
@@ -3110,7 +3106,8 @@ namespace LinqToDB.SqlProvider
 					query.Select.Take(null, null);
 
 				}, 
-				allowMutation: true);
+				allowMutation: true,
+				withStack: false);
 		}
 
 		/// <summary>
@@ -3187,7 +3184,8 @@ namespace LinqToDB.SqlProvider
 						QueryHelper.MoveOrderByUp(p, q);
 					}
 				},
-				allowMutation: true);
+				allowMutation: true,
+				withStack: false);
 		}
 
 		#region Helper functions

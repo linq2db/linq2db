@@ -1056,13 +1056,15 @@ namespace LinqToDB.SqlQuery
 		/// After wrapping query this function called for prcess needed optimizations. Array of queries contains [QC, QB, QA]
 		/// </param>
 		/// <param name="allowMutation">Wrapped query can be not recreated for performance considerations.</param>
+		/// <param name="withStack">Must be set to <c>true</c>, if <paramref name="wrapTest"/> function use 3rd parameter (containing parent element) otherwise it will be always null.</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when wrapping has been performed.</returns>
 		public static TStatement WrapQuery<TStatement, TContext>(
 			TContext                                         context,
 			TStatement                                       statement,
 			Func<TContext, SelectQuery, IQueryElement?, int> wrapTest,
 			Action<TContext, IReadOnlyList<SelectQuery>>     onWrap,
-			bool                                             allowMutation)
+			bool                                             allowMutation,
+			bool                                             withStack)
 			where TStatement : SqlStatement
 		{
 			if (statement == null) throw new ArgumentNullException(nameof(statement));
@@ -1077,7 +1079,7 @@ namespace LinqToDB.SqlQuery
 				{
 					if (element is SelectQuery query)
 					{
-						var ec = visitor.Context.wrapTest(visitor.Context.context, query, visitor.ParentElement);
+						var ec = visitor.Context.wrapTest(visitor.Context.context, query, visitor.HasStack ? visitor.ParentElement : null);
 						if (ec <= 0)
 							return element;
 
@@ -1170,7 +1172,7 @@ namespace LinqToDB.SqlQuery
 					} 
 
 					return element;
-				});
+				}, withStack: withStack);
 
 			return newStatement;
 		}
@@ -1195,12 +1197,15 @@ namespace LinqToDB.SqlQuery
 		/// <param name="queryToWrap">Tells which select query needs enveloping</param>
 		/// <param name="allowMutation">Wrapped query can be not recreated for performance considerations.</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when wrapping has been performed.</returns>
-		public static TStatement WrapQuery<TStatement>(TStatement statement, SelectQuery queryToWrap, bool allowMutation)
+		public static TStatement WrapQuery<TStatement>(
+			TStatement  statement,
+			SelectQuery queryToWrap,
+			bool        allowMutation)
 			where TStatement : SqlStatement
 		{
 			if (statement == null) throw new ArgumentNullException(nameof(statement));
 
-			return WrapQuery(queryToWrap, statement, static (queryToWrap, q, _) => q == queryToWrap, null, allowMutation);
+			return WrapQuery(queryToWrap, statement, static (queryToWrap, q, _) => q == queryToWrap, null, allowMutation, false);
 		}
 
 		/// <summary>
@@ -1214,13 +1219,15 @@ namespace LinqToDB.SqlQuery
 		/// <param name="wrapTest">Delegate for testing when query needs to be wrapped.</param>
 		/// <param name="onWrap">After enveloping query this function called for prcess needed optimizations.</param>
 		/// <param name="allowMutation">Wrapped query can be not recreated for performance considerations.</param>
+		/// <param name="withStack">Must be set to <c>true</c>, if <paramref name="wrapTest"/> function use 3rd parameter (containing parent element) otherwise it will be always null.</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when wrapping has been performed.</returns>
 		public static TStatement WrapQuery<TStatement, TContext>(
 			TContext                                          context,
 			TStatement                                        statement,
 			Func<TContext, SelectQuery, IQueryElement?, bool> wrapTest,
 			Action<TContext, SelectQuery, SelectQuery>?       onWrap,
-			bool                                              allowMutation)
+			bool                                              allowMutation,
+			bool                                              withStack)
 			where TStatement : SqlStatement
 		{
 			if (statement == null) throw new ArgumentNullException(nameof(statement));
@@ -1229,9 +1236,10 @@ namespace LinqToDB.SqlQuery
 			return WrapQuery(
 				(context, wrapTest, onWrap),
 				statement,
-				static (context, q, pe) => context.wrapTest(context.context, q, pe) ? 1 : 0,
+				static (context, q, pe  ) => context.wrapTest(context.context, q, pe) ? 1 : 0,
 				static (context, queries) => context.onWrap?.Invoke(context.context, queries[0], queries[1]),
-				allowMutation);
+				allowMutation,
+				withStack);
 		}
 
 		/// <summary>
