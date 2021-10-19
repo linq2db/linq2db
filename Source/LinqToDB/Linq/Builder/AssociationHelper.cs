@@ -39,9 +39,9 @@ namespace LinqToDB.Linq.Builder
 			{
 				// here we tell for Expression Comparer to compare optimized Association expressions
 				//
-				definedQueryMethod = (LambdaExpression)builder.AddQueryableMemberAccessors(onMember, builder.DataContext, (mi, dc) =>
+				definedQueryMethod = (LambdaExpression)builder.AddQueryableMemberAccessors((association, parentType, objectType), onMember, builder.DataContext, (context, mi, dc) =>
 				{
-					var queryLambda         = association.GetQueryMethod(parentType, objectType) ?? throw new InvalidOperationException();
+					var queryLambda         = context.association.GetQueryMethod(context.parentType, context.objectType) ?? throw new InvalidOperationException();
 					var optimizationContext = new ExpressionTreeOptimizationContext(dc);
 					var optimizedExpr       = optimizationContext.ExposeExpression(queryLambda);
 					    optimizedExpr       = optimizationContext.ExpandQueryableMethods(optimizedExpr);
@@ -165,7 +165,7 @@ namespace LinqToDB.Linq.Builder
 				// here we tell for Expression Comparer to compare optimized Association expressions
 				//
 				var closureExpr    = definedQueryMethod;
-				definedQueryMethod = (LambdaExpression)builder.AddQueryableMemberAccessors(onMember, builder.DataContext, (mi, dc) =>
+				definedQueryMethod = (LambdaExpression)builder.AddQueryableMemberAccessors(closureExpr, onMember, builder.DataContext, (closureExpr, mi, dc) =>
 				{
 					var optimizationContext = new ExpressionTreeOptimizationContext(dc);
 					var optimizedExpr       = optimizationContext.ExposeExpression(closureExpr);

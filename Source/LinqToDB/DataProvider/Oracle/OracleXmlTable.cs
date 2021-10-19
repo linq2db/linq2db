@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
@@ -55,7 +54,7 @@ namespace LinqToDB.DataProvider.Oracle
 				return text;
 			}
 
-			static string ValueConverter(List<Action<StringBuilder,object>> converters, object obj)
+			static string ValueConverter(IReadOnlyList<Action<StringBuilder,object>> converters, object obj)
 			{
 				var sb = new StringBuilder("<t>").AppendLine();
 
@@ -80,38 +79,39 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				var ed  = mappingSchema.GetEntityDescriptor(sqlTable.ObjectType!);
 
-				return o => ValueConverter(
-					ed.Columns.Select<ColumnDescriptor,Action<StringBuilder,object>>(c =>
+				var converters = new Action<StringBuilder,object>[ed.Columns.Count];
+				for (var i = 0; i < ed.Columns.Count; i++)
+				{
+					var c = ed.Columns[i];
+
+					var conv = mappingSchema.ValueToSqlConverter;
+					converters[i] = (sb, obj) =>
 					{
-						var conv = mappingSchema.ValueToSqlConverter;
-						return (sb,obj) =>
+						var value = c.GetValue(obj);
+
+						if (value is string && c.MemberType == typeof(string))
 						{
-							var value = c.GetValue(obj);
+							var str = conv.Convert(new StringBuilder(), value).ToString();
 
-							if (value is string && c.MemberType == typeof(string))
+							if (str.Length > 2)
 							{
-								var str = conv.Convert(new StringBuilder(), value).ToString();
+								str = str.Substring(1);
+								str = str.Substring(0, str.Length - 1);
+								sb.Append(str);
+							}
+						}
+						else
+							conv.Convert(sb, value);
+					};
+				}
 
-								if (str.Length> 2)
-								{
-									str = str.Substring(1);
-									str = str.Substring(0, str.Length - 1);
-									sb.Append(str);
-								}
-							}
-							else
-							{
-								conv.Convert(sb, value);
-							}
-						};
-					}).ToList(),
-					o);
+				return o => ValueConverter(converters, o);
 			}
 
-			public override void SetTable(ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<Expression, ColumnDescriptor?, ISqlExpression> converter)
+			public override void SetTable<TContext>(TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
 				var exp = methodCall.Arguments[1];
-				var arg = converter(exp, null);
+				var arg = converter(context, exp, null);
 				var ed  = mappingSchema.GetEntityDescriptor(table.ObjectType!);
 
 				if (arg is SqlParameter p)
@@ -122,35 +122,40 @@ namespace LinqToDB.DataProvider.Oracle
 					if (exp is ConstantExpression constExpr)
 					{
 						if (constExpr.Value is Func<string>)
-						{
-							p.ValueConverter = l => ((Func<string>)l!)();
-						}
+							p.ValueConverter = static l => ((Func<string>)l!)();
 						else
-						{
 							p.ValueConverter = GetXmlConverter(mappingSchema, table)!;
-						}
 					}
 					else if (exp is LambdaExpression)
 					{
-						p.ValueConverter = l => ((Func<string>)l!)();
+						p.ValueConverter = static l => ((Func<string>)l!)();
 					}
 				}
 
-				var columns = ed.Columns
-					.Select((c,i) => string.Format("{0} {1} path 'c{2}'",
-						sqlBuilder.ConvertInline(c.ColumnName, ConvertType.NameToQueryField),
-						string.IsNullOrEmpty(c.DbType) ?
-							GetDataTypeText(
-								new SqlDataType(
-									c.DataType == DataType.Undefined ? SqlDataType.GetDataType(c.MemberType).Type.DataType : c.DataType,
-									c.MemberType,
-									c.Length,
-									c.Precision,
-									c.Scale,
-									c.DbType)) :
-							c.DbType,
-						i))
-					.Aggregate((s1,s2) => s1 + ", " +  s2);
+				var columns = new StringBuilder();
+				for (var i = 0; i < ed.Columns.Count; i++)
+				{
+					if (i > 0)
+						columns.Append(", ");
+
+					var  c= ed.Columns[i];
+
+					columns.Append(
+						string.Format(
+							"{0} {1} path 'c{2}'",
+							sqlBuilder.ConvertInline(c.ColumnName, ConvertType.NameToQueryField),
+							string.IsNullOrEmpty(c.DbType)
+								? GetDataTypeText(
+									new SqlDataType(
+										c.DataType == DataType.Undefined ? SqlDataType.GetDataType(c.MemberType).Type.DataType : c.DataType,
+										c.MemberType,
+										c.Length,
+										c.Precision,
+										c.Scale,
+										c.DbType))
+								: c.DbType,
+							i));
+				}
 
 				table.SqlTableType   = SqlTableType.Expression;
 				table.Name           = $"XmlTable(\'/t/r\' PASSING XmlType({{2}}) COLUMNS {columns}) {{1}}";

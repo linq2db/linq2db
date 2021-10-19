@@ -355,7 +355,7 @@ namespace LinqToDB.Linq.Builder
 												var ed = Builder.MappingSchema.GetEntityDescriptor(member.DeclaringType!);
 												var descriptor = ed.FindColumnDescriptor(member);
 
-												sql = CloneSqlInfoArray(ConvertExpressions(memberExpression, flags, descriptor), member);
+												sql = ConvertExpressions(memberExpression, flags, descriptor).Clone(member);
 
 												_sql.Add(cacheKey, sql);
 											}
@@ -424,23 +424,12 @@ namespace LinqToDB.Linq.Builder
 			throw new NotImplementedException();
 		}
 
-		private static SqlInfo[] CloneSqlInfoArray(SqlInfo[] sqlInfos, MemberInfo member)
-		{
-			if (sqlInfos.Length == 0)
-				return Array<SqlInfo>.Empty;
-
-			var sql = new SqlInfo[sqlInfos.Length];
-			for (var i = 0; i < sql.Length; i++)
-				sql[i] = sqlInfos[i].Clone(member);
-			return sql;
-		}
-
 		SqlInfo[] ConvertMember(MemberInfo member, Expression expression, ConvertFlags flags)
 		{
 			var ed         = Builder.MappingSchema.GetEntityDescriptor(member.DeclaringType!);
 			var descriptor = ed.FindColumnDescriptor(member);
 
-			return CloneSqlInfoArray(ConvertExpressions(expression, flags, descriptor), member);
+			return ConvertExpressions(expression, flags, descriptor).Clone(member);
 		}
 
 		SqlInfo[] ConvertExpressions(Expression expression, ConvertFlags flags, ColumnDescriptor? columnDescriptor)

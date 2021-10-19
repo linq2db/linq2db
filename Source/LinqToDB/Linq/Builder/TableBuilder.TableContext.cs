@@ -134,7 +134,7 @@ namespace LinqToDB.Linq.Builder
 
 				SelectQuery.From.Table(SqlTable);
 
-				attr.SetTable(builder.DataContext.CreateSqlProvider(), Builder.MappingSchema, SqlTable, mc, (a, _) => builder.ConvertToSql(this, a));
+				attr.SetTable((context: this, builder), builder.DataContext.CreateSqlProvider(), Builder.MappingSchema, SqlTable, mc, static (context, a, _) => context.builder.ConvertToSql(context.context, a));
 
 				Init(true);
 			}
@@ -236,8 +236,8 @@ namespace LinqToDB.Linq.Builder
 			static bool IsRecord(Attribute[] attrs, out int sequence)
 			{
 				sequence = -1;
-				var compilationMappingAttr = attrs.FirstOrDefault(attr => attr.GetType().FullName == "Microsoft.FSharp.Core.CompilationMappingAttribute");
-				var cliMutableAttr         = attrs.FirstOrDefault(attr => attr.GetType().FullName == "Microsoft.FSharp.Core.CLIMutableAttribute");
+				var compilationMappingAttr = attrs.FirstOrDefault(static attr => attr.GetType().FullName == "Microsoft.FSharp.Core.CompilationMappingAttribute");
+				var cliMutableAttr         = attrs.FirstOrDefault(static attr => attr.GetType().FullName == "Microsoft.FSharp.Core.CLIMutableAttribute");
 
 				if (compilationMappingAttr != null)
 				{
@@ -398,28 +398,28 @@ namespace LinqToDB.Linq.Builder
 
 			Expression BuildDefaultConstructor(EntityDescriptor entityDescriptor, Type objectType, Tuple<int, SqlField?>[] index)
 			{
-				var members =
-				(
-					from idx in index
-					where idx.Item1 >= 0 && idx.Item2 != null
-					from cd in entityDescriptor.Columns.Where(c => c.ColumnName == idx.Item2.PhysicalName)
-					where
-						(cd.Storage != null ||
-						 !(cd.MemberAccessor.MemberInfo is PropertyInfo info) ||
-						 info.GetSetMethod(true) != null)
-					select new
+				var members = new List<(ColumnDescriptor column, ConvertFromDataReaderExpression expr)>();
+				foreach (var idx in index)
+				{
+					if (idx.Item1 >= 0 && idx.Item2 != null)
 					{
-						Column = cd,
-						Expr   = new ConvertFromDataReaderExpression(cd.StorageType, idx.Item1, cd.ValueConverter, Builder.DataReaderLocal)
+						foreach (var cd in entityDescriptor.Columns.Where(c => c.ColumnName == idx.Item2.PhysicalName))
+						{
+							if (cd.Storage != null ||
+								!(cd.MemberAccessor.MemberInfo is PropertyInfo info) ||
+								info.GetSetMethod(true) != null)
+							{
+								members.Add((cd, new ConvertFromDataReaderExpression(cd.StorageType, idx.Item1, cd.ValueConverter, Builder.DataReaderLocal)));
+							}
+						}
 					}
-				).ToList();
-
+				}
 
 				var initExpr = Expression.MemberInit(Expression.New(objectType),
 					members
 						// IMPORTANT: refactoring this condition will affect hasComplex variable calculation below
-						.Where(m => !m.Column.MemberAccessor.IsComplex)
-						.Select(m => (MemberBinding)Expression.Bind(m.Column.StorageInfo, m.Expr))
+						.Where(static m => !m.column.MemberAccessor.IsComplex)
+						.Select(static m => (MemberBinding)Expression.Bind(m.column.StorageInfo, m.expr))
 				);
 
 				var        hasComplex = members.Count > initExpr.Bindings.Count;
@@ -433,16 +433,12 @@ namespace LinqToDB.Linq.Builder
 					var exprs = new List<Expression> { Expression.Assign(obj, expr) };
 
 					if (hasComplex)
-					{
-						exprs.AddRange(
-							members.Where(m => m.Column.MemberAccessor.IsComplex).Select(m =>
-								m.Column.MemberAccessor.SetterExpression!.GetBody(obj, m.Expr)));
-					}
+						foreach (var (column, exp) in members)
+							if (column.MemberAccessor.IsComplex)
+								exprs.Add(column.MemberAccessor.SetterExpression!.GetBody(obj, exp));
 
 					if (loadWith != null)
-					{
 						SetLoadWithBindings(objectType, obj, exprs);
-					}
 
 					exprs.Add(obj);
 
@@ -468,7 +464,7 @@ namespace LinqToDB.Linq.Builder
 							return new { m, sequence };
 						return null;
 					})
-					.Where(_ => _ != null).OrderBy(_ => _!.sequence).Select(_ => _!.m) :
+					.Where(static _ => _ != null).OrderBy(static _ => _!.sequence).Select(static _ => _!.m) :
 					typeAccessor.Members;
 
 				var loadWith      = GetLoadWith();
@@ -476,7 +472,15 @@ namespace LinqToDB.Linq.Builder
 
 				foreach (var member in members)
 				{
-					var column = columns.FirstOrDefault(c => !c.IsComplex && c.Name == member.Name);
+					ColumnInfo? column = null;
+					foreach (var c in columns)
+					{
+						if (!c.IsComplex && c.Name == member.Name)
+						{
+							column = c;
+							break;
+						}
+					}
 
 					if (column != null)
 					{
@@ -489,22 +493,27 @@ namespace LinqToDB.Linq.Builder
 
 						if (isAssociation)
 						{
-							var loadWithItem = loadWithItems.FirstOrDefault(_ => MemberInfoEqualityComparer.Default.Equals(_.Info.MemberInfo, member.MemberInfo));
-							if (loadWithItem != null)
+							foreach (var item in loadWithItems)
 							{
-								var ma = Expression.MakeMemberAccess(Expression.Constant(null, typeAccessor.Type), member.MemberInfo);
-								yield return (member.Name, BuildExpression(ma, 1, false));
+								if (MemberInfoEqualityComparer.Default.Equals(item.Info.MemberInfo, member.MemberInfo))
+								{
+									var ma = Expression.MakeMemberAccess(Expression.Constant(null, typeAccessor.Type), member.MemberInfo);
+									yield return (member.Name, BuildExpression(ma, 1, false));
+									break;
+								}
 							}
 						}
 						else
 						{
 							var name = member.Name + '.';
-							var cols = columns.Where(c => c.IsComplex && c.Name.StartsWith(name)).ToList();
+
+							var cols = new List<ColumnInfo>(columns.Count);
+							foreach (var c in columns)
+								if (c.IsComplex && c.Name.StartsWith(name))
+									cols.Add(c);
 
 							if (cols.Count == 0)
-							{
 								yield return (member.Name, null);
-							}
 							else
 							{
 								foreach (var col in cols)
@@ -528,7 +537,7 @@ namespace LinqToDB.Linq.Builder
 								{
 									var expr = Expression.MemberInit(
 										Expression.New(member.Type),
-										from m in typeAcc.Members.Zip(exprs, (m,e) => new { m, e })
+										from m in typeAcc.Members.Zip(exprs, static (m,e) => new { m, e })
 										where m.e.Expr != null
 										select (MemberBinding)Expression.Bind(m.m.MemberInfo, m.e.Expr));
 
@@ -570,12 +579,28 @@ namespace LinqToDB.Linq.Builder
 				for (int i = 0; i < parameters.Length; i++)
 				{
 					var param = parameters[i];
-					var memberExpr =
-						expressions.FirstOrDefault(m => m.Name == param.Name).Expr ??
-						expressions.FirstOrDefault(m => m.Name.Equals(param.Name, StringComparison.OrdinalIgnoreCase))
-							.Expr;
+					Expression? arg = null;
+					foreach (var (name, e) in expressions)
+					{
+						if (e != null && name == param.Name)
+						{
+							arg = e;
+							break;
+						}
+					}
 
-					var arg = memberExpr;
+					if (arg == null)
+					{
+						foreach (var (name, e) in expressions)
+						{
+							if (e != null && name.Equals(param.Name, StringComparison.OrdinalIgnoreCase))
+							{
+								arg = e;
+								break;
+							}
+						}
+					}
+
 					argFound = argFound || arg != null;
 
 					arg ??= new DefaultValueExpression(Builder.MappingSchema, param.ParameterType);
@@ -584,9 +609,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				if (!argFound)
-				{
 					throw new InvalidOperationException($"Type '{objectType.Name}' has no suitable constructor.");
-				}
 
 				var expr = Expression.New(ctor, args);
 
@@ -595,18 +618,28 @@ namespace LinqToDB.Linq.Builder
 
 			Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, Type objectType, Tuple<int, SqlField?>[] index, bool isRecord)
 			{
-				var exprs = GetExpressions(entityDescriptor.TypeAccessor, isRecord,
-					(
-						from idx in index
-						where idx.Item1 >= 0 && idx.Item2 != null
-						from cd in entityDescriptor.Columns.Where(c => c.ColumnName == idx.Item2.PhysicalName)
-						select new ColumnInfo
+				var columns = new List<ColumnInfo>();
+				foreach (var idx in index)
+				{
+					if (idx.Item1 >= 0 && idx.Item2 != null)
+					{
+						foreach (var cd in entityDescriptor.Columns)
 						{
-							IsComplex  = cd.MemberAccessor.IsComplex,
-							Name       = cd.MemberName,
-							Expression = new ConvertFromDataReaderExpression(cd.MemberType, idx.Item1, cd.ValueConverter, Builder.DataReaderLocal)
+							if (cd.ColumnName == idx.Item2.PhysicalName)
+							{
+								columns.Add(
+									new ColumnInfo()
+									{
+										IsComplex  = cd.MemberAccessor.IsComplex,
+										Name       = cd.MemberName,
+										Expression = new ConvertFromDataReaderExpression(cd.MemberType, idx.Item1, cd.ValueConverter, Builder.DataReaderLocal)
+									});
+							}
 						}
-					).ToList()).ToList();
+					}
+				}
+
+				var exprs = GetExpressions(entityDescriptor.TypeAccessor, isRecord, columns).ToList();
 
 				return BuildFromParametrizedConstructor(objectType, exprs);
 			}
@@ -627,7 +660,7 @@ namespace LinqToDB.Linq.Builder
 						names.Add(cd.MemberName, n++);
 
 				var q =
-					from r in SqlTable.Fields.Select((f,i) => new { f, i })
+					from r in SqlTable.Fields.Select(static (f,i) => new { f, i })
 					where names.ContainsKey(r.f.Name)
 					orderby names[r.f.Name]
 					select index[r.i];
@@ -684,14 +717,16 @@ namespace LinqToDB.Linq.Builder
 					info = matchedFields.ToArray();
 				}
 
-				var index = info.Select(idx => Tuple.Create(ConvertToParentIndex(idx.Index, this), QueryHelper.GetUnderlyingField(idx.Sql))).ToArray();
+				var index = new Tuple<int, SqlField?>[info.Length];
+				for (var i = 0; i < info.Length; i++)
+					index[i] = Tuple.Create(ConvertToParentIndex(info[i].Index, this), QueryHelper.GetUnderlyingField(info[i].Sql));
 
 				if (ObjectType != tableType || InheritanceMapping.Count == 0)
 					return BuildTableExpression(!Builder.IsBlockDisable, tableType, index);
 
 				Expression expr;
 
-				var defaultMapping = InheritanceMapping.SingleOrDefault(m => m.IsDefault);
+				var defaultMapping = InheritanceMapping.SingleOrDefault(static m => m.IsDefault);
 
 				if (defaultMapping != null)
 				{
@@ -712,8 +747,11 @@ namespace LinqToDB.Linq.Builder
 						ObjectType);
 				}
 
-				foreach (var mapping in InheritanceMapping.Select((m,i) => new { m, i }).Where(m => m.m != defaultMapping))
+				foreach (var mapping in InheritanceMapping.Select(static (m,i) => new { m, i }))
 				{
+					if (mapping.m == defaultMapping)
+						continue;
+
 					var field  = SqlTable[InheritanceMapping[mapping.i].DiscriminatorName] ?? throw new LinqException($"Field {InheritanceMapping[mapping.i].DiscriminatorName} not found in table {SqlTable}");
 					var dindex = ConvertToParentIndex(_indexes[field].Index, this);
 
@@ -867,8 +905,8 @@ namespace LinqToDB.Linq.Builder
 
 									{
 										result = SqlTable.Fields
-											.Where(field => !field.IsDynamic && !field.SkipOnEntityFetch)
-											.Select(f =>
+											.Where(static field => !field.IsDynamic && !field.SkipOnEntityFetch)
+											.Select(static f =>
 												f.ColumnDescriptor != null
 													? new SqlInfo(f.ColumnDescriptor.MemberInfo, f)
 													: new SqlInfo(f))
@@ -1681,7 +1719,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (accessorMember.MemberInfo.MemberType == MemberTypes.Method)
 				{
-					var attribute = Builder.MappingSchema.GetAttribute<AssociationAttribute>(accessorMember.MemberInfo.DeclaringType!, accessorMember.MemberInfo, a => a.Configuration);
+					var attribute = Builder.MappingSchema.GetAttribute<AssociationAttribute>(accessorMember.MemberInfo.DeclaringType!, accessorMember.MemberInfo, static a => a.Configuration);
 
 					if (attribute != null)
 						descriptor = new AssociationDescriptor
@@ -1701,17 +1739,14 @@ namespace LinqToDB.Linq.Builder
 				}
 				else if (accessorMember.MemberInfo.MemberType == MemberTypes.Property || accessorMember.MemberInfo.MemberType == MemberTypes.Field)
 				{
-					var inheritance      =
-					(
-						from m in entityDescriptor.InheritanceMapping
-						let om = Builder.MappingSchema.GetEntityDescriptor(m.Type)
-						where om.Associations.Count > 0
-						select om
-					).ToList();
+					foreach (var ed in entityDescriptor.Associations)
+						if (ed.MemberInfo.EqualsTo(accessorMember.MemberInfo))
+							return ed;
 
-					descriptor = entityDescriptor.Associations
-						.Concat(inheritance.SelectMany(om => om.Associations))
-						.FirstOrDefault(a => a.MemberInfo.EqualsTo(accessorMember.MemberInfo));
+					foreach (var m in entityDescriptor.InheritanceMapping)
+						foreach (var ed in Builder.MappingSchema.GetEntityDescriptor(m.Type).Associations)
+							if (ed.MemberInfo.EqualsTo(accessorMember.MemberInfo))
+								return ed;
 				}
 
 				return descriptor;
