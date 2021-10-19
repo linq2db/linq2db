@@ -289,7 +289,7 @@ namespace LinqToDB.Expressions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private Expression ConvertPathTo(Type type)
 		{
-			return _path = Expression.Convert(_path, type);
+			return _path = _path.Type != type ? Expression.Convert(_path, type) : _path;
 		}
 	}
 }
