@@ -44,21 +44,23 @@ namespace LinqToDB.SqlProvider
 //statement.EnsureFindTables();
 			//TODO: We can use Walk here but OptimizeUnions fails with subqueries. Needs revising.
 			statement.WalkQueries(
-				selectQuery =>
+				(SqlProviderFlags, statement),
+				static (context, selectQuery) =>
 				{
-					new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery, 0).FinalizeAndValidate(
-						SqlProviderFlags.IsApplyJoinSupported,
-						SqlProviderFlags.IsGroupByExpressionSupported);
+					new SelectQueryOptimizer(context.SqlProviderFlags, context.statement, selectQuery, 0).FinalizeAndValidate(
+						context.SqlProviderFlags.IsApplyJoinSupported,
+						context.SqlProviderFlags.IsGroupByExpressionSupported);
 
 					return selectQuery;
 				}
 			);
 
 			statement.WalkQueries(
-				selectQuery =>
+				(context: this, evaluationContext),
+				static (context, selectQuery) =>
 				{
-					if (!SqlProviderFlags.IsCountSubQuerySupported)  selectQuery = MoveCountSubQuery (selectQuery, evaluationContext);
-					if (!SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = MoveSubQueryColumn(selectQuery, evaluationContext);
+					if (!context.context.SqlProviderFlags.IsCountSubQuerySupported)  selectQuery = context.context.MoveCountSubQuery (selectQuery, context.evaluationContext);
+					if (!context.context.SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = context.context.MoveSubQueryColumn(selectQuery, context.evaluationContext);
 
 					return selectQuery;
 				}
@@ -67,11 +69,12 @@ namespace LinqToDB.SqlProvider
 			if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
 			{
 				statement.WalkQueries(
-					selectQuery =>
+					(SqlProviderFlags, statement),
+					static (context, selectQuery) =>
 					{
-						new SelectQueryOptimizer(SqlProviderFlags, statement, selectQuery, 0).FinalizeAndValidate(
-							SqlProviderFlags.IsApplyJoinSupported,
-							SqlProviderFlags.IsGroupByExpressionSupported);
+						new SelectQueryOptimizer(context.SqlProviderFlags, context.statement, selectQuery, 0).FinalizeAndValidate(
+							context.SqlProviderFlags.IsApplyJoinSupported,
+							context.SqlProviderFlags.IsGroupByExpressionSupported);
 
 						return selectQuery;
 					}
@@ -99,8 +102,10 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual SqlStatement CorrectUnionOrderBy(SqlStatement statement)
 		{
-			return QueryHelper.WrapQuery(statement,
-				(q, v) =>
+			return QueryHelper.WrapQuery(
+				(object?)null,
+				statement,
+				static (_, q, parentElement) =>
 				{
 					if (q.OrderBy.IsEmpty)
 						return false;
@@ -110,7 +115,6 @@ namespace LinqToDB.SqlProvider
 						return true;
 
 					var isUnionAll = false;
-					var parentElement = v.ParentElement;
 					if (parentElement != null)
 					{
 						if (parentElement.ElementType == QueryElementType.SetOperator)
@@ -127,7 +131,7 @@ namespace LinqToDB.SqlProvider
 
 					return isUnionAll;
 				},
-				(p, q) => { }, 
+				null,
 				allowMutation: true);
 		}
 
@@ -283,10 +287,10 @@ namespace LinqToDB.SqlProvider
 					if (!SqlProviderFlags.IsCommonTableExpressionsSupported)
 						throw new LinqToDBException("DataProvider do not supports Common Table Expressions.");
 
-					var ordered = TopoSorting.TopoSort(cteHolder.WriteableValue.Keys, i => cteHolder.WriteableValue[i]).ToList();
+					var ordered = TopoSorting.TopoSort(cteHolder.WriteableValue.Keys, cteHolder, static (cteHolder, i) => cteHolder.WriteableValue![i]).ToList();
 
-					Utils.MakeUniqueNames(ordered, null, (n, a) => !ReservedWords.IsReserved(n), c => c.Name, (c, n, a) => c.Name = n,
-						c => c.Name.IsNullOrEmpty() ? "CTE_1" : c.Name, StringComparer.OrdinalIgnoreCase);
+					Utils.MakeUniqueNames(ordered, null, static (n, a) => !ReservedWords.IsReserved(n), static c => c.Name, static (c, n, a) => c.Name = n,
+						static c => c.Name.IsNullOrEmpty() ? "CTE_1" : c.Name, StringComparer.OrdinalIgnoreCase);
 
 					select.With = new SqlWithClause();
 					select.With.Clauses.AddRange(ordered);
@@ -320,28 +324,30 @@ namespace LinqToDB.SqlProvider
 
 						var newExpressions = new List<ISqlExpression>();
 
-						var changed = false;
+						var ctx = WritableContext.Create(false, (newExpressions, visitor, expr));
 
-						var newExpr = QueryHelper.TransformExpressionIndexes(expr.Expr,
-							idx =>
+						var newExpr = QueryHelper.TransformExpressionIndexes(
+							ctx,
+							expr.Expr,
+							static (context, idx) =>
 							{
-								if (idx >= 0 && idx < expr.Parameters.Length)
+								if (idx >= 0 && idx < context.StaticValue.expr.Parameters.Length)
 								{
-									var paramExpr  = expr.Parameters[idx];
-									var normalized = NormalizeExpressions(paramExpr, visitor.AllowMutation);
+									var paramExpr  = context.StaticValue.expr.Parameters[idx];
+									var normalized = NormalizeExpressions(paramExpr, context.StaticValue.visitor.AllowMutation);
 
-									if (!changed && !ReferenceEquals(normalized, paramExpr))
-										changed = true;
+									if (!context.WriteableValue && !ReferenceEquals(normalized, paramExpr))
+										context.WriteableValue = true;
 
-									var newIndex   = newExpressions.Count;
+									var newIndex   = context.StaticValue.newExpressions.Count;
 
-									newExpressions.Add(normalized);
+									context.StaticValue.newExpressions.Add(normalized);
 									return newIndex;
 								}
 								return idx;
 							});
 
-						changed = changed || newExpr != expr.Expr;
+						var changed = ctx.WriteableValue || newExpr != expr.Expr;
 
 						if (changed)
 							newExpression = new SqlExpression(expr.SystemType, newExpr, expr.Precedence, expr.Flags, newExpressions.ToArray());
@@ -394,7 +400,11 @@ namespace LinqToDB.SqlProvider
 
 					// Check if subquery where clause does not have ORs.
 					//
-					subQuery.Where.SearchCondition = (SqlSearchCondition)OptimizeElement(null, subQuery.Where.SearchCondition, new OptimizationContext(context, new AliasesContext(), false), false)!;
+					subQuery.Where.SearchCondition = (SqlSearchCondition)OptimizeElement(
+						null,
+						subQuery.Where.SearchCondition,
+						new OptimizationContext(context, new AliasesContext(), false),
+						false)!;
 
 					var allAnd = true;
 
@@ -583,7 +593,11 @@ namespace LinqToDB.SqlProvider
 
 						query.From.Tables[0].Joins.Add(join.JoinedTable);
 
-						subQuery.Where.SearchCondition = (SqlSearchCondition)context.optimizer.OptimizeElement(null, subQuery.Where.SearchCondition, new OptimizationContext(context.context, new AliasesContext(), false), false)!;
+						subQuery.Where.SearchCondition = (SqlSearchCondition)context.optimizer.OptimizeElement(
+							null,
+							subQuery.Where.SearchCondition,
+							new OptimizationContext(context.context, new AliasesContext(), false),
+							false)!;
 
 						var isCount      = false;
 
@@ -882,7 +896,7 @@ namespace LinqToDB.SqlProvider
 					if (func.Parameters.Length == 1 && func.Parameters[0] is SelectQuery query && query.Select.Columns.Count > 0)
 					{
 						var isAggregateQuery =
-									query.Select.Columns.All(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
+									query.Select.Columns.All(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
 
 						if (isAggregateQuery)
 							return new SqlValue(true);
@@ -2317,7 +2331,7 @@ namespace LinqToDB.SqlProvider
 				var tableKeys = table.GetKeys(true);
 				var copyKeys  = copy. GetKeys(true);
 
-				if (deleteStatement.SelectQuery.Where.SearchCondition.Conditions.Any(c => c.IsOr))
+				if (deleteStatement.SelectQuery.Where.SearchCondition.Conditions.Any(static c => c.IsOr))
 				{
 					var sc1 = new SqlSearchCondition(deleteStatement.SelectQuery.Where.SearchCondition.Conditions);
 					var sc2 = new SqlSearchCondition();
@@ -2419,9 +2433,16 @@ namespace LinqToDB.SqlProvider
 				foreach (var field in tableToUpdate.Fields)
 					objectTree.Remove(field);
 
-				var tableToCompare = QueryHelper.EnumerateAccessibleSources(clonedQuery)
-					.Select(ts => ts as SqlTable)
-					.FirstOrDefault(t => QueryHelper.IsEqualTables(t, tableToUpdate));
+				SqlTable? tableToCompare = null;
+				foreach (var ts in QueryHelper.EnumerateAccessibleSources(clonedQuery))
+				{
+					var t = ts as SqlTable;
+					if (QueryHelper.IsEqualTables(t, tableToUpdate))
+					{
+						tableToCompare = t;
+						break;
+					}
+				}
 
 				if (tableToCompare == null)
 					throw new LinqToDBException("Query can't be translated to UPDATE Statement.");
@@ -2486,7 +2507,8 @@ namespace LinqToDB.SqlProvider
 						ex = innerQuery;
 					}
 
-					item.Column     = tableToUpdate[QueryHelper.GetUnderlyingField(item.Column)!.Name] ?? throw new LinqException($"Field {QueryHelper.GetUnderlyingField(item.Column)!.Name} not found in table {tableToUpdate}");
+					item.Column     = tableToUpdate[QueryHelper.GetUnderlyingField(item.Column)!.Name]
+						?? throw new LinqException($"Field {QueryHelper.GetUnderlyingField(item.Column)!.Name} not found in table {tableToUpdate}");
 					item.Expression = ex;
 					newUpdateStatement.Update.Items.Add(item);
 				}
@@ -2877,14 +2899,14 @@ namespace LinqToDB.SqlProvider
 
 		public SqlStatement OptimizeAggregates(SqlStatement statement)
 		{
-			var newStatement = QueryHelper.JoinRemoval(statement, (currentStatement, join) =>
+			var newStatement = QueryHelper.JoinRemoval(statement, statement, static (statement, currentStatement, join) =>
 			{
 				if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply)
 				{
 					if (join.Table.Source is SelectQuery query && query.Select.Columns.Count > 0)
 					{
 						var isAggregateQuery =
-							query.Select.Columns.All(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
+							query.Select.Columns.All(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
 						if (isAggregateQuery)
 						{
 							// remove unwanted join
@@ -2975,9 +2997,11 @@ namespace LinqToDB.SqlProvider
 		/// <returns>The same <paramref name="statement"/> or modified statement when transformation has been performed.</returns>
 		protected SqlStatement SeparateDistinctFromPagination(SqlStatement statement, Func<SelectQuery, bool> queryFilter)
 		{
-			return QueryHelper.WrapQuery(statement,
-				(q, _) => q.Select.IsDistinct && queryFilter(q),
-				(p, q) =>
+			return QueryHelper.WrapQuery(
+				queryFilter,
+				statement,
+				static (queryFilter, q, _) => q.Select.IsDistinct && queryFilter(q),
+				static (_, p, q) =>
 				{
 					p.Select.SkipValue = q.Select.SkipValue;
 					p.Select.Take(q.Select.TakeValue, q.Select.TakeHints);
@@ -2986,7 +3010,7 @@ namespace LinqToDB.SqlProvider
 					q.Select.Take(null, null);
 
 					QueryHelper.MoveOrderByUp(p, q);
-				}, 
+				},
 				allowMutation: true);
 		}
 
@@ -2999,57 +3023,60 @@ namespace LinqToDB.SqlProvider
 		/// <returns>The same <paramref name="statement"/> or modified statement when transformation has been performed.</returns>
 		protected SqlStatement ReplaceTakeSkipWithRowNumber(SqlStatement statement, bool supportsEmptyOrderBy, bool onlySubqueries)
 		{
-			return ReplaceTakeSkipWithRowNumber(statement, query =>
-			{
-				if (onlySubqueries && query.ParentSelect == null)
-					return false;
-				return true;
-			}, supportsEmptyOrderBy);
+			return ReplaceTakeSkipWithRowNumber(
+				onlySubqueries,
+				statement,
+				static (onlySubqueries, query) => onlySubqueries && query.ParentSelect == null,
+				supportsEmptyOrderBy);
 		}
 
 		/// <summary>
 		/// Replaces pagination by Window function ROW_NUMBER().
 		/// </summary>
+		/// <param name="context"><paramref name="predicate"/> context object.</param>
 		/// <param name="statement">Statement which may contain take/skip modifiers.</param>
 		/// <param name="supportsEmptyOrderBy">Indicates that database supports OVER () syntax.</param>
 		/// <param name="predicate">Indicates when the transformation is needed</param>
 		/// <returns>The same <paramref name="statement"/> or modified statement when transformation has been performed.</returns>
-		protected SqlStatement ReplaceTakeSkipWithRowNumber(SqlStatement statement, Predicate<SelectQuery> predicate, bool supportsEmptyOrderBy)
+		protected SqlStatement ReplaceTakeSkipWithRowNumber<TContext>(TContext context, SqlStatement statement, Func<TContext, SelectQuery, bool> predicate, bool supportsEmptyOrderBy)
 		{
-			return QueryHelper.WrapQuery(statement,
-				(query, _) => 
+			return QueryHelper.WrapQuery(
+				(predicate, context, supportsEmptyOrderBy),
+				statement,
+				static (context, query, _) => 
 				{
 					if ((query.Select.TakeValue == null || query.Select.TakeHints != null) && query.Select.SkipValue == null)
 						return 0;
-					return predicate(query) ? 1 : 0;
-				}
-				, queries =>
+					return context.predicate(context.context, query) ? 1 : 0;
+				},
+				static (context, queries) =>
 				{
 					var query = queries[queries.Count - 1];
 					var processingQuery = queries[queries.Count - 2];
 
-					SqlOrderByItem[]? orderByItems = null;
+					IReadOnlyCollection<SqlOrderByItem>? orderByItems = null;
 					if (!query.OrderBy.IsEmpty)
-						orderByItems = query.OrderBy.Items.ToArray();
+						orderByItems = query.OrderBy.Items;
 					//else if (query.Select.Columns.Count > 0)
 					//{
 					//	orderByItems = query.Select.Columns
-					//		.Select(c => QueryHelper.NeedColumnForExpression(query, c, false))
-					//		.Where(e => e != null)
+					//		.Select(static c => QueryHelper.NeedColumnForExpression(query, c, false))
+					//		.Where(static e => e != null)
 					//		.Take(1)
-					//		.Select(e => new SqlOrderByItem(e, false))
+					//		.Select(static e => new SqlOrderByItem(e, false))
 					//		.ToArray();
 					//}
 
-					if (orderByItems == null || orderByItems.Length == 0)
-						orderByItems = supportsEmptyOrderBy ? Array<SqlOrderByItem>.Empty : new[] { new SqlOrderByItem(new SqlExpression("SELECT NULL"), false) };
+					if (orderByItems == null || orderByItems.Count == 0)
+						orderByItems = context.supportsEmptyOrderBy ? Array<SqlOrderByItem>.Empty : new[] { new SqlOrderByItem(new SqlExpression("SELECT NULL"), false) };
 
 					var orderBy = string.Join(", ",
-						orderByItems.Select((oi, i) => oi.IsDescending ? $"{{{i}}} DESC" : $"{{{i}}}"));
+						orderByItems.Select(static (oi, i) => oi.IsDescending ? $"{{{i}}} DESC" : $"{{{i}}}"));
 
+					var parameters = orderByItems.Select(static oi => oi.Expression).ToArray();
+
+					// careful here - don't clear it before orderByItems used
 					query.OrderBy.Items.Clear();
-
-					var parameters = orderByItems.Select(oi => oi.Expression).ToArray();
 
 					var rowNumberExpression = parameters.Length == 0
 						? new SqlExpression(typeof(long), "ROW_NUMBER() OVER ()", Precedence.Primary, SqlFlags.IsWindowFunction)
@@ -3089,12 +3116,14 @@ namespace LinqToDB.SqlProvider
 		/// <returns>The same <paramref name="statement"/> or modified statement when transformation has been performed.</returns>
 		protected SqlStatement ReplaceDistinctOrderByWithRowNumber(SqlStatement statement, Func<SelectQuery, bool> queryFilter)
 		{
-			return QueryHelper.WrapQuery(statement,
-				(q, _) => (q.Select.IsDistinct && !q.Select.OrderBy.IsEmpty && queryFilter(q)) /*|| q.Select.TakeValue != null || q.Select.SkipValue != null*/,
-				(p, q) =>
+			return QueryHelper.WrapQuery(
+				queryFilter,
+				statement,
+				static (queryFilter, q, _) => (q.Select.IsDistinct && !q.Select.OrderBy.IsEmpty && queryFilter(q)) /*|| q.Select.TakeValue != null || q.Select.SkipValue != null*/,
+				static (_, p, q) =>
 				{
-					var columnItems  = q.Select.Columns.Select(c => c.Expression).ToList();
-					var orderItems   = q.Select.OrderBy.Items.Select(o => o.Expression).ToList();
+					var columnItems  = q.Select.Columns.Select(static c => c.Expression).ToList();
+					var orderItems   = q.Select.OrderBy.Items.Select(static o => o.Expression).ToList();
 
 					var projectionItemsCount = columnItems.Union(orderItems).Count();
 					if (projectionItemsCount < columnItems.Count)
@@ -3110,15 +3139,16 @@ namespace LinqToDB.SqlProvider
 
 						var orderByItems = q.Select.OrderBy.Items;
 
-						var partitionBy = string.Join(", ", columnItems.Select((oi, i) => $"{{{i}}}"));
+						var partitionBy = string.Join(", ", columnItems.Select(static (oi, i) => $"{{{i}}}"));
 
-						var orderBy = string.Join(", ",
-							orderByItems.Select((oi, i) =>
-								oi.IsDescending
-									? $"{{{i + columnItems.Count}}} DESC"
-									: $"{{{i + columnItems.Count}}}"));
+						var columns = new string[orderByItems.Count];
+						for (var i = 0; i < columns.Length; i++)
+							columns[i] = orderByItems[i].IsDescending
+								? $"{{{i + columnItems.Count}}} DESC"
+								: $"{{{i + columnItems.Count}}}";
+						var orderBy = string.Join(", ", columns);
 
-						var parameters = columnItems.Concat(orderByItems.Select(oi => oi.Expression)).ToArray();
+						var parameters = columnItems.Concat(orderByItems.Select(static oi => oi.Expression)).ToArray();
 
 						var rnExpr = new SqlExpression(typeof(long),
 							$"ROW_NUMBER() OVER (PARTITION BY {partitionBy} ORDER BY {orderBy})", Precedence.Primary,
@@ -3183,28 +3213,41 @@ namespace LinqToDB.SqlProvider
 
 		protected SqlFunction ConvertFunctionParameters(SqlFunction func, bool withParameters = false)
 		{
-			if (func.Name == "CASE" &&
-			    func.Parameters.Select((p, i) => new { p, i }).Any(p => IsBooleanParameter(p.p, func.Parameters.Length, p.i)))
+			if (func.Name == "CASE")
 			{
-				return new SqlFunction(
-					func.SystemType,
-					func.Name,
-					false,
-					func.Precedence,
-					func.Parameters.Select((p, i) =>
-						IsBooleanParameter(p, func.Parameters.Length, i) ?
-							new SqlFunction(typeof(bool), "CASE", p, new SqlValue(true), new SqlValue(false))
-							{
-								CanBeNull = false, 
-								DoNotOptimize = true
-							} :
-							p
-					).ToArray());
+				ISqlExpression[]? parameters = null;
+				for (var i = 0; i < func.Parameters.Length; i++)
+				{
+					var p = func.Parameters[i];
+					if (IsBooleanParameter(p, func.Parameters.Length, i))
+					{
+						if (parameters == null)
+						{
+							parameters = new ISqlExpression[func.Parameters.Length];
+							for (var j = 0; j < i; j++)
+								parameters[j] = func.Parameters[j];
+						}
+						parameters[i] = new SqlFunction(typeof(bool), "CASE", p, new SqlValue(true), new SqlValue(false))
+						{
+							CanBeNull     = false,
+							DoNotOptimize = true
+						};
+					}
+					else if (parameters != null)
+						parameters[i] = p;
+				}
+
+				if (parameters != null)
+					return new SqlFunction(
+						func.SystemType,
+						func.Name,
+						false,
+						func.Precedence,
+						parameters);
 			}
 
 			return func;
 		}
-		
 
 		#endregion
 	}

@@ -17,16 +17,17 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		protected SqlStatement ReplaceSkipWithRowNumber(SqlStatement statement)
-			=> ReplaceTakeSkipWithRowNumber(statement, query => query.Select.SkipValue != null, false);
+			=> ReplaceTakeSkipWithRowNumber((object?)null, statement, static (_, query) => query.Select.SkipValue != null, false);
 
 		protected SqlStatement WrapRootTakeSkipOrderBy(SqlStatement statement)
 		{
 			return QueryHelper.WrapQuery(
+				(object?)null,
 				statement,
-				(query, _) => query.ParentSelect == null && (query.Select.SkipValue != null ||
+				static (_, query, _) => query.ParentSelect == null && (query.Select.SkipValue != null ||
 				                                        query.Select.TakeValue != null ||
 				                                        query.Select.TakeHints != null || !query.OrderBy.IsEmpty),
-				(query, wrappedQuery) => { },
+				null,
 				allowMutation: true
 			);
 		}
