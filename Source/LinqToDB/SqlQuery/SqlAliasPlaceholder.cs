@@ -18,7 +18,7 @@ namespace LinqToDB.SqlQuery
 			return other != null && other.GetType() == GetType();
 		}
 
-		public ISqlExpression Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		public ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			return this;
 		}

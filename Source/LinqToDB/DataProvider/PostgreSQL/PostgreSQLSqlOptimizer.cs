@@ -36,10 +36,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		void ReplaceTable(ISqlExpressionWalkable? element, SqlTable replacing, SqlTable withTable)
 		{
-			element?.Walk(new WalkOptions(), e =>
+			element?.Walk(WalkOptions.Default, (replacing, withTable), static (ctx, e) =>
 			{
-				if (e is SqlField field && field.Table == replacing)
-					return withTable[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {withTable}");
+				if (e is SqlField field && field.Table == ctx.replacing)
+					return ctx.withTable[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {ctx.withTable}");
 
 				return e;
 			});

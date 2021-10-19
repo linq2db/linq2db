@@ -114,12 +114,10 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		public ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			for (var index = 0; index < Clauses.Count; index++)
-			{
-				Clauses[index].Walk(options, func);
-			}
+				Clauses[index].Walk(options, context, func);
 
 			return null;
 		}

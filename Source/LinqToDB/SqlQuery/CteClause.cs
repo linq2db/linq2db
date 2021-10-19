@@ -80,9 +80,9 @@ namespace LinqToDB.SqlQuery
 			return sb.Append($"CTE({CteID}, {Name})");
 		}
 
-		public ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			Body = Body?.Walk(options, func) as SelectQuery;
+			Body = Body?.Walk(options, context, func) as SelectQuery;
 
 			return null;
 		}

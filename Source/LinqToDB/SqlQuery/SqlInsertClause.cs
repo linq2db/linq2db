@@ -32,12 +32,12 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			((ISqlExpressionWalkable?)Into)?.Walk(options, func);
+			((ISqlExpressionWalkable?)Into)?.Walk(options, context, func);
 
 			foreach (var t in Items)
-				((ISqlExpressionWalkable)t).Walk(options, func);
+				((ISqlExpressionWalkable)t).Walk(options, context, func);
 
 			return null;
 		}

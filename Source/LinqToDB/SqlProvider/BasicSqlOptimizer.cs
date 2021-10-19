@@ -2539,11 +2539,11 @@ namespace LinqToDB.SqlProvider
 
 							statement.Update.Table = jt;
 
-							statement.Walk(new WalkOptions(), exp =>
+							statement.Walk(WalkOptions.Default, (updateTable, jt), static (ctx, exp) =>
 							{
-								if (exp is SqlField field && field.Table == updateTable)
+								if (exp is SqlField field && field.Table == ctx.updateTable)
 								{
-									return jt[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {jt}");
+									return ctx.jt[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {ctx.jt}");
 								}
 								return exp;
 							});
@@ -2690,7 +2690,7 @@ namespace LinqToDB.SqlProvider
 
 		public void OptimizeJoins(SqlStatement statement)
 		{
-			((ISqlExpressionWalkable) statement).Walk(new WalkOptions(), element =>
+			((ISqlExpressionWalkable) statement).Walk(WalkOptions.Default, statement, static (statement, element) =>
 			{
 				if (element is SelectQuery query)
 					new JoinOptimizer().OptimizeJoins(statement, query);

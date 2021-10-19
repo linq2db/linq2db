@@ -42,11 +42,11 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		public ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			Condition = (SqlSearchCondition)((ISqlExpressionWalkable)Condition).Walk(options, func)!;
+			Condition = (SqlSearchCondition)((ISqlExpressionWalkable)Condition).Walk(options, context, func)!;
 
-			Table.Walk(options, func);
+			Table.Walk(options, context, func);
 
 			return null;
 		}

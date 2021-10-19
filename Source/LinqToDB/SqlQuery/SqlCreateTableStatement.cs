@@ -38,9 +38,9 @@ namespace LinqToDB.SqlQuery
 			return sb;
 		}
 
-		public override ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			Table = (SqlTable)((ISqlExpressionWalkable)Table).Walk(options, func)!;
+			Table = (SqlTable)((ISqlExpressionWalkable)Table).Walk(options, context, func)!;
 
 			return null;
 		}

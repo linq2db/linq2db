@@ -118,9 +118,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable
 
-		public ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		public ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			return SourceQuery?.Walk(options, func);
+			return SourceQuery?.Walk(options, context, func);
 		}
 
 		#endregion

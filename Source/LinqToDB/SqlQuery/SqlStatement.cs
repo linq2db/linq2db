@@ -63,7 +63,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IEquatable<ISqlExpression>
 
-		public abstract ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func);
+		public abstract ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func);
 
 		#endregion
 

@@ -76,7 +76,7 @@ namespace LinqToDB.Linq.Builder
 
 							collection.SelectQuery.Where.ConcatSearchCondition(foundJoin.Condition);
 
-							((ISqlExpressionWalkable) collection.SelectQuery.Where).Walk(new WalkOptions(), e =>
+							((ISqlExpressionWalkable) collection.SelectQuery.Where).Walk(WalkOptions.Default, collection, static (collection, e) =>
 							{
 								if (e is SqlColumn column)
 								{

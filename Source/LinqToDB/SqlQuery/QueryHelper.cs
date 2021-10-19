@@ -1514,10 +1514,10 @@ namespace LinqToDB.SqlQuery
 
 			var tableSources = new HashSet<ISqlTableSource>();
 
-			((ISqlExpressionWalkable)sql.Where.SearchCondition).Walk(new WalkOptions(), e =>
+			((ISqlExpressionWalkable)sql.Where.SearchCondition).Walk(WalkOptions.Default, (usedTableSources, tableSources), static (ctx, e) =>
 			{
-				if (e is ISqlTableSource ts && usedTableSources.Contains(ts))
-					tableSources.Add(ts);
+				if (e is ISqlTableSource ts && ctx.usedTableSources.Contains(ts))
+					ctx.tableSources.Add(ts);
 				return e;
 			});
 
