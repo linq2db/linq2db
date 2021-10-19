@@ -182,7 +182,7 @@ namespace LinqToDB.SqlQuery
 			return (T?)new ConvertVisitor<TContext>(context, convertAction, true, false, false).ConvertInternal(element) ?? element;
 		}
 
-		public static T ConvertAll<TContext, T>(this T element, TContext context, Func<ConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction, Func<VisitArgs<TContext>, bool> parentAction)
+		public static T ConvertAll<TContext, T>(this T element, TContext context, Func<ConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction, Func<ConvertVisitor<TContext>, bool> parentAction)
 			where T : class, IQueryElement
 		{
 			return (T?)new ConvertVisitor<TContext>(context, convertAction, true, false, false, parentAction).ConvertInternal(element) ?? element;

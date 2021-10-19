@@ -1797,11 +1797,11 @@ namespace LinqToDB.SqlProvider
 
 						return e;
 					},
-					static args =>
+					static visitor =>
 					{
-						if (args.Visitor.Context.OptimizationContext.IsOptimized(args.Element, out var expr))
+						if (visitor.Context.OptimizationContext.IsOptimized(visitor.CurrentElement, out var expr))
 						{
-							args.Element = expr;
+							visitor.CurrentElement = expr;
 							return false;
 						}	
 						return true;

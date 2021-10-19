@@ -8,25 +8,13 @@ namespace LinqToDB.SqlQuery
 {
 	using LinqToDB.Linq.Builder;
 
-	public class VisitArgs<TContext>
-	{
-		public VisitArgs(ConvertVisitor<TContext> visitor)
-		{
-			Visitor = visitor;
-		}
-
-		public readonly ConvertVisitor<TContext> Visitor;
-		public          IQueryElement            Element = null!;
-	}
-
 	public class ConvertVisitor<TContext>
 	{
 		// when true, only changed (and explicitly added) elements added to VisitedElements
 		// greatly reduce memory allocation for majority of cases, where there is nothing to replace
 		private bool                                                       _visitAll;
 		private Func<ConvertVisitor<TContext>,IQueryElement,IQueryElement> _convert;
-		private Func<VisitArgs<TContext>, bool>?                           _parentAction;
-		private VisitArgs<TContext>?                                       _visitArgs;
+		private Func<ConvertVisitor<TContext>, bool>?                      _parentAction;
 
 		public TContext Context;
 		public bool     AllowMutation;
@@ -39,6 +27,7 @@ namespace LinqToDB.SqlQuery
 
 		public List<IQueryElement> Stack         => _stack ??= (HasStack ? new () : throw new InvalidOperationException("Stack tracking is not enabled for current visitor instance"));
 		public IQueryElement?      ParentElement => Stack.Count == 0 ? null : Stack[Stack.Count - 1];
+		public IQueryElement       CurrentElement = null!;
 
 		internal ConvertVisitor(
 			TContext                                                     context,
@@ -46,7 +35,7 @@ namespace LinqToDB.SqlQuery
 			bool                                                         visitAll,
 			bool                                                         allowMutation,
 			bool                                                         withStack,
-			Func<VisitArgs<TContext>, bool>?                             parentAction = default)
+			Func<ConvertVisitor<TContext>, bool>?                        parentAction = default)
 		{
 			_visitAll     = visitAll;
 			_convert      = convertAction;
@@ -54,9 +43,6 @@ namespace LinqToDB.SqlQuery
 			HasStack      = withStack;
 			_parentAction = parentAction;
 			Context       = context;
-
-			if (_parentAction != null)
-				_visitArgs = new VisitArgs<TContext>(this);
 		}
 
 		internal void Reset(
@@ -65,7 +51,7 @@ namespace LinqToDB.SqlQuery
 			bool                                                         visitAll,
 			bool                                                         allowMutation,
 			bool                                                         withStack,
-			Func<VisitArgs<TContext>, bool>?                             parentAction = default)
+			Func<ConvertVisitor<TContext>, bool>?                        parentAction = default)
 		{
 			_visitAll     = visitAll;
 			_convert      = convertAction;
@@ -73,11 +59,6 @@ namespace LinqToDB.SqlQuery
 			HasStack      = withStack;
 			_parentAction = parentAction;
 			Context       = context;
-
-			if (_parentAction != null)
-				_visitArgs = new VisitArgs<TContext>(this);
-			else
-				_visitArgs = null;
 
 			_visitedElements?.Clear();
 			_stack?          .Clear();
@@ -174,13 +155,12 @@ namespace LinqToDB.SqlQuery
 			if (newElement != null)
 				return newElement;
 
+			CurrentElement = element;
 			if (_parentAction != null)
 			{
-				_visitArgs!.Element = element;
-				var stop            = !_parentAction(_visitArgs!);
-				element             = _visitArgs!.Element;
-				if (stop)
-					return element;
+				if (!_parentAction(this))
+					return CurrentElement;
+				element = CurrentElement;
 			}
 
 			Push(element);

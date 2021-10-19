@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Threading;
 using LinqToDB.Common;
 using LinqToDB.SqlQuery;
 
@@ -146,9 +145,9 @@ namespace LinqToDB.SqlProvider
 		private int _nestingLevel;
 		public T ConvertAll<T>(
 			BasicSqlOptimizer.RunOptimizationContext context,
-			T element,
+			T                                        element,
 			Func<ConvertVisitor<BasicSqlOptimizer.RunOptimizationContext>, IQueryElement, IQueryElement> convertAction,
-			Func<VisitArgs<BasicSqlOptimizer.RunOptimizationContext>, bool> parentAction)
+			Func<ConvertVisitor<BasicSqlOptimizer.RunOptimizationContext>, bool>                         parentAction)
 			where T : class, IQueryElement
 		{
 			if (_visitor == null)
@@ -159,9 +158,9 @@ namespace LinqToDB.SqlProvider
 			// temporary(?) guard
 			if (_nestingLevel > 0)
 				throw new InvalidOperationException("Nested optimization detected");
-			Interlocked.Increment(ref _nestingLevel);
+			_nestingLevel++;
 			var res = (T?)_visitor.ConvertInternal(element) ?? element;
-			Interlocked.Decrement(ref _nestingLevel);
+			_nestingLevel--;
 			return res;
 		}
 	}
