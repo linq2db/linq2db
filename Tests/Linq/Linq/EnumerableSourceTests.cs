@@ -796,6 +796,32 @@ namespace Tests.Linq
 			}
 		}
 
+		static int[] IdValues = new[] { 1, 2, 3 };
+
+		[Test]
+		public void ExceptContains([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Person
+					.Select(r => new
+					{
+						IsActive = IdValues.Contains(r.ID)
+					});
+				Assert.IsNotEmpty(result);
+			}
+		}
+
+		[Test]
+		public void StaticEnumerable([DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Person.Where(p => IdValues.Any(v => v == p.ID));
+				AssertQuery(query);
+			}
+		}
+
 		class PersonListProjection
 		{
 			public int        Id      { get; set; }
@@ -824,7 +850,6 @@ namespace Tests.Linq
 				personWithList.Should().HaveCountGreaterThan(0);
 				personWithList.All(p => p.SomeList == null).Should().BeTrue();
 			}
-
 		}
 
 		[Test]

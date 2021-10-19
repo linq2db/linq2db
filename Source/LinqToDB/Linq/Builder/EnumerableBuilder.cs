@@ -2,13 +2,18 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Reflection;
+using LinqToDB.Expressions;
 using LinqToDB.Extensions;
+using LinqToDB.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
 	class EnumerableBuilder : ISequenceBuilder
 	{
 		public int BuildCounter { get; set; }
+
+		private static MethodInfo[] _containsMethodInfos = { Methods.Enumerable.Contains, Methods.Queryable.Contains };
 
 		public bool CanBuild(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
@@ -17,6 +22,13 @@ namespace LinqToDB.Linq.Builder
 			if (expr.NodeType == ExpressionType.NewArrayInit)
 			{
 				return true;
+			}
+
+			if (expr.NodeType == ExpressionType.Call)
+			{
+				var mc = (MethodCallExpression)expr;
+				if (mc.IsSameGenericMethod(_containsMethodInfos))
+					return false;
 			}
 
 			if (!typeof(IEnumerable<>).IsSameOrParentOf(expr.Type))
@@ -34,6 +46,9 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.MemberAccess:
 				{
 					var ma = (MemberExpression)expr;
+					if (ma.Expression == null)
+						break;
+
 					if (ma.Expression.NodeType != ExpressionType.Constant)
 						return false;
 					break;
