@@ -6,7 +6,7 @@ using BenchmarkDotNet.Attributes;
 using LinqToDB.Benchmarks.Mappings;
 using LinqToDB.Benchmarks.TestProvider;
 using LinqToDB.Data;
-using LinqToDB.DataProvider.SQLite;
+using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
@@ -24,7 +24,7 @@ namespace LinqToDB.Benchmarks.Queries
 		public void Setup()
 		{
 			_cn = new MockDbConnection(new QueryResult() { Return = 1 }, ConnectionState.Open);
-			_db = new DataConnection(new SQLiteDataProvider(ProviderName.SQLiteMS), _cn);
+			_db = new DataConnection(new SqlServerDataProvider(ProviderName.SqlServer, SqlServerVersion.v2008, SqlServerProvider.MicrosoftDataSqlClient), _cn);
 
 			_compiled = CompiledQuery.Compile<DataConnection, int, int>((ctx, i) =>
 				ctx.GetTable<MyPOCO>()
@@ -58,11 +58,40 @@ namespace LinqToDB.Benchmarks.Queries
 		}
 
 		[Benchmark]
+		public void Update_Nullable_Full()
+		{
+			for (var i = 0; i < _iterations; i++)
+			{
+				using (var db = new DataConnection(new SqlServerDataProvider(ProviderName.SqlServer, SqlServerVersion.v2008, SqlServerProvider.MicrosoftDataSqlClient), _cn))
+				{
+					db.GetTable<MyPOCON>()
+						.Where(p => p.Code == "A" + i && p.Currency == "SUR")
+						.Set(p => p.Weight, i * 10)
+						.Set(p => p.Currency, "SUR")
+						.Set(p => p.Value, i * i + 2)
+						.Update();
+				}
+			}
+		}
+
+		[Benchmark]
 		public void Compiled_Update_Nullable()
 		{
 			for (var i = 0; i < _iterations; i++)
 			{
 				_compiledNullable(_db, i);
+			}
+		}
+
+		[Benchmark]
+		public void Compiled_Update_Nullable_Full()
+		{
+			for (var i = 0; i < _iterations; i++)
+			{
+				using (var db = new DataConnection(new SqlServerDataProvider(ProviderName.SqlServer, SqlServerVersion.v2008, SqlServerProvider.MicrosoftDataSqlClient), _cn))
+				{
+					_compiledNullable(db, i);
+				}
 			}
 		}
 
@@ -80,12 +109,41 @@ namespace LinqToDB.Benchmarks.Queries
 			}
 		}
 
+		[Benchmark]
+		public void Update_Full()
+		{
+			for (var i = 0; i < _iterations; i++)
+			{
+				using (var db = new DataConnection(new SqlServerDataProvider(ProviderName.SqlServer, SqlServerVersion.v2008, SqlServerProvider.MicrosoftDataSqlClient), _cn))
+				{
+					db.GetTable<MyPOCO>()
+						.Where(p => p.Code == "A" + i && p.Currency == "SUR")
+						.Set(p => p.Weight, i * 10)
+						.Set(p => p.Currency, "SUR")
+						.Set(p => p.Value, i * i + 2)
+						.Update();
+				}
+			}
+		}
+
 		[Benchmark(Baseline = true)]
 		public void Compiled_Update()
 		{
 			for (var i = 0; i < _iterations; i++)
 			{
 				_compiled(_db, i);
+			}
+		}
+
+		[Benchmark]
+		public void Compiled_Update_Full()
+		{
+			for (var i = 0; i < _iterations; i++)
+			{
+				using (var db = new DataConnection(new SqlServerDataProvider(ProviderName.SqlServer, SqlServerVersion.v2008, SqlServerProvider.MicrosoftDataSqlClient), _cn))
+				{
+					_compiled(db, i);
+				}
 			}
 		}
 
