@@ -686,7 +686,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void SetWithTernaryOperatorIssue([DataSources] string context)
 		{
-			Gender? nullableGender = null;
+			Gender? nullableGender = Gender.Other;
 
 			ResetPersonIdentity(context);
 
