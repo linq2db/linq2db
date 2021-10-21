@@ -16,61 +16,69 @@ namespace LinqToDB.Common
 		/// Performs topological sort on <paramref name="source"/>.
 		/// </summary>
 		/// <param name="source">Collection to sort.</param>
+		/// <param name="context"><paramref name="dependsOnGetter"/> delegate context object.</param>
 		/// <param name="dependsOnGetter">Function that returns items dependent on specified item.</param>
 		/// <returns>Topologically sorted list of items in <paramref name="source"/>.</returns>
 		[Pure]
-		public static IEnumerable<T> TopoSort<T>(
+		public static IEnumerable<T> TopoSort<T, TContext>(
 				[InstantHandle] IEnumerable<T> source,
-				[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter)
+				TContext context,
+				[InstantHandle] Func<TContext, T, IEnumerable<T>> dependsOnGetter)
 			where T : notnull =>
-			TopoSort(source, dependsOnGetter, EqualityComparer<T>.Default);
+			TopoSort(source, context, dependsOnGetter, EqualityComparer<T>.Default);
 
 		/// <summary>
 		/// Performs topological sort on <paramref name="source"/>.
 		/// </summary>
 		/// <param name="source">Collection to sort.</param>
+		/// <param name="context"><paramref name="dependsOnGetter"/> delegate context object.</param>
 		/// <param name="dependsOnGetter">Function that returns items dependent on specified item.</param>
 		/// <returns>Topologically sorted list of items in <paramref name="source"/>.</returns>
 		[Pure]
-		public static IEnumerable<T> TopoSort<T>(
+		public static IEnumerable<T> TopoSort<T, TContext>(
 				[InstantHandle] ICollection<T> source,
-				[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter)
+				TContext context,
+				[InstantHandle] Func<TContext, T, IEnumerable<T>> dependsOnGetter)
 			where T : notnull =>
-			TopoSort(source, dependsOnGetter, EqualityComparer<T>.Default);
+			TopoSort(source, context, dependsOnGetter, EqualityComparer<T>.Default);
 
 		/// <summary>
 		/// Performs topological sort on <paramref name="source"/>.
 		/// </summary>
 		/// <param name="source">Collection to sort.</param>
+		/// <param name="context"><paramref name="dependsOnGetter"/> delegate context object.</param>
 		/// <param name="dependsOnGetter">Function that returns items dependent on specified item.</param>
 		/// <param name="equalityComparer">Equality comparer for item comparison</param>
 		/// <returns>Topologically sorted list of items in <paramref name="source"/>.</returns>
 		[Pure]
-		public static IEnumerable<T> TopoSort<T>(
+		public static IEnumerable<T> TopoSort<T, TContext>(
 				this IEnumerable<T> source,
-				[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter,
+				TContext context,
+				[InstantHandle] Func<TContext, T, IEnumerable<T>> dependsOnGetter,
 				IEqualityComparer<T> equalityComparer)
 			where T : notnull =>
-			GroupTopoSort(source, dependsOnGetter, equalityComparer)
-				.Select(g => g.AsEnumerable())
-				.SelectMany(e => e);
+			GroupTopoSort(source, context, dependsOnGetter, equalityComparer)
+				.Select(static g => g.AsEnumerable())
+				.SelectMany(static e => e);
 
 		/// <summary>
 		/// Performs topological sort on <paramref name="source"/>.
 		/// </summary>
 		/// <param name="source">Collection to sort.</param>
+		/// <param name="context"><paramref name="dependsOnGetter"/> delegate context object.</param>
 		/// <param name="dependsOnGetter">Function that returns items dependent on specified item.</param>
 		/// <param name="equalityComparer">Equality comparer for item comparison</param>
 		/// <returns>Topologically sorted list of items in <paramref name="source"/>.</returns>
 		[Pure]
-		public static IEnumerable<T> TopoSort<T>(
+		public static IEnumerable<T> TopoSort<T, TContext>(
 				this ICollection<T> source,
-				[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter,
+				TContext context,
+				[InstantHandle] Func<TContext, T, IEnumerable<T>> dependsOnGetter,
 				IEqualityComparer<T> equalityComparer)
 			where T: notnull =>
-			GroupTopoSort(source, dependsOnGetter, equalityComparer)
-				.Select(g => g.AsEnumerable())
-				.SelectMany(e => e);
+			GroupTopoSort(source, context, dependsOnGetter, equalityComparer)
+				.Select(static g => g.AsEnumerable())
+				.SelectMany(static e => e);
 		#endregion
 
 		#region GroupTopoSort
@@ -78,56 +86,64 @@ namespace LinqToDB.Common
 		/// Performs topological sort on <paramref name="source"/>.
 		/// </summary>
 		/// <param name="source">Collection to sort.</param>
+		/// <param name="context"><paramref name="dependsOnGetter"/> delegate context object.</param>
 		/// <param name="dependsOnGetter">Function that returns items dependent on specified item.</param>
 		/// <returns>Topologically sorted list of items in <paramref name="source"/> separated by dependency level.</returns>
 		[Pure]
-		public static IEnumerable<T[]> GroupTopoSort<T>(
+		public static IEnumerable<T[]> GroupTopoSort<T, TContext>(
 				[InstantHandle] this IEnumerable<T> source,
-				[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter)
+				TContext context,
+				[InstantHandle] Func<TContext, T, IEnumerable<T>> dependsOnGetter)
 			where T : notnull =>
-			GroupTopoSort(source, dependsOnGetter, EqualityComparer<T>.Default);
+			GroupTopoSort(source, context, dependsOnGetter, EqualityComparer<T>.Default);
 
 		/// <summary>
 		/// Performs topological sort on <paramref name="source"/>.
 		/// </summary>
 		/// <param name="source">Collection to sort.</param>
+		/// <param name="context"><paramref name="dependsOnGetter"/> delegate context object.</param>
 		/// <param name="dependsOnGetter">Function that returns items dependent on specified item.</param>
 		/// <returns>Topologically sorted list of items in <paramref name="source"/> separated by dependency level.</returns>
 		[Pure]
-		public static IEnumerable<T[]> GroupTopoSort<T>(
+		public static IEnumerable<T[]> GroupTopoSort<T, TContext>(
 				[InstantHandle] this ICollection<T> source,
-				[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter)
+				TContext context,
+				[InstantHandle] Func<TContext, T, IEnumerable<T>> dependsOnGetter)
 			where T : notnull =>
-			GroupTopoSort(source, dependsOnGetter, EqualityComparer<T>.Default);
+			GroupTopoSort(source, context, dependsOnGetter, EqualityComparer<T>.Default);
 
 		/// <summary>
 		/// Performs topological sort on <paramref name="source"/>.
 		/// </summary>
 		/// <param name="source">Collection to sort.</param>
+		/// <param name="context"><paramref name="dependsOnGetter"/> delegate context object.</param>
 		/// <param name="dependsOnGetter">Function that returns items dependent on specified item.</param>
 		/// <param name="equalityComparer">Equality comparer for item comparison</param>
 		/// <returns>Topologically sorted list of items in <paramref name="source"/> separated by dependency level.</returns>
 		[Pure]
-		public static IEnumerable<T[]> GroupTopoSort<T>(
+		public static IEnumerable<T[]> GroupTopoSort<T, TContext>(
 				[InstantHandle] this IEnumerable<T> source,
-				[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter,
+				TContext context,
+				[InstantHandle] Func<TContext, T, IEnumerable<T>> dependsOnGetter,
 				IEqualityComparer<T> equalityComparer)
 			where T : notnull =>
-			GroupTopoSort(source.ToArray(), dependsOnGetter, equalityComparer);
+			GroupTopoSort(source.ToArray(), context, dependsOnGetter, equalityComparer);
 
 		/// <summary>
 		/// Performs topological sort on <paramref name="source"/>.
 		/// </summary>
 		/// <param name="source">Collection to sort.</param>
+		/// <param name="context"><paramref name="dependsOnGetter"/> delegate context object.</param>
 		/// <param name="dependsOnGetter">Function that returns items dependent on specified item.</param>
 		/// <param name="equalityComparer">Equality comparer for item comparison</param>
 		/// <returns>
 		/// Topologically sorted list of items in <paramref name="source"/>, separated by dependency level.
 		/// </returns>
 		[Pure]
-		public static IEnumerable<T[]> GroupTopoSort<T>(
+		public static IEnumerable<T[]> GroupTopoSort<T, TContext>(
 			[InstantHandle] this ICollection<T> source,
-			[InstantHandle] Func<T, IEnumerable<T>> dependsOnGetter,
+			TContext context,
+			[InstantHandle] Func<TContext, T, IEnumerable<T>> dependsOnGetter,
 			IEqualityComparer<T> equalityComparer)
 			where T : notnull
 		{
@@ -143,10 +159,10 @@ namespace LinqToDB.Common
 			var workArray = new int[source.Count];
 			var indices = new Dictionary<T, int>(equalityComparer);
 			var level = new List<T>();
-			foreach (var item in source.Select((item, index) => new {Item = item, Index = index}))
+			foreach (var item in source.Select(static (item, index) => new {Item = item, Index = index}))
 			{
 				var count = 0;
-				foreach (var dep in dependsOnGetter(item.Item))
+				foreach (var dep in dependsOnGetter(context, item.Item))
 				{
 					if (!dependants.TryGetValue(dep, out var list))
 					{
@@ -176,7 +192,7 @@ namespace LinqToDB.Common
 			var pendingCount = workArray.Length;
 			while (true)
 			{
-				var nextLevel = new Lazy<List<T>>(() => new List<T>(), false);
+				var nextLevel = new Lazy<List<T>>(static () => new List<T>(), false);
 				foreach (var item in level)
 				{
 					if (dependants.TryGetValue(item, out var list))
@@ -197,7 +213,6 @@ namespace LinqToDB.Common
 			}
 		}
 
-		private static ArgumentException CycleException(string argName) =>
-			new ArgumentException("Cycle detected.", argName);
+		private static ArgumentException CycleException(string argName) => new ("Cycle detected.", argName);
 		#endregion
 	}}

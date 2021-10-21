@@ -16,6 +16,7 @@ namespace LinqToDB.Extensions
 {
 	using System.Diagnostics.CodeAnalysis;
 	using Expressions;
+	using LinqToDB.Common;
 
 	[PublicAPI]
 	public static class ReflectionExtensions
@@ -303,37 +304,28 @@ namespace LinqToDB.Extensions
 
 #region Attributes cache
 
-		static readonly ConcurrentDictionary<Type, object[]> _typeAttributesTopInternal = new ();
+		static readonly ConcurrentDictionary<Type, IReadOnlyCollection<object>> _typeAttributesTopInternal = new ();
 
-		static void GetAttributesInternal(List<object> list, Type type)
+		static IReadOnlyCollection<object> GetAttributesInternal(Type type)
 		{
-			if (_typeAttributesTopInternal.TryGetValue(type, out var attrs))
-			{
-				list.AddRange(attrs);
-			}
-			else
-			{
-				GetAttributesTreeInternal(list, type);
-				_typeAttributesTopInternal[type] = list.ToArray();
-			}
+			return _typeAttributesTopInternal.GetOrAdd(type, static type => GetAttributesTreeInternal(type));
 		}
 
-		static readonly ConcurrentDictionary<Type, object[]> _typeAttributesInternal = new ();
+		static readonly ConcurrentDictionary<Type, IReadOnlyCollection<object>> _typeAttributesInternal = new ();
 
-		static void GetAttributesTreeInternal(List<object> list, Type type)
+		static IReadOnlyCollection<object> GetAttributesTreeInternal(Type type)
 		{
-			var attrs = _typeAttributesInternal.GetOrAdd(type, x => type.GetCustomAttributes(false));
-
-			list.AddRange(attrs);
+			IReadOnlyCollection<object> attrs = _typeAttributesInternal.GetOrAdd(type, x => type.GetCustomAttributes(false));
 
 			if (type.IsInterface)
-				return;
+				return attrs;
 
 			// Reflection returns interfaces for the whole inheritance chain.
 			// So, we are going to get some hemorrhoid here to restore the inheritance sequence.
 			//
 			var interfaces      = type.GetInterfaces();
 			var nBaseInterfaces = type.BaseType != null? type.BaseType.GetInterfaces().Length: 0;
+			List<object>? list  = null;
 
 			for (var i = 0; i < interfaces.Length; i++)
 			{
@@ -358,14 +350,38 @@ namespace LinqToDB.Extensions
 						continue;
 				}
 
-				GetAttributesTreeInternal(list, intf);
+				var ifaceAttrs = GetAttributesTreeInternal(intf);
+				if (ifaceAttrs.Count > 0)
+				{
+					if (list != null)
+						list.AddRange(ifaceAttrs);
+					else if (attrs.Count == 0)
+						attrs = ifaceAttrs;
+					else
+						(list ??= new(attrs)).AddRange(ifaceAttrs);
+				}
 			}
 
 			if (type.BaseType != null && type.BaseType != typeof(object))
-				GetAttributesTreeInternal(list, type.BaseType);
+			{
+				var baseAttrs = GetAttributesTreeInternal(type.BaseType);
+				if (baseAttrs.Count > 0)
+				{
+					if (list != null)
+						list.AddRange(baseAttrs);
+					else if (attrs.Count == 0)
+						attrs = baseAttrs;
+					else
+						(list ??= new(attrs)).AddRange(baseAttrs);
+				}
+			}
+
+			if (list != null   ) return list;
+			if (attrs.Count > 0) return attrs;
+			return Array<object>.Empty;
 		}
 
-#endregion
+		#endregion
 
 		/// <summary>
 		/// Returns an array of custom attributes applied to a type.
@@ -380,16 +396,9 @@ namespace LinqToDB.Extensions
 		{
 			if (type == null) throw new ArgumentNullException(nameof(type));
 
-			if (!CacheHelper<T>.TypeAttributes.TryGetValue(type, out var attrs))
-			{
-				var list = new List<object>();
-
-				GetAttributesInternal(list, type);
-
-				CacheHelper<T>.TypeAttributes[type] = attrs = list.OfType<T>().ToArray();
-			}
-
-			return attrs;
+			return CacheHelper<T>.TypeAttributes.GetOrAdd(
+				type,
+				static type => GetAttributesInternal(type).OfType<T>().ToArray());
 		}
 
 		/// <summary>
@@ -484,6 +493,8 @@ namespace LinqToDB.Extensions
 			yield return member.DeclaringType!;
 		}
 
+		static readonly ConcurrentDictionary<(Type parent, Type child), bool> _isSameOrParentOf = new ();
+
 		/// <summary>
 		/// Determines whether the specified types are considered equal.
 		/// </summary>
@@ -499,35 +510,40 @@ namespace LinqToDB.Extensions
 			if (parent == null) throw new ArgumentNullException(nameof(parent));
 			if (child  == null) throw new ArgumentNullException(nameof(child));
 
-			if (parent == child ||
-				child.IsEnum && Enum.GetUnderlyingType(child) == parent ||
-				child.IsSubclassOf(parent))
-			{
+			if (parent == child)
 				return true;
-			}
 
-			if (parent.IsGenericTypeDefinition)
-				for (var t = child; t != typeof(object) && t != null; t = t.BaseType)
-					if (t.IsGenericType && t.GetGenericTypeDefinition() == parent)
-						return true;
-
-			if (parent.IsInterface)
+			return _isSameOrParentOf.GetOrAdd((parent, child), static key =>
 			{
-				var interfaces = child.GetInterfaces();
+				var (parent, child) = key;
 
-				foreach (var t in interfaces)
-				{
-					if (parent.IsGenericTypeDefinition)
-					{
+				if (child.IsEnum && Enum.GetUnderlyingType(child) == parent ||
+					child.IsSubclassOf(parent))
+					return true;
+
+				if (parent.IsGenericTypeDefinition)
+					for (var t = child; t != typeof(object) && t != null; t = t.BaseType)
 						if (t.IsGenericType && t.GetGenericTypeDefinition() == parent)
 							return true;
-					}
-					else if (t == parent)
-						return true;
-				}
-			}
 
-			return false;
+				if (parent.IsInterface)
+				{
+					var interfaces = child.GetInterfaces();
+
+					foreach (var t in interfaces)
+					{
+						if (parent.IsGenericTypeDefinition)
+						{
+							if (t.IsGenericType && t.GetGenericTypeDefinition() == parent)
+								return true;
+						}
+						else if (t == parent)
+							return true;
+					}
+				}
+
+				return false;
+			});
 		}
 
 		/// <summary>
@@ -728,7 +744,7 @@ namespace LinqToDB.Extensions
 			if (type == null)
 				return null;
 
-			return _getItemTypeCache.GetOrAdd(type, t =>
+			return _getItemTypeCache.GetOrAdd(type, static t =>
 			{
 				if (t == typeof(object))
 					return null;

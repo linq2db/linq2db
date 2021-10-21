@@ -32,16 +32,16 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			((ISqlExpressionWalkable?)SourceTable  )?.Walk(options, func);
-			((ISqlExpressionWalkable?)DeletedTable )?.Walk(options, func);
-			((ISqlExpressionWalkable?)InsertedTable)?.Walk(options, func);
-			((ISqlExpressionWalkable?)OutputTable  )?.Walk(options, func);
+			((ISqlExpressionWalkable?)SourceTable  )?.Walk(options, context, func);
+			((ISqlExpressionWalkable?)DeletedTable )?.Walk(options, context, func);
+			((ISqlExpressionWalkable?)InsertedTable)?.Walk(options, context, func);
+			((ISqlExpressionWalkable?)OutputTable  )?.Walk(options, context, func);
 
 			if (HasOutputItems)
 				foreach (var t in OutputItems)
-					((ISqlExpressionWalkable)t).Walk(options, func);
+					((ISqlExpressionWalkable)t).Walk(options, context, func);
 
 			return null;
 		}
