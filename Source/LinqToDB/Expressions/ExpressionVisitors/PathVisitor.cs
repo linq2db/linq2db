@@ -24,31 +24,31 @@ namespace LinqToDB.Expressions
 			_visited = null;
 		}
 
-		private void Path<T>(IEnumerable<T> source, MethodInfo property, Action<T> func)
+		private void Path<T>(IEnumerable<T> source, PropertyInfo property, Action<T> func)
 			where T : class
 		{
 			var prop = Expression.Property(_path, property);
 			var i    = 0;
 			foreach (var item in source)
 			{
-				_path = Expression.Call(prop, ReflectionHelper.IndexExpressor<T>.Item, ExpressionInstances.Int32(i++));
+				_path = Expression.Call(prop, ReflectionHelper.IndexExpressor<T>.Item, ExpressionInstances.Int32Array(i++));
 				func(item);
 			}
 		}
 
-		private void Path<T>(IEnumerable<T> source, MethodInfo property)
+		private void Path<T>(IEnumerable<T> source, PropertyInfo property)
 			where T : Expression
 		{
 			var prop = Expression.Property(_path, property);
 			var i    = 0;
 			foreach (var item in source)
 			{
-				_path = Expression.Call(prop, ReflectionHelper.IndexExpressor<T>.Item, ExpressionInstances.Int32(i++));
+				_path = Expression.Call(prop, ReflectionHelper.IndexExpressor<T>.Item, ExpressionInstances.Int32Array(i++));
 				Path(item);
 			}
 		}
 
-		private void Path(Expression expr, MethodInfo property)
+		private void Path(Expression expr, PropertyInfo property)
 		{
 			_path = Expression.Property(_path, property);
 			Path(expr);
@@ -289,7 +289,7 @@ namespace LinqToDB.Expressions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private Expression ConvertPathTo(Type type)
 		{
-			return _path = Expression.Convert(_path, type);
+			return _path = _path.Type != type ? Expression.Convert(_path, type) : _path;
 		}
 	}
 }

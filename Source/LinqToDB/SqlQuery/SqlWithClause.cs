@@ -105,21 +105,19 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		public void WalkQueries(Func<SelectQuery, SelectQuery> func)
+		public void WalkQueries<TContext>(TContext context, Func<TContext, SelectQuery, SelectQuery> func)
 		{
 			foreach (var c in Clauses)
 			{
 				if (c.Body != null)
-					c.Body = func(c.Body);
+					c.Body = func(context, c.Body);
 			}
 		}
 
-		public ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		public ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			for (var index = 0; index < Clauses.Count; index++)
-			{
-				Clauses[index].Walk(options, func);
-			}
+				Clauses[index].Walk(options, context, func);
 
 			return null;
 		}

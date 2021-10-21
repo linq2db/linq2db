@@ -223,15 +223,15 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		public ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			if (!(options.SkipColumns && Expression is SqlColumn))
-				Expression = Expression.Walk(options, func)!;
+				Expression = Expression.Walk(options, context, func)!;
 
 			if (options.ProcessParent)
-				Parent = (SelectQuery)func(Parent!);
+				Parent = (SelectQuery)func(context, Parent!);
 
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion

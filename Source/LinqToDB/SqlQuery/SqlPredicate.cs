@@ -34,9 +34,9 @@ namespace LinqToDB.SqlQuery
 
 			public ISqlExpression Expr1 { get; set; }
 
-			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+			protected override void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 			{
-				Expr1 = Expr1.Walk(options, func)!;
+				Expr1 = Expr1.Walk(options, context, func)!;
 
 				if (Expr1 == null)
 					throw new InvalidOperationException();
@@ -106,10 +106,10 @@ namespace LinqToDB.SqlQuery
 
 			public bool? WithNull          { get; }
 
-			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+			protected override void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 			{
-				base.Walk(options, func);
-				Expr2 = Expr2.Walk(options, func)!;
+				base.Walk(options, context, func);
+				Expr2 = Expr2.Walk(options, context, func)!;
 			}
 
 			public override bool CanBeNull => base.CanBeNull || Expr2.CanBeNull;
@@ -358,12 +358,12 @@ namespace LinqToDB.SqlQuery
 			public ISqlExpression? Escape    { get; internal set; }
 			public string?         FunctionName { get; internal set; }
 
-			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+			protected override void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 			{
-				base.Walk(options, func);
-				Expr2 = Expr2.Walk(options, func)!;
+				base.Walk(options, context, func);
+				Expr2 = Expr2.Walk(options, context, func)!;
 
-				Escape = Escape?.Walk(options, func);
+				Escape = Escape?.Walk(options, context, func);
 			}
 
 			public override IQueryElement Invert()
@@ -415,10 +415,10 @@ namespace LinqToDB.SqlQuery
 			public SearchKind     Kind          { get; }
 			public ISqlExpression CaseSensitive { get; }
 
-			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+			protected override void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 			{
-				base.Walk(options, func);
-				Expr2 = Expr2.Walk(options, func)!;
+				base.Walk(options, context, func);
+				Expr2 = Expr2.Walk(options, context, func)!;
 			}
 
 			public override IQueryElement Invert()
@@ -464,10 +464,10 @@ namespace LinqToDB.SqlQuery
 
 			public ISqlExpression Expr2 { get; internal set; }
 
-			protected override void Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+			protected override void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 			{
-				base.Walk(options, func);
-				Expr2 = Expr2.Walk(options, func)!;
+				base.Walk(options, context, func);
+				Expr2 = Expr2.Walk(options, context, func)!;
 			}
 
 			public override IQueryElement Invert() => new IsDistinct(Expr1, !IsNot, Expr2);
@@ -497,11 +497,11 @@ namespace LinqToDB.SqlQuery
 			public ISqlExpression Expr2 { get; internal set; }
 			public ISqlExpression Expr3 { get; internal set; }
 
-			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+			protected override void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 			{
-				base.Walk(options, func);
-				Expr2 = Expr2.Walk(options, func)!;
-				Expr3 = Expr3.Walk(options, func)!;
+				base.Walk(options, context, func);
+				Expr2 = Expr2.Walk(options, context, func)!;
+				Expr3 = Expr3.Walk(options, context, func)!;
 			}
 
 			public override IQueryElement Invert()
@@ -611,10 +611,10 @@ namespace LinqToDB.SqlQuery
 
 			public SelectQuery SubQuery { get; private set; }
 
-			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+			protected override void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 			{
-				base.Walk(options, func);
-				SubQuery = (SelectQuery)((ISqlExpression)SubQuery).Walk(options, func)!;
+				base.Walk(options, context, func);
+				SubQuery = (SelectQuery)((ISqlExpression)SubQuery).Walk(options, context, func)!;
 			}
 
 			public override IQueryElement Invert()
@@ -663,11 +663,11 @@ namespace LinqToDB.SqlQuery
 
 			public   List<ISqlExpression>  Values { get; } = new List<ISqlExpression>();
 
-			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+			protected override void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 			{
-				base.Walk(options, func);
+				base.Walk(options, context, func);
 				for (var i = 0; i < Values.Count; i++)
-					Values[i] = Values[i].Walk(options, func)!;
+					Values[i] = Values[i].Walk(options, context, func)!;
 			}
 
 			public override IQueryElement Invert()
@@ -712,9 +712,9 @@ namespace LinqToDB.SqlQuery
 
 			public SqlFunction Function { get; private set; }
 
-			protected override void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+			protected override void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 			{
-				Function = (SqlFunction)((ISqlExpression)Function).Walk(options, func)!;
+				Function = (SqlFunction)((ISqlExpression)Function).Walk(options, context, func)!;
 			}
 
 			public override bool CanBeNull => Function.CanBeNull;
@@ -750,11 +750,11 @@ namespace LinqToDB.SqlQuery
 		public             int               Precedence { get; }
 
 		public    abstract bool              CanBeNull  { get; }
-		protected abstract void              Walk     (WalkOptions options, Func<ISqlExpression,ISqlExpression> func);
+		protected abstract void              Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func);
 
-		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			Walk(options, func);
+			Walk(options, context, func);
 			return null;
 		}
 

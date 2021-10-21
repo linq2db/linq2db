@@ -15,9 +15,9 @@ namespace LinqToDB.SqlQuery
 		public ISqlExpression Expression   { get; internal set; }
 		public bool           IsDescending { get; }
 
-		internal void Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		internal void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			Expression = Expression.Walk(options, func)!;
+			Expression = Expression.Walk(options, context, func)!;
 		}
 
 		#region Overrides

@@ -77,15 +77,15 @@ namespace LinqToDB.SqlQuery
 			return sb;
 		}
 
-		public override ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			Target.Walk(options, func);
-			Source.Walk(options, func);
+			Target.Walk(options, context, func);
+			Source.Walk(options, context, func);
 
-			((ISqlExpressionWalkable)On).Walk(options, func);
+			((ISqlExpressionWalkable)On).Walk(options, context, func);
 
 			for (var i = 0; i < Operations.Count; i++)
-				((ISqlExpressionWalkable)Operations[i]).Walk(options, func);
+				((ISqlExpressionWalkable)Operations[i]).Walk(options, context, func);
 
 			return null;
 		}
@@ -115,10 +115,10 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		public override void WalkQueries(Func<SelectQuery, SelectQuery> func)
+		public override void WalkQueries<TContext>(TContext context, Func<TContext, SelectQuery, SelectQuery> func)
 		{
-			Source.WalkQueries(func);
-			With?.WalkQueries(func);
+			Source.WalkQueries(context, func);
+			With?.WalkQueries(context, func);
 		}
 	}
 }

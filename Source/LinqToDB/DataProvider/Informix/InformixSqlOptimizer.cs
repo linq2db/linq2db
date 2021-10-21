@@ -116,10 +116,9 @@ namespace LinqToDB.DataProvider.Informix
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl<TContext>(ISqlExpression expression, ConvertVisitor<TContext> visitor,
-			EvaluationContext context)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
 		{
-			expression = base.ConvertExpressionImpl(expression, visitor, context);
+			expression = base.ConvertExpressionImpl(expression, visitor);
 
 			if (expression is SqlBinaryExpression be)
 			{
