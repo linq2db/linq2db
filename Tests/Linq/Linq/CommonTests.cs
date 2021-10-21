@@ -582,53 +582,6 @@ namespace Tests.Linq
 				Debug.WriteLine(str);
 			}
 		}
-
-		[Test]
-		public void MissingDataTypeIssue([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-				var param = "sql";
-
-				var varcharQuery = db.GetTable<Person>()
-					.Where(p => p.FirstName == param)
-					.Select(p =>
-						p.FirstName
-					).ToString();
-
-				CompareSql(@"-- SqlServer.2017
-DECLARE @param VarChar(8000) -- AnsiString
-SET     @param = N'sql'
-
-SELECT
-	[p].[FirstName]
-FROM
-	[Person] [p]
-WHERE
-	[p].[FirstName] = @param
-", varcharQuery);
-				
-				var nvarcharQuery = db.GetTable<Person>()
-					.Where(p => p.FirstName.StartsWith(param))
-					.Select(p =>
-						p.FirstName
-					).ToString();
-
-				Console.WriteLine(nvarcharQuery);
-				
-				CompareSql(@"-- SqlServer.2000
-DECLARE @param_1 VarChar(8000) -- String
-SET     @param_1 = 'sql%'
-
-SELECT
-	[p].[FirstName]
-FROM
-	[Person] [p]
-WHERE
-	[p].[FirstName] LIKE @param_1 ESCAPE N'~'
-", nvarcharQuery);
-			}
-		}
 	}
 
 	static class Extender

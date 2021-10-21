@@ -1570,19 +1570,9 @@ namespace LinqToDB.Linq.Builder
 					return p;
 			}
 
-			ISqlExpression l;
-			ISqlExpression r;
-			var ls = GetContext(context, left);
-			if (ls?.IsExpression(left, 0, RequestFor.Field).Result == true)
-			{
-				l = ConvertToSql(context, left);
-				r = ConvertToSql(context, right, true, QueryHelper.GetColumnDescriptor(l));
-			}
-			else
-			{
-				r = ConvertToSql(context, right, true);
-				l = ConvertToSql(context, left, false, QueryHelper.GetColumnDescriptor(r));
-			}
+			var cd = SuggestColumnDescriptor(context, left, right);
+			var l  = ConvertToSql(context, left,  unwrap: false, cd);
+			var r  = ConvertToSql(context, right, unwrap: true,  cd);
 
 			l = QueryHelper.UnwrapExpression(l);
 			r = QueryHelper.UnwrapExpression(r);
@@ -2299,13 +2289,53 @@ namespace LinqToDB.Linq.Builder
 
 		#endregion
 
+		#region ColumnDescriptor Helpers
+
+		public ColumnDescriptor? SuggestColumnDescriptor(IBuildContext? context, Expression expr)
+		{
+			var ctx = GetContext(context, expr);
+			if (ctx != null && ctx.IsExpression(expr, 0, RequestFor.Field).Result)
+			{
+				var descriptor = QueryHelper.GetColumnDescriptor(ConvertToSql(context, expr));
+				if (descriptor != null)
+				{
+					return descriptor;
+				}
+			}
+
+			return null;
+		}
+
+		public ColumnDescriptor? SuggestColumnDescriptor(IBuildContext? context, Expression expr1, Expression expr2)
+		{
+			return SuggestColumnDescriptor(context, expr1) ?? SuggestColumnDescriptor(context, expr2);
+		}
+
+		public ColumnDescriptor? SuggestColumnDescriptor(IBuildContext? context, ReadOnlyCollection<Expression> expressions)
+		{
+			foreach (var expr in expressions)
+			{
+				var descriptor = SuggestColumnDescriptor(context, expr);
+				if (descriptor != null)
+					return descriptor;
+			}
+
+			return null;
+		}
+	
+
+		#endregion
+
 		#region LIKE predicate
 
 		ISqlPredicate CreateStringPredicate(IBuildContext? context, MethodCallExpression expression, SqlPredicate.SearchString.SearchKind kind, ISqlExpression caseSensitive)
 		{
 			var e = expression;
-			var o = ConvertToSql(context, e.Object);
-			var a = ConvertToSql(context, e.Arguments[0]);
+
+			var descriptor = SuggestColumnDescriptor(context, e.Object, e.Arguments[0]);
+
+			var o = ConvertToSql(context, e.Object,       unwrap: false, descriptor);
+			var a = ConvertToSql(context, e.Arguments[0], unwrap: false, descriptor);
 
 			return new SqlPredicate.SearchString(o, false, a, kind, caseSensitive);
 		}
@@ -2313,13 +2343,16 @@ namespace LinqToDB.Linq.Builder
 		ISqlPredicate ConvertLikePredicate(IBuildContext context, MethodCallExpression expression)
 		{
 			var e  = expression;
-			var a1 = ConvertToSql(context, e.Arguments[0]);
-			var a2 = ConvertToSql(context, e.Arguments[1]);
+
+			var descriptor = SuggestColumnDescriptor(context, e.Arguments);
+
+			var a1 = ConvertToSql(context, e.Arguments[0], unwrap: false, descriptor);
+			var a2 = ConvertToSql(context, e.Arguments[1], unwrap: false, descriptor);
 
 			ISqlExpression? a3 = null;
 
 			if (e.Arguments.Count == 3)
-				a3 = ConvertToSql(context, e.Arguments[2]);
+				a3 = ConvertToSql(context, e.Arguments[2], unwrap: false, descriptor);
 
 			return new SqlPredicate.Like(a1, false, a2, a3);
 		}

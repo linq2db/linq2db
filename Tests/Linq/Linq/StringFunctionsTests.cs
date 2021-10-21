@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -29,12 +31,11 @@ namespace Tests.Linq
 		[Table]
 		class SampleClass
 		{
-			[Column] public int Id    { get; set; }
-			[Column(Length = 50, CanBeNull = true)] public string? Value1 { get; set; }
-			[Column(Length = 50, CanBeNull = true)] public string? Value2 { get; set; }
-			[Column(Length = 50, CanBeNull = true)] public string? Value3 { get; set; }
-			[Column(Length = 50, CanBeNull = true, DataType = DataType.VarChar)]
-			                                        public string? Value4 { get; set; }
+			[Column]                                                              public int     Id     { get; set; }
+			[Column(Length = 50, CanBeNull = true)]                               public string? Value1 { get; set; }
+			[Column(Length = 50, CanBeNull = true)]                               public string? Value2 { get; set; }
+			[Column(Length = 50, CanBeNull = true, DataType = DataType.VarChar)]  public string? Value3 { get; set; }
+			[Column(Length = 50, CanBeNull = true, DataType = DataType.NVarChar)] public string? Value4 { get; set; }
 		}
 
 		public class StringTestSourcesAttribute : IncludeDataSourcesAttribute
@@ -366,6 +367,115 @@ namespace Tests.Linq
 			};
 			return data;
 		}
+
+		[Test]
+		public void StartsWithDataType1([StringTestSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var str   = "some";
+				var table = db.GetTable<SampleClass>();
+				var sqlExpr = table.Where(t => t.Value3.StartsWith(str)).GetSelectQuery()
+					.Find(e => e.ElementType == QueryElementType.SqlParameter);
+
+				sqlExpr.Should().NotBeNull();
+
+				var param = (SqlParameter)sqlExpr!;
+
+				param.Type.DataType.Should().Be(DataType.VarChar);
+			}
+		}
+
+		[Test]
+		public void StartsWithDataType2([StringTestSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var str   = "some";
+				var table = db.GetTable<SampleClass>();
+				var sqlExpr = table.Where(t => t.Value4.StartsWith(str)).GetSelectQuery()
+					.Find(e => e.ElementType == QueryElementType.SqlParameter);
+
+				sqlExpr.Should().NotBeNull();
+
+				var param = (SqlParameter)sqlExpr!;
+
+				param.Type.DataType.Should().Be(DataType.NVarChar);
+			}
+		}
+
+		[Test]
+		public void StartsWithDataType3([StringTestSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var str   = "some";
+				var table = db.GetTable<SampleClass>();
+				var sqlExpr = table.Where(t => str.StartsWith(t.Value4)).GetSelectQuery()
+					.Find(e => e.ElementType == QueryElementType.SqlParameter);
+
+				sqlExpr.Should().NotBeNull();
+
+				var param = (SqlParameter)sqlExpr!;
+
+				param.Type.DataType.Should().Be(DataType.NVarChar);
+			}
+		}
+
+		[Test]
+		public void LikeWithDataType1([StringTestSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var str   = "some";
+				var table = db.GetTable<SampleClass>();
+				var sqlExpr = table.Where(t => Sql.Like(t.Value3, str)).GetSelectQuery()
+					.Find(e => e.ElementType == QueryElementType.SqlParameter);
+
+				sqlExpr.Should().NotBeNull();
+
+				var param = (SqlParameter)sqlExpr!;
+
+				param.Type.DataType.Should().Be(DataType.VarChar);
+			}
+		}
+
+		[Test]
+		public void LikeWithDataType2([StringTestSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var str   = "some";
+				var table = db.GetTable<SampleClass>();
+				var sqlExpr = table.Where(t => Sql.Like(t.Value4, str)).GetSelectQuery()
+					.Find(e => e.ElementType == QueryElementType.SqlParameter);
+
+				sqlExpr.Should().NotBeNull();
+
+				var param = (SqlParameter)sqlExpr!;
+
+				param.Type.DataType.Should().Be(DataType.NVarChar);
+			}
+		}
+
+		[Test]
+		public void LikeWithDataType3([StringTestSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var str   = "some";
+				var table = db.GetTable<SampleClass>();
+				var sqlExpr = table.Where(t => Sql.Like(str, t.Value4)).GetSelectQuery()
+					.Find(e => e.ElementType == QueryElementType.SqlParameter);
+
+				sqlExpr.Should().NotBeNull();
+
+				var param = (SqlParameter)sqlExpr!;
+
+				param.Type.DataType.Should().Be(DataType.NVarChar);
+			}
+		}
+
 
 		[Test]
 		public void Issue1765TestLiteral1([StringTestSources] string context)
