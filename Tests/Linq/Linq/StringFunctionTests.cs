@@ -639,7 +639,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StartsWithDataType3([DataSources] string context)
+		public void StartsWithDataType3([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
