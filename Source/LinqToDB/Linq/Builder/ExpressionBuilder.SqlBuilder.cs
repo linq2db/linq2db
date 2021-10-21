@@ -734,7 +734,7 @@ namespace LinqToDB.Linq.Builder
 					var expr = (MemberInitExpression)expression;
 					var ed   = context.Builder.MappingSchema.GetEntityDescriptor(expr.Type);
 					var dic  = TypeAccessor.GetAccessor(expr.Type).Members
-							.Select(static (m,i) => new { m, i })
+							.Select(static (m,i) => (m, i))
 							.ToDictionary(static _ => _.m.MemberInfo, static _ => _.i);
 
 					var result = new List<SqlInfo>();

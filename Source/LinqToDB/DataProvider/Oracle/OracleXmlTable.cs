@@ -140,21 +140,20 @@ namespace LinqToDB.DataProvider.Oracle
 
 					var  c= ed.Columns[i];
 
-					columns.Append(
-						string.Format(
-							"{0} {1} path 'c{2}'",
-							sqlBuilder.ConvertInline(c.ColumnName, ConvertType.NameToQueryField),
-							string.IsNullOrEmpty(c.DbType)
-								? GetDataTypeText(
-									new SqlDataType(
-										c.DataType == DataType.Undefined ? SqlDataType.GetDataType(c.MemberType).Type.DataType : c.DataType,
-										c.MemberType,
-										c.Length,
-										c.Precision,
-										c.Scale,
-										c.DbType))
-								: c.DbType,
-							i));
+					columns.AppendFormat(
+						"{0} {1} path 'c{2}'",
+						sqlBuilder.ConvertInline(c.ColumnName, ConvertType.NameToQueryField),
+						string.IsNullOrEmpty(c.DbType)
+							? GetDataTypeText(
+								new SqlDataType(
+									c.DataType == DataType.Undefined ? SqlDataType.GetDataType(c.MemberType).Type.DataType : c.DataType,
+									c.MemberType,
+									c.Length,
+									c.Precision,
+									c.Scale,
+									c.DbType))
+							: c.DbType,
+						i);
 				}
 
 				table.SqlTableType   = SqlTableType.Expression;
