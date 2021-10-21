@@ -871,7 +871,7 @@ namespace Tests.Linq
 					).ToList();
 
 				personWithList.Should().HaveCountGreaterThan(0);
-				personWithList.All(p => p.SomeList.Count == 0).Should().BeTrue();
+				personWithList.All(p => p.SomeList!.Count == 0).Should().BeTrue();
 			}
 
 		}
