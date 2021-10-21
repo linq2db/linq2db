@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Linq.Expressions;
 using LinqToDB.Mapping;
 
@@ -51,7 +50,7 @@ namespace LinqToDB
 			public string? Server        { get; set; }
 			public int[]?  ArgIndices    { get; set; }
 
-			public virtual void SetTable(ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<Expression, ColumnDescriptor?, ISqlExpression> converter)
+			public virtual void SetTable<TContext>(TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
 				table.SqlTableType   = SqlTableType.Function;
 				table.Name           = Name ?? methodCall.Method.Name;
@@ -63,7 +62,7 @@ namespace LinqToDB
 				if (string.IsNullOrEmpty(expressionStr))
 					throw new LinqToDBException($"Cannot retrieve Table Function body from expression '{methodCall}'.");
 
-				table.TableArguments = ExpressionAttribute.PrepareArguments(string.Empty, ArgIndices, addDefault: true, knownExpressions, genericTypes, converter).ToArray();
+				table.TableArguments = ExpressionAttribute.PrepareArguments(context, string.Empty, ArgIndices, addDefault: true, knownExpressions, genericTypes, converter);
 
 				if (Schema   != null) table.Schema   = Schema;
 				if (Database != null) table.Database = Database;

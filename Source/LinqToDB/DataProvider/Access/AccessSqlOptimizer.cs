@@ -64,12 +64,11 @@ namespace LinqToDB.DataProvider.Access
 			return !subQuery.Where.IsEmpty;
 		}
 
-		public override ISqlPredicate ConvertSearchStringPredicate<TContext>(MappingSchema mappingSchema, SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext<TContext>> visitor,
-			OptimizationContext optimizationContext)
+		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext> visitor)
 		{
-			var like = ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);
+			var like = ConvertSearchStringPredicateViaLike(predicate, visitor);
 
-			if (predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context) == true)
+			if (predicate.CaseSensitive.EvaluateBoolExpression(visitor.Context.OptimizationContext.Context) == true)
 			{
 				SqlPredicate.ExprExpr? subStrPredicate = null;
 
