@@ -1054,7 +1054,8 @@ namespace Tests.Linq
 			using (var db = (DataConnection)GetDataContext(context))
 			using (var table = db.CreateLocalTable(ParameterDeduplication.UpdateData))
 			{
-				table.Where(_ => _.Id == 1)
+				var id = 1;
+				table.Where(_ => _.Id == id)
 					.Set(_ => _.Int1   , 2)
 					.Set(_ => _.Int2   , 2)
 					.Set(_ => _.IntN1  , 2)
@@ -1067,7 +1068,7 @@ namespace Tests.Linq
 				var cacheMiss = Query<ParameterDeduplication>.CacheMissCount;
 				var sql       = db.LastQuery!;
 
-				sql.Should().Contain("@Id");
+				sql.Should().Contain("@id");
 				sql.Should().Contain("@Int1");
 				sql.Should().Contain("@Int2");
 				sql.Should().Contain("@IntN1");
@@ -1076,7 +1077,8 @@ namespace Tests.Linq
 				sql.Should().Contain("@String2");
 				sql.Should().Contain("@String3");
 
-				table.Where(_ => _.Id == 2)
+				id = 2;
+				table.Where(_ => _.Id == id)
 					.Set(_ => _.Int1   , 3)
 					.Set(_ => _.Int2   , 4)
 					.Set(_ => _.IntN1  , 5)
@@ -1089,7 +1091,7 @@ namespace Tests.Linq
 				Query<ParameterDeduplication>.CacheMissCount.Should().Be(cacheMiss);
 				sql = db.LastQuery!;
 
-				sql.Should().Contain("@Id");
+				sql.Should().Contain("@id");
 				sql.Should().Contain("@Int1");
 				sql.Should().Contain("@Int2");
 				sql.Should().Contain("@IntN1");
