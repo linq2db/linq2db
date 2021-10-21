@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -301,14 +300,14 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			if (!options.SkipColumnDeclaration)
 			{
 				for (var i = 0; i < Columns.Count; i++)
 				{
 					var col = Columns[i];
-					var expr = col.Walk(options, func);
+					var expr = col.Walk(options, context, func);
 
 					if (expr is SqlColumn column)
 						Columns[i] = column;
@@ -317,8 +316,8 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			TakeValue = TakeValue?.Walk(options, func);
-			SkipValue = SkipValue?.Walk(options, func);
+			TakeValue = TakeValue?.Walk(options, context, func);
+			SkipValue = SkipValue?.Walk(options, context, func);
 
 			return null;
 		}

@@ -57,7 +57,7 @@ namespace LinqToDB.Linq.Builder
 						if (typeof(ISqlExpression).IsAssignableFrom(type))
 							return Expression.Constant(a);
 
-						Expression expr = Expression.Call(formatArg, ReflectionHelper.Functions.FormattableString.GetArguments, ExpressionInstances.Int32(i));
+						Expression expr = Expression.Call(formatArg, ReflectionHelper.Functions.FormattableString.GetArguments, ExpressionInstances.Int32Array(i));
 
 						if (type != typeof(object))
 							expr = Expression.Convert(expr, type);

@@ -515,36 +515,36 @@ namespace LinqToDB.Linq.Builder
 
 				if (attribute != null)
 				{
-					var expr = attribute.GetExpression(Builder.DataContext, SelectQuery, call, (e, descriptor) =>
+					var expr = attribute.GetExpression((context: this, rootArgument), Builder.DataContext, SelectQuery, call, static (context, e, descriptor) =>
 					{
 						var ex = e.Unwrap();
 
 						if (ex is LambdaExpression l)
 						{
-							var p = Element.Parent;
-							var ctx = new ExpressionContext(Parent, Element, l);
+							var p = context.context.Element.Parent;
+							var ctx = new ExpressionContext(context.context.Parent, context.context.Element, l);
 
-							var res = Builder.ConvertToSql(ctx, l.Body, true, descriptor);
+							var res = context.context.Builder.ConvertToSql(ctx, l.Body, true, descriptor);
 
-							Builder.ReplaceParent(ctx, p);
+							context.context.Builder.ReplaceParent(ctx, p);
 							return res;
 						}
 
-						if (rootArgument == e && typeof(IGrouping<,>).IsSameOrParentOf(ex.Type))
+						if (context.rootArgument == e && typeof(IGrouping<,>).IsSameOrParentOf(ex.Type))
 						{
-							return Element.ConvertToSql(null, 0, ConvertFlags.Field)
+							return context.context.Element.ConvertToSql(null, 0, ConvertFlags.Field)
 								.Select(_ => _.Sql)
 								.FirstOrDefault();
 						}
 
-						if (typeof(IGrouping<,>).IsSameOrParentOf(Builder.GetRootObject(ex).Type))
+						if (typeof(IGrouping<,>).IsSameOrParentOf(context.context.Builder.GetRootObject(ex).Type))
 						{
-							return ConvertToSql(ex, 0, ConvertFlags.Field)
+							return context.context.ConvertToSql(ex, 0, ConvertFlags.Field)
 								.Select(_ => _.Sql)
 								.FirstOrDefault();
 						}
 
-						return Builder.ConvertToExtensionSql(Element, ex, descriptor);
+						return context.context.Builder.ConvertToExtensionSql(context.context.Element, ex, descriptor);
 					});
 
 					if (expr != null)

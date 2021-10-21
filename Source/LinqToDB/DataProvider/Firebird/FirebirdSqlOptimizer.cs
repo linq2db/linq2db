@@ -1,5 +1,4 @@
 ﻿using System;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider.Firebird
 {
@@ -60,14 +59,11 @@ namespace LinqToDB.DataProvider.Firebird
 			return false;
 		}
 
-
-		public override ISqlPredicate ConvertSearchStringPredicate<TContext>(MappingSchema mappingSchema, SqlPredicate.SearchString predicate,
-			ConvertVisitor<RunOptimizationContext<TContext>> visitor,
-			OptimizationContext optimizationContext)
+		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext> visitor)
 		{
 			ISqlExpression expr;
 
-			var caseSensitive = predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context);
+			var caseSensitive = predicate.CaseSensitive.EvaluateBoolExpression(visitor.Context.OptimizationContext.Context);
 
 			// for explicit case-sensitive search we apply "CAST({0} AS BLOB)" to searched string as COLLATE's collation is character set-dependent
 			switch (predicate.Kind)
@@ -92,7 +88,7 @@ namespace LinqToDB.DataProvider.Firebird
 							predicate.CaseSensitive);
 					}
 
-					return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);
+					return ConvertSearchStringPredicateViaLike(predicate, visitor);
 				}	
 				case SqlPredicate.SearchString.SearchKind.StartsWith:
 				{
@@ -105,11 +101,11 @@ namespace LinqToDB.DataProvider.Firebird
 								: caseSensitive == true
 									? new SqlExpression(typeof(string), "CAST({0} AS BLOB)", Precedence.Primary, predicate.Expr1)
 									: predicate.Expr1,
-							optimizationContext.Context),
+							visitor.Context.OptimizationContext.Context),
 						TryConvertToValue(
 							caseSensitive == false
 								? new SqlFunction(typeof(string), "$ToLower$", predicate.Expr2)
-								: predicate.Expr2, optimizationContext.Context)) {CanBeNull = false};
+								: predicate.Expr2, visitor.Context.OptimizationContext.Context)) {CanBeNull = false};
 					break;
 				}	
 				case SqlPredicate.SearchString.SearchKind.Contains:
@@ -119,8 +115,8 @@ namespace LinqToDB.DataProvider.Firebird
 						expr = new SqlExpression(typeof(bool),
 							predicate.IsNot ? "{0} NOT CONTAINING {1}" : "{0} CONTAINING {1}",
 							Precedence.Comparison,
-							TryConvertToValue(predicate.Expr1, optimizationContext.Context),
-							TryConvertToValue(predicate.Expr2, optimizationContext.Context)) {CanBeNull = false};
+							TryConvertToValue(predicate.Expr1, visitor.Context.OptimizationContext.Context),
+							TryConvertToValue(predicate.Expr2, visitor.Context.OptimizationContext.Context)) {CanBeNull = false};
 					}
 					else
 					{
@@ -134,7 +130,7 @@ namespace LinqToDB.DataProvider.Firebird
 								new SqlValue(false));
 						}
 
-						return ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor, optimizationContext);
+						return ConvertSearchStringPredicateViaLike(predicate, visitor);
 					}
 					break;
 				}	
@@ -155,10 +151,9 @@ namespace LinqToDB.DataProvider.Firebird
 			};
 		}
 
-		public override ISqlExpression OptimizeExpression<TContext>(ISqlExpression expression, ConvertVisitor<TContext> convertVisitor,
-			EvaluationContext context)
+		public override ISqlExpression OptimizeExpression(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> convertVisitor)
 		{
-			var newExpr = base.OptimizeExpression(expression, convertVisitor, context);
+			var newExpr = base.OptimizeExpression(expression, convertVisitor);
 
 			switch (newExpr.ElementType)
 			{
@@ -198,10 +193,9 @@ namespace LinqToDB.DataProvider.Firebird
 			return newExpr;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl<TContext>(ISqlExpression expression, ConvertVisitor<TContext> visitor,
-			EvaluationContext context)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
 		{
-			expression = base.ConvertExpressionImpl(expression, visitor, context);
+			expression = base.ConvertExpressionImpl(expression, visitor);
 
 			if (expression is SqlBinaryExpression be)
 			{
@@ -269,50 +263,47 @@ namespace LinqToDB.DataProvider.Firebird
 						return e;
 
 					var replace = false;
-					if (visitor.Stack != null)
+					for (var i = visitor.Stack.Count - 1; i >= 0; i--)
 					{
-						for (var i = visitor.Stack.Count - 1; i >= 0; i--)
+						// went outside of subquery, mission abort
+						if (visitor.Stack[i] is SelectQuery)
+							return e;
+
+						// part of select column
+						if (visitor.Stack[i] is SqlColumn)
 						{
-							// went outside of subquery, mission abort
-							if (visitor.Stack[i] is SelectQuery)
-								return e;
+							replace = true;
+							break;
+						}
 
-							// part of select column
-							if (visitor.Stack[i] is SqlColumn)
-							{
-								replace = true;
-								break;
-							}
+						// insert or update keys used in merge source select query
+						if (visitor.Stack[i] is SqlSetExpression set
+							&& i == 2
+							&& (visitor.Stack[i - 1] is SqlInsertClause || visitor.Stack[i - 1] is SqlUpdateClause)
+							&& visitor.Stack[i - 2] is SqlInsertOrUpdateStatement insertOrUpdate
+							&& insertOrUpdate.Update.Keys.Any(k => k.Expression == set.Expression))
+						{
+							replace = true;
+							break;
+						}
 
-							// insert or update keys used in merge source select query
-							if (visitor.Stack[i] is SqlSetExpression set
-								&& i == 2
-								&& (visitor.Stack[i - 1] is SqlInsertClause || visitor.Stack[i - 1] is SqlUpdateClause)
-								&& visitor.Stack[i - 2] is SqlInsertOrUpdateStatement insertOrUpdate
-								&& insertOrUpdate.Update.Keys.Any(k => k.Expression == set.Expression))
-							{
-								replace = true;
-								break;
-							}
+						// enumerable merge source
+						if (visitor.Stack[i] is SqlValuesTable)
+						{
+							replace = true;
+							break;
+						}
 
-							// enumerable merge source
-							if (visitor.Stack[i] is SqlValuesTable)
-							{
-								replace = true;
-								break;
-							}
-
-							// complex insert/update statement, including merge
-							if (visitor.Stack[i] is SqlSetExpression
-								&& i >= 2
-								&& i < visitor.Stack.Count - 1 // not just parameter setter
-								&& (visitor.Stack[i - 1] is SqlUpdateClause
-									|| visitor.Stack[i - 1] is SqlInsertClause
-									|| visitor.Stack[i - 1] is SqlMergeOperationClause))
-							{
-								replace = true;
-								break;
-							}
+						// complex insert/update statement, including merge
+						if (visitor.Stack[i] is SqlSetExpression
+							&& i >= 2
+							&& i < visitor.Stack.Count - 1 // not just parameter setter
+							&& (visitor.Stack[i - 1] is SqlUpdateClause
+								|| visitor.Stack[i - 1] is SqlInsertClause
+								|| visitor.Stack[i - 1] is SqlMergeOperationClause))
+						{
+							replace = true;
+							break;
 						}
 					}
 
@@ -323,7 +314,7 @@ namespace LinqToDB.DataProvider.Firebird
 				}
 
 				return e;
-			});
+			}, withStack: true);
 
 			return statement;
 		}

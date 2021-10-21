@@ -116,18 +116,18 @@ namespace LinqToDB.SqlQuery
 
 		#region Helpers
 
-		public void ForEachTable(Action<SqlTableSource> action, HashSet<SelectQuery> visitedQueries)
+		public void ForEachTable<TContext>(TContext context, Action<TContext, SqlTableSource> action, HashSet<SelectQuery> visitedQueries)
 		{
 			if (!visitedQueries.Add(this))
 				return;
 
 			foreach (var table in From.Tables)
-				table.ForEach(action, visitedQueries);
+				table.ForEach(context, action, visitedQueries);
 
-			this.Visit((query: this, action, visitedQueries), static (context, e) =>
+			this.Visit((query: this, action, visitedQueries, context), static (context, e) =>
 			{
 				if (e is SelectQuery query && e != context.query)
-					query.ForEachTable(context.action, context.visitedQueries);
+					query.ForEachTable(context.context, context.action, context.visitedQueries);
 			});
 		}
 
@@ -202,25 +202,25 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		public ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			((ISqlExpressionWalkable)Select) .Walk(options, func);
-			((ISqlExpressionWalkable)From)   .Walk(options, func);
-			((ISqlExpressionWalkable)Where)  .Walk(options, func);
-			((ISqlExpressionWalkable)GroupBy).Walk(options, func);
-			((ISqlExpressionWalkable)Having) .Walk(options, func);
-			((ISqlExpressionWalkable)OrderBy).Walk(options, func);
+			((ISqlExpressionWalkable)Select) .Walk(options, context, func);
+			((ISqlExpressionWalkable)From)   .Walk(options, context, func);
+			((ISqlExpressionWalkable)Where)  .Walk(options, context, func);
+			((ISqlExpressionWalkable)GroupBy).Walk(options, context, func);
+			((ISqlExpressionWalkable)Having) .Walk(options, context, func);
+			((ISqlExpressionWalkable)OrderBy).Walk(options, context, func);
 
 			if (HasSetOperators)
 				foreach (var setOperator in SetOperators)
-					((ISqlExpressionWalkable)setOperator.SelectQuery).Walk(options, func);
+					((ISqlExpressionWalkable)setOperator.SelectQuery).Walk(options, context, func);
 
 			if (HasUniqueKeys)
 				foreach (var uk in UniqueKeys)
 					foreach (var k in uk)
-						k.Walk(options, func);
+						k.Walk(options, context, func);
 
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion

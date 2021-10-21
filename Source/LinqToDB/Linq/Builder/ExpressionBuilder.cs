@@ -171,7 +171,7 @@ namespace LinqToDB.Linq.Builder
 				lock (_sync)
 				{
 					_reorder = false;
-					_sequenceBuilders = _sequenceBuilders.OrderByDescending(_ => _.BuildCounter).ToList();
+					_sequenceBuilders = _sequenceBuilders.OrderByDescending(static _ => _.BuildCounter).ToList();
 				}
 
 			_query.Init(sequence, _parametersContext.CurrentSqlParameters);
@@ -296,7 +296,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (isQueryable)
 					{
-						var p = sequence.ExpressionsToReplace.Single(s => s.Path.NodeType == ExpressionType.Parameter);
+						var p = sequence.ExpressionsToReplace.Single(static s => s.Path.NodeType == ExpressionType.Parameter);
 
 						return Expression.Call(
 							((MethodCallExpression)expr).Method.DeclaringType,
@@ -381,11 +381,9 @@ namespace LinqToDB.Linq.Builder
 
 		#region OptimizeExpression
 
-		private MethodInfo[]? _enumerableMethods;
-		public  MethodInfo[]   EnumerableMethods => _enumerableMethods ??= typeof(Enumerable).GetMethods();
-
-		private MethodInfo[]? _queryableMethods;
-		public  MethodInfo[]   QueryableMethods  => _queryableMethods  ??= typeof(Queryable). GetMethods();
+		public static readonly MethodInfo[] EnumerableMethods      = typeof(Enumerable     ).GetMethods();
+		public static readonly MethodInfo[] QueryableMethods       = typeof(Queryable      ).GetMethods();
+		public static readonly MethodInfo[] AsyncExtensionsMethods = typeof(AsyncExtensions).GetMethods();
 
 		Dictionary<Expression, Expression>? _optimizedExpressions;
 
@@ -434,12 +432,12 @@ namespace LinqToDB.Linq.Builder
 
 							if (!isList)
 								isList = me.Member.DeclaringType!.GetInterfaces()
-									.Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(ICollection<>));
+									.Any(static t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(ICollection<>));
 
 							if (isList)
 							{
 								var mi = EnumerableMethods
-									.First(m => m.Name == "Count" && m.GetParameters().Length == 1)
+									.First(static m => m.Name == "Count" && m.GetParameters().Length == 1)
 									.MakeGenericMethod(me.Expression.Type.GetItemType()!);
 
 								return new TransformInfo(Expression.Call(null, mi, me.Expression));
@@ -587,14 +585,14 @@ namespace LinqToDB.Linq.Builder
 		{
 			var param    = Expression.Parameter(call.Type, "p");
 			var selector = expr.Replace(call, param);
-			var method   = GetQueryableMethodInfo(call, (m, _) => m.Name == call.Method.Name && m.GetParameters().Length == 1);
+			var method   = GetQueryableMethodInfo(call, call, static (call, m, _) => m.Name == call.Method.Name && m.GetParameters().Length == 1);
 			var select   = call.Method.DeclaringType == typeof(Enumerable) ?
 				EnumerableMethods
-					.Where(m => m.Name == "Select" && m.GetParameters().Length == 2)
-					.First(m => m.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2) :
+					.Where(static m => m.Name == "Select" && m.GetParameters().Length == 2)
+					.First(static m => m.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2) :
 				QueryableMethods
-					.Where(m => m.Name == "Select" && m.GetParameters().Length == 2)
-					.First(m => m.GetParameters()[1].ParameterType.GetGenericArguments()[0].GetGenericArguments().Length == 2);
+					.Where(static m => m.Name == "Select" && m.GetParameters().Length == 2)
+					.First(static m => m.GetParameters()[1].ParameterType.GetGenericArguments()[0].GetGenericArguments().Length == 2);
 
 			call   = (MethodCallExpression)OptimizeExpression(call);
 			select = select.MakeGenericMethod(call.Type, expr.Type);
@@ -689,7 +687,7 @@ namespace LinqToDB.Linq.Builder
 
 				var newBody = lbody.Transform(dic, static (dic, ex) => dic.TryGetValue(ex, out var e) ? e : ex);
 
-				var nparm = exprs.Aggregate<Expression,Expression>(parm, (c,t) => ExpressionHelper.PropertyOrField(c, "p"));
+				var nparm = exprs.Aggregate<Expression,Expression>(parm, static (c,t) => ExpressionHelper.PropertyOrField(c, "p"));
 
 				newBody   = newBody.Replace(lparam, nparm);
 				predicate = Expression.Lambda(newBody, parm);
@@ -717,7 +715,7 @@ namespace LinqToDB.Linq.Builder
 					methodInfo = methodInfo.MakeGenericMethod(expr.Type, lparam.Type);
 					method     = Expression.Call(methodInfo, method,
 						Expression.Lambda(
-							exprs.Aggregate((Expression)parameter, (current,_) => ExpressionHelper.PropertyOrField(current, "p")),
+							exprs.Aggregate((Expression)parameter, static (current,_) => ExpressionHelper.PropertyOrField(current, "p")),
 							parameter));
 
 				}
@@ -1152,7 +1150,7 @@ namespace LinqToDB.Linq.Builder
 			if (method.Arguments.Count != 2)
 				return method;
 
-			var cm = GetQueryableMethodInfo(method, (m,_) => m.Name == method.Method.Name && m.GetParameters().Length == 1);
+			var cm = GetQueryableMethodInfo(method, method, static (method, m,_) => m.Name == method.Method.Name && m.GetParameters().Length == 1);
 			var wm = GetMethodInfo(method, "Where");
 
 			var argType = method.Method.GetGenericArguments()[0];
@@ -1173,7 +1171,19 @@ namespace LinqToDB.Linq.Builder
 			if (method.Arguments.Count != 3)
 				return method;
 
-			var cm = typeof(AsyncExtensions).GetMethods().First(m => m.Name == method.Method.Name && m.GetParameters().Length == 2);
+			MethodInfo? cm = null;
+			foreach (var m in AsyncExtensionsMethods)
+			{
+				if (m.Name == method.Method.Name && m.GetParameters().Length == 2)
+				{
+					cm = m;
+					break;
+				}
+			}
+
+			if (cm == null)
+				throw new InvalidOperationException("Sequence contains no elements");
+
 			var wm = GetMethodInfo(method, "Where");
 
 			var argType = method.Method.GetGenericArguments()[0];
@@ -1203,19 +1213,19 @@ namespace LinqToDB.Linq.Builder
 
 			var types = GetMethodGenericTypes(method);
 			var sm    = GetMethodInfo(method, "Select");
-			var cm    = GetQueryableMethodInfo(method, (m,isDefault) =>
+			var cm    = GetQueryableMethodInfo((method, isGeneric, types), method, static (context, m, isDefault) =>
 			{
-				if (m.Name == method.Method.Name)
+				if (m.Name == context.method.Method.Name)
 				{
 					var ps = m.GetParameters();
 
 					if (ps.Length == 1)
 					{
-						if (isGeneric)
+						if (context.isGeneric)
 							return true;
 
 						var ts = ps[0].ParameterType.GetGenericArguments();
-						return ts[0] == types[1] || isDefault && ts[0].IsGenericParameter;
+						return ts[0] == context.types[1] || isDefault && ts[0].IsGenericParameter;
 					}
 				}
 
@@ -1246,7 +1256,8 @@ namespace LinqToDB.Linq.Builder
 
 			var types = GetMethodGenericTypes(method);
 			var sm    = GetMethodInfo(method, "Select");
-			var cm    = typeof(AsyncExtensions).GetMethods().First(m =>
+			MethodInfo? cm = null;
+			foreach (var m in AsyncExtensionsMethods)
 			{
 				if (m.Name == method.Method.Name)
 				{
@@ -1255,15 +1266,22 @@ namespace LinqToDB.Linq.Builder
 					if (ps.Length == 2)
 					{
 						if (isGeneric)
-							return true;
+						{
+							cm = m;
+							break;
+						}
 
 						var ts = ps[0].ParameterType.GetGenericArguments();
-						return ts[0] == types[1];// || isDefault && ts[0].IsGenericParameter;
+						if (ts[0] == types[1])// || isDefault && ts[0].IsGenericParameter;
+						{
+							cm = m;
+							break;
+						}
 					}
 				}
-
-				return false;
-			});
+			}
+			if (cm == null)
+				throw new InvalidOperationException("Sequence contains no elements");
 
 			var argType = types[0];
 
@@ -1430,13 +1448,13 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				skipMethod = GetQueryableMethodInfo(method, (mi,_) => mi.Name == "Skip");
+				skipMethod = GetQueryableMethodInfo((object?)null, method, static (_,mi,_) => mi.Name == "Skip");
 			}
 
 			skipMethod = skipMethod.MakeGenericMethod(sourceType);
 
 			var methodName  = method.Method.Name == "ElementAt" ? "First" : "FirstOrDefault";
-			var firstMethod = GetQueryableMethodInfo(method, (mi,_) => mi.Name == methodName && mi.GetParameters().Length == 1);
+			var firstMethod = GetQueryableMethodInfo(methodName, method, static (methodName, mi,_) => mi.Name == methodName && mi.GetParameters().Length == 1);
 
 			firstMethod = firstMethod.MakeGenericMethod(sourceType);
 
@@ -1470,10 +1488,10 @@ namespace LinqToDB.Linq.Builder
 			});
 		}
 
-		public Expression AddQueryableMemberAccessors(AccessorMember memberInfo, IDataContext dataContext,
-			Func<MemberInfo, IDataContext, Expression> qe)
+		public Expression AddQueryableMemberAccessors<TContext>(TContext context, AccessorMember memberInfo, IDataContext dataContext,
+			Func<TContext, MemberInfo, IDataContext, Expression> qe)
 		{
-			return _query.AddQueryableMemberAccessors(memberInfo.MemberInfo, dataContext, qe);
+			return _query.AddQueryableMemberAccessors(context, memberInfo.MemberInfo, dataContext, qe);
 		}
 
 
@@ -1481,22 +1499,48 @@ namespace LinqToDB.Linq.Builder
 
 		#region Helpers
 
-		MethodInfo GetQueryableMethodInfo(MethodCallExpression method, [InstantHandle] Func<MethodInfo,bool,bool> predicate)
+		MethodInfo GetQueryableMethodInfo<TContext>(TContext context, MethodCallExpression method, [InstantHandle] Func<TContext,MethodInfo, bool,bool> predicate)
 		{
-			return method.Method.DeclaringType == typeof(Enumerable) ?
-				EnumerableMethods.FirstOrDefault(m => predicate(m, false)) ?? EnumerableMethods.First(m => predicate(m, true)):
-				QueryableMethods. FirstOrDefault(m => predicate(m, false)) ?? QueryableMethods. First(m => predicate(m, true));
+			if (method.Method.DeclaringType == typeof(Enumerable))
+			{
+				foreach (var m in EnumerableMethods)
+					if (predicate(context, m, false))
+						return m;
+				foreach (var m in EnumerableMethods)
+					if (predicate(context, m, true))
+						return m;
+			}
+			else
+			{
+				foreach (var m in QueryableMethods)
+					if (predicate(context, m, false))
+						return m;
+				foreach (var m in QueryableMethods)
+					if (predicate(context, m, true))
+						return m;
+			}
+
+			throw new InvalidOperationException("Sequence contains no elements");
 		}
 
 		MethodInfo GetMethodInfo(MethodCallExpression method, string name)
 		{
-			return method.Method.DeclaringType == typeof(Enumerable) ?
-				EnumerableMethods
-					.Where(m => m.Name == name && m.GetParameters().Length == 2)
-					.First(m => m.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2) :
-				QueryableMethods
-					.Where(m => m.Name == name && m.GetParameters().Length == 2)
-					.First(m => m.GetParameters()[1].ParameterType.GetGenericArguments()[0].GetGenericArguments().Length == 2);
+			if (method.Method.DeclaringType == typeof(Enumerable))
+			{
+				foreach (var m in EnumerableMethods)
+					if (m.Name == name && m.GetParameters().Length == 2
+						&& m.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2)
+						return m;
+			}
+			else
+			{
+				foreach (var m in QueryableMethods)
+					if (m.Name == name && m.GetParameters().Length == 2
+						&& m.GetParameters()[1].ParameterType.GetGenericArguments()[0].GetGenericArguments().Length == 2)
+						return m;
+			}
+
+			throw new InvalidOperationException("Sequence contains no elements");
 		}
 
 		static Type[] GetMethodGenericTypes(MethodCallExpression method)

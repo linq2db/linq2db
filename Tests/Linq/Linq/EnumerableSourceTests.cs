@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
 using LinqToDB;
@@ -795,6 +796,84 @@ namespace Tests.Linq
 			}
 		}
 
+		static int[] IdValues = new[] { 1, 2, 3 };
 
+		[Test]
+		public void ExceptContains([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var result = db.Person
+					.Select(r => new
+					{
+						IsActive = IdValues.Contains(r.ID)
+					});
+				Assert.IsNotEmpty(result);
+			}
+		}
+
+		[Test]
+		public void StaticEnumerable([DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Person.Where(p => IdValues.Any(v => v == p.ID));
+				AssertQuery(query);
+			}
+		}
+
+		class PersonListProjection
+		{
+			public int        Id      { get; set; }
+			public string?    Name    { get; set; }
+			public List<int>? SomeList { get; set; }
+		}
+
+		[Test]
+		public void NullConstantProjection(
+			[DataSources(ProviderName.SQLiteMS, TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase,
+				TestProvName.AllSybase, TestProvName.AllInformix)]
+			string context, [Values(1, 2)] int iteration)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var personWithList = db.GetTable<Person>()
+					.OrderBy(p => p.ID)
+					.Select(p =>
+						new PersonListProjection
+						{
+							Id   = p.ID,
+							Name = p.Name,
+							SomeList = null						}
+					).ToList();
+
+				personWithList.Should().HaveCountGreaterThan(0);
+				personWithList.All(p => p.SomeList == null).Should().BeTrue();
+			}
+		}
+
+		[Test]
+		public void ConstantProjection(
+			[DataSources(ProviderName.SQLiteMS, TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase,
+				TestProvName.AllSybase, TestProvName.AllInformix)]
+			string context, [Values(1, 2)] int iteration)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var personWithList = db.GetTable<Person>()
+					.OrderBy(p => p.ID)
+					.Select(p =>
+						new PersonListProjection
+						{
+							Id       = p.ID,
+							Name     = p.Name,
+							SomeList = new List<int>()						}
+					).ToList();
+
+				personWithList.Should().HaveCountGreaterThan(0);
+				personWithList.All(p => p.SomeList.Count == 0).Should().BeTrue();
+			}
+
+		}
 	}
 }

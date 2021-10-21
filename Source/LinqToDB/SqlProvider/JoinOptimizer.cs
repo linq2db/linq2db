@@ -651,13 +651,13 @@ namespace LinqToDB.SqlProvider
 			if (_replaceMap != null && _replaceMap.Count > 0 || _removedSources != null)
 			{
 				((ISqlExpressionWalkable)_statement)
-					.Walk(new WalkOptions(), element =>
+					.Walk(WalkOptions.Default, this, static (ctx, element) =>
 					{
 						if (element is SqlField field)
-							return GetNewField(new VirtualField(field)).Element;
+							return ctx.GetNewField(new VirtualField(field)).Element;
 
 						if (element is SqlColumn column)
-							return GetNewField(new VirtualField(column)).Element;
+							return ctx.GetNewField(new VirtualField(column)).Element;
 
 						return element;
 					});

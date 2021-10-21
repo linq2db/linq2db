@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return value.ToString();
 		}
 
-		public override void SetTable(ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<Expression, ColumnDescriptor?, ISqlExpression> converter)
+		public override void SetTable<TContext>(TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 		{
 			var method = methodCall.Method;
 
@@ -65,7 +65,7 @@ namespace LinqToDB.DataProvider.SapHana
 			arg[0] = new SqlExpression(
 				string.Join(", ",
 					Enumerable.Range(0, sqlValues.Count)
-						.Select(x => "{" + x + "}")),
+						.Select(static x => "{" + x + "}")),
 				sqlValues.ToArray());
 
 			table.SqlTableType = SqlTableType.Expression;

@@ -151,7 +151,7 @@ namespace LinqToDB.Linq.Builder
 
 							selectQuery.From.Tables.RemoveAt(0);
 
-							query.Walk(new WalkOptions(), qe =>
+							query.Walk(WalkOptions.Default, subSelect, static (subSelect, qe) =>
 								{
 									if (qe is SqlColumn column && column.Parent == subSelect)
 									{
