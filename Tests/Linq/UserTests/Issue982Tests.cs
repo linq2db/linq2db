@@ -90,27 +90,29 @@ namespace Tests.UserTests
 
 			private void AddConditions(SqlStatement statement)
 			{
-				statement.WalkQueries(query =>
-				{
-					query.Visit(this, static (optimizer, e) =>
+				statement.WalkQueries(
+					this,
+					static (context, query) =>
 					{
-						if (e.ElementType != QueryElementType.SqlQuery)
-							return;
-
-						var q = (SelectQuery)e;
-
-						foreach (var source in q.From.Tables)
+						query.Visit(context, static (optimizer, e) =>
 						{
-							if (source.Joins.Any())
-								optimizer.AddConditions(q.Select.Where, source);
+							if (e.ElementType != QueryElementType.SqlQuery)
+								return;
 
-							foreach (var join in source.Joins)
-								optimizer.AddConditions(q.Select.Where, join.Table);
-						}
+							var q = (SelectQuery)e;
+
+							foreach (var source in q.From.Tables)
+							{
+								if (source.Joins.Any())
+									optimizer.AddConditions(q.Select.Where, source);
+
+								foreach (var join in source.Joins)
+									optimizer.AddConditions(q.Select.Where, join.Table);
+							}
+						});
+
+						return query;
 					});
-
-					return query;
-				});
 			}
 		}
 

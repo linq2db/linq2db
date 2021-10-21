@@ -8,46 +8,60 @@ namespace LinqToDB.SqlQuery
 {
 	using LinqToDB.Linq.Builder;
 
-	public class VisitArgs<TContext>
-	{
-		public VisitArgs(ConvertVisitor<TContext> visitor)
-		{
-			Visitor = visitor;
-		}
-
-		public readonly ConvertVisitor<TContext> Visitor;
-		public          IQueryElement            Element = null!;
-	}
-
 	public class ConvertVisitor<TContext>
 	{
 		// when true, only changed (and explicitly added) elements added to VisitedElements
 		// greatly reduce memory allocation for majority of cases, where there is nothing to replace
-		private readonly bool                                                       _visitAll;
-		private readonly Func<ConvertVisitor<TContext>,IQueryElement,IQueryElement> _convert;
-		private readonly Func<VisitArgs<TContext>, bool>?                           _parentAction;
-		private readonly VisitArgs<TContext>?                                       _visitArgs;
+		private bool                                                       _visitAll;
+		private Func<ConvertVisitor<TContext>,IQueryElement,IQueryElement> _convert;
+		private Func<ConvertVisitor<TContext>, bool>?                      _parentAction;
 
-		public readonly TContext Context;
-		public readonly bool     AllowMutation;
+		public TContext Context;
+		public bool     AllowMutation;
+		public bool     HasStack;
 
 		delegate T Clone<T>(T obj);
 
 		private Dictionary<IQueryElement, IQueryElement?>? _visitedElements;
-		public List<IQueryElement>?                        Stack;
-		public IQueryElement?                              ParentElement       => Stack == null || Stack.Count == 0 ? null : Stack[Stack.Count - 1];
-		public IQueryElement?                              SecondParentElement => Stack == null || Stack.Count < 2  ? null : Stack[Stack.Count - 2];
+		private List<IQueryElement>?                       _stack;
 
-		internal ConvertVisitor(TContext context, Func<ConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction, bool visitAll, bool allowMutation, Func<VisitArgs<TContext>, bool>? parentAction = default)
+		public List<IQueryElement> Stack         => _stack ??= (HasStack ? new () : throw new InvalidOperationException("Stack tracking is not enabled for current visitor instance"));
+		public IQueryElement?      ParentElement => Stack.Count == 0 ? null : Stack[Stack.Count - 1];
+		public IQueryElement       CurrentElement = null!;
+
+		internal ConvertVisitor(
+			TContext                                                     context,
+			Func<ConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction,
+			bool                                                         visitAll,
+			bool                                                         allowMutation,
+			bool                                                         withStack,
+			Func<ConvertVisitor<TContext>, bool>?                        parentAction = default)
 		{
 			_visitAll     = visitAll;
 			_convert      = convertAction;
 			AllowMutation = allowMutation;
+			HasStack      = withStack;
+			_parentAction = parentAction;
+			Context       = context;
+		}
+
+		internal void Reset(
+			TContext                                                     context,
+			Func<ConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction,
+			bool                                                         visitAll,
+			bool                                                         allowMutation,
+			bool                                                         withStack,
+			Func<ConvertVisitor<TContext>, bool>?                        parentAction = default)
+		{
+			_visitAll     = visitAll;
+			_convert      = convertAction;
+			AllowMutation = allowMutation;
+			HasStack      = withStack;
 			_parentAction = parentAction;
 			Context       = context;
 
-			if (_parentAction != null)
-				_visitArgs = new VisitArgs<TContext>(this);
+			_visitedElements?.Clear();
+			_stack?          .Clear();
 		}
 
 		void CorrectQueryHierarchy(SelectQuery? parentQuery)
@@ -67,15 +81,16 @@ namespace LinqToDB.SqlQuery
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void Push(IQueryElement element)
 		{
-			(Stack ??= new()).Add(element);
+			if (HasStack)
+				(_stack ??= new()).Add(element);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void Pop()
 		{
 			// don't return last value as we don't need it at call sites
-			if (Stack != null && Stack.Count > 0)
-				Stack.RemoveAt(Stack.Count - 1);
+			if (_stack != null && _stack.Count > 0)
+				_stack.RemoveAt(_stack.Count - 1);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -140,13 +155,12 @@ namespace LinqToDB.SqlQuery
 			if (newElement != null)
 				return newElement;
 
+			CurrentElement = element;
 			if (_parentAction != null)
 			{
-				_visitArgs!.Element = element;
-				var stop            = !_parentAction(_visitArgs!);
-				element             = _visitArgs!.Element;
-				if (stop)
-					return element;
+				if (!_parentAction(this))
+					return CurrentElement;
+				element = CurrentElement;
 			}
 
 			Push(element);
@@ -1250,37 +1264,46 @@ namespace LinqToDB.SqlQuery
 
 					case QueryElementType.CteClause:
 					{
-						var cte = (CteClause)element;
+						// element converted by owner (QueryElementType.WithClause)
+						// to avoid conversion when used as table
+						break;
+					}
 
-						// TODO: if we can remove this line, we can optimize visitor to create Stack only when it used by visit function
-						// for avoiding recursion
-						if (SecondParentElement?.ElementType != QueryElementType.WithClause)
-							break;
+					case QueryElementType.WithClause:
+					{
+						var with = (SqlWithClause)element;
 
-						var body   = (SelectQuery?)ConvertInternal(cte.Body);
-
-						if (body != null && !ReferenceEquals(cte.Body, body))
+						List<CteClause>? newClauses = null;
+						for (var i = 0; i < with.Clauses.Count; i++)
 						{
-							var objTree = new Dictionary<IQueryElement, IQueryElement>();
+							var cte = with.Clauses[i];
+							Push(cte);
 
-							var clonedFields = cte.Fields!.Clone(objTree);
+							var body = (SelectQuery?)ConvertInternal(cte.Body);
 
-							newElement = new CteClause(
-								body,
-								clonedFields,
-								cte.ObjectType,
-								cte.IsRecursive,
-								cte.Name);
+							CteClause? newCte = null;
+							if (body != null && !ReferenceEquals(cte.Body, body))
+							{
+								var objTree = new Dictionary<IQueryElement, IQueryElement>();
 
-							var correctedBody = body.Convert(
-									(cte, newElement, objTree),
+								var clonedFields = cte.Fields!.Clone(objTree);
+
+								newCte = new CteClause(
+									body,
+									clonedFields,
+									cte.ObjectType,
+									cte.IsRecursive,
+									cte.Name);
+
+								var correctedBody = body.Convert(
+									(cte, newCte, objTree),
 									static (v, e) =>
 									{
 										if (e.ElementType == QueryElementType.CteClause)
 										{
 											var inner = (CteClause)e;
 											if (ReferenceEquals(inner, v.Context.cte))
-												return v.Context.newElement;
+												return v.Context.newCte;
 										}
 
 										if (v.Context.objTree.TryGetValue(e, out var newValue))
@@ -1289,36 +1312,40 @@ namespace LinqToDB.SqlQuery
 
 									});
 
-							// update visited for cloned fields
-							foreach (var pair in objTree)
-							{
-								if (pair.Key is IQueryElement queryElement)
-									AddVisited(queryElement, pair.Value);
+								// update visited for cloned fields
+								foreach (var pair in objTree)
+								{
+									if (pair.Key is IQueryElement queryElement)
+										AddVisited(queryElement, pair.Value);
+								}
+
+								AddVisited(cte, newCte);
+
+								newCte.Body = correctedBody;
+
+								if (newClauses == null)
+									newClauses = new(with.Clauses);
+
+								newClauses[i] = newCte;
 							}
 
-							AddVisited(element, newElement);
+							Pop();
 
-							((CteClause)newElement).Body = correctedBody;
-						}
+							newCte = (CteClause)_convert(this, newCte ?? cte);
 
-						break;
-					}
-
-					case QueryElementType.WithClause:
-					{
-						var with = (SqlWithClause)element;
-
-						var clauses = ConvertSafe(with.Clauses);
-
-						if (clauses != null && !ReferenceEquals(with.Clauses, clauses))
-						{
-							newElement = new SqlWithClause()
+							if (!_visitAll || !ReferenceEquals(cte, newCte))
 							{
-								Clauses = clauses
-							};
+								if (newClauses == null)
+									newClauses = new(with.Clauses);
+								newClauses[i] = newCte;
 
-							newElement = new SqlWithClause() { Clauses = clauses };
+								AddVisited(cte, newCte);
+							}
 						}
+
+						if (newClauses != null)
+							newElement = new SqlWithClause() { Clauses = newClauses };
+
 						break;
 					}
 

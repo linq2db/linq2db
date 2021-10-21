@@ -35,12 +35,34 @@ namespace LinqToDB.Expressions
 			Expression.Constant(10),
 		};
 
+		private static readonly ConstantExpression[][] _int32Length1Arrays = new ConstantExpression[][]
+		{
+			new []{ _int32Constants[0] },
+			new []{ _int32Constants[1] },
+			new []{ _int32Constants[2] },
+			new []{ _int32Constants[3] },
+			new []{ _int32Constants[4] },
+			new []{ _int32Constants[5] },
+			new []{ _int32Constants[6] },
+			new []{ _int32Constants[7] },
+			new []{ _int32Constants[8] },
+			new []{ _int32Constants[9] },
+			new []{ _int32Constants[10] },
+		};
+
 		// integer constants with 0+ values used a lot for indexes (e.g. in array access and data reader expressions)
 		internal static ConstantExpression Int32(int value)
 		{
 			return value >= 0 && value < _int32Constants.Length
 				? _int32Constants[value]
 				: Expression.Constant(value);
+		}
+
+		internal static ConstantExpression[] Int32Array(int value)
+		{
+			return value >= 0 && value < _int32Constants.Length
+				? _int32Length1Arrays[value]
+				: new[] { Expression.Constant(value) };
 		}
 
 		internal static ConstantExpression Boolean(bool value) => value ? True : False;

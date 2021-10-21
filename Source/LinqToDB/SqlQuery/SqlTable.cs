@@ -325,13 +325,13 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		public virtual ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public virtual ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			if (TableArguments != null)
 				for (var i = 0; i < TableArguments.Length; i++)
-					TableArguments[i] = TableArguments[i].Walk(options, func)!;
+					TableArguments[i] = TableArguments[i].Walk(options, context, func)!;
 
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion

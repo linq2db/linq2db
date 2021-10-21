@@ -92,13 +92,12 @@ namespace LinqToDB.Linq
 			return _queryableAccessorList.Count - 1;
 		}
 
-		internal Expression AddQueryableMemberAccessors(MemberInfo memberInfo, IDataContext dataContext, Func<MemberInfo, IDataContext, Expression> qe)
+		internal Expression AddQueryableMemberAccessors<TContext>(TContext context, MemberInfo memberInfo, IDataContext dataContext, Func<TContext, MemberInfo, IDataContext, Expression> qe)
 		{
 			if (_queryableMemberAccessorDic != null && _queryableMemberAccessorDic.TryGetValue(memberInfo, out var e))
 				return e.Expression;
 
-			e = new QueryableMemberAccessor { Accessor = qe };
-			e.Expression = e.Accessor(memberInfo, dataContext);
+			e = new QueryableMemberAccessor<TContext>(context, qe(context, memberInfo, dataContext), qe);
 
 			_queryableMemberAccessorDic ??= new Dictionary<MemberInfo, QueryableMemberAccessor>(MemberInfoComparer.Instance);
 			_queryableMemberAccessorDic.Add(memberInfo, e);
@@ -488,10 +487,9 @@ namespace LinqToDB.Linq
 			if (dataContext is IExpressionPreprocessor preprocessor)
 				expr = preprocessor.ProcessExpression(expr);
 
-			var parametersContext = new ParametersContext(expr, optimizationContext, dataContext);
 
 			if (Configuration.Linq.DisableQueryCache)
-				return CreateQuery(optimizationContext, parametersContext, dataContext, expr);
+				return CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
 
 			// calculate query flags
 			var flags = QueryFlags.None;
@@ -511,7 +509,7 @@ namespace LinqToDB.Linq
 
 			if (query == null)
 			{
-				query = CreateQuery(optimizationContext, parametersContext, dataContext, expr);
+				query = CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
 
 				if (!query.DoNotCache)
 					_queryCache.TryAdd(dataContext, query, flags);
