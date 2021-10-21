@@ -13,7 +13,7 @@ namespace LinqToDB.SqlQuery
 			return sb;
 		}
 
-		public ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			return null;
 		}

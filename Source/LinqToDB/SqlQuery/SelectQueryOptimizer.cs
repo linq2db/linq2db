@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace LinqToDB.SqlQuery
@@ -276,7 +277,7 @@ namespace LinqToDB.SqlQuery
 								if (context.dic.TryGetValue(expr.FalseValue, out ex)) expr.FalseValue = ex;
 								break;
 							}
-						
+
 						case QueryElementType.LikePredicate :
 							{
 								var expr = (SqlPredicate.Like)e;
@@ -458,7 +459,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (!_selectQuery.GroupBy.IsEmpty)
 			{
-				// Remove constants. 
+				// Remove constants.
 				//
 				for (int i = _selectQuery.GroupBy.Items.Count - 1; i >= 0; i--)
 				{
@@ -478,7 +479,7 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 		}
-		
+
 		private void CorrectColumns()
 		{
 			if (!_selectQuery.GroupBy.IsEmpty && _selectQuery.Select.Columns.Count == 0)
@@ -550,7 +551,7 @@ namespace LinqToDB.SqlQuery
 
 					if ((exprExpr.Operator == SqlPredicate.Operator.Equal ||
 					     exprExpr.Operator == SqlPredicate.Operator.NotEqual)
-					    && exprExpr.Expr1 is SqlValue value1 && value1.Value != null 
+					    && exprExpr.Expr1 is SqlValue value1 && value1.Value != null
 					    && exprExpr.Expr2 is SqlValue value2 && value2.Value != null
 					    && value1.GetType() == value2.GetType())
 					{
@@ -1104,7 +1105,7 @@ namespace LinqToDB.SqlQuery
 						foreach (var column in groupingSet.Items.OfType<SqlColumn>())
 							if (column.Parent == query && QueryHelper.IsConstantFast(column.Expression))
 								constCount++;
-						
+
 						if (constCount == groupingSet.Items.Count)
 						{
 							isColumnsOK = false;
@@ -1138,7 +1139,7 @@ namespace LinqToDB.SqlQuery
 					map.Add(c, c.Expression);
 					if (c.RawAlias != null)
 						aliasesMap.Add(c.Expression, c.RawAlias);
-				}			
+				}
 			}
 
 			map.Add(query.All, query.From.Tables[0].All);
@@ -1455,7 +1456,7 @@ namespace LinqToDB.SqlQuery
 						{
 							return column.Expression;
 						}
-					
+
 						return e;
 					});
 
@@ -1468,8 +1469,8 @@ namespace LinqToDB.SqlQuery
 			//TODO: Failed SelectQueryTests.JoinScalarTest
 			//Needs optimization refactor for 3.X
 			/*
-			if (_selectQuery.IsSimple 
-			    && _selectQuery.From.Tables.Count == 1 
+			if (_selectQuery.IsSimple
+			    && _selectQuery.From.Tables.Count == 1
 				&& _selectQuery.From.Tables[0].Joins.Count == 0
 			    && _selectQuery.From.Tables[0].Source is SelectQuery selectQuery
 				&& selectQuery.IsSimple

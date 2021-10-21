@@ -7,7 +7,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using LinqToDB.Mapping;
+using System.Threading;
 
 using JetBrains.Annotations;
 
@@ -16,6 +16,7 @@ namespace LinqToDB
 	using Common;
 	using Expressions;
 	using Extensions;
+	using Mapping;
 	using SqlQuery;
 
 	[AttributeUsage(AttributeTargets.Parameter)]

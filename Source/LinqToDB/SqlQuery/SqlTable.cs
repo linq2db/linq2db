@@ -333,6 +333,10 @@ namespace LinqToDB.SqlQuery
 				for (var i = 0; i < TableArguments.Length; i++)
 					TableArguments[i] = TableArguments[i].Walk(options, context, func)!;
 
+			if (SqlQueryExtensions != null)
+				foreach (var e in SqlQueryExtensions)
+					e.Walk(options, context, func);
+
 			return func(context, this);
 		}
 
