@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.Data;
 using LinqToDB;
 using LinqToDB.Mapping;
 
@@ -24,11 +24,11 @@ namespace Tests.Model
 
 		// Firebird: it duplicates identity generation trigger job
 		//[SequenceName(ProviderName.Firebird, "PersonID")]
-		[Column("PersonID"), Identity, PrimaryKey]     public int     ID;
-		[NotNull]                                      public string  FirstName { get; set; } = null!;
-		[NotNull]                                      public string  LastName = null!;
-		[Nullable]                                     public string? MiddleName;
-		[Column(DataType = DataType.Char, Length = 1)] public Gender  Gender;
+		[Column("PersonID"), Identity, PrimaryKey]               public int     ID;
+		[NotNull][Column(DataType  = DataType.VarChar)]          public string  FirstName { get; set; } = null!;
+		[NotNull][Column(DataType  = DataType.VarChar)]          public string  LastName = null!;
+		[Nullable][Column(DataType = DataType.VarChar)]          public string? MiddleName;
+		[Column(DataType           = DataType.Char, Length = 1)] public Gender  Gender;
 
 		[NotColumn]
 		int IPerson.ID
