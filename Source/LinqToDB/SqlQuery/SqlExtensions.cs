@@ -6,7 +6,6 @@
 	/// </summary>
 	public static class SqlExtensions
 	{
-
 		/// <summary>
 		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// It may change or be removed without further notice.

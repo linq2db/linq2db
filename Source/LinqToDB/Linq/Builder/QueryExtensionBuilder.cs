@@ -62,13 +62,18 @@ namespace LinqToDB.Linq.Builder
 					case Sql.QueryExtensionScope.Table:
 					{
 						var table = SequenceHelper.GetTableContext(sequence) ?? throw new LinqToDBException($"Cannot get table context from {sequence.GetType()}");
-
+						attr.ExtendTable(table.SqlTable);
 						break;
 					}
 				}
 			}
 
 			return sequence;
+		}
+
+		protected override SequenceConvertInfo? Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
+		{
+			return base.Convert(builder, methodCall, buildInfo, param);
 		}
 	}
 }

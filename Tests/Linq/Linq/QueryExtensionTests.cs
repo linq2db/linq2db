@@ -40,6 +40,14 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
+			_ = db.Parent.Comment(t => t.ParentID, "oh yeah").ToList();
+		}
+
+		[Test]
+		public void TableTest2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
 			_ =
 			(
 				from p in db.Parent.Comment(t => t.ParentID, "oh yeah")

@@ -39,7 +39,7 @@ namespace LinqToDB.SqlQuery
 			SqlGroupByClause        groupBy,
 			SqlWhereClause          having,
 			SqlOrderByClause        orderBy,
-			List<SqlSetOperator>?   setOparators,
+			List<SqlSetOperator>?   setOperators,
 			List<ISqlExpression[]>? uniqueKeys,
 			SelectQuery?            parentSelect,
 			bool                    parameterDependent)
@@ -50,7 +50,7 @@ namespace LinqToDB.SqlQuery
 			GroupBy              = groupBy;
 			Having               = having;
 			OrderBy              = orderBy;
-			_setOperators        = setOparators;
+			_setOperators        = setOperators;
 			ParentSelect         = parentSelect;
 			IsParameterDependent = parameterDependent;
 
@@ -178,7 +178,6 @@ namespace LinqToDB.SqlQuery
 
 		public bool CanBeNull => true;
 		public int Precedence => SqlQuery.Precedence.Unknown;
-
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{

@@ -2,6 +2,8 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB
 {
 	using Common;
@@ -25,6 +27,11 @@ namespace LinqToDB
 
 			public string?             Configuration { get; }
 			public QueryExtensionScope Scope         { get; }
+
+			public virtual void ExtendTable(SqlTable table)
+			{
+//				throw new InvalidOperationException("Override the ExtendTable method.");
+			}
 
 			public static QueryExtensionAttribute[] GetExtensionAttributes(Expression expression, MappingSchema mapping)
 			{

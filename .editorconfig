@@ -203,7 +203,7 @@ dotnet_style_qualification_for_method = false:refactoring
 dotnet_style_qualification_for_event = false:refactoring
 
 dotnet_diagnostic.IDE0004.severity = error # IDE0004: Remove unnecessary cast
-dotnet_diagnostic.IDE0005.severity = error # IDE0005: Remove unnecessary import
+dotnet_diagnostic.IDE0005.severity = warning # IDE0005: Remove unnecessary import
 
 # not reviewed yet rules
 dotnet_diagnostic.IDE0007.severity = none # IDE0007: Use 'var' instead of explicit type

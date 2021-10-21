@@ -643,7 +643,13 @@ namespace LinqToDB.ServiceModel
 
 				Builder.AppendLine();
 
-				return Builder.ToString();
+				var str = Builder.ToString();
+
+#if DEBUG
+				Debug.WriteLine(str);
+#endif
+
+				return str;
 			}
 
 			void Visit(IQueryElement e, EvaluationContext evaluationContext)
@@ -1454,6 +1460,18 @@ namespace LinqToDB.ServiceModel
 						throw new InvalidOperationException($"Serialize not implemented for element {e.ElementType}");
 				}
 
+				if (e is IQueryExtendible qe)
+				{
+					if (qe.SqlQueryExtensions == null || qe.SqlQueryExtensions.Count == 0)
+					{
+						Append(0);
+					}
+					else
+					{
+						Append(qe.SqlQueryExtensions.Count);
+					}
+				}
+
 				Builder.AppendLine();
 			}
 
@@ -2190,11 +2208,11 @@ namespace LinqToDB.ServiceModel
 					}
 
 					case QueryElementType.SetExpression : obj = new SqlSetExpression(Read     <ISqlExpression>()!, Read<ISqlExpression>()!); break;
-					case QueryElementType.FromClause    : obj = new SqlFromClause   (ReadArray<SqlTableSource>()!);                break;
-					case QueryElementType.WhereClause   : obj = new SqlWhereClause  (Read     <SqlSearchCondition>()!);            break;
+					case QueryElementType.FromClause    : obj = new SqlFromClause   (ReadArray<SqlTableSource>()!);                          break;
+					case QueryElementType.WhereClause   : obj = new SqlWhereClause  (Read     <SqlSearchCondition>()!);                      break;
 					case QueryElementType.GroupByClause : obj = new SqlGroupByClause((GroupingType)ReadInt(), ReadArray<ISqlExpression>()!); break;
 					case QueryElementType.GroupingSet   : obj = new SqlGroupingSet  (ReadArray<ISqlExpression>()!);                          break;
-					case QueryElementType.OrderByClause : obj = new SqlOrderByClause(ReadArray<SqlOrderByItem>()!);                break;
+					case QueryElementType.OrderByClause : obj = new SqlOrderByClause(ReadArray<SqlOrderByItem>()!);                          break;
 
 					case QueryElementType.OrderByItem :
 						{
@@ -2339,15 +2357,22 @@ namespace LinqToDB.ServiceModel
 						throw new InvalidOperationException($"Parse not implemented for element {(QueryElementType)type}");
 				}
 
+				if (obj is IQueryExtendible qe)
+				{
+					var count = ReadInt();
+
+					if (count > 0)
+					{
+						qe.SqlQueryExtensions = new List<SqlQueryExtension>(count);
+					}
+				}
+
 				ObjectIndices.Add(idx, obj!);
 
-				if (DelayedObjects.Count > 0)
+				if (DelayedObjects.Count > 0 && DelayedObjects.TryGetValue(idx, out var action))
 				{
-					if (DelayedObjects.TryGetValue(idx, out var action))
-					{
-						action(obj!);
-						DelayedObjects.Remove(idx);
-					}
+					action(obj!);
+					DelayedObjects.Remove(idx);
 				}
 
 				return true;

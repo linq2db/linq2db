@@ -10,8 +10,9 @@ namespace LinqToDB.SqlQuery
 	using Common;
 	using Data;
 	using Mapping;
+	using ServiceModel;
 
-	public class SqlTable : ISqlTableSource
+	public class SqlTable : ISqlTableSource, IQueryExtendible
 	{
 		#region Init
 
@@ -199,11 +200,12 @@ namespace LinqToDB.SqlQuery
 		public         ISqlExpression[]? TableArguments { get; set; }
 		public         TableOptions      TableOptions   { get; set; }
 
-		private readonly Dictionary<string, SqlField> _fieldsLookup   = new ();
-
 		// list user to preserve order of fields in queries
-		private readonly List<SqlField>                  _orderedFields  = new ();
-		public           IReadOnlyList<SqlField>         Fields => _orderedFields;
+		readonly List<SqlField>              _orderedFields = new();
+		readonly Dictionary<string,SqlField> _fieldsLookup  = new();
+
+		public IReadOnlyList<SqlField>  Fields             => _orderedFields;
+		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }
 
 		// identity fields cached, as it is most used fields filter
 		private readonly List<SqlField>                  _identityFields = new ();
@@ -288,7 +290,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-		public virtual QueryElementType ElementType { [DebuggerStepThrough] get; } = QueryElementType.SqlTable;
+		public virtual QueryElementType ElementType { [DebuggerStepThrough] get => QueryElementType.SqlTable; }
 
 		public virtual StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
@@ -330,6 +332,10 @@ namespace LinqToDB.SqlQuery
 			if (TableArguments != null)
 				for (var i = 0; i < TableArguments.Length; i++)
 					TableArguments[i] = TableArguments[i].Walk(options, func)!;
+
+			if (SqlQueryExtensions != null)
+				foreach (var e in SqlQueryExtensions)
+					e.Walk(options, func);
 
 			return func(this);
 		}
