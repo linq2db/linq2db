@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
@@ -37,6 +38,8 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { CreateSubQuery = true });
 
+			var prevSequence = sequence;
+
 			if (sequence.SelectQuery.Select.IsDistinct        ||
 			    sequence.SelectQuery.Select.TakeValue != null ||
 			    sequence.SelectQuery.Select.SkipValue != null ||
@@ -59,13 +62,54 @@ namespace LinqToDB.Linq.Builder
 
 			var sql = sequence.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).ToArray();
 
-			if (sql.Length == 1 && sql[0] is SelectQuery query)
+			if (sql.Length == 1)
 			{
-				if (query.Select.Columns.Count == 1)
+				if (sql[0] is SelectQuery query)
 				{
-					var join = query.OuterApply();
-					context.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
-					sql[0] = query.Select.Columns[0];
+					if (query.Select.Columns.Count == 1)
+					{
+						var join = query.OuterApply();
+						context.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
+						sql[0] = query.Select.Columns[0];
+					}
+				}
+				else if (sequence == prevSequence && !builder.DataContext.SqlProviderFlags.AcceptsOuterExpressionInAggregate)
+				{
+					// handle case when aggregate expression is complex. SQL Server will fail.
+
+					var sources = new HashSet<ISqlTableSource>(QueryHelper.EnumerateAccessibleSources(sequence.SelectQuery));
+
+					var outerElementFound = null != sql[0].Find(e =>
+					{
+						if (e.ElementType == QueryElementType.Column)
+						{
+							var parent = ((SqlColumn)e).Parent;
+							if (parent != null && !sources.Contains(parent))
+								return true;
+						}
+						else if (e.ElementType == QueryElementType.SqlField)
+						{
+							var table = ((SqlField)e).Table;
+							if (table != null && !sources.Contains(table))
+								return true;
+						}
+
+						return false;
+					});
+
+					if (outerElementFound)
+					{
+						// Wrap in subquery
+						sequence = new SubQueryContext(sequence);
+
+						var prevCtx = context;
+						context = new AggregationContext(buildInfo.Parent, sequence, methodCall);
+
+						builder.ReplaceParent(prevCtx, context);
+
+						prevSequence.SelectQuery.DoNotRemove = true;
+						sql = sequence.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).ToArray();
+					}
 				}
 			}
 

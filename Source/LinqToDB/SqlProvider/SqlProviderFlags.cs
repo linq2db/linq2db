@@ -9,26 +9,27 @@ namespace LinqToDB.SqlProvider
 
 	public class SqlProviderFlags
 	{
-		public bool        IsSybaseBuggyGroupBy           { get; set; }
+		public bool        IsSybaseBuggyGroupBy              { get; set; }
 
-		public bool        IsParameterOrderDependent      { get; set; }
-		public bool        AcceptsTakeAsParameter         { get; set; }
-		public bool        AcceptsTakeAsParameterIfSkip   { get; set; }
-		public bool        IsTakeSupported                { get; set; }
-		public bool        IsSkipSupported                { get; set; }
-		public bool        IsSkipSupportedIfTake          { get; set; }
-		public bool        IsSubQueryTakeSupported        { get; set; }
-		public bool        IsSubQueryColumnSupported      { get; set; }
-		public bool        IsSubQueryOrderBySupported     { get; set; }
-		public bool        IsCountSubQuerySupported       { get; set; }
-		public bool        IsIdentityParameterRequired    { get; set; }
-		public bool        IsApplyJoinSupported           { get; set; }
-		public bool        IsInsertOrUpdateSupported      { get; set; }
-		public bool        CanCombineParameters           { get; set; }
-		public bool        IsGroupByExpressionSupported   { get; set; }
-		public int         MaxInListValuesCount           { get; set; }
-		public bool        IsUpdateSetTableAliasSupported { get; set; }
-		public TakeHints?  TakeHintsSupported             { get; set; }
+		public bool        IsParameterOrderDependent         { get; set; }
+		public bool        AcceptsTakeAsParameter            { get; set; }
+		public bool        AcceptsTakeAsParameterIfSkip      { get; set; }
+		public bool        IsTakeSupported                   { get; set; }
+		public bool        IsSkipSupported                   { get; set; }
+		public bool        IsSkipSupportedIfTake             { get; set; }
+		public bool        IsSubQueryTakeSupported           { get; set; }
+		public bool        IsSubQueryColumnSupported         { get; set; }
+		public bool        IsSubQueryOrderBySupported        { get; set; }
+		public bool        IsCountSubQuerySupported          { get; set; }
+		public bool        IsIdentityParameterRequired       { get; set; }
+		public bool        IsApplyJoinSupported              { get; set; }
+		public bool        IsInsertOrUpdateSupported         { get; set; }
+		public bool        CanCombineParameters              { get; set; }
+		public bool        IsGroupByExpressionSupported      { get; set; }
+		public int         MaxInListValuesCount              { get; set; }
+		public bool        IsUpdateSetTableAliasSupported    { get; set; }
+		public TakeHints?  TakeHintsSupported                { get; set; }
+		public bool        AcceptsOuterExpressionInAggregate { get; set; }
 
 		/// <summary>
 		/// Provider requires that selected subquery column must be used in group by even for constant column.
