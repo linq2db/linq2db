@@ -7,6 +7,11 @@ if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Enterprise" (
 	echo Using Visual Studio 2019 Enterprise
 	echo.
 	set "msbuild_path=%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\MSBuild.exe"
+) else if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Professional" (
+	echo.
+	echo Using Visual Studio 2019 Professional
+	echo.
+	set "msbuild_path=%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Professional\MSBuild\Current\Bin\MSBuild.exe"
 ) else if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community" (
 	echo.
 	echo Using Visual Studio 2019 Community
