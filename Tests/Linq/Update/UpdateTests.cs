@@ -684,6 +684,48 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void SetWithTernaryOperatorIssue([DataSources] string context)
+		{
+			Gender? nullableGender = Gender.Other;
+
+			ResetPersonIdentity(context);
+
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(_ => _.FirstName.StartsWith("UpdateComplex")).Delete();
+				try
+				{
+					var id = Convert.ToInt32(db.InsertWithIdentity(
+						new ComplexPerson2
+						{
+							Name = new FullName
+							{
+								FirstName = "UpdateComplex",
+								LastName  = "Empty",
+							},
+							Gender = Gender.Male
+						}));
+
+					var cnt = db.GetTable<ComplexPerson2>()
+						.Where(_ => _.Name.FirstName.StartsWith("UpdateComplex"))
+						.Set(_ => _.Gender, _ => nullableGender.HasValue ? nullableGender.Value : _.Gender)
+						.Update();
+
+					Assert.AreEqual(1, cnt);
+
+					var obj = db.GetTable<ComplexPerson2>()
+						.First(_ => _.ID == id);
+
+					Assert.AreEqual(Gender.Other, obj.Gender);
+				}
+				finally
+				{
+					db.Person.Where(_ => _.FirstName.StartsWith("UpdateComplex")).Delete();
+				}
+			}
+		}
+		
+		[Test]
 		public void UpdateComplex2([DataSources] string context)
 		{
 			ResetPersonIdentity(context);

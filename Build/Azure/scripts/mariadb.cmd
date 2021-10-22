@@ -7,7 +7,7 @@ rem docker run -d --name mysql -h mysql -p 3306:3306 awesomecontainer/wdocker-ma
 docker ps -a
 
 echo "Waiting"
-set max = 100
+set max=100
 :repeat
 set /a max=max-1
 if %max% EQU 0 goto fail

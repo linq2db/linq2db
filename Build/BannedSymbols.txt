@@ -11,4 +11,4 @@ T:System.Data.IDbDataAdapter;Use DbDataAdapter class instead of ADO.NET interfac
 T:System.Data.IDbDataParameter;Use DbParameter class instead of ADO.NET interfaces
 T:System.Data.IDbTransaction;Use DbTransaction class instead of ADO.NET interfaces
 T:System.ThreadStaticAttribute;don't do it
-
+M:System.Linq.Expressions.Expression.Property(System.Linq.Expressions.Expression,System.Reflection.MethodInfo); use overload with PropertyInfo parameter
