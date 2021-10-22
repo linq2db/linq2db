@@ -165,7 +165,7 @@ namespace LinqToDB.Linq.Builder
 								if (l != null)
 								{
 									// In Grouping KeyContext we have to perform calculation on server side
-									if (context.builder.Contexts.Any(c => c is GroupByBuilder.KeyContext))
+									if (context.builder.Contexts.Any(static c => c is GroupByBuilder.KeyContext))
 										return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
 									break;
 								}
@@ -553,12 +553,15 @@ namespace LinqToDB.Linq.Builder
 			public Expression?          Expression;
 		}
 
-		readonly Dictionary<IBuildContext,List<SubQueryContextInfo>> _buildContextCache = new ();
+		Dictionary<IBuildContext,List<SubQueryContextInfo>>? _buildContextCache;
 
 		SubQueryContextInfo GetSubQueryContext(IBuildContext context, MethodCallExpression expr)
 		{
-			if (!_buildContextCache.TryGetValue(context, out var sbi))
+			if (_buildContextCache == null || !_buildContextCache.TryGetValue(context, out var sbi))
+			{
+				_buildContextCache ??= new ();
 				_buildContextCache[context] = sbi = new List<SubQueryContextInfo>();
+			}
 
 			foreach (var item in sbi)
 			{
@@ -675,8 +678,16 @@ namespace LinqToDB.Linq.Builder
 								select c.EntityDescriptor
 							).FirstOrDefault();
 
-					return om != null && om.Associations.All(a => !a.MemberInfo.EqualsTo(me.Member)) &&
-						   om[me.Member.Name] == null;
+					if (om != null && om[me.Member.Name] == null)
+					{
+						foreach (var a in om.Associations)
+							if (a.MemberInfo.EqualsTo(me.Member))
+								return false;
+
+						return true;
+					}
+
+					return false;
 				}
 				case ExpressionType.Call:
 				{
@@ -894,7 +905,7 @@ namespace LinqToDB.Linq.Builder
 
 		static Expression GetMultipleQueryExpressionLazy(IBuildContext context, MappingSchema mappingSchema, Expression expression, HashSet<ParameterExpression> parameters)
 		{
-			expression.Visit(parameters, static(parameters, e) =>
+			expression.Visit(parameters, static (parameters, e) =>
 			{
 				if (e.NodeType == ExpressionType.Lambda)
 					foreach (var p in ((LambdaExpression)e).Parameters)

@@ -63,7 +63,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IEquatable<ISqlExpression>
 
-		public abstract ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func);
+		public abstract ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func);
 
 		#endregion
 
@@ -269,7 +269,7 @@ namespace LinqToDB.SqlQuery
 
 		public abstract ISqlTableSource? GetTableSource(ISqlTableSource table);
 
-		public abstract void WalkQueries(Func<SelectQuery, SelectQuery> func);
+		public abstract void WalkQueries<TContext>(TContext context, Func<TContext, SelectQuery, SelectQuery> func);
 
 		internal void EnsureFindTables()
 		{

@@ -6,7 +6,6 @@ namespace LinqToDB.DataProvider.SQLite
 	using SqlProvider;
 	using SqlQuery;
 	using Common;
-	using Mapping;
 
 	class SQLiteSqlOptimizer : BasicSqlOptimizer
 	{
@@ -34,13 +33,13 @@ namespace LinqToDB.DataProvider.SQLite
 			return statement;
 		}
 
-		public override ISqlPredicate ConvertSearchStringPredicate<TContext>(MappingSchema mappingSchema, SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext<TContext>> visitor,
-			OptimizationContext optimizationContext)
+		public override ISqlPredicate ConvertSearchStringPredicate(
+			SqlPredicate.SearchString              predicate,
+			ConvertVisitor<RunOptimizationContext> visitor)
 		{
-			var like = ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor,
-				optimizationContext);
+			var like = ConvertSearchStringPredicateViaLike(predicate, visitor);
 
-			if (predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context) == true)
+			if (predicate.CaseSensitive.EvaluateBoolExpression(visitor.Context.OptimizationContext.Context) == true)
 			{
 				SqlPredicate.ExprExpr? subStrPredicate = null;
 
@@ -98,10 +97,9 @@ namespace LinqToDB.DataProvider.SQLite
 			return like;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl<TContext>(ISqlExpression expression, ConvertVisitor<TContext> visitor,
-			EvaluationContext context)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
 		{
-			expression = base.ConvertExpressionImpl(expression, visitor, context);
+			expression = base.ConvertExpressionImpl(expression, visitor);
 
 			if (expression is SqlBinaryExpression be)
 			{
@@ -145,7 +143,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return expression;
 		}
 
-		public override ISqlPredicate ConvertPredicateImpl<TContext>(MappingSchema mappingSchema, ISqlPredicate predicate, ConvertVisitor<RunOptimizationContext<TContext>> visitor, OptimizationContext optimizationContext)
+		public override ISqlPredicate ConvertPredicateImpl(ISqlPredicate predicate, ConvertVisitor<RunOptimizationContext> visitor)
 		{
 			if (predicate is SqlPredicate.ExprExpr exprExpr)
 			{
@@ -153,8 +151,8 @@ namespace LinqToDB.DataProvider.SQLite
 				var rightType = QueryHelper.GetDbDataType(exprExpr.Expr2);
 
 				if ((IsDateTime(leftType) || IsDateTime(rightType)) &&
-				    !(exprExpr.Expr1.TryEvaluateExpression(optimizationContext.Context, out var value1) && value1 == null ||
-				      exprExpr.Expr2.TryEvaluateExpression(optimizationContext.Context, out var value2) && value2 == null))
+				    !(exprExpr.Expr1.TryEvaluateExpression(visitor. Context.OptimizationContext.Context, out var value1) && value1 == null ||
+				      exprExpr.Expr2.TryEvaluateExpression(visitor.Context.OptimizationContext.Context, out var value2) && value2 == null))
 				{
 					if (!(exprExpr.Expr1 is SqlFunction func1 && (func1.Name == "$Convert$" || func1.Name == "DateTime")))
 					{
@@ -174,7 +172,7 @@ namespace LinqToDB.DataProvider.SQLite
 				}
 			}
 
-			predicate = base.ConvertPredicateImpl(mappingSchema, predicate, visitor, optimizationContext);
+			predicate = base.ConvertPredicateImpl(predicate, visitor);
 			return predicate;
 		}
 

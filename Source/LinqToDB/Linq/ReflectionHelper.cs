@@ -22,90 +22,95 @@ namespace LinqToDB.Linq
 			{
 				return MemberHelper.MethodOf(func);
 			}
+
+			public static PropertyInfo PropertyOf(Expression<Func<T, object?>> func)
+			{
+				return MemberHelper.PropertyOf(func);
+			}
 		}
 
 		public class Binary : Expressor<BinaryExpression>
 		{
-			public static MethodInfo Conversion = MethodOf(e => e.Conversion);
-			public static MethodInfo Left       = MethodOf(e => e.Left);
-			public static MethodInfo Right      = MethodOf(e => e.Right);
+			public static PropertyInfo Conversion = PropertyOf(e => e.Conversion);
+			public static PropertyInfo Left       = PropertyOf(e => e.Left);
+			public static PropertyInfo Right      = PropertyOf(e => e.Right);
 		}
 
 		public class Unary : Expressor<UnaryExpression>
 		{
-			public static MethodInfo Operand = MethodOf(e => e.Operand);
+			public static PropertyInfo Operand = PropertyOf(e => e.Operand);
 		}
 
 		public class LambdaExpr : Expressor<LambdaExpression>
 		{
-			public static MethodInfo Body       = MethodOf(e => e.Body);
-			public static MethodInfo Parameters = MethodOf(e => e.Parameters);
+			public static PropertyInfo Body       = PropertyOf(e => e.Body);
+			public static PropertyInfo Parameters = PropertyOf(e => e.Parameters);
 		}
 
 		public class Constant : Expressor<ConstantExpression>
 		{
-			public static MethodInfo Value = MethodOf(e => e.Value);
+			public static PropertyInfo Value = PropertyOf(e => e.Value);
 		}
 
 		public class QueryableInt : Expressor<IQueryable>
 		{
-			public static MethodInfo Expression = MethodOf(e => e.Expression);
+			public static PropertyInfo Expression = PropertyOf(e => e.Expression);
 		}
 
 		public class MethodCall : Expressor<MethodCallExpression>
 		{
-			public static MethodInfo Object    = MethodOf(e => e.Object);
-			public static MethodInfo Arguments = MethodOf(e => e.Arguments);
+			public static PropertyInfo Object    = PropertyOf(e => e.Object);
+			public static PropertyInfo Arguments = PropertyOf(e => e.Arguments);
 		}
 
 		public class Conditional : Expressor<ConditionalExpression>
 		{
-			public static MethodInfo Test    = MethodOf(e => e.Test);
-			public static MethodInfo IfTrue  = MethodOf(e => e.IfTrue);
-			public static MethodInfo IfFalse = MethodOf(e => e.IfFalse);
+			public static PropertyInfo Test    = PropertyOf(e => e.Test);
+			public static PropertyInfo IfTrue  = PropertyOf(e => e.IfTrue);
+			public static PropertyInfo IfFalse = PropertyOf(e => e.IfFalse);
 		}
 
 		public class Invocation : Expressor<InvocationExpression>
 		{
-			public static MethodInfo Expression = MethodOf(e => e.Expression);
-			public static MethodInfo Arguments  = MethodOf(e => e.Arguments);
+			public static PropertyInfo Expression = PropertyOf(e => e.Expression);
+			public static PropertyInfo Arguments  = PropertyOf(e => e.Arguments);
 		}
 
 		public class ListInit : Expressor<ListInitExpression>
 		{
-			public static MethodInfo NewExpression = MethodOf(e => e.NewExpression);
-			public static MethodInfo Initializers  = MethodOf(e => e.Initializers);
+			public static PropertyInfo NewExpression = PropertyOf(e => e.NewExpression);
+			public static PropertyInfo Initializers  = PropertyOf(e => e.Initializers);
 		}
 
 		public class ElementInit : Expressor<System.Linq.Expressions.ElementInit>
 		{
-			public static MethodInfo Arguments = MethodOf(e => e.Arguments);
+			public static PropertyInfo Arguments = PropertyOf(e => e.Arguments);
 		}
 
 		public class Member : Expressor<MemberExpression>
 		{
-			public static MethodInfo Expression = MethodOf(e => e.Expression);
+			public static PropertyInfo Expression = PropertyOf(e => e.Expression);
 		}
 
 		public class MemberInit : Expressor<MemberInitExpression>
 		{
-			public static MethodInfo NewExpression = MethodOf(e => e.NewExpression);
-			public static MethodInfo Bindings      = MethodOf(e => e.Bindings);
+			public static PropertyInfo NewExpression = PropertyOf(e => e.NewExpression);
+			public static PropertyInfo Bindings      = PropertyOf(e => e.Bindings);
 		}
 
 		public class New : Expressor<NewExpression>
 		{
-			public static MethodInfo Arguments = MethodOf(e => e.Arguments);
+			public static PropertyInfo Arguments = PropertyOf(e => e.Arguments);
 		}
 
 		public class NewArray : Expressor<NewArrayExpression>
 		{
-			public static MethodInfo Expressions = MethodOf(e => e.Expressions);
+			public static PropertyInfo Expressions = PropertyOf(e => e.Expressions);
 		}
 
 		public class TypeBinary : Expressor<TypeBinaryExpression>
 		{
-			public static MethodInfo Expression = MethodOf(e => e.Expression);
+			public static PropertyInfo Expression = PropertyOf(e => e.Expression);
 		}
 
 		public class IndexExpressor<T>
@@ -120,23 +125,23 @@ namespace LinqToDB.Linq
 
 		public class MemberAssignmentBind : Expressor<MemberAssignment>
 		{
-			public static MethodInfo Expression = MethodOf(e => e.Expression);
+			public static PropertyInfo Expression = PropertyOf(e => e.Expression);
 		}
 
 		public class MemberListBind : Expressor<MemberListBinding>
 		{
-			public static MethodInfo Initializers = MethodOf(e => e.Initializers);
+			public static PropertyInfo Initializers = PropertyOf(e => e.Initializers);
 		}
 
 		public class MemberMemberBind : Expressor<MemberMemberBinding>
 		{
-			public static MethodInfo Bindings = MethodOf(e => e.Bindings);
+			public static PropertyInfo Bindings = PropertyOf(e => e.Bindings);
 		}
 
 		public class Block : Expressor<BlockExpression>
 		{
-			public static MethodInfo Expressions = MethodOf(e => e.Expressions);
-			public static MethodInfo Variables   = MethodOf(e => e.Variables);
+			public static PropertyInfo Expressions = PropertyOf(e => e.Expressions);
+			public static PropertyInfo Variables   = PropertyOf(e => e.Variables);
 		}
 
 		public static MethodInfo ExprItem  = IndexExpressor<Expression>         .Item;
