@@ -553,12 +553,15 @@ namespace LinqToDB.Linq.Builder
 			public Expression?          Expression;
 		}
 
-		readonly Dictionary<IBuildContext,List<SubQueryContextInfo>> _buildContextCache = new ();
+		Dictionary<IBuildContext,List<SubQueryContextInfo>>? _buildContextCache;
 
 		SubQueryContextInfo GetSubQueryContext(IBuildContext context, MethodCallExpression expr)
 		{
-			if (!_buildContextCache.TryGetValue(context, out var sbi))
+			if (_buildContextCache == null || !_buildContextCache.TryGetValue(context, out var sbi))
+			{
+				_buildContextCache ??= new ();
 				_buildContextCache[context] = sbi = new List<SubQueryContextInfo>();
+			}
 
 			foreach (var item in sbi)
 			{

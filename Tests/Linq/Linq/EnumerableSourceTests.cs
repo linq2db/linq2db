@@ -844,7 +844,8 @@ namespace Tests.Linq
 						{
 							Id   = p.ID,
 							Name = p.Name,
-							SomeList = null						}
+							SomeList = null
+						}
 					).ToList();
 
 				personWithList.Should().HaveCountGreaterThan(0);
@@ -867,7 +868,8 @@ namespace Tests.Linq
 						{
 							Id       = p.ID,
 							Name     = p.Name,
-							SomeList = new List<int>()						}
+							SomeList = new List<int>()
+						}
 					).ToList();
 
 				personWithList.Should().HaveCountGreaterThan(0);
