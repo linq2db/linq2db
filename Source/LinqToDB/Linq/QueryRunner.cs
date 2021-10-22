@@ -310,7 +310,7 @@ namespace LinqToDB.Linq
 			}
 
 			var param = ParametersContext.CreateParameterAccessor(
-				dataContext, valueGetter, getter, dbDataTypeExpression, valueGetter, field.Name.Replace('.', '_'));
+				dataContext, valueGetter, getter, dbDataTypeExpression, valueGetter, parametersExpression: null, name: field.Name.Replace('.', '_'));
 
 			return param;
 		}

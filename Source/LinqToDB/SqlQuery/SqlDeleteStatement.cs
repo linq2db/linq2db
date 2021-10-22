@@ -28,12 +28,12 @@ namespace LinqToDB.SqlQuery
 
 		public SqlOutputClause? Output { get; set; }
 
-		public override ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			With?.Walk(options, func);
+			With?.Walk(options, context, func);
 
-			Table       = ((ISqlExpressionWalkable?)Table)?.Walk(options, func) as SqlTable;
-			SelectQuery = (SelectQuery)SelectQuery.Walk(options, func);
+			Table       = ((ISqlExpressionWalkable?)Table)?.Walk(options, context, func) as SqlTable;
+			SelectQuery = (SelectQuery)SelectQuery.Walk(options, context, func);
 
 			return null;
 		}
@@ -49,11 +49,11 @@ namespace LinqToDB.SqlQuery
 			return sb;
 		}
 
-		public override void WalkQueries(Func<SelectQuery, SelectQuery> func)
+		public override void WalkQueries<TContext>(TContext context, Func<TContext, SelectQuery, SelectQuery> func)
 		{
 			if (SelectQuery != null)
 			{
-				var newQuery = func(SelectQuery);
+				var newQuery = func(context, SelectQuery);
 
 				if (!ReferenceEquals(newQuery, SelectQuery))
 					SelectQuery = newQuery;

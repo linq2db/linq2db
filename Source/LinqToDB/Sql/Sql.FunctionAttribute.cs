@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
@@ -89,7 +87,7 @@ namespace LinqToDB
 				set => Expression = value;
 			}
 
-			public override ISqlExpression? GetExpression(IDataContext dataContext, SelectQuery query, Expression expression, Func<Expression, ColumnDescriptor?, ISqlExpression> converter)
+			public override ISqlExpression? GetExpression<TContext>(TContext context, IDataContext dataContext, SelectQuery query, Expression expression, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
 				var expressionStr = Expression;
 				PrepareParameterValues(expression, ref expressionStr, true, out var knownExpressions, out var genericTypes);
@@ -97,7 +95,7 @@ namespace LinqToDB
 				if (string.IsNullOrEmpty(expressionStr))
 					throw new LinqToDBException($"Cannot retrieve function name for expression '{expression}'.");
 
-				var parameters = PrepareArguments(expressionStr!, ArgIndices, addDefault: true, knownExpressions, genericTypes, converter);
+				var parameters = PrepareArguments(context, expressionStr!, ArgIndices, addDefault: true, knownExpressions, genericTypes, converter);
 
 				return new SqlFunction(expression.Type, expressionStr!, IsAggregate, IsPure, parameters)
 				{

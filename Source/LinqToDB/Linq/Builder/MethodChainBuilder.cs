@@ -37,8 +37,8 @@ namespace LinqToDB.Linq.Builder
 
 			var finalFunction = functions.First();
 				
-			var sqlExpression = finalFunction.GetExpression(builder.DataContext, buildInfo.SelectQuery, methodCall,
-				(e, descriptor) => builder.ConvertToExtensionSql(sequence, e, descriptor));
+			var sqlExpression = finalFunction.GetExpression((builder, sequence), builder.DataContext, buildInfo.SelectQuery, methodCall,
+				static (context, e, descriptor) => context.builder.ConvertToExtensionSql(context.sequence, e, descriptor));
 
 			var context = new ChainContext(buildInfo.Parent, sequence, methodCall);
 			context.Sql        = context.SelectQuery;

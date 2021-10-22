@@ -34,7 +34,7 @@
 					return new SqlExpression(p.Type.SystemType, "CVar({0})", Precedence.Primary, p);
 
 				return e;
-			});
+			}, withStack: true);
 
 			return statement;
 		}

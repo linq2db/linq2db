@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -29,12 +31,11 @@ namespace Tests.Linq
 		[Table]
 		class SampleClass
 		{
-			[Column] public int Id    { get; set; }
-			[Column(Length = 50, CanBeNull = true)] public string? Value1 { get; set; }
-			[Column(Length = 50, CanBeNull = true)] public string? Value2 { get; set; }
-			[Column(Length = 50, CanBeNull = true)] public string? Value3 { get; set; }
-			[Column(Length = 50, CanBeNull = true, DataType = DataType.VarChar)]
-			                                        public string? Value4 { get; set; }
+			[Column]                                                              public int     Id     { get; set; }
+			[Column(Length = 50, CanBeNull = true)]                               public string? Value1 { get; set; }
+			[Column(Length = 50, CanBeNull = true)]                               public string? Value2 { get; set; }
+			[Column(Length = 50, CanBeNull = true, DataType = DataType.VarChar)]  public string? Value3 { get; set; }
+			[Column(Length = 50, CanBeNull = true, DataType = DataType.NVarChar)] public string? Value4 { get; set; }
 		}
 
 		public class StringTestSourcesAttribute : IncludeDataSourcesAttribute

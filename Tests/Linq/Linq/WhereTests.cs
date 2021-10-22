@@ -1853,6 +1853,27 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void CaseOptimizationNullable([DataSources(TestProvName.AllSQLite)] string context, [Values(2, null)] int? filterValue)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(new List<WhereWithString>{new()
+				{
+					Id          = 1,
+					StringValue = "Str1"
+				}}))
+			{
+				var query = table.Where(x => filterValue.HasValue ? x.Id == filterValue : true);
+
+				var result = query.ToArray();
+
+				if (filterValue == null)
+					result.Should().HaveCount(1);
+				else
+					result.Should().HaveCount(0);
+			}
+		}
+
 
 		#region issue 2424
 		class Isue2424Table

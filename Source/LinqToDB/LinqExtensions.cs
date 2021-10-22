@@ -788,7 +788,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					Methods.LinqToDB.Update.SetQueryableValue.MakeGenericMethod(typeof(T), typeof(TV)),
-					currentSource.Expression, Expression.Quote(extract), WrapConstant(extract.Body, value)));
+					currentSource.Expression, Expression.Quote(extract), Expression.Constant(value, typeof(TV))));
 
 			return new Updatable<T>(query);
 		}
@@ -818,7 +818,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					Methods.LinqToDB.Update.SetUpdatableValue.MakeGenericMethod(typeof(T), typeof(TV)),
-					query.Expression, Expression.Quote(extract), WrapConstant(extract.Body, value)));
+					query.Expression, Expression.Quote(extract), Expression.Constant(value, typeof(TV))));
 
 			return new Updatable<T>(query);
 		}
@@ -1210,7 +1210,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(Value, source, field, value),
-					query.Expression, Expression.Quote(field), WrapConstant(field.Body, value)));
+					query.Expression, Expression.Quote(field), Expression.Constant(value, typeof(TV))));
 
 			return new ValueInsertable<T>(q);
 		}
@@ -1271,7 +1271,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(Value, source, field, value),
-					query.Expression, Expression.Quote(field), WrapConstant(field.Body, value)));
+					query.Expression, Expression.Quote(field), Expression.Constant(value, typeof(TV))));
 
 			return new ValueInsertable<T>(q);
 		}
@@ -1769,18 +1769,6 @@ namespace LinqToDB
 			}
 		}
 
-		static Expression WrapConstant<TV>(Expression body, TV value)
-		{
-			var bodyType  = body.Unwrap().Type;
-			var valueType = ReferenceEquals(null, value) ? bodyType : value.GetType();
-			if (bodyType.IsInterface)
-				valueType = bodyType;
-			var result    = (Expression)Expression.Constant(value, valueType);
-			if (result.Type != typeof(TV))
-				result = Expression.Convert(result, typeof(TV));
-			return result;
-		}
-
 		/// <summary>
 		/// Converts LINQ query into insert query with source query data as data to insert.
 		/// </summary>
@@ -1900,7 +1888,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(Value, source, field, value),
-					query.Expression, Expression.Quote(field), WrapConstant(field.Body, value)));
+					query.Expression, Expression.Quote(field), Expression.Constant(value, typeof(TValue))));
 
 			return new SelectInsertable<TSource,TTarget>(q);
 		}

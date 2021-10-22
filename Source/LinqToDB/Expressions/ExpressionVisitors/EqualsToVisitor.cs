@@ -103,7 +103,7 @@ namespace LinqToDB.Expressions
 
 			if (info.MemberCompareCache == null || !info.MemberCompareCache.TryGetValue(memberInfo, out var compareResult))
 			{
-				compareResult = accessor.Expression.EqualsTo(accessor.Accessor(memberInfo, info.DataContext), info);
+				compareResult = accessor.Expression.EqualsTo(accessor.Execute(memberInfo, info.DataContext), info);
 				(info.MemberCompareCache ??= new (MemberInfoComparer.Instance)).Add(memberInfo, compareResult);
 			}
 
