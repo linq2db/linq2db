@@ -2327,6 +2327,7 @@ namespace LinqToDB.Linq.Builder
 
 		public ColumnDescriptor? SuggestColumnDescriptor(IBuildContext? context, Expression expr)
 		{
+			expr = expr.Unwrap();
 			var ctx = GetContext(context, expr);
 			if (ctx != null && ctx.IsExpression(expr, 0, RequestFor.Field).Result)
 			{
