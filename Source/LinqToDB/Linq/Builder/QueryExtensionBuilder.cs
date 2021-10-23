@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -17,8 +18,10 @@ namespace LinqToDB.Linq.Builder
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence   = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			var parameters = new List<ISqlExpression>(methodCall.Arguments.Count - 1);
+			var sequence     = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var arguments    = new ISqlExpression[methodCall.Arguments.Count - 1];
+			var parameters   = new ParameterInfo [arguments.Length];
+			var methodParams = methodCall.Method.GetParameters();
 
 			for (var i = 1; i < methodCall.Arguments.Count; i++)
 			{
@@ -41,7 +44,7 @@ namespace LinqToDB.Linq.Builder
 				else
 				{
 					var ex   = methodCall.Arguments[i];
-					var p    = methodCall.Method.GetParameters()[i];
+					var p    = methodParams[i];
 					var attr = p.GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).Cast<SqlQueryDependentAttribute>().FirstOrDefault();
 
 					if (attr != null)
@@ -50,7 +53,8 @@ namespace LinqToDB.Linq.Builder
 					expr = builder.ConvertToSql(sequence, ex);
 				}
 
-				parameters.Add(expr);
+				arguments [i - 1] = expr;
+				parameters[i - 1] = methodParams[i];
 			}
 
 			var attrs = Sql.QueryExtensionAttribute.GetExtensionAttributes(methodCall, builder.MappingSchema);
@@ -62,7 +66,7 @@ namespace LinqToDB.Linq.Builder
 					case Sql.QueryExtensionScope.Table:
 					{
 						var table = SequenceHelper.GetTableContext(sequence) ?? throw new LinqToDBException($"Cannot get table context from {sequence.GetType()}");
-						attr.ExtendTable(table.SqlTable);
+						attr.ExtendTable(table.SqlTable, parameters, arguments);
 						break;
 					}
 				}

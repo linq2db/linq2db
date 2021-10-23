@@ -1,20 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlQueryExtension : IQueryElement, ISqlExpressionWalkable
+	public class SqlQueryExtension : ISqlExpressionWalkable
 	{
-		public QueryElementType ElementType => QueryElementType.SqlQueryExtension;
+		public Sql.QueryExtensionScope           Scope     { get; set; }
+		public int                               ID        { get; set; }
+		public Dictionary<string,ISqlExpression> Arguments { get; } = new();
 
-		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		public ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext,ISqlExpression,ISqlExpression> func)
 		{
-			return sb;
-		}
+			foreach (var argument in Arguments.ToList())
+				Arguments[argument.Key] = argument.Value.Walk(options, context, func)!;
 
-		public ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
 			return null;
 		}
 	}

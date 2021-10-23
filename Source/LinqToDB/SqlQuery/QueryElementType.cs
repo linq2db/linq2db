@@ -70,7 +70,6 @@
 
 		GroupingSet,
 
-		Comment,
-		SqlQueryExtension
+		Comment
 	}
 }

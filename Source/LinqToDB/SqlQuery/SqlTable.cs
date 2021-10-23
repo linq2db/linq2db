@@ -145,8 +145,9 @@ namespace LinqToDB.SqlQuery
 			foreach (var field in table.Fields)
 				Add(new SqlField(field));
 
-			SqlTableType   = table.SqlTableType;
-			TableArguments = table.TableArguments;
+			SqlTableType       = table.SqlTableType;
+			TableArguments     = table.TableArguments;
+			SqlQueryExtensions = table.SqlQueryExtensions;
 		}
 
 		public SqlTable(SqlTable table, IEnumerable<SqlField> fields, ISqlExpression[] tableArguments)
@@ -163,8 +164,9 @@ namespace LinqToDB.SqlQuery
 
 			AddRange(fields);
 
-			SqlTableType   = table.SqlTableType;
-			TableArguments = tableArguments;
+			SqlTableType       = table.SqlTableType;
+			TableArguments     = tableArguments;
+			SqlQueryExtensions = table.SqlQueryExtensions;
 		}
 
 		#endregion

@@ -672,6 +672,7 @@ namespace LinqToDB.ServiceModel
 
 							break;
 						}
+
 					case QueryElementType.SqlField :
 						{
 							var fld = (SqlField)e;
@@ -1469,6 +1470,19 @@ namespace LinqToDB.ServiceModel
 					else
 					{
 						Append(qe.SqlQueryExtensions.Count);
+
+						foreach (var ext in qe.SqlQueryExtensions)
+						{
+							Append((int)ext.Scope);
+							Append(ext.ID);
+							Append(ext.Arguments.Count);
+
+							foreach (var argument in ext.Arguments)
+							{
+								Append(argument.Key);
+								Append(argument.Value);
+							}
+						}
 					}
 				}
 
@@ -1496,7 +1510,7 @@ namespace LinqToDB.ServiceModel
 
 		public class QueryDeserializer : DeserializerBase
 		{
-			SqlStatement   _statement  = null!;
+			SqlStatement _statement = null!;
 
 			readonly Dictionary<int,SelectQuery> _queries = new ();
 			readonly List<Action>                _actions = new ();
@@ -2364,6 +2378,26 @@ namespace LinqToDB.ServiceModel
 					if (count > 0)
 					{
 						qe.SqlQueryExtensions = new List<SqlQueryExtension>(count);
+
+						for (var i = 0; i < count; i++)
+						{
+							var ext = new SqlQueryExtension();
+
+							ext.Scope = (Sql.QueryExtensionScope)ReadInt();
+							ext.ID    = ReadInt();
+
+							var cnt = ReadInt();
+
+							for (var j = 0; j < cnt; j++)
+							{
+								var key   = ReadString();
+								var value = Read<ISqlExpression>();
+
+								ext.Arguments.Add(key!, value!);
+							}
+
+							qe.SqlQueryExtensions.Add(ext);
+						}
 					}
 				}
 

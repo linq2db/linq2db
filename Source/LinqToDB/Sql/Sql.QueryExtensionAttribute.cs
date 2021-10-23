@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -14,23 +15,40 @@ namespace LinqToDB
 		[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true)]
 		public class QueryExtensionAttribute : Attribute
 		{
-			public QueryExtensionAttribute(QueryExtensionScope scope)
+			public QueryExtensionAttribute(QueryExtensionScope scope, int id = 0)
 			{
 				Scope = scope;
+				ID    = id;
 			}
 
-			public QueryExtensionAttribute(string? configuration, QueryExtensionScope scope)
+			public QueryExtensionAttribute(string? configuration, QueryExtensionScope scope, int id = 0)
 			{
 				Configuration = configuration;
 				Scope         = scope;
+				ID            = id;
 			}
 
 			public string?             Configuration { get; }
 			public QueryExtensionScope Scope         { get; }
+			public int                 ID            { get; }
 
-			public virtual void ExtendTable(SqlTable table)
+			public virtual SqlQueryExtension GetExtension(ParameterInfo[] parameters, ISqlExpression[] arguments)
 			{
-//				throw new InvalidOperationException("Override the ExtendTable method.");
+				var ext = new SqlQueryExtension
+				{
+					Scope = Scope,
+					ID    = ID,
+				};
+
+				for (var i = 0; i < parameters.Length; i++)
+					ext.Arguments.Add(parameters[i].Name!, arguments[i]);
+
+				return ext;
+			}
+
+			public virtual void ExtendTable(SqlTable table, ParameterInfo[] parameters, ISqlExpression[] arguments)
+			{
+				(table.SqlQueryExtensions ??= new List<SqlQueryExtension>()).Add(GetExtension(parameters, arguments));
 			}
 
 			public static QueryExtensionAttribute[] GetExtensionAttributes(Expression expression, MappingSchema mapping)
