@@ -516,20 +516,53 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildTableExtensions(SqlTable table)
 		{
-			if (table.SqlQueryExtensions!.Any(ext => ext.Scope == Sql.QueryExtensionScope.Table && ext.ID == QueryExtensionID.SqlServerCommonTableHintID))
+			if (table.SqlQueryExtensions!.Any(ext =>
+				ext.Scope == Sql.QueryExtensionScope.Table &&
+				ext.ID is
+					QueryExtensionID.SqlServerCommonTableHintID or
+					QueryExtensionID.SqlServerIntValueTableHintID or
+					QueryExtensionID.SqlServerIndexTableHintID))
 			{
 				StringBuilder.Append(" WITH (");
 
 				foreach (var ext in table.SqlQueryExtensions!)
 				{
-					var value = (SqlValue)ext.Arguments["tableHint"];
-					StringBuilder
-						.Append(((TableHint)value.Value!).ToString().ToUpper())
-						.Append(", ");
+					if (ext.ID == QueryExtensionID.SqlServerIntValueTableHintID)
+					{
+						var hint  = (SqlValue)ext.Arguments["tableHint"];
+						var value = (SqlValue)ext.Arguments["value"];
+
+						if ((TableHint)hint.Value! == TableHint.SpatialWindowMaxCells)
+							StringBuilder.Append("SPATIAL_WINDOW_MAX_CELLS");
+						else
+							StringBuilder.Append((TableHint)hint.Value!);
+
+						StringBuilder
+							.Append('=')
+							.Append(value.Value)
+							;
+					}
+					else if (ext.ID == QueryExtensionID.SqlServerIndexTableHintID)
+					{
+						var value = (SqlValue)ext.Arguments["indexName"];
+
+						StringBuilder
+							.Append("Index(")
+							.Append(value.Value)
+							.Append(')')
+							;
+					}
+					else
+					{
+						var hint = (SqlValue)ext.Arguments["tableHint"];
+
+						StringBuilder.Append((TableHint)hint.Value!);
+					}
+
+					StringBuilder.Append(", ");
 				}
 
 				StringBuilder.Length -= 2;
-
 				StringBuilder.Append(')');
 			}
 		}

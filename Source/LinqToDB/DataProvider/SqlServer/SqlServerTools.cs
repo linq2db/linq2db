@@ -404,6 +404,30 @@ namespace LinqToDB.DataProvider.SqlServer
 			return table;
 		}
 
+		[LinqToDB.Sql.QueryExtension(ProviderName.SqlServer, LinqToDB.Sql.QueryExtensionScope.Table, QueryExtensionID.SqlServerIntValueTableHintID)]
+		public static ITable<TSource> With<TSource>(this ITable<TSource> table, [SqlQueryDependent] TableHint tableHint, [SqlQueryDependent] int value)
+			where TSource : notnull
+		{
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(With, table, tableHint, value),
+				table.Expression, Expression.Constant(tableHint), Expression.Constant(value));
+
+			return table;
+		}
+
+		[LinqToDB.Sql.QueryExtension(ProviderName.SqlServer, LinqToDB.Sql.QueryExtensionScope.Table, QueryExtensionID.SqlServerIndexTableHintID)]
+		public static ITable<TSource> WithIndex<TSource>(this ITable<TSource> table, [SqlQueryDependent] string indexName)
+			where TSource : notnull
+		{
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(WithIndex, table, indexName),
+				table.Expression, Expression.Constant(indexName));
+
+			return table;
+		}
+
 		#endregion
 
 		public static class Sql

@@ -18,6 +18,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		RowLock,
 		Serializable,
 		Snapshot,
+		SpatialWindowMaxCells,
 		TabLock,
 		TabLockX,
 		UpdLock,

@@ -3,11 +3,13 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Expressions;
 using LinqToDB.Linq;
 
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -69,6 +71,102 @@ namespace Tests.Linq
 				select p
 			)
 			.ToList();
+		}
+
+		[Test]
+		public void SqlServerWith2005TableHintTest([IncludeDataSources(
+			TestProvName.AllSqlServer2005Plus)] string context,
+			[Values(
+				TableHint.HoldLock,
+				TableHint.NoLock,
+				TableHint.NoWait,
+				TableHint.PagLock,
+				TableHint.ReadCommitted,
+				TableHint.ReadCommittedLock,
+				TableHint.ReadPast,
+				TableHint.ReadUncommitted,
+				TableHint.RepeatableRead,
+				TableHint.RowLock,
+				TableHint.Serializable,
+				TableHint.TabLock,
+				TableHint.TabLockX,
+				TableHint.UpdLock,
+				TableHint.XLock
+				)] TableHint hint)
+		{
+			using var db = (TestDataConnection)GetDataContext(context);
+
+			var trace = string.Empty;
+
+			db.OnTraceConnection += ti =>
+			{
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			};
+
+			_ =
+			(
+				from p in db.Parent.With(hint)
+				select p
+			)
+			.ToList();
+
+			Assert.True(trace.Contains($"WITH ({hint})"));
+		}
+
+		[Test]
+		public void SqlServerWith2012TableHintTest([IncludeDataSources(
+			TestProvName.AllSqlServer2012Plus)] string context,
+			[Values(
+				TableHint.ForceScan
+//				TableHint.ForceSeek,
+//				TableHint.Snapshot
+				)] TableHint hint)
+		{
+			using var db = (TestDataConnection)GetDataContext(context);
+
+			var trace = string.Empty;
+
+			db.OnTraceConnection += ti =>
+			{
+				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
+					trace = ti.SqlText;
+			};
+
+			_ =
+			(
+				from p in db.Parent.With(hint)
+				select p
+			)
+			.ToList();
+
+			Assert.True(trace.Contains($"WITH ({hint})"));
+		}
+
+		[Test]
+		public void SqlServerWithSpatialWindowMaxCellsTableHintTest([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = (TestDataConnection)GetDataContext(context);
+
+			_ =
+				(
+					from p in db.Parent.With(TableHint.SpatialWindowMaxCells, 10)
+					select p
+				)
+				.ToList();
+		}
+
+		[Test]
+		public void SqlServerWithIndexTableHintTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = (TestDataConnection)GetDataContext(context);
+
+			_ =
+				(
+					from p in db.Child.WithIndex("IX_ChildIndex").With(TableHint.NoLock)
+					select p
+				)
+				.ToList();
 		}
 	}
 
