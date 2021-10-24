@@ -1,13 +1,10 @@
 ## LINQ to DB
 
-<a href="https://dotnetfoundation.org/projects/linq2db">
-<img align="right" alt=".NET Foundation Logo" src="https://raw.githubusercontent.com/dotnet-foundation/swag/master/logo/dotnetfoundation_v4_horizontal.png" width="250px" ></a>
-
 [![NuGet Version and Downloads count](https://buildstats.info/nuget/linq2db?includePreReleases=true)](https://www.nuget.org/profiles/LinqToDB) [![License](https://img.shields.io/github/license/linq2db/linq2db)](MIT-LICENSE.txt)
 
 [![Master branch build](https://img.shields.io/azure-devops/build/linq2db/linq2db/5/master?label=build%20(master))](https://dev.azure.com/linq2db/linq2db/_build?definitionId=5&_a=summary) [![Latest build](https://img.shields.io/azure-devops/build/linq2db/linq2db/5?label=build%20(latest))](https://dev.azure.com/linq2db/linq2db/_build?definitionId=5&_a=summary)
 
-[![StackOverflow questions](https://img.shields.io/stackexchange/stackoverflow/t/linq2db.svg?label=stackoverflow)](https://stackoverflow.com/questions/tagged/linq2db) [![Follow @linq2db](https://img.shields.io/twitter/follow/linq2db.svg)](https://twitter.com/linq2db) [!["good first issue" tasks](https://img.shields.io/github/issues/linq2db/linq2db/good%20first%20issue.svg)](https://github.com/linq2db/linq2db/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
+[![Follow @linq2db](https://img.shields.io/twitter/follow/linq2db.svg)](https://twitter.com/linq2db) [!["good first issue" tasks](https://img.shields.io/github/issues/linq2db/linq2db/good%20first%20issue.svg)](https://github.com/linq2db/linq2db/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
 
 LINQ to DB is the fastest LINQ database access library offering a simple, light, fast, and type-safe layer between your POCO objects and your database. 
 
@@ -16,8 +13,6 @@ Architecturally it is one step above micro-ORMs like Dapper, Massive, or PetaPoc
 However, it's not as heavy as LINQ to SQL or Entity Framework. There is no change-tracking, so you have to manage that yourself, but on the positive side you get more control and faster access to your data.
 
 In other words **LINQ to DB is type-safe SQL**.
-
-linq2db is a [.NET Foundation](https://dotnetfoundation.org/) project.
 
 Development version nuget [feed](https://pkgs.dev.azure.com/linq2db/linq2db/_packaging/linq2db/nuget/v3/index.json) ([how to use](https://docs.microsoft.com/en-us/nuget/consume-packages/install-use-packages-visual-studio#package-sources))
 
