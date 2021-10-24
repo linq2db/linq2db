@@ -19,20 +19,6 @@ namespace LinqToDB.Benchmarks.Queries
 		private IDbConnection  _cn     = null!;
 		private Func<DataConnection, string, string, string, decimal, decimal, int> _compiledInsert = null!;
 
-		private readonly Workflow _record = new ()
-		{
-			Id            = 1,
-			RowVersion    = 2,
-			Status        = StatusEnum.One,
-			Result        = $"Result:{3}",
-			Error         = $"Error:{4}",
-			Steps         = $"Steps:{5}",
-			StartTime     = DateTimeOffset.Now,
-			UpdateTime    = DateTimeOffset.Now,
-			ProcessedTime = DateTimeOffset.Now,
-			CompleteTime  = DateTimeOffset.Now
-		};
-
 		[GlobalSetup]
 		public void Setup()
 		{

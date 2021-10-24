@@ -18,6 +18,7 @@ namespace LinqToDB
 	using Extensions;
 	using Mapping;
 	using SqlQuery;
+	using Mapping;
 
 	[AttributeUsage(AttributeTargets.Parameter)]
 	[MeansImplicitUse]
