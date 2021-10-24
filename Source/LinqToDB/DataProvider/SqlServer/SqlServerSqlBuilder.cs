@@ -513,5 +513,25 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
+
+		protected override void BuildTableExtensions(SqlTable table)
+		{
+			if (table.SqlQueryExtensions!.Any(ext => ext.Scope == Sql.QueryExtensionScope.Table && ext.ID == QueryExtensionID.SqlServerCommonTableHintID))
+			{
+				StringBuilder.Append(" WITH (");
+
+				foreach (var ext in table.SqlQueryExtensions!)
+				{
+					var value = (SqlValue)ext.Arguments["tableHint"];
+					StringBuilder
+						.Append(((TableHint)value.Value!).ToString().ToUpper())
+						.Append(", ");
+				}
+
+				StringBuilder.Length -= 2;
+
+				StringBuilder.Append(')');
+			}
+		}
 	}
 }

@@ -1583,6 +1583,15 @@ namespace LinqToDB.SqlProvider
 					}
 				}
 			}
+
+			if (buildName && buildAlias && ts.Source is SqlTable table && table.SqlQueryExtensions is not null)
+			{
+				BuildTableExtensions(table);
+			}
+		}
+
+		protected virtual void BuildTableExtensions(SqlTable table)
+		{
 		}
 
 		void BuildJoinTable(SelectQuery selectQuery, SqlJoinedTable join, ref int joinCounter)

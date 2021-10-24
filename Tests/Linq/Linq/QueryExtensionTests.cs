@@ -3,6 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Expressions;
 using LinqToDB.Linq;
 
@@ -53,6 +54,19 @@ namespace Tests.Linq
 				from p in db.Parent.Comment(t => t.ParentID, "oh yeah")
 				join c in db.Child.Empty() on p.ParentID equals c.ParentID
 				select new { p, c }
+			)
+			.ToList();
+		}
+
+		[Test]
+		public void SqlServerWithTableHintTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			_ =
+			(
+				from p in db.Parent.With(TableHint.NoLock).With(TableHint.NoWait)
+				select p
 			)
 			.ToList();
 		}

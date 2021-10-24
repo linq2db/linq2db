@@ -19,9 +19,11 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence     = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			var arguments    = new ISqlExpression[methodCall.Arguments.Count - 1];
-			var parameters   = new ParameterInfo [arguments.Length];
+			var arguments    = new ISqlExpression[methodCall.Arguments.Count];
+			var parameters   = new ParameterInfo?[arguments.Length];
 			var methodParams = methodCall.Method.GetParameters();
+
+			arguments[0] = new SqlValue(methodCall.Method.Name);
 
 			for (var i = 1; i < methodCall.Arguments.Count; i++)
 			{
@@ -53,8 +55,8 @@ namespace LinqToDB.Linq.Builder
 					expr = builder.ConvertToSql(sequence, ex);
 				}
 
-				arguments [i - 1] = expr;
-				parameters[i - 1] = methodParams[i];
+				arguments [i] = expr;
+				parameters[i] = methodParams[i];
 			}
 
 			var attrs = Sql.QueryExtensionAttribute.GetExtensionAttributes(methodCall, builder.MappingSchema);

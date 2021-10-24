@@ -1,15 +1,18 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using System.Collections.Concurrent;
-	using System.Text;
 	using Common;
 	using Configuration;
 	using Data;
+	using Expressions;
+	using Linq;
 
 	public static class SqlServerTools
 	{
@@ -268,7 +271,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 #endregion
 
-#region Public Members
+		#region Public Members
 
 		public static IDataProvider GetDataProvider(
 			SqlServerVersion version   = SqlServerVersion.v2008,
@@ -326,9 +329,9 @@ namespace LinqToDB.DataProvider.SqlServer
 					SqlServerTypes.Configure(provider);
 		}
 
-#endregion
+		#endregion
 
-#region CreateDataConnection
+		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(
 			string            connectionString,
@@ -354,9 +357,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new DataConnection(GetDataProvider(version, provider), transaction);
 		}
 
-#endregion
+		#endregion
 
-#region BulkCopy
+		#region BulkCopy
 
 		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.ProviderSpecific;
 
@@ -385,7 +388,23 @@ namespace LinqToDB.DataProvider.SqlServer
 				}, source);
 		}
 
-#endregion
+		#endregion
+
+		#region QueryExtensions
+
+		[LinqToDB.Sql.QueryExtension(ProviderName.SqlServer, LinqToDB.Sql.QueryExtensionScope.Table, QueryExtensionID.SqlServerCommonTableHintID)]
+		public static ITable<TSource> With<TSource>(this ITable<TSource> table, [SqlQueryDependent] TableHint tableHint)
+			where TSource : notnull
+		{
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(With, table, tableHint),
+				table.Expression, Expression.Constant(tableHint));
+
+			return table;
+		}
+
+		#endregion
 
 		public static class Sql
 		{
@@ -394,6 +413,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		[Obsolete("This field is not used by linq2db. Configure reader expressions on DataProvider directly")]
 		public static Func<IDataReader,int,decimal> DataReaderGetMoney   = (dr, i) => dr.GetDecimal(i);
+
 		[Obsolete("This field is not used by linq2db. Configure reader expressions on DataProvider directly")]
 		public static Func<IDataReader,int,decimal> DataReaderGetDecimal = (dr, i) => dr.GetDecimal(i);
 	}
