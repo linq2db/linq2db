@@ -32,7 +32,7 @@ namespace LinqToDB
 			public QueryExtensionScope Scope         { get; }
 			public int                 ID            { get; }
 
-			public virtual SqlQueryExtension GetExtension(ParameterInfo?[] parameters, ISqlExpression[] arguments)
+			public virtual SqlQueryExtension GetExtension(Dictionary<string,ISqlExpression> parameters)
 			{
 				var ext = new SqlQueryExtension
 				{
@@ -40,15 +40,15 @@ namespace LinqToDB
 					ID    = ID,
 				};
 
-				for (var i = 0; i < parameters.Length; i++)
-					ext.Arguments.Add(parameters[i]?.Name ?? ".MethodName", arguments[i]);
+				foreach (var item in parameters)
+					ext.Arguments.Add(item.Key, item.Value);
 
 				return ext;
 			}
 
-			public virtual void ExtendTable(SqlTable table, ParameterInfo?[] parameters, ISqlExpression[] arguments)
+			public virtual void ExtendTable(SqlTable table, Dictionary<string,ISqlExpression> parameters)
 			{
-				(table.SqlQueryExtensions ??= new List<SqlQueryExtension>()).Add(GetExtension(parameters, arguments));
+				(table.SqlQueryExtensions ??= new()).Add(GetExtension(parameters));
 			}
 
 			public static QueryExtensionAttribute[] GetExtensionAttributes(Expression expression, MappingSchema mapping)

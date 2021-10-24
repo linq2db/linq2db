@@ -19,28 +19,33 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence     = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			var arguments    = new ISqlExpression[methodCall.Arguments.Count];
-			var parameters   = new ParameterInfo?[arguments.Length];
 			var methodParams = methodCall.Method.GetParameters();
 
-			arguments[0] = new SqlValue(methodCall.Method.Name);
+			var dic = new Dictionary<string,ISqlExpression>
+			{
+				{ ".MethodName", new SqlValue(methodCall.Method.Name) }
+			};
 
 			for (var i = 1; i < methodCall.Arguments.Count; i++)
 			{
-				ISqlExpression expr;
+				var arg  = methodCall.Arguments[i].Unwrap();
+				var name = methodParams[i].Name!;
 
-				if (methodCall.Arguments[i].Unwrap() is LambdaExpression le)
+				if (arg is LambdaExpression le)
 				{
-					var body = le.Body.Unwrap();
+					dic.Add(name, GetExpression(le));
+				}
+				else if (arg is NewArrayExpression ae)
+				{
+					dic.Add($"{name}.Count", new SqlValue(ae.Expressions.Count));
 
-					if (le.Parameters.Count == 1)
+					for (var j = 0; j < ae.Expressions.Count; j++)
 					{
-						var selector = new SelectContext(buildInfo.Parent, le, sequence);
-						expr = builder.ConvertToSql(selector, body);
-					}
-					else
-					{
-						expr = builder.ConvertToSql(sequence, body);
+						dic.Add($"{name}.{j}", ae.Expressions[j].Unwrap() switch
+						{
+							LambdaExpression lex => GetExpression(lex),
+							var ex               => builder.ConvertToSql(sequence, ex)
+						});
 					}
 				}
 				else
@@ -52,11 +57,21 @@ namespace LinqToDB.Linq.Builder
 					if (attr != null)
 						ex = Expression.Constant(ex.EvaluateExpression());
 
-					expr = builder.ConvertToSql(sequence, ex);
+					dic.Add(name, builder.ConvertToSql(sequence, ex));
 				}
 
-				arguments [i] = expr;
-				parameters[i] = methodParams[i];
+				ISqlExpression GetExpression(LambdaExpression le)
+				{
+					var body = le.Body.Unwrap();
+
+					if (le.Parameters.Count == 1)
+					{
+						var selector = new SelectContext(buildInfo.Parent, le, sequence);
+						return builder.ConvertToSql(selector, body);
+					}
+
+					return builder.ConvertToSql(sequence, body);
+				}
 			}
 
 			var attrs = Sql.QueryExtensionAttribute.GetExtensionAttributes(methodCall, builder.MappingSchema);
@@ -68,7 +83,7 @@ namespace LinqToDB.Linq.Builder
 					case Sql.QueryExtensionScope.Table:
 					{
 						var table = SequenceHelper.GetTableContext(sequence) ?? throw new LinqToDBException($"Cannot get table context from {sequence.GetType()}");
-						attr.ExtendTable(table.SqlTable, parameters, arguments);
+						attr.ExtendTable(table.SqlTable, dic);
 						break;
 					}
 				}

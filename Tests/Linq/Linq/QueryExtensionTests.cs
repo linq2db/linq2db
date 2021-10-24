@@ -149,11 +149,11 @@ namespace Tests.Linq
 			using var db = (TestDataConnection)GetDataContext(context);
 
 			_ =
-				(
-					from p in db.Parent.With(TableHint.SpatialWindowMaxCells, 10)
-					select p
-				)
-				.ToList();
+			(
+				from p in db.Parent.With(TableHint.SpatialWindowMaxCells, 10)
+				select p
+			)
+			.ToList();
 		}
 
 		[Test]
@@ -162,11 +162,37 @@ namespace Tests.Linq
 			using var db = (TestDataConnection)GetDataContext(context);
 
 			_ =
-				(
-					from p in db.Child.WithIndex("IX_ChildIndex").With(TableHint.NoLock)
-					select p
-				)
-				.ToList();
+			(
+				from p in db.Child.WithIndex("IX_ChildIndex").With(TableHint.NoLock)
+				select p
+			)
+			.ToList();
+		}
+
+		[Test, Explicit]
+		public void SqlServerWithForceSeekTableHintTest([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = (TestDataConnection)GetDataContext(context);
+
+			_ =
+			(
+				from p in db.Child.WithForceSeek("IX_ChildIndex", c => c.ParentID)
+				select p
+			)
+			.ToList();
+		}
+
+		[Test, Explicit]
+		public void SqlServerWithForceSeekTableHintTest2([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = (TestDataConnection)GetDataContext(context);
+
+			_ =
+			(
+				from p in db.Child.WithForceSeek("IX_ChildIndex")
+				select p
+			)
+			.ToList();
 		}
 	}
 

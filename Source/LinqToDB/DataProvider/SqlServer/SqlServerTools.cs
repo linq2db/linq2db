@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
@@ -424,6 +425,23 @@ namespace LinqToDB.DataProvider.SqlServer
 				null,
 				MethodHelper.GetMethodInfo(WithIndex, table, indexName),
 				table.Expression, Expression.Constant(indexName));
+
+			return table;
+		}
+
+		[LinqToDB.Sql.QueryExtension(ProviderName.SqlServer, LinqToDB.Sql.QueryExtensionScope.Table, QueryExtensionID.SqlServerForceSeekTableHintID)]
+		public static ITable<TSource> WithForceSeek<TSource>(
+			this ITable<TSource> table,
+			[SqlQueryDependent]  string indexName,
+			params Expression<Func<TSource,object>>[] columns)
+			where TSource : notnull
+		{
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(WithForceSeek, table, indexName, columns),
+				table.Expression, Expression.Constant(indexName), Expression.NewArrayInit(
+					typeof(Expression<Func<TSource,object>>),
+					columns));
 
 			return table;
 		}

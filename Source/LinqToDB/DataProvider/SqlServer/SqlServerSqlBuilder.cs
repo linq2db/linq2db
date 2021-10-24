@@ -521,42 +521,84 @@ namespace LinqToDB.DataProvider.SqlServer
 				ext.ID is
 					QueryExtensionID.SqlServerCommonTableHintID or
 					QueryExtensionID.SqlServerIntValueTableHintID or
-					QueryExtensionID.SqlServerIndexTableHintID))
+					QueryExtensionID.SqlServerIndexTableHintID or
+					QueryExtensionID.SqlServerForceSeekTableHintID))
 			{
 				StringBuilder.Append(" WITH (");
 
 				foreach (var ext in table.SqlQueryExtensions!)
 				{
-					if (ext.ID == QueryExtensionID.SqlServerIntValueTableHintID)
+					switch (ext.ID)
 					{
-						var hint  = (SqlValue)ext.Arguments["tableHint"];
-						var value = (SqlValue)ext.Arguments["value"];
+						case QueryExtensionID.SqlServerIntValueTableHintID :
+						{
+							var hint  = (SqlValue)ext.Arguments["tableHint"];
+							var value = (SqlValue)ext.Arguments["value"];
 
-						if ((TableHint)hint.Value! == TableHint.SpatialWindowMaxCells)
-							StringBuilder.Append("SPATIAL_WINDOW_MAX_CELLS");
-						else
+							if ((TableHint)hint.Value! == TableHint.SpatialWindowMaxCells)
+								StringBuilder.Append("SPATIAL_WINDOW_MAX_CELLS");
+							else
+								StringBuilder.Append((TableHint)hint.Value!);
+
+							StringBuilder
+								.Append('=')
+								.Append(value.Value)
+								;
+
+							break;
+						}
+						case QueryExtensionID.SqlServerIndexTableHintID :
+						{
+							var value = (SqlValue)ext.Arguments["indexName"];
+
+							StringBuilder
+								.Append("Index(")
+								.Append(value.Value)
+								.Append(')')
+								;
+
+							break;
+						}
+						case QueryExtensionID.SqlServerForceSeekTableHintID :
+						{
+							var value = (SqlValue)ext.Arguments["indexName"];
+							var count = (int)((SqlValue)ext.Arguments["columns.Count"]).Value!;
+
+							if (count == 0)
+							{
+								StringBuilder
+									.Append("ForceSeek, Index(")
+									.Append(value.Value)
+									.Append(')')
+									;
+							}
+							else
+							{
+								StringBuilder
+									.Append("ForceSeek (")
+									.Append(value.Value)
+									.Append(" (")
+									;
+
+								for (var i = 0; i < count; i++)
+								{
+									BuildExpression(ext.Arguments[$"columns.{i}"], false, false ,false);
+									StringBuilder.Append(", ");
+								}
+
+								StringBuilder.Length -= 2;
+								StringBuilder.Append("))");
+							}
+
+							break;
+						}
+						default:
+						{
+							var hint = (SqlValue)ext.Arguments["tableHint"];
+
 							StringBuilder.Append((TableHint)hint.Value!);
-
-						StringBuilder
-							.Append('=')
-							.Append(value.Value)
-							;
-					}
-					else if (ext.ID == QueryExtensionID.SqlServerIndexTableHintID)
-					{
-						var value = (SqlValue)ext.Arguments["indexName"];
-
-						StringBuilder
-							.Append("Index(")
-							.Append(value.Value)
-							.Append(')')
-							;
-					}
-					else
-					{
-						var hint = (SqlValue)ext.Arguments["tableHint"];
-
-						StringBuilder.Append((TableHint)hint.Value!);
+							break;
+						}
 					}
 
 					StringBuilder.Append(", ");
