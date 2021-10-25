@@ -46,6 +46,11 @@ namespace LinqToDB.Linq.Builder
 			var outerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], buildInfo.SelectQuery));
 			var innerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 
+			if (innerContext is QueryExtensionBuilder.JoinHintContext jhc)
+			{
+				innerContext = jhc.Context;
+			}
+
 			var context  = new SubQueryContext(outerContext);
 			innerContext = isGroup ? new GroupJoinSubQueryContext(innerContext) : new SubQueryContext(innerContext);
 
@@ -292,10 +297,11 @@ namespace LinqToDB.Linq.Builder
 				innerContext.GroupJoin = this;
 			}
 
-			readonly Expression       _innerExpression;
+			readonly Expression        _innerExpression;
+			private  Expression?       _groupExpression;
+
 			public   LambdaExpression  OuterKeyLambda { get; }
 			public   LambdaExpression  InnerKeyLambda { get; }
-			private  Expression?       _groupExpression;
 
 			interface IGroupJoinHelper
 			{

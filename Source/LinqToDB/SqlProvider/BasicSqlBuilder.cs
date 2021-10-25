@@ -1601,7 +1601,7 @@ namespace LinqToDB.SqlProvider
 			AppendIndent();
 
 			var condition = ConvertElement(join.Condition);
-			var buildOn = BuildJoinType(join.JoinType, condition);
+			var buildOn   = BuildJoinType(join.JoinType, condition);
 
 			if (IsNestedJoinParenthesisRequired && join.Table.Joins.Count != 0)
 				StringBuilder.Append('(');

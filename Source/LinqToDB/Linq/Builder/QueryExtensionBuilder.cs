@@ -76,6 +76,8 @@ namespace LinqToDB.Linq.Builder
 
 			var attrs = Sql.QueryExtensionAttribute.GetExtensionAttributes(methodCall, builder.MappingSchema);
 
+			List<SqlQueryExtension>? joinExtensions = null;
+
 			foreach (var attr in attrs)
 			{
 				switch (attr.Scope)
@@ -86,15 +88,31 @@ namespace LinqToDB.Linq.Builder
 						attr.ExtendTable(table.SqlTable, dic);
 						break;
 					}
+					case Sql.QueryExtensionScope.Join:
+					{
+						(joinExtensions ??= new()).Add(attr.ExtendJoin(dic));
+						break;
+					}
 				}
 			}
 
-			return sequence;
+			return joinExtensions != null ? new JoinHintContext(sequence, joinExtensions) : sequence;
 		}
 
 		protected override SequenceConvertInfo? Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return base.Convert(builder, methodCall, buildInfo, param);
+		}
+
+		public class JoinHintContext : PassThroughContext
+		{
+			public JoinHintContext(IBuildContext context, List<SqlQueryExtension> extensions)
+				: base(context)
+			{
+				Extensions = extensions;
+			}
+
+			public List<SqlQueryExtension> Extensions { get; }
 		}
 	}
 }

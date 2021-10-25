@@ -51,6 +51,11 @@ namespace LinqToDB
 				(table.SqlQueryExtensions ??= new()).Add(GetExtension(parameters));
 			}
 
+			public virtual SqlQueryExtension ExtendJoin(Dictionary<string,ISqlExpression> parameters)
+			{
+				return GetExtension(parameters);
+			}
+
 			public static QueryExtensionAttribute[] GetExtensionAttributes(Expression expression, MappingSchema mapping)
 			{
 				MemberInfo memberInfo;

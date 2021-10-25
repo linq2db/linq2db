@@ -20,12 +20,12 @@ namespace LinqToDB.DataProvider.SqlServer
 		#region Init
 
 		public static SqlServerProvider Provider = SqlServerProvider.SystemDataSqlClient;
-		private static readonly ConcurrentQueue<SqlServerDataProvider> _providers = new ConcurrentQueue<SqlServerDataProvider>();
+		private static readonly ConcurrentQueue<SqlServerDataProvider> _providers = new();
 
 		// System.Data
 		// and/or
 		// System.Data.SqlClient
-		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2000sdc = new Lazy<IDataProvider>(() =>
+		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2000sdc = new(() =>
 		{
 			var provider = new SqlServerDataProvider(ProviderName.SqlServer2000, SqlServerVersion.v2000, SqlServerProvider.SystemDataSqlClient);
 
@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			_providers.Enqueue(provider);
 			return provider;
 		}, true);
-		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2005sdc = new Lazy<IDataProvider>(() =>
+		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2005sdc = new(() =>
 		{
 			var provider = new SqlServerDataProvider(ProviderName.SqlServer2005, SqlServerVersion.v2005, SqlServerProvider.SystemDataSqlClient);
 
@@ -45,7 +45,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			_providers.Enqueue(provider);
 			return provider;
 		}, true);
-		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2008sdc = new Lazy<IDataProvider>(() =>
+		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2008sdc = new(() =>
 		{
 			var provider = new SqlServerDataProvider(ProviderName.SqlServer2008, SqlServerVersion.v2008, SqlServerProvider.SystemDataSqlClient);
 
@@ -444,6 +444,19 @@ namespace LinqToDB.DataProvider.SqlServer
 					columns));
 
 			return table;
+		}
+
+		[LinqToDB.Sql.QueryExtension(ProviderName.SqlServer, LinqToDB.Sql.QueryExtensionScope.Join, QueryExtensionID.SqlServerJoinHintID)]
+		public static IQueryable<TSource> JoinHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] JoinHint joinHint)
+			where TSource : notnull
+		{
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(JoinHint, source, joinHint),
+					currentSource.Expression, Expression.Constant(joinHint)));
 		}
 
 		#endregion

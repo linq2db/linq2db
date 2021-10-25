@@ -194,6 +194,20 @@ namespace Tests.Linq
 			)
 			.ToList();
 		}
+
+		[Test]
+		public void SqlServerJoinHintTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = (TestDataConnection)GetDataContext(context);
+
+			_ =
+			(
+				from c in db.Child
+				join p in db.Parent.JoinHint(JoinHint.Loop) on c.ParentID equals p.ParentID
+				select p
+			)
+			.ToList();
+		}
 	}
 
 	public static class QueryExtensions
