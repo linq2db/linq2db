@@ -75,29 +75,9 @@ namespace LinqToDB.Linq.Builder
 				}
 				else if (sequence == prevSequence && !builder.DataContext.SqlProviderFlags.AcceptsOuterExpressionInAggregate)
 				{
-					// handle case when aggregate expression is complex. SQL Server will fail.
+					// handle case when aggregate expression has outer references. SQL Server will fail.
 
-					var sources = new HashSet<ISqlTableSource>(QueryHelper.EnumerateAccessibleSources(sequence.SelectQuery));
-
-					var outerElementFound = null != sql[0].Find(e =>
-					{
-						if (e.ElementType == QueryElementType.Column)
-						{
-							var parent = ((SqlColumn)e).Parent;
-							if (parent != null && !sources.Contains(parent))
-								return true;
-						}
-						else if (e.ElementType == QueryElementType.SqlField)
-						{
-							var table = ((SqlField)e).Table;
-							if (table != null && !sources.Contains(table))
-								return true;
-						}
-
-						return false;
-					});
-
-					if (outerElementFound)
+					if (QueryHelper.HasOuterReferences(sequence.SelectQuery, sql[0]))
 					{
 						// Wrap in subquery
 						sequence = new SubQueryContext(sequence);

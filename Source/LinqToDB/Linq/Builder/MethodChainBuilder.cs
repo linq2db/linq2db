@@ -36,11 +36,30 @@ namespace LinqToDB.Linq.Builder
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, root) { CreateSubQuery = true });
 
 			var finalFunction = functions.First();
-				
-			var sqlExpression = finalFunction.GetExpression((builder, sequence), builder.DataContext, buildInfo.SelectQuery, methodCall,
-				static (context, e, descriptor) => context.builder.ConvertToExtensionSql(context.sequence, e, descriptor));
-
+	
 			var context = new ChainContext(buildInfo.Parent, sequence, methodCall);
+
+			var sqlExpression = finalFunction.GetExpression((builder, context), builder.DataContext, buildInfo.SelectQuery, methodCall,
+				static (ctx, e, descriptor) => ctx.builder.ConvertToExtensionSql(ctx.context, e, descriptor));
+
+			if (finalFunction.IsAggregate && !builder.DataContext.SqlProviderFlags.AcceptsOuterExpressionInAggregate)
+			{
+				// Wrap in subquery
+				var prevCtx = sequence;
+
+				sequence = new SubQueryContext(sequence);
+
+				builder.ReplaceParent(prevCtx, sequence);
+
+				prevCtx.SelectQuery.DoNotRemove = true;
+
+				context = new ChainContext(buildInfo.Parent, sequence, methodCall);
+
+				sqlExpression = finalFunction.GetExpression((builder, sequence), builder.DataContext, buildInfo.SelectQuery, methodCall,
+					static (context, e, descriptor) => context.builder.ConvertToExtensionSql(context.sequence, e, descriptor));
+
+			}
+
 			context.Sql        = context.SelectQuery;
 			context.FieldIndex = context.SelectQuery.Select.Add(sqlExpression, methodCall.Method.Name);
 

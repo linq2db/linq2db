@@ -861,6 +861,12 @@ namespace LinqToDB.Linq.Builder
 					return context.ConvertToSql(null, 0, ConvertFlags.Field).Select(static _ => _.Sql).First();
 			}
 
+			var buildInfo = new BuildInfo(context, expression, new SelectQuery());
+			if (IsSequence(buildInfo))
+			{
+				return context.ConvertToSql(null, 0, ConvertFlags.Field).Select(static _ => _.Sql).First();
+			}
+
 			return ConvertToSql(context, expression, false, columnDescriptor);
 		}
 

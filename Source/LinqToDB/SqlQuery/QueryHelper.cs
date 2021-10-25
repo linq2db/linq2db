@@ -1718,5 +1718,30 @@ namespace LinqToDB.SqlQuery
 
 			return new DbDataType(expr.SystemType!);
 		}
+
+		public static bool HasOuterReferences(SelectQuery root, ISqlExpression expr)
+		{
+			var sources = new HashSet<ISqlTableSource>(EnumerateAccessibleSources(root));
+
+			var outerElementFound = null != expr.Find(e =>
+			{
+				if (e.ElementType == QueryElementType.Column)
+				{
+					var parent = ((SqlColumn)e).Parent;
+					if (parent != null && !sources.Contains(parent))
+						return true;
+				}
+				else if (e.ElementType == QueryElementType.SqlField)
+				{
+					var table = ((SqlField)e).Table;
+					if (table != null && !sources.Contains(table))
+						return true;
+				}
+
+				return false;
+			});
+
+			return outerElementFound;
+		}
 	}
 }
