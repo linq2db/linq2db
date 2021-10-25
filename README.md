@@ -1,10 +1,10 @@
 ## LINQ to DB
 
 [![NuGet Version and Downloads count](https://buildstats.info/nuget/linq2db?includePreReleases=true)](https://www.nuget.org/profiles/LinqToDB) [![License](https://img.shields.io/github/license/linq2db/linq2db)](MIT-LICENSE.txt)
+[![Follow @linq2db](https://img.shields.io/twitter/follow/linq2db.svg)](https://twitter.com/linq2db) [!["good first issue" tasks](https://img.shields.io/github/issues/linq2db/linq2db/good%20first%20issue.svg)](https://github.com/linq2db/linq2db/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
 
 [![Master branch build](https://img.shields.io/azure-devops/build/linq2db/linq2db/5/master?label=build%20(master))](https://dev.azure.com/linq2db/linq2db/_build?definitionId=5&_a=summary) [![Latest build](https://img.shields.io/azure-devops/build/linq2db/linq2db/5?label=build%20(latest))](https://dev.azure.com/linq2db/linq2db/_build?definitionId=5&_a=summary)
 
-[![Follow @linq2db](https://img.shields.io/twitter/follow/linq2db.svg)](https://twitter.com/linq2db) [!["good first issue" tasks](https://img.shields.io/github/issues/linq2db/linq2db/good%20first%20issue.svg)](https://github.com/linq2db/linq2db/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
 
 LINQ to DB is the fastest LINQ database access library offering a simple, light, fast, and type-safe layer between your POCO objects and your database. 
 
@@ -117,23 +117,24 @@ In your `web.config` or `app.config` make sure you have a connection string (che
 
 ### Using Connection String Settings Provider
 
-.Net Core does not support `System.Configuration` until 3.0 so to configure connection strings you should implement `ILinqToDBSettings`, for example:
+Alternatively, you can implement custom settings provider with `ILinqToDBSettings` interface, for example:
 
 ```cs
 public class ConnectionStringSettings : IConnectionStringSettings
 {
     public string ConnectionString { get; set; }
-    public string Name { get; set; }
-    public string ProviderName { get; set; }
-    public bool IsGlobal => false;
+    public string Name             { get; set; }
+    public string ProviderName     { get; set; }
+    public bool   IsGlobal         => false;
 }
 
 public class MySettings : ILinqToDBSettings
 {
-    public IEnumerable<IDataProviderSettings> DataProviders => Enumerable.Empty<IDataProviderSettings>();
+    public IEnumerable<IDataProviderSettings> DataProviders
+        => Enumerable.Empty<IDataProviderSettings>();
 
     public string DefaultConfiguration => "SqlServer";
-    public string DefaultDataProvider => "SqlServer";
+    public string DefaultDataProvider  => "SqlServer";
 
     public IEnumerable<IConnectionStringSettings> ConnectionStrings
     {
@@ -142,9 +143,10 @@ public class MySettings : ILinqToDBSettings
             yield return
                 new ConnectionStringSettings
                 {
-                    Name = "Northwind",
-                    ProviderName = "SqlServer",
-                    ConnectionString = @"Server=.\;Database=Northwind;Trusted_Connection=True;Enlist=False;"
+                    Name             = "Northwind",
+                    ProviderName     = ProviderName.SqlServer,
+                    ConnectionString =
+                        @"Server=.\;Database=Northwind;Trusted_Connection=True;Enlist=False;"
                 };
         }
     }
@@ -218,7 +220,12 @@ This method lets you configure your mapping dynamically at runtime. Furthermore,
 With Fluent approach you can configure only things that require it explicitly. All other properties will be inferred by linq2db:
 
 ```c#
-var builder = MappingSchema.Default.GetFluentMappingBuilder();
+// IMPORTANT: configure mapping schema instance only once
+// and use it with all your connections that need those mappings
+// Never create new mapping schema for each connection as
+// it will seriously harm performance
+var mappingSchema = new MappingSchema();
+var builder       = mappingSchema.GetFluentMappingBuilder();
 
 builder.Entity<Product>()
     .HasTableName("Products")
@@ -249,13 +256,13 @@ using LinqToDB.Mapping;
 
 public class Product
 {
-  public int ProductID { get; set; }
+  public int    ProductID { get; set; }
 
-  public string Name { get; set; }
+  public string Name      { get; set; }
 
-  public int VendorID { get; set; }
+  public int    VendorID  { get; set; }
 
-  public Vendor Vendor { get; set; }
+  public Vendor Vendor    { get; set; }
 
   // ... other columns ...
 }
@@ -274,7 +281,7 @@ public class DbNorthwind : LinqToDB.Data.DataConnection
 {
   public DbNorthwind() : base("Northwind") { }
 
-  public ITable<Product> Product => GetTable<Product>();
+  public ITable<Product>  Product  => GetTable<Product>();
   public ITable<Category> Category => GetTable<Category>();
 
   // ... other tables ...
@@ -363,7 +370,11 @@ A lot of times we need to write code that returns only a subset of the entire da
 Keep in mind that the code below will query the database twice. Once to find out the total number of records, something that is required by many paging controls, and once to return the actual data.
 
 ```c#
-public static List<Product> Search(string searchFor, int currentPage, int pageSize, out int totalRecords)
+public static List<Product> Search(
+                  string  searchFor,
+                  int     currentPage,
+                  int     pageSize,
+                  out int totalRecords)
 {
   using (var db = new DbNorthwind())
   {
@@ -697,33 +708,56 @@ public class DbDataContext : DataConnection
 {
 // let's use profiler only for debug builds
 #if !DEBUG
-  public DbDataContext() : base("Northwind")
+
+  // regular non-profiled constructor
+  public DbDataContext() : base("Northwind") {}
+  
+#else
+
+  // use static instance of mapping schema
+  // never create mapping schema per-connection
+  // or it will seriously affect performance
+  private static readonly MappingSchema _miniProfilerMappings = new ();
+  
+  static DbDataContext()
   {
     // this is important part:
     // here we tell linq2db how to access underlying ADO.NET classes of used provider
-    // if you don't configure those mappings, linq2db will be unable to use provider-specific functionality
-    // which could lead to loss or unavailability of some functionality when profiled connection enabled
-    MappingSchema.SetConvertExpression<ProfiledDbConnection,  IDbConnection> (db => db.WrappedConnection);
-    MappingSchema.SetConvertExpression<ProfiledDbDataReader,  IDataReader>   (db => db.WrappedReader);
-    MappingSchema.SetConvertExpression<ProfiledDbTransaction, IDbTransaction>(db => db.WrappedTransaction);
-    MappingSchema.SetConvertExpression<ProfiledDbCommand,     IDbCommand>    (db => db.InternalCommand);
-  }
-#else
-  public DbDataContext() : base(GetDataProvider(), GetConnection()) { }
-
-  private static IDataProvider GetDataProvider()
-  {
-     // create provider instance (SQL Server 2012 provider in our case)
-     return new SqlServerDataProvider("", SqlServerVersion.v2012);
+    // if you don't configure those mappings, linq2db will be unable to use
+    // provider-specific functionality which could lead to loss or unavailability
+    //of some functionality when profiled connection enabled
+    _miniProfilerMappings.SetConvertExpression<ProfiledDbConnection,  IDbConnection> (
+        db => db.WrappedConnection);
+    _miniProfilerMappings.SetConvertExpression<ProfiledDbDataReader,  IDataReader>   (
+        db => db.WrappedReader);
+    _miniProfilerMappings.SetConvertExpression<ProfiledDbTransaction, IDbTransaction>(
+        db => db.WrappedTransaction);
+    _miniProfilerMappings.SetConvertExpression<ProfiledDbCommand,     IDbCommand>    (
+        db => db.InternalCommand);
   }
 
+  public DbDataContext()
+      : base(
+          // get data provider instance using
+          // <DB_NAME>Tools.GetDataProvider()
+          // helpers
+          // In this case we use SQL Server provider
+          SqlServerTools.GetDataProvider(SqlServerVersion.v2012),
+          GetConnection(),
+          _miniProfilerMappings)
+  { }
+
+  // wrap connection into profiler wrapper
   private static IDbConnection GetConnection()
   {
      // create provider-specific connection instance. SqlConnection in our case
-     var dbConnection = new SqlConnection(@"Server=.\SQL;Database=Northwind;Trusted_Connection=True;Enlist=False;");
+     var dbConnection = new SqlConnection(
+         @"Server=.\SQL;Database=Northwind;Trusted_Connection=True;Enlist=False;");
 
      // wrap it by profiler's connection implementation
-     return new StackExchange.Profiling.Data.ProfiledDbConnection(dbConnection, MiniProfiler.Current);
+     return new StackExchange.Profiling.Data.ProfiledDbConnection(
+                                                 dbConnection,
+                                                 MiniProfiler.Current);
   }
 #endif
 }
