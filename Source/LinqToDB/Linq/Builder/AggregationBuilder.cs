@@ -171,8 +171,15 @@ namespace LinqToDB.Linq.Builder
 						expr = convert.MakeNullable();
 						if (expr.Type.IsNullable())
 						{
-							var exprVar = generator.AssignToVariable(expr, "nullable");
-							var resultVar = generator.AssignToVariable(defaultIfEmpty.DefaultValue, "result");
+							var exprVar      = generator.AssignToVariable(expr, "nullable");
+							var defaultValue = defaultIfEmpty.DefaultValue;
+							if (defaultValue.Type != expr.Type)
+							{
+								var convertLambda = Builder.MappingSchema.GenerateSafeConvert(defaultValue.Type, expr.Type);
+								defaultValue = InternalExtensions.ApplyLambdaToExpression(convertLambda, defaultValue);
+							}
+
+							var resultVar = generator.AssignToVariable(defaultValue, "result");
 							
 							generator.AddExpression(Expression.IfThen(
 								Expression.NotEqual(exprVar, ExpressionInstances.UntypedNull),
