@@ -455,7 +455,10 @@ namespace LinqToDB.SqlQuery
 						table.JoinType,
 						Clone(table.Table),
 						table.IsWeak,
-						Clone(table.Condition)));
+						Clone(table.Condition))
+					{
+						SqlQueryExtensions = table.SqlQueryExtensions
+					});
 					break;
 				}
 
@@ -770,7 +773,7 @@ namespace LinqToDB.SqlQuery
 						var rows   = new List<ISqlExpression[]>(values.Rows.Count);
 						CloneInto(rows, values.Rows);
 						clone = new SqlValuesTable(fields, fields.Select(f => f.ColumnDescriptor?.MemberInfo).ToArray(), rows);
-					}	
+					}
 					break;
 
 				}

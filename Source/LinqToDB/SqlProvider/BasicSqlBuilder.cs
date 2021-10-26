@@ -1601,7 +1601,7 @@ namespace LinqToDB.SqlProvider
 			AppendIndent();
 
 			var condition = ConvertElement(join.Condition);
-			var buildOn   = BuildJoinType(join.JoinType, condition);
+			var buildOn   = BuildJoinType (join, condition);
 
 			if (IsNestedJoinParenthesisRequired && join.Table.Joins.Count != 0)
 				StringBuilder.Append('(');
@@ -1653,27 +1653,19 @@ namespace LinqToDB.SqlProvider
 			Indent--;
 		}
 
-		protected virtual bool BuildJoinType(JoinType joinType, SqlSearchCondition condition)
+		protected virtual bool BuildJoinType(SqlJoinedTable join, SqlSearchCondition condition)
 		{
-			switch (joinType)
+			switch (join.JoinType)
 			{
-				case JoinType.Inner     :
-					if (SqlProviderFlags.IsCrossJoinSupported && condition.Conditions.IsNullOrEmpty())
-					{
-						StringBuilder.Append("CROSS JOIN ");
-						return false;
-					}
-					else
-					{
-						StringBuilder.Append("INNER JOIN ");
-						return true;
-					}
-				case JoinType.Left      : StringBuilder.Append("LEFT JOIN ");   return true;
-				case JoinType.CrossApply: StringBuilder.Append("CROSS APPLY "); return false;
-				case JoinType.OuterApply: StringBuilder.Append("OUTER APPLY "); return false;
-				case JoinType.Right     : StringBuilder.Append("RIGHT JOIN ");  return true;
-				case JoinType.Full      : StringBuilder.Append("FULL JOIN ");   return true;
-				default: throw new InvalidOperationException();
+				case JoinType.Inner when SqlProviderFlags.IsCrossJoinSupported && condition.Conditions.IsNullOrEmpty() :
+					                       StringBuilder.Append("CROSS JOIN ");  return false;
+				case JoinType.Inner      : StringBuilder.Append("INNER JOIN ");  return true;
+				case JoinType.Left       : StringBuilder.Append("LEFT JOIN ");   return true;
+				case JoinType.CrossApply : StringBuilder.Append("CROSS APPLY "); return false;
+				case JoinType.OuterApply : StringBuilder.Append("OUTER APPLY "); return false;
+				case JoinType.Right      : StringBuilder.Append("RIGHT JOIN ");  return true;
+				case JoinType.Full       : StringBuilder.Append("FULL JOIN ");   return true;
+				default                  : throw new InvalidOperationException();
 			}
 		}
 

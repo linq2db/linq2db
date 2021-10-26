@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
+using LinqToDB.Common;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -607,6 +608,33 @@ namespace LinqToDB.DataProvider.SqlServer
 				StringBuilder.Length -= 2;
 				StringBuilder.Append(')');
 			}
+		}
+
+		protected override bool BuildJoinType(SqlJoinedTable join, SqlSearchCondition condition)
+		{
+			if (join.SqlQueryExtensions != null)
+			{
+				var ext = join.SqlQueryExtensions.LastOrDefault(e => e.Scope == Sql.QueryExtensionScope.Join && e.ID is QueryExtensionID.SqlServerJoinHintID);
+
+				if (ext?.Arguments["joinHint"] is SqlValue v)
+				{
+					var h = ((JoinHint)v.Value!).ToString().ToUpper();
+
+					switch (join.JoinType)
+					{
+						case JoinType.Inner when SqlProviderFlags.IsCrossJoinSupported && condition.Conditions.IsNullOrEmpty() :
+							                       StringBuilder.Append($"CROSS {h} JOIN "); return false;
+						case JoinType.Inner      : StringBuilder.Append($"INNER {h} JOIN "); return true;
+						case JoinType.Left       : StringBuilder.Append($"LEFT {h} JOIN ");  return true;
+						case JoinType.Right      : StringBuilder.Append($"RIGHT {h} JOIN "); return true;
+						case JoinType.Full       : StringBuilder.Append($"FULL {h} JOIN ");  return true;
+						default                  : throw new InvalidOperationException();
+					}
+
+				}
+			}
+
+			return base.BuildJoinType(join, condition);
 		}
 	}
 }

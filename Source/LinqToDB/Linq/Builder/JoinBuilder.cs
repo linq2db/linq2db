@@ -46,9 +46,12 @@ namespace LinqToDB.Linq.Builder
 			var outerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], buildInfo.SelectQuery));
 			var innerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 
+			List<SqlQueryExtension>? extensions = null;
+
 			if (innerContext is QueryExtensionBuilder.JoinHintContext jhc)
 			{
 				innerContext = jhc.Context;
+				extensions   = jhc.Extensions;
 			}
 
 			var context  = new SubQueryContext(outerContext);
@@ -58,6 +61,9 @@ namespace LinqToDB.Linq.Builder
 			var sql  = context.SelectQuery;
 
 			sql.From.Tables[0].Joins.Add(join.JoinedTable);
+
+			if (extensions != null)
+				join.JoinedTable.SqlQueryExtensions = extensions;
 
 			var selector = (LambdaExpression)methodCall.Arguments[4].Unwrap();
 

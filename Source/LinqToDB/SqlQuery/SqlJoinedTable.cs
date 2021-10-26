@@ -4,7 +4,9 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlJoinedTable : IQueryElement, ISqlExpressionWalkable
+	using ServiceModel;
+
+	public class SqlJoinedTable : IQueryElement, ISqlExpressionWalkable, IQueryExtendible
 	{
 		public SqlJoinedTable(JoinType joinType, SqlTableSource table, bool isWeak, SqlSearchCondition searchCondition)
 		{
@@ -25,11 +27,12 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public JoinType           JoinType        { get; set; }
-		public SqlTableSource     Table           { get; set; }
-		public SqlSearchCondition Condition       { get; private set; }
-		public bool               IsWeak          { get; set; }
-		public bool               CanConvertApply { get; set; }
+		public JoinType                 JoinType           { get; set; }
+		public SqlTableSource           Table              { get; set; }
+		public SqlSearchCondition       Condition          { get; private set; }
+		public bool                     IsWeak             { get; set; }
+		public bool                     CanConvertApply    { get; set; }
+		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }
 
 #if OVERRIDETOSTRING
 
@@ -47,6 +50,10 @@ namespace LinqToDB.SqlQuery
 			Condition = (SqlSearchCondition)((ISqlExpressionWalkable)Condition).Walk(options, context, func)!;
 
 			Table.Walk(options, context, func);
+
+			if (SqlQueryExtensions != null)
+				foreach (var e in SqlQueryExtensions)
+					e.Walk(options, context, func);
 
 			return null;
 		}

@@ -9,10 +9,11 @@ using LinqToDB.Expressions;
 using LinqToDB.Linq;
 
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.Linq
 {
+	using Model;
+
 	[TestFixture]
 	public class QueryExtensionTests : TestBase
 	{
@@ -61,21 +62,22 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerWithTableHintTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void SqlServerWithTableHintTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
 
-			_ =
-			(
+			var q =
 				from p in db.Parent.With(TableHint.NoLock).With(TableHint.NoWait)
-				select p
-			)
-			.ToList();
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(q.ToString(), Contains.Substring("WITH (NoLock, NoWait)"));
 		}
 
 		[Test]
-		public void SqlServerWith2005TableHintTest([IncludeDataSources(
-			TestProvName.AllSqlServer2005Plus)] string context,
+		public void SqlServerWith2005TableHintTest(
+			[IncludeDataSources(true, TestProvName.AllSqlServer2005Plus)] string context,
 			[Values(
 				TableHint.HoldLock,
 				TableHint.NoLock,
@@ -94,119 +96,173 @@ namespace Tests.Linq
 				TableHint.XLock
 				)] TableHint hint)
 		{
-			using var db = (TestDataConnection)GetDataContext(context);
+			using var db = GetDataContext(context);
 
-			var trace = string.Empty;
-
-			db.OnTraceConnection += ti =>
-			{
-				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-					trace = ti.SqlText;
-			};
-
-			_ =
-			(
+			var q =
 				from p in db.Parent.With(hint)
-				select p
-			)
-			.ToList();
+				select p;
 
-			Assert.True(trace.Contains($"WITH ({hint})"));
+			_ = q.ToList();
+
+			Assert.That(q.ToString(), Contains.Substring($"WITH ({hint})"));
 		}
 
 		[Test]
-		public void SqlServerWith2012TableHintTest([IncludeDataSources(
-			TestProvName.AllSqlServer2012Plus)] string context,
+		public void SqlServerWith2012TableHintTest(
+			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context,
 			[Values(
 				TableHint.ForceScan
 //				TableHint.ForceSeek,
 //				TableHint.Snapshot
 				)] TableHint hint)
 		{
-			using var db = (TestDataConnection)GetDataContext(context);
+			using var db = GetDataContext(context);
 
-			var trace = string.Empty;
-
-			db.OnTraceConnection += ti =>
-			{
-				if (ti.TraceInfoStep == TraceInfoStep.BeforeExecute)
-					trace = ti.SqlText;
-			};
-
-			_ =
-			(
+			var q =
 				from p in db.Parent.With(hint)
-				select p
-			)
-			.ToList();
+				select p;
 
-			Assert.True(trace.Contains($"WITH ({hint})"));
+			_ = q.ToList();
+
+			Assert.That(q.ToString(), Contains.Substring($"WITH ({hint})"));
 		}
 
 		[Test]
-		public void SqlServerWithSpatialWindowMaxCellsTableHintTest([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		public void SqlServerWithSpatialWindowMaxCellsTableHintTest([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
 		{
-			using var db = (TestDataConnection)GetDataContext(context);
+			using var db = GetDataContext(context);
 
-			_ =
-			(
+			var q =
 				from p in db.Parent.With(TableHint.SpatialWindowMaxCells, 10)
-				select p
-			)
-			.ToList();
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(q.ToString(), Contains.Substring("WITH (SPATIAL_WINDOW_MAX_CELLS=10)"));
 		}
 
 		[Test]
-		public void SqlServerWithIndexTableHintTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void SqlServerWithIndexTableHintTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
-			using var db = (TestDataConnection)GetDataContext(context);
+			using var db = GetDataContext(context);
 
-			_ =
-			(
+			var q =
 				from p in db.Child.WithIndex("IX_ChildIndex").With(TableHint.NoLock)
-				select p
-			)
-			.ToList();
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(q.ToString(), Contains.Substring("WITH (Index(IX_ChildIndex), NoLock)"));
 		}
 
 		[Test, Explicit]
-		public void SqlServerWithForceSeekTableHintTest([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		public void SqlServerWithForceSeekTableHintTest([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
 		{
-			using var db = (TestDataConnection)GetDataContext(context);
+			using var db = GetDataContext(context);
 
-			_ =
-			(
+			var q =
 				from p in db.Child.WithForceSeek("IX_ChildIndex", c => c.ParentID)
-				select p
-			)
-			.ToList();
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(q.ToString(), Contains.Substring("WITH (ForceSeek (IX_ChildIndex (ParentID)))"));
 		}
 
 		[Test, Explicit]
-		public void SqlServerWithForceSeekTableHintTest2([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		public void SqlServerWithForceSeekTableHintTest2([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
 		{
-			using var db = (TestDataConnection)GetDataContext(context);
+			using var db = GetDataContext(context);
 
-			_ =
-			(
+			var q =
 				from p in db.Child.WithForceSeek("IX_ChildIndex")
-				select p
-			)
-			.ToList();
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(q.ToString(), Contains.Substring("WITH (ForceSeek (IX_ChildIndex))"));
 		}
 
 		[Test]
-		public void SqlServerJoinHintTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void SqlServerJoinHintTest(
+			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
+			[Values(JoinHint.Loop, JoinHint.Hash, JoinHint.Merge, JoinHint.Remote)] JoinHint hint)
 		{
-			using var db = (TestDataConnection)GetDataContext(context);
+			using var db = GetDataContext(context);
 
-			_ =
-			(
+			var q =
 				from c in db.Child
-				join p in db.Parent.JoinHint(JoinHint.Loop) on c.ParentID equals p.ParentID
-				select p
-			)
-			.ToList();
+				join p in db.Parent.JoinHint(hint) on c.ParentID equals p.ParentID
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(q.ToString(), Contains.Substring($"INNER {hint.ToString().ToUpper()} JOIN"));
+		}
+
+		[Test]
+		public void SqlServerSubQueryJoinHintTest(
+			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
+			[Values(JoinHint.Loop, JoinHint.Hash, JoinHint.Merge, JoinHint.Remote)] JoinHint hint)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				join p in
+				(
+					from t in db.Parent
+					where t.Children.Any()
+					select new { t.ParentID, t.Children.Count }
+				).JoinHint(hint) on c.ParentID equals p.ParentID
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(q.ToString(), Contains.Substring($"INNER {hint.ToString().ToUpper()} JOIN"));
+		}
+
+		[Test]
+		public void SqlServerJoinMethodHintTest(
+			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
+			[Values(JoinHint.Loop, JoinHint.Hash, JoinHint.Merge)] JoinHint hint,
+			[Values(SqlJoinType.Left, SqlJoinType.Full)] SqlJoinType joinType)
+		{
+			using var db = GetDataContext(context);
+
+			var q = db.Child.Join(db.Parent.JoinHint(hint), joinType, (c, p) => c.ParentID == p.ParentID, (c, p) => p);
+
+			_ = q.ToList();
+
+			Assert.That(q.ToString(), Contains.Substring($"{joinType.ToString().ToUpper()} {hint.ToString().ToUpper()} JOIN"));
+		}
+
+		[Test]
+		public void SqlServerInnerJoinMethodHintTest(
+			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
+			[Values(JoinHint.Loop, JoinHint.Hash, JoinHint.Merge, JoinHint.Remote)] JoinHint hint)
+		{
+			using var db = GetDataContext(context);
+
+			var q = db.Child.InnerJoin(db.Parent.JoinHint(hint), (c, p) => c.ParentID == p.ParentID, (c, p) => p);
+
+			_ = q.ToList();
+
+			Assert.That(q.ToString(), Contains.Substring($"INNER {hint.ToString().ToUpper()} JOIN"));
+		}
+
+		[Test]
+		public void SqlServerRightJoinMethodHintTest(
+			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
+			[Values(JoinHint.Hash, JoinHint.Merge)] JoinHint hint)
+		{
+			using var db = GetDataContext(context);
+
+			var q = db.Child.RightJoin(db.Parent.JoinHint(hint), (c, p) => c.ParentID == p.ParentID, (c, p) => p);
+
+			_ = q.ToList();
+
+			Assert.That(q.ToString(), Contains.Substring($"RIGHT {hint.ToString().ToUpper()} JOIN"));
 		}
 	}
 

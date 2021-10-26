@@ -342,7 +342,10 @@ namespace LinqToDB.SqlQuery
 
 						if (table != null && !ReferenceEquals(table, join.Table) ||
 							cond != null && !ReferenceEquals(cond, join.Condition))
-							newElement = new SqlJoinedTable(join.JoinType, table ?? join.Table, join.IsWeak, cond ?? join.Condition);
+							newElement = new SqlJoinedTable(join.JoinType, table ?? join.Table, join.IsWeak, cond ?? join.Condition)
+							{
+								SqlQueryExtensions = join.SqlQueryExtensions
+							};
 
 						break;
 					}
