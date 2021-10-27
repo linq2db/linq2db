@@ -134,29 +134,78 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Adds table hints to a table in generated query.
-		/// Also see <see cref="WithTableExpression{T}(ITable{T}, string)"/> method.
 		/// <code>
-		/// // will produce following SQL code in generated query: table tablealias with(UpdLock)
+		/// // will produce following SQL code in generated query: table alias with(UpdLock)
 		/// var tableWithHint = db.Table.With("UpdLock");
 		/// </code>
 		/// </summary>
-		/// <typeparam name="T">Table record mapping class.</typeparam>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="table">Table-like query source.</param>
-		/// <param name="args">SQL text, added to WITH({0}) after table name in generated query.</param>
+		/// <param name="tableHint">SQL text, added to WITH({0}) after table name in generated query.</param>
 		/// <returns>Table-like query source with table hints.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static ITable<T> With<T>(this ITable<T> table, [SqlQueryDependent] string args)
-			where T : notnull
+		[Sql.QueryExtension(Sql.QueryExtensionScope.Table, Sql.QueryExtensionID.TableHint)]
+		public static ITable<TSource> With<TSource>(this ITable<TSource> table, [SqlQueryDependent] string tableHint)
+			where TSource : notnull
 		{
-			if (args == null) throw new ArgumentNullException(nameof(args));
-
 			table.Expression = Expression.Call(
 				null,
-				Methods.LinqToDB.Table.With.MakeGenericMethod(typeof(T)),
-				table.Expression, Expression.Constant(args));
+				MethodHelper.GetMethodInfo(With, table, tableHint),
+				table.Expression, Expression.Constant(tableHint));
 
 			return table;
+		}
+
+		/// <summary>
+		/// Adds table hints to a table in generated query.
+		/// <code>
+		/// // will produce following SQL code in generated query: table alias with(UpdLock)
+		/// var tableWithHint = db.Table.TableHint("UpdLock");
+		/// </code>
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="tableHint">SQL text, added to WITH({0}) after table name in generated query.</param>
+		/// <returns>Table-like query source with table hints.</returns>
+		[LinqTunnel]
+		[Pure]
+		[Sql.QueryExtension(Sql.QueryExtensionScope.Table, Sql.QueryExtensionID.TableHint)]
+		public static ITable<TSource> TableHint<TSource>(this ITable<TSource> table, [SqlQueryDependent] string tableHint)
+			where TSource : notnull
+		{
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(TableHint, table, tableHint),
+				table.Expression, Expression.Constant(tableHint));
+
+			return table;
+		}
+
+		/// <summary>
+		/// Adds join hint to a generated query.
+		/// <code>
+		/// // will produce following SQL code in generated query: table alias with(UpdLock)
+		/// var tableWithHint = db.Table.JoinHint("LOOP");
+		/// </code>
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="source">Table-like query source.</param>
+		/// <param name="joinHint">SQL text, added to WITH({0}) after table name in generated query.</param>
+		/// <returns>Table-like query source with table hints.</returns>
+		[LinqTunnel]
+		[Pure]
+		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.Join, Sql.QueryExtensionID.JoinHint)]
+		public static IQueryable<TSource> JoinHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string joinHint)
+			where TSource : notnull
+		{
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(JoinHint, source, joinHint),
+					currentSource.Expression, Expression.Constant(joinHint)));
 		}
 
 		#endregion

@@ -562,7 +562,7 @@ namespace Tests.DataProvider
 			[Column(DbType = "int"), PrimaryKey, Identity]
 			public int ID { get; set; }
 			[Column(DataType = DataType.Image), Nullable]
-			public byte[]? imageDataType { get; set; } 
+			public byte[]? imageDataType { get; set; }
 		}
 
 		[Test]

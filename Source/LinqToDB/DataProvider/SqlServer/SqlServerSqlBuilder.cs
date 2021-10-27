@@ -520,10 +520,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (table.SqlQueryExtensions!.Any(ext =>
 				ext.Scope == Sql.QueryExtensionScope.Table &&
 				ext.ID is
-					QueryExtensionID.SqlServerCommonTableHintID or
-					QueryExtensionID.SqlServerIntValueTableHintID or
-					QueryExtensionID.SqlServerIndexTableHintID or
-					QueryExtensionID.SqlServerForceSeekTableHintID))
+					Sql.QueryExtensionID.TableHint or
+					Sql.QueryExtensionID.SqlServerForceSeekTableHintID))
 			{
 				StringBuilder.Append(" WITH (");
 
@@ -531,36 +529,36 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					switch (ext.ID)
 					{
-						case QueryExtensionID.SqlServerIntValueTableHintID :
-						{
-							var hint  = (SqlValue)ext.Arguments["tableHint"];
-							var value = (SqlValue)ext.Arguments["value"];
-
-							if ((TableHint)hint.Value! == TableHint.SpatialWindowMaxCells)
-								StringBuilder.Append("SPATIAL_WINDOW_MAX_CELLS");
-							else
-								StringBuilder.Append((TableHint)hint.Value!);
-
-							StringBuilder
-								.Append('=')
-								.Append(value.Value)
-								;
-
-							break;
-						}
-						case QueryExtensionID.SqlServerIndexTableHintID :
-						{
-							var value = (SqlValue)ext.Arguments["indexName"];
-
-							StringBuilder
-								.Append("Index(")
-								.Append(value.Value)
-								.Append(')')
-								;
-
-							break;
-						}
-						case QueryExtensionID.SqlServerForceSeekTableHintID :
+//						case QueryExtensionID.SqlServerIntValueTableHintID :
+//						{
+//							var hint  = (SqlValue)ext.Arguments["tableHint"];
+//							var value = (SqlValue)ext.Arguments["value"];
+//
+//							if ((Hints.TableHint)hint.Value! == TableHint.SpatialWindowMaxCells)
+//								StringBuilder.Append("SPATIAL_WINDOW_MAX_CELLS");
+//							else
+//								StringBuilder.Append((TableHint)hint.Value!);
+//
+//							StringBuilder
+//								.Append('=')
+//								.Append(value.Value)
+//								;
+//
+//							break;
+//						}
+//						case QueryExtensionID.SqlServerIndexTableHintID :
+//						{
+//							var value = (SqlValue)ext.Arguments["indexName"];
+//
+//							StringBuilder
+//								.Append("Index(")
+//								.Append(value.Value)
+//								.Append(')')
+//								;
+//
+//							break;
+//						}
+						case Sql.QueryExtensionID.SqlServerForceSeekTableHintID :
 						{
 							var value = (SqlValue)ext.Arguments["indexName"];
 							var count = (int)((SqlValue)ext.Arguments["columns.Count"]).Value!;
@@ -597,7 +595,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						{
 							var hint = (SqlValue)ext.Arguments["tableHint"];
 
-							StringBuilder.Append((TableHint)hint.Value!);
+							StringBuilder.Append((string)hint.Value!);
 							break;
 						}
 					}
@@ -614,11 +612,11 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			if (join.SqlQueryExtensions != null)
 			{
-				var ext = join.SqlQueryExtensions.LastOrDefault(e => e.Scope == Sql.QueryExtensionScope.Join && e.ID is QueryExtensionID.SqlServerJoinHintID);
+				var ext = join.SqlQueryExtensions.LastOrDefault(e => e.Scope == Sql.QueryExtensionScope.Join && e.ID is Sql.QueryExtensionID.JoinHint);
 
 				if (ext?.Arguments["joinHint"] is SqlValue v)
 				{
-					var h = ((JoinHint)v.Value!).ToString().ToUpper();
+					var h = (string)v.Value!;
 
 					switch (join.JoinType)
 					{

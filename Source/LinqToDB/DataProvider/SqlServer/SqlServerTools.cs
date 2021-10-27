@@ -57,7 +57,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			_providers.Enqueue(provider);
 			return provider;
 		}, true);
-		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2012sdc = new Lazy<IDataProvider>(() =>
+		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2012sdc = new(() =>
 		{
 			var provider = new SqlServerDataProvider(ProviderName.SqlServer2012, SqlServerVersion.v2012, SqlServerProvider.SystemDataSqlClient);
 
@@ -70,7 +70,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			_providers.Enqueue(provider);
 			return provider;
 		}, true);
-		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2016sdc = new Lazy<IDataProvider>(() =>
+		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2016sdc = new(() =>
 		{
 			var provider = new SqlServerDataProvider(ProviderName.SqlServer2016, SqlServerVersion.v2016, SqlServerProvider.SystemDataSqlClient);
 
@@ -80,7 +80,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			_providers.Enqueue(provider);
 			return provider;
 		}, true);
-		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2017sdc = new Lazy<IDataProvider>(() =>
+		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2017sdc = new(() =>
 		{
 			var provider = new SqlServerDataProvider(ProviderName.SqlServer2017, SqlServerVersion.v2017, SqlServerProvider.SystemDataSqlClient);
 
@@ -92,7 +92,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}, true);
 
 		// Microsoft.Data.SqlClient
-		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2000mdc = new Lazy<IDataProvider>(() =>
+		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2000mdc = new(() =>
 		{
 			var provider = new SqlServerDataProvider(ProviderName.SqlServer2000, SqlServerVersion.v2000, SqlServerProvider.MicrosoftDataSqlClient);
 
@@ -102,7 +102,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			_providers.Enqueue(provider);
 			return provider;
 		}, true);
-		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2005mdc = new Lazy<IDataProvider>(() =>
+		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2005mdc = new(() =>
 		{
 			var provider = new SqlServerDataProvider(ProviderName.SqlServer2005, SqlServerVersion.v2005, SqlServerProvider.MicrosoftDataSqlClient);
 
@@ -112,7 +112,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			_providers.Enqueue(provider);
 			return provider;
 		}, true);
-		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2008mdc = new Lazy<IDataProvider>(() =>
+		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2008mdc = new(() =>
 		{
 			var provider = new SqlServerDataProvider(ProviderName.SqlServer2008, SqlServerVersion.v2008, SqlServerProvider.MicrosoftDataSqlClient);
 
@@ -124,7 +124,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			_providers.Enqueue(provider);
 			return provider;
 		}, true);
-		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2012mdc = new Lazy<IDataProvider>(() =>
+		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2012mdc = new(() =>
 		{
 			var provider = new SqlServerDataProvider(ProviderName.SqlServer2012, SqlServerVersion.v2012, SqlServerProvider.MicrosoftDataSqlClient);
 
@@ -137,7 +137,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			_providers.Enqueue(provider);
 			return provider;
 		}, true);
-		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2016mdc = new Lazy<IDataProvider>(() =>
+		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2016mdc = new(() =>
 		{
 			var provider = new SqlServerDataProvider(ProviderName.SqlServer2016, SqlServerVersion.v2016, SqlServerProvider.MicrosoftDataSqlClient);
 
@@ -147,7 +147,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			_providers.Enqueue(provider);
 			return provider;
 		}, true);
-		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2017mdc = new Lazy<IDataProvider>(() =>
+		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2017mdc = new(() =>
 		{
 			var provider = new SqlServerDataProvider(ProviderName.SqlServer2017, SqlServerVersion.v2017, SqlServerProvider.MicrosoftDataSqlClient);
 
@@ -393,43 +393,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#region QueryExtensions
 
-		[LinqToDB.Sql.QueryExtension(ProviderName.SqlServer, LinqToDB.Sql.QueryExtensionScope.Table, QueryExtensionID.SqlServerCommonTableHintID)]
-		public static ITable<TSource> With<TSource>(this ITable<TSource> table, [SqlQueryDependent] TableHint tableHint)
-			where TSource : notnull
-		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(With, table, tableHint),
-				table.Expression, Expression.Constant(tableHint));
-
-			return table;
-		}
-
-		[LinqToDB.Sql.QueryExtension(ProviderName.SqlServer, LinqToDB.Sql.QueryExtensionScope.Table, QueryExtensionID.SqlServerIntValueTableHintID)]
-		public static ITable<TSource> With<TSource>(this ITable<TSource> table, [SqlQueryDependent] TableHint tableHint, [SqlQueryDependent] int value)
-			where TSource : notnull
-		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(With, table, tableHint, value),
-				table.Expression, Expression.Constant(tableHint), Expression.Constant(value));
-
-			return table;
-		}
-
-		[LinqToDB.Sql.QueryExtension(ProviderName.SqlServer, LinqToDB.Sql.QueryExtensionScope.Table, QueryExtensionID.SqlServerIndexTableHintID)]
-		public static ITable<TSource> WithIndex<TSource>(this ITable<TSource> table, [SqlQueryDependent] string indexName)
-			where TSource : notnull
-		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(WithIndex, table, indexName),
-				table.Expression, Expression.Constant(indexName));
-
-			return table;
-		}
-
-		[LinqToDB.Sql.QueryExtension(ProviderName.SqlServer, LinqToDB.Sql.QueryExtensionScope.Table, QueryExtensionID.SqlServerForceSeekTableHintID)]
+		[LinqToDB.Sql.QueryExtension(ProviderName.SqlServer, LinqToDB.Sql.QueryExtensionScope.Table, LinqToDB.Sql.QueryExtensionID.SqlServerForceSeekTableHintID)]
 		public static ITable<TSource> WithForceSeek<TSource>(
 			this ITable<TSource> table,
 			[SqlQueryDependent]  string indexName,
@@ -444,19 +408,6 @@ namespace LinqToDB.DataProvider.SqlServer
 					columns));
 
 			return table;
-		}
-
-		[LinqToDB.Sql.QueryExtension(ProviderName.SqlServer, LinqToDB.Sql.QueryExtensionScope.Join, QueryExtensionID.SqlServerJoinHintID)]
-		public static IQueryable<TSource> JoinHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] JoinHint joinHint)
-			where TSource : notnull
-		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
-
-			return currentSource.Provider.CreateQuery<TSource>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(JoinHint, source, joinHint),
-					currentSource.Expression, Expression.Constant(joinHint)));
 		}
 
 		#endregion

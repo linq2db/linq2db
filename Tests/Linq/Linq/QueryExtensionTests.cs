@@ -3,7 +3,6 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Expressions;
 using LinqToDB.Linq;
@@ -12,8 +11,6 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class QueryExtensionTests : TestBase
 	{
@@ -67,7 +64,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var q =
-				from p in db.Parent.With(TableHint.NoLock).With(TableHint.NoWait)
+				from p in db.Parent.With(Hints.TableHint.NoLock).With(Hints.TableHint.NoWait)
 				select p;
 
 			_ = q.ToList();
@@ -79,22 +76,22 @@ namespace Tests.Linq
 		public void SqlServerWith2005TableHintTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2005Plus)] string context,
 			[Values(
-				TableHint.HoldLock,
-				TableHint.NoLock,
-				TableHint.NoWait,
-				TableHint.PagLock,
-				TableHint.ReadCommitted,
-				TableHint.ReadCommittedLock,
-				TableHint.ReadPast,
-				TableHint.ReadUncommitted,
-				TableHint.RepeatableRead,
-				TableHint.RowLock,
-				TableHint.Serializable,
-				TableHint.TabLock,
-				TableHint.TabLockX,
-				TableHint.UpdLock,
-				TableHint.XLock
-				)] TableHint hint)
+				Hints.TableHint.HoldLock,
+				Hints.TableHint.NoLock,
+				Hints.TableHint.NoWait,
+				Hints.TableHint.PagLock,
+				Hints.TableHint.ReadCommitted,
+				Hints.TableHint.ReadCommittedLock,
+				Hints.TableHint.ReadPast,
+				Hints.TableHint.ReadUncommitted,
+				Hints.TableHint.RepeatableRead,
+				Hints.TableHint.RowLock,
+				Hints.TableHint.Serializable,
+				Hints.TableHint.TabLock,
+				Hints.TableHint.TabLockX,
+				Hints.TableHint.UpdLock,
+				Hints.TableHint.XLock
+				)] string hint)
 		{
 			using var db = GetDataContext(context);
 
@@ -111,10 +108,10 @@ namespace Tests.Linq
 		public void SqlServerWith2012TableHintTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context,
 			[Values(
-				TableHint.ForceScan
+				Hints.TableHint.ForceScan
 //				TableHint.ForceSeek,
 //				TableHint.Snapshot
-				)] TableHint hint)
+				)] string hint)
 		{
 			using var db = GetDataContext(context);
 
@@ -133,7 +130,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var q =
-				from p in db.Parent.With(TableHint.SpatialWindowMaxCells, 10)
+				from p in db.Parent.With(Hints.TableHint.SpatialWindowMaxCells(10))
 				select p;
 
 			_ = q.ToList();
@@ -147,7 +144,9 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var q =
-				from p in db.Child.WithIndex("IX_ChildIndex").With(TableHint.NoLock)
+				from p in db.Child
+					.With(Hints.TableHint.Index("IX_ChildIndex"))
+					.With(Hints.TableHint.NoLock)
 				select p;
 
 			_ = q.ToList();
@@ -186,7 +185,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlServerJoinHintTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
-			[Values(JoinHint.Loop, JoinHint.Hash, JoinHint.Merge, JoinHint.Remote)] JoinHint hint)
+			[Values(Hints.JoinHint.Loop, Hints.JoinHint.Hash, Hints.JoinHint.Merge, Hints.JoinHint.Remote)] string hint)
 		{
 			using var db = GetDataContext(context);
 
@@ -197,13 +196,13 @@ namespace Tests.Linq
 
 			_ = q.ToList();
 
-			Assert.That(q.ToString(), Contains.Substring($"INNER {hint.ToString().ToUpper()} JOIN"));
+			Assert.That(q.ToString(), Contains.Substring($"INNER {hint} JOIN"));
 		}
 
 		[Test]
 		public void SqlServerSubQueryJoinHintTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
-			[Values(JoinHint.Loop, JoinHint.Hash, JoinHint.Merge, JoinHint.Remote)] JoinHint hint)
+			[Values(Hints.JoinHint.Loop, Hints.JoinHint.Hash, Hints.JoinHint.Merge, Hints.JoinHint.Remote)] string hint)
 		{
 			using var db = GetDataContext(context);
 
@@ -219,13 +218,13 @@ namespace Tests.Linq
 
 			_ = q.ToList();
 
-			Assert.That(q.ToString(), Contains.Substring($"INNER {hint.ToString().ToUpper()} JOIN"));
+			Assert.That(q.ToString(), Contains.Substring($"INNER {hint} JOIN"));
 		}
 
 		[Test]
 		public void SqlServerJoinMethodHintTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
-			[Values(JoinHint.Loop, JoinHint.Hash, JoinHint.Merge)] JoinHint hint,
+			[Values(Hints.JoinHint.Loop, Hints.JoinHint.Hash, Hints.JoinHint.Merge)] string hint,
 			[Values(SqlJoinType.Left, SqlJoinType.Full)] SqlJoinType joinType)
 		{
 			using var db = GetDataContext(context);
@@ -234,13 +233,13 @@ namespace Tests.Linq
 
 			_ = q.ToList();
 
-			Assert.That(q.ToString(), Contains.Substring($"{joinType.ToString().ToUpper()} {hint.ToString().ToUpper()} JOIN"));
+			Assert.That(q.ToString(), Contains.Substring($"{joinType.ToString().ToUpper()} {hint} JOIN"));
 		}
 
 		[Test]
 		public void SqlServerInnerJoinMethodHintTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
-			[Values(JoinHint.Loop, JoinHint.Hash, JoinHint.Merge, JoinHint.Remote)] JoinHint hint)
+			[Values(Hints.JoinHint.Loop, Hints.JoinHint.Hash, Hints.JoinHint.Merge, Hints.JoinHint.Remote)] string hint)
 		{
 			using var db = GetDataContext(context);
 
@@ -248,13 +247,13 @@ namespace Tests.Linq
 
 			_ = q.ToList();
 
-			Assert.That(q.ToString(), Contains.Substring($"INNER {hint.ToString().ToUpper()} JOIN"));
+			Assert.That(q.ToString(), Contains.Substring($"INNER {hint} JOIN"));
 		}
 
 		[Test]
 		public void SqlServerRightJoinMethodHintTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
-			[Values(JoinHint.Hash, JoinHint.Merge)] JoinHint hint)
+			[Values(Hints.JoinHint.Hash, Hints.JoinHint.Merge)] string hint)
 		{
 			using var db = GetDataContext(context);
 
@@ -262,7 +261,7 @@ namespace Tests.Linq
 
 			_ = q.ToList();
 
-			Assert.That(q.ToString(), Contains.Substring($"RIGHT {hint.ToString().ToUpper()} JOIN"));
+			Assert.That(q.ToString(), Contains.Substring($"RIGHT {hint} JOIN"));
 		}
 	}
 
