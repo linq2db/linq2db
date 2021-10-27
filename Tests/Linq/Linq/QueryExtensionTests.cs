@@ -101,7 +101,7 @@ namespace Tests.Linq
 
 			_ = q.ToList();
 
-			Assert.That(q.ToString(), Contains.Substring($"WITH ({hint})"));
+			Assert.That(LastQuery, Contains.Substring($"WITH ({hint})"));
 		}
 
 		[Test]
@@ -116,7 +116,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var q =
-				from p in db.Parent.With(hint)
+				from p in db.Parent.TableHint(hint)
 				select p;
 
 			_ = q.ToList();
@@ -213,7 +213,8 @@ namespace Tests.Linq
 					from t in db.Parent
 					where t.Children.Any()
 					select new { t.ParentID, t.Children.Count }
-				).JoinHint(hint) on c.ParentID equals p.ParentID
+				)
+				.JoinHint(hint) on c.ParentID equals p.ParentID
 				select p;
 
 			_ = q.ToList();
@@ -262,6 +263,21 @@ namespace Tests.Linq
 			_ = q.ToList();
 
 			Assert.That(q.ToString(), Contains.Substring($"RIGHT {hint} JOIN"));
+		}
+
+		[Test]
+		public void SqlServerDeleteTableHintTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Child.With(Hints.TableHint.NoLock)
+				where p.ParentID < -10000
+				select p;
+
+			q.Delete();
+
+			Assert.That(LastQuery, Contains.Substring("WITH (NoLock)"));
 		}
 	}
 

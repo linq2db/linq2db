@@ -47,7 +47,7 @@ namespace LinqToDB.SqlQuery
 			foreach (var insert in Inserts)
 				((ISqlExpressionWalkable)insert).Walk(options, context, func);
 
-			return null;
+			return base.Walk(options, context, func);
 		}
 
 		public override bool IsParameterDependent

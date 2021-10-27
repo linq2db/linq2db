@@ -529,35 +529,6 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					switch (ext.ID)
 					{
-//						case QueryExtensionID.SqlServerIntValueTableHintID :
-//						{
-//							var hint  = (SqlValue)ext.Arguments["tableHint"];
-//							var value = (SqlValue)ext.Arguments["value"];
-//
-//							if ((Hints.TableHint)hint.Value! == TableHint.SpatialWindowMaxCells)
-//								StringBuilder.Append("SPATIAL_WINDOW_MAX_CELLS");
-//							else
-//								StringBuilder.Append((TableHint)hint.Value!);
-//
-//							StringBuilder
-//								.Append('=')
-//								.Append(value.Value)
-//								;
-//
-//							break;
-//						}
-//						case QueryExtensionID.SqlServerIndexTableHintID :
-//						{
-//							var value = (SqlValue)ext.Arguments["indexName"];
-//
-//							StringBuilder
-//								.Append("Index(")
-//								.Append(value.Value)
-//								.Append(')')
-//								;
-//
-//							break;
-//						}
 						case Sql.QueryExtensionID.SqlServerForceSeekTableHintID :
 						{
 							var value = (SqlValue)ext.Arguments["indexName"];

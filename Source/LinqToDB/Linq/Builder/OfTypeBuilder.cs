@@ -87,7 +87,7 @@ namespace LinqToDB.Linq.Builder
 				_methodCall = methodCall;
 			}
 
-			private readonly MethodCallExpression _methodCall;
+			readonly MethodCallExpression _methodCall;
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{

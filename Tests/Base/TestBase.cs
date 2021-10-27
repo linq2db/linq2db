@@ -38,17 +38,17 @@ namespace Tests
 		protected static class TestData
 		{
 			// offset 40 is not used by any timezone, so we can detect tz handling issues, which could be hidden when offset match current TZ
-			public static readonly DateTimeOffset DateTimeOffset          = new DateTimeOffset(2020, 2, 29, 17, 54, 55, 123, TimeSpan.FromMinutes(40)).AddTicks(1234);
-			public static readonly DateTimeOffset DateTimeOffsetUtc       = new DateTimeOffset(2020, 2, 29, 17, 9, 55, 123, TimeSpan.Zero).AddTicks(1234);
-			public static readonly DateTime DateTime                      = new DateTime(2020, 2, 29, 17, 54, 55, 123).AddTicks(1234);
-			public static readonly DateTime DateTimeUtc                   = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1234);
-			public static readonly DateTime DateTime4Utc                  = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1000);
-			public static readonly DateTime Date                          = new (2020, 2, 29);
-			public static readonly TimeSpan TimeOfDay                     = new TimeSpan(0, 17, 54, 55, 123).Add(TimeSpan.FromTicks(1234));
-			public static readonly TimeSpan TimeOfDay4                    = new TimeSpan(0, 17, 54, 55, 123).Add(TimeSpan.FromTicks(1000));
-			public static readonly Guid     Guid1                         = new ("bc7b663d-0fde-4327-8f92-5d8cc3a11d11");
-			public static readonly Guid     Guid2                         = new ("a948600d-de21-4f74-8ac2-9516b287076e");
-			public static readonly Guid     Guid3                         = new ("bd3973a5-4323-4dd8-9f4f-df9f93e2a627");
+			public static readonly DateTimeOffset DateTimeOffset    = new DateTimeOffset(2020, 2, 29, 17, 54, 55, 123, TimeSpan.FromMinutes(40)).AddTicks(1234);
+			public static readonly DateTimeOffset DateTimeOffsetUtc = new DateTimeOffset(2020, 2, 29, 17, 9, 55, 123, TimeSpan.Zero).AddTicks(1234);
+			public static readonly DateTime       DateTime          = new DateTime(2020, 2, 29, 17, 54, 55, 123).AddTicks(1234);
+			public static readonly DateTime       DateTimeUtc       = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1234);
+			public static readonly DateTime       DateTime4Utc      = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1000);
+			public static readonly DateTime       Date              = new (2020, 2, 29);
+			public static readonly TimeSpan       TimeOfDay         = new TimeSpan(0, 17, 54, 55, 123).Add(TimeSpan.FromTicks(1234));
+			public static readonly TimeSpan       TimeOfDay4        = new TimeSpan(0, 17, 54, 55, 123).Add(TimeSpan.FromTicks(1000));
+			public static readonly Guid           Guid1             = new ("bc7b663d-0fde-4327-8f92-5d8cc3a11d11");
+			public static readonly Guid           Guid2             = new ("a948600d-de21-4f74-8ac2-9516b287076e");
+			public static readonly Guid           Guid3             = new ("bd3973a5-4323-4dd8-9f4f-df9f93e2a627");
 
 			public static byte[] Binary(int size)
 			{
@@ -66,6 +66,8 @@ namespace Tests
 
 		private static string? _baselinesPath;
 
+		protected static string? LastQuery;
+
 		static TestBase()
 		{
 			TestContext.WriteLine("Tests started in {0}...", Environment.CurrentDirectory);
@@ -77,7 +79,10 @@ namespace Tests
 			DataConnection.TurnTraceSwitchOn();
 			DataConnection.WriteTraceLine = (message, name, level) =>
 			{
-				var ctx   = CustomTestContext.Get();
+				if (message?.StartsWith("BeforeExecute") == true)
+					LastQuery = message;
+
+				var ctx = CustomTestContext.Get();
 
 				if (ctx.Get<bool>(CustomTestContext.BASELINE_DISABLED) != true)
 				{

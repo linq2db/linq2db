@@ -6,7 +6,6 @@ namespace LinqToDB
 	{
 		public enum QueryExtensionScope
 		{
-			Default,
 			Table,
 			Join,
 			Query

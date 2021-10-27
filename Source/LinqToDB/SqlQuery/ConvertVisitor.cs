@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using LinqToDB.ServiceModel;
 
 namespace LinqToDB.SqlQuery
 {
@@ -1363,6 +1364,26 @@ namespace LinqToDB.SqlQuery
 					default:
 						throw new InvalidOperationException($"Convert visitor not implemented for element {element.ElementType}");
 				}
+
+				if (element is IQueryExtendible { SqlQueryExtensions: {} } qe && newElement is IQueryExtendible ne)
+				{
+					ne.SqlQueryExtensions = new(qe.SqlQueryExtensions.Count);
+
+					foreach (var item in ne.SqlQueryExtensions)
+					{
+						var ext = new SqlQueryExtension
+						{
+							Scope = item.Scope,
+							ID    = item.ID,
+						};
+
+						foreach (var arg in item.Arguments)
+							ext.Arguments.Add(arg.Key, (ISqlExpression)ConvertInternal(arg.Value));
+
+						ne.SqlQueryExtensions.Add(ext);
+					}
+				}
+
 			}
 			Pop();
 

@@ -185,14 +185,14 @@ namespace LinqToDB
 		/// <summary>
 		/// Adds join hint to a generated query.
 		/// <code>
-		/// // will produce following SQL code in generated query: table alias with(UpdLock)
+		/// // will produce following SQL code in generated query: INNER LOOP JOIN
 		/// var tableWithHint = db.Table.JoinHint("LOOP");
 		/// </code>
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
-		/// <param name="source">Table-like query source.</param>
-		/// <param name="joinHint">SQL text, added to WITH({0}) after table name in generated query.</param>
-		/// <returns>Table-like query source with table hints.</returns>
+		/// <param name="source">Query source.</param>
+		/// <param name="joinHint">SQL text, added to join in generated query.</param>
+		/// <returns>Query source with join hints.</returns>
 		[LinqTunnel]
 		[Pure]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.Join, Sql.QueryExtensionID.JoinHint)]
@@ -206,6 +206,32 @@ namespace LinqToDB
 					null,
 					MethodHelper.GetMethodInfo(JoinHint, source, joinHint),
 					currentSource.Expression, Expression.Constant(joinHint)));
+		}
+
+		/// <summary>
+		/// Adds join hint to a generated query.
+		/// <code>
+		/// // will produce following SQL code in generated query: INNER LOOP JOIN
+		/// var tableWithHint = db.Table.JoinHint("LOOP");
+		/// </code>
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="queryHint">SQL text, added to join in generated query.</param>
+		/// <returns>Query source with join hints.</returns>
+		[LinqTunnel]
+		[Pure]
+		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.Query, Sql.QueryExtensionID.QueryHint)]
+		public static IQueryable<TSource> QueryHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string queryHint)
+			where TSource : notnull
+		{
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(QueryHint, source, queryHint),
+					currentSource.Expression, Expression.Constant(queryHint)));
 		}
 
 		#endregion

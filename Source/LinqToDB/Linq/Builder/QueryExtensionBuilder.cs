@@ -90,7 +90,12 @@ namespace LinqToDB.Linq.Builder
 					}
 					case Sql.QueryExtensionScope.Join:
 					{
-						(joinExtensions ??= new()).Add(attr.ExtendJoin(dic));
+						attr.ExtendJoin(joinExtensions ??= new(), dic);
+						break;
+					}
+					case Sql.QueryExtensionScope.Query:
+					{
+						attr.ExtendQuery(builder.SqlQueryExtensions ??= new(), dic);
 						break;
 					}
 				}

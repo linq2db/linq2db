@@ -87,7 +87,7 @@ namespace LinqToDB.SqlQuery
 			for (var i = 0; i < Operations.Count; i++)
 				((ISqlExpressionWalkable)Operations[i]).Walk(options, context, func);
 
-			return null;
+			return base.Walk(options, context, func);
 		}
 
 

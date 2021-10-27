@@ -106,15 +106,16 @@ namespace LinqToDB.Linq.Builder
 		readonly ExpressionTreeOptimizationContext _optimizationContext;
 		readonly ParametersContext                 _parametersContext;
 
-		public ExpressionTreeOptimizationContext OptimizationContext => _optimizationContext;
-		public ParametersContext                 ParametersContext   => _parametersContext;
+		public ExpressionTreeOptimizationContext   OptimizationContext => _optimizationContext;
+		public ParametersContext                   ParametersContext   => _parametersContext;
 
-		public readonly List<ParameterExpression>  BlockVariables       = new ();
-		public readonly List<Expression>           BlockExpressions     = new ();
+		public readonly List<ParameterExpression>  BlockVariables   = new ();
+		public readonly List<Expression>           BlockExpressions = new ();
 		public          bool                       IsBlockDisable;
 		public          int                        VarIndex;
 
-		public          SqlComment?                Tag;
+		public SqlComment?                         Tag;
+		public List<SqlQueryExtension>?            SqlQueryExtensions;
 
 		public ExpressionBuilder(
 			Query                             query,

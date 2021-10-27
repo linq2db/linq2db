@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using LinqToDB.Common;
 using LinqToDB.Linq.Builder;
+using LinqToDB.ServiceModel;
 
 namespace LinqToDB.SqlQuery
 {
@@ -786,6 +787,27 @@ namespace LinqToDB.SqlQuery
 				//case QueryElementType.MergeSourceTable:
 				default:
 					throw new NotImplementedException($"Unsupported query element type: {element.GetType()} ({element.ElementType})");
+			}
+
+			if (element is IQueryExtendible { SqlQueryExtensions: {} } qe)
+			{
+				var te = (IQueryExtendible)clone;
+
+				te.SqlQueryExtensions = new(qe.SqlQueryExtensions.Count);
+
+				foreach (var item in te.SqlQueryExtensions)
+				{
+					var ext = new SqlQueryExtension
+					{
+						Scope = item.Scope,
+						ID    = item.ID,
+					};
+
+					foreach (var arg in item.Arguments)
+						ext.Arguments.Add(arg.Key, Clone(arg.Value));
+
+					te.SqlQueryExtensions.Add(ext);
+				}
 			}
 
 			return (T)clone;

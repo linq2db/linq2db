@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using LinqToDB.SqlQuery;
-
 namespace LinqToDB
 {
 	using Common;
 	using Mapping;
+	using SqlQuery;
 
 	public partial class Sql
 	{
@@ -51,9 +50,14 @@ namespace LinqToDB
 				(table.SqlQueryExtensions ??= new()).Add(GetExtension(parameters));
 			}
 
-			public virtual SqlQueryExtension ExtendJoin(Dictionary<string,ISqlExpression> parameters)
+			public virtual void ExtendJoin(List<SqlQueryExtension> extensions, Dictionary<string,ISqlExpression> parameters)
 			{
-				return GetExtension(parameters);
+				extensions.Add(GetExtension(parameters));
+			}
+
+			public virtual void ExtendQuery(List<SqlQueryExtension> extensions, Dictionary<string,ISqlExpression> parameters)
+			{
+				extensions.Add(GetExtension(parameters));
 			}
 
 			public static QueryExtensionAttribute[] GetExtensionAttributes(Expression expression, MappingSchema mapping)
