@@ -69,7 +69,7 @@ namespace Tests.Linq
 
 			_ = q.ToList();
 
-			Assert.That(q.ToString(), Contains.Substring("WITH (NoLock, NoWait)"));
+			Assert.That(LastQuery, Contains.Substring("WITH (NoLock, NoWait)"));
 		}
 
 		[Test]
@@ -135,7 +135,7 @@ namespace Tests.Linq
 
 			_ = q.ToList();
 
-			Assert.That(q.ToString(), Contains.Substring("WITH (SPATIAL_WINDOW_MAX_CELLS=10)"));
+			Assert.That(LastQuery, Contains.Substring("WITH (SPATIAL_WINDOW_MAX_CELLS=10)"));
 		}
 
 		[Test]
@@ -151,7 +151,7 @@ namespace Tests.Linq
 
 			_ = q.ToList();
 
-			Assert.That(q.ToString(), Contains.Substring("WITH (Index(IX_ChildIndex), NoLock)"));
+			Assert.That(LastQuery, Contains.Substring("WITH (Index(IX_ChildIndex), NoLock)"));
 		}
 
 		[Test, Explicit]
@@ -165,7 +165,7 @@ namespace Tests.Linq
 
 			_ = q.ToList();
 
-			Assert.That(q.ToString(), Contains.Substring("WITH (ForceSeek (IX_ChildIndex (ParentID)))"));
+			Assert.That(LastQuery, Contains.Substring("WITH (ForceSeek (IX_ChildIndex (ParentID)))"));
 		}
 
 		[Test, Explicit]
@@ -179,7 +179,7 @@ namespace Tests.Linq
 
 			_ = q.ToList();
 
-			Assert.That(q.ToString(), Contains.Substring("WITH (ForceSeek (IX_ChildIndex))"));
+			Assert.That(LastQuery, Contains.Substring("WITH (ForceSeek (IX_ChildIndex))"));
 		}
 
 		[Test]
@@ -196,7 +196,7 @@ namespace Tests.Linq
 
 			_ = q.ToList();
 
-			Assert.That(q.ToString(), Contains.Substring($"INNER {hint} JOIN"));
+			Assert.That(LastQuery, Contains.Substring($"INNER {hint} JOIN"));
 		}
 
 		[Test]
@@ -219,7 +219,7 @@ namespace Tests.Linq
 
 			_ = q.ToList();
 
-			Assert.That(q.ToString(), Contains.Substring($"INNER {hint} JOIN"));
+			Assert.That(LastQuery, Contains.Substring($"INNER {hint} JOIN"));
 		}
 
 		[Test]
@@ -234,7 +234,7 @@ namespace Tests.Linq
 
 			_ = q.ToList();
 
-			Assert.That(q.ToString(), Contains.Substring($"{joinType.ToString().ToUpper()} {hint} JOIN"));
+			Assert.That(LastQuery, Contains.Substring($"{joinType.ToString().ToUpper()} {hint} JOIN"));
 		}
 
 		[Test]
@@ -248,7 +248,7 @@ namespace Tests.Linq
 
 			_ = q.ToList();
 
-			Assert.That(q.ToString(), Contains.Substring($"INNER {hint} JOIN"));
+			Assert.That(LastQuery, Contains.Substring($"INNER {hint} JOIN"));
 		}
 
 		[Test]
@@ -262,7 +262,7 @@ namespace Tests.Linq
 
 			_ = q.ToList();
 
-			Assert.That(q.ToString(), Contains.Substring($"RIGHT {hint} JOIN"));
+			Assert.That(LastQuery, Contains.Substring($"RIGHT {hint} JOIN"));
 		}
 
 		[Test]

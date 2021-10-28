@@ -456,10 +456,7 @@ namespace LinqToDB.SqlQuery
 						table.JoinType,
 						Clone(table.Table),
 						table.IsWeak,
-						Clone(table.Condition))
-					{
-						SqlQueryExtensions = table.SqlQueryExtensions
-					});
+						Clone(table.Condition)));
 					break;
 				}
 
@@ -795,7 +792,7 @@ namespace LinqToDB.SqlQuery
 
 				te.SqlQueryExtensions = new(qe.SqlQueryExtensions.Count);
 
-				foreach (var item in te.SqlQueryExtensions)
+				foreach (var item in qe.SqlQueryExtensions)
 				{
 					var ext = new SqlQueryExtension
 					{

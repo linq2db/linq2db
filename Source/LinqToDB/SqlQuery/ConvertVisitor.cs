@@ -1365,25 +1365,24 @@ namespace LinqToDB.SqlQuery
 						throw new InvalidOperationException($"Convert visitor not implemented for element {element.ElementType}");
 				}
 
-				if (element is IQueryExtendible { SqlQueryExtensions: {} } qe && newElement is IQueryExtendible ne)
-				{
-					ne.SqlQueryExtensions = new(qe.SqlQueryExtensions.Count);
-
-					foreach (var item in ne.SqlQueryExtensions)
-					{
-						var ext = new SqlQueryExtension
-						{
-							Scope = item.Scope,
-							ID    = item.ID,
-						};
-
-						foreach (var arg in item.Arguments)
-							ext.Arguments.Add(arg.Key, (ISqlExpression)ConvertInternal(arg.Value));
-
-						ne.SqlQueryExtensions.Add(ext);
-					}
-				}
-
+//				if (element is IQueryExtendible { SqlQueryExtensions: {} } qe && newElement is IQueryExtendible ne)
+//				{
+//					ne.SqlQueryExtensions = new(qe.SqlQueryExtensions.Count);
+//
+//					foreach (var item in qe.SqlQueryExtensions)
+//					{
+//						var ext = new SqlQueryExtension
+//						{
+//							Scope = item.Scope,
+//							ID    = item.ID,
+//						};
+//
+//						foreach (var arg in item.Arguments)
+//							ext.Arguments.Add(arg.Key, (ISqlExpression)ConvertInternal(arg.Value));
+//
+//						ne.SqlQueryExtensions.Add(ext);
+//					}
+//				}
 			}
 			Pop();
 
