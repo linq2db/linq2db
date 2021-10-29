@@ -141,7 +141,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				Expression expr;
 
-				if (Sequence is DefaultIfEmptyBuilder.DefaultIfEmptyContext defaultIfEmpty)
+				if (SequenceHelper.UnwrapSubqueryContext(Sequence) is DefaultIfEmptyBuilder.DefaultIfEmptyContext defaultIfEmpty)
 				{
 					expr = Builder.BuildSql(_returnType, fieldIndex, sqlExpression);
 					if (defaultIfEmpty.DefaultValue != null && expr is ConvertFromDataReaderExpression convert)

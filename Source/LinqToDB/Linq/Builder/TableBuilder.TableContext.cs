@@ -1636,13 +1636,7 @@ namespace LinqToDB.Linq.Builder
 											isOuter = false;
 										else if (!isOuter)
 										{
-											var ctx = Parent;
-											while (ctx is SubQueryContext)
-											{
-												ctx = ctx.Parent;
-											}
-
-											if (ctx is DefaultIfEmptyBuilder.DefaultIfEmptyContext)
+											if (Parent != null && SequenceHelper.UnwrapSubqueryContext(Parent) is DefaultIfEmptyBuilder.DefaultIfEmptyContext)
 												isOuter = true;
 										}
 

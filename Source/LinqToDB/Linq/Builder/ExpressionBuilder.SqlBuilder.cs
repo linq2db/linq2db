@@ -832,9 +832,6 @@ namespace LinqToDB.Linq.Builder
 
 			if (unwrapped is LambdaExpression lambda)
 			{
-				var saveParent = context.Parent;
-				ExpressionContext exprCtx;
-
 				IBuildContext valueSequence = context;
 
 				if (context is SelectContext sc && sc.Sequence[0] is GroupByBuilder.GroupByContext)
@@ -845,10 +842,12 @@ namespace LinqToDB.Linq.Builder
 					valueSequence = groupByContext.Element;
 				}
 
-				exprCtx = new ExpressionContext(valueSequence.Parent, valueSequence, lambda);
+				var contextRefExpression = new ContextRefExpression(lambda.Parameters[0].Type, valueSequence);
 
-				var result = ConvertToSql(exprCtx, lambda.Body, false, columnDescriptor);
-				ReplaceParent(context.Parent!, saveParent);
+				var body = lambda.GetBody(contextRefExpression);
+
+				var result = ConvertToSql(context, body, false, columnDescriptor);
+
 				if (!(result is SqlField field) || field.Table!.All != field)
 					return result;
 				result = context.ConvertToSql(null, 0, ConvertFlags.Field).Select(static _ => _.Sql).First();
@@ -863,7 +862,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (context is MethodChainBuilder.ChainContext chainContext)
 			{
-				if (chainContext.MethodCall.Arguments.Count == 1 && expression == chainContext.MethodCall.Arguments[0])
+				if (expression is MethodCallExpression mc && IsSubQuery(context, mc))
 					return context.ConvertToSql(null, 0, ConvertFlags.Field).Select(static _ => _.Sql).First();
 			}
 

@@ -132,11 +132,13 @@ namespace LinqToDB.Linq.Builder
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
+				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
+
 				switch (flags)
 				{
 					case ConvertFlags.All   :
 					case ConvertFlags.Key   :
-					case ConvertFlags.Field : return Sequence.ConvertToSql(expression, level + 1, flags);
+					case ConvertFlags.Field : return Sequence.ConvertToSql(expression, level, flags);
 				}
 
 				throw new InvalidOperationException();
@@ -157,6 +159,8 @@ namespace LinqToDB.Linq.Builder
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
+				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
+
 				return requestFlag switch
 				{
 					RequestFor.Root       => IsExpressionResult.GetResult(Lambda != null && expression == Lambda.Parameters[0]),
