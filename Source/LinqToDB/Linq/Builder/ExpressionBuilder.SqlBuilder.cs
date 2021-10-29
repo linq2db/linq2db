@@ -861,10 +861,10 @@ namespace LinqToDB.Linq.Builder
 					return context.ConvertToSql(null, 0, ConvertFlags.Field).Select(static _ => _.Sql).First();
 			}
 
-			var buildInfo = new BuildInfo(context, expression, new SelectQuery());
-			if (IsSequence(buildInfo))
+			if (context is MethodChainBuilder.ChainContext chainContext)
 			{
-				return context.ConvertToSql(null, 0, ConvertFlags.Field).Select(static _ => _.Sql).First();
+				if (chainContext.MethodCall.Arguments.Count == 1 && expression == chainContext.MethodCall.Arguments[0])
+					return context.ConvertToSql(null, 0, ConvertFlags.Field).Select(static _ => _.Sql).First();
 			}
 
 			return ConvertToSql(context, expression, false, columnDescriptor);

@@ -39,21 +39,12 @@ namespace LinqToDB.Linq.Builder
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { CreateSubQuery = true });
 
 			var prevSequence = sequence;
+			sequence = new SubQueryContext(sequence);
 
-			if (sequence.SelectQuery.Select.IsDistinct        ||
-			    sequence.SelectQuery.Select.TakeValue != null ||
-			    sequence.SelectQuery.Select.SkipValue != null ||
-			   !sequence.SelectQuery.GroupBy.IsEmpty)
+			if (prevSequence.SelectQuery.OrderBy.Items.Count > 0)
 			{
-				sequence = new SubQueryContext(sequence);
-			}
-
-			if (sequence.SelectQuery.OrderBy.Items.Count > 0)
-			{
-				if (sequence.SelectQuery.Select.TakeValue == null && sequence.SelectQuery.Select.SkipValue == null)
-					sequence.SelectQuery.OrderBy.Items.Clear();
-				else
-					sequence = new SubQueryContext(sequence);
+				if (prevSequence.SelectQuery.Select.TakeValue == null && prevSequence.SelectQuery.Select.SkipValue == null)
+					prevSequence.SelectQuery.OrderBy.Items.Clear();
 			}
 
 			var context = new AggregationContext(buildInfo.Parent, sequence, methodCall);
@@ -73,23 +64,11 @@ namespace LinqToDB.Linq.Builder
 						sql[0] = query.Select.Columns[0];
 					}
 				}
-				else if (sequence == prevSequence && !builder.DataContext.SqlProviderFlags.AcceptsOuterExpressionInAggregate)
+				else if (!builder.DataContext.SqlProviderFlags.AcceptsOuterExpressionInAggregate && QueryHelper.HasOuterReferences(sequence.SelectQuery, sql[0]))
 				{
 					// handle case when aggregate expression has outer references. SQL Server will fail.
 
-					if (QueryHelper.HasOuterReferences(sequence.SelectQuery, sql[0]))
-					{
-						// Wrap in subquery
-						sequence = new SubQueryContext(sequence);
-
-						var prevCtx = context;
-						context = new AggregationContext(buildInfo.Parent, sequence, methodCall);
-
-						builder.ReplaceParent(prevCtx, context);
-
-						prevSequence.SelectQuery.DoNotRemove = true;
-						sql = sequence.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).ToArray();
-					}
+					prevSequence.SelectQuery.DoNotRemove = true;
 				}
 			}
 

@@ -924,7 +924,28 @@ namespace LinqToDB.Linq.Builder
 
 								return result;
 							}
-							break;
+							else
+							{
+								var mi = QueryHelper.GetColumnDescriptor(contextInfo.Field)?.MemberInfo;
+
+								SqlInfo[] result;
+								if (mi != null)
+								{
+									result = new SqlInfo[]
+									{
+										new(mi, contextInfo.Field)
+									};
+								}
+								else
+								{
+									result = new SqlInfo[]
+									{
+										new(contextInfo.Field)
+									};
+
+								}
+								return result;
+							}
 						}
 
 					case ConvertFlags.Key   :

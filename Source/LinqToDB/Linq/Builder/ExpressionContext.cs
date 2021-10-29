@@ -68,6 +68,8 @@ namespace LinqToDB.Linq.Builder
 							{
 								if (((ConstantExpression)root).Value == null)
 									return Array<SqlInfo>.Empty;
+
+								return Builder.ConvertExpressions(this, expression!, flags, null);
 							}
 							else if (root.NodeType == ExpressionType.New)
 							{

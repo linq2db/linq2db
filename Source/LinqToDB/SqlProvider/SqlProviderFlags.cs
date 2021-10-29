@@ -29,7 +29,6 @@ namespace LinqToDB.SqlProvider
 		public int         MaxInListValuesCount              { get; set; }
 		public bool        IsUpdateSetTableAliasSupported    { get; set; }
 		public TakeHints?  TakeHintsSupported                { get; set; }
-		public bool        AcceptsOuterExpressionInAggregate { get; set; }
 
 		/// <summary>
 		/// Provider requires that selected subquery column must be used in group by even for constant column.
@@ -78,6 +77,33 @@ namespace LinqToDB.SqlProvider
 		/// Provider supports COUNT(DISTINCT column) function. Otherwise it will be emulated.
 		/// </summary>
 		public bool IsCountDistinctSupported              { get; set; }
+
+		/// <summary>
+		/// Provider supports aggregated expression with Outer reference
+		/// <code>
+		/// SELECT
+		/// (
+		///		SELECT SUM(inner.FieldX + outer.FieldOuter)
+		///		FROM table2 inner
+		/// ) AS Sum_Column
+		/// FROM table1 outer
+		///</code>
+		/// Otherwise aggeragated expression will be wrapped in subquery and aggregate function will be applied to subquery column.
+		/// <code>
+		/// SELECT
+		/// (
+		///		SELECT
+		///			SUM(sub.Column)
+		///		FROM 
+		///			(
+		///				SELECT inner.FieldX + outer.FieldOuter AS Column
+		///				FROM table2 inner
+		///			) sub
+		/// ) AS Sum_Column
+		/// FROM table1 outer
+		///</code>
+		/// </summary>
+		public bool AcceptsOuterExpressionInAggregate { get; set; }
 
 		/// <summary>
 		/// Provider supports
@@ -154,6 +180,7 @@ namespace LinqToDB.SqlProvider
 				^ IsCountDistinctSupported                     .GetHashCode()
 				^ IsUpdateFromSupported                        .GetHashCode()
 				^ DefaultMultiQueryIsolationLevel              .GetHashCode()
+				^ AcceptsOuterExpressionInAggregate            .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -190,6 +217,7 @@ namespace LinqToDB.SqlProvider
 				&& IsCountDistinctSupported             == other.IsCountDistinctSupported
 				&& IsUpdateFromSupported                == other.IsUpdateFromSupported
 				&& DefaultMultiQueryIsolationLevel      == other.DefaultMultiQueryIsolationLevel
+				&& AcceptsOuterExpressionInAggregate    == other.AcceptsOuterExpressionInAggregate
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                    == other.CustomFlags.Count
 				&& (CustomFlags.Count                   == 0

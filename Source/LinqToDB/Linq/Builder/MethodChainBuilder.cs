@@ -33,31 +33,21 @@ namespace LinqToDB.Linq.Builder
 
 			root = builder.ConvertExpressionTree(root);
 
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, root) { CreateSubQuery = true });
+			var prevSequence = builder.BuildSequence(new BuildInfo(buildInfo, root) { CreateSubQuery = true });
+			var sequence     = new SubQueryContext(prevSequence);
 
 			var finalFunction = functions.First();
 	
 			var context = new ChainContext(buildInfo.Parent, sequence, methodCall);
 
-			var sqlExpression = finalFunction.GetExpression((builder, context), builder.DataContext, buildInfo.SelectQuery, methodCall,
+			var sqlExpression = finalFunction.GetExpression((builder, context), builder.DataContext, context.SelectQuery, methodCall,
 				static (ctx, e, descriptor) => ctx.builder.ConvertToExtensionSql(ctx.context, e, descriptor));
 
 			if (finalFunction.IsAggregate && !builder.DataContext.SqlProviderFlags.AcceptsOuterExpressionInAggregate)
 			{
-				// Wrap in subquery
-				var prevCtx = sequence;
+				// handle case when aggregate expression has outer references. SQL Server will fail.
 
-				sequence = new SubQueryContext(sequence);
-
-				builder.ReplaceParent(prevCtx, sequence);
-
-				prevCtx.SelectQuery.DoNotRemove = true;
-
-				context = new ChainContext(buildInfo.Parent, sequence, methodCall);
-
-				sqlExpression = finalFunction.GetExpression((builder, sequence), builder.DataContext, buildInfo.SelectQuery, methodCall,
-					static (context, e, descriptor) => context.builder.ConvertToExtensionSql(context.sequence, e, descriptor));
-
+				prevSequence.SelectQuery.DoNotRemove = true;
 			}
 
 			context.Sql        = context.SelectQuery;
@@ -72,13 +62,14 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		class ChainContext : SequenceContextBase
+		internal class ChainContext : SequenceContextBase
 		{
 			public ChainContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall)
 				: base(parent, sequence, null)
 			{
-				_returnType = methodCall.Method.ReturnType;
-				_methodName = methodCall.Method.Name;
+				MethodCall = methodCall;
+				_returnType     = methodCall.Method.ReturnType;
+				_methodName     = methodCall.Method.Name;
 
 				if (_returnType.IsGenericType && _returnType.GetGenericTypeDefinition() == typeof(Task<>))
 				{
@@ -91,8 +82,9 @@ namespace LinqToDB.Linq.Builder
 			readonly Type       _returnType;
 			private  SqlInfo[]? _index;
 
-			public int             FieldIndex;
-			public ISqlExpression? Sql;
+			public int                  FieldIndex;
+			public ISqlExpression?      Sql;
+			public MethodCallExpression MethodCall { get; }
 
 			static int CheckNullValue(bool isNull, object context)
 			{

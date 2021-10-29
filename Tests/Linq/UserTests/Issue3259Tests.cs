@@ -98,7 +98,7 @@ namespace Tests.UserTests
 						WithParentReferenceCustom1 = SumCustom(tracking.Employee.LeaveRequests
 							.SelectMany(e => e.LeaveRequestDateEntries)
 							.Select(e => tracking.TrackingTimeType == TrackingTimeType.Hour ? e.StartHour : e.EndHour)
-							.DefaultIfEmpty(0), x => x),	
+							.DefaultIfEmpty(0), x => x),
 						WithParentReferenceCustom2 = SumCustom(tracking.Employee.LeaveRequests
 							.SelectMany(e => e.LeaveRequestDateEntries)
 							.Select(e => tracking.TrackingTimeType == TrackingTimeType.Hour ? e.StartHour : e.EndHour)
