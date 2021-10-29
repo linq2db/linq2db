@@ -279,6 +279,27 @@ namespace Tests.Linq
 
 			Assert.That(LastQuery, Contains.Substring("WITH (NoLock)"));
 		}
+
+
+		[Test]
+		public void SqlServerQueryJoinHintTest(
+			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
+			[Values(Hints.Option.LoopJoin, Hints.Option.HashJoin, Hints.Option.MergeJoin)] string hint)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.QueryHint(hint);
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({hint})"));
+		}
 	}
 
 	public static class QueryExtensions

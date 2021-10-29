@@ -2377,7 +2377,7 @@ namespace LinqToDB.ServiceModel
 
 					if (count > 0)
 					{
-						qe.SqlQueryExtensions = new List<SqlQueryExtension>(count);
+						qe.SqlQueryExtensions = new(count);
 
 						for (var i = 0; i < count; i++)
 						{

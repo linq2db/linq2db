@@ -46,5 +46,11 @@ namespace LinqToDB.DataProvider.SqlServer
 			public const string Remote = "REMOTE";
 		}
 
+		public static class Option
+		{
+			public const string LoopJoin  = "LOOP JOIN";
+			public const string HashJoin  = "HASH JOIN";
+			public const string MergeJoin = "MERGE JOIN";
+		}
 	}
 }

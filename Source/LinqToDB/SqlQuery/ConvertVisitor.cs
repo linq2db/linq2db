@@ -343,10 +343,7 @@ namespace LinqToDB.SqlQuery
 
 						if (table != null && !ReferenceEquals(table, join.Table) ||
 							cond != null && !ReferenceEquals(cond, join.Condition))
-							newElement = new SqlJoinedTable(join.JoinType, table ?? join.Table, join.IsWeak, cond ?? join.Condition)
-							{
-								SqlQueryExtensions = join.SqlQueryExtensions
-							};
+							newElement = new SqlJoinedTable(join.JoinType, table ?? join.Table, join.IsWeak, cond ?? join.Condition);
 
 						break;
 					}
@@ -1365,24 +1362,24 @@ namespace LinqToDB.SqlQuery
 						throw new InvalidOperationException($"Convert visitor not implemented for element {element.ElementType}");
 				}
 
-//				if (element is IQueryExtendible { SqlQueryExtensions: {} } qe && newElement is IQueryExtendible ne)
-//				{
-//					ne.SqlQueryExtensions = new(qe.SqlQueryExtensions.Count);
-//
-//					foreach (var item in qe.SqlQueryExtensions)
-//					{
-//						var ext = new SqlQueryExtension
-//						{
-//							Scope = item.Scope,
-//							ID    = item.ID,
-//						};
-//
-//						foreach (var arg in item.Arguments)
-//							ext.Arguments.Add(arg.Key, (ISqlExpression)ConvertInternal(arg.Value));
-//
-//						ne.SqlQueryExtensions.Add(ext);
-//					}
-//				}
+				if (element != newElement && element is IQueryExtendible { SqlQueryExtensions: { Count: > 0 } } qe && newElement is IQueryExtendible ne)
+				{
+					ne.SqlQueryExtensions = new(qe.SqlQueryExtensions.Count);
+
+					foreach (var item in qe.SqlQueryExtensions)
+					{
+						var ext = new SqlQueryExtension
+						{
+							Scope = item.Scope,
+							ID    = item.ID,
+						};
+
+						foreach (var arg in item.Arguments)
+							ext.Arguments.Add(arg.Key, (ISqlExpression)ConvertInternal(arg.Value));
+
+						ne.SqlQueryExtensions.Add(ext);
+					}
+				}
 			}
 			Pop();
 

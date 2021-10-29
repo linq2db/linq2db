@@ -605,5 +605,33 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			return base.BuildJoinType(join, condition);
 		}
+
+		protected override void BuildQueryExtensions(SqlStatement statement)
+		{
+			if (statement.SqlQueryExtensions?.Any(ext =>
+				ext.Scope == Sql.QueryExtensionScope.Query &&
+				ext.ID is Sql.QueryExtensionID.QueryHint) == true)
+			{
+				StringBuilder.Append("OPTION (");
+
+				foreach (var ext in statement.SqlQueryExtensions!)
+				{
+					switch (ext.ID)
+					{
+						case Sql.QueryExtensionID.QueryHint :
+						{
+							var hint = (SqlValue)ext.Arguments["queryHint"];
+							StringBuilder.Append((string)hint.Value!);
+							break;
+						}
+					}
+
+					StringBuilder.Append(", ");
+				}
+
+				StringBuilder.Length -= 2;
+				StringBuilder.AppendLine(")");
+			}
+		}
 	}
 }

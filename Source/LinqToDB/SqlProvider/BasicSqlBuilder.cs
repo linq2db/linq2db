@@ -299,15 +299,16 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSelectQuery(SqlSelectStatement selectStatement)
 		{
-			BuildStep = Step.Tag;           BuildTag(selectStatement);
-			BuildStep = Step.WithClause;    BuildWithClause(selectStatement.With);
-			BuildStep = Step.SelectClause;  BuildSelectClause(selectStatement.SelectQuery);
-			BuildStep = Step.FromClause;    BuildFromClause(selectStatement, selectStatement.SelectQuery);
-			BuildStep = Step.WhereClause;   BuildWhereClause(selectStatement.SelectQuery);
-			BuildStep = Step.GroupByClause; BuildGroupByClause(selectStatement.SelectQuery);
-			BuildStep = Step.HavingClause;  BuildHavingClause(selectStatement.SelectQuery);
-			BuildStep = Step.OrderByClause; BuildOrderByClause(selectStatement.SelectQuery);
-			BuildStep = Step.OffsetLimit;   BuildOffsetLimit(selectStatement.SelectQuery);
+			BuildStep = Step.Tag;             BuildTag(selectStatement);
+			BuildStep = Step.WithClause;      BuildWithClause(selectStatement.With);
+			BuildStep = Step.SelectClause;    BuildSelectClause(selectStatement.SelectQuery);
+			BuildStep = Step.FromClause;      BuildFromClause(selectStatement, selectStatement.SelectQuery);
+			BuildStep = Step.WhereClause;     BuildWhereClause(selectStatement.SelectQuery);
+			BuildStep = Step.GroupByClause;   BuildGroupByClause(selectStatement.SelectQuery);
+			BuildStep = Step.HavingClause;    BuildHavingClause(selectStatement.SelectQuery);
+			BuildStep = Step.OrderByClause;   BuildOrderByClause(selectStatement.SelectQuery);
+			BuildStep = Step.OffsetLimit;     BuildOffsetLimit(selectStatement.SelectQuery);
+			BuildStep = Step.QueryExtensions; BuildQueryExtensions(selectStatement);
 		}
 
 		protected virtual void BuildCteBody(SelectQuery selectQuery)
@@ -2937,7 +2938,8 @@ namespace LinqToDB.SqlProvider
 			HavingClause,
 			OrderByClause,
 			OffsetLimit,
-			Tag
+			Tag,
+			QueryExtensions
 		}
 
 		#endregion
@@ -3468,6 +3470,14 @@ namespace LinqToDB.SqlProvider
 				RemoveAlias(t);
 
 			return aliases;
+		}
+
+		#endregion
+
+		#region BuildQueryExtensions
+
+		protected virtual void BuildQueryExtensions(SqlStatement statement)
+		{
 		}
 
 		#endregion

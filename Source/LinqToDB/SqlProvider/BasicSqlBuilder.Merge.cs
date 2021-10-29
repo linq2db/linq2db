@@ -181,7 +181,7 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildMergeSourceQuery(SqlTableLikeSource mergeSource)
 		{
 			mergeSource = ConvertElement(mergeSource);
-			
+
 			BuildPhysicalTable(mergeSource.Source, null);
 
 			BuildMergeAsSourceClause(mergeSource);
