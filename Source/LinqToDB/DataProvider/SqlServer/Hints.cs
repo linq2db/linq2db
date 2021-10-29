@@ -48,9 +48,54 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public static class Option
 		{
-			public const string LoopJoin  = "LOOP JOIN";
-			public const string HashJoin  = "HASH JOIN";
-			public const string MergeJoin = "MERGE JOIN";
+			public const string HashGroup                          = "HASH GROUP";
+			public const string OrderGroup                         = "ORDER GROUP";
+			public const string ConcatUnion                        = "CONCAT UNION";
+			public const string HashUnion                          = "HASH UNION";
+			public const string MergeUnion                         = "MERGE UNION";
+			public const string LoopJoin                           = "LOOP JOIN";
+			public const string HashJoin                           = "HASH JOIN";
+			public const string MergeJoin                          = "MERGE JOIN";
+			public const string ExpandViews                        = "EXPAND VIEWS";
+			public const string ForceOrder                         = "FORCE ORDER";
+			public const string ForceExternalPushDown              = "FORCE EXTERNALPUSHDOWN";
+			public const string DisableExternalPushDown            = "DISABLE EXTERNALPUSHDOWN";
+			public const string ForceScaleOutExecution             = "FORCE SCALEOUTEXECUTION";
+			public const string DisableScaleOutExecution           = "DISABLE SCALEOUTEXECUTION";
+			public const string IgnoreNonClusteredColumnStoreIndex = "IGNORE_NONCLUSTERED_COLUMNSTORE_INDEX";
+			public const string KeepPlan                           = "KEEP PLAN   ";
+			public const string KeepFixedPlan                      = "KEEPFIXED PLAN";
+			public const string NoPerformanceSpool                 = "NO_PERFORMANCE_SPOOL";
+
+			[Sql.Expression("FAST {0}")]
+			public static string Fast(int value)
+			{
+				return $"FAST {value}";
+			}
+
+			[Sql.Expression("MAX_GRANT_PERCENT={0}")]
+			public static string MaxGrantPercent(decimal value)
+			{
+				return $"MAX_GRANT_PERCENT={value}";
+			}
+
+			[Sql.Expression("MIN_GRANT_PERCENT={0}")]
+			public static string MinGrantPercent(decimal value)
+			{
+				return $"MIN_GRANT_PERCENT={value}";
+			}
+
+			[Sql.Expression("MAXDOP {0}")]
+			public static string MaxDop(int value)
+			{
+				return $"MAXDOP {value}";
+			}
+
+			[Sql.Expression("MAXRECURSION {0}")]
+			public static string MaxRecursion(int value)
+			{
+				return $"MAXRECURSION {value}";
+			}
 		}
 	}
 }

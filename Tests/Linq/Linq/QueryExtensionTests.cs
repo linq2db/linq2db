@@ -280,11 +280,22 @@ namespace Tests.Linq
 			Assert.That(LastQuery, Contains.Substring("WITH (NoLock)"));
 		}
 
-
 		[Test]
-		public void SqlServerQueryJoinHintTest(
+		public void SqlServerQueryHintTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
-			[Values(Hints.Option.LoopJoin, Hints.Option.HashJoin, Hints.Option.MergeJoin)] string hint)
+			[Values(
+				Hints.Option.HashGroup,
+				Hints.Option.OrderGroup,
+				Hints.Option.ConcatUnion,
+				Hints.Option.HashUnion,
+				Hints.Option.MergeUnion,
+				Hints.Option.LoopJoin,
+				Hints.Option.HashJoin,
+				Hints.Option.MergeJoin,
+				Hints.Option.ExpandViews,
+				Hints.Option.KeepPlan,
+				Hints.Option.KeepFixedPlan
+			)] string hint)
 		{
 			using var db = GetDataContext(context);
 
@@ -299,6 +310,145 @@ namespace Tests.Linq
 			_ = q.ToList();
 
 			Assert.That(LastQuery, Contains.Substring($"OPTION ({hint})"));
+		}
+
+		[Test]
+		public void SqlServer2008QueryHintTest(
+			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context,
+			[Values(
+				Hints.Option.IgnoreNonClusteredColumnStoreIndex
+			)] string hint)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.QueryHint(hint);
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({hint})"));
+		}
+
+		[Test]
+		public void SqlServerQueryFastHintTest(
+			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.QueryHint(Hints.Option.HashJoin)
+			.QueryHint(Hints.Option.Fast(10));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("OPTION (HASH JOIN, FAST 10)"));
+		}
+
+		[Test]
+		public void SqlServerQueryMaxGrantPercentHintTest(
+			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.QueryHint(Hints.Option.MaxGrantPercent(25));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("OPTION (MAX_GRANT_PERCENT=25)"));
+		}
+
+		[Test]
+		public void SqlServerQueryMinGrantPercentHintTest(
+			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.QueryHint(Hints.Option.MinGrantPercent(25));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("OPTION (MIN_GRANT_PERCENT=25)"));
+		}
+
+		[Test]
+		public void SqlServerQueryMaxDopHintTest(
+			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.QueryHint(Hints.Option.MaxDop(25));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("OPTION (MAXDOP 25)"));
+		}
+
+		[Test]
+		public void SqlServerQueryMaxRecursionHintTest(
+			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.QueryHint(Hints.Option.MaxRecursion(25));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("OPTION (MAXRECURSION 25)"));
+		}
+
+		[Test]
+		public void SqlServerQueryOptimizeForHintTest(
+			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var id = 1;
+
+			var q =
+			(
+				from p in db.Parent
+				where p.ParentID == id
+				select p
+			)
+			.QueryHint("OPTIMIZE FOR (@id=1)");
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("OPTIMIZE FOR (@id=1)"));
 		}
 	}
 
