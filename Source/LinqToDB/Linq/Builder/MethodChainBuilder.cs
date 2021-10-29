@@ -43,7 +43,10 @@ namespace LinqToDB.Linq.Builder
 			var sqlExpression = finalFunction.GetExpression((builder, context), builder.DataContext, context.SelectQuery, methodCall,
 				static (ctx, e, descriptor) => ctx.builder.ConvertToExtensionSql(ctx.context, e, descriptor));
 
-			if (finalFunction.IsAggregate && !builder.DataContext.SqlProviderFlags.AcceptsOuterExpressionInAggregate)
+			if (finalFunction.IsAggregate && 
+			    !builder.DataContext.SqlProviderFlags.AcceptsOuterExpressionInAggregate && 
+			    QueryHelper.HasOuterReferences(sequence.SelectQuery, sqlExpression)
+			    )
 			{
 				// handle case when aggregate expression has outer references. SQL Server will fail.
 
