@@ -59,7 +59,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerWithTableHintTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void SqlServerTableHintTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -73,7 +73,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerWith2005TableHintTest(
+		public void SqlServerTableHint2005PlusTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2005Plus)] string context,
 			[Values(
 				Hints.TableHint.HoldLock,
@@ -105,7 +105,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerWith2012TableHintTest(
+		public void SqlServerTableHint2012PlusTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context,
 			[Values(
 				Hints.TableHint.ForceScan
@@ -125,7 +125,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerWithSpatialWindowMaxCellsTableHintTest([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		public void SqlServerTableHintSpatialWindowMaxCellsTest([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -139,7 +139,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerWithIndexTableHintTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void SqlServerTableHintIndexTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -155,7 +155,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Explicit]
-		public void SqlServerWithForceSeekTableHintTest([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		public void SqlServerTableHintForceSeekTest([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -169,7 +169,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Explicit]
-		public void SqlServerWithForceSeekTableHintTest2([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		public void SqlServerTableHintForceSeekTest2([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -200,7 +200,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerSubQueryJoinHintTest(
+		public void SqlServerJoinHintSubQueryTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
 			[Values(Hints.JoinHint.Loop, Hints.JoinHint.Hash, Hints.JoinHint.Merge, Hints.JoinHint.Remote)] string hint)
 		{
@@ -223,7 +223,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerJoinMethodHintTest(
+		public void SqlServerJoinHintMethodTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
 			[Values(Hints.JoinHint.Loop, Hints.JoinHint.Hash, Hints.JoinHint.Merge)] string hint,
 			[Values(SqlJoinType.Left, SqlJoinType.Full)] SqlJoinType joinType)
@@ -238,7 +238,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerInnerJoinMethodHintTest(
+		public void SqlServerJoinHintInnerJoinMethodTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
 			[Values(Hints.JoinHint.Loop, Hints.JoinHint.Hash, Hints.JoinHint.Merge, Hints.JoinHint.Remote)] string hint)
 		{
@@ -252,7 +252,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerRightJoinMethodHintTest(
+		public void SqlServerJoinHintRightJoinMethodTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
 			[Values(Hints.JoinHint.Hash, Hints.JoinHint.Merge)] string hint)
 		{
@@ -266,7 +266,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerDeleteTableHintTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void SqlServerTableHintDeleteMethodTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -294,7 +294,9 @@ namespace Tests.Linq
 				Hints.Option.MergeJoin,
 				Hints.Option.ExpandViews,
 				Hints.Option.KeepPlan,
-				Hints.Option.KeepFixedPlan
+				Hints.Option.KeepFixedPlan,
+				Hints.Option.Recompile,
+				Hints.Option.RobustPlan
 			)] string hint)
 		{
 			using var db = GetDataContext(context);
@@ -313,10 +315,11 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServer2008QueryHintTest(
+		public void SqlServerQueryHint2008PlusTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context,
 			[Values(
-				Hints.Option.IgnoreNonClusteredColumnStoreIndex
+				Hints.Option.IgnoreNonClusteredColumnStoreIndex,
+				Hints.Option.OptimizeForUnknown
 			)] string hint)
 		{
 			using var db = GetDataContext(context);
@@ -335,7 +338,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerQueryFastHintTest(
+		public void SqlServerQueryHintFastTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -355,7 +358,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerQueryMaxGrantPercentHintTest(
+		public void SqlServerQueryHintMaxGrantPercentTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -374,7 +377,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerQueryMinGrantPercentHintTest(
+		public void SqlServerQueryHintMinGrantPercentTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -393,7 +396,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerQueryMaxDopHintTest(
+		public void SqlServerQueryHintMaxDopTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -412,7 +415,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerQueryMaxRecursionHintTest(
+		public void SqlServerQueryHintMaxRecursionTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -431,7 +434,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlServerQueryOptimizeForHintTest(
+		public void SqlServerQueryHintOptimizeForTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -444,11 +447,29 @@ namespace Tests.Linq
 				where p.ParentID == id
 				select p
 			)
-			.QueryHint("OPTIMIZE FOR (@id=1)");
+			.QueryHint(Hints.Option.OptimizeFor("@id=1"));
 
 			_ = q.ToList();
 
 			Assert.That(LastQuery, Contains.Substring("OPTIMIZE FOR (@id=1)"));
+		}
+
+		[Test]
+		public void SqlServerQueryHintQueryTraceOnTest(
+			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Parent
+				select p
+			)
+			.QueryHint(Hints.Option.QueryTraceOn(10));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("QUERYTRACEON 10"));
 		}
 	}
 

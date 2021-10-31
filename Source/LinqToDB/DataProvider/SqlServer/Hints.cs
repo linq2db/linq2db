@@ -66,6 +66,11 @@ namespace LinqToDB.DataProvider.SqlServer
 			public const string KeepPlan                           = "KEEP PLAN   ";
 			public const string KeepFixedPlan                      = "KEEPFIXED PLAN";
 			public const string NoPerformanceSpool                 = "NO_PERFORMANCE_SPOOL";
+			public const string OptimizeForUnknown                 = "OPTIMIZE FOR UNKNOWN";
+			public const string ParameterizationSimple             = "PARAMETERIZATION SIMPLE";
+			public const string ParameterizationForced             = "PARAMETERIZATION FORCED";
+			public const string Recompile                          = "RECOMPILE";
+			public const string RobustPlan                         = "ROBUST PLAN";
 
 			[Sql.Expression("FAST {0}")]
 			public static string Fast(int value)
@@ -95,6 +100,30 @@ namespace LinqToDB.DataProvider.SqlServer
 			public static string MaxRecursion(int value)
 			{
 				return $"MAXRECURSION {value}";
+			}
+
+			[Sql.Expression("OPTIMIZE FOR ({0})")]
+			public static string OptimizeFor(string value)
+			{
+				return $"OPTIMIZE FOR ({value})";
+			}
+
+			[Sql.Expression("QUERYTRACEON {0}")]
+			public static string QueryTraceOn(int value)
+			{
+				return $"QUERYTRACEON {value}";
+			}
+
+			[Sql.Expression("USE HINT ({0})")]
+			public static string UseHint(string value)
+			{
+				return $"USE HINT ({value})";
+			}
+
+			[Sql.Expression("USE PLAN ({0})")]
+			public static string UsePlan(string value)
+			{
+				return $"USE PLAN ({value})";
 			}
 		}
 	}
