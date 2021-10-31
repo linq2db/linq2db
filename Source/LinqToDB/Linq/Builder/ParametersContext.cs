@@ -85,7 +85,8 @@ namespace LinqToDB.Linq.Builder
 			var newAccessor = PrepareConvertersAndCreateParameter(newExpr, expr, name, columnDescriptor, buildParameterType);
 
 			var found = newAccessor;
-			if (_parameters != null && expr.NodeType != ExpressionType.Constant)
+
+			if (_parameters != null && expr.NodeType != ExpressionType.Constant && expr.NodeType != ExpressionType.Default)
 			{
 				foreach (var (paramExpr, column, accessor) in _parameters)
 				{
@@ -323,7 +324,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			result.ValueExpression = expression.Transform(
-				(forceConstant, expression, expressionAccessors, result, setName, paramContext: this),
+				(forceConstant, (expression as MemberExpression)?.Member, expressionAccessors, result, setName, this.MappingSchema),
 				static (context, expr) =>
 				{
 					if (expr.NodeType == ExpressionType.Constant)
@@ -336,31 +337,29 @@ namespace LinqToDB.Linq.Builder
 							{
 								expr = Expression.Convert(val, expr.Type);
 
-								if (context.expression.NodeType == ExpressionType.MemberAccess)
+								if (context.Member != null)
 								{
-									var ma = (MemberExpression)context.expression;
-
-									var mt = ExpressionBuilder.GetMemberDataType(context.paramContext.MappingSchema, ma.Member);;
+									var mt = ExpressionBuilder.GetMemberDataType(context.MappingSchema, context.Member);
 
 									if (mt.DataType != DataType.Undefined)
 									{
-										context.result.DataType = context.result.DataType.WithDataType(mt.DataType);
+										context.result.DataType             = context.result.DataType.WithDataType(mt.DataType);
 										context.result.DbDataTypeExpression = Expression.Constant(mt);
 									}
 
 									if (mt.DbType != null)
 									{
-										context.result.DataType = context.result.DataType.WithDbType(mt.DbType);
+										context.result.DataType             = context.result.DataType.WithDbType(mt.DbType);
 										context.result.DbDataTypeExpression = Expression.Constant(mt);
 									}
 
 									if (mt.Length != null)
 									{
-										context.result.DataType = context.result.DataType.WithLength(mt.Length);
+										context.result.DataType             = context.result.DataType.WithLength(mt.Length);
 										context.result.DbDataTypeExpression = Expression.Constant(mt);
 									}
 
-									context.setName?.Invoke(ma.Member.Name);
+									context.setName?.Invoke(context.Member.Name);
 								}
 							}
 						}

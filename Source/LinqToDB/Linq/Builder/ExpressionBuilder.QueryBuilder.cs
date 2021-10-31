@@ -469,7 +469,7 @@ namespace LinqToDB.Linq.Builder
 								var valueType = f.Sql.SystemType!;
 
 								if (!valueType.IsNullable() && valueType.IsValueType)
-									valueType = typeof(Nullable<>).MakeGenericType(valueType);
+									valueType = valueType.AsNullable();
 
 								var reader     = BuildSql(context, f.Sql, valueType, null);
 								var comparison = Expression.MakeBinary(cond.Test.NodeType,

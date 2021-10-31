@@ -413,7 +413,7 @@ namespace LinqToDB.Linq.Builder
 					var b = (BinaryExpression)e;
 
 					if (b.Left is BinaryExpression equalityLeft && b.Right is ConstantExpression constantRight)
-						if (equalityLeft.Type.GetGenericTypeDefinition() == typeof(Nullable<>))
+						if (equalityLeft.Type.IsNullable())
 							if (equalityLeft.NodeType == ExpressionType.Equal && equalityLeft.Left.Type == equalityLeft.Right.Type)
 								if (constantRight.Value is bool val && val == false)
 									return new TransformInfo(equalityLeft, false);
@@ -1398,7 +1398,7 @@ namespace LinqToDB.Linq.Builder
 
 				var arg = mc.Arguments[1];
 
-				if (arg.NodeType == ExpressionType.Constant)
+				if (arg.NodeType == ExpressionType.Constant || arg.NodeType == ExpressionType.Default)
 				{
 					var comparison = (StringComparison)(arg.EvaluateExpression() ?? throw new InvalidOperationException());
 					return new SqlValue(comparison == StringComparison.CurrentCulture   ||
@@ -1406,9 +1406,9 @@ namespace LinqToDB.Linq.Builder
 					                    comparison == StringComparison.Ordinal);
 				}
 
-				var variable = Expression.Variable(typeof(StringComparison), "c");
+				var variable   = Expression.Variable(typeof(StringComparison), "c");
 				var assignment = Expression.Assign(variable, arg);
-				var expr     = (Expression)Expression.Equal(variable, Expression.Constant(StringComparison.CurrentCulture));
+				var expr       = (Expression)Expression.Equal(variable, Expression.Constant(StringComparison.CurrentCulture));
 				expr = Expression.OrElse(expr, Expression.Equal(variable, Expression.Constant(StringComparison.InvariantCulture)));
 				expr = Expression.OrElse(expr, Expression.Equal(variable, Expression.Constant(StringComparison.Ordinal)));
 				expr = Expression.Block(new[] {variable}, assignment, expr);
@@ -1663,15 +1663,13 @@ namespace LinqToDB.Linq.Builder
 				bool?           value      = null;
 				ISqlExpression? expression = null;
 				var             isNullable = false;
-				if ((typeof(bool) == left.Type || typeof(bool?) == left.Type) && left.Unwrap() is ConstantExpression lc)
+				if (IsBooleanConstant(left, out value))
 				{
-					value = lc.Value as bool?;
 					isNullable = typeof(bool?) == left.Type || r.CanBeNull;
 					expression = r;
 				}
-				else if ((typeof(bool) == right.Type || typeof(bool?) == right.Type) && right.Unwrap() is ConstantExpression rc)
+				else if (IsBooleanConstant(right, out value))
 				{
-					value = rc.Value as bool?;
 					isNullable = typeof(bool?) == right.Type || l.CanBeNull;
 					expression = l;
 				}
@@ -1702,6 +1700,26 @@ namespace LinqToDB.Linq.Builder
 			if (predicate == null)
 				predicate = new SqlPredicate.ExprExpr(l, op, r, Configuration.Linq.CompareNullsAsValues ? true : null);
 			return predicate;
+		}
+
+		private static bool IsBooleanConstant(Expression expr, out bool? value)
+		{
+			value = null;
+			if (expr.Type == typeof(bool) || expr.Type == typeof(bool?))
+			{
+				expr = expr.Unwrap();
+				if (expr is ConstantExpression c)
+				{
+					value = c.Value as bool?;
+					return true;
+				}
+				else if (expr is DefaultExpression)
+				{
+					value = expr.Type == typeof(bool) ? false : null;
+					return true;
+				}
+			}
+			return false;
 		}
 
 		// restores original types, lost due to C# compiler optimizations
@@ -1798,27 +1816,27 @@ namespace LinqToDB.Linq.Builder
 			if (left is MemberExpression)
 			{
 				operand = left;
-				value = right;
+				value   = right;
 			}
 			else if (left.NodeType == ExpressionType.Convert && ((UnaryExpression)left).Operand is MemberExpression)
 			{
 				operand = ((UnaryExpression)left).Operand;
-				value = right;
+				value   = right;
 			}
 			else if (right is MemberExpression)
 			{
 				operand = right;
-				value = left;
+				value   = left;
 			}
 			else if (right.NodeType == ExpressionType.Convert && ((UnaryExpression)right).Operand is MemberExpression)
 			{
 				operand = ((UnaryExpression)right).Operand;
-				value = left;
+				value   = left;
 			}
 			else if (left.NodeType == ExpressionType.Convert)
 			{
 				operand = ((UnaryExpression)left).Operand;
-				value = right;
+				value   = right;
 			}
 			else
 			{
@@ -1906,7 +1924,7 @@ namespace LinqToDB.Linq.Builder
 
 		ISqlPredicate? ConvertObjectNullComparison(IBuildContext? context, Expression left, Expression right, bool isEqual)
 		{
-			if (right.NodeType == ExpressionType.Constant && ((ConstantExpression)right).Value == null)
+			if (right.IsNullValue())
 			{
 				if (left.NodeType == ExpressionType.MemberAccess || left.NodeType == ExpressionType.Parameter)
 				{
@@ -1991,8 +2009,8 @@ namespace LinqToDB.Linq.Builder
 					rmembers = lm;
 				}
 
-				isNull = right is ConstantExpression expression && expression.Value == null;
-				lcols = new SqlInfo[lmembers.Count];
+				isNull = right.IsNullValue();
+				lcols  = new SqlInfo[lmembers.Count];
 				var idx = 0;
 				foreach (var m in lmembers)
 				{
@@ -2018,9 +2036,8 @@ namespace LinqToDB.Linq.Builder
 					sr = false;
 				}
 
-				isNull = right is ConstantExpression expression && expression.Value == null;
-
-				lcols = qsl!.ConvertToSql(left, 0, ConvertFlags.Key);
+				isNull = right.IsNullValue();
+				lcols  = qsl!.ConvertToSql(left, 0, ConvertFlags.Key);
 
 				if (!sr)
 					ProcessProjection(rmembers, right);
@@ -2148,7 +2165,6 @@ namespace LinqToDB.Linq.Builder
 						e.Operand.NodeType == ExpressionType.ArrayIndex &&
 						ReferenceEquals(((BinaryExpression)e.Operand).Left, ParametersParam);
 				}
-
 				case ExpressionType.MemberAccess:
 				case ExpressionType.New         :
 					return true;
@@ -2759,9 +2775,9 @@ namespace LinqToDB.Linq.Builder
 
 							Expression? obj = null;
 
-							if (e.Left.NodeType == ExpressionType.Constant && ((ConstantExpression)e.Left).Value == null)
+							if (e.Left.IsNullValue())
 								obj = e.Right;
-							else if (e.Right.NodeType == ExpressionType.Constant && ((ConstantExpression)e.Right).Value == null)
+							else if (e.Right.IsNullValue())
 								obj = e.Left;
 
 							if (obj != null)
@@ -2825,8 +2841,10 @@ namespace LinqToDB.Linq.Builder
 
 		bool IsNullConstant(Expression expr)
 		{
-			return expr.NodeType == ExpressionType.Constant  && ((ConstantExpression)expr).Value == null 
-				|| expr.NodeType == ExpressionType.Extension && expr is DefaultValueExpression;
+			// TODO: is it correct to return true for DefaultValueExpression for non-reference type or when default value
+			// set to non-null value?
+			return expr.IsNullValue()
+				|| expr is DefaultValueExpression;
 		}
 
 		private TransformVisitor<ExpressionBuilder>? _removeNullPropagationTransformer;

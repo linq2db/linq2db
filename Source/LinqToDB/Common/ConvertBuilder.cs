@@ -671,7 +671,7 @@ namespace LinqToDB.Common
 					?? Enum.GetUnderlyingType(type);
 
 			if ((enumType.IsNullable() || hasNullValue) && defaultType.IsValueType && !defaultType.IsNullable())
-				defaultType = typeof(Nullable<>).MakeGenericType(defaultType);
+				defaultType = defaultType.AsNullable();
 
 			return defaultType;
 		}

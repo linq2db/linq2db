@@ -341,7 +341,7 @@ namespace LinqToDB.Expressions
 		{
 			if (Type.IsValueType && !Type.IsNullable())
 			{
-				var type = typeof(Nullable<>).MakeGenericType(Type);
+				var type = Type.AsNullable();
 				return new ConvertFromDataReaderExpression(type, _idx, Converter, _dataReaderParam);
 			}
 
@@ -350,7 +350,7 @@ namespace LinqToDB.Expressions
 
 		public ConvertFromDataReaderExpression MakeNotNullable()
 		{
-			if (typeof(Nullable<>).IsSameOrParentOf(Type))
+			if (Type.IsNullable())
 			{
 				var type = Type.GetGenericArguments()[0];
 				return new ConvertFromDataReaderExpression(type, _idx, Converter, _dataReaderParam);

@@ -195,10 +195,10 @@ namespace LinqToDB.Expressions
 
 							switch (ue.Operand.NodeType)
 							{
-								case ExpressionType.Call           :
-								case ExpressionType.MemberAccess   :
-								case ExpressionType.New            :
-								case ExpressionType.Constant       :
+								case ExpressionType.Call        :
+								case ExpressionType.MemberAccess:
+								case ExpressionType.New         :
+								case ExpressionType.Constant    :
 
 									accessors.Add(e, p);
 									break;
@@ -528,6 +528,13 @@ namespace LinqToDB.Expressions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsNullValue(this Expression expr)
+		{
+			return (expr is ConstantExpression c && c.Value == null)
+				|| (expr is DefaultExpression && (!expr.Type.IsValueType || expr.Type.IsNullable()));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T? EvaluateExpression<T>(this Expression? expr)
 			where T : class
 		{
@@ -541,6 +548,9 @@ namespace LinqToDB.Expressions
 
 			switch (expr.NodeType)
 			{
+				case ExpressionType.Default :
+					return expr.Type.IsValueType ? Activator.CreateInstance(expr.Type) : null;
+
 				case ExpressionType.Constant:
 					return ((ConstantExpression)expr).Value;
 
@@ -606,12 +616,13 @@ namespace LinqToDB.Expressions
 		#endregion
 
 
-		public static bool IsEvaluable(Expression? expression)
+		public static bool IsEvaluable(this Expression? expression)
 		{
 			return expression?.NodeType switch
 			{
 				null                        => true,
 				ExpressionType.Convert      => IsEvaluable(((UnaryExpression)expression).Operand),
+				ExpressionType.Default      => true,
 				ExpressionType.Constant     => true,
 				ExpressionType.MemberAccess => IsEvaluable(((MemberExpression)expression).Expression),
 				_                           => false,

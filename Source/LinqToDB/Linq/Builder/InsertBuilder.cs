@@ -388,7 +388,7 @@ namespace LinqToDB.Linq.Builder
 
 				// static IValueInsertable<T> Into<T>(this IDataContext dataContext, Table<T> target)
 				//
-				if (source.NodeType == ExpressionType.Constant && ((ConstantExpression)source).Value == null)
+				if (source.IsNullValue())
 				{
 					sequence = builder.BuildSequence(new BuildInfo((IBuildContext?)null, into, new SelectQuery()));
 					destinationSequence = sequence;

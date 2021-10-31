@@ -235,6 +235,7 @@ namespace LinqToDB.Expressions
 					}
 
 				case ExpressionType.Parameter: path = ConvertPathTo(typeof(ParameterExpression)); break;
+				case ExpressionType.Default  : path = ConvertPathTo(typeof(DefaultExpression  )); break;
 
 				case ExpressionType.Extension:
 					{

@@ -36,7 +36,7 @@ namespace LinqToDB.Linq.Builder
 					operation.Items,
 					mergeContext);
 
-				if (!(predicate is ConstantExpression constPredicate) || constPredicate.Value != null)
+				if (!predicate.IsNullValue())
 				{
 					var condition = (LambdaExpression)predicate.Unwrap();
 

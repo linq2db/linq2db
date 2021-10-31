@@ -104,7 +104,7 @@ namespace LinqToDB.Linq
 									var isNullable = type.IsValueType && !type.IsNullable();
 									if (isNullable)
 									{
-										type                                        = typeof(Nullable<>).MakeGenericType(type);
+										type                                        = type.AsNullable();
 										context.IsNullableStruct[columnIndex.Value] = true;
 									}
 
