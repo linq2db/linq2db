@@ -337,7 +337,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestDefaultExpression_10([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_10([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context, [Values] bool withDefault)
 		{
 			using (var db = new TestDataConnection(context))
 			using (var tb = db.CreateLocalTable<TestTable>())
