@@ -39,9 +39,6 @@
 		<PackageReference Include="Oracle.ManagedDataAccess" />
 		<PackageReference Include="Microsoft.SqlServer.Types" />
 		<PackageReference Include="Microsoft.AspNet.OData" />
-		
-		<!--explicit reference to fix transient package versioning errors-->
-		<!--<PackageVersion Include="Microsoft.Extensions.DependencyInjection" />-->
 
 		<!--Copy sqlite3.dll manually, as package copy scripts doesn't work properly for our project -->
 		<Content Include="..\..\Redist\SQLite\sqlite3.dll">
