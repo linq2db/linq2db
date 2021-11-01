@@ -33,25 +33,21 @@ namespace LinqToDB.Linq.Builder
 
 			root = builder.ConvertExpressionTree(root);
 
-			var prevSequence = builder.BuildSequence(new BuildInfo(buildInfo, root) { CreateSubQuery = true });
-			var sequence     = new SubQueryContext(prevSequence);
-
+			var prevSequence  = builder.BuildSequence(new BuildInfo(buildInfo, root) { CreateSubQuery = true });
 			var finalFunction = functions.First();
-	
+			var sequence      = prevSequence;
+
+			if (finalFunction.IsAggregate)
+			{
+				// Wrap by subquery to handle aggregate limitations, especially for SQL Server
+				//
+				sequence = new SubQueryContext(sequence);
+			}
+
 			var context = new ChainContext(buildInfo.Parent, sequence, methodCall);
 
 			var sqlExpression = finalFunction.GetExpression((builder, context), builder.DataContext, context.SelectQuery, methodCall,
 				static (ctx, e, descriptor) => ctx.builder.ConvertToExtensionSql(ctx.context, e, descriptor));
-
-			if (finalFunction.IsAggregate && 
-			    !builder.DataContext.SqlProviderFlags.AcceptsOuterExpressionInAggregate && 
-			    QueryHelper.HasOuterReferences(prevSequence.SelectQuery, sqlExpression)
-			    )
-			{
-				// handle case when aggregate expression has outer references. SQL Server will fail.
-
-				prevSequence.SelectQuery.DoNotRemove = true;
-			}
 
 			context.Sql        = context.SelectQuery;
 			context.FieldIndex = context.SelectQuery.Select.Add(sqlExpression, methodCall.Method.Name);

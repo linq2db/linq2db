@@ -39,6 +39,9 @@ namespace LinqToDB.Linq.Builder
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { CreateSubQuery = true });
 
 			var prevSequence = sequence;
+
+			// Wrap by subquery to handle aggregate limitations, especially for SQL Server
+			//
 			sequence = new SubQueryContext(sequence);
 
 			if (prevSequence.SelectQuery.OrderBy.Items.Count > 0)
@@ -63,12 +66,6 @@ namespace LinqToDB.Linq.Builder
 						context.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 						sql[0] = query.Select.Columns[0];
 					}
-				}
-				else if (!builder.DataContext.SqlProviderFlags.AcceptsOuterExpressionInAggregate && QueryHelper.HasOuterReferences(prevSequence.SelectQuery, sql[0]))
-				{
-					// handle case when aggregate expression has outer references. SQL Server will fail.
-
-					prevSequence.SelectQuery.DoNotRemove = true;
 				}
 			}
 
