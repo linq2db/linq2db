@@ -45,7 +45,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (finalFunction.IsAggregate && 
 			    !builder.DataContext.SqlProviderFlags.AcceptsOuterExpressionInAggregate && 
-			    QueryHelper.HasOuterReferences(sequence.SelectQuery, sqlExpression)
+			    QueryHelper.HasOuterReferences(prevSequence.SelectQuery, sqlExpression)
 			    )
 			{
 				// handle case when aggregate expression has outer references. SQL Server will fail.
