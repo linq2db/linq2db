@@ -359,7 +359,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void SqlServerQueryHintMaxGrantPercentTest(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -378,7 +378,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void SqlServerQueryHintMinGrantPercentTest(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
