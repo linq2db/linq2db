@@ -81,36 +81,99 @@ namespace Tests.UserTests
 			builder.Entity<LeaveRequestDateEntry>()
 				.HasPrimaryKey(x => x.Id);
 
-			using (var db = GetDataContext(context, ms))
-			using (var employeeTimeOffBalances = db.CreateLocalTable<EmployeeTimeOffBalance>())
-			using (db.CreateLocalTable<Employee>())
-			using (db.CreateLocalTable<LeaveRequest>())
-			using (db.CreateLocalTable<LeaveRequestDateEntry>())
-			{
-				var query = employeeTimeOffBalances
-					.Select(tracking => new
-					{
-						WithParentReference = (decimal?)tracking.Employee.LeaveRequests
-							.SelectMany(e => e.LeaveRequestDateEntries)
-							.Select(e => tracking.TrackingTimeType == TrackingTimeType.Hour ? e.StartHour : e.EndHour)
-							.DefaultIfEmpty(0)
-							.Sum(),
-						WithParentReferenceCustom1 = SumCustom(tracking.Employee.LeaveRequests
-							.SelectMany(e => e.LeaveRequestDateEntries)
-							.Select(e => tracking.TrackingTimeType == TrackingTimeType.Hour ? e.StartHour : e.EndHour)
-							.DefaultIfEmpty(0), x => x),
-						WithParentReferenceCustom2 = SumCustom(tracking.Employee.LeaveRequests
-							.SelectMany(e => e.LeaveRequestDateEntries)
-							.Select(e => tracking.TrackingTimeType == TrackingTimeType.Hour ? e.StartHour : e.EndHour)
-							.DefaultIfEmpty(0)),
-						WithoutParentReference = (decimal?)tracking.Employee.LeaveRequests
-							.SelectMany(e => e.LeaveRequestDateEntries)
-							.Select(e => e.StartHour != null ? e.StartHour : e.EndHour)
-							.DefaultIfEmpty(0)
-							.Sum()
-					});
+			var timeOffBalances = new EmployeeTimeOffBalance[]{new()
+				{
+					Id               = 1,
+					EmployeeId       = 1,
+					TrackingTimeType = TrackingTimeType.Hour
+				},
+				new ()
+				{
+					Id               = 2,
+					EmployeeId       = 2,
+					TrackingTimeType = TrackingTimeType.Day
+				}};
 
-				FluentActions.Invoking(() => query.ToArray()).Should().NotThrow();
+			var employees = new Employee[] { new() { Id = 1 }, new() { Id = 2 } };
+
+			var leaveRequests = new LeaveRequest[]
+			{
+				new() { EmployeeId = 1, Id = 1 }, new() { EmployeeId = 1, Id = 2 },
+				new() { EmployeeId = 2, Id = 3 }, new() { EmployeeId = 2, Id = 4 }
+			};
+
+			var dateEntry = new LeaveRequestDateEntry[]
+			{
+				new() { Id = 1, StartHour = 1, EndHour = 12, LeaveRequestId = 1 },
+				new() { Id = 2, StartHour = 2, EndHour = 13, LeaveRequestId = 1 },
+				new() { Id = 3, StartHour = 3, EndHour = 14, LeaveRequestId = 2 },
+				new() { Id = 4, StartHour = 4, EndHour = 15, LeaveRequestId = 2 },
+			};
+
+			using (var db = GetDataContext(context, ms))
+			{
+				using (var employeeTimeOffBalances = db.CreateLocalTable(timeOffBalances))
+				using (db.CreateLocalTable(employees))
+				using (db.CreateLocalTable(leaveRequests))
+				using (db.CreateLocalTable(dateEntry))
+				{
+					var query = employeeTimeOffBalances
+						.Select(tracking => new
+						{
+							WithParentReference = (decimal?)tracking.Employee.LeaveRequests
+								.SelectMany(e => e.LeaveRequestDateEntries)
+								.Select(e =>
+									tracking.TrackingTimeType == TrackingTimeType.Hour ? e.StartHour : e.EndHour)
+								.DefaultIfEmpty(0)
+								.Sum(),
+							WithParentReferenceCustom1 = SumCustom(tracking.Employee.LeaveRequests
+								.SelectMany(e => e.LeaveRequestDateEntries)
+								.Select(e =>
+									tracking.TrackingTimeType == TrackingTimeType.Hour ? e.StartHour : e.EndHour)
+								.DefaultIfEmpty(0), x => x),
+							WithParentReferenceCustom2 = SumCustom(tracking.Employee.LeaveRequests
+								.SelectMany(e => e.LeaveRequestDateEntries)
+								.Select(e =>
+									tracking.TrackingTimeType == TrackingTimeType.Hour ? e.StartHour : e.EndHour)
+								.DefaultIfEmpty(0)),
+							WithoutParentReference = (decimal?)tracking.Employee.LeaveRequests
+								.SelectMany(e => e.LeaveRequestDateEntries)
+								.Select(e => e.StartHour != null ? e.StartHour : e.EndHour)
+								.DefaultIfEmpty(0)
+								.Sum()
+						});
+
+					var result = query.ToArray();
+
+					var expectedQuery = timeOffBalances
+						.Select(tracking => new
+						{
+							WithParentReference = leaveRequests.Where(lr => lr.EmployeeId == tracking.EmployeeId)
+								.SelectMany(e => dateEntry.Where(d => d.LeaveRequestId == e.Id))
+								.Select(e =>
+									tracking.TrackingTimeType == TrackingTimeType.Hour ? e.StartHour : e.EndHour)
+								.DefaultIfEmpty(0)
+								.Sum(),
+
+							WithoutParentReference = leaveRequests.Where(lr => lr.EmployeeId == tracking.EmployeeId)
+								.SelectMany(e => dateEntry.Where(d => d.LeaveRequestId == e.Id))
+								.Select(e => e.StartHour != null ? e.StartHour : e.EndHour)
+								.DefaultIfEmpty(0)
+								.Sum()
+
+						});
+
+					var expected = expectedQuery.ToArray();
+
+					result.Should().HaveCount(expected.Length);
+
+					for (int i = 0; i < result.Length; i++)
+					{
+						result[i].WithParentReference.Should().Be(expected[i].WithParentReference);
+						result[i].WithoutParentReference.Should().Be(expected[i].WithoutParentReference);
+					}
+
+				}
 			}
 		}
 	}

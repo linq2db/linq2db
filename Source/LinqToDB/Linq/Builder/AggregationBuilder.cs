@@ -64,7 +64,7 @@ namespace LinqToDB.Linq.Builder
 						sql[0] = query.Select.Columns[0];
 					}
 				}
-				else if (!builder.DataContext.SqlProviderFlags.AcceptsOuterExpressionInAggregate && QueryHelper.HasOuterReferences(sequence.SelectQuery, sql[0]))
+				else if (!builder.DataContext.SqlProviderFlags.AcceptsOuterExpressionInAggregate && QueryHelper.HasOuterReferences(prevSequence.SelectQuery, sql[0]))
 				{
 					// handle case when aggregate expression has outer references. SQL Server will fail.
 
