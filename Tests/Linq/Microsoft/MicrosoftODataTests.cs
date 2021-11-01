@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NETCOREAPP2_1
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,14 +18,6 @@ using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
 using Microsoft.AspNet.OData.Query;
 using Microsoft.AspNet.OData.Routing;
-#elif NETCOREAPP2_1
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNet.OData.Builder;
-using Microsoft.AspNet.OData;
-using Microsoft.AspNet.OData.Routing;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNet.OData.Query;
-using Microsoft.AspNet.OData.Extensions;
 #else
 using Microsoft.OData.UriParser;
 using Microsoft.OData.ModelBuilder;
@@ -131,13 +124,10 @@ namespace Tests.OData.Microsoft
 				request.Properties.Add(HttpPropertyKeys.HttpConfigurationKey, config);
 #else
 				// https://github.com/OData/AspNetCoreOData/blob/master/test/Microsoft.AspNetCore.OData.Tests/Extensions/RequestFactory.cs#L78
-				var  httpContext = new DefaultHttpContext();
+				var  httpContext    = new DefaultHttpContext();
 				HttpRequest request = httpContext.Request;
 
 				IServiceCollection services = new ServiceCollection();
-#if NETCOREAPP2_1
-				services.AddOData();
-#endif
 				httpContext.RequestServices = services.BuildServiceProvider();
 
 				request.Method      = "GET";
@@ -148,7 +138,7 @@ namespace Tests.OData.Microsoft
 #endif
 				var options = new ODataQueryOptions(queryContext, request);
 
-				var resultQuery = options.ApplyTo(table);
+				var resultQuery  = options.ApplyTo(table);
 				var materialized = Materialize(resultQuery);
 				Assert.That(materialized.Count, Is.EqualTo(1));
 			}
@@ -316,3 +306,4 @@ namespace Tests.OData.Microsoft
 
 	}
 }
+#endif
