@@ -99,15 +99,21 @@
 		<PackageVersion Include="IBM.Data.DB2.Core" Version="2.2.0.100" />
 		<PackageVersion Include="IBM.Data.DB2.Core-lnx" Version="2.2.0.100" />
 		<PackageVersion Include="IBM.Data.DB2.Core-osx" Version="2.0.0.100" />
+		<PackageVersion Include="Microsoft.AspNetCore.OData" Version="7.5.12" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp2.1' AND '$(TargetFramework)' != 'net472' ">
+		<PackageVersion Include="Microsoft.AspNetCore.OData" Version="8.0.3" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp3.1' ">
 		<PackageVersion Include="System.ComponentModel.Annotations" Version="5.0.0" />
 	</ItemGroup>
-	
+
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
 		<!-- explicitly reference specific version of transient dependency to avoid MSB3277 -->
 		<PackageVersion Include="System.Security.Cryptography.Cng" Version="5.0.0" />
+		<PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="5.0.0" />
 
 		<!--
 		downgraded temporary to make linq2db work with Azure Function v3:
