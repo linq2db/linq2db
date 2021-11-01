@@ -11,6 +11,7 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 	using LinqToDB.Reflection;
+	using LinqToDB.Common.Internal;
 
 	class AggregationBuilder : MethodCallBuilder
 	{
@@ -168,7 +169,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 				else
-				if (_returnType.IsClass || _methodName == "Sum" || _returnType.IsNullable())
+				if (_methodName == "Sum" || _returnType.IsNullableType())
 				{
 					expr = Builder.BuildSql(_returnType, fieldIndex, sqlExpression);
 				}

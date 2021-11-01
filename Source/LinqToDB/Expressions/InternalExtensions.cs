@@ -14,6 +14,7 @@ namespace LinqToDB.Expressions
 	using Linq.Builder;
 	using Mapping;
 	using LinqToDB.Common;
+	using LinqToDB.Common.Internal;
 
 	static class InternalExtensions
 	{
@@ -531,7 +532,7 @@ namespace LinqToDB.Expressions
 		public static bool IsNullValue(this Expression expr)
 		{
 			return (expr is ConstantExpression c && c.Value == null)
-				|| (expr is DefaultExpression && (!expr.Type.IsValueType || expr.Type.IsNullable()));
+				|| (expr is DefaultExpression && expr.Type.IsNullableType());
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -549,7 +550,7 @@ namespace LinqToDB.Expressions
 			switch (expr.NodeType)
 			{
 				case ExpressionType.Default :
-					return expr.Type.IsValueType ? Activator.CreateInstance(expr.Type) : null;
+					return !expr.Type.IsNullableType() ? Activator.CreateInstance(expr.Type) : null;
 
 				case ExpressionType.Constant:
 					return ((ConstantExpression)expr).Value;

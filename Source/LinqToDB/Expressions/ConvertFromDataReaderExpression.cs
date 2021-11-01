@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.Expressions
 {
 	using Common;
+	using LinqToDB.Common.Internal;
 	using LinqToDB.Extensions;
 	using LinqToDB.Linq;
 	using LinqToDB.Reflection;
@@ -339,7 +340,7 @@ namespace LinqToDB.Expressions
 
 		public ConvertFromDataReaderExpression MakeNullable()
 		{
-			if (Type.IsValueType && !Type.IsNullable())
+			if (!Type.IsNullableType())
 			{
 				var type = Type.AsNullable();
 				return new ConvertFromDataReaderExpression(type, _idx, Converter, _dataReaderParam);

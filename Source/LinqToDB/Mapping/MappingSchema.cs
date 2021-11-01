@@ -23,6 +23,7 @@ namespace LinqToDB.Mapping
 	using SqlProvider;
 	using SqlQuery;
 	using Common.Internal.Cache;
+	using LinqToDB.Common.Internal;
 
 	/// <summary>
 	/// Mapping schema.
@@ -259,7 +260,7 @@ namespace LinqToDB.Mapping
 				}
 			}
 
-			return type.IsClass || type.IsNullable();
+			return type.IsNullableType();
 		}
 
 		/// <summary>
