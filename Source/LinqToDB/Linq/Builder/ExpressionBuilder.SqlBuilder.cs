@@ -1138,9 +1138,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var arg = e.Arguments[0];
 						var enumerableType = arg.Type;
-						if (!EagerLoading.IsEnumerableType(enumerableType, MappingSchema))
-							isAggregation = false;
-						else
+						if (EagerLoading.IsEnumerableType(enumerableType, MappingSchema))
 						{
 							var elementType = EagerLoading.GetEnumerableElementType(enumerableType, MappingSchema);
 							if (!e.Method.GetParameters()[0].ParameterType.IsSameOrParentOf(typeof(IEnumerable<>).MakeGenericType(elementType)))
