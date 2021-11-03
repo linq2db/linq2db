@@ -232,8 +232,9 @@ namespace LinqToDB.Linq.Builder
 
 		internal ISqlExpression SubQueryToSql(IBuildContext context, MethodCallExpression expression)
 		{
-			var sequence = GetSubQuery(context, expression);
-			var subSql   = sequence.GetSubQuery(context);
+			var subQueryCtx = GetSubQueryContext(context, expression);
+			var sequence    = subQueryCtx.Context;
+			var subSql      = sequence.GetSubQuery(context);
 
 			if (subSql == null)
 			{

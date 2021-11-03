@@ -143,7 +143,11 @@ namespace Tests.UserTests
 								.Sum()
 						});
 
-					var result = query.OrderBy(_ => _.WithParentReference).ToArray();
+					var result = query.OrderBy(x => x.WithParentReference ?? 0)
+						.ThenBy(x => x.WithParentReferenceCustom1         ?? 0)
+						.ThenBy(x => x.WithParentReferenceCustom2         ?? 0)
+						.ThenByDescending(x => x.WithoutParentReference   ?? 0)
+						.ToArray();
 
 					var expectedQuery = timeOffBalances
 						.Select(tracking => new
@@ -163,7 +167,10 @@ namespace Tests.UserTests
 
 						});
 
-					var expected = expectedQuery.OrderBy(_ => _.WithParentReference).ToArray();
+					var expected = expectedQuery
+						.OrderBy(x => x.WithParentReference             ?? 0)
+						.ThenByDescending(x => x.WithoutParentReference ?? 0)
+						.ToArray();
 
 					result.Should().HaveCount(expected.Length);
 

@@ -80,9 +80,10 @@ namespace LinqToDB.Linq.Builder
 			readonly string     _methodName;
 			readonly Type       _returnType;
 			private  SqlInfo[]? _index;
+			private  int?       _parentIndex;
 
 			public int                  FieldIndex;
-			public ISqlExpression?      Sql;
+			public ISqlExpression       Sql = null!;
 			public MethodCallExpression MethodCall { get; }
 
 			static int CheckNullValue(bool isNull, object context)
@@ -143,6 +144,27 @@ namespace LinqToDB.Linq.Builder
 				throw new InvalidOperationException();
 			}
 
+			public override int ConvertToParentIndex(int index, IBuildContext context)
+			{
+				if (index != FieldIndex)
+					throw new InvalidOperationException();
+
+				if (_parentIndex != null)
+					return _parentIndex.Value;
+
+				if (Parent != null)
+				{
+					index        = Parent.SelectQuery.Select.Add(Sql);
+					_parentIndex = Parent.ConvertToParentIndex(index, Parent);
+				}
+				else
+				{
+					_parentIndex = index;
+				}
+
+				return _parentIndex.Value;
+			}
+
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
 				return flags switch
@@ -150,7 +172,7 @@ namespace LinqToDB.Linq.Builder
 					ConvertFlags.Field =>
 						_index ??= new[]
 						{
-							new SqlInfo(Sql!, Parent!.SelectQuery, Parent.SelectQuery.Select.Add(Sql!))
+							new SqlInfo(Sql, SelectQuery, FieldIndex)
 						},
 					_ => throw new InvalidOperationException(),
 				};
