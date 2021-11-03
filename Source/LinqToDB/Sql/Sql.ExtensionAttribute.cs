@@ -760,7 +760,7 @@ namespace LinqToDB
 				var newParams      = new List<ISqlExpression>();
 
 				Func<object?, string, string?, string?>? valueProvider = null;
-				Stack<SqlExtension> current                   = new Stack<SqlExtension>();
+				Stack<SqlExtension>                      current       = new Stack<SqlExtension>();
 
 				// TODO: implement context
 				valueProvider = (_, name, delimiter) =>
