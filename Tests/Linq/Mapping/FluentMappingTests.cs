@@ -10,6 +10,7 @@ using NUnit.Framework;
 
 namespace Tests.Mapping
 {
+	using LinqToDB.Data;
 	using Model;
 
 	[TestFixture]
@@ -692,6 +693,5 @@ namespace Tests.Mapping
 					Assert.That(sql2, Does.Not.Contain("[Money]"));
 			}
 		}
-
 	}
 }

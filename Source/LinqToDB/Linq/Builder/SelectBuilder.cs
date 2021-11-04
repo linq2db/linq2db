@@ -304,7 +304,7 @@ namespace LinqToDB.Linq.Builder
 					yield return new SequenceConvertPath { Path = path, Expr = expression, Level = level };
 					break;
 
-				// Queriable method.
+				// Queryable method.
 				//
 				case ExpressionType.Call       :
 					{
@@ -315,7 +315,7 @@ namespace LinqToDB.Linq.Builder
 							    typeof(IQueryable). IsSameOrParentOf(call.Type) ||
 							    FirstSingleBuilder.MethodNames.Contains(call.Method.Name))
 								yield return new SequenceConvertPath { Path = path, Expr = expression, Level = level };
-
+						
 						break;
 					}
 			}

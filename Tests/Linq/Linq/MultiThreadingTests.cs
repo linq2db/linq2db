@@ -3,6 +3,7 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -247,6 +248,137 @@ namespace Tests.Linq
 					}, Enumerable.Range(1, 100).ToArray());
 			}
 		}
+
+		[Test]
+		public void EagerLoadMultiLevel([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var d1 = new DisableBaseline("Multi-threading");
+			using var d2 = new DisableLogging();
+
+			var testData = MultiThreadedData.TestData();
+
+			using (var db    = (DataConnection)GetDataContext(context))
+			using (var table = db.CreateLocalTable(testData, true))
+			{
+				ConcurrentRunner(db, context, 1,
+					(threadDb, p) =>
+					{
+						var param1 = p;
+						var param2 = p;
+						var result = threadDb.GetTable<MultiThreadedData>()
+							.Where(t => t.Id > param1)
+							.Select(t => new
+							{
+								t.Id,
+								t.StrValue,
+								t.Value,
+								Others = threadDb.GetTable<MultiThreadedData>().Where(x => x.Id > t.Id && x.Id > param1 && x.Id > param2).OrderBy(x => x.Id)
+									.Select(o => new
+									{
+										o.Id,
+										o.StrValue,
+										Param = param1,
+										SubOthers = threadDb.GetTable<MultiThreadedData>()
+											.Where(x => x.Id > o.Id)
+											.OrderBy(x => x.Id)
+											.ToArray()
+									}).ToArray()
+							})
+							.ToList();
+						return result;
+					}, (result, p) =>
+					{
+						var param1 = p;
+						var param2 = p;
+						var expected = testData
+							.Where(t => t.Id > param1)
+							.Select(t => new
+							{
+								t.Id,
+								t.StrValue,
+								t.Value,
+								Others = testData.Where(x => x.Id > t.Id && x.Id > param1 && x.Id > param2).OrderBy(x => x.Id)
+									.Select(o => new
+									{
+										o.Id,
+										o.StrValue,
+										Param = param1,
+										SubOthers = testData
+											.Where(x => x.Id > o.Id)
+											.OrderBy(x => x.Id)
+											.ToArray()
+									}).ToArray()
+							})
+							.ToList();
+
+						result.Count.Should().Be(expected.Count);
+
+						if (expected.Count > 0)
+							AreEqualWithComparer(result, expected);	
+					}, Enumerable.Range(1, 100).ToArray());
+			}
+		}
+
+
+		/*
+		[Test]
+		public void EagerLoadingX([DataSources(false)] string context, [Values(1, 2, 3)] int p)
+		{
+			var testData = MultiThreadedData.TestData();
+
+			using (var threadDb    = (DataConnection)GetDataContext(context))
+			using (var table = threadDb.CreateLocalTable(testData, true))
+			{
+				var param1 = p;
+				var param2 = p;
+				var result = threadDb.GetTable<MultiThreadedData>()
+					.Where(t => t.Id > param1)
+					.Select(t => new
+					{
+						t.Id,
+						t.StrValue,
+						t.Value,
+						Others = threadDb.GetTable<MultiThreadedData>().Where(x => x.Id > t.Id && x.Id > param1 && x.Id > param2).OrderBy(x => x.Id)
+							.Select(o => new
+							{
+								o.Id,
+								o.StrValue,
+								Param = param1,
+								SubOthers = threadDb.GetTable<MultiThreadedData>()
+									.Where(x => x.Id > o.Id)
+									.OrderBy(x => x.Id)
+									.ToArray()
+							}).ToArray()
+					})
+					.ToList();
+
+				var expected = testData
+					.Where(t => t.Id > param1)
+					.Select(t => new
+					{
+						t.Id,
+						t.StrValue,
+						t.Value,
+						Others = testData.Where(x => x.Id > t.Id && x.Id > param1 && x.Id > param2).OrderBy(x => x.Id)
+							.Select(o => new
+							{
+								o.Id,
+								o.StrValue,
+								Param = param1,
+								SubOthers = testData
+									.Where(x => x.Id > o.Id)
+									.OrderBy(x => x.Id)
+									.ToArray()
+							}).ToArray()
+					})
+					.ToList();
+
+				AreEqualWithComparer(result, expected);	
+
+			}
+		}
+		*/
+
 
 	}
 }

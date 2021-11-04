@@ -62,7 +62,7 @@ namespace LinqToDB.Linq.Builder
 			return ConvertToSql(expression, level, flags)
 				.Select(idx => idx
 					.WithQuery(SelectQuery)
-					.WithIndex(GetIndex(idx.Index, (SqlColumn)idx.Sql)))
+					.WithIndex(GetIndex(idx.Index, idx.Sql)))
 				.ToArray();
 		}
 
@@ -78,7 +78,7 @@ namespace LinqToDB.Linq.Builder
 		protected virtual bool OptimizeColumns => true;
 		protected internal readonly Dictionary<int,int> ColumnIndexes = new ();
 
-		protected virtual int GetIndex(int index,  SqlColumn column)
+		protected virtual int GetIndex(int index, ISqlExpression column)
 		{
 			if (!ColumnIndexes.TryGetValue(index, out var idx))
 			{

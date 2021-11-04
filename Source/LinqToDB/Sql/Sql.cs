@@ -152,7 +152,7 @@ namespace LinqToDB
 
 		class IsDistinctBuilder : IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(ISqExtensionBuilder builder)
 			{
 				var left  = builder.GetExpression(0);
 				var right = builder.GetExpression(1);
@@ -602,9 +602,12 @@ namespace LinqToDB
 		}
 
 		[Function]
-		[Function(PN.DB2,     "Locate")]
-		[Function(PN.MySql,   "Locate")]
-		[Function(PN.SapHana, "Locate")]
+		[Function(PN.DB2,      "Locate")]
+		[Function(PN.MySql,    "Locate")]
+#pragma warning disable CS3016 // Arrays as attribute arguments is not CLS-compliant
+		[Function(PN.SapHana,  "Locate", 1, 0)]
+#pragma warning restore CS3016 // Arrays as attribute arguments is not CLS-compliant
+		[Function(PN.Firebird, "Position")]
 		public static int? CharIndex(char? value, string? str)
 		{
 			if (value == null || str == null) return null;
@@ -613,9 +616,12 @@ namespace LinqToDB
 		}
 
 		[Function]
-		[Function(PN.DB2,     "Locate")]
-		[Function(PN.MySql,   "Locate")]
-		[Function(PN.SapHana, "Locate")]
+		[Function(PN.DB2,      "Locate")]
+		[Function(PN.MySql,    "Locate")]
+#pragma warning disable CS3016 // Arrays as attribute arguments is not CLS-compliant
+		[Function(PN.SapHana,  "Locate", 1, 0, 2)]
+#pragma warning restore CS3016 // Arrays as attribute arguments is not CLS-compliant
+		[Function(PN.Firebird, "Position")]
 		public static int? CharIndex(char? value, string? str, int? start)
 		{
 			if (str == null || value == null || start == null) return null;
@@ -1072,7 +1078,7 @@ namespace LinqToDB
 			{
 			}
 
-			public override ISqlExpression? GetExpression(IDataContext dataContext, SelectQuery query, Expression expression, Func<Expression, ColumnDescriptor?, ISqlExpression> converter)
+			public override ISqlExpression? GetExpression<TContext>(TContext context, IDataContext dataContext, SelectQuery query, Expression expression, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
 				var expressionStr = Expression;
 				PrepareParameterValues(expression, ref expressionStr, true, out var knownExpressions, out _);
@@ -1081,7 +1087,7 @@ namespace LinqToDB
 
 				for (var i = 0; i < knownExpressions.Count; i++)
 				{
-					var arg = converter(knownExpressions[i]!, null);
+					var arg = converter(context, knownExpressions[i]!, null);
 
 					if (arg.SystemType == typeof(string))
 					{

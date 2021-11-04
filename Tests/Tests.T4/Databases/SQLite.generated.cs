@@ -18,7 +18,7 @@ using LinqToDB.Mapping;
 
 namespace SQLiteDataContext
 {
-	public partial class TestDataDB : LinqToDB.Data.DataConnection
+	public partial class TestDataDB : LinqToDB.DataContext
 	{
 		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
 		public ITable<Child>             Children            { get { return this.GetTable<Child>(); } }
@@ -47,13 +47,6 @@ namespace SQLiteDataContext
 
 		public TestDataDB(string configuration)
 			: base(configuration)
-		{
-			InitDataContext();
-			InitMappingSchema();
-		}
-
-		public TestDataDB(LinqToDbConnectionOptions options)
-			: base(options)
 		{
 			InitDataContext();
 			InitMappingSchema();

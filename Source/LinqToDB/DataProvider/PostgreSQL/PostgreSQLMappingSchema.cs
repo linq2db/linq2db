@@ -10,7 +10,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Mapping;
 	using System.Data.Linq;
 	using System.Globalization;
-	using System.Linq.Expressions;
 
 	public class PostgreSQLMappingSchema : MappingSchema
 	{
@@ -73,14 +72,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			AddScalarType(typeof(ulong ), ulongType);
 			AddScalarType(typeof(ulong?), ulongType);
 
-			SetConvertExpression(
-				ulongType.Type.WithSystemType(typeof(ulong)),
-				ulongType.Type.WithSystemType(typeof(DataParameter)),
-				(Expression<Func<ulong, DataParameter>>)((ulong value) => new DataParameter(null, (decimal)value, DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/));
-			SetConvertExpression(
-				ulongType.Type.WithSystemType(typeof(ulong?)),
-				ulongType.Type.WithSystemType(typeof(DataParameter)),
-				(Expression<Func<ulong?, DataParameter>>)((ulong? value) => new DataParameter(null, (decimal?)value, DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/), addNullCheck: false);
+			SetConvertExpression<ulong , DataParameter>(value => new DataParameter(null, (decimal)value , DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/);
+			SetConvertExpression<ulong?, DataParameter>(value => new DataParameter(null, (decimal?)value, DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/, addNullCheck: false);
 		}
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)

@@ -168,7 +168,7 @@ namespace LinqToDB.Linq.Builder
 								if (l != null)
 								{
 									// In Grouping KeyContext we have to perform calculation on server side
-									if (context.builder.Contexts.Any(c => c is GroupByBuilder.KeyContext))
+									if (context.builder.Contexts.Any(static c => c is GroupByBuilder.KeyContext))
 										return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
 									break;
 								}
@@ -211,9 +211,9 @@ namespace LinqToDB.Linq.Builder
 
 								if (ex is MethodCallExpression ce)
 								{
-									if (context.builder.IsSubQuery(context.context, ce))
+									if (!context.builder.IsEnumerableSource(ce) && context.builder.IsSubQuery(context.context, ce))
 									{
-										if (!IsMultipleQuery(ce, context.context.Builder.MappingSchema))
+										if (!context.context.Builder.IsMultipleQuery(ce, context.context.Builder.MappingSchema))
 										{
 											var info = context.builder.GetSubQueryContext(context.context, ce);
 											if (context.alias != null)
@@ -233,7 +233,7 @@ namespace LinqToDB.Linq.Builder
 								{
 									// field = localVariable
 									//
-									if (!context.builder._expressionAccessors.TryGetValue(ex, out var c))
+									if (!context.builder.ParametersContext._expressionAccessors.TryGetValue(ex, out var c))
 										return new TransformInfo(ma);
 									return new TransformInfo(Expression.MakeMemberAccess(Expression.Convert(c, ex.Type), ma.Member));
 								}
@@ -271,7 +271,7 @@ namespace LinqToDB.Linq.Builder
 									return new TransformInfo(context.builder.BuildMultipleQuery(context.context, expr, context.enforceServerSide));
 								}
 
-								if (context.builder._expressionAccessors.TryGetValue(expr, out var accessor))
+								if (context.builder.ParametersContext._expressionAccessors.TryGetValue(expr, out var accessor))
 									return new TransformInfo(Expression.Convert(accessor, expr.Type));
 
 								break;
@@ -291,11 +291,14 @@ namespace LinqToDB.Linq.Builder
 							{
 								var ce = (MethodCallExpression)expr;
 
-						/*if (IsGroupJoinSource(context, ce))
-						{
-							foreach (var arg in ce.Arguments.Skip(1))
-								if (!_skippedExpressions.Contains(arg))
-									_skippedExpressions.Add(arg);
+								/*if (context.builder.IsEnumerableSource(ce))
+									break;
+
+								if (context.builder.IsGroupJoinSource(context.context, ce))
+								{
+									foreach (var arg in ce.Arguments.Skip(1))
+										if (!context.builder._skippedExpressions.Contains(arg))
+										context.builder._skippedExpressions.Add(arg);
 
 									if (context.builder.IsSubQuery(context.context, ce))
 									{
@@ -323,7 +326,7 @@ namespace LinqToDB.Linq.Builder
 
 								if ((context.builder._buildMultipleQueryExpressions == null || !context.builder._buildMultipleQueryExpressions.Contains(ce)) && context.builder.IsSubQuery(context.context, ce))
 								{
-									if (IsMultipleQuery(ce, context.builder.MappingSchema))
+									if (context.builder.IsMultipleQuery(ce, context.builder.MappingSchema))
 										return new TransformInfo(context.builder.BuildMultipleQuery(context.context, ce, context.enforceServerSide));
 
 									return new TransformInfo(context.builder.GetSubQueryExpression(context.context, ce, context.enforceServerSide, context.alias));
@@ -518,14 +521,50 @@ namespace LinqToDB.Linq.Builder
 			return expr;
 		}
 
-		static bool IsMultipleQuery(MethodCallExpression ce, MappingSchema mappingSchema)
+		bool IsEnumerableSource(Expression expr)
+		{
+			if (!CanBeCompiled(expr))
+			{
+				// Special case, contains has it's own translation
+				if (!(expr is MethodCallExpression mce && mce.IsQueryable("Contains")))
+					return false;
+			}
+
+			var selectQuery = new SelectQuery();
+			while (expr != null)
+			{
+				var buildInfo = new BuildInfo((IBuildContext?)null, expr, selectQuery);
+				if (GetBuilder(buildInfo, false) is EnumerableBuilder)
+				{
+					return true;
+				}
+
+				switch (expr)
+				{
+					case MemberExpression me:
+						expr = me.Expression;
+						continue;
+					case MethodCallExpression mc when mc.IsQueryable():
+						expr = mc.Arguments[0];
+						continue;
+				}
+
+				break;
+			}
+
+			return false;
+		}
+
+		bool IsMultipleQuery(MethodCallExpression ce, MappingSchema mappingSchema)
 		{
 			//TODO: Multiply query check should be smarter, possibly not needed if we create fallback mechanism
-			return !ce.IsQueryable(FirstSingleBuilder.MethodNames)
+			var result = !ce.IsQueryable(FirstSingleBuilder.MethodNames)
 			       && typeof(IEnumerable).IsSameOrParentOf(ce.Type)
 			       && ce.Type != typeof(string) 
 			       && !ce.Type.IsArray 
 			       && !ce.IsAggregate(mappingSchema);
+
+			return result;
 		}
 
 		class SubQueryContextInfo
@@ -535,16 +574,19 @@ namespace LinqToDB.Linq.Builder
 			public Expression?          Expression;
 		}
 
-		readonly Dictionary<IBuildContext,List<SubQueryContextInfo>> _buildContextCache = new ();
+		Dictionary<IBuildContext,List<SubQueryContextInfo>>? _buildContextCache;
 
 		SubQueryContextInfo GetSubQueryContext(IBuildContext context, MethodCallExpression expr)
 		{
-			if (!_buildContextCache.TryGetValue(context, out var sbi))
+			if (_buildContextCache == null || !_buildContextCache.TryGetValue(context, out var sbi))
+			{
+				_buildContextCache ??= new ();
 				_buildContextCache[context] = sbi = new List<SubQueryContextInfo>();
+			}
 
 			foreach (var item in sbi)
 			{
-				if (expr.EqualsTo(item.Method, GetSimpleEqualsToContext(false)))
+				if (expr.EqualsTo(item.Method, OptimizationContext.GetSimpleEqualsToContext(false)))
 					return item;
 			}
 
@@ -657,8 +699,16 @@ namespace LinqToDB.Linq.Builder
 								select c.EntityDescriptor
 							).FirstOrDefault();
 
-					return om != null && om.Associations.All(a => !a.MemberInfo.EqualsTo(me.Member)) &&
-						   om[me.Member.Name] == null;
+					if (om != null && om[me.Member.Name] == null)
+					{
+						foreach (var a in om.Associations)
+							if (a.MemberInfo.EqualsTo(me.Member))
+								return false;
+
+						return true;
+					}
+
+					return false;
 				}
 				case ExpressionType.Call:
 				{
@@ -876,7 +926,7 @@ namespace LinqToDB.Linq.Builder
 
 		static Expression GetMultipleQueryExpressionLazy(IBuildContext context, MappingSchema mappingSchema, Expression expression, HashSet<ParameterExpression> parameters)
 		{
-			expression.Visit(parameters, static(parameters, e) =>
+			expression.Visit(parameters, static (parameters, e) =>
 			{
 				if (e.NodeType == ExpressionType.Lambda)
 					foreach (var p in ((LambdaExpression)e).Parameters)
@@ -987,7 +1037,7 @@ namespace LinqToDB.Linq.Builder
 					context.parms.Add(ex);
 
 					return Expression.Convert(
-						Expression.ArrayIndex(context.paramex, Expression.Constant(context.parms.Count - 1)),
+						Expression.ArrayIndex(context.paramex, ExpressionInstances.Int32(context.parms.Count - 1)),
 						e.Type);
 				}
 

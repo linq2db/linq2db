@@ -52,7 +52,7 @@ namespace LinqToDB.Linq.Builder
 			if (defaultIfEmpty != null && (collectionInfo.JoinType == JoinType.Right || collectionInfo.JoinType == JoinType.Full))
 				defaultIfEmpty.Disabled = false;
 
-			var leftJoin       = collection is DefaultIfEmptyBuilder.DefaultIfEmptyContext || collectionInfo.JoinType == JoinType.Left;
+			var leftJoin       = SequenceHelper.UnwrapSubqueryContext(collection) is DefaultIfEmptyBuilder.DefaultIfEmptyContext || collectionInfo.JoinType == JoinType.Left;
 			var sql            = collection.SelectQuery;
 
 			var newQuery       = QueryHelper.ContainsElement(sql, collectionInfo.SelectQuery);
@@ -80,7 +80,7 @@ namespace LinqToDB.Linq.Builder
 
 							collection.SelectQuery.Where.ConcatSearchCondition(foundJoin.Condition);
 
-							((ISqlExpressionWalkable) collection.SelectQuery.Where).Walk(new WalkOptions(), e =>
+							((ISqlExpressionWalkable) collection.SelectQuery.Where).Walk(WalkOptions.Default, collection, static (collection, e) =>
 							{
 								if (e is SqlColumn column)
 								{

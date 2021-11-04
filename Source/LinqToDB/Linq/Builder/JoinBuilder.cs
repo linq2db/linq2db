@@ -314,7 +314,7 @@ namespace LinqToDB.Linq.Builder
 
 					// Convert inner condition.
 					//
-					var parameters = context.Builder.CurrentSqlParameters
+					var parameters = context.Builder.ParametersContext.CurrentSqlParameters
 						.Select((p,i) => new { p, i })
 						.ToDictionary(_ => _.p.Expression, _ => _.i);
 					var paramArray = Expression.Parameter(typeof(object[]), "ps");
@@ -326,7 +326,7 @@ namespace LinqToDB.Linq.Builder
 							if (context.parameters.TryGetValue(e, out var idx))
 							{
 								return Expression.Convert(
-									Expression.ArrayIndex(context.paramArray, Expression.Constant(idx)),
+									Expression.ArrayIndex(context.paramArray, ExpressionInstances.Int32(idx)),
 									e.Type);
 							}
 
@@ -357,7 +357,7 @@ namespace LinqToDB.Linq.Builder
 						new[]
 						{
 							ExpressionBuilder.QueryRunnerParam,
-							Expression.Constant(context.Builder.CurrentSqlParameters),
+							Expression.Constant(context.Builder.ParametersContext.CurrentSqlParameters),
 							outerKey,
 							Expression.Constant(itemReader),
 						});

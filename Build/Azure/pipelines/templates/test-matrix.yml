@@ -41,7 +41,7 @@ parameters:
 # OPERATION SYSTEM SELECTORS
 # - enable_os_win2019  (true/false string) : enables testrun for windows 2019 image (windows-2019)
 # - enable_os_win2016  (true/false string) : enables testrun for windows 2016 image (vs2017-win2016)
-# - enable_os_ubuntu16 (true/false string) : enables testrun for Ubuntu 16.04 image (ubuntu-16.04)
+# - enable_os_ubuntu18 (true/false string) : enables testrun for Ubuntu 18.04 image (ubuntu-18.04)
 # - enable_os_ubuntu20 (true/false string) : enables testrun for Ubuntu 20.04 image (ubuntu-20.04)
 # - enable_os_macos    (true/false string) : enables testrun for Mac OS image (macOS-10.15)
 
@@ -75,7 +75,9 @@ jobs:
       enabled: ${{ parameters.enabled }}
       experimental: ${{ parameters.experimental }}
       with_baselines: ${{ parameters.with_baselines }}
-      mac_enabled: ${{ parameters.mac_enabled }}
+#      mac_enabled: ${{ parameters.mac_enabled }}
+# TODO: disable for now as it fails always due to small stack
+      mac_enabled: false
       test_matrix:
 # SQLite
         - name: SQLite
@@ -85,7 +87,7 @@ jobs:
           config_macos: sqlite
           enable_os_win2016: true
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: true
@@ -105,7 +107,7 @@ jobs:
           config_macos: sqlite.ms
           enable_os_win2016: true
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: true
@@ -124,7 +126,7 @@ jobs:
           config_win: access
           enable_os_win2016: false
           enable_os_win2019: true
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: false
           enable_os_macos: false
           enable_fw_net472: true
@@ -143,7 +145,7 @@ jobs:
           script_win: access.ace.cmd
           enable_os_win2016: false
           enable_os_win2019: true
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: false
           enable_os_macos: false
           enable_fw_net472: true
@@ -161,7 +163,7 @@ jobs:
           config_win: access.odbc.mdb
           enable_os_win2016: false
           enable_os_win2019: true
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: false
           enable_os_macos: false
           enable_fw_net472: true
@@ -180,7 +182,7 @@ jobs:
           script_win: access.ace.cmd
           enable_os_win2016: false
           enable_os_win2019: true
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: false
           enable_os_macos: false
           enable_fw_net472: true
@@ -199,7 +201,7 @@ jobs:
           script_win: access.ace.x64.cmd
           enable_os_win2016: true
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: false
           enable_os_macos: false
           enable_fw_net472: false
@@ -218,7 +220,7 @@ jobs:
           script_win: access.ace.x64.cmd
           enable_os_win2016: false # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: false
           enable_os_macos: false
           enable_fw_net472: false
@@ -238,7 +240,7 @@ jobs:
           psscript_win: sqlce.ps1
           enable_os_win2016: true
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: false
           enable_os_macos: false
           enable_fw_net472: true
@@ -261,7 +263,7 @@ jobs:
           install_docker_macos: true
           enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: false
@@ -283,7 +285,7 @@ jobs:
           install_docker_macos: true
           enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: false
@@ -307,7 +309,7 @@ jobs:
           install_docker_macos: true
           enable_os_win2016: false # true (needs working docker image)
           enable_os_win2019: false # true (needs working docker image)
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: true
@@ -330,7 +332,7 @@ jobs:
           install_docker_macos: true
           enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: false
@@ -352,7 +354,7 @@ jobs:
           install_docker_macos: true
           enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: false
@@ -374,7 +376,7 @@ jobs:
           install_docker_macos: true
           enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: false
@@ -396,7 +398,7 @@ jobs:
           install_docker_macos: true
           enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: false
@@ -420,7 +422,7 @@ jobs:
           install_docker_macos: true
           enable_os_win2016: false # true (needs working docker image)
           enable_os_win2019: false # true (needs working docker image)
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: true
@@ -443,7 +445,7 @@ jobs:
           install_docker_macos: true
           enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: false
@@ -466,7 +468,7 @@ jobs:
           install_docker_macos: true
           enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: false
@@ -489,7 +491,7 @@ jobs:
           install_docker_macos: true
           enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: false
@@ -509,7 +511,7 @@ jobs:
           script_win: sqlserver.2005.cmd
           enable_os_win2016: true
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: false
           enable_os_macos: false
           enable_fw_net472: true
@@ -528,7 +530,7 @@ jobs:
           script_win: sqlserver.2005.cmd
           enable_os_win2016: false # true (too many sqlserver tests)
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: false
           enable_os_macos: false
           enable_fw_net472: true
@@ -547,7 +549,7 @@ jobs:
           script_win: sqlserver.2008.cmd
           enable_os_win2016: true
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: false
           enable_os_macos: false
           enable_fw_net472: true
@@ -566,7 +568,7 @@ jobs:
           script_win: sqlserver.2008.cmd
           enable_os_win2016: false # true (too many sqlserver tests)
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: false
           enable_os_macos: false
           enable_fw_net472: true
@@ -585,7 +587,7 @@ jobs:
           script_win: sqlserver.2012.cmd
           enable_os_win2016: true
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: false
           enable_os_macos: false
           enable_fw_net472: true
@@ -604,7 +606,7 @@ jobs:
           script_win: sqlserver.2012.cmd
           enable_os_win2016: false # true (too many sqlserver tests)
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: false
           enable_os_macos: false
           enable_fw_net472: true
@@ -623,7 +625,7 @@ jobs:
           script_win: sqlserver.2014.cmd
           enable_os_win2016: true
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: false
           enable_os_macos: false
           enable_fw_net472: true
@@ -642,7 +644,7 @@ jobs:
           script_win: sqlserver.2014.cmd
           enable_os_win2016: false # true (too many sqlserver tests)
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: false
           enable_os_macos: false
           enable_fw_net472: true
@@ -661,7 +663,7 @@ jobs:
           script_win: sqlserver.2016.cmd
           enable_os_win2016: true
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: false
           enable_os_macos: false
           enable_fw_net472: true
@@ -680,7 +682,7 @@ jobs:
           script_win: sqlserver.2016.cmd
           enable_os_win2016: false # true (too many sqlserver tests)
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: false
           enable_os_macos: false
           enable_fw_net472: true
@@ -702,9 +704,9 @@ jobs:
           script_linux: sqlserver.2017.sh
           script_macos: mac.sqlserver.2017.sh
           install_docker_macos: true
-          enable_os_win2016: true
+          enable_os_win2016: false # disabled as MS removed docker images for sql server for no good reason
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: true
@@ -726,9 +728,9 @@ jobs:
           script_linux: sqlserver.2017.sh
           script_macos: mac.sqlserver.2017.sh
           install_docker_macos: true
-          enable_os_win2016: false # true (too many sqlserver tests)
+          enable_os_win2016: false # too many sqlserver tests
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: true
@@ -752,7 +754,7 @@ jobs:
           install_docker_macos: true
           enable_os_win2016: false
           enable_os_win2019: true
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: true
           enable_os_macos:  true
           enable_fw_net472: true
@@ -776,7 +778,7 @@ jobs:
           install_docker_macos: true
           enable_os_win2016: false
           enable_os_win2019: true
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: true
           enable_os_macos:  true
           enable_fw_net472: true
@@ -799,7 +801,7 @@ jobs:
           install_docker_macos: true
           enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: false
@@ -822,7 +824,7 @@ jobs:
           install_docker_macos: true
           enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: false
@@ -844,7 +846,7 @@ jobs:
           install_docker_macos: true
           enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: false
@@ -867,7 +869,7 @@ jobs:
           install_docker_macos: true
           enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: false
@@ -889,7 +891,7 @@ jobs:
           install_docker_macos: true
           enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: false
@@ -911,7 +913,7 @@ jobs:
           install_docker_macos: true
           enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: false
@@ -931,18 +933,18 @@ jobs:
           config_macos: db2
           script_linux: db2.sh
           script_macos: mac.db2.sh
-          nuget_linux: IBM.Data.DB2.Core-lnx -Version 2.2.0.100
-          nuget_macos: IBM.Data.DB2.Core-osx -Version 2.0.0.100
+          nuget_linux: IBM.Data.DB2.Core-lnx -Version 3.1.0.500
+          nuget_macos: IBM.Data.DB2.Core-osx -Version 3.1.0.500
           install_docker_macos: true
           enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu16: true
-          enable_os_ubuntu20: false
+          enable_os_ubuntu18: false
+          enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: false
-          enable_fw_netcore21: true
+          enable_fw_netcore21: false
           enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]')) }}:
             enabled: true
@@ -956,18 +958,18 @@ jobs:
           config_macos: informix
           script_linux: informix12.sh
           script_macos: mac.informix12.sh
-          nuget_linux: IBM.Data.DB2.Core-lnx -Version 2.2.0.100
-          nuget_macos: IBM.Data.DB2.Core-osx -Version 2.0.0.100
+          nuget_linux: IBM.Data.DB2.Core-lnx -Version 3.1.0.500
+          nuget_macos: IBM.Data.DB2.Core-osx -Version 3.1.0.500
           install_docker_macos: true
           enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu16: # false true (needs working docker image)
-          enable_os_ubuntu20: false
+          enable_os_ubuntu18: false
+          enable_os_ubuntu20: false # true (needs working docker image)
           enable_os_macos: # false true (needs working docker image)
           enable_fw_net472: false
-          enable_fw_netcore21: true
+          enable_fw_netcore21: false
           enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[informix.all]')) }}:
             enabled: true
@@ -980,18 +982,18 @@ jobs:
           config_macos: informix
           script_linux: informix14.sh
           script_macos: mac.informix14.sh
-          nuget_linux: IBM.Data.DB2.Core-lnx -Version 2.2.0.100
-          nuget_macos: IBM.Data.DB2.Core-osx -Version 2.0.0.100
+          nuget_linux: IBM.Data.DB2.Core-lnx -Version 3.1.0.500
+          nuget_macos: IBM.Data.DB2.Core-osx -Version 3.1.0.500
           install_docker_macos: true
           enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu16: true
-          enable_os_ubuntu20: false
+          enable_os_ubuntu18: false
+          enable_os_ubuntu20: true
           enable_os_macos: true
           enable_fw_net472: false
-          enable_fw_netcore21: true
+          enable_fw_netcore21: false
           enable_fw_netcore31: false
-          enable_fw_net50: false
+          enable_fw_net50: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[informix.all]')) }}:
             enabled: true
@@ -1008,7 +1010,7 @@ jobs:
           install_docker_macos: true
           enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu16: false
+          enable_os_ubuntu18: false
           enable_os_ubuntu20: true
           enable_os_macos: false # start takes 'forever'
           enable_fw_net472: false

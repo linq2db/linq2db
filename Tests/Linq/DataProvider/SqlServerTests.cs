@@ -7,10 +7,12 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -1946,6 +1948,79 @@ AS
 
 				for (var i = 0; i < 10; i++)
 					Assert.AreEqual(lastIdentity + (i + 1) * step, persons[i].ID);
+			}
+		}
+
+		[Sql.TableFunction("PersonTableFunction", argIndices: new []{2, 3})]
+		static IQueryable<Person> PersonTableFunction(IDataContext dc, object? fake, int? id, string? firstName)
+		{
+			return dc.GetTable<Person>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, dc, fake, id, firstName);
+		}
+
+		[Sql.TableFunction("PersonTableFunction", argIndices: new []{2, 3})]
+		static LinqToDB.ITable<Person> PersonTableFunctionTable(IDataContext dc, object? fake, int? id, string? firstName)
+		{
+			return dc.GetTable<Person>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, dc, fake, id, firstName);
+		}
+
+		[Sql.TableExpression("PersonTableFunction({4}, {5}) {1}")]
+		static IQueryable<Person> PersonTableExpression(IDataContext dc, object? fake, int? id, string? firstName)
+		{
+			return dc.GetTable<Person>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, dc, fake, id, firstName);
+		}
+
+		[Sql.TableExpression("PersonTableFunction({4}, {5}) {1}")]
+		static LinqToDB.ITable<Person> PersonTableExpressionTable(IDataContext dc, object? fake, int? id, string? firstName)
+		{
+			return dc.GetTable<Person>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, dc, fake, id, firstName);
+		}
+
+		[Test]
+		public void TestTableFunctionAndTableExpression([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context, [Values] bool useIdentity)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var person = db.Person.First();
+
+				void DropTableFunction()
+				{
+					db.Execute(@"
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'IF' AND name = 'PersonTableFunction')
+	BEGIN DROP FUNCTION PersonTableFunction
+END
+");
+				}
+
+				DropTableFunction();
+
+				try
+				{
+					db.Execute(@"
+CREATE FUNCTION dbo.PersonTableFunction( @ID int, @FirstName varchar(50))
+RETURNS TABLE
+AS
+	RETURN ( SELECT * FROM dbo.Person WHERE PersonID = @ID AND FirstName = @FirstName )
+");
+					PersonTableFunction(db, null, person.ID, person.FirstName).First().Should().Be(person);
+					PersonTableFunctionTable(db, null, person.ID, person.FirstName).First().Should().Be(person);
+
+					PersonTableFunction(db, null, person.ID, person.FirstName).First().Should().Be(person);
+					PersonTableFunctionTable(db, null, person.ID, person.FirstName).First().Should().Be(person);
+
+					var query =
+						from p in db.Person
+						from tf in PersonTableFunction(db, null, person.ID, person.FirstName).InnerJoin(tf => tf.ID           == p.ID)
+						from tft in PersonTableFunctionTable(db, null, person.ID, person.FirstName).InnerJoin(tft => tft.ID   == p.ID)
+						from te in PersonTableExpression(db, null, person.ID, person.FirstName).InnerJoin(te => te.ID         == p.ID)
+						from tet in PersonTableExpressionTable(db, null, person.ID, person.FirstName).InnerJoin(tet => tet.ID == p.ID)
+						select p;
+
+					query.First().Should().Be(person);;
+				}
+				finally
+				{
+					DropTableFunction();
+				}
 			}
 		}
 	}

@@ -227,7 +227,8 @@ namespace LinqToDB.DataProvider.Firebird
 				}
 			}
 
-			// as on 8.0.1 version provider doesn't add new FB4 types to DATATYPES schema API and older boolean type
+			// as on 8.5.3 version provider doesn't add new FB4 types to DATATYPES schema API and older boolean type
+			// https://github.com/FirebirdSQL/NETProvider/blob/master/Provider/src/FirebirdSql.Data.FirebirdClient/Schema/FbMetaData.xml
 			if (!knownTypes.Contains("boolean"))
 				dataTypes.Add(new DataTypeInfo { ProviderSpecific = false, TypeName = "boolean", DataType = "System.Boolean", ProviderDbType = 3 });
 			if (!knownTypes.Contains("int128"))

@@ -561,12 +561,17 @@ namespace LinqToDB.Expressions
 						if (member.Member.IsFieldEx())
 							return ((FieldInfo)member.Member).GetValue(member.Expression.EvaluateExpression());
 
-						if (member.Member.IsPropertyEx())
+						if (member.Member is PropertyInfo propertyInfo)
 						{
 							var obj = member.Expression.EvaluateExpression();
-							if (obj == null && ((PropertyInfo)member.Member).IsNullableValueMember())
-								return null;
-							return ((PropertyInfo)member.Member).GetValue(obj, null);
+							if (obj == null)
+							{
+								if (propertyInfo.IsNullableValueMember())
+									return null;
+								if (propertyInfo.IsNullableHasValueMember())
+									return false;
+							}
+							return propertyInfo.GetValue(obj, null);
 						}
 						
 						break;
@@ -689,7 +694,7 @@ namespace LinqToDB.Expressions
 							if (leftBool == true)
 								e = be.Right;
 							else if (leftBool == false)
-								newExpr = ExpressionHelper.FalseConstant;
+								newExpr = ExpressionInstances.False;
 						}
 						else if (IsEvaluable(be.Right))
 						{
@@ -697,7 +702,7 @@ namespace LinqToDB.Expressions
 							if (rightBool == true)
 								newExpr = be.Left;
 							else if (rightBool == false)
-								newExpr = ExpressionHelper.FalseConstant;
+								newExpr = ExpressionInstances.False;
 						}
 
 						break;
@@ -710,7 +715,7 @@ namespace LinqToDB.Expressions
 							if (leftBool == false)
 								newExpr = be.Right;
 							else if (leftBool == true)
-								newExpr = ExpressionHelper.TrueConstant;
+								newExpr = ExpressionInstances.True;
 						}
 						else if (IsEvaluable(be.Right))
 						{
@@ -718,7 +723,7 @@ namespace LinqToDB.Expressions
 							if (rightBool == false)
 								newExpr = be.Left;
 							else if (rightBool == true)
-								newExpr = ExpressionHelper.TrueConstant;
+								newExpr = ExpressionInstances.True;
 						}
 
 						break;

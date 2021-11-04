@@ -327,7 +327,7 @@ namespace LinqToDB.Linq.Builder
 					var field = QueryHelper.GetUnderlyingField(columnExpr);
 
 					if (parm.Type.DataType == DataType.Undefined)
-						parm.Type = parm.Type.WithDataType(field!.Type!.Value.DataType);
+						parm.Type = parm.Type.WithDataType(field!.Type.DataType);
 				}
 
 				items.Add(new SqlSetExpression(columnExpr, expr));
@@ -514,7 +514,7 @@ namespace LinqToDB.Linq.Builder
 
 			var columnDescriptor = QueryHelper.GetColumnDescriptor(columnSql);
 
-			var p = builder.BuildParameter(updateMethod.Arguments[valueIndex], columnDescriptor, true);
+			var p = builder.ParametersContext.BuildParameter(updateMethod.Arguments[valueIndex], columnDescriptor, true);
 
 			items.Add(new SqlSetExpression(columnSql, p.SqlParameter));
 		}

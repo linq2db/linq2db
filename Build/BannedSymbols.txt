@@ -1,0 +1,2 @@
+T:System.ThreadStaticAttribute;don't do it
+M:System.Linq.Expressions.Expression.Property(System.Linq.Expressions.Expression,System.Reflection.MethodInfo); use overload with PropertyInfo parameter

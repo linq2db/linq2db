@@ -12,27 +12,33 @@ namespace LinqToDB.SqlProvider
 		/// If true, provider supports column aliases specification after table alias.
 		/// E.g. as table_alias (column_alias1, column_alias2).
 		/// </summary>
-		protected virtual bool MergeSupportsColumnAliasesInSource => true;
+		protected virtual bool SupportsColumnAliasesInSource => true;
+
+		/// <summary>
+		/// If true, provider require column aliases for each  column.
+		/// E.g. as table_alias (column_alias1, column_alias2).
+		/// </summary>
+		protected virtual bool RequiresConstantColumnAliases => false;
 
 		/// <summary>
 		/// If true, provider supports list of VALUES as a source element of merge command.
 		/// </summary>
-		protected virtual bool MergeSupportsSourceDirectValues => true;
+		protected virtual bool IsValuesSyntaxSupported => true;
 
 		/// <summary>
 		/// If true, builder will generate command for empty enumerable source;
 		/// Otherwise exception will be generated.
 		/// </summary>
-		protected virtual bool MergeEmptySourceSupported => true;
+		protected virtual bool isEmptyValuesSourceSupported => true;
 
 		/// <summary>
-		/// If <see cref="MergeSupportsSourceDirectValues"/> set to false and provider doesn't support SELECTs without
+		/// If <see cref="IsValuesSyntaxSupported"/> set to false and provider doesn't support SELECTs without
 		/// FROM clause, this property should contain name of table with single record.
 		/// </summary>
 		protected virtual string? FakeTable => null;
 
 		/// <summary>
-		/// If <see cref="MergeSupportsSourceDirectValues"/> set to false and provider doesn't support SELECTs without
+		/// If <see cref="IsValuesSyntaxSupported"/> set to false and provider doesn't support SELECTs without
 		/// FROM clause, this property could contain name of schema for table with single record.
 		/// </summary>
 		protected virtual string? FakeTableSchema => null;
@@ -48,6 +54,8 @@ namespace LinqToDB.SqlProvider
 
 			foreach (var operation in merge.Operations)
 				BuildMergeOperation(operation);
+
+			BuildOutputSubclause(merge.Output);
 
 			BuildMergeTerminator(merge);
 		}
@@ -186,7 +194,7 @@ namespace LinqToDB.SqlProvider
 
 			ConvertTableName(StringBuilder, null, null, null, mergeSource.Name, TableOptions.NotSet);
 
-			if (MergeSupportsColumnAliasesInSource)
+			if (SupportsColumnAliasesInSource)
 			{
 				StringBuilder.AppendLine();
 				StringBuilder.AppendLine(OpenParens);
@@ -215,19 +223,19 @@ namespace LinqToDB.SqlProvider
 		private void BuildMergeSourceEnumerable(SqlMergeStatement merge)
 		{
 			merge = ConvertElement(merge);
-			var rows = merge.Source.SourceEnumerable!.Rows!;
+			var rows = merge.Source.SourceEnumerable!.BuildRows(OptimizationContext.Context);
 			if (rows.Count > 0)
 			{
 				StringBuilder.Append('(');
 
-				if (MergeSupportsSourceDirectValues)
+				if (IsValuesSyntaxSupported)
 					BuildValues(merge.Source.SourceEnumerable, rows);
 				else
 					BuildValuesAsSelectsUnion(merge.Source.SourceFields, merge.Source.SourceEnumerable, rows);
 
 				StringBuilder.Append(')');
 			}
-			else if (MergeEmptySourceSupported)
+			else if (isEmptyValuesSourceSupported)
 				BuildMergeEmptySource(merge);
 			else
 				throw new LinqToDBException($"{Name} doesn't support merge with empty source");
@@ -243,7 +251,7 @@ namespace LinqToDB.SqlProvider
 		/// <param name="row">Index of data row to check. Could contain -1 to indicate that this is a check for empty source NULL value.</param>
 		/// <param name="column">Index of data column to check in row.</param>
 		/// <returns>Returns <c>true</c>, if generated SQL should include type information for value at specified position, otherwise <c>false</c> returned.</returns>
-		protected virtual bool MergeSourceValueTypeRequired(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows, int row, int column) => false;
+		protected virtual bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows, int row, int column) => false;
 
 		private void BuildValuesAsSelectsUnion(IList<SqlField> sourceFields, SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows)
 		{
@@ -251,12 +259,20 @@ namespace LinqToDB.SqlProvider
 			for (var i = 0; i < sourceFields.Count; i++)
 				columnTypes[i] = new SqlDataType(sourceFields[i]);
 
+			StringBuilder
+				.AppendLine();
+			AppendIndent();
+
 			for (var i = 0; i < rows.Count; i++)
 			{
 				if (i > 0)
+				{
 					StringBuilder
-						.AppendLine()
-						.AppendLine("\tUNION ALL");
+						.AppendLine();
+					AppendIndent();
+					StringBuilder.AppendLine("\tUNION ALL");
+					AppendIndent();
+				}
 
 				// build record select
 				StringBuilder.Append("\tSELECT ");
@@ -268,15 +284,15 @@ namespace LinqToDB.SqlProvider
 					if (j > 0)
 						StringBuilder.Append(InlineComma);
 
-					if (MergeSourceValueTypeRequired(source, rows, i, j))
+					if (IsSqlValuesTableValueTypeRequired(source, rows, i, j))
 						BuildTypedExpression(columnTypes[j], value);
 					else
 						BuildExpression(value);
 
 					// add aliases only for first row
-					if (!MergeSupportsColumnAliasesInSource && i == 0)
+					if (RequiresConstantColumnAliases || i == 0)
 					{
-						StringBuilder.Append(' ');
+						StringBuilder.Append(" AS ");
 						Convert(StringBuilder, sourceFields[j].PhysicalName, ConvertType.NameToQueryField);
 					}
 				}
@@ -303,12 +319,12 @@ namespace LinqToDB.SqlProvider
 				if (i > 0)
 					StringBuilder.Append(InlineComma);
 
-				if (MergeSourceValueTypeRequired(merge.Source.SourceEnumerable!, Array<ISqlExpression[]>.Empty, -1, i))
-					BuildTypedExpression(new SqlDataType(field), new SqlValue(field.Type!.Value, null));
+				if (IsSqlValuesTableValueTypeRequired(merge.Source.SourceEnumerable!, Array<ISqlExpression[]>.Empty, -1, i))
+					BuildTypedExpression(new SqlDataType(field), new SqlValue(field.Type, null));
 				else
-					BuildExpression(new SqlValue(field.Type!.Value, null));
+					BuildExpression(new SqlValue(field.Type, null));
 
-				if (!MergeSupportsColumnAliasesInSource)
+				if (!SupportsColumnAliasesInSource)
 				{
 					StringBuilder.Append(' ');
 					Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
@@ -337,36 +353,67 @@ namespace LinqToDB.SqlProvider
 			return true;
 		}
 
-		private void BuildValues(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows)
+		protected void BuildValues(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows)
 		{
+			if (rows.Count == 0)
+				return;
+
 			var columnTypes = new SqlDataType[source.Fields.Count];
 			for (var i = 0; i < source.Fields.Count; i++)
 				columnTypes[i] = new SqlDataType(source.Fields[i]);
 
+			StringBuilder.AppendLine("VALUES");
+
+			++Indent;
+
+			AppendIndent();
+
+			var currentRowLength = 0;
+
 			for (var i = 0; i < rows.Count; i++)
 			{
+				var currentPos = StringBuilder.Length;
+				StringBuilder.Append(OpenParens);
 				var row = rows[i];
 
-				if (i != 0)
-					StringBuilder.AppendLine(Comma);
-				else
-					StringBuilder.AppendLine("\tVALUES");
-
-				StringBuilder.Append("\t\t(");
 				for (var j = 0; j < row.Length; j++)
 				{
 					var value = row[j];
 					if (j > 0)
-						StringBuilder.Append(InlineComma);
+						StringBuilder.Append(Comma);
 
-					if (MergeSourceValueTypeRequired(source, rows, i, j))
+					if (IsSqlValuesTableValueTypeRequired(source, rows, i, j))
 						BuildTypedExpression(columnTypes[j], value);
 					else
 						BuildExpression(value);
 				}
 
 				StringBuilder.Append(')');
+
+				var rowLength = StringBuilder.Length - currentPos;
+
+				currentRowLength += rowLength;
+
+				if (i < rows.Count - 1)
+				{
+					if (currentRowLength + rowLength / 2 > 50)
+					{
+						StringBuilder.Append(Comma).AppendLine();
+						currentRowLength = 0;
+						AppendIndent();
+					}
+					else
+					{
+						StringBuilder.Append(InlineComma);
+					}
+				}
 			}
+
+			--Indent;
+
+			StringBuilder.AppendLine();
+			AppendIndent();
+
 		}
 
 		private void BuildMergeSource(SqlMergeStatement merge)

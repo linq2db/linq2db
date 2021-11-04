@@ -4,22 +4,25 @@ namespace LinqToDB.SqlQuery
 {
 	public class WalkOptions
 	{
-		public WalkOptions()
+		private WalkOptions(bool skipColumns, bool skipColumnDeclaration, bool processParent)
 		{
+			SkipColumns           = skipColumns;
+			SkipColumnDeclaration = skipColumnDeclaration;
+			ProcessParent         = processParent;
 		}
 
-		public WalkOptions(bool skipColumns)
-		{
-			SkipColumns = skipColumns;
-		}
+		// TODO: unused (not set). remove?
+		public readonly bool SkipColumns;
+		public readonly bool SkipColumnDeclaration;
+		public readonly bool ProcessParent;
 
-		public bool SkipColumns;
-		public bool SkipColumnDeclaration;
-		public bool ProcessParent;
+		public static readonly WalkOptions Default                   = new (false, false, false);
+		public static readonly WalkOptions WithSkipColumnDeclaration = new (false, true, false);
+		public static readonly WalkOptions WithProcessParent         = new (false, false, true);
 	}
 
 	public interface ISqlExpressionWalkable
 	{
-		ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func);
+		ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression,ISqlExpression> func);
 	}
 }

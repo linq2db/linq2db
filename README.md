@@ -1,13 +1,10 @@
 ## LINQ to DB
 
-<a href="https://dotnetfoundation.org/projects/linq2db">
-<img align="right" alt=".NET Foundation Logo" src="https://raw.githubusercontent.com/dotnet-foundation/swag/master/logo/dotnetfoundation_v4_horizontal.png" width="250px" ></a>
-
 [![NuGet Version and Downloads count](https://buildstats.info/nuget/linq2db?includePreReleases=true)](https://www.nuget.org/profiles/LinqToDB) [![License](https://img.shields.io/github/license/linq2db/linq2db)](MIT-LICENSE.txt)
+[![Follow @linq2db](https://img.shields.io/twitter/follow/linq2db.svg)](https://twitter.com/linq2db) [!["good first issue" tasks](https://img.shields.io/github/issues/linq2db/linq2db/good%20first%20issue.svg)](https://github.com/linq2db/linq2db/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
 
 [![Master branch build](https://img.shields.io/azure-devops/build/linq2db/linq2db/5/master?label=build%20(master))](https://dev.azure.com/linq2db/linq2db/_build?definitionId=5&_a=summary) [![Latest build](https://img.shields.io/azure-devops/build/linq2db/linq2db/5?label=build%20(latest))](https://dev.azure.com/linq2db/linq2db/_build?definitionId=5&_a=summary)
 
-[![StackOverflow questions](https://img.shields.io/stackexchange/stackoverflow/t/linq2db.svg?label=stackoverflow)](https://stackoverflow.com/questions/tagged/linq2db) [![Follow @linq2db](https://img.shields.io/twitter/follow/linq2db.svg)](https://twitter.com/linq2db) [!["good first issue" tasks](https://img.shields.io/github/issues/linq2db/linq2db/good%20first%20issue.svg)](https://github.com/linq2db/linq2db/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
 
 LINQ to DB is the fastest LINQ database access library offering a simple, light, fast, and type-safe layer between your POCO objects and your database. 
 
@@ -16,8 +13,6 @@ Architecturally it is one step above micro-ORMs like Dapper, Massive, or PetaPoc
 However, it's not as heavy as LINQ to SQL or Entity Framework. There is no change-tracking, so you have to manage that yourself, but on the positive side you get more control and faster access to your data.
 
 In other words **LINQ to DB is type-safe SQL**.
-
-linq2db is a [.NET Foundation](https://dotnetfoundation.org/) project.
 
 Development version nuget [feed](https://pkgs.dev.azure.com/linq2db/linq2db/_packaging/linq2db/nuget/v3/index.json) ([how to use](https://docs.microsoft.com/en-us/nuget/consume-packages/install-use-packages-visual-studio#package-sources))
 
@@ -70,6 +65,15 @@ From **NuGet**:
 
 ## Configuring connection strings
 
+### Passing Into Constructor
+
+You can simply pass provider name and connection string into `DataConnection` constructor:
+
+```cs
+var db = new LinqToDB.Data.DataConnection(
+  LinqToDB.ProviderName.SqlServer2012,
+  "Server=.\;Database=Northwind;Trusted_Connection=True;Enlist=False;");
+```
 
 ### Using Connection Options Builder
 
@@ -113,23 +117,24 @@ In your `web.config` or `app.config` make sure you have a connection string (che
 
 ### Using Connection String Settings Provider
 
-.Net Core does not support `System.Configuration` until 3.0 so to configure connection strings you should implement `ILinqToDBSettings`, for example:
+Alternatively, you can implement custom settings provider with `ILinqToDBSettings` interface, for example:
 
 ```cs
 public class ConnectionStringSettings : IConnectionStringSettings
 {
     public string ConnectionString { get; set; }
-    public string Name { get; set; }
-    public string ProviderName { get; set; }
-    public bool IsGlobal => false;
+    public string Name             { get; set; }
+    public string ProviderName     { get; set; }
+    public bool   IsGlobal         => false;
 }
 
 public class MySettings : ILinqToDBSettings
 {
-    public IEnumerable<IDataProviderSettings> DataProviders => Enumerable.Empty<IDataProviderSettings>();
+    public IEnumerable<IDataProviderSettings> DataProviders
+        => Enumerable.Empty<IDataProviderSettings>();
 
     public string DefaultConfiguration => "SqlServer";
-    public string DefaultDataProvider => "SqlServer";
+    public string DefaultDataProvider  => "SqlServer";
 
     public IEnumerable<IConnectionStringSettings> ConnectionStrings
     {
@@ -138,9 +143,10 @@ public class MySettings : ILinqToDBSettings
             yield return
                 new ConnectionStringSettings
                 {
-                    Name = "Northwind",
-                    ProviderName = "SqlServer",
-                    ConnectionString = @"Server=.\;Database=Northwind;Trusted_Connection=True;Enlist=False;"
+                    Name             = "Northwind",
+                    ProviderName     = ProviderName.SqlServer,
+                    ConnectionString =
+                        @"Server=.\;Database=Northwind;Trusted_Connection=True;Enlist=False;"
                 };
         }
     }
@@ -160,7 +166,11 @@ See [article](https://linq2db.github.io/articles/get-started/asp-dotnet-core/ind
 
 ## Now let's create a **POCO** class
 
-Important: you also can generate those classes from your database using [T4 templates](https://linq2db.github.io/articles/T4.html). Demonstration video could be found [here](https://linq2db.github.io/articles/general/Video.html).
+You can generate POCO classes from your database using [T4 templates](https://linq2db.github.io/articles/T4.html).  These classes will be generated using the `Attribute configuration`. Demonstration video could be found [here](https://linq2db.github.io/articles/general/Video.html). 
+
+Alternatively, you can write them manually, using `Attribute configuration`, `Fluent configuration`, or inferring.
+
+### Attribute configuration
 
 ```c#
 using System;
@@ -175,9 +185,94 @@ public class Product
   [Column(Name = "ProductName"), NotNull]
   public string Name { get; set; }
 
+  [Column]
+  public int VendorID { get; set; }
+
+  [Association(ThisKey = nameof(VendorID), OtherKey=nameof(Vendor.ID))]
+  public Vendor Vendor { get; set; }
+
   // ... other columns ...
 }
 ```
+
+This approach involves attributes on all properties that should be mapped. This way lets you to configure all possible things linq2db ever supports. There one thing to mention: if you add at least one attribute into POCO, all other properties should also have attributes, otherwise they will be ignored:
+
+```c#
+using System;
+using LinqToDB.Mapping;
+
+[Table(Name = "Products")]
+public class Product
+{
+  [PrimaryKey, Identity]
+  public int ProductID { get; set; }
+
+  public string Name { get; set; }
+}
+```
+
+Property `Name` will be ignored as it lacks `Column` attibute. 
+
+### Fluent Configuration
+
+This method lets you configure your mapping dynamically at runtime. Furthermore, it lets you to have several different configurations if you need so. You will get all configuration abilities available with attribute configuration. These two approaches are interchangeable in its abilities. This kind of configuration is done through the class `MappingSchema`. 
+
+With Fluent approach you can configure only things that require it explicitly. All other properties will be inferred by linq2db:
+
+```c#
+// IMPORTANT: configure mapping schema instance only once
+// and use it with all your connections that need those mappings
+// Never create new mapping schema for each connection as
+// it will seriously harm performance
+var mappingSchema = new MappingSchema();
+var builder       = mappingSchema.GetFluentMappingBuilder();
+
+builder.Entity<Product>()
+    .HasTableName("Products")
+    .HasSchemaName("dbo")
+    .HasIdentity(x => x.ProductID)
+    .HasPrimaryKey(x => x.ProductID)
+    .Ignore(x => x.SomeNonDbProperty)
+    .Property(x => x.TimeStamp)
+        .HasSkipOnInsert()
+        .HasSkipOnUpdate()
+    .Association(x => x.Vendor, x => x.VendorID, x => x.VendorID, canBeNull: false)
+    ;
+
+//... other mapping configurations
+```
+
+In this example we configured only three properties and one association. We let linq2db to infer all other properties which have to match with column names. However, other associations will not get configured automatically.
+
+There is a static property `LinqToDB.Mapping.MappingSchema.Default` which may be used to define a global configuration. This mapping is used by default if no mapping schema provided explicitly. The other way is to pass instance of `MappingSchema` into constructor alongside with connection string.
+
+### Inferred Configuration
+
+This approach involves no attributes at all. In this case linq2db will use POCO's name as table name and property names as column names (with exact same casing, which could be important for case-sensitive databases). This might seem to be convenient, but there are some restrictions: linq2db will not infer primary key even if class has property called "ID"; it will not infer nullability of string properties as there is no way to do so; and associations will not be automatically configured.
+
+```c#
+using System;
+using LinqToDB.Mapping;
+
+public class Product
+{
+  public int    ProductID { get; set; }
+
+  public string Name      { get; set; }
+
+  public int    VendorID  { get; set; }
+
+  public Vendor Vendor    { get; set; }
+
+  // ... other columns ...
+}
+```
+
+This way linq2db will auto-configure `Product` class to map to `Product` table with fields `ProductID`, `Name`, and `VendorID`. POCO will not get `ProductID` property treated as primary key. And there will be no association with `Vendor`.
+
+This approach is not generally recommended.
+
+### DataConnection class
 
 At this point LINQ to DB doesn't know how to connect to our database or which POCOs go with what database. All this mapping is done through a `DataConnection` class:
 
@@ -186,7 +281,7 @@ public class DbNorthwind : LinqToDB.Data.DataConnection
 {
   public DbNorthwind() : base("Northwind") { }
 
-  public ITable<Product> Product => GetTable<Product>();
+  public ITable<Product>  Product  => GetTable<Product>();
   public ITable<Category> Category => GetTable<Category>();
 
   // ... other tables ...
@@ -275,7 +370,11 @@ A lot of times we need to write code that returns only a subset of the entire da
 Keep in mind that the code below will query the database twice. Once to find out the total number of records, something that is required by many paging controls, and once to return the actual data.
 
 ```c#
-public static List<Product> Search(string searchFor, int currentPage, int pageSize, out int totalRecords)
+public static List<Product> Search(
+                  string  searchFor,
+                  int     currentPage,
+                  int     pageSize,
+                  out int totalRecords)
 {
   using (var db = new DbNorthwind())
   {
@@ -555,6 +654,42 @@ using (var transaction = new TransactionScope())
 }
 ```
 
+It should be noted that there are two base classes for your "context" class: `LinqToDB.Data.DataConnection` and `LinqToDB.DataContext`. The key difference between them is in connection retention behaviour. `DataConnection` opens connection with first query and holds it open until dispose happens. `DataContext` behaves the way you might used to with Entity Framework: it opens connection per query and closes it right after query is done.
+
+This difference in behavior matters when used with `TransactionScope`:
+
+```c#
+using var db = new LinqToDB.Data.DataConnection("provider name", "connection string");
+
+var product = db.GetTable<Product>()
+  .FirstOrDefault(); // connection opened here
+
+var scope = new TransactionScope();
+// this transaction was not attached to connection
+// because it was opened earlier
+
+product.Name = "Lollipop";
+db.Update(product);
+
+scope.Dispose();
+
+// no transaction rollback happed, "Lollipop" has been saved
+```
+
+A `DataConnection` is attached with ambient transaction in moment it is opened. Any `TransactionScope`s created after the connection is created will no effect on that connection. Replacing `DataConnection` with `DataContext` in code shown earlier will make transaction scope work as expected: the created record will be discarded with the transaction.
+
+Although, `DataContext` appears to be the right class to choose, it is strongly recommended to use `DataConnection` instead. It's default behaviour might be changed with setting `CloseAfterUse` property to `true`:
+
+```c#
+public class DbNorthwind : LinqToDB.Data.DataConnection
+{
+  public DbNorthwind() : base("Northwind")
+  {
+    (this as IDataContext).CloseAfterUse = true;
+  }
+}
+```
+
 ## Merge
 
 [Here](https://linq2db.github.io/articles/sql/merge/Merge-API.html) you can read about MERGE support.
@@ -573,33 +708,56 @@ public class DbDataContext : DataConnection
 {
 // let's use profiler only for debug builds
 #if !DEBUG
-  public DbDataContext() : base("Northwind")
+
+  // regular non-profiled constructor
+  public DbDataContext() : base("Northwind") {}
+  
+#else
+
+  // use static instance of mapping schema
+  // never create mapping schema per-connection
+  // or it will seriously affect performance
+  private static readonly MappingSchema _miniProfilerMappings = new ();
+  
+  static DbDataContext()
   {
     // this is important part:
     // here we tell linq2db how to access underlying ADO.NET classes of used provider
-    // if you don't configure those mappings, linq2db will be unable to use provider-specific functionality
-    // which could lead to loss or unavailability of some functionality when profiled connection enabled
-    MappingSchema.SetConvertExpression<ProfiledDbConnection,  IDbConnection> (db => db.WrappedConnection);
-    MappingSchema.SetConvertExpression<ProfiledDbDataReader,  IDataReader>   (db => db.WrappedReader);
-    MappingSchema.SetConvertExpression<ProfiledDbTransaction, IDbTransaction>(db => db.WrappedTransaction);
-    MappingSchema.SetConvertExpression<ProfiledDbCommand,     IDbCommand>    (db => db.InternalCommand);
-  }
-#else
-  public DbDataContext() : base(GetDataProvider(), GetConnection()) { }
-
-  private static IDataProvider GetDataProvider()
-  {
-     // create provider instance (SQL Server 2012 provider in our case)
-     return new SqlServerDataProvider("", SqlServerVersion.v2012);
+    // if you don't configure those mappings, linq2db will be unable to use
+    // provider-specific functionality which could lead to loss or unavailability
+    //of some functionality when profiled connection enabled
+    _miniProfilerMappings.SetConvertExpression<ProfiledDbConnection,  IDbConnection> (
+        db => db.WrappedConnection);
+    _miniProfilerMappings.SetConvertExpression<ProfiledDbDataReader,  IDataReader>   (
+        db => db.WrappedReader);
+    _miniProfilerMappings.SetConvertExpression<ProfiledDbTransaction, IDbTransaction>(
+        db => db.WrappedTransaction);
+    _miniProfilerMappings.SetConvertExpression<ProfiledDbCommand,     IDbCommand>    (
+        db => db.InternalCommand);
   }
 
+  public DbDataContext()
+      : base(
+          // get data provider instance using
+          // <DB_NAME>Tools.GetDataProvider()
+          // helpers
+          // In this case we use SQL Server provider
+          SqlServerTools.GetDataProvider(SqlServerVersion.v2012),
+          GetConnection(),
+          _miniProfilerMappings)
+  { }
+
+  // wrap connection into profiler wrapper
   private static IDbConnection GetConnection()
   {
      // create provider-specific connection instance. SqlConnection in our case
-     var dbConnection = new SqlConnection(@"Server=.\SQL;Database=Northwind;Trusted_Connection=True;Enlist=False;");
+     var dbConnection = new SqlConnection(
+         @"Server=.\SQL;Database=Northwind;Trusted_Connection=True;Enlist=False;");
 
      // wrap it by profiler's connection implementation
-     return new StackExchange.Profiling.Data.ProfiledDbConnection(dbConnection, MiniProfiler.Current);
+     return new StackExchange.Profiling.Data.ProfiledDbConnection(
+                                                 dbConnection,
+                                                 MiniProfiler.Current);
   }
 #endif
 }

@@ -34,7 +34,10 @@ namespace LinqToDB.Linq
 
 					var query = new Query<T>(ctx.dataContext, key.expression);
 
-					query = new ExpressionBuilder(query, ctx.dataContext, key.expression, ctx.lambda.Parameters.ToArray())
+					var optimizationContext = new ExpressionTreeOptimizationContext(ctx.dataContext);
+					var parametersContext = new ParametersContext(key.expression, optimizationContext, ctx.dataContext);
+
+					query = new ExpressionBuilder(query, optimizationContext, parametersContext, ctx.dataContext, key.expression, ctx.lambda.Parameters.ToArray())
 						.Build<T>();
 
 					query.ClearMemberQueryableInfo();

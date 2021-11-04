@@ -51,6 +51,7 @@ namespace LinqToDB.DataProvider
 				IsAllSetOperationsSupported          = false,
 				IsDistinctSetOperationsSupported     = true,
 				IsUpdateFromSupported                = true,
+				AcceptsOuterExpressionInAggregate    = true,
 			};
 
 			SetField<IDataReader,bool>    ((r,i) => r.GetBoolean (i));
@@ -251,7 +252,7 @@ namespace LinqToDB.DataProvider
 
 			var getValueMethodInfo = MemberHelper.MethodOf<IDataReader>(r => r.GetValue(0));
 			return Expression.Convert(
-				Expression.Call(readerExpression, getValueMethodInfo, Expression.Constant(idx)),
+				Expression.Call(readerExpression, getValueMethodInfo, ExpressionInstances.Int32Array(idx)),
 				fieldType);
 		}
 

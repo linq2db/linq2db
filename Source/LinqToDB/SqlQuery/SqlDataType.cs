@@ -87,7 +87,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal SqlDataType(SqlField field)
-			: this(field.Type!.Value)
+			: this(field.Type)
 		{
 		}
 
@@ -95,7 +95,7 @@ namespace LinqToDB.SqlQuery
 
 		#region Public Members
 
-		public DbDataType Type { get; }
+		public DbDataType Type { get; internal set; }
 
 		public static readonly SqlDataType Undefined = new (DataType.Undefined, typeof(object), (int?)null, (int?)null, null, null);
 
@@ -451,9 +451,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion

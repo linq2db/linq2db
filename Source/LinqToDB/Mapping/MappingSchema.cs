@@ -30,6 +30,20 @@ namespace LinqToDB.Mapping
 	[PublicAPI]
 	public class MappingSchema
 	{
+		private static readonly MemoryCache<(string baseSchemaId, string addedSchemaId)> _combinedSchemasCache = new (new ());
+
+		internal static MappingSchema CombineSchemas(MappingSchema mappingSchema1, MappingSchema mappingSchema2)
+		{
+			return _combinedSchemasCache.GetOrCreate(
+				(mappingSchema1.ConfigurationID, mappingSchema2.ConfigurationID),
+				new { BaseSchema = mappingSchema1, AddedSchema = mappingSchema2 },
+				static (entry, context) =>
+				{
+					entry.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+					return new MappingSchema(context.AddedSchema, context.BaseSchema);
+				});
+		}
+
 		#region Init
 
 		/// <summary>
@@ -76,7 +90,9 @@ namespace LinqToDB.Mapping
 		/// mappings for same type.</remarks>
 		public MappingSchema(string? configuration, params MappingSchema[]? schemas)
 		{
-			if (configuration.IsNullOrEmpty() && (schemas == null || schemas.Length == 0))
+			// always generate "unique" configuration name, if name not provided to avoid duplicate names
+			// e.g. see https://github.com/linq2db/linq2db/issues/3251
+			if (configuration.IsNullOrEmpty())
 				configuration = "auto_" + Interlocked.Increment(ref _configurationCounter);
 
 			var schemaInfo = new MappingSchemaInfo(configuration);
@@ -618,41 +634,72 @@ namespace LinqToDB.Mapping
 			return expr;
 		}
 
-		static bool IsSimple (ref DbDataType type)
-			=> type.DataType == DataType.Undefined && string.IsNullOrEmpty(type.DbType) && type.Length == null;
+		public Expression GenerateConvertedValueExpression(object? value, Type type)
+		{
+			if (value == null)
+				return new DefaultValueExpression(this, type);
 
-		static void Simplify(ref DbDataType type)
+			var fromType  = value.GetType();
+			var valueExpr = (Expression)Expression.Constant(value);
+			if (fromType == type)
+				return valueExpr;
+
+			var convertLambda = GenerateSafeConvert(fromType, type);
+
+			valueExpr = InternalExtensions.ApplyLambdaToExpression(convertLambda, valueExpr);
+			return valueExpr;
+		}
+
+
+		static bool Simplify(ref DbDataType type)
 		{
 			if (!string.IsNullOrEmpty(type.DbType))
+			{
 				type = type.WithDbType(null);
+				return true;
+			}
+
+			if (type.Precision != null || type.Scale != null)
+			{
+				type = type.WithScale(null).WithPrecision(null);
+				return true;
+			}
+			
+			if (type.Length != null)
+			{
+				type = type.WithLength(null);
+				return true;
+			}
 
 			if (type.DataType != DataType.Undefined)
+			{
 				type = type.WithDataType(DataType.Undefined);
+				return true;
+			}
 
-			if (type.Length != null)
-				type = type.WithLength(null);
+			return false;
 		}
 
 		internal ConvertInfo.LambdaInfo? GetConverter(DbDataType from, DbDataType to, bool create)
 		{
+			var currentFrom = from;
 			do
 			{
-				for (var i = 0; i < Schemas.Length; i++)
+				var currentTo = to;
+				do
 				{
-					var info = Schemas[i];
-					var li   = info.GetConvertInfo(from, to);
+					for (var i = 0; i < Schemas.Length; i++)
+					{
+						var info = Schemas[i];
+						var li   = info.GetConvertInfo(currentFrom, currentTo);
 
-					if (li != null && (i == 0 || !li.IsSchemaSpecific))
-						return i == 0 ? li : new ConvertInfo.LambdaInfo(li.CheckNullLambda, li.Lambda, null, false);
-				}
+						if (li != null && (i == 0 || !li.IsSchemaSpecific))
+							return i == 0 ? li : new ConvertInfo.LambdaInfo(li.CheckNullLambda, li.Lambda, null, false);
+					}
 
-				if (!IsSimple(ref from))
-					Simplify(ref from);
-				else if (!IsSimple(ref to))
-					Simplify(ref to);
-				else break;
+				} while (Simplify(ref currentTo));
 
-			} while (true);
+			} while (Simplify(ref currentFrom));
 
 			var isFromGeneric = from.SystemType.IsGenericType && !from.SystemType.IsGenericTypeDefinition;
 			var isToGeneric   = to.SystemType.  IsGenericType && !to.SystemType.  IsGenericTypeDefinition;
@@ -662,8 +709,9 @@ namespace LinqToDB.Mapping
 				var fromGenericArgs = isFromGeneric ? from.SystemType.GetGenericArguments() : Array<Type>.Empty;
 				var toGenericArgs   = isToGeneric   ? to.SystemType.  GetGenericArguments() : Array<Type>.Empty;
 
-				var args = fromGenericArgs.SequenceEqual(toGenericArgs) ?
-					fromGenericArgs : fromGenericArgs.Concat(toGenericArgs).ToArray();
+				var args = fromGenericArgs.SequenceEqual(toGenericArgs)
+					? fromGenericArgs
+					: fromGenericArgs.Concat(toGenericArgs).ToArray();
 
 				if (InitGenericConvertProvider(args))
 					return GetConverter(from, to, create);
@@ -852,17 +900,22 @@ namespace LinqToDB.Mapping
 
 		void InitMetadataReaders()
 		{
-			var list = new List   <IMetadataReader>(Schemas.Length);
-			var hash = new HashSet<IMetadataReader>();
-
-			for (var i = 0; i < Schemas.Length; i++)
+			if (Schemas.Length > 0)
 			{
-				var s = Schemas[i];
-				if (s.MetadataReader != null && hash.Add(s.MetadataReader))
-					list.Add(s.MetadataReader);
-			}
+				var list = new List   <IMetadataReader>(Schemas.Length);
+				var hash = new HashSet<IMetadataReader>();
 
-			_metadataReaders = list.ToArray();
+				for (var i = 0; i < Schemas.Length; i++)
+				{
+					var s = Schemas[i];
+					if (s.MetadataReader != null && hash.Add(s.MetadataReader))
+						list.Add(s.MetadataReader);
+				}
+
+				_metadataReaders = list.ToArray();
+			}
+			else
+				_metadataReaders = Array<IMetadataReader>.Empty;
 		}
 
 #if NETFRAMEWORK
@@ -880,7 +933,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets or sets metadata attributes provider for current schema.
 		/// Metadata providers, shipped with LINQ to DB:
-		/// - <see cref="LinqToDB.Metadata.MetadataReader"/> - aggregation metadata provider over collection of other providers;
+		/// - <see cref="Metadata.MetadataReader"/> - aggregation metadata provider over collection of other providers;
 		/// - <see cref="AttributeReader"/> - .NET attributes provider;
 		/// - <see cref="FluentMetadataReader"/> - fluent mappings metadata provider;
 		/// - <see cref="SystemDataSqlServerAttributeReader"/> - metadata provider that converts Microsoft.SqlServer.Server attributes to LINQ to DB mapping attributes;
@@ -889,7 +942,7 @@ namespace LinqToDB.Mapping
 #endif
 		public IMetadataReader? MetadataReader
 		{
-			get { return Schemas[0].MetadataReader; }
+			get => Schemas[0].MetadataReader;
 			set
 			{
 				lock (_metadataReadersSyncRoot)
@@ -1146,12 +1199,16 @@ namespace LinqToDB.Mapping
 		/// <returns>All dynamic columns defined on given type.</returns>
 		public MemberInfo[] GetDynamicColumns(Type type)
 		{
-			var result = new List<MemberInfo>();
+			List<MemberInfo>? result = null;
 
 			foreach (var reader in MetadataReaders)
-				result.AddRange(reader.GetDynamicColumns(type));
+			{
+				var columns = reader.GetDynamicColumns(type);
+				if (columns.Length > 0)
+					(result ??= new()).AddRange(columns);
+			}
 
-			return result.ToArray();
+			return result == null ? Array<MemberInfo>.Empty : result.ToArray();
 		}
 
 		/// <summary>

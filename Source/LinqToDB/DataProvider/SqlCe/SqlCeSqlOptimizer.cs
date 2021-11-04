@@ -5,7 +5,6 @@ namespace LinqToDB.DataProvider.SqlCe
 	using Extensions;
 	using SqlQuery;
 	using SqlProvider;
-	using Mapping;
 
 	class SqlCeSqlOptimizer : BasicSqlOptimizer
 	{
@@ -22,6 +21,8 @@ namespace LinqToDB.DataProvider.SqlCe
 			CorrectInsertParameters(statement);
 
 			CorrectFunctionParameters(statement);
+
+			statement = CorrectBooleanComparison(statement);
 
 			switch (statement.QueryType)
 			{
@@ -46,13 +47,11 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public override string[] LikeCharactersToEscape => LikeSqlCeCharactersToEscape;
 
-		public override ISqlPredicate ConvertSearchStringPredicate<TContext>(MappingSchema mappingSchema, SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext<TContext>> visitor,
-			OptimizationContext optimizationContext)
+		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext> visitor)
 		{
-			var like = ConvertSearchStringPredicateViaLike(mappingSchema, predicate, visitor,
-				optimizationContext);
+			var like = ConvertSearchStringPredicateViaLike(predicate, visitor);
 
-			if (predicate.CaseSensitive.EvaluateBoolExpression(optimizationContext.Context) == true)
+			if (predicate.CaseSensitive.EvaluateBoolExpression(visitor.Context.OptimizationContext.Context) == true)
 			{
 				SqlPredicate.ExprExpr? subStrPredicate = null;
 
@@ -219,10 +218,34 @@ namespace LinqToDB.DataProvider.SqlCe
 			// already fixed by CorrectSkipAndColumns
 		}
 
-		public override ISqlExpression ConvertExpressionImpl<TContext>(ISqlExpression expression, ConvertVisitor<TContext> visitor,
-			EvaluationContext context)
+		protected SqlStatement CorrectBooleanComparison(SqlStatement statement)
 		{
-			expression = base.ConvertExpressionImpl(expression, visitor, context);
+			statement = statement.ConvertAll(this, true, static (_, e) =>
+			{
+				if (e.ElementType == QueryElementType.IsTruePredicate)
+				{
+					var isTruePredicate = (SqlPredicate.IsTrue)e;
+					if (isTruePredicate.Expr1 is SelectQuery query && query.Select.Columns.Count == 1)
+					{
+						query.Select.Where.EnsureConjunction();
+						query.Select.Where.SearchCondition.Conditions.Add(new SqlCondition(false,
+							new SqlPredicate.IsTrue(query.Select.Columns[0].Expression, isTruePredicate.TrueValue,
+								isTruePredicate.FalseValue, isTruePredicate.WithNull, isTruePredicate.IsNot)));
+						query.Select.Columns.Clear();
+
+						return new SqlPredicate.FuncLike(SqlFunction.CreateExists(query));
+					}
+				}
+
+				return e;
+			});
+
+			return statement;
+		}
+
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
+		{
+			expression = base.ConvertExpressionImpl(expression, visitor);
 
 			switch (expression)
 			{

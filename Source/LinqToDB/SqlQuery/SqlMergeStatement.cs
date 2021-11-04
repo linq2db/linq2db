@@ -34,21 +34,16 @@ namespace LinqToDB.SqlQuery
 				Operations.Add(operation);
 		}
 
-		public string?                        Hint       { get; internal set; }
+		public string?                       Hint       { get; internal set; }
+		public SqlTableSource                Target     { get; }
+		public SqlTableLikeSource            Source     { get; internal set; } = null!;
+		public SqlSearchCondition            On         { get; }               = new();
+		public List<SqlMergeOperationClause> Operations { get; }               = new();
+		public SqlOutputClause?              Output     { get; set; }
 
-		public SqlTableSource                 Target     { get; }
-
-		public SqlTableLikeSource             Source     { get; internal set; } = null!;
-
-		public SqlSearchCondition             On         { get; }               = new SqlSearchCondition();
-
-		public List<SqlMergeOperationClause>  Operations { get; }               = new List<SqlMergeOperationClause>();
-
-		public bool                           HasIdentityInsert             => Operations.Any(o => o.OperationType == MergeOperationType.Insert && o.Items.Any(item => item.Column is SqlField field && field.IsIdentity));
-
-		public override QueryType             QueryType                     => QueryType.Merge;
-
-		public override QueryElementType      ElementType                   => QueryElementType.MergeStatement;
+		public bool                          HasIdentityInsert => Operations.Any(o => o.OperationType == MergeOperationType.Insert && o.Items.Any(item => item.Column is SqlField field && field.IsIdentity));
+		public override QueryType            QueryType         => QueryType.Merge;
+		public override QueryElementType     ElementType       => QueryElementType.MergeStatement;
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
@@ -82,15 +77,15 @@ namespace LinqToDB.SqlQuery
 			return sb;
 		}
 
-		public override ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			Target.Walk(options, func);
-			Source.Walk(options, func);
+			Target.Walk(options, context, func);
+			Source.Walk(options, context, func);
 
-			((ISqlExpressionWalkable)On).Walk(options, func);
+			((ISqlExpressionWalkable)On).Walk(options, context, func);
 
 			for (var i = 0; i < Operations.Count; i++)
-				((ISqlExpressionWalkable)Operations[i]).Walk(options, func);
+				((ISqlExpressionWalkable)Operations[i]).Walk(options, context, func);
 
 			return null;
 		}
@@ -120,10 +115,10 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		public override void WalkQueries(Func<SelectQuery, SelectQuery> func)
+		public override void WalkQueries<TContext>(TContext context, Func<TContext, SelectQuery, SelectQuery> func)
 		{
-			Source.WalkQueries(func);
-			With?.WalkQueries(func);
+			Source.WalkQueries(context, func);
+			With?.WalkQueries(context, func);
 		}
 	}
 }

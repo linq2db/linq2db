@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using LinqToDB.Common;
 using LinqToDB.Extensions;
 using LinqToDB.SqlQuery;
 
@@ -35,14 +33,22 @@ namespace LinqToDB.Linq.Builder
 
 			root = builder.ConvertExpressionTree(root);
 
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, root) { CreateSubQuery = true });
-
+			var prevSequence  = builder.BuildSequence(new BuildInfo(buildInfo, root) { CreateSubQuery = true });
 			var finalFunction = functions.First();
-				
-			var sqlExpression = finalFunction.GetExpression(builder.DataContext, buildInfo.SelectQuery, methodCall,
-				(e, descriptor) => builder.ConvertToExtensionSql(sequence, e, descriptor));
+			var sequence      = prevSequence;
+
+			if (finalFunction.IsAggregate)
+			{
+				// Wrap by subquery to handle aggregate limitations, especially for SQL Server
+				//
+				sequence = new SubQueryContext(sequence);
+			}
 
 			var context = new ChainContext(buildInfo.Parent, sequence, methodCall);
+
+			var sqlExpression = finalFunction.GetExpression((builder, context), builder.DataContext, context.SelectQuery, methodCall,
+				static (ctx, e, descriptor) => ctx.builder.ConvertToExtensionSql(ctx.context, e, descriptor));
+
 			context.Sql        = context.SelectQuery;
 			context.FieldIndex = context.SelectQuery.Select.Add(sqlExpression, methodCall.Method.Name);
 
@@ -55,13 +61,14 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		class ChainContext : SequenceContextBase
+		internal class ChainContext : SequenceContextBase
 		{
 			public ChainContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall)
 				: base(parent, sequence, null)
 			{
-				_returnType = methodCall.Method.ReturnType;
-				_methodName = methodCall.Method.Name;
+				MethodCall = methodCall;
+				_returnType     = methodCall.Method.ReturnType;
+				_methodName     = methodCall.Method.Name;
 
 				if (_returnType.IsGenericType && _returnType.GetGenericTypeDefinition() == typeof(Task<>))
 				{
@@ -73,9 +80,11 @@ namespace LinqToDB.Linq.Builder
 			readonly string     _methodName;
 			readonly Type       _returnType;
 			private  SqlInfo[]? _index;
+			private  int?       _parentIndex;
 
-			public int             FieldIndex;
-			public ISqlExpression? Sql;
+			public int                  FieldIndex;
+			public ISqlExpression       Sql = null!;
+			public MethodCallExpression MethodCall { get; }
 
 			static int CheckNullValue(bool isNull, object context)
 			{
@@ -114,7 +123,7 @@ namespace LinqToDB.Linq.Builder
 				else
 				{
 					expr = Expression.Block(
-						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(false, null!)), Expression.Call(ExpressionBuilder.DataReaderParam, Methods.ADONet.IsDBNull, Expression.Constant(0)), Expression.Constant(_methodName)),
+						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(false, null!)), Expression.Call(ExpressionBuilder.DataReaderParam, Methods.ADONet.IsDBNull, ExpressionInstances.Constant0), Expression.Constant(_methodName)),
 						Builder.BuildSql(_returnType, fieldIndex, sqlExpression));
 				}
 
@@ -123,14 +132,37 @@ namespace LinqToDB.Linq.Builder
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
+				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
+
 				switch (flags)
 				{
 					case ConvertFlags.All   :
 					case ConvertFlags.Key   :
-					case ConvertFlags.Field : return Sequence.ConvertToSql(expression, level + 1, flags);
+					case ConvertFlags.Field : return Sequence.ConvertToSql(expression, level, flags);
 				}
 
 				throw new InvalidOperationException();
+			}
+
+			public override int ConvertToParentIndex(int index, IBuildContext context)
+			{
+				if (index != FieldIndex)
+					throw new InvalidOperationException();
+
+				if (_parentIndex != null)
+					return _parentIndex.Value;
+
+				if (Parent != null)
+				{
+					index        = Parent.SelectQuery.Select.Add(Sql);
+					_parentIndex = Parent.ConvertToParentIndex(index, Parent);
+				}
+				else
+				{
+					_parentIndex = index;
+				}
+
+				return _parentIndex.Value;
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
@@ -140,7 +172,7 @@ namespace LinqToDB.Linq.Builder
 					ConvertFlags.Field =>
 						_index ??= new[]
 						{
-							new SqlInfo(Sql!, Parent!.SelectQuery, Parent.SelectQuery.Select.Add(Sql!))
+							new SqlInfo(Sql, SelectQuery, FieldIndex)
 						},
 					_ => throw new InvalidOperationException(),
 				};
@@ -148,9 +180,11 @@ namespace LinqToDB.Linq.Builder
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
+				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
+
 				return requestFlag switch
 				{
-					RequestFor.Root       => new IsExpressionResult(Lambda != null && expression == Lambda.Parameters[0]),
+					RequestFor.Root       => IsExpressionResult.GetResult(Lambda != null && expression == Lambda.Parameters[0]),
 					RequestFor.Expression => IsExpressionResult.True,
 					_                     => IsExpressionResult.False,
 				};

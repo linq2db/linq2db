@@ -29,12 +29,11 @@ namespace Tests.Linq
 		[Table]
 		class SampleClass
 		{
-			[Column] public int Id    { get; set; }
-			[Column(Length = 50, CanBeNull = true)] public string? Value1 { get; set; }
-			[Column(Length = 50, CanBeNull = true)] public string? Value2 { get; set; }
-			[Column(Length = 50, CanBeNull = true)] public string? Value3 { get; set; }
-			[Column(Length = 50, CanBeNull = true, DataType = DataType.VarChar)]
-			                                        public string? Value4 { get; set; }
+			[Column]                                                              public int     Id     { get; set; }
+			[Column(Length = 50, CanBeNull = true)]                               public string? Value1 { get; set; }
+			[Column(Length = 50, CanBeNull = true)]                               public string? Value2 { get; set; }
+			[Column(Length = 50, CanBeNull = true, DataType = DataType.VarChar)]  public string? Value3 { get; set; }
+			[Column(Length = 50, CanBeNull = true, DataType = DataType.NVarChar)] public string? Value4 { get; set; }
 		}
 
 		public class StringTestSourcesAttribute : IncludeDataSourcesAttribute
@@ -312,11 +311,19 @@ namespace Tests.Linq
 					select new
 					{
 						Count = table.CountExt(e => e.Value1, Sql.AggregateModifier.Distinct),
-						Aggregated = table.AsQueryable().StringAggregate(" -> ", t => t.Value1).ToValue()
+						Aggregated = table.StringAggregate(" -> ", x => x.Value1).ToValue()
 					};
-				
-				
-				var result = query.ToArray();
+
+
+				var expected = from t in data
+					select new 
+					{ 
+						Count      = data.Count(x => x.Value1 != null), 
+						Aggregated = string.Join(" -> ", data.Where(x => x.Value1 != null).Select(x => x.Value1))
+					};
+
+
+				AreEqual(expected, query);
 			}
 		}
 

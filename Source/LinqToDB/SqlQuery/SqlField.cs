@@ -78,7 +78,7 @@ namespace LinqToDB.SqlQuery
 			ColumnDescriptor  = column;
 		}
 
-		public DbDataType?       Type              { get; set; }
+		public DbDataType        Type              { get; set; }
 		public string?           Alias             { get; set; }
 		public string            Name              { get; set; } = null!; // not always true, see ColumnDescriptor notes
 		public bool              IsPrimaryKey      { get; set; }
@@ -94,7 +94,7 @@ namespace LinqToDB.SqlQuery
 		public ISqlTableSource?  Table             { get; set; }
 		public ColumnDescriptor  ColumnDescriptor  { get; set; } = null!; // TODO: not true, we probably should introduce something else for non-column fields
 
-		Type ISqlExpression.SystemType => Type?.SystemType!; // !!!
+		Type ISqlExpression.SystemType => Type.SystemType; 
 
 		private string? _physicalName;
 		public  string   PhysicalName
@@ -109,7 +109,7 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>()).ToString();
 		}
 
 //#endif
@@ -120,7 +120,7 @@ namespace LinqToDB.SqlQuery
 
 		public bool CanBeNull { get; set; }
 
-		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		public bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			return this == other;
 		}
@@ -131,9 +131,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion
@@ -151,7 +151,7 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementType ElementType => QueryElementType.SqlField;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
 			if (Table != null)
 				sb
@@ -163,5 +163,12 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
+		internal static SqlField FakeField(DbDataType dataType, string fieldName, bool canBeNull)
+		{
+			var field = new SqlField(fieldName, fieldName);
+			field.Type = dataType;
+			return field;
+		}
 	}
 }

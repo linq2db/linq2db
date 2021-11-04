@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-
+using FluentAssertions;
 using LinqToDB;
 using NUnit.Framework;
 
@@ -288,6 +288,17 @@ namespace Tests.Linq
 					db.Customer.Where(c => c == o.Customer).All(c => c.CompanyName.StartsWith("A")) ||
 					db.Employee.Where(e => e == o.Employee).All(e => e.FirstName.EndsWith("t"))
 					select o);
+			}
+		}
+
+		[Test]
+		public void StackOverflowRegressionTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person
+					.Select(_ => _.Patient)
+					.Any().Should().BeTrue();
 			}
 		}
 	}

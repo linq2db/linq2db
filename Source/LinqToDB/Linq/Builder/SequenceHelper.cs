@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -29,14 +30,46 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (refExpression.BuildContext == current)
 					{
-						var contextRefExpression = new ContextRefExpression(root.Type, underlying);
-						expression = expression.Replace(root, contextRefExpression);
-					};
+						expression = expression.Replace(root, new ContextRefExpression(root.Type, underlying), EqualityComparer<Expression>.Default);
+					}
 				}
 			}
 
 			return expression;
 		}
-		
+
+		public static TableBuilder.TableContext? GetTableContext(IBuildContext context)
+		{
+			var table = context as TableBuilder.TableContext;
+
+			if (table != null)
+				return table;
+			
+			if (context is LoadWithBuilder.LoadWithContext lwCtx)
+				return lwCtx.TableContext;
+			
+			if (table == null)
+			{
+				var isTableResult = context.IsExpression(null, 0, RequestFor.Table);
+				if (isTableResult.Result)
+				{
+					table = isTableResult.Context as TableBuilder.TableContext;
+					if (table != null)
+						return table;
+				}
+			}
+
+			return null;
+		}
+
+		public static IBuildContext UnwrapSubqueryContext(IBuildContext context)
+		{
+			while (context is SubQueryContext sc)
+			{
+				context = sc.SubQuery;
+			}
+
+			return context;
+		}
 	}
 }

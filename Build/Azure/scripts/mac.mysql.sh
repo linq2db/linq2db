@@ -1,8 +1,6 @@
 #!/bin/bash
 
-#docker pull mysql:latest
-# --sql_mode="" disables ONLY_FULL_GROUP_BY, which is incompatible with linq2db
-docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=root -p 3306:3306 mysql:latest --sql_mode=""
+docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=root -p 3306:3306 mysql:latest
 docker ps -a
 
 retries=0

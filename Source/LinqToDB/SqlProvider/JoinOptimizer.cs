@@ -621,8 +621,12 @@ namespace LinqToDB.SqlProvider
 			var res = new Dictionary<string, VirtualField>();
 
 			if (source is SqlTable table)
+			{
 				foreach (var field in table.Fields)
 					res.Add(field.Name, new VirtualField(field));
+
+				res.Add(source.All.Name, new VirtualField(source.All));
+			}
 
 			return res;
 		}
@@ -647,13 +651,13 @@ namespace LinqToDB.SqlProvider
 			if (_replaceMap != null && _replaceMap.Count > 0 || _removedSources != null)
 			{
 				((ISqlExpressionWalkable)_statement)
-					.Walk(new WalkOptions(), element =>
+					.Walk(WalkOptions.Default, this, static (ctx, element) =>
 					{
 						if (element is SqlField field)
-							return GetNewField(new VirtualField(field)).Element;
+							return ctx.GetNewField(new VirtualField(field)).Element;
 
 						if (element is SqlColumn column)
-							return GetNewField(new VirtualField(column)).Element;
+							return ctx.GetNewField(new VirtualField(column)).Element;
 
 						return element;
 					});
@@ -961,8 +965,11 @@ namespace LinqToDB.SqlProvider
 			if (join.Table.Joins.Count != 0)
 				return false;
 
+			if (!(join.Table.Source is SqlTable t && t.SqlTableType == SqlTableType.Table))
+				return false;
+
 			// do not allow merging if table used in statement
-			if (join.Table.Source is SqlTable t && _statement.IsDependedOn(t))
+			if (_statement.IsDependedOn(t))
 				return false;
 
 			var hasLeftJoin = join.JoinType == JoinType.Left;
@@ -1044,8 +1051,12 @@ namespace LinqToDB.SqlProvider
 			SqlJoinedTable join1, SqlJoinedTable join2,
 			List<VirtualField[]> uniqueKeys)
 		{
+
+			if (!(join2.Table.Source is SqlTable t && t.SqlTableType == SqlTableType.Table))
+				return false;
+
 			// do not allow merging if table used in statement
-			if (join2.Table.Source is SqlTable t && _statement.IsDependedOn(t))
+			if (_statement.IsDependedOn(t))
 				return false;
 
 			var found1 = SearchForFields(manySource, join1);
@@ -1160,12 +1171,12 @@ namespace LinqToDB.SqlProvider
 			if (join.JoinType == JoinType.Inner)
 				return false;
 
-			if (join.Table.Source is SqlTable table)
-			{
-				// do not allow to remove JOIN if table used in statement
-				if (_statement.IsDependedOn(table))
-					return false;
-			}
+			if (!(join.Table.Source is SqlTable t && t.SqlTableType == SqlTableType.Table))
+				return false;
+
+			// do not allow to remove JOIN if table used in statement
+			if (_statement.IsDependedOn(t))
+				return false;
 
 			var found = SearchForFields(manySource, join);
 

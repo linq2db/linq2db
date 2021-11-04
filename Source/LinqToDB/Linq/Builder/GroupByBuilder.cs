@@ -333,7 +333,7 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					var parameters = context.Builder.CurrentSqlParameters
+					var parameters = context.Builder.ParametersContext.CurrentSqlParameters
 						.Select((p, i) => (p, i))
 						.ToDictionary(_ => _.p.Expression, _ => _.i);
 					var paramArray = Expression.Parameter(typeof(object[]), "ps");
@@ -346,7 +346,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								return
 									Expression.Convert(
-										Expression.ArrayIndex(context.paramArray, Expression.Constant(idx)),
+										Expression.ArrayIndex(context.paramArray, ExpressionInstances.Int32(idx)),
 										e.Type);
 							}
 
@@ -388,7 +388,7 @@ namespace LinqToDB.Linq.Builder
 						new Expression[]
 						{
 							ExpressionBuilder.QueryRunnerParam,
-							Expression.Constant(context.Builder.CurrentSqlParameters),
+							Expression.Constant(context.Builder.ParametersContext.CurrentSqlParameters),
 							keyExpr,
 							Expression.Constant(itemReader)
 						});
@@ -522,36 +522,36 @@ namespace LinqToDB.Linq.Builder
 
 				if (attribute != null)
 				{
-					var expr = attribute.GetExpression(Builder.DataContext, SelectQuery, call, (e, descriptor) =>
+					var expr = attribute.GetExpression((context: this, rootArgument), Builder.DataContext, SelectQuery, call, static (context, e, descriptor) =>
 					{
 						var ex = e.Unwrap();
 
 						if (ex is LambdaExpression l)
 						{
-							var p = Element.Parent;
-							var ctx = new ExpressionContext(Parent, Element, l);
+							var p = context.context.Element.Parent;
+							var ctx = new ExpressionContext(context.context.Parent, context.context.Element, l);
 
-							var res = Builder.ConvertToSql(ctx, l.Body, true, descriptor);
+							var res = context.context.Builder.ConvertToSql(ctx, l.Body, true, descriptor);
 
-							Builder.ReplaceParent(ctx, p);
+							context.context.Builder.ReplaceParent(ctx, p);
 							return res;
 						}
 
-						if (rootArgument == e && typeof(IGrouping<,>).IsSameOrParentOf(ex.Type))
+						if (context.rootArgument == e && typeof(IGrouping<,>).IsSameOrParentOf(ex.Type))
 						{
-							return Element.ConvertToSql(null, 0, ConvertFlags.Field)
+							return context.context.Element.ConvertToSql(null, 0, ConvertFlags.Field)
 								.Select(_ => _.Sql)
 								.FirstOrDefault();
 						}
 
-						if (typeof(IGrouping<,>).IsSameOrParentOf(Builder.GetRootObject(ex).Type))
+						if (typeof(IGrouping<,>).IsSameOrParentOf(context.context.Builder.GetRootObject(ex).Type))
 						{
-							return ConvertToSql(ex, 0, ConvertFlags.Field)
+							return context.context.ConvertToSql(ex, 0, ConvertFlags.Field)
 								.Select(_ => _.Sql)
 								.FirstOrDefault();
 						}
 
-						return Builder.ConvertToExtensionSql(Element, ex, descriptor);
+						return context.context.Builder.ConvertToExtensionSql(context.context.Element, ex, descriptor);
 					});
 
 					if (expr != null)

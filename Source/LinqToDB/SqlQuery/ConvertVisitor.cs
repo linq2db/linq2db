@@ -8,46 +8,60 @@ namespace LinqToDB.SqlQuery
 {
 	using LinqToDB.Linq.Builder;
 
-	public class VisitArgs<TContext>
-	{
-		public VisitArgs(ConvertVisitor<TContext> visitor)
-		{
-			Visitor = visitor;
-		}
-
-		public readonly ConvertVisitor<TContext> Visitor;
-		public          IQueryElement            Element = null!;
-	}
-
 	public class ConvertVisitor<TContext>
 	{
 		// when true, only changed (and explicitly added) elements added to VisitedElements
 		// greatly reduce memory allocation for majority of cases, where there is nothing to replace
-		private readonly bool                                                       _visitAll;
-		private readonly Func<ConvertVisitor<TContext>,IQueryElement,IQueryElement> _convert;
-		private readonly Func<VisitArgs<TContext>, bool>?                           _parentAction;
-		private readonly VisitArgs<TContext>?                                       _visitArgs;
+		private bool                                                       _visitAll;
+		private Func<ConvertVisitor<TContext>,IQueryElement,IQueryElement> _convert;
+		private Func<ConvertVisitor<TContext>, bool>?                      _parentAction;
 
-		public readonly TContext Context;
-		public readonly bool     AllowMutation;
+		public TContext Context;
+		public bool     AllowMutation;
+		public bool     HasStack;
 
 		delegate T Clone<T>(T obj);
 
-		public Dictionary<IQueryElement, IQueryElement?> VisitedElements     { get; } = new ();
-		public List<IQueryElement>                       Stack               { get; } = new ();
-		public IQueryElement?                            ParentElement               => Stack.Count == 0 ? null : Stack[Stack.Count - 1];
-		public IQueryElement?                            SecondParentElement         => Stack.Count < 2  ? null : Stack[Stack.Count - 2];
+		private Dictionary<IQueryElement, IQueryElement?>? _visitedElements;
+		private List<IQueryElement>?                       _stack;
 
-		internal ConvertVisitor(TContext context, Func<ConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction, bool visitAll, bool allowMutation, Func<VisitArgs<TContext>, bool>? parentAction = default)
+		public List<IQueryElement> Stack         => _stack ??= (HasStack ? new () : throw new InvalidOperationException("Stack tracking is not enabled for current visitor instance"));
+		public IQueryElement?      ParentElement => Stack.Count == 0 ? null : Stack[Stack.Count - 1];
+		public IQueryElement       CurrentElement = null!;
+
+		internal ConvertVisitor(
+			TContext                                                     context,
+			Func<ConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction,
+			bool                                                         visitAll,
+			bool                                                         allowMutation,
+			bool                                                         withStack,
+			Func<ConvertVisitor<TContext>, bool>?                        parentAction = default)
 		{
 			_visitAll     = visitAll;
 			_convert      = convertAction;
 			AllowMutation = allowMutation;
+			HasStack      = withStack;
+			_parentAction = parentAction;
+			Context       = context;
+		}
+
+		internal void Reset(
+			TContext                                                     context,
+			Func<ConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction,
+			bool                                                         visitAll,
+			bool                                                         allowMutation,
+			bool                                                         withStack,
+			Func<ConvertVisitor<TContext>, bool>?                        parentAction = default)
+		{
+			_visitAll     = visitAll;
+			_convert      = convertAction;
+			AllowMutation = allowMutation;
+			HasStack      = withStack;
 			_parentAction = parentAction;
 			Context       = context;
 
-			if (_parentAction != null)
-				_visitArgs = new VisitArgs<TContext>(this);
+			_visitedElements?.Clear();
+			_stack?          .Clear();
 		}
 
 		void CorrectQueryHierarchy(SelectQuery? parentQuery)
@@ -65,9 +79,31 @@ namespace LinqToDB.SqlQuery
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		void AddVisited(IQueryElement element, IQueryElement? newElement)
+		private void Push(IQueryElement element)
 		{
-			VisitedElements[element] = newElement;
+			if (HasStack)
+				(_stack ??= new()).Add(element);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void Pop()
+		{
+			// don't return last value as we don't need it at call sites
+			if (_stack != null && _stack.Count > 0)
+				_stack.RemoveAt(_stack.Count - 1);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void AddVisited(IQueryElement element, IQueryElement? newElement)
+		{
+			(_visitedElements ??= new())[element] = newElement;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void RemoveVisited(IQueryElement element)
+		{
+			if (_visitedElements != null)
+				_visitedElements.Remove(element);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -75,25 +111,26 @@ namespace LinqToDB.SqlQuery
 		{
 			List<IQueryElement>? forDelete = null;
 
-			foreach (var pair in VisitedElements)
-				if (pair.Value != null && QueryHelper.ContainsElement(pair.Value, element))
-					(forDelete ??= new ()).Add(pair.Key);
+			if (_visitedElements != null)
+				foreach (var pair in _visitedElements)
+					if (pair.Value != null && QueryHelper.ContainsElement(pair.Value, element))
+						(forDelete ??= new ()).Add(pair.Key);
 
-			if (forDelete != null)
+			if (forDelete != null && _visitedElements != null)
 				foreach (var e in forDelete)
-					VisitedElements.Remove(e);
+					_visitedElements.Remove(e);
 
-			VisitedElements[element] = newElement;
+			AddVisited(element, newElement);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		IQueryElement? GetCurrentReplaced(IQueryElement element)
 		{
-			if (VisitedElements.TryGetValue(element, out var replaced))
+			if (_visitedElements != null && _visitedElements.TryGetValue(element, out var replaced))
 			{
 				if (replaced != null && replaced != element)
 				{
-					while (replaced != null && VisitedElements.TryGetValue(replaced, out var another))
+					while (replaced != null && _visitedElements.TryGetValue(replaced, out var another))
 					{
 						if (replaced == another)
 							break;
@@ -118,16 +155,15 @@ namespace LinqToDB.SqlQuery
 			if (newElement != null)
 				return newElement;
 
+			CurrentElement = element;
 			if (_parentAction != null)
 			{
-				_visitArgs!.Element = element;
-				var stop            = !_parentAction(_visitArgs!);
-				element             = _visitArgs!.Element;
-				if (stop)
-					return element;
+				if (!_parentAction(this))
+					return CurrentElement;
+				element = CurrentElement;
 			}
 
-			Stack.Add(element);
+			Push(element);
 			{
 				switch (element.ElementType)
 				{
@@ -734,9 +770,9 @@ namespace LinqToDB.SqlQuery
 							{
 								var column = sc.Columns[i];
 
-								Stack.Add(column);
+								Push(column);
 								var expr = (ISqlExpression)ConvertInternal(column.Expression);
-								Stack.RemoveAt(Stack.Count - 1);
+								Pop();
 
 								if (!ReferenceEquals(column.Expression, expr))
 									column.Expression = expr;
@@ -748,9 +784,9 @@ namespace LinqToDB.SqlQuery
 							{
 								var column = sc.Columns[i];
 
-								Stack.Add(column);
+								Push(column);
 								var expr = (ISqlExpression)ConvertInternal(column.Expression);
-								Stack.RemoveAt(Stack.Count - 1);
+								Pop();
 
 								if (!ReferenceEquals(expr, column.Expression))
 								{
@@ -902,7 +938,7 @@ namespace LinqToDB.SqlQuery
 						{
 							var nq = new SelectQuery();
 
-							var objTree = new Dictionary<IQueryElement, IQueryElement>();
+							Dictionary<IQueryElement, IQueryElement>? objTree = null;
 
 							// try to correct if there q.* in columns expressions
 							// TODO: not performant, it is bad that Columns has reference on this select query
@@ -911,6 +947,8 @@ namespace LinqToDB.SqlQuery
 							// TODO: refactor
 							if (ReferenceEquals(sc, q.Select))
 							{
+								objTree = new();
+
 								sc = new SqlSelectClause(nq)
 								{
 									IsDistinct = q.Select.IsDistinct,
@@ -960,11 +998,9 @@ namespace LinqToDB.SqlQuery
 								q.IsParameterDependent);
 
 							// update visited in case if columns were cloned
-							foreach (var pair in objTree)
-							{
-								if (pair.Key is IQueryElement queryElement)
-									VisitedElements[queryElement] = pair.Value;
-							}
+							if (objTree != null)
+								foreach (var pair in objTree)
+									AddVisited(pair.Key, pair.Value);
 
 							newElement = nq;
 						}
@@ -975,16 +1011,18 @@ namespace LinqToDB.SqlQuery
 					{
 						var merge = (SqlMergeStatement)element;
 
-						var tag        = merge.Tag != null ? (SqlComment?)ConvertInternal(merge.Tag) : null;
-						var with       = (SqlWithClause?)      ConvertInternal(merge.With);
+						var tag        = merge.Tag != null    ? (SqlComment?)ConvertInternal(merge.Tag) : null;
+						var with       = (SqlWithClause?)     ConvertInternal(merge.With);
 						var target     = (SqlTableSource?)    ConvertInternal(merge.Target);
 						var source     = (SqlTableLikeSource?)ConvertInternal(merge.Source);
 						var on         = (SqlSearchCondition?)ConvertInternal(merge.On);
+						var output      = merge.Output != null ? (SqlOutputClause?)ConvertInternal(merge.Output) : null;
 						var operations = ConvertSafe(merge.Operations);
 
 						if (target     != null && !ReferenceEquals(merge.Target, target) ||
 							source     != null && !ReferenceEquals(merge.Source, source) ||
 							on         != null && !ReferenceEquals(merge.On, on)         ||
+							output     != null && !ReferenceEquals(merge.Output, output) ||
 							tag        != null && !ReferenceEquals(merge.Tag, tag)       ||
 							operations != null && !ReferenceEquals(merge.Operations, operations))
 						{
@@ -996,7 +1034,8 @@ namespace LinqToDB.SqlQuery
 								on         ?? merge.On,
 								operations ?? merge.Operations)
 							{
-								Tag = tag ?? merge.Tag
+								Tag    = tag    ?? merge.Tag,
+								Output = output ?? merge.Output
 							};
 						}
 
@@ -1072,43 +1111,56 @@ namespace LinqToDB.SqlQuery
 					{
 						var table = (SqlValuesTable)element;
 
-						List<ISqlExpression[]>? convertedRows = null;
-						var rowsConverted = false;
+						var converted = _convert(this, element);
 
-						if (table.Rows != null)
+						if (!ReferenceEquals(converted, element) && converted is SqlValuesTable table2)
 						{
-							convertedRows = new List<ISqlExpression[]>();
-							foreach (var row in table.Rows)
-							{
-								var convertedRow = ConvertSafe(row);
-								rowsConverted = rowsConverted || (convertedRow != null && !ReferenceEquals(convertedRow, row));
+							var fields1 = table.Fields;
+							var fields2 = table2.Fields;
 
-								convertedRows.Add(convertedRow ?? row!);
+							for (var i = 0; i < fields2.Count; i++)
+							{
+								var field = fields1[i];
+								//ReplaceVisited(field, fields2[i]);
+								AddVisited(field, fields2[i]);
 							}
+
+							newElement = converted;
 						}
-
-						var fields1 = table.Fields;
-						var fields2 = Convert(table.Fields, static f => new SqlField(f));
-
-						var fieldsConverted = fields2 != null && !ReferenceEquals(fields1, fields2);
-
-						if (fieldsConverted || rowsConverted)
+						else
 						{
-							if (!fieldsConverted)
+							List<ISqlExpression[]>? convertedRows = null;
+							var                     rowsConverted = false;
+
+							if (table.Rows != null)
 							{
-								fields2 = fields1;
-
-								for (var i = 0; i < fields2.Count; i++)
+								convertedRows = new List<ISqlExpression[]>();
+								foreach (var row in table.Rows)
 								{
-									var field = fields2[i];
+									var convertedRow = ConvertSafe(row);
+									rowsConverted = rowsConverted || (convertedRow != null && !ReferenceEquals(convertedRow, row));
 
-									fields2[i] = new SqlField(field);
-
-									VisitedElements[field] = fields2[i];
+									convertedRows.Add(convertedRow ?? row!);
 								}
 							}
 
-							newElement = new SqlValuesTable(table.Source!, table.ValueBuilders!, fields2!, rowsConverted ? convertedRows : table.Rows);
+							if (rowsConverted)
+							{
+								var prevFields = table.Fields;
+								var newFields  = new SqlField[prevFields.Count];
+
+								for (var i = 0; i < prevFields.Count; i++)
+								{
+									var field = prevFields[i];
+
+									var newField = new SqlField(field);
+									newFields[i] = newField;
+
+									AddVisited(field, newField);
+								}
+
+								newElement = new SqlValuesTable(table.Source!, table.ValueBuilders!, newFields, rowsConverted ? convertedRows : table.Rows);
+							}
 						}
 
 						break;
@@ -1212,36 +1264,46 @@ namespace LinqToDB.SqlQuery
 
 					case QueryElementType.CteClause:
 					{
-						var cte = (CteClause)element;
+						// element converted by owner (QueryElementType.WithClause)
+						// to avoid conversion when used as table
+						break;
+					}
 
-						// for avoiding recursion
-						if (SecondParentElement?.ElementType != QueryElementType.WithClause)
-							break;
+					case QueryElementType.WithClause:
+					{
+						var with = (SqlWithClause)element;
 
-						var body   = (SelectQuery?)ConvertInternal(cte.Body);
-
-						if (body != null && !ReferenceEquals(cte.Body, body))
+						List<CteClause>? newClauses = null;
+						for (var i = 0; i < with.Clauses.Count; i++)
 						{
-							var objTree = new Dictionary<IQueryElement, IQueryElement>();
+							var cte = with.Clauses[i];
+							Push(cte);
 
-							var clonedFields = cte.Fields!.Clone(objTree);
+							var body = (SelectQuery?)ConvertInternal(cte.Body);
 
-							newElement = new CteClause(
-								body,
-								clonedFields,
-								cte.ObjectType,
-								cte.IsRecursive,
-								cte.Name);
+							CteClause? newCte = null;
+							if (body != null && !ReferenceEquals(cte.Body, body))
+							{
+								var objTree = new Dictionary<IQueryElement, IQueryElement>();
 
-							var correctedBody = body.Convert(
-									(cte, newElement, objTree),
+								var clonedFields = cte.Fields!.Clone(objTree);
+
+								newCte = new CteClause(
+									body,
+									clonedFields,
+									cte.ObjectType,
+									cte.IsRecursive,
+									cte.Name);
+
+								var correctedBody = body.Convert(
+									(cte, newCte, objTree),
 									static (v, e) =>
 									{
 										if (e.ElementType == QueryElementType.CteClause)
 										{
 											var inner = (CteClause)e;
 											if (ReferenceEquals(inner, v.Context.cte))
-												return v.Context.newElement;
+												return v.Context.newCte;
 										}
 
 										if (v.Context.objTree.TryGetValue(e, out var newValue))
@@ -1250,37 +1312,40 @@ namespace LinqToDB.SqlQuery
 
 									});
 
-							// update visited for cloned fields
-							foreach (var pair in objTree)
-							{
-								if (pair.Key is IQueryElement queryElement)
-									VisitedElements[queryElement] = pair.Value;
+								// update visited for cloned fields
+								foreach (var pair in objTree)
+								{
+									if (pair.Key is IQueryElement queryElement)
+										AddVisited(queryElement, pair.Value);
+								}
+
+								AddVisited(cte, newCte);
+
+								newCte.Body = correctedBody;
+
+								if (newClauses == null)
+									newClauses = new(with.Clauses);
+
+								newClauses[i] = newCte;
 							}
 
-							VisitedElements.Remove(element);
-							AddVisited(element, newElement);
+							Pop();
 
-							((CteClause)newElement).Body = correctedBody;
-						}
+							newCte = (CteClause)_convert(this, newCte ?? cte);
 
-						break;
-					}
-
-					case QueryElementType.WithClause:
-					{
-						var with = (SqlWithClause)element;
-
-						var clauses = ConvertSafe(with.Clauses);
-
-						if (clauses != null && !ReferenceEquals(with.Clauses, clauses))
-						{
-							newElement = new SqlWithClause()
+							if (!_visitAll || !ReferenceEquals(cte, newCte))
 							{
-								Clauses = clauses
-							};
+								if (newClauses == null)
+									newClauses = new(with.Clauses);
+								newClauses[i] = newCte;
 
-							newElement = new SqlWithClause() { Clauses = clauses };
+								AddVisited(cte, newCte);
+							}
 						}
+
+						if (newClauses != null)
+							newElement = new SqlWithClause() { Clauses = newClauses };
+
 						break;
 					}
 
@@ -1296,7 +1361,7 @@ namespace LinqToDB.SqlQuery
 						throw new InvalidOperationException($"Convert visitor not implemented for element {element.ElementType}");
 				}
 			}
-			Stack.RemoveAt(Stack.Count - 1);
+			Pop();
 
 			newElement = _convert(this, newElement ?? element);
 
@@ -1479,7 +1544,7 @@ namespace LinqToDB.SqlQuery
 						{
 							var elem = list1[j];
 							if (clone != null)
-								VisitedElements[elem] = elem = clone(elem);
+								AddVisited(elem, elem = clone(elem));
 
 							list2.Add(elem);
 						}
@@ -1490,7 +1555,7 @@ namespace LinqToDB.SqlQuery
 				else if (list2 != null)
 				{
 					if (clone != null)
-						VisitedElements[elem1] = elem1 = clone(elem1);
+						AddVisited(elem1, elem1 = clone(elem1));
 
 					list2.Add(elem1);
 				}

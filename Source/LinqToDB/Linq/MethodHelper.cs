@@ -3,6 +3,8 @@ using System.Reflection;
 
 namespace LinqToDB.Linq
 {
+	// TODO: replace remaining calls in API with
+	// Methods.*.MakeGenericMethod calls
 	public static class MethodHelper
 	{
 

@@ -274,7 +274,7 @@ namespace Tests.Data
 			var collection = new ServiceCollection();
 			collection.AddLinqToDb((serviceProvider, options) => options.UseConfigurationString(context));
 			var provider = collection.BuildServiceProvider();
-			var con = provider.GetService<IDataContext>();
+			var con = provider.GetService<IDataContext>()!;
 			Assert.True(con is DataConnection);
 			Assert.That(((DataConnection)con).ConfigurationString, Is.EqualTo(context));
 		}
@@ -285,7 +285,7 @@ namespace Tests.Data
 			var collection = new ServiceCollection();
 			collection.AddLinqToDbContext<DataConnection>((serviceProvider, options) => options.UseConfigurationString(context));
 			var provider = collection.BuildServiceProvider();
-			var con = provider.GetService<DataConnection>();
+			var con = provider.GetService<DataConnection>()!;
 			Assert.That(con.ConfigurationString, Is.EqualTo(context));
 		}
 
@@ -311,8 +311,8 @@ namespace Tests.Data
 			collection.AddLinqToDbContext<DbConnection2>((provider, options) => {});
 
 			var serviceProvider = collection.BuildServiceProvider();
-			var c1 = serviceProvider.GetService<DbConnection1>();
-			var c2 = serviceProvider.GetService<DbConnection2>();
+			var c1 = serviceProvider.GetService<DbConnection1>()!;
+			var c2 = serviceProvider.GetService<DbConnection2>()!;
 			Assert.That(c1.ConfigurationString, Is.EqualTo(context));
 			Assert.That(c2.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
 		}
@@ -367,13 +367,13 @@ namespace Tests.Data
 			}
 			finally
 			{
-				var tid = Thread.CurrentThread.ManagedThreadId;
+				var tid = Environment.CurrentManagedThreadId;
 
 				await db.CloseAsync();
 
 				db.Dispose();
 
-				if (tid == Thread.CurrentThread.ManagedThreadId)
+				if (tid == Environment.CurrentManagedThreadId)
 					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
 			}
 		}
@@ -389,11 +389,11 @@ namespace Tests.Data
 			}
 			finally
 			{
-				var tid = Thread.CurrentThread.ManagedThreadId;
+				var tid = Environment.CurrentManagedThreadId;
 
 				await db.DisposeAsync();
 
-				if (tid == Thread.CurrentThread.ManagedThreadId)
+				if (tid == Environment.CurrentManagedThreadId)
 					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
 			}
 		}
@@ -1107,6 +1107,7 @@ namespace Tests.Data
 				context == ProviderName.DB2            ||
 				context == ProviderName.InformixDB2    ||
 				context == ProviderName.MySqlConnector ||
+				context == TestProvName.MariaDB        ||
 				context == ProviderName.SapHanaNative  ||
 				context == ProviderName.SqlCe          ||
 				context == ProviderName.Sybase         ||

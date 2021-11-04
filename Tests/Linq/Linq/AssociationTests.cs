@@ -1213,6 +1213,51 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region issue 3260
+
+		[Table]
+		public class LeaveRequest
+		{
+			[Column] public virtual int                       Id                      { get; set; }
+			[Column] public virtual int                       EmployeeId              { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(LeaveRequestDateEntry.LeaveRequestId))]
+			public virtual ICollection<LeaveRequestDateEntry> LeaveRequestDateEntries { get; set; } = null!;
+		}
+
+		public class LeaveRequestDateEntry
+		{
+			public virtual int      Id             { get; set; }
+			public virtual decimal? EndHour        { get; set; }
+			public virtual decimal? StartHour      { get; set; }
+			public virtual int      LeaveRequestId { get; set; }
+		}
+
+		public class TestDto
+		{
+			public decimal? Result { get; set; }
+		}
+
+		[Test]
+		public void Issue3260Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var t1 = db.CreateLocalTable<LeaveRequest>())
+			using (var t2 = db.CreateLocalTable<LeaveRequestDateEntry>())
+			{
+				db.GetTable<LeaveRequest>()
+					.Select(x => new TestDto()
+					{
+						Result = x
+							.LeaveRequestDateEntries
+							.Select(e => e.StartHour)
+							.DefaultIfEmpty(0)
+							.Sum()
+					}).ToList();
+			}
+		}
+
+		#endregion
 	}
 
 	public static class AssociationExtension

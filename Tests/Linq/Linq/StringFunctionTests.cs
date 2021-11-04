@@ -9,7 +9,7 @@ using System.Linq;
 using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
-
+using LinqToDB.SqlQuery;
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -589,6 +589,156 @@ namespace Tests.Linq
 			{
 				db.Person.Count(p => p.FirstName.EndsWith("JOHN") && p.ID == 1).Should().Be(IsCaseSensitiveComparison(context) ? 0 : 1);
 				db.Person.Count(p => !p.FirstName.EndsWith("JOHN") && p.ID == 1).Should().Be(IsCaseSensitiveComparison(context) ? 1 : 0);
+			}
+		}
+
+		[Table]
+		class StringTypesTable
+		{
+			[Column]                                                              public int    Id             { get; set; }
+			[Column(Length = 50, CanBeNull = true, DataType = DataType.Char)]     public string CharColumn     { get; set; } = null!;
+			[Column(Length = 50, CanBeNull = true, DataType = DataType.NChar)]    public string NCharColumn    { get; set; } = null!;
+			[Column(Length = 50, CanBeNull = true, DataType = DataType.VarChar)]  public string VarCharColumn  { get; set; } = null!;
+			[Column(Length = 50, CanBeNull = true, DataType = DataType.NVarChar)] public string NVarCharColumn { get; set; } = null!;
+		}
+
+		[Test]
+		public void StartsWithDataType1([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var str   = "some";
+				var table = db.GetTable<StringTypesTable>();
+				var sqlExpr = table.Where(t => t.VarCharColumn.StartsWith(str)).GetSelectQuery()
+					.Find(e => e.ElementType == QueryElementType.SqlParameter);
+
+				sqlExpr.Should().NotBeNull();
+
+				var param = (SqlParameter)sqlExpr!;
+
+				param.Type.DataType.Should().Be(DataType.VarChar);
+			}
+		}
+
+		[Test]
+		public void StartsWithDataType2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var str   = "some";
+				var table = db.GetTable<StringTypesTable>();
+				var sqlExpr = table.Where(t => t.NVarCharColumn.StartsWith(str)).GetSelectQuery()
+					.Find(e => e.ElementType == QueryElementType.SqlParameter);
+
+				sqlExpr.Should().NotBeNull();
+
+				var param = (SqlParameter)sqlExpr!;
+
+				param.Type.DataType.Should().Be(DataType.NVarChar);
+			}
+		}
+
+		[Test]
+		public void StartsWithDataType3([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var str   = "some";
+				var table = db.GetTable<StringTypesTable>();
+				var sqlExpr = table.Where(t => str.StartsWith(t.NVarCharColumn)).GetSelectQuery()
+					.Find(e => e.ElementType == QueryElementType.SqlParameter);
+
+				sqlExpr.Should().NotBeNull();
+
+				var param = (SqlParameter)sqlExpr!;
+
+				param.Type.DataType.Should().Be(DataType.NVarChar);
+			}
+		}
+
+		[Test]
+		public void LikeWithDataType1([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var str   = "some";
+				var table = db.GetTable<StringTypesTable>();
+				var sqlExpr = table.Where(t => Sql.Like(t.VarCharColumn, str)).GetSelectQuery()
+					.Find(e => e.ElementType == QueryElementType.SqlParameter);
+
+				sqlExpr.Should().NotBeNull();
+
+				var param = (SqlParameter)sqlExpr!;
+
+				param.Type.DataType.Should().Be(DataType.VarChar);
+			}
+		}
+
+		[Test]
+		public void LikeWithDataType2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var str   = "some";
+				var table = db.GetTable<StringTypesTable>();
+				var sqlExpr = table.Where(t => Sql.Like(t.NVarCharColumn, str)).GetSelectQuery()
+					.Find(e => e.ElementType == QueryElementType.SqlParameter);
+
+				sqlExpr.Should().NotBeNull();
+
+				var param = (SqlParameter)sqlExpr!;
+
+				param.Type.DataType.Should().Be(DataType.NVarChar);
+			}
+		}
+
+		[Test]
+		public void LikeWithDataType3([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var str   = "some";
+				var table = db.GetTable<StringTypesTable>();
+				var sqlExpr = table.Where(t => Sql.Like(str, t.NVarCharColumn)).GetSelectQuery()
+					.Find(e => e.ElementType == QueryElementType.SqlParameter);
+
+				sqlExpr.Should().NotBeNull();
+
+				var param = (SqlParameter)sqlExpr!;
+
+				param.Type.DataType.Should().Be(DataType.NVarChar);
+			}
+		}
+
+		[Test]
+		public void StartWithByTypes([DataSources] string context)
+		{
+			var dataStr = "someString";
+			var data = new StringTypesTable[]
+			{
+				new()
+				{
+					Id             = 1,
+					CharColumn     = dataStr,
+					NCharColumn    = dataStr,
+					NVarCharColumn = dataStr,
+					VarCharColumn  = dataStr,
+				}
+			};
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var str   = "some";
+				
+				var result = table.Where(t => 
+						t.CharColumn.StartsWith(str)  && 
+						t.NCharColumn.StartsWith(str) &&
+						t.VarCharColumn.StartsWith(str) &&
+						t.NVarCharColumn.StartsWith(str)
+					);
+
+				result.Should().HaveCount(1);
 			}
 		}
 
@@ -1589,6 +1739,7 @@ namespace Tests.Linq
 			ProviderName.SQLiteMS,
 			ProviderName.DB2,
 			ProviderName.MySqlConnector,
+			TestProvName.MariaDB,
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllInformix,
 			TestProvName.AllSybase)] string context)
