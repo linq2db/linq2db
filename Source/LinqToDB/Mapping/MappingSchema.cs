@@ -1264,6 +1264,8 @@ namespace LinqToDB.Mapping
 
 		internal MappingSchema(MappingSchemaInfo mappingSchemaInfo)
 		{
+			_reduceDefaultValueTransformer = TransformVisitor<MappingSchema>.Create(this, static (ctx, e) => ctx.ReduceDefaultValueTransformer(e));
+
 			Schemas = new[] { mappingSchemaInfo };
 
 			ValueToSqlConverter = new ValueToSqlConverter();
