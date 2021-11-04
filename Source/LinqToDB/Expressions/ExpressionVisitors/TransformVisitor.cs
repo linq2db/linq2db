@@ -233,7 +233,7 @@ namespace LinqToDB.Expressions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private Expression TransformX(ChangeTypeExpression e)
 		{
-			var ex = Transform(e.Expression)!;
+			var ex = Transform(e.Expression);
 
 			if (ex == e.Expression)
 				return e;
@@ -264,7 +264,7 @@ namespace LinqToDB.Expressions
 		private Expression TransformX(MemberInitExpression e)
 		{
 			return e.Update(
-				(NewExpression)Transform(e.NewExpression)!,
+				(NewExpression)Transform(e.NewExpression),
 				Transform(e.Bindings, Modify));
 		}
 
@@ -279,7 +279,7 @@ namespace LinqToDB.Expressions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private Expression TransformX(ListInitExpression e)
 		{
-			var n = Transform(e.NewExpression)!;
+			var n = Transform(e.NewExpression);
 			var i = Transform(e.Initializers, TransformElementInit);
 
 			return n != e.NewExpression || i != e.Initializers ? Expression.ListInit((NewExpression)n, i) : e;
@@ -358,7 +358,7 @@ namespace LinqToDB.Expressions
 			for (var i = 0; i < source.Count; i++)
 			{
 				var item = source[i];
-				var e    = (T)Transform(item)!;
+				var e    = (T)Transform(item);
 
 				if (e != item)
 				{
