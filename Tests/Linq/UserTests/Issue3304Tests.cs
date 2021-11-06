@@ -28,7 +28,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void Test([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetConverter<Table.VersionClass, int>(c => c?.Version ?? 0);
