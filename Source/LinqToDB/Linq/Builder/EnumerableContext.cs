@@ -564,9 +564,9 @@ namespace LinqToDB.Linq.Builder
 					generator.AddExpression(
 						Expression.New(
 							_parameterConstructor,
-							Expression.Property(variable, nameof(DataParameter.DbDataType)),
+							Expression.Property(variable, Methods.LinqToDB.DataParameter.DbDataType),
 							Expression.Constant(memberName),
-							Expression.Property(variable, nameof(DataParameter.Value))
+							Expression.Property(variable, Methods.LinqToDB.DataParameter.Value)
 						));
 				}
 				else
