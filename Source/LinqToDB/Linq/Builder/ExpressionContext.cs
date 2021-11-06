@@ -66,7 +66,9 @@ namespace LinqToDB.Linq.Builder
 							}
 							else if (root.IsNullValue())
 							{
-								return Array<SqlInfo>.Empty;
+									return Array<SqlInfo>.Empty;
+
+								return Builder.ConvertExpressions(this, expression!, flags, null);
 							}
 							else if (root.NodeType == ExpressionType.New)
 							{

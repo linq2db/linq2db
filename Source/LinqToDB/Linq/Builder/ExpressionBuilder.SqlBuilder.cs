@@ -232,8 +232,9 @@ namespace LinqToDB.Linq.Builder
 
 		internal ISqlExpression SubQueryToSql(IBuildContext context, MethodCallExpression expression)
 		{
-			var sequence = GetSubQuery(context, expression);
-			var subSql   = sequence.GetSubQuery(context);
+			var subQueryCtx = GetSubQueryContext(context, expression);
+			var sequence    = subQueryCtx.Context;
+			var subSql      = sequence.GetSubQuery(context);
 
 			if (subSql == null)
 			{
@@ -832,9 +833,6 @@ namespace LinqToDB.Linq.Builder
 
 			if (unwrapped is LambdaExpression lambda)
 			{
-				var saveParent = context.Parent;
-				ExpressionContext exprCtx;
-
 				IBuildContext valueSequence = context;
 
 				if (context is SelectContext sc && sc.Sequence[0] is GroupByBuilder.GroupByContext)
@@ -845,10 +843,12 @@ namespace LinqToDB.Linq.Builder
 					valueSequence = groupByContext.Element;
 				}
 
-				exprCtx = new ExpressionContext(valueSequence.Parent, valueSequence, lambda);
+				var contextRefExpression = new ContextRefExpression(lambda.Parameters[0].Type, valueSequence);
 
-				var result = ConvertToSql(exprCtx, lambda.Body, false, columnDescriptor);
-				ReplaceParent(context.Parent!, saveParent);
+				var body = lambda.GetBody(contextRefExpression);
+
+				var result = ConvertToSql(context, body, false, columnDescriptor);
+
 				if (!(result is SqlField field) || field.Table!.All != field)
 					return result;
 				result = context.ConvertToSql(null, 0, ConvertFlags.Field).Select(static _ => _.Sql).First();
@@ -858,6 +858,12 @@ namespace LinqToDB.Linq.Builder
 			if (context is SelectContext selectContext)
 			{
 				if (null != expression.Find(selectContext.Body))
+					return context.ConvertToSql(null, 0, ConvertFlags.Field).Select(static _ => _.Sql).First();
+			}
+
+			if (context is MethodChainBuilder.ChainContext chainContext)
+			{
+				if (expression is MethodCallExpression mc && IsSubQuery(context, mc))
 					return context.ConvertToSql(null, 0, ConvertFlags.Field).Select(static _ => _.Sql).First();
 			}
 
@@ -1132,9 +1138,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var arg = e.Arguments[0];
 						var enumerableType = arg.Type;
-						if (!EagerLoading.IsEnumerableType(enumerableType, MappingSchema))
-							isAggregation = false;
-						else
+						if (EagerLoading.IsEnumerableType(enumerableType, MappingSchema))
 						{
 							var elementType = EagerLoading.GetEnumerableElementType(enumerableType, MappingSchema);
 							if (!e.Method.GetParameters()[0].ParameterType.IsSameOrParentOf(typeof(IEnumerable<>).MakeGenericType(elementType)))

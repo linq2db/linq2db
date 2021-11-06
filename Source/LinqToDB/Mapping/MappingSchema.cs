@@ -91,6 +91,8 @@ namespace LinqToDB.Mapping
 		/// mappings for same type.</remarks>
 		public MappingSchema(string? configuration, params MappingSchema[]? schemas)
 		{
+			_reduceDefaultValueTransformer = TransformVisitor<MappingSchema>.Create(this, static (ctx, e) => ctx.ReduceDefaultValueTransformer(e));
+
 			// always generate "unique" configuration name, if name not provided to avoid duplicate names
 			// e.g. see https://github.com/linq2db/linq2db/issues/3251
 			if (configuration.IsNullOrEmpty())
@@ -806,11 +808,10 @@ namespace LinqToDB.Mapping
 
 		Expression ReduceDefaultValue(Expression expr)
 		{
-			return (_reduceDefaultValueTransformer ??= TransformVisitor<MappingSchema>.Create(this, static (ctx, e) => ctx.ReduceDefaultValueTransformer(e)))
-				.Transform(expr);
+			return _reduceDefaultValueTransformer.Transform(expr);
 		}
 
-		private TransformVisitor<MappingSchema>? _reduceDefaultValueTransformer;
+		private readonly TransformVisitor<MappingSchema> _reduceDefaultValueTransformer;
 		private Expression ReduceDefaultValueTransformer(Expression e)
 		{
 			return Converter.IsDefaultValuePlaceHolder(e) ?
@@ -1264,6 +1265,8 @@ namespace LinqToDB.Mapping
 
 		internal MappingSchema(MappingSchemaInfo mappingSchemaInfo)
 		{
+			_reduceDefaultValueTransformer = TransformVisitor<MappingSchema>.Create(this, static (ctx, e) => ctx.ReduceDefaultValueTransformer(e));
+
 			Schemas = new[] { mappingSchemaInfo };
 
 			ValueToSqlConverter = new ValueToSqlConverter();

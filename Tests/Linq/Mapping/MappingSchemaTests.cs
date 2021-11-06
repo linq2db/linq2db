@@ -3,6 +3,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Linq;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -409,7 +410,20 @@ namespace Tests.Mapping
 			Assert.False(c.IsPrimaryKey);
 			Assert.False(c.IsIdentity);
 			Assert.AreEqual(DataType.DateTime, c.DataType);
+		}
 
+		[Repeat(100)]
+		[Test]
+		public void TestIssue3312()
+		{
+			var ms = new MappingSchema();
+
+			var tasks = new Task[10];
+
+			for (var i = 0; i < tasks.Length; i++)
+				tasks[i] = Task.Run(() => ms.GetConvertExpression(typeof(string), typeof(int)));
+
+			Task.WaitAll(tasks);
 		}
 	}
 }
