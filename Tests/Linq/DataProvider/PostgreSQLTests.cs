@@ -2298,6 +2298,51 @@ namespace Tests.DataProvider
 				Assert.True(data.SequenceEqual(res));
 			}
 		}
+
+		[Test]
+		public void FunctionParameterTyping([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var ms = new MappingSchema();
+
+			using (var db = new TestDataConnection(context))
+			{
+				db.Execute(@"
+CREATE OR REPLACE        FUNCTION test_parameter_typing(psmallint smallint, pint integer, pbigint bigint, pdecimal decimal, pfloat real, pdouble double precision)
+ RETURNS smallint
+ LANGUAGE sql
+AS $function$
+   SELECT psmallint;
+$function$
+;");
+				short?   int16 = 1;
+				int?     int32 = 2;
+				long?    int64 = 3;
+				decimal? dec   = 4;
+				float?   fl    = 5;
+				double?  dbl   = 6;
+
+				db.Select(() => test_parameter_typing(int16, int32, int64, dec, fl, dbl));
+
+				int16 = null;
+				int32 = null;
+				int64 = null;
+				dec   = null;
+				fl    = null;
+				dbl   = null;
+
+				db.Select(() => test_parameter_typing(int16, int32, int64, dec, fl, dbl));
+
+				db.Select(() => test_parameter_typing(1, 2, 3, 4, 5, 6));
+
+				db.Select(() => test_parameter_typing(null, null, null, null, null, null));
+			}
+		}
+
+		[Sql.Function(ServerSideOnly = true)]
+		public static short? test_parameter_typing(short? input1, int? input2, long? input3, decimal? input4, float? input5, double? input6)
+		{
+			throw new InvalidOperationException();
+		}
 	}
 
 	public static class TestPgAggregates
