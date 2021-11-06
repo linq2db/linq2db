@@ -3,6 +3,7 @@
 <#@ import   namespace="System.Reflection"              #>
 <#@ import   namespace="System.IO"                      #>
 <#@ import   namespace="System.Linq"                    #>
+<#@ import   namespace="System.Runtime.InteropServices" #>
 
 <#
 AppDomain.CurrentDomain.AssemblyResolve += (_, args) =>
@@ -13,12 +14,25 @@ AppDomain.CurrentDomain.AssemblyResolve += (_, args) =>
 	return AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == requestedAssembly.Name);
 };
 
-var sharedPath = Path.GetDirectoryName(typeof(LinqToDB.Data.DataConnection).Assembly.Location);
+var sharedPath = Path.GetDirectoryName(GetAssemblyLocation(typeof(LinqToDB.Data.DataConnection).Assembly));
 
 LoadAssembly("Microsoft.Bcl.AsyncInterfaces", sharedPath);
 #>
 
 <#+
+static string GetAssemblyLocation(Assembly assembly)
+{
+	if (RuntimeInformation.FrameworkDescription.Contains(".NET Framework"))
+	{
+		// CodeBase used instead of Location, as Location could point to shadow copy, but we need to get original path
+		// to be able to locate sibling asemblies
+		return assembly.CodeBase.Replace("file:///", "");
+	}
+
+	// for "unofficial" T4 hosts use Location as CodeBase is obsoleted and throws exception on modern runtimes
+	return assembly.Location;
+}
+
 public static string GetProviderToolsPath(string assemblyName, string fullName)
 {
 	var assembly = AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(a => a.GetName().Name == assemblyName);
@@ -27,9 +41,7 @@ public static string GetProviderToolsPath(string assemblyName, string fullName)
 	if (assembly == null)
 		assembly = Assembly.Load(fullName);
 
-	// don't use Location as it could point to shadow copy
-	// resolve should be done against main provider assembly
-	return Path.GetDirectoryName(assembly.Location);
+	return Path.GetDirectoryName(GetAssemblyLocation(assembly));
 }
 
 public static void LoadAssembly(string assemblyName, string toolsPath)
