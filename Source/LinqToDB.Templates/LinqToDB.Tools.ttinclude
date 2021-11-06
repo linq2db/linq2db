@@ -13,7 +13,7 @@ AppDomain.CurrentDomain.AssemblyResolve += (_, args) =>
 	return AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == requestedAssembly.Name);
 };
 
-var sharedPath = Path.GetDirectoryName(typeof(LinqToDB.Data.DataConnection).Assembly.CodeBase.Replace("file:///", ""));
+var sharedPath = Path.GetDirectoryName(typeof(LinqToDB.Data.DataConnection).Assembly.Location);
 
 LoadAssembly("Microsoft.Bcl.AsyncInterfaces", sharedPath);
 #>
@@ -29,7 +29,7 @@ public static string GetProviderToolsPath(string assemblyName, string fullName)
 
 	// don't use Location as it could point to shadow copy
 	// resolve should be done against main provider assembly
-	return Path.GetDirectoryName(assembly.CodeBase.Replace("file:///", ""));
+	return Path.GetDirectoryName(assembly.Location);
 }
 
 public static void LoadAssembly(string assemblyName, string toolsPath)
