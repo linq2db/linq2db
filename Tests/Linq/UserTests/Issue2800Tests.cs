@@ -30,7 +30,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue(2839, Configuration = TestProvName.AllFirebird)]
+		[ActiveIssue(2839, Configuration = TestProvName.AllFirebird, SkipForLinqService = true)]
 		[Test]
 		public void TestExpressionMethod([DataSources] string context)
 		{
