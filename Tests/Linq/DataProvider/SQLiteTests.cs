@@ -599,7 +599,7 @@ namespace Tests.DataProvider
 				case ProviderName.SQLiteClassic:
 				case TestProvName.SQLiteClassicMiniProfilerMapped:
 				case TestProvName.SQLiteClassicMiniProfilerUnmapped:
-					expectedVersion = "3.36.0";
+					expectedVersion = "3.37.0";
 					break;
 				case ProviderName.SQLiteMS:
 #if NET472
