@@ -5,9 +5,9 @@ variables:
   - name: build_configuration
     value: Azure
   - name: assemblyVersion
-    value: 3.5.1
+    value: 3.5.2
   - name: nugetVersion
-    value: 3.5.1
+    value: 3.5.2
   - name: nugetDevVersion
     value: 3.5.2
   - name: artifact_nugets
