@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.Expressions
 {
 	using Common;
+	using LinqToDB.Common.Internal;
 	using LinqToDB.Extensions;
 	using LinqToDB.Linq;
 	using LinqToDB.Reflection;
@@ -339,9 +340,9 @@ namespace LinqToDB.Expressions
 
 		public ConvertFromDataReaderExpression MakeNullable()
 		{
-			if (Type.IsValueType && !Type.IsNullable())
+			if (!Type.IsNullableType())
 			{
-				var type = typeof(Nullable<>).MakeGenericType(Type);
+				var type = Type.AsNullable();
 				return new ConvertFromDataReaderExpression(type, _idx, Converter, _dataReaderParam);
 			}
 
@@ -350,7 +351,7 @@ namespace LinqToDB.Expressions
 
 		public ConvertFromDataReaderExpression MakeNotNullable()
 		{
-			if (typeof(Nullable<>).IsSameOrParentOf(Type))
+			if (Type.IsNullable())
 			{
 				var type = Type.GetGenericArguments()[0];
 				return new ConvertFromDataReaderExpression(type, _idx, Converter, _dataReaderParam);

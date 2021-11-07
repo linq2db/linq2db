@@ -10,6 +10,7 @@ namespace LinqToDB.Common
 {
 	using Expressions;
 	using Extensions;
+	using LinqToDB.Common.Internal;
 	using Mapping;
 
 	static class ConvertBuilder
@@ -670,8 +671,8 @@ namespace LinqToDB.Common
 					?? mappingSchema.GetDefaultFromEnumType(typeof(Enum))
 					?? Enum.GetUnderlyingType(type);
 
-			if ((enumType.IsNullable() || hasNullValue) && defaultType.IsValueType && !defaultType.IsNullable())
-				defaultType = typeof(Nullable<>).MakeGenericType(defaultType);
+			if ((enumType.IsNullable() || hasNullValue) && !defaultType.IsNullableType())
+				defaultType = defaultType.AsNullable();
 
 			return defaultType;
 		}

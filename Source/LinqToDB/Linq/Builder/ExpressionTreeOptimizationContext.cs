@@ -537,6 +537,7 @@ namespace LinqToDB.Linq.Builder
 
 			switch (ex.NodeType)
 			{
+				case ExpressionType.Default : return false;
 				case ExpressionType.Constant:
 				{
 					var c = (ConstantExpression)ex;
@@ -652,11 +653,6 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Constant:
 				{
 					var c = (ConstantExpression)expr;
-
-					// Fix Mono behaviour.
-					//
-					//if (c.Value is IExpressionQuery)
-					//	return ((IQueryable)c.Value).Expression;
 
 					if (c.Value is IQueryable queryable && !(queryable is ITable))
 					{

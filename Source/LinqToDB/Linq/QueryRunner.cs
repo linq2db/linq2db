@@ -250,7 +250,7 @@ namespace LinqToDB.Linq
 					var etype = type.GetItemType();
 
 					if (etype == null || etype == typeof(object) || etype.IsEnum ||
-						type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>) &&
+						type.IsNullable() &&
 						etype.GetGenericArguments()[0].IsEnum)
 					{
 						var values = new List<object?>();

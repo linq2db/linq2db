@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using LinqToDB.Extensions;
-using LinqToDB.Tools;
 
 namespace LinqToDB.Common.Internal
 {
@@ -157,11 +157,14 @@ namespace LinqToDB.Common.Internal
 		public static Type UnwrapNullableType(this Type type)
 			=> Nullable.GetUnderlyingType(type) ?? type;
 
-		public static bool IsNullableValueType(this Type type)
-			=> type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
-
+		/// <summary>
+		/// Returns <c>true</c> if type is reference type or <see cref="Nullable{T}"/>.
+		/// </summary>
+		/// <param name="type">Type to test.</param>
+		/// <returns><c>true</c> if type is reference type or <see cref="Nullable{T}"/>.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsNullableType(this Type type)
-			=> !type.IsValueType || type.IsNullableValueType();
+			=> !type.IsValueType || type.IsNullable();
 
 
 		public static bool IsInteger(this Type type)

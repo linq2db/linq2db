@@ -27,7 +27,7 @@ namespace LinqToDB.Linq.Builder
 				var predicate = methodCall.Arguments[1];
 				var setter    = methodCall.Arguments[2];
 
-				if (!(setter is ConstantExpression constSetter) || constSetter.Value != null)
+				if (!setter.IsNullValue())
 				{
 					var setterExpression = (LambdaExpression)setter.Unwrap();
 					mergeContext.AddSourceParameter(setterExpression.Parameters[0]);
@@ -66,7 +66,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				if (!(predicate is ConstantExpression constPredicate) || constPredicate.Value != null)
+				if (!predicate.IsNullValue())
 				{
 					var condition     = (LambdaExpression)predicate.Unwrap();
 					var conditionExpr = builder.ConvertExpression(condition.Body.Unwrap());

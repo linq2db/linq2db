@@ -23,9 +23,9 @@ namespace LinqToDB.Linq.Builder
 
 			if (methodCall.Arguments.Count == 2)
 			{
-				if (methodCall.Arguments[1] is ConstantExpression c)
+				if (methodCall.Arguments[1].Type == typeof(bool))
 				{
-					ifExists = !(bool)c.Value;
+					ifExists = !(bool)methodCall.Arguments[1].EvaluateExpression()!;
 				}
 			}
 
