@@ -46,6 +46,8 @@ namespace LinqToDB.SqlQuery
 
 			OptimizeUnions();
 			FinalizeAndValidateInternal(isApplySupported, optimizeColumns);
+
+			//TODO: Why this is still needed
 			ResolveFields();
 
 #if DEBUG

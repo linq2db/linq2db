@@ -49,17 +49,6 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		public override void WalkQueries<TContext>(TContext context, Func<TContext, SelectQuery, SelectQuery> func)
-		{
-			base.WalkQueries(context, func);
-
-			foreach (var setItem in Update.Items) {
-				if (setItem.Expression is SelectQuery q) {
-					setItem.Expression = func(context, q);
-				}
-			}
-		}
-
 		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
 		{
 			var result = SelectQuery.GetTableSource(table);
