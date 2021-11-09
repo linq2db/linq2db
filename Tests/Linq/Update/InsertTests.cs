@@ -2119,9 +2119,10 @@ namespace Tests.xUpdate
 			using (var table = db.CreateLocalTable<TestInsertOrReplaceTable>())
 			{
 				var vi = table.AsValueInsertable();
-				vi = vi.Value(x => x.ID, 123).Value(x => x.FirstName, "First name");
+				vi = vi.Value(x => x.ID, 123).Value(x => x.FirstName, "John");
 
 				Assert.AreEqual(1, vi.Insert());
+				Assert.AreEqual(1, table.Count(x => x.ID == 123 && x.FirstName == "John"));
 			}
 		}
 
