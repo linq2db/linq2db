@@ -44,7 +44,7 @@ namespace Tests.UserTests
 			{
 				var data = new Table()
 				{
-					UserId = Guid.NewGuid()
+					UserId = TestData.Guid1
 				};
 
 				var query = tb.Merge()

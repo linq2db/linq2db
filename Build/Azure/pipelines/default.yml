@@ -9,7 +9,7 @@ variables:
   - name: nugetVersion
     value: 3.5.2
   - name: nugetDevVersion
-    value: 3.5.2
+    value: 3.5.3
   - name: artifact_nugets
     value: nugets
   - name: artifact_linq2db_binaries
