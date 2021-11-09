@@ -1152,6 +1152,12 @@ namespace LinqToDB
 			return new ValueInsertable<T>(q);
 		}
 
+		/// <summary>
+		/// Starts insert operation LINQ query definition.
+		/// </summary>
+		/// <typeparam name="T">Target table mapping class.</typeparam>
+		/// <param name="source">Target table.</param>
+		/// <returns>Insertable source query.</returns>
 		public static IValueInsertable<T> AsValueInsertable<T>(this ITable<T> source)
 			where T : notnull
 		{
