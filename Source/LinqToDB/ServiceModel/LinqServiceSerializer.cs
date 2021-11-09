@@ -1427,8 +1427,6 @@ namespace LinqToDB.ServiceModel
 						{
 							var elem = (SqlOutputClause)e;
 
-							// actually only InsertedTable implemented now
-							Append(elem.SourceTable);
 							Append(elem.DeletedTable);
 							Append(elem.InsertedTable);
 							Append(elem.OutputTable);
@@ -1687,9 +1685,9 @@ namespace LinqToDB.ServiceModel
 							flds[0] = all;
 							Array.Copy(fields, 0, flds, 1, fields.Length);
 
-							var sqlTableType = (SqlTableType)ReadInt();
-							var tableArgs    = sqlTableType == SqlTableType.Table ? null : ReadArray<ISqlExpression>();
-							var tableOptions = (TableOptions)ReadInt();
+							var sqlTableType     = (SqlTableType)ReadInt();
+							var tableArgs        = sqlTableType == SqlTableType.Table ? null : ReadArray<ISqlExpression>();
+							var tableOptions     = (TableOptions)ReadInt();
 
 							obj = new SqlTable(
 								sourceID, name, alias, server, database, schema, physicalName, objectType, sequenceAttributes, flds,
@@ -2305,7 +2303,6 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.OutputClause:
 						{
 
-							var source   = Read<SqlTable>()!;
 							var deleted  = Read<SqlTable>()!;
 							var inserted = Read<SqlTable>()!;
 							var output   = Read<SqlTable>()!;
@@ -2314,14 +2311,13 @@ namespace LinqToDB.ServiceModel
 
 							var c = new SqlOutputClause()
 							{
-								SourceTable   = source,
 								DeletedTable  = deleted,
 								InsertedTable = inserted,
 								OutputTable   = output,
 								OutputQuery   = query
 							};
 
-							if (items.Length > 0)
+							if (items != null && items.Length > 0)
 								c.OutputItems.AddRange(items);
 
 							obj = c;

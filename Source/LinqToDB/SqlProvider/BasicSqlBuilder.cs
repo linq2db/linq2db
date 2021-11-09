@@ -252,6 +252,7 @@ namespace LinqToDB.SqlProvider
 			BuildStep = Step.HavingClause;  BuildHavingClause(deleteStatement.SelectQuery);
 			BuildStep = Step.OrderByClause; BuildOrderByClause(deleteStatement.SelectQuery);
 			BuildStep = Step.OffsetLimit;   BuildOffsetLimit(deleteStatement.SelectQuery);
+			BuildStep = Step.Output;        BuildOutputSubclause(deleteStatement.GetOutputClause());
 		}
 
 		protected void BuildDeleteQuery2(SqlDeleteStatement deleteStatement)
@@ -276,7 +277,6 @@ namespace LinqToDB.SqlProvider
 			--Indent;
 
 			AppendIndent().AppendLine(")");
-
 		}
 
 		protected virtual void BuildUpdateQuery(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
@@ -295,6 +295,7 @@ namespace LinqToDB.SqlProvider
 			BuildStep = Step.HavingClause;  BuildHavingClause(selectQuery);
 			BuildStep = Step.OrderByClause; BuildOrderByClause(selectQuery);
 			BuildStep = Step.OffsetLimit;   BuildOffsetLimit(selectQuery);
+			BuildStep = Step.Output;        BuildOutputSubclause(statement.GetOutputClause());
 		}
 
 		protected virtual void BuildSelectQuery(SqlSelectStatement selectStatement)
@@ -337,7 +338,8 @@ namespace LinqToDB.SqlProvider
 				BuildGetIdentity(insertClause);
 			else
 			{
-				BuildReturningSubclause(statement);
+				BuildStep = Step.Output;
+				BuildOutputSubclause(statement.GetOutputClause());
 			}
 		}
 
@@ -367,7 +369,7 @@ namespace LinqToDB.SqlProvider
 			if (insertClause.WithIdentity)
 				BuildGetIdentity(insertClause);
 			else
-				BuildReturningSubclause(statement);
+				BuildOutputSubclause(statement.GetOutputClause());
 
 			--Indent;
 
@@ -647,8 +649,8 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
-			BuildUpdateTable (selectQuery, updateClause);
-			BuildUpdateSet   (selectQuery, updateClause);
+			BuildUpdateTable    (selectQuery, updateClause);
+			BuildUpdateSet      (selectQuery, updateClause);
 		}
 
 		protected virtual void BuildUpdateTable(SelectQuery selectQuery, SqlUpdateClause updateClause)
@@ -714,6 +716,10 @@ namespace LinqToDB.SqlProvider
 		#endregion
 
 		#region Build Insert
+		protected virtual string OutputKeyword       => "RETURNING";
+		// don't change case, override in specific db builder, if database needs other case
+		protected virtual string DeletedOutputTable  => "OLD";
+		protected virtual string InsertedOutputTable => "NEW";
 
 		protected void BuildInsertClause(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
 		{
@@ -731,10 +737,80 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildOutputSubclause(SqlOutputClause? output)
 		{
-		}
+			if (output != null && output.HasOutput)
+			{
+				AppendIndent()
+					.AppendLine(OutputKeyword);
 
-		protected virtual void BuildReturningSubclause(SqlStatement statement)
-		{
+				if (output.InsertedTable != null && output.InsertedTable.SqlTableType == SqlTableType.SystemTable)
+					output.InsertedTable.PhysicalName = InsertedOutputTable;
+
+				if (output.DeletedTable != null && output.DeletedTable.SqlTableType == SqlTableType.SystemTable)
+					output.DeletedTable.PhysicalName = DeletedOutputTable;
+
+				++Indent;
+
+				bool first = true;
+				if (output.HasOutputItems)
+				{
+					foreach (var oi in output.OutputItems)
+					{
+						if (!first)
+							StringBuilder.AppendLine(Comma);
+						first = false;
+
+						AppendIndent();
+
+						BuildExpression(oi.Expression!);
+					}
+
+					StringBuilder
+						.AppendLine();
+				}
+
+				--Indent;
+
+				if (output.OutputQuery != null)
+				{
+					BuildColumns(output.OutputQuery);
+				}
+
+				if (output.OutputTable != null)
+				{
+					AppendIndent()
+						.Append("INTO ")
+						.Append(GetTablePhysicalName(output.OutputTable))
+						.AppendLine();
+
+					AppendIndent()
+						.AppendLine(OpenParens);
+
+					++Indent;
+
+					var firstColumn = true;
+					if (output.HasOutputItems)
+					{
+						foreach (var oi in output.OutputItems)
+						{
+							if (!firstColumn)
+								StringBuilder.AppendLine(Comma);
+							firstColumn = false;
+
+							AppendIndent();
+
+							BuildExpression(oi.Column, false, true);
+						}
+					}
+
+					StringBuilder
+						.AppendLine();
+
+					--Indent;
+
+					AppendIndent()
+						.AppendLine(")");
+				}
+			}
 		}
 
 		protected virtual void BuildInsertClause(SqlStatement statement, SqlInsertClause insertClause, string? insertText, bool appendTableName, bool addAlias)
@@ -2930,7 +3006,8 @@ namespace LinqToDB.SqlProvider
 			HavingClause,
 			OrderByClause,
 			OffsetLimit,
-			Tag
+			Tag,
+			Output
 		}
 
 		#endregion

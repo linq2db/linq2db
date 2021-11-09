@@ -488,10 +488,10 @@ namespace LinqToDB.SqlQuery
 					// TODO: tables not cloned (original logic)
 					clone = newOutput = new SqlOutputClause()
 					{
-						SourceTable   = output.SourceTable,
 						DeletedTable  = output.DeletedTable,
 						InsertedTable = output.InsertedTable,
-						OutputTable   = output.OutputTable
+						OutputTable   = output.OutputTable,
+						OutputQuery   = Clone(output.OutputQuery)
 					};
 
 					if (output.HasOutputItems)

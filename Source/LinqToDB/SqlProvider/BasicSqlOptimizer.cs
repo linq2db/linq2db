@@ -2323,6 +2323,9 @@ namespace LinqToDB.SqlProvider
 			if ((deleteStatement.SelectQuery.From.Tables.Count > 1 || deleteStatement.SelectQuery.From.Tables[0].Joins.Count > 0) &&
 				deleteStatement.SelectQuery.From.Tables[0].Source is SqlTable table)
 			{
+				if (deleteStatement.Output != null)
+					throw new NotImplementedException($"GetAlternativeDelete not implemented for delete with output");
+
 				var sql = new SelectQuery { IsParameterDependent = deleteStatement.IsParameterDependent };
 
 				var newDeleteStatement = new SqlDeleteStatement(sql);
@@ -2398,14 +2401,14 @@ namespace LinqToDB.SqlProvider
 
 		protected SqlUpdateStatement GetAlternativeUpdate(SqlUpdateStatement updateStatement)
 		{
-			if (updateStatement.Output != null)
-				throw new NotImplementedException($"GetAlternativeUpdate not implemented for update with output");
-
 			var sourcesCount  = QueryHelper.EnumerateAccessibleSources(updateStatement.SelectQuery).Skip(1).Take(2).Count();
 
 			// It covers subqueries also. Simple subquery will have sourcesCount == 2
 			if (sourcesCount > 1)
 			{
+				if (updateStatement.Output != null)
+					throw new NotImplementedException($"GetAlternativeUpdate not implemented for update with output");
+
 				if (NeedsEnvelopingForUpdate(updateStatement.SelectQuery))
 					updateStatement = QueryHelper.WrapQuery(updateStatement, updateStatement.SelectQuery, allowMutation: true);
 
@@ -2414,20 +2417,14 @@ namespace LinqToDB.SqlProvider
 				var newUpdateStatement = new SqlUpdateStatement(sql);
 				updateStatement.SelectQuery.ParentSelect = sql;
 
-				SqlTable? tableToUpdate = updateStatement.Update.Table;
-				if (tableToUpdate == null)
-				{
-					tableToUpdate = QueryHelper.EnumerateAccessibleSources(updateStatement.SelectQuery)
-						.OfType<SqlTable>()
-						.FirstOrDefault();
-				}
+				var tableToUpdate = updateStatement.GetUpdateTable();
 
 				if (tableToUpdate == null)
 					throw new LinqToDBException("Query can't be translated to UPDATE Statement.");
 
 				// we have to ensure that clone do not contain tableToUpdate
-				var objectTree  = new Dictionary<IQueryElement, IQueryElement>();
-				var clonedQuery = updateStatement.SelectQuery.Clone(objectTree);
+				var objectTree   = new Dictionary<IQueryElement, IQueryElement>();
+				var clonedQuery  = updateStatement.SelectQuery.Clone(objectTree);
 
 				var tableToUpdateMapping = new Dictionary<IQueryElement,IQueryElement>(objectTree);
 				// remove mapping from updatable table

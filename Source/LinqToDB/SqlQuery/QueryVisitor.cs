@@ -593,7 +593,6 @@ namespace LinqToDB.SqlQuery
 			if (outputClause == null)
 				return;
 
-			Visit(outputClause.SourceTable);
 			Visit(outputClause.DeletedTable);
 			Visit(outputClause.InsertedTable);
 			Visit(outputClause.OutputTable);

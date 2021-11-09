@@ -352,7 +352,7 @@ namespace LinqToDB.DataProvider.MySql
 				BuildGetIdentity(insertClause);
 			else
 			{
-				BuildReturningSubclause(statement);
+				BuildOutputSubclause(statement.GetOutputClause());
 			}
 		}
 

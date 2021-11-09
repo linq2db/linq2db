@@ -1169,28 +1169,34 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.OutputClause:
 					{
 						var output    = (SqlOutputClause)element;
-						var sourceT   = ConvertInternal(output.SourceTable)   as SqlTable;
 						var insertedT = ConvertInternal(output.InsertedTable) as SqlTable;
 						var deletedT  = ConvertInternal(output.DeletedTable)  as SqlTable;
 						var outputT   = ConvertInternal(output.OutputTable)   as SqlTable;
 						var outputQ   = output.OutputQuery != null ? ConvertInternal(output.OutputQuery) as SelectQuery : null;
 
+						List<SqlSetExpression>? outputItems = null;
+						if (output.HasOutputItems)
+							outputItems = ConvertSafe(output.OutputItems);
+
 						if (
-							sourceT   != null && !ReferenceEquals(output.SourceTable, sourceT)     ||
 							insertedT != null && !ReferenceEquals(output.InsertedTable, insertedT) ||
 							deletedT  != null && !ReferenceEquals(output.DeletedTable, deletedT)   ||
 							outputT   != null && !ReferenceEquals(output.OutputTable, outputT)     ||
-							outputQ   != null && !ReferenceEquals(output.OutputQuery, outputQ)
+							outputQ   != null && !ReferenceEquals(output.OutputQuery, outputQ)     ||
+							output.HasOutputItems && outputItems != null && !ReferenceEquals(output.OutputItems, outputItems)
 						)
 						{
 							newElement = new SqlOutputClause
 							{
-								SourceTable   = sourceT   ?? output.SourceTable,
 								InsertedTable = insertedT ?? output.InsertedTable,
 								DeletedTable  = deletedT  ?? output.DeletedTable,
 								OutputTable   = outputT   ?? output.OutputTable,
 								OutputQuery   = outputQ   ?? output.OutputQuery,
 							};
+
+							if (outputItems != null)
+								((SqlOutputClause)newElement).OutputItems.AddRange(outputItems);
+
 						}
 
 						break;

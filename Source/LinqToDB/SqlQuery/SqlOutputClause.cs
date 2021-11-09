@@ -8,13 +8,13 @@ namespace LinqToDB.SqlQuery
 	{
 		private List<SqlSetExpression>? _outputItems;
 
-		public SqlTable?    SourceTable    { get; set; }
 		public SqlTable?    InsertedTable  { get; set; }
 		public SqlTable?    DeletedTable   { get; set; }
 		public SqlTable?    OutputTable    { get; set; }
 		public SelectQuery? OutputQuery    { get; set; }
 
-		public bool                   HasOutputItems => _outputItems != null && _outputItems.Count > 0 || OutputQuery != null;
+		public bool                   HasOutput      => HasOutputItems || OutputQuery != null;
+		public bool                   HasOutputItems => _outputItems != null && _outputItems.Count > 0;
 		public List<SqlSetExpression> OutputItems    => _outputItems ??= new List<SqlSetExpression>();
 
 		#region Overrides
@@ -34,10 +34,10 @@ namespace LinqToDB.SqlQuery
 
 		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			((ISqlExpressionWalkable?)SourceTable  )?.Walk(options, context, func);
 			((ISqlExpressionWalkable?)DeletedTable )?.Walk(options, context, func);
 			((ISqlExpressionWalkable?)InsertedTable)?.Walk(options, context, func);
 			((ISqlExpressionWalkable?)OutputTable  )?.Walk(options, context, func);
+			((ISqlExpressionWalkable?)OutputQuery  )?.Walk(options, context, func);
 
 			if (HasOutputItems)
 				foreach (var t in OutputItems)

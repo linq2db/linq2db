@@ -11,6 +11,12 @@ namespace Tests.xUpdate
 	[TestFixture]
 	public class UpdateWithOutputTests : TestBase
 	{
+		private const string FeatureUpdateOutputWithOldSingle      = TestProvName.AllSqlServer2005Plus + "," + TestProvName.AllFirebird;
+		private const string FeatureUpdateOutputWithOldMultiple    = TestProvName.AllSqlServer2005Plus;
+		private const string FeatureUpdateOutputWithoutOldSingle   = TestProvName.AllSqlServer2005Plus + "," + TestProvName.AllFirebird + "," + TestProvName.AllPostgreSQL + "," + TestProvName.AllSQLiteClassic;
+		private const string FeatureUpdateOutputWithoutOldMultiple = TestProvName.AllSqlServer2005Plus + "," + TestProvName.AllPostgreSQL + "," + TestProvName.AllSQLiteClassic;
+		private const string FeatureUpdateOutputInto               = TestProvName.AllSqlServer2005Plus;
+
 		private class UpdateOutputComparer<T> : IEqualityComparer<UpdateOutput<T>>
 			where T : notnull
 		{
@@ -54,7 +60,7 @@ namespace Tests.xUpdate
 
 		static TableWithData[] GetSourceData()
 		{
-			return Enumerable.Range(1, 10).Select(i =>
+			return Enumerable.Range(1, 9).Select(i =>
 					new TableWithData { Id = i, Value = -i, ValueStr = "Str" + i.ToString() })
 				.ToArray();
 		}
@@ -62,7 +68,7 @@ namespace Tests.xUpdate
 		#region Update against ITable<T> target
 
 		[Test]
-		public void UpdateITableWithDefaultOutputTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void UpdateITableWithDefaultOutputTest([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -93,7 +99,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task UpdateITableWithDefaultOutputTestAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task UpdateITableWithDefaultOutputTestAsync([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -123,7 +129,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateITableWithProjectionOutputTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void UpdateITableWithProjectionOutputTest([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -160,7 +166,42 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task UpdateITableWithProjectionOutputTestAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void UpdateITableWithProjectionOutputTestWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			{
+				var expected = sourceData
+					.Select(s => new
+					{
+						SourceStr     = s.ValueStr,
+						InsertedValue = s.Value,
+					})
+					.ToArray();
+
+				var output = source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.UpdateWithOutput(
+						target,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+						(source, deleted, inserted) => new
+						{
+							SourceStr     = source.s.ValueStr,
+							InsertedValue = inserted.Value,
+						})
+					.ToArray();
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public async Task UpdateITableWithProjectionOutputTestAsync([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -196,7 +237,41 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateITableWithDefaultOutputIntoTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task UpdateITableWithProjectionOutputTestAsyncWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			{
+				var expected = sourceData
+					.Select(s => new
+					{
+						SourceStr     = s.ValueStr,
+						InsertedValue = s.Value,
+					})
+					.ToArray();
+
+				var output = await source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.UpdateWithOutputAsync(
+						target,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+						(source, deleted, inserted) => new
+						{
+							SourceStr     = source.s.ValueStr,
+							InsertedValue = inserted.Value,
+						});
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public void UpdateITableWithDefaultOutputIntoTest([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -220,7 +295,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task UpdateITableWithDefaultOutputIntoTestAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task UpdateITableWithDefaultOutputIntoTestAsync([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -244,7 +319,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateITableWithProjectionOutputIntoTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void UpdateITableWithProjectionOutputIntoTest([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -278,7 +353,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task UpdateITableWithProjectionOutputIntoTestAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task UpdateITableWithProjectionOutputIntoTestAsync([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -316,7 +391,7 @@ namespace Tests.xUpdate
 		#region Update against Expression target
 
 		[Test]
-		public void UpdateExpressionWithDefaultOutputTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void UpdateExpressionWithDefaultOutputTest([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -347,7 +422,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task UpdateExpressionWithDefaultOutputTestAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task UpdateExpressionWithDefaultOutputTestAsync([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -377,7 +452,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateExpressionWithProjectionOutputTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void UpdateExpressionWithProjectionOutputTest([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -414,7 +489,42 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task UpdateExpressionWithProjectionOutputTestAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void UpdateExpressionWithProjectionOutputTestWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			{
+				var expected = sourceData
+					.Select(s => new
+					{
+						SourceStr     = s.ValueStr,
+						InsertedValue = s.Value,
+					})
+					.ToArray();
+
+				var output = source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.UpdateWithOutput(
+						s => s.t,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+						(source, deleted, inserted) => new
+						{
+							SourceStr     = source.s.ValueStr,
+							InsertedValue = inserted.Value,
+						})
+					.ToArray();
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public async Task UpdateExpressionWithProjectionOutputTestAsync([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -450,7 +560,41 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateExpressionWithDefaultOutputIntoTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task UpdateExpressionWithProjectionOutputTestAsyncWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			{
+				var expected = sourceData
+					.Select(s => new
+					{
+						SourceStr     = s.ValueStr,
+						InsertedValue = s.Value,
+					})
+					.ToArray();
+
+				var output = await source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.UpdateWithOutputAsync(
+						s => s.t,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+						(source, deleted, inserted) => new
+						{
+							SourceStr     = source.s.ValueStr,
+							InsertedValue = inserted.Value,
+						});
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public void UpdateExpressionWithDefaultOutputIntoTest([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -474,7 +618,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task UpdateExpressionWithDefaultOutputIntoTestAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task UpdateExpressionWithDefaultOutputIntoTestAsync([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -498,7 +642,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateExpressionWithProjectionOutputIntoTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void UpdateExpressionWithProjectionOutputIntoTest([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -532,7 +676,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task UpdateExpressionWithProjectionOutputIntoTestAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task UpdateExpressionWithProjectionOutputIntoTestAsync([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -570,7 +714,7 @@ namespace Tests.xUpdate
 		#region Update against Source
 
 		[Test]
-		public void UpdateSourceWithDefaultOutputTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void UpdateSourceWithDefaultOutputTest([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -598,7 +742,35 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task UpdateSourceWithDefaultOutputTestAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void UpdateSourceWithDefaultOutputTestSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = sourceData
+					.Where(s => s.Id == 3)
+					.Select(s => new UpdateOutput<TableWithData>()
+					{
+						Deleted  = new TableWithData { Id = s.Id, Value = s.Value,     ValueStr = s.ValueStr, },
+						Inserted = new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+					})
+					.ToArray();
+
+				var output = source
+					.Where(s => s.Id == 3)
+					.UpdateWithOutput(s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", })
+					.ToArray();
+
+				AreEqual(
+					expected,
+					output,
+					new UpdateOutputComparer<TableWithData>());
+			}
+		}
+
+		[Test]
+		public async Task UpdateSourceWithDefaultOutputTestAsync([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -625,7 +797,34 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateSourceWithProjectionOutputTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task UpdateSourceWithDefaultOutputTestAsyncSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = sourceData
+					.Where(s => s.Id == 3)
+					.Select(s => new UpdateOutput<TableWithData>()
+					{
+						Deleted  = new TableWithData { Id = s.Id, Value = s.Value,     ValueStr = s.ValueStr, },
+						Inserted = new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+					})
+					.ToArray();
+
+				var output = await source
+					.Where(s => s.Id == 3)
+					.UpdateWithOutputAsync(s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", });
+
+				AreEqual(
+					expected,
+					output,
+					new UpdateOutputComparer<TableWithData>());
+			}
+		}
+
+		[Test]
+		public void UpdateSourceWithProjectionOutputTest([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -654,7 +853,92 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task UpdateSourceWithProjectionOutputTestAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void UpdateSourceWithProjectionOutputTestSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = sourceData
+					.Where(s => s.Id == 3)
+					.Select(s => new
+					{
+						DeletedValue  = s.Value,
+						InsertedValue = s.Value + 1,
+					})
+					.ToArray();
+
+				var output = source
+					.Where(s => s.Id == 3)
+					.UpdateWithOutput(
+						s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+						(deleted, inserted) => new { DeletedValue = deleted.Value, InsertedValue = inserted.Value, })
+					.ToArray();
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public void UpdateSourceWithProjectionOutputTestWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldMultiple)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = sourceData
+					.Where(s => s.Id > 3)
+					.Select(s => new
+					{
+						InsertedValue = s.Value + 1,
+					})
+					.ToArray();
+
+				var output = source
+					.Where(s => s.Id > 3)
+					.UpdateWithOutput(
+						s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+						(deleted, inserted) => new { InsertedValue = inserted.Value, })
+					.ToArray();
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public void UpdateSourceWithProjectionOutputTestWithoutOldSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = sourceData
+					.Where(s => s.Id == 3)
+					.Select(s => new
+					{
+						InsertedValue = s.Value + 1,
+					})
+					.ToArray();
+
+				var output = source
+					.Where(s => s.Id == 3)
+					.UpdateWithOutput(
+						s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+						(deleted, inserted) => new { InsertedValue = inserted.Value, })
+					.ToArray();
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public async Task UpdateSourceWithProjectionOutputTestAsync([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -682,7 +966,89 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateSourceWithDefaultOutputIntoTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task UpdateSourceWithProjectionOutputTestAsyncSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = sourceData
+					.Where(s => s.Id == 3)
+					.Select(s => new
+					{
+						DeletedValue  = s.Value,
+						InsertedValue = s.Value + 1,
+					})
+					.ToArray();
+
+				var output = await source
+					.Where(s => s.Id == 3)
+					.UpdateWithOutputAsync(
+						s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+						(deleted, inserted) => new { DeletedValue = deleted.Value, InsertedValue = inserted.Value, });
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public async Task UpdateSourceWithProjectionOutputTestAsyncWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldMultiple)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = sourceData
+					.Where(s => s.Id > 3)
+					.Select(s => new
+					{
+						InsertedValue = s.Value + 1,
+					})
+					.ToArray();
+
+				var output = await source
+					.Where(s => s.Id > 3)
+					.UpdateWithOutputAsync(
+						s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+						(deleted, inserted) => new { InsertedValue = inserted.Value, });
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public async Task UpdateSourceWithProjectionOutputTestAsyncWithoutOldSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = sourceData
+					.Where(s => s.Id == 3)
+					.Select(s => new
+					{
+						InsertedValue = s.Value + 1,
+					})
+					.ToArray();
+
+				var output = await source
+					.Where(s => s.Id == 3)
+					.UpdateWithOutputAsync(
+						s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+						(deleted, inserted) => new { InsertedValue = inserted.Value, });
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public void UpdateSourceWithDefaultOutputIntoTest([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData         = GetSourceData();
 			using (var db          = GetDataContext(context))
@@ -708,7 +1074,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task UpdateSourceWithDefaultOutputIntoTestAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task UpdateSourceWithDefaultOutputIntoTestAsync([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData         = GetSourceData();
 			using (var db          = GetDataContext(context))
@@ -734,7 +1100,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateSourceWithProjectionOutputIntoTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void UpdateSourceWithProjectionOutputIntoTest([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData         = GetSourceData();
 			using (var db          = GetDataContext(context))
@@ -761,7 +1127,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task UpdateSourceWithProjectionOutputTestIntoAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task UpdateSourceWithProjectionOutputTestIntoAsync([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData         = GetSourceData();
 			using (var db          = GetDataContext(context))
@@ -792,7 +1158,7 @@ namespace Tests.xUpdate
 		#region Update against Source
 
 		[Test]
-		public void UpdateIUpdatableWithDefaultOutputTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void UpdateIUpdatableWithDefaultOutputTest([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -823,7 +1189,38 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task UpdateIUpdatableWithDefaultOutputTestAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void UpdateIUpdatableWithDefaultOutputTestSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = sourceData
+					.Where(s => s.Id == 3)
+					.Select(s => new UpdateOutput<TableWithData>()
+					{
+						Deleted  = new TableWithData { Id = s.Id, Value = s.Value,     ValueStr = s.ValueStr, },
+						Inserted = new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+					})
+					.ToArray();
+
+				var output = source
+					.Where(s => s.Id == 3)
+					.AsUpdatable()
+					.Set(s => s.Value, s => s.Value + 1)
+					.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
+					.UpdateWithOutput()
+					.ToArray();
+
+				AreEqual(
+					expected,
+					output,
+					new UpdateOutputComparer<TableWithData>());
+			}
+		}
+
+		[Test]
+		public async Task UpdateIUpdatableWithDefaultOutputTestAsync([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -853,7 +1250,37 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateIUpdatableWithProjectionOutputTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task UpdateIUpdatableWithDefaultOutputTestAsyncSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = sourceData
+					.Where(s => s.Id == 3)
+					.Select(s => new UpdateOutput<TableWithData>()
+					{
+						Deleted  = new TableWithData { Id = s.Id, Value = s.Value,     ValueStr = s.ValueStr, },
+						Inserted = new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+					})
+					.ToArray();
+
+				var output = await source
+					.Where(s => s.Id == 3)
+					.AsUpdatable()
+					.Set(s => s.Value, s => s.Value + 1)
+					.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
+					.UpdateWithOutputAsync();
+
+				AreEqual(
+					expected,
+					output,
+					new UpdateOutputComparer<TableWithData>());
+			}
+		}
+
+		[Test]
+		public void UpdateIUpdatableWithProjectionOutputTest([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -884,7 +1311,98 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task UpdateIUpdatableWithProjectionOutputTestAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void UpdateIUpdatableWithProjectionOutputTestSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = sourceData
+					.Where(s => s.Id == 3)
+					.Select(s => new
+					{
+						DeletedValue  = s.Value,
+						InsertedValue = s.Value + 1,
+					})
+					.ToArray();
+
+				var output = source
+					.Where(s => s.Id == 3)
+					.AsUpdatable()
+					.Set(s => s.Value, s => s.Value + 1)
+					.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
+					.UpdateWithOutput(
+						(deleted, inserted) => new { DeletedValue = deleted.Value, InsertedValue = inserted.Value, })
+					.ToArray();
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public void UpdateIUpdatableWithProjectionOutputTestWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldMultiple)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = sourceData
+					.Where(s => s.Id > 3)
+					.Select(s => new
+					{
+						InsertedValue = s.Value + 1,
+					})
+					.ToArray();
+
+				var output = source
+					.Where(s => s.Id > 3)
+					.AsUpdatable()
+					.Set(s => s.Value, s => s.Value + 1)
+					.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
+					.UpdateWithOutput(
+						(deleted, inserted) => new { InsertedValue = inserted.Value, })
+					.ToArray();
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public void UpdateIUpdatableWithProjectionOutputTestWithoutOldSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = sourceData
+					.Where(s => s.Id == 3)
+					.Select(s => new
+					{
+						InsertedValue = s.Value + 1,
+					})
+					.ToArray();
+
+				var output = source
+					.Where(s => s.Id == 3)
+					.AsUpdatable()
+					.Set(s => s.Value, s => s.Value + 1)
+					.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
+					.UpdateWithOutput(
+						(deleted, inserted) => new { InsertedValue = inserted.Value, })
+					.ToArray();
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public async Task UpdateIUpdatableWithProjectionOutputTestAsync([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -914,7 +1432,95 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateIUpdatableWithDefaultOutputIntoTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task UpdateIUpdatableWithProjectionOutputTestAsyncSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = sourceData
+					.Where(s => s.Id == 3)
+					.Select(s => new
+					{
+						DeletedValue  = s.Value,
+						InsertedValue = s.Value + 1,
+					})
+					.ToArray();
+
+				var output = await source
+					.Where(s => s.Id == 3)
+					.AsUpdatable()
+					.Set(s => s.Value, s => s.Value + 1)
+					.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
+					.UpdateWithOutputAsync(
+						(deleted, inserted) => new { DeletedValue = deleted.Value, InsertedValue = inserted.Value, });
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public async Task UpdateIUpdatableWithProjectionOutputTestAsyncWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldMultiple)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = sourceData
+					.Where(s => s.Id > 3)
+					.Select(s => new
+					{
+						InsertedValue = s.Value + 1,
+					})
+					.ToArray();
+
+				var output = await source
+					.Where(s => s.Id > 3)
+					.AsUpdatable()
+					.Set(s => s.Value, s => s.Value + 1)
+					.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
+					.UpdateWithOutputAsync(
+						(deleted, inserted) => new { InsertedValue = inserted.Value, });
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public async Task UpdateIUpdatableWithProjectionOutputTestAsyncWithoutOldSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var expected = sourceData
+					.Where(s => s.Id == 3)
+					.Select(s => new
+					{
+						InsertedValue = s.Value + 1,
+					})
+					.ToArray();
+
+				var output = await source
+					.Where(s => s.Id == 3)
+					.AsUpdatable()
+					.Set(s => s.Value, s => s.Value + 1)
+					.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
+					.UpdateWithOutputAsync(
+						(deleted, inserted) => new { InsertedValue = inserted.Value, });
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public void UpdateIUpdatableWithDefaultOutputIntoTest([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData         = GetSourceData();
 			using (var db          = GetDataContext(context))
@@ -942,7 +1548,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task UpdateIUpdatableWithDefaultOutputIntoTestAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task UpdateIUpdatableWithDefaultOutputIntoTestAsync([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData         = GetSourceData();
 			using (var db          = GetDataContext(context))
@@ -970,7 +1576,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateIUpdatableWithProjectionOutputIntoTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void UpdateIUpdatableWithProjectionOutputIntoTest([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData         = GetSourceData();
 			using (var db          = GetDataContext(context))
@@ -999,7 +1605,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task UpdateIUpdatableWithProjectionOutputTestIntoAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task UpdateIUpdatableWithProjectionOutputTestIntoAsync([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData         = GetSourceData();
 			using (var db          = GetDataContext(context))

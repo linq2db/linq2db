@@ -168,8 +168,6 @@ namespace LinqToDB.Linq.Builder
 									insertStatement.Insert.Items.Add(new SqlSetExpression(column[0].Sql, parameter.SqlParameter));
 								}
 
-								var insertedTable = SqlTable.Inserted(methodCall.Method.GetGenericArguments()[0]);
-
 								break;
 							}
 					}
@@ -186,11 +184,15 @@ namespace LinqToDB.Linq.Builder
 
 					insertStatement.Output = new SqlOutputClause();
 
-					var insertedTable = SqlTable.Inserted(outputExpression.Parameters[0].Type);
+					var insertedTable = builder.DataContext.SqlProviderFlags.OutputInsertUseSpecialTable ? SqlTable.Inserted(outputExpression.Parameters[0].Type) : insertStatement.Insert.Into;
+
+					if (insertedTable == null)
+						throw new InvalidOperationException("Cannot find target table for INSERT statement");
 
 					outputContext = new TableBuilder.TableContext(builder, new SelectQuery(), insertedTable);
 
-					insertStatement.Output.InsertedTable = insertedTable;
+					if (builder.DataContext.SqlProviderFlags.OutputInsertUseSpecialTable)
+						insertStatement.Output.InsertedTable = insertedTable;
 
 					if (insertType == InsertContext.InsertType.InsertOutputInto)
 					{
@@ -208,7 +210,6 @@ namespace LinqToDB.Linq.Builder
 						insertStatement.Output.OutputTable = ((TableBuilder.TableContext)destination).SqlTable;
 					}
 				}
-
 			}
 
 			var insert = insertStatement.Insert;

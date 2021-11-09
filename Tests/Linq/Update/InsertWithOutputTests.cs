@@ -14,6 +14,11 @@ namespace Tests.xUpdate
 	[TestFixture]
 	public class InsertWithOutputTests : TestBase
 	{
+		private const string FeatureInsertOutputSingle     = TestProvName.AllSqlServer2005Plus + "," + TestProvName.AllFirebird + "," + TestProvName.MariaDB + "," + TestProvName.AllPostgreSQL + "," + TestProvName.AllSQLiteClassic;
+		private const string FeatureInsertOutputMultiple   = TestProvName.AllSqlServer2005Plus + "," + TestProvName.MariaDB + "," + TestProvName.AllPostgreSQL + "," + TestProvName.AllSQLiteClassic;
+		private const string FeatureInsertOutputWithSchema = TestProvName.AllSqlServer2005Plus + "," + TestProvName.AllFirebird + "," + TestProvName.MariaDB + "," + TestProvName.AllSQLiteClassic;
+		private const string FeatureInsertOutputInto       = TestProvName.AllSqlServer2005Plus;
+
 		[Table]
 		class TableWithData
 		{
@@ -46,7 +51,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithOutputProjectionFromQueryTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		public void InsertWithOutputProjectionFromQueryTest([IncludeDataSources(true, FeatureInsertOutputMultiple)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -81,7 +86,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithOutputFromQueryTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		public void InsertWithOutputFromQueryTest([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -111,7 +116,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task InsertWithOutputFromQueryTestAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		public async Task InsertWithOutputFromQueryTestAsync([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -140,7 +145,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithOutputTest3([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		public void InsertWithOutputTest3([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(100, 200)] int param)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -179,7 +184,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithOutputTest4([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		public void InsertWithOutputTest4([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(100, 200)] int param)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -214,7 +219,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithOutputObjTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
+		public void InsertWithOutputObjTest([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(1, 2)] int value)
 		{
 			using (var db     = GetDataContext(context))
 			using (var source = db.CreateLocalTable<TableWithData>())
@@ -235,7 +240,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task InsertWithOutputObjAsyncTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
+		public async Task InsertWithOutputObjAsyncTest([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(1, 2)] int value)
 		{
 			using (var db     = GetDataContext(context))
 			using (var source = db.CreateLocalTable<TableWithData>())
@@ -256,7 +261,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithOutputObjWithSetterTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
+		public void InsertWithOutputObjWithSetterTest([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(1, 2)] int value)
 		{
 			using (var db = GetDataContext(context))
 			using (var source = db.CreateLocalTable<TableWithData>())
@@ -278,7 +283,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task InsertWithOutputObjWithSetterAsyncTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
+		public async Task InsertWithOutputObjWithSetterAsyncTest([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(1, 2)] int value)
 		{
 			using (var db = GetDataContext(context))
 			using (var source = db.CreateLocalTable<TableWithData>())
@@ -300,7 +305,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithOutputDynamicWithSetterTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
+		public void InsertWithOutputDynamicWithSetterTest([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(1, 2)] int value)
 		{
 			using (var db = GetDataContext(context))
 			using (var source = db.CreateLocalTable<TableWithData>())
@@ -323,7 +328,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithOutputIntoTest1([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		public void InsertWithOutputIntoTest1([IncludeDataSources(false, FeatureInsertOutputInto)] string context, [Values(100, 200)] int param)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -379,7 +384,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithOutputIntoTest2([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context, [Values(100, 200)] int param)
+		public void InsertWithOutputIntoTest2([IncludeDataSources(false, FeatureInsertOutputInto)] string context, [Values(100, 200)] int param)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -428,7 +433,112 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithOutputWithSchema([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, [Values(1, 2)] int value)
+		public void InsertWithOutputIntoTest3([IncludeDataSources(true, FeatureInsertOutputInto)] string context, [Values(100, 200)] int param)
+		{
+			using (var db = GetDataContext(context))
+			{
+				const int idsLimit = 1000;
+
+				try
+				{
+					var id = idsLimit + 1;
+
+					db.Child.Delete(c => c.ChildID > idsLimit);
+
+					using (var t = db.CreateLocalTable<Child>("TInserted"))
+					{
+						var output =
+							db.Child
+								.Where(c => c.ChildID == 11)
+								.InsertWithOutputInto(db.Child, c => new Child
+									{
+										ParentID = c.ParentID,
+										ChildID  = id
+									},
+									t,
+									inserted =>
+										new Child
+										{
+											ChildID  = inserted.ChildID,
+											ParentID = inserted.ParentID + param
+										}
+								);
+
+						Assert.AreEqual(1, output);
+
+						AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new Child
+							{
+								ParentID = c.ParentID,
+								ChildID  = c.ChildID
+							}),
+							t.Select(c => new Child
+								{
+									ParentID = c.ParentID - param,
+									ChildID  = c.ChildID
+								}
+							)
+						);
+					}
+
+				}
+				finally
+				{
+					db.Child.Delete(c => c.ChildID > idsLimit);
+				}
+			}
+		}
+
+		[Test]
+		public void InsertWithOutputIntoTest4([IncludeDataSources(true, FeatureInsertOutputInto)] string context, [Values(100, 200)] int param)
+		{
+			using (var db = GetDataContext(context))
+			{
+				const int idsLimit = 1000;
+
+				try
+				{
+					var id = idsLimit + 1;
+
+					db.Child.Delete(c => c.ChildID > idsLimit);
+
+					using (var t = db.CreateLocalTable<Child>("TInserted"))
+					{
+
+						var output =
+							db.Child
+								.Where(c => c.ChildID == 11)
+								.InsertWithOutputInto(db.Child, c => new Child
+									{
+										ParentID = c.ParentID,
+										ChildID  = id + Sql.AsSql(param)
+									},
+									t);
+
+						Assert.AreEqual(1, output);
+
+						AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new Child
+							{
+								ParentID = c.ParentID,
+								ChildID  = c.ChildID
+							}),
+							t.Select(c => new Child
+								{
+									ParentID = c.ParentID,
+									ChildID  = c.ChildID
+								}
+							)
+						);
+					}
+				}
+				finally
+				{
+					db.Child.Delete(c => c.ChildID > idsLimit);
+				}
+			}
+		}
+
+		[Test]
+		public void InsertWithOutputWithSchema([IncludeDataSources(true, FeatureInsertOutputWithSchema)] string context, [Values(1, 2)] int value)
 		{
 			using (var db     = GetDataContext(context))
 			using (var source = db.CreateLocalTable<TableWithDataAndSchema>())

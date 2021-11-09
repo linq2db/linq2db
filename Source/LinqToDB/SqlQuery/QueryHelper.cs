@@ -1743,5 +1743,31 @@ namespace LinqToDB.SqlQuery
 
 			return outerElementFound;
 		}
+
+		public static SqlTable? GetUpdateTable(this SqlUpdateStatement updateStatement)
+		{
+			SqlTable? tableToUpdate = updateStatement.Update.Table;
+			if (tableToUpdate == null)
+			{
+				tableToUpdate = EnumerateAccessibleSources(updateStatement.SelectQuery)
+					.OfType<SqlTable>()
+					.FirstOrDefault();
+			}
+
+			return tableToUpdate;
+		}
+
+		public static SqlTable? GetDeleteTable(this SqlDeleteStatement deleteStatement)
+		{
+			SqlTable? tableToDelete = deleteStatement.Table;
+			if (tableToDelete == null)
+			{
+				tableToDelete = EnumerateAccessibleSources(deleteStatement.SelectQuery)
+					.OfType<SqlTable>()
+					.FirstOrDefault();
+			}
+
+			return tableToDelete;
+		}
 	}
 }
