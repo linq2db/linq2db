@@ -279,7 +279,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (typeof(DataParameter).IsSameOrParentOf(newExpr.ValueExpression.Type))
 				{
-					newExpr.DbDataTypeExpression = Expression.PropertyOrField(newExpr.ValueExpression, nameof(DataParameter.DbDataType));
+					newExpr.DbDataTypeExpression = Expression.Property(newExpr.ValueExpression, Methods.LinqToDB.DataParameter.DbDataType);
 
 					if (columnDescriptor != null)
 					{
@@ -288,7 +288,7 @@ namespace LinqToDB.Linq.Builder
 							DbDataType.WithSetValuesMethodInfo, newExpr.DbDataTypeExpression);
 					}
 
-					newExpr.ValueExpression = Expression.PropertyOrField(newExpr.ValueExpression, nameof(DataParameter.Value));
+					newExpr.ValueExpression = Expression.Property(newExpr.ValueExpression, Methods.LinqToDB.DataParameter.Value);
 				}
 			}
 

@@ -22,6 +22,7 @@ namespace LinqToDB.Linq
 	using Data;
 	using Extensions;
 	using LinqToDB.Expressions;
+	using LinqToDB.Reflection;
 	using SqlQuery;
 
 	static partial class QueryRunner
@@ -300,8 +301,8 @@ namespace LinqToDB.Linq
 			{
 				dbDataTypeExpression = Expression.Call(Expression.Constant(field.ColumnDescriptor.GetDbDataType(false)),
 					DbDataType.WithSetValuesMethodInfo,
-					Expression.PropertyOrField(valueGetter, nameof(DataParameter.DbDataType)));
-				valueGetter          = Expression.PropertyOrField(valueGetter, nameof(DataParameter.Value));
+					Expression.Property(valueGetter, Methods.LinqToDB.DataParameter.DbDataType));
+				valueGetter          = Expression.Property(valueGetter, Methods.LinqToDB.DataParameter.Value);
 			}
 			else
 			{
