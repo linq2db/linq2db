@@ -213,6 +213,8 @@ namespace LinqToDB.Reflection
 
 				public static class T
 				{
+					public static readonly MethodInfo AsValueInsertable = MemberHelper.MethodOfGeneric<ITable<LW1>>(q => q.AsValueInsertable());
+
 					public static readonly MethodInfo Value             = MemberHelper.MethodOfGeneric<ITable<LW1>>(q => q.Value(e => e.Value1, 1));
 					public static readonly MethodInfo ValueExpression   = MemberHelper.MethodOfGeneric<ITable<LW1>>(q => q.Value(e => e.Value1, () => 1));
 

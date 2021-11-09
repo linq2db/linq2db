@@ -1152,6 +1152,22 @@ namespace LinqToDB
 			return new ValueInsertable<T>(q);
 		}
 
+		public static IValueInsertable<T> AsValueInsertable<T>(this ITable<T> source)
+			where T : notnull
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			var query = currentSource.Provider.CreateQuery<T>(
+				Expression.Call(
+					null,
+					Methods.LinqToDB.Insert.T.AsValueInsertable.MakeGenericMethod(typeof(T)),
+					currentSource.Expression));
+
+			return new ValueInsertable<T>(query);
+		}
+
 		/// <summary>
 		/// Starts insert operation LINQ query definition from field setter expression.
 		/// </summary>

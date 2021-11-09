@@ -2112,6 +2112,19 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[Test]
+		public void AsValueInsertableTest([DataSources(TestProvName.AllInformix)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<TestInsertOrReplaceTable>())
+			{
+				var vi = table.AsValueInsertable();
+				vi = vi.Value(x => x.ID, 123).Value(x => x.FirstName, "First name");
+
+				Assert.AreEqual(1, vi.Insert());
+			}
+		}
+
 		#region InsertIfNotExists (https://github.com/linq2db/linq2db/issues/3005)
 		private int GetEmptyRowCount(string context)
 		{
