@@ -294,9 +294,25 @@ namespace Tests.UserTests
 			}
 		}
 
-		// generates bad sql (EXISTS missing in subquery condition)
-		[Test, ActiveIssue]
-		public void TestDefaultExpression_09([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		// some databases require EXISTS
+		[Test, ActiveIssue(
+			Configurations = new[]
+			{
+				TestProvName.AllAccess,
+				ProviderName.DB2,
+				TestProvName.AllFirebird,
+				TestProvName.AllInformix,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSapHana,
+				ProviderName.SqlCe,
+#if NETFRAMEWORK // old sqlite
+				ProviderName.SQLiteMS,
+#endif
+				TestProvName.AllSqlServer,
+				TestProvName.AllSybase
+			})]
+		public void TestDefaultExpression_09([DataSources] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
