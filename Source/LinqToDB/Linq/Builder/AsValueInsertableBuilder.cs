@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -13,7 +12,7 @@ namespace LinqToDB.Linq.Builder
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			throw new NotImplementedException();
+			return builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 		}
 
 		protected override SequenceConvertInfo? Convert(
