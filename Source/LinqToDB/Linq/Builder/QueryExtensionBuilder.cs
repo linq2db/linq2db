@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -18,22 +17,32 @@ namespace LinqToDB.Linq.Builder
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence     = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var methodParams = methodCall.Method.GetParameters();
-
-			var dic = new Dictionary<string,ISqlExpression>
+			var dic          = new Dictionary<string,SqlQueryExtensionData>(methodCall.Arguments.Count)
 			{
-				{ ".MethodName", new SqlValue(methodCall.Method.Name) }
+				{ ".MethodName", new()
+				{
+					Name          = ".MethodName",
+					SqlExpression = new SqlValue(methodCall.Method.Name),
+				}}
 			};
 
 			for (var i = 1; i < methodCall.Arguments.Count; i++)
 			{
-				var arg  = methodCall.Arguments[i].Unwrap();
 				var name = methodParams[i].Name!;
+				dic.Add(name, new() { Name = name, Expression = methodCall.Arguments[i] });
+			}
+
+			var sequence = builder.BuildSequence(new(buildInfo, methodCall.Arguments[0]));
+
+			for (var i = 1; i < methodCall.Arguments.Count; i++)
+			{
+				var arg  = methodCall.Arguments[i].Unwrap();
+				var name = methodParams[i].Name;
 
 				if (arg is LambdaExpression le)
 				{
-					dic.Add(name, GetExpression(le));
+					dic.Add(name, builder.ConvertToExtensionSql(sequence, le, null));
 				}
 				else if (arg is NewArrayExpression ae)
 				{
@@ -43,7 +52,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						dic.Add($"{name}.{j}", ae.Expressions[j].Unwrap() switch
 						{
-							LambdaExpression lex => GetExpression(lex),
+							LambdaExpression lex => builder.ConvertToExtensionSql(sequence, lex, null),
 							var ex               => builder.ConvertToSql(sequence, ex)
 						});
 					}
@@ -58,19 +67,6 @@ namespace LinqToDB.Linq.Builder
 						ex = Expression.Constant(ex.EvaluateExpression());
 
 					dic.Add(name, builder.ConvertToSql(sequence, ex));
-				}
-
-				ISqlExpression GetExpression(LambdaExpression le)
-				{
-					var body = le.Body.Unwrap();
-
-					if (le.Parameters.Count == 1)
-					{
-						var selector = new SelectContext(buildInfo.Parent, le, sequence);
-						return builder.ConvertToSql(selector, body);
-					}
-
-					return builder.ConvertToSql(sequence, body);
 				}
 			}
 

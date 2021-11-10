@@ -8,7 +8,8 @@ namespace LinqToDB
 		{
 			Table,
 			Join,
-			Query
+			Query,
+			AllTables
 		}
 	}
 }

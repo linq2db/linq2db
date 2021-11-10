@@ -115,11 +115,11 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (buildInfo.IsSubQuery && buildInfo.SelectQuery.From.Tables.Count == 0)
 						{
-							// It should be handled by GroupByElementBuilder 
+							// It should be handled by GroupByElementBuilder
 							//
 							if (typeof(IGrouping<,>).IsSameOrParentOf(expression.Type))
 								break;
-							
+
 							parentContext = builder.GetContext(buildInfo.Parent, expression);
 							if (parentContext != null)
 							{
@@ -157,7 +157,7 @@ namespace LinqToDB.Linq.Builder
 
 			var fakeQuery = ExpressionQueryImpl.CreateQuery(entityType, builder.DataContext, null);
 
-			// Here we tell for Equality Comparer to compare optimized expressions 
+			// Here we tell for Equality Comparer to compare optimized expressions
 			//
 			builder.AddQueryableMemberAccessors((filterFunc, fakeQuery), new AccessorMember(memberInfo), builder.DataContext, static (context, mi, dc) =>
 			{

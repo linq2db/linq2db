@@ -234,6 +234,28 @@ namespace LinqToDB
 					currentSource.Expression, Expression.Constant(queryHint)));
 		}
 
+		/// <summary>
+		/// Adds a table hint to all the tables in the method scope.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="tableHint">SQL text, added to join in generated query.</param>
+		/// <returns>Query source with join hints.</returns>
+		[LinqTunnel]
+		[Pure]
+		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.AllTables, Sql.QueryExtensionID.TableHint)]
+		public static IQueryable<TSource> AllTablesHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string tableHint)
+			where TSource : notnull
+		{
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AllTablesHint, source, tableHint),
+					currentSource.Expression, Expression.Constant(tableHint)));
+		}
+
 		#endregion
 
 		#region Scalar Select

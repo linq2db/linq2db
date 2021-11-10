@@ -2357,7 +2357,7 @@ namespace LinqToDB.Linq.Builder
 
 			return null;
 		}
-	
+
 
 		#endregion
 
@@ -2825,12 +2825,12 @@ namespace LinqToDB.Linq.Builder
 
 		bool IsNullConstant(Expression expr)
 		{
-			return expr.NodeType == ExpressionType.Constant  && ((ConstantExpression)expr).Value == null 
+			return expr.NodeType == ExpressionType.Constant  && ((ConstantExpression)expr).Value == null
 				|| expr.NodeType == ExpressionType.Extension && expr is DefaultValueExpression;
 		}
 
 		private TransformVisitor<ExpressionBuilder>? _removeNullPropagationTransformer;
-		
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private TransformVisitor<ExpressionBuilder> GetRemoveNullPropagationTransformer()
 		{
@@ -3037,7 +3037,7 @@ namespace LinqToDB.Linq.Builder
 				if (sql.Length > 0)
 				{
 					// Handling case when all columns are aggregates, it cause query to produce only single record and we have to include at least one aggregation in Select statement.
-					// 
+					//
 					var allAggregate = sql.All(static s => QueryHelper.IsAggregationOrWindowFunction(s.Sql));
 					if (allAggregate)
 					{
@@ -3103,7 +3103,7 @@ namespace LinqToDB.Linq.Builder
 			idx = null;
 			return null;
 		}
-		
+
 
 		public Tuple<CteClause, IBuildContext?> BuildCte(Expression cteExpression, Func<CteClause?, Tuple<CteClause, IBuildContext?>> buildFunc)
 		{
@@ -3152,8 +3152,8 @@ namespace LinqToDB.Linq.Builder
 		{
 			_preambles ??= new();
 			_preambles.Add(
-				Tuple.Create<object?, 
-					Func<object?, IDataContext, Expression, object?[]?, object?>, 
+				Tuple.Create<object?,
+					Func<object?, IDataContext, Expression, object?[]?, object?>,
 					Func<object?, IDataContext, Expression, object?[]?, CancellationToken, Task<object?>>
 				>
 				(
@@ -3170,7 +3170,7 @@ namespace LinqToDB.Linq.Builder
 
 		private Stack<Type[]>? _disabledFilters;
 
-		public void AddDisabledQueryFilters(Type[] disabledFilters)
+		public void PushDisabledQueryFilters(Type[] disabledFilters)
 		{
 			if (_disabledFilters == null)
 				_disabledFilters = new Stack<Type[]>();
@@ -3187,12 +3187,30 @@ namespace LinqToDB.Linq.Builder
 			return Array.IndexOf(filter, entityType) >= 0;
 		}
 
-		public void RemoveDisabledFilter()
+		public void PopDisabledFilter()
 		{
 			if (_disabledFilters == null)
 				throw new InvalidOperationException();
 
 			_ = _disabledFilters.Pop();
+		}
+
+		#endregion
+
+		#region Query Hint Stack
+
+		List<SqlQueryExtension>? _sqlQueryExtensionStack;
+
+		public void PushSqlQueryExtension(SqlQueryExtension extension)
+		{
+			(_sqlQueryExtensionStack ??= new()).Add(extension);
+		}
+
+		public void PopSqlQueryExtension(SqlQueryExtension extension)
+		{
+			if (_sqlQueryExtensionStack == null || _sqlQueryExtensionStack.Count > 0)
+				throw new InvalidOperationException();
+			_sqlQueryExtensionStack.RemoveAt(_sqlQueryExtensionStack.Count - 1);
 		}
 
 		#endregion
