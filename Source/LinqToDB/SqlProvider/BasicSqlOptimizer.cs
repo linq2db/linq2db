@@ -2406,9 +2406,6 @@ namespace LinqToDB.SqlProvider
 			// It covers subqueries also. Simple subquery will have sourcesCount == 2
 			if (sourcesCount > 1)
 			{
-				if (updateStatement.Output != null)
-					throw new NotImplementedException($"GetAlternativeUpdate not implemented for update with output");
-
 				if (NeedsEnvelopingForUpdate(updateStatement.SelectQuery))
 					updateStatement = QueryHelper.WrapQuery(updateStatement, updateStatement.SelectQuery, allowMutation: true);
 
@@ -2485,17 +2482,25 @@ namespace LinqToDB.SqlProvider
 
 						innerQuery.Select.Columns.Clear();
 
-						var remapped = ex.Convert((tableToUpdateMapping, innerQuery),
+						var remapped = ex.Convert((tableToUpdateMapping, innerQuery, objectTree),
 							static (v, e) =>
 							{
 								if (v.Context.tableToUpdateMapping.TryGetValue(e, out var n))
+								{
 									e = n;
+									v.Context.objectTree.Remove(e);
+									v.Context.objectTree.Add(e, n);
+								}
 
 								if (e is SqlColumn clmn && clmn.Parent != v.Context.innerQuery || e is SqlField)
 								{
 									var column = QueryHelper.NeedColumnForExpression(v.Context.innerQuery, (ISqlExpression)e, false);
 									if (column != null)
+									{
+										v.Context.objectTree.Remove(e);
+										v.Context.objectTree.Add(e, column);
 										return column;
+									}
 								}
 
 								return e;
@@ -2504,6 +2509,17 @@ namespace LinqToDB.SqlProvider
 
 						innerQuery.Select.AddNew(remapped);
 						ex = innerQuery;
+					}
+
+					if (updateStatement.Output != null)
+					{
+						newUpdateStatement.Output = updateStatement.Output.Convert(objectTree, static (v, e) =>
+						{
+							if (v.Context.TryGetValue(e, out var newElement))
+								return newElement;
+
+							return e;
+						});
 					}
 
 					item.Column     = tableToUpdate[QueryHelper.GetUnderlyingField(item.Column)!.Name]

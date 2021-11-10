@@ -1172,7 +1172,7 @@ namespace LinqToDB.SqlQuery
 						var insertedT = ConvertInternal(output.InsertedTable) as SqlTable;
 						var deletedT  = ConvertInternal(output.DeletedTable)  as SqlTable;
 						var outputT   = ConvertInternal(output.OutputTable)   as SqlTable;
-						var outputQ   = output.OutputQuery != null ? ConvertInternal(output.OutputQuery) as SelectQuery : null;
+						var outputС   = output.OutputColumns != null ? ConvertSafe(output.OutputColumns) : null;
 
 						List<SqlSetExpression>? outputItems = null;
 						if (output.HasOutputItems)
@@ -1182,7 +1182,7 @@ namespace LinqToDB.SqlQuery
 							insertedT != null && !ReferenceEquals(output.InsertedTable, insertedT) ||
 							deletedT  != null && !ReferenceEquals(output.DeletedTable, deletedT)   ||
 							outputT   != null && !ReferenceEquals(output.OutputTable, outputT)     ||
-							outputQ   != null && !ReferenceEquals(output.OutputQuery, outputQ)     ||
+							outputС   != null && !ReferenceEquals(output.OutputColumns, outputС)   ||
 							output.HasOutputItems && outputItems != null && !ReferenceEquals(output.OutputItems, outputItems)
 						)
 						{
@@ -1191,7 +1191,7 @@ namespace LinqToDB.SqlQuery
 								InsertedTable = insertedT ?? output.InsertedTable,
 								DeletedTable  = deletedT  ?? output.DeletedTable,
 								OutputTable   = outputT   ?? output.OutputTable,
-								OutputQuery   = outputQ   ?? output.OutputQuery,
+								OutputColumns = outputС   ?? output.OutputColumns,
 							};
 
 							if (outputItems != null)

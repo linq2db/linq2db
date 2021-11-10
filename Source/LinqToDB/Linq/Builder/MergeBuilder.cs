@@ -120,7 +120,7 @@ namespace LinqToDB.Linq.Builder
 
 				var mergeStatement = (SqlMergeStatement)Statement!;
 
-				mergeStatement.Output!.OutputQuery = Sequence[0].SelectQuery;
+				mergeStatement.Output!.OutputColumns = Sequence[0].SelectQuery.Select.Columns.Select(c => c.Expression).ToList();
 
 				QueryRunner.SetRunQuery(query, mapper);
 			}

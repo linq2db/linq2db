@@ -152,7 +152,7 @@ namespace LinqToDB.SqlQuery
 							Find(((SqlOutputClause)element).DeletedTable)  ??
 							Find(((SqlOutputClause)element).InsertedTable) ??
 							Find(((SqlOutputClause)element).OutputTable)   ??
-							Find(((SqlOutputClause)element).OutputQuery)   ??
+							Find(((SqlOutputClause)element).OutputColumns) ??
 							(((SqlOutputClause)element).HasOutputItems ? Find(((SqlOutputClause)element).OutputItems) : null);
 					}
 

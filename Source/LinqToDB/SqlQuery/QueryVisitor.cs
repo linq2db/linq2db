@@ -596,11 +596,13 @@ namespace LinqToDB.SqlQuery
 			Visit(outputClause.DeletedTable);
 			Visit(outputClause.InsertedTable);
 			Visit(outputClause.OutputTable);
-			if (outputClause.OutputQuery != null)
-				Visit(outputClause.OutputQuery);
 
 			if (outputClause.HasOutputItems)
 				foreach (var item in outputClause.OutputItems)
+					Visit(item);
+
+			if (outputClause.OutputColumns != null)
+				foreach (var item in outputClause.OutputColumns)
 					Visit(item);
 		}
 

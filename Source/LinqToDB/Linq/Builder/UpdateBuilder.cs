@@ -584,7 +584,7 @@ namespace LinqToDB.Linq.Builder
 
 				var updateStatement = (SqlUpdateStatement)Statement!;
 
-				updateStatement.Output!.OutputQuery = Sequence[0].SelectQuery;
+				updateStatement.Output!.OutputColumns = Sequence[0].SelectQuery.Select.Columns.Select(c => c.Expression).ToList();
 
 				QueryRunner.SetRunQuery(query, mapper);
 			}

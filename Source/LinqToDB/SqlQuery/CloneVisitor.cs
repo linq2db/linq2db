@@ -491,8 +491,13 @@ namespace LinqToDB.SqlQuery
 						DeletedTable  = output.DeletedTable,
 						InsertedTable = output.InsertedTable,
 						OutputTable   = output.OutputTable,
-						OutputQuery   = Clone(output.OutputQuery)
 					};
+
+					if (output.OutputColumns != null)
+					{
+						newOutput.OutputColumns = new List<ISqlExpression>();
+						CloneInto(newOutput.OutputColumns, output.OutputColumns);
+					}
 
 					if (output.HasOutputItems)
 						CloneInto(newOutput.OutputItems, output.OutputItems);

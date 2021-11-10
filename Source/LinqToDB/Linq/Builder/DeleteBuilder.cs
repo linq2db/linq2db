@@ -186,7 +186,7 @@ namespace LinqToDB.Linq.Builder
 				var deleteStatement = (SqlDeleteStatement)Statement!;
 				var outputQuery = Sequence[0].SelectQuery;
 
-				deleteStatement.Output!.OutputQuery = outputQuery;
+				deleteStatement.Output!.OutputColumns = outputQuery.Select.Columns.Select(c => c.Expression).ToList();
 
 				QueryRunner.SetRunQuery(query, mapper);
 			}

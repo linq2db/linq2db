@@ -340,7 +340,7 @@ namespace LinqToDB.Linq.Builder
 				var insertStatement = (SqlInsertStatement)Statement!;
 				var outputQuery     = Sequence[0].SelectQuery;
 
-				insertStatement.Output!.OutputQuery = outputQuery;
+				insertStatement.Output!.OutputColumns = outputQuery.Select.Columns.Select(c => c.Expression).ToList();
 
 				QueryRunner.SetRunQuery(query, mapper);
 			}

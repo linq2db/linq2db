@@ -1436,7 +1436,7 @@ namespace LinqToDB.ServiceModel
 							else
 								Builder.Append(" -");
 
-							Append(elem.OutputQuery);
+							Append(elem.OutputColumns);
 
 							break;
 						}
@@ -2307,14 +2307,14 @@ namespace LinqToDB.ServiceModel
 							var inserted = Read<SqlTable>()!;
 							var output   = Read<SqlTable>()!;
 							var items    = ReadArray<SqlSetExpression>()!;
-							var query    = Read<SelectQuery>();
+							var columns  = ReadList<ISqlExpression>();
 
 							var c = new SqlOutputClause()
 							{
 								DeletedTable  = deleted,
 								InsertedTable = inserted,
 								OutputTable   = output,
-								OutputQuery   = query
+								OutputColumns = columns
 							};
 
 							if (items != null && items.Length > 0)

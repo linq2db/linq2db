@@ -579,6 +579,31 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.AppendLine();
 		}
 
+		protected virtual void BuildColumnsExpressions(IReadOnlyList<ISqlExpression> expressions)
+		{
+			Indent++;
+
+			var first = true;
+
+			foreach (var expr in expressions)
+			{
+				if (!first)
+					StringBuilder.AppendLine(Comma);
+				first = false;
+
+				var addAlias = true;
+
+				var converted = ConvertElement(expr);
+
+				AppendIndent();
+				BuildColumnExpression(null, converted, null, ref addAlias);
+			}
+
+			Indent--;
+
+			StringBuilder.AppendLine();
+		}
+
 		protected virtual bool SupportsBooleanInColumn => false;
 		protected virtual bool SupportsNullInColumn    => true;
 
@@ -770,9 +795,9 @@ namespace LinqToDB.SqlProvider
 
 				--Indent;
 
-				if (output.OutputQuery != null)
+				if (output.OutputColumns != null)
 				{
-					BuildColumns(output.OutputQuery);
+					BuildColumnsExpressions(output.OutputColumns);
 				}
 
 				if (output.OutputTable != null)
