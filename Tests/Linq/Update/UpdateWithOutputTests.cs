@@ -11,11 +11,13 @@ namespace Tests.xUpdate
 	[TestFixture]
 	public class UpdateWithOutputTests : TestBase
 	{
-		private const string FeatureUpdateOutputWithOldSingle      = TestProvName.AllSqlServer2005Plus + "," + TestProvName.AllFirebird;
-		private const string FeatureUpdateOutputWithOldMultiple    = TestProvName.AllSqlServer2005Plus;
-		private const string FeatureUpdateOutputWithoutOldSingle   = TestProvName.AllSqlServer2005Plus + "," + TestProvName.AllFirebird + "," + TestProvName.AllPostgreSQL + "," + TestProvName.AllSQLiteClassic;
-		private const string FeatureUpdateOutputWithoutOldMultiple = TestProvName.AllSqlServer2005Plus + "," + TestProvName.AllPostgreSQL + "," + TestProvName.AllSQLiteClassic;
-		private const string FeatureUpdateOutputInto               = TestProvName.AllSqlServer2005Plus;
+		private const string FeatureUpdateOutputWithOldSingle                      = TestProvName.AllSqlServer2005Plus + "," + TestProvName.AllFirebird;
+		private const string FeatureUpdateOutputWithOldSingleNoAlternateRewrite    = TestProvName.AllSqlServer2005Plus;
+		private const string FeatureUpdateOutputWithOldMultiple                    = TestProvName.AllSqlServer2005Plus;
+		private const string FeatureUpdateOutputWithoutOldSingle                   = TestProvName.AllSqlServer2005Plus + "," + TestProvName.AllFirebird + "," + TestProvName.AllPostgreSQL + "," + TestProvName.AllSQLiteClassic;
+		private const string FeatureUpdateOutputWithoutOldSingleNoAlternateRewrite = TestProvName.AllSqlServer2005Plus + "," + TestProvName.AllPostgreSQL;
+		private const string FeatureUpdateOutputWithoutOldMultiple                 = TestProvName.AllSqlServer2005Plus + "," + TestProvName.AllPostgreSQL + "," + TestProvName.AllSQLiteClassic;
+		private const string FeatureUpdateOutputInto                               = TestProvName.AllSqlServer2005Plus;
 
 		private class UpdateOutputComparer<T> : IEqualityComparer<UpdateOutput<T>>
 			where T : notnull
@@ -194,7 +196,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateITableWithProjectionOutputTest([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
+		public void UpdateITableWithProjectionOutputTest([IncludeDataSources(true, FeatureUpdateOutputWithOldSingleNoAlternateRewrite)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -231,7 +233,79 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateITableWithProjectionOutputTestWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
+		public void UpdateITableWithProjectionOutputTestAlternateUpdate([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			{
+				var expected = sourceData
+					.Select(s => new
+					{
+						DeletedValue = s.Value + 1,
+						InsertedValue = s.Value,
+					})
+					.ToArray();
+
+				var output = source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.UpdateWithOutput(
+						target,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+						(source, deleted, inserted) => new
+						{
+							DeletedValue = deleted.Value,
+							InsertedValue = inserted.Value,
+						})
+					.ToArray();
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public void UpdateITableWithProjectionOutputTestAlternateUpdateSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			{
+				var expected = sourceData
+					.Where(_ => _.Id == 3)
+					.Select(s => new
+					{
+						DeletedValue = s.Value + 1,
+						InsertedValue = s.Value,
+					})
+					.ToArray();
+
+				var output = source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.Where(_ => _.s.Id == 3)
+					.UpdateWithOutput(
+						target,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+						(source, deleted, inserted) => new
+						{
+							DeletedValue = deleted.Value,
+							InsertedValue = inserted.Value,
+						})
+					.ToArray();
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public void UpdateITableWithProjectionOutputTestWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingleNoAlternateRewrite)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -266,7 +340,75 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task UpdateITableWithProjectionOutputTestAsync([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
+		public void UpdateITableWithProjectionOutputTestWithoutOldAlternateUpdate([IncludeDataSources(true, FeatureUpdateOutputWithoutOldMultiple)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			{
+				var expected = sourceData
+					.Select(s => new
+					{
+						InsertedValue = s.Value,
+					})
+					.ToArray();
+
+				var output = source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.UpdateWithOutput(
+						target,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+						(source, deleted, inserted) => new
+						{
+							InsertedValue = inserted.Value,
+						})
+					.ToArray();
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public void UpdateITableWithProjectionOutputTestWithoutOldAlternateUpdateSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			{
+				var expected = sourceData
+					.Where(_ => _.Id == 3)
+					.Select(s => new
+					{
+						InsertedValue = s.Value,
+					})
+					.ToArray();
+
+				var output = source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.Where(_ => _.s.Id == 3)
+					.UpdateWithOutput(
+						target,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+						(source, deleted, inserted) => new
+						{
+							InsertedValue = inserted.Value,
+						})
+					.ToArray();
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public async Task UpdateITableWithProjectionOutputTestAsync([IncludeDataSources(true, FeatureUpdateOutputWithOldSingleNoAlternateRewrite)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -302,7 +444,77 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task UpdateITableWithProjectionOutputTestAsyncWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
+		public async Task UpdateITableWithProjectionOutputTestAsyncAlternateUpdate([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			{
+				var expected = sourceData
+					.Select(s => new
+					{
+						DeletedValue = s.Value + 1,
+						InsertedValue = s.Value,
+					})
+					.ToArray();
+
+				var output = await source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.UpdateWithOutputAsync(
+						target,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+						(source, deleted, inserted) => new
+						{
+							DeletedValue = deleted.Value,
+							InsertedValue = inserted.Value,
+						});
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public async Task UpdateITableWithProjectionOutputTestAsyncAlternateUpdateSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			{
+				var expected = sourceData
+					.Where(_ => _.Id == 3)
+					.Select(s => new
+					{
+						DeletedValue = s.Value + 1,
+						InsertedValue = s.Value,
+					})
+					.ToArray();
+
+				var output = await source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.Where(_ => _.s.Id == 3)
+					.UpdateWithOutputAsync(
+						target,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+						(source, deleted, inserted) => new
+						{
+							DeletedValue = deleted.Value,
+							InsertedValue = inserted.Value,
+						});
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public async Task UpdateITableWithProjectionOutputTestAsyncWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingleNoAlternateRewrite)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -326,6 +538,72 @@ namespace Tests.xUpdate
 						(source, deleted, inserted) => new
 						{
 							SourceStr     = source.s.ValueStr,
+							InsertedValue = inserted.Value,
+						});
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public async Task UpdateITableWithProjectionOutputTestAsyncWithoutOldAlternateUpdate([IncludeDataSources(true, FeatureUpdateOutputWithoutOldMultiple)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			{
+				var expected = sourceData
+					.Select(s => new
+					{
+						InsertedValue = s.Value,
+					})
+					.ToArray();
+
+				var output = await source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.UpdateWithOutputAsync(
+						target,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+						(source, deleted, inserted) => new
+						{
+							InsertedValue = inserted.Value,
+						});
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public async Task UpdateITableWithProjectionOutputTestAsyncWithoutOldAlternateUpdateSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			{
+				var expected = sourceData
+					.Where(_ => _.Id == 3)
+					.Select(s => new
+					{
+						InsertedValue = s.Value,
+					})
+					.ToArray();
+
+				var output = await source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.Where(_ => _.s.Id == 3)
+					.UpdateWithOutputAsync(
+						target,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+						(source, deleted, inserted) => new
+						{
 							InsertedValue = inserted.Value,
 						});
 
@@ -582,7 +860,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateExpressionWithProjectionOutputTest([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
+		public void UpdateExpressionWithProjectionOutputTest([IncludeDataSources(true, FeatureUpdateOutputWithOldSingleNoAlternateRewrite)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -619,7 +897,79 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateExpressionWithProjectionOutputTestWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
+		public void UpdateExpressionWithProjectionOutputTestAlternateUpdate([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			{
+				var expected = sourceData
+					.Select(s => new
+					{
+						DeletedValue = s.Value + 1,
+						InsertedValue = s.Value,
+					})
+					.ToArray();
+
+				var output = source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.UpdateWithOutput(
+						s => s.t,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+						(source, deleted, inserted) => new
+						{
+							DeletedValue = deleted.Value,
+							InsertedValue = inserted.Value,
+						})
+					.ToArray();
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public void UpdateExpressionWithProjectionOutputTestAlternateUpdateSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			{
+				var expected = sourceData
+					.Where(_ => _.Id == 3)
+					.Select(s => new
+					{
+						DeletedValue = s.Value + 1,
+						InsertedValue = s.Value,
+					})
+					.ToArray();
+
+				var output = source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.Where(_ => _.s.Id == 3)
+					.UpdateWithOutput(
+						s => s.t,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+						(source, deleted, inserted) => new
+						{
+							DeletedValue = deleted.Value,
+							InsertedValue = inserted.Value,
+						})
+					.ToArray();
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public void UpdateExpressionWithProjectionOutputTestWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingleNoAlternateRewrite)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -654,7 +1004,75 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task UpdateExpressionWithProjectionOutputTestAsync([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
+		public void UpdateExpressionWithProjectionOutputTestWithoutOldAlternateUpdate([IncludeDataSources(true, FeatureUpdateOutputWithoutOldMultiple)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			{
+				var expected = sourceData
+					.Select(s => new
+					{
+						InsertedValue = s.Value,
+					})
+					.ToArray();
+
+				var output = source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.UpdateWithOutput(
+						s => s.t,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+						(source, deleted, inserted) => new
+						{
+							InsertedValue = inserted.Value,
+						})
+					.ToArray();
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public void UpdateExpressionWithProjectionOutputTestWithoutOldAlternateUpdateSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			{
+				var expected = sourceData
+					.Where(_ => _.Id == 3)
+					.Select(s => new
+					{
+						InsertedValue = s.Value,
+					})
+					.ToArray();
+
+				var output = source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.Where(_ => _.s.Id == 3)
+					.UpdateWithOutput(
+						s => s.t,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+						(source, deleted, inserted) => new
+						{
+							InsertedValue = inserted.Value,
+						})
+					.ToArray();
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public async Task UpdateExpressionWithProjectionOutputTestAsync([IncludeDataSources(true, FeatureUpdateOutputWithOldSingleNoAlternateRewrite)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -690,7 +1108,77 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task UpdateExpressionWithProjectionOutputTestAsyncWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
+		public async Task UpdateExpressionWithProjectionOutputTestAsyncAlternateUpdate([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			{
+				var expected = sourceData
+					.Select(s => new
+					{
+						DeletedValue = s.Value + 1,
+						InsertedValue = s.Value,
+					})
+					.ToArray();
+
+				var output = await source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.UpdateWithOutputAsync(
+						s => s.t,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+						(source, deleted, inserted) => new
+						{
+							DeletedValue = deleted.Value,
+							InsertedValue = inserted.Value,
+						});
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public async Task UpdateExpressionWithProjectionOutputTestAsyncAlternateUpdateSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			{
+				var expected = sourceData
+					.Where(_ => _.Id == 3)
+					.Select(s => new
+					{
+						DeletedValue = s.Value + 1,
+						InsertedValue = s.Value,
+					})
+					.ToArray();
+
+				var output = await source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.Where(_ => _.s.Id == 3)
+					.UpdateWithOutputAsync(
+						s => s.t,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+						(source, deleted, inserted) => new
+						{
+							DeletedValue = deleted.Value,
+							InsertedValue = inserted.Value,
+						});
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public async Task UpdateExpressionWithProjectionOutputTestAsyncWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingleNoAlternateRewrite)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -714,6 +1202,72 @@ namespace Tests.xUpdate
 						(source, deleted, inserted) => new
 						{
 							SourceStr     = source.s.ValueStr,
+							InsertedValue = inserted.Value,
+						});
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public async Task UpdateExpressionWithProjectionOutputTestAsyncWithoutOldAlternateUpdate([IncludeDataSources(true, FeatureUpdateOutputWithoutOldMultiple)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			{
+				var expected = sourceData
+					.Select(s => new
+					{
+						InsertedValue = s.Value,
+					})
+					.ToArray();
+
+				var output = await source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.UpdateWithOutputAsync(
+						s => s.t,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+						(source, deleted, inserted) => new
+						{
+							InsertedValue = inserted.Value,
+						});
+
+				AreEqual(
+					expected,
+					output);
+			}
+		}
+
+		[Test]
+		public async Task UpdateExpressionWithProjectionOutputTestAsyncWithoutOldAlternateUpdateSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			{
+				var expected = sourceData
+					.Where(_ => _.Id == 3)
+					.Select(s => new
+					{
+						InsertedValue = s.Value,
+					})
+					.ToArray();
+
+				var output = await source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.Where(_ => _.s.Id == 3)
+					.UpdateWithOutputAsync(
+						s => s.t,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+						(source, deleted, inserted) => new
+						{
 							InsertedValue = inserted.Value,
 						});
 
@@ -1821,7 +2375,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Issue3044UpdateOutputWithTakeCte([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird)] string context)
+		public void Issue3044UpdateOutputWithTakeCte([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
