@@ -1777,7 +1777,7 @@ namespace Tests.xUpdate
 					.Where(i => i.Id >= 7)
 					.OrderBy(i => i.Id)
 					.Take(1)
-					.UpdateWithOutput(x => new TableWithData { Id = 20, });
+					.UpdateWithOutput(x => new TableWithData { Id = 20, Value = x.Value, ValueStr = x.ValueStr });
 
 				AreEqual(
 					new[]
@@ -1804,7 +1804,7 @@ namespace Tests.xUpdate
 					.Where(i => i.Id >= 7)
 					.OrderBy(i => i.Id)
 					.Take(1)
-					.UpdateWithOutput(x => new TableWithData { Id = 20, });
+					.UpdateWithOutput(x => new TableWithData { Id = 20, Value = x.Value, ValueStr = x.ValueStr });
 
 				AreEqual(
 					new[]
@@ -1832,7 +1832,7 @@ namespace Tests.xUpdate
 					.OrderBy(i => i.Id)
 					.Take(1)
 					.AsCte()
-					.UpdateWithOutput(x => new TableWithData { Id = 20, });
+					.UpdateWithOutput(x => new TableWithData { Id = 20, Value = x.Value, ValueStr = x.ValueStr });
 
 				AreEqual(
 					new[]
