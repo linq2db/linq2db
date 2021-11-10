@@ -68,7 +68,7 @@ namespace Tests.xUpdate
 		#region Update against ITable<T> target
 
 		[Test]
-		public void UpdateITableWithDefaultOutputTest([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
+		public void UpdateITableWithDefaultOutputTest([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -99,7 +99,40 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task UpdateITableWithDefaultOutputTestAsync([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
+		public void UpdateITableWithDefaultOutputTestSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			{
+				var expected = sourceData
+					.Where(s => s.Id == 3)
+					.Select(s => new UpdateOutput<DestinationTable>()
+					{
+						Inserted = new DestinationTable { Id = s.Id, Value = s.Value,     ValueStr = s.ValueStr, },
+						Deleted  = new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", },
+					})
+					.ToArray();
+
+				var output = source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.Where(_ => _.s.Id == 3)
+					.UpdateWithOutput(
+						target,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, })
+					.ToArray();
+
+				AreEqual(
+					expected,
+					output,
+					new UpdateOutputComparer<DestinationTable>());
+			}
+		}
+
+		[Test]
+		public async Task UpdateITableWithDefaultOutputTestAsync([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -117,6 +150,38 @@ namespace Tests.xUpdate
 
 				var output = await source
 					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.UpdateWithOutputAsync(
+						target,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, });
+
+				AreEqual(
+					expected,
+					output,
+					new UpdateOutputComparer<DestinationTable>());
+			}
+		}
+
+		[Test]
+		public async Task UpdateITableWithDefaultOutputTestAsyncSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			{
+				var expected = sourceData
+					.Where(s => s.Id == 3)
+					.Select(s => new UpdateOutput<DestinationTable>()
+					{
+						Inserted = new DestinationTable { Id = s.Id, Value = s.Value,     ValueStr = s.ValueStr, },
+						Deleted  = new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", },
+					})
+					.ToArray();
+
+				var output = await source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.Where(_ => _.s.Id == 3)
 					.UpdateWithOutputAsync(
 						target,
 						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, });
@@ -391,7 +456,7 @@ namespace Tests.xUpdate
 		#region Update against Expression target
 
 		[Test]
-		public void UpdateExpressionWithDefaultOutputTest([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
+		public void UpdateExpressionWithDefaultOutputTest([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -422,7 +487,40 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task UpdateExpressionWithDefaultOutputTestAsync([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
+		public void UpdateExpressionWithDefaultOutputTestSingleRecord([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			{
+				var expected = sourceData
+					.Where(_ => _.Id == 3)
+					.Select(s => new UpdateOutput<DestinationTable>()
+					{
+						Inserted = new DestinationTable { Id = s.Id, Value = s.Value,     ValueStr = s.ValueStr, },
+						Deleted  = new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", },
+					})
+					.ToArray();
+
+				var output = source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.Where(_ => _.s.Id == 3)
+					.UpdateWithOutput(
+						s => s.t,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, })
+					.ToArray();
+
+				AreEqual(
+					expected,
+					output,
+					new UpdateOutputComparer<DestinationTable>());
+			}
+		}
+
+		[Test]
+		public async Task UpdateExpressionWithDefaultOutputTestAsync([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -440,6 +538,38 @@ namespace Tests.xUpdate
 
 				var output = await source
 					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.UpdateWithOutputAsync(
+						s => s.t,
+						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, });
+
+				AreEqual(
+					expected,
+					output,
+					new UpdateOutputComparer<DestinationTable>());
+			}
+		}
+
+		[Test]
+		public async Task UpdateExpressionWithDefaultOutputTestAsyncSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			using (var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
+			{
+				var expected = sourceData
+					.Where(_ => _.Id == 3)
+					.Select(s => new UpdateOutput<DestinationTable>()
+					{
+						Inserted = new DestinationTable { Id = s.Id, Value = s.Value,     ValueStr = s.ValueStr, },
+						Deleted  = new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", },
+					})
+					.ToArray();
+
+				var output = await source
+					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+					.Where(_ => _.s.Id == 3)
 					.UpdateWithOutputAsync(
 						s => s.t,
 						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, });
@@ -1637,7 +1767,7 @@ namespace Tests.xUpdate
 
 		#region Issues
 		[Test]
-		public void Issue3044UpdateOutputWithTake([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void Issue3044UpdateOutputWithTake([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -1664,7 +1794,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Issue3044UpdateOutputWithTakeSubquery([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void Issue3044UpdateOutputWithTakeSubquery([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -1691,7 +1821,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Issue3044UpdateOutputWithTakeCte([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void Issue3044UpdateOutputWithTakeCte([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird)] string context)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
