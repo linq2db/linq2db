@@ -518,6 +518,7 @@ namespace LinqToDB.DataProvider.MySql
 #else
 				[TypeWrapperName("WriteToServerAsync")]
 				private Task WriteToServerAsync3(IDataReader dataReader, CancellationToken cancellationToken) => throw new InvalidOperationException();
+				[TypeWrapperName("WriteToServerAsync")]
 				[return: CustomMapper(typeof(GenericTaskToTaskMapper))]
 				private Task<MySqlBulkCopyResult> WriteToServerAsync4(IDataReader dataReader, CancellationToken cancellationToken) => throw new InvalidOperationException();
 				private bool CanWriteToServerAsync3 => false;
