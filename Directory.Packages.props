@@ -62,8 +62,6 @@
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
 		<!--main version-->
 		<PackageVersion Include="Microsoft.Data.Sqlite" Version="6.0.0" />
-		<PackageVersion Include="Npgsql" Version="5.0.10" />
-	
 	</ItemGroup>
 	
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
@@ -102,6 +100,7 @@
 		<PackageVersion Include="Microsoft.AspNetCore.OData" Version="7.5.12" />
 
 		<PackageVersion Include="MySqlConnector" Version="0.69.10" />
+		<PackageVersion Include="Npgsql" Version="5.0.10" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp2.1' AND '$(TargetFramework)' != 'net472' ">
@@ -125,10 +124,12 @@
 		<PackageVersion Include="System.ComponentModel.Annotations" Version="4.7.0" />
 
 		<PackageVersion Include="MySqlConnector" Version="1.3.14" />
+		<PackageVersion Include="Npgsql" Version="6.0.0" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net5.0' ">
 		<PackageVersion Include="MySqlConnector" Version="2.0.0" />
+		<PackageVersion Include="Npgsql" Version="6.0.0" />
 	</ItemGroup>
 
 </Project>
