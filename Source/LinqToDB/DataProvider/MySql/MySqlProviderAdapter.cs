@@ -493,14 +493,15 @@ namespace LinqToDB.DataProvider.MySql
 				public MySqlBulkCopy(MySqlConnection connection, MySqlTransaction? transaction) => throw new NotImplementedException();
 
 				[TypeWrapperName("WriteToServer")]
-				public void WriteToServer1(IDataReader dataReader) => ((Action<MySqlBulkCopy, IDataReader>)CompiledWrappers[0])(this, dataReader);
+				private void WriteToServer1(IDataReader dataReader) => ((Action<MySqlBulkCopy, IDataReader>)CompiledWrappers[0])(this, dataReader);
 				[TypeWrapperName("WriteToServer")]
-				public MySqlBulkCopyResult WriteToServer2(IDataReader dataReader) => ((Func<MySqlBulkCopy, IDataReader, MySqlBulkCopyResult>)CompiledWrappers[9])(this, dataReader);
+				private MySqlBulkCopyResult WriteToServer2(IDataReader dataReader) => ((Func<MySqlBulkCopy, IDataReader, MySqlBulkCopyResult>)CompiledWrappers[9])(this, dataReader);
 
 				[TypeWrapperName("WriteToServerAsync")]
-				public Task WriteToServerAsync1      (IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken,      Task>)CompiledWrappers[8])(this, dataReader, cancellationToken);
+				private Task WriteToServerAsync1      (IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken,      Task>)CompiledWrappers[8])(this, dataReader, cancellationToken);
 				[TypeWrapperName("WriteToServerAsync")]
-				public Task<MySqlBulkCopyResult> WriteToServerAsync2(IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken, Task<MySqlBulkCopyResult>>)CompiledWrappers[10])(this, dataReader, cancellationToken);
+				[return: CustomMapper(typeof(GenericTaskToTaskMapper))]
+				private Task<MySqlBulkCopyResult> WriteToServerAsync2(IDataReader dataReader, CancellationToken cancellationToken) => throw new InvalidOperationException();
 
 				private bool CanWriteToServer1 => CompiledWrappers[0] != null;
 				private bool CanWriteToServer2 => CompiledWrappers[9] != null;
@@ -508,15 +509,17 @@ namespace LinqToDB.DataProvider.MySql
 				private bool CanWriteToServerAsync2 => CompiledWrappers[10] != null;
 #if !NETFRAMEWORK
 				[TypeWrapperName("WriteToServerAsync")]
-				public ValueTask WriteToServerAsync3(IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask>)CompiledWrappers[11])(this, dataReader, cancellationToken);
+				private ValueTask WriteToServerAsync3(IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask>)CompiledWrappers[11])(this, dataReader, cancellationToken);
 				[TypeWrapperName("WriteToServerAsync")]
-				public ValueTask<MySqlBulkCopyResult> WriteToServerAsync4(IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask<MySqlBulkCopyResult>>)CompiledWrappers[12])(this, dataReader, cancellationToken);
+				[return: CustomMapper(typeof(GenericTaskToTaskMapper))]
+				private ValueTask<MySqlBulkCopyResult> WriteToServerAsync4(IDataReader dataReader, CancellationToken cancellationToken) => throw new InvalidOperationException();
 				private bool CanWriteToServerAsync3 => CompiledWrappers[11] != null;
 				private bool CanWriteToServerAsync4 => CompiledWrappers[12] != null;
 #else
 				[TypeWrapperName("WriteToServerAsync")]
-				public Task WriteToServerAsync3(IDataReader dataReader, CancellationToken cancellationToken) => throw new InvalidOperationException();
-				public Task<MySqlBulkCopyResult> WriteToServerAsync4(IDataReader dataReader, CancellationToken cancellationToken) => throw new InvalidOperationException();
+				private Task WriteToServerAsync3(IDataReader dataReader, CancellationToken cancellationToken) => throw new InvalidOperationException();
+				[return: CustomMapper(typeof(GenericTaskToTaskMapper))]
+				private Task<MySqlBulkCopyResult> WriteToServerAsync4(IDataReader dataReader, CancellationToken cancellationToken) => throw new InvalidOperationException();
 				private bool CanWriteToServerAsync3 => false;
 				private bool CanWriteToServerAsync4 => false;
 #endif
@@ -532,35 +535,25 @@ namespace LinqToDB.DataProvider.MySql
 
 				public bool HasWriteToServerAsync => CanWriteToServerAsync1 || CanWriteToServerAsync2 || CanWriteToServerAsync3 || CanWriteToServerAsync4;
 
-#if NETFRAMEWORK
 				public async Task WriteToServerAsync(IDataReader dataReader, CancellationToken cancellationToken)
 				{
 					if (CanWriteToServerAsync4)
-						await WriteToServerAsync4(dataReader, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					{
+						var action = (Func<MySqlBulkCopy, IDataReader, CancellationToken, Task>)CompiledWrappers[12];
+						await action(this, dataReader, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					}
 					else if (CanWriteToServerAsync3)
 						await WriteToServerAsync3(dataReader, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					else if (CanWriteToServerAsync2)
-						await WriteToServerAsync2(dataReader, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					{
+						var action = (Func<MySqlBulkCopy, IDataReader, CancellationToken, Task>)CompiledWrappers[10];
+						await action(this, dataReader, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					}
 					else if (CanWriteToServerAsync1)
 						await WriteToServerAsync1(dataReader, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					else
 						throw new InvalidOperationException("BulkCopy.WriteToServerAsync implementation not configured");
 				}
-#else
-				public async ValueTask WriteToServerAsync(IDataReader dataReader, CancellationToken cancellationToken)
-				{
-					if (CanWriteToServerAsync4)
-						await WriteToServerAsync4(dataReader, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-					else if (CanWriteToServerAsync3)
-						await WriteToServerAsync3(dataReader, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-					else if (CanWriteToServerAsync2)
-						await WriteToServerAsync2(dataReader, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-					else if (CanWriteToServerAsync1)
-						await WriteToServerAsync1(dataReader, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-					else
-						throw new InvalidOperationException("BulkCopy.WriteToServerAsync implementation not configured");
-				}
-#endif
 
 				public int NotifyAfter
 				{
@@ -642,8 +635,11 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		[Wrapper]
-		internal class MySqlBulkCopyResult
+		internal class MySqlBulkCopyResult : TypeWrapper
 		{
+			public MySqlBulkCopyResult(object instance) : base(instance, null)
+			{
+			}
 		}
 	}
 }

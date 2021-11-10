@@ -61,7 +61,7 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
 		<!--main version-->
-		<PackageVersion Include="Microsoft.Data.Sqlite" Version="5.0.11" />
+		<PackageVersion Include="Microsoft.Data.Sqlite" Version="5.0.12" />
 		<PackageVersion Include="Npgsql" Version="5.0.10" />
 	
 	</ItemGroup>
