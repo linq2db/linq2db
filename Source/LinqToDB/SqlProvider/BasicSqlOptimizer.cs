@@ -1232,8 +1232,8 @@ namespace LinqToDB.SqlProvider
 						}
 					}
 
-					if (expr.Expr1.SystemType?.IsGenericType == true && expr.Expr1.SystemType.GetGenericTypeDefinition() == typeof(Sql.SqlRow<,>))
-						return OptimizeRowPredicate(expr, context);
+					if (IsSqlRow(expr.Expr1))
+						return OptimizeRowExprExpr(expr, context);
 
 					switch (expr.Operator)
 					{
@@ -1275,6 +1275,14 @@ namespace LinqToDB.SqlProvider
 						}
 					}
 
+					break;
+				}
+
+				case QueryElementType.InListPredicate:
+				{
+					var inList = (InList)predicate;
+					if (IsSqlRow(inList.Expr1))
+						return OptimizeRowInList(inList);
 					break;
 				}
 
@@ -1322,7 +1330,13 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual RowFeature SupportedRowFeatures => 0;
 
-		protected virtual ISqlPredicate OptimizeRowPredicate(SqlPredicate.ExprExpr predicate, EvaluationContext context)
+		protected bool IsSqlRow(ISqlExpression expression)
+		{
+			return expression.SystemType?.IsGenericType == true 
+			    && expression.SystemType.GetGenericTypeDefinition() == typeof(Sql.SqlRow<,>);
+		}
+
+		protected virtual ISqlPredicate OptimizeRowExprExpr(ExprExpr predicate, EvaluationContext context)
 		{
 			var op      = predicate.Operator;
 			var values1 = GetSqlRowValues(predicate.Expr1) ?? throw new LinqException("Null SqlRow values are only allowed on the right-hand side.");			
@@ -1345,7 +1359,27 @@ namespace LinqToDB.SqlProvider
 			// We always disable CompareNullsAsValues behavior when comparing SqlRow.
 			return predicate.WithNull == null
 				? predicate
-				: new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, predicate.Expr2, withNull: null);
+				: new ExprExpr(predicate.Expr1, predicate.Operator, predicate.Expr2, withNull: null);
+		}
+
+		protected virtual ISqlPredicate OptimizeRowInList(InList predicate)
+		{
+			if ((SupportedRowFeatures & RowFeature.In) == 0)
+			{			
+				var left = predicate.Expr1; 
+				var op = predicate.IsNot ? Operator.NotEqual : Operator.Equal;
+				var isOr = !predicate.IsNot;
+				var rewrite = new SqlSearchCondition();
+				foreach (var item in predicate.Values)
+					rewrite.Conditions.Add(new SqlCondition(false, new ExprExpr(left, op, item, withNull: null), isOr));
+				return rewrite;
+			}
+
+			// Default InList translation is ok
+			// We always disable CompareNullsAsValues behavior when comparing SqlRow.
+			return predicate.WithNull == null
+				? predicate
+				: new InList(predicate.Expr1, withNull: null, predicate.IsNot, predicate.Values);
 		}
 
 		protected ISqlPredicate RowIsNullFallback(ISqlExpression[] values1, bool isNot)
