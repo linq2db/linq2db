@@ -1072,7 +1072,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		public IDbConnection Connection => EnsureConnection().Connection;
 
-		internal IAsyncDbConnection EnsureConnection()
+		internal IAsyncDbConnection EnsureConnection(bool connect = true)
 		{
 			CheckAndThrowOnDisposed();
 
@@ -1092,7 +1092,7 @@ namespace LinqToDB.Data
 			else if (RetryPolicy != null && _connection is not RetryingDbConnection)
 				_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
 
-			if (_connection.State == ConnectionState.Closed)
+			if (connect && _connection.State == ConnectionState.Closed)
 			{
 				OnBeforeConnectionOpen?.Invoke(this, _connection.Connection);
 				_connection.Open();
@@ -1239,7 +1239,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		public IDbCommand CreateCommand()
 		{
-			var command = Connection.CreateCommand();
+			var command = EnsureConnection(false).CreateCommand();
 
 			if (_commandTimeout.HasValue)
 				command.CommandTimeout = _commandTimeout.Value;
