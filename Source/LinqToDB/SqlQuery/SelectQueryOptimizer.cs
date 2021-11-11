@@ -1545,6 +1545,21 @@ namespace LinqToDB.SqlQuery
 
 		void OptimizeColumns()
 		{
+			// When selecting a SqlRow, expand the row into individual columns.
+			var columns = _selectQuery.Select.Columns;
+			int sqlRowIndex = columns.FindIndex(c => c.Expression.IsSqlRow());
+			if (sqlRowIndex >= 0)
+			{
+				if (_selectQuery.ParentSelect is null)
+					throw new LinqToDBException("SqlRow can not be returned from main SELECT");
+				if (columns.Count > 1)
+					throw new LinqToDBException("SqlRow expression must be the only result in a SELECT");
+				var row = columns[0].Expression;
+				columns.Clear();
+				foreach (var value in row.GetSqlRowValues())
+					_selectQuery.Select.AddNew(value);
+			}
+
 			((ISqlExpressionWalkable)_selectQuery.Select).Walk(WalkOptions.Default, (object?)null, static (_, expr) =>
 			{
 				if (expr is SelectQuery query    &&

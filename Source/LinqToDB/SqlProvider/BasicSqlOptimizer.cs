@@ -1232,7 +1232,7 @@ namespace LinqToDB.SqlProvider
 						}
 					}
 
-					if (IsSqlRow(expr.Expr1))
+					if (expr.Expr1.IsSqlRow())
 						return OptimizeRowExprExpr(expr, context);
 
 					switch (expr.Operator)
@@ -1281,7 +1281,7 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.InListPredicate:
 				{
 					var inList = (InList)predicate;
-					if (IsSqlRow(inList.Expr1))
+					if (inList.Expr1.IsSqlRow())
 						return OptimizeRowInList(inList);
 					break;
 				}
@@ -1328,30 +1328,35 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual RowFeature SupportedRowFeatures => 0;
 
-		protected bool IsSqlRow(ISqlExpression expression)
-		{
-			return expression.SystemType?.IsGenericType == true 
-			    && expression.SystemType.GetGenericTypeDefinition() == typeof(Sql.SqlRow<,>);
-		}
-
 		protected virtual ISqlPredicate OptimizeRowExprExpr(ExprExpr predicate, EvaluationContext context)
 		{
-			var op      = predicate.Operator;
-			var values1 = GetSqlRowValues(predicate.Expr1) ?? throw new LinqException("Null SqlRow values are only allowed on the right-hand side.");			
-			var values2 = GetSqlRowValues(predicate.Expr2);
+			var op = predicate.Operator;
 
-			if (values2 == null)
+			switch (predicate.Expr2)
 			{
-				if (op is Operator.Equal or Operator.NotEqual)
-				{
-					if ((SupportedRowFeatures & RowFeature.IsNull) == 0)
-						return RowIsNullFallback(values1, op == Operator.NotEqual);
-				}
-				else
-					throw new LinqException("Null SqlRow is only allowed in equality comparisons");
+				// ROW(a, b) IS [NOT] NULL
+				case SqlValue { Value: null }:
+					if (op is not (Operator.Equal or Operator.NotEqual))
+						throw new LinqException("Null SqlRow is only allowed in equality comparisons");
+					if (!SupportedRowFeatures.HasFlag(RowFeature.IsNull))
+						return RowIsNullFallback(predicate.Expr1.GetSqlRowValues(), op == Operator.NotEqual);
+					break;
+
+				// ROW(a, b) operator ROW(c, d)
+				case SqlExpression rhs:
+					if (!SupportedRowFeatures.HasFlag(RowFeature.Comparisons))
+						return RowComparisonFallback(op, predicate.Expr1.GetSqlRowValues(), rhs.Parameters);
+					break;
+
+				// ROW(a, b) operator (SELECT c, d)
+				case SelectQuery _:
+					if (!SupportedRowFeatures.HasFlag(RowFeature.Comparisons))
+						throw new LinqException("SqlRow comparisons to SELECT are not supported by this DB provider");
+					break;
+
+				default:
+					throw new LinqException("Inappropriate SqlRow expression, only Sql.Row() and sub-selects are valid.");
 			}
-			else if ((SupportedRowFeatures & RowFeature.Comparisons) == 0)
-				return RowComparisonFallback(op, values1, values2);
 
 			// Default ExprExpr translation is ok
 			// We always disable CompareNullsAsValues behavior when comparing SqlRow.
@@ -1420,15 +1425,6 @@ namespace LinqToDB.SqlProvider
 			}
 
 			throw new LinqException("Unsupported SqlRow operator: " + op);
-		}
-		protected ISqlExpression[]? GetSqlRowValues(ISqlExpression expr)
-		{
-			if (expr is SqlValue { Value: null })
-				return null;
-			if (expr is not SqlExpression row)
-				throw new LinqException("Calls to Sql.Row() are the only accepted expression of type SqlRow.");
-			
-			return row.Parameters;
 		}
 
 		#endregion

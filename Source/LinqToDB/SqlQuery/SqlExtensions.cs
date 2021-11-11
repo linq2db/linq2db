@@ -142,5 +142,26 @@
 				throw new LinqToDBException("Sqlect Query required");
 				return selectQuery;
 		}
+
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
+		public static bool IsSqlRow(this ISqlExpression expression)
+		{
+			return expression.SystemType?.IsGenericType == true 
+			    && expression.SystemType.GetGenericTypeDefinition() == typeof(Sql.SqlRow<,>);
+		}
+
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// It may change or be removed without further notice.
+		/// </summary>
+		public static ISqlExpression[] GetSqlRowValues(this ISqlExpression expr)
+		{
+			return expr is SqlExpression row
+				? row.Parameters
+				: throw new LinqToDBException("Calls to Sql.Row() are the only valid expressions of type SqlRow.");
+		}
 	}
 }
