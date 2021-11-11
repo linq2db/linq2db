@@ -477,7 +477,7 @@ namespace Tests.Linq
 						break;
 				}
 
-				db.Person.Count(p => p.FirstName.StartsWith(nameToCheck, comparison)  && p.ID == 1).Should().Be(1);
+				db.Person.Count(p =>  p.FirstName.StartsWith(nameToCheck, comparison) && p.ID == 1).Should().Be(1);
 				db.Person.Count(p => !p.FirstName.StartsWith(nameToCheck, comparison) && p.ID == 1).Should().Be(0);
 
 				switch (comparison)
@@ -489,7 +489,7 @@ namespace Tests.Linq
 						nameToCheck = firstName.Substring(0, 3);
 						nameToCheck = nameToCheck.ToUpper();
 
-						db.Person.Count(p => p.FirstName.StartsWith(nameToCheck, comparison)  && p.ID == 1).Should().Be(0);
+						db.Person.Count(p =>  p.FirstName.StartsWith(nameToCheck, comparison) && p.ID == 1).Should().Be(0);
 						db.Person.Count(p => !p.FirstName.StartsWith(nameToCheck, comparison) && p.ID == 1).Should().Be(1);
 
 						break;

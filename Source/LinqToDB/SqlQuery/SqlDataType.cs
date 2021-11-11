@@ -9,6 +9,7 @@ namespace LinqToDB.SqlQuery
 {
 	using System.Numerics;
 	using Common;
+	using LinqToDB.Common.Internal;
 	using LinqToDB.Extensions;
 	using LinqToDB.Mapping;
 
@@ -205,7 +206,7 @@ namespace LinqToDB.SqlQuery
 		{
 			var underlyingType = type;
 
-			if (underlyingType.IsGenericType && underlyingType.GetGenericTypeDefinition() == typeof(Nullable<>))
+			if (underlyingType.IsNullable())
 				underlyingType = underlyingType.GetGenericArguments()[0];
 
 			if (underlyingType.IsEnum)
@@ -313,8 +314,7 @@ namespace LinqToDB.SqlQuery
 
 		public static bool TypeCanBeNull(Type type)
 		{
-			if (type.IsValueType == false ||
-				type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>) ||
+			if (type.IsNullableType() ||
 				typeof(INullable).IsSameOrParentOf(type))
 				return true;
 

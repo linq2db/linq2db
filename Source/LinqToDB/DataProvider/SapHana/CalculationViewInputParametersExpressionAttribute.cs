@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.SapHana
 {
 	using System.Globalization;
 	using System.Linq.Expressions;
-	using System.Reflection;
+	using LinqToDB.Expressions;
 	using LinqToDB.SqlProvider;
 	using SqlQuery;
 
@@ -37,22 +37,13 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public override void SetTable<TContext>(TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 		{
-			var method = methodCall.Method;
-
-			if (method == null)
-				throw new ArgumentNullException(nameof(methodCall));
-
-			var paramsList = method.GetParameters().ToList();
-			var valuesList = methodCall.Arguments.Cast<ConstantExpression>().ToList();
-
-			if (paramsList.Count != valuesList.Count)
-				throw new TargetParameterCountException("Invalid number of parameters");
+			var paramsList = methodCall.Method.GetParameters();
 
 			var sqlValues = new List<ISqlExpression>();
 
-			for(var i = 0; i < paramsList.Count; i++)
+			for(var i = 0; i < paramsList.Length; i++)
 			{
-				var val = valuesList[i].Value;
+				var val = methodCall.Arguments[i].EvaluateExpression();
 				if (val == null)
 					continue;
 				var p = paramsList[i];

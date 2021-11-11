@@ -400,9 +400,8 @@ namespace Tests.Linq
 			Client
 		}
 
-		[ActiveIssue(535)]
 		[Test]
-		public void Issue535Test2([DataSources] string context)
+		public void Issue535Test2([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable<CustomerBase>())

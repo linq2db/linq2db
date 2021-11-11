@@ -256,6 +256,7 @@ namespace LinqToDB.Expressions
 				}
 
 				// final expressions
+				case ExpressionType.Default  :
 				case ExpressionType.Parameter:
 				case ExpressionType.Constant : break;
 

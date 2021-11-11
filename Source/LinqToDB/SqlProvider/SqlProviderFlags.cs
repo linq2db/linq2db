@@ -8,77 +8,104 @@ namespace LinqToDB.SqlProvider
 
 	public class SqlProviderFlags
 	{
-		public bool        IsSybaseBuggyGroupBy            { get; set; }
+		public bool        IsSybaseBuggyGroupBy           { get; set; }
 
-		public bool        IsParameterOrderDependent       { get; set; }
+		public bool        IsParameterOrderDependent      { get; set; }
 
-		public bool        AcceptsTakeAsParameter          { get; set; }
-		public bool        AcceptsTakeAsParameterIfSkip    { get; set; }
-		public bool        IsTakeSupported                 { get; set; }
-		public bool        IsSkipSupported                 { get; set; }
-		public bool        IsSkipSupportedIfTake           { get; set; }
+		public bool        AcceptsTakeAsParameter         { get; set; }
+		public bool        AcceptsTakeAsParameterIfSkip   { get; set; }
+		public bool        IsTakeSupported                { get; set; }
+		public bool        IsSkipSupported                { get; set; }
+		public bool        IsSkipSupportedIfTake          { get; set; }
 		public TakeHints?  TakeHintsSupported              { get; set; }
-		public bool        IsSubQueryTakeSupported         { get; set; }
+		public bool        IsSubQueryTakeSupported        { get; set; }
 
-		public bool        IsSubQueryColumnSupported       { get; set; }
-		public bool        IsSubQueryOrderBySupported      { get; set; }
-		public bool        IsCountSubQuerySupported        { get; set; }
+		public bool        IsSubQueryColumnSupported      { get; set; }
+		public bool        IsSubQueryOrderBySupported     { get; set; }
+		public bool        IsCountSubQuerySupported       { get; set; }
 
-		public bool        IsIdentityParameterRequired     { get; set; }
-		public bool        IsApplyJoinSupported            { get; set; }
-		public bool        IsInsertOrUpdateSupported       { get; set; }
-		public bool        CanCombineParameters            { get; set; }
-		public bool        IsGroupByExpressionSupported    { get; set; }
-		public int         MaxInListValuesCount            { get; set; }
-		public bool        IsUpdateSetTableAliasSupported  { get; set; }
+		public bool        IsIdentityParameterRequired    { get; set; }
+		public bool        IsApplyJoinSupported           { get; set; }
+		public bool        IsInsertOrUpdateSupported      { get; set; }
+		public bool        CanCombineParameters           { get; set; }
+		public bool        IsGroupByExpressionSupported   { get; set; }
+		public int         MaxInListValuesCount           { get; set; }
+		public bool        IsUpdateSetTableAliasSupported { get; set; }
 
 		/// <summary>
 		/// Provider requires that selected subquery column must be used in group by even for constant column.
 		/// </summary>
-		public bool        IsGroupByColumnRequred          { get; set; }
+		public bool        IsGroupByColumnRequred         { get; set; }
 
 		/// <summary>
 		/// Provider supports:
 		/// CROSS JOIN a Supported
 		/// </summary>
-		public bool        IsCrossJoinSupported            { get; set; }
+		public bool IsCrossJoinSupported                  { get; set; }
 
 		/// <summary>
 		/// Provider supports:
 		/// INNER JOIN a ON 1 = 1 
 		/// </summary>
-		public bool IsInnerJoinAsCrossSupported            { get; set; }
+		public bool IsInnerJoinAsCrossSupported           { get; set; }
 
 		/// <summary>
 		/// Provider supports CTE expressions.
 		/// If provider does not support CTE, unsuported exception will be thrown when using CTE.
 		/// </summary>
-		public bool IsCommonTableExpressionsSupported      { get; set; }
+		public bool IsCommonTableExpressionsSupported     { get; set; }
 
 		/// <summary>
 		/// Provider supports DISTINCT and ORDER BY with fields that are not in projection.
 		/// </summary>
-		public bool IsDistinctOrderBySupported             { get; set; }
+		public bool IsDistinctOrderBySupported            { get; set; }
 
 		/// <summary>
 		/// Provider supports aggregate functions in ORDER BY statement.
 		/// </summary>
-		public bool IsOrderByAggregateFunctionsSupported   { get; set; }
+		public bool IsOrderByAggregateFunctionsSupported  { get; set; }
 
 		/// <summary>
 		/// Provider supports EXCEPT ALL, INTERSECT ALL set operators. Otherwise it will be emulated.
 		/// </summary>
-		public bool IsAllSetOperationsSupported            { get; set; }
+		public bool IsAllSetOperationsSupported           { get; set; }
 
 		/// <summary>
 		/// Provider supports EXCEPT, INTERSECT set operators. Otherwise it will be emulated.
 		/// </summary>
-		public bool IsDistinctSetOperationsSupported       { get; set; }
+		public bool IsDistinctSetOperationsSupported      { get; set; }
 
 		/// <summary>
 		/// Provider supports COUNT(DISTINCT column) function. Otherwise it will be emulated.
 		/// </summary>
-		public bool IsCountDistinctSupported               { get; set; }
+		public bool IsCountDistinctSupported              { get; set; }
+
+		/// <summary>
+		/// Provider supports aggregated expression with Outer reference
+		/// <code>
+		/// SELECT
+		/// (
+		///		SELECT SUM(inner.FieldX + outer.FieldOuter)
+		///		FROM table2 inner
+		/// ) AS Sum_Column
+		/// FROM table1 outer
+		///</code>
+		/// Otherwise aggeragated expression will be wrapped in subquery and aggregate function will be applied to subquery column.
+		/// <code>
+		/// SELECT
+		/// (
+		///		SELECT
+		///			SUM(sub.Column)
+		///		FROM 
+		///			(
+		///				SELECT inner.FieldX + outer.FieldOuter AS Column
+		///				FROM table2 inner
+		///			) sub
+		/// ) AS Sum_Column
+		/// FROM table1 outer
+		///</code>
+		/// </summary>
+		public bool AcceptsOuterExpressionInAggregate { get; set; }
 
 		/// <summary>
 		/// Provider supports
@@ -155,6 +182,7 @@ namespace LinqToDB.SqlProvider
 				^ IsCountDistinctSupported                     .GetHashCode()
 				^ IsUpdateFromSupported                        .GetHashCode()
 				^ DefaultMultiQueryIsolationLevel              .GetHashCode()
+				^ AcceptsOuterExpressionInAggregate            .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -191,6 +219,7 @@ namespace LinqToDB.SqlProvider
 				&& IsCountDistinctSupported             == other.IsCountDistinctSupported
 				&& IsUpdateFromSupported                == other.IsUpdateFromSupported
 				&& DefaultMultiQueryIsolationLevel      == other.DefaultMultiQueryIsolationLevel
+				&& AcceptsOuterExpressionInAggregate    == other.AcceptsOuterExpressionInAggregate
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                    == other.CustomFlags.Count
 				&& (CustomFlags.Count                   == 0

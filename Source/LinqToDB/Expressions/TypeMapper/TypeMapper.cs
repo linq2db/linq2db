@@ -686,7 +686,23 @@ namespace LinqToDB.Expressions
 									var newArguments  = mc.Arguments.Select(a => context.Mapper.ReplaceTypes(a, context));
 									var newMethodCall = Expression.Call(context.Mapper.ReplaceTypes(mc.Object, context), methodName, typeArgs, newArguments.ToArray());
 
-									return customReturnMapper != null ? customReturnMapper.Map(newMethodCall) : newMethodCall;
+									if (customReturnMapper != null)
+									{
+										if (!customReturnMapper.CanMap(newMethodCall))
+										{
+											if (context.IgnoreMissingMembers)
+											{
+												context.Aborted = true;
+												return e;
+											}
+
+											throw new LinqToDBException($"Cannot map return type: {newMethodCall.Type} using {customReturnMapper.GetType()} mapper");
+										}
+
+										return customReturnMapper.Map(newMethodCall);
+									}
+
+									return newMethodCall;
 								}
 								else
 								{
@@ -709,7 +725,23 @@ namespace LinqToDB.Expressions
 									var newArguments  = mc.Arguments.Select(a => context.Mapper.ReplaceTypes(a, context));
 									var newMethodCall = Expression.Call(context.Mapper.ReplaceTypes(mc.Object, context), method, newArguments);
 
-									return customReturnMapper != null ? customReturnMapper.Map(newMethodCall) : newMethodCall;
+									if (customReturnMapper != null)
+									{
+										if (!customReturnMapper.CanMap(newMethodCall))
+										{
+											if (context.IgnoreMissingMembers)
+											{
+												context.Aborted = true;
+												return e;
+											}
+
+											throw new LinqToDBException($"Cannot map return type: {newMethodCall.Type} using {customReturnMapper.GetType()} mapper");
+										}
+
+										return customReturnMapper.Map(newMethodCall);
+									}
+
+									return newMethodCall;
 								}
 							}
 

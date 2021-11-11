@@ -15,12 +15,6 @@
 		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
 
 		<PackageReference Include="NodaTime" />
-
-	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
-		<!-- transient -->
-		<PackageReference Include="System.Security.Cryptography.Cng" />
 	</ItemGroup>
 
 </Project>

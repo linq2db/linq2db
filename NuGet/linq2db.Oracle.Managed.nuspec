@@ -19,7 +19,7 @@
 			</group>
 			<group targetFramework=".NETFramework4.6.2">
 				<dependency id="linq2db"                       version="3.0.0"    />
-				<dependency id="Oracle.ManagedDataAccess"      version="21.3.0"   />
+				<dependency id="Oracle.ManagedDataAccess"      version="21.4.0"   />
 			</group>
 			<group targetFramework=".NETStandard2.0">
 				<dependency id="linq2db"                       version="3.0.0"    />
@@ -27,7 +27,7 @@
 			</group>
 			<group targetFramework=".NETStandard2.1">
 				<dependency id="linq2db"                       version="3.0.0"    />
-				<dependency id="Oracle.ManagedDataAccess.Core" version="3.21.3"   />
+				<dependency id="Oracle.ManagedDataAccess.Core" version="3.21.4"   />
 			</group>
 			<group targetFramework=".NETCoreApp2.1">
 				<dependency id="linq2db"                       version="3.0.0"    />
@@ -35,7 +35,7 @@
 			</group>
 			<group targetFramework=".NETCoreApp3.1">
 				<dependency id="linq2db"                       version="3.0.0"    />
-				<dependency id="Oracle.ManagedDataAccess.Core" version="3.21.3"   />
+				<dependency id="Oracle.ManagedDataAccess.Core" version="3.21.4"   />
 			</group>
 		</dependencies>
 		<contentFiles>

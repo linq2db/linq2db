@@ -17,6 +17,7 @@ namespace LinqToDB.Linq.Builder
 	using Common;
 	using Reflection;
 	using SqlQuery;
+	using LinqToDB.Common.Internal;
 
 	partial class ExpressionBuilder
 	{
@@ -477,8 +478,8 @@ namespace LinqToDB.Linq.Builder
 
 								var valueType = f.Sql.SystemType!;
 
-								if (!valueType.IsNullable() && valueType.IsValueType)
-									valueType = typeof(Nullable<>).MakeGenericType(valueType);
+								if (!valueType.IsNullableType())
+									valueType = valueType.AsNullable();
 
 								var reader     = BuildSql(context, f.Sql, valueType, null);
 								var comparison = Expression.MakeBinary(cond.Test.NodeType,

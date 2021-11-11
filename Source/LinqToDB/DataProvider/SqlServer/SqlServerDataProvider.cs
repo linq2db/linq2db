@@ -39,6 +39,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlProviderFlags.IsDistinctSetOperationsSupported = true;
 			SqlProviderFlags.IsCountDistinctSupported         = true;
 			SqlProviderFlags.IsUpdateFromSupported            = true;
+			SqlProviderFlags.AcceptsOuterExpressionInAggregate = false;
 			SqlProviderFlags.IsApplyJoinSupported              = true;
 			SqlProviderFlags.TakeHintsSupported                = TakeHints.Percent | TakeHints.WithTies;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = version >= SqlServerVersion.v2008;

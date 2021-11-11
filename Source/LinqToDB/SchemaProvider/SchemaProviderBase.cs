@@ -691,7 +691,7 @@ namespace LinqToDB.SchemaProvider
 			if (type.IsGenericType)
 				memberType = $"{type.Name.Split('`')[0]}<{string.Join(", ", type.GetGenericArguments().Select(t => ToTypeName(t, false)))}>";
 
-			if (!type.IsClass && isNullable)
+			if (type.IsValueType && isNullable)
 				memberType += "?";
 
 			return memberType;

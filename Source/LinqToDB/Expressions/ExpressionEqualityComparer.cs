@@ -5,7 +5,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -375,6 +374,7 @@ namespace LinqToDB.Expressions
 						return CompareTypeIs((TypeBinaryExpression)a, (TypeBinaryExpression)b);
 					case ExpressionType.Conditional:
 						return CompareConditional((ConditionalExpression)a, (ConditionalExpression)b);
+					case ExpressionType.Default: return true;
 					case ExpressionType.Constant:
 						return CompareConstant((ConstantExpression)a, (ConstantExpression)b);
 					case ExpressionType.Parameter:

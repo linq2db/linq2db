@@ -51,6 +51,7 @@ namespace LinqToDB.DataProvider
 				IsAllSetOperationsSupported          = false,
 				IsDistinctSetOperationsSupported     = true,
 				IsUpdateFromSupported                = true,
+				AcceptsOuterExpressionInAggregate    = true,
 			};
 
 			SetField<DbDataReader, bool>    ((r,i) => r.GetBoolean (i));

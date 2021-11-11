@@ -20,11 +20,12 @@ using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
 
+#if !NETCOREAPP2_1
 using MySqlDataDateTime = MySql.Data.Types.MySqlDateTime;
 using MySqlDataDecimal  = MySql.Data.Types.MySqlDecimal;
 
 using MySqlConnectorDateTime = MySqlConnector.MySqlDateTime;
-
+#endif
 namespace Tests.DataProvider
 {
 	using Model;
@@ -89,23 +90,28 @@ namespace Tests.DataProvider
 				Assert.That(TestType<string>					(conn, "enumDataType"),                                    Is.EqualTo("Green"));
 				Assert.That(TestType<string>					(conn, "setDataType"),                                     Is.EqualTo("one"));
 
-				if (context != ProviderName.MySqlConnector && context != TestProvName.MariaDB)
+#if !NETCOREAPP2_1
+				using (new DisableBaseline("Platform-specific baselines"))
 				{
-					TestType<MySqlDataDecimal?>(conn, "decimalDataType", DataType.Decimal);
-
-					var dt1 = TestType<MySqlDataDateTime?>(conn, "datetimeDataType", DataType.DateTime);
-					var dt2 = new MySqlDataDateTime(2012, 12, 12, 12, 12, 12, 0)
+					if (context != ProviderName.MySqlConnector && context != TestProvName.MariaDB)
 					{
-						TimezoneOffset = dt1!.Value.TimezoneOffset
-					};
+						TestType<MySqlDataDecimal?>(conn, "decimalDataType", DataType.Decimal);
 
-					Assert.That(dt1, Is.EqualTo(dt2));
+						var dt1 = TestType<MySqlDataDateTime?>(conn, "datetimeDataType", DataType.DateTime);
+						var dt2 = new MySqlDataDateTime(2012, 12, 12, 12, 12, 12, 0)
+						{
+							TimezoneOffset = dt1!.Value.TimezoneOffset
+						};
+
+						Assert.That(dt1, Is.EqualTo(dt2));
+					}
+					else
+					{
+						using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
+							Assert.That(TestType<MySqlConnectorDateTime?>(conn, "datetimeDataType", DataType.DateTime), Is.EqualTo(new MySqlConnectorDateTime(2012, 12, 12, 12, 12, 12, 0)));
+					}
 				}
-				else
-				{
-					using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
-						Assert.That(TestType<MySqlConnectorDateTime?>(conn, "datetimeDataType", DataType.DateTime), Is.EqualTo(new MySqlConnectorDateTime(2012, 12, 12, 12, 12, 12, 0)));
-				}
+#endif
 			}
 		}
 
