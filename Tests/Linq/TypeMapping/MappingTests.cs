@@ -163,7 +163,12 @@ namespace Tests.TypeMapping
 
 		class StringToIntMapper : ICustomMapper
 		{
-			public Expression Map(Expression expression)
+			bool ICustomMapper.CanMap(Expression expression)
+			{
+				return expression.Type == typeof(string);
+			}
+
+			Expression ICustomMapper.Map(Expression expression)
 			{
 				return Expression.Property(expression, "Length");
 			}
@@ -745,7 +750,7 @@ namespace Tests.TypeMapping
 				var taskExpression = Expression.Constant(0);
 				var mapper         = new ValueTaskToTaskMapper();
 
-				Assert.Throws(typeof(LinqToDBException), () => ((ICustomMapper)mapper).Map(taskExpression));
+				Assert.False(((ICustomMapper)mapper).CanMap(taskExpression));
 			}
 		}
 	}
