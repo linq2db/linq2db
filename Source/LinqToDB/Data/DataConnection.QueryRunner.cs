@@ -202,7 +202,7 @@ namespace LinqToDB.Data
 				bool                      forGetSqlText)
 			{
 				var preparedQuery      = GetCommand(dataConnection, context, parameterValues, forGetSqlText);
-				var commandsParameters = GetParameters(dataConnection, preparedQuery, parameterValues);
+				var commandsParameters = GetParameters(dataConnection, preparedQuery, parameterValues, forGetSqlText);
 				var executionQuery     = new ExecutionPreparedQuery(preparedQuery, commandsParameters);
 				return executionQuery;
 			}
@@ -279,33 +279,51 @@ namespace LinqToDB.Data
 				};
 			}
 
-			static IDbDataParameter[]?[] GetParameters(DataConnection dataConnection, PreparedQuery pq, IReadOnlyParameterValues? parameterValues)
+			static IDbDataParameter[]?[] GetParameters(DataConnection dataConnection, PreparedQuery pq, IReadOnlyParameterValues? parameterValues, bool forGetSqlText)
 			{
 				var result = new IDbDataParameter[pq.Commands.Length][];
-				for (var index = 0; index < pq.Commands.Length; index++)
+
+				IDbCommand? dbCommand = null;
+
+				try
 				{
-					var command = pq.Commands[index];
-					if (command.SqlParameters.Length == 0)
-						continue;
-
-					var parms = new IDbDataParameter[command.SqlParameters.Length];
-
-					for (var i = 0; i < command.SqlParameters.Length; i++)
+					for (var index = 0; index < pq.Commands.Length; index++)
 					{
-						var sqlp = command.SqlParameters[i];
+						var command = pq.Commands[index];
+						if (command.SqlParameters.Length == 0)
+							continue;
 
-						parms[i] = CreateParameter(dataConnection, sqlp, sqlp.GetParameterValue(parameterValues));
+						var parms = new IDbDataParameter[command.SqlParameters.Length];
+
+						for (var i = 0; i < command.SqlParameters.Length; i++)
+						{
+							var sqlp = command.SqlParameters[i];
+
+							if (dbCommand == null)
+							{
+								dbCommand = forGetSqlText
+									? dataConnection.EnsureConnection(false).CreateCommand()
+									: dataConnection.Command;
+							}
+
+							parms[i] = CreateParameter(dataConnection, dbCommand, sqlp, sqlp.GetParameterValue(parameterValues), forGetSqlText);
+						}
+
+						result[index] = parms;
 					}
-
-					result[index] = parms;
+				}
+				finally
+				{
+					if (forGetSqlText)
+						dbCommand?.Dispose();
 				}
 
 				return result;
 			}
 
-			static IDbDataParameter CreateParameter(DataConnection dataConnection, SqlParameter parameter, SqlParameterValue parmValue)
+			static IDbDataParameter CreateParameter(DataConnection dataConnection, IDbCommand command, SqlParameter parameter, SqlParameterValue parmValue, bool forGetSqlText)
 			{
-				var p          = dataConnection.Command.CreateParameter();
+				var p          = command.CreateParameter();
 				var dbDataType = parmValue.DbDataType;
 				var paramValue = parameter.CorrectParameterValue(parmValue.Value);
 
@@ -382,7 +400,7 @@ namespace LinqToDB.Data
 			public static int ExecuteNonQuery(DataConnection dataConnection, IQueryContext context, IReadOnlyParameterValues? parameterValues)
 			{
 				var preparedQuery      = GetCommand(dataConnection, context, parameterValues, false);
-				var commandsParameters = GetParameters(dataConnection, preparedQuery, parameterValues);
+				var commandsParameters = GetParameters(dataConnection, preparedQuery, parameterValues, false);
 				var executionQuery     = new ExecutionPreparedQuery(preparedQuery, commandsParameters);
 
 				return ExecuteNonQueryImpl(dataConnection, executionQuery);
@@ -434,7 +452,7 @@ namespace LinqToDB.Data
 			public static object? ExecuteScalar(DataConnection dataConnection, IQueryContext context, IReadOnlyParameterValues? parameterValues)
 			{
 				var preparedQuery      = GetCommand(dataConnection, context, parameterValues, false);
-				var commandsParameters = GetParameters(dataConnection, preparedQuery, parameterValues);
+				var commandsParameters = GetParameters(dataConnection, preparedQuery, parameterValues, false);
 				var executionQuery     = new ExecutionPreparedQuery(preparedQuery, commandsParameters);
 
 				InitFirstCommand(dataConnection, executionQuery);
