@@ -208,8 +208,16 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.SetExpression:
 					{
-						Visit(((SqlSetExpression)element).Column);
-						Visit(((SqlSetExpression)element).Expression);
+						var s = (SqlSetExpression)element;
+						if (s.Row is {} row)
+						{
+							foreach (var field in row)
+								Visit(field);
+						}
+						else
+							Visit(s.Column);
+
+						Visit(s.Expression);
 						break;
 					}
 
