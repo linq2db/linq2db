@@ -1323,9 +1323,7 @@ namespace LinqToDB.SqlProvider
 			IsNull      = 0x01,
 			Comparisons = 0x02,
 			In          = 0x04,
-			Between     = 0x08,
-			Overlaps    = 0x10,
-			Update      = 0x11,
+			Update      = 0x08,
 		}
 
 		protected virtual RowFeature SupportedRowFeatures => 0;
@@ -1400,7 +1398,6 @@ namespace LinqToDB.SqlProvider
 			{			
 				// (a1, a2) =  (b1, b2) => a1 =  b1 and a2 = b2
 				// (a1, a2) <> (b1, b2) => a1 <> b1 or  a2 <> b2
-				Console.WriteLine("Length1 = {0}, Length2 = {1}", values1.Length, values2.Length);
 				for (int i = 0; i < values1.Length; ++i)
 					rewrite.Conditions.Add(new SqlCondition(false, new ExprExpr(values1[i], op, values2[i], withNull: null), isOr: op == Operator.NotEqual ));
 				return rewrite;
@@ -1424,7 +1421,6 @@ namespace LinqToDB.SqlProvider
 
 			throw new LinqException("Unsupported SqlRow operator: " + op);
 		}
-
 		protected ISqlExpression[]? GetSqlRowValues(ISqlExpression expr)
 		{
 			if (expr is SqlValue { Value: null })
