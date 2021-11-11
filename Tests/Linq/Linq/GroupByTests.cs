@@ -2157,7 +2157,7 @@ namespace Tests.Linq
 			};
 		}
 
-		[ActiveIssue(1078, Details = "Disabled providers doesn't support sub-query columns and use join (which is not correct right now)", Configurations = new[] { TestProvName.AllAccess, ProviderName.SqlServer2000, ProviderName.SqlCe })]
+		[ActiveIssue(1078, Details = "Disabled providers doesn't support sub-query columns and use join (which is not correct right now)", Configurations = new[] { TestProvName.AllAccess, ProviderName.SqlCe })]
 		[Test]
 		public void Issue1078Test([DataSources] string context)
 		{

@@ -306,7 +306,7 @@ namespace LinqToDB.Data
 							{
 								dbCommand = forGetSqlText
 									? dataConnection.EnsureConnection(false).CreateCommand()
-									: dataConnection.Command;
+									: dataConnection.GetOrCreateCommand();
 							}
 
 							parms[i] = CreateParameter(dataConnection, dbCommand, sqlp, sqlp.GetParameterValue(parameterValues), forGetSqlText);
