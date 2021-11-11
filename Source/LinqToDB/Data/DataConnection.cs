@@ -1239,7 +1239,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		public IDbCommand CreateCommand()
 		{
-			var command = EnsureConnection(false).CreateCommand();
+			var command = Connection.CreateCommand();
 
 			if (_commandTimeout.HasValue)
 				command.CommandTimeout = _commandTimeout.Value;
