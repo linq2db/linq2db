@@ -605,7 +605,8 @@ namespace Tests.DataProvider
 #if NET472
 					expectedVersion = "3.13.0";
 #else
-					expectedVersion = "3.35.5";
+					expectedVersion = "3.33.0";
+					//expectedVersion = "3.35.5";
 #endif
 					break;
 				default:
