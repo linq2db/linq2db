@@ -94,6 +94,7 @@ namespace LinqToDB.SqlProvider
 
 			statement = CorrectUnionOrderBy(statement);
 			statement = FixSetOperationNulls(statement);
+			statement = OptimizeUpdateSubqueries(statement);
 
 			// provider specific query correction
 			statement = FinalizeStatement(statement, evaluationContext);
@@ -196,6 +197,25 @@ namespace LinqToDB.SqlProvider
 			return statement;
 		}
 
+
+		//TODO: move tis to standard optimizer
+		protected virtual SqlStatement OptimizeUpdateSubqueries(SqlStatement statement)
+		{
+			if (statement is SqlUpdateStatement updateStatement)
+			{
+				foreach (var setItem in updateStatement.Update.Items) 
+				{
+					if (setItem.Expression is SelectQuery q)
+					{
+						var optimizer = new SelectQueryOptimizer(SqlProviderFlags, q, q, 0);
+						optimizer.FinalizeAndValidate(SqlProviderFlags.IsApplyJoinSupported,
+							SqlProviderFlags.IsGroupByExpressionSupported);
+					}
+				}
+			}
+
+			return statement;
+		}
 
 		protected virtual void FixEmptySelect(SqlStatement statement)
 		{
