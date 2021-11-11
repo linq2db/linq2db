@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using LinqToDB.Common.Internal;
 using LinqToDB.Extensions;
 
 namespace LinqToDB.Common
@@ -91,7 +92,7 @@ namespace LinqToDB.Common
 			convertedValue = null;
 
 			if (value == null)
-				return  toType.IsClass || toType.IsNullable();
+				return  toType.IsNullableType();
 
 			var from = value.GetType().ToNullableUnderlying();
 			var to   = toType         .ToNullableUnderlying();

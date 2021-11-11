@@ -48,11 +48,12 @@
 		</Content>
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' OR '$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'net5.0' ">
+	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
 		<PackageReference Include="System.Data.Odbc" />
 		<PackageReference Include="System.Data.OleDb" />
 		<PackageReference Include="MiniProfiler.Shared" />
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
+		<PackageReference Include="Microsoft.AspNetCore.OData" />
 		
 		<!--magic-->
 		<PackageReference Include="IBM.Data.DB2.Core" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
@@ -64,6 +65,16 @@
 		<Reference Include="Microsoft.SqlServer.Types">
 			<HintPath>..\..\Redist\dotMorten.Microsoft.SqlServer.Types\Microsoft.SqlServer.Types.dll</HintPath>
 		</Reference>
+	</ItemGroup>
+	
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+		<!-- transient -->
+		<PackageReference Include="System.Security.Cryptography.Cng" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net5.0' OR '$(TargetFramework)' == 'netcoreapp3.1' ">
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 	</ItemGroup>
 
 </Project>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
@@ -11,6 +12,7 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 	using LinqToDB.Reflection;
+	using LinqToDB.Common.Internal;
 
 	class AggregationBuilder : MethodCallBuilder
 	{
@@ -37,20 +39,16 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { CreateSubQuery = true });
 
-			if (sequence.SelectQuery.Select.IsDistinct        ||
-			    sequence.SelectQuery.Select.TakeValue != null ||
-			    sequence.SelectQuery.Select.SkipValue != null ||
-			   !sequence.SelectQuery.GroupBy.IsEmpty)
-			{
-				sequence = new SubQueryContext(sequence);
-			}
+			var prevSequence = sequence;
 
-			if (sequence.SelectQuery.OrderBy.Items.Count > 0)
+			// Wrap by subquery to handle aggregate limitations, especially for SQL Server
+			//
+			sequence = new SubQueryContext(sequence);
+
+			if (prevSequence.SelectQuery.OrderBy.Items.Count > 0)
 			{
-				if (sequence.SelectQuery.Select.TakeValue == null && sequence.SelectQuery.Select.SkipValue == null)
-					sequence.SelectQuery.OrderBy.Items.Clear();
-				else
-					sequence = new SubQueryContext(sequence);
+				if (prevSequence.SelectQuery.Select.TakeValue == null && prevSequence.SelectQuery.Select.SkipValue == null)
+					prevSequence.SelectQuery.OrderBy.Items.Clear();
 			}
 
 			var context = new AggregationContext(buildInfo.Parent, sequence, methodCall);
@@ -59,13 +57,16 @@ namespace LinqToDB.Linq.Builder
 
 			var sql = sequence.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).ToArray();
 
-			if (sql.Length == 1 && sql[0] is SelectQuery query)
+			if (sql.Length == 1)
 			{
-				if (query.Select.Columns.Count == 1)
+				if (sql[0] is SelectQuery query)
 				{
-					var join = query.OuterApply();
-					context.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
-					sql[0] = query.Select.Columns[0];
+					if (query.Select.Columns.Count == 1)
+					{
+						var join = query.OuterApply();
+						context.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
+						sql[0] = query.Select.Columns[0];
+					}
 				}
 			}
 
@@ -104,9 +105,10 @@ namespace LinqToDB.Linq.Builder
 			readonly string     _methodName;
 			readonly Type       _returnType;
 			private  SqlInfo[]? _index;
+			private  int?       _parentIndex;
 
-			public int             FieldIndex;
-			public ISqlExpression? Sql;
+			public int            FieldIndex;
+			public ISqlExpression Sql = null!;
 
 			static int CheckNullValue(bool isNull, object context)
 			{
@@ -138,7 +140,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				Expression expr;
 
-				if (Sequence is DefaultIfEmptyBuilder.DefaultIfEmptyContext defaultIfEmpty)
+				if (SequenceHelper.UnwrapSubqueryContext(Sequence) is DefaultIfEmptyBuilder.DefaultIfEmptyContext defaultIfEmpty)
 				{
 					expr = Builder.BuildSql(_returnType, fieldIndex, sqlExpression);
 					if (defaultIfEmpty.DefaultValue != null && expr is ConvertFromDataReaderExpression convert)
@@ -168,7 +170,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 				else
-				if (_returnType.IsClass || _methodName == "Sum" || _returnType.IsNullable())
+				if (_methodName == "Sum" || _returnType.IsNullableType())
 				{
 					expr = Builder.BuildSql(_returnType, fieldIndex, sqlExpression);
 				}
@@ -194,6 +196,27 @@ namespace LinqToDB.Linq.Builder
 				throw new InvalidOperationException();
 			}
 
+			public override int ConvertToParentIndex(int index, IBuildContext context)
+			{
+				if (index != FieldIndex)
+					throw new InvalidOperationException();
+
+				if (_parentIndex != null)
+					return _parentIndex.Value;
+
+				if (Parent != null)
+				{
+					index = Parent.SelectQuery.Select.Add(Sql);
+					_parentIndex = Parent.ConvertToParentIndex(index, Parent);
+				}
+				else
+				{
+					_parentIndex = index;
+				}
+
+				return _parentIndex.Value;
+			}
+
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
 				switch (flags)
@@ -202,7 +225,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var result = _index ??= new[]
 							{
-								new SqlInfo(Sql!, Parent!.SelectQuery, Parent.SelectQuery.Select.Add(Sql!))
+								new SqlInfo(Sql!, SelectQuery, FieldIndex)
 							};
 
 							return result;

@@ -2136,22 +2136,33 @@ namespace Tests.Linq
 
 		class Issue1078Table
 		{
-			[Identity]
+			[PrimaryKey]
 			public int UserID { get; set; }
-			[Column, NotNull]
+			[Column]
 			public int SiteID { get; set; }
-			[Column, NotNull]
-			public string Username { get; set; } = null!;
-			[Column, NotNull]
+			[Column]
 			public bool Active { get; set; }
+
+			public static readonly Issue1078Table[] TestData = new []
+			{
+				new Issue1078Table() { UserID = 1, SiteID = 1, Active = true  },
+				new Issue1078Table() { UserID = 2, SiteID = 1, Active = false },
+				new Issue1078Table() { UserID = 3, SiteID = 1, Active = true  },
+				new Issue1078Table() { UserID = 4, SiteID = 2, Active = false },
+				new Issue1078Table() { UserID = 5, SiteID = 2, Active = true  },
+				new Issue1078Table() { UserID = 6, SiteID = 2, Active = false },
+				new Issue1078Table() { UserID = 7, SiteID = 2, Active = false },
+				new Issue1078Table() { UserID = 8, SiteID = 3, Active = false },
+				new Issue1078Table() { UserID = 9, SiteID = 4, Active = true  },
+			};
 		}
 
-		[ActiveIssue(1078)]
+		[ActiveIssue(1078, Details = "Disabled providers doesn't support sub-query columns and use join (which is not correct right now)", Configurations = new[] { TestProvName.AllAccess, ProviderName.SqlServer2000, ProviderName.SqlCe })]
 		[Test]
 		public void Issue1078Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<Issue1078Table>())
+			using (var table = db.CreateLocalTable(Issue1078Table.TestData))
 			{
 				var query =
 					from u in table
@@ -2163,7 +2174,25 @@ namespace Tests.Linq
 						Inactive = grp.Count(_ => _ == 0)
 					};
 
-				query.ToList();
+				var res = query.ToList().OrderBy(_ => _.SiteID).ToArray();
+
+				Assert.AreEqual(4, res.Length);
+
+				Assert.AreEqual(1, res[0].SiteID);
+				Assert.AreEqual(3, res[0].Total);
+				Assert.AreEqual(1, res[0].Inactive);
+
+				Assert.AreEqual(2, res[1].SiteID);
+				Assert.AreEqual(4, res[1].Total);
+				Assert.AreEqual(3, res[1].Inactive);
+
+				Assert.AreEqual(3, res[2].SiteID);
+				Assert.AreEqual(1, res[2].Total);
+				Assert.AreEqual(1, res[2].Inactive);
+
+				Assert.AreEqual(4, res[3].SiteID);
+				Assert.AreEqual(1, res[3].Total);
+				Assert.AreEqual(0, res[3].Inactive);
 			}
 		}
 

@@ -13,6 +13,7 @@ namespace LinqToDB.Linq
 	using LinqToDB.Expressions;
 	using Internal;
 	using Reflection;
+	using LinqToDB.Common.Internal;
 
 	internal static class SequentialAccessHelper
 	{
@@ -28,7 +29,7 @@ namespace LinqToDB.Linq
 		private class OptimizeMappingExpressionForSequentialAccessContext
 		{
 			public OptimizeMappingExpressionForSequentialAccessContext(int fieldCount)
-		{
+			{
 				NewVariables        = new ParameterExpression?[fieldCount * 2];
 				InsertedExpressions = new Expression?[fieldCount * 2];
 				Replacements        = new Expression?[fieldCount * 2];
@@ -76,7 +77,7 @@ namespace LinqToDB.Linq
 							var index = columnIndex.Value * 2;
 							if (context.NewVariables[index] == null)
 							{
-								var variable               = Expression.Variable(typeof(bool), $"is_null_{columnIndex}");
+								var variable                       = Expression.Variable(typeof(bool), $"is_null_{columnIndex}");
 								context.NewVariables[index]        = variable;
 								context.Replacements[index]        = variable;
 								context.InsertedExpressions[index] = Expression.Assign(variable, call);
@@ -97,15 +98,15 @@ namespace LinqToDB.Linq
 								{
 									// no IsDBNull call: column is not nullable
 									// (also could be a bad expression)
-									variable                   = Expression.Variable(type, $"get_value_{columnIndex}");
+									variable                           = Expression.Variable(type, $"get_value_{columnIndex}");
 									context.InsertedExpressions[index] = Expression.Assign(variable, Expression.Convert(call, type));
 								}
 								else
 								{
-									var isNullable = type.IsValueType && !type.IsNullable();
+									var isNullable = !type.IsNullableType();
 									if (isNullable)
 									{
-										type                                = typeof(Nullable<>).MakeGenericType(type);
+										type                                        = type.AsNullable();
 										context.IsNullableStruct[columnIndex.Value] = true;
 									}
 
@@ -347,7 +348,7 @@ namespace LinqToDB.Linq
 		class ExtractRawValueReaderContext
 		{
 			public ExtractRawValueReaderContext(int columnIndex)
-		{
+			{
 				ColumnIndex = columnIndex;
 			}
 

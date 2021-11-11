@@ -561,11 +561,13 @@ namespace LinqToDB.Linq.Builder
 				{
 					
 					var variable  = generator.AssignToVariable(getter.Body);
-					generator.AddExpression(Expression.New(_parameterConstructor,
-						Expression.Property(variable, nameof(DataParameter.DataType),
+					generator.AddExpression(
+						Expression.New(
+							_parameterConstructor,
+							Expression.Property(variable, Methods.LinqToDB.DataParameter.DbDataType),
 							Expression.Constant(memberName),
-							Expression.Property(variable, nameof(DataParameter.Value))
-						)));
+							Expression.Property(variable, Methods.LinqToDB.DataParameter.Value)
+						));
 				}
 				else
 				{

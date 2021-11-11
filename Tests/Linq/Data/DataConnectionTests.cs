@@ -331,7 +331,7 @@ namespace Tests.Data
 			var collection = new ServiceCollection();
 			collection.AddLinqToDb((serviceProvider, options) => options.UseConfigurationString(context));
 			var provider = collection.BuildServiceProvider();
-			var con = provider.GetService<IDataContext>();
+			var con = provider.GetService<IDataContext>()!;
 			Assert.True(con is DataConnection);
 			Assert.That(((DataConnection)con).ConfigurationString, Is.EqualTo(context));
 		}
@@ -342,7 +342,7 @@ namespace Tests.Data
 			var collection = new ServiceCollection();
 			collection.AddLinqToDbContext<DataConnection>((serviceProvider, options) => options.UseConfigurationString(context));
 			var provider = collection.BuildServiceProvider();
-			var con = provider.GetService<DataConnection>();
+			var con = provider.GetService<DataConnection>()!;
 			Assert.That(con.ConfigurationString, Is.EqualTo(context));
 		}
 
@@ -368,8 +368,8 @@ namespace Tests.Data
 			collection.AddLinqToDbContext<DbConnection2>((provider, options) => {});
 
 			var serviceProvider = collection.BuildServiceProvider();
-			var c1 = serviceProvider.GetService<DbConnection1>();
-			var c2 = serviceProvider.GetService<DbConnection2>();
+			var c1 = serviceProvider.GetService<DbConnection1>()!;
+			var c2 = serviceProvider.GetService<DbConnection2>()!;
 			Assert.That(c1.ConfigurationString, Is.EqualTo(context));
 			Assert.That(c2.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
 		}
@@ -1102,7 +1102,7 @@ namespace Tests.Data
 		// also some providers remove credentials from connection string in non-design mode
 		[ActiveIssue(Configurations = new[]
 		{
-			ProviderName.MySqlConnector,
+			//ProviderName.MySqlConnector,
 			ProviderName.SapHanaNative, // HanaException: error while parsing protocol
 			// Providers remove credentials in non-design mode:
 			TestProvName.AllPostgreSQL,

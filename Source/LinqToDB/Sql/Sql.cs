@@ -516,6 +516,7 @@ namespace LinqToDB
 		[Function  (PN.SqlCe,     "Len",                               PreferServerSide = true)]
 		[Function  (PN.Sybase,    "Len",                               PreferServerSide = true)]
 		[Function  (PN.MySql,     "Char_Length",                       PreferServerSide = true)]
+		[Function  (PN.Informix,  "CHAR_LENGTH",                       PreferServerSide = true)]
 		[Expression(PN.DB2LUW,    "CHARACTER_LENGTH({0},CODEUNITS32)", PreferServerSide = true)]
 		public static int? Length(string str)
 		{

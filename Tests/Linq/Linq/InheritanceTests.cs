@@ -743,7 +743,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Details = "Invalid mappings?")]
+		[ActiveIssue(Details = "Expression 'x.BaseValue' is not a Field. (Invalid mappings?)")]
 		[Test]
 		public void Issue2429PropertiesTest2([DataSources] string context)
 		{
@@ -762,7 +762,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Details = "Invalid mappings?")]
+		[ActiveIssue(Details = "Expression 'x.BaseValue' is not a Field. (Invalid mappings?)")]
 		[Test]
 		public void Issue2429MethodsTest2([DataSources] string context)
 		{

@@ -804,7 +804,7 @@ namespace LinqToDB.Linq.Builder
 				if (idx > 0)
 					name = name.Substring(0, idx);
 
-				if (type.GetGenericTypeDefinition() == typeof(Nullable<>))
+				if (type.IsNullable())
 				{
 					name = $"{GetTypeName(args[0])}?";
 				}

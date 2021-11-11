@@ -113,7 +113,7 @@ namespace Tests.UserTests
 
 		}
 
-		[Test, ActiveIssue(1298)]
+		[Test, ActiveIssue(1298, Details = "Expression 'x.y1' is not a Field.")]
 		public void Issue1298Test1([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataConnection(context))
