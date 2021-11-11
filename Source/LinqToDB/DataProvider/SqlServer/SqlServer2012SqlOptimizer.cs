@@ -60,31 +60,6 @@ namespace LinqToDB.DataProvider.SqlServer
 						func = ConvertCase(func.CanBeNull, func.SystemType, func.Parameters, 0);
 
 					break;
-
-				case "Coalesce" :
-
-					if (func.Parameters.Length > 2)
-					{
-						var parms = new ISqlExpression[func.Parameters.Length - 1];
-
-						Array.Copy(func.Parameters, 1, parms, 0, parms.Length);
-
-						func = new SqlFunction(func.SystemType, func.Name, func.Parameters[0],
-							new SqlFunction(func.SystemType, func.Name, parms));
-
-						break;
-					}
-
-					var sc = new SqlSearchCondition();
-
-					sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(func.Parameters[0], false)));
-
-					func = new SqlFunction(func.SystemType, "IIF", sc, func.Parameters[1], func.Parameters[0])
-					{
-						CanBeNull = func.CanBeNull
-					};
-
-					break;
 			}
 
 			return base.ConvertFunction(func);

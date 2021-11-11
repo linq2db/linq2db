@@ -490,7 +490,7 @@ namespace LinqToDB.Linq.Builder
 						if (Body == Lambda.Parameters[i])
 							return Sequence[i].ConvertToIndex(expression, level, flags);
 
-				if (expression == null)
+				if (expression == null || expression is ContextRefExpression refExpression && refExpression.BuildContext == this)
 				{
 					var key = Tuple.Create((MemberInfo?)null, flags);
 

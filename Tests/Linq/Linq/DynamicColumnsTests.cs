@@ -569,8 +569,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(Details = "https://stackoverflow.com/questions/61081571")]
-		public void DynamicGoesBanana1([IncludeDataSources(true, TestProvName.AllSQLiteClassic)] string context)
+		[ActiveIssue("https://stackoverflow.com/questions/61081571", Details = "Expression 't.Id' is not a Field.")]
+		public void DynamicGoesBanana1([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 
 			using (var db = GetDataContext(context))

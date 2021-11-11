@@ -8,6 +8,7 @@ namespace LinqToDB.Common
 	using Expressions;
 	using Extensions;
 	using JetBrains.Annotations;
+	using LinqToDB.Common.Internal;
 	using Mapping;
 
 	/// <summary>
@@ -71,7 +72,7 @@ namespace LinqToDB.Common
 				}
 			}
 
-			if (value == null && !type.IsClass && !type.IsNullable())
+			if (value == null && !type.IsNullableType())
 			{
 				var mi = MemberHelper.MethodOf(() => GetValue<int>());
 
