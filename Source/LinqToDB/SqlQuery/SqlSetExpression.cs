@@ -6,10 +6,13 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlSetExpression : IQueryElement, ISqlExpressionWalkable
 	{
+		private ISqlExpression?   column;
+		private ISqlExpression[]? row;
+
 		public SqlSetExpression(ISqlExpression column, ISqlExpression? expression)
 		{
-			Column     = column;
-			Expression = expression;
+			this.column = column;
+			Expression  = expression;
 
 			if (expression is SqlParameter p)
 			{
@@ -33,7 +36,36 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public ISqlExpression  Column     { get; set; }
+		public SqlSetExpression(ISqlExpression[] row, ISqlExpression? expression)
+		{
+			Row        = row;
+			Expression = expression;
+			// TODO SqlRow: set parameters types inside the SqlRow expression...
+		}
+
+		// Most places (e.g. Insert) that use SqlSetExpression don't support the Row variant and access Column directly.
+		// In those places, an invalid query that was built with SqlRow will throw LinqToDBException.
+		public ISqlExpression Column 
+		{
+			get => this.column ?? throw new LinqToDBException("SET (SqlRow) not supported here.");
+			set
+			{
+				if (this.row != null) throw new InvalidOperationException("Can't set both Row and Column.");
+				this.column = value;
+			}
+		} 
+
+		// Codepaths (e.g. Update) that support Row will first check whether this property is not null.
+		public ISqlExpression[]? Row
+		{ 
+			get => this.row;
+			set
+			{
+				if (this.column != null) throw new InvalidOperationException("Can't set both Row and Column.");
+				this.row = value;
+			}
+		}
+
 		public ISqlExpression? Expression { get; set; }
 
 		#region Overrides
@@ -53,7 +85,15 @@ namespace LinqToDB.SqlQuery
 
 		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			Column     = Column.     Walk(options, context, func)!;
+			if (row is {} fields)
+			{
+				for (int i = 0; i < fields.Length; i++)
+					fields[i] = fields[i].Walk(options, context, func)!;
+			}
+			else
+			{
+				column = column?.Walk(options, context, func);			
+			}
 			Expression = Expression?.Walk(options, context, func);
 			return null;
 		}
@@ -66,7 +106,18 @@ namespace LinqToDB.SqlQuery
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
-			Column.ToString(sb, dic);
+			if (Row is {} fields)
+			{
+				sb.Append('(');
+				foreach (var f in fields)
+					f.ToString(sb, dic).Append(", ");
+				if (fields.Length > 0)
+					sb.Length -= 2;
+				sb.Append(')');
+			}
+			else
+				Column.ToString(sb, dic);
+
 			sb.Append(" = ");
 			Expression?.ToString(sb, dic);
 

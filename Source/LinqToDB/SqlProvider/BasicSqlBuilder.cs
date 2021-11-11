@@ -694,7 +694,19 @@ namespace LinqToDB.SqlProvider
 
 				AppendIndent();
 
-				BuildExpression(expr.Column, SqlProviderFlags.IsUpdateSetTableAliasSupported, true, false);
+				if (expr.Row is {} row)
+				{
+					StringBuilder.Append('(');
+					foreach (var field in row)
+					{
+						BuildExpression(field, SqlProviderFlags.IsUpdateSetTableAliasSupported, true, false);
+						StringBuilder.Append(", ");
+					}
+					if (row.Length > 0) StringBuilder.Length -= 2;
+					StringBuilder.Append(')');
+				}
+				else
+					BuildExpression(expr.Column, SqlProviderFlags.IsUpdateSetTableAliasSupported, true, false);
 
 				if (expr.Expression != null)
 				{

@@ -533,11 +533,29 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.SetExpression:
 					{
 						var s = (SqlSetExpression)element;
-						var c = (ISqlExpression?)ConvertInternal(s.Column    );
-						var e = (ISqlExpression?)ConvertInternal(s.Expression);
+						var e = (ISqlExpression?) ConvertInternal(s.Expression);
 
-						if (c != null && !ReferenceEquals(s.Column, c) || e != null && !ReferenceEquals(s.Expression, e))
-							newElement = new SqlSetExpression(c ?? s.Column, e ?? s.Expression!);
+						if (s.Row is {} row)
+						{
+							ISqlExpression[]? newRow = null;
+							for (int i = 0; i < row.Length; ++i)
+							{								
+								var r = (ISqlExpression?)ConvertInternal(row[i]);
+								if (r != null && !ReferenceEquals(row[i], r))
+								{
+									if (newRow == null) newRow = (ISqlExpression[])row.Clone();
+									newRow[i] = r;
+								}
+							}
+							if (newRow != null || e != null && !ReferenceEquals(s.Expression, e))
+								newElement = new SqlSetExpression(newRow ?? row, e ?? s.Expression);
+						}
+						else
+						{
+							var c = (ISqlExpression?)ConvertInternal(s.Column);
+							if (c != null && !ReferenceEquals(s.Column, c) || e != null && !ReferenceEquals(s.Expression, e))
+								newElement = new SqlSetExpression(c ?? s.Column, e ?? s.Expression);
+						}
 
 						break;
 					}
