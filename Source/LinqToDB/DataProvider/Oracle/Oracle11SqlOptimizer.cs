@@ -284,9 +284,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.ConvertFunction(func);
 		}
 
-		protected override RowFeature SupportedRowFeatures => RowFeature.Comparisons;
+		protected override RowFeature SupportedRowFeatures => RowFeature.Comparisons | RowFeature.In;
 
-		protected override ISqlPredicate OptimizeRowPredicate(SqlPredicate.ExprExpr predicate, EvaluationContext context)
+		protected override ISqlPredicate OptimizeRowExprExpr(SqlPredicate.ExprExpr predicate, EvaluationContext context)
 		{
 			// Oracle needs brackets around the right-hand side to disambiguate the syntax, e.g.:
 			// (1, 2) = ( (3, 4) )
@@ -302,7 +302,7 @@ namespace LinqToDB.DataProvider.Oracle
 				)
 				: predicate;
 
-			return base.OptimizeRowPredicate(newPredicate, context);
+			return base.OptimizeRowExprExpr(newPredicate, context);
 		}
 	}
 }
