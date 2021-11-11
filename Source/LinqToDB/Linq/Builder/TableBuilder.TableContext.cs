@@ -1203,6 +1203,16 @@ namespace LinqToDB.Linq.Builder
 				throw new NotImplementedException();
 			}
 
+			public SqlInfo MakeSql(Expression path, ProjectFlags flags)
+			{
+				throw new NotImplementedException();
+			}
+
+			public SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
+			{
+				throw new NotImplementedException();
+			}
+
 			#endregion
 
 			#region IsExpression

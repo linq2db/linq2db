@@ -59,6 +59,16 @@ namespace LinqToDB.Linq.Builder
 			return new SqlInfo[] { new SqlInfo(SqlExpression, SelectQuery, idx) };
 		}
 
+		public SqlInfo MakeSql(Expression path, ProjectFlags flags)
+		{
+			throw new NotImplementedException();
+		}
+
+		public SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
+		{
+			throw new NotImplementedException();
+		}
+
 		public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 		{
 			if (requestFlag != RequestFor.Field)

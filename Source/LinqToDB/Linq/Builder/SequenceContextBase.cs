@@ -53,6 +53,17 @@ namespace LinqToDB.Linq.Builder
 		public abstract Expression         BuildExpression(Expression? expression, int level, bool enforceServerSide);
 		public abstract SqlInfo[]          ConvertToSql   (Expression? expression, int level, ConvertFlags flags);
 		public abstract SqlInfo[]          ConvertToIndex (Expression? expression, int level, ConvertFlags flags);
+
+		public SqlInfo MakeSql(Expression path, ProjectFlags flags)
+		{
+			throw new System.NotImplementedException();
+		}
+
+		public SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
+		{
+			throw new System.NotImplementedException();
+		}
+
 		public abstract IsExpressionResult IsExpression   (Expression? expression, int level, RequestFor requestFlag);
 		public abstract IBuildContext?     GetContext     (Expression? expression, int level, BuildInfo buildInfo);
 

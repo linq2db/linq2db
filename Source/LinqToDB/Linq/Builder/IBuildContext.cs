@@ -53,7 +53,7 @@ namespace LinqToDB.Linq.Builder
 		}
 	}
 
-	interface IBuildContext
+	internal interface IBuildContext
 	{
 #if DEBUG
 		string? _sqlQueryText { get; }
@@ -70,6 +70,10 @@ namespace LinqToDB.Linq.Builder
 		Expression         BuildExpression     (Expression? expression, int level, bool enforceServerSide);
 		SqlInfo[]          ConvertToSql        (Expression? expression, int level, ConvertFlags flags);
 		SqlInfo[]          ConvertToIndex      (Expression? expression, int level, ConvertFlags flags);
+
+
+		SqlInfo MakeSql(Expression path, ProjectFlags flags);
+		SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias);
 
 		/// <summary>
 		/// Returns information about expression according to <paramref name="requestFlag"/>. 

@@ -85,6 +85,16 @@ namespace LinqToDB.Linq.Builder
 			return corrected;
 		}
 
+		public SqlInfo MakeSql(Expression path, ProjectFlags flags)
+		{
+			throw new NotImplementedException();
+		}
+
+		public SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
+		{
+			throw new NotImplementedException();
+		}
+
 		public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 		{
 			expression = SequenceHelper.CorrectExpression(expression, this, SubqueryContext);

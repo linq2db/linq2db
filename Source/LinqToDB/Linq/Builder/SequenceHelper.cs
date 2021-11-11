@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -70,6 +72,15 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return context;
+		}
+
+		public static SqlInfo MakeColumn(SelectQuery selectQuery, SqlInfo sqlInfo)
+		{
+			if (sqlInfo.Sql is SqlColumn column && ReferenceEquals(selectQuery, column.Parent))
+				throw new InvalidOperationException();
+
+			var idx = selectQuery.Select.Add(sqlInfo.Sql);
+			return new SqlInfo(sqlInfo.MemberChain, selectQuery.Select.Columns[idx], selectQuery, idx);
 		}
 	}
 }

@@ -51,6 +51,17 @@ namespace LinqToDB.Linq.Builder
 			return Context.ConvertToIndex(expression, level, flags);
 		}
 
+		public SqlInfo MakeSql(Expression path, ProjectFlags flags)
+		{
+			path = SequenceHelper.CorrectExpression(path, this, Context);
+			return Context.MakeSql(path!, flags);
+		}
+
+		public SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
+		{
+			throw new System.NotImplementedException();
+		}
+
 		public virtual IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 		{
 			expression = SequenceHelper.CorrectExpression(expression, this, Context);

@@ -1178,17 +1178,20 @@ namespace LinqToDB.Linq.Builder
 
 					var ctx = GetContext(context, expression);
 
-						if (ctx != null)
-						{
-							var sql = ctx.ConvertToSql(expression, 1, ConvertFlags.Field);
+					if (ctx != null)
+					{
+						var sql = ctx.MakeSql(expression, ProjectFlags.SQL).Sql;
 
-						switch (sql.Length)
+						/*switch (sql.Length)
 						{
 							case 0: break;
 							case 1: return sql[0].Sql;
 							default: throw new InvalidOperationException();
-						}
+						}*/
+
+						return sql;
 					}
+					
 
 					break;
 				}
@@ -3323,6 +3326,227 @@ namespace LinqToDB.Linq.Builder
 		#region Grouping Guard
 
 		public bool IsGroupingGuardDisabled { get; set; }
+
+		#endregion
+
+		#region Projection
+
+		public Expression Project(IBuildContext context, Expression? path, ProjectFlags flags, Expression body)
+		{
+			if (path == null)
+			{
+				throw new NotImplementedException();
+				return body;
+			}
+
+			MemberInfo? member = null;
+			Expression? nextExpression = null;
+
+			if (path is MemberExpression memberExpression)
+			{
+				member         = memberExpression.Member;
+				nextExpression = memberExpression.Expression;
+			}
+
+			switch (body.NodeType)
+			{
+				case ExpressionType.Extension:
+				{
+					if (body is SqlPlaceholderExpression placeholder)
+					{
+						if (flags.HasFlag(ProjectFlags.SQL))
+						{
+							if (placeholder.Sql == null)
+							{
+								placeholder.Sql = MakeSql(placeholder.BuildContext, placeholder.MemberExpression);
+
+								if (member != null)
+									placeholder.Sql = placeholder.Sql.AppendMember(member);
+							}
+						}
+
+						if (flags.HasFlag(ProjectFlags.Column))
+						{
+							if (placeholder.ColumnSql == null)
+							{
+								placeholder.ColumnSql = MakeColumn(placeholder.BuildContext, placeholder.MemberExpression);
+
+								if (member != null)
+									placeholder.ColumnSql = placeholder.ColumnSql.AppendMember(member);
+							}
+						}
+
+						return placeholder;
+					}
+
+					if (body is ContextRefExpression contextRef)
+					{
+						if (member == null)
+							return contextRef;
+
+						if (contextRef.Type.IsSameOrParentOf(member.DeclaringType))
+						{
+							var ma = Expression.MakeMemberAccess(contextRef, member);
+
+							var newExpression = Project(contextRef.BuildContext, nextExpression,
+								flags | ProjectFlags.Column, ma);
+
+							return newExpression;
+						}
+
+						return body;
+					}
+
+					throw new NotImplementedException();
+				}
+
+				case ExpressionType.MemberAccess:
+				{
+					var ma = (MemberExpression)body;
+
+					var obj = Project(context, nextExpression, flags, ma.Expression);
+
+					if (obj is ContextRefExpression refExpression)
+					{
+						if (flags.HasFlag(ProjectFlags.SQL))
+						{
+							var placeholder = new SqlPlaceholderExpression(refExpression, ma);
+
+							//TODO: ConvertFlags.Field can be omitted
+
+							if (flags.HasFlag(ProjectFlags.Column))
+							{
+								placeholder.ColumnSql = refExpression.BuildContext
+									.ConvertToIndex(ma, 0, ConvertFlags.Field).Single();
+								if (member != null)
+									placeholder.ColumnSql = placeholder.ColumnSql.AppendMember(member);
+							}
+							else
+							{
+								placeholder.Sql = placeholder.RefExpression.BuildContext
+									.ConvertToSql(placeholder.MemberExpression, 0, ConvertFlags.Field).Single();
+
+								if (member != null)
+									placeholder.Sql = placeholder.Sql.AppendMember(member);
+							}
+
+							return placeholder;
+						}
+
+					}
+
+					throw new NotImplementedException();
+				}
+
+				case ExpressionType.New:
+				{
+					var ne = (NewExpression)body;
+
+					if (ne.Members != null)
+					{
+						if (member == null)
+						{
+							// Optimize
+							var corrected = new Expression[ne.Members.Count];
+
+							for (var i = 0; i < ne.Members.Count; i++)
+							{
+								//corrected[i] = Project(members, currentMemberIndex, withIndex, ne.Arguments[i]);
+							}
+
+							throw new NotImplementedException();
+
+							return ne.Update(corrected);
+						}
+
+						for (var i = 0; i < ne.Members.Count; i++)
+						{
+							var memberLocal = ne.Members[i];
+
+							//if (memberLocal.GetMemberType().IsSameOrParentOf(member.GetMemberType()))
+							{
+								var zz = Project(context, path, flags, ne.Arguments[i]);
+								if (MemberInfoEqualityComparer.Default.Equals(ne.Members[i], member))
+									return Project(context, nextExpression, flags, ne.Arguments[i]);
+							}
+						
+							
+						}
+					}
+
+					if (member == null)
+						return ne;
+
+					return new DefaultValueExpression(null, member.GetMemberType());
+				}
+
+				case ExpressionType.Conditional:
+				{
+					var cond = (ConditionalExpression)body;
+
+					var trueExpr  = Project(context, path, flags, cond.IfTrue);
+					var falseExpr = Project(context, path, flags, cond.IfFalse);
+
+					var newExpr = (Expression)cond.Update(cond.Test, trueExpr, falseExpr);
+
+					if (ReferenceEquals(newExpr, cond))
+						return cond;
+
+					newExpr = Project(context, path, flags, newExpr);
+					return newExpr;
+				}
+
+
+			}
+
+			throw new NotImplementedException();
+		}
+
+
+		private Dictionary<SqlCacheKey, SqlInfo> _sqlCache = new(SqlCacheKey.ExpressionContextComparer);
+		private Dictionary<SqlCacheKey, SqlInfo> _columnCache = new(SqlCacheKey.ExpressionContextComparer);
+
+		private SqlInfo MakeColumn(IBuildContext context, Expression path)
+		{
+			var sqlInfo = MakeSql(context, path);
+			return MakeColumn(context, path, sqlInfo);
+		}
+
+		private SqlInfo MakeColumn(IBuildContext context, Expression path, SqlInfo sql)
+		{
+			var key = new SqlCacheKey(path, context);
+
+			if (_columnCache.TryGetValue(key, out var columnSql))
+				return columnSql;
+
+			var alias = string.Empty;
+			if (path is MemberExpression me)
+			{
+				alias = me.Member.Name;
+			}
+
+			columnSql = context.MakeColumn(path, sql, alias);
+
+			_columnCache[key] = columnSql;
+
+			return columnSql;
+		}
+
+		private SqlInfo MakeSql(IBuildContext context, Expression path)
+		{
+			var key = new SqlCacheKey(path, context);
+
+			if (_sqlCache.TryGetValue(key, out var sql))
+				return sql;
+
+			sql = context.MakeSql(path, ProjectFlags.SQL);
+
+			_sqlCache[key] = sql;
+
+			return sql;
+		}
+
+	
 
 		#endregion
 	}

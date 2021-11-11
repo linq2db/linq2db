@@ -472,6 +472,31 @@ namespace LinqToDB.Linq.Builder
 			return info;
 		}
 
+		public SqlInfo MakeSql(Expression path, ProjectFlags flags)
+		{
+			Expression expr;
+
+			if (SequenceHelper.IsSameContext(path, this))
+			{
+				Body = Builder.Project(this, Body, flags | ProjectFlags.SQL, Body);
+				expr = Body;
+			}
+			else
+			{
+				expr = Builder.Project(this, path, flags | ProjectFlags.SQL, Body);
+			}
+
+			if (expr is SqlPlaceholderExpression placeholder)
+				return placeholder.Sql!;
+
+			throw new LinqException($"Expression '{path}' cannot be converted to the SQL.");
+		}
+
+		public SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
+		{
+			return SequenceHelper.MakeColumn(SelectQuery, sqlInfo);
+		}
+
 		readonly Dictionary<Tuple<MemberInfo?,ConvertFlags>,SqlInfo[]> _memberIndex = new();
 
 		class SqlData
