@@ -13,123 +13,114 @@
 	As both issues occur only in MSBUILD, it could be transitional issue fixed in future as feature is still not finalized
 	-->
 	<ItemGroup>
-		<!--generic packages-->
-		<PackageVersion Include="Newtonsoft.Json" Version="13.0.1" />
-		<PackageVersion Include="System.Memory" Version="4.5.4" />
-		<PackageVersion Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
-		<PackageVersion Include="System.ValueTuple" Version="4.5.0" />
-		<PackageVersion Include="System.Collections.Immutable" Version="5.0.0" />
-		<PackageVersion Include="System.Data.DataSetExtensions" Version="4.5.0" />
-		<PackageVersion Include="Microsoft.CSharp" Version="4.7.0" />
-		<PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="5.0.0" />
-		<PackageVersion Include="FluentAssertions" Version="6.2.0" />
-
-		<!--infrastructure-->
-		<PackageVersion Include="Microsoft.SourceLink.GitHub" Version="1.1.1" />
-
+		<!--as stated in issue 1 -  packages in this item group shouldn't be duplicated in other groups-->
+		
+		<!--generic code packages-->
+		<PackageVersion Include="Newtonsoft.Json"                           Version="13.0.1"      />
+		<PackageVersion Include="System.Memory"                             Version="4.5.4"       />
+		<PackageVersion Include="System.Threading.Tasks.Extensions"         Version="4.5.4"       />
+		<PackageVersion Include="System.ValueTuple"                         Version="4.5.0"       />
+		<PackageVersion Include="System.Collections.Immutable"              Version="5.0.0"       />
+		<PackageVersion Include="System.Data.DataSetExtensions"             Version="4.5.0"       />
+		<PackageVersion Include="Microsoft.CSharp"                          Version="4.7.0"       />
+		<PackageVersion Include="Microsoft.Bcl.AsyncInterfaces"             Version="5.0.0"       />
+		<PackageVersion Include="FluentAssertions"                          Version="6.2.0"       />
 		<!--data providers-->
-		<PackageVersion Include="MySql.Data" Version="8.0.27" />
-		<PackageVersion Include="AdoNetCore.AseClient" Version="0.19.2" />
-		<PackageVersion Include="System.Data.SqlClient" Version="4.8.3" />
-		<PackageVersion Include="Microsoft.Data.SqlClient" Version="3.0.1" />
-		<PackageVersion Include="System.Data.Odbc" Version="5.0.0" />
-		<PackageVersion Include="System.Data.OleDb" Version="5.0.0" />
-		<PackageVersion Include="Oracle.ManagedDataAccess" Version="21.4.0" />
-		<PackageVersion Include="FirebirdSql.Data.FirebirdClient" Version="8.5.4" />
-		<PackageVersion Include="System.Data.SQLite.Core" Version="1.0.115.5" />
-
-		<PackageVersion Include="IBM.Data.DB.Provider" Version="11.5.5010.4" />
-
-		<!--test infrastructure-->
-		<PackageVersion Include="MiniProfiler" Version="3.2.0.157" />
-		<PackageVersion Include="MiniProfiler.Shared" Version="4.2.22" />
-		<PackageVersion Include="NUnit" Version="3.13.2" />
-		<PackageVersion Include="NUnit3TestAdapter" Version="4.1.0" />
-		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
-		<PackageVersion Include="FastExpressionCompiler" Version="3.2.1" />
-		<PackageVersion Include="BenchmarkDotNet" Version="0.13.1" />
-		<PackageVersion Include="JetBrains.Profiler.Api" Version="1.1.7" />
-		<PackageVersion Include="Humanizer.Core" Version="2.11.10" />
-		<PackageVersion Include="FSharp.Core" Version="6.0.1" />
-		<PackageVersion Include="Microsoft.AspNet.OData" Version="7.5.12" />
-		<PackageVersion Include="NodaTime" Version="3.0.9" />
-		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.3" />
-
+		<PackageVersion Include="MySql.Data"                                Version="8.0.27"      />
+		<PackageVersion Include="AdoNetCore.AseClient"                      Version="0.19.2"      />
+		<PackageVersion Include="System.Data.SqlClient"                     Version="4.8.3"       />
+		<PackageVersion Include="Microsoft.Data.SqlClient"                  Version="3.0.1"       />
+		<PackageVersion Include="System.Data.Odbc"                          Version="5.0.0"       />
+		<PackageVersion Include="System.Data.OleDb"                         Version="5.0.0"       />
+		<PackageVersion Include="Oracle.ManagedDataAccess"                  Version="21.4.0"      />
+		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"           Version="8.5.4"       />
+		<PackageVersion Include="System.Data.SQLite.Core"                   Version="1.0.115.5"   />
+		<PackageVersion Include="IBM.Data.DB.Provider"                      Version="11.5.5010.4" />
+		<!--infrastructure/testing-->
+		<PackageVersion Include="MiniProfiler"                              Version="3.2.0.157"   />
+		<PackageVersion Include="MiniProfiler.Shared"                       Version="4.2.22"      />
+		<PackageVersion Include="NUnit"                                     Version="3.13.2"      />
+		<PackageVersion Include="NUnit3TestAdapter"                         Version="4.1.0"       />
+		<PackageVersion Include="Microsoft.NET.Test.Sdk"                    Version="17.0.0"      />
+		<PackageVersion Include="FastExpressionCompiler"                    Version="3.2.1"       />
+		<PackageVersion Include="BenchmarkDotNet"                           Version="0.13.1"      />
+		<PackageVersion Include="JetBrains.Profiler.Api"                    Version="1.1.7"       />
+		<PackageVersion Include="Humanizer.Core"                            Version="2.11.10"     />
+		<PackageVersion Include="FSharp.Core"                               Version="6.0.1"       />
+		<PackageVersion Include="Microsoft.AspNet.OData"                    Version="7.5.12"      />
+		<PackageVersion Include="NodaTime"                                  Version="3.0.9"       />
+		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.3"       />
+		<PackageVersion Include="Microsoft.SourceLink.GitHub"               Version="1.1.1"       />
 		<!--nuget doesn't have strong name, so we use local self-signed copy-->
-		<!--<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types" Version="1.3.0" />-->
-	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
-		<!--main version-->
-		<PackageVersion Include="Microsoft.Data.Sqlite" Version="5.0.12" />
+		<!--<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"   Version="1.3.0"       />-->
 	</ItemGroup>
 	
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
-		<!--specify here or it will conflict with Reference-include in netcore targets-->
-		<PackageVersion Include="Microsoft.SqlServer.Types" Version="14.0.1016.290" />
-		<!--downgrade-->
-		<PackageVersion Include="Microsoft.Data.Sqlite" Version="1.1.1" />
-		<PackageVersion Include="Npgsql" Version="4.1.9" />
-		<PackageVersion Include="MySqlConnector" Version="2.0.0" />
-	</ItemGroup>
-	
-	<ItemGroup Condition=" '$(TargetFramework)' != 'net45' ">
-		<!--main version-->
-		<PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="3.1.20" />
-		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
-	</ItemGroup>
+	<!--linq2db targets-->
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
 		<!--downgrade-->
-		<PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="1.1.1" />
-		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="1.1.2" />
+		<PackageVersion Include="Microsoft.Extensions.DependencyInjection"  Version="1.1.1"  />
+		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="1.1.2"  />
 	</ItemGroup>
-	
-	<ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp2.1' ">
+	<ItemGroup Condition=" '$(TargetFramework)' != 'net45' ">
 		<!--main version-->
-		<PackageVersion Include="Oracle.ManagedDataAccess.Core" Version="3.21.4" />
-		<PackageVersion Include="IBM.Data.DB2.Core" Version="3.1.0.500" />
-		<PackageVersion Include="IBM.Data.DB2.Core-lnx" Version="3.1.0.500" />
-		<PackageVersion Include="IBM.Data.DB2.Core-osx" Version="3.1.0.500" />
+		<PackageVersion Include="Microsoft.Extensions.DependencyInjection"  Version="3.1.20" />
+		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0"  />
 	</ItemGroup>
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' ">
-		<!--downgrade-->
-		<PackageVersion Include="Oracle.ManagedDataAccess.Core" Version="2.19.130" />
-		<PackageVersion Include="IBM.Data.DB2.Core" Version="2.2.0.100" />
-		<PackageVersion Include="IBM.Data.DB2.Core-lnx" Version="2.2.0.100" />
-		<PackageVersion Include="IBM.Data.DB2.Core-osx" Version="2.0.0.100" />
-		<PackageVersion Include="Microsoft.AspNetCore.OData" Version="7.5.12" />
-
-		<PackageVersion Include="MySqlConnector" Version="0.69.10" />
-		<PackageVersion Include="Npgsql" Version="5.0.10" />
-	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp2.1' AND '$(TargetFramework)' != 'net472' ">
-		<PackageVersion Include="Microsoft.AspNetCore.OData" Version="8.0.3" />
-	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp3.1' ">
-		<PackageVersion Include="System.ComponentModel.Annotations" Version="5.0.0" />
-	</ItemGroup>
-
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
-		<!-- explicitly reference specific version of transient dependency to avoid MSB3277 -->
-		<PackageVersion Include="System.Security.Cryptography.Cng" Version="5.0.0" />
-		<PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="5.0.0" />
-
 		<!--
-		downgraded temporary to make linq2db work with Azure Function v3:
+		downgrade to make linq2db work with Azure Function v3:
 		https://github.com/linq2db/linq2db/issues/2868
 		https://github.com/Azure/azure-functions-host/issues/6893
 		-->
-		<PackageVersion Include="System.ComponentModel.Annotations" Version="4.7.0" />
-
-		<PackageVersion Include="MySqlConnector" Version="1.3.14" />
-		<PackageVersion Include="Npgsql" Version="5.0.10" />
+		<PackageVersion Include="System.ComponentModel.Annotations"         Version="4.7.0"  />
+	</ItemGroup>
+	<ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp3.1' ">
+		<PackageVersion Include="System.ComponentModel.Annotations"         Version="5.0.0"  />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net5.0' ">
-		<PackageVersion Include="MySqlConnector" Version="2.0.0" />
-		<PackageVersion Include="Npgsql" Version="5.0.10" />
+	<!--test targets-->
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
+		<!--used only for netfx, but adding it to main group produce conflicts-->
+		<PackageVersion Include="Microsoft.SqlServer.Types"                             Version="14.0.1016.290" />
+		<!--old versions of providers with netfx support-->
+		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="1.1.1"         />
+		<PackageVersion Include="Npgsql"                                                Version="4.1.10"        />
 	</ItemGroup>
-
+	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
+		<!--main version-->
+		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="5.0.12"        />
+	</ItemGroup>
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' ">
+		<!--old versions of providers with netcoreapp2.1 support-->
+		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="2.19.130"      />
+		<PackageVersion Include="IBM.Data.DB2.Core"                                     Version="2.2.0.100"     />
+		<PackageVersion Include="IBM.Data.DB2.Core-lnx"                                 Version="2.2.0.100"     />
+		<PackageVersion Include="IBM.Data.DB2.Core-osx"                                 Version="2.0.0.100"     />
+		<PackageVersion Include="Npgsql"                                                Version="5.0.11"        />
+		<!--test м0.x compatibility, required for old Pomelo EF.Core provider-->
+		<PackageVersion Include="MySqlConnector"                                        Version="0.69.10"       />
+		<!--legacy odata library for netcoreapp2.1-->
+		<PackageVersion Include="Microsoft.AspNetCore.OData"                            Version="7.5.12"        />
+	</ItemGroup>
+	<ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp2.1' ">
+		<!--main version-->
+		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="3.21.4"        />
+		<PackageVersion Include="IBM.Data.DB2.Core"                                     Version="3.1.0.500"     />
+		<PackageVersion Include="IBM.Data.DB2.Core-lnx"                                 Version="3.1.0.500"     />
+		<PackageVersion Include="IBM.Data.DB2.Core-osx"                                 Version="3.1.0.500"     />
+		<PackageVersion Include="Microsoft.AspNetCore.OData"                            Version="8.0.3"         />
+	</ItemGroup>
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+		<!-- explicitly reference specific version of transient dependency to avoid MSB3277 -->
+		<PackageVersion Include="System.Security.Cryptography.Cng"                      Version="5.0.0"         />
+		<PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="5.0.0"         />
+		<!--test v1.x compatibility, required for old Pomelo EF.Core provider-->
+		<PackageVersion Include="MySqlConnector"                                        Version="1.3.14"        />
+	</ItemGroup>
+	<ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp2.1' AND '$(TargetFramework)' != 'netcoreapp3.1' ">
+		<PackageVersion Include="MySqlConnector"                                        Version="2.0.0"         />
+	</ItemGroup>
+	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' AND '$(TargetFramework)' != 'netcoreapp2.1' ">
+		<PackageVersion Include="Npgsql"                                                Version="6.0.0"         />
+	</ItemGroup>
 </Project>

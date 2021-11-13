@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
+	using System;
+	using System.Runtime.CompilerServices;
 	using Common;
 	using Data;
 	using Mapping;
@@ -193,13 +195,38 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return true;
 		}
 #endif
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal object? NormalizeTimeStamp(object? value, DbDataType dataType)
+		{
+			if (PostgreSQLTools.NormalizeTimestampData)
+			{
+				// normalize DateTimeOffset values to prevent unnecessary (in this case) npgsql 6.0.0 complains
+				if (value is DateTimeOffset dto && dto.Offset != TimeSpan.Zero)
+					value = dto.ToUniversalTime();
+				// set DateTime.Kind to expected value for timestamp and timestamptz parameters to prevent npgsql 6.0.0 complains
+				else if (value is DateTime dt)
+				{
+					// timestamp should have non-UTC Kind (Unspecified used by default by npgsql)
+					if (dt.Kind == DateTimeKind.Utc
+						&& (dataType.DataType == DataType.DateTime2 || GetNativeType(dataType.DbType) == NpgsqlProviderAdapter.NpgsqlDbType.Timestamp))
+						value = DateTime.SpecifyKind(dt, DateTimeKind.Unspecified);
+					// timestamptz should have UTC Kind
+					else if (dt.Kind != DateTimeKind.Utc
+						&& (dataType.DataType == DataType.DateTimeOffset || GetNativeType(dataType.DbType) == NpgsqlProviderAdapter.NpgsqlDbType.TimestampTZ))
+						value = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+				}
+			}
+
+			return value;
+		}
+
 
 		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			if (value is IDictionary && dataType.DataType == DataType.Undefined)
-			{
 				dataType = dataType.WithDataType(DataType.Dictionary);
-			}
+			else
+				value = NormalizeTimeStamp(value, dataType);
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
@@ -211,20 +238,23 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			NpgsqlProviderAdapter.NpgsqlDbType? type = null;
 			switch (dataType.DataType)
 			{
-				case DataType.Money     : type = NpgsqlProviderAdapter.NpgsqlDbType.Money  ; break;
+				case DataType.Money     : type = NpgsqlProviderAdapter.NpgsqlDbType.Money    ; break;
 				case DataType.Image     :
 				case DataType.Binary    :
-				case DataType.VarBinary : type = NpgsqlProviderAdapter.NpgsqlDbType.Bytea  ; break;
-				case DataType.Boolean   : type = NpgsqlProviderAdapter.NpgsqlDbType.Boolean; break;
-				case DataType.Xml       : type = NpgsqlProviderAdapter.NpgsqlDbType.Xml    ; break;
+				case DataType.VarBinary : type = NpgsqlProviderAdapter.NpgsqlDbType.Bytea    ; break;
+				case DataType.Boolean   : type = NpgsqlProviderAdapter.NpgsqlDbType.Boolean  ; break;
+				case DataType.Xml       : type = NpgsqlProviderAdapter.NpgsqlDbType.Xml      ; break;
 				case DataType.Text      :
-				case DataType.NText     : type = NpgsqlProviderAdapter.NpgsqlDbType.Text   ; break;
-				case DataType.BitArray  : type = NpgsqlProviderAdapter.NpgsqlDbType.Bit    ; break;
-				case DataType.Dictionary: type = NpgsqlProviderAdapter.NpgsqlDbType.Hstore ; break;
-				case DataType.Json      : type = NpgsqlProviderAdapter.NpgsqlDbType.Json   ; break;
-				case DataType.BinaryJson: type = NpgsqlProviderAdapter.NpgsqlDbType.Jsonb  ; break;
+				case DataType.NText     : type = NpgsqlProviderAdapter.NpgsqlDbType.Text     ; break;
+				case DataType.BitArray  : type = NpgsqlProviderAdapter.NpgsqlDbType.Bit      ; break;
+				case DataType.Dictionary: type = NpgsqlProviderAdapter.NpgsqlDbType.Hstore   ; break;
+				case DataType.Json      : type = NpgsqlProviderAdapter.NpgsqlDbType.Json     ; break;
+				case DataType.BinaryJson: type = NpgsqlProviderAdapter.NpgsqlDbType.Jsonb    ; break;
 				case DataType.Interval  : type = NpgsqlProviderAdapter.NpgsqlDbType.Interval ; break;
-				case DataType.Int64     : type = NpgsqlProviderAdapter.NpgsqlDbType.Bigint ; break;
+				case DataType.Int64     : type = NpgsqlProviderAdapter.NpgsqlDbType.Bigint   ; break;
+					// address npgsql 6.0.0 mapping DateTime by default to timestamptz
+				case DataType.DateTime  :
+				case DataType.DateTime2 : type = NpgsqlProviderAdapter.NpgsqlDbType.Timestamp; break;
 			}
 
 			if (!string.IsNullOrEmpty(dataType.DbType))
