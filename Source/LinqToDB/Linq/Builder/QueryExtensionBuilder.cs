@@ -18,31 +18,86 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var methodParams = methodCall.Method.GetParameters();
-			var dic          = new Dictionary<string,SqlQueryExtensionData>(methodCall.Arguments.Count)
+			var list         = new List<SqlQueryExtensionData>
 			{
-				{ ".MethodName", new()
+				new(".MethodName", methodCall, methodParams[0])
 				{
-					Name          = ".MethodName",
 					SqlExpression = new SqlValue(methodCall.Method.Name),
-				}}
+				}
 			};
 
 			for (var i = 1; i < methodCall.Arguments.Count; i++)
 			{
-				var name = methodParams[i].Name!;
-				dic.Add(name, new() { Name = name, Expression = methodCall.Arguments[i] });
+				var arg  = methodCall.Arguments[i].Unwrap();
+				var p    = methodParams[i];
+				var name = p.Name;
+
+				if (arg is LambdaExpression)
+				{
+					list.Add(new(name, arg, p));
+				}
+				else if (arg is NewArrayExpression ae)
+				{
+					list.Add(new($"{name}.Count", arg, p)
+					{
+						SqlExpression = new SqlValue(ae.Expressions.Count),
+					});
+
+					for (var j = 0; j < ae.Expressions.Count; j++)
+						list.Add(new($"{name}.{j}", ae.Expressions[j], p, j));
+				}
+				else
+				{
+					var ex   = methodCall.Arguments[i];
+					var attr = p.GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).Cast<SqlQueryDependentAttribute>().FirstOrDefault();
+
+					if (attr != null)
+						ex = Expression.Constant(ex.EvaluateExpression());
+
+					list.Add(new(name, ex, p));
+				}
 			}
+
+			var dic = list.ToDictionary(t => t.Name);
 
 			var sequence = builder.BuildSequence(new(buildInfo, methodCall.Arguments[0]));
 
-			for (var i = 1; i < methodCall.Arguments.Count; i++)
+			for (var i = 1; i < list.Count; i++)
 			{
+				var data = list[i];
+
+				if (data.SqlExpression == null)
+				{
+					if (data.ParamsIndex >= 0)
+					{
+						data.SqlExpression = data.Expression.Unwrap() switch
+						{
+							LambdaExpression lex => builder.ConvertToExtensionSql(sequence, lex, null),
+							var ex => builder.ConvertToSql(sequence, ex)
+						};
+					}
+					else if (data.Expression is LambdaExpression le)
+					{
+						data.SqlExpression = builder.ConvertToExtensionSql(sequence, le, null);
+					}
+					else
+					{
+						data.SqlExpression = builder.ConvertToSql(sequence, data.Expression);
+					}
+				}
+
+				/*
 				var arg  = methodCall.Arguments[i].Unwrap();
 				var name = methodParams[i].Name;
 
 				if (arg is LambdaExpression le)
 				{
-					dic.Add(name, builder.ConvertToExtensionSql(sequence, le, null));
+					dic.Add(name, new SqlQueryExtensionData
+					{
+						Name          = name,
+						Expression    = le,
+						SqlExpression = builder.ConvertToExtensionSql(sequence, le, null)
+					});
 				}
 				else if (arg is NewArrayExpression ae)
 				{
@@ -68,6 +123,7 @@ namespace LinqToDB.Linq.Builder
 
 					dic.Add(name, builder.ConvertToSql(sequence, ex));
 				}
+				*/
 			}
 
 			var attrs = Sql.QueryExtensionAttribute.GetExtensionAttributes(methodCall, builder.MappingSchema);

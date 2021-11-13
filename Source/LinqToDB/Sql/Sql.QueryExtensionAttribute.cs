@@ -6,6 +6,7 @@ using System.Reflection;
 namespace LinqToDB
 {
 	using Common;
+	using Linq.Builder;
 	using Mapping;
 	using SqlQuery;
 
@@ -31,7 +32,7 @@ namespace LinqToDB
 			public QueryExtensionScope Scope         { get; }
 			public int                 ID            { get; }
 
-			public virtual SqlQueryExtension GetExtension(Dictionary<string,ISqlExpression> parameters)
+			public virtual SqlQueryExtension GetExtension(Dictionary<string,SqlQueryExtensionData> parameters)
 			{
 				var ext = new SqlQueryExtension
 				{
@@ -40,22 +41,22 @@ namespace LinqToDB
 				};
 
 				foreach (var item in parameters)
-					ext.Arguments.Add(item.Key, item.Value);
+					ext.Arguments.Add(item.Key, item.Value.SqlExpression!);
 
 				return ext;
 			}
 
-			public virtual void ExtendTable(SqlTable table, Dictionary<string,ISqlExpression> parameters)
+			public virtual void ExtendTable(SqlTable table, Dictionary<string,SqlQueryExtensionData> parameters)
 			{
 				(table.SqlQueryExtensions ??= new()).Add(GetExtension(parameters));
 			}
 
-			public virtual void ExtendJoin(List<SqlQueryExtension> extensions, Dictionary<string,ISqlExpression> parameters)
+			public virtual void ExtendJoin(List<SqlQueryExtension> extensions, Dictionary<string,SqlQueryExtensionData> parameters)
 			{
 				extensions.Add(GetExtension(parameters));
 			}
 
-			public virtual void ExtendQuery(List<SqlQueryExtension> extensions, Dictionary<string,ISqlExpression> parameters)
+			public virtual void ExtendQuery(List<SqlQueryExtension> extensions, Dictionary<string,SqlQueryExtensionData> parameters)
 			{
 				extensions.Add(GetExtension(parameters));
 			}
