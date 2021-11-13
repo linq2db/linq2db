@@ -271,8 +271,8 @@ SELECT * FROM Person
 GO
 
 CREATE TABLE KeepIdentityTest (
-	ID    NUMERIC(12, 0) IDENTITY,
-	Value INT            NULL
+	ID    INT IDENTITY,
+	Value INT NULL
 )
 GO
 

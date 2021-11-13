@@ -25,7 +25,7 @@ namespace LinqToDB.Linq.Builder
 				statement.Operations.Add(operation);
 
 				var predicate = methodCall.Arguments[1];
-				if (!(predicate is ConstantExpression constPredicate) || constPredicate.Value != null)
+				if (!predicate.IsNullValue())
 				{
 					var condition   = (LambdaExpression)predicate.Unwrap();
 					operation.Where = BuildSearchCondition(builder, statement, mergeContext.TargetContext, null, condition);

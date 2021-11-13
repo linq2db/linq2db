@@ -64,10 +64,14 @@ namespace LinqToDB.Linq.Builder
 										Sequence.ConvertToSql(expression, level + 1, flags);
 								}
 							}
+							else if (root.IsNullValue())
+							{
+								return Array<SqlInfo>.Empty;
+							}
+							// except null, handled above
 							else if (root.NodeType == ExpressionType.Constant)
 							{
-								if (((ConstantExpression)root).Value == null)
-									return Array<SqlInfo>.Empty;
+								return Builder.ConvertExpressions(this, expression!, flags, null);
 							}
 							else if (root.NodeType == ExpressionType.New)
 							{
@@ -159,6 +163,7 @@ namespace LinqToDB.Linq.Builder
 
 			switch (expression!.NodeType)
 			{
+				case ExpressionType.Default    :
 				case ExpressionType.Constant   :
 				case ExpressionType.New        :
 				case ExpressionType.MemberInit : return null;

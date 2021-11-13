@@ -1000,7 +1000,7 @@ namespace Tests.Data
 		// also some providers remove credentials from connection string in non-design mode
 		[ActiveIssue(Configurations = new[]
 		{
-			ProviderName.MySqlConnector,
+			//ProviderName.MySqlConnector,
 			ProviderName.SapHanaNative, // HanaException: error while parsing protocol
 			// Providers remove credentials in non-design mode:
 			TestProvName.AllPostgreSQL,

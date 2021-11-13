@@ -493,7 +493,7 @@ namespace LinqToDB
 					// notify if there is method that has no defined attribute for specific configuration
 					attributes = mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedType!, memberInfo);
 					if (attributes.Length > 0)
-						throw new LinqToDBException($"Expression {expression}, unsupported for configuration(s) '{string.Join(", ", mapping.ConfigurationList)}'.");
+						throw new LinqToDBException($"Member {memberInfo.Name}, unsupported for configuration(s) '{string.Join(", ", mapping.ConfigurationList)}'.");
 				}
 
 				return attributes;
@@ -760,7 +760,7 @@ namespace LinqToDB
 				var newParams      = new List<ISqlExpression>();
 
 				Func<object?, string, string?, string?>? valueProvider = null;
-				Stack<SqlExtension> current                   = new Stack<SqlExtension>();
+				Stack<SqlExtension>                      current       = new Stack<SqlExtension>();
 
 				// TODO: implement context
 				valueProvider = (_, name, delimiter) =>

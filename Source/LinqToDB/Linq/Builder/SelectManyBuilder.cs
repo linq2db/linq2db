@@ -48,7 +48,7 @@ namespace LinqToDB.Linq.Builder
 			if (defaultIfEmpty != null && (collectionInfo.JoinType == JoinType.Right || collectionInfo.JoinType == JoinType.Full))
 				defaultIfEmpty.Disabled = false;
 
-			var leftJoin       = collection is DefaultIfEmptyBuilder.DefaultIfEmptyContext || collectionInfo.JoinType == JoinType.Left;
+			var leftJoin       = SequenceHelper.UnwrapSubqueryContext(collection) is DefaultIfEmptyBuilder.DefaultIfEmptyContext || collectionInfo.JoinType == JoinType.Left;
 			var sql            = collection.SelectQuery;
 
 			var newQuery       = QueryHelper.ContainsElement(sql, collectionInfo.SelectQuery);

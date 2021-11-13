@@ -1205,10 +1205,9 @@ namespace Tests.OrmBattle
 			Assert.AreEqual(10, result.ToList().Count);
 		}
 
-		[Test, ActiveIssue(573)]
+		[Test]
 		public void AnyParameterizedTest([NorthwindDataContext] string context)
 		{
-			//TODO: sdanyliv: It may take many efforts to implement. And I don't see any benefits.
 			Setup(context);
 			var ids = new[] {"ABCDE", "ALFKI"};
 			var result = db.Customer.Where(c => ids.Any(id => c.CustomerID == id));
@@ -1426,7 +1425,7 @@ namespace Tests.OrmBattle
 			}
 		}
 
-		[Test, ActiveIssue(573)]
+		[Test, ActiveIssue(573, Details = "'k.CompanyName' cannot be converted to SQL.")]
 		public void ComplexTest2([NorthwindDataContext] string context)
 		{
 			Setup(context);

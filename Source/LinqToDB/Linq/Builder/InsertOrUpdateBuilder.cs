@@ -32,7 +32,7 @@ namespace LinqToDB.Linq.Builder
 				sequence);
 
 			var updateExpr = methodCall.Arguments[2].Unwrap();
-			if (!(updateExpr is ConstantExpression constant && constant.Value == null))
+			if (!updateExpr.IsNullValue())
 				UpdateBuilder.BuildSetter(
 					builder,
 					buildInfo,

@@ -49,5 +49,15 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
+		public static IBuildContext UnwrapSubqueryContext(IBuildContext context)
+		{
+			while (context is SubQueryContext sc)
+			{
+				context = sc.SubQuery;
+			}
+
+			return context;
+		}
+
 	}
 }

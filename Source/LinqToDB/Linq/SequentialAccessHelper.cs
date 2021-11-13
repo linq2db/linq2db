@@ -12,6 +12,7 @@ namespace LinqToDB.Linq
 	using LinqToDB.Expressions;
 	using Internal;
 	using Reflection;
+	using LinqToDB.Common.Internal;
 
 	internal static class SequentialAccessHelper
 	{
@@ -101,10 +102,10 @@ namespace LinqToDB.Linq
 								}
 								else
 								{
-									var isNullable = type.IsValueType && !type.IsNullable();
+									var isNullable = !type.IsNullableType();
 									if (isNullable)
 									{
-										type                                        = typeof(Nullable<>).MakeGenericType(type);
+										type                                        = type.AsNullable();
 										context.IsNullableStruct[columnIndex.Value] = true;
 									}
 

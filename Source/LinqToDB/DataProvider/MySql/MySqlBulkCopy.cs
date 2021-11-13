@@ -164,23 +164,13 @@ namespace LinqToDB.DataProvider.MySql
 				await TraceActionAsync(
 					dataConnection,
 					() =>
-					((
-#if !NETFRAMEWORK
-							bc.CanWriteToServerAsync2 ||
-#endif
-							bc.CanWriteToServerAsync)
-					? "INSERT ASYNC BULK " : "INSERT BULK ")
+					(bc.HasWriteToServerAsync ? "INSERT ASYNC BULK " : "INSERT BULK ")
 					+ tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
 					async () => {
-#if !NETFRAMEWORK
-						if (bc.CanWriteToServerAsync2)
-							await bc.WriteToServerAsync2(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						if (bc.HasWriteToServerAsync)
+							await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 						else
-#endif
-							if (bc.CanWriteToServerAsync)
-								await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-							else
-								bc.WriteToServer(rd);
+							bc.WriteToServer(rd);
 						return rd.Count;
 					}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
@@ -307,15 +297,12 @@ namespace LinqToDB.DataProvider.MySql
 
 				await TraceActionAsync(
 					dataConnection,
-					() => (bc.CanWriteToServerAsync2 || bc.CanWriteToServerAsync ? "INSERT ASYNC BULK " : "INSERT BULK ") + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
+					() => (bc.HasWriteToServerAsync ? "INSERT ASYNC BULK " : "INSERT BULK ") + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
 					async () => {
-						if (bc.CanWriteToServerAsync2)
-							await bc.WriteToServerAsync2(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						if (bc.HasWriteToServerAsync)
+							await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 						else
-							if (bc.CanWriteToServerAsync)
-								await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-							else
-								bc.WriteToServer(rd);
+							bc.WriteToServer(rd);
 						return rd.Count;
 					}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 

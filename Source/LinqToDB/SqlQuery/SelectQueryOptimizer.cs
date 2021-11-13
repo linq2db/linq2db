@@ -990,7 +990,7 @@ namespace LinqToDB.SqlQuery
 			return true;
 		}
 
-		static bool CheckColumn(SelectQuery parentQuery, SqlColumn column, ISqlExpression expr, SelectQuery query, bool optimizeValues, bool optimizeColumns)
+		bool CheckColumn(SelectQuery parentQuery, SqlColumn column, ISqlExpression expr, SelectQuery query, bool optimizeValues, bool optimizeColumns)
 		{
 			expr = QueryHelper.UnwrapExpression(expr);
 
@@ -1019,6 +1019,14 @@ namespace LinqToDB.SqlQuery
 				var depends = QueryHelper.IsDependsOn(parentQuery.GroupBy, column, elementsToIgnore);
 				if (depends)
 					return true;
+
+				if (!_flags.AcceptsOuterExpressionInAggregate && 
+				    column.Expression.ElementType != QueryElementType.Column &&
+				    QueryHelper.HasOuterReferences(parentQuery, column))
+				{
+					// handle case when aggregate expression has outer references. SQL Server will fail.
+					return true;
+				}
 
 				if (QueryHelper.IsComplexExpression(expr))
 				{

@@ -34,11 +34,12 @@ namespace LinqToDB.DataProvider.SqlServer
 			Version  = version;
 			Provider = provider;
 
-			SqlProviderFlags.IsDistinctOrderBySupported       = false;
-			SqlProviderFlags.IsSubQueryOrderBySupported       = false;
-			SqlProviderFlags.IsDistinctSetOperationsSupported = true;
-			SqlProviderFlags.IsCountDistinctSupported         = true;
-			SqlProviderFlags.IsUpdateFromSupported            = true;
+			SqlProviderFlags.IsDistinctOrderBySupported        = false;
+			SqlProviderFlags.IsSubQueryOrderBySupported        = false;
+			SqlProviderFlags.IsDistinctSetOperationsSupported  = true;
+			SqlProviderFlags.IsCountDistinctSupported          = true;
+			SqlProviderFlags.IsUpdateFromSupported             = true;
+			SqlProviderFlags.AcceptsOuterExpressionInAggregate = false;
 
 			if (version == SqlServerVersion.v2000)
 			{

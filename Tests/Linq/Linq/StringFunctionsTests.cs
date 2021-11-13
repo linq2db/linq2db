@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -313,11 +311,19 @@ namespace Tests.Linq
 					select new
 					{
 						Count = table.CountExt(e => e.Value1, Sql.AggregateModifier.Distinct),
-						Aggregated = table.AsQueryable().StringAggregate(" -> ", t => t.Value1).ToValue()
+						Aggregated = table.StringAggregate(" -> ", x => x.Value1).ToValue()
 					};
-				
-				
-				var result = query.ToArray();
+
+
+				var expected = from t in data
+					select new 
+					{ 
+						Count      = data.Count(x => x.Value1 != null), 
+						Aggregated = string.Join(" -> ", data.Where(x => x.Value1 != null).Select(x => x.Value1))
+					};
+
+
+				AreEqual(expected, query);
 			}
 		}
 
