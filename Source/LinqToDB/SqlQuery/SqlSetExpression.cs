@@ -13,34 +13,26 @@ namespace LinqToDB.SqlQuery
 		{
 			this.column = column;
 			Expression  = expression;
-
-			if (expression is SqlParameter p)
-			{
-				if (column is SqlField field)
-				{
-					if (field.ColumnDescriptor != null && p.Type.SystemType != typeof(object))
-					{
-						if (field.ColumnDescriptor.DataType  != DataType.Undefined && p.Type.DataType == DataType.Undefined)
-							p.Type = p.Type.WithDataType(field.ColumnDescriptor.DataType);
-
-						if (field.ColumnDescriptor.DbType    != null && p.Type.DbType == null)
-							p.Type = p.Type.WithDbType(field.ColumnDescriptor.DbType);
-						if (field.ColumnDescriptor.Length    != null && p.Type.Length == null)
-							p.Type = p.Type.WithLength(field.ColumnDescriptor.Length);
-						if (field.ColumnDescriptor.Precision != null && p.Type.Precision == null)
-							p.Type = p.Type.WithPrecision(field.ColumnDescriptor.Precision);
-						if (field.ColumnDescriptor.Scale     != null && p.Type.Scale == null)
-							p.Type = p.Type.WithScale(field.ColumnDescriptor.Scale);
-					}
-				}
-			}
+			RefineDbParameter(column, expression);
 		}
 
 		public SqlSetExpression(ISqlExpression[] row, ISqlExpression? expression)
 		{
 			Row        = row;
 			Expression = expression;
-			// TODO SqlRow: set parameters types inside the SqlRow expression...
+
+			if (expression is SelectQuery subquery)
+			{
+				var columns = subquery.Select.Columns;
+				for (int i = 0; i < row.Length; i++)				
+					RefineDbParameter(row[i], columns[i].Expression);
+			}
+			else if (expression != null)
+			{
+				var values = expression.GetSqlRowValues();
+				for (int i = 0; i < row.Length; i++)
+					RefineDbParameter(row[i], values[i]);
+			}
 		}
 
 		// Most places (e.g. Insert) that use SqlSetExpression don't support the Row variant and access Column directly.
@@ -55,7 +47,7 @@ namespace LinqToDB.SqlQuery
 			}
 		} 
 
-		// Codepaths (e.g. Update) that support Row will first check whether this property is not null.
+		// Codepaths that support Row (e.g. Update) will first check whether this property is not null.
 		public ISqlExpression[]? Row
 		{ 
 			get => this.row;
@@ -67,6 +59,27 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public ISqlExpression? Expression { get; set; }
+
+		private void RefineDbParameter(ISqlExpression column, ISqlExpression? value)
+		{
+			if (value is SqlParameter p && column is SqlField field)
+			{
+				if (field.ColumnDescriptor != null && p.Type.SystemType != typeof(object))
+				{
+					if (field.ColumnDescriptor.DataType  != DataType.Undefined && p.Type.DataType == DataType.Undefined)
+						p.Type = p.Type.WithDataType(field.ColumnDescriptor.DataType);
+
+					if (field.ColumnDescriptor.DbType    != null && p.Type.DbType == null)
+						p.Type = p.Type.WithDbType(field.ColumnDescriptor.DbType);
+					if (field.ColumnDescriptor.Length    != null && p.Type.Length == null)
+						p.Type = p.Type.WithLength(field.ColumnDescriptor.Length);
+					if (field.ColumnDescriptor.Precision != null && p.Type.Precision == null)
+						p.Type = p.Type.WithPrecision(field.ColumnDescriptor.Precision);
+					if (field.ColumnDescriptor.Scale     != null && p.Type.Scale == null)
+						p.Type = p.Type.WithScale(field.ColumnDescriptor.Scale);
+				}
+			}
+		}
 
 		#region Overrides
 

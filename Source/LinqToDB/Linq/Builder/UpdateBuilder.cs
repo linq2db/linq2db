@@ -495,7 +495,6 @@ namespace LinqToDB.Linq.Builder
 			IBuildContext                   select,
 			List<SqlSetExpression> items)
 		{
-			// TODO SqlRow
 			var ext        = extract.Body.Unwrap();
 			var rootObject = builder.GetRootObject(ext);
 
@@ -534,6 +533,13 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var columnDescriptor = QueryHelper.GetColumnDescriptor(columnSql);
+
+			// Note: this ParseSet overload doesn't support a SqlRow value.
+			// This overload is called for a constants, e.g. `Set(x => x.Name, "Doe")`.
+			// SqlRow can't be constructed as C# values, they can only be used inside expressions, so the call
+			// `Set(x => SqlRow(x.Name, x.Age), SqlRow("Doe", 18))` 
+			// is not possible (2nd SqlRow would be called at runtime and throw).
+			// This is useless anyway, as `Set(x => x.Name, "Doe").Set(x => x.Age, 18)` generates simpler SQL anyway.
 
 			var p = builder.ParametersContext.BuildParameter(updateMethod.Arguments[valueIndex], columnDescriptor, true);
 

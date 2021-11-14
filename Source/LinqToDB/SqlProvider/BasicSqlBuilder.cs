@@ -698,6 +698,8 @@ namespace LinqToDB.SqlProvider
 				{
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Update))
 						throw new LinqToDBException("This provider does not support SqlRow in UPDATE.");
+					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.UpdateLiteral) && expr.Expression is not SelectQuery)
+						throw new LinqToDBException("This provider does not support SqlRow literal on the right-hand side of an UPDATE SET.");
 
 					StringBuilder.Append('(');
 					foreach (var field in row)
