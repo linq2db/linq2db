@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 using JetBrains.Annotations;
 using PN = LinqToDB.ProviderName;
@@ -17,6 +18,7 @@ namespace LinqToDB
 	using Linq;
 	using SqlQuery;
 	using LinqToDB.Common;
+	using System.Text;
 
 	[PublicAPI]
 	public static partial class Sql
@@ -548,23 +550,30 @@ namespace LinqToDB
 		[Function(ServerSideOnly = true)]
 		public static bool Like(string? matchExpression, string? pattern)
 		{
-#if !NETFRAMEWORK
-			throw new InvalidOperationException();
-#else
-			return matchExpression != null && pattern != null &&
-				System.Data.Linq.SqlClient.SqlMethods.Like(matchExpression, pattern);
-#endif
+			return Regex.IsMatch(matchExpression, Regex.Escape(pattern).Replace("%", ".*").Replace("_", "."));
 		}
 
 		[Function(ServerSideOnly = true)]
 		public static bool Like(string? matchExpression, string? pattern, char? escapeCharacter)
 		{
-#if !NETFRAMEWORK
-			throw new InvalidOperationException();
-#else
-			return matchExpression != null && pattern != null && escapeCharacter != null &&
-				System.Data.Linq.SqlClient.SqlMethods.Like(matchExpression, pattern, escapeCharacter.Value);
-#endif
+			if (pattern == null) return true;
+
+			var sb = new StringBuilder();
+			for (int i = 0; i < pattern.Length; i++)
+			{
+				if (pattern[i] == '%')
+					sb.Append(".*");
+				else if (pattern[i] == '_')
+					sb.Append('.');
+				else if (escapeCharacter.HasValue && pattern[i] == escapeCharacter.Value && pattern.Length > i + 1 && (pattern[i + 1] == '%' || pattern[i + 1] == '_'))
+				{
+					sb.Append(pattern[i + 1]);
+					i++;
+				}
+				else
+					sb.Append(Regex.Escape(pattern[i].ToString()));
+			}
+			return Regex.IsMatch(matchExpression, sb.ToString());
 		}
 
 		[CLSCompliant(false)]
