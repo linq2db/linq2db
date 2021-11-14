@@ -696,6 +696,9 @@ namespace LinqToDB.SqlProvider
 
 				if (expr.Row is {} row)
 				{
+					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Update))
+						throw new LinqToDBException("This provider does not support SqlRow in UPDATE.");
+
 					StringBuilder.Append('(');
 					foreach (var field in row)
 					{

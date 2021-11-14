@@ -284,8 +284,6 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.ConvertFunction(func);
 		}
 
-		protected override RowFeature SupportedRowFeatures => RowFeature.Comparisons | RowFeature.In;
-
 		protected override ISqlPredicate OptimizeRowExprExpr(SqlPredicate.ExprExpr predicate, EvaluationContext context)
 		{
 			// Oracle needs brackets around the right-hand side to disambiguate the syntax, e.g.:

@@ -1337,17 +1337,6 @@ namespace LinqToDB.SqlProvider
 
 		#region SqlRow
 
-		[Flags]
-		protected enum RowFeature
-		{
-			IsNull      = 0x01,
-			Comparisons = 0x02,
-			In          = 0x04,
-			Update      = 0x08,
-		}
-
-		protected virtual RowFeature SupportedRowFeatures => 0;
-
 		protected virtual ISqlPredicate OptimizeRowExprExpr(ExprExpr predicate, EvaluationContext context)
 		{
 			var op = predicate.Operator;
@@ -1358,19 +1347,19 @@ namespace LinqToDB.SqlProvider
 				case SqlValue { Value: null }:
 					if (op is not (Operator.Equal or Operator.NotEqual))
 						throw new LinqException("Null SqlRow is only allowed in equality comparisons");
-					if (!SupportedRowFeatures.HasFlag(RowFeature.IsNull))
+					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.IsNull))
 						return RowIsNullFallback(predicate.Expr1.GetSqlRowValues(), op == Operator.NotEqual);
 					break;
 
 				// ROW(a, b) operator ROW(c, d)
 				case SqlExpression rhs:
-					if (!SupportedRowFeatures.HasFlag(RowFeature.Comparisons))
+					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Comparisons))
 						return RowComparisonFallback(op, predicate.Expr1.GetSqlRowValues(), rhs.Parameters);
 					break;
 
 				// ROW(a, b) operator (SELECT c, d)
 				case SelectQuery _:
-					if (!SupportedRowFeatures.HasFlag(RowFeature.Comparisons))
+					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Comparisons))
 						throw new LinqException("SqlRow comparisons to SELECT are not supported by this DB provider");
 					break;
 
@@ -1387,7 +1376,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual ISqlPredicate OptimizeRowInList(InList predicate)
 		{
-			if ((SupportedRowFeatures & RowFeature.In) == 0)
+			if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.In))
 			{			
 				var left = predicate.Expr1; 
 				var op = predicate.IsNot ? Operator.NotEqual : Operator.Equal;

@@ -140,6 +140,11 @@ namespace LinqToDB.SqlProvider
 		public IsolationLevel DefaultMultiQueryIsolationLevel { get; set; } = IsolationLevel.RepeatableRead;
 
 		/// <summary>
+		/// Provider support Row Constructor `(1, 2, 3)` in various positions (flags)
+		/// </summary>
+		public RowFeature RowConstructorSupport { get; set; }
+
+		/// <summary>
 		/// Flags for use by external providers.
 		/// </summary>
 		public List<string> CustomFlags { get; } = new List<string>();
@@ -181,8 +186,9 @@ namespace LinqToDB.SqlProvider
 				^ IsUpdateFromSupported                        .GetHashCode()
 				^ DefaultMultiQueryIsolationLevel              .GetHashCode()
 				^ AcceptsOuterExpressionInAggregate            .GetHashCode()
+				^ RowConstructorSupport                           .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
-	}
+		}
 
 		public override bool Equals(object? obj)
 		{
@@ -218,6 +224,7 @@ namespace LinqToDB.SqlProvider
 				&& IsUpdateFromSupported                == other.IsUpdateFromSupported
 				&& DefaultMultiQueryIsolationLevel      == other.DefaultMultiQueryIsolationLevel
 				&& AcceptsOuterExpressionInAggregate    == other.AcceptsOuterExpressionInAggregate
+				&& RowConstructorSupport                == other.RowConstructorSupport
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                    == other.CustomFlags.Count
 				&& (CustomFlags.Count                   == 0
