@@ -270,6 +270,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					// address npgsql 6.0.0 mapping DateTime by default to timestamptz
 				case DataType.DateTime  :
 				case DataType.DateTime2 : type = NpgsqlProviderAdapter.NpgsqlDbType.Timestamp; break;
+					// npgsql 6.0.0 changed some DbType <-> NpgsqlDbType mappings
+					// while it doesn't look like having any impact on queries
+					// it makes sense to hint more precise types when we know that npgsql use less precise type
+					//
+					// Npgsql default was: NpgsqlDbType.Text
+				case DataType.NChar     :
+				case DataType.Char      : type = NpgsqlProviderAdapter.NpgsqlDbType.Char     ; break;
+				case DataType.NVarChar  :
+				case DataType.VarChar   : type = NpgsqlProviderAdapter.NpgsqlDbType.Varchar  ; break;
 			}
 
 			if (!string.IsNullOrEmpty(dataType.DbType))

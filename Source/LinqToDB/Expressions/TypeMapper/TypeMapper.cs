@@ -235,7 +235,12 @@ namespace LinqToDB.Expressions
 					var pTask = Expression.Parameter(typeof(Task));
 					var taskT = typeof(Task<>).MakeGenericType(originalType);
 
-					var taskResult = Expression.Property(Expression.Convert(pTask, taskT), nameof(Task<object>.Result));
+					Expression taskResult = Expression.Property(Expression.Convert(pTask, taskT), nameof(Task<object>.Result));
+
+					// TODO: add generics support to avoid boxing of structs?
+					if (originalType.IsValueType)
+						taskResult = Expression.Convert(taskResult, typeof(object));
+
 					Expression taskFactoryBody = delegates != null
 						? Expression.New(ctor, taskResult, Expression.Constant(delegates))
 						: Expression.New(ctor, taskResult);
