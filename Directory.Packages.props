@@ -88,7 +88,7 @@
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
 		<!--main version-->
-		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="5.0.12"        />
+		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="6.0.0"         />
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' ">
 		<!--old versions of providers with netcoreapp2.1 support-->
