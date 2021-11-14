@@ -565,13 +565,21 @@ namespace LinqToDB
 					sb.Append(".*");
 				else if (pattern[i] == '_')
 					sb.Append('.');
-				else if (escapeCharacter.HasValue && pattern[i] == escapeCharacter.Value && pattern.Length > i + 1 && (pattern[i + 1] == '%' || pattern[i + 1] == '_'))
+				else if (escapeCharacter.HasValue && pattern[i] == escapeCharacter.Value)
 				{
-					sb.Append(pattern[i + 1]);
-					i++;
+					if (pattern.Length == i + 1)
+						return false;
+					if (pattern[i + 1] == '%' || pattern[i + 1] == '_')
+					{
+						sb.Append(pattern[i + 1]);
+						i++;
+					}
+					else
+					{
+						sb.Append(Regex.Escape(pattern[i + 1].ToString()));
+						i++;
+					}
 				}
-				else
-					sb.Append(Regex.Escape(pattern[i].ToString()));
 			}
 			return Regex.IsMatch(matchExpression, sb.ToString());
 		}

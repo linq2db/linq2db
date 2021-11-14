@@ -6,10 +6,10 @@ using NUnit.Framework;
 namespace Tests.UserTests
 {
 	[TestFixture]
-	public class Issue3347Tests : TestBase
+	public class Issue3347Tests
 	{
 		[Test]
-		public void TestSqlLike([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestSqlLike()
 		{
 			var lst = new List<string>() {"aabbcc", "aaaaaa", "bbbbb", "ccccc", "***", "...", "aa%bb_cc"};
 
