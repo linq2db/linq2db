@@ -239,7 +239,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				npgsqlTypes[i] = npgsqlType.Value;
 			}
 
-			var writer = _provider.Adapter.BeginBinaryImport(connection, copyCommand);
+			var writer = _provider.Adapter.BeginBinaryImportAsync != null
+				? await _provider.Adapter.BeginBinaryImportAsync(connection, copyCommand, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext)
+				: _provider.Adapter.BeginBinaryImport(connection, copyCommand);
 
 			if (!writer.SupportsAsync)
 			{
@@ -285,7 +287,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						await writer.DisposeAsync()
 							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-						writer = _provider.Adapter.BeginBinaryImport(connection, copyCommand);
+						writer = _provider.Adapter.BeginBinaryImportAsync != null
+							? await _provider.Adapter.BeginBinaryImportAsync(connection, copyCommand, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext)
+							: _provider.Adapter.BeginBinaryImport(connection, copyCommand);
 						currentCount = 0;
 					}
 				}
@@ -352,7 +356,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				npgsqlTypes[i] = npgsqlType.Value;
 			}
 
-			var writer     = _provider.Adapter.BeginBinaryImport(connection, copyCommand);
+			var writer = _provider.Adapter.BeginBinaryImportAsync != null
+				? await _provider.Adapter.BeginBinaryImportAsync(connection, copyCommand, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext)
+				: _provider.Adapter.BeginBinaryImport(connection, copyCommand);
 
 			if (!writer.SupportsAsync)
 			{
@@ -402,7 +408,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						await writer.DisposeAsync()
 							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-						writer = _provider.Adapter.BeginBinaryImport(connection, copyCommand);
+						writer = _provider.Adapter.BeginBinaryImportAsync != null
+							? await _provider.Adapter.BeginBinaryImportAsync(connection, copyCommand, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext)
+							: _provider.Adapter.BeginBinaryImport(connection, copyCommand);
 						currentCount = 0;
 					}
 				}

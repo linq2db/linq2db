@@ -8,6 +8,8 @@ namespace LinqToDB.Expressions
 {
 	using System.Collections;
 	using System.Diagnostics.CodeAnalysis;
+	using System.Threading;
+	using System.Threading.Tasks;
 	using Common;
 	using LinqToDB.Extensions;
 
@@ -28,6 +30,7 @@ namespace LinqToDB.Expressions
 		readonly Dictionary<Type, Type>                         _typeMappingReverseCache  = new ();
 		readonly Dictionary<LambdaExpression, LambdaExpression> _lambdaMappingCache       = new ();
 		readonly Dictionary<Type, Func<object, object>>         _wrapperFactoryCache      = new ();
+		readonly Dictionary<Type, Func<Task, object?>>          _taskWrapperFactoryCache  = new ();
 		// [originalType] = converter
 		readonly Dictionary<Type, LambdaExpression>             _enumToWrapperCache       = new ();
 		// [wrapperType] = converter
@@ -224,6 +227,35 @@ namespace LinqToDB.Expressions
 					.CompileExpression();
 
 				_wrapperFactoryCache.Add(wrapperType, factory);
+
+				// resolved Task<T> unwrap
+				var originalType = _typeMappingCache[wrapperType];
+				if (originalType != null)
+				{
+					var pTask = Expression.Parameter(typeof(Task));
+					var taskT = typeof(Task<>).MakeGenericType(originalType);
+
+					var taskResult = Expression.Property(Expression.Convert(pTask, taskT), nameof(Task<object>.Result));
+					Expression taskFactoryBody = delegates != null
+						? Expression.New(ctor, taskResult, Expression.Constant(delegates))
+						: Expression.New(ctor, taskResult);
+
+					if (eventsHandler != null)
+					{
+						var instance = Expression.Parameter(wrapperType);
+						taskFactoryBody = Expression.Block(
+							new[] { instance },
+							Expression.Assign(instance, taskFactoryBody),
+							Expression.Invoke(Expression.Constant(eventsHandler), instance),
+							instance);
+					}
+
+					var taskFactory = Expression
+						.Lambda<Func<Task, object?>>(taskFactoryBody, pTask)
+						.CompileExpression();
+
+					_taskWrapperFactoryCache.Add(wrapperType, taskFactory);
+				}
 			}
 
 			_finalized = true;
@@ -1193,6 +1225,22 @@ namespace LinqToDB.Expressions
 				return null;
 
 			if (!_wrapperFactoryCache.TryGetValue(wrapperType, out var factory))
+				throw new LinqToDBException($"Missing type wrapper factory registration for type {wrapperType}");
+
+			return factory(instance);
+		}
+
+		public async Task<TR?> WrapTask<TR>(Task instanceTask, Type instanceType, CancellationToken cancellationToken)
+			where TR : TypeWrapper
+		{
+			await instanceTask.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+			return (TR?)WrapTask(typeof(TR), instanceTask);
+		}
+
+		private object? WrapTask(Type wrapperType, Task instance)
+		{
+			if (!_taskWrapperFactoryCache.TryGetValue(wrapperType, out var factory))
 				throw new LinqToDBException($"Missing type wrapper factory registration for type {wrapperType}");
 
 			return factory(instance);

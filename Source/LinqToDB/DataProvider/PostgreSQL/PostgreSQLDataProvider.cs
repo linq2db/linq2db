@@ -118,6 +118,21 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			mapType("refcursor"               , NpgsqlProviderAdapter.NpgsqlDbType.Refcursor);
 			mapType("oidvector"               , NpgsqlProviderAdapter.NpgsqlDbType.Oidvector);
 			mapType("int2vector"              , NpgsqlProviderAdapter.NpgsqlDbType.Int2Vector);
+			// ranges
+			mapType("int4range"               , NpgsqlProviderAdapter.NpgsqlDbType.IntegerRange);
+			mapType("int8range"               , NpgsqlProviderAdapter.NpgsqlDbType.BigIntRange);
+			mapType("numrange"                , NpgsqlProviderAdapter.NpgsqlDbType.NumericRange);
+			mapType("tsrange"                 , NpgsqlProviderAdapter.NpgsqlDbType.TimestampRange);
+			mapType("tstzrange"               , NpgsqlProviderAdapter.NpgsqlDbType.TimestampTzRange);
+			mapType("daterange"               , NpgsqlProviderAdapter.NpgsqlDbType.DateRange);
+			// multi-ranges
+			mapType("int4multirange"          , NpgsqlProviderAdapter.NpgsqlDbType.IntegerMultirange);
+			mapType("int8multirange"          , NpgsqlProviderAdapter.NpgsqlDbType.BigIntMultirange);
+			mapType("nummultirange"           , NpgsqlProviderAdapter.NpgsqlDbType.NumericMultirange);
+			mapType("tsmultirange"            , NpgsqlProviderAdapter.NpgsqlDbType.TimestampMultirange);
+			mapType("tstzmultirange"          , NpgsqlProviderAdapter.NpgsqlDbType.TimestampTzMultirange);
+			mapType("datemultirange"          , NpgsqlProviderAdapter.NpgsqlDbType.DateMultirange);
+
 
 			SetProviderField(Adapter.NpgsqlTimeSpanType, Adapter.NpgsqlTimeSpanType, Adapter.GetIntervalReaderMethod     , dataReaderType: Adapter.DataReaderType);
 			SetProviderField(Adapter.NpgsqlDateTimeType, Adapter.NpgsqlDateTimeType, Adapter.GetTimeStampReaderMethod    , dataReaderType: Adapter.DataReaderType);
@@ -366,7 +381,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				dbType = dbType.Substring(0, idx);
 			}
 
-			var isRange = false;
+			var isRange      = false;
+			var isMultiRange = false;
 
 			dbType = dbType.Trim();
 
@@ -393,12 +409,38 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					dbType  = "timestamp with time zone";
 					isRange = true;
 					break;
+				case "daterange":
+					dbType = "date";
+					isRange = true;
+					break;
+
+				case "int4multirange":
+					dbType = "integer";
+					isMultiRange = true;
+					break;
+				case "int8multirange":
+					dbType = "bigint";
+					isMultiRange = true;
+					break;
+				case "nummultirange":
+					dbType = "numeric";
+					isMultiRange = true;
+					break;
+				case "tsmultirange":
+					dbType = "timestamp";
+					isMultiRange = true;
+					break;
+				case "tstzmultirange":
+					dbType = "timestamp with time zone";
+					isMultiRange = true;
+					break;
+				case "datemultirange":
+					dbType = "date";
+					isMultiRange = true;
+					break;
+
 				case "timestamptz":
 					dbType = "timestamp with time zone";
-					break;
-				case "daterange":
-					dbType  = "date";
-					isRange = true;
 					break;
 				case "int2":
 				case "smallserial":
@@ -469,7 +511,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 				// because NpgsqlDbType fields numeric values changed in npgsql4,
 				// applying flag-like array/range bits is not straightforward process
-				result = Adapter.ApplyDbTypeFlags(result, isArray, isRange, convertAlways);
+				result = Adapter.ApplyDbTypeFlags(result, isArray, isRange, isMultiRange, convertAlways);
 
 				return result;
 			}

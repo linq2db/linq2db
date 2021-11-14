@@ -52,7 +52,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		/// <item>Use <see cref="DateTimeKind.Utc"/> for <see cref="DateTime"/> timestamptz values</item>
 		/// <item>Use <see cref="DateTimeKind.Unspecified"/> for <see cref="DateTime"/> timestamp values with <see cref="DateTimeKind.Utc"/> kind</item>
 		/// </list>
-		/// - 
 		/// Default value: <c>true</c>.
 		/// </summary>
 		public static bool NormalizeTimestampData { get; set; } = true;
