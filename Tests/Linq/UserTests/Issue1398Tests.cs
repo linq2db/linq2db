@@ -1,4 +1,5 @@
 ﻿using LinqToDB;
+using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 using System;
@@ -60,6 +61,9 @@ namespace Tests.UserTests
 		public void TestInsert([DataSources(false, TestProvName.AllFirebird, TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllOracle12)] string context)
 		{
 			const int recordsCount = 20;
+
+			// sqlite connection pooling is not compatible with tested template
+			SQLiteTools.ClearAllPools();
 
 			using (new DisableBaseline("Multi-threading"))
 			using (var db = GetDataConnection(context))

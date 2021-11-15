@@ -1446,7 +1446,9 @@ namespace Tests.Data
 
 				// provider-specific type classes and readers
 				var dateValue = new DateTime(1234, 11, 22);
+#pragma warning disable CS0618 // Type or member is obsolete
 				var ndateValue = db.Execute<NpgsqlTypes.NpgsqlDate>("SELECT @p", new DataParameter("@p", dateValue, DataType.Date));
+#pragma warning restore CS0618 // Type or member is obsolete
 				Assert.AreEqual(dateValue, (DateTime)ndateValue);
 				var rawValue = db.Execute<object>("SELECT @p", new DataParameter("@p", dateValue, DataType.Date));
 				Assert.True    (rawValue is DateTime);
