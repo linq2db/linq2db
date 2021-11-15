@@ -603,7 +603,7 @@ namespace LinqToDB.Linq.Builder
 			return sql;
 		}
 
-		public SqlInfo MakeSql(Expression path, ProjectFlags flags)
+		public SqlInfo? MakeSql(Expression path)
 		{
 			throw new NotImplementedException();
 		}

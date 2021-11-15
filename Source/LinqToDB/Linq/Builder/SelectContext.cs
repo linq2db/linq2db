@@ -472,7 +472,7 @@ namespace LinqToDB.Linq.Builder
 			return info;
 		}
 
-		public SqlInfo MakeSql(Expression path, ProjectFlags flags)
+		public SqlInfo? MakeSql(Expression path)
 		{
 			Expression expr;
 

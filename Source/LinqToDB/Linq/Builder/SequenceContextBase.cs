@@ -54,7 +54,7 @@ namespace LinqToDB.Linq.Builder
 		public abstract SqlInfo[]          ConvertToSql   (Expression? expression, int level, ConvertFlags flags);
 		public abstract SqlInfo[]          ConvertToIndex (Expression? expression, int level, ConvertFlags flags);
 
-		public SqlInfo MakeSql(Expression path, ProjectFlags flags)
+		public SqlInfo? MakeSql(Expression path)
 		{
 			throw new System.NotImplementedException();
 		}

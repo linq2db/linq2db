@@ -51,10 +51,10 @@ namespace LinqToDB.Linq.Builder
 			return Context.ConvertToIndex(expression, level, flags);
 		}
 
-		public SqlInfo MakeSql(Expression path, ProjectFlags flags)
+		public SqlInfo? MakeSql(Expression path)
 		{
 			path = SequenceHelper.CorrectExpression(path, this, Context);
-			return Context.MakeSql(path!, flags);
+			return Context.MakeSql(path!);
 		}
 
 		public SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)

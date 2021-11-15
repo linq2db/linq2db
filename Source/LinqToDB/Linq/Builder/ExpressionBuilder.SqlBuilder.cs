@@ -1180,7 +1180,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (ctx != null)
 					{
-						var sql = ctx.MakeSql(expression, ProjectFlags.SQL).Sql;
+						var sql = ctx.MakeSql(expression).Sql;
 
 						/*switch (sql.Length)
 						{
@@ -3539,7 +3539,7 @@ namespace LinqToDB.Linq.Builder
 			if (_sqlCache.TryGetValue(key, out var sql))
 				return sql;
 
-			sql = context.MakeSql(path, ProjectFlags.SQL);
+			sql = context.MakeSql(path);
 
 			_sqlCache[key] = sql;
 

@@ -72,8 +72,9 @@ namespace LinqToDB.Linq.Builder
 		SqlInfo[]          ConvertToIndex      (Expression? expression, int level, ConvertFlags flags);
 
 
-		SqlInfo MakeSql(Expression path, ProjectFlags flags);
+		SqlInfo? MakeSql(Expression path);
 		SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias);
+		Expression MakeExpression(Expression path);
 
 		/// <summary>
 		/// Returns information about expression according to <paramref name="requestFlag"/>. 

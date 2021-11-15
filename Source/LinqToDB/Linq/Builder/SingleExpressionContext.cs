@@ -59,7 +59,7 @@ namespace LinqToDB.Linq.Builder
 			return new SqlInfo[] { new SqlInfo(SqlExpression, SelectQuery, idx) };
 		}
 
-		public SqlInfo MakeSql(Expression path, ProjectFlags flags)
+		public SqlInfo? MakeSql(Expression path)
 		{
 			throw new NotImplementedException();
 		}

@@ -85,7 +85,7 @@ namespace LinqToDB.Linq.Builder
 			return corrected;
 		}
 
-		public SqlInfo MakeSql(Expression path, ProjectFlags flags)
+		public SqlInfo? MakeSql(Expression path)
 		{
 			throw new NotImplementedException();
 		}
