@@ -207,11 +207,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 								pConnection, pCommand)
 							.CompileExpression();
 
-						Func<IDbConnection, string, CancellationToken, Task<NpgsqlBinaryImporter>>? beginBinaryImportAsync = null;
+						Func<DbConnection, string, CancellationToken, Task<NpgsqlBinaryImporter>>? beginBinaryImportAsync = null;
 						if (connectionType.GetMethod(nameof(BeginBinaryImportAsync)) != null)
 						{
-							beginBinaryImportAsync = Expression.Lambda<Func<IDbConnection, string, CancellationToken, Task<NpgsqlBinaryImporter>>>(
-									typeMapper.MapExpression((IDbConnection conn, string command, CancellationToken cancellationToken) => typeMapper.WrapTask<NpgsqlBinaryImporter>(((NpgsqlConnection)conn).BeginBinaryImportAsync(command, cancellationToken), npgsqlBinaryImporterType, cancellationToken), pConnection, pCommand, pToken),
+							beginBinaryImportAsync = Expression.Lambda<Func<DbConnection, string, CancellationToken, Task<NpgsqlBinaryImporter>>>(
+									typeMapper.MapExpression((DbConnection conn, string command, CancellationToken cancellationToken) => typeMapper.WrapTask<NpgsqlBinaryImporter>(((NpgsqlConnection)conn).BeginBinaryImportAsync(command, cancellationToken), npgsqlBinaryImporterType, cancellationToken), pConnection, pCommand, pToken),
 									pConnection, pCommand, pToken)
 								.CompileExpression();
 						}
