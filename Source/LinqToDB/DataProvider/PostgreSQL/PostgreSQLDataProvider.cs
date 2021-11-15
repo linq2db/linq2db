@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
+	using System;
+	using System.Runtime.CompilerServices;
 	using Common;
 	using Data;
 	using Mapping;
@@ -117,6 +119,21 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			mapType("refcursor"               , NpgsqlProviderAdapter.NpgsqlDbType.Refcursor);
 			mapType("oidvector"               , NpgsqlProviderAdapter.NpgsqlDbType.Oidvector);
 			mapType("int2vector"              , NpgsqlProviderAdapter.NpgsqlDbType.Int2Vector);
+			// ranges
+			mapType("int4range"               , NpgsqlProviderAdapter.NpgsqlDbType.IntegerRange);
+			mapType("int8range"               , NpgsqlProviderAdapter.NpgsqlDbType.BigIntRange);
+			mapType("numrange"                , NpgsqlProviderAdapter.NpgsqlDbType.NumericRange);
+			mapType("tsrange"                 , NpgsqlProviderAdapter.NpgsqlDbType.TimestampRange);
+			mapType("tstzrange"               , NpgsqlProviderAdapter.NpgsqlDbType.TimestampTzRange);
+			mapType("daterange"               , NpgsqlProviderAdapter.NpgsqlDbType.DateRange);
+			// multi-ranges
+			mapType("int4multirange"          , NpgsqlProviderAdapter.NpgsqlDbType.IntegerMultirange);
+			mapType("int8multirange"          , NpgsqlProviderAdapter.NpgsqlDbType.BigIntMultirange);
+			mapType("nummultirange"           , NpgsqlProviderAdapter.NpgsqlDbType.NumericMultirange);
+			mapType("tsmultirange"            , NpgsqlProviderAdapter.NpgsqlDbType.TimestampMultirange);
+			mapType("tstzmultirange"          , NpgsqlProviderAdapter.NpgsqlDbType.TimestampTzMultirange);
+			mapType("datemultirange"          , NpgsqlProviderAdapter.NpgsqlDbType.DateMultirange);
+
 
 			SetProviderField(Adapter.NpgsqlTimeSpanType, Adapter.NpgsqlTimeSpanType, Adapter.GetIntervalReaderMethod     , dataReaderType: Adapter.DataReaderType);
 			SetProviderField(Adapter.NpgsqlDateTimeType, Adapter.NpgsqlDateTimeType, Adapter.GetTimeStampReaderMethod    , dataReaderType: Adapter.DataReaderType);
@@ -194,13 +211,38 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return true;
 		}
 #endif
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal object? NormalizeTimeStamp(object? value, DbDataType dataType)
+		{
+			if (PostgreSQLTools.NormalizeTimestampData)
+			{
+				// normalize DateTimeOffset values to prevent unnecessary (in this case) npgsql 6.0.0 complains
+				if (value is DateTimeOffset dto && dto.Offset != TimeSpan.Zero)
+					value = dto.ToUniversalTime();
+				// set DateTime.Kind to expected value for timestamp and timestamptz parameters to prevent npgsql 6.0.0 complains
+				else if (value is DateTime dt)
+				{
+					// timestamp should have non-UTC Kind (Unspecified used by default by npgsql)
+					if (dt.Kind == DateTimeKind.Utc
+						&& (dataType.DataType == DataType.DateTime2 || GetNativeType(dataType.DbType) == NpgsqlProviderAdapter.NpgsqlDbType.Timestamp))
+						value = DateTime.SpecifyKind(dt, DateTimeKind.Unspecified);
+					// timestamptz should have UTC Kind
+					else if (dt.Kind != DateTimeKind.Utc
+						&& (dataType.DataType == DataType.DateTimeOffset || GetNativeType(dataType.DbType) == NpgsqlProviderAdapter.NpgsqlDbType.TimestampTZ))
+						value = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+				}
+			}
+
+			return value;
+		}
+
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			if (value is IDictionary && dataType.DataType == DataType.Undefined)
-			{
 				dataType = dataType.WithDataType(DataType.Dictionary);
-			}
+			else
+				value = NormalizeTimeStamp(value, dataType);
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
@@ -212,20 +254,32 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			NpgsqlProviderAdapter.NpgsqlDbType? type = null;
 			switch (dataType.DataType)
 			{
-				case DataType.Money     : type = NpgsqlProviderAdapter.NpgsqlDbType.Money  ; break;
+				case DataType.Money     : type = NpgsqlProviderAdapter.NpgsqlDbType.Money    ; break;
 				case DataType.Image     :
 				case DataType.Binary    :
-				case DataType.VarBinary : type = NpgsqlProviderAdapter.NpgsqlDbType.Bytea  ; break;
-				case DataType.Boolean   : type = NpgsqlProviderAdapter.NpgsqlDbType.Boolean; break;
-				case DataType.Xml       : type = NpgsqlProviderAdapter.NpgsqlDbType.Xml    ; break;
+				case DataType.VarBinary : type = NpgsqlProviderAdapter.NpgsqlDbType.Bytea    ; break;
+				case DataType.Boolean   : type = NpgsqlProviderAdapter.NpgsqlDbType.Boolean  ; break;
+				case DataType.Xml       : type = NpgsqlProviderAdapter.NpgsqlDbType.Xml      ; break;
 				case DataType.Text      :
-				case DataType.NText     : type = NpgsqlProviderAdapter.NpgsqlDbType.Text   ; break;
-				case DataType.BitArray  : type = NpgsqlProviderAdapter.NpgsqlDbType.Bit    ; break;
-				case DataType.Dictionary: type = NpgsqlProviderAdapter.NpgsqlDbType.Hstore ; break;
-				case DataType.Json      : type = NpgsqlProviderAdapter.NpgsqlDbType.Json   ; break;
-				case DataType.BinaryJson: type = NpgsqlProviderAdapter.NpgsqlDbType.Jsonb  ; break;
+				case DataType.NText     : type = NpgsqlProviderAdapter.NpgsqlDbType.Text     ; break;
+				case DataType.BitArray  : type = NpgsqlProviderAdapter.NpgsqlDbType.Bit      ; break;
+				case DataType.Dictionary: type = NpgsqlProviderAdapter.NpgsqlDbType.Hstore   ; break;
+				case DataType.Json      : type = NpgsqlProviderAdapter.NpgsqlDbType.Json     ; break;
+				case DataType.BinaryJson: type = NpgsqlProviderAdapter.NpgsqlDbType.Jsonb    ; break;
 				case DataType.Interval  : type = NpgsqlProviderAdapter.NpgsqlDbType.Interval ; break;
-				case DataType.Int64     : type = NpgsqlProviderAdapter.NpgsqlDbType.Bigint ; break;
+				case DataType.Int64     : type = NpgsqlProviderAdapter.NpgsqlDbType.Bigint   ; break;
+					// address npgsql 6.0.0 mapping DateTime by default to timestamptz
+				case DataType.DateTime  :
+				case DataType.DateTime2 : type = NpgsqlProviderAdapter.NpgsqlDbType.Timestamp; break;
+					// npgsql 6.0.0 changed some DbType <-> NpgsqlDbType mappings
+					// while it doesn't look like having any impact on queries
+					// it makes sense to hint more precise types when we know that npgsql use less precise type
+					//
+					// Npgsql default was: NpgsqlDbType.Text
+				case DataType.NChar     :
+				case DataType.Char      : type = NpgsqlProviderAdapter.NpgsqlDbType.Char     ; break;
+				case DataType.NVarChar  :
+				case DataType.VarChar   : type = NpgsqlProviderAdapter.NpgsqlDbType.Varchar  ; break;
 			}
 
 			if (!string.IsNullOrEmpty(dataType.DbType))
@@ -337,7 +391,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				dbType = dbType.Substring(0, idx);
 			}
 
-			var isRange = false;
+			var isRange      = false;
+			var isMultiRange = false;
 
 			dbType = dbType.Trim();
 
@@ -364,12 +419,38 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					dbType  = "timestamp with time zone";
 					isRange = true;
 					break;
+				case "daterange":
+					dbType = "date";
+					isRange = true;
+					break;
+
+				case "int4multirange":
+					dbType = "integer";
+					isMultiRange = true;
+					break;
+				case "int8multirange":
+					dbType = "bigint";
+					isMultiRange = true;
+					break;
+				case "nummultirange":
+					dbType = "numeric";
+					isMultiRange = true;
+					break;
+				case "tsmultirange":
+					dbType = "timestamp";
+					isMultiRange = true;
+					break;
+				case "tstzmultirange":
+					dbType = "timestamp with time zone";
+					isMultiRange = true;
+					break;
+				case "datemultirange":
+					dbType = "date";
+					isMultiRange = true;
+					break;
+
 				case "timestamptz":
 					dbType = "timestamp with time zone";
-					break;
-				case "daterange":
-					dbType  = "date";
-					isRange = true;
 					break;
 				case "int2":
 				case "smallserial":
@@ -440,7 +521,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 				// because NpgsqlDbType fields numeric values changed in npgsql4,
 				// applying flag-like array/range bits is not straightforward process
-				result = Adapter.ApplyDbTypeFlags(result, isArray, isRange, convertAlways);
+				result = Adapter.ApplyDbTypeFlags(result, isArray, isRange, isMultiRange, convertAlways);
 
 				return result;
 			}
