@@ -177,7 +177,8 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 				((SQLiteDataProvider)_SQLiteMSDataProvider.Value).Adapter.ClearAllPools?.Invoke();
 			}
-			else if ((provider == null || provider == ProviderName.SQLiteClassic) && _SQLiteClassicDataProvider.IsValueCreated)
+
+			if ((provider == null || provider == ProviderName.SQLiteClassic) && _SQLiteClassicDataProvider.IsValueCreated)
 			{
 				((SQLiteDataProvider)_SQLiteClassicDataProvider.Value).Adapter.ClearAllPools?.Invoke();
 			}
