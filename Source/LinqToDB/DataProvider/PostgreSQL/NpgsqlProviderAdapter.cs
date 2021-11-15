@@ -203,7 +203,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						var pToken      = Expression.Parameter(typeof(CancellationToken));
 
 						var beginBinaryImport = Expression.Lambda<Func<DbConnection, string, NpgsqlBinaryImporter>>(
-								typeMapper.MapExpression((DbConnection conn, string command) => typeMapper.Wrap<NpgsqlBinaryImporter>(((NpgsqlConnection)conn).BeginBinaryImport(command)), pConnection, pCommand),
+								typeMapper.MapExpression((DbConnection conn, string command) => typeMapper.Wrap<NpgsqlBinaryImporter>(((NpgsqlConnection)(object)conn).BeginBinaryImport(command)), pConnection, pCommand),
 								pConnection, pCommand)
 							.CompileExpression();
 
