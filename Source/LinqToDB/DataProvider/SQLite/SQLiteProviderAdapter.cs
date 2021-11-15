@@ -1,11 +1,12 @@
 ﻿using System;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.DataProvider.SQLite
 {
 	public class SQLiteProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _systemSyncRoot = new object();
-		private static readonly object _msSyncRoot     = new object();
+		private static readonly object _systemSyncRoot = new ();
+		private static readonly object _msSyncRoot     = new ();
 
 		private static SQLiteProviderAdapter? _systemDataSQLite;
 		private static SQLiteProviderAdapter? _microsoftDataSQLite;
@@ -17,12 +18,13 @@ namespace LinqToDB.DataProvider.SQLite
 		public const string MicrosoftDataSQLiteClientNamespace = "Microsoft.Data.Sqlite";
 
 		private SQLiteProviderAdapter(
-			Type connectionType,
-			Type dataReaderType,
-			Type parameterType,
-			Type commandType,
-			Type transactionType,
-			bool disposeCommandOnError)
+			Type    connectionType,
+			Type    dataReaderType,
+			Type    parameterType,
+			Type    commandType,
+			Type    transactionType,
+			bool    disposeCommandOnError,
+			Action? clearAllPulls)
 		{
 			ConnectionType  = connectionType;
 			DataReaderType  = dataReaderType;
@@ -31,6 +33,8 @@ namespace LinqToDB.DataProvider.SQLite
 			TransactionType = transactionType;
 
 			DisposeCommandOnError = disposeCommandOnError;
+
+			ClearAllPools = clearAllPulls;
 		}
 
 		public Type ConnectionType  { get; }
@@ -44,6 +48,8 @@ namespace LinqToDB.DataProvider.SQLite
 		/// for Microsoft.Data.Sqlite v3.0.0.
 		/// </summary>
 		internal bool DisposeCommandOnError { get; }
+
+		public Action? ClearAllPools { get; }
 
 		private static SQLiteProviderAdapter CreateAdapter(string assemblyName, string clientNamespace, string prefix)
 		{
@@ -59,14 +65,37 @@ namespace LinqToDB.DataProvider.SQLite
 
 			var disposeCommandOnError = connectionType.AssemblyQualifiedName == "Microsoft.Data.Sqlite.SqliteConnection, Microsoft.Data.Sqlite, Version=3.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60";
 
+			Action? clearAllPools = null;
+			if (clientNamespace == MicrosoftDataSQLiteClientNamespace)
+			{
+				if (assembly.GetName().Version >= ClearPoolsMinVersionMDS)
+				{
+					var typeMapper = new TypeMapper();
+					typeMapper.RegisterTypeWrapper<SqliteConnection>(connectionType);
+					typeMapper.FinalizeMappings();
+					clearAllPools = typeMapper.BuildAction(typeMapper.MapActionLambda(() => SqliteConnection.ClearAllPools()));
+				}
+			}
+			else if(assembly.GetName().Version >= ClearPoolsMinVersionSDS)
+				{
+				var typeMapper = new TypeMapper();
+				typeMapper.RegisterTypeWrapper<SQLiteConnection>(connectionType);
+				typeMapper.FinalizeMappings();
+				clearAllPools = typeMapper.BuildAction(typeMapper.MapActionLambda(() => SQLiteConnection.ClearAllPools()));
+			}
+
 			return new SQLiteProviderAdapter(
 				connectionType,
 				dataReaderType,
 				parameterType,
 				commandType,
 				transactionType,
-				disposeCommandOnError);
+				disposeCommandOnError,
+				clearAllPools);
 		}
+
+		private static readonly Version ClearPoolsMinVersionMDS = new (6, 0, 0);
+		private static readonly Version ClearPoolsMinVersionSDS = new (1, 0, 55);
 
 		public static SQLiteProviderAdapter GetInstance(string name)
 		{
@@ -89,5 +118,19 @@ namespace LinqToDB.DataProvider.SQLite
 				return _microsoftDataSQLite;
 			}
 		}
+
+		#region wrappers
+		[Wrapper]
+		private class SqliteConnection
+		{
+			public static void ClearAllPools() => throw new NotImplementedException();
+		}
+
+		[Wrapper]
+		private class SQLiteConnection
+		{
+			public static void ClearAllPools() => throw new NotImplementedException();
+		}
+		#endregion
 	}
 }
