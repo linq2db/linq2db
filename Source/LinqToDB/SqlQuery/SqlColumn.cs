@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Text;
+using LinqToDB.Linq;
 
 namespace LinqToDB.SqlQuery
 {
@@ -57,7 +59,22 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		internal string?        RawAlias   { get; set; }
+		internal string? RawAlias   { get; set; }
+
+		public ISqlExpression UnderlyingExpression()
+		{
+			var current = QueryHelper.UnwrapExpression(Expression);
+			while (current.ElementType == QueryElementType.Column)
+			{
+				var column      = (SqlColumn)current;
+				var columnQuery = column.Parent;
+				if (columnQuery == null || columnQuery.HasSetOperators || QueryHelper.EnumerateLevelSources(columnQuery).Take(2).Count() > 1)
+					break;
+				current = QueryHelper.UnwrapExpression(column.Expression);
+			}
+
+			return current;
+		}
 
 		public string? Alias
 		{
@@ -83,49 +100,6 @@ namespace LinqToDB.SqlQuery
 			set => RawAlias = value;
 		}
 
-		private bool   _underlyingColumnSet;
-
-		private SqlColumn? _underlyingColumn;
-
-		public  SqlColumn?  UnderlyingColumn
-		{
-			get
-			{
-				if (_underlyingColumnSet)
-					return _underlyingColumn;
-
-				var columns = new List<SqlColumn>(10);
-				var column  = Expression as SqlColumn;
-
-				while (column != null)
-				{
-					if (column._underlyingColumn != null)
-					{
-						columns.Add(column._underlyingColumn);
-						break;
-					}
-
-					columns.Add(column);
-					column = column.Expression as SqlColumn;
-				}
-
-				_underlyingColumnSet = true;
-				if (columns.Count == 0)
-					return null;
-
-				_underlyingColumn = columns[columns.Count - 1];
-
-				for (var i = 0; i < columns.Count - 1; i++)
-				{
-					var c = columns[i];
-					c._underlyingColumn    = _underlyingColumn;
-					c._underlyingColumnSet = true;
-				}
-
-				return _underlyingColumn;
-			}
-		}
-
 		int? _hashCode;
 
 		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
@@ -137,8 +111,6 @@ namespace LinqToDB.SqlQuery
 			var hashCode = Parent?.GetHashCode() ?? 0;
 
 			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expression.GetHashCode());
-			if (UnderlyingColumn != null)
-				hashCode = unchecked(hashCode + (hashCode * 397) ^ UnderlyingColumn.GetHashCode());
 
 			_hashCode = hashCode;
 
@@ -150,13 +122,16 @@ namespace LinqToDB.SqlQuery
 			if (other == null)
 				return false;
 
+			if (ReferenceEquals(this, other))
+				return true;
+
 			if (!Equals(Parent, other.Parent))
 				return false;
 
 			if (Expression.Equals(other.Expression))
-				return true;
+				return false;
 
-			return UnderlyingColumn != null && UnderlyingColumn.Equals(other.UnderlyingColumn);
+			return false;
 		}
 
 		public override string ToString()
@@ -171,11 +146,18 @@ namespace LinqToDB.SqlQuery
 #if DEBUG
 				.Append('[').Append(_columnNumber).Append(']')
 #endif
-				.Append(".")
+				.Append('.')
 				.Append(Alias ?? "c")
 				.Append(" => ");
 
 			Expression.ToString(sb, dic);
+
+			var underlying = UnderlyingExpression();
+			if (!ReferenceEquals(underlying, Expression))
+			{
+				sb.Append(" == ");
+				underlying.ToString(sb, dic);
+			}
 
 			return sb.ToString();
 
@@ -225,22 +207,6 @@ namespace LinqToDB.SqlQuery
 		public int   Precedence => SqlQuery.Precedence.Primary;
 		public Type? SystemType => Expression.SystemType;
 
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			var parent = (SelectQuery?)Parent?.Clone(objectTree, doClone);
-
-			if (!objectTree.TryGetValue(this, out var clone))
-				objectTree.Add(this, clone = new SqlColumn(
-					parent,
-					(ISqlExpression)Expression.Clone(objectTree, doClone),
-					RawAlias));
-
-			return clone;
-		}
-
 		#endregion
 
 		#region IEquatable<ISqlExpression> Members
@@ -257,15 +223,15 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		public ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			if (!(options.SkipColumns && Expression is SqlColumn))
-				Expression = Expression.Walk(options, func)!;
+				Expression = Expression.Walk(options, context, func)!;
 
 			if (options.ProcessParent)
-				Parent = (SelectQuery)func(Parent!);
+				Parent = (SelectQuery)func(context, Parent!);
 
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion
@@ -288,7 +254,7 @@ namespace LinqToDB.SqlQuery
 #if DEBUG
 				.Append('[').Append(_columnNumber).Append(']')
 #endif
-				.Append(".")
+				.Append('.')
 				.Append(Alias ?? "c" + (parentIndex >= 0 ? parentIndex + 1 : parentIndex));
 
 			return sb;

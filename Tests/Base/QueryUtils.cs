@@ -13,7 +13,7 @@ namespace Tests
 		{
 			var eq = (IExpressionQuery)query;
 			var expression = eq.Expression;
-			var info = Query<T>.GetQuery(eq.DataContext, ref expression);
+			var info = Query<T>.GetQuery(eq.DataContext, ref expression, out _);
 
 			InitParameters(eq, info, expression);
 
@@ -29,7 +29,7 @@ namespace Tests
 		{
 			var eq = (IExpressionQuery)query;
 			var expression = eq.Expression;
-			var info = Query<T>.GetQuery(eq.DataContext, ref expression);
+			var info = Query<T>.GetQuery(eq.DataContext, ref expression, out _);
 
 			return info.PreamblesCount();
 		}

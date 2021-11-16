@@ -10,9 +10,11 @@ namespace LinqToDB.Linq.Builder
 
 	class OrderByBuilder : MethodCallBuilder
 	{
+		private static readonly string[] MethodNames = { "OrderBy", "OrderByDescending", "ThenBy", "ThenByDescending", "ThenOrBy", "ThenOrByDescending" };
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			if (!methodCall.IsQueryable("OrderBy", "OrderByDescending", "ThenBy", "ThenByDescending", "ThenOrBy", "ThenOrByDescending"))
+			if (!methodCall.IsQueryable(MethodNames))
 				return false;
 
 			var body = ((LambdaExpression)methodCall.Arguments[1].Unwrap()).Body.Unwrap();
@@ -40,8 +42,7 @@ namespace LinqToDB.Linq.Builder
 
 			var wrapped = false;
 
-			if (sequence.SelectQuery.Select.TakeValue != null ||
-				sequence.SelectQuery.Select.SkipValue != null)
+			if (sequence.SelectQuery.Select.HasModifier)
 			{
 				sequence = new SubQueryContext(sequence);
 				wrapped = true;
@@ -78,8 +79,7 @@ namespace LinqToDB.Linq.Builder
 					
 					// possible we have to extend this list
 					//
-					isComplex = null != new QueryVisitor().Find(sqlInfo.Sql,
-						e => e.ElementType == QueryElementType.SqlQuery);
+					isComplex = null != sqlInfo.Sql.Find(QueryElementType.SqlQuery);
 					if (isComplex)
 						break;
 				}
@@ -102,8 +102,7 @@ namespace LinqToDB.Linq.Builder
 				if (QueryHelper.IsConstant(expr.Sql))
 					continue;
 			
-				var e = builder.ConvertSearchCondition(expr.Sql);
-				sequence.SelectQuery.OrderBy.Expr(e, methodCall.Method.Name.EndsWith("Descending"));
+				sequence.SelectQuery.OrderBy.Expr(expr.Sql, methodCall.Method.Name.EndsWith("Descending"));
 			}
 
 			return sequence;

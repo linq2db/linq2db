@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
@@ -12,6 +12,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Common;
 	using Model;
 	using System.Text.RegularExpressions;
 
@@ -1037,7 +1038,7 @@ namespace Tests.Linq
 		[Test]
 		public void Contains5([DataSources] string context)
 		{
-			IEnumerable<int> ids = new int[0];
+			IEnumerable<int> ids = Array<int>.Empty;
 
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1432,7 +1433,7 @@ namespace Tests.Linq
 		{
 			void AreEqualLocal(IEnumerable<WhereCases> expected, IQueryable<WhereCases> actual, Expression<Func<WhereCases, bool>> predicate)
 			{
-				var exp = expected.Where(predicate.Compile());
+				var exp = expected.Where(predicate.CompileExpression());
 				var act = actual.  Where(predicate);
 				AreEqual(exp, act, WhereCases.Comparer);
 				Assert.That(act.ToString(), Does.Not.Contain("<>"));
@@ -1440,7 +1441,7 @@ namespace Tests.Linq
 				var notPredicate = Expression.Lambda<Func<WhereCases, bool>>(
 					Expression.Not(predicate.Body), predicate.Parameters);
 
-				var expNot      = expected.Where(notPredicate.Compile()).ToArray();
+				var expNot      = expected.Where(notPredicate.CompileExpression()).ToArray();
 				var actNotQuery = actual.Where(notPredicate);
 				var actNot      = actNotQuery.ToArray();
 				AreEqual(expNot, actNot, WhereCases.Comparer);
@@ -1451,7 +1452,7 @@ namespace Tests.Linq
 			void AreEqualLocalPredicate(IEnumerable<WhereCases> expected, IQueryable<WhereCases> actual, Expression<Func<WhereCases, bool>> predicate, Expression<Func<WhereCases, bool>> localPredicate)
 			{
 				var actualQuery = actual.Where(predicate);
-				AreEqual(expected.Where(localPredicate.Compile()), actualQuery, WhereCases.Comparer);
+				AreEqual(expected.Where(localPredicate.CompileExpression()), actualQuery, WhereCases.Comparer);
 				Assert.That(actualQuery.ToString(), Does.Not.Contain("<>"));
 
 				var notLocalPredicate = Expression.Lambda<Func<WhereCases, bool>>(
@@ -1460,7 +1461,7 @@ namespace Tests.Linq
 				var notPredicate = Expression.Lambda<Func<WhereCases, bool>>(
 					Expression.Not(predicate.Body), predicate.Parameters);
 
-				var expNot = expected.Where(notLocalPredicate.Compile()).ToArray();
+				var expNot = expected.Where(notLocalPredicate.CompileExpression()).ToArray();
 				var actualNotQuery = actual.Where(notPredicate);
 
 				var actNot = actualNotQuery.ToArray();
@@ -1684,20 +1685,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(1767)]
-		[Test]
-		public void Issue1767Test([DataSources(false)] string context)
-		{
-			using (var db = new TestDataConnection(context))
-			using (db.BeginTransaction())
-			{
-				db.Person.FirstOrDefault(p => p.MiddleName != null && p.MiddleName != "test");
-
-				Assert.True(db.LastQuery!.Contains("IS NOT NULL"));
-				Assert.False(db.LastQuery!.Contains("IS NULL"));
-			}
-		}
-
 		class Parameter
 		{
 			public int Id;
@@ -1806,6 +1793,88 @@ namespace Tests.Linq
 			return value => value == "1" ? "test" : value;
 		}
 
+		class WhereWithBool
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column]
+			public bool BoolValue { get; set; }
+		}
+
+		[Test]
+		public void BooleanSubquery([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<WhereWithBool>(new List<WhereWithBool>(){new WhereWithBool()
+			{
+				Id = 1,
+				BoolValue = true
+			}}))
+			{
+				var query =
+					from t in table
+					where table.Single(x => x.Id == 1).BoolValue
+					select t;
+
+				var result = query.ToArray();
+			}
+		}
+
+		class WhereWithString
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column]
+			public string? StringValue { get; set; }
+		}
+
+		[Test]
+		public void CaseOptimization([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(new List<WhereWithString>{new()
+			{
+				Id        = 1,
+				StringValue = "Str1"
+			}}))
+			{
+				// ReSharper disable RedundantCast
+				var query = table.Where(x =>
+					(x.StringValue == null ? (bool?)null : (bool?)x.StringValue.Contains("Str")) == true);
+				// ReSharper restore RedundantCast
+
+				var result = query.ToArray();
+
+				var str = query.ToString();
+
+				str.Should().NotContain("NULL");
+			}
+		}
+
+		[Test]
+		public void CaseOptimizationNullable([DataSources(TestProvName.AllSQLite)] string context, [Values(2, null)] int? filterValue)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(new List<WhereWithString>{new()
+				{
+					Id          = 1,
+					StringValue = "Str1"
+				}}))
+			{
+				var query = table.Where(x => filterValue.HasValue ? x.Id == filterValue : true);
+
+				var result = query.ToArray();
+
+				if (filterValue == null)
+					result.Should().HaveCount(1);
+				else
+					result.Should().HaveCount(0);
+			}
+		}
+
+
 		#region issue 2424
 		class Isue2424Table
 		{
@@ -1883,5 +1952,41 @@ namespace Tests.Linq
 			}
 		}
 		#endregion
+
+		[ActiveIssue(1767)]
+		[Test]
+		public void Issue1767Test1([DataSources(false)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Parent.Where(p => p.Value1 != null && p.Value1 != 1);
+
+				AreEqual(
+					db.Parent.AsEnumerable().Where(p => p.Value1 != null && p.Value1 != 1),
+					query);
+
+				var sql = query.ToString()!;
+				Assert.False(sql.Contains("IS NULL"), sql);
+				Assert.AreEqual(1, Regex.Matches(sql, "IS NOT NULL").Count, sql);
+			}
+		}
+
+		[ActiveIssue(1767)]
+		[Test]
+		public void Issue1767Test2([DataSources(false)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Parent.Where(p => p.Value1 == null || p.Value1 != 1);
+
+				AreEqual(
+					db.Parent.AsEnumerable().Where(p => p.Value1 == null || p.Value1 != 1),
+					query);
+
+				var sql = query.ToString()!;
+				Assert.AreEqual(1, Regex.Matches(sql, "IS NULL").Count, sql);
+				Assert.False(sql.Contains("IS NOT NULL"), sql);
+			}
+		}
 	}
 }

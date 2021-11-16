@@ -1,15 +1,13 @@
-﻿using LinqToDB;
-using NUnit.Framework;
-using System;
+﻿using System;
 using System.Linq;
+using LinqToDB;
+using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using System.Collections.Generic;
 	using System.Runtime.InteropServices;
 	using LinqToDB.Mapping;
 	using LinqToDB.Tools;
-	using Tests.Model;
 
 	[TestFixture]
 	public class DateTimeOffsetTests : TestBase
@@ -64,7 +62,7 @@ namespace Tests.Linq
 
 			/* Currently, only SQL Server properly handles DateTimeOffset with full fidelity in both directions.
 			 * Other Server behaviors:
-			 *  - PostgreSQL: 
+			 *  - PostgreSQL:
 			 *     - Translates to UTC before transmitting to server. Original TZ lost in translation.
 			 *     - Does not keep precision to the Tick level, only to the 100ns level.
 			 */
@@ -570,7 +568,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
 					from t in Transaction.GetTestDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Hour, 1, t.TransactionDate)!. Value.Hour,
-					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Hour, 1, t.TransactionDate))!.Value.Hour);
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Hour, 1, t.TransactionDate)!.Value.Hour));
 		}
 
 		[Test]
@@ -630,7 +628,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
 					from t in Transaction.GetTestDataForContext(context) select           t.TransactionDate.AddHours(22). Hour,
-					from t in db.GetTable<Transaction>()                 select Sql.AsSql(t.TransactionDate.AddHours(22)).Hour);
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(t.TransactionDate.AddHours(22).Hour));
 		}
 
 		[Test]
@@ -758,7 +756,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
 					from t in Transaction.GetTestDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Hour, 1, t.TransactionDate)!.             Value.Hour,
-					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Hour, part2 - part1, t.TransactionDate))!.Value.Hour);
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Hour, part2 - part1, t.TransactionDate)!.Value.Hour));
 		}
 
 		[Test]
@@ -836,7 +834,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
 				AreEqual(
 					from t in Transaction.GetTestDataForContext(context) select           t.TransactionDate.AddHours(22)            .Hour,
-					from t in db.GetTable<Transaction>()                 select Sql.AsSql(t.TransactionDate.AddHours(part1 + part2)).Hour);
+					from t in db.GetTable<Transaction>()                 select Sql.AsSql(t.TransactionDate.AddHours(part1 + part2).Hour));
 		}
 
 		[Test]

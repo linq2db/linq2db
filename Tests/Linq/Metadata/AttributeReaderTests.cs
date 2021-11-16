@@ -1,4 +1,4 @@
-﻿using System;
+﻿#if NET472
 using System.Data.Linq.Mapping;
 
 using LinqToDB.Expressions;
@@ -48,3 +48,4 @@ namespace Tests.Metadata
 		}
 	}
 }
+#endif

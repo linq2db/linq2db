@@ -1,12 +1,10 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
 	using LinqToDB;
-	using Model;
 
 	public partial class MergeTests
 	{
@@ -682,7 +680,7 @@ namespace Tests.xUpdate
 								Field1 = s.Field1
 							},
 							(t, s) => t.Field2 == s.Field2)
-						.Merge());
+						.Merge())!;
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
 				Assert.That(exception.Message, Does.EndWith(".Field2' cannot be converted to SQL."));
@@ -711,7 +709,7 @@ namespace Tests.xUpdate
 								Field1 = s.Field2
 							},
 							(t, s) => t.Field2 == s.Field1)
-						.Merge());
+						.Merge())!;
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
 				Assert.AreEqual("'s.Field2' cannot be converted to SQL.", exception.Message);
@@ -734,7 +732,7 @@ namespace Tests.xUpdate
 						.Using(table.Select(_ => new TestMapping1() { Id = _.Id, Field1 = _.Field1 }))
 						.OnTargetKey()
 						.UpdateWhenMatchedThenDelete((t, s) => t.Field2 == s.Field1)
-						.Merge());
+						.Merge())!;
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
 				Assert.AreEqual("'s.Field2' cannot be converted to SQL.", exception.Message);
@@ -764,7 +762,7 @@ namespace Tests.xUpdate
 								Field1 = s.Field1
 							},
 							(t, s) => t.Field2 == s.Field1)
-						.Merge());
+						.Merge())!;
 
 				Assert.IsInstanceOf<LinqToDBException>(exception);
 				Assert.That(exception.Message, Does.EndWith(".Field2' cannot be converted to SQL."));

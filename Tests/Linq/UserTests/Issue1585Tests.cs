@@ -1,8 +1,4 @@
-﻿using System;
-using System.Threading;
-using LinqToDB.Data;
-using LinqToDB.DataProvider.SQLite;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
 namespace Tests.UserTests
 {
@@ -49,7 +45,7 @@ namespace Tests.UserTests
 
 				db.CreateTable<Test1585>();
 				var data = db.GetTable<Test1585>();
-				ed1 = db.MappingSchema.GetEntityDescriptor(typeof(Test1585));	
+				ed1 = db.MappingSchema.GetEntityDescriptor(typeof(Test1585));
 			}
 			using (var db = GetDataContext(context, ms))
 			{

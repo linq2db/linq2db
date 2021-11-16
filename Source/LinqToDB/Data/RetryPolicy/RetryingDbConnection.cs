@@ -69,7 +69,7 @@ namespace LinqToDB.Data.RetryPolicy
 
 		void IDisposable.Dispose()
 		{
-			((IDisposable)_connection).Dispose();
+			_connection.Dispose();
 		}
 
 		public DbConnection UnderlyingObject => _dbConnection;
@@ -122,7 +122,7 @@ namespace LinqToDB.Data.RetryPolicy
 
 		protected override ValueTask<DbTransaction> BeginDbTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken)
 			=> _dbConnection.BeginTransactionAsync(isolationLevel, cancellationToken);
-#elif !NETFRAMEWORK
+#elif NATIVE_ASYNC
 		public ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
 			=> _connection.BeginTransactionAsync(cancellationToken);
 
@@ -146,8 +146,10 @@ namespace LinqToDB.Data.RetryPolicy
 		}
 
 #if NETSTANDARD2_1PLUS
+#pragma warning disable CA2215 // CA2215: Dispose methods should call base class dispose
 		public override ValueTask DisposeAsync()
-#elif !NETFRAMEWORK
+#pragma warning restore CA2215 // CA2215: Dispose methods should call base class dispose
+#elif NATIVE_ASYNC
 		public ValueTask DisposeAsync()
 #else
 		public Task DisposeAsync()

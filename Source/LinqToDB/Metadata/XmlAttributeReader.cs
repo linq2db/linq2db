@@ -20,8 +20,8 @@ namespace LinqToDB.Metadata
 
 		public XmlAttributeReader(string xmlFile, Assembly assembly)
 		{
-			if (xmlFile  == null) throw new ArgumentNullException("xmlFile");
-			if (assembly == null) throw new ArgumentNullException("assembly");
+			if (xmlFile  == null) throw new ArgumentNullException(nameof(xmlFile));
+			if (assembly == null) throw new ArgumentNullException(nameof(assembly));
 
 			StreamReader? streamReader = null;
 
@@ -98,7 +98,7 @@ namespace LinqToDB.Metadata
 					return Tuple.Create(name, val);
 				});
 
-				return new AttributeInfo(aname, values.ToDictionary(v => v.Item1, v => (object?)v.Item2));
+				return new AttributeInfo(aname, values.ToDictionary(v => v.Item1, v => v.Item2));
 			});
 
 			return attrs.ToArray();
@@ -159,6 +159,6 @@ namespace LinqToDB.Metadata
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
 		public MemberInfo[] GetDynamicColumns(Type type)
-			=> new MemberInfo[0];
+			=> Array<MemberInfo>.Empty;
 	}
 }

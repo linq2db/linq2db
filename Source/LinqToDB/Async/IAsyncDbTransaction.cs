@@ -11,10 +11,7 @@ namespace LinqToDB.Async
 	/// Asynchronous version of the <see cref="IDbTransaction"/> interface, allowing asynchronous operations, missing from <see cref="IDbTransaction"/>.
 	/// </summary>
 	[PublicAPI]
-	public interface IAsyncDbTransaction : IDbTransaction
-#if !NETFRAMEWORK
-		, IAsyncDisposable
-#endif
+	public interface IAsyncDbTransaction : IDbTransaction, IAsyncDisposable
 	{
 		/// <summary>
 		/// Commits transaction asynchronously.
@@ -34,13 +31,5 @@ namespace LinqToDB.Async
 		/// Gets underlying transaction instance.
 		/// </summary>
 		IDbTransaction Transaction { get; }
-
-#if NETFRAMEWORK
-		/// <summary>
-		/// Disposes transaction asynchronously.
-		/// </summary>
-		/// <returns>Asynchronous operation completion task.</returns>
-		Task DisposeAsync();
-#endif
 	}
 }

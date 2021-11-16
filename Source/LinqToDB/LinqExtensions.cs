@@ -14,6 +14,7 @@ namespace LinqToDB
 	using Expressions;
 	using Linq;
 	using Linq.Builder;
+	using LinqToDB.Reflection;
 
 	/// <summary>
 	/// Contains extension methods for LINQ queries.
@@ -33,6 +34,7 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> TableName<T>(this ITable<T> table, [SqlQueryDependent] string name)
+			where T : notnull
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 			if (name  == null) throw new ArgumentNullException(nameof(name));
@@ -54,10 +56,10 @@ namespace LinqToDB
 		/// <returns>Table-like query source with new database name.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static ITable<T> DatabaseName<T>(this ITable<T> table, [SqlQueryDependent] string name)
+		public static ITable<T> DatabaseName<T>(this ITable<T> table, [SqlQueryDependent] string? name)
+			where T : notnull
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
-			if (name  == null) throw new ArgumentNullException(nameof(name));
 
 			var result = ((ITableMutable<T>)table).ChangeDatabaseName(name);
 			return result;
@@ -74,10 +76,10 @@ namespace LinqToDB
 		/// <returns>Table-like query source with new linked server name.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static ITable<T> ServerName<T>(this ITable<T> table, [SqlQueryDependent] string name)
+		public static ITable<T> ServerName<T>(this ITable<T> table, [SqlQueryDependent] string? name)
+			where T : notnull
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
-			if (name  == null) throw new ArgumentNullException(nameof(name));
 
 			var result = ((ITableMutable<T>)table).ChangeServerName(name);
 			return result;
@@ -94,7 +96,8 @@ namespace LinqToDB
 		/// <returns>Table-like query source with new owner/schema name.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static ITable<T> SchemaName<T>(this ITable<T> table, [SqlQueryDependent] string name)
+		public static ITable<T> SchemaName<T>(this ITable<T> table, [SqlQueryDependent] string? name)
+			where T : notnull
 		{
 			var result = ((ITableMutable<T>)table).ChangeSchemaName(name);
 			return result;
@@ -117,12 +120,13 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> WithTableExpression<T>(this ITable<T> table, [SqlQueryDependent] string expression)
+			where T : notnull
 		{
 			if (expression == null) throw new ArgumentNullException(nameof(expression));
 
 			table.Expression = Expression.Call(
 				null,
-				MethodHelper.GetMethodInfo(WithTableExpression, table, expression),
+				Methods.LinqToDB.Table.WithTableExpression.MakeGenericMethod(typeof(T)),
 				table.Expression, Expression.Constant(expression));
 
 			return table;
@@ -143,12 +147,13 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> With<T>(this ITable<T> table, [SqlQueryDependent] string args)
+			where T : notnull
 		{
 			if (args == null) throw new ArgumentNullException(nameof(args));
 
 			table.Expression = Expression.Call(
 				null,
-				MethodHelper.GetMethodInfo(With, table, args),
+				Methods.LinqToDB.Table.With.MakeGenericMethod(typeof(T)),
 				table.Expression, Expression.Constant(args));
 
 			return table;
@@ -174,7 +179,7 @@ namespace LinqToDB
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			if (selector    == null) throw new ArgumentNullException(nameof(selector));
 
-			var q = new Table<T>(dataContext, selector);
+			var q = new ExpressionQueryImpl<T>(dataContext, selector);
 
 			foreach (var item in q)
 				return item;
@@ -198,7 +203,7 @@ namespace LinqToDB
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			if (selector    == null) throw new ArgumentNullException(nameof(selector));
 
-			var q = new Table<T>(dataContext, selector);
+			var q = new ExpressionQueryImpl<T>(dataContext, selector);
 
 			var read = false;
 			var item = default(T)!; // this is fine, as we never return it
@@ -235,7 +240,7 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(Delete, source),
+					Methods.LinqToDB.Delete.DeleteQueryable.MakeGenericMethod(typeof(T)),
 					currentSource.Expression));
 		}
 
@@ -254,7 +259,7 @@ namespace LinqToDB
 
 			var expr = Expression.Call(
 				null,
-				MethodHelper.GetMethodInfo(Delete, source),
+				Methods.LinqToDB.Delete.DeleteQueryable.MakeGenericMethod(typeof(T)),
 				currentSource.Expression);
 
 			if (currentSource is IQueryProviderAsync query)
@@ -282,7 +287,7 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(Delete, source, predicate),
+					Methods.LinqToDB.Delete.DeleteQueryablePredicate.MakeGenericMethod(typeof(T)),
 					currentSource.Expression, Expression.Quote(predicate)));
 		}
 
@@ -306,7 +311,7 @@ namespace LinqToDB
 
 			var expr = Expression.Call(
 				null,
-				MethodHelper.GetMethodInfo(Delete, source, predicate),
+				Methods.LinqToDB.Delete.DeleteQueryablePredicate.MakeGenericMethod(typeof(T)),
 				currentSource.Expression, Expression.Quote(predicate));
 
 			if (currentSource is IQueryProviderAsync query)
@@ -332,6 +337,7 @@ namespace LinqToDB
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -342,7 +348,7 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(Update, source, target, setter),
+					Methods.LinqToDB.Update.UpdateTarget.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
 					currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter)));
 		}
 
@@ -361,6 +367,7 @@ namespace LinqToDB
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
 			CancellationToken                                 token = default)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -370,7 +377,7 @@ namespace LinqToDB
 
 			var expr = Expression.Call(
 				null,
-				MethodHelper.GetMethodInfo(Update, source, target, setter),
+				Methods.LinqToDB.Update.UpdateTarget.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
 				currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter));
 
 			if (currentSource is IQueryProviderAsync query)
@@ -396,7 +403,7 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(Update, source, setter),
+					Methods.LinqToDB.Update.UpdateSetter.MakeGenericMethod(typeof(T)),
 					currentSource.Expression, Expression.Quote(setter)));
 		}
 
@@ -420,7 +427,7 @@ namespace LinqToDB
 
 			var expr = Expression.Call(
 				null,
-				MethodHelper.GetMethodInfo(Update, source, setter),
+				Methods.LinqToDB.Update.UpdateSetter.MakeGenericMethod(typeof(T)),
 				currentSource.Expression, Expression.Quote(setter));
 
 			if (currentSource is IQueryProviderAsync query)
@@ -451,7 +458,7 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(Update, source, predicate, setter),
+					Methods.LinqToDB.Update.UpdatePredicateSetter.MakeGenericMethod(typeof(T)),
 					currentSource.Expression, Expression.Quote(predicate), Expression.Quote(setter)));
 		}
 
@@ -478,7 +485,7 @@ namespace LinqToDB
 
 			var expr = Expression.Call(
 				null,
-				MethodHelper.GetMethodInfo(Update, source, predicate, setter),
+				Methods.LinqToDB.Update.UpdatePredicateSetter.MakeGenericMethod(typeof(T)),
 				currentSource.Expression, Expression.Quote(predicate), Expression.Quote(setter));
 
 			if (currentSource is IQueryProviderAsync query)
@@ -504,7 +511,7 @@ namespace LinqToDB
 			return currentQuery.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(Update, source),
+					Methods.LinqToDB.Update.UpdateUpdatable.MakeGenericMethod(typeof(T)),
 					currentQuery.Expression));
 		}
 
@@ -525,7 +532,7 @@ namespace LinqToDB
 
 			var expr = Expression.Call(
 				null,
-				MethodHelper.GetMethodInfo(Update, source),
+				Methods.LinqToDB.Update.UpdateUpdatable.MakeGenericMethod(typeof(T)),
 				currentQuery.Expression);
 
 			if (currentQuery is IQueryProviderAsync query)
@@ -558,7 +565,7 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(Update, source, target, setter),
+					Methods.LinqToDB.Update.UpdateTargetFuncSetter.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
 					currentSource.Expression, Expression.Quote(target), Expression.Quote(setter)));
 		}
 
@@ -587,7 +594,7 @@ namespace LinqToDB
 
 			var expr = Expression.Call(
 				null,
-				MethodHelper.GetMethodInfo(Update, source, target, setter),
+				Methods.LinqToDB.Update.UpdateTargetFuncSetter.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
 				currentSource.Expression, Expression.Quote(target), Expression.Quote(setter));
 
 			if (currentSource is IQueryProviderAsync query)
@@ -628,7 +635,7 @@ namespace LinqToDB
 			var query = currentSource.Provider.CreateQuery<T>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(AsUpdatable, source),
+					Methods.LinqToDB.Update.AsUpdatable.MakeGenericMethod(typeof(T)),
 					currentSource.Expression));
 
 			return new Updatable<T>(query);
@@ -659,7 +666,7 @@ namespace LinqToDB
 			var query = currentSource.Provider.CreateQuery<T>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(Set, source, extract, update),
+					Methods.LinqToDB.Update.SetQueryablePrev.MakeGenericMethod(typeof(T), typeof(TV)),
 					currentSource.Expression, Expression.Quote(extract), Expression.Quote(update)));
 
 			return new Updatable<T>(query);
@@ -690,7 +697,7 @@ namespace LinqToDB
 			query = query.Provider.CreateQuery<T>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(Set, source, extract, update),
+					Methods.LinqToDB.Update.SetUpdatablePrev.MakeGenericMethod(typeof(T), typeof(TV)),
 					query.Expression, Expression.Quote(extract), Expression.Quote(update)));
 
 			return new Updatable<T>(query);
@@ -719,7 +726,7 @@ namespace LinqToDB
 			var query = source.Provider.CreateQuery<T>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(Set, source, extract, update),
+					Methods.LinqToDB.Update.SetQueryableExpression.MakeGenericMethod(typeof(T), typeof(TV)),
 					source.Expression, Expression.Quote(extract), Expression.Quote(update)));
 
 			return new Updatable<T>(query);
@@ -750,7 +757,7 @@ namespace LinqToDB
 			query = query.Provider.CreateQuery<T>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(Set, source, extract, update),
+					Methods.LinqToDB.Update.SetUpdatableExpression.MakeGenericMethod(typeof(T), typeof(TV)),
 					query.Expression, Expression.Quote(extract), Expression.Quote(update)));
 
 			return new Updatable<T>(query);
@@ -768,9 +775,9 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static IUpdatable<T> Set<T,TV>(
-			                this IQueryable<T>     source,
-			[InstantHandle] Expression<Func<T,TV>> extract,
-			TV                                     value)
+			                 this IQueryable<T>     source,
+			[InstantHandle]  Expression<Func<T,TV>> extract,
+			[SkipIfConstant] TV                     value)
 		{
 			if (source  == null) throw new ArgumentNullException(nameof(source));
 			if (extract == null) throw new ArgumentNullException(nameof(extract));
@@ -780,8 +787,8 @@ namespace LinqToDB
 			var query = currentSource.Provider.CreateQuery<T>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(Set, source, extract, value),
-					currentSource.Expression, Expression.Quote(extract), WrapConstant(extract.Body, value)));
+					Methods.LinqToDB.Update.SetQueryableValue.MakeGenericMethod(typeof(T), typeof(TV)),
+					currentSource.Expression, Expression.Quote(extract), Expression.Constant(value, typeof(TV))));
 
 			return new Updatable<T>(query);
 		}
@@ -798,9 +805,9 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static IUpdatable<T> Set<T,TV>(
-			                this IUpdatable<T>     source,
-			[InstantHandle] Expression<Func<T,TV>> extract,
-			TV                                     value)
+			                 this IUpdatable<T>     source,
+			[InstantHandle]  Expression<Func<T,TV>> extract,
+			[SkipIfConstant] TV                     value)
 		{
 			if (source  == null) throw new ArgumentNullException(nameof(source));
 			if (extract == null) throw new ArgumentNullException(nameof(extract));
@@ -810,8 +817,8 @@ namespace LinqToDB
 			query = query.Provider.CreateQuery<T>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(Set, source, extract, value),
-					query.Expression, Expression.Quote(extract), WrapConstant(extract.Body, value)));
+					Methods.LinqToDB.Update.SetUpdatableValue.MakeGenericMethod(typeof(T), typeof(TV)),
+					query.Expression, Expression.Quote(extract), Expression.Constant(value, typeof(TV))));
 
 			return new Updatable<T>(query);
 		}
@@ -845,7 +852,7 @@ namespace LinqToDB
 			var query = currentSource.Provider.CreateQuery<T>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(Set, source, setExpression),
+					Methods.LinqToDB.Update.SetQueryableSetCustom.MakeGenericMethod(typeof(T)),
 					currentSource.Expression, Expression.Quote(setExpression)));
 
 			return new Updatable<T>(query);
@@ -881,7 +888,7 @@ namespace LinqToDB
 			query = query.Provider.CreateQuery<T>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(Set, source, setExpression),
+					Methods.LinqToDB.Update.SetUpdatableSetCustom.MakeGenericMethod(typeof(T)),
 					query.Expression, Expression.Quote(setExpression)));
 
 			return new Updatable<T>(query);
@@ -901,6 +908,7 @@ namespace LinqToDB
 		public static int Insert<T>(
 			                this ITable<T>      target,
 			[InstantHandle] Expression<Func<T>> setter)
+			where T : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
@@ -928,6 +936,7 @@ namespace LinqToDB
 			                this ITable<T>      target,
 			[InstantHandle] Expression<Func<T>> setter,
 			CancellationToken                   token = default)
+			where T : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
@@ -957,6 +966,7 @@ namespace LinqToDB
 		public static object InsertWithIdentity<T>(
 			                this ITable<T>      target,
 			[InstantHandle] Expression<Func<T>> setter)
+			where T : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
@@ -982,6 +992,7 @@ namespace LinqToDB
 		public static int InsertWithInt32Identity<T>(
 			                this ITable<T>      target,
 			[InstantHandle] Expression<Func<T>> setter)
+			where T : notnull
 		{
 			return target.DataContext.MappingSchema.ChangeTypeTo<int>(InsertWithIdentity(target, setter));
 		}
@@ -996,6 +1007,7 @@ namespace LinqToDB
 		public static long InsertWithInt64Identity<T>(
 			                this ITable<T>      target,
 			[InstantHandle] Expression<Func<T>> setter)
+			where T : notnull
 		{
 			return target.DataContext.MappingSchema.ChangeTypeTo<long>(InsertWithIdentity(target, setter));
 		}
@@ -1010,6 +1022,7 @@ namespace LinqToDB
 		public static decimal InsertWithDecimalIdentity<T>(
 			                this ITable<T>      target,
 			[InstantHandle] Expression<Func<T>> setter)
+			where T : notnull
 		{
 			return target.DataContext.MappingSchema.ChangeTypeTo<decimal>(InsertWithIdentity(target, setter));
 		}
@@ -1026,6 +1039,7 @@ namespace LinqToDB
 			                this ITable<T>      target,
 			[InstantHandle] Expression<Func<T>> setter,
 			CancellationToken                   token = default)
+			where T : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
@@ -1056,7 +1070,8 @@ namespace LinqToDB
 		public static async Task<int> InsertWithInt32IdentityAsync<T>(
 			                this ITable<T>      target,
 			[InstantHandle] Expression<Func<T>> setter,
-			CancellationToken                            token = default)
+			CancellationToken                   token = default)
+			where T : notnull
 		{
 			return target.DataContext.MappingSchema.ChangeTypeTo<int>(await InsertWithIdentityAsync(target, setter, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
 		}
@@ -1072,7 +1087,8 @@ namespace LinqToDB
 		public static async Task<long> InsertWithInt64IdentityAsync<T>(
 			                this ITable<T>      target,
 			[InstantHandle] Expression<Func<T>> setter,
-			CancellationToken                            token = default)
+			CancellationToken                   token = default)
+			where T : notnull
 		{
 			return target.DataContext.MappingSchema.ChangeTypeTo<long>(await InsertWithIdentityAsync(target, setter, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
 		}
@@ -1088,7 +1104,8 @@ namespace LinqToDB
 		public static async Task<decimal> InsertWithDecimalIdentityAsync<T>(
 			                this ITable<T>      target,
 			[InstantHandle] Expression<Func<T>> setter,
-			CancellationToken                            token = default)
+			CancellationToken                   token = default)
+			where T : notnull
 		{
 			return target.DataContext.MappingSchema.ChangeTypeTo<decimal>(await InsertWithIdentityAsync(target, setter, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
 		}
@@ -1120,6 +1137,7 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static IValueInsertable<T> Into<T>(this IDataContext dataContext, ITable<T> target)
+			where T : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 
@@ -1149,6 +1167,7 @@ namespace LinqToDB
 			                this ITable<T>         source,
 			[InstantHandle] Expression<Func<T,TV>> field,
 			[InstantHandle] Expression<Func<TV>>   value)
+			where T : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (field  == null) throw new ArgumentNullException(nameof(field));
@@ -1177,9 +1196,10 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static IValueInsertable<T> Value<T,TV>(
-			                this ITable<T>         source,
-			[InstantHandle] Expression<Func<T,TV>> field,
-			TV                                     value)
+			                 this ITable<T>         source,
+			[InstantHandle]  Expression<Func<T,TV>> field,
+			[SkipIfConstant] TV                     value)
+			where T : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (field  == null) throw new ArgumentNullException(nameof(field));
@@ -1190,7 +1210,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(Value, source, field, value),
-					query.Expression, Expression.Quote(field), WrapConstant(field.Body, value)));
+					query.Expression, Expression.Quote(field), Expression.Constant(value, typeof(TV))));
 
 			return new ValueInsertable<T>(q);
 		}
@@ -1238,9 +1258,9 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		public static IValueInsertable<T> Value<T,TV>(
-			                this IValueInsertable<T> source,
-			[InstantHandle] Expression<Func<T,TV>>   field,
-			TV                                       value)
+			                 this IValueInsertable<T> source,
+			[InstantHandle]  Expression<Func<T,TV>>   field,
+			[SkipIfConstant] TV                       value)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (field  == null) throw new ArgumentNullException(nameof(field));
@@ -1251,7 +1271,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(Value, source, field, value),
-					query.Expression, Expression.Quote(field), WrapConstant(field.Body, value)));
+					query.Expression, Expression.Quote(field), Expression.Constant(value, typeof(TV))));
 
 			return new ValueInsertable<T>(q);
 		}
@@ -1273,7 +1293,7 @@ namespace LinqToDB
 			return currentQuery.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(Insert, source),
+					Methods.LinqToDB.Insert.VI.Insert.MakeGenericMethod(typeof(T)),
 					currentQuery.Expression));
 		}
 
@@ -1294,7 +1314,8 @@ namespace LinqToDB
 
 			var expr = Expression.Call(
 				null,
-				MethodHelper.GetMethodInfo(Insert, source), currentQueryable.Expression);
+				Methods.LinqToDB.Insert.VI.Insert.MakeGenericMethod(typeof(T)),
+				currentQueryable.Expression);
 
 			if (currentQueryable is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -1456,6 +1477,7 @@ namespace LinqToDB
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -1486,6 +1508,7 @@ namespace LinqToDB
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
 			CancellationToken                                 token = default)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -1518,6 +1541,7 @@ namespace LinqToDB
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -1546,6 +1570,7 @@ namespace LinqToDB
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -1571,6 +1596,7 @@ namespace LinqToDB
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -1596,6 +1622,7 @@ namespace LinqToDB
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -1623,6 +1650,7 @@ namespace LinqToDB
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
 			CancellationToken                                 token = default)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -1658,6 +1686,7 @@ namespace LinqToDB
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
 			CancellationToken                                 token = default)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -1685,6 +1714,7 @@ namespace LinqToDB
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
 			CancellationToken                                 token = default)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -1712,6 +1742,7 @@ namespace LinqToDB
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
 			CancellationToken                                 token = default)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -1738,18 +1769,6 @@ namespace LinqToDB
 			}
 		}
 
-		static Expression WrapConstant<TV>(Expression body, TV value)
-		{
-			var bodyType  = body.Unwrap().Type;
-			var valueType = ReferenceEquals(null, value) ? bodyType : value.GetType();
-			if (bodyType.IsInterface)
-				valueType = bodyType;
-			var result    = (Expression)Expression.Constant(value, valueType);
-			if (result.Type != typeof(TV))
-				result = Expression.Convert(result, typeof(TV));
-			return result;
-		}
-
 		/// <summary>
 		/// Converts LINQ query into insert query with source query data as data to insert.
 		/// </summary>
@@ -1763,6 +1782,7 @@ namespace LinqToDB
 		public static ISelectInsertable<TSource,TTarget> Into<TSource,TTarget>(
 			 this IQueryable<TSource> source,
 			 ITable<TTarget>          target)
+			where TTarget : notnull
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
@@ -1868,7 +1888,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(Value, source, field, value),
-					query.Expression, Expression.Quote(field), WrapConstant(field.Body, value)));
+					query.Expression, Expression.Quote(field), Expression.Constant(value, typeof(TValue))));
 
 			return new SelectInsertable<TSource,TTarget>(q);
 		}
@@ -1891,7 +1911,7 @@ namespace LinqToDB
 			return currentQuery.Provider.Execute<int>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(Insert, source),
+					Methods.LinqToDB.Insert.SI.Insert.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
 					currentQuery.Expression));
 		}
 
@@ -1914,7 +1934,8 @@ namespace LinqToDB
 
 			var expr = Expression.Call(
 				null,
-				MethodHelper.GetMethodInfo(Insert, source), currentQueryable.Expression);
+				Methods.LinqToDB.Insert.SI.Insert.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
+				currentQueryable.Expression);
 
 			if (currentQueryable is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -2079,6 +2100,8 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Inserts new record into target table or updates existing record if record with the same primary key value already exists in target table.
+		/// When <c>null</c> value or expression without field setters passed to <paramref name="onDuplicateKeyUpdateSetter"/>, this method
+		/// implements <c>INSERT IF NOT EXISTS</c> logic.
 		/// </summary>
 		/// <typeparam name="T">Table record type.</typeparam>
 		/// <param name="target">Target table.</param>
@@ -2089,13 +2112,13 @@ namespace LinqToDB
 		/// Accepts updated record as parameter.</param>
 		/// <returns>Number of affected records.</returns>
 		public static int InsertOrUpdate<T>(
-			                this ITable<T>        target,
-			[InstantHandle] Expression<Func<T>>   insertSetter,
-			[InstantHandle] Expression<Func<T,T>> onDuplicateKeyUpdateSetter)
+			                this ITable<T>          target,
+			[InstantHandle] Expression<Func<T>>     insertSetter,
+			[InstantHandle] Expression<Func<T,T?>>? onDuplicateKeyUpdateSetter)
+			where T : notnull
 		{
 			if (target                     == null) throw new ArgumentNullException(nameof(target));
 			if (insertSetter               == null) throw new ArgumentNullException(nameof(insertSetter));
-			if (onDuplicateKeyUpdateSetter == null) throw new ArgumentNullException(nameof(onDuplicateKeyUpdateSetter));
 
 			IQueryable<T> query = target;
 
@@ -2105,11 +2128,13 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					_insertOrUpdateMethodInfo.MakeGenericMethod(typeof(T)),
-					currentQuery.Expression, Expression.Quote(insertSetter), Expression.Quote(onDuplicateKeyUpdateSetter)));
+					currentQuery.Expression, Expression.Quote(insertSetter), onDuplicateKeyUpdateSetter != null ? Expression.Quote(onDuplicateKeyUpdateSetter) : Expression.Constant(null, typeof(Expression<Func<T, T>>))));
 		}
 
 		/// <summary>
 		/// Asynchronously inserts new record into target table or updates existing record if record with the same primary key value already exists in target table.
+		/// When <c>null</c> value or expression without field setters passed to <paramref name="onDuplicateKeyUpdateSetter"/>, this method
+		/// implements <c>INSERT IF NOT EXISTS</c> logic.
 		/// </summary>
 		/// <typeparam name="T">Table record type.</typeparam>
 		/// <param name="target">Target table.</param>
@@ -2121,14 +2146,14 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static async Task<int> InsertOrUpdateAsync<T>(
-			                this ITable<T>        target,
-			[InstantHandle] Expression<Func<T>>   insertSetter,
-			[InstantHandle] Expression<Func<T,T>> onDuplicateKeyUpdateSetter,
-			CancellationToken                     token = default)
+			                this ITable<T>          target,
+			[InstantHandle] Expression<Func<T>>     insertSetter,
+			[InstantHandle] Expression<Func<T,T?>>? onDuplicateKeyUpdateSetter,
+			CancellationToken                       token = default)
+			where T : notnull
 		{
 			if (target                     == null) throw new ArgumentNullException(nameof(target));
 			if (insertSetter               == null) throw new ArgumentNullException(nameof(insertSetter));
-			if (onDuplicateKeyUpdateSetter == null) throw new ArgumentNullException(nameof(onDuplicateKeyUpdateSetter));
 
 			IQueryable<T> source = target;
 
@@ -2137,7 +2162,7 @@ namespace LinqToDB
 			var expr = Expression.Call(
 				null,
 				_insertOrUpdateMethodInfo.MakeGenericMethod(typeof(T)),
-				currentSource.Expression, Expression.Quote(insertSetter), Expression.Quote(onDuplicateKeyUpdateSetter));
+				currentSource.Expression, Expression.Quote(insertSetter), onDuplicateKeyUpdateSetter != null ? Expression.Quote(onDuplicateKeyUpdateSetter) : Expression.Constant(null, typeof(Expression<Func<T, T>>)));
 
 			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -2150,6 +2175,8 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Inserts new record into target table or updates existing record if record with the same key value already exists in target table.
+		/// When <c>null</c> value or expression without field setters passed to <paramref name="onDuplicateKeyUpdateSetter"/>, this method
+		/// implements <c>INSERT IF NOT EXISTS</c> logic.
 		/// </summary>
 		/// <typeparam name="T">Table record type.</typeparam>
 		/// <param name="target">Target table.</param>
@@ -2162,14 +2189,14 @@ namespace LinqToDB
 		/// Expression supports only target table record new expression with field initializers for each key field. Assigned key field value will be used as key value by operation type selector.</param>
 		/// <returns>Number of affected records.</returns>
 		public static int InsertOrUpdate<T>(
-			                this ITable<T>        target,
-			[InstantHandle] Expression<Func<T>>   insertSetter,
-			[InstantHandle] Expression<Func<T,T>> onDuplicateKeyUpdateSetter,
-			[InstantHandle] Expression<Func<T>>   keySelector)
+			                this ITable<T>          target,
+			[InstantHandle] Expression<Func<T>>     insertSetter,
+			[InstantHandle] Expression<Func<T,T?>>? onDuplicateKeyUpdateSetter,
+			[InstantHandle] Expression<Func<T>>     keySelector)
+			where T : notnull
 		{
 			if (target                     == null) throw new ArgumentNullException(nameof(target));
 			if (insertSetter               == null) throw new ArgumentNullException(nameof(insertSetter));
-			if (onDuplicateKeyUpdateSetter == null) throw new ArgumentNullException(nameof(onDuplicateKeyUpdateSetter));
 			if (keySelector                == null) throw new ArgumentNullException(nameof(keySelector));
 
 			IQueryable<T> query = target;
@@ -2182,12 +2209,14 @@ namespace LinqToDB
 					_insertOrUpdateMethodInfo2.MakeGenericMethod(typeof(T)),
 					currentQuery.Expression,
 					Expression.Quote(insertSetter),
-					Expression.Quote(onDuplicateKeyUpdateSetter),
+					onDuplicateKeyUpdateSetter != null ? Expression.Quote(onDuplicateKeyUpdateSetter) : Expression.Constant(null, typeof(Expression<Func<T, T>>)),
 					Expression.Quote(keySelector)));
 		}
 
 		/// <summary>
 		/// Asynchronously inserts new record into target table or updates existing record if record with the same key value already exists in target table.
+		/// When <c>null</c> value or expression without field setters passed to <paramref name="onDuplicateKeyUpdateSetter"/>, this method
+		/// implements <c>INSERT IF NOT EXISTS</c> logic.
 		/// </summary>
 		/// <typeparam name="T">Table record type.</typeparam>
 		/// <param name="target">Target table.</param>
@@ -2201,15 +2230,15 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
 		public static async Task<int> InsertOrUpdateAsync<T>(
-			                this ITable<T>        target,
-			[InstantHandle] Expression<Func<T>>   insertSetter,
-			[InstantHandle] Expression<Func<T,T>> onDuplicateKeyUpdateSetter,
-			[InstantHandle] Expression<Func<T>>   keySelector,
-			CancellationToken                     token = default)
+			                this ITable<T>          target,
+			[InstantHandle] Expression<Func<T>>     insertSetter,
+			[InstantHandle] Expression<Func<T,T?>>? onDuplicateKeyUpdateSetter,
+			[InstantHandle] Expression<Func<T>>     keySelector,
+			CancellationToken                       token = default)
+			where T : notnull
 		{
 			if (target                     == null) throw new ArgumentNullException(nameof(target));
 			if (insertSetter               == null) throw new ArgumentNullException(nameof(insertSetter));
-			if (onDuplicateKeyUpdateSetter == null) throw new ArgumentNullException(nameof(onDuplicateKeyUpdateSetter));
 			if (keySelector                == null) throw new ArgumentNullException(nameof(keySelector));
 
 			IQueryable<T> source = target;
@@ -2221,7 +2250,7 @@ namespace LinqToDB
 				_insertOrUpdateMethodInfo2.MakeGenericMethod(typeof(T)),
 				currentSource.Expression,
 				Expression.Quote(insertSetter),
-				Expression.Quote(onDuplicateKeyUpdateSetter),
+				onDuplicateKeyUpdateSetter != null ? Expression.Quote(onDuplicateKeyUpdateSetter) : Expression.Constant(null, typeof(Expression<Func<T, T>>)),
 				Expression.Quote(keySelector));
 
 			if (currentSource is IQueryProviderAsync query)
@@ -2247,6 +2276,7 @@ namespace LinqToDB
 		/// Default value: <c>true</c>.</param>
 		/// <returns>Number of affected records. Usually <c>-1</c> as it is not data modification operation.</returns>
 		public static int Drop<T>( this ITable<T> target, bool throwExceptionIfNotExists = true)
+			where T : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 
@@ -2257,7 +2287,7 @@ namespace LinqToDB
 			var expr = Expression.Call(
 				null,
 				_dropMethodInfo2.MakeGenericMethod(typeof(T)),
-				currentQuery.Expression, Expression.Constant(throwExceptionIfNotExists));
+				currentQuery.Expression, ExpressionInstances.Boolean(throwExceptionIfNotExists));
 
 			if (throwExceptionIfNotExists)
 			{
@@ -2287,9 +2317,10 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records. Usually <c>-1</c> as it is not data modification operation.</returns>
 		public static async Task<int> DropAsync<T>(
-			 this ITable<T> target,
-			bool                     throwExceptionIfNotExists = true,
-			CancellationToken        token = default)
+			this ITable<T>    target,
+			bool              throwExceptionIfNotExists = true,
+			CancellationToken token = default)
+			where T : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 
@@ -2300,7 +2331,7 @@ namespace LinqToDB
 			var expr = Expression.Call(
 					null,
 					_dropMethodInfo2.MakeGenericMethod(typeof(T)),
-				currentSource.Expression, Expression.Constant(throwExceptionIfNotExists));
+				currentSource.Expression, ExpressionInstances.Boolean(throwExceptionIfNotExists));
 
 			var query = currentSource as IQueryProviderAsync;
 
@@ -2340,6 +2371,7 @@ namespace LinqToDB
 		/// <param name="resetIdentity">Performs reset identity column.</param>
 		/// <returns>Number of affected records. Usually <c>-1</c> as it is not data modification operation.</returns>
 		public static int Truncate<T>( this ITable<T> target, bool resetIdentity = true)
+			where T : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 
@@ -2350,7 +2382,7 @@ namespace LinqToDB
 			var expr = Expression.Call(
 				null,
 				_truncateMethodInfo.MakeGenericMethod(typeof(T)),
-				currentQuery.Expression, Expression.Constant(resetIdentity));
+				currentQuery.Expression, ExpressionInstances.Boolean(resetIdentity));
 
 			return currentQuery.Provider.Execute<int>(expr);
 		}
@@ -2364,9 +2396,10 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records. Usually <c>-1</c> as it is not data modification operation.</returns>
 		public static async Task<int> TruncateAsync<T>(
-			 this ITable<T> target,
-			bool                     resetIdentity = true,
-			CancellationToken        token         = default)
+			this ITable<T>    target,
+			bool              resetIdentity = true,
+			CancellationToken token         = default)
+			where T : notnull
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 
@@ -2377,7 +2410,7 @@ namespace LinqToDB
 			var expr = Expression.Call(
 				null,
 				_truncateMethodInfo.MakeGenericMethod(typeof(T)),
-				currentSource.Expression, Expression.Constant(resetIdentity));
+				currentSource.Expression, ExpressionInstances.Boolean(resetIdentity));
 
 			if (currentSource is IQueryProviderAsync query)
 				return await query.ExecuteAsync<int>(expr, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -2472,7 +2505,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					_takeMethodInfo3.MakeGenericMethod(typeof(TSource)),
-					currentSource.Expression, Expression.Constant(count), Expression.Constant(hints)));
+					currentSource.Expression, ExpressionInstances.Int32(count), Expression.Constant(hints)));
 		}
 
 		static readonly MethodInfo _skipMethodInfo = MemberHelper.MethodOf(() => Skip<int>(null!,null!)).GetGenericMethodDefinition();
@@ -2831,7 +2864,7 @@ namespace LinqToDB
 			return currentOuter.Provider.CreateQuery<TResult>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(Join, outer, inner, joinType, predicate, resultSelector),
+					Methods.LinqToDB.JoinTypePredicateSelector.MakeGenericMethod(typeof(TOuter), typeof(TInner), typeof(TResult)),
 					currentOuter.Expression,
 					inner.Expression,
 					Expression.Constant(joinType),
@@ -3082,16 +3115,16 @@ namespace LinqToDB
 
 		#region AsQueryable
 
-		/// <summary>Converts a generic <see cref="T:System.Collections.Generic.IEnumerable`1" /> to Linq To DB query.</summary>
+		/// <summary>Converts a generic <see cref="IEnumerable{T}" /> to Linq To DB query.</summary>
 		/// <param name="source">A sequence to convert.</param>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <typeparam name="TElement">The type of the elements of <paramref name="source" />.</typeparam>
-		/// <returns>An <see cref="T:System.Linq.IQueryable`1" /> that represents the input sequence.</returns>
-		/// <exception cref="T:System.ArgumentNullException">
+		/// <returns>An <see cref="IQueryable{T}" /> that represents the input sequence.</returns>
+		/// <exception cref="ArgumentNullException">
 		/// <paramref name="source" /> is <see langword="null" />.</exception>
 		public static IQueryable<TElement> AsQueryable<TElement>(
-			[SqlQueryDependent]  this IEnumerable<TElement> source,
-			                          IDataContext          dataContext)
+			this IEnumerable<TElement> source,
+			IDataContext               dataContext)
 		{
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
@@ -3106,8 +3139,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AsQueryable, source, dataContext),
-					Expression.NewArrayInit(typeof(TElement),
-						source.Select(i => Expression.Constant(i, typeof(TElement)))),
+					Expression.Constant(source),
 					Expression.Constant(dataContext)
 				));
 
@@ -3139,8 +3171,8 @@ namespace LinqToDB
 		/// <summary>
 		/// Defines that sub-query is mandatory for <paramref name="grouping"/> query.
 		/// </summary>
-		/// <typeparam name="TKey">The type of the key of the <see cref="T:System.Linq.IGrouping`2" />.</typeparam>
-		/// <typeparam name="TElement">The type of the values in the <see cref="T:System.Linq.IGrouping`2" />.</typeparam>
+		/// <typeparam name="TKey">The type of the key of the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
+		/// <typeparam name="TElement">The type of the values in the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
 		/// <param name="grouping">Source data query.</param>
 		/// <returns>Query covered in sub-query.</returns>
 		[Pure]
@@ -3186,8 +3218,8 @@ namespace LinqToDB
 		/// <summary>
 		/// Disables grouping guard for particular <paramref name="grouping"/> query.
 		/// </summary>
-		/// <typeparam name="TKey">The type of the key of the <see cref="T:System.Linq.IGrouping`2" />.</typeparam>
-		/// <typeparam name="TElement">The type of the values in the <see cref="T:System.Linq.IGrouping`2" />.</typeparam>
+		/// <typeparam name="TKey">The type of the key of the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
+		/// <typeparam name="TElement">The type of the values in the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
 		/// <param name="grouping">Source data query.</param>
 		/// <returns>Query with suppressed grouping guard.</returns>
 		[Pure]
@@ -3248,8 +3280,8 @@ namespace LinqToDB
 		/// <param name="source1">The first sequence to concatenate.</param>
 		/// <param name="source2">The sequence to concatenate to the first sequence.</param>
 		/// <typeparam name="TSource">The type of the elements of the input sequences.</typeparam>
-		/// <returns>An <see cref="T:System.Linq.IQueryable`1" /> that contains the concatenated elements of the two input sequences.</returns>
-		/// <exception cref="T:System.ArgumentNullException">
+		/// <returns>An <see cref="IQueryable{T}" /> that contains the concatenated elements of the two input sequences.</returns>
+		/// <exception cref="ArgumentNullException">
 		/// <paramref name="source1" /> or <paramref name="source2" /> is <see langword="null" />.</exception>
 		public static IQueryable<TSource> UnionAll<TSource>(
 			 this IQueryable<TSource>  source1,
@@ -3262,11 +3294,11 @@ namespace LinqToDB
 		}
 
 		/// <summary>Produces the set difference of two sequences.</summary>
-		/// <param name="source1">An <see cref="T:System.Linq.IQueryable`1" /> whose elements that are not also in <paramref name="source2" /> will be returned.</param>
-		/// <param name="source2">An <see cref="T:System.Collections.Generic.IEnumerable`1" /> whose elements that also occur in the first sequence will not appear in the returned sequence.</param>
+		/// <param name="source1">An <see cref="IQueryable{T}" /> whose elements that are not also in <paramref name="source2" /> will be returned.</param>
+		/// <param name="source2">An <see cref="IEnumerable{T}" /> whose elements that also occur in the first sequence will not appear in the returned sequence.</param>
 		/// <typeparam name="TSource">The type of the elements of the input sequences.</typeparam>
-		/// <returns>An <see cref="T:System.Linq.IQueryable`1" /> that contains the set difference of the two sequences.</returns>
-		/// <exception cref="T:System.ArgumentNullException">
+		/// <returns>An <see cref="IQueryable{T}" /> that contains the set difference of the two sequences.</returns>
+		/// <exception cref="ArgumentNullException">
 		/// <paramref name="source1" /> or <paramref name="source2" /> is <see langword="null" />.</exception>
 		public static IQueryable<TSource> ExceptAll<TSource>(
 			 this IQueryable<TSource>  source1,
@@ -3287,7 +3319,7 @@ namespace LinqToDB
 		/// <param name="source2">A sequence whose elements that also appear in the first sequence are returned.</param>
 		/// <typeparam name="TSource">The type of the elements of the input sequences.</typeparam>
 		/// <returns>A sequence that contains the set intersection of the two sequences.</returns>
-		/// <exception cref="T:System.ArgumentNullException">
+		/// <exception cref="ArgumentNullException">
 		/// <paramref name="source1" /> or <paramref name="source2" /> is <see langword="null" />.</exception>
 		public static IQueryable<TSource> IntersectAll<TSource>(
 			 this IQueryable<TSource>  source1,
@@ -3382,5 +3414,61 @@ namespace LinqToDB
 
 
 		#endregion;
+
+		#region Tag
+
+		/// <summary>
+		/// Adds a tag comment before generated query.
+		/// <code>
+		/// The example below will produce following code before generated query: /* my tag */\r\n
+		/// db.Table.TagQuery("my tag");
+		/// </code>
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <param name="tagValue">Tag text to be added as comment before generated query.</param>
+		/// <returns>Query with tag.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static IQueryable<TSource> TagQuery<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string tagValue)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (tagValue == null) throw new ArgumentNullException(nameof(tagValue));
+
+			return source.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TagQuery, source, tagValue),
+					source.Expression,
+					Expression.Constant(tagValue)));
+		}
+
+		/// <summary>
+		/// Adds a tag comment before generated query for table.
+		/// <code>
+		/// The example below will produce following code before generated query: /* my tag */\r\n
+		/// db.Table.TagQuery("my tag");
+		/// </code>
+		/// </summary>
+		/// <typeparam name="T">Table record mapping class.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="tagValue">Tag text to be added as comment before generated query.</param>
+		/// <returns>Table-like query source with tag.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static ITable<T> TagQuery<T>(this ITable<T> table, [SqlQueryDependent] string tagValue) where T : notnull
+		{
+			if (table == null) throw new ArgumentNullException(nameof(table));
+			if (tagValue == null) throw new ArgumentNullException(nameof(tagValue));
+
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(TagQuery, table, tagValue),
+				table.Expression, Expression.Constant(tagValue));
+
+			return table;
+		}
+
+		#endregion
 	}
 }

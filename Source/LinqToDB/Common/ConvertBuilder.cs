@@ -10,6 +10,7 @@ namespace LinqToDB.Common
 {
 	using Expressions;
 	using Extensions;
+	using LinqToDB.Common.Internal;
 	using Mapping;
 
 	static class ConvertBuilder
@@ -24,7 +25,7 @@ namespace LinqToDB.Common
 			}
 			catch (Exception ex)
 			{
-				throw new LinqToDBConvertException($"Cannot convert value '{value}' to type '{conversionType.FullName}'", ex);
+				throw new LinqToDBConvertException($"Cannot convert value '{value}: {value.GetType().FullName}' to type '{conversionType.FullName}'", ex);
 			}
 		}
 
@@ -65,6 +66,21 @@ namespace LinqToDB.Common
 			var op =
 				to.GetMethodEx("op_Implicit", from) ??
 				to.GetMethodEx("op_Explicit", from);
+
+			if (op != null)
+			{
+				Type oppt = op.GetParameters()[0].ParameterType;
+				Type pt   = p.Type;
+
+				if (oppt.IsNullable() && !pt.IsNullable())
+					p = GetCtor(pt, oppt, p)!;
+
+				return Expression.Convert(p, to, op);
+			}
+
+			op =
+				from.GetMethodEx(to, "op_Implicit", from) ??
+				from.GetMethodEx(to, "op_Explicit", from);
 
 			if (op != null)
 			{
@@ -142,7 +158,7 @@ namespace LinqToDB.Common
 		{
 			if (to == typeof(string) && !from.IsNullable())
 			{
-				var mi = from.GetMethodEx("ToString", new Type[0]);
+				var mi = from.GetMethodEx("ToString", Array<Type>.Empty);
 				return mi != null ? Expression.Call(p, mi) : null;
 			}
 
@@ -246,7 +262,7 @@ namespace LinqToDB.Common
 
 					if (ambiguityMapping != null)
 					{
-						var enums = ambiguityMapping.ToArray();
+						var enums = ambiguityMapping.ToList();
 
 						return Expression.Convert(
 							Expression.Call(
@@ -273,7 +289,7 @@ namespace LinqToDB.Common
 					return expr;
 				}
 
-				if (fromTypeFields.Any(f => f.attrs.Count(a => a.Value != null) != 0))
+				if (fromTypeFields.Any(f => f.attrs.Any(a => a.Value != null)))
 				{
 					var field = fromTypeFields.First(f => f.attrs.Count == 0);
 
@@ -363,7 +379,7 @@ namespace LinqToDB.Common
 						.ToList();
 
 					var dic = new Dictionary<EnumValues,EnumValues>();
-					var cl  = mappingSchema.ConfigurationList.Concat(new[] { "", null }).Select((c,i) => new { c, i }).ToArray();
+					var cl  = mappingSchema.ConfigurationList.Concat(new[] { "", null }).Select((c,i) => (c, i)).ToArray();
 
 					foreach (var toField in toFields)
 					{
@@ -589,43 +605,74 @@ namespace LinqToDB.Common
 			if (!type.IsEnum)
 				return null;
 
-			var fields =
-			(
-				from f in type.GetFields()
-				where (f.Attributes & EnumField) == EnumField
-				let attrs = mappingSchema.GetAttributes<MapValueAttribute>(type, f, a => a.Configuration)
-				select
-				(
-					from a in attrs
-					where a.Configuration == attrs[0].Configuration
-					orderby !a.IsDefault
-					select a
-				).ToList()
-			).ToList();
+			var allFieldsMapped      = true;
+			Type? valuesType         = null;
+			var allValuesHasSameType = true;
+			var hasNullValue         = false;
 
-			Type? defaultType = null;
-
-			if (fields.All(attrs => attrs.Count != 0))
+			foreach (var field in type.GetFields())
 			{
-				var attr = fields.FirstOrDefault(attrs => attrs[0].Value != null);
-
-				if (attr != null)
+				if ((field.Attributes & EnumField) == EnumField)
 				{
-					var valueType = attr[0].Value!.GetType();
+					var attrs = mappingSchema.GetAttributes<MapValueAttribute>(type, field, static a => a.Configuration);
 
-					if (fields.All(attrs => attrs[0].Value == null || attrs[0].Value!.GetType() == valueType))
-						defaultType = valueType;
+					if (attrs.Length == 0)
+						allFieldsMapped = false;
+					else
+					{
+						// we don't just take first attribute to not break previous implementation
+						// which prefered IsDefault=true value if many values specified
+						var isDefault = false;
+
+						// look for default value
+						foreach (var attr in attrs)
+						{
+							if (attr.IsDefault)
+							{
+								if (attr.Value != null)
+								{
+									if (valuesType == null)
+										valuesType = attr.Value.GetType();
+									else if (valuesType != attr.Value.GetType())
+										allValuesHasSameType = false;
+								}
+								else
+									hasNullValue = true;
+
+								isDefault = true;
+								break;
+							}
+						}
+
+						if (!isDefault)
+						{
+							var attr = attrs[0];
+							if (attr.Value != null)
+							{
+								if (valuesType == null)
+									valuesType = attr.Value.GetType();
+								else if (valuesType != attr.Value.GetType())
+									allValuesHasSameType = false;
+							}
+							else
+								hasNullValue = true;
+						}
+					}
 				}
 			}
 
-			if (defaultType == null)
+			Type defaultType;
+
+			if (allFieldsMapped && valuesType != null && allValuesHasSameType)
+				defaultType = valuesType;
+			else
 				defaultType =
 					   mappingSchema.GetDefaultFromEnumType(enumType)
 					?? mappingSchema.GetDefaultFromEnumType(typeof(Enum))
 					?? Enum.GetUnderlyingType(type);
 
-			if ((enumType.IsNullable() || fields.Any(attrs => attrs.Count != 0 && attrs[0].Value == null)) && !defaultType.IsClass && !defaultType.IsNullable())
-				defaultType = typeof(Nullable<>).MakeGenericType(defaultType);
+			if ((enumType.IsNullable() || hasNullValue) && !defaultType.IsNullableType())
+				defaultType = defaultType.AsNullable();
 
 			return defaultType;
 		}

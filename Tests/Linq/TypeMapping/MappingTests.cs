@@ -3,8 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Expressions;
 using NUnit.Framework;
 
@@ -17,7 +19,11 @@ namespace Tests.TypeMapping
 		public delegate string      ReturningDelegate           (string input);
 		public delegate SampleClass ReturningDelegateWithMapping(SampleClass input);
 
-		public class SampleClass
+		public interface ISampleClass
+		{
+		}
+
+		public class SampleClass : ISampleClass
 		{
 			public int     Id       { get; set; }
 			public int     Value    { get; set; }
@@ -68,6 +74,8 @@ namespace Tests.TypeMapping
 				Id    = id;
 				Value = value;
 			}
+
+			public Task<SampleClass> GetSelfAsync(CancellationToken cancellationToken) => Task<SampleClass>.FromResult(this);
 
 			public RegularEnum1 GetRegularEnum1(int raw) => (RegularEnum1)raw;
 			public RegularEnum2 GetRegularEnum2(int raw) => (RegularEnum2)raw;
@@ -162,7 +170,12 @@ namespace Tests.TypeMapping
 
 		class StringToIntMapper : ICustomMapper
 		{
-			public Expression Map(Expression expression)
+			bool ICustomMapper.CanMap(Expression expression)
+			{
+				return expression.Type == typeof(string);
+			}
+
+			Expression ICustomMapper.Map(Expression expression)
 			{
 				return Expression.Property(expression, "Length");
 			}
@@ -252,6 +265,8 @@ namespace Tests.TypeMapping
 
 			[return: CustomMapper(typeof(StringToIntMapper))]
 			public int ReturnTypeMapper(string value) => ((Func<SampleClass, string, int>)CompiledWrappers[19])(this, value);
+
+			public Task<SampleClass> GetSelfAsync(CancellationToken cancellationToken) => throw new NotImplementedException();
 
 			public RegularEnum1 RegularEnum1Property
 			{
@@ -448,7 +463,6 @@ namespace Tests.TypeMapping
 			[Test]
 			public void WrappingTests()
 			{
-
 				var concrete = new Dynamic.SampleClass{ Id = 1, Value = 33 };
 
 				var typeMapper = CreateTypeMapper();
@@ -459,10 +473,10 @@ namespace Tests.TypeMapping
 				var l4 = typeMapper.MapLambda((SampleClass s, int i) => s.GetOther(i).OtherStrProp);
 
 
-				var cl1 = (Func<Dynamic.SampleClass, int>)l1.Compile();
-				var cl2 = (Func<Dynamic.SampleClass, int>)l2.Compile();
-				var cl3 = (Func<Dynamic.SampleClass, int, Dynamic.OtherClass>)l3.Compile();
-				var cl4 = (Func<Dynamic.SampleClass, int, string>)l4.Compile();
+				var cl1 = (Func<Dynamic.SampleClass, int>)l1.CompileExpression();
+				var cl2 = (Func<Dynamic.SampleClass, int>)l2.CompileExpression();
+				var cl3 = (Func<Dynamic.SampleClass, int, Dynamic.OtherClass>)l3.CompileExpression();
+				var cl4 = (Func<Dynamic.SampleClass, int, string>)l4.CompileExpression();
 
 				Assert.That(cl1(concrete), Is.EqualTo(33));
 				Assert.That(cl2(concrete), Is.EqualTo(1));
@@ -486,7 +500,7 @@ namespace Tests.TypeMapping
 
 				var newExpression = typeMapper.MapExpression(() => new SampleClass(55, 77));
 				var newLambda     = Expression.Lambda<Func<Dynamic.SampleClass>>(newExpression);
-				var instance      = newLambda.Compile()();
+				var instance      = newLambda.CompileExpression()();
 
 				Assert.That(instance.Id   , Is.EqualTo(55));
 				Assert.That(instance.Value, Is.EqualTo(77));
@@ -500,11 +514,30 @@ namespace Tests.TypeMapping
 				var newMemberInit    = typeMapper.MapExpression(() => new SampleClass(55, 77) {StrValue = "Str"});
 				var memberInitLambda = Expression.Lambda<Func<Dynamic.SampleClass>>(newMemberInit);
 
-				var instance = memberInitLambda.Compile()();
+				var instance = memberInitLambda.CompileExpression()();
 
 				Assert.That(instance.Id      , Is.EqualTo(55));
 				Assert.That(instance.Value   , Is.EqualTo(77));
 				Assert.That(instance.StrValue, Is.EqualTo("Str"));
+			}
+
+			[Test]
+			public async Task TestMapTaskMethod()
+			{
+				var typeMapper = CreateTypeMapper();
+
+				var pInstance = Expression.Parameter(typeof(Dynamic.ISampleClass));
+				var pToken    = Expression.Parameter(typeof(CancellationToken));
+
+				var asyncCall = Expression.Lambda<Func<Dynamic.ISampleClass, CancellationToken, Task<SampleClass>>>(
+					typeMapper.MapExpression((Dynamic.ISampleClass instance, CancellationToken cancellationToken) => typeMapper.WrapTask<SampleClass>(((SampleClass)instance).GetSelfAsync(cancellationToken), typeof(Dynamic.SampleClass), cancellationToken), pInstance, pToken),
+					pInstance, pToken);
+
+				var instance = await asyncCall.CompileExpression()(new Dynamic.SampleClass(55, 77) {StrValue = "Str"}, default);
+
+				Assert.That(instance.Id      , Is.EqualTo(55));
+				Assert.That(instance.Value   , Is.EqualTo(77));
+				Assert.That(instance.StrValue, Is.Null);
 			}
 
 			[Test]
@@ -744,7 +777,7 @@ namespace Tests.TypeMapping
 				var taskExpression = Expression.Constant(0);
 				var mapper         = new ValueTaskToTaskMapper();
 
-				Assert.Throws(typeof(LinqToDBException), () => ((ICustomMapper)mapper).Map(taskExpression));
+				Assert.False(((ICustomMapper)mapper).CanMap(taskExpression));
 			}
 		}
 	}

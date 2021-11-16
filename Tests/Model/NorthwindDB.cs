@@ -32,6 +32,7 @@ namespace Tests.Model
 			ITable<TTable> table,
 			Expression<Func<TTable, object?>> columns,
 			string search)
+			where TTable : notnull
 		{
 			return Sql.Ext.SqlServer().FreeTextTable<TTable, TKey>(table, columns, search);
 		}

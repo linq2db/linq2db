@@ -11,11 +11,13 @@ namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
 	using LinqToDB.Expressions;
+	using LinqToDB.Mapping;
 
 	class ExpressionTestGenerator
 	{
 		readonly bool          _mangleNames;
-		readonly StringBuilder _exprBuilder = new StringBuilder();
+		readonly StringBuilder _exprBuilder = new ();
+		IDataContext?          _dataContext;
 
 		string _indent = "\t\t\t\t";
 
@@ -31,7 +33,15 @@ namespace LinqToDB.Linq.Builder
 		void PushIndent() { _indent += '\t'; }
 		void PopIndent () { _indent = _indent.Substring(1); }
 
-		readonly HashSet<Expression> _visitedExprs = new HashSet<Expression>();
+		readonly HashSet<Expression> _visitedExprs = new ();
+
+		private VisitFuncVisitor<ExpressionTestGenerator>? _buildExpressionVisitor;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void Build(Expression expr)
+		{
+			(_buildExpressionVisitor ??= VisitFuncVisitor<ExpressionTestGenerator>.Create(this, static (ctx, e) => ctx.BuildExpression(e))).Visit(expr);
+		}
 
 		bool BuildExpression(Expression expr)
 		{
@@ -64,9 +74,9 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (BinaryExpression)expr;
 
-						_exprBuilder.Append("(");
+						_exprBuilder.Append('(');
 
-						e.Left.Visit(BuildExpression);
+						Build(e.Left);
 
 						switch (expr.NodeType)
 						{
@@ -96,9 +106,9 @@ namespace LinqToDB.Linq.Builder
 							case ExpressionType.SubtractChecked    : _exprBuilder.Append(" - ");  break;
 						}
 
-						e.Right.Visit(BuildExpression);
+						Build(e.Right);
 
-						_exprBuilder.Append(")");
+						_exprBuilder.Append(')');
 
 						return false;
 					}
@@ -107,7 +117,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (UnaryExpression)expr;
 
-						e.Operand.Visit(BuildExpression);
+						Build(e.Operand);
 						_exprBuilder.Append(".Length");
 
 						return false;
@@ -119,7 +129,7 @@ namespace LinqToDB.Linq.Builder
 						var e = (UnaryExpression)expr;
 
 						_exprBuilder.AppendFormat("({0})", GetTypeName(e.Type));
-						e.Operand.Visit(BuildExpression);
+						Build(e.Operand);
 
 						return false;
 					}
@@ -127,13 +137,13 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Negate:
 				case ExpressionType.NegateChecked:
 					{
-						_exprBuilder.Append("-");
+						_exprBuilder.Append('-');
 						return true;
 					}
 
 				case ExpressionType.Not:
 					{
-						_exprBuilder.Append("!");
+						_exprBuilder.Append('!');
 						return true;
 					}
 
@@ -144,8 +154,8 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (UnaryExpression)expr;
 
-						_exprBuilder.Append("(");
-						e.Operand.Visit(BuildExpression);
+						_exprBuilder.Append('(');
+						Build(e.Operand);
 						_exprBuilder.AppendFormat(" as {0})", GetTypeName(e.Type));
 
 						return false;
@@ -153,7 +163,7 @@ namespace LinqToDB.Linq.Builder
 
 				case ExpressionType.UnaryPlus:
 					{
-						_exprBuilder.Append("+");
+						_exprBuilder.Append('+');
 						return true;
 					}
 
@@ -161,10 +171,10 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (BinaryExpression)expr;
 
-						e.Left.Visit(BuildExpression);
-						_exprBuilder.Append("[");
-						e.Right.Visit(BuildExpression);
-						_exprBuilder.Append("]");
+						Build(e.Left);
+						_exprBuilder.Append('[');
+						Build(e.Right);
+						_exprBuilder.Append(']');
 
 						return false;
 					}
@@ -173,7 +183,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (MemberExpression)expr;
 
-						e.Expression.Visit(BuildExpression);
+						Build(e.Expression);
 						_exprBuilder.AppendFormat(".{0}", MangleName(e.Member.DeclaringType!, e.Member.Name, "P"));
 
 						return false;
@@ -195,26 +205,27 @@ namespace LinqToDB.Linq.Builder
 
 						if (attrs.Length != 0)
 						{
-							ex.Arguments[0].Visit(BuildExpression);
+							Build(ex.Arguments[0]);
 							PushIndent();
 							_exprBuilder.AppendLine().Append(_indent);
 						}
 						else if (ex.Object != null)
-							ex.Object.Visit(BuildExpression);
+							Build(ex.Object);
 						else
 							_exprBuilder.Append(GetTypeName(mi.DeclaringType!));
 
-						_exprBuilder.Append(".").Append(MangleName(mi.DeclaringType!, mi.Name, "M"));
+						_exprBuilder.Append('.').Append(MangleName(mi.DeclaringType!, mi.Name, "M"));
 
-						if (!ex.IsQueryable() && mi.IsGenericMethod && mi.GetGenericArguments().Select(GetTypeName).All(t => t != null))
+					if ((!ex.IsQueryable() || ex.Method.DeclaringType == typeof(DataExtensions))
+						&& mi.IsGenericMethod && mi.GetGenericArguments().Select(GetTypeName).All(t => t != null))
 						{
 							_exprBuilder
-								.Append("<")
+								.Append('<')
 								.Append(GetTypeNames(mi.GetGenericArguments(), ","))
-								.Append(">");
+								.Append('>');
 						}
 
-						_exprBuilder.Append("(");
+						_exprBuilder.Append('(');
 
 						PushIndent();
 
@@ -223,16 +234,16 @@ namespace LinqToDB.Linq.Builder
 						for (var i = n; i < ex.Arguments.Count; i++)
 						{
 							if (i != n)
-								_exprBuilder.Append(",");
+								_exprBuilder.Append(',');
 
 							_exprBuilder.AppendLine().Append(_indent);
 
-							ex.Arguments[i].Visit(BuildExpression);
+							Build(ex.Arguments[i]);
 						}
 
 						PopIndent();
 
-						_exprBuilder.Append(")");
+						_exprBuilder.Append(')');
 
 						if (attrs.Length != 0)
 						{
@@ -252,17 +263,17 @@ namespace LinqToDB.Linq.Builder
 
 							if (_visitedExprs.Add(e))
 							{
-								e.Visit(BuildExpression);
+								Build(e);
 								return false;
 							}
 						}
 
 						if (typeof(Table<>).IsSameOrParentOf(expr.Type))
-						{
 							_exprBuilder.AppendFormat("db.GetTable<{0}>()", GetTypeName(expr.Type.GetGenericArguments()[0]));
-						}
+					else if (c.Value == _dataContext)
+						_exprBuilder.Append("db");
 						else if (expr.ToString() == "value(" + expr.Type + ")")
-							_exprBuilder.Append("value(").Append(GetTypeName(expr.Type)).Append(")");
+							_exprBuilder.Append("value(").Append(GetTypeName(expr.Type)).Append(')');
 						else
 							_exprBuilder.Append(expr);
 
@@ -277,10 +288,10 @@ namespace LinqToDB.Linq.Builder
 						if (le.Parameters.Count == 1)
 							_exprBuilder.Append(ps);
 						else
-							_exprBuilder.Append("(").Append(ps).Append(")");
+							_exprBuilder.Append('(').Append(ps).Append(')');
 						_exprBuilder.Append(" => ");
 
-						le.Body.Visit(BuildExpression);
+						Build(le.Body);
 						return false;
 					}
 
@@ -288,13 +299,13 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (ConditionalExpression)expr;
 
-						_exprBuilder.Append("(");
-						e.Test.Visit(BuildExpression);
+						_exprBuilder.Append('(');
+						Build(e.Test);
 						_exprBuilder.Append(" ? ");
-						e.IfTrue.Visit(BuildExpression);
+						Build(e.IfTrue);
 						_exprBuilder.Append(" : ");
-						e.IfFalse.Visit(BuildExpression);
-						_exprBuilder.Append(")");
+						Build(e.IfFalse);
+						_exprBuilder.Append(')');
 
 						return false;
 					}
@@ -308,26 +319,26 @@ namespace LinqToDB.Linq.Builder
 							if (ne.Members.Count == 1)
 							{
 								_exprBuilder.AppendFormat("new {{ {0} = ", MangleName(ne.Members[0].DeclaringType!, ne.Members[0].Name, "P"));
-								ne.Arguments[0].Visit(BuildExpression);
+								Build(ne.Arguments[0]);
 								_exprBuilder.Append(" }}");
 							}
 							else
 							{
-								_exprBuilder.AppendLine("new").Append(_indent).Append("{");
+								_exprBuilder.AppendLine("new").Append(_indent).Append('{');
 
 								PushIndent();
 
 								for (var i = 0; i < ne.Members.Count; i++)
 								{
 									_exprBuilder.AppendLine().Append(_indent).AppendFormat("{0} = ", MangleName(ne.Members[i].DeclaringType!, ne.Members[i].Name, "P"));
-									ne.Arguments[i].Visit(BuildExpression);
+									Build(ne.Arguments[i]);
 
 									if (i + 1 < ne.Members.Count)
-										_exprBuilder.Append(",");
+										_exprBuilder.Append(',');
 								}
 
 								PopIndent();
-								_exprBuilder.AppendLine().Append(_indent).Append("}");
+								_exprBuilder.AppendLine().Append(_indent).Append('}');
 							}
 						}
 						else
@@ -336,12 +347,12 @@ namespace LinqToDB.Linq.Builder
 
 							for (var i = 0; i < ne.Arguments.Count; i++)
 							{
-								ne.Arguments[i].Visit(BuildExpression);
+								Build(ne.Arguments[i]);
 								if (i + 1 < ne.Arguments.Count)
 									_exprBuilder.Append(", ");
 							}
 
-							_exprBuilder.Append(")");
+							_exprBuilder.Append(')');
 						}
 
 						return false;
@@ -356,7 +367,7 @@ namespace LinqToDB.Linq.Builder
 								case MemberBindingType.Assignment:
 									var ma = (MemberAssignment) b;
 									_exprBuilder.AppendFormat("{0} = ", MangleName(ma.Member.DeclaringType!, ma.Member.Name, "P"));
-									ma.Expression.Visit(BuildExpression);
+									Build(ma.Expression);
 									break;
 								default:
 									_exprBuilder.Append(b);
@@ -366,7 +377,7 @@ namespace LinqToDB.Linq.Builder
 
 						var e = (MemberInitExpression)expr;
 
-						e.NewExpression.Visit(BuildExpression);
+						Build(e.NewExpression);
 
 						if (e.Bindings.Count == 1)
 						{
@@ -376,7 +387,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							_exprBuilder.AppendLine().Append(_indent).Append("{");
+							_exprBuilder.AppendLine().Append(_indent).Append('{');
 
 							PushIndent();
 
@@ -385,11 +396,11 @@ namespace LinqToDB.Linq.Builder
 								_exprBuilder.AppendLine().Append(_indent);
 								Modify(e.Bindings[i]);
 								if (i + 1 < e.Bindings.Count)
-									_exprBuilder.Append(",");
+									_exprBuilder.Append(',');
 							}
 
 							PopIndent();
-							_exprBuilder.AppendLine().Append(_indent).Append("}");
+							_exprBuilder.AppendLine().Append(_indent).Append('}');
 						}
 
 						return false;
@@ -404,25 +415,25 @@ namespace LinqToDB.Linq.Builder
 						if (e.Expressions.Count == 1)
 						{
 							_exprBuilder.Append(" { ");
-							e.Expressions[0].Visit(BuildExpression);
+							Build(e.Expressions[0]);
 							_exprBuilder.Append(" }");
 						}
 						else
 						{
-							_exprBuilder.AppendLine().Append(_indent).Append("{");
+							_exprBuilder.AppendLine().Append(_indent).Append('{');
 
 							PushIndent();
 
 							for (var i = 0; i < e.Expressions.Count; i++)
 							{
 								_exprBuilder.AppendLine().Append(_indent);
-								e.Expressions[i].Visit(BuildExpression);
+								Build(e.Expressions[i]);
 								if (i + 1 < e.Expressions.Count)
-									_exprBuilder.Append(",");
+									_exprBuilder.Append(',');
 							}
 
 							PopIndent();
-							_exprBuilder.AppendLine().Append(_indent).Append("}");
+							_exprBuilder.AppendLine().Append(_indent).Append('}');
 						}
 
 						return false;
@@ -432,8 +443,8 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (TypeBinaryExpression)expr;
 
-						_exprBuilder.Append("(");
-						e.Expression.Visit(BuildExpression);
+						_exprBuilder.Append('(');
+						Build(e.Expression);
 						_exprBuilder.AppendFormat(" is {0})", e.TypeOperand);
 
 						return false;
@@ -443,30 +454,30 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (ListInitExpression)expr;
 
-						e.NewExpression.Visit(BuildExpression);
+						Build(e.NewExpression);
 
 						if (e.Initializers.Count == 1)
 						{
 							_exprBuilder.Append(" { ");
-							e.Initializers[0].Arguments[0].Visit(BuildExpression);
+							Build(e.Initializers[0].Arguments[0]);
 							_exprBuilder.Append(" }");
 						}
 						else
 						{
-							_exprBuilder.AppendLine().Append(_indent).Append("{");
+							_exprBuilder.AppendLine().Append(_indent).Append('{');
 
 							PushIndent();
 
 							for (var i = 0; i < e.Initializers.Count; i++)
 							{
 								_exprBuilder.AppendLine().Append(_indent);
-								e.Initializers[i].Arguments[0].Visit(BuildExpression);
+								Build(e.Initializers[i].Arguments[0]);
 								if (i + 1 < e.Initializers.Count)
-									_exprBuilder.Append(",");
+									_exprBuilder.Append(',');
 							}
 
 							PopIndent();
-							_exprBuilder.AppendLine().Append(_indent).Append("}");
+							_exprBuilder.AppendLine().Append(_indent).Append('}');
 						}
 
 						return false;
@@ -477,12 +488,12 @@ namespace LinqToDB.Linq.Builder
 						var e = (InvocationExpression)expr;
 
 						_exprBuilder.Append("Expression.Invoke(");
-						e.Expression.Visit(BuildExpression);
+						Build(e.Expression);
 						_exprBuilder.Append(", (");
 
 						for (var i = 0; i < e.Arguments.Count; i++)
 						{
-							e.Arguments[i].Visit(BuildExpression);
+							Build(e.Arguments[i]);
 							if (i + 1 < e.Arguments.Count)
 								_exprBuilder.Append(", ");
 						}
@@ -497,7 +508,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		readonly Dictionary<Type,string?> _typeNames = new Dictionary<Type,string?>
+		readonly Dictionary<Type,string?> _typeNames = new ()
 		{
 			{ typeof(object), "object" },
 			{ typeof(bool),   "bool"   },
@@ -505,9 +516,9 @@ namespace LinqToDB.Linq.Builder
 			{ typeof(string), "string" },
 		};
 
-		readonly StringBuilder _typeBuilder = new StringBuilder();
+		readonly StringBuilder _typeBuilder = new ();
 
-		void BuildType(Type type)
+		void BuildType(Type type, MappingSchema mappingSchema)
 		{
 			if (!IsUserType(type) ||
 				IsAnonymous(type) ||
@@ -525,20 +536,37 @@ namespace LinqToDB.Linq.Builder
 			if (type.IsGenericType)
 				type = type.GetGenericTypeDefinition();
 
-			Type[] baseClasses = new[] { type.BaseType }
-				.Where(t => t != null && t != typeof(object))
-				.Concat(type.GetInterfaces()).ToArray()!;
+			if (type.IsEnum)
+			{
+				// var ed = mappingSchema.GetEntityDescriptor(type); -> todo entity descriptor should contain enum mappings, otherwise fluent mappings will not be included
+				_typeBuilder.AppendLine("\tenum " + MangleName(isUserName, type.Name, "T") + " {");
+				foreach (var nm in Enum.GetNames(type))
+				{
+					var attr = "";
+					var valueAttribute = type.GetField(nm)!.GetCustomAttribute<MapValueAttribute>();
+					if (valueAttribute != null)
+					{
+						attr = "[MapValue(\"" + valueAttribute.Value + "\")] ";
+					}
+					_typeBuilder.AppendLine("\t\t" + attr + nm + " = " + Convert.ToInt64(Enum.Parse(type, nm)) + ",");
+				}
+				_typeBuilder.Remove(_typeBuilder.Length - 1, 1);
+				_typeBuilder.AppendLine("\t}");
+				return;
+			}
+
+			var baseClasses = CollectBaseTypes(type);
 
 			var ctors = type.GetConstructors().Select(c =>
 			{
 				var attrs = c.GetCustomAttributesData();
-				var attr  = string.Join(string.Empty, attrs.Select(a => "\r\n\t\t" + a.ToString()));
-				var ps    = c.GetParameters().Select(p => GetTypeName(p.ParameterType) + " " + MangleName(p.Name, "p")).ToArray();
+				var attr  = string.Concat(attrs.Select(a => "\r\n\t\t" + a.ToString()));
+				var ps    = c.GetParameters().Select(p => GetTypeName(p.ParameterType) + " " + MangleName(p.Name, "p"));
 
 				return string.Format(@"{0}
 		public {1}({2})
 		{{
-			throw new NotImplementedException();
+			// throw new NotImplementedException();
 		}}",
 					attr,
 					name,
@@ -550,11 +578,26 @@ namespace LinqToDB.Linq.Builder
 
 			var members = type.GetFields().Intersect(_usedMembers.OfType<FieldInfo>()).Select(f =>
 			{
-				var attrs = f.GetCustomAttributesData();
-				var attr  = string.Join(string.Empty, attrs.Select(a => "\r\n\t\t" + a.ToString()));
-
-				return string.Format(@"{0}
-		public {1} {2};",
+				var attr = "";
+				var ed = mappingSchema.GetEntityDescriptor(type);
+				if (ed != null)
+				{
+					var colum = ed.Columns.FirstOrDefault(x => x.MemberInfo == f);
+					if (colum != null)
+					{
+						attr += "\t\t[Column(" + (string.IsNullOrEmpty(colum.ColumnName) ? "" : "\"" + colum.ColumnName + "\"") + ")]" + Environment.NewLine;
+					}
+					else
+					{
+						attr += "\t\t[NotColumn]" + Environment.NewLine;
+					}
+					if (colum != null && colum.IsPrimaryKey)
+					{
+						attr += "\t\t[PrimaryKey]" + Environment.NewLine;
+					}
+				}
+				return string.Format(@"
+{0}		public {1} {2};",
 					attr,
 					GetTypeName(f.FieldType),
 					MangleName(isUserName, f.Name, "P"));
@@ -562,10 +605,27 @@ namespace LinqToDB.Linq.Builder
 			.Concat(
 				type.GetPropertiesEx().Intersect(_usedMembers.OfType<PropertyInfo>()).Select(p =>
 				{
-					var attrs = p.GetCustomAttributesData();
-					return string.Format(@"{0}
-		{3}{1} {2} {{ get; set; }}",
-						string.Join(string.Empty, attrs.Select(a => "\r\n\t\t" + a.ToString())),
+					var attr = "";
+					var ed = mappingSchema.GetEntityDescriptor(type);
+					if (ed != null)
+					{
+						var colum = ed.Columns.FirstOrDefault(x => x.MemberInfo == p);
+						if (colum != null)
+						{
+							attr += "\t\t[Column(" + (string.IsNullOrEmpty(colum.ColumnName) ? "" : "\"" + colum.ColumnName + "\"") + ")]" + Environment.NewLine;
+						}
+						else
+						{
+							attr += "\t\t[NotColumn]" + Environment.NewLine;
+						}
+						if (colum != null && colum.IsPrimaryKey)
+						{
+							attr += "\t\t[PrimaryKey]" + Environment.NewLine;
+						}
+					}
+					return string.Format(@"
+{0}		{3}{1} {2} {{ get; set; }}",
+						attr,
 						GetTypeName(p.PropertyType),
 						MangleName(isUserName, p.Name, "P"),
 						type.IsInterface ? "" : "public ");
@@ -574,13 +634,13 @@ namespace LinqToDB.Linq.Builder
 				type.GetMethods().Intersect(_usedMembers.OfType<MethodInfo>()).Select(m =>
 				{
 					var attrs = m.GetCustomAttributesData();
-					var ps    = m.GetParameters().Select(p => GetTypeName(p.ParameterType) + " " + MangleName(p.Name, "p")).ToArray();
+					var ps    = m.GetParameters().Select(p => GetTypeName(p.ParameterType) + " " + MangleName(p.Name, "p"));
 					return string.Format(@"{0}
 		{5}{4}{1} {2}({3})
 		{{
 			throw new NotImplementedException();
 		}}",
-						string.Join(string.Empty, attrs.Select(a => "\r\n\t\t" + a.ToString())),
+						string.Concat(attrs.Select(a => "\r\n\t\t" + a.ToString())),
 						GetTypeName(m.ReturnType),
 						MangleName(isUserName, m.Name, "M"),
 						string.Join(", ", ps),
@@ -593,26 +653,25 @@ namespace LinqToDB.Linq.Builder
 			.ToArray();
 
 			{
-				var attrs = type.GetCustomAttributesData();
+				var attr = "";
+				var ed = mappingSchema.GetEntityDescriptor(type);
+				if (ed != null && !type.IsInterface)
+				{
+					attr += "\t[Table(" + (string.IsNullOrEmpty(ed.TableName) ? "" : "\"" + ed.TableName + "\"") + ")]" + Environment.NewLine;
+				}
 
 				_typeBuilder.AppendFormat(
 					type.IsGenericType ?
 @"
-namespace {0}
-{{{8}
-	{6}{7}{1} {2}<{3}>{5}
+{8}	{6}{7}{1} {2}<{3}>{5}
 	{{{4}{9}
 	}}
-}}
 "
 :
 @"
-namespace {0}
-{{{8}
-	{6}{7}{1} {2}{5}
+{8}	{6}{7}{1} {2}{5}
 	{{{4}{9}
 	}}
-}}
 ",
 					MangleName(isUserName, type.Namespace, "T"),
 					type.IsInterface ? "interface" : type.IsClass ? "class" : "struct",
@@ -622,8 +681,36 @@ namespace {0}
 					baseClasses.Length == 0 ? "" : " : " + GetTypeNames(baseClasses),
 					type.IsPublic ? "public " : "",
 					type.IsAbstract && !type.IsInterface ? "abstract " : "",
-					string.Join(string.Empty, attrs.Select(a => "\r\n\t" + a.ToString())),
+					attr,
 					members.Length > 0 ? (ctors.Count != 0 ? "\r\n" : "") + string.Join("\r\n", members) : string.Empty);
+			}
+		}
+
+		private static Type[] CollectBaseTypes(Type type)
+		{
+			var types = new List<Type>();
+			var duplicateInterfaces = new HashSet<Type>();
+
+			if (type.BaseType != null && type.BaseType != typeof(object))
+			{
+				types.Add(type.BaseType);
+
+				populateBaseInterfaces(type.BaseType, duplicateInterfaces);
+			}
+
+			foreach (var iface in type.GetInterfaces())
+				if (duplicateInterfaces.Add(iface))
+				{
+					types.Add(iface);
+					populateBaseInterfaces(iface, duplicateInterfaces);
+				}
+
+			return types.ToArray();
+
+			static void populateBaseInterfaces(Type type, HashSet<Type> duplicateInterfaces)
+			{
+				foreach (var iface in type.GetInterfaces())
+					duplicateInterfaces.Add(iface);
 			}
 		}
 
@@ -634,10 +721,10 @@ namespace {0}
 
 		bool IsAnonymous(Type type)
 		{
-			return type.Name.StartsWith("<>f__AnonymousType");
+			return type.Name.StartsWith("<>");
 		}
 
-		readonly Dictionary<string,string> _nameDic = new Dictionary<string,string>();
+		readonly Dictionary<string,string> _nameDic = new ();
 
 		string MangleName(Type type, string? name, string prefix)
 		{
@@ -669,14 +756,19 @@ namespace {0}
 			return string.Join(".", newNames);
 		}
 
-		public static List<string> SystemNamespaces = new List<string>
+		public static List<string> SystemNamespaces = new ()
 		{
 			"System", "LinqToDB", "Microsoft"
 		};
 
 		bool IsUserType(Type type)
 		{
-			return type.Namespace == null || SystemNamespaces.All(ns => type.Namespace != ns && !type.Namespace.StartsWith(ns + '.'));
+			return IsUserNamespace(type.Namespace);
+		}
+
+		bool IsUserNamespace(string? @namespace)
+		{
+			return @namespace == null || SystemNamespaces.All(ns => @namespace != ns && !@namespace.StartsWith(ns + '.'));
 		}
 
 		string? GetTypeName(Type type)
@@ -712,7 +804,7 @@ namespace {0}
 				if (idx > 0)
 					name = name.Substring(0, idx);
 
-				if (type.GetGenericTypeDefinition() == typeof(Nullable<>))
+				if (type.IsNullable())
 				{
 					name = $"{GetTypeName(args[0])}?";
 				}
@@ -734,7 +826,7 @@ namespace {0}
 			return MangleName(type, type.ToString(), "T");
 		}
 
-		readonly HashSet<object> _usedMembers = new HashSet<object>();
+		readonly HashSet<object> _usedMembers = new ();
 
 		void VisitMembers(Expression expr)
 		{
@@ -793,7 +885,25 @@ namespace {0}
 			}
 		}
 
-		readonly HashSet<Type> _usedTypes = new HashSet<Type>();
+		void VisitForDataContext(Expression expr)
+		{
+			switch (expr)
+			{
+				case ConstantExpression cont:
+				{
+					if (_dataContext == null)
+					{
+						if (cont.Value is IDataContext ctx)
+							_dataContext = ctx;
+						else if (cont.Value is IExpressionQuery expressionQuery)
+							_dataContext = expressionQuery.DataContext;
+					}
+					break;
+				}
+			}
+		}
+
+		readonly HashSet<Type> _usedTypes = new ();
 
 		void AddType(Type? type)
 		{
@@ -814,6 +924,10 @@ namespace {0}
 			foreach (var i in type.GetInterfaces())
 				AddType(i);
 		}
+
+		private VisitActionVisitor<ExpressionTestGenerator>? _typesVisitor;
+		private VisitActionVisitor<ExpressionTestGenerator>? _membersVisitor;
+		private VisitActionVisitor<ExpressionTestGenerator>? _dataContextVisitor;
 
 		void VisitTypes(Expression expr)
 		{
@@ -878,16 +992,33 @@ namespace {0}
 
 		public string GenerateSourceString(Expression expr)
 		{
-			expr.Visit(new Action<Expression>(VisitMembers));
-			expr.Visit(new Action<Expression>(VisitTypes));
+			(_dataContextVisitor ??= VisitActionVisitor<ExpressionTestGenerator>.Create(this, static (ctx, e) => ctx.VisitForDataContext(e))).Visit(expr);
+			(_membersVisitor     ??= VisitActionVisitor<ExpressionTestGenerator>.Create(this, static (ctx, e) => ctx.VisitMembers(e))).Visit(expr);
+			(_typesVisitor       ??= VisitActionVisitor<ExpressionTestGenerator>.Create(this, static (ctx, e) => ctx.VisitTypes(e))).Visit(expr);
 
-			foreach (var type in _usedTypes.OrderBy(t => t.Namespace).ThenBy(t => t.Name))
-				BuildType(type);
+			foreach (var typeNamespaceList in _usedTypes.OrderBy(t => t.Namespace).GroupBy(x => x.Namespace))
+			{
+				if (typeNamespaceList.All(type =>
+				{
+					return (!IsUserType(type) ||
+							IsAnonymous(type) ||
+							type.Assembly == GetType().Assembly ||
+							type.IsGenericType && type.GetGenericTypeDefinition() != type);
+				}))
+					continue;
+				_typeBuilder.AppendLine("namespace " + MangleName(IsUserNamespace(typeNamespaceList.Key), typeNamespaceList.Key, "T"));
+				_typeBuilder.AppendLine("{");
+				foreach (var type in typeNamespaceList.OrderBy(t => t.Name))
+				{
+					BuildType(type, _dataContext!.MappingSchema);
+				}
+				_typeBuilder.AppendLine("}");
+			}
 
-			expr.Visit(BuildExpression);
+			Build(expr);
 
 			_exprBuilder.Replace("<>h__TransparentIdentifier", "tp");
-			_exprBuilder.Insert(0, "var quey = ");
+			_exprBuilder.Insert(0, "var query = ");
 
 			var result = string.Format(
 @"//---------------------------------------------------------------------------------------------------
@@ -897,16 +1028,16 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 using LinqToDB;
-
 using NUnit.Framework;
+
 {0}
 namespace Tests.UserTests
 {{
 	[TestFixture]
 	public class UserTest : TestBase
 	{{
-		[Test, DataContextSource]
-		public void Test(string context)
+		[Test]
+		public void Test([DataSources(ProviderName.SQLite)] string context)
 		{{
 			// {1}
 			using (var db = GetDataContext(context))

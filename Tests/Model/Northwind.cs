@@ -8,8 +8,9 @@ namespace Tests.Model
 	public class Northwind
 	{
 		public abstract class EntityBase<T>
+			where T: notnull
+
 		{
-			[System.Diagnostics.CodeAnalysis.NotNull]
 			protected abstract T Key { get; }
 
 			public override bool Equals(object? obj)

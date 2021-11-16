@@ -2,7 +2,6 @@
 using System.Linq;
 using LinqToDB;
 using LinqToDB.Mapping;
-using MySqlX.XDevAPI;
 using NUnit.Framework;
 
 namespace Tests.UserTests

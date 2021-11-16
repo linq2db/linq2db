@@ -1,3 +1,0 @@
-<#@ assembly name="$(LinqToDBT4SybaseDataActionToolsDirectory)linq2db.dll"              #>
-<#@ include file="LinqToDB.Tools.ttinclude"                                             #>
-<#@ include file="LinqToDB.Sybase.ttinclude"                                            #>

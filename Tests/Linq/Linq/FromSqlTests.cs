@@ -51,6 +51,7 @@ namespace Tests.Linq
 		}
 
 		class ToTableName<T> : IToSqlConverter
+			where T : notnull
 		{
 			public ToTableName(ITable<T> table)
 			{
@@ -69,6 +70,7 @@ namespace Tests.Linq
 		}
 
 		ToTableName<T> GetName<T>(ITable<T> table)
+			where T : notnull
 		{
 			return new ToTableName<T>(table);
 		}
@@ -477,8 +479,8 @@ namespace Tests.Linq
 				var expr1 = qry1.Expression;
 				var expr2 = qry2.Expression;
 
-				var query1 = Query<SampleClass>.GetQuery(db, ref expr1);
-				var query2 = Query<SampleClass>.GetQuery(db, ref expr2);
+				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
+				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
 
 				Assert.True(ReferenceEquals(query1, query2));
 
@@ -503,8 +505,8 @@ namespace Tests.Linq
 				var expr1 = qry1.Expression;
 				var expr2 = qry2.Expression;
 
-				var query1 = Query<SampleClass>.GetQuery(db, ref expr1);
-				var query2 = Query<SampleClass>.GetQuery(db, ref expr2);
+				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
+				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
 
 				Assert.False(ReferenceEquals(query1, query2));
 
@@ -529,12 +531,13 @@ namespace Tests.Linq
 				var expr1 = qry1.Expression;
 				var expr2 = qry2.Expression;
 
-				var query1 = Query<SampleClass>.GetQuery(db, ref expr1);
-				var query2 = Query<SampleClass>.GetQuery(db, ref expr2);
+				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
+				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
 
 				Assert.False(ReferenceEquals(query1, query2));
 
 				IQueryable<SampleClass> GetQuery<T>(ITable<T> table, int startId, int endId)
+					where T : notnull
 				{
 					return db.FromSql<SampleClass>(
 						$"SELECT * FROM {GetName(table)} where id >= {DataParameter.Int32("startId", startId)} and id < {DataParameter.Int32("endId", endId)}");
@@ -554,8 +557,8 @@ namespace Tests.Linq
 				var expr1 = qry1.Expression;
 				var expr2 = qry2.Expression;
 
-				var query1 = Query<SampleClass>.GetQuery(db, ref expr1);
-				var query2 = Query<SampleClass>.GetQuery(db, ref expr2);
+				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
+				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
 
 				Assert.True(ReferenceEquals(query1, query2));
 
@@ -582,8 +585,8 @@ namespace Tests.Linq
 				var expr1 = qry1.Expression;
 				var expr2 = qry2.Expression;
 
-				var query1 = Query<SampleClass>.GetQuery(db, ref expr1);
-				var query2 = Query<SampleClass>.GetQuery(db, ref expr2);
+				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
+				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
 
 				Assert.False(ReferenceEquals(query1, query2));
 
@@ -611,12 +614,13 @@ namespace Tests.Linq
 				var expr1 = qry1.Expression;
 				var expr2 = qry2.Expression;
 
-				var query1 = Query<SampleClass>.GetQuery(db, ref expr1);
-				var query2 = Query<SampleClass>.GetQuery(db, ref expr2);
+				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
+				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
 
 				Assert.False(ReferenceEquals(query1, query2));
 
 				IQueryable<SampleClass> GetQuery<T>(ITable<T> table, int startId, int endId)
+					where T : notnull
 				{
 					return db.FromSql<SampleClass>(
 						"SELECT * FROM {0} where id >= {1} and id < {2}",

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -110,6 +109,7 @@ namespace Tests.Linq
 			}
 		}
 
+		//Instance property or field with name Key not found on type System.Collections.Generic.IEnumerable`1[Tests.VisualBasic.VBTests+Activity649]
 		[ActiveIssue(649)]
 		[Test]
 		public void Issue649Test1([DataSources] string context)
@@ -144,6 +144,7 @@ namespace Tests.Linq
 			}
 		}
 
+		// Instance property or field with name Key not found on type System.Collections.Generic.IEnumerable`1[Tests.Model.Child]
 		[ActiveIssue(649)]
 		[Test]
 		public void Issue649Test4([DataSources] string context)
@@ -169,5 +170,18 @@ namespace Tests.Linq
 				var str = q1.ToString();
 			}
 		}
+
+		#region issue 2746
+
+		[Test]
+		public void Issue2746([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				VBTests.Issue2746Test(db, "1");
+			}
 		}
+		#endregion
+
+	}
 }

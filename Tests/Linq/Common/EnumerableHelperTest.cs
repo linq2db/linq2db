@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using LinqToDB.Async;
 using LinqToDB.Common;
-
 using NUnit.Framework;
 
 namespace Tests.Common
@@ -44,7 +43,6 @@ namespace Tests.Common
 			}
 		}
 
-#if !NET472
 		[Test]
 		public async Task BatchAsyncTest()
 		{
@@ -86,6 +84,5 @@ namespace Tests.Common
 				yield return i;
 			}
 		}
-#endif
 	}
 }

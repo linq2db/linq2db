@@ -1,5 +1,5 @@
-rmdir built /S /Q
-md built
+rmdir ..\BuiltNuGet\built /S /Q
+md ..\BuiltNuGet\built
 
 IF [%1] EQU [snupkg] (
 nuget.exe Pack ..\BuiltNuGet\linq2db.nuspec -OutputDirectory ..\BuiltNuGet\built -Symbols -SymbolPackageFormat snupkg

@@ -15,7 +15,6 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
-	using SqlQuery;
 
 	public class SqlServerDataProvider : DynamicDataProviderBase<SqlServerProviderAdapter>
 	{
@@ -35,11 +34,12 @@ namespace LinqToDB.DataProvider.SqlServer
 			Version  = version;
 			Provider = provider;
 
-			SqlProviderFlags.IsDistinctOrderBySupported       = false;
-			SqlProviderFlags.IsSubQueryOrderBySupported       = false;
-			SqlProviderFlags.IsDistinctSetOperationsSupported = true;
-			SqlProviderFlags.IsCountDistinctSupported         = true;
-			SqlProviderFlags.IsUpdateFromSupported            = true;
+			SqlProviderFlags.IsDistinctOrderBySupported        = false;
+			SqlProviderFlags.IsSubQueryOrderBySupported        = false;
+			SqlProviderFlags.IsDistinctSetOperationsSupported  = true;
+			SqlProviderFlags.IsCountDistinctSupported          = true;
+			SqlProviderFlags.IsUpdateFromSupported             = true;
+			SqlProviderFlags.AcceptsOuterExpressionInAggregate = false;
 
 			if (version == SqlServerVersion.v2000)
 			{
@@ -64,6 +64,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				SqlServerVersion.v2000 => new SqlServer2000SqlOptimizer(SqlProviderFlags),
 				SqlServerVersion.v2005 => new SqlServer2005SqlOptimizer(SqlProviderFlags),
 				SqlServerVersion.v2012 => new SqlServer2012SqlOptimizer(SqlProviderFlags),
+				SqlServerVersion.v2016 => new SqlServer2016SqlOptimizer(SqlProviderFlags),
 				SqlServerVersion.v2017 => new SqlServer2017SqlOptimizer(SqlProviderFlags),
 				_                      => new SqlServer2008SqlOptimizer(SqlProviderFlags),
 			};
@@ -113,6 +114,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			public static readonly MappingSchema SqlServer2005MappingSchema = new SqlServer2005MappingSchema();
 			public static readonly MappingSchema SqlServer2008MappingSchema = new SqlServer2008MappingSchema();
 			public static readonly MappingSchema SqlServer2012MappingSchema = new SqlServer2012MappingSchema();
+			public static readonly MappingSchema SqlServer2016MappingSchema = new SqlServer2016MappingSchema();
 			public static readonly MappingSchema SqlServer2017MappingSchema = new SqlServer2017MappingSchema();
 
 			public static MappingSchema Get(SqlServerVersion version)
@@ -122,6 +124,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					SqlServerVersion.v2000 => SqlServer2000MappingSchema,
 					SqlServerVersion.v2005 => SqlServer2005MappingSchema,
 					SqlServerVersion.v2012 => SqlServer2012MappingSchema,
+					SqlServerVersion.v2016 => SqlServer2016MappingSchema,
 					SqlServerVersion.v2017 => SqlServer2017MappingSchema,
 					_                      => SqlServer2008MappingSchema,
 				};
@@ -145,6 +148,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				SqlServerVersion.v2005 => new SqlServer2005SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
 				SqlServerVersion.v2008 => new SqlServer2008SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
 				SqlServerVersion.v2012 => new SqlServer2012SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
+				SqlServerVersion.v2016 => new SqlServer2016SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
 				SqlServerVersion.v2017 => new SqlServer2017SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
 				_                      => throw new InvalidOperationException(),
 			};
@@ -428,7 +432,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			_bulkCopy ??= new SqlServerBulkCopy(this);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using LinqToDB.Common.Internal;
 using LinqToDB.Extensions;
 
 namespace LinqToDB.Common
@@ -50,7 +51,7 @@ namespace LinqToDB.Common
 					{ typeof(byte ) , Tuple.Create((IComparable)(int)byte  .MinValue, (IComparable)(int)byte     .MaxValue) },
 					{ typeof(short) , Tuple.Create((IComparable)(int)short .MinValue, (IComparable)(int)short    .MaxValue) },
 					{ typeof(ushort), Tuple.Create((IComparable)(int)ushort.MinValue, (IComparable)(int)ushort   .MaxValue) },
-					{ typeof(uint)  , Tuple.Create((IComparable)(int)0              , (IComparable)     int      .MaxValue) },
+					{ typeof(uint)  , Tuple.Create((IComparable)     0              , (IComparable)     int      .MaxValue) },
 				}
 			},
 			{ typeof(uint) , new Dictionary<Type, Tuple<IComparable, IComparable>>()
@@ -91,7 +92,7 @@ namespace LinqToDB.Common
 			convertedValue = null;
 
 			if (value == null)
-				return  toType.IsClass || toType.IsNullable();
+				return  toType.IsNullableType();
 
 			var from = value.GetType().ToNullableUnderlying();
 			var to   = toType         .ToNullableUnderlying();

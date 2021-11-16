@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETFRAMEWORK
+using System;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.Threading.Tasks;
@@ -7,16 +8,16 @@ namespace LinqToDB.ServiceModel
 {
 	class LinqServiceClient : ClientBase<ILinqClient>, ILinqClient, IDisposable
 	{
-		#region Init
+#region Init
 
 		public LinqServiceClient(string endpointConfigurationName)                                : base(endpointConfigurationName) { }
 		public LinqServiceClient(string endpointConfigurationName, string remoteAddress)          : base(endpointConfigurationName, remoteAddress) { }
 		public LinqServiceClient(string endpointConfigurationName, EndpointAddress remoteAddress) : base(endpointConfigurationName, remoteAddress) { }
 		public LinqServiceClient(Binding binding, EndpointAddress remoteAddress)                  : base(binding, remoteAddress) { }
 
-		#endregion
+#endregion
 
-		#region ILinqService Members
+#region ILinqService Members
 
 		public LinqServiceInfo GetInfo(string? configuration)
 		{
@@ -68,9 +69,9 @@ namespace LinqToDB.ServiceModel
 			return Channel.ExecuteBatchAsync(configuration, queryData);
 		}
 
-		#endregion
+#endregion
 
-		#region IDisposable Members
+#region IDisposable Members
 
 		void IDisposable.Dispose()
 		{
@@ -96,6 +97,7 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		#endregion
+#endregion
 	}
 }
+#endif

@@ -1,3 +1,4 @@
+<#@ include file="T4Model.ttinclude" once="true" #>
 <#
 	{
 		var beforeGenerateModel = BeforeGenerateModel;

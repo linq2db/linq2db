@@ -10,17 +10,48 @@ namespace LinqToDB.DataProvider.Oracle
 	using Configuration;
 	using Data;
 
+	/// <summary>
+	/// Defines type of multi-row INSERT operation to generate for <see cref="BulkCopyType.RowByRow"/> bulk copy mode.
+	/// </summary>
 	public enum AlternativeBulkCopy
 	{
+		/// <summary>
+		/// This mode generates INSERT ALL statement.
+		/// Note that INSERT ALL doesn't support sequences and will use single generated value for all rows.
+		/// <code>
+		/// INSERT ALL
+		///     INTO target_table VALUES(/*row data*/)
+		///     ...
+		///     INTO target_table VALUES(/*row data*/)
+		/// </code>
+		/// </summary>
 		InsertAll,
+		/// <summary>
+		/// This mode performs regular INSERT INTO query with array of values for each column.
+		/// <code>
+		/// INSERT INTO target_table(/*columns*/)
+		///     VALUES(:column1ArrayParameter, ..., :columnXArrayParameter)
+		/// </code>
+		/// </summary>
 		InsertInto,
+		/// <summary>
+		/// This mode generates INSERT ... SELECT statement.
+		/// <code>
+		/// INSERT INTO target_table(/*columns*/)
+		///     SELECT /*row data*/ FROM DUAL
+		///     UNION ALL
+		///     ...
+		///     UNION ALL
+		///     SELECT /*row data*/ FROM DUAL
+		/// </code>
+		/// </summary>
 		InsertDual
 	}
 
 	public static partial class OracleTools
 	{
 #if NETFRAMEWORK
-		private static readonly Lazy<IDataProvider> _oracleNativeDataProvider11 = new Lazy<IDataProvider>(() =>
+		private static readonly Lazy<IDataProvider> _oracleNativeDataProvider11 = new (() =>
 		{
 			var provider = new OracleDataProvider(ProviderName.OracleNative, OracleVersion.v11);
 
@@ -29,7 +60,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return provider;
 		}, true);
 
-		private static readonly Lazy<IDataProvider> _oracleNativeDataProvider12 = new Lazy<IDataProvider>(() =>
+		private static readonly Lazy<IDataProvider> _oracleNativeDataProvider12 = new (() =>
 		{
 			var provider = new OracleDataProvider(ProviderName.OracleNative, OracleVersion.v12);
 
@@ -39,7 +70,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}, true);
 #endif
 
-		private static readonly Lazy<IDataProvider> _oracleManagedDataProvider11 = new Lazy<IDataProvider>(() =>
+		private static readonly Lazy<IDataProvider> _oracleManagedDataProvider11 = new (() =>
 		{
 			var provider = new OracleDataProvider(ProviderName.OracleManaged, OracleVersion.v11);
 
@@ -48,7 +79,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return provider;
 		}, true);
 
-		private static readonly Lazy<IDataProvider> _oracleManagedDataProvider12 = new Lazy<IDataProvider>(() =>
+		private static readonly Lazy<IDataProvider> _oracleManagedDataProvider12 = new (() =>
 		{
 			var provider = new OracleDataProvider(ProviderName.OracleManaged, OracleVersion.v12);
 
@@ -205,23 +236,25 @@ namespace LinqToDB.DataProvider.Oracle
 #endif
 		}
 
-		public static IDataProvider GetDataProvider(string? providerName = null, string? assemblyName = null)
+		public static IDataProvider GetDataProvider(string? providerName = null, string? assemblyName = null, OracleVersion? version = null)
 		{
+			version ??= DefaultVersion;
+
 #if NETFRAMEWORK
-			if (assemblyName == OracleProviderAdapter.NativeAssemblyName ) return GetVersionedDataProvider(DefaultVersion, false);
-			if (assemblyName == OracleProviderAdapter.ManagedAssemblyName) return GetVersionedDataProvider(DefaultVersion, true);
+			if (assemblyName == OracleProviderAdapter.NativeAssemblyName ) return GetVersionedDataProvider(version.Value, false);
+			if (assemblyName == OracleProviderAdapter.ManagedAssemblyName) return GetVersionedDataProvider(version.Value, true);
 
 			return providerName switch
 			{
-				ProviderName.OracleNative  => GetVersionedDataProvider(DefaultVersion, false),
-				ProviderName.OracleManaged => GetVersionedDataProvider(DefaultVersion, true),
+				ProviderName.OracleNative  => GetVersionedDataProvider(version.Value, false),
+				ProviderName.OracleManaged => GetVersionedDataProvider(version.Value, true),
 				_						   => 
 					DetectedProviderName == ProviderName.OracleNative
-					? GetVersionedDataProvider(DefaultVersion, false)
-					: GetVersionedDataProvider(DefaultVersion, true),
+					? GetVersionedDataProvider(version.Value, false)
+					: GetVersionedDataProvider(version.Value, true),
 			};
 #else
-			return GetVersionedDataProvider(DefaultVersion, true);
+			return GetVersionedDataProvider(version.Value, true);
 #endif
 		}
 
@@ -299,8 +332,12 @@ namespace LinqToDB.DataProvider.Oracle
 				}, source);
 		}
 
-#endregion
+		#endregion
 
+		/// <summary>
+		/// Specifies type of multi-row INSERT operation to generate for <see cref="BulkCopyType.RowByRow"/> bulk copy mode.
+		/// Default value: <see cref="AlternativeBulkCopy.InsertAll"/>.
+		/// </summary>
 		public static AlternativeBulkCopy UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
 
 		[Obsolete("This field is not used by linq2db. Configure reader expressions on DataProvider directly")]
@@ -309,8 +346,7 @@ namespace LinqToDB.DataProvider.Oracle
 		/// <summary>
 		/// Gets or sets flag to tell LinqToDB to quote identifiers, if they contain lowercase letters.
 		/// Default value: <c>false</c>.
-		/// This flag is added for backward compatibility and will be removed later, so it is recommended to
-		/// leave it as <c>false</c> and fix mappings to use uppercase letters for non-quoted identifiers.
+		/// This flag is added for backward compatibility and not recommended for use with new applications.
 		/// </summary>
 		public static bool DontEscapeLowercaseIdentifiers { get; set; }
 	}

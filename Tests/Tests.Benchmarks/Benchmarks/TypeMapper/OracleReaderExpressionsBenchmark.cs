@@ -9,7 +9,10 @@ namespace LinqToDB.Benchmarks.TypeMapping
 	// shows small performance degradation due to indirect call
 	public class OracleReaderExpressionsBenchmark
 	{
-		private static readonly int             IntParameter        = 0;
+#pragma warning disable CS0649 // Field is never assigned to...
+		private static readonly int             IntParameter;
+#pragma warning restore CS0649 // Field is never assigned to...
+
 		private static readonly ITestDataReader DataReaderParameter = new Original.OracleDataReader();
 		private const           int             NanosecondsPerTick  = 100;
 

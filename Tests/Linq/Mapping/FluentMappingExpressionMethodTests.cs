@@ -7,8 +7,6 @@ using NUnit.Framework;
 
 namespace Tests.Mapping
 {
-	using Tools;
-
 	[TestFixture]
 	public class FluentMappingExpressionMethodTests : TestBase
 	{

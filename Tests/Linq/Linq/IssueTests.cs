@@ -12,6 +12,7 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using System.Collections.Generic;
+	using LinqToDB.Common;
 	using Model;
 
 	[TestFixture]
@@ -399,9 +400,8 @@ namespace Tests.Linq
 			Client
 		}
 
-		[ActiveIssue(535)]
 		[Test]
-		public void Issue535Test2([DataSources] string context)
+		public void Issue535Test2([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable<CustomerBase>())
@@ -477,13 +477,13 @@ namespace Tests.Linq
 		[ExpressionMethod("MapToDtoExpr1")]
 		public static PersonDto MapToDto(Person376 person)
 		{
-			return MapToDtoExpr1().Compile()(person);
+			return MapToDtoExpr1().CompileExpression()(person);
 		}
 
 		[ExpressionMethod("MapToDtoExpr2")]
 		public static DoctorDto MapToDto(Doctor doctor)
 		{
-			return MapToDtoExpr2().Compile()(doctor);
+			return MapToDtoExpr2().CompileExpression()(doctor);
 		}
 
 		private static Expression<Func<Person376, PersonDto>> MapToDtoExpr1()

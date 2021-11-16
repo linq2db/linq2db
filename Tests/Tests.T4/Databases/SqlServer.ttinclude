@@ -4,7 +4,8 @@
 		new Method(null, name, new Func<string>[] { () => "int i" }),
 		new Method(null, name, new Func<string>[] { () => "string configuration" }) { AfterSignature = { ": base(configuration)" } },
 	};
-
+#>
+<#+
 	void AddReturnParameter(string procedureName, string parameterName = "@return")
 	{
 		GetProcedure(procedureName)

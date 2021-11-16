@@ -39,6 +39,8 @@ namespace LinqToDB.DataProvider.Sybase
 				.AppendLine("SELECT @@IDENTITY");
 		}
 
+		protected override bool SupportsColumnAliasesInSource => true;
+
 		protected override string FirstFormat(SelectQuery selectQuery)
 		{
 			return "TOP {0}";
@@ -121,7 +123,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override void BuildUpdateTableName(SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
-			if (updateClause.Table != null && updateClause.Table != selectQuery.From.Tables[0].Source)
+			if (updateClause.Table != null && (selectQuery.From.Tables.Count == 0 || updateClause.Table != selectQuery.From.Tables[0].Source))
 				BuildPhysicalTable(updateClause.Table, null);
 			else
 				BuildTableName(selectQuery.From.Tables[0], true, false);
@@ -194,7 +196,7 @@ namespace LinqToDB.DataProvider.Sybase
 			AppendIndent();
 			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");
 			StringBuilder.Append(string.Join(InlineComma, fieldNames));
-			StringBuilder.Append(")");
+			StringBuilder.Append(')');
 		}
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
@@ -288,6 +290,8 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			var table = dropTable.Table!;
 
+			BuildTag(dropTable);
+
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
 				var defaultDatabaseName = IsTemporary(table) ? "tempdb" : null;
@@ -355,5 +359,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			return table.TableOptions.IsTemporaryOptionSet() || table.PhysicalName!.StartsWith("#");
 		}
+
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
 	}
 }

@@ -4,6 +4,7 @@ using System.Data;
 namespace LinqToDB.DataProvider.Oracle
 {
 	using System.Linq.Expressions;
+	using LinqToDB.Common;
 	using LinqToDB.Expressions;
 	using LinqToDB.Mapping;
 
@@ -12,7 +13,7 @@ namespace LinqToDB.DataProvider.Oracle
 		const int NanosecondsPerTick = 100;
 
 #if NETFRAMEWORK
-		private static readonly object _nativeSyncRoot = new object();
+		private static readonly object _nativeSyncRoot = new ();
 
 		public const string NativeAssemblyName        = "Oracle.DataAccess";
 		public const string NativeProviderFactoryName = "Oracle.DataAccess.Client";
@@ -22,7 +23,7 @@ namespace LinqToDB.DataProvider.Oracle
 		private static OracleProviderAdapter? _nativeAdapter;
 #endif
 
-		private static readonly object _managedSyncRoot = new object();
+		private static readonly object _managedSyncRoot = new ();
 
 		public const string ManagedAssemblyName    = "Oracle.ManagedDataAccess";
 		public const string ManagedClientNamespace = "Oracle.ManagedDataAccess.Client";
@@ -239,7 +240,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		private static OracleProviderAdapter CreateAdapter(string assemblyName, string clientNamespace, string typesNamespace, string? factoryName)
 		{
-			var assembly = Common.Tools.TryLoadAssembly(assemblyName, factoryName);
+			var assembly = Tools.TryLoadAssembly(assemblyName, factoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
 
@@ -344,7 +345,7 @@ namespace LinqToDB.DataProvider.Oracle
 			var oracleDecimalParam = Expression.Parameter(readOracleDecimal.ReturnType, "dec");
 
 			generator      = new ExpressionGenerator(typeMapper);
-			var precision  = generator.AssignToVariable(Expression.Constant(29), "precision");
+			var precision  = generator.AssignToVariable(ExpressionInstances.Constant29, "precision");
 			var decimalVar = generator.AddVariable(Expression.Parameter(typeof(decimal), "dec"));
 			var label      = Expression.Label(typeof(decimal));
 
@@ -359,7 +360,7 @@ namespace LinqToDB.DataProvider.Oracle
 							typeof(OverflowException),
 							Expression.Block(
 								Expression.IfThen(
-									Expression.LessThanOrEqual(Expression.SubtractAssign(precision, Expression.Constant(1)), Expression.Constant(26)),
+									Expression.LessThanOrEqual(Expression.SubtractAssign(precision, ExpressionInstances.Constant1), ExpressionInstances.Constant26),
 									Expression.Rethrow())))),
 					label));
 
@@ -367,7 +368,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			// workaround for mapper issue with complex reader expressions handling
 			// https://github.com/linq2db/linq2db/issues/2032
-			var compiledReader                = Expression.Lambda(body, oracleDecimalParam).Compile();
+			var compiledReader                = Expression.Lambda(body, oracleDecimalParam).CompileExpression();
 			var readOracleDecimalToDecimalAdv = (Expression<Func<IDataReader, int, decimal>>)Expression.Lambda(
 				Expression.Invoke(
 					Expression.Constant(compiledReader),
@@ -438,7 +439,7 @@ namespace LinqToDB.DataProvider.Oracle
 				if (hasNull)
 				{
 					// if native provider fails here, check that you have ODAC installed properly
-					var getNullValue = Expression.Lambda<Func<object>>(Expression.Convert(ExpressionHelper.Field(type, "Null"), typeof(object))).Compile();
+					var getNullValue = Expression.Lambda<Func<object>>(Expression.Convert(ExpressionHelper.Field(type, "Null"), typeof(object))).CompileExpression();
 					mappingSchema.AddScalarType(type, getNullValue(), true, dataType);
 				}
 				else
@@ -524,10 +525,13 @@ namespace LinqToDB.DataProvider.Oracle
 			Varchar2     = 126,
 			XmlType      = 127,
 
-			// native provider-only
+			// native provider and recent managed (21.3.0)
 			Array        = 128,
 			Object       = 129,
 			Ref          = 130,
+
+			// Oracle 21c
+			Json         = 135
 		}
 
 		[Wrapper]

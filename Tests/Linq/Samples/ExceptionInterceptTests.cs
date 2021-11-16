@@ -1,13 +1,15 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Mapping;
 using NUnit.Framework;
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+
+#if NET472
 using System.Data.SQLite;
+#endif
 
 namespace Tests.Samples
 {

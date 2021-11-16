@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 
@@ -7,10 +6,11 @@ using NUnit.Framework;
 
 namespace Tests.Data
 {
-	using LinqToDB.Data;
-	using Model;
+	using System;
 	using System.Threading;
 	using System.Threading.Tasks;
+	using LinqToDB.Data;
+	using Model;
 
 	[TestFixture]
 	public class TransactionTests : TestBase
@@ -24,14 +24,14 @@ namespace Tests.Data
 				db.KeepConnectionAlive = true;
 				await db.GetTable<Parent>().ToListAsync();
 
-				var tid = Thread.CurrentThread.ManagedThreadId;
+				var tid = Environment.CurrentManagedThreadId;
 
 				using (await db.BeginTransactionAsync())
 				{
 					// perform synchonously to not mess with BeginTransactionAsync testing
 					db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
 
-					if (tid == Thread.CurrentThread.ManagedThreadId)
+					if (tid == Environment.CurrentManagedThreadId)
 						Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
 				}
 			}
@@ -40,7 +40,7 @@ namespace Tests.Data
 		[Test]
 		public async Task DataContextOpenOrBeginTransactionAsync([DataSources(false)] string context)
 		{
-			var tid = Thread.CurrentThread.ManagedThreadId;
+			var tid = Environment.CurrentManagedThreadId;
 
 			using (var db = new DataContext(context))
 			using (await db.BeginTransactionAsync())
@@ -48,7 +48,7 @@ namespace Tests.Data
 				// perform synchonously to not mess with BeginTransactionAsync testing
 				db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
 
-				if (tid == Thread.CurrentThread.ManagedThreadId)
+				if (tid == Environment.CurrentManagedThreadId)
 					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
 			}
 		}
@@ -64,7 +64,7 @@ namespace Tests.Data
 				{
 					await db.InsertAsync(new Parent { ParentID = 1010, Value1 = 1010 });
 
-					tid = Thread.CurrentThread.ManagedThreadId;
+					tid = Environment.CurrentManagedThreadId;
 
 					await tr.CommitTransactionAsync();
 				}
@@ -74,7 +74,7 @@ namespace Tests.Data
 					db.GetTable<Parent>().Where(_ => _.ParentID == 1010).Delete();
 				}
 
-				if (tid == Thread.CurrentThread.ManagedThreadId)
+				if (tid == Environment.CurrentManagedThreadId)
 					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
 			}
 		}
@@ -87,11 +87,11 @@ namespace Tests.Data
 			{
 				await db.InsertAsync(new Parent { ParentID = 1010, Value1 = 1010 });
 
-				var tid = Thread.CurrentThread.ManagedThreadId;
+				var tid = Environment.CurrentManagedThreadId;
 
 				await tr.RollbackTransactionAsync();
 
-				if (tid == Thread.CurrentThread.ManagedThreadId)
+				if (tid == Environment.CurrentManagedThreadId)
 					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
 			}
 		}
@@ -99,7 +99,7 @@ namespace Tests.Data
 		[Test]
 		public async Task DataConnectionBeginTransactionAsync([DataSources(false)] string context)
 		{
-			var tid = Thread.CurrentThread.ManagedThreadId;
+			var tid = Environment.CurrentManagedThreadId;
 
 			using (var db = new DataConnection(context))
 			using (await db.BeginTransactionAsync())
@@ -107,8 +107,26 @@ namespace Tests.Data
 				// perform synchonously to not mess with BeginTransactionAsync testing
 				db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
 
-				if (tid == Thread.CurrentThread.ManagedThreadId)
+				if (tid == Environment.CurrentManagedThreadId)
 					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
+			}
+		}
+
+		[Test]
+		public async Task DataConnectionDisposeAsyncTransaction([DataSources(false)] string context)
+		{
+			var tid = Environment.CurrentManagedThreadId;
+
+			using (var db = new DataConnection(context))
+			{
+				await using (db.BeginTransaction())
+				{
+					// perform synchonously to not mess with DisposeAsync testing
+					db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
+
+					if (tid == Environment.CurrentManagedThreadId)
+						Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
+				}
 			}
 		}
 
@@ -123,7 +141,7 @@ namespace Tests.Data
 				{
 					await db.InsertAsync(new Parent { ParentID = 1010, Value1 = 1010 });
 
-					tid = Thread.CurrentThread.ManagedThreadId;
+					tid = Environment.CurrentManagedThreadId;
 
 					await db.CommitTransactionAsync();
 				}
@@ -133,7 +151,7 @@ namespace Tests.Data
 					db.GetTable<Parent>().Where(_ => _.ParentID == 1010).Delete();
 				}
 
-				if (tid == Thread.CurrentThread.ManagedThreadId)
+				if (tid == Environment.CurrentManagedThreadId)
 					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
 			}
 		}
@@ -147,11 +165,11 @@ namespace Tests.Data
 				// perform synchonously to not mess with BeginTransactionAsync testing
 				db.Insert(new Parent { ParentID = 1010, Value1 = 1010 });
 
-				var tid = Thread.CurrentThread.ManagedThreadId;
+				var tid = Environment.CurrentManagedThreadId;
 
 				await db.RollbackTransactionAsync();
 
-				if (tid == Thread.CurrentThread.ManagedThreadId)
+				if (tid == Environment.CurrentManagedThreadId)
 					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
 			}
 		}

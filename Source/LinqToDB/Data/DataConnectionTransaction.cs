@@ -7,9 +7,11 @@ namespace LinqToDB.Data
 	/// <summary>
 	/// Data connection transaction controller.
 	/// </summary>
-	public class DataConnectionTransaction : IDisposable
-#if !NETFRAMEWORK
-		, IAsyncDisposable
+	public class DataConnectionTransaction : IDisposable,
+#if NATIVE_ASYNC
+		IAsyncDisposable
+#else
+		Async.IAsyncDisposable
 #endif
 	{
 		/// <summary>
@@ -76,13 +78,21 @@ namespace LinqToDB.Data
 				DataConnection.RollbackTransaction();
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		public ValueTask DisposeAsync()
 		{
 			if (_disposeTransaction)
 				return new ValueTask(DataConnection.RollbackTransactionAsync());
 
-			return new ValueTask(Task.CompletedTask);
+			return default;
+		}
+#else
+		public Task DisposeAsync()
+		{
+			if (_disposeTransaction)
+				return DataConnection.RollbackTransactionAsync();
+
+			return TaskEx.CompletedTask;
 		}
 #endif
 	}

@@ -52,8 +52,7 @@ namespace LinqToDB.Data.RetryPolicy
 		/// </summary>
 		protected virtual TimeSpan MaxRetryDelay { get; }
 
-		[ThreadStatic]
-		static volatile bool _suspended;
+		static readonly AsyncLocal<bool> _suspended = new ();
 
 		/// <summary>
 		/// Indicates whether the strategy is suspended. The strategy is typically suspending while executing to avoid
@@ -61,8 +60,8 @@ namespace LinqToDB.Data.RetryPolicy
 		/// </summary>
 		protected static bool Suspended
 		{
-			get => _suspended;
-			set => _suspended = value;
+			get => _suspended.Value;
+			set => _suspended.Value = value;
 		}
 
 		/// <summary>

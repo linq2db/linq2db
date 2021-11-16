@@ -88,16 +88,18 @@ namespace Tests.SchemaProvider
 
 				switch (context)
 				{
-					case ProviderName.SqlServer2000 :
-					case ProviderName.SqlServer2005 :
-					case ProviderName.SqlServer2008 :
-					case ProviderName.SqlServer2012 :
-					case ProviderName.SqlServer2014 :
-					case TestProvName.SqlServer2016 :
-					case ProviderName.SqlServer2017 :
-					case TestProvName.SqlServer2019 :
-					case TestProvName.SqlServer2019SequentialAccess :
-					case TestProvName.SqlAzure      :
+					case ProviderName.SqlServer2000                       :
+					case ProviderName.SqlServer2005                       :
+					case ProviderName.SqlServer2008                       :
+					case ProviderName.SqlServer2012                       :
+					case ProviderName.SqlServer2014                       :
+					case ProviderName.SqlServer2016                       :
+					case ProviderName.SqlServer2017                       :
+					case TestProvName.SqlServer2019                       :
+					case TestProvName.SqlServer2019SequentialAccess       :
+					case TestProvName.SqlServer2019FastExpressionCompiler :
+					case TestProvName.SqlServerContained                  :
+					case TestProvName.SqlAzure                            :
 						{
 							var indexTable = dbSchema.Tables.Single(t => t.TableName == "IndexTable");
 							Assert.That(indexTable.ForeignKeys.Count,                Is.EqualTo(1));
@@ -110,21 +112,23 @@ namespace Tests.SchemaProvider
 						{
 							var indexTable = dbSchema.Tables.First(t => t.TableName == "testunique");
 							Assert.That(indexTable.Columns.Count(c => c.IsPrimaryKey), Is.EqualTo(2));
-							Assert.That(indexTable.ForeignKeys.Count(), Is.EqualTo(2));
+							Assert.That(indexTable.ForeignKeys.Count, Is.EqualTo(2));
 						}
 						break;
 				}
 
 				switch (context)
 				{
-					case ProviderName.SqlServer2008 :
-					case ProviderName.SqlServer2012 :
-					case ProviderName.SqlServer2014 :
-					case TestProvName.SqlServer2016 :
-					case ProviderName.SqlServer2017 :
-					case TestProvName.SqlServer2019 :
-					case TestProvName.SqlServer2019SequentialAccess:
-					case TestProvName.SqlAzure      :
+					case ProviderName.SqlServer2008                       :
+					case ProviderName.SqlServer2012                       :
+					case ProviderName.SqlServer2014                       :
+					case ProviderName.SqlServer2016                       :
+					case ProviderName.SqlServer2017                       :
+					case TestProvName.SqlServer2019                       :
+					case TestProvName.SqlServer2019SequentialAccess       :
+					case TestProvName.SqlServer2019FastExpressionCompiler :
+					case TestProvName.SqlServerContained                  :
+					case TestProvName.SqlAzure                            :
 						{
 							var tbl = dbSchema.Tables.Single(at => at.TableName == "AllTypes");
 							var col = tbl.Columns.First(c => c.ColumnName == "datetimeoffset3DataType");

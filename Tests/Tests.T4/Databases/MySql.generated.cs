@@ -15,6 +15,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Common;
+using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
@@ -40,7 +41,6 @@ namespace MySqlDataContext
 		/// VIEW
 		/// </summary>
 		public ITable<Personview>        Personviews        { get { return this.GetTable<Personview>(); } }
-		public ITable<Sampleclass>       Sampleclasses      { get { return this.GetTable<Sampleclass>(); } }
 		public ITable<Testidentity>      Testidentities     { get { return this.GetTable<Testidentity>(); } }
 		public ITable<Testmerge1>        Testmerge1         { get { return this.GetTable<Testmerge1>(); } }
 		public ITable<Testmerge2>        Testmerge2         { get { return this.GetTable<Testmerge2>(); } }
@@ -54,6 +54,13 @@ namespace MySqlDataContext
 
 		public TestdbDB(string configuration)
 			: base(configuration)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
+		public TestdbDB(LinqToDbConnectionOptions options)
+			: base(options)
 		{
 			InitDataContext();
 			InitMappingSchema();
@@ -294,16 +301,6 @@ namespace MySqlDataContext
 		[Column, NotNull] public int ID { get; set; } // int
 	}
 
-	[Table("sampleclass")]
-	public partial class Sampleclass
-	{
-		[Column, NotNull    ] public int     Id     { get; set; } // int
-		[Column,    Nullable] public string? Value1 { get; set; } // varchar(50)
-		[Column,    Nullable] public string? Value2 { get; set; } // varchar(50)
-		[Column,    Nullable] public string? Value3 { get; set; } // varchar(50)
-		[Column,    Nullable] public string? Value4 { get; set; } // varchar(50)
-	}
-
 	[Table("testidentity")]
 	public partial class Testidentity
 	{
@@ -377,6 +374,119 @@ namespace MySqlDataContext
 		public static int AddIssue792Record(this TestdbDB dataConnection)
 		{
 			return dataConnection.ExecuteProc("`AddIssue792Record`");
+		}
+
+		#endregion
+
+		#region Issue2313Parameters
+
+		public static IEnumerable<Issue2313ParametersResult> Issue2313Parameters(this TestdbDB dataConnection, string? VarChar255, char? VarChar1, string? Char255, char? Char1, byte[]? VarBinary255, byte[]? Binary255, byte[]? TinyBlob, byte[]? Blob, byte[]? MediumBlob, byte[]? LongBlob, string? TinyText, string? Text, string? MediumText, string? LongText, DateTime? Date, DateTime? DateTime, DateTime? TimeStamp, TimeSpan? Time, string? Json, sbyte? TinyInt, byte? TinyIntUnsigned, short? SmallInt, ushort? SmallIntUnsigned, int? MediumInt, uint? MediumIntUnsigned, int? Int, uint? IntUnsigned, long? BigInt, ulong? BigIntUnsigned, decimal? Decimal, float? Float, double? Double, bool? Boolean, bool? Bit1, byte? Bit8, ushort? Bit10, ushort? Bit16, uint? Bit32, ulong? Bit64, string? Enum, string? Set, int? Year, byte[]? Geometry, byte[]? Point, byte[]? LineString, byte[]? Polygon, byte[]? MultiPoint, byte[]? MultiLineString, byte[]? MultiPolygon, byte[]? GeometryCollection)
+		{
+			return dataConnection.QueryProc<Issue2313ParametersResult>("`Issue2313Parameters`",
+				new DataParameter("VarChar255",         VarChar255,         LinqToDB.DataType.VarChar),
+				new DataParameter("VarChar1",           VarChar1,           LinqToDB.DataType.VarChar),
+				new DataParameter("Char255",            Char255,            LinqToDB.DataType.Char),
+				new DataParameter("Char1",              Char1,              LinqToDB.DataType.Char),
+				new DataParameter("VarBinary255",       VarBinary255,       LinqToDB.DataType.VarBinary),
+				new DataParameter("Binary255",          Binary255,          LinqToDB.DataType.Binary),
+				new DataParameter("TinyBlob",           TinyBlob,           LinqToDB.DataType.Blob),
+				new DataParameter("Blob",               Blob,               LinqToDB.DataType.Blob),
+				new DataParameter("MediumBlob",         MediumBlob,         LinqToDB.DataType.Blob),
+				new DataParameter("LongBlob",           LongBlob,           LinqToDB.DataType.Blob),
+				new DataParameter("TinyText",           TinyText,           LinqToDB.DataType.Text),
+				new DataParameter("Text",               Text,               LinqToDB.DataType.Text),
+				new DataParameter("MediumText",         MediumText,         LinqToDB.DataType.Text),
+				new DataParameter("LongText",           LongText,           LinqToDB.DataType.Text),
+				new DataParameter("Date",               Date,               LinqToDB.DataType.Date),
+				new DataParameter("DateTime",           DateTime,           LinqToDB.DataType.DateTime),
+				new DataParameter("TimeStamp",          TimeStamp,          LinqToDB.DataType.DateTime),
+				new DataParameter("Time",               Time,               LinqToDB.DataType.Time),
+				new DataParameter("Json",               Json,               LinqToDB.DataType.Json),
+				new DataParameter("TinyInt",            TinyInt,            LinqToDB.DataType.SByte),
+				new DataParameter("TinyIntUnsigned",    TinyIntUnsigned,    LinqToDB.DataType.Byte),
+				new DataParameter("SmallInt",           SmallInt,           LinqToDB.DataType.Int16),
+				new DataParameter("SmallIntUnsigned",   SmallIntUnsigned,   LinqToDB.DataType.UInt16),
+				new DataParameter("MediumInt",          MediumInt,          LinqToDB.DataType.Int32),
+				new DataParameter("MediumIntUnsigned",  MediumIntUnsigned,  LinqToDB.DataType.UInt32),
+				new DataParameter("Int",                Int,                LinqToDB.DataType.Int32),
+				new DataParameter("IntUnsigned",        IntUnsigned,        LinqToDB.DataType.UInt32),
+				new DataParameter("BigInt",             BigInt,             LinqToDB.DataType.Int64),
+				new DataParameter("BigIntUnsigned",     BigIntUnsigned,     LinqToDB.DataType.UInt64),
+				new DataParameter("Decimal",            Decimal,            LinqToDB.DataType.Decimal),
+				new DataParameter("Float",              Float,              LinqToDB.DataType.Single),
+				new DataParameter("Double",             Double,             LinqToDB.DataType.Double),
+				new DataParameter("Boolean",            Boolean,            LinqToDB.DataType.SByte),
+				new DataParameter("Bit1",               Bit1,               LinqToDB.DataType.BitArray),
+				new DataParameter("Bit8",               Bit8,               LinqToDB.DataType.BitArray),
+				new DataParameter("Bit10",              Bit10,              LinqToDB.DataType.BitArray),
+				new DataParameter("Bit16",              Bit16,              LinqToDB.DataType.BitArray),
+				new DataParameter("Bit32",              Bit32,              LinqToDB.DataType.BitArray),
+				new DataParameter("Bit64",              Bit64,              LinqToDB.DataType.BitArray),
+				new DataParameter("Enum",               Enum,               LinqToDB.DataType.VarChar),
+				new DataParameter("Set",                Set,                LinqToDB.DataType.VarChar),
+				new DataParameter("Year",               Year,               LinqToDB.DataType.Int32),
+				new DataParameter("Geometry",           Geometry,           LinqToDB.DataType.Undefined),
+				new DataParameter("Point",              Point,              LinqToDB.DataType.Undefined),
+				new DataParameter("LineString",         LineString,         LinqToDB.DataType.Undefined),
+				new DataParameter("Polygon",            Polygon,            LinqToDB.DataType.Undefined),
+				new DataParameter("MultiPoint",         MultiPoint,         LinqToDB.DataType.Undefined),
+				new DataParameter("MultiLineString",    MultiLineString,    LinqToDB.DataType.Undefined),
+				new DataParameter("MultiPolygon",       MultiPolygon,       LinqToDB.DataType.Undefined),
+				new DataParameter("GeometryCollection", GeometryCollection, LinqToDB.DataType.Undefined));
+		}
+
+		public partial class Issue2313ParametersResult
+		{
+			[Column("`VarChar255`")        ] public string?   VarChar255         { get; set; }
+			[Column("`VarChar1`")          ] public char?     VarChar1           { get; set; }
+			[Column("`Char255`")           ] public string?   Char255            { get; set; }
+			[Column("`Char1`")             ] public char?     Char1              { get; set; }
+			[Column("`VarBinary255`")      ] public byte[]?   VarBinary255       { get; set; }
+			[Column("`Binary255`")         ] public byte[]?   Binary255          { get; set; }
+			[Column("`TinyBlob`")          ] public byte[]?   TinyBlob           { get; set; }
+			[Column("`Blob`")              ] public byte[]?   Blob               { get; set; }
+			[Column("`MediumBlob`")        ] public byte[]?   MediumBlob         { get; set; }
+			[Column("`LongBlob`")          ] public byte[]?   LongBlob           { get; set; }
+			[Column("`TinyText`")          ] public string?   TinyText           { get; set; }
+			[Column("`Text`")              ] public string?   Text               { get; set; }
+			[Column("`MediumText`")        ] public string?   MediumText         { get; set; }
+			[Column("`LongText`")          ] public string?   LongText           { get; set; }
+			[Column("`Date`")              ] public DateTime? Date               { get; set; }
+			[Column("`DateTime`")          ] public DateTime? DateTime           { get; set; }
+			[Column("`TimeStamp`")         ] public DateTime? TimeStamp          { get; set; }
+			[Column("`Time`")              ] public TimeSpan? Time               { get; set; }
+			[Column("`Json`")              ] public string?   Json               { get; set; }
+			[Column("`TinyInt`")           ] public sbyte?    TinyInt            { get; set; }
+			[Column("`TinyIntUnsigned`")   ] public byte?     TinyIntUnsigned    { get; set; }
+			[Column("`SmallInt`")          ] public short?    SmallInt           { get; set; }
+			[Column("`SmallIntUnsigned`")  ] public ushort?   SmallIntUnsigned   { get; set; }
+			[Column("`MediumInt`")         ] public int?      MediumInt          { get; set; }
+			[Column("`MediumIntUnsigned`") ] public uint?     MediumIntUnsigned  { get; set; }
+			[Column("`Int`")               ] public int?      Int                { get; set; }
+			[Column("`IntUnsigned`")       ] public uint?     IntUnsigned        { get; set; }
+			[Column("`BigInt`")            ] public long?     BigInt             { get; set; }
+			[Column("`BigIntUnsigned`")    ] public ulong?    BigIntUnsigned     { get; set; }
+			[Column("`Decimal`")           ] public decimal?  Decimal            { get; set; }
+			[Column("`Float`")             ] public float?    Float              { get; set; }
+			[Column("`Double`")            ] public double?   Double             { get; set; }
+			[Column("`Boolean`")           ] public bool?     Boolean            { get; set; }
+			[Column("`Bit1`")              ] public bool?     Bit1               { get; set; }
+			[Column("`Bit8`")              ] public byte?     Bit8               { get; set; }
+			[Column("`Bit10`")             ] public ushort?   Bit10              { get; set; }
+			[Column("`Bit16`")             ] public ushort?   Bit16              { get; set; }
+			[Column("`Bit32`")             ] public uint?     Bit32              { get; set; }
+			[Column("`Bit64`")             ] public ulong?    Bit64              { get; set; }
+			[Column("`Enum`")              ] public string?   Enum               { get; set; }
+			[Column("`Set`")               ] public string?   Set                { get; set; }
+			[Column("`Year`")              ] public int?      Year               { get; set; }
+			[Column("`Geometry`")          ] public byte[]?   Geometry           { get; set; }
+			[Column("`Point`")             ] public byte[]?   Point              { get; set; }
+			[Column("`LineString`")        ] public byte[]?   LineString         { get; set; }
+			[Column("`Polygon`")           ] public byte[]?   Polygon            { get; set; }
+			[Column("`MultiPoint`")        ] public byte[]?   MultiPoint         { get; set; }
+			[Column("`MultiLineString`")   ] public byte[]?   MultiLineString    { get; set; }
+			[Column("`MultiPolygon`")      ] public byte[]?   MultiPolygon       { get; set; }
+			[Column("`GeometryCollection`")] public byte[]?   GeometryCollection { get; set; }
 		}
 
 		#endregion

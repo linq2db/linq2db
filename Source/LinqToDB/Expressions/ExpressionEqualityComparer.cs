@@ -5,7 +5,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -375,6 +374,7 @@ namespace LinqToDB.Expressions
 						return CompareTypeIs((TypeBinaryExpression)a, (TypeBinaryExpression)b);
 					case ExpressionType.Conditional:
 						return CompareConditional((ConditionalExpression)a, (ConditionalExpression)b);
+					case ExpressionType.Default: return true;
 					case ExpressionType.Constant:
 						return CompareConstant((ConstantExpression)a, (ConstantExpression)b);
 					case ExpressionType.Parameter:
@@ -748,7 +748,7 @@ namespace LinqToDB.Expressions
 
 				public void Add(TKey key, TValue value) => _map.Add(key, value);
 
-				public bool TryGetValue(TKey key, [MaybeNull] out TValue value)
+				public bool TryGetValue(TKey key, out TValue? value)
 				{
 					for (var scope = this; scope != null; scope = scope._previous!)
 					{

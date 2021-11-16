@@ -83,7 +83,7 @@ namespace Tests.xUpdate
 			var data = GenerateData();
 			var newData = GenerateNewData();
 			using (var db = GetDataContext(context))
-			using (var forUpdates = db.CreateLocalTable<UpdatedEntities>(data))
+			using (var forUpdates = db.CreateLocalTable(data))
 			using (var tempTable = db.CreateLocalTable(newData))
 			{
 				var someId = 100;

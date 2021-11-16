@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETFRAMEWORK
+using System;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
@@ -8,10 +9,13 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.ServiceModel
 {
-	using Linq;
 	using Common.Internal;
-	using SqlQuery;
+	using Linq;
 	using SqlProvider;
+	using SqlQuery;
+#if !NATIVE_ASYNC
+	using Tools;
+#endif
 
 	public abstract partial class RemoteDataContextBase
 	{
@@ -36,38 +40,42 @@ namespace LinqToDB.ServiceModel
 
 			public override Expression? MapperExpression { get; set; }
 
-			protected override void SetQuery(IReadOnlyParameterValues parameterValues)
+			protected override void SetQuery(IReadOnlyParameterValues parameterValues, bool forGetSqlText)
 			{
 				_evaluationContext = new EvaluationContext(parameterValues);
 			}
 
-			#region GetSqlText
+#region GetSqlText
 
 			public override string GetSqlText()
 			{
-				SetCommand(false);
+				SetCommand(true);
 
-				var sb = new StringBuilder();
-				var query = Query.Queries[QueryNumber];
-				var sqlBuilder   = DataContext.CreateSqlProvider();
-				var sqlOptimizer = DataContext.GetSqlOptimizer();
+				var sb               = new StringBuilder();
+				var query            = Query.Queries[QueryNumber];
+				var sqlBuilder       = DataContext.CreateSqlProvider();
+				var sqlOptimizer     = DataContext.GetSqlOptimizer();
 				var sqlStringBuilder = new StringBuilder();
-				var cc = sqlBuilder.CommandCount(query.Statement);
+				var cc               = sqlBuilder.CommandCount(query.Statement);
 
-				var optimizationContext = new OptimizationContext(_evaluationContext, null, false);
+				var optimizationContext = new OptimizationContext(_evaluationContext, query.Aliases!, false);
 
 				for (var i = 0; i < cc; i++)
 				{
-					var statement = sqlOptimizer.PrepareStatementForSql(query.Statement, DataContext.MappingSchema, _evaluationContext);
+					var statement = sqlOptimizer.PrepareStatementForSql(query.Statement, DataContext.MappingSchema, optimizationContext);
 					sqlBuilder.BuildSql(i, statement, sqlStringBuilder, optimizationContext);
 
-					if (i == 0 && query.QueryHints != null && query.QueryHints.Count > 0)
+					if (i == 0)
 					{
-						var sql = sqlStringBuilder.ToString();
+						var queryHints = DataContext.GetNextCommandHints(false);
+						if (queryHints != null)
+						{
+							var sql = sqlStringBuilder.ToString();
 
-						sql = sqlBuilder.ApplyQueryHints(sql, query.QueryHints);
+							sql = sqlBuilder.ApplyQueryHints(sql, queryHints);
 
-						sqlStringBuilder.Append(sql);
+							sqlStringBuilder.Append(sql);
+						}
 					}
 
 					sb
@@ -126,7 +134,7 @@ namespace LinqToDB.ServiceModel
 				return sb.ToString();
 			}
 
-			#endregion
+#endregion
 
 			public override void Dispose()
 			{
@@ -140,21 +148,18 @@ namespace LinqToDB.ServiceModel
 			{
 				string data;
 
-				SetCommand(true);
+				SetCommand(false);
 
 				var queryContext = Query.Queries[QueryNumber];
 
 				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement,
-					_dataContext.MappingSchema, _evaluationContext);
-
-				var currentParameters = q.CollectParameters();
+					_dataContext.MappingSchema, queryContext.Aliases!, _evaluationContext);
 
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
-					currentParameters,
 					_evaluationContext.ParameterValues,
-					QueryHints);
+					_dataContext.GetNextCommandHints(true));
 
 				if (_dataContext._batchCounter > 0)
 				{
@@ -174,18 +179,18 @@ namespace LinqToDB.ServiceModel
 
 				string data;
 
-				SetCommand(true);
+				SetCommand(false);
 
 				var queryContext = Query.Queries[QueryNumber];
 
 				var sqlOptimizer = _dataContext.GetSqlOptimizer();
-				var q = sqlOptimizer.PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _evaluationContext);
-				var currentParameters = q.CollectParameters();
+				var q = sqlOptimizer.PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, queryContext.Aliases!, _evaluationContext);
 
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
-					currentParameters, _evaluationContext.ParameterValues, QueryHints);
+					_evaluationContext.ParameterValues,
+					_dataContext.GetNextCommandHints(true));
 
 				_client = _dataContext.GetClient();
 
@@ -201,20 +206,17 @@ namespace LinqToDB.ServiceModel
 
 				string data;
 
-				SetCommand(true);
+				SetCommand(false);
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _evaluationContext);
-
-				var currentParameters = q.CollectParameters();
+				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, queryContext.Aliases!, _evaluationContext);
 
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
-					currentParameters,
 					_evaluationContext.ParameterValues,
-					QueryHints);
+					_dataContext.GetNextCommandHints(true));
 
 				_client = _dataContext.GetClient();
 
@@ -259,6 +261,20 @@ namespace LinqToDB.ServiceModel
 				{
 					DataReader.Dispose();
 				}
+
+#if !NATIVE_ASYNC
+				public Task DisposeAsync()
+				{
+					DataReader.Dispose();
+					return TaskEx.CompletedTask;
+				}
+#else
+				public ValueTask DisposeAsync()
+				{
+					DataReader.Dispose();
+					return default;
+				}
+#endif
 			}
 
 			public override async Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)
@@ -268,19 +284,17 @@ namespace LinqToDB.ServiceModel
 
 				string data;
 
-				SetCommand(true);
+				SetCommand(false);
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _evaluationContext);
-				var currentParameters = q.CollectParameters();
+				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, queryContext.Aliases!, _evaluationContext);
 
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
-					currentParameters,
 					_evaluationContext.ParameterValues,
-					QueryHints);
+					_dataContext.GetNextCommandHints(true));
 
 				_client = _dataContext.GetClient();
 
@@ -299,19 +313,17 @@ namespace LinqToDB.ServiceModel
 
 				string data;
 
-				SetCommand(true);
+				SetCommand(false);
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _evaluationContext);
-				var currentParameters = q.CollectParameters();
+				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, queryContext.Aliases!, _evaluationContext);
 
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
-					currentParameters,
 					_evaluationContext.ParameterValues,
-					QueryHints);
+					_dataContext.GetNextCommandHints(true));
 
 				_client = _dataContext.GetClient();
 
@@ -322,19 +334,17 @@ namespace LinqToDB.ServiceModel
 			{
 				string data;
 
-				SetCommand(true);
+				SetCommand(false);
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _evaluationContext);
-				var currentParameters = q.CollectParameters();
+				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, queryContext.Aliases!, _evaluationContext);
 
 				data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
-					currentParameters,
 					_evaluationContext.ParameterValues,
-					QueryHints);
+					_dataContext.GetNextCommandHints(true));
 
 				if (_dataContext._batchCounter > 0)
 				{
@@ -349,3 +359,4 @@ namespace LinqToDB.ServiceModel
 		}
 	}
 }
+#endif

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
-
+using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -162,7 +162,6 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[ActiveIssue("Incorrect length returned for Jürgen: 7 instead of 6", Configuration = TestProvName.AllInformix)]
 		[Test]
 		public void PreferServerFunc1([DataSources] string context)
 		{
@@ -172,7 +171,6 @@ namespace Tests.Linq
 					from p in db.Person select p.FirstName.Length);
 		}
 
-		[ActiveIssue("Incorrect length returned for Jürgen: 7 instead of 6", Configuration = TestProvName.AllInformix)]
 		[Test]
 		public void PreferServerFunc2([DataSources] string context)
 		{
@@ -186,7 +184,7 @@ namespace Tests.Linq
 		{
 			class Entity
 			{
-				public Test? TestField = null;
+				public Test? TestField;
 			}
 
 			public Test? TestClosure(ITestDataContext db)

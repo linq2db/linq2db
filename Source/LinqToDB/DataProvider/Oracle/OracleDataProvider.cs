@@ -180,7 +180,12 @@ namespace LinqToDB.DataProvider.Oracle
 					if (value is bool boolValue)
 						value = boolValue ? (byte)1 : (byte)0;
 					break;
-				case DataType.Guid:
+				case DataType.Guid     :
+				case DataType.Binary   :
+				case DataType.VarBinary:
+				case DataType.Blob     :
+				case DataType.Image    :
+					// https://github.com/linq2db/linq2db/issues/3207
 					if (value is Guid guid) value = guid.ToByteArray();
 					break;
 				case DataType.Time:
@@ -250,11 +255,13 @@ namespace LinqToDB.DataProvider.Oracle
 				case DataType.NText    : type = OracleProviderAdapter.OracleDbType.NClob       ; break;
 				case DataType.Image    :
 				case DataType.Binary   :
+				case DataType.Blob     :
 				case DataType.VarBinary: type = OracleProviderAdapter.OracleDbType.Blob        ; break;
 				case DataType.Cursor   : type = OracleProviderAdapter.OracleDbType.RefCursor   ; break;
 				case DataType.NVarChar : type = OracleProviderAdapter.OracleDbType.NVarchar2   ; break;
 				case DataType.Long     : type = OracleProviderAdapter.OracleDbType.Long        ; break;
 				case DataType.LongRaw  : type = OracleProviderAdapter.OracleDbType.LongRaw     ; break;
+				case DataType.Json     : type = OracleProviderAdapter.OracleDbType.Json        ; break;
 			}
 
 			if (type != null)
@@ -326,7 +333,7 @@ namespace LinqToDB.DataProvider.Oracle
 				cancellationToken);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{

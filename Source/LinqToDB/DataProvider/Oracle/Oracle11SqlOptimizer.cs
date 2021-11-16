@@ -5,8 +5,6 @@ namespace LinqToDB.DataProvider.Oracle
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
-	using Mapping;
-	using Tools;
 
 	public class Oracle11SqlOptimizer : BasicSqlOptimizer
 	{
@@ -51,7 +49,10 @@ namespace LinqToDB.DataProvider.Oracle
 
 					// Oracle saves empty string as null to database, so we need predicate modification before sending query
 					//
-					if (expr.Operator.In(SqlPredicate.Operator.Equal, SqlPredicate.Operator.NotEqual, SqlPredicate.Operator.GreaterOrEqual, SqlPredicate.Operator.LessOrEqual) && expr.WithNull == true)
+					if ((expr.Operator == SqlPredicate.Operator.Equal          ||
+						 expr.Operator == SqlPredicate.Operator.NotEqual       ||
+						 expr.Operator == SqlPredicate.Operator.GreaterOrEqual ||
+						 expr.Operator == SqlPredicate.Operator.LessOrEqual) && expr.WithNull == true)
 					{
 						if (expr.Expr1.SystemType == typeof(string) && expr.Expr1.CanBeEvaluated(true))
 							return true;
@@ -65,7 +66,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return false;
 		}
 
-		public override ISqlPredicate ConvertPredicateImpl(MappingSchema mappingSchema, ISqlPredicate predicate, ConvertVisitor visitor, OptimizationContext optimizationContext)
+		public override ISqlPredicate ConvertPredicateImpl(ISqlPredicate predicate, ConvertVisitor<RunOptimizationContext> visitor)
 		{
 			switch (predicate.ElementType)
 			{
@@ -75,10 +76,14 @@ namespace LinqToDB.DataProvider.Oracle
 
 					// Oracle saves empty string as null to database, so we need predicate modification before sending query
 					//
-					if (expr.Operator.In(SqlPredicate.Operator.Equal, SqlPredicate.Operator.NotEqual, SqlPredicate.Operator.GreaterOrEqual, SqlPredicate.Operator.LessOrEqual) && expr.WithNull == true)
+					if (expr.WithNull == true &&
+						(expr.Operator == SqlPredicate.Operator.Equal          ||
+						 expr.Operator == SqlPredicate.Operator.NotEqual       ||
+						 expr.Operator == SqlPredicate.Operator.GreaterOrEqual ||
+						 expr.Operator == SqlPredicate.Operator.LessOrEqual))
 					{
 						if (expr.Expr1.SystemType == typeof(string) &&
-						    expr.Expr1.TryEvaluateExpression(optimizationContext.Context, out var value1) && value1 is string string1)
+						    expr.Expr1.TryEvaluateExpression(visitor.Context.OptimizationContext.Context, out var value1) && value1 is string string1)
 						{
 							if (string1 == "")
 							{
@@ -90,7 +95,7 @@ namespace LinqToDB.DataProvider.Oracle
 						}
 
 						if (expr.Expr2.SystemType == typeof(string) &&
-						    expr.Expr2.TryEvaluateExpression(optimizationContext.Context, out var value2) && value2 is string string2)
+						    expr.Expr2.TryEvaluateExpression(visitor.Context.OptimizationContext.Context, out var value2) && value2 is string string2)
 						{
 							if (string2 == "")
 							{
@@ -105,17 +110,16 @@ namespace LinqToDB.DataProvider.Oracle
 				}
 			}
 
-			predicate = base.ConvertPredicateImpl(mappingSchema, predicate, visitor, optimizationContext);
+			predicate = base.ConvertPredicateImpl(predicate, visitor);
 
 			return predicate;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, ConvertVisitor visitor,
-			EvaluationContext context)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
 		{
-			expr = base.ConvertExpressionImpl(expr, visitor, context);
+			expression = base.ConvertExpressionImpl(expression, visitor);
 
-			if (expr is SqlBinaryExpression be)
+			if (expression is SqlBinaryExpression be)
 			{
 				switch (be.Operation)
 				{
@@ -132,10 +136,10 @@ namespace LinqToDB.DataProvider.Oracle
 							Add(be.Expr1, be.Expr2, be.SystemType),
 							Mul(new SqlFunction(be.SystemType, "BITAND", be.Expr1, be.Expr2), 2),
 							be.SystemType);
-					case "+": return be.SystemType == typeof(string) ? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) : expr;
+					case "+": return be.SystemType == typeof(string) ? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) : expression;
 				}
 			}
-			else if (expr is SqlFunction func)
+			else if (expression is SqlFunction func)
 			{
 				switch (func.Name)
 				{
@@ -200,16 +204,16 @@ namespace LinqToDB.DataProvider.Oracle
 							new SqlValue(27));
 				}
 			}
-			else if (expr is SqlExpression e)
+			else if (expression is SqlExpression e)
 			{
 				if (e.Expr.StartsWith("To_Number(To_Char(") && e.Expr.EndsWith(", 'FF'))"))
 					return Div(new SqlExpression(e.SystemType, e.Expr.Replace("To_Number(To_Char(", "to_Number(To_Char("), e.Parameters), 1000);
 			}
 
-			return expr;
+			return expression;
 		}
 
-		static readonly ISqlExpression RowNumExpr = new SqlExpression(typeof(long), "ROWNUM", Precedence.Primary, true, true);
+		static readonly ISqlExpression RowNumExpr = new SqlExpression(typeof(long), "ROWNUM", Precedence.Primary, SqlFlags.IsAggregate | SqlFlags.IsWindowFunction);
 
 		/// <summary>
 		/// Replaces Take/Skip by ROWNUM usage.
@@ -220,8 +224,10 @@ namespace LinqToDB.DataProvider.Oracle
 		/// <returns>The same <paramref name="statement"/> or modified statement when optimization has been performed.</returns>
 		protected SqlStatement ReplaceTakeSkipWithRowNum(SqlStatement statement, bool onlySubqueries)
 		{
-			return QueryHelper.WrapQuery(statement,
-				query =>
+			return QueryHelper.WrapQuery(
+				(object?)null,
+				statement,
+				static (_, query, _) =>
 				{
 					if (query.Select.TakeValue == null && query.Select.SkipValue == null)
 						return 0;
@@ -238,8 +244,8 @@ namespace LinqToDB.DataProvider.Oracle
 					}
 						
 					return 1;
-				}
-				, queries =>
+				},
+				static (_, queries) =>
 				{
 					var query = queries[queries.Count - 1];
 					var processingQuery = queries[queries.Count - 2];
@@ -267,7 +273,9 @@ namespace LinqToDB.DataProvider.Oracle
 					query.Select.SkipValue = null;
 					query.Select.Take(null, null);
 
-				});
+				},
+				allowMutation: true,
+				withStack: false);
 		}
 
 		protected override ISqlExpression ConvertFunction(SqlFunction func)

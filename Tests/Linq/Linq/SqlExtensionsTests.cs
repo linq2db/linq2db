@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -264,6 +263,44 @@ namespace Tests.Linq
 				StringAssert.Contains("FREETEXTTABLE([database].[schema].[table_name], [value],", query1Str);
 				StringAssert.Contains("FREETEXTTABLE([database].[schema].[table_name], [value],", query2Str);
 				StringAssert.Contains("FREETEXTTABLE([database].[schema].[table_name], [value],", query3Str);
+			}
+		}
+
+		[Test]
+		public void TestSqlCollate1(
+			[DataSources(
+				ProviderName.SqlCe,
+				TestProvName.AllAccess,
+				TestProvName.AllSapHana,
+				TestProvName.AllOracle11,
+				TestProvName.AllInformix,
+				TestProvName.AllSybase)]
+			string context)
+		{
+			var collation = TestUtils.GetValidCollationName(GetProviderName(context, out _));
+
+			using (var db = GetDataContext(context))
+			{
+				db.Person.OrderBy(_ => "1" + Sql.Collate(_.FirstName, collation) + "2").ToList();
+			}
+		}
+
+		[Test]
+		public void TestSqlCollate2(
+			[DataSources(
+				ProviderName.SqlCe,
+				TestProvName.AllAccess,
+				TestProvName.AllSapHana,
+				TestProvName.AllOracle11,
+				TestProvName.AllInformix,
+				TestProvName.AllSybase)]
+			string context)
+		{
+			var collation = TestUtils.GetValidCollationName(GetProviderName(context, out _));
+
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Select(_ => new { CollatedName = "1" + Sql.Collate(_.FirstName, collation) + "2" }).ToList();
 			}
 		}
 	}

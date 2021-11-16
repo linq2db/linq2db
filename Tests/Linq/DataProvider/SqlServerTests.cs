@@ -4,23 +4,24 @@ using System.Data;
 using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.Linq;
 using LinqToDB.Linq.Internal;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
+using LinqToDB.Tools;
 using Microsoft.SqlServer.Types;
 using NUnit.Framework;
 using Tests.Model;
@@ -488,7 +489,7 @@ namespace Tests.DataProvider
 				}
 				else
 				{
-					isScCollation = conn.Execute<int>("SELECT COUNT(*) FROM sys.Databases WHERE database_id = DB_ID() AND collation_name LIKE '%_SC'") > 0;
+					isScCollation = conn.Execute<int>("SELECT COUNT(*) FROM sys.databases WHERE database_id = DB_ID() AND collation_name LIKE '%_SC'") > 0;
 				}
 				if (isScCollation)
 				{
@@ -571,10 +572,10 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create   ("p", arr1)), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", null)), Is.EqualTo(null));
-				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as binary(1))", DataParameter.Binary("p", new byte[0])), Is.EqualTo(new byte[] {0}));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Binary   ("p", new byte[0])), Is.EqualTo(new byte[8000]));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", new byte[0])), Is.EqualTo(new byte[0]));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Image    ("p", new byte[0])), Is.EqualTo(new byte[0]));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as binary(1))", DataParameter.Binary("p", Array<byte>.Empty)), Is.EqualTo(new byte[] {0}));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Binary   ("p", Array<byte>.Empty)), Is.EqualTo(new byte[8000]));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Image    ("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter { Name = "p", Value = arr1 }), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create   ("p", new Binary(arr1))), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter("p", new Binary(arr1))), Is.EqualTo(arr1));
@@ -1160,7 +1161,8 @@ namespace Tests.DataProvider
 			await BulkCopyAllTypesAsync(context, BulkCopyType.ProviderSpecific);
 		}
 
-		void CompareObject<T>(MappingSchema mappingSchema, [DisallowNull] T actual, [DisallowNull] T test)
+		void CompareObject<T>(MappingSchema mappingSchema, T actual, T test)
+			where T : notnull
 		{
 			var ed = mappingSchema.GetEntityDescriptor(typeof(T));
 
@@ -1912,6 +1914,113 @@ AS
 				param = func.Parameters.FirstOrDefault(p => p.ParameterName == "@value")!;
 				Assert.NotNull(param);
 				Assert.AreEqual("This is <test> scalar function parameter!", param.Description);
+			}
+		}
+
+		[Test]
+		public void TestRetrieveIdentity([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context, [Values] bool useIdentity)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				using (db.BeginTransaction())
+				{
+					// advance identity forward
+					db.Insert(new Person() { FirstName = "", LastName = "" });
+					db.Insert(new Person() { FirstName = "", LastName = "" });
+					db.Insert(new Person() { FirstName = "", LastName = "" });
+				}
+
+				var lastIdentity = db.Person.Select(_ => _.ID).Max();
+				var step         = 1;
+				var max = lastIdentity;
+
+				if (useIdentity)
+				{
+					lastIdentity = db.Execute<int>("SELECT IDENT_CURRENT('Person')");
+					step         = db.Execute<int>("SELECT IDENT_INCR('Person')");
+					Assert.True(max < lastIdentity);
+					Assert.AreEqual(1, step);
+				}
+
+				var persons  = Enumerable.Range(1, 10).Select(_ => new Person()).ToArray();
+
+				persons.RetrieveIdentity(db, useIdentity: useIdentity);
+
+				for (var i = 0; i < 10; i++)
+					Assert.AreEqual(lastIdentity + (i + 1) * step, persons[i].ID);
+			}
+		}
+
+		[Sql.TableFunction("PersonTableFunction", argIndices: new []{2, 3})]
+		static IQueryable<Person> PersonTableFunction(IDataContext dc, object? fake, int? id, string? firstName)
+		{
+			return dc.GetTable<Person>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, dc, fake, id, firstName);
+		}
+
+		[Sql.TableFunction("PersonTableFunction", argIndices: new []{2, 3})]
+		static LinqToDB.ITable<Person> PersonTableFunctionTable(IDataContext dc, object? fake, int? id, string? firstName)
+		{
+			return dc.GetTable<Person>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, dc, fake, id, firstName);
+		}
+
+		[Sql.TableExpression("PersonTableFunction({4}, {5}) {1}")]
+		static IQueryable<Person> PersonTableExpression(IDataContext dc, object? fake, int? id, string? firstName)
+		{
+			return dc.GetTable<Person>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, dc, fake, id, firstName);
+		}
+
+		[Sql.TableExpression("PersonTableFunction({4}, {5}) {1}")]
+		static LinqToDB.ITable<Person> PersonTableExpressionTable(IDataContext dc, object? fake, int? id, string? firstName)
+		{
+			return dc.GetTable<Person>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, dc, fake, id, firstName);
+		}
+
+		[Test]
+		public void TestTableFunctionAndTableExpression([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context, [Values] bool useIdentity)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var person = db.Person.First();
+
+				void DropTableFunction()
+				{
+					db.Execute(@"
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'IF' AND name = 'PersonTableFunction')
+	BEGIN DROP FUNCTION PersonTableFunction
+END
+");
+				}
+
+				DropTableFunction();
+
+				try
+				{
+					db.Execute(@"
+CREATE FUNCTION dbo.PersonTableFunction( @ID int, @FirstName varchar(50))
+RETURNS TABLE
+AS
+	RETURN ( SELECT * FROM dbo.Person WHERE PersonID = @ID AND FirstName = @FirstName )
+");
+					PersonTableFunction(db, null, person.ID, person.FirstName).First().Should().Be(person);
+					PersonTableFunctionTable(db, null, person.ID, person.FirstName).First().Should().Be(person);
+
+					PersonTableFunction(db, null, person.ID, person.FirstName).First().Should().Be(person);
+					PersonTableFunctionTable(db, null, person.ID, person.FirstName).First().Should().Be(person);
+
+					var query =
+						from p in db.Person
+						from tf in PersonTableFunction(db, null, person.ID, person.FirstName).InnerJoin(tf => tf.ID           == p.ID)
+						from tft in PersonTableFunctionTable(db, null, person.ID, person.FirstName).InnerJoin(tft => tft.ID   == p.ID)
+						from te in PersonTableExpression(db, null, person.ID, person.FirstName).InnerJoin(te => te.ID         == p.ID)
+						from tet in PersonTableExpressionTable(db, null, person.ID, person.FirstName).InnerJoin(tet => tet.ID == p.ID)
+						select p;
+
+					query.First().Should().Be(person);;
+				}
+				finally
+				{
+					DropTableFunction();
+				}
 			}
 		}
 	}

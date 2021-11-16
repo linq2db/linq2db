@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using LinqToDB;
 using NUnit.Framework;
 using Tests.Model;
@@ -117,7 +116,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(Details = "Converted FuncLikePredicate expression is not a Predicate expression.")]
 		[Test]
 		public void ExistsRemoval([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context, [Values] bool shouldFilter, [Values] bool isPositive)
 		{

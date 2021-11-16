@@ -1,58 +1,55 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlMergeStatement : SqlStatement
+	public class SqlMergeStatement : SqlStatementWithQueryBase
 	{
 		private const string TargetAlias = "Target";
 
-		public SqlMergeStatement(SqlTable target)
+		public SqlMergeStatement(SqlTable target) : base(null)
 		{
 			Target = new SqlTableSource(target, TargetAlias);
 		}
 
 		internal SqlMergeStatement(
+			SqlWithClause?                       with,
 			string?                              hint,
 			SqlTableSource                       target,
-			SqlMergeSourceTable                  source,
+			SqlTableLikeSource                   source,
 			SqlSearchCondition                   on,
 			IEnumerable<SqlMergeOperationClause> operations)
+			: base(null)
 		{
-			Hint   = hint;
+			With = with;
+			Hint = hint;
 			Target = target;
 			Source = source;
-			On     = on;
+			On = on;
 
 			foreach (var operation in operations)
 				Operations.Add(operation);
 		}
 
-		public string?                        Hint       { get; internal set; }
+		public string?                       Hint       { get; internal set; }
+		public SqlTableSource                Target     { get; }
+		public SqlTableLikeSource            Source     { get; internal set; } = null!;
+		public SqlSearchCondition            On         { get; }               = new();
+		public List<SqlMergeOperationClause> Operations { get; }               = new();
+		public SqlOutputClause?              Output     { get; set; }
 
-		public SqlTableSource                 Target     { get; }
-
-		public SqlMergeSourceTable            Source     { get; internal set; } = null!;
-
-		public SqlSearchCondition             On         { get; }               = new SqlSearchCondition();
-
-		public IList<SqlMergeOperationClause> Operations { get; }               = new List<SqlMergeOperationClause>();
-
-		public bool                           HasIdentityInsert                 => Operations.Any(o => o.OperationType == MergeOperationType.Insert && o.Items.Any(item => item.Column is SqlField field && field.IsIdentity));
-
-		public override QueryType        QueryType   => QueryType.Merge;
-
-		public override QueryElementType ElementType => QueryElementType.MergeStatement;
-
-		public override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			throw new NotImplementedException();
-		}
+		public bool                          HasIdentityInsert => Operations.Any(o => o.OperationType == MergeOperationType.Insert && o.Items.Any(item => item.Column is SqlField field && field.IsIdentity));
+		public override QueryType            QueryType         => QueryType.Merge;
+		public override QueryElementType     ElementType       => QueryElementType.MergeStatement;
 
 		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
+			if (With != null)
+				With.ToString(sb, dic);
+
 			sb.Append("MERGE INTO ");
 
 			((IQueryElement)Target).ToString(sb, dic);
@@ -80,15 +77,15 @@ namespace LinqToDB.SqlQuery
 			return sb;
 		}
 
-		public override ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			Target.Walk(options, func);
-			Source.Walk(options, func);
+			Target.Walk(options, context, func);
+			Source.Walk(options, context, func);
 
-			((ISqlExpressionWalkable)On).Walk(options, func);
+			((ISqlExpressionWalkable)On).Walk(options, context, func);
 
 			for (var i = 0; i < Operations.Count; i++)
-				((ISqlExpressionWalkable)Operations[i]).Walk(options, func);
+				((ISqlExpressionWalkable)Operations[i]).Walk(options, context, func);
 
 			return null;
 		}
@@ -100,9 +97,10 @@ namespace LinqToDB.SqlQuery
 			set => Source.IsParameterDependent = value;
 		}
 
+		[NotNull]
 		public override SelectQuery? SelectQuery
 		{
-			get => null;
+			get => base.SelectQuery;
 			set => throw new InvalidOperationException();
 		}
 
@@ -117,19 +115,10 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		public override IEnumerable<IQueryElement> EnumClauses()
+		public override void WalkQueries<TContext>(TContext context, Func<TContext, SelectQuery, SelectQuery> func)
 		{
-			yield return Target;
-			yield return Source;
-			yield return On;
-
-			foreach (var operation in Operations)
-				yield return operation;
-		}
-
-		public override void WalkQueries(Func<SelectQuery, SelectQuery> func)
-		{
-			Source.WalkQueries(func);
+			Source.WalkQueries(context, func);
+			With?.WalkQueries(context, func);
 		}
 	}
 }

@@ -43,7 +43,7 @@ namespace LinqToDB.DataProvider
 				typeof(AppDomain).GetEvent("AssemblyResolve")!.GetAddMethod(),
 				Expression.Constant(resolver)));
 
-			l.Compile()();
+			l.CompileExpression()();
 		}
 
 		public Assembly? Resolver(object? sender, ResolveEventArgs args)

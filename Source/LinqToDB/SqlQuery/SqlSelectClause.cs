@@ -13,19 +13,6 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		internal SqlSelectClause(
-			SelectQuery     selectQuery,
-			SqlSelectClause clone,
-			Dictionary<ICloneableElement,ICloneableElement> objectTree,
-			Predicate<ICloneableElement> doClone)
-			: base(selectQuery)
-		{
-			Columns.AddRange(clone.Columns.Select(c => (SqlColumn)c.Clone(objectTree, doClone)));
-			IsDistinct = clone.IsDistinct;
-			TakeValue  = (ISqlExpression?)clone.TakeValue?.Clone(objectTree, doClone);
-			SkipValue  = (ISqlExpression?)clone.SkipValue?.Clone(objectTree, doClone);
-		}
-
 		internal SqlSelectClause(bool isDistinct, ISqlExpression? takeValue, TakeHints? takeHints, ISqlExpression? skipValue, IEnumerable<SqlColumn> columns)
 			: base(null)
 		{
@@ -159,12 +146,12 @@ namespace LinqToDB.SqlQuery
 			return SelectQuery.Select.Columns[Add(expr)];
 		}
 
-		public int AddNew(ISqlExpression expr)
+		public int AddNew(ISqlExpression expr, string? alias = default)
 		{
 			if (expr is SqlColumn column && column.Parent == SelectQuery)
 				throw new InvalidOperationException();
 
-			Columns.Add(new SqlColumn(SelectQuery, expr));
+			Columns.Add(new SqlColumn(SelectQuery, expr, alias));
 			return Columns.Count - 1;
 		}
 
@@ -184,9 +171,14 @@ namespace LinqToDB.SqlQuery
 		/// <returns>Returns index of column in Columns list.</returns>
 		int AddOrFindColumn(SqlColumn col)
 		{
+			var colExpression = col.Expression;
+
 			for (var i = 0; i < Columns.Count; i++)
 			{
-				if (Columns[i].Equals(col))
+				var column           = Columns[i];
+				var columnExpression = column.Expression;
+
+				if (columnExpression.CanBeNull == colExpression.CanBeNull && column.UnderlyingExpression().Equals(col.UnderlyingExpression()))
 				{
 					return i;
 				}
@@ -271,7 +263,7 @@ namespace LinqToDB.SqlQuery
 			return this;
 		}
 
-		public ISqlExpression? TakeValue { get; private set; }
+		public ISqlExpression? TakeValue { get; internal set; }
 		public TakeHints?      TakeHints { get; private set; }
 
 		#endregion
@@ -309,14 +301,14 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			if (!options.SkipColumnDeclaration)
 			{
 				for (var i = 0; i < Columns.Count; i++)
 				{
 					var col = Columns[i];
-					var expr = col.Walk(options, func);
+					var expr = col.Walk(options, context, func);
 
 					if (expr is SqlColumn column)
 						Columns[i] = column;
@@ -325,8 +317,8 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			TakeValue = TakeValue?.Walk(options, func);
-			SkipValue = SkipValue?.Walk(options, func);
+			TakeValue = TakeValue?.Walk(options, context, func);
+			SkipValue = SkipValue?.Walk(options, context, func);
 
 			return null;
 		}
@@ -352,14 +344,14 @@ namespace LinqToDB.SqlQuery
 			{
 				sb.Append("SKIP ");
 				SkipValue.ToString(sb, dic);
-				sb.Append(" ");
+				sb.Append(' ');
 			}
 
 			if (TakeValue != null)
 			{
 				sb.Append("TAKE ");
 				TakeValue.ToString(sb, dic);
-				sb.Append(" ");
+				sb.Append(' ');
 			}
 
 			sb.AppendLine();
@@ -375,7 +367,7 @@ namespace LinqToDB.SqlQuery
 				{
 					csb.Length = 0;
 					var c = Columns[i];
-					csb.Append("\t");
+					csb.Append('\t');
 
 					csb
 						.Append('t')
@@ -383,7 +375,7 @@ namespace LinqToDB.SqlQuery
 #if DEBUG
 						.Append('[').Append(c.ColumnNumber).Append(']')
 #endif
-						.Append(".")
+						.Append('.')
 						.Append(c.Alias ?? "c" + (i + 1));
 
 					var columnName = csb.ToString();

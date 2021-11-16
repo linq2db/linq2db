@@ -8,7 +8,6 @@ namespace LinqToDB.Linq
 	using SqlQuery;
 	using Mapping;
 	using Common.Internal.Cache;
-	using System.Diagnostics.CodeAnalysis;
 	using System.Linq;
 
 	static partial class QueryRunner
@@ -18,7 +17,7 @@ namespace LinqToDB.Linq
 			static Query<object> CreateQuery(
 				IDataContext           dataContext,
 				EntityDescriptor       descriptor,
-				[DisallowNull] T       obj,
+				T                      obj,
 				InsertColumnFilter<T>? columnFilter,
 				string?                tableName,
 				string?                serverName,
@@ -88,7 +87,7 @@ namespace LinqToDB.Linq
 				var ei               = Common.Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert) || columnFilter != null
 					? CreateQuery(dataContext, entityDescriptor, obj!, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-						new { Operation = "II", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, tableOptions, type },
+						(operation: "II", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, tableOptions, type),
 						new { dataContext, entityDescriptor, obj },
 						static (entry, key, context) =>
 						{
@@ -118,7 +117,7 @@ namespace LinqToDB.Linq
 				var ei               = Common.Configuration.Linq.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert) || columnFilter != null
 					? CreateQuery(dataContext, entityDescriptor, obj!, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
 					: Cache<T>.QueryCache.GetOrCreate(
-						new { Operation = "II", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, tableOptions, type },
+						(operation: "II", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schemaName, databaseName, serverName, tableOptions, type),
 						new { dataContext, entityDescriptor, obj },
 						static (entry, key, context) =>
 						{

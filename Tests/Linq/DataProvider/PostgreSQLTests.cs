@@ -31,6 +31,7 @@ using Newtonsoft.Json.Linq;
 namespace Tests.DataProvider
 {
 	using System.Threading.Tasks;
+	using LinqToDB.Tools;
 	using Model;
 
 	[TestFixture]
@@ -112,7 +113,7 @@ namespace Tests.DataProvider
 
 			readonly string _providerName;
 
-			public IEnumerable<TestMethod> BuildFrom(IMethodInfo method, Test suite)
+			public IEnumerable<TestMethod> BuildFrom(IMethodInfo method, Test? suite)
 			{
 				var tests = UserProviders.Contains(_providerName) ?
 					new[]
@@ -137,7 +138,9 @@ namespace Tests.DataProvider
 
 						new TypeTestData("timestampDataType",   (n,t,c) => t.TestTypeEx<DateTime?>         (c, n, DataType.DateTime2),      new DateTime(2012, 12, 12, 12, 12, 12)),
 						new TypeTestData("timestampTZDataType", (n,t,c) => t.TestTypeEx<DateTimeOffset?>   (c, n, DataType.DateTimeOffset), new DateTimeOffset(2012, 12, 12, 11, 12, 12, new TimeSpan(-5, 0, 0))),
+#pragma warning disable CS0618 // Type or member is obsolete
 						new TypeTestData("dateDataType",    0,  (n,t,c) => t.TestTypeEx<NpgsqlDate?>       (c, n, skipDefaultNull:true),    new NpgsqlDate(2012, 12, 12)),
+#pragma warning restore CS0618 // Type or member is obsolete
 						new TypeTestData("dateDataType",    1,  (n,t,c) => t.TestTypeEx<DateTime?>         (c, n, DataType.Date),           new DateTime(2012, 12, 12)),
 
 						new TypeTestData("charDataType",    0,  (n,t,c) => t.TestTypeEx<char?>             (c, n, DataType.Char),                           '1'),
@@ -448,8 +451,8 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create("p", arr1)), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", null)), Is.EqualTo(null));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", new byte[0])), Is.EqualTo(new byte[0]));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Image("p", new byte[0])), Is.EqualTo(new byte[0]));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Image("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter { Name = "p", Value = arr1 }), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create("p", new Binary(arr1))), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter("p", new Binary(arr1))), Is.EqualTo(arr1));
@@ -533,6 +536,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = GetDataContext(context))
 			{
+				ResetTestSequence(context);
 				db.GetTable<PostgreSQLSpecific.SequenceTest1>().Where(_ => _.Value == "SeqValue").Delete();
 				db.Insert(new PostgreSQLSpecific.SequenceTest1 { Value = "SeqValue" });
 
@@ -565,6 +569,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = GetDataContext(context))
 			{
+				ResetTestSequence(context);
 				db.GetTable<PostgreSQLSpecific.SequenceTest3>().Where(_ => _.Value == "SeqValue").Delete();
 				db.Insert(new PostgreSQLSpecific.SequenceTest3 { Value = "SeqValue" });
 
@@ -627,6 +632,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = GetDataContext(context))
 			{
+				ResetTestSequence(context);
 				db.GetTable<PostgreSQLSpecific.SequenceTest1>().Where(_ => _.Value == "SeqValue").Delete();
 
 				var id1 = Convert.ToInt32(db.InsertWithIdentity(new PostgreSQLSpecific.SequenceTest1 { Value = "SeqValue" }));
@@ -663,6 +669,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = GetDataContext(context))
 			{
+				ResetTestSequence(context);
 				db.GetTable<PostgreSQLSpecific.SequenceTest3>().Where(_ => _.Value == "SeqValue").Delete();
 
 				var id1 = Convert.ToInt32(db.InsertWithIdentity(new PostgreSQLSpecific.SequenceTest3 { Value = "SeqValue" }));
@@ -821,16 +828,22 @@ namespace Tests.DataProvider
 		{
 			PostgreSQLTools.GetDataProvider().CreateConnection(DataConnection.GetConnectionString(context));
 
+#pragma warning disable CS0618 // Type or member is obsolete
 			var d = new NpgsqlDateTime(TestData.Date);
+#pragma warning restore CS0618 // Type or member is obsolete
 			var o = new DateTimeOffset(TestData.Date);
+#pragma warning disable CS0618 // Type or member is obsolete
 			var c1 = PostgreSQLTools.GetDataProvider().MappingSchema.GetConvertExpression<NpgsqlDateTime, DateTimeOffset>();
+#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning disable CS0618 // Type or member is obsolete
 			var c2 = PostgreSQLTools.GetDataProvider().MappingSchema.GetConvertExpression<NpgsqlDateTime, DateTimeOffset?>();
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			Assert.IsNotNull(c1);
 			Assert.IsNotNull(c2);
 
-			Assert.AreEqual(o, c1!.Compile()(d));
-			Assert.AreEqual(o, c2!.Compile()(d)!.Value);
+			Assert.AreEqual(o, c1!.CompileExpression()(d));
+			Assert.AreEqual(o, c2!.CompileExpression()(d)!.Value);
 		}
 
 		[Table]
@@ -846,12 +859,18 @@ namespace Tests.DataProvider
 			[Column]                                   public double?  doubleDataType                   { get; set; }
 			[Column]                                   public float?   realDataType                     { get; set; }
 			// time/date/intertval
+#pragma warning disable CS0618 // Type or member is obsolete
 			[Column]                                   public NpgsqlDateTime? timestampDataType         { get; set; }
+#pragma warning restore CS0618 // Type or member is obsolete
 			[Column]                                   public DateTimeOffset? timestampTZDataType       { get; set; }
+#pragma warning disable CS0618 // Type or member is obsolete
 			[Column]                                   public NpgsqlDate?     dateDataType              { get; set; }
+#pragma warning restore CS0618 // Type or member is obsolete
 			[Column(DbType = "time")]                  public TimeSpan?       timeDataType              { get; set; }
 			[Column  (DbType = "time with time zone")] public DateTimeOffset? timeTZDataType            { get; set; }
+#pragma warning disable CS0618 // Type or member is obsolete
 			[Column]                                   public NpgsqlTimeSpan? intervalDataType          { get; set; }
+#pragma warning restore CS0618 // Type or member is obsolete
 			[Column(DataType = DataType.Interval)]     public TimeSpan?       intervalDataType2         { get; set; }
 			// text
 			[Column]                                   public char?   charDataType                      { get; set; }
@@ -932,9 +951,13 @@ namespace Tests.DataProvider
 					doubleDataType      = double.MaxValue,
 					realDataType        = float.MaxValue,
 
+#pragma warning disable CS0618 // Type or member is obsolete
 					timestampDataType   = new NpgsqlDateTime(2010, 5, 30, 1, 2, 3, 4),
+#pragma warning restore CS0618 // Type or member is obsolete
 					timestampTZDataType = new DateTimeOffset(2011, 3, 22, 10, 11, 12, 13, TimeSpan.FromMinutes(30)),
+#pragma warning disable CS0618 // Type or member is obsolete
 					dateDataType        = new NpgsqlDate(2010, 5, 30),
+#pragma warning restore CS0618 // Type or member is obsolete
 					timeDataType        = new TimeSpan(0, 1, 2, 3, 4),
 					// npgsql4 uses 2/1/1 instead of 1/1/1 as date part in npgsql3
 					timeTZDataType      = new DateTimeOffset(1, 1, 2, 10, 11, 12, 13, TimeSpan.FromMinutes(30)),
@@ -1057,7 +1080,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-				[Test]
+		[Test]
 		public async Task BulkCopyTestAsync([Values]BulkTestMode mode, [IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			var providerName      = GetProviderName(context, out var _);
@@ -1082,9 +1105,13 @@ namespace Tests.DataProvider
 					doubleDataType      = double.MaxValue,
 					realDataType        = float.MaxValue,
 
+#pragma warning disable CS0618 // Type or member is obsolete
 					timestampDataType   = new NpgsqlDateTime(2010, 5, 30, 1, 2, 3, 4),
+#pragma warning restore CS0618 // Type or member is obsolete
 					timestampTZDataType = new DateTimeOffset(2011, 3, 22, 10, 11, 12, 13, TimeSpan.FromMinutes(30)),
+#pragma warning disable CS0618 // Type or member is obsolete
 					dateDataType        = new NpgsqlDate(2010, 5, 30),
+#pragma warning restore CS0618 // Type or member is obsolete
 					timeDataType        = new TimeSpan(0, 1, 2, 3, 4),
 					// npgsql4 uses 2/1/1 instead of 1/1/1 as date part in npgsql3
 					timeTZDataType      = new DateTimeOffset(1, 1, 2, 10, 11, 12, 13, TimeSpan.FromMinutes(30)),
@@ -1204,6 +1231,55 @@ namespace Tests.DataProvider
 
 				if (mode == BulkTestMode.WithRollback)
 					Assert.AreEqual(0, db.GetTable<AllTypes>().Where(_ => ids!.Contains(_.ID)).Count());
+			}
+		}
+
+		[Table("SequenceTest1")]
+		public class SequenceTest
+		{
+			[Column, SequenceName("sequencetestseq")]
+			public int    ID;
+			[Column]
+			public string Value = null!;
+		}
+
+		[Test]
+		public void BulkCopyRetrieveSequences(
+			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
+			[Values] BulkCopyType bulkCopyType,
+			[Values] bool useSequence)
+		{
+				var data = Enumerable.Range(1, 40).Select(i => new SequenceTest { Value = $"SeqValue{i}" }).ToArray();
+
+			using (var db = new TestDataConnection(context))
+			{
+				try
+				{
+					db.GetTable<SequenceTest>().Where(_ => _.Value.StartsWith("SeqValue")).Delete();
+
+					if (useSequence)
+						ResetTestSequence(context);
+
+					var options = new BulkCopyOptions()
+					{
+						KeepIdentity = bulkCopyType == BulkCopyType.RowByRow ? false : true,
+						MaxBatchSize = 10,
+						BulkCopyType = bulkCopyType
+					};
+
+					db.BulkCopy(options, data.RetrieveIdentity(db, useSequence));
+
+					var cnt = 1;
+					foreach (var d in data)
+					{
+						Assert.AreEqual(cnt, d.ID);
+						cnt++;
+					}
+				}
+				finally
+				{
+					db.GetTable<SequenceTest>().Where(_ => _.Value.StartsWith("SeqValue")).Delete();
+				}
 			}
 		}
 
@@ -1417,12 +1493,13 @@ namespace Tests.DataProvider
 
 		private static MappingSchema CreateRangesMapping()
 		{
-			NpgsqlRange<DateTime> ConvertToNpgSqlRange(SomeRange<DateTime> r)
+			NpgsqlRange<DateTime> ConvertToNpgSqlRange(SomeRange<DateTime> r, bool withTimeZone)
 			{
+				// specify proper kind for npgsql 6
 				var range = NpgsqlRange<DateTime>.Empty;
 					range = new NpgsqlRange<DateTime>(
-						r.Start ?? default, true,  r.Start == null,
-						r.End   ?? default, false, r.End == null);
+						DateTime.SpecifyKind(r.Start ?? default, withTimeZone ? DateTimeKind.Utc : DateTimeKind.Unspecified), true,  r.Start == null,
+						DateTime.SpecifyKind(r.End   ?? default, withTimeZone ? DateTimeKind.Utc : DateTimeKind.Unspecified), false, r.End == null);
 
 				return range;
 			}
@@ -1446,13 +1523,13 @@ namespace Tests.DataProvider
 
 			mapping.SetConverter<SomeRange<DateTime>, DataParameter>(r =>
 			{
-				var range = ConvertToNpgSqlRange(r);
+				var range = ConvertToNpgSqlRange(r, true);
 				return new DataParameter("", range, "tstzrange");
 			}, new DbDataType(typeof(SomeRange<DateTime>)), new DbDataType(typeof(DataParameter), "tstzrange"));
 
 			mapping.SetConverter<SomeRange<DateTime>, DataParameter>(r =>
 			{
-				var range = ConvertToNpgSqlRange(r);
+				var range = ConvertToNpgSqlRange(r, false);
 				return new DataParameter("", range, "tsrange");
 			}, new DbDataType(typeof(SomeRange<DateTime>)), new DbDataType(typeof(DataParameter), "tsrange"));
 
@@ -1529,17 +1606,148 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Table]
+		public class UIntTable
+		{
+			[Column] public ushort  Field16  { get; set; }
+			[Column] public uint    Field32  { get; set; }
+			[Column] public ulong   Field64  { get; set; }
+			[Column] public ushort? Field16N { get; set; }
+			[Column] public uint?   Field32N { get; set; }
+			[Column] public ulong?  Field64N { get; set; }
+		}
+
+		[Test]
+		public void UIntXXMappingTest([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using (var db = (DataConnection)GetDataContext(context))
+			using (var table = db.CreateLocalTable<UIntTable>())
+			{
+				// test create table
+				Assert.True(db.LastQuery!.Contains("\"Field16\"  Int"));
+				Assert.True(db.LastQuery!.Contains("\"Field32\"  BigInt"));
+				Assert.True(db.LastQuery!.Contains("\"Field64\"  decimal(20)"));
+				Assert.True(db.LastQuery!.Contains("\"Field16N\" Int"));
+				Assert.True(db.LastQuery!.Contains("\"Field32N\" BigInt"));
+				Assert.True(db.LastQuery!.Contains("\"Field64N\" decimal(20)"));
+
+				var value16      = ushort.MaxValue;
+				var value32      = uint.MaxValue;
+				var value64      = ulong.MaxValue;
+				ushort? value16N = ushort.MaxValue;
+				uint? value32N   = uint.MaxValue;
+				ulong? value64N  = ulong.MaxValue;
+
+				// test literal (+materialization)
+				db.InlineParameters = true;
+				table.Insert(() => new UIntTable() { Field16 = value16, Field32 = value32, Field64 = value64, Field16N = value16N, Field32N = value32N, Field64N = value64N });
+				Assert.True(db.LastQuery!.Contains("\t65535,"));
+				Assert.True(db.LastQuery!.Contains("\t4294967295,"));
+				Assert.True(db.LastQuery!.Contains("18446744073709551615"));
+				var res = table.ToArray();
+				Assert.AreEqual(1, res.Length);
+				Assert.AreEqual(ushort.MaxValue, res[0].Field16);
+				Assert.AreEqual(uint.MaxValue  , res[0].Field32);
+				Assert.AreEqual(ulong.MaxValue , res[0].Field64);
+				Assert.AreEqual(ushort.MaxValue, res[0].Field16N);
+				Assert.AreEqual(uint.MaxValue  , res[0].Field32N);
+				Assert.AreEqual(ulong.MaxValue , res[0].Field64N);
+				table.Delete();
+
+				// test parameter (+materialization)
+				db.InlineParameters = false;
+				table.Insert(() => new UIntTable() { Field16 = value16, Field32 = value32, Field64 = value64, Field16N = value16N, Field32N = value32N, Field64N = value64N });
+				Assert.False(db.LastQuery!.Contains("65535"));
+				Assert.False(db.LastQuery!.Contains("4294967295"));
+				Assert.False(db.LastQuery!.Contains("18446744073709551615"));
+				res = table.ToArray();
+				Assert.AreEqual(1, res.Length);
+				Assert.AreEqual(ushort.MaxValue, res[0].Field16);
+				Assert.AreEqual(uint.MaxValue  , res[0].Field32);
+				Assert.AreEqual(ulong.MaxValue , res[0].Field64);
+				Assert.AreEqual(ushort.MaxValue, res[0].Field16N);
+				Assert.AreEqual(uint.MaxValue  , res[0].Field32N);
+				Assert.AreEqual(ulong.MaxValue , res[0].Field64N);
+
+				// test schema
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new LinqToDB.SchemaProvider.GetSchemaOptions()
+				{
+					GetProcedures = false,
+					GetTables     = true,
+					LoadTable     = t => t.Name == nameof(UIntTable)
+				});
+
+				Assert.AreEqual(1                , schema.Tables.Count);
+				Assert.AreEqual(nameof(UIntTable), schema.Tables[0].TableName);
+				Assert.AreEqual(6                , schema.Tables[0].Columns.Count);
+
+				var column = schema.Tables[0].Columns.Single(c => c.ColumnName == nameof(UIntTable.Field16));
+
+				Assert.AreEqual("integer"     , column.ColumnType);
+				Assert.AreEqual(DataType.Int32, column.DataType);
+				Assert.AreEqual("int"         , column.MemberType);
+				Assert.AreEqual(typeof(int)   , column.SystemType);
+
+				column = schema.Tables[0].Columns.Single(c => c.ColumnName == nameof(UIntTable.Field32));
+
+				Assert.AreEqual("bigint"      , column.ColumnType);
+				Assert.AreEqual(DataType.Int64, column.DataType);
+				Assert.AreEqual("long"        , column.MemberType);
+				Assert.AreEqual(typeof(long)  , column.SystemType);
+
+				column = schema.Tables[0].Columns.Single(c => c.ColumnName == nameof(UIntTable.Field64));
+
+				Assert.AreEqual("numeric(20,0)" , column.ColumnType);
+				Assert.AreEqual(DataType.Decimal, column.DataType);
+				Assert.AreEqual("decimal"       , column.MemberType);
+				Assert.AreEqual(20              , column.Precision);
+				Assert.AreEqual(0               , column.Scale);
+				Assert.AreEqual(typeof(decimal) , column.SystemType);
+
+				column = schema.Tables[0].Columns.Single(c => c.ColumnName == nameof(UIntTable.Field16N));
+
+				Assert.AreEqual("integer"     , column.ColumnType);
+				Assert.AreEqual(DataType.Int32, column.DataType);
+				Assert.AreEqual("int?"        , column.MemberType);
+				Assert.AreEqual(typeof(int)   , column.SystemType);
+
+				column = schema.Tables[0].Columns.Single(c => c.ColumnName == nameof(UIntTable.Field32N));
+
+				Assert.AreEqual("bigint"      , column.ColumnType);
+				Assert.AreEqual(DataType.Int64, column.DataType);
+				Assert.AreEqual("long?"       , column.MemberType);
+				Assert.AreEqual(typeof(long)  , column.SystemType);
+
+				column = schema.Tables[0].Columns.Single(c => c.ColumnName == nameof(UIntTable.Field64N));
+
+				Assert.AreEqual("numeric(20,0)" , column.ColumnType);
+				Assert.AreEqual(DataType.Decimal, column.DataType);
+				Assert.AreEqual("decimal?"      , column.MemberType);
+				Assert.AreEqual(20              , column.Precision);
+				Assert.AreEqual(0               , column.Scale);
+				Assert.AreEqual(typeof(decimal) , column.SystemType);
+			}
+		}
+
 		class ExtraBulkCopyTypesTable
 		{
-			[Column] public int     Id     { get; set; }
-			[Column] public byte?   Byte   { get; set; }
-			[Column] public sbyte?  SByte  { get; set; }
-			[Column] public short?  Int16  { get; set; }
-			[Column] public ushort? UInt16 { get; set; }
-			[Column] public int?    Int32  { get; set; }
-			[Column] public uint?   UInt32 { get; set; }
-			[Column] public long?   Int64  { get; set; }
-			[Column] public ulong?  UInt64 { get; set; }
+			[Column                            ] public int     Id      { get; set; }
+			[Column                            ] public byte?   Byte    { get; set; }
+			[Column                            ] public sbyte?  SByte   { get; set; }
+			[Column                            ] public short?  Int16   { get; set; }
+			[Column                            ] public ushort? UInt16  { get; set; }
+			[Column                            ] public int?    Int32   { get; set; }
+			[Column                            ] public uint?   UInt32  { get; set; }
+			[Column                            ] public long?   Int64   { get; set; }
+			[Column                            ] public ulong?  UInt64  { get; set; }
+			[Column(DataType = DataType.Byte)  ] public byte?   ByteT   { get; set; }
+			[Column(DataType = DataType.SByte) ] public sbyte?  SByteT  { get; set; }
+			[Column(DataType = DataType.Int16) ] public short?  Int16T  { get; set; }
+			[Column(DataType = DataType.UInt16)] public ushort? UInt16T { get; set; }
+			[Column(DataType = DataType.Int32) ] public int?    Int32T  { get; set; }
+			[Column(DataType = DataType.UInt32)] public uint?   UInt32T { get; set; }
+			[Column(DataType = DataType.Int64) ] public long?   Int64T  { get; set; }
+			[Column(DataType = DataType.UInt64)] public ulong?  UInt64T { get; set; }
 		}
 
 		[Test]
@@ -1553,15 +1761,24 @@ namespace Tests.DataProvider
 					new ExtraBulkCopyTypesTable() { Id = 1 },
 					new ExtraBulkCopyTypesTable()
 					{
-						Id     = 2,
-						Byte   = byte.MaxValue,
-						SByte  = sbyte.MaxValue,
-						Int16  = short.MaxValue,
-						UInt16 = ushort.MaxValue,
-						Int32  = int.MaxValue,
-						UInt32 = uint.MaxValue,
-						Int64  = long.MaxValue,
-						UInt64 = ulong.MaxValue,
+						Id          = 2,
+
+						Byte        = byte.MaxValue,
+						SByte       = sbyte.MaxValue,
+						Int16       = short.MaxValue,
+						UInt16      = ushort.MaxValue,
+						Int32       = int.MaxValue,
+						UInt32      = uint.MaxValue,
+						Int64       = long.MaxValue,
+						UInt64      = ulong.MaxValue,
+						ByteT       = byte.MaxValue,
+						SByteT      = sbyte.MaxValue,
+						Int16T      = short.MaxValue,
+						UInt16T     = ushort.MaxValue,
+						Int32T      = int.MaxValue,
+						UInt32T     = uint.MaxValue,
+						Int64T      = long.MaxValue,
+						UInt64T     = ulong.MaxValue,
 					}
 				};
 
@@ -1580,6 +1797,14 @@ namespace Tests.DataProvider
 				Assert.IsNull(result[0].UInt32);
 				Assert.IsNull(result[0].Int64);
 				Assert.IsNull(result[0].UInt64);
+				Assert.IsNull(result[0].ByteT);
+				Assert.IsNull(result[0].SByteT);
+				Assert.IsNull(result[0].Int16T);
+				Assert.IsNull(result[0].UInt16T);
+				Assert.IsNull(result[0].Int32T);
+				Assert.IsNull(result[0].UInt32T);
+				Assert.IsNull(result[0].Int64T);
+				Assert.IsNull(result[0].UInt64T);
 
 				Assert.AreEqual(2              , result[1].Id);
 				Assert.AreEqual(byte.MaxValue  , result[1].Byte);
@@ -1590,6 +1815,14 @@ namespace Tests.DataProvider
 				Assert.AreEqual(uint.MaxValue  , result[1].UInt32);
 				Assert.AreEqual(long.MaxValue  , result[1].Int64);
 				Assert.AreEqual(ulong.MaxValue , result[1].UInt64);
+				Assert.AreEqual(byte.MaxValue  , result[1].ByteT);
+				Assert.AreEqual(sbyte.MaxValue , result[1].SByteT);
+				Assert.AreEqual(short.MaxValue , result[1].Int16T);
+				Assert.AreEqual(ushort.MaxValue, result[1].UInt16T);
+				Assert.AreEqual(int.MaxValue   , result[1].Int32T);
+				Assert.AreEqual(uint.MaxValue  , result[1].UInt32T);
+				Assert.AreEqual(long.MaxValue  , result[1].Int64T);
+				Assert.AreEqual(ulong.MaxValue , result[1].UInt64T);
 			}
 		}
 
@@ -1604,15 +1837,23 @@ namespace Tests.DataProvider
 					new ExtraBulkCopyTypesTable() { Id = 1 },
 					new ExtraBulkCopyTypesTable()
 					{
-						Id     = 2,
-						Byte   = byte.MaxValue,
-						SByte  = sbyte.MaxValue,
-						Int16  = short.MaxValue,
-						UInt16 = ushort.MaxValue,
-						Int32  = int.MaxValue,
-						UInt32 = uint.MaxValue,
-						Int64  = long.MaxValue,
-						UInt64 = ulong.MaxValue,
+						Id      = 2,
+						Byte    = byte.MaxValue,
+						SByte   = sbyte.MaxValue,
+						Int16   = short.MaxValue,
+						UInt16  = ushort.MaxValue,
+						Int32   = int.MaxValue,
+						UInt32  = uint.MaxValue,
+						Int64   = long.MaxValue,
+						UInt64  = ulong.MaxValue,
+						ByteT   = byte.MaxValue,
+						SByteT  = sbyte.MaxValue,
+						Int16T  = short.MaxValue,
+						UInt16T = ushort.MaxValue,
+						Int32T  = int.MaxValue,
+						UInt32T = uint.MaxValue,
+						Int64T  = long.MaxValue,
+						UInt64T = ulong.MaxValue,
 					}
 				};
 
@@ -1631,6 +1872,14 @@ namespace Tests.DataProvider
 				Assert.IsNull(result[0].UInt32);
 				Assert.IsNull(result[0].Int64);
 				Assert.IsNull(result[0].UInt64);
+				Assert.IsNull(result[0].ByteT);
+				Assert.IsNull(result[0].SByteT);
+				Assert.IsNull(result[0].Int16T);
+				Assert.IsNull(result[0].UInt16T);
+				Assert.IsNull(result[0].Int32T);
+				Assert.IsNull(result[0].UInt32T);
+				Assert.IsNull(result[0].Int64T);
+				Assert.IsNull(result[0].UInt64T);
 
 				Assert.AreEqual(2              , result[1].Id);
 				Assert.AreEqual(byte.MaxValue  , result[1].Byte);
@@ -1641,6 +1890,14 @@ namespace Tests.DataProvider
 				Assert.AreEqual(uint.MaxValue  , result[1].UInt32);
 				Assert.AreEqual(long.MaxValue  , result[1].Int64);
 				Assert.AreEqual(ulong.MaxValue , result[1].UInt64);
+				Assert.AreEqual(byte.MaxValue  , result[1].ByteT);
+				Assert.AreEqual(sbyte.MaxValue , result[1].SByteT);
+				Assert.AreEqual(short.MaxValue , result[1].Int16T);
+				Assert.AreEqual(ushort.MaxValue, result[1].UInt16T);
+				Assert.AreEqual(int.MaxValue   , result[1].Int32T);
+				Assert.AreEqual(uint.MaxValue  , result[1].UInt32T);
+				Assert.AreEqual(long.MaxValue  , result[1].Int64T);
+				Assert.AreEqual(ulong.MaxValue , result[1].UInt64T);
 			}
 		}
 
@@ -1673,7 +1930,7 @@ namespace Tests.DataProvider
 				var range1 = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 3), true);
 				var range2 = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), false, new DateTime(2000, 3, 3), false);
 				var range3 = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3, 4, 5, 6), new DateTime(2000, 4, 3, 4, 5, 6));
-				var range4 = new NpgsqlRange<DateTime>(new DateTime(2000, 4, 3, 4, 5, 6, DateTimeKind.Local), new DateTime(2000, 5, 3, 4, 5, 6, DateTimeKind.Local));
+				var range4 = new NpgsqlRange<DateTime>(new DateTime(2000, 4, 3, 4, 5, 6, DateTimeKind.Utc), new DateTime(2000, 5, 3, 4, 5, 6, DateTimeKind.Utc));
 				db.Insert(new NpgsqlTableWithDateRanges
 				{
 					DateRangeInclusive = range1,
@@ -1687,7 +1944,15 @@ namespace Tests.DataProvider
 				Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 4), false), record.DateRangeInclusive);
 				Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000, 2, 4), true, new DateTime(2000, 3, 3), false), record.DateRangeExclusive);
 				Assert.AreEqual(range3, record.TSRange);
+
+#if NETCOREAPP3_1 || NET5_0
+				// npgsql 6+
 				Assert.AreEqual(range4, record.TSTZRange);
+#else
+				// pre-v6 returned data with Local kind
+				range4 = new NpgsqlRange<DateTime>(range4.LowerBound.ToLocalTime(), range4.UpperBound.ToLocalTime());
+				Assert.AreEqual(range4, record.TSTZRange);
+#endif
 			}
 		}
 
@@ -1707,9 +1972,7 @@ namespace Tests.DataProvider
 							DateRangeInclusive = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 3), true),
 							DateRangeExclusive = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), false, new DateTime(2000, 3, 3), false),
 							TSRange            = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 2, 3, 4, 5, 6), true, new DateTime(2000 + i, 4, 3, 4, 5, 6), true),
-							// DateTimeKind.Local used, because npgsql will return values with DateTimeKind.Local kind
-							// passing DateTimeKind.Utc values will require offset calculations in assert, as DateTime.Equals ignore kind in comparison
-							TSTZRange          = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 4, 3, 4, 5, 6, DateTimeKind.Local), true, new DateTime(2000 + i, 5, 3, 4, 5, 6, DateTimeKind.Local), true),
+							TSTZRange          = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 4, 3, 4, 5, 6, DateTimeKind.Utc), true, new DateTime(2000 + i, 5, 3, 4, 5, 6, DateTimeKind.Utc), true),
 						};
 					})
 					.ToArray();
@@ -1719,6 +1982,12 @@ namespace Tests.DataProvider
 				var records = table.OrderBy(_ => _.Id).ToArray();
 
 				Assert.AreEqual(100, records.Length);
+
+#if !NETCOREAPP3_1 && !NET5_0
+				// pre-v6 returned data with Local kind
+				foreach (var item in items)
+					item.TSTZRange = new NpgsqlRange<DateTime>(item.TSTZRange.LowerBound.ToLocalTime(), true, item.TSTZRange.UpperBound.ToLocalTime(), true);
+#endif
 
 				AreEqual(
 					items.Select(t => new
@@ -1753,9 +2022,7 @@ namespace Tests.DataProvider
 							DateRangeInclusive = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 3), true),
 							DateRangeExclusive = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), false, new DateTime(2000, 3, 3), false),
 							TSRange            = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 2, 3, 4, 5, 6), true, new DateTime(2000 + i, 4, 3, 4, 5, 6), true),
-							// DateTimeKind.Local used, because npgsql will return values with DateTimeKind.Local kind
-							// passing DateTimeKind.Utc values will require offset calculations in assert, as DateTime.Equals ignore kind in comparison
-							TSTZRange          = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 4, 3, 4, 5, 6, DateTimeKind.Local), true, new DateTime(2000 + i, 5, 3, 4, 5, 6, DateTimeKind.Local), true),
+							TSTZRange          = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 4, 3, 4, 5, 6, DateTimeKind.Utc), true, new DateTime(2000 + i, 5, 3, 4, 5, 6, DateTimeKind.Utc), true),
 						};
 					})
 					.ToArray();
@@ -1765,6 +2032,12 @@ namespace Tests.DataProvider
 				var records = await table.OrderBy(_ => _.Id).ToArrayAsync();
 
 				Assert.AreEqual(100, records.Length);
+
+#if !NETCOREAPP3_1 && !NET5_0
+				// pre-v6 returned data with Local kind
+				foreach (var item in items)
+					item.TSTZRange = new NpgsqlRange<DateTime>(item.TSTZRange.LowerBound.ToLocalTime(), true, item.TSTZRange.UpperBound.ToLocalTime(), true);
+#endif
 
 				AreEqual(
 					items.Select(t => new
@@ -1897,7 +2170,9 @@ namespace Tests.DataProvider
 		{
 			[Column, PrimaryKey, Identity]         public int             ID                { get; set; }
 			[Column]                               public TimeSpan?       timeDataType      { get; set; }
+#pragma warning disable CS0618 // Type or member is obsolete
 			[Column]                               public NpgsqlTimeSpan? intervalDataType  { get; set; }
+#pragma warning restore CS0618 // Type or member is obsolete
 			[Column(DataType = DataType.Interval)] public TimeSpan?       intervalDataType2 { get; set; }
 		}
 
@@ -1939,7 +2214,9 @@ namespace Tests.DataProvider
 		public class DateProviderSpecific
 		{
 			[Column, PrimaryKey, Identity] public int         ID { get; set; }
+#pragma warning disable CS0618 // Type or member is obsolete
 			[Column]                       public NpgsqlDate? dateDataType { get; set; }
+#pragma warning restore CS0618 // Type or member is obsolete
 		}
 
 		[Table("AllTypes")]
@@ -1961,7 +2238,9 @@ namespace Tests.DataProvider
 					var date2 = TestData.Date.AddDays(5);
 					db.GetTable<DateProviderSpecific>().Insert(() => new DateProviderSpecific()
 					{
+#pragma warning disable CS0618 // Type or member is obsolete
 						dateDataType = (NpgsqlDate)date1
+#pragma warning restore CS0618 // Type or member is obsolete
 					});
 
 					db.GetTable<DateCommon>().Insert(() => new DateCommon()
@@ -2035,17 +2314,46 @@ namespace Tests.DataProvider
 			}
 		}
 
+		public class DataTypeBinaryMapping
+		{
+			public byte[] Binary { get; set; } = null!;
+		}
+
+		// see https://github.com/linq2db/linq2db/issues/3130
+		[Test]
+		public void DataTypeBinaryMappingTest([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var ms = new MappingSchema();
+
+			ms.GetFluentMappingBuilder()
+				.Entity<DataTypeBinaryMapping>()
+					.Property(p => p.Binary).HasDataType(DataType.Binary).IsNullable(false);
+
+			using (var db = (DataConnection)GetDataContext(context, ms))
+			using (db.CreateLocalTable<DataTypeBinaryMapping>())
+			{
+				var data = new byte[] { 1, 2, 3 };
+
+				db.BulkCopy(
+					new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific },
+					new[] { new DataTypeBinaryMapping() { Binary = data } });
+
+				var res = db.GetTable<DataTypeBinaryMapping>().Select(_ => _.Binary).Single();
+
+				Assert.True(data.SequenceEqual(res));
+			}
+		}
 	}
 
 	public static class TestPgAggregates
 	{
-		[Sql.Function("test_avg", ServerSideOnly = true, IsAggregate = true, ArgIndices = new[] { 0 })]
+		[Sql.Function("test_avg", ServerSideOnly = true, IsAggregate = true, ArgIndices = new[] { 1 })]
 		public static double CustomAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double>> value)
 		{
 			throw new InvalidOperationException();
 		}
 
-		[Sql.Function("test_avg", ServerSideOnly = true, IsAggregate = true, ArgIndices = new[] { 0 })]
+		[Sql.Function("test_avg", ServerSideOnly = true, IsAggregate = true, ArgIndices = new[] { 1 })]
 		public static double? CustomAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> value)
 		{
 			throw new InvalidOperationException();
@@ -2072,7 +2380,7 @@ namespace Tests.DataProvider
 		[Sql.TableFunction("\"TestTableFunctionSchema\"")]
 		public LinqToDB.ITable<PostgreSQLTests.AllTypes> GetAllTypes()
 		{
-			var methodInfo = typeof(TestPgFunctions).GetMethod("GetAllTypes", new Type[0])!;
+			var methodInfo = typeof(TestPgFunctions).GetMethod("GetAllTypes", Array<Type>.Empty)!;
 
 			return _ctx.GetTable<PostgreSQLTests.AllTypes>(this, methodInfo);
 		}

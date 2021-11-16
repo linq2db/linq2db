@@ -1,15 +1,15 @@
-﻿using System;
-using System.Data.SqlTypes;
+﻿using System.Data.SqlTypes;
 using System.IO;
 using System.Text;
 using System.Xml;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
+	using System;
+	using System.Data.Linq;
 	using Common;
 	using Mapping;
 	using SqlQuery;
-	using System.Data.Linq;
 
 	public class SqlCeMappingSchema : MappingSchema
 	{
@@ -65,10 +65,10 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			stringBuilder.Append("0x");
 
-			foreach (var b in value)
-				stringBuilder.Append(b.ToString("X2"));
+			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 		}
 
+		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			stringBuilder
@@ -80,12 +80,12 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "+", null, AppendConversion, value, null);
+			DataTools.ConvertStringToSql(stringBuilder, "+", null, AppendConversionAction, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
-			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
+			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversionAction, value);
 		}
 	}
 }

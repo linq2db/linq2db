@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using LinqToDB.Mapping;
 
 // ReSharper disable CheckNamespace
 
 namespace LinqToDB
 {
-	using Extensions;
 	using LinqToDB.SqlProvider;
 	using SqlQuery;
 
@@ -54,36 +50,19 @@ namespace LinqToDB
 			public string? Server        { get; set; }
 			public int[]?  ArgIndices    { get; set; }
 
-			protected ISqlExpression[] ConvertArgs(MemberInfo member, ISqlExpression[] args)
-			{
-				if (member is MethodInfo method)
-				{
-					if (method.DeclaringType!.IsGenericType)
-						args = args.Concat(method.DeclaringType.GetGenericArguments().Select(t => (ISqlExpression)SqlDataType.GetDataType(t))).ToArray();
-
-					if (method.IsGenericMethod)
-						args = args.Concat(method.GetGenericArguments().Select(t => (ISqlExpression)SqlDataType.GetDataType(t))).ToArray();
-				}
-
-				if (ArgIndices != null)
-				{
-					var idxs = new ISqlExpression[ArgIndices.Length];
-
-					for (var i = 0; i < ArgIndices.Length; i++)
-						idxs[i] = args[ArgIndices[i]];
-
-					return idxs;
-				}
-
-				return args;
-			}
-
-			public virtual void SetTable(ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MemberInfo member, IEnumerable<Expression> arguments, IEnumerable<ISqlExpression> sqlArgs)
+			public virtual void SetTable<TContext>(TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
 				table.SqlTableType   = SqlTableType.Function;
-				table.Name           = Name ?? member.Name;
-				table.PhysicalName   = Name ?? member.Name;
-				table.TableArguments = ConvertArgs(member, sqlArgs.ToArray());
+				table.Name           = Name ?? methodCall.Method.Name;
+				table.PhysicalName   = Name ?? methodCall.Method.Name;
+
+				var expressionStr = table.Name;
+				ExpressionAttribute.PrepareParameterValues(methodCall, ref expressionStr, false, out var knownExpressions, out var genericTypes);
+
+				if (string.IsNullOrEmpty(expressionStr))
+					throw new LinqToDBException($"Cannot retrieve Table Function body from expression '{methodCall}'.");
+
+				table.TableArguments = ExpressionAttribute.PrepareArguments(context, string.Empty, ArgIndices, addDefault: true, knownExpressions, genericTypes, converter);
 
 				if (Schema   != null) table.Schema   = Schema;
 				if (Database != null) table.Database = Database;

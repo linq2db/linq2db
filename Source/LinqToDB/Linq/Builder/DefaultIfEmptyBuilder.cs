@@ -74,7 +74,7 @@ namespace LinqToDB.Linq.Builder
 					Expression e = Expression.Call(
 						ExpressionBuilder.DataReaderParam,
 						ReflectionHelper.DataReader.IsDBNull,
-						Expression.Constant(n));
+						ExpressionInstances.Int32Array(n));
 
 					var defaultValue = DefaultValue ?? new DefaultValueExpression(Builder.MappingSchema, expr.Type);
 

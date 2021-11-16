@@ -1,4 +1,5 @@
-<#@ include file="LinqToDB.ttinclude" #>
+<#@ include file="LinqToDB.ttinclude" once="true" #>
+<#@ import namespace="System.IO"                  #>
 <#
 	LinqToDB.DataProvider.SQLite.SQLiteTools.ResolveSQLite(typeof(System.Data.SQLite.SQLiteConnection).Assembly);
 
@@ -27,16 +28,16 @@ LinqToDB.Data.DataConnection GetSQLiteConnection(string connectionString)
 
 LinqToDB.Data.DataConnection GetSQLiteConnection(string path, string database)
 {
-	return GetSQLiteConnection(string.Format("Data Source={0}", System.IO.Path.Combine(path, database)));
+	return GetSQLiteConnection(string.Format("Data Source={0}", Path.Combine(path, database)));
 }
 
-void LoadSQLiteMetadata(string connectionString)
+public void LoadSQLiteMetadata(string connectionString)
 {
 	using (var dataConnection = GetSQLiteConnection(connectionString))
 		LoadMetadata(dataConnection);
 }
 
-void LoadSQLiteMetadata(string path, string database)
+public void LoadSQLiteMetadata(string path, string database)
 {
 	using (var dataConnection = GetSQLiteConnection(path, database))
 		LoadMetadata(dataConnection);

@@ -2,14 +2,22 @@
 using System.Globalization;
 using System.Text;
 
+
 namespace LinqToDB.DataProvider.SQLite
 {
+	using Common;
 	using Mapping;
 	using SqlQuery;
 	using System.Data.Linq;
 
 	public class SQLiteMappingSchema : MappingSchema
 	{
+		private const string DATE_FORMAT      = "'{0:yyyy-MM-dd}'";
+		private const string DATETIME0_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss}'";
+		private const string DATETIME1_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.f}'";
+		private const string DATETIME2_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.ff}'";
+		private const string DATETIME3_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'";
+
 		public SQLiteMappingSchema() : this(ProviderName.SQLite)
 		{
 		}
@@ -32,10 +40,9 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			stringBuilder.Append("X'");
 
-			foreach (var b in value)
-				stringBuilder.Append(b.ToString("X2"));
+			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 
-			stringBuilder.Append("'");
+			stringBuilder.Append('\'');
 		}
 
 		static void ConvertGuidToSql(StringBuilder stringBuilder, Guid value)
@@ -59,22 +66,28 @@ namespace LinqToDB.DataProvider.SQLite
 
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, DateTime value)
 		{
+			string format;
 			if (value.Millisecond == 0)
 			{
-				var format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
-					"'{0:yyyy-MM-dd}'" :
-					"'{0:yyyy-MM-dd HH:mm:ss}'";
-
-				stringBuilder.AppendFormat(format, value);
+				format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
+					DATE_FORMAT :
+					DATETIME0_FORMAT;
 			}
+			// TODO: code below should be gone after we implement proper date/time support for sqlite
+			// This actually doesn't make sense and exists only for our tests to work in cases where literals
+			// compared as strings
+			// E.g. see DateTimeArray2/DateTimeArray3 tests
+			else if (value.Millisecond % 100 == 0)
+				format = DATETIME1_FORMAT;
+			else if (value.Millisecond % 10 == 0)
+				format = DATETIME2_FORMAT;
 			else
-			{
-				stringBuilder
-					.Append(string.Format("'{0:yyyy-MM-dd HH:mm:ss.fff}", value).TrimEnd('0'))
-					.Append('\'');
-			}
+				format = DATETIME3_FORMAT;
+
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
 
+		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			stringBuilder
@@ -86,15 +99,15 @@ namespace LinqToDB.DataProvider.SQLite
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "+", null, AppendConversion, value, null);
+			DataTools.ConvertStringToSql(stringBuilder, "+", null, AppendConversionAction, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
-			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
+			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversionAction, value);
 		}
 
-		internal static readonly SQLiteMappingSchema Instance = new SQLiteMappingSchema();
+		internal static readonly SQLiteMappingSchema Instance = new ();
 
 		public class ClassicMappingSchema : MappingSchema
 		{

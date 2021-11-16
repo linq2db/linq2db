@@ -14,6 +14,11 @@ namespace LinqToDB.SqlProvider
 
 	public class ValueToSqlConverter
 	{
+		public ValueToSqlConverter()
+		{
+			BaseConverters = Array<ValueToSqlConverter>.Empty;
+		}
+
 		public ValueToSqlConverter(params ValueToSqlConverter[]? converters)
 		{
 			BaseConverters = converters ?? Array<ValueToSqlConverter>.Empty;
@@ -45,9 +50,9 @@ namespace LinqToDB.SqlProvider
 			SetConverter(typeof(uint),       (sb,dt,v) => sb.Append((uint)      v));
 			SetConverter(typeof(long),       (sb,dt,v) => sb.Append((long)      v));
 			SetConverter(typeof(ulong),      (sb,dt,v) => sb.Append((ulong)     v));
-			SetConverter(typeof(float),      (sb,dt,v) => sb.Append(((float)    v). ToString(_numberFormatInfo)));
+			SetConverter(typeof(float),      (sb,dt,v) => sb.Append(((float)    v). ToString("G9", _numberFormatInfo)));
 			SetConverter(typeof(double),     (sb,dt,v) => sb.Append(((double)   v). ToString("G17", _numberFormatInfo)));
-			SetConverter(typeof(decimal),    (sb,dt,v) => sb.Append(((decimal)v).   ToString(_numberFormatInfo)));
+			SetConverter(typeof(decimal),    (sb,dt,v) => sb.Append(((decimal)  v). ToString(_numberFormatInfo)));
 			SetConverter(typeof(DateTime),   (sb,dt,v) => BuildDateTime(sb, (DateTime)v));
 			SetConverter(typeof(string),     (sb,dt,v) => BuildString  (sb, v.ToString()!));
 			SetConverter(typeof(Guid),       (sb,dt,v) => sb.Append('\'').Append(v).Append('\''));
@@ -69,7 +74,7 @@ namespace LinqToDB.SqlProvider
 
 		internal readonly ValueToSqlConverter[] BaseConverters;
 
-		readonly Dictionary<Type,ConverterType> _converters = new Dictionary<Type,ConverterType>();
+		readonly Dictionary<Type,ConverterType> _converters = new ();
 
 		ConverterType? _booleanConverter;
 		ConverterType? _charConverter;
@@ -87,7 +92,7 @@ namespace LinqToDB.SqlProvider
 		ConverterType? _dateTimeConverter;
 		ConverterType? _stringConverter;
 
-		static readonly NumberFormatInfo _numberFormatInfo = new NumberFormatInfo
+		static readonly NumberFormatInfo _numberFormatInfo = new ()
 		{
 			CurrencyDecimalDigits    = NumberFormatInfo.InvariantInfo.CurrencyDecimalDigits,
 			CurrencyDecimalSeparator = NumberFormatInfo.InvariantInfo.CurrencyDecimalSeparator,
@@ -164,11 +169,16 @@ namespace LinqToDB.SqlProvider
 			return TryConvertImpl(stringBuilder, dataType, value, true);
 		}
 
-		bool TryConvertImpl(StringBuilder stringBuilder, SqlDataType dataType, object? value, bool tryBase)
+		public bool CanConvert(SqlDataType dataType, object? value)
+		{
+			return TryConvertImpl(null, dataType, value, true);
+		}
+
+		bool TryConvertImpl(StringBuilder? stringBuilder, SqlDataType dataType, object? value, bool tryBase)
 		{
 			if (value == null || value is INullable nullable && nullable.IsNull)
 			{
-				stringBuilder.Append("NULL");
+				stringBuilder?.Append("NULL");
 				return true;
 			}
 
@@ -182,7 +192,7 @@ namespace LinqToDB.SqlProvider
 				{
 					switch (type.GetTypeCodeEx())
 					{
-						case TypeCode.DBNull  : stringBuilder.Append("NULL")  ; return true;
+						case TypeCode.DBNull  : stringBuilder?.Append("NULL")  ; return true;
 						case TypeCode.Boolean : converter = _booleanConverter ; break;
 						case TypeCode.Char    : converter = _charConverter    ; break;
 						case TypeCode.SByte   : converter = _sByteConverter   ; break;
@@ -204,7 +214,8 @@ namespace LinqToDB.SqlProvider
 
 			if (converter != null)
 			{
-				converter(stringBuilder, dataType, value);
+				if (stringBuilder != null)
+					converter(stringBuilder, dataType, value);
 				return true;
 			}
 

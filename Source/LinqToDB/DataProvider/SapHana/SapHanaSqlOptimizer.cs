@@ -23,12 +23,11 @@ namespace LinqToDB.DataProvider.SapHana
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, ConvertVisitor visitor,
-			EvaluationContext context)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
 		{
-			expr = base.ConvertExpressionImpl(expr, visitor, context);
+			expression = base.ConvertExpressionImpl(expression, visitor);
 
-			if (expr is SqlFunction func)
+			if (expression is SqlFunction func)
 			{
 				if (func.Name == "Convert")
 				{
@@ -43,7 +42,7 @@ namespace LinqToDB.DataProvider.SapHana
 					return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);
 				}
 			}
-			else if (expr is SqlBinaryExpression be)
+			else if (expression is SqlBinaryExpression be)
 			{
 				switch (be.Operation)
 				{
@@ -64,11 +63,11 @@ namespace LinqToDB.DataProvider.SapHana
 					case "+": 
 						return be.SystemType == typeof(string) ? 
 							new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) : 
-							expr;
+							expression;
 				}
 			}
 
-			return expr;
+			return expression;
 		}
 
 		//this is for Tests.Linq.Common.CoalesceLike test

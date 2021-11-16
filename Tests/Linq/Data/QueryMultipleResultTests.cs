@@ -1,12 +1,11 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
-using LinqToDB.Data;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Tests.Model;
-using System.Threading;
 
 namespace Tests.Data
 {
@@ -134,10 +133,10 @@ namespace Tests.Data
 				);
 
 				Assert.IsFalse(res.DoctorFound);
-				Assert.AreEqual(res.MatchingPersonIds.Count(), 1);
+				Assert.AreEqual(res.MatchingPersonIds.Count, 1);
 				Assert.AreEqual(res.MatchingPersons.Count(), 1);
 				Assert.AreEqual(res.MatchingPatients.Count(), 0);
-				Assert.AreEqual(res.MatchingPersons2.Count(), 1);
+				Assert.AreEqual(res.MatchingPersons2.Length, 1);
 				Assert.AreEqual(res.MatchCount, 1);
 				Assert.NotNull(res.MatchingPerson);
 				Assert.AreEqual("Jane", res.MatchingPerson.FirstName);
@@ -157,10 +156,10 @@ namespace Tests.Data
 				);
 
 				Assert.IsFalse(res.DoctorFound);
-				Assert.AreEqual(res.MatchingPersonIds.Count(), 1);
+				Assert.AreEqual(res.MatchingPersonIds.Count, 1);
 				Assert.AreEqual(res.MatchingPersons.Count(), 1);
 				Assert.AreEqual(res.MatchingPatients.Count(), 0);
-				Assert.AreEqual(res.MatchingPersons2.Count(), 1);
+				Assert.AreEqual(res.MatchingPersons2.Length, 1);
 				Assert.AreEqual(res.MatchCount, 1);
 				Assert.NotNull(res.MatchingPerson);
 				Assert.AreEqual("Jane", res.MatchingPerson.FirstName);
@@ -180,10 +179,10 @@ namespace Tests.Data
 				);
 
 				Assert.IsFalse(res.DoctorFound);
-				Assert.AreEqual(res.MatchingPersonIds.Count(), 1);
+				Assert.AreEqual(res.MatchingPersonIds.Count, 1);
 				Assert.AreEqual(res.MatchingPersons.Count(), 1);
 				Assert.AreEqual(res.MatchingPatients.Count(), 0);
-				Assert.AreEqual(res.MatchingPersons2.Count(), 1);
+				Assert.AreEqual(res.MatchingPersons2.Length, 1);
 				Assert.AreEqual(res.MatchCount, 1);
 				Assert.NotNull(res.MatchingPerson);
 				Assert.AreEqual("Jane", res.MatchingPerson.FirstName);
@@ -204,10 +203,10 @@ namespace Tests.Data
 				);
 
 				Assert.IsFalse(res.DoctorFound);
-				Assert.AreEqual(res.MatchingPersonIds.Count(), 1);
+				Assert.AreEqual(res.MatchingPersonIds.Count, 1);
 				Assert.AreEqual(res.MatchingPersons.Count(), 1);
 				Assert.AreEqual(res.MatchingPatients.Count(), 0);
-				Assert.AreEqual(res.MatchingPersons2.Count(), 1);
+				Assert.AreEqual(res.MatchingPersons2.Length, 1);
 				Assert.AreEqual(res.MatchCount, 1);
 				Assert.NotNull(res.MatchingPerson);
 				Assert.AreEqual("Jane", res.MatchingPerson.FirstName);
@@ -227,10 +226,10 @@ namespace Tests.Data
 				);
 
 				Assert.IsTrue(res.DoctorFound);
-				Assert.AreEqual(res.MatchingPersonIds.Count(), 1);
+				Assert.AreEqual(res.MatchingPersonIds.Count, 1);
 				Assert.AreEqual(res.MatchingPersons.Count(), 1);
 				Assert.AreEqual(res.MatchingPatients.Count(), 0);
-				Assert.AreEqual(res.MatchingPersons2.Count(), 1);
+				Assert.AreEqual(res.MatchingPersons2.Length, 1);
 				Assert.AreEqual(res.MatchCount, 1);
 				Assert.NotNull(res.MatchingPerson);
 				Assert.AreEqual("John", res.MatchingPerson.FirstName);
@@ -250,10 +249,10 @@ namespace Tests.Data
 				);
 
 				Assert.IsTrue(res.DoctorFound);
-				Assert.AreEqual(res.MatchingPersonIds.Count(), 1);
+				Assert.AreEqual(res.MatchingPersonIds.Count, 1);
 				Assert.AreEqual(res.MatchingPersons.Count(), 1);
 				Assert.AreEqual(res.MatchingPatients.Count(), 0);
-				Assert.AreEqual(res.MatchingPersons2.Count(), 1);
+				Assert.AreEqual(res.MatchingPersons2.Length, 1);
 				Assert.AreEqual(res.MatchCount, 1);
 				Assert.NotNull(res.MatchingPerson);
 				Assert.AreEqual("John", res.MatchingPerson.FirstName);
@@ -286,10 +285,10 @@ namespace Tests.Data
 				);
 
 				Assert.IsFalse(res.DoctorFound);
-				Assert.AreEqual(res.MatchingPersonIds.Count(), 1);
+				Assert.AreEqual(res.MatchingPersonIds.Count, 1);
 				Assert.AreEqual(res.MatchingPersons.Count(), 1);
 				Assert.AreEqual(res.MatchingPatients.Count(), 0);
-				Assert.AreEqual(res.MatchingPersons2.Count(), 1);
+				Assert.AreEqual(res.MatchingPersons2.Length, 1);
 				Assert.AreEqual(res.MatchCount, 1);
 				Assert.NotNull(res.MatchingPerson);
 				Assert.AreEqual("Jane", res.MatchingPerson.FirstName);
@@ -309,10 +308,10 @@ namespace Tests.Data
 				);
 
 				Assert.IsFalse(res.DoctorFound);
-				Assert.AreEqual(res.MatchingPersonIds.Count(), 1);
+				Assert.AreEqual(res.MatchingPersonIds.Count, 1);
 				Assert.AreEqual(res.MatchingPersons.Count(), 1);
 				Assert.AreEqual(res.MatchingPatients.Count(), 0);
-				Assert.AreEqual(res.MatchingPersons2.Count(), 1);
+				Assert.AreEqual(res.MatchingPersons2.Length, 1);
 				Assert.AreEqual(res.MatchCount, 1);
 				Assert.NotNull(res.MatchingPerson);
 				Assert.AreEqual("Jane", res.MatchingPerson.FirstName);

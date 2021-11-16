@@ -1,4 +1,5 @@
-﻿#region Copyright Simple Injector Contributors
+﻿#if NET45
+#region Copyright Simple Injector Contributors
 /* The Simple Injector is an easy-to-use Inversion of Control library for .NET
  * 
  * Copyright (c) 2016 Simple Injector Contributors
@@ -24,14 +25,12 @@ namespace System.Threading
 {
 	using System.Security;
 	using System.Runtime.Remoting.Messaging;
-	using System.Diagnostics.CodeAnalysis;
 
 	internal sealed class AsyncLocal<T>
 	{
 		private readonly string _key = Guid.NewGuid().ToString("N").Substring(0, 12);
 
-		[MaybeNull]
-		public T Value
+		public T? Value
 		{
 			[SecuritySafeCritical]
 			get
@@ -63,3 +62,4 @@ namespace System.Threading
 		}
 	}
 }
+#endif

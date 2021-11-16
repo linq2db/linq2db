@@ -4,7 +4,7 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlMergeOperationClause : IQueryElement, ISqlExpressionWalkable, ICloneableElement
+	public class SqlMergeOperationClause : IQueryElement, ISqlExpressionWalkable
 	{
 		public SqlMergeOperationClause(MergeOperationType type)
 		{
@@ -36,14 +36,14 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable
 
-		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			((ISqlExpressionWalkable?)Where)?.Walk(options, func);
+			((ISqlExpressionWalkable?)Where)?.Walk(options, context, func);
 
 			foreach (var t in Items)
-				((ISqlExpressionWalkable)t).Walk(options, func);
+				((ISqlExpressionWalkable)t).Walk(options, context, func);
 
-			((ISqlExpressionWalkable?)WhereDelete)?.Walk(options, func);
+			((ISqlExpressionWalkable?)WhereDelete)?.Walk(options, context, func);
 
 			return null;
 		}
@@ -97,7 +97,7 @@ namespace LinqToDB.SqlQuery
 
 					foreach (var item in Items)
 					{
-						sb.Append("\t");
+						sb.Append('\t');
 						((IQueryElement)item).ToString(sb, dic);
 						sb.AppendLine();
 					}
@@ -117,7 +117,7 @@ namespace LinqToDB.SqlQuery
 
 					foreach (var item in Items)
 					{
-						sb.Append("\t");
+						sb.Append('\t');
 						((IQueryElement)item).ToString(sb, dic);
 						sb.AppendLine();
 					}
@@ -137,7 +137,7 @@ namespace LinqToDB.SqlQuery
 
 					foreach (var item in Items)
 					{
-						sb.Append("\t");
+						sb.Append('\t');
 						((IQueryElement)item).ToString(sb, dic);
 						sb.AppendLine();
 					}
@@ -163,15 +163,6 @@ namespace LinqToDB.SqlQuery
 			}
 
 			return sb;
-		}
-
-		#endregion
-
-		#region ICloneableElement
-
-		ICloneableElement ICloneableElement.Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			throw new NotImplementedException();
 		}
 
 		#endregion

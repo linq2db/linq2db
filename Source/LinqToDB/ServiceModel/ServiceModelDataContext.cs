@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETFRAMEWORK
+using System;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 
@@ -6,7 +7,7 @@ namespace LinqToDB.ServiceModel
 {
 	public class ServiceModelDataContext : RemoteDataContextBase
 	{
-		#region Init
+#region Init
 
 		ServiceModelDataContext()
 		{
@@ -45,9 +46,9 @@ namespace LinqToDB.ServiceModel
 
 		public Binding? Binding { get; private set; }
 
-		#endregion
+#endregion
 
-		#region Overrides
+#region Overrides
 
 		protected override ILinqClient GetClient()
 		{
@@ -78,6 +79,7 @@ namespace LinqToDB.ServiceModel
 
 		protected override string ContextIDPrefix => "LinqService";
 
-		#endregion
+#endregion
 	}
 }
+#endif

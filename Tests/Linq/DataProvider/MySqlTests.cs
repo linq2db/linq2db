@@ -3,6 +3,11 @@ using System.Data.Linq;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
+using System.Collections;
+using System.Collections.Generic;
+using System.Data;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -10,25 +15,20 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using LinqToDB.Tools;
+using LinqToDB.DataProvider.MySql;
+using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
 
+#if !NETCOREAPP2_1
 using MySqlDataDateTime = MySql.Data.Types.MySqlDateTime;
 using MySqlDataDecimal  = MySql.Data.Types.MySqlDecimal;
 
 using MySqlConnectorDateTime = MySqlConnector.MySqlDateTime;
-
+#endif
 namespace Tests.DataProvider
 {
-	using LinqToDB.DataProvider.MySql;
-	using LinqToDB.SqlProvider;
-	using LinqToDB.Tools.Comparers;
 	using Model;
-	using System.Collections;
-	using System.Collections.Generic;
-	using System.Data;
-	using System.Diagnostics;
-	using System.Threading.Tasks;
 
 	[TestFixture]
 	public class MySqlTests : DataProviderTestBase
@@ -90,23 +90,28 @@ namespace Tests.DataProvider
 				Assert.That(TestType<string>					(conn, "enumDataType"),                                    Is.EqualTo("Green"));
 				Assert.That(TestType<string>					(conn, "setDataType"),                                     Is.EqualTo("one"));
 
-				if (context != ProviderName.MySqlConnector)
+#if !NETCOREAPP2_1
+				using (new DisableBaseline("Platform-specific baselines"))
 				{
-					TestType<MySqlDataDecimal?>(conn, "decimalDataType", DataType.Decimal);
-
-					var dt1 = TestType<MySqlDataDateTime?>(conn, "datetimeDataType", DataType.DateTime);
-					var dt2 = new MySqlDataDateTime(2012, 12, 12, 12, 12, 12, 0)
+					if (context != ProviderName.MySqlConnector && context != TestProvName.MariaDB)
 					{
-						TimezoneOffset = dt1!.Value.TimezoneOffset
-					};
+						TestType<MySqlDataDecimal?>(conn, "decimalDataType", DataType.Decimal);
 
-					Assert.That(dt1, Is.EqualTo(dt2));
+						var dt1 = TestType<MySqlDataDateTime?>(conn, "datetimeDataType", DataType.DateTime);
+						var dt2 = new MySqlDataDateTime(2012, 12, 12, 12, 12, 12, 0)
+						{
+							TimezoneOffset = dt1!.Value.TimezoneOffset
+						};
+
+						Assert.That(dt1, Is.EqualTo(dt2));
+					}
+					else
+					{
+						using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
+							Assert.That(TestType<MySqlConnectorDateTime?>(conn, "datetimeDataType", DataType.DateTime), Is.EqualTo(new MySqlConnectorDateTime(2012, 12, 12, 12, 12, 12, 0)));
+					}
 				}
-				else
-				{
-					using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
-						Assert.That(TestType<MySqlConnectorDateTime?>(conn, "datetimeDataType", DataType.DateTime), Is.EqualTo(new MySqlConnectorDateTime(2012, 12, 12, 12, 12, 12, 0)));
-				}
+#endif
 			}
 		}
 
@@ -198,15 +203,15 @@ namespace Tests.DataProvider
 
 			using (var conn = new DataConnection(context))
 			{
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Binary   ("p", arr1)),             Is.EqualTo(arr1));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", arr1)),             Is.EqualTo(arr1));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create   ("p", arr1)),             Is.EqualTo(arr1));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", null)),             Is.EqualTo(null));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", new byte[0])),      Is.EqualTo(new byte[0]));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Image    ("p", new byte[0])),      Is.EqualTo(new byte[0]));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter { Name = "p", Value = arr1 }), Is.EqualTo(arr1));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create   ("p", new Binary(arr1))), Is.EqualTo(arr1));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter("p", new Binary(arr1))),       Is.EqualTo(arr1));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Binary   ("p", arr1)),              Is.EqualTo(arr1));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", arr1)),              Is.EqualTo(arr1));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create   ("p", arr1)),              Is.EqualTo(arr1));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", null)),              Is.EqualTo(null));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Image    ("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter { Name = "p", Value = arr1 }),  Is.EqualTo(arr1));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create   ("p", new Binary(arr1))),  Is.EqualTo(arr1));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter("p", new Binary(arr1))),        Is.EqualTo(arr1));
 			}
 		}
 
@@ -1822,7 +1827,7 @@ namespace Tests.DataProvider
 			{
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions() { GetTables = false });
 
-				var proc = schema.Procedures.Where(t => t.ProcedureName == "Issue2313Results").SingleOrDefault()!;
+				var proc = schema.Procedures.SingleOrDefault(t => t.ProcedureName == "Issue2313Results")!;
 
 				Assert.IsNotNull(proc);
 				Assert.IsNotNull(proc.ResultTable);
@@ -1868,7 +1873,7 @@ namespace Tests.DataProvider
 				assertColumn("Year"              , "int?"     , DataType.Int32);
 
 				// mysql.data cannot handle json procedure parameter
-				if (context == ProviderName.MySqlConnector)
+				if (context == ProviderName.MySqlConnector || context == TestProvName.MariaDB)
 				{
 					assertColumn("Point"               , "byte[]", DataType.Undefined);
 					assertColumn("LineString"          , "byte[]", DataType.Undefined);
@@ -1877,9 +1882,9 @@ namespace Tests.DataProvider
 					assertColumn("MultiLineString"     , "byte[]", DataType.Undefined);
 					assertColumn("MultiPolygon"        , "byte[]", DataType.Undefined);
 					assertColumn("Geometry"            , "byte[]", DataType.Undefined);
-					assertColumn("GeometryCollection", "byte[]", DataType.Undefined);
+					assertColumn("GeometryCollection"  , "byte[]", DataType.Undefined);
 
-					assertColumn("Json"    , "string", DataType.Json);
+					assertColumn("Json"    , "string", context == TestProvName.MariaDB ? DataType.Text : DataType.Json);
 					assertColumn("Enum"    , "string", DataType.VarChar);
 					assertColumn("Set"     , "string", DataType.VarChar);
 				}
@@ -1893,7 +1898,7 @@ namespace Tests.DataProvider
 				{
 					// m'kaaaay...
 					name       = "`" + name + "`";
-					var column = proc.ResultTable!.Columns.Where(c => c.ColumnName == name).SingleOrDefault()!;
+					var column = proc.ResultTable!.Columns.SingleOrDefault(c => c.ColumnName == name)!;
 
 					Assert.IsNotNull(column);
 
@@ -1908,9 +1913,7 @@ namespace Tests.DataProvider
 	{
 		public static int TestOutputParametersWithoutTableProcedure(this DataConnection dataConnection, string aInParam, out sbyte? aOutParam)
 		{
-			// WORKAROUND: db name needed for MySql.Data 8.0.21, as they managed to break already escaped procedure name handling
-			var dbName = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema).ConvertInline(TestUtils.GetDatabaseName(dataConnection), ConvertType.NameToDatabase);
-			var ret = dataConnection.ExecuteProc($"{dbName}.`TestOutputParametersWithoutTableProcedure`",
+			var ret = dataConnection.ExecuteProc("`TestOutputParametersWithoutTableProcedure`",
 				new DataParameter("aInParam", aInParam, DataType.VarChar),
 				new DataParameter("aOutParam", null, DataType.SByte) { Direction = ParameterDirection.Output });
 
@@ -1921,9 +1924,7 @@ namespace Tests.DataProvider
 
 		public static IEnumerable<Person> TestProcedure(this DataConnection dataConnection, int? param3, ref int? param2, out int? param1)
 		{
-			// WORKAROUND: db name needed for MySql.Data 8.0.21, as they managed to break already escaped procedure name handling
-			var dbName = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema).ConvertInline(TestUtils.GetDatabaseName(dataConnection), ConvertType.NameToDatabase);
-			var ret = dataConnection.QueryProc<Person>($"{dbName}.`TestProcedure`",
+			var ret = dataConnection.QueryProc<Person>("`TestProcedure`",
 				new DataParameter("param3", param3, DataType.Int32),
 				new DataParameter("param2", param2, DataType.Int32) { Direction = ParameterDirection.InputOutput },
 				new DataParameter("param1", null, DataType.Int32) { Direction = ParameterDirection.Output }).ToList();

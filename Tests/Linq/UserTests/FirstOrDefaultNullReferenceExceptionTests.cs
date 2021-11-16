@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB.Mapping;
@@ -9,7 +8,6 @@ using NUnit.Framework;
 namespace Tests.UserTests
 {
 	using Model;
-	using Tests;
 
 	[TestFixture]
 	public class FirstOrDefaultNullReferenceExceptionTests : TestBase

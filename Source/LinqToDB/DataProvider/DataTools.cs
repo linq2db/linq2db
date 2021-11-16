@@ -41,7 +41,7 @@ namespace LinqToDB.DataProvider
 				    (closeBracket - lastIndex == 2 && closeBracket - nextIndex == 1))
 				{
 					if (nextIndex < 0)
-						newStr.Append("[");
+						newStr.Append('[');
 				}
 				else
 					newStr.Append("[[]");
@@ -78,12 +78,12 @@ namespace LinqToDB.DataProvider
 							{
 								isInString = false;
 								stringBuilder
-									.Append("'");
+									.Append('\'');
 							}
 
 							if (i != 0)
 								stringBuilder
-									.Append(" ")
+									.Append(' ')
 									.Append(plusOperator)
 									.Append(' ')
 									;
@@ -99,12 +99,12 @@ namespace LinqToDB.DataProvider
 
 								if (i != 0)
 									stringBuilder
-										.Append(" ")
+										.Append(' ')
 										.Append(plusOperator)
 										.Append(' ')
 										;
 
-								stringBuilder.Append(startPrefix).Append("'");
+								stringBuilder.Append(startPrefix).Append('\'');
 							}
 
 							stringBuilder.Append("''");
@@ -118,12 +118,12 @@ namespace LinqToDB.DataProvider
 								{
 									isInString = false;
 									stringBuilder
-										.Append("'");
+										.Append('\'');
 								}
 
 								if (i != 0)
 									stringBuilder
-										.Append(" ")
+										.Append(' ')
 										.Append(plusOperator)
 										.Append(' ')
 										;
@@ -138,12 +138,12 @@ namespace LinqToDB.DataProvider
 
 								if (i != 0)
 									stringBuilder
-										.Append(" ")
+										.Append(' ')
 										.Append(plusOperator)
 										.Append(' ')
 										;
 
-								stringBuilder.Append(startPrefix).Append("'");
+								stringBuilder.Append(startPrefix).Append('\'');
 							}
 
 							stringBuilder.Append(c);
@@ -159,7 +159,7 @@ namespace LinqToDB.DataProvider
 			{
 				stringBuilder
 					.Append(startPrefix)
-					.Append("'")
+					.Append('\'')
 					.Append(value)
 					.Append('\'')
 					;

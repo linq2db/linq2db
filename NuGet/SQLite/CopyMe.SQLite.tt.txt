@@ -1,9 +1,8 @@
-<#@ template language="C#" debug="True" hostSpecific="True"                        #>
-<#@ output extension=".generated.cs"                                               #>
-<#@ include file="$(LinqToDBT4SQLiteTemplatesDirectory)LinqToDB.SQLite.Tools.ttinclude" #>
-<#@ include file="$(LinqToDBT4SQLiteTemplatesDirectory)PluralizationService.ttinclude"  #>
-<# //@ include file="$(ProjectDir)LinqToDB.Templates\LinqToDB.SQLite.Tools.ttinclude" #>
-<# //@ include file="$(ProjectDir)LinqToDB.Templates\PluralizationService.ttinclude"  #>
+<#@ template language="C#" debug="True" hostSpecific="True" #>
+<#@ output extension=".generated.cs"                        #>
+
+<#@ include file="$(LinqToDBT4SQLiteTemplatesPath)LinqToDB.SQLite.Tools.ttinclude" once="true" #>
+<#@ include file="$(LinqToDBT4SQLiteTemplatesPath)PluralizationService.ttinclude"  once="true" #>
 <#
 	/*
 		1. Create new *.tt file (e.g. MyDatabase.tt) in a folder where you would like to generate your data model
@@ -36,7 +35,7 @@
 		5. See more at https://linq2db.github.io/articles/T4.html
 
 		IMPORTANT: if running .tt file gives you error like this:
-		"error : Failed to resolve include text for file: C:\...\$(LinqToDBT4<SOME_DB>TemplatesDirectory)LinqToDB.<DB_NAME>.Tools.ttinclude"
+		"error : Failed to resolve include text for file: C:\...\$(LinqToDBT4<DB>TemplatesPath)LinqToDB.<DB>.Tools.ttinclude"
 		check tt file properties.
 		Custom tool must be set to TextTemplatingFileGenerator, not TextTemplatingFilePreprocessor or any other value.
 	*/

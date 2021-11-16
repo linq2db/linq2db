@@ -97,12 +97,12 @@ namespace LinqToDB.Linq.Builder
 				return _cteQueryContext ??= Builder.GetCteContext(_cteExpression);
 			}
 
-			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFor)
+			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
 				var queryContext = GetQueryContext();
 				if (queryContext == null)
-					return base.IsExpression(expression, level, requestFor);
-				return queryContext.IsExpression(expression, level, requestFor);
+					return base.IsExpression(expression, level, requestFlag);
+				return queryContext.IsExpression(expression, level, requestFlag);
 			}
 
 			static string? GenerateAlias(Expression? expression)
@@ -132,6 +132,8 @@ namespace LinqToDB.Linq.Builder
 					// it means that queryContext context already has columns and we need all of them. For example for Distinct.
 					ConvertToSql(null, 0, ConvertFlags.All);
 				}
+
+				expression = SequenceHelper.CorrectExpression(expression, this, queryContext);
 
 				var infos  = queryContext.ConvertToIndex(expression, level, flags);
 

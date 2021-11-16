@@ -53,7 +53,7 @@ namespace LinqToDB.DataProvider.Oracle
 				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.Name);
 
 			AppendIndent().AppendLine("RETURNING ");
-			AppendIndent().Append("\t");
+			AppendIndent().Append('\t');
 			BuildExpression(identityField, false, true);
 			StringBuilder.AppendLine(" INTO :IDENTITY_PARAMETER");
 		}
@@ -146,7 +146,7 @@ namespace LinqToDB.DataProvider.Oracle
 					if (type.Type.Length == null || type.Type.Length == 0)
 						StringBuilder.Append("BLOB");
 					else
-						StringBuilder.Append("Raw(").Append(type.Type.Length).Append(")");
+						StringBuilder.Append("Raw(").Append(type.Type.Length).Append(')');
 					break;
 				default: base.BuildDataTypeFromDataType(type, forCreateTable);                    break;
 			}
@@ -235,6 +235,34 @@ namespace LinqToDB.DataProvider.Oracle
 			return sb.Append(value);
 		}
 
+		protected override StringBuilder BuildExpression(
+			ISqlExpression expr,
+			bool buildTableName,
+			bool checkParentheses,
+			string? alias,
+			ref bool addAlias,
+			bool throwExceptionIfTableNotFound = true)
+		{
+			return base.BuildExpression(
+				expr,
+				buildTableName && Statement.QueryType != QueryType.MultiInsert,
+				checkParentheses,
+				alias,
+				ref addAlias,
+				throwExceptionIfTableNotFound);
+		}
+
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
+		{
+			StringBuilder.Append("DECODE(");
+			BuildExpression(Precedence.Unknown, expr.Expr1);
+			StringBuilder.Append(", ");
+			BuildExpression(Precedence.Unknown, expr.Expr2);
+			StringBuilder
+				.Append(", 0, 1) = ")
+				.Append(expr.IsNot ? '0' : '1');
+		}
+
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
 			BuildInsertOrUpdateQueryAsMerge(insertOrUpdate, "FROM SYS.DUAL");
@@ -265,7 +293,7 @@ namespace LinqToDB.DataProvider.Oracle
 					return truncateTable.ResetIdentity && truncateTable.Table!.IdentityFields.Count > 0 ? 2 : 1;
 
 				case SqlCreateTableStatement createTable:
-					_identityField = createTable.Table!.IdentityFields.FirstOrDefault();
+					_identityField = createTable.Table!.IdentityFields.Count > 0 ? createTable.Table!.IdentityFields[0] : null;
 					if (_identityField != null)
 						return 3;
 					break;
@@ -276,7 +304,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var identityField = dropTable.Table!.IdentityFields.FirstOrDefault();
+			var identityField = dropTable.Table!.IdentityFields.Count > 0 ? dropTable.Table!.IdentityFields[0] : null;
 
 			if (identityField == null && dropTable.Table.TableOptions.HasDropIfExists() == false && dropTable.Table.TableOptions.HasIsTemporary() == false)
 			{
@@ -284,6 +312,8 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 			else
 			{
+				BuildTag(dropTable);
+
 				StringBuilder
 					.AppendLine(@"BEGIN");
 
@@ -474,12 +504,12 @@ END;",
 			if (schema != null && schema.Length == 0) schema = null;
 
 			if (schema != null)
-				sb.Append(schema).Append(".");
+				sb.Append(schema).Append('.');
 
 			sb.Append(table);
 
 			if (server != null)
-				sb.Append("@").Append(server);
+				sb.Append('@').Append(server);
 
 			return sb;
 		}
@@ -489,7 +519,7 @@ END;",
 			if (schema != null)
 			{
 				Convert(sb, schema, ConvertType.NameToSchema);
-				sb.Append(".");
+				sb.Append('.');
 			}
 		}
 
@@ -587,5 +617,52 @@ END;",
 				}
 			}
 		}
+
+		#region Build MultiInsert
+
+		protected override void BuildMultiInsertQuery(SqlMultiInsertStatement statement)
+		{
+			BuildMultiInsertClause(statement);
+			BuildSqlBuilder((SelectQuery)statement.Source.Source, Indent, skipAlias: false);
+		}
+
+		protected void BuildMultiInsertClause(SqlMultiInsertStatement statement)
+		{
+			StringBuilder.AppendLine(statement.InsertType == MultiInsertType.First ? "INSERT FIRST" : "INSERT ALL");
+			
+			Indent++;
+
+			if (statement.InsertType == MultiInsertType.Unconditional)
+			{
+				foreach (var insert in statement.Inserts)
+					BuildInsertClause(statement, insert.Insert, "INTO ", appendTableName: true, addAlias: false);
+			}
+			else
+			{
+				foreach (var insert in statement.Inserts)
+				{
+					if (insert.When != null)
+					{
+						int length = StringBuilder.Append("WHEN ").Length;
+						BuildSearchCondition(insert.When, wrapCondition: true);
+						// If `when` condition is optimized to always `true`, 
+						// then BuildSearchCondition doesn't write anything.
+						if (StringBuilder.Length == length)
+							StringBuilder.Append("1 = 1");
+						StringBuilder.AppendLine(" THEN");
+					}
+					else
+					{
+						StringBuilder.AppendLine("ELSE");
+					}
+		
+					BuildInsertClause(statement, insert.Insert, "INTO ", appendTableName: true, addAlias: false);
+				}
+			}
+
+			Indent--;
+		}
+
+		#endregion 
 	}
 }

@@ -1,22 +1,22 @@
 ``` ini
 
-BenchmarkDotNet=v0.12.1, OS=Windows 10.0.16299.125 (1709/FallCreatorsUpdate/Redstone3)
+BenchmarkDotNet=v0.13.1, OS=Windows 10.0.16299.125 (1709/FallCreatorsUpdate/Redstone3)
 Intel Core i7-3770K CPU 3.50GHz (Ivy Bridge), 1 CPU, 8 logical and 4 physical cores
-Frequency=3417995 Hz, Resolution=292.5692 ns, Timer=TSC
-  [Host]     : .NET Framework 4.8 (4.8.3928.0), X64 RyuJIT
-  Job-FSMYUH : .NET Framework 4.8 (4.8.3928.0), X64 RyuJIT
-  Job-TSQXSD : .NET Core 2.1.17 (CoreCLR 4.6.28619.01, CoreFX 4.6.28619.01), X64 RyuJIT
-  Job-OUTKHJ : .NET Core 3.1.3 (CoreCLR 4.700.20.11803, CoreFX 4.700.20.12001), X64 RyuJIT
+Frequency=3417994 Hz, Resolution=292.5693 ns, Timer=TSC
+.NET SDK=5.0.402
+  [Host]     : .NET 5.0.11 (5.0.1121.47308), X64 RyuJIT
+  Job-ODZCDL : .NET 5.0.11 (5.0.1121.47308), X64 RyuJIT
+  Job-PCJJBI : .NET Core 3.1.20 (CoreCLR 4.700.21.47003, CoreFX 4.700.21.47101), X64 RyuJIT
+  Job-HHEMGO : .NET Framework 4.8 (4.8.3928.0), X64 RyuJIT
 
-Jit=RyuJit  Platform=X64  MaxIterationCount=5  
-MinIterationCount=3  WarmupCount=2  
+Jit=RyuJit  Platform=X64  
 
 ```
-|       Method |       Runtime |      Mean | Ratio | Gen 0 | Gen 1 | Gen 2 | Allocated |
-|------------- |-------------- |----------:|------:|------:|------:|------:|----------:|
-|    BuildFunc |    .NET 4.6.2 | 10.271 ns |  4.59 |     - |     - |     - |         - |
-| DirectAccess |    .NET 4.6.2 |  2.236 ns |  1.00 |     - |     - |     - |         - |
-|    BuildFunc | .NET Core 2.1 |  5.864 ns |  2.62 |     - |     - |     - |         - |
-| DirectAccess | .NET Core 2.1 |  3.523 ns |  1.57 |     - |     - |     - |         - |
-|    BuildFunc | .NET Core 3.1 |  4.530 ns |  2.03 |     - |     - |     - |         - |
-| DirectAccess | .NET Core 3.1 |  1.996 ns |  0.89 |     - |     - |     - |         - |
+|       Method |              Runtime |      Mean | Ratio | Allocated |
+|------------- |--------------------- |----------:|------:|----------:|
+|    BuildFunc |             .NET 5.0 |  3.660 ns |  1.77 |         - |
+| DirectAccess |             .NET 5.0 |  2.100 ns |  1.02 |         - |
+|    BuildFunc |        .NET Core 3.1 |  4.096 ns |  1.99 |         - |
+| DirectAccess |        .NET Core 3.1 |  1.956 ns |  0.95 |         - |
+|    BuildFunc | .NET Framework 4.7.2 | 10.587 ns |  5.13 |         - |
+| DirectAccess | .NET Framework 4.7.2 |  2.065 ns |  1.00 |         - |

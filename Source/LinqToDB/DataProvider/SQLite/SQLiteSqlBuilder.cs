@@ -18,6 +18,8 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 		}
 
+		protected override bool SupportsColumnAliasesInSource => false;
+
 		public override int CommandCount(SqlStatement statement)
 		{
 			if (statement is SqlTruncateTableStatement trun)
@@ -122,7 +124,7 @@ namespace LinqToDB.DataProvider.SQLite
 				AppendIndent();
 				StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY (");
 			StringBuilder.Append(string.Join(InlineComma, fieldNames));
-				StringBuilder.Append(")");
+				StringBuilder.Append(')');
 			}
 		}
 
@@ -131,7 +133,7 @@ namespace LinqToDB.DataProvider.SQLite
 			if (database != null && database.Length == 0) database = null;
 
 			if (database != null)
-				sb.Append(database).Append(".");
+				sb.Append(database).Append('.');
 
 			return sb.Append(table);
 		}
@@ -176,6 +178,53 @@ namespace LinqToDB.DataProvider.SQLite
 
 			if (table.TableOptions.HasCreateIfNotExists())
 				StringBuilder.Append("IF NOT EXISTS ");
+		}
+
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
+		{
+			BuildExpression(GetPrecedence(expr), expr.Expr1);
+			StringBuilder.Append(expr.IsNot ? " IS " : " IS NOT ");
+			BuildExpression(GetPrecedence(expr), expr.Expr2);
+		}
+
+		protected override void BuildSqlValuesTable(SqlValuesTable valuesTable, string alias, out bool aliasBuilt)
+		{
+			valuesTable = ConvertElement(valuesTable);
+			var rows = valuesTable.BuildRows(OptimizationContext.Context);
+
+			if (rows.Count == 0)
+			{
+				StringBuilder.Append(OpenParens);
+				BuildEmptyValues(valuesTable);
+				StringBuilder.Append(')');
+			}
+			else 
+			{
+				StringBuilder.Append(OpenParens);
+
+				++Indent;
+
+				StringBuilder.AppendLine();
+				AppendIndent();
+				BuildEmptyValues(valuesTable);
+				StringBuilder.AppendLine();
+
+				AppendIndent();
+
+				if (rows?.Count > 0)
+				{
+					StringBuilder.AppendLine("UNION ALL");
+					AppendIndent();
+
+					BuildValues(valuesTable, rows);
+				}
+
+				StringBuilder.Append(')');
+
+				--Indent;
+			}
+
+			aliasBuilt = false;
 		}
 	}
 }

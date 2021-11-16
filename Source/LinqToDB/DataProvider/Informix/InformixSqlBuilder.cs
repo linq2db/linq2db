@@ -34,6 +34,8 @@ namespace LinqToDB.DataProvider.Informix
 		{
 		}
 
+		protected override bool SupportsNullInColumn => false;
+
 		public override int CommandCount(SqlStatement statement)
 		{
 			if (statement is SqlTruncateTableStatement trun)
@@ -82,9 +84,9 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			if (selectQuery.From.Tables.Count == 0)
 			{
-				AppendIndent().Append("SELECT FIRST 1").AppendLine();
+				AppendIndent().Append("SELECT").AppendLine();
 				BuildColumns(selectQuery);
-				AppendIndent().Append("FROM SYSTABLES").AppendLine();
+				AppendIndent().Append("FROM ").Append(FakeTable).AppendLine();
 			}
 			else if (selectQuery.Select.IsDistinct)
 			{
@@ -101,6 +103,8 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override string FirstFormat(SelectQuery selectQuery) => "FIRST {0}";
 		protected override string SkipFormat  => "SKIP {0}";
+
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
 
 		protected override void BuildLikePredicate(SqlPredicate.Like predicate)
 		{
@@ -209,13 +213,13 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			if (field.IsIdentity)
 			{
-				if (field.Type!.Value.DataType == DataType.Int32)
+				if (field.Type.DataType == DataType.Int32)
 				{
 					StringBuilder.Append("SERIAL");
 					return;
 				}
 
-				if (field.Type!.Value.DataType == DataType.Int64)
+				if (field.Type.DataType == DataType.Int64)
 				{
 					StringBuilder.Append("SERIAL8");
 					return;
@@ -230,7 +234,7 @@ namespace LinqToDB.DataProvider.Informix
 			AppendIndent();
 			StringBuilder.Append("PRIMARY KEY (");
 			StringBuilder.Append(string.Join(InlineComma, fieldNames));
-			StringBuilder.Append(")");
+			StringBuilder.Append(')');
 		}
 
 		// https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_1652.htm
@@ -247,13 +251,13 @@ namespace LinqToDB.DataProvider.Informix
 				sb.Append(database);
 
 			if (server != null)
-				sb.Append("@").Append(server);
+				sb.Append('@').Append(server);
 
 			if (database != null)
-				sb.Append(":");
+				sb.Append(':');
 
 			if (schema != null)
-				sb.Append(schema).Append(".");
+				sb.Append(schema).Append('.');
 
 			return sb.Append(table);
 		}
@@ -316,5 +320,18 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			BuildDropTableStatementIfExists(dropTable);
 		}
+
+		protected override ISqlExpression WrapBooleanExpression(ISqlExpression expr)
+		{
+			var newExpr = base.WrapBooleanExpression(expr);
+			if (!ReferenceEquals(newExpr, expr))
+			{
+				return new SqlFunction(typeof(bool), "Convert", false, new SqlDataType(DataType.Boolean),
+					newExpr);
+			}
+
+			return newExpr;
+		}
+
 	}
 }

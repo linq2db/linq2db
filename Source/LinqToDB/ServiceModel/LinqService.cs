@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NETFRAMEWORK
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
@@ -49,7 +50,10 @@ namespace LinqToDB.ServiceModel
 
 		public virtual DataConnection CreateDataContext(string? configuration)
 		{
-			return MappingSchema != null ? new DataConnection(configuration, MappingSchema) : new DataConnection(configuration);
+			var dc = new DataConnection(configuration);
+			if (MappingSchema != null)
+				dc.AddMappingSchema(MappingSchema);
+			return dc;
 		}
 
 		protected virtual void ValidateQuery(LinqServiceQuery query)
@@ -62,7 +66,7 @@ namespace LinqToDB.ServiceModel
 		{
 		}
 
-		#region ILinqService Members
+#region ILinqService Members
 
 		[WebMethod]
 		public virtual LinqServiceInfo GetInfo(string? configuration)
@@ -84,7 +88,7 @@ namespace LinqToDB.ServiceModel
 			public SqlStatement    Statement   { get; set; } = null!;
 			public object?         Context     { get; set; }
 			public SqlParameter[]? Parameters  { get; set; }
-			public List<string>?   QueryHints  { get; set; }
+			public AliasesContext? Aliases     { get; set; }
 		}
 
 		[WebMethod]
@@ -99,11 +103,11 @@ namespace LinqToDB.ServiceModel
 				using var db = CreateDataContext(configuration);
 				using var _  = db.DataProvider.ExecuteScope(db);
 
+				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
+
 				return DataConnection.QueryRunner.ExecuteNonQuery(db, new QueryContext
 				{
-					Statement  = query.Statement,
-					Parameters = query.Parameters,
-					QueryHints = query.QueryHints
+					Statement  = query.Statement
 				}, new SqlParameterValues());
 			}
 			catch (Exception exception)
@@ -125,11 +129,11 @@ namespace LinqToDB.ServiceModel
 				using var db = CreateDataContext(configuration);
 				using var _  = db.DataProvider.ExecuteScope(db);
 
+				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
+
 				return DataConnection.QueryRunner.ExecuteScalar(db, new QueryContext
 				{
-					Statement  = query.Statement,
-					Parameters = query.Parameters,
-					QueryHints = query.QueryHints
+					Statement  = query.Statement
 				}, null);
 			}
 			catch (Exception exception)
@@ -150,11 +154,12 @@ namespace LinqToDB.ServiceModel
 
 				using var db = CreateDataContext(configuration);
 				using var _  = db.DataProvider.ExecuteScope(db);
+
+				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
+
 				using var rd = DataConnection.QueryRunner.ExecuteReader(db, new QueryContext
 				{
-					Statement  = query.Statement,
-					Parameters = query.Parameters,
-					QueryHints = query.QueryHints
+					Statement  = query.Statement
 				}, SqlParameterValues.Empty);
 
 				var reader = DataReaderWrapCache.TryUnwrapDataReader(db.MappingSchema, rd);
@@ -174,6 +179,8 @@ namespace LinqToDB.ServiceModel
 					QueryType.Select => query.Statement.SelectQuery!,
 					QueryType.Insert => ((SqlInsertStatement)query.Statement).Output!.OutputQuery!,
 					QueryType.Delete => ((SqlDeleteStatement)query.Statement).Output!.OutputQuery!,
+					QueryType.Update => ((SqlUpdateStatement)query.Statement).Output!.OutputQuery!,
+					QueryType.Merge  => ((SqlMergeStatement )query.Statement).Output!.OutputQuery!,
 					_ => throw new NotImplementedException($"Query type not supported: {query.Statement.QueryType}"),
 				};
 
@@ -273,11 +280,11 @@ namespace LinqToDB.ServiceModel
 
 				foreach (var query in queries)
 				{
+					if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
+
 					DataConnection.QueryRunner.ExecuteNonQuery(db, new QueryContext
 					{
-						Statement  = query.Statement,
-						Parameters = query.Parameters,
-						QueryHints = query.QueryHints
+						Statement  = query.Statement
 					}, null);
 				}
 
@@ -292,6 +299,7 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		#endregion
+#endregion
 	}
 }
+#endif

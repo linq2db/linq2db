@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -6,17 +6,15 @@ using System.Linq;
 
 namespace LinqToDB.Reflection
 {
-	using System.Diagnostics.CodeAnalysis;
 	using Common;
 	using Expressions;
 	using Extensions;
+	using LinqToDB.Common.Internal;
 	using Mapping;
 
 	public class MemberAccessor
 	{
-		static readonly ConstructorInfo ArgumentExceptionConstructorInfo =
-			typeof(ArgumentException).GetConstructor(new[] {typeof(string)}) ??
-				throw new Exception($"Can not retrieve information about constructor for {nameof(ArgumentException)}");
+		static readonly ConstructorInfo ArgumentExceptionConstructorInfo = typeof(ArgumentException).GetConstructor(new[] {typeof(string)})!;
 
 		internal MemberAccessor(TypeAccessor typeAccessor, string memberName, EntityDescriptor? ed)
 		{
@@ -50,7 +48,7 @@ namespace LinqToDB.Reflection
 				MemberInfo = lastInfo.member;
 				Type       = lastInfo.type;
 
-				var checkNull = infos.Take(infos.Length - 1).Any(info => info.type.IsClass || info.type.IsNullable());
+				var checkNull = infos.Take(infos.Length - 1).Any(info => info.type.IsNullableType());
 
 				// Build getter.
 				//
@@ -67,15 +65,15 @@ namespace LinqToDB.Reflection
 							if (i == infos.Length - 1)
 								return Expression.Assign(ret, next);
 
-							if (next.Type.IsClass || next.Type.IsNullable())
+							if (next.Type.IsNullableType())
 							{
 								var local = Expression.Variable(next.Type);
 
 								return Expression.Block(
 									new[] { local },
-									Expression.Assign(local, next) as Expression,
+									Expression.Assign(local, next),
 									Expression.IfThen(
-										Expression.NotEqual(local, Expression.Constant(null)),
+										Expression.NotEqual(local, ExpressionInstances.UntypedNull),
 										MakeGetter(local, i + 1)));
 							}
 
@@ -123,7 +121,7 @@ namespace LinqToDB.Reflection
 								}
 								else
 								{
-									if (next.Type.IsClass || next.Type.IsNullable())
+									if (next.Type.IsNullableType())
 									{
 										var local = Expression.Variable(next.Type);
 
@@ -132,7 +130,7 @@ namespace LinqToDB.Reflection
 										exprs.Add(Expression.Assign(local, next));
 										exprs.Add(
 											Expression.IfThen(
-												Expression.Equal(local, Expression.Constant(null)),
+												Expression.Equal(local, ExpressionInstances.UntypedNull),
 												Expression.Block(
 													Expression.Assign(local, Expression.New(local.Type)),
 													Expression.Assign(next, local))));
@@ -167,7 +165,7 @@ namespace LinqToDB.Reflection
 						SetterExpression = Expression.Lambda(
 							Expression.Block(
 								new[] { fakeParam },
-								Expression.Assign(fakeParam, Expression.Constant(0))),
+								Expression.Assign(fakeParam, ExpressionInstances.Constant0)),
 							objParam,
 							valueParam);
 					}
@@ -280,7 +278,7 @@ namespace LinqToDB.Reflection
 					setterType,
 					Expression.Block(
 						new[] { fakeParam },
-						new Expression[] { Expression.Assign(fakeParam, Expression.Constant(0)) }),
+						new Expression[] { Expression.Assign(fakeParam, ExpressionInstances.Constant0) }),
 					objParam,
 					valueParam);
 			}
@@ -292,7 +290,7 @@ namespace LinqToDB.Reflection
 			var getterExpr = GetterExpression.GetBody(Expression.Convert(objParam, TypeAccessor.Type));
 			var getter     = Expression.Lambda<Func<object,object?>>(Expression.Convert(getterExpr, typeof(object)), objParam);
 
-			Getter = getter.Compile();
+			Getter = getter.CompileExpression();
 
 			var valueParam = Expression.Parameter(typeof(object), "value");
 
@@ -303,7 +301,7 @@ namespace LinqToDB.Reflection
 					Expression.Convert(valueParam, Type));
 				var setter = Expression.Lambda<Action<object, object?>>(setterExpr, objParam, valueParam);
 
-				Setter = setter.Compile();
+				Setter = setter.CompileExpression();
 			}
 		}
 
@@ -311,7 +309,6 @@ namespace LinqToDB.Reflection
 		static T ThrowOnDynamicStoreMissing<T>()
 		{
 			throw new ArgumentException("Tried getting dynamic column value, without setting dynamic column store on type.");
-
 		}
 
 		#region Public Properties
@@ -336,8 +333,7 @@ namespace LinqToDB.Reflection
 
 		#region Public Methods
 
-		[return: MaybeNull]
-		public T GetAttribute<T>() where T : Attribute
+		public T? GetAttribute<T>() where T : Attribute
 		{
 			var attrs = MemberInfo.GetCustomAttributes(typeof(T), true);
 

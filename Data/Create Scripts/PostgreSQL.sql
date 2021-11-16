@@ -642,3 +642,53 @@ COMMENT ON MATERIALIZED VIEW  "Issue2023" IS 'This is the Issue2023 matview';
 COMMENT ON COLUMN             "Issue2023"."PersonID" IS 'This is the Issue2023.PersonID column';
 -- SKIP PostgreSQL.9.2 END
 GO
+
+DROP FUNCTION IF EXISTS "SchemaName"."fnTest"(INT)
+GO
+
+DROP SCHEMA IF EXISTS "SchemaName"
+GO
+
+CREATE SCHEMA "SchemaName"
+GO
+CREATE OR REPLACE FUNCTION "SchemaName"."fnTest"(param INT) RETURNS VARCHAR(20)
+AS $$ BEGIN RETURN 'issue2679test'; END $$ LANGUAGE PLPGSQL;
+GO
+
+DROP TABLE IF EXISTS same_name2
+GO
+DROP TABLE IF EXISTS same_name1
+GO
+DROP TABLE IF EXISTS same_name
+GO
+CREATE TABLE same_name (
+id INTEGER PRIMARY KEY
+)
+GO
+CREATE TABLE same_name1 (
+id			INTEGER PRIMARY KEY,
+same_name	INTEGER NULL,
+
+CONSTRAINT same_name
+	FOREIGN KEY (same_name)
+	REFERENCES same_name (id)
+)
+GO
+CREATE TABLE same_name2 (
+id			INTEGER PRIMARY KEY,
+same_name	INTEGER NULL,
+
+CONSTRAINT same_name
+	FOREIGN KEY (same_name)
+	REFERENCES same_name (id)
+)
+GO
+DROP TABLE "CollatedTable"
+GO
+CREATE TABLE "CollatedTable"
+(
+	"Id"				INT NOT NULL,
+	"CaseSensitive"		VARCHAR(20) NOT NULL,
+	"CaseInsensitive"	VARCHAR(20) NOT NULL
+)
+GO

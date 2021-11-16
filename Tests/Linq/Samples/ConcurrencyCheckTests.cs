@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -109,6 +108,7 @@ namespace Tests.Samples
 			}
 		}
 
+		[AttributeUsage(AttributeTargets.Property)]
 		public class RowVersionAttribute: Attribute
 		{ }
 

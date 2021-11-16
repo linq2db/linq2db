@@ -4,6 +4,7 @@ using System.Data;
 namespace LinqToDB.DataProvider.Informix
 {
 	using System.Linq.Expressions;
+	using LinqToDB.Common;
 	using LinqToDB.DataProvider.DB2;
 	using LinqToDB.Expressions;
 	using LinqToDB.Mapping;
@@ -274,7 +275,7 @@ namespace LinqToDB.DataProvider.Informix
 
 				if (register)
 				{
-					var getNullValue = Expression.Lambda<Func<object>>(Expression.Convert(ExpressionHelper.Field(type, "Null"), typeof(object))).Compile();
+					var getNullValue = Expression.Lambda<Func<object>>(Expression.Convert(ExpressionHelper.Field(type, "Null"), typeof(object))).CompileExpression();
 					mappingSchema.AddScalarType(type, getNullValue(), true, dataType);
 				}
 

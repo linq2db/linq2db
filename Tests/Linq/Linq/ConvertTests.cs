@@ -541,10 +541,11 @@ namespace Tests.Linq
 		[Test]
 		public void GuidToString([DataSources] string context)
 		{
+			var guid = IsCaseSensitiveDB(context) ? "FEBE3ECA-CB5F-40B2-AD39-2979D312AFCA" : "febe3eca-cb5f-40b2-ad39-2979d312afca";
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from t in    Types where Sql.ConvertTo<string>.From(t.GuidValue) == "febe3eca-cb5f-40b2-ad39-2979d312afca" select t.GuidValue,
-					from t in db.Types where Sql.ConvertTo<string>.From(t.GuidValue) == "febe3eca-cb5f-40b2-ad39-2979d312afca" select t.GuidValue);
+					from t in db.Types where Sql.ConvertTo<string>.From(t.GuidValue) == guid select t.GuidValue);
 		}
 
 		#endregion
@@ -1277,6 +1278,63 @@ namespace Tests.Linq
 				Assert.False(db.LastQuery!.Contains(" Convert("));
 			}
 		}
-#endregion
+		#endregion
+
+		#region TryConvert
+		// NOTE:
+		// class-typed overloads not tested for Oracle as it doesn't support DEFAULT CAST for strings
+		// and we need custom reference type that wraps something like int for test
+		[Test]
+		public void TryConvertConvertedStruct([IncludeDataSources(true,
+			TestProvName.AllOracle12,
+			TestProvName.AllSqlServer2012Plus
+			)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual(123, db.Select(() => Sql.TryConvert("123", (int?)0)));
+			}
+		}
+
+		[Test]
+		public void TryConvertNotConvertedStruct([IncludeDataSources(true,
+			TestProvName.AllOracle12,
+			TestProvName.AllSqlServer2012Plus
+			)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.IsNull(db.Select(() => Sql.TryConvert("burp", (int?)0)));
+			}
+		}
+
+		[Test]
+		public void TryConvertConvertedClass([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual("345", db.Select(() => Sql.TryConvert(345, "")));
+			}
+		}
+
+		[Test]
+		public void TryConvertOrDefaultConvertedStruct([IncludeDataSources(true, TestProvName.AllOracle12)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual(123, db.Select(() => Sql.TryConvertOrDefault("123", (int?)100500)));
+			}
+		}
+
+		[Test]
+		public void TryConvertOrDefaultNotConvertedStruct([IncludeDataSources(true, TestProvName.AllOracle12)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.AreEqual(-10, db.Select(() => Sql.TryConvertOrDefault("burp", (int?)-10)));
+			}
+		}
+
+		#endregion
 	}
 }

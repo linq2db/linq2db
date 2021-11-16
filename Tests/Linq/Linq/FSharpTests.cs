@@ -1,6 +1,4 @@
-﻿using System;
-
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
 namespace Tests.Linq
 {
@@ -25,7 +23,7 @@ namespace Tests.Linq
 		public void LoadSingleWithOptions([DataSources] string context)
 		{
 
-			var ms = Tests.FSharp.MappingSchema.Initialize();
+			var ms = FSharp.MappingSchema.Initialize();
 
 			using (var db = GetDataContext(context, ms))
 				FSharp.WhereTest.LoadSingleWithOptions(db);
@@ -80,7 +78,7 @@ namespace Tests.Linq
 				FSharp.InsertTest.Insert1(db);
 		}
 
-		[Test, Explicit("It breaks following tests.")]
+		[Test]
 		public void Insert2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -93,6 +91,20 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				FSharp.SelectTest.SelectLeftJoin(db);
+		}
+
+		[Test]
+		public void TestIssue2678_SelectObject([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+				FSharp.Issue2678.InsertAndSelectObject(db);
+		}
+
+		[Test]
+		public void TestIssue2678_SelectRecord([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+				FSharp.Issue2678.InsertAndSelectRecord(db);
 		}
 	}
 }

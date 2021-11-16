@@ -1,11 +1,12 @@
-using System;
+﻿using System;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace LinqToDB.AspNet
 {
+	using System.Reflection;
 	using Configuration;
 	using Data;
+	using Microsoft.Extensions.DependencyInjection.Extensions;
 
 	public static class ServiceConfigurationExtensions
 	{
@@ -33,7 +34,7 @@ namespace LinqToDB.AspNet
 		///     </para>
 		/// </param>
 		/// <param name="lifetime"> The lifetime with which to register the Context service in the container.
-		/// For one connection pre request use <see cref="ServiceLifetime.Scoped"/> (the default).
+		/// For one connection per request use <see cref="ServiceLifetime.Scoped"/> (the default).
 		/// </param>
 		/// <remarks>
 		/// 	<para>
@@ -90,7 +91,7 @@ namespace LinqToDB.AspNet
 		/// </param>
 		/// <param name="lifetime">
 		/// 	The lifetime with which to register the Context service in the container.
-		/// 	For one connection pre request use <see cref="ServiceLifetime.Scoped"/> (the default).
+		/// 	For one connection per request use <see cref="ServiceLifetime.Scoped"/> (the default).
 		/// </param>
 		/// <remarks>
 		/// 	This method should be used when a custom context is required or
@@ -102,7 +103,7 @@ namespace LinqToDB.AspNet
 		public static IServiceCollection AddLinqToDbContext<TContext>(
 			this IServiceCollection serviceCollection,
 			Action<IServiceProvider, LinqToDbConnectionOptionsBuilder> configure,
-			ServiceLifetime lifetime = ServiceLifetime.Scoped) where TContext : IDataContext
+			ServiceLifetime lifetime  = ServiceLifetime.Scoped) where TContext : IDataContext
 		{
 			return AddLinqToDbContext<TContext, TContext>(serviceCollection, configure, lifetime);
 		}
@@ -145,7 +146,7 @@ namespace LinqToDB.AspNet
 		/// </param>
 		/// <param name="lifetime">
 		/// 	The lifetime with which to register the Context service in the container.
-		/// 	For one connection pre request use <see cref="ServiceLifetime.Scoped"/> (the default).
+		/// 	For one connection per request use <see cref="ServiceLifetime.Scoped"/> (the default).
 		/// </param>
 		/// <remarks>
 		/// 	This method should be used when a custom context is required or
@@ -157,9 +158,9 @@ namespace LinqToDB.AspNet
 		public static IServiceCollection AddLinqToDbContext<TContext, TContextImplementation>(
 			this IServiceCollection serviceCollection,
 			Action<IServiceProvider, LinqToDbConnectionOptionsBuilder> configure,
-			ServiceLifetime lifetime = ServiceLifetime.Scoped) where TContextImplementation : TContext, IDataContext
+			ServiceLifetime lifetime  = ServiceLifetime.Scoped) where TContextImplementation : TContext, IDataContext
 		{
-			CheckContextConstructor<TContextImplementation>();
+			var hasTypedConstructor = HasTypedContextConstructor<TContextImplementation>();
 			serviceCollection.TryAdd(new ServiceDescriptor(typeof(TContext), typeof(TContextImplementation), lifetime));
 			serviceCollection.TryAdd(new ServiceDescriptor(typeof(LinqToDbConnectionOptions<TContextImplementation>),
 				provider =>
@@ -169,21 +170,31 @@ namespace LinqToDB.AspNet
 					return builder.Build<TContextImplementation>();
 				},
 				lifetime));
-			serviceCollection.TryAdd(new ServiceDescriptor(typeof(LinqToDbConnectionOptions),
-				provider => provider.GetService(typeof(LinqToDbConnectionOptions<TContextImplementation>)), lifetime));
+
+			if (!hasTypedConstructor)
+				serviceCollection.TryAdd(new ServiceDescriptor(typeof(LinqToDbConnectionOptions),
+					provider => provider.GetService(typeof(LinqToDbConnectionOptions<TContextImplementation>)), lifetime));
+
 			return serviceCollection;
 		}
 
-		private static void CheckContextConstructor<TContext>()
+		private static bool HasTypedContextConstructor<TContext>()
 		{
-			var constructorInfo =
-				typeof(TContext).GetConstructor(new[] {typeof(LinqToDbConnectionOptions<TContext>)}) ??
-				typeof(TContext).GetConstructor(new[] {typeof(LinqToDbConnectionOptions)});
-			if (constructorInfo == null)
-			{
+			var typedConstructorInfo   = typeof(TContext).GetConstructor(
+				BindingFlags.Public | BindingFlags.Instance | BindingFlags.ExactBinding,
+				null,
+				new[] {typeof(LinqToDbConnectionOptions<TContext>)},
+				null);
+
+			var untypedConstructorInfo = typedConstructorInfo == null
+				? typeof(TContext).GetConstructor(new[] {typeof(LinqToDbConnectionOptions)})
+				: null;
+
+			if (typedConstructorInfo == null && untypedConstructorInfo == null)
 				throw new ArgumentException("Missing constructor accepting 'LinqToDbContextOptions' on type "
 				                            + typeof(TContext).Name);
-			}
+
+			return typedConstructorInfo != null;
 		}
 	}
 }

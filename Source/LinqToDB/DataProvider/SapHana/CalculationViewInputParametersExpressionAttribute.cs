@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.SapHana
 {
 	using System.Globalization;
 	using System.Linq.Expressions;
-	using System.Reflection;
+	using LinqToDB.Expressions;
 	using LinqToDB.SqlProvider;
 	using SqlQuery;
 
@@ -35,24 +35,15 @@ namespace LinqToDB.DataProvider.SapHana
 			return value.ToString();
 		}
 
-		public override void SetTable(ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MemberInfo member, IEnumerable<Expression> expArgs, IEnumerable<ISqlExpression> sqlArgs)
+		public override void SetTable<TContext>(TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 		{
-			var method = member as MethodInfo;
-
-			if (method == null)
-				throw new ArgumentNullException("member");
-
-			var paramsList = method.GetParameters().ToList();
-			var valuesList = expArgs.Cast<ConstantExpression>().ToList();
-
-			if (paramsList.Count != valuesList.Count)
-				throw new TargetParameterCountException("Invalid number of parameters");
+			var paramsList = methodCall.Method.GetParameters();
 
 			var sqlValues = new List<ISqlExpression>();
 
-			for(var i = 0; i < paramsList.Count; i++)
+			for(var i = 0; i < paramsList.Length; i++)
 			{
-				var val = valuesList[i].Value;
+				var val = methodCall.Arguments[i].EvaluateExpression();
 				if (val == null)
 					continue;
 				var p = paramsList[i];
@@ -65,7 +56,7 @@ namespace LinqToDB.DataProvider.SapHana
 			arg[0] = new SqlExpression(
 				string.Join(", ",
 					Enumerable.Range(0, sqlValues.Count)
-						.Select(x => "{" + x + "}")),
+						.Select(static x => "{" + x + "}")),
 				sqlValues.ToArray());
 
 			table.SqlTableType = SqlTableType.Expression;

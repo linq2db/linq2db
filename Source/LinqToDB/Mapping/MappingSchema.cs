@@ -3,14 +3,12 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.Linq;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading;
-using System.Timers;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -25,6 +23,7 @@ namespace LinqToDB.Mapping
 	using SqlProvider;
 	using SqlQuery;
 	using Common.Internal.Cache;
+	using LinqToDB.Common.Internal;
 
 	/// <summary>
 	/// Mapping schema.
@@ -32,6 +31,20 @@ namespace LinqToDB.Mapping
 	[PublicAPI]
 	public class MappingSchema
 	{
+		private static readonly MemoryCache<(string baseSchemaId, string addedSchemaId)> _combinedSchemasCache = new (new ());
+
+		internal static MappingSchema CombineSchemas(MappingSchema mappingSchema1, MappingSchema mappingSchema2)
+		{
+			return _combinedSchemasCache.GetOrCreate(
+				(mappingSchema1.ConfigurationID, mappingSchema2.ConfigurationID),
+				new { BaseSchema = mappingSchema1, AddedSchema = mappingSchema2 },
+				static (entry, context) =>
+				{
+					entry.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+					return new MappingSchema(context.AddedSchema, context.BaseSchema);
+				});
+		}
+
 		#region Init
 
 		/// <summary>
@@ -78,7 +91,11 @@ namespace LinqToDB.Mapping
 		/// mappings for same type.</remarks>
 		public MappingSchema(string? configuration, params MappingSchema[]? schemas)
 		{
-			if (configuration.IsNullOrEmpty() && (schemas == null || schemas.Length == 0))
+			_reduceDefaultValueTransformer = TransformVisitor<MappingSchema>.Create(this, static (ctx, e) => ctx.ReduceDefaultValueTransformer(e));
+
+			// always generate "unique" configuration name, if name not provided to avoid duplicate names
+			// e.g. see https://github.com/linq2db/linq2db/issues/3251
+			if (configuration.IsNullOrEmpty())
 				configuration = "auto_" + Interlocked.Increment(ref _configurationCounter);
 
 			var schemaInfo = new MappingSchemaInfo(configuration);
@@ -122,8 +139,8 @@ namespace LinqToDB.Mapping
 						baseConverters[bc] = j++;
 				}
 
-				Schemas             = schemaList.OrderBy(_ => _.Value).Select(_ => _.Key).ToArray();
-				ValueToSqlConverter = new ValueToSqlConverter(baseConverters.OrderBy(_ => _.Value).Select(_ => _.Key).ToArray());
+				Schemas             = schemaList.OrderBy(static _ => _.Value).Select(static _ => _.Key).ToArray();
+				ValueToSqlConverter = new ValueToSqlConverter(baseConverters.OrderBy(static _ => _.Value).Select(static _ => _.Key).ToArray());
 			}
 		}
 
@@ -179,12 +196,11 @@ namespace LinqToDB.Mapping
 
 				if (mapValues != null)
 				{
-					var fields =
-						from f in mapValues
-						where f.MapValues.Any(a => a.Value == null)
-						select f.OrigValue;
+					object? value = null;
 
-					var value = fields.FirstOrDefault();
+					foreach (var f in mapValues)
+						if (f.MapValues.Any(static a => a.Value == null))
+							value = f.OrigValue;
 
 					if (value != null)
 					{
@@ -232,12 +248,11 @@ namespace LinqToDB.Mapping
 
 				if (mapValues != null)
 				{
-					var fields =
-						from f in mapValues
-						where f.MapValues.Any(a => a.Value == null)
-						select f.OrigValue;
+					object? value = null;
 
-					var value = fields.FirstOrDefault();
+					foreach (var f in mapValues)
+						if (f.MapValues.Any(static a => a.Value == null))
+							value = f.OrigValue;
 
 					if (value != null)
 					{
@@ -247,7 +262,7 @@ namespace LinqToDB.Mapping
 				}
 			}
 
-			return type.IsClass || type.IsNullable();
+			return type.IsNullableType();
 		}
 
 		/// <summary>
@@ -280,7 +295,11 @@ namespace LinqToDB.Mapping
 		/// <returns>Returns <c>true</c> if new generic type conversions could have added to mapping schema.</returns>
 		public bool InitGenericConvertProvider(params Type[] types)
 		{
-			return Schemas.Aggregate(false, (cur, info) => cur || info.InitGenericConvertProvider(types, this));
+			foreach (var schema in Schemas)
+				if (schema.InitGenericConvertProvider(types, this))
+					return true;
+
+			return false;
 		}
 
 		/// <summary>
@@ -419,7 +438,7 @@ namespace LinqToDB.Mapping
 			if (li.Delegate == null)
 			{
 				var rex = (Expression<Func<TFrom,TTo>>)ReduceDefaultValue(li.CheckNullLambda);
-				var l   = rex.Compile();
+				var l   = rex.CompileExpression();
 
 				Schemas[0].SetConvertInfo(from, to, new ConvertInfo.LambdaInfo(li.CheckNullLambda, null, l, li.IsSchemaSpecific));
 
@@ -450,7 +469,7 @@ namespace LinqToDB.Mapping
 			if (toType   == null) throw new ArgumentNullException(nameof(toType));
 			if (expr     == null) throw new ArgumentNullException(nameof(expr));
 
-			var ex = addNullCheck && expr.Find(Converter.IsDefaultValuePlaceHolder) == null?
+			var ex = addNullCheck && Converter.IsDefaultValuePlaceHolderVisitor.Find(expr) == null?
 				AddNullCheck(expr) :
 				expr;
 
@@ -476,7 +495,7 @@ namespace LinqToDB.Mapping
 		{
 			if (expr == null) throw new ArgumentNullException(nameof(expr));
 
-			var ex = addNullCheck && expr.Find(Converter.IsDefaultValuePlaceHolder) == null?
+			var ex = addNullCheck && Converter.IsDefaultValuePlaceHolderVisitor.Find(expr) == null?
 				AddNullCheck(expr) :
 				expr;
 
@@ -500,7 +519,7 @@ namespace LinqToDB.Mapping
 		{
 			if (expr == null) throw new ArgumentNullException(nameof(expr));
 
-			var ex = addNullCheck && expr.Find(Converter.IsDefaultValuePlaceHolder) == null?
+			var ex = addNullCheck && Converter.IsDefaultValuePlaceHolderVisitor.Find(expr) == null?
 				AddNullCheck(expr) :
 				expr;
 
@@ -618,41 +637,72 @@ namespace LinqToDB.Mapping
 			return expr;
 		}
 
-		static bool IsSimple (ref DbDataType type) 
-			=> type.DataType == DataType.Undefined && string.IsNullOrEmpty(type.DbType) && type.Length == null;
+		public Expression GenerateConvertedValueExpression(object? value, Type type)
+		{
+			if (value == null)
+				return new DefaultValueExpression(this, type);
 
-		static void Simplify(ref DbDataType type)
+			var fromType  = value.GetType();
+			var valueExpr = (Expression)Expression.Constant(value);
+			if (fromType == type)
+				return valueExpr;
+
+			var convertLambda = GenerateSafeConvert(fromType, type);
+
+			valueExpr = InternalExtensions.ApplyLambdaToExpression(convertLambda, valueExpr);
+			return valueExpr;
+		}
+
+
+		static bool Simplify(ref DbDataType type)
 		{
 			if (!string.IsNullOrEmpty(type.DbType))
+			{
 				type = type.WithDbType(null);
+				return true;
+			}
+
+			if (type.Precision != null || type.Scale != null)
+			{
+				type = type.WithScale(null).WithPrecision(null);
+				return true;
+			}
+			
+			if (type.Length != null)
+			{
+				type = type.WithLength(null);
+				return true;
+			}
 
 			if (type.DataType != DataType.Undefined)
+			{
 				type = type.WithDataType(DataType.Undefined);
+				return true;
+			}
 
-			if (type.Length != null)
-				type = type.WithLength(null);
+			return false;
 		}
 
 		internal ConvertInfo.LambdaInfo? GetConverter(DbDataType from, DbDataType to, bool create)
 		{
+			var currentFrom = from;
 			do
 			{
-				for (var i = 0; i < Schemas.Length; i++)
+				var currentTo = to;
+				do
 				{
-					var info = Schemas[i];
-					var li   = info.GetConvertInfo(from, to);
+					for (var i = 0; i < Schemas.Length; i++)
+					{
+						var info = Schemas[i];
+						var li   = info.GetConvertInfo(currentFrom, currentTo);
 
-					if (li != null && (i == 0 || !li.IsSchemaSpecific))
-						return i == 0 ? li : new ConvertInfo.LambdaInfo(li.CheckNullLambda, li.Lambda, null, false);
-				}
+						if (li != null && (i == 0 || !li.IsSchemaSpecific))
+							return i == 0 ? li : new ConvertInfo.LambdaInfo(li.CheckNullLambda, li.Lambda, null, false);
+					}
 
-				if (!IsSimple(ref from))
-					Simplify(ref from);
-				else if (!IsSimple(ref to))
-					Simplify(ref to);
-				else break;
+				} while (Simplify(ref currentTo));
 
-			} while (true);
+			} while (Simplify(ref currentFrom));
 
 			var isFromGeneric = from.SystemType.IsGenericType && !from.SystemType.IsGenericTypeDefinition;
 			var isToGeneric   = to.SystemType.  IsGenericType && !to.SystemType.  IsGenericTypeDefinition;
@@ -662,8 +712,9 @@ namespace LinqToDB.Mapping
 				var fromGenericArgs = isFromGeneric ? from.SystemType.GetGenericArguments() : Array<Type>.Empty;
 				var toGenericArgs   = isToGeneric   ? to.SystemType.  GetGenericArguments() : Array<Type>.Empty;
 
-				var args = fromGenericArgs.SequenceEqual(toGenericArgs) ?
-					fromGenericArgs : fromGenericArgs.Concat(toGenericArgs).ToArray();
+				var args = fromGenericArgs.SequenceEqual(toGenericArgs)
+					? fromGenericArgs
+					: fromGenericArgs.Concat(toGenericArgs).ToArray();
 
 				if (InitGenericConvertProvider(args))
 					return GetConverter(from, to, create);
@@ -692,7 +743,7 @@ namespace LinqToDB.Mapping
 
 						ss = li.IsSchemaSpecific;
 						ex = Expression.Lambda(
-							b.Transform(e => e == ps[0] ? Expression.Convert(p, ufrom) : e),
+							b.Transform((ufrom, p, ps), static (context, e) => e == context.ps[0] ? Expression.Convert(context.p, context.ufrom) : e),
 							p);
 					}
 					else if (to.SystemType != uto)
@@ -711,7 +762,7 @@ namespace LinqToDB.Mapping
 							ss = li.IsSchemaSpecific;
 							ex = Expression.Lambda(
 								Expression.Convert(
-									b.Transform(e => e == ps[0] ? Expression.Convert(p, ufrom) : e),
+									b.Transform((ufrom, p, ps), static (context, e) => e == context.ps[0] ? Expression.Convert(context.p, context.ufrom) : e),
 									to.SystemType),
 								p);
 						}
@@ -757,10 +808,15 @@ namespace LinqToDB.Mapping
 
 		Expression ReduceDefaultValue(Expression expr)
 		{
-			return expr.Transform(e =>
-				Converter.IsDefaultValuePlaceHolder(e) ?
-					Expression.Constant(GetDefaultValue(e.Type), e.Type) :
-					e);
+			return _reduceDefaultValueTransformer.Transform(expr);
+		}
+
+		private readonly TransformVisitor<MappingSchema> _reduceDefaultValueTransformer;
+		private Expression ReduceDefaultValueTransformer(Expression e)
+		{
+			return Converter.IsDefaultValuePlaceHolder(e) ?
+				Expression.Constant(GetDefaultValue(e.Type), e.Type) :
+				e;
 		}
 
 		/// <summary>
@@ -842,28 +898,33 @@ namespace LinqToDB.Mapping
 
 		#region MetadataReader
 
-		readonly object _metadataReadersSyncRoot = new object();
+		readonly object _metadataReadersSyncRoot = new ();
 
 		void InitMetadataReaders()
 		{
-			var list = new List   <IMetadataReader>(Schemas.Length);
-			var hash = new HashSet<IMetadataReader>();
-
-			for (var i = 0; i < Schemas.Length; i++)
+			if (Schemas.Length > 0)
 			{
-				var s = Schemas[i];
-				if (s.MetadataReader != null && hash.Add(s.MetadataReader))
-					list.Add(s.MetadataReader);
-			}
+				var list = new List   <IMetadataReader>(Schemas.Length);
+				var hash = new HashSet<IMetadataReader>();
 
-			_metadataReaders = list.ToArray();
+				for (var i = 0; i < Schemas.Length; i++)
+				{
+					var s = Schemas[i];
+					if (s.MetadataReader != null && hash.Add(s.MetadataReader))
+						list.Add(s.MetadataReader);
+				}
+
+				_metadataReaders = list.ToArray();
+			}
+			else
+				_metadataReaders = Array<IMetadataReader>.Empty;
 		}
 
 #if NETFRAMEWORK
 		/// <summary>
 		/// Gets or sets metadata attributes provider for current schema.
 		/// Metadata providers, shipped with LINQ to DB:
-		/// - <see cref="LinqToDB.Metadata.MetadataReader"/> - aggregation metadata provider over collection of other providers;
+		/// - <see cref="Metadata.MetadataReader"/> - aggregation metadata provider over collection of other providers;
 		/// - <see cref="AttributeReader"/> - .NET attributes provider;
 		/// - <see cref="FluentMetadataReader"/> - fluent mappings metadata provider;
 		/// - <see cref="SystemDataLinqAttributeReader"/> - metadata provider that converts <see cref="System.Data.Linq.Mapping"/> attributes to LINQ to DB mapping attributes;
@@ -874,7 +935,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets or sets metadata attributes provider for current schema.
 		/// Metadata providers, shipped with LINQ to DB:
-		/// - <see cref="LinqToDB.Metadata.MetadataReader"/> - aggregation metadata provider over collection of other providers;
+		/// - <see cref="Metadata.MetadataReader"/> - aggregation metadata provider over collection of other providers;
 		/// - <see cref="AttributeReader"/> - .NET attributes provider;
 		/// - <see cref="FluentMetadataReader"/> - fluent mappings metadata provider;
 		/// - <see cref="SystemDataSqlServerAttributeReader"/> - metadata provider that converts Microsoft.SqlServer.Server attributes to LINQ to DB mapping attributes;
@@ -883,7 +944,7 @@ namespace LinqToDB.Mapping
 #endif
 		public IMetadataReader? MetadataReader
 		{
-			get { return Schemas[0].MetadataReader; }
+			get => Schemas[0].MetadataReader;
 			set
 			{
 				lock (_metadataReadersSyncRoot)
@@ -937,12 +998,32 @@ namespace LinqToDB.Mapping
 		public T[] GetAttributes<T>(Type type, bool inherit = true)
 			where T : Attribute
 		{
-			var q =
-				from mr in MetadataReaders
-				from a in mr.GetAttributes<T>(type, inherit)
-				select a;
+			if (MetadataReaders.Length == 0)
+				return Array<T>.Empty;
+			if (MetadataReaders.Length == 1)
+				return MetadataReaders[0].GetAttributes<T>(type, inherit);
 
-			return q.ToArray();
+			var length = 0;
+			var attrs = new T[MetadataReaders.Length][];
+
+			for (var i = 0; i < MetadataReaders.Length; i++)
+			{
+				attrs[i] = MetadataReaders[i].GetAttributes<T>(type, inherit);
+				length += attrs[i].Length;
+			}
+
+			var attributes = new T[length];
+			length = 0;
+			for (var i = 0; i < attrs.Length; i++)
+			{
+				if (attrs[i].Length > 0)
+				{
+					Array.Copy(attrs[i], 0, attributes, length, attrs[i].Length);
+					length += attrs[i].Length;
+				}
+			}
+
+			return attributes;
 		}
 
 		/// <summary>
@@ -956,12 +1037,32 @@ namespace LinqToDB.Mapping
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute
 		{
-			var q =
-				from mr in MetadataReaders
-				from a in mr.GetAttributes<T>(type, memberInfo, inherit)
-				select a;
+			if (MetadataReaders.Length == 0)
+				return Array<T>.Empty;
+			if (MetadataReaders.Length == 1)
+				return MetadataReaders[0].GetAttributes<T>(type, memberInfo, inherit);
 
-			return q.ToArray();
+			var attrs = new T[MetadataReaders.Length][];
+			var length = 0;
+
+			for (var i = 0; i < MetadataReaders.Length; i++)
+			{
+				attrs[i] = MetadataReaders[i].GetAttributes<T>(type, memberInfo, inherit);
+				length += attrs[i].Length;
+			}
+
+			var attributes = new T[length];
+			length = 0;
+			for (var i = 0; i < attrs.Length; i++)
+			{
+				if (attrs[i].Length > 0)
+				{
+					Array.Copy(attrs[i], 0, attributes, length, attrs[i].Length);
+					length += attrs[i].Length;
+				}
+			}
+
+			return attributes;
 		}
 
 		/// <summary>
@@ -1019,7 +1120,11 @@ namespace LinqToDB.Mapping
 					return list.ToArray();
 			}
 
-			return list.Concat(attrs.Where(a => string.IsNullOrEmpty(configGetter(a)))).ToArray();
+			foreach (var attribute in attrs)
+				if (string.IsNullOrEmpty(configGetter(attribute)))
+					list.Add(attribute);
+
+			return list.ToArray();
 		}
 
 		/// <summary>
@@ -1049,7 +1154,11 @@ namespace LinqToDB.Mapping
 					return list.ToArray();
 			}
 
-			return list.Concat(attrs.Where(a => string.IsNullOrEmpty(configGetter(a)))).ToArray();
+			foreach (var attribute in attrs)
+				if (string.IsNullOrEmpty(configGetter(attribute)))
+					list.Add(attribute);
+
+			return list.ToArray();
 		}
 
 		/// <summary>
@@ -1091,7 +1200,18 @@ namespace LinqToDB.Mapping
 		/// <param name="type">The type.</param>
 		/// <returns>All dynamic columns defined on given type.</returns>
 		public MemberInfo[] GetDynamicColumns(Type type)
-			=> MetadataReaders.SelectMany(mr => mr.GetDynamicColumns(type)).ToArray();
+		{
+			List<MemberInfo>? result = null;
+
+			foreach (var reader in MetadataReaders)
+			{
+				var columns = reader.GetDynamicColumns(type);
+				if (columns.Length > 0)
+					(result ??= new()).AddRange(columns);
+			}
+
+			return result == null ? Array<MemberInfo>.Empty : result.ToArray();
+		}
 
 		/// <summary>
 		/// Gets fluent mapping builder for current schema.
@@ -1145,6 +1265,8 @@ namespace LinqToDB.Mapping
 
 		internal MappingSchema(MappingSchemaInfo mappingSchemaInfo)
 		{
+			_reduceDefaultValueTransformer = TransformVisitor<MappingSchema>.Create(this, static (ctx, e) => ctx.ReduceDefaultValueTransformer(e));
+
 			Schemas = new[] { mappingSchemaInfo };
 
 			ValueToSqlConverter = new ValueToSqlConverter();
@@ -1203,7 +1325,7 @@ namespace LinqToDB.Mapping
 
 				AddScalarType(typeof(BitArray),        DataType.BitArray);
 
-				SetConverter<DBNull, object?>(_ => null);
+				SetConverter<DBNull, object?>(static _ => null);
 
 				ValueToSqlConverter.SetDefaults();
 			}
@@ -1227,7 +1349,7 @@ namespace LinqToDB.Mapping
 					return o.Value;
 			}
 
-			var attr = GetAttribute<ScalarTypeAttribute>(type, a => a.Configuration);
+			var attr = GetAttribute<ScalarTypeAttribute>(type, static a => a.Configuration);
 			var ret  = false;
 
 			if (attr != null)
@@ -1369,14 +1491,11 @@ namespace LinqToDB.Mapping
 
 			if (underlyingType.IsEnum)
 			{
-				var attrs =
-				(
-					from f in underlyingType.GetFields()
-					where (f.Attributes & EnumField) == EnumField
-					from attr in GetAttributes<MapValueAttribute>(underlyingType, f, a => a.Configuration).Select(attr => attr)
-					orderby attr.IsDefault ? 0 : 1
-					select attr
-				).ToList();
+				var attrs = new List<MapValueAttribute>();
+
+				foreach (var f in underlyingType.GetFields())
+					if ((f.Attributes & EnumField) == EnumField)
+						attrs.AddRange(GetAttributes<MapValueAttribute>(underlyingType, f, static a => a.Configuration));
 
 				if (attrs.Count == 0)
 				{
@@ -1387,7 +1506,7 @@ namespace LinqToDB.Mapping
 					var   minLen    = 0;
 					Type? valueType = null;
 
-					foreach (var attr in attrs)
+					foreach (var attr in attrs.OrderBy(static a => a.IsDefault ? 0 : 1))
 					{
 						if (attr.Value == null)
 						{
@@ -1450,7 +1569,7 @@ namespace LinqToDB.Mapping
 		/// <returns>Mapping values for enum type and <c>null</c> for non-enum types.</returns>
 		public virtual MapValue[]? GetMapValues(Type type)
 		{
-			if (type == null) throw new ArgumentNullException("type");
+			if (type == null) throw new ArgumentNullException(nameof(type));
 
 			if (_mapValues == null)
 				_mapValues = new ConcurrentDictionary<Type,MapValue[]?>();
@@ -1462,16 +1581,17 @@ namespace LinqToDB.Mapping
 
 			if (underlyingType.IsEnum)
 			{
-				var fields =
-				(
-					from f in underlyingType.GetFields()
-					where (f.Attributes & EnumField) == EnumField
-					let attrs = GetAttributes<MapValueAttribute>(underlyingType, f, a => a.Configuration)
-					select new MapValue(Enum.Parse(underlyingType, f.Name, false), attrs)
-				).ToArray();
+				var fields = new List<MapValue>();
 
-				if (fields.Any(f => f.MapValues.Length > 0))
-					mapValues = fields;
+				foreach (var f in underlyingType.GetFields())
+					if ((f.Attributes & EnumField) == EnumField)
+					{
+						var attrs = GetAttributes<MapValueAttribute>(underlyingType, f, static a => a.Configuration);
+						fields.Add(new MapValue(Enum.Parse(underlyingType, f.Name, false), attrs));
+					}
+
+				if (fields.Any(static f => f.MapValues.Length > 0))
+					mapValues = fields.ToArray();
 			}
 
 			_mapValues[type] = mapValues;
@@ -1494,8 +1614,8 @@ namespace LinqToDB.Mapping
 				if (Schemas[0].ColumnNameComparer == null)
 				{
 					Schemas[0].ColumnNameComparer = Schemas
-						.Select        (s => s.ColumnNameComparer)
-						.FirstOrDefault(s => s != null)
+						.Select        (static s => s.ColumnNameComparer)
+						.FirstOrDefault(static s => s != null)
 						??
 						StringComparer.Ordinal;
 				}
@@ -1516,7 +1636,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public Action<MappingSchema, IEntityChangeDescriptor>? EntityDescriptorCreatedCallback { get; set; }
 
-		internal static MemoryCache EntityDescriptorsCache { get; } = new MemoryCache(new MemoryCacheOptions());
+		internal static MemoryCache<(Type entityType, string schemaId)> EntityDescriptorsCache { get; } = new (new ());
 
 		/// <summary>
 		/// Returns mapped entity descriptor.
@@ -1525,14 +1645,13 @@ namespace LinqToDB.Mapping
 		/// <returns>Mapping descriptor.</returns>
 		public EntityDescriptor GetEntityDescriptor(Type type)
 		{
-			var key = new { Type = type, ConfigurationID };
 			var ed = EntityDescriptorsCache.GetOrCreate(
-				key,
+				(entityType: type, ConfigurationID),
 				this,
-				static (o, key, context) =>
+				static (o, context) =>
 				{
 					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
-					var edNew = new EntityDescriptor(context, key.Type);
+					var edNew = new EntityDescriptor(context, o.Key.entityType);
 					context.EntityDescriptorCreatedCallback?.Invoke(context, edNew);
 					return edNew;
 				});
@@ -1548,7 +1667,7 @@ namespace LinqToDB.Mapping
 		/// </returns>
 		public Type[] GetDefinedTypes()
 		{
-			return Schemas.SelectMany(s => s.GetRegisteredTypes()).ToArray();
+			return Schemas.SelectMany(static s => s.GetRegisteredTypes()).ToArray();
 		}
 
 		/// <summary>
@@ -1561,8 +1680,7 @@ namespace LinqToDB.Mapping
 
 		internal void ResetEntityDescriptor(Type type)
 		{
-			var key = new { Type = type, ConfigurationID };
-			EntityDescriptorsCache.Remove(key);
+			EntityDescriptorsCache.Remove((type, ConfigurationID));
 		}
 
 		#endregion
@@ -1600,14 +1718,19 @@ namespace LinqToDB.Mapping
 
 		internal IEnumerable<T> SortByConfiguration<T>(Func<T, string?> configGetter, IEnumerable<T> values)
 		{
-			return values
-				.Select(val => new
-				{
-					Value = val,
-					Order = Array.IndexOf(ConfigurationList, configGetter(val)) == -1 ? ConfigurationList.Length : Array.IndexOf(ConfigurationList, configGetter(val))
-				})
-				.OrderBy(_ => _.Order)
-				.Select(_ => _.Value);
+			var orderedValues = new List<Tuple<T, int>>();
+
+			foreach (var value in values)
+			{
+				var config = configGetter(value);
+				var index  = Array.IndexOf(ConfigurationList, config);
+				var order  = index == -1 ? ConfigurationList.Length : index;
+				orderedValues.Add(Tuple.Create(value, order));
+			}
+
+			return orderedValues
+				.OrderBy(static _ => _.Item2)
+				.Select (static _ => _.Item1);
 		}
 	}
 }

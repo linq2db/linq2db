@@ -39,11 +39,16 @@ namespace LinqToDB.Linq.Builder
 		/// <summary>
 		/// Static value for indicating successful test.
 		/// </summary>
-		public static IsExpressionResult True  = new IsExpressionResult(true);
+		public static readonly IsExpressionResult True  = new (true);
 
 		/// <summary>
 		/// Static value for indicating unsuccessful test.
 		/// </summary>
-		public static IsExpressionResult False = new IsExpressionResult(false);
+		public static readonly IsExpressionResult False = new (false);
+
+		/// <summary>
+		/// Returns cached instance of <see cref="IsExpressionResult"/> without expression and context.
+		/// </summary>
+		public static IsExpressionResult GetResult(bool result) => result ? True : False;
 	}
 }

@@ -241,5 +241,33 @@ CREATE COLUMN TABLE ""AllTypes""
 				}
 			}
 		}
+
+		protected void ResetTestSequence(string context)
+		{
+			var provider = GetProviderName(context, out var _);
+
+			var lastValue = 0;
+
+			string[]? sql = CustomizationSupport.Interceptor.InterceptResetTestSequence(context, lastValue);
+
+			if (sql == null)
+			{
+				switch (provider)
+				{
+					case string prov when prov.StartsWith("PostgreSQL"):
+						sql = new[] { $"ALTER SEQUENCE sequencetestseq RESTART WITH {lastValue + 1}" };
+						break;
+				}
+			}
+
+			if (sql != null)
+			{
+				using (var db = new DataConnection(provider))
+				{
+					foreach (var query in sql)
+						db.Execute(query);
+				}
+			}
+		}
 	}
 }

@@ -14,7 +14,7 @@ namespace Tests.OrmBattle.Helper
                 current = ((UnaryExpression)current).Operand;
 
             if (current.NodeType != ExpressionType.MemberAccess)
-                throw new Exception("Expression must be a member access");
+                throw new InvalidOperationException("Expression must be a member access");
 
             return (MemberExpression) current;
         }

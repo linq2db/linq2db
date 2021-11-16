@@ -37,8 +37,8 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(1, query(db, 1).ToList().Count());
-				Assert.AreEqual(2, query(db, 2).ToList().Count());
+				Assert.AreEqual(1, query(db, 1).ToList().Count);
+				Assert.AreEqual(2, query(db, 2).ToList().Count);
 			}
 		}
 
@@ -50,8 +50,8 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(1, query(db, 1).ToList().Count());
-				Assert.AreEqual(2, query(db, 2).ToList().Count());
+				Assert.AreEqual(1, query(db, 1).ToList().Count);
+				Assert.AreEqual(2, query(db, 2).ToList().Count);
 			}
 		}
 
@@ -63,8 +63,8 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(1, (await query(db, 1)).Count());
-				Assert.AreEqual(2, (await query(db, 2)).Count());
+				Assert.AreEqual(1, (await query(db, 1)).Count);
+				Assert.AreEqual(2, (await query(db, 2)).Count);
 			}
 		}
 
@@ -75,7 +75,7 @@ namespace Tests.Linq
 				db.GetTable<Child>().Where(c => n.Contains(c.ParentID)));
 
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(3, query(db, new[] { 1, 2 }).ToList().Count());
+				Assert.AreEqual(3, query(db, new[] { 1, 2 }).ToList().Count);
 		}
 
 		[Test]
@@ -86,8 +86,8 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(1, query(db, new object[] { 1, 1     }).ToList().Count());
-				Assert.AreEqual(1, query(db, new object?[] { 2, null }).ToList().Count());
+				Assert.AreEqual(1, query(db, new object[] { 1, 1     }).ToList().Count);
+				Assert.AreEqual(1, query(db, new object?[] { 2, null }).ToList().Count);
 			}
 		}
 
@@ -99,7 +99,7 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
-				var _ = query(db).ToList().Count();
+				var _ = query(db).ToList().Count;
 			}
 		}
 
@@ -110,7 +110,7 @@ namespace Tests.Linq
 				db.GetTable<Child>());
 
 			using (var db = GetDataContext(context))
-				query(db).ToList().Count();
+				query(db).ToList();
 		}
 
 		[Test, Order(100)]
@@ -274,7 +274,7 @@ namespace Tests.Linq
 				});
 
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(2, query(db, 2).ToList().Count());
+				Assert.AreEqual(2, query(db, 2).ToList().Count);
 		}
 
 		[Test]

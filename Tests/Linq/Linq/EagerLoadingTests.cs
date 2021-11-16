@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Mapping;
@@ -205,11 +206,7 @@ namespace Tests.Linq
 
 				var result = new List<MasterClass>();
 
-#if NET472
-				await foreach (var item in (LinqToDB.Async.IAsyncEnumerable<MasterClass>)query)
-#else
 				await foreach (var item in (IAsyncEnumerable<MasterClass>)query)
-#endif
 					result.Add(item);
 
 				var expected = expectedQuery.ToList();
@@ -1009,7 +1006,77 @@ FROM
 			}
 		}
 
-#region issue 1862
+
+		[Test]
+		public void ProjectionWithoutClass([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = master.Select(x => new
+					{
+						Details = x.Details.Select(d => d.DetailValue)
+					});
+
+				var result = query.Select(m => m.Details).ToList();
+
+				var expectedQuery = masterRecords.Select(x => new
+				{
+					Details = detailRecords.Where(d => d.MasterId == x.Id1).Select(d => d.DetailValue)
+				});
+
+				var expected = expectedQuery.Select(m => m.Details).ToList();
+
+				AreEqual(expected, result);
+			}
+		}
+
+		[Test]
+		public void FirstSingleWithFilter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = master.Select(x => new
+				{
+					x.Id1,
+					Details = x.Details.Select(d => d.DetailValue)
+				});
+
+				FluentActions.Invoking(() => query.FirstOrDefault(x => x.Id1 == 1)).Should().NotThrow();
+				FluentActions.Invoking(() => query.First(x => x.Id1          == 1)).Should().NotThrow();
+				FluentActions.Invoking(() => query.Single(x => x.Id1         == 1)).Should().NotThrow();
+			}
+		}
+
+		[Test]
+		public async Task FirstSingleWithFilterAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = master.Select(x => new
+				{
+					x.Id1,
+					Details = x.Details.Select(d => d.DetailValue)
+				});
+
+				await FluentActions.Awaiting(() => query.FirstOrDefaultAsync(x => x.Id1 == 1)).Should().NotThrowAsync();
+				await FluentActions.Awaiting(() => query.FirstAsync(x => x.Id1          == 1)).Should().NotThrowAsync();
+				await FluentActions.Awaiting(() => query.SingleAsync(x => x.Id1         == 1)).Should().NotThrowAsync();
+			}
+		}
+
+		#region issue 1862
 		[Table]
 		public partial class Blog
 		{
@@ -1345,6 +1412,81 @@ FROM
 				query.ToList();
 			}
 		}
-#endregion
+		#endregion
+
+		#region issue 3128
+
+		[Table]
+		class UserIssue3128
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(UserDetailsIssue3128.UserId), CanBeNull = true)]
+			public UserDetailsIssue3128? Details { get; set; }
+		}
+
+		[Table]
+		class UserDetailsIssue3128
+		{
+			[PrimaryKey] public int UserId { get; set; }
+			[Column] public int Age { get; set; }
+		}
+
+		[Test]
+		public void TableExpressionAfterLoadWithTable([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<UserIssue3128>())
+			using (db.CreateLocalTable<UserDetailsIssue3128>())
+			{
+				db.InsertWithIdentity(new UserIssue3128 { Id = 10 });
+				db.InsertWithIdentity(new UserDetailsIssue3128 { UserId = 10, Age = 18 });
+
+				var result = db.GetTable<UserIssue3128>()
+					.LoadWithAsTable( _ => _.Details)
+					.WithTableExpression($"{{0}} {{1}}")
+					.ToList();
+
+				Assert.AreEqual(result.Count, 1);
+			}
+		}
+
+		[Test]
+		public void TableExpressionFirst([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<UserIssue3128>())
+			using (db.CreateLocalTable<UserDetailsIssue3128>())
+			{
+				db.InsertWithIdentity(new UserIssue3128 { Id = 10 });
+				db.InsertWithIdentity(new UserDetailsIssue3128 { UserId = 10, Age = 18 });
+
+				var result = db.GetTable<UserIssue3128>()
+					.WithTableExpression($"{{0}} {{1}}")
+					.LoadWithAsTable( _ => _.Details)
+					.ToList();
+
+				Assert.AreEqual(result.Count, 1);
+			}
+		}
+
+		[Test]
+		public void WithTableAttributeMethods([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<UserIssue3128>())
+			using (db.CreateLocalTable<UserDetailsIssue3128>())
+			{
+				db.InsertWithIdentity(new UserIssue3128 { Id = 10 });
+				db.InsertWithIdentity(new UserDetailsIssue3128 { UserId = 10, Age = 18 });
+
+				db.Person.Where(p => db.GetTable<UserIssue3128>()
+					.LoadWithAsTable(_ => _.Details)
+					.SchemaName(null).Count() > 0).ToList();
+			}
+		}
+		#endregion
+
 	}
 }

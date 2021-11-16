@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
-
+using LinqToDB.Common;
 using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
@@ -45,7 +45,7 @@ namespace Tests.UserTests
 				predicate = predicate.And(p => p.ParentID <= 4);
 
 				var q = db.Parent.Where(predicate);
-				var e = Parent.Where(predicate.Compile());
+				var e = Parent.Where(predicate.CompileExpression());
 
 				AreEqual(r => new Parent() { ParentID = r.ParentID, Value1 = r.Value1 }, e, q, ComparerBuilder.GetEqualityComparer<Parent>(), src => src.OrderBy(p => p.ParentID));
 			}
@@ -61,7 +61,7 @@ namespace Tests.UserTests
 				predicate = predicate.And(p => p.ParentID <= 4);
 
 				var q = db.Parent.Where(predicate);
-				var e = Parent.Where(predicate.Compile());
+				var e = Parent.Where(predicate.CompileExpression());
 
 				Assert.AreEqual(e, q);
 			}
@@ -77,7 +77,7 @@ namespace Tests.UserTests
 				predicate = predicate.Or(p => p.ParentID <= 4);
 
 				var q = db.Parent.Where(predicate);
-				var e = Parent.Where(predicate.Compile());
+				var e = Parent.Where(predicate.CompileExpression());
 
 				AreEqual(r => new Parent() { ParentID = r.ParentID, Value1 = r.Value1 }, e, q, ComparerBuilder.GetEqualityComparer<Parent>(), src => src.OrderBy(p => p.ParentID));
 			}
@@ -93,7 +93,7 @@ namespace Tests.UserTests
 				predicate = predicate.Or(p => p.ParentID <= 4);
 
 				var q = db.Parent.Where(predicate);
-				var e = Parent.Where(predicate.Compile());
+				var e = Parent.Where(predicate.CompileExpression());
 
 				AreEqual(r => new Parent() { ParentID = r.ParentID, Value1 = r.Value1 }, e, q, ComparerBuilder.GetEqualityComparer<Parent>(), src => src.OrderBy(p => p.ParentID));
 			}

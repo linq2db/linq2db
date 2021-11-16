@@ -8,6 +8,7 @@ namespace LinqToDB.Common
 	using Expressions;
 	using Extensions;
 	using JetBrains.Annotations;
+	using LinqToDB.Common.Internal;
 	using Mapping;
 
 	/// <summary>
@@ -49,7 +50,7 @@ namespace LinqToDB.Common
 		/// <returns>Default value for specific type.</returns>
 		public static object? GetValue(Type type, MappingSchema? mappingSchema = null)
 		{
-			if (type == null) throw new ArgumentNullException("type");
+			if (type == null) throw new ArgumentNullException(nameof(type));
 
 			var ms = mappingSchema ?? MappingSchema.Default;
 
@@ -71,7 +72,7 @@ namespace LinqToDB.Common
 				}
 			}
 
-			if (value == null && !type.IsClass && !type.IsNullable())
+			if (value == null && !type.IsNullableType())
 			{
 				var mi = MemberHelper.MethodOf(() => GetValue<int>());
 
@@ -80,7 +81,7 @@ namespace LinqToDB.Common
 						Expression.Convert(
 							Expression.Call(mi.GetGenericMethodDefinition().MakeGenericMethod(type)),
 							typeof(object)))
-						.Compile()();
+						.CompileExpression()();
 			}
 
 			_values[type] = value;

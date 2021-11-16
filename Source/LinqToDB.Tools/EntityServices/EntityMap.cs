@@ -5,8 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-using JetBrains.Annotations;
-
 namespace LinqToDB.Tools.EntityServices
 {
 	using System.Diagnostics.CodeAnalysis;
@@ -32,7 +30,11 @@ namespace LinqToDB.Tools.EntityServices
 
 		volatile ConcurrentDictionary<T,EntityMapEntry<T>> _entities;
 
-		public IReadOnlyDictionary<T,EntityMapEntry<T>>? Entities => _entities as IReadOnlyDictionary<T,EntityMapEntry<T>>;
+#if NET45
+		public IDictionary<T, EntityMapEntry<T>> Entities => _entities;
+#else
+		public IReadOnlyDictionary<T,EntityMapEntry<T>> Entities => _entities;
+#endif
 
 		void IEntityMap.MapEntity(EntityCreatedEventArgs args)
 		{
@@ -140,8 +142,7 @@ namespace LinqToDB.Tools.EntityServices
 
 		volatile ConcurrentDictionary<Type,IKeyComparer>? _keyComparers;
 
-		[return: MaybeNull]
-		public T GetEntity(IDataContext context, object key)
+		public T? GetEntity(IDataContext context, object key)
 		{
 			if (context == null) throw new ArgumentNullException(nameof(context));
 			if (key     == null) throw new ArgumentNullException(nameof(key));

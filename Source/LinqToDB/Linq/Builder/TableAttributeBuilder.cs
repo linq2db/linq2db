@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -7,28 +6,32 @@ namespace LinqToDB.Linq.Builder
 
 	class TableAttributeBuilder : MethodCallBuilder
 	{
+		private static readonly string[] MethodNames = new []
+		{
+			nameof(LinqExtensions.TableName),
+			nameof(LinqExtensions.ServerName),
+			nameof(LinqExtensions.DatabaseName),
+			nameof(LinqExtensions.SchemaName),
+			nameof(TableExtensions.IsTemporary),
+			nameof(TableExtensions.TableOptions)
+		};
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable(
-				nameof(LinqExtensions.TableName),
-				nameof(LinqExtensions.ServerName),
-				nameof(LinqExtensions.DatabaseName),
-				nameof(LinqExtensions.SchemaName),
-				nameof(TableExtensions.IsTemporary),
-				nameof(TableExtensions.TableOptions));
+			return methodCall.IsQueryable(MethodNames);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			var table    = (TableBuilder.TableContext)sequence;
+			var table    = SequenceHelper.GetTableContext(sequence) ?? throw new LinqToDBException($"Cannot get table context from {sequence.GetType()}");
 			var value    = methodCall.Arguments.Count == 1 && methodCall.Method.Name == nameof(TableExtensions.IsTemporary) ?
 				true :
 				methodCall.Arguments[1].EvaluateExpression();
 
 			switch (methodCall.Method.Name)
 			{
-				case nameof(LinqExtensions.TableName)     : table.SqlTable.PhysicalName  = (string?)     value!; break;
+				case nameof(LinqExtensions.TableName)     : table.SqlTable.PhysicalName  = (string)      value!; break;
 				case nameof(LinqExtensions.ServerName)    : table.SqlTable.Server        = (string?)     value;  break;
 				case nameof(LinqExtensions.DatabaseName)  : table.SqlTable.Database      = (string?)     value;  break;
 				case nameof(LinqExtensions.SchemaName)    : table.SqlTable.Schema        = (string?)     value;  break;

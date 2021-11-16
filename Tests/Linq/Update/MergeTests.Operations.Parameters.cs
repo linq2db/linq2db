@@ -368,7 +368,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestParametersInInsertCreate([MergeDataContextSource(
 			false,
-			ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
+			ProviderName.DB2, TestProvName.AllFirebird,
 			TestProvName.AllOracle,
 			TestProvName.AllInformix, TestProvName.AllSapHana)]
 			string context)
@@ -409,7 +409,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestParametersInUpdateExpression([MergeDataContextSource(
 			false,
-			ProviderName.DB2, ProviderName.Firebird, TestProvName.Firebird3,
+			ProviderName.DB2, TestProvName.AllFirebird,
 			TestProvName.AllOracle,
 			TestProvName.AllInformix, TestProvName.AllSapHana)]
 			string context)
@@ -487,7 +487,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestParametersInSourceFilter([MergeDataContextSource(
 			false,
-			ProviderName.Firebird, TestProvName.Firebird3, TestProvName.AllInformix)]
+			TestProvName.AllFirebird, TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = new TestDataConnection(context))
@@ -515,7 +515,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestParametersInSourceSelect([MergeDataContextSource(
 			false,
-			ProviderName.Firebird, TestProvName.Firebird3, TestProvName.AllInformix,
+			TestProvName.AllFirebird, TestProvName.AllInformix,
 			TestProvName.AllOracle)]
 			string context)
 		{

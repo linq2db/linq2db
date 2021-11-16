@@ -1,3 +1,5 @@
+<#@ include file="T4Model.ttinclude"   once="true" #>
+<#@ include file="DataModel.ttinclude" once="true" #>
 <#
 	{
 		var beforeGenerateModel = BeforeGenerateModel;
@@ -24,14 +26,14 @@ void EquatableImpl()
 		{
 			var className = cl.Name;
 
-			if (!cl.Interfaces.Contains($"IEquatable<{className}>"))
+			if (!cl.Interfaces.Contains(string.Format("IEquatable<{0}>", className)))
 			{
-				cl.Interfaces.Add($"IEquatable<{className}>");
+				cl.Interfaces.Add(string.Format("IEquatable<{0}>", className));
 
 				if (!Model.Usings.Contains("LinqToDB.Tools.Comparers"))
 					Model.Usings.Add("LinqToDB.Tools.Comparers");
 
-				var comparerProperties = string.Join(", ", props.Select(p => $"c => c.{p.Name}"));
+				var comparerProperties = string.Join(", ", props.Select(p => string.Format("c => c.{0}", p.Name)));
 
 				cl.Members.Add(new MemberGroup
 				{
@@ -43,9 +45,9 @@ void EquatableImpl()
 							IsCompact = false,
 							Members   =
 							{
-								new Field(() => $"IEqualityComparer<{className}>", EqualityComparerFieldName)
+								new Field(() => string.Format("IEqualityComparer<{0}>", className), EqualityComparerFieldName)
 								{
-									InitValue      = $"ComparerBuilder.GetEqualityComparer<{className}>({comparerProperties})",
+									InitValue      = string.Format("ComparerBuilder.GetEqualityComparer<{0}>({1})", className, comparerProperties),
 									AccessModifier = AccessModifier.Private,
 									IsStatic       = true,
 									IsReadonly     = true
@@ -54,17 +56,17 @@ void EquatableImpl()
 								new Method(() => "bool", "Equals",
 									new Func<string>[]
 									{
-										() => $"{new ModelType(className, true, true).ToTypeName()} other"
+										() => string.Format("{0} other", new ModelType(className, true, true).ToTypeName())
 									},
 									() => new[]
 									{
-										$"return {EqualityComparerFieldName}.Equals(this, other{(EnableNullableReferenceTypes ? "!" : "")});"
+										string.Format("return {0}.Equals(this, other{1});", EqualityComparerFieldName, EnableNullableReferenceTypes ? "!" : "")
 									}),
 
 								new Method(() => "int", "GetHashCode", null,
 									() => new[]
 									{
-										$"return {EqualityComparerFieldName}.GetHashCode(this);"
+										string.Format("return {0}.GetHashCode(this);", EqualityComparerFieldName)
 									})
 									{
 										IsOverride = true
@@ -77,7 +79,7 @@ void EquatableImpl()
 									},
 									() => new[]
 									{
-										$"if (!(obj is {className} other))", "\treturn false;", string.Empty,
+										string.Format("if (!(obj is {0} other))", className), "\treturn false;", string.Empty,
 										"// use IEquatable implementation",
 										"return Equals(other);"
 									})
@@ -102,6 +104,6 @@ partial class Class
 
 static bool EqualityPropertiesFilterDefault(Class cl, Property prop)
 {
-	return cl is Table && prop is Column col && col.IsPrimaryKey;
+	return cl is Table && prop is Column && ((Column)prop).IsPrimaryKey;
 }
 #>

@@ -1,9 +1,10 @@
-﻿using System;
-
-#if NET472
+﻿#if NET472
 using System.Data.Linq.Mapping;
+using ColumnAttribute = System.Data.Linq.Mapping.ColumnAttribute;
+using TableAttribute = System.Data.Linq.Mapping.TableAttribute;
 #else
-using System.Data;
+using ColumnAttribute = System.ComponentModel.DataAnnotations.Schema.ColumnAttribute;
+using TableAttribute = System.ComponentModel.DataAnnotations.Schema.TableAttribute;
 #endif
 
 using LinqToDB;
@@ -16,16 +17,16 @@ namespace Tests.Linq
 	using Model;
 
 #if NET472
-	[System.Data.Linq.Mapping.Table(Name = "Person")]
+	[Table(Name = "Person")]
 #else
-	[System.ComponentModel.DataAnnotations.Schema.Table("Person")]
+	[Table("Person")]
 #endif
 	public class L2SPersons
 	{
 		private int _personID;
 
 #if NET472
-		[System.Data.Linq.Mapping.Column(
+		[Column(
 			Storage       = "_personID",
 			Name          = "PersonID",
 			DbType        = "integer(32,0)",
@@ -34,7 +35,7 @@ namespace Tests.Linq
 			AutoSync      = AutoSync.Never,
 			CanBeNull     = false)]
 #else
-		[System.ComponentModel.DataAnnotations.Schema.Column("PersonID",
+		[Column("PersonID",
 			TypeName      = "integer(32,0)")]
 #endif
 		public int PersonID
@@ -42,32 +43,16 @@ namespace Tests.Linq
 			get { return _personID;  }
 			set { _personID = value; }
 		}
-#if NET472
-		[System.Data.Linq.Mapping.Column]
-#else
-		[System.ComponentModel.DataAnnotations.Schema.Column]
-#endif
+		[Column]
 		public string FirstName { get; set; } = null!;
 
-#if NET472
-		[System.Data.Linq.Mapping.Column]
-#else
-		[System.ComponentModel.DataAnnotations.Schema.Column]
-#endif
+		[Column]
 		public string LastName = null!;
 
-#if NET472
-		[System.Data.Linq.Mapping.Column]
-#else
-		[System.ComponentModel.DataAnnotations.Schema.Column]
-#endif
+		[Column]
 		public string? MiddleName;
 
-#if NET472
-		[System.Data.Linq.Mapping.Column]
-#else
-		[System.ComponentModel.DataAnnotations.Schema.Column]
-#endif
+		[Column]
 		public string Gender = null!;
 	}
 

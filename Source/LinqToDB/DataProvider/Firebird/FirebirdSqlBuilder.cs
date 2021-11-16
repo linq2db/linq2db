@@ -83,7 +83,7 @@ namespace LinqToDB.DataProvider.Firebird
 				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.Name);
 
 			AppendIndent().AppendLine("RETURNING");
-			AppendIndent().Append("\t");
+			AppendIndent().Append('\t');
 			BuildExpression(identityField, false, true);
 		}
 
@@ -99,6 +99,16 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			switch (type.Type.DataType)
 			{
+				// FB4+ types:
+				case DataType.Int128        : StringBuilder.Append("INT128");                             break;
+				case DataType.TimeTZ        : StringBuilder.Append("TIME WITH TIME ZONE");                break;
+				case DataType.DateTimeOffset: StringBuilder.Append("TIMESTAMP WITH TIME ZONE");           break;
+				case DataType.DecFloat      :
+					StringBuilder.Append("DECFLOAT");
+					if (type.Type.Precision != null && type.Type.Precision <= 16)
+						StringBuilder.Append("(16)");
+					                                                                                      break;
+
 				case DataType.Decimal       :
 					base.BuildDataTypeFromDataType(type.Type.Precision > 18 ? new SqlDataType(type.Type.DataType, type.Type.SystemType, null, 18, type.Type.Scale, type.Type.DbType) : type, forCreateTable);
 					                                                                                      break;
@@ -208,13 +218,15 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var identityField = dropTable.Table!.IdentityFields.FirstOrDefault();
+			var identityField = dropTable.Table!.IdentityFields.Count > 0 ? dropTable.Table!.IdentityFields[0] : null;
 
 			if (identityField == null && dropTable.Table.TableOptions.HasDropIfExists() == false && dropTable.Table.TableOptions.HasIsTemporary() == false)
 			{
 				base.BuildDropTableStatement(dropTable);
 				return;
 			}
+
+			BuildTag(dropTable);
 
 			// implementation use following approach: http://www.firebirdfaq.org/faq69/
 			StringBuilder
@@ -263,7 +275,7 @@ namespace LinqToDB.DataProvider.Firebird
 				dropCommand
 					.Append("DROP ")
 					.Append(objectName)
-					.Append(" ");
+					.Append(' ');
 
 				Convert(dropCommand, identifier, ConvertType.NameToQueryTable);
 
@@ -365,7 +377,7 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			if (createTable.StatementHeader == null)
 			{
-				_identityField = createTable.Table!.IdentityFields.FirstOrDefault();
+				_identityField = createTable.Table!.IdentityFields.Count > 0 ? createTable.Table!.IdentityFields[0] : null;
 
 				var checkExistence = createTable.Table.TableOptions.HasCreateIfNotExists() || createTable.Table.TableOptions.HasIsTemporary();
 

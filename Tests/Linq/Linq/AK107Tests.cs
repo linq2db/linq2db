@@ -7,7 +7,6 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using System.Linq;
 	using Model;
 
 	[TestFixture]

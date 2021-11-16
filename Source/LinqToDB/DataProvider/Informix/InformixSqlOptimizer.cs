@@ -82,16 +82,16 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			CheckAliases(statement, int.MaxValue);
 
-			new QueryVisitor().VisitAll(statement, SetQueryParameter);
+			statement.VisitAll(SetQueryParameter);
 
 			// TODO: test if it works and enable support with type-cast like it is done for Firebird
 			// Informix doesn't support parameters in select list
 			var ignore = statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count == 0;
 			if (!ignore)
-				new QueryVisitor().VisitAll(statement, e =>
+				statement.VisitAll(static e =>
 				{
 					if (e is SqlSelectClause select)
-						new QueryVisitor().VisitAll(select, ClearQueryParameter);
+						select.VisitAll(ClearQueryParameter);
 				});
 
 			return base.Finalize(statement);
@@ -116,12 +116,11 @@ namespace LinqToDB.DataProvider.Informix
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expr, ConvertVisitor visitor,
-			EvaluationContext context)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
 		{
-			expr = base.ConvertExpressionImpl(expr, visitor, context);
+			expression = base.ConvertExpressionImpl(expression, visitor);
 
-			if (expr is SqlBinaryExpression be)
+			if (expression is SqlBinaryExpression be)
 			{
 				switch (be.Operation)
 				{
@@ -129,10 +128,10 @@ namespace LinqToDB.DataProvider.Informix
 					case "&": return new SqlFunction(be.SystemType, "BitAnd", be.Expr1, be.Expr2);
 					case "|": return new SqlFunction(be.SystemType, "BitOr", be.Expr1, be.Expr2);
 					case "^": return new SqlFunction(be.SystemType, "BitXor", be.Expr1, be.Expr2);
-					case "+": return be.SystemType == typeof(string) ? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) : expr;
+					case "+": return be.SystemType == typeof(string) ? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) : expression;
 				}
 			}
-			else if (expr is SqlFunction func)
+			else if (expression is SqlFunction func)
 			{
 				switch (func.Name)
 				{
@@ -142,45 +141,50 @@ namespace LinqToDB.DataProvider.Informix
 						var par0 = func.Parameters[0];
 						var par1 = func.Parameters[1];
 
-						switch (Type.GetTypeCode(func.SystemType.ToUnderlying()))
+						var isNull = par1 is SqlValue sqlValue && sqlValue.Value == null;
+
+						if (!isNull)
 						{
-							case TypeCode.String   : return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1]);
-							case TypeCode.Boolean  :
+							switch (Type.GetTypeCode(func.SystemType.ToUnderlying()))
 							{
-								var ex = AlternativeConvertToBoolean(func, 1);
-								if (ex != null)
-									return ex;
-								break;
-							}
-
-							case TypeCode.UInt64   :
-								if (func.Parameters[1].SystemType!.IsFloatType())
-									par1 = new SqlFunction(func.SystemType, "Floor", func.Parameters[1]);
-								break;
-
-							case TypeCode.DateTime :
-								if (IsDateDataType(func.Parameters[0], "Date"))
+								case TypeCode.String   : return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1]);
+								case TypeCode.Boolean  :
 								{
-									if (func.Parameters[1].SystemType == typeof(string))
-									{
-										return new SqlFunction(
-											func.SystemType,
-											"Date",
-											new SqlFunction(func.SystemType, "To_Date", func.Parameters[1], new SqlValue("%Y-%m-%d")));
-									}
-
-									return new SqlFunction(func.SystemType, "Date", func.Parameters[1]);
+									var ex = AlternativeConvertToBoolean(func, 1);
+									if (ex != null)
+										return ex;
+									break;
 								}
 
-								if (IsTimeDataType(func.Parameters[0]))
-									return new SqlExpression(func.SystemType, "Cast(Extend({0}, hour to second) as Char(8))", Precedence.Primary, func.Parameters[1]);
+								case TypeCode.UInt64   :
+									if (func.Parameters[1].SystemType!.IsFloatType())
+										par1 = new SqlFunction(func.SystemType, "Floor", func.Parameters[1]);
+									break;
 
-								return new SqlFunction(func.SystemType, "To_Date", func.Parameters[1]);
+								case TypeCode.DateTime :
+									if (IsDateDataType(func.Parameters[0], "Date"))
+									{
+										if (func.Parameters[1].SystemType == typeof(string))
+										{
+											return new SqlFunction(
+												func.SystemType,
+												"Date",
+												new SqlFunction(func.SystemType, "To_Date", func.Parameters[1], new SqlValue("%Y-%m-%d")));
+										}
 
-							default:
-								if (func.SystemType.ToUnderlying() == typeof(DateTimeOffset))
-									goto case TypeCode.DateTime;
-								break;
+										return new SqlFunction(func.SystemType, "Date", func.Parameters[1]);
+									}
+
+									if (IsTimeDataType(func.Parameters[0]))
+										return new SqlExpression(func.SystemType, "Cast(Extend({0}, hour to second) as Char(8))", Precedence.Primary, func.Parameters[1]);
+
+									return new SqlFunction(func.SystemType, "To_Date", func.Parameters[1]);
+
+								default:
+									if (func.SystemType.ToUnderlying() == typeof(DateTimeOffset))
+										goto case TypeCode.DateTime;
+									break;
+							}
 						}
 
 						return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, par1, par0);
@@ -188,7 +192,7 @@ namespace LinqToDB.DataProvider.Informix
 				}
 			}
 
-			return expr;
+			return expression;
 		}
 
 		protected override ISqlExpression ConvertFunction(SqlFunction func)

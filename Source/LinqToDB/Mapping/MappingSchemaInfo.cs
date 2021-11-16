@@ -86,7 +86,14 @@ namespace LinqToDB.Mapping
 
 						if (args.Length == types.Length)
 						{
-							if (type.Value.Aggregate(false, (cur,ts) => cur || ts.SequenceEqual(types)))
+							var stop = false;
+							foreach (var value in type.Value)
+								if (value.SequenceEqual(types))
+								{
+									stop = true;
+									break;
+								}
+							if (stop)
 								continue;
 
 							var gtype    = type.Key.MakeGenericType(types);

@@ -19,10 +19,12 @@ using StackExchange.Profiling;
 using StackExchange.Profiling.Data;
 using Tests.Model;
 
+#if !NETCOREAPP2_1
 using MySqlDataDateTime           = MySql.Data.Types.MySqlDateTime;
 using MySqlDataDecimal            = MySql.Data.Types.MySqlDecimal;
 using MySqlConnectorDateTime      = MySqlConnector.MySqlDateTime;
 using MySqlDataMySqlConnection    = MySql.Data.MySqlClient.MySqlConnection;
+#endif
 using System.Globalization;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.DB2;
@@ -36,6 +38,8 @@ using LinqToDB.DataProvider.Oracle;
 using LinqToDB.DataProvider.PostgreSQL;
 using System.Threading.Tasks;
 using LinqToDB.Common;
+using FirebirdSql.Data.Types;
+using System.Numerics;
 #if NET472
 using IBM.Data.Informix;
 #endif
@@ -184,6 +188,22 @@ namespace Tests.Data
 
 				// assert api resolved and callable
 				FirebirdTools.ClearAllPools();
+
+				// test provider-specific types
+				if (context == TestProvName.Firebird4)
+				{
+					var fbDecFloat = new FbDecFloat(BigInteger.Parse("12345"), 5);
+					var fbDecFloat1 = db.Execute<FbDecFloat>("SELECT CAST(@p as decfloat) from rdb$database", new DataParameter("@p", fbDecFloat, DataType.DecFloat));
+					Assert.AreEqual(fbDecFloat, fbDecFloat1);
+
+					var fbZonedDateTime = new FbZonedDateTime(TestData.DateTime4Utc, "UTC");
+					var fbZonedDateTime1 = db.Execute<FbZonedDateTime>("SELECT CAST(@p as timestamp with time zone) from rdb$database", new DataParameter("@p", fbZonedDateTime, DataType.DateTimeOffset));
+					Assert.AreEqual(fbZonedDateTime, fbZonedDateTime1);
+
+					var fbZonedTime = new FbZonedTime(TestData.TimeOfDay4, "UTC");
+					var fbZonedTime1 = db.Execute<FbZonedTime>("SELECT CAST(@p as time with time zone) from rdb$database", new DataParameter("@p", fbZonedTime, DataType.TimeTZ));
+					Assert.AreEqual(fbZonedTime, fbZonedTime1);
+				}
 			}
 		}
 
@@ -233,6 +253,7 @@ namespace Tests.Data
 			public DateTime Value { get; set; }
 		}
 
+#if !NETCOREAPP2_1
 		class MapperExpressionTest2
 		{
 			public MySqlDataDateTime Value { get; set; }
@@ -458,6 +479,7 @@ namespace Tests.Data
 				db.DataProvider.GetSchemaProvider().GetSchema(db);
 			}
 		}
+#endif
 
 		[Test]
 		public void TestSystemSqlite([IncludeDataSources(ProviderName.SQLiteClassic)] string context, [Values] ConnectionType type)
@@ -638,7 +660,7 @@ namespace Tests.Data
 				}
 
 				// test SqlException handing
-				Assert.IsFalse(SqlServerTransientExceptionDetector.IsHandled(new Exception(), out var errors));
+				Assert.IsFalse(SqlServerTransientExceptionDetector.IsHandled(new InvalidOperationException(), out var errors));
 				Exception? sex = null;
 				try
 				{
@@ -802,7 +824,7 @@ namespace Tests.Data
 				}
 
 				// test SqlException handing
-				Assert.IsFalse(SqlServerTransientExceptionDetector.IsHandled(new Exception(), out var errors));
+				Assert.IsFalse(SqlServerTransientExceptionDetector.IsHandled(new InvalidOperationException(), out var errors));
 				Exception? sex = null;
 				try
 				{
@@ -1436,7 +1458,9 @@ namespace Tests.Data
 
 				// provider-specific type classes and readers
 				var dateValue = new DateTime(1234, 11, 22);
+#pragma warning disable CS0618 // Type or member is obsolete
 				var ndateValue = db.Execute<NpgsqlTypes.NpgsqlDate>("SELECT @p", new DataParameter("@p", dateValue, DataType.Date));
+#pragma warning restore CS0618 // Type or member is obsolete
 				Assert.AreEqual(dateValue, (DateTime)ndateValue);
 				var rawValue = db.Execute<object>("SELECT @p", new DataParameter("@p", dateValue, DataType.Date));
 				Assert.True    (rawValue is DateTime);

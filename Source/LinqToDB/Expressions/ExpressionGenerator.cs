@@ -6,9 +6,9 @@ namespace LinqToDB.Expressions
 {
 	public class ExpressionGenerator
 	{
-		private readonly List<ParameterExpression> _variables = new List<ParameterExpression>();
-		private readonly List<Expression> _expressions = new List<Expression>();
-		private readonly TypeMapper _mapper;
+		private readonly List<ParameterExpression> _variables   = new ();
+		private readonly List<Expression>          _expressions = new ();
+		private readonly TypeMapper                _mapper;
 
 		public ExpressionGenerator(TypeMapper mapper)
 		{

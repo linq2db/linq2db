@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlServer
@@ -34,7 +33,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// </summary>
 		protected SqlStatement AddOrderByForSkip(SqlStatement statement)
 		{
-			statement = ConvertVisitor.Convert(statement, (visitor, element) => 
+			statement = statement.Convert(static (visitor, element) => 
 			{
 				if (element.ElementType == QueryElementType.OrderByClause)
 				{
@@ -43,7 +42,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					{
 						return new SqlOrderByClause(new[] { new SqlOrderByItem(new SqlValue(typeof(int), 1), false) });
 					}
-				}	
+				}
 				return element;
 			});
 			return statement;
@@ -59,31 +58,6 @@ namespace LinqToDB.DataProvider.SqlServer
 
 					if (func.Parameters.Length <= 5)
 						func = ConvertCase(func.CanBeNull, func.SystemType, func.Parameters, 0);
-
-					break;
-
-				case "Coalesce" :
-
-					if (func.Parameters.Length > 2)
-					{
-						var parms = new ISqlExpression[func.Parameters.Length - 1];
-
-						Array.Copy(func.Parameters, 1, parms, 0, parms.Length);
-
-						func = new SqlFunction(func.SystemType, func.Name, func.Parameters[0],
-							new SqlFunction(func.SystemType, func.Name, parms));
-
-						break;
-					}
-
-					var sc = new SqlSearchCondition();
-
-					sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(func.Parameters[0], false)));
-
-					func = new SqlFunction(func.SystemType, "IIF", sc, func.Parameters[1], func.Parameters[0])
-					{
-						CanBeNull = func.CanBeNull
-					};
 
 					break;
 			}

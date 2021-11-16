@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -97,7 +96,7 @@ namespace Tests.Linq
 		[Test]
 		public async Task FirstOrDefaultAsync([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<AsyncDataProjection>>((db, id, token) =>
+			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<AsyncDataProjection?>>((db, id, token) =>
 				(from c in db.GetTable<AsyncDataTable>()
 				where c.Id == id
 				select new AsyncDataProjection
@@ -109,7 +108,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(GenerateData()))
 			{
-				var result = await query(db, 2, CancellationToken.None);
+				var result = (await query(db, 2, CancellationToken.None))!;
 				Assert.AreEqual(2, result.Id);
 				Assert.AreEqual(2, result.Value);
 			}
@@ -118,7 +117,7 @@ namespace Tests.Linq
 		[Test]
 		public async Task FirstOrDefaultPredicateAsync([DataSources] string context)
 		{
-			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<AsyncDataProjection>>((db, id, token) =>
+			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<AsyncDataProjection?>>((db, id, token) =>
 				(from c in db.GetTable<AsyncDataTable>()
 				where c.Id == id
 				select new AsyncDataProjection
@@ -130,7 +129,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(GenerateData()))
 			{
-				var result = await query(db, 2, CancellationToken.None);
+				var result = (await query(db, 2, CancellationToken.None))!;
 				Assert.AreEqual(2, result.Id);
 				Assert.AreEqual(2, result.Value);
 			}
@@ -188,7 +187,7 @@ namespace Tests.Linq
 		[Test]
 		public async Task SingleOrDefaultAsync([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<AsyncDataProjection>>((db, id, token) =>
+			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<AsyncDataProjection?>>((db, id, token) =>
 				(from c in db.GetTable<AsyncDataTable>()
 				where c.Id == id
 				select new AsyncDataProjection
@@ -200,7 +199,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(GenerateData()))
 			{
-				var result = await query(db, 2, CancellationToken.None);
+				var result = (await query(db, 2, CancellationToken.None))!;
 				Assert.AreEqual(2, result.Id);
 				Assert.AreEqual(2, result.Value);
 			}
@@ -216,7 +215,7 @@ namespace Tests.Linq
 					.Entity<AsyncDataTable>()
 						.HasTableName(lt.TableName);
 
-				var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<AsyncDataProjection>>(
+				var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<AsyncDataProjection?>>(
 					(bd, id, token) =>
 					(
 						from c in bd.GetTable<AsyncDataTable>()
@@ -228,7 +227,7 @@ namespace Tests.Linq
 						}
 					).SingleOrDefaultAsync(c => c.Id == id, token));
 
-				var result = await query(db, 2, CancellationToken.None);
+				var result = (await query(db, 2, CancellationToken.None))!;
 				Assert.AreEqual(2, result.Id);
 				Assert.AreEqual(2, result.Value);
 			}

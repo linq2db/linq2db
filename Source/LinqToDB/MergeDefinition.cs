@@ -1,4 +1,5 @@
-﻿using LinqToDB.Linq;
+﻿using LinqToDB.Common;
+using LinqToDB.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +21,7 @@ namespace LinqToDB
 		: IMergeableUsing<TTarget>,
 			IMergeableOn<TTarget, TSource>,
 			IMergeable<TTarget, TSource>
+		where TTarget : notnull
 	{
 		public MergeDefinition(ITable<TTarget> target)
 		{
@@ -65,7 +67,7 @@ namespace LinqToDB
 			SourceKey        = sourceKey;
 			KeyType          = keyType;
 
-			Operations       = operations ?? new Operation[0];
+			Operations       = operations ?? Array<Operation>.Empty;
 		}
 
 		public IEnumerable<TSource>?                     EnumerableSource { get; }
@@ -101,7 +103,7 @@ namespace LinqToDB
 				TargetKey,
 				SourceKey,
 				KeyType,
-				(Operations ?? new Operation[0]).Concat(new[] { operation }).ToArray());
+				(Operations ?? Array<Operation>.Empty).Concat(new[] { operation }).ToArray());
 		}
 
 		public MergeDefinition<TTarget, TSource> AddOnPredicate(Expression<Func<TTarget, TSource, bool>> matchPredicate)

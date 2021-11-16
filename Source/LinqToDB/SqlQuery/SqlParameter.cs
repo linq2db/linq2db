@@ -21,12 +21,6 @@ namespace LinqToDB.SqlQuery
 #endif
 		}
 
-		private SqlParameter(DbDataType type, string? name, object? value, Func<object?, object?>? valueConverter)
-			: this(type, name, value)
-		{
-			_valueConverter = valueConverter;
-		}
-
 #if DEBUG
 		readonly int _paramNumber;
 		static   int _paramCounter;
@@ -85,9 +79,9 @@ namespace LinqToDB.SqlQuery
 			var conv = _valueConverter;
 
 			if (conv == null)
-				_valueConverter = v => v == null ? null : (object) ((int) v + take);
+				_valueConverter = v => v == null ? null : ((int) v + take);
 			else
-				_valueConverter = v => v == null ? null : (object) ((int) conv(v)! + take);
+				_valueConverter = v => v == null ? null : ((int) conv(v)! + take);
 		}
 
 		#endregion
@@ -113,9 +107,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion
@@ -145,24 +139,16 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			// we do not allow parameters cloning 
-			return this;
-		}
-
-		#endregion
-
 		#region IQueryElement Members
 
 		public QueryElementType ElementType => QueryElementType.SqlParameter;
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
+			if (Name?.StartsWith("@") == false)
+				sb.Append('@');
+
 			sb
-				.Append('@')
 				.Append(Name ?? "parameter");
 
 #if DEBUG

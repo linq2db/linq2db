@@ -1,32 +1,27 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Configuration;
 using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
-using NUnit.Framework;
-
 using LinqToDB;
 using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.SqlServer;
+using NUnit.Framework;
 
 namespace Tests.Data
 {
-	using Microsoft.Extensions.DependencyInjection;
-
 	using System.Collections.Generic;
-	using System.Runtime.InteropServices;
+	using System.Data.Common;
 	using System.Transactions;
 	using LinqToDB.AspNet;
 	using LinqToDB.Data.RetryPolicy;
 	using LinqToDB.Mapping;
+	using Microsoft.Extensions.DependencyInjection;
 	using Model;
-	using System.Data.Common;
 
 	[TestFixture]
 	public class DataConnectionTests : TestBase
@@ -279,7 +274,7 @@ namespace Tests.Data
 			var collection = new ServiceCollection();
 			collection.AddLinqToDb((serviceProvider, options) => options.UseConfigurationString(context));
 			var provider = collection.BuildServiceProvider();
-			var con = provider.GetService<IDataContext>();
+			var con = provider.GetService<IDataContext>()!;
 			Assert.True(con is DataConnection);
 			Assert.That(((DataConnection)con).ConfigurationString, Is.EqualTo(context));
 		}
@@ -290,7 +285,7 @@ namespace Tests.Data
 			var collection = new ServiceCollection();
 			collection.AddLinqToDbContext<DataConnection>((serviceProvider, options) => options.UseConfigurationString(context));
 			var provider = collection.BuildServiceProvider();
-			var con = provider.GetService<DataConnection>();
+			var con = provider.GetService<DataConnection>()!;
 			Assert.That(con.ConfigurationString, Is.EqualTo(context));
 		}
 
@@ -316,8 +311,8 @@ namespace Tests.Data
 			collection.AddLinqToDbContext<DbConnection2>((provider, options) => {});
 
 			var serviceProvider = collection.BuildServiceProvider();
-			var c1 = serviceProvider.GetService<DbConnection1>();
-			var c2 = serviceProvider.GetService<DbConnection2>();
+			var c1 = serviceProvider.GetService<DbConnection1>()!;
+			var c2 = serviceProvider.GetService<DbConnection2>()!;
 			Assert.That(c1.ConfigurationString, Is.EqualTo(context));
 			Assert.That(c2.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
 		}
@@ -356,7 +351,7 @@ namespace Tests.Data
 				foreach (var thread in threads) thread.Start();
 				foreach (var thread in threads) thread.Join();
 
-				if (exceptions.Count > 0)
+				if (!exceptions.IsEmpty)
 					throw new AggregateException(exceptions);
 			}
 		}
@@ -372,13 +367,13 @@ namespace Tests.Data
 			}
 			finally
 			{
-				var tid = Thread.CurrentThread.ManagedThreadId;
+				var tid = Environment.CurrentManagedThreadId;
 
 				await db.CloseAsync();
 
 				db.Dispose();
 
-				if (tid == Thread.CurrentThread.ManagedThreadId)
+				if (tid == Environment.CurrentManagedThreadId)
 					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
 			}
 		}
@@ -394,11 +389,11 @@ namespace Tests.Data
 			}
 			finally
 			{
-				var tid = Thread.CurrentThread.ManagedThreadId;
+				var tid = Environment.CurrentManagedThreadId;
 
 				await db.DisposeAsync();
 
-				if (tid == Thread.CurrentThread.ManagedThreadId)
+				if (tid == Environment.CurrentManagedThreadId)
 					Assert.Inconclusive("Executed synchronously due to lack of async support or there were no underlying async operations");
 			}
 		}
@@ -415,11 +410,11 @@ namespace Tests.Data
 					if (cn.State == ConnectionState.Closed)
 						open = true;
 				};
-				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() =>
+				conn.OnBeforeConnectionOpenAsync += (dc, cn, token) => Task.Run(() =>
 				{
 					if (cn.State == ConnectionState.Closed)
 						openAsync = true;
-				});
+				}, default);
 				Assert.False(open);
 				Assert.False(openAsync);
 				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
@@ -444,7 +439,7 @@ namespace Tests.Data
 						{
 							if (cn.State == ConnectionState.Closed)
 								openAsync = true;
-						});
+						}, default);
 				Assert.False(open);
 				Assert.False(openAsync);
 				await conn.SelectAsync(() => 1);
@@ -1005,7 +1000,7 @@ namespace Tests.Data
 		// also some providers remove credentials from connection string in non-design mode
 		[ActiveIssue(Configurations = new[]
 		{
-			ProviderName.MySqlConnector,
+			//ProviderName.MySqlConnector,
 			ProviderName.SapHanaNative, // HanaException: error while parsing protocol
 			// Providers remove credentials in non-design mode:
 			TestProvName.AllPostgreSQL,
@@ -1112,6 +1107,7 @@ namespace Tests.Data
 				context == ProviderName.DB2            ||
 				context == ProviderName.InformixDB2    ||
 				context == ProviderName.MySqlConnector ||
+				context == TestProvName.MariaDB        ||
 				context == ProviderName.SapHanaNative  ||
 				context == ProviderName.SqlCe          ||
 				context == ProviderName.Sybase         ||

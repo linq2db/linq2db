@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		StringBuilder AppendOutputTableVariable(SqlTable table)
 		{
-			StringBuilder.Append("@").Append(table.PhysicalName).Append("Output");
+			StringBuilder.Append('@').Append(table.PhysicalName).Append("Output");
 			return StringBuilder;
 		}
 
@@ -41,14 +41,14 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				var identityField = insertClause.Into!.GetIdentityField();
 
-				if (identityField != null && (identityField.Type!.Value.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
+				if (identityField != null && (identityField.Type.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
 				{
 					AppendIndent()
 						.Append("DECLARE ");
 					AppendOutputTableVariable(insertClause.Into)
 						.Append(" TABLE (");
 					Convert(StringBuilder, identityField.PhysicalName, ConvertType.NameToQueryField);
-					StringBuilder.Append(" ");
+					StringBuilder.Append(' ');
 					BuildCreateTableFieldType(identityField);
 					StringBuilder
 							.AppendLine(")")
@@ -65,7 +65,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				var identityField = insertClause.Into!.GetIdentityField();
 
-				if (identityField != null && (identityField.Type!.Value.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
+				if (identityField != null && (identityField.Type.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
 				{
 					StringBuilder
 						.Append("OUTPUT [INSERTED].");
@@ -84,7 +84,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		private void BuildOutputSubclause(SqlOutputClause? output)
+		protected override void BuildOutputSubclause(SqlOutputClause? output)
 		{
 			if (output != null && output.HasOutputItems)
 			{
@@ -163,7 +163,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var identityField = insertClause.Into!.GetIdentityField();
 
-			if (identityField != null && (identityField.Type!.Value.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
+			if (identityField != null && (identityField.Type.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
 			{
 				StringBuilder
 					.AppendLine();
@@ -182,6 +182,14 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
+		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
+		{
+			base.BuildUpdateClause(statement, selectQuery, updateClause);
+
+			var output = statement.GetOutputClause();
+			BuildOutputSubclause(output);
+		}
+
 		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
 		{
 			var table = deleteStatement.Table != null ?
@@ -193,7 +201,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			BuildSkipFirst(deleteStatement.SelectQuery);
 
-			StringBuilder.Append(" ");
+			StringBuilder.Append(' ');
 			Convert(StringBuilder, GetTableAlias(table)!, ConvertType.NameToQueryTableAlias);
 			StringBuilder.AppendLine();
 
@@ -282,14 +290,14 @@ namespace LinqToDB.DataProvider.SqlServer
 				if (database == null || schema == null)
 					throw new LinqToDBException("You must specify both schema and database names explicitly for linked server query");
 
-				sb.Append(server).Append(".").Append(database).Append(".").Append(schema).Append(".");
+				sb.Append(server).Append('.').Append(database).Append('.').Append(schema).Append('.');
 			}
 			else if (database != null)
 			{
 				if (schema == null) sb.Append(database).Append("..");
-				else sb.Append(database).Append(".").Append(schema).Append(".");
+				else sb.Append(database).Append('.').Append(schema).Append('.');
 			}
-			else if (schema != null) sb.Append(schema).Append(".");
+			else if (schema != null) sb.Append(schema).Append('.');
 
 			return sb.Append(table);
 		}
@@ -307,6 +315,9 @@ namespace LinqToDB.DataProvider.SqlServer
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
 					if (value.Length > 0 && value[0] == '[')
+						return sb.Append(value);
+
+					if (value == "$action")
 						return sb.Append(value);
 
 					return SqlServerTools.QuoteIdentifier(sb, value);
@@ -343,17 +354,19 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			AppendIndent();
 
-			if (!pkName.StartsWith("[PK_#"))
+			if (!pkName.StartsWith("[PK_#") && !createTable.Table.TableOptions.IsTemporaryOptionSet())
 				StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(' ');
 
 			StringBuilder.Append("PRIMARY KEY CLUSTERED (");
 			StringBuilder.Append(string.Join(InlineComma, fieldNames));
-			StringBuilder.Append(")");
+			StringBuilder.Append(')');
 		}
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
 			var table = dropTable.Table!;
+
+			BuildTag(dropTable);
 
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
@@ -498,5 +511,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				Indent--;
 			}
 		}
+
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
 	}
 }

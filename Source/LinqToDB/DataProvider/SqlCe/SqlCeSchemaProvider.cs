@@ -119,9 +119,9 @@ INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE oc ON oc.CONSTRAINT_NAME = rc.UNI
 			return data.ToList();
 		}
 
-		protected override string GetDatabaseName(DataConnection connection)
+		protected override string GetDatabaseName(DataConnection dbConnection)
 		{
-			return Path.GetFileNameWithoutExtension(((DbConnection)connection.Connection).Database);
+			return Path.GetFileNameWithoutExtension(((DbConnection)dbConnection.Connection).Database);
 		}
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)

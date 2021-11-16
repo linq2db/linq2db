@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Data;
 using System.Diagnostics;
 
@@ -7,16 +7,6 @@ namespace LinqToDB.Configuration
 	using Data;
 	using DataProvider;
 	using Mapping;
-
-	internal enum ConnectionSetupType
-	{
-		DefaultConfiguration,
-		ConnectionString,
-		ConfigurationString,
-		Connection,
-		ConnectionFactory,
-		Transaction
-	}
 
 	/// <summary>
 	/// Used to build <see cref="LinqToDbConnectionOptions"/>
@@ -62,56 +52,6 @@ namespace LinqToDB.Configuration
 		public LinqToDbConnectionOptions Build()
 		{
 			return new LinqToDbConnectionOptions(this);
-		}
-
-		/// <summary>
-		/// Configure the database to use SqlServer default provider and connection string.
-		/// </summary>
-		/// <param name="connectionString">SqlServer connection string</param>
-		/// <returns>The builder instance so calls can be chained</returns>
-		public LinqToDbConnectionOptionsBuilder UseSqlServer(string connectionString)
-		{
-			return UseConnectionString(LinqToDB.ProviderName.SqlServer, connectionString);
-		}
-
-		/// <summary>
-		/// Configure the database to use Oracle default provider and connection string.
-		/// </summary>
-		/// <param name="connectionString">Oracle connection string.</param>
-		/// <returns>The builder instance so calls can be chained.</returns>
-		public LinqToDbConnectionOptionsBuilder UseOracle(string connectionString)
-		{
-			return UseConnectionString(LinqToDB.ProviderName.Oracle, connectionString);
-		}
-
-		/// <summary>
-		/// Configure the database to use PostgreSQL default provider and connection string.
-		/// </summary>
-		/// <param name="connectionString">PostgreSQL connection string.</param>
-		/// <returns>The builder instance so calls can be chained.</returns>
-		public LinqToDbConnectionOptionsBuilder UsePostgreSQL(string connectionString)
-		{
-			return UseConnectionString(LinqToDB.ProviderName.PostgreSQL, connectionString);
-		}
-
-		/// <summary>
-		/// Configure the database to use MySql default provider and connection string.
-		/// </summary>
-		/// <param name="connectionString">MySql connection string.</param>
-		/// <returns>The builder instance so calls can be chained.</returns>
-		public LinqToDbConnectionOptionsBuilder UseMySql(string connectionString)
-		{
-			return UseConnectionString(LinqToDB.ProviderName.MySql, connectionString);
-		}
-
-		/// <summary>
-		/// Configure the database to use SqlLite default provider and connection string.
-		/// </summary>
-		/// <param name="connectionString">SQLite connection string.</param>
-		/// <returns>The builder instance so calls can be chained.</returns>
-		public LinqToDbConnectionOptionsBuilder UseSQLite(string connectionString)
-		{
-			return UseConnectionString(LinqToDB.ProviderName.SQLite, connectionString);
 		}
 
 		/// <summary>

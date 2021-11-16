@@ -25,7 +25,7 @@ namespace Tests.Linq
 
 			public bool Equals(int x, int y) => (x >= (y - _precision) && x <= (y + _precision));
 
-			public int GetHashCode(int x) => 0;
+			public int GetHashCode(int obj) => 0;
 		}
 
 		public class CustomNullableIntComparer : IEqualityComparer<int?>
@@ -44,7 +44,7 @@ namespace Tests.Linq
 				return (x.Value >= (y.Value - _precision) && x.Value <= (y.Value + _precision));
 			}
 
-			public int GetHashCode(int? x) => 0;
+			public int GetHashCode(int? obj) => 0;
 		}
 
 		public class CustomNullableDateTimeComparer : IEqualityComparer<DateTime?>
@@ -56,7 +56,7 @@ namespace Tests.Linq
 				return x.Value.Between(y.Value.AddMilliseconds(-1), y.Value.AddMilliseconds(1));
 			}
 
-			public int GetHashCode(DateTime? x) => 0;
+			public int GetHashCode(DateTime? obj) => 0;
 		}
 
 		public class CustomDateTimeComparer : IEqualityComparer<DateTime>
@@ -66,7 +66,7 @@ namespace Tests.Linq
 				return x.Between(y.AddMilliseconds(-1), y.AddMilliseconds(1));
 			}
 
-			public int GetHashCode(DateTime x) => 0;
+			public int GetHashCode(DateTime obj) => 0;
 		}
 
 		[Test]
@@ -101,7 +101,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void CurrentTimestampUtc(
-			[DataSources(ProviderName.Access, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SqlCe,
+			[DataSources(ProviderName.Access, TestProvName.AllFirebird, ProviderName.SqlCe,
 				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
 			string context)
 		{
@@ -141,7 +141,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void CurrentTimestampUtcClientSideParameter(
-			[IncludeDataSources(true, TestProvName.AllAccess, ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SqlCe)]
+			[IncludeDataSources(true, TestProvName.AllAccess, TestProvName.AllFirebird, ProviderName.SqlCe)]
 			string context)
 		{
 			using (new DisableBaseline("Server-side date generation test"))
@@ -655,7 +655,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from t in    Types select           Sql.DateAdd(Sql.DateParts.Hour, 1, t.DateTimeValue)!. Value.Hour,
-					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Hour, 1, t.DateTimeValue))!.Value.Hour);
+					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Hour, 1, t.DateTimeValue)!.Value.Hour));
 		}
 
 		[Test]
@@ -719,7 +719,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from t in    Types select           t.DateTimeValue.AddHours(22). Hour,
-					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddHours(22)).Hour);
+					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddHours(22).Hour));
 		}
 
 		[Test]
@@ -963,7 +963,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from t in Types select Sql.DateAdd(Sql.DateParts.Hour, 1, t.DateTimeValue)!.Value.Hour,
-					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Hour, part2 - part1, t.DateTimeValue))!.Value.Hour);
+					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Hour, part2 - part1, t.DateTimeValue)!.Value.Hour));
 		}
 
 		[Test]
@@ -1048,7 +1048,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from t in Types select t.DateTimeValue.AddHours(22).Hour,
-					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddHours(part1 + part2)).Hour);
+					from t in db.Types select Sql.AsSql(t.DateTimeValue.AddHours(part1 + part2).Hour));
 		}
 
 		[Test]
@@ -1477,7 +1477,7 @@ namespace Tests.Linq
 
 #endregion
 
-		[ActiveIssue("SQL0418N", Configuration = ProviderName.DB2)]
+		[ActiveIssue("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.", Configuration = ProviderName.DB2)]
 		[Test]
 		public void GetDateTest1([DataSources] string context)
 		{

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using LinqToDB.Data;
-using Tests.Model;
+﻿using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -1317,7 +1314,9 @@ namespace Tests.Linq
 			};
 		}
 
+#if NETFRAMEWORK
 		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
+#endif
 		[Test]
 		public void Issue1732Lag([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1361,7 +1360,9 @@ namespace Tests.Linq
 			}
 		}
 
+#if NETFRAMEWORK
 		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
+#endif
 		[Test]
 		public void Issue1732Lead([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1403,7 +1404,9 @@ namespace Tests.Linq
 			}
 		}
 
+#if NETFRAMEWORK
 		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
+#endif
 		[Test]
 		public void Issue1732FirstValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1443,7 +1446,9 @@ namespace Tests.Linq
 			}
 		}
 
+#if NETFRAMEWORK
 		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
+#endif
 		[Test]
 		public void Issue1732LastValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1549,7 +1554,9 @@ namespace Tests.Linq
 			[Column] public string? ProcessName { get; set; }
 		}
 
+#if NETFRAMEWORK
 		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
+#endif
 		[Test]
 		public void Issue1799Test1([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1604,7 +1611,9 @@ namespace Tests.Linq
 			}
 		}
 
+#if NETFRAMEWORK
 		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
+#endif
 		[Test]
 		public void Issue1799Test2([DataSources(
 			TestProvName.AllSqlServer2008Minus,

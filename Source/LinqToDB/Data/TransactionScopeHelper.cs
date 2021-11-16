@@ -2,6 +2,8 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Common;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Data
 {
@@ -31,9 +33,9 @@ namespace LinqToDB.Data
 				if (currentDataProperty != null)
 				{
 					var body   = Expression.NotEqual(Expression.MakeMemberAccess(null, currentDataProperty),
-						Expression.Constant(null));
+						ExpressionInstances.UntypedNull);
 					var lambda = Expression.Lambda<Func<bool>>(body);
-					return lambda.Compile();
+					return lambda.CompileExpression();
 				}
 			}
 

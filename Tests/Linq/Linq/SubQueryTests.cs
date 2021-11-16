@@ -8,7 +8,6 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using System.Text.RegularExpressions;
 	using LinqToDB.Mapping;
 	using Model;
 

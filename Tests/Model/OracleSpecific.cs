@@ -21,7 +21,7 @@ namespace Tests.Model
 
 			public override bool Equals(object? obj)
 			{
-				if (!(obj is StringTest other))
+				if (obj is not StringTest other)
 					return false;
 
 				return    string.Equals(KeyValue, other.KeyValue)

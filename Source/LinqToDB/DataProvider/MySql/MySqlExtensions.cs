@@ -1,4 +1,4 @@
-using LinqToDB.Expressions;
+﻿using LinqToDB.Expressions;
 using LinqToDB.Linq;
 using System;
 
@@ -32,7 +32,7 @@ namespace LinqToDB.DataProvider.MySql
 						builder.AddExpression("modifier", " WITH QUERY EXPANSION");
 						break;
 					default:
-						throw new ArgumentOutOfRangeException("modifier");
+						throw new InvalidOperationException($"Unexpected modifier: {modifier}");
 				}
 			}
 		}

@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Configuration;
 using LinqToDB.Mapping;
 
 namespace InformixDataContext
@@ -25,7 +26,6 @@ namespace InformixDataContext
 		public ITable<Grandchild>        Grandchilds        { get { return this.GetTable<Grandchild>(); } }
 		public ITable<Inheritancechild>  Inheritancechilds  { get { return this.GetTable<Inheritancechild>(); } }
 		public ITable<Inheritanceparent> Inheritanceparents { get { return this.GetTable<Inheritanceparent>(); } }
-		public ITable<Issue913test>      Issue913tests      { get { return this.GetTable<Issue913test>(); } }
 		public ITable<Linqdatatype>      Linqdatatypes      { get { return this.GetTable<Linqdatatype>(); } }
 		public ITable<Parent>            Parents            { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>           Patients           { get { return this.GetTable<Patient>(); } }
@@ -45,6 +45,13 @@ namespace InformixDataContext
 
 		public TestdataidsDB(string configuration)
 			: base(configuration)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
+		public TestdataidsDB(LinqToDbConnectionOptions options)
+			: base(options)
 		{
 			InitDataContext();
 			InitMappingSchema();
@@ -127,13 +134,6 @@ namespace InformixDataContext
 		[Column("inheritanceparentid"), PrimaryKey,  NotNull] public int     Inheritanceparentid { get; set; } // INTEGER
 		[Column("typediscriminator"),      Nullable         ] public int?    Typediscriminator   { get; set; } // INTEGER
 		[Column("name"),                   Nullable         ] public string? Name                { get; set; } // NVARCHAR(50)
-	}
-
-	[Table(Schema="informix", Name="issue913test")]
-	public partial class Issue913test
-	{
-		[Column("instrumentid"),  PrimaryKey,  NotNull] public int   Instrumentid  { get; set; } // INTEGER
-		[Column("tradingstatus"),    Nullable         ] public char? Tradingstatus { get; set; } // NCHAR(1)
 	}
 
 	[Table(Schema="informix", Name="linqdatatypes")]
@@ -340,12 +340,6 @@ namespace InformixDataContext
 		{
 			return table.FirstOrDefault(t =>
 				t.Inheritanceparentid == Inheritanceparentid);
-		}
-
-		public static Issue913test? Find(this ITable<Issue913test> table, int Instrumentid)
-		{
-			return table.FirstOrDefault(t =>
-				t.Instrumentid == Instrumentid);
 		}
 
 		public static Patient? Find(this ITable<Patient> table, int Personid)

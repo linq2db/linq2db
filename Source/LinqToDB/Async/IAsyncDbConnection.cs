@@ -11,17 +11,14 @@ namespace LinqToDB.Async
 	/// Asynchronous version of the <see cref="IDbConnection"/> interface, allowing asynchronous operations, missing from <see cref="IDbConnection"/>.
 	/// </summary>
 	[PublicAPI]
-	public interface IAsyncDbConnection : IDbConnection
-#if !NETFRAMEWORK
-		, IAsyncDisposable
-#endif
+	public interface IAsyncDbConnection : IDbConnection, IAsyncDisposable
 	{
 		/// <summary>
 		/// Starts new transaction asynchronously for current connection with default isolation level.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
 #else
 		Task<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
@@ -33,7 +30,7 @@ namespace LinqToDB.Async
 		/// <param name="isolationLevel">Transaction isolation level.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		ValueTask<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default);
 #else
 		Task<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default);
@@ -51,14 +48,6 @@ namespace LinqToDB.Async
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Async operation task.</returns>
 		Task OpenAsync(CancellationToken cancellationToken = default);
-
-#if NETFRAMEWORK
-		/// <summary>
-		/// Disposes current connection asynchonously.
-		/// </summary>
-		/// <returns>Async operation task.</returns>
-		Task DisposeAsync();
-#endif
 
 		/// <summary>
 		/// Gets underlying connection instance.

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.SqlQuery;
 
@@ -13,6 +14,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Common;
 	using Model;
 
 	[TestFixture]
@@ -124,8 +126,10 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 				AreEqual(
+#pragma warning disable CA1841 // Prefer Dictionary.Contains methods : suppressed as we test this method
 					from p in    Parent where arr.Keys.Contains(p.ParentID) select p,
 					from p in db.Parent where arr.Keys.Contains(p.ParentID) select p);
+#pragma warning restore CA1841 // Prefer Dictionary.Contains methods
 		}
 
 		[Test]
@@ -154,8 +158,10 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 				AreEqual(
+#pragma warning disable CA1841 // Prefer Dictionary.Contains methods : suppressed as we test this method
 					from p in    Parent where arr.Values.Contains(p.ParentID) select p,
 					from p in db.Parent where arr.Values.Contains(p.ParentID) select p);
+#pragma warning restore CA1841 // Prefer Dictionary.Contains methods
 		}
 
 		[Test]
@@ -190,10 +196,10 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
-					where new int[0].Contains(p.ParentID) || p.ParentID == 2
+					where Array<int>.Empty.Contains(p.ParentID) || p.ParentID == 2
 					select p,
 					from p in db.Parent
-					where new int[0].Contains(p.ParentID) || p.ParentID == 2
+					where Array<int>.Empty.Contains(p.ParentID) || p.ParentID == 2
 					select p);
 		}
 
@@ -328,6 +334,27 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreNotEqual(Guid.Empty, (from p in db.Types select Sql.NewGuid()).First());
+		}
+
+		[Test]
+		public void NewGuidOrder(
+			[DataSources(false,
+				ProviderName.DB2,
+				TestProvName.AllInformix,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSQLite,
+				TestProvName.AllAccess)]
+			string context)
+		{
+			using var db = (TestDataConnection)GetDataContext(context);
+			var query =
+				from p in db.Types
+				orderby Sql.NewGuid()
+				select p.GuidValue;
+
+			_ = query.ToArray();
+
+			Assert.That(db.LastQuery, Does.Contain("ORDER"));
 		}
 
 		[Test]
@@ -513,7 +540,7 @@ namespace Tests.Linq
 			return person.LastName + ", " + person.FirstName;
 		}
 
-		[Sql.Function("SUM", ServerSideOnly = true, IsAggregate = true, ArgIndices = new[]{0})]
+		[Sql.Function("SUM", ServerSideOnly = true, IsAggregate = true, ArgIndices = new[]{1})]
 		public static TItem MySum<TSource,TItem>(this IEnumerable<TSource> src, Expression<Func<TSource,TItem>> value)
 		{
 			throw new InvalidOperationException();

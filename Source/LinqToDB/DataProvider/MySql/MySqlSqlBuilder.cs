@@ -6,11 +6,10 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using SqlQuery;
-	using SqlProvider;
-	using Mapping;
 	using Extensions;
-	using Tools;
+	using Mapping;
+	using SqlProvider;
+	using SqlQuery;
 
 	class MySqlSqlBuilder : BasicSqlBuilder
 	{
@@ -40,8 +39,10 @@ namespace LinqToDB.DataProvider.MySql
 			ParameterSymbol = '@';
 		}
 
-		protected override bool IsRecursiveCteKeywordRequired   => true;
-		public    override bool IsNestedJoinParenthesisRequired => true;
+		protected override bool   IsRecursiveCteKeywordRequired   => true;
+		public    override bool   IsNestedJoinParenthesisRequired => true;
+		protected override bool   IsValuesSyntaxSupported         => false;
+		protected override string FakeTable                       => "DUAL";
 
 		protected override bool CanSkipRootAliases(SqlStatement statement)
 		{
@@ -56,6 +57,20 @@ namespace LinqToDB.DataProvider.MySql
 		public override int CommandCount(SqlStatement statement)
 		{
 			return statement.NeedsIdentity() ? 2 : 1;
+		}
+
+		protected override void BuildSelectClause(SelectQuery selectQuery)
+		{
+			// mysql <= 5.5 doesn't support WHERE without FROM
+			// https://docs.oracle.com/cd/E19957-01/mysql-refman-5.5/sql-syntax.html#select
+			if (selectQuery.From.Tables.Count == 0 && !selectQuery.Where.IsEmpty)
+			{
+				AppendIndent().Append("SELECT").AppendLine();
+				BuildColumns(selectQuery);
+				AppendIndent().Append("FROM DUAL").AppendLine();
+			}
+			else
+				base.BuildSelectClause(selectQuery);
 		}
 
 		protected override void BuildCommand(SqlStatement statement, int commandNumber)
@@ -318,6 +333,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
 		{
+			BuildStep = Step.Tag;          BuildTag(statement);
 			BuildStep = Step.InsertClause; BuildInsertClause(statement, insertClause, addAlias);
 
 			if (statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count != 0)
@@ -432,6 +448,15 @@ namespace LinqToDB.DataProvider.MySql
 				throwExceptionIfTableNotFound);
 		}
 
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
+		{
+			if (!expr.IsNot)
+				StringBuilder.Append("NOT ");
+			BuildExpression(GetPrecedence(expr), expr.Expr1);
+			StringBuilder.Append(" <=> ");
+			BuildExpression(GetPrecedence(expr), expr.Expr2);
+		}
+
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
 			var position = StringBuilder.Length;
@@ -489,7 +514,7 @@ namespace LinqToDB.DataProvider.MySql
 			AppendIndent();
 			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");
 			StringBuilder.Append(string.Join(InlineComma, fieldNames));
-			StringBuilder.Append(")");
+			StringBuilder.Append(')');
 		}
 
 		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
@@ -497,7 +522,7 @@ namespace LinqToDB.DataProvider.MySql
 			if (database != null && database.Length == 0) database = null;
 
 			if (database != null)
-				sb.Append(database).Append(".");
+				sb.Append(database).Append('.');
 
 			return sb.Append(table);
 		}
@@ -534,7 +559,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildGroupByBody(GroupingType groupingType, List<ISqlExpression> items)
 		{
-			if (groupingType.In(GroupingType.GroupBySets, GroupingType.Default))
+			if (groupingType == GroupingType.GroupBySets || groupingType == GroupingType.Default)
 			{
 				base.BuildGroupByBody(groupingType, items);
 				return;
@@ -552,7 +577,8 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				AppendIndent();
 
-				BuildExpression(items[i]);
+				var expr = WrapBooleanExpression(items[i]);
+				BuildExpression(expr);
 
 				if (i + 1 < items.Count)
 					StringBuilder.AppendLine(Comma);
@@ -571,7 +597,7 @@ namespace LinqToDB.DataProvider.MySql
 					StringBuilder.Append("WITH CUBE");
 					break;
 				default:
-					throw new ArgumentOutOfRangeException();
+					throw new InvalidOperationException($"Unexpected grouping type: {groupingType}");
 			}
 		}
 

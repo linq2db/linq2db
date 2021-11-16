@@ -1,8 +1,6 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Runtime.InteropServices;
 using LinqToDB.Common;
-using LinqToDB.Extensions;
 
 using NUnit.Framework;
 

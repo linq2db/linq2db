@@ -1,8 +1,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup>
-		<LinqToDBT4SybaseDataActionTemplatesDirectory>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4SybaseDataActionTemplatesDirectory>
-		<LinqToDBT4SybaseDataActionToolsDirectory>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4SybaseDataActionToolsDirectory>
-		<LinqToDBT4ToolsDirectory>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4ToolsDirectory>
-	
-</PropertyGroup>
+		<LinqToDBT4SharedTools>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4SharedTools>
+		<LinqToDBT4SybaseDataActionClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4SybaseDataActionClientPath>
+		<LinqToDBT4SybaseAseTemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4SybaseAseTemplatesPath>
+	</PropertyGroup>
 </Project>

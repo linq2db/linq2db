@@ -19,6 +19,7 @@ Follow this [document](https://github.com/linq2db/linq2db/files/1056002/Developm
 |.\Redist                    | Binaries,unavailable officially at NuGet, used by tests and nugets                                                               |
 |.\Source\LinqToDB           | LINQ to DB source code                                                                                                           |
 |.\Source\LinqToDB.Tools     | LINQ to DB Tools source code                                                                                                     |
+|.\Source\LinqToDB.AspNet    | LINQ to DB ASP.NET Core integration library source code                                                                          |
 |.\Source\LinqToDB.Templates | LINQ to DB t4models source code                                                                                                  |
 |.\Tests                     | Unit test projects folder                                                                                                        |
 |.\Tests\Base                | LINQ to DB testing framework                                                                                                     |
@@ -38,16 +39,18 @@ Solutions:
 
 #### Source projects
 
-| Project \ Target                                 |.NET 4.5 |.NET 4.6 | .NET Standard 2.0 | .NET Core 2.1 | .NET Standard 2.1 | .NET Core 3.1 |
-|-------------------------------------------------:|:-------:|:-------:|:-----------------:|:-------------:|:-----------------:|:-------------:|
-| `.\Source\LinqToDB\LinqToDB.csproj`              |    √    |    √    |         √         |       √       |         √         |       √       |
-| `.\Source\LinqToDB\LinqToDB.Tools.csproj`        |    √    |         |         √         |               |                   |               |
+| Project \ Target                                 |.NET 4.5 |.NET 4.6 |.NET 4.7.2 | .NET Standard 2.0 | .NET Core 2.1 | .NET Standard 2.1 | .NET Core 3.1 |
+|-------------------------------------------------:|:-------:|:-------:|:---------:|:-----------------:|:-------------:|:-----------------:|:-------------:|
+| `.\Source\LinqToDB\LinqToDB.csproj`              |    √    |    √    |     √     |         √         |       √       |         √         |       √       |
+| `.\Source\LinqToDB\LinqToDB.Tools.csproj`        |    √    |    √    |           |         √         |               |                   |               |
+| `.\Source\LinqToDB\LinqToDB.AspNet.csproj`       |    √    |         |           |         √         |               |                   |               |
 
 Preferred target defines:
-- `NETFRAMEWORK` - `net45` and `net46` target ifdef
+- `NETFRAMEWORK` - `net45`, `net46` and `net472` target ifdef
 - `!NETFRAMEWORK` - `netstandard2.0` and newer target ifdef
 - `NETCOREAPP` - `netcoreapp2.1` and `netcoreapp3.1` target ifdef
 - `NETSTANDARD2_1PLUS` - `netstandard2.1` and `netcoreapp3.1` target ifdef
+- `NATIVE_ASYNC` - ifdef with native support for `ValueTask`, `IAsyncEnumerable<T>` and `IAsyncDisposable` types
 
 Other allowed target defines:
 - `NETSTANDARD2_1` - `netstandard2.1` target ifdef
@@ -56,6 +59,7 @@ Other allowed target defines:
 - `NETCOREAPP2_1` - `netcoreapp2.1` target ifdef
 - `NET45` - `net45` target ifdef
 - `NET46` - `net46` target ifdef
+- `NET472` - `net472` target ifdef
 
 Allowed debugging defines:
 - `TRACK_BUILD`
@@ -64,17 +68,16 @@ Allowed debugging defines:
 
 #### Test projects
 
-| Project \ Target                                   |.NET 4.7.2 | .NET Core 2.1 | .NET Core 3.1 | .NET 5.0 | Xamarin.Forms Android v8.1 |
-|---------------------------------------------------:|:---------:|:-------------:|:-------------:|:--------:|:--------------------------:|
-| `.\Tests\Base\Tests.Base.csproj`                   |     √     |       √       |       √       |    √     |                            |
-| `.\Tests\FSharp\Tests.FSharp.fsproj`               |     √     |       √       |       √       |    √     |                            |
-| `.\Tests\Linq\Tests.csproj`                        |     √     |       √       |       √       |    √     |                            |
-| `.\Tests\Model\Tests.Model.csproj`                 |     √     |       √       |       √       |    √     |                            |
-| `.\Tests\Tests.Android\Tests.Android.csproj`       |           |               |               |          |              √             |
-| `.\Tests\Tests.Benchmarks\Tests.Benchmarks.csproj` |     √     |       √       |       √       |    √     |                            |
-| `.\Tests\Tests.Playground\Tests.Playground.csproj` |     √     |       √       |       √       |    √     |                            |
-| `.\Tests\Tests.T4\Tests.T4.csproj`                 |     √     |       √       |       √       |    √     |                            |
-| `.\Tests\VisualBasic\Tests.VisualBasic.vbproj`     |     √     |       √       |       √       |    √     |                            |
+| Project \ Target                                   |.NET 4.7.2 | .NET Core 2.1 | .NET Core 3.1 | .NET 5.0 |
+|---------------------------------------------------:|:---------:|:-------------:|:-------------:|:--------:|
+| `.\Tests\Base\Tests.Base.csproj`                   |     √     |       √       |       √       |    √     |
+| `.\Tests\FSharp\Tests.FSharp.fsproj`               |     √     |       √       |       √       |    √     |
+| `.\Tests\Linq\Tests.csproj`                        |     √     |       √       |       √       |    √     |
+| `.\Tests\Model\Tests.Model.csproj`                 |     √     |       √       |       √       |    √     |
+| `.\Tests\Tests.Benchmarks\Tests.Benchmarks.csproj` |     √     |       √       |       √       |    √     |
+| `.\Tests\Tests.Playground\Tests.Playground.csproj` |     √     |       √       |       √       |    √     |
+| `.\Tests\Tests.T4\Tests.T4.csproj`                 |     √     |       √       |       √       |    √     |
+| `.\Tests\VisualBasic\Tests.VisualBasic.vbproj`     |     √     |       √       |       √       |    √     |
 
 
 Allowed target defines:
@@ -92,7 +95,7 @@ You can use the solution to build and run tests. Also you can build whole soluti
 * `.\Build.cmd` - builds all the projects in the solution for Debug, Release and Azure configurations
 * `.\Compile.cmd` - builds LinqToDB project for Debug and Release configurations
 * `.\Clean.cmd` - cleanups solution projects for Debug, Release and Azure configurations
-* `.\Test.cmd` - build `Debug` configuration and run tests for `net472`,  `netcoreapp2.1`, `netcoreapp3.1` and `net5.0` targets. You can set other configuration by passing it as first paramenter, disable test targets by passing 0 to second(for `net472`),  third (for `netcoreapp2.1`), fourth (for `netcoreapp3.1`) or fifth (for `net5.0`) parameter and format (default:html) as 6th parameter.
+* `.\Test.cmd` - build `Debug` configuration and run tests for `net472`,  `netcoreapp2.1`, `netcoreapp3.1` and `net5.0` targets. You can set other configuration by passing it as first parameter, disable test targets by passing 0 to second (for `net472`),  third (for `netcoreapp2.1`), fourth (for `netcoreapp3.1`) or fifth (for `net5.0`) parameter and format (default:html) as 6th parameter.
 
 Example of running Release build tests for `netcoreapp2.1` only with trx as output:
 ```
@@ -264,7 +267,7 @@ Also - if your test changes database data, be sure to revert those changes (!) t
 
 We do run builds and tests with:
 
-* [Azure Pipelines](https://dev.azure.com/linq2db/linq2db/_build?definitionId=1) [azure-pipelines.yml](https://github.com/linq2db/linq2db/blob/master/azure-pipelines.yml).
+* [Azure Pipelines](https://dev.azure.com/linq2db/linq2db/_build?definitionId=3) [pipelines/default.yml](https://github.com/linq2db/linq2db/blob/master/Build/Azure/pipelines/default.yml).
 It builds solution, generate and publish nugets and runs tests for:
   * .Net 4.7.2
   * .Net Core 2.1 (Windows/Linux and MacOS)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Mapping;
@@ -57,6 +58,9 @@ namespace Tests.Linq
 
 			[Column(DataType = DataType.VarChar, Length = 1, CanBeNull = false)]
 			public bool BoolValue { get; set; }
+
+			[Column(DataType = DataType.VarChar, Length = 1, CanBeNull = false)]
+			public bool AnotherBoolValue { get; set; }
 
 			[Column]
 			public DateTime? DateTimeNullable { get; set; }
@@ -116,6 +120,9 @@ namespace Tests.Linq
 			[Column(DataType = DataType.VarChar, Length = 1, CanBeNull = false)]
 			public char BoolValue { get; set; }
 
+			[Column(DataType = DataType.VarChar, Length = 1, CanBeNull = false)]
+			public char AnotherBoolValue { get; set; }
+
 			[Column]
 			public DateTime? DateTimeNullable { get; set; }
 		}
@@ -147,6 +154,8 @@ namespace Tests.Linq
 				)
 				.Property(e => e.BoolValue)
 				.HasConversion(v => v ? 'Y' : 'N', p => p == 'Y')
+				.Property(e => e.AnotherBoolValue)
+				.HasConversion(v => v ? 'T' : 'F', p => p == 'T')
 				.Property(e => e.DateTimeNullable)
 				.HasConversion(
 					_ => _.HasValue ? _.Value.ToLocalTime() : new DateTime?(),
@@ -474,7 +483,7 @@ namespace Tests.Linq
 					.Set(e => e.EnumWithNullDeclarative, EnumValue.Null)
 					.Update();
 
-				var update1Check = rawTable.FirstOrDefault(e => e.Id == 1)!;
+				var update1Check = rawTable.First(e => e.Id == 1);
 
 				Assert.That(update1Check.Value1, Is.EqualTo(JsonConvert.SerializeObject(testData[0].Value1)));
 				Assert.That(update1Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(updated)));
@@ -493,7 +502,7 @@ namespace Tests.Linq
 
 				db.Update(toUpdate2);
 
-				var update2Check = rawTable.FirstOrDefault(e => e.Id == 2)!;
+				var update2Check = rawTable.First(e => e.Id == 2);
 
 				Assert.That(update2Check.Value1, Is.EqualTo("{\"some\":\"updated2}\"}"));
 				Assert.That(update2Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(new List<ItemClass> { new ItemClass { Value = "updated2" } })));
@@ -511,7 +520,7 @@ namespace Tests.Linq
 				};
 				db.Update(toUpdate3);
 
-				var update3Check = rawTable.FirstOrDefault(e => e.Id == 3)!;
+				var update3Check = rawTable.First(e => e.Id == 3)!;
 
 				Assert.That(update3Check.Value1, Is.Null);
 				Assert.That(update3Check.Value2, Is.Null);
@@ -538,8 +547,9 @@ namespace Tests.Linq
 					.Value(e => e.Enum, EnumValue.Value1)
 					.Value(e => e.Value2, inserted)
 					.Value(e => e.BoolValue, true)
+					.Value(e => e.AnotherBoolValue, true)
 					.Insert();
-				var insert1Check = rawTable.FirstOrDefault(e => e.Id == 1)!;
+				var insert1Check = rawTable.First(e => e.Id == 1);
 
 				Assert.That(insert1Check.Value1, Is.EqualTo(JsonConvert.SerializeObject(new JArray())));
 				Assert.That(insert1Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(inserted)));
@@ -547,6 +557,7 @@ namespace Tests.Linq
 				Assert.That(insert1Check.EnumWithNull, Is.Null);
 				Assert.That(insert1Check.EnumWithNullDeclarative, Is.Null);
 				Assert.That(insert1Check.BoolValue, Is.EqualTo('Y'));
+				Assert.That(insert1Check.AnotherBoolValue, Is.EqualTo('T'));
 				
 				table
 					.Value(e => e.Id, 2)
@@ -554,9 +565,10 @@ namespace Tests.Linq
 					.Value(e => e.Value2, (List<ItemClass>?)null)
 					.Value(e => e.Enum, EnumValue.Value2)
 					.Value(e => e.BoolValue, false)
+					.Value(e => e.AnotherBoolValue, false)
 					.Insert();
 
-				var insert2Check = rawTable.FirstOrDefault(e => e.Id == 2)!;
+				var insert2Check = rawTable.First(e => e.Id == 2);
 
 				Assert.That(insert2Check.Value1, Is.Null);
 				Assert.That(insert2Check.Value2, Is.Null);
@@ -564,6 +576,7 @@ namespace Tests.Linq
 				Assert.That(insert2Check.EnumWithNull, Is.Null);
 				Assert.That(insert2Check.EnumWithNullDeclarative, Is.Null);
 				Assert.That(insert2Check.BoolValue, Is.EqualTo('N'));
+				Assert.That(insert2Check.AnotherBoolValue, Is.EqualTo('F'));
 
 
 				var toInsert = new MainClass
@@ -572,12 +585,13 @@ namespace Tests.Linq
 					Value1 = JToken.Parse("{ some: \"inserted3}\" }"),
 					Value2 = new List<ItemClass> { new ItemClass { Value = "inserted3" } },
 					Enum = EnumValue.Value3,
-					BoolValue = true
+					BoolValue = true,
+					AnotherBoolValue = true,
 				};
 
 				db.Insert(toInsert);
 
-				var insert3Check = rawTable.FirstOrDefault(e => e.Id == 3)!;
+				var insert3Check = rawTable.First(e => e.Id == 3);
 
 				Assert.That(insert3Check.Value1, Is.EqualTo("{\"some\":\"inserted3}\"}"));
 				Assert.That(insert3Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(new List<ItemClass> { new ItemClass { Value = "inserted3" } })));
@@ -586,8 +600,45 @@ namespace Tests.Linq
 				Assert.That(insert3Check.EnumWithNull, Is.EqualTo("Value1"));
 				Assert.That(insert3Check.EnumWithNullDeclarative, Is.EqualTo("Value1"));
 				Assert.That(insert3Check.BoolValue, Is.EqualTo('Y'));
+				Assert.That(insert3Check.AnotherBoolValue, Is.EqualTo('T'));
 
 				Assert.That(table.Count(), Is.EqualTo(3));
+			}
+		}
+		
+		[Test]
+		public void InsertExpression([DataSources(false)] string context, [Values(1, 2)] int iteration)
+		{
+			var ms = CreateMappingSchema();
+
+			using (var db = GetDataContext(context, ms))
+			using (var table = db.CreateLocalTable<MainClass>())
+			{
+				var rawTable = db.GetTable<MainClassRaw>();
+
+				var inserted  = new List<ItemClass> { new ItemClass { Value = "inserted" } };
+				var boolValue = iteration % 2 == 0;
+				table.Insert(() => new MainClass
+				{
+					Id     = iteration,
+					Value1 = new JArray(),
+					Enum   = EnumValue.Value1,
+					Value2 = inserted,
+					BoolValue = boolValue,
+					AnotherBoolValue = boolValue
+				});
+
+				var record = rawTable.Single(e => e.Id == iteration);
+
+				record.Id.Should().Be(iteration);
+				record.Value1.Should().Be(JsonConvert.SerializeObject(new JArray()));
+				record.Value2.Should().Be(JsonConvert.SerializeObject(inserted));
+				record.Enum.Should().Be("Value1");
+				record.EnumWithNull.Should().BeNull();
+				record.EnumWithNullDeclarative.Should().BeNull();
+				record.BoolValue.Should().Be(boolValue ? 'Y' : 'N');
+				record.AnotherBoolValue.Should().Be(boolValue ? 'T' : 'F');
+
 			}
 		}
 		

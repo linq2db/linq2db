@@ -133,7 +133,7 @@ CREATE Procedure Person_SelectByKeyLowercase
 	@id int
 AS
 
-SELECT personid, firstname FROM Person WHERE PersonID = @id
+SELECT PersonID, FirstName FROM Person WHERE PersonID = @id
 
 GO
 
@@ -480,6 +480,8 @@ CREATE TABLE AllTypes
 -- SKIP SqlServer.2017 BEGIN
 -- SKIP SqlServer.2019 BEGIN
 -- SKIP SqlServer.2019.SA BEGIN
+-- SKIP SqlServer.2019.FEC BEGIN
+-- SKIP SqlServer.Contained BEGIN
 -- SKIP SqlAzure BEGIN
 	datetime2DataType        varchar(50)       NULL,
 	datetimeoffsetDataType   varchar(50)       NULL,
@@ -500,6 +502,8 @@ CREATE TABLE AllTypes
 -- SKIP SqlServer.2017 END
 -- SKIP SqlServer.2019 END
 -- SKIP SqlServer.2019.SA END
+-- SKIP SqlServer.2019.FEC END
+-- SKIP SqlServer.Contained END
 -- SKIP SqlAzure END
 
 ) ON [PRIMARY]
@@ -685,6 +689,8 @@ GO
 -- SKIP SqlServer.2017 BEGIN
 -- SKIP SqlServer.2019 BEGIN
 -- SKIP SqlServer.2019.SA BEGIN
+-- SKIP SqlServer.2019.FEC BEGIN
+-- SKIP SqlServer.Contained BEGIN
 -- SKIP SqlAzure BEGIN
 CREATE TABLE LinqDataTypes
 (
@@ -708,6 +714,8 @@ GO
 -- SKIP SqlServer.2017 END
 -- SKIP SqlServer.2019 END
 -- SKIP SqlServer.2019.SA END
+-- SKIP SqlServer.2019.FEC END
+-- SKIP SqlServer.Contained END
 -- SKIP SqlServer.2008 END
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestIdentity') AND type in (N'U'))
@@ -966,7 +974,7 @@ BEGIN
 END
 GO
 
-IF EXISTS (SELECT  schema_name FROM    information_schema.schemata WHERE   schema_name = 'TestSchema')
+IF EXISTS (SELECT  SCHEMA_NAME FROM    INFORMATION_SCHEMA.SCHEMATA WHERE   SCHEMA_NAME = 'TestSchema')
 BEGIN
 	DROP SCHEMA [TestSchema]
 END
@@ -1111,8 +1119,8 @@ BEGIN
 	INSERT INTO #PeopleIds
 	SELECT Person.PersonID
 	FROM Person
-	WHERE LOWER(FirstName) like '%' + @nameFilter + '%'
-	OR LOWER(LastName) like '%' + @nameFilter + '%';
+	WHERE FirstName like '%' + @nameFilter + '%'
+	OR LastName like '%' + @nameFilter + '%';
 
 	-- 0: List of matching person ids.
 	SELECT PersonID FROM #PeopleIds;
@@ -1271,5 +1279,15 @@ CREATE TABLE DataType
 (
 	id INT NOT NULL
 
+)
+GO
+
+DROP TABLE CollatedTable
+GO
+CREATE TABLE CollatedTable
+(
+	Id				INT NOT NULL,
+	CaseSensitive	NVARCHAR(20) COLLATE Latin1_General_CS_AI NOT NULL,
+	CaseInsensitive	NVARCHAR(20) COLLATE Latin1_General_CI_AI NOT NULL
 )
 GO

@@ -23,7 +23,7 @@ namespace LinqToDB.SqlQuery
 
 		public SqlValue(object value)
 		{
-			_value     = value ?? throw new ArgumentNullException("Untyped null value");
+			_value     = value ?? throw new ArgumentNullException(nameof(value), "Untyped null value");
 			_valueType = new DbDataType(value.GetType());
 		}
 
@@ -79,9 +79,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion
@@ -127,21 +127,6 @@ namespace LinqToDB.SqlQuery
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			return ((ISqlExpression)this).Equals(other) && comparer(this, other);
-		}
-
-		#endregion
-
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-				objectTree.Add(this, clone = new SqlValue(ValueType, Value));
-
-			return clone;
 		}
 
 		#endregion

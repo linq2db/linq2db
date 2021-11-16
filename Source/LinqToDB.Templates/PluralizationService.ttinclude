@@ -1,5 +1,7 @@
 <#@ assembly name="System.Data.Entity.Design"                          #>
 <#@ import namespace="System.Data.Entity.Design.PluralizationServices" #>
+<#@ include file="T4Model.ttinclude"   once="true"                     #>
+<#@ include file="DataModel.ttinclude" once="true"                     #>
 <#
 	{
 		ToPlural   = Pluralization.ToPlural;
@@ -7,7 +9,7 @@
 	}
 #>
 <#+
-static class Pluralization
+public static class Pluralization
 {
 	public static string CultureInfo = "en";
 
@@ -78,11 +80,10 @@ static class Pluralization
 		var word = GetLastWord(str);
 
 		string newWord;
-
 		if (!Dictionary.TryGetValue(word.ToLower(), out newWord))
 			newWord = _service.IsPlural(word) ? word : _service.Pluralize(word);
 
-		if (string.Compare(word, newWord, true) != 0)
+		if (string.Compare(word, newWord, true, _service.Culture) != 0)
 		{
 			if (char.IsUpper(word[0]))
 				newWord = char.ToUpper(newWord[0]) + newWord.Substring(1, newWord.Length - 1).ToLower();
@@ -108,7 +109,7 @@ static class Pluralization
 			??
 			(_service.IsSingular(word) ? word : _service.Singularize(word));
 
-		if (string.Compare(word, newWord, true) != 0)
+		if (string.Compare(word, newWord, true, _service.Culture) != 0)
 		{
 			if (char.IsUpper(word[0]))
 				newWord = char.ToUpper(newWord[0]) + newWord.Substring(1, newWord.Length - 1);
@@ -141,11 +142,10 @@ static class Pluralization
 		var word = GetLastWordVersion1(str);
 
 		string newWord;
-
 		if (!Dictionary.TryGetValue(word.ToLower(), out newWord))
 			newWord = _service.IsPlural(word) ? word : _service.Pluralize(word);
 
-		if (string.Compare(word, newWord, true) != 0)
+		if (string.Compare(word, newWord, true, _service.Culture) != 0)
 		{
 			if (char.IsUpper(word[0]))
 				newWord = char.ToUpper(newWord[0]) + newWord.Substring(1, newWord.Length - 1);
@@ -165,7 +165,7 @@ static class Pluralization
 
 		var newWord =
 			Dictionary
-				.Where(dic => string.Compare(dic.Value, word, true) == 0)
+				.Where(dic => string.Compare(dic.Value, word, true, _service.Culture) == 0)
 				.Select(dic => dic.Key)
 				.FirstOrDefault()
 			??

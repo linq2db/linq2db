@@ -34,10 +34,7 @@ namespace LinqToDB.DataProvider.SapHana
 				if (identityField == null || table == null)
 					throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.Name);
 
-				StringBuilder.Append("SELECT MAX(");
-				BuildExpression(identityField, false, true);
-				StringBuilder.Append(") FROM ");
-				BuildPhysicalTable(table, null);
+				StringBuilder.Append("SELECT CURRENT_IDENTITY_VALUE() FROM DUMMY");
 			}
 		}
 
@@ -77,11 +74,6 @@ namespace LinqToDB.DataProvider.SapHana
 
 				AppendIndent().AppendFormat(createTable.StatementHeader, name);
 			}
-		}
-
-		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
-		{
-			BuildInsertOrUpdateQueryAsUpdateInsert(insertOrUpdate);
 		}
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
@@ -192,7 +184,7 @@ namespace LinqToDB.DataProvider.SapHana
 			AppendIndent();
 			StringBuilder.Append("PRIMARY KEY (");
 			StringBuilder.Append(string.Join(InlineComma, fieldNames));
-			StringBuilder.Append(")");
+			StringBuilder.Append(')');
 		}
 
 		public override StringBuilder BuildTableName(StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions)
@@ -205,10 +197,10 @@ namespace LinqToDB.DataProvider.SapHana
 				throw new LinqToDBException("You must specify schema name for linked server queries.");
 
 			if (server != null)
-				sb.Append(server).Append(".");
+				sb.Append(server).Append('.');
 
 			if (schema != null)
-				sb.Append(schema).Append(".");
+				sb.Append(schema).Append('.');
 
 			return sb.Append(table);
 		}
@@ -245,5 +237,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 			StringBuilder.Append(command);
 		}
+
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
 	}
 }
