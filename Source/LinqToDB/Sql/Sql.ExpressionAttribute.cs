@@ -193,6 +193,7 @@ namespace LinqToDB
 					case IsNullableType.SameAsThirdParameter   : return SameAs(2);
 					case IsNullableType.SameAsLastParameter    : return SameAs(parameters.Length - 1);
 					case IsNullableType.IfAnyParameterNullable : return parameters.Any(static p => p);
+					case IsNullableType.IfAllParametersNullable: return parameters.All(static p => p);
 				}
 
 				bool SameAs(int parameterNumber)
