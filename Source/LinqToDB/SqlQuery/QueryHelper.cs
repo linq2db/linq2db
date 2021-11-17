@@ -1681,6 +1681,30 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
+		/// <summary>
+		/// Returns true, if expression result requires non-trivial evaluation (e.g. function call, subquery or some operation).
+		/// </summary>
+		/// <param name="expr">Expression to test.</param>
+		/// <returns><c>true</c> if expression result requires server to evaluate it.</returns>
+		public static bool IsComplexEvaluationExpression(this ISqlExpression expr)
+		{
+			return null == expr.Find(static e =>
+			{
+				switch (e.ElementType)
+				{
+					case QueryElementType.SqlQuery             :
+					case QueryElementType.LikePredicate        :
+					case QueryElementType.SearchStringPredicate:
+					case QueryElementType.SearchCondition      :
+					case QueryElementType.SqlBinaryExpression  :
+					case QueryElementType.SqlFunction          :
+						return true;
+				}
+
+				return false;
+			});
+		}
+
 		public static bool ShouldCheckForNull(this ISqlExpression expr)
 		{
 			if (!expr.CanBeNull)
