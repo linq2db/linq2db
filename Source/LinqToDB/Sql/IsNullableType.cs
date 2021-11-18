@@ -14,7 +14,7 @@ namespace LinqToDB
 			SameAsSecondParameter,
 			SameAsThirdParameter,
 			SameAsLastParameter,
-			IfAllParametersNullable
+			IfAllParametersNullable,
 		}
 	}
 }

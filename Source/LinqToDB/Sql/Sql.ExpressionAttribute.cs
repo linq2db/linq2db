@@ -186,15 +186,16 @@ namespace LinqToDB
 
 				var parameters = nullInfo.ToArray();
 
-				switch (isNullable)
+				bool? isNullabeParameters = isNullable switch
 				{
-					case IsNullableType.SameAsFirstParameter   : return SameAs(0);
-					case IsNullableType.SameAsSecondParameter  : return SameAs(1);
-					case IsNullableType.SameAsThirdParameter   : return SameAs(2);
-					case IsNullableType.SameAsLastParameter    : return SameAs(parameters.Length - 1);
-					case IsNullableType.IfAnyParameterNullable : return parameters.Any(static p => p);
-					case IsNullableType.IfAllParametersNullable: return parameters.All(static p => p);
-				}
+					IsNullableType.SameAsFirstParameter => SameAs(0),
+					IsNullableType.SameAsSecondParameter => SameAs(1),
+					IsNullableType.SameAsThirdParameter  => SameAs(2),
+					IsNullableType.SameAsLastParameter  => SameAs(parameters.Length - 1),
+					IsNullableType.IfAnyParameterNullable  => parameters.Any(static p => p),
+					IsNullableType.IfAllParametersNullable  => parameters.All(static p => p),
+					_ => null
+				};
 
 				bool SameAs(int parameterNumber)
 				{
@@ -203,7 +204,7 @@ namespace LinqToDB
 					return true;
 				}
 
-				return null;
+				return isNullabeParameters;
 			}
 
 			const  string MatchParamPattern = @"{([0-9a-z_A-Z?]*)(,\s'(.*)')?}";
