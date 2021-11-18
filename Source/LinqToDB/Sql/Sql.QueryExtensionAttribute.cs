@@ -32,7 +32,7 @@ namespace LinqToDB
 			public QueryExtensionScope Scope         { get; }
 			public int                 ID            { get; }
 
-			public virtual SqlQueryExtension GetExtension(Dictionary<string,SqlQueryExtensionData> parameters)
+			public virtual SqlQueryExtension GetExtension(List<SqlQueryExtensionData> parameters)
 			{
 				var ext = new SqlQueryExtension
 				{
@@ -41,22 +41,22 @@ namespace LinqToDB
 				};
 
 				foreach (var item in parameters)
-					ext.Arguments.Add(item.Key, item.Value.SqlExpression!);
+					ext.Arguments.Add(item.Name, item.SqlExpression!);
 
 				return ext;
 			}
 
-			public virtual void ExtendTable(SqlTable table, Dictionary<string,SqlQueryExtensionData> parameters)
+			public virtual void ExtendTable(SqlTable table, List<SqlQueryExtensionData> parameters)
 			{
 				(table.SqlQueryExtensions ??= new()).Add(GetExtension(parameters));
 			}
 
-			public virtual void ExtendJoin(List<SqlQueryExtension> extensions, Dictionary<string,SqlQueryExtensionData> parameters)
+			public virtual void ExtendJoin(List<SqlQueryExtension> extensions, List<SqlQueryExtensionData> parameters)
 			{
 				extensions.Add(GetExtension(parameters));
 			}
 
-			public virtual void ExtendQuery(List<SqlQueryExtension> extensions, Dictionary<string,SqlQueryExtensionData> parameters)
+			public virtual void ExtendQuery(List<SqlQueryExtension> extensions, List<SqlQueryExtensionData> parameters)
 			{
 				extensions.Add(GetExtension(parameters));
 			}
