@@ -252,6 +252,11 @@ namespace Tests.Linq
 		[Test]
 		public void EagerLoadMultiLevel([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
+#if NETFRAMEWORK
+			if (context.Contains(ProviderName.SQLiteMS))
+				Assert.Inconclusive("Disabled due to sporadical errors due to old SQLite version (SQLite Error 5: 'database is locked')");
+#endif
+
 			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();
 
