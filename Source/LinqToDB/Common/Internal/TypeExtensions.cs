@@ -230,7 +230,6 @@ namespace LinqToDB.Common.Internal
 				    || genericDefinition == typeof(Tuple<,,,,>)
 				    || genericDefinition == typeof(Tuple<,,,,,>)
 				    || genericDefinition == typeof(Tuple<,,,,,,>)
-				    || genericDefinition == typeof(Tuple<,,,,,,,>)
 				    || genericDefinition == typeof(Tuple<,,,,,,,>))
 				{
 					return true;
