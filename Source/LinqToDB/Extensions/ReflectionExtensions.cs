@@ -29,12 +29,6 @@ namespace LinqToDB.Extensions
 
 		public static MemberInfo[] GetPublicInstanceValueMembers(this Type type)
 		{
-			if (type.IsAnonymous())
-			{
-				type.GetConstructors().Single()
-					.GetParameters().Select((p, i) => new { p.Name, i }).ToDictionary(_ => _.Name, _ => _.i);
-			}
-
 			var members = type.GetMembers(BindingFlags.Instance | BindingFlags.Public)
 				.Where(m => m.IsFieldEx() || m.IsPropertyEx() && ((PropertyInfo)m).GetIndexParameters().Length == 0);
 
