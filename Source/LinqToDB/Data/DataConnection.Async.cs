@@ -26,18 +26,24 @@ namespace LinqToDB.Data
 			//
 			if (TransactionAsync != null) await TransactionAsync.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			// Create new transaction object.
-			//
-			TransactionAsync = await _connection!.BeginTransactionAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			var dataConnectionTransaction = await TraceActionAsync(TraceOperation.BeginTransaction, () => "BeginTransaction", async () =>
+			{
+				// Create new transaction object.
+				//
+				TransactionAsync = await _connection!.BeginTransactionAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			_closeTransaction = true;
+				_closeTransaction = true;
 
-			// If the active command exists.
-			//
-			if (_command != null)
-				_command.Transaction = Transaction;
+				// If the active command exists.
+				//
+				if (_command != null)
+					_command.Transaction = Transaction;
 
-			return new DataConnectionTransaction(this);
+				return new DataConnectionTransaction(this);
+			})
+			.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+			return dataConnectionTransaction;
 		}
 
 		/// <summary>
@@ -54,18 +60,24 @@ namespace LinqToDB.Data
 			//
 			if (TransactionAsync != null) await TransactionAsync.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			// Create new transaction object.
-			//
-			TransactionAsync = await _connection!.BeginTransactionAsync(isolationLevel, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			var dataConnectionTransaction = await TraceActionAsync(TraceOperation.BeginTransaction, () => "BeginTransaction", async () =>
+			{
+				// Create new transaction object.
+				//
+				TransactionAsync = await _connection!.BeginTransactionAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			_closeTransaction = true;
+				_closeTransaction = true;
 
-			// If the active command exists.
-			//
-			if (_command != null)
-				_command.Transaction = Transaction;
+				// If the active command exists.
+				//
+				if (_command != null)
+					_command.Transaction = Transaction;
 
-			return new DataConnectionTransaction(this);
+				return new DataConnectionTransaction(this);
+			})
+			.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+			return dataConnectionTransaction;
 		}
 
 		/// <summary>
@@ -134,16 +146,21 @@ namespace LinqToDB.Data
 		{
 			if (TransactionAsync != null)
 			{
-				await TransactionAsync.CommitAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-
-				if (_closeTransaction)
+				await TraceActionAsync(TraceOperation.CommitTransaction, () => "CommitTransaction", async () =>
 				{
-					await TransactionAsync.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-					TransactionAsync = null;
+					await TransactionAsync.CommitAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-					if (_command != null)
-						_command.Transaction = null;
-				}
+					if (_closeTransaction)
+					{
+						await TransactionAsync.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						TransactionAsync = null;
+
+						if (_command != null)
+							_command.Transaction = null;
+					}
+					return Task.FromResult(true);
+				})
+				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 		}
 
@@ -157,16 +174,21 @@ namespace LinqToDB.Data
 		{
 			if (TransactionAsync != null)
 			{
-				await TransactionAsync.RollbackAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-
-				if (_closeTransaction)
+				await TraceActionAsync(TraceOperation.RollbackTransaction, () => "RollbackTransaction", async () =>
 				{
-					await TransactionAsync.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-					TransactionAsync = null;
+					await TransactionAsync.RollbackAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-					if (_command != null)
-						_command.Transaction = null;
-				}
+					if (_closeTransaction)
+					{
+						await TransactionAsync.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						TransactionAsync = null;
+
+						if (_command != null)
+							_command.Transaction = null;
+					}
+					return Task.FromResult(true);
+				})
+				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 		}
 
@@ -229,8 +251,59 @@ namespace LinqToDB.Data
 			Disposed = true;
 			await CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
+		#region ProviderSpecific Support
+		protected async Task<T> TraceActionAsync<T>(TraceOperation traceOperation, Func<string> commandText, Func<Task<T>> action)
+		{
+			var now = DateTime.UtcNow;
+			var sw  = Stopwatch.StartNew();
 
-#region ExecuteNonQueryAsync
+			if (TraceSwitchConnection.TraceInfo)
+			{
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, traceOperation, false)
+				{
+					TraceLevel = TraceLevel.Info,
+					CommandText = commandText(),
+					StartTime = now,
+				});
+			}
+
+			try
+			{
+				var actionResult = await action().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+				if (TraceSwitchConnection.TraceInfo)
+				{
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, traceOperation, false)
+					{
+						TraceLevel = TraceLevel.Info,
+						CommandText = commandText(),
+						StartTime = now,
+						ExecutionTime = sw.Elapsed
+					});
+				}
+
+				return actionResult;
+			}
+			catch (Exception ex)
+			{
+				if (TraceSwitchConnection.TraceError)
+				{
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, traceOperation, false)
+					{
+						TraceLevel = TraceLevel.Error,
+						CommandText = commandText(),
+						StartTime = now,
+						ExecutionTime = sw.Elapsed,
+						Exception = ex,
+					});
+				}
+
+				throw;
+			}
+		}
+		#endregion
+
+		#region ExecuteNonQueryAsync
 
 		protected virtual Task<int> ExecuteNonQueryAsync(IDbCommand command, CancellationToken cancellationToken)
 		{

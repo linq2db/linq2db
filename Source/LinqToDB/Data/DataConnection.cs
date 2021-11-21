@@ -1495,18 +1495,22 @@ namespace LinqToDB.Data
 			//
 			TransactionAsync?.Dispose();
 
-			// Create new transaction object.
-			//
-			TransactionAsync = AsyncFactory.Create(EnsureConnection().BeginTransaction());
+			var dataConnectionTransaction = TraceAction(TraceOperation.BeginTransaction, () => "BeginTransaction", () =>
+			{
+				// Create new transaction object.
+				//
+				TransactionAsync = AsyncFactory.Create(EnsureConnection().BeginTransaction());
 
-			_closeTransaction = true;
+				_closeTransaction = true;
 
-			// If the active command exists.
-			//
-			if (_command != null)
-				_command.Transaction = Transaction;
+				// If the active command exists.
+				if (_command != null)
+					_command.Transaction = Transaction;
 
-			return new DataConnectionTransaction(this);
+				return new DataConnectionTransaction(this);
+			});
+
+			return dataConnectionTransaction;
 		}
 
 		/// <summary>
@@ -1520,18 +1524,22 @@ namespace LinqToDB.Data
 			//
 			TransactionAsync?.Dispose();
 
-			// Create new transaction object.
-			//
-			TransactionAsync = AsyncFactory.Create(EnsureConnection().BeginTransaction(isolationLevel));
+			var dataConnectionTransaction = TraceAction(TraceOperation.BeginTransaction, () => "BeginTransaction", () =>
+			{
+				// Create new transaction object.
+				//
+				TransactionAsync = AsyncFactory.Create(EnsureConnection().BeginTransaction(isolationLevel));
 
-			_closeTransaction = true;
+				_closeTransaction = true;
 
-			// If the active command exists.
-			//
-			if (_command != null)
-				_command.Transaction = Transaction;
+				// If the active command exists.
+				if (_command != null)
+					_command.Transaction = Transaction;
 
-			return new DataConnectionTransaction(this);
+				return new DataConnectionTransaction(this);
+			});
+
+			return dataConnectionTransaction;
 		}
 
 		/// <summary>
@@ -1541,16 +1549,21 @@ namespace LinqToDB.Data
 		{
 			if (TransactionAsync != null)
 			{
-				TransactionAsync.Commit();
-
-				if (_closeTransaction)
+				TraceAction(TraceOperation.CommitTransaction, () => "CommitTransaction", () =>
 				{
-					TransactionAsync.Dispose();
-					TransactionAsync = null;
+					TransactionAsync.Commit();
 
-					if (_command != null)
-						_command.Transaction = null;
-				}
+					if (_closeTransaction)
+					{
+						TransactionAsync.Dispose();
+						TransactionAsync = null;
+
+						if (_command != null)
+							_command.Transaction = null;
+					}
+
+					return true;
+				});	
 			}
 		}
 
@@ -1561,19 +1574,75 @@ namespace LinqToDB.Data
 		{
 			if (TransactionAsync != null)
 			{
-				TransactionAsync.Rollback();
-
-				if (_closeTransaction)
+				TraceAction(TraceOperation.RollbackTransaction, () => "RollbackTransaction", () =>
 				{
-					TransactionAsync.Dispose();
-					TransactionAsync = null;
+					TransactionAsync.Rollback();
 
-					if (_command != null)
-						_command.Transaction = null;
-				}
+					if (_closeTransaction)
+					{
+						TransactionAsync.Dispose();
+						TransactionAsync = null;
+
+						if (_command != null)
+							_command.Transaction = null;
+					}
+					return true;
+				});
 			}
 		}
 
+		#endregion
+
+		#region ProviderSpecific Support
+		protected T TraceAction<T>(TraceOperation traceOperation, Func<string> commandText, Func<T> action)
+		{
+			var now = DateTime.UtcNow;
+			var sw  = Stopwatch.StartNew();
+
+			if (TraceSwitchConnection.TraceInfo)
+			{
+				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, traceOperation, false)
+				{
+					TraceLevel = TraceLevel.Info,
+					CommandText = commandText(),
+					StartTime = now,
+				});
+			}
+
+			try
+			{
+				var actionResult = action();
+
+				if (TraceSwitchConnection.TraceInfo)
+				{
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, traceOperation, false)
+					{
+						TraceLevel = TraceLevel.Info,
+						CommandText = commandText(),
+						StartTime = now,
+						ExecutionTime = sw.Elapsed
+					});
+				}
+
+				return actionResult;
+			}
+			catch (Exception ex)
+			{
+				if (TraceSwitchConnection.TraceError)
+				{
+					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, traceOperation, false)
+					{
+						TraceLevel = TraceLevel.Error,
+						CommandText = commandText(),
+						StartTime = now,
+						ExecutionTime = sw.Elapsed,
+						Exception = ex,
+					});
+				}
+
+				throw;
+			}
+		}
 		#endregion
 
 		#region MappingSchema
