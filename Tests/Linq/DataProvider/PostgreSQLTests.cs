@@ -908,6 +908,7 @@ namespace Tests.DataProvider
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL11)]
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL12)]
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL13)]
+			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL14)]
 			                                           public PhysicalAddress? macaddr8DataType         { get; set; }
 			// json
 			[Column]                                   public string? jsonDataType                      { get; set; }
@@ -933,7 +934,8 @@ namespace Tests.DataProvider
 			var macaddr8Supported = providerName == TestProvName.PostgreSQL10
 				|| providerName == TestProvName.PostgreSQL11
 				|| providerName == TestProvName.PostgreSQL12
-				|| providerName == TestProvName.PostgreSQL13;
+				|| providerName == TestProvName.PostgreSQL13
+				|| providerName == TestProvName.PostgreSQL14;
 			var lineSupported     = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			var jsonbSupported    = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			var testData = new[]
@@ -1087,7 +1089,8 @@ namespace Tests.DataProvider
 			var macaddr8Supported = providerName == TestProvName.PostgreSQL10
 				|| providerName == TestProvName.PostgreSQL11
 				|| providerName == TestProvName.PostgreSQL12
-				|| providerName == TestProvName.PostgreSQL13;
+				|| providerName == TestProvName.PostgreSQL13
+				|| providerName == TestProvName.PostgreSQL14;
 			var lineSupported     = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			var jsonbSupported    = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			var testData = new[]

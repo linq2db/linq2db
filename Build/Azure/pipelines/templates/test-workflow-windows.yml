@@ -4,7 +4,8 @@ parameters:
   framework: ''
   titleFramework: ''
   with_baselines: false
-  installnet5: false # temporary flag
+  installnet5: false
+  installnet6: false
 
 steps:
 - checkout: none
@@ -13,8 +14,15 @@ steps:
   displayName: 'Install .net 5'
   inputs:
     packageType: sdk
-    version: 5.x
+    version: 5.0.x
   condition: eq('${{ parameters.installnet5 }}', 'true')
+
+- task: UseDotNet@2
+  displayName: 'Install .net 6'
+  inputs:
+    packageType: sdk
+    version: 6.0.x
+  condition: eq('${{ parameters.installnet6 }}', 'true')
 
 - task: CmdLine@2
   inputs:
@@ -120,9 +128,3 @@ steps:
     EMAIL: azp@linq2db.com
     GIT_AUTHOR_NAME: Azure Pipelines Bot
     GIT_COMMITTER_NAME: Azure Pipelines Bot
-
-#    - powershell: Get-OdbcDriver | Select Name, Platform
-#      displayName: List ODBC providers
-
-#    - powershell: '[System.Data.OleDb.OleDbEnumerator]::GetRootEnumerator() | % { $_.GetValue(0) + " => " + $_.GetValue(2) }'
-#      displayName: List OLEDB providers

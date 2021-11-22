@@ -276,7 +276,8 @@ namespace Tests.SchemaProvider
 			var macaddr8Supported =  context.Contains(TestProvName.PostgreSQL10)
 				|| context.Contains(TestProvName.PostgreSQL11)
 				|| context.Contains(TestProvName.PostgreSQL12)
-				|| context.Contains(TestProvName.PostgreSQL13);
+				|| context.Contains(TestProvName.PostgreSQL13)
+				|| context.Contains(TestProvName.PostgreSQL14);
 			var jsonbSupported    = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			using (var db = (DataConnection)GetDataContext(context))
 			{

@@ -432,6 +432,7 @@ namespace Tests
 			TestProvName.PostgreSQL11,
 			TestProvName.PostgreSQL12,
 			TestProvName.PostgreSQL13,
+			TestProvName.PostgreSQL14,
 			ProviderName.MySql,
 			ProviderName.MySqlConnector,
 			TestProvName.MySql55,
