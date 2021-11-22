@@ -216,7 +216,7 @@ jobs:
   steps:
   - template: test-workflow-windows.yml
     parameters:
-      isCore: false
+      isCore: true
       artifacts: $(netfx472_tests)
       framework: 'net472'
       titleFramework: 'NET472'
