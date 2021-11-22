@@ -80,7 +80,11 @@ namespace LinqToDB.Common
 		{
 			try
 			{
-				var uri = new Uri(uriString);
+				// TODO: v4: get rid of this API completely?
+				// originated from https://github.com/linq2db/linq2db/pull/502
+#pragma warning disable SYSLIB0013 // Type or member is obsolete : ugly solutions for ugly problems
+				var uri = new Uri(Uri.EscapeUriString(uriString));
+#pragma warning restore SYSLIB0013 // Type or member is obsolete
 
 				var path = string.Empty;
 

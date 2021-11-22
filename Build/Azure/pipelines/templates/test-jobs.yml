@@ -216,11 +216,12 @@ jobs:
   steps:
   - template: test-workflow-windows.yml
     parameters:
-      isCore: true
+      isCore: false
       artifacts: $(netfx472_tests)
       framework: 'net472'
       titleFramework: 'NET472'
       with_baselines: ${{ parameters.with_baselines }}
+      useVsTest: true
 
 ###################################
 #  Tests: Windows (NETCOREAPP2_1) #
