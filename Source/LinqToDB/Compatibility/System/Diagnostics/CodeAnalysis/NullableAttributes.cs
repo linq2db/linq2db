@@ -127,7 +127,7 @@ namespace System.Diagnostics.CodeAnalysis
 	}
 #endif
 
-#if !NET5_0 && !NET6_0
+#if !NET5_0_OR_GREATER
 	/// <summary>Specifies that the method or property will ensure that the listed field and property members have not-null values.</summary>
 	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, Inherited = false, AllowMultiple = true)]
 	sealed class MemberNotNullAttribute : Attribute
