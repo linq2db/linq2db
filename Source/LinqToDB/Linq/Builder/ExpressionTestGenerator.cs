@@ -183,7 +183,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (MemberExpression)expr;
 
-						Build(e.Expression);
+						Build(e.Expression!);
 						_exprBuilder.AppendFormat(".{0}", MangleName(e.Member.DeclaringType!, e.Member.Name, "P"));
 
 						return false;
@@ -316,7 +316,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (IsAnonymous(ne.Type))
 						{
-							if (ne.Members.Count == 1)
+							if (ne.Members!.Count == 1)
 							{
 								_exprBuilder.AppendFormat("new {{ {0} = ", MangleName(ne.Members[0].DeclaringType!, ne.Members[0].Name, "P"));
 								Build(ne.Arguments[0]);

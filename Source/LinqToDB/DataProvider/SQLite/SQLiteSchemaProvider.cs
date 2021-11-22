@@ -85,8 +85,8 @@ namespace LinqToDB.DataProvider.SQLite
 				select new PrimaryKeyInfo
 				{
 					TableID        = pk.Field<string>("TABLE_CATALOG") + "." + pk.Field<string>("TABLE_SCHEMA") + "." + pk.Field<string>("TABLE_NAME"),
-					PrimaryKeyName = pk.Field<string>("CONSTRAINT_NAME"),
-					ColumnName     = pk.Field<string>("COLUMN_NAME"),
+					PrimaryKeyName = pk.Field<string>("CONSTRAINT_NAME")!,
+					ColumnName     = pk.Field<string>("COLUMN_NAME")!,
 					Ordinal        = pk.Field<int>   ("ORDINAL_POSITION"),
 				}
 			).ToList();
@@ -101,11 +101,11 @@ namespace LinqToDB.DataProvider.SQLite
 				from c in cs.AsEnumerable()
 				let tschema  = c.Field<string>("TABLE_SCHEMA")
 				let schema   = tschema == "sqlite_default_schema" ? "" : tschema
-				let dataType = c.Field<string>("DATA_TYPE").Trim()
+				let dataType = c.Field<string>("DATA_TYPE")!.Trim()
 				select new ColumnInfo
 				{
 					TableID      = c.Field<string>("TABLE_CATALOG") + "." + schema + "." + c.Field<string>("TABLE_NAME"),
-					Name         = c.Field<string>("COLUMN_NAME"),
+					Name         = c.Field<string>("COLUMN_NAME")!,
 					IsNullable   = c.Field<bool>  ("IS_NULLABLE"),
 					Ordinal      = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
 					DataType     = dataType,
@@ -130,11 +130,11 @@ namespace LinqToDB.DataProvider.SQLite
 				where fk.Field<string>("CONSTRAINT_TYPE") == "FOREIGN KEY"
 				select new ForeignKeyInfo
 				{
-					Name         = fk.Field<string>("CONSTRAINT_NAME"           ),
+					Name         = fk.Field<string>("CONSTRAINT_NAME"           )!,
 					ThisTableID  = fk.Field<string>("TABLE_CATALOG"             ) + "." + fk.Field<string>("TABLE_SCHEMA")   + "." + fk.Field<string>("TABLE_NAME"),
-					ThisColumn   = fk.Field<string>("FKEY_FROM_COLUMN"          ),
+					ThisColumn   = fk.Field<string>("FKEY_FROM_COLUMN"          )!,
 					OtherTableID = fk.Field<string>("FKEY_TO_CATALOG"           ) + "." + fk.Field<string>("FKEY_TO_SCHEMA") + "." + fk.Field<string>("FKEY_TO_TABLE"),
-					OtherColumn  = fk.Field<string>("FKEY_TO_COLUMN"            ),
+					OtherColumn  = fk.Field<string>("FKEY_TO_COLUMN"            )!,
 					Ordinal      = fk.Field<int>   ("FKEY_FROM_ORDINAL_POSITION"),
 				}
 			).ToList();

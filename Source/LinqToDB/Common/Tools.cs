@@ -64,7 +64,11 @@ namespace LinqToDB.Common
 		/// <returns>Assembly file path.</returns>
 		public static string GetFileName(this Assembly assembly)
 		{
+#if NETFRAMEWORK
 			return assembly.CodeBase!.GetPathFromUri();
+#else
+			return assembly.Location;
+#endif
 		}
 
 		/// <summary>
@@ -76,7 +80,7 @@ namespace LinqToDB.Common
 		{
 			try
 			{
-				var uri = new Uri(Uri.EscapeUriString(uriString));
+				var uri = new Uri(uriString);
 
 				var path = string.Empty;
 
@@ -154,7 +158,8 @@ namespace LinqToDB.Common
 #if !NETSTANDARD2_0
 			try
 			{
-				return DbProviderFactories.GetFactory(providerFactory).GetType().Assembly;
+				if (providerFactory != null)
+					return DbProviderFactories.GetFactory(providerFactory).GetType().Assembly;
 			}
 			catch {}
 #endif

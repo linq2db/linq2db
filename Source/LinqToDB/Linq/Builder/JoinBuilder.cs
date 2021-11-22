@@ -344,7 +344,7 @@ namespace LinqToDB.Linq.Builder
 					//
 					var expr = Expression.Call(
 						null,
-						MemberHelper.MethodOf(() => Queryable.Where(null, (Expression<Func<TElement,bool>>)null!)),
+						MemberHelper.MethodOf(() => Queryable.Where(null!, (Expression<Func<TElement,bool>>)null!)),
 						context._innerExpression,
 						Expression.Lambda<Func<TElement,bool>>(
 							ExpressionBuilder.Equal(context.Builder.MappingSchema, innerKey, outerParam),
@@ -391,7 +391,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var expr = Expression.Call(
 						null,
-						MemberHelper.MethodOf(() => Queryable.Where(null, (Expression<Func<T,bool>>)null!)),
+						MemberHelper.MethodOf(() => Queryable.Where(null!, (Expression<Func<T,bool>>)null!)),
 						context._innerExpression,
 						Expression.Lambda<Func<T,bool>>(
 							ExpressionBuilder.Equal(

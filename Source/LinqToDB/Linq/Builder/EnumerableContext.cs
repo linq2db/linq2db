@@ -96,17 +96,17 @@ namespace LinqToDB.Linq.Builder
 				var rowValues = new ISqlExpression[columnsInfo.Count];
 
 				var idx = 0;
-				foreach (var info in columnsInfo)
+				foreach (var (member, column) in columnsInfo)
 				{
 					ISqlExpression sql;
-					if (members.TryGetValue(info.Member, out var accessExpr))
+					if (members.TryGetValue(member, out var accessExpr))
 					{
-						sql = Builder.ConvertToSql(Parent, accessExpr, columnDescriptor: info.Column);
+						sql = Builder.ConvertToSql(Parent, accessExpr, columnDescriptor: column);
 					}
 					else
 					{
 						var nullValue = Expression.Constant(Builder.MappingSchema.GetDefaultValue(_elementType), _elementType);
-						sql = Builder.ConvertToSql(Parent, nullValue, columnDescriptor: info.Column);
+						sql = Builder.ConvertToSql(Parent, nullValue, columnDescriptor: column);
 					}
 
 					rowValues[idx] = sql;
@@ -120,11 +120,11 @@ namespace LinqToDB.Linq.Builder
 
 			for (var index = 0; index < columnsInfo.Count; index++)
 			{
-				var info  = columnsInfo[index];
-				var field = info.Column != null
-					? new SqlField(info.Column)
-					: new SqlField(info.Member.GetMemberType(), "item" + (index + 1), true);
-				fields[index] = field;
+				var (member, column) = columnsInfo[index];
+				var field            = column != null
+					? new SqlField(column)
+					: new SqlField(member.GetMemberType(), "item" + (index + 1), true);
+				fields[index]        = field;
 			}
 
 			return new SqlValuesTable(fields, columnsInfo.Select(ci => ci.Member).ToArray(), builtRows);
@@ -332,7 +332,7 @@ namespace LinqToDB.Linq.Builder
 			var parameters = ctor.GetParameters();
 			var argFound   = false;
 
-			var args = new Expression?[parameters.Length];
+			var args = new Expression[parameters.Length];
 			for (int i = 0; i < parameters.Length; i++)
 			{
 				var param = parameters[i];
@@ -668,7 +668,7 @@ namespace LinqToDB.Linq.Builder
 			return Parent.ConvertToParentIndex(index, this);
 		}
 
-		public void SetAlias(string alias)
+		public void SetAlias(string? alias)
 		{
 			if (SelectQuery.Select.Columns.Count == 1)
 				SelectQuery.Select.Columns[0].Alias = alias;
