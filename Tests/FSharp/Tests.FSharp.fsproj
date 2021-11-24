@@ -5,7 +5,8 @@
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests.FSharp</AssemblyName>
 		<LangVersion>latest</LangVersion>
-
+		<WarningLevel>5</WarningLevel>
+		
 		<!--see notes in Directory.Packages.props-->
 		<ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
 	</PropertyGroup>

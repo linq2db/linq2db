@@ -46,7 +46,7 @@ stages:
 #############
   - job: build_nugets_job
     pool:
-      vmImage: 'windows-2019'
+      vmImage: 'windows-2022'
     displayName: 'Nugets Generation'
     variables:
       - template: templates/nuget-vars.yml

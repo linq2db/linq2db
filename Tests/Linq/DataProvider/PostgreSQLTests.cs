@@ -908,6 +908,7 @@ namespace Tests.DataProvider
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL11)]
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL12)]
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL13)]
+			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL14)]
 			                                           public PhysicalAddress? macaddr8DataType         { get; set; }
 			// json
 			[Column]                                   public string? jsonDataType                      { get; set; }
@@ -933,7 +934,8 @@ namespace Tests.DataProvider
 			var macaddr8Supported = providerName == TestProvName.PostgreSQL10
 				|| providerName == TestProvName.PostgreSQL11
 				|| providerName == TestProvName.PostgreSQL12
-				|| providerName == TestProvName.PostgreSQL13;
+				|| providerName == TestProvName.PostgreSQL13
+				|| providerName == TestProvName.PostgreSQL14;
 			var lineSupported     = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			var jsonbSupported    = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			var testData = new[]
@@ -1087,7 +1089,8 @@ namespace Tests.DataProvider
 			var macaddr8Supported = providerName == TestProvName.PostgreSQL10
 				|| providerName == TestProvName.PostgreSQL11
 				|| providerName == TestProvName.PostgreSQL12
-				|| providerName == TestProvName.PostgreSQL13;
+				|| providerName == TestProvName.PostgreSQL13
+				|| providerName == TestProvName.PostgreSQL14;
 			var lineSupported     = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			var jsonbSupported    = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			var testData = new[]
@@ -1945,7 +1948,7 @@ namespace Tests.DataProvider
 				Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000, 2, 4), true, new DateTime(2000, 3, 3), false), record.DateRangeExclusive);
 				Assert.AreEqual(range3, record.TSRange);
 
-#if NETCOREAPP3_1 || NET5_0
+#if NETCOREAPP3_1 || NET5_0 || NET6_0
 				// npgsql 6+
 				Assert.AreEqual(range4, record.TSTZRange);
 #else
@@ -1983,7 +1986,7 @@ namespace Tests.DataProvider
 
 				Assert.AreEqual(100, records.Length);
 
-#if !NETCOREAPP3_1 && !NET5_0
+#if !NETCOREAPP3_1 && !NET5_0 && !NET6_0
 				// pre-v6 returned data with Local kind
 				foreach (var item in items)
 					item.TSTZRange = new NpgsqlRange<DateTime>(item.TSTZRange.LowerBound.ToLocalTime(), true, item.TSTZRange.UpperBound.ToLocalTime(), true);
@@ -2033,7 +2036,7 @@ namespace Tests.DataProvider
 
 				Assert.AreEqual(100, records.Length);
 
-#if !NETCOREAPP3_1 && !NET5_0
+#if !NETCOREAPP3_1 && !NET5_0 && !NET6_0
 				// pre-v6 returned data with Local kind
 				foreach (var item in items)
 					item.TSTZRange = new NpgsqlRange<DateTime>(item.TSTZRange.LowerBound.ToLocalTime(), true, item.TSTZRange.UpperBound.ToLocalTime(), true);

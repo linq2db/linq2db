@@ -172,7 +172,7 @@ namespace LinqToDB.Linq
 				{
 					Expression dataReaderExpression = Expression.Convert(context.Expression.Parameters[1], context.DataReaderType);
 
-					return Expression.Assign(context.NewVariable, dataReaderExpression);
+					return Expression.Assign(context.NewVariable!, dataReaderExpression);
 				}
 
 				return e;

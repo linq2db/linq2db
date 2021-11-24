@@ -522,7 +522,7 @@ namespace LinqToDB.Linq.Builder
 				switch (expr)
 				{
 					case MemberExpression me:
-						expr = me.Expression;
+						expr = me.Expression!;
 						continue;
 					case MethodCallExpression mc when mc.IsQueryable():
 						expr = mc.Arguments[0];
@@ -937,7 +937,7 @@ namespace LinqToDB.Linq.Builder
 									{
 										var me = (MemberExpression)e;
 
-										var parentType = me.Expression.Type;
+										var parentType = me.Expression!.Type;
 										var childType  = me.Type;
 
 										var queryMethod = AssociationHelper.CreateAssociationQueryLambda(context.context.Builder,
