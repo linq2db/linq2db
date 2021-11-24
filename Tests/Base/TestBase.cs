@@ -1055,7 +1055,11 @@ namespace Tests
 			// on CI we test two configurations:
 			// linux/mac: db is case sensitive, catalog is case insensitive
 			// windows: both db and catalog are case sensitive
-			return GetProviderName(context, out var _) == TestProvName.SqlServer2019;
+			var provider = GetProviderName(context, out var _);
+
+			return provider == TestProvName.SqlServer2019
+				|| CustomizationSupport.Interceptor.IsCaseSensitiveDB(provider)
+				;
 		}
 
 		/// <summary>
@@ -1079,6 +1083,7 @@ namespace Tests
 				|| provider.StartsWith(ProviderName.PostgreSQL)
 				|| provider.StartsWith(ProviderName.SapHana)
 				|| provider.StartsWith(ProviderName.Sybase)
+				|| CustomizationSupport.Interceptor.IsCaseSensitiveComparison(provider)
 				;
 		}
 
@@ -1107,6 +1112,7 @@ namespace Tests
 				|| provider.StartsWith(ProviderName.MySql)
 				// while it is configured, LIKE in SQLite is case-insensitive (for ASCII only though)
 				//|| provider.StartsWith(ProviderName.SQLite)
+				|| CustomizationSupport.Interceptor.IsCollatedTableConfigured(provider)
 				;
 		}
 

@@ -361,6 +361,7 @@ namespace LinqToDB.Expressions
 						return CompareTypeIs((TypeBinaryExpression)a, (TypeBinaryExpression)b);
 					case ExpressionType.Conditional:
 						return CompareConditional((ConditionalExpression)a, (ConditionalExpression)b);
+					case ExpressionType.Default: return true;
 					case ExpressionType.Constant:
 						return CompareConstant((ConstantExpression)a, (ConstantExpression)b);
 					case ExpressionType.Parameter:

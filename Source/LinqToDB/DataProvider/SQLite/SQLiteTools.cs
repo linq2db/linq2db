@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 	public static class SQLiteTools
 	{
-		private static readonly Lazy<IDataProvider> _SQLiteClassicDataProvider = new Lazy<IDataProvider>(() =>
+		private static readonly Lazy<IDataProvider> _SQLiteClassicDataProvider = new (() =>
 		{
 			var provider = new SQLiteDataProvider(ProviderName.SQLiteClassic);
 
@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return provider;
 		}, true);
 
-		private static readonly Lazy<IDataProvider> _SQLiteMSDataProvider = new Lazy<IDataProvider>(() =>
+		private static readonly Lazy<IDataProvider> _SQLiteMSDataProvider = new (() =>
 		{
 			var provider = new SQLiteDataProvider(ProviderName.SQLiteMS);
 
@@ -157,6 +157,31 @@ namespace LinqToDB.DataProvider.SQLite
 			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
 
 			DataTools.DropFileDatabase(databaseName, ".sqlite");
+		}
+
+		/// <summary>
+		/// Invokes ClearAllPools() method for specified provider.
+		/// </summary>
+		/// <param name="provider">For which provider ClearAllPools should be called:
+		/// <list type="bullet">
+		/// <item><see cref="ProviderName.SQLiteClassic"/>: System.Data.SQLite</item>
+		/// <item><see cref="ProviderName.SQLiteMS"/>: Microsoft.Data.Sqlite</item>
+		/// <item><c>null</c>: both (any)</item>
+		/// </list>
+		/// </param>
+		public static void ClearAllPools(string? provider = null)
+		{
+			// method will do nothing if provider is not loaded yet, but in that case user shouldn't have pooled connections
+			// except situation, when he created them externally
+			if ((provider == null || provider == ProviderName.SQLiteMS) && _SQLiteMSDataProvider.IsValueCreated)
+			{
+				((SQLiteDataProvider)_SQLiteMSDataProvider.Value).Adapter.ClearAllPools?.Invoke();
+			}
+
+			if ((provider == null || provider == ProviderName.SQLiteClassic) && _SQLiteClassicDataProvider.IsValueCreated)
+			{
+				((SQLiteDataProvider)_SQLiteClassicDataProvider.Value).Adapter.ClearAllPools?.Invoke();
+			}
 		}
 
 		#region BulkCopy

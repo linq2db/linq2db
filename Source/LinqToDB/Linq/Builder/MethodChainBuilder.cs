@@ -7,6 +7,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Common.Internal;
 	using LinqToDB.Expressions;
 	using LinqToDB.Reflection;
 
@@ -116,7 +117,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				Expression expr;
 
-				if (_returnType.IsClass || _returnType.IsNullable())
+				if (_returnType.IsNullableType())
 				{
 					expr = Builder.BuildSql(_returnType, fieldIndex, sqlExpression);
 				}

@@ -502,6 +502,7 @@ namespace Tests.DataProvider
 				db.DropTable  <CreateTableTest>();
 			}
 
+			SQLiteTools.ClearAllPools  ();
 			SQLiteTools.DropDatabase   ("TestDatabase");
 			Assert.IsFalse(File.Exists ("TestDatabase.sqlite"));
 		}
@@ -599,11 +600,13 @@ namespace Tests.DataProvider
 				case ProviderName.SQLiteClassic:
 				case TestProvName.SQLiteClassicMiniProfilerMapped:
 				case TestProvName.SQLiteClassicMiniProfilerUnmapped:
-					expectedVersion = "3.36.0";
+					expectedVersion = "3.37.0";
 					break;
 				case ProviderName.SQLiteMS:
 #if NET472
 					expectedVersion = "3.13.0";
+#elif NET5_0
+					expectedVersion = "3.35.5";
 #else
 					expectedVersion = "3.33.0";
 #endif

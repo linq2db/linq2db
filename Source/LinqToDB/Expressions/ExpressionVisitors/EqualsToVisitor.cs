@@ -488,8 +488,8 @@ namespace LinqToDB.Expressions
 				for (var i = 0; i < expr1.Arguments.Count; i++)
 				{
 					if (skipConstantArguments[i]
-						&& expr1.Arguments[i].NodeType == ExpressionType.Constant
-						&& expr2.Arguments[i].NodeType == ExpressionType.Constant)
+						&& (expr1.Arguments[i].NodeType == ExpressionType.Constant || expr1.Arguments[i].NodeType == ExpressionType.Default)
+						&& (expr2.Arguments[i].NodeType == ExpressionType.Constant || expr2.Arguments[i].NodeType == ExpressionType.Default))
 						continue;
 
 					if (!DefaultCompareArguments(expr1.Arguments[i], expr2.Arguments[i], info))
@@ -529,8 +529,8 @@ namespace LinqToDB.Expressions
 					else
 					{
 						if (skipConstantArguments[i]
-							&& expr1.Arguments[i].NodeType == ExpressionType.Constant
-							&& expr2.Arguments[i].NodeType == ExpressionType.Constant)
+							&& (expr1.Arguments[i].NodeType == ExpressionType.Constant && expr1.Arguments[i].NodeType == ExpressionType.Default)
+							&& (expr2.Arguments[i].NodeType == ExpressionType.Constant && expr2.Arguments[i].NodeType == ExpressionType.Default))
 							continue;
 
 						if (!DefaultCompareArguments(expr1.Arguments[i], expr2.Arguments[i], info))

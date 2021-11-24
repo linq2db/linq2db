@@ -1606,6 +1606,11 @@ namespace LinqToDB.Linq.Builder
 
 				newBody = MakeExpressionCopy(newBody);
 
+				// The following conversion is needed because compiler can create Lambda with specific ReturnType but in runtime we cannot specify that.
+				//
+				if (newBody.Type != lambda.ReturnType)
+					newBody = Expression.Convert(newBody, lambda.ReturnType);
+
 				return Expression.Lambda(newBody, newParameters);
 			}
 
