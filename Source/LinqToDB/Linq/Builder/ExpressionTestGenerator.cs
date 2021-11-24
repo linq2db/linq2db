@@ -663,26 +663,25 @@ namespace LinqToDB.Linq.Builder
 				_typeBuilder.AppendFormat(
 					type.IsGenericType ?
 @"
-{8}	{6}{7}{1} {2}<{3}>{5}
-	{{{4}{9}
+{0}	{1}{2}{3} {4}<{8}>{5}
+	{{{6}{7}
 	}}
 "
 :
 @"
-{8}	{6}{7}{1} {2}{5}
-	{{{4}{9}
+{0}	{1}{2}{3} {4}{5}
+	{{{6}{7}
 	}}
 ",
-					MangleName(isUserName, type.Namespace, "T"),
+					attr,
+					type.IsPublic ? "public " : string.Empty,
+					type.IsAbstract && !type.IsInterface ? "abstract " : string.Empty,
 					type.IsInterface ? "interface" : type.IsClass ? "class" : "struct",
 					name,
-					type.IsGenericType ? GetTypeNames(type.GetGenericArguments(), ",") : null,
+					baseClasses.Length == 0 ? string.Empty : " : " + GetTypeNames(baseClasses),
 					string.Join("\r\n", ctors),
-					baseClasses.Length == 0 ? "" : " : " + GetTypeNames(baseClasses),
-					type.IsPublic ? "public " : "",
-					type.IsAbstract && !type.IsInterface ? "abstract " : "",
-					attr,
-					members.Length > 0 ? (ctors.Count != 0 ? "\r\n" : "") + string.Join("\r\n", members) : string.Empty);
+					members.Length > 0 ? (ctors.Count != 0 ? "\r\n" : string.Empty) + string.Join("\r\n", members) : string.Empty,
+					type.IsGenericType ? GetTypeNames(type.GetGenericArguments(), ",") : string.Empty);
 			}
 		}
 

@@ -2032,7 +2032,10 @@ namespace LinqToDB.Linq.Builder
 
 					var c        = rightContext;
 					rightContext = leftContext;
-					leftContext  = c;
+					// value not used below: https://pvs-studio.com/ru/blog/posts/csharp/0887/
+					// but! we have test that fails in this place (TestDefaultExpression_08)
+					// so it could be incomplete implementation
+					//leftContext = c;
 
 					var q = qsr;
 					qsl   = q;

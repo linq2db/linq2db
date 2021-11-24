@@ -745,7 +745,7 @@ namespace LinqToDB.Linq
 			{
 				using (var dr = runner.ExecuteReader())
 				{
-					while (dr.Read())
+					if (dr.Read())
 					{
 						var value = mapper.Map(dataContext, runner, dr);
 						runner.RowsCount++;
