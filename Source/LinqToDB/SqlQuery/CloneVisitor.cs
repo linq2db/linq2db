@@ -644,7 +644,7 @@ namespace LinqToDB.SqlQuery
 				{
 					var table = (SqlTable)(IQueryElement)element;
 
-					var newTable = new SqlTable()
+					var newTable = new SqlTable(table.ObjectType, null)
 					{
 						Name               = table.Name,
 						Alias              = table.Alias,
@@ -652,7 +652,6 @@ namespace LinqToDB.SqlQuery
 						Database           = table.Database,
 						Schema             = table.Schema,
 						PhysicalName       = table.PhysicalName,
-						ObjectType         = table.ObjectType,
 						SqlTableType       = table.SqlTableType,
 						SequenceAttributes = table.SequenceAttributes,
 					};

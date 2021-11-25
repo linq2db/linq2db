@@ -108,7 +108,7 @@ namespace LinqToDB.Linq.Builder
 			return TableContext.ConvertToParentIndex(index, this);
 		}
 
-		public void SetAlias(string alias)
+		public void SetAlias(string? alias)
 		{
 			//TODO
 		}

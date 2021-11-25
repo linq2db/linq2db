@@ -47,7 +47,10 @@ namespace LinqToDB.DataProvider
 		{
 			var p = Expression.Parameter(typeof(string));
 			var l = Expression.Lambda<Func<string, IDbConnection>>(
-				Expression.Convert(Expression.New(connectionType.GetConstructor(new[] { typeof(string) }), p), typeof(IDbConnection)),
+				Expression.Convert(Expression.New(
+					connectionType.GetConstructor(new[] { typeof(string) })
+						?? throw new InvalidOperationException($"DbConnection type {connectionType} missing constructor with connection string parameter: {connectionType.Name}(string connectionString)"),
+					p), typeof(IDbConnection)),
 				p);
 			return l;
 		}

@@ -515,7 +515,7 @@ namespace LinqToDB
 						case ExpressionType.MemberAccess :
 							{
 								var memberExpr = (MemberExpression)current;
-								current        = memberExpr.Expression;
+								current        = memberExpr.Expression!;
 
 								break;
 							}
@@ -532,7 +532,7 @@ namespace LinqToDB
 										return current;
 								}
 								else
-									current = call.Object;
+									current = call.Object!;
 
 								break;
 							}

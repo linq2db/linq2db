@@ -110,16 +110,12 @@ namespace LinqToDB.Linq.Builder
 			if (ctx is LoadWithContext lwCtx)
 				return lwCtx.TableContext;
 
-			if (table == null)
+			var isTableResult = ctx.IsExpression(null, 0, RequestFor.Table);
+			if (isTableResult.Result)
 			{
-				var isTableResult = ctx.IsExpression(null, 0, RequestFor.Table);
-				if (isTableResult.Result)
-				{
-					table = isTableResult.Context as TableBuilder.TableContext;
-					if (table != null)
-						return table;
-				}
-
+				table = isTableResult.Context as TableBuilder.TableContext;
+				if (table != null)
+					return table;
 			}
 
 			var maxLevel = path.GetLevel(ctx.Builder.MappingSchema);
@@ -127,7 +123,7 @@ namespace LinqToDB.Linq.Builder
 			while (level <= maxLevel)
 			{
 				var levelExpression = path.GetLevelExpression(ctx.Builder.MappingSchema, level);
-				var isTableResult = ctx.IsExpression(levelExpression, 1, RequestFor.Table);
+				isTableResult       = ctx.IsExpression(levelExpression, 1, RequestFor.Table);
 				if (isTableResult.Result)
 				{
 					table = isTableResult.Context switch
@@ -151,7 +147,6 @@ namespace LinqToDB.Linq.Builder
 
 			throw new LinqToDBException(
 				$"Unable to find table information for LoadWith. Consider moving LoadWith closer to GetTable<{expr.Type.Name}>() method.");
-
 		}
 
 		static IEnumerable<LoadWithInfo> ExtractAssociations(ExpressionBuilder builder, Expression expression, Expression? stopExpression)
@@ -249,7 +244,7 @@ namespace LinqToDB.Linq.Builder
 							var attr   = builder.MappingSchema.GetAttribute<AssociationAttribute>(member.ReflectedType!, member);
 							if (attr == null)
 							{
-								member = mexpr.Expression.Type.GetMemberEx(member)!;
+								member = mexpr.Expression!.Type.GetMemberEx(member)!;
 								attr = builder.MappingSchema.GetAttribute<AssociationAttribute>(mexpr.Expression.Type, member);
 							}
 							if (attr == null)
@@ -257,7 +252,7 @@ namespace LinqToDB.Linq.Builder
 
 							yield return member;
 
-							expression = mexpr.Expression;
+							expression = mexpr.Expression!;
 
 							break;
 						}

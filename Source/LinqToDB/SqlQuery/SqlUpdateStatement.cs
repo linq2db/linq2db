@@ -56,8 +56,8 @@ namespace LinqToDB.SqlQuery
 			if (result != null)
 				return result;
 
-			if (table == _update?.Table)
-				return _update.Table;
+			if (_update != null && table == _update.Table)
+				return table;
 
 			if (Update != null)
 			{
@@ -72,7 +72,7 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			return result;
+			return null;
 		}
 
 		public override bool IsDependedOn(SqlTable table)

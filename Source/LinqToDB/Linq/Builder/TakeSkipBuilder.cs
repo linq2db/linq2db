@@ -69,7 +69,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				info.Expression =
 					Expression.Call(
-						methodCall.Method.DeclaringType,
+						methodCall.Method.DeclaringType!,
 						methodCall.Method.Name,
 						new[] { info.Expression.Type.GetGenericArguments()[0] },
 						info.Expression, methodCall.Arguments[1]);

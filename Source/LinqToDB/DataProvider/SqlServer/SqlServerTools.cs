@@ -219,7 +219,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 								if (int.TryParse(conn.ServerVersion.Split('.')[0], out var version))
 								{
-									if (version <= 8)
+									if (version <= 8) // sql server v6 - v2000
 										return GetDataProvider(SqlServerVersion.v2000, provider);
 
 									using (var cmd = conn.CreateCommand())
@@ -242,18 +242,15 @@ namespace LinqToDB.DataProvider.SqlServer
 
 										switch (version)
 										{
-											case  8 : return GetDataProvider(SqlServerVersion.v2000, provider);
+											// versions below 9 handled above already
 											case  9 : return GetDataProvider(SqlServerVersion.v2005, provider);
 											case 10 : return GetDataProvider(SqlServerVersion.v2008, provider);
-											case 11 :
-											case 12 : return GetDataProvider(SqlServerVersion.v2012, provider);
+											case 11 : // v2012
+											case 12 : return GetDataProvider(SqlServerVersion.v2012, provider); // v2014
 											case 13 : return GetDataProvider(SqlServerVersion.v2016, provider);
-											case 14 :
-											case 15 : return GetDataProvider(SqlServerVersion.v2017, provider);
-											default :
-												if (version > 15)
-													return GetDataProvider(SqlServerVersion.v2017, provider);
-												return GetDataProvider(SqlServerVersion.v2008, provider);
+											//case 14 : // v2017
+											//case 15 : // v2019 : no own dialect yet
+											default : return GetDataProvider(SqlServerVersion.v2017, provider);
 										}
 									}
 								}

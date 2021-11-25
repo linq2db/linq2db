@@ -88,7 +88,7 @@ namespace LinqToDB.Mapping
 			}
 			else
 			{
-				var expr = ExpressionHelper.PropertyOrField(Expression.Constant(null, MemberInfo.DeclaringType), Storage);
+				var expr = ExpressionHelper.PropertyOrField(Expression.Constant(null, MemberInfo.DeclaringType!), Storage);
 				StorageType = expr.Type;
 				StorageInfo = expr.Member;
 			}

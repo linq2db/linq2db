@@ -354,7 +354,7 @@ namespace LinqToDB.Linq.Builder
 
 					var expr = Expression.Call(
 						null,
-						MemberHelper.MethodOf(() => Queryable.Where(null, (Expression<Func<TSource,bool>>)null!)),
+						MemberHelper.MethodOf(() => Queryable.Where(null!, (Expression<Func<TSource,bool>>)null!)),
 						groupExpression,
 						Expression.Lambda<Func<TSource,bool>>(
 							ExpressionBuilder.Equal(context.Builder.MappingSchema, context._key.Lambda.Body, keyParam),
@@ -362,7 +362,7 @@ namespace LinqToDB.Linq.Builder
 
 					expr = Expression.Call(
 						null,
-						MemberHelper.MethodOf(() => Queryable.Select(null, (Expression<Func<TSource,TElement>>)null!)),
+						MemberHelper.MethodOf(() => Queryable.Select(null!, (Expression<Func<TSource,TElement>>)null!)),
 						expr,
 						context.Element.Lambda);
 
@@ -534,14 +534,16 @@ namespace LinqToDB.Linq.Builder
 						{
 							return context.context.Element.ConvertToSql(null, 0, ConvertFlags.Field)
 								.Select(_ => _.Sql)
-								.FirstOrDefault();
+								.Single();
+								//.FirstOrDefault();
 						}
 
 						if (typeof(IGrouping<,>).IsSameOrParentOf(context.context.Builder.GetRootObject(ex).Type))
 						{
 							return context.context.ConvertToSql(ex, 0, ConvertFlags.Field)
 								.Select(_ => _.Sql)
-								.FirstOrDefault();
+								.Single();
+								//.FirstOrDefault();
 						}
 
 						return context.context.Builder.ConvertToExtensionSql(context.context.Element, ex, descriptor);

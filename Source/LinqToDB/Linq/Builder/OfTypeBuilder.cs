@@ -70,7 +70,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var field  = context.table[name] ?? throw new LinqException($"Field {name} not found in table {context.table}");
 					var member = field.ColumnDescriptor.MemberInfo;
-					var expr   = Expression.MakeMemberAccess(Expression.Parameter(member.DeclaringType, "p"), member);
+					var expr   = Expression.MakeMemberAccess(Expression.Parameter(member.DeclaringType!, "p"), member);
 					var sql    = context.context.ConvertToSql(expr, 1, ConvertFlags.Field)[0].Sql;
 
 					return sql;

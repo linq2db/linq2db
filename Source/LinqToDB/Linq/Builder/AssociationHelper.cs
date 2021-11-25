@@ -360,7 +360,7 @@ namespace LinqToDB.Linq.Builder
 					var isEnumerableMember =
 						EagerLoading.IsEnumerableType(memberType, mappingSchema);
 
-					var desiredType = member.MemberInfo.IsMethodEx() ? currentEntityType : member.MemberInfo.DeclaringType;
+					var desiredType = member.MemberInfo.IsMethodEx() ? currentEntityType : member.MemberInfo.DeclaringType!;
 
 					var entityParam = Expression.Parameter(currentEntityType, "e");
 					var loadBody    = desiredType == currentEntityType
