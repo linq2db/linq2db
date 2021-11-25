@@ -60,9 +60,10 @@ namespace LinqToDB.Linq.Builder
 
 			var attrs = Sql.QueryExtensionAttribute.GetExtensionAttributes(methodCall, builder.MappingSchema);
 
-			int? tablesInScopeCount = attrs.Any(a => a.Scope == Sql.QueryExtensionScope.TablesInScope)
-				? (builder.TablesInScope ??= new()).Count
-				: null;
+			var prevTablesInScope = builder.TablesInScope;
+
+			if (attrs.Any(a => a.Scope == Sql.QueryExtensionScope.TablesInScope))
+				builder.TablesInScope = new();
 
 			var sequence = builder.BuildSequence(new(buildInfo, methodCall.Arguments[0]));
 
@@ -103,14 +104,10 @@ namespace LinqToDB.Linq.Builder
 						attr.ExtendTable(table.SqlTable, list);
 						break;
 					}
-					case Sql.QueryExtensionScope.TablesInScope when tablesInScopeCount is not null && builder.TablesInScope?.Count > tablesInScopeCount.Value:
+					case Sql.QueryExtensionScope.TablesInScope :
 					{
-						for (var i = tablesInScopeCount.Value; i < builder.TablesInScope.Count; i++)
-						{
-							var table = builder.TablesInScope[i];
+						foreach (var table in builder.TablesInScope!)
 							attr.ExtendTable(table.SqlTable, list);
-						}
-
 						break;
 					}
 					case Sql.QueryExtensionScope.Join:
@@ -126,17 +123,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			switch (tablesInScopeCount)
-			{
-				case null :
-					break;
-				case 0 :
-					builder.TablesInScope = null;
-					break;
-				case var count when builder.TablesInScope?.Count > count:
-					builder.TablesInScope.RemoveRange(count.Value, builder.TablesInScope.Count - count.Value);
-					break;
-			}
+			builder.TablesInScope = prevTablesInScope;
 
 			return joinExtensions != null ? new JoinHintContext(sequence, joinExtensions) : sequence;
 		}

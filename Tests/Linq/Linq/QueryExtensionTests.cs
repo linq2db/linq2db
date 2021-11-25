@@ -487,10 +487,28 @@ namespace Tests.Linq
 			)
 			.TablesInScopeHint(Hints.TableHint.NoLock);
 
+			q =
+			(
+				from p in q
+				from c in db.Child
+				where c.ParentID == p.ParentID && c.Parent!.ParentID > 0
+				select p
+			)
+			.TablesInScopeHint(Hints.TableHint.NoWait);
+
+			q =
+				from p in q
+				from c in db.Child
+				where c.ParentID == p.ParentID
+				select p;
+
 			_ = q.ToList();
 
-			Assert.That(LastQuery,
-				Contains.Substring("[Parent] [p] WITH (NoLock)").And.Contains("[Child] [c_1] WITH (NoLock)"));
+			Assert.That(LastQuery, Contains.Substring("[Parent] [p] WITH (NoLock)"));
+			Assert.That(LastQuery, Contains.Substring("[Child] [c_1] WITH (NoLock)"));
+			Assert.That(LastQuery, Contains.Substring("[Child] [c_2] WITH (NoWait)"));
+			Assert.That(LastQuery, Contains.Substring("[Parent] [a_Parent] WITH (NoWait)"));
+			Assert.That(LastQuery, Contains.Substring("[Child] [c_3]\r\n"));
 		}
 	}
 
