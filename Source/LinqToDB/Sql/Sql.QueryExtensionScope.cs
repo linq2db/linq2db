@@ -9,7 +9,7 @@ namespace LinqToDB
 			Table,
 			Join,
 			Query,
-			AllTables
+			TablesInScope
 		}
 	}
 }

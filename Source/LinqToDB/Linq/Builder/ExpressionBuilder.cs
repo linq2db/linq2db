@@ -114,8 +114,9 @@ namespace LinqToDB.Linq.Builder
 		public          bool                       IsBlockDisable;
 		public          int                        VarIndex;
 
-		public SqlComment?                         Tag;
-		public List<SqlQueryExtension>?            SqlQueryExtensions;
+		public SqlComment?                      Tag;
+		public List<SqlQueryExtension>?         SqlQueryExtensions;
+		public List<TableBuilder.TableContext>? TablesInScope;
 
 		public ExpressionBuilder(
 			Query                             query,

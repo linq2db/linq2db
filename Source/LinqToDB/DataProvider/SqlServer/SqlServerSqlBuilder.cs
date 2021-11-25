@@ -518,8 +518,10 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override void BuildTableExtensions(SqlTable table)
 		{
 			if (table.SqlQueryExtensions!.Any(ext =>
-				ext.Scope == Sql.QueryExtensionScope.Table &&
-				ext.ID is
+				ext.Scope is
+					Sql.QueryExtensionScope.Table or
+					Sql.QueryExtensionScope.TablesInScope &&
+				ext.ID    is
 					Sql.QueryExtensionID.TableHint or
 					Sql.QueryExtensionID.SqlServerForceSeekTableHintID))
 			{

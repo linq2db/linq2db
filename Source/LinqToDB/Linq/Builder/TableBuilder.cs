@@ -198,21 +198,27 @@ namespace LinqToDB.Linq.Builder
 				case BuildContextType.TableConstant:
 					{
 						return ApplyQueryFilters(builder, buildInfo, null,
-							new TableContext(builder, buildInfo, ((IQueryable)buildInfo.Expression.EvaluateExpression()!).ElementType));
+							AddTableInScope(new(builder, buildInfo, ((IQueryable)buildInfo.Expression.EvaluateExpression()!).ElementType)));
 					}
 				case BuildContextType.GetTableMethod         :
 				case BuildContextType.MemberAccess           :
 					{
 						return ApplyQueryFilters(builder, buildInfo, null,
-							new TableContext(builder, buildInfo,
-								buildInfo.Expression.Type.GetGenericArguments()[0]));
+							AddTableInScope(new(builder, buildInfo,
+								buildInfo.Expression.Type.GetGenericArguments()[0])));
 					}
 				case BuildContextType.Association            : return parentContext!.GetContext(buildInfo.Expression, 0, buildInfo);
-				case BuildContextType.TableFunctionAttribute : return new TableContext    (builder, buildInfo);
+				case BuildContextType.TableFunctionAttribute : return AddTableInScope(new (builder, buildInfo));
 				case BuildContextType.AsCteMethod            : return BuildCteContext     (builder, buildInfo);
 				case BuildContextType.CteConstant            : return BuildCteContextTable(builder, buildInfo);
 				case BuildContextType.FromSqlMethod          : return BuildRawSqlTable(builder, buildInfo, false);
 				case BuildContextType.FromSqlScalarMethod    : return BuildRawSqlTable(builder, buildInfo, true);
+			}
+
+			TableContext AddTableInScope(TableContext context)
+			{
+				builder.TablesInScope?.Add(context);
+				return context;
 			}
 
 			throw new InvalidOperationException();

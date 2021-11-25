@@ -471,6 +471,27 @@ namespace Tests.Linq
 
 			Assert.That(LastQuery, Contains.Substring("QUERYTRACEON 10"));
 		}
+
+		[Test]
+		public void SqlServerTablesInScopeHintTest(
+			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Parent
+				from c in db.Child
+				where c.ParentID == p.ParentID
+				select p
+			)
+			.TablesInScopeHint(Hints.TableHint.NoLock);
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery,
+				Contains.Substring("[Parent] [p] WITH (NoLock)").And.Contains("[Child] [c_1] WITH (NoLock)"));
+		}
 	}
 
 	public static class QueryExtensions

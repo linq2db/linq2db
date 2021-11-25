@@ -12,9 +12,9 @@ namespace LinqToDB
 {
 	using Async;
 	using Expressions;
+	using Reflection;
 	using Linq;
 	using Linq.Builder;
-	using LinqToDB.Reflection;
 
 	/// <summary>
 	/// Contains extension methods for LINQ queries.
@@ -243,8 +243,8 @@ namespace LinqToDB
 		/// <returns>Query source with join hints.</returns>
 		[LinqTunnel]
 		[Pure]
-		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.AllTables, Sql.QueryExtensionID.TableHint)]
-		public static IQueryable<TSource> AllTablesHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string tableHint)
+		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TablesInScope, Sql.QueryExtensionID.TableHint)]
+		public static IQueryable<TSource> TablesInScopeHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string tableHint)
 			where TSource : notnull
 		{
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
@@ -252,7 +252,7 @@ namespace LinqToDB
 			return currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(AllTablesHint, source, tableHint),
+					MethodHelper.GetMethodInfo(TablesInScopeHint, source, tableHint),
 					currentSource.Expression, Expression.Constant(tableHint)));
 		}
 
