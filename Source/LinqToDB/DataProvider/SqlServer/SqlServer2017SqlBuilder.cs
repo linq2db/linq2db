@@ -15,7 +15,7 @@
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
 		{
 			return new SqlServer2017SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}

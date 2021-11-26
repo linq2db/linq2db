@@ -104,7 +104,7 @@ namespace LinqToDB.Linq.Builder
 						attr.ExtendTable(table.SqlTable, list);
 						break;
 					}
-					case Sql.QueryExtensionScope.TablesInScope :
+					case Sql.QueryExtensionScope.TablesInScope:
 					{
 						foreach (var table in builder.TablesInScope!)
 							attr.ExtendTable(table.SqlTable, list);

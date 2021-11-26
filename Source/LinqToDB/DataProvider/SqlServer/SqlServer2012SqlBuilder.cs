@@ -28,7 +28,7 @@
 
 		protected override bool OffsetFirst => true;
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
 		{
 			return new SqlServer2012SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}

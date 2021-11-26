@@ -78,7 +78,7 @@ namespace LinqToDB.DataProvider.MySql
 			StringBuilder.AppendLine("SELECT LAST_INSERT_ID()");
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
 		{
 			return new MySqlSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}

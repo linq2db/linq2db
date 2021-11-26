@@ -154,7 +154,7 @@ namespace LinqToDB.SqlProvider
 						BuildSetOperation(union.Operation, sb);
 						sb.AppendLine();
 
-						var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
+						var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder(this));
 						sqlBuilder.BuildSql(commandNumber,
 							new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb,
 							optimizationContext, indent,
@@ -187,12 +187,12 @@ namespace LinqToDB.SqlProvider
 			if (!SqlProviderFlags.IsTakeSupported && takeExpr != null)
 				throw new SqlException("Take for subqueries is not supported by the '{0}' provider.", Name);
 
-			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
+			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder(this);
 			sqlBuilder.BuildSql(0,
 				new SqlSelectStatement(selectQuery) { ParentStatement = Statement }, StringBuilder, OptimizationContext, indent, skipAlias);
 		}
 
-		protected abstract ISqlBuilder CreateSqlBuilder();
+		protected abstract ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder);
 
 		protected T WithStringBuilder<T>(StringBuilder sb, Func<T> func)
 		{
@@ -270,7 +270,7 @@ namespace LinqToDB.SqlProvider
 			var selectStatement = new SqlSelectStatement(deleteStatement.SelectQuery)
 				{ ParentStatement = deleteStatement, With = deleteStatement.GetWithClause() };
 
-			var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
+			var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder(this));
 			sqlBuilder.BuildSql(0, selectStatement, StringBuilder, OptimizationContext, Indent);
 
 			--Indent;
@@ -313,7 +313,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildCteBody(SelectQuery selectQuery)
 		{
-			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
+			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder(this);
 			sqlBuilder.BuildSql(0, new SqlSelectStatement(selectQuery), StringBuilder, OptimizationContext, Indent, SkipAlias);
 		}
 

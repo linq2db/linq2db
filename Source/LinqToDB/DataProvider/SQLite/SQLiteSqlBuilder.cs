@@ -43,7 +43,7 @@ namespace LinqToDB.DataProvider.SQLite
 			}
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
 		{
 			return new SQLiteSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}

@@ -70,7 +70,7 @@ namespace LinqToDB.DataProvider.Sybase
 			if (_skipAliases) addAlias = false;
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
 		{
 			return new SybaseSqlBuilder(_provider, _isSelect, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}

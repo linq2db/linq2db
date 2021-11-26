@@ -66,7 +66,7 @@ namespace LinqToDB.DataProvider.Informix
 			StringBuilder.Append("TRUNCATE TABLE ");
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
 		{
 			return new InformixSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}

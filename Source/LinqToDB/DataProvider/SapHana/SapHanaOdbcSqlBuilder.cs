@@ -12,8 +12,8 @@ namespace LinqToDB.DataProvider.SapHana
 			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
-		
-		protected override ISqlBuilder CreateSqlBuilder()
+
+		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
 		{
 			return new SapHanaOdbcSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}

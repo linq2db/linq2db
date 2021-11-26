@@ -41,7 +41,7 @@
 			return base.Convert(sb, value, convertType);
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
 		{
 			return new AccessODBCSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}

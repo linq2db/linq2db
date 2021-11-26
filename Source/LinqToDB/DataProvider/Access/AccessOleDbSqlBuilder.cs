@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider.Access
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
 		{
 			return new AccessOleDbSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}

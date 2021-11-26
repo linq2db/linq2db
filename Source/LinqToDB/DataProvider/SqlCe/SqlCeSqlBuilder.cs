@@ -75,7 +75,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			}
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
 		{
 			return new SqlCeSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}

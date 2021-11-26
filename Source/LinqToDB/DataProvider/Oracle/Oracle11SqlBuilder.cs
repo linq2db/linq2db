@@ -91,7 +91,7 @@ namespace LinqToDB.DataProvider.Oracle
 				selectQuery.OrderBy.IsEmpty && selectQuery.Having.IsEmpty;
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
 		{
 			return new Oracle11SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}

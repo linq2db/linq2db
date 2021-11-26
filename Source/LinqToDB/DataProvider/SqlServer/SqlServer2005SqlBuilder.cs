@@ -16,7 +16,7 @@
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
 		{
 			return new SqlServer2005SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}

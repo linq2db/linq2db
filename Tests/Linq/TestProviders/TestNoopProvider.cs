@@ -313,7 +313,7 @@ namespace Tests
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder() => throw new NotImplementedException();
+		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder) => throw new NotImplementedException();
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{

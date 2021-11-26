@@ -38,7 +38,7 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
 		{
 			return new FirebirdSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}

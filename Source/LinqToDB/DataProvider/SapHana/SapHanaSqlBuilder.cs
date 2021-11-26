@@ -38,7 +38,7 @@ namespace LinqToDB.DataProvider.SapHana
 			}
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
 		{
 			return new SapHanaSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}

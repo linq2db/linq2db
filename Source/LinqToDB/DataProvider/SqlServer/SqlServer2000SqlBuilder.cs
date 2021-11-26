@@ -21,7 +21,7 @@
 			return "TOP {0}";
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
 		{
 			return new SqlServer2000SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}

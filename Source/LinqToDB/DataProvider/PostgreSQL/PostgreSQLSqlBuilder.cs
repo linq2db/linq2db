@@ -54,7 +54,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			StringBuilder.AppendLine();
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
 		{
 			return new PostgreSQLSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}

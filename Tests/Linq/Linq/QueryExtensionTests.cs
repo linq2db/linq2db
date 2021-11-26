@@ -482,7 +482,8 @@ namespace Tests.Linq
 			(
 				from p in db.Parent
 				from c in db.Child
-				where c.ParentID == p.ParentID
+				from c1 in db.Child.With(Hints.TableHint.Index("IX_ChildIndex"))
+				where c.ParentID == p.ParentID && c1.ParentID == p.ParentID
 				select p
 			)
 			.TablesInScopeHint(Hints.TableHint.NoLock);
@@ -491,7 +492,8 @@ namespace Tests.Linq
 			(
 				from p in q
 				from c in db.Child
-				where c.ParentID == p.ParentID && c.Parent!.ParentID > 0
+				from p1 in db.Parent.TablesInScopeHint(Hints.TableHint.HoldLock)
+				where c.ParentID == p.ParentID && c.Parent!.ParentID > 0 && p1.ParentID == p.ParentID
 				select p
 			)
 			.TablesInScopeHint(Hints.TableHint.NoWait);
@@ -509,6 +511,8 @@ namespace Tests.Linq
 			Assert.That(LastQuery, Contains.Substring("[Child] [c_2] WITH (NoWait)"));
 			Assert.That(LastQuery, Contains.Substring("[Parent] [a_Parent] WITH (NoWait)"));
 			Assert.That(LastQuery, Contains.Substring("[Child] [c_3]\r\n"));
+			Assert.That(LastQuery, Contains.Substring("[Child] [c1] WITH (Index(IX_ChildIndex), NoLock)"));
+			Assert.That(LastQuery, Contains.Substring("[Parent] [p1] WITH (HoldLock)"));
 		}
 	}
 

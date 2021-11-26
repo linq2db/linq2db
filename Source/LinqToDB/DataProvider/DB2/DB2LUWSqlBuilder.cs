@@ -23,7 +23,7 @@
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
+		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
 		{
 			return new DB2LUWSqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
