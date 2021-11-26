@@ -38,7 +38,7 @@ namespace LinqToDB.DataProvider.Oracle
 			if (selectQuery.From.Tables.Count == 0)
 			{
 				AppendIndent().Append("SELECT").AppendLine();
-				BuildSelectQueryExtensions(selectQuery);
+				StartStatementQueryExtensions();
 				BuildColumns(selectQuery);
 				AppendIndent().Append("FROM SYS.DUAL").AppendLine();
 			}
@@ -46,7 +46,7 @@ namespace LinqToDB.DataProvider.Oracle
 				base.BuildSelectClause(selectQuery);
 		}
 
-		protected override void BuildSelectQueryExtensions(SelectQuery selectQuery)
+		protected override void StartStatementQueryExtensions()
 		{
 		}
 

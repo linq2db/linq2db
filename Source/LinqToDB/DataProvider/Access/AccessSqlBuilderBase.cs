@@ -58,6 +58,7 @@ namespace LinqToDB.DataProvider.Access
 		protected override void BuildSql()
 		{
 			var selectQuery = Statement.SelectQuery;
+
 			if (selectQuery != null)
 			{
 				if (selectQuery.From.Tables.Count == 0 && selectQuery.Select.Columns.Count == 1)

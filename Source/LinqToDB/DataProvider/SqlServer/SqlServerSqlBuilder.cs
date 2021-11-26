@@ -614,6 +614,9 @@ namespace LinqToDB.DataProvider.SqlServer
 				ext.Scope == Sql.QueryExtensionScope.Query &&
 				ext.ID is Sql.QueryExtensionID.QueryHint) == true)
 			{
+				if (statement is SqlMergeStatement)
+					StringBuilder.AppendLine();
+
 				StringBuilder.Append("OPTION (");
 
 				foreach (var ext in statement.SqlQueryExtensions!)
