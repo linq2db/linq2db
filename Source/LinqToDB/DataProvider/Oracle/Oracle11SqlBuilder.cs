@@ -672,7 +672,6 @@ END;",
 
 		protected StringBuilder? HintBuilder;
 		protected string?        TablePath;
-		protected string?        LastTableAliasWIthPath;
 
 		int  _hintPosition;
 		bool _isTopLevelBuilder;
@@ -689,6 +688,20 @@ END;",
 
 		protected override void BuildQueryExtensions(SqlStatement statement)
 		{
+			if (statement.SqlQueryExtensions?.Any(ext =>
+				ext.Scope == Sql.QueryExtensionScope.Query &&
+				ext.ID is Sql.QueryExtensionID.QueryHint) == true)
+			{
+				foreach (var ext in statement.SqlQueryExtensions!)
+				{
+					if (HintBuilder!.Length > 0)
+						HintBuilder.Append(' ');
+
+					var hint = (SqlValue)ext.Arguments["queryHint"];
+					HintBuilder.Append((string)hint.Value!);
+				}
+			}
+
 			if (_isTopLevelBuilder && HintBuilder!.Length > 0)
 			{
 				HintBuilder.Insert(0, " /*+ ");
@@ -718,9 +731,6 @@ END;",
 
 		protected override void BuildTableExtensions(SqlTable table, string alias)
 		{
-			if (HintBuilder!.Length > 0)
-				HintBuilder.Append(", ");
-
 			if (table.SqlQueryExtensions!.Any(ext =>
 				ext.Scope is
 					Sql.QueryExtensionScope.Table or
@@ -730,6 +740,9 @@ END;",
 			{
 				foreach (var ext in table.SqlQueryExtensions!)
 				{
+					if (HintBuilder!.Length > 0)
+						HintBuilder.Append(' ');
+
 					var hint = (SqlValue)ext.Arguments["tableHint"];
 
 					HintBuilder.Append((string)hint.Value!);

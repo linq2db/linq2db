@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Linq;
-using FastExpressionCompiler;
+
 using LinqToDB;
 using LinqToDB.DataProvider.SqlServer;
 
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.Linq
 {

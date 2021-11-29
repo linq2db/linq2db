@@ -151,7 +151,7 @@ namespace LinqToDB
 		{
 			table.Expression = Expression.Call(
 				null,
-				MethodHelper.GetMethodInfo(With, table, tableHint),
+				MethodHelper.GetMethodInfo(TableHint, table, tableHint),
 				table.Expression, Expression.Constant(tableHint));
 
 			return table;
@@ -195,7 +195,7 @@ namespace LinqToDB
 		/// <returns>Query source with join hints.</returns>
 		[LinqTunnel]
 		[Pure]
-		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.Join, Sql.QueryExtensionID.JoinHint)]
+		[Sql.QueryExtension(Sql.QueryExtensionScope.Join, Sql.QueryExtensionID.JoinHint)]
 		public static IQueryable<TSource> JoinHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string joinHint)
 			where TSource : notnull
 		{
@@ -221,7 +221,7 @@ namespace LinqToDB
 		/// <returns>Query source with join hints.</returns>
 		[LinqTunnel]
 		[Pure]
-		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.Query, Sql.QueryExtensionID.QueryHint)]
+		[Sql.QueryExtension(Sql.QueryExtensionScope.Query, Sql.QueryExtensionID.QueryHint)]
 		public static IQueryable<TSource> QueryHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string queryHint)
 			where TSource : notnull
 		{

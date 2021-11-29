@@ -12,20 +12,6 @@ namespace Tests.Linq
 	public class QueryExtensionOracleTests : TestBase
 	{
 		[Test]
-		public void TableHintTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Parent.TableHint(Hints.TableHint.Full)//.With(Hints.TableHint.NoWait)
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring("SELECT /*+ Full(p) */"));
-		}
-
-		[Test]
 		public void TableSubqueryHintTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -33,7 +19,7 @@ namespace Tests.Linq
 			var q =
 				from p in
 					(
-						from p in db.Parent.TableHint(Hints.TableHint.Full)
+						from p in db.Parent.TableHint(Hints.TableHint.Full).With(Hints.TableHint.Cache)
 						select p
 					)
 					.AsSubQuery()
@@ -41,9 +27,8 @@ namespace Tests.Linq
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring("SELECT /*+ Full(p_1.p) */"));
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ FULL(p_1.p) CACHE(p_1.p) */"));
 		}
-
 
 		[Test]
 		public void TableSubqueryHintTest2([IncludeDataSources(true, TestProvName.AllOracle)] string context)
@@ -67,29 +52,16 @@ namespace Tests.Linq
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring("SELECT /*+ Full(p_2.p_1.p), Full(p_2.p_1.c_1)"));
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ FULL(p_2.p_1.p) FULL(p_2.p_1.c_1)"));
 		}
 
-		/*
 		[Test]
-		public void TableHint2005PlusTest(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2005Plus)] string context,
+		public void TableHintTest([IncludeDataSources(true, TestProvName.AllOracle)] string context,
 			[Values(
-				Hints.TableHint.HoldLock,
-				Hints.TableHint.NoLock,
-				Hints.TableHint.NoWait,
-				Hints.TableHint.PagLock,
-				Hints.TableHint.ReadCommitted,
-				Hints.TableHint.ReadCommittedLock,
-				Hints.TableHint.ReadPast,
-				Hints.TableHint.ReadUncommitted,
-				Hints.TableHint.RepeatableRead,
-				Hints.TableHint.RowLock,
-				Hints.TableHint.Serializable,
-				Hints.TableHint.TabLock,
-				Hints.TableHint.TabLockX,
-				Hints.TableHint.UpdLock,
-				Hints.TableHint.XLock
+				Hints.TableHint.Cache,
+				Hints.TableHint.Cluster,
+				Hints.TableHint.DrivingSite,
+				Hints.TableHint.Full
 				)] string hint)
 		{
 			using var db = GetDataContext(context);
@@ -100,29 +72,10 @@ namespace Tests.Linq
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"WITH ({hint})"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {hint}(p) */"));
 		}
 
-		[Test]
-		public void TableHint2012PlusTest(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context,
-			[Values(
-				Hints.TableHint.ForceScan
-//				TableHint.ForceSeek,
-//				TableHint.Snapshot
-				)] string hint)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Parent.TableHint(hint)
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(q.ToString(), Contains.Substring($"WITH ({hint})"));
-		}
-
+		/*
 		[Test]
 		public void TableHintSpatialWindowMaxCellsTest([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
 		{
@@ -278,24 +231,14 @@ namespace Tests.Linq
 
 			Assert.That(LastQuery, Contains.Substring("WITH (NoLock)"));
 		}
+		*/
 
 		[Test]
-		public void QueryHintTest(
-			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
+		public void QueryHintTest([IncludeDataSources(true, TestProvName.AllOracle)] string context,
 			[Values(
-				Hints.Option.HashGroup,
-				Hints.Option.OrderGroup,
-				Hints.Option.ConcatUnion,
-				Hints.Option.HashUnion,
-				Hints.Option.MergeUnion,
-				Hints.Option.LoopJoin,
-				Hints.Option.HashJoin,
-				Hints.Option.MergeJoin,
-				Hints.Option.ExpandViews,
-				Hints.Option.KeepPlan,
-				Hints.Option.KeepFixedPlan,
-				Hints.Option.Recompile,
-				Hints.Option.RobustPlan
+				Hints.QueryHint.AllRows,
+				Hints.QueryHint.Append,
+				Hints.QueryHint.CursorSharingExact
 			)] string hint)
 		{
 			using var db = GetDataContext(context);
@@ -310,9 +253,28 @@ namespace Tests.Linq
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"OPTION ({hint})"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {hint} */"));
 		}
 
+		[Test]
+		public void QueryHintFirstRowsTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				(
+					from c in db.Child
+					join p in db.Parent on c.ParentID equals p.ParentID
+					select p
+				)
+				.QueryHint(Hints.QueryHint.FirstRows(25));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ FIRST_ROWS(25) */"));
+		}
+
+		/*
 		[Test]
 		public void QueryHint2008PlusTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context,

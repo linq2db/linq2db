@@ -6,24 +6,10 @@ namespace LinqToDB.DataProvider.Oracle
 	{
 		public static class TableHint
 		{
-			public const string Full = "Full";
-//			public const string ForceSeek         = "ForceSeek";
-//			public const string HoldLock          = "HoldLock";
-//			public const string NoLock            = "NoLock";
-//			public const string NoWait            = "NoWait";
-//			public const string PagLock           = "PagLock";
-//			public const string ReadCommitted     = "ReadCommitted";
-//			public const string ReadCommittedLock = "ReadCommittedLock";
-//			public const string ReadPast          = "ReadPast";
-//			public const string ReadUncommitted   = "ReadUncommitted";
-//			public const string RepeatableRead    = "RepeatableRead";
-//			public const string RowLock           = "RowLock";
-//			public const string Serializable      = "Serializable";
-//			public const string Snapshot          = "Snapshot";
-//			public const string TabLock           = "TabLock";
-//			public const string TabLockX          = "TabLockX";
-//			public const string UpdLock           = "UpdLock";
-//			public const string XLock             = "XLock";
+			public const string Cache       = "CACHE";
+			public const string Cluster     = "CLUSTER";
+			public const string DrivingSite = "DRIVING_SITE";
+			public const string Full        = "FULL";
 //
 //			[Sql.Expression("SPATIAL_WINDOW_MAX_CELLS={0}")]
 //			public static string SpatialWindowMaxCells(int value)
@@ -46,37 +32,17 @@ namespace LinqToDB.DataProvider.Oracle
 //			public const string Remote = "REMOTE";
 		}
 
-		public static class Option
+		public static class QueryHint
 		{
-//			public const string HashGroup                          = "HASH GROUP";
-//			public const string OrderGroup                         = "ORDER GROUP";
-//			public const string ConcatUnion                        = "CONCAT UNION";
-//			public const string HashUnion                          = "HASH UNION";
-//			public const string MergeUnion                         = "MERGE UNION";
-//			public const string LoopJoin                           = "LOOP JOIN";
-//			public const string HashJoin                           = "HASH JOIN";
-//			public const string MergeJoin                          = "MERGE JOIN";
-//			public const string ExpandViews                        = "EXPAND VIEWS";
-//			public const string ForceOrder                         = "FORCE ORDER";
-//			public const string ForceExternalPushDown              = "FORCE EXTERNALPUSHDOWN";
-//			public const string DisableExternalPushDown            = "DISABLE EXTERNALPUSHDOWN";
-//			public const string ForceScaleOutExecution             = "FORCE SCALEOUTEXECUTION";
-//			public const string DisableScaleOutExecution           = "DISABLE SCALEOUTEXECUTION";
-//			public const string IgnoreNonClusteredColumnStoreIndex = "IGNORE_NONCLUSTERED_COLUMNSTORE_INDEX";
-//			public const string KeepPlan                           = "KEEP PLAN   ";
-//			public const string KeepFixedPlan                      = "KEEPFIXED PLAN";
-//			public const string NoPerformanceSpool                 = "NO_PERFORMANCE_SPOOL";
-//			public const string OptimizeForUnknown                 = "OPTIMIZE FOR UNKNOWN";
-//			public const string ParameterizationSimple             = "PARAMETERIZATION SIMPLE";
-//			public const string ParameterizationForced             = "PARAMETERIZATION FORCED";
-//			public const string Recompile                          = "RECOMPILE";
-//			public const string RobustPlan                         = "ROBUST PLAN";
-//
-//			[Sql.Expression("FAST {0}")]
-//			public static string Fast(int value)
-//			{
-//				return $"FAST {value}";
-//			}
+			public const string AllRows            = "ALL_ROWS";
+			public const string Append             = "APPEND";
+			public const string CursorSharingExact = "CURSOR_SHARING_EXACT";
+
+			[Sql.Expression("FIRST_ROWS(0)")]
+			public static string FirstRows(int value)
+			{
+				return $"FIRST_ROWS({value})";
+			}
 //
 //			[Sql.Expression("MAX_GRANT_PERCENT={0}")]
 //			public static string MaxGrantPercent(decimal value)
