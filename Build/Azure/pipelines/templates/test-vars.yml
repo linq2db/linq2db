@@ -4,3 +4,4 @@ variables:
   netcore21_tests: netcoreapp21_tests
   netcore31_tests: netcoreapp31_tests
   net50_tests: net50_tests
+  net60_tests: net60_tests

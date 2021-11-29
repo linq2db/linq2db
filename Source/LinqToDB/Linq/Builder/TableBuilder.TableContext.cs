@@ -79,7 +79,7 @@ namespace LinqToDB.Linq.Builder
 				SelectQuery      = buildInfo.SelectQuery;
 				AssociationsToSubQueries = buildInfo.AssociationsAsSubQueries;
 
-				OriginalType     = table.ObjectType!;
+				OriginalType     = table.ObjectType;
 				ObjectType       = GetObjectType();
 				SqlTable         = table;
 				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
@@ -97,7 +97,7 @@ namespace LinqToDB.Linq.Builder
 				Expression       = null;
 				SelectQuery      = selectQuery;
 
-				OriginalType     = table.ObjectType!;
+				OriginalType     = table.ObjectType;
 				ObjectType       = GetObjectType();
 				SqlTable         = table;
 				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
@@ -419,7 +419,7 @@ namespace LinqToDB.Linq.Builder
 					if (hasComplex)
 						foreach (var (column, exp) in members)
 							if (column.MemberAccessor.IsComplex)
-								exprs.Add(column.MemberAccessor.SetterExpression!.GetBody(obj, exp));
+								exprs.Add(column.MemberAccessor.SetterExpression.GetBody(obj, exp));
 
 					if (loadWith != null)
 						SetLoadWithBindings(objectType, obj, exprs);
@@ -559,7 +559,7 @@ namespace LinqToDB.Linq.Builder
 				var parameters = ctor.GetParameters();
 				var argFound   = false;
 
-				var args = new Expression?[parameters.Length];
+				var args = new Expression[parameters.Length];
 				for (int i = 0; i < parameters.Length; i++)
 				{
 					var param = parameters[i];
@@ -1234,7 +1234,7 @@ namespace LinqToDB.Linq.Builder
 						var table = new TableContext(
 							Builder,
 							new BuildInfo(Parent is SelectManyBuilder.SelectManyContext ? this : Parent, Expression!, buildInfo.SelectQuery),
-							SqlTable.ObjectType!);
+							SqlTable.ObjectType);
 
 						return table;
 					}
@@ -1261,12 +1261,12 @@ namespace LinqToDB.Linq.Builder
 								{
 									case MemberExpression me:
 										{
-											ma = me.Expression;
+											ma = me.Expression!;
 											break;
 										}
 									case MethodCallExpression mc:
 										{
-											ma = mc.Method.IsStatic ? mc.Arguments[0] : mc.Object;
+											ma = mc.Method.IsStatic ? mc.Arguments[0] : mc.Object!;
 											break;
 										}
 
@@ -1334,7 +1334,7 @@ namespace LinqToDB.Linq.Builder
 
 			#region SetAlias
 
-			public void SetAlias(string alias)
+			public void SetAlias(string? alias)
 			{
 				if (alias == null || SqlTable == null)
 					return;
@@ -1383,17 +1383,17 @@ namespace LinqToDB.Linq.Builder
 									if (column.MemberInfo.EqualsTo(memberExpression.Member, SqlTable.ObjectType))
 									{
 										expression = memberExpression = ExpressionHelper.PropertyOrField(
-											Expression.Convert(memberExpression.Expression, column.MemberInfo.DeclaringType), column.MemberName);
+											Expression.Convert(memberExpression.Expression!, column.MemberInfo.DeclaringType!), column.MemberName);
 										break;
 									}
 								}
 							}
 							else
 							{
-								var expr = memberExpression.Expression;
+								var expr = memberExpression.Expression!;
 
 								if (alias.MemberInfo.DeclaringType != memberExpression.Member.DeclaringType)
-									expr = Expression.Convert(memberExpression.Expression, alias.MemberInfo.DeclaringType);
+									expr = Expression.Convert(memberExpression.Expression!, alias.MemberInfo.DeclaringType!);
 
 								expression = memberExpression = ExpressionHelper.PropertyOrField(expr, alias.MemberName);
 							}
@@ -1414,11 +1414,11 @@ namespace LinqToDB.Linq.Builder
 							{
 								var sameType =
 									levelMember.Member.ReflectedType == SqlTable.ObjectType ||
-									levelMember.Member.DeclaringType     == SqlTable.ObjectType;
+									levelMember.Member.DeclaringType == SqlTable.ObjectType;
 
 								if (!sameType)
 								{
-									var members = SqlTable.ObjectType!.GetInstanceMemberEx(levelMember.Member.Name);
+									var members = SqlTable.ObjectType.GetInstanceMemberEx(levelMember.Member.Name);
 									foreach (var mi in members)
 									{
 										if (mi.DeclaringType == levelMember.Member.DeclaringType)
@@ -1442,7 +1442,7 @@ namespace LinqToDB.Linq.Builder
 												var suffix = string.Empty;
 												for (var ex = (MemberExpression)expression;
 													ex != levelMember;
-													ex = (MemberExpression)ex.Expression)
+													ex = (MemberExpression)ex.Expression!)
 												{
 													suffix = string.IsNullOrEmpty(suffix)
 														? ex.Member.Name

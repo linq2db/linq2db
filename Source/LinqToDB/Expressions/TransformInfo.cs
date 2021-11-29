@@ -21,7 +21,6 @@ namespace LinqToDB.Expressions
 		public TransformInfo(Expression expression, bool stop, bool @continue)
 		{
 			Expression = expression;
-			Stop       = false;
 			Stop       = stop;
 			Continue   = @continue;
 		}

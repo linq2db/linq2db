@@ -26,7 +26,7 @@ namespace LinqToDB.Tools.EntityServices
 		{
 			return _entityMapDic.GetOrAdd(
 				entityType,
-				key => (IEntityMap)Activator.CreateInstance(typeof(EntityMap<>).MakeGenericType(key), _dataContext));
+				key => (IEntityMap)Activator.CreateInstance(typeof(EntityMap<>).MakeGenericType(key), _dataContext)!);
 		}
 
 		public IEnumerable GetEntities(Type entityType)
@@ -56,7 +56,7 @@ namespace LinqToDB.Tools.EntityServices
 			where T : class, new()
 		{
 			if (_dataContext != null)
-				return GetEntityMap<T>().GetEntity(_dataContext, key);
+			return GetEntityMap<T>().GetEntity(_dataContext, key);
 
 			throw new ObjectDisposedException(nameof(IdentityMap));
 		}

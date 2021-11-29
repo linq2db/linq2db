@@ -40,8 +40,8 @@ namespace Tests.Common
 			public void Log<TState>(LogLevel logLevel,
 				EventId eventId,
 				TState state,
-				Exception exception,
-				Func<TState, Exception, string> formatter)
+				Exception? exception,
+				Func<TState, Exception?, string> formatter)
 			{
 				var message = formatter(state, exception);
 				Messages.Add(message);
@@ -52,9 +52,13 @@ namespace Tests.Common
 				return false;
 			}
 
-			public IDisposable? BeginScope<TState>(TState state)
+			public IDisposable BeginScope<TState>(TState state) => new Disposable();
+
+			private class Disposable : IDisposable
 			{
-				return null;
+				void IDisposable.Dispose()
+				{
+				}
 			}
 		}
 

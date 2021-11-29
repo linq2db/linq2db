@@ -201,7 +201,7 @@ namespace LinqToDB.DataProvider.SQLite
 				BuildEmptyValues(valuesTable);
 				StringBuilder.Append(')');
 			}
-			else 
+			else
 			{
 				StringBuilder.Append(OpenParens);
 
@@ -214,7 +214,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 				AppendIndent();
 
-				if (rows?.Count > 0)
+				if (rows.Count > 0)
 				{
 					StringBuilder.AppendLine("UNION ALL");
 					AppendIndent();

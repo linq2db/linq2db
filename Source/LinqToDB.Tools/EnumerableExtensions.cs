@@ -61,14 +61,14 @@ namespace LinqToDB.Tools
 						if      (value == null)            values[i] = "<NULL>";
 						else if (type == typeof(decimal))  values[i] = ((decimal) value).ToString("G");
 						else if (type == typeof(DateTime)) values[i] = ((DateTime)value).ToString("yyy-MM-dd hh:mm:ss");
-						else                               values[i] = value.ToString();
+						else                               values[i] = value.ToString() ?? string.Empty;
 					}
 
 					itemValues.Add(values);
 				}
 				else
 				{
-					itemValues.Add(item == null ? new[] { "<NULL>" } : new[] { item.ToString() });
+					itemValues.Add(item == null ? new[] { "<NULL>" } : new[] { item.ToString() ?? string.Empty });
 				}
 			}
 

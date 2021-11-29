@@ -232,7 +232,7 @@ namespace Tests
 
 	internal class TestNoopDbParameterCollection : DbParameterCollection
 	{
-		private List<TestNoopDbParameter> _parameters = new List<TestNoopDbParameter>();
+		private List<TestNoopDbParameter> _parameters = new ();
 
 		public override int Count => _parameters.Count;
 

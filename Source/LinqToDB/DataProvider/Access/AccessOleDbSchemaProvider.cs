@@ -52,9 +52,9 @@ namespace LinqToDB.DataProvider.Access
 			var q = from fk in data.AsEnumerable()
 					select new ForeignKeyInfo
 					{
-						Name         = fk.Field<string>("FK_NAME"),
-						ThisColumn   = fk.Field<string>("FK_COLUMN_NAME"),
-						OtherColumn  = fk.Field<string>("PK_COLUMN_NAME"),
+						Name         = fk.Field<string>("FK_NAME")!,
+						ThisColumn   = fk.Field<string>("FK_COLUMN_NAME")!,
+						OtherColumn  = fk.Field<string>("PK_COLUMN_NAME")!,
 						ThisTableID  = fk.Field<string>("FK_TABLE_CATALOG") + "." + fk.Field<string>("FK_TABLE_SCHEMA") + "." + fk.Field<string>("FK_TABLE_NAME"),
 						OtherTableID = fk.Field<string>("PK_TABLE_CATALOG") + "." + fk.Field<string>("PK_TABLE_SCHEMA") + "." + fk.Field<string>("PK_TABLE_NAME"),
 						Ordinal      = ConvertTo<int>.From(fk.Field<long>("ORDINAL")),
@@ -101,8 +101,8 @@ namespace LinqToDB.DataProvider.Access
 				select new PrimaryKeyInfo
 				{
 					TableID        = idx.Field<string>("TABLE_CATALOG") + "." + idx.Field<string>("TABLE_SCHEMA") + "." + idx.Field<string>("TABLE_NAME"),
-					PrimaryKeyName = idx.Field<string>("INDEX_NAME"),
-					ColumnName     = idx.Field<string>("COLUMN_NAME"),
+					PrimaryKeyName = idx.Field<string>("INDEX_NAME")!,
+					ColumnName     = idx.Field<string>("COLUMN_NAME")!,
 					Ordinal        = ConvertTo<int>.From(idx["ORDINAL_POSITION"]),
 				}
 			).ToList();
@@ -121,7 +121,7 @@ namespace LinqToDB.DataProvider.Access
 				select new ColumnInfo
 				{
 					TableID     = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME"),
-					Name        = c.Field<string>("COLUMN_NAME"),
+					Name        = c.Field<string>("COLUMN_NAME")!,
 					IsNullable  = c.Field<bool>  ("IS_NULLABLE"),
 					Ordinal     = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
 					DataType    = dt?.TypeName,
@@ -189,6 +189,9 @@ namespace LinqToDB.DataProvider.Access
 
 			foreach (var procedure in procedures)
 			{
+				if (procedure.ProcedureDefinition == null)
+					continue;
+
 				var match      = _paramsExp.Match(procedure.ProcedureDefinition);
 				var names      = match.Groups["name"].Captures;
 				var types      = match.Groups["type"].Captures;

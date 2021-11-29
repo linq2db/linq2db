@@ -21,7 +21,7 @@ namespace LinqToDB.Async
 
 		/// <inheritdoc cref="DbTransaction.Commit"/>
 		void Commit();
-		/// <inheritdoc cref="DbTransaction.Rollback"/>
+		/// <inheritdoc cref="DbTransaction.Rollback()"/>
 		void Rollback();
 
 		/// <summary>

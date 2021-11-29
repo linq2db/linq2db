@@ -375,7 +375,7 @@ namespace LinqToDB.Linq.Builder
 														ColumnDescriptor? descriptor = null;
 														if (mex is MemberExpression ma)
 														{
-															var ed = context.context.Builder.MappingSchema.GetEntityDescriptor(ma.Expression.Type);
+															var ed     = context.context.Builder.MappingSchema.GetEntityDescriptor(ma.Expression!.Type);
 															descriptor = ed.FindColumnDescriptor(ma.Member);
 														}
 														return context.context.ConvertExpressions(buildExpression, context.flags, descriptor);
@@ -988,9 +988,9 @@ namespace LinqToDB.Linq.Builder
 
 		#region SetAlias
 
-		public virtual void SetAlias(string alias)
+		public virtual void SetAlias(string? alias)
 		{
-			if (!string.IsNullOrEmpty(alias) && !alias.Contains('<') && SelectQuery.Select.From.Tables.Count == 1)
+			if (!string.IsNullOrEmpty(alias) && !alias!.Contains('<') && SelectQuery.Select.From.Tables.Count == 1)
 			{
 				SelectQuery.Select.From.Tables[0].Alias = alias;
 			}

@@ -46,7 +46,7 @@ namespace LinqToDB.Linq.Builder
 				.ToArray();
 		}
 
-		SqlField RegisterSourceField(ISqlExpression baseExpression, ISqlExpression expression, int index, MemberInfo member)
+		SqlField RegisterSourceField(ISqlExpression baseExpression, ISqlExpression expression, int index, MemberInfo? member)
 		{
 			var sourceField = Source.RegisterSourceField(baseExpression, expression, index, () =>
 			{

@@ -53,8 +53,8 @@ namespace LinqToDB.DataProvider.SapHana
 			var dt = dts.AsEnumerable()
 				.Select(t => new DataTypeInfo
 				{
-					TypeName         = t.Field<string>("TypeName"),
-					DataType         = t.Field<string>("DataType"),
+					TypeName         = t.Field<string>("TypeName")!,
+					DataType         = t.Field<string>("DataType")!,
 					CreateFormat     = t.Field<string>("CreateFormat"),
 					CreateParameters = t.Field<string>("CreateParameters"),
 					ProviderDbType   = Converter.ChangeTypeTo<int>(t["ProviderDbType"]),
@@ -170,8 +170,8 @@ namespace LinqToDB.DataProvider.SapHana
 				select new PrimaryKeyInfo
 				{
 					TableID        = pk.Field<string>("TABLE_SCHEMA") + "." + pk.Field<string>("TABLE_NAME"),
-					PrimaryKeyName = pk.Field<string>("INDEX_NAME"),
-					ColumnName     = pk.Field<string>("COLUMN_NAME"),
+					PrimaryKeyName = pk.Field<string>("INDEX_NAME")!,
+					ColumnName     = pk.Field<string>("COLUMN_NAME")!,
 					Ordinal        = Converter.ChangeTypeTo<int>(pk["POSITION"]),
 				}
 			).ToList();
@@ -396,7 +396,7 @@ namespace LinqToDB.DataProvider.SapHana
 				from r in resultTable.AsEnumerable()
 
 				let systemType   = r.Field<Type>("DataType")
-				let columnName   = GetEmptyStringIfInvalidColumnName(r.Field<string>("ColumnName"))
+				let columnName   = GetEmptyStringIfInvalidColumnName(r.Field<string>("ColumnName")!)
 				let providerType = Converter.ChangeTypeTo<int>(r["ProviderType"])
 				let dataType     = GetDataTypeByProviderDbType(providerType, options)
 				let columnType   = dataType?.TypeName

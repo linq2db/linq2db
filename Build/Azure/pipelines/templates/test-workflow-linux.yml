@@ -11,8 +11,15 @@ steps:
   displayName: 'Install .net 5'
   inputs:
     packageType: sdk
-    version: 5.x
+    version: 5.0.x
   condition: eq('${{ parameters.framework }}', 'net5.0')
+
+- task: UseDotNet@2
+  displayName: 'Install .net 6'
+  inputs:
+    packageType: sdk
+    version: 6.0.x
+  condition: eq('${{ parameters.framework }}', 'net6.0')
 
 - task: CmdLine@2
   inputs:

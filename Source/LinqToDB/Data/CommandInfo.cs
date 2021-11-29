@@ -639,7 +639,7 @@ namespace LinqToDB.Data
 			return ReadEnumerator<T>(new DataReaderWrapper(rd), null, false).ToList();
 		}
 
-		T ReadSingle<T>(DbDataReader rd)
+		T? ReadSingle<T>(DbDataReader rd)
 		{
 			return ReadEnumerator<T>(new DataReaderWrapper(rd), null, false).FirstOrDefault();
 		}

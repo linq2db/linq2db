@@ -30,8 +30,8 @@ namespace LinqToDB.DataProvider.DB2
 			return DataTypesSchema.AsEnumerable()
 				.Select(t => new DataTypeInfo
 				{
-					TypeName         = t.Field<string>("SQL_TYPE_NAME"),
-					DataType         = t.Field<string>("FRAMEWORK_TYPE"),
+					TypeName         = t.Field<string>("SQL_TYPE_NAME")!,
+					DataType         = t.Field<string>("FRAMEWORK_TYPE")!,
 					CreateParameters = t.Field<string>("CREATE_PARAMS"),
 				})
 				.Union(
@@ -227,8 +227,8 @@ WHERE
 	" + GetSchemaFilter("TABSCHEMA"))
 				.SelectMany(fk =>
 				{
-					var thisTable    = _columns.Where(c => c.TableID == fk.thisTable). OrderByDescending(c => c.Name.Length).ToList();
-					var otherTable   = _columns.Where(c => c.TableID == fk.otherTable).OrderByDescending(c => c.Name.Length).ToList();
+					var thisTable    = _columns!.Where(c => c.TableID == fk.thisTable). OrderByDescending(c => c.Name.Length).ToList();
+					var otherTable   = _columns!.Where(c => c.TableID == fk.otherTable).OrderByDescending(c => c.Name.Length).ToList();
 					var thisColumns  = fk.thisColumns. Trim();
 					var otherColumns = fk.otherColumns.Trim();
 

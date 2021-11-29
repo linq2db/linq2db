@@ -404,7 +404,7 @@ namespace LinqToDB.Linq
 
 					_cache   = newCache;
 					_indexes = newPriorities;
-					version  = _version;
+					_version = version;
 				}
 			}
 

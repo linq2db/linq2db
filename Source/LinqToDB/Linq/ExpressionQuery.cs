@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	using System.Diagnostics.CodeAnalysis;
 	using Async;
 	using Extensions;
 	using Data;
@@ -277,7 +276,6 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		[return: MaybeNull]
 		TResult IQueryProvider.Execute<TResult>(Expression expression)
 		{
 			var query = GetQuery(ref expression, false, out _);

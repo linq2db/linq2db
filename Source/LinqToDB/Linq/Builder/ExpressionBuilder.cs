@@ -296,10 +296,10 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (isQueryable)
 					{
-						var p = sequence.ExpressionsToReplace.Single(static s => s.Path.NodeType == ExpressionType.Parameter);
+						var p = sequence.ExpressionsToReplace!.Single(static s => s.Path.NodeType == ExpressionType.Parameter);
 
 						return Expression.Call(
-							((MethodCallExpression)expr).Method.DeclaringType,
+							((MethodCallExpression)expr).Method.DeclaringType!,
 							"Select",
 							new[] { p.Path.Type, paramType },
 							sequence.Expression,
@@ -438,7 +438,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								var mi = EnumerableMethods
 									.First(static m => m.Name == "Count" && m.GetParameters().Length == 1)
-									.MakeGenericMethod(me.Expression.Type.GetItemType()!);
+									.MakeGenericMethod(me.Expression!.Type.GetItemType()!);
 
 								return new TransformInfo(Expression.Call(null, mi, me.Expression));
 							}

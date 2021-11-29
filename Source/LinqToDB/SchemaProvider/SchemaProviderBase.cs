@@ -264,7 +264,7 @@ namespace LinqToDB.SchemaProvider
 
 				if (procs != null)
 				{
-					var procParams = GetProcedureParameters(dataConnection, procs, options);
+					var procParams = (IEnumerable<ProcedureParameterInfo>?)GetProcedureParameters(dataConnection, procs, options) ?? Array<ProcedureParameterInfo>.Empty;
 
 					procedures =
 					(
@@ -578,8 +578,8 @@ namespace LinqToDB.SchemaProvider
 			return DataTypesSchema.AsEnumerable()
 				.Select(t => new DataTypeInfo
 				{
-					TypeName         = t.Field<string>("TypeName"),
-					DataType         = t.Field<string>("DataType"),
+					TypeName         = t.Field<string>("TypeName")!,
+					DataType         = t.Field<string>("DataType")!,
 					CreateFormat     = t.Field<string>("CreateFormat"),
 					CreateParameters = t.Field<string>("CreateParameters"),
 					ProviderDbType   = t.Field<int>   ("ProviderDbType"),

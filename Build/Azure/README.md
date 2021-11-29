@@ -1,7 +1,10 @@
 ﻿This directory contains test configs and setup scripts for test jobs on Azure Pipelines
 - `net472` folder stores test job configs for .NET 4.7.2 Windows tests
 - `netcoreapp21` folder stores test job configs for `netcoreapp2.1` test runs for Windows, Linux and MacOS
-- `scripts` folder stores test job setup scripts (`*.cmd` for windows jobs and `*.sh` for Linux and MacOS)
+- `netcoreapp31` folder stores test job configs for `netcoreapp3.1` test runs for Windows, Linux and MacOS
+- `net50` folder stores test job configs for `net5.0` test runs for Windows, Linux and MacOS
+- `net60` folder stores test job configs for `net6.0` test runs for Windows, Linux and MacOS
+- `scripts` folder stores test job setup scripts (`*.cmd` for Windows jobs and `*.sh` for Linux and MacOS)
 
 ## Azure Pipelines
 All existing pipelines we have listed below. If you need more flexible test runs, you can request more test pipelines. E.g. to run only specific database or framework/OS tests.
@@ -55,14 +58,13 @@ Legend:
 - :heavy_minus_sign: - test configuration not supported (e.g. db/provider not available for target OS/Framework)
 - :heavy_check_mark: - test job implemented
 - :x: - test job not implemented yet
-- `net472`: .NET Framework 4.7.2
-- `netcoreapp2.1`: .NETCoreApp 2.1
-- `netcoreapp3.1`: .NETCoreApp 3.1 (currently not used for azure tests except couple of test providers)
-- :door: - Windows (2019 or 2016 for some docker-based tests)
+- `netfx`: .NET Framework (4.7.2)
+- `netcore`: .NET Core 2.1/3.1 OR .NET 5.0 / 6.0
+- :door: - Windows 2022, 2019 or 2016 (depends on used docker image for database)
 - :penguin: - Linux (Ununtu 20.04)
 - :green_apple: - MacOS Catalina 10.15
 
-| Database (version): provider \ Target framework (OS) | net472 :door: | netcoreapp2.1 :door: | netcoreapp2.1 :penguin: | netcoreapp2.1 :green_apple: |
+| Database (version): provider \ Target framework (OS) | netfx :door: | netcore :door: | netcore :penguin: | netcore :green_apple: |
 |:---|:---:|:---:|:---:|:---:|
 |TestNoopProvider<sup>[1](#notes)</sup>|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |SQLite [3.13.0](https://www.sqlite.org/releaselog/3_13_0.html)<sup>[2](#notes)</sup><br>[Microsoft.Data.SQLite](https://www.nuget.org/packages/Microsoft.Data.SQLite/) 1.1.1<br>with NorthwindDB Tests|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
@@ -102,12 +104,12 @@ Legend:
 |PostgreSQL 11<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.1.10 (netfx) / 5.0.11 (core2.1) / 6.0.0 (core3.1+)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 12<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.1.10 (netfx) / 5.0.11 (core2.1) / 6.0.0 (core3.1+)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 13<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.1.10 (netfx) / 5.0.11 (core2.1) / 6.0.0 (core3.1+)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|DB2 LUW 11.5.0.0a<br>[IBM.Data.DB2](https://www.nuget.org/packages/IBM.Data.DB.Provider/) 11.5.5010.4 (netfx)<br>[IBM.Data.DB2.Core](https://www.nuget.org/packages/IBM.Data.DB2.Core/) 2.2.0.100 ([osx](https://www.nuget.org/packages/IBM.Data.DB2.Core-osx/) 2.0.0.100, [lin](https://www.nuget.org/packages/IBM.Data.DB2.Core-lnx/) 2.2.0.100) (core)|:x:|:x:|:heavy_check_mark:<sup>[6](#notes)</sup>|:heavy_check_mark:|
+|DB2 LUW 11.5.0.0a<br>[IBM.Data.DB2](https://www.nuget.org/packages/IBM.Data.DB.Provider/) 11.5.5010.4 (netfx)<br>[IBM.Data.DB2.Core](https://www.nuget.org/packages/IBM.Data.DB2.Core/) 2.2.0.100 ([osx](https://www.nuget.org/packages/IBM.Data.DB2.Core-osx/) 2.0.0.100, [lin](https://www.nuget.org/packages/IBM.Data.DB2.Core-lnx/) 2.2.0.100) (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Informix 12.10.FC12W1DE<br>IBM.Data.Informix (SQLI) 4.0.410.10|:x:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
 |Informix 14.10<br>IBM.Data.Informix (SQLI) 4.0.410.10|:x:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
 |Informix 12.10.FC12W1DE<br>IBM.Data.Informix (IDS) 11.1.1010.4|:x:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
 |Informix 14.10<br>IBM.Data.Informix (IDS) 11.1.1010.4|:x:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
-|Informix 12.10.FC12W1DE<br>[IBM.Data.DB2](https://www.nuget.org/packages/IBM.Data.DB.Provider/) IDS 11.5.5010.4 (netfx)<br>[IBM.Data.DB2.Core](https://www.nuget.org/packages/IBM.Data.DB2.Core/) 2.2.0.100 ([osx](https://www.nuget.org/packages/IBM.Data.DB2.Core-osx/) 2.0.0.100, [lin](https://www.nuget.org/packages/IBM.Data.DB2.Core-lnx/) 2.2.0.100) (core)|:x:|:x:|:heavy_check_mark:<sup>[6](#notes)</sup>|:heavy_check_mark:|
+|Informix 12.10.FC12W1DE<br>[IBM.Data.DB2](https://www.nuget.org/packages/IBM.Data.DB.Provider/) IDS 11.5.5010.4 (netfx)<br>[IBM.Data.DB2.Core](https://www.nuget.org/packages/IBM.Data.DB2.Core/) 2.2.0.100 ([osx](https://www.nuget.org/packages/IBM.Data.DB2.Core-osx/) 2.0.0.100, [lin](https://www.nuget.org/packages/IBM.Data.DB2.Core-lnx/) 2.2.0.100) (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Informix 14.10<br>[IBM.Data.DB2](https://www.nuget.org/packages/IBM.Data.DB.Provider/) IDS 11.5.5010.4 (netfx)<br>[IBM.Data.DB2.Core](https://www.nuget.org/packages/IBM.Data.DB2.Core/) 2.2.0.100 ([osx](https://www.nuget.org/packages/IBM.Data.DB2.Core-osx/) 2.0.0.100, [lin](https://www.nuget.org/packages/IBM.Data.DB2.Core-lnx/) 2.2.0.100) (core)|:x:|:x:|:x:|:x:|
 |SAP HANA 2.0 SPS 04r45<br>Native Provider|:x:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
 |SAP HANA 2.0 SPS 04r45<br>ODBC Provider|:x:|:x:|:heavy_check_mark:|:x:|
@@ -126,11 +128,10 @@ Legend:
 
 ###### Notes:
 1. `TestNoopProvider` is a fake test provider to perform tests without database dependencies
-2. `1.1.1` is the last version of `Microsoft.Data.SQLite`, that supports .NET Framework, so we use it for `net4.7.2` test configuration and recent version for `netcoreapp2.1`
+2. `1.1.1` is the last version of `Microsoft.Data.SQLite`, that supports .NET Framework, so we use it for `net4.7.2` test configuration and recent version for `netcore`
 3. needs System.Data.OleDb 4.7.1+ for .Net Core support (contains critical [issue](https://github.com/dotnet/runtime/issues/36954) that could crash application, so ODBC provider is recommended for .net core)
 4. for SQL CE right now we don't run .net core tests
 5. Northwind FTS SQL Server tests not enabled yet, as we need SQL Server images with full-text search included
-6. Informix and DB2 use ubuntu 16.04 vm due to locale issues on 18.04/20.04 with IBM.Data.DB2 linux provider
 
 ###### Provider names in context of tests
 | Name | Target Database | Extra Notes |
@@ -171,6 +172,7 @@ Legend:
 |`TestProvName.PostgreSQL11`|PostgreSQL 11||
 |`TestProvName.PostgreSQL12`|PostgreSQL 12||
 |`TestProvName.PostgreSQL13`|PostgreSQL 13||
+|`TestProvName.PostgreSQL14`|PostgreSQL 14||
 |`ProviderName.SqlCe`|SQL CE||
 |`ProviderName.SQLite`|not used||
 |`ProviderName.SQLiteClassic`|System.Data.Sqlite||

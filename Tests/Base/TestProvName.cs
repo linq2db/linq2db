@@ -24,6 +24,7 @@ namespace Tests
 		public const string PostgreSQL11      = "PostgreSQL.11";
 		public const string PostgreSQL12      = "PostgreSQL.12";
 		public const string PostgreSQL13      = "PostgreSQL.13";
+		public const string PostgreSQL14      = "PostgreSQL.14";
 		public const string Oracle11Native    = "Oracle.11.Native";
 		public const string Oracle11Managed   = "Oracle.11.Managed";
 		public const string SqlServer2019     = "SqlServer.2019";
@@ -61,11 +62,11 @@ namespace Tests
 		// MySql.Data server providers (no mysqlconnector)
 		public const string AllMySqlData           = "MySql,MySql55";
 		public const string AllMySqlWithCTE        = "MySql,MariaDB";
-		public const string AllPostgreSQL          = "PostgreSQL,PostgreSQL.9.2,PostgreSQL.9.3,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11,PostgreSQL.12,PostgreSQL.13";
+		public const string AllPostgreSQL          = "PostgreSQL,PostgreSQL.9.2,PostgreSQL.9.3,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11,PostgreSQL.12,PostgreSQL.13,PostgreSQL.14";
 		public const string AllPostgreSQLLess10    = "PostgreSQL.9.2,PostgreSQL.9.3,PostgreSQL.9.5";
-		public const string AllPostgreSQL93Plus    = "PostgreSQL,PostgreSQL.9.3,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11,PostgreSQL.12,PostgreSQL.13";
-		public const string AllPostgreSQL95Plus    = "PostgreSQL,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11,PostgreSQL.12,PostgreSQL.13";
-		public const string AllPostgreSQL10Plus    = "PostgreSQL,PostgreSQL.10,PostgreSQL.11,PostgreSQL.12,PostgreSQL.13";
+		public const string AllPostgreSQL93Plus    = "PostgreSQL,PostgreSQL.9.3,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11,PostgreSQL.12,PostgreSQL.13,PostgreSQL.14";
+		public const string AllPostgreSQL95Plus    = "PostgreSQL,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11,PostgreSQL.12,PostgreSQL.13,PostgreSQL.14";
+		public const string AllPostgreSQL10Plus    = "PostgreSQL,PostgreSQL.10,PostgreSQL.11,PostgreSQL.12,PostgreSQL.13,PostgreSQL.14";
 		public const string AllOracle              = "Oracle.Native,Oracle.Managed,Oracle.11.Native,Oracle.11.Managed";
 		public const string AllOracleManaged       = "Oracle.Managed,Oracle.11.Managed";
 		public const string AllOracleNative        = "Oracle.Native,Oracle.11.Native";

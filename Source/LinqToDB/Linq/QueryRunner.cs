@@ -132,12 +132,12 @@ namespace LinqToDB.Linq
 					expression = _expression.Transform(
 						ctx,
 						static (context, e) =>
-					{
-						if (e is ConvertFromDataReaderExpression ex)
+						{
+							if (e is ConvertFromDataReaderExpression ex)
 								return new ConvertFromDataReaderExpression(ex.Type, ex.Index, ex.Converter, context.NewVariable!, context.Context).Reduce();
 
 							return ReplaceVariable(context, e);
-					});
+						});
 				}
 				else
 				{
@@ -159,24 +159,24 @@ namespace LinqToDB.Linq
 			}
 
 			static Expression ReplaceVariable(TransformMapperExpressionContext context, Expression e)
+			{
+				if (e is ParameterExpression vex && vex.Name == "ldr")
 				{
-					if (e is ParameterExpression vex && vex.Name == "ldr")
-					{
 					context.OldVariable = vex;
 					return context.NewVariable ??= Expression.Variable(context.DataReader.GetType(), "ldr");
-					}
+				}
 
-					if (e is BinaryExpression bex
-						&& bex.NodeType == ExpressionType.Assign
+				if (e is BinaryExpression bex
+					&& bex.NodeType == ExpressionType.Assign
 					&& bex.Left     == context.OldVariable)
-					{
+				{
 					Expression dataReaderExpression = Expression.Convert(context.Expression.Parameters[1], context.DataReaderType);
 
-					return Expression.Assign(context.NewVariable, dataReaderExpression);
-					}
-
-					return e;
+					return Expression.Assign(context.NewVariable!, dataReaderExpression);
 				}
+
+				return e;
+			}
 
 			class TransformMapperExpressionContext
 			{
@@ -189,9 +189,9 @@ namespace LinqToDB.Linq
 				}
 
 				public Expression<Func<IQueryRunner,DbDataReader,T>> Expression;
-				public readonly IDataContext                         Context;
+				public readonly IDataContext                        Context;
 				public readonly DbDataReader                         DataReader;
-				public readonly Type                                 DataReaderType;
+				public readonly Type                                DataReaderType;
 
 				public ParameterExpression? OldVariable;
 				public ParameterExpression? NewVariable;
@@ -747,7 +747,7 @@ namespace LinqToDB.Linq
 			{
 				using (var dr = runner.ExecuteReader())
 				{
-					while (dr.DataReader!.Read())
+					if (dr.DataReader!.Read())
 					{
 						var value = mapper.Map(dataContext, runner, dr.DataReader!);
 						runner.RowsCount++;

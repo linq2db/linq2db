@@ -114,7 +114,7 @@ namespace LinqToDB.Linq
 									context.InsertedExpressions[index] = Expression.Assign(
 										variable,
 										Expression.Condition(
-											context.NewVariables[index - 1],
+											context.NewVariables[index - 1]!,
 											Expression.Constant(null, type),
 											isNullable ? Expression.Convert(call, type) : call));
 								}
@@ -157,7 +157,7 @@ namespace LinqToDB.Linq
 						// replacement expression build later when we know all types
 						return call.Update(
 							call.Object,
-							call.Arguments.Take(2).Select(a => a.Transform(context, TranformFunc)).Concat(new[] { context.NewVariables[index] }));
+							call.Arguments.Take(2).Select(a => a.Transform(context, TranformFunc)).Concat(new[] { context.NewVariables[index]! }));
 					}
 
 					foreach (var arg in call.Arguments)
@@ -251,8 +251,8 @@ namespace LinqToDB.Linq
 
 					// first N expressions init context variables
 					return block.Update(
-						block.Variables.Concat(context.NewVariables.Where(v => v != null)),
-						block.Expressions.Take(skip + 1).Concat(context.InsertedExpressions.Where(e => e != null)).Concat(block.Expressions.Skip(skip + 1)));
+						block.Variables.Concat(context.NewVariables.Where(v => v != null))!,
+						block.Expressions.Take(skip + 1).Concat(context.InsertedExpressions.Where(e => e != null)).Concat(block.Expressions.Skip(skip + 1))!);
 				}
 
 				return e;
@@ -266,14 +266,14 @@ namespace LinqToDB.Linq
 			// ColumnReaderAttribute method
 			var attr = call.Method.GetCustomAttribute<ColumnReaderAttribute>();
 			if (attr != null && call.Arguments[attr.IndexParameterIndex] is ConstantExpression c1 && c1.Type == typeof(int))
-				return (int)c1.Value;
+				return (int)c1.Value!;
 
 			// instance method of data reader
 			// check that method accept single integer constant as parameter
 			// this is currently how we detect method that we must process
-			if (attr == null && !call.Method.IsStatic && typeof(DbDataReader).IsAssignableFrom(call.Object.Type)
+			if (attr == null && !call.Method.IsStatic && typeof(DbDataReader).IsAssignableFrom(call.Object!.Type)
 				&& call.Arguments.Count == 1 && call.Arguments[0] is ConstantExpression c2 && c2.Type == typeof(int))
-				return (int)c2.Value;
+				return (int)c2.Value!;
 
 			return null;
 		}
