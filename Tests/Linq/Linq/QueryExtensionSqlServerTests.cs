@@ -459,13 +459,15 @@ namespace Tests.Linq
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring("[Parent] [p] WITH (NoLock)"));
-			Assert.That(LastQuery, Contains.Substring("[Child] [c_1] WITH (NoLock)"));
-			Assert.That(LastQuery, Contains.Substring("[Child] [c_2] WITH (NoWait)"));
-			Assert.That(LastQuery, Contains.Substring("[Parent] [a_Parent] WITH (NoWait)"));
-			Assert.That(LastQuery, Contains.Substring("[Child] [c_3]\r\n"));
-			Assert.That(LastQuery, Contains.Substring("[Child] [c1] WITH (Index(IX_ChildIndex), NoLock)"));
-			Assert.That(LastQuery, Contains.Substring("[Parent] [p1] WITH (HoldLock)"));
+			var test = LastQuery?.Replace("\r", "");
+
+			Assert.That(test, Contains.Substring("[Parent] [p] WITH (NoLock)"));
+			Assert.That(test, Contains.Substring("[Child] [c_1] WITH (NoLock)"));
+			Assert.That(test, Contains.Substring("[Child] [c_2] WITH (NoWait)"));
+			Assert.That(test, Contains.Substring("[Parent] [a_Parent] WITH (NoWait)"));
+			Assert.That(test, Contains.Substring("[Child] [c1] WITH (Index(IX_ChildIndex), NoLock)"));
+			Assert.That(test, Contains.Substring("[Parent] [p1] WITH (HoldLock)"));
+			Assert.That(test, Contains.Substring("[Child] [c_3]\n"));
 		}
 
 		[Test]
