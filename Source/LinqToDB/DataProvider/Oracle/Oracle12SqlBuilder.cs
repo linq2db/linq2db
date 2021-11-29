@@ -38,7 +38,11 @@
 
 		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
 		{
-			return new Oracle12SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
+			return new Oracle12SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags)
+			{
+				HintBuilder = HintBuilder,
+				TablePath   = TablePath
+			};
 		}
 
 		protected override bool BuildWhere(SelectQuery selectQuery)

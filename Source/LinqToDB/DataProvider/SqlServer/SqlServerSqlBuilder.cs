@@ -515,7 +515,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
 
-		protected override void BuildTableExtensions(SqlTable table)
+		protected override void BuildTableExtensions(SqlTable table, string alias)
 		{
 			if (table.SqlQueryExtensions!.Any(ext =>
 				ext.Scope is

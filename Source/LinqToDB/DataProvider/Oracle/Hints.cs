@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.Oracle
 	{
 		public static class TableHint
 		{
-//			public const string ForceScan         = "ForceScan";
+			public const string Full = "Full";
 //			public const string ForceSeek         = "ForceSeek";
 //			public const string HoldLock          = "HoldLock";
 //			public const string NoLock            = "NoLock";

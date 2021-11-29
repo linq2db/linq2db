@@ -11,19 +11,65 @@ namespace Tests.Linq
 	[TestFixture]
 	public class QueryExtensionOracleTests : TestBase
 	{
-//		[Test]
-//		public void TableHintTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-//		{
-//			using var db = GetDataContext(context);
-//
-//			var q =
-//				from p in db.Parent.With(Hints.TableHint.NoLock).With(Hints.TableHint.NoWait)
-//				select p;
-//
-//			_ = q.ToList();
-//
-//			Assert.That(LastQuery, Contains.Substring("WITH (NoLock, NoWait)"));
-//		}
+		[Test]
+		public void TableHintTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent.TableHint(Hints.TableHint.Full)//.With(Hints.TableHint.NoWait)
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ Full(p) */"));
+		}
+
+		[Test]
+		public void TableSubqueryHintTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in
+					(
+						from p in db.Parent.TableHint(Hints.TableHint.Full)
+						select p
+					)
+					.AsSubQuery()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ Full(p_1.p) */"));
+		}
+
+
+		[Test]
+		public void TableSubqueryHintTest2([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in
+					(
+						from p in
+							(
+								from p in db.Parent.TableHint(Hints.TableHint.Full)
+								from c in db.Child.TableHint(Hints.TableHint.Full)
+								select p
+							)
+							.AsSubQuery()
+						select p
+					)
+					.AsSubQuery()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ Full(p_2.p_1.p), Full(p_2.p_1.c_1)"));
+		}
+
 		/*
 		[Test]
 		public void TableHint2005PlusTest(

@@ -46,10 +46,6 @@ namespace LinqToDB.DataProvider.Oracle
 				base.BuildSelectClause(selectQuery);
 		}
 
-		protected override void StartStatementQueryExtensions()
-		{
-		}
-
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
 			var identityField = insertClause.Into!.GetIdentityField();
@@ -93,7 +89,11 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
 		{
-			return new Oracle11SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
+			return new Oracle11SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags)
+			{
+				HintBuilder = HintBuilder,
+				TablePath   = TablePath
+			};
 		}
 
 		protected override void BuildSetOperation(SetOperation operation, StringBuilder sb)
@@ -669,5 +669,82 @@ END;",
 		}
 
 		#endregion
+
+		protected StringBuilder? HintBuilder;
+		protected string?        TablePath;
+		protected string?        LastTableAliasWIthPath;
+
+		int  _hintPosition;
+		bool _isTopLevelBuilder;
+
+		protected override void StartStatementQueryExtensions()
+		{
+			if (HintBuilder == null)
+			{
+				HintBuilder        = new();
+				_isTopLevelBuilder = true;
+				_hintPosition      = StringBuilder.Length;
+			}
+		}
+
+		protected override void BuildQueryExtensions(SqlStatement statement)
+		{
+			if (_isTopLevelBuilder && HintBuilder!.Length > 0)
+			{
+				HintBuilder.Insert(0, " /*+ ");
+				HintBuilder.Append(" */");
+
+				StringBuilder.Insert(_hintPosition, HintBuilder);
+			}
+		}
+
+		protected override bool? BuildPhysicalTable(ISqlTableSource table, string? alias, string? defaultDatabaseName = null)
+		{
+			var tablePath = TablePath;
+
+			if (alias != null)
+			{
+				if (TablePath is { Length: > 0 })
+					TablePath += '.';
+				TablePath += alias;
+			}
+
+			var ret = base.BuildPhysicalTable(table, alias, defaultDatabaseName);
+
+			TablePath = tablePath;
+
+			return ret;
+		}
+
+		protected override void BuildTableExtensions(SqlTable table, string alias)
+		{
+			if (HintBuilder!.Length > 0)
+				HintBuilder.Append(", ");
+
+			if (table.SqlQueryExtensions!.Any(ext =>
+				ext.Scope is
+					Sql.QueryExtensionScope.Table or
+					Sql.QueryExtensionScope.TablesInScope &&
+				ext.ID is
+					Sql.QueryExtensionID.TableHint))
+			{
+				foreach (var ext in table.SqlQueryExtensions!)
+				{
+					var hint = (SqlValue)ext.Arguments["tableHint"];
+
+					HintBuilder.Append((string)hint.Value!);
+					HintBuilder.Append('(');
+
+					if (TablePath is {Length: > 0})
+					{
+						HintBuilder.Append(TablePath);
+						HintBuilder.Append('.');
+					}
+
+					HintBuilder.Append(alias);
+					HintBuilder.Append(')');
+				}
+			}
+		}
 	}
 }

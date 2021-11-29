@@ -509,6 +509,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+
 		public void UpdateTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -552,6 +553,38 @@ namespace Tests.Linq
 
 			Assert.That(LastQuery, Contains.Substring("WITH (NoLock)"));
 			Assert.That(LastQuery, Contains.Substring("OPTION (RECOMPILE, FAST 10)"));
+		}
+
+		[Test]
+
+		public void CteTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte =
+				(
+					from c in db.Child.TableHint(Hints.TableHint.NoLock)
+					where c.ParentID < -1111
+					select c
+				)
+				.QueryHint(Hints.Option.Fast(10))
+				.TablesInScopeHint(Hints.TableHint.NoWait)
+				.AsCte();
+
+			var q =
+				(
+					from p in cte
+					from c in db.Child
+					select p
+				)
+				.QueryHint(Hints.Option.Recompile)
+				.TablesInScopeHint(Hints.TableHint.HoldLock);
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("WITH (NoLock, NoWait)"));
+			Assert.That(LastQuery, Contains.Substring("WITH (HoldLock)"));
+			Assert.That(LastQuery, Contains.Substring("OPTION (FAST 10, RECOMPILE)"));
 		}
 	}
 }

@@ -339,9 +339,7 @@ namespace LinqToDB.SqlProvider
 			if (insertClause.WithIdentity)
 				BuildGetIdentity(insertClause);
 			else
-			{
 				BuildReturningSubclause(statement);
-			}
 		}
 
 		protected void BuildInsertQuery2(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
@@ -1417,7 +1415,7 @@ namespace LinqToDB.SqlProvider
 
 		private static readonly Regex _selectDetector = new (@"^[\W\r\n]*select\W+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-		protected bool? BuildPhysicalTable(ISqlTableSource table, string? alias, string? defaultDatabaseName = null)
+		protected virtual bool? BuildPhysicalTable(ISqlTableSource table, string? alias, string? defaultDatabaseName = null)
 		{
 			bool? buildAlias = null;
 
@@ -1569,9 +1567,11 @@ namespace LinqToDB.SqlProvider
 
 		protected void BuildTableName(SqlTableSource ts, bool buildName, bool buildAlias)
 		{
+			string? alias = null;
+
 			if (buildName)
 			{
-				var alias = GetTableAlias(ts);
+				alias = GetTableAlias(ts);
 				var isBuildAlias = BuildPhysicalTable(ts.Source, alias);
 				if (isBuildAlias == false)
 					buildAlias = false;
@@ -1581,7 +1581,8 @@ namespace LinqToDB.SqlProvider
 			{
 				if (ts.SqlTableType != SqlTableType.Expression)
 				{
-					var alias = GetTableAlias(ts);
+					if (buildName == false)
+						alias = GetTableAlias(ts);
 
 					if (!string.IsNullOrEmpty(alias))
 					{
@@ -1594,11 +1595,11 @@ namespace LinqToDB.SqlProvider
 
 			if (buildName && buildAlias && ts.Source is SqlTable table && table.SqlQueryExtensions is not null)
 			{
-				BuildTableExtensions(table);
+				BuildTableExtensions(table, alias!);
 			}
 		}
 
-		protected virtual void BuildTableExtensions(SqlTable table)
+		protected virtual void BuildTableExtensions(SqlTable table, string alias)
 		{
 		}
 
