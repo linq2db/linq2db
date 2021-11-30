@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -7,6 +8,7 @@ using LinqToDB.Expressions;
 using LinqToDB.Linq;
 
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -55,6 +57,40 @@ namespace Tests.Linq
 				select new { p, c }
 			)
 			.ToList();
+		}
+
+		[Test]
+		public void SelfJoinWithDifferentHint([NorthwindDataContext] string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var query =
+					from p in db.GetTable<JoinOptimizeTests.AdressEntity>().TableHint("NOLOCK")
+					join a in db.GetTable<JoinOptimizeTests.AdressEntity>()//.TableHint("READUNCOMMITTED")
+						on p.Id equals a.Id //PK column
+					select p;
+
+				Debug.WriteLine(query);
+
+				Assert.AreEqual(1, query.GetTableSource().Joins.Count);
+			}
+		}
+
+		[Test]
+		public void SelfJoinWithDifferentHint2([NorthwindDataContext] string context)
+		{
+			using (var db = new NorthwindDB(context))
+			{
+				var query =
+					from p in db.GetTable<JoinOptimizeTests.AdressEntity>().TableHint("NOLOCK")
+					join a in db.GetTable<JoinOptimizeTests.AdressEntity>().TableHint("READUNCOMMITTED")
+						on p.Id equals a.Id //PK column
+					select p;
+
+				Debug.WriteLine(query);
+
+				Assert.AreEqual(1, query.GetTableSource().Joins.Count);
+			}
 		}
 	}
 
