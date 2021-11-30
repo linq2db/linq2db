@@ -310,7 +310,7 @@ namespace LinqToDB.Linq.Builder
 					var outerParam = Expression.Parameter(context.OuterKeyLambda.Body.Type, "o");
 					var outerKey   = context.OuterKeyLambda.GetBody(context.Lambda.Parameters[0]);
 
-					outerKey = context.Builder.BuildExpression(context, outerKey, false);
+					outerKey = context.Builder.BuildSqlExpression(context, outerKey, ProjectFlags.Expression);
 
 					// Convert inner condition.
 					//
@@ -399,6 +399,8 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
+				throw new NotImplementedException();
+				/*
 				if (expression != null && (ReferenceEquals(expression, Lambda.Parameters[1]) || SequenceHelper.IsSameContext(expression, this)))
 				{
 					if (_groupExpression == null)
@@ -447,13 +449,14 @@ namespace LinqToDB.Linq.Builder
 
 						expr = call.Replace(replaceExpression, expr);
 
-						return Builder.BuildExpression(this, expr, enforceServerSide);
+						return Builder.BuildSqlExpression(this, expr, enforceServerSide);
 					}
 
 				}
 
-				return base.BuildExpression(expression, level, enforceServerSide);
+				return base.BuildExpression(expression, level, enforceServerSide);*/
 			}
+		
 		}
 
 		internal class GroupJoinSubQueryContext : SubQueryContext

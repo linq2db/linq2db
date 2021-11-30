@@ -93,7 +93,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				var expr = BuildExpression(null, 0, false);
+				var expr = Builder.FinalizeProjection(this, Builder.MakeExpression(this, null, ProjectFlags.Expression));
 
 				if (expr.Type != typeof(T))
 					expr = Expression.Convert(expr, typeof(T));

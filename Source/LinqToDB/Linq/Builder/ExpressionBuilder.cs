@@ -1497,6 +1497,14 @@ namespace LinqToDB.Linq.Builder
 
 		#region Helpers
 
+#if DEBUG
+		int _contextCounter;
+
+		public int GenerateContextId() =>
+			++_contextCounter;
+			
+#endif
+
 		MethodInfo GetQueryableMethodInfo<TContext>(TContext context, MethodCallExpression method, [InstantHandle] Func<TContext,MethodInfo, bool,bool> predicate)
 		{
 			if (method.Method.DeclaringType == typeof(Enumerable))

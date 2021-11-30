@@ -60,8 +60,10 @@ namespace LinqToDB.Linq.Builder
 
 			var methodName = methodCall.Method.Name.Replace("Async", "");
 
-			var sql = sequence.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).ToArray();
+			var refExpression = new ContextRefExpression(methodCall.Arguments[0].Type, sequence);
+			var sql           = builder.ConvertToSqlInfo(sequence, refExpression);
 
+			/*
 			if (sql.Length == 1)
 			{
 				if (sql[0] is SelectQuery query)
@@ -75,7 +77,8 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			ISqlExpression sqlExpression = new SqlFunction(methodCall.Type, methodName, true, sql);
+			*/
+			ISqlExpression sqlExpression = new SqlFunction(methodCall.Type, methodName, true, sql.Sql);
 
 			if (sqlExpression == null)
 				throw new LinqToDBException("Invalid Aggregate function implementation");

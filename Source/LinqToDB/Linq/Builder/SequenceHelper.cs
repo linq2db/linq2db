@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using LinqToDB.SqlQuery;
@@ -23,6 +24,7 @@ namespace LinqToDB.Linq.Builder
 			return expression == null || expression is ContextRefExpression contextRef && contextRef.BuildContext == context;
 		}
 
+		[return: NotNullIfNotNull("expression")]
 		public static Expression? CorrectExpression(Expression? expression, IBuildContext current, IBuildContext underlying)
 		{
 			if (expression != null)
@@ -77,10 +79,19 @@ namespace LinqToDB.Linq.Builder
 		public static SqlInfo MakeColumn(SelectQuery selectQuery, SqlInfo sqlInfo)
 		{
 			if (sqlInfo.Sql is SqlColumn column && ReferenceEquals(selectQuery, column.Parent))
-				throw new InvalidOperationException();
+				return sqlInfo;
 
 			var idx = selectQuery.Select.Add(sqlInfo.Sql);
 			return new SqlInfo(sqlInfo.MemberChain, selectQuery.Select.Columns[idx], selectQuery, idx);
+		}
+
+		public static Expression RequireSqlExpression(this IBuildContext context, Expression? path)
+		{
+			var sql = context.Builder.MakeExpression(context, path, ProjectFlags.SQL);
+			if (sql == null)
+				throw new LinqException("'{0}' cannot be converted to SQL.", path);
+
+			return sql;
 		}
 	}
 }

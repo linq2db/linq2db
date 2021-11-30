@@ -361,7 +361,7 @@ namespace LinqToDB.Linq.Builder
 								members.Select(m => ExpressionHelper.PropertyOrField(_unionParameter!, m.Name)),
 								members);
 
-							var ex = Builder.BuildExpression(this, expr, enforceServerSide);
+							var ex = Builder.BuildSqlExpression(this, expr, ProjectFlags.SQL);
 							return ex;
 						}
 
@@ -428,7 +428,7 @@ namespace LinqToDB.Linq.Builder
 								Expression.New(ta.Type),
 								_members.Select(m =>
 									Expression.Bind(m.Value.MemberExpression.Member, m.Value.MemberExpression)));
-							var ex = Builder.BuildExpression(this, expr, enforceServerSide);
+							var ex = Builder.BuildSqlExpression(this, expr, ProjectFlags.SQL);
 							return ex;
 						}
 						else

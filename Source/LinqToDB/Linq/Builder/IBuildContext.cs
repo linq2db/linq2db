@@ -14,9 +14,14 @@ namespace LinqToDB.Linq.Builder
 	{
 		public static string GetContextInfo(IBuildContext context)
 		{
+#if DEBUG
+			var contextId = $"[{context.ContextId}]";
+#else
+			var contextId = string.Empty;
+#endif
 			var result = context.SelectQuery == null
-				? $"{context.GetType().Name}(<none>)"
-				: $"{context.GetType().Name}({context.SelectQuery.SourceID})";
+				? $"{context.GetType().Name}{contextId}(<none>)"
+				: $"{context.GetType().Name}{contextId}({context.SelectQuery.SourceID})";
 
 			if (context is TableBuilder.TableContext tc)
 			{
@@ -57,7 +62,8 @@ namespace LinqToDB.Linq.Builder
 	{
 #if DEBUG
 		string? _sqlQueryText { get; }
-		string   Path         { get; }
+		string  Path          { get; }
+		int     ContextId     { get; }
 #endif
 
 		ExpressionBuilder  Builder     { get; }
@@ -72,9 +78,8 @@ namespace LinqToDB.Linq.Builder
 		SqlInfo[]          ConvertToIndex      (Expression? expression, int level, ConvertFlags flags);
 
 
-		SqlInfo? MakeSql(Expression path);
 		SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias);
-		Expression MakeExpression(Expression path);
+		Expression MakeExpression(Expression? path, ProjectFlags flags);
 
 		/// <summary>
 		/// Returns information about expression according to <paramref name="requestFlag"/>. 

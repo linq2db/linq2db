@@ -53,12 +53,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (take != 0)
 			{
-				var takeExpression = Configuration.Linq.ParameterizeTakeSkip
-					? (ISqlExpression)new SqlParameter(new DbDataType(typeof(int)), "take", take)
-					{
-						IsQueryParameter = !builder.DataContext.InlineParameters
-					}
-					: new SqlValue(take);
+				var takeExpression = new SqlValue(take);
 				builder.BuildTake(sequence, takeExpression, null);
 			}
 
@@ -357,7 +352,7 @@ namespace LinqToDB.Linq.Builder
 						if (   !Builder.DataContext.SqlProviderFlags.IsSubQueryColumnSupported 
 						       || Sequence.IsExpression(null, level, RequestFor.Object).Result)
 						{
-							return Builder.BuildMultipleQuery(Parent!, _methodCall, enforceServerSide);
+							return Builder.BuildMultipleQuery(Parent!, _methodCall, ProjectFlags.SQL);
 						}
 
 						var idx = Parent!.SelectQuery.Select.Add(SelectQuery);

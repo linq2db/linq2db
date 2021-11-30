@@ -116,5 +116,18 @@ namespace LinqToDB.Linq.Builder
 		{
 			return Statement ??= new SqlSelectStatement(SelectQuery);
 		}
+
+		public override SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
+		{
+			var column = base.MakeColumn(path, sqlInfo, alias);
+			column = SequenceHelper.MakeColumn(SelectQuery, column);
+			return column;
+		}
+
+		public override Expression MakeExpression(Expression? path, ProjectFlags flags)
+		{
+			var result = base.MakeExpression(path, flags);
+			return result;
+		}
 	}
 }

@@ -13,13 +13,17 @@ namespace LinqToDB.Linq.Builder
 			Context = context;
 
 			context.Builder.Contexts.Add(this);
+#if DEBUG
+			ContextId = context.Builder.GenerateContextId();
+#endif
 		}
 
 		public IBuildContext Context { get; set; }
 
 #if DEBUG
 		string? IBuildContext._sqlQueryText => Context._sqlQueryText;
-		public string Path => this.GetPath();
+		public string         Path          => this.GetPath();
+		public int            ContextId     { get; }
 #endif
 
 		public virtual ExpressionBuilder Builder     => Context.Builder;
@@ -51,15 +55,17 @@ namespace LinqToDB.Linq.Builder
 			return Context.ConvertToIndex(expression, level, flags);
 		}
 
-		public SqlInfo? MakeSql(Expression path)
+		public virtual SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
 		{
 			path = SequenceHelper.CorrectExpression(path, this, Context);
-			return Context.MakeSql(path!);
+			var column = Context.MakeColumn(path, sqlInfo, alias);
+			return column;
 		}
 
-		public SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
+		public virtual Expression MakeExpression(Expression? path, ProjectFlags flags)
 		{
-			throw new System.NotImplementedException();
+			path = SequenceHelper.CorrectExpression(path, this, Context);
+			return Builder.MakeExpression(Context, path, flags);
 		}
 
 		public virtual IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)

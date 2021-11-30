@@ -22,8 +22,9 @@ namespace LinqToDB.Linq.Builder
 		readonly Type _elementType;
 
 #if DEBUG
-		public string?               _sqlQueryText { get; }
-		public string                Path          => this.GetPath();
+		public string? _sqlQueryText { get; }
+		public string  Path          => this.GetPath();
+		public int     ContextId     { get; }
 #endif
 		public  ExpressionBuilder    Builder       { get; }
 		public  Expression           Expression    { get; }
@@ -51,6 +52,9 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			SelectQuery.From.Table(Table);
+#if DEBUG
+			ContextId = builder.GenerateContextId();
+#endif
 		}
 
 		SqlValuesTable BuildValuesTable()
@@ -611,6 +615,11 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Expression MakeExpression(Expression? path, ProjectFlags flags)
 		{
 			throw new NotImplementedException();
 		}

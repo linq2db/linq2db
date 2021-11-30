@@ -15,11 +15,15 @@ namespace LinqToDB.Linq.Builder
 			SelectQuery   = selectQuery;
 
 			Builder.Contexts.Add(this);
+#if DEBUG
+			ContextId = builder.GenerateContextId();
+#endif
 		}
 
 #if DEBUG
 		public string _sqlQueryText => SelectQuery?.SqlText ?? "";
 		public string Path          => this.GetPath();
+		public int    ContextId     { get; }
 #endif
 
 		public IBuildContext?     Parent        { get; set; }
@@ -65,6 +69,11 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Expression MakeExpression(Expression? path, ProjectFlags flags)
 		{
 			throw new NotImplementedException();
 		}

@@ -25,7 +25,8 @@ namespace LinqToDB.Linq.Builder
 
 #if DEBUG
 			public string _sqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
-			public string Path => this.GetPath();
+			public string Path          => this.GetPath();
+			public int    ContextId     { get; private set; }
 #endif
 
 			public ExpressionBuilder      Builder     { get; }
@@ -157,6 +158,9 @@ namespace LinqToDB.Linq.Builder
 			protected void Init(bool applyFilters)
 			{
 				Builder.Contexts.Add(this);
+#if DEBUG
+				ContextId = Builder.GenerateContextId();
+#endif
 
 				InheritanceMapping = EntityDescriptor.InheritanceMapping;
 
@@ -800,7 +804,7 @@ namespace LinqToDB.Linq.Builder
 
 			public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				var expr   = BuildQuery(typeof(T), this, null);
+				var expr   = Builder.FinalizeProjection(this, Builder.MakeExpression(this, null, ProjectFlags.Expression));
 				var mapper = Builder.BuildMapper<T>(expr);
 
 				QueryRunner.SetRunQuery(query, mapper);
@@ -818,34 +822,26 @@ namespace LinqToDB.Linq.Builder
 			Expression BuildExpression(Expression? expression, int level, ParameterExpression? parentObject,
 				bool enforceServerSide)
 			{
+				throw new NotImplementedException();
 
 				if (expression == null || SequenceHelper.IsSameContext(expression, this))
 				{
 					return BuildQuery(OriginalType, this, parentObject);
 				}
 
-
 				// Build table.
 				//
-
-				var projection = MakeProjection(expression, false);
-				if (projection != expression)
-				{
-					var ctx = Builder.GetContext(this, projection);
-					if (ctx == null)
-						throw new InvalidOperationException();
-					return ctx.BuildExpression(projection, 0, enforceServerSide);
-				}
 
 				var field = GetField(expression, 1, false);
 				if (field != null)
 				{
 					// Build field.
 					//
-					var fieldInfo  = ConvertToIndex(expression, level, ConvertFlags.Field).Single();
-					var fieldIndex = ConvertToParentIndex(fieldInfo.Index, null);
 
-					return Builder.BuildSql(expression!, fieldIndex, fieldInfo.Sql);
+					var placeholder = new SqlPlaceholderExpression(this, expression);
+					placeholder.Sql = new SqlInfo(field, SelectQuery);
+
+					return placeholder;
 				}
 
 				throw new NotImplementedException();
@@ -857,7 +853,7 @@ namespace LinqToDB.Linq.Builder
 					if (Builder.GetRootObject(expression) is ContextRefExpression)
 						return EagerLoading.GenerateAssociationExpression(Builder, this, expression, descriptor)!;
 
-					return Builder.BuildMultipleQuery(this, expression, false);
+					return Builder.BuildMultipleQuery(this, expression, ProjectFlags.Expression);
 				}
 
 				var contextInfo = FindContextExpression(expression, level, false, false);
@@ -1203,14 +1199,29 @@ namespace LinqToDB.Linq.Builder
 				throw new NotImplementedException();
 			}
 
-			public SqlInfo? MakeSql(Expression path)
-			{
-				throw new NotImplementedException();
-			}
-
 			public SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
 			{
-				throw new NotImplementedException();
+				return SequenceHelper.MakeColumn(SelectQuery, sqlInfo);
+			}
+
+			public Expression MakeExpression(Expression? path, ProjectFlags flags)
+			{
+				if (SequenceHelper.IsSameContext(path, this))
+				{
+					return Builder.BuildEntityExpression(this, ObjectType, flags);
+				}
+
+				if (path is not MemberExpression member)
+					throw new NotImplementedException();
+
+				var sql = GetField(member, 1, false);
+				if (sql == null)
+					return Builder.CreateSqlError(this, path);
+
+				var placeholder = new SqlPlaceholderExpression(this, path);
+				placeholder.Sql = new SqlInfo(member.Member, sql, SelectQuery);
+
+				return placeholder;
 			}
 
 			#endregion

@@ -19,6 +19,9 @@ namespace LinqToDB.Linq.Builder
 			Sequence.Parent = this;
 
 			Builder.Contexts.Add(this);
+#if DEBUG
+			ContextId = Builder.GenerateContextId();
+#endif
 		}
 
 		protected SequenceContextBase(IBuildContext? parent, IBuildContext sequence, LambdaExpression? lambda)
@@ -28,7 +31,8 @@ namespace LinqToDB.Linq.Builder
 
 #if DEBUG
 		public string _sqlQueryText => SelectQuery?.SqlText ?? "";
-		public string Path => this.GetPath();
+		public string Path          => this.GetPath();
+		public int    ContextId     { get; }
 #endif
 
 		public IBuildContext?    Parent      { get; set; }
@@ -54,14 +58,14 @@ namespace LinqToDB.Linq.Builder
 		public abstract SqlInfo[]          ConvertToSql   (Expression? expression, int level, ConvertFlags flags);
 		public abstract SqlInfo[]          ConvertToIndex (Expression? expression, int level, ConvertFlags flags);
 
-		public SqlInfo? MakeSql(Expression path)
-		{
-			throw new System.NotImplementedException();
-		}
-
 		public SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
 		{
-			throw new System.NotImplementedException();
+			return SequenceHelper.MakeColumn(SelectQuery, sqlInfo);
+		}
+
+		public Expression MakeExpression(Expression? path, ProjectFlags flags)
+		{
+			return Builder.MakeExpression(Sequence, path, flags);
 		}
 
 		public abstract IsExpressionResult IsExpression   (Expression? expression, int level, RequestFor requestFlag);

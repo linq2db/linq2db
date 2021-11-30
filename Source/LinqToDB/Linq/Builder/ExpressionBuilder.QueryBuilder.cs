@@ -49,11 +49,11 @@ namespace LinqToDB.Linq.Builder
 			_convertedExpressions.Remove(ex);
 		}
 
-		Expression ConvertAssignmentArgument(IBuildContext context, Expression expr, MemberInfo? memberInfo, bool enforceServerSide,
+		Expression ConvertAssignmentArgument(IBuildContext context, Expression expr, MemberInfo? memberInfo, ProjectFlags flags,
 			string? alias)
 		{
 			var resultExpr = expr;
-			resultExpr = CorrectConditional(context, resultExpr, enforceServerSide, alias);
+			resultExpr = CorrectConditional(context, resultExpr, flags, alias);
 
 			// Update nullability
 			resultExpr = (_updateNullabilityFromExtensionTransformer ??= TransformVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.UpdateNullabilityFromExtension(e))).Transform(resultExpr);
@@ -114,10 +114,176 @@ namespace LinqToDB.Linq.Builder
 			return resultExpr;
 		}
 
-		public Expression BuildExpression(IBuildContext context, Expression expression, bool enforceServerSide, string? alias = null)
+		public Expression FinalizeProjection(IBuildContext context, Expression expression)
 		{
-			return expression.Transform(
-				(builder: this, context, enforceServerSide, alias),
+			// postprocess constuctors
+
+			var globalGenerator = new ExpressionGenerator();
+			var processedMap    = new Dictionary<Expression, Expression>();
+
+			// Deduplication
+			//
+			var postProcessed = expression.Transform((map: processedMap, generator: globalGenerator), static (ctx, e) =>
+			{
+				if (e is SqlErrorExpression error)
+					throw error.CreateError();
+
+				if (e is ContextConstructionExpression construction)
+				{
+					if (ctx.map.TryGetValue(e, out var processed))
+						return processed;
+
+					var variable = ctx.generator.AssignToVariable(construction.InnerExpression);
+
+					if (construction.PostProcess?.Count > 0)
+					{
+						foreach (var lambda in construction.PostProcess)
+						{
+							var body = lambda.GetBody(variable);
+							ctx.generator.AddExpression(body);
+						}
+					}
+
+					ctx.map[e] = variable;
+					return variable;
+				}
+
+				//TODO: palcehorders also can be simplified
+				//if (e is SqlPlaceholderExpression) ...
+
+				return e;
+			});
+
+			globalGenerator.AddExpression(postProcessed);
+
+			postProcessed = globalGenerator.Build();
+
+			// convert all missed references
+			postProcessed = BuildSqlExpression(context, postProcessed, ProjectFlags.Expression);
+
+			var withColumns = ToColumns(postProcessed);
+			return withColumns;
+		}
+
+		public Expression ToColumns(Expression expression)
+		{
+			var withColumns =
+				expression.Transform(
+					this,
+					static (context, expr) =>
+					{
+						if (expr is SqlPlaceholderExpression placeholder)
+						{
+							if (placeholder.BuildContext == null)
+								throw new InvalidOperationException();
+
+
+							{
+								var parent = placeholder.BuildContext;
+								while (true)
+								{
+									placeholder = (SqlPlaceholderExpression)context.MakeColumn(
+										parent,
+										placeholder.MemberExpression, placeholder.Sql!);
+
+									parent = placeholder.BuildContext?.Parent;
+									if (parent == null)
+										break;
+								}
+							}
+
+							return placeholder;
+						}
+
+						return expr;
+					});
+
+			return withColumns;
+		}
+
+		static bool IsSameParentTree(IBuildContext upToContext, IBuildContext? tested)
+		{
+			var current = tested;
+			while (current != null)
+			{
+				if (current == upToContext)
+					return true;
+
+				current = current.Parent;
+			}
+
+			return false;
+		}
+
+		public Expression UpdateNesting(IBuildContext upToContext, Expression expression)
+		{
+			var withColumns =
+				expression.Transform(
+					(builder: this, upToContext),
+					static (context, expr) =>
+					{
+						if (expr is SqlErrorExpression error)
+							throw error.CreateError();
+
+						if (expr is SqlPlaceholderExpression placeholder && IsSameParentTree(context.upToContext, placeholder.BuildContext))
+						{
+							if (placeholder.BuildContext == null)
+								throw new InvalidOperationException();
+
+							var parent = placeholder.BuildContext;
+							while (true)
+							{
+								if (context.upToContext == placeholder.BuildContext || placeholder.BuildContext == null)
+									break;
+
+								if (ReferenceEquals(context.upToContext.SelectQuery, placeholder.BuildContext.SelectQuery))
+									break;
+
+								placeholder = (SqlPlaceholderExpression)context.builder.MakeColumn(
+									parent,
+									placeholder.MemberExpression, placeholder.Sql!);
+
+								parent = placeholder.BuildContext?.Parent;
+								if (parent == null || parent == context.upToContext)
+									break;
+							}
+
+							return placeholder;
+						}
+
+						return expr;
+					});
+
+			return withColumns;
+		}
+
+		public ISqlExpression? TryConvertToSql(IBuildContext context, Expression expression)
+		{
+			var converted = ConvertToSqlExpr(context, expression, testOnly: true);
+			if (converted is not SqlPlaceholderExpression placeholder)
+				return null;
+
+			return placeholder.Sql?.Sql;
+		}
+
+		public Expression? TryConvertToSqlExpr(IBuildContext context, Expression expression)
+		{
+			var converted = ConvertToSqlExpr(context, expression);
+			if (converted is not SqlPlaceholderExpression)
+				return null;
+
+			return converted;
+		}
+
+		public SqlErrorExpression CreateSqlError(IBuildContext? context, Expression expression)
+		{
+			return new SqlErrorExpression(context, expression);
+		}
+
+		public Expression BuildSqlExpression(IBuildContext context, Expression expression, ProjectFlags flags, string? alias = null)
+		{
+			var result = expression.Transform(
+				(builder: this, context, flags, alias),
 				static (context, expr) =>
 				{
 					if (context.builder._skippedExpressions.Contains(expr))
@@ -137,7 +303,7 @@ namespace LinqToDB.Linq.Builder
 
 								var saveBlockDisable = context.builder.IsBlockDisable;
 								context.builder.IsBlockDisable = true;
-								var newOperand = context.builder.BuildExpression(context.context, cex.Operand, context.enforceServerSide);
+								var newOperand = context.builder.BuildSqlExpression(context.context, cex.Operand, context.flags);
 								context.builder.IsBlockDisable = saveBlockDisable;
 
 								if (newOperand.Type != cex.Type)
@@ -160,7 +326,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								var ma = (MemberExpression)expr;
 
-								if (context.builder.IsServerSideOnly(ma) || context.builder.PreferServerSide(ma, context.enforceServerSide) && !context.builder.HasNoneSqlMember(ma))
+								if (context.builder.IsServerSideOnly(ma) || context.builder.PreferServerSide(ma, false) && !context.builder.HasNoneSqlMember(ma))
 								{
 									return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
 								}
@@ -182,12 +348,12 @@ namespace LinqToDB.Linq.Builder
 								if (ctx != null)
 								{
 									var prevCount  = ctx.SelectQuery.Select.Columns.Count;
-									var expression = ctx.BuildExpression(ma, 0, context.enforceServerSide);
+									var expression = ctx.Builder.MakeExpression(ctx, ma, context.flags);
 
 									if (expression.NodeType == ExpressionType.Extension && expression is DefaultValueExpression 
 																						&& ma.Expression?.NodeType == ExpressionType.Parameter)
 									{
-										var objExpression = context.builder.BuildExpression(ctx, ma.Expression, context.enforceServerSide, context.alias);
+										var objExpression = context.builder.BuildSqlExpression(ctx, ma.Expression, context.flags, context.alias);
 										var varTempVar    = objExpression.NodeType == ExpressionType.Parameter
 											? objExpression
 											: context.builder.BuildVariable(objExpression, ((ParameterExpression)ma.Expression).Name);
@@ -219,8 +385,9 @@ namespace LinqToDB.Linq.Builder
 											var info = context.builder.GetSubQueryContext(context.context, ce);
 											if (context.alias != null)
 												info.Context.SetAlias(context.alias);
+
 											var par  = Expression.Parameter(ex.Type);
-											var bex  = info.Context.BuildExpression(ma.Replace(ex, par), 0, context.enforceServerSide);
+											var bex  = context.builder.MakeExpression(info.Context, ma.Replace(ex, par), context.flags);
 
 											if (bex != null)
 												return new TransformInfo(bex);
@@ -242,26 +409,6 @@ namespace LinqToDB.Linq.Builder
 								break;
 							}
 
-						case ExpressionType.Parameter:
-							{
-								if (expr == ParametersParam || expr == PreambleParam)
-									break;
-
-								var ctx = context.builder.GetContext(context.context, expr);
-
-								if (ctx != null)
-								{
-									var buildExpr = ctx.BuildExpression(expr, 0, context.enforceServerSide);
-									if (buildExpr.Type != expr.Type)
-									{
-										buildExpr = Expression.Convert(buildExpr, expr.Type);
-									}
-									return new TransformInfo(buildExpr);
-								}
-
-								break;
-							}
-
 						case ExpressionType.Constant:
 							{
 								if (expr.Type.IsConstantable(true))
@@ -269,7 +416,7 @@ namespace LinqToDB.Linq.Builder
 
 								if ((context.builder._buildMultipleQueryExpressions == null || !context.builder._buildMultipleQueryExpressions.Contains(expr)) && context.builder.IsSequence(new BuildInfo(context.context, expr, new SelectQuery())))
 								{
-									return new TransformInfo(context.builder.BuildMultipleQuery(context.context, expr, context.enforceServerSide));
+									return new TransformInfo(context.builder.BuildMultipleQuery(context.context, expr, context.flags));
 								}
 
 								if (context.builder.ParametersContext._expressionAccessors.TryGetValue(expr, out var accessor))
@@ -279,15 +426,16 @@ namespace LinqToDB.Linq.Builder
 							}
 
 						case ExpressionType.Coalesce:
-
-							if (expr.Type == typeof(string) && context.builder.MappingSchema.GetDefaultValue(typeof(string)) != null)
-								return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
-
-							if (context.builder.CanBeTranslatedToSql(context.context, context.builder.ConvertExpression(expr), true))
-								return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
+						{
+							if (context.flags.HasFlag(ProjectFlags.Expression))
+							{
+								var sql = context.builder.TryConvertToSqlExpr(context.context, expr);
+								if (sql != null)
+									return new TransformInfo(sql);
+							}
 
 							break;
-
+						}
 						case ExpressionType.Call:
 							{
 								var ce = (MethodCallExpression)expr;
@@ -322,15 +470,15 @@ namespace LinqToDB.Linq.Builder
 									if (ctx == null)
 										throw new InvalidOperationException();
 
-									return new TransformInfo(ctx.BuildExpression(ce, 0, context.enforceServerSide));
+									return new TransformInfo(context.builder.MakeExpression(ctx, ce, context.flags));
 								}
 
 								if ((context.builder._buildMultipleQueryExpressions == null || !context.builder._buildMultipleQueryExpressions.Contains(ce)) && context.builder.IsSubQuery(context.context, ce))
 								{
 									if (context.builder.IsMultipleQuery(ce, context.builder.MappingSchema))
-										return new TransformInfo(context.builder.BuildMultipleQuery(context.context, ce, context.enforceServerSide));
+										return new TransformInfo(context.builder.BuildMultipleQuery(context.context, ce, context.flags));
 
-									return new TransformInfo(context.builder.GetSubQueryExpression(context.context, ce, context.enforceServerSide, context.alias));
+									return new TransformInfo(context.builder.GetSubQueryExpression(context.context, ce, false, context.alias));
 								}
 
 								if (ce.IsSameGenericMethod(Methods.LinqToDB.SqlExt.Alias))
@@ -338,9 +486,10 @@ namespace LinqToDB.Linq.Builder
 									return new TransformInfo(context.builder.BuildSql(context.context, ce.Arguments[0], context.alias ?? ce.Arguments[1].EvaluateExpression<string>()));
 								}
 
-
-								if (context.builder.IsServerSideOnly(expr) || context.builder.PreferServerSide(expr, context.enforceServerSide) || ce.Method.IsSqlPropertyMethodEx())
-										return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
+								if (context.builder.IsServerSideOnly(expr) || context.builder.PreferServerSide(expr, false) || ce.Method.IsSqlPropertyMethodEx())
+								{
+									return new TransformInfo(context.builder.ConvertToSqlExpr(context.context, expr));
+								}
 
 								break;
 							}
@@ -355,7 +504,7 @@ namespace LinqToDB.Linq.Builder
 									var argument    = ne.Arguments[i];
 									var memberAlias = ne.Members?[i].Name;
 
-									var newArgument = context.builder.ConvertAssignmentArgument(context.context, argument, ne.Members?[i], context.enforceServerSide, memberAlias);
+									var newArgument = context.builder.ConvertAssignmentArgument(context.context, argument, ne.Members?[i], context.flags, memberAlias);
 									if (newArgument != argument)
 									{
 										if (arguments == null)
@@ -375,7 +524,7 @@ namespace LinqToDB.Linq.Builder
 						case ExpressionType.MemberInit:
 							{
 								var mi      = (MemberInitExpression)expr;
-								var newPart = (NewExpression)context.builder.BuildExpression(context.context, mi.NewExpression, context.enforceServerSide);
+								var newPart = (NewExpression)context.builder.BuildSqlExpression(context.context, mi.NewExpression, context.flags);
 								List<MemberBinding>? bindings = null;
 								for (var i = 0; i < mi.Bindings.Count; i++)
 								{
@@ -384,7 +533,7 @@ namespace LinqToDB.Linq.Builder
 									if (binding is MemberAssignment assignment)
 									{
 										var argument = context.builder.ConvertAssignmentArgument(context.context, assignment.Expression,
-											assignment.Member, context.enforceServerSide, assignment.Member.Name);
+											assignment.Member, context.flags, assignment.Member.Name);
 										if (argument != assignment.Expression)
 										{
 											newBinding = Expression.Bind(assignment.Member, argument);
@@ -405,14 +554,14 @@ namespace LinqToDB.Linq.Builder
 									mi = mi.Update(newPart, bindings ?? mi.Bindings.AsEnumerable());
 								}
 
-						return new TransformInfo(mi, true);
-					}
+								return new TransformInfo(mi, true);
+							}
 
 				case ExpressionType.Extension:
 				{
 					if (expr is ContextRefExpression contextRef)
 					{
-						var buildExpr = contextRef.BuildContext.BuildExpression(expr, 0, context.enforceServerSide);
+						var buildExpr = context.builder.MakeExpression(contextRef.BuildContext, contextRef, context.flags);
 						if (buildExpr.Type != expr.Type)
 						{
 							buildExpr = Expression.Convert(buildExpr, expr.Type);
@@ -427,7 +576,7 @@ namespace LinqToDB.Linq.Builder
 
 			}
 
-			if (context.enforceServerSide || EnforceServerSide(context.context))
+			if (false || EnforceServerSide(context.context))
 			{
 				switch (expr.NodeType)
 				{
@@ -436,7 +585,7 @@ namespace LinqToDB.Linq.Builder
 						break;
 
 							default                        :
-								if (!context.enforceServerSide && context.builder.CanBeCompiled(expr))
+								if (!false && context.builder.CanBeCompiled(expr))
 									break;
 								return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
 						}
@@ -444,12 +593,15 @@ namespace LinqToDB.Linq.Builder
 
 					return new TransformInfo(expr);
 				});
+
+
+			return result;
 		}
 
-		Expression CorrectConditional(IBuildContext context, Expression expr, bool enforceServerSide, string? alias)
+		Expression CorrectConditional(IBuildContext context, Expression expr, ProjectFlags flags, string? alias)
 		{
 			if (expr.NodeType != ExpressionType.Conditional)
-				return BuildExpression(context, expr, enforceServerSide, alias);
+				return BuildSqlExpression(context, expr, flags, alias);
 
 			var cond = (ConditionalExpression)expr;
 
@@ -476,11 +628,9 @@ namespace LinqToDB.Linq.Builder
 					var objContext = GetContext(context, obj);
 					if (objContext != null && objContext.IsExpression(obj, 0, RequestFor.Object).Result)
 					{
-						var sql = objContext.ConvertToSql(obj, 0, ConvertFlags.Key);
-						if (sql.Length == 0)
-							sql = objContext.ConvertToSql(obj, 0, ConvertFlags.All);
-
-						if (sql.Length > 0)
+						//var sql = objContext.MakeSql(obj)?.Sql;
+						throw new NotImplementedException();
+						/*if (sql.Length > 0)
 						{
 							Expression? predicate = null;
 							foreach (var f in sql)
@@ -509,13 +659,13 @@ namespace LinqToDB.Linq.Builder
 								cond = cond.Update(predicate,
 									CorrectConditional(context, cond.IfTrue,  enforceServerSide, alias),
 									CorrectConditional(context, cond.IfFalse, enforceServerSide, alias));
-						}
+						}*/
 					}
 				}
 			}
 
 			if (cond == expr)
-				expr = BuildExpression(context, expr, enforceServerSide, alias);
+				expr = BuildSqlExpression(context, expr, flags, alias);
 			else
 				expr = cond;
 
@@ -838,12 +988,35 @@ namespace LinqToDB.Linq.Builder
 			return variable;
 		}
 
+		public Expression ToReadExpression(Expression expression)
+		{
+			var toRead = expression.Transform(e =>
+			{
+				if (e is SqlPlaceholderExpression placeholder)
+				{
+					if (placeholder.Sql == null)
+						throw new InvalidOperationException();
+					if (placeholder.Sql.Index < 0)
+						throw new InvalidOperationException();
+
+					return new ConvertFromDataReaderExpression(placeholder.Type, placeholder.Sql.Index,
+						QueryHelper.GetColumnDescriptor(placeholder.Sql.Sql)?.ValueConverter, DataReaderParam);
+				}
+
+				return e;
+			});
+
+			return toRead;
+		}
+
 		public Expression<Func<IQueryRunner,IDataContext,IDataReader,Expression,object?[]?,object?[]?,T>> BuildMapper<T>(Expression expr)
 		{
 			var type = typeof(T);
 
 			if (expr.Type != type)
 				expr = Expression.Convert(expr, type);
+
+			expr = ToReadExpression(expr);
 
 			var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,IDataReader,Expression,object?[]?,object?[]?,T>>(
 				BuildBlock(expr), new[]
@@ -995,7 +1168,7 @@ namespace LinqToDB.Linq.Builder
 
 		HashSet<Expression>? _buildMultipleQueryExpressions;
 
-		public Expression BuildMultipleQuery(IBuildContext context, Expression expression, bool enforceServerSide)
+		public Expression BuildMultipleQuery(IBuildContext context, Expression expression, ProjectFlags flags)
 		{
 			var parameters = new HashSet<ParameterExpression>();
 
@@ -1009,7 +1182,7 @@ namespace LinqToDB.Linq.Builder
 
 			// Convert parameters.
 			//
-			expression = expression.Transform((parameters, buildContext: context, builder: this, parms, paramex, enforceServerSide), static (context, e) =>
+			expression = expression.Transform((parameters, buildContext: context, builder: this, parms, paramex, flags), static (context, e) =>
 			{
 				if (e.NodeType == ExpressionType.Lambda)
 				{
@@ -1031,7 +1204,7 @@ namespace LinqToDB.Linq.Builder
 
 					context.builder._buildMultipleQueryExpressions.Add(e);
 
-					var ex = Expression.Convert(context.builder.BuildExpression(context.buildContext, e, context.enforceServerSide), typeof(object));
+					var ex = Expression.Convert(context.builder.BuildSqlExpression(context.buildContext, e, context.flags), typeof(object));
 
 					context.builder._buildMultipleQueryExpressions.Remove(e);
 

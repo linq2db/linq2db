@@ -190,7 +190,18 @@ namespace LinqToDB.Expressions
 
 		// ReSharper disable once InconsistentNaming
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private Expression TransformXE(Expression expr) => expr;
+		private Expression TransformXE(Expression expr)
+		{
+			if (expr is ContextConstructionExpression construct)
+			{
+				var inner       = Transform(construct.InnerExpression);
+				var postProcess = construct.PostProcess == null ? null : Transform(construct.PostProcess);
+
+				return construct.Update(construct.BuildContext, inner, postProcess as List<LambdaExpression>);
+			}
+
+			return expr;
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private Expression TransformX(TryExpression e)

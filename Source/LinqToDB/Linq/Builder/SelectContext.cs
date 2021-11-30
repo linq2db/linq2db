@@ -26,7 +26,9 @@ namespace LinqToDB.Linq.Builder
 
 #if DEBUG
 		public string _sqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
-		public string Path => this.GetPath();
+		public string Path          => this.GetPath();
+		public int    ContextId     { get; }
+
 		public MethodCallExpression? Debug_MethodCall;
 #endif
 
@@ -57,6 +59,9 @@ namespace LinqToDB.Linq.Builder
 			IsScalar = !Builder.ProcessProjection(Members, Body);
 
 			Builder.Contexts.Add(this);
+#if DEBUG
+			ContextId = builder.GenerateContextId();
+#endif
 		}
 
 		public SelectContext(IBuildContext? parent, LambdaExpression lambda, params IBuildContext[] sequences)
@@ -83,7 +88,7 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 		{
-			var expr   = BuildExpression(null, 0, Sequence.Length == 0);
+			var expr   = Builder.FinalizeProjection(this, Builder.MakeExpression(this, null, ProjectFlags.Expression));
 			var mapper = Builder.BuildMapper<T>(expr);
 
 			QueryRunner.SetRunQuery(query, mapper);
@@ -96,299 +101,17 @@ namespace LinqToDB.Linq.Builder
 		ParameterExpression? _rootExpression;
 
 		public virtual Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-#if DEBUG && TRACK_BUILD
 		{
-			Debug.WriteLine("{0}.BuildExpression start {1}:\n{2}".Args(GetType().Name, level, (expression ?? Body).GetDebugView()));
-			Debug.WriteLine("{0}.BuildExpression start:\n{1}".Args(GetType().Name, SelectQuery));
-
-			var expr = BuildExpressionInternal(expression, level, enforceServerSide);
-
-			Debug.WriteLine("{0}.BuildExpression end:\n{1}".Args(GetType().Name, (expression ?? Body).GetDebugView()));
-			Debug.WriteLine("{0}.BuildExpression end:\n{1}".Args(GetType().Name, SelectQuery));
-
-			return expr;
-		}
-
-		Expression BuildExpressionInternal(Expression? expression, int level, bool enforceServerSide)
-#endif
-		{
-			{
-				var key = new ConvertKey(expression, level, ConvertFlags.Field);
-
-				if (_expressionIndex.TryGetValue(key, out var info))
-				{
-					var idx  = Parent?.ConvertToParentIndex(info[0].Index, this) ?? info[0].Index;
-
-					var expr = expression ?? Body;
-
-					if (IsExpression(expr, level, RequestFor.Object).Result)
-						return Builder.BuildExpression(this, expr, enforceServerSide);
-
-					return Builder.BuildSql(expr.Type, idx, info[0].Sql);
-				}
-			}
-
-			if (SequenceHelper.IsSameContext(expression, this))
-			{
-				if (_rootExpression == null)
-				{
-					var expr = Builder.BuildExpression(this, Body, enforceServerSide);
-
-					if (Builder.IsBlockDisable)
-						return expr;
-
-					_rootExpression = Builder.BuildVariable(expr);
-				}
-
-				return _rootExpression;
-			}
-
-			Builder.AssociationRoot = expression;
-			var projection = MakeProjection(expression, out _);
-			if (projection == null)
-				throw new InvalidOperationException();
-
-			var resultExpr = Builder.BuildExpression(this, projection, enforceServerSide);
-
-			if (IsScalar)
-			{
-
-				if (Builder.IsBlockDisable)
-					return resultExpr;
-
-				_rootExpression = Builder.BuildVariable(resultExpr);
-
-				return _rootExpression;
-			}
-
-			return resultExpr;
+			throw new NotImplementedException();
 		}
 
 		#endregion
 
 		#region ConvertToSql
 
-		readonly Dictionary<(MemberInfo, ConvertFlags),SqlInfo[]> _sql = new();
-
 		public virtual SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 		{
-			if (expression != null && level > 0 && expression.NodeType == ExpressionType.Call)
-			{
-				var e = (MethodCallExpression)expression;
-
-				if (e.Method.DeclaringType == typeof(Enumerable) && !typeof(IGrouping<,>).IsSameOrParentOf(e.Arguments[0].Type))
-				{
-					return new[] { new SqlInfo(Builder.SubQueryToSql(this, e)) };
-				}
-			}
-
-			/*if (IsScalar)
-			{
-				if (expression == null)
-					return Builder.ConvertExpressions(this, Body, flags, null);
-
-				switch (flags)
-				{
-					case ConvertFlags.Field :
-					case ConvertFlags.Key   :
-					case ConvertFlags.All   :
-						{
-							if (Body.NodeType != ExpressionType.Parameter && level == 0)
-							{
-								var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
-
-								if (levelExpression != expression)
-									if (flags != ConvertFlags.Field && IsExpression(expression, level, RequestFor.Field).Result)
-										flags = ConvertFlags.Field;
-							}
-
-							return ProcessScalar(
-								expression,
-								level,
-								(ctx, ex, l) => ctx!.ConvertToSql(ex, l, flags),
-								() => new[] { new SqlInfo(Builder.ConvertToSql(this, expression)) }, true);
-						}
-				}
-			}
-			else*/
-			if (IsScalar)
-			{
-				if (expression == null)
-					return Builder.ConvertExpressions(this, Body, flags, null);
-
-				switch (flags)
-				{
-					case ConvertFlags.Field :
-					case ConvertFlags.Key   :
-					case ConvertFlags.All   :
-						{
-							var projection = MakeProjection(expression, out var member);
-
-							if (projection != expression)
-							{
-								var ctx = Builder.GetContext(this, projection);
-								if (ctx != null)
-									return ctx.ConvertToSql(projection, 0, flags);
-							}
-
-							var result = new[] {new SqlInfo(member, Builder.ConvertToSql(this, projection ?? Body))};
-							/*
-							var result = projection == null
-								? Builder.ConvertExpressions(this, Body, flags, null)
-								: ConvertExpressions(projection, flags, null);
-								*/
-
-							return result;
-
-							if (Body.NodeType != ExpressionType.Parameter && level == 0)
-							{
-								var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
-
-								if (levelExpression != expression)
-									if (flags != ConvertFlags.Field && IsExpression(expression, level, RequestFor.Field).Result)
-										flags = ConvertFlags.Field;
-							}
-
-							return ProcessScalar(
-								(flags, context: this, expression),
-								expression,
-								level,
-								static (context, ctx, ex, l) => ctx!.ConvertToSql(ex, l, context.flags),
-								static context => new[] { new SqlInfo(context.context.Builder.ConvertToSql(context.context, context.expression)) }, true);
-						}
-				}
-			}
-			else
-			{
-				if (expression == null)
-				{
-					if (flags != ConvertFlags.Field)
-					{
-						var list = new List<SqlInfo>();
-						foreach (var mi in Members)
-							if (!(mi.Key is MethodInfo || flags == ConvertFlags.Key && EagerLoading.IsDetailsMember(this, mi.Value)))
-								list.AddRange(ConvertMember(mi.Key, mi.Value, flags));
-
-						return list.ToArray();
-					}
-					else
-					{
-						return Builder.ConvertExpressions(this, Body, flags, null);
-					}
-
-					throw new NotImplementedException();
-				}
-
-				switch (flags)
-				{
-					case ConvertFlags.All   :
-					case ConvertFlags.Key   :
-					case ConvertFlags.Field :
-						{
-							var projection = MakeProjection(expression, out _);
-
-							var result = projection == null
-								? Builder.ConvertExpressions(this, Body, flags, null)
-								: ConvertExpressions(projection, flags, null);
-
-							return result;
-
-							var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
-							levelExpression = levelExpression.Unwrap();
-
-							switch (levelExpression.NodeType)
-							{
-								case ExpressionType.MemberAccess :
-									{
-										if (level != 0 && levelExpression == expression)
-										{
-											var member = ((MemberExpression)levelExpression).Member;
-
-											var cacheKey = (member, flags);
-
-											if (!_sql.TryGetValue(cacheKey, out var sql))
-											{
-												var memberExpression = GetMemberExpression(
-															member, levelExpression == expression, levelExpression.Type, expression);
-
-												var ed = Builder.MappingSchema.GetEntityDescriptor(member.DeclaringType!);
-												var descriptor = ed.FindColumnDescriptor(member);
-
-												sql = ConvertExpressions(memberExpression, flags, descriptor).Clone(member);
-
-												_sql.Add(cacheKey, sql);
-											}
-
-											return sql;
-										}
-
-										return ProcessMemberAccess(
-											(context: this, flags, expression, levelExpression),
-											expression, (MemberExpression)levelExpression, level,
-											static (context, n, ctx,ex,l,mex) =>
-											{
-												switch (n)
-												{
-													case 0 :
-														var buildExpression = GetExpression(context.expression, context.levelExpression, mex);
-														ColumnDescriptor? descriptor = null;
-														if (mex is MemberExpression ma)
-														{
-															var ed = context.context.Builder.MappingSchema.GetEntityDescriptor(ma.Expression.Type);
-															descriptor = ed.FindColumnDescriptor(ma.Member);
-														}
-														return context.context.ConvertExpressions(buildExpression, context.flags, descriptor);
-													default:
-														return ctx.ConvertToSql(ex, l, context.flags);
-												}
-											});
-									}
-
-								case ExpressionType.Parameter:
-									if (levelExpression != expression)
-										return GetSequence(expression, level)!.ConvertToSql(expression, level + 1, flags);
-
-									if (level == 0)
-										return GetSequence(expression, level)!.ConvertToSql(null, 0, flags);
-
-									break;
-
-								case ExpressionType.Extension:
-									{
-										if (levelExpression is ContextRefExpression)
-										{
-											if (levelExpression != expression)
-												return GetSequence(expression, level)!.ConvertToSql(expression,
-													level + 1,
-													flags);
-
-											if (level == 0)
-												return GetSequence(expression, level)!.ConvertToSql(null, 0, flags);
-										}
-
-										goto default;
-									}
-
-								default:
-									if (level == 0)
-										return Builder.ConvertExpressions(this, expression, flags, null);
-									break;
-							}
-
-							break;
-						}
-				}
-			}
-
 			throw new NotImplementedException();
-		}
-
-		SqlInfo[] ConvertMember(MemberInfo member, Expression expression, ConvertFlags flags)
-		{
-			var ed         = Builder.MappingSchema.GetEntityDescriptor(member.DeclaringType!);
-			var descriptor = ed.FindColumnDescriptor(member);
-
-			return ConvertExpressions(expression, flags, descriptor).Clone(member);
 		}
 
 		SqlInfo[] ConvertExpressions(Expression expression, ConvertFlags flags, ColumnDescriptor? columnDescriptor)
@@ -400,96 +123,32 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertToIndex
 
-		readonly Dictionary<ConvertKey,SqlInfo[]> _expressionIndex = new(ConvertKey.ExpressionFlagsComparer);
-
-		struct ConvertKey
-		{
-			public ConvertKey(Expression? expression, int level, ConvertFlags flags)
-			{
-				Expression = expression;
-				Level      = level;
-				Flags      = flags;
-			}
-
-			public Expression?  Expression { get; }
-			public int          Level      { get; }
-			public ConvertFlags Flags      { get; }
-
-			private sealed class ExpressionFlagsEqualityComparer : IEqualityComparer<ConvertKey>
-			{
-				private readonly IEqualityComparer<Expression> _expressionEqualityComparer;
-
-				public ExpressionFlagsEqualityComparer(IEqualityComparer<Expression> expressionEqualityComparer)
-				{
-					_expressionEqualityComparer = expressionEqualityComparer;
-				}
-
-				public bool Equals(ConvertKey x, ConvertKey y)
-				{
-					return x.Flags == y.Flags && x.Level == y.Level && _expressionEqualityComparer.Equals(x.Expression, y.Expression);
-				}
-
-				public int GetHashCode(ConvertKey obj)
-				{
-					unchecked
-					{
-						var hashCode = _expressionEqualityComparer.GetHashCode(obj.Expression);
-						hashCode = (hashCode * 397) ^ obj.Level;
-						hashCode = (hashCode * 397) ^ (int)obj.Flags;
-						return hashCode;
-					}
-				}
-			}
-
-			public static IEqualityComparer<ConvertKey> ExpressionFlagsComparer { get; } = new ExpressionFlagsEqualityComparer(ExpressionEqualityComparer.Instance);
-		}
-
 		public virtual SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 		{
-			var key = new ConvertKey(expression, level, flags);
-
-			//if (!_expressionIndex.TryGetValue(key, out var info))
-				var info = ConvertToIndexInternal(expression, level, flags);
-
-				var newInfo = new SqlInfo[info.Length];
-				for (var i = 0; i < newInfo.Length; i++)
-				{
-					var si = info[i];
-					if (si.Query == SelectQuery)
-						newInfo[i] = si;
-					else
-					{
-						var index = SelectQuery.Select.Add(si.Query!.Select.Columns[si.Index]);
-
-						newInfo[i] = new SqlInfo(si.MemberChain, SelectQuery.Select.Columns[index], SelectQuery, index);
-					}
-				}
-
-				//_expressionIndex.Add(key, newInfo);
-
-				return newInfo;
-
-			return info;
+			throw new NotImplementedException();
 		}
+
+		#endregion
 
 		public SqlInfo? MakeSql(Expression path)
 		{
+			throw new NotImplementedException();
 			Expression expr;
 
 			if (SequenceHelper.IsSameContext(path, this))
 			{
-				Body = Builder.Project(this, Body, flags | ProjectFlags.SQL, Body);
+				Body = Builder.Project(this, Body, null, 0, ProjectFlags.SQL, Body);
 				expr = Body;
 			}
 			else
 			{
-				expr = Builder.Project(this, path, flags | ProjectFlags.SQL, Body);
+				var correctedPath = path;
+				expr = Builder.Project(this, correctedPath, null, 0, ProjectFlags.SQL, Body);
 			}
 
-			if (expr is SqlPlaceholderExpression placeholder)
-				return placeholder.Sql!;
+			var sql = Builder.ConvertToSql(this, expr);
 
-			throw new LinqException($"Expression '{path}' cannot be converted to the SQL.");
+			return new SqlInfo(sql, SelectQuery);
 		}
 
 		public SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
@@ -497,223 +156,21 @@ namespace LinqToDB.Linq.Builder
 			return SequenceHelper.MakeColumn(SelectQuery, sqlInfo);
 		}
 
-		readonly Dictionary<Tuple<MemberInfo?,ConvertFlags>,SqlInfo[]> _memberIndex = new();
-
-		class SqlData
+		public Expression MakeExpression(Expression? path, ProjectFlags flags)
 		{
-			public SqlInfo[]  Sql    = null!;
-			public MemberInfo Member = null!;
-		}
+			Expression result;
 
-		SqlInfo[] ConvertToIndexInternal(Expression? expression, int level, ConvertFlags flags)
-		{
-			if (IsScalar)
+			if (SequenceHelper.IsSameContext(path, this))
 			{
-				/*
-				throw new NotImplementedException();
-				if (Body.NodeType == ExpressionType.Parameter)
-					for (var i = 0; i < Sequence.Length; i++)
-						if (Body == Lambda.Parameters[i])
-							return Sequence[i].ConvertToIndex(expression, level, flags);
-
-				if (expression == null || expression is ContextRefExpression refExpression && refExpression.BuildContext == this)
-				{
-					var key = Tuple.Create((MemberInfo?)null, flags);
-
-					if (!_memberIndex.TryGetValue(key, out var idx))
-					{
-						idx = ConvertToSql(null, 0, flags);
-
-						for (var i = 0; i < idx.Length; i++)
-						{
-							idx[i] = SetInfo(idx[i], null);
-						}
-
-						_memberIndex.Add(key, idx);
-					}
-
-					return idx;
-				}
-				*/
-
-				if (expression == null || expression is ContextRefExpression refExpression && refExpression.BuildContext == this)
-				{
-
-					var projection = MakeProjection(Body, out var member);
-					var idx        = Builder.ConvertExpressions(this, projection, flags, null);
-
-					for (var i = 0; i < idx.Length; i++)
-					{
-						idx[i] = SetInfo(idx[i], member);
-					}
-
-					return idx;
-				}
-
-				switch (flags)
-				{
-					case ConvertFlags.Field:
-					case ConvertFlags.Key:
-					case ConvertFlags.All:
-						{
-							var projection = MakeProjection(expression!, out var member);
-
-							var key = new ConvertKey(projection, level, flags);
-							if (_expressionIndex.TryGetValue(key, out var info))
-								return info;
-
-							var idx        = Builder.ConvertExpressions(this, projection, flags, null);
-
-							for (var i = 0; i < idx.Length; i++)
-							{
-								idx[i] = SetInfo(idx[i], member);
-							}
-
-							_expressionIndex.Add(key, idx);
-
-							return idx;
-						}
-						/*return ProcessScalar(
-							expression,
-							level,
-							static (context, ctx, ex, l) => ctx!.ConvertToIndex(ex, l, context.flags),
-							static context => context.context.GetSequence(context.expression, context.level)!.ConvertToIndex(context.expression, context.level + 1, context.flags), true);*/
-				}
+				result = Builder.BuildSqlExpression(this, Body, flags);
 			}
 			else
 			{
-				if (expression == null)
-				{
-					switch (flags)
-					{
-						case ConvertFlags.Field :
-						case ConvertFlags.Key   :
-						case ConvertFlags.All   :
-							{
-								var p = Expression.Parameter(Body.Type, "p");
-
-								var list = new List<SqlInfo>();
-								foreach (var m in Members)
-								{
-									if (!(m.Key is MethodInfo || flags == ConvertFlags.Key && EagerLoading.IsDetailsMember(this, m.Value)))
-									{
-										foreach (var si in ConvertToIndex(Expression.MakeMemberAccess(p, m.Key), 1, flags))
-											list.Add(si.Clone(m.Key));
-									}
-								}
-
-								return list.ToArray();
-							}
-					}
-				}
-
-				switch (flags)
-				{
-					case ConvertFlags.All   :
-					case ConvertFlags.Key   :
-					case ConvertFlags.Field :
-						{
-							var projection = MakeProjection(expression, out var member);
-
-							var key = new ConvertKey(projection, level, flags);
-							if (_expressionIndex.TryGetValue(key, out var info))
-								return info;
-
-							var idx        = Builder.ConvertExpressions(this, projection, flags, null);
-
-							for (var i = 0; i < idx.Length; i++)
-							{
-								idx[i] = SetInfo(idx[i], member);
-							}
-
-							_expressionIndex.Add(key, idx);
-
-							return idx;
-
-							/*if (level == 0)
-							{
-								var idx = Builder.ConvertExpressions(this, expression!, flags, null);
-
-								for (var i = 0; i < idx.Length; i++)
-								{
-									idx[i] = SetInfo(idx[i], null);
-								}
-
-								return idx;
-							}
-
-							var levelExpression = expression!.GetLevelExpression(Builder.MappingSchema, level);
-
-							switch (levelExpression.NodeType)
-							{
-								case ExpressionType.MemberAccess :
-									{
-										if (levelExpression == expression)
-										{
-											var member = Tuple.Create((MemberInfo?)((MemberExpression)levelExpression).Member, flags);
-
-											if (!_memberIndex.TryGetValue(member, out var idx))
-											{
-												idx = ConvertToSql(expression, level, flags);
-
-												if (flags == ConvertFlags.Field && idx.Length != 1)
-													throw new InvalidOperationException();
-
-												for (var i = 0; i < idx.Length; i++)
-												{
-													idx[i] = SetInfo(idx[i], member.Item1);
-												}
-
-												_memberIndex.Add(member, idx);
-											}
-
-											return idx;
-										}
-
-										return ProcessMemberAccess(
-											(context: this, expression, level, flags),
-											expression!,
-											(MemberExpression)levelExpression,
-											level,
-											static (context, n, ctx, ex, l, _) => n == 0 ?
-												context.context.GetSequence(context.expression!, context.level)!.ConvertToIndex(context.expression, context.level + 1, context.flags) :
-												ctx.ConvertToIndex(ex, l, context.flags));
-									}
-
-								case ExpressionType.Parameter:
-								case ExpressionType.Extension:
-
-									if (levelExpression != expression)
-										return GetSequence(expression!, level)!.ConvertToIndex(expression, level + 1, flags);
-									break;
-							}
-
-							break;*/
-						}
-				}
+				result = Builder.Project(this, path, null, 0, flags, Body);
 			}
 
-			throw new NotImplementedException();
+			return result;
 		}
-
-		SqlInfo SetInfo(SqlInfo info, MemberInfo? member)
-		{
-			info = info.WithQuery(SelectQuery);
-
-			if (info.Sql == SelectQuery)
-				info = info.WithIndex(SelectQuery.Select.Columns.Count - 1);
-			else
-			{
-				info = info.WithIndex(SelectQuery.Select.Add(info.Sql));
-				var column = SelectQuery.Select.Columns[info.Index];
-				if (member != null && column.RawAlias == null)
-					column.Alias = member.Name;
-			}
-
-			return info;
-		}
-
-		#endregion
 
 		#region IsExpression
 
@@ -1055,102 +512,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return null;
-
-			if (IsScalar)
-			{
-				return ProcessScalar(
-					buildInfo,
-					expression,
-					level,
-					static (buildInfo, ctx, ex, l) => ctx!.GetContext(ex, l, buildInfo),
-					static _ => throw new NotImplementedException(), true);
-			}
-			else
-			{
-				var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
-
-				switch (levelExpression.NodeType)
-				{
-					case ExpressionType.MemberAccess :
-						{
-							if (levelExpression == expression && Sequence.Length == 1 && !(Sequence[0] is GroupByBuilder.GroupByContext))
-							{
-								var memberExpression = GetMemberExpression(
-									((MemberExpression)levelExpression).Member,
-									levelExpression == expression,
-									levelExpression.Type,
-									expression);
-
-								return GetContext(memberExpression, 0, new BuildInfo(this, memberExpression, buildInfo.SelectQuery));
-							}
-
-							var context = ProcessMemberAccess(
-								buildInfo,
-								expression,
-								(MemberExpression)levelExpression,
-								level,
-								static (buildInfo, n,ctx,ex,l,_) => n == 0 ?
-									null :
-									ctx.GetContext(ex, l, buildInfo));
-
-							if (context == null)
-								throw new NotImplementedException();
-
-							return context;
-						}
-
-					case ExpressionType.Parameter    :
-						{
-							var sequence  = GetSequence(expression, level)!;
-							var paramIndex = Sequence.Length == 0 ? 0 : Array.IndexOf(Sequence, sequence);
-							var parameter  = paramIndex >= 0 ? Lambda.Parameters[paramIndex] : null;
-
-							if (ReferenceEquals(levelExpression, expression))
-							{
-								if (ReferenceEquals(levelExpression, parameter))
-									return sequence.GetContext(null, 0, buildInfo);
-							}
-							else if (level == 0)
-								return sequence.GetContext(expression, 1, buildInfo);
-
-							break;
-						}
-					default:
-						{
-							if (levelExpression is ContextRefExpression)
-							{
-								var sequence = GetSequence(expression, level);
-
-								if (sequence != null)
-								{
-									if (ReferenceEquals(levelExpression, expression))
-									{
-										return sequence.GetContext(null, 0, buildInfo);
-									}
-
-									if (level == 0)
-										return sequence.GetContext(expression, 1, buildInfo);
-								}
-							}
-
-							break;
-						}
-				}
-
-				if (level == 0)
-				{
-					var sequence = GetSequence(expression, level);
-					if (sequence != null)
-						return sequence.GetContext(expression, level + 1, buildInfo);
-					if (Builder.IsSequence(buildInfo))
-					{
-						sequence = Builder.BuildSequence(buildInfo);
-						return sequence;
-					}
-				}
-			}
-
-			throw new NotImplementedException();
 		}
 
 		#endregion
@@ -1159,10 +520,7 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual int ConvertToParentIndex(int index, IBuildContext context)
 		{
-			if (!ReferenceEquals(context.SelectQuery, SelectQuery))
-				index = SelectQuery.Select.Add(context.SelectQuery.Select.Columns[index]);
-
-			return Parent?.ConvertToParentIndex(index, this) ?? index;
+			throw new NotImplementedException();
 		}
 
 		#endregion
@@ -1205,83 +563,6 @@ namespace LinqToDB.Linq.Builder
 
 		#region Helpers
 
-		T ProcessScalar<T, TContext>(TContext context, Expression expression, int level, Func<TContext, IBuildContext?,Expression?,int,T> action, Func<TContext, T> defaultAction, bool throwOnError)
-		{
-			throw new NotImplementedException();
-			if (level == 0)
-			{
-				if (Body.NodeType == ExpressionType.Parameter && Lambda.Parameters.Count == 1)
-				{
-					var sequence = GetSequence(Body, 0)!;
-
-					return ReferenceEquals(expression, Body) ?
-						action(context, sequence, null,       0) :
-						action(context, sequence, expression, 1);
-				}
-
-				var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
-
-				if (!ReferenceEquals(levelExpression, expression))
-				{
-					var ctx = GetSequence(expression, level);
-					return ctx == null ? defaultAction(context) : action(context, ctx, expression, Sequence.Contains(ctx) ? level + 1 : 0);
-				}
-
-				if (expression.NodeType == ExpressionType.Parameter)
-				{
-					var sequence  = GetSequence(expression, level)!;
-					var idx       = Array.IndexOf(Sequence, sequence);
-					var parameter = Sequence.Length == 0 ? Lambda.Parameters[0] :
-						idx < 0 ? null : Lambda.Parameters[idx];
-
-					if (parameter != null && ReferenceEquals(levelExpression, parameter))
-						return action(context, sequence, null, 0);
-				}
-
-				return Body.NodeType switch
-				{
-					ExpressionType.MemberAccess => action(context, GetSequence(expression, level)!, null, 0),
-					_                           => defaultAction(context),
-				};
-			}
-			else
-			{
-				var root = Builder.GetRootObject(Body);
-
-				if (root.NodeType == ExpressionType.Parameter)
-				{
-					var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level - 1);
-					var newExpression   = GetExpression(expression, levelExpression, Body);
-
-					Builder.UpdateConvertedExpression(expression, newExpression);
-
-					var result = action(context, this, newExpression, 0);
-
-					Builder.RemoveConvertedExpression(newExpression);
-
-					return result;
-				}
-				else if (root is ContextRefExpression refExpression)
-				{
-					var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level - 1);
-					var newExpression   = GetExpression(expression, levelExpression, Body);
-
-					Builder.UpdateConvertedExpression(expression, newExpression);
-
-					var result = action(context, refExpression.BuildContext, newExpression, 0);
-
-					Builder.RemoveConvertedExpression(newExpression);
-
-					return result;
-				}
-			}
-
-			if (throwOnError)
-				throw new NotImplementedException();
-
-			return default!;
-		}
-
 		public static List<MemberInfo> GetMemberPath(MemberExpression? memberExpression, out Expression? root)
 		{
 			var result = new List<MemberInfo>();
@@ -1291,46 +572,6 @@ namespace LinqToDB.Linq.Builder
 				root = memberExpression.Expression;
 				result.Add(memberExpression.Member);
 				memberExpression = memberExpression.Expression as MemberExpression;
-			}
-
-			result.Reverse();
-			return result;
-		}
-
-		public static List<Expression> GetMemberPath2(Expression? expression, out Expression? root)
-		{
-			var result = new List<Expression>();
-			root = null;
-
-			var current = expression;
-			while (current != null)
-			{
-				var prev = current;
-				switch (current.NodeType)
-				{
-					case ExpressionType.MemberAccess:
-					{
-						result.Add(current);
-						current = ((MemberExpression)current).Expression;
-						break;
-					}
-					case ExpressionType.Call:
-					{
-						var mc = (MethodCallExpression)current;
-						if (mc.IsQueryable())
-						{
-							result.Add(mc);
-							current = mc.Arguments[0];
-						}
-						break;
-					}
-				}
-
-				if (prev == current)
-				{
-					result.Add(current);
-					break;
-				}
 			}
 
 			result.Reverse();
@@ -1541,114 +782,6 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		/*
-		Expression MakeProjectionOld(MemberExpression memberExpression)
-		{
-			Expression ProcessMember(Expression currentBody, int currentIndex, List<MemberInfo> memberPath)
-			{
-				if (currentIndex >= memberPath.Count)
-				{
-					return currentBody;
-				}
-
-				var currentMember = memberPath[currentIndex];
-
-				switch (currentBody.NodeType)
-				{
-					case ExpressionType.New:
-					{
-						var newExpression = (NewExpression)currentBody;
-
-						for (var index = 0; index < newExpression.Members.Count; index++)
-						{
-							var member = newExpression.Members[index];
-							if (currentMember == member)
-							{
-								return ProcessMember(newExpression.Arguments[index], currentIndex + 1, memberPath);
-							}
-						}
-
-
-						break;
-					}
-
-					case ExpressionType.Conditional:
-					{
-						var cond = (ConditionalExpression)currentBody;
-
-						var trueExpr  = ProcessMember(cond.IfTrue, currentIndex, memberPath);
-						var falseExpr = ProcessMember(cond.IfFalse, currentIndex, memberPath);
-
-						return Expression.Condition(cond.Test, trueExpr, falseExpr);
-					}
-
-					case ExpressionType.MemberAccess:
-					{
-						var ma = (MemberExpression)currentBody;
-						return ma;
-					}
-
-				}
-
-				return Expression.Constant(DefaultValue.GetValue(currentMember.GetMemberType()), currentMember.GetMemberType());
-			}
-
-
-			var memberPath = GetMemberPath(memberExpression, out var root);
-
-			var result = ProcessMember(CorrectedBody, 0, memberPath);
-
-			return result;
-		}
-		*/
-
-		T ProcessMemberAccess<T, TContext>(TContext context, Expression expression, MemberExpression levelExpression, int level,
-			Func<TContext, int, IBuildContext,Expression?,int,Expression,T> action)
-		{
-			throw new NotImplementedException();
-			var memberExpression = GetProjectedExpression(levelExpression.Member, true)!;
-			memberExpression = memberExpression.Unwrap();
-
-			var newExpression    = GetExpression(expression, levelExpression, memberExpression);
-			var sequence         = GetSequence  (expression, level);
-			var nextLevel        = 1;
-
-			if (sequence != null)
-			{
-				var idx = Sequence.Length == 0 ? 0 : Array.IndexOf(Sequence, sequence);
-
-				if (idx >= 0)
-				{
-					var parameter = Lambda.Parameters[idx];
-
-					if (ReferenceEquals(memberExpression, parameter) && ReferenceEquals(levelExpression, expression))
-						return action(context, 1, sequence, null, 0, memberExpression);
-				}
-				else
-				{
-					nextLevel = 0;
-				}
-			}
-
-			switch (memberExpression.NodeType)
-			{
-				case ExpressionType.MemberAccess :
-				case ExpressionType.Parameter    :
-					if (sequence != null)
-						return action(context, 2, sequence, newExpression, nextLevel, memberExpression);
-					break;
-
-				case ExpressionType.New          :
-				case ExpressionType.MemberInit   :
-					{
-						var mmExpresion = GetMemberExpression(memberExpression, expression, level + 1);
-						return action(context, 3, this, mmExpresion, 0, memberExpression);
-					}
-			}
-
-			return action(context, 0, this, null, 0, memberExpression);
-		}
-
 		protected bool IsSubQuery()
 		{
 			for (IBuildContext? p = Parent; p != null; p = p.Parent)
@@ -1751,141 +884,7 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		static Expression GetExpression(Expression expression, Expression levelExpression, Expression memberExpression)
-		{
-			if (memberExpression is MemberExpression me)
-			{
-				//TODO: Why do we need such quirks with grouping?
-				if (typeof(IGrouping<,>).IsSameOrParentOf(me.Member.DeclaringType!) && memberExpression.Type == expression.Type)
-					return memberExpression;
-			}
-
-			if (memberExpression is ConstantExpression cnt && cnt.Value == null)
-			{
-				return Expression.Constant(DefaultValue.GetValue(expression.Type), expression.Type);
-			}
-
-			if (!memberExpression.Type.IsAssignableFrom(levelExpression.Type))
-				return memberExpression;
-
-			return !ReferenceEquals(levelExpression, expression) ?
-				expression.Replace(levelExpression, memberExpression) :
-				memberExpression;
-		}
-
-		Expression GetMemberExpression(Expression newExpression, Expression expression, int level)
-		{
-			var levelExpresion = expression.GetLevelExpression(Builder.MappingSchema, level);
-
-			switch (newExpression.NodeType)
-			{
-				case ExpressionType.New        :
-				case ExpressionType.MemberInit : break;
-				default                        :
-					var le = expression.GetLevelExpression(Builder.MappingSchema, level - 1);
-					return GetExpression(expression, le, newExpression);
-			}
-
-			if (levelExpresion.NodeType != ExpressionType.MemberAccess)
-				throw new LinqException("Invalid expression {0}", levelExpresion);
-
-			var me = (MemberExpression)levelExpresion;
-
-			switch (newExpression.NodeType)
-			{
-				case ExpressionType.New:
-					{
-						var expr = (NewExpression)newExpression;
-
-// ReSharper disable ConditionIsAlwaysTrueOrFalse
-// ReSharper disable HeuristicUnreachableCode
-						if (expr.Members == null)
-							throw new LinqException("Invalid expression {0}", expression);
-// ReSharper restore HeuristicUnreachableCode
-// ReSharper restore ConditionIsAlwaysTrueOrFalse
-
-						for (var i = 0; i < expr.Members.Count; i++)
-							if (me.Member == expr.Members[i])
-								return ReferenceEquals(levelExpresion, expression) ?
-									expr.Arguments[i].Unwrap() :
-									GetMemberExpression(expr.Arguments[i].Unwrap(), expression, level + 1);
-
-						throw new LinqException("Invalid expression {0}", expression);
-					}
-
-				case ExpressionType.MemberInit:
-					{
-						var expr = (MemberInitExpression)newExpression;
-
-						foreach (var binding in expr.Bindings.Cast<MemberAssignment>())
-						{
-							if (me.Member.EqualsTo(binding.Member))
-								return ReferenceEquals(levelExpresion, expression) ?
-									binding.Expression.Unwrap() :
-									GetMemberExpression(binding.Expression.Unwrap(), expression, level + 1);
-						}
-
-						throw new LinqException("Invalid expression {0}", expression);
-					}
-			}
-
-			return expression;
-		}
-
-		protected Expression GetMemberExpression(MemberInfo member, bool add, Type type, Expression sourceExpression)
-		{
-			var memberExpression = GetProjectedExpression(member, false);
-			if (memberExpression == null)
-			{
-				foreach (var m in Members)
-				{
-					if (m.Key.Name == member.Name)
-					{
-						if (m.Key.EqualsTo(member, IsScalar ? null : Body.Type))
-							return m.Value;
-					}
-				}
-
-				if (member.DeclaringType!.IsSameOrParentOf(Body.Type))
-				{
-					if (Body.NodeType == ExpressionType.MemberInit)
-					{
-						var ed = Builder.MappingSchema.GetEntityDescriptor(Body.Type);
-
-						if (ed.Aliases != null)
-						{
-							if (ed.Aliases.TryGetValue(member.Name, out var value))
-								return GetMemberExpression(ed.TypeAccessor[value!].MemberInfo, add, type, sourceExpression);
-
-							foreach (var a in ed.Aliases)
-							{
-								if (a.Value == member.Name)
-								{
-									foreach (var m in Members)
-										if (m.Key.Name == a.Key)
-											return m.Value;
-
-									break;
-								}
-							}
-						}
-					}
-
-					if (add && AllowAddDefault)
-					{
-						memberExpression = Expression.Constant(type.GetDefaultValue(), type);
-						Members.Add(member, memberExpression);
-
-						return memberExpression;
-					}
-				}
-
-				throw new LinqToDBException($"'{sourceExpression}' cannot be converted to SQL.");
-			}
-
-			return memberExpression;
-		}
-
 		#endregion
+
 	}
 }

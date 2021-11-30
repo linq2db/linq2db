@@ -13,7 +13,8 @@ namespace LinqToDB.Linq.Builder
 	{
 #if DEBUG
 		string? IBuildContext._sqlQueryText => TableContext._sqlQueryText;
-		public string Path => this.GetPath();
+		public string         Path          => this.GetPath();
+		public int            ContextId     { get; }
 #endif
 		public ExpressionBuilder Builder { get; }
 		public Expression?       Expression { get; }
@@ -47,6 +48,9 @@ namespace LinqToDB.Linq.Builder
 			Join                   = join;
 			SubqueryContext.Parent = this;
 			Parent                 = tableContext;
+#if DEBUG
+			ContextId = builder.GenerateContextId();
+#endif
 		}
 
 		public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
@@ -91,6 +95,11 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Expression MakeExpression(Expression? path, ProjectFlags flags)
 		{
 			throw new NotImplementedException();
 		}
