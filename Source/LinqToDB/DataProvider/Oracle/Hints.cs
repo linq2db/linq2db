@@ -6,11 +6,27 @@ namespace LinqToDB.DataProvider.Oracle
 	{
 		public static class TableHint
 		{
-			public const string Cache       = "CACHE";
-			public const string Cluster     = "CLUSTER";
-			public const string DrivingSite = "DRIVING_SITE";
-			public const string Full        = "FULL";
-//
+			public const string Cache             = "CACHE";
+			public const string Cluster           = "CLUSTER";
+			public const string DrivingSite       = "DRIVING_SITE";
+			public const string DynamicSampling   = "DYNAMIC_SAMPLING"; // 0..10
+			public const string Fact              = "FACT";
+			public const string Full              = "FULL";
+			public const string Hash              = "HASH";
+			public const string Index             = "INDEX";         // "index_name"
+			public const string IndexAsc          = "INDEX_ASC";     // "index_name index_name2"
+			public const string IndexCombine      = "INDEX_COMBINE"; // "index_name index_name2"
+			public const string IndexDesc         = "INDEX_DESC";    // "index_name index_name2"
+			public const string IndexFFS          = "INDEX_FFS";     // "index_name index_name2"
+			public const string IndexFastFullScan = "INDEX_FFS";     // "index_name index_name2"
+			public const string IndexJoin         = "INDEX_JOIN";    // "index_name index_name2"
+			public const string IndexSS           = "INDEX_SS";      // "index_name index_name2"
+			public const string IndexSkipScan     = "INDEX_SS";      // "index_name index_name2"
+			public const string IndexSSAsc        = "INDEX_SS_ASC";  // "index_name index_name2"
+			public const string IndexSkipScanAsc  = "INDEX_SS_ASC";  // "index_name index_name2"
+			public const string IndexSSDesc       = "INDEX_SS_DESC"; // "index_name index_name2"
+			public const string IndexSkipScanDesc = "INDEX_SS_DESC"; // "index_name index_name2"
+
 //			[Sql.Expression("SPATIAL_WINDOW_MAX_CELLS={0}")]
 //			public static string SpatialWindowMaxCells(int value)
 //			{

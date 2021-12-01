@@ -736,7 +736,10 @@ END;",
 					Sql.QueryExtensionScope.Table or
 					Sql.QueryExtensionScope.TablesInScope &&
 				ext.ID is
-					Sql.QueryExtensionID.TableHint))
+					Sql.QueryExtensionID.TableHint      or
+					Sql.QueryExtensionID.TableHintParam or
+					Sql.QueryExtensionID.TableHintParams
+				))
 			{
 				foreach (var ext in table.SqlQueryExtensions!)
 				{
@@ -755,6 +758,27 @@ END;",
 					}
 
 					HintBuilder.Append(alias);
+
+					if (ext.ID is Sql.QueryExtensionID.TableHintParam)
+					{
+						var param = ((SqlValue)ext.Arguments["hintParameter"]).Value;
+
+						HintBuilder.Append(' ');
+						HintBuilder.Append(param);
+					}
+					else if (ext.ID is Sql.QueryExtensionID.TableHintParams)
+					{
+						var count = (int)((SqlValue)ext.Arguments["hintParameters.Count"]).Value!;
+
+						for (var i = 0; i < count; i++)
+						{
+							var value = ((SqlValue)ext.Arguments[$"hintParameters.{i}"]).Value;
+
+							HintBuilder.Append(' ');
+							HintBuilder.Append(value);
+						}
+					}
+
 					HintBuilder.Append(')');
 				}
 			}

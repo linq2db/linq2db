@@ -66,7 +66,7 @@ namespace Tests.Linq
 			{
 				var query =
 					from p in db.GetTable<JoinOptimizeTests.AdressEntity>().TableHint("NOLOCK")
-					join a in db.GetTable<JoinOptimizeTests.AdressEntity>()//.TableHint("READUNCOMMITTED")
+					join a in db.GetTable<JoinOptimizeTests.AdressEntity>()
 						on p.Id equals a.Id //PK column
 					select p;
 

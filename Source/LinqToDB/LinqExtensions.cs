@@ -183,6 +183,62 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Adds table hints to a table in generated query.
+		/// <code>
+		/// // will produce following SQL code in generated query: table alias with(UpdLock)
+		/// var tableWithHint = db.Table.TableHint("UpdLock");
+		/// </code>
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <typeparam name="TParam">Table hint parameter type.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="tableHint">SQL text, added to WITH({0}) after table name in generated query.</param>
+		/// <param name="hintParameter">Table hint parameter.</param>
+		/// <returns>Table-like query source with table hints.</returns>
+		[LinqTunnel]
+		[Pure]
+		[Sql.QueryExtension(Sql.QueryExtensionScope.Table, Sql.QueryExtensionID.TableHintParam)]
+		public static ITable<TSource> TableHint<TSource,TParam>(this ITable<TSource> table, [SqlQueryDependent] string tableHint, [SqlQueryDependent] TParam hintParameter)
+			where TSource : notnull
+		{
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(TableHint, table, tableHint, hintParameter),
+				table.Expression, Expression.Constant(tableHint), Expression.Constant(hintParameter));
+
+			return table;
+		}
+
+		/// <summary>
+		/// Adds table hints to a table in generated query.
+		/// <code>
+		/// // will produce following SQL code in generated query: table alias with(UpdLock)
+		/// var tableWithHint = db.Table.TableHint("UpdLock");
+		/// </code>
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <typeparam name="TParam">Table hint parameter type.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="tableHint">SQL text, added to WITH({0}) after table name in generated query.</param>
+		/// <param name="hintParameters">Table hint parameters.</param>
+		/// <returns>Table-like query source with table hints.</returns>
+		[LinqTunnel]
+		[Pure]
+		[Sql.QueryExtension(Sql.QueryExtensionScope.Table, Sql.QueryExtensionID.TableHintParams)]
+		public static ITable<TSource> TableHint<TSource,TParam>(this ITable<TSource> table, [SqlQueryDependent] string tableHint, [SqlQueryDependent] params TParam[] hintParameters)
+			where TSource : notnull
+		{
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(TableHint, table, tableHint, hintParameters),
+				table.Expression,
+				Expression.Constant(tableHint),
+				Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p))));
+
+			return table;
+		}
+
+		/// <summary>
 		/// Adds join hint to a generated query.
 		/// <code>
 		/// // will produce following SQL code in generated query: INNER LOOP JOIN

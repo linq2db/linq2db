@@ -61,7 +61,9 @@ namespace Tests.Linq
 				Hints.TableHint.Cache,
 				Hints.TableHint.Cluster,
 				Hints.TableHint.DrivingSite,
-				Hints.TableHint.Full
+				Hints.TableHint.Fact,
+				Hints.TableHint.Full,
+				Hints.TableHint.Hash
 				)] string hint)
 		{
 			using var db = GetDataContext(context);
@@ -75,163 +77,58 @@ namespace Tests.Linq
 			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {hint}(p) */"));
 		}
 
-		/*
 		[Test]
-		public void TableHintSpatialWindowMaxCellsTest([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		public void TableHintDynamicSamplingTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 
 			var q =
-				from p in db.Parent.With(Hints.TableHint.SpatialWindowMaxCells(10))
+				from p in db.Parent.TableHint(Hints.TableHint.DynamicSampling, 1)
 				select p;
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring("WITH (SPATIAL_WINDOW_MAX_CELLS=10)"));
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ DYNAMIC_SAMPLING(p 1)"));
 		}
 
 		[Test]
-		public void TableHintIndexTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void TableHintIndexSingleTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 
 			var q =
-				from p in db.Child
-					.With(Hints.TableHint.Index("IX_ChildIndex"))
-					.With(Hints.TableHint.NoLock)
+				from p in db.Parent.TableHint(Hints.TableHint.Index, "parent_ix")
 				select p;
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring("WITH (Index(IX_ChildIndex), NoLock)"));
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ INDEX(p parent_ix)"));
 		}
 
-		[Test, Explicit]
-		public void TableHintForceSeekTest([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		[Test]
+		public void TableHintIndexTest([IncludeDataSources(true, TestProvName.AllOracle)] string context,
+			[Values(
+				Hints.TableHint.Index,
+				Hints.TableHint.IndexAsc,
+				Hints.TableHint.IndexCombine,
+				Hints.TableHint.IndexDesc,
+				Hints.TableHint.IndexFastFullScan,
+				Hints.TableHint.IndexJoin,
+				Hints.TableHint.IndexSkipScan,
+				Hints.TableHint.IndexSkipScanAsc,
+				Hints.TableHint.IndexSkipScanDesc
+			)] string hint)
 		{
 			using var db = GetDataContext(context);
 
 			var q =
-				from p in db.Child.WithForceSeek("IX_ChildIndex", c => c.ParentID)
+				from p in db.Parent.TableHint(hint, "parent_ix", "parent2_ix")
 				select p;
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring("WITH (ForceSeek (IX_ChildIndex (ParentID)))"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {hint}(p parent_ix parent2_ix)"));
 		}
-
-		[Test, Explicit]
-		public void TableHintForceSeekTest2([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Child.WithForceSeek("IX_ChildIndex")
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring("WITH (ForceSeek (IX_ChildIndex))"));
-		}
-
-		[Test]
-		public void JoinHintTest(
-			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
-			[Values(Hints.JoinHint.Loop, Hints.JoinHint.Hash, Hints.JoinHint.Merge, Hints.JoinHint.Remote)] string hint)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from c in db.Child
-				join p in db.Parent.JoinHint(hint) on c.ParentID equals p.ParentID
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"INNER {hint} JOIN"));
-		}
-
-		[Test]
-		public void JoinHintSubQueryTest(
-			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
-			[Values(Hints.JoinHint.Loop, Hints.JoinHint.Hash, Hints.JoinHint.Merge, Hints.JoinHint.Remote)] string hint)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from c in db.Child
-				join p in
-				(
-					from t in db.Parent
-					where t.Children.Any()
-					select new { t.ParentID, t.Children.Count }
-				)
-				.JoinHint(hint) on c.ParentID equals p.ParentID
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"INNER {hint} JOIN"));
-		}
-
-		[Test]
-		public void JoinHintMethodTest(
-			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
-			[Values(Hints.JoinHint.Loop, Hints.JoinHint.Hash, Hints.JoinHint.Merge)] string hint,
-			[Values(SqlJoinType.Left, SqlJoinType.Full)] SqlJoinType joinType)
-		{
-			using var db = GetDataContext(context);
-
-			var q = db.Child.Join(db.Parent.JoinHint(hint), joinType, (c, p) => c.ParentID == p.ParentID, (c, p) => p);
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"{joinType.ToString().ToUpper()} {hint} JOIN"));
-		}
-
-		[Test]
-		public void JoinHintInnerJoinMethodTest(
-			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
-			[Values(Hints.JoinHint.Loop, Hints.JoinHint.Hash, Hints.JoinHint.Merge, Hints.JoinHint.Remote)] string hint)
-		{
-			using var db = GetDataContext(context);
-
-			var q = db.Child.InnerJoin(db.Parent.JoinHint(hint), (c, p) => c.ParentID == p.ParentID, (c, p) => p);
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"INNER {hint} JOIN"));
-		}
-
-		[Test]
-		public void JoinHintRightJoinMethodTest(
-			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
-			[Values(Hints.JoinHint.Hash, Hints.JoinHint.Merge)] string hint)
-		{
-			using var db = GetDataContext(context);
-
-			var q = db.Child.RightJoin(db.Parent.JoinHint(hint), (c, p) => c.ParentID == p.ParentID, (c, p) => p);
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"RIGHT {hint} JOIN"));
-		}
-
-		[Test]
-		public void TableHintDeleteMethodTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Child.With(Hints.TableHint.NoLock)
-				where p.ParentID < -10000
-				select p;
-
-			q.Delete();
-
-			Assert.That(LastQuery, Contains.Substring("WITH (NoLock)"));
-		}
-		*/
 
 		[Test]
 		public void QueryHintTest([IncludeDataSources(true, TestProvName.AllOracle)] string context,
@@ -273,208 +170,5 @@ namespace Tests.Linq
 
 			Assert.That(LastQuery, Contains.Substring("SELECT /*+ FIRST_ROWS(25) */"));
 		}
-
-		/*
-		[Test]
-		public void QueryHint2008PlusTest(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context,
-			[Values(
-				Hints.Option.IgnoreNonClusteredColumnStoreIndex,
-				Hints.Option.OptimizeForUnknown
-			)] string hint)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-			(
-				from c in db.Child
-				join p in db.Parent on c.ParentID equals p.ParentID
-				select p
-			)
-			.QueryHint(hint);
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"OPTION ({hint})"));
-		}
-
-		[Test]
-		public void QueryHintFastTest(
-			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-			(
-				from c in db.Child
-				join p in db.Parent on c.ParentID equals p.ParentID
-				select p
-			)
-			.QueryHint(Hints.Option.HashJoin)
-			.QueryHint(Hints.Option.Fast(10));
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring("OPTION (HASH JOIN, FAST 10)"));
-		}
-
-		[Test]
-		public void QueryHintMaxGrantPercentTest(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-			(
-				from c in db.Child
-				join p in db.Parent on c.ParentID equals p.ParentID
-				select p
-			)
-			.QueryHint(Hints.Option.MaxGrantPercent(25));
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring("OPTION (MAX_GRANT_PERCENT=25)"));
-		}
-
-		[Test]
-		public void QueryHintMinGrantPercentTest(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-			(
-				from c in db.Child
-				join p in db.Parent on c.ParentID equals p.ParentID
-				select p
-			)
-			.QueryHint(Hints.Option.MinGrantPercent(25));
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring("OPTION (MIN_GRANT_PERCENT=25)"));
-		}
-
-		[Test]
-		public void QueryHintMaxDopTest(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-			(
-				from c in db.Child
-				join p in db.Parent on c.ParentID equals p.ParentID
-				select p
-			)
-			.QueryHint(Hints.Option.MaxDop(25));
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring("OPTION (MAXDOP 25)"));
-		}
-
-		[Test]
-		public void QueryHintMaxRecursionTest(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-			(
-				from c in db.Child
-				join p in db.Parent on c.ParentID equals p.ParentID
-				select p
-			)
-			.QueryHint(Hints.Option.MaxRecursion(25));
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring("OPTION (MAXRECURSION 25)"));
-		}
-
-		[Test]
-		public void QueryHintOptimizeForTest(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var id = 1;
-
-			var q =
-			(
-				from p in db.Parent
-				where p.ParentID == id
-				select p
-			)
-			.QueryHint(Hints.Option.OptimizeFor("@id=1"));
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring("OPTIMIZE FOR (@id=1)"));
-		}
-
-		[Test]
-		public void QueryHintQueryTraceOnTest(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-			(
-				from p in db.Parent
-				select p
-			)
-			.QueryHint(Hints.Option.QueryTraceOn(10));
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring("QUERYTRACEON 10"));
-		}
-
-		[Test]
-		public void TablesInScopeHintTest(
-			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-			(
-				from p in db.Parent
-				from c in db.Child
-				from c1 in db.Child.With(Hints.TableHint.Index("IX_ChildIndex"))
-				where c.ParentID == p.ParentID && c1.ParentID == p.ParentID
-				select p
-			)
-			.TablesInScopeHint(Hints.TableHint.NoLock);
-
-			q =
-			(
-				from p in q
-				from c in db.Child
-				from p1 in db.Parent.TablesInScopeHint(Hints.TableHint.HoldLock)
-				where c.ParentID == p.ParentID && c.Parent!.ParentID > 0 && p1.ParentID == p.ParentID
-				select p
-			)
-			.TablesInScopeHint(Hints.TableHint.NoWait);
-
-			q =
-				from p in q
-				from c in db.Child
-				where c.ParentID == p.ParentID
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring("[Parent] [p] WITH (NoLock)"));
-			Assert.That(LastQuery, Contains.Substring("[Child] [c_1] WITH (NoLock)"));
-			Assert.That(LastQuery, Contains.Substring("[Child] [c_2] WITH (NoWait)"));
-			Assert.That(LastQuery, Contains.Substring("[Parent] [a_Parent] WITH (NoWait)"));
-			Assert.That(LastQuery, Contains.Substring("[Child] [c_3]\r\n"));
-			Assert.That(LastQuery, Contains.Substring("[Child] [c1] WITH (Index(IX_ChildIndex), NoLock)"));
-			Assert.That(LastQuery, Contains.Substring("[Parent] [p1] WITH (HoldLock)"));
-		}
-		*/
 	}
 }
