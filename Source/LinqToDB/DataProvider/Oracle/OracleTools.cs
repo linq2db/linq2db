@@ -2,7 +2,11 @@
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.Linq.Expressions;
 using System.Reflection;
+using JetBrains.Annotations;
+using LinqToDB.Expressions;
+using LinqToDB.Linq;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -248,7 +252,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				ProviderName.OracleNative  => GetVersionedDataProvider(version.Value, false),
 				ProviderName.OracleManaged => GetVersionedDataProvider(version.Value, true),
-				_						   => 
+				_						   =>
 					DetectedProviderName == ProviderName.OracleNative
 					? GetVersionedDataProvider(version.Value, false)
 					: GetVersionedDataProvider(version.Value, true),

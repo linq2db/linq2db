@@ -63,7 +63,12 @@ namespace Tests.Linq
 				Hints.TableHint.DrivingSite,
 				Hints.TableHint.Fact,
 				Hints.TableHint.Full,
-				Hints.TableHint.Hash
+				Hints.TableHint.Hash,
+				Hints.TableHint.NoCache,
+				Hints.TableHint.NoFact,
+				Hints.TableHint.NoParallel,
+				Hints.TableHint.NoPxJoinFilter,
+				Hints.TableHint.NoUseHash
 				)] string hint)
 		{
 			using var db = GetDataContext(context);
@@ -92,12 +97,40 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TableHintIndexSingleTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void TableHintParallelTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 
 			var q =
-				from p in db.Parent.TableHint(Hints.TableHint.Index, "parent_ix")
+				from p in db.Parent.TableHint(Hints.TableHint.Parallel, ", ", 5)
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ PARALLEL(p, 5)"));
+		}
+
+		[Test]
+		public void TableHintParallelDefaultTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent.TableHint(Hints.TableHint.Parallel, ", ", "DEFAULT")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ PARALLEL(p, DEFAULT)"));
+		}
+
+		[Test]
+		public void IndexHintSingleTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent.TableHint(Hints.IndexHint.Index, "parent_ix")
 				select p;
 
 			_ = q.ToList();
@@ -106,17 +139,21 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TableHintIndexTest([IncludeDataSources(true, TestProvName.AllOracle)] string context,
+		public void IndexHintTest([IncludeDataSources(true, TestProvName.AllOracle)] string context,
 			[Values(
-				Hints.TableHint.Index,
-				Hints.TableHint.IndexAsc,
-				Hints.TableHint.IndexCombine,
-				Hints.TableHint.IndexDesc,
-				Hints.TableHint.IndexFastFullScan,
-				Hints.TableHint.IndexJoin,
-				Hints.TableHint.IndexSkipScan,
-				Hints.TableHint.IndexSkipScanAsc,
-				Hints.TableHint.IndexSkipScanDesc
+				Hints.IndexHint.Index,
+				Hints.IndexHint.IndexAsc,
+				Hints.IndexHint.IndexCombine,
+				Hints.IndexHint.IndexDesc,
+				Hints.IndexHint.IndexFastFullScan,
+				Hints.IndexHint.IndexJoin,
+				Hints.IndexHint.IndexSkipScan,
+				Hints.IndexHint.IndexSkipScanAsc,
+				Hints.IndexHint.IndexSkipScanDesc,
+				Hints.IndexHint.NoIndex,
+				Hints.IndexHint.NoIndexFastFullScan,
+				Hints.IndexHint.NoIndexSkipScan,
+				Hints.IndexHint.NoParallelIndex
 			)] string hint)
 		{
 			using var db = GetDataContext(context);
@@ -135,7 +172,17 @@ namespace Tests.Linq
 			[Values(
 				Hints.QueryHint.AllRows,
 				Hints.QueryHint.Append,
-				Hints.QueryHint.CursorSharingExact
+				Hints.QueryHint.CursorSharingExact,
+				Hints.QueryHint.ModelMinAnalysis,
+				Hints.QueryHint.NoAppend,
+				Hints.QueryHint.NoExpand,
+				Hints.QueryHint.NoPushSubQuery,
+				Hints.QueryHint.NoRewrite,
+				Hints.QueryHint.NoQueryTransformation,
+				Hints.QueryHint.NoStarTransformation,
+				Hints.QueryHint.NoUnnest,
+				Hints.QueryHint.NoXmlQueryRewrite,
+				Hints.QueryHint.Ordered
 			)] string hint)
 		{
 			using var db = GetDataContext(context);

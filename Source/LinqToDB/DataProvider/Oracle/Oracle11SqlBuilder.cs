@@ -759,23 +759,41 @@ END;",
 
 					HintBuilder.Append(alias);
 
-					if (ext.ID is Sql.QueryExtensionID.TableHintParam)
+					switch (ext.ID)
 					{
-						var param = ((SqlValue)ext.Arguments["hintParameter"]).Value;
-
-						HintBuilder.Append(' ');
-						HintBuilder.Append(param);
-					}
-					else if (ext.ID is Sql.QueryExtensionID.TableHintParams)
-					{
-						var count = (int)((SqlValue)ext.Arguments["hintParameters.Count"]).Value!;
-
-						for (var i = 0; i < count; i++)
+						case Sql.QueryExtensionID.TableHintParam:
 						{
-							var value = ((SqlValue)ext.Arguments[$"hintParameters.{i}"]).Value;
+							var param = ((SqlValue)ext.Arguments["hintParameter"]).Value;
 
-							HintBuilder.Append(' ');
-							HintBuilder.Append(value);
+							if (ext.Arguments.TryGetValue("parameterDelimiter", out var pd) && pd is SqlValue value)
+							{
+								HintBuilder.Append(value.Value);
+							}
+							else
+							{
+								HintBuilder.Append(' ');
+							}
+
+							HintBuilder.Append(param);
+
+							break;
+						}
+						default:
+						{
+							if (ext.ID is Sql.QueryExtensionID.TableHintParams)
+							{
+								var count = (int)((SqlValue)ext.Arguments["hintParameters.Count"]).Value!;
+
+								for (var i = 0; i < count; i++)
+								{
+									var value = ((SqlValue)ext.Arguments[$"hintParameters.{i}"]).Value;
+
+									HintBuilder.Append(' ');
+									HintBuilder.Append(value);
+								}
+							}
+
+							break;
 						}
 					}
 
