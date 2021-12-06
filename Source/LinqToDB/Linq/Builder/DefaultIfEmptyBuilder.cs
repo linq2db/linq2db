@@ -1,5 +1,7 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -106,6 +108,51 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					expr = Expression.Condition(e, defaultValue, expr);
+				}
+
+				return expr;
+			}
+
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				var expr = base.MakeExpression(path, flags);
+
+				if (!Disabled)
+				{
+					expr = Builder.ConvertToSqlExpr(this, expr, true);
+
+					//Make placeholders nullable
+					var map = new Dictionary<Expression, Expression>();
+					expr = expr.Transform(map, static (map, e) =>
+					{
+						if (map.TryGetValue(e, out var newExpr))
+							return newExpr;
+
+						if (e is SqlPlaceholderExpression placeholder && !placeholder.IsNullable)
+						{
+							newExpr = ExpressionBuilder.CreatePlaceholder(placeholder.BuildContext, placeholder.Sql,
+								placeholder.MemberExpression, isNullable: true);
+							map[e] = newExpr;
+							return newExpr;
+						}
+
+						return e;
+					});
+
+					var placeholders = Builder.CollectPlaceholders(expr);
+
+					var notNull = placeholders
+						.FirstOrDefault(placeholder => !placeholder.Sql.Sql.CanBeNull);
+
+					if (notNull == null)
+					{
+						notNull = ExpressionBuilder.CreatePlaceholder(this,
+							new SqlValue(1), Expression.Constant(1));
+					}
+
+					var defaultValue = DefaultValue ?? new DefaultValueExpression(Builder.MappingSchema, expr.Type);
+
+					expr = Expression.Condition(new SqlReaderIsNullExpression(notNull), defaultValue, expr);
 				}
 
 				return expr;

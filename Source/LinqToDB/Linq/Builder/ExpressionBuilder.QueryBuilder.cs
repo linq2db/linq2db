@@ -16,7 +16,6 @@ namespace LinqToDB.Linq.Builder
 	using Reflection;
 	using SqlQuery;
 	using System.Runtime.CompilerServices;
-	using LinqToDB.Common.Internal;
 
 	partial class ExpressionBuilder
 	{
@@ -167,31 +166,34 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression ToColumns(Expression expression)
 		{
+			var processedMap = new Dictionary<Expression, Expression>();
+
 			var withColumns =
 				expression.Transform(
-					this,
+					(builder: this, map: processedMap),
 					static (context, expr) =>
 					{
+						if (context.map.TryGetValue(expr, out var mapped))
+							return mapped;
+
 						if (expr is SqlPlaceholderExpression placeholder)
 						{
 							if (placeholder.BuildContext == null)
 								throw new InvalidOperationException();
 
-
+							var parent = placeholder.BuildContext;
+							while (true)
 							{
-								var parent = placeholder.BuildContext;
-								while (true)
-								{
-									placeholder = (SqlPlaceholderExpression)context.MakeColumn(
-										parent,
-										placeholder.MemberExpression, placeholder.Sql!);
+								placeholder = (SqlPlaceholderExpression)context.builder.MakeColumn(
+									parent,
+									placeholder.MemberExpression, placeholder.Sql!, placeholder.IsNullable);
 
-									parent = placeholder.BuildContext?.Parent;
-									if (parent == null)
-										break;
-								}
+								parent = placeholder.BuildContext?.Parent;
+								if (parent == null)
+									break;
 							}
 
+							context.map[expr] = placeholder;
 							return placeholder;
 						}
 
@@ -217,9 +219,12 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression UpdateNesting(IBuildContext upToContext, Expression expression)
 		{
+			var accessibleSources =
+				new HashSet<ISqlTableSource>(QueryHelper.EnumerateAccessibleSources(upToContext.SelectQuery));
+
 			var withColumns =
 				expression.Transform(
-					(builder: this, upToContext),
+					(builder: this, upToContext, accessibleSources),
 					static (context, expr) =>
 					{
 						if (expr is SqlErrorExpression error)
@@ -239,9 +244,18 @@ namespace LinqToDB.Linq.Builder
 								if (ReferenceEquals(context.upToContext.SelectQuery, placeholder.BuildContext.SelectQuery))
 									break;
 
+								if (placeholder.Sql.Index >= 0)
+								{
+									if (context.accessibleSources.Contains(((SqlColumn)placeholder.Sql.Sql).Parent))
+									{
+										// weird, inventing better solution
+										break;
+									}
+								}
+
 								placeholder = (SqlPlaceholderExpression)context.builder.MakeColumn(
 									parent,
-									placeholder.MemberExpression, placeholder.Sql!);
+									placeholder.MemberExpression, placeholder.Sql!, placeholder.IsNullable);
 
 								parent = placeholder.BuildContext?.Parent;
 								if (parent == null || parent == context.upToContext)
@@ -257,18 +271,30 @@ namespace LinqToDB.Linq.Builder
 			return withColumns;
 		}
 
-		public ISqlExpression? TryConvertToSql(IBuildContext context, Expression expression)
+		public ISqlExpression? TryConvertToSql(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor)
 		{
-			var converted = ConvertToSqlExpr(context, expression, testOnly: true);
+			var converted = ConvertToSqlExpr(context, expression, testOnly: true, columnDescriptor: columnDescriptor);
 			if (converted is not SqlPlaceholderExpression placeholder)
 				return null;
 
 			return placeholder.Sql?.Sql;
 		}
 
+		public bool TryConvertToSql(IBuildContext context, Expression expression, out ISqlExpression? sqlExpression, out Expression actual)
+		{
+			sqlExpression = null;
+
+			actual = ConvertToSqlExpr(context, expression, testOnly: true);
+			if (actual is not SqlPlaceholderExpression placeholder)
+				return false;
+
+			sqlExpression = placeholder.Sql?.Sql;
+			return true;
+		}
+
 		public Expression? TryConvertToSqlExpr(IBuildContext context, Expression expression)
 		{
-			var converted = ConvertToSqlExpr(context, expression);
+			var converted = ConvertToSqlExpr(context, expression, testOnly: true);
 			if (converted is not SqlPlaceholderExpression)
 				return null;
 
@@ -279,6 +305,23 @@ namespace LinqToDB.Linq.Builder
 		{
 			return new SqlErrorExpression(context, expression);
 		}
+
+		/*public IBuildContext? GetRootContext(Expression expression)
+		{
+			if (expression is MemberExpression memberExpression)
+			{
+				var corrected = MakeAssociation(memberExpression);
+				if (corrected != memberExpression)
+					return GetRootContext(expression);
+
+				return GetRootContext(memberExpression.Expression);
+			}
+
+			if (expression is ContextRefExpression contextRef)
+				return contextRef.BuildContext;
+
+			return null;
+		}*/
 
 		public Expression BuildSqlExpression(IBuildContext context, Expression expression, ProjectFlags flags, string? alias = null)
 		{
@@ -326,6 +369,11 @@ namespace LinqToDB.Linq.Builder
 							{
 								var ma = (MemberExpression)expr;
 
+								/*if (ma.Expression is not ContextRefExpression && context.builder.IsAssociation(ma.Expression))
+								{
+									var projected = context.builder.Project(context.context, ma, null, 0, context.flags, ma);
+								}*/
+
 								if (context.builder.IsServerSideOnly(ma) || context.builder.PreferServerSide(ma, false) && !context.builder.HasNoneSqlMember(ma))
 								{
 									return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
@@ -343,12 +391,17 @@ namespace LinqToDB.Linq.Builder
 								if (ma.Member.IsNullableValueMember())
 									break;
 
-								var ctx = context.builder.GetContext(context.context, ma);
 
+								var newExpr = context.builder.MakeExpression(null, ma, context.flags);
+
+								if (!ReferenceEquals(newExpr, ma))
+									return new TransformInfo(newExpr, false, true);
+
+								/*
 								if (ctx != null)
 								{
-									var prevCount  = ctx.SelectQuery.Select.Columns.Count;
-									var expression = ctx.Builder.MakeExpression(ctx, ma, context.flags);
+									var prevCount  = context.context.SelectQuery.Select.Columns.Count;
+									var expression = context.builder.MakeExpression(ctx, ma, context.flags);
 
 									if (expression.NodeType == ExpressionType.Extension && expression is DefaultValueExpression 
 																						&& ma.Expression?.NodeType == ExpressionType.Parameter)
@@ -368,8 +421,10 @@ namespace LinqToDB.Linq.Builder
 									{
 										ctx.SelectQuery.Select.Columns[ctx.SelectQuery.Select.Columns.Count - 1].Alias = context.alias;
 									}
-									return new TransformInfo(expression);
+
+									return new TransformInfo(expression, false, true);
 								}
+								*/
 
 								var ex = ma.Expression;
 
@@ -473,13 +528,13 @@ namespace LinqToDB.Linq.Builder
 									return new TransformInfo(context.builder.MakeExpression(ctx, ce, context.flags));
 								}
 
-								if ((context.builder._buildMultipleQueryExpressions == null || !context.builder._buildMultipleQueryExpressions.Contains(ce)) && context.builder.IsSubQuery(context.context, ce))
+								/*if ((context.builder._buildMultipleQueryExpressions == null || !context.builder._buildMultipleQueryExpressions.Contains(ce)) && context.builder.IsSubQuery(context.context, ce))
 								{
 									if (context.builder.IsMultipleQuery(ce, context.builder.MappingSchema))
 										return new TransformInfo(context.builder.BuildMultipleQuery(context.context, ce, context.flags));
 
 									return new TransformInfo(context.builder.GetSubQueryExpression(context.context, ce, false, context.alias));
-								}
+								}*/
 
 								if (ce.IsSameGenericMethod(Methods.LinqToDB.SqlExt.Alias))
 								{
@@ -491,7 +546,7 @@ namespace LinqToDB.Linq.Builder
 									return new TransformInfo(context.builder.ConvertToSqlExpr(context.context, expr));
 								}
 
-								break;
+								return new TransformInfo(expr);
 							}
 
 						case ExpressionType.New:
@@ -557,49 +612,67 @@ namespace LinqToDB.Linq.Builder
 								return new TransformInfo(mi, true);
 							}
 
-				case ExpressionType.Extension:
-				{
-					if (expr is ContextRefExpression contextRef)
-					{
-						var buildExpr = context.builder.MakeExpression(contextRef.BuildContext, contextRef, context.flags);
-						if (buildExpr.Type != expr.Type)
+						case ExpressionType.Conditional:
 						{
-							buildExpr = Expression.Convert(buildExpr, expr.Type);
+							var cond    = (ConditionalExpression)expr;
+							var condSql = context.builder.TryConvertToSqlExpr(context.context, cond);
+							if (condSql != null)
+								return new TransformInfo(condSql);
+
+							var testSQl = context.builder.TryConvertToSqlExpr(context.context, cond.Test);
+							if (testSQl != null)
+								return new TransformInfo(cond.Update(testSQl, cond.IfTrue, cond.IfFalse), false, true);
+							break;
 						}
 
-						return new TransformInfo(buildExpr);
+						case ExpressionType.Extension:
+						{
+							if (expr is ContextRefExpression contextRef)
+							{
+								var buildExpr = context.builder.MakeExpression(contextRef.BuildContext, contextRef, context.flags);
+								if (buildExpr.Type != expr.Type)
+								{
+									buildExpr = Expression.Convert(buildExpr, expr.Type);
+								}
+
+								return new TransformInfo(buildExpr);
+							}
+
+							if (expr is SqlPlaceholderExpression)
+								return new TransformInfo(expr);
+
+							break;
+						}
 					}
 
-					break;
-				}
-
-
-			}
-
-			if (false || EnforceServerSide(context.context))
-			{
-				switch (expr.NodeType)
-				{
-					case ExpressionType.MemberInit :
-					case ExpressionType.Convert    :
-						break;
-
+					if (false || EnforceServerSide(context.context))
+					{
+						switch (expr.NodeType)
+						{
+							case ExpressionType.MemberInit :
+							case ExpressionType.Convert    :
+								break;
 							default                        :
+							{
 								if (!false && context.builder.CanBeCompiled(expr))
 									break;
-								return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
+								return new TransformInfo(context.builder.BuildSql(context.context, expr,
+									context.alias));
+							}
+
 						}
 					}
 
 					return new TransformInfo(expr);
 				});
 
-
 			return result;
 		}
 
 		Expression CorrectConditional(IBuildContext context, Expression expr, ProjectFlags flags, string? alias)
 		{
+			return BuildSqlExpression(context, expr, flags, alias);
+			
 			if (expr.NodeType != ExpressionType.Conditional)
 				return BuildSqlExpression(context, expr, flags, alias);
 
@@ -999,8 +1072,24 @@ namespace LinqToDB.Linq.Builder
 					if (placeholder.Sql.Index < 0)
 						throw new InvalidOperationException();
 
-					return new ConvertFromDataReaderExpression(placeholder.Type, placeholder.Sql.Index,
+					var valueType = placeholder.Type;
+
+					// read from DataReader as Nullable
+					if (placeholder.IsNullable && valueType.IsValueType && !valueType.IsNullable())
+						valueType = valueType.AsNullable();
+
+					return new ConvertFromDataReaderExpression(valueType, placeholder.Sql.Index,
 						QueryHelper.GetColumnDescriptor(placeholder.Sql.Sql)?.ValueConverter, DataReaderParam);
+				}
+
+				if (e is SqlReaderIsNullExpression isNullExpression)
+				{
+					var nullCheck = Expression.Call(
+						DataReaderParam,
+						ReflectionHelper.DataReader.IsDBNull,
+						ExpressionInstances.Int32Array(isNullExpression.Placeholder.Sql.Index));
+
+					return nullCheck;
 				}
 
 				return e;

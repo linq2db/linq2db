@@ -63,8 +63,9 @@ namespace LinqToDB.Linq.Builder
 			return SequenceHelper.MakeColumn(SelectQuery, sqlInfo);
 		}
 
-		public Expression MakeExpression(Expression? path, ProjectFlags flags)
+		public virtual Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
+			path = SequenceHelper.CorrectExpression(path, this, Sequence);
 			return Builder.MakeExpression(Sequence, path, flags);
 		}
 

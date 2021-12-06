@@ -804,7 +804,9 @@ namespace LinqToDB.Linq.Builder
 
 			public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				var expr   = Builder.FinalizeProjection(this, Builder.MakeExpression(this, null, ProjectFlags.Expression));
+				var expr = Builder.FinalizeProjection(this,
+					Builder.MakeExpression(this, new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
+
 				var mapper = Builder.BuildMapper<T>(expr);
 
 				QueryRunner.SetRunQuery(query, mapper);
@@ -838,8 +840,7 @@ namespace LinqToDB.Linq.Builder
 					// Build field.
 					//
 
-					var placeholder = new SqlPlaceholderExpression(this, expression);
-					placeholder.Sql = new SqlInfo(field, SelectQuery);
+					var placeholder = ExpressionBuilder.CreatePlaceholder(this, field, expression);
 
 					return placeholder;
 				}
@@ -1204,7 +1205,7 @@ namespace LinqToDB.Linq.Builder
 				return SequenceHelper.MakeColumn(SelectQuery, sqlInfo);
 			}
 
-			public Expression MakeExpression(Expression? path, ProjectFlags flags)
+			public Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if (SequenceHelper.IsSameContext(path, this))
 				{
@@ -1218,8 +1219,7 @@ namespace LinqToDB.Linq.Builder
 				if (sql == null)
 					return Builder.CreateSqlError(this, path);
 
-				var placeholder = new SqlPlaceholderExpression(this, path);
-				placeholder.Sql = new SqlInfo(member.Member, sql, SelectQuery);
+				var placeholder = ExpressionBuilder.CreatePlaceholder(this, sql, path);
 
 				return placeholder;
 			}

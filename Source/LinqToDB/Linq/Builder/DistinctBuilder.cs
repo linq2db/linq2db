@@ -33,7 +33,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				sequence.ConvertToIndex(null, 0, ConvertFlags.All);
+				builder.ConvertToSqlExpr(sequence, new ContextRefExpression(methodCall.Arguments[0].Type, sequence));
 			}
 
 			return sequence;

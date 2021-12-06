@@ -383,7 +383,7 @@ namespace Tests.Linq
 			}
 		}
 
-		static readonly MyMapSchema _myMapSchema = new MyMapSchema();
+		static readonly MyMapSchema _myMapSchema = new();
 
 		[Test]
 		public void Coalesce3([DataSources(false)] string context)

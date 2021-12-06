@@ -101,9 +101,9 @@ namespace LinqToDB.Linq.Builder
 					if (typeof(ITable<>).IsSameOrParentOf(expression.Type))
 						return BuildContextType.MemberAccess;
 
-					// Looking for association.
+					/*// Looking for association.
 					//
-					if (buildInfo.IsSubQuery/* && buildInfo.SelectQuery.From.Tables.Count == 0*/)
+					if (buildInfo.IsSubQuery/* && buildInfo.SelectQuery.From.Tables.Count == 0#1#)
 					{
 						parentContext = buildInfo.Parent;
 						if (expression.GetLevel(builder.MappingSchema) == 1)
@@ -113,7 +113,7 @@ namespace LinqToDB.Linq.Builder
 							parentContext = parentContext.GetContext(expression, 0, new BuildInfo(buildInfo, expression, new SelectQuery()));
 						if (parentContext != null)
 							return BuildContextType.Association;
-					}
+					}*/
 
 					break;
 

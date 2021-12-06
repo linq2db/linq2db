@@ -95,6 +95,10 @@ namespace LinqToDB.Linq.Builder
 			{
 				var expr = Builder.FinalizeProjection(this, Builder.MakeExpression(this, null, ProjectFlags.Expression));
 
+				expr = Builder.ToReadExpression(expr);
+
+				expr = expr.Replace(Lambda.Parameters[1], _counterParam);
+
 				if (expr.Type != typeof(T))
 					expr = Expression.Convert(expr, typeof(T));
 

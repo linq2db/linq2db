@@ -387,7 +387,9 @@ namespace LinqToDB.Linq.Builder
 		static bool IsQueryMember(Expression expr)
 		{
 			expr = expr.Unwrap();
-			if (expr != null) switch (expr.NodeType)
+			if (expr != null) 
+			{
+				switch (expr.NodeType)
 				{
 					case ExpressionType.Parameter   : return true;
 					case ExpressionType.MemberAccess: return IsQueryMember(((MemberExpression)expr).Expression);
@@ -403,7 +405,8 @@ namespace LinqToDB.Linq.Builder
 
 						return IsQueryMember(call.Object);
 					}
-				case ExpressionType.Extension    : return expr is ContextRefExpression;
+					case ExpressionType.Extension    : return expr is ContextRefExpression;
+				}
 			}
 
 			return false;

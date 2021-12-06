@@ -1,26 +1,32 @@
 ﻿using System;
 using System.Linq.Expressions;
+using LinqToDB.Extensions;
 using LinqToDB.Linq.Builder;
 
 namespace LinqToDB.Expressions
 {
 	class SqlPlaceholderExpression : Expression
 	{
-		public SqlPlaceholderExpression(IBuildContext? buildContext, Expression memberExpression, Type? convertType = null)
+		private readonly Type _valueType;
+
+		public SqlPlaceholderExpression(IBuildContext? buildContext, SqlInfo sql, Expression memberExpression, bool isNullable)
 		{
 			BuildContext     = buildContext;
 			MemberExpression = memberExpression;
-			ConvertType      = convertType ?? MemberExpression.Type;
+			IsNullable       = isNullable;
+			Sql              = sql;
+
+			_valueType = memberExpression.Type;
 		}
 
 		public IBuildContext? BuildContext     { get; }
 		public Expression     MemberExpression { get; }
-		public Type           ConvertType      { get; }
+		public bool           IsNullable       { get; }
+		public SqlInfo        Sql              { get; }
 
-		internal SqlInfo Sql { get; set; } = default!;
 
 		public override ExpressionType NodeType => ExpressionType.Extension;
-		public override Type           Type     => ConvertType;
+		public override Type           Type     => _valueType;
 
 		public override string ToString()
 		{

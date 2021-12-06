@@ -22,7 +22,7 @@ namespace LinqToDB.Expressions
 	/// </summary>
 	class ExpressionEqualityComparer : IEqualityComparer<Expression>
 	{
-		public static IEqualityComparer<Expression> Instance { get; } = new ExpressionEqualityComparer();
+		public static ExpressionEqualityComparer Instance { get; } = new ExpressionEqualityComparer();
 
 		private ExpressionEqualityComparer()
 		{

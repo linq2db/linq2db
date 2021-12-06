@@ -89,19 +89,16 @@ namespace LinqToDB.Linq.Builder
 			return corrected;
 		}
 
-		public SqlInfo? MakeSql(Expression path)
-		{
-			throw new NotImplementedException();
-		}
-
 		public SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
 		{
-			throw new NotImplementedException();
+			path = SequenceHelper.CorrectExpression(path, this, SubqueryContext);
+			return SubqueryContext.MakeColumn(path, sqlInfo, alias);
 		}
 
-		public Expression MakeExpression(Expression? path, ProjectFlags flags)
+		public Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			throw new NotImplementedException();
+			path = SequenceHelper.CorrectExpression(path, this, SubqueryContext);
+			return SubqueryContext.MakeExpression(path, flags);
 		}
 
 		public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)

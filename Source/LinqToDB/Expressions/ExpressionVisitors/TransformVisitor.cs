@@ -200,6 +200,11 @@ namespace LinqToDB.Expressions
 				return construct.Update(construct.BuildContext, inner, postProcess as List<LambdaExpression>);
 			}
 
+			if (expr is SqlReaderIsNullExpression isNullExpression)
+			{
+				return isNullExpression.Update((SqlPlaceholderExpression)Transform(isNullExpression.Placeholder));
+			}
+
 			return expr;
 		}
 

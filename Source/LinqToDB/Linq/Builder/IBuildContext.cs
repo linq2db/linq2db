@@ -15,7 +15,7 @@ namespace LinqToDB.Linq.Builder
 		public static string GetContextInfo(IBuildContext context)
 		{
 #if DEBUG
-			var contextId = $"[{context.ContextId}]";
+			var contextId = $"_{context.ContextId}";
 #else
 			var contextId = string.Empty;
 #endif
@@ -79,7 +79,7 @@ namespace LinqToDB.Linq.Builder
 
 
 		SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias);
-		Expression MakeExpression(Expression? path, ProjectFlags flags);
+		Expression MakeExpression(Expression path, ProjectFlags flags);
 
 		/// <summary>
 		/// Returns information about expression according to <paramref name="requestFlag"/>. 

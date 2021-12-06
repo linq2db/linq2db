@@ -80,6 +80,9 @@ namespace LinqToDB.Linq.Builder
 			IsScalar = !Builder.ProcessProjection(Members, Body);
 
 			Builder.Contexts.Add(this);
+#if DEBUG
+			ContextId = Builder.GenerateContextId();
+#endif
 		}
 
 		#endregion
@@ -88,7 +91,9 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 		{
-			var expr   = Builder.FinalizeProjection(this, Builder.MakeExpression(this, null, ProjectFlags.Expression));
+			var expr = Builder.FinalizeProjection(this,
+				Builder.MakeExpression(this, new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
+
 			var mapper = Builder.BuildMapper<T>(expr);
 
 			QueryRunner.SetRunQuery(query, mapper);
@@ -162,7 +167,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (SequenceHelper.IsSameContext(path, this))
 			{
-				result = Builder.BuildSqlExpression(this, Body, flags);
+				result = Body;
 			}
 			else
 			{

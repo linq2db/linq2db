@@ -5,6 +5,7 @@ using System.Reflection;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -12,6 +13,21 @@ namespace LinqToDB.Linq.Builder
 	{
 		Dictionary<AccessorMember, Tuple<IBuildContext, bool>>? _associationContexts;
 		Dictionary<AccessorMember, IBuildContext>?              _collectionAssociationContexts;
+
+		bool IsAssociation(Expression expression)
+		{
+			if (expression is MemberExpression memberExpression)
+			{
+				return memberExpression.IsAssociation(MappingSchema);
+			}
+
+			if (expression is MethodCallExpression methodCall)
+			{
+				return methodCall.IsAssociation(MappingSchema);
+			}
+
+			return false;
+		}
 
 		AssociationDescriptor? GetAssociationDescriptor(Expression expression, out AccessorMember? memberInfo, bool onlyCurrent = true)
 		{
@@ -96,6 +112,87 @@ namespace LinqToDB.Linq.Builder
 
 			return descriptor;
 		}
-	
+
+		Dictionary<SqlCacheKey, Expression>? _associations;
+
+		Expression BuildAssociations(Expression expression, out ContextRefExpression? rootContext)
+		{
+			if (expression is MemberExpression memberExpression)
+			{
+				var parent = BuildAssociations(memberExpression.Expression, out rootContext);
+
+				if (rootContext == null)
+					return expression;
+
+				var newExpr = memberExpression.Update(parent);
+
+				if (newExpr != memberExpression)
+					return BuildAssociations(newExpr, out rootContext);
+
+				var corrected = TryCreateAssociation(newExpr, rootContext);
+
+				return corrected;
+			}
+
+			if (expression is ContextRefExpression contextRef)
+			{
+				rootContext = contextRef;
+				return expression;
+			}
+
+			rootContext = null;
+			return expression;
+		}
+
+		public Expression MakeAssociation(Expression expression, out ContextRefExpression? rootContext)
+		{
+			var newExpr = BuildAssociations(expression, out rootContext);
+
+			if (newExpr != expression || rootContext == null)
+				return newExpr;
+
+			newExpr = TryCreateAssociation(expression, rootContext);
+
+			return newExpr;
+		}
+
+		public Expression TryCreateAssociation(Expression expression, ContextRefExpression rootContext)
+		{
+			if (!IsAssociation(expression))
+				return expression;
+
+			_associations ??= new Dictionary<SqlCacheKey, Expression>(SqlCacheKey.SqlCacheKeyComparer);
+
+			IBuildContext context;
+
+			var key = new SqlCacheKey(expression, rootContext.BuildContext, null, ProjectFlags.Root);
+
+			if (_associations.TryGetValue(key, out var associationExpression))
+				return associationExpression;
+
+			AccessorMember? memberInfo;
+			var associationDescriptor = GetAssociationDescriptor(expression, out memberInfo);
+			if (associationDescriptor == null || memberInfo == null)
+				return expression;
+
+			if (associationDescriptor.IsList)
+			{
+				throw new NotImplementedException();
+			}
+
+			//var refExpression = new ContextRefExpression(expression.Type, context);
+
+			var buildInfo = new BuildInfo(rootContext.BuildContext, expression, rootContext.BuildContext.SelectQuery);
+			var isOuter   = associationDescriptor.CanBeNull;
+
+			var association = AssociationHelper.BuildAssociationInline(this, buildInfo, rootContext.BuildContext, memberInfo,
+				associationDescriptor, true, ref isOuter);
+
+			associationExpression = new ContextRefExpression(expression.Type, association);
+
+			_associations[key] = associationExpression;
+
+			return associationExpression;
+		}
 	}
 }
