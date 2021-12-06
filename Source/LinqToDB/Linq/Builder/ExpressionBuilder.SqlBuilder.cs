@@ -1075,7 +1075,8 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.LessThanOrEqual:
 				{
 					var condition = new SqlSearchCondition();
-					BuildSearchCondition(context, expression, condition.Conditions);
+					if (!BuildSearchCondition(context, expression, condition.Conditions))
+						return CreateSqlError(context, expression);
 					return CreatePlaceholder(context, condition, expression);
 				}
 
@@ -1247,7 +1248,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (!ReferenceEquals(newExpr, ma))
 					{
-						return BuildSqlExpression(context, newExpr, flags);
+						return ConvertToSqlExpr(context, newExpr, flags.HasFlag(ProjectFlags.Test), unwrap, columnDescriptor, isPureExpression);
 					}
 
 					/*
@@ -1737,10 +1738,13 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertCompare
 
-		ISqlPredicate ConvertCompare(IBuildContext? context, ExpressionType nodeType, Expression left, Expression right)
+		ISqlPredicate? ConvertCompare(IBuildContext? context, ExpressionType nodeType, Expression left, Expression right)
 		{
-			SqlSearchCondition GenerateNullComaprison(List<SqlPlaceholderExpression> placeholders, bool isNot)
+			SqlSearchCondition? GenerateNullComaprison(List<SqlPlaceholderExpression> placeholders, bool isNot)
 			{
+				if (placeholders.Count == 0)
+					return null;
+
 				var notNull = placeholders.Where(p => !p.Sql.Sql.CanBeNull).ToList();
 				if (notNull.Count == 0)
 					notNull = placeholders;
@@ -1786,17 +1790,25 @@ namespace LinqToDB.Linq.Builder
 					if (l != null && r != null)
 						break;
 
+					var leftPlaceholders  = CollectPlaceholders(leftExpr);
+					var rightPlaceholders = CollectPlaceholders(rightExpr);
+
 					if (l is SqlValue lv && lv.Value == null)
 					{
-						return GenerateNullComaprison(CollectPlaceholders(rightExpr),
+						return GenerateNullComaprison(rightPlaceholders,
 							nodeType == ExpressionType.NotEqual);
 					}
 
 					if (r is SqlValue rv && rv.Value == null)
 					{
-						return GenerateNullComaprison(CollectPlaceholders(leftExpr),
+						return GenerateNullComaprison(leftPlaceholders,
 							nodeType == ExpressionType.NotEqual);
 					}
+
+					if (leftPlaceholders.Count == 0 || rightPlaceholders.Count == 0)
+						return null;
+
+					MatchPlaceholders(leftExpr, rightExpr);
 
 					throw new NotImplementedException();
 
@@ -1921,6 +1933,30 @@ namespace LinqToDB.Linq.Builder
 			if (predicate == null)
 				predicate = new SqlPredicate.ExprExpr(l, op, r, Configuration.Linq.CompareNullsAsValues ? true : null);
 			return predicate;
+		}
+
+		//TODO: lazy implementation
+		public Dictionary<Expression, (Expression left, Expression right)> MatchPlaceholders(Expression leftExpr, Expression rightExpr)
+		{
+			var leftPaths = new Dictionary<Expression, Expression>();
+			leftExpr.Path(ExpressionParam, leftPaths, static (paths, e, p) =>
+			{
+				if (e is SqlPlaceholderExpression placeholder)
+				{
+					paths.Add(p, e);
+				}
+			});
+
+			var rightPaths = new Dictionary<Expression, Expression>();
+			rightExpr.Path(ExpressionParam, rightPaths, static (paths, e, p) =>
+			{
+				if (e is SqlPlaceholderExpression placeholder)
+				{
+					paths.Add(p, e);
+				}
+			});
+
+			throw new NotImplementedException();
 		}
 
 		public List<SqlPlaceholderExpression> CollectPlaceholders(Expression expression)
@@ -2841,7 +2877,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Search Condition Builder
 
-		internal void BuildSearchCondition(IBuildContext? context, Expression expression, List<SqlCondition> conditions)
+		internal bool BuildSearchCondition(IBuildContext? context, Expression expression, List<SqlCondition> conditions)
 		{
 			//expression = expression.Transform(RemoveNullPropagation);
 
@@ -2893,10 +2929,15 @@ namespace LinqToDB.Linq.Builder
 				default                    :
 					var predicate = ConvertPredicate(context, expression);
 
+					if (predicate == null)
+						return false;
+
 					conditions.Add(new SqlCondition(false, predicate));
 
 					break;
 			}
+
+			return true;
 		}
 
 

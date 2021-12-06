@@ -92,6 +92,7 @@ namespace LinqToDB.Expressions
 					case ExpressionType.LeftShift:
 					case ExpressionType.ExclusiveOr:
 					case ExpressionType.Power:
+					case ExpressionType.Assign:
 					{
 						var binaryExpression = (BinaryExpression)obj;
 
@@ -270,6 +271,21 @@ namespace LinqToDB.Expressions
 						hashCode += (hashCode * 397) ^ obj.GetHashCode();
 						break;
 					}
+					case ExpressionType.Block:
+					{
+						var blockExpression = (BlockExpression)obj;
+						for (var i = 0; i < blockExpression.Variables.Count; i++)
+						{
+							hashCode += (hashCode * 397) ^ GetHashCode(blockExpression.Variables[i]);
+						}
+
+						for (var i = 0; i < blockExpression.Expressions.Count; i++)
+						{
+							hashCode += (hashCode * 397) ^ GetHashCode(blockExpression.Expressions[i]);
+						}
+
+						break;
+					}
 					default:
 						throw new NotImplementedException();
 				}
@@ -356,6 +372,7 @@ namespace LinqToDB.Expressions
 					case ExpressionType.LeftShift:
 					case ExpressionType.ExclusiveOr:
 					case ExpressionType.Power:
+					case ExpressionType.Assign:
 						return CompareBinary((BinaryExpression)a, (BinaryExpression)b);
 					case ExpressionType.TypeIs:
 						return CompareTypeIs((TypeBinaryExpression)a, (TypeBinaryExpression)b);
@@ -387,6 +404,8 @@ namespace LinqToDB.Expressions
 						return CompareExtension(a, b);
 					case ChangeTypeExpression.ChangeTypeType:
 						return a.Equals(b);
+					case ExpressionType.Block:
+						return CompareBlock((BlockExpression)a, (BlockExpression)b);
 					default:
 						throw new NotImplementedException();
 				}
@@ -581,6 +600,11 @@ namespace LinqToDB.Expressions
 			private bool CompareExtension(Expression a, Expression b)
 			{
 				return a.Equals(b);
+			}
+
+			private bool CompareBlock(BlockExpression a, BlockExpression b)
+			{
+				return CompareExpressionList(a.Variables, b.Variables) && CompareExpressionList(b.Expressions, a.Expressions);
 			}
 
 			private bool CompareInvocation(InvocationExpression a, InvocationExpression b)

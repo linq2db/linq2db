@@ -677,7 +677,8 @@ namespace LinqToDB.Linq
 			Expression<Func<IQueryRunner,IDataContext,IDataReader,Expression,object?[]?,object?[]?,int,T>> expression)
 		{
 			var queryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
-			var dataReaderParam  = Expression.Parameter(typeof(IDataReader),  "dr");
+			//var dataReaderParam  = Expression.Parameter(typeof(IDataReader),  "dr");
+			var dataReaderParam  = ExpressionBuilder.DataReaderParam;
 
 			var dataContextVar = expression.Parameters[1];
 			var expressionVar  = expression.Parameters[3];

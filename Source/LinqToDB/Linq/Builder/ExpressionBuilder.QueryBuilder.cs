@@ -48,11 +48,11 @@ namespace LinqToDB.Linq.Builder
 			_convertedExpressions.Remove(ex);
 		}
 
-		Expression ConvertAssignmentArgument(IBuildContext context, Expression expr, MemberInfo? memberInfo, ProjectFlags flags,
+		Expression ConvertAssignmentArgument(Dictionary<Expression, Expression> translated, IBuildContext context, Expression expr, MemberInfo? memberInfo, ProjectFlags flags,
 			string? alias)
 		{
 			var resultExpr = expr;
-			resultExpr = CorrectConditional(context, resultExpr, flags, alias);
+			return BuildSqlExpression(translated, context, expr, flags, alias);
 
 			// Update nullability
 			resultExpr = (_updateNullabilityFromExtensionTransformer ??= TransformVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.UpdateNullabilityFromExtension(e))).Transform(resultExpr);
@@ -120,9 +120,12 @@ namespace LinqToDB.Linq.Builder
 			var globalGenerator = new ExpressionGenerator();
 			var processedMap    = new Dictionary<Expression, Expression>();
 
+			// convert all missed references
+			var postProcessed = BuildSqlExpression(new Dictionary<Expression, Expression>(), context, expression, ProjectFlags.Expression);
+
 			// Deduplication
 			//
-			var postProcessed = expression.Transform((map: processedMap, generator: globalGenerator), static (ctx, e) =>
+			postProcessed = postProcessed.Transform((map: processedMap, generator: globalGenerator), static (ctx, e) =>
 			{
 				if (e is SqlErrorExpression error)
 					throw error.CreateError();
@@ -156,9 +159,6 @@ namespace LinqToDB.Linq.Builder
 			globalGenerator.AddExpression(postProcessed);
 
 			postProcessed = globalGenerator.Build();
-
-			// convert all missed references
-			postProcessed = BuildSqlExpression(context, postProcessed, ProjectFlags.Expression);
 
 			var withColumns = ToColumns(postProcessed);
 			return withColumns;
@@ -323,12 +323,15 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}*/
 
-		public Expression BuildSqlExpression(IBuildContext context, Expression expression, ProjectFlags flags, string? alias = null)
+		public Expression BuildSqlExpression(Dictionary<Expression, Expression> translated, IBuildContext context, Expression expression, ProjectFlags flags, string? alias = null)
 		{
 			var result = expression.Transform(
-				(builder: this, context, flags, alias),
+				(builder: this, context, flags, alias, translated),
 				static (context, expr) =>
 				{
+					if (context.translated.TryGetValue(expr, out var replaced))
+						return new TransformInfo(replaced, true);
+
 					if (context.builder._skippedExpressions.Contains(expr))
 						return new TransformInfo(expr, true);
 
@@ -346,7 +349,7 @@ namespace LinqToDB.Linq.Builder
 
 								var saveBlockDisable = context.builder.IsBlockDisable;
 								context.builder.IsBlockDisable = true;
-								var newOperand = context.builder.BuildSqlExpression(context.context, cex.Operand, context.flags);
+								var newOperand = context.builder.BuildSqlExpression(context.translated, context.context, cex.Operand, context.flags);
 								context.builder.IsBlockDisable = saveBlockDisable;
 
 								if (newOperand.Type != cex.Type)
@@ -559,7 +562,7 @@ namespace LinqToDB.Linq.Builder
 									var argument    = ne.Arguments[i];
 									var memberAlias = ne.Members?[i].Name;
 
-									var newArgument = context.builder.ConvertAssignmentArgument(context.context, argument, ne.Members?[i], context.flags, memberAlias);
+									var newArgument = context.builder.ConvertAssignmentArgument(context.translated, context.context, argument, ne.Members?[i], context.flags, memberAlias);
 									if (newArgument != argument)
 									{
 										if (arguments == null)
@@ -579,7 +582,7 @@ namespace LinqToDB.Linq.Builder
 						case ExpressionType.MemberInit:
 							{
 								var mi      = (MemberInitExpression)expr;
-								var newPart = (NewExpression)context.builder.BuildSqlExpression(context.context, mi.NewExpression, context.flags);
+								var newPart = (NewExpression)context.builder.BuildSqlExpression(context.translated, context.context, mi.NewExpression, context.flags);
 								List<MemberBinding>? bindings = null;
 								for (var i = 0; i < mi.Bindings.Count; i++)
 								{
@@ -587,7 +590,7 @@ namespace LinqToDB.Linq.Builder
 									var newBinding = binding;
 									if (binding is MemberAssignment assignment)
 									{
-										var argument = context.builder.ConvertAssignmentArgument(context.context, assignment.Expression,
+										var argument = context.builder.ConvertAssignmentArgument(context.translated, context.context, assignment.Expression,
 											assignment.Member, context.flags, assignment.Member.Name);
 										if (argument != assignment.Expression)
 										{
@@ -635,6 +638,15 @@ namespace LinqToDB.Linq.Builder
 									buildExpr = Expression.Convert(buildExpr, expr.Type);
 								}
 
+								if (!ReferenceEquals(buildExpr, contextRef))
+								{
+									buildExpr = context.builder.BuildSqlExpression(context.translated, context.context,
+										buildExpr,
+										context.flags, context.alias);
+								}
+
+								context.translated[expr] = buildExpr;
+
 								return new TransformInfo(buildExpr);
 							}
 
@@ -669,12 +681,12 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		Expression CorrectConditional(IBuildContext context, Expression expr, ProjectFlags flags, string? alias)
+		Expression CorrectConditional(Dictionary<Expression, Expression> translated, IBuildContext context, Expression expr, ProjectFlags flags, string? alias)
 		{
-			return BuildSqlExpression(context, expr, flags, alias);
+			return BuildSqlExpression(translated, context, expr, flags, alias);
 			
 			if (expr.NodeType != ExpressionType.Conditional)
-				return BuildSqlExpression(context, expr, flags, alias);
+				return BuildSqlExpression(translated, context, expr, flags, alias);
 
 			var cond = (ConditionalExpression)expr;
 
@@ -738,7 +750,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			if (cond == expr)
-				expr = BuildSqlExpression(context, expr, flags, alias);
+				expr = BuildSqlExpression(translated, context, expr, flags, alias);
 			else
 				expr = cond;
 
@@ -1269,9 +1281,11 @@ namespace LinqToDB.Linq.Builder
 			var paramex = Expression.Parameter(typeof(object[]), "ps");
 			var parms   = new List<Expression>();
 
+			var translated = new Dictionary<Expression, Expression>();
+
 			// Convert parameters.
 			//
-			expression = expression.Transform((parameters, buildContext: context, builder: this, parms, paramex, flags), static (context, e) =>
+			expression = expression.Transform((parameters, buildContext: context, builder: this, parms, paramex, flags, translated), static (context, e) =>
 			{
 				if (e.NodeType == ExpressionType.Lambda)
 				{
@@ -1293,7 +1307,7 @@ namespace LinqToDB.Linq.Builder
 
 					context.builder._buildMultipleQueryExpressions.Add(e);
 
-					var ex = Expression.Convert(context.builder.BuildSqlExpression(context.buildContext, e, context.flags), typeof(object));
+					var ex = Expression.Convert(context.builder.BuildSqlExpression(context.translated, context.buildContext, e, context.flags), typeof(object));
 
 					context.builder._buildMultipleQueryExpressions.Remove(e);
 

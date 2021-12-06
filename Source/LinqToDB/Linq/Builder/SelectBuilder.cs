@@ -93,7 +93,8 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				var expr = Builder.FinalizeProjection(this, Builder.MakeExpression(this, null, ProjectFlags.Expression));
+				var expr = Builder.FinalizeProjection(this,
+					Builder.MakeExpression(this, new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
 
 				expr = Builder.ToReadExpression(expr);
 

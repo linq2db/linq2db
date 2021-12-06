@@ -310,7 +310,7 @@ namespace LinqToDB.Linq.Builder
 					var outerParam = Expression.Parameter(context.OuterKeyLambda.Body.Type, "o");
 					var outerKey   = context.OuterKeyLambda.GetBody(context.Lambda.Parameters[0]);
 
-					outerKey = context.Builder.BuildSqlExpression(context, outerKey, ProjectFlags.Expression);
+					outerKey = context.Builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), context, outerKey, ProjectFlags.Expression);
 
 					// Convert inner condition.
 					//

@@ -99,7 +99,7 @@ namespace LinqToDB.Linq.Builder
 					me = Expression.MakeMemberAccess(refExpression, column.MemberInfo);
 				}
 
-				var sqlExpression = context.Builder.BuildSqlExpression(context, me, projectFlags);
+				var sqlExpression = context.Builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), context, me, projectFlags);
 				members.Add((column, sqlExpression));
 			}
 

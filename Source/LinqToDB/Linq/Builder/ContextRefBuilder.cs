@@ -15,10 +15,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (builder.IsAssociation(buildInfo.Expression))
 			{
-				var association = builder.MakeAssociation(buildInfo.Expression, out var rootContext);
-
-				if (rootContext == null)
-					return false;
+				var association = builder.MakeExpression(null, buildInfo.Expression, ProjectFlags.Test);
 
 				return builder.IsSequence(new BuildInfo(buildInfo, association));
 			}
@@ -30,7 +27,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (builder.IsAssociation(buildInfo.Expression))
 			{
-				var association = builder.MakeAssociation(buildInfo.Expression, out var rootContext);
+				var association = builder.MakeExpression(null, buildInfo.Expression, ProjectFlags.Test);
 
 				return builder.BuildSequence(new BuildInfo(buildInfo, association));
 			}
@@ -57,10 +54,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (builder.IsAssociation(buildInfo.Expression))
 			{
-				var association = builder.MakeAssociation(buildInfo.Expression, out var rootContext);
-
-				if (rootContext == null)
-					return false;
+				var association = builder.MakeExpression(null, buildInfo.Expression, ProjectFlags.Test);
 
 				return builder.IsSequence(new BuildInfo(buildInfo, association));
 			}
