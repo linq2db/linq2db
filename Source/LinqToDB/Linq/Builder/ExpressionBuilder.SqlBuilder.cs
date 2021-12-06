@@ -1458,7 +1458,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (e.Method.DeclaringType == typeof(Enumerable) ||
 							typeof(IList).IsSameOrParentOf(e.Method.DeclaringType!) ||
-							typeof(ICollection<>).IsSameOrParentOf(e.Method.DeclaringType!)) ||
+							typeof(ICollection<>).IsSameOrParentOf(e.Method.DeclaringType!) ||
 							typeof(IReadOnlyCollection<>).IsSameOrParentOf(e.Method.DeclaringType!))
 						{
 							predicate = ConvertInPredicate(context!, e);
