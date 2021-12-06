@@ -1075,8 +1075,8 @@ namespace LinqToDB.Linq.Builder
 					var valueType = placeholder.Type;
 
 					// read from DataReader as Nullable
-					if (placeholder.IsNullable && valueType.IsValueType && !valueType.IsNullable())
-						valueType = valueType.AsNullable();
+					/*if (placeholder.IsNullable && valueType.IsValueType && !valueType.IsNullable())
+						valueType = valueType.AsNullable();*/
 
 					return new ConvertFromDataReaderExpression(valueType, placeholder.Sql.Index,
 						QueryHelper.GetColumnDescriptor(placeholder.Sql.Sql)?.ValueConverter, DataReaderParam);

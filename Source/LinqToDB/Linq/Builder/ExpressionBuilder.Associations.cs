@@ -14,7 +14,7 @@ namespace LinqToDB.Linq.Builder
 		Dictionary<AccessorMember, Tuple<IBuildContext, bool>>? _associationContexts;
 		Dictionary<AccessorMember, IBuildContext>?              _collectionAssociationContexts;
 
-		bool IsAssociation(Expression expression)
+		public bool IsAssociation(Expression expression)
 		{
 			if (expression is MemberExpression memberExpression)
 			{
@@ -177,10 +177,10 @@ namespace LinqToDB.Linq.Builder
 
 			if (associationDescriptor.IsList)
 			{
-				throw new NotImplementedException();
+				var collectionAssociation = CreateCollectionAssociation(expression, rootContext);
+				// such associations are processed by ContextRefBuilder
+				return collectionAssociation;
 			}
-
-			//var refExpression = new ContextRefExpression(expression.Type, context);
 
 			var buildInfo = new BuildInfo(rootContext.BuildContext, expression, rootContext.BuildContext.SelectQuery);
 			var isOuter   = associationDescriptor.CanBeNull;
@@ -194,5 +194,38 @@ namespace LinqToDB.Linq.Builder
 
 			return associationExpression;
 		}
+
+		public Expression CreateCollectionAssociation(Expression expression, ContextRefExpression rootContext)
+		{
+			if (!IsAssociation(expression))
+				return expression;
+
+			AccessorMember? memberInfo;
+
+			var associationDescriptor = GetAssociationDescriptor(expression, out memberInfo);
+			if (associationDescriptor == null || memberInfo == null)
+				return expression;
+
+			if (!associationDescriptor.IsList)
+			{
+				throw new InvalidOperationException();
+			}
+
+			var buildInfo = new BuildInfo(rootContext.BuildContext, expression, rootContext.BuildContext.SelectQuery);
+			var isOuter   = associationDescriptor.CanBeNull;
+			var elementType     = associationDescriptor.GetElementType(MappingSchema);
+			var parentExactType = associationDescriptor.GetParentElementType();
+
+			var queryMethod = AssociationHelper.CreateAssociationQueryLambda(
+				this, memberInfo, associationDescriptor, elementType/*OriginalType*/, parentExactType, elementType,
+				false, false, null/*GetLoadWith()*/, out _);
+			;
+			var expr = queryMethod.GetBody(rootContext);
+
+			return expr;
+
+			//return associationExpression;
+		}
+
 	}
 }

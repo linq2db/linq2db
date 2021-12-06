@@ -263,7 +263,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (ctx.SelectQuery.Select.Columns.Count == 0)
 			{
-				var sqlExpr = MakeExpression(ctx, new ContextRefExpression(expr.Type, ctx), ProjectFlags.SQL);
+				var sqlExpr = MakeExpression(null, new ContextRefExpression(expr.Type, ctx), ProjectFlags.SQL);
 				UpdateNesting(context, sqlExpr);
 			}
 
@@ -960,7 +960,7 @@ namespace LinqToDB.Linq.Builder
 
 		Dictionary<SqlCacheKey, Expression> _cachedSql = new(SqlCacheKey.SqlCacheKeyComparer);
 
-		public SqlInfo ConvertToSqlInfo(IBuildContext? context, Expression expression, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false)
+		public SqlPlaceholderExpression ConvertToSqlPlaceholder(IBuildContext? context, Expression expression, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false)
 		{
 			var expr = ConvertToSqlExpr(context, expression, false, unwrap, columnDescriptor, isPureExpression);
 
@@ -968,6 +968,13 @@ namespace LinqToDB.Linq.Builder
 			{
 				throw new LinqToDBException($"Expression {expression} could not be converted to the SQL.");
 			}
+
+			return placeholder;
+		}
+
+		public SqlInfo ConvertToSqlInfo(IBuildContext? context, Expression expression, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false)
+		{
+			var placeholder = ConvertToSqlPlaceholder(context, expression, unwrap, columnDescriptor, isPureExpression);
 
 			return placeholder.Sql;
 		}
@@ -1099,19 +1106,11 @@ namespace LinqToDB.Linq.Builder
 					var shouldCheckColumn =
 							e.Left.Type.ToNullableUnderlying() == e.Right.Type.ToNullableUnderlying();
 
+					columnDescriptor = SuggestColumnDescriptor(context, e.Left, e.Right);
 					if (shouldCheckColumn)
 					{
-						var ls = GetContext(context, e.Left);
-						if (ls?.IsExpression(e.Left, 0, RequestFor.Field).Result == true)
-						{
-							l = ConvertToSql(context, e.Left);
-							r = ConvertToSql(context, e.Right, true, QueryHelper.GetColumnDescriptor(l) ?? columnDescriptor);
-						}
-						else
-						{
-							r = ConvertToSql(context, e.Right, true);
-							l = ConvertToSql(context, e.Left, false, QueryHelper.GetColumnDescriptor(r) ?? columnDescriptor);
-						}
+						l = ConvertToSql(context, e.Left, false, columnDescriptor);
+						r = ConvertToSql(context, e.Right, true, columnDescriptor);
 					}
 					else
 					{
@@ -3690,15 +3689,16 @@ namespace LinqToDB.Linq.Builder
 		/// <returns></returns>
 		public Expression MakeExpression(IBuildContext? context, Expression path, ProjectFlags flags)
 		{
-			var key = new SqlCacheKey(path, context, null, flags);
-
-			if (_expressionCache.TryGetValue(key, out var expression))
-				return expression;
-
 			var association = MakeAssociation(path, out var rootContext);
 
 			if (rootContext == null)
 				return association;
+
+			var key = new SqlCacheKey(path, rootContext.BuildContext, null, flags);
+
+			if (_expressionCache.TryGetValue(key, out var expression))
+				return expression;
+
 
 			if (!ExpressionEqualityComparer.Instance.Equals(association, path))
 			{
@@ -3706,6 +3706,8 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			expression = rootContext.BuildContext.MakeExpression(path, flags);
+			if (expression != path)
+				expression = MakeExpression(null, expression, flags);
 
 			_expressionCache[key] = expression;
 

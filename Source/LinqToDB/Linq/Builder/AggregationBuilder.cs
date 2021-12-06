@@ -60,8 +60,10 @@ namespace LinqToDB.Linq.Builder
 
 			var methodName = methodCall.Method.Name.Replace("Async", "");
 
-			var refExpression = new ContextRefExpression(methodCall.Arguments[0].Type, sequence);
-			var sql           = builder.ConvertToSqlInfo(sequence, refExpression);
+			var refExpression  = new ContextRefExpression(methodCall.Arguments[0].Type, prevSequence);
+			var sqlPlaceholder = builder.ConvertToSqlPlaceholder(sequence, refExpression);
+
+			var sql = sqlPlaceholder.Sql;
 
 			/*
 			if (sql.Length == 1)
@@ -78,13 +80,10 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			*/
-			ISqlExpression sqlExpression = new SqlFunction(methodCall.Type, methodName, true, sql.Sql);
+			var functionPlaceholder = ExpressionBuilder.CreatePlaceholder(context,
+				new SqlFunction(methodCall.Type, methodName, true, sql.Sql) { CanBeNull = true }, buildInfo.Expression);
 
-			if (sqlExpression == null)
-				throw new LinqToDBException("Invalid Aggregate function implementation");
-
-			context.Sql        = context.SelectQuery;
-			context.FieldIndex = context.SelectQuery.Select.Add(sqlExpression, methodName);
+			context.Placeholder = functionPlaceholder;
 
 			return context;
 		}
@@ -115,8 +114,7 @@ namespace LinqToDB.Linq.Builder
 			private  SqlInfo[]? _index;
 			private  int?       _parentIndex;
 
-			public int            FieldIndex;
-			public ISqlExpression Sql = null!;
+			public SqlPlaceholderExpression Placeholder = null!;
 
 			static int CheckNullValue(bool isNull, object context)
 			{
@@ -128,11 +126,17 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				var expr   = BuildExpression(FieldIndex, Sql);
+				throw new NotImplementedException();
+				/*var expr   = BuildExpression(FieldIndex, Sql);
 				var mapper = Builder.BuildMapper<object>(expr);
 
 				CompleteColumns();
-				QueryRunner.SetRunQuery(query, mapper);
+				QueryRunner.SetRunQuery(query, mapper);*/
+			}
+
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				return Placeholder;
 			}
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
@@ -206,7 +210,8 @@ namespace LinqToDB.Linq.Builder
 
 			public override int ConvertToParentIndex(int index, IBuildContext context)
 			{
-				if (index != FieldIndex)
+				throw new NotImplementedException();
+				/*if (index != FieldIndex)
 					throw new InvalidOperationException();
 
 				if (_parentIndex != null)
@@ -222,12 +227,13 @@ namespace LinqToDB.Linq.Builder
 					_parentIndex = index;
 				}
 
-				return _parentIndex.Value;
+				return _parentIndex.Value;*/
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
-				switch (flags)
+				throw new NotImplementedException();
+				/*switch (flags)
 				{
 					case ConvertFlags.Field :
 						{
@@ -241,7 +247,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 
-				throw new InvalidOperationException();
+				throw new InvalidOperationException();*/
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)

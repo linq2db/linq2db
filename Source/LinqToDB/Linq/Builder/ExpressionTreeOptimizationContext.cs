@@ -370,21 +370,22 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-						break;
-					}
+					break;
+				}
+
 				case ExpressionType.Extension:
-					{
-						if (expr is ContextRefExpression)
-							result = true;
-						break;
-					}
+				{
+					if (expr is ContextRefExpression)
+						result = true;
+					break;
+				}
 			}
 
 			(_isServerSideOnlyCache ??= new()).Add(expr, result);
 			return result;
 		}
 
-		static bool IsQueryMember(Expression expr)
+		static bool IsQueryMember(Expression? expr)
 		{
 			expr = expr.Unwrap();
 			if (expr != null) 

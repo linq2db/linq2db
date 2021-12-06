@@ -366,6 +366,11 @@ namespace LinqToDB.Linq.Builder
 				throw new NotImplementedException();
 			}
 
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				return base.MakeExpression(path, flags);
+			}
+
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				return Sequence.ConvertToSql(expression, level + 1, flags);

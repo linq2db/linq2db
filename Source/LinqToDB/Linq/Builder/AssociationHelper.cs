@@ -301,16 +301,17 @@ namespace LinqToDB.Linq.Builder
 			return new AssociationContext(builder, descriptor, tableContext, context, join.JoinedTable);
 		}
 
-		public static IBuildContext BuildAssociationSelectMany(ExpressionBuilder builder, BuildInfo buildInfo, TableBuilder.TableContext tableContext, 
+		public static IBuildContext BuildAssociationSelectMany(ExpressionBuilder builder, BuildInfo buildInfo, IBuildContext tableContext, 
 			AccessorMember onMember, AssociationDescriptor descriptor, ref bool isOuter)
 		{
-			var elementType = descriptor.GetElementType(builder.MappingSchema);
+			var elementType     = descriptor.GetElementType(builder.MappingSchema);
+			var parentExactType = descriptor.GetParentElementType();
 
 			var queryMethod = CreateAssociationQueryLambda(
-				builder, onMember, descriptor, tableContext.OriginalType, tableContext.ObjectType, elementType,
-				false, isOuter, tableContext.LoadWith, out isOuter);
+				builder, onMember, descriptor, elementType /*tableContext.OriginalType*/, parentExactType /*tableContext.ObjectType*/, elementType,
+				false, isOuter, null /*tableContext.LoadWith*/, out isOuter);
 
-			var parentRef   = new ContextRefExpression(queryMethod.Parameters[0].Type, tableContext);
+			var parentRef = new ContextRefExpression(queryMethod.Parameters[0].Type, tableContext);
 			var body = queryMethod.GetBody(parentRef);
 
 			IBuildContext context;

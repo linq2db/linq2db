@@ -117,7 +117,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var expr = base.MakeExpression(path, flags);
 
-				if (!Disabled)
+				if (!Disabled && flags.HasFlag(ProjectFlags.Expression))
 				{
 					expr = Builder.ConvertToSqlExpr(this, expr, true);
 
