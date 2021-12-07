@@ -255,7 +255,7 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		[Sql.QueryExtension(Sql.QueryExtensionScope.Table, Sql.QueryExtensionID.TableHintParam)]
-		public static ITable<TSource> TableHint<TSource, TParam>(
+		public static ITable<TSource> TableHintEx<TSource, TParam>(
 			this ITable<TSource> table,
 			[SqlQueryDependent] string tableHint,
 			[SqlQueryDependent] string parameterDelimiter,
@@ -264,7 +264,7 @@ namespace LinqToDB
 		{
 			table.Expression = Expression.Call(
 				null,
-				MethodHelper.GetMethodInfo(TableHint, table, tableHint, parameterDelimiter, hintParameter),
+				MethodHelper.GetMethodInfo(TableHintEx, table, tableHint, parameterDelimiter, hintParameter),
 				table.Expression, Expression.Constant(tableHint), Expression.Constant(parameterDelimiter), Expression.Constant(hintParameter));
 
 			return table;
