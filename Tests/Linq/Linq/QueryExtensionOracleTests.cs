@@ -68,7 +68,8 @@ namespace Tests.Linq
 				Hints.TableHint.NoFact,
 				Hints.TableHint.NoParallel,
 				Hints.TableHint.NoPxJoinFilter,
-				Hints.TableHint.NoUseHash
+				Hints.TableHint.NoUseHash,
+				Hints.TableHint.PxJoinFilter
 				)] string hint)
 		{
 			using var db = GetDataContext(context);
@@ -102,7 +103,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var q =
-				from p in db.Parent.TableHint(Hints.TableHint.Parallel, ", ", 5)
+				from p in db.Parent.TableHintEx(Hints.TableHint.Parallel, ", ", 5)
 				select p;
 
 			_ = q.ToList();
@@ -116,7 +117,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var q =
-				from p in db.Parent.TableHint(Hints.TableHint.Parallel, ", ", "DEFAULT")
+				from p in db.Parent.TableHintEx(Hints.TableHint.Parallel, ", ", "DEFAULT")
 				select p;
 
 			_ = q.ToList();
@@ -153,7 +154,9 @@ namespace Tests.Linq
 				Hints.IndexHint.NoIndex,
 				Hints.IndexHint.NoIndexFastFullScan,
 				Hints.IndexHint.NoIndexSkipScan,
-				Hints.IndexHint.NoParallelIndex
+				Hints.IndexHint.NoParallelIndex,
+				Hints.IndexHint.ParallelIndex,
+				Hints.IndexHint.UseNlWithIndex
 			)] string hint)
 		{
 			using var db = GetDataContext(context);
@@ -182,7 +185,12 @@ namespace Tests.Linq
 				Hints.QueryHint.NoStarTransformation,
 				Hints.QueryHint.NoUnnest,
 				Hints.QueryHint.NoXmlQueryRewrite,
-				Hints.QueryHint.Ordered
+				Hints.QueryHint.Ordered,
+				Hints.QueryHint.PushSubQueries,
+				Hints.QueryHint.Rule,
+				Hints.QueryHint.StarTransformation,
+				Hints.QueryHint.Unnest,
+				Hints.QueryHint.UseConcat
 			)] string hint)
 		{
 			using var db = GetDataContext(context);

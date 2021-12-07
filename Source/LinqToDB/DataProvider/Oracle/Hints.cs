@@ -4,6 +4,24 @@ namespace LinqToDB.DataProvider.Oracle
 {
 	public static class Hints
 	{
+		// https://docs.oracle.com/cd/B19306_01/server.102/b14200/sql_elements006.htm#SQLRF50901
+		//
+		// Not implemented:
+		//
+		// LEADING
+		// MERGE
+		// NO_MERGE
+		// NO_PUSH_PRED
+		// NO_USE_MERGE
+		// NO_USE_NL
+		// PQ_DISTRIBUTE
+		// PUSH_PRED
+		// QB_NAME
+		// REWRITE
+		// USE_HASH
+		// USE_MERGE
+		// USE_NL
+		//
 		public static class TableHint
 		{
 			public const string Cache           = "CACHE";
@@ -19,18 +37,7 @@ namespace LinqToDB.DataProvider.Oracle
 			public const string NoPxJoinFilter  = "NO_PX_JOIN_FILTER";
 			public const string NoUseHash       = "NO_USE_HASH";
 			public const string Parallel        = "PARALLEL";
-
-//			[Sql.Expression("SPATIAL_WINDOW_MAX_CELLS={0}")]
-//			public static string SpatialWindowMaxCells(int value)
-//			{
-//				return "SPATIAL_WINDOW_MAX_CELLS=" + value;
-//			}
-//
-//			[Sql.Function]
-//			public static string Index(string value)
-//			{
-//				return "Index(" + value + ")";
-//			}
+			public const string PxJoinFilter    = "PX_JOIN_FILTER";
 		}
 
 		public static class IndexHint
@@ -54,6 +61,8 @@ namespace LinqToDB.DataProvider.Oracle
 			public const string NoIndexSS           = "NO_INDEX_SS";
 			public const string NoIndexSkipScan     = "NO_INDEX_SS";
 			public const string NoParallelIndex     = "NO_PARALLEL_INDEX";
+			public const string ParallelIndex       = "PARALLEL_INDEX";
+			public const string UseNlWithIndex      = "USE_NL_WITH_INDEX";
 		}
 
 		public static class QueryHint
@@ -71,67 +80,17 @@ namespace LinqToDB.DataProvider.Oracle
 			public const string NoUnnest              = "NO_UNNEST";
 			public const string NoXmlQueryRewrite     = "NO_XML_QUERY_REWRITE";
 			public const string Ordered               = "ORDERED";
-
-			// LEADING
-			// MERGE
-			// NO_MERGE
-			// NO_PUSH_PRED
-			// NO_USE_MERGE
-			// NO_USE_NL
+			public const string PushSubQueries        = "PUSH_SUBQ";
+			public const string StarTransformation    = "STAR_TRANSFORMATION";
+			public const string Rule                  = "RULE";
+			public const string Unnest                = "UNNEST";
+			public const string UseConcat             = "USE_CONCAT";
 
 			[Sql.Expression("FIRST_ROWS(0)")]
 			public static string FirstRows(int value)
 			{
 				return $"FIRST_ROWS({value})";
 			}
-//
-//			[Sql.Expression("MAX_GRANT_PERCENT={0}")]
-//			public static string MaxGrantPercent(decimal value)
-//			{
-//				return $"MAX_GRANT_PERCENT={value}";
-//			}
-//
-//			[Sql.Expression("MIN_GRANT_PERCENT={0}")]
-//			public static string MinGrantPercent(decimal value)
-//			{
-//				return $"MIN_GRANT_PERCENT={value}";
-//			}
-//
-//			[Sql.Expression("MAXDOP {0}")]
-//			public static string MaxDop(int value)
-//			{
-//				return $"MAXDOP {value}";
-//			}
-//
-//			[Sql.Expression("MAXRECURSION {0}")]
-//			public static string MaxRecursion(int value)
-//			{
-//				return $"MAXRECURSION {value}";
-//			}
-//
-//			[Sql.Expression("OPTIMIZE FOR ({0})")]
-//			public static string OptimizeFor(string value)
-//			{
-//				return $"OPTIMIZE FOR ({value})";
-//			}
-//
-//			[Sql.Expression("QUERYTRACEON {0}")]
-//			public static string QueryTraceOn(int value)
-//			{
-//				return $"QUERYTRACEON {value}";
-//			}
-//
-//			[Sql.Expression("USE HINT ({0})")]
-//			public static string UseHint(string value)
-//			{
-//				return $"USE HINT ({value})";
-//			}
-//
-//			[Sql.Expression("USE PLAN ({0})")]
-//			public static string UsePlan(string value)
-//			{
-//				return $"USE PLAN ({value})";
-//			}
 		}
 	}
 }
