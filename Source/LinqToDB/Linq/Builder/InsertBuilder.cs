@@ -326,7 +326,7 @@ namespace LinqToDB.Linq.Builder
 		class InsertWithOutputContext : SelectContext
 		{
 			public InsertWithOutputContext(IBuildContext? parent, IBuildContext sequence, IBuildContext outputContext, LambdaExpression outputExpression)
-				: base(parent, outputExpression, outputContext)
+				: base(parent, outputExpression, false, outputContext)
 			{
 				Statement = sequence.Statement;
 			}

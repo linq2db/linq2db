@@ -39,7 +39,7 @@ namespace LinqToDB.Linq.Builder
 				// but right now it breaks at least association builder so it is not a small change
 				sequence = new SubQueryContext(sequence);
 
-			var context        = new SelectManyContext(buildInfo.Parent, collectionSelector, sequence);
+			var context        = new SelectManyContext(buildInfo.Parent, collectionSelector, buildInfo.IsSubQuery, sequence);
 			context.SetAlias(collectionSelector.Parameters[0].Name);
 
 			expr = SequenceHelper.PrepareBody(collectionSelector, sequence).Unwrap();
@@ -96,7 +96,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				context.Collection = new SubQueryContext(collection, sequence.SelectQuery, false);
-				return new SelectContext(buildInfo.Parent, resultSelector, sequence, context.Collection);
+				return new SelectContext(buildInfo.Parent, resultSelector, buildInfo.IsSubQuery, sequence, context.Collection);
 			}
 
 			if (!crossApply)
@@ -104,7 +104,7 @@ namespace LinqToDB.Linq.Builder
 				if (!leftJoin)
 				{
 					context.Collection = new SubQueryContext(collection, sequence.SelectQuery, true);
-					return new SelectContext(buildInfo.Parent, resultSelector, sequence, context.Collection);
+					return new SelectContext(buildInfo.Parent, resultSelector, buildInfo.IsSubQuery, sequence, context.Collection);
 				}
 				else
 				{
@@ -112,7 +112,7 @@ namespace LinqToDB.Linq.Builder
 					sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 					context.Collection = new SubQueryContext(collection, sequence.SelectQuery, false);
 
-					return new SelectContext(buildInfo.Parent, resultSelector, sequence, context.Collection);
+					return new SelectContext(buildInfo.Parent, resultSelector, buildInfo.IsSubQuery, sequence, context.Collection);
 				}
 			}
 
@@ -171,7 +171,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				context.Collection = new SubQueryContext(table, sequence.SelectQuery, false);
-				return new SelectContext(buildInfo.Parent, resultSelector, sequence, context.Collection);
+				return new SelectContext(buildInfo.Parent, resultSelector, buildInfo.IsSubQuery, sequence, context.Collection);
 			}
 			else
 			{
@@ -188,7 +188,7 @@ namespace LinqToDB.Linq.Builder
 				sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 				
 				context.Collection = new SubQueryContext(collection, sequence.SelectQuery, false);
-				return new SelectContext(buildInfo.Parent, resultSelector, sequence, context.Collection);
+				return new SelectContext(buildInfo.Parent, resultSelector, buildInfo.IsSubQuery, sequence, context.Collection);
 			}
 		}
 
@@ -205,8 +205,8 @@ namespace LinqToDB.Linq.Builder
 
 		public class SelectManyContext : SelectContext
 		{
-			public SelectManyContext(IBuildContext? parent, LambdaExpression lambda, IBuildContext sequence)
-				: base(parent, lambda, sequence)
+			public SelectManyContext(IBuildContext? parent, LambdaExpression lambda, bool isSubquery, IBuildContext sequence)
+				: base(parent, lambda, isSubquery, sequence)
 			{
 			}
 

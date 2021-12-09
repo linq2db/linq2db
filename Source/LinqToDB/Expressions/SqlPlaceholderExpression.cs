@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using LinqToDB.Common.Internal;
 using LinqToDB.Extensions;
 using LinqToDB.Linq.Builder;
 
@@ -7,26 +8,34 @@ namespace LinqToDB.Expressions
 {
 	class SqlPlaceholderExpression : Expression
 	{
-		private readonly Type _valueType;
-
-		public SqlPlaceholderExpression(IBuildContext? buildContext, SqlInfo sql, Expression memberExpression, bool isNullable)
+		public SqlPlaceholderExpression(IBuildContext? buildContext, SqlInfo sql, Expression memberExpression, Type? convertType = null)
 		{
 			BuildContext     = buildContext;
 			MemberExpression = memberExpression;
-			IsNullable       = isNullable;
+			ConvertType      = convertType;
 			Sql              = sql;
-
-			_valueType = memberExpression.Type;
 		}
 
 		public IBuildContext? BuildContext     { get; }
 		public Expression     MemberExpression { get; }
-		public bool           IsNullable       { get; }
+		public Type?          ConvertType      { get; }
 		public SqlInfo        Sql              { get; }
 
 
 		public override ExpressionType NodeType => ExpressionType.Extension;
-		public override Type           Type     => _valueType;
+		public override Type           Type     => ConvertType ?? MemberExpression.Type;
+
+
+		public SqlPlaceholderExpression MakeNullable()
+		{
+			if (!Type.IsNullableType())
+			{
+				var type = Type.AsNullable();
+				return new SqlPlaceholderExpression(BuildContext, Sql, MemberExpression, type);
+			}
+
+			return this;
+		}
 
 		public override string ToString()
 		{

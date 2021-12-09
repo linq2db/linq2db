@@ -66,7 +66,7 @@ namespace LinqToDB.Linq.Builder
 			outerContext.SetAlias(selector.Parameters[0].Name);
 			innerContext.SetAlias(selector.Parameters[1].Name);
 
-			var joinContext = new JoinContext(buildInfo.Parent, selector, outerContext, innerContext)
+			var joinContext = new JoinContext(buildInfo.Parent, selector, buildInfo.IsSubQuery, outerContext, innerContext)
 #if DEBUG
 			{
 				Debug_MethodCall = methodCall
@@ -107,7 +107,7 @@ namespace LinqToDB.Linq.Builder
 
 		class JoinContext : SelectContext
 		{
-			public JoinContext(IBuildContext? parent, LambdaExpression lambda, IBuildContext outerContext, IBuildContext innerContext) : base(parent, lambda, outerContext, innerContext)
+			public JoinContext(IBuildContext? parent, LambdaExpression lambda, bool isSubquery, IBuildContext outerContext, IBuildContext innerContext) : base(parent, lambda, isSubquery, outerContext, innerContext)
 			{
 			}
 

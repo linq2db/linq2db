@@ -126,7 +126,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			sequence     = new SubQueryContext(sequence);
-			var key      = new KeyContext(buildInfo.Parent, keySelector, sequence);
+			var key      = new KeyContext(buildInfo.Parent, keySelector, buildInfo.IsSubQuery, sequence);
 			if (groupingKind != GroupingType.GroupBySets)
 			{
 				var body     = keySelector.GetBody(new ContextRefExpression(keySelector.Parameters[0].Type, sequence));
@@ -154,7 +154,7 @@ namespace LinqToDB.Linq.Builder
 
 			sequence.SelectQuery.GroupBy.GroupingType = groupingKind;
 
-			var element = new SelectContext (buildInfo.Parent, elementSelector, sequence/*, key*/);
+			var element = new SelectContext (buildInfo.Parent, elementSelector, buildInfo.IsSubQuery, sequence/*, key*/);
 			var groupBy = new GroupByContext(buildInfo.Parent, sequenceExpr, groupingType, sequence, key, element, builder.IsGroupingGuardDisabled);
 
 			Debug.WriteLine("BuildMethodCall GroupBy:\n" + groupBy.SelectQuery);
@@ -174,8 +174,8 @@ namespace LinqToDB.Linq.Builder
 
 		internal class KeyContext : SelectContext
 		{
-			public KeyContext(IBuildContext? parent, LambdaExpression lambda, params IBuildContext[] sequences)
-				: base(parent, lambda, sequences)
+			public KeyContext(IBuildContext? parent, LambdaExpression lambda, bool isSubquery, params IBuildContext[] sequences)
+				: base(parent, lambda, isSubquery, sequences)
 			{
 			}
 

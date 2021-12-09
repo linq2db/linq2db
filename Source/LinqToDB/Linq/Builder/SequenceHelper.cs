@@ -87,7 +87,7 @@ namespace LinqToDB.Linq.Builder
 
 		public static Expression RequireSqlExpression(this IBuildContext context, Expression? path)
 		{
-			var sql = context.Builder.MakeExpression(context, path, ProjectFlags.SQL);
+			var sql = context.Builder.MakeExpression(path, ProjectFlags.SQL);
 			if (sql == null)
 				throw new LinqException("'{0}' cannot be converted to SQL.", path);
 

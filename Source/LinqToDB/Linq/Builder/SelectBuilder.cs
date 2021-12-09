@@ -54,8 +54,8 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var context = selector.Parameters.Count == 1 ?
-				new SelectContext (buildInfo.Parent, selector, sequence) :
-				new SelectContext2(buildInfo.Parent, selector, sequence);
+				new SelectContext (buildInfo.Parent, selector, buildInfo.IsSubQuery, sequence) :
+				new SelectContext2(buildInfo.Parent, selector, buildInfo.IsSubQuery, sequence);
 
 			if (sequence is GroupByBuilder.GroupByContext)
 			{
@@ -84,8 +84,8 @@ namespace LinqToDB.Linq.Builder
 
 		class SelectContext2 : SelectContext
 		{
-			public SelectContext2(IBuildContext? parent, LambdaExpression lambda, IBuildContext sequence)
-				: base(parent, lambda, sequence)
+			public SelectContext2(IBuildContext? parent, LambdaExpression lambda, bool isSubquery, IBuildContext sequence)
+				: base(parent, lambda, isSubquery, sequence)
 			{
 			}
 
@@ -94,7 +94,7 @@ namespace LinqToDB.Linq.Builder
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
 				var expr = Builder.FinalizeProjection(this,
-					Builder.MakeExpression(this, new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
+					Builder.MakeExpression(new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
 
 				expr = Builder.ToReadExpression(expr);
 

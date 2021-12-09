@@ -16,7 +16,7 @@ namespace LinqToDB.Linq.Builder
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			
 			var keySelector = (LambdaExpression) methodCall.Arguments[1].Unwrap();
-			var keyContext  = new SelectContext(buildInfo.Parent, keySelector, sequence);
+			var keyContext  = new SelectContext(buildInfo.Parent, keySelector, false, sequence);
 			var keySql      = builder.ConvertExpressions(keyContext, keySelector.Body.Unwrap(), ConvertFlags.All, null);
 
 			var uniqueKeys  = keySql

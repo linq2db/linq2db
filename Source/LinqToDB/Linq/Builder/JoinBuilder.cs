@@ -113,10 +113,10 @@ namespace LinqToDB.Linq.Builder
 						innerKeyLambda, outerKeySelector, innerKeySelector, context);
 
 				return new GroupJoinContext(
-					buildInfo.Parent, selector, context, inner, methodCall.Arguments[1], outerKeyLambda, innerKeyLambda);
+					buildInfo.Parent, selector, buildInfo.IsSubQuery, context, inner, methodCall.Arguments[1], outerKeyLambda, innerKeyLambda);
 			}
 
-			return new JoinContext(buildInfo.Parent, selector, context, innerContext)
+			return new JoinContext(buildInfo.Parent, selector, buildInfo.IsSubQuery, context, innerContext)
 #if DEBUG
 			{
 				Debug_MethodCall = methodCall
@@ -262,8 +262,8 @@ namespace LinqToDB.Linq.Builder
 
 		internal class JoinContext : SelectContext
 		{
-			public JoinContext(IBuildContext? parent, LambdaExpression lambda, IBuildContext outerContext, IBuildContext innerContext)
-				: base(parent, lambda, outerContext, innerContext)
+			public JoinContext(IBuildContext? parent, LambdaExpression lambda, bool isSubquery, IBuildContext outerContext, IBuildContext innerContext)
+				: base(parent, lambda, isSubquery, outerContext, innerContext)
 			{
 			}
 
@@ -277,12 +277,14 @@ namespace LinqToDB.Linq.Builder
 			public GroupJoinContext(
 				IBuildContext?           parent,
 				LambdaExpression         lambda,
+				bool                     isSubquery,
 				IBuildContext            outerContext,
 				GroupJoinSubQueryContext innerContext,
 				Expression               innerExpression,
 				LambdaExpression         outerKeyLambda,
-				LambdaExpression         innerKeyLambda)
-				: base(parent, lambda, outerContext, innerContext)
+				LambdaExpression         innerKeyLambda
+				)
+				: base(parent, lambda, isSubquery, outerContext, innerContext)
 			{
 				_innerExpression = innerExpression;
 				OuterKeyLambda  = outerKeyLambda;
@@ -299,6 +301,11 @@ namespace LinqToDB.Linq.Builder
 			interface IGroupJoinHelper
 			{
 				Expression GetGroupJoin(GroupJoinContext context);
+			}
+
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				return base.MakeExpression(path, flags);
 			}
 
 			class GroupJoinHelper<TKey,TElement> : IGroupJoinHelper
@@ -456,7 +463,6 @@ namespace LinqToDB.Linq.Builder
 
 				return base.BuildExpression(expression, level, enforceServerSide);*/
 			}
-		
 		}
 
 		internal class GroupJoinSubQueryContext : SubQueryContext

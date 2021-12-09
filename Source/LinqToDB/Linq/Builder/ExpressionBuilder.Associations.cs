@@ -115,55 +115,12 @@ namespace LinqToDB.Linq.Builder
 
 		Dictionary<SqlCacheKey, Expression>? _associations;
 
-		Expression BuildAssociations(Expression expression, out ContextRefExpression? rootContext)
-		{
-			if (expression is MemberExpression memberExpression)
-			{
-				var parent = BuildAssociations(memberExpression.Expression, out rootContext);
-
-				if (rootContext == null)
-					return expression;
-
-				var newExpr = memberExpression.Update(parent);
-
-				if (newExpr != memberExpression)
-					return BuildAssociations(newExpr, out rootContext);
-
-				var corrected = TryCreateAssociation(newExpr, rootContext);
-
-				return corrected;
-			}
-
-			if (expression is ContextRefExpression contextRef)
-			{
-				rootContext = contextRef;
-				return expression;
-			}
-
-			rootContext = null;
-			return expression;
-		}
-
-		public Expression MakeAssociation(Expression expression, out ContextRefExpression? rootContext)
-		{
-			var newExpr = BuildAssociations(expression, out rootContext);
-
-			if (newExpr != expression || rootContext == null)
-				return newExpr;
-
-			newExpr = TryCreateAssociation(expression, rootContext);
-
-			return newExpr;
-		}
-
 		public Expression TryCreateAssociation(Expression expression, ContextRefExpression rootContext)
 		{
 			if (!IsAssociation(expression))
 				return expression;
 
 			_associations ??= new Dictionary<SqlCacheKey, Expression>(SqlCacheKey.SqlCacheKeyComparer);
-
-			IBuildContext context;
 
 			var key = new SqlCacheKey(expression, rootContext.BuildContext, null, ProjectFlags.Root);
 
@@ -178,6 +135,9 @@ namespace LinqToDB.Linq.Builder
 			if (associationDescriptor.IsList)
 			{
 				var collectionAssociation = CreateCollectionAssociation(expression, rootContext);
+
+				_associations[key] = collectionAssociation;
+
 				// such associations are processed by ContextRefBuilder
 				return collectionAssociation;
 			}
@@ -211,8 +171,6 @@ namespace LinqToDB.Linq.Builder
 				throw new InvalidOperationException();
 			}
 
-			var buildInfo = new BuildInfo(rootContext.BuildContext, expression, rootContext.BuildContext.SelectQuery);
-			var isOuter   = associationDescriptor.CanBeNull;
 			var elementType     = associationDescriptor.GetElementType(MappingSchema);
 			var parentExactType = associationDescriptor.GetParentElementType();
 

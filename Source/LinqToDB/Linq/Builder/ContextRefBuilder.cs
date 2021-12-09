@@ -13,25 +13,22 @@ namespace LinqToDB.Linq.Builder
 
 		public bool CanBuild(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			if (builder.IsAssociation(buildInfo.Expression))
+			var root = builder.MakeExpression(buildInfo.Expression, ProjectFlags.Root);
+			if (root == buildInfo.Expression)
 			{
-				var association = builder.MakeExpression(null, buildInfo.Expression, ProjectFlags.Test);
-
-				return builder.IsSequence(new BuildInfo(buildInfo, association));
+				if (root is ContextRefExpression)
+					return true;
+				return false;
 			}
 
-			return buildInfo.Expression is ContextRefExpression;
+			return builder.IsSequence(new BuildInfo(buildInfo, root));
 		}
 
 		public IBuildContext BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			if (builder.IsAssociation(buildInfo.Expression))
-			{
-				var association = builder.MakeExpression(null, buildInfo.Expression, ProjectFlags.Test);
-
-				return builder.BuildSequence(new BuildInfo(buildInfo, association));
-			}
-
+			var root = builder.MakeExpression(buildInfo.Expression, ProjectFlags.Root);
+			if (root != buildInfo.Expression)
+				return builder.BuildSequence(new BuildInfo(buildInfo, root));
 
 			var context = ((ContextRefExpression)buildInfo.Expression).BuildContext;
 
@@ -52,12 +49,9 @@ namespace LinqToDB.Linq.Builder
 
 		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			if (builder.IsAssociation(buildInfo.Expression))
-			{
-				var association = builder.MakeExpression(null, buildInfo.Expression, ProjectFlags.Test);
-
-				return builder.IsSequence(new BuildInfo(buildInfo, association));
-			}
+			var root = builder.MakeExpression(buildInfo.Expression, ProjectFlags.Root);
+			if (root != buildInfo.Expression)
+				return builder.IsSequence(new BuildInfo(buildInfo, root));
 
 			if (buildInfo.Expression is not ContextRefExpression contextRef)
 				return false;

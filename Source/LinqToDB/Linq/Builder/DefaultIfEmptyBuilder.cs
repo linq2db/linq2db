@@ -122,7 +122,7 @@ namespace LinqToDB.Linq.Builder
 					expr = Builder.ConvertToSqlExpr(this, expr, true);
 
 					//Make placeholders nullable
-					var map = new Dictionary<Expression, Expression>();
+					/*var map = new Dictionary<Expression, Expression>();
 					expr = expr.Transform(map, static (map, e) =>
 					{
 						if (map.TryGetValue(e, out var newExpr))
@@ -137,7 +137,7 @@ namespace LinqToDB.Linq.Builder
 						}
 
 						return e;
-					});
+					});*/
 
 					var placeholders = Builder.CollectPlaceholders(expr);
 

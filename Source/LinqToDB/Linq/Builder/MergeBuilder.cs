@@ -105,7 +105,7 @@ namespace LinqToDB.Linq.Builder
 		class MergeOutputContext : SelectContext
 		{
 			public MergeOutputContext(IBuildContext? parent, LambdaExpression lambda, MergeContext mergeContext, IBuildContext emptyTable, IBuildContext deletedTable, IBuildContext insertedTable)
-				: base(parent, lambda, emptyTable, deletedTable, insertedTable)
+				: base(parent, lambda, false, emptyTable, deletedTable, insertedTable)
 			{
 				Statement = mergeContext.Statement;
 				Sequence[0].SelectQuery.Select.Columns.Clear();

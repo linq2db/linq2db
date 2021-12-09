@@ -215,6 +215,9 @@ namespace LinqToDB.Expressions
 						((ChangeTypeExpression)expr1).Type == ((ChangeTypeExpression)expr2).Type &&
 						((ChangeTypeExpression)expr1).Expression.EqualsTo(((ChangeTypeExpression)expr2).Expression, info);
 
+				case ExpressionType.Extension:
+					return expr1.Equals(expr2);
+
 				default:
 					throw new NotImplementedException($"Unhandled expression type: {expr1.NodeType}");
 			}

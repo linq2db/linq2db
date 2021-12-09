@@ -57,6 +57,11 @@ namespace LinqToDB.Linq.Builder
 				builder.BuildTake(sequence, takeExpression, null);
 			}
 
+			if (methodCall.Method.Name.Contains("OrDefault"))
+			{
+				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null);
+			}
+
 			return new FirstSingleContext(buildInfo.Parent, sequence, methodCall);
 		}
 
@@ -368,6 +373,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
+				CreateJoin();
 				return base.MakeExpression(path, flags);
 			}
 

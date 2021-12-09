@@ -22,7 +22,7 @@ namespace LinqToDB.Linq.Builder
 			var arg = methodCall.Arguments[1].Unwrap();
 
 			ISqlExpression expr;
-			var parameterize = Common.Configuration.Linq.ParameterizeTakeSkip;
+			var parameterize = !buildInfo.IsSubQuery && Common.Configuration.Linq.ParameterizeTakeSkip;
 			if (arg.NodeType == ExpressionType.Lambda)
 			{
 				arg  = ((LambdaExpression)arg).Body.Unwrap();

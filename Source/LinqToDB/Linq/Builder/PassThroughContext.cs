@@ -65,7 +65,7 @@ namespace LinqToDB.Linq.Builder
 		public virtual Expression MakeExpression(Expression? path, ProjectFlags flags)
 		{
 			path = SequenceHelper.CorrectExpression(path, this, Context);
-			return Builder.MakeExpression(Context, path, flags);
+			return Builder.MakeExpression(path, flags);
 		}
 
 		public virtual IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)

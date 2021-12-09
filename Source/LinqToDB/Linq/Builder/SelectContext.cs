@@ -47,14 +47,15 @@ namespace LinqToDB.Linq.Builder
 
 		public readonly Dictionary<MemberInfo,Expression> Members = new (new MemberInfoComparer());
 
-		public SelectContext(IBuildContext? parent, ExpressionBuilder builder, LambdaExpression lambda, SelectQuery selectQuery)
+		public SelectContext(IBuildContext? parent, ExpressionBuilder builder, LambdaExpression lambda, SelectQuery selectQuery, bool isSubquery)
 		{
-			Parent        = parent;
-			Sequence      = Array<IBuildContext>.Empty;
-			Builder       = builder;
-			Lambda        = lambda;
-			Body          = lambda.Body;
-			SelectQuery   = selectQuery;
+			Parent      = parent;
+			Sequence    = Array<IBuildContext>.Empty;
+			Builder     = builder;
+			Lambda      = lambda;
+			Body        = lambda.Body;
+			SelectQuery = selectQuery;
+			IsSubquery  = isSubquery;
 
 			IsScalar = !Builder.ProcessProjection(Members, Body);
 
@@ -64,13 +65,14 @@ namespace LinqToDB.Linq.Builder
 #endif
 		}
 
-		public SelectContext(IBuildContext? parent, LambdaExpression lambda, params IBuildContext[] sequences)
+		public SelectContext(IBuildContext? parent, LambdaExpression lambda, bool isSubquery, params IBuildContext[] sequences)
 		{
-			Parent   = parent;
-			Sequence = sequences;
-			Builder  = sequences[0].Builder;
-			Lambda   = lambda;
-			Body     = SequenceHelper.PrepareBody(lambda, sequences);
+			Parent     = parent;
+			Sequence   = sequences;
+			Builder    = sequences[0].Builder;
+			Lambda     = lambda;
+			IsSubquery = isSubquery;
+			Body       = SequenceHelper.PrepareBody(lambda, sequences);
 
 			SelectQuery   = sequences[0].SelectQuery;
 
@@ -92,7 +94,7 @@ namespace LinqToDB.Linq.Builder
 		public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 		{
 			var expr = Builder.FinalizeProjection(this,
-				Builder.MakeExpression(this, new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
+				Builder.MakeExpression(new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
 
 			var mapper = Builder.BuildMapper<T>(expr);
 
@@ -161,12 +163,14 @@ namespace LinqToDB.Linq.Builder
 			return SequenceHelper.MakeColumn(SelectQuery, sqlInfo);
 		}
 
-		public Expression MakeExpression(Expression? path, ProjectFlags flags)
+		public virtual Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
 			Expression result;
 
 			if (SequenceHelper.IsSameContext(path, this))
 			{
+				if (flags.HasFlag(ProjectFlags.Root))
+					return path;
 				result = Body;
 			}
 			else
@@ -787,13 +791,7 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		protected bool IsSubQuery()
-		{
-			for (IBuildContext? p = Parent; p != null; p = p.Parent)
-				if (p.IsExpression(null, 0, RequestFor.SubQuery).Result)
-					return true;
-			return false;
-		}
+		public bool IsSubquery { get; }
 
 		Expression? GetProjectedExpression(MemberInfo memberInfo, bool throwOnError)
 		{

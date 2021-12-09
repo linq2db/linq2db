@@ -564,7 +564,7 @@ namespace LinqToDB.Linq.Builder
 		class UpdateOutputContext : SelectContext
 		{
 			public UpdateOutputContext(IBuildContext? parent, LambdaExpression lambda, IBuildContext source, IBuildContext deletedTable, IBuildContext insertedTable)
-				: base(parent, lambda, source, deletedTable, insertedTable)
+				: base(parent, lambda, false, source, deletedTable, insertedTable)
 			{
 				Statement = source.Statement;
 				Sequence[0].SelectQuery.Select.Columns.Clear();

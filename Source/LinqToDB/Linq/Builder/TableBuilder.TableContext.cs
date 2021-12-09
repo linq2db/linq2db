@@ -387,7 +387,7 @@ namespace LinqToDB.Linq.Builder
 					var convertedExpression = Builder.ConvertExpressionTree(accessExpression);
 					var selectorLambda      = Expression.Lambda(convertedExpression, variable);
 
-					var context    = new SelectContext(Parent, selectorLambda, this);
+					var context    = new SelectContext(Parent, selectorLambda, false, this);
 					var expression = context.BuildExpression(null, 0, false);
 
 					expressions.Add(Expression.Assign(accessExpression, expression));
@@ -805,7 +805,7 @@ namespace LinqToDB.Linq.Builder
 			public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
 				var expr = Builder.FinalizeProjection(this,
-					Builder.MakeExpression(this, new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
+					Builder.MakeExpression(new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
 
 				var mapper = Builder.BuildMapper<T>(expr);
 
@@ -1209,11 +1209,14 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (SequenceHelper.IsSameContext(path, this))
 				{
+					if (flags.HasFlag(ProjectFlags.Root))
+						return path;
+
 					return Builder.BuildEntityExpression(this, ObjectType, flags);
 				}
 
 				if (path is not MemberExpression member)
-					throw new NotImplementedException();
+					return Builder.CreateSqlError(this, path);
 
 				var sql = GetField(member, 1, false);
 				if (sql == null)
