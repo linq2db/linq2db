@@ -11,6 +11,7 @@
 			This package includes a T4 template to generate data models for PostgreSQL database and references to the linq2db and Npgsql nugets.
 		</summary>
 		<tags>linq linq2db Npgsql PostgreSQL LinqToDB ORM database DB SQL</tags>
+		<readme>linq2db.PostgreSQL.readme.md</readme>
 		<dependencies>
 			<group targetFramework=".NETFramework4.5">
 				<dependency id="linq2db" version="3.0.0"  />
@@ -54,5 +55,6 @@
 		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                             target="content\LinqToDB.Templates"                                       exclude="**\LinqToDB.*.ttinclude" />
 		<file src="..\Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                target="content\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                                                />
 		<file src="..\Source\LinqToDB.Templates\*.PostgreSQL.ttinclude"                  target="content\LinqToDB.Templates"                                                                         />
+		<file src="README.md"																																										 />
 	</files>
 </package>

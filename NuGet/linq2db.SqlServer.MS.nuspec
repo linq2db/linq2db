@@ -11,6 +11,7 @@
 			This package includes a T4 template to generate data models for SqlServer database and references to the linq2db and Microsoft.Data.SqlClient provider.
 		</summary>
 		<tags>linq linq2db SqlServer LinqToDB ORM database DB SQL</tags>
+		<readme>linq2db.SqlServer.MS.readme.md</readme>
 		<dependencies>
 			<dependency id="linq2db"                  version="3.0.0" />
 			<dependency id="Microsoft.Data.SqlClient" version="3.0.1" />
@@ -38,5 +39,6 @@
 		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                         target="content\LinqToDB.Templates"                                       exclude="**\LinqToDB.*.ttinclude" />
 		<file src="..\Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude"            target="content\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                                                />
 		<file src="..\Source\LinqToDB.Templates\*.SqlServer.ttinclude"               target="content\LinqToDB.Templates"                                                                         />
+		<file src="README.md"																																									 />
 	</files>
 </package>

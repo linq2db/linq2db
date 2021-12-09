@@ -12,6 +12,7 @@
 			SapHana data provider for .NET will still need to be installed on the production or development machine in order to connect to Sybase.
 		</summary>
 		<tags>linq linq2db SapHana LinqToDB ORM database DB SQL</tags>
+		<readme>linq2db.SapHana.readme</readme>
 		<dependencies>
 			<dependency id="linq2db" version="3.0.0" />
 		</dependencies>
@@ -37,5 +38,6 @@
 		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                         target="content\LinqToDB.Templates"                                       exclude="**\LinqToDB.*.ttinclude" />
 		<file src="..\Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude"            target="content\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                                                />
 		<file src="..\Source\LinqToDB.Templates\*.SapHana.ttinclude"                 target="content\LinqToDB.Templates"                                                                         />
+		<file src="README.md"																																									 />
 	</files>
 </package>

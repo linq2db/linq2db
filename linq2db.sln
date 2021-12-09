@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31912.275
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.1525
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{885042E3-18EA-4927-B1CF-5E0E3DBD1C00}"
 	ProjectSection(SolutionItems) = preProject
@@ -91,29 +91,52 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 		NuGet\Icon_dialog.png = NuGet\Icon_dialog.png
 		NuGet\Icon_list.png = NuGet\Icon_list.png
 		NuGet\linq2db.Access.nuspec = NuGet\linq2db.Access.nuspec
+		NuGet\linq2db.Access.readme.md = NuGet\linq2db.Access.readme.md
 		NuGet\linq2db.AspNet.nuspec = NuGet\linq2db.AspNet.nuspec
+		NuGet\linq2db.AspNet.readme.md = NuGet\linq2db.AspNet.readme.md
 		NuGet\linq2db.DB2.Core.nuspec = NuGet\linq2db.DB2.Core.nuspec
+		NuGet\linq2db.DB2.Core.readme.md = NuGet\linq2db.DB2.Core.readme.md
 		NuGet\linq2db.DB2.nuspec = NuGet\linq2db.DB2.nuspec
+		NuGet\linq2db.DB2.readme.md = NuGet\linq2db.DB2.readme.md
 		NuGet\linq2db.Firebird.nuspec = NuGet\linq2db.Firebird.nuspec
+		NuGet\linq2db.Firebird.readme.md = NuGet\linq2db.Firebird.readme.md
 		NuGet\linq2db.Informix.Core.nuspec = NuGet\linq2db.Informix.Core.nuspec
+		NuGet\linq2db.Informix.Core.readme.md = NuGet\linq2db.Informix.Core.readme.md
 		NuGet\linq2db.Informix.nuspec = NuGet\linq2db.Informix.nuspec
+		NuGet\linq2db.Informix.readme.md = NuGet\linq2db.Informix.readme.md
 		NuGet\linq2db.MySql.nuspec = NuGet\linq2db.MySql.nuspec
+		NuGet\linq2db.MySql.readme.md = NuGet\linq2db.MySql.readme.md
 		NuGet\linq2db.MySqlConnector.nuspec = NuGet\linq2db.MySqlConnector.nuspec
+		NuGet\linq2db.MySqlConnector.readme.md = NuGet\linq2db.MySqlConnector.readme.md
 		NuGet\linq2db.nuspec = NuGet\linq2db.nuspec
 		NuGet\linq2db.Oracle.Managed.nuspec = NuGet\linq2db.Oracle.Managed.nuspec
+		NuGet\linq2db.Oracle.Managed.readme.md = NuGet\linq2db.Oracle.Managed.readme.md
 		NuGet\linq2db.Oracle.Unmanaged.nuspec = NuGet\linq2db.Oracle.Unmanaged.nuspec
+		NuGet\linq2db.Oracle.Unmanaged.readme.md = NuGet\linq2db.Oracle.Unmanaged.readme.md
 		NuGet\linq2db.png = NuGet\linq2db.png
 		NuGet\linq2db.PostgreSQL.nuspec = NuGet\linq2db.PostgreSQL.nuspec
+		NuGet\linq2db.PostgreSQL.readme.md = NuGet\linq2db.PostgreSQL.readme.md
+		NuGet\linq2db.readme.md = NuGet\linq2db.readme.md
 		NuGet\linq2db.SapHana.nuspec = NuGet\linq2db.SapHana.nuspec
+		NuGet\linq2db.SapHana.readme.md = NuGet\linq2db.SapHana.readme.md
 		NuGet\linq2db.SqlCe.nuspec = NuGet\linq2db.SqlCe.nuspec
+		NuGet\linq2db.SqlCe.readme.md = NuGet\linq2db.SqlCe.readme.md
 		NuGet\linq2db.SQLite.MS.nuspec = NuGet\linq2db.SQLite.MS.nuspec
+		NuGet\linq2db.SQLite.MS.readme.md = NuGet\linq2db.SQLite.MS.readme.md
 		NuGet\linq2db.SQLite.nuspec = NuGet\linq2db.SQLite.nuspec
+		NuGet\linq2db.SQLite.readme.md = NuGet\linq2db.SQLite.readme.md
 		NuGet\linq2db.SqlServer.MS.nuspec = NuGet\linq2db.SqlServer.MS.nuspec
+		NuGet\linq2db.SqlServer.MS.readme.md = NuGet\linq2db.SqlServer.MS.readme.md
 		NuGet\linq2db.SqlServer.nuspec = NuGet\linq2db.SqlServer.nuspec
+		NuGet\linq2db.SqlServer.readme.md = NuGet\linq2db.SqlServer.readme.md
 		NuGet\linq2db.Sybase.DataAction.nuspec = NuGet\linq2db.Sybase.DataAction.nuspec
+		NuGet\linq2db.Sybase.DataAction.readme.md = NuGet\linq2db.Sybase.DataAction.readme.md
 		NuGet\linq2db.Sybase.nuspec = NuGet\linq2db.Sybase.nuspec
+		NuGet\linq2db.Sybase.readme.md = NuGet\linq2db.Sybase.readme.md
 		NuGet\linq2db.t4models.nuspec = NuGet\linq2db.t4models.nuspec
+		NuGet\linq2db.t4models.readme.md = NuGet\linq2db.t4models.readme.md
 		NuGet\linq2db.Tools.nuspec = NuGet\linq2db.Tools.nuspec
+		NuGet\linq2db.Tools.readme.md = NuGet\linq2db.Tools.readme.md
 		NuGet\Pack.bat = NuGet\Pack.bat
 		NuGet\PackLocal.cmd = NuGet\PackLocal.cmd
 	EndProjectSection
@@ -587,6 +610,33 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net60", "net60", "{AA850554
 		Build\Azure\net60\sqlserver.fts.2019.json = Build\Azure\net60\sqlserver.fts.2019.json
 		Build\Azure\net60\sqlserver.fts.2019.ms.json = Build\Azure\net60\sqlserver.fts.2019.ms.json
 		Build\Azure\net60\sybase.json = Build\Azure\net60\sybase.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{63A6E835-A6BC-4722-8321-88C1AE278B43}"
+	ProjectSection(SolutionItems) = preProject
+		NuGet\linq2db.Access.readme.md = NuGet\linq2db.Access.readme.md
+		NuGet\linq2db.AspNet.readme.md = NuGet\linq2db.AspNet.readme.md
+		NuGet\linq2db.DB2.Core.readme.md = NuGet\linq2db.DB2.Core.readme.md
+		NuGet\linq2db.DB2.readme.md = NuGet\linq2db.DB2.readme.md
+		NuGet\linq2db.Firebird.readme.md = NuGet\linq2db.Firebird.readme.md
+		NuGet\linq2db.Informix.Core.readme.md = NuGet\linq2db.Informix.Core.readme.md
+		NuGet\linq2db.Informix.readme.md = NuGet\linq2db.Informix.readme.md
+		NuGet\linq2db.MySql.readme.md = NuGet\linq2db.MySql.readme.md
+		NuGet\linq2db.MySqlConnector.readme.md = NuGet\linq2db.MySqlConnector.readme.md
+		NuGet\linq2db.Oracle.Managed.readme.md = NuGet\linq2db.Oracle.Managed.readme.md
+		NuGet\linq2db.Oracle.Unmanaged.readme.md = NuGet\linq2db.Oracle.Unmanaged.readme.md
+		NuGet\linq2db.PostgreSQL.readme.md = NuGet\linq2db.PostgreSQL.readme.md
+		NuGet\linq2db.readme.md = NuGet\linq2db.readme.md
+		NuGet\linq2db.SapHana.readme.md = NuGet\linq2db.SapHana.readme.md
+		NuGet\linq2db.SqlCe.readme.md = NuGet\linq2db.SqlCe.readme.md
+		NuGet\linq2db.SQLite.MS.readme.md = NuGet\linq2db.SQLite.MS.readme.md
+		NuGet\linq2db.SQLite.readme.md = NuGet\linq2db.SQLite.readme.md
+		NuGet\linq2db.SqlServer.MS.readme.md = NuGet\linq2db.SqlServer.MS.readme.md
+		NuGet\linq2db.SqlServer.readme.md = NuGet\linq2db.SqlServer.readme.md
+		NuGet\linq2db.Sybase.DataAction.readme.md = NuGet\linq2db.Sybase.DataAction.readme.md
+		NuGet\linq2db.Sybase.readme.md = NuGet\linq2db.Sybase.readme.md
+		NuGet\linq2db.t4models.readme.md = NuGet\linq2db.t4models.readme.md
+		NuGet\linq2db.Tools.readme.md = NuGet\linq2db.Tools.readme.md
 	EndProjectSection
 EndProject
 Global

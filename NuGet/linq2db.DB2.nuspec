@@ -12,6 +12,7 @@
 			IBM Data Server Provider for .NET will still need to be installed on the production or development machine in order to connect to DB2.
 		</summary>
 		<tags>linq linq2db DB2 LinqToDB ORM database DB SQL</tags>
+		<readme>linq2db.DB2.readme.md</readme>
 		<dependencies>
 			<dependency id="linq2db" version="3.0.0" />
 		</dependencies>
@@ -37,5 +38,6 @@
 		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                         target="content\LinqToDB.Templates"                                       exclude="**\LinqToDB.*.ttinclude" />
 		<file src="..\Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude"            target="content\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                                                />
 		<file src="..\Source\LinqToDB.Templates\*.DB2.ttinclude"                     target="content\LinqToDB.Templates"                                                                         />
+		<file src="README.md"																																									 />
 	</files>
 </package>

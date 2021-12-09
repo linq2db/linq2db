@@ -9,6 +9,7 @@
 			linq linq2db LinqToDB ORM database DB T4 datamodel SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase
 			Oracle ODP PostgreSQL DB2 Informix SapHana
 		</tags>
+		<readme>linq2db.t4models.readme.md</readme>
 		<dependencies>
 			<dependency id="linq2db" version="3.0.0" />
 		</dependencies>
@@ -66,5 +67,6 @@
 		<file src="..\NuGet\Sybase\*.*"                                                    target="content\LinqToDB.Templates"              exclude="**\*.props" />
 		<file src="..\Source\LinqToDB.Templates\*.*"                                       target="content\LinqToDB.Templates"                                   />
 		<file src="..\NuGet\t4models\*.*"                                                  target="content\LinqToDB.Templates"              exclude="**\*.props" />
+		<file src="README.md"																																	 />
 	</files>
 </package>
