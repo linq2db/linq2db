@@ -88,6 +88,7 @@ namespace LinqToDB.Linq.Builder
 			new TagQueryBuilder            (),
 			new EnumerableBuilder          (),
 			new QueryExtensionBuilder      (),
+			new QueryNameBuilder           (),
 		};
 
 		public static void AddBuilder(ISequenceBuilder builder)

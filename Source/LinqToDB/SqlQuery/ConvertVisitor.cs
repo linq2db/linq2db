@@ -996,7 +996,8 @@ namespace LinqToDB.SqlQuery
 
 							nq.Init(sc, fc, wc, gc, hc, oc, us, uk,
 								q.ParentSelect,
-								q.IsParameterDependent);
+								q.IsParameterDependent,
+								q.QueryName);
 
 							// update visited in case if columns were cloned
 							if (objTree != null)

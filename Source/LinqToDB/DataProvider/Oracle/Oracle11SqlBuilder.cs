@@ -37,8 +37,9 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			if (selectQuery.From.Tables.Count == 0)
 			{
-				AppendIndent().Append("SELECT").AppendLine();
-				StartStatementQueryExtensions();
+				AppendIndent().Append("SELECT");
+				StartStatementQueryExtensions(selectQuery);
+				StringBuilder.AppendLine();
 				BuildColumns(selectQuery);
 				AppendIndent().Append("FROM SYS.DUAL").AppendLine();
 			}
@@ -676,13 +677,28 @@ END;",
 		int  _hintPosition;
 		bool _isTopLevelBuilder;
 
-		protected override void StartStatementQueryExtensions()
+		protected override void StartStatementQueryExtensions(SelectQuery? selectQuery)
 		{
 			if (HintBuilder == null)
 			{
 				HintBuilder        = new();
 				_isTopLevelBuilder = true;
 				_hintPosition      = StringBuilder.Length;
+
+				if (selectQuery?.QueryName is {} queryName)
+					HintBuilder
+						.Append("QB_NAME(")
+						.Append(queryName)
+						.Append(')')
+						;
+			}
+			else if (selectQuery?.QueryName is {} queryName)
+			{
+				StringBuilder
+					.Append(" /*+ QB_NAME(")
+					.Append(queryName)
+					.Append(") */")
+					;
 			}
 		}
 

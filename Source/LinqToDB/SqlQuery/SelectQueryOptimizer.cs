@@ -1020,7 +1020,7 @@ namespace LinqToDB.SqlQuery
 				if (depends)
 					return true;
 
-				if (!_flags.AcceptsOuterExpressionInAggregate && 
+				if (!_flags.AcceptsOuterExpressionInAggregate &&
 				    column.Expression.ElementType != QueryElementType.Column &&
 				    QueryHelper.HasOuterReferences(parentQuery, column))
 				{
@@ -1057,6 +1057,13 @@ namespace LinqToDB.SqlQuery
 			isQueryOK = isQueryOK && (concatWhere || query.Where.IsEmpty && query.Having.IsEmpty);
 			isQueryOK = isQueryOK && !query.HasSetOperators && query.GroupBy.IsEmpty && !query.Select.HasModifier;
 			//isQueryOK = isQueryOK && (_flags.IsDistinctOrderBySupported || query.Select.IsDistinct );
+
+			if (isQueryOK && query.QueryName is not null)
+			{
+				isQueryOK =
+					_selectQuery.QueryName is null &&
+					_selectQuery.From.Tables.Count(t => t.Source is SelectQuery { QueryName: { } }) <= 1;
+			}
 
 			if (isQueryOK && parentJoinedTable != null && parentJoinedTable.JoinType != JoinType.Inner)
 			{
@@ -1136,6 +1143,8 @@ namespace LinqToDB.SqlQuery
 
 			if (!isColumnsOK)
 				return childSource;
+
+			_selectQuery.QueryName = query.QueryName;
 
 			var map = new Dictionary<ISqlExpression,ISqlExpression>(query.Select.Columns.Count, Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
 			var aliasesMap = new Dictionary<ISqlExpression,string>(query.Select.Columns.Count, Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);

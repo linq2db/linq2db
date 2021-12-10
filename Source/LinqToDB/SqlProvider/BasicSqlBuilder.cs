@@ -531,7 +531,7 @@ namespace LinqToDB.SqlProvider
 			AppendIndent();
 			StringBuilder.Append("SELECT");
 
-			StartStatementQueryExtensions();
+			StartStatementQueryExtensions(selectQuery);
 
 			if (selectQuery.Select.IsDistinct)
 				StringBuilder.Append(" DISTINCT");
@@ -542,8 +542,14 @@ namespace LinqToDB.SqlProvider
 			BuildColumns(selectQuery);
 		}
 
-		protected virtual void StartStatementQueryExtensions()
+		protected virtual void StartStatementQueryExtensions(SelectQuery? selectQuery)
 		{
+			if (selectQuery?.QueryName is {} queryName)
+				StringBuilder
+					.Append(" /* ")
+					.Append(queryName)
+					.Append(" */")
+					;
 		}
 
 		protected virtual IEnumerable<SqlColumn> GetSelectedColumns(SelectQuery selectQuery)
@@ -645,7 +651,7 @@ namespace LinqToDB.SqlProvider
 		{
 			AppendIndent();
 			StringBuilder.Append("DELETE");
-			StartStatementQueryExtensions();
+			StartStatementQueryExtensions(deleteStatement.SelectQuery);
 			BuildSkipFirst(deleteStatement.SelectQuery);
 			StringBuilder.Append(' ');
 		}
@@ -664,7 +670,7 @@ namespace LinqToDB.SqlProvider
 		{
 			AppendIndent().Append("UPDATE");
 
-			StartStatementQueryExtensions();
+			StartStatementQueryExtensions(selectQuery);
 			BuildSkipFirst(selectQuery);
 
 			StringBuilder.AppendLine().Append('\t');
@@ -751,7 +757,7 @@ namespace LinqToDB.SqlProvider
 		{
 			AppendIndent().Append(insertText);
 
-			StartStatementQueryExtensions();
+			StartStatementQueryExtensions(statement.SelectQuery);
 
 			if (appendTableName)
 			{

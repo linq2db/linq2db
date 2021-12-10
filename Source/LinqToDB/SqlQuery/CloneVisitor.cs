@@ -156,7 +156,8 @@ namespace LinqToDB.SqlQuery
 					var newSelectQuery = new SelectQuery(Interlocked.Increment(ref SelectQuery.SourceIDCounter))
 					{
 						IsParameterDependent = selectQuery.IsParameterDependent,
-						DoNotRemove          = selectQuery.DoNotRemove
+						DoNotRemove          = selectQuery.DoNotRemove,
+						QueryName            = selectQuery.QueryName
 					};
 
 					_objectTree.Add(element, clone = newSelectQuery);

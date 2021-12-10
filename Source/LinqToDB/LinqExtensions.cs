@@ -3336,7 +3336,7 @@ namespace LinqToDB
 		#region AsSubQuery
 
 		/// <summary>
-		/// Defines that sub-query is mandatory for <paramref name="source"/> query.
+		/// Defines that sub-query is mandatory for <paramref name="source"/> query and cannot be removed during the query optimization.
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <param name="source">Source data query.</param>
@@ -3354,7 +3354,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Defines that sub-query is mandatory for <paramref name="grouping"/> query.
+		/// Defines that sub-query is mandatory for <paramref name="grouping"/> query and cannot be removed during the query optimization.
 		/// </summary>
 		/// <typeparam name="TKey">The type of the key of the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
 		/// <typeparam name="TElement">The type of the values in the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
@@ -3362,7 +3362,7 @@ namespace LinqToDB
 		/// <returns>Query covered in sub-query.</returns>
 		[Pure]
 		[LinqTunnel]
-		public static IQueryable<TKey> AsSubQuery<TKey, TElement>(this IQueryable<IGrouping<TKey, TElement>> grouping)
+		public static IQueryable<TKey> AsSubQuery<TKey, TElement>(this IQueryable<IGrouping<TKey,TElement>> grouping)
 		{
 			if (grouping == null) throw new ArgumentNullException(nameof(grouping));
 
@@ -3370,6 +3370,49 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AsSubQuery, grouping), grouping.Expression));
+		}
+
+		#endregion
+
+		#region QueryName
+
+		/// <summary>
+		/// Defines query name for specified sub-query. The query cannot be removed during the query optimization.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <param name="queryName">Query name.</param>
+		/// <returns>Query covered in sub-query.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TSource> QueryName<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string queryName)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			return source.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(QueryName, source, queryName), source.Expression, Expression.Constant(queryName)));
+		}
+
+		/// <summary>
+		/// Defines query name for specified sub-query. The query cannot be removed during the query optimization.
+		/// </summary>
+		/// <typeparam name="TKey">The type of the key of the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
+		/// <typeparam name="TElement">The type of the values in the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
+		/// <param name="grouping">Source data query.</param>
+		/// <param name="queryName">Query name.</param>
+		/// <returns>Query covered in sub-query.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TKey> QueryName<TKey, TElement>(this IQueryable<IGrouping<TKey,TElement>> grouping, [SqlQueryDependent] string queryName)
+		{
+			if (grouping == null) throw new ArgumentNullException(nameof(grouping));
+
+			return grouping.Provider.CreateQuery<TKey>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(QueryName, grouping, queryName), grouping.Expression, Expression.Constant(queryName)));
 		}
 
 		#endregion

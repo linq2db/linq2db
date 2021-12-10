@@ -1091,6 +1091,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.OrderBy);
 							Append(elem.ParentSelect?.SourceID ?? 0);
 							Append(elem.IsParameterDependent);
+							Append(elem.QueryName);
 
 							if (!elem.HasSetOperators)
 								Builder.Append(" -");
@@ -1931,9 +1932,11 @@ namespace LinqToDB.ServiceModel
 							var orderBy            = Read<SqlOrderByClause>()!;
 							var parentSql          = ReadInt();
 							var parameterDependent = ReadBool();
+							var queryName          = ReadString();
 							var unions             = ReadArray<SqlSetOperator>();
 
 							var query = new SelectQuery(sid);
+
 							_statement = new SqlSelectStatement(query);
 
 							query.Init(
@@ -1946,7 +1949,8 @@ namespace LinqToDB.ServiceModel
 								unions?.ToList(),
 								null, // we do not serialize unique keys
 								null,
-								parameterDependent);
+								parameterDependent,
+								queryName);
 
 							_queries.Add(sid, query);
 

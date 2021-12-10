@@ -632,5 +632,31 @@ namespace LinqToDB.DataProvider.MySql
 			if (table.TableOptions.HasCreateIfNotExists())
 				StringBuilder.Append("IF NOT EXISTS ");
 		}
+
+		protected override void StartStatementQueryExtensions(SelectQuery? selectQuery)
+		{
+//			if (HintBuilder == null)
+//			{
+//				HintBuilder        = new();
+//				_isTopLevelBuilder = true;
+//				_hintPosition      = StringBuilder.Length;
+//
+//				if (selectQuery?.QueryName is { } queryName)
+//					HintBuilder
+//						.Append("QB_NAME(")
+//						.Append(queryName)
+//						.Append(')')
+//						;
+//			}
+//			else
+			if (selectQuery?.QueryName is {} queryName)
+			{
+				StringBuilder
+					.Append(" /*+ QB_NAME(")
+					.Append(queryName)
+					.Append(") */")
+					;
+			}
+		}
 	}
 }
