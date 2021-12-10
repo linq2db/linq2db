@@ -70,7 +70,7 @@ namespace Tests.Linq
 						on p.Id equals a.Id //PK column
 					select p;
 
-				Debug.WriteLine(query);
+				Console.WriteLine(query);
 
 				Assert.AreEqual(1, query.GetTableSource().Joins.Count);
 			}

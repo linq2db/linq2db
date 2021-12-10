@@ -18,8 +18,6 @@ namespace LinqToDB.Linq.Builder
 			var sequence    = builder.BuildSequence(new(buildInfo, methodCall.Arguments[0]));
 			var elementType = methodCall.Arguments[0].Type.GetGenericArguments()[0];
 
-			//sequence.SelectQuery.DoNotRemove = true;
-
 			sequence.SelectQuery.QueryName = (string?)methodCall.Arguments[1].EvaluateExpression();
 
 			if (typeof(IGrouping<,>).IsSameOrParentOf(elementType))

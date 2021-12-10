@@ -3405,7 +3405,7 @@ namespace LinqToDB
 		/// <returns>Query covered in sub-query.</returns>
 		[Pure]
 		[LinqTunnel]
-		public static IQueryable<TKey> QueryName<TKey, TElement>(this IQueryable<IGrouping<TKey,TElement>> grouping, [SqlQueryDependent] string queryName)
+		public static IQueryable<TKey> QueryName<TKey,TElement>(this IQueryable<IGrouping<TKey,TElement>> grouping, [SqlQueryDependent] string queryName)
 		{
 			if (grouping == null) throw new ArgumentNullException(nameof(grouping));
 

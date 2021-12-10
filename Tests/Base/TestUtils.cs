@@ -408,5 +408,15 @@ namespace Tests
 					return "whatever";
 			}
 		}
+
+		public static string? Clean(this string? s)
+		{
+			return s?
+				.Replace(" ", "")
+				.Replace("\t", "")
+				.Replace("\r", "")
+				.Replace("\n", "")
+				;
+		}
 	}
 }

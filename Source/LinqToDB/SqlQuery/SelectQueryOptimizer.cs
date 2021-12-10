@@ -1052,10 +1052,13 @@ namespace LinqToDB.SqlQuery
 		{
 			var query = (SelectQuery)childSource.Source;
 
-			var isQueryOK = !query.DoNotRemove && query.From.Tables.Count == 1;
-
-			isQueryOK = isQueryOK && (concatWhere || query.Where.IsEmpty && query.Having.IsEmpty);
-			isQueryOK = isQueryOK && !query.HasSetOperators && query.GroupBy.IsEmpty && !query.Select.HasModifier;
+			var isQueryOK =
+				query.DoNotRemove        == false                            &&
+				query.From.Tables.Count  == 1                                &&
+				(concatWhere || query.Where.IsEmpty && query.Having.IsEmpty) &&
+				query.HasSetOperators    == false                            &&
+				query.GroupBy.IsEmpty                                        &&
+				query.Select.HasModifier == false;
 			//isQueryOK = isQueryOK && (_flags.IsDistinctOrderBySupported || query.Select.IsDistinct );
 
 			if (isQueryOK && query.QueryName is not null)
@@ -1096,6 +1099,7 @@ namespace LinqToDB.SqlQuery
 				return childSource;
 
 			var isColumnsOK = (allColumns && !query.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)));
+
 			if (!isColumnsOK)
 			{
 				isColumnsOK = true;
@@ -1144,7 +1148,7 @@ namespace LinqToDB.SqlQuery
 			if (!isColumnsOK)
 				return childSource;
 
-			_selectQuery.QueryName = query.QueryName;
+			_selectQuery.QueryName ??= query.QueryName;
 
 			var map = new Dictionary<ISqlExpression,ISqlExpression>(query.Select.Columns.Count, Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
 			var aliasesMap = new Dictionary<ISqlExpression,string>(query.Select.Columns.Count, Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
