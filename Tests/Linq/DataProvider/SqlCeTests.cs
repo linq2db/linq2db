@@ -510,10 +510,8 @@ namespace Tests.DataProvider
 		[Test]
 		public void SelectTableWithHintTest([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(Person, db.Person.With("TABLOCK"));
-			}
+			using var db = GetDataContext(context);
+			AreEqual(Person, db.Person.With("TABLOCK"), ps => ps.OrderBy(p => p.ID));
 		}
 
 		[Test]

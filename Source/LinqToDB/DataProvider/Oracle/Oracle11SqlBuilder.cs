@@ -706,7 +706,9 @@ END;",
 		{
 			if (statement.SqlQueryExtensions?.Any(ext =>
 				ext.Scope == Sql.QueryExtensionScope.Query &&
-				ext.ID is Sql.QueryExtensionID.QueryHint) == true)
+				ext.ID is
+					Sql.QueryExtensionID.QueryHint or
+					Sql.QueryExtensionID.QueryHintWithParameter) == true)
 			{
 				foreach (var ext in statement.SqlQueryExtensions!)
 				{
@@ -714,7 +716,17 @@ END;",
 						HintBuilder.Append(' ');
 
 					var hint = (SqlValue)ext.Arguments["queryHint"];
+
 					HintBuilder.Append((string)hint.Value!);
+
+					if (ext.ID is Sql.QueryExtensionID.QueryHintWithParameter)
+					{
+						var value = (SqlValue)ext.Arguments["hintParameter"];
+
+						HintBuilder.Append('(');
+						HintBuilder.Append(value.Value);
+						HintBuilder.Append(')');
+					}
 				}
 			}
 
@@ -753,8 +765,8 @@ END;",
 					Sql.QueryExtensionScope.TablesInScope &&
 				ext.ID is
 					Sql.QueryExtensionID.TableHint      or
-					Sql.QueryExtensionID.TableHintParam or
-					Sql.QueryExtensionID.TableHintParams
+					Sql.QueryExtensionID.TableHintWithParameter or
+					Sql.QueryExtensionID.TableHintWithParameters
 				))
 			{
 				foreach (var ext in table.SqlQueryExtensions!)
@@ -777,7 +789,7 @@ END;",
 
 					switch (ext.ID)
 					{
-						case Sql.QueryExtensionID.TableHintParam:
+						case Sql.QueryExtensionID.TableHintWithParameter:
 						{
 							var param = ((SqlValue)ext.Arguments["hintParameter"]).Value;
 
@@ -796,7 +808,7 @@ END;",
 						}
 						default:
 						{
-							if (ext.ID is Sql.QueryExtensionID.TableHintParams)
+							if (ext.ID is Sql.QueryExtensionID.TableHintWithParameters)
 							{
 								var count = (int)((SqlValue)ext.Arguments["hintParameters.Count"]).Value!;
 

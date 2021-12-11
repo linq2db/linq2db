@@ -197,7 +197,7 @@ namespace LinqToDB
 		/// <returns>Table-like query source with table hints.</returns>
 		[LinqTunnel]
 		[Pure]
-		[Sql.QueryExtension(Sql.QueryExtensionScope.Table, Sql.QueryExtensionID.TableHintParam)]
+		[Sql.QueryExtension(Sql.QueryExtensionScope.Table, Sql.QueryExtensionID.TableHintWithParameter)]
 		public static ITable<TSource> TableHint<TSource,TParam>(this ITable<TSource> table, [SqlQueryDependent] string tableHint, [SqlQueryDependent] TParam hintParameter)
 			where TSource : notnull
 		{
@@ -224,7 +224,7 @@ namespace LinqToDB
 		/// <returns>Table-like query source with table hints.</returns>
 		[LinqTunnel]
 		[Pure]
-		[Sql.QueryExtension(Sql.QueryExtensionScope.Table, Sql.QueryExtensionID.TableHintParams)]
+		[Sql.QueryExtension(Sql.QueryExtensionScope.Table, Sql.QueryExtensionID.TableHintWithParameters)]
 		public static ITable<TSource> TableHint<TSource,TParam>(this ITable<TSource> table, [SqlQueryDependent] string tableHint, [SqlQueryDependent] params TParam[] hintParameters)
 			where TSource : notnull
 		{
@@ -254,7 +254,7 @@ namespace LinqToDB
 		/// <returns>Table-like query source with table hints.</returns>
 		[LinqTunnel]
 		[Pure]
-		[Sql.QueryExtension(Sql.QueryExtensionScope.Table, Sql.QueryExtensionID.TableHintParam)]
+		[Sql.QueryExtension(Sql.QueryExtensionScope.Table, Sql.QueryExtensionID.TableHintWithParameter)]
 		public static ITable<TSource> TableHintEx<TSource, TParam>(
 			this ITable<TSource> table,
 			[SqlQueryDependent] string tableHint,
@@ -320,6 +320,37 @@ namespace LinqToDB
 					null,
 					MethodHelper.GetMethodInfo(QueryHint, source, queryHint),
 					currentSource.Expression, Expression.Constant(queryHint)));
+		}
+
+		/// <summary>
+		/// Adds join hint to a generated query.
+		/// <code>
+		/// // will produce following SQL code in generated query: INNER LOOP JOIN
+		/// var tableWithHint = db.Table.JoinHint("LOOP");
+		/// </code>
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <typeparam name="TParam">Hint parameter type</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="queryHint">SQL text, added to join in generated query.</param>
+		/// <param name="hintParameter">Hint parameter.</param>
+		/// <returns>Query source with join hints.</returns>
+		[LinqTunnel]
+		[Pure]
+		[Sql.QueryExtension(Sql.QueryExtensionScope.Query, Sql.QueryExtensionID.QueryHintWithParameter)]
+		public static IQueryable<TSource> QueryHint<TSource,TParam>(
+			this IQueryable<TSource> source,
+			[SqlQueryDependent] string queryHint,
+			[SqlQueryDependent] TParam hintParameter)
+			where TSource : notnull
+		{
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(QueryHint, source, queryHint, hintParameter),
+					currentSource.Expression, Expression.Constant(queryHint), Expression.Constant(hintParameter)));
 		}
 
 		/// <summary>
@@ -3370,6 +3401,45 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AsSubQuery, grouping), grouping.Expression));
+		}
+
+		/// <summary>
+		/// Defines that sub-query is mandatory for <paramref name="source"/> query and cannot be removed during the query optimization.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <param name="queryName">Query name.</param>
+		/// <returns>Query covered in sub-query.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TSource> AsSubQuery<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string queryName)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			return source.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AsSubQuery, source, queryName), source.Expression, Expression.Constant(queryName)));
+		}
+
+		/// <summary>
+		/// Defines that sub-query is mandatory for <paramref name="grouping"/> query and cannot be removed during the query optimization.
+		/// </summary>
+		/// <typeparam name="TKey">The type of the key of the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
+		/// <typeparam name="TElement">The type of the values in the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
+		/// <param name="grouping">Source data query.</param>
+		/// <param name="queryName">Query name.</param>
+		/// <returns>Query covered in sub-query.</returns>
+		[Pure]
+		[LinqTunnel]
+		public static IQueryable<TKey> AsSubQuery<TKey, TElement>(this IQueryable<IGrouping<TKey,TElement>> grouping, [SqlQueryDependent] string queryName)
+		{
+			if (grouping == null) throw new ArgumentNullException(nameof(grouping));
+
+			return grouping.Provider.CreateQuery<TKey>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AsSubQuery, grouping, queryName), grouping.Expression, Expression.Constant(queryName)));
 		}
 
 		#endregion

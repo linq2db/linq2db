@@ -209,6 +209,30 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void QueryHintWithQueryBlockTest([IncludeDataSources(true, TestProvName.AllOracle)] string context,
+			[Values(
+				Hints.QueryHint.NoUnnest
+			)] string hint)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in
+					db.Parent.AsSubQuery("Parent")
+					on c.ParentID equals p.ParentID
+				select p
+			)
+			.QueryHint(hint, "@Parent");
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {hint}(@Parent) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(Parent) */"));
+		}
+
+		[Test]
 		public void QueryHintFirstRowsTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);

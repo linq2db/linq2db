@@ -197,19 +197,19 @@ namespace LinqToDB.SqlProvider
 
 		bool FixRootSelect(SqlStatement statement)
 		{
-			if (statement.SelectQuery is {} query                &&
-				query.Select.IsDistinct == false                 &&
-				query.DoNotRemove       == false                 &&
-				query.QueryName is null                          &&
-				query.Where.  IsEmpty                            &&
-				query.GroupBy.IsEmpty                            &&
-				query.Having. IsEmpty                            &&
-				query.OrderBy.IsEmpty                            &&
-				query.From.Tables.Count == 1                     &&
-				query.From.Tables[0].Source is SelectQuery child &&
-				query.From.Tables[0].Joins.Count == 0            &&
-				child.DoNotRemove                == false        &&
-				query.Select.Columns.Count       == child.Select.Columns.Count)
+			if (statement.SelectQuery is {} query         &&
+				query.Select.HasModifier == false         &&
+				query.DoNotRemove        == false         &&
+				query.QueryName is null                   &&
+				query.Where.  IsEmpty                     &&
+				query.GroupBy.IsEmpty                     &&
+				query.Having. IsEmpty                     &&
+				query.OrderBy.IsEmpty                     &&
+				query.From.Tables is { Count : 1 } tables &&
+				tables[0].Source  is SelectQuery   child  &&
+				tables[0].Joins.Count      == 0           &&
+				child.DoNotRemove          == false       &&
+				query.Select.Columns.Count == child.Select.Columns.Count)
 			{
 				for (var i = 0; i < query.Select.Columns.Count; i++)
 				{
