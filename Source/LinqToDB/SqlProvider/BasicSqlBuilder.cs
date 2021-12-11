@@ -161,6 +161,8 @@ namespace LinqToDB.SqlProvider
 							skipAlias);
 					}
 				}
+
+				FinalizeBuildQuery(statement);
 			}
 			else
 			{
@@ -169,6 +171,10 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected virtual void BuildCommand(SqlStatement statement, int commandNumber)
+		{
+		}
+
+		protected virtual void FinalizeBuildQuery(SqlStatement statement)
 		{
 		}
 

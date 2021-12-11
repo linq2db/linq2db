@@ -587,5 +587,25 @@ namespace Tests.Linq
 			Assert.That(LastQuery, Contains.Substring("WITH (HoldLock)"));
 			Assert.That(LastQuery, Contains.Substring("OPTION (FAST 10, RECOMPILE)"));
 		}
+
+
+		[Test]
+		public void UnionTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q1 =
+				from c in db.Child
+				join p in db.Parent.TableHint(Hints.TableHint.NoLock) on c.ParentID equals p.ParentID
+				select p;
+
+			var q =
+				q1.QueryName("qb_1").Union(q1.QueryName("qb_2"));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("[p] WITH (NoLock)"));
+			Assert.That(LastQuery, Contains.Substring("[p_1] WITH (NoLock)"));
+		}
 	}
 }

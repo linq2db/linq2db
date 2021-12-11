@@ -673,6 +673,7 @@ END;",
 
 		protected StringBuilder? HintBuilder;
 		protected string?        TablePath;
+		protected string?        QueryName;
 
 		int  _hintPosition;
 		bool _isTopLevelBuilder;
@@ -702,7 +703,24 @@ END;",
 			}
 		}
 
-		protected override void BuildQueryExtensions(SqlStatement statement)
+		protected override void BuildSelectQuery(SqlSelectStatement selectStatement)
+		{
+			var queryName = QueryName;
+			var tablePath = TablePath;
+
+			if (selectStatement.SelectQuery.QueryName is not null)
+			{
+				QueryName = selectStatement.SelectQuery.QueryName;
+				TablePath = null;
+			}
+
+			base.BuildSelectQuery(selectStatement);
+
+			TablePath = tablePath;
+			QueryName = queryName;
+		}
+
+		protected override void FinalizeBuildQuery(SqlStatement statement)
 		{
 			if (statement.SqlQueryExtensions?.Any(ext =>
 				ext.Scope == Sql.QueryExtensionScope.Query &&
@@ -787,6 +805,12 @@ END;",
 
 					HintBuilder.Append(alias);
 
+					if (QueryName is not null)
+						HintBuilder
+							.Append('@')
+							.Append(QueryName)
+							;
+
 					switch (ext.ID)
 					{
 						case Sql.QueryExtensionID.TableHintWithParameter:
@@ -806,19 +830,16 @@ END;",
 
 							break;
 						}
-						default:
+						case Sql.QueryExtensionID.TableHintWithParameters:
 						{
-							if (ext.ID is Sql.QueryExtensionID.TableHintWithParameters)
+							var count = (int)((SqlValue)ext.Arguments["hintParameters.Count"]).Value!;
+
+							for (var i = 0; i < count; i++)
 							{
-								var count = (int)((SqlValue)ext.Arguments["hintParameters.Count"]).Value!;
+								var value = ((SqlValue)ext.Arguments[$"hintParameters.{i}"]).Value;
 
-								for (var i = 0; i < count; i++)
-								{
-									var value = ((SqlValue)ext.Arguments[$"hintParameters.{i}"]).Value;
-
-									HintBuilder.Append(' ');
-									HintBuilder.Append(value);
-								}
+								HintBuilder.Append(' ');
+								HintBuilder.Append(value);
 							}
 
 							break;

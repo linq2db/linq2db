@@ -249,5 +249,65 @@ namespace Tests.Linq
 
 			Assert.That(LastQuery, Contains.Substring("SELECT /*+ FIRST_ROWS(25) */"));
 		}
+
+		[Test]
+		public void UnionTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q1 =
+				from c in db.Child
+				join p in db.Parent.TableHint(Hints.TableHint.Full) on c.ParentID equals p.ParentID
+				select p;
+
+			var q =
+				q1.QueryName("qb_1").Union(q1.QueryName("qb_2"));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ QB_NAME(qb_1) FULL(p@qb_1) FULL(p_1@qb_2) */"));
+		}
+
+		[Test]
+		public void UnionTest2([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q1 =
+				from c in db.Child
+				join p in db.Parent.TableHint(Hints.TableHint.Full) on c.ParentID equals p.ParentID
+				select p;
+
+			var q =
+				from p in q1.QueryName("qb_1").Union(q1.QueryName("qb_2"))
+				where p.ParentID > 0
+				select p.ParentID;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ FULL(p@qb_1) FULL(p_1@qb_2) */"));
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ QB_NAME(qb_1) */"));
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ QB_NAME(qb_2) */"));
+		}
+
+		[Test]
+		public void UnionTest3([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q1 =
+				from c in db.Child
+				join p in db.Parent.TableHint(Hints.TableHint.Full) on c.ParentID equals p.ParentID
+				select p;
+
+			var q =
+				from p in q1.Union(q1)
+				where p.ParentID > 0
+				select p.ParentID;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ FULL(p_2.p) FULL(p_2.p_1) */"));
+		}
 	}
 }
