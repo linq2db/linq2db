@@ -136,6 +136,24 @@ namespace LinqToDB.Linq
 			}
 		}
 
+		private string? _tableID;
+		public string?   TableID
+		{
+			get => _tableID;
+			set
+			{
+				if (_tableID != value)
+				{
+					Expression = Expression.Call(
+						null,
+						_tableNameMethodInfo ??= Methods.LinqToDB.Table.TableID.MakeGenericMethod(typeof(T)),
+						Expression, Expression.Constant(value, typeof(string)));
+
+					_tableID = value;
+				}
+			}
+		}
+
 		public string GetTableName() =>
 			DataContext.CreateSqlProvider()
 				.ConvertTableName(new StringBuilder(), ServerName, DatabaseName, SchemaName, TableName, TableOptions)
@@ -150,7 +168,8 @@ namespace LinqToDB.Linq
 				DatabaseName = DatabaseName,
 				Expression   = Expression,
 				ServerName   = serverName,
-				TableOptions = TableOptions
+				TableOptions = TableOptions,
+				TableID      = TableID,
 			};
 		}
 
@@ -163,7 +182,8 @@ namespace LinqToDB.Linq
 				ServerName   = ServerName,
 				Expression   = Expression,
 				DatabaseName = databaseName,
-				TableOptions = TableOptions
+				TableOptions = TableOptions,
+				TableID      = TableID,
 			};
 		}
 
@@ -176,7 +196,8 @@ namespace LinqToDB.Linq
 				DatabaseName = DatabaseName,
 				Expression   = Expression,
 				SchemaName   = schemaName,
-				TableOptions = TableOptions
+				TableOptions = TableOptions,
+				TableID      = TableID,
 			};
 		}
 
@@ -189,7 +210,8 @@ namespace LinqToDB.Linq
 				DatabaseName = DatabaseName,
 				Expression   = Expression,
 				TableName    = tableName,
-				TableOptions = TableOptions
+				TableOptions = TableOptions,
+				TableID      = TableID,
 			};
 		}
 
@@ -202,7 +224,22 @@ namespace LinqToDB.Linq
 				DatabaseName = DatabaseName,
 				Expression   = Expression,
 				TableName    = TableName,
-				TableOptions = options
+				TableOptions = options,
+				TableID      = TableID,
+			};
+		}
+
+		public ITable<T> ChangeTableID(string? tableID)
+		{
+			return new Table<T>(DataContext)
+			{
+				SchemaName   = SchemaName,
+				ServerName   = ServerName,
+				DatabaseName = DatabaseName,
+				Expression   = Expression,
+				TableName    = TableName,
+				TableOptions = TableOptions,
+				TableID      = tableID,
 			};
 		}
 

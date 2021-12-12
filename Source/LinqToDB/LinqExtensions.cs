@@ -25,6 +25,24 @@ namespace LinqToDB
 		#region Table Helpers
 
 		/// <summary>
+		/// Assigns table id.
+		/// </summary>
+		/// <typeparam name="T">Table record mapping class.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="id">Table ID.</param>
+		/// <returns>Table-like query source with new name.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static ITable<T> TableID<T>(this ITable<T> table, [SqlQueryDependent] string? id)
+			where T : notnull
+		{
+			if (table == null) throw new ArgumentNullException(nameof(table));
+
+			var result = ((ITableMutable<T>)table).ChangeTableID(id);
+			return result;
+		}
+
+		/// <summary>
 		/// Overrides table or view name with new name for current query.
 		/// </summary>
 		/// <typeparam name="T">Table record mapping class.</typeparam>
