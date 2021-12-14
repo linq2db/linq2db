@@ -49,6 +49,9 @@ namespace LinqToDB.Expressions
 			if (includingArrays && type.IsArray)
 				return type.GetElementType()!.IsConstantable(includingArrays);
 
+			if (type == typeof(Sql.SqlID))
+				return true;
+
 			return false;
 		}
 

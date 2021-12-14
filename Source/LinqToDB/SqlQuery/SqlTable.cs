@@ -29,7 +29,8 @@ namespace LinqToDB.SqlQuery
 			IEnumerable<SqlField>    fields,
 			SqlTableType             sqlTableType,
 			ISqlExpression[]?        tableArguments,
-			TableOptions             tableOptions)
+			TableOptions             tableOptions,
+			string?                  tableID)
 			: this(objectType, id)
 		{
 			Name               = name;
@@ -39,6 +40,7 @@ namespace LinqToDB.SqlQuery
 			Schema             = schema;
 			PhysicalName       = physicalName;
 			SequenceAttributes = sequenceAttributes;
+			ID                 = tableID;
 
 			AddRange(fields);
 
@@ -197,6 +199,7 @@ namespace LinqToDB.SqlQuery
 		public virtual SqlTableType      SqlTableType   { get; set; }
 		public         ISqlExpression[]? TableArguments { get; set; }
 		public         TableOptions      TableOptions   { get; set; }
+		public virtual string?           ID             { get; set; }
 
 		// list user to preserve order of fields in queries
 		readonly List<SqlField>              _orderedFields = new();

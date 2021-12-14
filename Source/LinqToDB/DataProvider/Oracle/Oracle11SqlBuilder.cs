@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
@@ -93,7 +94,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return new Oracle11SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags)
 			{
 				HintBuilder = HintBuilder,
-				TablePath   = TablePath
+				TablePath   = TablePath,
+				QueryName   = QueryName,
+				TableIDs    = TableIDs ??= new(),
 			};
 		}
 
@@ -671,9 +674,10 @@ END;",
 
 		#endregion
 
-		protected StringBuilder? HintBuilder;
-		protected string?        TablePath;
-		protected string?        QueryName;
+		protected StringBuilder?             HintBuilder;
+		protected string?                    TablePath;
+		protected string?                    QueryName;
+		protected Dictionary<string,string>? TableIDs;
 
 		int  _hintPosition;
 		bool _isTopLevelBuilder;
@@ -725,8 +729,9 @@ END;",
 			if (statement.SqlQueryExtensions?.Any(ext =>
 				ext.Scope == Sql.QueryExtensionScope.Query &&
 				ext.ID is
-					Sql.QueryExtensionID.QueryHint or
-					Sql.QueryExtensionID.QueryHintWithParameter) == true)
+					Sql.QueryExtensionID.QueryHint              or
+					Sql.QueryExtensionID.QueryHintWithParameter or
+					Sql.QueryExtensionID.QueryHintWithParameters) == true)
 			{
 				foreach (var ext in statement.SqlQueryExtensions!)
 				{
@@ -737,13 +742,50 @@ END;",
 
 					HintBuilder.Append((string)hint.Value!);
 
-					if (ext.ID is Sql.QueryExtensionID.QueryHintWithParameter)
+					switch (ext.ID)
 					{
-						var value = (SqlValue)ext.Arguments["hintParameter"];
+						case Sql.QueryExtensionID.QueryHintWithParameter:
+						{
+							var value = GetValue((SqlValue)ext.Arguments["hintParameter"]);
 
-						HintBuilder.Append('(');
-						HintBuilder.Append(value.Value);
-						HintBuilder.Append(')');
+							HintBuilder.Append('(');
+							HintBuilder.Append(value);
+							HintBuilder.Append(')');
+
+							break;
+						}
+						case Sql.QueryExtensionID.QueryHintWithParameters:
+						{
+							HintBuilder.Append('(');
+
+							var count = (int)((SqlValue)ext.Arguments["hintParameters.Count"]).Value!;
+
+							for (var i = 0; i < count; i++)
+							{
+								var value = GetValue((SqlValue)ext.Arguments[$"hintParameters.{i}"]);
+
+								if (i > 0)
+									HintBuilder.Append(' ');
+								HintBuilder.Append(value);
+							}
+
+							HintBuilder.Append(')');
+
+							break;
+						}
+					}
+
+					object? GetValue(SqlValue value)
+					{
+						if (value.Value is Sql.SqlID id)
+						{
+							if (TableIDs == null || !TableIDs.TryGetValue(id.ID, out var path))
+								throw new InvalidOperationException($"Table ID '{id.ID}' is not defined.");
+
+							return path;
+						}
+
+						return value.Value;
 					}
 				}
 			}
@@ -766,6 +808,16 @@ END;",
 				if (TablePath is { Length: > 0 })
 					TablePath += '.';
 				TablePath += alias;
+
+				if (table is SqlTable { ID: {} id })
+				{
+					var path = TablePath;
+
+					if (QueryName is not null)
+						path += $"@{QueryName}";
+
+					(TableIDs ??= new())[id] = path!;
+				}
 			}
 
 			var ret = base.BuildPhysicalTable(table, alias, defaultDatabaseName);
@@ -797,7 +849,7 @@ END;",
 					HintBuilder.Append((string)hint.Value!);
 					HintBuilder.Append('(');
 
-					if (TablePath is {Length: > 0})
+					if (TablePath is { Length: > 0 })
 					{
 						HintBuilder.Append(TablePath);
 						HintBuilder.Append('.');

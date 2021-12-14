@@ -8,7 +8,6 @@ namespace LinqToDB.DataProvider.Oracle
 		//
 		// Not implemented:
 		//
-		// LEADING
 		// MERGE
 		// NO_MERGE
 		// NO_PUSH_PRED
@@ -70,6 +69,7 @@ namespace LinqToDB.DataProvider.Oracle
 			public const string AllRows               = "ALL_ROWS";
 			public const string Append                = "APPEND";
 			public const string CursorSharingExact    = "CURSOR_SHARING_EXACT";
+			public const string Leading               = "LEADING";
 			public const string ModelMinAnalysis      = "MODEL_MIN_ANALYSIS ";
 			public const string NoAppend              = "NOAPPEND";
 			public const string NoExpand              = "NO_EXPAND";

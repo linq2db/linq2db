@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB.Linq.Builder
@@ -54,16 +55,15 @@ namespace LinqToDB.Linq.Builder
 
 			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType)
 			{
-				Builder          = builder;
-				Parent           = buildInfo.Parent;
-				Expression       = buildInfo.Expression;
-				SelectQuery      = buildInfo.SelectQuery;
+				Builder                  = builder;
+				Parent                   = buildInfo.Parent;
+				Expression               = buildInfo.Expression;
+				SelectQuery              = buildInfo.SelectQuery;
 				AssociationsToSubQueries = buildInfo.AssociationsAsSubQueries;
-
-				OriginalType     = originalType;
-				ObjectType       = GetObjectType();
-				SqlTable         = new SqlTable(builder.MappingSchema, ObjectType);
-				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
+				OriginalType             = originalType;
+				ObjectType               = GetObjectType();
+				SqlTable                 = new SqlTable(builder.MappingSchema, ObjectType);
+				EntityDescriptor         = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
 
 				SelectQuery.From.Table(SqlTable);
 
@@ -72,16 +72,15 @@ namespace LinqToDB.Linq.Builder
 
 			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, SqlTable table)
 			{
-				Builder          = builder;
-				Parent           = buildInfo.Parent;
-				Expression       = buildInfo.Expression;
-				SelectQuery      = buildInfo.SelectQuery;
+				Builder                  = builder;
+				Parent                   = buildInfo.Parent;
+				Expression               = buildInfo.Expression;
+				SelectQuery              = buildInfo.SelectQuery;
 				AssociationsToSubQueries = buildInfo.AssociationsAsSubQueries;
-
-				OriginalType     = table.ObjectType;
-				ObjectType       = GetObjectType();
-				SqlTable         = table;
-				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
+				OriginalType             = table.ObjectType;
+				ObjectType               = GetObjectType();
+				SqlTable                 = table;
+				EntityDescriptor         = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
 
 				if (SqlTable.SqlTableType != SqlTableType.SystemTable)
 					SelectQuery.From.Table(SqlTable);
@@ -95,7 +94,6 @@ namespace LinqToDB.Linq.Builder
 				Parent           = null;
 				Expression       = null;
 				SelectQuery      = selectQuery;
-
 				OriginalType     = table.ObjectType;
 				ObjectType       = GetObjectType();
 				SqlTable         = table;
@@ -115,10 +113,10 @@ namespace LinqToDB.Linq.Builder
 
 			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo)
 			{
-				Builder     = builder;
-				Parent      = buildInfo.Parent;
-				Expression  = buildInfo.Expression;
-				SelectQuery = buildInfo.SelectQuery;
+				Builder                  = builder;
+				Parent                   = buildInfo.Parent;
+				Expression               = buildInfo.Expression;
+				SelectQuery              = buildInfo.SelectQuery;
 				AssociationsToSubQueries = buildInfo.AssociationsAsSubQueries;
 
 				var mc   = (MethodCallExpression)Expression;
@@ -231,7 +229,6 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 			}
-
 
 			static bool IsRecord(Attribute[] attrs, out int sequence)
 			{

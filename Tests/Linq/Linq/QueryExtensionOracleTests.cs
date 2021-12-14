@@ -309,5 +309,121 @@ namespace Tests.Linq
 
 			Assert.That(LastQuery, Contains.Substring("SELECT /*+ FULL(p_2.p) FULL(p_2.p_1) */"));
 		}
+
+		[Test]
+		public void TableIDTest([IncludeDataSources(true, TestProvName.AllOracle)] string context,
+			[Values(
+				Hints.QueryHint.Leading
+			)] string hint)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Parent.TableHint(Hints.TableHint.Full).TableID("Pr")
+				from c in db.Child.TableID("Ch")
+				select p
+			)
+			.QueryHint(hint, Sql.TableID("Pr"), Sql.TableID("Ch"));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ FULL(p) {hint}(p c_1) */"));
+		}
+
+		[Test]
+		public void TableIDTest2([IncludeDataSources(true, TestProvName.AllOracle)] string context,
+			[Values(
+				Hints.QueryHint.Leading
+			)] string hint)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in
+					(
+						from p in
+							(
+								from p in db.Parent.TableHint(Hints.TableHint.Full).TableID("Pr")
+								from c in db.Child.TableID("Ch")
+								select p
+							)
+							.AsSubQuery()
+						select p
+					)
+					.AsSubQuery()
+				select p
+			)
+			.QueryHint(hint, Sql.TableID("Pr"), Sql.TableID("Ch"));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ FULL(p_2.p_1.p) {hint}(p_2.p_1.p p_2.p_1.c_1) */"));
+		}
+
+		[Test]
+		public void TableIDTest3([IncludeDataSources(true, TestProvName.AllOracle)] string context,
+			[Values(
+				Hints.QueryHint.Leading
+			)] string hint)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in
+					(
+						from p in
+							(
+								from p in db.Parent.TableHint(Hints.TableHint.Full).TableID("Pr")
+								where p.ParentID < 0
+								select p
+							)
+							.AsSubQuery()
+						select p
+					)
+					.AsSubQuery("qn")
+				from c in db.Child.TableID("Ch")
+				select p
+			)
+			.QueryHint(hint, Sql.TableID("Pr"), Sql.TableID("Ch"));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ FULL(p_1.p@qn) {hint}(p_1.p@qn c_1) */"));
+		}
+
+		[Test]
+		public void TableIDTest4([IncludeDataSources(true, TestProvName.AllOracle)] string context,
+			[Values(
+				Hints.QueryHint.Leading
+			)] string hint)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in
+					(
+						from p in
+							(
+								from p in db.Parent.TableHint(Hints.TableHint.Full).TableID("Pr")
+								where p.ParentID < 0
+								select p
+							)
+							.AsSubQuery("qn")
+						from c in db.Child.TableID("Ch")
+						select p
+					)
+					.AsSubQuery()
+				select p
+			)
+			.QueryHint(hint, Sql.TableID("Pr"), Sql.TableID("Ch"));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ FULL(p@qn) {hint}(p@qn p_2.c_1) */"));
+		}
 	}
 }

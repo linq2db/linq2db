@@ -856,6 +856,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Schema);
 							Append(elem.PhysicalName);
 							Append(elem.ObjectType);
+							Append(elem.ID);
 
 							if (elem.SequenceAttributes.IsNullOrEmpty())
 								Builder.Append(" -");
@@ -1701,6 +1702,7 @@ namespace LinqToDB.ServiceModel
 							var schema             = ReadString();
 							var physicalName       = ReadString();
 							var objectType         = Read<Type>()!;
+							var tableID            = ReadString();
 							var sequenceAttributes = null as SequenceNameAttribute[];
 
 							var count = ReadCount();
@@ -1726,7 +1728,7 @@ namespace LinqToDB.ServiceModel
 
 							obj = new SqlTable(
 								sourceID, name, alias, server, database, schema, physicalName, objectType, sequenceAttributes, flds,
-								sqlTableType, tableArgs, tableOptions);
+								sqlTableType, tableArgs, tableOptions, tableID);
 
 							break;
 						}

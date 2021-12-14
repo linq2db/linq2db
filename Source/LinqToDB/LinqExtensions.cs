@@ -243,7 +243,10 @@ namespace LinqToDB
 		[LinqTunnel]
 		[Pure]
 		[Sql.QueryExtension(Sql.QueryExtensionScope.Table, Sql.QueryExtensionID.TableHintWithParameters)]
-		public static ITable<TSource> TableHint<TSource,TParam>(this ITable<TSource> table, [SqlQueryDependent] string tableHint, [SqlQueryDependent] params TParam[] hintParameters)
+		public static ITable<TSource> TableHint<TSource,TParam>(
+			this ITable<TSource> table,
+			[SqlQueryDependent] string tableHint,
+			[SqlQueryDependent] params TParam[] hintParameters)
 			where TSource : notnull
 		{
 			table.Expression = Expression.Call(
@@ -341,11 +344,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Adds join hint to a generated query.
-		/// <code>
-		/// // will produce following SQL code in generated query: INNER LOOP JOIN
-		/// var tableWithHint = db.Table.JoinHint("LOOP");
-		/// </code>
+		/// Adds a query hint to the generated query.
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <typeparam name="TParam">Hint parameter type</typeparam>
@@ -368,7 +367,38 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(QueryHint, source, queryHint, hintParameter),
-					currentSource.Expression, Expression.Constant(queryHint), Expression.Constant(hintParameter)));
+					currentSource.Expression,
+					Expression.Constant(queryHint),
+					Expression.Constant(hintParameter)));
+		}
+
+		/// <summary>
+		/// Adds a query hint to the generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <typeparam name="TParam">Table hint parameter type.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="queryHint">SQL text, added to join in generated query.</param>
+		/// <param name="hintParameters">Table hint parameters.</param>
+		/// <returns>Table-like query source with table hints.</returns>
+		[LinqTunnel]
+		[Pure]
+		[Sql.QueryExtension(Sql.QueryExtensionScope.Query, Sql.QueryExtensionID.QueryHintWithParameters)]
+		public static IQueryable<TSource> QueryHint<TSource, TParam>(
+			this IQueryable<TSource> source,
+			[SqlQueryDependent] string queryHint,
+			[SqlQueryDependent] params TParam[] hintParameters)
+			where TSource : notnull
+		{
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(QueryHint, source, queryHint, hintParameters),
+					currentSource.Expression,
+					Expression.Constant(queryHint),
+					Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p)))));
 		}
 
 		/// <summary>

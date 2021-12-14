@@ -12,6 +12,7 @@ namespace LinqToDB
 			public const int JoinHint                = 1100;
 			public const int QueryHint               = 1200;
 			public const int QueryHintWithParameter  = 1201;
+			public const int QueryHintWithParameters = 1202;
 
 			// SqlServer table hint IDs.
 			//

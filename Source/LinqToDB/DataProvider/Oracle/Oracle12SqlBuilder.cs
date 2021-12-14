@@ -41,7 +41,9 @@
 			return new Oracle12SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags)
 			{
 				HintBuilder = HintBuilder,
-				TablePath   = TablePath
+				TablePath   = TablePath,
+				QueryName   = QueryName,
+				TableIDs    = TableIDs ??= new(),
 			};
 		}
 
