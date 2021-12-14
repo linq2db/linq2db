@@ -410,7 +410,7 @@ namespace LinqToDB
 		/// <returns>Query source with join hints.</returns>
 		[LinqTunnel]
 		[Pure]
-		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TablesInScope, Sql.QueryExtensionID.TableHint)]
+		[Sql.QueryExtension(Sql.QueryExtensionScope.TablesInScope, Sql.QueryExtensionID.TableHint)]
 		public static IQueryable<TSource> TablesInScopeHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string tableHint)
 			where TSource : notnull
 		{

@@ -425,5 +425,153 @@ namespace Tests.Linq
 
 			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ FULL(p@qn) {hint}(p@qn p_2.c_1) */"));
 		}
+
+		[Test]
+		public void TableInScopeTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				(
+					from p in db.Parent
+					from c in db.Child
+					from c1 in db.Child.TableHint(Hints.TableHint.Full)
+					where c.ParentID == p.ParentID && c1.ParentID == p.ParentID
+					select p
+				)
+				.TablesInScopeHint(Hints.TableHint.NoCache);
+
+			q =
+				(
+					from p in q
+					from c in db.Child
+					from p1 in db.Parent.TablesInScopeHint(Hints.TableHint.Parallel)
+					where c.ParentID == p.ParentID && c.Parent!.ParentID > 0 && p1.ParentID == p.ParentID
+					select p
+				)
+				.TablesInScopeHint(Hints.TableHint.Cluster);
+
+			q =
+				from p in q
+				from c in db.Child
+				where c.ParentID == p.ParentID
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ NOCACHE(p_2.p_1.t1.p) NOCACHE(p_2.p_1.t1.c_1) FULL(p_2.p_1.c1) NOCACHE(p_2.p_1.c1) PARALLEL(p_2.p1) CLUSTER(p_2.c_2) CLUSTER(p_2.a_Parent) */"));
+		}
+
+		[Test]
+		public void DeleteTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			(
+				from c in db.Child.TableHint(Hints.TableHint.Full)
+				where c.ParentID < -1111
+				select c
+			)
+			.QueryHint(Hints.QueryHint.AllRows)
+			.QueryHint(Hints.QueryHint.FirstRows(10))
+			.Delete();
+
+			Assert.That(LastQuery, Contains.Substring("DELETE /*+ FULL(c_1) ALL_ROWS FIRST_ROWS(10) */"));
+		}
+
+		[Test]
+		public void InsertTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			(
+				from c in db.Child.TableHint(Hints.TableHint.Full)
+				where c.ParentID < -1111
+				select c
+			)
+			.QueryHint(Hints.QueryHint.AllRows)
+			.QueryHint(Hints.QueryHint.FirstRows(10))
+			.Insert(db.Child, c => new()
+			{
+				ChildID = c.ChildID * 2
+			});
+
+			Assert.That(LastQuery, Contains.Substring("INSERT /*+ FULL(c_1) ALL_ROWS FIRST_ROWS(10) */ INTO "));
+		}
+
+		[Test]
+
+		public void UpdateTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			(
+				from c in db.Child//.TableHint(Hints.TableHint.Full)
+				where c.ParentID < -1111
+				select c
+			)
+			.QueryHint(Hints.QueryHint.AllRows)
+			.QueryHint(Hints.QueryHint.FirstRows(10))
+			.Update(db.Child, c => new()
+			{
+				ChildID = c.ChildID * 2
+			});
+
+			Assert.That(LastQuery, Contains.Substring("UPDATE /*+ ALL_ROWS FIRST_ROWS(10) */"));
+		}
+
+		[Test]
+		public void MergeTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.Parent1
+				.Merge()
+				.Using
+				(
+					(
+						from c in db.Parent1.TableHint(Hints.TableHint.Full)
+						where c.ParentID < -1111
+						select c
+					)
+					.QueryHint(Hints.QueryHint.AllRows)
+					.QueryHint(Hints.QueryHint.FirstRows(10))
+				)
+				.OnTargetKey()
+				.UpdateWhenMatched()
+				.Merge();
+
+			Assert.That(LastQuery, Contains.Substring("MERGE /*+ FULL(c_1) ALL_ROWS FIRST_ROWS(10) */ INTO"));
+		}
+
+		[Test]
+		public void CteTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte =
+				(
+					from c in db.Child.TableHint(Hints.TableHint.Full)
+					where c.ParentID < -1111
+					select c
+				)
+				.QueryHint(Hints.QueryHint.FirstRows(10))
+				.TablesInScopeHint(Hints.TableHint.NoCache)
+				.AsCte();
+
+			var q =
+				(
+					from p in cte
+					from c in db.Child
+					select p
+				)
+				.QueryHint(Hints.QueryHint.AllRows)
+				.TablesInScopeHint(Hints.TableHint.Fact);
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("\tSELECT /*+ FULL(c_1) NOCACHE(c_1) */"));
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ FACT(c_2) FIRST_ROWS(10) ALL_ROWS */"));
+		}
 	}
 }

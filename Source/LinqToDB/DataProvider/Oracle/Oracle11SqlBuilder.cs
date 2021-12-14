@@ -107,6 +107,7 @@ namespace LinqToDB.DataProvider.Oracle
 				case SetOperation.Except    : sb.Append("MINUS");     return;
 				case SetOperation.ExceptAll : sb.Append("MINUS ALL"); return;
 			}
+
 			base.BuildSetOperation(operation, sb);
 		}
 
@@ -689,6 +690,9 @@ END;",
 				HintBuilder        = new();
 				_isTopLevelBuilder = true;
 				_hintPosition      = StringBuilder.Length;
+
+				if (Statement is SqlInsertStatement)
+					_hintPosition -= " INTO ".Length;
 
 				if (selectQuery?.QueryName is {} queryName)
 					HintBuilder

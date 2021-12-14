@@ -588,7 +588,6 @@ namespace Tests.Linq
 			Assert.That(LastQuery, Contains.Substring("OPTION (FAST 10, RECOMPILE)"));
 		}
 
-
 		[Test]
 		public void UnionTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
