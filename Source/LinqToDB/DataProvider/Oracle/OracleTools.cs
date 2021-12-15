@@ -2,11 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
-using System.Linq.Expressions;
 using System.Reflection;
-using JetBrains.Annotations;
-using LinqToDB.Expressions;
-using LinqToDB.Linq;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -147,11 +143,11 @@ namespace LinqToDB.DataProvider.Oracle
 
 		private static OracleVersion DetectProviderVersion(IConnectionStringSettings css, string connectionString, bool managed)
 		{
-
-			OracleProviderAdapter providerAdapter;
 			try
 			{
 				var cs = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
+
+				OracleProviderAdapter providerAdapter;
 
 #if NETFRAMEWORK
 				if (!managed)
@@ -275,7 +271,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public static void ResolveOracle(Assembly assembly) => new AssemblyResolver(assembly, assembly.FullName!);
 
-#region CreateDataConnection
+		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString, string? providerName = null)
 		{
@@ -292,9 +288,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return new DataConnection(GetDataProvider(providerName), transaction);
 		}
 
-#endregion
+		#endregion
 
-#region BulkCopy
+		#region BulkCopy
 
 		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
 

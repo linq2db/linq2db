@@ -118,6 +118,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			return (dc, array) => dc.FromSqlScalar<T>($"UNNEST({array})");
 		}
+
 		public class Ordinality<T>
 		{
 			[Column(Name = "value")]                  public T    Value = default!;

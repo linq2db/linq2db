@@ -510,7 +510,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-
 		public void UpdateTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -557,7 +556,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-
 		public void CteTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var db = GetDataContext(context);

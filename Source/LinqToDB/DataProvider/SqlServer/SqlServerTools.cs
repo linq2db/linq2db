@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
@@ -11,8 +10,6 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Common;
 	using Configuration;
 	using Data;
-	using Expressions;
-	using Linq;
 
 	public static class SqlServerTools
 	{
@@ -387,29 +384,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#endregion
 
-		#region QueryExtensions
-
-		[LinqToDB.Sql.QueryExtension(ProviderName.SqlServer, LinqToDB.Sql.QueryExtensionScope.Table, LinqToDB.Sql.QueryExtensionID.SqlServerForceSeekTableHintID)]
-		public static ITable<TSource> WithForceSeek<TSource>(
-			this ITable<TSource> table,
-			[SqlQueryDependent]  string indexName,
-			params Expression<Func<TSource,object>>[] columns)
-			where TSource : notnull
-		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(WithForceSeek, table, indexName, columns),
-				table.Expression, Expression.Constant(indexName), Expression.NewArrayInit(
-					typeof(Expression<Func<TSource,object>>),
-					columns));
-
-			return table;
-		}
-
-		#endregion
-
 		public static class Sql
 		{
+			[Obsolete("Use 'QueryHint(Hints.Option.Recompile)' instead.")]
 			public const string OptionRecompile = "OPTION(RECOMPILE)";
 		}
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SQLite
@@ -225,6 +226,25 @@ namespace LinqToDB.DataProvider.SQLite
 			}
 
 			aliasBuilt = false;
+		}
+
+		protected override void BuildTableExtensions(SqlTable table, string alias)
+		{
+			if (table.SqlQueryExtensions!.Any(ext =>
+				ext.Scope is
+					Sql.QueryExtensionScope.Table or
+					Sql.QueryExtensionScope.TablesInScope &&
+				ext.ID is
+					Sql.QueryExtensionID.TableHint))
+			{
+				StringBuilder.Append(' ');
+
+				foreach (var ext in table.SqlQueryExtensions!)
+				{
+					var hint = (SqlValue)ext.Arguments["tableHint"];
+					StringBuilder.Append((string)hint.Value!);
+				}
+			}
 		}
 	}
 }

@@ -238,12 +238,12 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var q =
-				(
-					from c in db.Child
-					join p in db.Parent on c.ParentID equals p.ParentID
-					select p
-				)
-				.QueryHint(Hints.QueryHint.FirstRows(25));
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.QueryHint(Hints.QueryHint.FirstRows(25));
 
 			_ = q.ToList();
 

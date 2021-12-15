@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Linq.Expressions;
+using LinqToDB.Expressions;
+using LinqToDB.Linq;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -126,5 +129,26 @@ namespace LinqToDB.DataProvider.SqlServer
 				return $"USE PLAN ({value})";
 			}
 		}
+
+		#region QueryExtensions
+
+		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.Table, Sql.QueryExtensionID.SqlServerForceSeekTableHintID)]
+		public static ITable<TSource> WithForceSeek<TSource>(
+			this ITable<TSource>                      table,
+			[SqlQueryDependent] string                indexName,
+			params Expression<Func<TSource,object>>[] columns)
+			where TSource : notnull
+		{
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(WithForceSeek, table, indexName, columns),
+				table.Expression, Expression.Constant(indexName), Expression.NewArrayInit(
+					typeof(Expression<Func<TSource,object>>),
+					columns));
+
+			return table;
+		}
+
+		#endregion
 	}
 }

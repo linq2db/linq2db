@@ -61,7 +61,9 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
+#pragma warning disable CS0618
 				db.QueryHints.Add(SqlServerTools.Sql.OptionRecompile);
+#pragma warning restore CS0618
 
 				var q = db.Parent.Select(p => p);
 
@@ -88,7 +90,9 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
+#pragma warning disable CS0618
 				db.NextQueryHints.Add(SqlServerTools.Sql.OptionRecompile);
+#pragma warning restore CS0618
 
 				var q = db.Parent.Select(p => p);
 
