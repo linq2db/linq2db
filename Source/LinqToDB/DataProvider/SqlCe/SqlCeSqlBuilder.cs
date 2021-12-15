@@ -182,57 +182,15 @@ namespace LinqToDB.DataProvider.SqlCe
 					Sql.QueryExtensionScope.Table or
 					Sql.QueryExtensionScope.TablesInScope &&
 				ext.ID is
-					Sql.QueryExtensionID.TableHint or
-					Sql.QueryExtensionID.SqlServerForceSeekTableHintID))
+					Sql.QueryExtensionID.TableHint))
 			{
 				StringBuilder.Append(" WITH (");
 
 				foreach (var ext in table.SqlQueryExtensions!)
 				{
-					switch (ext.ID)
-					{
-						case Sql.QueryExtensionID.SqlServerForceSeekTableHintID:
-						{
-							var value = (SqlValue)ext.Arguments["indexName"];
-							var count = (int)((SqlValue)ext.Arguments["columns.Count"]).Value!;
+					var hint = (SqlValue)ext.Arguments["tableHint"];
 
-							if (count == 0)
-							{
-								StringBuilder
-									.Append("ForceSeek, Index(")
-									.Append(value.Value)
-									.Append(')')
-									;
-							}
-							else
-							{
-								StringBuilder
-									.Append("ForceSeek (")
-									.Append(value.Value)
-									.Append(" (")
-									;
-
-								for (var i = 0; i < count; i++)
-								{
-									BuildExpression(ext.Arguments[$"columns.{i}"], false, false, false);
-									StringBuilder.Append(", ");
-								}
-
-								StringBuilder.Length -= 2;
-								StringBuilder.Append("))");
-							}
-
-							break;
-						}
-						default:
-						{
-							var hint = (SqlValue)ext.Arguments["tableHint"];
-
-							StringBuilder.Append((string)hint.Value!);
-							break;
-						}
-					}
-
+					StringBuilder.Append((string)hint.Value!);
 					StringBuilder.Append(", ");
 				}
 
