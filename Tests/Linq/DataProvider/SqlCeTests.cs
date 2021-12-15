@@ -512,6 +512,8 @@ namespace Tests.DataProvider
 		{
 			using var db = GetDataContext(context);
 			AreEqual(Person, db.Person.With("TABLOCK"), ps => ps.OrderBy(p => p.ID));
+
+			Assert.That(LastQuery, Contains.Substring("[Person] [t1] WITH (TABLOCK)"));
 		}
 
 		[Test]

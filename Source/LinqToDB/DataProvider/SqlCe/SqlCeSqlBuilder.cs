@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Data;
+using System.Linq;
 using System.Text;
+
+using LinqToDB.Common;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
@@ -171,5 +174,71 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 
 		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
+
+		protected override void BuildTableExtensions(SqlTable table, string alias)
+		{
+			if (table.SqlQueryExtensions!.Any(ext =>
+				ext.Scope is
+					Sql.QueryExtensionScope.Table or
+					Sql.QueryExtensionScope.TablesInScope &&
+				ext.ID is
+					Sql.QueryExtensionID.TableHint or
+					Sql.QueryExtensionID.SqlServerForceSeekTableHintID))
+			{
+				StringBuilder.Append(" WITH (");
+
+				foreach (var ext in table.SqlQueryExtensions!)
+				{
+					switch (ext.ID)
+					{
+						case Sql.QueryExtensionID.SqlServerForceSeekTableHintID:
+						{
+							var value = (SqlValue)ext.Arguments["indexName"];
+							var count = (int)((SqlValue)ext.Arguments["columns.Count"]).Value!;
+
+							if (count == 0)
+							{
+								StringBuilder
+									.Append("ForceSeek, Index(")
+									.Append(value.Value)
+									.Append(')')
+									;
+							}
+							else
+							{
+								StringBuilder
+									.Append("ForceSeek (")
+									.Append(value.Value)
+									.Append(" (")
+									;
+
+								for (var i = 0; i < count; i++)
+								{
+									BuildExpression(ext.Arguments[$"columns.{i}"], false, false, false);
+									StringBuilder.Append(", ");
+								}
+
+								StringBuilder.Length -= 2;
+								StringBuilder.Append("))");
+							}
+
+							break;
+						}
+						default:
+						{
+							var hint = (SqlValue)ext.Arguments["tableHint"];
+
+							StringBuilder.Append((string)hint.Value!);
+							break;
+						}
+					}
+
+					StringBuilder.Append(", ");
+				}
+
+				StringBuilder.Length -= 2;
+				StringBuilder.Append(')');
+			}
+		}
 	}
 }
