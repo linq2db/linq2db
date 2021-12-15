@@ -107,7 +107,7 @@ namespace LinqToDB.Linq.Builder
 
 		class JoinContext : SelectContext
 		{
-			public JoinContext(IBuildContext? parent, LambdaExpression lambda, bool isSubquery, IBuildContext outerContext, IBuildContext innerContext) : base(parent, lambda, isSubquery, outerContext, innerContext)
+			public JoinContext(IBuildContext? parent, LambdaExpression lambda, bool isSubQuery, IBuildContext outerContext, IBuildContext innerContext) : base(parent, lambda, isSubQuery, outerContext, innerContext)
 			{
 			}
 

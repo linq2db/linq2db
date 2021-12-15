@@ -511,6 +511,10 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (ex is ContextRefExpression)
 						return true;
+					if (ex is SqlErrorExpression)
+						return true;
+					if (ex is SqlPlaceholderExpression)
+						return true;
 					return !ex.CanReduce;
 				}
 			}

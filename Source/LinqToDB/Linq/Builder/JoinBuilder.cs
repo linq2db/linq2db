@@ -262,8 +262,8 @@ namespace LinqToDB.Linq.Builder
 
 		internal class JoinContext : SelectContext
 		{
-			public JoinContext(IBuildContext? parent, LambdaExpression lambda, bool isSubquery, IBuildContext outerContext, IBuildContext innerContext)
-				: base(parent, lambda, isSubquery, outerContext, innerContext)
+			public JoinContext(IBuildContext? parent, LambdaExpression lambda, bool isSubQuery, IBuildContext outerContext, IBuildContext innerContext)
+				: base(parent, lambda, isSubQuery, outerContext, innerContext)
 			{
 			}
 
@@ -277,14 +277,14 @@ namespace LinqToDB.Linq.Builder
 			public GroupJoinContext(
 				IBuildContext?           parent,
 				LambdaExpression         lambda,
-				bool                     isSubquery,
+				bool                     isSubQuery,
 				IBuildContext            outerContext,
 				GroupJoinSubQueryContext innerContext,
 				Expression               innerExpression,
 				LambdaExpression         outerKeyLambda,
 				LambdaExpression         innerKeyLambda
 				)
-				: base(parent, lambda, isSubquery, outerContext, innerContext)
+				: base(parent, lambda, isSubQuery, outerContext, innerContext)
 			{
 				_innerExpression = innerExpression;
 				OuterKeyLambda  = outerKeyLambda;

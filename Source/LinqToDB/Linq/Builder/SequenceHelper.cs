@@ -76,12 +76,20 @@ namespace LinqToDB.Linq.Builder
 			return context;
 		}
 
-		public static SqlInfo MakeColumn(SelectQuery selectQuery, SqlInfo sqlInfo)
+		public static SqlInfo MakeColumn(SelectQuery selectQuery, SqlInfo sqlInfo, string? alias)
 		{
 			if (sqlInfo.Sql is SqlColumn column && ReferenceEquals(selectQuery, column.Parent))
 				return sqlInfo;
 
 			var idx = selectQuery.Select.Add(sqlInfo.Sql);
+
+			column = selectQuery.Select.Columns[idx];
+
+			if (!string.IsNullOrEmpty(alias) && (idx + 1 == selectQuery.Select.Columns.Count))
+			{
+				column.RawAlias = alias;
+			}
+
 			return new SqlInfo(sqlInfo.MemberChain, selectQuery.Select.Columns[idx], selectQuery, idx);
 		}
 

@@ -20,7 +20,7 @@ namespace LinqToDB.Linq.Builder
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { CopyTable = true, CreateSubQuery = true });
+			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { /*CopyTable = true, CreateSubQuery = true*/ });
 
 			var isAsync = methodCall.Method.DeclaringType == typeof(AsyncExtensions);
 
@@ -178,6 +178,25 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				return _subQuerySql;
+			}
+
+			private SqlPlaceholderExpression? _innerSql;
+
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				if (!SequenceHelper.IsSameContext(path, this))
+					throw new InvalidOperationException();
+
+				if (_innerSql == null)
+				{ 
+					var cond = new SqlCondition(
+						_methodCall.Method.Name.StartsWith("All"),
+						new SqlPredicate.FuncLike(SqlFunction.CreateExists(SelectQuery)));
+
+					_innerSql = ExpressionBuilder.CreatePlaceholder(Parent, new SqlSearchCondition(cond), path);
+				}
+
+				return _innerSql;
 			}
 		}
 	}

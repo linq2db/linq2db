@@ -47,7 +47,7 @@ namespace LinqToDB.Linq.Builder
 
 		public readonly Dictionary<MemberInfo,Expression> Members = new (new MemberInfoComparer());
 
-		public SelectContext(IBuildContext? parent, ExpressionBuilder builder, LambdaExpression lambda, SelectQuery selectQuery, bool isSubquery)
+		public SelectContext(IBuildContext? parent, ExpressionBuilder builder, LambdaExpression lambda, SelectQuery selectQuery, bool isSubQuery)
 		{
 			Parent      = parent;
 			Sequence    = Array<IBuildContext>.Empty;
@@ -55,7 +55,7 @@ namespace LinqToDB.Linq.Builder
 			Lambda      = lambda;
 			Body        = lambda.Body;
 			SelectQuery = selectQuery;
-			IsSubquery  = isSubquery;
+			IsSubQuery  = isSubQuery;
 
 			IsScalar = !Builder.ProcessProjection(Members, Body);
 
@@ -65,13 +65,13 @@ namespace LinqToDB.Linq.Builder
 #endif
 		}
 
-		public SelectContext(IBuildContext? parent, LambdaExpression lambda, bool isSubquery, params IBuildContext[] sequences)
+		public SelectContext(IBuildContext? parent, LambdaExpression lambda, bool isSubQuery, params IBuildContext[] sequences)
 		{
 			Parent     = parent;
 			Sequence   = sequences;
 			Builder    = sequences[0].Builder;
 			Lambda     = lambda;
-			IsSubquery = isSubquery;
+			IsSubQuery = isSubQuery;
 			Body       = SequenceHelper.PrepareBody(lambda, sequences);
 
 			SelectQuery   = sequences[0].SelectQuery;
@@ -160,17 +160,21 @@ namespace LinqToDB.Linq.Builder
 
 		public SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
 		{
-			return SequenceHelper.MakeColumn(SelectQuery, sqlInfo);
+			return SequenceHelper.MakeColumn(SelectQuery, sqlInfo, alias);
 		}
 
 		public virtual Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
 			Expression result;
 
+			if (flags.HasFlag(ProjectFlags.Root))
+				return path;
+
 			if (SequenceHelper.IsSameContext(path, this))
 			{
-				if (flags.HasFlag(ProjectFlags.Root))
-					return path;
+				if (path.Type != Body.Type && flags.HasFlag(ProjectFlags.Expression))
+					return new SqlEagerLoadExpression(this, path);
+
 				result = Body;
 			}
 			else
@@ -791,7 +795,7 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		public bool IsSubquery { get; }
+		public bool IsSubQuery { get; }
 
 		Expression? GetProjectedExpression(MemberInfo memberInfo, bool throwOnError)
 		{

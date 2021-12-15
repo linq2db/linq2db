@@ -120,13 +120,19 @@ namespace LinqToDB.Linq.Builder
 		public override SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
 		{
 			var column = base.MakeColumn(path, sqlInfo, alias);
-			column = SequenceHelper.MakeColumn(SelectQuery, column);
+			column = SequenceHelper.MakeColumn(SelectQuery, column, alias);
 			return column;
 		}
 
-		public override Expression MakeExpression(Expression? path, ProjectFlags flags)
+		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
+			/*
+			if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Root))
+				return path;
+
+			*/
 			var result = base.MakeExpression(path, flags);
+			result = Builder.UpdateNesting(this, result);
 			return result;
 		}
 	}

@@ -258,10 +258,13 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			if (inline && shouldAddDefaultIfEmpty)
+			if (inline)
 			{
 				var body = definedQueryMethod.Body.Unwrap();
-				body = Expression.Call(Methods.Queryable.DefaultIfEmpty.MakeGenericMethod(objectType), body);
+				body = Expression.Call(
+					(shouldAddDefaultIfEmpty ? Methods.Queryable.SingleOrDefault : Methods.Queryable.Single)
+					.MakeGenericMethod(objectType), body);
+
 				definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters);
 				isLeft = true;
 			}
@@ -290,7 +293,7 @@ namespace LinqToDB.Linq.Builder
 			var parentRef   = new ContextRefExpression(queryMethod.Parameters[0].Type, tableContext);
 			var body = queryMethod.GetBody(parentRef);
 
-			var context = builder.BuildSequence(new BuildInfo(tableContext, body, new SelectQuery()));
+			var context = builder.BuildSequence(new BuildInfo((IBuildContext?)null, body, new SelectQuery()));
 
 			var tableSource = tableContext.SelectQuery.From.Tables.First();
 			var join = new SqlFromClause.Join(isOuter ? JoinType.OuterApply : JoinType.CrossApply, context.SelectQuery,
@@ -299,6 +302,21 @@ namespace LinqToDB.Linq.Builder
 			tableSource.Joins.Add(join.JoinedTable);
 			
 			return new AssociationContext(builder, descriptor, tableContext, context, join.JoinedTable);
+		}
+
+		public static Expression BuildAssociationQuery(ExpressionBuilder builder, ContextRefExpression tableContext, 
+			AccessorMember onMember, AssociationDescriptor descriptor, bool inline, ref bool isOuter)
+		{
+			var elementType     = descriptor.GetElementType(builder.MappingSchema);
+			var parentExactType = descriptor.GetParentElementType();
+
+			var queryMethod = CreateAssociationQueryLambda(
+				builder, onMember, descriptor, elementType /*tableContext.OriginalType*/, parentExactType, elementType,
+				inline, isOuter, null /*tableContext.LoadWith*/, out isOuter);
+
+			var body = queryMethod.GetBody(tableContext);
+
+			return body;
 		}
 
 		public static IBuildContext BuildAssociationSelectMany(ExpressionBuilder builder, BuildInfo buildInfo, IBuildContext tableContext, 

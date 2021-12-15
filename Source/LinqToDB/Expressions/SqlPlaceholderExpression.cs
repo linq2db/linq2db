@@ -8,17 +8,19 @@ namespace LinqToDB.Expressions
 {
 	class SqlPlaceholderExpression : Expression
 	{
-		public SqlPlaceholderExpression(IBuildContext? buildContext, SqlInfo sql, Expression memberExpression, Type? convertType = null)
+		public SqlPlaceholderExpression(IBuildContext? buildContext, SqlInfo sql, Expression memberExpression, Type? convertType = null, string? alias = null)
 		{
 			BuildContext     = buildContext;
 			MemberExpression = memberExpression;
 			ConvertType      = convertType;
+			Alias            = alias;
 			Sql              = sql;
 		}
 
 		public IBuildContext? BuildContext     { get; }
 		public Expression     MemberExpression { get; }
 		public Type?          ConvertType      { get; }
+		public string?        Alias            { get; set; }
 		public SqlInfo        Sql              { get; }
 
 

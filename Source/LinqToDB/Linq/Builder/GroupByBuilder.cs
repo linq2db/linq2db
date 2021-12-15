@@ -174,8 +174,8 @@ namespace LinqToDB.Linq.Builder
 
 		internal class KeyContext : SelectContext
 		{
-			public KeyContext(IBuildContext? parent, LambdaExpression lambda, bool isSubquery, params IBuildContext[] sequences)
-				: base(parent, lambda, isSubquery, sequences)
+			public KeyContext(IBuildContext? parent, LambdaExpression lambda, bool isSubQuery, params IBuildContext[] sequences)
+				: base(parent, lambda, isSubQuery, sequences)
 			{
 			}
 
@@ -247,6 +247,26 @@ namespace LinqToDB.Linq.Builder
 			readonly bool          _isGroupingGuardDisabled;
 
 			public SelectContext   Element { get; }
+
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Root))
+					return path;
+
+				if (SequenceHelper.IsSameContext(path, this))
+				{
+					var elementPath = SequenceHelper.CorrectExpression(path, this, Element);
+					return Builder.MakeExpression(elementPath, flags);
+				}
+
+				if (path is MemberExpression me && me.Expression is ContextRefExpression contextRef && me.Member.Name == "Key")
+				{
+					var keyPath = new ContextRefExpression(contextRef.Type, Element);
+					return Builder.MakeExpression(keyPath, flags);
+				}
+
+				return base.MakeExpression(path, flags);
+			}
 
 			internal class Grouping<TKey,TElement> : IGrouping<TKey,TElement>
 			{

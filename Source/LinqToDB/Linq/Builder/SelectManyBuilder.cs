@@ -205,8 +205,8 @@ namespace LinqToDB.Linq.Builder
 
 		public class SelectManyContext : SelectContext
 		{
-			public SelectManyContext(IBuildContext? parent, LambdaExpression lambda, bool isSubquery, IBuildContext sequence)
-				: base(parent, lambda, isSubquery, sequence)
+			public SelectManyContext(IBuildContext? parent, LambdaExpression lambda, bool isSubQuery, IBuildContext sequence)
+				: base(parent, lambda, isSubQuery, sequence)
 			{
 			}
 

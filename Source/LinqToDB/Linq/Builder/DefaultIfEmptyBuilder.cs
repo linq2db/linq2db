@@ -119,25 +119,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (!Disabled && flags.HasFlag(ProjectFlags.Expression))
 				{
-					expr = Builder.ConvertToSqlExpr(this, expr, true);
-
-					//Make placeholders nullable
-					/*var map = new Dictionary<Expression, Expression>();
-					expr = expr.Transform(map, static (map, e) =>
-					{
-						if (map.TryGetValue(e, out var newExpr))
-							return newExpr;
-
-						if (e is SqlPlaceholderExpression placeholder && !placeholder.IsNullable)
-						{
-							newExpr = ExpressionBuilder.CreatePlaceholder(placeholder.BuildContext, placeholder.Sql,
-								placeholder.MemberExpression, isNullable: true);
-							map[e] = newExpr;
-							return newExpr;
-						}
-
-						return e;
-					});*/
+					expr = Builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), this, expr, flags);
 
 					var placeholders = Builder.CollectPlaceholders(expr);
 
@@ -147,7 +129,7 @@ namespace LinqToDB.Linq.Builder
 					if (notNull == null)
 					{
 						notNull = ExpressionBuilder.CreatePlaceholder(this,
-							new SqlValue(1), Expression.Constant(1));
+							new SqlValue(1), Expression.Constant(1), alias: "not_null");
 					}
 
 					var defaultValue = DefaultValue ?? new DefaultValueExpression(Builder.MappingSchema, expr.Type);

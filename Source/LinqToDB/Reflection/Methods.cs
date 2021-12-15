@@ -74,6 +74,10 @@ namespace LinqToDB.Reflection
 			public static readonly MethodInfo FirstOrDefault          = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.FirstOrDefault());
 			public static readonly MethodInfo FirstOrDefaultCondition = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.FirstOrDefault(e => true));
 
+			public static readonly MethodInfo Single                   = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.Single());
+			public static readonly MethodInfo SingleOrDefault          = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.SingleOrDefault());
+			public static readonly MethodInfo SingleOrDefaultCondition = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.SingleOrDefault(e => true));
+
 			public static readonly MethodInfo ElementAt               = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.ElementAt(0));
 			public static readonly MethodInfo ElementAtOrDefault      = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.ElementAtOrDefault(0));
 			public static readonly MethodInfo ElementAtAsync          = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.ElementAtAsync(() => 0, default));

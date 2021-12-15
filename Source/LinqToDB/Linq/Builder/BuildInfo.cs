@@ -34,6 +34,7 @@ namespace LinqToDB.Linq.Builder
 		public bool           CopyTable                { get; set; }
 		public bool           CreateSubQuery           { get; set; }
 		public bool           AssociationsAsSubQueries { get; set; }
+		public bool           IsAssociation            { get; set; }
 		public JoinType       JoinType                 { get; set; }
 		public bool           IsSubQuery               => Parent != null;
 

@@ -84,8 +84,8 @@ namespace LinqToDB.Linq.Builder
 
 		class SelectContext2 : SelectContext
 		{
-			public SelectContext2(IBuildContext? parent, LambdaExpression lambda, bool isSubquery, IBuildContext sequence)
-				: base(parent, lambda, isSubquery, sequence)
+			public SelectContext2(IBuildContext? parent, LambdaExpression lambda, bool isSubQuery, IBuildContext sequence)
+				: base(parent, lambda, isSubQuery, sequence)
 			{
 			}
 

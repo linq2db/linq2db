@@ -311,5 +311,10 @@ namespace LinqToDB.Mapping
 
 			return lambda;
 		}
+
+		public override string ToString()
+		{
+			return MemberInfo.Name;
+		}
 	}
 }

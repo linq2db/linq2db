@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Linq.Expressions;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -48,7 +49,9 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 		{
-			var expr   = BuildExpression(null, 0, false);
+			var expr = Builder.FinalizeProjection(this,
+				Builder.MakeExpression(new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
+
 			var mapper = Builder.BuildMapper<T>(expr);
 
 			QueryRunner.SetRunQuery(query, mapper);
@@ -60,7 +63,7 @@ namespace LinqToDB.Linq.Builder
 
 		public SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
 		{
-			return SequenceHelper.MakeColumn(SelectQuery, sqlInfo);
+			return SequenceHelper.MakeColumn(SelectQuery, sqlInfo, alias);
 		}
 
 		public virtual Expression MakeExpression(Expression path, ProjectFlags flags)

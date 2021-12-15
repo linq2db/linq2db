@@ -62,7 +62,7 @@ namespace LinqToDB.Linq.Builder
 				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null);
 			}
 
-			return new FirstSingleContext(buildInfo.Parent, sequence, methodCall);
+			return new FirstSingleContext(buildInfo.Parent, sequence, methodCall, buildInfo.IsSubQuery, buildInfo.IsAssociation);
 		}
 
 		protected override SequenceConvertInfo? Convert(
@@ -131,13 +131,18 @@ namespace LinqToDB.Linq.Builder
 
 		public class FirstSingleContext : SequenceContextBase
 		{
-			public FirstSingleContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall)
+			public FirstSingleContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall, bool isSubQuery, bool isAssociation)
 				: base(parent, sequence, null)
 			{
-				_methodCall = methodCall;
+				_methodCall     = methodCall;
+				IsSubQuery = isSubQuery;
+				IsAssociation   = isAssociation;
 			}
 
 			readonly MethodCallExpression _methodCall;
+
+			public bool IsSubQuery    { get; }
+			public bool IsAssociation { get; }
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
@@ -371,10 +376,40 @@ namespace LinqToDB.Linq.Builder
 				throw new NotImplementedException();
 			}
 
+			private SqlPlaceholderExpression? _subquerySql;
+
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				CreateJoin();
-				return base.MakeExpression(path, flags);
+				var projected = base.MakeExpression(path, flags);
+
+				if (!flags.HasFlag(ProjectFlags.Test))
+				{
+					if (IsSubQuery)
+					{
+						if (!IsAssociation && projected is SqlPlaceholderExpression placeholder)
+						{
+							// we can make subquery
+							if (_subquerySql == null)
+							{
+								var column = (SqlPlaceholderExpression)Builder.UpdateNesting(this, placeholder);
+								column = Builder.MakeColumn(this, column);
+								_subquerySql = ExpressionBuilder.CreatePlaceholder(this.Parent, SelectQuery,
+									placeholder.MemberExpression, placeholder.ConvertType);
+							}
+
+							return _subquerySql;
+						}
+
+						if (flags.HasFlag(ProjectFlags.Root) && projected is ContextRefExpression)
+							return projected;
+
+						CreateJoin();
+
+						return projected;
+					}
+				}
+
+				return projected;
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)

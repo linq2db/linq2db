@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using LinqToDB.SqlQuery;
@@ -55,7 +56,8 @@ namespace LinqToDB.Linq.Builder
 			while (true)
 			{
 				var body = SequenceHelper.PrepareBody(lambda, sequence).Unwrap();
-					sql  = builder.ConvertExpressions(sequence, body, ConvertFlags.Key, null);
+
+				sql = new SqlInfo[] { builder.ConvertToSqlInfo(sequence, body) };
 
 				// Do not create subquery for ThenByExtensions
 				if (wrapped || isContinuousOrder)

@@ -42,7 +42,18 @@ namespace LinqToDB.Linq.Builder
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { CreateSubQuery = true });
+			var root = builder.MakeExpression(methodCall.Arguments[0], ProjectFlags.Root);
+
+			IBuildContext sequence;
+			if (root is ContextRefExpression contextRefExpression &&
+			    contextRefExpression.BuildContext is GroupByBuilder.GroupByContext)
+			{
+				sequence = contextRefExpression.BuildContext;
+			}
+			else
+			{
+				sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { CreateSubQuery = true });
+			}
 
 			var prevSequence = sequence;
 
@@ -61,27 +72,19 @@ namespace LinqToDB.Linq.Builder
 			var methodName = methodCall.Method.Name.Replace("Async", "");
 
 			var refExpression  = new ContextRefExpression(methodCall.Arguments[0].Type, prevSequence);
-			var sqlPlaceholder = builder.ConvertToSqlPlaceholder(sequence, refExpression);
+			var sqlPlaceholder = builder.ConvertToSqlPlaceholder(prevSequence, refExpression);
 
 			var sql = sqlPlaceholder.Sql;
 
-			/*
-			if (sql.Length == 1)
-			{
-				if (sql[0] is SelectQuery query)
-				{
-					if (query.Select.Columns.Count == 1)
-					{
-						var join = query.OuterApply();
-						context.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
-						sql[0] = query.Select.Columns[0];
-					}
-				}
-			}
-
-			*/
-			var functionPlaceholder = ExpressionBuilder.CreatePlaceholder(context,
+			var functionPlaceholder = ExpressionBuilder.CreatePlaceholder(prevSequence, /*context*/
 				new SqlFunction(methodCall.Type, methodName, true, sql.Sql) { CanBeNull = true }, buildInfo.Expression);
+
+			if (prevSequence is not GroupByBuilder.GroupByContext)
+			{
+				builder.MakeColumn(context, functionPlaceholder);
+
+				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence, context.SelectQuery, functionPlaceholder.MemberExpression, functionPlaceholder.ConvertType);
+			}
 
 			context.Placeholder = functionPlaceholder;
 

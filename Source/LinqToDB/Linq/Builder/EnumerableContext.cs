@@ -553,6 +553,21 @@ namespace LinqToDB.Linq.Builder
 		private static ConstructorInfo _sqlValueconstructor =
 			MemberHelper.ConstructorOf(() => new SqlValue(new DbDataType(typeof(object)), null));
 
+		private SqlField? GetField(MemberExpression path)
+		{
+			foreach (var column in _entityDescriptor.Columns)
+			{
+				if (column.MemberInfo.EqualsTo(path.Member, _elementType))
+				{
+					var newField = BuildField(column);
+
+					return newField;
+				}
+			}
+
+			return null;
+		}
+
 		private SqlField BuildField(ColumnDescriptor column)
 		{
 			var memberName = column.MemberName;
@@ -619,9 +634,30 @@ namespace LinqToDB.Linq.Builder
 			throw new NotImplementedException();
 		}
 
-		public Expression MakeExpression(Expression? path, ProjectFlags flags)
+		public Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			throw new NotImplementedException();
+			if (SequenceHelper.IsSameContext(path, this))
+			{
+				if (flags.HasFlag(ProjectFlags.Root))
+					return path;
+
+				// trying to access Queryable variant
+				if (path.Type != _elementType && flags.HasFlag(ProjectFlags.Expression))
+					return new SqlEagerLoadExpression(this, path);
+
+				return Builder.BuildEntityExpression(this, _elementType, flags);
+			}
+
+			if (path is not MemberExpression member)
+				return Builder.CreateSqlError(this, path);
+
+			var sql = GetField(member);
+			if (sql == null)
+				return Builder.CreateSqlError(this, path);
+
+			var placeholder = ExpressionBuilder.CreatePlaceholder(this, sql, path);
+
+			return placeholder;
 		}
 
 		public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)

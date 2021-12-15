@@ -53,6 +53,11 @@ namespace LinqToDB.Linq.Builder
 		{
 			var resultExpr = BuildSqlExpression(translated, context, expr, flags, alias);
 
+			if (!string.IsNullOrEmpty(alias) && resultExpr is SqlPlaceholderExpression placeholder)
+			{
+				placeholder.Alias = alias;
+			}
+
 			// Update nullability
 			resultExpr = (_updateNullabilityFromExtensionTransformer ??= TransformVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.UpdateNullabilityFromExtension(e))).Transform(resultExpr);
 
@@ -240,19 +245,27 @@ namespace LinqToDB.Linq.Builder
 								if (context.upToContext == placeholder.BuildContext || placeholder.BuildContext == null)
 									break;
 
+								if (placeholder.Sql.Index >= 0)
+								{
+									if (((SqlColumn)placeholder.Sql.Sql).Parent == context.upToContext.SelectQuery)
+										break;
+
+									parent = parent.Parent;
+
+									if (parent == null || parent == context.upToContext || ReferenceEquals(parent.SelectQuery, context.upToContext.SelectQuery))
+										break;
+								}
+
 								if (ReferenceEquals(context.upToContext.SelectQuery, placeholder.BuildContext.SelectQuery))
 									break;
 
-								if (placeholder.Sql.Index >= 0)
-								{
-									if (context.accessibleSources.Contains(((SqlColumn)placeholder.Sql.Sql).Parent))
-									{
-										// weird, inventing better solution
-										break;
-									}
-								}
+								if (ReferenceEquals(context.upToContext.SelectQuery, placeholder.Sql.Query))
+									break;
 
-								placeholder = (SqlPlaceholderExpression)context.builder.MakeColumn(
+								if (!QueryHelper.EnumerateAccessibleSources(context.upToContext.SelectQuery).Contains(placeholder.BuildContext.SelectQuery))
+									break;
+
+								placeholder = context.builder.MakeColumn(
 									parent,
 									placeholder);
 
@@ -270,20 +283,17 @@ namespace LinqToDB.Linq.Builder
 			return withColumns;
 		}
 
-		public ISqlExpression? TryConvertToSql(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor)
-		{
-			var converted = ConvertToSqlExpr(context, expression, testOnly: true, columnDescriptor: columnDescriptor);
-			if (converted is not SqlPlaceholderExpression placeholder)
-				return null;
-
-			return placeholder.Sql?.Sql;
-		}
-
-		public bool TryConvertToSql(IBuildContext context, Expression expression, out ISqlExpression? sqlExpression, out Expression actual)
+		public bool TryConvertToSql(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor, out ISqlExpression? sqlExpression, out Expression actual)
 		{
 			sqlExpression = null;
 
-			actual = ConvertToSqlExpr(context, expression, testOnly: true);
+			//Just test that we can convert
+			actual = ConvertToSqlExpr(context, expression, testOnly: true, columnDescriptor: columnDescriptor);
+			if (actual is not SqlPlaceholderExpression)
+				return false;
+
+			//Test conversion success, do it again
+			actual = ConvertToSqlExpr(context, expression, testOnly: false, columnDescriptor: columnDescriptor);
 			if (actual is not SqlPlaceholderExpression placeholder)
 				return false;
 
@@ -428,6 +438,7 @@ namespace LinqToDB.Linq.Builder
 								}
 								*/
 
+
 								var ex = ma.Expression;
 
 								while (ex is MemberExpression memberExpression)
@@ -435,6 +446,20 @@ namespace LinqToDB.Linq.Builder
 
 								if (ex is MethodCallExpression ce)
 								{
+									var buildInfo = new BuildInfo((IBuildContext?)null, ce, new SelectQuery());
+									if (context.builder.IsSequence(buildInfo))
+									{
+										var subqueryCtx = context.builder.GetSubQueryContext(context.context, ce);
+										var subqueryExpr =
+											subqueryCtx.Context.MakeExpression(
+												new ContextRefExpression(ce.Type, subqueryCtx.Context), ProjectFlags.Root);
+
+										subqueryExpr = ma.Replace(ex, subqueryExpr);
+
+										return new TransformInfo(subqueryExpr, false, true);
+									}
+
+
 									if (!context.builder.IsEnumerableSource(ce) && context.builder.IsSubQuery(context.context, ce))
 									{
 										if (!context.context.Builder.IsMultipleQuery(ce, context.context.Builder.MappingSchema))
@@ -552,7 +577,15 @@ namespace LinqToDB.Linq.Builder
 
 								if (context.builder.IsSequence(info))
 								{
-									return new TransformInfo(context.builder.GetSubQueryExpression(context.context, ce, false, context.alias), false, true);
+									// handling case when sequence can be just collection and we do not need SQL
+									//
+									if (!(context.flags.HasFlag(ProjectFlags.Expression) &&
+									     context.builder.CanBeCompiled(expr)))
+									{
+										return new TransformInfo(
+											context.builder.GetSubQueryExpression(context.context, ce, false,
+												context.alias), false, true);
+									}
 								}
 
 								return new TransformInfo(expr);

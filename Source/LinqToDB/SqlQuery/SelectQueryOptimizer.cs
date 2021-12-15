@@ -46,7 +46,7 @@ namespace LinqToDB.SqlQuery
 
 			OptimizeUnions();
 			FinalizeAndValidateInternal(isApplySupported, optimizeColumns);
-			ResolveFields();
+			//ResolveFields();
 
 #if DEBUG
 			// ReSharper disable once RedundantAssignment

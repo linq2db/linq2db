@@ -49,17 +49,20 @@ namespace LinqToDB.Linq.Builder
 
 			public bool             AssociationsToSubQueries { get; set; }
 
+			public bool IsSubQuery { get; }
+
 			#endregion
 
 			#region Init
 
 			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType)
 			{
-				Builder          = builder;
-				Parent           = buildInfo.Parent;
-				Expression       = buildInfo.Expression;
-				SelectQuery      = buildInfo.SelectQuery;
+				Builder                  = builder;
+				Parent                   = buildInfo.Parent;
+				Expression               = buildInfo.Expression;
+				SelectQuery              = buildInfo.SelectQuery;
 				AssociationsToSubQueries = buildInfo.AssociationsAsSubQueries;
+				IsSubQuery               = buildInfo.IsSubQuery;
 
 				OriginalType     = originalType;
 				ObjectType       = GetObjectType();
@@ -73,11 +76,12 @@ namespace LinqToDB.Linq.Builder
 
 			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, SqlTable table)
 			{
-				Builder          = builder;
-				Parent           = buildInfo.Parent;
-				Expression       = buildInfo.Expression;
-				SelectQuery      = buildInfo.SelectQuery;
+				Builder                  = builder;
+				Parent                   = buildInfo.Parent;
+				Expression               = buildInfo.Expression;
+				SelectQuery              = buildInfo.SelectQuery;
 				AssociationsToSubQueries = buildInfo.AssociationsAsSubQueries;
+				IsSubQuery               = buildInfo.IsSubQuery;
 
 				OriginalType     = table.ObjectType!;
 				ObjectType       = GetObjectType();
@@ -92,10 +96,11 @@ namespace LinqToDB.Linq.Builder
 
 			internal TableContext(ExpressionBuilder builder, SelectQuery selectQuery, SqlTable table)
 			{
-				Builder          = builder;
-				Parent           = null;
-				Expression       = null;
-				SelectQuery      = selectQuery;
+				Builder     = builder;
+				Parent      = null;
+				Expression  = null;
+				SelectQuery = selectQuery;
+				IsSubQuery  = false;
 
 				OriginalType     = table.ObjectType!;
 				ObjectType       = GetObjectType();
@@ -108,19 +113,14 @@ namespace LinqToDB.Linq.Builder
 				Init(true);
 			}
 
-			protected TableContext(ExpressionBuilder builder, SelectQuery selectQuery)
-			{
-				Builder     = builder;
-				SelectQuery = selectQuery;
-			}
-
 			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo)
 			{
-				Builder     = builder;
-				Parent      = buildInfo.Parent;
-				Expression  = buildInfo.Expression;
-				SelectQuery = buildInfo.SelectQuery;
+				Builder                  = builder;
+				Parent                   = buildInfo.Parent;
+				Expression               = buildInfo.Expression;
+				SelectQuery              = buildInfo.SelectQuery;
 				AssociationsToSubQueries = buildInfo.AssociationsAsSubQueries;
+				IsSubQuery               = buildInfo.IsSubQuery;
 
 				var mc   = (MethodCallExpression)Expression;
 				var attr = builder.GetTableFunctionAttribute(mc.Method)!;
@@ -1202,7 +1202,7 @@ namespace LinqToDB.Linq.Builder
 
 			public SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
 			{
-				return SequenceHelper.MakeColumn(SelectQuery, sqlInfo);
+				return SequenceHelper.MakeColumn(SelectQuery, sqlInfo, alias);
 			}
 
 			public Expression MakeExpression(Expression path, ProjectFlags flags)
@@ -1211,6 +1211,10 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (flags.HasFlag(ProjectFlags.Root))
 						return path;
+
+					// trying to access Queryable variant
+					if (path.Type != ObjectType && flags.HasFlag(ProjectFlags.Expression))
+						return new SqlEagerLoadExpression(this, path);
 
 					return Builder.BuildEntityExpression(this, ObjectType, flags);
 				}
@@ -1319,7 +1323,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (SequenceHelper.IsSameContext(expression, this))
 				{
-					if (buildInfo.IsSubQuery)
+					/*if (buildInfo.IsSubQuery)
 					{
 						var table = new TableContext(
 							Builder,
@@ -1327,7 +1331,7 @@ namespace LinqToDB.Linq.Builder
 							SqlTable.ObjectType!);
 
 						return table;
-					}
+					}*/
 
 					return this;
 				}
