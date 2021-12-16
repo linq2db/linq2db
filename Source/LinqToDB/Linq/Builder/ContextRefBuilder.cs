@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -13,8 +11,8 @@ namespace LinqToDB.Linq.Builder
 
 		public bool CanBuild(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			var root = builder.MakeExpression(buildInfo.Expression, ProjectFlags.Root);
-			if (root == buildInfo.Expression)
+			var root = builder.MakeExpression(buildInfo.Expression, ProjectFlags.Test);
+			if (ExpressionEqualityComparer.Instance.Equals(root, buildInfo.Expression))
 			{
 				if (root is ContextRefExpression)
 					return true;
@@ -26,11 +24,11 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			var root = builder.MakeExpression(buildInfo.Expression, ProjectFlags.Root);
-			if (root != buildInfo.Expression)
+			var root = builder.MakeExpression(buildInfo.Expression, ProjectFlags.SQL);
+			if (!ExpressionEqualityComparer.Instance.Equals(root, buildInfo.Expression) || root is not ContextRefExpression contextRef)
 				return builder.BuildSequence(new BuildInfo(buildInfo, root));
 
-			var context = ((ContextRefExpression)buildInfo.Expression).BuildContext;
+			var context = contextRef.BuildContext;
 
 			if (buildInfo.IsSubQuery)
 			{
@@ -49,8 +47,8 @@ namespace LinqToDB.Linq.Builder
 
 		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			var root = builder.MakeExpression(buildInfo.Expression, ProjectFlags.Root);
-			if (root != buildInfo.Expression)
+			var root = builder.MakeExpression(buildInfo.Expression, ProjectFlags.Test);
+			if (!ExpressionEqualityComparer.Instance.Equals(root, buildInfo.Expression))
 				return builder.IsSequence(new BuildInfo(buildInfo, root));
 
 			if (buildInfo.Expression is not ContextRefExpression contextRef)

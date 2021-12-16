@@ -13,8 +13,8 @@ namespace LinqToDB.Expressions
 			Expression   = expression;
 		}
 
-		public IBuildContext? BuildContext     { get; }
-		public Expression     Expression { get; }
+		public IBuildContext? BuildContext { get; }
+		public Expression     Expression   { get; }
 
 		internal SqlInfo? Sql { get; set; }
 
