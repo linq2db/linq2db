@@ -1066,6 +1066,47 @@ namespace Tests.Linq
 
 		#endregion
 
+		#region Regression: query comparison
+		[Test(Description = "Tests regression introduced in 3.5.2")]
+		public void ComparisonTest1([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var left  = GetQuery(db, null);
+				var right = GetQuery(db, 2);
+
+				Assert.False(
+					db.Person.Where(_ =>
+					left.Where(rec => !right.Select(r2 => r2.PersonID).Contains(rec.PersonID)).Select(_ => Sql.Ext.Count(_.PersonID, Sql.AggregateModifier.None).ToValue()).Single() == 0
+					&&
+					right.Where(rec => !left.Select(r2 => r2.PersonID).Contains(rec.PersonID)).Select(_ => Sql.Ext.Count(_.PersonID, Sql.AggregateModifier.None).ToValue()).Single() == 0)
+					.Any());
+			}
+		}
+
+		[Test(Description = "Tests regression introduced in 3.5.2")]
+		public void ComparisonTest2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var left  = GetQuery(db, null);
+				var right = GetQuery(db, 2);
+
+				Assert.False(
+					db.Person.Where(_ =>
+					left.Where(rec => !right.Select(r2 => r2.PersonID).Contains(rec.PersonID)).Count() == 0
+					&&
+					right.Where(rec => !left.Select(r2 => r2.PersonID).Contains(rec.PersonID)).Count() == 0)
+					.Any());
+			}
+		}
+
+		private static IQueryable<Patient> GetQuery(ITestDataContext db, int? personId)
+		{
+			return db.Patient.Where(_ => _.PersonID == personId);
+		}
+
+		#endregion
 	}
 
 	static class ExpressionTestExtensions
