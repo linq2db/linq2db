@@ -177,26 +177,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		protected override void BuildTableExtensions(SqlTable table, string alias)
 		{
-			if (table.SqlQueryExtensions!.Any(ext =>
-				ext.Scope is
-					Sql.QueryExtensionScope.Table or
-					Sql.QueryExtensionScope.TablesInScope &&
-				ext.ID is
-					Sql.QueryExtensionID.TableHint))
-			{
-				StringBuilder.Append(" WITH (");
-
-				foreach (var ext in table.SqlQueryExtensions!)
-				{
-					var hint = (SqlValue)ext.Arguments["tableHint"];
-
-					StringBuilder.Append((string)hint.Value!);
-					StringBuilder.Append(", ");
-				}
-
-				StringBuilder.Length -= 2;
-				StringBuilder.Append(')');
-			}
+			BuildTableExtensions(StringBuilder, table, alias, " WITH (", ", ", ")");
 		}
 	}
 }

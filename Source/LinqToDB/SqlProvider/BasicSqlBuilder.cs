@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Linq;
@@ -21,22 +22,22 @@ namespace LinqToDB.SqlProvider
 
 		protected BasicSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 		{
-			MappingSchema       = mappingSchema;
-			SqlOptimizer        = sqlOptimizer;
-			SqlProviderFlags    = sqlProviderFlags;
+			MappingSchema    = mappingSchema;
+			SqlOptimizer     = sqlOptimizer;
+			SqlProviderFlags = sqlProviderFlags;
 		}
 
-		public OptimizationContext OptimizationContext { get; protected set; } = null!;
+		public    OptimizationContext OptimizationContext { get; protected set; } = null!;
+		public    MappingSchema       MappingSchema       { get; }
+		protected ValueToSqlConverter ValueToSqlConverter => MappingSchema.ValueToSqlConverter;
 
-		protected SqlStatement           Statement = null!;
-		protected readonly MappingSchema MappingSchema;
-		protected int                    Indent;
-		protected Step                   BuildStep;
-		protected ISqlOptimizer          SqlOptimizer;
-		protected SqlProviderFlags       SqlProviderFlags;
-		protected ValueToSqlConverter    ValueToSqlConverter => MappingSchema.ValueToSqlConverter;
-		protected StringBuilder          StringBuilder = null!;
-		protected bool                   SkipAlias;
+		protected SqlStatement        Statement = null!;
+		protected int                 Indent;
+		protected Step                BuildStep;
+		protected ISqlOptimizer       SqlOptimizer;
+		protected SqlProviderFlags    SqlProviderFlags;
+		protected StringBuilder       StringBuilder = null!;
+		protected bool                SkipAlias;
 
 		#endregion
 
@@ -1615,6 +1616,107 @@ namespace LinqToDB.SqlProvider
 		{
 		}
 
+		static readonly ConcurrentDictionary<Type,ISqlExtensionBuilder> _extensionBuilders = new();
+
+		protected void BuildTableExtensions(
+			StringBuilder sb,
+			SqlTable table, string alias,
+			string? prefix, string delimiter, string? suffix,
+			Func<SqlQueryExtension,bool>? customExtensionBuilder = null)
+		{
+			if (table.SqlQueryExtensions?.Any(ext =>
+				ext.Scope is
+					Sql.QueryExtensionScope.TableHint or
+					Sql.QueryExtensionScope.TablesInScopeHint) == true)
+			{
+				if (prefix != null)
+					sb.Append(prefix);
+
+				foreach (var ext in table.SqlQueryExtensions!)
+				{
+					if (ext.BuilderType != null)
+					{
+						var extensionBuilder = _extensionBuilders.GetOrAdd(
+							ext.BuilderType,
+							type =>
+							{
+								var inst = Activator.CreateInstance(type);
+
+								if (inst is not ISqlExtensionBuilder)
+									throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement the {typeof(ISqlExtensionBuilder).FullName} interface.");
+
+								return (ISqlExtensionBuilder)inst;
+							});
+
+						extensionBuilder.Build(this, sb, ext);
+					}
+					else
+					{
+						switch (ext.ID)
+						{
+							case Sql.QueryExtensionID.Hint:
+							{
+								var hint = (SqlValue)ext.Arguments["tableHint"];
+								sb.Append((string)hint.Value!);
+								break;
+							}
+							case Sql.QueryExtensionID.HintWithParameter:
+							{
+								var hint  = ((SqlValue)ext.Arguments["tableHint"]).    Value;
+								var param = ((SqlValue)ext.Arguments["hintParameter"]).Value;
+
+								sb
+									.Append(hint)
+									.Append('(')
+									.Append(param)
+									.Append(')');
+
+								break;
+							}
+							case Sql.QueryExtensionID.HintWithParameters:
+							{
+								var hint  = ((SqlValue)     ext.Arguments["tableHint"]).           Value;
+								var count = (int)((SqlValue)ext.Arguments["hintParameters.Count"]).Value!;
+
+								sb.Append(hint);
+
+								if (count > 0)
+								{
+									sb.Append('(');
+
+									for (var i = 0; i < count; i++)
+									{
+										var value = ((SqlValue)ext.Arguments[$"hintParameters.{i}"]).Value;
+										sb
+											.Append(value)
+											.Append(", ");
+									}
+
+									sb.Length -= 2;
+									sb.Append(')');
+								}
+
+								break;
+							}
+							default:
+							{
+								if (customExtensionBuilder == null || customExtensionBuilder(ext) == false)
+									throw new LinqToDBException($"Cannot convert {ext.Arguments[".MethodName"]} extension to SQL.");
+								break;
+							}
+						}
+					}
+
+					sb.Append(delimiter);
+				}
+
+				sb.Length -= delimiter.Length;
+
+				if (suffix != null)
+					sb.Append(suffix);
+			}
+		}
+
 		void BuildJoinTable(SelectQuery selectQuery, SqlJoinedTable join, ref int joinCounter)
 		{
 			StringBuilder.AppendLine();
@@ -2696,7 +2798,7 @@ namespace LinqToDB.SqlProvider
 			return BuildExpression(expr, true, true, null, ref dummy);
 		}
 
-		protected void BuildExpression(ISqlExpression expr, bool buildTableName, bool checkParentheses, bool throwExceptionIfTableNotFound = true)
+		public void BuildExpression(ISqlExpression expr, bool buildTableName, bool checkParentheses, bool throwExceptionIfTableNotFound = true)
 		{
 			var dummy = false;
 			BuildExpression(expr, buildTableName, checkParentheses, null, ref dummy, throwExceptionIfTableNotFound);

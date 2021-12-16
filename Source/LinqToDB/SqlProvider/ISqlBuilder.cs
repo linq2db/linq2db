@@ -28,7 +28,9 @@ namespace LinqToDB.SqlProvider
 
 		string           GetReserveSequenceValuesSql(int count, string sequenceName);
 		string           GetMaxValueSql       (EntityDescriptor entity, ColumnDescriptor column);
+		void             BuildExpression      (ISqlExpression expr, bool buildTableName, bool checkParentheses, bool throwExceptionIfTableNotFound);
 
-		string Name { get; }
+		string        Name          { get; }
+		MappingSchema MappingSchema { get; }
 	}
 }

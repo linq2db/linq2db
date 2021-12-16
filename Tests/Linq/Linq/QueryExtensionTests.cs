@@ -2,16 +2,20 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
 
 using LinqToDB;
 using LinqToDB.Expressions;
 using LinqToDB.Linq;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.Linq
 {
+	using Model;
+
 	[TestFixture]
 	public class QueryExtensionTests : TestBase
 	{
@@ -26,7 +30,6 @@ namespace Tests.Linq
 		public void EmptyTest2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-
 			_ =
 			(
 				from p in db.Parent.Empty()
@@ -38,18 +41,16 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TableTest([DataSources] string context)
+		public void CommentTest([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-
 			_ = db.Parent.Comment(t => t.ParentID, "oh yeah").ToList();
 		}
 
 		[Test]
-		public void TableTest2([DataSources] string context)
+		public void CommentTest2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-
 			_ =
 			(
 				from p in db.Parent.Comment(t => t.ParentID, "oh yeah")
@@ -62,41 +63,46 @@ namespace Tests.Linq
 		[Test]
 		public void SelfJoinWithDifferentHint([NorthwindDataContext] string context)
 		{
-			using (var db = new NorthwindDB(context))
-			{
-				var query =
-					from p in db.GetTable<JoinOptimizeTests.AdressEntity>().TableHint("NOLOCK")
-					join a in db.GetTable<JoinOptimizeTests.AdressEntity>()
-						on p.Id equals a.Id //PK column
-					select p;
+			using var db = new NorthwindDB(context);
 
-				Console.WriteLine(query);
+			var query =
+				from p in db.GetTable<JoinOptimizeTests.AdressEntity>().TableHint("NOLOCK")
+				join a in db.GetTable<JoinOptimizeTests.AdressEntity>()
+					on p.Id equals a.Id //PK column
+				select p;
 
-				Assert.AreEqual(1, query.GetTableSource().Joins.Count);
-			}
+			Console.WriteLine(query);
+
+			Assert.AreEqual(1, query.GetTableSource().Joins.Count);
 		}
 
 		[Test]
 		public void SelfJoinWithDifferentHint2([NorthwindDataContext] string context)
 		{
-			using (var db = new NorthwindDB(context))
-			{
-				var query =
-					from p in db.GetTable<JoinOptimizeTests.AdressEntity>().TableHint("NOLOCK")
-					join a in db.GetTable<JoinOptimizeTests.AdressEntity>().TableHint("READUNCOMMITTED")
-						on p.Id equals a.Id //PK column
-					select p;
+			using var db = new NorthwindDB(context);
 
-				Debug.WriteLine(query);
+			var query =
+				from p in db.GetTable<JoinOptimizeTests.AdressEntity>().TableHint("NOLOCK")
+				join a in db.GetTable<JoinOptimizeTests.AdressEntity>().TableHint("READUNCOMMITTED")
+					on p.Id equals a.Id //PK column
+				select p;
 
-				Assert.AreEqual(1, query.GetTableSource().Joins.Count);
-			}
+			Debug.WriteLine(query);
+
+			Assert.AreEqual(1, query.GetTableSource().Joins.Count);
 		}
 	}
 
 	public static class QueryExtensions
 	{
-		[Sql.QueryExtension(Sql.QueryExtensionScope.Table)]
+		class EmptyExtensionBuilder : ISqlExtensionBuilder
+		{
+			public void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+			{
+			}
+		}
+
+		[Sql.QueryExtension(Sql.QueryExtensionScope.None, ExtensionBuilderType = typeof(EmptyExtensionBuilder))]
 		public static ITable<T> Empty<T>(this ITable<T> table)
 			where T : notnull
 		{
@@ -108,7 +114,7 @@ namespace Tests.Linq
 			return table;
 		}
 
-		[Sql.QueryExtension(Sql.QueryExtensionScope.Join)]
+		[Sql.QueryExtension(Sql.QueryExtensionScope.JoinHint)]
 		public static IQueryable<TSource> John<TSource>(this IQueryable<TSource> source)
 			where TSource : notnull
 		{
@@ -121,7 +127,7 @@ namespace Tests.Linq
 					currentSource.Expression));
 		}
 
-		[Sql.QueryExtension(Sql.QueryExtensionScope.Table)]
+		[Sql.QueryExtension(Sql.QueryExtensionScope.QueryHint)]
 		public static ITable<TSource> Comment<TSource,TValue>(
 			this ITable<TSource>             table,
 			Expression<Func<TSource,TValue>> expr,

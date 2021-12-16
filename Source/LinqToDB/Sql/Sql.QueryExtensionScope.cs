@@ -6,10 +6,11 @@ namespace LinqToDB
 	{
 		public enum QueryExtensionScope
 		{
-			Table,
-			Join,
-			Query,
-			TablesInScope
+			None,
+			TableHint,
+			JoinHint,
+			QueryHint,
+			TablesInScopeHint
 		}
 	}
 }

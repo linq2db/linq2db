@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.Expressions;
-using LinqToDB.Linq;
 
 namespace LinqToDB.DataProvider.SQLite
 {

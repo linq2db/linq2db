@@ -1475,8 +1475,10 @@ namespace LinqToDB.ServiceModel
 
 						foreach (var ext in qe.SqlQueryExtensions)
 						{
+							Append(ext.Configuration);
 							Append((int)ext.Scope);
 							Append(ext.ID);
+							Append(ext.BuilderType);
 							Append(ext.Arguments.Count);
 
 							foreach (var argument in ext.Arguments)
@@ -2389,8 +2391,10 @@ namespace LinqToDB.ServiceModel
 						{
 							var ext = new SqlQueryExtension();
 
-							ext.Scope = (Sql.QueryExtensionScope)ReadInt();
-							ext.ID    = ReadInt();
+							ext.Configuration = ReadString();
+							ext.Scope         = (Sql.QueryExtensionScope)ReadInt();
+							ext.ID            = ReadInt();
+							ext.BuilderType   = ReadType();
 
 							var cnt = ReadInt();
 

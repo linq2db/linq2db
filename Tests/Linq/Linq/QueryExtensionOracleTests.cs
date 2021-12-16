@@ -103,12 +103,12 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var q =
-				from p in db.Parent.TableHintEx(Hints.TableHint.Parallel, ", ", 5)
+				from p in db.Parent.TableHint(Hints.TableHint.Parallel, 5)
 				select p;
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring("SELECT /*+ PARALLEL(p, 5)"));
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ PARALLEL(p 5)"));
 		}
 
 		[Test]
@@ -117,12 +117,12 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var q =
-				from p in db.Parent.TableHintEx(Hints.TableHint.Parallel, ", ", "DEFAULT")
+				from p in db.Parent.TableHint(Hints.TableHint.Parallel, "DEFAULT")
 				select p;
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring("SELECT /*+ PARALLEL(p, DEFAULT)"));
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ PARALLEL(p DEFAULT)"));
 		}
 
 		[Test]

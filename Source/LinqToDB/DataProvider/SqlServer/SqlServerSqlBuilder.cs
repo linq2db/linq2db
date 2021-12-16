@@ -517,75 +517,14 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildTableExtensions(SqlTable table, string alias)
 		{
-			if (table.SqlQueryExtensions!.Any(ext =>
-				ext.Scope is
-					Sql.QueryExtensionScope.Table or
-					Sql.QueryExtensionScope.TablesInScope &&
-				ext.ID    is
-					Sql.QueryExtensionID.TableHint or
-					Sql.QueryExtensionID.SqlServerForceSeekTableHintID))
-			{
-				StringBuilder.Append(" WITH (");
-
-				foreach (var ext in table.SqlQueryExtensions!)
-				{
-					switch (ext.ID)
-					{
-						case Sql.QueryExtensionID.SqlServerForceSeekTableHintID :
-						{
-							var value = (SqlValue)ext.Arguments["indexName"];
-							var count = (int)((SqlValue)ext.Arguments["columns.Count"]).Value!;
-
-							if (count == 0)
-							{
-								StringBuilder
-									.Append("ForceSeek, Index(")
-									.Append(value.Value)
-									.Append(')')
-									;
-							}
-							else
-							{
-								StringBuilder
-									.Append("ForceSeek (")
-									.Append(value.Value)
-									.Append(" (")
-									;
-
-								for (var i = 0; i < count; i++)
-								{
-									BuildExpression(ext.Arguments[$"columns.{i}"], false, false ,false);
-									StringBuilder.Append(", ");
-								}
-
-								StringBuilder.Length -= 2;
-								StringBuilder.Append("))");
-							}
-
-							break;
-						}
-						default:
-						{
-							var hint = (SqlValue)ext.Arguments["tableHint"];
-
-							StringBuilder.Append((string)hint.Value!);
-							break;
-						}
-					}
-
-					StringBuilder.Append(", ");
-				}
-
-				StringBuilder.Length -= 2;
-				StringBuilder.Append(')');
-			}
+			BuildTableExtensions(StringBuilder, table, alias, " WITH (", ", ", ")");
 		}
 
 		protected override bool BuildJoinType(SqlJoinedTable join, SqlSearchCondition condition)
 		{
 			if (join.SqlQueryExtensions != null)
 			{
-				var ext = join.SqlQueryExtensions.LastOrDefault(e => e.Scope == Sql.QueryExtensionScope.Join && e.ID is Sql.QueryExtensionID.JoinHint);
+				var ext = join.SqlQueryExtensions.LastOrDefault(e => e.Scope == Sql.QueryExtensionScope.JoinHint && e.ID is Sql.QueryExtensionID.Hint);
 
 				if (ext?.Arguments["joinHint"] is SqlValue v)
 				{
@@ -611,8 +550,8 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override void BuildQueryExtensions(SqlStatement statement)
 		{
 			if (statement.SqlQueryExtensions?.Any(ext =>
-				ext.Scope == Sql.QueryExtensionScope.Query &&
-				ext.ID is Sql.QueryExtensionID.QueryHint) == true)
+				ext.Scope == Sql.QueryExtensionScope.QueryHint &&
+				ext.ID is Sql.QueryExtensionID.Hint) == true)
 			{
 				if (statement is SqlMergeStatement)
 					StringBuilder.AppendLine();
@@ -623,7 +562,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					switch (ext.ID)
 					{
-						case Sql.QueryExtensionID.QueryHint :
+						case Sql.QueryExtensionID.Hint :
 						{
 							var hint = (SqlValue)ext.Arguments["queryHint"];
 							StringBuilder.Append((string)hint.Value!);

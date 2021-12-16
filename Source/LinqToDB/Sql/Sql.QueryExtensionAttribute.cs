@@ -15,7 +15,7 @@ namespace LinqToDB
 		[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true)]
 		public class QueryExtensionAttribute : Attribute
 		{
-			public QueryExtensionAttribute(QueryExtensionScope scope, int id = 0)
+			public QueryExtensionAttribute(QueryExtensionScope scope, int id = QueryExtensionID.None)
 			{
 				Scope = scope;
 				ID    = id;
@@ -28,16 +28,22 @@ namespace LinqToDB
 				ID            = id;
 			}
 
-			public string?             Configuration { get; }
-			public QueryExtensionScope Scope         { get; }
-			public int                 ID            { get; }
+			public string?             Configuration        { get; }
+			public QueryExtensionScope Scope                { get; }
+			public int                 ID                   { get; }
+			/// <summary>
+			/// Instance of <see cref="ISqlExtensionBuilder"/>.
+			/// </summary>
+			public Type?               ExtensionBuilderType { get; set; }
 
 			public virtual SqlQueryExtension GetExtension(List<SqlQueryExtensionData> parameters)
 			{
 				var ext = new SqlQueryExtension
 				{
-					Scope = Scope,
-					ID    = ID,
+					Configuration = Configuration,
+					Scope         = Scope,
+					ID            = ID,
+					BuilderType   = ExtensionBuilderType,
 				};
 
 				foreach (var item in parameters)

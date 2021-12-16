@@ -731,11 +731,11 @@ END;",
 		protected override void FinalizeBuildQuery(SqlStatement statement)
 		{
 			if (statement.SqlQueryExtensions?.Any(ext =>
-				ext.Scope == Sql.QueryExtensionScope.Query &&
+				ext.Scope == Sql.QueryExtensionScope.QueryHint &&
 				ext.ID is
-					Sql.QueryExtensionID.QueryHint              or
-					Sql.QueryExtensionID.QueryHintWithParameter or
-					Sql.QueryExtensionID.QueryHintWithParameters) == true)
+					Sql.QueryExtensionID.Hint              or
+					Sql.QueryExtensionID.HintWithParameter or
+					Sql.QueryExtensionID.HintWithParameters) == true)
 			{
 				foreach (var ext in statement.SqlQueryExtensions!)
 				{
@@ -748,7 +748,7 @@ END;",
 
 					switch (ext.ID)
 					{
-						case Sql.QueryExtensionID.QueryHintWithParameter:
+						case Sql.QueryExtensionID.HintWithParameter:
 						{
 							var value = GetValue((SqlValue)ext.Arguments["hintParameter"]);
 
@@ -758,7 +758,7 @@ END;",
 
 							break;
 						}
-						case Sql.QueryExtensionID.QueryHintWithParameters:
+						case Sql.QueryExtensionID.HintWithParameters:
 						{
 							HintBuilder.Append('(');
 
@@ -835,12 +835,12 @@ END;",
 		{
 			if (table.SqlQueryExtensions!.Any(ext =>
 				ext.Scope is
-					Sql.QueryExtensionScope.Table or
-					Sql.QueryExtensionScope.TablesInScope &&
+					Sql.QueryExtensionScope.TableHint or
+					Sql.QueryExtensionScope.TablesInScopeHint &&
 				ext.ID is
-					Sql.QueryExtensionID.TableHint      or
-					Sql.QueryExtensionID.TableHintWithParameter or
-					Sql.QueryExtensionID.TableHintWithParameters
+					Sql.QueryExtensionID.Hint              or
+					Sql.QueryExtensionID.HintWithParameter or
+					Sql.QueryExtensionID.HintWithParameters
 				))
 			{
 				foreach (var ext in table.SqlQueryExtensions!)
@@ -869,7 +869,7 @@ END;",
 
 					switch (ext.ID)
 					{
-						case Sql.QueryExtensionID.TableHintWithParameter:
+						case Sql.QueryExtensionID.HintWithParameter:
 						{
 							var param = ((SqlValue)ext.Arguments["hintParameter"]).Value;
 
@@ -886,7 +886,7 @@ END;",
 
 							break;
 						}
-						case Sql.QueryExtensionID.TableHintWithParameters:
+						case Sql.QueryExtensionID.HintWithParameters:
 						{
 							var count = (int)((SqlValue)ext.Arguments["hintParameters.Count"]).Value!;
 

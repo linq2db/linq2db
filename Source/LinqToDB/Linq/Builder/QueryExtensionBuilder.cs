@@ -62,7 +62,7 @@ namespace LinqToDB.Linq.Builder
 
 			var prevTablesInScope = builder.TablesInScope;
 
-			if (attrs.Any(a => a.Scope == Sql.QueryExtensionScope.TablesInScope))
+			if (attrs.Any(a => a.Scope == Sql.QueryExtensionScope.TablesInScopeHint))
 				builder.TablesInScope = new();
 
 			var sequence = builder.BuildSequence(new(buildInfo, methodCall.Arguments[0]));
@@ -98,24 +98,24 @@ namespace LinqToDB.Linq.Builder
 			{
 				switch (attr.Scope)
 				{
-					case Sql.QueryExtensionScope.Table:
+					case Sql.QueryExtensionScope.TableHint:
 					{
 						var table = SequenceHelper.GetTableContext(sequence) ?? throw new LinqToDBException($"Cannot get table context from {sequence.GetType()}");
 						attr.ExtendTable(table.SqlTable, list);
 						break;
 					}
-					case Sql.QueryExtensionScope.TablesInScope:
+					case Sql.QueryExtensionScope.TablesInScopeHint:
 					{
 						foreach (var table in builder.TablesInScope!)
 							attr.ExtendTable(table.SqlTable, list);
 						break;
 					}
-					case Sql.QueryExtensionScope.Join:
+					case Sql.QueryExtensionScope.JoinHint:
 					{
 						attr.ExtendJoin(joinExtensions ??= new(), list);
 						break;
 					}
-					case Sql.QueryExtensionScope.Query:
+					case Sql.QueryExtensionScope.QueryHint:
 					{
 						attr.ExtendQuery(builder.SqlQueryExtensions ??= new(), list);
 						break;

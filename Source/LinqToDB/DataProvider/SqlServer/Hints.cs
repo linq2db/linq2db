@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Linq.Expressions;
+using System.Text;
+
 using LinqToDB.Expressions;
 using LinqToDB.Linq;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -132,7 +136,42 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#region QueryExtensions
 
-		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.Table, Sql.QueryExtensionID.SqlServerForceSeekTableHintID)]
+		class WithForceSeekExtensionBuilder : ISqlExtensionBuilder
+		{
+			public void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+			{
+				var value = (SqlValue)sqlQueryExtension.Arguments["indexName"];
+				var count = (int)((SqlValue)sqlQueryExtension.Arguments["columns.Count"]).Value!;
+
+				if (count == 0)
+				{
+					stringBuilder
+						.Append("ForceSeek, Index(")
+						.Append(value.Value)
+						.Append(')')
+						;
+				}
+				else
+				{
+					stringBuilder
+						.Append("ForceSeek (")
+						.Append(value.Value)
+						.Append(" (")
+						;
+
+					for (var i = 0; i < count; i++)
+					{
+						sqlBuilder.BuildExpression(sqlQueryExtension.Arguments[$"columns.{i}"], false, false, false);
+						stringBuilder.Append(", ");
+					}
+
+					stringBuilder.Length -= 2;
+					stringBuilder.Append("))");
+				}
+			}
+		}
+
+		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableHint, ExtensionBuilderType = typeof(WithForceSeekExtensionBuilder))]
 		public static ITable<TSource> WithForceSeek<TSource>(
 			this ITable<TSource>                      table,
 			[SqlQueryDependent] string                indexName,

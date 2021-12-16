@@ -42,7 +42,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Person
-					.With(Hints.TableHint.Index("PK_Person"))
+					.TableHint("Index", "PK_Person")
 					.With(Hints.TableHint.NoLock)
 				select p;
 

@@ -6,17 +6,10 @@ namespace LinqToDB
 	{
 		public static class QueryExtensionID
 		{
-			public const int TableHint               = 1000;
-			public const int TableHintWithParameter  = 1010;
-			public const int TableHintWithParameters = 1011;
-			public const int JoinHint                = 1100;
-			public const int QueryHint               = 1200;
-			public const int QueryHintWithParameter  = 1201;
-			public const int QueryHintWithParameters = 1202;
-
-			// SqlServer table hint IDs.
-			//
-			public const int SqlServerForceSeekTableHintID = 2001;
+			public const int None               = 0;
+			public const int Hint               = 1000;
+			public const int HintWithParameter  = 1001;
+			public const int HintWithParameters = 1002;
 		}
 	}
 }

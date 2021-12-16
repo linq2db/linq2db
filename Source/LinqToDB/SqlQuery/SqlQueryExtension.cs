@@ -6,9 +6,11 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlQueryExtension : ISqlExpressionWalkable
 	{
-		public Sql.QueryExtensionScope           Scope     { get; set; }
-		public int                               ID        { get; set; }
-		public Dictionary<string,ISqlExpression> Arguments { get; } = new();
+		public string?                           Configuration { get; set; }
+		public Sql.QueryExtensionScope           Scope         { get; set; }
+		public int                               ID            { get; set; }
+		public Dictionary<string,ISqlExpression> Arguments     { get; } = new();
+		public Type?                             BuilderType   { get; set; }
 
 		public ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext,ISqlExpression,ISqlExpression> func)
 		{
