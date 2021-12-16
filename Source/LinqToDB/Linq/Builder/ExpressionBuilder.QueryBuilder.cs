@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -188,11 +189,18 @@ namespace LinqToDB.Linq.Builder
 							var parent = placeholder.BuildContext;
 							while (true)
 							{
-								placeholder = (SqlPlaceholderExpression)context.builder.MakeColumn(
-									parent,
-									placeholder);
+								if (placeholder.Sql.Index < 0 || placeholder.Sql.Query != parent.SelectQuery)
+								{
+									placeholder = context.builder.MakeColumn(
+										parent,
+										placeholder);
+								}
+								else
+								{
+									
+								}
 
-								parent = placeholder.BuildContext?.Parent;
+								parent = parent.Parent;
 								if (parent == null)
 									break;
 							}
@@ -283,7 +291,7 @@ namespace LinqToDB.Linq.Builder
 			return withColumns;
 		}
 
-		public bool TryConvertToSql(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor, out ISqlExpression? sqlExpression, out Expression actual)
+		public bool TryConvertToSql(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor, [NotNullWhen(true)] out ISqlExpression? sqlExpression, out Expression actual)
 		{
 			sqlExpression = null;
 
@@ -661,9 +669,10 @@ namespace LinqToDB.Linq.Builder
 							if (condSql != null)
 								return new TransformInfo(condSql);
 
-							var testSQl = context.builder.TryConvertToSqlExpr(context.context, cond.Test);
+							/*var testSQl = context.builder.TryConvertToSqlExpr(context.context, cond.Test);
 							if (testSQl != null)
 								return new TransformInfo(cond.Update(testSQl, cond.IfTrue, cond.IfFalse), false, true);
+							*/
 							break;
 						}
 

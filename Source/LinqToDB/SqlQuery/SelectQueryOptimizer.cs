@@ -719,6 +719,17 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
+			if (searchCondition.Conditions.Count == 1)
+			{
+				var cond = searchCondition.Conditions[0];
+				if (!cond.IsNot && cond.Predicate is SqlSearchCondition subSc && subSc.Conditions.Count == 1)
+				{
+					var subCond = subSc.Conditions[0];
+					if (!subCond.IsNot)
+						return subSc;
+				}
+			}
+
 			return searchCondition;
 		}
 
@@ -1325,9 +1336,11 @@ namespace LinqToDB.SqlQuery
 
 				if (!QueryHelper.IsDependsOn(sql, sources, ignore))
 				{
+					/*
 					if (!(joinTable.JoinType == JoinType.CrossApply && searchCondition.Count == 0) // CROSS JOIN
 						&& sql.Select.HasModifier)
 						throw new LinqToDBException("Database do not support CROSS/OUTER APPLY join required by the query.");
+						*/
 
 					// correct conditions
 					if (searchCondition.Count > 0 && sql.Select.Columns.Count > 0)

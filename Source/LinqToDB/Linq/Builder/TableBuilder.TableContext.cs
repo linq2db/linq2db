@@ -1207,11 +1207,11 @@ namespace LinqToDB.Linq.Builder
 
 			public Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
+				if (flags.HasFlag(ProjectFlags.Root))
+					return path;
+
 				if (SequenceHelper.IsSameContext(path, this))
 				{
-					if (flags.HasFlag(ProjectFlags.Root))
-						return path;
-
 					// trying to access Queryable variant
 					if (path.Type != ObjectType && flags.HasFlag(ProjectFlags.Expression))
 						return new SqlEagerLoadExpression(this, path);
@@ -1222,7 +1222,7 @@ namespace LinqToDB.Linq.Builder
 				if (path is not MemberExpression member)
 					return Builder.CreateSqlError(this, path);
 
-				var sql = GetField(member, 1, false);
+				var sql = GetField(member, member.GetLevel(Builder.MappingSchema), false);
 				if (sql == null)
 					return Builder.CreateSqlError(this, path);
 

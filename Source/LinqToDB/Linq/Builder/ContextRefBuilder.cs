@@ -13,7 +13,7 @@ namespace LinqToDB.Linq.Builder
 
 		public bool CanBuild(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			var root = builder.MakeExpression(buildInfo, ProjectFlags.Root);
+			var root = builder.MakeExpression(buildInfo.Expression, ProjectFlags.Root);
 			if (root == buildInfo.Expression)
 			{
 				if (root is ContextRefExpression)
@@ -26,7 +26,7 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			var root = builder.MakeExpression(buildInfo, ProjectFlags.Root);
+			var root = builder.MakeExpression(buildInfo.Expression, ProjectFlags.Root);
 			if (root != buildInfo.Expression)
 				return builder.BuildSequence(new BuildInfo(buildInfo, root));
 
@@ -49,7 +49,7 @@ namespace LinqToDB.Linq.Builder
 
 		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			var root = builder.MakeExpression(buildInfo, ProjectFlags.Root);
+			var root = builder.MakeExpression(buildInfo.Expression, ProjectFlags.Root);
 			if (root != buildInfo.Expression)
 				return builder.IsSequence(new BuildInfo(buildInfo, root));
 

@@ -1013,7 +1013,7 @@ namespace LinqToDB.Linq.Builder
 		/// <param name="columnDescriptor"></param>
 		/// <param name="isPureExpression"></param>
 		/// <returns></returns>
-		public Expression ConvertToSqlExpr(IBuildContext? context, Expression expression, bool testOnly = false, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false, string? alias = null)
+		public Expression ConvertToSqlExpr(IBuildContext context, Expression expression, bool testOnly = false, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false, string? alias = null)
 		{
 			var flags = ProjectFlags.SQL;
 			if (testOnly)
@@ -1055,14 +1055,13 @@ namespace LinqToDB.Linq.Builder
 				result = UpdateNesting(context, result);
 			}
 
-			_cachedSql.Remove(cacheKey);
-			_cachedSql.Add(cacheKey, result);
+			_cachedSql[cacheKey] = result;
 
 			return result;
 		}
 
 
-		Expression ConvertToSqlInternal(IBuildContext? context, Expression expression, ProjectFlags flags, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false, string? alias = null)
+		Expression ConvertToSqlInternal(IBuildContext context, Expression expression, ProjectFlags flags, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false, string? alias = null)
 		{
 			switch (expression.NodeType)
 			{
@@ -1236,6 +1235,19 @@ namespace LinqToDB.Linq.Builder
 						return tError;
 					if (!TryConvertToSql(context, e.IfFalse, columnDescriptor, out var f, out var fError))
 						return fError;
+
+					if (s is SqlSearchCondition sc)
+					{
+						sc = SelectQueryOptimizer.OptimizeSearchCondition(sc, new EvaluationContext());
+
+						if (sc.Conditions.Count == 1 && !sc.Conditions[0].IsNot &&
+						    sc.Conditions[0].Predicate is SqlPredicate.IsNull isnull && isnull.IsNot)
+						{
+							if (QueryHelper.IsNullValue(f) && t.Equals(isnull.Expr1))
+								return CreatePlaceholder(context, isnull.Expr1, expression);
+						}
+
+					}
 
 					if (QueryHelper.UnwrapExpression(f) is SqlFunction c && c.Name == "CASE")
 					{
@@ -1477,6 +1489,14 @@ namespace LinqToDB.Linq.Builder
 					var cnt = (ConstantExpression)expression;
 					if (cnt.Value is ISqlExpression sql)
 						return CreatePlaceholder(context, sql, expression, alias: alias);
+					break;
+				}
+
+				default:
+				{
+					expression = BuildSqlExpression(new Dictionary<Expression, Expression>(), context, expression,
+						flags, alias);
+
 					break;
 				}
 			}
@@ -1803,7 +1823,7 @@ namespace LinqToDB.Linq.Builder
 				if (placeholders.Count == 0)
 					return null;
 
-				var notNull = placeholders.Where(p => !p.Sql.Sql.CanBeNull).ToList();
+				var notNull = placeholders.Where(p => p.Sql.Sql.CanBeNull != isNot).ToList();
 				if (notNull.Count == 0)
 					notNull = placeholders;
 
@@ -3205,8 +3225,6 @@ namespace LinqToDB.Linq.Builder
 
 		Expression RemoveNullPropagation(Expression expr)
 		{
-			return expr;
-
 			// Do not modify parameters
 			//
 			if (CanBeCompiled(expr))
@@ -3573,6 +3591,41 @@ namespace LinqToDB.Linq.Builder
 
 		#region Projection
 
+		static MemberInfo? FindMember(Type inType, ParameterInfo parameter)
+		{
+			var found = FindMember(TypeAccessor.GetAccessor(inType).Members, parameter);
+			return found;
+		}
+
+
+		static MemberInfo? FindMember(IReadOnlyCollection<MemberAccessor> members, ParameterInfo parameter)
+		{
+			MemberInfo? exactMatch   = null;
+			MemberInfo? nonCaseMatch = null;
+
+			foreach (var member in members)
+			{
+				if (member.Type == parameter.ParameterType)
+				{
+					if (member.Name == parameter.Name)
+					{
+						exactMatch = member.MemberInfo;
+						break;
+					}
+
+					if (member.Name.Equals(parameter.Name, StringComparison.InvariantCultureIgnoreCase))
+					{
+						nonCaseMatch = member.MemberInfo;
+						break;
+					}
+
+				}
+			}
+
+			return exactMatch ?? nonCaseMatch;
+		}
+
+
 		public Expression Project(IBuildContext context, Expression? path, List<Expression>? nextPath, int nextIndex, ProjectFlags flags, Expression body)
 		{
 			MemberInfo? member = null;
@@ -3613,6 +3666,11 @@ namespace LinqToDB.Linq.Builder
 				{
 					throw new NotImplementedException();
 				}
+			}
+
+			if (flags.HasFlag(ProjectFlags.SQL))
+			{
+				body = RemoveNullPropagation(body);
 			}
 
 			switch (body.NodeType)
@@ -3670,6 +3728,22 @@ namespace LinqToDB.Linq.Builder
 							var memberLocal = ne.Members[i];
 
 							if (MemberInfoEqualityComparer.Default.Equals(memberLocal, member))
+							{
+								return Project(context, path, nextPath, nextIndex - 1, flags, ne.Arguments[i]);
+							}
+						}
+					}
+					else
+					{
+						var parameters = ne.Constructor.GetParameters();
+
+						for (var i = 0; i < parameters.Length; i++)
+						{
+							var parameter     = parameters[i];
+							var memberByParam = FindMember(ne.Constructor.DeclaringType, parameter);
+
+							if (memberByParam != null &&
+							    MemberInfoEqualityComparer.Default.Equals(memberByParam, member))
 							{
 								return Project(context, path, nextPath, nextIndex - 1, flags, ne.Arguments[i]);
 							}
@@ -3759,6 +3833,30 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					break;
+				}
+
+				case ExpressionType.Call:
+				{
+					var mc = (MethodCallExpression)body;
+
+					if (mc.Method.IsStatic)
+					{
+						var parameters = mc.Method.GetParameters();
+
+						for (var i = 0; i < parameters.Length; i++)
+						{
+							var parameter     = parameters[i];
+							var memberByParam = FindMember(mc.Method.ReturnType, parameter);
+
+							if (memberByParam != null &&
+							    MemberInfoEqualityComparer.Default.Equals(memberByParam, member))
+							{
+								return Project(context, path, nextPath, nextIndex - 1, flags, mc.Arguments[i]);
+							}
+						}
+					}
+
+					return mc;
 				}
 			}
 
@@ -3867,6 +3965,11 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				rootContext = root as ContextRefExpression;
+				if (rootContext == null)
+				{
+					//TODO: why i cannot do that without GetLevelExpression ???
+					rootContext = root.GetLevelExpression(MappingSchema, 0) as ContextRefExpression;
+				}
 			}
 			else if (path is ContextRefExpression contextRef)
 			{
@@ -3898,7 +4001,7 @@ namespace LinqToDB.Linq.Builder
 
 		public SqlPlaceholderExpression MakeColumn(IBuildContext context, SqlPlaceholderExpression sqlPlaceholder)
 		{
-			var key = new SqlCacheKey(sqlPlaceholder.MemberExpression, context, null, ProjectFlags.SQL);
+			var key = new SqlCacheKey(sqlPlaceholder, context, null, ProjectFlags.SQL);
 
 			if (_columnCache.TryGetValue(key, out var placeholder))
 				return placeholder;

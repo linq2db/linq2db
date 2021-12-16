@@ -885,6 +885,13 @@ namespace LinqToDB.SqlProvider
 
 							return parms[0];
 						}
+
+						//Trying to remove not needed null check
+						if (parms[0] is SqlSearchCondition sc && sc.Conditions.Count == 1 && !sc.Conditions[0].IsNot && sc.Conditions[0].Predicate is SqlPredicate.IsNull isnull && isnull.IsNot)
+						{
+							if (parms[1].Equals(isnull.Expr1))
+								return isnull.Expr1;
+						}
 					}
 				}
 

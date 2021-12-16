@@ -433,6 +433,13 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
+		public static bool IsNullValue(ISqlExpression expr)
+		{
+			if (expr is SqlValue value && value.Value == null)
+				return true;
+			return false;
+		}
+
 		public static SelectQuery RootQuery(this SelectQuery query)
 		{
 			while (query.ParentSelect != null)

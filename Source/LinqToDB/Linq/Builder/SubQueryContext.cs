@@ -119,6 +119,9 @@ namespace LinqToDB.Linq.Builder
 
 		public override SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
 		{
+			if (sqlInfo.Query == SelectQuery)
+				return sqlInfo;
+
 			var column = base.MakeColumn(path, sqlInfo, alias);
 			column = SequenceHelper.MakeColumn(SelectQuery, column, alias);
 			return column;

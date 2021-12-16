@@ -167,11 +167,11 @@ namespace LinqToDB.Linq.Builder
 		{
 			Expression result;
 
-			if (flags.HasFlag(ProjectFlags.Root))
-				return path;
-
 			if (SequenceHelper.IsSameContext(path, this))
 			{
+				if (flags.HasFlag(ProjectFlags.Root))
+					return path;
+
 				if (path.Type != Body.Type && flags.HasFlag(ProjectFlags.Expression))
 					return new SqlEagerLoadExpression(this, path);
 
@@ -180,6 +180,10 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				result = Builder.Project(this, path, null, 0, flags, Body);
+
+				if (flags.HasFlag(ProjectFlags.Root) && result is not ContextRefExpression)
+					return path;
+
 			}
 
 			return result;
