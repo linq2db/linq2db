@@ -132,19 +132,7 @@ namespace LinqToDB.Linq.Builder
 			if (associationDescriptor == null || memberInfo == null)
 				return expression;
 
-			/*
-			if (associationDescriptor.IsList)
-			{
-				var collectionAssociation = CreateCollectionAssociation(expression, rootContext);
-
-				_associations[key] = collectionAssociation;
-
-				// such associations are processed by ContextRefBuilder
-				return collectionAssociation;
-			}
-			*/
-
-			var isOuter   = associationDescriptor.CanBeNull;
+			var isOuter = associationDescriptor.CanBeNull;
 			var association = AssociationHelper.BuildAssociationQuery(this, rootContext, memberInfo,  associationDescriptor, !associationDescriptor.IsList, ref isOuter);
 
 			associationExpression = association;
@@ -159,51 +147,10 @@ namespace LinqToDB.Linq.Builder
 				associationExpression = new ContextRefExpression(association.Type, sequence);
 			}
 
-			//associationExpression = association;
-
 			_associations[key] = associationExpression;
 
 			return associationExpression;
 		}
-
-		public Expression TryCreateAssociation(BuildInfo buildInfo, Expression expression, ContextRefExpression rootContext)
-		{
-			if (!IsAssociation(expression))
-				return expression;
-
-			_associations ??= new Dictionary<SqlCacheKey, Expression>(SqlCacheKey.SqlCacheKeyComparer);
-
-			var key = new SqlCacheKey(expression, rootContext.BuildContext, null, ProjectFlags.Root);
-
-			if (_associations.TryGetValue(key, out var associationExpression))
-				return associationExpression;
-
-			AccessorMember? memberInfo;
-			var             associationDescriptor = GetAssociationDescriptor(expression, out memberInfo);
-			if (associationDescriptor == null || memberInfo == null)
-				return expression;
-
-			if (!associationDescriptor.IsList)
-				return expression;
-
-			var isOuter   = associationDescriptor.CanBeNull;
-			var association = AssociationHelper.BuildAssociationQuery(this, rootContext, memberInfo,  associationDescriptor, !associationDescriptor.IsList, ref isOuter);
-
-			associationExpression = association;
-
-			if (!associationDescriptor.IsList)
-			{
-				buildInfo = new BuildInfo(buildInfo, association);
-				var sequence = BuildSequence(buildInfo);
-
-				associationExpression = new ContextRefExpression(association.Type, sequence);
-			}
-
-			_associations[key] = associationExpression;
-
-			return associationExpression;
-		}
-
 
 		public Expression CreateCollectionAssociation(Expression expression, ContextRefExpression rootContext)
 		{
