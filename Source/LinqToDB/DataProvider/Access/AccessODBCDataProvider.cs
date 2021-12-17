@@ -26,7 +26,7 @@ namespace LinqToDB.DataProvider.Access
 		{
 			SqlProviderFlags.AcceptsTakeAsParameter           = false;
 			SqlProviderFlags.IsSkipSupported                  = false;
-			SqlProviderFlags.IsCountSubQuerySupported         = false;
+			SqlProviderFlags.IsCountSubQuerySupported         = true;
 			SqlProviderFlags.IsInsertOrUpdateSupported        = false;
 			SqlProviderFlags.TakeHintsSupported               = TakeHints.Percent;
 			SqlProviderFlags.IsCrossJoinSupported             = false;

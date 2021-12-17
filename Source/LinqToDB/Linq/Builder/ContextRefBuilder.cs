@@ -24,7 +24,7 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			var root = builder.MakeExpression(buildInfo.Expression, ProjectFlags.SQL);
+			var root = builder.MakeExpression(buildInfo.Expression, ProjectFlags.Test);
 			if (!ExpressionEqualityComparer.Instance.Equals(root, buildInfo.Expression) || root is not ContextRefExpression contextRef)
 				return builder.BuildSequence(new BuildInfo(buildInfo, root));
 

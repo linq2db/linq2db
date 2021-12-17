@@ -42,34 +42,67 @@ namespace LinqToDB.Linq.Builder
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var root = builder.MakeExpression(methodCall.Arguments[0], ProjectFlags.Root);
+			var methodName = methodCall.Method.Name.Replace("Async", "");
 
-			IBuildContext sequence;
-			if (root is ContextRefExpression contextRefExpression &&
-			    contextRefExpression.BuildContext is GroupByBuilder.GroupByContext)
+			var inGrouping = false;
+
+			IBuildContext?      sequence = null;
+			SqlSearchCondition? filter   = null;
+
+			if (buildInfo.IsSubQuery)
 			{
-				sequence = contextRefExpression.BuildContext;
+				var testSequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { AggregationTest = true });
+
+				// It means that as root we have used fake context
+				var testSelectQuery = testSequence.SelectQuery;
+				if (testSelectQuery.From.Tables.Count == 0)
+				{
+					var valid = true;
+					if (!testSelectQuery.Where.IsEmpty)
+					{
+						valid = false;
+						/*
+						switch (methodName)
+						{
+							case "Sum":
+							{
+								filter = testSelectQuery.
+							}
+						}
+						*/
+					}
+
+					if (valid)
+					{
+						sequence = builder.BuildSequence(
+							new BuildInfo(buildInfo, methodCall.Arguments[0]) { CreateSubQuery = false });
+						inGrouping = true;
+					}
+				}
 			}
-			else
+
+			if (sequence == null)
 			{
 				sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { CreateSubQuery = true });
 			}
 
 			var prevSequence = sequence;
 
-			// Wrap by subquery to handle aggregate limitations, especially for SQL Server
-			//
-			sequence = new SubQueryContext(sequence);
-
-			if (prevSequence.SelectQuery.OrderBy.Items.Count > 0)
+			if (!inGrouping && buildInfo.IsSubQuery)
 			{
-				if (prevSequence.SelectQuery.Select.TakeValue == null && prevSequence.SelectQuery.Select.SkipValue == null)
-					prevSequence.SelectQuery.OrderBy.Items.Clear();
+				// Wrap by subquery to handle aggregate limitations, especially for SQL Server
+				//
+				sequence = new SubQueryContext(sequence);
+
+				if (prevSequence.SelectQuery.OrderBy.Items.Count > 0)
+				{
+					if (prevSequence.SelectQuery.Select.TakeValue == null &&
+					    prevSequence.SelectQuery.Select.SkipValue == null)
+						prevSequence.SelectQuery.OrderBy.Items.Clear();
+				}
 			}
 
 			var context = new AggregationContext(buildInfo.Parent, sequence, methodCall);
-
-			var methodName = methodCall.Method.Name.Replace("Async", "");
 
 			var refExpression  = new ContextRefExpression(methodCall.Arguments[0].Type, prevSequence);
 			var sqlPlaceholder = builder.ConvertToSqlPlaceholder(prevSequence, refExpression);
@@ -79,11 +112,15 @@ namespace LinqToDB.Linq.Builder
 			var functionPlaceholder = ExpressionBuilder.CreatePlaceholder(prevSequence, /*context*/
 				new SqlFunction(methodCall.Type, methodName, true, sql.Sql) { CanBeNull = true }, buildInfo.Expression);
 
-			if (prevSequence is not GroupByBuilder.GroupByContext)
+			functionPlaceholder.Alias = methodName;
+
+			//functionPlaceholder = (SqlPlaceholderExpression)builder.UpdateNesting(context, functionPlaceholder);
+
+			if (!inGrouping && buildInfo.IsSubQuery)
 			{
 				builder.MakeColumn(context, functionPlaceholder);
 
-				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence, context.SelectQuery, functionPlaceholder.MemberExpression, functionPlaceholder.ConvertType);
+				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(buildInfo.Parent, context.SelectQuery, functionPlaceholder.MemberExpression, functionPlaceholder.ConvertType);
 			}
 
 			context.Placeholder = functionPlaceholder;
@@ -129,7 +166,14 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				throw new NotImplementedException();
+				var expr = Builder.FinalizeProjection(this,
+					Builder.MakeExpression(new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
+
+				var mapper = Builder.BuildMapper<object>(expr);
+
+				QueryRunner.SetRunQuery(query, mapper);
+
+				//throw new NotImplementedException();
 				/*var expr   = BuildExpression(FieldIndex, Sql);
 				var mapper = Builder.BuildMapper<object>(expr);
 
@@ -144,6 +188,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
+				throw new NotImplementedException();
 				var info  = ConvertToIndex(expression, level, ConvertFlags.Field)[0];
 				var index = info.Index;
 				if (Parent != null)
@@ -153,6 +198,8 @@ namespace LinqToDB.Linq.Builder
 
 			Expression BuildExpression(int fieldIndex, ISqlExpression? sqlExpression)
 			{
+				throw new NotImplementedException();
+
 				Expression expr;
 
 				if (SequenceHelper.UnwrapSubqueryContext(Sequence) is DefaultIfEmptyBuilder.DefaultIfEmptyContext defaultIfEmpty)
@@ -201,6 +248,8 @@ namespace LinqToDB.Linq.Builder
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
+				throw new NotImplementedException();
+
 				switch (flags)
 				{
 					case ConvertFlags.All   :
@@ -255,6 +304,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
+				throw new NotImplementedException();
 				return requestFlag switch
 				{
 					RequestFor.Root       => IsExpressionResult.GetResult(Lambda != null && expression == Lambda.Parameters[0]),

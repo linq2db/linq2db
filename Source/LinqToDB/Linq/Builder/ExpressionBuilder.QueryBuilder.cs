@@ -576,11 +576,6 @@ namespace LinqToDB.Linq.Builder
 									return new TransformInfo(context.builder.BuildSql(context.context, ce.Arguments[0], context.alias ?? ce.Arguments[1].EvaluateExpression<string>()));
 								}
 
-								if (context.builder.IsServerSideOnly(expr) || context.builder.PreferServerSide(expr, false) || ce.Method.IsSqlPropertyMethodEx())
-								{
-									return new TransformInfo(context.builder.ConvertToSqlExpr(context.context, expr));
-								}
-
 								var info = new BuildInfo(context.context, ce, new SelectQuery {ParentSelect = context.context.SelectQuery});
 
 								if (context.builder.IsSequence(info))
@@ -594,6 +589,11 @@ namespace LinqToDB.Linq.Builder
 											context.builder.GetSubQueryExpression(context.context, ce, false,
 												context.alias), false, true);
 									}
+								}
+
+								if (context.builder.IsServerSideOnly(expr) || context.builder.PreferServerSide(expr, false) || ce.Method.IsSqlPropertyMethodEx())
+								{
+									return new TransformInfo(context.builder.ConvertToSqlExpr(context.context, expr));
 								}
 
 								return new TransformInfo(expr);

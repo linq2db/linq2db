@@ -170,7 +170,11 @@ namespace LinqToDB.Linq.Builder
 			if (SequenceHelper.IsSameContext(path, this))
 			{
 				if (flags.HasFlag(ProjectFlags.Root))
+				{
+					if (Body is ContextRefExpression)
+						return Body;
 					return path;
+				}
 
 				if (path.Type != Body.Type && flags.HasFlag(ProjectFlags.Expression))
 					return new SqlEagerLoadExpression(this, path);

@@ -250,8 +250,11 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Root))
+				if (SequenceHelper.IsSameContext(path, this) &&
+				    (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.Test)))
+				{
 					return path;
+				}
 
 				if (SequenceHelper.IsSameContext(path, this))
 				{
@@ -261,7 +264,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (path is MemberExpression me && me.Expression is ContextRefExpression contextRef && me.Member.Name == "Key")
 				{
-					var keyPath = new ContextRefExpression(contextRef.Type, Element);
+					var keyPath = new ContextRefExpression(contextRef.Type, _key);
 					return Builder.MakeExpression(keyPath, flags);
 				}
 
@@ -780,6 +783,12 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
+				if (buildInfo.AggregationTest)
+					return new AggregationRoot(this);
+
+				if (!buildInfo.CreateSubQuery)
+					return this;
+
 				if (SequenceHelper.IsSameContext(expression, this))
 				{
 					/*if (buildInfo.Parent is SelectManyBuilder.SelectManyContext sm)
@@ -796,7 +805,7 @@ namespace LinqToDB.Linq.Builder
 
 					//if (buildInfo.Parent == this)
 					{
-						var buildExpression = Builder.GetSubqueryContextReplacement(buildInfo.Expression);
+						var buildExpression = buildInfo.Expression;
 
 						var expr = MakeSubQueryExpression(
 							Builder.MappingSchema,
@@ -864,5 +873,15 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		#endregion
+
+		class AggregationRoot : PassThroughContext
+		{
+			public AggregationRoot(IBuildContext context) : base(context)
+			{
+				SelectQuery = new SelectQuery();
+			}
+
+			public override SelectQuery SelectQuery { get; set; }
+		}
 	}
 }

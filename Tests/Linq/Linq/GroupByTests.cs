@@ -752,6 +752,7 @@ namespace Tests.Linq
 					group ch by ch.ParentID into g
 					select new
 					{
+						Cnt =      g.Select(c => c.ChildID).Where(_ => _ > 30).Count(),
 						Sum =      g.Select(c => c.ChildID).Where(_ => _ > 30).Sum(),
 						Min =      g.Select(c => c.ChildID).Where(_ => _ > 30).Min(),
 						Max =      g.Select(c => c.ChildID).Where(_ => _ > 30).Max(),
@@ -762,6 +763,7 @@ namespace Tests.Linq
 					group ch by ch.ParentID into g
 					select new
 					{
+						Cnt =      g.Select(c => c.ChildID).Where(_ => _ > 30).Count(),
 						Sum =      g.Select(c => c.ChildID).Where(_ => _ > 30).Sum(),
 						Min =      g.Select(c => c.ChildID).Where(_ => _ > 30).Min(),
 						Max =      g.Select(c => c.ChildID).Where(_ => _ > 30).Max(),
