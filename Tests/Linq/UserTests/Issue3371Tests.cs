@@ -41,7 +41,7 @@ namespace Tests.UserTests
 			var builder = MappingSchema.Default.GetFluentMappingBuilder();
 
 			builder.Entity<Employee>()
-				 .Association(x => x.PayRate, x => x.PayRateId, x => x.Id);
+				 .Association(x => x.PayRate, x => x.PayRateId, x => x!.Id);
 
 
 			builder.Entity<PayRate>();
