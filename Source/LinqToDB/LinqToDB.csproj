@@ -124,4 +124,5 @@
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net45' AND '$(TargetFramework)' != 'net46' ">
 		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
 	</ItemGroup>
+
 </Project>

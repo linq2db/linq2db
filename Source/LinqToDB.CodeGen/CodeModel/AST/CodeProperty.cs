@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Class property declaration.
@@ -8,17 +8,17 @@ namespace LinqToDB.CodeGen.Model
 	public sealed class CodeProperty : AttributeOwner, IGroupElement, ITypedName
 	{
 		public CodeProperty(
-			List<CodeAttribute>? customAttributes,
-			CodeIdentifier       name,
-			CodeTypeToken        type,
-			Modifiers            attributes,
-			bool                 hasGetter,
-			CodeBlock?           getter,
-			bool                 hasSetter,
-			CodeBlock?           setter,
-			CodeComment?         trailingComment,
-			CodeXmlComment?      xmlDoc,
-			ICodeExpression?     initializer)
+			IEnumerable<CodeAttribute>? customAttributes,
+			CodeIdentifier              name,
+			CodeTypeToken               type,
+			Modifiers                   attributes,
+			bool                        hasGetter,
+			CodeBlock?                  getter,
+			bool                        hasSetter,
+			CodeBlock?                  setter,
+			CodeComment?                trailingComment,
+			CodeXmlComment?             xmlDoc,
+			ICodeExpression?            initializer)
 			: base(customAttributes)
 		{
 			Name            = name;

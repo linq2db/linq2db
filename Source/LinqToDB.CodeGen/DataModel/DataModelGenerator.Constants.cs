@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace LinqToDB.CodeGen.DataModel
+namespace LinqToDB.DataModel
 {
 	// while those names used later as wrapped in CodeIdentifier AST class,
 	// we shouldn't do it here as CodeIdentifier is mutable and could change name

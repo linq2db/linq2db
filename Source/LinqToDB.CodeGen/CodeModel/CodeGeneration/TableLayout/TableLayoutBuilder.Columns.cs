@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
-	// column descriptors and column data storages separated as single column descriptor could correspond to
-	// multiple column instances in table, when parent groups contain multiple sub-groups
+	// column descriptors and column data storages are separate objects as single column descriptor could correspond to
+	// multiple column instances in table, when parent groups contain multiple sub-groups.
+	// In other words, one column descriptor could be used for multiple columns in resulting table.
 	// Example:
 	// 1. attribute named parameter is a group of 3 columns: name, assignment operator fixed column and value.
 	// 2. we have 2 simple column descriptors: name column descriptor and value column descriptor
@@ -78,17 +79,17 @@ namespace LinqToDB.CodeGen.Model
 			/// <summary>
 			/// Column name (except fixed columns).
 			/// </summary>
-			public string? Name { get; }
+			public string? Name       { get; }
 
 			/// <summary>
 			/// Indicates that column is fully configured.
 			/// </summary>
-			internal bool Configured { get; private set; }
+			internal bool  Configured { get; private set; }
 
 			/// <summary>
 			/// Indicates that column data already populated for all rows.
 			/// </summary>
-			protected bool Populated { get; private set; }
+			protected bool Populated  { get; private set; }
 
 			/// <summary>
 			/// Mark column as configured.
@@ -662,8 +663,10 @@ namespace LinqToDB.CodeGen.Model
 			private bool IsEmpty(IReadOnlyList<ColumnDataBase> subGroup, int rowIndex)
 			{
 				foreach (var column in subGroup)
+				{
 					if (!column.IsEmpty(rowIndex))
 						return false;
+				}
 
 				return true;
 			}

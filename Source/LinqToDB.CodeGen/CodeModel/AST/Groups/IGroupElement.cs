@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Marker interface for members of node groups.

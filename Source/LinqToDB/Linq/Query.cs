@@ -30,7 +30,7 @@ namespace LinqToDB.Linq
 
 		#region Init
 
-		internal readonly List<QueryInfo> Queries = new (1);
+		public readonly List<QueryInfo> Queries = new (1);
 
 		internal abstract void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters);
 
@@ -235,7 +235,7 @@ namespace LinqToDB.Linq
 		#endregion
 	}
 
-	class Query<T> : Query
+	public class Query<T> : Query
 	{
 		#region Init
 
@@ -266,11 +266,11 @@ namespace LinqToDB.Linq
 
 		#region Properties & Fields
 
-		public bool DoNotCache;
+		internal bool DoNotCache;
 
-		public Func<IDataContext,Expression,object?[]?,object?[]?,IEnumerable<T>>      GetIEnumerable = null!;
-		public Func<IDataContext,Expression,object?[]?,object?[]?,IAsyncEnumerable<T>> GetIAsyncEnumerable = null!;
-		public Func<IDataContext,Expression,object?[]?,object?[]?,Func<T,bool>,CancellationToken,Task> GetForEachAsync = null!;
+		internal Func<IDataContext,Expression,object?[]?,object?[]?,IEnumerable<T>>                      GetIEnumerable      = null!;
+		internal Func<IDataContext,Expression,object?[]?,object?[]?,IAsyncEnumerable<T>>                 GetIAsyncEnumerable = null!;
+		internal Func<IDataContext,Expression,object?[]?,object?[]?,Func<T,bool>,CancellationToken,Task> GetForEachAsync     = null!;
 
 		#endregion
 
@@ -560,16 +560,16 @@ namespace LinqToDB.Linq
 		#endregion
 	}
 
-	class QueryInfo : IQueryContext
+	public class QueryInfo : IQueryContext
 	{
 		public SqlStatement    Statement   { get; set; } = null!;
 		public object?         Context     { get; set; }
 		public SqlParameter[]? Parameters  { get; set; }
 		public AliasesContext? Aliases     { get; set; }
 
-		public List<ParameterAccessor> ParameterAccessors = new ();
+		internal List<ParameterAccessor> ParameterAccessors = new ();
 
-		public void AddParameterAccessor(ParameterAccessor accessor)
+		internal void AddParameterAccessor(ParameterAccessor accessor)
 		{
 			ParameterAccessors.Add(accessor);
 			accessor.SqlParameter.AccessorId = ParameterAccessors.Count - 1;

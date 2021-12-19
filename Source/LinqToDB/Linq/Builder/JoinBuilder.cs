@@ -472,7 +472,6 @@ namespace LinqToDB.Linq.Builder
 		internal class GroupJoinSubQueryContext : SubQueryContext
 		{
 			public SqlJoinedTable?      Join;
-			public SelectQuery?         CounterSelect;
 			public GroupJoinContext?    GroupJoin;
 			public Func<IBuildContext>? GetSubQueryContext;
 

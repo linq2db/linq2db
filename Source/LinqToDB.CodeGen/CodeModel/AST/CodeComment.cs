@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	public sealed class CodeComment : ITopLevelElement
 	{
@@ -11,11 +11,11 @@
 		/// <summary>
 		/// Text of commentary.
 		/// </summary>
-		public string Text { get; }
+		public string Text   { get; }
 		/// <summary>
 		/// Type of comment - inlined or single-line.
 		/// </summary>
-		public bool Inline { get; }
+		public bool   Inline { get; }
 
 		CodeElementType ICodeElement.ElementType => CodeElementType.Comment;
 	}

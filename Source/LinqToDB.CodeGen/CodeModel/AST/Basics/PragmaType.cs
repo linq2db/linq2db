@@ -1,7 +1,8 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Compiler pragma directive type.
+	/// List of pragmas limited to one we currently support.
 	/// </summary>
 	public enum PragmaType
 	{

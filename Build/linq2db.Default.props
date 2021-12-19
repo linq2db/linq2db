@@ -54,4 +54,8 @@
 		<AdditionalFiles Include="$(MSBuildThisFileDirectory)/BannedSymbols.txt" />
 	</ItemGroup>
 
+	<ItemGroup Condition="'$(Language)'=='C#'">
+		<Compile Include="$(MSBuildThisFileDirectory)/../Source/Shared/*.cs" LinkBase="Compatibility" />
+	</ItemGroup>
+
 </Project>

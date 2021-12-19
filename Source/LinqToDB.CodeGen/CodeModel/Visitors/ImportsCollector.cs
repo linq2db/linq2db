@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// This visitor collects imports for all types, used in code model.
 	/// </summary>
-	internal class ImportsCollector : NoopCodeModelVisitor
+	internal sealed class ImportsCollector : NoopCodeModelVisitor
 	{
 		private readonly ILanguageProvider                      _languageProvider;
 		private readonly HashSet<IReadOnlyList<CodeIdentifier>> _imports;
@@ -16,8 +16,8 @@ namespace LinqToDB.CodeGen.Model
 		public ImportsCollector(ILanguageProvider languageProvider)
 		{
 			_languageProvider = languageProvider;
-			_imports          = new HashSet<IReadOnlyList<CodeIdentifier>>(languageProvider.FullNameEqualityComparer);
-			_ignoredImports   = new HashSet<IReadOnlyList<CodeIdentifier>>(languageProvider.FullNameEqualityComparer);
+			_imports          = new (languageProvider.FullNameEqualityComparer);
+			_ignoredImports   = new (languageProvider.FullNameEqualityComparer);
 		}
 
 		/// <summary>

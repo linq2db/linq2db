@@ -1,0 +1,54 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\..\Build\linq2db.Source.props" />
+
+	<PropertyGroup>
+		<AssemblyName>linq2db.CLI</AssemblyName>
+		<RootNamespace>LinqToDB.CLI</RootNamespace>
+
+		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.CLI.xml</DocumentationFile>
+		<TargetFrameworks>net6.0</TargetFrameworks>
+		<OutputType>Exe</OutputType>
+		<WarningsAsErrors>true</WarningsAsErrors>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!--TODO: move codegeneration to linq2db.Tools-->
+		<ProjectReference Include="..\LinqToDB.CodeGen\LinqToDB.CodeGen.csproj" />
+
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+
+		<PackageReference Include="Humanizer.Core" />
+
+		<!--providers-->
+		<PackageReference Include="System.Data.SqlClient" />
+		<PackageReference Include="Microsoft.Data.SqlClient" />
+		<PackageReference Include="dotMorten.Microsoft.SqlServer.Types" />
+
+		<PackageReference Include="System.Data.SQLite.Core" />
+		<PackageReference Include="Microsoft.Data.SQLite" />
+		
+		<PackageReference Include="Npgsql" />
+
+		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
+
+		<PackageReference Include="MySqlConnector" />
+
+		<PackageReference Include="System.Data.OleDb" />
+		<PackageReference Include="System.Data.Odbc" />
+
+		<PackageReference Include="AdoNetCore.AseClient" />
+
+		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
+
+		<PackageReference Include="IBM.Data.DB2.Core" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
+		<PackageReference Include="IBM.Data.DB2.Core-lnx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
+		<PackageReference Include="IBM.Data.DB2.Core-osx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' " />
+
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="Configuration\*.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+</Project>

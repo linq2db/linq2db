@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Group of properties.
 	/// </summary>
-	public class PropertyGroup : MemberGroup<CodeProperty>
+	public sealed class PropertyGroup : MemberGroup<CodeProperty>
 	{
-		public PropertyGroup(List<CodeProperty>? members, bool tableLayout)
+		public PropertyGroup(IEnumerable<CodeProperty>? members, bool tableLayout)
 			: base(members)
 		{
 			TableLayout = tableLayout;
@@ -27,9 +27,7 @@ namespace LinqToDB.CodeGen.Model
 
 		public PropertyBuilder New(CodeIdentifier name, IType type)
 		{
-			var property = new CodeProperty(name, type);
-			Members.Add(property);
-			return new PropertyBuilder(property);
+			return new PropertyBuilder(AddMember(new CodeProperty(name, type)));
 		}
 	}
 }

@@ -1,21 +1,22 @@
 ﻿using System;
 using System.Text;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
-	/// Code generation writer with indent support.
+	/// Code generation writer with indentation support.
 	/// </summary>
-	internal class IndentedWriter
+	internal sealed class IndentedWriter
 	{
-		// true: writer position is on new line without any data including padding
-		// false: writer position is on line with padding and optionally some more data
+		// current line status
+		// true : writer position is on new empty line without anything, even padding
+		// false: writer position is on line with padding and optionally with some other text
 		private          bool          _newLine = true;
-		// number of indents used for current writer position
+		// number of indent levels used for current writer position
 		private          int           _currentIndent;
 		// character sequence used as newline
 		private readonly string        _newLineSequence;
-		// string used as one ident
+		// character sequence used as one identation element
 		private readonly string        _indentValue;
 
 		private readonly StringBuilder _text = new ();
@@ -111,10 +112,12 @@ namespace LinqToDB.CodeGen.Model
 		private void WriteIndent()
 		{
 			if (_newLine)
+			{
 				for (var i = 0; i < _currentIndent; i++)
 					_text.Append(_indentValue);
 
-			_newLine = false;
+				_newLine = false;
+			}
 		}
 
 		/// <summary>

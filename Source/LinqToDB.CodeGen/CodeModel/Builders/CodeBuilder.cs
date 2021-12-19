@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// AST builder class with helpers to create various AST nodes.
 	/// </summary>
-	public class CodeBuilder
+	public sealed class CodeBuilder
 	{
 		private readonly ILanguageProvider _languageProvider;
 
-		public CodeBuilder(ILanguageProvider languageProvider)
+		internal CodeBuilder(ILanguageProvider languageProvider)
 		{
 			_languageProvider = languageProvider;
 		}
@@ -24,8 +24,9 @@ namespace LinqToDB.CodeGen.Model
 		/// Add new file code unit.
 		/// </summary>
 		/// <param name="fileName">File name.</param>
+		/// <param name="imports">Using statements (imports).</param>
 		/// <returns>File code-unit.</returns>
-		public CodeFile File(string fileName) => new (fileName);
+		public CodeFile File(string fileName, params CodeImport[] imports) => new (fileName, null, imports, null);
 
 		/// <summary>
 		/// Create code comment.
@@ -67,7 +68,7 @@ namespace LinqToDB.CodeGen.Model
 		/// </summary>
 		/// <param name="name">Namespace name.</param>
 		/// <returns>Namespace builder instance.</returns>
-		public NamespaceBuilder Namespace(string name) => new (new(_languageProvider.TypeParser.ParseNamespace(name)));
+		public NamespaceBuilder Namespace(string name) => new (new(_languageProvider.TypeParser.ParseNamespaceOrRegularTypeName(name, true)));
 
 		/// <summary>
 		/// Create one-dimensional array type.
@@ -86,18 +87,7 @@ namespace LinqToDB.CodeGen.Model
 		public IType Type(Type type, bool nullable) => _languageProvider.TypeParser.Parse(type).WithNullability(nullable);
 
 		/// <summary>
-		/// Create method call expression.
-		/// </summary>
-		/// <param name="objOrType">Callee object or type in case of static method.</param>
-		/// <param name="method">Called method name.</param>
-		/// <param name="genericArguments">Generic method type arguments.</param>
-		/// <param name="parameters">Method parameters.</param>
-		/// <param name="returnType">Method return value type.</param>
-		/// <returns>Call element instance.</returns>
-		public CodeCallExpression Call(ICodeExpression objOrType, CodeIdentifier method, IType[] genericArguments, ICodeExpression[] parameters, IType returnType) => new(false, objOrType, method, genericArguments, parameters, returnType);
-
-		/// <summary>
-		/// Create method call expression.
+		/// Create non-void generic method call expression.
 		/// </summary>
 		/// <param name="objOrType">Callee object or type in case of static method.</param>
 		/// <param name="method">Called method name.</param>
@@ -108,7 +98,7 @@ namespace LinqToDB.CodeGen.Model
 		public CodeCallExpression Call(ICodeExpression objOrType, CodeIdentifier method, IType returnType, IType[] genericArguments, params ICodeExpression[] parameters) => new(false, objOrType, method, genericArguments, parameters, returnType);
 
 		/// <summary>
-		/// Create method call expression.
+		/// Create non-void method call expression.
 		/// </summary>
 		/// <param name="objOrType">Callee object or type in case of static method.</param>
 		/// <param name="method">Called method name.</param>
@@ -118,7 +108,7 @@ namespace LinqToDB.CodeGen.Model
 		public CodeCallExpression Call(ICodeExpression objOrType, CodeIdentifier method, IType returnType, params ICodeExpression[] parameters) => new(false, objOrType, method, System.Array.Empty<IType>(), parameters, returnType);
 
 		/// <summary>
-		/// Create method call statement.
+		/// Create generic void method call statement.
 		/// </summary>
 		/// <param name="objOrType">Callee object or type in case of static method.</param>
 		/// <param name="method">Called method name.</param>
@@ -128,26 +118,16 @@ namespace LinqToDB.CodeGen.Model
 		public CodeCallStatement Call(ICodeExpression objOrType, CodeIdentifier method, IType[] genericArguments, params ICodeExpression[] parameters) => new(false, objOrType, method, genericArguments, parameters);
 
 		/// <summary>
-		/// Create method call statement.
+		/// Create void method call statement.
 		/// </summary>
 		/// <param name="objOrType">Callee object or type in case of static method.</param>
 		/// <param name="method">Called method name.</param>
+		/// <param name="parameters">Method parameters.</param>
 		/// <returns>Call element instance.</returns>
-		public CodeCallStatement Call(ICodeExpression objOrType, CodeIdentifier method) => new(false, objOrType, method, System.Array.Empty<IType>(), System.Array.Empty<ICodeExpression>());
+		public CodeCallStatement Call(ICodeExpression objOrType, CodeIdentifier method, params ICodeExpression[] parameters) => new(false, objOrType, method, System.Array.Empty<IType>(), parameters);
 
 		/// <summary>
-		/// Create extension method call expression.
-		/// </summary>
-		/// <param name="type">Type, containing extension method.</param>
-		/// <param name="method">Called method name.</param>
-		/// <param name="genericArguments">Type arguments for generic method.</param>
-		/// <param name="parameters">Call parameters.</param>
-		/// <param name="returnType">Method return value type.</param>
-		/// <returns>Call element instance.</returns>
-		public CodeCallExpression ExtCall(IType type, CodeIdentifier method, IType[] genericArguments, ICodeExpression[] parameters, IType returnType) => new(true, new CodeTypeReference(type), method, genericArguments, parameters, returnType);
-
-		/// <summary>
-		/// Create extension method call expression.
+		/// Create non-void generic extension method call expression.
 		/// </summary>
 		/// <param name="type">Type, containing extension method.</param>
 		/// <param name="method">Called method name.</param>
@@ -158,7 +138,7 @@ namespace LinqToDB.CodeGen.Model
 		public CodeCallExpression ExtCall(IType type, CodeIdentifier method, IType returnType, IType[] genericArguments, params ICodeExpression[] parameters) => new(true, new CodeTypeReference(type), method, genericArguments, parameters, returnType);
 
 		/// <summary>
-		/// Create extension method call expression.
+		/// Create non-void extension method call expression.
 		/// </summary>
 		/// <param name="type">Type, containing extension method.</param>
 		/// <param name="method">Called method name.</param>
@@ -168,13 +148,32 @@ namespace LinqToDB.CodeGen.Model
 		public CodeCallExpression ExtCall(IType type, CodeIdentifier method, IType returnType, params ICodeExpression[] parameters) => new(true, new CodeTypeReference(type), method, System.Array.Empty<IType>(), parameters, returnType);
 
 		/// <summary>
+		/// Create void generic extension method call statement.
+		/// </summary>
+		/// <param name="type">Type, containing extension method.</param>
+		/// <param name="method">Called method name.</param>
+		/// <param name="genericArguments">Generic method type arguments.</param>
+		/// <param name="parameters">Call parameters.</param>
+		/// <returns>Call element instance.</returns>
+		public CodeCallStatement ExtCall(IType type, CodeIdentifier method, IType[] genericArguments, params ICodeExpression[] parameters) => new(true, new CodeTypeReference(type), method, genericArguments, parameters);
+
+		/// <summary>
+		/// Create void extension method call statement.
+		/// </summary>
+		/// <param name="type">Type, containing extension method.</param>
+		/// <param name="method">Called method name.</param>
+		/// <param name="parameters">Call parameters.</param>
+		/// <returns>Call element instance.</returns>
+		public CodeCallStatement ExtCall(IType type, CodeIdentifier method, params ICodeExpression[] parameters) => new(true, new CodeTypeReference(type), method, System.Array.Empty<IType>(), parameters);
+
+		/// <summary>
 		/// Create method parameter.
 		/// </summary>
 		/// <param name="type">Parameter type.</param>
 		/// <param name="name">Parameter name.</param>
 		/// <param name="direction">Parameter direction.</param>
 		/// <returns>Parameter element instance.</returns>
-		public CodeParameter Parameter(IType type, CodeIdentifier name, ParameterDirection direction) => new (type, name, direction);
+		public CodeParameter Parameter(IType type, CodeIdentifier name, CodeParameterDirection direction) => new (type, name, direction);
 
 		/// <summary>
 		/// Create default expression.
@@ -190,7 +189,7 @@ namespace LinqToDB.CodeGen.Model
 		/// <param name="name">Parameter name.</param>
 		/// <param name="type">Parameter type.</param>
 		/// <returns>Parameter instance.</returns>
-		public CodeParameter LambdaParameter(CodeIdentifier name, IType type) => new(type, name, ParameterDirection.In);
+		public CodeParameter LambdaParameter(CodeIdentifier name, IType type) => new(type, name, CodeParameterDirection.In);
 
 		/// <summary>
 		/// Creates return statement/expression.
@@ -208,7 +207,7 @@ namespace LinqToDB.CodeGen.Model
 		public CodeBinary Equal(ICodeExpression left, ICodeExpression right) => new(left, BinaryOperation.Equal, right);
 
 		/// <summary>
-		/// Creates + binary expression.
+		/// Creates "+" binary expression.
 		/// </summary>
 		/// <param name="left">Left-side argument.</param>
 		/// <param name="right">Right-side argument.</param>
@@ -223,15 +222,6 @@ namespace LinqToDB.CodeGen.Model
 		/// <returns>Binary operation instance.</returns>
 		public CodeBinary And(ICodeExpression left, ICodeExpression right) => new(left, BinaryOperation.And, right);
 
-		///// <summary>
-		///// Creates member access expression (e.g. property or field accessor).
-		///// </summary>
-		///// <param name="obj">Member owner instance.</param>
-		///// <param name="memberName">Member name.</param>
-		///// <param name="memberType">Member type.</param>
-		///// <returns>Member access expression.</returns>
-		//public CodeMember Member(ICodeExpression obj, CodeIdentifier memberName, IType memberType) => new(obj, memberName, memberType);
-
 		/// <summary>
 		/// Creates member access expression (e.g. property or field accessor).
 		/// </summary>
@@ -241,28 +231,12 @@ namespace LinqToDB.CodeGen.Model
 		public CodeMember Member(ICodeExpression obj, CodeReference member) => new(obj, member);
 
 		/// <summary>
-		/// Creates property access expression.
-		/// </summary>
-		/// <param name="obj">Property owner instance.</param>
-		/// <param name="property">Property node.</param>
-		/// <returns>Property access expression.</returns>
-		public CodeMember Member(ICodeExpression obj, CodeProperty property) => new(obj, property.Reference);
-
-		/// <summary>
-		/// Creates static property access expression.
+		/// Creates static member access expression (e.g. property or field accessor).
 		/// </summary>
 		/// <param name="owner">Static property owner type.</param>
-		/// <param name="property">Property node.</param>
+		/// <param name="member">Member reference.</param>
 		/// <returns>Property access expression.</returns>
-		public CodeMember Member(IType owner, CodeProperty property) => new(owner, property.Reference);
-
-		/// <summary>
-		/// Creates field access expression.
-		/// </summary>
-		/// <param name="obj">Field owner instance.</param>
-		/// <param name="field">Field node.</param>
-		/// <returns>Field access expression.</returns>
-		public CodeMember Member(ICodeExpression obj, CodeField field) => new(obj, field.Reference);
+		public CodeMember Member(IType owner, CodeReference member) => new(owner, member);
 
 		/// <summary>
 		/// Creates new object expression.
@@ -271,7 +245,7 @@ namespace LinqToDB.CodeGen.Model
 		/// <param name="parameters">Constructor parameters.</param>
 		/// <param name="initializers">Field/property initializers.</param>
 		/// <returns>New object expression instance.</returns>
-		public CodeNew New(IType type, ICodeExpression[] parameters, CodeAssignmentStatement[] initializers) => new(type, parameters, initializers);
+		public CodeNew New(IType type, ICodeExpression[] parameters, params CodeAssignmentStatement[] initializers) => new(type, parameters, initializers);
 
 		/// <summary>
 		/// Creates new object expression.
@@ -320,7 +294,7 @@ namespace LinqToDB.CodeGen.Model
 		/// <param name="values">Array values.</param>
 		/// <param name="inline">Indicates that array should be generated on single line if possible.</param>
 		/// <returns>Array instance creation expression.</returns>
-		public CodeNewArray Array(IType type, bool valueTyped, ICodeExpression[] values, bool inline) => new(type, valueTyped, values, inline);
+		public CodeNewArray Array(IType type, bool valueTyped, bool inline, params ICodeExpression[] values) => new(type, valueTyped, values, inline);
 
 		/// <summary>
 		/// Single-parameter indexed access expression.
@@ -349,14 +323,6 @@ namespace LinqToDB.CodeGen.Model
 		public CodeConstant Null(IType type, bool targetTyped) => new (type, (object?)null, targetTyped);
 #pragma warning restore IDE0004 // Remove Unnecessary Cast
 
-		///// <summary>
-		///// Creates static property access expression.
-		///// </summary>
-		///// <param name="type">Property owner type.</param>
-		///// <param name="property">Property.</param>
-		///// <returns>Property access expression.</returns>
-		//public CodeMember Member(IType type, CodeProperty property) => new(type, property.Name, property.Type.Type);
-
 		/// <summary>
 		/// Creates lambda method builder.
 		/// </summary>
@@ -372,14 +338,6 @@ namespace LinqToDB.CodeGen.Model
 		/// <param name="targetTyped">Indicates that value is target-typed.</param>
 		/// <returns>Constant expression instance.</returns>
 		public CodeConstant Constant(string value, bool targetTyped) => new(WellKnownTypes.System.String, value, targetTyped);
-
-		/// <summary>
-		/// Creates delayed <see cref="string"/> literal constant expression.
-		/// </summary>
-		/// <param name="delayedValue">Delayed value provider.</param>
-		/// <param name="targetTyped">Indicates that value is target-typed.</param>
-		/// <returns>Constant expression instance.</returns>
-		public CodeConstant Constant(Func<string> delayedValue, bool targetTyped) => new(WellKnownTypes.System.String, delayedValue, targetTyped);
 
 		/// <summary>
 		/// Creates <see cref="bool"/> constant expression.
@@ -420,7 +378,7 @@ namespace LinqToDB.CodeGen.Model
 		/// </summary>
 		/// <param name="name">Name to use as identifier.</param>
 		/// <returns>Identifier instance.</returns>
-		public CodeIdentifier Name(string name) => new(name);
+		public CodeIdentifier Name(string name) => new(name, false);
 
 		/// <summary>
 		/// Creates identifier instance with invalid identifier fix parameters.

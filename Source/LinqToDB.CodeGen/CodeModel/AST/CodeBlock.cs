@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Code block statement.
 	/// </summary>
 	public sealed class CodeBlock : CodeElementList<ICodeStatement>
 	{
-		public CodeBlock(List<ICodeStatement>? items)
+		public CodeBlock(IEnumerable<ICodeStatement>? items)
 			: base(items)
 		{
 		}

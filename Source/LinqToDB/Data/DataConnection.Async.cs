@@ -383,6 +383,9 @@ namespace LinqToDB.Data
 				? result.Value
 				: await CurrentCommand!.ExecuteReaderAsync(commandBehavior, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
+			if (_commandInterceptors != null)
+				_commandInterceptors.Apply((interceptor, arg1, arg2, arg3, arg4) => interceptor.AfterExecuteReader(arg1, arg2, arg3, arg4), new CommandEventData(this), _command!, commandBehavior, dr);
+
 			var wrapper = new DataReaderWrapper(this, dr, CurrentCommand);
 			_command    = null;
 

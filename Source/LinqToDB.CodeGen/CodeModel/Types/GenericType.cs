@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Implementation of generic type.
 	/// </summary>
-	public class GenericType : RegularType
+	internal sealed class GenericType : RegularType
 	{
 		private readonly IReadOnlyList<IType> _typeArguments;
 

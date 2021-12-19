@@ -1,9 +1,9 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// <see cref="CodeProperty"/> object builder.
 	/// </summary>
-	public class PropertyBuilder
+	public sealed class PropertyBuilder
 	{
 		internal PropertyBuilder(CodeProperty property)
 		{
@@ -79,7 +79,7 @@
 		public AttributeBuilder AddAttribute(IType type)
 		{
 			var attr = new CodeAttribute(type);
-			Property.CustomAttributes.Add(attr);
+			Property.AddAttribute(attr);
 			return new AttributeBuilder(attr);
 		}
 

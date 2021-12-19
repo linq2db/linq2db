@@ -1,6 +1,6 @@
-﻿using LinqToDB.CodeGen.Model;
+﻿using LinqToDB.CodeModel;
 
-namespace LinqToDB.CodeGen.DataModel
+namespace LinqToDB.DataModel
 {
 	// additional schema generation logic
 	// except functionality shared with main context (entities, functions, etc)
@@ -40,7 +40,7 @@ namespace LinqToDB.CodeGen.DataModel
 			// schema data context field
 			var ctxField = schemaContext
 				.Fields(false)
-					.New(_code.Name(SCHEMA_CONTEXT_FIELD), WellKnownTypes.LinqToDB.IDataContext)
+					.New(AST.Name(SCHEMA_CONTEXT_FIELD), WellKnownTypes.LinqToDB.IDataContext)
 						.Private()
 						.ReadOnly();
 
@@ -51,11 +51,11 @@ namespace LinqToDB.CodeGen.DataModel
 				entity => DefineClass(schemaEntities, entity.Class),
 				schemaContext.Properties(true),
 				false,
-				_code.Member(schemaContext.Type.This, ctxField.Field),
+				AST.Member(schemaContext.Type.This, ctxField.Field.Reference),
 				() => findMethods);
 
 			// add constructor to context-like class
-			var ctorParam = _code.Parameter(WellKnownTypes.LinqToDB.IDataContext, _code.Name(SCHEMA_CONTEXT_CONSTRUCTOR_PARAMETER), ParameterDirection.In);
+			var ctorParam = AST.Parameter(WellKnownTypes.LinqToDB.IDataContext, AST.Name(SCHEMA_CONTEXT_CONSTRUCTOR_PARAMETER), CodeParameterDirection.In);
 			schemaContext
 				.Constructors()
 					.New()
@@ -63,8 +63,8 @@ namespace LinqToDB.CodeGen.DataModel
 						.Parameter(ctorParam)
 						.Body()
 							.Append(
-								_code.Assign(
-									_code.Member(schemaContext.Type.This, ctxField.Field),
+								AST.Assign(
+									AST.Member(schemaContext.Type.This, ctxField.Field.Reference),
 									ctorParam.Reference));
 
 			// save wrapper and context classes in lookup for later use by function/parameter generators

@@ -1,17 +1,25 @@
 ﻿using System.Collections.Generic;
-using LinqToDB.CodeGen.Schema;
+using LinqToDB.Schema;
 
-namespace LinqToDB.CodeGen.DataModel
+namespace LinqToDB.DataModel
 {
-	public class StoredProcedureModel : TableFunctionModelBase
+	/// <summary>
+	/// Stored procedure descriptor.
+	/// </summary>
+	public sealed class StoredProcedureModel : TableFunctionModelBase
 	{
 		public StoredProcedureModel(ObjectName name, MethodModel method)
 			: base(name, method)
 		{
 		}
 
-		public List<(ResultTableModel? customTable, EntityModel? entity)> Results { get; set; } = new();
-
-		public ReturnParameter? Return { get; set; }
+		/// <summary>
+		/// Gets or sets return parameter descriptor.
+		/// </summary>
+		public FunctionParameterModel? Return  { get; set; }
+		/// <summary>
+		/// Gets or sets record types for returned result set(s).
+		/// </summary>
+		public List<FunctionResult>    Results { get; set; } = new();
 	}
 }

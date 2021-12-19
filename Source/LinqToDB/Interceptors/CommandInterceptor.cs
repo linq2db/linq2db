@@ -17,6 +17,8 @@ namespace LinqToDB.Interceptors
 		public virtual Option<DbDataReader>       ExecuteReader       (CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, Option<DbDataReader> result) => result;
 		public virtual Task<Option<DbDataReader>> ExecuteReaderAsync  (CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, Option<DbDataReader> result, CancellationToken cancellationToken) => Task.FromResult(result);
 
+		public virtual void                       AfterExecuteReader  (CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, DbDataReader dataReader) {}
+
 		public virtual Option<object?>            ExecuteScalar       (CommandEventData eventData, DbCommand command, Option<object?> result) => result;
 		public virtual Task<Option<object?>>      ExecuteScalarAsync  (CommandEventData eventData, DbCommand command, Option<object?> result, CancellationToken cancellationToken) => Task.FromResult(result);
 	}

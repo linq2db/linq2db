@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Assignment expression or statement.

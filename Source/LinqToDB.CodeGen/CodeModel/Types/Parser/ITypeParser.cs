@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Provides helpers to create <see cref="IType"/> type descriptor from <see cref="Type"/> or string with type name.
@@ -41,10 +41,13 @@ namespace LinqToDB.CodeGen.Model
 		IType Parse(string typeName, bool valueType);
 
 		/// <summary>
-		/// Parse composite namespace into collection of identifiers for each namespace element.
+		/// Parse (multi-part) namespace or type name (with namespace) into collection of identifiers for each namespace/type name element.
 		/// </summary>
-		/// <param name="namespace">String with namespace.</param>
-		/// <returns>Namespace elements.</returns>
-		CodeIdentifier[] ParseNamespace(string @namespace);
+		/// <param name="name">String with namespace or type name.
+		/// Type name shouldn't contain anything except namespace and namespace (no array brackets, generic argument list).
+		/// Name components should be separated by dot (.).</param>
+		/// <param name="generated">When <c>true</c>, <paramref name="name"/> contains generated namespace/type name and could be modified on name conflict.</param>
+		/// <returns>Namespace/type name elements.</returns>
+		CodeIdentifier[] ParseNamespaceOrRegularTypeName(string name, bool generated);
 	}
 }

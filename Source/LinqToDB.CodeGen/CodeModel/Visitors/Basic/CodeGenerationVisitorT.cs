@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Base visitor for code generators for specific languages.
@@ -13,7 +13,7 @@ namespace LinqToDB.CodeGen.Model
 	/// </list>
 	/// </summary>
 	/// <typeparam name="TVisitor">Type of visitor implementation.</typeparam>
-	public abstract class CodeGenerationVisitor<TVisitor> : CodeGenerationVisitor
+	internal abstract class CodeGenerationVisitor<TVisitor> : CodeGenerationVisitor
 		where TVisitor : CodeGenerationVisitor<TVisitor>
 	{
 		/// <summary>

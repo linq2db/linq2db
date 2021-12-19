@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Provides access to language-specific functionality.
@@ -59,6 +59,8 @@ namespace LinqToDB.CodeGen.Model
 		/// Default file extension (without leading dot) for source files for current language.
 		/// </summary>
 		string                                         FileExtension                  { get; }
+
+		CodeBuilder                                    ASTBuilder                     { get; }
 
 		/// <summary>
 		/// Verify that provided character could start indentifier name for current language.

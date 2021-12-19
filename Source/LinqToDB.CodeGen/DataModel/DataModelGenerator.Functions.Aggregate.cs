@@ -1,7 +1,7 @@
 ﻿using System;
-using LinqToDB.CodeGen.Model;
+using LinqToDB.CodeModel;
 
-namespace LinqToDB.CodeGen.DataModel
+namespace LinqToDB.DataModel
 {
 	// contains generation logic for aggregate function mappings
 	partial class DataModelGenerator
@@ -33,14 +33,14 @@ namespace LinqToDB.CodeGen.DataModel
 			var body = method
 				.Body()
 				.Append(
-					_code.Throw(_code.New(
+					AST.Throw(AST.New(
 						WellKnownTypes.System.InvalidOperationException,
-						_code.Constant(EXCEPTION_QUERY_ONLY_ASSOCATION_CALL, true))));
+						AST.Constant(EXCEPTION_QUERY_ONLY_ASSOCATION_CALL, true))));
 
 			// build mappings
 			_metadataBuilder.BuildFunctionMetadata(aggregate.Metadata, method);
 
-			var source = _code.TypeParameter(_code.Name(AGGREGATE_RECORD_TYPE));
+			var source = AST.TypeParameter(AST.Name(AGGREGATE_RECORD_TYPE));
 			method.TypeParameter(source);
 
 			method.Returns(aggregate.ReturnType);
@@ -48,10 +48,10 @@ namespace LinqToDB.CodeGen.DataModel
 			// define parameters
 			// aggregate has at least one parameter - collection of aggregated values
 			// and optionally could have one or more additional scalar parameters
-			var sourceParam = _code.Parameter(
+			var sourceParam = AST.Parameter(
 				WellKnownTypes.System.Collections.Generic.IEnumerable(source),
-				_code.Name(AGGREGATE_SOURCE_PARAMETER),
-				ParameterDirection.In);
+				AST.Name(AGGREGATE_SOURCE_PARAMETER),
+				CodeParameterDirection.In);
 			method.Parameter(sourceParam);
 
 			if (aggregate.Parameters.Count > 0)
@@ -67,7 +67,7 @@ namespace LinqToDB.CodeGen.DataModel
 					parameterType = WellKnownTypes.System.Linq.Expressions.Expression(
 						WellKnownTypes.System.Func(parameterType, source));
 
-					var p = _code.Parameter(parameterType, _code.Name(param.Parameter.Name, null, i + 1), ParameterDirection.In);
+					var p = AST.Parameter(parameterType, AST.Name(param.Parameter.Name, null, i + 1), CodeParameterDirection.In);
 					method.Parameter(p);
 
 					if (param.Parameter.Description != null)

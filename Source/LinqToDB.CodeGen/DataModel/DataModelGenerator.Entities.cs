@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using LinqToDB.CodeGen.Model;
+using LinqToDB.CodeModel;
 using LinqToDB.Data;
 
-namespace LinqToDB.CodeGen.DataModel
+namespace LinqToDB.DataModel
 {
 	// contains entity related generation logic:
 	// - entity classes generation
@@ -120,12 +120,12 @@ namespace LinqToDB.CodeGen.DataModel
 			// for DataConnection: this.GetTable<Entity>()
 			// for other contexts: DataExtensions.GetTable<Entity>() extension method
 			var getTableCall = contextIsDataConnection
-				?_code.Call(
+				? AST.Call(
 					contextReference,
 					WellKnownTypes.LinqToDB.Data.DataConnection_GetTable,
 					WellKnownTypes.LinqToDB.ITable(entityType),
 					new[] { entityType })
-				:_code.ExtCall(
+				: AST.ExtCall(
 					WellKnownTypes.LinqToDB.DataExtensions,
 					WellKnownTypes.LinqToDB.DataExtensions_GetTable,
 					WellKnownTypes.LinqToDB.ITable(entityType),
@@ -135,7 +135,7 @@ namespace LinqToDB.CodeGen.DataModel
 
 			contextProperty
 				.AddGetter()
-					.Append(_code.Return(getTableCall));
+					.Append(AST.Return(getTableCall));
 		}
 
 		/// <summary>
@@ -163,10 +163,10 @@ namespace LinqToDB.CodeGen.DataModel
 
 			// table parameter
 			methodParameters.Add(
-				_code.Parameter(
+				AST.Parameter(
 					WellKnownTypes.LinqToDB.ITable(entityType),
-					_code.Name(FIND_TABLE_PARAMETER),
-					ParameterDirection.In));
+					AST.Name(FIND_TABLE_PARAMETER),
+					CodeParameterDirection.In));
 
 			// for composite primary key we generate comparison based on field order (ordinal) in primary key definition
 			// as it could be important for some databases to generate more optimal index lookups
@@ -186,7 +186,7 @@ namespace LinqToDB.CodeGen.DataModel
 				pks = pks.OrderBy(static c => c.Metadata.PrimaryKeyOrder);
 
 			// filter parameter
-			var entityParameter = _code.LambdaParameter(_code.Name(FIND_ENTITY_PARAMETER), entityType);
+			var entityParameter = AST.LambdaParameter(AST.Name(FIND_ENTITY_PARAMETER), entityType);
 			// filter comparisons
 			var comparisons = new List<(int ordinal, ICodeExpression comparison)>();
 
@@ -194,15 +194,15 @@ namespace LinqToDB.CodeGen.DataModel
 			{
 				// generate parameter for primary key column
 				var paramName = _parameterNameNormalizer(column.Property.Name);
-				var parameter = _code.Parameter(column.Property.Type!, _code.Name(paramName), ParameterDirection.In);
+				var parameter = AST.Parameter(column.Property.Type!, AST.Name(paramName), CodeParameterDirection.In);
 				methodParameters.Add(parameter);
 
 				// generate filter comparison
 				// note that == operator could be overloaded for compared type and require comparison modification
 				// e.g. we have this situation for Sql* types from Microsoft
 				// comparison modification is done later after model generation by conversion visitor
-				var condition = _code.Equal(
-					_code.Member(entityParameter.Reference, _columnProperties[column]),
+				var condition = AST.Equal(
+					AST.Member(entityParameter.Reference, _columnProperties[column].Reference),
 					parameter.Reference);
 
 				comparisons.Add((column.Metadata.PrimaryKeyOrder ?? 0, condition));
@@ -212,22 +212,22 @@ namespace LinqToDB.CodeGen.DataModel
 			// e => e.PK1 == pk1 && e.PK2 == pk2
 			ICodeExpression filter = null!;
 			foreach (var (_, cond) in comparisons.OrderBy(static _ => _.ordinal))
-				filter = filter == null ? cond : _code.And(filter, cond);
+				filter = filter == null ? cond : AST.And(filter, cond);
 
 			// define filter lambda of type Expression<Func<TEntity, bool>>
-			var filterLambda = _code
+			var filterLambda = AST
 				.Lambda(
 					WellKnownTypes.System.Linq.Expressions.Expression(WellKnownTypes.System.Func(WellKnownTypes.System.Boolean, entityType)),
 					true)
 				.Parameter(entityParameter);
 
-			filterLambda.Body().Append(_code.Return(filter));
+			filterLambda.Body().Append(AST.Return(filter));
 
 			// declare Find method
 			var returnType = entityType.WithNullability(true);
 
 			var find = findMethodsGroup()
-				.New(_code.Name(FIND_METHOD))
+				.New(AST.Name(FIND_METHOD))
 					.Public()
 					.Extension()
 					.Returns(returnType);
@@ -238,8 +238,8 @@ namespace LinqToDB.CodeGen.DataModel
 			find
 				.Body()
 					.Append(
-						_code.Return(
-							_code.ExtCall(
+						AST.Return(
+							AST.ExtCall(
 								WellKnownTypes.System.Linq.Queryable,
 								WellKnownTypes.System.Linq.Queryable_FirstOrDefault,
 								returnType,

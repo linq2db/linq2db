@@ -2,34 +2,38 @@
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using LinqToDB.CodeGen.ContextModel;
-using LinqToDB.CodeGen.Model;
+using LinqToDB.CodeGen;
 
-namespace LinqToDB.CodeGen.Naming
+namespace LinqToDB.Naming
 {
-	public class NamingServices
+	/// <summary>
+	/// Identifier names normalization service. Identify separate words in name and apply requested
+	/// pluralization and casing modes.
+	/// </summary>
+	public sealed class NamingServices
 	{
-		private readonly ILanguageProvider _languageProvider;
-		private readonly INameConverterProvider _pluralizationProvider;
+		private readonly INameConversionProvider _pluralizationProvider;
 
-		public NamingServices(ILanguageProvider langServices, INameConverterProvider pluralizationProvider)
+		internal NamingServices(INameConversionProvider pluralizationProvider)
 		{
-			_languageProvider = langServices;
 			_pluralizationProvider = pluralizationProvider;
 		}
 
-		public string NormalizeIdentifier(ObjectNormalizationSettings settings, string name)
+		/// <summary>
+		/// Normalize provided identifier using specififed normalization options.
+		/// </summary>
+		/// <param name="settings">Identifier normalization options.</param>
+		/// <param name="name">Identifier.</param>
+		/// <returns>Normalized identifier.</returns>
+		public string NormalizeIdentifier(NormalizationOptions settings, string name)
 		{
-			//if (name == string.Empty)
-			//	name = settings.DefaultValue ?? name;
-
 			var mixedCase = name.ToUpper() != name;
 			// skip normalization for ALLCAPS names
 			if (!settings.DontCaseAllCaps || name.EnumerateCharacters().Any(c => c.category != UnicodeCategory.UppercaseLetter))
 			{
 				// first split identifier into text/non-text fragments, optionally treat underscore as discarded separator
 				var words = SplitIntoWords(name, settings.Transformation == NameTransformation.SplitByUnderscore
-							|| settings.Transformation == NameTransformation.T4Association);
+							|| settings.Transformation == NameTransformation.T4Compat);
 
 				// find last word to apply pluralization to it (if configured)
 				var lastTextIndex = -1;

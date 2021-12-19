@@ -169,7 +169,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public PostgreSQLVersion Version { get; }
 
-		internal bool HasMacAddr8 => Adapter.IsDbTypeSupported(NpgsqlProviderAdapter.NpgsqlDbType.MacAddr8);
+		public bool HasMacAddr8 => Adapter.IsDbTypeSupported(NpgsqlProviderAdapter.NpgsqlDbType.MacAddr8);
 
 		/// <summary>
 		/// Map of canonical PostgreSQL type name to NpgsqlDbType enumeration value.

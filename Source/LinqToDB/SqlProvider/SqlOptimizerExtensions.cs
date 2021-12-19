@@ -3,7 +3,7 @@
 	using Mapping;
 	using SqlQuery;
 
-	internal static class SqlOptimizerExtensions
+	public static class SqlOptimizerExtensions
 	{
 		public static SqlStatement PrepareStatementForRemoting(this ISqlOptimizer optimizer, SqlStatement statement,
 			MappingSchema mappingSchema, AliasesContext aliases, EvaluationContext context)
@@ -15,7 +15,7 @@
 			return newStatement;
 		}
 
-		public static SqlStatement PrepareStatementForSql(this ISqlOptimizer optimizer, SqlStatement statement,
+		internal static SqlStatement PrepareStatementForSql(this ISqlOptimizer optimizer, SqlStatement statement,
 			MappingSchema mappingSchema, OptimizationContext optimizationContext)
 		{
 			var newStatement = (SqlStatement)optimizer.ConvertElement(mappingSchema, statement, optimizationContext);

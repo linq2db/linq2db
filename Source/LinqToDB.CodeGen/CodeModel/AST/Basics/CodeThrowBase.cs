@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Throw expression.
@@ -7,7 +7,7 @@
 	{
 		public CodeThrowBase(ICodeExpression exception)
 		{
-			Exception   = exception;
+			Exception = exception;
 		}
 
 		/// <summary>

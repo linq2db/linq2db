@@ -1,10 +1,13 @@
-﻿using LinqToDB.CodeGen.Metadata;
-using LinqToDB.CodeGen.Model;
-using LinqToDB.CodeGen.Schema;
+﻿using LinqToDB.Metadata;
+using LinqToDB.Schema;
+using LinqToDB.CodeModel;
 
-namespace LinqToDB.CodeGen.DataModel
+namespace LinqToDB.DataModel
 {
-	public class AggregateFunctionModel : ScalarFunctionModelBase
+	/// <summary>
+	/// Aggregate function model.
+	/// </summary>
+	public sealed class AggregateFunctionModel : ScalarFunctionModelBase
 	{
 		public AggregateFunctionModel(ObjectName name, MethodModel method, FunctionMetadata metadata, IType returnType)
 			: base(name, method, metadata)
@@ -12,6 +15,9 @@ namespace LinqToDB.CodeGen.DataModel
 			ReturnType = returnType;
 		}
 
+		/// <summary>
+		/// Gets or sets function return type.
+		/// </summary>
 		public IType ReturnType { get; set; }
 	}
 }

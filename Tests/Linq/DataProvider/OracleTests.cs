@@ -28,6 +28,7 @@ namespace Tests.DataProvider
 	using System.Threading;
 	using System.Threading.Tasks;
 	using LinqToDB.Data.RetryPolicy;
+	using LinqToDB.Interceptors;
 	using LinqToDB.Linq;
 	using LinqToDB.Linq.Internal;
 	using LinqToDB.SchemaProvider;
@@ -594,43 +595,43 @@ namespace Tests.DataProvider
 		[Table]
 		public partial class AllTypes
 		{
-			[Column(DataType=DataType.Decimal,        Length=22, Scale=0),               PrimaryKey,  NotNull] public decimal         ID                     { get; set; } // NUMBER
-			[Column(DataType=DataType.Decimal,        Length=22, Precision=20, Scale=0),    Nullable         ] public decimal?        bigintDataType         { get; set; } // NUMBER (20,0)
-			[Column(DataType=DataType.Decimal,        Length=22, Scale=0),                  Nullable         ] public decimal?        numericDataType        { get; set; } // NUMBER
-			[Column(DataType=DataType.Decimal,        Length=22, Precision=1, Scale=0),     Nullable         ] public sbyte?          bitDataType            { get; set; } // NUMBER (1,0)
-			[Column(DataType=DataType.Decimal,        Length=22, Precision=5, Scale=0),     Nullable         ] public int?            smallintDataType       { get; set; } // NUMBER (5,0)
-			[Column(DataType=DataType.Decimal,        Length=22, Scale=6),                  Nullable         ] public decimal?        decimalDataType        { get; set; } // NUMBER
-			[Column(DataType=DataType.Decimal,        Length=22, Precision=10, Scale=4),    Nullable         ] public decimal?        smallmoneyDataType     { get; set; } // NUMBER (10,4)
-			[Column(DataType=DataType.Decimal,        Length=22, Precision=10, Scale=0),    Nullable         ] public long?           intDataType            { get; set; } // NUMBER (10,0)
-			[Column(DataType=DataType.Decimal,        Length=22, Precision=3, Scale=0),     Nullable         ] public short?          tinyintDataType        { get; set; } // NUMBER (3,0)
-			[Column(DataType=DataType.Decimal,        Length=22),                           Nullable         ] public decimal?        moneyDataType          { get; set; } // NUMBER
-			[Column(DataType=DataType.Double,         Length=8),                            Nullable         ] public double?         floatDataType          { get; set; } // BINARY_DOUBLE
-			[Column(DataType=DataType.Single,         Length=4),                            Nullable         ] public float?          realDataType           { get; set; } // BINARY_FLOAT
-			[Column(DataType=DataType.Date),                                                Nullable         ] public DateTime?       datetimeDataType       { get; set; } // DATE
-			[Column(DataType=DataType.DateTime2,      Length=11, Scale=6),                  Nullable         ] public DateTime?       datetime2DataType      { get; set; } // TIMESTAMP(6)
-			[Column(DataType=DataType.DateTimeOffset, Length=13, Scale=6),                  Nullable         ] public DateTimeOffset? datetimeoffsetDataType { get; set; } // TIMESTAMP(6) WITH TIME ZONE
-			[Column(DataType=DataType.DateTimeOffset, Length=11, Scale=6),                  Nullable         ] public DateTimeOffset? localZoneDataType      { get; set; } // TIMESTAMP(6) WITH LOCAL TIME ZONE
-			[Column(DataType=DataType.Char,           Length=1),                            Nullable         ] public char?           charDataType           { get; set; } // CHAR(1)
-			[Column(DataType=DataType.VarChar,        Length=20),                           Nullable         ] public string?         varcharDataType        { get; set; } // VARCHAR2(20)
-			[Column(DataType=DataType.Text,           Length=4000),                         Nullable         ] public string?         textDataType           { get; set; } // CLOB
-			[Column(DataType=DataType.NChar,          Length=40),                           Nullable         ] public string?         ncharDataType          { get; set; } // NCHAR(40)
-			[Column(DataType=DataType.NVarChar,       Length=40),                           Nullable         ] public string?         nvarcharDataType       { get; set; } // NVARCHAR2(40)
-			[Column(DataType=DataType.NText,          Length=4000),                         Nullable         ] public string?         ntextDataType          { get; set; } // NCLOB
-			[Column(DataType=DataType.Blob,           Length=4000),                         Nullable         ] public byte[]?         binaryDataType         { get; set; } // BLOB
-			[Column(DataType=DataType.VarBinary,      Length=530),                          Nullable         ] public byte[]?         bfileDataType          { get; set; } // BFILE
-			[Column(DataType=DataType.Binary,         Length=16),                           Nullable         ] public byte[]?         guidDataType           { get; set; } // RAW(16)
-			[Column(DataType=DataType.Long),                                                Nullable         ] public string?         longDataType           { get; set; } // LONG
-			[Column(DataType=DataType.Undefined,      Length=256),                          Nullable         ] public object?         uriDataType            { get; set; } // URITYPE
-			[Column(DataType=DataType.Xml,            Length=2000),                         Nullable         ] public string?         xmlDataType            { get; set; } // XMLTYPE
+			[Column(DataType=DataType.Decimal,        Length=22, Scale=0),                PrimaryKey] public decimal         ID                     { get; set; } // NUMBER
+			[Column(DataType=DataType.Decimal,        Length=22, Precision=20, Scale=0),    Nullable] public decimal?        bigintDataType         { get; set; } // NUMBER (20,0)
+			[Column(DataType=DataType.Decimal,        Length=22, Scale=0),                  Nullable] public decimal?        numericDataType        { get; set; } // NUMBER
+			[Column(DataType=DataType.Decimal,        Length=22, Precision=1, Scale=0),     Nullable] public sbyte?          bitDataType            { get; set; } // NUMBER (1,0)
+			[Column(DataType=DataType.Decimal,        Length=22, Precision=5, Scale=0),     Nullable] public int?            smallintDataType       { get; set; } // NUMBER (5,0)
+			[Column(DataType=DataType.Decimal,        Length=22, Scale=6),                  Nullable] public decimal?        decimalDataType        { get; set; } // NUMBER
+			[Column(DataType=DataType.Decimal,        Length=22, Precision=10, Scale=4),    Nullable] public decimal?        smallmoneyDataType     { get; set; } // NUMBER (10,4)
+			[Column(DataType=DataType.Decimal,        Length=22, Precision=10, Scale=0),    Nullable] public long?           intDataType            { get; set; } // NUMBER (10,0)
+			[Column(DataType=DataType.Decimal,        Length=22, Precision=3, Scale=0),     Nullable] public short?          tinyintDataType        { get; set; } // NUMBER (3,0)
+			[Column(DataType=DataType.Decimal,        Length=22),                           Nullable] public decimal?        moneyDataType          { get; set; } // NUMBER
+			[Column(DataType=DataType.Double,         Length=8),                            Nullable] public double?         floatDataType          { get; set; } // BINARY_DOUBLE
+			[Column(DataType=DataType.Single,         Length=4),                            Nullable] public float?          realDataType           { get; set; } // BINARY_FLOAT
+			[Column(DataType=DataType.Date),                                                Nullable] public DateTime?       datetimeDataType       { get; set; } // DATE
+			[Column(DataType=DataType.DateTime2,      Length=11, Scale=6),                  Nullable] public DateTime?       datetime2DataType      { get; set; } // TIMESTAMP(6)
+			[Column(DataType=DataType.DateTimeOffset, Length=13, Scale=6),                  Nullable] public DateTimeOffset? datetimeoffsetDataType { get; set; } // TIMESTAMP(6) WITH TIME ZONE
+			[Column(DataType=DataType.DateTimeOffset, Length=11, Scale=6),                  Nullable] public DateTimeOffset? localZoneDataType      { get; set; } // TIMESTAMP(6) WITH LOCAL TIME ZONE
+			[Column(DataType=DataType.Char,           Length=1),                            Nullable] public char?           charDataType           { get; set; } // CHAR(1)
+			[Column(DataType=DataType.VarChar,        Length=20),                           Nullable] public string?         varcharDataType        { get; set; } // VARCHAR2(20)
+			[Column(DataType=DataType.Text,           Length=4000),                         Nullable] public string?         textDataType           { get; set; } // CLOB
+			[Column(DataType=DataType.NChar,          Length=40),                           Nullable] public string?         ncharDataType          { get; set; } // NCHAR(40)
+			[Column(DataType=DataType.NVarChar,       Length=40),                           Nullable] public string?         nvarcharDataType       { get; set; } // NVARCHAR2(40)
+			[Column(DataType=DataType.NText,          Length=4000),                         Nullable] public string?         ntextDataType          { get; set; } // NCLOB
+			[Column(DataType=DataType.Blob,           Length=4000),                         Nullable] public byte[]?         binaryDataType         { get; set; } // BLOB
+			[Column(DataType=DataType.VarBinary,      Length=530),                          Nullable] public byte[]?         bfileDataType          { get; set; } // BFILE
+			[Column(DataType=DataType.Binary,         Length=16),                           Nullable] public byte[]?         guidDataType           { get; set; } // RAW(16)
+			[Column(DataType=DataType.Long),                                                Nullable] public string?         longDataType           { get; set; } // LONG
+			[Column(DataType=DataType.Undefined,      Length=256),                          Nullable] public object?         uriDataType            { get; set; } // URITYPE
+			[Column(DataType=DataType.Xml,            Length=2000),                         Nullable] public string?         xmlDataType            { get; set; } // XMLTYPE
 		}
 
 		[Table("t_entity")]
 		public sealed class Entity
 		{
 			[PrimaryKey, Identity]
-			[NotNull, Column("entity_id")] public long Id           { get; set; }
-			[NotNull, Column("time")]      public DateTime Time     { get; set; }
-			[NotNull, Column("duration")]  public TimeSpan Duration { get; set; }
+			[Column("entity_id")] public long Id           { get; set; }
+			[Column("time")]      public DateTime Time     { get; set; }
+			[Column("duration")]  public TimeSpan Duration { get; set; }
 		}
 
 		[Test]
@@ -2336,7 +2337,7 @@ namespace Tests.DataProvider
 		[Table("ISSUE723TABLE")]
 		public class Issue723Table
 		{
-			[PrimaryKey, Identity, NotNull]
+			[PrimaryKey, Identity]
 			public int Id;
 
 			public string? StringValue;
@@ -2821,35 +2822,27 @@ namespace Tests.DataProvider
 			}
 		}
 
-		class MyTestDataConnection : TestDataConnection
+		class MyTestDataConnectionInterceptor : CommandInterceptor
 		{
-			public MyTestDataConnection(string configurationString)
-				: base(configurationString)
+			public override void AfterExecuteReader(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, DbDataReader dataReader)
 			{
-			}
-
-			protected override DataReaderWrapper ExecuteReader(CommandBehavior commandBehavior)
-			{
-				var reader = base.ExecuteReader(commandBehavior);
-
-				if (reader.DataReader is OracleDataReader or1 && CurrentCommand is OracleCommand oc1)
+				if (dataReader is OracleDataReader or1 && command is OracleCommand oc1)
 				{
 					or1.FetchSize = oc1.RowSize * 10000;
 				}
-
-				return reader;
 			}
 		}
 
 		[Test]
 		public void OverrideExecuteReaderTest([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var db = new MyTestDataConnection(context))
+			using (var db = new TestDataConnection(context))
 			{
+				db.AddInterceptor(new MyTestDataConnectionInterceptor());
+
 				_ = db.Person.ToList();
 			}
 		}
-
 
 		[Test]
 		public void LongDataTypeTest([IncludeDataSources(false, TestProvName.AllOracle)] string context)
@@ -3415,8 +3408,8 @@ namespace Tests.DataProvider
 		[Table]
 		sealed class Issue2342Entity
 		{
-			[Column]                        public long   Id   { get; set; }
-			[NotNull, Column(Length = 256)] public string Name { get; set; } = null!;
+			[Column]                                  public long   Id   { get; set; }
+			[Column(Length = 256, CanBeNull = false)] public string Name { get; set; } = null!;
 		}
 		#endregion
 
@@ -3508,15 +3501,15 @@ CREATE TABLE ""TABLE_A""(
 		public sealed class Issue2504Table1
 		{
 			[PrimaryKey]
-			[Column(Name = "COLUMN_A"), NotNull]
+			[Column(Name = "COLUMN_A")]
 			public long COLUMNA { get; set; }
 
 			[PrimaryKey]
-			[Column(Name = "COLUMN_B"), NotNull]
+			[Column(Name = "COLUMN_B")]
 			public int COLUMNB { get; set; }
 
 			[PrimaryKey]
-			[Column(Name = "COLUMN_C"), NotNull, SequenceName("SEQ_A")]
+			[Column(Name = "COLUMN_C"), SequenceName("SEQ_A")]
 			public int COLUMNC { get; set; }
 		}
 
@@ -3524,15 +3517,15 @@ CREATE TABLE ""TABLE_A""(
 		public sealed class Issue2504Table2
 		{
 			[PrimaryKey]
-			[Column(Name = "COLUMN_A"), NotNull]
+			[Column(Name = "COLUMN_A")]
 			public long COLUMNA { get; set; }
 
 			[PrimaryKey]
-			[Column(Name = "COLUMN_B"), NotNull]
+			[Column(Name = "COLUMN_B")]
 			public int COLUMNB { get; set; }
 
 			[PrimaryKey]
-			[Column(Name = "COLUMN_C"), NotNull, SequenceName(ProviderName.Oracle, "SEQ_A")]
+			[Column(Name = "COLUMN_C"), SequenceName(ProviderName.Oracle, "SEQ_A")]
 			public int COLUMNC { get; set; }
 		}
 		#endregion

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Base class for types.
@@ -8,11 +8,11 @@ namespace LinqToDB.CodeGen.Model
 	public abstract class TypeBase : AttributeOwner, ITopLevelElement
 	{
 		protected TypeBase(
-			List<CodeAttribute>? customAttributes,
-			Modifiers            attributes,
-			CodeXmlComment?      xmlDoc,
-			IType                type,
-			CodeIdentifier       name)
+			IEnumerable<CodeAttribute>? customAttributes,
+			Modifiers                   attributes,
+			CodeXmlComment?             xmlDoc,
+			IType                       type,
+			CodeIdentifier              name)
 			: base(customAttributes)
 		{
 			Attributes = attributes;
@@ -24,18 +24,18 @@ namespace LinqToDB.CodeGen.Model
 		/// <summary>
 		/// Type modifiers and attributes.
 		/// </summary>
-		public Modifiers       Attributes { get; set; }
+		public Modifiers       Attributes { get; internal set; }
 		/// <summary>
 		/// Xml-doc comment.
 		/// </summary>
-		public CodeXmlComment? XmlDoc     { get; set; }
+		public CodeXmlComment? XmlDoc     { get; internal set; }
 		/// <summary>
 		/// Type definition.
 		/// </summary>
-		public IType           Type       { get; protected set; }
+		public IType           Type       { get; }
 		/// <summary>
 		/// Type name.
 		/// </summary>
-		public CodeIdentifier  Name       { get; protected set; }
+		public CodeIdentifier  Name       { get; }
 	}
 }

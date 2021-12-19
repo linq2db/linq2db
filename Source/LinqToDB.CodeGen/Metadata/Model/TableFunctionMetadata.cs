@@ -1,20 +1,24 @@
-﻿using LinqToDB.CodeGen.Schema;
+﻿using LinqToDB.Schema;
 
-namespace LinqToDB.CodeGen.Metadata
+namespace LinqToDB.Metadata
 {
-	public class TableFunctionMetadata
+	/// <summary>
+	/// Table function mapping attributes, used with <see cref="Sql.TableFunctionAttribute"/> mapping attribute.
+	/// </summary>
+	public sealed class TableFunctionMetadata
 	{
-		public TableFunctionMetadata()
-		{
-		}
-
-		public TableFunctionMetadata(ObjectName name)
-		{
-			Name = name;
-		}
-
-		public ObjectName? Name { get; set; }
-		public string? Configuration { get; set; }
-		public int[]? ArgIndices { get; set; }
+		/// <summary>
+		/// Function name.
+		/// </summary>
+		public ObjectName? Name          { get; set; }
+		/// <summary>
+		/// Mapping configuration name.
+		/// </summary>
+		public string?     Configuration { get; set; }
+		/// <summary>
+		/// Contains indexes of mapped method parameters, that should be mapped to table function parameter with position
+		/// matching position of index in array.
+		/// </summary>
+		public int[]?      ArgIndices    { get; set; }
 	}
 }

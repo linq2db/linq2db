@@ -290,7 +290,7 @@ namespace LinqToDB.Mapping
 			if (prop      == null) throw new ArgumentNullException(nameof(prop));
 			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-			return Property( prop ).HasAttribute( new AssociationAttribute { Predicate = predicate, CanBeNull = canBeNull, Relationship = Relationship.OneToMany } );
+			return Property( prop ).HasAttribute( new AssociationAttribute { Predicate = predicate, CanBeNull = canBeNull } );
 		}
 
 		/// <summary>
@@ -328,7 +328,7 @@ namespace LinqToDB.Mapping
 			if (prop            == null) throw new ArgumentNullException(nameof(prop));
 			if (queryExpression == null) throw new ArgumentNullException(nameof(queryExpression));
 
-			return Property( prop ).HasAttribute( new AssociationAttribute { QueryExpression = queryExpression, CanBeNull = canBeNull, Relationship = Relationship.OneToMany } );
+			return Property( prop ).HasAttribute( new AssociationAttribute { QueryExpression = queryExpression, CanBeNull = canBeNull } );
 		}
 
 		/// <summary>

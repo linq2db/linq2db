@@ -1,9 +1,9 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// <see cref="CodeRegion"/> object builder.
 	/// </summary>
-	public class RegionBuilder
+	public sealed class RegionBuilder
 	{
 		internal RegionBuilder(CodeRegion region)
 		{
@@ -23,7 +23,7 @@
 		public PropertyGroup Properties(bool tableLayout)
 		{
 			var group = new PropertyGroup(tableLayout);
-			Region.Members.Add(group);
+			Region.Add(group);
 			return group;
 		}
 
@@ -34,7 +34,7 @@
 		public ConstructorGroup Constructors()
 		{
 			var group = new ConstructorGroup(Region.Type);
-			Region.Members.Add(group);
+			Region.Add(group);
 			return group;
 		}
 
@@ -46,7 +46,7 @@
 		public MethodGroup Methods(bool tableLayout)
 		{
 			var group = new MethodGroup(tableLayout);
-			Region.Members.Add(group);
+			Region.Add(group);
 			return group;
 		}
 
@@ -57,7 +57,7 @@
 		public ClassGroup Classes()
 		{
 			var group = new ClassGroup(Region.Type);
-			Region.Members.Add(group);
+			Region.Add(group);
 			return group;
 		}
 
@@ -68,7 +68,7 @@
 		public RegionGroup Regions()
 		{
 			var group = new RegionGroup(Region.Type);
-			Region.Members.Add(group);
+			Region.Add(group);
 			return group;
 		}
 
@@ -80,7 +80,7 @@
 		public FieldGroup Fields(bool tableLayout)
 		{
 			var group = new FieldGroup(tableLayout);
-			Region.Members.Add(group);
+			Region.Add(group);
 			return group;
 		}
 
@@ -91,7 +91,7 @@
 		public PragmaGroup Pragmas()
 		{
 			var group = new PragmaGroup();
-			Region.Members.Add(group);
+			Region.Add(group);
 			return group;
 		}
 	}

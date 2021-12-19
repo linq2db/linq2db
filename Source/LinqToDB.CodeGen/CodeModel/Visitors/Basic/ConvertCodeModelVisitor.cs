@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Base AST rewrite visitor class with noop node visit methods implementation with root-to-leaf visit order.
@@ -391,10 +391,10 @@ namespace LinqToDB.CodeGen.Model
 			var parameters      = VisitList(attribute.Parameters);
 			var namedParameters = VisitList(attribute.NamedParameters, np =>
 			{
-				var value = (ICodeExpression)Visit(np.value);
+				var value = (ICodeExpression)Visit(np.Value);
 
-				if (value != np.value)
-					return (np.property, value);
+				if (value != np.Value)
+					return new (np.Property, value);
 
 				return np;
 			});
@@ -495,7 +495,7 @@ namespace LinqToDB.CodeGen.Model
 		/// <typeparam name="TElement">Node type.</typeparam>
 		/// <param name="members">Nodes collection.</param>
 		/// <returns>Original collection of nodes not changed or new collection if any node was replaced with new one.</returns>
-		private List<TElement> VisitList<TElement>(List<TElement> members)
+		private IReadOnlyList<TElement> VisitList<TElement>(IReadOnlyList<TElement> members)
 			where TElement : ICodeElement
 		{
 			List<TElement>? newMembers = null;
@@ -528,7 +528,7 @@ namespace LinqToDB.CodeGen.Model
 		/// <param name="members">Collection.</param>
 		/// <param name="converter">Collection element converter.</param>
 		/// <returns>Original collection not changed or new collection if any element was replaced with new one.</returns>
-		private List<TElement> VisitList<TElement>(List<TElement> members, Func<TElement, TElement> converter)
+		private IReadOnlyList<TElement> VisitList<TElement>(IReadOnlyList<TElement> members, Func<TElement, TElement> converter)
 			where TElement: notnull
 		{
 			List<TElement>? newMembers = null;

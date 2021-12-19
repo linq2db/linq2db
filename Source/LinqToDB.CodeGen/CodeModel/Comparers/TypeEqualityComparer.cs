@@ -1,18 +1,22 @@
 ﻿using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Compare types with or without taking into account nullability for reference types.
 	/// </summary>
-	internal class TypeEqualityComparer : IEqualityComparer<IType>
+	internal sealed class TypeEqualityComparer : IEqualityComparer<IType>
 	{
 		private readonly bool                                           _ignoreNRT;
 		private readonly bool                                           _ignoreNullability;
 		private readonly IEqualityComparer<CodeIdentifier>              _identifierComparer;
 		private readonly IEqualityComparer<IEnumerable<CodeIdentifier>> _namespaceComparer;
 
-		internal TypeEqualityComparer(IEqualityComparer<CodeIdentifier> identifierComparer, IEqualityComparer<IEnumerable<CodeIdentifier>> namespaceComparer, bool ignoreNRT, bool ignoreNullability)
+		internal TypeEqualityComparer(
+			IEqualityComparer<CodeIdentifier>              identifierComparer,
+			IEqualityComparer<IEnumerable<CodeIdentifier>> namespaceComparer,
+			bool                                           ignoreNRT,
+			bool                                           ignoreNullability)
 		{
 			_identifierComparer = identifierComparer;
 			_namespaceComparer  = namespaceComparer;
@@ -29,7 +33,6 @@ namespace LinqToDB.CodeGen.Model
 
 			if (x.Kind                != y.Kind               ) return false;
 			if (x.IsValueType         != y.IsValueType        ) return false;
-			if (x.External            != y.External           ) return false;
 			if (x.OpenGenericArgCount != y.OpenGenericArgCount) return false;
 
 			// ignore nullability for reference types (when _ignoreNRT set)
@@ -68,7 +71,6 @@ namespace LinqToDB.CodeGen.Model
 			var hash =
 				   obj.Kind                .GetHashCode()
 				^  obj.IsValueType         .GetHashCode()
-				^  obj.External            .GetHashCode()
 				^  obj.OpenGenericArgCount?.GetHashCode() ?? 0
 
 				^ (!_ignoreNullability && (!_ignoreNRT || obj.IsValueType) ? obj.IsNullable.GetHashCode() : 0)

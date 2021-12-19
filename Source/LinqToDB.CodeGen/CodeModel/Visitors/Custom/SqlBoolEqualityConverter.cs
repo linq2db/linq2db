@@ -2,17 +2,17 @@
 using System.Collections.Generic;
 using System.Data.SqlTypes;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// This visitor wraps equality operation for some well-known types with cast to <see cref="Boolean"/> as they
 	/// override equality operation to return <see cref="SqlBoolean"/> value.
 	/// </summary>
-	public class SqlBoolEqualityConverter : ConvertCodeModelVisitor
+	public sealed class SqlBoolEqualityConverter : ConvertCodeModelVisitor
 	{
 		private readonly ISet<IType> _types;
 
-		public SqlBoolEqualityConverter(IEqualityComparer<IType> typeComparer)
+		private SqlBoolEqualityConverter(IEqualityComparer<IType> typeComparer)
 		{
 			_types = new HashSet<IType>(typeComparer)
 			{
@@ -34,6 +34,11 @@ namespace LinqToDB.CodeGen.Model
 			};
 		}
 
+		/// <summary>
+		/// Creates instance of converter.
+		/// </summary>
+		/// <param name="languageProvider">Current language provider.</param>
+		/// <returns>Converter instance.</returns>
 		public static ConvertCodeModelVisitor Create(ILanguageProvider languageProvider)
 		{
 			return new SqlBoolEqualityConverter(languageProvider.TypeEqualityComparerWithoutNRT);

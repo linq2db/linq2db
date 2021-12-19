@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Class field definition.
@@ -35,7 +35,7 @@
 		/// <summary>
 		/// Optional field initializer.
 		/// </summary>
-		public ICodeExpression? Initializer { get; set; }
+		public ICodeExpression? Initializer { get; internal set; }
 
 		/// <summary>
 		/// Simple reference to current field.

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Expression, describing new one-dimensional array declaration.
@@ -9,17 +10,16 @@ namespace LinqToDB.CodeGen.Model
 	{
 		private readonly IType _arrayType;
 
-		public CodeNewArray(CodeTypeToken type, bool valueTyped, IReadOnlyList<ICodeExpression> values, bool inline)
+		public CodeNewArray(CodeTypeToken type, bool valueTyped, IEnumerable<ICodeExpression> values, bool inline)
 		{
 			Type       = type;
 			ValueTyped = valueTyped;
 			Inline     = inline;
-			Values     = values;
-
-			_arrayType = new ArrayType(type.Type, new int?[] { values.Count == 0 ? null : values.Count }, false);
+			Values     = values.ToArray();
+			_arrayType = new ArrayType(type.Type, new int?[] { Values.Count == 0 ? null : Values.Count }, false);
 		}
 
-		public CodeNewArray(IType type, bool valueTyped, IReadOnlyList<ICodeExpression> values, bool inline)
+		public CodeNewArray(IType type, bool valueTyped, IEnumerable<ICodeExpression> values, bool inline)
 			: this(new CodeTypeToken(type), valueTyped, values, inline)
 		{
 		}
@@ -41,8 +41,7 @@ namespace LinqToDB.CodeGen.Model
 		/// </summary>
 		public IReadOnlyList<ICodeExpression> Values { get; }
 
-		IType ICodeExpression.Type => _arrayType;
-
-		CodeElementType ICodeElement.ElementType => CodeElementType.Array;
+		IType           ICodeExpression.Type        => _arrayType;
+		CodeElementType ICodeElement   .ElementType => CodeElementType.Array;
 	}
 }

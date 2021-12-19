@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Group of compiler pragmas.
 	/// </summary>
-	public class PragmaGroup : MemberGroup<CodePragma>
+	public sealed class PragmaGroup : MemberGroup<CodePragma>
 	{
-		public PragmaGroup(List<CodePragma>? members)
+		public PragmaGroup(IEnumerable<CodePragma>? members)
 			: base(members)
 		{
 		}
@@ -26,7 +26,7 @@ namespace LinqToDB.CodeGen.Model
 		/// <returns>Current group instance.</returns>
 		public PragmaGroup Add(CodePragma pragma)
 		{
-			Members.Add(pragma);
+			AddMember(pragma);
 			return this;
 		}
 	}

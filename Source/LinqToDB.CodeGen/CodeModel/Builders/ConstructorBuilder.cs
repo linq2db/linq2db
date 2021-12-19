@@ -1,9 +1,9 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// <see cref="CodeConstructor"/> builder.
 	/// </summary>
-	public class ConstructorBuilder : MethodBaseBuilder<ConstructorBuilder, CodeConstructor>
+	public sealed class ConstructorBuilder : MethodBaseBuilder<ConstructorBuilder, CodeConstructor>
 	{
 		internal ConstructorBuilder(CodeConstructor ctor)
 			: base(ctor)
@@ -11,14 +11,14 @@
 		}
 
 		/// <summary>
-		/// add base constructor call.
+		/// Add base constructor call.
 		/// </summary>
 		/// <param name="parameters">Base constructor parameters.</param>
 		/// <returns>Constructor builder instance.</returns>
 		public ConstructorBuilder Base(params ICodeExpression[] parameters)
 		{
 			Method.ThisCall = false;
-			Method.BaseArguments.AddRange(parameters);
+			Method.AddBaseParameters(parameters);
 			return this;
 		}
 	}

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	public sealed class CodeBinary : ICodeExpression
 	{
@@ -41,8 +41,7 @@ namespace LinqToDB.CodeGen.Model
 		/// </summary>
 		public BinaryOperation Operation { get; }
 
-		IType ICodeExpression.Type => _type;
-
-		CodeElementType ICodeElement.ElementType => CodeElementType.BinaryOperation;
+		IType           ICodeExpression.Type        => _type;
+		CodeElementType ICodeElement   .ElementType => CodeElementType.BinaryOperation;
 	}
 }

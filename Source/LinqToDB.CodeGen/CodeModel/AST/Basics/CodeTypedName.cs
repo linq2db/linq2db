@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Typed named entity (parameter, variable, field or property).
@@ -15,11 +15,11 @@
 		/// <summary>
 		/// Name.
 		/// </summary>
-		public CodeIdentifier Name { get; }
+		public CodeIdentifier Name     { get; }
 		/// <summary>
 		/// Type.
 		/// </summary>
-		public CodeTypeToken  Type { get; }
+		public CodeTypeToken  Type     { get; }
 
 		/// <summary>
 		/// Reference to current parameter/variable.

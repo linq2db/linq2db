@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using LinqToDB.CodeGen;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
-	internal class TypeParser : ITypeParser
+	internal sealed class TypeParser : ITypeParser
 	{
 		private static Dictionary<Type, IType> _typeCache { get; } = new ();
 
@@ -18,7 +19,6 @@ namespace LinqToDB.CodeGen.Model
 		#region ITypeParser
 		IType ITypeParser.Parse   (Type type                      ) => ParseCLRType(type);
 		IType ITypeParser.Parse<T>(                               ) => ParseCLRType(typeof(T));
-
 		IType ITypeParser.Parse   (string typeName, bool valueType)
 		{
 			var (type, consumedCharacters) = ParseTypeInternal(null, typeName, valueType, false);
@@ -29,10 +29,10 @@ namespace LinqToDB.CodeGen.Model
 			return type;
 		}
 
-		CodeIdentifier[] ITypeParser.ParseNamespace(string @namespace)
+		CodeIdentifier[] ITypeParser.ParseNamespaceOrRegularTypeName(string name, bool generated)
 		{
 			// simplified version of type parser
-			// parsed namespace
+			// parsed name
 			var ns = new List<CodeIdentifier>();
 
 			// parser position in parsed string
@@ -41,14 +41,14 @@ namespace LinqToDB.CodeGen.Model
 			var parserState       = ParserState.SearchForIdentifierStart;
 
 			// use state machine for type parsing
-			foreach (var (chr, cat) in @namespace.EnumerateCharacters())
+			foreach (var (chr, cat) in name.EnumerateCharacters())
 			{
 				position += chr.Length;
 
 				// there are several characters that could trigger parser state change:
-				// " " (as filler before/after namespace)
-				// "." (as namespaces separator)
-				// other characters expected to be valid namespace name characters with regrards to their position in name
+				// " " (as filler before/after name)
+				// "." (as name components separator)
+				// other characters expected to be valid namespace/type name characters with regards to their position in name
 				// (like first character or rest character)
 				if (chr == " ")
 				{
@@ -57,36 +57,36 @@ namespace LinqToDB.CodeGen.Model
 						case ParserState.ParseTrailingSpaces                   : // consume trailing spaces
 						case ParserState.SearchForIdentifierStart              : // consume leading spaces
 							continue;
-						case ParserState.ParseNamespaceTypeNameOrParentTypeName: // end of namespace name
+						case ParserState.ParseNamespaceTypeNameOrParentTypeName: // end of name
 							if (currentIdentifier.Length == 0)
-								throw new InvalidOperationException($"Cannot parse namespace \"{@namespace}\": space found at unexpected position");
+								throw new InvalidOperationException($"Cannot parse name \"{name}\": space found at unexpected position");
 
 							// consume trailing spaces
 							parserState = ParserState.ParseTrailingSpaces;
 							continue;
 						default:
-							throw new InvalidOperationException($"Invalid namespace parser state: {parserState}");
+							throw new InvalidOperationException($"Invalid name parser state: {parserState}");
 					}
 				}
 				else if (chr == ".")
 				{
 					switch (parserState)
 					{
-						case ParserState.ParseNamespaceTypeNameOrParentTypeName: // dot after namespace identifer
+						case ParserState.ParseNamespaceTypeNameOrParentTypeName: // dot after name identifer
 							if (currentIdentifier.Length == 0)
-								throw new InvalidOperationException($"Cannot parse namespace \"{@namespace}\": dot found but name expected");
+								throw new InvalidOperationException($"Cannot parse name \"{name}\": dot found but name expected");
 
-							// save namespace component
-							ns.Add(new CodeIdentifier(currentIdentifier.ToString()));
+							// save name component
+							ns.Add(new CodeIdentifier(currentIdentifier.ToString(), !generated));
 
-							// reset current identifier and parse for next namespace component or type name (no state change)
+							// reset current identifier and parse for next name component or type name (no state change)
 							currentIdentifier.Clear();
 							continue;
 						case ParserState.SearchForIdentifierStart              : // identifier cannot start with .
 						case ParserState.ParseTrailingSpaces                   : // only spaces allowed after type
-							throw new InvalidOperationException($"Cannot parse namespace \"{@namespace}\": unexpected dot found at {position}");
+							throw new InvalidOperationException($"Cannot parse name \"{name}\": unexpected dot found at {position}");
 						default:
-							throw new InvalidOperationException($"Invalid namespace parser state: {parserState}");
+							throw new InvalidOperationException($"Invalid name parser state: {parserState}");
 					}
 				}
 				else // any other character (it should be identifier character only)
@@ -95,31 +95,31 @@ namespace LinqToDB.CodeGen.Model
 					{
 						case ParserState.SearchForIdentifierStart              : // identifier start character expected
 							if (!_languageProvider.IsValidIdentifierFirstChar(chr, cat))
-								throw new InvalidOperationException($"Cannot parse namespace \"{@namespace}\": identifier cannot start from \"{chr}\"");
+								throw new InvalidOperationException($"Cannot parse name \"{name}\": identifier cannot start from \"{chr}\"");
 
 							currentIdentifier.Append(chr);
 							parserState = ParserState.ParseNamespaceTypeNameOrParentTypeName;
 							continue;
 						case ParserState.ParseNamespaceTypeNameOrParentTypeName: // identifier non-start character expected
 							if (!_languageProvider.IsValidIdentifierNonFirstChar(chr, cat))
-								throw new InvalidOperationException($"Cannot parse namespace \"{@namespace}\": identifier cannot contain \"{chr}\"");
+								throw new InvalidOperationException($"Cannot parse name \"{name}\": identifier cannot contain \"{chr}\"");
 
 							currentIdentifier.Append(chr);
 							continue;
 						case ParserState.ParseTrailingSpaces                   : // spaces expected
-							throw new InvalidOperationException($"Cannot parse namespace \"{@namespace}\": unexpected character at {position}");
+							throw new InvalidOperationException($"Cannot parse name \"{name}\": unexpected character at {position}");
 						default:
-							throw new InvalidOperationException($"Invalid namespace parser state: {parserState}");
+							throw new InvalidOperationException($"Invalid name parser state: {parserState}");
 					}
 				}
 			}
 
 			// TODO: should it be possible or we save name in parser always so we should throw assert exception here?
 			if (currentIdentifier.Length != 0)
-				ns.Add(new CodeIdentifier(currentIdentifier.ToString()));
+				ns.Add(new CodeIdentifier(currentIdentifier.ToString(), !generated));
 
-			if (ns.Count == 0 || position != @namespace.Length)
-				throw new InvalidOperationException($"Cannot parse namespace: {@namespace}");
+			if (ns.Count == 0 || position != name.Length)
+				throw new InvalidOperationException($"Cannot parse name: {name}");
 
 			return ns.ToArray();
 		}
@@ -234,7 +234,7 @@ namespace LinqToDB.CodeGen.Model
 								throw new InvalidOperationException($"Cannot parse type name \"{typeName}\": dot found but name expected");
 
 							// save namespace component
-							ns.Add(new CodeIdentifier(currentIdentifier.ToString()));
+							ns.Add(new CodeIdentifier(currentIdentifier.ToString(), true));
 
 							// reset current identifier and parse for next namespace component or type name (no state change)
 							currentIdentifier.Clear();
@@ -259,7 +259,7 @@ namespace LinqToDB.CodeGen.Model
 								throw new InvalidOperationException($"Cannot parse type name \"{typeName}\": + found but name expected");
 
 							// save identifier as type name
-							name = new CodeIdentifier(currentIdentifier.ToString());
+							name = new CodeIdentifier(currentIdentifier.ToString(), true);
 
 							// stop parsing to create parent type token and continue nested type parsing
 							currentIdentifier.Clear();
@@ -284,7 +284,7 @@ namespace LinqToDB.CodeGen.Model
 								throw new InvalidOperationException($"Cannot parse type name \"{typeName}\": < found but name expected");
 
 							// save identifier as type name
-							name = new CodeIdentifier(currentIdentifier.ToString());
+							name = new CodeIdentifier(currentIdentifier.ToString(), true);
 
 							currentIdentifier.Clear();
 
@@ -323,7 +323,7 @@ namespace LinqToDB.CodeGen.Model
 								throw new InvalidOperationException($"Cannot parse type name \"{typeName}\": , found but name expected");
 
 							// save type name
-							name = new CodeIdentifier(currentIdentifier.ToString());
+							name = new CodeIdentifier(currentIdentifier.ToString(), true);
 							currentIdentifier.Clear();
 
 							// reset position to include only current type name (so parent parser will resume parsing from ,)
@@ -395,7 +395,7 @@ namespace LinqToDB.CodeGen.Model
 							if (currentIdentifier.Length == 0)
 								throw new InvalidOperationException($"Cannot parse type name \"{typeName}\": , found but name expected");
 
-							name = new CodeIdentifier(currentIdentifier.ToString());
+							name = new CodeIdentifier(currentIdentifier.ToString(), true);
 							currentIdentifier.Clear();
 							goto case ParserState.ParseNullablity;
 						case ParserState.ParseNullablity                       : // looking for nullability marker
@@ -447,7 +447,7 @@ namespace LinqToDB.CodeGen.Model
 
 			// TODO: should it be possible or we save name in parser always so we should throw assert exception here?
 			if (currentIdentifier.Length != 0)
-				name = new CodeIdentifier(currentIdentifier.ToString());
+				name = new CodeIdentifier(currentIdentifier.ToString(), true);
 
 			// create type descriptor
 			IType parsedType;
@@ -553,9 +553,9 @@ namespace LinqToDB.CodeGen.Model
 			// regular or generic type
 			CodeIdentifier[]? ns = null;
 			if (type.Namespace != null)
-				ns = ((ITypeParser)this).ParseNamespace(type.Namespace);
+				ns = ((ITypeParser)this).ParseNamespaceOrRegularTypeName(type.Namespace, false);
 
-			var name  = new CodeIdentifier(type.IsGenericType ? type.Name.Substring(0, type.Name.IndexOf('`')) : type.Name);
+			var name  = new CodeIdentifier(type.IsGenericType ? type.Name.Substring(0, type.Name.IndexOf('`')) : type.Name, true);
 
 			// generic/open generic type
 			if (type.IsGenericType)

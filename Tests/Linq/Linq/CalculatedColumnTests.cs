@@ -56,7 +56,7 @@ namespace Tests.Linq
 			[Column(Length = 50), NotNull] public string Taxonomy { get; set; } = null!; // text(50)
 
 			// Many association for test
-			[Association(ThisKey = "PersonID", OtherKey = "PersonID", CanBeNull = false, KeyName = "PersonDoctor", BackReferenceName = "PersonDoctor")]
+			[Association(ThisKey = "PersonID", OtherKey = "PersonID", CanBeNull = false)]
 			public IEnumerable<PersonCalculated> PersonDoctor { get; set; } = null!;
 		}
 

@@ -2,31 +2,29 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Implements text (code) generation using table layout.
 	/// </summary>
-	internal partial class TableLayoutBuilder
+	internal sealed partial class TableLayoutBuilder
 	{
 		/// <summary>
 		/// Root column group definition (contains full table layout definition).
 		/// </summary>
-		private ColumnGroup? _root;
+		private ColumnGroup?           _root;
 		/// <summary>
 		/// Root table data object.
 		/// </summary>
-		private ColumnGroupData? _data;
-
+		private ColumnGroupData?       _data;
 		/// <summary>
 		/// Cached generation results.
 		/// </summary>
 		private IReadOnlyList<string>? _generatedRows;
-
 		/// <summary>
 		/// Number of data rows in table.
 		/// </summary>
-		private int _rowsCount;
+		private int                    _rowsCount;
 
 		/// <summary>
 		/// Returns generated text for current table as separate string for each row.
@@ -37,7 +35,7 @@ namespace LinqToDB.CodeGen.Model
 			if (_generatedRows != null)
 				return _generatedRows;
 
-			// freeze table to disallow more data added after final text generated
+			// freeze table to disallow adding of more data after final text generated
 			var header = AssertConfigured();
 			header.Freeze();
 
@@ -53,6 +51,7 @@ namespace LinqToDB.CodeGen.Model
 			{
 				for (var i = 0; i < _rowsCount; i++)
 					result[i] = string.Empty;
+
 				return _generatedRows = result;
 			}
 

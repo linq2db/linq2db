@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Indexed access expression.
@@ -26,8 +26,7 @@
 		/// </summary>
 		public IType           ReturnType { get; }
 
-		IType ICodeExpression.Type => ReturnType;
-
-		CodeElementType ICodeElement.ElementType => CodeElementType.Index;
+		IType           ICodeExpression.Type        => ReturnType;
+		CodeElementType ICodeElement   .ElementType => CodeElementType.Index;
 	}
 }

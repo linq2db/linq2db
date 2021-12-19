@@ -1,20 +1,20 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
-	public class NameFixOptions
+	public sealed class NameFixOptions
 	{
-		public NameFixOptions(string fixer, NameFixType fixType)
+		public NameFixOptions(string defaultValue, NameFixType fixType)
 		{
-			Fixer   = fixer;
-			FixType = fixType;
+			DefaultValue = defaultValue;
+			FixType      = fixType;
 		}
 		/// <summary>
 		/// Default fixer value for identifier.
 		/// </summary>
-		public string      Fixer   { get; }
+		public string      DefaultValue { get; }
 
 		/// <summary>
 		/// Identifier fix logic to use.
 		/// </summary>
-		public NameFixType FixType { get; }
+		public NameFixType FixType      { get; }
 	}
 }

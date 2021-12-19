@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Group of methods.
 	/// </summary>
-	public class MethodGroup : MemberGroup<CodeMethod>
+	public sealed class MethodGroup : MemberGroup<CodeMethod>
 	{
-		public MethodGroup(List<CodeMethod>? members, bool tableLayout)
+		public MethodGroup(IEnumerable<CodeMethod>? members, bool tableLayout)
 			: base(members)
 		{
 			TableLayout = tableLayout;
@@ -27,9 +27,7 @@ namespace LinqToDB.CodeGen.Model
 
 		public MethodBuilder New(CodeIdentifier name)
 		{
-			var method = new CodeMethod(name);
-			Members.Add(method);
-			return new MethodBuilder(method);
+			return new MethodBuilder(AddMember(new CodeMethod(name)));
 		}
 	}
 }

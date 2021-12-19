@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Member access expression.
@@ -40,8 +40,7 @@
 		/// </summary>
 		public CodeReference      Member     { get; }
 
-		IType ICodeExpression.Type => Member.Referenced.Type.Type;
-
-		CodeElementType ICodeElement.ElementType => CodeElementType.MemberAccess;
+		IType         ICodeExpression.Type        => Member.Referenced.Type.Type;
+		CodeElementType ICodeElement .ElementType => CodeElementType.MemberAccess;
 	}
 }

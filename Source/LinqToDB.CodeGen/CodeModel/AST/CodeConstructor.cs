@@ -1,26 +1,29 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Class constructor.
 	/// </summary>
 	public sealed class CodeConstructor : MethodBase, IGroupElement
 	{
+		private readonly List<ICodeExpression> _baseParameters;
+
 		public CodeConstructor(
-			List<CodeAttribute>?   customAttributes,
-			Modifiers              attributes,
-			CodeBlock?             body,
-			CodeXmlComment?        xmlDoc,
-			List<CodeParameter>?   parameters,
-			CodeClass              @class,
-			bool                   thisCall,
-			List<ICodeExpression>? baseArguments)
+			IEnumerable<CodeAttribute>?   customAttributes,
+			Modifiers                     attributes,
+			CodeBlock?                    body,
+			CodeXmlComment?               xmlDoc,
+			IEnumerable<CodeParameter>?   parameters,
+			CodeClass                     @class,
+			bool                          thisCall,
+			IEnumerable<ICodeExpression>? baseArguments)
 			: base(customAttributes, attributes, body, xmlDoc, parameters)
 		{
-			Class         = @class;
-			ThisCall      = thisCall;
-			BaseArguments = baseArguments ?? new();
+			Class           = @class;
+			ThisCall        = thisCall;
+			_baseParameters = new (baseArguments ?? Array.Empty<ICodeExpression>());
 		}
 
 		public CodeConstructor(CodeClass @class)
@@ -31,16 +34,21 @@ namespace LinqToDB.CodeGen.Model
 		/// <summary>
 		/// Owner class.
 		/// </summary>
-		public CodeClass             Class         { get; }
+		public CodeClass                      Class         { get; }
 		/// <summary>
 		/// Indicator wether constructor calls <c>this()</c> or <c>base</c> constructor.
 		/// </summary>
-		public bool                  ThisCall      { get; set; }
+		public bool                           ThisCall      { get; internal set; }
 		/// <summary>
 		/// Parameters for <c>this()</c> or <c>base</c> constructor call.
 		/// </summary>
-		public List<ICodeExpression> BaseArguments { get; }
+		public IReadOnlyList<ICodeExpression> BaseArguments => _baseParameters;
 
 		public override CodeElementType ElementType => CodeElementType.Constructor;
+
+		internal void AddBaseParameters(ICodeExpression[] parameters)
+		{
+			_baseParameters.AddRange(parameters);
+		}
 	}
 }

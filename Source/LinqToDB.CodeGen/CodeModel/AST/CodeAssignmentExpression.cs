@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Assignment expression.
@@ -10,8 +10,7 @@
 		{
 		}
 
-		IType ICodeExpression.Type => RValue.Type;
-
-		CodeElementType ICodeElement.ElementType => CodeElementType.AssignmentExpression;
+		IType           ICodeExpression.Type        => RValue.Type;
+		CodeElementType ICodeElement   .ElementType => CodeElementType.AssignmentExpression;
 	}
 }

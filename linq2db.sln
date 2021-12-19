@@ -594,7 +594,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net60", "net60", "{AA850554
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.CodeGen", "Source\LinqToDB.CodeGen\LinqToDB.CodeGen.csproj", "{ED68D677-1871-4AC3-A78C-E880467E1830}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.CLITools", "Source\LinqToDB.CLITools\LinqToDB.CLITools.csproj", "{CECB0D6C-33BD-4A00-8882-0D8622D4ACEA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.CLI", "Source\LinqToDB.CLI\LinqToDB.CLI.csproj", "{CECB0D6C-33BD-4A00-8882-0D8622D4ACEA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{D069A715-29E5-4CFD-9112-63ED5633971F}"
+	ProjectSection(SolutionItems) = preProject
+		Source\Shared\IsExternalInit.cs = Source\Shared\IsExternalInit.cs
+		Source\Shared\JetBrains.Annotations.cs = Source\Shared\JetBrains.Annotations.cs
+		Source\Shared\NullableAttributes.cs = Source\Shared\NullableAttributes.cs
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -725,6 +732,7 @@ Global
 		{AA850554-8CD1-4231-A3E3-804B62FF3622} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
 		{ED68D677-1871-4AC3-A78C-E880467E1830} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 		{CECB0D6C-33BD-4A00-8882-0D8622D4ACEA} = {AF93451E-198C-4A94-8EB4-C330D886E102}
+		{D069A715-29E5-4CFD-9112-63ED5633971F} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15BBD7CE-1C8E-4407-9DCF-674982CEB3F7}

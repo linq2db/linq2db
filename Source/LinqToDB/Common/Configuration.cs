@@ -27,13 +27,23 @@ namespace LinqToDB.Common
 			_compiler = compiler;
 		}
 
-		internal static TDelegate CompileExpression<TDelegate>(this Expression<TDelegate> expression)
+		/// <summary>
+		/// Internal API.
+		/// </summary>
+		/// <param name="expression"></param>
+		/// <returns></returns>
+		public static TDelegate CompileExpression<TDelegate>(this Expression<TDelegate> expression)
 			where TDelegate : Delegate
 		{
 			return ((TDelegate?)_compiler?.Invoke(expression)) ?? expression.Compile();
 		}
 
-		internal static Delegate CompileExpression(this LambdaExpression expression)
+		/// <summary>
+		/// Internal API.
+		/// </summary>
+		/// <param name="expression"></param>
+		/// <returns></returns>
+		public static Delegate CompileExpression(this LambdaExpression expression)
 		{
 			return _compiler?.Invoke(expression) ?? expression.Compile();
 		}

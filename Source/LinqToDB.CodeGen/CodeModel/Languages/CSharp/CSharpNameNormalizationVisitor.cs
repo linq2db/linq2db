@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using LinqToDB.CodeGen;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// This visitor used to walk all generated code and fix identifiers to be valid according to C# naming
 	/// and conflict resolution rules.
 	/// </summary>
-	internal class CSharpNameNormalizationVisitor : NoopCodeModelVisitor
+	internal sealed class CSharpNameNormalizationVisitor : NoopCodeModelVisitor
 	{
 		// Note that we use strings for names tracking as this visitor modifies CodeIdentifier instances
 
@@ -98,8 +99,8 @@ namespace LinqToDB.CodeGen.Model
 						for (var i = 0; i < overload.Parameters.Count; i++)
 						{
 							if (overload.Parameters[i].Direction != method.Parameters[i].Direction
-								&& (overload.Parameters[i].Direction == ParameterDirection.In
-									|| method.Parameters[i].Direction == ParameterDirection.In))
+								&& (overload.Parameters[i].Direction == CodeParameterDirection.In
+									|| method.Parameters[i].Direction == CodeParameterDirection.In))
 							{
 								sameParameters = false;
 								break;
@@ -384,16 +385,16 @@ namespace LinqToDB.CodeGen.Model
 				switch (fixOptions.FixType)
 				{
 					case NameFixType.Replace:
-						baseName = fixOptions.Fixer;
+						baseName = fixOptions.DefaultValue;
 						break;
 					case NameFixType.ReplaceWithPosition:
-						baseName = fixOptions.Fixer + position?.ToString(NumberFormatInfo.InvariantInfo);
+						baseName = fixOptions.DefaultValue + position?.ToString(NumberFormatInfo.InvariantInfo);
 						break;
 					case NameFixType.Suffix:
-						baseName = identifierName + fixOptions.Fixer;
+						baseName = identifierName + fixOptions.DefaultValue;
 						break;
 					case NameFixType.SuffixWithPosition:
-						baseName = identifierName + fixOptions.Fixer + position?.ToString(NumberFormatInfo.InvariantInfo);
+						baseName = identifierName + fixOptions.DefaultValue + position?.ToString(NumberFormatInfo.InvariantInfo);
 						break;
 					default:
 						throw new NotImplementedException($"C# name validator doesn't implement {fixOptions.FixType} name fix strategy");

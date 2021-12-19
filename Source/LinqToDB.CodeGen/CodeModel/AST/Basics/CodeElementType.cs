@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	// Types split into groups by node kind.
 	// Also note that AST could miss many language elements, because they are not used by code generator right now

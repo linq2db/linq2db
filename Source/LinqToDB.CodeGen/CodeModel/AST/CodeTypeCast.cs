@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Type cast expression.
@@ -25,8 +25,7 @@
 		/// </summary>
 		public ICodeExpression Value { get; }
 
-		IType ICodeExpression.Type => Type.Type;
-
-		CodeElementType ICodeElement.ElementType => CodeElementType.Cast;
+		IType           ICodeExpression.Type        => Type.Type;
+		CodeElementType ICodeElement   .ElementType => CodeElementType.Cast;
 	}
 }

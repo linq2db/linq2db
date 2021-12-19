@@ -33,7 +33,7 @@ namespace LinqToDB.Mapping
 	{
 		private static readonly MemoryCache<(string baseSchemaId, string addedSchemaId)> _combinedSchemasCache = new (new ());
 
-		internal static MappingSchema CombineSchemas(MappingSchema mappingSchema1, MappingSchema mappingSchema2)
+		public static MappingSchema CombineSchemas(MappingSchema mappingSchema1, MappingSchema mappingSchema2)
 		{
 			return _combinedSchemasCache.GetOrCreate(
 				(mappingSchema1.ConfigurationID, mappingSchema2.ConfigurationID),

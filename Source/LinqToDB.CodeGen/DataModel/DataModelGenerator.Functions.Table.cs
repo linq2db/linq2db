@@ -1,7 +1,7 @@
 ﻿using System;
-using LinqToDB.CodeGen.Model;
+using LinqToDB.CodeModel;
 
-namespace LinqToDB.CodeGen.DataModel
+namespace LinqToDB.DataModel
 {
 	// contains generation logic for table function mappings
 	partial class DataModelGenerator
@@ -37,7 +37,7 @@ namespace LinqToDB.CodeGen.DataModel
 			if (tableFunction.Error != null)
 			{
 				if (_dataModel.GenerateProceduresSchemaError)
-					region.Pragmas().Add(_code.Error($"Failed to load return table schema: {tableFunction.Error}"));
+					region.Pragmas().Add(AST.Error($"Failed to load return table schema: {tableFunction.Error}"));
 
 				// as we cannot generate table function without knowing it's schema, we skip failed function
 				return;
@@ -45,15 +45,14 @@ namespace LinqToDB.CodeGen.DataModel
 
 			// if function result schema matches known entity, we use entity class for result
 			// otherwise we generate custom record mapping
-			var (customTable, entity) = tableFunction.Result;
-			if (customTable == null && entity == null)
-				throw new InvalidOperationException($"Table function {tableFunction.Name} result table not set");
+			if (tableFunction.Result == null || tableFunction.Result.CustomTable == null && tableFunction.Result.Entity == null)
+				throw new InvalidOperationException($"Table function {tableFunction.Name} result record type not set");
 
 			// GetTable API for table functions need MethodInfo instance of generated method as parameter
 			// to not load it on each call, we cache MethodInfo instance in static field
 			var methodInfo = region
 				.Fields(false)
-					.New(_code.Name(tableFunction.MethodInfoFieldName), WellKnownTypes.System.Reflection.MethodInfo)
+					.New(AST.Name(tableFunction.MethodInfoFieldName), WellKnownTypes.System.Reflection.MethodInfo)
 						.Private()
 						.Static()
 						.ReadOnly();
@@ -66,10 +65,10 @@ namespace LinqToDB.CodeGen.DataModel
 
 			// table record type
 			IType returnEntity;
-			if (entity != null)
-				returnEntity = _entityBuilders[entity].Type.Type;
+			if (tableFunction.Result.Entity != null)
+				returnEntity = _entityBuilders[tableFunction.Result.Entity].Type.Type;
 			else
-				returnEntity = BuildCustomResultClass(customTable!, region, true).resultClassType;
+				returnEntity = BuildCustomResultClass(tableFunction.Result.CustomTable!, region, true).resultClassType;
 
 			// set return type
 			// T4 used ITable<T> for return type, but there is no reason to use ITable<T> over IQueryable<T>
@@ -97,14 +96,14 @@ namespace LinqToDB.CodeGen.DataModel
 				var parameter = DefineParameter(method, param.Parameter);
 				parameters[i + 3] = parameter.Reference;
 				// TODO: potential issue: target-typed `default` could cause errors with overloads
-				fieldInitParameters[i] = _code.Default(param.Parameter.Type, true);
+				fieldInitParameters[i] = AST.Default(param.Parameter.Type, true);
 			}
 
 			// generate mapping body
 			method.Body()
 				.Append(
-					_code.Return(
-						_code.ExtCall(
+					AST.Return(
+						AST.ExtCall(
 							WellKnownTypes.LinqToDB.DataExtensions,
 							WellKnownTypes.LinqToDB.DataExtensions_GetTable,
 							WellKnownTypes.LinqToDB.ITable(returnEntity),
@@ -112,24 +111,24 @@ namespace LinqToDB.CodeGen.DataModel
 							parameters)));
 
 			// generate MethodInfo field initializer
-			var lambdaParam = _code.LambdaParameter(_code.Name(TABLE_FUNCTION_METHOD_INFO_CONTEXT_PARAMETER), context.Type);
+			var lambdaParam = AST.LambdaParameter(AST.Name(TABLE_FUNCTION_METHOD_INFO_CONTEXT_PARAMETER), context.Type);
 
 			// Expression<Func<context, returnType>>
-			var lambda = _code
+			var lambda = AST
 				.Lambda(WellKnownTypes.System.Linq.Expressions.Expression(WellKnownTypes.System.Func(returnType, context.Type)), true)
 				.Parameter(lambdaParam);
 
 			lambda.Body()
 				.Append(
-					_code.Return(
-						_code.Call(
+					AST.Return(
+						AST.Call(
 							lambdaParam.Reference,
 							method.Method.Name,
 							returnType,
 							fieldInitParameters)));
 
 			methodInfo.AddInitializer(
-				_code.Call(
+				AST.Call(
 					new CodeTypeReference(WellKnownTypes.LinqToDB.Expressions.MemberHelper),
 					WellKnownTypes.LinqToDB.Expressions.MemberHelper_MethodOf,
 					WellKnownTypes.System.Reflection.MethodInfo,

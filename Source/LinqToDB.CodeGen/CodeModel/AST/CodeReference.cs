@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	// right now we don't need to differentiate between variable or parameter in reference
 	/// <summary>
@@ -20,8 +20,7 @@
 		/// </summary>
 		public ITypedName Referenced { get; }
 
-		IType ICodeExpression.Type => Referenced.Type.Type;
-
-		CodeElementType ICodeElement.ElementType => CodeElementType.Reference;
+		IType           ICodeExpression.Type        => Referenced.Type.Type;
+		CodeElementType ICodeElement   .ElementType => CodeElementType.Reference;
 	}
 }

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Base class for method-like object builders.
@@ -11,7 +11,8 @@ namespace LinqToDB.CodeGen.Model
 		 where TBuilder : MethodBaseBuilder<TBuilder, TMethod>
 		 where TMethod : MethodBase
 	{
-		private BlockBuilder? _body;
+		private BlockBuilder?  _body;
+		private XmlDocBuilder? _xmlComment;
 
 		protected MethodBaseBuilder(TMethod method)
 		{
@@ -70,11 +71,9 @@ namespace LinqToDB.CodeGen.Model
 		/// <returns>Builder instance.</returns>
 		public TBuilder Parameter(CodeParameter parameter)
 		{
-			Method.Parameters.Add(parameter);
+			Method.AddParameter(parameter);
 			return (TBuilder)this;
 		}
-
-		private XmlDocBuilder? _xmlComment;
 
 		/// <summary>
 		/// Create xml-doc comment builder (or get existing).
@@ -99,7 +98,7 @@ namespace LinqToDB.CodeGen.Model
 		public AttributeBuilder Attribute(IType type)
 		{
 			var attr = new CodeAttribute(type);
-			Method.CustomAttributes.Add(attr);
+			Method.AddAttribute(attr);
 			return new AttributeBuilder(attr);
 		}
 	}

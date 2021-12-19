@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.CodeGen.Schema
+﻿namespace LinqToDB.Schema
 {
 	// Offtopic: https://english.stackexchange.com/questions/56431
 	/// <summary>
@@ -10,7 +10,7 @@
 	/// <param name="Nullable">Column allows <c>NULL</c> values.</param>
 	/// <param name="Insertable">Flag indicating that column accepts user-provided values for insert operations.</param>
 	/// <param name="Updatable">Flag indicating that column accepts user-provided values for update operations.</param>
-	public record Column(string Name, string? Description, DatabaseType Type, bool Nullable, bool Insertable, bool Updatable)
+	public sealed record Column(string Name, string? Description, DatabaseType Type, bool Nullable, bool Insertable, bool Updatable)
 	{
 		public override string ToString() => Name;
 	}

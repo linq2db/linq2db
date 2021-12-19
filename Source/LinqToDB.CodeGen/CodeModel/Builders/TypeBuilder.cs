@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Base class for type builders.
@@ -23,7 +23,7 @@
 		/// <summary>
 		/// Built type type descriptor.
 		/// </summary>
-		public TType Type { get; }
+		public TType      Type  { get; }
 
 		/// <summary>
 		/// Add custom attribute to type.
@@ -33,7 +33,7 @@
 		public AttributeBuilder AddAttribute(IType type)
 		{
 			var attr = new CodeAttribute(type);
-			Type.CustomAttributes.Add(attr);
+			Type.AddAttribute(attr);
 			return new AttributeBuilder(attr);
 		}
 

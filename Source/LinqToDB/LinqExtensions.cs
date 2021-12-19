@@ -1054,7 +1054,7 @@ namespace LinqToDB
 			return await TaskEx.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-		internal class Updatable<T> : IUpdatable<T>
+		public class Updatable<T> : IUpdatable<T>
 		{
 			public Updatable(IQueryable<T> query)
 			{

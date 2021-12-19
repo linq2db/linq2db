@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using LinqToDB.CodeGen.Model;
+using LinqToDB.CodeModel;
 
-namespace LinqToDB.CodeGen.DataModel
+namespace LinqToDB.DataModel
 {
 	// contains generation logic for data context class supplementary code like constructors
 	partial class DataModelGenerator
@@ -31,10 +31,10 @@ namespace LinqToDB.CodeGen.DataModel
 				ctors.Add(constructors.New().Public().Body());
 			if (_dataModel.DataContext.HasConfigurationConstructor)
 			{
-				var configurationParam = _code.Parameter(
+				var configurationParam = AST.Parameter(
 					WellKnownTypes.System.String,
-					_code.Name(CONTEXT_CONSTRUCTOR_CONFIGURATION_PARAMETER),
-					ParameterDirection.In);
+					AST.Name(CONTEXT_CONSTRUCTOR_CONFIGURATION_PARAMETER),
+					CodeParameterDirection.In);
 
 				ctors.Add(constructors
 					.New()
@@ -45,10 +45,10 @@ namespace LinqToDB.CodeGen.DataModel
 			}
 			if (_dataModel.DataContext.HasUntypedOptionsConstructor)
 			{
-				var optionsParam = _code.Parameter(
+				var optionsParam = AST.Parameter(
 					WellKnownTypes.LinqToDB.Configuration.LinqToDbConnectionOptions,
-					_code.Name(CONTEXT_CONSTRUCTOR_OPTIONS_PARAMETER),
-					ParameterDirection.In);
+					AST.Name(CONTEXT_CONSTRUCTOR_OPTIONS_PARAMETER),
+					CodeParameterDirection.In);
 
 				ctors.Add(constructors
 					.New()
@@ -59,10 +59,10 @@ namespace LinqToDB.CodeGen.DataModel
 			}
 			if (_dataModel.DataContext.HasTypedOptionsConstructor)
 			{
-				var typedOptionsParam = _code.Parameter(
+				var typedOptionsParam = AST.Parameter(
 					WellKnownTypes.LinqToDB.Configuration.LinqToDbConnectionOptionsWithType(contextBuilder.Type.Type),
-					_code.Name(CONTEXT_CONSTRUCTOR_OPTIONS_PARAMETER),
-					ParameterDirection.In);
+					AST.Name(CONTEXT_CONSTRUCTOR_OPTIONS_PARAMETER),
+					CodeParameterDirection.In);
 
 				ctors.Add(constructors
 					.New()
@@ -76,7 +76,7 @@ namespace LinqToDB.CodeGen.DataModel
 			// additional initialization logic
 			var initDataContext = contextBuilder
 				.Methods(true)
-					.New(_code.Name(CONTEXT_INIT_METHOD))
+					.New(AST.Name(CONTEXT_INIT_METHOD))
 						.Partial();
 
 			foreach (var body in ctors)
@@ -86,9 +86,9 @@ namespace LinqToDB.CodeGen.DataModel
 				// InitDataContext(); // partial method for custom initialization
 
 				if (initSchemasMethodName != null)
-					body.Append(_code.Call(contextBuilder.Type.This, initSchemasMethodName));
+					body.Append(AST.Call(contextBuilder.Type.This, initSchemasMethodName));
 
-				body.Append(_code.Call(contextBuilder.Type.This, initDataContext.Method.Name));
+				body.Append(AST.Call(contextBuilder.Type.This, initDataContext.Method.Name));
 			}
 		}
 	}

@@ -1,22 +1,30 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Base class for elements with custom attributes.
 	/// </summary>
 	public abstract class AttributeOwner : ICodeElement
 	{
-		protected AttributeOwner(List<CodeAttribute>? customAttributes)
+		private readonly List<CodeAttribute> _customAttributes;
+
+		protected AttributeOwner(IEnumerable<CodeAttribute>? customAttributes)
 		{
-			CustomAttributes = customAttributes ?? new ();
+			_customAttributes = new (customAttributes ?? Array.Empty<CodeAttribute>());
 		}
 
 		/// <summary>
 		/// Custom attributes.
 		/// </summary>
-		public          List<CodeAttribute> CustomAttributes { get; set; }
+		public IReadOnlyList<CodeAttribute> CustomAttributes => _customAttributes;
 
 		public abstract CodeElementType     ElementType      { get; }
+
+		internal void AddAttribute(CodeAttribute attribute)
+		{
+			_customAttributes.Add(attribute);
+		}
 	}
 }

@@ -1,20 +1,34 @@
-﻿using LinqToDB.CodeGen.Model;
+﻿using LinqToDB.CodeModel;
 
-namespace LinqToDB.CodeGen.DataModel
+namespace LinqToDB.DataModel
 {
-	public class ParameterModel
+	/// <summary>
+	/// Contains method (including constructors and lambdas) parameter basic attributes.
+	/// </summary>
+	public sealed class ParameterModel
 	{
-		public ParameterModel(string name, IType type, ParameterDirection direction)
+		public ParameterModel(string name, IType type, CodeParameterDirection direction)
 		{
-			Name = name;
-			Type = type;
+			Name      = name;
+			Type      = type;
 			Direction = direction;
 		}
-		public string Name { get; set; }
-		public IType Type { get; set; }
-		
-		public string? Description { get; set; }
 
-		public ParameterDirection Direction { get; set; }
+		/// <summary>
+		/// Gets or sets parameter name.
+		/// </summary>
+		public string                 Name        { get; set; }
+		/// <summary>
+		/// Gets or sets parameter type.
+		/// </summary>
+		public IType                  Type        { get; set; }
+		/// <summary>
+		/// Gets or sets xml-doc comment text for parameter.
+		/// </summary>
+		public string?                Description { get; set; }
+		/// <summary>
+		/// Gets or sets parameter direction.
+		/// </summary>
+		public CodeParameterDirection Direction   { get; set; }
 	}
 }

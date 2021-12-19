@@ -461,37 +461,37 @@ namespace Tests.Common
 			Assert.AreEqual(null, ConvertTo<int?>.From((Enum15?)null));
 		}
 
-		[Test]
-		public void NullableParameterInOperatorConvert()
-		{
-			var (convertFromDecimalLambdaExpression1, convertFromDecimalLambdaExpression2, b1)
-				= ConvertBuilder.GetConverter(null, typeof(decimal), typeof(CustomMoneyType));
+		// TODO: reenable without internals access
+		//[Test]
+		//public void NullableParameterInOperatorConvert()
+		//{
+		//	var (convertFromDecimalLambdaExpression1, convertFromDecimalLambdaExpression2, b1)
+		//		= ConvertBuilder.GetConverter(null, typeof(decimal), typeof(CustomMoneyType));
 
-			var convertFromDecimalFunc1 = (Func<decimal, CustomMoneyType>)convertFromDecimalLambdaExpression1.CompileExpression();
-			var convertFromDecimalFunc2 = (Func<decimal, CustomMoneyType>)convertFromDecimalLambdaExpression2!.CompileExpression();
+		//	var convertFromDecimalFunc1 = (Func<decimal, CustomMoneyType>)convertFromDecimalLambdaExpression1.CompileExpression();
+		//	var convertFromDecimalFunc2 = (Func<decimal, CustomMoneyType>)convertFromDecimalLambdaExpression2!.CompileExpression();
 
-			Assert.AreEqual(new CustomMoneyType { Amount = 1.11m }, convertFromDecimalFunc1(1.11m));
-			Assert.AreEqual(new CustomMoneyType { Amount = 1.11m }, convertFromDecimalFunc2(1.11m));
+		//	Assert.AreEqual(new CustomMoneyType { Amount = 1.11m }, convertFromDecimalFunc1(1.11m));
+		//	Assert.AreEqual(new CustomMoneyType { Amount = 1.11m }, convertFromDecimalFunc2(1.11m));
 
-			var (convertFromNullableDecimalLambdaExpression1, convertFromNullableDecimalLambdaExpression2, b2)
-				= ConvertBuilder.GetConverter(null, typeof(decimal?), typeof(CustomMoneyType));
+		//	var (convertFromNullableDecimalLambdaExpression1, convertFromNullableDecimalLambdaExpression2, b2)
+		//		= ConvertBuilder.GetConverter(null, typeof(decimal?), typeof(CustomMoneyType));
 
-			var convertFromNullableDecimalFunc1 = (Func<decimal?, CustomMoneyType>)convertFromNullableDecimalLambdaExpression1.CompileExpression();
-			var convertFromNullableDecimalFunc2 = (Func<decimal?, CustomMoneyType>)convertFromNullableDecimalLambdaExpression2!.CompileExpression();
+		//	var convertFromNullableDecimalFunc1 = (Func<decimal?, CustomMoneyType>)convertFromNullableDecimalLambdaExpression1.CompileExpression();
+		//	var convertFromNullableDecimalFunc2 = (Func<decimal?, CustomMoneyType>)convertFromNullableDecimalLambdaExpression2!.CompileExpression();
 
-			Assert.AreEqual(new CustomMoneyType { Amount = 1.11m }, convertFromNullableDecimalFunc1(1.11m));
-			Assert.AreEqual(new CustomMoneyType { Amount = 1.11m }, convertFromNullableDecimalFunc2(1.11m));
+		//	Assert.AreEqual(new CustomMoneyType { Amount = 1.11m }, convertFromNullableDecimalFunc1(1.11m));
+		//	Assert.AreEqual(new CustomMoneyType { Amount = 1.11m }, convertFromNullableDecimalFunc2(1.11m));
 
-			Assert.AreEqual(new CustomMoneyType { Amount = null }, convertFromNullableDecimalFunc1(null));
-			Assert.AreEqual(new CustomMoneyType { Amount = null }, convertFromNullableDecimalFunc2(null));
-		}
+		//	Assert.AreEqual(new CustomMoneyType { Amount = null }, convertFromNullableDecimalFunc1(null));
+		//	Assert.AreEqual(new CustomMoneyType { Amount = null }, convertFromNullableDecimalFunc2(null));
+		//}
 
 		private struct CustomMoneyType
 		{
 			public decimal? Amount;
 
-			public static explicit operator CustomMoneyType(decimal? amount) =>
-				new CustomMoneyType() { Amount = amount };
+			public static explicit operator CustomMoneyType(decimal? amount) => new () { Amount = amount };
 		}
 	}
 }

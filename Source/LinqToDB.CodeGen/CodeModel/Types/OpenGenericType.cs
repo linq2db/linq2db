@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Implementation of open-generic type.
 	/// </summary>
-	public class OpenGenericType : RegularType
+	internal sealed class OpenGenericType : RegularType
 	{
 		private readonly int _size;
 

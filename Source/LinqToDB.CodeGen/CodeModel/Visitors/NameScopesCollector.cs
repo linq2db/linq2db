@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System;
 using System.Diagnostics.CodeAnalysis;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// This visitor inspects code model and collect two collections:
@@ -13,7 +13,7 @@ namespace LinqToDB.CodeGen.Model
 	/// </list>
 	/// Those collections used to detect and resolve name conflicts.
 	/// </summary>
-	public class NameScopesCollector : NoopCodeModelVisitor
+	internal sealed class NameScopesCollector : NoopCodeModelVisitor
 	{
 		private readonly ILanguageProvider _languageProvider;
 
@@ -31,8 +31,8 @@ namespace LinqToDB.CodeGen.Model
 		public NameScopesCollector(ILanguageProvider languageProvider)
 		{
 			_languageProvider  = languageProvider;
-			_nameScopes        = new Dictionary<IEnumerable<CodeIdentifier>, ISet<CodeIdentifier>>(_languageProvider.FullNameEqualityComparer);
-			_typesNamespaces   = new Dictionary<CodeIdentifier, ISet<IEnumerable<CodeIdentifier>>>(_languageProvider.IdentifierEqualityComparer);
+			_nameScopes        = new (_languageProvider.FullNameEqualityComparer);
+			_typesNamespaces   = new (_languageProvider.IdentifierEqualityComparer);
 
 			SetNewScope(Array.Empty<CodeIdentifier>());
 		}

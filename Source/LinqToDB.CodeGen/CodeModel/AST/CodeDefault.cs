@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Default value expression.
@@ -25,8 +25,7 @@
 		/// </summary>
 		public bool          TargetTyped { get; }
 
-		IType ICodeExpression.Type => Type.Type;
-
-		CodeElementType ICodeElement.ElementType => CodeElementType.Default;
+		IType           ICodeExpression.Type        => Type.Type;
+		CodeElementType ICodeElement   .ElementType => CodeElementType.Default;
 	}
 }

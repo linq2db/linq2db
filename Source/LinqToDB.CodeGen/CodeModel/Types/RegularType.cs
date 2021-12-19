@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Implementation of non-generic type.
 	/// </summary>
-	public class RegularType : IType
+	internal class RegularType : IType
 	{
 		private readonly bool                           _nullable;
 		private readonly bool                           _valueType;

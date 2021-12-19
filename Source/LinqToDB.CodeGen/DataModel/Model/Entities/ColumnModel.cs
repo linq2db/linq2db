@@ -1,8 +1,11 @@
-﻿using LinqToDB.CodeGen.Metadata;
+﻿using LinqToDB.Metadata;
 
-namespace LinqToDB.CodeGen.DataModel
+namespace LinqToDB.DataModel
 {
-	public class ColumnModel
+	/// <summary>
+	/// Entity column model.
+	/// </summary>
+	public sealed class ColumnModel
 	{
 		public ColumnModel(ColumnMetadata metadata, PropertyModel property)
 		{
@@ -10,8 +13,13 @@ namespace LinqToDB.CodeGen.DataModel
 			Property = property;
 		}
 
+		/// <summary>
+		/// Gets or sets column mapping metadata.
+		/// </summary>
 		public ColumnMetadata Metadata { get; set; }
-
-		public PropertyModel Property { get; set; }
+		/// <summary>
+		/// Gets or sets code property attributes for column.
+		/// </summary>
+		public PropertyModel  Property { get; set; }
 	}
 }

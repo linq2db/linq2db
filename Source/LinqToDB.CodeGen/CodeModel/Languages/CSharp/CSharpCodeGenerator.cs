@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Code generation visitor for C# language.
 	/// </summary>
-	internal class CSharpCodeGenerator : CodeGenerationVisitor<CSharpCodeGenerator>
+	internal sealed class CSharpCodeGenerator : CodeGenerationVisitor<CSharpCodeGenerator>
 	{
 		/// <summary>
 		/// Code fragments for binary operators.
@@ -240,9 +240,9 @@ namespace LinqToDB.CodeGen.Model
 						attribute.NamedParameters,
 						namedParam =>
 						{
-							Visit(namedParam.property);
+							Visit(namedParam.Property);
 							Write(" = ");
-							Visit(namedParam.value);
+							Visit(namedParam.Value);
 						},
 						", ",
 						false);
@@ -317,9 +317,9 @@ namespace LinqToDB.CodeGen.Model
 
 		protected override void Visit(CodeParameter parameter)
 		{
-			if (parameter.Direction == ParameterDirection.Ref)
+			if (parameter.Direction == CodeParameterDirection.Ref)
 				Write("ref ");
-			else if (parameter.Direction == ParameterDirection.Out)
+			else if (parameter.Direction == CodeParameterDirection.Out)
 				Write("out ");
 
 			Visit(parameter.Type);
@@ -706,7 +706,7 @@ namespace LinqToDB.CodeGen.Model
 				Visit(field.Initializer);
 			}
 
-			// TODO: add NRT suppression initilizer support ( == null!)
+			// TODO: add NRT suppression initializer support ( == null!)
 
 			WriteLine(';');
 		}
@@ -904,7 +904,7 @@ namespace LinqToDB.CodeGen.Model
 				throw new InvalidOperationException($"Invalid custom attribute type {attribute.Type.Type} ({attribute.Type.Type.Kind})");
 
 			if (attribute.Type.Type.Name.Name.EndsWith("Attribute"))
-				newTypeName = new CodeIdentifier(attribute.Type.Type.Name.Name.Substring(0, attribute.Type.Type.Name.Name.Length - 9));
+				newTypeName = new CodeIdentifier(attribute.Type.Type.Name.Name.Substring(0, attribute.Type.Type.Name.Name.Length - 9), true);
 
 			RenderType(attribute.Type.Type, newTypeName, true);
 		}
@@ -1328,7 +1328,7 @@ namespace LinqToDB.CodeGen.Model
 		/// <typeparam name="T">Attributes owner type.</typeparam>
 		/// <param name="owners">Attributes owners.</param>
 		/// <returns>Array of string with each string containing attributes code for corresponding attributes owner.</returns>
-		private IReadOnlyList<string> BuildAttributesAsTable<T>(List<T> owners)
+		private IReadOnlyList<string> BuildAttributesAsTable<T>(IReadOnlyCollection<T> owners)
 			where T : AttributeOwner
 		{
 			var tableBuilder = new TableLayoutBuilder();
@@ -1415,7 +1415,7 @@ namespace LinqToDB.CodeGen.Model
 		/// Generate code for property group using 'table' layout.
 		/// </summary>
 		/// <param name="properties">Property group.</param>
-		private void WritePropertiesAsTable(List<CodeProperty> properties)
+		private void WritePropertiesAsTable(IReadOnlyList<CodeProperty> properties)
 		{
 			if (properties.Count == 0)
 				return;

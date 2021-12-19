@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Group of constructors.
 	/// </summary>
-	public class ConstructorGroup : MemberGroup<CodeConstructor>
+	public sealed class ConstructorGroup : MemberGroup<CodeConstructor>
 	{
-		public ConstructorGroup(List<CodeConstructor>? members, CodeClass owner)
+		public ConstructorGroup(IEnumerable<CodeConstructor>? members, CodeClass owner)
 			: base(members)
 		{
 			Class = owner;
@@ -27,9 +27,7 @@ namespace LinqToDB.CodeGen.Model
 
 		public ConstructorBuilder New()
 		{
-			var ctor = new CodeConstructor(Class);
-			Members.Add(ctor);
-			return new ConstructorBuilder(ctor);
+			return new ConstructorBuilder(AddMember(new CodeConstructor(Class)));
 		}
 	}
 }

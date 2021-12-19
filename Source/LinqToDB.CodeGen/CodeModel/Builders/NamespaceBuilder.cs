@@ -1,11 +1,11 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// <see cref="CodeNamespace"/> object builder.
 	/// </summary>
-	public class NamespaceBuilder
+	public sealed class NamespaceBuilder
 	{
-		public NamespaceBuilder(CodeNamespace @namespace)
+		internal NamespaceBuilder(CodeNamespace @namespace)
 		{
 			Namespace = @namespace;
 		}
@@ -22,7 +22,7 @@
 		public ClassGroup Classes()
 		{
 			var group = new ClassGroup(Namespace);
-			Namespace.Members.Add(group);
+			Namespace.AddGroup(group);
 			return group;
 		}
 	}

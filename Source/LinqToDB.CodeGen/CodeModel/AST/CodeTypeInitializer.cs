@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Type initializer (static constructor).
@@ -8,12 +8,12 @@ namespace LinqToDB.CodeGen.Model
 	public sealed class CodeTypeInitializer : MethodBase
 	{
 		internal CodeTypeInitializer(
-			List<CodeAttribute>? customAttributes,
-			Modifiers            attributes,
-			CodeBlock?           body,
-			CodeXmlComment?      xmlDoc,
-			List<CodeParameter>? parameters,
-			CodeClass            type)
+			IEnumerable<CodeAttribute>? customAttributes,
+			Modifiers                   attributes,
+			CodeBlock?                  body,
+			CodeXmlComment?             xmlDoc,
+			IEnumerable<CodeParameter>? parameters,
+			CodeClass                   type)
 			: base(customAttributes, attributes, body, xmlDoc, parameters)
 		{
 			Type = type;

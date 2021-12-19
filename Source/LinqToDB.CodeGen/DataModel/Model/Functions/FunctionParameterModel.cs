@@ -1,20 +1,36 @@
-﻿using LinqToDB.CodeGen.Schema;
+﻿using LinqToDB.Schema;
 
-namespace LinqToDB.CodeGen.DataModel
+namespace LinqToDB.DataModel
 {
-	public class FunctionParameterModel
+	/// <summary>
+	/// Function or procedure parameter descriptor (also for return parameter).
+	/// </summary>
+	public sealed class FunctionParameterModel
 	{
 		public FunctionParameterModel(ParameterModel parameter)
 		{
 			Parameter = parameter;
 		}
 
-		public ParameterModel Parameter { get; set; }
-
-		public string? DbName { get; set; }
-
-		public DatabaseType? Type { get; set; }
-		public DataType? DataType { get; set; }
-		public bool IsNullable { get; set; }
+		/// <summary>
+		/// Gets or sets method parameter descriptor.
+		/// </summary>
+		public ParameterModel Parameter  { get; set; }
+		/// <summary>
+		/// Gets or sets parameter's name in database.
+		/// </summary>
+		public string?        DbName     { get; set; }
+		/// <summary>
+		/// Gets or sets parameter's database type.
+		/// </summary>
+		public DatabaseType?  Type       { get; set; }
+		/// <summary>
+		/// Gets or sets parameter's <see cref="LinqToDB.DataType"/> enum value.
+		/// </summary>
+		public DataType?      DataType   { get; set; }
+		/// <summary>
+		/// Gets or sets parameter nullability.
+		/// </summary>
+		public bool           IsNullable { get; set; }
 	}
 }

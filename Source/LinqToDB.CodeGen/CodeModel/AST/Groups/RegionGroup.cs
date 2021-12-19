@@ -1,14 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Group of regions.
 	/// </summary>
-	public class RegionGroup : MemberGroup<CodeRegion>
+	public sealed class RegionGroup : MemberGroup<CodeRegion>
 	{
-		public RegionGroup(List<CodeRegion>? members, CodeClass @class)
+		public RegionGroup(IEnumerable<CodeRegion>? members, CodeClass @class)
 			: base(members)
 		{
 			OwnerType = @class;
@@ -33,11 +33,9 @@ namespace LinqToDB.CodeGen.Model
 		/// <returns>New region builder class.</returns>
 		public RegionBuilder New(string name)
 		{
-			var region = new CodeRegion(OwnerType, name);
-			Members.Add(region);
-			return new RegionBuilder(region);
+			return new RegionBuilder(AddMember(new CodeRegion(OwnerType, name)));
 		}
 
-		public override bool IsEmpty => Members.All(m => m.IsEmpty());
+		public override bool IsEmpty => Members.All(static m => m.IsEmpty());
 	}
 }

@@ -3,6 +3,8 @@
 
 	<PropertyGroup>
 		<AssemblyName>Tests.T4</AssemblyName>
+
+		<NoWarn>;(NoWarn);618</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>

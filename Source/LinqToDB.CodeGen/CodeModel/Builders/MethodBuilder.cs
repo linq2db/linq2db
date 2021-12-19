@@ -1,9 +1,9 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// <see cref="CodeMethod"/> object builder.
 	/// </summary>
-	public class MethodBuilder : MethodBaseBuilder<MethodBuilder, CodeMethod>
+	public sealed class MethodBuilder : MethodBaseBuilder<MethodBuilder, CodeMethod>
 	{
 		internal MethodBuilder(CodeMethod method)
 			: base(method)
@@ -37,7 +37,7 @@
 		/// <returns>Method builder instance.</returns>
 		public MethodBuilder TypeParameter(IType typeParameter)
 		{
-			Method.TypeParameters.Add(new(typeParameter));
+			Method.AddGenericParameter(new(typeParameter));
 			return this;
 		}
 

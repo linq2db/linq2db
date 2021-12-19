@@ -1,16 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Namespace declaration.
 	/// </summary>
 	public sealed class CodeNamespace : ITopLevelElement
 	{
-		internal CodeNamespace(IReadOnlyList<CodeIdentifier> name, List<IMemberGroup>? members)
+		private readonly List<IMemberGroup> _members;
+
+		internal CodeNamespace(IReadOnlyList<CodeIdentifier> name, IEnumerable<IMemberGroup>? members)
 		{
-			Name    = name;
-			Members = members ?? new ();
+			Name     = name;
+			_members = new (members ?? Array.Empty<IMemberGroup>());
 		}
 
 		public CodeNamespace(IReadOnlyList<CodeIdentifier> name)
@@ -25,8 +28,13 @@ namespace LinqToDB.CodeGen.Model
 		/// <summary>
 		/// Namespace members (in groups).
 		/// </summary>
-		public List<IMemberGroup>            Members { get; set; }
+		public IReadOnlyList<IMemberGroup>   Members => _members;
 
 		CodeElementType ICodeElement.ElementType => CodeElementType.Namespace;
+
+		internal void AddGroup(IMemberGroup group)
+		{
+			_members.Add(group);
+		}
 	}
 }

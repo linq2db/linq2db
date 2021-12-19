@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
 
-namespace LinqToDB.CodeGen
+namespace LinqToDB
 {
 	/// <summary>
-	/// Contains various text helpers.
+	/// Contains text helpers.
 	/// </summary>
 	internal static class StringUtilities
 	{
@@ -13,8 +13,11 @@ namespace LinqToDB.CodeGen
 		/// </summary>
 		/// <param name="str">String to split.</param>
 		/// <returns>Sequence of code point + unicode category for provided string.</returns>
-		public static IEnumerable<(string character, UnicodeCategory category)> EnumerateCharacters(this string str)
+		public static IEnumerable<(string codePoint, UnicodeCategory category)> EnumerateCharacters(this string str)
 		{
+			// currently we ignore existense of modifiers and work with code points directly
+			// hardly it will change in future, as people should use some common sense when naming things
+			// or be prepared to suffer
 			for (var i = 0; i < str.Length; i++)
 			{
 				var cat             = CharUnicodeInfo.GetUnicodeCategory(str, i);

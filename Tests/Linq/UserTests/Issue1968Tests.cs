@@ -21,7 +21,7 @@ namespace Tests.UserTests
 			[Column] public string? Name { get; set; }
 			[Column] public string? Location { get; set; }
 
-			[Association(ThisKey = "Id", OtherKey = nameof(Faculty.UniversityId), CanBeNull = true, Relationship = Relationship.OneToMany, IsBackReference = true)]
+			[Association(ThisKey = "Id", OtherKey = nameof(Faculty.UniversityId), CanBeNull = true)]
 			public ICollection<Faculty> Faculties { get; set; } = null!;
 
 			public static Expression<Func<University, IDataContext, IQueryable<Subject>>> Expression()
@@ -44,10 +44,10 @@ namespace Tests.UserTests
 			[Column] public int Contract { get; set; }
 			[Column] public int? UniversityId { get; set; }
 
-			[Association(ThisKey = "UniversityId", OtherKey = "Id", CanBeNull = true, Relationship = Relationship.ManyToOne, BackReferenceName = "Faculties")]
+			[Association(ThisKey = "UniversityId", OtherKey = "Id", CanBeNull = true)]
 			public University? University { get; set; }
 
-			[Association(ThisKey = "Id", OtherKey = "FacultyId", CanBeNull = true, Relationship = Relationship.OneToOne, IsBackReference = true)]
+			[Association(ThisKey = "Id", OtherKey = "FacultyId", CanBeNull = true)]
 			public Subject? Subject { get; set; }
 		}
 
@@ -59,7 +59,7 @@ namespace Tests.UserTests
 			[Column] public string? ThirdSubject { get; set; }
 			[Column] public int? FacultyId { get; set; }
 
-			[Association(ThisKey = "FacultyId", OtherKey = "Id", CanBeNull = false, Relationship = Relationship.ManyToOne, BackReferenceName = "Subjects")]
+			[Association(ThisKey = "FacultyId", OtherKey = "Id", CanBeNull = false)]
 			public Faculty Faculty { get; set; } = null!;
 		}
 

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Type descriptor interface.
@@ -48,6 +48,7 @@ namespace LinqToDB.CodeGen.Model
 		/// </summary>
 		IReadOnlyList<int?>?           ArraySizes          { get; }
 
+		// unused currently
 		/// <summary>
 		/// Number of type arguments for open generic type.
 		/// </summary>
@@ -57,12 +58,6 @@ namespace LinqToDB.CodeGen.Model
 		/// Type arguments for generic type.
 		/// </summary>
 		IReadOnlyList<IType>?          TypeArguments       { get; }
-
-		// TODO: needed?
-		/// <summary>
-		/// Indicates wether type is imported or declared in current model.
-		/// </summary>
-		bool                           External            { get; }
 
 		/// <summary>
 		/// Apply nullability flag to current type.

@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Method call statement.
@@ -10,22 +9,22 @@ namespace LinqToDB.CodeGen.Model
 	public sealed class CodeCallStatement : CodeCallBase, ICodeStatement
 	{
 		internal CodeCallStatement(
-			bool                           extension,
-			ICodeExpression                callee,
-			CodeIdentifier                 method,
-			IReadOnlyList<CodeTypeToken>   genericArguments,
-			IReadOnlyList<ICodeExpression> parameters)
+			bool                         extension,
+			ICodeExpression              callee,
+			CodeIdentifier               method,
+			IEnumerable<CodeTypeToken>   genericArguments,
+			IEnumerable<ICodeExpression> parameters)
 			: base(extension, callee, method, genericArguments, parameters)
 		{
 		}
 
 		public CodeCallStatement(
-			bool                           extension,
-			ICodeExpression                callee,
-			CodeIdentifier                 method,
-			IReadOnlyList<IType>           genericArguments,
-			IReadOnlyList<ICodeExpression> parameters)
-			: base(extension, callee, method, genericArguments.Count > 0 ? genericArguments.Select(t => new CodeTypeToken(t)).ToArray() : Array.Empty<CodeTypeToken>(), parameters)
+			bool                         extension,
+			ICodeExpression              callee,
+			CodeIdentifier               method,
+			IEnumerable<IType>           genericArguments,
+			IEnumerable<ICodeExpression> parameters)
+			: base(extension, callee, method, genericArguments.Select(static t => new CodeTypeToken(t)), parameters)
 		{
 		}
 

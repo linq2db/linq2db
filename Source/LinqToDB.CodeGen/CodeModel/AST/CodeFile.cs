@@ -2,8 +2,10 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
+using System;
+using LinqToDB.CodeGen;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// File-level code unit.
@@ -11,13 +13,15 @@ namespace LinqToDB.CodeGen.Model
 	public sealed class CodeFile : CodeElementList<ITopLevelElement>, ICodeElement
 	{
 		private string _name;
+		private readonly List<CodeComment> _header;
+		private readonly List<CodeImport>  _imports;
 
-		public CodeFile(string fileName, List<CodeComment>? header, List<CodeImport>? imports, List<ITopLevelElement>? items)
+		public CodeFile(string fileName, IEnumerable<CodeComment>? header, IEnumerable<CodeImport>? imports, IEnumerable<ITopLevelElement>? items)
 			: base(items)
 		{
 			FileName = fileName;
-			Header   = header  ?? new();
-			Imports  = imports ?? new();
+			_header  = new (header  ?? Array.Empty<CodeComment>());
+			_imports = new (imports ?? Array.Empty<CodeImport>());
 		}
 
 		public CodeFile(string fileName)
@@ -32,21 +36,31 @@ namespace LinqToDB.CodeGen.Model
 		{
 			get => _name;
 			[MemberNotNull(nameof(_name))]
-			set => _name = NormalizeName(value);
+			set => _name = NormalizeFileName(value);
 		}
 
 		/// <summary>
 		/// File header coomment(s).
 		/// </summary>
-		public List<CodeComment> Header { get; }
+		public IReadOnlyList<CodeComment> Header => _header;
 		/// <summary>
 		/// File imports.
 		/// </summary>
-		public List<CodeImport> Imports { get; }
+		public IReadOnlyList<CodeImport> Imports => _imports;
 
 		CodeElementType ICodeElement.ElementType => CodeElementType.File;
 
-		private string NormalizeName(string name)
+		internal void AddHeader(CodeComment comment)
+		{
+			_header.Add(comment);
+		}
+
+		internal void AddImport(CodeImport import)
+		{
+			_imports.Add(import);
+		}
+
+		private static string NormalizeFileName(string name)
 		{
 			// for file name normalization we use simple and strict logic where we just filter out
 			// all non-digit and non-letter characters plus allow underscore and dot characters

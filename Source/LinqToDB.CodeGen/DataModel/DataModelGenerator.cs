@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using LinqToDB.CodeGen.CodeGeneration;
-using LinqToDB.CodeGen.Model;
+using LinqToDB.CodeModel;
+using LinqToDB.Metadata;
 using LinqToDB.SqlProvider;
 
-namespace LinqToDB.CodeGen.DataModel
+namespace LinqToDB.DataModel
 {
 	/// <summary>
 	/// Implements code model AST generation for database model and produce AST for:
@@ -16,10 +16,8 @@ namespace LinqToDB.CodeGen.DataModel
 	/// <item>classes for non-default schemas</item>
 	/// </list>
 	/// </summary>
-	public partial class DataModelGenerator
+	public sealed partial class DataModelGenerator
 	{
-		// AST generation helpers
-		private readonly CodeBuilder                 _code;
 		// current data model
 		private readonly DatabaseModel               _dataModel;
 		// language-specific services
@@ -65,9 +63,9 @@ namespace LinqToDB.CodeGen.DataModel
 			_metadataBuilder         = metadataBuilder;
 			_parameterNameNormalizer = parameterNameNormalizer;
 			_sqlBuilder              = sqlBuilder;
-
-			_code = new CodeBuilder(languageProvider);
 		}
+
+		private CodeBuilder AST => _languageProvider.ASTBuilder;
 
 		/// <summary>
 		/// Performs conversion of data model to AST.
@@ -110,7 +108,7 @@ namespace LinqToDB.CodeGen.DataModel
 
 				initSchemasMethod = schemasRegion
 					.Methods(false)
-						.New(_code.Name(SCHEMAS_INIT_METHOD))
+						.New(AST.Name(SCHEMAS_INIT_METHOD))
 							.Public();
 
 				contextSchemaProperties = schemasRegion.Properties(true);
@@ -142,16 +140,16 @@ namespace LinqToDB.CodeGen.DataModel
 
 				// add schema reference to data context class
 				var schemaProp = contextSchemaProperties!
-					.New(_code.Name(schema.DataContextPropertyName), schemaContextType)
+					.New(AST.Name(schema.DataContextPropertyName), schemaContextType)
 						.Public()
 						.Default(true);
 
 				initSchemasMethod!
 					.Body()
 						.Append(
-							_code.Assign(
-								_code.Member(dataContextBuilder.Type.This, schemaProp.Property),
-								_code.New(schemaContextType, dataContextBuilder.Type.This)));
+							AST.Assign(
+								AST.Member(dataContextBuilder.Type.This, schemaProp.Property.Reference),
+								AST.New(schemaContextType, dataContextBuilder.Type.This)));
 			}
 			
 			// generate associations for all entities after all entity classes generated for both
@@ -166,7 +164,7 @@ namespace LinqToDB.CodeGen.DataModel
 			{
 				return extensionsClass ??= dataContextBuilder
 					.Group
-						.New(_code.Name(EXTENSIONS_CLASS))
+						.New(AST.Name(EXTENSIONS_CLASS))
 							.Public()
 							.Static()
 							.Partial();

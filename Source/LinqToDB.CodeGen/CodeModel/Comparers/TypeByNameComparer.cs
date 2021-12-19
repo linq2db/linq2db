@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Compare types by name (including namespace and parent type names) e.g. in name conflict resolution logic.
 	/// Should be used only for types that are visible in global namespace like regular and generic types,
 	/// which means it cannot be used with types without own names like arrays.
 	/// </summary>
-	internal class TypeByNameComparer : IEqualityComparer<IType>
+	internal sealed class TypeByNameComparer : IEqualityComparer<IType>
 	{
 		private readonly IEqualityComparer<CodeIdentifier> _identifierComparer;
 

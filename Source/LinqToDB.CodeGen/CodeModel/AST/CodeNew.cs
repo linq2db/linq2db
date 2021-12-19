@@ -1,20 +1,22 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// New object instantiation expression.
 	/// </summary>
 	public sealed class CodeNew : ICodeExpression
 	{
-		public CodeNew(CodeTypeToken type, IReadOnlyList<ICodeExpression> parameters, IReadOnlyList<CodeAssignmentStatement> initializers)
+		public CodeNew(CodeTypeToken type, IEnumerable<ICodeExpression> parameters, IEnumerable<CodeAssignmentStatement> initializers)
 		{
-			Type         = type;
-			Parameters   = parameters;
-			Initializers = initializers;
+			Type          = type;
+			Parameters   = parameters  .ToArray() ?? Array.Empty<ICodeExpression>();
+			Initializers = initializers.ToArray() ?? Array.Empty<CodeAssignmentStatement>();
 		}
 
-		public CodeNew(IType type, IReadOnlyList<ICodeExpression> parameters, IReadOnlyList<CodeAssignmentStatement> initializers)
+		public CodeNew(IType type, IEnumerable<ICodeExpression> parameters, IEnumerable<CodeAssignmentStatement> initializers)
 			: this(new CodeTypeToken(type), parameters, initializers)
 		{
 		}
@@ -32,8 +34,7 @@ namespace LinqToDB.CodeGen.Model
 		/// </summary>
 		public IReadOnlyList<CodeAssignmentStatement> Initializers { get; }
 
-		IType ICodeExpression.Type => Type.Type;
-
-		CodeElementType ICodeElement.ElementType => CodeElementType.New;
+		IType           ICodeExpression.Type        => Type.Type;
+		CodeElementType ICodeElement   .ElementType => CodeElementType.New;
 	}
 }

@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// <c>nameof(...)</c> expression.
@@ -16,8 +16,7 @@
 		/// </summary>
 		public ICodeExpression Expression { get; }
 
-		IType ICodeExpression.Type => WellKnownTypes.System.String;
-
-		CodeElementType ICodeElement.ElementType => CodeElementType.NameOf;
+		IType           ICodeExpression.Type        => WellKnownTypes.System.String;
+		CodeElementType ICodeElement   .ElementType => CodeElementType.NameOf;
 	}
 }

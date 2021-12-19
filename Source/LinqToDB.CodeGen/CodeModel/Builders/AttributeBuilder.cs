@@ -1,9 +1,9 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// <see cref="CodeAttribute"/> custom attribute object builder.
 	/// </summary>
-	public class AttributeBuilder
+	public sealed class AttributeBuilder
 	{
 		internal AttributeBuilder(CodeAttribute attribute)
 		{
@@ -22,7 +22,7 @@
 		/// <returns>Builder instance.</returns>
 		public AttributeBuilder Parameter(ICodeExpression value)
 		{
-			Attribute.Parameters.Add(value);
+			Attribute.AddParameter(value);
 			return this;
 		}
 
@@ -34,7 +34,7 @@
 		/// <returns>Builder instance.</returns>
 		public AttributeBuilder Parameter(CodeIdentifier property, ICodeExpression value)
 		{
-			Attribute.NamedParameters.Add((property, value));
+			Attribute.AddNamedParameter(property, value);
 			return this;
 		}
 	}

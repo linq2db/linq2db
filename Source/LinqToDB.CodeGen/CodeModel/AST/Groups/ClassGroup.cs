@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Group of classes.
 	/// </summary>
-	public class ClassGroup : MemberGroup<CodeClass>, ITopLevelElement
+	public sealed class ClassGroup : MemberGroup<CodeClass>, ITopLevelElement
 	{
-		public ClassGroup(List<CodeClass>? members, ITopLevelElement? owner)
+		public ClassGroup(IEnumerable<CodeClass>? members, ITopLevelElement? owner)
 			: base(members)
 		{
 			Owner = owner;
@@ -38,9 +38,7 @@ namespace LinqToDB.CodeGen.Model
 			else
 				throw new InvalidOperationException();
 
-			Members.Add(@class);
-
-			return new ClassBuilder(@class, this);
+			return new ClassBuilder(AddMember(@class), this);
 		}
 	}
 }

@@ -1,9 +1,9 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// <see cref="CodeBlock"/> object builder.
 	/// </summary>
-	public class BlockBuilder
+	public sealed class BlockBuilder
 	{
 		internal BlockBuilder(CodeBlock block)
 		{

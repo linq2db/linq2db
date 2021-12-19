@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// <c>this</c> reference.
@@ -12,8 +12,7 @@
 
 		public CodeClass Class { get; }
 
-		IType ICodeExpression.Type => Class.Type;
-
-		CodeElementType ICodeElement.ElementType => CodeElementType.This;
+		IType           ICodeExpression.Type        => Class.Type;
+		CodeElementType ICodeElement   .ElementType => CodeElementType.This;
 	}
 }

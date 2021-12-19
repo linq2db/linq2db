@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using LinqToDB.CodeGen.Metadata;
-using LinqToDB.CodeGen.Model;
+using LinqToDB.CodeModel;
+using LinqToDB.Metadata;
 
-namespace LinqToDB.CodeGen.DataModel
+namespace LinqToDB.DataModel
 {
 	// Constains assiction generation code
 	// Associations could generated in two equivalent forms:
@@ -25,7 +25,7 @@ namespace LinqToDB.CodeGen.DataModel
 			// region in extensions class with association extension methods
 			RegionGroup? extensionsRegion            = null;
 
-			foreach (var association in _dataModel.Associations)
+			foreach (var association in _dataModel.DataContext.Associations)
 			{
 				BuildAssociation(
 					association,
@@ -83,7 +83,7 @@ namespace LinqToDB.CodeGen.DataModel
 			{
 				// for many-to-one assocations has collection type, defined by user preferences
 				if (_dataModel.AssociationCollectionAsArray)
-					tagetType = _code.ArrayType(tagetType, false);
+					tagetType = AST.ArrayType(tagetType, false);
 				else if (_dataModel.AssociationCollectionType != null)
 					tagetType = _dataModel.AssociationCollectionType.WithTypeArguments(tagetType);
 				else
@@ -181,23 +181,23 @@ namespace LinqToDB.CodeGen.DataModel
 
 			// we generate keys using nameof operator to get property name to have refactoring-friendly mappings
 			// (T4 always used strings here)
-			var separator = association.FromColumns.Length > 1 ? _code.Constant(",", true) : null;
+			var separator = association.FromColumns.Length > 1 ? AST.Constant(",", true) : null;
 			for (var i = 0; i < association.FromColumns.Length; i++)
 			{
 				if (i > 0)
 				{
 					// add comma separator
-					metadata.ThisKeyExpression  = _code.Add(metadata.ThisKeyExpression! , separator!);
-					metadata.OtherKeyExpression = _code.Add(metadata.OtherKeyExpression!, separator!);
+					metadata.ThisKeyExpression  = AST.Add(metadata.ThisKeyExpression! , separator!);
+					metadata.OtherKeyExpression = AST.Add(metadata.OtherKeyExpression!, separator!);
 				}
 
 				// generate nameof() expressions for current key column
-				var thisKey  = _code.NameOf(_code.Member(thisBuilder .Type.Type, _columnProperties[thisColumns [0]]));
-				var otherKey = _code.NameOf(_code.Member(otherBuilder.Type.Type, _columnProperties[otherColumns[0]]));
+				var thisKey  = AST.NameOf(AST.Member(thisBuilder .Type.Type, _columnProperties[thisColumns [0]].Reference));
+				var otherKey = AST.NameOf(AST.Member(otherBuilder.Type.Type, _columnProperties[otherColumns[0]].Reference));
 
 				// append column name to key
-				metadata.ThisKeyExpression  = metadata.ThisKeyExpression  == null ? thisKey  : _code.Add(metadata.ThisKeyExpression , thisKey);
-				metadata.OtherKeyExpression = metadata.OtherKeyExpression == null ? otherKey : _code.Add(metadata.OtherKeyExpression, thisKey);
+				metadata.ThisKeyExpression  = metadata.ThisKeyExpression  == null ? thisKey  : AST.Add(metadata.ThisKeyExpression , thisKey);
+				metadata.OtherKeyExpression = metadata.OtherKeyExpression == null ? otherKey : AST.Add(metadata.OtherKeyExpression, thisKey);
 			}
 		}
 
@@ -276,8 +276,8 @@ namespace LinqToDB.CodeGen.DataModel
 			_metadataBuilder.BuildAssociationMetadata(metadata, methodBuilder);
 
 			// build method parameters...
-			var thisParam = _code.Parameter(thisEntity.Type.Type, _code.Name(EXTENSIONS_ENTITY_THIS_PARAMETER), ParameterDirection.In);
-			var ctxParam  = _code.Parameter(WellKnownTypes.LinqToDB.IDataContext, _code.Name(EXTENSIONS_ENTITY_CONTEXT_PARAMETER), ParameterDirection.In);
+			var thisParam = AST.Parameter(thisEntity.Type.Type, AST.Name(EXTENSIONS_ENTITY_THIS_PARAMETER), CodeParameterDirection.In);
+			var ctxParam  = AST.Parameter(WellKnownTypes.LinqToDB.IDataContext, AST.Name(EXTENSIONS_ENTITY_CONTEXT_PARAMETER), CodeParameterDirection.In);
 
 			methodBuilder.Parameter(thisParam);
 			methodBuilder.Parameter(ctxParam);
@@ -289,10 +289,10 @@ namespace LinqToDB.CodeGen.DataModel
 				methodBuilder
 					.Body()
 						.Append(
-							_code.Throw(
-								_code.New(
+							AST.Throw(
+								AST.New(
 									WellKnownTypes.System.InvalidOperationException,
-									_code.Constant(EXCEPTION_QUERY_ONLY_ASSOCATION_CALL, true))));
+									AST.Constant(EXCEPTION_QUERY_ONLY_ASSOCATION_CALL, true))));
 			else
 			{
 				// generate association query for non-query invocation
@@ -302,7 +302,7 @@ namespace LinqToDB.CodeGen.DataModel
 				if (associationModel.ManyToOne && backReference)
 					methodBuilder.Returns(WellKnownTypes.System.Linq.IQueryable(resultEntity.Type.Type));
 
-				var lambdaParam = _code.LambdaParameter(_code.Name(EXTENSIONS_ASSOCIATION_FILTER_PARAMETER), resultEntity.Type.Type);
+				var lambdaParam = AST.LambdaParameter(AST.Name(EXTENSIONS_ASSOCIATION_FILTER_PARAMETER), resultEntity.Type.Type);
 
 				// generate assocation key columns filter, which compare
 				// `this` entity parameter columns with return table entity columns
@@ -316,24 +316,24 @@ namespace LinqToDB.CodeGen.DataModel
 					var fromColumn = _columnProperties[associationModel.FromColumns[i]];
 					var toColumn   = _columnProperties[associationModel.ToColumns[i]];
 
-					var cond = _code.Equal(
-						_code.Member(fromObject.Reference, fromColumn),
-						_code.Member(toObject.Reference  , toColumn  ));
+					var cond = AST.Equal(
+						AST.Member(fromObject.Reference, fromColumn.Reference),
+						AST.Member(toObject.Reference  , toColumn.Reference  ));
 
-					filter = filter == null ? cond : _code.And(filter, cond);
+					filter = filter == null ? cond : AST.And(filter, cond);
 				}
 
 				// generate filter lambda function
-				var filterLambda = _code
+				var filterLambda = AST
 					.Lambda(
 						WellKnownTypes.System.Linq.Expressions.Expression(
 							WellKnownTypes.System.Func(WellKnownTypes.System.Boolean, resultEntity.Type.Type)),
 						true)
 					.Parameter(lambdaParam);
-				filterLambda.Body().Append(_code.Return(filter!));
+				filterLambda.Body().Append(AST.Return(filter!));
 
 				// ctx.GetTable<ResultEntity>()
-				var body = _code.ExtCall(
+				var body = AST.ExtCall(
 						WellKnownTypes.LinqToDB.DataExtensions,
 						WellKnownTypes.LinqToDB.DataExtensions_GetTable,
 						WellKnownTypes.LinqToDB.ITable(resultEntity.Type.Type),
@@ -349,7 +349,7 @@ namespace LinqToDB.CodeGen.DataModel
 					// .First(t => t.PK == thisEntity.PK)
 					// or
 					// .FirstOrDefault(t => t.PK == thisEntity.PK)
-					body = _code.ExtCall(
+					body = AST.ExtCall(
 						WellKnownTypes.System.Linq.Queryable,
 						optional ? WellKnownTypes.System.Linq.Queryable_FirstOrDefault : WellKnownTypes.System.Linq.Queryable_First,
 						resultEntity.Type.Type.WithNullability(optional),
@@ -360,7 +360,7 @@ namespace LinqToDB.CodeGen.DataModel
 				else
 				{
 					// .Where(t => t.PK == thisEntity.PK)
-					body = _code.ExtCall(
+					body = AST.ExtCall(
 						WellKnownTypes.System.Linq.Queryable,
 						WellKnownTypes.System.Linq.Queryable_Where,
 						WellKnownTypes.System.Linq.IQueryable(resultEntity.Type.Type),
@@ -369,7 +369,7 @@ namespace LinqToDB.CodeGen.DataModel
 						filterLambda.Method);
 				}
 
-				methodBuilder.Body().Append(_code.Return(body));
+				methodBuilder.Body().Append(AST.Return(body));
 			}
 		}
 	}

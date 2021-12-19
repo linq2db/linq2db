@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Lambda method.
@@ -8,13 +8,13 @@ namespace LinqToDB.CodeGen.Model
 	public sealed class CodeLambda : MethodBase, ICodeExpression
 	{
 		public CodeLambda(
-			List<CodeAttribute>? customAttributes,
-			Modifiers            attributes,
-			CodeBlock?           body,
-			CodeXmlComment?      xmlDoc,
-			List<CodeParameter>? parameters,
-			IType                targetType,
-			bool                 canOmmitTypes)
+			IEnumerable<CodeAttribute>? customAttributes,
+			Modifiers                   attributes,
+			CodeBlock?                  body,
+			CodeXmlComment?             xmlDoc,
+			IEnumerable<CodeParameter>? parameters,
+			IType                       targetType,
+			bool                        canOmmitTypes)
 			: base(customAttributes, attributes, body, xmlDoc, parameters)
 		{
 			TargetType    = targetType;

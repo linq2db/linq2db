@@ -304,7 +304,7 @@ namespace LinqToDB
 		/// doesn't exists.
 		/// </summary>
 		/// <returns>Data connection.</returns>
-		internal DataConnection GetDataConnection()
+		public DataConnection GetDataConnection()
 		{
 			AssertDisposed();
 
@@ -341,12 +341,13 @@ namespace LinqToDB
 				throw new ObjectDisposedException(GetType().FullName);
 		}
 
+		// TODO: hide again? needs tests refactoring
 		/// <summary>
 		/// For active underlying connection, updates information about last executed query <see cref="LastQuery"/> and
 		/// releases connection, if it is not locked (<see cref="LockDbManagerCounter"/>)
 		/// and <see cref="KeepConnectionAlive"/> is <c>false</c>.
 		/// </summary>
-		internal void ReleaseQuery()
+		public void ReleaseQuery()
 		{
 			if (_dataConnection != null)
 			{
@@ -363,7 +364,8 @@ namespace LinqToDB
 			}
 		}
 
-		internal async Task ReleaseQueryAsync()
+		// TODO: hide again? needs tests refactoring
+		public async Task ReleaseQueryAsync()
 		{
 			if (_dataConnection != null)
 			{

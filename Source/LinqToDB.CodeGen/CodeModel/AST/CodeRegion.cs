@@ -1,17 +1,20 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Code region.
 	/// </summary>
 	public sealed class CodeRegion : ITopLevelElement, IGroupElement
 	{
-		internal CodeRegion(CodeClass ownerType, string name, List<IMemberGroup>? members)
+		private readonly List<IMemberGroup> _members;
+
+		internal CodeRegion(CodeClass ownerType, string name, IEnumerable<IMemberGroup>? members)
 		{
-			Type    = ownerType;
-			Name    = name;
-			Members = members ?? new ();
+			Type     = ownerType;
+			Name     = name;
+			_members = new (members ?? Array.Empty<IMemberGroup>());
 		}
 
 		public CodeRegion(CodeClass ownerType, string name)
@@ -22,15 +25,15 @@ namespace LinqToDB.CodeGen.Model
 		/// <summary>
 		/// Region name.
 		/// </summary>
-		public string             Name    { get; }
+		public string                      Name    { get; }
 		/// <summary>
 		/// Owner class in which region is declared.
 		/// </summary>
-		public CodeClass          Type    { get; }
+		public CodeClass                   Type    { get; }
 		/// <summary>
 		/// Region members (in groups).
 		/// </summary>
-		public List<IMemberGroup> Members { get; }
+		public IReadOnlyList<IMemberGroup> Members => _members;
 
 		CodeElementType ICodeElement.ElementType => CodeElementType.Region;
 
@@ -46,6 +49,11 @@ namespace LinqToDB.CodeGen.Model
 			}
 
 			return true;
+		}
+
+		internal void Add(IMemberGroup group)
+		{
+			_members.Add(group);
 		}
 	}
 }

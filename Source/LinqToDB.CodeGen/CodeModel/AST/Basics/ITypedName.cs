@@ -1,13 +1,16 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
+	/// <summary>
+	/// Represents code element, that have type and name (e.g. class field).
+	/// </summary>
 	public interface ITypedName
 	{
 		/// <summary>
-		/// Name.
+		/// Element name.
 		/// </summary>
 		CodeIdentifier Name { get; }
 		/// <summary>
-		/// Type.
+		/// Element type.
 		/// </summary>
 		CodeTypeToken  Type { get; }
 	}

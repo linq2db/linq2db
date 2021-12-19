@@ -2,37 +2,33 @@
 using System.Collections.Generic;
 using System.Globalization;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// C# language services provider implementation.
 	/// </summary>
-	internal class CSharpLanguageProvider : ILanguageProvider
+	internal sealed class CSharpLanguageProvider : ILanguageProvider
 	{
 		// 1573: Parameter ? has no matching param tag in the XML comment https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/compiler-messages/cs1573
 		// 1591: Missing XML comment for publicly visible type or member https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/compiler-messages/cs1591
 		private static readonly string[] _xmlDocWarnings = new [] {"1573", "1591" };
 
-		private readonly IReadOnlyDictionary<IType, string>             _aliasedTypes;
-		private readonly IEqualityComparer<CodeIdentifier>              _identifierEqualityComparer;
-		private readonly IComparer<CodeIdentifier>                      _identifierComparer;
-		private readonly IEqualityComparer<IEnumerable<CodeIdentifier>> _namespaceEqualityComparer;
-		private readonly IComparer<IEnumerable<CodeIdentifier>>         _namespaceComparer;
-		private readonly IEqualityComparer<IType>                       _typeEqualityComparerWithoutNRT;
-		private readonly IEqualityComparer<IType>                       _typeEqualityComparerWithoutNullability;
-		private readonly IEqualityComparer<IType>                       _typeEqualityComparerWithNRT;
-		private readonly ITypeParser                                    _typeParser;
+		private readonly IReadOnlyDictionary<IType, string> _aliasedTypes;
+		private readonly CodeIdentifierComparer             _identifierComparer;
+		private readonly IEqualityComparer<IType>           _typeEqualityComparerWithoutNRT;
+		private readonly IEqualityComparer<IType>           _typeEqualityComparerWithoutNullability;
+		private readonly IEqualityComparer<IType>           _typeEqualityComparerWithNRT;
+		private readonly ITypeParser                        _typeParser;
+		private readonly CodeBuilder                        _builder;
 
 		private CSharpLanguageProvider()
 		{
-			_identifierEqualityComparer             = new CodeIdentifierEqualityComparer(StringComparer.Ordinal);
 			_identifierComparer                     = new CodeIdentifierComparer(StringComparer.Ordinal);
-			_namespaceEqualityComparer              = new NamespaceEqualityComparer(_identifierEqualityComparer);
-			_namespaceComparer                      = new NamespaceComparer(_identifierComparer);
-			_typeEqualityComparerWithoutNRT         = new TypeEqualityComparer(_identifierEqualityComparer, _namespaceEqualityComparer, true , false);
-			_typeEqualityComparerWithoutNullability = new TypeEqualityComparer(_identifierEqualityComparer, _namespaceEqualityComparer, true , true );
-			_typeEqualityComparerWithNRT            = new TypeEqualityComparer(_identifierEqualityComparer, _namespaceEqualityComparer, false, false);
+			_typeEqualityComparerWithoutNRT         = new TypeEqualityComparer(_identifierComparer, _identifierComparer, true , false);
+			_typeEqualityComparerWithoutNullability = new TypeEqualityComparer(_identifierComparer, _identifierComparer, true , true );
+			_typeEqualityComparerWithNRT            = new TypeEqualityComparer(_identifierComparer, _identifierComparer, false, false);
 			_typeParser                             = new TypeParser(this);
+			_builder                                = new CodeBuilder(this);
 
 			var aliasedTypes = new Dictionary<IType, string>(_typeEqualityComparerWithoutNullability);
 			_aliasedTypes    = aliasedTypes;
@@ -60,9 +56,9 @@ namespace LinqToDB.CodeGen.Model
 
 		public static ILanguageProvider Instance { get; } = new CSharpLanguageProvider();
 
-		IEqualityComparer<CodeIdentifier>              ILanguageProvider.IdentifierEqualityComparer        => _identifierEqualityComparer;
-		IEqualityComparer<IEnumerable<CodeIdentifier>> ILanguageProvider.FullNameEqualityComparer          => _namespaceEqualityComparer;
-		IComparer<IEnumerable<CodeIdentifier>>         ILanguageProvider.FullNameComparer                  => _namespaceComparer;
+		IEqualityComparer<CodeIdentifier>              ILanguageProvider.IdentifierEqualityComparer        => _identifierComparer;
+		IEqualityComparer<IEnumerable<CodeIdentifier>> ILanguageProvider.FullNameEqualityComparer          => _identifierComparer;
+		IComparer<IEnumerable<CodeIdentifier>>         ILanguageProvider.FullNameComparer                  => _identifierComparer;
 		IEqualityComparer<string>                      ILanguageProvider.RawIdentifierEqualityComparer     => StringComparer.Ordinal;
 		IEqualityComparer<IType>                       ILanguageProvider.TypeEqualityComparerWithNRT       => _typeEqualityComparerWithNRT;
 		IEqualityComparer<IType>                       ILanguageProvider.TypeEqualityComparerWithoutNRT    => _typeEqualityComparerWithoutNRT;
@@ -70,6 +66,7 @@ namespace LinqToDB.CodeGen.Model
 		bool                                           ILanguageProvider.NRTSupported                      => true;
 		string[]                                       ILanguageProvider.MissingXmlCommentWarnCodes        => _xmlDocWarnings;
 		string                                         ILanguageProvider.FileExtension                     => "cs";
+		CodeBuilder                                    ILanguageProvider.ASTBuilder                        => _builder;
 
 		bool ILanguageProvider.IsValidIdentifierFirstChar(string character, UnicodeCategory category)
 		{

@@ -1,21 +1,21 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Binary operation type.
-	/// Currently contains only operations, used by code generator.
+	/// List of operations limited to those we currently use for code generation and could be extended in future.
 	/// </summary>
 	public enum BinaryOperation
 	{
 		/// <summary>
-		/// Equality.
+		/// Equality (==).
 		/// </summary>
 		Equal,
 		/// <summary>
-		/// Logical AND.
+		/// Logical AND (&amp;&amp;).
 		/// </summary>
 		And,
 		/// <summary>
-		/// Addition.
+		/// Addition (+).
 		/// </summary>
 		Add,
 	}

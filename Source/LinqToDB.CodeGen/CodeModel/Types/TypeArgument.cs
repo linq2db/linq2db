@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	// TODO: add constrains and type arguments support?
 	/// <summary>
 	/// Implementation of generic type argument type definition.
 	/// </summary>
-	public class TypeArgument : IType
+	internal sealed class TypeArgument : IType
 	{
 		private readonly bool           _isNullable;
 		private readonly CodeIdentifier _name;
@@ -35,7 +35,6 @@ namespace LinqToDB.CodeGen.Model
 		IReadOnlyList<int?>?           IType.ArraySizes          => null;
 		int?                           IType.OpenGenericArgCount => null;
 		IReadOnlyList<IType>?          IType.TypeArguments       => null;
-		bool                           IType.External            => false;
 		bool                           IType.IsValueType         => false;
 		IReadOnlyList<CodeIdentifier>? IType.Namespace           => null;
 		IType?                         IType.Parent              => null;

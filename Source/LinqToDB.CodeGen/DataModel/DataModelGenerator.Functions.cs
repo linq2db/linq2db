@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Text;
-using LinqToDB.CodeGen.Model;
-using LinqToDB.CodeGen.Schema;
+using LinqToDB.Schema;
+using LinqToDB.CodeModel;
 using LinqToDB.Data;
 using LinqToDB.SqlProvider;
 
-namespace LinqToDB.CodeGen.DataModel
+namespace LinqToDB.DataModel
 {
 	// basic functionality for function/procedure mappings generation
 	partial class DataModelGenerator
@@ -76,11 +76,11 @@ namespace LinqToDB.CodeGen.DataModel
 					// declare static mapping schema property
 					var schemaProp = dataContextClass
 						.Properties(true)
-							.New(_code.Name(CONTEXT_SCHEMA_PROPERTY), WellKnownTypes.LinqToDB.Mapping.MappingSchema)
+							.New(AST.Name(CONTEXT_SCHEMA_PROPERTY), WellKnownTypes.LinqToDB.Mapping.MappingSchema)
 								.Public()
 								.Static()
 								.Default(false)
-								.SetInitializer(_code.New(WellKnownTypes.LinqToDB.Mapping.MappingSchema));
+								.SetInitializer(AST.New(WellKnownTypes.LinqToDB.Mapping.MappingSchema));
 					schemaProperty = schemaProp.Property.Reference;
 
 					// declare static constructor, where we will add custom schema initialization logic

@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Group of fields.
 	/// </summary>
-	public class FieldGroup : MemberGroup<CodeField>
+	public sealed class FieldGroup : MemberGroup<CodeField>
 	{
-		public FieldGroup(List<CodeField>? members, bool tableLayout)
+		public FieldGroup(IEnumerable<CodeField>? members, bool tableLayout)
 			: base(members)
 		{
 			TableLayout = tableLayout;
@@ -27,9 +27,7 @@ namespace LinqToDB.CodeGen.Model
 
 		public FieldBuilder New(CodeIdentifier name, IType type)
 		{
-			var field = new CodeField(name, type);
-			Members.Add(field);
-			return new FieldBuilder(field);
+			return new FieldBuilder(AddMember(new CodeField(name, type)));
 		}
 	}
 }

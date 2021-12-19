@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Base class for node groups.
@@ -9,15 +10,28 @@ namespace LinqToDB.CodeGen.Model
 	public abstract class MemberGroup<TMember> : IMemberGroup
 		where TMember : IGroupElement
 	{
-		protected MemberGroup(List<TMember>? members)
+		private readonly List<TMember> _members;
+
+		protected MemberGroup(IEnumerable<TMember>? members)
 		{
-			Members = members ?? new List<TMember>();
+			_members = new List<TMember>(members ?? Array.Empty<TMember>());
 		}
 
 		/// <summary>
 		/// Group members.
 		/// </summary>
-		public List<TMember> Members { get; set; }
+		public IReadOnlyList<TMember> Members => _members;
+
+		/// <summary>
+		/// Add new member to members list.
+		/// </summary>
+		/// <param name="member">New group element.</param>
+		/// <returns>Added element.</returns>
+		protected TMember AddMember(TMember member)
+		{
+			_members.Add(member);
+			return member;
+		}
 
 		public virtual bool IsEmpty => Members.Count == 0;
 

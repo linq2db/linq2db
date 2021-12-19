@@ -1,7 +1,7 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
-	/// Marker interface for member groups.
+	/// Non-generic interface for member groups.
 	/// </summary>
 	public interface IMemberGroup : ICodeElement
 	{

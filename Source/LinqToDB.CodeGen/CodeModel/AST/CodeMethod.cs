@@ -1,26 +1,29 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Class method definition.
 	/// </summary>
 	public sealed class CodeMethod : MethodBase, IGroupElement
 	{
+		private readonly List<CodeTypeToken> _typeArguments;
+
 		public CodeMethod(
-			List<CodeAttribute>? customAttributes,
-			Modifiers            attributes,
-			CodeBlock?           body,
-			CodeXmlComment?      xmlDoc,
-			List<CodeParameter>? parameters,
-			CodeIdentifier       name,
-			CodeTypeToken?       returnType,
-			List<CodeTypeToken>? typeParameters)
+			IEnumerable<CodeAttribute>? customAttributes,
+			Modifiers                   attributes,
+			CodeBlock?                  body,
+			CodeXmlComment?             xmlDoc,
+			IEnumerable<CodeParameter>? parameters,
+			CodeIdentifier              name,
+			CodeTypeToken?              returnType,
+			IEnumerable<CodeTypeToken>? typeParameters)
 			: base(customAttributes, attributes, body, xmlDoc, parameters)
 		{
 			Name           = name;
 			ReturnType     = returnType;
-			TypeParameters = typeParameters ?? new();
+			_typeArguments = new (typeParameters ?? Array.Empty<CodeTypeToken>());
 		}
 
 		public CodeMethod(CodeIdentifier name)
@@ -31,17 +34,22 @@ namespace LinqToDB.CodeGen.Model
 		/// <summary>
 		/// Method name.
 		/// </summary>
-		public CodeIdentifier      Name           { get; }
+		public CodeIdentifier               Name           { get; }
 		/// <summary>
 		/// Method return type.
 		/// <c>null</c> for void methods.
 		/// </summary>
-		public CodeTypeToken?      ReturnType     { get; internal set; }
+		public CodeTypeToken?               ReturnType     { get; internal set; }
 		/// <summary>
 		/// Generic method type parameters.
 		/// </summary>
-		public List<CodeTypeToken> TypeParameters { get; }
+		public IReadOnlyList<CodeTypeToken> TypeParameters => _typeArguments;
 
 		public override CodeElementType ElementType => CodeElementType.Method;
+
+		internal void AddGenericParameter(CodeTypeToken genericParameter)
+		{
+			_typeArguments.Add(genericParameter);
+		}
 	}
 }

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Type and type member attributes and modifiers.

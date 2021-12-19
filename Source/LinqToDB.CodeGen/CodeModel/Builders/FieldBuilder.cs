@@ -1,9 +1,9 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// <see cref="CodeField"/> object builder.
 	/// </summary>
-	public class FieldBuilder
+	public sealed class FieldBuilder
 	{
 		internal FieldBuilder(CodeField field)
 		{

@@ -1,9 +1,12 @@
-﻿using LinqToDB.CodeGen.Metadata;
-using LinqToDB.CodeGen.Schema;
+﻿using LinqToDB.Metadata;
+using LinqToDB.Schema;
 
-namespace LinqToDB.CodeGen.DataModel
+namespace LinqToDB.DataModel
 {
-	public class ScalarFunctionModelBase : FunctionModelBase
+	/// <summary>
+	/// Base class for scalar or aggregate function descriptors (methods with scalar return value).
+	/// </summary>
+	public abstract class ScalarFunctionModelBase : FunctionModelBase
 	{
 		protected ScalarFunctionModelBase(ObjectName name, MethodModel method, FunctionMetadata metadata)
 			: base(name, method)
@@ -11,6 +14,9 @@ namespace LinqToDB.CodeGen.DataModel
 			Metadata = metadata;
 		}
 
+		/// <summary>
+		/// Gets or sets function metadata.
+		/// </summary>
 		public FunctionMetadata Metadata { get; set; }
 	}
 }

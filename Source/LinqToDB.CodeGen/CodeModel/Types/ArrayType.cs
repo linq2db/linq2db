@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Implementation of array type definition.
 	/// </summary>
-	public class ArrayType : IType
+	internal sealed class ArrayType : IType
 	{
 		private readonly IType               _elementType;
 		private readonly IReadOnlyList<int?> _sizes;
@@ -23,7 +23,6 @@ namespace LinqToDB.CodeGen.Model
 		bool                IType.IsNullable       => _isNullable;
 		IReadOnlyList<int?> IType.ArraySizes       => _sizes;
 		IType               IType.ArrayElementType => _elementType;
-		bool                IType.External         => _elementType.External;
 		bool                IType.IsValueType      => false;
 
 		IType IType.WithNullability(bool nullable) => new ArrayType(_elementType, _sizes, nullable);

@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Schema
+namespace LinqToDB.Schema
 {
 	/// <summary>
 	/// Table primary key constraint descriptor.
 	/// </summary>
 	/// <param name="Name">Primary key name.</param>
 	/// <param name="Columns">Primary key columns, ordered by constraint ordinal.</param>
-	public record PrimaryKey(string? Name, IReadOnlyCollection<string> Columns)
+	public sealed record PrimaryKey(string? Name, IReadOnlyCollection<string> Columns)
 	{
 		/// <summary>
 		/// Gets position of specified column in primary key.

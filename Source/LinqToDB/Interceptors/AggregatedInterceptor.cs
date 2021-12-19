@@ -92,6 +92,23 @@ namespace LinqToDB.Interceptors
 			}
 		}
 
+		// void event(arg1, arg2, arg3, arg4)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Apply<TArg1, TArg2, TArg3, TArg4>(Action<TInterceptor, TArg1, TArg2, TArg3, TArg4> apply, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4)
+		{
+			_enumerating = true;
+			try
+			{
+				foreach (var interceptor in _interceptors)
+					apply(interceptor, arg1, arg2, arg3, arg4);
+			}
+			finally
+			{
+				_enumerating = false;
+				RemoveDelayed();
+			}
+		}
+
 		// Task event(arg)
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public async Task Apply<TArg>(Func<TInterceptor, TArg, Task> apply, TArg arg)

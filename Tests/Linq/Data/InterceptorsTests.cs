@@ -438,6 +438,7 @@ namespace Tests.Data
 				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
 				Assert.False(interceptor.ExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteNonQueryTriggered);
 				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
 
@@ -447,6 +448,7 @@ namespace Tests.Data
 					Assert.False(interceptor.ExecuteScalarAsyncTriggered);
 					Assert.False(interceptor.ExecuteReaderTriggered);
 					Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+					Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
 					Assert.True(interceptor.ExecuteNonQueryTriggered);
 					Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
 				}
@@ -465,6 +467,7 @@ namespace Tests.Data
 				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
 				Assert.False(interceptor.ExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteNonQueryTriggered);
 				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
 
@@ -474,6 +477,7 @@ namespace Tests.Data
 					Assert.False(interceptor.ExecuteScalarAsyncTriggered);
 					Assert.False(interceptor.ExecuteReaderTriggered);
 					Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+					Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
 					Assert.False(interceptor.ExecuteNonQueryTriggered);
 					Assert.True(interceptor.ExecuteNonQueryAsyncTriggered);
 				}
@@ -493,6 +497,7 @@ namespace Tests.Data
 				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
 				Assert.False(interceptor.ExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteNonQueryTriggered);
 				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
 
@@ -502,6 +507,7 @@ namespace Tests.Data
 				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
 				Assert.False(interceptor.ExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
 				// also true, as for sqlite we generate two queries
 				Assert.True(interceptor.ExecuteNonQueryTriggered);
 				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
@@ -521,6 +527,7 @@ namespace Tests.Data
 				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
 				Assert.False(interceptor.ExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteNonQueryTriggered);
 				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
 
@@ -530,6 +537,7 @@ namespace Tests.Data
 				Assert.True(interceptor.ExecuteScalarAsyncTriggered);
 				Assert.False(interceptor.ExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteNonQueryTriggered);
 				// also true, as for sqlite we generate two queries
 				Assert.True(interceptor.ExecuteNonQueryAsyncTriggered);
@@ -548,6 +556,7 @@ namespace Tests.Data
 				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
 				Assert.False(interceptor.ExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteNonQueryTriggered);
 				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
 
@@ -557,6 +566,7 @@ namespace Tests.Data
 				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
 				Assert.True(interceptor.ExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.True(interceptor.ExecuteAfterExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteNonQueryTriggered);
 				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
 			}
@@ -574,6 +584,7 @@ namespace Tests.Data
 				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
 				Assert.False(interceptor.ExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteNonQueryTriggered);
 				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
 
@@ -583,6 +594,7 @@ namespace Tests.Data
 				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
 				Assert.False(interceptor.ExecuteReaderTriggered);
 				Assert.True(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.True(interceptor.ExecuteAfterExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteNonQueryTriggered);
 				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
 			}
@@ -600,6 +612,7 @@ namespace Tests.Data
 				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
 				Assert.False(interceptor.ExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteNonQueryTriggered);
 				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
 
@@ -609,6 +622,7 @@ namespace Tests.Data
 					Assert.False(interceptor.ExecuteScalarAsyncTriggered);
 					Assert.False(interceptor.ExecuteReaderTriggered);
 					Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+					Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
 					Assert.True(interceptor.ExecuteNonQueryTriggered);
 					Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
 				}
@@ -627,6 +641,7 @@ namespace Tests.Data
 				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
 				Assert.False(interceptor.ExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteNonQueryTriggered);
 				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
 
@@ -636,6 +651,7 @@ namespace Tests.Data
 					Assert.False(interceptor.ExecuteScalarAsyncTriggered);
 					Assert.False(interceptor.ExecuteReaderTriggered);
 					Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+					Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
 					Assert.False(interceptor.ExecuteNonQueryTriggered);
 					Assert.True(interceptor.ExecuteNonQueryAsyncTriggered);
 				}
@@ -656,6 +672,7 @@ namespace Tests.Data
 				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
 				Assert.False(interceptor.ExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteNonQueryTriggered);
 				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
 
@@ -665,6 +682,7 @@ namespace Tests.Data
 				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
 				Assert.False(interceptor.ExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
 				// also true, as for sqlite we generate two queries
 				Assert.True(interceptor.ExecuteNonQueryTriggered);
 				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
@@ -685,6 +703,7 @@ namespace Tests.Data
 				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
 				Assert.False(interceptor.ExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteNonQueryTriggered);
 				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
 
@@ -694,6 +713,7 @@ namespace Tests.Data
 				Assert.True(interceptor.ExecuteScalarAsyncTriggered);
 				Assert.False(interceptor.ExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteNonQueryTriggered);
 				// also true, as for sqlite we generate two queries
 				Assert.True(interceptor.ExecuteNonQueryAsyncTriggered);
@@ -712,6 +732,7 @@ namespace Tests.Data
 				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
 				Assert.False(interceptor.ExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteNonQueryTriggered);
 				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
 
@@ -721,6 +742,7 @@ namespace Tests.Data
 				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
 				Assert.True(interceptor.ExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.True(interceptor.ExecuteAfterExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteNonQueryTriggered);
 				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
 			}
@@ -738,6 +760,7 @@ namespace Tests.Data
 				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
 				Assert.False(interceptor.ExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.False(interceptor.ExecuteAfterExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteNonQueryTriggered);
 				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
 
@@ -747,6 +770,7 @@ namespace Tests.Data
 				Assert.False(interceptor.ExecuteScalarAsyncTriggered);
 				Assert.False(interceptor.ExecuteReaderTriggered);
 				Assert.True(interceptor.ExecuteReaderAsyncTriggered);
+				Assert.True(interceptor.ExecuteAfterExecuteReaderTriggered);
 				Assert.False(interceptor.ExecuteNonQueryTriggered);
 				Assert.False(interceptor.ExecuteNonQueryAsyncTriggered);
 			}
@@ -1038,7 +1062,7 @@ namespace Tests.Data
 				interceptor.ConnectionOpenedAsyncTriggered = false;
 				interceptor.ConnectionOpeningAsyncTriggered = false;
 
-				db.ReleaseQuery();
+				await db.ReleaseQueryAsync();
 
 				await db.GetTable<Child>().ToListAsync();
 
@@ -1638,12 +1662,13 @@ namespace Tests.Data
 				return base.CommandInitialized(eventData, command);
 			}
 
-			public bool ExecuteNonQueryTriggered      { get; set; }
-			public bool ExecuteNonQueryAsyncTriggered { get; set; }
-			public bool ExecuteReaderTriggered        { get; set; }
-			public bool ExecuteReaderAsyncTriggered   { get; set; }
-			public bool ExecuteScalarTriggered        { get; set; }
-			public bool ExecuteScalarAsyncTriggered   { get; set; }
+			public bool ExecuteNonQueryTriggered           { get; set; }
+			public bool ExecuteNonQueryAsyncTriggered      { get; set; }
+			public bool ExecuteReaderTriggered             { get; set; }
+			public bool ExecuteReaderAsyncTriggered        { get; set; }
+			public bool ExecuteScalarTriggered             { get; set; }
+			public bool ExecuteScalarAsyncTriggered        { get; set; }
+			public bool ExecuteAfterExecuteReaderTriggered { get; set; }
 
 			public override Option<int> ExecuteNonQuery(CommandEventData eventData, DbCommand command, Option<int> result)
 			{
@@ -1667,6 +1692,12 @@ namespace Tests.Data
 			{
 				ExecuteReaderAsyncTriggered = true;
 				return base.ExecuteReaderAsync(eventData, command, commandBehavior, result, cancellationToken);
+			}
+
+			public override void AfterExecuteReader(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, DbDataReader dataReader)
+			{
+				ExecuteAfterExecuteReaderTriggered = true;
+				base.AfterExecuteReader(eventData, command, commandBehavior, dataReader);
 			}
 
 			public override Option<object?> ExecuteScalar(CommandEventData eventData, DbCommand command, Option<object?> result)

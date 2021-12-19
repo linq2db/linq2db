@@ -1,28 +1,31 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
-namespace LinqToDB.CodeGen.Model
+namespace LinqToDB.CodeModel
 {
 	public sealed class CodeClass : TypeBase, IGroupElement
 	{
+		private readonly List<CodeTypeToken> _implements;
+		private readonly List<IMemberGroup>  _members;
+
 		public CodeClass(
-			List<CodeAttribute>? customAttributes,
-			Modifiers            attributes,
-			CodeXmlComment?      xmlDoc,
-			IType                type,
-			CodeIdentifier       name,
-			CodeClass?           parent,
-			CodeTypeToken?       inherits,
-			List<CodeTypeToken>? implements,
-			List<IMemberGroup>?  members,
-			CodeTypeInitializer? typeInitializer)
+			IEnumerable<CodeAttribute>? customAttributes,
+			Modifiers                   attributes,
+			CodeXmlComment?             xmlDoc,
+			IType                       type,
+			CodeIdentifier              name,
+			CodeClass?                  parent,
+			CodeTypeToken?              inherits,
+			IEnumerable<CodeTypeToken>? implements,
+			IEnumerable<IMemberGroup>?  members,
+			CodeTypeInitializer?        typeInitializer)
 			: base(customAttributes, attributes, xmlDoc, type, name)
 		{
 			Parent          = parent;
 			Inherits        = inherits;
-			Implements      = implements ?? new ();
-			Members         = members ?? new ();
+			_implements     = new (implements ?? Array.Empty<CodeTypeToken>());
+			_members        = new (members    ?? Array.Empty<IMemberGroup>());
 			TypeInitializer = typeInitializer;
-
 			This            = new CodeThis(this);
 		}
 
@@ -50,29 +53,39 @@ namespace LinqToDB.CodeGen.Model
 		/// <summary>
 		/// Parent class.
 		/// </summary>
-		public CodeClass?           Parent          { get; }
+		public CodeClass?                   Parent          { get; }
 		/// <summary>
 		/// Base class.
 		/// </summary>
-		public CodeTypeToken?       Inherits        { get; set; }
+		public CodeTypeToken?               Inherits        { get; internal set; }
 		/// <summary>
 		/// Implemented interfaces.
 		/// </summary>
-		public List<CodeTypeToken>  Implements      { get; }
+		public IReadOnlyList<CodeTypeToken> Implements      => _implements;
 		/// <summary>
 		/// Class members (in groups).
 		/// </summary>
-		public List<IMemberGroup>   Members         { get; }
+		public IReadOnlyList<IMemberGroup>  Members         => _members;
 		/// <summary>
 		/// Static constructor.
 		/// </summary>
-		public CodeTypeInitializer? TypeInitializer { get; set; }
+		public CodeTypeInitializer?         TypeInitializer { get; internal set; }
 
 		/// <summary>
 		/// <c>this</c> expression.
 		/// </summary>
-		public CodeThis             This            { get; }
+		public CodeThis                     This            { get; }
 
 		public override CodeElementType ElementType => CodeElementType.Class;
+
+		internal void AddInterface(CodeTypeToken interfaceType)
+		{
+			_implements.Add(interfaceType);
+		}
+
+		internal void AddMemberGroup(IMemberGroup memberGroup)
+		{
+			_members.Add(memberGroup);
+		}
 	}
 }

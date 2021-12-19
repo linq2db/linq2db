@@ -1,9 +1,9 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// <see cref="CodeClass"/> object builder.
 	/// </summary>
-	public class ClassBuilder : TypeBuilder<ClassBuilder, CodeClass>
+	public sealed class ClassBuilder : TypeBuilder<ClassBuilder, CodeClass>
 	{
 		internal ClassBuilder(CodeClass @class, ClassGroup group)
 			: base(@class, group)
@@ -48,7 +48,7 @@
 		/// <returns>Class builder instance.</returns>
 		public ClassBuilder Implements(IType @interface)
 		{
-			Type.Implements.Add(new (@interface));
+			Type.AddInterface(new (@interface));
 			return this;
 		}
 
@@ -60,7 +60,7 @@
 		public PropertyGroup Properties(bool tableLayout)
 		{
 			var group = new PropertyGroup(tableLayout);
-			Type.Members.Add(group);
+			Type.AddMemberGroup(group);
 			return group;
 		}
 
@@ -71,7 +71,7 @@
 		public ConstructorGroup Constructors()
 		{
 			var group = new ConstructorGroup(Type);
-			Type.Members.Add(group);
+			Type.AddMemberGroup(group);
 			return group;
 		}
 
@@ -83,7 +83,7 @@
 		public FieldGroup Fields(bool tableLayout)
 		{
 			var group = new FieldGroup(tableLayout);
-			Type.Members.Add(group);
+			Type.AddMemberGroup(group);
 			return group;
 		}
 
@@ -95,7 +95,7 @@
 		public MethodGroup Methods(bool tableLayout)
 		{
 			var group = new MethodGroup(tableLayout);
-			Type.Members.Add(group);
+			Type.AddMemberGroup(group);
 			return group;
 		}
 
@@ -106,7 +106,7 @@
 		public RegionGroup Regions()
 		{
 			var group = new RegionGroup(Type);
-			Type.Members.Add(group);
+			Type.AddMemberGroup(group);
 			return group;
 		}
 
@@ -117,7 +117,7 @@
 		public ClassGroup Classes()
 		{
 			var group = new ClassGroup(Type);
-			Type.Members.Add(group);
+			Type.AddMemberGroup(group);
 			return group;
 		}
 

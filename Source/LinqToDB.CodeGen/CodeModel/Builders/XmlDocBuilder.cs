@@ -1,9 +1,9 @@
-﻿namespace LinqToDB.CodeGen.Model
+﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// <see cref="CodeXmlComment"/> object builder.
 	/// </summary>
-	public class XmlDocBuilder
+	public sealed class XmlDocBuilder
 	{
 		private readonly CodeXmlComment _comment;
 
@@ -31,7 +31,7 @@
 		/// <returns>Builder instance.</returns>
 		public XmlDocBuilder Parameter(CodeIdentifier parameter, string text)
 		{
-			_comment.Parameters.Add((parameter, text));
+			_comment.AddParameter(parameter, text);
 			return this;
 		}
 	}
