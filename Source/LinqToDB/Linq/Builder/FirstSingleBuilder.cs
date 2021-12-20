@@ -134,9 +134,14 @@ namespace LinqToDB.Linq.Builder
 			public FirstSingleContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall, bool isSubQuery, bool isAssociation)
 				: base(parent, sequence, null)
 			{
-				_methodCall     = methodCall;
-				IsSubQuery = isSubQuery;
-				IsAssociation   = isAssociation;
+				_methodCall   = methodCall;
+				IsSubQuery    = isSubQuery;
+				IsAssociation = isAssociation;
+
+				if (IsAssociation)
+				{
+					CreateJoin();
+				}
 			}
 
 			readonly MethodCallExpression _methodCall;
@@ -246,6 +251,7 @@ namespace LinqToDB.Linq.Builder
 					_isJoinCreated = true;
 
 					var join = SelectQuery.OuterApply();
+					join.JoinedTable.IsWeak = true;
 
 					Parent!.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 				}

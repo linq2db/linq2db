@@ -643,7 +643,7 @@ namespace LinqToDB.Linq.Builder
 
 				// trying to access Queryable variant
 				if (path.Type != _elementType && flags.HasFlag(ProjectFlags.Expression))
-					return new SqlEagerLoadExpression(this, path);
+					return new SqlEagerLoadExpression(this, path, Builder.GetSequenceExpression(this));
 
 				return Builder.BuildEntityExpression(this, _elementType, flags);
 			}

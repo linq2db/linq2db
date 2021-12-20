@@ -29,7 +29,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (buildInfo.IsSubQuery)
 			{
-				var testSequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { AggregationTest = true });
+				var testSequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], new SelectQuery()) { AggregationTest = true });
 
 				// It means that as root we have used fake context
 				var testSelectQuery = testSequence.SelectQuery;

@@ -24,6 +24,25 @@ namespace LinqToDB.Linq.Builder
 			return entityType;
 		}
 
+		class AssignmentInfo
+		{
+			public AssignmentInfo(ColumnDescriptor? column, Expression expression)
+			{
+				Column     = column;
+				Member     = column.MemberInfo;
+				Expression = expression;
+			}
+
+			public AssignmentInfo(MemberInfo member, Expression expression)
+			{
+				Member     = member;
+				Expression = expression;
+			}
+
+			public ColumnDescriptor? Column     { get; }
+			public MemberInfo        Member     { get; }
+			public Expression        Expression { get; }
+		}
 
 		public Expression BuildEntityExpression(IBuildContext context, Type entityType, ProjectFlags flags)
 		{
@@ -31,29 +50,44 @@ namespace LinqToDB.Linq.Builder
 
 			var entityDescriptor = MappingSchema.GetEntityDescriptor(entityType);
 
-			List<LambdaExpression>? postProcess = null;
-
 			var members = BuildMembers(context, entityDescriptor, flags);
 
-			var expr =
-				IsRecord(MappingSchema.GetAttributes<Attribute>(entityType), out var _) ?
-					BuildRecordConstructor (entityDescriptor, members) :
-					IsAnonymous(entityType) ?
-						BuildRecordConstructor (entityDescriptor, members) :
-						BuildDefaultConstructor(entityDescriptor, members, ref postProcess);
-
-			if (flags.HasFlag(ProjectFlags.Expression))
+			/*if (flags.HasFlag(ProjectFlags.SQL))
 			{
-				BuildCalculatedColumns(context, entityDescriptor, expr.Type, ref postProcess);
+				var assignments = members
+					.Select(x => new SqlGenericConstructorExpression.Assignment(x.column.MemberInfo, x.expr)).ToList();
 
-				//TODO:
-				/*
-				expr = ProcessExpression(expr);
-				expr = NotifyEntityCreated(expr);
-				*/
+				return new SqlGenericConstructorExpression(assignments);
+			}*/
+
+			//if (flags.HasFlag(ProjectFlags.Expression))
+			{
+				List<LambdaExpression>? postProcess = null;
+
+				var expr =
+					IsRecord(MappingSchema.GetAttributes<Attribute>(entityType), out var _)
+						?
+						BuildRecordConstructor(entityDescriptor, members)
+						: IsAnonymous(entityType)
+							? BuildRecordConstructor(entityDescriptor, members)
+							:
+							BuildDefaultConstructor(entityDescriptor, members, ref postProcess);
+
+				if (flags.HasFlag(ProjectFlags.Expression))
+				{
+					BuildCalculatedColumns(context, entityDescriptor, expr.Type, ref postProcess);
+
+					//TODO:
+					/*
+					expr = ProcessExpression(expr);
+					expr = NotifyEntityCreated(expr);
+					*/
+				}
+
+				return new ContextConstructionExpression(context, expr, postProcess);
 			}
 
-			return new ContextConstructionExpression(context, expr, postProcess);
+			throw new NotImplementedException();
 		}
 
 		void BuildCalculatedColumns(IBuildContext context, EntityDescriptor entityDescriptor, Type objectType, ref List<LambdaExpression>? postProcess)
@@ -78,10 +112,10 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		List<(ColumnDescriptor column, Expression expr)> BuildMembers(IBuildContext context,
+		List<AssignmentInfo> BuildMembers(IBuildContext context,
 			EntityDescriptor entityDescriptor, ProjectFlags projectFlags)
 		{
-			var members       = new List<(ColumnDescriptor column, Expression expr)>();
+			var members       = new List<AssignmentInfo>();
 			var objectType    = entityDescriptor.ObjectType;
 			var refExpression = new ContextRefExpression(objectType, context);
 
@@ -100,13 +134,27 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				var sqlExpression = context.Builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), context, me, projectFlags);
-				members.Add((column, sqlExpression));
+				members.Add(new AssignmentInfo(column, sqlExpression));
+			}
+
+			var loadWith = GetLoadWith(context);
+
+			if (loadWith != null)
+			{
+				var contextRef = new ContextRefExpression(objectType, context);
+
+				foreach (var info in loadWith)
+				{
+					var memberInfo = info[0].MemberInfo;
+					var expression = Expression.MakeMemberAccess(contextRef, memberInfo);
+					members.Add(new AssignmentInfo(memberInfo, expression));
+				}
 			}
 
 			return members;
 		}
 
-		Expression BuildDefaultConstructor(EntityDescriptor entityDescriptor, List<(ColumnDescriptor column, Expression expr)> members, ref List<LambdaExpression>? postProcess)
+		Expression BuildDefaultConstructor(EntityDescriptor entityDescriptor, List<AssignmentInfo> members, ref List<LambdaExpression>? postProcess)
 		{
 			var constructor = SuggestConstructor(entityDescriptor);
 
@@ -115,22 +163,20 @@ namespace LinqToDB.Linq.Builder
 
 			var initExpr = Expression.MemberInit(newExpression,
 				members
-					.Where(m => ignoredColumns?.Contains(m.column) != true)
+					.Where(m => m.Column == null || ignoredColumns?.Contains(m.Column) != true)
 					// IMPORTANT: refactoring this condition will affect hasComplex variable calculation below
-					.Where(static m => !m.column.MemberAccessor.IsComplex)
-					.Select(static m => (MemberBinding)Expression.Bind(m.column.StorageInfo, m.expr))
+					.Where(static m => m.Column?.MemberAccessor.IsComplex != true)
+					.Select(static m => (MemberBinding)Expression.Bind(m.Column?.StorageInfo ?? m.Member, m.Expression))
 			);
 
-			//var loadWith = GetLoadWith();
-
-			foreach (var (column, expr) in members)
+			foreach (var ai in members)
 			{
-				if (column.MemberAccessor.IsComplex)
+				if (ai.Column?.MemberAccessor.IsComplex == true)
 				{
 					postProcess ??= new List<LambdaExpression>();
 
-					var setter = column.MemberAccessor.SetterExpression!;
-					setter = Expression.Lambda(setter.GetBody(setter.Parameters[0], expr), setter.Parameters[0]);
+					var setter = ai.Column.MemberAccessor.SetterExpression!;
+					setter = Expression.Lambda(setter.GetBody(setter.Parameters[0], ai.Expression), setter.Parameters[0]);
 
 					postProcess.Add(setter);
 				}
@@ -183,24 +229,24 @@ namespace LinqToDB.Linq.Builder
 				$"Could not decide which constructor should be used for '{entityDescriptor.ObjectType.Name}.'");
 		}
 
-		private static int MatchParameter(ParameterInfo parameter, List<(ColumnDescriptor column, Expression expr)> members)
+		private static int MatchParameter(ParameterInfo parameter, List<AssignmentInfo> members)
 		{
 			var found = members.FindIndex(x =>
-				x.column.MemberType == parameter.ParameterType &&
-				x.column.MemberName == parameter.Name);
+				x.Column.MemberType == parameter.ParameterType &&
+				x.Column.MemberName == parameter.Name);
 
 			if (found < 0)
 			{
 				found = members.FindIndex(x =>
-					x.column.MemberType == parameter.ParameterType &&
-					x.column.MemberName.Equals(parameter.Name,
+					x.Column.MemberType == parameter.ParameterType &&
+					x.Column.MemberName.Equals(parameter.Name,
 						StringComparison.InvariantCultureIgnoreCase));
 			}
 
 			return found;
 		}
 
-		NewExpression BuildNewExpression(ConstructorInfo constructor, List<(ColumnDescriptor column, Expression expr)> members, ref List<ColumnDescriptor>? ignoredColumns)
+		NewExpression BuildNewExpression(ConstructorInfo constructor, List<AssignmentInfo> members, ref List<ColumnDescriptor>? ignoredColumns)
 		{
 			var parameters = constructor.GetParameters();
 
@@ -217,10 +263,14 @@ namespace LinqToDB.Linq.Builder
 
 				if (idx >= 0)
 				{
-					var (column, expr) = members[idx];
-					parameterValues.Add(expr);
+					var ai = members[idx];
+					parameterValues.Add(ai.Expression);
 					ignoredColumns ??= new List<ColumnDescriptor>();
-					ignoredColumns.Add(column);
+					
+					if (ai.Column != null)
+					{
+						ignoredColumns.Add(ai.Column);
+					}
 				}
 				else
 				{
@@ -233,7 +283,7 @@ namespace LinqToDB.Linq.Builder
 
 		}
 
-		Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, List<(ColumnDescriptor column, Expression expr)> members)
+		Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, List<AssignmentInfo> members)
 		{
 			var ctor = entityDescriptor.ObjectType.GetConstructors().Single();
 

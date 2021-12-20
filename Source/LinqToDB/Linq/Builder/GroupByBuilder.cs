@@ -129,13 +129,15 @@ namespace LinqToDB.Linq.Builder
 			var key      = new KeyContext(buildInfo.Parent, keySelector, buildInfo.IsSubQuery, sequence);
 			if (groupingKind != GroupingType.GroupBySets)
 			{
-				var body     = keySelector.GetBody(new ContextRefExpression(keySelector.Parameters[0].Type, sequence));
-				var groupSql = builder.ConvertExpressions(key, body.Unwrap(), ConvertFlags.Key, null);
+				var body = keySelector.GetBody(new ContextRefExpression(keySelector.Parameters[0].Type, sequence));
+				var groupSqlExpr = builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), key, body.Unwrap(), ProjectFlags.SQL);
 
-				var allowed = groupSql.Where(s => !QueryHelper.IsConstantFast(s.Sql));
+				var placeholders = builder.CollectPKPlaceholders(groupSqlExpr);
 
-				foreach (var sql in allowed)
-					sequence.SelectQuery.GroupBy.Expr(sql.Sql);
+				var allowed = placeholders.Where(p => !QueryHelper.IsConstantFast(p.Sql.Sql));
+
+				foreach (var p in allowed)
+					sequence.SelectQuery.GroupBy.Expr(p.Sql.Sql);
 			}
 			else
 			{
@@ -154,8 +156,11 @@ namespace LinqToDB.Linq.Builder
 
 			sequence.SelectQuery.GroupBy.GroupingType = groupingKind;
 
-			var element = new SelectContext (buildInfo.Parent, elementSelector, buildInfo.IsSubQuery, sequence/*, key*/);
+			var element = new ElementContext(buildInfo.Parent, elementSelector, buildInfo.IsSubQuery, sequence/*, key*/);
 			var groupBy = new GroupByContext(buildInfo.Parent, sequenceExpr, groupingType, sequence, key, element, builder.IsGroupingGuardDisabled);
+
+			// Will be used for eager loading generation
+			element.GroupByContext = groupBy;
 
 			Debug.WriteLine("BuildMethodCall GroupBy:\n" + groupBy.SelectQuery);
 
@@ -166,6 +171,25 @@ namespace LinqToDB.Linq.Builder
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return null;
+		}
+
+		#endregion
+
+		#region Element Context
+
+		internal class ElementContext : SelectContext
+		{
+			public ElementContext(IBuildContext? parent, LambdaExpression lambda, bool isSubQuery, params IBuildContext[] sequences) : base(parent, lambda, isSubQuery, sequences)
+			{
+			}
+
+			public GroupByContext GroupByContext { get; set; } = null!;
+
+			public override Expression GetEagerLoadExpression(Expression path)
+			{
+				var subquery = GroupByContext.MakeSubqueryExpression(new ContextRefExpression(path.Type, GroupByContext));
+				return subquery;
+			}
 		}
 
 		#endregion
@@ -264,7 +288,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (path is MemberExpression me && me.Expression is ContextRefExpression contextRef && me.Member.Name == "Key")
 				{
-					var keyPath = new ContextRefExpression(contextRef.Type, _key);
+					var keyPath = new ContextRefExpression(path.Type, _key);
 					return Builder.MakeExpression(keyPath, flags);
 				}
 
@@ -779,6 +803,18 @@ namespace LinqToDB.Linq.Builder
 			{
 				var filterLambda = Expression.Lambda(ExpressionBuilder.Equal(mappingSchema, expr1, expr2), param);
 				return TypeHelper.MakeMethodCall(Methods.Enumerable.Where, sequence, filterLambda);
+			}
+
+			public Expression MakeSubqueryExpression(Expression buildExpression)
+			{
+				var expr = MakeSubQueryExpression(
+					Builder.MappingSchema,
+					_sequenceExpr,
+					_key.Lambda.Parameters[0],
+					ExpressionHelper.PropertyOrField(buildExpression, "Key"),
+					_key.Lambda.Body);
+
+				return expr;
 			}
 
 			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)

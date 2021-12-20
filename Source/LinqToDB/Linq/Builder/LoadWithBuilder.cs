@@ -51,16 +51,31 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var path  = selector.Body.Unwrap();
-			var table = GetTableContext(sequence, path, out var level);
 
-			var associations = ExtractAssociations(builder, path, level)
+			var contextRef   = new ContextRefExpression(methodCall.Arguments[0].Type, sequence);
+			var rootSequence = builder.MakeExpression(contextRef, ProjectFlags.Root) as ContextRefExpression;
+
+			if (rootSequence == null)
+				throw new InvalidOperationException("Could not find association root.");
+
+			var associations = ExtractAssociations(builder, path, null)
 				.Reverse()
 				.ToArray();
 
 			if (associations.Length == 0)
 				throw new LinqToDBException($"Unable to retrieve properties path for LoadWith/ThenLoad. Path: '{path}'");
 
-			if (methodCall.Method.Name == "ThenLoad")
+
+			if (methodCall.Arguments.Count == 3)
+			{
+				var lastElement = associations[associations.Length - 1];
+				lastElement.FilterFunc = (Expression?)methodCall.Arguments[2];
+				CheckFilterFunc(lastElement.MemberInfo.GetMemberType(), lastElement.FilterFunc!.Type, builder.MappingSchema);
+			}
+
+			builder.RegisterLoadWith(rootSequence.BuildContext, associations, methodCall.Method.Name == "ThenLoad");
+
+			/*if (methodCall.Method.Name == "ThenLoad")
 			{
 				if (!(table.LoadWith?.Count > 0))
 					throw new LinqToDBException($"ThenLoad function should be followed after LoadWith. Can not find previous property for '{path}'.");
@@ -91,13 +106,14 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				table.LoadWith.Add(associations);
-			}
+			}*/
 
-			var loadWithSequence = sequence as LoadWithContext ?? new LoadWithContext(sequence, table);
+			var loadWithSequence = sequence as LoadWithContext ?? new LoadWithContext(sequence, rootSequence);
 
 			return loadWithSequence;
 		}
 
+		/*
 		TableBuilder.TableContext GetTableContext(IBuildContext ctx, Expression path, out Expression? stopExpression)
 		{
 			stopExpression = null;
@@ -153,6 +169,7 @@ namespace LinqToDB.Linq.Builder
 				$"Unable to find table information for LoadWith. Consider moving LoadWith closer to GetTable<{expr.Type.Name}>() method.");
 	
 		}
+		*/
 
 		static IEnumerable<LoadWithInfo> ExtractAssociations(ExpressionBuilder builder, Expression expression, Expression? stopExpression)
 		{
@@ -301,13 +318,18 @@ namespace LinqToDB.Linq.Builder
 
 		internal class LoadWithContext : PassThroughContext
 		{
-			private readonly TableBuilder.TableContext _tableContext;
+			public ContextRefExpression Root { get; }
 
-			public TableBuilder.TableContext TableContext => _tableContext;
-
-			public LoadWithContext(IBuildContext context, TableBuilder.TableContext tableContext) : base(context)
+			public LoadWithContext(IBuildContext context, ContextRefExpression root) : base(context)
 			{
-				_tableContext = tableContext;
+				Root = root;
+			}
+
+			public override Expression MakeExpression(Expression? path, ProjectFlags flags)
+			{
+				if (flags.HasFlag(ProjectFlags.Root))
+					return Root;
+				return base.MakeExpression(path, flags);
 			}
 		}
 	}

@@ -51,7 +51,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (buildInfo.IsSubQuery)
 			{
-				var testSequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { AggregationTest = true });
+				var testSequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], new SelectQuery()) { AggregationTest = true });
 
 				// It means that as root we have used fake context
 				var testSelectQuery = testSequence.SelectQuery;
@@ -105,11 +105,11 @@ namespace LinqToDB.Linq.Builder
 			var context = new AggregationContext(buildInfo.Parent, sequence, methodCall);
 
 			var refExpression  = new ContextRefExpression(methodCall.Arguments[0].Type, prevSequence);
-			var sqlPlaceholder = builder.ConvertToSqlPlaceholder(prevSequence, refExpression);
+			var sqlPlaceholder = builder.ConvertToSqlPlaceholder(context, refExpression);
 
 			var sql = sqlPlaceholder.Sql;
 
-			var functionPlaceholder = ExpressionBuilder.CreatePlaceholder(prevSequence, /*context*/
+			var functionPlaceholder = ExpressionBuilder.CreatePlaceholder(context, /*context*/
 				new SqlFunction(methodCall.Type, methodName, true, sql.Sql) { CanBeNull = true }, buildInfo.Expression);
 
 			functionPlaceholder.Alias = methodName;

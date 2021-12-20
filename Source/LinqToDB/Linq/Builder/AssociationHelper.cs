@@ -305,14 +305,14 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public static Expression BuildAssociationQuery(ExpressionBuilder builder, ContextRefExpression tableContext, 
-			AccessorMember onMember, AssociationDescriptor descriptor, bool inline, ref bool isOuter)
+			AccessorMember onMember, AssociationDescriptor descriptor, bool inline, List<LoadWithInfo[]>? loadwith, ref bool isOuter)
 		{
 			var elementType     = descriptor.GetElementType(builder.MappingSchema);
 			var parentExactType = descriptor.GetParentElementType();
 
 			var queryMethod = CreateAssociationQueryLambda(
 				builder, onMember, descriptor, elementType /*tableContext.OriginalType*/, parentExactType, elementType,
-				inline, isOuter, null /*tableContext.LoadWith*/, out isOuter);
+				inline, isOuter, loadwith, out isOuter);
 
 			var body = queryMethod.GetBody(tableContext);
 

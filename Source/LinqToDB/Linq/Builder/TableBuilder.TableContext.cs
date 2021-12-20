@@ -1214,7 +1214,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					// trying to access Queryable variant
 					if (path.Type != ObjectType && flags.HasFlag(ProjectFlags.Expression))
-						return new SqlEagerLoadExpression(this, path);
+						return new SqlEagerLoadExpression(this, path, Builder.GetSequenceExpression(this));
 
 					return Builder.BuildEntityExpression(this, ObjectType, flags);
 				}
@@ -1224,7 +1224,7 @@ namespace LinqToDB.Linq.Builder
 
 				var sql = GetField(member, member.GetLevel(Builder.MappingSchema), false);
 				if (sql == null)
-					return Builder.CreateSqlError(this, path);
+					return path;
 
 				var placeholder = ExpressionBuilder.CreatePlaceholder(this, sql, path);
 

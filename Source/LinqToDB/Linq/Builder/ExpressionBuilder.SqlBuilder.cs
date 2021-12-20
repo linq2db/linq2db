@@ -2053,6 +2053,30 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
+		public List<SqlPlaceholderExpression> CollectPKPlaceholders(Expression expression)
+		{
+			var result = new List<SqlPlaceholderExpression>();
+
+			expression.Visit(result, (list, e) =>
+			{
+				if (e is SqlPlaceholderExpression placeholder)
+				{
+					if (!list.Contains(placeholder))
+						result.Add(placeholder);
+				}
+			});
+
+			// Table context for example
+			if (expression is ContextConstructionExpression)
+			{
+				var filtered = result.Where(p => (p.Sql.Sql is SqlField field) && field.IsPrimaryKey).ToList();
+				if (filtered.Count == 0)
+					return filtered;
+			}
+
+			return result;
+		}
+
 		private static bool IsBooleanConstant(Expression expr, out bool? value)
 		{
 			value = null;
@@ -3856,6 +3880,12 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
+					if (member != null)
+					{
+						var ma = Expression.MakeMemberAccess(mc, member);
+						return Project(context, path, nextPath, nextIndex - 1, flags, ma);
+					}
+
 					return mc;
 				}
 			}
@@ -3901,6 +3931,41 @@ namespace LinqToDB.Linq.Builder
 				{
 					//TODO: why i cannot do that without GetLevelExpression ???
 					rootContext = root.GetLevelExpression(MappingSchema, 0) as ContextRefExpression;
+				}
+			}
+			else if (path.NodeType == ExpressionType.Convert)
+			{
+				var unary = (UnaryExpression)path;
+				if (unary.Operand is ContextRefExpression contextRef)
+				{
+					expression = new ContextRefExpression(unary.Type, contextRef.BuildContext);
+				}
+			}
+			else if (path is MethodCallExpression mc)
+			{
+				if (IsAssociation(mc))
+				{
+					if (!mc.Method.IsStatic)
+						throw new NotImplementedException();
+
+					var arguments = mc.Arguments;
+					if (arguments.Count == 0)
+						throw new InvalidOperationException("Association methods should have at least one parameter");
+
+					var rootArgument = MakeExpression(arguments[0], ProjectFlags.Root);
+					if (!ReferenceEquals(rootArgument, arguments[0]))
+					{
+						var argumentsArray = arguments.ToArray();
+						argumentsArray[0] = rootArgument;
+
+						mc = mc.Update(mc.Object, argumentsArray);
+					}
+
+					if (mc.Arguments[0] is ContextRefExpression contextRef)
+					{
+						expression  = TryCreateAssociation(mc, contextRef);
+						rootContext = expression as ContextRefExpression;
+					}
 				}
 			}
 			else if (path is ContextRefExpression contextRef)

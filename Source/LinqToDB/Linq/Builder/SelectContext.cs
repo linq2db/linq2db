@@ -177,7 +177,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				if (path.Type != Body.Type && flags.HasFlag(ProjectFlags.Expression))
-					return new SqlEagerLoadExpression(this, path);
+					return new SqlEagerLoadExpression(this, path, GetEagerLoadExpression(path));
 
 				result = Body;
 			}
@@ -193,6 +193,11 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
+		public virtual Expression GetEagerLoadExpression(Expression path)
+		{
+			return Builder.GetSequenceExpression(this);
+		}
+		
 		#region IsExpression
 
 		Expression? _lastAssociationExpression;

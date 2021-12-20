@@ -132,8 +132,10 @@ namespace LinqToDB.Linq.Builder
 			if (associationDescriptor == null || memberInfo == null)
 				return expression;
 
+			var loadWith = GetLoadWith(rootContext.BuildContext);
+
 			var isOuter = associationDescriptor.CanBeNull;
-			var association = AssociationHelper.BuildAssociationQuery(this, rootContext, memberInfo,  associationDescriptor, !associationDescriptor.IsList, ref isOuter);
+			var association = AssociationHelper.BuildAssociationQuery(this, rootContext, memberInfo, associationDescriptor, !associationDescriptor.IsList, loadWith, ref isOuter);
 
 			associationExpression = association;
 
@@ -143,6 +145,8 @@ namespace LinqToDB.Linq.Builder
 				//
 				var buildInfo = new BuildInfo(rootContext.BuildContext, association, new SelectQuery()) { IsAssociation = true };
 				var sequence = BuildSequence(buildInfo);
+
+				sequence.SetAlias(associationDescriptor.GenerateAlias());
 
 				associationExpression = new ContextRefExpression(association.Type, sequence);
 			}

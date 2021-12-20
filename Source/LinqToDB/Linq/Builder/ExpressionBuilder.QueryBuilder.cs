@@ -126,40 +126,46 @@ namespace LinqToDB.Linq.Builder
 			var processedMap    = new Dictionary<Expression, Expression>();
 
 			// convert all missed references
-			var postProcessed = BuildSqlExpression(new Dictionary<Expression, Expression>(), context, expression, ProjectFlags.Expression);
+			var translatedMap   = new Dictionary<Expression, Expression>();
+			var postProcessed = BuildSqlExpression(translatedMap, context, expression, ProjectFlags.Expression);
 
 			// Deduplication
 			//
-			postProcessed = postProcessed.Transform((map: processedMap, generator: globalGenerator), static (ctx, e) =>
-			{
-				if (e is SqlErrorExpression error)
-					throw error.CreateError();
-
-				if (e is ContextConstructionExpression construction)
+			postProcessed = postProcessed.Transform(
+				(builder: this, map: processedMap, translatedMap, generator: globalGenerator),
+				static (ctx, e) =>
 				{
-					if (ctx.map.TryGetValue(e, out var processed))
-						return processed;
+					if (e is SqlErrorExpression error)
+						throw error.CreateError();
 
-					var variable = ctx.generator.AssignToVariable(construction.InnerExpression);
-
-					if (construction.PostProcess?.Count > 0)
+					if (e is ContextConstructionExpression construction)
 					{
-						foreach (var lambda in construction.PostProcess)
+						var innerExpression = ctx.builder.BuildSqlExpression(ctx.translatedMap,
+							construction.BuildContext, construction.InnerExpression, ProjectFlags.Expression);
+
+						if (ctx.map.TryGetValue(e, out var processed))
+							return processed;
+
+						var variable = ctx.generator.AssignToVariable(innerExpression);
+
+						if (construction.PostProcess?.Count > 0)
 						{
-							var body = lambda.GetBody(variable);
-							ctx.generator.AddExpression(body);
+							foreach (var lambda in construction.PostProcess)
+							{
+								var body = lambda.GetBody(variable);
+								ctx.generator.AddExpression(body);
+							}
 						}
+
+						ctx.map[e] = variable;
+						return variable;
 					}
 
-					ctx.map[e] = variable;
-					return variable;
-				}
+					//TODO: palcehorders also can be simplified
+					//if (e is SqlPlaceholderExpression) ...
 
-				//TODO: palcehorders also can be simplified
-				//if (e is SqlPlaceholderExpression) ...
-
-				return e;
-			});
+					return e;
+				});
 
 			globalGenerator.AddExpression(postProcessed);
 
@@ -399,20 +405,15 @@ namespace LinqToDB.Linq.Builder
 									return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
 								}
 
-								var l  = Expressions.ConvertMember(context.builder.MappingSchema, ma.Expression?.Type, ma.Member);
-								if (l != null)
-								{
-									// In Grouping KeyContext we have to perform calculation on server side
-									if (context.builder.Contexts.Any(static c => c is GroupByBuilder.KeyContext))
-										return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
-									break;
-								}
+								var newExpr = context.builder.ExposeExpression(ma);
+
+								if (!ReferenceEquals(newExpr, ma))
+									return new TransformInfo(newExpr, false, true);
 
 								if (ma.Member.IsNullableValueMember())
 									break;
 
-
-								var newExpr = context.builder.MakeExpression(ma, context.flags);
+								newExpr = context.builder.MakeExpression(ma, context.flags);
 
 								if (!ReferenceEquals(newExpr, ma))
 									return new TransformInfo(newExpr, false, true);
@@ -591,10 +592,9 @@ namespace LinqToDB.Linq.Builder
 									}
 								}
 
-								if (context.builder.IsServerSideOnly(expr) || context.builder.PreferServerSide(expr, false) || ce.Method.IsSqlPropertyMethodEx())
-								{
-									return new TransformInfo(context.builder.ConvertToSqlExpr(context.context, expr));
-								}
+								var newExpr = context.builder.TryConvertToSqlExpr(context.context, expr);
+								if (newExpr != null)
+									return new TransformInfo(newExpr, false, true);
 
 								return new TransformInfo(expr);
 							}

@@ -646,6 +646,15 @@ namespace LinqToDB.Linq.Builder
 						return new TransformInfo(AliasCall(ex, alias!), false, true);
 					}
 
+					l = Expressions.ConvertMember(MappingSchema, me.Member.ReflectedType!, me.Member);
+
+					if (l != null)
+					{
+						var ex = СonvertMemberExpression(expr, me.Expression!, l);
+
+						return new TransformInfo(ex, false, true);
+					}
+
 					break;
 				}
 
@@ -736,7 +745,7 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		private static Expression СonvertMemberExpression(Expression expr, Expression root, LambdaExpression l)
+		public static Expression СonvertMemberExpression(Expression expr, Expression root, LambdaExpression l)
 		{
 			var body  = l.Body.Unwrap();
 			var parms = l.Parameters.ToDictionary(p => p);

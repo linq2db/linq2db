@@ -44,26 +44,13 @@ namespace LinqToDB.Linq.Builder
 
 		public static TableBuilder.TableContext? GetTableContext(IBuildContext context)
 		{
-			var table = context as TableBuilder.TableContext;
+			var contextRef = new ContextRefExpression(typeof(object), context);
 
-			if (table != null)
-				return table;
-			
-			if (context is LoadWithBuilder.LoadWithContext lwCtx)
-				return lwCtx.TableContext;
-			
-			if (table == null)
-			{
-				var isTableResult = context.IsExpression(null, 0, RequestFor.Table);
-				if (isTableResult.Result)
-				{
-					table = isTableResult.Context as TableBuilder.TableContext;
-					if (table != null)
-						return table;
-				}
-			}
+			var rootContext = context.Builder.MakeExpression(contextRef, ProjectFlags.Root) as ContextRefExpression;
 
-			return null;
+			var tableContext = rootContext?.BuildContext as TableBuilder.TableContext;
+
+			return tableContext;
 		}
 
 		public static IBuildContext UnwrapSubqueryContext(IBuildContext context)

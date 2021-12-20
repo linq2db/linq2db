@@ -543,15 +543,15 @@ namespace Tests.Linq
 					select new
 					{
 						n.ParentID,
-						Children = n.Children.ToList(),
-						//Children = n.Children//.Select(t => t).ToList(),
-						//Children = n.Children.Where(t => 1 == 1).ToList().ToList(),
+						Children1 = n.Children.ToList(),
+						Children2 = n.Children.Select(t => t).ToList(),
+						Children3 = n.Children.Where(t => 1 == 1).ToList().ToList(),
 					};
 
 				var list = q.ToList();
 
-				Assert.That(list.Count,       Is.GreaterThan(0));
-				Assert.That(list[0].Children, Is.Not.Null);
+				Assert.That(list.Count,        Is.GreaterThan(0));
+				Assert.That(list[0].Children1, Is.Not.Null);
 			}
 		}
 
@@ -1193,12 +1193,12 @@ namespace Tests.Linq
 		public void Issue2981Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var t1 = db.CreateLocalTable<Issue2981Entity>(new[]
+			using var t1 = db.CreateLocalTable(new[]
 			{
 				new Issue2981Entity {OwnerId = 1}, 
 				new Issue2981Entity {OwnerId = 2}
 			});
-			using var t2 = db.CreateLocalTable<Issue2981OwnerEntity>(new[] {new Issue2981OwnerEntity {Id = 1}});
+			using var t2 = db.CreateLocalTable(new[] {new Issue2981OwnerEntity {Id = 1}});
 
 
 			var res = t1.Select(r => new {r.OwnerId, Id = (int?)r.Owner!.Id})

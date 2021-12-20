@@ -183,8 +183,28 @@ namespace LinqToDB.Linq.Builder
 			return (Query<T>)_query;
 		}
 
+		/// <summary>
+		/// Contains information from which expression sequence were built. Used for Eager Loading.
+		/// </summary>
+		private Dictionary<IBuildContext, Expression> _sequenceExpressions = new();
+
+		public Expression GetSequenceExpression(IBuildContext sequence)
+		{
+			if (_sequenceExpressions.TryGetValue(sequence, out var expr))
+				return expr;
+
+			throw new InvalidOperationException("Sequence has no registered expression");
+		}
+
+		public void AssignSequenceExpression(IBuildContext sequence, Expression sequenceExpression)
+		{
+			_sequenceExpressions[sequence] = sequenceExpression;
+		}
+
 		public IBuildContext BuildSequence(BuildInfo buildInfo)
 		{
+			var originalExpression = buildInfo.Expression;
+
 			buildInfo.Expression = buildInfo.Expression.Unwrap();
 
 			var n = _builders[0].BuildCounter;
@@ -199,6 +219,9 @@ namespace LinqToDB.Linq.Builder
 						builder.BuildCounter++;
 
 					_reorder = _reorder || n < builder.BuildCounter;
+
+					if (sequence != null)
+						_sequenceExpressions[sequence] = originalExpression;
 
 					return sequence!;
 				}

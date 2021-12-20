@@ -99,6 +99,9 @@ namespace LinqToDB.Linq.Builder
 			{
 				SelectQuery.Select.Columns[0].Alias = alias;
 			}
+
+			if (SelectQuery.From.Tables.Count > 0)
+				SelectQuery.From.Tables[SelectQuery.From.Tables.Count - 1].Alias = alias;
 		}
 
 		public virtual ISqlExpression? GetSubQuery(IBuildContext context)
