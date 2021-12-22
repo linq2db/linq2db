@@ -28,6 +28,8 @@ namespace LinqToDB.Linq.Builder
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var take     = 0;
 
+			var forceOuter = buildInfo.Parent is DefaultIfEmptyBuilder.DefaultIfEmptyContext; 
+
 			if (!buildInfo.IsSubQuery || builder.DataContext.SqlProviderFlags.IsSubQueryTakeSupported)
 			{
 				switch (methodCall.Method.Name)
@@ -57,7 +59,7 @@ namespace LinqToDB.Linq.Builder
 				builder.BuildTake(sequence, takeExpression, null);
 			}
 
-			if (methodCall.Method.Name.Contains("OrDefault"))
+			if (forceOuter || methodCall.Method.Name.Contains("OrDefault"))
 			{
 				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null);
 			}
@@ -138,7 +140,7 @@ namespace LinqToDB.Linq.Builder
 				IsSubQuery    = isSubQuery;
 				IsAssociation = isAssociation;
 
-				if (IsAssociation)
+				if (isSubQuery)
 				{
 					CreateJoin();
 				}

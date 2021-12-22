@@ -115,9 +115,12 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
+				if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Root))
+					return path;
+
 				var expr = base.MakeExpression(path, flags);
 
-				if (!Disabled && flags.HasFlag(ProjectFlags.Expression))
+				if (!Disabled && flags.HasFlag(ProjectFlags.Expression) && SequenceHelper.IsSameContext(path, this))
 				{
 					expr = Builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), this, expr, flags);
 

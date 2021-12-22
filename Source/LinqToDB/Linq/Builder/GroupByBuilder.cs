@@ -822,7 +822,7 @@ namespace LinqToDB.Linq.Builder
 				if (buildInfo.AggregationTest)
 					return new AggregationRoot(this);
 
-				if (!buildInfo.CreateSubQuery)
+				if (!buildInfo.IsSubQuery)
 					return this;
 
 				if (SequenceHelper.IsSameContext(expression, this))

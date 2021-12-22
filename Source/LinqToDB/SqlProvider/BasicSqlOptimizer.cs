@@ -364,7 +364,7 @@ namespace LinqToDB.SqlProvider
 
 		SelectQuery MoveCountSubQuery(SelectQuery selectQuery, EvaluationContext context)
 		{
-			selectQuery.Visit((context, optimizer: this), static (context, e) => context.optimizer.MoveCountSubQuery(e, context.context));
+			//selectQuery.Visit((context, optimizer: this), static (context, e) => context.optimizer.MoveCountSubQuery(e, context.context));
 			return selectQuery;
 		}
 

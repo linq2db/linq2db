@@ -144,6 +144,11 @@ namespace LinqToDB.Linq
 			public static PropertyInfo Variables   = PropertyOf(e => e.Variables);
 		}
 
+		public class ContextConstruction : Expressor<ContextConstructionExpression>
+		{
+			public static PropertyInfo InnerExpression = PropertyOf(e => e.InnerExpression);
+		}
+
 		public static MethodInfo ExprItem  = IndexExpressor<Expression>         .Item;
 		public static MethodInfo ParamItem = IndexExpressor<ParameterExpression>.Item;
 		public static MethodInfo ElemItem  = IndexExpressor<ElementInit>        .Item;

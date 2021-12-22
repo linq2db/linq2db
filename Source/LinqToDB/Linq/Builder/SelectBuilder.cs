@@ -61,8 +61,6 @@ namespace LinqToDB.Linq.Builder
 			{
 				var prevSequence = sequence;
 				sequence = new SubQueryContext(sequence);
-				builder.RegisterSubqueryContextReplacement(new ContextRefExpression(selector.Parameters[0].Type, prevSequence),
-					new ContextRefExpression(selector.Parameters[0].Type, sequence));
 			}
 
 
@@ -148,6 +146,7 @@ namespace LinqToDB.Linq.Builder
 		protected override SequenceConvertInfo? Convert(
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
+			return null;
 			var originalMethodCall = methodCall;
 			var selector           = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 			var info               = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), selector.Parameters[0], true);

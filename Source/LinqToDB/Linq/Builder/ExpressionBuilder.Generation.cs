@@ -147,6 +147,16 @@ namespace LinqToDB.Linq.Builder
 				{
 					var memberInfo = info[0].MemberInfo;
 					var expression = Expression.MakeMemberAccess(contextRef, memberInfo);
+					var ad         = GetAssociationDescriptor(expression, out var accessorMember);
+					if (ad != null)
+					{
+						if (!string.IsNullOrEmpty(ad.Storage))
+						{
+							memberInfo = memberInfo.ReflectedType!.GetMember(ad.Storage!,
+								BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy |
+								BindingFlags.NonPublic).SingleOrDefault();
+						}
+					}
 					members.Add(new AssignmentInfo(memberInfo, expression));
 				}
 			}

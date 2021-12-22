@@ -23,27 +23,6 @@ namespace LinqToDB.Linq.Builder
 
 	partial class ExpressionBuilder
 	{
-		#region Suqueries support
-
-		Dictionary<Expression, Expression>? _subqueryContextReplacement;
-
-		public void RegisterSubqueryContextReplacement(Expression previous, Expression newExpression)
-		{
-			_subqueryContextReplacement ??= new(ExpressionEqualityComparer.Instance);
-			_subqueryContextReplacement.Remove(previous);
-			_subqueryContextReplacement.Add(previous, newExpression);
-		}
-
-		public Expression GetSubqueryContextReplacement(Expression context)
-		{
-			if (_subqueryContextReplacement == null)
-				return context;
-			if (_subqueryContextReplacement.TryGetValue(context, out var newExpression))
-				return newExpression;
-			return context;
-		}
-
-		#endregion
 
 		#region Build Where
 
@@ -54,6 +33,15 @@ namespace LinqToDB.Linq.Builder
 			var expr               = ConvertExpression(body.Unwrap());
 			var makeHaving         = false;
 
+			var sc = new SqlSearchCondition();
+			BuildSearchCondition(parent ?? sequence, expr, sc.Conditions);
+
+			if (!sequence.SelectQuery.GroupBy.IsEmpty)
+				sequence.SelectQuery.Having.SearchCondition = sc;
+			else
+				sequence.SelectQuery.Where.SearchCondition = sc;
+
+			/*
 			if (checkForSubQuery && CheckSubQueryForWhere(sequence, expr, out makeHaving))
 			{
 				sequence = new SubQueryContext(sequence);
@@ -61,8 +49,6 @@ namespace LinqToDB.Linq.Builder
 				var subqueryContextRef = new ContextRefExpression(condition.Parameters[0].Type, sequence);
 				body = condition.GetBody(subqueryContextRef).Unwrap();
 				expr = ConvertExpression(body.Unwrap());
-
-				RegisterSubqueryContextReplacement(originalContextRef, subqueryContextRef);
 			}
 
 			var conditions = enforceHaving || makeHaving && !sequence.SelectQuery.GroupBy.IsEmpty?
@@ -70,6 +56,7 @@ namespace LinqToDB.Linq.Builder
 				sequence.SelectQuery.Where. SearchCondition.Conditions;
 
 			BuildSearchCondition(sequence, expr, conditions);
+			*/
 
 			return sequence;
 		}
@@ -92,9 +79,6 @@ namespace LinqToDB.Linq.Builder
 
 		bool CheckSubQueryForWhere(IBuildContext context, Expression expression, out bool makeHaving)
 		{
-			makeHaving = false;
-			return false;
-
 			var ctx = new CheckSubQueryForWhereContext(this, context);
 
 			expression.Visit(ctx, static (context, expr) =>
@@ -919,7 +903,7 @@ namespace LinqToDB.Linq.Builder
 			return ConvertToSql(context, expression, false, columnDescriptor);
 		}
 
-		[DebuggerDisplay("E: {Expression}, C: {Context}")]
+		[DebuggerDisplay("F: {Flags}, E: {Expression}, C: {Context}")]
 		struct SqlCacheKey
 		{
 			public SqlCacheKey(Expression? expression, IBuildContext? context, ColumnDescriptor? columnDescriptor, ProjectFlags flags)
@@ -1827,13 +1811,13 @@ namespace LinqToDB.Linq.Builder
 				if (notNull.Count == 0)
 					notNull = placeholders;
 
-				var searchcondition = new SqlSearchCondition();
+				var searchCondition = new SqlSearchCondition();
 				foreach (var placeholder in notNull)
 				{
-					searchcondition.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(placeholder.Sql.Sql, isNot), isNot));
+					searchCondition.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(placeholder.Sql.Sql, isNot), isNot));
 				}
 
-				return searchcondition;
+				return searchCondition;
 			}
 
 
@@ -1855,6 +1839,8 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Equal:
 				case ExpressionType.NotEqual:
 
+					var isNot = nodeType == ExpressionType.NotEqual;
+
 					if (leftExpr is SqlPlaceholderExpression placeholderLeft)
 					{
 						l = placeholderLeft.Sql.Sql;
@@ -1873,24 +1859,35 @@ namespace LinqToDB.Linq.Builder
 
 					if (l is SqlValue lv && lv.Value == null)
 					{
-						return GenerateNullComaprison(rightPlaceholders,
-							nodeType == ExpressionType.NotEqual);
+						return GenerateNullComaprison(rightPlaceholders, isNot);
 					}
 
 					if (r is SqlValue rv && rv.Value == null)
 					{
-						return GenerateNullComaprison(leftPlaceholders,
-							nodeType == ExpressionType.NotEqual);
+						return GenerateNullComaprison(leftPlaceholders, isNot);
 					}
 
 					if (leftPlaceholders.Count == 0 || rightPlaceholders.Count == 0)
 						return null;
 
-					MatchPlaceholders(leftExpr, rightExpr);
+					var matched = MatchPlaceholders(leftExpr, rightExpr);
 
-					throw new NotImplementedException();
+					if (matched.Count == 0)
+						return null;
 
-					break;
+					var searchCondition = new SqlSearchCondition();
+					foreach (var pair in matched)
+					{
+						var equality = new SqlPredicate.ExprExpr(
+							pair.left.Sql.Sql,
+							isNot ? SqlPredicate.Operator.NotEqual : SqlPredicate.Operator.Equal,
+							pair.right.Sql.Sql, Configuration.Linq.CompareNullsAsValues ? true : null);
+
+						searchCondition.Conditions.Add(new SqlCondition(false, equality, isNot));
+
+					}
+
+					return searchCondition;
 			}
 
 			var op = nodeType switch
@@ -2014,27 +2011,30 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		//TODO: lazy implementation
-		public Dictionary<Expression, (Expression left, Expression right)> MatchPlaceholders(Expression leftExpr, Expression rightExpr)
+		public List<(SqlPlaceholderExpression left, SqlPlaceholderExpression right)> MatchPlaceholders(Expression leftExpr, Expression rightExpr)
 		{
-			var leftPaths = new Dictionary<Expression, Expression>();
+			var leftPaths = new Dictionary<Expression, SqlPlaceholderExpression>();
 			leftExpr.Path(ExpressionParam, leftPaths, static (paths, e, p) =>
 			{
 				if (e is SqlPlaceholderExpression placeholder)
 				{
-					paths.Add(p, e);
+					paths.Add(p, placeholder);
 				}
 			});
 
-			var rightPaths = new Dictionary<Expression, Expression>();
+			var rightPaths = new Dictionary<Expression, SqlPlaceholderExpression>();
 			rightExpr.Path(ExpressionParam, rightPaths, static (paths, e, p) =>
 			{
 				if (e is SqlPlaceholderExpression placeholder)
 				{
-					paths.Add(p, e);
+					paths.Add(p, placeholder);
 				}
 			});
 
-			throw new NotImplementedException();
+			var matched = leftPaths.Join(rightPaths, x => x.Key, x => x.Key, (l, r) => (left: l.Value, right: r.Value),
+				ExpressionEqualityComparer.Instance).ToList();
+
+			return matched;
 		}
 
 		public List<SqlPlaceholderExpression> CollectPlaceholders(Expression expression)
@@ -2070,7 +2070,7 @@ namespace LinqToDB.Linq.Builder
 			if (expression is ContextConstructionExpression)
 			{
 				var filtered = result.Where(p => (p.Sql.Sql is SqlField field) && field.IsPrimaryKey).ToList();
-				if (filtered.Count == 0)
+				if (filtered.Count > 0)
 					return filtered;
 			}
 
