@@ -1854,8 +1854,8 @@ namespace LinqToDB.Linq.Builder
 					if (l != null && r != null)
 						break;
 
-					var leftPlaceholders  = CollectPlaceholders(leftExpr);
-					var rightPlaceholders = CollectPlaceholders(rightExpr);
+					var leftPlaceholders  = CollectDistinctPlaceholders(leftExpr);
+					var rightPlaceholders = CollectDistinctPlaceholders(rightExpr);
 
 					if (l is SqlValue lv && lv.Value == null)
 					{
@@ -2041,12 +2041,27 @@ namespace LinqToDB.Linq.Builder
 		{
 			var result = new List<SqlPlaceholderExpression>();
 
-			expression.Visit(result, (list, e) =>
+			expression.Visit(result, static (list, e) =>
+			{
+				if (e is SqlPlaceholderExpression placeholder)
+				{
+					list.Add(placeholder);
+				}
+			});
+
+			return result;
+		}
+
+		public List<SqlPlaceholderExpression> CollectDistinctPlaceholders(Expression expression)
+		{
+			var result = new List<SqlPlaceholderExpression>();
+
+			expression.Visit(result, static (list, e) =>
 			{
 				if (e is SqlPlaceholderExpression placeholder)
 				{
 					if (!list.Contains(placeholder))
-						result.Add(placeholder);
+						list.Add(placeholder);
 				}
 			});
 
@@ -2057,12 +2072,12 @@ namespace LinqToDB.Linq.Builder
 		{
 			var result = new List<SqlPlaceholderExpression>();
 
-			expression.Visit(result, (list, e) =>
+			expression.Visit(result, static (list, e) =>
 			{
 				if (e is SqlPlaceholderExpression placeholder)
 				{
 					if (!list.Contains(placeholder))
-						result.Add(placeholder);
+						list.Add(placeholder);
 				}
 			});
 

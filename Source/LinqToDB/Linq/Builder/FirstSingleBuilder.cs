@@ -70,6 +70,8 @@ namespace LinqToDB.Linq.Builder
 		protected override SequenceConvertInfo? Convert(
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
+			return null;
+
 			var isAsync = methodCall.Method.Name.EndsWith("Async");
 
 			if (methodCall.Arguments.Count == (isAsync ? 3 : 2))
@@ -139,11 +141,6 @@ namespace LinqToDB.Linq.Builder
 				_methodCall   = methodCall;
 				IsSubQuery    = isSubQuery;
 				IsAssociation = isAssociation;
-
-				if (isSubQuery)
-				{
-					CreateJoin();
-				}
 			}
 
 			readonly MethodCallExpression _methodCall;
@@ -394,7 +391,9 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (IsSubQuery)
 					{
-						if (!IsAssociation && projected is SqlPlaceholderExpression placeholder)
+						CreateJoin();
+
+						/*if (!IsAssociation && projected is SqlPlaceholderExpression placeholder)
 						{
 							// we can make subquery
 							if (_subquerySql == null)
@@ -406,12 +405,14 @@ namespace LinqToDB.Linq.Builder
 							}
 
 							return _subquerySql;
-						}
+						}*/
 
+						/*
 						if (flags.HasFlag(ProjectFlags.Root) && projected is ContextRefExpression)
 							return projected;
 
 						CreateJoin();
+						*/
 
 						return projected;
 					}
