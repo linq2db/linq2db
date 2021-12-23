@@ -317,8 +317,14 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression? TryConvertToSqlExpr(IBuildContext context, Expression expression)
 		{
+			//Just test that we can convert
 			var converted = ConvertToSqlExpr(context, expression, testOnly: true);
 			if (converted is not SqlPlaceholderExpression)
+				return null;
+
+			//Test conversion success, do it again
+			converted = ConvertToSqlExpr(context, expression, testOnly: false);
+			if (converted is not SqlPlaceholderExpression placeholder)
 				return null;
 
 			return converted;
@@ -352,6 +358,26 @@ namespace LinqToDB.Linq.Builder
 				(builder: this, context, flags, alias, translated),
 				static (context, expr) =>
 				{
+					if (context.builder.CanBeCompiled(expr) && context.flags.HasFlag(ProjectFlags.Expression))
+					{
+						if (context.builder.ParametersContext._expressionAccessors.TryGetValue(expr, out var accessor))
+						{
+							// get data from parameter accessor
+
+							var valueAccessor = context.builder.ParametersContext.ReplaceParameter(
+								context.builder.ParametersContext._expressionAccessors, expr, false, s => { });
+
+							var valueExpr = valueAccessor.ValueExpression;
+
+							if (valueExpr.Type != expr.Type)
+							{
+								valueExpr = Expression.Convert(valueExpr.UnwrapConvert(), expr.Type);
+							}
+
+							return new TransformInfo(valueExpr, true);
+						}
+					}
+
 					if (context.translated.TryGetValue(expr, out var replaced))
 						return new TransformInfo(replaced, true);
 
@@ -592,9 +618,12 @@ namespace LinqToDB.Linq.Builder
 									}
 								}
 
-								var newExpr = context.builder.TryConvertToSqlExpr(context.context, expr);
-								if (newExpr != null)
-									return new TransformInfo(newExpr, false, true);
+								//if (context.flags.HasFlag(ProjectFlags.SQL) || context.builder.IsServerSideContext(context.context))
+								{
+									var newExpr = context.builder.TryConvertToSqlExpr(context.context, expr);
+									if (newExpr != null)
+										return new TransformInfo(newExpr, false, true);
+								}
 
 								return new TransformInfo(expr);
 							}

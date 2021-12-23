@@ -91,11 +91,23 @@ namespace LinqToDB.Linq.Builder
 
 			var functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence, SqlFunction.CreateCount(returnType, sequence.SelectQuery), buildInfo.Expression);
 
-			if (!inGrouping && buildInfo.IsSubQuery)
+			if (buildInfo.IsSubQuery)
 			{
-				builder.MakeColumn(sequence, functionPlaceholder);
+				if (!inGrouping)
+				{
+					if (!builder.DataContext.SqlProviderFlags.IsCountSubQuerySupported)
+					{
+						CreateWeakOuterJoin(buildInfo.Parent!, sequence.SelectQuery);
+					}
+					else
+					{
+						builder.MakeColumn(sequence, functionPlaceholder);
 
-				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(buildInfo.Parent, sequence.SelectQuery, functionPlaceholder.MemberExpression, functionPlaceholder.ConvertType);
+						functionPlaceholder = ExpressionBuilder.CreatePlaceholder(buildInfo.Parent,
+							sequence.SelectQuery, functionPlaceholder.MemberExpression,
+							functionPlaceholder.ConvertType);
+					}
+				}
 			}
 
 			var context = new CountContext(buildInfo.Parent, sequence, returnType);
@@ -104,6 +116,15 @@ namespace LinqToDB.Linq.Builder
 
 			return context;
 		}
+
+		void CreateWeakOuterJoin(IBuildContext parent, SelectQuery selectQuery)
+		{
+			var join = selectQuery.OuterApply();
+			join.JoinedTable.IsWeak = true;
+
+			parent.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
+		}
+
 
 		protected override SequenceConvertInfo? Convert(
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
