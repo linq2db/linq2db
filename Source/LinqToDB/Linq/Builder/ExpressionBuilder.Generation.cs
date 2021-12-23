@@ -4,12 +4,13 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using LinqToDB.Expressions;
-using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Extensions;
+	using Mapping;
+	using LinqToDB.Expressions;
+
 	partial class ExpressionBuilder
 	{
 		#region Entity Construction
@@ -44,11 +45,62 @@ namespace LinqToDB.Linq.Builder
 			public Expression        Expression { get; }
 		}
 
-		public Expression BuildEntityExpression(IBuildContext context, Type entityType, ProjectFlags flags)
+		public Expression BuildEntityExpression(IBuildContext context, Type entityType, ProjectFlags flags, bool checkInheritance = true)
 		{
 			entityType = GetTypeForInstantiation(entityType);
 
 			var entityDescriptor = MappingSchema.GetEntityDescriptor(entityType);
+
+			if (checkInheritance && flags.HasFlag(ProjectFlags.Expression))
+			{
+				var inheritanceMappings = entityDescriptor.InheritanceMapping;
+				if (inheritanceMappings.Count > 0)
+				{
+					var defaultDescriptor = inheritanceMappings.FirstOrDefault(x => x.IsDefault);
+
+					Expression defaultExpression;
+					if (defaultDescriptor != null)
+					{
+						defaultExpression = BuildEntityExpression(context, defaultDescriptor.Type, flags, false);
+					}
+					else
+					{
+						var generator = new ExpressionGenerator();
+
+						Expression<Func<object, Exception>> throwExpr = code =>
+							new LinqException(
+								"Inheritance mapping is not defined for discriminator value '{0}' in the '{1}' hierarchy.",
+								code, entityType);
+
+						generator.Throw(throwExpr.Body);
+						generator.AddExpression(new DefaultValueExpression(MappingSchema, entityType));
+
+						defaultExpression = generator.Build();
+					}
+
+					var current = defaultExpression;
+
+					for (int i = 0; i < inheritanceMappings.Count; i++)
+					{
+						var inheritance = inheritanceMappings[i];
+						if (inheritance.IsDefault)
+							continue;
+
+						var contextRef = new ContextRefExpression(inheritance.Type, context);
+
+						var test = Equal(
+							MappingSchema,
+							Expression.MakeMemberAccess(contextRef, inheritance.Discriminator.MemberInfo),
+							Expression.Constant(inheritance.Code));
+
+						var tableExpr = Expression.Convert(BuildEntityExpression(context, inheritance.Type, flags, false), current.Type);
+
+						current = Expression.Condition(test, tableExpr, current);
+					}
+
+					return current;
+				}
+			}
 
 			var members = BuildMembers(context, entityDescriptor, flags);
 
@@ -130,7 +182,10 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					me = Expression.MakeMemberAccess(refExpression, column.MemberInfo);
+					var mi = refExpression.Type.GetMemberEx(column.MemberInfo);
+					if (mi == null)
+						continue;
+					me = Expression.MakeMemberAccess(refExpression, mi);
 				}
 
 				var sqlExpression = context.Builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), context, me, projectFlags);
