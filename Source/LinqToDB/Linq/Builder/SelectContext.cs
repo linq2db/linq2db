@@ -185,14 +185,6 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				result = Builder.Project(this, path, null, 0, flags, Body);
-
-				if (!ReferenceEquals(result, Body))
-				{
-					if (flags.HasFlag(ProjectFlags.Root) && !(result is ContextRefExpression || result is MemberExpression || result is MethodCallExpression))
-					{
-						return path;
-					}
-				}
 			}
 
 			return result;

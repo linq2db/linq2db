@@ -3929,23 +3929,36 @@ namespace LinqToDB.Linq.Builder
 
 			if (path is MemberExpression memberExpression)
 			{
-				var root = MakeExpression(memberExpression.Expression, ProjectFlags.Root);
+				rootContext = path.GetLevelExpression(MappingSchema, 0) as ContextRefExpression;
 
-				var newPath = (Expression)memberExpression.Update(root);
-
-				path = newPath;
-
-				if (IsAssociation(newPath))
+				if (rootContext != null)
 				{
-					if (root is ContextRefExpression contextRef)
-						expression = TryCreateAssociation(path, contextRef);
+					expression = rootContext.BuildContext.MakeExpression(path, flags);
+					if (ReferenceEquals(expression, path))
+						expression = null;
 				}
 
-				rootContext = root as ContextRefExpression;
-				if (rootContext == null)
+				if (expression == null)
 				{
-					//TODO: why i cannot do that without GetLevelExpression ???
-					rootContext = root.GetLevelExpression(MappingSchema, 0) as ContextRefExpression;
+					var root = MakeExpression(memberExpression.Expression, ProjectFlags.Root);
+
+					Expression newPath;
+					newPath = memberExpression.Update(root);
+
+					path = newPath;
+
+					if (IsAssociation(newPath))
+					{
+						if (root is ContextRefExpression contextRef)
+							expression = TryCreateAssociation(path, contextRef);
+					}
+
+					rootContext = root as ContextRefExpression;
+					if (rootContext == null)
+					{
+						//TODO: why i cannot do that without GetLevelExpression ???
+						rootContext = root.GetLevelExpression(MappingSchema, 0) as ContextRefExpression;
+					}
 				}
 			}
 			else if (path.NodeType == ExpressionType.Convert)
@@ -4002,7 +4015,7 @@ namespace LinqToDB.Linq.Builder
 			do
 			{
 				var newExpr = MakeExpression(expression, flags);
-				if (expression == newExpr)
+				if (ReferenceEquals(expression, newExpr))
 					break;
 				expression = newExpr;
 			} while (true);
