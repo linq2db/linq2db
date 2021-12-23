@@ -513,6 +513,15 @@ namespace LinqToDB.Linq.Builder
 
 				return base.IsExpression(expression, level, requestFlag);
 			}
+
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				// stop on this context
+				if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Root))
+					return path;
+
+				return base.MakeExpression(path, flags);
+			}
 		}
 	}
 }

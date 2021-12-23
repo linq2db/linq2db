@@ -129,11 +129,6 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			/*
-			if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Root))
-				return path;
-
-			*/
 			var result = base.MakeExpression(path, flags);
 			result = Builder.UpdateNesting(this, result);
 			return result;

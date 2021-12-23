@@ -618,7 +618,8 @@ namespace LinqToDB.Linq.Builder
 									}
 								}
 
-								//if (context.flags.HasFlag(ProjectFlags.SQL) || context.builder.IsServerSideContext(context.context))
+								//TODO: Don't like group by check, we have to validate this case
+								if (context.flags.HasFlag(ProjectFlags.SQL) || !context.context.SelectQuery.GroupBy.IsEmpty)
 								{
 									var newExpr = context.builder.TryConvertToSqlExpr(context.context, expr);
 									if (newExpr != null)

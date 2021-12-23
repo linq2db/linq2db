@@ -17,11 +17,9 @@ namespace LinqToDB.Linq.Builder
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			var sql      = sequence.SelectQuery;
+			var prevSequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			if (sql.Select.TakeValue != null || sql.Select.SkipValue != null)
-				sequence = new SubQueryContext(sequence);
+			var sequence = new SubQueryContext(prevSequence);
 
 			sequence.SelectQuery.Select.IsDistinct = true;
 
@@ -33,7 +31,9 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				builder.ConvertToSqlExpr(sequence, new ContextRefExpression(methodCall.Arguments[0].Type, sequence));
+				// create all columns
+				var sqlExpr = builder.ConvertToSqlExpr(prevSequence, new ContextRefExpression(methodCall.Arguments[0].Type, prevSequence));
+				builder.UpdateNesting(sequence, sqlExpr);
 			}
 
 			return sequence;
