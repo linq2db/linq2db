@@ -473,7 +473,7 @@ namespace LinqToDB.Linq.Builder
 		private bool CanBeCompiledFind(CanBeCompiledContext context, Expression ex)
 		{
 			if (IsServerSideOnly(ex))
-					return true;
+				return true;
 
 			switch (ex.NodeType)
 			{

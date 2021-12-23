@@ -607,23 +607,22 @@ namespace LinqToDB.Linq.Builder
 
 								if (context.builder.IsSequence(info))
 								{
-									// handling case when sequence can be just collection and we do not need SQL
-									//
-									if (!(context.flags.HasFlag(ProjectFlags.Expression) &&
-									     context.builder.CanBeCompiled(expr)))
-									{
-										return new TransformInfo(
-											context.builder.GetSubQueryExpression(context.context, ce, false,
-												context.alias), false, true);
-									}
+									return new TransformInfo(
+										context.builder.GetSubQueryExpression(context.context, ce, false,
+											context.alias), false, true);
 								}
 
 								//TODO: Don't like group by check, we have to validate this case
-								if (context.flags.HasFlag(ProjectFlags.SQL) || !context.context.SelectQuery.GroupBy.IsEmpty)
+								if (context.flags.HasFlag(ProjectFlags.SQL)      ||
+								    !context.context.SelectQuery.GroupBy.IsEmpty ||
+								    context.builder.IsServerSideOnly(expr)
+								   )
 								{
 									var newExpr = context.builder.TryConvertToSqlExpr(context.context, expr);
 									if (newExpr != null)
+									{
 										return new TransformInfo(newExpr, false, true);
+									}
 								}
 
 								return new TransformInfo(expr);

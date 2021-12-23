@@ -173,6 +173,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (Body is ContextRefExpression)
 						return Body;
+
 					return path;
 				}
 
@@ -185,9 +186,13 @@ namespace LinqToDB.Linq.Builder
 			{
 				result = Builder.Project(this, path, null, 0, flags, Body);
 
-				if (flags.HasFlag(ProjectFlags.Root) && result is not ContextRefExpression)
-					return path;
-
+				if (!ReferenceEquals(result, Body))
+				{
+					if (flags.HasFlag(ProjectFlags.Root) && !(result is ContextRefExpression || result is MemberExpression || result is MethodCallExpression))
+					{
+						return path;
+					}
+				}
 			}
 
 			return result;
