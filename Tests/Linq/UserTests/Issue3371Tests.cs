@@ -18,7 +18,7 @@ namespace Tests.UserTests
 			public PayRate()
 			{
 				Name = string.Empty;
-			}
+		}
 		}
 
 		class Employee
