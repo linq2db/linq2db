@@ -124,12 +124,14 @@ namespace LinqToDB.DataModel
 					contextReference,
 					WellKnownTypes.LinqToDB.Data.DataConnection_GetTable,
 					WellKnownTypes.LinqToDB.ITable(entityType),
-					new[] { entityType })
+					new[] { entityType },
+					false)
 				: AST.ExtCall(
 					WellKnownTypes.LinqToDB.DataExtensions,
 					WellKnownTypes.LinqToDB.DataExtensions_GetTable,
 					WellKnownTypes.LinqToDB.ITable(entityType),
 					new[] { entityType },
+					false,
 					// `this` parameter
 					contextReference);
 
@@ -244,6 +246,7 @@ namespace LinqToDB.DataModel
 								WellKnownTypes.System.Linq.Queryable_FirstOrDefault,
 								returnType,
 								new[] { entityType },
+								true,
 								// table `this` parameter
 								methodParameters[0].Reference,
 								// filter expression lambda

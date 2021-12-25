@@ -13,8 +13,9 @@ namespace LinqToDB.CodeModel
 			ICodeExpression              callee,
 			CodeIdentifier               method,
 			IEnumerable<CodeTypeToken>   genericArguments,
+			bool                         skipTypeArguments,
 			IEnumerable<ICodeExpression> parameters)
-			: base(extension, callee, method, genericArguments, parameters)
+			: base(extension, callee, method, genericArguments, skipTypeArguments, parameters)
 		{
 		}
 
@@ -23,8 +24,9 @@ namespace LinqToDB.CodeModel
 			ICodeExpression              callee,
 			CodeIdentifier               method,
 			IEnumerable<IType>           genericArguments,
+			bool                         skipTypeArguments,
 			IEnumerable<ICodeExpression> parameters)
-			: base(extension, callee, method, genericArguments.Select(static t => new CodeTypeToken(t)), parameters)
+			: base(extension, callee, method, genericArguments.Select(static t => new CodeTypeToken(t)), skipTypeArguments, parameters)
 		{
 		}
 

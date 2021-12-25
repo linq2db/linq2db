@@ -139,6 +139,9 @@ namespace LinqToDB.Scaffold
 						if (!nameScopes.ScopesWithNames.TryGetValue(scope, out var names))
 							nameScopes.ScopesWithNames.Add(scope, names = new HashSet<CodeIdentifier>(Language.IdentifierEqualityComparer));
 						names.Add(parsedName[parsedName.Length - 1]);
+						if (!nameScopes.ScopesWithTypeNames.TryGetValue(scope, out names))
+							nameScopes.ScopesWithTypeNames.Add(scope, names = new HashSet<CodeIdentifier>(Language.IdentifierEqualityComparer));
+						names.Add(parsedName[parsedName.Length - 1]);
 					}
 					else
 						throw new InvalidOperationException($"Cannot parse name: {name}");
@@ -150,7 +153,8 @@ namespace LinqToDB.Scaffold
 					_codeGenerationSettings.Indent ?? "\t",
 					_codeGenerationSettings.NullableReferenceTypes,
 					nameScopes.TypesNamespaces,
-					nameScopes.ScopesWithNames);
+					nameScopes.ScopesWithNames,
+					nameScopes.ScopesWithTypeNames);
 
 				codeGenerator.Visit(file);
 

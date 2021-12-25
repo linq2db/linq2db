@@ -60,6 +60,11 @@ namespace LinqToDB.CodeModel
 		IReadOnlyList<IType>?          TypeArguments       { get; }
 
 		/// <summary>
+		/// Returns <c>true</c> if type defined in external code and <c>false</c>, when type defined in current AST (as class).
+		/// </summary>
+		bool                           External            { get; }
+
+		/// <summary>
 		/// Apply nullability flag to current type.
 		/// </summary>
 		/// <param name="nullable">New type nullability status.</param>

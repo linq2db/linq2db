@@ -338,13 +338,14 @@ namespace LinqToDB.DataModel
 						WellKnownTypes.LinqToDB.DataExtensions_GetTable,
 						WellKnownTypes.LinqToDB.ITable(resultEntity.Type.Type),
 						new[] { resultEntity.Type.Type },
+						false,
 						ctxParam.Reference);
 
 				// append First/FirstOrDefault (for optional association)
 				// for non-many relation
 				if (!backReference || !associationModel.ManyToOne)
 				{
-					var optional = backReference ? associationModel.SourceMetadata.CanBeNull : associationModel.TargetMetadata.CanBeNull;
+					var optional = backReference ? associationModel.TargetMetadata.CanBeNull : associationModel.SourceMetadata.CanBeNull;
 
 					// .First(t => t.PK == thisEntity.PK)
 					// or
@@ -354,6 +355,7 @@ namespace LinqToDB.DataModel
 						optional ? WellKnownTypes.System.Linq.Queryable_FirstOrDefault : WellKnownTypes.System.Linq.Queryable_First,
 						resultEntity.Type.Type.WithNullability(optional),
 						new[] { resultEntity.Type.Type },
+						true,
 						body,
 						filterLambda.Method);
 				}
@@ -365,6 +367,7 @@ namespace LinqToDB.DataModel
 						WellKnownTypes.System.Linq.Queryable_Where,
 						WellKnownTypes.System.Linq.IQueryable(resultEntity.Type.Type),
 						new [] { resultEntity.Type.Type },
+						true,
 						body,
 						filterLambda.Method);
 				}

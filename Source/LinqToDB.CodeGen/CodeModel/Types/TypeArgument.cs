@@ -21,6 +21,7 @@ namespace LinqToDB.CodeModel
 		TypeKind       IType.Kind       => TypeKind.TypeArgument;
 		bool           IType.IsNullable => _isNullable;
 		CodeIdentifier IType.Name       => _name;
+		bool           IType.External   => false;
 
 		IType IType.WithNullability(bool nullable)
 		{

@@ -70,7 +70,7 @@ namespace LinqToDB.CodeModel
 
 		// not valid for current type kind
 		public virtual IReadOnlyList<IType>? TypeArguments       => null;
-		public virtual int?     OpenGenericArgCount => null;
+		public virtual int?                  OpenGenericArgCount => null;
 
 		IType?               IType.ArrayElementType => null;
 		IReadOnlyList<int?>? IType.ArraySizes       => null;

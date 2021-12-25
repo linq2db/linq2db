@@ -112,6 +112,7 @@ namespace LinqToDB.DataModel
 							AST.ArrayType(WellKnownTypes.System.ObjectNullable, false),
 							tupleClassBuilder.Type.Type
 						},
+						false,
 						conversionLambda.Method));
 
 				returnType = tupleClassBuilder.Type.Type.WithNullability(function.ReturnTuple.CanBeNull);

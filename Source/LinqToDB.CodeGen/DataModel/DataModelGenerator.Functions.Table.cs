@@ -108,6 +108,7 @@ namespace LinqToDB.DataModel
 							WellKnownTypes.LinqToDB.DataExtensions_GetTable,
 							WellKnownTypes.LinqToDB.ITable(returnEntity),
 							new[] { returnEntity },
+							false,
 							parameters)));
 
 			// generate MethodInfo field initializer
@@ -133,6 +134,7 @@ namespace LinqToDB.DataModel
 					WellKnownTypes.LinqToDB.Expressions.MemberHelper_MethodOf,
 					WellKnownTypes.System.Reflection.MethodInfo,
 					new[] { functionsGroup.OwnerType.Type },
+					false,
 					lambda.Method));
 
 			// TODO: similar tables

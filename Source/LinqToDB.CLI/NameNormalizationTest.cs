@@ -63,11 +63,8 @@ namespace LinqToDB.Tools
 			var languageProvider = LanguageProviders.CSharp;
 
 			var builder = languageProvider.ASTBuilder;
-			var modelFile = builder.File(
-				"TestNormalization",
-				builder.Import(new[] { new CodeIdentifier("System", true), new CodeIdentifier("Linq", true) }),
-				builder.Import(new[] { new CodeIdentifier("LinqToDB", true) }),
-				builder.Import(new[] { new CodeIdentifier("Tests", true) }));
+			var modelFile = builder.File("TestNormalization");
+			modelFile.Add(builder.DisableWarnings("CS0219", "CS1718"));
 
 			_attributeType = builder.Type(typeof(DataTypeAttribute), false);
 			_type = WellKnownTypes.LinqToDB.DataType.WithNullability(true);
@@ -91,6 +88,7 @@ namespace LinqToDB.Tools
 			CreateClass(builder, classes.New(builder.Name(DUPLICATE_NAME2)), false, true, DUPLICATE_NAME2, DUPLICATE_NAME1, false, false);
 
 			var settings = new CodeGenerationSettings();
+			//settings.ConflictingNames.Add("Tests.DataType");
 			var generator = new Scaffolder(LanguageProviders.CSharp, HumanizerNameConverter.Instance, settings);
 			var sourceCode = generator.GenerateSourceCode(modelFile);
 

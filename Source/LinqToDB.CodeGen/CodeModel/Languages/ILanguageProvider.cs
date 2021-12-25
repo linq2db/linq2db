@@ -98,13 +98,15 @@ namespace LinqToDB.CodeModel
 		/// <param name="indent">Single indent unit character sequence.</param>
 		/// <param name="useNRT">Indicates wether NRT annotations should be emmited by code generator.</param>
 		/// <param name="knownTypes">Information about namespaces, that include types with specific name.</param>
-		/// <param name="sopedNames">Information about names (type name, namespace or type member) in specific naming scopes.</param>
+		/// <param name="scopedNames">Information about names (type name, namespace or type member) in specific naming scopes.</param>
+		/// <param name="scopedTypes">Information about type names (type name and namespace) in specific naming scopes.</param>
 		/// <returns>Visitor instance.</returns>
 		CodeGenerationVisitor GetCodeGenerator(
 			string                                                                 newLine,
 			string                                                                 indent,
 			bool                                                                   useNRT,
 			IReadOnlyDictionary<CodeIdentifier, ISet<IEnumerable<CodeIdentifier>>> knownTypes,
-			IReadOnlyDictionary<IEnumerable<CodeIdentifier>, ISet<CodeIdentifier>> sopedNames);
+			IReadOnlyDictionary<IEnumerable<CodeIdentifier>, ISet<CodeIdentifier>> scopedNames,
+			IReadOnlyDictionary<IEnumerable<CodeIdentifier>, ISet<CodeIdentifier>> scopedTypes);
 	}
 }

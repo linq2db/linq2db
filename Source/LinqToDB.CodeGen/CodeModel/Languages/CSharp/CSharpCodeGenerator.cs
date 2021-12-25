@@ -59,6 +59,10 @@ namespace LinqToDB.CodeModel
 		// key: name scope (namespace or namespace + type(s) name)
 		// value: names in scope: nested namespaces, types and type members
 		private readonly IReadOnlyDictionary<IEnumerable<CodeIdentifier>, ISet<CodeIdentifier>> _scopedNames;
+		// dictionary with name scopes and names, defined in those scopes:
+		// key: name scope (namespace or namespace + type(s) name)
+		// value: names in scope: nested namespaces and types
+		private readonly IReadOnlyDictionary<IEnumerable<CodeIdentifier>, ISet<CodeIdentifier>> _scopedTypes;
 
 		// list of imports for current generation context (file)
 		private IEnumerable<CodeImport>? _currentImports;
@@ -72,13 +76,15 @@ namespace LinqToDB.CodeModel
 			string                                                                 indent,
 			bool                                                                   useNRT,
 			IReadOnlyDictionary<CodeIdentifier, ISet<IEnumerable<CodeIdentifier>>> knownTypes,
-			IReadOnlyDictionary<IEnumerable<CodeIdentifier>, ISet<CodeIdentifier>> scopedNames)
+			IReadOnlyDictionary<IEnumerable<CodeIdentifier>, ISet<CodeIdentifier>> scopedNames,
+			IReadOnlyDictionary<IEnumerable<CodeIdentifier>, ISet<CodeIdentifier>> scopedTypes)
 			: base(newLine, indent)
 		{
 			_languageProvider = languageProvider;
 			_useNRT           = useNRT;
 			_knownTypes       = knownTypes;
 			_scopedNames      = scopedNames;
+			_scopedTypes      = scopedTypes;
 		}
 
 		protected override string[] NewLineSequences => _newLines;
@@ -178,8 +184,11 @@ namespace LinqToDB.CodeModel
 		{
 			if (expression.Type != null)
 			{
-				Visit(expression.Type);
-				Write('.');
+				if (expression.Type.Type.Name == null || _currentType != expression.Type.Type)
+				{
+					Visit(expression.Type);
+					Write('.');
+				}
 			}
 
 			// TODO: check if we can ommit "this" or it will result in name conflicts
@@ -434,7 +443,7 @@ namespace LinqToDB.CodeModel
 
 			Visit(call.MethodName);
 
-			if (call.TypeArguments.Count > 0)
+			if (!call.CanSkipTypeArguments && call.TypeArguments.Count > 0)
 			{
 				Write('<');
 				WriteDelimitedList(call.TypeArguments, ", ", false);
@@ -1127,128 +1136,105 @@ namespace LinqToDB.CodeModel
 		private void RenderType(IType type, CodeIdentifier? nameOverride, bool typeOnlyContext)
 		{
 			var alias = _languageProvider.GetAlias(type);
-			// this method use various visibility/name conflict checks to identify wether we need to generate
-			// parent type prefix or namespace
-			// those checks are by no means complete and probably will fail in some complex cases
-			// but this is something to improve for later
 
-			// identify wether it is necessary to generate parent type(s) for nested type
-			// skip generation for aliased types as they cannot be nested
+			// when we render type name we need to identify wether we need to render qualified name (and to which degree) or not
+			// name scopes for C# described here https://github.com/dotnet/csharplang/blob/main/spec/basic-concepts.md#scopes
+			// Procedure currently simplified to handle only actual cases
+			//
+			// For aliased types we skip this procedure
 			if (alias == null && type.Name != null)
 			{
+				// we should use acually rendered identifier
+				// this is e.g. a case for attributes where we remove Attribute suffix on render
 				var typeName = nameOverride ?? type.Name;
 
-				var scope = new List<CodeIdentifier>();
-				var ns = type.Namespace;
-				var parent = type.Parent;
-				while (parent != null)
+				// only applicable to types with parent scope
+				if (type.Namespace != null || type.Parent != null)
 				{
-					ns = parent.Namespace;
-					scope.Insert(0, parent.Name!);
-					parent = parent.Parent;
-				}
-
-				if (ns != null)
-					scope.InsertRange(0, ns);
-
-				// flag, indicating that parent type or namespace should be generated for current type
-				var fullyQualify = false;
-
-				if (type.Parent != null)
-				{
-					// skip parent types generation for types, directly nested into current class
-					// (class we currently generate AKA _currentType, not type we pass into this method)
-					// or parent classes of current class
-					// otherwise don't generate parent type name for type that present in current visibility scope
-					var t = _currentType;
-					fullyQualify = true;
-					while (t != null)
-					{
-						// we use by-refrence comparison here as we don't create type duplicates for classes, defined
-						// in current AST (if this will happen, this comparison definitely will fails)
-						fullyQualify = t != type.Parent;
-						if (!fullyQualify)
-							break;
-						t = t.Parent;
-					}
-				}
-
-				// identify wether we need to generate type namespace
-				// skip generation for aliased types
-				if (type.Namespace != null)
-				{
-
-					// check if type with such name exists in multiple namespaces
-					if (_knownTypes.TryGetValue(typeName, out var namespaces))
-						// multiple namespaces || type with same name in other namespace
-						// second check could look unnecessary as in that case namespaces could have at least two items
-						// but actually it is valid case when nameOverride specified
-						fullyQualify = namespaces.Count > 1 || !namespaces.Contains(type.Namespace);
-				}
-
-				// check that current type name doesn't conflict with names in current context
-				// such as namespaces, type members
-				if (!fullyQualify)
-				{
-					// check current and parent scopes for name conflicts
-					for (var i = _currentScope.Count - 1; i >= 0; i--)
-					{
-						// type is from current scope, do nothing
-						if (_languageProvider.FullNameEqualityComparer.Equals(scope, _currentScope.Take(i)) && typeOnlyContext)
-							break;
-
-						// type is not from current scope (by check above), but current scope contains such name
-						// or current scope have same name as type for type used in expressions
-						if (_scopedNames[_currentScope].Contains(typeName)
-							|| (!typeOnlyContext && _languageProvider.IdentifierEqualityComparer.Equals(_currentScope[i], typeName)))
-						{
-							// name conflict detected
-							fullyQualify = true;
-							break;
-						}
-					}
-				}
-
-				if (!fullyQualify)
-				{
-					// check namespaced type name conflict with top-level naming scope
-					if (_scopedNames.TryGetValue(Array.Empty<CodeIdentifier>(), out var names) && names.Contains(typeName))
-						fullyQualify = true;
-					else if (_currentImports != null)
-					{
-						// check that type name doesn't conflict with names in imported namespaces
-						// checks only names we aware of, so for other conflicting types user need to provide them
-						// in settings so they will be added to _scopedNames
-						foreach (var import in _currentImports)
-						{
-							// ignore self
-							if (!_languageProvider.FullNameEqualityComparer.Equals(import.Namespace, scope))
-							{
-								if (_scopedNames.TryGetValue(import.Namespace, out names) && names.Contains(typeName))
-								{
-									fullyQualify = true;
-									break;
-								}
-							}
-						}
-					}
-				}
-
-				if (fullyQualify)
-				{
+					// for nested type - check if we need to render parent type
 					if (type.Parent != null)
 					{
-						RenderType(type.Parent, null, typeOnlyContext);
-						Write('.');
-					}
-					else
-					{
-						// TODO: detect how many namespace levels to generate
-						// for now we generate full namespace
-						foreach (var part in type.Namespace!)
+						var nested = false;
+						// skip parent types generation for types, directly nested into current class
+						// (class we currently generate AKA _currentType, not type we pass into this method)
+						// or parent classes of current class
+						// otherwise don't generate parent type name for type that present in current visibility scope
+						var t = _currentType;
+						while (t != null)
 						{
-							WriteIdentifier(part.Name);
+							// we use by-refrence comparison here as we don't create type duplicates for classes, defined
+							// in current AST (if this will happen, this comparison definitely will fails)
+							if (t == type.Parent)
+							{
+								nested = true;
+								break;
+							}
+
+							t = t.Parent;
+						}
+
+						// if parent type generation required, render parent type with own qualified name resolution logic
+						if (!nested)
+						{
+							RenderType(type.Parent, null, typeOnlyContext);
 							Write('.');
+						}
+					}
+					else // type has namespace - detect which parts of namespace (if any) we should render
+					{
+						// we go from current scope to parent scopes and check for name conflicts
+						// - if there is no conflicts -> check parent scope
+						// - if there is conflict -> do same check for remaining name part staring from conflicting scope
+						// if type belongs to current scope - skip namespace check
+
+						List<CodeIdentifier>? renderedParts = null;
+
+						// use proper scope for current context
+						var scopedNames = typeOnlyContext ? _scopedTypes : _scopedNames;
+
+						var scope         = _currentScope.ToList();
+						var remainingName = new List<CodeIdentifier>();
+						var currentName   = typeName;
+						remainingName.InsertRange(0, type.Namespace);
+
+
+						// if name prefix == currently checked scope, abort check - there is no conflict
+						// check for conflicts in current and parent scopes staring from current
+						while (!_languageProvider.FullNameEqualityComparer.Equals(remainingName, scope))
+						{
+							if (!scopedNames[scope].Contains(currentName))
+							{
+								// no conflict, check parent scope
+								if (scope.Count == 0)
+								{
+									// no conflicts found
+									break;
+								}
+
+								scope.RemoveAt(scope.Count - 1);
+								continue;
+							}
+							else
+							{
+								// conflict found - add parent name to rendered path and check it for conflicts
+								if (remainingName.Count > 0)
+								{
+									currentName = remainingName[remainingName.Count - 1];
+									remainingName.RemoveAt(remainingName.Count - 1);
+									(renderedParts ??= new()).Insert(0, currentName);
+								}
+								else
+									break;
+							}
+						}
+
+						if (renderedParts != null)
+						{
+							foreach (var part in renderedParts)
+							{
+								WriteIdentifier(part.Name);
+								Write('.');
+							}
 						}
 					}
 				}

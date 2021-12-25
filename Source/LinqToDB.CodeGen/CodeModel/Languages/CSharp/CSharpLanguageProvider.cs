@@ -121,7 +121,8 @@ namespace LinqToDB.CodeModel
 			string                                                                 indent,
 			bool                                                                   useNRT,
 			IReadOnlyDictionary<CodeIdentifier, ISet<IEnumerable<CodeIdentifier>>> knownTypes,
-			IReadOnlyDictionary<IEnumerable<CodeIdentifier>, ISet<CodeIdentifier>> sopedNames)
+			IReadOnlyDictionary<IEnumerable<CodeIdentifier>, ISet<CodeIdentifier>> scopedNames,
+			IReadOnlyDictionary<IEnumerable<CodeIdentifier>, ISet<CodeIdentifier>> scopedTypes)
 		{
 			return new CSharpCodeGenerator(
 				this,
@@ -129,7 +130,8 @@ namespace LinqToDB.CodeModel
 				indent,
 				useNRT,
 				knownTypes,
-				sopedNames);
+				scopedNames,
+				scopedTypes);
 		}
 	}
 }

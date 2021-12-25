@@ -24,6 +24,7 @@ namespace LinqToDB.CodeModel
 		IReadOnlyList<int?> IType.ArraySizes       => _sizes;
 		IType               IType.ArrayElementType => _elementType;
 		bool                IType.IsValueType      => false;
+		bool                IType.External         => true;
 
 		IType IType.WithNullability(bool nullable) => new ArrayType(_elementType, _sizes, nullable);
 
@@ -33,6 +34,7 @@ namespace LinqToDB.CodeModel
 		int?                           IType.OpenGenericArgCount => null;
 		IReadOnlyList<IType>?          IType.TypeArguments       => null;
 		IType?                         IType.Parent              => null;
+		
 
 		IType IType.WithTypeArguments(params IType[] typeArguments) => throw new InvalidOperationException();
 	}

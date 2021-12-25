@@ -48,6 +48,21 @@ namespace LinqToDB.CodeModel
 			base.Visit(type);
 		}
 
+		protected override void Visit(CodeLambda method)
+		{
+			VisitList(method.CustomAttributes);
+
+			if (!method.CanOmmitTypes)
+				VisitList(method.Parameters);
+
+			if (method.Body != null)
+				VisitList(method.Body);
+		}
+
+		protected override void Visit(CodeReference reference)
+		{
+		}
+
 		protected override void Visit(CodeNamespace @namespace)
 		{
 			var newNamespaces = new List<CodeIdentifier[]>();

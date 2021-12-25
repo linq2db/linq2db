@@ -437,7 +437,7 @@ namespace LinqToDB.CodeModel
 			var parameters = VisitReadOnlyList(call.Parameters);
 
 			if (parameters != call.Parameters)
-				return new CodeCallStatement(call.Extension, call.Callee, call.MethodName, call.TypeArguments, parameters);
+				return new CodeCallStatement(call.Extension, call.Callee, call.MethodName, call.TypeArguments, call.CanSkipTypeArguments, parameters);
 
 			return call;
 		}
@@ -447,7 +447,7 @@ namespace LinqToDB.CodeModel
 			var parameters = VisitReadOnlyList(call.Parameters);
 
 			if (parameters != call.Parameters)
-				return new CodeCallExpression(call.Extension, call.Callee, call.MethodName, call.TypeArguments, parameters, call.ReturnType);
+				return new CodeCallExpression(call.Extension, call.Callee, call.MethodName, call.TypeArguments, call.CanSkipTypeArguments, parameters, call.ReturnType);
 
 			return call;
 		}

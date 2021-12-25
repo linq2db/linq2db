@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace LinqToDB.CodeModel
 {
@@ -6,6 +7,7 @@ namespace LinqToDB.CodeModel
 	/// Reference to identifier value. Used instead of string to allow identifier mutation in existing AST
 	/// (e.g. because initial value is not valid in target language or conflicts with existing identifiers).
 	/// </summary>
+	[DebuggerDisplay("{Name}")]
 	public sealed class CodeIdentifier : ICodeElement
 	{
 		private string _name;

@@ -13,9 +13,10 @@ namespace LinqToDB.CodeModel
 			ICodeExpression              callee,
 			CodeIdentifier               method,
 			IEnumerable<CodeTypeToken>   genericArguments,
+			bool                         skipTypeArguments,
 			IEnumerable<ICodeExpression> parameters,
 			IType                        returnType)
-			: base(extension, callee, method, genericArguments, parameters)
+			: base(extension, callee, method, genericArguments, skipTypeArguments, parameters)
 		{
 			ReturnType = returnType;
 		}
@@ -25,12 +26,16 @@ namespace LinqToDB.CodeModel
 			ICodeExpression              callee,
 			CodeIdentifier               method,
 			IEnumerable<IType>           genericArguments,
+			bool                         skipTypeArguments,
 			IEnumerable<ICodeExpression> parameters,
 			IType                        returnType)
-			: this(extension, callee, method, genericArguments.Select(static t => new CodeTypeToken(t)), parameters, returnType)
+			: this(extension, callee, method, genericArguments.Select(static t => new CodeTypeToken(t)), skipTypeArguments, parameters, returnType)
 		{
 		}
 
+		/// <summary>
+		/// Gets return type of call expression.
+		/// </summary>
 		public IType ReturnType { get; }
 
 		IType           ICodeExpression.Type        => ReturnType;

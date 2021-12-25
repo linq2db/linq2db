@@ -238,6 +238,7 @@ namespace LinqToDB.DataModel
 								WellKnownTypes.LinqToDB.Common.Converter_ChangeTypeTo,
 								prop.Type.Type,
 								new[] { prop.Type.Type },
+								false,
 								AST.Call(
 									drParam.Reference,
 									WellKnownTypes.System.Data.Common.DbDataReader_GetValue,
@@ -280,6 +281,7 @@ namespace LinqToDB.DataModel
 					WellKnownTypes.LinqToDB.Data.DataConnectionExtensions_QueryProc,
 					WellKnownTypes.System.Collections.Generic.IEnumerable(returnElementType),
 					queryProcTypeArgs,
+					false,
 					queryProcParameters);
 
 				// generate ToList materialization call in two cases:
@@ -294,6 +296,7 @@ namespace LinqToDB.DataModel
 						WellKnownTypes.System.Linq.Enumerable_ToList,
 						WellKnownTypes.System.Collections.Generic.List(returnElementType),
 						new[] { returnElementType },
+						true,
 						returnValue);
 				}
 			}
@@ -426,6 +429,7 @@ namespace LinqToDB.DataModel
 						WellKnownTypes.LinqToDB.Common.Converter_ChangeTypeTo,
 						parameter.Type.Type,
 						new[] { parameter.Type.Type },
+						false,
 						AST.Member(
 							AST.Index(
 								parametersVar.Reference,
