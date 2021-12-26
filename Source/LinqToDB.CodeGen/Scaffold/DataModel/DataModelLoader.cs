@@ -101,8 +101,49 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 			// load foreign keys as associations
 			if (_schemaSettings.Objects.HasFlag(SchemaObjects.ForeignKey))
 			{
+				Dictionary<(ObjectName from, ObjectName to), List<ISet<ForeignKeyColumnMapping>>>? duplicateFKs = null;
+
 				foreach (var fk in _schemaProvider.GetForeignKeys())
 				{
+					// detect and skip duplicate foreign keys
+					if (_schemaSettings.IgnoreDuplicateForeignKeys)
+					{
+						var currentKeyColumns = new HashSet<ForeignKeyColumnMapping>(fk.Relation);
+
+						if (duplicateFKs != null && duplicateFKs.TryGetValue((fk.Source, fk.Target), out var keys))
+						{
+							var isDuplicate = false;
+
+							foreach (var knowKey in keys)
+							{
+								if (knowKey.Count == currentKeyColumns.Count)
+								{
+									var keysDiffer = false;
+									foreach (var pair in currentKeyColumns)
+									{
+										if (!knowKey.Contains(pair))
+										{
+											keysDiffer = true;
+											break;
+										}
+									}
+
+									if (!keysDiffer)
+									{
+										isDuplicate = true;
+										break;
+									}
+								}
+							}
+
+							// skip duplicate key
+							if (isDuplicate)
+								continue;
+						}
+						else
+							(duplicateFKs ??= new()).Add((fk.Source, fk.Target), new() { currentKeyColumns });
+					}
+
 					var association = BuildAssociations(fk, defaultSchemas);
 					if (association != null)
 						dataContext.Associations.Add(association);

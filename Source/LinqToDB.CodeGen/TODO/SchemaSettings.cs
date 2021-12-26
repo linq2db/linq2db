@@ -108,5 +108,7 @@ namespace LinqToDB.CodeGen.Metadata
 
 		public HashSet<ObjectName> AddReturnParameterToProcedures { get; } = new();
 
+		public bool IgnoreDuplicateForeignKeys { get; set; } = true;
+
 	}
 }
