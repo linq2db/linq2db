@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using LinqToDB.CodeGen.CodeGeneration;
-using LinqToDB.CodeGen.ContextModel;
-using LinqToDB.Metadata;
-using LinqToDB.Naming;
 using LinqToDB.CodeModel;
 using LinqToDB.Data;
 using LinqToDB.DataModel;
+using LinqToDB.Metadata;
+using LinqToDB.Naming;
 using LinqToDB.Schema;
 using LinqToDB.SqlProvider;
-using LinqToDB.CodeGen.Metadata;
 
 namespace LinqToDB.Scaffold
 {
@@ -19,20 +16,20 @@ namespace LinqToDB.Scaffold
 	/// </summary>
 	public sealed class Scaffolder
 	{
-		private readonly NamingServices         _namingServices;
-		private readonly CodeGenerationSettings _codeGenerationSettings;
+		private readonly NamingServices  _namingServices;
+		private readonly ScaffoldOptions _options;
 
 		/// <summary>
 		/// Creates instance of data model codegerator from database connection.
 		/// </summary>
 		/// <param name="languageProvider">Language provider to use for data model codegeneration.</param>
 		/// <param name="nameConverter"><see cref="INameConversionProvider"/> pluralization service implementation.</param>
-		/// <param name="codeGenerationSettings">Code generation settings.</param>
-		public Scaffolder(ILanguageProvider languageProvider, INameConversionProvider nameConverter, CodeGenerationSettings codeGenerationSettings)
+		/// <param name="options">Scaffolding process customization options.</param>
+		public Scaffolder(ILanguageProvider languageProvider, INameConversionProvider nameConverter, ScaffoldOptions options)
 		{
-			Language                = languageProvider;
-			_namingServices         = new NamingServices(nameConverter);
-			_codeGenerationSettings = codeGenerationSettings;
+			Language        = languageProvider;
+			_namingServices = new NamingServices(nameConverter);
+			_options        = options;
 		}
 
 		/// <summary>
@@ -46,21 +43,15 @@ namespace LinqToDB.Scaffold
 		/// <returns>Loaded database model instance.</returns>
 		public DatabaseModel LoadDataModel(DataConnection dataConnection)
 		{
-			var schemaSettings                   = new SchemaSettings();
-			var contextSettings                  = new ContextModelSettings();
-			contextSettings.GenerateSchemaAsType = true;
-
-			var schemaProvider = new LegacySchemaProvider(dataConnection, schemaSettings, Language);
+			var schemaProvider = new LegacySchemaProvider(dataConnection, _options.Schema, Language);
 			
 			return new DataModelLoader(
 				_namingServices,
 				Language,
-				_codeGenerationSettings,
 				schemaProvider,
-				contextSettings,
-				schemaSettings,
-				schemaProvider
-				).LoadSchema();
+				schemaProvider,
+				_options)
+				.LoadSchema();
 		}
 
 		/// <summary>
@@ -78,11 +69,12 @@ namespace LinqToDB.Scaffold
 			params ConvertCodeModelVisitor[] modelConverters)
 		{
 			var generator = new DataModelGenerator(
-					Language,
-					dataModel,
-					metadataBuilder,
-					name => _namingServices.NormalizeIdentifier(_codeGenerationSettings.ParameterNameNormalization, name),
-					sqlBuilder);
+				Language,
+				dataModel,
+				metadataBuilder,
+				name => _namingServices.NormalizeIdentifier(_options.DataModel.FindParameterNameOptions, name),
+				sqlBuilder,
+				_options);
 
 			var files = generator.ConvertToCodeModel();
 
@@ -130,7 +122,7 @@ namespace LinqToDB.Scaffold
 					file.AddImport(Language.ASTBuilder.Import(import));
 
 				// resolve naming conflicts for external conflicting names, provider by user
-				foreach (var name in _codeGenerationSettings.ConflictingNames)
+				foreach (var name in _options.CodeGeneration.ConflictingNames)
 				{
 					var parsedName = Language.TypeParser.ParseNamespaceOrRegularTypeName(name, false);
 					if (parsedName.Length > 0)
@@ -149,9 +141,9 @@ namespace LinqToDB.Scaffold
 
 				// convert AST to source code
 				var codeGenerator = Language.GetCodeGenerator(
-					_codeGenerationSettings.NewLine,
-					_codeGenerationSettings.Indent ?? "\t",
-					_codeGenerationSettings.NullableReferenceTypes,
+					_options.CodeGeneration.NewLine,
+					_options.CodeGeneration.Indent,
+					_options.CodeGeneration.EnableNullableReferenceTypes,
 					nameScopes.TypesNamespaces,
 					nameScopes.ScopesWithNames,
 					nameScopes.ScopesWithTypeNames);

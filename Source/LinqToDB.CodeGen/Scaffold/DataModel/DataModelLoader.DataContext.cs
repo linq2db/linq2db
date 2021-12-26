@@ -13,22 +13,22 @@ namespace LinqToDB.Scaffold
 		private DataContextModel BuildDataContext()
 		{
 			var className = _namingServices.NormalizeIdentifier(
-				_contextSettings.DataContextClassNameNormalization,
-				_contextSettings.ContextClassName ?? _schemaProvider.DatabaseName ?? "MyDataContext");
+				_options.DataModel.DataContextClassNameOptions,
+				_options.DataModel.ContextClassName ?? _schemaProvider.DatabaseName ?? "MyDataContext");
 
 			var dataContextClass = new ClassModel(className, className)
 			{
 				IsPartial = true,
 				IsPublic  = true,
-				Namespace = _codegenSettings.Namespace
+				Namespace = _options.CodeGeneration.Namespace
 			};
 
-			if (_codegenSettings.BaseContextClass != null)
-				dataContextClass.BaseType = _languageProvider.TypeParser.Parse(_codegenSettings.BaseContextClass, false);
+			if (_options.DataModel.BaseContextClass != null)
+				dataContextClass.BaseType = _languageProvider.TypeParser.Parse(_options.DataModel.BaseContextClass, false);
 			else
 				dataContextClass.BaseType = WellKnownTypes.LinqToDB.Data.DataConnection;
 
-			if (_codegenSettings.IncludeDatabaseInfo)
+			if (_options.DataModel.IncludeDatabaseInfo)
 			{
 				var summary = new StringBuilder();
 				if (_schemaProvider.DatabaseName != null)
@@ -44,10 +44,10 @@ namespace LinqToDB.Scaffold
 
 			var dataContext = new DataContextModel(dataContextClass);
 
-			dataContext.HasDefaultConstructor        = _contextSettings.HasDefaultConstructor;
-			dataContext.HasConfigurationConstructor  = _contextSettings.HasConfigurationConstructor;
-			dataContext.HasUntypedOptionsConstructor = _contextSettings.HasUntypedOptionsConstructor;
-			dataContext.HasTypedOptionsConstructor   = _contextSettings.HasTypedOptionsConstructor;
+			dataContext.HasDefaultConstructor        = _options.DataModel.HasDefaultConstructor;
+			dataContext.HasConfigurationConstructor  = _options.DataModel.HasConfigurationConstructor;
+			dataContext.HasUntypedOptionsConstructor = _options.DataModel.HasUntypedOptionsConstructor;
+			dataContext.HasTypedOptionsConstructor   = _options.DataModel.HasTypedOptionsConstructor;
 
 			return dataContext;
 		}

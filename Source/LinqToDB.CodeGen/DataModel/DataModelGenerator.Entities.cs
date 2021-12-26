@@ -178,13 +178,13 @@ namespace LinqToDB.DataModel
 
 				// sort in order for parameters
 				// sort for filter will be done later
-			if (_dataModel.OrderFindParametersByOrdinal)
+			if (_options.DataModel.OrderFindParametersByColumnOrdinal)
 				pks = pks.OrderBy(static c => c.Metadata.PrimaryKeyOrder);
 			else
 				pks = pks.OrderBy(static c => c.Property.Name);
 
 			// apply ordinal sort to primary key columns for parameters generation if by-name sort not
-			if (_dataModel.OrderFindParametersByOrdinal)
+			if (_options.DataModel.OrderFindParametersByColumnOrdinal)
 				pks = pks.OrderBy(static c => c.Metadata.PrimaryKeyOrder);
 
 			// filter parameter
@@ -195,7 +195,7 @@ namespace LinqToDB.DataModel
 			foreach (var column in pks)
 			{
 				// generate parameter for primary key column
-				var paramName = _parameterNameNormalizer(column.Property.Name);
+				var paramName = _findMethodParameterNameNormalizer(column.Property.Name);
 				var parameter = AST.Parameter(column.Property.Type!, AST.Name(paramName), CodeParameterDirection.In);
 				methodParameters.Add(parameter);
 

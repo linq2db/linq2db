@@ -82,7 +82,7 @@ namespace LinqToDB.DataModel
 			if (association.ManyToOne)
 			{
 				// for many-to-one assocations has collection type, defined by user preferences
-				if (_dataModel.AssociationCollectionAsArray)
+				if (_options.DataModel.AssociationCollectionAsArray)
 					tagetType = AST.ArrayType(tagetType, false);
 				else if (_dataModel.AssociationCollectionType != null)
 					tagetType = _dataModel.AssociationCollectionType.WithTypeArguments(tagetType);

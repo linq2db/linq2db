@@ -36,7 +36,7 @@ namespace LinqToDB.DataModel
 			// if function schema load failed, generate error pragma with exception details
 			if (tableFunction.Error != null)
 			{
-				if (_dataModel.GenerateProceduresSchemaError)
+				if (_options.DataModel.GenerateProceduresSchemaError)
 					region.Pragmas().Add(AST.Error($"Failed to load return table schema: {tableFunction.Error}"));
 
 				// as we cannot generate table function without knowing it's schema, we skip failed function
@@ -73,7 +73,7 @@ namespace LinqToDB.DataModel
 			// set return type
 			// T4 used ITable<T> for return type, but there is no reason to use ITable<T> over IQueryable<T>
 			// Even more: ITable<T> is not correct return type here
-			var returnType = _dataModel.TableFunctionReturnsTable
+			var returnType = _options.DataModel.TableFunctionReturnsTable
 				? WellKnownTypes.LinqToDB.ITable(returnEntity)
 				: WellKnownTypes.System.Linq.IQueryable(returnEntity);
 			method.Returns(returnType);

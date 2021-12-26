@@ -43,15 +43,12 @@ namespace LinqToDB.Schema
 		/// <summary>
 		/// Returns schema information for all table functions.
 		/// </summary>
-		/// <param name="withSchema">Try to load result records schema.</param>
-		/// <param name="safeSchemaOnly">When <paramref name="withSchema"/> is <c>true</c>, specify record schema load method:
 		/// <list type="bullet">
 		/// <item><c>true</c>: read record metadata (not supported by most of databases)</item>
 		/// <item><c>false</c>: execute function in schema-only mode. Could lead to unwanted side-effects if function contains non-transactional functionality</item>
 		/// </list>
-		/// </param>
 		/// <returns>Table functions schema collection.</returns>
-		IEnumerable<TableFunction> GetTableFunctions(bool withSchema, bool safeSchemaOnly);
+		IEnumerable<TableFunction> GetTableFunctions();
 
 		/// <summary>
 		/// Returns schema information for all scalar functions.

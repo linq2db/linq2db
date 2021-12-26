@@ -17,11 +17,11 @@ namespace LinqToDB.Scaffold
 			var result             = originalName;
 
 			// remove default schema from name if disabled
-			if (!_contextSettings.GenerateDefaultSchema && !isNonDefaultSchema && originalName.Schema != null)
+			if (!_options.DataModel.GenerateDefaultSchema && !isNonDefaultSchema && originalName.Schema != null)
 				result = result with { Schema = null };
 
 			// remove database name if disabled
-			if (!_schemaSettings.IncludeDatabaseName)
+			if (!_options.DataModel.IncludeDatabaseName)
 				result = result with { Database = null };
 
 			// currently we don't load schema data from linked servers, so there is no need to process server name

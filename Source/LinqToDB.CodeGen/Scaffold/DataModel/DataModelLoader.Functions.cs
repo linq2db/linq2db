@@ -20,7 +20,7 @@ namespace LinqToDB.Scaffold
 			var (name, isNonDefaultSchema) = ProcessObjectName(func.Name, defaultSchemas);
 
 			var method = new MethodModel(
-				_namingServices.NormalizeIdentifier(_contextSettings.ProcedureNameNormalization,
+				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureNameOptions,
 				name.Name))
 			{
 				Public    = true,
@@ -52,7 +52,7 @@ namespace LinqToDB.Scaffold
 
 			BuildParameters(func.Parameters, funcModel.Parameters);
 
-			if (isNonDefaultSchema && _contextSettings.GenerateSchemaAsType)
+			if (isNonDefaultSchema && _options.DataModel.GenerateSchemaAsType)
 				GetOrAddAdditionalSchema(dataContext, func.Name.Schema!).AggregateFunctions.Add(funcModel);
 			else
 				dataContext.AggregateFunctions.Add(funcModel);
@@ -69,7 +69,7 @@ namespace LinqToDB.Scaffold
 			var (name, isNonDefaultSchema) = ProcessObjectName(func.Name, defaultSchemas);
 
 			var method = new MethodModel(
-				_namingServices.NormalizeIdentifier(_contextSettings.ProcedureNameNormalization,
+				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureNameOptions,
 				name.Name))
 			{
 				Public  = true,
@@ -104,7 +104,7 @@ namespace LinqToDB.Scaffold
 
 					// tuple model class
 					var @class = new ClassModel(
-						_namingServices.NormalizeIdentifier(_contextSettings.FunctionTupleResultClassName,
+						_namingServices.NormalizeIdentifier(_options.DataModel.FunctionTupleResultClassNameOptions,
 						func.Name.Name))
 					{
 						IsPublic  = true,
@@ -120,7 +120,7 @@ namespace LinqToDB.Scaffold
 					{
 						var typeMapping = _typeMappingsProvider.GetTypeMapping(field.Type);
 
-						var prop = new PropertyModel(_namingServices.NormalizeIdentifier(_contextSettings.FunctionTupleResultPropertyName, field.Name ?? "Field"), (typeMapping?.CLRType ?? WellKnownTypes.System.Object).WithNullability(field.Nullable))
+						var prop = new PropertyModel(_namingServices.NormalizeIdentifier(_options.DataModel.FunctionTupleResultPropertyNameOptions, field.Name ?? "Field"), (typeMapping?.CLRType ?? WellKnownTypes.System.Object).WithNullability(field.Nullable))
 						{
 							IsPublic  = true,
 							IsDefault = true,
@@ -140,7 +140,7 @@ namespace LinqToDB.Scaffold
 					break;
 			}
 
-			if (isNonDefaultSchema && _contextSettings.GenerateSchemaAsType)
+			if (isNonDefaultSchema && _options.DataModel.GenerateSchemaAsType)
 				GetOrAddAdditionalSchema(dataContext, func.Name.Schema!).ScalarFunctions.Add(funcModel);
 			else
 				dataContext.ScalarFunctions.Add(funcModel);
@@ -157,7 +157,7 @@ namespace LinqToDB.Scaffold
 			var (name, isNonDefaultSchema) = ProcessObjectName(func.Name, defaultSchemas);
 
 			var method = new MethodModel(
-				_namingServices.NormalizeIdentifier(_contextSettings.ProcedureNameNormalization,
+				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureNameOptions,
 				name.Name))
 			{
 				Public  = true,
@@ -169,7 +169,7 @@ namespace LinqToDB.Scaffold
 				name,
 				method,
 				metadata,
-				_namingServices.NormalizeIdentifier(_contextSettings.ProcedureMethodInfoFieldNameNormalization, func.Name.Name))
+				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureMethodInfoFieldNameOptions, func.Name.Name))
 			{
 				Error = func.SchemaError?.Message
 			};
@@ -179,7 +179,7 @@ namespace LinqToDB.Scaffold
 			if (func.Result != null)
 				funcModel.Result = PrepareResultSetModel(func.Name, func.Result);
 
-			if (isNonDefaultSchema && _contextSettings.GenerateSchemaAsType)
+			if (isNonDefaultSchema && _options.DataModel.GenerateSchemaAsType)
 				GetOrAddAdditionalSchema(dataContext, func.Name.Schema!).TableFunctions.Add(funcModel);
 			else
 				dataContext.TableFunctions.Add(funcModel);
@@ -196,7 +196,7 @@ namespace LinqToDB.Scaffold
 			var (name, isNonDefaultSchema) = ProcessObjectName(func.Name, defaultSchemas);
 
 			var method = new MethodModel(
-				_namingServices.NormalizeIdentifier(_contextSettings.ProcedureNameNormalization,
+				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureNameOptions,
 				name.Name))
 			{
 				Public    = true,
@@ -224,7 +224,7 @@ namespace LinqToDB.Scaffold
 					var scalarResult = (ScalarResult)func.Result;
 					var typeMapping  = _typeMappingsProvider.GetTypeMapping(scalarResult.Type);
 
-					var paramName    = _namingServices.NormalizeIdentifier(_contextSettings.ProcedureParameterNameNormalization, scalarResult.Name ?? "return");
+					var paramName    = _namingServices.NormalizeIdentifier(_options.DataModel.ProcedureParameterNameOptions, scalarResult.Name ?? "return");
 					funcModel.Return = new FunctionParameterModel(
 						new ParameterModel(paramName, (typeMapping?.CLRType ?? WellKnownTypes.System.Object).WithNullability(scalarResult.Nullable),
 						CodeParameterDirection.Out))
@@ -248,7 +248,7 @@ namespace LinqToDB.Scaffold
 				funcModel.Results.Add(PrepareResultSetModel(func.Name, func.ResultSets[0]));
 			}
 
-			if (isNonDefaultSchema && _contextSettings.GenerateSchemaAsType)
+			if (isNonDefaultSchema && _options.DataModel.GenerateSchemaAsType)
 				GetOrAddAdditionalSchema(dataContext, func.Name.Schema!).StoredProcedures.Add(funcModel);
 			else
 				dataContext.StoredProcedures.Add(funcModel);
@@ -264,7 +264,7 @@ namespace LinqToDB.Scaffold
 			foreach (var param in parameters)
 			{
 				var typeMapping = _typeMappingsProvider.GetTypeMapping(param.Type);
-				var paramName   = _namingServices.NormalizeIdentifier(_contextSettings.ProcedureParameterNameNormalization, param.Name);
+				var paramName   = _namingServices.NormalizeIdentifier(_options.DataModel.ProcedureParameterNameOptions, param.Name);
 
 				CodeParameterDirection direction;
 				switch (param.Direction)
@@ -306,25 +306,25 @@ namespace LinqToDB.Scaffold
 		{
 			if (!dataContext.AdditionalSchemas.TryGetValue(schemaName, out var schemaModel))
 			{
-				if (!_contextSettings.SchemaMap.TryGetValue(schemaName, out var baseName))
+				if (!_options.DataModel.SchemaMap.TryGetValue(schemaName, out var baseName))
 					baseName = schemaName;
 
 				var schemaClassName = _namingServices.NormalizeIdentifier(
-					_codegenSettings.SchemaClassNameNormalization,
+					_options.DataModel.SchemaClassNameOptions,
 					baseName);
 
 				var contextPropertyName = _namingServices.NormalizeIdentifier(
-					_codegenSettings.SchemaPropertyNormalization,
+					_options.DataModel.SchemaPropertyOptions,
 					baseName);
 
 				var wrapperClass = new ClassModel(
 					schemaClassName,
-					_codegenSettings.ClassPerFile ? schemaClassName : dataContext.Class.FileName!)
+					_options.CodeGeneration.ClassPerFile ? schemaClassName : dataContext.Class.FileName!)
 				{
 					IsPublic  = true,
 					IsPartial = true,
 					IsStatic  = true,
-					Namespace = _codegenSettings.Namespace
+					Namespace = _options.CodeGeneration.Namespace
 				};
 				var contextClass = new ClassModel("DataContext")
 				{
@@ -348,7 +348,7 @@ namespace LinqToDB.Scaffold
 		{
 			// try to find entity model with same set of columns
 			// column equality check includes: name, database type and nullability
-			if (_contextSettings.MapProcedureResultToEntity)
+			if (_options.DataModel.MapProcedureResultToEntity)
 			{
 				var names = new Dictionary<string, (DatabaseType type, bool isNullable)>();
 				foreach (var column in columns)
@@ -387,7 +387,7 @@ namespace LinqToDB.Scaffold
 			}
 
 			var resultClass = new ClassModel(
-				_namingServices.NormalizeIdentifier(_contextSettings.ProcedureResultClassNameNormalization,
+				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureResultClassNameOptions,
 				funcName.Name))
 			{
 				IsPublic  = true,
@@ -410,7 +410,7 @@ namespace LinqToDB.Scaffold
 				};
 
 				var property  = new PropertyModel(
-					_namingServices.NormalizeIdentifier(_contextSettings.ProcedureResultColumnPropertyNameNormalization, col.Name ?? "Column"),
+					_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureResultColumnPropertyNameOptions, col.Name ?? "Column"),
 					(typeMapping?.CLRType ?? WellKnownTypes.System.Object).WithNullability(col.Nullable))
 				{
 					IsPublic  = true,

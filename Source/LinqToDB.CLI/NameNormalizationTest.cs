@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using LinqToDB.CodeGen.CodeGeneration;
-using LinqToDB.Naming;
 using LinqToDB.CodeModel;
+using LinqToDB.Naming;
 using LinqToDB.Scaffold;
 using Tests;
 
@@ -87,8 +86,7 @@ namespace LinqToDB.Tools
 			CreateClass(builder, classes.New(builder.Name(DUPLICATE_NAME1)), false, true, DUPLICATE_NAME1, DUPLICATE_NAME2, false, true);
 			CreateClass(builder, classes.New(builder.Name(DUPLICATE_NAME2)), false, true, DUPLICATE_NAME2, DUPLICATE_NAME1, false, false);
 
-			var settings = new CodeGenerationSettings();
-			//settings.ConflictingNames.Add("Tests.DataType");
+			var settings = ScaffoldOptions.Default();
 			var generator = new Scaffolder(LanguageProviders.CSharp, HumanizerNameConverter.Instance, settings);
 			var sourceCode = generator.GenerateSourceCode(modelFile);
 

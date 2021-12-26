@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using LinqToDB.CodeModel;
 using LinqToDB.Metadata;
+using LinqToDB.Scaffold;
 using LinqToDB.SqlProvider;
 
 namespace LinqToDB.DataModel
@@ -27,7 +28,9 @@ namespace LinqToDB.DataModel
 		// used for full function name generation
 		private readonly ISqlBuilder                 _sqlBuilder;
 		// adjust parameter name according to naming rules for parameter
-		private readonly Func<string, string>        _parameterNameNormalizer;
+		private readonly Func<string, string>        _findMethodParameterNameNormalizer;
+		// scaffolding options
+		private readonly ScaffoldOptions             _options;
 
 		// generated AST files
 		private readonly Dictionary<string, (CodeFile file, Dictionary<string, ClassGroup> classesPerNamespace)> _files = new ();
@@ -43,26 +46,30 @@ namespace LinqToDB.DataModel
 		// stores AST objects for additional/non-default schema descriptors
 		private readonly Dictionary<AdditionalSchemaModel, (ClassBuilder schemaWrapperClass, ClassBuilder schemaContextClass)> _schemaClasses = new ();
 
+
 		/// <summary>
 		/// Creates data model to AST generator instance.
 		/// </summary>
 		/// <param name="languageProvider">Language-specific services.</param>
 		/// <param name="dataModel">Data model to convert.</param>
 		/// <param name="metadataBuilder">Data model mappings generation service.</param>
-		/// <param name="parameterNameNormalizer">Parameter name normalization action.</param>
+		/// <param name="findMethodParameterNameNormalizer">Find extension method parameter name normalization action.</param>
 		/// <param name="sqlBuilder">SQL builder for current database provider.</param>
+		/// <param name="options">Scaffolding options.</param>
 		public DataModelGenerator(
 			ILanguageProvider    languageProvider,
 			DatabaseModel        dataModel,
 			IMetadataBuilder     metadataBuilder,
-			Func<string, string> parameterNameNormalizer,
-			ISqlBuilder          sqlBuilder)
+			Func<string, string> findMethodParameterNameNormalizer,
+			ISqlBuilder          sqlBuilder,
+			ScaffoldOptions      options)
 		{
-			_languageProvider        = languageProvider;
-			_dataModel               = dataModel;
-			_metadataBuilder         = metadataBuilder;
-			_parameterNameNormalizer = parameterNameNormalizer;
-			_sqlBuilder              = sqlBuilder;
+			_languageProvider                  = languageProvider;
+			_dataModel                         = dataModel;
+			_metadataBuilder                   = metadataBuilder;
+			_findMethodParameterNameNormalizer = findMethodParameterNameNormalizer;
+			_sqlBuilder                        = sqlBuilder;
+			_options                           = options;
 		}
 
 		private CodeBuilder AST => _languageProvider.ASTBuilder;

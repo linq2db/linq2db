@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using LinqToDB.CodeGen;
-using LinqToDB.CodeGen.ContextModel;
+using LinqToDB.CodeModel;
+using LinqToDB.DataModel;
 using LinqToDB.Metadata;
 using LinqToDB.Naming;
 using LinqToDB.Schema;
-using LinqToDB.CodeModel;
-using LinqToDB.DataModel;
 
 namespace LinqToDB.Scaffold
 {
@@ -40,34 +38,34 @@ namespace LinqToDB.Scaffold
 			};
 
 			// generate name for entity table property in data context class
-			var contextPropertyName = _contextSettings.EntityContextPropertyNameProvider?.Invoke(table);
+			var contextPropertyName = _options.DataModel.EntityContextPropertyNameProvider?.Invoke(table);
 			contextPropertyName = contextPropertyName != null
 				? contextPropertyName
 				: _namingServices.NormalizeIdentifier(
-					_contextSettings.EntityContextPropertyNameNormalization,
+					_options.DataModel.EntityContextPropertyNameOptions,
 					table.Name.Name);
 
 			// generate entity class name
-			var className          = _contextSettings.EntityClassNameProvider?.Invoke(table);
+			var className          = _options.DataModel.EntityClassNameProvider?.Invoke(table);
 			var hasCustomClassName = className != null;
 
 			className = className != null
 				? className
 				: _namingServices.NormalizeIdentifier(
-					_contextSettings.EntityClassNameNormalization,
+					_options.DataModel.EntityClassNameOptions,
 					table.Name.Name);
 
 			// add schema name ato entity class name as prefix for table from non-default schema without
 			// class-per-schema option set
-			if (!hasCustomClassName && !_contextSettings.GenerateSchemaAsType && isNonDefaultSchema)
+			if (!hasCustomClassName && !_options.DataModel.GenerateSchemaAsType && isNonDefaultSchema)
 				className = table.Name.Schema + "_" + className;
 
 			// entity class properties
-			var classModel       = new ClassModel(className, _codegenSettings.ClassPerFile ? className : dataContext.Class.FileName!);
+			var classModel       = new ClassModel(className, _options.CodeGeneration.ClassPerFile ? className : dataContext.Class.FileName!);
 			classModel.Summary = table.Description;
 			classModel.BaseType = baseType;
 			classModel.IsPublic = true;
-			classModel.Namespace = _codegenSettings.Namespace;
+			classModel.Namespace = _options.CodeGeneration.Namespace;
 
 			// entity data model
 			var entity = new EntityModel(
@@ -82,7 +80,7 @@ namespace LinqToDB.Scaffold
 						IsPublic = true,
 						Summary  = table.Description
 					});
-			entity.HasFindExtension = _codegenSettings.GenerateFindExtensions;
+			entity.HasFindExtension = _options.DataModel.GenerateFindExtensions;
 
 			// add entity to lookup
 			_entities.Add(table.Name, new TableWithEntity(table, entity));
@@ -90,7 +88,7 @@ namespace LinqToDB.Scaffold
 			BuildEntityColumns(table, primaryKey, identity, entity);
 
 			// add entity to model
-			if (isNonDefaultSchema && _contextSettings.GenerateSchemaAsType)
+			if (isNonDefaultSchema && _options.DataModel.GenerateSchemaAsType)
 				GetOrAddAdditionalSchema(dataContext, table.Name.Schema!).Entities.Add(entity);
 			else
 				dataContext.Entities.Add(entity);
@@ -113,7 +111,7 @@ namespace LinqToDB.Scaffold
 				var typeMapping    = _typeMappingsProvider.GetTypeMapping(column.Type);
 				var columnMetadata = new ColumnMetadata() { Name = column.Name };
 				var propertyName   = _namingServices.NormalizeIdentifier(
-					_contextSettings.EntityColumnPropertyNameNormalization,
+					_options.DataModel.EntityColumnPropertyNameOptions,
 					column.Name);
 				var propertyType   = (typeMapping?.CLRType ?? WellKnownTypes.System.Object).WithNullability(column.Nullable);
 
@@ -132,16 +130,16 @@ namespace LinqToDB.Scaffold
 
 				// populate metadata for column
 				columnMetadata.DbType = column.Type;
-				if (!_codegenSettings.GenerateDbType)
+				if (!_options.DataModel.GenerateDbType)
 					columnMetadata.DbType = columnMetadata.DbType with { Name = null };
-				if (!_codegenSettings.GenerateLength)
+				if (!_options.DataModel.GenerateLength)
 					columnMetadata.DbType = columnMetadata.DbType with { Length = null };
-				if (!_codegenSettings.GeneratePrecision)
+				if (!_options.DataModel.GeneratePrecision)
 					columnMetadata.DbType = columnMetadata.DbType with { Precision = null };
-				if (!_codegenSettings.GenerateScale)
+				if (!_options.DataModel.GenerateScale)
 					columnMetadata.DbType = columnMetadata.DbType with { Scale = null };
 
-				if (_codegenSettings.GenerateDataType)
+				if (_options.DataModel.GenerateDataType)
 					columnMetadata.DataType = typeMapping?.DataType;
 
 				columnMetadata.CanBeNull    = column.Nullable;
@@ -220,7 +218,7 @@ namespace LinqToDB.Scaffold
 				fk.Source,
 				sourceColumnName,
 				fk.Name,
-				_contextSettings.SingularForeignKeyAssociationPropertyNameNormalization,
+				_options.DataModel.SourceAssociationPropertyNameOptions,
 				defaultSchemas);
 			var toAssocationName     = GenerateAssociationName(
 				fk.Source,
@@ -228,12 +226,12 @@ namespace LinqToDB.Scaffold
 				null,
 				fk.Name,
 				manyToOne
-					? _contextSettings.MultiplePrimaryKeyAssociationPropertyNameNormalization
-					: _contextSettings.SingularPrimaryKeyAssociationPropertyNameNormalization,
+					? _options.DataModel.TargetMultipleAssociationPropertyNameOptions
+					: _options.DataModel.TargetSingularAssociationPropertyNameOptions,
 				defaultSchemas);
 
 			// define association properties on on entities
-			if (_codegenSettings.GenerateAssociations)
+			if (_options.DataModel.GenerateAssociations)
 			{
 				association.Property = new PropertyModel(fromAssociationName)
 				{
@@ -252,7 +250,7 @@ namespace LinqToDB.Scaffold
 			}
 
 			// define association extension methods
-			if (_codegenSettings.GenerateAssociationExtensions)
+			if (_options.DataModel.GenerateAssociationExtensions)
 			{
 				association.Extension = new MethodModel(fromAssociationName)
 				{

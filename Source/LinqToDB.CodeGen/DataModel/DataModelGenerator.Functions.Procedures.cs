@@ -65,14 +65,14 @@ namespace LinqToDB.DataModel
 			if (storedProcedure.Error != null)
 			{
 				// if procedure resultset schema load failed, generate error pragma
-				if (_dataModel.GenerateProceduresSchemaError)
+				if (_options.DataModel.GenerateProceduresSchemaError)
 					(region ??= proceduresGroup().New(storedProcedure.Method.Name))
 						.Pragmas()
 							.Add(AST.Error(storedProcedure.Error));
 
 				// even with this error procedure generation could continue, as we still
 				// can invoke procedure, we just cannot get resultset from it
-				if (_dataModel.SkipProceduresWithSchemaErrors)
+				if (_options.DataModel.SkipProceduresWithSchemaErrors)
 					return;
 			}
 
@@ -271,7 +271,7 @@ namespace LinqToDB.DataModel
 					queryProcParameters[queryProcParameters.Length - 1] = parametersVar!.Reference;
 
 				method.Returns(
-					_dataModel.GenerateProcedureResultAsList
+					_options.DataModel.GenerateProcedureResultAsList
 						? WellKnownTypes.System.Collections.Generic.List(returnElementType)
 						: WellKnownTypes.System.Collections.Generic.IEnumerable(returnElementType));
 
@@ -288,7 +288,7 @@ namespace LinqToDB.DataModel
 				// - when return type of mapping is List<T>
 				// - when procedure has non-input parameters, because parameter values only available after
 				//   full data set read from data reader
-				if (_dataModel.GenerateProcedureResultAsList
+				if (_options.DataModel.GenerateProcedureResultAsList
 					|| parameterRebinds?.Length > 0)
 				{
 					returnValue = AST.ExtCall(
@@ -364,7 +364,7 @@ namespace LinqToDB.DataModel
 				initializersCount++;
 			if (dbType != null)
 			{
-				if (dbType.Name != null && _dataModel.GenerateProcedureParameterDbType)
+				if (dbType.Name != null && _options.DataModel.GenerateProcedureParameterDbType)
 					initializersCount++;
 				if (dbType.Length != null && dbType.Length >= int.MinValue && dbType.Length <= int.MaxValue)
 					initializersCount++;
@@ -394,7 +394,7 @@ namespace LinqToDB.DataModel
 
 			if (dbType != null)
 			{
-				if (dbType.Name != null && _dataModel.GenerateProcedureParameterDbType)
+				if (dbType.Name != null && _options.DataModel.GenerateProcedureParameterDbType)
 				{
 					ctorInitializers[initializersIdx] = AST.Assign(WellKnownTypes.LinqToDB.Data.DataParameter_DbType, AST.Constant(dbType.Name!, true));
 					initializersIdx++;

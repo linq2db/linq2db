@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using LinqToDB.CodeGen.Metadata;
 using LinqToDB.CodeModel;
 using LinqToDB.Data;
+using LinqToDB.Scaffold;
 using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Schema
@@ -36,7 +36,7 @@ namespace LinqToDB.Schema
 		private readonly Dictionary<DatabaseType, TypeMapping> _typeMappings = new ();
 
 		private readonly ILanguageProvider _languageProvider;
-		private readonly SchemaSettings    _settings;
+		private readonly SchemaOptions     _options;
 		private readonly ISet<string>      _defaultSchemas = new HashSet<string>();
 
 		// database provider name, used to workaround provider-specific issues with legacy API...
@@ -47,9 +47,9 @@ namespace LinqToDB.Schema
 		private readonly bool              _isAccessOdbc;
 		private readonly bool              _isSystemDataSqlite;
 
-		internal LegacySchemaProvider(DataConnection connection, SchemaSettings settings, ILanguageProvider languageProvider)
+		internal LegacySchemaProvider(DataConnection connection, SchemaOptions options, ILanguageProvider languageProvider)
 		{
-			_settings          = settings;
+			_options           = options;
 			_languageProvider  = languageProvider;
 			var schemaProvider = connection.DataProvider.GetSchemaProvider();
 			_providerName      = connection.DataProvider.Name;
@@ -62,8 +62,8 @@ namespace LinqToDB.Schema
 
 			// load schema from legacy API and convrt it into new model
 			ParseSchema(
-				schemaProvider.GetSchema(connection, CreateSchemaOptions(settings)),
-				settings.Objects);
+				schemaProvider.GetSchema(connection, CreateSchemaOptions(_options)),
+				_options.LoadedObjects);
 		}
 
 		/// <summary>
@@ -155,7 +155,8 @@ namespace LinqToDB.Schema
 			}
 			else if (proc.IsTableFunction)
 			{
-				_tableFunctions.Add(new TableFunction(dbName, description, parameters, schemaError, resultSet));
+				if (_options.LoadTableFunction(new ObjectName(null, null, proc.SchemaName, proc.ProcedureName)))
+					_tableFunctions.Add(new TableFunction(dbName, description, parameters, schemaError, resultSet));
 			}
 			else if (proc.IsAggregateFunction)
 			{
@@ -488,7 +489,7 @@ namespace LinqToDB.Schema
 		private void RegisterType(DatabaseType dbType, DataType dataType, Type systemType, string? providerSpecificType)
 		{
 			IType type;
-			if (_settings.PreferProviderSpecificTypes && !string.IsNullOrWhiteSpace(providerSpecificType))
+			if (_options.PreferProviderSpecificTypes && !string.IsNullOrWhiteSpace(providerSpecificType))
 			{
 				switch (providerSpecificType)
 				{
@@ -635,66 +636,57 @@ namespace LinqToDB.Schema
 		/// <summary>
 		/// Creates legacy API schema options object for API call.
 		/// </summary>
-		/// <param name="settings">Schema request settings.</param>
+		/// <param name="options">Schema load options.</param>
 		/// <returns>Legacy schema request settings.</returns>
-		private static GetSchemaOptions CreateSchemaOptions(SchemaSettings settings)
+		private static GetSchemaOptions CreateSchemaOptions(SchemaOptions options)
 		{
-			var options = new GetSchemaOptions();
+			var legacyOptions = new GetSchemaOptions();
 
-			options.PreferProviderSpecificTypes = settings.PreferProviderSpecificTypes;
-
-			// requires post-load filtering
-			options.GetTables      = settings.Objects.HasFlag(SchemaObjects.Table) || settings.Objects.HasFlag(SchemaObjects.View);
-			options.GetForeignKeys = settings.Objects.HasFlag(SchemaObjects.ForeignKey) && settings.Objects.HasFlag(SchemaObjects.Table);
+			legacyOptions.PreferProviderSpecificTypes = options.PreferProviderSpecificTypes;
 
 			// requires post-load filtering
-			options.GetProcedures = settings.Objects.HasFlag(SchemaObjects.StoredProcedure)
-				|| settings.Objects.HasFlag(SchemaObjects.ScalarFunction)
-				|| settings.Objects.HasFlag(SchemaObjects.TableFunction)
-				|| settings.Objects.HasFlag(SchemaObjects.AggregateFunction);
+			legacyOptions.GetTables      = options.LoadedObjects.HasFlag(SchemaObjects.Table) || options.LoadedObjects.HasFlag(SchemaObjects.View);
+			legacyOptions.GetForeignKeys = options.LoadedObjects.HasFlag(SchemaObjects.ForeignKey) && options.LoadedObjects.HasFlag(SchemaObjects.Table);
 
-			if (settings.IncludeSchemas)
-				options.IncludedSchemas = settings.Schemas?.ToArray();
+			// requires post-load filtering
+			legacyOptions.GetProcedures = options.LoadedObjects.HasFlag(SchemaObjects.StoredProcedure)
+				|| options.LoadedObjects.HasFlag(SchemaObjects.ScalarFunction)
+				|| options.LoadedObjects.HasFlag(SchemaObjects.TableFunction)
+				|| options.LoadedObjects.HasFlag(SchemaObjects.AggregateFunction);
+
+			if (options.IncludeSchemas)
+				legacyOptions.IncludedSchemas = options.Schemas.ToArray();
 			else
-				options.ExcludedSchemas = settings.Schemas?.ToArray();
+				legacyOptions.ExcludedSchemas = options.Schemas.ToArray();
 
-			if (settings.IncludeCatalogs)
-				options.IncludedCatalogs = settings.Catalogs?.ToArray();
+			if (options.IncludeCatalogs)
+				legacyOptions.IncludedCatalogs = options.Catalogs.ToArray();
 			else
-				options.ExcludedCatalogs = settings.Catalogs?.ToArray();
+				legacyOptions.ExcludedCatalogs = options.Catalogs.ToArray();
 
-			options.LoadProcedure = p =>
+			legacyOptions.LoadProcedure = p =>
 			{
 				var name = new ObjectName(null, null, p.SchemaName, p.ProcedureName);
 				if (!p.IsFunction)
-					return settings.LoadProceduresSchema && settings.LoadProcedureSchema(name);
+					return options.LoadProceduresSchema && options.LoadProcedureSchema(name);
 
 				if (p.IsTableFunction)
-					return settings.LoadTableFunctionsSchema && settings.LoadTableFunctionSchema(name);
+					return options.LoadTableFunction(name);
 
 				throw new InvalidOperationException($"{nameof(GetSchemaOptions)}.{nameof(GetSchemaOptions.LoadProcedure)} called for non-table returning object {p.ProcedureName}");
 			};
 
-			options.LoadTable = t =>
-			{
-				var name = new ObjectName(null, null, t.Schema, t.Name);
+			legacyOptions.LoadTable     = t => options.LoadTableOrView(new ObjectName(null, null, t.Schema, t.Name), t.IsView);
+			legacyOptions.UseSchemaOnly = options.UseSafeSchemaLoad;
 
-				if (t.IsView)
-					return settings.LoadView(name);
-
-				return settings.LoadTable(name);
-			};
-
-			options.UseSchemaOnly = settings.UseSafeSchemaLoad;
-
-			return options;
+			return legacyOptions;
 		}
 
 		#region ISchemaProvider
 		IEnumerable<AggregateFunction> ISchemaProvider.GetAggregateFunctions(                                    ) => _aggregateFunctions;
 		IEnumerable<StoredProcedure>   ISchemaProvider.GetProcedures        (bool withSchema, bool safeSchemaOnly) => _procedures;
 		IEnumerable<ScalarFunction>    ISchemaProvider.GetScalarFunctions   (                                    ) => _scalarFunctions;
-		IEnumerable<TableFunction>     ISchemaProvider.GetTableFunctions    (bool withSchema, bool safeSchemaOnly) => _tableFunctions;
+		IEnumerable<TableFunction>     ISchemaProvider.GetTableFunctions    (                                    ) => _tableFunctions;
 		IEnumerable<Table>             ISchemaProvider.GetTables            (                                    ) => _tables;
 		IEnumerable<View>              ISchemaProvider.GetViews             (                                    ) => _views;
 		IEnumerable<ForeignKey>        ISchemaProvider.GetForeignKeys       (                                    ) => _foreignKeys;
