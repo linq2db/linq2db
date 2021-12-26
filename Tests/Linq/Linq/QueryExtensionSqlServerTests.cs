@@ -17,7 +17,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var q =
-				from p in db.Parent.With(Hints.TableHint.NoLock).With(Hints.TableHint.NoWait)
+				from p in db.Parent.With(Hints.Table.NoLock).With(Hints.Table.NoWait)
 				select p;
 
 			_ = q.ToList();
@@ -29,21 +29,21 @@ namespace Tests.Linq
 		public void TableHint2005PlusTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2005Plus)] string context,
 			[Values(
-				Hints.TableHint.HoldLock,
-				Hints.TableHint.NoLock,
-				Hints.TableHint.NoWait,
-				Hints.TableHint.PagLock,
-				Hints.TableHint.ReadCommitted,
-				Hints.TableHint.ReadCommittedLock,
-				Hints.TableHint.ReadPast,
-				Hints.TableHint.ReadUncommitted,
-				Hints.TableHint.RepeatableRead,
-				Hints.TableHint.RowLock,
-				Hints.TableHint.Serializable,
-				Hints.TableHint.TabLock,
-				Hints.TableHint.TabLockX,
-				Hints.TableHint.UpdLock,
-				Hints.TableHint.XLock
+				Hints.Table.HoldLock,
+				Hints.Table.NoLock,
+				Hints.Table.NoWait,
+				Hints.Table.PagLock,
+				Hints.Table.ReadCommitted,
+				Hints.Table.ReadCommittedLock,
+				Hints.Table.ReadPast,
+				Hints.Table.ReadUncommitted,
+				Hints.Table.RepeatableRead,
+				Hints.Table.RowLock,
+				Hints.Table.Serializable,
+				Hints.Table.TabLock,
+				Hints.Table.TabLockX,
+				Hints.Table.UpdLock,
+				Hints.Table.XLock
 				)] string hint)
 		{
 			using var db = GetDataContext(context);
@@ -61,7 +61,7 @@ namespace Tests.Linq
 		public void TableHint2012PlusTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context,
 			[Values(
-				Hints.TableHint.ForceScan
+				Hints.Table.ForceScan
 //				TableHint.ForceSeek,
 //				TableHint.Snapshot
 				)] string hint)
@@ -83,7 +83,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var q =
-				from p in db.Parent.With(Hints.TableHint.SpatialWindowMaxCells(10))
+				from p in db.Parent.With(Hints.Table.SpatialWindowMaxCells(10))
 				select p;
 
 			_ = q.ToList();
@@ -98,13 +98,41 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Child
-					.With(Hints.TableHint.Index("IX_ChildIndex"))
-					.With(Hints.TableHint.NoLock)
+					.WithIndex("IX_ChildIndex")
+					.With(Hints.Table.NoLock)
 				select p;
 
 			_ = q.ToList();
 
 			Assert.That(LastQuery, Contains.Substring("WITH (Index(IX_ChildIndex), NoLock)"));
+		}
+
+		[Test]
+		public void TableHintIndexTest2([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Child.TableHint(Hints.Table.Index, "IX_ChildIndex")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("WITH (Index(IX_ChildIndex))"));
+		}
+
+		[Test]
+		public void TableHintIndexTest3([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Child.WithIndex("IX_ChildIndex", "IX_ChildIndex")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("WITH (Index(IX_ChildIndex, IX_ChildIndex))"));
 		}
 
 		[Test, Explicit]
@@ -138,7 +166,7 @@ namespace Tests.Linq
 		[Test]
 		public void JoinHintTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
-			[Values(Hints.JoinHint.Loop, Hints.JoinHint.Hash, Hints.JoinHint.Merge, Hints.JoinHint.Remote)] string hint)
+			[Values(Hints.Join.Loop, Hints.Join.Hash, Hints.Join.Merge, Hints.Join.Remote)] string hint)
 		{
 			using var db = GetDataContext(context);
 
@@ -155,7 +183,7 @@ namespace Tests.Linq
 		[Test]
 		public void JoinHintSubQueryTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
-			[Values(Hints.JoinHint.Loop, Hints.JoinHint.Hash, Hints.JoinHint.Merge, Hints.JoinHint.Remote)] string hint)
+			[Values(Hints.Join.Loop, Hints.Join.Hash, Hints.Join.Merge, Hints.Join.Remote)] string hint)
 		{
 			using var db = GetDataContext(context);
 
@@ -178,7 +206,7 @@ namespace Tests.Linq
 		[Test]
 		public void JoinHintMethodTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
-			[Values(Hints.JoinHint.Loop, Hints.JoinHint.Hash, Hints.JoinHint.Merge)] string hint,
+			[Values(Hints.Join.Loop, Hints.Join.Hash, Hints.Join.Merge)] string hint,
 			[Values(SqlJoinType.Left, SqlJoinType.Full)] SqlJoinType joinType)
 		{
 			using var db = GetDataContext(context);
@@ -193,7 +221,7 @@ namespace Tests.Linq
 		[Test]
 		public void JoinHintInnerJoinMethodTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
-			[Values(Hints.JoinHint.Loop, Hints.JoinHint.Hash, Hints.JoinHint.Merge, Hints.JoinHint.Remote)] string hint)
+			[Values(Hints.Join.Loop, Hints.Join.Hash, Hints.Join.Merge, Hints.Join.Remote)] string hint)
 		{
 			using var db = GetDataContext(context);
 
@@ -207,7 +235,7 @@ namespace Tests.Linq
 		[Test]
 		public void JoinHintRightJoinMethodTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
-			[Values(Hints.JoinHint.Hash, Hints.JoinHint.Merge)] string hint)
+			[Values(Hints.Join.Hash, Hints.Join.Merge)] string hint)
 		{
 			using var db = GetDataContext(context);
 
@@ -224,7 +252,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var q =
-				from p in db.Child.With(Hints.TableHint.NoLock)
+				from p in db.Child.With(Hints.Table.NoLock)
 				where p.ParentID < -10000
 				select p;
 
@@ -237,19 +265,19 @@ namespace Tests.Linq
 		public void QueryHintTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
 			[Values(
-				Hints.Option.HashGroup,
-				Hints.Option.OrderGroup,
-				Hints.Option.ConcatUnion,
-				Hints.Option.HashUnion,
-				Hints.Option.MergeUnion,
-				Hints.Option.LoopJoin,
-				Hints.Option.HashJoin,
-				Hints.Option.MergeJoin,
-				Hints.Option.ExpandViews,
-				Hints.Option.KeepPlan,
-				Hints.Option.KeepFixedPlan,
-				Hints.Option.Recompile,
-				Hints.Option.RobustPlan
+				Hints.Query.HashGroup,
+				Hints.Query.OrderGroup,
+				Hints.Query.ConcatUnion,
+				Hints.Query.HashUnion,
+				Hints.Query.MergeUnion,
+				Hints.Query.LoopJoin,
+				Hints.Query.HashJoin,
+				Hints.Query.MergeJoin,
+				Hints.Query.ExpandViews,
+				Hints.Query.KeepPlan,
+				Hints.Query.KeepFixedPlan,
+				Hints.Query.Recompile,
+				Hints.Query.RobustPlan
 			)] string hint)
 		{
 			using var db = GetDataContext(context);
@@ -271,8 +299,8 @@ namespace Tests.Linq
 		public void QueryHint2008PlusTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context,
 			[Values(
-				Hints.Option.IgnoreNonClusteredColumnStoreIndex,
-				Hints.Option.OptimizeForUnknown
+				Hints.Query.IgnoreNonClusteredColumnStoreIndex,
+				Hints.Query.OptimizeForUnknown
 			)] string hint)
 		{
 			using var db = GetDataContext(context);
@@ -302,8 +330,8 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.QueryHint(Hints.Option.HashJoin)
-			.QueryHint(Hints.Option.Fast(10));
+			.QueryHint(Hints.Query.HashJoin)
+			.QueryHint(Hints.Query.Fast(10));
 
 			_ = q.ToList();
 
@@ -322,7 +350,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.QueryHint(Hints.Option.MaxGrantPercent(25));
+			.QueryHint(Hints.Query.MaxGrantPercent(25));
 
 			_ = q.ToList();
 
@@ -341,7 +369,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.QueryHint(Hints.Option.MinGrantPercent(25));
+			.QueryHint(Hints.Query.MinGrantPercent(25));
 
 			_ = q.ToList();
 
@@ -360,7 +388,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.QueryHint(Hints.Option.MaxDop(25));
+			.QueryHint(Hints.Query.MaxDop(25));
 
 			_ = q.ToList();
 
@@ -379,7 +407,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.QueryHint(Hints.Option.MaxRecursion(25));
+			.QueryHint(Hints.Query.MaxRecursion(25));
 
 			_ = q.ToList();
 
@@ -400,7 +428,7 @@ namespace Tests.Linq
 				where p.ParentID == id
 				select p
 			)
-			.QueryHint(Hints.Option.OptimizeFor("@id=1"));
+			.QueryHint(Hints.Query.OptimizeFor("@id=1"));
 
 			_ = q.ToList();
 
@@ -418,7 +446,7 @@ namespace Tests.Linq
 				from p in db.Parent
 				select p
 			)
-			.QueryHint(Hints.Option.QueryTraceOn(10));
+			.QueryHint(Hints.Query.QueryTraceOn(10));
 
 			_ = q.ToList();
 
@@ -435,21 +463,21 @@ namespace Tests.Linq
 			(
 				from p in db.Parent
 				from c in db.Child
-				from c1 in db.Child.With(Hints.TableHint.Index("IX_ChildIndex"))
+				from c1 in db.Child.WithIndex("IX_ChildIndex")
 				where c.ParentID == p.ParentID && c1.ParentID == p.ParentID
 				select p
 			)
-			.TablesInScopeHint(Hints.TableHint.NoLock);
+			.TablesInScopeHint(Hints.Table.NoLock);
 
 			q =
 			(
 				from p in q
 				from c in db.Child
-				from p1 in db.Parent.TablesInScopeHint(Hints.TableHint.HoldLock)
+				from p1 in db.Parent.TablesInScopeHint(Hints.Table.HoldLock)
 				where c.ParentID == p.ParentID && c.Parent!.ParentID > 0 && p1.ParentID == p.ParentID
 				select p
 			)
-			.TablesInScopeHint(Hints.TableHint.NoWait);
+			.TablesInScopeHint(Hints.Table.NoWait);
 
 			q =
 				from p in q
@@ -476,12 +504,12 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			(
-				from c in db.Child.TableHint(Hints.TableHint.NoLock)
+				from c in db.Child.TableHint(Hints.Table.NoLock)
 				where c.ParentID < -1111
 				select c
 			)
-			.QueryHint(Hints.Option.Recompile)
-			.QueryHint(Hints.Option.Fast(10))
+			.QueryHint(Hints.Query.Recompile)
+			.QueryHint(Hints.Query.Fast(10))
 			.Delete();
 
 			Assert.That(LastQuery, Contains.Substring("WITH (NoLock)"));
@@ -494,12 +522,12 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			(
-				from c in db.Child.TableHint(Hints.TableHint.NoLock)
+				from c in db.Child.TableHint(Hints.Table.NoLock)
 				where c.ParentID < -1111
 				select c
 			)
-			.QueryHint(Hints.Option.Recompile)
-			.QueryHint(Hints.Option.Fast(10))
+			.QueryHint(Hints.Query.Recompile)
+			.QueryHint(Hints.Query.Fast(10))
 			.Insert(db.Child, c => new()
 			{
 				ChildID = c.ChildID * 2
@@ -515,12 +543,12 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			(
-				from c in db.Child.TableHint(Hints.TableHint.NoLock)
+				from c in db.Child.TableHint(Hints.Table.NoLock)
 				where c.ParentID < -1111
 				select c
 			)
-			.QueryHint(Hints.Option.Recompile)
-			.QueryHint(Hints.Option.Fast(10))
+			.QueryHint(Hints.Query.Recompile)
+			.QueryHint(Hints.Query.Fast(10))
 			.Update(db.Child, c => new()
 			{
 				ChildID = c.ChildID * 2
@@ -540,12 +568,12 @@ namespace Tests.Linq
 				.Using
 				(
 					(
-						from c in db.Parent1.TableHint(Hints.TableHint.NoLock)
+						from c in db.Parent1.TableHint(Hints.Table.NoLock)
 						where c.ParentID < -1111
 						select c
 					)
-					.QueryHint(Hints.Option.Recompile)
-					.QueryHint(Hints.Option.Fast(10))
+					.QueryHint(Hints.Query.Recompile)
+					.QueryHint(Hints.Query.Fast(10))
 				)
 				.OnTargetKey()
 				.UpdateWhenMatched()
@@ -562,12 +590,12 @@ namespace Tests.Linq
 
 			var cte =
 				(
-					from c in db.Child.TableHint(Hints.TableHint.NoLock)
+					from c in db.Child.TableHint(Hints.Table.NoLock)
 					where c.ParentID < -1111
 					select c
 				)
-				.QueryHint(Hints.Option.Fast(10))
-				.TablesInScopeHint(Hints.TableHint.NoWait)
+				.QueryHint(Hints.Query.Fast(10))
+				.TablesInScopeHint(Hints.Table.NoWait)
 				.AsCte();
 
 			var q =
@@ -576,8 +604,8 @@ namespace Tests.Linq
 					from c in db.Child
 					select p
 				)
-				.QueryHint(Hints.Option.Recompile)
-				.TablesInScopeHint(Hints.TableHint.HoldLock);
+				.QueryHint(Hints.Query.Recompile)
+				.TablesInScopeHint(Hints.Table.HoldLock);
 
 			_ = q.ToList();
 
@@ -593,7 +621,7 @@ namespace Tests.Linq
 
 			var q1 =
 				from c in db.Child
-				join p in db.Parent.TableHint(Hints.TableHint.NoLock) on c.ParentID equals p.ParentID
+				join p in db.Parent.TableHint(Hints.Table.NoLock) on c.ParentID equals p.ParentID
 				select p;
 
 			var q =

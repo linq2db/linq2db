@@ -21,11 +21,24 @@ namespace LinqToDB
 				ID    = id;
 			}
 
-			public QueryExtensionAttribute(string? configuration, QueryExtensionScope scope, int id = 0)
+			public QueryExtensionAttribute(string? configuration, QueryExtensionScope scope, int id = QueryExtensionID.None)
 			{
 				Configuration = configuration;
 				Scope         = scope;
 				ID            = id;
+			}
+
+			public QueryExtensionAttribute(QueryExtensionScope scope, Type extensionBuilderType)
+			{
+				Scope                = scope;
+				ExtensionBuilderType = extensionBuilderType;
+			}
+
+			public QueryExtensionAttribute(string? configuration, QueryExtensionScope scope, Type extensionBuilderType)
+			{
+				Configuration        = configuration;
+				Scope                = scope;
+				ExtensionBuilderType = extensionBuilderType;
 			}
 
 			public string?             Configuration        { get; }

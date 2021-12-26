@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
-using LinqToDB.Common;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using Common;
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using Mapping;
 
 	abstract class SqlServerSqlBuilder : BasicSqlBuilder
 	{
@@ -52,8 +52,8 @@ namespace LinqToDB.DataProvider.SqlServer
 					StringBuilder.Append(' ');
 					BuildCreateTableFieldType(identityField);
 					StringBuilder
-							.AppendLine(")")
-							.AppendLine();
+						.AppendLine(")")
+						.AppendLine();
 				}
 			}
 
@@ -395,7 +395,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.Guid      : StringBuilder.Append("UniqueIdentifier"); return;
 				case DataType.Variant   : StringBuilder.Append("Sql_Variant");      return;
 				case DataType.NVarChar  :
-					if (type.Type.Length == null || type.Type.Length > 4000 || type.Type.Length < 1)
+					if (type.Type.Length is null or > 4000 or < 1)
 					{
 						StringBuilder
 							.Append(type.Type.DataType)
@@ -407,7 +407,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				case DataType.VarChar   :
 				case DataType.VarBinary :
-					if (type.Type.Length == null || type.Type.Length > 8000 || type.Type.Length < 1)
+					if (type.Type.Length is null or > 8000 or < 1)
 					{
 						StringBuilder
 							.Append(type.Type.DataType)

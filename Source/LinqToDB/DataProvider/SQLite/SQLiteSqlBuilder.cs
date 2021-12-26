@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SQLite
@@ -122,10 +121,10 @@ namespace LinqToDB.DataProvider.SQLite
 			}
 			else
 			{
-				AppendIndent();
-				StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY (");
-			StringBuilder.Append(string.Join(InlineComma, fieldNames));
-				StringBuilder.Append(')');
+				AppendIndent()
+					.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY (")
+					.Append(string.Join(InlineComma, fieldNames))
+					.Append(')');
 			}
 		}
 

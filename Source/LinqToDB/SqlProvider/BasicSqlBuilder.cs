@@ -1616,7 +1616,12 @@ namespace LinqToDB.SqlProvider
 		{
 		}
 
-		static readonly ConcurrentDictionary<Type,ISqlExtensionBuilder> _extensionBuilders = new();
+		static readonly ConcurrentDictionary<Type,ISqlExtensionBuilder> _extensionBuilders = new()
+		{
+			[typeof(TableHintExtensionBuilder)]               = new TableHintExtensionBuilder(),
+			[typeof(TableHintWithParameterExtensionBuilder)]  = new TableHintWithParameterExtensionBuilder(),
+			[typeof(TableHintWithParametersExtensionBuilder)] = new TableHintWithParametersExtensionBuilder(),
+		};
 
 		protected void BuildTableExtensions(
 			StringBuilder sb,
@@ -1642,69 +1647,19 @@ namespace LinqToDB.SqlProvider
 							{
 								var inst = Activator.CreateInstance(type);
 
-								if (inst is not ISqlExtensionBuilder)
-									throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement the {typeof(ISqlExtensionBuilder).FullName} interface.");
+								if (inst is not ISqlExtensionBuilder builder)
+									throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement the '{typeof(ISqlExtensionBuilder).FullName}' interface.");
 
-								return (ISqlExtensionBuilder)inst;
+								return builder;
 							});
 
 						extensionBuilder.Build(this, sb, ext);
 					}
 					else
 					{
-						switch (ext.ID)
-						{
-							case Sql.QueryExtensionID.Hint:
-							{
-								var hint = (SqlValue)ext.Arguments["tableHint"];
-								sb.Append((string)hint.Value!);
-								break;
-							}
-							case Sql.QueryExtensionID.HintWithParameter:
-							{
-								var hint  = ((SqlValue)ext.Arguments["tableHint"]).    Value;
-								var param = ((SqlValue)ext.Arguments["hintParameter"]).Value;
-
-								sb
-									.Append(hint)
-									.Append('(')
-									.Append(param)
-									.Append(')');
-
-								break;
-							}
-							case Sql.QueryExtensionID.HintWithParameters:
-							{
-								var hint  = ((SqlValue)     ext.Arguments["tableHint"]).           Value;
-								var count = (int)((SqlValue)ext.Arguments["hintParameters.Count"]).Value!;
-
-								sb.Append(hint);
-
-								if (count > 0)
-								{
-									sb.Append('(');
-
-									for (var i = 0; i < count; i++)
-									{
-										var value = ((SqlValue)ext.Arguments[$"hintParameters.{i}"]).Value;
-										sb
-											.Append(value)
-											.Append(", ");
-									}
-
-									sb.Length -= 2;
-									sb.Append(')');
-								}
-
-								break;
-							}
-							default:
-							{
-								if (customExtensionBuilder == null || customExtensionBuilder(ext) == false)
-									throw new LinqToDBException($"Cannot convert {ext.Arguments[".MethodName"]} extension to SQL.");
-								break;
-							}
-						}
+						if (customExtensionBuilder == null || customExtensionBuilder(ext) == false)
+							throw new LinqToDBException($"Cannot convert {ext.Arguments[".MethodName"]} extension to SQL.");
+						break;
 					}
 
 					sb.Append(delimiter);

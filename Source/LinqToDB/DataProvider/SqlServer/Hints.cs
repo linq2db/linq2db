@@ -9,10 +9,14 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	/// <summary>
+	/// https://docs.microsoft.com/en-us/sql/t-sql/queries/hints-transact-sql
+	/// </summary>
 	public static class Hints
 	{
-		public static class TableHint
+		public static class Table
 		{
+			public const string Index             = "Index";
 			public const string ForceScan         = "ForceScan";
 			public const string ForceSeek         = "ForceSeek";
 			public const string HoldLock          = "HoldLock";
@@ -37,15 +41,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				return "SPATIAL_WINDOW_MAX_CELLS=" + value;
 			}
-
-			[Sql.Function]
-			public static string Index(string value)
-			{
-				return "Index(" + value + ")";
-			}
 		}
 
-		public static class JoinHint
+		public static class Join
 		{
 			public const string Loop   = "LOOP";
 			public const string Hash   = "HASH";
@@ -53,7 +51,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			public const string Remote = "REMOTE";
 		}
 
-		public static class Option
+		public static class Query
 		{
 			public const string HashGroup                          = "HASH GROUP";
 			public const string OrderGroup                         = "ORDER GROUP";
@@ -186,6 +184,36 @@ namespace LinqToDB.DataProvider.SqlServer
 					columns));
 
 			return table;
+		}
+
+		#endregion
+
+		#region ExpressionMethods
+
+		[ExpressionMethod(nameof(WithIndexImpl))]
+		public static ITable<TSource> WithIndex<TSource>(this ITable<TSource> table, string indexName)
+			where TSource : notnull
+		{
+			return table.TableHint(Table.Index, indexName);
+		}
+
+		static Expression<Func<ITable<TSource>,string,ITable<TSource>>> WithIndexImpl<TSource>()
+			where TSource : notnull
+		{
+			return (table, indexName) => table.TableHint(Table.Index, indexName);
+		}
+
+		[ExpressionMethod(nameof(WithIndex2Impl))]
+		public static ITable<TSource> WithIndex<TSource>(this ITable<TSource> table, params string[] indexNames)
+			where TSource : notnull
+		{
+			return table.TableHint(Table.Index, indexNames);
+		}
+
+		static Expression<Func<ITable<TSource>,string[],ITable<TSource>>> WithIndex2Impl<TSource>()
+			where TSource : notnull
+		{
+			return (table, indexNames) => table.TableHint(Table.Index, indexNames);
 		}
 
 		#endregion
