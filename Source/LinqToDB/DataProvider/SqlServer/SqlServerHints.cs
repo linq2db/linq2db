@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	/// <summary>
 	/// https://docs.microsoft.com/en-us/sql/t-sql/queries/hints-transact-sql
 	/// </summary>
-	public static class Hints
+	public static class SqlServerHints
 	{
 		public static class Table
 		{
@@ -138,7 +138,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			public void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 			{
-				var value = (SqlValue)sqlQueryExtension.Arguments["indexName"];
+				var value = (SqlValue)      sqlQueryExtension.Arguments["indexName"];
 				var count = (int)((SqlValue)sqlQueryExtension.Arguments["columns.Count"]).Value!;
 
 				if (count == 0)

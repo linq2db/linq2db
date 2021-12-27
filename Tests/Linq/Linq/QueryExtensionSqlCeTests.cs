@@ -15,13 +15,13 @@ namespace Tests.Linq
 		public void TableHintTest(
 			[IncludeDataSources(true, ProviderName.SqlCe)] string context,
 			[Values(
-				Hints.TableHint.HoldLock,
-				Hints.TableHint.NoLock,
-				Hints.TableHint.PagLock,
-				Hints.TableHint.RowLock,
-				Hints.TableHint.TabLock,
-				Hints.TableHint.UpdLock,
-				Hints.TableHint.XLock
+				SqlCeHints.TableHint.HoldLock,
+				SqlCeHints.TableHint.NoLock,
+				SqlCeHints.TableHint.PagLock,
+				SqlCeHints.TableHint.RowLock,
+				SqlCeHints.TableHint.TabLock,
+				SqlCeHints.TableHint.UpdLock,
+				SqlCeHints.TableHint.XLock
 				)] string hint)
 		{
 			using var db = GetDataContext(context);
@@ -43,7 +43,7 @@ namespace Tests.Linq
 			var q =
 				from p in db.Person
 					.TableHint("Index", "PK_Person")
-					.With(Hints.TableHint.NoLock)
+					.With(SqlCeHints.TableHint.NoLock)
 				select p;
 
 			_ = q.ToList();
@@ -59,22 +59,22 @@ namespace Tests.Linq
 
 			var q =
 			(
-				from p in db.Person.With(Hints.TableHint.Index("PK_Person"))
+				from p in db.Person.With(SqlCeHints.TableHint.Index("PK_Person"))
 				from c in db.Child
 				where c.ParentID == p.ID
 				select p
 			)
-			.TablesInScopeHint(Hints.TableHint.NoLock);
+			.TablesInScopeHint(SqlCeHints.TableHint.NoLock);
 
 			q =
 			(
 				from p in q
 				from c in db.Child
-				from p1 in db.Parent.TablesInScopeHint(Hints.TableHint.HoldLock)
+				from p1 in db.Parent.TablesInScopeHint(SqlCeHints.TableHint.HoldLock)
 				where c.ParentID == p.ID && c.Parent!.ParentID > 0 && p1.ParentID == p.ID
 				select p
 			)
-			.TablesInScopeHint(Hints.TableHint.PagLock);
+			.TablesInScopeHint(SqlCeHints.TableHint.PagLock);
 
 			q =
 				from p in q
@@ -99,7 +99,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			(
-				from c in db.Child.TableHint(Hints.TableHint.NoLock)
+				from c in db.Child.TableHint(SqlCeHints.TableHint.NoLock)
 				where c.ParentID < -1111
 				select c
 			)
@@ -118,7 +118,7 @@ namespace Tests.Linq
 
 			var q1 =
 				from c in db.Child
-				join p in db.Parent.TableHint(Hints.TableHint.NoLock) on c.ParentID equals p.ParentID
+				join p in db.Parent.TableHint(SqlCeHints.TableHint.NoLock) on c.ParentID equals p.ParentID
 				select p;
 
 			var q =

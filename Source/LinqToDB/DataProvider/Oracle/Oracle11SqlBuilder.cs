@@ -848,7 +848,7 @@ END;",
 					if (HintBuilder!.Length > 0)
 						HintBuilder.Append(' ');
 
-					var hint = (SqlValue)ext.Arguments["tableHint"];
+					var hint = (SqlValue)ext.Arguments["hint"];
 
 					HintBuilder.Append((string)hint.Value!);
 					HintBuilder.Append('(');

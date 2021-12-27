@@ -5,11 +5,11 @@ namespace LinqToDB.SqlProvider
 {
 	using SqlQuery;
 
-	class TableHintWithParametersExtensionBuilder : ISqlExtensionBuilder
+	class HintWithParametersExtensionBuilder : ISqlExtensionBuilder
 	{
 		public void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 		{
-			var hint  = ((SqlValue)     sqlQueryExtension.Arguments["tableHint"]).           Value;
+			var hint  = ((SqlValue)     sqlQueryExtension.Arguments["hint"]).                Value;
 			var count = (int)((SqlValue)sqlQueryExtension.Arguments["hintParameters.Count"]).Value!;
 
 			stringBuilder.Append(hint);

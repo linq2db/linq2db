@@ -2,7 +2,7 @@
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	public static class Hints
+	public static class OracleHints
 	{
 		// https://docs.oracle.com/cd/B19306_01/server.102/b14200/sql_elements006.htm#SQLRF50901
 		//

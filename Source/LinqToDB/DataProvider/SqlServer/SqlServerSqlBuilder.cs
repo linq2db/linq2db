@@ -540,7 +540,6 @@ namespace LinqToDB.DataProvider.SqlServer
 						case JoinType.Full       : StringBuilder.Append($"FULL {h} JOIN ");  return true;
 						default                  : throw new InvalidOperationException();
 					}
-
 				}
 			}
 

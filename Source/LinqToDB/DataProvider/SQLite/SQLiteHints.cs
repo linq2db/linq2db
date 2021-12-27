@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	public static class Hints
+	public static class SQLiteHints
 	{
 		public static class TableHint
 		{

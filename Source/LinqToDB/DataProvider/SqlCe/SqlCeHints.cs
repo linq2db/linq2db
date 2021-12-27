@@ -2,7 +2,7 @@
 
 namespace LinqToDB.DataProvider.SqlCe
 {
-	public static class Hints
+	public static class SqlCeHints
 	{
 		public static class TableHint
 		{

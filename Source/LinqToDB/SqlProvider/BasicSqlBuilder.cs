@@ -1618,9 +1618,9 @@ namespace LinqToDB.SqlProvider
 
 		static readonly ConcurrentDictionary<Type,ISqlExtensionBuilder> _extensionBuilders = new()
 		{
-			[typeof(TableHintExtensionBuilder)]               = new TableHintExtensionBuilder(),
-			[typeof(TableHintWithParameterExtensionBuilder)]  = new TableHintWithParameterExtensionBuilder(),
-			[typeof(TableHintWithParametersExtensionBuilder)] = new TableHintWithParametersExtensionBuilder(),
+			[typeof(HintExtensionBuilder)]               = new HintExtensionBuilder(),
+			[typeof(HintWithParameterExtensionBuilder)]  = new HintWithParameterExtensionBuilder(),
+			[typeof(HintWithParametersExtensionBuilder)] = new HintWithParametersExtensionBuilder(),
 		};
 
 		protected void BuildTableExtensions(
@@ -1629,47 +1629,47 @@ namespace LinqToDB.SqlProvider
 			string? prefix, string delimiter, string? suffix,
 			Func<SqlQueryExtension,bool>? customExtensionBuilder = null)
 		{
-			if (table.SqlQueryExtensions?.Any(ext =>
-				ext.Scope is
-					Sql.QueryExtensionScope.TableHint or
-					Sql.QueryExtensionScope.TablesInScopeHint) == true)
+			if (table.SqlQueryExtensions is null)
+				return;
+
+			if (prefix != null)
+				sb.Append(prefix);
+
+			foreach (var ext in table.SqlQueryExtensions!)
 			{
-				if (prefix != null)
-					sb.Append(prefix);
-
-				foreach (var ext in table.SqlQueryExtensions!)
+				if (ext.BuilderType != null)
 				{
-					if (ext.BuilderType != null)
-					{
-						var extensionBuilder = _extensionBuilders.GetOrAdd(
-							ext.BuilderType,
-							type =>
-							{
-								var inst = Activator.CreateInstance(type);
+					var extensionBuilder = _extensionBuilders.GetOrAdd(
+						ext.BuilderType,
+						type =>
+						{
+							var inst = Activator.CreateInstance(type);
 
-								if (inst is not ISqlExtensionBuilder builder)
-									throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement the '{typeof(ISqlExtensionBuilder).FullName}' interface.");
+							if (inst is not ISqlExtensionBuilder builder)
+								throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement the '{typeof(ISqlExtensionBuilder).FullName}' interface.");
 
-								return builder;
-							});
+							return builder;
+						});
 
-						extensionBuilder.Build(this, sb, ext);
-					}
+					if (extensionBuilder is ISqlTableExtensionBuilder tableExtensionBuilder)
+						tableExtensionBuilder.Build(this, sb, ext, table, alias);
 					else
-					{
-						if (customExtensionBuilder == null || customExtensionBuilder(ext) == false)
-							throw new LinqToDBException($"Cannot convert {ext.Arguments[".MethodName"]} extension to SQL.");
-						break;
-					}
-
-					sb.Append(delimiter);
+						extensionBuilder.Build(this, sb, ext);
+				}
+				else
+				{
+					if (customExtensionBuilder == null || customExtensionBuilder(ext) == false)
+						throw new LinqToDBException($"Cannot convert {ext.Arguments[".MethodName"]} extension to SQL.");
+					break;
 				}
 
-				sb.Length -= delimiter.Length;
-
-				if (suffix != null)
-					sb.Append(suffix);
+				sb.Append(delimiter);
 			}
+
+			sb.Length -= delimiter.Length;
+
+			if (suffix != null)
+				sb.Append(suffix);
 		}
 
 		void BuildJoinTable(SelectQuery selectQuery, SqlJoinedTable join, ref int joinCounter)

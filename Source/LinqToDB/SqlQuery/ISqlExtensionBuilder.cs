@@ -1,12 +1,17 @@
 ﻿using System;
 using System.Text;
 
-using LinqToDB.SqlProvider;
-
 namespace LinqToDB.SqlQuery
 {
+	using SqlProvider;
+
 	public interface ISqlExtensionBuilder
 	{
 		void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension);
+	}
+
+	public interface ISqlTableExtensionBuilder : ISqlExtensionBuilder
+	{
+		void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension, SqlTable table, string alias);
 	}
 }
