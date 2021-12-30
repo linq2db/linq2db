@@ -73,7 +73,9 @@ namespace LinqToDB.Linq.Builder
 
 		static IBuildContext CheckSubQueryForSelect(IBuildContext context)
 		{
-			return context.SelectQuery.Select.IsDistinct ? new SubQueryContext(context) : context;
+			return context.SelectQuery.Select.IsDistinct || !context.SelectQuery.Select.GroupBy.IsEmpty
+				? new SubQueryContext(context)
+				: context;
 		}
 
 		#endregion

@@ -51,13 +51,15 @@ namespace LinqToDB.Linq.Builder
 
 			var isContinuousOrder = !sequence.SelectQuery.OrderBy.IsEmpty && methodCall.Method.Name.StartsWith("Then");
 			var lambda  = (LambdaExpression)methodCall.Arguments[1].Unwrap();
-			SqlInfo[] sql;
+
+			List<SqlPlaceholderExpression> placeholders;
 
 			while (true)
 			{
 				var body = SequenceHelper.PrepareBody(lambda, sequence).Unwrap();
 
-				sql = new SqlInfo[] { builder.ConvertToSqlInfo(sequence, body) };
+				var sqlExpr = builder.ConvertToSqlExpr(sequence, body);
+				placeholders = builder.CollectDistinctPlaceholders(sqlExpr);
 
 				// Do not create subquery for ThenByExtensions
 				if (wrapped || isContinuousOrder)
@@ -67,17 +69,17 @@ namespace LinqToDB.Linq.Builder
 
 				var isComplex = false;
 
-				foreach (var sqlInfo in sql)
+				foreach (var placeholder in placeholders)
 				{
 					// immutable expressions will be removed later
 					//
-					var isImmutable = QueryHelper.IsConstant(sqlInfo.Sql);
+					var isImmutable = QueryHelper.IsConstant(placeholder.Sql);
 					if (isImmutable)
 						continue;
 					
 					// possible we have to extend this list
 					//
-					isComplex = null != sqlInfo.Sql.Find(QueryElementType.SqlQuery);
+					isComplex = null != placeholder.Sql.Find(QueryElementType.SqlQuery);
 					if (isComplex)
 						break;
 				}
@@ -93,7 +95,7 @@ namespace LinqToDB.Linq.Builder
 			if (!isContinuousOrder && !Configuration.Linq.DoNotClearOrderBys)
 				sequence.SelectQuery.OrderBy.Items.Clear();
 
-			foreach (var expr in sql)
+			foreach (var expr in placeholders)
 			{
 				// we do not need sorting by immutable values, like "Some", Func("Some"), "Some1" + "Some2". It does nothing for ordering
 				//

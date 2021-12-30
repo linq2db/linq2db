@@ -3,29 +3,32 @@ using System.Linq.Expressions;
 using LinqToDB.Common.Internal;
 using LinqToDB.Extensions;
 using LinqToDB.Linq.Builder;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Expressions
 {
 	class SqlPlaceholderExpression : Expression
 	{
-		public SqlPlaceholderExpression(IBuildContext? buildContext, SqlInfo sql, Expression memberExpression, Type? convertType = null, string? alias = null)
+		public SqlPlaceholderExpression(SelectQuery selectQuery, ISqlExpression sql, Expression path, Type? convertType = null, string? alias = null, int? index = null)
 		{
-			BuildContext     = buildContext;
-			MemberExpression = memberExpression;
-			ConvertType      = convertType;
-			Alias            = alias;
-			Sql              = sql;
+			SelectQuery = selectQuery;
+			Path        = path;
+			ConvertType = convertType;
+			Alias       = alias;
+			Index       = index;
+			Sql         = sql;
 		}
 
-		public IBuildContext? BuildContext     { get; }
-		public Expression     MemberExpression { get; }
-		public Type?          ConvertType      { get; }
-		public string?        Alias            { get; set; }
-		public SqlInfo        Sql              { get; }
+		public SelectQuery    SelectQuery { get; }
+		public Expression     Path        { get; }
+		public int?           Index       { get; }
+		public string?        Alias       { get; set; }
+		public ISqlExpression Sql         { get; }
+		public Type?          ConvertType { get; }
 
 
 		public override ExpressionType NodeType => ExpressionType.Extension;
-		public override Type           Type     => ConvertType ?? MemberExpression.Type;
+		public override Type           Type     => ConvertType ?? Path.Type;
 
 
 		public SqlPlaceholderExpression MakeNullable()
@@ -33,7 +36,7 @@ namespace LinqToDB.Expressions
 			if (!Type.IsNullableType())
 			{
 				var type = Type.AsNullable();
-				return new SqlPlaceholderExpression(BuildContext, Sql, MemberExpression, type);
+				return new SqlPlaceholderExpression(SelectQuery, Sql, Path, type, Alias, Index);
 			}
 
 			return this;
@@ -41,9 +44,9 @@ namespace LinqToDB.Expressions
 
 		public override string ToString()
 		{
-			if (Sql?.Index >= 0)
-				return $"SQL[{Sql.Index}]: {Sql?.Sql}";
-			return $"SQL: {Sql?.Sql}";
+			if (Index != null)
+				return $"SQL[{Index}]: {{{Sql}}}";
+			return $"SQL: {{{Sql}}}";
 		}
 	}
 

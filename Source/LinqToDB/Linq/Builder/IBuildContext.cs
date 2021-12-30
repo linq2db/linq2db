@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq.Expressions;
+using LinqToDB.Expressions;
 
 #if DEBUG
 // ReSharper disable InconsistentNaming
@@ -78,7 +79,7 @@ namespace LinqToDB.Linq.Builder
 		SqlInfo[]          ConvertToIndex      (Expression? expression, int level, ConvertFlags flags);
 
 
-		SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias);
+		Expression ColumnCreated(SqlPlaceholderExpression placeholder);
 		Expression MakeExpression(Expression path, ProjectFlags flags);
 
 		/// <summary>

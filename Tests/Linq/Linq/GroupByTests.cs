@@ -1024,16 +1024,20 @@ namespace Tests.Linq
 		public void GroupByAssociation102([DataSources()] string context)
 		{
 			using (var db = GetDataContext(context))
+			{
 				AreEqual(
 					from ch in GrandChild1
-					group ch by ch.Parent into g
+					group ch by ch.Parent
+					into g
 					where g.Count(_ => _.ChildID >= 20) > 2
 					select g.Key.Value1
 					,
 					from ch in db.GrandChild1
-					group ch by ch.Parent into g
+					group ch by ch.Parent
+					into g
 					where g.Count(_ => _.ChildID >= 20) > 2
 					select g.Key.Value1);
+			}
 		}
 
 		[Test]
@@ -1156,14 +1160,31 @@ namespace Tests.Linq
 		public void GroupByAggregate1([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
+			{
+				var query = from p in db.Parent
+					group p by p.Children.Count > 0 && p.Children.Average(c => c.ParentID) > 3
+					//group p by p.Children.Count > 0
+					//group p by p.Children.Average(c => c.ParentID) > 3
+					into g
+					select g.Key;
+
+				var zz = query.ToList();
+
+				return;
+
+
 				AreEqual(
 					from p in Parent
-					group p by p.Children.Count > 0 && p.Children.Average(c => c.ParentID) > 3 into g
+					group p by p.Children.Count > 0 && p.Children.Average(c => c.ParentID) > 3
+					into g
 					select g.Key
 					,
 					from p in db.Parent
-					group p by  p.Children.Count > 0 && p.Children.Average(c => c.ParentID) > 3 into g
+					group p by p.Children.Count > 0 && p.Children.Average(c => c.ParentID) > 3
+					into g
 					select g.Key);
+			}
+
 		}
 
 		[Test]

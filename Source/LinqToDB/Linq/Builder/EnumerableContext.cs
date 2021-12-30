@@ -624,12 +624,17 @@ namespace LinqToDB.Linq.Builder
 			return sql;
 		}
 
+		public Expression ColumnCreated(SqlPlaceholderExpression placeholder)
+		{
+			throw new NotImplementedException();
+		}
+
 		public SqlInfo? MakeSql(Expression path)
 		{
 			throw new NotImplementedException();
 		}
 
-		public SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
+		public ISqlExpression MakeColumn(Expression path, ISqlExpression sqlExpression, string? alias)
 		{
 			throw new NotImplementedException();
 		}

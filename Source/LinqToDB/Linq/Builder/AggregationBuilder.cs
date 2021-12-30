@@ -102,25 +102,53 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			var context = new AggregationContext(buildInfo.Parent, sequence, methodCall);
+			var parentContext = buildInfo.Parent;
+			if (parentContext is SubQueryContext subQuery)
+			{
+				parentContext = subQuery.SubQuery;
+			}
 
-			var refExpression  = new ContextRefExpression(methodCall.Arguments[0].Type, prevSequence);
-			var sqlPlaceholder = builder.ConvertToSqlPlaceholder(context, refExpression);
+			var refExpression  = new ContextRefExpression(methodCall.Arguments[0].Type, sequence);
+			var sqlPlaceholder = builder.ConvertToSqlPlaceholder(sequence, refExpression);
+			var context        = new AggregationContext(parentContext, sequence, methodCall);
 
 			var sql = sqlPlaceholder.Sql;
 
 			var functionPlaceholder = ExpressionBuilder.CreatePlaceholder(context, /*context*/
-				new SqlFunction(methodCall.Type, methodName, true, sql.Sql) { CanBeNull = true }, buildInfo.Expression);
+				new SqlFunction(methodCall.Type, methodName, true, sql) { CanBeNull = true }, buildInfo.Expression);
 
 			functionPlaceholder.Alias = methodName;
 
-			//functionPlaceholder = (SqlPlaceholderExpression)builder.UpdateNesting(context, functionPlaceholder);
-
-			if (!inGrouping && buildInfo.IsSubQuery)
+			if (buildInfo.IsSubQuery)
 			{
-				builder.MakeColumn(context, functionPlaceholder);
+				if (!inGrouping)
+				{
+					if (false /*!builder.DataContext.SqlProviderFlags.IsCountSubQuerySupported*/)
+					{
+						//CreateWeakOuterJoin(buildInfo.Parent!, sequence.SelectQuery);
+					}
+					else
+					{
+						_ = builder.MakeColumn(sequence.SelectQuery, functionPlaceholder);
 
-				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(buildInfo.Parent, context.SelectQuery, functionPlaceholder.MemberExpression, functionPlaceholder.ConvertType);
+						functionPlaceholder = ExpressionBuilder.CreatePlaceholder(parentContext!,
+							sequence.SelectQuery, buildInfo.Expression,
+							functionPlaceholder.ConvertType);
+
+						/*
+						functionPlaceholder = ExpressionBuilder.CreatePlaceholder(parentContext,
+							sequence.SelectQuery, new ContextRefExpression(functionPlaceholder.Path.Type, context),
+							functionPlaceholder.ConvertType);*/
+
+						builder.MakeColumn(functionPlaceholder.SelectQuery, functionPlaceholder);
+
+						if (parentContext != buildInfo.Parent)
+						{
+							functionPlaceholder =
+								(SqlPlaceholderExpression)builder.UpdateNesting(buildInfo.Parent!, functionPlaceholder);
+						}
+					}
+				}
 			}
 
 			context.Placeholder = functionPlaceholder;

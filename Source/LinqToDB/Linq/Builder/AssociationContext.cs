@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Security.Cryptography;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -90,10 +91,9 @@ namespace LinqToDB.Linq.Builder
 			return corrected;
 		}
 
-		public SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
+		public Expression ColumnCreated(SqlPlaceholderExpression placeholder)
 		{
-			path = SequenceHelper.CorrectExpression(path, this, SubqueryContext);
-			return SubqueryContext.MakeColumn(path, sqlInfo, alias);
+			throw new NotImplementedException();
 		}
 
 		public Expression MakeExpression(Expression path, ProjectFlags flags)

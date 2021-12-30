@@ -71,6 +71,7 @@ namespace LinqToDB.Linq.Builder
 				}
 				else if (inGrouping)
 				{
+					//TODO: maybe remove
 					if (!builder.DataContext.SqlProviderFlags.IsSybaseBuggyGroupBy)
 						sequence.SelectQuery.Select.Add(new SqlValue(0));
 					else
@@ -89,28 +90,46 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			var parentContext = buildInfo.Parent;
+			if (parentContext is SubQueryContext subQuery)
+			{
+				parentContext = subQuery.SubQuery;
+			}
+
 			var functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence, SqlFunction.CreateCount(returnType, sequence.SelectQuery), buildInfo.Expression);
+			var context = new CountContext(parentContext, sequence, returnType);
 
 			if (buildInfo.IsSubQuery)
 			{
 				if (!inGrouping)
 				{
-					if (!builder.DataContext.SqlProviderFlags.IsCountSubQuerySupported)
+					if (false /*!builder.DataContext.SqlProviderFlags.IsCountSubQuerySupported*/)
 					{
 						CreateWeakOuterJoin(buildInfo.Parent!, sequence.SelectQuery);
 					}
 					else
 					{
-						builder.MakeColumn(sequence, functionPlaceholder);
+						_ = builder.MakeColumn(sequence.SelectQuery, functionPlaceholder);
 
-						functionPlaceholder = ExpressionBuilder.CreatePlaceholder(buildInfo.Parent,
-							sequence.SelectQuery, functionPlaceholder.MemberExpression,
+						functionPlaceholder = ExpressionBuilder.CreatePlaceholder(parentContext,
+							sequence.SelectQuery, buildInfo.Expression,
 							functionPlaceholder.ConvertType);
+
+						/*
+						functionPlaceholder = ExpressionBuilder.CreatePlaceholder(parentContext,
+							sequence.SelectQuery, new ContextRefExpression(functionPlaceholder.Path.Type, context),
+							functionPlaceholder.ConvertType);*/
+
+						builder.MakeColumn(functionPlaceholder.SelectQuery, functionPlaceholder);
+
+						if (parentContext != buildInfo.Parent)
+						{
+							functionPlaceholder =
+								(SqlPlaceholderExpression)builder.UpdateNesting(buildInfo.Parent, functionPlaceholder);
+						}
 					}
 				}
 			}
-
-			var context = new CountContext(buildInfo.Parent, sequence, returnType);
 
 			context.Placeholder = functionPlaceholder;
 

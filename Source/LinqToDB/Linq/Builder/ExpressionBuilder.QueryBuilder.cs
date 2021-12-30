@@ -171,45 +171,37 @@ namespace LinqToDB.Linq.Builder
 
 			postProcessed = globalGenerator.Build();
 
-			var withColumns = ToColumns(postProcessed);
+			var withColumns = ToColumns(context, postProcessed);
 			return withColumns;
 		}
 
-		public Expression ToColumns(Expression expression)
+		public Expression ToColumns(IBuildContext rootContext, Expression expression)
 		{
+			var info         = new QueryInformation(rootContext.SelectQuery);
 			var processedMap = new Dictionary<Expression, Expression>();
 
 			var withColumns =
 				expression.Transform(
-					(builder: this, map: processedMap),
+					(builder: this, map: processedMap, info),
 					static (context, expr) =>
 					{
 						if (context.map.TryGetValue(expr, out var mapped))
 							return mapped;
 
-						if (expr is SqlPlaceholderExpression placeholder)
+						if (expr is SqlPlaceholderExpression placeholder && placeholder.SelectQuery != null)
 						{
-							if (placeholder.BuildContext == null)
-								throw new InvalidOperationException();
-
-							var parent = placeholder.BuildContext;
-							while (true)
+							do
 							{
-								if (placeholder.Sql.Index < 0 || placeholder.Sql.Query != parent.SelectQuery)
+								var parent = context.info.GetParentQuery(placeholder.SelectQuery);
+								if (parent == null)
 								{
-									placeholder = context.builder.MakeColumn(
-										parent,
-										placeholder);
-								}
-								else
-								{
-									
+									placeholder = context.builder.MakeColumn(null, placeholder);
+									break;
 								}
 
-								parent = parent.Parent;
-								if (parent == null)
-									break;
-							}
+								placeholder = context.builder.MakeColumn(parent, placeholder);
+
+							} while (true);
 
 							context.map[expr] = placeholder;
 							return placeholder;
@@ -226,7 +218,7 @@ namespace LinqToDB.Linq.Builder
 			var current = tested;
 			while (current != null)
 			{
-				if (current == upToContext)
+				if (current == upToContext || current.SelectQuery == upToContext.SelectQuery)
 					return true;
 
 				current = current.Parent;
@@ -235,57 +227,50 @@ namespace LinqToDB.Linq.Builder
 			return false;
 		}
 
+		static bool IsSameParentTree(QueryInformation info, SelectQuery testedQuery)
+		{
+			var parent = info.GetParentQuery(testedQuery);
+
+			while (parent != null)
+			{
+				if (ReferenceEquals(parent, info.RootQuery))
+					return true;
+
+				parent = info.GetParentQuery(parent);
+			}
+
+			return false;
+		}
+
 		public Expression UpdateNesting(IBuildContext upToContext, Expression expression)
 		{
-			var accessibleSources =
-				new HashSet<ISqlTableSource>(QueryHelper.EnumerateAccessibleSources(upToContext.SelectQuery));
+			var info  = new QueryInformation(upToContext.SelectQuery);
 
 			var withColumns =
 				expression.Transform(
-					(builder: this, upToContext, accessibleSources),
+					(builder: this, upToContext, info),
 					static (context, expr) =>
 					{
 						if (expr is SqlErrorExpression error)
 							throw error.CreateError();
 
-						if (expr is SqlPlaceholderExpression placeholder && IsSameParentTree(context.upToContext, placeholder.BuildContext))
+						if (expr is SqlPlaceholderExpression placeholder && !ReferenceEquals(context.upToContext.SelectQuery, placeholder.SelectQuery))
 						{
-							if (placeholder.BuildContext == null)
-								throw new InvalidOperationException();
-
-							var parent = placeholder.BuildContext;
-							while (true)
+							if (IsSameParentTree(context.info, placeholder.SelectQuery))
 							{
-								if (context.upToContext == placeholder.BuildContext || placeholder.BuildContext == null)
-									break;
-
-								if (placeholder.Sql.Index >= 0)
+								do
 								{
-									if (((SqlColumn)placeholder.Sql.Sql).Parent == context.upToContext.SelectQuery)
+									var parentQuery = context.info.GetParentQuery(placeholder.SelectQuery);
+
+									if (parentQuery == null)
 										break;
 
-									parent = parent.Parent;
+									placeholder = context.builder.MakeColumn(parentQuery, placeholder);
 
-									if (parent == null || parent == context.upToContext || ReferenceEquals(parent.SelectQuery, context.upToContext.SelectQuery))
+									if (ReferenceEquals(context.upToContext.SelectQuery, parentQuery))
 										break;
-								}
 
-								if (ReferenceEquals(context.upToContext.SelectQuery, placeholder.BuildContext.SelectQuery))
-									break;
-
-								if (ReferenceEquals(context.upToContext.SelectQuery, placeholder.Sql.Query))
-									break;
-
-								if (!QueryHelper.EnumerateAccessibleSources(context.upToContext.SelectQuery).Contains(placeholder.BuildContext.SelectQuery))
-									break;
-
-								placeholder = context.builder.MakeColumn(
-									parent,
-									placeholder);
-
-								parent = placeholder.BuildContext?.Parent;
-								if (parent == null || parent == context.upToContext)
-									break;
+								} while (true);
 							}
 
 							return placeholder;
@@ -297,21 +282,28 @@ namespace LinqToDB.Linq.Builder
 			return withColumns;
 		}
 
-		public bool TryConvertToSql(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor, [NotNullWhen(true)] out ISqlExpression? sqlExpression, out Expression actual)
+		public bool TryConvertToSql(IBuildContext context, ProjectFlags flags, Expression expression, ColumnDescriptor? columnDescriptor, [NotNullWhen(true)] out ISqlExpression? sqlExpression, out Expression actual)
 		{
 			sqlExpression = null;
 
 			//Just test that we can convert
 			actual = ConvertToSqlExpr(context, expression, testOnly: true, columnDescriptor: columnDescriptor);
-			if (actual is not SqlPlaceholderExpression)
+			if (actual is not SqlPlaceholderExpression placeholderTest)
 				return false;
 
-			//Test conversion success, do it again
-			actual = ConvertToSqlExpr(context, expression, testOnly: false, columnDescriptor: columnDescriptor);
-			if (actual is not SqlPlaceholderExpression placeholder)
-				return false;
+			sqlExpression = placeholderTest.Sql;
 
-			sqlExpression = placeholder.Sql?.Sql;
+			if (!flags.HasFlag(ProjectFlags.Test))
+			{
+				sqlExpression = null;
+				//Test conversion success, do it again
+				actual = ConvertToSqlExpr(context, expression, testOnly: false, columnDescriptor: columnDescriptor);
+				if (actual is not SqlPlaceholderExpression placeholder)
+					return false;
+
+				sqlExpression = placeholder.Sql;
+			}
+
 			return true;
 		}
 
@@ -888,29 +880,46 @@ namespace LinqToDB.Linq.Builder
 			public Expression?          Expression;
 		}
 
-		Dictionary<SelectQuery,List<SubQueryContextInfo>>? _buildContextCache;
+
+		Expression CorrectRoot(Expression expr)
+		{
+			if (expr is MethodCallExpression mc && mc.IsQueryable())
+			{
+				var firstArg = CorrectRoot(mc.Arguments[0]);
+				if (!ReferenceEquals(firstArg, mc.Arguments[0]))
+				{
+					var args = mc.Arguments.ToArray();
+					args[0] = firstArg;
+					return mc.Update(null, args);
+				}
+
+			}
+			else
+				expr = MakeExpression(expr, ProjectFlags.Root);
+
+			return expr;
+		}
+
+		List<SubQueryContextInfo>? _buildContextCache;
 
 		SubQueryContextInfo GetSubQueryContext(IBuildContext context, MethodCallExpression expr)
 		{
-			var select = context.SelectQuery;
+			var testExpression = (MethodCallExpression)CorrectRoot(expr);
+			var select         = context.SelectQuery;
 
-			if (_buildContextCache == null || !_buildContextCache.TryGetValue(select, out var sbi))
-			{
-				_buildContextCache ??= new();
-				_buildContextCache[select] =   sbi = new List<SubQueryContextInfo>();
-			}
+			_buildContextCache ??= new List<SubQueryContextInfo>();
 
-			foreach (var item in sbi)
+			foreach (var item in _buildContextCache)
 			{
-				if (expr.EqualsTo(item.Method, OptimizationContext.GetSimpleEqualsToContext(false)))
+				if (testExpression.EqualsTo(item.Method, OptimizationContext.GetSimpleEqualsToContext(false)))
 					return item;
 			}
 
-			var ctx = GetSubQuery(context, expr);
+			var ctx = GetSubQuery(context, testExpression);
 
-			var info = new SubQueryContextInfo { Method = expr, Context = ctx };
+			var info = new SubQueryContextInfo { Method = testExpression, Context = ctx };
 
-			sbi.Add(info);
+			_buildContextCache.Add(info);
 
 			return info;
 		}
@@ -1161,7 +1170,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (placeholder.Sql == null)
 						throw new InvalidOperationException();
-					if (placeholder.Sql.Index < 0)
+					if (placeholder.Index == null)
 						throw new InvalidOperationException();
 
 					var valueType = placeholder.Type;
@@ -1170,16 +1179,19 @@ namespace LinqToDB.Linq.Builder
 					/*if (placeholder.IsNullable && valueType.IsValueType && !valueType.IsNullable())
 						valueType = valueType.AsNullable();*/
 
-					return new ConvertFromDataReaderExpression(valueType, placeholder.Sql.Index,
-						QueryHelper.GetColumnDescriptor(placeholder.Sql.Sql)?.ValueConverter, DataReaderParam);
+					return new ConvertFromDataReaderExpression(valueType, placeholder.Index.Value,
+						QueryHelper.GetColumnDescriptor(placeholder.Sql)?.ValueConverter, DataReaderParam);
 				}
 
 				if (e is SqlReaderIsNullExpression isNullExpression)
 				{
+					if (isNullExpression.Placeholder.Index == null)
+						throw new InvalidOperationException();
+
 					var nullCheck = Expression.Call(
 						DataReaderParam,
 						ReflectionHelper.DataReader.IsDBNull,
-						ExpressionInstances.Int32Array(isNullExpression.Placeholder.Sql.Index));
+						ExpressionInstances.Int32Array(isNullExpression.Placeholder.Index.Value));
 
 					return nullCheck;
 				}

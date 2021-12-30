@@ -115,14 +115,14 @@ namespace LinqToDB.Linq.Builder
 
 		Dictionary<SqlCacheKey, Expression>? _associations;
 
-		public Expression TryCreateAssociation(Expression expression, ContextRefExpression rootContext)
+		public Expression TryCreateAssociation(Expression expression, ContextRefExpression rootContext, ProjectFlags flags)
 		{
 			if (!IsAssociation(expression))
 				return expression;
 
 			_associations ??= new Dictionary<SqlCacheKey, Expression>(SqlCacheKey.SqlCacheKeyComparer);
 
-			var key = new SqlCacheKey(expression, rootContext.BuildContext, null, ProjectFlags.Root);
+			var key = new SqlCacheKey(expression, rootContext.BuildContext, null, null, ProjectFlags.Root);
 
 			if (_associations.TryGetValue(key, out var associationExpression))
 				return associationExpression;

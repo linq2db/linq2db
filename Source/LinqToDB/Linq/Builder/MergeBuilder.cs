@@ -236,7 +236,7 @@ namespace LinqToDB.Linq.Builder
 
 				builder.BuildSearchCondition(
 					new ExpressionContext(null, secondContext == null? new[] { onContext } : new[] { onContext, secondContext }, condition),
-					conditionExpr,
+					conditionExpr, ProjectFlags.SQL, 
 					result.Conditions);
 			}
 

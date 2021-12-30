@@ -126,7 +126,7 @@ namespace LinqToDB.Linq.Builder
 					var placeholders = Builder.CollectDistinctPlaceholders(expr);
 
 					var notNull = placeholders
-						.FirstOrDefault(placeholder => !placeholder.Sql.Sql.CanBeNull);
+						.FirstOrDefault(placeholder => !placeholder.Sql.CanBeNull);
 
 					if (notNull == null)
 					{

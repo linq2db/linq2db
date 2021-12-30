@@ -40,10 +40,7 @@ namespace LinqToDB.Linq.Builder
 				// create all columns
 				var sqlExpr = builder.ConvertToSqlExpr(prevSequence, new ContextRefExpression(methodCall.Arguments[0].Type, prevSequence));
 
-				if (prevSequence == sequence)
-					builder.ToColumns(sqlExpr);
-				else
-					builder.UpdateNesting(sequence, sqlExpr);
+				builder.ToColumns(sequence, sqlExpr);
 			}
 
 			return sequence;

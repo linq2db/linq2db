@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -63,12 +64,17 @@ namespace LinqToDB.Linq.Builder
 			return new SqlInfo[] { new SqlInfo(SqlExpression, SelectQuery, idx) };
 		}
 
+		public Expression ColumnCreated(SqlPlaceholderExpression placeholder)
+		{
+			throw new NotImplementedException();
+		}
+
 		public SqlInfo? MakeSql(Expression path)
 		{
 			throw new NotImplementedException();
 		}
 
-		public SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
+		public ISqlExpression MakeColumn(Expression path, ISqlExpression sqlExpression, string? alias)
 		{
 			throw new NotImplementedException();
 		}

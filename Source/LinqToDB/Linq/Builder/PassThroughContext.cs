@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Linq.Expressions;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -55,11 +56,9 @@ namespace LinqToDB.Linq.Builder
 			return Context.ConvertToIndex(expression, level, flags);
 		}
 
-		public virtual SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
+		public Expression ColumnCreated(SqlPlaceholderExpression placeholder)
 		{
-			path = SequenceHelper.CorrectExpression(path, this, Context);
-			var column = Context.MakeColumn(path, sqlInfo, alias);
-			return column;
+			throw new System.NotImplementedException();
 		}
 
 		public virtual Expression MakeExpression(Expression? path, ProjectFlags flags)

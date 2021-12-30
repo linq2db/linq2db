@@ -71,7 +71,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				builder.BuildSearchCondition(
 					new ExpressionContext(null, new[] { source }, condition),
-					builder.ConvertExpression(condition.Body.Unwrap()),
+					builder.ConvertExpression(condition.Body.Unwrap()), ProjectFlags.SQL,
 					when!.Conditions);
 			}
 

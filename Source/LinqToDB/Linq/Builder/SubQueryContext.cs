@@ -117,18 +117,13 @@ namespace LinqToDB.Linq.Builder
 			return Statement ??= new SqlSelectStatement(SelectQuery);
 		}
 
-		public override SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
-		{
-			if (sqlInfo.Query == SelectQuery)
-				return sqlInfo;
-
-			var column = base.MakeColumn(path, sqlInfo, alias);
-			column = SequenceHelper.MakeColumn(SelectQuery, column, alias);
-			return column;
-		}
-
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
+			if (flags.HasFlag(ProjectFlags.Root) && !SubQuery.SelectQuery.GroupBy.IsEmpty)
+			{
+				return path;
+			}
+
 			var result = base.MakeExpression(path, flags);
 			result = Builder.UpdateNesting(this, result);
 			return result;

@@ -631,6 +631,8 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ConvertWhere(MethodCallExpression method)
 		{
+			return method;
+
 			var sequence  = OptimizeExpression(method.Arguments[0]);
 			var predicate = OptimizeExpression(method.Arguments[1]);
 			var lambda    = (LambdaExpression)predicate.Unwrap();
@@ -1523,8 +1525,11 @@ namespace LinqToDB.Linq.Builder
 #if DEBUG
 		int _contextCounter;
 
-		public int GenerateContextId() =>
-			++_contextCounter;
+		public int GenerateContextId() 
+		{
+			var nextId = ++_contextCounter;
+			return nextId;
+		}
 			
 #endif
 

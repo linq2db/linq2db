@@ -135,6 +135,11 @@ namespace LinqToDB.Linq.Builder
 			throw new NotImplementedException();
 		}
 
+		public Expression ColumnCreated(SqlPlaceholderExpression placeholder)
+		{
+			throw new NotImplementedException();
+		}
+
 		#endregion
 
 		public SqlInfo? MakeSql(Expression path)
@@ -158,18 +163,13 @@ namespace LinqToDB.Linq.Builder
 			return new SqlInfo(sql, SelectQuery);
 		}
 
-		public SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
-		{
-			return SequenceHelper.MakeColumn(SelectQuery, sqlInfo, alias);
-		}
-
 		public virtual Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
 			Expression result;
 
 			if (SequenceHelper.IsSameContext(path, this))
 			{
-				if (flags.HasFlag(ProjectFlags.Root))
+				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot))
 				{
 					if (Body is ContextRefExpression)
 						return Body;
@@ -185,6 +185,16 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				result = Builder.Project(this, path, null, 0, flags, Body);
+
+				if (!ReferenceEquals(result, Body))
+				{
+					if ((flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot)) &&
+					    !(result is ContextRefExpression || result is MemberExpression ||
+					      result is MethodCallExpression))
+					{
+						return path;
+					}
+				}
 			}
 
 			return result;

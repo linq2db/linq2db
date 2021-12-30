@@ -61,9 +61,9 @@ namespace LinqToDB.Linq.Builder
 		public abstract SqlInfo[]          ConvertToSql   (Expression? expression, int level, ConvertFlags flags);
 		public abstract SqlInfo[]          ConvertToIndex (Expression? expression, int level, ConvertFlags flags);
 
-		public SqlInfo MakeColumn(Expression path, SqlInfo sqlInfo, string? alias)
+		public Expression ColumnCreated(SqlPlaceholderExpression placeholder)
 		{
-			return SequenceHelper.MakeColumn(SelectQuery, sqlInfo, alias);
+			throw new System.NotImplementedException();
 		}
 
 		public virtual Expression MakeExpression(Expression path, ProjectFlags flags)

@@ -88,7 +88,7 @@ namespace LinqToDB.Linq.Builder
 
 				builder.BuildSearchCondition(
 					joinContext, 
-					conditionExpr,
+					conditionExpr, ProjectFlags.SQL,
 					@join.JoinedTable.Condition.Conditions);
 			}
 			else
