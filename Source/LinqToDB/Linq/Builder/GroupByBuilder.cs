@@ -132,14 +132,16 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					var groupSqlExpr = builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), sequence, key.Body, ProjectFlags.SQL);
+					var groupSqlExpr = builder.UpdateNesting(sequence, builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), sequence, key.Body, ProjectFlags.SQL));
 
 					var placeholders = builder.CollectPKPlaceholders(groupSqlExpr);
 
 					var allowed = placeholders.Where(p => !QueryHelper.IsConstantFast(p.Sql));
 
 					foreach (var p in allowed)
+					{
 						sequence.SelectQuery.GroupBy.Expr(p.Sql);
+					}
 				}
 			}
 			else
@@ -223,7 +225,8 @@ namespace LinqToDB.Linq.Builder
 				if (newFlags.HasFlag(ProjectFlags.Expression))
 					newFlags = (newFlags & ~ProjectFlags.Expression) | ProjectFlags.SQL;
 
-				return base.MakeExpression(path, newFlags);
+				var result = base.MakeExpression(path, newFlags);
+				return result;
 			}
 		}
 

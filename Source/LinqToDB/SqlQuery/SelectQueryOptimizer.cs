@@ -10,20 +10,22 @@ namespace LinqToDB.SqlQuery
 	class 
 		SelectQueryOptimizer
 	{
-		public SelectQueryOptimizer(SqlProviderFlags flags, IQueryElement rootElement, SelectQuery selectQuery, int level, params IQueryElement[] dependencies)
+		public SelectQueryOptimizer(SqlProviderFlags flags, EvaluationContext evaluationContext, IQueryElement rootElement, SelectQuery selectQuery, int level, params IQueryElement[] dependencies)
 		{
-			_flags        = flags;
-			_selectQuery  = selectQuery;
-			_rootElement  = rootElement;
-			_level        = level;
-			_dependencies = dependencies;
+			_flags             = flags;
+			_evaluationContext = evaluationContext;
+			_selectQuery       = selectQuery;
+			_rootElement       = rootElement;
+			_level             = level;
+			_dependencies      = dependencies;
 		}
 
-		readonly SqlProviderFlags _flags;
-		readonly SelectQuery      _selectQuery;
-		readonly IQueryElement    _rootElement;
-		readonly int              _level;
-		readonly IQueryElement[]  _dependencies;
+		readonly         SqlProviderFlags  _flags;
+		readonly         EvaluationContext _evaluationContext;
+		readonly         SelectQuery       _selectQuery;
+		readonly         IQueryElement     _rootElement;
+		readonly         int               _level;
+		readonly         IQueryElement[]   _dependencies;
 
 		public void FinalizeAndValidate(bool isApplySupported, bool optimizeColumns)
 		{
@@ -434,7 +436,7 @@ namespace LinqToDB.SqlQuery
 				if (e is SelectQuery sql && sql != context.optimizer._selectQuery)
 				{
 					sql.ParentSelect = context.optimizer._selectQuery;
-					new SelectQueryOptimizer(context.optimizer._flags, context.optimizer._rootElement, sql, context.optimizer._level + 1, context.optimizer._dependencies)
+					new SelectQueryOptimizer(context.optimizer._flags, context.optimizer._evaluationContext, context.optimizer._rootElement, sql, context.optimizer._level + 1, context.optimizer._dependencies)
 						.FinalizeAndValidateInternal(context.isApplySupported, context.optimizeColumns);
 
 					if (sql.IsParameterDependent)
@@ -446,6 +448,7 @@ namespace LinqToDB.SqlQuery
 			RemoveEmptyJoins();
 			OptimizeGroupBy();
 			OptimizeColumns();
+			MoveOuterJoinsToSubQuery(_selectQuery);
 			OptimizeApplies   (isApplySupported, optimizeColumns);
 			OptimizeSubQueries(isApplySupported, optimizeColumns);
 			OptimizeApplies   (isApplySupported, optimizeColumns);
@@ -1457,7 +1460,9 @@ namespace LinqToDB.SqlQuery
 
 			// Move up simple subqueries
 			//
-			/* TODO: Cause Stackoverflow in ConcatUnionTests.UnionWithObjects
+
+			/*
+			// TODO: Cause Stackoverflow in ConcatUnionTests.UnionWithObjects
 			for (int tableIndex = 0; tableIndex < _selectQuery.From.Tables.Count; tableIndex++)
 			{
 				var table = _selectQuery.From.Tables[tableIndex];
@@ -1472,9 +1477,9 @@ namespace LinqToDB.SqlQuery
 
 					var root = _selectQuery.ParentSelect ?? _selectQuery;
 
-					root.Walk(new WalkOptions(), static e =>
+					root.Walk(WalkOptions.Default, subQuery, static (ctx, e) =>
 					{
-						if (e is SqlColumn column && column.Parent == subQuery)
+						if (e is SqlColumn column && column.Parent == ctx)
 						{
 							return column.Expression;
 						}
@@ -1484,7 +1489,6 @@ namespace LinqToDB.SqlQuery
 
 				}
 			}
-
 			*/
 
 
@@ -1635,5 +1639,140 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 		}
+
+		static bool IsLimitedToOneRecord(SelectQuery selectQuery, EvaluationContext context)
+		{
+			if (selectQuery.Select.TakeValue != null &&
+			    selectQuery.Select.TakeValue.TryEvaluateExpression(context, out var takeValue))
+			{
+				if (takeValue is int intValue)
+				{
+					return intValue == 1;
+				}
+			}
+
+			if (selectQuery.Select.Columns.Count == 1)
+			{
+				var column = selectQuery.Select.Columns[0];
+				if (QueryHelper.IsAggregation(column.Expression))
+					return true;
+			}
+
+			return false;
+		}
+
+		static bool IsUniqueUsage(SelectQuery rootQuery, SqlColumn column)
+		{
+			int counter = 0;
+
+			rootQuery.VisitParentFirst(e =>
+			{
+				// do not search in the same query
+				if (e is SelectQuery sq && sq == column.Parent)
+					return false;
+
+				if (e == column)
+				{
+					++counter;
+				}
+
+				return counter < 2;
+			});
+
+			return counter == 1;
+		}
+
+
+		SelectQuery MoveOuterJoinsToSubQuery(SelectQuery selectQuery)
+		{
+			var mappings = new Dictionary<ISqlExpression, ISqlExpression>();
+
+			selectQuery.VisitParentFirst((mappings, context: _evaluationContext), static (ctx, e) =>
+			{
+				if (e is SelectQuery sq)
+				{
+					foreach (var table in sq.From.Tables)
+					{
+						for (int j = table.Joins.Count - 1; j >= 0; j--)
+						{
+							var join = table.Joins[j];
+							if (join.JoinType == JoinType.OuterApply || join.JoinType == JoinType.Left)
+							{
+								if (join.Table.Source is SelectQuery tsQuery &&
+								    tsQuery.Select.Columns.Count == 1 &&
+								    IsLimitedToOneRecord(tsQuery, ctx.context))
+								{
+									// where we can start analyzing that we can move join to subquery
+									var testedColumn = tsQuery.Select.Columns[0];
+									if (IsUniqueUsage(sq, testedColumn))
+									{
+										// moving whole join to subquery
+
+										table.Joins.RemoveAt(j);
+										tsQuery.Where.ConcatSearchCondition(join.Condition);
+
+										if (table.Source is SelectQuery mainQuery)
+										{
+											// moving into FROM query
+
+											var idx       = mainQuery.Select.Add(tsQuery);
+											var newColumn = mainQuery.Select.Columns[idx];
+											newColumn.RawAlias = testedColumn.RawAlias;
+
+											// temporary remove to avoid recursion
+											mainQuery.Select.Columns.RemoveAt(idx);
+
+											sq.Walk(WalkOptions.Default, (testedColumn, newColumn),
+												static (ctx, e) =>
+												{
+													if (e == ctx.testedColumn)
+													{
+														return ctx.newColumn;
+													}
+
+													return e;
+												});
+
+											tsQuery.Walk(WalkOptions.Default, (mainQuery, testedColumn, newColumn),
+												static (ctx, e) =>
+												{
+													if (e is SqlColumn column && column.Parent == ctx.mainQuery)
+													{
+														return column.Expression;
+													}
+
+													return e;
+												});
+
+											// restore at index
+											mainQuery.Select.Columns.Insert(idx, newColumn);
+
+										}
+										else
+										{
+											// replacing column with subquery
+											sq.Walk(WalkOptions.Default, (query: tsQuery, column: testedColumn),
+												(ctx, e) =>
+												{
+													if (e == ctx.column)
+														return ctx.query;
+
+													return e;
+												});
+										}
+
+									}
+								}
+							}
+						}
+					}
+				}
+
+				return true;
+			});
+
+			return selectQuery;
+		}
+
 	}
 }

@@ -59,7 +59,7 @@ namespace LinqToDB.Linq.Builder
 			return isHaving;
 		}
 
-		public IBuildContext BuildWhere(IBuildContext? parent, IBuildContext sequence, LambdaExpression condition, bool checkForSubQuery, bool enforceHaving = false)
+		public IBuildContext BuildWhere(IBuildContext? parent, IBuildContext sequence, LambdaExpression condition, bool checkForSubQuery, bool enforceHaving, bool addSubquery)
 		{
 			var originalContextRef = new ContextRefExpression(condition.Parameters[0].Type, sequence);
 			var body               = condition.GetBody(originalContextRef);
@@ -67,7 +67,12 @@ namespace LinqToDB.Linq.Builder
 			var makeHaving         = false;
 
 			var prevSequence = sequence;
-			sequence = new SubQueryContext(prevSequence);
+			//if (addSubquery)
+			if (sequence is not SubQueryContext squbquery || !squbquery.SelectQuery.IsSimple)
+			{
+				sequence = new SubQueryContext(prevSequence);
+			}
+
 			var targetSequence = sequence;
 
 			/*var sc = new SqlSearchCondition();
@@ -4045,7 +4050,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (IsAssociation(newPath))
 				{
-					root = MakeExpression(root, ProjectFlags.AssociationRoot);
+					//root = MakeExpression(root, ProjectFlags.SQL);
 					path = ((MemberExpression)newPath).Update(root);
 					if (root is ContextRefExpression contextRef)
 						expression = TryCreateAssociation(path, contextRef, flags);

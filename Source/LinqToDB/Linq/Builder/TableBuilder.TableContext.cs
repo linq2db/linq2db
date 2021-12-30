@@ -1207,7 +1207,7 @@ namespace LinqToDB.Linq.Builder
 
 			public Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot))
+				if (flags.HasFlag(ProjectFlags.Root))
 					return path;
 
 				if (SequenceHelper.IsSameContext(path, this))

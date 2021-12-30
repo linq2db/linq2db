@@ -79,7 +79,7 @@ namespace LinqToDB.Linq.Builder
 					var expr = methodCall.Arguments[1].Unwrap();
 					if (expr is LambdaExpression lex && lex.ReturnType == typeof(bool))
 					{
-						sequence = builder.BuildWhere(buildInfo.Parent, sequence, (LambdaExpression)methodCall.Arguments[1].Unwrap(), false);
+						sequence = builder.BuildWhere(buildInfo.Parent, sequence, (LambdaExpression)methodCall.Arguments[1].Unwrap(), false, false, !buildInfo.IsAssociation);
 						expr = methodCall.Arguments[2].Unwrap();
 					}
 
@@ -129,7 +129,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					sequence.ConvertToIndex(null, 0, ConvertFlags.All);
-					new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, updateStatement, updateStatement.SelectQuery, 0)
+					new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, new EvaluationContext(), updateStatement, updateStatement.SelectQuery, 0)
 						.ResolveWeakJoins();
 					updateStatement.SelectQuery.Select.Columns.Clear();
 

@@ -11,7 +11,7 @@ namespace LinqToDB.Linq.Builder
 
 		static ProjectFlags GetRootProjectFlags(BuildInfo buildInfo)
 		{
-			return buildInfo.IsAssociation ? ProjectFlags.AssociationRoot : ProjectFlags.Root;
+			return buildInfo.IsAggregation ? ProjectFlags.AggregationRoot : ProjectFlags.Root;
 		}
 
 		public bool CanBuild(ExpressionBuilder builder, BuildInfo buildInfo)
@@ -59,7 +59,7 @@ namespace LinqToDB.Linq.Builder
 			if (buildInfo.Expression is not ContextRefExpression contextRef)
 				return false;
 
-			if (buildInfo.InAggregation)
+			if (buildInfo.IsAggregation)
 				return contextRef.BuildContext is GroupByBuilder.GroupByContext;
 
 			return true;

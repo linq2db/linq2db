@@ -24,7 +24,8 @@ namespace LinqToDB.Linq.Builder
 			    sequence.SelectQuery.Select.SkipValue != null)
 				sequence = new SubQueryContext(sequence);
 
-			var result    = builder.BuildWhere(buildInfo.Parent, sequence, condition, !isHaving, isHaving);
+			var result = builder.BuildWhere(buildInfo.Parent, sequence, condition, !isHaving, isHaving,
+				!buildInfo.IsSubQuery);
 
 			result.SetAlias(condition.Parameters[0].Name);
 

@@ -54,13 +54,13 @@ namespace LinqToDB.Linq.Builder
 
 		private bool _isAggregation;
 
-		public bool InAggregation
+		public bool IsAggregation
 		{
 			get
 			{
 				if (_isAggregation || SequenceInfo == null)
 					return _isAggregation;
-				return SequenceInfo.InAggregation;
+				return SequenceInfo.IsAggregation;
 			}
 
 			set => _isAggregation = value;

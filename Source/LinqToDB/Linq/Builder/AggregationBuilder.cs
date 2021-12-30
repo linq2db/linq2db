@@ -16,8 +16,8 @@ namespace LinqToDB.Linq.Builder
 
 	class AggregationBuilder : MethodCallBuilder
 	{
-		public  static readonly string[] MethodNames      = { "Average"     , "Min"     , "Max"     , "Sum"      };
-		private static readonly string[] MethodNamesAsync = { "AverageAsync", "MinAsync", "MaxAsync", "SumAsync" };
+		public  static readonly string[] MethodNames      = { "Average"     , "Min"     , "Max"     , "Sum",      "Count"     , "LongCount"      };
+		private static readonly string[] MethodNamesAsync = { "AverageAsync", "MinAsync", "MaxAsync", "SumAsync", "CountAsync", "LongCountAsync" };
 
 		public static Sql.ExpressionAttribute? GetAggregateDefinition(MethodCallExpression methodCall, MappingSchema mapping)
 		{
@@ -49,9 +49,11 @@ namespace LinqToDB.Linq.Builder
 			IBuildContext?      sequence = null;
 			SqlSearchCondition? filter   = null;
 
+			var seqenceArgument = builder.CorrectRoot(methodCall.Arguments[0]);
+
 			if (buildInfo.IsSubQuery)
 			{
-				var testSequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], new SelectQuery()) { AggregationTest = true });
+				var testSequence = builder.BuildSequence(new BuildInfo(buildInfo, seqenceArgument, new SelectQuery()) { AggregationTest = true, IsAggregation = true });
 
 				// It means that as root we have used fake context
 				var testSelectQuery = testSequence.SelectQuery;
@@ -75,7 +77,7 @@ namespace LinqToDB.Linq.Builder
 					if (valid)
 					{
 						sequence = builder.BuildSequence(
-							new BuildInfo(buildInfo, methodCall.Arguments[0]) { CreateSubQuery = false });
+							new BuildInfo(buildInfo, seqenceArgument) { CreateSubQuery = false, IsAggregation = true });
 						inGrouping = true;
 					}
 				}
@@ -83,7 +85,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (sequence == null)
 			{
-				sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { CreateSubQuery = true });
+				sequence = builder.BuildSequence(new BuildInfo(buildInfo, seqenceArgument) { CreateSubQuery = true, IsAggregation = false });
 			}
 
 			var prevSequence = sequence;
@@ -108,14 +110,28 @@ namespace LinqToDB.Linq.Builder
 				parentContext = subQuery.SubQuery;
 			}
 
-			var refExpression  = new ContextRefExpression(methodCall.Arguments[0].Type, sequence);
-			var sqlPlaceholder = builder.ConvertToSqlPlaceholder(sequence, refExpression);
-			var context        = new AggregationContext(parentContext, sequence, methodCall);
+			SqlPlaceholderExpression functionPlaceholder;
+			AggregationContext       context;
 
-			var sql = sqlPlaceholder.Sql;
+			if (methodName == "Count" || methodName == "LongCount")
+			{
+				var returnType = methodCall.Method.ReturnType;
 
-			var functionPlaceholder = ExpressionBuilder.CreatePlaceholder(context, /*context*/
-				new SqlFunction(methodCall.Type, methodName, true, sql) { CanBeNull = true }, buildInfo.Expression);
+				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence, SqlFunction.CreateCount(returnType, sequence.SelectQuery), buildInfo.Expression);
+				context = new AggregationContext(parentContext, sequence, methodCall);
+			}
+			else
+			{
+				var refExpression = new ContextRefExpression(seqenceArgument.Type, sequence);
+
+				var sqlPlaceholder = builder.ConvertToSqlPlaceholder(sequence, refExpression);
+				context        = new AggregationContext(parentContext, sequence, methodCall);
+
+				var sql = sqlPlaceholder.Sql;
+
+				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(context, /*context*/
+					new SqlFunction(methodCall.Type, methodName, true, sql) { CanBeNull = true }, buildInfo.Expression);
+			}
 
 			functionPlaceholder.Alias = methodName;
 
@@ -123,9 +139,9 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (!inGrouping)
 				{
-					if (false /*!builder.DataContext.SqlProviderFlags.IsCountSubQuerySupported*/)
+					if (true)
 					{
-						//CreateWeakOuterJoin(buildInfo.Parent!, sequence.SelectQuery);
+						CreateWeakOuterJoin(buildInfo.Parent!, sequence.SelectQuery);
 					}
 					else
 					{
@@ -154,6 +170,14 @@ namespace LinqToDB.Linq.Builder
 			context.Placeholder = functionPlaceholder;
 
 			return context;
+		}
+
+		void CreateWeakOuterJoin(IBuildContext parent, SelectQuery selectQuery)
+		{
+			var join = selectQuery.OuterApply();
+			join.JoinedTable.IsWeak = true;
+
+			parent.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 		}
 
 		protected override SequenceConvertInfo? Convert(

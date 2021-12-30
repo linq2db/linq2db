@@ -49,7 +49,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				case ExpressionType.Parameter : break;
 				default                       :
-					sequence = CheckSubQueryForSelect(sequence);
+					sequence = CheckSubQueryForSelect(sequence, buildInfo);
 					break;
 			}
 
@@ -71,9 +71,17 @@ namespace LinqToDB.Linq.Builder
 			return context;
 		}
 
-		static IBuildContext CheckSubQueryForSelect(IBuildContext context)
+		static IBuildContext CheckSubQueryForSelect(IBuildContext context, BuildInfo buildInfo)
 		{
-			return context.SelectQuery.Select.IsDistinct || !context.SelectQuery.Select.GroupBy.IsEmpty
+			var createSubquery = context.SelectQuery.Select.IsDistinct;
+
+			if (!createSubquery)
+			{
+				if (!buildInfo.IsAggregation & !context.SelectQuery.Select.GroupBy.IsEmpty)
+					createSubquery = true;
+			}
+
+			return createSubquery
 				? new SubQueryContext(context)
 				: context;
 		}

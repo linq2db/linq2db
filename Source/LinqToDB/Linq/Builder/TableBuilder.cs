@@ -240,7 +240,7 @@ namespace LinqToDB.Linq.Builder
 
 		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			if (buildInfo.InAggregation)
+			if (buildInfo.IsAggregation)
 				return false;
 			return true;
 		}

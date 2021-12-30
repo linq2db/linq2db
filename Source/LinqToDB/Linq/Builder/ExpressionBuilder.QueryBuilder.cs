@@ -57,6 +57,8 @@ namespace LinqToDB.Linq.Builder
 			if (!string.IsNullOrEmpty(alias) && resultExpr is SqlPlaceholderExpression placeholder)
 			{
 				placeholder.Alias = alias;
+				if (placeholder.Sql is SqlColumn column)
+					column.RawAlias = alias;
 			}
 
 			// Update nullability
@@ -120,6 +122,13 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression FinalizeProjection(IBuildContext context, Expression expression)
 		{
+			// going to parent
+
+			while (context.Parent != null)
+			{
+				context = context.Parent;
+			}
+
 			// postprocess constuctors
 
 			var globalGenerator = new ExpressionGenerator();
@@ -326,23 +335,6 @@ namespace LinqToDB.Linq.Builder
 		{
 			return new SqlErrorExpression(context, expression);
 		}
-
-		/*public IBuildContext? GetRootContext(Expression expression)
-		{
-			if (expression is MemberExpression memberExpression)
-			{
-				var corrected = MakeAssociation(memberExpression);
-				if (corrected != memberExpression)
-					return GetRootContext(expression);
-
-				return GetRootContext(memberExpression.Expression);
-			}
-
-			if (expression is ContextRefExpression contextRef)
-				return contextRef.BuildContext;
-
-			return null;
-		}*/
 
 		public Expression BuildSqlExpression(Dictionary<Expression, Expression> translated, IBuildContext context, Expression expression, ProjectFlags flags, string? alias = null)
 		{
@@ -881,7 +873,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 
-		Expression CorrectRoot(Expression expr)
+		public Expression CorrectRoot(Expression expr)
 		{
 			if (expr is MethodCallExpression mc && mc.IsQueryable())
 			{
@@ -900,12 +892,31 @@ namespace LinqToDB.Linq.Builder
 			return expr;
 		}
 
+		public ContextRefExpression? GetRootContext(Expression? expression)
+		{
+			if (expression == null)
+				return null;
+
+			expression = MakeExpression(expression, ProjectFlags.Root);
+
+			if (expression is MemberExpression memberExpression)
+			{
+				expression = GetRootContext(memberExpression.Expression);
+			}
+
+			if (expression is MethodCallExpression mc && mc.IsQueryable())
+			{
+				expression = GetRootContext(mc.Arguments[0]);
+			}
+
+			return expression as ContextRefExpression;
+		}
+
 		List<SubQueryContextInfo>? _buildContextCache;
 
 		SubQueryContextInfo GetSubQueryContext(IBuildContext context, MethodCallExpression expr)
 		{
 			var testExpression = (MethodCallExpression)CorrectRoot(expr);
-			var select         = context.SelectQuery;
 
 			_buildContextCache ??= new List<SubQueryContextInfo>();
 
@@ -913,6 +924,13 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (testExpression.EqualsTo(item.Method, OptimizationContext.GetSimpleEqualsToContext(false)))
 					return item;
+			}
+
+			var rootQuery = GetRootContext(testExpression);
+
+			if (rootQuery != null)
+			{
+				context = rootQuery.BuildContext;
 			}
 
 			var ctx = GetSubQuery(context, testExpression);
@@ -932,7 +950,8 @@ namespace LinqToDB.Linq.Builder
 
 			if (!alias.IsNullOrEmpty())
 				info.Context.SetAlias(alias);
-			return info.Expression;
+
+			return UpdateNesting(context, info.Expression);
 		}
 
 		static bool EnforceServerSide(IBuildContext context)

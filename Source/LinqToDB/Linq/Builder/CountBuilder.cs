@@ -45,7 +45,7 @@ namespace LinqToDB.Linq.Builder
 					if (valid)
 					{
 						sequence = builder.BuildSequence(
-							new BuildInfo(buildInfo, methodCall.Arguments[0]) { CreateSubQuery = false });
+							new BuildInfo(buildInfo, methodCall.Arguments[0]) { CreateSubQuery = false, IsAggregation = true });
 						inGrouping = true;
 					}
 				}
@@ -53,7 +53,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (sequence == null)
 			{
-				sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { CreateSubQuery = true });
+				sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { CreateSubQuery = true, IsAggregation = false });
 			}
 
 			var returnType = methodCall.Method.ReturnType;
@@ -103,7 +103,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (!inGrouping)
 				{
-					if (false /*!builder.DataContext.SqlProviderFlags.IsCountSubQuerySupported*/)
+					if (true /*!builder.DataContext.SqlProviderFlags.IsCountSubQuerySupported*/)
 					{
 						CreateWeakOuterJoin(buildInfo.Parent!, sequence.SelectQuery);
 					}

@@ -1430,6 +1430,17 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
+		public static bool IsAggregation(IQueryElement expr)
+		{
+			if (expr is SqlFunction func)
+				return func.IsAggregate;
+
+			if (expr is SqlExpression expression)
+				return (expression.Flags & SqlFlags.IsAggregate) != 0;
+
+			return false;
+		}
+
 		/// <summary>
 		/// Collects unique keys from different sources.
 		/// </summary>

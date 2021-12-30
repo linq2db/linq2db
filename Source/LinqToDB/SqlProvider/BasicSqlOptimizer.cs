@@ -44,10 +44,10 @@ namespace LinqToDB.SqlProvider
 //statement.EnsureFindTables();
 			//TODO: We can use Walk here but OptimizeUnions fails with subqueries. Needs revising.
 			statement.WalkQueries(
-				(SqlProviderFlags, statement),
+				(SqlProviderFlags, statement, evaluationContext),
 				static (context, selectQuery) =>
 				{
-					new SelectQueryOptimizer(context.SqlProviderFlags, context.statement, selectQuery, 0).FinalizeAndValidate(
+					new SelectQueryOptimizer(context.SqlProviderFlags, context.evaluationContext, context.statement, selectQuery, 0).FinalizeAndValidate(
 						context.SqlProviderFlags.IsApplyJoinSupported,
 						context.SqlProviderFlags.IsGroupByExpressionSupported);
 
@@ -64,7 +64,7 @@ namespace LinqToDB.SqlProvider
 					if (!context.context.SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = context.context.MoveSubQueryColumn(selectQuery, context.evaluationContext);
 					*/
 
-					selectQuery = context.context.MoveOuterJoinsToSubQuery(selectQuery, context.evaluationContext);
+					//selectQuery = context.context.MoveOuterJoinsToSubQuery(selectQuery, context.evaluationContext);
 
 					return selectQuery;
 				}
@@ -73,10 +73,10 @@ namespace LinqToDB.SqlProvider
 			if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
 			{
 				statement.WalkQueries(
-					(SqlProviderFlags, statement),
+					(SqlProviderFlags, statement, evaluationContext),
 					static (context, selectQuery) =>
 					{
-						new SelectQueryOptimizer(context.SqlProviderFlags, context.statement, selectQuery, 0).FinalizeAndValidate(
+						new SelectQueryOptimizer(context.SqlProviderFlags, context.evaluationContext, context.statement, selectQuery, 0).FinalizeAndValidate(
 							context.SqlProviderFlags.IsApplyJoinSupported,
 							context.SqlProviderFlags.IsGroupByExpressionSupported);
 
@@ -547,93 +547,6 @@ namespace LinqToDB.SqlProvider
 		public virtual bool ConvertCountSubQuery(SelectQuery subQuery)
 		{
 			return true;
-		}
-
-		static bool IsLimitedToOneRecord(SelectQuery selectQuery, EvaluationContext context)
-		{
-			if (selectQuery.Select.TakeValue != null &&
-			    selectQuery.Select.TakeValue.TryEvaluateExpression(context, out var takeValue))
-			{
-				if (takeValue is int intValue)
-				{
-					return intValue == 1;
-				}
-			}
-
-			return false;
-		}
-
-		static bool IsUniqueUsage(SelectQuery rootQuery, SqlColumn column)
-		{
-			int counter = 0;
-
-			rootQuery.VisitParentFirst(e =>
-			{
-				// do not search in the same query
-				if (e is SelectQuery sq && sq == column.Parent)
-					return false;
-
-				if (e == column)
-				{
-					++counter;
-				}
-
-				return counter < 2;
-			});
-
-			return counter == 1;
-		}
-
-
-		SelectQuery MoveOuterJoinsToSubQuery(SelectQuery selectQuery, EvaluationContext context)
-		{
-			var mappings = new Dictionary<ISqlExpression, ISqlExpression>();
-
-			selectQuery.VisitParentFirst((mappings, context), static (ctx, e) =>
-			{
-				if (e is SelectQuery sq)
-				{
-					foreach (var table in sq.From.Tables)
-					{
-						for (int j = table.Joins.Count - 1; j >= 0; j--)
-						{
-							var join = table.Joins[j];
-							if (join.JoinType == JoinType.OuterApply || join.JoinType == JoinType.Left)
-							{
-								if (join.Table.Source is SelectQuery tsQuery &&
-								    tsQuery.Select.Columns.Count == 1 &&
-								    IsLimitedToOneRecord(tsQuery, ctx.context))
-								{
-									// where we can start analyzing that we can move join to subquery
-									var testedColumn = tsQuery.Select.Columns[0];
-									if (IsUniqueUsage(sq, testedColumn))
-									{
-										// moving whole join to subquery
-
-										table.Joins.RemoveAt(j);
-
-										tsQuery.Where.ConcatSearchCondition(join.Condition);
-
-										// replacing column with subquery
-										sq.Walk(WalkOptions.Default, (query: tsQuery, column: testedColumn), (ctx, e) =>
-										{
-											if (e == ctx.column)
-												return ctx.query;
-
-											return e;
-										});
-
-									}
-								}
-							}
-						}
-					}
-				}
-
-				return true;
-			});
-
-			return selectQuery;
 		}
 
 		SelectQuery MoveSubQueryColumn(SelectQuery selectQuery, EvaluationContext context)
