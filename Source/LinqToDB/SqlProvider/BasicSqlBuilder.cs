@@ -9,6 +9,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using LinqToDB.DataProvider.Oracle;
 
 namespace LinqToDB.SqlProvider
 {
@@ -1621,6 +1622,7 @@ namespace LinqToDB.SqlProvider
 			[typeof(HintExtensionBuilder)]               = new HintExtensionBuilder(),
 			[typeof(HintWithParameterExtensionBuilder)]  = new HintWithParameterExtensionBuilder(),
 			[typeof(HintWithParametersExtensionBuilder)] = new HintWithParametersExtensionBuilder(),
+			[typeof(OracleTableHintExtensionBuilder)]    = new OracleTableHintExtensionBuilder(),
 		};
 
 		protected void BuildTableExtensions(
@@ -1629,47 +1631,110 @@ namespace LinqToDB.SqlProvider
 			string? prefix, string delimiter, string? suffix,
 			Func<SqlQueryExtension,bool>? customExtensionBuilder = null)
 		{
-			if (table.SqlQueryExtensions is null)
-				return;
-
-			if (prefix != null)
-				sb.Append(prefix);
-
-			foreach (var ext in table.SqlQueryExtensions!)
+			if (table.SqlQueryExtensions?.Any(ext =>
+				ext.Scope is
+					Sql.QueryExtensionScope.TableHint or
+					Sql.QueryExtensionScope.TablesInScopeHint) == true)
 			{
-				if (ext.BuilderType != null)
+				if (prefix != null)
+					sb.Append(prefix);
+
+				foreach (var ext in table.SqlQueryExtensions!)
 				{
-					var extensionBuilder = _extensionBuilders.GetOrAdd(
-						ext.BuilderType,
-						type =>
+					if (ext.BuilderType != null)
+					{
+						var extensionBuilder = _extensionBuilders.GetOrAdd(
+							ext.BuilderType,
+							type =>
+							{
+								var inst = Activator.CreateInstance(type);
+
+								if (inst is not ISqlExtensionBuilder builder)
+									throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement the '{typeof(ISqlExtensionBuilder).FullName}' interface.");
+
+								return builder;
+							});
+
+						switch (extensionBuilder)
 						{
-							var inst = Activator.CreateInstance(type);
-
-							if (inst is not ISqlExtensionBuilder builder)
-								throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement the '{typeof(ISqlExtensionBuilder).FullName}' interface.");
-
-							return builder;
-						});
-
-					if (extensionBuilder is ISqlTableExtensionBuilder tableExtensionBuilder)
-						tableExtensionBuilder.Build(this, sb, ext, table, alias);
+							case ISqlQueryExtensionBuilder queryExtensionBuilder:
+								queryExtensionBuilder.Build(this, sb, ext);
+								break;
+							case ISqlTableExtensionBuilder tableExtensionBuilder:
+								tableExtensionBuilder.Build(this, sb, ext, table, alias);
+								break;
+							default:
+								throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement either '{typeof(ISqlQueryExtensionBuilder).FullName}' or '{typeof(ISqlTableExtensionBuilder).FullName}' interface.");
+						}
+					}
 					else
-						extensionBuilder.Build(this, sb, ext);
-				}
-				else
-				{
-					if (customExtensionBuilder == null || customExtensionBuilder(ext) == false)
-						throw new LinqToDBException($"Cannot convert {ext.Arguments[".MethodName"]} extension to SQL.");
-					break;
+					{
+						if (customExtensionBuilder == null || customExtensionBuilder(ext) == false)
+							throw new LinqToDBException($"Cannot convert {ext.Arguments[".MethodName"]} extension to SQL.");
+						break;
+					}
+
+					sb.Append(delimiter);
 				}
 
-				sb.Append(delimiter);
+				sb.Length -= delimiter.Length;
+
+				if (suffix != null)
+					sb.Append(suffix);
 			}
+		}
 
-			sb.Length -= delimiter.Length;
+		protected void BuildQueryExtensions(
+			StringBuilder sb,
+			List<SqlQueryExtension> sqlQueryExtensions,
+			string? prefix, string delimiter, string? suffix,
+			Func<SqlQueryExtension,bool>? customExtensionBuilder = null)
+		{
+			if (sqlQueryExtensions.Any(ext => ext.Scope is Sql.QueryExtensionScope.QueryHint) == true)
+			{
+				if (prefix != null)
+					sb.Append(prefix);
 
-			if (suffix != null)
-				sb.Append(suffix);
+				foreach (var ext in sqlQueryExtensions!)
+				{
+					if (ext.BuilderType != null)
+					{
+						var extensionBuilder = _extensionBuilders.GetOrAdd(
+							ext.BuilderType,
+							type =>
+							{
+								var inst = Activator.CreateInstance(type);
+
+								if (inst is not ISqlExtensionBuilder builder)
+									throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement the '{typeof(ISqlExtensionBuilder).FullName}' interface.");
+
+								return builder;
+							});
+
+						switch (extensionBuilder)
+						{
+							case ISqlQueryExtensionBuilder queryExtensionBuilder:
+								queryExtensionBuilder.Build(this, sb, ext);
+								break;
+							default:
+								throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement either '{typeof(ISqlQueryExtensionBuilder).FullName}' or '{typeof(ISqlTableExtensionBuilder).FullName}' interface.");
+						}
+					}
+					else
+					{
+						if (customExtensionBuilder == null || customExtensionBuilder(ext) == false)
+							throw new LinqToDBException($"Cannot convert {ext.Arguments[".MethodName"]} extension to SQL.");
+						break;
+					}
+
+					sb.Append(delimiter);
+				}
+
+				sb.Length -= delimiter.Length;
+
+				if (suffix != null)
+					sb.Append(suffix);
+			}
 		}
 
 		void BuildJoinTable(SelectQuery selectQuery, SqlJoinedTable join, ref int joinCounter)

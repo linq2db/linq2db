@@ -1430,7 +1430,7 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SqlAliasPlaceholder:
 						{
 							break;
-						};
+						}
 
 					case QueryElementType.OutputClause:
 						{

@@ -1371,8 +1371,10 @@ namespace LinqToDB.SqlQuery
 					{
 						var ext = new SqlQueryExtension
 						{
-							Scope = item.Scope,
-							ID    = item.ID,
+							Configuration = item.Configuration,
+							Scope         = item.Scope,
+							ID            = item.ID,
+							BuilderType   = item.BuilderType,
 						};
 
 						foreach (var arg in item.Arguments)

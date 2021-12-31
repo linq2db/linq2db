@@ -5,9 +5,9 @@ namespace LinqToDB.SqlProvider
 {
 	using SqlQuery;
 
-	class HintExtensionBuilder : ISqlExtensionBuilder
+	class HintExtensionBuilder : ISqlQueryExtensionBuilder
 	{
-		public void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+		void ISqlQueryExtensionBuilder.Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 		{
 			var hint = (SqlValue)sqlQueryExtension.Arguments["hint"];
 			stringBuilder.Append((string)hint.Value!);

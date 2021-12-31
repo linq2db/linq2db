@@ -3,20 +3,34 @@ using System.Text;
 
 namespace LinqToDB.SqlProvider
 {
+	using DataProvider;
 	using SqlQuery;
 
-	class HintWithParameterExtensionBuilder : ISqlExtensionBuilder
+	class HintWithParameterExtensionBuilder : ISqlQueryExtensionBuilder
 	{
-		public void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+		void ISqlQueryExtensionBuilder.Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 		{
 			var hint  = ((SqlValue)sqlQueryExtension.Arguments["hint"]).    Value;
-			var param = ((SqlValue)sqlQueryExtension.Arguments["hintParameter"]).Value;
+			var param = GetValue((SqlValue)sqlQueryExtension.Arguments["hintParameter"]);
 
 			stringBuilder
 				.Append(hint)
 				.Append('(')
 				.Append(param)
 				.Append(')');
+
+
+			object? GetValue(SqlValue value)
+			{
+				if (value.Value is Sql.SqlID id)
+				{
+					if (sqlBuilder is IPathableSqlBuilder pb && pb.TableIDs?.TryGetValue(id.ID, out var path) == true)
+						return path;
+					throw new InvalidOperationException($"Table ID '{id.ID}' is not defined.");
+				}
+
+				return value.Value;
+			}
 		}
 	}
 }

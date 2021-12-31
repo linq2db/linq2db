@@ -52,8 +52,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TablesInScopeHintTest(
-			[IncludeDataSources(true, ProviderName.SqlCe)] string context)
+		public void TablesInScopeHintTest([IncludeDataSources(true, ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
 

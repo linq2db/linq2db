@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using System.Text;
 	using Mapping;
 
-	partial class Oracle11SqlBuilder : BasicSqlBuilder
+	partial class Oracle11SqlBuilder : BasicSqlBuilder, IPathableSqlBuilder
 	{
 		protected OracleDataProvider? Provider { get; }
 
@@ -676,9 +676,9 @@ END;",
 		#endregion
 
 		protected StringBuilder?             HintBuilder;
-		protected string?                    TablePath;
-		protected string?                    QueryName;
-		protected Dictionary<string,string>? TableIDs;
+		public    Dictionary<string,string>? TableIDs  { get; set; }
+		public    string?                    TablePath { get; set; }
+		public    string?                    QueryName { get; set; }
 
 		int  _hintPosition;
 		bool _isTopLevelBuilder;
@@ -730,68 +730,11 @@ END;",
 
 		protected override void FinalizeBuildQuery(SqlStatement statement)
 		{
-			if (statement.SqlQueryExtensions?.Any(ext =>
-				ext.Scope == Sql.QueryExtensionScope.QueryHint &&
-				ext.ID is
-					Sql.QueryExtensionID.Hint              or
-					Sql.QueryExtensionID.HintWithParameter or
-					Sql.QueryExtensionID.HintWithParameters) == true)
+			if (statement.SqlQueryExtensions is not null && HintBuilder is not null)
 			{
-				foreach (var ext in statement.SqlQueryExtensions!)
-				{
-					if (HintBuilder!.Length > 0)
-						HintBuilder.Append(' ');
-
-					var hint = (SqlValue)ext.Arguments["queryHint"];
-
-					HintBuilder.Append((string)hint.Value!);
-
-					switch (ext.ID)
-					{
-						case Sql.QueryExtensionID.HintWithParameter:
-						{
-							var value = GetValue((SqlValue)ext.Arguments["hintParameter"]);
-
-							HintBuilder.Append('(');
-							HintBuilder.Append(value);
-							HintBuilder.Append(')');
-
-							break;
-						}
-						case Sql.QueryExtensionID.HintWithParameters:
-						{
-							HintBuilder.Append('(');
-
-							var count = (int)((SqlValue)ext.Arguments["hintParameters.Count"]).Value!;
-
-							for (var i = 0; i < count; i++)
-							{
-								var value = GetValue((SqlValue)ext.Arguments[$"hintParameters.{i}"]);
-
-								if (i > 0)
-									HintBuilder.Append(' ');
-								HintBuilder.Append(value);
-							}
-
-							HintBuilder.Append(')');
-
-							break;
-						}
-					}
-
-					object? GetValue(SqlValue value)
-					{
-						if (value.Value is Sql.SqlID id)
-						{
-							if (TableIDs == null || !TableIDs.TryGetValue(id.ID, out var path))
-								throw new InvalidOperationException($"Table ID '{id.ID}' is not defined.");
-
-							return path;
-						}
-
-						return value.Value;
-					}
-				}
+				if (HintBuilder.Length > 0 && HintBuilder[HintBuilder.Length - 1] != ' ')
+					HintBuilder.Append(' ');
+				BuildQueryExtensions(HintBuilder, statement.SqlQueryExtensions, null, " ", null);
 			}
 
 			if (_isTopLevelBuilder && HintBuilder!.Length > 0)
@@ -833,78 +776,8 @@ END;",
 
 		protected override void BuildTableExtensions(SqlTable table, string alias)
 		{
-			if (table.SqlQueryExtensions!.Any(ext =>
-				ext.Scope is
-					Sql.QueryExtensionScope.TableHint or
-					Sql.QueryExtensionScope.TablesInScopeHint &&
-				ext.ID is
-					Sql.QueryExtensionID.Hint              or
-					Sql.QueryExtensionID.HintWithParameter or
-					Sql.QueryExtensionID.HintWithParameters
-				))
-			{
-				foreach (var ext in table.SqlQueryExtensions!)
-				{
-					if (HintBuilder!.Length > 0)
-						HintBuilder.Append(' ');
-
-					var hint = (SqlValue)ext.Arguments["hint"];
-
-					HintBuilder.Append((string)hint.Value!);
-					HintBuilder.Append('(');
-
-					if (TablePath is { Length: > 0 })
-					{
-						HintBuilder.Append(TablePath);
-						HintBuilder.Append('.');
-					}
-
-					HintBuilder.Append(alias);
-
-					if (QueryName is not null)
-						HintBuilder
-							.Append('@')
-							.Append(QueryName)
-							;
-
-					switch (ext.ID)
-					{
-						case Sql.QueryExtensionID.HintWithParameter:
-						{
-							var param = ((SqlValue)ext.Arguments["hintParameter"]).Value;
-
-							if (ext.Arguments.TryGetValue("parameterDelimiter", out var pd) && pd is SqlValue value)
-							{
-								HintBuilder.Append(value.Value);
-							}
-							else
-							{
-								HintBuilder.Append(' ');
-							}
-
-							HintBuilder.Append(param);
-
-							break;
-						}
-						case Sql.QueryExtensionID.HintWithParameters:
-						{
-							var count = (int)((SqlValue)ext.Arguments["hintParameters.Count"]).Value!;
-
-							for (var i = 0; i < count; i++)
-							{
-								var value = ((SqlValue)ext.Arguments[$"hintParameters.{i}"]).Value;
-
-								HintBuilder.Append(' ');
-								HintBuilder.Append(value);
-							}
-
-							break;
-						}
-					}
-
-					HintBuilder.Append(')');
-				}
-			}
+			if (HintBuilder is not null && table.SqlQueryExtensions is not null)
+				BuildTableExtensions(HintBuilder, table, alias, null, " ", null);
 		}
 	}
 }

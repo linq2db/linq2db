@@ -7,6 +7,10 @@ namespace LinqToDB.SqlQuery
 
 	public interface ISqlExtensionBuilder
 	{
+	}
+
+	public interface ISqlQueryExtensionBuilder : ISqlExtensionBuilder
+	{
 		void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension);
 	}
 

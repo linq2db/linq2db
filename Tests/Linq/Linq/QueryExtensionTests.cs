@@ -1,14 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
 
 using LinqToDB;
-using LinqToDB.Expressions;
-using LinqToDB.Linq;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
@@ -19,47 +13,6 @@ namespace Tests.Linq
 	[TestFixture]
 	public class QueryExtensionTests : TestBase
 	{
-		[Test]
-		public void EmptyTest([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			_ = db.Parent.Empty().ToList();
-		}
-
-		[Test]
-		public void EmptyTest2([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			_ =
-			(
-				from p in db.Parent.Empty()
-				from c in db.Child.John()
-				where p.ParentID == c.ParentID
-				select new { p, c }
-			)
-			.ToList();
-		}
-
-		[Test]
-		public void CommentTest([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			_ = db.Parent.Comment(t => t.ParentID, "oh yeah").ToList();
-		}
-
-		[Test]
-		public void CommentTest2([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			_ =
-			(
-				from p in db.Parent.Comment(t => t.ParentID, "oh yeah")
-				join c in db.Child.Empty() on p.ParentID equals c.ParentID
-				select new { p, c }
-			)
-			.ToList();
-		}
-
 		[Test]
 		public void SelfJoinWithDifferentHint([NorthwindDataContext] string context)
 		{
@@ -90,56 +43,6 @@ namespace Tests.Linq
 			Debug.WriteLine(query);
 
 			Assert.AreEqual(1, query.GetTableSource().Joins.Count);
-		}
-	}
-
-	public static class QueryExtensions
-	{
-		class EmptyExtensionBuilder : ISqlExtensionBuilder
-		{
-			public void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
-			{
-			}
-		}
-
-		[Sql.QueryExtension(Sql.QueryExtensionScope.None, ExtensionBuilderType = typeof(EmptyExtensionBuilder))]
-		public static ITable<T> Empty<T>(this ITable<T> table)
-			where T : notnull
-		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(Empty, table),
-				table.Expression);
-
-			return table;
-		}
-
-		[Sql.QueryExtension(Sql.QueryExtensionScope.JoinHint)]
-		public static IQueryable<TSource> John<TSource>(this IQueryable<TSource> source)
-			where TSource : notnull
-		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
-
-			return currentSource.Provider.CreateQuery<TSource>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(John, source),
-					currentSource.Expression));
-		}
-
-		[Sql.QueryExtension(Sql.QueryExtensionScope.QueryHint)]
-		public static ITable<TSource> Comment<TSource,TValue>(
-			this ITable<TSource>             table,
-			Expression<Func<TSource,TValue>> expr,
-			[SqlQueryDependent] string       comment)
-			where TSource : notnull
-		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(Comment, table, expr, comment),
-				table.Expression, Expression.Quote(expr), Expression.Constant(comment));
-
-			return table;
 		}
 	}
 }

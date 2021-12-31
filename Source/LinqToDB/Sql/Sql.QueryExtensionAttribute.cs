@@ -28,7 +28,7 @@ namespace LinqToDB
 				ID            = id;
 			}
 
-			public QueryExtensionAttribute(QueryExtensionScope scope, Type extensionBuilderType)
+			public QueryExtensionAttribute(QueryExtensionScope scope, Type extensionBuilderType, params string[] extensionArguments)
 			{
 				Scope                = scope;
 				ExtensionBuilderType = extensionBuilderType;
@@ -41,6 +41,22 @@ namespace LinqToDB
 				ExtensionBuilderType = extensionBuilderType;
 			}
 
+			public QueryExtensionAttribute(string? configuration, QueryExtensionScope scope, Type extensionBuilderType, params string[] extensionArguments)
+			{
+				Configuration        = configuration;
+				Scope                = scope;
+				ExtensionBuilderType = extensionBuilderType;
+				ExtensionArguments   = extensionArguments;
+			}
+
+			public QueryExtensionAttribute(string? configuration, QueryExtensionScope scope, Type extensionBuilderType, string extensionArgument)
+			{
+				Configuration        = configuration;
+				Scope                = scope;
+				ExtensionBuilderType = extensionBuilderType;
+				ExtensionArguments   = new [] { extensionArgument };
+			}
+
 			public string?             Configuration        { get; }
 			public QueryExtensionScope Scope                { get; }
 			public int                 ID                   { get; }
@@ -48,6 +64,7 @@ namespace LinqToDB
 			/// Instance of <see cref="ISqlExtensionBuilder"/>.
 			/// </summary>
 			public Type?               ExtensionBuilderType { get; set; }
+			public string[]?           ExtensionArguments   { get; set; }
 
 			public virtual SqlQueryExtension GetExtension(List<SqlQueryExtensionData> parameters)
 			{
@@ -61,6 +78,14 @@ namespace LinqToDB
 
 				foreach (var item in parameters)
 					ext.Arguments.Add(item.Name, item.SqlExpression!);
+
+				if (ExtensionArguments is not null)
+				{
+					ext.Arguments.Add(".ExtensionArguments.Count",  new SqlValue(ExtensionArguments.Length));
+
+					for (var i = 0; i < ExtensionArguments.Length; i++)
+						ext.Arguments.Add($".ExtensionArguments.{i}", new SqlValue(ExtensionArguments[i]));
+				}
 
 				return ext;
 			}

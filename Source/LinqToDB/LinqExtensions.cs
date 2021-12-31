@@ -7,15 +7,16 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using JetBrains.Annotations;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB
 {
 	using Async;
+	using DataProvider.Oracle;
 	using Expressions;
-	using Reflection;
 	using Linq;
 	using Linq.Builder;
+	using Reflection;
+	using SqlProvider;
 
 	/// <summary>
 	/// Contains extension methods for LINQ queries.
@@ -167,7 +168,7 @@ namespace LinqToDB
 		/// <param name="hint">SQL text, added to WITH({0}) after table name in generated query.</param>
 		/// <returns>Table-like query source with table hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, Sql.QueryExtensionID.Hint)]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(OracleTableHintExtensionBuilder), " ")]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
 		public static ITable<TSource> With<TSource>(this ITable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
@@ -192,7 +193,7 @@ namespace LinqToDB
 		/// <param name="hint">SQL text, added to WITH({0}) after table name in generated query.</param>
 		/// <returns>Table-like query source with table hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, Sql.QueryExtensionID.Hint)]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(OracleTableHintExtensionBuilder), " ")]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
 		public static ITable<TSource> TableHint<TSource>(this ITable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
@@ -219,7 +220,7 @@ namespace LinqToDB
 		/// <param name="hintParameter">Table hint parameter.</param>
 		/// <returns>Table-like query source with table hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, Sql.QueryExtensionID.HintWithParameter)]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(OracleTableHintExtensionBuilder), " ")]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TableHint, typeof(HintWithParameterExtensionBuilder))]
 		public static ITable<TSource> TableHint<TSource,TParam>(
 			this ITable<TSource>       table,
@@ -249,7 +250,7 @@ namespace LinqToDB
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Table-like query source with table hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, Sql.QueryExtensionID.HintWithParameters)]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(OracleTableHintExtensionBuilder), " ")]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TableHint, typeof(HintWithParametersExtensionBuilder))]
 		public static ITable<TSource> TableHint<TSource,TParam>(
 			this ITable<TSource>                table,
@@ -275,7 +276,7 @@ namespace LinqToDB
 		/// <param name="hint">SQL text, added to join in generated query.</param>
 		/// <returns>Query source with join hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, Sql.QueryExtensionID.Hint)]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(OracleTableHintExtensionBuilder), " ")]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
 		public static IQueryable<TSource> TablesInScopeHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull
@@ -299,7 +300,7 @@ namespace LinqToDB
 		/// <param name="hintParameter">Table hint parameter.</param>
 		/// <returns>Table-like query source with table hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, Sql.QueryExtensionID.HintWithParameter)]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(OracleTableHintExtensionBuilder), " ")]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintWithParameterExtensionBuilder))]
 		public static ITable<TSource> TablesInScopeHintHint<TSource, TParam>(this ITable<TSource> table, [SqlQueryDependent] string tableHint, [SqlQueryDependent] TParam hintParameter)
 			where TSource : notnull
@@ -321,7 +322,7 @@ namespace LinqToDB
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Table-like query source with table hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, Sql.QueryExtensionID.HintWithParameters)]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(OracleTableHintExtensionBuilder), " ")]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintWithParametersExtensionBuilder))]
 		public static ITable<TSource> TablesInScopeHintHint<TSource>(
 			this ITable<TSource> table,
@@ -382,12 +383,11 @@ namespace LinqToDB
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="source">Query source.</param>
-		/// <param name="queryHint">SQL text, added to join in generated query.</param>
+		/// <param name="hint">SQL text, added to join in generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		[LinqTunnel]
-		[Pure]
-		[Sql.QueryExtension(Sql.QueryExtensionScope.QueryHint, Sql.QueryExtensionID.Hint)]
-		public static IQueryable<TSource> QueryHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string queryHint)
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(null, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
+		public static IQueryable<TSource> QueryHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
@@ -395,8 +395,8 @@ namespace LinqToDB
 			return currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(QueryHint, source, queryHint),
-					currentSource.Expression, Expression.Constant(queryHint)));
+					MethodHelper.GetMethodInfo(QueryHint, source, hint),
+					currentSource.Expression, Expression.Constant(hint)));
 		}
 
 		/// <summary>
@@ -405,15 +405,14 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <typeparam name="TParam">Hint parameter type</typeparam>
 		/// <param name="source">Query source.</param>
-		/// <param name="queryHint">SQL text, added to join in generated query.</param>
+		/// <param name="hint">SQL text, added to join in generated query.</param>
 		/// <param name="hintParameter">Hint parameter.</param>
 		/// <returns>Query source with join hints.</returns>
-		[LinqTunnel]
-		[Pure]
-		[Sql.QueryExtension(Sql.QueryExtensionScope.QueryHint, Sql.QueryExtensionID.HintWithParameter)]
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(null, Sql.QueryExtensionScope.QueryHint, typeof(HintWithParameterExtensionBuilder))]
 		public static IQueryable<TSource> QueryHint<TSource,TParam>(
 			this IQueryable<TSource> source,
-			[SqlQueryDependent] string queryHint,
+			[SqlQueryDependent] string hint,
 			[SqlQueryDependent] TParam hintParameter)
 			where TSource : notnull
 		{
@@ -422,9 +421,9 @@ namespace LinqToDB
 			return currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(QueryHint, source, queryHint, hintParameter),
+					MethodHelper.GetMethodInfo(QueryHint, source, hint, hintParameter),
 					currentSource.Expression,
-					Expression.Constant(queryHint),
+					Expression.Constant(hint),
 					Expression.Constant(hintParameter)));
 		}
 
@@ -434,15 +433,15 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <typeparam name="TParam">Table hint parameter type.</typeparam>
 		/// <param name="source">Query source.</param>
-		/// <param name="queryHint">SQL text, added to join in generated query.</param>
+		/// <param name="hint">SQL text, added to join in generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Table-like query source with table hints.</returns>
-		[LinqTunnel]
-		[Pure]
-		[Sql.QueryExtension(Sql.QueryExtensionScope.QueryHint, Sql.QueryExtensionID.HintWithParameters)]
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.QueryHint, typeof(HintWithParametersExtensionBuilder), " ")]
+		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.QueryHint, typeof(HintWithParametersExtensionBuilder))]
 		public static IQueryable<TSource> QueryHint<TSource, TParam>(
 			this IQueryable<TSource> source,
-			[SqlQueryDependent] string queryHint,
+			[SqlQueryDependent] string hint,
 			[SqlQueryDependent] params TParam[] hintParameters)
 			where TSource : notnull
 		{
@@ -451,9 +450,9 @@ namespace LinqToDB
 			return currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(QueryHint, source, queryHint, hintParameters),
+					MethodHelper.GetMethodInfo(QueryHint, source, hint, hintParameters),
 					currentSource.Expression,
-					Expression.Constant(queryHint),
+					Expression.Constant(hint),
 					Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p)))));
 		}
 

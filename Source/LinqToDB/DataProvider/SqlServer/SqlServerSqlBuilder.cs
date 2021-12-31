@@ -517,7 +517,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildTableExtensions(SqlTable table, string alias)
 		{
-			BuildTableExtensions(StringBuilder, table, alias, " WITH (", ", ", ")");
+			if (table.SqlQueryExtensions is not null)
+				BuildTableExtensions(StringBuilder, table, alias, " WITH (", ", ", ")");
 		}
 
 		protected override bool BuildJoinType(SqlJoinedTable join, SqlSearchCondition condition)
@@ -548,33 +549,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildQueryExtensions(SqlStatement statement)
 		{
-			if (statement.SqlQueryExtensions?.Any(ext =>
-				ext.Scope == Sql.QueryExtensionScope.QueryHint &&
-				ext.ID is Sql.QueryExtensionID.Hint) == true)
-			{
-				if (statement is SqlMergeStatement)
-					StringBuilder.AppendLine();
-
-				StringBuilder.Append("OPTION (");
-
-				foreach (var ext in statement.SqlQueryExtensions!)
-				{
-					switch (ext.ID)
-					{
-						case Sql.QueryExtensionID.Hint :
-						{
-							var hint = (SqlValue)ext.Arguments["queryHint"];
-							StringBuilder.Append((string)hint.Value!);
-							break;
-						}
-					}
-
-					StringBuilder.Append(", ");
-				}
-
-				StringBuilder.Length -= 2;
-				StringBuilder.AppendLine(")");
-			}
+			if (statement.SqlQueryExtensions is not null)
+				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, "OPTION (", ", ", ")");
 		}
 	}
 }
