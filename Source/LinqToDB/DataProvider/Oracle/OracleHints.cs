@@ -86,7 +86,7 @@ namespace LinqToDB.DataProvider.Oracle
 			public const string Unnest                = "UNNEST";
 			public const string UseConcat             = "USE_CONCAT";
 
-			[Sql.Expression("FIRST_ROWS(0)")]
+			[Sql.Expression("FIRST_ROWS({0})")]
 			public static string FirstRows(int value)
 			{
 				return $"FIRST_ROWS({value})";

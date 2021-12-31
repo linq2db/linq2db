@@ -134,7 +134,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#region QueryExtensions
 
-		class WithForceSeekExtensionBuilder : ISqlExtensionBuilder
+		class WithForceSeekExtensionBuilder : ISqlQueryExtensionBuilder
 		{
 			public void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 			{
@@ -169,7 +169,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableHint, ExtensionBuilderType = typeof(WithForceSeekExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableHint, typeof(WithForceSeekExtensionBuilder))]
 		public static ITable<TSource> WithForceSeek<TSource>(
 			this ITable<TSource>                      table,
 			[SqlQueryDependent] string                indexName,

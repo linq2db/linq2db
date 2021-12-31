@@ -524,7 +524,7 @@ END;",
 			return sb;
 		}
 
-		private void AppendSchemaPrefix(StringBuilder sb, string? schema)
+		void AppendSchemaPrefix(StringBuilder sb, string? schema)
 		{
 			if (schema != null)
 			{

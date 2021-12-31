@@ -14,7 +14,8 @@ namespace LinqToDB.SqlProvider
 			var hint  = ((SqlValue)     args["hint"]).                Value;
 			var count = (int)((SqlValue)args["hintParameters.Count"]).Value!;
 
-			var parameterDelimiter = args.TryGetValue(".ExtensionArguments.0", out var extArg0) && extArg0 is SqlValue { Value : string val } ? val : ", ";
+			var firstDelimiter = args.TryGetValue(".ExtensionArguments.0", out var extArg0) && extArg0 is SqlValue { Value : string val0 } ? val0 : ", ";
+			var nextDelimiter  = args.TryGetValue(".ExtensionArguments.1", out var extArg1) && extArg1 is SqlValue { Value : string val1 } ? val1 : null;
 
 			stringBuilder.Append(hint);
 
@@ -22,15 +23,22 @@ namespace LinqToDB.SqlProvider
 			{
 				stringBuilder.Append('(');
 
+				var delimiter = string.Empty;
+
 				for (var i = 0; i < count; i++)
 				{
-					var value = GetValue((SqlValue)args[$"hintParameters.{i}"]);
+					if (i == 1)
+						delimiter = firstDelimiter;
+					else if (i > 0)
+						delimiter = nextDelimiter ?? firstDelimiter;
+
 					stringBuilder
-						.Append(value)
-						.Append(parameterDelimiter);
+						.Append(delimiter);
+
+					var value = GetValue((SqlValue)args[$"hintParameters.{i}"]);
+					stringBuilder.Append(value);
 				}
 
-				stringBuilder.Length -= parameterDelimiter.Length;
 				stringBuilder.Append(')');
 			}
 

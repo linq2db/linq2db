@@ -168,7 +168,8 @@ namespace LinqToDB
 		/// <param name="hint">SQL text, added to WITH({0}) after table name in generated query.</param>
 		/// <returns>Table-like query source with table hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(OracleTableHintExtensionBuilder), " ")]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(PathableTableHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TableHint, typeof(PathableTableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
 		public static ITable<TSource> With<TSource>(this ITable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
@@ -193,7 +194,8 @@ namespace LinqToDB
 		/// <param name="hint">SQL text, added to WITH({0}) after table name in generated query.</param>
 		/// <returns>Table-like query source with table hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(OracleTableHintExtensionBuilder), " ")]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(PathableTableHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TableHint, typeof(PathableTableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
 		public static ITable<TSource> TableHint<TSource>(this ITable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
@@ -220,7 +222,8 @@ namespace LinqToDB
 		/// <param name="hintParameter">Table hint parameter.</param>
 		/// <returns>Table-like query source with table hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(OracleTableHintExtensionBuilder), " ")]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(PathableTableHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TableHint, typeof(PathableTableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TableHint, typeof(HintWithParameterExtensionBuilder))]
 		public static ITable<TSource> TableHint<TSource,TParam>(
 			this ITable<TSource>       table,
@@ -250,7 +253,8 @@ namespace LinqToDB
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Table-like query source with table hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(OracleTableHintExtensionBuilder), " ")]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(PathableTableHintExtensionBuilder), " ")]
+		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TableHint, typeof(PathableTableHintExtensionBuilder), ", ")]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TableHint, typeof(HintWithParametersExtensionBuilder))]
 		public static ITable<TSource> TableHint<TSource,TParam>(
 			this ITable<TSource>                table,
@@ -276,7 +280,8 @@ namespace LinqToDB
 		/// <param name="hint">SQL text, added to join in generated query.</param>
 		/// <returns>Query source with join hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(OracleTableHintExtensionBuilder), " ")]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(PathableTableHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TablesInScopeHint, typeof(PathableTableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
 		public static IQueryable<TSource> TablesInScopeHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull
@@ -300,7 +305,8 @@ namespace LinqToDB
 		/// <param name="hintParameter">Table hint parameter.</param>
 		/// <returns>Table-like query source with table hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(OracleTableHintExtensionBuilder), " ")]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(PathableTableHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TablesInScopeHint, typeof(PathableTableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintWithParameterExtensionBuilder))]
 		public static ITable<TSource> TablesInScopeHintHint<TSource, TParam>(this ITable<TSource> table, [SqlQueryDependent] string tableHint, [SqlQueryDependent] TParam hintParameter)
 			where TSource : notnull
@@ -322,7 +328,8 @@ namespace LinqToDB
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Table-like query source with table hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(OracleTableHintExtensionBuilder), " ")]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(PathableTableHintExtensionBuilder), " ")]
+		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TablesInScopeHint, typeof(PathableTableHintExtensionBuilder), ", ")]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintWithParametersExtensionBuilder))]
 		public static ITable<TSource> TablesInScopeHintHint<TSource>(
 			this ITable<TSource> table,
@@ -3763,7 +3770,7 @@ namespace LinqToDB
 		/// Gets or sets callback for preprocessing query before execution.
 		/// Useful for intercepting queries.
 		/// </summary>
-		public static Func<IQueryable, IQueryable>? ProcessSourceQueryable { get; set; }
+		public static Func<IQueryable,IQueryable>? ProcessSourceQueryable { get; set; }
 
 		public static IExtensionsAdapter? ExtensionsAdapter { get; set; }
 

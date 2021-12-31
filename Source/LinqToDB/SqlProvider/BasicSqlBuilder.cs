@@ -1622,7 +1622,7 @@ namespace LinqToDB.SqlProvider
 			[typeof(HintExtensionBuilder)]               = new HintExtensionBuilder(),
 			[typeof(HintWithParameterExtensionBuilder)]  = new HintWithParameterExtensionBuilder(),
 			[typeof(HintWithParametersExtensionBuilder)] = new HintWithParametersExtensionBuilder(),
-			[typeof(OracleTableHintExtensionBuilder)]    = new OracleTableHintExtensionBuilder(),
+			[typeof(PathableTableHintExtensionBuilder)]    = new PathableTableHintExtensionBuilder(),
 		};
 
 		protected void BuildTableExtensions(

@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.MySql
 	using SqlProvider;
 	using SqlQuery;
 
-	class MySqlSqlBuilder : BasicSqlBuilder
+	class MySqlSqlBuilder : BasicSqlBuilder, IPathableSqlBuilder
 	{
 		private readonly MySqlDataProvider? _provider;
 
@@ -80,7 +80,13 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
 		{
-			return new MySqlSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
+			return new MySqlSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags)
+			{
+				HintBuilder = HintBuilder,
+				TablePath   = TablePath,
+				QueryName   = QueryName,
+				TableIDs    = TableIDs ??= new(),
+			};
 		}
 
 		protected override string LimitFormat(SelectQuery selectQuery)
@@ -315,7 +321,9 @@ namespace LinqToDB.DataProvider.MySql
 				(deleteStatement.SelectQuery.From.FindTableSource(deleteStatement.Table) ?? deleteStatement.Table) :
 				deleteStatement.SelectQuery.From.Tables[0];
 
-			AppendIndent().Append("DELETE ");
+			AppendIndent().Append("DELETE");
+			StartStatementQueryExtensions(deleteStatement.SelectQuery);
+			StringBuilder.Append(' ');
 			Convert(StringBuilder, GetTableAlias(table)!, ConvertType.NameToQueryTableAlias);
 			StringBuilder.AppendLine();
 		}
@@ -633,23 +641,33 @@ namespace LinqToDB.DataProvider.MySql
 				StringBuilder.Append("IF NOT EXISTS ");
 		}
 
+		protected StringBuilder?             HintBuilder;
+		public    Dictionary<string,string>? TableIDs  { get; set; }
+		public    string?                    TablePath { get; set; }
+		public    string?                    QueryName { get; set; }
+
+		int  _hintPosition;
+		bool _isTopLevelBuilder;
+
 		protected override void StartStatementQueryExtensions(SelectQuery? selectQuery)
 		{
-//			if (HintBuilder == null)
-//			{
-//				HintBuilder        = new();
-//				_isTopLevelBuilder = true;
-//				_hintPosition      = StringBuilder.Length;
-//
-//				if (selectQuery?.QueryName is { } queryName)
-//					HintBuilder
-//						.Append("QB_NAME(")
-//						.Append(queryName)
-//						.Append(')')
-//						;
-//			}
-//			else
-			if (selectQuery?.QueryName is {} queryName)
+			if (HintBuilder == null)
+			{
+				HintBuilder        = new();
+				_isTopLevelBuilder = true;
+				_hintPosition      = StringBuilder.Length;
+
+				if (Statement is SqlInsertStatement)
+					_hintPosition -= " INTO ".Length;
+
+				if (selectQuery?.QueryName is {} queryName)
+					HintBuilder
+						.Append("QB_NAME(")
+						.Append(queryName)
+						.Append(')')
+						;
+			}
+			else if (selectQuery?.QueryName is {} queryName)
 			{
 				StringBuilder
 					.Append(" /*+ QB_NAME(")
@@ -657,6 +675,75 @@ namespace LinqToDB.DataProvider.MySql
 					.Append(") */")
 					;
 			}
+		}
+
+		protected override void BuildSelectQuery(SqlSelectStatement selectStatement)
+		{
+			var queryName = QueryName;
+			var tablePath = TablePath;
+
+			if (selectStatement.SelectQuery.QueryName is not null)
+			{
+				QueryName = selectStatement.SelectQuery.QueryName;
+				TablePath = null;
+			}
+
+			base.BuildSelectQuery(selectStatement);
+
+			TablePath = tablePath;
+			QueryName = queryName;
+		}
+
+		protected override void FinalizeBuildQuery(SqlStatement statement)
+		{
+			if (statement.SqlQueryExtensions is not null && HintBuilder is not null)
+			{
+				if (HintBuilder.Length > 0 && HintBuilder[HintBuilder.Length - 1] != ' ')
+					HintBuilder.Append(' ');
+				BuildQueryExtensions(HintBuilder, statement.SqlQueryExtensions, null, " ", null);
+			}
+
+			if (_isTopLevelBuilder && HintBuilder!.Length > 0)
+			{
+				HintBuilder.Insert(0, " /*+ ");
+				HintBuilder.Append(" */");
+
+				StringBuilder.Insert(_hintPosition, HintBuilder);
+			}
+		}
+
+		protected override bool? BuildPhysicalTable(ISqlTableSource table, string? alias, string? defaultDatabaseName = null)
+		{
+			var tablePath = TablePath;
+
+			if (alias != null)
+			{
+				if (TablePath is { Length: > 0 })
+					TablePath += '.';
+				TablePath += alias;
+
+				if (table is SqlTable { ID: {} id })
+				{
+					var path = TablePath;
+
+					if (QueryName is not null)
+						path += $"@{QueryName}";
+
+					(TableIDs ??= new())[id] = path!;
+				}
+			}
+
+			var ret = base.BuildPhysicalTable(table, alias, defaultDatabaseName);
+
+			TablePath = tablePath;
+
+			return ret;
+		}
+
+		protected override void BuildTableExtensions(SqlTable table, string alias)
+		{
+			if (HintBuilder is not null && table.SqlQueryExtensions is not null)
+				BuildTableExtensions(HintBuilder, table, alias, null, " ", null);
 		}
 	}
 }
