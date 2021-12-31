@@ -103,12 +103,12 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var q =
-				from p in db.Parent.TableHint(OracleHints.TableHint.Parallel, 5)
+				from p in db.Parent.TableHint(OracleHints.TableHint.Parallel, (object)",", 5)
 				select p;
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring("SELECT /*+ PARALLEL(p 5)"));
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ PARALLEL(p , 5)"));
 		}
 
 		[Test]

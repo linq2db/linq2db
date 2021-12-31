@@ -263,7 +263,7 @@ namespace LinqToDB
 				MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameters),
 				table.Expression,
 				Expression.Constant(hint),
-				Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p))));
+				Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p, typeof(TParam)))));
 
 			return table;
 		}

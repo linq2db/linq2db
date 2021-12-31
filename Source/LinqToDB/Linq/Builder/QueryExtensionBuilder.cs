@@ -38,13 +38,22 @@ namespace LinqToDB.Linq.Builder
 				}
 				else if (arg is NewArrayExpression ae)
 				{
+					var attr = p.GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).Cast<SqlQueryDependentAttribute>().FirstOrDefault();
+
 					list.Add(new($"{name}.Count", arg, p)
 					{
 						SqlExpression = new SqlValue(ae.Expressions.Count),
 					});
 
 					for (var j = 0; j < ae.Expressions.Count; j++)
-						list.Add(new($"{name}.{j}", ae.Expressions[j], p, j));
+					{
+						var ex = ae.Expressions[j];
+
+						if (attr != null)
+							ex = Expression.Constant(ex.EvaluateExpression());
+
+						list.Add(new($"{name}.{j}", ex, p, j));
+					}
 				}
 				else
 				{
@@ -126,11 +135,6 @@ namespace LinqToDB.Linq.Builder
 			builder.TablesInScope = prevTablesInScope;
 
 			return joinExtensions != null ? new JoinHintContext(sequence, joinExtensions) : sequence;
-		}
-
-		protected override SequenceConvertInfo? Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return base.Convert(builder, methodCall, buildInfo, param);
 		}
 
 		public class JoinHintContext : PassThroughContext

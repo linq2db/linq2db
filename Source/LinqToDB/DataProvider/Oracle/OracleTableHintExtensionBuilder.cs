@@ -22,7 +22,7 @@ namespace LinqToDB.DataProvider.Oracle
 			stringBuilder.Append((string)hint.Value!);
 			stringBuilder.Append('(');
 
-			if (builder.TablePath is {Length: > 0})
+			if (builder.TablePath is { Length: > 0 })
 			{
 				stringBuilder.Append(builder.TablePath);
 				stringBuilder.Append('.');
@@ -36,8 +36,7 @@ namespace LinqToDB.DataProvider.Oracle
 					.Append(builder.QueryName)
 					;
 
-			if (!(args.TryGetValue("parameterDelimiter", out var pd) && pd is SqlValue { Value: string parameterDelimiter }))
-				parameterDelimiter = args.TryGetValue(".ExtensionArguments.0", out var extArg0) && extArg0 is SqlValue { Value : string val } ? val : " ";
+			var parameterDelimiter = args.TryGetValue(".ExtensionArguments.0", out var extArg0) && extArg0 is SqlValue { Value : string val } ? val : " ";
 
 			if (args.TryGetValue("hintParameter", out var hintParameter))
 			{

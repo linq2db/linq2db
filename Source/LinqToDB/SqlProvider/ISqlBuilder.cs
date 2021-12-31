@@ -32,5 +32,6 @@ namespace LinqToDB.SqlProvider
 
 		string        Name          { get; }
 		MappingSchema MappingSchema { get; }
+		StringBuilder StringBuilder { get; }
 	}
 }

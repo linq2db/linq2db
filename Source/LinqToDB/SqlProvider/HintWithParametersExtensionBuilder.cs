@@ -14,7 +14,6 @@ namespace LinqToDB.SqlProvider
 			var hint  = ((SqlValue)     args["hint"]).                Value;
 			var count = (int)((SqlValue)args["hintParameters.Count"]).Value!;
 
-			//if (!(args.TryGetValue("parameterDelimiter", out var pd) && pd is SqlValue { Value: string parameterDelimiter }))
 			var parameterDelimiter = args.TryGetValue(".ExtensionArguments.0", out var extArg0) && extArg0 is SqlValue { Value : string val } ? val : ", ";
 
 			stringBuilder.Append(hint);

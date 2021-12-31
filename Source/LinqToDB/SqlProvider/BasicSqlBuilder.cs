@@ -30,14 +30,14 @@ namespace LinqToDB.SqlProvider
 
 		public    OptimizationContext OptimizationContext { get; protected set; } = null!;
 		public    MappingSchema       MappingSchema       { get; }
-		protected ValueToSqlConverter ValueToSqlConverter => MappingSchema.ValueToSqlConverter;
+		public    StringBuilder       StringBuilder       { get; set; } = null!;
 
+		protected ValueToSqlConverter ValueToSqlConverter => MappingSchema.ValueToSqlConverter;
 		protected SqlStatement        Statement = null!;
 		protected int                 Indent;
 		protected Step                BuildStep;
 		protected ISqlOptimizer       SqlOptimizer;
 		protected SqlProviderFlags    SqlProviderFlags;
-		protected StringBuilder       StringBuilder = null!;
 		protected bool                SkipAlias;
 
 		#endregion
@@ -670,8 +670,8 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
-			BuildUpdateTable (selectQuery, updateClause);
-			BuildUpdateSet   (selectQuery, updateClause);
+			BuildUpdateTable(selectQuery, updateClause);
+			BuildUpdateSet  (selectQuery, updateClause);
 		}
 
 		protected virtual void BuildUpdateTable(SelectQuery selectQuery, SqlUpdateClause updateClause)
