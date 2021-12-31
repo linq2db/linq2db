@@ -777,7 +777,7 @@ END;",
 		protected override void BuildTableExtensions(SqlTable table, string alias)
 		{
 			if (HintBuilder is not null && table.SqlQueryExtensions is not null)
-				BuildTableExtensions(HintBuilder, table, alias, null, " ", null);
+				BuildTableExtensions(HintBuilder, table, alias, null, " ", null, null);
 		}
 	}
 }

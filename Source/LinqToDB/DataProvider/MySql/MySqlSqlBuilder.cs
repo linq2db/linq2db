@@ -742,8 +742,16 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildTableExtensions(SqlTable table, string alias)
 		{
-			if (HintBuilder is not null && table.SqlQueryExtensions is not null)
-				BuildTableExtensions(HintBuilder, table, alias, null, " ", null);
+			if (table.SqlQueryExtensions is not null)
+			{
+				if (HintBuilder is not null)
+					BuildTableExtensions(HintBuilder, table, alias, null, " ", null, ext =>
+						ext.Scope is
+							Sql.QueryExtensionScope.TableHint or
+							Sql.QueryExtensionScope.TablesInScopeHint, null);
+
+				BuildTableExtensions(StringBuilder, table, alias, " ", ", ", null, ext => ext.Scope is Sql.QueryExtensionScope.IndexHint, null);
+			}
 		}
 	}
 }

@@ -1629,17 +1629,33 @@ namespace LinqToDB.SqlProvider
 			StringBuilder sb,
 			SqlTable table, string alias,
 			string? prefix, string delimiter, string? suffix,
-			Func<SqlQueryExtension,bool>? customExtensionBuilder = null)
+			Func<SqlQueryExtension,bool>? customExtensionBuilder)
 		{
-			if (table.SqlQueryExtensions?.Any(ext =>
-				ext.Scope is
-					Sql.QueryExtensionScope.TableHint or
-					Sql.QueryExtensionScope.TablesInScopeHint) == true)
+			BuildTableExtensions(
+				sb,
+				table,  alias,
+				prefix, delimiter, suffix,
+				ext =>
+					ext.Scope is
+						Sql.QueryExtensionScope.TableHint or
+						Sql.QueryExtensionScope.IndexHint or
+						Sql.QueryExtensionScope.TablesInScopeHint,
+				customExtensionBuilder);
+		}
+
+		protected void BuildTableExtensions(
+			StringBuilder sb,
+			SqlTable table, string alias,
+			string? prefix, string delimiter, string? suffix,
+			Func<SqlQueryExtension,bool> tableExtensionFilter,
+			Func<SqlQueryExtension,bool>? customExtensionBuilder)
+		{
+			if (table.SqlQueryExtensions?.Any(tableExtensionFilter) == true)
 			{
 				if (prefix != null)
 					sb.Append(prefix);
 
-				foreach (var ext in table.SqlQueryExtensions!)
+				foreach (var ext in table.SqlQueryExtensions.Where(tableExtensionFilter))
 				{
 					if (ext.BuilderType != null)
 					{
@@ -1690,7 +1706,7 @@ namespace LinqToDB.SqlProvider
 			string? prefix, string delimiter, string? suffix,
 			Func<SqlQueryExtension,bool>? customExtensionBuilder = null)
 		{
-			if (sqlQueryExtensions.Any(ext => ext.Scope is Sql.QueryExtensionScope.QueryHint) == true)
+			if (sqlQueryExtensions.Any(ext => ext.Scope is Sql.QueryExtensionScope.QueryHint))
 			{
 				if (prefix != null)
 					sb.Append(prefix);

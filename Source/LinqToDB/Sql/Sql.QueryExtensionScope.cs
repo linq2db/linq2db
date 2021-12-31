@@ -8,6 +8,7 @@ namespace LinqToDB
 		{
 			None,
 			TableHint,
+			IndexHint,
 			JoinHint,
 			QueryHint,
 			TablesInScopeHint

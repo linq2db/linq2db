@@ -61,7 +61,6 @@ namespace Tests.Linq
 			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {hint}(p parent_ix, parent2_ix)"));
 		}
 
-
 		[Test]
 		public void TableSubQueryHintTest([IncludeDataSources(true, TestProvName.AllMySql)] string context,
 			[Values(
@@ -171,6 +170,28 @@ namespace Tests.Linq
 			_ = q.ToList();
 
 			Assert.That(LastQuery, Contains.Substring("SELECT /*+ MAX_EXECUTION_TIME(1000) */"));
+		}
+
+		[Test]
+		public void TableIndexHintTest([IncludeDataSources(true, TestProvName.AllMySql)] string context,
+			[Values(
+				"USE INDEX",
+				"USE KEY FOR ORDER BY"
+			)] string hint)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Child.TableIndexHint(hint, "IX_ChildIndex", "IX_ChildIndex2").With(MySqlHints.TableHint.Bka)
+				select p
+			)
+			.QueryHint(MySqlHints.QueryHint.MaxExecutionTime(1000));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ BKA(p) MAX_EXECUTION_TIME(1000) */"));
+			Assert.That(LastQuery, Contains.Substring($"`Child` `p` {hint}(IX_ChildIndex, IX_ChildIndex2)"));
 		}
 	}
 }
