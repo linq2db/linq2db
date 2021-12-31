@@ -121,28 +121,12 @@ namespace LinqToDB.Linq.Builder
 			var elementSelector = (LambdaExpression)methodCall.Arguments[2].Unwrap()!;
 
 			sequence   = new SubQueryContext(sequence);
-			var key    = new KeyContext(sequence, keySelector, buildInfo.IsSubQuery, keySequence);
-			var keyRef = new ContextRefExpression(keySelector.Parameters[0].Type, key);
+			var key                 = new KeyContext(sequence, keySelector, buildInfo.IsSubQuery, keySequence);
+			var keyRef              = new ContextRefExpression(keySelector.Parameters[0].Type, key);
+			var currentPlaceholders = new List<SqlPlaceholderExpression>();
 			if (groupingKind != GroupingType.GroupBySets)
 			{
-				if (builder.TryConvertToSqlExpr(sequence, key.Body) is SqlPlaceholderExpression groupKey)
-				{
-					if (!QueryHelper.IsConstantFast(groupKey.Sql))
-						sequence.SelectQuery.GroupBy.Expr(groupKey.Sql);
-				}
-				else
-				{
-					var groupSqlExpr = builder.UpdateNesting(sequence, builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), sequence, key.Body, ProjectFlags.SQL));
-
-					var placeholders = builder.CollectPKPlaceholders(groupSqlExpr);
-
-					var allowed = placeholders.Where(p => !QueryHelper.IsConstantFast(p.Sql));
-
-					foreach (var p in allowed)
-					{
-						sequence.SelectQuery.GroupBy.Expr(p.Sql);
-					}
-				}
+				AppendGrouping(sequence, currentPlaceholders, builder, key.Body);
 			}
 			else
 			{
@@ -162,7 +146,7 @@ namespace LinqToDB.Linq.Builder
 			sequence.SelectQuery.GroupBy.GroupingType = groupingKind;
 
 			var element = new ElementContext(buildInfo.Parent, elementSelector, buildInfo.IsSubQuery, sequence/*, key*/);
-			var groupBy = new GroupByContext(buildInfo.Parent, sequenceExpr, groupingType, sequence, key, keyRef, element, builder.IsGroupingGuardDisabled);
+			var groupBy = new GroupByContext(buildInfo.Parent, sequenceExpr, groupingType, sequence, key, keyRef, currentPlaceholders, element, builder.IsGroupingGuardDisabled);
 
 			// Will be used for eager loading generation
 			element.GroupByContext = groupBy;
@@ -170,6 +154,35 @@ namespace LinqToDB.Linq.Builder
 			Debug.WriteLine("BuildMethodCall GroupBy:\n" + groupBy.SelectQuery);
 
 			return groupBy;
+		}
+
+		static void AppendGrouping(IBuildContext sequence, List<SqlPlaceholderExpression> currentPlaceholders, ExpressionBuilder builder, Expression path)
+		{
+			if (builder.TryConvertToSqlExpr(sequence, path, ProjectFlags.SQL) is SqlPlaceholderExpression groupKey)
+			{
+				if (!QueryHelper.IsConstantFast(groupKey.Sql) && !currentPlaceholders.Contains(groupKey))
+				{
+					currentPlaceholders.Add(groupKey);
+					sequence.SelectQuery.GroupBy.Expr(groupKey.Sql);
+				}
+			}
+			else
+			{
+				var groupSqlExpr = builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), sequence, path, ProjectFlags.SQL);
+
+				var placeholders = builder.CollectPKPlaceholders(groupSqlExpr);
+
+				var allowed = placeholders.Where(p => !QueryHelper.IsConstantFast(p.Sql));
+
+				foreach (var p in allowed)
+				{
+					if (!currentPlaceholders.Contains(p))
+					{
+						currentPlaceholders.Add(p);
+						sequence.SelectQuery.GroupBy.Expr(p.Sql);
+					}
+				}
+			}
 		}
 
 		protected override SequenceConvertInfo? Convert(
@@ -243,26 +256,29 @@ namespace LinqToDB.Linq.Builder
 				IBuildContext  sequence,
 				KeyContext     key,
 				ContextRefExpression keyRef,
+				List<SqlPlaceholderExpression> currentPlaceholders,
 				SelectContext  element,
 				bool           isGroupingGuardDisabled)
 				: base(parent, sequence, null)
 			{
-				_sequenceExpr = sequenceExpr;
-				_key          = key;
-				_keyRef       = keyRef;
-				Element       = element;
-				_groupingType = groupingType;
+				_sequenceExpr        = sequenceExpr;
+				_key                 = key;
+				_keyRef              = keyRef;
+				_currentPlaceholders = currentPlaceholders;
+				Element              = element;
+				_groupingType        = groupingType;
 
 				_isGroupingGuardDisabled = isGroupingGuardDisabled;
 
 				key.Parent = this;
 			}
 
-			readonly Expression           _sequenceExpr;
-			readonly KeyContext           _key;
-			readonly ContextRefExpression _keyRef;
-			readonly Type                 _groupingType;
-			readonly bool                 _isGroupingGuardDisabled;
+			readonly         Expression                     _sequenceExpr;
+			readonly         KeyContext                     _key;
+			readonly         ContextRefExpression           _keyRef;
+			private readonly List<SqlPlaceholderExpression> _currentPlaceholders;
+			readonly         Type                           _groupingType;
+			readonly         bool                           _isGroupingGuardDisabled;
 
 			public SelectContext   Element { get; }
 

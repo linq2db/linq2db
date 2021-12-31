@@ -11,7 +11,11 @@ namespace LinqToDB.Linq.Builder
 
 		static ProjectFlags GetRootProjectFlags(BuildInfo buildInfo)
 		{
-			return buildInfo.IsAggregation ? ProjectFlags.AggregationRoot : ProjectFlags.Root;
+			var flags = ProjectFlags.Root;
+			if (buildInfo.IsAggregation)
+				flags |= ProjectFlags.Aggregation;
+
+			return flags;
 		}
 
 		public bool CanBuild(ExpressionBuilder builder, BuildInfo buildInfo)

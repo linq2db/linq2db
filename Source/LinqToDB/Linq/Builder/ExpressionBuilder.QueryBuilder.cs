@@ -296,7 +296,7 @@ namespace LinqToDB.Linq.Builder
 			sqlExpression = null;
 
 			//Just test that we can convert
-			actual = ConvertToSqlExpr(context, expression, testOnly: true, columnDescriptor: columnDescriptor);
+			actual = ConvertToSqlExpr(context, expression, flags | ProjectFlags.Test, columnDescriptor: columnDescriptor);
 			if (actual is not SqlPlaceholderExpression placeholderTest)
 				return false;
 
@@ -306,7 +306,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				sqlExpression = null;
 				//Test conversion success, do it again
-				actual = ConvertToSqlExpr(context, expression, testOnly: false, columnDescriptor: columnDescriptor);
+				actual = ConvertToSqlExpr(context, expression, flags, columnDescriptor: columnDescriptor);
 				if (actual is not SqlPlaceholderExpression placeholder)
 					return false;
 
@@ -316,17 +316,20 @@ namespace LinqToDB.Linq.Builder
 			return true;
 		}
 
-		public Expression? TryConvertToSqlExpr(IBuildContext context, Expression expression)
+		public Expression? TryConvertToSqlExpr(IBuildContext context, Expression expression, ProjectFlags flags)
 		{
 			//Just test that we can convert
-			var converted = ConvertToSqlExpr(context, expression, testOnly: true);
+			var converted = ConvertToSqlExpr(context, expression, flags | ProjectFlags.Test);
 			if (converted is not SqlPlaceholderExpression)
 				return null;
 
-			//Test conversion success, do it again
-			converted = ConvertToSqlExpr(context, expression, testOnly: false);
-			if (converted is not SqlPlaceholderExpression placeholder)
-				return null;
+			if (!flags.HasFlag(ProjectFlags.Test))
+			{
+				//Test conversion success, do it again
+				converted = ConvertToSqlExpr(context, expression, flags);
+				if (converted is not SqlPlaceholderExpression placeholder)
+					return null;
+			}
 
 			return converted;
 		}
@@ -530,7 +533,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (context.flags.HasFlag(ProjectFlags.Expression))
 							{
-								var sql = context.builder.TryConvertToSqlExpr(context.context, expr);
+								var sql = context.builder.TryConvertToSqlExpr(context.context, expr, context.flags);
 								if (sql != null)
 									return new TransformInfo(sql);
 							}
@@ -602,7 +605,7 @@ namespace LinqToDB.Linq.Builder
 								    context.builder.IsServerSideOnly(expr)
 								   )
 								{
-									var newExpr = context.builder.TryConvertToSqlExpr(context.context, expr);
+									var newExpr = context.builder.TryConvertToSqlExpr(context.context, expr, context.flags);
 									if (newExpr != null)
 									{
 										return new TransformInfo(newExpr, false, true);
@@ -678,7 +681,7 @@ namespace LinqToDB.Linq.Builder
 						case ExpressionType.Conditional:
 						{
 							var cond    = (ConditionalExpression)expr;
-							var condSql = context.builder.TryConvertToSqlExpr(context.context, cond);
+							var condSql = context.builder.TryConvertToSqlExpr(context.context, cond, context.flags);
 							if (condSql != null)
 								return new TransformInfo(condSql);
 
@@ -739,6 +742,11 @@ namespace LinqToDB.Linq.Builder
 
 					return new TransformInfo(expr);
 				});
+
+			if (!flags.HasFlag(ProjectFlags.Test))
+			{
+				result = UpdateNesting(context, result);
+			}
 
 			return result;
 		}

@@ -53,7 +53,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (buildInfo.IsSubQuery)
 			{
-				var testSequence = builder.BuildSequence(new BuildInfo(buildInfo, seqenceArgument, new SelectQuery()) { AggregationTest = true, IsAggregation = true });
+				var testSequence = builder.BuildSequence(new BuildInfo(buildInfo, seqenceArgument, new SelectQuery()) { AggregationTest = true, IsAggregation = false });
 
 				// It means that as root we have used fake context
 				var testSelectQuery = testSequence.SelectQuery;
@@ -85,7 +85,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (sequence == null)
 			{
-				sequence = builder.BuildSequence(new BuildInfo(buildInfo, seqenceArgument) { CreateSubQuery = true, IsAggregation = false });
+				sequence = builder.BuildSequence(new BuildInfo(buildInfo, seqenceArgument) { CreateSubQuery = true, IsAggregation = true });
 			}
 
 			var prevSequence = sequence;
@@ -124,7 +124,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var refExpression = new ContextRefExpression(seqenceArgument.Type, sequence);
 
-				var sqlPlaceholder = builder.ConvertToSqlPlaceholder(sequence, refExpression);
+				var sqlPlaceholder = builder.ConvertToSqlPlaceholder(sequence, refExpression, ProjectFlags.SQL | ProjectFlags.Aggregation);
 				context        = new AggregationContext(parentContext, sequence, methodCall);
 
 				var sql = sqlPlaceholder.Sql;

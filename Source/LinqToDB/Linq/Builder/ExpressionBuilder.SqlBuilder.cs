@@ -59,7 +59,8 @@ namespace LinqToDB.Linq.Builder
 			return isHaving;
 		}
 
-		public IBuildContext BuildWhere(IBuildContext? parent, IBuildContext sequence, LambdaExpression condition, bool checkForSubQuery, bool enforceHaving, bool addSubquery)
+		public IBuildContext BuildWhere(IBuildContext? parent, IBuildContext sequence, LambdaExpression condition,
+			bool checkForSubQuery, bool enforceHaving, bool isAggregation)
 		{
 			var originalContextRef = new ContextRefExpression(condition.Parameters[0].Type, sequence);
 			var body               = condition.GetBody(originalContextRef);
@@ -84,7 +85,7 @@ namespace LinqToDB.Linq.Builder
 			}*/
 
 			var sc = new SqlSearchCondition();
-			BuildSearchCondition(targetSequence, expr, ProjectFlags.SQL, sc.Conditions);
+			BuildSearchCondition(targetSequence, expr, isAggregation ? ProjectFlags.Aggregation | ProjectFlags.SQL : ProjectFlags.SQL, sc.Conditions);
 
 			if (!targetSequence.SelectQuery.GroupBy.IsEmpty)
 				targetSequence.SelectQuery.Having.ConcatSearchCondition(sc);
@@ -1036,9 +1037,9 @@ namespace LinqToDB.Linq.Builder
 		Dictionary<SqlCacheKey, Expression> _preciseCachedSql = new(SqlCacheKey.SqlCacheKeyComparer);
 		Dictionary<SqlCacheKey, Expression> _cachedSql = new(SqlCacheKey.SqlCacheKeyComparer);
 
-		public SqlPlaceholderExpression ConvertToSqlPlaceholder(IBuildContext? context, Expression expression, bool testOnly = false, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false)
+		public SqlPlaceholderExpression ConvertToSqlPlaceholder(IBuildContext? context, Expression expression, ProjectFlags flags = ProjectFlags.SQL, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false)
 		{
-			var expr = ConvertToSqlExpr(context, expression, testOnly, unwrap, columnDescriptor, isPureExpression);
+			var expr = ConvertToSqlExpr(context, expression, flags, unwrap, columnDescriptor, isPureExpression: isPureExpression);
 
 			if (expr is not SqlPlaceholderExpression placeholder)
 			{
@@ -1048,9 +1049,9 @@ namespace LinqToDB.Linq.Builder
 			return placeholder;
 		}
 
-		public ISqlExpression ConvertToSql(IBuildContext? context, Expression expression, bool testOnly = false, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false)
+		public ISqlExpression ConvertToSql(IBuildContext? context, Expression expression, ProjectFlags flags = ProjectFlags.SQL, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false)
 		{
-			var placeholder = ConvertToSqlPlaceholder(context, expression, testOnly: testOnly, unwrap: unwrap, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression);
+			var placeholder = ConvertToSqlPlaceholder(context, expression, flags, unwrap: unwrap, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression);
 
 			return placeholder.Sql;
 		}
@@ -1074,17 +1075,17 @@ namespace LinqToDB.Linq.Builder
 		/// </summary>
 		/// <param name="context"></param>
 		/// <param name="expression"></param>
-		/// <param name="testOnly">If set, no columns are created. Better suitable for testing that particular expression can be converted to the SQL.</param>
+		/// <param name="flags1"></param>
 		/// <param name="unwrap"></param>
 		/// <param name="columnDescriptor"></param>
 		/// <param name="isPureExpression"></param>
+		/// <param name="alias"></param>
+		/// <param name="isAggregation"></param>
 		/// <returns></returns>
-		public Expression ConvertToSqlExpr(IBuildContext context, Expression expression, bool testOnly = false, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false, string? alias = null)
+		public Expression ConvertToSqlExpr(IBuildContext context, Expression expression, ProjectFlags flags = ProjectFlags.SQL,
+			bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false,
+			string? alias = null)
 		{
-			var flags = ProjectFlags.SQL;
-			if (testOnly)
-				flags |= ProjectFlags.Test;
-
 			var cacheKey        = new SqlCacheKey(expression, null, columnDescriptor, null, flags);
 			var preciseCacheKey = new SqlCacheKey(expression, null, columnDescriptor, context.SelectQuery, flags);
 
@@ -1129,7 +1130,7 @@ namespace LinqToDB.Linq.Builder
 				? CreatePlaceholder(context.SelectQuery, sql, expression, alias: alias)
 				: ConvertToSqlInternal(context, expression, flags, unwrap: unwrap, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression, alias: alias);
 
-			if (!testOnly)
+			if (!flags.HasFlag(ProjectFlags.Test))
 			{
 				result = UpdateNesting(context, result);
 			}
@@ -1193,7 +1194,7 @@ namespace LinqToDB.Linq.Builder
 					var shouldCheckColumn =
 							e.Left.Type.ToNullableUnderlying() == e.Right.Type.ToNullableUnderlying();
 
-					columnDescriptor = SuggestColumnDescriptor(context, e.Left, e.Right);
+					columnDescriptor = SuggestColumnDescriptor(context, e.Left, e.Right, flags);
 
 					if (!TryConvertToSql(context, flags, e.Left, columnDescriptor, out var l, out var lError))
 						return lError;
@@ -1361,7 +1362,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (!ReferenceEquals(newExpr, ma))
 					{
-						return ConvertToSqlExpr(context, newExpr, flags.HasFlag(ProjectFlags.Test), unwrap, columnDescriptor, isPureExpression);
+						return ConvertToSqlExpr(context, newExpr, flags, unwrap, columnDescriptor, isPureExpression);
 					}
 
 					/*
@@ -1383,7 +1384,7 @@ namespace LinqToDB.Linq.Builder
 						var sequence = BuildSequence(buildInfo);
 
 						newExpr = ma.Update(new ContextRefExpression(ma.Expression.Type, sequence));
-						return ConvertToSqlExpr(context, newExpr, flags.HasFlag(ProjectFlags.Test), unwrap, columnDescriptor, isPureExpression);
+						return ConvertToSqlExpr(context, newExpr, flags, unwrap, columnDescriptor, isPureExpression);
 					}
 					/*
 					var ctx = GetContext(context, expression);
@@ -1433,7 +1434,7 @@ namespace LinqToDB.Linq.Builder
 						var newExpr = MakeExpression(expression, flags);
 						if (!ReferenceEquals(newExpr, expression))
 						{
-							return ConvertToSqlExpr(context, newExpr, flags.HasFlag(ProjectFlags.Test), unwrap, columnDescriptor, isPureExpression);
+							return ConvertToSqlExpr(context, newExpr, flags, unwrap, columnDescriptor, isPureExpression);
 						}
 					}
 
@@ -1475,7 +1476,7 @@ namespace LinqToDB.Linq.Builder
 						var subqueryCtx  = GetSubQueryContext(context, e);
 						var subqueryExpr = new ContextRefExpression(e.Type, subqueryCtx.Context);
 
-						return ConvertToSqlExpr(context, subqueryExpr, flags.HasFlag(ProjectFlags.Test), unwrap, columnDescriptor, isPureExpression);
+						return ConvertToSqlExpr(context, subqueryExpr, flags, unwrap, columnDescriptor, isPureExpression);
 					}
 
 					/*
@@ -1794,9 +1795,9 @@ namespace LinqToDB.Linq.Builder
 					{
 						switch (e.Method.Name)
 						{
-								case "Contains"   : predicate = CreateStringPredicate(context, e, SqlPredicate.SearchString.SearchKind.Contains,   IsCaseSensitive(e)); break;
-								case "StartsWith" : predicate = CreateStringPredicate(context, e, SqlPredicate.SearchString.SearchKind.StartsWith, IsCaseSensitive(e)); break;
-								case "EndsWith"   : predicate = CreateStringPredicate(context, e, SqlPredicate.SearchString.SearchKind.EndsWith,   IsCaseSensitive(e)); break;
+								case "Contains"   : predicate = CreateStringPredicate(context, e, SqlPredicate.SearchString.SearchKind.Contains,   IsCaseSensitive(e), flags); break;
+								case "StartsWith" : predicate = CreateStringPredicate(context, e, SqlPredicate.SearchString.SearchKind.StartsWith, IsCaseSensitive(e), flags); break;
+								case "EndsWith"   : predicate = CreateStringPredicate(context, e, SqlPredicate.SearchString.SearchKind.EndsWith,   IsCaseSensitive(e), flags); break;
 						}
 					}
 					else if (e.Method.Name == "Contains")
@@ -1837,11 +1838,11 @@ namespace LinqToDB.Linq.Builder
 						predicate = ConvertInPredicate(context!, expr);
 					}
 #if NETFRAMEWORK
-					else if (e.Method == ReflectionHelper.Functions.String.Like11) predicate = ConvertLikePredicate(context!, e);
-					else if (e.Method == ReflectionHelper.Functions.String.Like12) predicate = ConvertLikePredicate(context!, e);
+					else if (e.Method == ReflectionHelper.Functions.String.Like11) predicate = ConvertLikePredicate(context!, e, flags);
+					else if (e.Method == ReflectionHelper.Functions.String.Like12) predicate = ConvertLikePredicate(context!, e, flags);
 #endif
-					else if (e.Method == ReflectionHelper.Functions.String.Like21) predicate = ConvertLikePredicate(context!, e);
-					else if (e.Method == ReflectionHelper.Functions.String.Like22) predicate = ConvertLikePredicate(context!, e);
+					else if (e.Method == ReflectionHelper.Functions.String.Like21) predicate = ConvertLikePredicate(context!, e, flags);
+					else if (e.Method == ReflectionHelper.Functions.String.Like22) predicate = ConvertLikePredicate(context!, e, flags);
 
 					if (predicate != null)
 						return predicate;
@@ -1929,9 +1930,9 @@ namespace LinqToDB.Linq.Builder
 			ISqlExpression? l = null;
 			ISqlExpression? r = null;
 
-			var columnDescriptor = SuggestColumnDescriptor(context, left, right);
-			var leftExpr         = ConvertToSqlExpr(context, left, testOnly: flags.HasFlag(ProjectFlags.Test), columnDescriptor: columnDescriptor);
-			var rightExpr        = ConvertToSqlExpr(context, right, testOnly: flags.HasFlag(ProjectFlags.Test), columnDescriptor: columnDescriptor);
+			var columnDescriptor = SuggestColumnDescriptor(context, left, right, flags);
+			var leftExpr         = ConvertToSqlExpr(context, left, flags, columnDescriptor: columnDescriptor);
+			var rightExpr        = ConvertToSqlExpr(context, right, flags, columnDescriptor: columnDescriptor);
 
 			switch (nodeType)
 			{
@@ -2006,8 +2007,8 @@ namespace LinqToDB.Linq.Builder
 					return p;
 			}
 
-			l ??= ConvertToSql(context, left, testOnly: flags.HasFlag(ProjectFlags.Test), unwrap: false, columnDescriptor: columnDescriptor);
-			r ??= ConvertToSql(context, right, testOnly: flags.HasFlag(ProjectFlags.Test), unwrap: true,  columnDescriptor: columnDescriptor);
+			l ??= ConvertToSql(context, left, flags, unwrap: false, columnDescriptor: columnDescriptor);
+			r ??= ConvertToSql(context, right, flags, unwrap: true,  columnDescriptor: columnDescriptor);
 
 			l = QueryHelper.UnwrapExpression(l);
 			r = QueryHelper.UnwrapExpression(r);
@@ -2830,10 +2831,10 @@ namespace LinqToDB.Linq.Builder
 
 		#region ColumnDescriptor Helpers
 
-		public ColumnDescriptor? SuggestColumnDescriptor(IBuildContext context, Expression expr)
+		public ColumnDescriptor? SuggestColumnDescriptor(IBuildContext context, Expression expr, ProjectFlags flags)
 		{
 			expr = expr.Unwrap();
-			if (TryConvertToSql(context, ProjectFlags.Test, expr, null, out var sqlExpr, out _))
+			if (TryConvertToSql(context, flags, expr, null, out var sqlExpr, out _))
 			{
 				var descriptor = QueryHelper.GetColumnDescriptor(sqlExpr);
 				if (descriptor != null)
@@ -2845,16 +2846,17 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		public ColumnDescriptor? SuggestColumnDescriptor(IBuildContext context, Expression expr1, Expression expr2)
+		public ColumnDescriptor? SuggestColumnDescriptor(IBuildContext context, Expression expr1, Expression expr2,
+			ProjectFlags flags)
 		{
-			return SuggestColumnDescriptor(context, expr1) ?? SuggestColumnDescriptor(context, expr2);
+			return SuggestColumnDescriptor(context, expr1, flags) ?? SuggestColumnDescriptor(context, expr2, flags);
 		}
 
-		public ColumnDescriptor? SuggestColumnDescriptor(IBuildContext context, ReadOnlyCollection<Expression> expressions)
+		public ColumnDescriptor? SuggestColumnDescriptor(IBuildContext context, ReadOnlyCollection<Expression> expressions, ProjectFlags flags)
 		{
 			foreach (var expr in expressions)
 			{
-				var descriptor = SuggestColumnDescriptor(context, expr);
+				var descriptor = SuggestColumnDescriptor(context, expr, flags);
 				if (descriptor != null)
 					return descriptor;
 			}
@@ -2867,11 +2869,11 @@ namespace LinqToDB.Linq.Builder
 
 		#region LIKE predicate
 
-		ISqlPredicate CreateStringPredicate(IBuildContext? context, MethodCallExpression expression, SqlPredicate.SearchString.SearchKind kind, ISqlExpression caseSensitive)
+		ISqlPredicate CreateStringPredicate(IBuildContext? context, MethodCallExpression expression, SqlPredicate.SearchString.SearchKind kind, ISqlExpression caseSensitive, ProjectFlags flags)
 		{
 			var e = expression;
 
-			var descriptor = SuggestColumnDescriptor(context, e.Object, e.Arguments[0]);
+			var descriptor = SuggestColumnDescriptor(context, e.Object, e.Arguments[0], flags);
 
 			var o = ConvertToSql(context, e.Object,       unwrap: false, columnDescriptor: descriptor);
 			var a = ConvertToSql(context, e.Arguments[0], unwrap: false, columnDescriptor: descriptor);
@@ -2879,11 +2881,11 @@ namespace LinqToDB.Linq.Builder
 			return new SqlPredicate.SearchString(o, false, a, kind, caseSensitive);
 		}
 
-		ISqlPredicate ConvertLikePredicate(IBuildContext context, MethodCallExpression expression)
+		ISqlPredicate ConvertLikePredicate(IBuildContext context, MethodCallExpression expression, ProjectFlags flags)
 		{
 			var e  = expression;
 
-			var descriptor = SuggestColumnDescriptor(context, e.Arguments);
+			var descriptor = SuggestColumnDescriptor(context, e.Arguments, flags);
 
 			var a1 = ConvertToSql(context, e.Arguments[0], unwrap: false, columnDescriptor: descriptor);
 			var a2 = ConvertToSql(context, e.Arguments[1], unwrap: false, columnDescriptor: descriptor);
