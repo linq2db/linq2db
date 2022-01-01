@@ -525,9 +525,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			if (join.SqlQueryExtensions != null)
 			{
-				var ext = join.SqlQueryExtensions.LastOrDefault(e => e.Scope == Sql.QueryExtensionScope.JoinHint && e.ID is Sql.QueryExtensionID.Hint);
+				var ext = join.SqlQueryExtensions.LastOrDefault(e => e.Scope is Sql.QueryExtensionScope.JoinHint);
 
-				if (ext?.Arguments["joinHint"] is SqlValue v)
+				if (ext?.Arguments["hint"] is SqlValue v)
 				{
 					var h = (string)v.Value!;
 

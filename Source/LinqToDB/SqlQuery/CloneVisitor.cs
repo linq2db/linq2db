@@ -798,7 +798,6 @@ namespace LinqToDB.SqlQuery
 					{
 						Configuration = item.Configuration,
 						Scope         = item.Scope,
-						ID            = item.ID,
 						BuilderType   = item.BuilderType,
 					};
 

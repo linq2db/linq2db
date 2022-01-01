@@ -17,7 +17,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var q =
-				from p in db.Parent.With(SqlServerHints.Table.NoLock).With(SqlServerHints.Table.NoWait)
+				from p in db.Parent.With(SqlServerHints.Table.NoLock).IndexHint(SqlServerHints.Table.NoWait)
 				select p;
 
 			_ = q.ToList();
@@ -113,7 +113,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var q =
-				from p in db.Child.TableHint(SqlServerHints.Table.Index, "IX_ChildIndex")
+				from p in db.Child.IndexHint(SqlServerHints.Table.Index, "IX_ChildIndex")
 				select p;
 
 			_ = q.ToList();

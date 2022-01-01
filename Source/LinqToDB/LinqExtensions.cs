@@ -349,6 +349,100 @@ namespace LinqToDB
 
 		#endregion
 
+		#region IndexHint
+
+		/// <summary>
+		/// Adds table hints to a table in generated query.
+		/// <code>
+		/// // will produce following SQL code in generated query: table alias with(UpdLock)
+		/// var tableWithHint = db.Table.TableHint("UpdLock");
+		/// </code>
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="hint">SQL text, added to WITH({0}) after table name in generated query.</param>
+		/// <returns>Table-like query source with table hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.IndexHint, typeof(PathableTableHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.IndexHint, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.IndexHint, typeof(HintExtensionBuilder))]
+		public static ITable<TSource> IndexHint<TSource>(this ITable<TSource> table, [SqlQueryDependent] string hint)
+			where TSource : notnull
+		{
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(IndexHint, table, hint),
+				table.Expression, Expression.Constant(hint));
+
+			return table;
+		}
+
+		/// <summary>
+		/// Adds table hints to a table in generated query.
+		/// <code>
+		/// // will produce following SQL code in generated query: table alias with(UpdLock)
+		/// var tableWithHint = db.Table.TableHint("UpdLock");
+		/// </code>
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <typeparam name="TParam">Table hint parameter type.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="hint">SQL text, added to WITH({0}) after table name in generated query.</param>
+		/// <param name="hintParameter">Table hint parameter.</param>
+		/// <returns>Table-like query source with table hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.IndexHint, typeof(PathableTableHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.IndexHint, typeof(HintWithParameterExtensionBuilder))]
+		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.IndexHint, typeof(HintWithParameterExtensionBuilder))]
+		public static ITable<TSource> IndexHint<TSource,TParam>(
+			this ITable<TSource>       table,
+			[SqlQueryDependent] string hint,
+			[SqlQueryDependent] TParam hintParameter)
+			where TSource : notnull
+		{
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(IndexHint, table, hint, hintParameter),
+				table.Expression, Expression.Constant(hint), Expression.Constant(hintParameter));
+
+			return table;
+		}
+
+		/// <summary>
+		/// Adds table hints to a table in generated query.
+		/// <code>
+		/// // will produce following SQL code in generated query: table alias with(UpdLock)
+		/// var tableWithHint = db.Table.TableHint("UpdLock");
+		/// </code>
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <typeparam name="TParam">Table hint parameter type.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="hint">SQL text, added to WITH({0}) after table name in generated query.</param>
+		/// <param name="hintParameters">Table hint parameters.</param>
+		/// <returns>Table-like query source with table hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.IndexHint, typeof(PathableTableHintExtensionBuilder), " ")]
+		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.IndexHint, typeof(HintWithParametersExtensionBuilder))]
+		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.IndexHint, typeof(HintWithParametersExtensionBuilder))]
+		public static ITable<TSource> IndexHint<TSource,TParam>(
+			this ITable<TSource>                table,
+			[SqlQueryDependent] string          hint,
+			[SqlQueryDependent] params TParam[] hintParameters)
+			where TSource : notnull
+		{
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(IndexHint, table, hint, hintParameters),
+				table.Expression,
+				Expression.Constant(hint),
+				Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p, typeof(TParam)))));
+
+			return table;
+		}
+
+		#endregion
+
 		#region JoinHint
 
 		/// <summary>
@@ -360,12 +454,11 @@ namespace LinqToDB
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="source">Query source.</param>
-		/// <param name="joinHint">SQL text, added to join in generated query.</param>
+		/// <param name="hint">SQL text, added to join in generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		[LinqTunnel]
-		[Pure]
-		[Sql.QueryExtension(Sql.QueryExtensionScope.JoinHint, Sql.QueryExtensionID.Hint)]
-		public static IQueryable<TSource> JoinHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string joinHint)
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(Sql.QueryExtensionScope.JoinHint)]
+		public static IQueryable<TSource> JoinHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
@@ -373,8 +466,8 @@ namespace LinqToDB
 			return currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(JoinHint, source, joinHint),
-					currentSource.Expression, Expression.Constant(joinHint)));
+					MethodHelper.GetMethodInfo(JoinHint, source, hint),
+					currentSource.Expression, Expression.Constant(hint)));
 		}
 
 		#endregion

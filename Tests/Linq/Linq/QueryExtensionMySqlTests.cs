@@ -183,7 +183,7 @@ namespace Tests.Linq
 
 			var q =
 			(
-				from p in db.Child.TableIndexHint(hint, "IX_ChildIndex", "IX_ChildIndex2").With(MySqlHints.TableHint.Bka)
+				from p in db.Child.IndexHint(hint, "IX_ChildIndex", "IX_ChildIndex2").With(MySqlHints.TableHint.Bka)
 				select p
 			)
 			.QueryHint(MySqlHints.QueryHint.MaxExecutionTime(1000));

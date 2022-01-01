@@ -98,37 +98,5 @@ namespace LinqToDB.DataProvider.MySql
 					Expression.Constant(hint),
 					Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p)))));
 		}
-
-		/// <summary>
-		/// Adds table hints to a table in generated query.
-		/// <code>
-		/// // will produce following SQL code in generated query: table alias with(UpdLock)
-		/// var tableWithHint = db.Table.TableHint("UpdLock");
-		/// </code>
-		/// </summary>
-		/// <typeparam name="TSource">Table record mapping class.</typeparam>
-		/// <typeparam name="TParam">Table hint parameter type.</typeparam>
-		/// <param name="table">Table-like query source.</param>
-		/// <param name="hint">SQL text, added to WITH({0}) after table name in generated query.</param>
-		/// <param name="hintParameters">Table hint parameters.</param>
-		/// <returns>Table-like query source with table hints.</returns>
-		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.IndexHint, typeof(HintWithParametersExtensionBuilder))]
-		public static ITable<TSource> TableIndexHint<TSource,TParam>(
-			this ITable<TSource>                table,
-			[SqlQueryDependent] string          hint,
-			[SqlQueryDependent] params TParam[] hintParameters)
-			where TSource : notnull
-		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableIndexHint, table, hint, hintParameters),
-				table.Expression,
-				Expression.Constant(hint),
-				Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p, typeof(TParam)))));
-
-			return table;
-		}
-
 	}
 }

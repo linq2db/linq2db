@@ -1453,11 +1453,11 @@ namespace LinqToDB.ServiceModel
 						}
 
 					case QueryElementType.Comment:
-					{
-						var elem = (SqlComment)e;
-						AppendStringList(elem.Lines);
-						break;
-					};
+						{
+							var elem = (SqlComment)e;
+							AppendStringList(elem.Lines);
+							break;
+						}
 
 					default:
 						throw new InvalidOperationException($"Serialize not implemented for element {e.ElementType}");
@@ -1477,7 +1477,6 @@ namespace LinqToDB.ServiceModel
 						{
 							Append(ext.Configuration);
 							Append((int)ext.Scope);
-							Append(ext.ID);
 							Append(ext.BuilderType);
 							Append(ext.Arguments.Count);
 
@@ -2393,7 +2392,6 @@ namespace LinqToDB.ServiceModel
 
 							ext.Configuration = ReadString();
 							ext.Scope         = (Sql.QueryExtensionScope)ReadInt();
-							ext.ID            = ReadInt();
 							ext.BuilderType   = ReadType();
 
 							var cnt = ReadInt();
