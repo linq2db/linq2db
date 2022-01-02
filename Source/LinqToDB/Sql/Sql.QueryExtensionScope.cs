@@ -8,10 +8,11 @@ namespace LinqToDB
 		{
 			None,
 			TableHint,
+			TablesInScopeHint,
 			IndexHint,
 			JoinHint,
+			SubQueryHint,
 			QueryHint,
-			TablesInScopeHint
 		}
 	}
 }

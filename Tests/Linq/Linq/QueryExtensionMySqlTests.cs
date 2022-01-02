@@ -80,7 +80,7 @@ namespace Tests.Linq
 					.AsSubQuery("qq")
 				select p
 			)
-			.SubQueryHint(hint, "@qq", "FIRSTMATCH", "LOOSESCAN");
+			.QueryBlockHint(hint, "@qq", "FIRSTMATCH", "LOOSESCAN");
 
 			_ = q.ToList();
 

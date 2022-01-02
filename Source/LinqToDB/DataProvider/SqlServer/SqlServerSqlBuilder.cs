@@ -518,7 +518,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override void BuildTableExtensions(SqlTable table, string alias)
 		{
 			if (table.SqlQueryExtensions is not null)
-				BuildTableExtensions(StringBuilder, table, alias, " WITH (", ", ", ")", null);
+				BuildTableExtensions(StringBuilder, table, alias, " WITH (", ", ", ")");
 		}
 
 		protected override bool BuildJoinType(SqlJoinedTable join, SqlSearchCondition condition)

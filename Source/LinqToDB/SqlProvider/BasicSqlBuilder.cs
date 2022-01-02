@@ -1628,8 +1628,7 @@ namespace LinqToDB.SqlProvider
 		protected void BuildTableExtensions(
 			StringBuilder sb,
 			SqlTable table, string alias,
-			string? prefix, string delimiter, string? suffix,
-			Func<SqlQueryExtension,bool>? customExtensionBuilder)
+			string? prefix, string delimiter, string? suffix)
 		{
 			BuildTableExtensions(
 				sb,
@@ -1639,16 +1638,14 @@ namespace LinqToDB.SqlProvider
 					ext.Scope is
 						Sql.QueryExtensionScope.TableHint or
 						Sql.QueryExtensionScope.IndexHint or
-						Sql.QueryExtensionScope.TablesInScopeHint,
-				customExtensionBuilder);
+						Sql.QueryExtensionScope.TablesInScopeHint);
 		}
 
 		protected void BuildTableExtensions(
 			StringBuilder sb,
 			SqlTable table, string alias,
 			string? prefix, string delimiter, string? suffix,
-			Func<SqlQueryExtension,bool> tableExtensionFilter,
-			Func<SqlQueryExtension,bool>? customExtensionBuilder)
+			Func<SqlQueryExtension,bool> tableExtensionFilter)
 		{
 			if (table.SqlQueryExtensions?.Any(tableExtensionFilter) == true)
 			{
@@ -1683,12 +1680,6 @@ namespace LinqToDB.SqlProvider
 								throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement either '{typeof(ISqlQueryExtensionBuilder).FullName}' or '{typeof(ISqlTableExtensionBuilder).FullName}' interface.");
 						}
 					}
-					else
-					{
-						if (customExtensionBuilder == null || customExtensionBuilder(ext) == false)
-							throw new LinqToDBException($"Cannot convert {ext.Arguments[".MethodName"]} extension to SQL.");
-						break;
-					}
 
 					sb.Append(delimiter);
 				}
@@ -1703,10 +1694,9 @@ namespace LinqToDB.SqlProvider
 		protected void BuildQueryExtensions(
 			StringBuilder sb,
 			List<SqlQueryExtension> sqlQueryExtensions,
-			string? prefix, string delimiter, string? suffix,
-			Func<SqlQueryExtension,bool>? customExtensionBuilder = null)
+			string? prefix, string delimiter, string? suffix)
 		{
-			if (sqlQueryExtensions.Any(ext => ext.Scope is Sql.QueryExtensionScope.QueryHint))
+			if (sqlQueryExtensions.Any(ext => ext.Scope is Sql.QueryExtensionScope.QueryHint or Sql.QueryExtensionScope.SubQueryHint))
 			{
 				if (prefix != null)
 					sb.Append(prefix);
@@ -1735,12 +1725,6 @@ namespace LinqToDB.SqlProvider
 							default:
 								throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement either '{typeof(ISqlQueryExtensionBuilder).FullName}' or '{typeof(ISqlTableExtensionBuilder).FullName}' interface.");
 						}
-					}
-					else
-					{
-						if (customExtensionBuilder == null || customExtensionBuilder(ext) == false)
-							throw new LinqToDBException($"Cannot convert {ext.Arguments[".MethodName"]} extension to SQL.");
-						break;
 					}
 
 					sb.Append(delimiter);

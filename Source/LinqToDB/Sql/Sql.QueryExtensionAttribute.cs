@@ -96,6 +96,11 @@ namespace LinqToDB
 				extensions.Add(GetExtension(parameters));
 			}
 
+			public virtual void ExtendSubQuery(List<SqlQueryExtension> extensions, List<SqlQueryExtensionData> parameters)
+			{
+				extensions.Add(GetExtension(parameters));
+			}
+
 			public virtual void ExtendQuery(List<SqlQueryExtension> extensions, List<SqlQueryExtensionData> parameters)
 			{
 				extensions.Add(GetExtension(parameters));

@@ -82,7 +82,7 @@ namespace LinqToDB.DataProvider.MySql
 		[LinqTunnel, Pure]
 		[CLSCompliant(false)]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.QueryHint, typeof(HintWithParametersExtensionBuilder), " ", ", ")]
-		public static IQueryable<TSource> SubQueryHint<TSource, TParam>(
+		public static IQueryable<TSource> QueryBlockHint<TSource, TParam>(
 			this IQueryable<TSource> source,
 			[SqlQueryDependent] string hint,
 			[SqlQueryDependent] params TParam[] hintParameters)
@@ -93,7 +93,7 @@ namespace LinqToDB.DataProvider.MySql
 			return currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(SubQueryHint, source, hint, hintParameters),
+					MethodHelper.GetMethodInfo(QueryBlockHint, source, hint, hintParameters),
 					currentSource.Expression,
 					Expression.Constant(hint),
 					Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p)))));

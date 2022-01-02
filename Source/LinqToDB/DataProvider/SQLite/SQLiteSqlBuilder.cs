@@ -230,7 +230,7 @@ namespace LinqToDB.DataProvider.SQLite
 		protected override void BuildTableExtensions(SqlTable table, string alias)
 		{
 			if (table.SqlQueryExtensions is not null)
-				BuildTableExtensions(StringBuilder, table, alias, " ", " ", null, null);
+				BuildTableExtensions(StringBuilder, table, alias, " ", " ", null);
 		}
 	}
 }

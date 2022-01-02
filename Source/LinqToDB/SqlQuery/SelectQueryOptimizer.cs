@@ -873,6 +873,12 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
+		static void ApplySubQueryExtensions(SelectQuery mainQuery, SelectQuery subQuery)
+		{
+			if (subQuery.SqlQueryExtensions is not null)
+				(mainQuery.SqlQueryExtensions ??= new()).AddRange(subQuery.SqlQueryExtensions);
+		}
+
 		SqlTableSource OptimizeSubQuery(
 			SelectQuery parentQuery,
 			SqlTableSource source,
@@ -898,7 +904,10 @@ namespace LinqToDB.SqlQuery
 				if (table != jt.Table)
 				{
 					if (jt.Table.Source is SelectQuery sql)
-						ApplySubsequentOrder(_selectQuery, sql);
+					{
+						ApplySubQueryExtensions(_selectQuery, sql);
+						ApplySubsequentOrder   (_selectQuery, sql);
+					}
 
 					jt.Table = table;
 				}
@@ -1103,6 +1112,7 @@ namespace LinqToDB.SqlQuery
 			if (!isColumnsOK)
 			{
 				isColumnsOK = true;
+
 				foreach (var column in query.Select.Columns)
 				{
 					if (CheckColumn(parentQuery, column, column.Expression, query, optimizeValues, optimizeColumns))
@@ -1166,6 +1176,7 @@ namespace LinqToDB.SqlQuery
 			map.Add(query.All, query.From.Tables[0].All);
 
 			List<ISqlExpression[]>? uniqueKeys = null;
+
 			if ((parentJoinedTable == null || parentJoinedTable.JoinType == JoinType.Inner) && query.HasUniqueKeys)
 				uniqueKeys = query.UniqueKeys;
 
@@ -1221,9 +1232,7 @@ namespace LinqToDB.SqlQuery
 			});
 
 			query.From.Tables[0].Joins.AddRange(childSource.Joins);
-
-			if (query.From.Tables[0].Alias == null)
-				query.From.Tables[0].Alias = childSource.Alias;
+			query.From.Tables[0].Alias ??= childSource.Alias;
 
 			if (!query.Where. IsEmpty) ConcatSearchCondition(_selectQuery.Where,  query.Where);
 			if (!query.Having.IsEmpty) ConcatSearchCondition(_selectQuery.Having, query.Having);
@@ -1241,6 +1250,9 @@ namespace LinqToDB.SqlQuery
 
 			if (uniqueKeys != null)
 				result.UniqueKeys.AddRange(uniqueKeys);
+
+//			if (query.SqlQueryExtensions != null)
+//				result.
 
 			return result;
 		}
@@ -1387,8 +1399,11 @@ namespace LinqToDB.SqlQuery
 
 					if (table != joinTable.Table)
 					{
-						if (joinTable.Table.Source is SelectQuery q && q.OrderBy.Items.Count > 0)
-							ApplySubsequentOrder(_selectQuery, q);
+						if (joinTable.Table.Source is SelectQuery q)
+						{
+							ApplySubQueryExtensions(_selectQuery, q);
+							ApplySubsequentOrder   (_selectQuery, q);
+						}
 
 						joinTable.Table = table;
 
@@ -1444,9 +1459,11 @@ namespace LinqToDB.SqlQuery
 
 				if (table != _selectQuery.From.Tables[i])
 				{
-					if (!_selectQuery.Select.Columns.All(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
+					if (_selectQuery.From.Tables[i].Source is SelectQuery sql)
 					{
-						if (_selectQuery.From.Tables[i].Source is SelectQuery sql)
+						ApplySubQueryExtensions(_selectQuery, sql);
+
+						if (!_selectQuery.Select.Columns.All(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
 							ApplySubsequentOrder(_selectQuery, sql);
 					}
 

@@ -125,6 +125,11 @@ namespace LinqToDB.Linq.Builder
 						attr.ExtendJoin(joinExtensions ??= new(), list);
 						break;
 					}
+					case Sql.QueryExtensionScope.SubQueryHint:
+					{
+						attr.ExtendSubQuery(sequence.SelectQuery.SqlQueryExtensions ??= new(), list);
+						break;
+					}
 					case Sql.QueryExtensionScope.QueryHint:
 					{
 						attr.ExtendQuery(builder.SqlQueryExtensions ??= new(), list);

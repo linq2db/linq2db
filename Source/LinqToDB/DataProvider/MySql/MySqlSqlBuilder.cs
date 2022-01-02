@@ -748,9 +748,9 @@ namespace LinqToDB.DataProvider.MySql
 					BuildTableExtensions(HintBuilder, table, alias, null, " ", null, ext =>
 						ext.Scope is
 							Sql.QueryExtensionScope.TableHint or
-							Sql.QueryExtensionScope.TablesInScopeHint, null);
+							Sql.QueryExtensionScope.TablesInScopeHint);
 
-				BuildTableExtensions(StringBuilder, table, alias, " ", ", ", null, ext => ext.Scope is Sql.QueryExtensionScope.IndexHint, null);
+				BuildTableExtensions(StringBuilder, table, alias, " ", ", ", null, ext => ext.Scope is Sql.QueryExtensionScope.IndexHint);
 			}
 		}
 	}

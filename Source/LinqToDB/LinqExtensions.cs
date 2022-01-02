@@ -472,6 +472,91 @@ namespace LinqToDB
 
 		#endregion
 
+		#region SubQueryHint
+
+		/// <summary>
+		/// Adds join hint to a generated query.
+		/// <code>
+		/// // will produce following SQL code in generated query: INNER LOOP JOIN
+		/// var tableWithHint = db.Table.JoinHint("LOOP");
+		/// </code>
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="hint">SQL text, added to join in generated query.</param>
+		/// <returns>Query source with join hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(null, Sql.QueryExtensionScope.SubQueryHint, typeof(HintExtensionBuilder))]
+		public static IQueryable<TSource> SubQueryHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string hint)
+			where TSource : notnull
+		{
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(SubQueryHint, source, hint),
+					currentSource.Expression, Expression.Constant(hint)));
+		}
+
+		/// <summary>
+		/// Adds a query hint to the generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <typeparam name="TParam">Hint parameter type</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="hint">SQL text, added to join in generated query.</param>
+		/// <param name="hintParameter">Hint parameter.</param>
+		/// <returns>Query source with join hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(null, Sql.QueryExtensionScope.SubQueryHint, typeof(HintWithParameterExtensionBuilder))]
+		public static IQueryable<TSource> SubQueryHint<TSource,TParam>(
+			this IQueryable<TSource> source,
+			[SqlQueryDependent] string hint,
+			[SqlQueryDependent] TParam hintParameter)
+			where TSource : notnull
+		{
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(SubQueryHint, source, hint, hintParameter),
+					currentSource.Expression,
+					Expression.Constant(hint),
+					Expression.Constant(hintParameter)));
+		}
+
+		/// <summary>
+		/// Adds a query hint to the generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <typeparam name="TParam">Table hint parameter type.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="hint">SQL text, added to join in generated query.</param>
+		/// <param name="hintParameters">Table hint parameters.</param>
+		/// <returns>Table-like query source with table hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(null, Sql.QueryExtensionScope.SubQueryHint, typeof(HintWithParametersExtensionBuilder))]
+		public static IQueryable<TSource> SubQueryHint<TSource, TParam>(
+			this IQueryable<TSource> source,
+			[SqlQueryDependent] string hint,
+			[SqlQueryDependent] params TParam[] hintParameters)
+			where TSource : notnull
+		{
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(SubQueryHint, source, hint, hintParameters),
+					currentSource.Expression,
+					Expression.Constant(hint),
+					Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p)))));
+		}
+
+		#endregion
+
 		#region QueryHint
 
 		/// <summary>
