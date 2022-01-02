@@ -453,14 +453,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public Dictionary<string,string>? TableIDs { get; set; }
 
-//		protected override bool? BuildPhysicalTable(ISqlTableSource table, string? alias, string? defaultDatabaseName = null)
-//		{
-//			if (alias != null && table is SqlTable { ID: {} id })
-//				(TableIDs ??= new())[id] = alias;
-//
-//			return base.BuildPhysicalTable(table, alias, defaultDatabaseName);
-//		}
-//
+		protected override bool? BuildPhysicalTable(ISqlTableSource table, string? alias, string? defaultDatabaseName = null)
+		{
+			if (alias != null && table is SqlTable { ID: {} id })
+				(TableIDs ??= new())[id] = alias;
+
+			return base.BuildPhysicalTable(table, alias, defaultDatabaseName);
+		}
+
 //		protected override void BuildQueryExtensions(SqlStatement statement)
 //		{
 //			if (statement.SelectQuery?.SqlQueryExtensions is not null)
