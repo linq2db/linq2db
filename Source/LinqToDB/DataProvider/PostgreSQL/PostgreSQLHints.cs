@@ -12,6 +12,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using SqlProvider;
 	using SqlQuery;
 
+	// https://www.postgresql.org/docs/current/sql-select.html
+	//
 	public static class PostgreSQLHints
 	{
 		public const string ForUpdate      = "FOR UPDATE";

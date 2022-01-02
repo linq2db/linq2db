@@ -724,7 +724,7 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-		
+
 		[Test]
 		public void UpdateComplex2([DataSources] string context)
 		{

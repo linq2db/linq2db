@@ -453,36 +453,35 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public Dictionary<string,string>? TableIDs { get; set; }
 
-
-		protected override bool? BuildPhysicalTable(ISqlTableSource table, string? alias, string? defaultDatabaseName = null)
-		{
-			if (alias != null && table is SqlTable { ID: {} id })
-				(TableIDs ??= new())[id] = alias;
-
-			return base.BuildPhysicalTable(table, alias, defaultDatabaseName);
-		}
-
-		protected override void BuildQueryExtensions(SqlStatement statement)
-		{
-			if (statement.SelectQuery?.SqlQueryExtensions is not null)
-			{
-				var len = StringBuilder.Length;
-
-				AppendIndent();
-
-				var prefix = Environment.NewLine;
-
-				if (StringBuilder.Length > len)
-				{
-					var buffer = new char[StringBuilder.Length - len];
-
-					StringBuilder.CopyTo(len, buffer, 0, StringBuilder.Length - len);
-
-					prefix += new string(buffer);
-				}
-
-				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine);
-			}
-		}
+//		protected override bool? BuildPhysicalTable(ISqlTableSource table, string? alias, string? defaultDatabaseName = null)
+//		{
+//			if (alias != null && table is SqlTable { ID: {} id })
+//				(TableIDs ??= new())[id] = alias;
+//
+//			return base.BuildPhysicalTable(table, alias, defaultDatabaseName);
+//		}
+//
+//		protected override void BuildQueryExtensions(SqlStatement statement)
+//		{
+//			if (statement.SelectQuery?.SqlQueryExtensions is not null)
+//			{
+//				var len = StringBuilder.Length;
+//
+//				AppendIndent();
+//
+//				var prefix = Environment.NewLine;
+//
+//				if (StringBuilder.Length > len)
+//				{
+//					var buffer = new char[StringBuilder.Length - len];
+//
+//					StringBuilder.CopyTo(len, buffer, 0, StringBuilder.Length - len);
+//
+//					prefix += new string(buffer);
+//				}
+//
+//				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine);
+//			}
+//		}
 	}
 }
