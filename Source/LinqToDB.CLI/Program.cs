@@ -1,6 +1,8 @@
-﻿using System.Data.Common;
+﻿using System;
+using System.Data.Common;
 using System.IO;
 using System.Reflection;
+using LinqToDB.CLI;
 using LinqToDB.CodeGen.Configuration;
 using LinqToDB.CodeModel;
 using LinqToDB.Data;
@@ -15,77 +17,24 @@ namespace LinqToDB.Tools
 	{
 		private static int Main(string[] args)
 		{
-			Directory.CreateDirectory(@"..\..\..\Generated");
+			//Directory.CreateDirectory(@"..\..\..\Generated");
+			//BuildModel("sql.2017");
+			//BuildModel("pg10");
+			//NameNormalizationTest.NormalizationTest();
+			////var sqlce = Assembly.LoadFrom(@"c:\Program Files\Microsoft SQL Server Compact Edition\v4.0\Desktop\System.Data.SqlServerCe.dll");
+			//RegisterSapHanaFactory();
 
-			BuildModel("sql.2017");
-			BuildModel("pg10");
-			
-			//BuildModel("mysql55");
-			//BuildModel("access.oledb");
-			//BuildModel("db2");
-
-			NameNormalizationTest.NormalizationTest();
-			
-			if (args.Length == 0) return 0;
-
-
-			BuildModel("sqlite.classic");
-			BuildModel("sqlite.ms");
-			BuildModel("sqlite.nw.classic");
-			BuildModel("sqlite.nw.ms");
-			//var sqlce = Assembly.LoadFrom(@"c:\Program Files\Microsoft SQL Server Compact Edition\v4.0\Desktop\System.Data.SqlServerCe.dll");
-			//BuildModel("sqlce");
-			BuildModel("firebird25");
-			BuildModel("firebird3");
-			BuildModel("firebird4");
-			BuildModel("sql.2005");
-			BuildModel("sql.2008");
-			BuildModel("sql.2012");
-			BuildModel("sql.2014");
-			BuildModel("sql.2017");
-			BuildModel("sql.contained");
-			BuildModel("sql.2019");
-			BuildModel("sql.2019.ms");
-			BuildModel("sql.nw");
-			BuildModel("sql.azure");
-			BuildModel("mysql");
-			BuildModel("mysql55");
-			BuildModel("mysqlconnector");
-			BuildModel("mariadb");
-			BuildModel("pg92");
-			BuildModel("pg93");
-			BuildModel("pg95");
-			BuildModel("pg10");
-			BuildModel("pg11");
-			BuildModel("access.oledb");
-			BuildModel("access.odbc");
-			BuildModel("sybase.managed");
-			BuildModel("db2");
-			BuildModel("db2.ifx");
-			BuildModel("ora11.managed");
-			BuildModel("sap.odbc");
-
-			RegisterSapHanaFactory();
-			BuildModel("sap.native");
-
-			//BuildModel("sqlite");
-			//BuildModel("sql2017");
-			//BuildModel("pg11");
-
-			return 0;
+			return new LinqToDBCLIController().Execute(args);
 		}
 
-		private static void ReadSettings()
-		{
-		}
-
+		// TODO: move path to options. same for sqlce provider
 		private static void RegisterSapHanaFactory()
 		{
 			try
 			{
 				// woo-hoo, hardcoded pathes! default install location on x64 system
 				var srcPath = @"c:\Program Files (x86)\sap\hdbclient\dotnetcore\v2.1\Sap.Data.Hana.Core.v2.1.dll";
-				var targetPath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory!, Path.GetFileName(srcPath));
+				var targetPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory!, Path.GetFileName(srcPath));
 				if (File.Exists(srcPath))
 				{
 					// original path contains spaces which breaks broken native dlls discovery logic in SAP provider
