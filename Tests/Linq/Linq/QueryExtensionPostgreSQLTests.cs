@@ -12,7 +12,7 @@ namespace Tests.Linq
 	public class QueryExtensionPostgreSQLTests : TestBase
 	{
 		[Test]
-		public void HintTest([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context,
+		public void HintTest([IncludeDataSources(true, TestProvName.AllPostgreSQL95Plus)] string context,
 			[Values(
 				PostgreSQLHints.ForUpdate,
 				PostgreSQLHints.ForNoKeyUpdate,
@@ -33,7 +33,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQueryHintTest([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context,
+		public void SubQueryHintTest([IncludeDataSources(true, TestProvName.AllPostgreSQL95Plus)] string context,
 			[Values(
 				PostgreSQLHints.ForUpdate,
 				PostgreSQLHints.ForNoKeyUpdate,
@@ -73,7 +73,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQueryHintTest2([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void SubQueryHintTest2([IncludeDataSources(true, TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -103,7 +103,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQueryHintTest3([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void SubQueryHintTest3([IncludeDataSources(true, TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -149,7 +149,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TableHintTest2([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void TableHintTest2([IncludeDataSources(true, TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
