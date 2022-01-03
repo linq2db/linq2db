@@ -461,27 +461,27 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return base.BuildPhysicalTable(table, alias, defaultDatabaseName);
 		}
 
-//		protected override void BuildQueryExtensions(SqlStatement statement)
-//		{
-//			if (statement.SelectQuery?.SqlQueryExtensions is not null)
-//			{
-//				var len = StringBuilder.Length;
-//
-//				AppendIndent();
-//
-//				var prefix = Environment.NewLine;
-//
-//				if (StringBuilder.Length > len)
-//				{
-//					var buffer = new char[StringBuilder.Length - len];
-//
-//					StringBuilder.CopyTo(len, buffer, 0, StringBuilder.Length - len);
-//
-//					prefix += new string(buffer);
-//				}
-//
-//				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine);
-//			}
-//		}
+		protected override void BuildQueryExtensions(SqlStatement statement)
+		{
+			if (statement.SelectQuery?.SqlQueryExtensions is not null)
+			{
+				var len = StringBuilder.Length;
+
+				AppendIndent();
+
+				var prefix = Environment.NewLine;
+
+				if (StringBuilder.Length > len)
+				{
+					var buffer = new char[StringBuilder.Length - len];
+
+					StringBuilder.CopyTo(len, buffer, 0, StringBuilder.Length - len);
+
+					prefix += new string(buffer);
+				}
+
+				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine);
+			}
+		}
 	}
 }

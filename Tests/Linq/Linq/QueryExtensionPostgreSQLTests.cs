@@ -8,7 +8,6 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	/*
 	[TestFixture]
 	public class QueryExtensionPostgreSQLTests : TestBase
 	{
@@ -167,5 +166,4 @@ namespace Tests.Linq
 			Assert.That(LastQuery, Contains.Substring("FOR UPDATE OF p, c_1 SKIP LOCKED"));
 		}
 	}
-	*/
 }

@@ -44,6 +44,7 @@ namespace LinqToDB.Linq
 		static MethodInfo? _schemaNameMethodInfo;
 		static MethodInfo? _tableNameMethodInfo;
 		static MethodInfo? _tableOptionsMethodInfo;
+		static MethodInfo? _tableIDMethodInfo;
 		// ReSharper restore StaticMemberInGenericType
 
 		private string? _serverName;
@@ -146,7 +147,7 @@ namespace LinqToDB.Linq
 				{
 					Expression = Expression.Call(
 						null,
-						_tableNameMethodInfo ??= Methods.LinqToDB.Table.TableID.MakeGenericMethod(typeof(T)),
+						_tableIDMethodInfo ??= Methods.LinqToDB.Table.TableID.MakeGenericMethod(typeof(T)),
 						Expression, Expression.Constant(value, typeof(string)));
 
 					_tableID = value;
