@@ -1430,7 +1430,7 @@ namespace Tests.xUpdate
 
 			using (var db = GetDataContext(context))
 			{
-				db.DropTable<Patient>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+				db.DropTable<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
 			}
 
 			using (var db = GetDataContext(context))
@@ -1461,6 +1461,9 @@ namespace Tests.xUpdate
 				var updatedPerson = table.Single();
 				Assert.AreEqual("None", updatedPerson.MiddleName);
 
+				if (db is DataConnection { Connection: FirebirdSql.Data.FirebirdClient.FbConnection })
+					db.Close();
+
 				table.Drop();
 			}
 		}
@@ -1473,7 +1476,7 @@ namespace Tests.xUpdate
 
 			using (var db = GetDataContext(context))
 			{
-				await db.DropTableAsync<Patient>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+				await db.DropTableAsync<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
 			}
 
 			using (var db = GetDataContext(context))
@@ -1503,6 +1506,9 @@ namespace Tests.xUpdate
 
 				var updatedPerson = await table.SingleAsync();
 				Assert.AreEqual("None", updatedPerson.MiddleName);
+
+				if (db is DataConnection { Connection: FirebirdSql.Data.FirebirdClient.FbConnection })
+					await db.CloseAsync();
 
 				await table.DropAsync();
 			}
