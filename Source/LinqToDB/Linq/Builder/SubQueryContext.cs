@@ -119,7 +119,7 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			if (flags.HasFlag(ProjectFlags.Root))
+			if (flags.HasFlag(ProjectFlags.Root) & !flags.HasFlag(ProjectFlags.AggregtionRoot))
 			{
 				return path;
 			}

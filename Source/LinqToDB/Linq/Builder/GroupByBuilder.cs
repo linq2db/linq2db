@@ -150,6 +150,8 @@ namespace LinqToDB.Linq.Builder
 
 			// Will be used for eager loading generation
 			element.GroupByContext = groupBy;
+			// Will be used for completing GroupBy part
+			key.GroupByContext = groupBy;
 
 			Debug.WriteLine("BuildMethodCall GroupBy:\n" + groupBy.SelectQuery);
 
@@ -160,30 +162,35 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (builder.TryConvertToSqlExpr(sequence, path, ProjectFlags.SQL) is SqlPlaceholderExpression groupKey)
 			{
-				if (!QueryHelper.IsConstantFast(groupKey.Sql) && !currentPlaceholders.Contains(groupKey))
-				{
-					currentPlaceholders.Add(groupKey);
-					sequence.SelectQuery.GroupBy.Expr(groupKey.Sql);
-				}
+				AppendGroupBy(builder, currentPlaceholders, sequence.SelectQuery, groupKey);
 			}
 			else
 			{
-				var groupSqlExpr = builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), sequence, path, ProjectFlags.SQL);
+				// project as SQL to cache grouping elements
+				_ = builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), sequence, path, ProjectFlags.SQL);
 
-				var placeholders = builder.CollectPKPlaceholders(groupSqlExpr);
+				// only keys
+				var groupSqlExpr = builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), sequence, path, ProjectFlags.SQL | ProjectFlags.Keys);
 
-				var allowed = placeholders.Where(p => !QueryHelper.IsConstantFast(p.Sql));
+				AppendGroupBy(builder, currentPlaceholders, sequence.SelectQuery, groupSqlExpr);
+			}
+		}
 
-				foreach (var p in allowed)
+		static void AppendGroupBy(ExpressionBuilder builder, List<SqlPlaceholderExpression> currentPlaceholders, SelectQuery query, Expression result)
+		{
+			var placeholders = builder.CollectDistinctPlaceholders(result);
+			var allowed      = placeholders.Where(p => !QueryHelper.IsConstantFast(p.Sql));
+
+			foreach (var p in allowed)
+			{
+				if (!currentPlaceholders.Contains(p))
 				{
-					if (!currentPlaceholders.Contains(p))
-					{
-						currentPlaceholders.Add(p);
-						sequence.SelectQuery.GroupBy.Expr(p.Sql);
-					}
+					currentPlaceholders.Add(p);
+					query.GroupBy.Expr(p.Sql);
 				}
 			}
 		}
+
 
 		protected override SequenceConvertInfo? Convert(
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
@@ -229,6 +236,8 @@ namespace LinqToDB.Linq.Builder
 			{
 			}
 
+			public GroupByContext GroupByContext { get; set; } = null!;
+
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if (flags.HasFlag(ProjectFlags.Root) && SequenceHelper.IsSameContext(path, this))
@@ -239,6 +248,12 @@ namespace LinqToDB.Linq.Builder
 					newFlags = (newFlags & ~ProjectFlags.Expression) | ProjectFlags.SQL;
 
 				var result = base.MakeExpression(path, newFlags);
+
+				result = Builder.MakeExpression(result, newFlags);
+
+				// appending missing keys
+				AppendGroupBy(Builder, GroupByContext.CurrentPlaceholders, GroupByContext.SelectQuery, result);
+
 				return result;
 			}
 		}
@@ -264,7 +279,7 @@ namespace LinqToDB.Linq.Builder
 				_sequenceExpr        = sequenceExpr;
 				_key                 = key;
 				_keyRef              = keyRef;
-				_currentPlaceholders = currentPlaceholders;
+				CurrentPlaceholders = currentPlaceholders;
 				Element              = element;
 				_groupingType        = groupingType;
 
@@ -273,12 +288,12 @@ namespace LinqToDB.Linq.Builder
 				key.Parent = this;
 			}
 
-			readonly         Expression                     _sequenceExpr;
-			readonly         KeyContext                     _key;
-			readonly         ContextRefExpression           _keyRef;
-			private readonly List<SqlPlaceholderExpression> _currentPlaceholders;
-			readonly         Type                           _groupingType;
-			readonly         bool                           _isGroupingGuardDisabled;
+			readonly Expression                     _sequenceExpr;
+			readonly KeyContext                     _key;
+			readonly ContextRefExpression           _keyRef;
+			public   List<SqlPlaceholderExpression> CurrentPlaceholders { get; }
+			readonly Type                           _groupingType;
+			readonly bool                           _isGroupingGuardDisabled;
 
 			public SelectContext   Element { get; }
 
@@ -290,7 +305,7 @@ namespace LinqToDB.Linq.Builder
 					return path;
 				}
 
-				if (path is MemberExpression me && me.Expression is ContextRefExpression contextRef && me.Member.Name == "Key")
+				if (path is MemberExpression me && me.Expression is ContextRefExpression && me.Member.Name == "Key")
 				{
 					var keyPath = new ContextRefExpression(me.Type, _key);
 
@@ -862,7 +877,7 @@ namespace LinqToDB.Linq.Builder
 							ExpressionHelper.PropertyOrField(buildExpression, "Key"),
 							_key.Lambda.Body);
 
-						var ctx = Builder.BuildSequence(new BuildInfo(buildInfo, expr));
+						var ctx = Builder.BuildSequence(new BuildInfo(buildInfo, expr) { IsAggregation = false });
 
 						//ctx.SelectQuery.Properties.Add(Tuple.Create("from_group_by", SelectQuery));
 

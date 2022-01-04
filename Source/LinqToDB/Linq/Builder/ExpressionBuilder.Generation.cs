@@ -165,7 +165,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		List<AssignmentInfo> BuildMembers(IBuildContext context,
-			EntityDescriptor entityDescriptor, ProjectFlags projectFlags)
+			EntityDescriptor entityDescriptor, ProjectFlags flags)
 		{
 			var members       = new List<AssignmentInfo>();
 			var objectType    = entityDescriptor.ObjectType;
@@ -173,6 +173,9 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var column in entityDescriptor.Columns)
 			{
+				if (flags.HasFlag(ProjectFlags.Keys) && !column.IsPrimaryKey)
+					continue;
+
 				Expression me;
 				if (column.MemberName.Contains('.'))
 				{
@@ -188,7 +191,7 @@ namespace LinqToDB.Linq.Builder
 					me = Expression.MakeMemberAccess(refExpression, mi);
 				}
 
-				var sqlExpression = context.Builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), context, me, projectFlags);
+				var sqlExpression = context.Builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), context, me, flags);
 				members.Add(new AssignmentInfo(column, sqlExpression));
 			}
 

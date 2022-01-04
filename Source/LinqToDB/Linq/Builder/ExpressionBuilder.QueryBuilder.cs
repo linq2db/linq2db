@@ -531,7 +531,7 @@ namespace LinqToDB.Linq.Builder
 
 						case ExpressionType.Coalesce:
 						{
-							if (context.flags.HasFlag(ProjectFlags.Expression))
+							//if (context.flags.HasFlag(ProjectFlags.Expression))
 							{
 								var sql = context.builder.TryConvertToSqlExpr(context.context, expr, context.flags);
 								if (sql != null)

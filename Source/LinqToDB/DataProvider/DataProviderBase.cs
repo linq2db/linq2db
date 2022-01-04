@@ -52,6 +52,7 @@ namespace LinqToDB.DataProvider
 				IsDistinctSetOperationsSupported     = true,
 				IsUpdateFromSupported                = true,
 				AcceptsOuterExpressionInAggregate    = true,
+				IsWindowFunctionsSupported           = true,
 			};
 
 			SetField<IDataReader,bool>    ((r,i) => r.GetBoolean (i));

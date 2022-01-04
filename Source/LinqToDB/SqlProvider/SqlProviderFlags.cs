@@ -115,6 +115,11 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		public bool IsUpdateFromSupported                 { get; set; }
 
+		/// <summary>
+		/// Indicates that provider supports window functions
+		/// </summary>
+		public bool IsWindowFunctionsSupported { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null;

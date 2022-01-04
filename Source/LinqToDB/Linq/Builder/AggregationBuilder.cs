@@ -85,7 +85,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (sequence == null)
 			{
-				sequence = builder.BuildSequence(new BuildInfo(buildInfo, seqenceArgument) { CreateSubQuery = true, IsAggregation = true });
+				sequence = builder.BuildSequence(new BuildInfo(buildInfo, seqenceArgument, new SelectQuery()) { CreateSubQuery = true, IsAggregation = true });
 			}
 
 			var prevSequence = sequence;
@@ -105,9 +105,18 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var parentContext = buildInfo.Parent;
-			if (parentContext is SubQueryContext subQuery)
+
+			if (!inGrouping)
 			{
-				parentContext = subQuery.SubQuery;
+				//TODO: workaround. Looking for query for OuterApply
+				if (parentContext is SubQueryContext subQuery)
+				{
+					parentContext = subQuery.SubQuery;
+				}
+				else if (parentContext?.Parent is SubQueryContext subQuery2)
+				{
+					parentContext = subQuery2;
+				}
 			}
 
 			SqlPlaceholderExpression functionPlaceholder;
@@ -117,15 +126,15 @@ namespace LinqToDB.Linq.Builder
 			{
 				var returnType = methodCall.Method.ReturnType;
 
-				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence, SqlFunction.CreateCount(returnType, sequence.SelectQuery), buildInfo.Expression);
-				context = new AggregationContext(parentContext, sequence, methodCall);
+				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(parentContext, SqlFunction.CreateCount(returnType, sequence.SelectQuery), buildInfo.Expression);
+				context = new AggregationContext(buildInfo.Parent, sequence, methodCall);
 			}
 			else
 			{
 				var refExpression = new ContextRefExpression(seqenceArgument.Type, sequence);
 
-				var sqlPlaceholder = builder.ConvertToSqlPlaceholder(sequence, refExpression, ProjectFlags.SQL | ProjectFlags.Aggregation);
-				context        = new AggregationContext(parentContext, sequence, methodCall);
+				var sqlPlaceholder = builder.ConvertToSqlPlaceholder(sequence, refExpression, ProjectFlags.SQL);
+				context = new AggregationContext(buildInfo.Parent,  sequence, methodCall);
 
 				var sql = sqlPlaceholder.Sql;
 
@@ -141,7 +150,17 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (true)
 					{
-						CreateWeakOuterJoin(buildInfo.Parent!, sequence.SelectQuery);
+						/*//TODO: workaround. Looking for query for OuterApply
+						if (parentContext is SubQueryContext subQuery)
+						{
+							parentContext = subQuery.SubQuery;
+						}
+						else if (parentContext?.Parent is SubQueryContext subQuery2)
+						{
+							parentContext = subQuery2;
+						}*/
+
+						context.OuterJoinParentQuery = parentContext!.SelectQuery;
 					}
 					else
 					{
@@ -172,14 +191,6 @@ namespace LinqToDB.Linq.Builder
 			return context;
 		}
 
-		void CreateWeakOuterJoin(IBuildContext parent, SelectQuery selectQuery)
-		{
-			var join = selectQuery.OuterApply();
-			join.JoinedTable.IsWeak = true;
-
-			parent.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
-		}
-
 		protected override SequenceConvertInfo? Convert(
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
@@ -207,6 +218,7 @@ namespace LinqToDB.Linq.Builder
 			private  int?       _parentIndex;
 
 			public SqlPlaceholderExpression Placeholder = null!;
+			public SelectQuery?             OuterJoinParentQuery { get; set; }
 
 			static int CheckNullValue(bool isNull, object context)
 			{
@@ -233,8 +245,32 @@ namespace LinqToDB.Linq.Builder
 				QueryRunner.SetRunQuery(query, mapper);*/
 			}
 
+
+			private bool _joinCreated;
+
+			void CreateWeakOuterJoin(SelectQuery parentQuery, SelectQuery selectQuery)
+			{
+				if (!_joinCreated)
+				{
+					_joinCreated = true;
+
+					var join = selectQuery.OuterApply();
+					join.JoinedTable.IsWeak = true;
+
+					parentQuery.From.Tables[0].Joins.Add(join.JoinedTable);
+				}
+			}
+
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
+				if (OuterJoinParentQuery != null)
+				{
+					if (!flags.HasFlag(ProjectFlags.Test))
+					{
+						CreateWeakOuterJoin(OuterJoinParentQuery, SelectQuery);
+					}
+				}
+
 				return Placeholder;
 			}
 

@@ -391,28 +391,22 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (IsSubQuery)
 					{
-						CreateJoin();
-
-						/*if (!IsAssociation && projected is SqlPlaceholderExpression placeholder)
+						// Bad thing here. We expect that SelectQueryOptimizer will transfer OUTER APPLY to ROW_NUMBER query. We have to predict it here
+						if (!Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported && !Builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)
 						{
-							// we can make subquery
-							if (_subquerySql == null)
+							var sqlProjected = Builder.MakeExpression(projected, ProjectFlags.Test);
+
+							var placeholders = Builder.CollectDistinctPlaceholders(sqlProjected);
+
+							if (placeholders.Count > 1)
 							{
-								var column = (SqlPlaceholderExpression)Builder.UpdateNesting(this, placeholder);
-								column = Builder.MakeColumn(this, column);
-								_subquerySql = ExpressionBuilder.CreatePlaceholder(this.Parent, SelectQuery,
-									placeholder.MemberExpression, placeholder.ConvertType);
+								if (flags.HasFlag(ProjectFlags.Expression))
+									return new SqlEagerLoadExpression(this, path, Builder.GetSequenceExpression(this));
+								return new SqlErrorExpression(this, path);
 							}
-
-							return _subquerySql;
-						}*/
-
-						/*
-						if (flags.HasFlag(ProjectFlags.Root) && projected is ContextRefExpression)
-							return projected;
+						}
 
 						CreateJoin();
-						*/
 
 						return projected;
 					}

@@ -1687,7 +1687,7 @@ namespace LinqToDB.SqlQuery
 		{
 			var mappings = new Dictionary<ISqlExpression, ISqlExpression>();
 
-			selectQuery.VisitParentFirst((mappings, context: _evaluationContext), static (ctx, e) =>
+			selectQuery.VisitParentFirst((flags: _flags, mappings, context: _evaluationContext), static (ctx, e) =>
 			{
 				if (e is SelectQuery sq)
 				{
@@ -1706,6 +1706,15 @@ namespace LinqToDB.SqlQuery
 									var testedColumn = tsQuery.Select.Columns[0];
 									if (IsUniqueUsage(sq, testedColumn))
 									{
+										if (testedColumn.Expression is SqlFunction function)
+										{
+											if (function.IsAggregate && function.Name == "Count")
+											{
+												if (!ctx.flags.IsCountSubQuerySupported)
+													continue;
+											}
+										}
+
 										// moving whole join to subquery
 
 										table.Joins.RemoveAt(j);

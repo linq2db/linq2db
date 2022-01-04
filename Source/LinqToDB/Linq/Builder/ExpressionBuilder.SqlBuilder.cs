@@ -69,7 +69,7 @@ namespace LinqToDB.Linq.Builder
 
 			var prevSequence = sequence;
 			//if (addSubquery)
-			if (sequence is not SubQueryContext squbquery || !squbquery.SelectQuery.IsSimple)
+			if (parent == null && (sequence is not SubQueryContext squbquery || !squbquery.SelectQuery.IsSimple))
 			{
 				sequence = new SubQueryContext(prevSequence);
 			}
@@ -85,7 +85,7 @@ namespace LinqToDB.Linq.Builder
 			}*/
 
 			var sc = new SqlSearchCondition();
-			BuildSearchCondition(targetSequence, expr, isAggregation ? ProjectFlags.Aggregation | ProjectFlags.SQL : ProjectFlags.SQL, sc.Conditions);
+			BuildSearchCondition(targetSequence, expr, ProjectFlags.SQL, sc.Conditions);
 
 			if (!targetSequence.SelectQuery.GroupBy.IsEmpty)
 				targetSequence.SelectQuery.Having.ConcatSearchCondition(sc);
