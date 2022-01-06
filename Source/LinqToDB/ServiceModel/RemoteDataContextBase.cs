@@ -11,9 +11,10 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.ServiceModel
 {
+	using Common;
+	using DataProvider;
 	using Expressions;
 	using Extensions;
-	using LinqToDB.Common;
 	using Mapping;
 	using SqlProvider;
 
@@ -25,10 +26,11 @@ namespace LinqToDB.ServiceModel
 		class ConfigurationInfo
 		{
 			public LinqServiceInfo LinqServiceInfo = null!;
+			public IDataProvider   DataProvider    = null!;
 			public MappingSchema   MappingSchema   = null!;
 		}
 
-		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new ();
+		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new();
 
 		class RemoteMappingSchema : MappingSchema
 		{
@@ -49,13 +51,14 @@ namespace LinqToDB.ServiceModel
 				try
 				{
 					var info = client.GetInfo(Configuration);
-
-					var type = Type.GetType(info.MappingSchemaType)!;
-					var ms   = new RemoteMappingSchema(ContextIDPrefix, (MappingSchema)Activator.CreateInstance(type));
+					var type = Type.GetType(info.DataProviderType)!;
+					var dp   = (IDataProvider)Activator.CreateInstance(type);
+					var ms   = new RemoteMappingSchema(ContextIDPrefix, dp.MappingSchema);
 
 					_configurationInfo = new ConfigurationInfo
 					{
 						LinqServiceInfo = info,
+						DataProvider    = dp,
 						MappingSchema   = ms,
 					};
 				}
@@ -75,6 +78,13 @@ namespace LinqToDB.ServiceModel
 		string?            _contextID;
 		string IDataContext.ContextID => _contextID ??= GetConfigurationInfo().MappingSchema.ConfigurationList[0];
 
+		private IDataProvider? _dataProvider;
+		public  IDataProvider   DataProvider
+		{
+			get => _dataProvider ??= GetConfigurationInfo().DataProvider;
+			set => _dataProvider = value;
+		}
+
 		private MappingSchema? _mappingSchema;
 		public  MappingSchema   MappingSchema
 		{
@@ -87,7 +97,7 @@ namespace LinqToDB.ServiceModel
 		}
 
 		private  MappingSchema? _serializationMappingSchema;
-		internal MappingSchema  SerializationMappingSchema => _serializationMappingSchema ??= new SerializationMappingSchema(MappingSchema);
+		internal MappingSchema   SerializationMappingSchema => _serializationMappingSchema ??= new SerializationMappingSchema(MappingSchema);
 
 		public  bool InlineParameters { get; set; }
 		public  bool CloseAfterUse    { get; set; }
@@ -200,12 +210,14 @@ namespace LinqToDB.ServiceModel
 										Expression.New(
 											type.GetConstructor(new[]
 											{
+												typeof(IDataProvider),
 												typeof(MappingSchema),
 												typeof(ISqlOptimizer),
 												typeof(SqlProviderFlags)
 											}),
 											new Expression[]
 											{
+												Expression.Constant(DataProvider),
 												Expression.Constant(((IDataContext)this).MappingSchema),
 												Expression.Constant(GetSqlOptimizer()),
 												Expression.Constant(((IDataContext)this).SqlProviderFlags)

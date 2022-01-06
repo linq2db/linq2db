@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider.SqlServer
+﻿using System;
+
+namespace LinqToDB.DataProvider.SqlServer
 {
 	using SqlQuery;
 	using SqlProvider;
@@ -6,24 +8,23 @@
 
 	class SqlServer2000SqlBuilder : SqlServerSqlBuilder
 	{
-		public SqlServer2000SqlBuilder(SqlServerDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public SqlServer2000SqlBuilder(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		public SqlServer2000SqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(null, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		SqlServer2000SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
+		}
+
+		protected override ISqlBuilder CreateSqlBuilder()
+		{
+			return new SqlServer2000SqlBuilder(this);
 		}
 
 		protected override string FirstFormat(SelectQuery selectQuery)
 		{
 			return "TOP {0}";
-		}
-
-		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
-		{
-			return new SqlServer2000SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildOutputSubclause(SqlStatement statement, SqlInsertClause insertClause)

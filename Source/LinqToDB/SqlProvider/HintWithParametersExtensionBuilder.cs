@@ -3,7 +3,6 @@ using System.Text;
 
 namespace LinqToDB.SqlProvider
 {
-	using DataProvider;
 	using SqlQuery;
 
 	class HintWithParametersExtensionBuilder : ISqlQueryExtensionBuilder
@@ -46,7 +45,7 @@ namespace LinqToDB.SqlProvider
 			{
 				if (value.Value is Sql.SqlID id)
 				{
-					if (sqlBuilder is IPathableSqlBuilder pb && pb.TableIDs?.TryGetValue(id.ID, out var path) == true)
+					if (sqlBuilder.TableIDs?.TryGetValue(id.ID, out var path) == true)
 						return path;
 					throw new InvalidOperationException($"Table ID '{id.ID}' is not defined.");
 				}

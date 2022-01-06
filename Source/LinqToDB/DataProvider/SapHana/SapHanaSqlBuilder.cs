@@ -10,12 +10,18 @@ namespace LinqToDB.DataProvider.SapHana
 
 	partial class SapHanaSqlBuilder : BasicSqlBuilder
 	{
-		public SapHanaSqlBuilder(
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public SapHanaSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
+		}
+
+		protected SapHanaSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		{
+		}
+
+		protected override ISqlBuilder CreateSqlBuilder()
+		{
+			return new SapHanaSqlBuilder(this);
 		}
 
 		public override int CommandCount(SqlStatement statement)
@@ -36,11 +42,6 @@ namespace LinqToDB.DataProvider.SapHana
 
 				StringBuilder.Append("SELECT CURRENT_IDENTITY_VALUE() FROM DUMMY");
 			}
-		}
-
-		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
-		{
-			return new SapHanaSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override string LimitFormat(SelectQuery selectQuery)

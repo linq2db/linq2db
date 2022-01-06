@@ -12,23 +12,8 @@ namespace LinqToDB.DataProvider.SQLite
 
 	public static class SQLiteTools
 	{
-		private static readonly Lazy<IDataProvider> _SQLiteClassicDataProvider = new (() =>
-		{
-			var provider = new SQLiteDataProvider(ProviderName.SQLiteClassic);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
-
-		private static readonly Lazy<IDataProvider> _SQLiteMSDataProvider = new (() =>
-		{
-			var provider = new SQLiteDataProvider(ProviderName.SQLiteMS);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
+		static readonly Lazy<IDataProvider> _SQLiteClassicDataProvider = DataConnection.CreateDataProvider<SQLiteDataProviderClassic>();
+		static readonly Lazy<IDataProvider> _SQLiteMSDataProvider      = DataConnection.CreateDataProvider<SQLiteDataProviderMS>();
 
 		public static bool AlwaysCheckDbNull = true;
 

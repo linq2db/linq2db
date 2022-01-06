@@ -10,12 +10,18 @@ namespace LinqToDB.DataProvider.SQLite
 
 	public class SQLiteSqlBuilder : BasicSqlBuilder
 	{
-		public SQLiteSqlBuilder(
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public SQLiteSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
+		}
+
+		SQLiteSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		{
+		}
+
+		protected override ISqlBuilder CreateSqlBuilder()
+		{
+			return new SQLiteSqlBuilder(this);
 		}
 
 		protected override bool SupportsColumnAliasesInSource => false;
@@ -41,11 +47,6 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 				StringBuilder.AppendLine("SELECT last_insert_rowid()");
 			}
-		}
-
-		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
-		{
-			return new SQLiteSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override string LimitFormat(SelectQuery selectQuery)

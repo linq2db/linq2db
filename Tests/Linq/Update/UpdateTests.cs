@@ -1507,7 +1507,7 @@ namespace Tests.xUpdate
 				var updatedPerson = await table.SingleAsync();
 				Assert.AreEqual("None", updatedPerson.MiddleName);
 
-				if (db is DataConnection { Connection: FirebirdSql.Data.FirebirdClient.FbConnection })
+				//if (db is DataConnection { Connection: FirebirdSql.Data.FirebirdClient.FbConnection })
 					await db.CloseAsync();
 
 				await table.DropAsync();

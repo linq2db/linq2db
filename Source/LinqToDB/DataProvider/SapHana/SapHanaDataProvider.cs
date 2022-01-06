@@ -15,17 +15,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 	public class SapHanaDataProvider : DynamicDataProviderBase<SapHanaProviderAdapter>
 	{
-		public SapHanaDataProvider()
-			: this(ProviderName.SapHanaNative)
-		{
-		}
-
-		public SapHanaDataProvider(string name)
-			: this(name, MappingSchemaInstance)
-		{
-		}
-		protected SapHanaDataProvider(string name, MappingSchema mappingSchema)
-			: base(name, mappingSchema, SapHanaProviderAdapter.GetInstance())
+		public SapHanaDataProvider() : base(ProviderName.SapHanaNative, MappingSchemaInstance, SapHanaProviderAdapter.GetInstance())
 		{
 			SqlProviderFlags.IsParameterOrderDependent         = true;
 
@@ -65,7 +55,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new SapHanaSqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new SapHanaSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;

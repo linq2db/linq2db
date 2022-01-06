@@ -16,13 +16,7 @@ namespace LinqToDB.DataProvider.Access
 
 	public class AccessODBCDataProvider : DynamicDataProviderBase<OdbcProviderAdapter>
 	{
-		public AccessODBCDataProvider()
-			: this(ProviderName.AccessOdbc, MappingSchemaInstance)
-		{
-		}
-
-		protected AccessODBCDataProvider(string name, MappingSchema mappingSchema)
-			: base(name, mappingSchema, OdbcProviderAdapter.GetInstance())
+		public AccessODBCDataProvider() : base(ProviderName.AccessOdbc, MappingSchemaInstance, OdbcProviderAdapter.GetInstance())
 		{
 			SqlProviderFlags.AcceptsTakeAsParameter           = false;
 			SqlProviderFlags.IsSkipSupported                  = false;

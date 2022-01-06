@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Data;
 using System.Linq;
-using System.Threading.Tasks;
+
 using BenchmarkDotNet.Attributes;
-using LinqToDB.Benchmarks.Mappings;
+
 using LinqToDB.Benchmarks.TestProvider;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Benchmarks.Queries

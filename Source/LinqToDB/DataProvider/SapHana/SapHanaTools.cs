@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.Reflection;
 
 namespace LinqToDB.DataProvider.SapHana
@@ -10,24 +11,10 @@ namespace LinqToDB.DataProvider.SapHana
 	public static class SapHanaTools
 	{
 #if NETFRAMEWORK || NETCOREAPP
-		private static readonly Lazy<IDataProvider> _hanaDataProvider = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new SapHanaDataProvider(ProviderName.SapHanaNative);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
+		static readonly Lazy<IDataProvider> _hanaDataProvider = DataConnection.CreateDataProvider<SapHanaDataProvider>();
 #endif
 
-		private static readonly Lazy<IDataProvider> _hanaOdbcDataProvider = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new SapHanaOdbcDataProvider();
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
+		static readonly Lazy<IDataProvider> _hanaOdbcDataProvider = DataConnection.CreateDataProvider<SapHanaOdbcDataProvider>();
 
 		public static void ResolveSapHana(string path)
 		{

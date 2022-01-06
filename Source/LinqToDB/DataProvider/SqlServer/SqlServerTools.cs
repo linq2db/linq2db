@@ -21,138 +21,19 @@ namespace LinqToDB.DataProvider.SqlServer
 		// System.Data
 		// and/or
 		// System.Data.SqlClient
-		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2000sdc = new(() =>
-		{
-			var provider = new SqlServerDataProvider(ProviderName.SqlServer2000, SqlServerVersion.v2000, SqlServerProvider.SystemDataSqlClient);
-
-			if (Provider == SqlServerProvider.SystemDataSqlClient)
-				DataConnection.AddDataProvider(provider);
-
-			_providers.Enqueue(provider);
-			return provider;
-		}, true);
-		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2005sdc = new(() =>
-		{
-			var provider = new SqlServerDataProvider(ProviderName.SqlServer2005, SqlServerVersion.v2005, SqlServerProvider.SystemDataSqlClient);
-
-			if (Provider == SqlServerProvider.SystemDataSqlClient)
-				DataConnection.AddDataProvider(provider);
-
-			_providers.Enqueue(provider);
-			return provider;
-		}, true);
-		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2008sdc = new(() =>
-		{
-			var provider = new SqlServerDataProvider(ProviderName.SqlServer2008, SqlServerVersion.v2008, SqlServerProvider.SystemDataSqlClient);
-
-			if (Provider == SqlServerProvider.SystemDataSqlClient)
-			{
-				DataConnection.AddDataProvider(provider);
-			}
-
-			_providers.Enqueue(provider);
-			return provider;
-		}, true);
-		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2012sdc = new(() =>
-		{
-			var provider = new SqlServerDataProvider(ProviderName.SqlServer2012, SqlServerVersion.v2012, SqlServerProvider.SystemDataSqlClient);
-
-			if (Provider == SqlServerProvider.SystemDataSqlClient)
-			{
-				DataConnection.AddDataProvider(ProviderName.SqlServer2014, provider);
-				DataConnection.AddDataProvider(provider);
-			}
-
-			_providers.Enqueue(provider);
-			return provider;
-		}, true);
-		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2016sdc = new(() =>
-		{
-			var provider = new SqlServerDataProvider(ProviderName.SqlServer2016, SqlServerVersion.v2016, SqlServerProvider.SystemDataSqlClient);
-
-			if (Provider == SqlServerProvider.SystemDataSqlClient)
-				DataConnection.AddDataProvider(provider);
-
-			_providers.Enqueue(provider);
-			return provider;
-		}, true);
-		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2017sdc = new(() =>
-		{
-			var provider = new SqlServerDataProvider(ProviderName.SqlServer2017, SqlServerVersion.v2017, SqlServerProvider.SystemDataSqlClient);
-
-			if (Provider == SqlServerProvider.SystemDataSqlClient)
-				DataConnection.AddDataProvider(provider);
-
-			_providers.Enqueue(provider);
-			return provider;
-		}, true);
-
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2000sdc = DataConnection.CreateDataProvider<SqlServerDataProvider2000SystemDataSqlClient>();
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2005sdc = DataConnection.CreateDataProvider<SqlServerDataProvider2005SystemDataSqlClient>();
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2008sdc = DataConnection.CreateDataProvider<SqlServerDataProvider2008SystemDataSqlClient>();
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2012sdc = DataConnection.CreateDataProvider<SqlServerDataProvider2012SystemDataSqlClient>();
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2016sdc = DataConnection.CreateDataProvider<SqlServerDataProvider2016SystemDataSqlClient>();
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2017sdc = DataConnection.CreateDataProvider<SqlServerDataProvider2017SystemDataSqlClient>();
 		// Microsoft.Data.SqlClient
-		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2000mdc = new(() =>
-		{
-			var provider = new SqlServerDataProvider(ProviderName.SqlServer2000, SqlServerVersion.v2000, SqlServerProvider.MicrosoftDataSqlClient);
-
-			if (Provider == SqlServerProvider.MicrosoftDataSqlClient)
-				DataConnection.AddDataProvider(provider);
-
-			_providers.Enqueue(provider);
-			return provider;
-		}, true);
-		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2005mdc = new(() =>
-		{
-			var provider = new SqlServerDataProvider(ProviderName.SqlServer2005, SqlServerVersion.v2005, SqlServerProvider.MicrosoftDataSqlClient);
-
-			if (Provider == SqlServerProvider.MicrosoftDataSqlClient)
-				DataConnection.AddDataProvider(provider);
-
-			_providers.Enqueue(provider);
-			return provider;
-		}, true);
-		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2008mdc = new(() =>
-		{
-			var provider = new SqlServerDataProvider(ProviderName.SqlServer2008, SqlServerVersion.v2008, SqlServerProvider.MicrosoftDataSqlClient);
-
-			if (Provider == SqlServerProvider.MicrosoftDataSqlClient)
-			{
-				DataConnection.AddDataProvider(provider);
-			}
-
-			_providers.Enqueue(provider);
-			return provider;
-		}, true);
-		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2012mdc = new(() =>
-		{
-			var provider = new SqlServerDataProvider(ProviderName.SqlServer2012, SqlServerVersion.v2012, SqlServerProvider.MicrosoftDataSqlClient);
-
-			if (Provider == SqlServerProvider.MicrosoftDataSqlClient)
-			{
-				DataConnection.AddDataProvider(ProviderName.SqlServer2014, provider);
-				DataConnection.AddDataProvider(provider);
-			}
-
-			_providers.Enqueue(provider);
-			return provider;
-		}, true);
-		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2016mdc = new(() =>
-		{
-			var provider = new SqlServerDataProvider(ProviderName.SqlServer2016, SqlServerVersion.v2016, SqlServerProvider.MicrosoftDataSqlClient);
-
-			if (Provider == SqlServerProvider.MicrosoftDataSqlClient)
-				DataConnection.AddDataProvider(provider);
-
-			_providers.Enqueue(provider);
-			return provider;
-		}, true);
-		private static readonly Lazy<IDataProvider> _sqlServerDataProvider2017mdc = new(() =>
-		{
-			var provider = new SqlServerDataProvider(ProviderName.SqlServer2017, SqlServerVersion.v2017, SqlServerProvider.MicrosoftDataSqlClient);
-
-			if (Provider == SqlServerProvider.MicrosoftDataSqlClient)
-				DataConnection.AddDataProvider(provider);
-
-			_providers.Enqueue(provider);
-			return provider;
-		}, true);
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2000mdc = DataConnection.CreateDataProvider<SqlServerDataProvider2000MicrosoftDataSqlClient>();
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2005mdc = DataConnection.CreateDataProvider<SqlServerDataProvider2005MicrosoftDataSqlClient>();
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2008mdc = DataConnection.CreateDataProvider<SqlServerDataProvider2008MicrosoftDataSqlClient>();
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2012mdc = DataConnection.CreateDataProvider<SqlServerDataProvider2012MicrosoftDataSqlClient>();
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2016mdc = DataConnection.CreateDataProvider<SqlServerDataProvider2016MicrosoftDataSqlClient>();
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2017mdc = DataConnection.CreateDataProvider<SqlServerDataProvider2017MicrosoftDataSqlClient>();
 
 		public static bool AutoDetectProvider { get; set; } = true;
 
@@ -271,26 +152,20 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlServerVersion version   = SqlServerVersion.v2008,
 			SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 		{
-			return provider switch
+			return (provider, version) switch
 			{
-				SqlServerProvider.SystemDataSqlClient => version switch
-				{
-					SqlServerVersion.v2000 => _sqlServerDataProvider2000sdc.Value,
-					SqlServerVersion.v2005 => _sqlServerDataProvider2005sdc.Value,
-					SqlServerVersion.v2012 => _sqlServerDataProvider2012sdc.Value,
-					SqlServerVersion.v2016 => _sqlServerDataProvider2016sdc.Value,
-					SqlServerVersion.v2017 => _sqlServerDataProvider2017sdc.Value,
-					_                      => _sqlServerDataProvider2008sdc.Value,
-				},
-				SqlServerProvider.MicrosoftDataSqlClient => version switch
-				{
-					SqlServerVersion.v2000 => _sqlServerDataProvider2000mdc.Value,
-					SqlServerVersion.v2005 => _sqlServerDataProvider2005mdc.Value,
-					SqlServerVersion.v2012 => _sqlServerDataProvider2012mdc.Value,
-					SqlServerVersion.v2016 => _sqlServerDataProvider2016mdc.Value,
-					SqlServerVersion.v2017 => _sqlServerDataProvider2017mdc.Value,
-					_                      => _sqlServerDataProvider2008mdc.Value,
-				},
+				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2000) => _sqlServerDataProvider2000sdc.Value,
+				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2005) => _sqlServerDataProvider2005sdc.Value,
+				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2012) => _sqlServerDataProvider2012sdc.Value,
+				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2016) => _sqlServerDataProvider2016sdc.Value,
+				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2017) => _sqlServerDataProvider2017sdc.Value,
+				(SqlServerProvider.SystemDataSqlClient,    _                     ) => _sqlServerDataProvider2008sdc.Value,
+				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2000) => _sqlServerDataProvider2000mdc.Value,
+				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2005) => _sqlServerDataProvider2005mdc.Value,
+				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2012) => _sqlServerDataProvider2012mdc.Value,
+				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2016) => _sqlServerDataProvider2016mdc.Value,
+				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2017) => _sqlServerDataProvider2017mdc.Value,
+				(SqlServerProvider.MicrosoftDataSqlClient, _                     ) => _sqlServerDataProvider2008mdc.Value,
 				_ => _sqlServerDataProvider2008sdc.Value,
 			};
 		}

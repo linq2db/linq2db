@@ -12,13 +12,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 	public class SapHanaOdbcDataProvider : DynamicDataProviderBase<OdbcProviderAdapter>
 	{
-		public SapHanaOdbcDataProvider()
-			: this(ProviderName.SapHanaOdbc, MappingSchemaInstance)
-		{
-		}
-
-		protected SapHanaOdbcDataProvider(string name, MappingSchema mappingSchema)
-			: base(name, mappingSchema, OdbcProviderAdapter.GetInstance())
+		public SapHanaOdbcDataProvider() : base(ProviderName.SapHanaOdbc, MappingSchemaInstance, OdbcProviderAdapter.GetInstance())
 		{
 			//supported flags
 			SqlProviderFlags.IsParameterOrderDependent = true;
@@ -68,7 +62,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new SapHanaOdbcSqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new SapHanaOdbcSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;

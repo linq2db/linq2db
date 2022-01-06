@@ -11,27 +11,20 @@ namespace LinqToDB.DataProvider.MySql
 	using SqlProvider;
 	using SqlQuery;
 
-	class MySqlSqlBuilder : BasicSqlBuilder, IPathableSqlBuilder
+	class MySqlSqlBuilder : BasicSqlBuilder
 	{
-		private readonly MySqlDataProvider? _provider;
-
-		public MySqlSqlBuilder(
-			MySqlDataProvider? provider,
-			MappingSchema      mappingSchema,
-			ISqlOptimizer      sqlOptimizer,
-			SqlProviderFlags   sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public MySqlSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
-			_provider = provider;
 		}
 
-		// remote context
-		public MySqlSqlBuilder(
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		MySqlSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
+		}
+
+		protected override ISqlBuilder CreateSqlBuilder()
+		{
+			return new MySqlSqlBuilder(this) { HintBuilder = HintBuilder };
 		}
 
 		static MySqlSqlBuilder()
@@ -76,17 +69,6 @@ namespace LinqToDB.DataProvider.MySql
 		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
 			StringBuilder.AppendLine("SELECT LAST_INSERT_ID()");
-		}
-
-		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
-		{
-			return new MySqlSqlBuilder(MappingSchema, SqlOptimizer, SqlProviderFlags)
-			{
-				HintBuilder = HintBuilder,
-				TablePath   = TablePath,
-				QueryName   = QueryName,
-				TableIDs    = TableIDs ??= new(),
-			};
 		}
 
 		protected override string LimitFormat(SelectQuery selectQuery)
@@ -537,11 +519,11 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			if (_provider != null)
+			if (Provider is MySqlDataProvider provider)
 			{
-				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
-					return _provider.Adapter.GetDbType(param).ToString();
+					return provider.Adapter.GetDbType(param).ToString();
 			}
 
 			return base.GetProviderTypeName(parameter);
@@ -641,10 +623,7 @@ namespace LinqToDB.DataProvider.MySql
 				StringBuilder.Append("IF NOT EXISTS ");
 		}
 
-		protected StringBuilder?             HintBuilder;
-		public    Dictionary<string,string>? TableIDs  { get; set; }
-		public    string?                    TablePath { get; set; }
-		public    string?                    QueryName { get; set; }
+		protected StringBuilder? HintBuilder;
 
 		int  _hintPosition;
 		bool _isTopLevelBuilder;

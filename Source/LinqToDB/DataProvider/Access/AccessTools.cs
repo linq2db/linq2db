@@ -14,23 +14,8 @@ namespace LinqToDB.DataProvider.Access
 	/// </summary>
 	public static class AccessTools
 	{
-		private static readonly Lazy<IDataProvider> _accessOleDbDataProvider = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new AccessOleDbDataProvider();
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
-
-		private static readonly Lazy<IDataProvider> _accessODBCDataProvider = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new AccessODBCDataProvider();
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
+		static readonly Lazy<IDataProvider> _accessOleDbDataProvider = DataConnection.CreateDataProvider<AccessOleDbDataProvider>();
+		static readonly Lazy<IDataProvider> _accessODBCDataProvider  = DataConnection.CreateDataProvider<AccessODBCDataProvider>();
 
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{

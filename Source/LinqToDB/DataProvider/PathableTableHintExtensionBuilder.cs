@@ -10,9 +10,6 @@ namespace LinqToDB.DataProvider.Oracle
 	{
 		void ISqlTableExtensionBuilder.Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension, SqlTable table, string alias)
 		{
-			if (sqlBuilder is not IPathableSqlBuilder builder)
-				throw new ArgumentException($"{nameof(PathableTableHintExtensionBuilder)} supports only {typeof(IPathableSqlBuilder).FullName}", nameof(sqlBuilder));
-
 			if (stringBuilder.Length > 0 && stringBuilder[stringBuilder.Length - 1] != ' ')
 				stringBuilder.Append(' ');
 
@@ -22,18 +19,18 @@ namespace LinqToDB.DataProvider.Oracle
 			stringBuilder.Append((string)hint.Value!);
 			stringBuilder.Append('(');
 
-			if (builder.TablePath is { Length: > 0 })
+			if (sqlBuilder.TablePath is { Length: > 0 })
 			{
-				stringBuilder.Append(builder.TablePath);
+				stringBuilder.Append(sqlBuilder.TablePath);
 				stringBuilder.Append('.');
 			}
 
 			stringBuilder.Append(alias);
 
-			if (builder.QueryName is not null)
+			if (sqlBuilder.QueryName is not null)
 				stringBuilder
 					.Append('@')
-					.Append(builder.QueryName)
+					.Append(sqlBuilder.QueryName)
 					;
 
 			if (args.TryGetValue("hintParameter", out var hintParameter))

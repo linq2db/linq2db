@@ -1,4 +1,5 @@
-﻿﻿using System.Data;
+﻿﻿using System;
+﻿using System.Data;
 
 namespace LinqToDB.DataProvider.Access
 {
@@ -7,39 +8,27 @@ namespace LinqToDB.DataProvider.Access
 
 	class AccessOleDbSqlBuilder : AccessSqlBuilderBase
 	{
-		private readonly AccessOleDbDataProvider? _provider;
-
-		public AccessOleDbSqlBuilder(
-			AccessOleDbDataProvider? provider,
-			MappingSchema            mappingSchema,
-			ISqlOptimizer            sqlOptimizer,
-			SqlProviderFlags         sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
-		{
-			_provider = provider;
-		}
-
-		// remote context
-		public AccessOleDbSqlBuilder(
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public AccessOleDbSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
+		AccessOleDbSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
-			return new AccessOleDbSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
+		}
+
+		protected override ISqlBuilder CreateSqlBuilder()
+		{
+			return new AccessOleDbSqlBuilder(this);
 		}
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			if (_provider != null)
+			if (Provider is AccessOleDbDataProvider provider)
 			{
-				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
-					return _provider.Adapter.GetDbType(param).ToString();
+					return provider.Adapter.GetDbType(param).ToString();
 			}
 
 			return base.GetProviderTypeName(parameter);

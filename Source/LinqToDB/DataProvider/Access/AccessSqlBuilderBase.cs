@@ -11,11 +11,12 @@ namespace LinqToDB.DataProvider.Access
 
 	abstract class AccessSqlBuilderBase : BasicSqlBuilder
 	{
-		protected AccessSqlBuilderBase(
-			MappingSchema       mappingSchema,
-			ISqlOptimizer       sqlOptimizer,
-			SqlProviderFlags    sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		protected AccessSqlBuilderBase(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		{
+		}
+
+		protected AccessSqlBuilderBase(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 

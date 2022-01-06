@@ -51,42 +51,12 @@ namespace LinqToDB.DataProvider.Oracle
 	public static partial class OracleTools
 	{
 #if NETFRAMEWORK
-		private static readonly Lazy<IDataProvider> _oracleNativeDataProvider11 = new (() =>
-		{
-			var provider = new OracleDataProvider(ProviderName.OracleNative, OracleVersion.v11);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
-
-		private static readonly Lazy<IDataProvider> _oracleNativeDataProvider12 = new (() =>
-		{
-			var provider = new OracleDataProvider(ProviderName.OracleNative, OracleVersion.v12);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
+		static readonly Lazy<IDataProvider> _oracleNativeDataProvider11 = DataConnection.CreateDataProvider<OracleDataProviderNative11>();
+		static readonly Lazy<IDataProvider> _oracleNativeDataProvider12 = DataConnection.CreateDataProvider<OracleDataProviderNative12>();
 #endif
 
-		private static readonly Lazy<IDataProvider> _oracleManagedDataProvider11 = new (() =>
-		{
-			var provider = new OracleDataProvider(ProviderName.OracleManaged, OracleVersion.v11);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
-
-		private static readonly Lazy<IDataProvider> _oracleManagedDataProvider12 = new (() =>
-		{
-			var provider = new OracleDataProvider(ProviderName.OracleManaged, OracleVersion.v12);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
+		static readonly Lazy<IDataProvider> _oracleManagedDataProvider11 = DataConnection.CreateDataProvider<OracleDataProviderManaged11>();
+		static readonly Lazy<IDataProvider> _oracleManagedDataProvider12 = DataConnection.CreateDataProvider<OracleDataProviderManaged12>();
 
 		public static bool AutoDetectProvider { get; set; } = true;
 

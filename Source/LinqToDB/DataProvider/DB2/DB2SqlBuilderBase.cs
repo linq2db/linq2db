@@ -13,16 +13,13 @@ namespace LinqToDB.DataProvider.DB2
 
 	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder
 	{
-		protected DB2DataProvider? Provider { get; }
-
-		protected DB2SqlBuilderBase(
-			DB2DataProvider? provider,
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		protected DB2SqlBuilderBase(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
-			Provider = provider;
+		}
+
+		protected DB2SqlBuilderBase(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		{
 		}
 
 		SqlField? _identityField;
@@ -237,11 +234,11 @@ namespace LinqToDB.DataProvider.DB2
 				return "(" + d.Precision + InlineComma + d.Scale + ")";
 			}
 
-			if (Provider != null)
+			if (Provider is DB2DataProvider provider)
 			{
-				var param = Provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
-					return Provider.Adapter.GetDbType(param).ToString();
+					return provider.Adapter.GetDbType(param).ToString();
 			}
 
 			return base.GetProviderTypeName(parameter);

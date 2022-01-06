@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Text;
 
@@ -33,5 +34,9 @@ namespace LinqToDB.SqlProvider
 		string        Name          { get; }
 		MappingSchema MappingSchema { get; }
 		StringBuilder StringBuilder { get; }
+
+		public Dictionary<string,string>? TableIDs  { get; }
+		string?                           TablePath { get; }
+		string?                           QueryName { get; }
 	}
 }

@@ -17,30 +17,18 @@ namespace LinqToDB.DataProvider.Firebird
 
 	public partial class FirebirdSqlBuilder : BasicSqlBuilder
 	{
-		private readonly FirebirdDataProvider? _provider;
-
-		public FirebirdSqlBuilder(
-			FirebirdDataProvider? provider,
-			MappingSchema         mappingSchema,
-			ISqlOptimizer         sqlOptimizer,
-			SqlProviderFlags      sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
-		{
-			_provider = provider;
-		}
-
-		// remote context
-		public FirebirdSqlBuilder(
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public FirebirdSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
+		FirebirdSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
-			return new FirebirdSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
+		}
+
+		protected override ISqlBuilder CreateSqlBuilder()
+		{
+			return new FirebirdSqlBuilder(this);
 		}
 
 		protected override void BuildSelectClause(SelectQuery selectQuery)
@@ -308,11 +296,11 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			if (_provider != null)
+			if (Provider is FirebirdDataProvider provider)
 			{
-				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
-					return _provider.Adapter.GetDbType(param).ToString();
+					return provider.Adapter.GetDbType(param).ToString();
 			}
 
 			return base.GetProviderTypeName(parameter);

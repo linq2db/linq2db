@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Data;
-using System.Linq;
 using System.Text;
-
-using LinqToDB.Common;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
@@ -13,24 +10,18 @@ namespace LinqToDB.DataProvider.SqlCe
 
 	class SqlCeSqlBuilder : BasicSqlBuilder
 	{
-		private readonly SqlCeDataProvider? _provider;
-		public SqlCeSqlBuilder(
-			SqlCeDataProvider? provider,
-			MappingSchema      mappingSchema,
-			ISqlOptimizer      sqlOptimizer,
-			SqlProviderFlags   sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public SqlCeSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
-			_provider = provider;
 		}
 
-		// remote context
-		public SqlCeSqlBuilder(
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		SqlCeSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
+		}
+
+		protected override ISqlBuilder CreateSqlBuilder()
+		{
+			return new SqlCeSqlBuilder(this);
 		}
 
 		protected override string? FirstFormat(SelectQuery selectQuery)
@@ -76,11 +67,6 @@ namespace LinqToDB.DataProvider.SqlCe
 			{
 				StringBuilder.AppendLine("SELECT @@IDENTITY");
 			}
-		}
-
-		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
-		{
-			return new SqlCeSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
@@ -158,11 +144,11 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			if (_provider != null)
+			if (Provider is SqlCeDataProvider provider)
 			{
-				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
-					return _provider.Adapter.GetDbType(param).ToString();
+					return provider.Adapter.GetDbType(param).ToString();
 			}
 
 			return base.GetProviderTypeName(parameter);

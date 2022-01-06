@@ -12,23 +12,8 @@ namespace LinqToDB.DataProvider.MySql
 
 	public static class MySqlTools
 	{
-		private static readonly Lazy<IDataProvider> _mySqlDataProvider = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new MySqlDataProvider(ProviderName.MySqlOfficial);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
-
-		private static readonly Lazy<IDataProvider> _mySqlConnectorDataProvider = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new MySqlDataProvider(ProviderName.MySqlConnector);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
+		static readonly Lazy<IDataProvider> _mySqlDataProvider          = DataConnection.CreateDataProvider<MySqlDataProviderMySqlOfficial>();
+		static readonly Lazy<IDataProvider> _mySqlConnectorDataProvider = DataConnection.CreateDataProvider<MySqlDataProviderMySqlConnector>();
 
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
@@ -74,7 +59,7 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				ProviderName.MySqlOfficial  => _mySqlDataProvider.Value,
 				ProviderName.MySqlConnector => _mySqlConnectorDataProvider.Value,
-				_                           => 
+				_                           =>
 					DetectedProviderName == ProviderName.MySqlOfficial
 					? _mySqlDataProvider.Value
 					: _mySqlConnectorDataProvider.Value,

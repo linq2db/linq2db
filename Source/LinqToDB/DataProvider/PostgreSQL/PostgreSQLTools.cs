@@ -7,39 +7,15 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using System.Runtime.CompilerServices;
 	using Configuration;
 	using Data;
 
 	[PublicAPI]
 	public static class PostgreSQLTools
 	{
-		private static readonly Lazy<IDataProvider> _postgreSQLDataProvider92 = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new PostgreSQLDataProvider(ProviderName.PostgreSQL92, PostgreSQLVersion.v92);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
-
-		private static readonly Lazy<IDataProvider> _postgreSQLDataProvider93 = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new PostgreSQLDataProvider(ProviderName.PostgreSQL93, PostgreSQLVersion.v93);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
-
-		private static readonly Lazy<IDataProvider> _postgreSQLDataProvider95 = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new PostgreSQLDataProvider(ProviderName.PostgreSQL95, PostgreSQLVersion.v95);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
+		static readonly Lazy<IDataProvider> _postgreSQLDataProvider92 = DataConnection.CreateDataProvider<PostgreSQLDataProvider92>();
+		static readonly Lazy<IDataProvider> _postgreSQLDataProvider93 = DataConnection.CreateDataProvider<PostgreSQLDataProvider93>();
+		static readonly Lazy<IDataProvider> _postgreSQLDataProvider95 = DataConnection.CreateDataProvider<PostgreSQLDataProvider95>();
 
 		public static bool AutoDetectProvider     { get; set; } = true;
 
@@ -60,15 +36,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			switch (css.ProviderName)
 			{
-				case ProviderName.PostgreSQL92                                : return _postgreSQLDataProvider92.Value;
-				case ProviderName.PostgreSQL93                                : return _postgreSQLDataProvider93.Value;
-				case ProviderName.PostgreSQL95                                : return _postgreSQLDataProvider95.Value;
-				case ""                                                       :
-				case null                                                     :
+				case ProviderName.PostgreSQL92 : return _postgreSQLDataProvider92.Value;
+				case ProviderName.PostgreSQL93 : return _postgreSQLDataProvider93.Value;
+				case ProviderName.PostgreSQL95 : return _postgreSQLDataProvider95.Value;
+				case ""                        :
+				case null                      :
 					if (css.Name == "PostgreSQL")
 						goto case "Npgsql";
 					break;
-				case NpgsqlProviderAdapter.ClientNamespace                    :
+				case NpgsqlProviderAdapter.ClientNamespace :
 				case var providerName when providerName.Contains("PostgreSQL") || providerName.Contains(NpgsqlProviderAdapter.AssemblyName):
 					if (css.Name.Contains("92") || css.Name.Contains("9.2"))
 						return _postgreSQLDataProvider92.Value;

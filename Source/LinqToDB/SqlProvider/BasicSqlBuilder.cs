@@ -9,11 +9,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using LinqToDB.DataProvider.Oracle;
 
 namespace LinqToDB.SqlProvider
 {
 	using Common;
+	using DataProvider;
 	using Mapping;
 	using SqlQuery;
 
@@ -21,17 +21,30 @@ namespace LinqToDB.SqlProvider
 	{
 		#region Init
 
-		protected BasicSqlBuilder(MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		protected BasicSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 		{
+			Provider         = provider;
 			MappingSchema    = mappingSchema;
 			SqlOptimizer     = sqlOptimizer;
 			SqlProviderFlags = sqlProviderFlags;
+		}
+
+		protected BasicSqlBuilder(BasicSqlBuilder parentBuilder)
+		{
+			Provider         = parentBuilder.Provider;
+			MappingSchema    = parentBuilder.MappingSchema;
+			SqlOptimizer     = parentBuilder.SqlOptimizer;
+			SqlProviderFlags = parentBuilder.SqlProviderFlags;
+			TablePath        = parentBuilder.TablePath;
+			QueryName        = parentBuilder.QueryName;
+			TableIDs         = parentBuilder.TableIDs ??= new();
 		}
 
 		public    OptimizationContext OptimizationContext { get; protected set; } = null!;
 		public    MappingSchema       MappingSchema       { get; }
 		public    StringBuilder       StringBuilder       { get; set; } = null!;
 
+		protected IDataProvider       Provider;
 		protected ValueToSqlConverter ValueToSqlConverter => MappingSchema.ValueToSqlConverter;
 		protected SqlStatement        Statement = null!;
 		protected int                 Indent;
@@ -156,7 +169,7 @@ namespace LinqToDB.SqlProvider
 						BuildSetOperation(union.Operation, sb);
 						sb.AppendLine();
 
-						var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder(this));
+						var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
 						sqlBuilder.BuildSql(commandNumber,
 							new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb,
 							optimizationContext, indent,
@@ -195,12 +208,12 @@ namespace LinqToDB.SqlProvider
 			if (!SqlProviderFlags.IsTakeSupported && takeExpr != null)
 				throw new SqlException("Take for subqueries is not supported by the '{0}' provider.", Name);
 
-			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder(this);
+			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
 			sqlBuilder.BuildSql(0,
 				new SqlSelectStatement(selectQuery) { ParentStatement = Statement }, StringBuilder, OptimizationContext, indent, skipAlias);
 		}
 
-		protected abstract ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder);
+		protected abstract ISqlBuilder CreateSqlBuilder();
 
 		protected T WithStringBuilder<T>(StringBuilder sb, Func<T> func)
 		{
@@ -279,7 +292,7 @@ namespace LinqToDB.SqlProvider
 			var selectStatement = new SqlSelectStatement(deleteStatement.SelectQuery)
 				{ ParentStatement = deleteStatement, With = deleteStatement.GetWithClause() };
 
-			var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder(this));
+			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
 			sqlBuilder.BuildSql(0, selectStatement, StringBuilder, OptimizationContext, Indent);
 
 			--Indent;
@@ -322,7 +335,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildCteBody(SelectQuery selectQuery)
 		{
-			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder(this);
+			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
 			sqlBuilder.BuildSql(0, new SqlSelectStatement(selectQuery), StringBuilder, OptimizationContext, Indent, SkipAlias);
 		}
 
@@ -1622,7 +1635,6 @@ namespace LinqToDB.SqlProvider
 			[typeof(HintExtensionBuilder)]               = new HintExtensionBuilder(),
 			[typeof(HintWithParameterExtensionBuilder)]  = new HintWithParameterExtensionBuilder(),
 			[typeof(HintWithParametersExtensionBuilder)] = new HintWithParametersExtensionBuilder(),
-			[typeof(PathableTableHintExtensionBuilder)]    = new PathableTableHintExtensionBuilder(),
 		};
 
 		protected void BuildTableExtensions(
@@ -3621,6 +3633,14 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildQueryExtensions(SqlStatement statement)
 		{
 		}
+
+		#endregion
+
+		#region TableID
+
+		public Dictionary<string,string>? TableIDs  { get; set; }
+		public string?                    TablePath { get; set; }
+		public string?                    QueryName { get; set; }
 
 		#endregion
 	}

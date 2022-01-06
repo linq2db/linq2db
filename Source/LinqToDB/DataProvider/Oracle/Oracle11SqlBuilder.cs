@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
@@ -11,27 +10,20 @@ namespace LinqToDB.DataProvider.Oracle
 	using System.Text;
 	using Mapping;
 
-	partial class Oracle11SqlBuilder : BasicSqlBuilder, IPathableSqlBuilder
+	partial class Oracle11SqlBuilder : BasicSqlBuilder
 	{
-		protected OracleDataProvider? Provider { get; }
-
-		public Oracle11SqlBuilder(
-			OracleDataProvider? provider,
-			MappingSchema       mappingSchema,
-			ISqlOptimizer       sqlOptimizer,
-			SqlProviderFlags    sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public Oracle11SqlBuilder(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
-			Provider = provider;
 		}
 
-		// remote context
-		public Oracle11SqlBuilder(
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		protected Oracle11SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
+		}
+
+		protected override ISqlBuilder CreateSqlBuilder()
+		{
+			return new Oracle11SqlBuilder(this) { HintBuilder = HintBuilder };
 		}
 
 		protected override void BuildSelectClause(SelectQuery selectQuery)
@@ -87,17 +79,6 @@ namespace LinqToDB.DataProvider.Oracle
 				!NeedSkip(takeExpr, skipEpr) &&
 				 NeedTake(takeExpr) &&
 				selectQuery.OrderBy.IsEmpty && selectQuery.Having.IsEmpty;
-		}
-
-		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
-		{
-			return new Oracle11SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags)
-			{
-				HintBuilder = HintBuilder,
-				TablePath   = TablePath,
-				QueryName   = QueryName,
-				TableIDs    = TableIDs ??= new(),
-			};
 		}
 
 		protected override void BuildSetOperation(SetOperation operation, StringBuilder sb)
@@ -535,11 +516,11 @@ END;",
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			if (Provider != null)
+			if (Provider is OracleDataProvider provider)
 			{
-				var param = Provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
-					return Provider.Adapter.GetDbType(param).ToString();
+					return provider.Adapter.GetDbType(param).ToString();
 			}
 
 			return base.GetProviderTypeName(parameter);
@@ -675,10 +656,7 @@ END;",
 
 		#endregion
 
-		protected StringBuilder?             HintBuilder;
-		public    Dictionary<string,string>? TableIDs  { get; set; }
-		public    string?                    TablePath { get; set; }
-		public    string?                    QueryName { get; set; }
+		protected StringBuilder? HintBuilder;
 
 		int  _hintPosition;
 		bool _isTopLevelBuilder;

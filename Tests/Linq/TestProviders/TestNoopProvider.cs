@@ -300,7 +300,7 @@ namespace Tests
 			// Just for triggering of static constructor
 		}
 
-		public override ISqlBuilder     CreateSqlBuilder (MappingSchema mappingSchema) => new TestNoopSqlBuilder(MappingSchema);
+		public override ISqlBuilder     CreateSqlBuilder (MappingSchema mappingSchema) => new TestNoopSqlBuilder(this, MappingSchema);
 		public override ISchemaProvider GetSchemaProvider(                           ) => throw new NotImplementedException();
 		public override ISqlOptimizer   GetSqlOptimizer  (                           ) => TestNoopSqlOptimizer.Instance;
 		public override TableOptions    SupportedTableOptions => TableOptions.None;
@@ -308,12 +308,12 @@ namespace Tests
 
 	internal class TestNoopSqlBuilder : BasicSqlBuilder
 	{
-		public TestNoopSqlBuilder(MappingSchema mappingSchema)
-			: base(mappingSchema, TestNoopSqlOptimizer.Instance, new SqlProviderFlags())
+		public TestNoopSqlBuilder(IDataProvider provider, MappingSchema mappingSchema)
+			: base(provider, mappingSchema, TestNoopSqlOptimizer.Instance, new SqlProviderFlags())
 		{
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder) => throw new NotImplementedException();
+		protected override ISqlBuilder CreateSqlBuilder() => throw new NotImplementedException();
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{

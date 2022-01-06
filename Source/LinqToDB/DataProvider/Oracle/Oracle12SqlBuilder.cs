@@ -1,27 +1,25 @@
-﻿namespace LinqToDB.DataProvider.Oracle
+﻿using System;
+
+namespace LinqToDB.DataProvider.Oracle
 {
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
-	partial class Oracle12SqlBuilder : Oracle11SqlBuilder
+	class Oracle12SqlBuilder : Oracle11SqlBuilder
 	{
-		public Oracle12SqlBuilder(
-			OracleDataProvider? provider,
-			MappingSchema       mappingSchema,
-			ISqlOptimizer       sqlOptimizer,
-			SqlProviderFlags    sqlProviderFlags)
+		public Oracle12SqlBuilder(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		// remote context
-		public Oracle12SqlBuilder(
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		Oracle12SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
+		}
+
+		protected override ISqlBuilder CreateSqlBuilder()
+		{
+			return new Oracle12SqlBuilder(this) { HintBuilder = HintBuilder };
 		}
 
 		protected override bool CanSkipRootAliases(SqlStatement statement)
@@ -34,17 +32,6 @@
 			}
 
 			return true;
-		}
-
-		protected override ISqlBuilder CreateSqlBuilder(ISqlBuilder? parentBuilder)
-		{
-			return new Oracle12SqlBuilder(Provider, MappingSchema, SqlOptimizer, SqlProviderFlags)
-			{
-				HintBuilder = HintBuilder,
-				TablePath   = TablePath,
-				QueryName   = QueryName,
-				TableIDs    = TableIDs ??= new(),
-			};
 		}
 
 		protected override bool BuildWhere(SelectQuery selectQuery)

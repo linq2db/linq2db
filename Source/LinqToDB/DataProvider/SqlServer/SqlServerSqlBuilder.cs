@@ -13,16 +13,13 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	abstract class SqlServerSqlBuilder : BasicSqlBuilder
 	{
-		protected readonly SqlServerDataProvider? Provider;
-
-		protected SqlServerSqlBuilder(
-			SqlServerDataProvider? provider,
-			MappingSchema          mappingSchema,
-			ISqlOptimizer          sqlOptimizer,
-			SqlProviderFlags       sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		protected SqlServerSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
-			Provider = provider;
+		}
+
+		protected SqlServerSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		{
 		}
 
 		protected override string? FirstFormat(SelectQuery selectQuery)
@@ -435,11 +432,11 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override string? GetTypeName(IDbDataParameter parameter)
 		{
-			if (Provider != null)
+			if (Provider is SqlServerDataProvider provider)
 			{
-				var param = Provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
-					return Provider.Adapter.GetTypeName(param);
+					return provider.Adapter.GetTypeName(param);
 			}
 
 			return base.GetTypeName(parameter);
@@ -447,11 +444,11 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override string? GetUdtTypeName(IDbDataParameter parameter)
 		{
-			if (Provider != null)
+			if (Provider is SqlServerDataProvider provider)
 			{
-				var param = Provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
-					return Provider.Adapter.GetUdtTypeName(param);
+					return provider.Adapter.GetUdtTypeName(param);
 			}
 
 			return base.GetUdtTypeName(parameter);
@@ -459,11 +456,11 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			if (Provider != null)
+			if (Provider is SqlServerDataProvider provider)
 			{
-				var param = Provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
-					return Provider.Adapter.GetDbType(param).ToString();
+					return provider.Adapter.GetDbType(param).ToString();
 			}
 
 			return base.GetProviderTypeName(parameter);

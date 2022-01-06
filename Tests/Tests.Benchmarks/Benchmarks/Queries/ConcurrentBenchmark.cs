@@ -46,7 +46,7 @@ namespace LinqToDB.Benchmarks.Queries
 			};
 
 			_cn = new MockDbConnection(result, ConnectionState.Open);
-			
+
 			_compiled = CompiledQuery.Compile<DataConnection, long?, IQueryable<User>>(
 				(db, userId) => from c in db.GetTable<User>()
 						  where userId == null || c.Id == userId
@@ -58,7 +58,7 @@ namespace LinqToDB.Benchmarks.Queries
 
 			for (var i = 0; i < _threads.Length; i++)
 			{
-				_db[i]                   = new DataConnection(new PostgreSQLDataProvider(PostgreSQLVersion.v95), _cn);
+				_db[i]                   = new DataConnection(new PostgreSQLDataProvider95(), _cn);
 				_threads[i]              = new Thread(ThreadWorker);
 				_threads[i].IsBackground = true; // we don't stop threads explicitly
 				_threads[i].Start(i);
@@ -94,7 +94,7 @@ namespace LinqToDB.Benchmarks.Queries
 		public int ThreadCount { get; set; }
 
 		public IEnumerable<int> ThreadCountDataProvider => new[] { 16, 32, 64 };
-		
+
 		[Benchmark]
 		public void Linq()
 		{

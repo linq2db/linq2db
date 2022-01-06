@@ -7,6 +7,7 @@ namespace LinqToDB.ServiceModel
 
 	public class LinqServiceInfo
 	{
+		public string           DataProviderType      { get; set; } = null!;
 		public string           MappingSchemaType     { get; set; } = null!;
 		public string           SqlBuilderType        { get; set; } = null!;
 		public string           SqlOptimizerType      { get; set; } = null!;
