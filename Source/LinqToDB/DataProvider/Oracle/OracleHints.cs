@@ -1,7 +1,14 @@
 ﻿using System;
+using System.Linq.Expressions;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.Oracle
 {
+	using Expressions;
+	using Linq;
+	using SqlProvider;
+
 	public static class OracleHints
 	{
 		// https://docs.oracle.com/cd/B19306_01/server.102/b14200/sql_elements006.htm
@@ -91,6 +98,27 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				return $"FIRST_ROWS({value})";
 			}
+		}
+
+		/// <summary>
+		/// Adds a table hint to a table in generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <returns>Table-like query source with table hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(PathableTableHintExtensionBuilder))]
+		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.Ignore,    typeof(HintExtensionBuilder))]
+		public static IOracleSpecificTable<TSource> With<TSource>(this IOracleSpecificTable<TSource> table, [SqlQueryDependent] string hint)
+			where TSource : notnull
+		{
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(With, table, hint),
+				table.Expression, Expression.Constant(hint));
+
+			return table;
 		}
 	}
 }

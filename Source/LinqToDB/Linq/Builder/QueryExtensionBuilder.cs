@@ -26,7 +26,9 @@ namespace LinqToDB.Linq.Builder
 				}
 			};
 
-			for (var i = 1; i < methodCall.Arguments.Count; i++)
+			var startIndex = methodCall.Object == null ? 1 : 0;
+
+			for (var i = startIndex; i < methodCall.Arguments.Count; i++)
 			{
 				var arg  = methodCall.Arguments[i].Unwrap();
 				var p    = methodParams[i];
@@ -74,9 +76,9 @@ namespace LinqToDB.Linq.Builder
 			if (attrs.Any(a => a.Scope == Sql.QueryExtensionScope.TablesInScopeHint))
 				builder.TablesInScope = new();
 
-			var sequence = builder.BuildSequence(new(buildInfo, methodCall.Arguments[0]));
+			var sequence = builder.BuildSequence(new(buildInfo, methodCall.Object ?? methodCall.Arguments[0]));
 
-			for (var i = 1; i < list.Count; i++)
+			for (var i = startIndex; i < list.Count; i++)
 			{
 				var data = list[i];
 

@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Configuration;
 	using Data;
 
-	public static class SqlServerTools
+	public static partial class SqlServerTools
 	{
 		#region Init
 
@@ -144,7 +144,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return null;
 		}
 
-#endregion
+		#endregion
 
 		#region Public Members
 

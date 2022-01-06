@@ -2,13 +2,15 @@
 using System.Linq.Expressions;
 using System.Text;
 
-using LinqToDB.Expressions;
-using LinqToDB.Linq;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
+using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using Expressions;
+	using Linq;
+	using SqlProvider;
+	using SqlQuery;
+
 	/// <summary>
 	/// https://docs.microsoft.com/en-us/sql/t-sql/queries/hints-transact-sql
 	/// </summary>
@@ -217,5 +219,26 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		#endregion
+
+		/// <summary>
+		/// Adds a table hint to a table in generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <returns>Table-like query source with table hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.Ignore,    typeof(HintExtensionBuilder))]
+		public static ISqlServerSpecificTable<TSource> With<TSource>(this ISqlServerSpecificTable<TSource> table, [SqlQueryDependent] string hint)
+			where TSource : notnull
+		{
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(With, table, hint),
+				table.Expression, Expression.Constant(hint));
+
+			return table;
+		}
 	}
 }

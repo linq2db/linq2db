@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.DataProvider.Oracle;
 
 using NUnit.Framework;
 
@@ -43,6 +45,32 @@ namespace Tests.Linq
 			Debug.WriteLine(query);
 
 			Assert.AreEqual(1, query.GetTableSource().Joins.Count);
+		}
+
+		[Test]
+		public void DatabaseSpecificTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsSqlServerSpecific()
+						.With(SqlServerHints.Table.NoLock)
+						.With(SqlServerHints.Table.NoWait)
+					.AsOracleSpecific()
+						.With(OracleHints.TableHint.Full)
+						.With(OracleHints.TableHint.Hash)
+				select p;
+
+			_ = q.ToList();
+
+			var sqlServerHints = "[Parent] [p] WITH (NoLock, NoWait)";
+			var oracleHints    = "SELECT /*+ FULL(p) HASH(p) */";
+
+			if (context.StartsWith("SqlServer"))
+				Assert.That(LastQuery,Contains.Substring(sqlServerHints).And.Not.Contains(oracleHints));
+			else if (context.StartsWith("Oracle"))
+				Assert.That(LastQuery,Is.Not.Contains(sqlServerHints).And.Contains(oracleHints));
 		}
 	}
 }
