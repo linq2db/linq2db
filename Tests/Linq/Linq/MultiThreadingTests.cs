@@ -23,16 +23,16 @@ namespace Tests.Linq
 
 			TestContext.WriteLine(JsonConvert.SerializeObject(obj, Formatting.Indented));
 		}
-		
+
 		[Table]
 		class MultiThreadedData
 		{
-			[Column(IsPrimaryKey = true)] 
+			[Column(IsPrimaryKey = true)]
 			public int Id    { get; set; }
 			[Column] public int Value { get; set; }
-			[Column(Length = 50, DataType = DataType.Char)] 
+			[Column(Length = 50, DataType = DataType.Char)]
 			public string StrValue { get; set; } = null!;
-			
+
 			public static MultiThreadedData[] TestData()
 			{
 				return Enumerable.Range(1, 100)
@@ -52,7 +52,7 @@ namespace Tests.Linq
 			const int poolCount = 10;
 
 			var semaphore = new Semaphore(0, poolCount);
-			
+
 			var threads = new Thread[threadCount];
 			var results = new Tuple<TParam, TResult, string, IDataParameterCollection?, Exception?>[threadCount];
 
@@ -125,7 +125,7 @@ namespace Tests.Linq
 					TestContext.WriteLine(result.Item3);
 
 					DumpObject(result.Item2);
-					
+
 					DumpObject(testResult);
 
 
@@ -139,7 +139,7 @@ namespace Tests.Linq
 		{
 			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();
-			
+
 			var testData = MultiThreadedData.TestData();
 
 			// transaction (or delay) required for Access and Firebird, otherwise it is possible for other threads
@@ -216,8 +216,8 @@ namespace Tests.Linq
 						AreEqual(expected, result);
 					}, Enumerable.Range(1, 50).ToArray());
 			}
-		}		
-		
+		}
+
 		[Test]
 		public void MergeInsert([MergeTests.MergeDataContextSource(false, ProviderName.Sybase, TestProvName.AllInformix)] string context)
 		{
@@ -244,7 +244,7 @@ namespace Tests.Linq
 						return result;
 					}, (result, p) =>
 					{
-						
+
 					}, Enumerable.Range(1, 100).ToArray());
 			}
 		}
@@ -319,7 +319,7 @@ namespace Tests.Linq
 						result.Count.Should().Be(expected.Count);
 
 						if (expected.Count > 0)
-							AreEqualWithComparer(result, expected);	
+							AreEqualWithComparer(result, expected);
 					}, Enumerable.Range(1, 100).ToArray());
 			}
 		}
@@ -378,7 +378,7 @@ namespace Tests.Linq
 					})
 					.ToList();
 
-				AreEqualWithComparer(result, expected);	
+				AreEqualWithComparer(result, expected);
 
 			}
 		}

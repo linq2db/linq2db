@@ -6,32 +6,62 @@ namespace LinqToDB
 	{
 		public struct SqlID
 		{
-			public string ID { get; }
+			public SqlIDType Type { get; }
+			public string    ID   { get; }
 
-			public SqlID(string id)
+			public SqlID(SqlIDType type, string id)
 			{
-				ID = id;
+				ID        = id;
+				Type = type;
 			}
 
 			public override string ToString()
 			{
-				return ID;
+				return $"{Type}:{ID}";
 			}
 
 			public override bool Equals(object? obj)
 			{
-				return ID == (obj is SqlID id ? id.ID : null);
+				return obj is SqlID id && Type == id.Type && ID == id.ID;
+			}
+
+			public bool Equals(SqlID other)
+			{
+				return Type == other.Type && ID == other.ID;
 			}
 
 			public override int GetHashCode()
 			{
-				return ID.GetHashCode();
+				return (int)Type | (ID.GetHashCode() >> 3);
+			}
+
+			public static SqlID Parse(string value)
+			{
+				var idx = value.IndexOf(':');
+
+				if (idx == -1)
+					throw new InvalidOperationException($"Cannot parse '{value}' to SqlID.");
+
+				var type = value.Substring(0, idx);
+				var id   = value.Substring(idx + 1);
+
+				return new ((SqlIDType)Enum.Parse(typeof(SqlIDType), type), id);
 			}
 		}
 
-		public static SqlID TableID(string id)
+		public static SqlID TableAlias(string id)
 		{
-			return new(id);
+			return new(SqlIDType.TableAlias, id);
+		}
+
+		public static SqlID TableName(string id)
+		{
+			return new(SqlIDType.TableName, id);
+		}
+
+		public static SqlID TableSpec(string id)
+		{
+			return new(SqlIDType.TableSpec, id);
 		}
 	}
 }

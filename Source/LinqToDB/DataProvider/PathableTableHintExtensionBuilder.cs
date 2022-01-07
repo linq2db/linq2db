@@ -45,15 +45,18 @@ namespace LinqToDB.DataProvider.Oracle
 				var parameterDelimiter = args.TryGetValue(".ExtensionArguments.0", out var extArg0) && extArg0 is SqlValue { Value : string val } ? val : " ";
 				var count              = (int)((SqlValue)hintParametersCount).Value!;
 
-				stringBuilder.Append(' ');
-
-				for (var i = 0; i < count; i++)
+				if (count > 0)
 				{
-					var value = ((SqlValue)args[$"hintParameters.{i}"]).Value;
+					stringBuilder.Append(' ');
 
-					if (i > 0)
-						stringBuilder.Append(parameterDelimiter);
-					stringBuilder.Append(value);
+					for (var i = 0; i < count; i++)
+					{
+						var value = ((SqlValue)args[$"hintParameters.{i}"]).Value;
+
+						if (i > 0)
+							stringBuilder.Append(parameterDelimiter);
+						stringBuilder.Append(value);
+					}
 				}
 			}
 

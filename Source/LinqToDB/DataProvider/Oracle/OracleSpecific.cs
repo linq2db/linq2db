@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
@@ -21,10 +22,21 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 	}
 
+	public interface IOracleSpecificQueryable<out TSource> : IQueryable<TSource>
+	{
+	}
+
+	class OracleSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IOracleSpecificQueryable<TSource>, ITable
+	{
+		public OracleSpecificQueryable(IQueryable<TSource> queryable) : base(queryable)
+		{
+		}
+	}
+
 	public static partial class OracleTools
 	{
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(null, Sql.QueryExtensionScope.Ignore, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static IOracleSpecificTable<TSource> AsOracleSpecific<TSource>(this ITable<TSource> table)
 			where TSource : notnull
 		{
@@ -34,6 +46,20 @@ namespace LinqToDB.DataProvider.Oracle
 				table.Expression);
 
 			return new OracleSpecificTable<TSource>(table);
+		}
+
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
+		public static IOracleSpecificQueryable<TSource> AsOracleSpecific<TSource>(this IQueryable<TSource> source)
+			where TSource : notnull
+		{
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return new OracleSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AsOracleSpecific, source),
+					currentSource.Expression)));
 		}
 	}
 }

@@ -139,7 +139,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Person.TableID("Pr")
-					.SubQueryTableHint(PostgreSQLHints.ForUpdate, Sql.TableID("Pr"))
+					.SubQueryTableHint(PostgreSQLHints.ForUpdate, Sql.TableAlias("Pr"))
 				where p.ID > 0
 				select p;
 
@@ -159,7 +159,7 @@ namespace Tests.Linq
 				join c in db.Child.TableID("Ch") on p.ParentID equals c.ParentID
 				select p
 			)
-			.SubQueryTableHint(PostgreSQLHints.ForUpdate, PostgreSQLHints.SkipLocked, Sql.TableID("Pr"), Sql.TableID("Ch"));
+			.SubQueryTableHint(PostgreSQLHints.ForUpdate, PostgreSQLHints.SkipLocked, Sql.TableAlias("Pr"), Sql.TableAlias("Ch"));
 
 			_ = q.ToList();
 

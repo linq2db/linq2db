@@ -58,7 +58,8 @@ namespace LinqToDB.ServiceModel
 
 		class SerializerBase
 		{
-			private   readonly MappingSchema _ms;
+			readonly MappingSchema _mappingSchema;
+
 			protected readonly StringBuilder             Builder        = new ();
 			protected readonly Dictionary<object,int>    ObjectIndices  = new ();
 			protected readonly Dictionary<object,string> DelayedObjects = new ();
@@ -68,7 +69,7 @@ namespace LinqToDB.ServiceModel
 
 			protected SerializerBase(MappingSchema serializationMappingSchema)
 			{
-				_ms = serializationMappingSchema;
+				_mappingSchema = serializationMappingSchema;
 			}
 
 			protected void Append(Type type, object? value, bool withType = true)
@@ -81,7 +82,7 @@ namespace LinqToDB.ServiceModel
 					Append((string?)null);
 				else if (!type.IsArray)
 				{
-					Append(SerializationConverter.Serialize(_ms, value));
+					Append(SerializationConverter.Serialize(_mappingSchema, value));
 				}
 				else
 				{

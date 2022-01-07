@@ -321,6 +321,15 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSelectQuery(SqlSelectStatement selectStatement)
 		{
+			var queryName = QueryName;
+			var tablePath = TablePath;
+
+			if (selectStatement.SelectQuery.QueryName is not null)
+			{
+				QueryName = selectStatement.SelectQuery.QueryName;
+				TablePath = null;
+			}
+
 			BuildStep = Step.Tag;             BuildTag            (selectStatement);
 			BuildStep = Step.WithClause;      BuildWithClause     (selectStatement.With);
 			BuildStep = Step.SelectClause;    BuildSelectClause   (selectStatement.SelectQuery);
@@ -331,6 +340,9 @@ namespace LinqToDB.SqlProvider
 			BuildStep = Step.OrderByClause;   BuildOrderByClause  (selectStatement.SelectQuery);
 			BuildStep = Step.OffsetLimit;     BuildOffsetLimit    (selectStatement.SelectQuery);
 			BuildStep = Step.QueryExtensions; BuildQueryExtensions(selectStatement);
+
+			TablePath = tablePath;
+			QueryName = queryName;
 		}
 
 		protected virtual void BuildCteBody(SelectQuery selectQuery)
@@ -1444,14 +1456,38 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual bool? BuildPhysicalTable(ISqlTableSource table, string? alias, string? defaultDatabaseName = null)
 		{
+			var tablePath = TablePath;
+
+			if (alias != null)
+			{
+				if (TablePath is { Length: > 0 })
+					TablePath += '.';
+				TablePath += alias;
+			}
+
 			bool? buildAlias = null;
 
 			switch (table.ElementType)
 			{
-				case QueryElementType.SqlTable        :
-				case QueryElementType.TableSource     :
-					StringBuilder.Append(GetPhysicalTableName(table, alias, defaultDatabaseName : defaultDatabaseName));
+				case QueryElementType.SqlTable:
+				case QueryElementType.TableSource:
+				{
+					var name = GetPhysicalTableName(table, alias, defaultDatabaseName : defaultDatabaseName);
+
+					StringBuilder.Append(name);
+
+					if (alias != null && table is SqlTable { ID: {} id })
+					{
+						var path = TablePath;
+
+						if (QueryName is not null)
+							path += $"@{QueryName}";
+
+						(TableIDs ??= new())[id] = new(alias, name, path!);
+					}
+
 					break;
+				}
 
 				case QueryElementType.SqlQuery        :
 					StringBuilder.AppendLine(OpenParens);
@@ -1507,6 +1543,8 @@ namespace LinqToDB.SqlProvider
 				default:
 					throw new InvalidOperationException($"Unexpected table type {table.ElementType}");
 			}
+
+			TablePath = tablePath;
 
 			return buildAlias;
 		}
@@ -1632,6 +1670,7 @@ namespace LinqToDB.SqlProvider
 
 		static readonly ConcurrentDictionary<Type,ISqlExtensionBuilder> _extensionBuilders = new()
 		{
+			[typeof(NoneExtensionBuilder)]               = new NoneExtensionBuilder(),
 			[typeof(HintExtensionBuilder)]               = new HintExtensionBuilder(),
 			[typeof(HintWithParameterExtensionBuilder)]  = new HintWithParameterExtensionBuilder(),
 			[typeof(HintWithParametersExtensionBuilder)] = new HintWithParametersExtensionBuilder(),
@@ -3638,9 +3677,24 @@ namespace LinqToDB.SqlProvider
 
 		#region TableID
 
-		public Dictionary<string,string>? TableIDs  { get; set; }
-		public string?                    TablePath { get; set; }
-		public string?                    QueryName { get; set; }
+
+		public Dictionary<string,TableIDInfo>? TableIDs  { get; set; }
+		public string?                         TablePath { get; set; }
+		public string?                         QueryName { get; set; }
+
+		public string? BuildSqlID(Sql.SqlID id)
+		{
+			if (TableIDs?.TryGetValue(id.ID, out var path) == true)
+				return id.Type switch
+				{
+					Sql.SqlIDType.TableAlias => path!.TableAlias,
+					Sql.SqlIDType.TableName  => path!.TableName,
+					Sql.SqlIDType.TableSpec  => path!.TableSpec,
+					_ => throw new InvalidOperationException($"Unknown SqlID Type '{id.Type}'.")
+				};
+
+			throw new InvalidOperationException($"Table ID '{id.ID}' is not defined.");
+		}
 
 		#endregion
 	}

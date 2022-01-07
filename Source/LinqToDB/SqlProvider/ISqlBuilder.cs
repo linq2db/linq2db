@@ -35,8 +35,10 @@ namespace LinqToDB.SqlProvider
 		MappingSchema MappingSchema { get; }
 		StringBuilder StringBuilder { get; }
 
-		public Dictionary<string,string>? TableIDs  { get; }
-		string?                           TablePath { get; }
-		string?                           QueryName { get; }
+		public Dictionary<string,TableIDInfo>? TableIDs  { get; }
+		string?                                TablePath { get; }
+		string?                                QueryName { get; }
+
+		string? BuildSqlID(Sql.SqlID id);
 	}
 }

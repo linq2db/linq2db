@@ -15,21 +15,17 @@ namespace LinqToDB
 		[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true)]
 		public class QueryExtensionAttribute : Attribute
 		{
-			public QueryExtensionAttribute(QueryExtensionScope scope)
+			public QueryExtensionAttribute(QueryExtensionScope scope, Type extensionBuilderType)
 			{
-				Scope = scope;
-			}
-
-			public QueryExtensionAttribute(string? configuration, QueryExtensionScope scope)
-			{
-				Configuration = configuration;
-				Scope         = scope;
+				Scope                = scope;
+				ExtensionBuilderType = extensionBuilderType;
 			}
 
 			public QueryExtensionAttribute(QueryExtensionScope scope, Type extensionBuilderType, params string[] extensionArguments)
 			{
 				Scope                = scope;
 				ExtensionBuilderType = extensionBuilderType;
+				ExtensionArguments   = extensionArguments;
 			}
 
 			public QueryExtensionAttribute(string? configuration, QueryExtensionScope scope, Type extensionBuilderType)

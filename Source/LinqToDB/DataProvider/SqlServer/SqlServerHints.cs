@@ -229,13 +229,13 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Table-like query source with table hints.</returns>
 		[LinqTunnel, Pure]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
-		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.Ignore,    typeof(HintExtensionBuilder))]
-		public static ISqlServerSpecificTable<TSource> With<TSource>(this ISqlServerSpecificTable<TSource> table, [SqlQueryDependent] string hint)
+		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
+		public static ISqlServerSpecificTable<TSource> TableHint<TSource>(this ISqlServerSpecificTable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
 			table.Expression = Expression.Call(
 				null,
-				MethodHelper.GetMethodInfo(With, table, hint),
+				MethodHelper.GetMethodInfo(TableHint, table, hint),
 				table.Expression, Expression.Constant(hint));
 
 			return table;

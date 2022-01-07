@@ -1662,7 +1662,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// Access, SQLite, Firebird before v4, Informix and SAP Hana do not support DEFAULT in inserted values, 
+		// Access, SQLite, Firebird before v4, Informix and SAP Hana do not support DEFAULT in inserted values,
 		// see https://github.com/linq2db/linq2db/pull/2954#issuecomment-821798021
 		[Test]
 		public void InsertDefault([DataSources(

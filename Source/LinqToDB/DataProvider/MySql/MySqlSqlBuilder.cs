@@ -656,23 +656,6 @@ namespace LinqToDB.DataProvider.MySql
 			}
 		}
 
-		protected override void BuildSelectQuery(SqlSelectStatement selectStatement)
-		{
-			var queryName = QueryName;
-			var tablePath = TablePath;
-
-			if (selectStatement.SelectQuery.QueryName is not null)
-			{
-				QueryName = selectStatement.SelectQuery.QueryName;
-				TablePath = null;
-			}
-
-			base.BuildSelectQuery(selectStatement);
-
-			TablePath = tablePath;
-			QueryName = queryName;
-		}
-
 		protected override void FinalizeBuildQuery(SqlStatement statement)
 		{
 			if (statement.SqlQueryExtensions is not null && HintBuilder is not null)
@@ -689,34 +672,6 @@ namespace LinqToDB.DataProvider.MySql
 
 				StringBuilder.Insert(_hintPosition, HintBuilder);
 			}
-		}
-
-		protected override bool? BuildPhysicalTable(ISqlTableSource table, string? alias, string? defaultDatabaseName = null)
-		{
-			var tablePath = TablePath;
-
-			if (alias != null)
-			{
-				if (TablePath is { Length: > 0 })
-					TablePath += '.';
-				TablePath += alias;
-
-				if (table is SqlTable { ID: {} id })
-				{
-					var path = TablePath;
-
-					if (QueryName is not null)
-						path += $"@{QueryName}";
-
-					(TableIDs ??= new())[id] = path!;
-				}
-			}
-
-			var ret = base.BuildPhysicalTable(table, alias, defaultDatabaseName);
-
-			TablePath = tablePath;
-
-			return ret;
 		}
 
 		protected override void BuildTableExtensions(SqlTable table, string alias)

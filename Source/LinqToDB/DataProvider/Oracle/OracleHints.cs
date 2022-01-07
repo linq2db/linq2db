@@ -109,7 +109,7 @@ namespace LinqToDB.DataProvider.Oracle
 		/// <returns>Table-like query source with table hints.</returns>
 		[LinqTunnel, Pure]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(PathableTableHintExtensionBuilder))]
-		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.Ignore,    typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static IOracleSpecificTable<TSource> With<TSource>(this IOracleSpecificTable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{

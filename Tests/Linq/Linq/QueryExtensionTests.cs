@@ -53,14 +53,18 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var q =
+			(
 				from p in db.Parent
 					.AsSqlServerSpecific()
-						.With(SqlServerHints.Table.NoLock)
-						.With(SqlServerHints.Table.NoWait)
+						.TableHint(SqlServerHints.Table.NoLock)
+						.TableHint(SqlServerHints.Table.NoWait)
 					.AsOracleSpecific()
 						.With(OracleHints.TableHint.Full)
 						.With(OracleHints.TableHint.Hash)
-				select p;
+				select p
+			)
+			.AsSqlServerSpecific()
+			.AsOracleSpecific();
 
 			_ = q.ToList();
 

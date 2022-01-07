@@ -21,14 +21,7 @@ namespace LinqToDB.SqlProvider
 
 			object? GetValue(SqlValue value)
 			{
-				if (value.Value is Sql.SqlID id)
-				{
-					if (sqlBuilder.TableIDs?.TryGetValue(id.ID, out var path) == true)
-						return path;
-					throw new InvalidOperationException($"Table ID '{id.ID}' is not defined.");
-				}
-
-				return value.Value;
+				return value.Value is Sql.SqlID id ? sqlBuilder.BuildSqlID(id) : value.Value;
 			}
 		}
 	}

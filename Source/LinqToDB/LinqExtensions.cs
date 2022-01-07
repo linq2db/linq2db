@@ -428,7 +428,7 @@ namespace LinqToDB
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(Sql.QueryExtensionScope.JoinHint)]
+		[Sql.QueryExtension(Sql.QueryExtensionScope.JoinHint, typeof(NoneExtensionBuilder))]
 		public static IQueryable<TSource> JoinHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{

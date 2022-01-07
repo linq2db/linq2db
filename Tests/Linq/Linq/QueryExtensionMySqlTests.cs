@@ -29,7 +29,7 @@ namespace Tests.Linq
 					from c in db.Child.TableID("Ch")
 					select p
 				)
-				.QueryHint(hint, Sql.TableID("Pr"), Sql.TableID("Ch"));
+				.QueryHint(hint, Sql.TableSpec("Pr"), Sql.TableSpec("Ch"));
 
 			_ = q.ToList();
 

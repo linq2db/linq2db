@@ -115,7 +115,7 @@ namespace Tests.Data
 				{
 					dataProvider = DataConnection.GetDataProvider("DB2", connectionString)!;
 
-					Assert.That(dataProvider, Is.TypeOf<DB2DataProvider>());
+					Assert.That(dataProvider, Is.TypeOf<DB2LUWDataProvider>());
 
 					var sqlServerDataProvider = (DB2DataProvider)dataProvider;
 
@@ -128,7 +128,7 @@ namespace Tests.Data
 				{
 					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", "MyConfig.2005", connectionString)!;
 
-					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
+					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider2005SystemDataSqlClient>());
 
 					var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
@@ -146,7 +146,7 @@ namespace Tests.Data
 				{
 					dataProvider = DataConnection.GetDataProvider("SqlServer", connectionString)!;
 
-					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
+					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider2008SystemDataSqlClient>());
 
 					var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
@@ -164,7 +164,7 @@ namespace Tests.Data
 				{
 					dataProvider = DataConnection.GetDataProvider("SqlServer.2012", connectionString)!;
 
-					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
+					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider2012SystemDataSqlClient>());
 
 					var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
@@ -182,7 +182,7 @@ namespace Tests.Data
 				{
 					dataProvider = DataConnection.GetDataProvider("SqlServer", "SqlServer.2012", connectionString)!;
 
-					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
+					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider2012SystemDataSqlClient>());
 
 					var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
@@ -200,7 +200,7 @@ namespace Tests.Data
 					{
 						dataProvider = DataConnection.GetDataProvider("SqlServer", "SqlServer.2017", connectionString)!;
 
-						Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
+						Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider2017SystemDataSqlClient>());
 
 						var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
@@ -435,7 +435,7 @@ namespace Tests.Data
 						if (cn.State == ConnectionState.Closed)
 							open = true;
 					};
-				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() => 
+				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() =>
 						{
 							if (cn.State == ConnectionState.Closed)
 								openAsync = true;
