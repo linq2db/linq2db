@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	class SqlServer2016SqlBuilder : SqlServer2012SqlBuilder
 	{
-		public SqlServer2016SqlBuilder(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public SqlServer2016SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}

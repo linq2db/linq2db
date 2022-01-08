@@ -9,7 +9,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using LinqToDB.Linq;
 
 namespace LinqToDB.SqlProvider
 {
@@ -22,9 +21,9 @@ namespace LinqToDB.SqlProvider
 	{
 		#region Init
 
-		protected BasicSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		protected BasicSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 		{
-			Provider         = provider;
+			DataProvider     = provider;
 			MappingSchema    = mappingSchema;
 			SqlOptimizer     = sqlOptimizer;
 			SqlProviderFlags = sqlProviderFlags;
@@ -32,7 +31,7 @@ namespace LinqToDB.SqlProvider
 
 		protected BasicSqlBuilder(BasicSqlBuilder parentBuilder)
 		{
-			Provider         = parentBuilder.Provider;
+			DataProvider     = parentBuilder.DataProvider;
 			MappingSchema    = parentBuilder.MappingSchema;
 			SqlOptimizer     = parentBuilder.SqlOptimizer;
 			SqlProviderFlags = parentBuilder.SqlProviderFlags;
@@ -45,7 +44,7 @@ namespace LinqToDB.SqlProvider
 		public    MappingSchema       MappingSchema       { get; }
 		public    StringBuilder       StringBuilder       { get; set; } = null!;
 
-		protected IDataProvider       Provider;
+		protected IDataProvider?      DataProvider;
 		protected ValueToSqlConverter ValueToSqlConverter => MappingSchema.ValueToSqlConverter;
 		protected SqlStatement        Statement = null!;
 		protected int                 Indent;

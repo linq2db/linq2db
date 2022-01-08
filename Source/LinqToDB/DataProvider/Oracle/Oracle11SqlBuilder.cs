@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 	partial class Oracle11SqlBuilder : BasicSqlBuilder
 	{
-		public Oracle11SqlBuilder(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public Oracle11SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
@@ -516,7 +516,7 @@ END;",
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			if (Provider is OracleDataProvider provider)
+			if (DataProvider is OracleDataProvider provider)
 			{
 				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)

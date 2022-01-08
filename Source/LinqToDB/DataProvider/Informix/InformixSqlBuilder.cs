@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.Informix
 
 	partial class InformixSqlBuilder : BasicSqlBuilder
 	{
-		public InformixSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public InformixSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
@@ -252,7 +252,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			if (Provider is InformixDataProvider provider)
+			if (DataProvider is InformixDataProvider provider)
 			{
 				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)

@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.Access
 
 	class AccessOleDbSqlBuilder : AccessSqlBuilderBase
 	{
-		public AccessOleDbSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public AccessOleDbSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
@@ -24,7 +24,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			if (Provider is AccessOleDbDataProvider provider)
+			if (DataProvider is AccessOleDbDataProvider provider)
 			{
 				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)

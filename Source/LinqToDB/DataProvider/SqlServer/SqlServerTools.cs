@@ -259,9 +259,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#endregion
 
+		[Obsolete("Use 'QueryHint(Hints.Option.Recompile)' instead.")]
 		public static class Sql
 		{
-			[Obsolete("Use 'QueryHint(Hints.Option.Recompile)' instead.")]
 			public const string OptionRecompile = "OPTION(RECOMPILE)";
 		}
 

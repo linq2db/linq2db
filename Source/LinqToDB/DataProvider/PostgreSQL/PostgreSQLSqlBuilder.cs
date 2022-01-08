@@ -17,7 +17,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 	public class PostgreSQLSqlBuilder : BasicSqlBuilder
 	{
-		public PostgreSQLSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public PostgreSQLSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
@@ -113,7 +113,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.Udt            :
 					var udtType = type.Type.SystemType.ToNullableUnderlying();
 
-					var provider = Provider as PostgreSQLDataProvider;
+					var provider = DataProvider as PostgreSQLDataProvider;
 
 					     if (udtType == provider?.Adapter.NpgsqlPointType   ) StringBuilder.Append("point");
 					else if (udtType == provider?.Adapter.NpgsqlLineType    ) StringBuilder.Append("line");
@@ -304,7 +304,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			if (Provider is PostgreSQLDataProvider provider)
+			if (DataProvider is PostgreSQLDataProvider provider)
 			{
 				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)

@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 	class SapHanaOdbcSqlBuilder : SapHanaSqlBuilder
 	{
-		public SapHanaOdbcSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public SapHanaOdbcSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}

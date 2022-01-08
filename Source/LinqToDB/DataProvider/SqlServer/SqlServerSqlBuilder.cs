@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	abstract class SqlServerSqlBuilder : BasicSqlBuilder
 	{
-		protected SqlServerSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		protected SqlServerSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
@@ -432,7 +432,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override string? GetTypeName(IDbDataParameter parameter)
 		{
-			if (Provider is SqlServerDataProvider provider)
+			if (DataProvider is SqlServerDataProvider provider)
 			{
 				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
@@ -444,7 +444,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override string? GetUdtTypeName(IDbDataParameter parameter)
 		{
-			if (Provider is SqlServerDataProvider provider)
+			if (DataProvider is SqlServerDataProvider provider)
 			{
 				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
@@ -456,7 +456,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			if (Provider is SqlServerDataProvider provider)
+			if (DataProvider is SqlServerDataProvider provider)
 			{
 				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)

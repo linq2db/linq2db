@@ -26,7 +26,6 @@ namespace LinqToDB.ServiceModel
 		class ConfigurationInfo
 		{
 			public LinqServiceInfo LinqServiceInfo = null!;
-			public IDataProvider   DataProvider    = null!;
 			public MappingSchema   MappingSchema   = null!;
 		}
 
@@ -51,14 +50,12 @@ namespace LinqToDB.ServiceModel
 				try
 				{
 					var info = client.GetInfo(Configuration);
-					var type = Type.GetType(info.DataProviderType)!;
-					var dp   = (IDataProvider)Activator.CreateInstance(type);
-					var ms   = new RemoteMappingSchema(ContextIDPrefix, dp.MappingSchema);
+					var type = Type.GetType(info.MappingSchemaType)!;
+					var ms   = new RemoteMappingSchema(ContextIDPrefix, (MappingSchema)Activator.CreateInstance(type));
 
 					_configurationInfo = new ConfigurationInfo
 					{
 						LinqServiceInfo = info,
-						DataProvider    = dp,
 						MappingSchema   = ms,
 					};
 				}
@@ -77,13 +74,6 @@ namespace LinqToDB.ServiceModel
 
 		string?            _contextID;
 		string IDataContext.ContextID => _contextID ??= GetConfigurationInfo().MappingSchema.ConfigurationList[0];
-
-		private IDataProvider? _dataProvider;
-		public  IDataProvider   DataProvider
-		{
-			get => _dataProvider ??= GetConfigurationInfo().DataProvider;
-			set => _dataProvider = value;
-		}
 
 		private MappingSchema? _mappingSchema;
 		public  MappingSchema   MappingSchema
@@ -217,7 +207,7 @@ namespace LinqToDB.ServiceModel
 											}),
 											new Expression[]
 											{
-												Expression.Constant(DataProvider),
+												Expression.Constant(null, typeof(IDataProvider)),
 												Expression.Constant(((IDataContext)this).MappingSchema),
 												Expression.Constant(GetSqlOptimizer()),
 												Expression.Constant(((IDataContext)this).SqlProviderFlags)

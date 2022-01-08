@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	class SqlServer2017SqlBuilder : SqlServer2016SqlBuilder
 	{
-		public SqlServer2017SqlBuilder(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public SqlServer2017SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}

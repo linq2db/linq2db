@@ -296,7 +296,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			if (Provider is FirebirdDataProvider provider)
+			if (DataProvider is FirebirdDataProvider provider)
 			{
 				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)

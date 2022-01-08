@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 	partial class SybaseSqlBuilder : BasicSqlBuilder
 	{
-		public SybaseSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public SybaseSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
 		}
@@ -182,7 +182,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override string? GetProviderTypeName(IDbDataParameter parameter)
 		{
-			if (Provider is SybaseDataProvider provider)
+			if (DataProvider is SybaseDataProvider provider)
 			{
 				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
