@@ -21,19 +21,40 @@ namespace LinqToDB.DataProvider.SqlServer
 		// System.Data
 		// and/or
 		// System.Data.SqlClient
-		static readonly Lazy<IDataProvider> _sqlServerDataProvider2000sdc = DataConnection.CreateDataProvider<SqlServerDataProvider2000SystemDataSqlClient>();
-		static readonly Lazy<IDataProvider> _sqlServerDataProvider2005sdc = DataConnection.CreateDataProvider<SqlServerDataProvider2005SystemDataSqlClient>();
-		static readonly Lazy<IDataProvider> _sqlServerDataProvider2008sdc = DataConnection.CreateDataProvider<SqlServerDataProvider2008SystemDataSqlClient>();
-		static readonly Lazy<IDataProvider> _sqlServerDataProvider2012sdc = DataConnection.CreateDataProvider<SqlServerDataProvider2012SystemDataSqlClient>();
-		static readonly Lazy<IDataProvider> _sqlServerDataProvider2016sdc = DataConnection.CreateDataProvider<SqlServerDataProvider2016SystemDataSqlClient>();
-		static readonly Lazy<IDataProvider> _sqlServerDataProvider2017sdc = DataConnection.CreateDataProvider<SqlServerDataProvider2017SystemDataSqlClient>();
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2000sdc = CreateDataProvider<SqlServerDataProvider2000SystemDataSqlClient>();
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2005sdc = CreateDataProvider<SqlServerDataProvider2005SystemDataSqlClient>();
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2008sdc = CreateDataProvider<SqlServerDataProvider2008SystemDataSqlClient>();
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2012sdc = CreateDataProvider<SqlServerDataProvider2012SystemDataSqlClient>();
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2016sdc = CreateDataProvider<SqlServerDataProvider2016SystemDataSqlClient>();
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2017sdc = CreateDataProvider<SqlServerDataProvider2017SystemDataSqlClient>();
 		// Microsoft.Data.SqlClient
-		static readonly Lazy<IDataProvider> _sqlServerDataProvider2000mdc = DataConnection.CreateDataProvider<SqlServerDataProvider2000MicrosoftDataSqlClient>();
-		static readonly Lazy<IDataProvider> _sqlServerDataProvider2005mdc = DataConnection.CreateDataProvider<SqlServerDataProvider2005MicrosoftDataSqlClient>();
-		static readonly Lazy<IDataProvider> _sqlServerDataProvider2008mdc = DataConnection.CreateDataProvider<SqlServerDataProvider2008MicrosoftDataSqlClient>();
-		static readonly Lazy<IDataProvider> _sqlServerDataProvider2012mdc = DataConnection.CreateDataProvider<SqlServerDataProvider2012MicrosoftDataSqlClient>();
-		static readonly Lazy<IDataProvider> _sqlServerDataProvider2016mdc = DataConnection.CreateDataProvider<SqlServerDataProvider2016MicrosoftDataSqlClient>();
-		static readonly Lazy<IDataProvider> _sqlServerDataProvider2017mdc = DataConnection.CreateDataProvider<SqlServerDataProvider2017MicrosoftDataSqlClient>();
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2000mdc = CreateDataProvider<SqlServerDataProvider2000MicrosoftDataSqlClient>();
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2005mdc = CreateDataProvider<SqlServerDataProvider2005MicrosoftDataSqlClient>();
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2008mdc = CreateDataProvider<SqlServerDataProvider2008MicrosoftDataSqlClient>();
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2012mdc = CreateDataProvider<SqlServerDataProvider2012MicrosoftDataSqlClient>();
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2016mdc = CreateDataProvider<SqlServerDataProvider2016MicrosoftDataSqlClient>();
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2017mdc = CreateDataProvider<SqlServerDataProvider2017MicrosoftDataSqlClient>();
+
+		static Lazy<IDataProvider> CreateDataProvider<T>()
+			where T : SqlServerDataProvider, new()
+		{
+			return new(() =>
+			{
+				var provider = new T();
+
+				if (Provider == provider.Provider)
+				{
+					DataConnection.AddDataProvider(provider);
+
+					if (provider.Name == ProviderName.SqlServer2012)
+						DataConnection.AddDataProvider(ProviderName.SqlServer2014, provider);
+				}
+
+				_providers.Enqueue(provider);
+
+				return provider;
+			}, true);
+		}
 
 		public static bool AutoDetectProvider { get; set; } = true;
 
