@@ -1241,6 +1241,9 @@ namespace LinqToDB.Linq.Builder
 						return sql;
 					break;
 				}
+//
+//				case ExpressionType.New when expression.Type == typeof(Sql.SqlID) :
+//					return new SqlValue(typeof(Sql.SqlID), expression.EvaluateExpression());
 			}
 
 			if (expression.Type == typeof(bool) && _convertedPredicates.Add(expression))
@@ -1277,13 +1280,13 @@ namespace LinqToDB.Linq.Builder
 			if (attr.InlineParameters)
 				DataContext.InlineParameters = true;
 
-			var sqlExpression =
-				attr.GetExpression(
-					(this_: this, context: context),
-					DataContext,
-					context!.SelectQuery,
-					mc,
-					static (context, e, descriptor) => context.this_.ConvertToExtensionSql(context.context, e, descriptor));
+			var sqlExpression = attr.GetExpression(
+				(this_: this, context),
+				DataContext,
+				context!.SelectQuery,
+				mc,
+				static (context, e, descriptor) => context.this_.ConvertToExtensionSql(context.context, e, descriptor));
+
 			if (sqlExpression == null)
 				throw new LinqToDBException($"Cannot convert to SQL method '{mc}'.");
 
@@ -1294,7 +1297,7 @@ namespace LinqToDB.Linq.Builder
 
 		public static ISqlExpression ConvertToSqlConvertible(Expression expression)
 		{
-			var l = Expression.Lambda<Func<IToSqlConverter>>(expression);
+			var l = Expression.Lambda<Func<IToSqlConverter>>(Expression.Convert(expression, typeof(IToSqlConverter)));
 			var f = l.CompileExpression();
 			var c = f();
 

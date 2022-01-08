@@ -9,6 +9,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using LinqToDB.Linq;
 
 namespace LinqToDB.SqlProvider
 {
@@ -189,8 +190,13 @@ namespace LinqToDB.SqlProvider
 		{
 		}
 
+		List<Action>? _finalBuilders;
+
 		protected virtual void FinalizeBuildQuery(SqlStatement statement)
 		{
+			if (_finalBuilders != null)
+				foreach (var builder in _finalBuilders)
+					builder();
 		}
 
 		#endregion
@@ -2817,7 +2823,7 @@ namespace LinqToDB.SqlProvider
 				StringBuilder.Append(format);
 			else
 			{
-				StringBuilder s = new StringBuilder();
+				var s      = new StringBuilder();
 				var values = new object[parameters.Count];
 
 				for (var i = 0; i < values.Length; i++)
@@ -2896,10 +2902,15 @@ namespace LinqToDB.SqlProvider
 
 		protected void BuildValue(SqlDataType? dataType, object? value)
 		{
-			if (dataType != null)
-				ValueToSqlConverter.Convert(StringBuilder, dataType, value);
+			if (value is Sql.SqlID id)
+			{
+				TryBuildSqlID(id);
+			}
 			else
-				ValueToSqlConverter.Convert(StringBuilder, value);
+				if (dataType != null)
+					ValueToSqlConverter.Convert(StringBuilder, dataType, value);
+				else
+					ValueToSqlConverter.Convert(StringBuilder, value);
 		}
 
 		#endregion
@@ -3677,12 +3688,11 @@ namespace LinqToDB.SqlProvider
 
 		#region TableID
 
-
 		public Dictionary<string,TableIDInfo>? TableIDs  { get; set; }
 		public string?                         TablePath { get; set; }
 		public string?                         QueryName { get; set; }
 
-		public string? BuildSqlID(Sql.SqlID id)
+		public string BuildSqlID(Sql.SqlID id)
 		{
 			if (TableIDs?.TryGetValue(id.ID, out var path) == true)
 				return id.Type switch
@@ -3694,6 +3704,24 @@ namespace LinqToDB.SqlProvider
 				};
 
 			throw new InvalidOperationException($"Table ID '{id.ID}' is not defined.");
+		}
+
+		int _testReplaceNumber;
+
+		void TryBuildSqlID(Sql.SqlID id)
+		{
+			if (TableIDs?.ContainsKey(id.ID) == true)
+			{
+				StringBuilder.Append(BuildSqlID(id));
+			}
+			else
+			{
+				var testToReplace = $"$$${++_testReplaceNumber}$$$";
+
+				StringBuilder.Append(testToReplace);
+
+				(_finalBuilders ??= new(1)).Add(() => StringBuilder.Replace(testToReplace, BuildSqlID(id)));
+			}
 		}
 
 		#endregion

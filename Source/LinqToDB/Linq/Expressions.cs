@@ -123,9 +123,9 @@ namespace LinqToDB.Linq
 		/// <param name="expression">Lambda expression which has to replace <see cref="BinaryExpression"/></param>
 		/// <remarks>Note that method is not thread safe and has to be used only in Application's initialization section.</remarks>
 		public static void MapBinary(
-			string           providerName, 
+			string           providerName,
 			ExpressionType   nodeType,
-			Type             leftType, 
+			Type             leftType,
 			Type             rightType,
 			LambdaExpression expression)
 		{
@@ -155,9 +155,9 @@ namespace LinqToDB.Linq
 		/// <param name="expression">Lambda expression which has to replace <see cref="BinaryExpression"/>.</param>
 		/// <remarks>Note that method is not thread safe and has to be used only in Application's initialization section.</remarks>
 		public static void MapBinary(
-			ExpressionType   nodeType, 
-			Type             leftType, 
-			Type             rightType, 
+			ExpressionType   nodeType,
+			Type             leftType,
+			Type             rightType,
 			LambdaExpression expression)
 		{
 			MapBinary("", nodeType, leftType, rightType, expression);
@@ -191,7 +191,7 @@ namespace LinqToDB.Linq
 		/// <param name="expression">Lambda expression which has to replace <paramref name="binaryExpression"/>.</param>
 		/// <remarks>Note that method is not thread safe and has to be used only in Application's initialization section.</remarks>
 		public static void MapBinary<TLeft,TRight,TR>(
-			Expression<Func<TLeft,TRight,TR>> binaryExpression, 
+			Expression<Func<TLeft,TRight,TR>> binaryExpression,
 			Expression<Func<TLeft,TRight,TR>> expression)
 		{
 			MapBinary("", binaryExpression, expression);
@@ -501,7 +501,7 @@ namespace LinqToDB.Linq
 		static Dictionary<string,Dictionary<MemberInfo,IExpressionInfo>>? _members;
 		static readonly object                                            _memberSync = new object();
 
-		static readonly Lazy<Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>> _binaries = 
+		static readonly Lazy<Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>> _binaries =
 			new Lazy<Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>>(() => new Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>());
 
 		#region Common
@@ -621,7 +621,7 @@ namespace LinqToDB.Linq
 
 			// Disabled for now. See #2512 (https://github.com/linq2db/linq2db/issues/2512)
 			// { M(() => DateTimeOffset.Now                   ), N(() => L<DateTimeOffset>                      (()                              => Sql.CurrentTzTimestamp                                 )) },
-			
+
 			{ M(() => DateTimeOffset.Now.Year              ), N(() => L<DateTimeOffset,int>                  ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Year,        obj)!.Value    )) },
 			{ M(() => DateTimeOffset.Now.Month             ), N(() => L<DateTimeOffset,int>                  ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.Month,       obj)!.Value    )) },
 			{ M(() => DateTimeOffset.Now.DayOfYear         ), N(() => L<DateTimeOffset,int>                  ((DateTimeOffset obj)            => Sql.DatePart(Sql.DateParts.DayOfYear,   obj)!.Value    )) },
@@ -1106,6 +1106,14 @@ namespace LinqToDB.Linq
 			{ M(() => SqlBoolean.False),         N(() => L<bool>           (()               => false)) },
 
 			#endregion
+
+//			#region SqlID
+//
+//			{ M(() => Sql.TableAlias(null!)), N(() => L<string,Sql.SqlID>(id => new Sql.SqlID(Sql.SqlIDType.TableAlias, id))) },
+//			{ M(() => Sql.TableName (null!)), N(() => L<string,Sql.SqlID>(id => new Sql.SqlID(Sql.SqlIDType.TableName,  id))) },
+//			{ M(() => Sql.TableSpec (null!)), N(() => L<string,Sql.SqlID>(id => new Sql.SqlID(Sql.SqlIDType.TableSpec,  id))) },
+//
+//			#endregion
 		};
 
 		#endregion

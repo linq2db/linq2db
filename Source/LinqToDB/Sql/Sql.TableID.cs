@@ -1,10 +1,15 @@
 ﻿using System;
+using System.Linq.Expressions;
 
 namespace LinqToDB
 {
+	using Expressions;
+	using Linq.Builder;
+	using SqlQuery;
+
 	public partial class Sql
 	{
-		public struct SqlID
+		public struct SqlID : IToSqlConverter
 		{
 			public SqlIDType Type { get; }
 			public string    ID   { get; }
@@ -33,6 +38,11 @@ namespace LinqToDB
 			public override int GetHashCode()
 			{
 				return (int)Type | (ID.GetHashCode() >> 3);
+			}
+
+			public ISqlExpression ToSql(Expression expression)
+			{
+				return new SqlValue(typeof(SqlID), expression.EvaluateExpression());
 			}
 
 			public static SqlID Parse(string value)

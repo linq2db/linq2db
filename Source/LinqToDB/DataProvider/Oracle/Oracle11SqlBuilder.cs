@@ -691,6 +691,8 @@ END;",
 
 		protected override void FinalizeBuildQuery(SqlStatement statement)
 		{
+			base.FinalizeBuildQuery(statement);
+
 			if (statement.SqlQueryExtensions is not null && HintBuilder is not null)
 			{
 				if (HintBuilder.Length > 0 && HintBuilder[HintBuilder.Length - 1] != ' ')

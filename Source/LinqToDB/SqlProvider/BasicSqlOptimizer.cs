@@ -1351,6 +1351,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 		private readonly SqlDataType _typeWrapper = new (default(DbDataType));
+
 		public virtual IQueryElement OptimizeQueryElement(ConvertVisitor<RunOptimizationContext> visitor, IQueryElement element)
 		{
 			switch (element.ElementType)
@@ -1365,6 +1366,10 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.SqlValue:
 				{
 					var value = (SqlValue)element;
+
+					if (value.Value is Sql.SqlID)
+						break;
+
 					if (visitor.Context.MappingSchema != null)
 					{
 						// TODO:
@@ -1372,6 +1377,7 @@ namespace LinqToDB.SqlProvider
 						// as currently we cannot change ValueConverter signatures, we use pre-created instance of type wrapper
 						//var dataType = new SqlDataType(value.ValueType);
 						_typeWrapper.Type = value.ValueType;
+
 						if (!visitor.Context.MappingSchema.ValueToSqlConverter.CanConvert(_typeWrapper, value.Value))
 						{
 							// we cannot generate SQL literal, so just convert to parameter

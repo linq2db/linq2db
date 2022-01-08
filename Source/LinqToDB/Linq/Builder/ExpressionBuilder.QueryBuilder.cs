@@ -181,7 +181,7 @@ namespace LinqToDB.Linq.Builder
 									var prevCount  = ctx.SelectQuery.Select.Columns.Count;
 									var expression = ctx.BuildExpression(ma, 0, context.enforceServerSide);
 
-									if (expression.NodeType == ExpressionType.Extension && expression is DefaultValueExpression 
+									if (expression.NodeType == ExpressionType.Extension && expression is DefaultValueExpression
 																						&& ma.Expression?.NodeType == ExpressionType.Parameter)
 									{
 										var objExpression = context.builder.BuildExpression(ctx, ma.Expression, context.enforceServerSide, context.alias);
@@ -337,7 +337,7 @@ namespace LinqToDB.Linq.Builder
 
 
 								if (context.builder.IsServerSideOnly(expr) || context.builder.PreferServerSide(expr, context.enforceServerSide) || ce.Method.IsSqlPropertyMethodEx())
-										return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
+									return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
 
 								break;
 							}
@@ -540,8 +540,8 @@ namespace LinqToDB.Linq.Builder
 			//TODO: Multiply query check should be smarter, possibly not needed if we create fallback mechanism
 			var result = !ce.IsQueryable(FirstSingleBuilder.MethodNames)
 			       && typeof(IEnumerable).IsSameOrParentOf(ce.Type)
-			       && ce.Type != typeof(string) 
-			       && !ce.Type.IsArray 
+			       && ce.Type != typeof(string)
+			       && !ce.Type.IsArray
 			       && !ce.IsAggregate(mappingSchema);
 
 			return result;
@@ -651,7 +651,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			return BuildSql(type, idx, QueryHelper.GetValueConverter(sourceExpression));
 		}
-		
+
 		#endregion
 
 		#region IsNonSqlMember
@@ -720,6 +720,9 @@ namespace LinqToDB.Linq.Builder
 
 		bool PreferServerSide(Expression expr, bool enforceServerSide)
 		{
+			if (expr.Type == typeof(Sql.SqlID))
+				return true;
+
 			switch (expr.NodeType)
 			{
 				case ExpressionType.MemberAccess:
