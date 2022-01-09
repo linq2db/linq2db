@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.CLI
+﻿using System.Collections.Generic;
+using System.Text.Json;
+
+namespace LinqToDB.CLI
 {
 	/// <summary>
 	/// String-typed CLI option with fixed list of allowed values.
@@ -29,8 +32,97 @@
 			Required,
 			AllowMultiple,
 			true,
+			true,
 			Help,
 			DetailedHelp,
 			Examples,
-			JsonExamples);
+			JsonExamples)
+	{
+		public override object? ParseCLI(CliCommand command, string rawValue)
+		{
+			// we don't operate with large lists to bother with Values lookup optimization with dictionary
+			if (AllowMultiple)
+			{
+				var values = new List<string>();
+				foreach (var val in rawValue.Split(','))
+				{
+					var found = false;
+					foreach (var value in Values)
+					{
+						if (rawValue == value.Value)
+						{
+							values.Add(rawValue);
+							found = true;
+							break;
+						}
+					}
+
+					if (!found)
+						return null;
+				}
+
+				return values.ToArray();
+			}
+			else
+			{
+				foreach (var value in Values)
+				{
+					if (rawValue == value.Value)
+						return rawValue;
+				}
+
+				return null;
+			}
+		}
+
+		public override object? ParseJSON(JsonElement rawValue)
+		{
+			if (AllowMultiple)
+			{
+				if (rawValue.ValueKind == JsonValueKind.Array)
+				{
+					var values = new List<string>();
+
+					foreach (var element in rawValue.EnumerateArray())
+					{
+						if (element.ValueKind != JsonValueKind.String)
+							return null;
+
+						var stringValue = element.GetString()!;
+
+						var found = false;
+						foreach (var value in Values)
+						{
+							if (stringValue == value.Value)
+							{
+								found = true;
+								values.Add(stringValue);
+								break;
+							}
+						}
+
+							if (!found)
+							return null;
+					}
+
+					return values.ToArray();
+				}
+			}
+			else
+			{
+				if (rawValue.ValueKind == JsonValueKind.String)
+				{
+					var stringValue = rawValue.GetString()!;
+
+					foreach (var value in Values)
+					{
+						if (stringValue == value.Value)
+							return rawValue;
+					}
+				}
+			}
+
+			return null;
+		}
+	}
 }

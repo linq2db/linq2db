@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.CLI
+﻿using System.Collections.Generic;
+using System.Text.Json;
+
+namespace LinqToDB.CLI
 {
 	/// <summary>
 	/// Arbitrary string (more or less) CLI option.
@@ -29,8 +32,46 @@
 			Required,
 			AllowMultiple,
 			true,
+			true,
 			Help,
 			DetailedHelp,
 			Examples,
-			JsonExamples);
+			JsonExamples)
+	{
+		public override object? ParseCLI(CliCommand command, string rawValue)
+		{
+			if (AllowMultiple)
+				return rawValue.Split(',');
+
+			return rawValue;
+		}
+
+		public override object? ParseJSON(JsonElement rawValue)
+		{
+			if (AllowMultiple)
+			{
+				var values = new List<string>();
+
+				if (rawValue.ValueKind == JsonValueKind.Array)
+				{
+					foreach (var value in rawValue.EnumerateArray())
+					{
+						if (value.ValueKind != JsonValueKind.String)
+							return null;
+						values.Add(value.GetString()!);
+					}
+				}
+
+				return values.ToArray();
+
+			}
+			else
+			{
+				if (rawValue.ValueKind == JsonValueKind.String)
+					return rawValue.GetString()!;
+			}
+
+			return null;
+		}
+	}
 }

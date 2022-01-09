@@ -169,7 +169,7 @@ namespace LinqToDB.Scaffold
 				name,
 				method,
 				metadata,
-				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureMethodInfoFieldNameOptions, func.Name.Name))
+				_namingServices.NormalizeIdentifier(_options.DataModel.TableFunctionMethodInfoFieldNameOptions, func.Name.Name))
 			{
 				Error = func.SchemaError?.Message
 			};

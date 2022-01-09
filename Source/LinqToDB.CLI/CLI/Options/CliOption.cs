@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.CLI
+﻿using System.Text.Json;
+
+namespace LinqToDB.CLI
 {
 	/// <summary>
 	/// Base type for CLI command option.
@@ -9,6 +11,7 @@
 	/// <param name="Required">When <c>true</c>, used requred to specify this option.</param>
 	/// <param name="AllowMultiple">When <c>true</c>, user can specify multiple values (separated by comma).</param>
 	/// <param name="AllowInJson">When <c>true</c>, option could be provided in JSON file.</param>
+	/// <param name="AllowInCli">When <c>true</c>, option could be provided through command-line interface.</param>
 	/// <param name="Help">Short help/description test for option.</param>
 	/// <param name="DetailedHelp">Optional detailed help for option.</param>
 	/// <param name="Examples">Optional list of option use examples.</param>
@@ -20,8 +23,29 @@
 		bool       Required,
 		bool       AllowMultiple,
 		bool       AllowInJson,
+		bool       AllowInCli,
 		string     Help,
 		string?    DetailedHelp,
 		string[]?  Examples,
-		string[]?  JsonExamples);
+		string[]?  JsonExamples)
+	{
+		/// <summary>
+		/// Parse option value(s) using CLI arguments.
+		/// </summary>
+		/// <param name="command">Option's command descriptor.</param>
+		/// <param name="rawValue">Option's value argument.</param>
+		/// <returns>
+		/// Returns parsed value or <c>null</c> on error.
+		/// </returns>
+		public abstract object? ParseCLI(CliCommand command, string rawValue);
+
+		/// <summary>
+		/// Parse option value(s) using value from JSON.
+		/// </summary>
+		/// <param name="rawValue">Option's property value in JSON.</param>
+		/// <returns>
+		/// Returns parsed value or <c>null</c> on error.
+		/// </returns>
+		public abstract object? ParseJSON(JsonElement rawValue);
+	}
 }

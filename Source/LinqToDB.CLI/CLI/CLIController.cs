@@ -3,31 +3,55 @@ using System.Collections.Generic;
 
 namespace LinqToDB.CLI
 {
+	/// <summary>
+	/// Base class for CLI controller.
+	/// </summary>
 	internal abstract class CLIController
 	{
-		private readonly CliCommand? _defaultCommand;
+		/// <summary>
+		/// Optional default command to execute when unknown or no command specified by caller.
+		/// </summary>
+		private readonly CliCommand?                       _defaultCommand;
+		/// <summary>
+		/// List of supported commands.
+		/// </summary>
+		private readonly Dictionary<string, CliCommand>    _commands = new ();
 
-		private readonly List<CliCommand> _commands = new ();
-		public IReadOnlyCollection<CliCommand> Commands => _commands;
+		/// <summary>
+		/// Gets list of supported commands.
+		/// </summary>
+		public IReadOnlyCollection<CliCommand> Commands => _commands.Values;
 
-		public CLIController(CliCommand? defaultCommand)
+		/// <summary>
+		/// Creates controller instance.
+		/// </summary>
+		/// <param name="defaultCommand">Optional default command.</param>
+		protected CLIController(CliCommand? defaultCommand)
 		{
 			_defaultCommand = defaultCommand;
 		}
 
+		/// <summary>
+		/// Register command handler.
+		/// </summary>
+		/// <param name="command">Command to register.</param>
 		protected void AddCommand(CliCommand command)
 		{
-			_commands.Add(command);
+			_commands.Add(command.Name, command);
 		}
 
+		/// <summary>
+		/// Process CLI arguments and invoke corresponding command.
+		/// </summary>
+		/// <param name="args">Raw CLI arguments.</param>
+		/// <returns>Command execution status code.</returns>
 		public virtual int Execute(string[] args)
 		{
 			if (args.Length == 0)
 			{
+				// no arguments specified - invoke default command (if set)
 				if (_defaultCommand != null)
-				{
-					return _defaultCommand.Execute(this, args, Array.Empty<CliOption>(), args);
-				}
+					return _defaultCommand.Execute(this, args, new Dictionary<CliOption, object?>(), args);
 
 				return StatusCodes.SUCCESS;
 			}
@@ -35,24 +59,143 @@ namespace LinqToDB.CLI
 			{
 				var commandName = args[0];
 
-				foreach (var command in _commands)
+				if (_commands.TryGetValue(commandName, out var command))
 				{
-					if (command.Name == commandName)
+					var unknownArgs = new List<string>();
+
+					IReadOnlyDictionary<CliOption, object?>? options = null;
+					if (command.HasOptions)
 					{
-						// TODO: parse options
-						var unknownArgs = new List<string>();
-						var options = new List<CliOption>();
-						return command.Execute(this, args, options, unknownArgs);
+						(options, var hasErrors) = ParseCommandOptions(command, args, unknownArgs);
+						if (hasErrors)
+							return StatusCodes.INVALID_ARGUMENTS;
+					}
+
+					return command.Execute(this, args, options ?? new Dictionary<CliOption, object?>(), unknownArgs);
+				}
+			}
+
+			// cannot find matching command - invoke default command (if set)
+			if (_defaultCommand != null)
+				return _defaultCommand.Execute(this, args, new Dictionary<CliOption, object?>(), args);
+
+			return StatusCodes.INVALID_ARGUMENTS;
+		}
+
+		private (Dictionary<CliOption, object?> options, bool hasErrors) ParseCommandOptions(CliCommand command, string[] args, List<string> unknownArgs)
+		{
+			var hasErrors  = false;
+			var cliOptions = new Dictionary<CliOption, object?>();
+
+			// arg[0] is command name
+			for (var i = 1; i < args.Length; i++)
+			{
+				CliOption? option = null;
+
+				// detect option
+				if (args[i].StartsWith("--"))
+				{
+					var name = args[i].Substring(2);
+					option = command.GetOptionByName(name);
+					if (option == null)
+					{
+						unknownArgs.Add(args[i]);
+						Console.Error.WriteLine("Unrecognized option: {0}", args[i]);
+						hasErrors = true;
+					}
+				}
+				else if (args[i].StartsWith("-") && args[i].Length == 2)
+				{
+					var name = args[i][1];
+					option = command.GetOptionByShortName(name);
+					if (option == null)
+					{
+						unknownArgs.Add(args[i]);
+						Console.Error.WriteLine("Unrecognized option: {0}", args[i]);
+						hasErrors = true;
+					}
+				}
+				else
+				{
+					hasErrors = true;
+					Console.Error.WriteLine("Unrecognized argument: {0}", args[i]);
+					unknownArgs.Add(args[i]);
+				}
+
+				if (option != null)
+				{
+					if (cliOptions.ContainsKey(option))
+					{
+						Console.Error.WriteLine("Duplicate option: {0}", args[i]);
+						hasErrors = true;
+					}
+					else if (!option.AllowInCli)
+					{
+						Console.Error.WriteLine("Option '{0}' not allowed in command line", args[i]);
+						hasErrors = true;
+					}
+					else if (args.Length == i + 1)
+					{
+						// currently all options has exactly one argument
+						Console.Error.WriteLine("Option '{0}' must have value", args[i]);
+						hasErrors = true;
+					}
+					else
+					{
+						i++;
+						var value = option.ParseCLI(command, args[i]);
+						if (value == null)
+						{
+							Console.Error.WriteLine("Invalid option value: {0} {1}", args[i - 1], args[i]);
+							hasErrors = true;
+						}
+
+						cliOptions.Add(option, value);
 					}
 				}
 			}
 
-			if (_defaultCommand != null)
+			// merge JSON and CLI options into single set
+			Dictionary<CliOption, object?>? options = null;
+			foreach (var option in cliOptions)
 			{
-				return _defaultCommand.Execute(this, args, Array.Empty<CliOption>(), args);
+				if (option.Key is ImportCliOption && option.Value != null)
+					options = MergeOptions(options, (Dictionary<CliOption, object?>)option.Value);
 			}
 
-			return StatusCodes.INVALID_ARGUMENTS;
+			options = MergeOptions(options, cliOptions);
+
+			// validate required options set
+			foreach (var option in command.AllOptions)
+			{
+				// this is the reason why we require option to add null value on parse error:
+				// to not trigger additional "required" error
+				if (option.Required && !options.ContainsKey(option))
+				{
+					Console.Error.WriteLine("Required option '{0}' not specified", option.Name);
+					hasErrors = true;
+				}
+			}
+
+			return (options, hasErrors);
+		}
+
+		/// <summary>
+		/// Merge two option sets into single set. When both sets contain same option - value from <paramref name="second"/> set used.
+		/// Method doesn't create new set but updates <paramref name="first"/> set with values from <paramref name="second"/> set.
+		/// </summary>
+		/// <param name="first">First set of options. Could be <c>null</c>.</param>
+		/// <param name="second">Second set of options.</param>
+		/// <returns>Merged options.</returns>
+		private Dictionary<CliOption, object?> MergeOptions(Dictionary<CliOption, object?>? first, Dictionary<CliOption, object?> second)
+		{
+			if (first == null)
+				return second;
+
+			foreach (var value in second)
+				first[value.Key] = value.Value;
+
+			return first;
 		}
 	}
 }

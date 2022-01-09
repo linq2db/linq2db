@@ -341,7 +341,7 @@ namespace LinqToDB.Scaffold
 		/// <item>In T4 compability mode: TODO</item>
 		/// </list>
 		/// </summary>
-		public NormalizationOptions ProcedureMethodInfoFieldNameOptions { get; } = new() { Casing = NameCasing.CamelCase, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None, Prefix = "_" };
+		public NormalizationOptions TableFunctionMethodInfoFieldNameOptions { get; } = new() { Casing = NameCasing.CamelCase, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None, Prefix = "_" };
 
 		/// <summary>
 		/// Gets or sets name generation and normalization rules for custom mapping class for result record of stored procedure or table function.
