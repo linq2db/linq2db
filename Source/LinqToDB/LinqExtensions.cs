@@ -256,6 +256,10 @@ namespace LinqToDB
 			return table;
 		}
 
+		#endregion
+
+		#region TablesInScopeHint
+
 		/// <summary>
 		/// Adds a table hint to all the tables in the method scope.
 		/// </summary>
@@ -284,54 +288,56 @@ namespace LinqToDB
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <typeparam name="TParam">Table hint parameter type.</typeparam>
-		/// <param name="table">Table-like query source.</param>
+		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameter">Table hint parameter.</param>
-		/// <returns>Table-like query source with table hints.</returns>
+		/// <returns>Query source with join hints.</returns>
 		[LinqTunnel, Pure]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(PathableTableHintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TablesInScopeHint, typeof(PathableTableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintWithParameterExtensionBuilder))]
-		public static ITable<TSource> TablesInScopeHint<TSource,TParam>(
-			this ITable<TSource>       table,
+		public static IQueryable<TSource> TablesInScopeHint<TSource,TParam>(
+			this IQueryable<TSource> source,
 			[SqlQueryDependent] string hint,
 			[SqlQueryDependent] TParam hintParameter)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TablesInScopeHint, table, hint, hintParameter),
-				table.Expression, Expression.Constant(hint), Expression.Constant(hintParameter));
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
-			return table;
+			return currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TablesInScopeHint, source, hint, hintParameter),
+					currentSource.Expression, Expression.Constant(hint), Expression.Constant(hintParameter)));
 		}
 
 		/// <summary>
 		/// Adds a table hint to all the tables in the method scope.
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
-		/// <param name="table">Table-like query source.</param>
+		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
-		/// <returns>Table-like query source with table hints.</returns>
+		/// <returns>Query source with join hints.</returns>
 		[LinqTunnel, Pure]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(PathableTableHintExtensionBuilder), " ")]
 		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TablesInScopeHint, typeof(PathableTableHintExtensionBuilder), ", ")]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintWithParametersExtensionBuilder))]
-		public static ITable<TSource> TablesInScopeHint<TSource>(
-			this ITable<TSource>                table,
-			[SqlQueryDependent] string          hint,
+		public static IQueryable<TSource> TablesInScopeHint<TSource>(
+			this IQueryable<TSource> source,
+			[SqlQueryDependent] string hint,
 			[SqlQueryDependent] params object[] hintParameters)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TablesInScopeHint, table, hint, hintParameters),
-				table.Expression,
-				Expression.Constant(hint),
-				Expression.NewArrayInit(typeof(object), hintParameters.Select(Expression.Constant)));
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
-			return table;
+			return currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TablesInScopeHint, source, hint, hintParameters),
+					currentSource.Expression,
+					Expression.Constant(hint),
+					Expression.NewArrayInit(typeof(object), hintParameters.Select(Expression.Constant))));
 		}
 
 		#endregion

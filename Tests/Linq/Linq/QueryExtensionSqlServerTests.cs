@@ -60,11 +60,7 @@ namespace Tests.Linq
 		[Test]
 		public void TableHint2012PlusTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context,
-			[Values(
-				SqlServerHints.Table.ForceScan
-//				TableHint.ForceSeek,
-//				TableHint.Snapshot
-				)] string hint)
+			[Values(SqlServerHints.Table.ForceScan)] string hint)
 		{
 			using var db = GetDataContext(context);
 
@@ -92,22 +88,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TableHintIndexTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Child
-					.WithIndex("IX_ChildIndex")
-					.With(SqlServerHints.Table.NoLock)
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring("WITH (Index(IX_ChildIndex), NoLock)"));
-		}
-
-		[Test]
 		public void TableHintIndexTest2([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -119,48 +99,6 @@ namespace Tests.Linq
 			_ = q.ToList();
 
 			Assert.That(LastQuery, Contains.Substring("WITH (Index(IX_ChildIndex))"));
-		}
-
-		[Test]
-		public void TableHintIndexTest3([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Child.WithIndex("IX_ChildIndex", "IX_ChildIndex")
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring("WITH (Index(IX_ChildIndex, IX_ChildIndex))"));
-		}
-
-		[Test, Explicit]
-		public void TableHintForceSeekTest([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Child.WithForceSeek("IX_ChildIndex", c => c.ParentID)
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring("WITH (ForceSeek (IX_ChildIndex (ParentID)))"));
-		}
-
-		[Test, Explicit]
-		public void TableHintForceSeekTest2([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Child.WithForceSeek("IX_ChildIndex")
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring("WITH (ForceSeek (IX_ChildIndex))"));
 		}
 
 		[Test]
@@ -463,7 +401,7 @@ namespace Tests.Linq
 			(
 				from p in db.Parent
 				from c in db.Child
-				from c1 in db.Child.WithIndex("IX_ChildIndex")
+				from c1 in db.Child.AsSqlServerSpecific().WithIndex("IX_ChildIndex")
 				where c.ParentID == p.ParentID && c1.ParentID == p.ParentID
 				select p
 			)
@@ -631,6 +569,103 @@ namespace Tests.Linq
 
 			Assert.That(LastQuery, Contains.Substring("[p] WITH (NoLock)"));
 			Assert.That(LastQuery, Contains.Substring("[p_1] WITH (NoLock)"));
+		}
+
+		[Test]
+		public void WithIndexTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Child
+					.AsSqlServerSpecific()
+					.WithIndex("IX_ChildIndex")
+					.With(SqlServerHints.Table.NoLock)
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("WITH (Index(IX_ChildIndex), NoLock)"));
+		}
+
+		[Test]
+		public void WithIndexTest2([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Child
+					.AsSqlServerSpecific()
+					.WithIndex("IX_ChildIndex", "IX_ChildIndex")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("WITH (Index(IX_ChildIndex, IX_ChildIndex))"));
+		}
+
+		[Test, Explicit]
+		public void WithForceSeekTest([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Child
+					.AsSqlServerSpecific()
+					.WithForceSeek("IX_ChildIndex", c => c.ParentID)
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("WITH (ForceSeek(IX_ChildIndex(ParentID)))"));
+		}
+
+		[Test, Explicit]
+		public void WithForceSeekTest2([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Child
+					.AsSqlServerSpecific()
+					.WithForceSeek("IX_ChildIndex")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("WITH (ForceSeek(IX_ChildIndex))"));
+		}
+
+		[Test, Explicit]
+		public void WithForceSeekTest3([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Child
+					.AsSqlServerSpecific()
+					.WithForceSeek()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("WITH (ForceSeek)"));
+		}
+
+		[Test]
+		public void WithForceScanTest([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Child
+					.AsSqlServerSpecific()
+					.WithForceScan()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("WITH (ForceScan)"));
 		}
 	}
 }

@@ -39,6 +39,7 @@ namespace Tests.Linq
 			Assert.That(LastQuery, Contains.Substring("*** p.t1 ***"));
 			Assert.That(LastQuery,
 				Contains.Substring("*** \"Parent\" ***")
+					.Or.Contains("*** Parent ***")
 					.Or.Contains("*** `Parent` ***")
 					.Or.Contains("*** [Parent] ***"));
 		}
