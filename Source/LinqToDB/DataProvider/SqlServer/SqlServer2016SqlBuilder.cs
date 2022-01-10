@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using SqlQuery;
 	using SqlProvider;
 
-	class SqlServer2016SqlBuilder : SqlServer2012SqlBuilder
+	class SqlServer2016SqlBuilder : SqlServer2014SqlBuilder
 	{
 		public SqlServer2016SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)

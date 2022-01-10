@@ -25,6 +25,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2005sdc = CreateDataProvider<SqlServerDataProvider2005SystemDataSqlClient>();
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2008sdc = CreateDataProvider<SqlServerDataProvider2008SystemDataSqlClient>();
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2012sdc = CreateDataProvider<SqlServerDataProvider2012SystemDataSqlClient>();
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2014sdc = CreateDataProvider<SqlServerDataProvider2014SystemDataSqlClient>();
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2016sdc = CreateDataProvider<SqlServerDataProvider2016SystemDataSqlClient>();
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2017sdc = CreateDataProvider<SqlServerDataProvider2017SystemDataSqlClient>();
 		// Microsoft.Data.SqlClient
@@ -32,6 +33,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2005mdc = CreateDataProvider<SqlServerDataProvider2005MicrosoftDataSqlClient>();
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2008mdc = CreateDataProvider<SqlServerDataProvider2008MicrosoftDataSqlClient>();
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2012mdc = CreateDataProvider<SqlServerDataProvider2012MicrosoftDataSqlClient>();
+		static readonly Lazy<IDataProvider> _sqlServerDataProvider2014mdc = CreateDataProvider<SqlServerDataProvider2014MicrosoftDataSqlClient>();
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2016mdc = CreateDataProvider<SqlServerDataProvider2016MicrosoftDataSqlClient>();
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2017mdc = CreateDataProvider<SqlServerDataProvider2017MicrosoftDataSqlClient>();
 
@@ -43,12 +45,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				var provider = new T();
 
 				if (Provider == provider.Provider)
-				{
 					DataConnection.AddDataProvider(provider);
-
-					if (provider.Name == ProviderName.SqlServer2012)
-						DataConnection.AddDataProvider(ProviderName.SqlServer2014, provider);
-				}
 
 				_providers.Enqueue(provider);
 
@@ -100,7 +97,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					if (css.Name.Contains("2005") || css.ProviderName?.Contains("2005") == true) return GetDataProvider(SqlServerVersion.v2005, provider);
 					if (css.Name.Contains("2008") || css.ProviderName?.Contains("2008") == true) return GetDataProvider(SqlServerVersion.v2008, provider);
 					if (css.Name.Contains("2012") || css.ProviderName?.Contains("2012") == true) return GetDataProvider(SqlServerVersion.v2012, provider);
-					if (css.Name.Contains("2014") || css.ProviderName?.Contains("2014") == true) return GetDataProvider(SqlServerVersion.v2012, provider);
+					if (css.Name.Contains("2014") || css.ProviderName?.Contains("2014") == true) return GetDataProvider(SqlServerVersion.v2014, provider);
 					if (css.Name.Contains("2016") || css.ProviderName?.Contains("2016") == true) return GetDataProvider(SqlServerVersion.v2016, provider);
 					if (css.Name.Contains("2017") || css.ProviderName?.Contains("2017") == true) return GetDataProvider(SqlServerVersion.v2017, provider);
 					if (css.Name.Contains("2019") || css.ProviderName?.Contains("2019") == true) return GetDataProvider(SqlServerVersion.v2017, provider);
@@ -129,6 +126,8 @@ namespace LinqToDB.DataProvider.SqlServer
 											return GetDataProvider(SqlServerVersion.v2017, provider);
 										if (level >= 130)
 											return GetDataProvider(SqlServerVersion.v2016, provider);
+										if (level >= 120)
+											return GetDataProvider(SqlServerVersion.v2014, provider);
 										if (level >= 110)
 											return GetDataProvider(SqlServerVersion.v2012, provider);
 										if (level >= 100)
@@ -143,8 +142,8 @@ namespace LinqToDB.DataProvider.SqlServer
 											// versions below 9 handled above already
 											case  9 : return GetDataProvider(SqlServerVersion.v2005, provider);
 											case 10 : return GetDataProvider(SqlServerVersion.v2008, provider);
-											case 11 : // v2012
-											case 12 : return GetDataProvider(SqlServerVersion.v2012, provider); // v2014
+											case 11 : return GetDataProvider(SqlServerVersion.v2012, provider);
+											case 12 : return GetDataProvider(SqlServerVersion.v2014, provider);
 											case 13 : return GetDataProvider(SqlServerVersion.v2016, provider);
 											//case 14 : // v2017
 											//case 15 : // v2019 : no own dialect yet
@@ -178,12 +177,14 @@ namespace LinqToDB.DataProvider.SqlServer
 				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2000) => _sqlServerDataProvider2000sdc.Value,
 				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2005) => _sqlServerDataProvider2005sdc.Value,
 				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2012) => _sqlServerDataProvider2012sdc.Value,
+				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2014) => _sqlServerDataProvider2014sdc.Value,
 				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2016) => _sqlServerDataProvider2016sdc.Value,
 				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2017) => _sqlServerDataProvider2017sdc.Value,
 				(SqlServerProvider.SystemDataSqlClient,    _                     ) => _sqlServerDataProvider2008sdc.Value,
 				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2000) => _sqlServerDataProvider2000mdc.Value,
 				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2005) => _sqlServerDataProvider2005mdc.Value,
 				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2012) => _sqlServerDataProvider2012mdc.Value,
+				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2014) => _sqlServerDataProvider2014mdc.Value,
 				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2016) => _sqlServerDataProvider2016mdc.Value,
 				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2017) => _sqlServerDataProvider2017mdc.Value,
 				(SqlServerProvider.MicrosoftDataSqlClient, _                     ) => _sqlServerDataProvider2008mdc.Value,

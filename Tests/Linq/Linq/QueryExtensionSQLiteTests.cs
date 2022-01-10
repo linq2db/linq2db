@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	[TestFixture]
-	public class QueryExtensionSQLiteTests : TestBase
+	public partial class QueryExtensionSQLiteTests : TestBase
 	{
 		[Test]
 		public void IndexedByTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)

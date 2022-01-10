@@ -235,7 +235,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			stringBuilder.Append("0x");
 			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 		}
-		
+
 	}
 
 	public class SqlServer2000MappingSchema : MappingSchema
@@ -285,6 +285,21 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 		public SqlServer2012MappingSchema()
 			: base(ProviderName.SqlServer2012, SqlServerMappingSchema.Instance)
+		{
+			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
+		}
+
+		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+		{
+			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
+		}
+	}
+
+	public class SqlServer2014MappingSchema : MappingSchema
+	{
+		public SqlServer2014MappingSchema()
+			: base(ProviderName.SqlServer2014, SqlServerMappingSchema.Instance)
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));

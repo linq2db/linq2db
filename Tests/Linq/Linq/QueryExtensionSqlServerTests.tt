@@ -1,0 +1,83 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".generated.cs" #>
+// Generated.
+//
+using System;
+using System.Linq;
+using System.Linq.Expressions;
+
+using LinqToDB.DataProvider.SqlServer;
+
+using NUnit.Framework;
+
+namespace Tests.Linq
+{
+	partial class QueryExtensionSqlServerTests
+	{
+<#
+	GenerateTest("ForceScan", "2012Plus");
+	GenerateTest("HoldLock");
+	GenerateTest("NoLock");
+	GenerateTest("NoWait");
+	GenerateTest("PagLock");
+	GenerateTest("ReadCommitted");
+	GenerateTest("ReadCommittedLock");
+	GenerateTest("ReadPast");
+	GenerateTest("ReadUncommitted");
+	GenerateTest("RepeatableRead");
+	GenerateTest("RowLock");
+	GenerateTest("Serializable");
+	GenerateTest("TabLock");
+	GenerateTest("TabLockX");
+	GenerateTest("UpdLock");
+	GenerateTest("XLock");
+#>
+	}
+}
+<#+
+void GenerateTest(string test, string version = "")
+{
+#>
+		[Test]
+		public void With<#= test #>TableTest([IncludeDataSources(true, TestProvName.AllSqlServer<#= version #>)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsSqlServerSpecific()
+					.With<#= test #>()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("WITH (<#= test #>)"));
+		}
+
+		[Test]
+		public void With<#= test #>InScopeTest([IncludeDataSources(true, TestProvName.AllSqlServer<#= version #>)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Parent
+				join c in db.Child on p.ParentID equals c.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.With<#= test #>InScope();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("[p] WITH (<#= test #>)"));
+			Assert.That(LastQuery, Contains.Substring("[c_1] WITH (<#= test #>)"));
+		}
+
+<#+
+}
+#>

@@ -180,18 +180,18 @@ namespace Tests.Data
 
 				case ProviderName.SqlServer2014:
 				{
-					dataProvider = DataConnection.GetDataProvider("SqlServer", "SqlServer.2012", connectionString)!;
+					dataProvider = DataConnection.GetDataProvider("SqlServer", "SqlServer.2014", connectionString)!;
 
-					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider2012SystemDataSqlClient>());
+					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider2014SystemDataSqlClient>());
 
 					var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
-					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
+					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2014));
 
 					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString)!;
 					sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
-					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
+					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2014));
 
 					break;
 				}

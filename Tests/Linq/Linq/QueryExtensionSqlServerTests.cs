@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	[TestFixture]
-	public class QueryExtensionSqlServerTests : TestBase
+	public partial class QueryExtensionSqlServerTests : TestBase
 	{
 		[Test]
 		public void TableHintTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
@@ -80,6 +80,22 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent.With(SqlServerHints.Table.SpatialWindowMaxCells(10))
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("WITH (SPATIAL_WINDOW_MAX_CELLS=10)"));
+		}
+
+		[Test]
+		public void TableHintSpatialWindowMaxCellsTest2([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsSqlServerSpecific()
+					.WithSpatialWindowMaxCells(10)
 				select p;
 
 			_ = q.ToList();
@@ -182,6 +198,57 @@ namespace Tests.Linq
 			_ = q.ToList();
 
 			Assert.That(LastQuery, Contains.Substring($"RIGHT {hint} JOIN"));
+		}
+
+		[Test]
+		public void JoinLoopHintTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				join p in db.Parent.AsSqlServerSpecific().JoinLoopHint() on c.ParentID equals p.ParentID
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("INNER LOOP JOIN"));
+		}
+
+		[Test]
+		public void JoinHashHintTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				join p in
+					(
+						from t in db.Parent
+						where t.Children.Any()
+						select new { t.ParentID, t.Children.Count }
+					)
+					.AsSqlServerSpecific()
+					.JoinHashHint() on c.ParentID equals p.ParentID
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("INNER HASH JOIN"));
+		}
+
+		[Test]
+		public void JoinMergeHintTest(
+			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
+			[Values(SqlJoinType.Inner, SqlJoinType.Left, SqlJoinType.Full)] SqlJoinType joinType)
+		{
+			using var db = GetDataContext(context);
+
+			var q = db.Child.Join(db.Parent.AsSqlServerSpecific().JoinMergeHint(), joinType, (c, p) => c.ParentID == p.ParentID, (c, p) => p);
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"{joinType.ToString().ToUpper()} MERGE JOIN"));
 		}
 
 		[Test]
@@ -612,12 +679,12 @@ namespace Tests.Linq
 			var q =
 				from p in db.Child
 					.AsSqlServerSpecific()
-					.WithForceSeek("IX_ChildIndex", c => c.ParentID)
+					.WithForceSeek()
 				select p;
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring("WITH (ForceSeek(IX_ChildIndex(ParentID)))"));
+			Assert.That(LastQuery, Contains.Substring("WITH (ForceSeek)"));
 		}
 
 		[Test, Explicit]
@@ -650,22 +717,6 @@ namespace Tests.Linq
 			_ = q.ToList();
 
 			Assert.That(LastQuery, Contains.Substring("WITH (ForceSeek)"));
-		}
-
-		[Test]
-		public void WithForceScanTest([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Child
-					.AsSqlServerSpecific()
-					.WithForceScan()
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring("WITH (ForceScan)"));
 		}
 	}
 }

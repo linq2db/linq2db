@@ -1,0 +1,107 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".generated.cs" #>
+// Generated.
+//
+using System;
+using System.Linq.Expressions;
+
+namespace LinqToDB.DataProvider.SqlServer
+{
+	public static partial class SqlServerHints
+	{
+<#
+	GenerateTableHint("ForceScan", "2012Plus");
+	GenerateTableHint("ForceSeek");
+	GenerateTableHint("HoldLock");
+	GenerateTableHint("NoLock");
+	GenerateTableHint("NoWait");
+	GenerateTableHint("PagLock");
+	GenerateTableHint("ReadCommitted");
+	GenerateTableHint("ReadCommittedLock");
+	GenerateTableHint("ReadPast");
+	GenerateTableHint("ReadUncommitted");
+	GenerateTableHint("RepeatableRead");
+	GenerateTableHint("RowLock");
+	GenerateTableHint("Serializable");
+	GenerateTableHint("Snapshot", "2014Plus");
+	GenerateTableHint("TabLock");
+	GenerateTableHint("TabLockX");
+	GenerateTableHint("UpdLock");
+	GenerateTableHint("XLock");
+
+	GenerateJoinHint("Loop");
+	GenerateJoinHint("Hash");
+	GenerateJoinHint("Merge");
+	GenerateJoinHint("Remote");
+#>
+	}
+}
+<#+
+void GenerateTableHint(string hint, string version = "")
+{
+#>
+		[ExpressionMethod(ProviderName.SqlServer, nameof(With<#= hint #>TableImpl))]
+		public static ISqlServerSpecificTable<TSource> With<#= hint #><TSource>(this ISqlServerSpecificTable<TSource> table)
+			where TSource : notnull
+		{
+			return table.TableHint<#= version #>(Table.<#= hint #>);
+		}
+
+		static Expression<Func<ISqlServerSpecificTable<TSource>,ISqlServerSpecificTable<TSource>>> With<#= hint #>TableImpl<TSource>()
+			where TSource : notnull
+		{
+			return table => table.TableHint<#= version #>(Table.<#= hint #>);
+		}
+
+		[ExpressionMethod(ProviderName.SqlServer, nameof(With<#= hint #>QueryImpl))]
+		public static ISqlServerSpecificQueryable<TSource> With<#= hint #>InScope<TSource>(this ISqlServerSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return query.TablesInScopeHint<#= version #>(Table.<#= hint #>);
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> With<#= hint #>QueryImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => query.TablesInScopeHint<#= version #>(Table.<#= hint #>);
+		}
+
+<#+
+}
+
+void GenerateJoinHint(string hint)
+{
+#>
+		[ExpressionMethod(nameof(Join<#= hint #>HintImpl))]
+		public static ISqlServerSpecificQueryable<TSource> Join<#= hint #>Hint<TSource>(this ISqlServerSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return query.JoinHint(Join.<#= hint #>);
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> Join<#= hint #>HintImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => query.JoinHint(Join.<#= hint #>);
+		}
+
+		[ExpressionMethod(nameof(Join<#= hint #>TableHintImpl))]
+		public static ISqlServerSpecificTable<TSource> Join<#= hint #>Hint<TSource>(this ISqlServerSpecificTable<TSource> table)
+			where TSource : notnull
+		{
+			return table.JoinHint(Join.<#= hint #>);
+		}
+
+		static Expression<Func<ISqlServerSpecificTable<TSource>,ISqlServerSpecificTable<TSource>>> Join<#= hint #>TableHintImpl<TSource>()
+			where TSource : notnull
+		{
+			return table => table.JoinHint(Join.<#= hint #>);
+		}
+
+<#+
+}
+#>

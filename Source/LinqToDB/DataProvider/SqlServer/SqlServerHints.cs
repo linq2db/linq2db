@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	/// <summary>
 	/// https://docs.microsoft.com/en-us/sql/t-sql/queries/hints-transact-sql
 	/// </summary>
-	public static class SqlServerHints
+	public static partial class SqlServerHints
 	{
 		public static class Table
 		{
@@ -216,30 +216,17 @@ namespace LinqToDB.DataProvider.SqlServer
 			return table;
 		}
 
-		[ExpressionMethod(ProviderName.SqlServer, nameof(WithForceScanImpl))]
-		public static ISqlServerSpecificTable<TSource> WithForceScan<TSource>(this ISqlServerSpecificTable<TSource> table)
+		[ExpressionMethod(nameof(WithSpatialWindowMaxCellsImpl))]
+		public static ISqlServerSpecificTable<TSource> WithSpatialWindowMaxCells<TSource>(this ISqlServerSpecificTable<TSource> table, int cells)
 			where TSource : notnull
 		{
-			return table.TableHint2012Plus(Table.ForceScan);
+			return table.TableHint2012Plus(Table.SpatialWindowMaxCells(cells));
 		}
 
-		static Expression<Func<ISqlServerSpecificTable<TSource>,ISqlServerSpecificTable<TSource>>> WithForceScanImpl<TSource>()
+		static Expression<Func<ISqlServerSpecificTable<TSource>,int,ISqlServerSpecificTable<TSource>>> WithSpatialWindowMaxCellsImpl<TSource>()
 			where TSource : notnull
 		{
-			return table => table.TableHint2012Plus(Table.ForceScan);
-		}
-
-		[ExpressionMethod(ProviderName.SqlServer, nameof(WithForceSeekImpl))]
-		public static ISqlServerSpecificTable<TSource> WithForceSeek<TSource>(this ISqlServerSpecificTable<TSource> table)
-			where TSource : notnull
-		{
-			return table.TableHint(Table.ForceSeek);
-		}
-
-		static Expression<Func<ISqlServerSpecificTable<TSource>,ISqlServerSpecificTable<TSource>>> WithForceSeekImpl<TSource>()
-			where TSource : notnull
-		{
-			return table => table.TableHint(Table.ForceSeek);
+			return (table, cells) => table.TableHint2012Plus(Table.SpatialWindowMaxCells(cells));
 		}
 
 		#endregion
@@ -327,12 +314,28 @@ namespace LinqToDB.DataProvider.SqlServer
 		[Sql.QueryExtension(ProviderName.SqlServer2016, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2017, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,                       Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
-		static ISqlServerSpecificTable<TSource> TableHint2012Plus<TSource>(this ISqlServerSpecificTable<TSource> table, [SqlQueryDependent] string hint)
+		public static ISqlServerSpecificTable<TSource> TableHint2012Plus<TSource>(this ISqlServerSpecificTable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
 			table.Expression = Expression.Call(
 				null,
 				MethodHelper.GetMethodInfo(TableHint2012Plus, table, hint),
+				table.Expression, Expression.Constant(hint));
+
+			return table;
+		}
+
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.SqlServer2014, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.SqlServer2016, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.SqlServer2017, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(null,                       Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
+		static ISqlServerSpecificTable<TSource> TableHint2014Plus<TSource>(this ISqlServerSpecificTable<TSource> table, [SqlQueryDependent] string hint)
+			where TSource : notnull
+		{
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(TableHint2014Plus, table, hint),
 				table.Expression, Expression.Constant(hint));
 
 			return table;
@@ -359,11 +362,11 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
-			return (ISqlServerSpecificQueryable<TSource>)currentSource.Provider.CreateQuery<TSource>(
+			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(TablesInScopeHint, source, hint),
-					currentSource.Expression, Expression.Constant(hint)));
+					currentSource.Expression, Expression.Constant(hint))));
 		}
 
 		/// <summary>
@@ -386,11 +389,11 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
-			return (ISqlServerSpecificQueryable<TSource>)currentSource.Provider.CreateQuery<TSource>(
+			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(TablesInScopeHint, source, hint, hintParameter),
-					currentSource.Expression, Expression.Constant(hint), Expression.Constant(hintParameter)));
+					currentSource.Expression, Expression.Constant(hint), Expression.Constant(hintParameter))));
 		}
 
 		/// <summary>
@@ -412,13 +415,113 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
-			return (ISqlServerSpecificQueryable<TSource>)currentSource.Provider.CreateQuery<TSource>(
+			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(TablesInScopeHint, source, hint, hintParameters),
 					currentSource.Expression,
 					Expression.Constant(hint),
-					Expression.NewArrayInit(typeof(object), hintParameters.Select(Expression.Constant))));
+					Expression.NewArrayInit(typeof(object), hintParameters.Select(Expression.Constant)))));
+		}
+
+		/// <summary>
+		/// Adds a table hint to all the tables in the method scope.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <returns>Query source with join hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.SqlServer2012, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.SqlServer2014, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.SqlServer2016, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.SqlServer2017, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(null,                       Sql.QueryExtensionScope.None,              typeof(NoneExtensionBuilder))]
+		public static ISqlServerSpecificQueryable<TSource> TablesInScopeHint2012Plus<TSource>(
+			this ISqlServerSpecificQueryable<TSource> source,
+			[SqlQueryDependent] string                hint)
+			where TSource : notnull
+		{
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TablesInScopeHint2012Plus, source, hint),
+					currentSource.Expression, Expression.Constant(hint))));
+		}
+
+		/// <summary>
+		/// Adds a table hint to all the tables in the method scope.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <returns>Query source with join hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.SqlServer2014, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.SqlServer2016, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.SqlServer2017, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(null,                       Sql.QueryExtensionScope.None,              typeof(NoneExtensionBuilder))]
+		public static ISqlServerSpecificQueryable<TSource> TablesInScopeHint2014Plus<TSource>(
+			this ISqlServerSpecificQueryable<TSource> source,
+			[SqlQueryDependent] string                hint)
+			where TSource : notnull
+		{
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TablesInScopeHint2014Plus, source, hint),
+					currentSource.Expression, Expression.Constant(hint))));
+		}
+
+		#endregion
+
+		#region JoinHint
+
+		/// <summary>
+		/// Adds a join hint to a generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <returns>Query source with join hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.JoinHint, typeof(NoneExtensionBuilder))]
+		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,     typeof(NoneExtensionBuilder))]
+		public static ISqlServerSpecificTable<TSource> JoinHint<TSource>(this ISqlServerSpecificTable<TSource> table, [SqlQueryDependent] string hint)
+			where TSource : notnull
+		{
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(JoinHint, table, hint),
+				table.Expression, Expression.Constant(hint));
+
+			return table;
+		}
+
+		/// <summary>
+		/// Adds a join hint to a generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <returns>Query source with join hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.JoinHint, typeof(NoneExtensionBuilder))]
+		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,     typeof(NoneExtensionBuilder))]
+		public static ISqlServerSpecificQueryable<TSource> JoinHint<TSource>(this ISqlServerSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
+			where TSource : notnull
+		{
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(JoinHint, source, hint),
+					currentSource.Expression, Expression.Constant(hint))));
 		}
 
 		#endregion

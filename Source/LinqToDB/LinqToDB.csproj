@@ -28,6 +28,16 @@
 		<EmbeddedResource Include="SqlQuery\ReservedWordsFirebird.txt" />
 		<EmbeddedResource Include="SqlQuery\ReservedWordsPostgres.txt" />
 
+		<None Update="DataProvider\SqlServer\SqlServerHints.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>SqlServerHints.generated.cs</LastGenOutput>
+		</None>
+		<Compile Update="DataProvider\SqlServer\SqlServerHints.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>SqlServerHints.tt</DependentUpon>
+		</Compile>
+
 		<None Update="AsyncExtensions.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>AsyncExtensions.generated.cs</LastGenOutput>
@@ -37,18 +47,17 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>AsyncExtensions.tt</DependentUpon>
 		</Compile>
-		<Compile Update="Common\Internal\MutableTuple.generated.cs">
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-			<DependentUpon>MutableTuple.tt</DependentUpon>
-		</Compile>
 
 		<None Update="Common\Internal\MutableTuple.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>MutableTuple.generated.cs</LastGenOutput>
 		</None>
+		<Compile Update="Common\Internal\MutableTuple.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>MutableTuple.tt</DependentUpon>
+		</Compile>
 	</ItemGroup>
-
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net472' ">
 		<Reference Include="Microsoft.CSharp" />
