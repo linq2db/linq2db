@@ -383,7 +383,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void QueryHintMaxDopTest(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
