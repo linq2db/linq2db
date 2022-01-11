@@ -817,26 +817,26 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static ISqlServerSpecificQueryable<TSource> OptionMaxGrantPercent<TSource>(this ISqlServerSpecificQueryable<TSource> query, int value)
 			where TSource : notnull
 		{
-			return query.QueryHint2012Plus(Query.MaxGrantPercent(value));
+			return query.QueryHint2016Plus(Query.MaxGrantPercent(value));
 		}
 
 		static Expression<Func<ISqlServerSpecificQueryable<TSource>,int,ISqlServerSpecificQueryable<TSource>>> OptionMaxGrantPercentImpl<TSource>()
 			where TSource : notnull
 		{
-			return (query, value) => query.QueryHint2012Plus(Query.MaxGrantPercent(value));
+			return (query, value) => query.QueryHint2016Plus(Query.MaxGrantPercent(value));
 		}
 
 		[ExpressionMethod(nameof(OptionMinGrantPercentImpl))]
 		public static ISqlServerSpecificQueryable<TSource> OptionMinGrantPercent<TSource>(this ISqlServerSpecificQueryable<TSource> query, int value)
 			where TSource : notnull
 		{
-			return query.QueryHint2012Plus(Query.MinGrantPercent(value));
+			return query.QueryHint2016Plus(Query.MinGrantPercent(value));
 		}
 
 		static Expression<Func<ISqlServerSpecificQueryable<TSource>,int,ISqlServerSpecificQueryable<TSource>>> OptionMinGrantPercentImpl<TSource>()
 			where TSource : notnull
 		{
-			return (query, value) => query.QueryHint2012Plus(Query.MinGrantPercent(value));
+			return (query, value) => query.QueryHint2016Plus(Query.MinGrantPercent(value));
 		}
 
 		[ExpressionMethod(nameof(OptionMaxDopImpl))]

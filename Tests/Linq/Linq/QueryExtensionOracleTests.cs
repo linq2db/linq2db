@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	[TestFixture]
-	public class QueryExtensionOracleTests : TestBase
+	public partial class QueryExtensionOracleTests : TestBase
 	{
 		[Test]
 		public void TableSubqueryHintTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
@@ -19,7 +19,7 @@ namespace Tests.Linq
 			var q =
 				from p in
 					(
-						from p in db.Parent.TableHint(OracleHints.TableHint.Full).With(OracleHints.TableHint.Cache)
+						from p in db.Parent.TableHint(OracleHints.Table.Full).With(OracleHints.Table.Cache)
 						select p
 					)
 					.AsSubQuery()
@@ -40,8 +40,8 @@ namespace Tests.Linq
 					(
 						from p in
 							(
-								from p in db.Parent.TableHint(OracleHints.TableHint.Full)
-								from c in db.Child.TableHint(OracleHints.TableHint.Full)
+								from p in db.Parent.TableHint(OracleHints.Table.Full)
+								from c in db.Child.TableHint(OracleHints.Table.Full)
 								select p
 							)
 							.AsSubQuery()
@@ -58,18 +58,18 @@ namespace Tests.Linq
 		[Test]
 		public void TableHintTest([IncludeDataSources(true, TestProvName.AllOracle)] string context,
 			[Values(
-				OracleHints.TableHint.Cache,
-				OracleHints.TableHint.Cluster,
-				OracleHints.TableHint.DrivingSite,
-				OracleHints.TableHint.Fact,
-				OracleHints.TableHint.Full,
-				OracleHints.TableHint.Hash,
-				OracleHints.TableHint.NoCache,
-				OracleHints.TableHint.NoFact,
-				OracleHints.TableHint.NoParallel,
-				OracleHints.TableHint.NoPxJoinFilter,
-				OracleHints.TableHint.NoUseHash,
-				OracleHints.TableHint.PxJoinFilter
+				OracleHints.Table.Cache,
+				OracleHints.Table.Cluster,
+				OracleHints.Table.DrivingSite,
+				OracleHints.Table.Fact,
+				OracleHints.Table.Full,
+				OracleHints.Table.Hash,
+				OracleHints.Table.NoCache,
+				OracleHints.Table.NoFact,
+				OracleHints.Table.NoParallel,
+				OracleHints.Table.NoPxJoinFilter,
+				OracleHints.Table.NoUseHash,
+				OracleHints.Table.PxJoinFilter
 				)] string hint)
 		{
 			using var db = GetDataContext(context);
@@ -89,7 +89,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var q =
-				from p in db.Parent.TableHint(OracleHints.TableHint.DynamicSampling, 1)
+				from p in db.Parent.TableHint(OracleHints.Table.DynamicSampling, 1)
 				select p;
 
 			_ = q.ToList();
@@ -103,7 +103,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var q =
-				from p in db.Parent.TableHint(OracleHints.TableHint.Parallel, (object)",", 5)
+				from p in db.Parent.TableHint(OracleHints.Table.Parallel, (object)",", 5)
 				select p;
 
 			_ = q.ToList();
@@ -117,7 +117,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var q =
-				from p in db.Parent.TableHint(OracleHints.TableHint.Parallel, "DEFAULT")
+				from p in db.Parent.TableHint(OracleHints.Table.Parallel, "DEFAULT")
 				select p;
 
 			_ = q.ToList();
@@ -131,7 +131,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var q =
-				from p in db.Parent.TableHint(OracleHints.IndexHint.Index, "parent_ix")
+				from p in db.Parent.TableHint(OracleHints.Table.Index, "parent_ix")
 				select p;
 
 			_ = q.ToList();
@@ -142,21 +142,21 @@ namespace Tests.Linq
 		[Test]
 		public void IndexHintTest([IncludeDataSources(true, TestProvName.AllOracle)] string context,
 			[Values(
-				OracleHints.IndexHint.Index,
-				OracleHints.IndexHint.IndexAsc,
-				OracleHints.IndexHint.IndexCombine,
-				OracleHints.IndexHint.IndexDesc,
-				OracleHints.IndexHint.IndexFastFullScan,
-				OracleHints.IndexHint.IndexJoin,
-				OracleHints.IndexHint.IndexSkipScan,
-				OracleHints.IndexHint.IndexSkipScanAsc,
-				OracleHints.IndexHint.IndexSkipScanDesc,
-				OracleHints.IndexHint.NoIndex,
-				OracleHints.IndexHint.NoIndexFastFullScan,
-				OracleHints.IndexHint.NoIndexSkipScan,
-				OracleHints.IndexHint.NoParallelIndex,
-				OracleHints.IndexHint.ParallelIndex,
-				OracleHints.IndexHint.UseNlWithIndex
+				OracleHints.Table.Index,
+				OracleHints.Table.IndexAsc,
+				OracleHints.Table.IndexCombine,
+				OracleHints.Table.IndexDesc,
+				OracleHints.Table.IndexFastFullScan,
+				OracleHints.Table.IndexJoin,
+				OracleHints.Table.IndexSkipScan,
+				OracleHints.Table.IndexSkipScanAsc,
+				OracleHints.Table.IndexSkipScanDesc,
+				OracleHints.Table.NoIndex,
+				OracleHints.Table.NoIndexFastFullScan,
+				OracleHints.Table.NoIndexSkipScan,
+				OracleHints.Table.NoParallelIndex,
+				OracleHints.Table.ParallelIndex,
+				OracleHints.Table.UseNlWithIndex
 			)] string hint)
 		{
 			using var db = GetDataContext(context);
@@ -173,24 +173,24 @@ namespace Tests.Linq
 		[Test]
 		public void QueryHintTest([IncludeDataSources(true, TestProvName.AllOracle)] string context,
 			[Values(
-				OracleHints.QueryHint.AllRows,
-				OracleHints.QueryHint.Append,
-				OracleHints.QueryHint.CursorSharingExact,
-				OracleHints.QueryHint.ModelMinAnalysis,
-				OracleHints.QueryHint.NoAppend,
-				OracleHints.QueryHint.NoExpand,
-				OracleHints.QueryHint.NoPushSubQuery,
-				OracleHints.QueryHint.NoRewrite,
-				OracleHints.QueryHint.NoQueryTransformation,
-				OracleHints.QueryHint.NoStarTransformation,
-				OracleHints.QueryHint.NoUnnest,
-				OracleHints.QueryHint.NoXmlQueryRewrite,
-				OracleHints.QueryHint.Ordered,
-				OracleHints.QueryHint.PushSubQueries,
-				OracleHints.QueryHint.Rule,
-				OracleHints.QueryHint.StarTransformation,
-				OracleHints.QueryHint.Unnest,
-				OracleHints.QueryHint.UseConcat
+				OracleHints.Query.AllRows,
+				OracleHints.Query.Append,
+				OracleHints.Query.CursorSharingExact,
+				OracleHints.Query.ModelMinAnalysis,
+				OracleHints.Query.NoAppend,
+				OracleHints.Query.NoExpand,
+				OracleHints.Query.NoPushSubQuery,
+				OracleHints.Query.NoRewrite,
+				OracleHints.Query.NoQueryTransformation,
+				OracleHints.Query.NoStarTransformation,
+				OracleHints.Query.NoUnnest,
+				OracleHints.Query.NoXmlQueryRewrite,
+				OracleHints.Query.Ordered,
+				OracleHints.Query.PushSubQueries,
+				OracleHints.Query.Rule,
+				OracleHints.Query.StarTransformation,
+				OracleHints.Query.Unnest,
+				OracleHints.Query.UseConcat
 			)] string hint)
 		{
 			using var db = GetDataContext(context);
@@ -211,7 +211,7 @@ namespace Tests.Linq
 		[Test]
 		public void QueryHintWithQueryBlockTest([IncludeDataSources(true, TestProvName.AllOracle)] string context,
 			[Values(
-				OracleHints.QueryHint.NoUnnest
+				OracleHints.Query.NoUnnest
 			)] string hint)
 		{
 			using var db = GetDataContext(context);
@@ -233,7 +233,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void QueryHintFirstRowsTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void QueryHintFirstRowsTest2([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -243,7 +243,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.QueryHint(OracleHints.QueryHint.FirstRows(25));
+			.QueryHint(OracleHints.Query.FirstRows(25));
 
 			_ = q.ToList();
 
@@ -257,7 +257,7 @@ namespace Tests.Linq
 
 			var q1 =
 				from c in db.Child
-				join p in db.Parent.TableHint(OracleHints.TableHint.Full) on c.ParentID equals p.ParentID
+				join p in db.Parent.TableHint(OracleHints.Table.Full) on c.ParentID equals p.ParentID
 				select p;
 
 			var q =
@@ -275,7 +275,7 @@ namespace Tests.Linq
 
 			var q1 =
 				from c in db.Child
-				join p in db.Parent.TableHint(OracleHints.TableHint.Full) on c.ParentID equals p.ParentID
+				join p in db.Parent.TableHint(OracleHints.Table.Full) on c.ParentID equals p.ParentID
 				select p;
 
 			var q =
@@ -297,7 +297,7 @@ namespace Tests.Linq
 
 			var q1 =
 				from c in db.Child
-				join p in db.Parent.TableHint(OracleHints.TableHint.Full) on c.ParentID equals p.ParentID
+				join p in db.Parent.TableHint(OracleHints.Table.Full) on c.ParentID equals p.ParentID
 				select p;
 
 			var q =
@@ -313,14 +313,14 @@ namespace Tests.Linq
 		[Test]
 		public void TableIDTest([IncludeDataSources(true, TestProvName.AllOracle)] string context,
 			[Values(
-				OracleHints.QueryHint.Leading
+				OracleHints.Query.Leading
 			)] string hint)
 		{
 			using var db = GetDataContext(context);
 
 			var q =
 			(
-				from p in db.Parent.TableHint(OracleHints.TableHint.Full).TableID("Pr")
+				from p in db.Parent.TableHint(OracleHints.Table.Full).TableID("Pr")
 				from c in db.Child.TableID("Ch")
 				select p
 			)
@@ -334,7 +334,7 @@ namespace Tests.Linq
 		[Test]
 		public void TableIDTest2([IncludeDataSources(true, TestProvName.AllOracle)] string context,
 			[Values(
-				OracleHints.QueryHint.Leading
+				OracleHints.Query.Leading
 			)] string hint)
 		{
 			using var db = GetDataContext(context);
@@ -345,7 +345,7 @@ namespace Tests.Linq
 					(
 						from p in
 							(
-								from p in db.Parent.TableHint(OracleHints.TableHint.Full).TableID("Pr")
+								from p in db.Parent.TableHint(OracleHints.Table.Full).TableID("Pr")
 								from c in db.Child.TableID("Ch")
 								select p
 							)
@@ -365,7 +365,7 @@ namespace Tests.Linq
 		[Test]
 		public void TableIDTest3([IncludeDataSources(true, TestProvName.AllOracle)] string context,
 			[Values(
-				OracleHints.QueryHint.Leading
+				OracleHints.Query.Leading
 			)] string hint)
 		{
 			using var db = GetDataContext(context);
@@ -376,7 +376,7 @@ namespace Tests.Linq
 					(
 						from p in
 							(
-								from p in db.Parent.TableHint(OracleHints.TableHint.Full).TableID("Pr")
+								from p in db.Parent.TableHint(OracleHints.Table.Full).TableID("Pr")
 								where p.ParentID < 0
 								select p
 							)
@@ -397,7 +397,7 @@ namespace Tests.Linq
 		[Test]
 		public void TableIDTest4([IncludeDataSources(true, TestProvName.AllOracle)] string context,
 			[Values(
-				OracleHints.QueryHint.Leading
+				OracleHints.Query.Leading
 			)] string hint)
 		{
 			using var db = GetDataContext(context);
@@ -408,7 +408,7 @@ namespace Tests.Linq
 					(
 						from p in
 							(
-								from p in db.Parent.TableHint(OracleHints.TableHint.Full).TableID("Pr")
+								from p in db.Parent.TableHint(OracleHints.Table.Full).TableID("Pr")
 								where p.ParentID < 0
 								select p
 							)
@@ -435,21 +435,21 @@ namespace Tests.Linq
 				(
 					from p in db.Parent
 					from c in db.Child
-					from c1 in db.Child.TableHint(OracleHints.TableHint.Full)
+					from c1 in db.Child.TableHint(OracleHints.Table.Full)
 					where c.ParentID == p.ParentID && c1.ParentID == p.ParentID
 					select p
 				)
-				.TablesInScopeHint(OracleHints.TableHint.NoCache);
+				.TablesInScopeHint(OracleHints.Table.NoCache);
 
 			q =
 				(
 					from p in q
 					from c in db.Child
-					from p1 in db.Parent.TablesInScopeHint(OracleHints.TableHint.Parallel)
+					from p1 in db.Parent.TablesInScopeHint(OracleHints.Table.Parallel)
 					where c.ParentID == p.ParentID && c.Parent!.ParentID > 0 && p1.ParentID == p.ParentID
 					select p
 				)
-				.TablesInScopeHint(OracleHints.TableHint.Cluster);
+				.TablesInScopeHint(OracleHints.Table.Cluster);
 
 			q =
 				from p in q
@@ -468,12 +468,12 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			(
-				from c in db.Child.TableHint(OracleHints.TableHint.Full)
+				from c in db.Child.TableHint(OracleHints.Table.Full)
 				where c.ParentID < -1111
 				select c
 			)
-			.QueryHint(OracleHints.QueryHint.AllRows)
-			.QueryHint(OracleHints.QueryHint.FirstRows(10))
+			.QueryHint(OracleHints.Query.AllRows)
+			.QueryHint(OracleHints.Query.FirstRows(10))
 			.Delete();
 
 			Assert.That(LastQuery, Contains.Substring("DELETE /*+ FULL(c_1) ALL_ROWS FIRST_ROWS(10) */"));
@@ -485,12 +485,12 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			(
-				from c in db.Child.TableHint(OracleHints.TableHint.Full)
+				from c in db.Child.TableHint(OracleHints.Table.Full)
 				where c.ParentID < -1111
 				select c
 			)
-			.QueryHint(OracleHints.QueryHint.AllRows)
-			.QueryHint(OracleHints.QueryHint.FirstRows(10))
+			.QueryHint(OracleHints.Query.AllRows)
+			.QueryHint(OracleHints.Query.FirstRows(10))
 			.Insert(db.Child, c => new()
 			{
 				ChildID = c.ChildID * 2
@@ -510,8 +510,8 @@ namespace Tests.Linq
 				where c.ParentID < -1111
 				select c
 			)
-			.QueryHint(OracleHints.QueryHint.AllRows)
-			.QueryHint(OracleHints.QueryHint.FirstRows(10))
+			.QueryHint(OracleHints.Query.AllRows)
+			.QueryHint(OracleHints.Query.FirstRows(10))
 			.Update(db.Child, c => new()
 			{
 				ChildID = c.ChildID * 2
@@ -530,12 +530,12 @@ namespace Tests.Linq
 				.Using
 				(
 					(
-						from c in db.Parent1.TableHint(OracleHints.TableHint.Full)
+						from c in db.Parent1.TableHint(OracleHints.Table.Full)
 						where c.ParentID < -1111
 						select c
 					)
-					.QueryHint(OracleHints.QueryHint.AllRows)
-					.QueryHint(OracleHints.QueryHint.FirstRows(10))
+					.QueryHint(OracleHints.Query.AllRows)
+					.QueryHint(OracleHints.Query.FirstRows(10))
 				)
 				.OnTargetKey()
 				.UpdateWhenMatched()
@@ -551,12 +551,12 @@ namespace Tests.Linq
 
 			var cte =
 				(
-					from c in db.Child.TableHint(OracleHints.TableHint.Full)
+					from c in db.Child.TableHint(OracleHints.Table.Full)
 					where c.ParentID < -1111
 					select c
 				)
-				.QueryHint(OracleHints.QueryHint.FirstRows(10))
-				.TablesInScopeHint(OracleHints.TableHint.NoCache)
+				.QueryHint(OracleHints.Query.FirstRows(10))
+				.TablesInScopeHint(OracleHints.Table.NoCache)
 				.AsCte();
 
 			var q =
@@ -565,8 +565,8 @@ namespace Tests.Linq
 					from c in db.Child
 					select p
 				)
-				.QueryHint(OracleHints.QueryHint.AllRows)
-				.TablesInScopeHint(OracleHints.TableHint.Fact);
+				.QueryHint(OracleHints.Query.AllRows)
+				.TablesInScopeHint(OracleHints.Table.Fact);
 
 			_ = q.ToList();
 

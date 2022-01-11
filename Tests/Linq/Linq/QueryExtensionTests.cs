@@ -59,8 +59,8 @@ namespace Tests.Linq
 						.TableHint(SqlServerHints.Table.NoLock)
 						.TableHint(SqlServerHints.Table.NoWait)
 					.AsOracleSpecific()
-						.With(OracleHints.TableHint.Full)
-						.With(OracleHints.TableHint.Hash)
+						.With(OracleHints.Table.Full)
+						.With(OracleHints.Table.Hash)
 				select p
 			)
 			.AsSqlServerSpecific()

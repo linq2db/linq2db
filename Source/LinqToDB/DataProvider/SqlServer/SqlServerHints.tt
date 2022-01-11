@@ -50,8 +50,8 @@ namespace LinqToDB.DataProvider.SqlServer
 	GenerateQueryHint ("IgnoreNonClusteredColumnStoreIndex");
 	GenerateQueryHint ("KeepPlan");
 	GenerateQueryHint ("KeepFixedPlan");
-	GenerateQueryHint2("MaxGrantPercent", "2012Plus");
-	GenerateQueryHint2("MinGrantPercent", "2012Plus");
+	GenerateQueryHint2("MaxGrantPercent", "2016Plus");
+	GenerateQueryHint2("MinGrantPercent", "2016Plus");
 	GenerateQueryHint2("MaxDop");
 	GenerateQueryHint2("MaxRecursion");
 	GenerateQueryHint ("NoPerformanceSpool");

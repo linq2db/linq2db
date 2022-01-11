@@ -19,10 +19,21 @@
 
 		<PackageReference Include="NodaTime" />
 
+		<None Update="Linq\QueryExtensionOracleTests.tt">
+		  <LastGenOutput>QueryExtensionOracleTests.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+
 		<None Update="Linq\QueryExtensionSqlServerTests.tt">
 			<LastGenOutput>QueryExtensionSqlServerTests.generated.cs</LastGenOutput>
 			<Generator>TextTemplatingFileGenerator</Generator>
 		</None>
+
+		<Compile Update="Linq\QueryExtensionOracleTests.generated.cs">
+		  <DependentUpon>QueryExtensionOracleTests.tt</DependentUpon>
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		</Compile>
 		<Compile Update="Linq\QueryExtensionSqlServerTests.generated.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>

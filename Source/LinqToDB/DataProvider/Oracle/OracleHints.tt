@@ -1,0 +1,96 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".generated.cs" #>
+// Generated.
+//
+using System;
+using System.Linq.Expressions;
+
+namespace LinqToDB.DataProvider.Oracle
+{
+	public static partial class OracleHints
+	{
+<#
+	GenerateTableHint ("Full");
+	GenerateTableHint ("Cluster");
+	GenerateTableHint ("Hash");
+
+	GenerateQueryHint ("AllRows");
+	GenerateQueryHint2("FirstRows");
+#>
+	}
+}
+<#+
+void GenerateTableHint(string hint, string version = "")
+{
+#>
+		[ExpressionMethod(ProviderName.Oracle, nameof(<#= hint #>HintImpl))]
+		public static IOracleSpecificTable<TSource> <#= hint #>Hint<TSource>(this IOracleSpecificTable<TSource> table)
+			where TSource : notnull
+		{
+			return table.TableHint<#= version #>(Table.<#= hint #>);
+		}
+
+		static Expression<Func<IOracleSpecificTable<TSource>,IOracleSpecificTable<TSource>>> <#= hint #>HintImpl<TSource>()
+			where TSource : notnull
+		{
+			return table => table.TableHint<#= version #>(Table.<#= hint #>);
+		}
+
+		[ExpressionMethod(ProviderName.Oracle, nameof(<#= hint #>InScopeHintImpl))]
+		public static IOracleSpecificQueryable<TSource> <#= hint #>InScopeHint<TSource>(this IOracleSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return query.TablesInScopeHint<#= version #>(Table.<#= hint #>);
+		}
+
+		static Expression<Func<IOracleSpecificQueryable<TSource>,IOracleSpecificQueryable<TSource>>> <#= hint #>InScopeHintImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => query.TablesInScopeHint<#= version #>(Table.<#= hint #>);
+		}
+
+<#+
+}
+
+void GenerateQueryHint(string hint, string version = "")
+{
+#>
+		[ExpressionMethod(nameof(<#= hint #>HintImpl))]
+		public static IOracleSpecificQueryable<TSource> <#= hint #>Hint<TSource>(this IOracleSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return query.QueryHint<#= version #>(Query.<#= hint #>);
+		}
+
+		static Expression<Func<IOracleSpecificQueryable<TSource>,IOracleSpecificQueryable<TSource>>> <#= hint #>HintImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => query.QueryHint<#= version #>(Query.<#= hint #>);
+		}
+
+<#+
+}
+
+void GenerateQueryHint2(string hint, string version = "")
+{
+#>
+		[ExpressionMethod(nameof(<#= hint #>HintImpl))]
+		public static IOracleSpecificQueryable<TSource> <#= hint #>Hint<TSource>(this IOracleSpecificQueryable<TSource> query, int value)
+			where TSource : notnull
+		{
+			return query.QueryHint<#= version #>(Query.<#= hint #>(value));
+		}
+
+		static Expression<Func<IOracleSpecificQueryable<TSource>,int,IOracleSpecificQueryable<TSource>>> <#= hint #>HintImpl<TSource>()
+			where TSource : notnull
+		{
+			return (query, value) => query.QueryHint<#= version #>(Query.<#= hint #>(value));
+		}
+
+<#+
+}
+#>

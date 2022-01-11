@@ -813,6 +813,30 @@ namespace LinqToDB.DataProvider.SqlServer
 					currentSource.Expression, Expression.Constant(hint))));
 		}
 
+		/// <summary>
+		/// Adds a query hint to a generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <returns>Query source with join hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.SqlServer2016, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.SqlServer2017, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.SqlServer2019, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
+		public static ISqlServerSpecificQueryable<TSource> QueryHint2016Plus<TSource>(this ISqlServerSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
+			where TSource : notnull
+		{
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(QueryHint2016Plus, source, hint),
+					currentSource.Expression, Expression.Constant(hint))));
+		}
+
 		#endregion
 	}
 }

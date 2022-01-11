@@ -1,0 +1,122 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".generated.cs" #>
+// Generated.
+//
+using System;
+using System.Linq;
+using System.Linq.Expressions;
+
+using LinqToDB.DataProvider.Oracle;
+
+using NUnit.Framework;
+
+namespace Tests.Linq
+{
+	partial class QueryExtensionOracleTests
+	{
+<#
+	GenerateTableTest ("Full");
+	GenerateTableTest ("Cluster");
+	GenerateTableTest ("Hash");
+
+	GenerateQueryTest ("AllRows");
+	GenerateQueryTest2("FirstRows");
+#>
+	}
+}
+<#+
+void GenerateTableTest(string test, string version = "")
+{
+#>
+		[Test]
+		public void TableHint<#= test #>Test([IncludeDataSources(true, TestProvName.AllOracle<#= version #>)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracleSpecific()
+					.<#= test #>Hint()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.<#= test #>}(p) */"));
+		}
+
+		[Test]
+		public void TableHint<#= test #>InScopeTest([IncludeDataSources(true, TestProvName.AllOracle<#= version #>)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Parent
+				join c in db.Child on p.ParentID equals c.ParentID
+				select p
+			)
+			.AsOracleSpecific()
+			.<#= test #>InScopeHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.<#= test #>}(p) {OracleHints.Table.<#= test #>}(c_1) */"));
+		}
+
+<#+
+}
+
+void GenerateQueryTest(string test, string version = "")
+{
+#>
+		[Test]
+		public void QueryHint<#= test #>Test([IncludeDataSources(true, TestProvName.AllOracle<#= version #>)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracleSpecific()
+			.<#= test #>Hint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.<#= test #>} */"));
+		}
+
+<#+
+}
+
+void GenerateQueryTest2(string test, string version = "")
+{
+#>
+		[Test]
+		public void QueryHint<#= test #>Test([IncludeDataSources(true, TestProvName.AllOracle<#= version #>)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracleSpecific()
+			.<#= test #>Hint(10);
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.<#= test #>(10)} */"));
+		}
+
+<#+
+}
+#>

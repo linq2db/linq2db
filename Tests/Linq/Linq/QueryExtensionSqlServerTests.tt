@@ -47,8 +47,8 @@ namespace Tests.Linq
 	GenerateOptionTest ("IgnoreNonClusteredColumnStoreIndex", "2012Plus");
 	GenerateOptionTest ("KeepPlan");
 	GenerateOptionTest ("KeepFixedPlan");
-	GenerateOptionTest2("MaxGrantPercent", "2012Plus");
-	GenerateOptionTest2("MinGrantPercent", "2012Plus");
+	GenerateOptionTest2("MaxGrantPercent", "2016Plus");
+	GenerateOptionTest2("MinGrantPercent", "2016Plus");
 	GenerateOptionTest2("MaxDop");
 	GenerateOptionTest2("MaxRecursion");
 	GenerateOptionTest ("NoPerformanceSpool", "2019Plus");

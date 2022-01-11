@@ -893,7 +893,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OptionMaxGrantPercentTest([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		public void OptionMaxGrantPercentTest([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -912,7 +912,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OptionMinGrantPercentTest([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		public void OptionMinGrantPercentTest([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
