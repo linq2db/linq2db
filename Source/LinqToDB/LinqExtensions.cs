@@ -266,7 +266,7 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
-		/// <returns>Query source with join hints.</returns>
+		/// <returns>Query source with table hints.</returns>
 		[LinqTunnel, Pure]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(PathableTableHintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TablesInScopeHint, typeof(PathableTableHintExtensionBuilder))]
@@ -291,7 +291,7 @@ namespace LinqToDB
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameter">Table hint parameter.</param>
-		/// <returns>Query source with join hints.</returns>
+		/// <returns>Query source with table hints.</returns>
 		[LinqTunnel, Pure]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(PathableTableHintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TablesInScopeHint, typeof(PathableTableHintExtensionBuilder))]
@@ -318,7 +318,7 @@ namespace LinqToDB
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
-		/// <returns>Query source with join hints.</returns>
+		/// <returns>Query source with table hints.</returns>
 		[LinqTunnel, Pure]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(PathableTableHintExtensionBuilder), " ")]
 		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TablesInScopeHint, typeof(PathableTableHintExtensionBuilder), ", ")]
@@ -350,7 +350,7 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="table">Table-like query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
-		/// <returns>Table-like query source with table hints.</returns>
+		/// <returns>Table-like query source with index hints.</returns>
 		[LinqTunnel, Pure]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.IndexHint, typeof(PathableTableHintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.IndexHint, typeof(HintExtensionBuilder))]
@@ -374,7 +374,7 @@ namespace LinqToDB
 		/// <param name="table">Table-like query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameter">Table hint parameter.</param>
-		/// <returns>Table-like query source with table hints.</returns>
+		/// <returns>Table-like query source with index hints.</returns>
 		[LinqTunnel, Pure]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.IndexHint, typeof(PathableTableHintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.IndexHint, typeof(HintWithParameterExtensionBuilder))]
@@ -401,7 +401,7 @@ namespace LinqToDB
 		/// <param name="table">Table-like query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
-		/// <returns>Table-like query source with table hints.</returns>
+		/// <returns>Table-like query source with index hints.</returns>
 		[LinqTunnel, Pure]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.IndexHint, typeof(PathableTableHintExtensionBuilder), " ")]
 		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.IndexHint, typeof(HintWithParametersExtensionBuilder))]
@@ -457,7 +457,7 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
-		/// <returns>Query source with join hints.</returns>
+		/// <returns>Query source with hints.</returns>
 		[LinqTunnel, Pure]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.SubQueryHint, typeof(HintExtensionBuilder))]
 		public static IQueryable<TSource> SubQueryHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string hint)
@@ -480,7 +480,7 @@ namespace LinqToDB
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameter">Hint parameter.</param>
-		/// <returns>Query source with join hints.</returns>
+		/// <returns>Query source with hints.</returns>
 		[LinqTunnel, Pure]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.SubQueryHint, typeof(HintWithParameterExtensionBuilder))]
 		public static IQueryable<TSource> SubQueryHint<TSource,TParam>(
@@ -508,7 +508,7 @@ namespace LinqToDB
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
-		/// <returns>Table-like query source with table hints.</returns>
+		/// <returns>Table-like query source with hints.</returns>
 		[LinqTunnel, Pure]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.SubQueryHint, typeof(HintWithParametersExtensionBuilder))]
 		public static IQueryable<TSource> SubQueryHint<TSource, TParam>(
@@ -542,7 +542,7 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
-		/// <returns>Query source with join hints.</returns>
+		/// <returns>Query source with hints.</returns>
 		[LinqTunnel, Pure]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		public static IQueryable<TSource> QueryHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string hint)
@@ -565,7 +565,7 @@ namespace LinqToDB
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameter">Hint parameter.</param>
-		/// <returns>Query source with join hints.</returns>
+		/// <returns>Query source with hints.</returns>
 		[LinqTunnel, Pure]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.QueryHint, typeof(HintWithParameterExtensionBuilder))]
 		public static IQueryable<TSource> QueryHint<TSource,TParam>(
@@ -593,7 +593,7 @@ namespace LinqToDB
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
-		/// <returns>Table-like query source with table hints.</returns>
+		/// <returns>Table-like query source with hints.</returns>
 		[LinqTunnel, Pure]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.QueryHint, typeof(HintWithParametersExtensionBuilder), " ")]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.QueryHint, typeof(HintWithParametersExtensionBuilder))]
@@ -3610,7 +3610,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <param name="source">Source data query.</param>
-		/// <returns>Query covered in sub-query.</returns>
+		/// <returns>Query converted into sub-query.</returns>
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> AsSubQuery<TSource>(this IQueryable<TSource> source)
@@ -3629,7 +3629,7 @@ namespace LinqToDB
 		/// <typeparam name="TKey">The type of the key of the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
 		/// <typeparam name="TElement">The type of the values in the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
 		/// <param name="grouping">Source data query.</param>
-		/// <returns>Query covered in sub-query.</returns>
+		/// <returns>Query converted into sub-query.</returns>
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TKey> AsSubQuery<TKey, TElement>(this IQueryable<IGrouping<TKey,TElement>> grouping)
@@ -3648,7 +3648,7 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <param name="source">Source data query.</param>
 		/// <param name="queryName">Query name.</param>
-		/// <returns>Query covered in sub-query.</returns>
+		/// <returns>Query converted into sub-query.</returns>
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> AsSubQuery<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string queryName)
@@ -3668,7 +3668,7 @@ namespace LinqToDB
 		/// <typeparam name="TElement">The type of the values in the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
 		/// <param name="grouping">Source data query.</param>
 		/// <param name="queryName">Query name.</param>
-		/// <returns>Query covered in sub-query.</returns>
+		/// <returns>Query converted into sub-query.</returns>
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TKey> AsSubQuery<TKey, TElement>(this IQueryable<IGrouping<TKey,TElement>> grouping, [SqlQueryDependent] string queryName)
@@ -3691,7 +3691,7 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <param name="source">Source data query.</param>
 		/// <param name="queryName">Query name.</param>
-		/// <returns>Query covered in sub-query.</returns>
+		/// <returns>Query converted into sub-query.</returns>
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> QueryName<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string queryName)
@@ -3711,7 +3711,7 @@ namespace LinqToDB
 		/// <typeparam name="TElement">The type of the values in the <see cref="IGrouping{TKey, TElement}" />.</typeparam>
 		/// <param name="grouping">Source data query.</param>
 		/// <param name="queryName">Query name.</param>
-		/// <returns>Query covered in sub-query.</returns>
+		/// <returns>Query converted into sub-query.</returns>
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TKey> QueryName<TKey,TElement>(this IQueryable<IGrouping<TKey,TElement>> grouping, [SqlQueryDependent] string queryName)
@@ -3783,7 +3783,7 @@ namespace LinqToDB
 		/// <typeparam name="TKey">Key type.</typeparam>
 		/// <param name="source">Source data query.</param>
 		/// <param name="keySelector">A function to specify which fields are unique.</param>
-		/// <returns>Query covered in sub-query.</returns>
+		/// <returns>Query converted into sub-query.</returns>
 		[Pure]
 		[LinqTunnel]
 		public static IQueryable<TSource> HasUniqueKey<TSource, TKey>(

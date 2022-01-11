@@ -12,6 +12,9 @@ namespace LinqToDB
 
 	public partial class Sql
 	{
+		/// <summary>
+		/// Defines custom query extension builder.
+		/// </summary>
 		[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true)]
 		public class QueryExtensionAttribute : Attribute
 		{

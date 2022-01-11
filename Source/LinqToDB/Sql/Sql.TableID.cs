@@ -16,7 +16,7 @@ namespace LinqToDB
 
 			public SqlID(SqlIDType type, string id)
 			{
-				ID        = id;
+				ID   = id;
 				Type = type;
 			}
 
@@ -28,11 +28,6 @@ namespace LinqToDB
 			public override bool Equals(object? obj)
 			{
 				return obj is SqlID id && Type == id.Type && ID == id.ID;
-			}
-
-			public bool Equals(SqlID other)
-			{
-				return Type == other.Type && ID == other.ID;
 			}
 
 			public override int GetHashCode()
