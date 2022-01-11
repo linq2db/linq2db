@@ -402,6 +402,7 @@ namespace LinqToDB
 		[Property(PN.SqlServer2019, "DateTimeOffset", ServerSideOnly=true)]
 		[Property(PN.SqlServer2017, "DateTimeOffset", ServerSideOnly=true)]
 		[Property(PN.SqlServer2016, "DateTimeOffset", ServerSideOnly=true)]
+		[Property(PN.SqlServer2014, "DateTimeOffset", ServerSideOnly=true)]
 		[Property(PN.SqlServer2012, "DateTimeOffset", ServerSideOnly=true)]
 		[Property(PN.SqlServer2008, "DateTimeOffset", ServerSideOnly=true)]
 		[Property(PN.SapHana,       "TimeStamp",      ServerSideOnly=true)]
