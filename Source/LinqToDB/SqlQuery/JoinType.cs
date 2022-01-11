@@ -10,6 +10,8 @@ namespace LinqToDB.SqlQuery
 		CrossApply,
 		OuterApply,
 		Right,
-		Full
+		Full,
+		RightApply,
+		FullApply
 	}
 }

@@ -452,6 +452,7 @@ namespace LinqToDB.SqlQuery
 			OptimizeApplies   (isApplySupported, optimizeColumns);
 			OptimizeSubQueries(isApplySupported, optimizeColumns);
 			OptimizeApplies   (isApplySupported, optimizeColumns);
+			RemoveEmptyJoins();
 
 			OptimizeGroupBy();
 			OptimizeDistinct();
@@ -1251,159 +1252,91 @@ namespace LinqToDB.SqlQuery
 		{
 			var joinSource = joinTable.Table;
 
-			foreach (var join in joinSource.Joins)
-				if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply)
-					OptimizeApply(parentQuery, parentTableSources, joinSource, join, isApplySupported, optimizeColumns);
-
-			if (isApplySupported && !joinTable.CanConvertApply)
-				return;
-
-			bool ContainsTable(ISqlTableSource table, IQueryElement qe)
+			if (joinSource.Joins.Count > 0)
 			{
-				return null != qe.Find(table, static (table, e) =>
-					e == table ||
-					e.ElementType == QueryElementType.SqlField && table == ((SqlField) e).Table ||
-					e.ElementType == QueryElementType.Column   && table == ((SqlColumn)e).Parent);
+				var joinSources = new HashSet<ISqlTableSource>(parentTableSources);
+				joinSources.Add(joinTable.Table);
+				foreach (var join in joinSource.Joins)
+				{
+					if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply|| join.JoinType == JoinType.FullApply|| join.JoinType == JoinType.RightApply)
+					{
+						OptimizeApply(parentQuery, joinSources, joinSource, join, isApplySupported,
+							optimizeColumns);
+					}
+
+					joinSources.AddRange(QueryHelper.EnumerateAccessibleSources(join.Table));
+				}
 			}
+
+			if (!joinTable.CanConvertApply)
+				return;
 
 			if (joinSource.Source.ElementType == QueryElementType.SqlQuery)
 			{
 				var sql   = (SelectQuery)joinSource.Source;
 				var isAgg = sql.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
 
-				if (isApplySupported  && (isAgg || sql.Select.HasModifier))
+				if (isApplySupported && (isAgg || sql.Select.HasModifier))
 					return;
-
-				var tableSources = new HashSet<ISqlTableSource>();
-
-				((ISqlExpressionWalkable)sql.Where.SearchCondition).Walk(WalkOptions.Default, tableSources, static (tableSources, e) =>
-				{
-					if (e is ISqlTableSource ts && !tableSources.Contains(ts))
-						tableSources.Add(ts);
-					return e;
-				});
 
 				var searchCondition = new List<SqlCondition>();
 
+				var conditions = sql.Where.SearchCondition.Conditions;
+
+				var toIgnore = new HashSet<IQueryElement> { joinTable };
+
+				if (conditions.Count > 0)
 				{
-					var conditions = sql.Where.SearchCondition.Conditions;
-
-					if (conditions.Count > 0)
+					for (var i = conditions.Count - 1; i >= 0; i--)
 					{
-						for (var i = conditions.Count - 1; i >= 0; i--)
+						var condition = conditions[i];
+
+						var contains = QueryHelper.IsDependsOn(condition, parentTableSources, toIgnore);
+
+						if (contains)
 						{
-							var condition = conditions[i];
-
-							var contains = false;
-							foreach (var ts in tableSources)
-							{
-								if (ContainsTable(ts, condition))
-								{
-									contains = true;
-									break;
-								}
-							}
-
-							if (!contains)
-							{
-								searchCondition.Insert(0, condition);
-								conditions.RemoveAt(i);
-							}
-							else
-							{
-								contains = false;
-								foreach (var ts in parentTableSources)
-								{
-									if (ContainsTable(ts, condition))
-									{
-										contains = true;
-										break;
-									}
-								}
-
-								if (contains)
-								{
-									if (isApplySupported && Configuration.Linq.PreferApply)
-										return;
-
-									searchCondition.Insert(0, condition);
-									conditions.RemoveAt(i);
-								}
-							}
+							searchCondition.Insert(0, condition);
+							conditions.RemoveAt(i);
 						}
 					}
 				}
 
-				var sources = new HashSet<ISqlTableSource> {tableSource.Source};
-				var ignore  = new HashSet<IQueryElement>();
-				ignore.AddRange(QueryHelper.EnumerateJoins(sql).Select(static j => j.Condition));
+				var toCheck = new HashSet<ISqlTableSource>();
 
-				if (!QueryHelper.IsDependsOn(sql, sources, ignore))
+				toCheck.AddRange(QueryHelper.EnumerateAccessibleSources(sql));
+
+				for (int i = 0; i < searchCondition.Count; i++)
 				{
-					/*
-					if (!(joinTable.JoinType == JoinType.CrossApply && searchCondition.Count == 0) // CROSS JOIN
-						&& sql.Select.HasModifier)
-						throw new LinqToDBException("Database do not support CROSS/OUTER APPLY join required by the query.");
-						*/
-
-					// correct conditions
-					if (searchCondition.Count > 0 && sql.Select.Columns.Count > 0)
+					var cond    = searchCondition[i];
+					var newCond = cond.Convert((sql, toCheck, toIgnore), static (visitor, e) =>
 					{
-						var map = sql.Select.Columns.ToLookup(static c => c.Expression);
-						foreach (var condition in searchCondition)
+						if (e.ElementType == QueryElementType.Column || e.ElementType == QueryElementType.SqlField)
 						{
-							var newPredicate = condition.Predicate.Convert(map, static (visitor, e) =>
+							if (QueryHelper.IsDependsOn(e, visitor.Context.toCheck, null))
 							{
-								if (e is ISqlExpression ex && visitor.Context.Contains(ex))
-								{
-									var newExpr = visitor.Context[ex].First();
-									if (visitor.ParentElement is SqlColumn column)
-									{
-										if (newExpr != column)
-											e = newExpr;
-									}
-									else
-										e = newExpr;
-								}
+								var newExpr = visitor.Context.sql.Select.AddColumn((ISqlExpression)e);
 
-								return e;
-							}, withStack: true);
-							condition.Predicate = newPredicate;
+								return newExpr;
+							}
 						}
-					}
 
-					joinTable.JoinType = joinTable.JoinType == JoinType.CrossApply ? JoinType.Inner : JoinType.Left;
-					joinTable.Condition.Conditions.AddRange(searchCondition);
+						return e;
+					});
+
+					searchCondition[i] = newCond;
 				}
-				else
+
+				var newJoinType = joinTable.JoinType switch
 				{
-					sql.Where.SearchCondition.Conditions.AddRange(searchCondition);
+					JoinType.CrossApply => JoinType.Inner,
+					JoinType.OuterApply => JoinType.Left,
+					JoinType.FullApply  => JoinType.Full,
+					JoinType.RightApply => JoinType.Right,
+					_ => throw new InvalidOperationException($"Invalid APPLY Join: {joinTable.JoinType}"),
+				};
 
-					var table = OptimizeSubQuery(
-						parentQuery,
-						joinTable.Table,
-						joinTable.JoinType == JoinType.Inner || joinTable.JoinType == JoinType.CrossApply,
-						joinTable.JoinType == JoinType.CrossApply,
-						isApplySupported,
-						joinTable.JoinType == JoinType.Inner || joinTable.JoinType == JoinType.CrossApply,
-						optimizeColumns,
-						joinTable);
-
-					if (table != joinTable.Table)
-					{
-						if (joinTable.Table.Source is SelectQuery q && q.OrderBy.Items.Count > 0)
-							ApplySubsequentOrder(_selectQuery, q);
-
-						joinTable.Table = table;
-
-						OptimizeApply(parentQuery, parentTableSources, tableSource, joinTable, isApplySupported, optimizeColumns);
-					}
-				}
-			}
-			else
-			{
-				if (!ContainsTable(tableSource.Source, joinSource.Source))
-					joinTable.JoinType = joinTable.JoinType == JoinType.CrossApply ? JoinType.Inner : JoinType.Left;
+				joinTable.JoinType = newJoinType;
+				joinTable.Condition.Conditions.AddRange(searchCondition);
 			}
 		}
 
@@ -1523,11 +1456,14 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var table in _selectQuery.From.Tables)
 			{
-				tableSources.Add(table);
+				tableSources.Add(table.Source);
+
+				if (table.Source is SelectQuery selectQuery)
+					tableSources.AddRange(QueryHelper.EnumerateAccessibleSources(selectQuery));
 
 				foreach (var join in table.Joins)
 				{
-					if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply)
+					if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply|| join.JoinType == JoinType.FullApply|| join.JoinType == JoinType.RightApply)
 						OptimizeApply(_selectQuery, tableSources, table, join, isApplySupported, optimizeColumns);
 
 					join.Walk(WalkOptions.Default, tableSources, static (tableSources, e) =>
