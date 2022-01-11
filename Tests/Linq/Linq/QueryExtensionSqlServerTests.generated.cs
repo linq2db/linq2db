@@ -797,7 +797,7 @@ namespace Tests.Linq
 			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.ForceOrder})"));
 		}
 
-		[Test]
+		[Test, Explicit]
 		public void OptionForceScaleOutExecutionTest([IncludeDataSources(true, TestProvName.AllSqlServer2019Plus)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -816,7 +816,7 @@ namespace Tests.Linq
 			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.ForceScaleOutExecution})"));
 		}
 
-		[Test]
+		[Test, Explicit]
 		public void OptionDisableScaleOutExecutionTest([IncludeDataSources(true, TestProvName.AllSqlServer2019Plus)] string context)
 		{
 			using var db = GetDataContext(context);

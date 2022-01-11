@@ -743,7 +743,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OptionUseHintTest([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
+		public void OptionUseHintTest([IncludeDataSources(true, TestProvName.AllSqlServer2017Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
