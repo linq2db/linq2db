@@ -171,9 +171,11 @@ namespace LinqToDB.Linq.Builder
 			var objectType    = entityDescriptor.ObjectType;
 			var refExpression = new ContextRefExpression(objectType, context);
 
+			var checkForKey = flags.HasFlag(ProjectFlags.Keys) && entityDescriptor.Columns.Any(c => c.IsPrimaryKey);
+
 			foreach (var column in entityDescriptor.Columns)
 			{
-				if (flags.HasFlag(ProjectFlags.Keys) && !column.IsPrimaryKey)
+				if (checkForKey && !column.IsPrimaryKey)
 					continue;
 
 				Expression me;

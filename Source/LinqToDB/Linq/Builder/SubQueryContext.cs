@@ -119,11 +119,6 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			if (flags.HasFlag(ProjectFlags.Root) & !flags.HasFlag(ProjectFlags.AggregtionRoot))
-			{
-				return path;
-			}
-
 			var result = base.MakeExpression(path, flags);
 			result = Builder.UpdateNesting(this, result);
 			return result;

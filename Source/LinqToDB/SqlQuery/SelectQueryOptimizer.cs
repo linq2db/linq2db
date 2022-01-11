@@ -1665,7 +1665,7 @@ namespace LinqToDB.SqlQuery
 		{
 			int counter = 0;
 
-			rootQuery.VisitParentFirst(e =>
+			rootQuery.VisitParentFirstAll(e =>
 			{
 				// do not search in the same query
 				if (e is SelectQuery sq && sq == column.Parent)
@@ -1708,7 +1708,7 @@ namespace LinqToDB.SqlQuery
 									{
 										if (testedColumn.Expression is SqlFunction function)
 										{
-											if (function.IsAggregate && function.Name == "Count")
+											if (function.IsAggregate)
 											{
 												if (!ctx.flags.IsCountSubQuerySupported)
 													continue;

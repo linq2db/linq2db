@@ -485,7 +485,7 @@ namespace LinqToDB.Linq.Builder
 							switch (call.Method.Name)
 							{
 								case "Where"                : return new TransformInfo(ConvertWhere         (call));
-								case "GroupBy"              : return new TransformInfo(ConvertGroupBy       (call));
+								//case "GroupBy"              : return new TransformInfo(ConvertGroupBy       (call));
 								case "SelectMany"           : return new TransformInfo(ConvertSelectMany    (call));
 								case "Select"               : return new TransformInfo(ConvertSelect        (call));
 								case "LongCount"            :

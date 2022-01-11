@@ -645,7 +645,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Sum3([DataSources(ProviderName.SqlCe)] string context)
+		public void Sum3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -743,7 +743,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Aggregates3([DataSources(ProviderName.SqlCe)] string context)
+		public void Aggregates3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -772,7 +772,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Aggregates4([DataSources(ProviderName.SqlCe)] string context)
+		public void Aggregates4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -793,7 +793,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Aggregates5([DataSources(ProviderName.SqlCe)] string context)
+		public void Aggregates5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1041,9 +1041,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByAssociation1022([DataSources(
-			ProviderName.SqlCe, TestProvName.AllAccess /* Can be fixed*/)]
-			string context)
+		public void GroupByAssociation1022([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1059,9 +1057,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByAssociation1023([DataSources(
-			ProviderName.SqlCe, TestProvName.AllAccess /* Can be fixed.*/)]
-			string context)
+		public void GroupByAssociation1023([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1083,9 +1079,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByAssociation1024([DataSources(
-			ProviderName.SqlCe, TestProvName.AllAccess) /* Can be fixed. */]
-			string context)
+		public void GroupByAssociation1024([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1157,22 +1151,10 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByAggregate1([DataSources(ProviderName.SqlCe)] string context)
+		public void GroupByAggregate1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var query = from p in db.Parent
-					group p by p.Children.Count > 0 && p.Children.Average(c => c.ParentID) > 3
-					//group p by p.Children.Count > 0
-					//group p by p.Children.Average(c => c.ParentID) > 3
-					into g
-					select g.Key;
-
-				var zz = query.ToList();
-
-				return;
-
-
 				AreEqual(
 					from p in Parent
 					group p by p.Children.Count > 0 && p.Children.Average(c => c.ParentID) > 3
@@ -1188,7 +1170,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByAggregate11([DataSources(ProviderName.SqlCe)] string context)
+		public void GroupByAggregate11([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1204,7 +1186,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByAggregate12([DataSources(ProviderName.SqlCe)] string context)
+		public void GroupByAggregate12([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1485,7 +1467,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByExtraFieldBugTest([IncludeDataSources(TestProvName.AllMySql)] string context)
+		public void GroupByExtraFieldBugTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			// https://github.com/igor-tkachev/LinqToDB/issues/42
 			// extra field is generated in the GROUP BY clause, for example:
@@ -2190,7 +2172,6 @@ namespace Tests.Linq
 			};
 		}
 
-		[ActiveIssue(1078, Details = "Disabled providers doesn't support sub-query columns and use join (which is not correct right now)", Configurations = new[] { TestProvName.AllAccess, ProviderName.SqlServer2000, ProviderName.SqlCe })]
 		[Test]
 		public void Issue1078Test([DataSources] string context)
 		{

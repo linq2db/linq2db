@@ -42,6 +42,17 @@ namespace LinqToDB.Expressions
 			return this;
 		}
 
+		public SqlPlaceholderExpression MakeNotNullable()
+		{
+			if (Type.IsNullable())
+			{
+				var type = Type.GetGenericArguments()[0];
+				return new SqlPlaceholderExpression(SelectQuery, Sql, Path, type, Alias, Index);
+			}
+
+			return this;
+		}
+
 		public override string ToString()
 		{
 			if (Index != null)

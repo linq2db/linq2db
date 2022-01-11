@@ -60,7 +60,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public IBuildContext BuildWhere(IBuildContext? parent, IBuildContext sequence, LambdaExpression condition,
-			bool checkForSubQuery, bool enforceHaving, bool isAggregation)
+			bool checkForSubQuery, bool enforceHaving, bool aggregationTest)
 		{
 			var originalContextRef = new ContextRefExpression(condition.Parameters[0].Type, sequence);
 			var body               = condition.GetBody(originalContextRef);
@@ -68,48 +68,22 @@ namespace LinqToDB.Linq.Builder
 			var makeHaving         = false;
 
 			var prevSequence = sequence;
-			//if (addSubquery)
+
 			if (parent == null && (sequence is not SubQueryContext squbquery || !squbquery.SelectQuery.IsSimple))
 			{
 				sequence = new SubQueryContext(prevSequence);
 			}
 
-			var targetSequence = sequence;
-
-			/*var sc = new SqlSearchCondition();
-			BuildSearchCondition(targetSequence, expr, ProjectFlags.Test, sc.Conditions);
-
-			if (IsHavingSql(!prevSequence.SelectQuery.GroupBy.IsEmpty, sc, prevSequence.SelectQuery) == true)
-			{
-				targetSequence = prevSequence;
-			}*/
+			var searchContext = parent ?? sequence;
+			if (sequence is GroupByBuilder.AggregationRoot)
+				searchContext = sequence;
 
 			var sc = new SqlSearchCondition();
-			BuildSearchCondition(targetSequence, expr, ProjectFlags.SQL, sc.Conditions);
+			BuildSearchCondition(searchContext, expr, aggregationTest ? ProjectFlags.Test : ProjectFlags.SQL, sc.Conditions);
 
-			if (!targetSequence.SelectQuery.GroupBy.IsEmpty)
-				targetSequence.SelectQuery.Having.ConcatSearchCondition(sc);
-			else
-				targetSequence.SelectQuery.Where.ConcatSearchCondition(sc);
+			sequence.SelectQuery.Where.ConcatSearchCondition(sc);
 
-			/*
-			if (checkForSubQuery && CheckSubQueryForWhere(sequence, expr, out makeHaving))
-			{
-				sequence = new SubQueryContext(sequence);
-
-				var subqueryContextRef = new ContextRefExpression(condition.Parameters[0].Type, sequence);
-				body = condition.GetBody(subqueryContextRef).Unwrap();
-				expr = ConvertExpression(body.Unwrap());
-			}
-
-			var conditions = enforceHaving || makeHaving && !sequence.SelectQuery.GroupBy.IsEmpty?
-				sequence.SelectQuery.Having.SearchCondition.Conditions :
-				sequence.SelectQuery.Where. SearchCondition.Conditions;
-
-			BuildSearchCondition(sequence, expr, conditions);
-			*/
-
-			return targetSequence;
+			return sequence;
 		}
 
 		class CheckSubQueryForWhereContext
@@ -1086,6 +1060,9 @@ namespace LinqToDB.Linq.Builder
 			bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false,
 			string? alias = null)
 		{
+			// remove keys flag. We can cache SQL
+			flags &= ~ProjectFlags.Keys;
+
 			var cacheKey        = new SqlCacheKey(expression, null, columnDescriptor, null, flags);
 			var preciseCacheKey = new SqlCacheKey(expression, null, columnDescriptor, context.SelectQuery, flags);
 
@@ -2834,7 +2811,7 @@ namespace LinqToDB.Linq.Builder
 		public ColumnDescriptor? SuggestColumnDescriptor(IBuildContext context, Expression expr, ProjectFlags flags)
 		{
 			expr = expr.Unwrap();
-			if (TryConvertToSql(context, flags, expr, null, out var sqlExpr, out _))
+			if (TryConvertToSql(context, flags | ProjectFlags.Test, expr, null, out var sqlExpr, out _))
 			{
 				var descriptor = QueryHelper.GetColumnDescriptor(sqlExpr);
 				if (descriptor != null)
@@ -4024,14 +4001,13 @@ namespace LinqToDB.Linq.Builder
 		/// <returns></returns>
 		public Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			if (flags.HasFlag(ProjectFlags.Expression))
+			path = ExposeExpression(path); 
+
+			// try to find already converted to SQL
+			var sqlKey = new SqlCacheKey(path, null, null, null, ProjectFlags.SQL);
+			if (_cachedSql.TryGetValue(sqlKey, out var cachedSql))
 			{
-				// try to find already converted to SQL
-				var sqlKey = new SqlCacheKey(path, null, null, null, ProjectFlags.SQL);
-				if (_cachedSql.TryGetValue(sqlKey, out var cachedSql))
-				{
-					return cachedSql;
-				}
+				return cachedSql;
 			}
 			
 			var key = new SqlCacheKey(path, null, null, null, flags);
@@ -4043,6 +4019,11 @@ namespace LinqToDB.Linq.Builder
 
 			if (path is MemberExpression memberExpression)
 			{
+				if (memberExpression.Member.IsNullableValueMember())
+				{
+					return MakeExpression(memberExpression.Expression, flags);
+				}
+
 				var root = MakeExpression(memberExpression.Expression, ProjectFlags.Root);
 
 				Expression newPath;
@@ -4052,7 +4033,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (IsAssociation(newPath))
 				{
-					//root = MakeExpression(root, ProjectFlags.SQL);
+					root = MakeExpression(root, ProjectFlags.AssociationRoot);
 					path = ((MemberExpression)newPath).Update(root);
 					if (root is ContextRefExpression contextRef)
 						expression = TryCreateAssociation(path, contextRef, flags);

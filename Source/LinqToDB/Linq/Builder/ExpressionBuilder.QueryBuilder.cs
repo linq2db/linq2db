@@ -54,28 +54,39 @@ namespace LinqToDB.Linq.Builder
 		{
 			var resultExpr = BuildSqlExpression(translated, context, expr, flags, alias);
 
-			if (!string.IsNullOrEmpty(alias) && resultExpr is SqlPlaceholderExpression placeholder)
+			if (resultExpr is SqlPlaceholderExpression placeholder)
 			{
-				placeholder.Alias = alias;
-				if (placeholder.Sql is SqlColumn column)
-					column.RawAlias = alias;
+				if (!string.IsNullOrEmpty(alias))
+				{
+					placeholder.Alias = alias;
+					if (placeholder.Sql is SqlColumn column)
+						column.RawAlias = alias;
+				}
+
+				if (memberInfo?.GetMemberType().IsNullable() == false && placeholder.Type.IsNullable())
+				{
+					resultExpr = placeholder.MakeNotNullable();
+				}
 			}
 
 			// Update nullability
-			resultExpr = (_updateNullabilityFromExtensionTransformer ??= TransformVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.UpdateNullabilityFromExtension(e))).Transform(resultExpr);
+			resultExpr =
+				(_updateNullabilityFromExtensionTransformer ??=
+					TransformVisitor<ExpressionBuilder>.Create(this,
+						static (ctx, e) => ctx.UpdateNullabilityFromExtension(e))).Transform(resultExpr);
 
 			if (resultExpr.NodeType == ExpressionType.Convert || resultExpr.NodeType == ExpressionType.ConvertChecked)
 			{
 				var conv = (UnaryExpression)resultExpr;
 				if (memberInfo?.GetMemberType().IsNullable() == true
-					&& conv.Operand is ConvertFromDataReaderExpression readerExpression
+					&& conv.Operand is SqlPlaceholderExpression readerExpression
 					&& !readerExpression.Type.IsNullable())
 				{
 					resultExpr = readerExpression.MakeNullable();
 				}
 			}
 			else if (resultExpr.NodeType == ExpressionType.Extension &&
-					 resultExpr is ConvertFromDataReaderExpression readerExpression)
+					 resultExpr is SqlPlaceholderExpression readerExpression)
 			{
 				if (memberInfo?.GetMemberType().IsNullable() == true &&
 					!readerExpression.Type.IsNullable())
@@ -900,21 +911,21 @@ namespace LinqToDB.Linq.Builder
 			return expr;
 		}
 
-		public ContextRefExpression? GetRootContext(Expression? expression)
+		public ContextRefExpression? GetRootContext(Expression? expression, bool isAggregation)
 		{
 			if (expression == null)
 				return null;
 
-			expression = MakeExpression(expression, ProjectFlags.Root);
+			expression = MakeExpression(expression, isAggregation ? ProjectFlags.AggregtionRoot : ProjectFlags.Root);
 
 			if (expression is MemberExpression memberExpression)
 			{
-				expression = GetRootContext(memberExpression.Expression);
+				expression = GetRootContext(memberExpression.Expression, isAggregation);
 			}
 
 			if (expression is MethodCallExpression mc && mc.IsQueryable())
 			{
-				expression = GetRootContext(mc.Arguments[0]);
+				expression = GetRootContext(mc.Arguments[0], isAggregation);
 			}
 
 			return expression as ContextRefExpression;
@@ -934,11 +945,20 @@ namespace LinqToDB.Linq.Builder
 					return item;
 			}
 
-			var rootQuery = GetRootContext(testExpression);
+			var rootQuery = GetRootContext(testExpression, false);
 
 			if (rootQuery != null)
 			{
 				context = rootQuery.BuildContext;
+			}
+			else
+			{
+				var contextRef = new ContextRefExpression(typeof(object), context);
+				rootQuery = GetRootContext(contextRef, false);
+				if (rootQuery != null)
+				{
+					context = rootQuery.BuildContext;
+				}
 			}
 
 			var ctx = GetSubQuery(context, testExpression);

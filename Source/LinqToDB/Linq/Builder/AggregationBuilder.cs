@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -8,11 +6,8 @@ using System.Threading.Tasks;
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-	using Extensions;
 	using Mapping;
 	using SqlQuery;
-	using LinqToDB.Reflection;
-	using LinqToDB.Common.Internal;
 
 	class AggregationBuilder : MethodCallBuilder
 	{
@@ -43,17 +38,51 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var methodName = methodCall.Method.Name.Replace("Async", "");
+			var returnType = methodCall.Method.ReturnType;
 
-			var inGrouping = false;
+			SqlPlaceholderExpression functionPlaceholder;
+			AggregationContext       context;
 
-			IBuildContext?      sequence = null;
-			SqlSearchCondition? filter   = null;
+			var sequenceArgument = builder.CorrectRoot(methodCall.Arguments[0]);
 
-			var seqenceArgument = builder.CorrectRoot(methodCall.Arguments[0]);
-
-			if (buildInfo.IsSubQuery)
+			if (!buildInfo.IsSubQuery)
 			{
-				var testSequence = builder.BuildSequence(new BuildInfo(buildInfo, seqenceArgument, new SelectQuery()) { AggregationTest = true, IsAggregation = false });
+				//shorter path
+
+				var sequence = builder.BuildSequence(new BuildInfo(buildInfo, sequenceArgument, new SelectQuery()));
+
+				if (methodName == "Count" || methodName == "LongCount")
+				{
+					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence, SqlFunction.CreateCount(returnType, sequence.SelectQuery), buildInfo.Expression);
+					context = new AggregationContext(buildInfo.Parent, sequence, methodCall);
+				}
+				else
+				{
+					Expression refExpression = new ContextRefExpression(sequenceArgument.Type, sequence);
+
+					var sqlPlaceholder = builder.ConvertToSqlPlaceholder(sequence, refExpression, ProjectFlags.SQL);
+					context = new AggregationContext(buildInfo.Parent,  sequence, methodCall);
+
+					var sql = sqlPlaceholder.Sql;
+
+					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence, 
+						new SqlFunction(methodCall.Type, methodName, true, sql) { CanBeNull = true }, buildInfo.Expression);
+				}
+			}
+			else
+			{
+				var isSimple = false;
+
+				IBuildContext?      sequence            = null;
+				SqlSearchCondition? filter              = null;
+				IBuildContext?      placeholderSequence = null;
+
+
+				var parentContext       = buildInfo.Parent;
+				var placeholderSelect   = parentContext.SelectQuery;
+
+				var testSequence = builder.BuildSequence(new BuildInfo(buildInfo, sequenceArgument, new SelectQuery())
+					{ AggregationTest = true, IsAggregation = true });
 
 				// It means that as root we have used fake context
 				var testSelectQuery = testSequence.SelectQuery;
@@ -63,7 +92,7 @@ namespace LinqToDB.Linq.Builder
 					if (!testSelectQuery.Where.IsEmpty)
 					{
 						valid = false;
-						/*
+						/* TODO: we can inject predicate into function if provider supports that
 						switch (methodName)
 						{
 							case "Sum":
@@ -77,116 +106,71 @@ namespace LinqToDB.Linq.Builder
 					if (valid)
 					{
 						sequence = builder.BuildSequence(
-							new BuildInfo(buildInfo, seqenceArgument) { CreateSubQuery = false, IsAggregation = true });
-						inGrouping = true;
+							new BuildInfo(buildInfo, sequenceArgument)
+								{ CreateSubQuery = false, IsAggregation = true });
+
+						var rootContext  = builder.GetRootContext(sequenceArgument, false);
+
+						if (rootContext != null)
+						{
+							placeholderSequence = rootContext.BuildContext;
+							placeholderSelect   = rootContext.BuildContext.SelectQuery;
+
+							if (placeholderSequence is GroupByBuilder.GroupByContext groupCtx)
+							{
+								placeholderSequence = groupCtx.SubQuery;
+								placeholderSelect   = groupCtx.Element.SelectQuery;
+							}
+						}
+						else
+						{
+							throw new NotImplementedException();
+						}
+
+						isSimple = true;
 					}
 				}
-			}
 
-			if (sequence == null)
-			{
-				sequence = builder.BuildSequence(new BuildInfo(buildInfo, seqenceArgument, new SelectQuery()) { CreateSubQuery = true, IsAggregation = true });
-			}
-
-			var prevSequence = sequence;
-
-			if (!inGrouping && buildInfo.IsSubQuery)
-			{
-				// Wrap by subquery to handle aggregate limitations, especially for SQL Server
-				//
-				sequence = new SubQueryContext(sequence);
-
-				if (prevSequence.SelectQuery.OrderBy.Items.Count > 0)
+				if (sequence == null)
 				{
-					if (prevSequence.SelectQuery.Select.TakeValue == null &&
-					    prevSequence.SelectQuery.Select.SkipValue == null)
-						prevSequence.SelectQuery.OrderBy.Items.Clear();
+					sequence = builder.BuildSequence(new BuildInfo(buildInfo, sequenceArgument, new SelectQuery()) { CreateSubQuery = true, IsAggregation = true });
+
+					placeholderSequence ??= sequence;
+
+					if (sequence is GroupByBuilder.GroupByContext groupByContext)
+					{
+						placeholderSequence = groupByContext.SubQuery;
+						placeholderSelect   = groupByContext.Element.SelectQuery;
+					}
+				}
+
+				if (methodName == "Count" || methodName == "LongCount")
+				{
+					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(placeholderSequence, SqlFunction.CreateCount(returnType, placeholderSelect), buildInfo.Expression);
+					context = new AggregationContext(buildInfo.Parent, sequence, methodCall);
+				}
+				else
+				{
+					Expression refExpression = new ContextRefExpression(sequenceArgument.Type, sequence);
+
+					var sqlPlaceholder = builder.ConvertToSqlPlaceholder(placeholderSequence, refExpression, ProjectFlags.SQL);
+					context = new AggregationContext(buildInfo.Parent,  sequence, methodCall);
+
+					var sql = sqlPlaceholder.Sql;
+
+					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(placeholderSequence, /*context*/
+						new SqlFunction(methodCall.Type, methodName, true, sql) { CanBeNull = true }, buildInfo.Expression);
+				}
+
+				if (!isSimple)
+				{
+					context.OuterJoinParentQuery = buildInfo.Parent.SelectQuery;
 				}
 			}
 
-			var parentContext = buildInfo.Parent;
-
-			if (!inGrouping)
-			{
-				//TODO: workaround. Looking for query for OuterApply
-				if (parentContext is SubQueryContext subQuery)
-				{
-					parentContext = subQuery.SubQuery;
-				}
-				else if (parentContext?.Parent is SubQueryContext subQuery2)
-				{
-					parentContext = subQuery2;
-				}
-			}
-
-			SqlPlaceholderExpression functionPlaceholder;
-			AggregationContext       context;
-
-			if (methodName == "Count" || methodName == "LongCount")
-			{
-				var returnType = methodCall.Method.ReturnType;
-
-				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(parentContext, SqlFunction.CreateCount(returnType, sequence.SelectQuery), buildInfo.Expression);
-				context = new AggregationContext(buildInfo.Parent, sequence, methodCall);
-			}
-			else
-			{
-				var refExpression = new ContextRefExpression(seqenceArgument.Type, sequence);
-
-				var sqlPlaceholder = builder.ConvertToSqlPlaceholder(sequence, refExpression, ProjectFlags.SQL);
-				context = new AggregationContext(buildInfo.Parent,  sequence, methodCall);
-
-				var sql = sqlPlaceholder.Sql;
-
-				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(context, /*context*/
-					new SqlFunction(methodCall.Type, methodName, true, sql) { CanBeNull = true }, buildInfo.Expression);
-			}
 
 			functionPlaceholder.Alias = methodName;
-
-			if (buildInfo.IsSubQuery)
-			{
-				if (!inGrouping)
-				{
-					if (true)
-					{
-						/*//TODO: workaround. Looking for query for OuterApply
-						if (parentContext is SubQueryContext subQuery)
-						{
-							parentContext = subQuery.SubQuery;
-						}
-						else if (parentContext?.Parent is SubQueryContext subQuery2)
-						{
-							parentContext = subQuery2;
-						}*/
-
-						context.OuterJoinParentQuery = parentContext!.SelectQuery;
-					}
-					else
-					{
-						_ = builder.MakeColumn(sequence.SelectQuery, functionPlaceholder);
-
-						functionPlaceholder = ExpressionBuilder.CreatePlaceholder(parentContext!,
-							sequence.SelectQuery, buildInfo.Expression,
-							functionPlaceholder.ConvertType);
-
-						/*
-						functionPlaceholder = ExpressionBuilder.CreatePlaceholder(parentContext,
-							sequence.SelectQuery, new ContextRefExpression(functionPlaceholder.Path.Type, context),
-							functionPlaceholder.ConvertType);*/
-
-						builder.MakeColumn(functionPlaceholder.SelectQuery, functionPlaceholder);
-
-						if (parentContext != buildInfo.Parent)
-						{
-							functionPlaceholder =
-								(SqlPlaceholderExpression)builder.UpdateNesting(buildInfo.Parent!, functionPlaceholder);
-						}
-					}
-				}
-			}
-
-			context.Placeholder = functionPlaceholder;
+			context.Placeholder       = functionPlaceholder;
 
 			return context;
 		}
@@ -236,15 +220,22 @@ namespace LinqToDB.Linq.Builder
 				var mapper = Builder.BuildMapper<object>(expr);
 
 				QueryRunner.SetRunQuery(query, mapper);
-
-				//throw new NotImplementedException();
-				/*var expr   = BuildExpression(FieldIndex, Sql);
-				var mapper = Builder.BuildMapper<object>(expr);
-
-				CompleteColumns();
-				QueryRunner.SetRunQuery(query, mapper);*/
 			}
 
+			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
+			{
+				throw new NotImplementedException();
+			}
+
+			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
+			{
+				throw new NotImplementedException();
+			}
+
+			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
+			{
+				throw new NotImplementedException();
+			}
 
 			private bool _joinCreated;
 
@@ -274,134 +265,12 @@ namespace LinqToDB.Linq.Builder
 				return Placeholder;
 			}
 
-			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-			{
-				throw new NotImplementedException();
-				var info  = ConvertToIndex(expression, level, ConvertFlags.Field)[0];
-				var index = info.Index;
-				if (Parent != null)
-					index = ConvertToParentIndex(index, Parent);
-				return BuildExpression(index, info.Sql);
-			}
-
-			Expression BuildExpression(int fieldIndex, ISqlExpression? sqlExpression)
-			{
-				throw new NotImplementedException();
-
-				Expression expr;
-
-				if (SequenceHelper.UnwrapSubqueryContext(Sequence) is DefaultIfEmptyBuilder.DefaultIfEmptyContext defaultIfEmpty)
-				{
-					expr = Builder.BuildSql(_returnType, fieldIndex, sqlExpression);
-					if (defaultIfEmpty.DefaultValue != null && expr is ConvertFromDataReaderExpression convert)
-					{
-						var generator = new ExpressionGenerator();
-						expr = convert.MakeNullable();
-						if (expr.Type.IsNullable())
-						{
-							var exprVar      = generator.AssignToVariable(expr, "nullable");
-							var defaultValue = defaultIfEmpty.DefaultValue;
-							if (defaultValue.Type != expr.Type)
-							{
-								var convertLambda = Builder.MappingSchema.GenerateSafeConvert(defaultValue.Type, expr.Type);
-								defaultValue = InternalExtensions.ApplyLambdaToExpression(convertLambda, defaultValue);
-							}
-
-							var resultVar = generator.AssignToVariable(defaultValue, "result");
-							
-							generator.AddExpression(Expression.IfThen(
-								Expression.NotEqual(exprVar, ExpressionInstances.UntypedNull),
-								Expression.Assign(resultVar, Expression.Convert(exprVar, resultVar.Type))));
-
-							generator.AddExpression(resultVar);
-
-							expr = generator.Build();
-						}
-					}
-				}
-				else
-				if (_methodName == "Sum" || _returnType.IsNullableType())
-				{
-					expr = Builder.BuildSql(_returnType, fieldIndex, sqlExpression);
-				}
-				else
-				{
-					expr = Expression.Block(
-						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(false, null!)), Expression.Call(ExpressionBuilder.DataReaderParam, Methods.ADONet.IsDBNull, ExpressionInstances.Constant0), Expression.Constant(_methodName)),
-						Builder.BuildSql(_returnType, fieldIndex, sqlExpression));
-				}
-
-				return expr;
-			}
-
-			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-
-				switch (flags)
-				{
-					case ConvertFlags.All   :
-					case ConvertFlags.Key   :
-					case ConvertFlags.Field : return Sequence.ConvertToSql(expression, level + 1, flags);
-				}
-
-				throw new InvalidOperationException();
-			}
-
-			public override int ConvertToParentIndex(int index, IBuildContext context)
-			{
-				throw new NotImplementedException();
-				/*if (index != FieldIndex)
-					throw new InvalidOperationException();
-
-				if (_parentIndex != null)
-					return _parentIndex.Value;
-
-				if (Parent != null)
-				{
-					index = Parent.SelectQuery.Select.Add(Sql);
-					_parentIndex = Parent.ConvertToParentIndex(index, Parent);
-				}
-				else
-				{
-					_parentIndex = index;
-				}
-
-				return _parentIndex.Value;*/
-			}
-
-			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-				/*switch (flags)
-				{
-					case ConvertFlags.Field :
-						{
-							var result = _index ??= new[]
-							{
-								new SqlInfo(Sql!, SelectQuery, FieldIndex)
-							};
-
-							return result;
-						}
-				}
-
-
-				throw new InvalidOperationException();*/
-			}
-
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
 				throw new NotImplementedException();
-				return requestFlag switch
-				{
-					RequestFor.Root       => IsExpressionResult.GetResult(Lambda != null && expression == Lambda.Parameters[0]),
-					RequestFor.Expression => IsExpressionResult.True,
-					_                     => IsExpressionResult.False,
-				};
 			}
 
-			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
+			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
 				throw new NotImplementedException();
 			}
