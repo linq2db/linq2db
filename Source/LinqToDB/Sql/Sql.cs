@@ -399,6 +399,7 @@ namespace LinqToDB
 
 		[Property(PN.PostgreSQL,    "TimeStamp",      ServerSideOnly=true)]
 		[Property(PN.Firebird,      "TimeStamp",      ServerSideOnly=true)]
+		[Property(PN.SqlServer2019, "DateTimeOffset", ServerSideOnly=true)]
 		[Property(PN.SqlServer2017, "DateTimeOffset", ServerSideOnly=true)]
 		[Property(PN.SqlServer2016, "DateTimeOffset", ServerSideOnly=true)]
 		[Property(PN.SqlServer2012, "DateTimeOffset", ServerSideOnly=true)]
@@ -756,6 +757,7 @@ namespace LinqToDB
 		[Extension(PN.Informix,      typeof(IsNullOrWhiteSpaceInformixBuilder),      IsPredicate = true)]
 		[Extension(PN.SqlServer,     typeof(IsNullOrWhiteSpaceSqlServerBuilder),     IsPredicate = true)]
 		[Extension(PN.SqlServer2017, typeof(IsNullOrWhiteSpaceSqlServer2017Builder), IsPredicate = true)]
+		[Extension(PN.SqlServer2019, typeof(IsNullOrWhiteSpaceSqlServer2017Builder), IsPredicate = true)]
 		[Extension(PN.Access,        typeof(IsNullOrWhiteSpaceAccessBuilder),        IsPredicate = true)]
 		[Extension(PN.Sybase,        typeof(IsNullOrWhiteSpaceSybaseBuilder),        IsPredicate = true)]
 		[Extension(PN.MySql,         typeof(IsNullOrWhiteSpaceMySqlBuilder),         IsPredicate = true)]

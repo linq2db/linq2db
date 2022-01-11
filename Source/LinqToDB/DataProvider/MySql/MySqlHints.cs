@@ -1,13 +1,16 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
+
 using JetBrains.Annotations;
-using LinqToDB.Expressions;
-using LinqToDB.Linq;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.DataProvider.MySql
 {
+	using Expressions;
+	using Linq;
+	using SqlProvider;
+
 	public static class MySqlHints
 	{
 		// https://dev.mysql.com/doc/refman/8.0/en/optimizer-hints.html#optimizer-hints-index-level
@@ -66,7 +69,7 @@ namespace LinqToDB.DataProvider.MySql
 			[Sql.Expression("MAX_EXECUTION_TIME({0})")]
 			public static string MaxExecutionTime(int value)
 			{
-				return $"MAX_EXECUTION_TIME({value})";
+				return string.Format(CultureInfo.InvariantCulture, "MAX_EXECUTION_TIME({0})", value);
 			}
 		}
 

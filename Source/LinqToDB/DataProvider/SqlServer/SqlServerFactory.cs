@@ -29,7 +29,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				"2014" => SqlServerTools.GetDataProvider(SqlServerVersion.v2014, provider),
 				"2016" => SqlServerTools.GetDataProvider(SqlServerVersion.v2016, provider),
 				"2017" => SqlServerTools.GetDataProvider(SqlServerVersion.v2017, provider),
-				"2019" => SqlServerTools.GetDataProvider(SqlServerVersion.v2017, provider),
+				"2019" => SqlServerTools.GetDataProvider(SqlServerVersion.v2019, provider),
 				_      => SqlServerTools.GetDataProvider(SqlServerVersion.v2008, provider),
 			};
 		}

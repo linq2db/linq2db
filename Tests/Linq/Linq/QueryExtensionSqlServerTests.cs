@@ -718,5 +718,96 @@ namespace Tests.Linq
 
 			Assert.That(LastQuery, Contains.Substring("WITH (ForceSeek)"));
 		}
+
+		[Test]
+		public void OptionOptimizeForTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var n  = 10;
+			var id = 10;
+
+			var q =
+				(
+					from c in db.Child
+					join p in db.Parent on c.ParentID equals p.ParentID
+					where p.Value1 == n && p.ParentID == id
+					select p
+				)
+				.AsSqlServerSpecific()
+				.OptionOptimizeFor("@n=10", "@id=10");
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("OPTION (OPTIMIZE FOR(@n=10, @id=10))"));
+		}
+
+		[Test]
+		public void OptionUseHintTest([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var n  = 10;
+			var id = 10;
+
+			var q =
+				(
+					from c in db.Child
+					join p in db.Parent on c.ParentID equals p.ParentID
+					where p.Value1 == n && p.ParentID == id
+					select p
+				)
+				.AsSqlServerSpecific()
+				.OptionUseHint("'ASSUME_JOIN_PREDICATE_DEPENDS_ON_FILTERS'");
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("OPTION (USE HINT('ASSUME_JOIN_PREDICATE_DEPENDS_ON_FILTERS'))"));
+		}
+
+		[Test, Explicit]
+		public void OptionUsePlanTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				(
+					from c in db.Child.TableID("pp")
+					join p in db.Parent on c.ParentID equals p.ParentID
+					select p
+				)
+				.AsSqlServerSpecific()
+				.OptionUsePlan("<xml/>");
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("OPTION (TABLE HINT(c_1, NoLock))"));
+		}
+
+		[Test]
+		public void OptionUseTableTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var n  = 10;
+			var id = 10;
+
+			var q =
+				(
+					from c in db.Child.TableID("pp")
+						.AsSqlServerSpecific()
+						.WithNoLock()
+						.WithForceSeek()
+					join p in db.Parent on c.ParentID equals p.ParentID
+					where p.Value1 == n && p.ParentID == id
+					select p
+				)
+				.AsSqlServerSpecific()
+				.OptionTableHint(Sql.TableAlias("pp"), SqlServerHints.Table.NoLock);
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("OPTION (TABLE HINT(c_1, NoLock))"));
+		}
 	}
 }

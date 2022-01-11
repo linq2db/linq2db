@@ -11,5 +11,6 @@ namespace LinqToDB.DataProvider.SqlServer
 		v2014,
 		v2016,
 		v2017,
+		v2019,
 	}
 }

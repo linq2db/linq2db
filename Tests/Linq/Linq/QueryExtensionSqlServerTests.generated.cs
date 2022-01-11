@@ -588,5 +588,480 @@ namespace Tests.Linq
 			Assert.That(LastQuery, Contains.Substring("[c_1] WITH (XLock)"));
 		}
 
+		[Test]
+		public void OptionHashGroupTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.OptionHashGroup();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.HashGroup})"));
+		}
+
+		[Test]
+		public void OptionOrderGroupTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.OptionOrderGroup();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.OrderGroup})"));
+		}
+
+		[Test]
+		public void OptionConcatUnionTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.OptionConcatUnion();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.ConcatUnion})"));
+		}
+
+		[Test]
+		public void OptionHashUnionTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.OptionHashUnion();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.HashUnion})"));
+		}
+
+		[Test]
+		public void OptionMergeUnionTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.OptionMergeUnion();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.MergeUnion})"));
+		}
+
+		[Test]
+		public void OptionLoopJoinTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.OptionLoopJoin();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.LoopJoin})"));
+		}
+
+		[Test]
+		public void OptionHashJoinTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.OptionHashJoin();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.HashJoin})"));
+		}
+
+		[Test]
+		public void OptionMergeJoinTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.OptionMergeJoin();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.MergeJoin})"));
+		}
+
+		[Test]
+		public void OptionExpandViewsTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.OptionExpandViews();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.ExpandViews})"));
+		}
+
+		[Test]
+		public void OptionFastTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.OptionFast(10);
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.Fast(10)})"));
+		}
+
+		[Test]
+		public void OptionForceOrderTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.OptionForceOrder();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.ForceOrder})"));
+		}
+
+		[Test]
+		public void OptionForceScaleOutExecutionTest([IncludeDataSources(true, TestProvName.AllSqlServer2019Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.OptionForceScaleOutExecution();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.ForceScaleOutExecution})"));
+		}
+
+		[Test]
+		public void OptionDisableScaleOutExecutionTest([IncludeDataSources(true, TestProvName.AllSqlServer2019Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.OptionDisableScaleOutExecution();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.DisableScaleOutExecution})"));
+		}
+
+		[Test]
+		public void OptionIgnoreNonClusteredColumnStoreIndexTest([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.OptionIgnoreNonClusteredColumnStoreIndex();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.IgnoreNonClusteredColumnStoreIndex})"));
+		}
+
+		[Test]
+		public void OptionKeepPlanTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.OptionKeepPlan();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.KeepPlan})"));
+		}
+
+		[Test]
+		public void OptionKeepFixedPlanTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.OptionKeepFixedPlan();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.KeepFixedPlan})"));
+		}
+
+		[Test]
+		public void OptionMaxGrantPercentTest([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.OptionMaxGrantPercent(10);
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.MaxGrantPercent(10)})"));
+		}
+
+		[Test]
+		public void OptionMinGrantPercentTest([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.OptionMinGrantPercent(10);
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.MinGrantPercent(10)})"));
+		}
+
+		[Test]
+		public void OptionMaxDopTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.OptionMaxDop(10);
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.MaxDop(10)})"));
+		}
+
+		[Test]
+		public void OptionMaxRecursionTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.OptionMaxRecursion(10);
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.MaxRecursion(10)})"));
+		}
+
+		[Test]
+		public void OptionNoPerformanceSpoolTest([IncludeDataSources(true, TestProvName.AllSqlServer2019Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.OptionNoPerformanceSpool();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.NoPerformanceSpool})"));
+		}
+
+		[Test]
+		public void OptionOptimizeForUnknownTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.OptionOptimizeForUnknown();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.OptimizeForUnknown})"));
+		}
+
+		[Test]
+		public void OptionQueryTraceOnTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.OptionQueryTraceOn(10);
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.QueryTraceOn(10)})"));
+		}
+
+		[Test]
+		public void OptionRecompileTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.OptionRecompile();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.Recompile})"));
+		}
+
+		[Test]
+		public void OptionRobustPlanTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.OptionRobustPlan();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.RobustPlan})"));
+		}
+
 	}
 }

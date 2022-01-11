@@ -28,8 +28,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			void ISqlQueryExtensionBuilder.Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 			{
-				var builder = (PostgreSQLSqlBuilder)sqlBuilder;
-				var hint    = (SqlValue)sqlQueryExtension.Arguments["hint"];
+				var hint = (SqlValue)sqlQueryExtension.Arguments["hint"];
 
 				stringBuilder.Append((string)hint.Value!);
 
@@ -43,7 +42,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						stringBuilder.Append(", ");
 
 					var id    = (Sql.SqlID)((SqlValue)sqlQueryExtension.Arguments[$"tableIDs.{i}"]).Value!;
-					var alias = builder.BuildSqlID(id);
+					var alias = sqlBuilder.BuildSqlID(id);
 
 					stringBuilder.Append(alias);
 				}

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
@@ -96,7 +97,7 @@ namespace LinqToDB.DataProvider.Oracle
 			[Sql.Expression("FIRST_ROWS({0})")]
 			public static string FirstRows(int value)
 			{
-				return $"FIRST_ROWS({value})";
+				return string.Format(CultureInfo.InvariantCulture, "FIRST_ROWS({0})", value);
 			}
 		}
 

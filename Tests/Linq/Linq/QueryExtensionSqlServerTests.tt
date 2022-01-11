@@ -19,27 +19,48 @@ namespace Tests.Linq
 	partial class QueryExtensionSqlServerTests
 	{
 <#
-	GenerateTest("ForceScan", "2012Plus");
-	GenerateTest("HoldLock");
-	GenerateTest("NoLock");
-	GenerateTest("NoWait");
-	GenerateTest("PagLock");
-	GenerateTest("ReadCommitted");
-	GenerateTest("ReadCommittedLock");
-	GenerateTest("ReadPast");
-	GenerateTest("ReadUncommitted");
-	GenerateTest("RepeatableRead");
-	GenerateTest("RowLock");
-	GenerateTest("Serializable");
-	GenerateTest("TabLock");
-	GenerateTest("TabLockX");
-	GenerateTest("UpdLock");
-	GenerateTest("XLock");
+	GenerateTableTest("ForceScan", "2012Plus");
+	GenerateTableTest("HoldLock");
+	GenerateTableTest("NoLock");
+	GenerateTableTest("NoWait");
+	GenerateTableTest("PagLock");
+	GenerateTableTest("ReadCommitted");
+	GenerateTableTest("ReadCommittedLock");
+	GenerateTableTest("ReadPast");
+	GenerateTableTest("ReadUncommitted");
+	GenerateTableTest("RepeatableRead");
+	GenerateTableTest("RowLock");
+	GenerateTableTest("Serializable");
+	GenerateTableTest("TabLock");
+	GenerateTableTest("TabLockX");
+	GenerateTableTest("UpdLock");
+	GenerateTableTest("XLock");
+
+	GenerateOptionTest ("HashGroup");   GenerateOptionTest("OrderGroup");
+	GenerateOptionTest ("ConcatUnion"); GenerateOptionTest("HashUnion"); GenerateOptionTest("MergeUnion");
+	GenerateOptionTest ("LoopJoin");    GenerateOptionTest("HashJoin");  GenerateOptionTest("MergeJoin");
+	GenerateOptionTest ("ExpandViews");
+	GenerateOptionTest2("Fast");
+	GenerateOptionTest ("ForceOrder");
+	GenerateOptionTest ("ForceScaleOutExecution",   "2019Plus");
+	GenerateOptionTest ("DisableScaleOutExecution", "2019Plus");
+	GenerateOptionTest ("IgnoreNonClusteredColumnStoreIndex", "2012Plus");
+	GenerateOptionTest ("KeepPlan");
+	GenerateOptionTest ("KeepFixedPlan");
+	GenerateOptionTest2("MaxGrantPercent", "2012Plus");
+	GenerateOptionTest2("MinGrantPercent", "2012Plus");
+	GenerateOptionTest2("MaxDop");
+	GenerateOptionTest2("MaxRecursion");
+	GenerateOptionTest ("NoPerformanceSpool", "2019Plus");
+	GenerateOptionTest ("OptimizeForUnknown", "2008Plus");
+	GenerateOptionTest2("QueryTraceOn");
+	GenerateOptionTest ("Recompile");
+	GenerateOptionTest ("RobustPlan");
 #>
 	}
 }
 <#+
-void GenerateTest(string test, string version = "")
+void GenerateTableTest(string test, string version = "")
 {
 #>
 		[Test]
@@ -76,6 +97,56 @@ void GenerateTest(string test, string version = "")
 
 			Assert.That(LastQuery, Contains.Substring("[p] WITH (<#= test #>)"));
 			Assert.That(LastQuery, Contains.Substring("[c_1] WITH (<#= test #>)"));
+		}
+
+<#+
+}
+
+void GenerateOptionTest(string test, string version = "")
+{
+#>
+		[Test]
+		public void Option<#= test #>Test([IncludeDataSources(true, TestProvName.AllSqlServer<#= version #>)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.Option<#= test #>();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.<#= test #>})"));
+		}
+
+<#+
+}
+
+void GenerateOptionTest2(string test, string version = "")
+{
+#>
+		[Test]
+		public void Option<#= test #>Test([IncludeDataSources(true, TestProvName.AllSqlServer<#= version #>)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlServerSpecific()
+			.Option<#= test #>(10);
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.<#= test #>(10)})"));
 		}
 
 <#+

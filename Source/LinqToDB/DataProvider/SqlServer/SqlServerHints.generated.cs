@@ -579,5 +579,356 @@ namespace LinqToDB.DataProvider.SqlServer
 			return table => table.JoinHint(Join.Remote);
 		}
 
+		[ExpressionMethod(nameof(OptionHashGroupImpl))]
+		public static ISqlServerSpecificQueryable<TSource> OptionHashGroup<TSource>(this ISqlServerSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return query.QueryHint(Query.HashGroup);
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> OptionHashGroupImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => query.QueryHint(Query.HashGroup);
+		}
+
+		[ExpressionMethod(nameof(OptionOrderGroupImpl))]
+		public static ISqlServerSpecificQueryable<TSource> OptionOrderGroup<TSource>(this ISqlServerSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return query.QueryHint(Query.OrderGroup);
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> OptionOrderGroupImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => query.QueryHint(Query.OrderGroup);
+		}
+
+		[ExpressionMethod(nameof(OptionConcatUnionImpl))]
+		public static ISqlServerSpecificQueryable<TSource> OptionConcatUnion<TSource>(this ISqlServerSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return query.QueryHint(Query.ConcatUnion);
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> OptionConcatUnionImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => query.QueryHint(Query.ConcatUnion);
+		}
+
+		[ExpressionMethod(nameof(OptionHashUnionImpl))]
+		public static ISqlServerSpecificQueryable<TSource> OptionHashUnion<TSource>(this ISqlServerSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return query.QueryHint(Query.HashUnion);
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> OptionHashUnionImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => query.QueryHint(Query.HashUnion);
+		}
+
+		[ExpressionMethod(nameof(OptionMergeUnionImpl))]
+		public static ISqlServerSpecificQueryable<TSource> OptionMergeUnion<TSource>(this ISqlServerSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return query.QueryHint(Query.MergeUnion);
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> OptionMergeUnionImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => query.QueryHint(Query.MergeUnion);
+		}
+
+		[ExpressionMethod(nameof(OptionLoopJoinImpl))]
+		public static ISqlServerSpecificQueryable<TSource> OptionLoopJoin<TSource>(this ISqlServerSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return query.QueryHint(Query.LoopJoin);
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> OptionLoopJoinImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => query.QueryHint(Query.LoopJoin);
+		}
+
+		[ExpressionMethod(nameof(OptionHashJoinImpl))]
+		public static ISqlServerSpecificQueryable<TSource> OptionHashJoin<TSource>(this ISqlServerSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return query.QueryHint(Query.HashJoin);
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> OptionHashJoinImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => query.QueryHint(Query.HashJoin);
+		}
+
+		[ExpressionMethod(nameof(OptionMergeJoinImpl))]
+		public static ISqlServerSpecificQueryable<TSource> OptionMergeJoin<TSource>(this ISqlServerSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return query.QueryHint(Query.MergeJoin);
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> OptionMergeJoinImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => query.QueryHint(Query.MergeJoin);
+		}
+
+		[ExpressionMethod(nameof(OptionExpandViewsImpl))]
+		public static ISqlServerSpecificQueryable<TSource> OptionExpandViews<TSource>(this ISqlServerSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return query.QueryHint(Query.ExpandViews);
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> OptionExpandViewsImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => query.QueryHint(Query.ExpandViews);
+		}
+
+		[ExpressionMethod(nameof(OptionFastImpl))]
+		public static ISqlServerSpecificQueryable<TSource> OptionFast<TSource>(this ISqlServerSpecificQueryable<TSource> query, int value)
+			where TSource : notnull
+		{
+			return query.QueryHint(Query.Fast(value));
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,int,ISqlServerSpecificQueryable<TSource>>> OptionFastImpl<TSource>()
+			where TSource : notnull
+		{
+			return (query, value) => query.QueryHint(Query.Fast(value));
+		}
+
+		[ExpressionMethod(nameof(OptionForceOrderImpl))]
+		public static ISqlServerSpecificQueryable<TSource> OptionForceOrder<TSource>(this ISqlServerSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return query.QueryHint(Query.ForceOrder);
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> OptionForceOrderImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => query.QueryHint(Query.ForceOrder);
+		}
+
+		[ExpressionMethod(nameof(OptionForceExternalPushDownImpl))]
+		public static ISqlServerSpecificQueryable<TSource> OptionForceExternalPushDown<TSource>(this ISqlServerSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return query.QueryHint(Query.ForceExternalPushDown);
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> OptionForceExternalPushDownImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => query.QueryHint(Query.ForceExternalPushDown);
+		}
+
+		[ExpressionMethod(nameof(OptionDisableExternalPushDownImpl))]
+		public static ISqlServerSpecificQueryable<TSource> OptionDisableExternalPushDown<TSource>(this ISqlServerSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return query.QueryHint(Query.DisableExternalPushDown);
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> OptionDisableExternalPushDownImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => query.QueryHint(Query.DisableExternalPushDown);
+		}
+
+		[ExpressionMethod(nameof(OptionForceScaleOutExecutionImpl))]
+		public static ISqlServerSpecificQueryable<TSource> OptionForceScaleOutExecution<TSource>(this ISqlServerSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return query.QueryHint2019Plus(Query.ForceScaleOutExecution);
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> OptionForceScaleOutExecutionImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => query.QueryHint2019Plus(Query.ForceScaleOutExecution);
+		}
+
+		[ExpressionMethod(nameof(OptionDisableScaleOutExecutionImpl))]
+		public static ISqlServerSpecificQueryable<TSource> OptionDisableScaleOutExecution<TSource>(this ISqlServerSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return query.QueryHint(Query.DisableScaleOutExecution);
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> OptionDisableScaleOutExecutionImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => query.QueryHint(Query.DisableScaleOutExecution);
+		}
+
+		[ExpressionMethod(nameof(OptionIgnoreNonClusteredColumnStoreIndexImpl))]
+		public static ISqlServerSpecificQueryable<TSource> OptionIgnoreNonClusteredColumnStoreIndex<TSource>(this ISqlServerSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return query.QueryHint(Query.IgnoreNonClusteredColumnStoreIndex);
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> OptionIgnoreNonClusteredColumnStoreIndexImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => query.QueryHint(Query.IgnoreNonClusteredColumnStoreIndex);
+		}
+
+		[ExpressionMethod(nameof(OptionKeepPlanImpl))]
+		public static ISqlServerSpecificQueryable<TSource> OptionKeepPlan<TSource>(this ISqlServerSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return query.QueryHint(Query.KeepPlan);
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> OptionKeepPlanImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => query.QueryHint(Query.KeepPlan);
+		}
+
+		[ExpressionMethod(nameof(OptionKeepFixedPlanImpl))]
+		public static ISqlServerSpecificQueryable<TSource> OptionKeepFixedPlan<TSource>(this ISqlServerSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return query.QueryHint(Query.KeepFixedPlan);
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> OptionKeepFixedPlanImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => query.QueryHint(Query.KeepFixedPlan);
+		}
+
+		[ExpressionMethod(nameof(OptionMaxGrantPercentImpl))]
+		public static ISqlServerSpecificQueryable<TSource> OptionMaxGrantPercent<TSource>(this ISqlServerSpecificQueryable<TSource> query, int value)
+			where TSource : notnull
+		{
+			return query.QueryHint2012Plus(Query.MaxGrantPercent(value));
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,int,ISqlServerSpecificQueryable<TSource>>> OptionMaxGrantPercentImpl<TSource>()
+			where TSource : notnull
+		{
+			return (query, value) => query.QueryHint2012Plus(Query.MaxGrantPercent(value));
+		}
+
+		[ExpressionMethod(nameof(OptionMinGrantPercentImpl))]
+		public static ISqlServerSpecificQueryable<TSource> OptionMinGrantPercent<TSource>(this ISqlServerSpecificQueryable<TSource> query, int value)
+			where TSource : notnull
+		{
+			return query.QueryHint2012Plus(Query.MinGrantPercent(value));
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,int,ISqlServerSpecificQueryable<TSource>>> OptionMinGrantPercentImpl<TSource>()
+			where TSource : notnull
+		{
+			return (query, value) => query.QueryHint2012Plus(Query.MinGrantPercent(value));
+		}
+
+		[ExpressionMethod(nameof(OptionMaxDopImpl))]
+		public static ISqlServerSpecificQueryable<TSource> OptionMaxDop<TSource>(this ISqlServerSpecificQueryable<TSource> query, int value)
+			where TSource : notnull
+		{
+			return query.QueryHint(Query.MaxDop(value));
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,int,ISqlServerSpecificQueryable<TSource>>> OptionMaxDopImpl<TSource>()
+			where TSource : notnull
+		{
+			return (query, value) => query.QueryHint(Query.MaxDop(value));
+		}
+
+		[ExpressionMethod(nameof(OptionMaxRecursionImpl))]
+		public static ISqlServerSpecificQueryable<TSource> OptionMaxRecursion<TSource>(this ISqlServerSpecificQueryable<TSource> query, int value)
+			where TSource : notnull
+		{
+			return query.QueryHint(Query.MaxRecursion(value));
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,int,ISqlServerSpecificQueryable<TSource>>> OptionMaxRecursionImpl<TSource>()
+			where TSource : notnull
+		{
+			return (query, value) => query.QueryHint(Query.MaxRecursion(value));
+		}
+
+		[ExpressionMethod(nameof(OptionNoPerformanceSpoolImpl))]
+		public static ISqlServerSpecificQueryable<TSource> OptionNoPerformanceSpool<TSource>(this ISqlServerSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return query.QueryHint(Query.NoPerformanceSpool);
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> OptionNoPerformanceSpoolImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => query.QueryHint(Query.NoPerformanceSpool);
+		}
+
+		[ExpressionMethod(nameof(OptionOptimizeForUnknownImpl))]
+		public static ISqlServerSpecificQueryable<TSource> OptionOptimizeForUnknown<TSource>(this ISqlServerSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return query.QueryHint(Query.OptimizeForUnknown);
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> OptionOptimizeForUnknownImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => query.QueryHint(Query.OptimizeForUnknown);
+		}
+
+		[ExpressionMethod(nameof(OptionQueryTraceOnImpl))]
+		public static ISqlServerSpecificQueryable<TSource> OptionQueryTraceOn<TSource>(this ISqlServerSpecificQueryable<TSource> query, int value)
+			where TSource : notnull
+		{
+			return query.QueryHint(Query.QueryTraceOn(value));
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,int,ISqlServerSpecificQueryable<TSource>>> OptionQueryTraceOnImpl<TSource>()
+			where TSource : notnull
+		{
+			return (query, value) => query.QueryHint(Query.QueryTraceOn(value));
+		}
+
+		[ExpressionMethod(nameof(OptionRecompileImpl))]
+		public static ISqlServerSpecificQueryable<TSource> OptionRecompile<TSource>(this ISqlServerSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return query.QueryHint(Query.Recompile);
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> OptionRecompileImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => query.QueryHint(Query.Recompile);
+		}
+
+		[ExpressionMethod(nameof(OptionRobustPlanImpl))]
+		public static ISqlServerSpecificQueryable<TSource> OptionRobustPlan<TSource>(this ISqlServerSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return query.QueryHint(Query.RobustPlan);
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> OptionRobustPlanImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => query.QueryHint(Query.RobustPlan);
+		}
+
 	}
 }

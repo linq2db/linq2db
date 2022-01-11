@@ -340,4 +340,19 @@ namespace LinqToDB.DataProvider.SqlServer
 			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
 		}
 	}
+
+	public class SqlServer2019MappingSchema : MappingSchema
+	{
+		public SqlServer2019MappingSchema()
+			: base(ProviderName.SqlServer2019, SqlServerMappingSchema.Instance)
+		{
+			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
+		}
+
+		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+		{
+			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
+		}
+	}
 }

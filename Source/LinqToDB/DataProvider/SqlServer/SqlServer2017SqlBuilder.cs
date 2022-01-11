@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 		}
 
-		SqlServer2017SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		protected SqlServer2017SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 

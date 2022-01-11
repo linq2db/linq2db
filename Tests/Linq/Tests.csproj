@@ -23,18 +23,11 @@
 			<LastGenOutput>QueryExtensionSqlServerTests.generated.cs</LastGenOutput>
 			<Generator>TextTemplatingFileGenerator</Generator>
 		</None>
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Compile Update="Linq\QueryExtensionSqlServerTests.generated.cs">
-	    <DesignTime>True</DesignTime>
-	    <AutoGen>True</AutoGen>
-	    <DependentUpon>QueryExtensionSqlServerTests.tt</DependentUpon>
-	  </Compile>
+		<Compile Update="Linq\QueryExtensionSqlServerTests.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>QueryExtensionSqlServerTests.tt</DependentUpon>
+		</Compile>
 	</ItemGroup>
 
 </Project>

@@ -37,6 +37,28 @@ namespace LinqToDB.DataProvider.SqlServer
 	GenerateJoinHint("Hash");
 	GenerateJoinHint("Merge");
 	GenerateJoinHint("Remote");
+
+	GenerateQueryHint ("HashGroup");   GenerateQueryHint("OrderGroup");
+	GenerateQueryHint ("ConcatUnion"); GenerateQueryHint("HashUnion"); GenerateQueryHint("MergeUnion");
+	GenerateQueryHint ("LoopJoin");    GenerateQueryHint("HashJoin");  GenerateQueryHint("MergeJoin");
+	GenerateQueryHint ("ExpandViews");
+	GenerateQueryHint2("Fast");
+	GenerateQueryHint ("ForceOrder");
+	GenerateQueryHint ("ForceExternalPushDown");  GenerateQueryHint("DisableExternalPushDown");
+	GenerateQueryHint ("ForceScaleOutExecution",   "2019Plus");
+	GenerateQueryHint ("DisableScaleOutExecution");
+	GenerateQueryHint ("IgnoreNonClusteredColumnStoreIndex");
+	GenerateQueryHint ("KeepPlan");
+	GenerateQueryHint ("KeepFixedPlan");
+	GenerateQueryHint2("MaxGrantPercent", "2012Plus");
+	GenerateQueryHint2("MinGrantPercent", "2012Plus");
+	GenerateQueryHint2("MaxDop");
+	GenerateQueryHint2("MaxRecursion");
+	GenerateQueryHint ("NoPerformanceSpool");
+	GenerateQueryHint ("OptimizeForUnknown");
+	GenerateQueryHint2("QueryTraceOn");
+	GenerateQueryHint ("Recompile");
+	GenerateQueryHint ("RobustPlan");
 #>
 	}
 }
@@ -100,6 +122,44 @@ void GenerateJoinHint(string hint)
 			where TSource : notnull
 		{
 			return table => table.JoinHint(Join.<#= hint #>);
+		}
+
+<#+
+}
+
+void GenerateQueryHint(string hint, string version = "")
+{
+#>
+		[ExpressionMethod(nameof(Option<#= hint #>Impl))]
+		public static ISqlServerSpecificQueryable<TSource> Option<#= hint #><TSource>(this ISqlServerSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return query.QueryHint<#= version #>(Query.<#= hint #>);
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> Option<#= hint #>Impl<TSource>()
+			where TSource : notnull
+		{
+			return query => query.QueryHint<#= version #>(Query.<#= hint #>);
+		}
+
+<#+
+}
+
+void GenerateQueryHint2(string hint, string version = "")
+{
+#>
+		[ExpressionMethod(nameof(Option<#= hint #>Impl))]
+		public static ISqlServerSpecificQueryable<TSource> Option<#= hint #><TSource>(this ISqlServerSpecificQueryable<TSource> query, int value)
+			where TSource : notnull
+		{
+			return query.QueryHint<#= version #>(Query.<#= hint #>(value));
+		}
+
+		static Expression<Func<ISqlServerSpecificQueryable<TSource>,int,ISqlServerSpecificQueryable<TSource>>> Option<#= hint #>Impl<TSource>()
+			where TSource : notnull
+		{
+			return (query, value) => query.QueryHint<#= version #>(Query.<#= hint #>(value));
 		}
 
 <#+
