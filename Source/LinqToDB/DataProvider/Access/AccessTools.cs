@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.Access
 	/// <summary>
 	/// Contains Access provider management tools.
 	/// </summary>
-	public static class AccessTools
+	public static partial class AccessTools
 	{
 		static readonly Lazy<IDataProvider> _accessOleDbDataProvider = DataConnection.CreateDataProvider<AccessOleDbDataProvider>();
 		static readonly Lazy<IDataProvider> _accessODBCDataProvider  = DataConnection.CreateDataProvider<AccessODBCDataProvider>();

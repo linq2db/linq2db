@@ -5,7 +5,7 @@ using LinqToDB;
 
 using NUnit.Framework;
 
-namespace Tests.Linq
+namespace Tests.Extensions
 {
 	[TestFixture]
 	public class QueryNameTests : TestBase

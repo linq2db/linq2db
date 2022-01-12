@@ -9,9 +9,9 @@ using LinqToDB.DataProvider.SqlCe;
 
 using NUnit.Framework;
 
-namespace Tests.Linq
+namespace Tests.Extensions
 {
-	partial class QueryExtensionSqlCeTests
+	partial class SqlCeTests
 	{
 		[Test]
 		public void WithHoldLockTableTest([IncludeDataSources(true, ProviderName.SqlCe)] string context)

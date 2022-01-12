@@ -6,10 +6,10 @@ using LinqToDB.DataProvider.SqlServer;
 
 using NUnit.Framework;
 
-namespace Tests.Linq
+namespace Tests.Extensions
 {
 	[TestFixture]
-	public partial class QueryExtensionSqlServerTests : TestBase
+	public partial class SqlServerTests : TestBase
 	{
 		[Test]
 		public void TableHintTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)

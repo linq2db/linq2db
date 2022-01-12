@@ -9,9 +9,9 @@ using LinqToDB.DataProvider.Oracle;
 
 using NUnit.Framework;
 
-namespace Tests.Linq
+namespace Tests.Extensions
 {
-	partial class QueryExtensionOracleTests
+	partial class OracleTests
 	{
 		[Test]
 		public void TableHintFullTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)

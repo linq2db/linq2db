@@ -656,10 +656,6 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		/// <summary>
 		/// Adds a query hint to a generated query.
-		/// <code>
-		/// // will produce following SQL code in generated query: INNER LOOP JOIN
-		/// var tableWithHint = db.Table.JoinHint("LOOP");
-		/// </code>
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="source">Query source.</param>

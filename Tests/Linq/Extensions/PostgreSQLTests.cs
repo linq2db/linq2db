@@ -6,10 +6,10 @@ using LinqToDB.DataProvider.PostgreSQL;
 
 using NUnit.Framework;
 
-namespace Tests.Linq
+namespace Tests.Extensions
 {
 	[TestFixture]
-	public class QueryExtensionPostgreSQLTests : TestBase
+	public class PostgreSQLTests : TestBase
 	{
 		[Test]
 		public void HintTest([IncludeDataSources(true, TestProvName.AllPostgreSQL95Plus)] string context,

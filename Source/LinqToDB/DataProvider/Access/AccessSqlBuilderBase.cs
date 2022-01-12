@@ -325,5 +325,11 @@ namespace LinqToDB.DataProvider.Access
 			// comments not supported by Access
 			return sb;
 		}
+
+		protected override void BuildQueryExtensions(SqlStatement statement)
+		{
+			if (statement.SqlQueryExtensions is not null)
+				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, null, " ", null);
+		}
 	}
 }

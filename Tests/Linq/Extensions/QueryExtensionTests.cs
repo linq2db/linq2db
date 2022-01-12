@@ -9,8 +9,9 @@ using LinqToDB.DataProvider.Oracle;
 
 using NUnit.Framework;
 
-namespace Tests.Linq
+namespace Tests.Extensions
 {
+	using Linq;
 	using Model;
 
 	[TestFixture]

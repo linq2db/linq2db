@@ -6,10 +6,10 @@ using LinqToDB.DataProvider.SQLite;
 
 using NUnit.Framework;
 
-namespace Tests.Linq
+namespace Tests.Extensions
 {
 	[TestFixture]
-	public partial class QueryExtensionSQLiteTests : TestBase
+	public class SQLiteTests : TestBase
 	{
 		[Test]
 		public void IndexedByTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)

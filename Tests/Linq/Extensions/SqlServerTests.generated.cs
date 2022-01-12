@@ -8,9 +8,9 @@ using LinqToDB.DataProvider.SqlServer;
 
 using NUnit.Framework;
 
-namespace Tests.Linq
+namespace Tests.Extensions
 {
-	partial class QueryExtensionSqlServerTests
+	partial class SqlServerTests
 	{
 		[Test]
 		public void WithForceScanTableTest([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)

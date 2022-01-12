@@ -19,34 +19,34 @@
 
 		<PackageReference Include="NodaTime" />
 
-		<None Update="Linq\QueryExtensionOracleTests.tt">
-			<LastGenOutput>QueryExtensionOracleTests.generated.cs</LastGenOutput>
+		<None Update="Extensions\OracleTests.tt">
+			<LastGenOutput>OracleTests.generated.cs</LastGenOutput>
 			<Generator>TextTemplatingFileGenerator</Generator>
 		</None>
-		<Compile Update="Linq\QueryExtensionOracleTests.generated.cs">
-			<DependentUpon>QueryExtensionOracleTests.tt</DependentUpon>
+		<Compile Update="Extensions\OracleTests.generated.cs">
+			<DependentUpon>OracleTests.tt</DependentUpon>
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
 		</Compile>
 
-		<None Update="Linq\QueryExtensionSqlCeTests.tt">
-			<LastGenOutput>QueryExtensionSqlCeTests.generated.cs</LastGenOutput>
+		<None Update="Extensions\SqlServerTests.tt">
+			<LastGenOutput>SqlServerTests.generated.cs</LastGenOutput>
 			<Generator>TextTemplatingFileGenerator</Generator>
 		</None>
-		<Compile Update="Linq\QueryExtensionSqlCeTests.generated.cs">
-			<DependentUpon>QueryExtensionSqlCeTests.tt</DependentUpon>
+		<Compile Update="Extensions\SqlServerTests.generated.cs">
+			<DependentUpon>SqlServerTests.tt</DependentUpon>
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
 		</Compile>
 
-		<None Update="Linq\QueryExtensionSqlServerTests.tt">
-			<LastGenOutput>QueryExtensionSqlServerTests.generated.cs</LastGenOutput>
+		<None Update="Extensions\SqlCeTests.tt">
+			<LastGenOutput>SqlCeTests.generated.cs</LastGenOutput>
 			<Generator>TextTemplatingFileGenerator</Generator>
 		</None>
-		<Compile Update="Linq\QueryExtensionSqlServerTests.generated.cs">
+		<Compile Update="Extensions\SqlCeTests.generated.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
-			<DependentUpon>QueryExtensionSqlServerTests.tt</DependentUpon>
+			<DependentUpon>SqlCeTests.tt</DependentUpon>
 		</Compile>
 	</ItemGroup>
 

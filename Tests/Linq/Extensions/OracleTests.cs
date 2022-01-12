@@ -6,10 +6,10 @@ using LinqToDB.DataProvider.Oracle;
 
 using NUnit.Framework;
 
-namespace Tests.Linq
+namespace Tests.Extensions
 {
 	[TestFixture]
-	public partial class QueryExtensionOracleTests : TestBase
+	public partial class OracleTests : TestBase
 	{
 		[Test]
 		public void TableSubqueryHintTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)

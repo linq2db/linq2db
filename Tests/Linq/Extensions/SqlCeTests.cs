@@ -6,10 +6,10 @@ using LinqToDB.DataProvider.SqlCe;
 
 using NUnit.Framework;
 
-namespace Tests.Linq
+namespace Tests.Extensions
 {
 	[TestFixture]
-	public partial class QueryExtensionSqlCeTests : TestBase
+	public partial class SqlCeTests : TestBase
 	{
 		[Test]
 		public void TableHintTest(

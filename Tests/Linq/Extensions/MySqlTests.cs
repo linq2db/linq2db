@@ -6,10 +6,10 @@ using LinqToDB.DataProvider.MySql;
 
 using NUnit.Framework;
 
-namespace Tests.Linq
+namespace Tests.Extensions
 {
 	[TestFixture]
-	public class QueryExtensionMySqlTests : TestBase
+	public class MySqlTests : TestBase
 	{
 		[Test]
 		public void QueryHintTest([IncludeDataSources(true, TestProvName.AllMySql)] string context,
