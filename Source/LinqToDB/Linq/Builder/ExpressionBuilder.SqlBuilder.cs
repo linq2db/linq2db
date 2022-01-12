@@ -288,7 +288,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region IsSubQuery
 
-		public bool IsSubQuery(IBuildContext context, MethodCallExpression call)
+		bool IsSubQuery(IBuildContext context, MethodCallExpression call)
 		{
 			var isAggregate = call.IsAggregate(MappingSchema);
 
