@@ -19,13 +19,13 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			var prevSequence = sequence;
-
 			var sql = sequence.SelectQuery;
 			if (sql.Select.TakeValue != null || sql.Select.SkipValue != null)
 			{
 				sequence = new SubQueryContext(sequence);
 			}
+
+			var subQueryContext = new SubQueryContext(sequence);
 
 			sequence.SelectQuery.Select.IsDistinct = true;
 
@@ -38,18 +38,31 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				// create all columns
-				var sqlExpr = builder.ConvertToSqlExpr(prevSequence, new ContextRefExpression(methodCall.Arguments[0].Type, prevSequence));
-
-				builder.ToColumns(sequence, sqlExpr);
+				_ = builder.ConvertToSqlExpr(subQueryContext, new ContextRefExpression(methodCall.Arguments[0].Type, sequence));
 			}
 
-			return sequence;
+			return new DistinctContext(subQueryContext);
 		}
 
 		protected override SequenceConvertInfo? Convert(
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return null;
+		}
+
+		class DistinctContext : PassThroughContext
+		{
+			public DistinctContext(IBuildContext context) : base(context)
+			{
+			}
+
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				if (SequenceHelper.IsSameContext(path, this) && (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot)))
+					return path;
+				
+				return base.MakeExpression(path, flags);
+			}
 		}
 	}
 }

@@ -4003,7 +4003,7 @@ namespace LinqToDB.Linq.Builder
 
 		public SqlPlaceholderExpression MakeColumn(SelectQuery? parentQuery, SqlPlaceholderExpression sqlPlaceholder)
 		{
-			var key = new ColumnCacheKey(sqlPlaceholder.Path, parentQuery);
+			var key = new ColumnCacheKey(sqlPlaceholder.Path, sqlPlaceholder.SelectQuery);
 
 			if (_columnCache.TryGetValue(key, out var placeholder))
 				return placeholder;
