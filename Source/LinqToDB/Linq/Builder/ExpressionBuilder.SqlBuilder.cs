@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
+	using Common.Internal;
 	using Data;
 	using LinqToDB.Expressions;
 	using Extensions;
@@ -2885,8 +2886,8 @@ namespace LinqToDB.Linq.Builder
 								return GetRemoveNullPropagationTransformer().Transform(conditional.IfFalse);
 							}
 							else if (IsNullConstant(conditional.IfFalse)
-								&& ((nullRight && !MappingSchema.IsScalarType(binary.Left.Type)) ||
-									(nullLeft  && !MappingSchema.IsScalarType(binary.Right.Type))))
+								&& ((nullRight && binary.Left.Type.IsNullableType() ||
+									(nullLeft  && binary.Right.Type.IsNullableType()))))
 							{
 								return GetRemoveNullPropagationTransformer().Transform(conditional.IfTrue);
 							}
@@ -2904,8 +2905,8 @@ namespace LinqToDB.Linq.Builder
 								return GetRemoveNullPropagationTransformer().Transform(conditional.IfTrue);
 							}
 							else if (IsNullConstant(conditional.IfTrue)
-								&& ((nullRight && (!MappingSchema.IsScalarType(binary.Left.Type) || conditional.IfFalse != null || conditional.IfTrue != null)) ||
-									(nullLeft  && (!MappingSchema.IsScalarType(binary.Right.Type) || conditional.IfFalse != null || conditional.IfTrue != null))))
+							         && ((nullRight && binary.Left.Type.IsNullableType() ||
+							              (nullLeft && binary.Right.Type.IsNullableType()))))
 							{
 								return GetRemoveNullPropagationTransformer().Transform(conditional.IfFalse);
 							}

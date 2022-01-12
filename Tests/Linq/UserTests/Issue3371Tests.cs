@@ -1,6 +1,4 @@
 ﻿using System.Linq;
-using FluentAssertions;
-using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -9,107 +7,81 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue3371Tests : TestBase
 	{
-
-		class PayRate
+		private class PayRate
 		{
-			public int Id { get; set; }
-			public string Name { get; set; }
-
 			public PayRate()
 			{
 				Name = string.Empty;
-		}
-		}
-
-		class Employee
-		{
-			public int Id { get; set; }
-			public PayRate PayRate { get; private set; }
-			public int? PayRateId { get; private set; }
-
-			public Employee()
-			{
-				PayRate = new PayRate();
 			}
+
+			public int    Id   { get; set; }
+			public string Name { get; set; }
 		}
 
-
-
-		private PayRate[] CtreatePayRateData() => new PayRate[]
-			{
-				new PayRate { Id = 1, Name = "Name1" },
-				new PayRate { Id = 2, Name = "Name2" },
-				new PayRate { Id = 3, Name = "test" }
-			};
-
+		private class Employee
+		{
+			public int      Id        { get; set; }
+			public PayRate? PayRate   { get; set; }
+			public int?     PayRateId { get; set; }
+		}
 
 
 		[Test]
 		public void NullReferenceExceptionTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-
-			var builder = MappingSchema.Default.GetFluentMappingBuilder();
+			var ms      = new MappingSchema();
+			var builder = ms.GetFluentMappingBuilder();
 
 			builder.Entity<Employee>()
-				 .Association(x => x.PayRate, x => x.PayRateId, x => x!.Id);
-
+				.Association(x => x.PayRate, x => x.PayRateId, x => x!.Id);
 
 			builder.Entity<PayRate>();
 
-			var payRateData = CtreatePayRateData();
-
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<PayRate>("PayRate", payRateData))
-			using (var table2 = db.CreateLocalTable<Employee>())
-			//using (var table2 = db.CreateLocalTable<Employee>("Employees", new Employee[] { new Employee { Id = 1 , PayRate= null } }))
+			var payRateData = new PayRate[]
 			{
-				var data = table.Select(x => new { x.Id, x.Name }).First();
-				Assert.AreEqual("Name1", data.Name);
+				new() { Id = 1, Name = "Name1" }, new() { Id = 2, Name = "Name2" }, new() { Id = 3, Name = "test" }
+			};
 
-				table.ToArray().Should().HaveCount(3);
-				table2.ToArray().Should().BeEmpty();
-				//table2.ToArray().Should().HaveCount(1);
+			var employeeData = new Employee[]
+			{
+				new() { Id = 1, PayRateId = 1 }, new() { Id = 2, PayRateId = null },
+				new() { Id = 3, PayRateId = 3 },
+			};
 
-				var queryNavProp = table2
+			using (var db = GetDataContext(context, ms))
+			using (var payRates = db.CreateLocalTable("PayRate", payRateData))
+			using (var employees = db.CreateLocalTable("Employees", employeeData))
+			{
+				var queryNavProp = employees
 					.Select(x => new
 					{
 						x.Id,
 						PayRate = x.PayRate == null // nav property
-						? null
-						: new
-						{
-							x.Id,
-							x.PayRate.Name,
-						}
+							? null
+							: new { x.Id, x.PayRate.Name }
 					})
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
-				.Where(item => item.PayRate.Name.Equals("test"));
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
+					.Where(item => item.PayRate!.Name.Equals("test"));
 
 				var good = queryNavProp.ToList();
 
-				var queryFK = table2
+				var queryFK = employees
 					.Select(x => new
 					{
 						x.Id,
 						PayRate = x.PayRateId == null // FK property
-						? null
-						: new
-						{
-							x.Id,
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
-							x.PayRate.Name,
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
-						}
+							? null
+							: new
+							{
+								x.Id,
+								x.PayRate!.Name,
+							}
 					})
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
-					.Where(item => item.PayRate.Name.Equals("test"));
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
+					.Where(item => item.PayRate!.Name.Equals("test"));
 
 				var bad = queryFK.ToList(); // System.NullReferenceException
+
+				AreEqual(good, bad);
 			}
-
-
 		}
 	}
 }
