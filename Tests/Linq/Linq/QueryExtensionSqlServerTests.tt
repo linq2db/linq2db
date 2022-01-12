@@ -42,8 +42,8 @@ namespace Tests.Linq
 	GenerateOptionTest ("ExpandViews");
 	GenerateOptionTest2("Fast");
 	GenerateOptionTest ("ForceOrder");
-	GenerateOptionTest ("ForceScaleOutExecution",   "2019Plus");
-	GenerateOptionTest ("DisableScaleOutExecution", "2019Plus");
+//	GenerateOptionTest ("ForceScaleOutExecution",   "2019Plus");
+//	GenerateOptionTest ("DisableScaleOutExecution", "2019Plus");
 	GenerateOptionTest ("IgnoreNonClusteredColumnStoreIndex", "2012Plus");
 	GenerateOptionTest ("KeepPlan");
 	GenerateOptionTest ("KeepFixedPlan");

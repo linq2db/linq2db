@@ -798,44 +798,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OptionForceScaleOutExecutionTest([IncludeDataSources(true, TestProvName.AllSqlServer2019Plus)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-			(
-				from c in db.Child
-				join p in db.Parent on c.ParentID equals p.ParentID
-				select p
-			)
-			.AsSqlServer()
-			.OptionForceScaleOutExecution();
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.ForceScaleOutExecution})"));
-		}
-
-		[Test]
-		public void OptionDisableScaleOutExecutionTest([IncludeDataSources(true, TestProvName.AllSqlServer2019Plus)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-			(
-				from c in db.Child
-				join p in db.Parent on c.ParentID equals p.ParentID
-				select p
-			)
-			.AsSqlServer()
-			.OptionDisableScaleOutExecution();
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.DisableScaleOutExecution})"));
-		}
-
-		[Test]
 		public void OptionIgnoreNonClusteredColumnStoreIndexTest([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
 		{
 			using var db = GetDataContext(context);
