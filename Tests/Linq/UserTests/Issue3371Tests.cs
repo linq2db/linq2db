@@ -13,14 +13,24 @@ namespace Tests.UserTests
 		class PayRate
 		{
 			public int Id { get; set; }
-			public string? Name { get; set; }
+			public string Name { get; set; }
+
+			public PayRate()
+			{
+				Name = string.Empty;
+		}
 		}
 
 		class Employee
 		{
 			public int Id { get; set; }
-			public PayRate? PayRate { get; private set; }
+			public PayRate PayRate { get; private set; }
 			public int? PayRateId { get; private set; }
+
+			public Employee()
+			{
+				PayRate = new PayRate();
+			}
 		}
 
 

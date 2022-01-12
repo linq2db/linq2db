@@ -2904,8 +2904,8 @@ namespace LinqToDB.Linq.Builder
 								return GetRemoveNullPropagationTransformer().Transform(conditional.IfTrue);
 							}
 							else if (IsNullConstant(conditional.IfTrue)
-								&& ((nullRight && !MappingSchema.IsScalarType(binary.Left.Type)) ||
-									(nullLeft  && !MappingSchema.IsScalarType(binary.Right.Type))))
+								&& ((nullRight && (!MappingSchema.IsScalarType(binary.Left.Type) || conditional.IfFalse != null || conditional.IfTrue != null)) ||
+									(nullLeft  && (!MappingSchema.IsScalarType(binary.Right.Type) || conditional.IfFalse != null || conditional.IfTrue != null))))
 							{
 								return GetRemoveNullPropagationTransformer().Transform(conditional.IfFalse);
 							}
