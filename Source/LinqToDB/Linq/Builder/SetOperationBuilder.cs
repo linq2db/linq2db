@@ -352,12 +352,12 @@ namespace LinqToDB.Linq.Builder
 
 						if (nctor != null)
 						{
-							var members = nctor.Members
+							var members = nctor.Members!
 								.Select(m => m is MethodInfo info ? info.GetPropertyInfo() : m)
 								.ToList();
 
 							expr = Expression.New(
-								nctor.Constructor,
+								nctor.Constructor!,
 								members.Select(m => ExpressionHelper.PropertyOrField(_unionParameter!, m.Name)),
 								members);
 

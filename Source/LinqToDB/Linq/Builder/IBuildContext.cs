@@ -93,7 +93,7 @@ namespace LinqToDB.Linq.Builder
 
 		IBuildContext?     GetContext          (Expression? expression, int level, BuildInfo buildInfo);
 		int                ConvertToParentIndex(int index, IBuildContext context);
-		void               SetAlias            (string alias);
+		void               SetAlias            (string? alias);
 		ISqlExpression?    GetSubQuery         (IBuildContext context);
 
 		SqlStatement       GetResultStatement();

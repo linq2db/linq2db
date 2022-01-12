@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -45,6 +46,7 @@ namespace LinqToDB.Data.RetryPolicy
 			_policy.Execute(_connection.Open);
 		}
 
+		[AllowNull]
 		public override string ConnectionString
 		{
 			get => _connection.ConnectionString;
@@ -84,12 +86,12 @@ namespace LinqToDB.Data.RetryPolicy
 			return _dbConnection.GetSchema(collectionName);
 		}
 
-		public override DataTable GetSchema(string collectionName, string[] restrictionValues)
+		public override DataTable GetSchema(string collectionName, string?[] restrictionValues)
 		{
 			return _dbConnection.GetSchema(collectionName, restrictionValues);
 		}
 
-		public override ISite Site
+		public override ISite? Site
 		{
 			get => _dbConnection.Site;
 			set => _dbConnection.Site = value;
@@ -100,7 +102,7 @@ namespace LinqToDB.Data.RetryPolicy
 		// return this or it will be breaking change for DataConnection.Connection property
 		public IDbConnection Connection => this;
 
-		public override event StateChangeEventHandler StateChange
+		public override event StateChangeEventHandler? StateChange
 		{
 			add    => _dbConnection.StateChange += value;
 			remove => _dbConnection.StateChange -= value;

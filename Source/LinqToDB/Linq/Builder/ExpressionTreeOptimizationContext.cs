@@ -393,7 +393,7 @@ namespace LinqToDB.Linq.Builder
 				switch (expr.NodeType)
 				{
 					case ExpressionType.Parameter   : return true;
-					case ExpressionType.MemberAccess: return IsQueryMember(((MemberExpression)expr).Expression);
+					case ExpressionType.MemberAccess: return IsQueryMember(((MemberExpression)expr).Expression!);
 					case ExpressionType.Call:
 					{
 						var call = (MethodCallExpression)expr;
@@ -404,7 +404,7 @@ namespace LinqToDB.Linq.Builder
 						if (call.Method.DeclaringType == typeof(Enumerable) && call.Arguments.Count > 0)
 							return IsQueryMember(call.Arguments[0]);
 
-						return IsQueryMember(call.Object);
+						return IsQueryMember(call.Object!);
 					}
 					case ExpressionType.Extension    : return expr is ContextRefExpression;
 				}
@@ -631,7 +631,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (me.Member.IsNullableHasValueMember())
 					{
-						return new TransformInfo(Expression.NotEqual(me.Expression, Expression.Constant(null, me.Expression.Type)), false, true);
+						return new TransformInfo(Expression.NotEqual(me.Expression!, Expression.Constant(null, me.Expression!.Type)), false, true);
 					}
 
 					if (CanBeCompiled(expr))
@@ -801,13 +801,13 @@ namespace LinqToDB.Linq.Builder
 						var name  = string.Format(attr.MethodName, names);
 
 						expr = Expression.Call(
-							mi.DeclaringType,
+							mi.DeclaringType!,
 							name,
 							name != attr.MethodName ? Array<Type>.Empty : args);
 					}
 					else
 					{
-						expr = Expression.Call(mi.DeclaringType, attr.MethodName, Array<Type>.Empty);
+						expr = Expression.Call(mi.DeclaringType!, attr.MethodName, Array<Type>.Empty);
 					}
 
 					var evaluated = (LambdaExpression?)expr.EvaluateExpression();

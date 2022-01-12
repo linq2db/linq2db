@@ -93,7 +93,7 @@ namespace LinqToDB.Linq.Builder
 			return Parent?.ConvertToParentIndex(index, context) ?? index;
 		}
 
-		public virtual void SetAlias(string alias)
+		public virtual void SetAlias(string? alias)
 		{
 			if (SelectQuery.Select.Columns.Count == 1)
 			{

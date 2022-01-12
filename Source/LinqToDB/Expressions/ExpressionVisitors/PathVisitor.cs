@@ -48,7 +48,7 @@ namespace LinqToDB.Expressions
 			}
 		}
 
-		private void Path(Expression expr, PropertyInfo property)
+		private void Path(Expression? expr, PropertyInfo property)
 		{
 			_path = Expression.Property(_path, property);
 			Path(expr);

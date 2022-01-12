@@ -43,7 +43,7 @@ namespace LinqToDB.Expressions
 				expr = ((UnaryExpression)expr).Operand;
 
 			if (expr.NodeType == ExpressionType.New)
-				return ((NewExpression)expr).Constructor;
+				return ((NewExpression)expr).Constructor!;
 
 			if (expr is MethodCallExpression methodCall && methodCall.Method.IsSqlPropertyMethodEx())
 			{
@@ -74,7 +74,7 @@ namespace LinqToDB.Expressions
 					? me.Member
 					: expr is MethodCallExpression mce
 						? mce.Method
-						: (MemberInfo)((NewExpression)expr).Constructor;
+						: (MemberInfo)((NewExpression)expr).Constructor!;
 		}
 
 		public static MemberInfo MemberOf<T>(Expression<Func<T,object?>> func)

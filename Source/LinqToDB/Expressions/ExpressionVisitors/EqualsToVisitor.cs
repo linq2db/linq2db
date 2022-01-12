@@ -352,7 +352,7 @@ namespace LinqToDB.Expressions
 		{
 			if (expr1.Member == expr2.Member)
 			{
-				if (expr1.Expression == expr2.Expression || expr1.Expression.Type == expr2.Expression.Type)
+				if (expr1.Expression == expr2.Expression || expr1.Expression!.Type == expr2.Expression!.Type)
 				{
 					if (info.QueryableAccessorDic != null && info.QueryableAccessorDic.TryGetValue(expr1, out var qa))
 						return

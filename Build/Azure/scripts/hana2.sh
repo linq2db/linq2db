@@ -72,6 +72,12 @@ cat <<-EOJSON > UserDataProviders.json
         "Providers": [
             "SapHana.Odbc"
         ]
+    },
+    "NET60.Azure": {
+        "BasedOn": "BASE.Azure",
+        "Providers": [
+            "SapHana.Odbc"
+        ]
     }
 }
 EOJSON

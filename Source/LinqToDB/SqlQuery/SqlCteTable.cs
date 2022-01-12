@@ -45,7 +45,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal SqlCteTable(int id, string alias, SqlField[] fields)
-			: base(id, null, alias, string.Empty, string.Empty, string.Empty, null, null, null, fields, SqlTableType.Cte, null, TableOptions.NotSet)
+			: base(id, null, alias, string.Empty, string.Empty, string.Empty, null, null!, null, fields, SqlTableType.Cte, null, TableOptions.NotSet)
 		{
 		}
 
@@ -58,6 +58,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public SqlCteTable(SqlCteTable table, IEnumerable<SqlField> fields, CteClause cte)
+			: base(table.ObjectType, null)
 		{
 			Alias              = table.Alias;
 			Server             = table.Server;
@@ -65,7 +66,6 @@ namespace LinqToDB.SqlQuery
 			Schema             = table.Schema;
 
 			PhysicalName       = table.PhysicalName;
-			ObjectType         = table.ObjectType;
 			SequenceAttributes = table.SequenceAttributes;
 
 			Cte                = cte;

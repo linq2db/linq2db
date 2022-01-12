@@ -150,7 +150,7 @@ namespace LinqToDB.Linq.Builder
 				return Parent?.ConvertToParentIndex(index, context) ?? index;
 			}
 
-			public void SetAlias(string alias)
+			public void SetAlias(string? alias)
 			{
 			}
 

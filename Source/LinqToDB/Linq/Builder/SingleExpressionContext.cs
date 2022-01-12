@@ -121,7 +121,7 @@ namespace LinqToDB.Linq.Builder
 			return Parent?.ConvertToParentIndex(index, this) ?? index;
 		}
 
-		public virtual void SetAlias(string alias)
+		public virtual void SetAlias(string? alias)
 		{
 		}
 

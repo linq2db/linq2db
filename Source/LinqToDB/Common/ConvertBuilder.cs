@@ -343,7 +343,7 @@ namespace LinqToDB.Common
 					if (toTypeFields.All(f => f.Attrs != null))
 					{
 						var cases = toTypeFields.Select(f => Expression.SwitchCase(
-							Expression.Constant(f.Attrs.Value ?? mappingSchema.GetDefaultValue(to), to),
+							Expression.Constant(f.Attrs!.Value ?? mappingSchema.GetDefaultValue(to), to),
 							Expression.Constant(Enum.Parse(from, f.Field.Name, false))));
 
 						var expr = Expression.Switch(

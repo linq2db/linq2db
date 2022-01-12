@@ -23,7 +23,7 @@ namespace LinqToDB.Async
 			Transaction = transaction ?? throw new ArgumentNullException(nameof(transaction));
 		}
 
-		public virtual IDbConnection Connection      => Transaction.Connection;
+		public virtual IDbConnection? Connection     => Transaction.Connection;
 
 		public virtual IsolationLevel IsolationLevel => Transaction.IsolationLevel;
 

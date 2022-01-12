@@ -169,7 +169,7 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.Index:
 					return ((IndexExpression)expr).Update(
-						Transform(((IndexExpression)expr).Object),
+						Transform(((IndexExpression)expr).Object!),
 						Transform(((IndexExpression)expr).Arguments));
 
 				case ExpressionType.Label:
@@ -265,7 +265,7 @@ namespace LinqToDB.Expressions
 		{
 			var ex = Transform(e.Expressions);
 
-			return ex != e.Expressions ? Expression.NewArrayInit(e.Type.GetElementType(), ex) : e;
+			return ex != e.Expressions ? Expression.NewArrayInit(e.Type.GetElementType()!, ex) : e;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -411,7 +411,7 @@ namespace LinqToDB.Expressions
 				case MemberBindingType.MemberBinding:
 				{
 					var mm = (MemberMemberBinding) b;
-					var bs = Transform<MemberBinding>(mm.Bindings, Modify);
+					var bs = Transform(mm.Bindings, Modify);
 
 					if (bs != mm.Bindings)
 						mm = Expression.MemberBind(mm.Member);

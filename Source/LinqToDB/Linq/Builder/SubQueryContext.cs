@@ -95,7 +95,7 @@ namespace LinqToDB.Linq.Builder
 			return Parent?.ConvertToParentIndex(idx, this) ?? idx;
 		}
 
-		public override void SetAlias(string alias)
+		public override void SetAlias(string? alias)
 		{
 			if (alias == null)
 				return;

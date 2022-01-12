@@ -560,7 +560,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region SetAlias
 
-		public virtual void SetAlias(string alias)
+		public virtual void SetAlias(string? alias)
 		{
 			if (!alias.IsNullOrEmpty() && !alias.Contains('<') && SelectQuery.Select.From.Tables.Count == 1)
 			{
