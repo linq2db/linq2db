@@ -103,31 +103,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (!inGrouping)
 				{
-					if (true /*!builder.DataContext.SqlProviderFlags.IsCountSubQuerySupported*/)
-					{
-						CreateWeakOuterJoin(buildInfo.Parent!, sequence.SelectQuery);
-					}
-					else
-					{
-						_ = builder.MakeColumn(sequence.SelectQuery, functionPlaceholder);
-
-						functionPlaceholder = ExpressionBuilder.CreatePlaceholder(parentContext,
-							sequence.SelectQuery, buildInfo.Expression,
-							functionPlaceholder.ConvertType);
-
-						/*
-						functionPlaceholder = ExpressionBuilder.CreatePlaceholder(parentContext,
-							sequence.SelectQuery, new ContextRefExpression(functionPlaceholder.Path.Type, context),
-							functionPlaceholder.ConvertType);*/
-
-						builder.MakeColumn(functionPlaceholder.SelectQuery, functionPlaceholder);
-
-						if (parentContext != buildInfo.Parent)
-						{
-							functionPlaceholder =
-								(SqlPlaceholderExpression)builder.UpdateNesting(buildInfo.Parent, functionPlaceholder);
-						}
-					}
+					CreateWeakOuterJoin(buildInfo.Parent!, sequence.SelectQuery);
 				}
 			}
 
@@ -160,7 +136,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			readonly Type       _returnType;
-			private  SqlInfo[]? _index;
 
 			public int                      FieldIndex;
 			public ISqlExpression?          Sql;
@@ -169,55 +144,26 @@ namespace LinqToDB.Linq.Builder
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
 				throw new NotImplementedException();
-				var expr   = Builder.BuildSql(_returnType, FieldIndex, Sql);
-				var mapper = Builder.BuildMapper<object>(expr);
-
-				CompleteColumns();
-				QueryRunner.SetRunQuery(query, mapper);
 			}
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				throw new NotImplementedException();
-				var info  = ConvertToIndex(expression, level, ConvertFlags.Field)[0];
-				var index = info.Index;
-				if (Parent != null)
-					index = ConvertToParentIndex(index, Parent);
-				return Builder.BuildSql(_returnType, index, info.Sql);
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				throw new NotImplementedException();
-				return flags switch
-				{
-					ConvertFlags.Field => new[] { new SqlInfo(Sql!, Parent!.SelectQuery) },
-					_                  => throw new NotImplementedException(),
-				};
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
 				throw new NotImplementedException();
-				return flags switch
-				{
-					ConvertFlags.Field => 
-						_index ??= new[]
-						{
-							new SqlInfo(Sql!, Parent!.SelectQuery, Parent.SelectQuery.Select.Add(Sql!))
-						},
-					_ => throw new NotImplementedException(),
-				};
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
 				throw new NotImplementedException();
-				return requestFlag switch
-				{
-					RequestFor.Expression => IsExpressionResult.True,
-					_                     => IsExpressionResult.False,
-				};
 			}
 
 			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)

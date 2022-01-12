@@ -72,6 +72,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			return null;
 
+			/*
 			var isAsync = methodCall.Method.Name.EndsWith("Async");
 
 			if (methodCall.Arguments.Count == (isAsync ? 3 : 2))
@@ -130,7 +131,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			return null;
+			return null;*/
 		}
 
 		public class FirstSingleContext : SequenceContextBase

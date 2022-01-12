@@ -320,7 +320,7 @@ namespace LinqToDB.Linq.Builder
 				Root = root;
 			}
 
-			public override Expression MakeExpression(Expression? path, ProjectFlags flags)
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if (flags.HasFlag(ProjectFlags.Root))
 					return Root;

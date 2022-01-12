@@ -193,7 +193,7 @@ namespace LinqToDB.Linq.Builder
 						_methodCall.Method.Name.StartsWith("All"),
 						new SqlPredicate.FuncLike(SqlFunction.CreateExists(SelectQuery)));
 
-					_innerSql = ExpressionBuilder.CreatePlaceholder(Parent, new SqlSearchCondition(cond), path);
+					_innerSql = ExpressionBuilder.CreatePlaceholder(this, new SqlSearchCondition(cond), path);
 				}
 
 				return _innerSql;

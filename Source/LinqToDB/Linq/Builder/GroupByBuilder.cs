@@ -101,7 +101,6 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequenceExpr    = methodCall.Arguments[0];
-			var wrapSequence    = false;
 			LambdaExpression?   groupingKey = null;
 			var groupingKind    = GroupingType.Default;
 			if (sequenceExpr.NodeType == ExpressionType.Call)
@@ -115,8 +114,6 @@ namespace LinqToDB.Linq.Builder
 
 					if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ExpressionBuilder.GroupSubQuery<,>))
 					{
-						wrapSequence = true;
-
 						var selectParamBody = selectParam.Body.Unwrap();
 						MethodCallExpression? groupingMethod = null;
 						if (selectParamBody is MemberInitExpression mi)
@@ -720,73 +717,9 @@ namespace LinqToDB.Linq.Builder
 				return new SqlFunction(call.Type, call.Method.Name, true, args);
 			}
 
-			PropertyInfo? _keyProperty;
-
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
-				if (SequenceHelper.IsSameContext(expression, this))
-				{
-					if (flags == ConvertFlags.Field && !_key.IsScalar)
-						return Element.ConvertToSql(null, 0, flags);
-					var keys = _key.ConvertToSql(null, 0, flags);
-					for (var i = 0; i < keys.Length; i++)
-					{
-						var key = keys[i];
-						keys[i] = key.AppendMember(_keyProperty!);
-					}
-
-					return keys;
-				}
-
-				switch (expression.NodeType)
-				{
-					case ExpressionType.Call:
-					{
-						var e = (MethodCallExpression)expression;
-
-						if (e.IsQueryable() || e.IsAggregate(Builder.MappingSchema))
-						{
-							return new[] {new SqlInfo(ConvertEnumerable(e))};
-						}
-
-						break;
-					}
-
-					case ExpressionType.MemberAccess:
-					{
-						var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, 1);
-
-						if (levelExpression.NodeType == ExpressionType.MemberAccess)
-						{
-							var e = (MemberExpression)levelExpression;
-
-							if (e.Member.Name == "Key")
-							{
-								if (_keyProperty == null)
-									_keyProperty = _groupingType.GetProperty("Key");
-
-								if (e.Member == _keyProperty)
-								{
-									if (ReferenceEquals(levelExpression, expression))
-										return _key.ConvertToSql(null, 0, flags);
-
-									var keyRef   = new ContextRefExpression(levelExpression.Type, _key);
-									var replaced = expression.Replace(levelExpression, keyRef);
-
-									return _key.ConvertToSql(replaced, 0, flags);
-								}
-							}
-
-							expression = SequenceHelper.CorrectExpression(expression, this, _key);
-
-							return _key.ConvertToSql(expression, level, flags);
-						}
-
-						break;
-					}
-				}
-
-				throw new LinqException("Expression '{0}' cannot be converted to SQL.", expression);
+				throw new NotImplementedException();
 			}
 
 			readonly Dictionary<Tuple<Expression?,int,ConvertFlags>,SqlInfo[]> _expressionIndex = new ();

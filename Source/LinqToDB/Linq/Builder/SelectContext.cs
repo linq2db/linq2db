@@ -105,8 +105,6 @@ namespace LinqToDB.Linq.Builder
 
 		#region BuildExpression
 
-		ParameterExpression? _rootExpression;
-
 		public virtual Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 		{
 			throw new NotImplementedException();
@@ -141,27 +139,6 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		#endregion
-
-		public SqlInfo? MakeSql(Expression path)
-		{
-			throw new NotImplementedException();
-			Expression expr;
-
-			if (SequenceHelper.IsSameContext(path, this))
-			{
-				Body = Builder.Project(this, Body, null, 0, ProjectFlags.SQL, Body);
-				expr = Body;
-			}
-			else
-			{
-				var correctedPath = path;
-				expr = Builder.Project(this, correctedPath, null, 0, ProjectFlags.SQL, Body);
-			}
-
-			var sql = Builder.ConvertToSql(this, expr);
-
-			return new SqlInfo(sql, SelectQuery);
-		}
 
 		public virtual Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
@@ -817,97 +794,8 @@ namespace LinqToDB.Linq.Builder
 
 		public bool IsSubQuery { get; }
 
-		Expression? GetProjectedExpression(MemberInfo memberInfo, bool throwOnError)
-		{
-			throw new NotImplementedException();
-			if (!Members.TryGetValue(memberInfo, out var memberExpression))
-			{
-				var member = Body?.Type.GetMemberEx(memberInfo);
-				if (member != null)
-					Members.TryGetValue(member, out memberExpression);
-
-				if (memberExpression == null)
-				{
-					if (typeof(ExpressionBuilder.GroupSubQuery<,>).IsSameOrParentOf(Body!.Type))
-					{
-						var newMember = Body.Type.GetField("Element")!;
-						if (Members.TryGetValue(newMember, out memberExpression))
-						{
-							if (memberInfo.DeclaringType!.IsSameOrParentOf(memberExpression.Type))
-								memberExpression = Expression.MakeMemberAccess(memberExpression, memberInfo);
-						}
-					}
-				}
-			}
-
-			if (throwOnError && memberExpression == null)
-				throw new LinqToDBException($"Member '{memberInfo.Name}' not found in type '{Body?.Type.Name ?? "<Unknown>"}'.");
-			return memberExpression;
-		}
-
 		IBuildContext? GetSequence(Expression expression, int level)
 		{
-			if (Sequence.Length == 1 && Sequence[0].Parent == null)
-				return Sequence[0];
-
-			Expression? root = null;
-
-			if (IsScalar)
-			{
-				root = Builder.GetRootObject(expression);
-			}
-			else
-			{
-				var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
-				levelExpression = levelExpression.Unwrap();
-
-				switch (levelExpression.NodeType)
-				{
-					case ExpressionType.MemberAccess :
-						{
-							var memberExpression = GetProjectedExpression(((MemberExpression)levelExpression).Member, true)!;
-
-							root = Builder.GetRootObject(memberExpression);
-
-							if (root is ContextRefExpression refExpression)
-							{
-								return refExpression.BuildContext;
-							}
-
-							if (root.NodeType != ExpressionType.Parameter)
-								return null;
-
-							break;
-						}
-
-					case ExpressionType.Parameter :
-						{
-							root = Builder.GetRootObject(expression).Unwrap();
-							break;
-						}
-					case ExpressionType.Extension:
-						{
-							root = Builder.GetRootObject(expression).Unwrap();
-							break;
-						}
-				}
-			}
-
-			if (root != null)
-				for (var i = 0; i < Lambda.Parameters.Count; i++)
-					if (ReferenceEquals(root, Lambda.Parameters[i]))
-						return Sequence[i];
-
-			foreach (var context in Sequence)
-			{
-				if (context.Parent != null)
-				{
-					var ctx = Builder.GetContext(context, root);
-					if (ctx != null)
-						return ctx;
-				}
-			}
-
 			return null;
 		}
 

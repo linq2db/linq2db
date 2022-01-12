@@ -120,32 +120,6 @@ namespace LinqToDB.Linq.Builder
 
 						var result = Sequence.IsExpression(expression, level, requestFlag);
 						return result;
-
-						var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
-
-						if (levelExpression is ContextRefExpression contextRef)
-						{
-							return contextRef.BuildContext.IsExpression(expression, level, requestFlag);
-						}
-
-						if (Lambda!.Parameters.Count > 1)
-						{
-							for (var i = 0; i < Lambda.Parameters.Count; i++)
-							{
-								var root = Builder.GetRootObject(expression);
-
-								if (ReferenceEquals(root, Lambda.Parameters[i]))
-								{
-									return ReferenceEquals(levelExpression, expression) ?
-										Sequences[i].IsExpression(null,       0,         requestFlag) :
-										Sequences[i].IsExpression(expression, level + 1, requestFlag);
-								}
-							}
-						}
-
-						return ReferenceEquals(levelExpression, expression) ?
-							Sequence.IsExpression(null,       0,         requestFlag) :
-							Sequence.IsExpression(expression, level + 1, requestFlag);
 					}
 			}
 

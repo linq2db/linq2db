@@ -109,12 +109,5 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		protected bool IsSubQuery()
-		{
-			for (var p = Parent; p != null; p = p.Parent)
-				if (p.IsExpression(null, 0, RequestFor.SubQuery).Result)
-					return true;
-			return false;
-		}
 	}
 }

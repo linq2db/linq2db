@@ -61,7 +61,7 @@ namespace LinqToDB.Linq.Builder
 			throw new System.NotImplementedException();
 		}
 
-		public virtual Expression MakeExpression(Expression? path, ProjectFlags flags)
+		public virtual Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
 			path = SequenceHelper.CorrectExpression(path, this, Context);
 			return Builder.MakeExpression(path, flags);

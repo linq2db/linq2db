@@ -74,11 +74,10 @@ namespace LinqToDB.Linq.Builder
 				var isSimple = false;
 
 				IBuildContext?      sequence            = null;
-				SqlSearchCondition? filter              = null;
 				IBuildContext?      placeholderSequence = null;
 
 
-				var parentContext       = buildInfo.Parent;
+				var parentContext       = buildInfo.Parent!;
 				var placeholderSelect   = parentContext.SelectQuery;
 
 				var testSequence = builder.BuildSequence(new BuildInfo(buildInfo, sequenceArgument, new SelectQuery())
@@ -131,7 +130,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				if (sequence == null)
+				if (sequence is null)
 				{
 					sequence = builder.BuildSequence(new BuildInfo(buildInfo, sequenceArgument, new SelectQuery()) { CreateSubQuery = true, IsAggregation = true });
 
@@ -143,6 +142,8 @@ namespace LinqToDB.Linq.Builder
 						placeholderSelect   = groupByContext.Element.SelectQuery;
 					}
 				}
+
+				placeholderSequence ??= sequence;
 
 				if (methodName == "Count" || methodName == "LongCount")
 				{
@@ -164,7 +165,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (!isSimple)
 				{
-					context.OuterJoinParentQuery = buildInfo.Parent.SelectQuery;
+					context.OuterJoinParentQuery = buildInfo.Parent!.SelectQuery;
 				}
 			}
 
@@ -198,8 +199,6 @@ namespace LinqToDB.Linq.Builder
 
 			readonly string     _methodName;
 			readonly Type       _returnType;
-			private  SqlInfo[]? _index;
-			private  int?       _parentIndex;
 
 			public SqlPlaceholderExpression Placeholder = null!;
 			public SelectQuery?             OuterJoinParentQuery { get; set; }

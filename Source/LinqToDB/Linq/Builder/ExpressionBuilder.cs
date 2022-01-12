@@ -100,7 +100,6 @@ namespace LinqToDB.Linq.Builder
 		readonly Query                             _query;
 		readonly List<ISequenceBuilder>            _builders = _sequenceBuilders;
 		private  bool                              _reorder;
-		private  HashSet<Expression>?              _subQueryExpressions;
 		readonly ExpressionTreeOptimizationContext _optimizationContext;
 		readonly ParametersContext                 _parametersContext;
 
@@ -633,7 +632,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			return method;
 
-			var sequence  = OptimizeExpression(method.Arguments[0]);
+			/*var sequence  = OptimizeExpression(method.Arguments[0]);
 			var predicate = OptimizeExpression(method.Arguments[1]);
 			var lambda    = (LambdaExpression)predicate.Unwrap();
 			var lparam    = lambda.Parameters[0];
@@ -744,7 +743,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			return method;
+			return method;*/
 		}
 
 		#endregion

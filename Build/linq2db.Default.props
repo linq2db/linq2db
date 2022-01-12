@@ -17,7 +17,7 @@
 		<ErrorReport>prompt</ErrorReport>
 		<NoWarn>1591</NoWarn>
 		<Features>strict</Features>
-		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+		<TreatWarningsAsErrors>False</TreatWarningsAsErrors>
 
 		<AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
