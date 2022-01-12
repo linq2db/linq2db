@@ -304,6 +304,8 @@ namespace LinqToDB.Linq.Builder
 
 		public bool TryConvertToSql(IBuildContext context, ProjectFlags flags, Expression expression, ColumnDescriptor? columnDescriptor, [NotNullWhen(true)] out ISqlExpression? sqlExpression, out Expression actual)
 		{
+			flags = flags & ~ProjectFlags.Expression | ProjectFlags.SQL;
+
 			sqlExpression = null;
 
 			//Just test that we can convert
@@ -329,6 +331,8 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression? TryConvertToSqlExpr(IBuildContext context, Expression expression, ProjectFlags flags)
 		{
+			flags = flags & ~ProjectFlags.Expression | ProjectFlags.SQL;
+
 			//Just test that we can convert
 			var converted = ConvertToSqlExpr(context, expression, flags | ProjectFlags.Test);
 			if (converted is not SqlPlaceholderExpression)

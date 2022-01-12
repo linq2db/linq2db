@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -42,70 +43,12 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
-
-				var expr = Sequence.BuildExpression(expression, level, enforceServerSide);
-
-				if (!Disabled && SequenceHelper.IsSameContext(expression, Sequence))
-				{
-					var q =
-						from col in SelectQuery.Select.Columns
-						where !col.CanBeNull
-						select SelectQuery.Select.Columns.IndexOf(col);
-
-					var idx = q.DefaultIfEmpty(-1).First();
-
-					if (idx == -1)
-					{
-						idx = SelectQuery.Select.Add(new SqlValue((int?)1));
-						SelectQuery.Select.Columns[idx].RawAlias = "is_empty";
-					}
-
-					var n = ConvertToParentIndex(idx, this);
-
-					Expression e = Expression.Call(
-						ExpressionBuilder.DataReaderParam,
-						ReflectionHelper.DataReader.IsDBNull,
-						ExpressionInstances.Int32Array(n));
-
-					var defaultValue = DefaultValue ?? new DefaultValueExpression(Builder.MappingSchema, expr.Type);
-
-					if (expr.NodeType == ExpressionType.Parameter)
-					{
-						var par  = (ParameterExpression)expr;
-						var pidx = Builder.BlockVariables.IndexOf(par);
-
-						if (pidx >= 0)
-						{
-							var ex = Builder.BlockExpressions[pidx];
-
-							if (ex.NodeType == ExpressionType.Assign)
-							{
-								var bex = (BinaryExpression)ex;
-
-								if (bex.Left == expr)
-								{
-									if (bex.Right.NodeType != ExpressionType.Conditional)
-									{
-										Builder.BlockExpressions[pidx] =
-											Expression.Assign(
-												bex.Left,
-												Expression.Condition(e, defaultValue, bex.Right));
-									}
-								}
-							}
-						}
-					}
-
-					expr = Expression.Condition(e, defaultValue, expr);
-				}
-
-				return expr;
+				throw new NotImplementedException();
 			}
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Root))
+				if (SequenceHelper.IsSameContext(path, this) && (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot)))
 					return path;
 
 				var expr = base.MakeExpression(path, flags);

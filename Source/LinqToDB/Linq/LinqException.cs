@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.Serialization;
 
 namespace LinqToDB.Linq
@@ -24,6 +24,17 @@ namespace LinqToDB.Linq
 		/// </remarks>
 		public LinqException()
 			: base("A LinqToDB Linq error has occurred.")
+		{
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="LinqException"/> class
+		/// with the specified error message.
+		/// </summary>
+		/// <param name="message">The message to display to the client when the exception is thrown.</param>
+		/// <seealso cref="Exception.Message"/>
+		public LinqException(string message)
+			: base(message)
 		{
 		}
 

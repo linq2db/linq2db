@@ -1279,6 +1279,12 @@ namespace LinqToDB.SqlQuery
 				if (isApplySupported && (isAgg || sql.Select.HasModifier))
 					return;
 
+				var whereToIgnore = new HashSet<IQueryElement> { sql.Where };
+
+				// we cannot optimize apply because reference to parent sources are used inside the query
+				if (QueryHelper.IsDependsOn(sql, parentTableSources, whereToIgnore))
+					return;
+
 				var searchCondition = new List<SqlCondition>();
 
 				var conditions = sql.Where.SearchCondition.Conditions;
