@@ -164,8 +164,8 @@ namespace LinqToDB
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Table-like query source with table hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(PathableTableHintExtensionBuilder))]
-		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TableHint, typeof(PathableTableHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
 		public static ITable<TSource> With<TSource>(this ITable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
@@ -186,8 +186,8 @@ namespace LinqToDB
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Table-like query source with table hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(PathableTableHintExtensionBuilder))]
-		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TableHint, typeof(PathableTableHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
 		public static ITable<TSource> TableHint<TSource>(this ITable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
@@ -210,8 +210,8 @@ namespace LinqToDB
 		/// <param name="hintParameter">Table hint parameter.</param>
 		/// <returns>Table-like query source with table hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(PathableTableHintExtensionBuilder))]
-		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TableHint, typeof(PathableTableHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TableHint, typeof(HintWithParameterExtensionBuilder))]
 		public static ITable<TSource> TableHint<TSource,TParam>(
 			this ITable<TSource>       table,
@@ -237,8 +237,8 @@ namespace LinqToDB
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Table-like query source with table hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(PathableTableHintExtensionBuilder), " ")]
-		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TableHint, typeof(PathableTableHintExtensionBuilder), ", ")]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder), " ", " ")]
+		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder), " ", ", ")]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TableHint, typeof(HintWithParametersExtensionBuilder))]
 		public static ITable<TSource> TableHint<TSource,TParam>(
 			this ITable<TSource>                table,
@@ -268,8 +268,8 @@ namespace LinqToDB
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with table hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(PathableTableHintExtensionBuilder))]
-		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TablesInScopeHint, typeof(PathableTableHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
 		public static IQueryable<TSource> TablesInScopeHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull
@@ -293,8 +293,8 @@ namespace LinqToDB
 		/// <param name="hintParameter">Table hint parameter.</param>
 		/// <returns>Query source with table hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(PathableTableHintExtensionBuilder))]
-		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TablesInScopeHint, typeof(PathableTableHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintWithParameterExtensionBuilder))]
 		public static IQueryable<TSource> TablesInScopeHint<TSource,TParam>(
 			this IQueryable<TSource> source,
@@ -320,8 +320,8 @@ namespace LinqToDB
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Query source with table hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(PathableTableHintExtensionBuilder), " ")]
-		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TablesInScopeHint, typeof(PathableTableHintExtensionBuilder), ", ")]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder), " ", " ")]
+		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder), " ", ", ")]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintWithParametersExtensionBuilder))]
 		public static IQueryable<TSource> TablesInScopeHint<TSource>(
 			this IQueryable<TSource> source,
@@ -352,7 +352,7 @@ namespace LinqToDB
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Table-like query source with index hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.IndexHint, typeof(PathableTableHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.IndexHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.IndexHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.IndexHint, typeof(HintExtensionBuilder))]
 		public static ITable<TSource> IndexHint<TSource>(this ITable<TSource> table, [SqlQueryDependent] string hint)
@@ -376,7 +376,7 @@ namespace LinqToDB
 		/// <param name="hintParameter">Table hint parameter.</param>
 		/// <returns>Table-like query source with index hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.IndexHint, typeof(PathableTableHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.IndexHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.IndexHint, typeof(HintWithParameterExtensionBuilder))]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.IndexHint, typeof(HintWithParameterExtensionBuilder))]
 		public static ITable<TSource> IndexHint<TSource,TParam>(
@@ -403,7 +403,7 @@ namespace LinqToDB
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Table-like query source with index hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.IndexHint, typeof(PathableTableHintExtensionBuilder), " ")]
+		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.IndexHint, typeof(TableSpecHintExtensionBuilder), " ", " ")]
 		[Sql.QueryExtension(ProviderName.MySql,  Sql.QueryExtensionScope.IndexHint, typeof(HintWithParametersExtensionBuilder))]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.IndexHint, typeof(HintWithParametersExtensionBuilder))]
 		public static ITable<TSource> IndexHint<TSource,TParam>(

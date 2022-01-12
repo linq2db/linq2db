@@ -54,6 +54,14 @@ namespace LinqToDB
 				ExtensionArguments   = new [] { extensionArgument };
 			}
 
+			public QueryExtensionAttribute(string? configuration, QueryExtensionScope scope, Type extensionBuilderType, string extensionArgument0, string extensionArgument1)
+			{
+				Configuration        = configuration;
+				Scope                = scope;
+				ExtensionBuilderType = extensionBuilderType;
+				ExtensionArguments   = new [] { extensionArgument0, extensionArgument1 };
+			}
+
 			public string?             Configuration        { get; }
 			public QueryExtensionScope Scope                { get; }
 			/// <summary>

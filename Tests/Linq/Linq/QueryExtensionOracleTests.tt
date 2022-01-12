@@ -10,6 +10,7 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB;
 using LinqToDB.DataProvider.Oracle;
 
 using NUnit.Framework;
@@ -23,8 +24,68 @@ namespace Tests.Linq
 	GenerateTableTest ("Cluster");
 	GenerateTableTest ("Hash");
 
+	GenerateIndexTest ("Index");
+	GenerateIndexTest ("IndexAsc");
+	GenerateIndexTest ("IndexCombine");
+	GenerateIndexTest ("IndexJoin");
+	GenerateIndexTest ("IndexDesc");
+	GenerateIndexTest ("IndexFFS");
+	GenerateIndexTest ("IndexFastFullScan");
+	GenerateIndexTest ("IndexSS");
+	GenerateIndexTest ("IndexSkipScan");
+	GenerateIndexTest ("IndexSSAsc");
+	GenerateIndexTest ("IndexSkipScanAsc");
+	GenerateIndexTest ("IndexSSDesc");
+	GenerateIndexTest ("IndexSkipScanDesc");
+	GenerateIndexTest ("NoIndex");
+	GenerateIndexTest ("NoIndexFFS");
+	GenerateIndexTest ("NoIndexFastFullScan");
+	GenerateIndexTest ("NoIndexSS");
+	GenerateIndexTest ("NoIndexSkipScan");
+
 	GenerateQueryTest ("AllRows");
 	GenerateQueryTest2("FirstRows");
+
+	GenerateQueryTest ("NoQueryTransformation");
+	GenerateQueryTest ("UseConcat");            GenerateQueryTest3("UseConcat");
+	GenerateQueryTest ("NoExpand");             GenerateQueryTest3("NoExpand");
+	GenerateQueryTest ("Rewrite");              GenerateQueryTest3("Rewrite");
+	GenerateQueryTest ("NoRewrite");            GenerateQueryTest3("NoRewrite");
+	GenerateQueryTest ("Merge");                GenerateQueryTest3("Merge");   GenerateTableTest("Merge");
+	GenerateQueryTest ("NoMerge");              GenerateQueryTest3("NoMerge"); GenerateTableTest("NoMerge");
+	GenerateQueryTest ("StarTransformation");   GenerateQueryTest3("StarTransformation");
+	GenerateQueryTest ("NoStarTransformation"); GenerateQueryTest3("NoStarTransformation");
+	GenerateTableTest ("Fact");
+	GenerateTableTest ("NoFact");
+	GenerateQueryTest ("Unnest");               GenerateQueryTest3("Unnest");
+	GenerateQueryTest ("NoUnnest");             GenerateQueryTest3("NoUnnest");
+
+	GenerateQueryTest4("Leading");
+	GenerateQueryTest ("Ordered");
+
+	GenerateQueryTest4("UseNL");    GenerateQueryTest4("UseNestedLoop");
+	GenerateQueryTest4("NoUseNL");  GenerateQueryTest4("NoUseNestedLoop");
+	GenerateQueryTest4("UseMerge"); GenerateQueryTest4("NoUseMerge");
+	GenerateQueryTest4("UseHash");  GenerateQueryTest4("NoUseHash");
+	GenerateIndexTest ("UseNestedLoopWithIndex");
+
+	GenerateQueryTest ("Parallel");
+	GenerateTableTest ("NoParallel");
+
+	GenerateQueryTest ("Append");
+	GenerateQueryTest ("NoAppend");
+	GenerateTableTest ("Cache");
+	GenerateTableTest ("NoCache");
+	GenerateQueryTest ("PushPredicate");        GenerateQueryTest3("PushPredicate");      GenerateTableTest("PushPredicate");
+	GenerateQueryTest3("PushSubQueries");
+	GenerateQueryTest3("NoPushSubQueries");
+	GenerateQueryTest ("CursorSharingExact");
+	GenerateTableTest ("DrivingSite");
+	GenerateQueryTest ("ModelMinAnalysis");
+	GenerateTableTest ("PxJoinFilter");
+	GenerateTableTest ("NoPxJoinFilter");
+	GenerateQueryTest ("NoXmlQueryRewrite");
+	GenerateQueryTest ("NoXmlIndexRewrite");
 #>
 	}
 }
@@ -70,6 +131,28 @@ void GenerateTableTest(string test, string version = "")
 <#+
 }
 
+void GenerateIndexTest(string test, string version = "")
+{
+#>
+		[Test]
+		public void IndexHint<#= test #>Test([IncludeDataSources(true, TestProvName.AllOracle<#= version #>)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracleSpecific()
+					.<#= test #>Hint("parent_ix", "parent2_ix")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.<#= test #>}(p parent_ix parent2_ix) */"));
+		}
+
+<#+
+}
+
 void GenerateQueryTest(string test, string version = "")
 {
 #>
@@ -99,7 +182,7 @@ void GenerateQueryTest2(string test, string version = "")
 {
 #>
 		[Test]
-		public void QueryHint<#= test #>Test([IncludeDataSources(true, TestProvName.AllOracle<#= version #>)] string context)
+		public void QueryHint<#= test #>Test2([IncludeDataSources(true, TestProvName.AllOracle<#= version #>)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -115,6 +198,57 @@ void GenerateQueryTest2(string test, string version = "")
 			_ = q.ToList();
 
 			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.<#= test #>(10)} */"));
+		}
+
+<#+
+}
+
+void GenerateQueryTest3(string test, string version = "")
+{
+#>
+		[Test]
+		public void QueryHint<#= test #>Test3([IncludeDataSources(true, TestProvName.AllOracle<#= version #>)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.QueryName("qb")
+			.AsOracleSpecific()
+			.<#= test #>Hint("@qb");
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Query.<#= test #>}(@qb) */"));
+		}
+
+<#+
+}
+
+void GenerateQueryTest4(string test, string version = "")
+{
+#>
+		[Test]
+		public void QueryHint<#= test #>Test4([IncludeDataSources(true, TestProvName.AllOracle<#= version #>)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child.TableID("cc")
+				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracleSpecific()
+			.<#= test #>Hint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.<#= test #>}(c_1 p) */"));
 		}
 
 <#+

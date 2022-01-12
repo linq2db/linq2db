@@ -68,7 +68,6 @@ namespace Tests.Linq
 				OracleHints.Table.NoFact,
 				OracleHints.Table.NoParallel,
 				OracleHints.Table.NoPxJoinFilter,
-				OracleHints.Table.NoUseHash,
 				OracleHints.Table.PxJoinFilter
 				)] string hint)
 		{
@@ -156,7 +155,7 @@ namespace Tests.Linq
 				OracleHints.Table.NoIndexSkipScan,
 				OracleHints.Table.NoParallelIndex,
 				OracleHints.Table.ParallelIndex,
-				OracleHints.Table.UseNlWithIndex
+				OracleHints.Table.UseNLWithIndex
 			)] string hint)
 		{
 			using var db = GetDataContext(context);
@@ -179,7 +178,6 @@ namespace Tests.Linq
 				OracleHints.Query.ModelMinAnalysis,
 				OracleHints.Query.NoAppend,
 				OracleHints.Query.NoExpand,
-				OracleHints.Query.NoPushSubQuery,
 				OracleHints.Query.NoRewrite,
 				OracleHints.Query.NoQueryTransformation,
 				OracleHints.Query.NoStarTransformation,
@@ -187,7 +185,6 @@ namespace Tests.Linq
 				OracleHints.Query.NoXmlQueryRewrite,
 				OracleHints.Query.Ordered,
 				OracleHints.Query.PushSubQueries,
-				OracleHints.Query.Rule,
 				OracleHints.Query.StarTransformation,
 				OracleHints.Query.Unnest,
 				OracleHints.Query.UseConcat
@@ -233,7 +230,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void QueryHintFirstRowsTest2([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void QueryHintFirstRowsTest3([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -572,6 +569,187 @@ namespace Tests.Linq
 
 			Assert.That(LastQuery, Contains.Substring("\tSELECT /*+ FULL(c_1) NOCACHE(c_1) */"));
 			Assert.That(LastQuery, Contains.Substring("SELECT /*+ FACT(c_2) FIRST_ROWS(10) ALL_ROWS */"));
+		}
+
+		[Test]
+		public void QueryHintParallelDefaultTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				(
+					from c in db.Child
+					join p in db.Parent on c.ParentID equals p.ParentID
+					select p
+				)
+				.AsOracleSpecific()
+				.ParallelDefaultHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ PARALLEL(DEFAULT) */"));
+		}
+
+		[Test]
+		public void QueryHintParallelAutoTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				(
+					from c in db.Child
+					join p in db.Parent on c.ParentID equals p.ParentID
+					select p
+				)
+				.AsOracleSpecific()
+				.ParallelAutoHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ PARALLEL(AUTO) */"));
+		}
+
+		[Test]
+		public void QueryHintParallelManualTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				(
+					from c in db.Child
+					join p in db.Parent on c.ParentID equals p.ParentID
+					select p
+				)
+				.AsOracleSpecific()
+				.ParallelManualHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ PARALLEL(MANUAL) */"));
+		}
+
+		[Test]
+		public void QueryHintParallelTest2([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				(
+					from c in db.Child
+					join p in db.Parent on c.ParentID equals p.ParentID
+					select p
+				)
+				.AsOracleSpecific()
+				.ParallelHint(10);
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ PARALLEL(10) */"));
+		}
+
+		[Test]
+		public void QueryHintParallelTest3([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				(
+					from c in db.Child.AsOracleSpecific().ParallelHint(5)
+					join p in db.Parent on c.ParentID equals p.ParentID
+					select p
+				);
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ PARALLEL(c_1, 5) */"));
+		}
+
+		[Test]
+		public void QueryHintParallelDefaultTest2([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				(
+					from c in db.Child
+					from p in db.Parent.AsOracleSpecific().PqDistributeHint("PARTITION", "NONE")
+					where c.ParentID == p.ParentID
+					select p
+				);
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ PQ_DISTRIBUTE(p PARTITION, NONE) */"));
+		}
+
+		[Test]
+		public void QueryHintParallelIndexTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				(
+					from c in db.Child
+					from p in db.Parent.AsOracleSpecific().ParallelIndexHint("index1", 3)
+					where c.ParentID == p.ParentID
+					select p
+				);
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ PARALLEL_INDEX(p, index1, 3) */"));
+		}
+
+		[Test]
+		public void QueryHintParallelIndexDefaultTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				(
+					from c in db.Child
+					from p in db.Parent.AsOracleSpecific().ParallelIndexHint("index1", "DEFAULT")
+					where c.ParentID == p.ParentID
+					select p
+				);
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ PARALLEL_INDEX(p, index1, DEFAULT) */"));
+		}
+
+		[Test]
+		public void QueryHintNoParallelIndexTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				from p in db.Parent.AsOracleSpecific().NoParallelIndexHint("index1")
+				where c.ParentID == p.ParentID
+				select p
+			);
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ NO_PARALLEL_INDEX(p, index1) */"));
+		}
+
+		[Test]
+		public void TableHintDynamicSamplingTest2([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracleSpecific()
+					.DynamicSamplingHint(1)
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.DynamicSampling}(p 1) */"));
 		}
 	}
 }

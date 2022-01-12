@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using SqlProvider;
 	using SqlQuery;
 
-	class PathableTableHintExtensionBuilder : ISqlTableExtensionBuilder
+	class TableSpecHintExtensionBuilder : ISqlTableExtensionBuilder
 	{
 		void ISqlTableExtensionBuilder.Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension, SqlTable table, string alias)
 		{
@@ -35,26 +35,28 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (args.TryGetValue("hintParameter", out var hintParameter))
 			{
-				var param = ((SqlValue)hintParameter).Value;
+				var param     = ((SqlValue)hintParameter).Value;
+				var delimiter = args.TryGetValue(".ExtensionArguments.0", out var extArg) && extArg is SqlValue { Value : string val } ? val : " ";
 
-				stringBuilder.Append(' ');
+				stringBuilder.Append(delimiter);
 				stringBuilder.Append(param);
 			}
 			else if (args.TryGetValue("hintParameters.Count", out var hintParametersCount))
 			{
-				var parameterDelimiter = args.TryGetValue(".ExtensionArguments.0", out var extArg0) && extArg0 is SqlValue { Value : string val } ? val : " ";
+				var delimiter0 = args.TryGetValue(".ExtensionArguments.0", out var extArg0) && extArg0 is SqlValue { Value : string val0 } ? val0 : " ";
+				var delimiter1 = args.TryGetValue(".ExtensionArguments.1", out var extArg1) && extArg1 is SqlValue { Value : string val1 } ? val1 : " ";
 				var count              = (int)((SqlValue)hintParametersCount).Value!;
 
 				if (count > 0)
 				{
-					stringBuilder.Append(' ');
+					stringBuilder.Append(delimiter0);
 
 					for (var i = 0; i < count; i++)
 					{
 						var value = ((SqlValue)args[$"hintParameters.{i}"]).Value;
 
 						if (i > 0)
-							stringBuilder.Append(parameterDelimiter);
+							stringBuilder.Append(delimiter1);
 						stringBuilder.Append(value);
 					}
 				}
