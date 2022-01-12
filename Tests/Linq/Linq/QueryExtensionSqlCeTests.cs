@@ -9,19 +9,19 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	[TestFixture]
-	public class QueryExtensionSqlCeTests : TestBase
+	public partial class QueryExtensionSqlCeTests : TestBase
 	{
 		[Test]
 		public void TableHintTest(
 			[IncludeDataSources(true, ProviderName.SqlCe)] string context,
 			[Values(
-				SqlCeHints.TableHint.HoldLock,
-				SqlCeHints.TableHint.NoLock,
-				SqlCeHints.TableHint.PagLock,
-				SqlCeHints.TableHint.RowLock,
-				SqlCeHints.TableHint.TabLock,
-				SqlCeHints.TableHint.UpdLock,
-				SqlCeHints.TableHint.XLock
+				SqlCeHints.Table.HoldLock,
+				SqlCeHints.Table.NoLock,
+				SqlCeHints.Table.PagLock,
+				SqlCeHints.Table.RowLock,
+				SqlCeHints.Table.TabLock,
+				SqlCeHints.Table.UpdLock,
+				SqlCeHints.Table.XLock
 				)] string hint)
 		{
 			using var db = GetDataContext(context);
@@ -43,7 +43,7 @@ namespace Tests.Linq
 			var q =
 				from p in db.Person
 					.TableHint("Index", "PK_Person")
-					.With(SqlCeHints.TableHint.NoLock)
+					.With(SqlCeHints.Table.NoLock)
 				select p;
 
 			_ = q.ToList();
@@ -58,22 +58,22 @@ namespace Tests.Linq
 
 			var q =
 			(
-				from p in db.Person.With(SqlCeHints.TableHint.Index("PK_Person"))
+				from p in db.Person.TableHint(SqlCeHints.Table.Index, "PK_Person")
 				from c in db.Child
 				where c.ParentID == p.ID
 				select p
 			)
-			.TablesInScopeHint(SqlCeHints.TableHint.NoLock);
+			.TablesInScopeHint(SqlCeHints.Table.NoLock);
 
 			q =
 			(
 				from p in q
 				from c in db.Child
-				from p1 in db.Parent.TablesInScopeHint(SqlCeHints.TableHint.HoldLock)
+				from p1 in db.Parent.TablesInScopeHint(SqlCeHints.Table.HoldLock)
 				where c.ParentID == p.ID && c.Parent!.ParentID > 0 && p1.ParentID == p.ID
 				select p
 			)
-			.TablesInScopeHint(SqlCeHints.TableHint.PagLock);
+			.TablesInScopeHint(SqlCeHints.Table.PagLock);
 
 			q =
 				from p in q
@@ -98,7 +98,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			(
-				from c in db.Child.TableHint(SqlCeHints.TableHint.NoLock)
+				from c in db.Child.TableHint(SqlCeHints.Table.NoLock)
 				where c.ParentID < -1111
 				select c
 			)
@@ -117,7 +117,7 @@ namespace Tests.Linq
 
 			var q1 =
 				from c in db.Child
-				join p in db.Parent.TableHint(SqlCeHints.TableHint.NoLock) on c.ParentID equals p.ParentID
+				join p in db.Parent.TableHint(SqlCeHints.Table.NoLock) on c.ParentID equals p.ParentID
 				select p;
 
 			var q =
@@ -127,6 +127,23 @@ namespace Tests.Linq
 
 			Assert.That(LastQuery, Contains.Substring("[p] WITH (NoLock)"));
 			Assert.That(LastQuery, Contains.Substring("[p_1] WITH (NoLock)"));
+		}
+
+		[Test]
+		public void WithIndexTest([IncludeDataSources(true, ProviderName.SqlCe)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Person
+					.AsSqlCe()
+					.WithIndex("PK_Person")
+					.WithNoLock()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("WITH (Index(PK_Person), NoLock)"));
 		}
 	}
 }

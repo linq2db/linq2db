@@ -10,67 +10,38 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 
-using LinqToDB.DataProvider.SqlServer;
+using LinqToDB;
+using LinqToDB.DataProvider.SqlCe;
 
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	partial class QueryExtensionSqlServerTests
+	partial class QueryExtensionSqlCeTests
 	{
 <#
-	GenerateTableTest("ForceScan", "2012Plus");
-	GenerateTableTest("HoldLock");
-	GenerateTableTest("NoLock");
-	GenerateTableTest("NoWait");
-	GenerateTableTest("PagLock");
-	GenerateTableTest("ReadCommitted");
-	GenerateTableTest("ReadCommittedLock");
-	GenerateTableTest("ReadPast");
-	GenerateTableTest("ReadUncommitted");
-	GenerateTableTest("RepeatableRead");
-	GenerateTableTest("RowLock");
-	GenerateTableTest("Serializable");
-	GenerateTableTest("TabLock");
-	GenerateTableTest("TabLockX");
-	GenerateTableTest("UpdLock");
-	GenerateTableTest("XLock");
-
-	GenerateOptionTest ("HashGroup");   GenerateOptionTest("OrderGroup");
-	GenerateOptionTest ("ConcatUnion"); GenerateOptionTest("HashUnion"); GenerateOptionTest("MergeUnion");
-	GenerateOptionTest ("LoopJoin");    GenerateOptionTest("HashJoin");  GenerateOptionTest("MergeJoin");
-	GenerateOptionTest ("ExpandViews");
-	GenerateOptionTest2("Fast");
-	GenerateOptionTest ("ForceOrder");
-//	GenerateOptionTest ("ForceScaleOutExecution",   "2019Plus");
-//	GenerateOptionTest ("DisableScaleOutExecution", "2019Plus");
-	GenerateOptionTest ("IgnoreNonClusteredColumnStoreIndex", "2012Plus");
-	GenerateOptionTest ("KeepPlan");
-	GenerateOptionTest ("KeepFixedPlan");
-	GenerateOptionTest2("MaxGrantPercent", "2016Plus");
-	GenerateOptionTest2("MinGrantPercent", "2016Plus");
-	GenerateOptionTest2("MaxDop");
-	GenerateOptionTest2("MaxRecursion");
-	GenerateOptionTest ("NoPerformanceSpool", "2019Plus");
-	GenerateOptionTest ("OptimizeForUnknown", "2008Plus");
-	GenerateOptionTest2("QueryTraceOn");
-	GenerateOptionTest ("Recompile");
-	GenerateOptionTest ("RobustPlan");
+	GenerateTable("HoldLock");
+	GenerateTable("NoLock");
+	GenerateTable("PagLock");
+	GenerateTable("RowLock");
+	GenerateTable("TabLock");
+	GenerateTable("UpdLock");
+	GenerateTable("XLock");
 #>
 	}
 }
 <#+
-void GenerateTableTest(string test, string version = "")
+void GenerateTable(string test)
 {
 #>
 		[Test]
-		public void With<#= test #>TableTest([IncludeDataSources(true, TestProvName.AllSqlServer<#= version #>)] string context)
+		public void With<#= test #>TableTest([IncludeDataSources(true, ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
 
 			var q =
 				from p in db.Parent
-					.AsSqlServer()
+					.AsSqlCe()
 					.With<#= test #>()
 				select p;
 
@@ -80,7 +51,7 @@ void GenerateTableTest(string test, string version = "")
 		}
 
 		[Test]
-		public void With<#= test #>InScopeTest([IncludeDataSources(true, TestProvName.AllSqlServer<#= version #>)] string context)
+		public void With<#= test #>InScopeTest([IncludeDataSources(true, ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -90,7 +61,7 @@ void GenerateTableTest(string test, string version = "")
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsSqlServer()
+			.AsSqlCe()
 			.With<#= test #>InScope();
 
 			_ = q.ToList();
@@ -102,11 +73,11 @@ void GenerateTableTest(string test, string version = "")
 <#+
 }
 
-void GenerateOptionTest(string test, string version = "")
+void GenerateOptionTest(string test)
 {
 #>
 		[Test]
-		public void Option<#= test #>Test([IncludeDataSources(true, TestProvName.AllSqlServer<#= version #>)] string context)
+		public void Option<#= test #>Test([IncludeDataSources(true, ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -116,22 +87,22 @@ void GenerateOptionTest(string test, string version = "")
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServer()
+			.AsSqlCe()
 			.Option<#= test #>();
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.<#= test #>})"));
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlCeHints.Query.<#= test #>})"));
 		}
 
 <#+
 }
 
-void GenerateOptionTest2(string test, string version = "")
+void GenerateOptionTest2(string test)
 {
 #>
 		[Test]
-		public void Option<#= test #>Test([IncludeDataSources(true, TestProvName.AllSqlServer<#= version #>)] string context)
+		public void Option<#= test #>Test([IncludeDataSources(true, ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -141,12 +112,12 @@ void GenerateOptionTest2(string test, string version = "")
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServer()
+			.AsSqlCe()
 			.Option<#= test #>(10);
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.<#= test #>(10)})"));
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlCeHints.Query.<#= test #>(10)})"));
 		}
 
 <#+

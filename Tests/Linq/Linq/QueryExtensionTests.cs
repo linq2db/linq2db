@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.DataProvider.SqlCe;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.DataProvider.Oracle;
 
@@ -56,25 +57,45 @@ namespace Tests.Linq
 			(
 				from p in db.Parent
 					.AsSqlServer()
-						.TableHint(SqlServerHints.Table.NoLock)
-						.TableHint(SqlServerHints.Table.NoWait)
+						.WithNoLock()
+						.WithNoWait()
+					.AsSqlCe()
+						.WithNoLock()
 					.AsOracle()
-						.TableHint(OracleHints.Table.Full)
-						.TableHint(OracleHints.Table.Hash)
+						.FullHint()
+						.HashHint()
 				select p
 			)
 			.AsSqlServer()
-			.AsOracle();
+				.WithReadUncommittedInScope()
+			.AsOracle()
+				.ParallelHint(2);
 
 			_ = q.ToList();
 
-			var sqlServerHints = "[Parent] [p] WITH (NoLock, NoWait)";
-			var oracleHints    = "SELECT /*+ FULL(p) HASH(p) */";
+			string sqlCeHints, sqlServerHints, oracleHints;
 
-			if (context.StartsWith("SqlServer"))
-				Assert.That(LastQuery,Contains.Substring(sqlServerHints).And.Not.Contains(oracleHints));
-			else if (context.StartsWith("Oracle"))
-				Assert.That(LastQuery,Is.Not.Contains(sqlServerHints).And.Contains(oracleHints));
+			var testSql = new[]
+			{
+				sqlCeHints     = "[Parent] [p] WITH (NoLock)",
+				sqlServerHints = "[Parent] [p] WITH (NoLock, NoWait, ReadUncommitted)",
+				oracleHints    = "SELECT /*+ FULL(p) HASH(p) PARALLEL(2) */",
+			};
+
+			string? current = null;
+
+			if      (context.StartsWith("SqlCe"))     current = sqlCeHints;
+			else if (context.StartsWith("SqlServer")) current = sqlServerHints;
+			else if (context.StartsWith("Oracle"))    current = oracleHints;
+
+			if (current != null)
+			{
+				foreach (var sql in testSql)
+				{
+					if (sql == current) Assert.That(LastQuery, Contains.Substring(sql));
+					else                Assert.That(LastQuery, Is.Not.Contains(sql));
+				}
+			}
 		}
 	}
 }

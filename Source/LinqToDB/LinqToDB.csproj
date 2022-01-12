@@ -27,21 +27,31 @@
 		<EmbeddedResource Include="SqlQuery\ReservedWordsOracle.txt" />
 		<EmbeddedResource Include="SqlQuery\ReservedWordsFirebird.txt" />
 		<EmbeddedResource Include="SqlQuery\ReservedWordsPostgres.txt" />
+
 		<None Update="DataProvider\Oracle\OracleHints.tt">
-		  <LastGenOutput>OracleHints.generated.cs</LastGenOutput>
-		  <Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>OracleHints.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
 		</None>
+		<Compile Update="DataProvider\Oracle\OracleHints.generated.cs">
+			<DependentUpon>OracleHints.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+		</Compile>
+
+		<None Update="DataProvider\SqlCe\SqlCeHints.tt">
+			<LastGenOutput>SqlCeHints.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<Compile Update="DataProvider\SqlCe\SqlCeHints.generated.cs">
+			<DependentUpon>SqlCeHints.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+		</Compile>
 
 		<None Update="DataProvider\SqlServer\SqlServerHints.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>SqlServerHints.generated.cs</LastGenOutput>
 		</None>
-
-		<Compile Update="DataProvider\Oracle\OracleHints.generated.cs">
-		  <DependentUpon>OracleHints.tt</DependentUpon>
-		  <DesignTime>True</DesignTime>
-		  <AutoGen>True</AutoGen>
-		</Compile>
 		<Compile Update="DataProvider\SqlServer\SqlServerHints.generated.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
