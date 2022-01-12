@@ -2614,8 +2614,6 @@ namespace LinqToDB.Linq.Builder
 
 		internal void BuildSearchCondition(IBuildContext? context, Expression expression, List<SqlCondition> conditions)
 		{
-			expression = GetRemoveNullPropagationTransformer().Transform(expression);
-
 			switch (expression.NodeType)
 			{
 				case ExpressionType.And     :
@@ -2957,14 +2955,13 @@ namespace LinqToDB.Linq.Builder
 					if (members.ContainsKey(foundMember.MemberInfo))
 						continue;
 
-					var converted = GetRemoveNullPropagationTransformer().Transform(arguments[i]);
-
-					if (!foundMember.MemberInfo.GetMemberType().IsAssignableFrom(converted.Type))
-						continue;
+					var converted = arguments[i];
 
 					members.Add(foundMember.MemberInfo, converted);
 				}
 			}
+
+			expression = GetRemoveNullPropagationTransformer().Transform(expression);
 
 			switch (expression.NodeType)
 			{
@@ -2980,7 +2977,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								var member = expr.Members[i];
 
-								var converted = GetRemoveNullPropagationTransformer().Transform(expr.Arguments[i]);
+								var converted = expr.Arguments[i];
 								members.Add(member, converted);
 
 								if (member is MethodInfo info)
@@ -3012,7 +3009,7 @@ namespace LinqToDB.Linq.Builder
 
 						foreach (var (binding, _) in assignments.OrderBy(static a => a.order))
 						{
-							var converted = GetRemoveNullPropagationTransformer().Transform(binding.Expression);
+							var converted = binding.Expression;
 							members.Add(binding.Member, converted);
 
 							if (binding.Member is MethodInfo info)
