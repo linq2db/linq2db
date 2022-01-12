@@ -100,7 +100,7 @@ void GenerateTableTest(string test, string version = "")
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.<#= test #>Hint()
 				select p;
 
@@ -120,7 +120,7 @@ void GenerateTableTest(string test, string version = "")
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.<#= test #>InScopeHint();
 
 			_ = q.ToList();
@@ -141,7 +141,7 @@ void GenerateIndexTest(string test, string version = "")
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.<#= test #>Hint("parent_ix", "parent2_ix")
 				select p;
 
@@ -167,7 +167,7 @@ void GenerateQueryTest(string test, string version = "")
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.<#= test #>Hint();
 
 			_ = q.ToList();
@@ -192,7 +192,7 @@ void GenerateQueryTest2(string test, string version = "")
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.<#= test #>Hint(10);
 
 			_ = q.ToList();
@@ -218,7 +218,7 @@ void GenerateQueryTest3(string test, string version = "")
 				select p
 			)
 			.QueryName("qb")
-			.AsOracleSpecific()
+			.AsOracle()
 			.<#= test #>Hint("@qb");
 
 			_ = q.ToList();
@@ -243,7 +243,7 @@ void GenerateQueryTest4(string test, string version = "")
 				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.<#= test #>Hint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
 
 			_ = q.ToList();

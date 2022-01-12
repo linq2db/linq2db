@@ -582,7 +582,7 @@ namespace Tests.Linq
 					join p in db.Parent on c.ParentID equals p.ParentID
 					select p
 				)
-				.AsOracleSpecific()
+				.AsOracle()
 				.ParallelDefaultHint();
 
 			_ = q.ToList();
@@ -601,7 +601,7 @@ namespace Tests.Linq
 					join p in db.Parent on c.ParentID equals p.ParentID
 					select p
 				)
-				.AsOracleSpecific()
+				.AsOracle()
 				.ParallelAutoHint();
 
 			_ = q.ToList();
@@ -620,7 +620,7 @@ namespace Tests.Linq
 					join p in db.Parent on c.ParentID equals p.ParentID
 					select p
 				)
-				.AsOracleSpecific()
+				.AsOracle()
 				.ParallelManualHint();
 
 			_ = q.ToList();
@@ -639,7 +639,7 @@ namespace Tests.Linq
 					join p in db.Parent on c.ParentID equals p.ParentID
 					select p
 				)
-				.AsOracleSpecific()
+				.AsOracle()
 				.ParallelHint(10);
 
 			_ = q.ToList();
@@ -654,7 +654,7 @@ namespace Tests.Linq
 
 			var q =
 				(
-					from c in db.Child.AsOracleSpecific().ParallelHint(5)
+					from c in db.Child.AsOracle().ParallelHint(5)
 					join p in db.Parent on c.ParentID equals p.ParentID
 					select p
 				);
@@ -672,7 +672,7 @@ namespace Tests.Linq
 			var q =
 				(
 					from c in db.Child
-					from p in db.Parent.AsOracleSpecific().PqDistributeHint("PARTITION", "NONE")
+					from p in db.Parent.AsOracle().PqDistributeHint("PARTITION", "NONE")
 					where c.ParentID == p.ParentID
 					select p
 				);
@@ -690,7 +690,7 @@ namespace Tests.Linq
 			var q =
 				(
 					from c in db.Child
-					from p in db.Parent.AsOracleSpecific().ParallelIndexHint("index1", 3)
+					from p in db.Parent.AsOracle().ParallelIndexHint("index1", 3)
 					where c.ParentID == p.ParentID
 					select p
 				);
@@ -708,7 +708,7 @@ namespace Tests.Linq
 			var q =
 				(
 					from c in db.Child
-					from p in db.Parent.AsOracleSpecific().ParallelIndexHint("index1", "DEFAULT")
+					from p in db.Parent.AsOracle().ParallelIndexHint("index1", "DEFAULT")
 					where c.ParentID == p.ParentID
 					select p
 				);
@@ -726,7 +726,7 @@ namespace Tests.Linq
 			var q =
 			(
 				from c in db.Child
-				from p in db.Parent.AsOracleSpecific().NoParallelIndexHint("index1")
+				from p in db.Parent.AsOracle().NoParallelIndexHint("index1")
 				where c.ParentID == p.ParentID
 				select p
 			);
@@ -743,7 +743,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.DynamicSamplingHint(1)
 				select p;
 

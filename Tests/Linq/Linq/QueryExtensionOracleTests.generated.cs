@@ -20,7 +20,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.FullHint()
 				select p;
 
@@ -40,7 +40,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.FullInScopeHint();
 
 			_ = q.ToList();
@@ -55,7 +55,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.ClusterHint()
 				select p;
 
@@ -75,7 +75,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.ClusterInScopeHint();
 
 			_ = q.ToList();
@@ -90,7 +90,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.HashHint()
 				select p;
 
@@ -110,7 +110,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.HashInScopeHint();
 
 			_ = q.ToList();
@@ -125,7 +125,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.IndexHint("parent_ix", "parent2_ix")
 				select p;
 
@@ -141,7 +141,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.IndexAscHint("parent_ix", "parent2_ix")
 				select p;
 
@@ -157,7 +157,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.IndexCombineHint("parent_ix", "parent2_ix")
 				select p;
 
@@ -173,7 +173,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.IndexJoinHint("parent_ix", "parent2_ix")
 				select p;
 
@@ -189,7 +189,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.IndexDescHint("parent_ix", "parent2_ix")
 				select p;
 
@@ -205,7 +205,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.IndexFFSHint("parent_ix", "parent2_ix")
 				select p;
 
@@ -221,7 +221,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.IndexFastFullScanHint("parent_ix", "parent2_ix")
 				select p;
 
@@ -237,7 +237,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.IndexSSHint("parent_ix", "parent2_ix")
 				select p;
 
@@ -253,7 +253,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.IndexSkipScanHint("parent_ix", "parent2_ix")
 				select p;
 
@@ -269,7 +269,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.IndexSSAscHint("parent_ix", "parent2_ix")
 				select p;
 
@@ -285,7 +285,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.IndexSkipScanAscHint("parent_ix", "parent2_ix")
 				select p;
 
@@ -301,7 +301,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.IndexSSDescHint("parent_ix", "parent2_ix")
 				select p;
 
@@ -317,7 +317,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.IndexSkipScanDescHint("parent_ix", "parent2_ix")
 				select p;
 
@@ -333,7 +333,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.NoIndexHint("parent_ix", "parent2_ix")
 				select p;
 
@@ -349,7 +349,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.NoIndexFFSHint("parent_ix", "parent2_ix")
 				select p;
 
@@ -365,7 +365,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.NoIndexFastFullScanHint("parent_ix", "parent2_ix")
 				select p;
 
@@ -381,7 +381,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.NoIndexSSHint("parent_ix", "parent2_ix")
 				select p;
 
@@ -397,7 +397,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.NoIndexSkipScanHint("parent_ix", "parent2_ix")
 				select p;
 
@@ -417,7 +417,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.AllRowsHint();
 
 			_ = q.ToList();
@@ -436,7 +436,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.FirstRowsHint(10);
 
 			_ = q.ToList();
@@ -455,7 +455,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.NoQueryTransformationHint();
 
 			_ = q.ToList();
@@ -474,7 +474,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.UseConcatHint();
 
 			_ = q.ToList();
@@ -494,7 +494,7 @@ namespace Tests.Linq
 				select p
 			)
 			.QueryName("qb")
-			.AsOracleSpecific()
+			.AsOracle()
 			.UseConcatHint("@qb");
 
 			_ = q.ToList();
@@ -513,7 +513,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.NoExpandHint();
 
 			_ = q.ToList();
@@ -533,7 +533,7 @@ namespace Tests.Linq
 				select p
 			)
 			.QueryName("qb")
-			.AsOracleSpecific()
+			.AsOracle()
 			.NoExpandHint("@qb");
 
 			_ = q.ToList();
@@ -552,7 +552,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.RewriteHint();
 
 			_ = q.ToList();
@@ -572,7 +572,7 @@ namespace Tests.Linq
 				select p
 			)
 			.QueryName("qb")
-			.AsOracleSpecific()
+			.AsOracle()
 			.RewriteHint("@qb");
 
 			_ = q.ToList();
@@ -591,7 +591,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.NoRewriteHint();
 
 			_ = q.ToList();
@@ -611,7 +611,7 @@ namespace Tests.Linq
 				select p
 			)
 			.QueryName("qb")
-			.AsOracleSpecific()
+			.AsOracle()
 			.NoRewriteHint("@qb");
 
 			_ = q.ToList();
@@ -630,7 +630,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.MergeHint();
 
 			_ = q.ToList();
@@ -650,7 +650,7 @@ namespace Tests.Linq
 				select p
 			)
 			.QueryName("qb")
-			.AsOracleSpecific()
+			.AsOracle()
 			.MergeHint("@qb");
 
 			_ = q.ToList();
@@ -665,7 +665,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.MergeHint()
 				select p;
 
@@ -685,7 +685,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.MergeInScopeHint();
 
 			_ = q.ToList();
@@ -704,7 +704,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.NoMergeHint();
 
 			_ = q.ToList();
@@ -724,7 +724,7 @@ namespace Tests.Linq
 				select p
 			)
 			.QueryName("qb")
-			.AsOracleSpecific()
+			.AsOracle()
 			.NoMergeHint("@qb");
 
 			_ = q.ToList();
@@ -739,7 +739,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.NoMergeHint()
 				select p;
 
@@ -759,7 +759,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.NoMergeInScopeHint();
 
 			_ = q.ToList();
@@ -778,7 +778,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.StarTransformationHint();
 
 			_ = q.ToList();
@@ -798,7 +798,7 @@ namespace Tests.Linq
 				select p
 			)
 			.QueryName("qb")
-			.AsOracleSpecific()
+			.AsOracle()
 			.StarTransformationHint("@qb");
 
 			_ = q.ToList();
@@ -817,7 +817,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.NoStarTransformationHint();
 
 			_ = q.ToList();
@@ -837,7 +837,7 @@ namespace Tests.Linq
 				select p
 			)
 			.QueryName("qb")
-			.AsOracleSpecific()
+			.AsOracle()
 			.NoStarTransformationHint("@qb");
 
 			_ = q.ToList();
@@ -852,7 +852,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.FactHint()
 				select p;
 
@@ -872,7 +872,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.FactInScopeHint();
 
 			_ = q.ToList();
@@ -887,7 +887,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.NoFactHint()
 				select p;
 
@@ -907,7 +907,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.NoFactInScopeHint();
 
 			_ = q.ToList();
@@ -926,7 +926,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.UnnestHint();
 
 			_ = q.ToList();
@@ -946,7 +946,7 @@ namespace Tests.Linq
 				select p
 			)
 			.QueryName("qb")
-			.AsOracleSpecific()
+			.AsOracle()
 			.UnnestHint("@qb");
 
 			_ = q.ToList();
@@ -965,7 +965,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.NoUnnestHint();
 
 			_ = q.ToList();
@@ -985,7 +985,7 @@ namespace Tests.Linq
 				select p
 			)
 			.QueryName("qb")
-			.AsOracleSpecific()
+			.AsOracle()
 			.NoUnnestHint("@qb");
 
 			_ = q.ToList();
@@ -1004,7 +1004,7 @@ namespace Tests.Linq
 				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.LeadingHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
 
 			_ = q.ToList();
@@ -1023,7 +1023,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.OrderedHint();
 
 			_ = q.ToList();
@@ -1042,7 +1042,7 @@ namespace Tests.Linq
 				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.UseNLHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
 
 			_ = q.ToList();
@@ -1061,7 +1061,7 @@ namespace Tests.Linq
 				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.UseNestedLoopHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
 
 			_ = q.ToList();
@@ -1080,7 +1080,7 @@ namespace Tests.Linq
 				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.NoUseNLHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
 
 			_ = q.ToList();
@@ -1099,7 +1099,7 @@ namespace Tests.Linq
 				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.NoUseNestedLoopHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
 
 			_ = q.ToList();
@@ -1118,7 +1118,7 @@ namespace Tests.Linq
 				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.UseMergeHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
 
 			_ = q.ToList();
@@ -1137,7 +1137,7 @@ namespace Tests.Linq
 				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.NoUseMergeHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
 
 			_ = q.ToList();
@@ -1156,7 +1156,7 @@ namespace Tests.Linq
 				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.UseHashHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
 
 			_ = q.ToList();
@@ -1175,7 +1175,7 @@ namespace Tests.Linq
 				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.NoUseHashHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
 
 			_ = q.ToList();
@@ -1190,7 +1190,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.UseNestedLoopWithIndexHint("parent_ix", "parent2_ix")
 				select p;
 
@@ -1210,7 +1210,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.ParallelHint();
 
 			_ = q.ToList();
@@ -1225,7 +1225,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.NoParallelHint()
 				select p;
 
@@ -1245,7 +1245,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.NoParallelInScopeHint();
 
 			_ = q.ToList();
@@ -1264,7 +1264,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.AppendHint();
 
 			_ = q.ToList();
@@ -1283,7 +1283,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.NoAppendHint();
 
 			_ = q.ToList();
@@ -1298,7 +1298,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.CacheHint()
 				select p;
 
@@ -1318,7 +1318,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.CacheInScopeHint();
 
 			_ = q.ToList();
@@ -1333,7 +1333,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.NoCacheHint()
 				select p;
 
@@ -1353,7 +1353,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.NoCacheInScopeHint();
 
 			_ = q.ToList();
@@ -1372,7 +1372,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.PushPredicateHint();
 
 			_ = q.ToList();
@@ -1392,7 +1392,7 @@ namespace Tests.Linq
 				select p
 			)
 			.QueryName("qb")
-			.AsOracleSpecific()
+			.AsOracle()
 			.PushPredicateHint("@qb");
 
 			_ = q.ToList();
@@ -1407,7 +1407,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.PushPredicateHint()
 				select p;
 
@@ -1427,7 +1427,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.PushPredicateInScopeHint();
 
 			_ = q.ToList();
@@ -1447,7 +1447,7 @@ namespace Tests.Linq
 				select p
 			)
 			.QueryName("qb")
-			.AsOracleSpecific()
+			.AsOracle()
 			.PushSubQueriesHint("@qb");
 
 			_ = q.ToList();
@@ -1467,7 +1467,7 @@ namespace Tests.Linq
 				select p
 			)
 			.QueryName("qb")
-			.AsOracleSpecific()
+			.AsOracle()
 			.NoPushSubQueriesHint("@qb");
 
 			_ = q.ToList();
@@ -1486,7 +1486,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.CursorSharingExactHint();
 
 			_ = q.ToList();
@@ -1501,7 +1501,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.DrivingSiteHint()
 				select p;
 
@@ -1521,7 +1521,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.DrivingSiteInScopeHint();
 
 			_ = q.ToList();
@@ -1540,7 +1540,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.ModelMinAnalysisHint();
 
 			_ = q.ToList();
@@ -1555,7 +1555,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.PxJoinFilterHint()
 				select p;
 
@@ -1575,7 +1575,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.PxJoinFilterInScopeHint();
 
 			_ = q.ToList();
@@ -1590,7 +1590,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsOracleSpecific()
+					.AsOracle()
 					.NoPxJoinFilterHint()
 				select p;
 
@@ -1610,7 +1610,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.NoPxJoinFilterInScopeHint();
 
 			_ = q.ToList();
@@ -1629,7 +1629,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.NoXmlQueryRewriteHint();
 
 			_ = q.ToList();
@@ -1648,7 +1648,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsOracleSpecific()
+			.AsOracle()
 			.NoXmlIndexRewriteHint();
 
 			_ = q.ToList();

@@ -19,7 +19,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsSqlServerSpecific()
+					.AsSqlServer()
 					.WithForceScan()
 				select p;
 
@@ -39,7 +39,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.WithForceScanInScope();
 
 			_ = q.ToList();
@@ -55,7 +55,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsSqlServerSpecific()
+					.AsSqlServer()
 					.WithHoldLock()
 				select p;
 
@@ -75,7 +75,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.WithHoldLockInScope();
 
 			_ = q.ToList();
@@ -91,7 +91,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsSqlServerSpecific()
+					.AsSqlServer()
 					.WithNoLock()
 				select p;
 
@@ -111,7 +111,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.WithNoLockInScope();
 
 			_ = q.ToList();
@@ -127,7 +127,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsSqlServerSpecific()
+					.AsSqlServer()
 					.WithNoWait()
 				select p;
 
@@ -147,7 +147,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.WithNoWaitInScope();
 
 			_ = q.ToList();
@@ -163,7 +163,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsSqlServerSpecific()
+					.AsSqlServer()
 					.WithPagLock()
 				select p;
 
@@ -183,7 +183,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.WithPagLockInScope();
 
 			_ = q.ToList();
@@ -199,7 +199,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsSqlServerSpecific()
+					.AsSqlServer()
 					.WithReadCommitted()
 				select p;
 
@@ -219,7 +219,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.WithReadCommittedInScope();
 
 			_ = q.ToList();
@@ -235,7 +235,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsSqlServerSpecific()
+					.AsSqlServer()
 					.WithReadCommittedLock()
 				select p;
 
@@ -255,7 +255,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.WithReadCommittedLockInScope();
 
 			_ = q.ToList();
@@ -271,7 +271,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsSqlServerSpecific()
+					.AsSqlServer()
 					.WithReadPast()
 				select p;
 
@@ -291,7 +291,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.WithReadPastInScope();
 
 			_ = q.ToList();
@@ -307,7 +307,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsSqlServerSpecific()
+					.AsSqlServer()
 					.WithReadUncommitted()
 				select p;
 
@@ -327,7 +327,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.WithReadUncommittedInScope();
 
 			_ = q.ToList();
@@ -343,7 +343,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsSqlServerSpecific()
+					.AsSqlServer()
 					.WithRepeatableRead()
 				select p;
 
@@ -363,7 +363,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.WithRepeatableReadInScope();
 
 			_ = q.ToList();
@@ -379,7 +379,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsSqlServerSpecific()
+					.AsSqlServer()
 					.WithRowLock()
 				select p;
 
@@ -399,7 +399,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.WithRowLockInScope();
 
 			_ = q.ToList();
@@ -415,7 +415,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsSqlServerSpecific()
+					.AsSqlServer()
 					.WithSerializable()
 				select p;
 
@@ -435,7 +435,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.WithSerializableInScope();
 
 			_ = q.ToList();
@@ -451,7 +451,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsSqlServerSpecific()
+					.AsSqlServer()
 					.WithTabLock()
 				select p;
 
@@ -471,7 +471,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.WithTabLockInScope();
 
 			_ = q.ToList();
@@ -487,7 +487,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsSqlServerSpecific()
+					.AsSqlServer()
 					.WithTabLockX()
 				select p;
 
@@ -507,7 +507,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.WithTabLockXInScope();
 
 			_ = q.ToList();
@@ -523,7 +523,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsSqlServerSpecific()
+					.AsSqlServer()
 					.WithUpdLock()
 				select p;
 
@@ -543,7 +543,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.WithUpdLockInScope();
 
 			_ = q.ToList();
@@ -559,7 +559,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsSqlServerSpecific()
+					.AsSqlServer()
 					.WithXLock()
 				select p;
 
@@ -579,7 +579,7 @@ namespace Tests.Linq
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.WithXLockInScope();
 
 			_ = q.ToList();
@@ -599,7 +599,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.OptionHashGroup();
 
 			_ = q.ToList();
@@ -618,7 +618,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.OptionOrderGroup();
 
 			_ = q.ToList();
@@ -637,7 +637,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.OptionConcatUnion();
 
 			_ = q.ToList();
@@ -656,7 +656,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.OptionHashUnion();
 
 			_ = q.ToList();
@@ -675,7 +675,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.OptionMergeUnion();
 
 			_ = q.ToList();
@@ -694,7 +694,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.OptionLoopJoin();
 
 			_ = q.ToList();
@@ -713,7 +713,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.OptionHashJoin();
 
 			_ = q.ToList();
@@ -732,7 +732,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.OptionMergeJoin();
 
 			_ = q.ToList();
@@ -751,7 +751,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.OptionExpandViews();
 
 			_ = q.ToList();
@@ -770,7 +770,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.OptionFast(10);
 
 			_ = q.ToList();
@@ -789,7 +789,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.OptionForceOrder();
 
 			_ = q.ToList();
@@ -797,7 +797,7 @@ namespace Tests.Linq
 			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.ForceOrder})"));
 		}
 
-		[Test, Explicit]
+		[Test]
 		public void OptionForceScaleOutExecutionTest([IncludeDataSources(true, TestProvName.AllSqlServer2019Plus)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -808,7 +808,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.OptionForceScaleOutExecution();
 
 			_ = q.ToList();
@@ -816,7 +816,7 @@ namespace Tests.Linq
 			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlServerHints.Query.ForceScaleOutExecution})"));
 		}
 
-		[Test, Explicit]
+		[Test]
 		public void OptionDisableScaleOutExecutionTest([IncludeDataSources(true, TestProvName.AllSqlServer2019Plus)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -827,7 +827,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.OptionDisableScaleOutExecution();
 
 			_ = q.ToList();
@@ -846,7 +846,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.OptionIgnoreNonClusteredColumnStoreIndex();
 
 			_ = q.ToList();
@@ -865,7 +865,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.OptionKeepPlan();
 
 			_ = q.ToList();
@@ -884,7 +884,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.OptionKeepFixedPlan();
 
 			_ = q.ToList();
@@ -903,7 +903,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.OptionMaxGrantPercent(10);
 
 			_ = q.ToList();
@@ -922,7 +922,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.OptionMinGrantPercent(10);
 
 			_ = q.ToList();
@@ -941,7 +941,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.OptionMaxDop(10);
 
 			_ = q.ToList();
@@ -960,7 +960,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.OptionMaxRecursion(10);
 
 			_ = q.ToList();
@@ -979,7 +979,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.OptionNoPerformanceSpool();
 
 			_ = q.ToList();
@@ -998,7 +998,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.OptionOptimizeForUnknown();
 
 			_ = q.ToList();
@@ -1017,7 +1017,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.OptionQueryTraceOn(10);
 
 			_ = q.ToList();
@@ -1036,7 +1036,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.OptionRecompile();
 
 			_ = q.ToList();
@@ -1055,7 +1055,7 @@ namespace Tests.Linq
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.OptionRobustPlan();
 
 			_ = q.ToList();

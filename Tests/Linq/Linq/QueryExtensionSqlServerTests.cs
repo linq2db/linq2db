@@ -94,7 +94,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Parent
-					.AsSqlServerSpecific()
+					.AsSqlServer()
 					.WithSpatialWindowMaxCells(10)
 				select p;
 
@@ -207,7 +207,7 @@ namespace Tests.Linq
 
 			var q =
 				from c in db.Child
-				join p in db.Parent.AsSqlServerSpecific().JoinLoopHint() on c.ParentID equals p.ParentID
+				join p in db.Parent.AsSqlServer().JoinLoopHint() on c.ParentID equals p.ParentID
 				select p;
 
 			_ = q.ToList();
@@ -228,7 +228,7 @@ namespace Tests.Linq
 						where t.Children.Any()
 						select new { t.ParentID, t.Children.Count }
 					)
-					.AsSqlServerSpecific()
+					.AsSqlServer()
 					.JoinHashHint() on c.ParentID equals p.ParentID
 				select p;
 
@@ -244,7 +244,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			var q = db.Child.Join(db.Parent.AsSqlServerSpecific().JoinMergeHint(), joinType, (c, p) => c.ParentID == p.ParentID, (c, p) => p);
+			var q = db.Child.Join(db.Parent.AsSqlServer().JoinMergeHint(), joinType, (c, p) => c.ParentID == p.ParentID, (c, p) => p);
 
 			_ = q.ToList();
 
@@ -468,7 +468,7 @@ namespace Tests.Linq
 			(
 				from p in db.Parent
 				from c in db.Child
-				from c1 in db.Child.AsSqlServerSpecific().WithIndex("IX_ChildIndex")
+				from c1 in db.Child.AsSqlServer().WithIndex("IX_ChildIndex")
 				where c.ParentID == p.ParentID && c1.ParentID == p.ParentID
 				select p
 			)
@@ -645,7 +645,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Child
-					.AsSqlServerSpecific()
+					.AsSqlServer()
 					.WithIndex("IX_ChildIndex")
 					.With(SqlServerHints.Table.NoLock)
 				select p;
@@ -662,7 +662,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Child
-					.AsSqlServerSpecific()
+					.AsSqlServer()
 					.WithIndex("IX_ChildIndex", "IX_ChildIndex")
 				select p;
 
@@ -678,7 +678,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Child
-					.AsSqlServerSpecific()
+					.AsSqlServer()
 					.WithForceSeek()
 				select p;
 
@@ -694,7 +694,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Child
-					.AsSqlServerSpecific()
+					.AsSqlServer()
 					.WithForceSeek("IX_ChildIndex")
 				select p;
 
@@ -710,7 +710,7 @@ namespace Tests.Linq
 
 			var q =
 				from p in db.Child
-					.AsSqlServerSpecific()
+					.AsSqlServer()
 					.WithForceSeek()
 				select p;
 
@@ -734,7 +734,7 @@ namespace Tests.Linq
 					where p.Value1 == n && p.ParentID == id
 					select p
 				)
-				.AsSqlServerSpecific()
+				.AsSqlServer()
 				.OptionOptimizeFor("@n=10", "@id=10");
 
 			_ = q.ToList();
@@ -757,7 +757,7 @@ namespace Tests.Linq
 					where p.Value1 == n && p.ParentID == id
 					select p
 				)
-				.AsSqlServerSpecific()
+				.AsSqlServer()
 				.OptionUseHint("'ASSUME_JOIN_PREDICATE_DEPENDS_ON_FILTERS'");
 
 			_ = q.ToList();
@@ -776,7 +776,7 @@ namespace Tests.Linq
 					join p in db.Parent on c.ParentID equals p.ParentID
 					select p
 				)
-				.AsSqlServerSpecific()
+				.AsSqlServer()
 				.OptionUsePlan("<xml/>");
 
 			_ = q.ToList();
@@ -795,14 +795,14 @@ namespace Tests.Linq
 			var q =
 				(
 					from c in db.Child.TableID("pp")
-						.AsSqlServerSpecific()
+						.AsSqlServer()
 						.WithNoLock()
 						.WithForceSeek()
 					join p in db.Parent on c.ParentID equals p.ParentID
 					where p.Value1 == n && p.ParentID == id
 					select p
 				)
-				.AsSqlServerSpecific()
+				.AsSqlServer()
 				.OptionTableHint(Sql.TableAlias("pp"), SqlServerHints.Table.NoLock);
 
 			_ = q.ToList();

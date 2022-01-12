@@ -55,16 +55,16 @@ namespace Tests.Linq
 			var q =
 			(
 				from p in db.Parent
-					.AsSqlServerSpecific()
+					.AsSqlServer()
 						.TableHint(SqlServerHints.Table.NoLock)
 						.TableHint(SqlServerHints.Table.NoWait)
-					.AsOracleSpecific()
+					.AsOracle()
 						.TableHint(OracleHints.Table.Full)
 						.TableHint(OracleHints.Table.Hash)
 				select p
 			)
-			.AsSqlServerSpecific()
-			.AsOracleSpecific();
+			.AsSqlServer()
+			.AsOracle();
 
 			_ = q.ToList();
 

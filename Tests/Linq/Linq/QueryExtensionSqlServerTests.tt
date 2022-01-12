@@ -70,7 +70,7 @@ void GenerateTableTest(string test, string version = "")
 
 			var q =
 				from p in db.Parent
-					.AsSqlServerSpecific()
+					.AsSqlServer()
 					.With<#= test #>()
 				select p;
 
@@ -90,7 +90,7 @@ void GenerateTableTest(string test, string version = "")
 				join c in db.Child on p.ParentID equals c.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.With<#= test #>InScope();
 
 			_ = q.ToList();
@@ -116,7 +116,7 @@ void GenerateOptionTest(string test, string version = "")
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.Option<#= test #>();
 
 			_ = q.ToList();
@@ -141,7 +141,7 @@ void GenerateOptionTest2(string test, string version = "")
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.AsSqlServerSpecific()
+			.AsSqlServer()
 			.Option<#= test #>(10);
 
 			_ = q.ToList();
