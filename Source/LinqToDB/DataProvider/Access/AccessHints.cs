@@ -23,18 +23,18 @@ namespace LinqToDB.DataProvider.Access
 		public static IAccessSpecificQueryable<TSource> WithOwnerAccessOption<TSource>(this IAccessSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
-			return QueryHint(query, Query.WithOwnerAccessOption);
+			return SubQueryHint(query, Query.WithOwnerAccessOption);
 		}
 
 		static Expression<Func<IAccessSpecificQueryable<TSource>,IAccessSpecificQueryable<TSource>>> WithOwnerAccessOptionImpl<TSource>()
 			where TSource : notnull
 		{
-			return query => QueryHint(query, Query.WithOwnerAccessOption);
+			return query => SubQueryHint(query, Query.WithOwnerAccessOption);
 		}
 
 		#endregion
 
-		#region QueryHint
+		#region SubQueryHint
 
 		/// <summary>
 		/// Adds a query hint to a generated query.
@@ -44,9 +44,9 @@ namespace LinqToDB.DataProvider.Access
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.Access, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
-		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
-		public static IAccessSpecificQueryable<TSource> QueryHint<TSource>(this IAccessSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
+		[Sql.QueryExtension(ProviderName.Access, Sql.QueryExtensionScope.SubQueryHint, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
+		public static IAccessSpecificQueryable<TSource> SubQueryHint<TSource>(this IAccessSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
@@ -54,7 +54,7 @@ namespace LinqToDB.DataProvider.Access
 			return new AccessSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(QueryHint, source, hint),
+					MethodHelper.GetMethodInfo(SubQueryHint, source, hint),
 					currentSource.Expression, Expression.Constant(hint))));
 		}
 

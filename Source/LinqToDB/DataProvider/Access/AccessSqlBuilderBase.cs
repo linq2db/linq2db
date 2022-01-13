@@ -330,6 +330,26 @@ namespace LinqToDB.DataProvider.Access
 		{
 			if (statement.SqlQueryExtensions is not null)
 				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, null, " ", null);
+
+			if (statement.SelectQuery?.SqlQueryExtensions is not null)
+			{
+				var len = StringBuilder.Length;
+
+				AppendIndent();
+
+				var prefix = Environment.NewLine;
+
+				if (StringBuilder.Length > len)
+				{
+					var buffer = new char[StringBuilder.Length - len];
+
+					StringBuilder.CopyTo(len, buffer, 0, StringBuilder.Length - len);
+
+					prefix += new string(buffer);
+				}
+
+				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine);
+			}
 		}
 	}
 }

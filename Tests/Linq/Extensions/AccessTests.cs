@@ -34,16 +34,21 @@ namespace Tests.Extensions
 			using var db = GetDataContext(context);
 
 			var q =
+				from p in
 				(
 					from p in db.Parent
 					select p
 				)
 				.AsAccess()
-				.WithOwnerAccessOption();
+					.WithOwnerAccessOption()
+				.AsSubQuery()
+				.AsAccess()
+					.WithOwnerAccessOption()
+				select p;
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring("WITH OWNERACCESS OPTION"));
+			Assert.That(LastQuery, Contains.Substring("\tWITH OWNERACCESS OPTION"));
 		}
 	}
 }

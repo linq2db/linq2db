@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.DataProvider.Access;
 using LinqToDB.DataProvider.SqlCe;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.DataProvider.Oracle;
@@ -69,8 +70,11 @@ namespace Tests.Extensions
 			)
 			.AsSqlServer()
 				.WithReadUncommittedInScope()
+				.OptionRecompile()
 			.AsOracle()
-				.ParallelHint(2);
+				.ParallelHint(2)
+			.AsAccess()
+				.WithOwnerAccessOption();
 
 			_ = q.ToList();
 
