@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -122,7 +123,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			DataConnection                             dataConnection,
 			BulkCopyOptions                            options,
 			IEnumerable<T>                             source,
-			IDbConnection                              connection,
+			DbConnection                               connection,
 			string                                     tableName,
 			ColumnDescriptor[]                         columns,
 			DbDataType[]                               columnTypes,

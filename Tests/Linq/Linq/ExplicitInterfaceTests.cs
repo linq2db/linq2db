@@ -7,7 +7,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using Model;
+	using LinqToDB.Data;
 
 	[TestFixture]
 	public class ExplicitInterfaceTests : TestBase
@@ -81,7 +81,7 @@ namespace Tests.Linq
 		[Test]
 		public void ExplicitInterface1()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var result = SelectNoDate(db.GetTable<TestTable>()).ToList();
 			}
@@ -90,7 +90,7 @@ namespace Tests.Linq
 		[Test]
 		public void ExplicitInterface2()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var result = SelectNoDate(db.GetTable<TestTable2>()).ToList();
 			}
@@ -99,7 +99,7 @@ namespace Tests.Linq
 		[Test]
 		public void ExplicitInterface3()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var result = SelectNoDate2(db.GetTable<TestTable3>()).ToList();
 			}
@@ -108,7 +108,7 @@ namespace Tests.Linq
 		[Test]
 		public void ExplicitInterface4()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var result = SelectNoDate2(db.GetTable<TestTable4>()).ToList();
 			}

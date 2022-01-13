@@ -56,7 +56,6 @@ namespace Tests.xUpdate
 
 			[Column(IsColumn = false, Configuration = ProviderName.Sybase)]
 			[Column(IsColumn = false, Configuration = ProviderName.DB2)]
-			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2000)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2005)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlCe)]
 			[Column(IsColumn = false, Configuration = ProviderName.Informix)]
@@ -84,7 +83,6 @@ namespace Tests.xUpdate
 			[Column("FieldDecimal")]
 			public decimal? FieldDecimal;
 
-			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2000)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2005)]
 			[Column(IsColumn = false, Configuration = ProviderName.Oracle)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlCe)]
@@ -94,7 +92,6 @@ namespace Tests.xUpdate
 			public DateTime? FieldDate;
 
 			[Column(IsColumn = false, Configuration = ProviderName.Firebird)]
-			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2000)]
 			[Column(IsColumn = false, Configuration = ProviderName.SqlServer2005)]
 			[Column(IsColumn = false, Configuration = TestProvName.MySql55)]
 			[Column(IsColumn = false, Configuration = ProviderName.Oracle)]
@@ -412,8 +409,7 @@ namespace Tests.xUpdate
 			if (!provider.Contains("SQLite"))
 				Assert.AreEqual(expected.FieldDecimal, actual.FieldDecimal);
 
-			if (   provider != ProviderName.SqlServer2000
-				&& provider != ProviderName.SqlServer2005
+			if (   provider != ProviderName.SqlServer2005
 				&& provider != ProviderName.SqlCe
 				&& !provider.Contains("Oracle"))
 				Assert.AreEqual(expected.FieldDate, actual.FieldDate);
@@ -475,8 +471,7 @@ namespace Tests.xUpdate
 					expected = expected.Value.AddTicks(-expected.Value.Ticks % 10);
 			}
 
-			if (   provider != ProviderName.SqlServer2000
-				&& provider != ProviderName.SqlServer2005
+			if (   provider != ProviderName.SqlServer2005
 				&& provider != ProviderName.SqlCe
 				&& !provider.Contains(ProviderName.Informix)
 				&& !provider.Contains(ProviderName.Firebird)
@@ -591,8 +586,7 @@ namespace Tests.xUpdate
 
 		private static void AssertTime(TimeSpan? expected, TimeSpan? actual, string provider)
 		{
-			if (   provider == ProviderName.SqlServer2000
-				|| provider == ProviderName.SqlServer2005
+			if (   provider == ProviderName.SqlServer2005
 				|| provider.Contains("Oracle")
 				|| provider == ProviderName.SqlCe
 				|| provider == ProviderName.SQLiteClassic

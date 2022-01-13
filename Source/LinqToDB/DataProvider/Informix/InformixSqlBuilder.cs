@@ -10,6 +10,7 @@ namespace LinqToDB.DataProvider.Informix
 	using SqlProvider;
 	using System.Globalization;
 	using Mapping;
+	using System.Data.Common;
 
 	partial class InformixSqlBuilder : BasicSqlBuilder
 	{
@@ -262,7 +263,7 @@ namespace LinqToDB.DataProvider.Informix
 			return sb.Append(table);
 		}
 
-		protected override string? GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(DbParameter parameter)
 		{
 			if (_provider != null)
 			{

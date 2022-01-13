@@ -38,7 +38,7 @@ namespace Tests.Mapping
 		[Test]
 		public void TestCreate([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable<TestTable>())
 			{
 				var sql = db.LastQuery!;

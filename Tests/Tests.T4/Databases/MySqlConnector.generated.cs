@@ -382,20 +382,57 @@ namespace MySqlConnectorDataContext
 
 		public static IEnumerable<Issue2313ParametersResult> Issue2313Parameters(this TestmysqlconnectordbDB dataConnection, string? VarChar255, char? VarChar1, string? Char255, char? Char1, byte[]? VarBinary255, byte[]? Binary255, byte[]? TinyBlob, byte[]? Blob, byte[]? MediumBlob, byte[]? LongBlob, string? TinyText, string? Text, string? MediumText, string? LongText, DateTime? Date, DateTime? DateTime, DateTime? TimeStamp, TimeSpan? Time, string? Json, sbyte? TinyInt, byte? TinyIntUnsigned, short? SmallInt, ushort? SmallIntUnsigned, int? MediumInt, uint? MediumIntUnsigned, int? Int, uint? IntUnsigned, long? BigInt, ulong? BigIntUnsigned, decimal? Decimal, float? Float, double? Double, bool? Boolean, bool? Bit1, byte? Bit8, ushort? Bit10, ushort? Bit16, uint? Bit32, ulong? Bit64, string? Enum, string? Set, int? Year, byte[]? Geometry, byte[]? Point, byte[]? LineString, byte[]? Polygon, byte[]? MultiPoint, byte[]? MultiLineString, byte[]? MultiPolygon, byte[]? GeometryCollection)
 		{
-			return dataConnection.QueryProc<Issue2313ParametersResult>("`Issue2313Parameters`",
-				new DataParameter("VarChar255",         VarChar255,         LinqToDB.DataType.VarChar),
-				new DataParameter("VarChar1",           VarChar1,           LinqToDB.DataType.VarChar),
-				new DataParameter("Char255",            Char255,            LinqToDB.DataType.Char),
-				new DataParameter("Char1",              Char1,              LinqToDB.DataType.Char),
-				new DataParameter("VarBinary255",       VarBinary255,       LinqToDB.DataType.VarBinary),
-				new DataParameter("Binary255",          Binary255,          LinqToDB.DataType.Binary),
-				new DataParameter("TinyBlob",           TinyBlob,           LinqToDB.DataType.Blob),
-				new DataParameter("Blob",               Blob,               LinqToDB.DataType.Blob),
-				new DataParameter("MediumBlob",         MediumBlob,         LinqToDB.DataType.Blob),
+			var parameters = new []
+			{
+				new DataParameter("VarChar255",         VarChar255,         LinqToDB.DataType.VarChar)
+				{
+					Size = 255
+				},
+				new DataParameter("VarChar1",           VarChar1,           LinqToDB.DataType.VarChar)
+				{
+					Size = 1
+				},
+				new DataParameter("Char255",            Char255,            LinqToDB.DataType.Char)
+				{
+					Size = 255
+				},
+				new DataParameter("Char1",              Char1,              LinqToDB.DataType.Char)
+				{
+					Size = 1
+				},
+				new DataParameter("VarBinary255",       VarBinary255,       LinqToDB.DataType.VarBinary)
+				{
+					Size = 255
+				},
+				new DataParameter("Binary255",          Binary255,          LinqToDB.DataType.Binary)
+				{
+					Size = 255
+				},
+				new DataParameter("TinyBlob",           TinyBlob,           LinqToDB.DataType.Blob)
+				{
+					Size = 255
+				},
+				new DataParameter("Blob",               Blob,               LinqToDB.DataType.Blob)
+				{
+					Size = 65535
+				},
+				new DataParameter("MediumBlob",         MediumBlob,         LinqToDB.DataType.Blob)
+				{
+					Size = 16777215
+				},
 				new DataParameter("LongBlob",           LongBlob,           LinqToDB.DataType.Blob),
-				new DataParameter("TinyText",           TinyText,           LinqToDB.DataType.Text),
-				new DataParameter("Text",               Text,               LinqToDB.DataType.Text),
-				new DataParameter("MediumText",         MediumText,         LinqToDB.DataType.Text),
+				new DataParameter("TinyText",           TinyText,           LinqToDB.DataType.Text)
+				{
+					Size = 255
+				},
+				new DataParameter("Text",               Text,               LinqToDB.DataType.Text)
+				{
+					Size = 65535
+				},
+				new DataParameter("MediumText",         MediumText,         LinqToDB.DataType.Text)
+				{
+					Size = 16777215
+				},
 				new DataParameter("LongText",           LongText,           LinqToDB.DataType.Text),
 				new DataParameter("Date",               Date,               LinqToDB.DataType.Date),
 				new DataParameter("DateTime",           DateTime,           LinqToDB.DataType.DateTime),
@@ -422,8 +459,14 @@ namespace MySqlConnectorDataContext
 				new DataParameter("Bit16",              Bit16,              LinqToDB.DataType.BitArray),
 				new DataParameter("Bit32",              Bit32,              LinqToDB.DataType.BitArray),
 				new DataParameter("Bit64",              Bit64,              LinqToDB.DataType.BitArray),
-				new DataParameter("Enum",               Enum,               LinqToDB.DataType.VarChar),
-				new DataParameter("Set",                Set,                LinqToDB.DataType.VarChar),
+				new DataParameter("Enum",               Enum,               LinqToDB.DataType.VarChar)
+				{
+					Size = 3
+				},
+				new DataParameter("Set",                Set,                LinqToDB.DataType.VarChar)
+				{
+					Size = 3
+				},
 				new DataParameter("Year",               Year,               LinqToDB.DataType.Int32),
 				new DataParameter("Geometry",           Geometry,           LinqToDB.DataType.Undefined),
 				new DataParameter("Point",              Point,              LinqToDB.DataType.Undefined),
@@ -432,7 +475,10 @@ namespace MySqlConnectorDataContext
 				new DataParameter("MultiPoint",         MultiPoint,         LinqToDB.DataType.Undefined),
 				new DataParameter("MultiLineString",    MultiLineString,    LinqToDB.DataType.Undefined),
 				new DataParameter("MultiPolygon",       MultiPolygon,       LinqToDB.DataType.Undefined),
-				new DataParameter("GeometryCollection", GeometryCollection, LinqToDB.DataType.Undefined));
+				new DataParameter("GeometryCollection", GeometryCollection, LinqToDB.DataType.Undefined)
+			};
+
+			return dataConnection.QueryProc<Issue2313ParametersResult>("`Issue2313Parameters`", parameters);
 		}
 
 		public partial class Issue2313ParametersResult
@@ -495,20 +541,57 @@ namespace MySqlConnectorDataContext
 
 		public static IEnumerable<Issue2313ResultsResult> Issue2313Results(this TestmysqlconnectordbDB dataConnection, string? VarChar255, char? VarChar1, string? Char255, char? Char1, byte[]? VarBinary255, byte[]? Binary255, byte[]? TinyBlob, byte[]? Blob, byte[]? MediumBlob, byte[]? LongBlob, string? TinyText, string? Text, string? MediumText, string? LongText, DateTime? Date, DateTime? DateTime, DateTime? TimeStamp, TimeSpan? Time, sbyte? TinyInt, byte? TinyIntUnsigned, short? SmallInt, ushort? SmallIntUnsigned, int? MediumInt, uint? MediumIntUnsigned, int? Int, uint? IntUnsigned, long? BigInt, ulong? BigIntUnsigned, decimal? Decimal, float? Float, double? Double, bool? Boolean, bool? Bit1, byte? Bit8, ushort? Bit10, ushort? Bit16, uint? Bit32, ulong? Bit64, string? Enum, string? Set, string? Json, byte[]? Geometry, byte[]? Point, byte[]? LineString, byte[]? Polygon, byte[]? MultiPoint, byte[]? MultiLineString, byte[]? MultiPolygon, byte[]? GeometryCollection, int? Year)
 		{
-			return dataConnection.QueryProc<Issue2313ResultsResult>("`Issue2313Results`",
-				new DataParameter("VarChar255",         VarChar255,         LinqToDB.DataType.VarChar),
-				new DataParameter("VarChar1",           VarChar1,           LinqToDB.DataType.VarChar),
-				new DataParameter("Char255",            Char255,            LinqToDB.DataType.Char),
-				new DataParameter("Char1",              Char1,              LinqToDB.DataType.Char),
-				new DataParameter("VarBinary255",       VarBinary255,       LinqToDB.DataType.VarBinary),
-				new DataParameter("Binary255",          Binary255,          LinqToDB.DataType.Binary),
-				new DataParameter("TinyBlob",           TinyBlob,           LinqToDB.DataType.Blob),
-				new DataParameter("Blob",               Blob,               LinqToDB.DataType.Blob),
-				new DataParameter("MediumBlob",         MediumBlob,         LinqToDB.DataType.Blob),
+			var parameters = new []
+			{
+				new DataParameter("VarChar255",         VarChar255,         LinqToDB.DataType.VarChar)
+				{
+					Size = 255
+				},
+				new DataParameter("VarChar1",           VarChar1,           LinqToDB.DataType.VarChar)
+				{
+					Size = 1
+				},
+				new DataParameter("Char255",            Char255,            LinqToDB.DataType.Char)
+				{
+					Size = 255
+				},
+				new DataParameter("Char1",              Char1,              LinqToDB.DataType.Char)
+				{
+					Size = 1
+				},
+				new DataParameter("VarBinary255",       VarBinary255,       LinqToDB.DataType.VarBinary)
+				{
+					Size = 255
+				},
+				new DataParameter("Binary255",          Binary255,          LinqToDB.DataType.Binary)
+				{
+					Size = 255
+				},
+				new DataParameter("TinyBlob",           TinyBlob,           LinqToDB.DataType.Blob)
+				{
+					Size = 255
+				},
+				new DataParameter("Blob",               Blob,               LinqToDB.DataType.Blob)
+				{
+					Size = 65535
+				},
+				new DataParameter("MediumBlob",         MediumBlob,         LinqToDB.DataType.Blob)
+				{
+					Size = 16777215
+				},
 				new DataParameter("LongBlob",           LongBlob,           LinqToDB.DataType.Blob),
-				new DataParameter("TinyText",           TinyText,           LinqToDB.DataType.Text),
-				new DataParameter("Text",               Text,               LinqToDB.DataType.Text),
-				new DataParameter("MediumText",         MediumText,         LinqToDB.DataType.Text),
+				new DataParameter("TinyText",           TinyText,           LinqToDB.DataType.Text)
+				{
+					Size = 255
+				},
+				new DataParameter("Text",               Text,               LinqToDB.DataType.Text)
+				{
+					Size = 65535
+				},
+				new DataParameter("MediumText",         MediumText,         LinqToDB.DataType.Text)
+				{
+					Size = 16777215
+				},
 				new DataParameter("LongText",           LongText,           LinqToDB.DataType.Text),
 				new DataParameter("Date",               Date,               LinqToDB.DataType.Date),
 				new DataParameter("DateTime",           DateTime,           LinqToDB.DataType.DateTime),
@@ -534,8 +617,14 @@ namespace MySqlConnectorDataContext
 				new DataParameter("Bit16",              Bit16,              LinqToDB.DataType.BitArray),
 				new DataParameter("Bit32",              Bit32,              LinqToDB.DataType.BitArray),
 				new DataParameter("Bit64",              Bit64,              LinqToDB.DataType.BitArray),
-				new DataParameter("Enum",               Enum,               LinqToDB.DataType.VarChar),
-				new DataParameter("Set",                Set,                LinqToDB.DataType.VarChar),
+				new DataParameter("Enum",               Enum,               LinqToDB.DataType.VarChar)
+				{
+					Size = 3
+				},
+				new DataParameter("Set",                Set,                LinqToDB.DataType.VarChar)
+				{
+					Size = 3
+				},
 				new DataParameter("Json",               Json,               LinqToDB.DataType.Json),
 				new DataParameter("Geometry",           Geometry,           LinqToDB.DataType.Undefined),
 				new DataParameter("Point",              Point,              LinqToDB.DataType.Undefined),
@@ -545,7 +634,10 @@ namespace MySqlConnectorDataContext
 				new DataParameter("MultiLineString",    MultiLineString,    LinqToDB.DataType.Undefined),
 				new DataParameter("MultiPolygon",       MultiPolygon,       LinqToDB.DataType.Undefined),
 				new DataParameter("GeometryCollection", GeometryCollection, LinqToDB.DataType.Undefined),
-				new DataParameter("Year",               Year,               LinqToDB.DataType.Int32));
+				new DataParameter("Year",               Year,               LinqToDB.DataType.Int32)
+			};
+
+			return dataConnection.QueryProc<Issue2313ResultsResult>("`Issue2313Results`", parameters);
 		}
 
 		public partial class Issue2313ResultsResult
@@ -608,11 +700,21 @@ namespace MySqlConnectorDataContext
 
 		public static int TestOutputParametersWithoutTableProcedure(this TestmysqlconnectordbDB dataConnection, string? aInParam, out bool? aOutParam)
 		{
-			var ret = dataConnection.ExecuteProc("`TestOutputParametersWithoutTableProcedure`",
-				new DataParameter("aInParam",  aInParam,  LinqToDB.DataType.VarChar),
-				new DataParameter("aOutParam", null, LinqToDB.DataType.SByte) { Direction = ParameterDirection.Output });
+			var parameters = new []
+			{
+				new DataParameter("aInParam",  aInParam,  LinqToDB.DataType.VarChar)
+				{
+					Size = 256
+				},
+				new DataParameter("aOutParam", null, LinqToDB.DataType.SByte)
+				{
+					Direction = ParameterDirection.Output
+				}
+			};
 
-			aOutParam = Converter.ChangeTypeTo<bool?>(((IDbDataParameter)dataConnection.Command.Parameters["aOutParam"]).Value);
+			var ret = dataConnection.ExecuteProc("`TestOutputParametersWithoutTableProcedure`", parameters);
+
+			aOutParam = Converter.ChangeTypeTo<bool?>(parameters[1].Value);
 
 			return ret;
 		}
@@ -623,13 +725,23 @@ namespace MySqlConnectorDataContext
 
 		public static IEnumerable<Person> TestProcedure(this TestmysqlconnectordbDB dataConnection, int? param3, ref int? param2, out int? param1)
 		{
-			var ret = dataConnection.QueryProc<Person>("`TestProcedure`",
+			var parameters = new []
+			{
 				new DataParameter("param3", param3, LinqToDB.DataType.Int32),
-				new DataParameter("param2", param2, LinqToDB.DataType.Int32) { Direction = ParameterDirection.InputOutput },
-				new DataParameter("param1", null, LinqToDB.DataType.Int32) { Direction = ParameterDirection.Output }).ToList();
+				new DataParameter("param2", param2, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				},
+				new DataParameter("param1", null, LinqToDB.DataType.Int32)
+				{
+					Direction = ParameterDirection.Output
+				}
+			};
 
-			param2 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["param2"]).Value);
-			param1 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["param1"]).Value);
+			var ret = dataConnection.QueryProc<Person>("`TestProcedure`", parameters).ToList();
+
+			param2 = Converter.ChangeTypeTo<int?>(parameters[1].Value);
+			param1 = Converter.ChangeTypeTo<int?>(parameters[2].Value);
 
 			return ret;
 		}

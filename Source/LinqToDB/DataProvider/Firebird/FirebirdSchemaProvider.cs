@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 
 namespace LinqToDB.DataProvider.Firebird
 {
-	using System.Numerics;
 	using Common;
 	using Data;
 	using SchemaProvider;
@@ -28,7 +27,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
+			var tables = dataConnection.Connection.GetSchema("Tables");
 
 			return
 			(
@@ -53,7 +52,7 @@ namespace LinqToDB.DataProvider.Firebird
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var pks = ((DbConnection)dataConnection.Connection).GetSchema("PrimaryKeys");
+			var pks = dataConnection.Connection.GetSchema("PrimaryKeys");
 
 			return
 			(
@@ -70,7 +69,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var tcs  = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
+			var tcs  = dataConnection.Connection.GetSchema("Columns");
 
 			return
 			(
@@ -99,7 +98,7 @@ namespace LinqToDB.DataProvider.Firebird
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var cols = ((DbConnection)dataConnection.Connection).GetSchema("ForeignKeyColumns");
+			var cols = dataConnection.Connection.GetSchema("ForeignKeyColumns");
 
 			return
 			(
@@ -118,7 +117,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var ps = ((DbConnection)dataConnection.Connection).GetSchema("Procedures");
+			var ps = dataConnection.Connection.GetSchema("Procedures");
 
 			return
 			(
@@ -132,7 +131,7 @@ namespace LinqToDB.DataProvider.Firebird
 					CatalogName         = catalog,
 					SchemaName          = schema,
 					ProcedureName       = name,
-					IsDefaultSchema     = schema.IsNullOrEmpty(),
+					IsDefaultSchema     = string.IsNullOrEmpty(schema),
 					ProcedureDefinition = p.Field<string>("SOURCE")
 				}
 			).ToList();
@@ -140,7 +139,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
-			var pps = ((DbConnection)dataConnection.Connection).GetSchema("ProcedureParameters");
+			var pps = dataConnection.Connection.GetSchema("ProcedureParameters");
 
 			return
 			(
@@ -218,11 +217,11 @@ namespace LinqToDB.DataProvider.Firebird
 			foreach (var dataType in dataTypes)
 			{
 				knownTypes.Add(dataType.TypeName);
-				if (dataType.CreateFormat.IsNullOrEmpty() && !dataType.CreateParameters.IsNullOrEmpty())
+				if (string.IsNullOrEmpty(dataType.CreateFormat) && !string.IsNullOrEmpty(dataType.CreateParameters))
 				{
 					dataType.CreateFormat =
 						dataType.TypeName + "(" +
-						string.Join(",", dataType.CreateParameters.Split(',').Select((_,i) => "{" + i + "}")) +
+						string.Join(",", dataType.CreateParameters!.Split(',').Select((_,i) => "{" + i + "}")) +
 						")";
 				}
 			}
@@ -262,26 +261,26 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			return dataType?.ToLower() switch
 			{
-				"array"                    => DataType.VarBinary,
-				"bigint"                   => DataType.Int64,
-				"blob"                     => DataType.Blob,
-				"char"                     => DataType.NChar,
-				"date"                     => DataType.Date,
-				"decimal"                  => DataType.Decimal,
-				"double precision"         => DataType.Double,
-				"float"                    => DataType.Single,
-				"integer"                  => DataType.Int32,
-				"numeric"                  => DataType.Decimal,
-				"smallint"                 => DataType.Int16,
-				"blob sub_type 1"          => DataType.Text,
-				"time"                     => DataType.Time,
-				"timestamp"                => DataType.DateTime,
-				"varchar"                  => DataType.NVarChar,
+				"array"            => DataType.VarBinary,
+				"bigint"           => DataType.Int64,
+				"blob"             => DataType.Blob,
+				"char"             => DataType.NChar,
+				"date"             => DataType.Date,
+				"decimal"          => DataType.Decimal,
+				"double precision" => DataType.Double,
+				"float"            => DataType.Single,
+				"integer"          => DataType.Int32,
+				"numeric"          => DataType.Decimal,
+				"smallint"         => DataType.Int16,
+				"blob sub_type 1"  => DataType.Text,
+				"time"             => DataType.Time,
+				"timestamp"        => DataType.DateTime,
+				"varchar"          => DataType.NVarChar,
 				"int128"                   => DataType.Int128,
 				"decfloat"                 => DataType.DecFloat,
 				"timestamp with time zone" => DataType.DateTimeOffset,
 				"time with time zone"      => DataType.TimeTZ,
-				_                          => DataType.Undefined,
+				_                  => DataType.Undefined,
 			};
 		}
 

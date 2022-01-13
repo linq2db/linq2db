@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.Sybase
 	using SqlQuery;
 	using SqlProvider;
 	using Mapping;
+	using System.Data.Common;
 
 	partial class SybaseSqlBuilder : BasicSqlBuilder
 	{
@@ -142,7 +143,10 @@ namespace LinqToDB.DataProvider.Sybase
 					if (value.Length > 26)
 						value = value.Substring(0, 26);
 
-					return sb.Append('@').Append(value);
+					if (value.Length == 0 || value[0] != '@')
+						sb.Append('@');
+
+					return sb.Append(value);
 
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryFieldAlias:
@@ -199,7 +203,7 @@ namespace LinqToDB.DataProvider.Sybase
 			StringBuilder.Append(')');
 		}
 
-		protected override string? GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(DbParameter parameter)
 		{
 			if (_provider != null)
 			{

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -27,26 +28,26 @@ namespace LinqToDB.DataProvider.SapHana
 		protected SapHanaDataProvider(string name, MappingSchema mappingSchema)
 			: base(name, mappingSchema, SapHanaProviderAdapter.GetInstance())
 		{
-			SqlProviderFlags.IsParameterOrderDependent         = true;
+			SqlProviderFlags.IsParameterOrderDependent = true;
 
 			//supported flags
-			SqlProviderFlags.IsCountSubQuerySupported          = true;
+			SqlProviderFlags.IsCountSubQuerySupported  = true;
 
 			//Exception: Sap.Data.Hana.HanaException
 			//Message: single-row query returns more than one row
 			//when expression returns more than 1 row
 			//mark this as supported, it's better to throw exception
 			//instead of replace with left join, in which case returns incorrect data
-			SqlProviderFlags.IsSubQueryColumnSupported         = true;
+			SqlProviderFlags.IsSubQueryColumnSupported  = true;
 
-			SqlProviderFlags.IsTakeSupported                   = true;
-			SqlProviderFlags.IsDistinctOrderBySupported        = false;
+			SqlProviderFlags.IsTakeSupported            = true;
+			SqlProviderFlags.IsDistinctOrderBySupported = false;
 
 			//not supported flags
-			SqlProviderFlags.IsSubQueryTakeSupported           = false;
-			SqlProviderFlags.IsApplyJoinSupported              = false;
-			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
-			SqlProviderFlags.IsUpdateFromSupported             = false;
+			SqlProviderFlags.IsSubQueryTakeSupported   = false;
+			SqlProviderFlags.IsApplyJoinSupported      = false;
+			SqlProviderFlags.IsInsertOrUpdateSupported = false;
+			SqlProviderFlags.IsUpdateFromSupported     = false;
 			SqlProviderFlags.AcceptsOuterExpressionInAggregate = false;
 
 			_sqlOptimizer = new SapHanaNativeSqlOptimizer(SqlProviderFlags);
@@ -93,7 +94,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return base.ConvertParameterType(type, dataType);
 		}
 
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			switch (dataType.DataType)
 			{
@@ -113,7 +114,7 @@ namespace LinqToDB.DataProvider.SapHana
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
 			if (parameter is BulkCopyReader.Parameter)
 				return;
@@ -182,7 +183,7 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 #endif
 
-		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
+		public override bool? IsDBNullAllowed(DbDataReader reader, int idx)
 		{
 			// provider fails to set AllowDBNull for some results
 			return true;

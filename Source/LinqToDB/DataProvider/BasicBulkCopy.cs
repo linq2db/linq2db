@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider
 {
 	using Data;
 	using SqlProvider;
-	using System.Data;
-	using System.Threading;
-	using System.Threading.Tasks;
 
 	public class BasicBulkCopy
 	{
@@ -233,9 +233,9 @@ namespace LinqToDB.DataProvider
 
 		protected struct ProviderConnections
 		{
-			public DataConnection  DataConnection;
-			public IDbConnection   ProviderConnection;
-			public IDbTransaction? ProviderTransaction;
+			public DataConnection DataConnection;
+			public DbConnection   ProviderConnection;
+			public DbTransaction? ProviderTransaction;
 		}
 
 		#region ProviderSpecific Support

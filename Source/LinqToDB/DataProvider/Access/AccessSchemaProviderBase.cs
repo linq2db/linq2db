@@ -3,7 +3,6 @@ using System.IO;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using Common;
 	using Data;
 	using SchemaProvider;
 
@@ -17,7 +16,7 @@ namespace LinqToDB.DataProvider.Access
 		{
 			var name = base.GetDatabaseName(dbConnection);
 
-			if (name.IsNullOrEmpty())
+			if (string.IsNullOrEmpty(name))
 				name = Path.GetFileNameWithoutExtension(GetDataSourceName(dbConnection));
 
 			return name;

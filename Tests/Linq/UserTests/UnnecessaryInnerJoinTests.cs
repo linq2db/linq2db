@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.UserTests
 {
@@ -35,7 +34,7 @@ namespace Tests.UserTests
 		{
 			var ids = new long[] { 1, 2, 3 };
 
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var q =
 					from t1 in db.GetTable<Table2>()

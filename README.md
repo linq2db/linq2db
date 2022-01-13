@@ -726,13 +726,13 @@ public class DbDataContext : DataConnection
     // if you don't configure those mappings, linq2db will be unable to use
     // provider-specific functionality which could lead to loss or unavailability
     //of some functionality when profiled connection enabled
-    _miniProfilerMappings.SetConvertExpression<ProfiledDbConnection,  IDbConnection> (
+    _miniProfilerMappings.SetConvertExpression<ProfiledDbConnection,  DbConnection> (
         db => db.WrappedConnection);
-    _miniProfilerMappings.SetConvertExpression<ProfiledDbDataReader,  IDataReader>   (
+    _miniProfilerMappings.SetConvertExpression<ProfiledDbDataReader,  DbDataReader> (
         db => db.WrappedReader);
-    _miniProfilerMappings.SetConvertExpression<ProfiledDbTransaction, IDbTransaction>(
+    _miniProfilerMappings.SetConvertExpression<ProfiledDbTransaction, DbTransaction>(
         db => db.WrappedTransaction);
-    _miniProfilerMappings.SetConvertExpression<ProfiledDbCommand,     IDbCommand>    (
+    _miniProfilerMappings.SetConvertExpression<ProfiledDbCommand,     DbCommand>    (
         db => db.InternalCommand);
   }
 
@@ -748,7 +748,7 @@ public class DbDataContext : DataConnection
   { }
 
   // wrap connection into profiler wrapper
-  private static IDbConnection GetConnection()
+  private static DbConnection GetConnection()
   {
      // create provider-specific connection instance. SqlConnection in our case
      var dbConnection = new SqlConnection(
