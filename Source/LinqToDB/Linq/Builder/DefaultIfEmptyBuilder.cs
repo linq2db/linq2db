@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -17,15 +19,6 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence     = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var defaultValue = methodCall.Arguments.Count == 1 ? null : methodCall.Arguments[1].Unwrap();
-
-			if (buildInfo.Parent is SelectManyBuilder.SelectManyContext context)
-			{
-				if (context.Sequence[0] is JoinBuilder.GroupJoinContext groupJoin)
-				{
-					groupJoin.SelectQuery.From.Tables[0].Joins[0].JoinType = JoinType.Left;
-					groupJoin.SelectQuery.From.Tables[0].Joins[0].IsWeak   = false;
-				}
-			}
 
 			return new DefaultIfEmptyContext(buildInfo.Parent, sequence, defaultValue);
 		}
@@ -50,62 +43,34 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
+				throw new NotImplementedException();
+			}
 
-				var expr = Sequence.BuildExpression(expression, level, enforceServerSide);
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				if (SequenceHelper.IsSameContext(path, this) && (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot)))
+					return path;
 
-				if (!Disabled && expression == null)
+				var expr = base.MakeExpression(path, flags);
+
+				if (!Disabled && flags.HasFlag(ProjectFlags.Expression) && SequenceHelper.IsSameContext(path, this))
 				{
-					var q =
-						from col in SelectQuery.Select.Columns
-						where !col.CanBeNull
-						select SelectQuery.Select.Columns.IndexOf(col);
+					expr = Builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), this, expr, flags);
 
-					var idx = q.DefaultIfEmpty(-1).First();
+					var placeholders = Builder.CollectDistinctPlaceholders(expr);
 
-					if (idx == -1)
+					var notNull = placeholders
+						.FirstOrDefault(placeholder => !placeholder.Sql.CanBeNull);
+
+					if (notNull == null)
 					{
-						idx = SelectQuery.Select.Add(new SqlValue((int?)1));
-						SelectQuery.Select.Columns[idx].RawAlias = "is_empty";
+						notNull = ExpressionBuilder.CreatePlaceholder(this,
+							new SqlValue(1), Expression.Constant(1), alias: "not_null");
 					}
-
-					var n = ConvertToParentIndex(idx, this);
-
-					Expression e = Expression.Call(
-						ExpressionBuilder.DataReaderParam,
-						ReflectionHelper.DataReader.IsDBNull,
-						ExpressionInstances.Int32Array(n));
 
 					var defaultValue = DefaultValue ?? new DefaultValueExpression(Builder.MappingSchema, expr.Type);
 
-					if (expr.NodeType == ExpressionType.Parameter)
-					{
-						var par  = (ParameterExpression)expr;
-						var pidx = Builder.BlockVariables.IndexOf(par);
-
-						if (pidx >= 0)
-						{
-							var ex = Builder.BlockExpressions[pidx];
-
-							if (ex.NodeType == ExpressionType.Assign)
-							{
-								var bex = (BinaryExpression)ex;
-
-								if (bex.Left == expr)
-								{
-									if (bex.Right.NodeType != ExpressionType.Conditional)
-									{
-										Builder.BlockExpressions[pidx] =
-											Expression.Assign(
-												bex.Left,
-												Expression.Condition(e, defaultValue, bex.Right));
-									}
-								}
-							}
-						}
-					}
-
-					expr = Expression.Condition(e, defaultValue, expr);
+					expr = Expression.Condition(new SqlReaderIsNullExpression(notNull), defaultValue, expr);
 				}
 
 				return expr;

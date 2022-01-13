@@ -79,8 +79,8 @@ namespace LinqToDB.Linq.Builder
 					var expr = methodCall.Arguments[1].Unwrap();
 					if (expr is LambdaExpression lex && lex.ReturnType == typeof(bool))
 					{
-						sequence = builder.BuildWhere(buildInfo.Parent, sequence, (LambdaExpression)methodCall.Arguments[1].Unwrap(), false);
-						expr = methodCall.Arguments[2].Unwrap();
+						sequence = builder.BuildWhere(buildInfo.Parent, sequence, (LambdaExpression)methodCall.Arguments[1].Unwrap(), false, false, buildInfo.AggregationTest);
+						expr     = methodCall.Arguments[2].Unwrap();
 					}
 
 					if (sequence.SelectQuery.Select.SkipValue != null || !sequence.SelectQuery.Select.OrderBy.IsEmpty)
@@ -129,7 +129,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					sequence.ConvertToIndex(null, 0, ConvertFlags.All);
-					new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, updateStatement, updateStatement.SelectQuery, 0)
+					new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, new EvaluationContext(), updateStatement, updateStatement.SelectQuery, 0)
 						.ResolveWeakJoins();
 					updateStatement.SelectQuery.Select.Columns.Clear();
 
@@ -259,7 +259,9 @@ namespace LinqToDB.Linq.Builder
 
 		static void CheckAssociation(IBuildContext sequence)
 		{
-			if (sequence is SelectContext ctx && ctx.IsScalar)
+			throw new NotImplementedException();
+
+			if (sequence is SelectContext ctx/* && ctx.IsScalar*/)
 			{
 				var res = ctx.IsExpression(null, 0, RequestFor.Association);
 
@@ -564,7 +566,7 @@ namespace LinqToDB.Linq.Builder
 		class UpdateOutputContext : SelectContext
 		{
 			public UpdateOutputContext(IBuildContext? parent, LambdaExpression lambda, IBuildContext source, IBuildContext deletedTable, IBuildContext insertedTable)
-				: base(parent, lambda, source, deletedTable, insertedTable)
+				: base(parent, lambda, false, source, deletedTable, insertedTable)
 			{
 				Statement = source.Statement;
 				Sequence[0].SelectQuery.Select.Columns.Clear();

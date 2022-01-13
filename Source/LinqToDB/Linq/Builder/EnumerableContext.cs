@@ -22,8 +22,9 @@ namespace LinqToDB.Linq.Builder
 		readonly Type _elementType;
 
 #if DEBUG
-		public string?               _sqlQueryText { get; }
-		public string                Path          => this.GetPath();
+		public string? _sqlQueryText { get; }
+		public string  Path          => this.GetPath();
+		public int     ContextId     { get; }
 #endif
 		public  ExpressionBuilder    Builder       { get; }
 		public  Expression           Expression    { get; }
@@ -51,6 +52,9 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			SelectQuery.From.Table(Table);
+#if DEBUG
+			ContextId = builder.GenerateContextId();
+#endif
 		}
 
 		SqlValuesTable BuildValuesTable()
@@ -549,6 +553,21 @@ namespace LinqToDB.Linq.Builder
 		private static ConstructorInfo _sqlValueconstructor =
 			MemberHelper.ConstructorOf(() => new SqlValue(new DbDataType(typeof(object)), null));
 
+		private SqlField? GetField(MemberExpression path)
+		{
+			foreach (var column in _entityDescriptor.Columns)
+			{
+				if (column.MemberInfo.EqualsTo(path.Member, _elementType))
+				{
+					var newField = BuildField(column);
+
+					return newField;
+				}
+			}
+
+			return null;
+		}
+
 		private SqlField BuildField(ColumnDescriptor column)
 		{
 			var memberName = column.MemberName;
@@ -603,6 +622,32 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return sql;
+		}
+
+		public Expression MakeExpression(Expression path, ProjectFlags flags)
+		{
+			if (SequenceHelper.IsSameContext(path, this))
+			{
+				if (flags.HasFlag(ProjectFlags.Root))
+					return path;
+
+				// trying to access Queryable variant
+				if (path.Type != _elementType && flags.HasFlag(ProjectFlags.Expression))
+					return new SqlEagerLoadExpression(this, path, Builder.GetSequenceExpression(this));
+
+				return Builder.BuildEntityExpression(this, _elementType, flags);
+			}
+
+			if (path is not MemberExpression member)
+				return Builder.CreateSqlError(this, path);
+
+			var sql = GetField(member);
+			if (sql == null)
+				return Builder.CreateSqlError(this, path);
+
+			var placeholder = ExpressionBuilder.CreatePlaceholder(this, sql, path);
+
+			return placeholder;
 		}
 
 		public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)

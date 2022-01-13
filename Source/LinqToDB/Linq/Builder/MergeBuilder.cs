@@ -105,7 +105,7 @@ namespace LinqToDB.Linq.Builder
 		class MergeOutputContext : SelectContext
 		{
 			public MergeOutputContext(IBuildContext? parent, LambdaExpression lambda, MergeContext mergeContext, IBuildContext emptyTable, IBuildContext deletedTable, IBuildContext insertedTable)
-				: base(parent, lambda, emptyTable, deletedTable, insertedTable)
+				: base(parent, lambda, false, emptyTable, deletedTable, insertedTable)
 			{
 				Statement = mergeContext.Statement;
 				Sequence[0].SelectQuery.Select.Columns.Clear();
@@ -215,7 +215,7 @@ namespace LinqToDB.Linq.Builder
 
 				//TODO: Why it is not handled by main optimizer
 				var sqlFlags = builder.DataContext.SqlProviderFlags;
-				new SelectQueryOptimizer(sqlFlags, query, query, 0, statement)
+				new SelectQueryOptimizer(sqlFlags, new EvaluationContext(), query, query, 0, statement)
 					.FinalizeAndValidate(sqlFlags.IsApplyJoinSupported, sqlFlags.IsGroupByExpressionSupported);
 				
 				if (query.From.Tables.Count == 0)
@@ -236,7 +236,7 @@ namespace LinqToDB.Linq.Builder
 
 				builder.BuildSearchCondition(
 					new ExpressionContext(null, secondContext == null? new[] { onContext } : new[] { onContext, secondContext }, condition),
-					conditionExpr,
+					conditionExpr, ProjectFlags.SQL, 
 					result.Conditions);
 			}
 

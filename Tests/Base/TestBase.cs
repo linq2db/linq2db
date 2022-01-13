@@ -5,12 +5,12 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Data.DbCommandProcessor;
 using LinqToDB.DataProvider.Informix;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
@@ -27,9 +27,12 @@ using LinqToDB.ServiceModel;
 
 using NUnit.Framework;
 using NUnit.Framework.Internal;
+using TypeHelper = LinqToDB.Common.TypeHelper;
 
 namespace Tests
 {
+	using LinqToDB.Data.RetryPolicy;
+	using LinqToDB.Interceptors;
 	using Model;
 	using Tools;
 
@@ -49,6 +52,9 @@ namespace Tests
 			public static readonly Guid     Guid1                         = new ("bc7b663d-0fde-4327-8f92-5d8cc3a11d11");
 			public static readonly Guid     Guid2                         = new ("a948600d-de21-4f74-8ac2-9516b287076e");
 			public static readonly Guid     Guid3                         = new ("bd3973a5-4323-4dd8-9f4f-df9f93e2a627");
+			public static readonly Guid     Guid4                         = new ("76b1c875-2287-4b82-a23b-7967c5eafed8");
+			public static readonly Guid     Guid5                         = new ("656606a4-6e36-4431-add6-85f886a1c7c2");
+			public static readonly Guid     Guid6                         = new ("66aa9df9-260f-4a2b-ac50-9ca8ce7ad725");
 
 			public static byte[] Binary(int size)
 			{
@@ -227,7 +233,7 @@ namespace Tests
 
 			DefaultProvider = testSettings.DefaultConfiguration;
 
-			if (!DefaultProvider.IsNullOrEmpty())
+			if (!string.IsNullOrEmpty(DefaultProvider))
 			{
 				DataConnection.DefaultConfiguration = DefaultProvider;
 #if !NET472
@@ -336,7 +342,7 @@ namespace Tests
 #if NET472
 		const           int          IP = 22654;
 		static          bool         _isHostOpen;
-		static          LinqService? _service;
+		static          TestLinqService? _service;
 		static readonly object       _syncRoot = new ();
 #endif
 
@@ -359,7 +365,7 @@ namespace Tests
 					return;
 				}
 
-				host        = new ServiceHost(_service = new LinqService(ms) { AllowUpdates = true }, new Uri("net.tcp://localhost:" + (IP + TestExternals.RunID)));
+				host        = new ServiceHost(_service = new TestLinqService(ms, null, false) { AllowUpdates = true }, new Uri("net.tcp://localhost:" + (IP + TestExternals.RunID)));
 				_isHostOpen = true;
 			}
 
@@ -421,7 +427,6 @@ namespace Tests
 			TestProvName.SqlServer2019SequentialAccess,
 			TestProvName.SqlServer2019FastExpressionCompiler,
 			TestProvName.SqlServerContained,
-			ProviderName.SqlServer2000,
 			ProviderName.SqlServer2005,
 			TestProvName.SqlAzure,
 			ProviderName.PostgreSQL,
@@ -442,7 +447,12 @@ namespace Tests
 			ProviderName.SapHanaOdbc
 		}).ToList();
 
-		protected ITestDataContext GetDataContext(string configuration, MappingSchema? ms = null, bool testLinqService = true)
+		protected ITestDataContext GetDataContext(
+			string         configuration,
+			MappingSchema? ms                       = null,
+			bool           testLinqService          = true,
+			IInterceptor?  interceptor              = null,
+			bool           suppressSequentialAccess = false)
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
@@ -451,9 +461,25 @@ namespace Tests
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
 
-				var dx  = testLinqService
-					? new ServiceModel.TestLinqServiceDataContext(new LinqService(ms) { AllowUpdates = true }) { Configuration = str }
-					: new TestServiceModelDataContext(IP + TestExternals.RunID) { Configuration = str } as RemoteDataContextBase;
+				RemoteDataContextBase dx;
+
+				if (testLinqService)
+					dx = new ServiceModel.TestLinqServiceDataContext(new TestLinqService(ms, interceptor, suppressSequentialAccess) { AllowUpdates = true }) { Configuration = str };
+				else
+				{
+					_service!.SuppressSequentialAccess = suppressSequentialAccess;
+					if (interceptor != null)
+						_service!.AddInterceptor(interceptor);
+
+					dx = new TestServiceModelDataContext(
+						IP + TestExternals.RunID,
+						() =>
+						{
+							_service!.SuppressSequentialAccess = false;
+							if (interceptor != null)
+								_service!.RemoveInterceptor();
+						}) { Configuration = str };
+				}
 
 				Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
 
@@ -466,6 +492,21 @@ namespace Tests
 #endif
 			}
 
+			return GetDataConnection(configuration, ms, interceptor, suppressSequentialAccess: suppressSequentialAccess);
+		}
+
+		protected TestDataConnection GetDataConnection(
+			string         configuration,
+			MappingSchema? ms                       = null,
+			IInterceptor?  interceptor              = null,
+			IRetryPolicy?  retryPolicy              = null,
+			bool           suppressSequentialAccess = false)
+		{
+			if (configuration.EndsWith(".LinqService"))
+			{
+				throw new InvalidOperationException($"Call {nameof(GetDataContext)} for remote context creation");
+			}
+
 			Debug.WriteLine(configuration, "Provider ");
 
 			var res = new TestDataConnection(configuration);
@@ -475,9 +516,20 @@ namespace Tests
 			// add extra mapping schema to not share mappers with other sql2017/2019 providers
 			// use same schema to use cache within test provider scope
 			if (configuration == TestProvName.SqlServer2019SequentialAccess)
+			{
+				if (!suppressSequentialAccess)
+					res.AddInterceptor(SequentialAccessCommandInterceptor.Instance);
+
 				res.AddMappingSchema(_sequentialAccessSchema);
+			}
 			else if (configuration == TestProvName.SqlServer2019FastExpressionCompiler)
 				res.AddMappingSchema(_fecSchema);
+
+			if (interceptor != null)
+				res.AddInterceptor(interceptor);
+
+			if (retryPolicy != null)
+				res.RetryPolicy = retryPolicy;
 
 			return res;
 		}
@@ -1238,19 +1290,159 @@ namespace Tests
 			Assert.IsTrue(b);
 		}
 
+		public static Expression CheckForNull(Expression? expression)
+		{
+			if (expression != null && expression.NodeType.NotIn(ExpressionType.Lambda, ExpressionType.Quote) &&
+			    (expression.Type.IsClass || expression.Type.IsInterface) &&
+			    !typeof(IQueryable<>).IsSameOrParentOf(expression.Type))
+			{
+				var test = Expression.ReferenceEqual(expression,
+					Expression.Constant(null, expression.Type));
+				return Expression.Condition(test,
+					Expression.Constant(DefaultValue.GetValue(expression.Type), expression.Type), expression);
+			}
+
+			return expression;
+		}
+
+		public static Expression CheckForNull(Expression? expression, Expression trueExpression, Expression falseExpression)
+		{
+			if (expression is MemberExpression me)
+				expression = CheckForNull(me);
+
+			if (expression != null && expression.NodeType.NotIn(ExpressionType.Lambda, ExpressionType.Quote) &&
+			    (expression.Type.IsClass || expression.Type.IsInterface) &&
+			    !typeof(IQueryable<>).IsSameOrParentOf(expression.Type))
+			{
+				var test = Expression.ReferenceEqual(expression,
+					Expression.Constant(null, expression.Type));
+				return Expression.Condition(test, trueExpression, falseExpression);
+			}
+
+			return expression;
+		}
+
+		public static List<Expression> GetMemberPath(Expression? expression)
+		{
+			var result = new List<Expression>();
+
+			var current = expression;
+			while (current != null)
+			{
+				var prev = current;
+				switch (current.NodeType)
+				{
+					case ExpressionType.MemberAccess:
+					{
+						result.Add(current);
+						current = ((MemberExpression)current).Expression;
+						break;
+					}
+				}
+
+				if (prev == current)
+				{
+					result.Add(current);
+					break;
+				}
+			}
+
+			result.Reverse();
+			return result;
+		}
+
+
+		public static Expression CheckForNull(MemberExpression expr)
+		{
+			Expression? test = null;
+
+			var path = GetMemberPath(expr);
+
+			for (int i = 0; i < path.Count - 1; i++)
+			{
+				var objExpr = path[i];
+				if (objExpr != null && (objExpr.Type.IsClass || objExpr.Type.IsInterface))
+				{
+					var currentTest = Expression.ReferenceEqual(objExpr,
+						Expression.Constant(null, objExpr.Type));
+					if (test == null)
+						test = currentTest;
+					else
+					{
+						test = Expression.OrElse(test, currentTest);
+					}
+				}
+			}
+
+			if (test == null)
+				return expr;
+
+			return Expression.Condition(test,
+				Expression.Constant(DefaultValue.GetValue(expr.Type), expr.Type), expr);
+		}
+
+		static Expression ApplyNullCheck(Expression expr)
+		{
+			var newExpr = expr.Transform(e =>
+			{
+				if (e.NodeType == ExpressionType.Call)
+				{
+					var mc = (MethodCallExpression)e;
+
+					if (!mc.Method.IsStatic)
+					{
+						var checkedMethod = CheckForNull(mc.Object, Expression.Constant(DefaultValue.GetValue(mc.Method.ReturnType), mc.Method.ReturnType), mc);
+						return new TransformInfo(checkedMethod);
+					}
+				}
+				else if (e.NodeType == ExpressionType.MemberAccess)
+				{
+					var ma = (MemberExpression)e;
+
+					return new TransformInfo(CheckForNull(ma));
+				}
+
+				return new TransformInfo(e);
+			})!;
+
+			return newExpr;
+		}
+
 		public T[] AssertQuery<T>(IQueryable<T> query)
 		{
-			var expr    = query.Expression;
-			var loaded  = new Dictionary<Type, Expression>();
-			var actual  = query.ToArray();
-			var newExpr = expr.Transform(loaded, static (loaded, e) =>
+			var expr   = query.Expression;
+			var actual = query.ToArray();
+
+			var loaded = new Dictionary<Type, Expression>();
+
+			Expression RegisterLoaded(Type eType, Expression tableExpression)
+			{
+				if (!loaded.TryGetValue(eType, out var itemsExpression))
+				{
+					var newCall = LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Queryable.ToArray, tableExpression);
+					using (new DisableLogging())
+					{
+						var items = newCall.EvaluateExpression();
+						itemsExpression = Expression.Constant(items, eType.MakeArrayType());
+						loaded.Add(eType, itemsExpression);
+					}
+				}
+
+				var queryCall =
+					LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Enumerable.AsQueryable,
+						itemsExpression);
+
+				return queryCall;
+			}
+
+			var newExpr = expr.Transform(e =>
 			{
 				if (e.NodeType == ExpressionType.Call)
 				{
 					var mc = (MethodCallExpression)e;
 
 					if (mc.IsSameGenericMethod(Methods.LinqToDB.AsSubQuery))
-						return mc.Arguments[0];
+						return new TransformInfo(mc.Arguments[0], false, true);
 
 					if (typeof(ITable<>).IsSameOrParentOf(mc.Type))
 					{
@@ -1258,26 +1450,34 @@ namespace Tests
 
 						if (entityType != null)
 						{
-							if (!loaded.TryGetValue(entityType, out var itemsExpression))
-							{
-								var newCall = LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Queryable.ToArray, mc);
-								using (new DisableLogging())
-								{
-									var items = newCall.EvaluateExpression();
-									itemsExpression = Expression.Constant(items, entityType.MakeArrayType());
-									loaded.Add(entityType, itemsExpression);
-								}
-							}
-							var queryCall =
-								LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Enumerable.AsQueryable,
-									itemsExpression);
-							return queryCall;
+							var itemsExpression = RegisterLoaded(entityType, mc);
+							return new TransformInfo(itemsExpression);
 						}
+					}
+
+					if (mc.IsQueryable("InnerJoin"))
+					{
+						mc = TypeHelper.MakeMethodCall(Methods.Queryable.Where, mc.Arguments.ToArray());
+					}
+
+					return new TransformInfo(mc, false, true);
+					//return mc.Update(CheckForNull(mc.Object), mc.Arguments.Select(CheckForNull));
+				}
+				else if (e.NodeType == ExpressionType.MemberAccess)
+				{
+					if (typeof(ITable<>).IsSameOrParentOf(e.Type))
+					{
+						var entityType = e.Type.GetGenericArguments()[0];
+						var items = RegisterLoaded(entityType, e);
+						return new TransformInfo(items);
 					}
 				}
 
-				return e;
+				return new TransformInfo(e);
 			})!;
+
+
+			newExpr = ApplyNullCheck(newExpr);
 
 			var empty = LinqToDB.Common.Tools.CreateEmptyQuery<T>();
 			T[]? expected;
@@ -1319,7 +1519,6 @@ namespace Tests
 			{
 				case TestProvName.SqlAzure                           :
 				case ProviderName.SqlServer                          :
-				case ProviderName.SqlServer2000                      :
 				case ProviderName.SqlServer2005                      :
 				case ProviderName.SqlServer2008                      :
 				case ProviderName.SqlServer2012                      :
@@ -1356,7 +1555,6 @@ namespace Tests
 			if (provider == TestProvName.SqlServer2019SequentialAccess)
 			{
 				Configuration.OptimizeForSequentialAccess = true;
-				DbCommandProcessorExtensions.Instance = new SequentialAccessCommandProcessor();
 			}
 			else if (provider == TestProvName.SqlServer2019FastExpressionCompiler)
 			{
@@ -1372,7 +1570,6 @@ namespace Tests
 			if (provider == TestProvName.SqlServer2019SequentialAccess)
 			{
 				Configuration.OptimizeForSequentialAccess = false;
-				DbCommandProcessorExtensions.Instance = null;
 			}
 			if (provider == TestProvName.SqlServer2019FastExpressionCompiler)
 			{

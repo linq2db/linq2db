@@ -1,11 +1,13 @@
-using System;
-using System.Data;
+﻿using System;
 using System.Diagnostics;
 
 namespace LinqToDB.Configuration
 {
+	using System.Collections.Generic;
+	using System.Data.Common;
 	using Data;
 	using DataProvider;
+	using LinqToDB.Interceptors;
 	using Mapping;
 
 	public class LinqToDbConnectionOptions<T> : LinqToDbConnectionOptions
@@ -52,6 +54,7 @@ namespace LinqToDB.Configuration
 			OnTrace       = builder.OnTrace;
 			TraceLevel    = builder.TraceLevel;
 			WriteTrace    = builder.WriteTrace;
+			Interceptors  = builder.Interceptors;
 		}
 
 		/// <summary>
@@ -71,9 +74,9 @@ namespace LinqToDB.Configuration
 		/// </summary>
 		public IDataProvider?                        DataProvider        { get; }
 		/// <summary>
-		/// Gets <see cref="IDbConnection"/> instance to use with <see cref="DataConnection"/> instance.
+		/// Gets <see cref="System.Data.Common.DbConnection"/> instance to use with <see cref="DataConnection"/> instance.
 		/// </summary>
-		public IDbConnection?                        DbConnection        { get; }
+		public DbConnection?                         DbConnection        { get; }
 		/// <summary>
 		/// Gets <see cref="DbConnection"/> ownership status for <see cref="DataConnection"/> instance.
 		/// If <c>true</c>, <see cref="DataConnection"/> will dispose provided connection on own dispose.
@@ -94,11 +97,11 @@ namespace LinqToDB.Configuration
 		/// <summary>
 		/// Gets connection factory to use with <see cref="DataConnection"/> instance.
 		/// </summary>
-		public Func<IDbConnection>?                  ConnectionFactory   { get; }
+		public Func<DbConnection>?                   ConnectionFactory   { get; }
 		/// <summary>
-		/// Gets <see cref="IDbTransaction"/> instance to use with <see cref="DataConnection"/> instance.
+		/// Gets <see cref="DbTransaction"/> instance to use with <see cref="DataConnection"/> instance.
 		/// </summary>
-		public IDbTransaction?                       DbTransaction       { get; }
+		public DbTransaction?                        DbTransaction       { get; }
 		/// <summary>
 		/// Gets custom trace method to use with <see cref="DataConnection"/> instance.
 		/// </summary>
@@ -111,6 +114,10 @@ namespace LinqToDB.Configuration
 		/// Gets custom trace writer to use with <see cref="DataConnection"/> instance.
 		/// </summary>
 		public Action<string?, string?, TraceLevel>? WriteTrace          { get; }
+		/// <summary>
+		/// Gets list of interceptors to use with <see cref="DataConnection"/> instance.
+		/// </summary>
+		public IReadOnlyList<IInterceptor>?          Interceptors        { get; }
 
 		internal ConnectionSetupType SetupType { get; }
 

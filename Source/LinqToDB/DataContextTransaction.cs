@@ -157,7 +157,7 @@ namespace LinqToDB
 				if (_transactionCounter == 0)
 				{
 					DataContext.LockDbManagerCounter--;
-					DataContext.ReleaseQuery();
+					await DataContext.ReleaseQueryAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				}
 			}
 		}
@@ -181,7 +181,7 @@ namespace LinqToDB
 				if (_transactionCounter == 0)
 				{
 					DataContext.LockDbManagerCounter--;
-					DataContext.ReleaseQuery();
+					await DataContext.ReleaseQueryAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				}
 			}
 		}

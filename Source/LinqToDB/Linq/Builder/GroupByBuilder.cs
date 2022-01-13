@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
@@ -63,10 +62,45 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
+
+		/*
+
+		-- describing subqueries when building GroupByContext
+
+		 SELECT GroupByContext.*
+		 FROM 
+		 (
+		    SELECT
+				GroupByContext.SubQuery.Field1,
+				GroupByContext.SubQuery.Field2,
+				Count(*),
+				SUM(GroupByContext.SubQuery.Field3)
+		    FROM 
+			(
+				SELECT dataSubquery.*
+				FROM (
+				   SELECT dataSequence.*
+				   FROM dataSequence
+				   -- all associations are attached here
+				) dataSubquery
+		    ) GroupByContext.SubQuery	-- groupingSubquery
+		    GROUP BY
+					GroupByContext.SubQuery.Field1,
+					GroupByContext.SubQuery.Field2
+		 ) GroupByContext
+
+		 OUTER APPLY (  -- applying complex aggregates
+			SELECT Count(*) FROM dataSubquery
+			WHERE dataSubquery.Field > 10 AND 
+				-- filter by grouping key
+				dataSubquery.Field1 == GroupByContext.Field1 AND dataSubquery.Field2 == GroupByContext.Field2
+		 )
+
+		 */
+		
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequenceExpr    = methodCall.Arguments[0];
-			var wrapSequence    = false;
 			LambdaExpression?   groupingKey = null;
 			var groupingKind    = GroupingType.Default;
 			if (sequenceExpr.NodeType == ExpressionType.Call)
@@ -80,8 +114,6 @@ namespace LinqToDB.Linq.Builder
 
 					if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ExpressionBuilder.GroupSubQuery<,>))
 					{
-						wrapSequence = true;
-
 						var selectParamBody = selectParam.Body.Unwrap();
 						MethodCallExpression? groupingMethod = null;
 						if (selectParamBody is MemberInitExpression mi)
@@ -114,28 +146,32 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			var sequence        = builder.BuildSequence(new BuildInfo(buildInfo, sequenceExpr));
-			var keySequence     = sequence;
+			var dataSequence = builder.BuildSequence(new BuildInfo(buildInfo, sequenceExpr));
+
+			var dataSubquery     = new SubQueryContext(dataSequence);
+			var groupingSubquery = new SubQueryContext(dataSubquery);
+
+			var keySequence     = dataSequence;
 
 			var groupingType    = methodCall.Type.GetGenericArguments()[0];
 			var keySelector     = (LambdaExpression)methodCall.Arguments[1].Unwrap()!;
-			var elementSelector = (LambdaExpression)methodCall.Arguments[2].Unwrap()!;
-
-			if (wrapSequence)
+			LambdaExpression elementSelector;
+			if (methodCall.Arguments.Count >= 3)
 			{
-				sequence = new SubQueryContext(sequence);
+				elementSelector = (LambdaExpression)methodCall.Arguments[2].Unwrap()!;
+			}
+			else
+			{
+				var param = Expression.Parameter(groupingType.GetGenericArguments()[1], "selector");
+				elementSelector = Expression.Lambda(param, param);
 			}
 
-			sequence     = new SubQueryContext(sequence);
-			var key      = new KeyContext(buildInfo.Parent, keySelector, sequence);
+			var key                 = new KeyContext(groupingSubquery, keySelector, buildInfo.IsSubQuery, keySequence);
+			var keyRef              = new ContextRefExpression(keySelector.Parameters[0].Type, key);
+			var currentPlaceholders = new List<SqlPlaceholderExpression>();
 			if (groupingKind != GroupingType.GroupBySets)
 			{
-				var groupSql = builder.ConvertExpressions(key, keySelector.Body.Unwrap(), ConvertFlags.Key, null);
-
-				var allowed = groupSql.Where(s => !QueryHelper.IsConstantFast(s.Sql));
-
-				foreach (var sql in allowed)
-					sequence.SelectQuery.GroupBy.Expr(sql.Sql);
+				AppendGrouping(groupingSubquery, currentPlaceholders, builder, dataSequence, key.Body);
 			}
 			else
 			{
@@ -147,20 +183,66 @@ namespace LinqToDB.Linq.Builder
 				foreach (var groupingSet in groupingSets)
 				{
 					var groupSql = builder.ConvertExpressions(keySequence, groupingSet, ConvertFlags.Key, null);
-					sequence.SelectQuery.GroupBy.Items.Add(
+					groupingSubquery.SelectQuery.GroupBy.Items.Add(
 						new SqlGroupingSet(groupSql.Select(s => keySequence.SelectQuery.Select.AddColumn(s.Sql))));
 				}
 			}
 
-			sequence.SelectQuery.GroupBy.GroupingType = groupingKind;
+			groupingSubquery.SelectQuery.GroupBy.GroupingType = groupingKind;
 
-			var element = new SelectContext (buildInfo.Parent, elementSelector, sequence/*, key*/);
-			var groupBy = new GroupByContext(buildInfo.Parent, sequenceExpr, groupingType, sequence, key, element, builder.IsGroupingGuardDisabled);
+			var element = new ElementContext(buildInfo.Parent, elementSelector, buildInfo.IsSubQuery, dataSubquery);
+			var groupBy = new GroupByContext(groupingSubquery, sequenceExpr, groupingType, key, keyRef, currentPlaceholders, element, builder.IsGroupingGuardDisabled);
+
+			// Will be used for eager loading generation
+			element.GroupByContext = groupBy;
+			// Will be used for completing GroupBy part
+			key.GroupByContext = groupBy;
 
 			Debug.WriteLine("BuildMethodCall GroupBy:\n" + groupBy.SelectQuery);
 
 			return groupBy;
 		}
+
+		/// <summary>
+		/// Appends GroupBy items to <paramref name="sequence"/> SelectQuery.
+		/// </summary>
+		/// <param name="sequence">Context which contains groping query.</param>
+		/// <param name="currentPlaceholders"></param>
+		/// <param name="builder"></param>
+		/// <param name="onSequence">Context from which level we want to get groping SQL.</param>
+		/// <param name="path">Actual expression which should be translated to grouping keys.</param>
+		static void AppendGrouping(IBuildContext sequence, List<SqlPlaceholderExpression> currentPlaceholders, ExpressionBuilder builder, IBuildContext onSequence, Expression path)
+		{
+			if (builder.TryConvertToSqlExpr(onSequence, path, ProjectFlags.SQL) is SqlPlaceholderExpression groupKey)
+			{
+				groupKey = (SqlPlaceholderExpression)builder.UpdateNesting(sequence, groupKey);
+				AppendGroupBy(builder, currentPlaceholders, sequence.SelectQuery, groupKey);
+			}
+			else
+			{
+				// only keys
+				var groupSqlExpr = builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), onSequence, path, ProjectFlags.SQL | ProjectFlags.Keys);
+				groupSqlExpr = builder.UpdateNesting(sequence, groupSqlExpr);
+
+				AppendGroupBy(builder, currentPlaceholders, sequence.SelectQuery, groupSqlExpr);
+			}
+		}
+
+		static void AppendGroupBy(ExpressionBuilder builder, List<SqlPlaceholderExpression> currentPlaceholders, SelectQuery query, Expression result)
+		{
+			var placeholders = builder.CollectDistinctPlaceholders(result);
+			var allowed      = placeholders.Where(p => !QueryHelper.IsConstantFast(p.Sql));
+
+			foreach (var p in allowed)
+			{
+				if (currentPlaceholders.Find(cp => ExpressionEqualityComparer.Instance.Equals(cp.Path, p.Path)) == null)
+				{
+					currentPlaceholders.Add(p);
+					query.GroupBy.Expr(p.Sql);
+				}
+			}
+		}
+
 
 		protected override SequenceConvertInfo? Convert(
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
@@ -170,48 +252,63 @@ namespace LinqToDB.Linq.Builder
 
 		#endregion
 
+		#region Element Context
+
+		internal class ElementContext : SelectContext
+		{
+			public ElementContext(IBuildContext? parent, LambdaExpression lambda, bool isSubQuery, params IBuildContext[] sequences) : base(parent, lambda, isSubQuery, sequences)
+			{
+			}
+
+			public GroupByContext GroupByContext { get; set; } = null!;
+
+			public override Expression GetEagerLoadExpression(Expression path)
+			{
+				var subquery = GroupByContext.MakeSubQueryExpression(new ContextRefExpression(path.Type, GroupByContext));
+				return subquery;
+			}
+
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				if (flags.HasFlag(ProjectFlags.Root) && SequenceHelper.IsSameContext(path, this))
+					return path;
+
+				var newExpr = base.MakeExpression(path, flags);
+
+				return newExpr;
+			}
+		}
+
+		#endregion
+
 		#region KeyContext
 
 		internal class KeyContext : SelectContext
 		{
-			public KeyContext(IBuildContext? parent, LambdaExpression lambda, params IBuildContext[] sequences)
-				: base(parent, lambda, sequences)
+			public KeyContext(IBuildContext? parent, LambdaExpression lambda, bool isSubQuery, params IBuildContext[] sequences)
+				: base(parent, lambda, isSubQuery, sequences)
 			{
 			}
 
-			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-			{
-				return base.BuildExpression(expression, level, true);
-			}
+			public GroupByContext GroupByContext { get; set; } = null!;
 
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				base.BuildQuery(query, queryParameter);
-			}
+				if (flags.HasFlag(ProjectFlags.Root) && SequenceHelper.IsSameContext(path, this))
+					return path;
 
-			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				return base.ConvertToSql(expression, level, flags);
-			}
+				var newFlags = flags;
+				if (newFlags.HasFlag(ProjectFlags.Expression))
+					newFlags = (newFlags & ~ProjectFlags.Expression) | ProjectFlags.SQL;
 
-			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-			{
-				return base.ConvertToIndex(expression, level, flags);
-			}
+				var result = base.MakeExpression(path, newFlags);
 
-			public override int ConvertToParentIndex(int index, IBuildContext context)
-			{
-				return base.ConvertToParentIndex(index, context);
-			}
+				result = Builder.MakeExpression(result, newFlags);
 
-			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-			{
-				return base.IsExpression(expression, level, requestFlag);
-			}
+				// appending missing keys
+				AppendGroupBy(Builder, GroupByContext.CurrentPlaceholders, GroupByContext.SubQuery.SelectQuery, result);
 
-			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
-			{
-				return base.GetContext(expression, level, buildInfo);
+				return result;
 			}
 		}
 
@@ -219,34 +316,65 @@ namespace LinqToDB.Linq.Builder
 
 		#region GroupByContext
 
-		internal class GroupByContext : SequenceContextBase
+		internal class GroupByContext : SubQueryContext
 		{
 			public GroupByContext(
-				IBuildContext? parent,
+				IBuildContext  sequence,
 				Expression     sequenceExpr,
 				Type           groupingType,
-				IBuildContext  sequence,
 				KeyContext     key,
+				ContextRefExpression keyRef,
+				List<SqlPlaceholderExpression> currentPlaceholders,
 				SelectContext  element,
 				bool           isGroupingGuardDisabled)
-				: base(parent, sequence, null)
+				: base(sequence)
 			{
-				_sequenceExpr = sequenceExpr;
-				_key          = key;
-				Element       = element;
-				_groupingType = groupingType;
+				_sequenceExpr        = sequenceExpr;
+				_key                 = key;
+				_keyRef              = keyRef;
+				CurrentPlaceholders = currentPlaceholders;
+				Element              = element;
+				_groupingType        = groupingType;
 
 				_isGroupingGuardDisabled = isGroupingGuardDisabled;
 
 				key.Parent = this;
 			}
 
-			readonly Expression    _sequenceExpr;
-			readonly KeyContext    _key;
-			readonly Type          _groupingType;
-			readonly bool          _isGroupingGuardDisabled;
+			readonly Expression                     _sequenceExpr;
+			readonly KeyContext                     _key;
+			readonly ContextRefExpression           _keyRef;
+			public   List<SqlPlaceholderExpression> CurrentPlaceholders { get; }
+			readonly Type                           _groupingType;
+			readonly bool                           _isGroupingGuardDisabled;
 
 			public SelectContext   Element { get; }
+
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				if (SequenceHelper.IsSameContext(path, this) &&
+				    (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.Test)))
+				{
+					return path;
+				}
+
+				if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Keys))
+				{
+					var result = Builder.MakeExpression(_keyRef, flags);
+					return result;
+				}
+
+				if (path is MemberExpression me && me.Expression is ContextRefExpression && me.Member.Name == "Key")
+				{
+					var keyPath = new ContextRefExpression(me.Type, _key);
+
+					return keyPath;
+				}
+
+				var newPath = SequenceHelper.CorrectExpression(path, this, Element);
+
+				return newPath;
+			}
 
 			internal class Grouping<TKey,TElement> : IGrouping<TKey,TElement>
 			{
@@ -317,8 +445,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (Configuration.Linq.GuardGrouping && !context._isGroupingGuardDisabled)
 					{
-						if (context.Element.Lambda.Parameters.Count == 1 &&
-							context.Element.Body == context.Element.Lambda.Parameters[0])
+						if (context.Element.Body is ContextRefExpression)
 						{
 							var ex = new LinqToDBException(
 								"You should explicitly specify selected fields for server-side GroupBy() call or add AsEnumerable() call before GroupBy() to perform client-side grouping.\n" +
@@ -426,12 +553,14 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				if (expression == null)
-					return BuildGrouping();
-
-				if (level != 0)
+				if (SequenceHelper.IsSameContext(expression, this))
 				{
-					var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+					return BuildGrouping();
+				}
+
+				if (expression!.NodeType == ExpressionType.MemberAccess)
+				{
+					var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, 1);
 
 					if (levelExpression.NodeType == ExpressionType.MemberAccess)
 					{
@@ -439,13 +568,15 @@ namespace LinqToDB.Linq.Builder
 
 						if (ma.Member.Name == "Key" && ma.Member.DeclaringType == _groupingType)
 						{
+							var keyRef = new ContextRefExpression(levelExpression.Type, _key);
+
+							var keyExpression = expression.Replace(levelExpression, keyRef);
+
 							var isBlockDisable = Builder.IsBlockDisable;
 
 							Builder.IsBlockDisable = true;
 
-							var r = ReferenceEquals(levelExpression, expression) ?
-								_key.BuildExpression(null,       0, enforceServerSide) :
-								_key.BuildExpression(expression, level + 1, enforceServerSide);
+							var r = _key.BuildExpression(keyExpression, 0, enforceServerSide);
 
 							Builder.IsBlockDisable = isBlockDisable;
 
@@ -476,11 +607,9 @@ namespace LinqToDB.Linq.Builder
 
 								if (largs.Length == 2)
 								{
-									var p   = Element.Parent;
-									var ctx = new ExpressionContext(Parent, Element, l);
-									var sql = Builder.ConvertToSql(ctx, l.Body, true);
+									var body = SequenceHelper.PrepareBody(l, Element);
+									var sql  = Builder.ConvertToSql(this, body, unwrap: true);
 
-									Builder.ReplaceParent(ctx, p);
 
 									return new SqlFunction(call.Type, call.Method.Name, true, sql);
 								}
@@ -530,7 +659,7 @@ namespace LinqToDB.Linq.Builder
 							var p = context.context.Element.Parent;
 							var ctx = new ExpressionContext(context.context.Parent, context.context.Element, l);
 
-							var res = context.context.Builder.ConvertToSql(ctx, l.Body, true, descriptor);
+							var res = context.context.Builder.ConvertToSql(ctx, l.Body, unwrap: true, columnDescriptor: descriptor);
 
 							context.context.Builder.ReplaceParent(ctx, p);
 							return res;
@@ -570,13 +699,13 @@ namespace LinqToDB.Linq.Builder
 							var p   = Element.Parent;
 							var ctx = new ExpressionContext(Parent, Element, l);
 
-							args[i - 1] = Builder.ConvertToSql(ctx, l.Body, true);
+							args[i - 1] = Builder.ConvertToSql(ctx, l.Body, unwrap: true);
 
 							Builder.ReplaceParent(ctx, p);
 						}
 						else
 						{
-							args[i - 1] = Builder.ConvertToSql(Element, ex, true);
+							args[i - 1] = Builder.ConvertToSql(Element, ex, unwrap: true);
 						}
 					}
 				}
@@ -588,73 +717,9 @@ namespace LinqToDB.Linq.Builder
 				return new SqlFunction(call.Type, call.Method.Name, true, args);
 			}
 
-			PropertyInfo? _keyProperty;
-
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
-				if (expression == null)
-				{
-					if (flags == ConvertFlags.Field && !_key.IsScalar)
-						return Element.ConvertToSql(null, 0, flags);
-					var keys = _key.ConvertToSql(null, 0, flags);
-					for (var i = 0; i < keys.Length; i++)
-					{
-						var key = keys[i];
-						keys[i] = key.AppendMember(_keyProperty!);
-					}
-
-					return keys;
-				}
-
-				if (level == 0 && expression.NodeType == ExpressionType.MemberAccess)
-					level += 1;
-				if (level > 0)
-				{
-					switch (expression.NodeType)
-					{
-						case ExpressionType.Call         :
-							{
-								var e = (MethodCallExpression)expression;
-
-								if (e.IsQueryable() || e.IsAggregate(Builder.MappingSchema))
-								{
-									return new[] { new SqlInfo(ConvertEnumerable(e)) };
-								}
-
-								break;
-							}
-
-						case ExpressionType.MemberAccess :
-							{
-								var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
-
-								if (levelExpression.NodeType == ExpressionType.MemberAccess)
-								{
-									var e = (MemberExpression)levelExpression;
-
-									if (e.Member.Name == "Key")
-									{
-										if (_keyProperty == null)
-											_keyProperty = _groupingType.GetProperty("Key");
-
-										if (e.Member == _keyProperty)
-										{
-											if (ReferenceEquals(levelExpression, expression))
-												return _key.ConvertToSql(null, 0, flags);
-
-											return _key.ConvertToSql(expression, level + 1, flags);
-										}
-									}
-
-									return Sequence.ConvertToSql(expression, level, flags);
-								}
-
-								break;
-							}
-					}
-				}
-
-				throw new LinqException("Expression '{0}' cannot be converted to SQL.", expression);
+				throw new NotImplementedException();
 			}
 
 			readonly Dictionary<Tuple<Expression?,int,ConvertFlags>,SqlInfo[]> _expressionIndex = new ();
@@ -681,9 +746,10 @@ namespace LinqToDB.Linq.Builder
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				if (level != 0)
+				/*if (expression != null)
 				{
-					var levelExpression = expression!.GetLevelExpression(Builder.MappingSchema, level);
+					//var levelExpression = expression!.GetLevelExpression(Builder.MappingSchema, level);
+					var levelExpression = expression;
 
 					if (levelExpression.NodeType == ExpressionType.MemberAccess)
 					{
@@ -696,9 +762,37 @@ namespace LinqToDB.Linq.Builder
 								_key.IsExpression(expression, level + 1, requestFlag);
 						}
 					}
+					else if (levelExpression is ContextRefExpression contextRef && contextRef.BuildContext == this)
+					{
+						return _key.IsExpression(null, 0, requestFlag);
+					}
 					else if (levelExpression.NodeType == ExpressionType.Call)
 						if (requestFlag == RequestFor.Expression)
 							return IsExpressionResult.True;
+				}*/
+
+				if (expression != null)
+				{
+					if (expression!.NodeType == ExpressionType.MemberAccess)
+					{
+						var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, 1);
+
+						if (levelExpression.NodeType == ExpressionType.MemberAccess)
+						{
+							var ma = (MemberExpression)levelExpression;
+
+							if (ma.Member.Name == "Key" && ma.Member.DeclaringType == _groupingType)
+							{
+								var keyRef = new ContextRefExpression(levelExpression.Type, _key);
+
+								var keyExpression = expression.Replace(levelExpression, keyRef);
+
+								var r = _key.IsExpression(keyExpression, 0, requestFlag);
+
+								return r;
+							}
+						}
+					}
 				}
 
 				return IsExpressionResult.False;
@@ -715,7 +809,9 @@ namespace LinqToDB.Linq.Builder
 					if (SelectQuery.GroupBy.GroupingType == GroupingType.GroupBySets)
 						SelectQuery.GroupBy.Items.Add(new SqlGroupingSet(new[] { expr }));
 					else
+					{
 						SelectQuery.GroupBy.Items.Add(expr);
+					}
 				}
 
 				return base.ConvertToParentIndex(index, this);
@@ -728,80 +824,54 @@ namespace LinqToDB.Linq.Builder
 				return TypeHelper.MakeMethodCall(Methods.Enumerable.Where, sequence, filterLambda);
 			}
 
+			public Expression MakeSubQueryExpression(Expression buildExpression)
+			{
+				var expr = MakeSubQueryExpression(
+					Builder.MappingSchema,
+					_sequenceExpr,
+					_key.Lambda.Parameters[0],
+					ExpressionHelper.PropertyOrField(buildExpression, "Key"),
+					_key.Lambda.Body);
+
+				expr = TypeHelper.MakeMethodCall(Methods.Enumerable.Select, expr, Element.Lambda);
+
+				return expr;
+			}
+
 			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				if (expression == null && buildInfo != null)
+				if (buildInfo.AggregationTest)
+					return new AggregationRoot(Element);
+
+				if (!buildInfo.IsSubQuery)
+					return this;
+
+				if (buildInfo.IsAggregation)
 				{
-					if (buildInfo.Parent is SelectManyBuilder.SelectManyContext sm)
-					{
-						var expr = MakeSubQueryExpression(
-							Builder.MappingSchema,
-							Sequence.Expression!,
-							_key.Lambda.Parameters[0],
-							ExpressionHelper.PropertyOrField(sm.Lambda.Parameters[0], "Key"),
-							_key.Lambda.Body);
-
-						return Builder.BuildSequence(new BuildInfo(buildInfo, expr));
-					}
-
-					//if (buildInfo.Parent == this)
-					{
-						var expr = MakeSubQueryExpression(
-							Builder.MappingSchema,
-							_sequenceExpr,
-							_key.Lambda.Parameters[0],
-							ExpressionHelper.PropertyOrField(buildInfo.Expression, "Key"),
-							_key.Lambda.Body);
-
-						var ctx = Builder.BuildSequence(new BuildInfo(buildInfo, expr));
-
-						ctx.SelectQuery.Properties.Add(Tuple.Create("from_group_by", SelectQuery));
-
-						return ctx;
-					}
-
-					//return this;
+					return this;
 				}
 
-				if (level != 0)
-				{
-					var levelExpression = expression!.GetLevelExpression(Builder.MappingSchema, level);
+				if (!SequenceHelper.IsSameContext(expression, this))
+					return null;
 
-					if (levelExpression.NodeType == ExpressionType.MemberAccess)
-					{
-						var ma = (MemberExpression)levelExpression;
+				var expr = MakeSubQueryExpression(buildInfo.Expression);
 
-						if (ma.Member.Name == "Key" && ma.Member.DeclaringType == _groupingType)
-						{
-							return ReferenceEquals(levelExpression, expression) ?
-								_key.GetContext(null,       0,         buildInfo!) :
-								_key.GetContext(expression, level + 1, buildInfo!);
-						}
-					}
-				}
+				var ctx = Builder.BuildSequence(new BuildInfo(buildInfo, expr) { IsAggregation = false });
 
-				if (buildInfo != null && level == 0 && expression?.NodeType == ExpressionType.Parameter)
-				{
-					var expr = MakeSubQueryExpression(
-						Builder.MappingSchema,
-						_sequenceExpr,
-						_key.Lambda.Parameters[0],
-						ExpressionHelper.PropertyOrField(buildInfo.Expression, "Key"),
-						_key.Lambda.Body);
-
-					expr = TypeHelper.MakeMethodCall(Methods.Enumerable.Select, expr, Element.Lambda);
-
-					var ctx = Builder.BuildSequence(new BuildInfo(buildInfo, expr));
-
-					ctx.SelectQuery.Properties.Add(Tuple.Create("from_group_by", SelectQuery));
-
-					return ctx;
-				}
-
-				throw new NotImplementedException();
+				return ctx;
 			}
 		}
 
 		#endregion
+
+		public class AggregationRoot : PassThroughContext
+		{
+			public AggregationRoot(IBuildContext context) : base(context)
+			{
+				SelectQuery = new SelectQuery();
+			}
+
+			public override SelectQuery SelectQuery { get; set; }
+		}
 	}
 }

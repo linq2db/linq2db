@@ -1100,7 +1100,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void JoinSubQueryCount([DataSources(
-			TestProvName.AllAccess, ProviderName.SqlCe, ProviderName.SqlServer2000)]
+			TestProvName.AllAccess, ProviderName.SqlCe)]
 			string context)
 		{
 			var n = 1;

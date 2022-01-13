@@ -28,7 +28,8 @@ namespace LinqToDB.Linq.Builder
 		{
 		}
 
-		public SqlInfo(MemberInfo mi, ISqlExpression sql, SelectQuery? query = null, int index = -1) : this(new[] { mi }, sql, query, index)
+		public SqlInfo(MemberInfo? mi, ISqlExpression sql, SelectQuery? query = null, int index = -1) 
+			: this(mi == null ? Array<MemberInfo>.Empty : new[] { mi }, sql, query, index)
 		{
 		}
 

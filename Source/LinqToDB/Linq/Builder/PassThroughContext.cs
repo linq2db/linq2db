@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Linq.Expressions;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -13,13 +14,17 @@ namespace LinqToDB.Linq.Builder
 			Context = context;
 
 			context.Builder.Contexts.Add(this);
+#if DEBUG
+			ContextId = context.Builder.GenerateContextId();
+#endif
 		}
 
 		public IBuildContext Context { get; set; }
 
 #if DEBUG
 		string? IBuildContext._sqlQueryText => Context._sqlQueryText;
-		public string Path => this.GetPath();
+		public string         Path          => this.GetPath();
+		public int            ContextId     { get; }
 #endif
 
 		public virtual ExpressionBuilder Builder     => Context.Builder;
@@ -49,6 +54,12 @@ namespace LinqToDB.Linq.Builder
 		{
 			expression = SequenceHelper.CorrectExpression(expression, this, Context);
 			return Context.ConvertToIndex(expression, level, flags);
+		}
+
+		public virtual Expression MakeExpression(Expression path, ProjectFlags flags)
+		{
+			path = SequenceHelper.CorrectExpression(path, this, Context);
+			return Builder.MakeExpression(path, flags);
 		}
 
 		public virtual IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)

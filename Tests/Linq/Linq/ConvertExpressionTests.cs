@@ -647,7 +647,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestConversionRemovedForEnumOfTypeByte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			using (var db    = new TestDataConnection(context))
+			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
 			{
 				table
@@ -693,7 +693,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestConversionRemovedForEnumOfTypeSByte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			using (var db    = new TestDataConnection(context))
+			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
 			{
 				table
@@ -739,7 +739,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestConversionRemovedForEnumOfTypeInt16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			using (var db    = new TestDataConnection(context))
+			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
 			{
 				table
@@ -785,7 +785,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestConversionRemovedForEnumOfTypeUInt16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			using (var db    = new TestDataConnection(context))
+			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
 			{
 				table
@@ -831,7 +831,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestConversionRemovedForEnumOfTypeInt32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			using (var db    = new TestDataConnection(context))
+			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
 			{
 				table
@@ -877,7 +877,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestConversionRemovedForEnumOfTypeUInt32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			using (var db    = new TestDataConnection(context))
+			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
 			{
 				table
@@ -923,7 +923,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestConversionRemovedForEnumOfTypeInt64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			using (var db    = new TestDataConnection(context))
+			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
 			{
 				table
@@ -969,7 +969,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestConversionRemovedForEnumOfTypeUInt64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			using (var db    = new TestDataConnection(context))
+			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<ConversionsTestTable>())
 			{
 				table

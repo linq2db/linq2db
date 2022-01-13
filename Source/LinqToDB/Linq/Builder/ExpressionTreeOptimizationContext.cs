@@ -372,16 +372,25 @@ namespace LinqToDB.Linq.Builder
 
 					break;
 				}
+
+				case ExpressionType.Extension:
+				{
+					if (expr is ContextRefExpression)
+						result = true;
+					break;
+				}
 			}
 
 			(_isServerSideOnlyCache ??= new()).Add(expr, result);
 			return result;
 		}
 
-		static bool IsQueryMember(Expression expr)
+		static bool IsQueryMember(Expression? expr)
 		{
 			expr = expr.Unwrap();
-			if (expr != null) switch (expr.NodeType)
+			if (expr != null) 
+			{
+				switch (expr.NodeType)
 				{
 					case ExpressionType.Parameter   : return true;
 					case ExpressionType.MemberAccess: return IsQueryMember(((MemberExpression)expr).Expression!);
@@ -397,7 +406,9 @@ namespace LinqToDB.Linq.Builder
 
 						return IsQueryMember(call.Object!);
 					}
+					case ExpressionType.Extension    : return expr is ContextRefExpression;
 				}
+			}
 
 			return false;
 		}
@@ -462,7 +473,7 @@ namespace LinqToDB.Linq.Builder
 		private bool CanBeCompiledFind(CanBeCompiledContext context, Expression ex)
 		{
 			if (IsServerSideOnly(ex))
-					return true;
+				return true;
 
 			switch (ex.NodeType)
 			{
@@ -499,6 +510,10 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Extension:
 				{
 					if (ex is ContextRefExpression)
+						return true;
+					if (ex is SqlErrorExpression)
+						return true;
+					if (ex is SqlPlaceholderExpression)
 						return true;
 					return !ex.CanReduce;
 				}
@@ -631,6 +646,15 @@ namespace LinqToDB.Linq.Builder
 						return new TransformInfo(AliasCall(ex, alias!), false, true);
 					}
 
+					l = Expressions.ConvertMember(MappingSchema, me.Member.ReflectedType!, me.Member);
+
+					if (l != null)
+					{
+						var ex = СonvertMemberExpression(expr, me.Expression!, l);
+
+						return new TransformInfo(ex, false, true);
+					}
+
 					break;
 				}
 
@@ -721,7 +745,7 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		private static Expression СonvertMemberExpression(Expression expr, Expression root, LambdaExpression l)
+		public static Expression СonvertMemberExpression(Expression expr, Expression root, LambdaExpression l)
 		{
 			var body  = l.Body.Unwrap();
 			var parms = l.Parameters.ToDictionary(p => p);

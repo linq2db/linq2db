@@ -28,7 +28,7 @@ namespace Tests.UserTests
 		[Test]
 		public void TestInsertOrUpdate([InsertOrUpdateDataSources(false, TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				db.GetTable<TestTable>().Delete();
@@ -72,7 +72,7 @@ namespace Tests.UserTests
 		[Test]
 		public void InsertOrReplaceTest([InsertOrUpdateDataSources(false, TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				db.GetTable<TestTable>().Delete();
@@ -97,7 +97,7 @@ namespace Tests.UserTests
 		[Test]
 		public void TestMerge([MergeTests.MergeDataContextSource(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				db.GetTable<TestTable>().Delete();
@@ -134,7 +134,7 @@ namespace Tests.UserTests
 		[Test]
 		public void TestMergeOnExplicit([MergeTests.MergeDataContextSource(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				db.GetTable<TestTable>().Delete();

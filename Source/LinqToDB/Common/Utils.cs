@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Common
@@ -67,12 +65,12 @@ namespace LinqToDB.Common
 			foreach (var item in items)
 			{
 				var name = nameFunc(item);
-				if (!name.IsNullOrEmpty() && currentNames?.Contains(name) != true && validatorFunc(name, namesParameter))
+				if (!string.IsNullOrEmpty(name) && currentNames?.Contains(name!) != true && validatorFunc(name!, namesParameter))
 				{
 					if (currentNames == null)
 						currentNames = new HashSet<string>(comparer);
-					currentNames.Add(name);
-					nameSetter(item, name, namesParameter);
+					currentNames.Add(name!);
+					nameSetter(item, name!, namesParameter);
 					continue;
 				}
 
@@ -83,13 +81,13 @@ namespace LinqToDB.Common
 
 				name = defaultName(item);
 
-				if (name.IsNullOrEmpty())
+				if (string.IsNullOrEmpty(name))
 					name = nameFunc(item);
-				if (name.IsNullOrEmpty())
+				if (string.IsNullOrEmpty(name))
 					name = "t";
 
 				var digitCount = 0;
-				while (char.IsDigit(name[name.Length - 1 - digitCount]))
+				while (char.IsDigit(name![name.Length - 1 - digitCount]))
 				{
 					++digitCount;
 				}

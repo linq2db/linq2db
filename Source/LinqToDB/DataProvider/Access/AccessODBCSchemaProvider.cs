@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Linq;
 
 
@@ -31,9 +30,9 @@ namespace LinqToDB.DataProvider.Access
 		{
 			// tables and views has same schema, only difference in TABLE_TYPE
 			// views also include SELECT procedures, including procedures with parameters(!)
-			var tables = ((DbConnection)dataConnection.Connection).GetSchema("Tables");
-			var views  = ((DbConnection)dataConnection.Connection).GetSchema("Views");
-			var procs  = ((DbConnection)dataConnection.Connection).GetSchema("Procedures");
+			var tables = dataConnection.Connection.GetSchema("Tables");
+			var views  = dataConnection.Connection.GetSchema("Views");
+			var procs  = dataConnection.Connection.GetSchema("Procedures");
 
 			var procIds = new HashSet<string>(
 				procs.AsEnumerable().Select(p => $"{p.Field<string>("PROCEDURE_CAT")}.{p.Field<string>("PROCEDURE_SCHEM")}.{p.Field<string>("PROCEDURE_NAME")}"));
@@ -56,7 +55,7 @@ namespace LinqToDB.DataProvider.Access
 					CatalogName        = null,
 					SchemaName         = schema,
 					TableName          = name,
-					IsDefaultSchema    = schema.IsNullOrEmpty(),
+					IsDefaultSchema    = string.IsNullOrEmpty(schema),
 					IsView             = t.Field<string>("TABLE_TYPE") == "VIEW",
 					IsProviderSpecific = system,
 					Description        = t.Field<string>("REMARKS")
@@ -73,7 +72,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var cs = ((DbConnection)dataConnection.Connection).GetSchema("Columns");
+			var cs = dataConnection.Connection.GetSchema("Columns");
 
 			return
 			(
@@ -100,7 +99,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var ps = ((DbConnection)dataConnection.Connection).GetSchema("Procedures");
+			var ps = dataConnection.Connection.GetSchema("Procedures");
 
 			return
 			(
@@ -114,14 +113,14 @@ namespace LinqToDB.DataProvider.Access
 					CatalogName         = null,
 					SchemaName          = schema,
 					ProcedureName       = name,
-					IsDefaultSchema     = schema.IsNullOrEmpty()
+					IsDefaultSchema     = string.IsNullOrEmpty(schema)
 				}
 			).ToList();
 		}
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
-			var ps = ((DbConnection)dataConnection.Connection).GetSchema("ProcedureParameters");
+			var ps = dataConnection.Connection.GetSchema("ProcedureParameters");
 			return
 			(
 				from p in ps.AsEnumerable()
@@ -150,7 +149,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters, GetSchemaOptions options)
 		{
-			return ((DbConnection)dataConnection.Connection).GetSchema("ProcedureColumns", new[] { null, null, commandText.TrimStart('[').TrimEnd(']') });
+			return dataConnection.Connection.GetSchema("ProcedureColumns", new[] { null, null, commandText.TrimStart('[').TrimEnd(']') });
 		}
 
 		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, long? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
@@ -161,9 +160,9 @@ namespace LinqToDB.DataProvider.Access
 			{
 				var parms = dataType.CreateParameters;
 
-				if (!parms.IsNullOrWhiteSpace())
+				if (!string.IsNullOrWhiteSpace(parms))
 				{
-					var paramNames = parms.Split(',');
+					var paramNames = parms!.Split(',');
 					var paramValues = new object?[paramNames.Length];
 
 					for (var i = 0; i < paramNames.Length; i++)

@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 
 namespace LinqToDB.DataProvider.Firebird
 {
-	using System.Globalization;
-	using System.Text;
 	using LinqToDB.Common;
 	using LinqToDB.Expressions;
 	using LinqToDB.Mapping;
@@ -20,18 +19,18 @@ namespace LinqToDB.DataProvider.Firebird
 		public const string TypesNamespace  = "FirebirdSql.Data.Types";
 
 		private FirebirdProviderAdapter(
-			Type                               connectionType,
-			Type                               dataReaderType,
-			Type                               parameterType,
-			Type                               commandType,
-			Type                               transactionType,
+			Type connectionType,
+			Type dataReaderType,
+			Type parameterType,
+			Type commandType,
+			Type transactionType,
 			Type?                              fbDecFloatType,
 			Type?                              fbZonedDateTimeType,
 			Type?                              fbZonedTimeType,
 			MappingSchema?                     mappingSchema,
-			Action<IDbDataParameter, FbDbType> dbTypeSetter,
-			Func<IDbDataParameter, FbDbType>   dbTypeGetter,
-			Action                             clearAllPulls)
+			Action<DbParameter, FbDbType>     dbTypeSetter,
+			Func<DbParameter, FbDbType>        dbTypeGetter,
+			Action clearAllPulls)
 		{
 			ConnectionType  = connectionType;
 			DataReaderType  = dataReaderType;
@@ -45,7 +44,7 @@ namespace LinqToDB.DataProvider.Firebird
 			MappingSchema       = mappingSchema;
 
 			SetDbType = dbTypeSetter;
-			GetDbType = dbTypeGetter;
+			GetDbType     = dbTypeGetter;
 			ClearAllPools = clearAllPulls;
 		}
 
@@ -66,8 +65,8 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public MappingSchema? MappingSchema { get; }
 
-		public Action<IDbDataParameter, FbDbType> SetDbType { get; }
-		public Func<IDbDataParameter, FbDbType>   GetDbType { get; }
+		public Action<DbParameter, FbDbType> SetDbType { get; }
+		public Func<DbParameter, FbDbType> GetDbType { get; }
 
 		public Action ClearAllPools { get; }
 
@@ -179,22 +178,22 @@ namespace LinqToDB.DataProvider.Firebird
 		[Wrapper]
 		public enum FbDbType
 		{
-			Array         = 0,
-			BigInt        = 1,
-			Binary        = 2,
-			Boolean       = 3,
-			Char          = 4,
-			Date          = 5,
-			Decimal       = 6,
-			Double        = 7,
-			Float         = 8,
-			Guid          = 9,
-			Integer       = 10,
-			Numeric       = 11,
-			SmallInt      = 12,
-			Text          = 13,
-			Time          = 14,
-			TimeStamp     = 15,
+			Array     = 0,
+			BigInt    = 1,
+			Binary    = 2,
+			Boolean   = 3,
+			Char      = 4,
+			Date      = 5,
+			Decimal   = 6,
+			Double    = 7,
+			Float     = 8,
+			Guid      = 9,
+			Integer   = 10,
+			Numeric   = 11,
+			SmallInt  = 12,
+			Text      = 13,
+			Time      = 14,
+			TimeStamp = 15,
 			VarChar       = 16,
 
 			// new in 7.10.0

@@ -202,6 +202,25 @@ namespace LinqToDB.Expressions
 		}
 
 		/// <summary>
+		/// Returns the body of <paramref name="lambda"/> but replaces all parameters
+		/// with the given replace expressions.
+		/// </summary>
+		public static Expression GetBody(this LambdaExpression lambda, params Expression[] replacement)
+		{
+			return Transform(lambda.Body, e =>
+			{
+				if (e.NodeType == ExpressionType.Parameter)
+				{
+					var idx = lambda.Parameters.IndexOf((ParameterExpression)e);
+					if (idx >= 0 && idx < replacement.Length)
+						return replacement[idx];
+				}
+
+				return e;
+			});
+		}
+
+		/// <summary>
 		/// Enumerates the expression tree of <paramref name="expr"/> and might
 		/// replace expression with the returned value of the given <paramref name="func"/>.
 		/// </summary>

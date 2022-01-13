@@ -1,5 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
+#if NET45
 using LinqToDB.Common.Internal;
+#endif
 
 namespace System.Threading.Tasks
 {

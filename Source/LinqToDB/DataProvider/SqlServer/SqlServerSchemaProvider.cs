@@ -443,7 +443,6 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			switch (dataConnection.DataProvider.Name)
 			{
-				case ProviderName.SqlServer2000 :
 				case ProviderName.SqlServer2005 :
 				case ProviderName.SqlServer2008 :
 					return CallBase();

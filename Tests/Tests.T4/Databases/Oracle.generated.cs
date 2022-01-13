@@ -36,7 +36,6 @@ namespace OracleDataContext
 		public ITable<LinqDataType>            LinqDataTypes            { get { return this.GetTable<LinqDataType>(); } }
 		public ITable<LINQDATATYPESBC>         Linqdatatypesbcs         { get { return this.GetTable<LINQDATATYPESBC>(); } }
 		public ITable<LongRawTable>            LongRawTables            { get { return this.GetTable<LongRawTable>(); } }
-		public ITable<OracleBulkCopyTable>     OracleBulkCopyTables     { get { return this.GetTable<OracleBulkCopyTable>(); } }
 		public ITable<Parent>                  Parents                  { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>                 Patients                 { get { return this.GetTable<Patient>(); } }
 		public ITable<Person>                  People                   { get { return this.GetTable<Person>(); } }
@@ -262,12 +261,6 @@ namespace OracleDataContext
 		[Column("longRawDataType", DbType="LONG RAW", DataType=LinqToDB.DataType.LongRaw, Length=0),     Nullable         ] public byte[]? LongRawDataType { get; set; } // LONG RAW
 	}
 
-	[Table(Schema="MANAGED", Name="OracleBulkCopyTable")]
-	public partial class OracleBulkCopyTable
-	{
-		[Column(DbType="NUMBER", DataType=LinqToDB.DataType.Decimal, Length=22, Scale=0), NotNull] public decimal ID { get; set; } // NUMBER
-	}
-
 	[Table(Schema="MANAGED", Name="Parent")]
 	public partial class Parent
 	{
@@ -459,7 +452,7 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C00799365_BackReference
+		/// SYS_C00819237_BackReference
 		/// </summary>
 		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 		public IEnumerable<TTestUserContract> Syscs { get; set; } = null!;
@@ -478,9 +471,9 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C00799365
+		/// SYS_C00819237
 		/// </summary>
-		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="SYS_C00799365", BackReferenceName="Syscs")]
+		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="SYS_C00819237", BackReferenceName="Syscs")]
 		public TTestUser User { get; set; } = null!;
 
 		#endregion
@@ -492,12 +485,19 @@ namespace OracleDataContext
 
 		public static int PersonUpdate(this XEDB dataConnection, decimal? PPERSONID, string? PFIRSTNAME, string? PLASTNAME, string? PMIDDLENAME, string? PGENDER)
 		{
-			return dataConnection.ExecuteProc("MANAGED.PERSON_UPDATE",
-				new DataParameter("PPERSONID",   PPERSONID,   LinqToDB.DataType.Decimal),
+			var parameters = new []
+			{
+				new DataParameter("PPERSONID",   PPERSONID,   LinqToDB.DataType.Decimal)
+				{
+					Size = 22
+				},
 				new DataParameter("PFIRSTNAME",  PFIRSTNAME,  LinqToDB.DataType.NVarChar),
 				new DataParameter("PLASTNAME",   PLASTNAME,   LinqToDB.DataType.NVarChar),
 				new DataParameter("PMIDDLENAME", PMIDDLENAME, LinqToDB.DataType.NVarChar),
-				new DataParameter("PGENDER",     PGENDER,     LinqToDB.DataType.Char));
+				new DataParameter("PGENDER",     PGENDER,     LinqToDB.DataType.Char)
+			};
+
+			return dataConnection.ExecuteProc("MANAGED.PERSON_UPDATE", parameters);
 		}
 
 		#endregion
@@ -506,8 +506,15 @@ namespace OracleDataContext
 
 		public static int PersonDelete(this XEDB dataConnection, decimal? PPERSONID)
 		{
-			return dataConnection.ExecuteProc("MANAGED.PERSON_DELETE",
-				new DataParameter("PPERSONID", PPERSONID, LinqToDB.DataType.Decimal));
+			var parameters = new []
+			{
+				new DataParameter("PPERSONID", PPERSONID, LinqToDB.DataType.Decimal)
+				{
+					Size = 22
+				}
+			};
+
+			return dataConnection.ExecuteProc("MANAGED.PERSON_DELETE", parameters);
 		}
 
 		#endregion
@@ -516,18 +523,39 @@ namespace OracleDataContext
 
 		public static int OUTREFTEST(this XEDB dataConnection, decimal? PID, out decimal? POUTPUTID, ref decimal? PINPUTOUTPUTID, string? PSTR, out string? POUTPUTSTR, ref string? PINPUTOUTPUTSTR)
 		{
-			var ret = dataConnection.ExecuteProc("MANAGED.OUTREFTEST",
-				new DataParameter("PID",             PID,             LinqToDB.DataType.Decimal),
-				new DataParameter("POUTPUTID", null,       LinqToDB.DataType.Decimal) { Direction = ParameterDirection.Output, Size = 22 },
-				new DataParameter("PINPUTOUTPUTID",  PINPUTOUTPUTID,  LinqToDB.DataType.Decimal) { Direction = ParameterDirection.InputOutput, Size = 22 },
+			var parameters = new []
+			{
+				new DataParameter("PID",             PID,             LinqToDB.DataType.Decimal)
+				{
+					Size = 22
+				},
+				new DataParameter("POUTPUTID", null,       LinqToDB.DataType.Decimal)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 22
+				},
+				new DataParameter("PINPUTOUTPUTID",  PINPUTOUTPUTID,  LinqToDB.DataType.Decimal)
+				{
+					Direction = ParameterDirection.InputOutput,
+					Size      = 22
+				},
 				new DataParameter("PSTR",            PSTR,            LinqToDB.DataType.NVarChar),
-				new DataParameter("POUTPUTSTR", null,      LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.Output },
-				new DataParameter("PINPUTOUTPUTSTR", PINPUTOUTPUTSTR, LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.InputOutput });
+				new DataParameter("POUTPUTSTR", null,      LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.Output
+				},
+				new DataParameter("PINPUTOUTPUTSTR", PINPUTOUTPUTSTR, LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.InputOutput
+				}
+			};
 
-			POUTPUTID       = Converter.ChangeTypeTo<decimal?>(((IDbDataParameter)dataConnection.Command.Parameters["POUTPUTID"]).      Value);
-			PINPUTOUTPUTID  = Converter.ChangeTypeTo<decimal?>(((IDbDataParameter)dataConnection.Command.Parameters["PINPUTOUTPUTID"]). Value);
-			POUTPUTSTR      = Converter.ChangeTypeTo<string?> (((IDbDataParameter)dataConnection.Command.Parameters["POUTPUTSTR"]).     Value);
-			PINPUTOUTPUTSTR = Converter.ChangeTypeTo<string?> (((IDbDataParameter)dataConnection.Command.Parameters["PINPUTOUTPUTSTR"]).Value);
+			var ret = dataConnection.ExecuteProc("MANAGED.OUTREFTEST", parameters);
+
+			POUTPUTID       = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
+			PINPUTOUTPUTID  = Converter.ChangeTypeTo<decimal?>(parameters[2].Value);
+			POUTPUTSTR      = Converter.ChangeTypeTo<string?> (parameters[4].Value);
+			PINPUTOUTPUTSTR = Converter.ChangeTypeTo<string?> (parameters[5].Value);
 
 			return ret;
 		}
@@ -538,13 +566,23 @@ namespace OracleDataContext
 
 		public static int OUTREFENUMTEST(this XEDB dataConnection, string? PSTR, out string? POUTPUTSTR, ref string? PINPUTOUTPUTSTR)
 		{
-			var ret = dataConnection.ExecuteProc("MANAGED.OUTREFENUMTEST",
+			var parameters = new []
+			{
 				new DataParameter("PSTR",            PSTR,            LinqToDB.DataType.NVarChar),
-				new DataParameter("POUTPUTSTR", null,      LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.Output },
-				new DataParameter("PINPUTOUTPUTSTR", PINPUTOUTPUTSTR, LinqToDB.DataType.NVarChar) { Direction = ParameterDirection.InputOutput });
+				new DataParameter("POUTPUTSTR", null,      LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.Output
+				},
+				new DataParameter("PINPUTOUTPUTSTR", PINPUTOUTPUTSTR, LinqToDB.DataType.NVarChar)
+				{
+					Direction = ParameterDirection.InputOutput
+				}
+			};
 
-			POUTPUTSTR      = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["POUTPUTSTR"]).     Value);
-			PINPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(((IDbDataParameter)dataConnection.Command.Parameters["PINPUTOUTPUTSTR"]).Value);
+			var ret = dataConnection.ExecuteProc("MANAGED.OUTREFENUMTEST", parameters);
+
+			POUTPUTSTR      = Converter.ChangeTypeTo<string?>(parameters[1].Value);
+			PINPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(parameters[2].Value);
 
 			return ret;
 		}

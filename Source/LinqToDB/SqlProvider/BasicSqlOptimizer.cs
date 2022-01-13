@@ -44,10 +44,10 @@ namespace LinqToDB.SqlProvider
 //statement.EnsureFindTables();
 			//TODO: We can use Walk here but OptimizeUnions fails with subqueries. Needs revising.
 			statement.WalkQueries(
-				(SqlProviderFlags, statement),
+				(SqlProviderFlags, statement, evaluationContext),
 				static (context, selectQuery) =>
 				{
-					new SelectQueryOptimizer(context.SqlProviderFlags, context.statement, selectQuery, 0).FinalizeAndValidate(
+					new SelectQueryOptimizer(context.SqlProviderFlags, context.evaluationContext, context.statement, selectQuery, 0).FinalizeAndValidate(
 						context.SqlProviderFlags.IsApplyJoinSupported,
 						context.SqlProviderFlags.IsGroupByExpressionSupported);
 
@@ -59,8 +59,12 @@ namespace LinqToDB.SqlProvider
 				(context: this, evaluationContext),
 				static (context, selectQuery) =>
 				{
+					/*
 					if (!context.context.SqlProviderFlags.IsCountSubQuerySupported)  selectQuery = context.context.MoveCountSubQuery (selectQuery, context.evaluationContext);
 					if (!context.context.SqlProviderFlags.IsSubQueryColumnSupported) selectQuery = context.context.MoveSubQueryColumn(selectQuery, context.evaluationContext);
+					*/
+
+					//selectQuery = context.context.MoveOuterJoinsToSubQuery(selectQuery, context.evaluationContext);
 
 					return selectQuery;
 				}
@@ -69,10 +73,10 @@ namespace LinqToDB.SqlProvider
 			if (!SqlProviderFlags.IsCountSubQuerySupported || !SqlProviderFlags.IsSubQueryColumnSupported)
 			{
 				statement.WalkQueries(
-					(SqlProviderFlags, statement),
+					(SqlProviderFlags, statement, evaluationContext),
 					static (context, selectQuery) =>
 					{
-						new SelectQueryOptimizer(context.SqlProviderFlags, context.statement, selectQuery, 0).FinalizeAndValidate(
+						new SelectQueryOptimizer(context.SqlProviderFlags, context.evaluationContext, context.statement, selectQuery, 0).FinalizeAndValidate(
 							context.SqlProviderFlags.IsApplyJoinSupported,
 							context.SqlProviderFlags.IsGroupByExpressionSupported);
 
@@ -291,7 +295,7 @@ namespace LinqToDB.SqlProvider
 					var ordered = TopoSorting.TopoSort(cteHolder.WriteableValue.Keys, cteHolder, static (cteHolder, i) => cteHolder.WriteableValue![i]).ToList();
 
 					Utils.MakeUniqueNames(ordered, null, static (n, a) => !ReservedWords.IsReserved(n), static c => c.Name, static (c, n, a) => c.Name = n,
-						static c => c.Name.IsNullOrEmpty() ? "CTE_1" : c.Name, StringComparer.OrdinalIgnoreCase);
+						static c => string.IsNullOrEmpty(c.Name) ? "CTE_1" : c.Name, StringComparer.OrdinalIgnoreCase);
 
 					select.With = new SqlWithClause();
 					select.With.Clauses.AddRange(ordered);
@@ -320,7 +324,7 @@ namespace LinqToDB.SqlProvider
 					// we interested in modifying only expressions which have parameters
 					if (HasParameters(expr))
 					{
-						if (expr.Expr.IsNullOrEmpty() || expr.Parameters.Length == 0)
+						if (string.IsNullOrEmpty(expr.Expr) || expr.Parameters.Length == 0)
 							return expr;
 
 						var newExpressions = new List<ISqlExpression>();
@@ -364,7 +368,7 @@ namespace LinqToDB.SqlProvider
 
 		SelectQuery MoveCountSubQuery(SelectQuery selectQuery, EvaluationContext context)
 		{
-			selectQuery.Visit((context, optimizer: this), static (context, e) => context.optimizer.MoveCountSubQuery(e, context.context));
+			//selectQuery.Visit((context, optimizer: this), static (context, e) => context.optimizer.MoveCountSubQuery(e, context.context));
 			return selectQuery;
 		}
 
@@ -884,6 +888,13 @@ namespace LinqToDB.SqlProvider
 								return new SqlSearchCondition(new SqlCondition(true, new SqlPredicate.Expr(parms[0], parms[0].Precedence)));
 
 							return parms[0];
+						}
+
+						//Trying to remove not needed null check
+						if (parms[0] is SqlSearchCondition sc && sc.Conditions.Count == 1 && !sc.Conditions[0].IsNot && sc.Conditions[0].Predicate is SqlPredicate.IsNull isnull && isnull.IsNot)
+						{
+							if (parms[1].Equals(isnull.Expr1))
+								return isnull.Expr1;
 						}
 					}
 				}

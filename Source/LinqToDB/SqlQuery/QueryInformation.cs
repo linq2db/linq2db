@@ -9,7 +9,8 @@ namespace LinqToDB.SqlQuery
 	/// </summary>
 	public class QueryInformation
 	{
-		private readonly SelectQuery                        _rootQuery;
+		public SelectQuery RootQuery { get; }
+
 		private Dictionary<SelectQuery, HierarchyInfo>?     _parents;
 		private Dictionary<SelectQuery, List<SelectQuery>>? _tree;
 
@@ -19,7 +20,7 @@ namespace LinqToDB.SqlQuery
 		/// </summary>
 		public QueryInformation(SelectQuery rootQuery)
 		{
-			_rootQuery = rootQuery ?? throw new ArgumentNullException(nameof(rootQuery));
+			RootQuery = rootQuery ?? throw new ArgumentNullException(nameof(rootQuery));
 		}
 
 		/// <summary>
@@ -30,7 +31,9 @@ namespace LinqToDB.SqlQuery
 		public SelectQuery? GetParentQuery(SelectQuery selectQuery)
 		{
 			var info = GetHierarchyInfo(selectQuery);
-			return info?.HierarchyType == HierarchyType.From ? info.MasterQuery : null;
+			return info?.HierarchyType == HierarchyType.From || info?.HierarchyType == HierarchyType.Join
+				? info.MasterQuery
+				: null;
 		}
 
 		/// <summary>
@@ -51,7 +54,7 @@ namespace LinqToDB.SqlQuery
 			{
 				_parents = new Dictionary<SelectQuery, HierarchyInfo>();
 				_tree    = new Dictionary<SelectQuery, List<SelectQuery>>();
-				BuildParentHierarchy(_rootQuery);
+				BuildParentHierarchy(RootQuery);
 			}
 		}
 
@@ -66,7 +69,7 @@ namespace LinqToDB.SqlQuery
 
 		public IEnumerable<SelectQuery> GetQueriesParentFirst()
 		{
-			return GetQueriesParentFirst(_rootQuery);
+			return GetQueriesParentFirst(RootQuery);
 		}
 
 		public IEnumerable<SelectQuery> GetQueriesParentFirst(SelectQuery root)
@@ -88,7 +91,7 @@ namespace LinqToDB.SqlQuery
 
 		public IEnumerable<SelectQuery> GetQueriesChildFirst()
 		{
-			return GetQueriesChildFirst(_rootQuery);
+			return GetQueriesChildFirst(RootQuery);
 		}
 
 		public IEnumerable<SelectQuery> GetQueriesChildFirst(SelectQuery root)

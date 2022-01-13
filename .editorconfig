@@ -262,4 +262,4 @@ dotnet_diagnostic.CS1998.severity = error # CS1998: Async method lacks 'await' o
 dotnet_diagnostic.CS8618.severity = error # CS8618: Non-nullable field is uninitialized. Consider declaring as nullable.
 dotnet_diagnostic.CS4014.severity = error # CS4014: Because this call is not awaited, execution of the current method continues before the call is completed
 
-#
+dotnet_diagnostic.CS0162.severity = warning # CS0162: Unreachable code detected

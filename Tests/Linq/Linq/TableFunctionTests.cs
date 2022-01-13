@@ -61,7 +61,7 @@ namespace Tests.Linq
 		[Test]
 		public void CompiledFunc1([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSapHana)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var q = _f1(db, 1);
 				q.ToList();
@@ -74,7 +74,7 @@ namespace Tests.Linq
 		[Test]
 		public void CompiledFunc2([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSapHana)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var q = _f2(db, 1);
 				q.ToList();

@@ -1,11 +1,6 @@
 variables:
+  - template: templates/shared-vars.yml
   - template: templates/test-vars.yml
-  - name: solution
-    value: linq2db.sln
-  - name: build_configuration
-    value: Azure
-  - name: assemblyVersion
-    value: 3.0.0
 
 trigger: none
 pr:

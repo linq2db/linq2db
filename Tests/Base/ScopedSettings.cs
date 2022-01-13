@@ -1,6 +1,5 @@
 ﻿using LinqToDB;
 using LinqToDB.Common;
-using LinqToDB.Data.DbCommandProcessor;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Linq;
@@ -22,20 +21,6 @@ namespace Tests
 		void IDisposable.Dispose()
 		{
 			FirebirdConfiguration.IdentifierQuoteMode = _oldMode;
-		}
-	}
-
-	public class CustomCommandProcessor : IDisposable
-	{
-		private readonly IDbCommandProcessor? _original = DbCommandProcessorExtensions.Instance;
-		public CustomCommandProcessor(IDbCommandProcessor? processor)
-		{
-			DbCommandProcessorExtensions.Instance = processor;
-		}
-
-		public void Dispose()
-		{
-			DbCommandProcessorExtensions.Instance = _original;
 		}
 	}
 

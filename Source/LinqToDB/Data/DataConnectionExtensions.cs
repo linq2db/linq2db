@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -84,7 +85,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="sql">Command text.</param>
 		/// <returns>Returns collection of query result records.</returns>
-		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql)
+		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql)
 		{
 			return new CommandInfo(connection, sql).Query(objectReader);
 		}
@@ -98,7 +99,7 @@ namespace LinqToDB.Data
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns collection of query result records.</returns>
-		public static IEnumerable<T> QueryProc<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, params DataParameter[] parameters)
+		public static IEnumerable<T> QueryProc<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, params DataParameter[] parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryProc(objectReader);
 		}
@@ -112,7 +113,7 @@ namespace LinqToDB.Data
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns collection of query result records.</returns>
-		public static Task<IEnumerable<T>> QueryProcAsync<T>(this DataConnection connection, Func<IDataReader, T> objectReader, string sql, params DataParameter[] parameters)
+		public static Task<IEnumerable<T>> QueryProcAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, params DataParameter[] parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryProcAsync(objectReader);
 		}
@@ -127,7 +128,7 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns collection of query result records.</returns>
-		public static Task<IEnumerable<T>> QueryProcAsync<T>(this DataConnection connection, Func<IDataReader, T> objectReader, string sql, CancellationToken cancellationToken, params DataParameter[] parameters)
+		public static Task<IEnumerable<T>> QueryProcAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, CancellationToken cancellationToken, params DataParameter[] parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryProcAsync(objectReader, cancellationToken);
 		}
@@ -150,7 +151,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns collection of query result records.</returns>
-		public static IEnumerable<T> QueryProc<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, object? parameters)
+		public static IEnumerable<T> QueryProc<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryProc(objectReader);
 		}
@@ -174,7 +175,7 @@ namespace LinqToDB.Data
 		/// </param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns collection of query result records.</returns>
-		public static Task<IEnumerable<T>> QueryProcAsync<T>(this DataConnection connection, Func<IDataReader, T> objectReader, string sql, object? parameters, CancellationToken cancellationToken = default)
+		public static Task<IEnumerable<T>> QueryProcAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, object? parameters, CancellationToken cancellationToken = default)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryProcAsync(objectReader, cancellationToken);
 		}
@@ -188,7 +189,7 @@ namespace LinqToDB.Data
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns collection of query result records.</returns>
-		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, params DataParameter[] parameters)
+		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, params DataParameter[] parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).Query(objectReader);
 		}
@@ -211,7 +212,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns collection of query result records.</returns>
-		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, object? parameters)
+		public static IEnumerable<T> Query<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).Query(objectReader);
 		}
@@ -228,7 +229,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="sql">Command text.</param>
 		/// <returns>Returns task with list of query result records.</returns>
-		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql)
+		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql)
 		{
 			return new CommandInfo(connection, sql).QueryToListAsync(objectReader);
 		}
@@ -242,7 +243,7 @@ namespace LinqToDB.Data
 		/// <param name="sql">Command text.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task with list of query result records.</returns>
-		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, CancellationToken cancellationToken)
+		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, CancellationToken cancellationToken)
 		{
 			return new CommandInfo(connection, sql).QueryToListAsync(objectReader, cancellationToken);
 		}
@@ -255,7 +256,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="sql">Command text.</param>
 		/// <returns>Returns task with array of query result records.</returns>
-		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql)
+		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql)
 		{
 			return new CommandInfo(connection, sql).QueryToArrayAsync(objectReader);
 		}
@@ -269,7 +270,7 @@ namespace LinqToDB.Data
 		/// <param name="sql">Command text.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task with array of query result records.</returns>
-		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, CancellationToken cancellationToken)
+		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, CancellationToken cancellationToken)
 		{
 			return new CommandInfo(connection, sql).QueryToArrayAsync(objectReader, cancellationToken);
 		}
@@ -283,7 +284,7 @@ namespace LinqToDB.Data
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns task with list of query result records.</returns>
-		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, params DataParameter[] parameters)
+		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, params DataParameter[] parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToListAsync(objectReader);
 		}
@@ -298,7 +299,7 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns task with list of query result records.</returns>
-		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, CancellationToken cancellationToken, params DataParameter[] parameters)
+		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, CancellationToken cancellationToken, params DataParameter[] parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToListAsync(objectReader, cancellationToken);
 		}
@@ -312,7 +313,7 @@ namespace LinqToDB.Data
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns task with array of query result records.</returns>
-		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, params DataParameter[] parameters)
+		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, params DataParameter[] parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync(objectReader);
 		}
@@ -327,7 +328,7 @@ namespace LinqToDB.Data
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <param name="parameters">Command parameters.</param>
 		/// <returns>Returns task with array of query result records.</returns>
-		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, CancellationToken cancellationToken, params DataParameter[] parameters)
+		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, CancellationToken cancellationToken, params DataParameter[] parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync(objectReader, cancellationToken);
 		}
@@ -350,7 +351,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with list of query result records.</returns>
-		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, object? parameters)
+		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToListAsync(objectReader);
 		}
@@ -374,7 +375,7 @@ namespace LinqToDB.Data
 		/// </param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task with list of query result records.</returns>
-		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, object? parameters, CancellationToken cancellationToken)
+		public static Task<List<T>> QueryToListAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, object? parameters, CancellationToken cancellationToken)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToListAsync(objectReader, cancellationToken);
 		}
@@ -397,7 +398,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with array of query result records.</returns>
-		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, object? parameters)
+		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync(objectReader);
 		}
@@ -421,7 +422,7 @@ namespace LinqToDB.Data
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with array of query result records.</returns>
-		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<IDataReader,T> objectReader, string sql, CancellationToken cancellationToken, object? parameters)
+		public static Task<T[]> QueryToArrayAsync<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, CancellationToken cancellationToken, object? parameters)
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync(objectReader, cancellationToken);
 		}

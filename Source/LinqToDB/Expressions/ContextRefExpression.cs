@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using LinqToDB.Linq.Builder;
 
 namespace LinqToDB.Expressions
@@ -29,7 +30,7 @@ namespace LinqToDB.Expressions
 
 		protected bool Equals(ContextRefExpression other)
 		{
-			return Equals(ElementType, other.ElementType) && Equals(BuildContext, other.BuildContext);
+			return ElementType == other.ElementType && ReferenceEquals(BuildContext, other.BuildContext);
 		}
 
 		public override bool Equals(object? obj)
@@ -44,7 +45,8 @@ namespace LinqToDB.Expressions
 		{
 			unchecked
 			{
-				return ((ElementType != null ? ElementType.GetHashCode() : 0) * 397) ^ (BuildContext != null ? BuildContext.GetHashCode() : 0);
+				return ((ElementType != null ? ElementType.GetHashCode() : 0) * 397) ^
+				       RuntimeHelpers.GetHashCode(BuildContext);
 			}
 		}
 

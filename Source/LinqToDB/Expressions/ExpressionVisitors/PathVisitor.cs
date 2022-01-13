@@ -240,8 +240,17 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Extension:
 					{
 						path = _path;
-						if (expr.CanReduce)
-							Path(expr.Reduce());
+
+						if (expr is ContextConstructionExpression construction)
+						{
+							path = ConvertPathTo(typeof(ContextConstructionExpression));
+							Path(construction.InnerExpression, ReflectionHelper.ContextConstruction.InnerExpression);
+						}
+						else
+						{
+							if (expr.CanReduce)
+								Path(expr.Reduce());
+						}
 
 						break;
 					}

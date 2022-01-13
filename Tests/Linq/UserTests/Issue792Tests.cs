@@ -46,7 +46,7 @@ namespace Tests.UserTests
 			TestProvName.AllInformix)]
 			string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var recordsBefore = db.GetTable<AllTypes>().Count();
 
@@ -91,7 +91,7 @@ namespace Tests.UserTests
 			TestProvName.AllSqlServer)]
 			string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				var recordsBefore = db.GetTable<AllTypes>().Count();
@@ -121,7 +121,7 @@ namespace Tests.UserTests
 			TestProvName.AllSqlServer)]
 			string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				var recordsBefore = db.GetTable<AllTypes>().Count();
@@ -141,7 +141,7 @@ namespace Tests.UserTests
 		[Test]
 		public void TestWithTransactionThrowsFromLinqToDB([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				var recordsBefore = db.GetTable<AllTypes>().Count();

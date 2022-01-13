@@ -31,6 +31,8 @@ namespace LinqToDB.Linq.Builder
 			return builder.IsSequence(new BuildInfo(buildInfo, ((MethodCallExpression)buildInfo.Expression).Arguments[0]));
 		}
 
+		public virtual bool IsAggregationContext(ExpressionBuilder builder, BuildInfo buildInfo) => false;
+
 		protected abstract bool                 CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo);
 		protected abstract IBuildContext        BuildMethodCall   (ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo);
 		protected abstract SequenceConvertInfo? Convert           (ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param);

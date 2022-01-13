@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Linq.Expressions;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -8,6 +11,20 @@ namespace LinqToDB.Linq.Builder
 
 	static class SequenceHelper
 	{
+		public static Expression PrepareBody(LambdaExpression lambda, params IBuildContext[] sequences)
+		{
+			var body = lambda.GetBody(sequences
+				.Select((s, idx) => (Expression)new ContextRefExpression(lambda.Parameters[idx].Type, s)).ToArray());
+
+			return body;
+		}
+
+		public static bool IsSameContext(Expression? expression, IBuildContext context)
+		{
+			return expression == null || expression is ContextRefExpression contextRef && contextRef.BuildContext == context;
+		}
+
+		[return: NotNullIfNotNull("expression")]
 		public static Expression? CorrectExpression(Expression? expression, IBuildContext current, IBuildContext underlying)
 		{
 			if (expression != null)
@@ -27,26 +44,13 @@ namespace LinqToDB.Linq.Builder
 
 		public static TableBuilder.TableContext? GetTableContext(IBuildContext context)
 		{
-			var table = context as TableBuilder.TableContext;
+			var contextRef = new ContextRefExpression(typeof(object), context);
 
-			if (table != null)
-				return table;
-			
-			if (context is LoadWithBuilder.LoadWithContext lwCtx)
-				return lwCtx.TableContext;
-			
-			if (table == null)
-			{
-				var isTableResult = context.IsExpression(null, 0, RequestFor.Table);
-				if (isTableResult.Result)
-				{
-					table = isTableResult.Context as TableBuilder.TableContext;
-					if (table != null)
-						return table;
-				}
-			}
+			var rootContext = context.Builder.MakeExpression(contextRef, ProjectFlags.Root) as ContextRefExpression;
 
-			return null;
+			var tableContext = rootContext?.BuildContext as TableBuilder.TableContext;
+
+			return tableContext;
 		}
 
 		public static IBuildContext UnwrapSubqueryContext(IBuildContext context)
@@ -59,5 +63,13 @@ namespace LinqToDB.Linq.Builder
 			return context;
 		}
 
+		public static Expression RequireSqlExpression(this IBuildContext context, Expression? path)
+		{
+			var sql = context.Builder.MakeExpression(path, ProjectFlags.SQL);
+			if (sql == null)
+				throw new LinqException("'{0}' cannot be converted to SQL.", path);
+
+			return sql;
+		}
 	}
 }

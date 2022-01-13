@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 using LinqToDB.Expressions;
 
 namespace LinqToDB.DataProvider
@@ -18,8 +19,8 @@ namespace LinqToDB.DataProvider
 			Type parameterType,
 			Type commandType,
 			Type transactionType,
-			Action<IDbDataParameter, OdbcType> dbTypeSetter,
-			Func  <IDbDataParameter, OdbcType> dbTypeGetter)
+			Action<DbParameter, OdbcType> dbTypeSetter,
+			Func  <DbParameter, OdbcType> dbTypeGetter)
 		{
 			ConnectionType  = connectionType;
 			DataReaderType  = dataReaderType;
@@ -37,8 +38,8 @@ namespace LinqToDB.DataProvider
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
 
-		public Action<IDbDataParameter, OdbcType> SetDbType { get; }
-		public Func  <IDbDataParameter, OdbcType> GetDbType { get; }
+		public Action<DbParameter, OdbcType> SetDbType { get; }
+		public Func  <DbParameter, OdbcType> GetDbType { get; }
 
 		public static OdbcProviderAdapter GetInstance()
 		{
@@ -67,8 +68,8 @@ namespace LinqToDB.DataProvider
 						typeMapper.FinalizeMappings();
 
 						var dbTypeBuilder = typeMapper.Type<OdbcParameter>().Member(p => p.OdbcType);
-						var typeSetter    = dbTypeBuilder.BuildSetter<IDbDataParameter>();
-						var typeGetter    = dbTypeBuilder.BuildGetter<IDbDataParameter>();
+						var typeSetter    = dbTypeBuilder.BuildSetter<DbParameter>();
+						var typeGetter    = dbTypeBuilder.BuildGetter<DbParameter>();
 
 						_instance = new OdbcProviderAdapter(
 							connectionType,

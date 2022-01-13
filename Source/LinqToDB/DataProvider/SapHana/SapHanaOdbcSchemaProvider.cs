@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.SapHana
 	{
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			var dts = ((DbConnection)dataConnection.Connection).GetSchema("DataTypes");
+			var dts = dataConnection.Connection.GetSchema("DataTypes");
 
 			var dt = dts.AsEnumerable()
 				.Where(x=> x["ProviderDbType"] != DBNull.Value)

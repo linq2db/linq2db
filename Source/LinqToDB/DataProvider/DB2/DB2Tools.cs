@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using System.Data.Common;
 	using Configuration;
 	using Data;
 
@@ -123,7 +124,7 @@ namespace LinqToDB.DataProvider.DB2
 		/// <param name="connection">Connection instance.</param>
 		/// <param name="version">DB2 version.</param>
 		/// <returns><see cref="DataConnection"/> instance.</returns>
-		public static DataConnection CreateDataConnection(IDbConnection connection, DB2Version version = DB2Version.LUW)
+		public static DataConnection CreateDataConnection(DbConnection connection, DB2Version version = DB2Version.LUW)
 		{
 			return new DataConnection(GetDataProvider(version), connection);
 		}
@@ -134,7 +135,7 @@ namespace LinqToDB.DataProvider.DB2
 		/// <param name="transaction">Transaction instance.</param>
 		/// <param name="version">DB2 version.</param>
 		/// <returns><see cref="DataConnection"/> instance.</returns>
-		public static DataConnection CreateDataConnection(IDbTransaction transaction, DB2Version version = DB2Version.LUW)
+		public static DataConnection CreateDataConnection(DbTransaction transaction, DB2Version version = DB2Version.LUW)
 		{
 			return new DataConnection(GetDataProvider(version), transaction);
 		}
@@ -149,44 +150,6 @@ namespace LinqToDB.DataProvider.DB2
 		/// Default value: <see cref="BulkCopyType.MultipleRows"/>.
 		/// </summary>
 		public static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
-
-		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
-		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection              dataConnection,
-			IEnumerable<T>              source,
-			int                         maxBatchSize       = 1000,
-			Action<BulkCopyRowsCopied>? rowsCopiedCallback = null)
-			where T : class
-		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.ProviderSpecific,
-					MaxBatchSize       = maxBatchSize,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
-		}
-
-		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
-		public static BulkCopyRowsCopied ProviderSpecificBulkCopy<T>(
-			DataConnection              dataConnection,
-			IEnumerable<T>              source,
-			int?                        bulkCopyTimeout    = null,
-			bool                        keepIdentity       = false,
-			int                         notifyAfter        = 0,
-			Action<BulkCopyRowsCopied>? rowsCopiedCallback = null)
-			where T : class
-		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.ProviderSpecific,
-					BulkCopyTimeout    = bulkCopyTimeout,
-					KeepIdentity       = keepIdentity,
-					NotifyAfter        = notifyAfter,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
-		}
 
 		#endregion
 	}

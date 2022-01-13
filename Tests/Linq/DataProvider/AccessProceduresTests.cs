@@ -17,7 +17,7 @@ namespace Tests.DataProvider
 		public void Test_SelectProcedureSchema([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
 			var isODBC = context == ProviderName.AccessOdbc;
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 
@@ -169,7 +169,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Test_Person_Delete([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				var id = db.Person.Insert(() => new Person()
@@ -192,7 +192,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Test_Person_Update([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				var id = db.Person.Insert(() => new Person()
@@ -222,7 +222,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Test_Person_Insert([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				var maxId = db.Person.OrderByDescending(_ => _.ID).Select(_ => _.ID).FirstOrDefault();
@@ -243,7 +243,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Test_ThisProcedureNotVisibleFromODBC([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				Assert.AreEqual(0, db.GetTable<Issue792Tests.AllTypes>().Where(_ => _.char20DataType == "issue792").Count());
@@ -259,7 +259,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Test_AddIssue792Record([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				Assert.AreEqual(0, db.GetTable<Issue792Tests.AllTypes>().Where(_ => _.char20DataType == "issue792").Count());
@@ -275,7 +275,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Test_Scalar_DataReader([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				var res = Scalar_DataReader(db, context == ProviderName.AccessOdbc);
@@ -289,7 +289,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Test_Person_SelectAll([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				var res = Person_SelectAll(db, context == ProviderName.AccessOdbc);
@@ -301,7 +301,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Test_Person_SelectByKey([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				var id = db.Person.Select(_ => _.ID).Max();
@@ -314,7 +314,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Test_Person_SelectByName([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				var firstName = "Jürgen";
@@ -330,7 +330,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Test_Person_SelectListByName([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				var firstName = "e";
@@ -346,7 +346,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Test_Patient_SelectAll([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				var res = Patient_SelectAll(db, context == ProviderName.AccessOdbc);
@@ -369,7 +369,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Test_Patient_SelectByName([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				var firstName = "Tester";

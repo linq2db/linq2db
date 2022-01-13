@@ -2,6 +2,7 @@
 
 namespace LinqToDB.DataProvider.Access
 {
+	using System.Data.Common;
 	using Mapping;
 	using SqlProvider;
 
@@ -33,7 +34,7 @@ namespace LinqToDB.DataProvider.Access
 			return new AccessOleDbSqlBuilder(_provider, MappingSchema, SqlOptimizer, SqlProviderFlags);
 		}
 
-		protected override string? GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(DbParameter parameter)
 		{
 			if (_provider != null)
 			{

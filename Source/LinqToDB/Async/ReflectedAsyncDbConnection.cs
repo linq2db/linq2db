@@ -11,33 +11,33 @@ namespace LinqToDB.Async
 	/// </summary>
 	internal class ReflectedAsyncDbConnection : AsyncDbConnection
 	{
-		private readonly Func<IDbConnection, CancellationToken, Task>?                                           _openAsync;
-		private readonly Func<IDbConnection, Task>?                                                              _closeAsync;
+		private readonly Func<DbConnection, CancellationToken, Task>?                                           _openAsync;
+		private readonly Func<DbConnection, Task>?                                                              _closeAsync;
 #if NATIVE_ASYNC
-		private readonly Func<IDbConnection, CancellationToken, ValueTask<IAsyncDbTransaction>>?                 _beginTransactionAsync;
-		private readonly Func<IDbConnection, IsolationLevel, CancellationToken, ValueTask<IAsyncDbTransaction>>? _beginTransactionIlAsync;
-		private readonly Func<IDbConnection, ValueTask>?                                                         _disposeAsync;
+		private readonly Func<DbConnection, CancellationToken, ValueTask<IAsyncDbTransaction>>?                 _beginTransactionAsync;
+		private readonly Func<DbConnection, IsolationLevel, CancellationToken, ValueTask<IAsyncDbTransaction>>? _beginTransactionIlAsync;
+		private readonly Func<DbConnection, ValueTask>?                                                         _disposeAsync;
 #else
-		private readonly Func<IDbConnection, CancellationToken, Task<IAsyncDbTransaction>>?                      _beginTransactionAsync;
-		private readonly Func<IDbConnection, IsolationLevel, CancellationToken, Task<IAsyncDbTransaction>>?      _beginTransactionIlAsync;
-		private readonly Func<IDbConnection, Task>?                                                              _disposeAsync;
+		private readonly Func<DbConnection, CancellationToken, Task<IAsyncDbTransaction>>?                      _beginTransactionAsync;
+		private readonly Func<DbConnection, IsolationLevel, CancellationToken, Task<IAsyncDbTransaction>>?      _beginTransactionIlAsync;
+		private readonly Func<DbConnection, Task>?                                                              _disposeAsync;
 #endif
 
 		public ReflectedAsyncDbConnection(
-			IDbConnection connection,
+			DbConnection connection,
 #if NATIVE_ASYNC
-			Func<IDbConnection, CancellationToken, ValueTask<IAsyncDbTransaction>>?                 beginTransactionAsync,
-			Func<IDbConnection, IsolationLevel, CancellationToken, ValueTask<IAsyncDbTransaction>>? beginTransactionIlAsync,
+			Func<DbConnection, CancellationToken, ValueTask<IAsyncDbTransaction>>?                 beginTransactionAsync,
+			Func<DbConnection, IsolationLevel, CancellationToken, ValueTask<IAsyncDbTransaction>>? beginTransactionIlAsync,
 #else
-			Func<IDbConnection, CancellationToken, Task<IAsyncDbTransaction>>?                      beginTransactionAsync,
-			Func<IDbConnection, IsolationLevel, CancellationToken, Task<IAsyncDbTransaction>>?      beginTransactionIlAsync,
+			Func<DbConnection, CancellationToken, Task<IAsyncDbTransaction>>?                      beginTransactionAsync,
+			Func<DbConnection, IsolationLevel, CancellationToken, Task<IAsyncDbTransaction>>?      beginTransactionIlAsync,
 #endif
-			Func<IDbConnection, CancellationToken, Task>?                                           openAsync,
-			Func<IDbConnection, Task>?                                                              closeAsync,
+			Func<DbConnection, CancellationToken, Task>?                                           openAsync,
+			Func<DbConnection, Task>?                                                              closeAsync,
 #if NATIVE_ASYNC
-			Func<IDbConnection, ValueTask>?                                                         disposeAsync)
+			Func<DbConnection, ValueTask>?                                                         disposeAsync)
 #else
-			Func<IDbConnection, Task>?                                                              disposeAsync)
+			Func<DbConnection, Task>?                                                              disposeAsync)
 #endif
 			: base(connection)
 		{

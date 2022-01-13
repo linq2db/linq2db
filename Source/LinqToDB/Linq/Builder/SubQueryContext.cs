@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -7,6 +8,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using SqlQuery;
 
+	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 	class SubQueryContext : PassThroughContext
 	{
 #if DEBUG

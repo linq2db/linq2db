@@ -32,6 +32,7 @@ namespace LinqToDB.DataProvider.Firebird
 			SetValueToSqlConverter(typeof(byte[])  , (sb, dt, v) => ConvertBinaryToSql(sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary)  , (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => BuildDateTime(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(Guid)    , (sb, dt, v) => ConvertGuidToSql(sb, dt, (Guid)v));
 
 			SetDataType(typeof(BigInteger), new SqlDataType(DataType.Int128, typeof(BigInteger), "INT128"));
 			SetValueToSqlConverter(typeof(BigInteger), (sb, dt, v) => sb.Append(((BigInteger)v).ToString(CultureInfo.InvariantCulture)));
@@ -78,6 +79,25 @@ namespace LinqToDB.DataProvider.Firebird
 					: DATETIME_FORMAT;
 
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value, dbType);
+		}
+
+		static void ConvertGuidToSql(StringBuilder sb, SqlDataType dataType, Guid value)
+		{
+			if (dataType.Type.DataType == DataType.Char || dataType.Type.DataType == DataType.NChar)
+				sb.Append('\'').Append(value.ToString()).Append('\'');
+			else
+			{
+				var bytes = value.ToByteArray();
+				if (BitConverter.IsLittleEndian)
+				{
+					Array.Reverse(bytes, 0, 4);
+					Array.Reverse(bytes, 4, 2);
+					Array.Reverse(bytes, 6, 2);
+				}
+				sb.Append("X'");
+				sb.AppendByteArrayAsHexViaLookup32(bytes);
+				sb.Append('\'');
+			}
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)

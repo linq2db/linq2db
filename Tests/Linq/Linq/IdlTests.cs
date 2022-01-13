@@ -363,7 +363,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestDistinctWithGroupBy([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var source = db.Parent.ToList();
 				// Ensure that the data source has duplicate values.
@@ -397,7 +397,7 @@ namespace Tests.Linq
 		[Test]
 		public void ImplicitCastTest([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var people =
 					from p in db.Person
@@ -417,7 +417,7 @@ namespace Tests.Linq
 		[Test]
 		public void ListvsArrayTest([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var st = "John";
 
@@ -438,7 +438,7 @@ namespace Tests.Linq
 		[Test]
 		public void ConcatJoinOrderByTest([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var query = from y in
 								((from pat in db.Patient
@@ -462,7 +462,7 @@ namespace Tests.Linq
 		{
 			var types2 = new[] { TypeValue.Value2, TypeValue.Value3, TypeValue.Value4 };
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var result = (from x in db.Parent4 where types2.Contains(x.Value1) select x)
 					.ToList();
@@ -474,7 +474,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestQueryWithInterface([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var persons =
 					from x in db.Person
@@ -501,7 +501,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestCountWithOrderBy([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var q1 = db.Person.OrderBy(x => x.ID);
 
@@ -517,7 +517,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestCountWithOrderByAsync([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var q1 = db.Person.OrderBy(x => x.ID);
 
@@ -544,7 +544,7 @@ namespace Tests.Linq
 
 		private void TestUpdateByAssociationProperty(string context, bool useUpdateWithTarget)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				const int childId = 10000;
 				const int parentId = 20000;
@@ -595,7 +595,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestComparePropertyOfEnumTypeToVariableInSubquery([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var gender = Gender.Other;
 				var q = from x in db.Patient
@@ -610,7 +610,7 @@ namespace Tests.Linq
 		[Test]
 		public void ConcatOrderByTest([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var q = from p in db.Person
 							where p.ID < 0
@@ -634,7 +634,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestContainsForNullableDateTimeWithOnlyNullValue1([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var dates = new DateTime?[] { null };
 
@@ -652,7 +652,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestContainsForNullableDateTimeWithOnlyNullValue2([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				// Ensures that  the query works properly in memory
 				// ReSharper disable RemoveToList.2
@@ -668,7 +668,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestContainsForNullableDateTimeWithNullAndNotNullValues1([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var date  = new DateTime(2009,  9,  24,  9, 19, 29,  90);
 				var dates = new DateTime?[] { null, date };
@@ -687,7 +687,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestContainsForNullableDateTimeWithNullAndNotNullValues2([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				// Ensures that  the query works properly in memory
 				// ReSharper disable RemoveToList.2
@@ -750,7 +750,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestMono01([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var ds = new IdlPatientSource(db);
 				var t = "A";
@@ -770,7 +770,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestMono03([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 				Assert.That(new GenericConcatQuery(db, new object[] { "A", 1 }).Query().ToList(), Is.Not.Null);
 		}
 
@@ -786,7 +786,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestMonoConcat([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var ds = new IdlPatientSource(db);
 				var t  = "A";
@@ -801,7 +801,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestMonoConcat2([IdlProviders] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var ds = new IdlPatientSource(db);
 				var t  = "A";
@@ -812,7 +812,7 @@ namespace Tests.Linq
 				Assert.That(query1.ToList(), Is.Not.Null);
 			}
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var ds = new IdlPatientSource(db);
 				var t  = "A";

@@ -433,6 +433,13 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
+		public static bool IsNullValue(ISqlExpression expr)
+		{
+			if (expr is SqlValue value && value.Value == null)
+				return true;
+			return false;
+		}
+
 		public static SelectQuery RootQuery(this SelectQuery query)
 		{
 			while (query.ParentSelect != null)
@@ -1419,6 +1426,17 @@ namespace LinqToDB.SqlQuery
 
 			if (expr is SqlExpression expression)
 				return (expression.Flags & (SqlFlags.IsAggregate | SqlFlags.IsWindowFunction)) != 0;
+
+			return false;
+		}
+
+		public static bool IsAggregation(IQueryElement expr)
+		{
+			if (expr is SqlFunction func)
+				return func.IsAggregate;
+
+			if (expr is SqlExpression expression)
+				return (expression.Flags & SqlFlags.IsAggregate) != 0;
 
 			return false;
 		}

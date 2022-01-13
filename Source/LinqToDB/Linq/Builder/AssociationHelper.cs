@@ -258,10 +258,13 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			if (inline && shouldAddDefaultIfEmpty)
+			if (inline)
 			{
 				var body = definedQueryMethod.Body.Unwrap();
-				body = Expression.Call(Methods.Queryable.DefaultIfEmpty.MakeGenericMethod(objectType), body);
+				body = Expression.Call(
+					(shouldAddDefaultIfEmpty ? Methods.Queryable.SingleOrDefault : Methods.Queryable.Single)
+					.MakeGenericMethod(objectType), body);
+
 				definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters);
 				isLeft = true;
 			}
@@ -277,20 +280,20 @@ namespace LinqToDB.Linq.Builder
 			return definedQueryMethod;
 		}
 
-		public static IBuildContext BuildAssociationInline(ExpressionBuilder builder, BuildInfo buildInfo, TableBuilder.TableContext tableContext, 
+		public static IBuildContext BuildAssociationInline(ExpressionBuilder builder, BuildInfo buildInfo, IBuildContext tableContext, 
 			AccessorMember onMember, AssociationDescriptor descriptor, bool inline, ref bool isOuter)
 		{
 			var elementType     = descriptor.GetElementType(builder.MappingSchema);
 			var parentExactType = descriptor.GetParentElementType();
-			
+
 			var queryMethod = CreateAssociationQueryLambda(
-				builder, onMember, descriptor, tableContext.OriginalType, parentExactType, elementType,
-				inline, isOuter, tableContext.LoadWith, out isOuter);
+				builder, onMember, descriptor, elementType /*tableContext.OriginalType*/, parentExactType, elementType,
+				inline, isOuter, null /*tableContext.LoadWith*/, out isOuter);
 
 			var parentRef   = new ContextRefExpression(queryMethod.Parameters[0].Type, tableContext);
 			var body = queryMethod.GetBody(parentRef);
 
-			var context = builder.BuildSequence(new BuildInfo(tableContext, body, new SelectQuery()));
+			var context = builder.BuildSequence(new BuildInfo((IBuildContext?)null, body, new SelectQuery()));
 
 			var tableSource = tableContext.SelectQuery.From.Tables.First();
 			var join = new SqlFromClause.Join(isOuter ? JoinType.OuterApply : JoinType.CrossApply, context.SelectQuery,
@@ -301,16 +304,32 @@ namespace LinqToDB.Linq.Builder
 			return new AssociationContext(builder, descriptor, tableContext, context, join.JoinedTable);
 		}
 
-		public static IBuildContext BuildAssociationSelectMany(ExpressionBuilder builder, BuildInfo buildInfo, TableBuilder.TableContext tableContext, 
-			AccessorMember onMember, AssociationDescriptor descriptor, ref bool isOuter)
+		public static Expression BuildAssociationQuery(ExpressionBuilder builder, ContextRefExpression tableContext, 
+			AccessorMember onMember, AssociationDescriptor descriptor, bool inline, List<LoadWithInfo[]>? loadwith, ref bool isOuter)
 		{
-			var elementType = descriptor.GetElementType(builder.MappingSchema);
+			var elementType     = descriptor.GetElementType(builder.MappingSchema);
+			var parentExactType = descriptor.GetParentElementType();
 
 			var queryMethod = CreateAssociationQueryLambda(
-				builder, onMember, descriptor, tableContext.OriginalType, tableContext.ObjectType, elementType,
-				false, isOuter, tableContext.LoadWith, out isOuter);
+				builder, onMember, descriptor, elementType /*tableContext.OriginalType*/, parentExactType, elementType,
+				inline, isOuter, loadwith, out isOuter);
 
-			var parentRef   = new ContextRefExpression(queryMethod.Parameters[0].Type, tableContext);
+			var body = queryMethod.GetBody(tableContext);
+
+			return body;
+		}
+
+		public static IBuildContext BuildAssociationSelectMany(ExpressionBuilder builder, BuildInfo buildInfo, IBuildContext tableContext, 
+			AccessorMember onMember, AssociationDescriptor descriptor, ref bool isOuter)
+		{
+			var elementType     = descriptor.GetElementType(builder.MappingSchema);
+			var parentExactType = descriptor.GetParentElementType();
+
+			var queryMethod = CreateAssociationQueryLambda(
+				builder, onMember, descriptor, elementType /*tableContext.OriginalType*/, parentExactType /*tableContext.ObjectType*/, elementType,
+				false, isOuter, null /*tableContext.LoadWith*/, out isOuter);
+
+			var parentRef = new ContextRefExpression(queryMethod.Parameters[0].Type, tableContext);
 			var body = queryMethod.GetBody(parentRef);
 
 			IBuildContext context;

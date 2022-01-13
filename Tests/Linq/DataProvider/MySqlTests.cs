@@ -36,7 +36,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestParameters([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT @p",        new { p =  1  }), Is.EqualTo("1"));
 				Assert.That(conn.Execute<string>("SELECT @p",        new { p = "1" }), Is.EqualTo("1"));
@@ -50,7 +50,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDataTypes([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(TestType<long?>						(conn, "bigintDataType",    DataType.Int64),               Is.EqualTo(1000000));
 				Assert.That(TestType<short?>					(conn, "smallintDataType",  DataType.Int16),               Is.EqualTo(25555));
@@ -118,7 +118,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDate([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12);
 
@@ -132,7 +132,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDateTime([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
 
@@ -148,7 +148,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestChar([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<char> ("SELECT Cast('1' as char)"),         Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT Cast('1' as char)"),         Is.EqualTo('1'));
@@ -179,7 +179,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestString([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20))"),      Is.EqualTo("12345"));
 				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as char(20))"),      Is.Null);
@@ -201,7 +201,7 @@ namespace Tests.DataProvider
 		{
 			var arr1 = new byte[] { 48, 57 };
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Binary   ("p", arr1)),              Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", arr1)),              Is.EqualTo(arr1));
@@ -218,7 +218,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestXml([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>     ("SELECT '<xml/>'"),            Is.EqualTo("<xml/>"));
 				Assert.That(conn.Execute<XDocument>  ("SELECT '<xml/>'").ToString(), Is.EqualTo("<xml />"));
@@ -244,7 +244,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum1([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<TestEnum> ("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
 				Assert.That(conn.Execute<TestEnum?>("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
@@ -256,7 +256,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum2([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = TestEnum.AA }),            Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT @p", new { p = (TestEnum?)TestEnum.BB }), Is.EqualTo("B"));
@@ -314,7 +314,7 @@ namespace Tests.DataProvider
 			const int records   = 1000;
 			const int batchSize = 500;
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				EnableNativeBulk(conn, context);
 				DataConnectionTransaction? transaction = null;
@@ -400,7 +400,7 @@ namespace Tests.DataProvider
 			const int records   = 1000;
 			const int batchSize = 500;
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				EnableNativeBulk(conn, context);
 				DataConnectionTransaction? transaction = null;
@@ -567,7 +567,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyBinaryAndBitTypes([IncludeDataSources(TestProvName.AllMySql)] string context, [Values] BulkCopyType bulkCopyType)
 		{
-			using (var db    = new DataConnection(context))
+			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<BinaryTypes>())
 			{
 				EnableNativeBulk(db, context);
@@ -620,7 +620,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task BulkCopyBinaryAndBitTypesAsync([IncludeDataSources(TestProvName.AllMySql)] string context, [Values] BulkCopyType bulkCopyType)
 		{
-			using (var db    = new DataConnection(context))
+			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<BinaryTypes>())
 			{
 				EnableNativeBulk(db, context);
@@ -675,7 +675,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					EnableNativeBulk(db, context);
 
@@ -707,7 +707,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					EnableNativeBulk(db, context);
 					try
@@ -733,7 +733,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		static void BulkCopyRetrieveSequence(string context, BulkCopyType bulkCopyType)
+		void BulkCopyRetrieveSequence(string context, BulkCopyType bulkCopyType)
 		{
 			var data = new[]
 			{
@@ -744,7 +744,7 @@ namespace Tests.DataProvider
 				new Person { FirstName = "Psychiatry"     , LastName = "test"  }
 			};
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				EnableNativeBulk(db, context);
@@ -764,7 +764,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		static async Task BulkCopyRetrieveSequenceAsync(string context, BulkCopyType bulkCopyType)
+		async Task BulkCopyRetrieveSequenceAsync(string context, BulkCopyType bulkCopyType)
 		{
 			var data = new[]
 			{
@@ -775,7 +775,7 @@ namespace Tests.DataProvider
 				new Person { FirstName = "Psychiatry"     , LastName = "test"  }
 			};
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				EnableNativeBulk(db, context);
@@ -798,7 +798,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestTransaction1([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.GetTable<Parent>().Update(p => p.ParentID == 1, p => new Parent { Value1 = 1 });
 
@@ -817,7 +817,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestTransaction2([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.GetTable<Parent>().Update(p => p.ParentID == 1, p => new Parent { Value1 = 1 });
 
@@ -837,7 +837,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestBeginTransactionWithIsolationLevel([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.GetTable<Parent>().Update(p => p.ParentID == 1, p => new Parent { Value1 = 1 });
 
@@ -1358,7 +1358,7 @@ namespace Tests.DataProvider
 			// - floating point (M,D) specifiers
 			// - synonyms (except BOOLEAN)
 			// etc
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				// enable configuration use in mapping attributes
 				if (context == TestProvName.MySql55)
@@ -1639,7 +1639,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestTypesSchema([IncludeDataSources(false, TestProvName.AllMySql)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				// enable configuration use in mapping attributes
 				if (context == TestProvName.MySql55)
@@ -1742,7 +1742,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestProcedureTypesParameters([IncludeDataSources(false, TestProvName.AllMySql)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions() { GetTables = false });
 
@@ -1823,7 +1823,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestProcedureTypesResults([IncludeDataSources(false, TestProvName.AllMySql)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions() { GetTables = false });
 
@@ -1911,26 +1911,46 @@ namespace Tests.DataProvider
 
 	internal static class MySqlTestFunctions
 	{
-		public static int TestOutputParametersWithoutTableProcedure(this DataConnection dataConnection, string aInParam, out sbyte? aOutParam)
+		public static int TestOutputParametersWithoutTableProcedure(this DataConnection dataConnection, string? aInParam, out sbyte? aOutParam)
 		{
-			var ret = dataConnection.ExecuteProc("`TestOutputParametersWithoutTableProcedure`",
-				new DataParameter("aInParam", aInParam, DataType.VarChar),
-				new DataParameter("aOutParam", null, DataType.SByte) { Direction = ParameterDirection.Output });
+			var parameters = new []
+			{
+				new DataParameter("aInParam",  aInParam,  DataType.VarChar)
+				{
+					Size = 256
+				},
+				new DataParameter("aOutParam", null, DataType.SByte)
+				{
+					Direction = ParameterDirection.Output
+				}
+			};
 
-			aOutParam = Converter.ChangeTypeTo<sbyte?>(((IDbDataParameter)dataConnection.Command.Parameters["aOutParam"]).Value);
+			var ret = dataConnection.ExecuteProc("`TestOutputParametersWithoutTableProcedure`", parameters);
+
+			aOutParam = Converter.ChangeTypeTo<sbyte?>(parameters[1].Value);
 
 			return ret;
 		}
 
 		public static IEnumerable<Person> TestProcedure(this DataConnection dataConnection, int? param3, ref int? param2, out int? param1)
 		{
-			var ret = dataConnection.QueryProc<Person>("`TestProcedure`",
+			var parameters = new []
+			{
 				new DataParameter("param3", param3, DataType.Int32),
-				new DataParameter("param2", param2, DataType.Int32) { Direction = ParameterDirection.InputOutput },
-				new DataParameter("param1", null, DataType.Int32) { Direction = ParameterDirection.Output }).ToList();
+				new DataParameter("param2", param2, DataType.Int32)
+				{
+					Direction = ParameterDirection.InputOutput
+				},
+				new DataParameter("param1", null, DataType.Int32)
+				{
+					Direction = ParameterDirection.Output
+				}
+			};
 
-			param2 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["param2"]).Value);
-			param1 = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["param1"]).Value);
+			var ret = dataConnection.QueryProc<Person>("`TestProcedure`", parameters).ToList();
+
+			param2 = Converter.ChangeTypeTo<int?>(parameters[1].Value);
+			param1 = Converter.ChangeTypeTo<int?>(parameters[2].Value);
 
 			return ret;
 		}

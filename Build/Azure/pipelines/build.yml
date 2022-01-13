@@ -1,8 +1,6 @@
 # build solution only
 variables:
-  solution: 'linq2db.sln'
-  build_configuration: 'Azure'
-  assemblyVersion: 3.0.0
+  - template: templates/shared-vars.yml
 
 # allways trigger on PRs
 trigger: none

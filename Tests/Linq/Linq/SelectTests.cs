@@ -383,7 +383,7 @@ namespace Tests.Linq
 			}
 		}
 
-		static readonly MyMapSchema _myMapSchema = new MyMapSchema();
+		static readonly MyMapSchema _myMapSchema = new ();
 
 		[Test]
 		public void Coalesce3([DataSources(false)] string context)
@@ -601,7 +601,7 @@ namespace Tests.Linq
 		[Test]
 		public void SelectField()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var q =
 					from p in db.GetTable<TestParent>()
@@ -751,7 +751,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var query1 = from p in db.Parent
-					from c in db.Child.InnerJoin(c => c.ParentID == p.ParentID)
+					from c in db.Child.Where(c => c.ParentID == p.ParentID)
 					select new
 					{
 						Info1 = p != null ? new { p.ParentID, p.Value1 } : null,
@@ -771,9 +771,20 @@ namespace Tests.Linq
 							}
 					};
 
-				var query3 = query2.Where(p => p.InfoAll.ParentID!.Value > 0 || p.InfoAll.Value1 > 0  || p.InfoAll.Value2 > 0 );
+				var query3 = query2.Where(p => p.InfoAll.ParentID!.Value > 0 || p.InfoAll.Value1 > 0  || p.InfoAll.Value2 > 0);
 
-				var _ = query3.ToArray();
+				/*
+				query3 = query3
+					.OrderBy(q => q.InfoAll.ParentID)
+					.ThenBy(q => q.InfoAll.Value1)
+					.ThenBy(q => q.InfoAll.Value2);
+
+				*/
+				var zz = query3.ToArray();
+
+				//AssertQuery(query3);
+
+				//var _ = query3.ToArray();
 			}
 		}
 
@@ -951,7 +962,7 @@ namespace Tests.Linq
 			if (context.Contains("Oracle"))
 				sql = "select \"PersonID\", \"FirstName\", \"MiddleName\", \"LastName\", \"Gender\" from \"Person\" where \"PersonID\" = 3";
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var person = db.Query<ComplexPerson>(sql).FirstOrDefault()!;
 
@@ -1070,16 +1081,16 @@ namespace Tests.Linq
 
 			void CheckResult()
 			{
-				if (includeChild)
-				{
-					result.Child.Should().NotBeNull();
-				}
-				else
-				{
-					result.Child.Should().BeNull();
+			if (includeChild)
+			{
+				result.Child.Should().NotBeNull();
+			}
+			else
+			{
+				result.Child.Should().BeNull();
 
-					((DataConnection)db).LastQuery.Should().NotContain("ChildID");
-				}
+				((DataConnection)db).LastQuery.Should().NotContain("ChildID");
+			}
 			}
 
 			CheckResult();
@@ -1098,7 +1109,7 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void TestConditionalInProjection([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestConditionalInProjection([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new []
@@ -1148,7 +1159,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConditionalInProjectionSubquery([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestConditionalInProjectionSubquery([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new []
@@ -1334,8 +1345,7 @@ namespace Tests.Linq
 		public void Select_TernaryNullableValue([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			// mapping fails and fallbacks to slow-mapper
-			using (new CustomCommandProcessor(null))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, suppressSequentialAccess: true))
 			{
 				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : Sql.AsSql(value!.Value));
 
@@ -1350,8 +1360,7 @@ namespace Tests.Linq
 		public void Select_TernaryNullableValueReversed([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			// mapping fails and fallbacks to slow-mapper
-			using (new CustomCommandProcessor(null))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, suppressSequentialAccess: true))
 			{
 				var result = db.Select(() => Sql.AsSql(value) != null ? Sql.AsSql(value!.Value) : (int?)null);
 
@@ -1366,8 +1375,7 @@ namespace Tests.Linq
 		public void Select_TernaryNullableValue_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			// mapping fails and fallbacks to slow-mapper
-			using (new CustomCommandProcessor(null))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, suppressSequentialAccess: true))
 			{
 				var result = db.Select(() => Sql.AsSql(value) == null ? (int?)null : (Sql.AsSql(value!.Value) < 2 ? Sql.AsSql(value.Value) : 2 + Sql.AsSql(value.Value)));
 
@@ -1382,8 +1390,7 @@ namespace Tests.Linq
 		public void Select_TernaryNullableValueReversed_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			// mapping fails and fallbacks to slow-mapper
-			using (new CustomCommandProcessor(null))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, suppressSequentialAccess: true))
 			{
 				var result = db.Select(() => Sql.AsSql(value) != null ? (Sql.AsSql(value!.Value) < 2 ? Sql.AsSql(value.Value) : Sql.AsSql(value.Value) + 4) : (int?)null);
 
@@ -1753,8 +1760,7 @@ namespace Tests.Linq
 			// Microsoft.Data.SqlClient
 			// SqlCe
 			using (new OptimizeForSequentialAccess(true))
-			using (new CustomCommandProcessor(new SequentialAccessCommandProcessor()))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true))
 			{
 				var q = db.Person
 					.Select(p => new
@@ -1776,8 +1782,8 @@ namespace Tests.Linq
 		{
 			// fields read out-of-order, multiple times and with different types
 			using (new OptimizeForSequentialAccess(true))
-			using (new CustomCommandProcessor(new SequentialAccessCommandProcessor()))
-			using (var db = GetDataContext(context))
+			// suppressSequentialAccess: true to avoid interceptor added twice
+			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true))
 			{
 				Assert.AreEqual(typeof(InheritanceParentBase), InheritanceParent[0].GetType());
 				Assert.AreEqual(typeof(InheritanceParent1)   , InheritanceParent[1].GetType());

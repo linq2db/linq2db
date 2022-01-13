@@ -34,5 +34,38 @@ namespace LinqToDB.Expressions
 		{
 			return $"Default({Type.Name})";
 		}
+
+		protected bool Equals(DefaultValueExpression other)
+		{
+			return Equals(_mappingSchema, other._mappingSchema) && _type.Equals(other._type);
+		}
+
+		public override bool Equals(object? obj)
+		{
+			if (ReferenceEquals(null, obj))
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, obj))
+			{
+				return true;
+			}
+
+			if (obj.GetType() != this.GetType())
+			{
+				return false;
+			}
+
+			return Equals((DefaultValueExpression)obj);
+		}
+
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				return ((_mappingSchema != null ? _mappingSchema.GetHashCode() : 0) * 397) ^ _type.GetHashCode();
+			}
+		}
 	}
 }

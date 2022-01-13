@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Expressions;
@@ -96,7 +97,7 @@ namespace Tests.TypeMapping
 
 			var instance = new Oracle.ManagedDataAccess.Client.OracleParameter();
 
-			var setterAction = oracleMapper.Type<OracleParameter>().Member(p => p.OracleDbType).BuildSetter<IDbDataParameter>();
+			var setterAction = oracleMapper.Type<OracleParameter>().Member(p => p.OracleDbType).BuildSetter<DbParameter>();
 			setterAction(instance, OracleDbType.Blob);
 
 			var expr = oracleMapper.MapLambda((OracleDataReader r, int i) => r.GetOracleDate(i));

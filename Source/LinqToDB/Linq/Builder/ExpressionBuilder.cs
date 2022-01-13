@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
@@ -34,8 +35,8 @@ namespace LinqToDB.Linq.Builder
 			new OrderByBuilder             (),
 			new RemoveOrderByBuilder       (),
 			new GroupByBuilder             (),
-			new GroupByElementBuilder      (),
 			new JoinBuilder                (),
+			new GroupJoinBuilder           (),
 			new AllJoinsBuilder            (),
 			new AllJoinsLinqBuilder        (),
 			new TakeSkipBuilder            (),
@@ -46,7 +47,7 @@ namespace LinqToDB.Linq.Builder
 			new MethodChainBuilder         (),
 			new ScalarSelectBuilder        (),
 			new SelectQueryBuilder         (),
-			new CountBuilder               (),
+			//new CountBuilder               (),
 			new PassThroughBuilder         (),
 			new TableAttributeBuilder      (),
 			new InsertBuilder              (),
@@ -101,7 +102,6 @@ namespace LinqToDB.Linq.Builder
 		readonly Query                             _query;
 		readonly List<ISequenceBuilder>            _builders = _sequenceBuilders;
 		private  bool                              _reorder;
-		private  HashSet<Expression>?              _subQueryExpressions;
 		readonly ExpressionTreeOptimizationContext _optimizationContext;
 		readonly ParametersContext                 _parametersContext;
 
@@ -151,7 +151,7 @@ namespace LinqToDB.Linq.Builder
 
 		public static readonly ParameterExpression QueryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
 		public static readonly ParameterExpression DataContextParam = Expression.Parameter(typeof(IDataContext), "dctx");
-		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(IDataReader),  "rd");
+		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(DbDataReader), "rd");
 		public        readonly ParameterExpression DataReaderLocal;
 		public static readonly ParameterExpression ParametersParam  = Expression.Parameter(typeof(object[]),     "ps");
 		public static readonly ParameterExpression ExpressionParam  = Expression.Parameter(typeof(Expression),   "expr");
@@ -184,8 +184,28 @@ namespace LinqToDB.Linq.Builder
 			return (Query<T>)_query;
 		}
 
+		/// <summary>
+		/// Contains information from which expression sequence were built. Used for Eager Loading.
+		/// </summary>
+		private Dictionary<IBuildContext, Expression> _sequenceExpressions = new();
+
+		public Expression GetSequenceExpression(IBuildContext sequence)
+		{
+			if (_sequenceExpressions.TryGetValue(sequence, out var expr))
+				return expr;
+
+			throw new InvalidOperationException("Sequence has no registered expression");
+		}
+
+		public void AssignSequenceExpression(IBuildContext sequence, Expression sequenceExpression)
+		{
+			_sequenceExpressions[sequence] = sequenceExpression;
+		}
+
 		public IBuildContext BuildSequence(BuildInfo buildInfo)
 		{
+			var originalExpression = buildInfo.Expression;
+
 			buildInfo.Expression = buildInfo.Expression.Unwrap();
 
 			var n = _builders[0].BuildCounter;
@@ -200,6 +220,9 @@ namespace LinqToDB.Linq.Builder
 						builder.BuildCounter++;
 
 					_reorder = _reorder || n < builder.BuildCounter;
+
+					if (sequence != null)
+						_sequenceExpressions[sequence] = originalExpression;
 
 					return sequence!;
 				}
@@ -463,7 +486,7 @@ namespace LinqToDB.Linq.Builder
 							switch (call.Method.Name)
 							{
 								case "Where"                : return new TransformInfo(ConvertWhere         (call));
-								case "GroupBy"              : return new TransformInfo(ConvertGroupBy       (call));
+								//case "GroupBy"              : return new TransformInfo(ConvertGroupBy       (call));
 								case "SelectMany"           : return new TransformInfo(ConvertSelectMany    (call));
 								case "Select"               : return new TransformInfo(ConvertSelect        (call));
 								case "LongCount"            :
@@ -609,7 +632,9 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ConvertWhere(MethodCallExpression method)
 		{
-			var sequence  = OptimizeExpression(method.Arguments[0]);
+			return method;
+
+			/*var sequence  = OptimizeExpression(method.Arguments[0]);
 			var predicate = OptimizeExpression(method.Arguments[1]);
 			var lambda    = (LambdaExpression)predicate.Unwrap();
 			var lparam    = lambda.Parameters[0];
@@ -720,7 +745,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			return method;
+			return method;*/
 		}
 
 		#endregion
@@ -1497,6 +1522,17 @@ namespace LinqToDB.Linq.Builder
 		#endregion
 
 		#region Helpers
+
+#if DEBUG
+		int _contextCounter;
+
+		public int GenerateContextId() 
+		{
+			var nextId = ++_contextCounter;
+			return nextId;
+		}
+			
+#endif
 
 		MethodInfo GetQueryableMethodInfo<TContext>(TContext context, MethodCallExpression method, [InstantHandle] Func<TContext,MethodInfo, bool,bool> predicate)
 		{

@@ -7,22 +7,25 @@ namespace LinqToDB.SqlQuery
 	using Common;
 	using SqlProvider;
 
-	class SelectQueryOptimizer
+	class 
+		SelectQueryOptimizer
 	{
-		public SelectQueryOptimizer(SqlProviderFlags flags, IQueryElement rootElement, SelectQuery selectQuery, int level, params IQueryElement[] dependencies)
+		public SelectQueryOptimizer(SqlProviderFlags flags, EvaluationContext evaluationContext, IQueryElement rootElement, SelectQuery selectQuery, int level, params IQueryElement[] dependencies)
 		{
-			_flags        = flags;
-			_selectQuery  = selectQuery;
-			_rootElement  = rootElement;
-			_level        = level;
-			_dependencies = dependencies;
+			_flags             = flags;
+			_evaluationContext = evaluationContext;
+			_selectQuery       = selectQuery;
+			_rootElement       = rootElement;
+			_level             = level;
+			_dependencies      = dependencies;
 		}
 
-		readonly SqlProviderFlags _flags;
-		readonly SelectQuery      _selectQuery;
-		readonly IQueryElement    _rootElement;
-		readonly int              _level;
-		readonly IQueryElement[]  _dependencies;
+		readonly         SqlProviderFlags  _flags;
+		readonly         EvaluationContext _evaluationContext;
+		readonly         SelectQuery       _selectQuery;
+		readonly         IQueryElement     _rootElement;
+		readonly         int               _level;
+		readonly         IQueryElement[]   _dependencies;
 
 		public void FinalizeAndValidate(bool isApplySupported, bool optimizeColumns)
 		{
@@ -46,7 +49,7 @@ namespace LinqToDB.SqlQuery
 
 			OptimizeUnions();
 			FinalizeAndValidateInternal(isApplySupported, optimizeColumns);
-			ResolveFields();
+			//ResolveFields();
 
 #if DEBUG
 			// ReSharper disable once RedundantAssignment
@@ -433,7 +436,7 @@ namespace LinqToDB.SqlQuery
 				if (e is SelectQuery sql && sql != context.optimizer._selectQuery)
 				{
 					sql.ParentSelect = context.optimizer._selectQuery;
-					new SelectQueryOptimizer(context.optimizer._flags, context.optimizer._rootElement, sql, context.optimizer._level + 1, context.optimizer._dependencies)
+					new SelectQueryOptimizer(context.optimizer._flags, context.optimizer._evaluationContext, context.optimizer._rootElement, sql, context.optimizer._level + 1, context.optimizer._dependencies)
 						.FinalizeAndValidateInternal(context.isApplySupported, context.optimizeColumns);
 
 					if (sql.IsParameterDependent)
@@ -445,9 +448,11 @@ namespace LinqToDB.SqlQuery
 			RemoveEmptyJoins();
 			OptimizeGroupBy();
 			OptimizeColumns();
+			MoveOuterJoinsToSubQuery(_selectQuery);
 			OptimizeApplies   (isApplySupported, optimizeColumns);
 			OptimizeSubQueries(isApplySupported, optimizeColumns);
 			OptimizeApplies   (isApplySupported, optimizeColumns);
+			RemoveEmptyJoins();
 
 			OptimizeGroupBy();
 			OptimizeDistinct();
@@ -716,6 +721,17 @@ namespace LinqToDB.SqlQuery
 							}
 						}
 					}
+				}
+			}
+
+			if (searchCondition.Conditions.Count == 1)
+			{
+				var cond = searchCondition.Conditions[0];
+				if (!cond.IsNot && cond.Predicate is SqlSearchCondition subSc && subSc.Conditions.Count == 1)
+				{
+					var subCond = subSc.Conditions[0];
+					if (!subCond.IsNot)
+						return subSc;
 				}
 			}
 
@@ -1236,157 +1252,100 @@ namespace LinqToDB.SqlQuery
 		{
 			var joinSource = joinTable.Table;
 
-			foreach (var join in joinSource.Joins)
-				if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply)
-					OptimizeApply(parentQuery, parentTableSources, joinSource, join, isApplySupported, optimizeColumns);
-
-			if (isApplySupported && !joinTable.CanConvertApply)
-				return;
-
-			bool ContainsTable(ISqlTableSource table, IQueryElement qe)
+			if (joinSource.Joins.Count > 0)
 			{
-				return null != qe.Find(table, static (table, e) =>
-					e == table ||
-					e.ElementType == QueryElementType.SqlField && table == ((SqlField) e).Table ||
-					e.ElementType == QueryElementType.Column   && table == ((SqlColumn)e).Parent);
+				var joinSources = new HashSet<ISqlTableSource>(parentTableSources);
+				joinSources.Add(joinTable.Table);
+				foreach (var join in joinSource.Joins)
+				{
+					if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply|| join.JoinType == JoinType.FullApply|| join.JoinType == JoinType.RightApply)
+					{
+						OptimizeApply(parentQuery, joinSources, joinSource, join, isApplySupported,
+							optimizeColumns);
+					}
+
+					joinSources.AddRange(QueryHelper.EnumerateAccessibleSources(join.Table));
+				}
 			}
+
+			if (!joinTable.CanConvertApply)
+				return;
 
 			if (joinSource.Source.ElementType == QueryElementType.SqlQuery)
 			{
 				var sql   = (SelectQuery)joinSource.Source;
 				var isAgg = sql.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
 
-				if (isApplySupported  && (isAgg || sql.Select.HasModifier))
+				if (isApplySupported && (isAgg || sql.Select.HasModifier))
 					return;
 
-				var tableSources = new HashSet<ISqlTableSource>();
+				if (sql.Select.HasModifier)
+					throw new NotImplementedException();
 
-				((ISqlExpressionWalkable)sql.Where.SearchCondition).Walk(WalkOptions.Default, tableSources, static (tableSources, e) =>
-				{
-					if (e is ISqlTableSource ts && !tableSources.Contains(ts))
-						tableSources.Add(ts);
-					return e;
-				});
+				var whereToIgnore = new HashSet<IQueryElement> { sql.Where };
+
+				// we cannot optimize apply because reference to parent sources are used inside the query
+				if (QueryHelper.IsDependsOn(sql, parentTableSources, whereToIgnore))
+					return;
 
 				var searchCondition = new List<SqlCondition>();
 
+				var conditions = sql.Where.SearchCondition.Conditions;
+
+				var toIgnore = new HashSet<IQueryElement> { joinTable };
+
+				if (conditions.Count > 0)
 				{
-					var conditions = sql.Where.SearchCondition.Conditions;
-
-					if (conditions.Count > 0)
+					for (var i = conditions.Count - 1; i >= 0; i--)
 					{
-						for (var i = conditions.Count - 1; i >= 0; i--)
+						var condition = conditions[i];
+
+						var contains = QueryHelper.IsDependsOn(condition, parentTableSources, toIgnore);
+
+						if (contains)
 						{
-							var condition = conditions[i];
-
-							var contains = false;
-							foreach (var ts in tableSources)
-							{
-								if (ContainsTable(ts, condition))
-								{
-									contains = true;
-									break;
-								}
-							}
-
-							if (!contains)
-							{
-								searchCondition.Insert(0, condition);
-								conditions.RemoveAt(i);
-							}
-							else
-							{
-								contains = false;
-								foreach (var ts in parentTableSources)
-								{
-									if (ContainsTable(ts, condition))
-									{
-										contains = true;
-										break;
-									}
-								}
-
-								if (contains)
-								{
-									if (isApplySupported && Configuration.Linq.PreferApply)
-										return;
-
-									searchCondition.Insert(0, condition);
-									conditions.RemoveAt(i);
-								}
-							}
+							searchCondition.Insert(0, condition);
+							conditions.RemoveAt(i);
 						}
 					}
 				}
 
-				var sources = new HashSet<ISqlTableSource> {tableSource.Source};
-				var ignore  = new HashSet<IQueryElement>();
-				ignore.AddRange(QueryHelper.EnumerateJoins(sql).Select(static j => j.Condition));
+				var toCheck = new HashSet<ISqlTableSource>();
 
-				if (!QueryHelper.IsDependsOn(sql, sources, ignore))
+				toCheck.AddRange(QueryHelper.EnumerateAccessibleSources(sql));
+
+				for (int i = 0; i < searchCondition.Count; i++)
 				{
-					if (!(joinTable.JoinType == JoinType.CrossApply && searchCondition.Count == 0) // CROSS JOIN
-						&& sql.Select.HasModifier)
-						throw new LinqToDBException("Database do not support CROSS/OUTER APPLY join required by the query.");
-
-					// correct conditions
-					if (searchCondition.Count > 0 && sql.Select.Columns.Count > 0)
+					var cond    = searchCondition[i];
+					var newCond = cond.Convert((sql, toCheck, toIgnore), static (visitor, e) =>
 					{
-						var map = sql.Select.Columns.ToLookup(static c => c.Expression);
-						foreach (var condition in searchCondition)
+						if (e.ElementType == QueryElementType.Column || e.ElementType == QueryElementType.SqlField)
 						{
-							var newPredicate = condition.Predicate.Convert(map, static (visitor, e) =>
+							if (QueryHelper.IsDependsOn(e, visitor.Context.toCheck, null))
 							{
-								if (e is ISqlExpression ex && visitor.Context.Contains(ex))
-								{
-									var newExpr = visitor.Context[ex].First();
-									if (visitor.ParentElement is SqlColumn column)
-									{
-										if (newExpr != column)
-											e = newExpr;
-									}
-									else
-										e = newExpr;
-								}
+								var newExpr = visitor.Context.sql.Select.AddColumn((ISqlExpression)e);
 
-								return e;
-							}, withStack: true);
-							condition.Predicate = newPredicate;
+								return newExpr;
+							}
 						}
-					}
 
-					joinTable.JoinType = joinTable.JoinType == JoinType.CrossApply ? JoinType.Inner : JoinType.Left;
-					joinTable.Condition.Conditions.AddRange(searchCondition);
+						return e;
+					});
+
+					searchCondition[i] = newCond;
 				}
-				else
+
+				var newJoinType = joinTable.JoinType switch
 				{
-					sql.Where.SearchCondition.Conditions.AddRange(searchCondition);
+					JoinType.CrossApply => JoinType.Inner,
+					JoinType.OuterApply => JoinType.Left,
+					JoinType.FullApply  => JoinType.Full,
+					JoinType.RightApply => JoinType.Right,
+					_ => throw new InvalidOperationException($"Invalid APPLY Join: {joinTable.JoinType}"),
+				};
 
-					var table = OptimizeSubQuery(
-						parentQuery,
-						joinTable.Table,
-						joinTable.JoinType == JoinType.Inner || joinTable.JoinType == JoinType.CrossApply,
-						joinTable.JoinType == JoinType.CrossApply,
-						isApplySupported,
-						joinTable.JoinType == JoinType.Inner || joinTable.JoinType == JoinType.CrossApply,
-						optimizeColumns,
-						joinTable);
-
-					if (table != joinTable.Table)
-					{
-						if (joinTable.Table.Source is SelectQuery q && q.OrderBy.Items.Count > 0)
-							ApplySubsequentOrder(_selectQuery, q);
-
-						joinTable.Table = table;
-
-						OptimizeApply(parentQuery, parentTableSources, tableSource, joinTable, isApplySupported, optimizeColumns);
-					}
-				}
-			}
-			else
-			{
-				if (!ContainsTable(tableSource.Source, joinSource.Source))
-					joinTable.JoinType = joinTable.JoinType == JoinType.CrossApply ? JoinType.Inner : JoinType.Left;
+				joinTable.JoinType = newJoinType;
+				joinTable.Condition.Conditions.AddRange(searchCondition);
 			}
 		}
 
@@ -1443,7 +1402,9 @@ namespace LinqToDB.SqlQuery
 
 			// Move up simple subqueries
 			//
-			/* TODO: Cause Stackoverflow in ConcatUnionTests.UnionWithObjects
+
+			/*
+			// TODO: Cause Stackoverflow in ConcatUnionTests.UnionWithObjects
 			for (int tableIndex = 0; tableIndex < _selectQuery.From.Tables.Count; tableIndex++)
 			{
 				var table = _selectQuery.From.Tables[tableIndex];
@@ -1458,9 +1419,9 @@ namespace LinqToDB.SqlQuery
 
 					var root = _selectQuery.ParentSelect ?? _selectQuery;
 
-					root.Walk(new WalkOptions(), static e =>
+					root.Walk(WalkOptions.Default, subQuery, static (ctx, e) =>
 					{
-						if (e is SqlColumn column && column.Parent == subQuery)
+						if (e is SqlColumn column && column.Parent == ctx)
 						{
 							return column.Expression;
 						}
@@ -1470,7 +1431,6 @@ namespace LinqToDB.SqlQuery
 
 				}
 			}
-
 			*/
 
 
@@ -1505,11 +1465,14 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var table in _selectQuery.From.Tables)
 			{
-				tableSources.Add(table);
+				tableSources.Add(table.Source);
+
+				if (table.Source is SelectQuery selectQuery)
+					tableSources.AddRange(QueryHelper.EnumerateAccessibleSources(selectQuery));
 
 				foreach (var join in table.Joins)
 				{
-					if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply)
+					if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply|| join.JoinType == JoinType.FullApply|| join.JoinType == JoinType.RightApply)
 						OptimizeApply(_selectQuery, tableSources, table, join, isApplySupported, optimizeColumns);
 
 					join.Walk(WalkOptions.Default, tableSources, static (tableSources, e) =>
@@ -1621,5 +1584,149 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 		}
+
+		static bool IsLimitedToOneRecord(SelectQuery selectQuery, EvaluationContext context)
+		{
+			if (selectQuery.Select.TakeValue != null &&
+			    selectQuery.Select.TakeValue.TryEvaluateExpression(context, out var takeValue))
+			{
+				if (takeValue is int intValue)
+				{
+					return intValue == 1;
+				}
+			}
+
+			if (selectQuery.Select.Columns.Count == 1)
+			{
+				var column = selectQuery.Select.Columns[0];
+				if (QueryHelper.IsAggregation(column.Expression))
+					return true;
+			}
+
+			return false;
+		}
+
+		static bool IsUniqueUsage(SelectQuery rootQuery, SqlColumn column)
+		{
+			int counter = 0;
+
+			rootQuery.VisitParentFirstAll(e =>
+			{
+				// do not search in the same query
+				if (e is SelectQuery sq && sq == column.Parent)
+					return false;
+
+				if (e == column)
+				{
+					++counter;
+				}
+
+				return counter < 2;
+			});
+
+			return counter == 1;
+		}
+
+
+		SelectQuery MoveOuterJoinsToSubQuery(SelectQuery selectQuery)
+		{
+			var mappings = new Dictionary<ISqlExpression, ISqlExpression>();
+
+			selectQuery.VisitParentFirst((flags: _flags, mappings, context: _evaluationContext), static (ctx, e) =>
+			{
+				if (e is SelectQuery sq)
+				{
+					foreach (var table in sq.From.Tables)
+					{
+						for (int j = table.Joins.Count - 1; j >= 0; j--)
+						{
+							var join = table.Joins[j];
+							if (join.JoinType == JoinType.OuterApply || join.JoinType == JoinType.Left)
+							{
+								if (join.Table.Source is SelectQuery tsQuery &&
+								    tsQuery.Select.Columns.Count == 1 &&
+								    IsLimitedToOneRecord(tsQuery, ctx.context))
+								{
+									// where we can start analyzing that we can move join to subquery
+									var testedColumn = tsQuery.Select.Columns[0];
+									if (IsUniqueUsage(sq, testedColumn))
+									{
+										if (testedColumn.Expression is SqlFunction function)
+										{
+											if (function.IsAggregate)
+											{
+												if (!ctx.flags.IsCountSubQuerySupported)
+													continue;
+											}
+										}
+
+										// moving whole join to subquery
+
+										table.Joins.RemoveAt(j);
+										tsQuery.Where.ConcatSearchCondition(join.Condition);
+
+										if (table.Source is SelectQuery mainQuery)
+										{
+											// moving into FROM query
+
+											var idx       = mainQuery.Select.Add(tsQuery);
+											var newColumn = mainQuery.Select.Columns[idx];
+											newColumn.RawAlias = testedColumn.RawAlias;
+
+											// temporary remove to avoid recursion
+											mainQuery.Select.Columns.RemoveAt(idx);
+
+											sq.Walk(WalkOptions.Default, (testedColumn, newColumn),
+												static (ctx, e) =>
+												{
+													if (e == ctx.testedColumn)
+													{
+														return ctx.newColumn;
+													}
+
+													return e;
+												});
+
+											tsQuery.Walk(WalkOptions.Default, (mainQuery, testedColumn, newColumn),
+												static (ctx, e) =>
+												{
+													if (e is SqlColumn column && column.Parent == ctx.mainQuery)
+													{
+														return column.Expression;
+													}
+
+													return e;
+												});
+
+											// restore at index
+											mainQuery.Select.Columns.Insert(idx, newColumn);
+
+										}
+										else
+										{
+											// replacing column with subquery
+											sq.Walk(WalkOptions.Default, (query: tsQuery, column: testedColumn),
+												(ctx, e) =>
+												{
+													if (e == ctx.column)
+														return ctx.query;
+
+													return e;
+												});
+										}
+
+									}
+								}
+							}
+						}
+					}
+				}
+
+				return true;
+			});
+
+			return selectQuery;
+		}
+
 	}
 }

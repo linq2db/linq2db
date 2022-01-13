@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Linq;
-using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -68,9 +67,9 @@ namespace Tests.UserTests
 			});
 			MappingSchema.Default.SetConverter<string?, List<string>?>((txt) =>
 			{
-				if (txt.IsNullOrEmpty())
+				if (string.IsNullOrEmpty(txt))
 					return null;
-				return txt.Split(';').ToList();
+				return txt!.Split(';').ToList();
 			});
 
 			var names = new List<string>() { "Nancy", "Andrew" };

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Common
 {
@@ -7,33 +8,29 @@ namespace LinqToDB.Common
 	/// <a href="https://en.wikipedia.org/wiki/Option_type">Option type</a>.
 	/// </summary>
 	/// <typeparam name="T">Value type.</typeparam>
-	class Option<T>
+	public readonly struct Option<T>
 	{
+		private readonly bool _hasValue;
+		private readonly T    _value;
+
+		private Option(T value)
+		{
+			_hasValue = true;
+			_value    = value;
+		}
+
+		/// <summary>
+		/// Returns <c>true</c> if current option stores some value instead of <see cref="None"/>.
+		/// </summary>
+		public bool HasValue => _hasValue;
+
 		/// <summary>
 		/// Gets value, stored in option.
 		/// </summary>
-		[AllowNull]
-		public readonly T Value;
-
-		Option([AllowNull] T value)
+		public T Value
 		{
-			Value = value;
-		}
-
-		/// <summary>
-		/// Returns <c>true</c> of current option stores <see cref="None"/> value.
-		/// </summary>
-		public bool IsNone
-		{
-			get { return this == None; }
-		}
-
-		/// <summary>
-		/// Returns <c>true</c> of current option stores some value instead of <see cref="None"/>.
-		/// </summary>
-		public bool IsSome
-		{
-			get { return this != None; }
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => _hasValue ? _value : throw new InvalidOperationException($"{nameof(Option<int>)}.{nameof(Value)} not set");
 		}
 
 		/// <summary>
@@ -41,6 +38,7 @@ namespace LinqToDB.Common
 		/// </summary>
 		/// <param name="value">Option's value.</param>
 		/// <returns>Option instance.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Option<T> Some(T value)
 		{
 			return new Option<T>(value);
@@ -49,6 +47,8 @@ namespace LinqToDB.Common
 		/// <summary>
 		/// Gets <see cref="None"/> value for option.
 		/// </summary>
-		public static readonly Option<T> None = new (default);
+		public static readonly Option<T> None;
+
+		public static implicit operator Option<T>(T value) => new (value);
 	}
 }

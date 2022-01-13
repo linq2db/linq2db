@@ -13,8 +13,8 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = new SelectContext(buildInfo.Parent, builder,
-				(LambdaExpression)methodCall.Arguments[1].Unwrap(),
-				buildInfo.SelectQuery);
+				(LambdaExpression)methodCall.Arguments[1].Unwrap(), 
+				buildInfo.SelectQuery, buildInfo.IsSubQuery);
 
 			return sequence;
 		}

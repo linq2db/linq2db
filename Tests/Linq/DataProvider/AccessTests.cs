@@ -30,7 +30,7 @@ namespace Tests.DataProvider
 			var param1 = context.Contains("Odbc") ? "?" : "@p1";
 			var param2 = context.Contains("Odbc") ? "?" : "@p2";
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>($"SELECT {param}"         , new { p  = 1                                 }), Is.EqualTo("1"));
 				Assert.That(conn.Execute<string>($"SELECT {param}"         , new { p  = "1"                               }), Is.EqualTo("1"));
@@ -57,7 +57,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDataTypes([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var isODBC = conn.DataProvider.Name == ProviderName.AccessOdbc;
 				Assert.That(TestType<bool     >(conn, "bitDataType"             , DataType.Boolean  , skipDefaultNull: isODBC                  ), Is.EqualTo(true));
@@ -136,7 +136,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestNumerics([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				// ODBC driver doesn't support null parameter in select
 				var isODBC = conn.DataProvider.Name == ProviderName.AccessOdbc;
@@ -201,7 +201,7 @@ namespace Tests.DataProvider
 		{
 			var param = context.Contains("Odbc") ? "?" : "@p";
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
 
@@ -219,7 +219,7 @@ namespace Tests.DataProvider
 		{
 			var param = context.Contains("Odbc") ? "?" : "@p";
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<char >("SELECT CStr('1')"), Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT CStr('1')"), Is.EqualTo('1'));
@@ -249,7 +249,7 @@ namespace Tests.DataProvider
 			var isODBC = context.Contains("Odbc");
 			var param = isODBC ? "?" : "@p";
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT CStr('12345')"), Is.EqualTo("12345"));
 				Assert.That(conn.Execute<string>("SELECT NULL"), Is.Null);
@@ -278,7 +278,7 @@ namespace Tests.DataProvider
 			var param = isODBC ? "?" : "@p";
 
 			var arr1 = new byte[] { 48, 57 };
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<byte[]>($"SELECT {param}", DataParameter.Binary("p", arr1)), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>($"SELECT {param}", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
@@ -302,7 +302,7 @@ namespace Tests.DataProvider
 		{
 			var param = context.Contains("Odbc") ? "?" : "@p";
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var guid = TestData.Guid1;
 
@@ -317,7 +317,7 @@ namespace Tests.DataProvider
 			var isODBC = context.Contains("Odbc");
 			var param = isODBC ? "?" : "@p";
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<object>("SELECT CVar(1)"), Is.EqualTo("1"));
 				Assert.That(conn.Execute<int   >("SELECT CVar(1)"), Is.EqualTo(1));
@@ -335,7 +335,7 @@ namespace Tests.DataProvider
 		{
 			var param = context.Contains("Odbc") ? "?" : "@p";
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string     >("SELECT '<xml/>'"), Is.EqualTo("<xml/>"));
 				Assert.That(conn.Execute<XDocument  >("SELECT '<xml/>'").ToString(), Is.EqualTo("<xml />"));
@@ -361,7 +361,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum1([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<TestEnum >("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
 				Assert.That(conn.Execute<TestEnum?>("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
@@ -375,7 +375,7 @@ namespace Tests.DataProvider
 		{
 			var param = context.Contains("Odbc") ? "?" : "@p";
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Query<string>($"SELECT {param}", new { p = TestEnum.AA }).First(), Is.EqualTo("A"));
 				Assert.That(conn.Query<string>($"SELECT {param}", new { p = (TestEnum?)TestEnum.BB }).First(), Is.EqualTo("B"));
@@ -425,7 +425,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					try
 					{
@@ -456,7 +456,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					try
 					{
@@ -507,7 +507,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestZeroDate([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db    = new DataConnection(context))
+			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<DateTable>())
 			{
 				table.Insert(() => new DateTable() { ID = 1, Date = new DateTime(1899, 12, 29)});
@@ -575,7 +575,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Issue1906Test([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable<CtqResultModel>())
 			using (db.CreateLocalTable<CtqDefinitionModel>())
 			using (db.CreateLocalTable<CtqSetModel>())

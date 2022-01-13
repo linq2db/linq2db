@@ -645,7 +645,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Sum3([DataSources(ProviderName.SqlCe)] string context)
+		public void Sum3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -743,7 +743,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Aggregates3([DataSources(ProviderName.SqlCe)] string context)
+		public void Aggregates3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -752,6 +752,7 @@ namespace Tests.Linq
 					group ch by ch.ParentID into g
 					select new
 					{
+						Cnt =      g.Select(c => c.ChildID).Where(_ => _ > 30).Count(),
 						Sum =      g.Select(c => c.ChildID).Where(_ => _ > 30).Sum(),
 						Min =      g.Select(c => c.ChildID).Where(_ => _ > 30).Min(),
 						Max =      g.Select(c => c.ChildID).Where(_ => _ > 30).Max(),
@@ -762,6 +763,7 @@ namespace Tests.Linq
 					group ch by ch.ParentID into g
 					select new
 					{
+						Cnt =      g.Select(c => c.ChildID).Where(_ => _ > 30).Count(),
 						Sum =      g.Select(c => c.ChildID).Where(_ => _ > 30).Sum(),
 						Min =      g.Select(c => c.ChildID).Where(_ => _ > 30).Min(),
 						Max =      g.Select(c => c.ChildID).Where(_ => _ > 30).Max(),
@@ -770,7 +772,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Aggregates4([DataSources(ProviderName.SqlCe)] string context)
+		public void Aggregates4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -791,7 +793,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Aggregates5([DataSources(ProviderName.SqlCe)] string context)
+		public void Aggregates5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1022,22 +1024,24 @@ namespace Tests.Linq
 		public void GroupByAssociation102([DataSources()] string context)
 		{
 			using (var db = GetDataContext(context))
+			{
 				AreEqual(
 					from ch in GrandChild1
-					group ch by ch.Parent into g
+					group ch by ch.Parent
+					into g
 					where g.Count(_ => _.ChildID >= 20) > 2
 					select g.Key.Value1
 					,
 					from ch in db.GrandChild1
-					group ch by ch.Parent into g
+					group ch by ch.Parent
+					into g
 					where g.Count(_ => _.ChildID >= 20) > 2
 					select g.Key.Value1);
+			}
 		}
 
 		[Test]
-		public void GroupByAssociation1022([DataSources(
-			ProviderName.SqlCe, TestProvName.AllAccess /* Can be fixed*/)]
-			string context)
+		public void GroupByAssociation1022([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1053,9 +1057,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByAssociation1023([DataSources(
-			ProviderName.SqlCe, TestProvName.AllAccess /* Can be fixed.*/)]
-			string context)
+		public void GroupByAssociation1023([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1077,9 +1079,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByAssociation1024([DataSources(
-			ProviderName.SqlCe, TestProvName.AllAccess) /* Can be fixed. */]
-			string context)
+		public void GroupByAssociation1024([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1151,21 +1151,26 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByAggregate1([DataSources(ProviderName.SqlCe)] string context)
+		public void GroupByAggregate1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
+			{
 				AreEqual(
 					from p in Parent
-					group p by p.Children.Count > 0 && p.Children.Average(c => c.ParentID) > 3 into g
+					group p by p.Children.Count > 0 && p.Children.Average(c => c.ParentID) > 3
+					into g
 					select g.Key
 					,
 					from p in db.Parent
-					group p by  p.Children.Count > 0 && p.Children.Average(c => c.ParentID) > 3 into g
+					group p by p.Children.Count > 0 && p.Children.Average(c => c.ParentID) > 3
+					into g
 					select g.Key);
+			}
+
 		}
 
 		[Test]
-		public void GroupByAggregate11([DataSources(ProviderName.SqlCe)] string context)
+		public void GroupByAggregate11([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1181,7 +1186,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByAggregate12([DataSources(ProviderName.SqlCe)] string context)
+		public void GroupByAggregate12([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1319,7 +1324,16 @@ namespace Tests.Linq
 		[Test]
 		public void Scalar4([DataSources(ProviderName.SqlCe, TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+
+			var query = from ch in db.Child
+				group ch by ch.ParentID into g
+				where g.Where(ch => ch.ParentID > 2).Select(ch => (int?)ch.ChildID).Min() != null
+				select g.Where(ch => ch.ParentID > 2).Select(ch => ch.ChildID).Min();
+
+			query.ToList();
+
+				/*
 				AreEqual(
 					from ch in Child
 					group ch by ch.ParentID into g
@@ -1330,6 +1344,7 @@ namespace Tests.Linq
 					group ch by ch.ParentID into g
 					where g.Where(ch => ch.ParentID > 2).Select(ch => (int?)ch.ChildID).Min() != null
 					select g.Where(ch => ch.ParentID > 2).Select(ch => ch.ChildID).Min());
+		*/
 		}
 
 		[Test]
@@ -1452,13 +1467,13 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByExtraFieldBugTest([IncludeDataSources(TestProvName.AllMySql)] string context)
+		public void GroupByExtraFieldBugTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			// https://github.com/igor-tkachev/LinqToDB/issues/42
 			// extra field is generated in the GROUP BY clause, for example:
 			// GROUP BY p.LastName, p.LastName <--- the second one is redundant
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var q =
 					from d in db.Doctor
@@ -2041,7 +2056,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue680Test([DataSources(false)] string context)
 		{
-			using (var db    = new TestDataConnection(context))
+			using (var db    = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<Issue680Table>())
 			{
 				var result = (from record in table
@@ -2157,7 +2172,6 @@ namespace Tests.Linq
 			};
 		}
 
-		[ActiveIssue(1078, Details = "Disabled providers doesn't support sub-query columns and use join (which is not correct right now)", Configurations = new[] { TestProvName.AllAccess, ProviderName.SqlServer2000, ProviderName.SqlCe })]
 		[Test]
 		public void Issue1078Test([DataSources] string context)
 		{

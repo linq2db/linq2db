@@ -11,6 +11,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Extensions;
 	using Reflection;
+	using System.Data.Common;
 
 	class SelectBuilder : MethodCallBuilder
 	{
@@ -30,6 +31,12 @@ namespace LinqToDB.Linq.Builder
 			return false;
 		}
 
+		public override bool IsAggregationContext(ExpressionBuilder builder, BuildInfo buildInfo)
+		{
+			// Select is transparent and we can treat it as an aggregation.
+			return true;
+		}
+
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var selector = (LambdaExpression)methodCall.Arguments[1].Unwrap();
@@ -43,13 +50,13 @@ namespace LinqToDB.Linq.Builder
 			{
 				case ExpressionType.Parameter : break;
 				default                       :
-					sequence = CheckSubQueryForSelect(sequence);
+					sequence = CheckSubQueryForSelect(sequence, buildInfo);
 					break;
 			}
 
 			var context = selector.Parameters.Count == 1 ?
-				new SelectContext (buildInfo.Parent, selector, sequence) :
-				new SelectContext2(buildInfo.Parent, selector, sequence);
+				new SelectContext (buildInfo.Parent, selector, buildInfo.IsSubQuery, sequence) :
+				new SelectContext2(buildInfo.Parent, selector, buildInfo.IsSubQuery, sequence);
 
 #if DEBUG
 			context.Debug_MethodCall = methodCall;
@@ -58,9 +65,19 @@ namespace LinqToDB.Linq.Builder
 			return context;
 		}
 
-		static IBuildContext CheckSubQueryForSelect(IBuildContext context)
+		static IBuildContext CheckSubQueryForSelect(IBuildContext context, BuildInfo buildInfo)
 		{
-			return context.SelectQuery.Select.IsDistinct ? new SubQueryContext(context) : context;
+			var createSubquery = context.SelectQuery.Select.IsDistinct;
+
+			if (!createSubquery)
+			{
+				if (!buildInfo.IsAggregation & !context.SelectQuery.Select.GroupBy.IsEmpty)
+					createSubquery = true;
+			}
+
+			return createSubquery
+				? new SubQueryContext(context)
+				: context;
 		}
 
 		#endregion
@@ -69,8 +86,8 @@ namespace LinqToDB.Linq.Builder
 
 		class SelectContext2 : SelectContext
 		{
-			public SelectContext2(IBuildContext? parent, LambdaExpression lambda, IBuildContext sequence)
-				: base(parent, lambda, sequence)
+			public SelectContext2(IBuildContext? parent, LambdaExpression lambda, bool isSubQuery, IBuildContext sequence)
+				: base(parent, lambda, isSubQuery, sequence)
 			{
 			}
 
@@ -78,12 +95,17 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				var expr = BuildExpression(null, 0, false);
+				var expr = Builder.FinalizeProjection(this,
+					Builder.MakeExpression(new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
+
+				expr = Builder.ToReadExpression(expr);
+
+				expr = expr.Replace(Lambda.Parameters[1], _counterParam);
 
 				if (expr.Type != typeof(T))
 					expr = Expression.Convert(expr, typeof(T));
 
-				var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,IDataReader,Expression,object?[]?,object?[]?,int,T>>(
+				var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,DbDataReader,Expression,object?[]?,object?[]?,int,T>>(
 					Builder.BuildBlock(expr), new []
 					{
 						ExpressionBuilder.QueryRunnerParam,
@@ -128,6 +150,7 @@ namespace LinqToDB.Linq.Builder
 		protected override SequenceConvertInfo? Convert(
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
+			return null;
 			var originalMethodCall = methodCall;
 			var selector           = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 			var info               = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), selector.Parameters[0], true);

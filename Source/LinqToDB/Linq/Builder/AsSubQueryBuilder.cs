@@ -28,7 +28,7 @@ namespace LinqToDB.Linq.Builder
 				var lambda = Expression.Lambda(Expression.PropertyOrField(param, "Key"), param);
 
 				sequence = new SubQueryContext(sequence);
-				sequence = new SelectContext(buildInfo.Parent, lambda, sequence);
+				sequence = new SelectContext(buildInfo.Parent, lambda, buildInfo.IsSubQuery, sequence);
 			}
 			else 
 				sequence = new SubQueryContext(sequence);

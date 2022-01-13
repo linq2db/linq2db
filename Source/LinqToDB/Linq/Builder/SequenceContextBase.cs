@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Linq.Expressions;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -10,15 +11,18 @@ namespace LinqToDB.Linq.Builder
 	{
 		protected SequenceContextBase(IBuildContext? parent, IBuildContext[] sequences, LambdaExpression? lambda)
 		{
-			Parent      = parent;
-			Sequences   = sequences;
-			Builder     = sequences[0].Builder;
-			Lambda      = lambda;
-			SelectQuery = sequences[0].SelectQuery;
-
+			Parent          = parent;
+			Sequences       = sequences;
+			Builder         = sequences[0].Builder;
+			Lambda          = lambda;
+			Body            = lambda == null ? null : SequenceHelper.PrepareBody(lambda, sequences);
+			SelectQuery     = sequences[0].SelectQuery;
 			Sequence.Parent = this;
 
 			Builder.Contexts.Add(this);
+#if DEBUG
+			ContextId = Builder.GenerateContextId();
+#endif
 		}
 
 		protected SequenceContextBase(IBuildContext? parent, IBuildContext sequence, LambdaExpression? lambda)
@@ -28,22 +32,26 @@ namespace LinqToDB.Linq.Builder
 
 #if DEBUG
 		public string _sqlQueryText => SelectQuery?.SqlText ?? "";
-		public string Path => this.GetPath();
+		public string Path          => this.GetPath();
+		public int    ContextId     { get; }
 #endif
 
 		public IBuildContext?    Parent      { get; set; }
 		public IBuildContext[]   Sequences   { get; set; }
 		public ExpressionBuilder Builder     { get; set; }
 		public LambdaExpression? Lambda      { get; set; }
+		public Expression?       Body        { get; set; }
 		public SelectQuery       SelectQuery { get; set; }
 		public SqlStatement?     Statement   { get; set; }
-		public IBuildContext     Sequence => Sequences[0];
+		public IBuildContext     Sequence    => Sequences[0];
 
 		Expression? IBuildContext.Expression => Lambda;
 
 		public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 		{
-			var expr   = BuildExpression(null, 0, false);
+			var expr = Builder.FinalizeProjection(this,
+				Builder.MakeExpression(new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
+
 			var mapper = Builder.BuildMapper<T>(expr);
 
 			QueryRunner.SetRunQuery(query, mapper);
@@ -52,6 +60,13 @@ namespace LinqToDB.Linq.Builder
 		public abstract Expression         BuildExpression(Expression? expression, int level, bool enforceServerSide);
 		public abstract SqlInfo[]          ConvertToSql   (Expression? expression, int level, ConvertFlags flags);
 		public abstract SqlInfo[]          ConvertToIndex (Expression? expression, int level, ConvertFlags flags);
+
+		public virtual Expression MakeExpression(Expression path, ProjectFlags flags)
+		{
+			path = SequenceHelper.CorrectExpression(path, this, Sequence);
+			return Builder.MakeExpression(path, flags);
+		}
+
 		public abstract IsExpressionResult IsExpression   (Expression? expression, int level, RequestFor requestFlag);
 		public abstract IBuildContext?     GetContext     (Expression? expression, int level, BuildInfo buildInfo);
 
@@ -79,6 +94,9 @@ namespace LinqToDB.Linq.Builder
 			{
 				SelectQuery.Select.Columns[0].Alias = alias;
 			}
+
+			if (SelectQuery.From.Tables.Count > 0)
+				SelectQuery.From.Tables[SelectQuery.From.Tables.Count - 1].Alias = alias;
 		}
 
 		public virtual ISqlExpression? GetSubQuery(IBuildContext context)
@@ -86,12 +104,5 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		protected bool IsSubQuery()
-		{
-			for (var p = Parent; p != null; p = p.Parent)
-				if (p.IsExpression(null, 0, RequestFor.SubQuery).Result)
-					return true;
-			return false;
-		}
 	}
 }

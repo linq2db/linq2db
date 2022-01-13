@@ -75,7 +75,7 @@ namespace LinqToDB.Linq.Builder
 
 					builder.BuildSearchCondition(
 						new ExpressionContext(null, new[] { mergeContext.SourceContext }, condition),
-						conditionExpr,
+						conditionExpr, ProjectFlags.SQL,
 						operation.Where.Conditions);
 				}
 

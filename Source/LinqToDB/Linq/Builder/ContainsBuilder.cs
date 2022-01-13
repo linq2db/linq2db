@@ -162,7 +162,7 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						var sequence = Builder.BuildWhere(Parent, Sequence, condition, true);
+						var sequence = Builder.BuildWhere(Parent, Sequence, condition, true, false, false);
 						cond = new SqlCondition(false, new SqlPredicate.FuncLike(SqlFunction.CreateExists(sequence.SelectQuery)));
 					}
 

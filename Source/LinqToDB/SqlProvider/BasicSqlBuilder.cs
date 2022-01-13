@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 
 namespace LinqToDB.SqlProvider
 {
+	using System.Data.Common;
 	using Common;
 	using Mapping;
 	using SqlQuery;
@@ -562,10 +563,10 @@ namespace LinqToDB.SqlProvider
 				AppendIndent();
 				BuildColumnExpression(selectQuery, expr, col.Alias, ref addAlias);
 
-				if (!SkipAlias && addAlias && !col.Alias.IsNullOrEmpty())
+				if (!SkipAlias && addAlias && !string.IsNullOrEmpty(col.Alias))
 				{
 					StringBuilder.Append(" as ");
-					Convert(StringBuilder, col.Alias, ConvertType.NameToQueryFieldAlias);
+					Convert(StringBuilder, col.Alias!, ConvertType.NameToQueryFieldAlias);
 				}
 			}
 
@@ -2634,7 +2635,7 @@ namespace LinqToDB.SqlProvider
 
 		string IdentText(string text, int ident)
 		{
-			if (text.IsNullOrEmpty())
+			if (string.IsNullOrEmpty(text))
 				return text;
 
 			text = text.Replace("\r", "");
@@ -3172,24 +3173,24 @@ namespace LinqToDB.SqlProvider
 			return null;
 		}
 
-		protected virtual void PrintParameterName(StringBuilder sb, IDbDataParameter parameter)
+		protected virtual void PrintParameterName(StringBuilder sb, DbParameter parameter)
 		{
 			if (!parameter.ParameterName.StartsWith("@"))
 				sb.Append('@');
 			sb.Append(parameter.ParameterName);
 		}
 
-		protected virtual string? GetTypeName(IDbDataParameter parameter)
+		protected virtual string? GetTypeName(DbParameter parameter)
 		{
 			return null;
 		}
 
-		protected virtual string? GetUdtTypeName(IDbDataParameter parameter)
+		protected virtual string? GetUdtTypeName(DbParameter parameter)
 		{
 			return null;
 		}
 
-		protected virtual string? GetProviderTypeName(IDbDataParameter parameter)
+		protected virtual string? GetProviderTypeName(DbParameter parameter)
 		{
 			return parameter.DbType switch
 			{
@@ -3203,7 +3204,7 @@ namespace LinqToDB.SqlProvider
 			};
 		}
 
-		protected virtual void PrintParameterType(StringBuilder sb, IDbDataParameter parameter)
+		protected virtual void PrintParameterType(StringBuilder sb, DbParameter parameter)
 		{
 			var typeName = GetTypeName(parameter);
 			if (!string.IsNullOrEmpty(typeName))
@@ -3225,11 +3226,21 @@ namespace LinqToDB.SqlProvider
 					if (t1.IndexOf('(') < 0)
 						sb.Append('(').Append(parameter.Size).Append(')');
 				}
+#if NET45
+#pragma warning disable RS0030 // API missing from DbParameter in NET 4.5
+				else if (((IDbDataParameter)parameter).Precision > 0)
+				{
+					if (t1.IndexOf('(') < 0)
+						sb.Append('(').Append(((IDbDataParameter)parameter).Precision).Append(InlineComma).Append(((IDbDataParameter)parameter).Scale).Append(')');
+				}
+#pragma warning restore RS0030 // API missing from DbParameter in NET 4.5
+#else
 				else if (parameter.Precision > 0)
 				{
 					if (t1.IndexOf('(') < 0)
 						sb.Append('(').Append(parameter.Precision).Append(InlineComma).Append(parameter.Scale).Append(')');
 				}
+#endif
 				else
 				{
 					switch (parameter.DbType)
@@ -3273,7 +3284,7 @@ namespace LinqToDB.SqlProvider
 				sb.Append(" -- ").Append(t2);
 		}
 
-		public virtual StringBuilder PrintParameters(StringBuilder sb, IEnumerable<IDbDataParameter>? parameters)
+		public virtual StringBuilder PrintParameters(StringBuilder sb, IEnumerable<DbParameter>? parameters)
 		{
 			if (parameters != null)
 			{
@@ -3412,9 +3423,9 @@ namespace LinqToDB.SqlProvider
 
 		public virtual string Name => _name ??= GetType().Name.Replace("SqlBuilder", "");
 
-		#endregion
+#endregion
 
-		#region Aliases
+#region Aliases
 
 		HashSet<string>? _aliases;
 
@@ -3463,7 +3474,7 @@ namespace LinqToDB.SqlProvider
 			return aliases;
 		}
 
-		#endregion
+#endregion
 
 	}
 }

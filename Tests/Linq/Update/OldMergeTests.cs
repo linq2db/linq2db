@@ -28,12 +28,12 @@ namespace Tests.xUpdate
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
+				ProviderName.SqlServer2005,
 				TestProvName.AllSybase,
 				TestProvName.AllSapHana)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.Merge(db.Types2);
 			}
@@ -47,10 +47,10 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				ProviderName.SqlServer2005)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.Merge(Array<Person>.Empty);
 			}
@@ -71,10 +71,10 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				ProviderName.SqlServer2005)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.Merge(true, db.Types2);
 			}
@@ -95,10 +95,10 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				ProviderName.SqlServer2005)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.Merge(t => t.ID > 5, db.Types2.Where(t => t.ID > 5));
 			}
@@ -119,10 +119,10 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				ProviderName.SqlServer2005)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.Merge(db.Types2, t => t.ID > 5);
 			}
@@ -143,10 +143,10 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				ProviderName.SqlServer2005)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				await db.MergeAsync(db.Types2, t => t.ID > 5);
 			}
@@ -167,10 +167,10 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				ProviderName.SqlServer2005)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var patient = db.Patient.First();
 				db.Merge(db.Person, t => t.Patient == patient);
@@ -192,10 +192,10 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				ProviderName.SqlServer2005)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var patient = db.Patient.First().PersonID;
 				db.Merge(db.Person, t => t.Patient!.PersonID == patient);
@@ -219,10 +219,10 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				ProviderName.SqlServer2005)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.Merge(db.Child, t => t.Parent!.ParentID == 2 && t.GrandChildren.Any(g => g.Child!.ChildID == 22));
 			}
@@ -250,12 +250,12 @@ namespace Tests.xUpdate
 				TestProvName.AllSybase,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				ProviderName.SqlServer2005)]
 			string context)
 		{
 			ResetAllTypesIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				var id = ConvertTo<int>.From(db.GetTable<AllType>().InsertWithIdentity(() => new AllType
@@ -282,10 +282,10 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				ProviderName.SqlServer2005)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				db.Merge(new[]

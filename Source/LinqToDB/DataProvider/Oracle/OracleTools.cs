@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.IO;
 using System.Reflection;
 
@@ -278,12 +279,12 @@ namespace LinqToDB.DataProvider.Oracle
 			return new DataConnection(GetDataProvider(providerName), connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection, string? providerName = null)
+		public static DataConnection CreateDataConnection(DbConnection connection, string? providerName = null)
 		{
 			return new DataConnection(GetDataProvider(providerName), connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction, string? providerName = null)
+		public static DataConnection CreateDataConnection(DbTransaction transaction, string? providerName = null)
 		{
 			return new DataConnection(GetDataProvider(providerName), transaction);
 		}
@@ -294,54 +295,13 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
 
-		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
-		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			this DataConnection          dataConnection,
-			IEnumerable<T>               source,
-			int                          maxBatchSize       = 1000,
-			Action<BulkCopyRowsCopied>?  rowsCopiedCallback = null)
-			where T : class
-		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.MultipleRows,
-					MaxBatchSize       = maxBatchSize,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
-		}
-
-		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
-		public static BulkCopyRowsCopied ProviderSpecificBulkCopy<T>(
-			DataConnection               dataConnection,
-			IEnumerable<T>               source,
-			int?                         maxBatchSize       = null,
-			int?                         bulkCopyTimeout    = null,
-			int                          notifyAfter        = 0,
-			Action<BulkCopyRowsCopied>?  rowsCopiedCallback = null)
-			where T : class
-		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.ProviderSpecific,
-					MaxBatchSize       = maxBatchSize,
-					BulkCopyTimeout    = bulkCopyTimeout,
-					NotifyAfter        = notifyAfter,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
-		}
-
-		#endregion
+#endregion
 
 		/// <summary>
 		/// Specifies type of multi-row INSERT operation to generate for <see cref="BulkCopyType.RowByRow"/> bulk copy mode.
 		/// Default value: <see cref="AlternativeBulkCopy.InsertAll"/>.
 		/// </summary>
 		public static AlternativeBulkCopy UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
-
-		[Obsolete("This field is not used by linq2db. Configure reader expressions on DataProvider directly")]
-		public static Func<IDataReader,int,decimal> DataReaderGetDecimal = (dr, i) => dr.GetDecimal(i);
 
 		/// <summary>
 		/// Gets or sets flag to tell LinqToDB to quote identifiers, if they contain lowercase letters.

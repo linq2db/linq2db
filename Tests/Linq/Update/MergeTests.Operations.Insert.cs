@@ -420,7 +420,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertFromCrossJoinedSourceQuery2Workaround([MergeDataContextSource(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				PrepareData(db);
 
@@ -453,7 +453,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertFromCrossJoinedSourceQuery2([MergeDataContextSource(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				PrepareData(db);
 
@@ -511,7 +511,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertFromCrossJoinedSourceQuery([MergeDataContextSource(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				// prepare test data
@@ -608,7 +608,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertFromSelectManySourceQuery([MergeDataContextSource(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				// prepare test data
@@ -1663,7 +1663,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void CrossJoinedSourceWithSingleFieldSelection([MergeDataContextSource(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				// prepare test data
@@ -1729,7 +1729,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void SortedMergeResultsIssue([MergeDataContextSource(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				// prepare test data

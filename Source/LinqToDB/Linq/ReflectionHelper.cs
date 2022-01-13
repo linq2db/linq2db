@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Linq
 {
+	using System.Data.Common;
 	using LinqToDB.Expressions;
 
 	class ReflectionHelper
@@ -144,11 +144,16 @@ namespace LinqToDB.Linq
 			public static PropertyInfo Variables   = PropertyOf(e => e.Variables);
 		}
 
+		public class ContextConstruction : Expressor<ContextConstructionExpression>
+		{
+			public static PropertyInfo InnerExpression = PropertyOf(e => e.InnerExpression);
+		}
+
 		public static MethodInfo ExprItem  = IndexExpressor<Expression>         .Item;
 		public static MethodInfo ParamItem = IndexExpressor<ParameterExpression>.Item;
 		public static MethodInfo ElemItem  = IndexExpressor<ElementInit>        .Item;
 
-		public class DataReader : Expressor<IDataReader>
+		public class DataReader : Expressor<DbDataReader>
 		{
 			public static MethodInfo GetValue = MethodOf(rd => rd.GetValue(0));
 			public static MethodInfo IsDBNull = MethodOf(rd => rd.IsDBNull(0));

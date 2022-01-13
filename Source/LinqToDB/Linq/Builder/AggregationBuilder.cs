@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -8,16 +6,13 @@ using System.Threading.Tasks;
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-	using Extensions;
 	using Mapping;
 	using SqlQuery;
-	using LinqToDB.Reflection;
-	using LinqToDB.Common.Internal;
 
 	class AggregationBuilder : MethodCallBuilder
 	{
-		public  static readonly string[] MethodNames      = { "Average"     , "Min"     , "Max"     , "Sum"      };
-		private static readonly string[] MethodNamesAsync = { "AverageAsync", "MinAsync", "MaxAsync", "SumAsync" };
+		public  static readonly string[] MethodNames      = { "Average"     , "Min"     , "Max"     , "Sum",      "Count"     , "LongCount"      };
+		private static readonly string[] MethodNamesAsync = { "AverageAsync", "MinAsync", "MaxAsync", "SumAsync", "CountAsync", "LongCountAsync" };
 
 		public static Sql.ExpressionAttribute? GetAggregateDefinition(MethodCallExpression methodCall, MappingSchema mapping)
 		{
@@ -35,48 +30,148 @@ namespace LinqToDB.Linq.Builder
 			return false;
 		}
 
+		public override bool IsAggregationContext(ExpressionBuilder builder, BuildInfo buildInfo)
+		{
+			return true;
+		}
+
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { CreateSubQuery = true });
-
-			var prevSequence = sequence;
-
-			// Wrap by subquery to handle aggregate limitations, especially for SQL Server
-			//
-			sequence = new SubQueryContext(sequence);
-
-			if (prevSequence.SelectQuery.OrderBy.Items.Count > 0)
-			{
-				if (prevSequence.SelectQuery.Select.TakeValue == null && prevSequence.SelectQuery.Select.SkipValue == null)
-					prevSequence.SelectQuery.OrderBy.Items.Clear();
-			}
-
-			var context = new AggregationContext(buildInfo.Parent, sequence, methodCall);
-
 			var methodName = methodCall.Method.Name.Replace("Async", "");
+			var returnType = methodCall.Method.ReturnType;
 
-			var sql = sequence.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).ToArray();
+			SqlPlaceholderExpression functionPlaceholder;
+			AggregationContext       context;
 
-			if (sql.Length == 1)
+			var sequenceArgument = builder.CorrectRoot(methodCall.Arguments[0]);
+
+			if (!buildInfo.IsSubQuery)
 			{
-				if (sql[0] is SelectQuery query)
+				//shorter path
+
+				var sequence = builder.BuildSequence(new BuildInfo(buildInfo, sequenceArgument, new SelectQuery()));
+
+				if (methodName == "Count" || methodName == "LongCount")
 				{
-					if (query.Select.Columns.Count == 1)
+					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence, SqlFunction.CreateCount(returnType, sequence.SelectQuery), buildInfo.Expression);
+					context = new AggregationContext(buildInfo.Parent, sequence, methodCall);
+				}
+				else
+				{
+					Expression refExpression = new ContextRefExpression(sequenceArgument.Type, sequence);
+
+					var sqlPlaceholder = builder.ConvertToSqlPlaceholder(sequence, refExpression, ProjectFlags.SQL);
+					context = new AggregationContext(buildInfo.Parent,  sequence, methodCall);
+
+					var sql = sqlPlaceholder.Sql;
+
+					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence, 
+						new SqlFunction(methodCall.Type, methodName, true, sql) { CanBeNull = true }, buildInfo.Expression);
+				}
+			}
+			else
+			{
+				var isSimple = false;
+
+				IBuildContext?      sequence            = null;
+				IBuildContext?      placeholderSequence = null;
+
+
+				var parentContext       = buildInfo.Parent!;
+				var placeholderSelect   = parentContext.SelectQuery;
+
+				var testSequence = builder.BuildSequence(new BuildInfo(buildInfo, sequenceArgument, new SelectQuery())
+					{ AggregationTest = true, IsAggregation = true });
+
+				// It means that as root we have used fake context
+				var testSelectQuery = testSequence.SelectQuery;
+				if (testSelectQuery.From.Tables.Count == 0)
+				{
+					var valid = true;
+					if (!testSelectQuery.Where.IsEmpty)
 					{
-						var join = query.OuterApply();
-						context.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
-						sql[0] = query.Select.Columns[0];
+						valid = false;
+						/* TODO: we can inject predicate into function if provider supports that
+						switch (methodName)
+						{
+							case "Sum":
+							{
+								filter = testSelectQuery.
+							}
+						}
+						*/
 					}
+
+					if (valid)
+					{
+						sequence = builder.BuildSequence(
+							new BuildInfo(buildInfo, sequenceArgument)
+								{ CreateSubQuery = false, IsAggregation = true });
+
+						var rootContext  = builder.GetRootContext(sequenceArgument, false);
+
+						if (rootContext != null)
+						{
+							placeholderSequence = rootContext.BuildContext;
+							placeholderSelect   = rootContext.BuildContext.SelectQuery;
+
+							if (placeholderSequence is GroupByBuilder.GroupByContext groupCtx)
+							{
+								placeholderSequence = groupCtx.SubQuery;
+								placeholderSelect   = groupCtx.Element.SelectQuery;
+							}
+						}
+						else
+						{
+							throw new NotImplementedException();
+						}
+
+						isSimple = true;
+					}
+				}
+
+				if (sequence is null)
+				{
+					sequence = builder.BuildSequence(new BuildInfo(buildInfo, sequenceArgument, new SelectQuery()) { CreateSubQuery = true, IsAggregation = true });
+
+					placeholderSequence ??= sequence;
+
+					if (sequence is GroupByBuilder.GroupByContext groupByContext)
+					{
+						placeholderSequence = groupByContext.SubQuery;
+						placeholderSelect   = groupByContext.Element.SelectQuery;
+					}
+				}
+
+				placeholderSequence ??= sequence;
+
+				if (methodName == "Count" || methodName == "LongCount")
+				{
+					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(placeholderSequence, SqlFunction.CreateCount(returnType, placeholderSelect), buildInfo.Expression);
+					context = new AggregationContext(buildInfo.Parent, sequence, methodCall);
+				}
+				else
+				{
+					Expression refExpression = new ContextRefExpression(sequenceArgument.Type, sequence);
+
+					var sqlPlaceholder = builder.ConvertToSqlPlaceholder(placeholderSequence, refExpression, ProjectFlags.SQL);
+					context = new AggregationContext(buildInfo.Parent,  sequence, methodCall);
+
+					var sql = sqlPlaceholder.Sql;
+
+					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(placeholderSequence, /*context*/
+						new SqlFunction(methodCall.Type, methodName, true, sql) { CanBeNull = true }, buildInfo.Expression);
+				}
+
+				if (!isSimple)
+				{
+					context.OuterJoinParentQuery = buildInfo.Parent!.SelectQuery;
 				}
 			}
 
-			ISqlExpression sqlExpression = new SqlFunction(methodCall.Type, methodName, true, sql);
 
-			if (sqlExpression == null)
-				throw new LinqToDBException("Invalid Aggregate function implementation");
-
-			context.Sql        = context.SelectQuery;
-			context.FieldIndex = context.SelectQuery.Select.Add(sqlExpression, methodName);
+			functionPlaceholder.Alias = methodName;
+			context.Placeholder       = functionPlaceholder;
 
 			return context;
 		}
@@ -104,11 +199,9 @@ namespace LinqToDB.Linq.Builder
 
 			readonly string     _methodName;
 			readonly Type       _returnType;
-			private  SqlInfo[]? _index;
-			private  int?       _parentIndex;
 
-			public int            FieldIndex;
-			public ISqlExpression Sql = null!;
+			public SqlPlaceholderExpression Placeholder = null!;
+			public SelectQuery?             OuterJoinParentQuery { get; set; }
 
 			static int CheckNullValue(bool isNull, object context)
 			{
@@ -120,133 +213,63 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				var expr   = BuildExpression(FieldIndex, Sql);
+				var expr = Builder.FinalizeProjection(this,
+					Builder.MakeExpression(new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
+
 				var mapper = Builder.BuildMapper<object>(expr);
 
-				CompleteColumns();
 				QueryRunner.SetRunQuery(query, mapper);
 			}
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				var info  = ConvertToIndex(expression, level, ConvertFlags.Field)[0];
-				var index = info.Index;
-				if (Parent != null)
-					index = ConvertToParentIndex(index, Parent);
-				return BuildExpression(index, info.Sql);
-			}
-
-			Expression BuildExpression(int fieldIndex, ISqlExpression? sqlExpression)
-			{
-				Expression expr;
-
-				if (SequenceHelper.UnwrapSubqueryContext(Sequence) is DefaultIfEmptyBuilder.DefaultIfEmptyContext defaultIfEmpty)
-				{
-					expr = Builder.BuildSql(_returnType, fieldIndex, sqlExpression);
-					if (defaultIfEmpty.DefaultValue != null && expr is ConvertFromDataReaderExpression convert)
-					{
-						var generator = new ExpressionGenerator();
-						expr = convert.MakeNullable();
-						if (expr.Type.IsNullable())
-						{
-							var exprVar      = generator.AssignToVariable(expr, "nullable");
-							var defaultValue = defaultIfEmpty.DefaultValue;
-							if (defaultValue.Type != expr.Type)
-							{
-								var convertLambda = Builder.MappingSchema.GenerateSafeConvert(defaultValue.Type, expr.Type);
-								defaultValue = InternalExtensions.ApplyLambdaToExpression(convertLambda, defaultValue);
-							}
-
-							var resultVar = generator.AssignToVariable(defaultValue, "result");
-							
-							generator.AddExpression(Expression.IfThen(
-								Expression.NotEqual(exprVar, ExpressionInstances.UntypedNull),
-								Expression.Assign(resultVar, Expression.Convert(exprVar, resultVar.Type))));
-
-							generator.AddExpression(resultVar);
-
-							expr = generator.Build();
-						}
-					}
-				}
-				else
-				if (_methodName == "Sum" || _returnType.IsNullableType())
-				{
-					expr = Builder.BuildSql(_returnType, fieldIndex, sqlExpression);
-				}
-				else
-				{
-					expr = Expression.Block(
-						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(false, null!)), Expression.Call(ExpressionBuilder.DataReaderParam, Methods.ADONet.IsDBNull, ExpressionInstances.Constant0), Expression.Constant(_methodName)),
-						Builder.BuildSql(_returnType, fieldIndex, sqlExpression));
-				}
-
-				return expr;
+				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
-				switch (flags)
-				{
-					case ConvertFlags.All   :
-					case ConvertFlags.Key   :
-					case ConvertFlags.Field : return Sequence.ConvertToSql(expression, level + 1, flags);
-				}
-
-				throw new InvalidOperationException();
-			}
-
-			public override int ConvertToParentIndex(int index, IBuildContext context)
-			{
-				if (index != FieldIndex)
-					throw new InvalidOperationException();
-
-				if (_parentIndex != null)
-					return _parentIndex.Value;
-
-				if (Parent != null)
-				{
-					index = Parent.SelectQuery.Select.Add(Sql);
-					_parentIndex = Parent.ConvertToParentIndex(index, Parent);
-				}
-				else
-				{
-					_parentIndex = index;
-				}
-
-				return _parentIndex.Value;
+				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
-				switch (flags)
-				{
-					case ConvertFlags.Field :
-						{
-							var result = _index ??= new[]
-							{
-								new SqlInfo(Sql!, SelectQuery, FieldIndex)
-							};
+				throw new NotImplementedException();
+			}
 
-							return result;
-						}
+			private bool _joinCreated;
+
+			void CreateWeakOuterJoin(SelectQuery parentQuery, SelectQuery selectQuery)
+			{
+				if (!_joinCreated)
+				{
+					_joinCreated = true;
+
+					var join = selectQuery.OuterApply();
+					join.JoinedTable.IsWeak = true;
+
+					parentQuery.From.Tables[0].Joins.Add(join.JoinedTable);
+				}
+			}
+
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				if (OuterJoinParentQuery != null)
+				{
+					if (!flags.HasFlag(ProjectFlags.Test))
+					{
+						CreateWeakOuterJoin(OuterJoinParentQuery, SelectQuery);
+					}
 				}
 
-
-				throw new InvalidOperationException();
+				return Placeholder;
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				return requestFlag switch
-				{
-					RequestFor.Root       => IsExpressionResult.GetResult(Lambda != null && expression == Lambda.Parameters[0]),
-					RequestFor.Expression => IsExpressionResult.True,
-					_                     => IsExpressionResult.False,
-				};
+				throw new NotImplementedException();
 			}
 
-			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
+			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
 				throw new NotImplementedException();
 			}

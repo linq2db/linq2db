@@ -33,16 +33,19 @@ namespace LinqToDB.Linq.Builder
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
 			if (methodCall.Arguments.Count == 2 && deleteType == DeleteContext.DeleteType.Delete)
-				sequence = builder.BuildWhere(buildInfo.Parent, sequence, (LambdaExpression)methodCall.Arguments[1].Unwrap(), false);
+				sequence = builder.BuildWhere(buildInfo.Parent, sequence, (LambdaExpression)methodCall.Arguments[1].Unwrap(), false, false, buildInfo.AggregationTest);
 
 			var deleteStatement = new SqlDeleteStatement(sequence.SelectQuery);
 
 			sequence.Statement = deleteStatement;
 
+
+			throw new NotImplementedException();
+
 			// Check association.
 			//
 
-			if (sequence is SelectContext ctx && ctx.IsScalar)
+			if (sequence is SelectContext ctx /*&& ctx.IsScalar*/)
 			{
 				var res = ctx.IsExpression(null, 0, RequestFor.Association);
 
@@ -169,7 +172,7 @@ namespace LinqToDB.Linq.Builder
 		class DeleteWithOutputContext : SelectContext
 		{
 			public DeleteWithOutputContext(IBuildContext? parent, IBuildContext sequence, IBuildContext outputContext, LambdaExpression outputExpression)
-				: base(parent, outputExpression, outputContext)
+				: base(parent, outputExpression, false, outputContext)
 			{
 				Statement = sequence.Statement;
 			}

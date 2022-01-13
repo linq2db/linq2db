@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq.Expressions;
+using LinqToDB.Expressions;
 
 #if DEBUG
 // ReSharper disable InconsistentNaming
@@ -14,13 +15,22 @@ namespace LinqToDB.Linq.Builder
 	{
 		public static string GetContextInfo(IBuildContext context)
 		{
+#if DEBUG
+			var contextId = $"_{context.ContextId}";
+#else
+			var contextId = string.Empty;
+#endif
 			var result = context.SelectQuery == null
-				? $"{context.GetType().Name}(<none>)"
-				: $"{context.GetType().Name}({context.SelectQuery.SourceID})";
+				? $"{context.GetType().Name}{contextId}(<none>)"
+				: $"{context.GetType().Name}{contextId}({context.SelectQuery.SourceID})";
 
 			if (context is TableBuilder.TableContext tc)
 			{
 				result += $"(T: {tc.SqlTable.SourceID})";
+			}
+			else if (context is SubQueryContext sc)
+			{
+				result += $"(SC)";
 			}
 
 			return result;
@@ -49,11 +59,12 @@ namespace LinqToDB.Linq.Builder
 		}
 	}
 
-	interface IBuildContext
+	internal interface IBuildContext
 	{
 #if DEBUG
 		string? _sqlQueryText { get; }
-		string   Path         { get; }
+		string  Path          { get; }
+		int     ContextId     { get; }
 #endif
 
 		ExpressionBuilder  Builder     { get; }
@@ -66,6 +77,9 @@ namespace LinqToDB.Linq.Builder
 		Expression         BuildExpression     (Expression? expression, int level, bool enforceServerSide);
 		SqlInfo[]          ConvertToSql        (Expression? expression, int level, ConvertFlags flags);
 		SqlInfo[]          ConvertToIndex      (Expression? expression, int level, ConvertFlags flags);
+
+
+		Expression MakeExpression(Expression path, ProjectFlags flags);
 
 		/// <summary>
 		/// Returns information about expression according to <paramref name="requestFlag"/>. 

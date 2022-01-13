@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Security.Cryptography;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -13,7 +15,8 @@ namespace LinqToDB.Linq.Builder
 	{
 #if DEBUG
 		string? IBuildContext._sqlQueryText => TableContext._sqlQueryText;
-		public string Path => this.GetPath();
+		public string         Path          => this.GetPath();
+		public int            ContextId     { get; }
 #endif
 		public ExpressionBuilder Builder { get; }
 		public Expression?       Expression { get; }
@@ -47,6 +50,9 @@ namespace LinqToDB.Linq.Builder
 			Join                   = join;
 			SubqueryContext.Parent = this;
 			Parent                 = tableContext;
+#if DEBUG
+			ContextId = builder.GenerateContextId();
+#endif
 		}
 
 		public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
@@ -83,6 +89,12 @@ namespace LinqToDB.Linq.Builder
 				.ToArray();
 
 			return corrected;
+		}
+
+		public Expression MakeExpression(Expression path, ProjectFlags flags)
+		{
+			path = SequenceHelper.CorrectExpression(path, this, SubqueryContext);
+			return SubqueryContext.MakeExpression(path, flags);
 		}
 
 		public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)

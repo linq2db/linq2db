@@ -191,7 +191,7 @@ namespace Tests.Linq
 		public void SequenceNameTest([IncludeDataSources(false, TestProvName.AllOracle)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.BeginTransaction();
 

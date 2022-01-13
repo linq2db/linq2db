@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq.Expressions;
 
@@ -46,11 +47,15 @@ namespace LinqToDB.Linq.Builder
 				Builder = builder;
 
 				builder.Contexts.Add(this);
+#if DEBUG
+				ContextId = builder.GenerateContextId();
+#endif
 			}
 
 #if DEBUG
 			public string _sqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
-			public string Path => this.GetPath();
+			public string Path          => this.GetPath();
+			public int    ContextId     { get; }
 #endif
 
 			public ExpressionBuilder Builder     { get; }
@@ -77,7 +82,7 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.New:
 					case ExpressionType.MemberInit:
 						{
-							var expr = Builder.BuildExpression(this, expression, enforceServerSide);
+							var expr = Builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), this, expression, ProjectFlags.Expression);
 
 							if (SelectQuery.Select.Columns.Count == 0)
 								SelectQuery.Select.Expr(new SqlValue(1));
@@ -102,6 +107,11 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			public SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
+			{
+				throw new NotImplementedException();
+			}
+
+			public Expression MakeExpression(Expression? path, ProjectFlags flags)
 			{
 				throw new NotImplementedException();
 			}

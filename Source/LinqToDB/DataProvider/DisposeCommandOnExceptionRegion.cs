@@ -4,19 +4,13 @@ using LinqToDB.Data;
 
 namespace LinqToDB
 {
-	/// <summary>
-	/// Implements disposable region, which will call provided action, if region execution terminated due to
-	/// exception.
-	/// </summary>
-	internal class CallOnExceptionRegion : IDisposable
+	internal class DisposeCommandOnExceptionRegion : IDisposable
 	{
-		private readonly DataConnection         _dc;
-		private readonly Action<DataConnection> _action;
+		private readonly DataConnection _dataConnection;
 
-		public CallOnExceptionRegion(DataConnection dataConnection, Action<DataConnection> action)
+		public DisposeCommandOnExceptionRegion(DataConnection dataConnection)
 		{
-			_dc     = dataConnection;
-			_action = action;
+			_dataConnection = dataConnection;
 		}
 
 		void IDisposable.Dispose()
@@ -31,7 +25,7 @@ namespace LinqToDB
 #pragma warning disable CS0618 // GetExceptionCode obsolete
 				Marshal.GetExceptionCode() != 0)
 #pragma warning restore CS0618
-				_action(_dc);
+				_dataConnection.DisposeCommand();
 		}
 	}
 }

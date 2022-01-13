@@ -12,7 +12,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeIntoWithTargetHintSqlServer([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				PrepareData(db);
 
@@ -44,7 +44,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void UsingTargetWithTargetHintSqlServer([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				PrepareData(db);
 
@@ -101,7 +101,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeWithTargetHintSqlServer([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				PrepareData(db);
 
@@ -141,7 +141,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeIntoWithTargetHintOracle([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				PrepareData(db);
 
@@ -174,7 +174,7 @@ namespace Tests.xUpdate
 		public void MergeIntoWithTargetHintInformix([IncludeDataSources(false, TestProvName.AllInformix)]
 			string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				PrepareData(db);
 

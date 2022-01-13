@@ -28,6 +28,8 @@ namespace LinqToDB.Linq.Builder
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var take     = 0;
 
+			var forceOuter = buildInfo.Parent is DefaultIfEmptyBuilder.DefaultIfEmptyContext; 
+
 			if (!buildInfo.IsSubQuery || builder.DataContext.SqlProviderFlags.IsSubQueryTakeSupported)
 			{
 				switch (methodCall.Method.Name)
@@ -53,91 +55,38 @@ namespace LinqToDB.Linq.Builder
 
 			if (take != 0)
 			{
-				var takeExpression = Configuration.Linq.ParameterizeTakeSkip
-					? (ISqlExpression)new SqlParameter(new DbDataType(typeof(int)), "take", take)
-					{
-						IsQueryParameter = !builder.DataContext.InlineParameters
-					}
-					: new SqlValue(take);
+				var takeExpression = new SqlValue(take);
 				builder.BuildTake(sequence, takeExpression, null);
 			}
 
-			return new FirstSingleContext(buildInfo.Parent, sequence, methodCall);
+			if (forceOuter || methodCall.Method.Name.Contains("OrDefault"))
+			{
+				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null);
+			}
+
+			return new FirstSingleContext(buildInfo.Parent, sequence, methodCall, buildInfo.IsSubQuery, buildInfo.IsAssociation);
 		}
 
 		protected override SequenceConvertInfo? Convert(
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
-			var isAsync = methodCall.Method.Name.EndsWith("Async");
-
-			if (methodCall.Arguments.Count == (isAsync ? 3 : 2))
-			{
-				var predicate = (LambdaExpression)methodCall.Arguments[1].Unwrap();
-				var info      = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), predicate.Parameters[0], true);
-
-				if (info != null)
-				{
-					info.Expression = methodCall.Transform(
-						(methodCall, info, predicate),
-						static (context, ex) => ConvertMethod(context.methodCall, 0, context.info, context.predicate.Parameters[0], ex));
-					info.Parameter  = param;
-
-					return info;
-				}
-			}
-			else
-			{
-				var argument = methodCall.Arguments[0];
-				var info     = builder.ConvertSequence(new BuildInfo(buildInfo, argument), null, true);
-
-				if (info != null)
-				{
-					var prevGenericType = typeof(IEnumerable<>).GetGenericType(argument.Type);
-					var genericType     = typeof(IEnumerable<>).GetGenericType(info.Expression.Type);
-
-					if (genericType == null || prevGenericType == null)
-						throw new InvalidOperationException();
-
-					var newArgument = info.Expression;
-					var elementType = genericType.GetGenericArguments()[0];
-
-					if (typeof(ExpressionHolder<,>).IsSameOrParentOf(elementType))
-					{
-						var selectMethod = typeof(IQueryable<>).IsSameOrParentOf(info.Expression.Type)
-							? Methods.Queryable.Select
-							: Methods.Enumerable.Select;
-
-						var entityParam     = Expression.Parameter(elementType);
-						var selectCall = TypeHelper.MakeMethodCall(selectMethod, info.Expression,
-							Expression.Quote(
-								Expression.Lambda(
-									Expression.PropertyOrField(entityParam, nameof(ExpressionHolder<int, int>.ex)),
-									entityParam)
-							));
-
-						newArgument = selectCall;
-					}
-
-					info.Expression = methodCall.Update(methodCall.Object, new[] {newArgument});
-
-					info.Parameter = param;
-
-					return info;
-				}
-			}
-
 			return null;
 		}
 
 		public class FirstSingleContext : SequenceContextBase
 		{
-			public FirstSingleContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall)
+			public FirstSingleContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall, bool isSubQuery, bool isAssociation)
 				: base(parent, sequence, null)
 			{
-				_methodCall = methodCall;
+				_methodCall   = methodCall;
+				IsSubQuery    = isSubQuery;
+				IsAssociation = isAssociation;
 			}
 
 			readonly MethodCallExpression _methodCall;
+
+			public bool IsSubQuery    { get; }
+			public bool IsAssociation { get; }
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
@@ -241,6 +190,7 @@ namespace LinqToDB.Linq.Builder
 					_isJoinCreated = true;
 
 					var join = SelectQuery.OuterApply();
+					join.JoinedTable.IsWeak = true;
 
 					Parent!.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 				}
@@ -311,7 +261,7 @@ namespace LinqToDB.Linq.Builder
 						if (   !Builder.DataContext.SqlProviderFlags.IsSubQueryColumnSupported 
 						    || Sequence.IsExpression(null, level, RequestFor.Object).Result)
 						{
-							return Builder.BuildMultipleQuery(Parent!, _methodCall, enforceServerSide);
+							return Builder.BuildMultipleQuery(Parent!, _methodCall, ProjectFlags.SQL);
 						}
 
 						var idx = Parent!.SelectQuery.Select.Add(SelectQuery);
@@ -323,6 +273,40 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				throw new NotImplementedException();
+			}
+
+			private SqlPlaceholderExpression? _subquerySql;
+
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				var projected = base.MakeExpression(path, flags);
+
+				if (!flags.HasFlag(ProjectFlags.Test))
+				{
+					if (IsSubQuery)
+					{
+						// Bad thing here. We expect that SelectQueryOptimizer will transfer OUTER APPLY to ROW_NUMBER query. We have to predict it here
+						if (!Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported && !Builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)
+						{
+							var sqlProjected = Builder.MakeExpression(projected, ProjectFlags.Test);
+
+							var placeholders = Builder.CollectDistinctPlaceholders(sqlProjected);
+
+							if (placeholders.Count > 1)
+							{
+								if (flags.HasFlag(ProjectFlags.Expression))
+									return new SqlEagerLoadExpression(this, path, Builder.GetSequenceExpression(this));
+								return new SqlErrorExpression(this, path);
+							}
+						}
+
+						CreateJoin();
+
+						return projected;
+					}
+				}
+
+				return projected;
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)

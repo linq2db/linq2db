@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -15,11 +16,15 @@ namespace LinqToDB.Linq.Builder
 			SelectQuery   = selectQuery;
 
 			Builder.Contexts.Add(this);
+#if DEBUG
+			ContextId = builder.GenerateContextId();
+#endif
 		}
 
 #if DEBUG
 		public string _sqlQueryText => SelectQuery?.SqlText ?? "";
 		public string Path          => this.GetPath();
+		public int    ContextId     { get; }
 #endif
 
 		public IBuildContext?     Parent        { get; set; }
@@ -57,6 +62,11 @@ namespace LinqToDB.Linq.Builder
 			var idx = SelectQuery.Select.Add(SqlExpression);
 
 			return new SqlInfo[] { new SqlInfo(SqlExpression, SelectQuery, idx) };
+		}
+
+		public Expression MakeExpression(Expression? path, ProjectFlags flags)
+		{
+			throw new NotImplementedException();
 		}
 
 		public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)

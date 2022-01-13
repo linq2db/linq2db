@@ -241,7 +241,7 @@ namespace Tests.Linq
 		[Test]
 		public void SimpleTest()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 				Assert.AreEqual(1, QueryTable<PersonEx>(db).Where(_ => _.FirstName == "John").Select(_ => _.ID).Single());
 		}
 

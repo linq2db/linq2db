@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -98,7 +97,7 @@ namespace Tests.Samples
 		{
 			Assert.Throws<SQLiteException>(() =>
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					db.GetTable<TestTable>().ToList();
 				}
@@ -115,7 +114,7 @@ namespace Tests.Samples
 
 			Assert.Throws<DivideByZeroException>(() =>
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					db.RetryPolicy = ret;
 					db.GetTable<TestTable>().ToList();

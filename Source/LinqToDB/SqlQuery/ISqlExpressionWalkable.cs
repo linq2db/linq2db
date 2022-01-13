@@ -17,7 +17,8 @@ namespace LinqToDB.SqlQuery
 		public readonly bool ProcessParent;
 
 		public static readonly WalkOptions Default                   = new (false, false, false);
-		public static readonly WalkOptions WithSkipColumnDeclaration = new (false, true, false);
+		public static readonly WalkOptions WithSkipColumnDeclaration = new (false, true,  false);
+		public static readonly WalkOptions WithSkipColumns           = new (true,  false, false);
 		public static readonly WalkOptions WithProcessParent         = new (false, false, true);
 	}
 
