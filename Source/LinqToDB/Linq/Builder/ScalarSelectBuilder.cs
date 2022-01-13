@@ -111,21 +111,6 @@ namespace LinqToDB.Linq.Builder
 				throw new NotImplementedException();
 			}
 
-			public Expression ColumnCreated(SqlPlaceholderExpression placeholder)
-			{
-				throw new NotImplementedException();
-			}
-
-			public SqlInfo? MakeSql(Expression path)
-			{
-				throw new NotImplementedException();
-			}
-
-			public ISqlExpression MakeColumn(Expression path, ISqlExpression sqlExpression, string? alias)
-			{
-				throw new NotImplementedException();
-			}
-
 			public Expression MakeExpression(Expression? path, ProjectFlags flags)
 			{
 				throw new NotImplementedException();

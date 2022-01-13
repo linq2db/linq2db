@@ -79,7 +79,6 @@ namespace LinqToDB.Linq.Builder
 		SqlInfo[]          ConvertToIndex      (Expression? expression, int level, ConvertFlags flags);
 
 
-		Expression ColumnCreated(SqlPlaceholderExpression placeholder);
 		Expression MakeExpression(Expression path, ProjectFlags flags);
 
 		/// <summary>

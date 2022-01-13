@@ -39,10 +39,13 @@ namespace LinqToDB.Linq.Builder
 
 			sequence.Statement = deleteStatement;
 
+
+			throw new NotImplementedException();
+
 			// Check association.
 			//
 
-			if (sequence is SelectContext ctx && ctx.IsScalar)
+			if (sequence is SelectContext ctx /*&& ctx.IsScalar*/)
 			{
 				var res = ctx.IsExpression(null, 0, RequestFor.Association);
 

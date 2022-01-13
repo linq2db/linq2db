@@ -1200,11 +1200,6 @@ namespace LinqToDB.Linq.Builder
 				throw new NotImplementedException();
 			}
 
-			public Expression ColumnCreated(SqlPlaceholderExpression placeholder)
-			{
-				throw new NotImplementedException();
-			}
-
 			public Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot))

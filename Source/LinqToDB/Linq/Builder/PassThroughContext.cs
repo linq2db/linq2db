@@ -56,11 +56,6 @@ namespace LinqToDB.Linq.Builder
 			return Context.ConvertToIndex(expression, level, flags);
 		}
 
-		public Expression ColumnCreated(SqlPlaceholderExpression placeholder)
-		{
-			throw new System.NotImplementedException();
-		}
-
 		public virtual Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
 			path = SequenceHelper.CorrectExpression(path, this, Context);

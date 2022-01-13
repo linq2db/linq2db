@@ -91,11 +91,6 @@ namespace LinqToDB.Linq.Builder
 			return corrected;
 		}
 
-		public Expression ColumnCreated(SqlPlaceholderExpression placeholder)
-		{
-			throw new NotImplementedException();
-		}
-
 		public Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
 			path = SequenceHelper.CorrectExpression(path, this, SubqueryContext);

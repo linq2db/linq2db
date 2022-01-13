@@ -259,7 +259,9 @@ namespace LinqToDB.Linq.Builder
 
 		static void CheckAssociation(IBuildContext sequence)
 		{
-			if (sequence is SelectContext ctx && ctx.IsScalar)
+			throw new NotImplementedException();
+
+			if (sequence is SelectContext ctx/* && ctx.IsScalar*/)
 			{
 				var res = ctx.IsExpression(null, 0, RequestFor.Association);
 

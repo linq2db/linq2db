@@ -99,11 +99,6 @@ namespace LinqToDB.Linq.Builder
 				throw new NotImplementedException();
 			}
 
-			public Expression ColumnCreated(SqlPlaceholderExpression placeholder)
-			{
-				return placeholder;
-			}
-
 			public Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				return path;

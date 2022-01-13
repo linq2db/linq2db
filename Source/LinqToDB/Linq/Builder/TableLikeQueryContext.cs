@@ -16,9 +16,6 @@ namespace LinqToDB.Linq.Builder
 			Source = sourceContext is EnumerableContext enumerableSource
 				? new SqlTableLikeSource { SourceEnumerable = enumerableSource.Table }
 				: new SqlTableLikeSource { SourceQuery = sourceContext.SelectQuery };
-
-			if (SubQuery is SelectContext select)
-				select.AllowAddDefault = false;
 		}
 
 		public void MatchBuilt()
