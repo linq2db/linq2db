@@ -116,5 +116,14 @@ namespace LinqToDB.Linq.Builder
 		{
 			return Statement ??= new SqlSelectStatement(SelectQuery);
 		}
+
+		public override Expression MakeExpression(Expression path, ProjectFlags flags)
+		{
+			var result = base.MakeExpression(path, flags);
+
+			// in this case all complex expressions become columns
+			result = Builder.UpdateNesting(this, result);
+			return result;
+		}
 	}
 }

@@ -6,8 +6,6 @@ using System.Runtime.CompilerServices;
 
 namespace LinqToDB.SqlQuery
 {
-	using LinqToDB.Linq.Builder;
-
 	public class ConvertVisitor<TContext>
 	{
 		// when true, only changed (and explicitly added) elements added to VisitedElements
@@ -206,7 +204,7 @@ namespace LinqToDB.SqlQuery
 						}
 						else
 						{
-							SqlInfo[]? currentParams = null;
+							SqlGetValue[]? currentParams = null;
 
 							for (int i = 0; i < expr.InfoParameters.Length; i++)
 							{
@@ -218,7 +216,7 @@ namespace LinqToDB.SqlQuery
 								{
 									if (currentParams == null)
 									{
-										currentParams = new SqlInfo[expr.InfoParameters.Length];
+										currentParams = new SqlGetValue[expr.InfoParameters.Length];
 										Array.Copy(expr.InfoParameters, currentParams, i);
 									}
 

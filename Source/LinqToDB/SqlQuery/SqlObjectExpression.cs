@@ -5,16 +5,14 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	using LinqToDB.Extensions;
-	using Linq.Builder;
 	using Mapping;
-	using Reflection;
+	using LinqToDB.Extensions;
 
 	public class SqlObjectExpression : ISqlExpression
 	{
-		readonly SqlInfo[] _infoParameters;
+		readonly SqlGetValue[] _infoParameters;
 
-		public SqlObjectExpression(MappingSchema mappingSchema, SqlInfo[] infoParameters)
+		public SqlObjectExpression(MappingSchema mappingSchema, SqlGetValue[] infoParameters)
 		{
 			MappingSchema   = mappingSchema;
 			_infoParameters = infoParameters;
@@ -23,13 +21,21 @@ namespace LinqToDB.SqlQuery
 		public SqlValue GetSqlValue(object obj, int index)
 		{
 			var p  = _infoParameters[index];
-			var mi = p.MemberChain[p.MemberChain.Length - 1];
 
-			var ta        = TypeAccessor.GetAccessor(mi.DeclaringType!);
-			var valueType = mi.GetMemberType();
-			var value     = ta[mi.Name].Getter!(obj);
+			object? value;
 
-			return MappingSchema.GetSqlValue(valueType, value);
+			if (p.ColumnDescriptor != null)
+			{
+				value = p.ColumnDescriptor.GetValue(obj);
+			}
+			else if (p.GetValueFunc != null)
+			{
+				value = p.GetValueFunc(obj);
+			}
+			else
+				throw new InvalidOperationException();
+
+			return MappingSchema.GetSqlValue(p.ValueType, value);
 		}
 
 		public Type? SystemType => null;
@@ -130,7 +136,8 @@ namespace LinqToDB.SqlQuery
 
 
 		public MappingSchema MappingSchema { get; }
-		internal SqlInfo[] InfoParameters => _infoParameters;
+
+		internal SqlGetValue[] InfoParameters => _infoParameters;
 
 	}
 }

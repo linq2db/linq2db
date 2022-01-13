@@ -7,8 +7,7 @@ namespace LinqToDB.SqlQuery
 	using Common;
 	using SqlProvider;
 
-	class 
-		SelectQueryOptimizer
+	class SelectQueryOptimizer
 	{
 		public SelectQueryOptimizer(SqlProviderFlags flags, EvaluationContext evaluationContext, IQueryElement rootElement, SelectQuery selectQuery, int level, params IQueryElement[] dependencies)
 		{

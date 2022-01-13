@@ -315,24 +315,18 @@ namespace LinqToDB.Linq.Builder
 			List<SqlSetExpression> items,
 			params IBuildContext[] sequences)
 		{
-			var ctx = new ExpressionContext(buildInfo.Parent, sequences, setter);
+			var setterExpr = setter.Body;
+			if (setter.Parameters.Count > 0)
+			{
+				setterExpr = SequenceHelper.PrepareBody(setter, sequences);
+			}
 
 			void BuildSetter(MemberExpression memberExpression, Expression expression)
 			{
-				var column     = into.ConvertToSql(memberExpression, 1, ConvertFlags.Field);
-				var columnExpr = column[0].Sql;
-				var expr       = builder.ConvertToSqlExpression(ctx, expression, QueryHelper.GetColumnDescriptor(columnExpr), false);
+				var column = builder.ConvertToSql(into, memberExpression);
+				var expr   = builder.ConvertToSql(into, expression, ProjectFlags.SQL, columnDescriptor: QueryHelper.GetColumnDescriptor(column));
 
-				if (expr.ElementType == QueryElementType.SqlParameter)
-				{
-					var parm  = (SqlParameter)expr;
-					var field = QueryHelper.GetUnderlyingField(columnExpr);
-
-					if (parm.Type.DataType == DataType.Undefined)
-						parm.Type = parm.Type.WithDataType(field!.Type.DataType);
-				}
-
-				items.Add(new SqlSetExpression(columnExpr, expr));
+				items.Add(new SqlSetExpression(column, expr));
 			}
 
 			void BuildNew(NewExpression expression, Expression path)
@@ -393,32 +387,28 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			var bodyPath = Expression.Parameter(setter.Body.Type, "p");
-			var bodyExpr = setter.Body;
+			var bodyPath = new ContextRefExpression(setterExpr.Type, into);
+			var bodyExpr = setterExpr;
 
 			if (bodyExpr.NodeType == ExpressionType.New && bodyExpr.Type.IsAnonymous())
 			{
 				var ex = (NewExpression)bodyExpr;
-				var p  = sequences[0].Parent;
 
 				BuildNew(ex, bodyPath);
-
-				builder.ReplaceParent(ctx, p);
 			}
 			else if (bodyExpr.NodeType == ExpressionType.MemberInit)
 			{
 				var ex = (MemberInitExpression)bodyExpr;
-				var p  = sequences[0].Parent;
 
 				BuildMemberInit(ex, bodyPath);
-
-				builder.ReplaceParent(ctx, p);
 			}
 			else
 			{
-				var sqlInfo = ctx.ConvertToSql(bodyExpr, 0, ConvertFlags.All);
+				var sqlInfo = builder.ConvertToSqlExpr(buildInfo.Parent, setterExpr, ProjectFlags.SQL, false);
 
-				foreach (var info in sqlInfo)
+				throw new NotImplementedException(); 
+
+				/*foreach (var info in sqlInfo)
 				{
 					if (info.MemberChain.Length == 0)
 						throw new LinqException("Object initializer expected for insert statement.");
@@ -432,7 +422,7 @@ namespace LinqToDB.Linq.Builder
 					var expr   = info.Sql;
 
 					items.Add(new SqlSetExpression(column[0].Sql, expr));
-				}
+				}*/
 			}
 		}
 

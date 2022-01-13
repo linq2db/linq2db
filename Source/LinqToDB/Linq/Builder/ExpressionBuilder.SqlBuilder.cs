@@ -1769,7 +1769,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertCompare
 
-		ISqlPredicate? ConvertCompare(IBuildContext? context, ExpressionType nodeType, Expression left, Expression right, ProjectFlags flags)
+		public ISqlPredicate? ConvertCompare(IBuildContext? context, ExpressionType nodeType, Expression left, Expression right, ProjectFlags flags)
 		{
 			SqlSearchCondition? GenerateNullComaprison(List<SqlPlaceholderExpression> placeholders, bool isNot)
 			{
@@ -2646,23 +2646,42 @@ namespace LinqToDB.Linq.Builder
 
 			ISqlExpression? expr = null;
 
-			var ctx = GetContext(context, arg);
-
-			if (ctx is TableBuilder.TableContext &&
-				ctx.SelectQuery != context.SelectQuery &&
-				ctx.IsExpression(arg, 0, RequestFor.Object).Result)
-			{
-				expr = ctx.SelectQuery;
-			}
-
 			if (expr == null)
 			{
-				var sql = ConvertExpressions(context, arg, ConvertFlags.Key, null);
+				var sql = BuildSqlExpression(new Dictionary<Expression, Expression>(), context, arg, ProjectFlags.SQL | ProjectFlags.Keys, null);
 
-				if (sql.Length == 1 && sql[0].MemberChain.Length == 0)
-					expr = sql[0].Sql;
+				var placeholders = CollectDistinctPlaceholders(sql);
+
+				if (placeholders.Count == 1)
+					expr = placeholders[0].Sql;
 				else
-					expr = new SqlObjectExpression(MappingSchema, sql);
+				{
+					var objParam = Expression.Parameter(typeof(object));
+
+					var getters = new SqlGetValue[placeholders.Count];
+					for (int i = 0; i < getters.Length; i++)
+					{
+						var placeholder = placeholders[i];
+
+						var cd = QueryHelper.GetColumnDescriptor(placeholder.Sql);
+
+						if (cd != null)
+						{
+							getters[i] = new SqlGetValue(placeholder.Sql, placeholder.Type, cd, null);
+						}
+						else
+						{
+							var body = placeholder.Path.Replace(arg, Expression.Convert(objParam, arg.Type));
+							body = Expression.Convert(body, typeof(object));
+
+							var lambda = Expression.Lambda<Func<object, object>>(body, objParam);
+
+							getters[i] = new SqlGetValue(placeholder.Sql, placeholder.Type, null, lambda.Compile());
+						}
+					}
+
+					expr = new SqlObjectExpression(MappingSchema, getters);
+				}
 			}
 
 			var columnDescriptor = QueryHelper.GetColumnDescriptor(expr);

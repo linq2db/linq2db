@@ -464,7 +464,7 @@ namespace LinqToDB.SqlQuery
 					var expr = (SqlObjectExpression)(IQueryElement)element;
 					// TODO: children Clone called before _objectTree update (original cloning logic)
 					// TODO: SqlInfo in AST?
-					var newInfoParameters = expr.InfoParameters.Length > 0 ? new SqlInfo[expr.InfoParameters.Length] : Array<SqlInfo>.Empty;
+					var newInfoParameters = expr.InfoParameters.Length > 0 ? new SqlGetValue[expr.InfoParameters.Length] : Array<SqlGetValue>.Empty;
 					for (var i = 0; i < newInfoParameters.Length; i++)
 						newInfoParameters[i] = expr.InfoParameters[i].WithSql(Clone(expr.InfoParameters[i].Sql));
 

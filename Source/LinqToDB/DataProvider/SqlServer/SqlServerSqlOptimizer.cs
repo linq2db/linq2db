@@ -23,9 +23,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			return QueryHelper.WrapQuery(
 				(object?)null,
 				statement,
-				static (_, query, _) => query.ParentSelect == null && (query.Select.SkipValue != null ||
-				                                        query.Select.TakeValue != null ||
-				                                        query.Select.TakeHints != null || !query.OrderBy.IsEmpty),
+				static (_, query, _) => query.ParentSelect == null && ((query.Select.SkipValue != null ||
+				                                                        query.Select.TakeValue != null ||
+				                                                        query.Select.TakeHints != null) && !query.OrderBy.IsEmpty),
 				null,
 				allowMutation: true,
 				withStack: false);

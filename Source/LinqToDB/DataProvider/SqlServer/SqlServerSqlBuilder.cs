@@ -193,9 +193,15 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
 		{
-			var table = deleteStatement.Table != null ?
-				(deleteStatement.SelectQuery.From.FindTableSource(deleteStatement.Table) ?? deleteStatement.Table) :
-				deleteStatement.SelectQuery.From.Tables[0];
+			ISqlTableSource? table = null;
+
+			if (deleteStatement.Table != null)
+			{
+				table = deleteStatement.SelectQuery.From.FindTableSource(deleteStatement.Table);
+			}
+
+			if (table == null)
+				table = deleteStatement.SelectQuery.From.Tables[0];
 
 			AppendIndent()
 				.Append("DELETE");
@@ -203,7 +209,14 @@ namespace LinqToDB.DataProvider.SqlServer
 			BuildSkipFirst(deleteStatement.SelectQuery);
 
 			StringBuilder.Append(' ');
-			Convert(StringBuilder, GetTableAlias(table)!, ConvertType.NameToQueryTableAlias);
+
+			var alias = GetTableAlias(table);
+			if (alias == null)
+			{
+				throw new InvalidOperationException();
+			}
+
+			Convert(StringBuilder, alias, ConvertType.NameToQueryTableAlias);
 			StringBuilder.AppendLine();
 
 			BuildOutputSubclause(deleteStatement);

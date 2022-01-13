@@ -30,7 +30,8 @@ namespace LinqToDB.Linq.Builder
 				_                                           => DeleteContext.DeleteType.Delete,
 			};
 
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var sequenceArgument = methodCall.Arguments[0];
+			var sequence         = builder.BuildSequence(new BuildInfo(buildInfo, sequenceArgument));
 
 			if (methodCall.Arguments.Count == 2 && deleteType == DeleteContext.DeleteType.Delete)
 				sequence = builder.BuildWhere(buildInfo.Parent, sequence, (LambdaExpression)methodCall.Arguments[1].Unwrap(), false, false, buildInfo.AggregationTest);
@@ -39,38 +40,11 @@ namespace LinqToDB.Linq.Builder
 
 			sequence.Statement = deleteStatement;
 
+			var root = builder.MakeExpression(new ContextRefExpression(sequenceArgument.Type, sequence),
+				ProjectFlags.Root);
 
-			throw new NotImplementedException();
-
-			// Check association.
-			//
-
-			if (sequence is SelectContext ctx /*&& ctx.IsScalar*/)
-			{
-				var res = ctx.IsExpression(null, 0, RequestFor.Association);
-
-				if (res.Result)
-				{
-					var isTableResult = res.Context!.IsExpression(null, 0, RequestFor.Table);
-					if (!isTableResult.Result)
-						throw new LinqException("Can not retrieve Table context from association.");
-
-					var atc = (TableBuilder.TableContext)isTableResult.Context!;
-					deleteStatement.Table = atc.SqlTable;
-				}
-				else
-				{
-					res = ctx.IsExpression(null, 0, RequestFor.Table);
-
-					if (res.Result && res.Context is TableBuilder.TableContext context)
-					{
-						var tc = context;
-
-						if (deleteStatement.SelectQuery.From.Tables.Count == 0 || deleteStatement.SelectQuery.From.Tables[0].Source != tc.SelectQuery)
-							deleteStatement.Table = tc.SqlTable;
-					}
-				}
-			}
+			if (root is ContextRefExpression rootRef && rootRef.BuildContext is TableBuilder.TableContext tableContext)
+				deleteStatement.Table = tableContext.SqlTable;
 
 			static LambdaExpression BuildDefaultOutputExpression(Type outputType)
 			{

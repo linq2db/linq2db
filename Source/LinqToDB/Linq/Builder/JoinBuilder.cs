@@ -120,10 +120,10 @@ namespace LinqToDB.Linq.Builder
 			IBuildContext outerKeyContext, Expression outerKeySelector,
 			IBuildContext innerKeyContext, Expression innerKeySelector)
 		{
-			var predicate = builder.ConvertObjectComparison(
+			var predicate = builder.ConvertCompare(outerKeyContext,
 				ExpressionType.Equal,
-				outerKeyContext, outerKeySelector,
-				innerKeyContext, innerKeySelector);
+				outerKeySelector, 
+				innerKeySelector, ProjectFlags.SQL);
 
 			if (predicate == null)
 			{

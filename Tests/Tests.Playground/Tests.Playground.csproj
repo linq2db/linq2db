@@ -15,6 +15,8 @@
 		<Compile Include="..\Linq\Linq\GroupByTests.cs" Link="GroupByTests.cs" />
 		<Compile Include="..\Linq\Linq\SelectManyTests.cs" Link="SelectManyTests.cs" />
 		<Compile Include="..\Linq\Linq\SelectTests.cs" Link="SelectTests.cs" />
+		<Compile Include="..\Linq\Update\DeleteTests.cs" Link="DeleteTests.cs" />
+		<Compile Include="..\Linq\Update\InsertTests.cs" Link="InsertTests.cs" />
 		<Compile Include="..\Linq\UserTests\IndexOutOfRangeInUnions.cs" Link="IndexOutOfRangeInUnions.cs" />
 	</ItemGroup>
 
