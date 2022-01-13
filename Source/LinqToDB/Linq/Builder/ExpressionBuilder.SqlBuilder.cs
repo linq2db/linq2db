@@ -65,11 +65,10 @@ namespace LinqToDB.Linq.Builder
 			var originalContextRef = new ContextRefExpression(condition.Parameters[0].Type, sequence);
 			var body               = condition.GetBody(originalContextRef);
 			var expr               = ConvertExpression(body.Unwrap());
-			var makeHaving         = false;
 
 			var prevSequence = sequence;
 
-			if (parent == null && (sequence is not SubQueryContext squbquery || !squbquery.SelectQuery.IsSimple))
+			if (parent == null && (sequence is not SubQueryContext subquery || !subquery.SelectQuery.IsSimple))
 			{
 				sequence = new SubQueryContext(prevSequence);
 			}
@@ -866,20 +865,23 @@ namespace LinqToDB.Linq.Builder
 		[DebuggerDisplay("S: {SelectQuery?.SourceID} F: {Flags}, E: {Expression}, C: {Context}")]
 		struct ColumnCacheKey
 		{
-			public ColumnCacheKey(Expression? expression, SelectQuery? selectQuery)
+			public ColumnCacheKey(Expression? expression, Type resultType, SelectQuery? selectQuery)
 			{
-				Expression  = expression;
-				SelectQuery = selectQuery;
+				Expression      = expression;
+				ResultType = resultType;
+				SelectQuery     = selectQuery;
 			}
 
-			public Expression?       Expression       { get; }
-			public SelectQuery?      SelectQuery      { get; }
+			public Expression?  Expression  { get; }
+			public Type         ResultType  { get; }
+			public SelectQuery? SelectQuery { get; }
 
 			private sealed class ColumnCacheKeyEqualityComparer : IEqualityComparer<ColumnCacheKey>
 			{
 				public bool Equals(ColumnCacheKey x, ColumnCacheKey y)
 				{
-					return ExpressionEqualityComparer.Instance.Equals(x.Expression, y.Expression) &&
+					return x.ResultType == y.ResultType                                           &&
+					       ExpressionEqualityComparer.Instance.Equals(x.Expression, y.Expression) &&
 					       Equals(x.SelectQuery, y.SelectQuery);
 				}
 
@@ -887,7 +889,8 @@ namespace LinqToDB.Linq.Builder
 				{
 					unchecked
 					{
-						var hashCode = (obj.Expression != null ? ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression) : 0);
+						var hashCode = obj.ResultType.GetHashCode();
+						hashCode = (hashCode * 397) ^ (obj.Expression != null ? ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression) : 0);
 						hashCode = (hashCode * 397) ^ (obj.SelectQuery      != null ? obj.SelectQuery.GetHashCode() : 0);
 						return hashCode;
 					}
@@ -962,7 +965,7 @@ namespace LinqToDB.Linq.Builder
 
 			var cache = null != expression.Find(1, (_, e) => e is ContextRefExpression);
 
-			if (cache && _cachedSql.TryGetValue(cacheKey, out sqlExpr))
+			if (cache && _cachedSql.TryGetValue(cacheKey, out sqlExpr) && false)
 			{
 				// conversion found but needs nesting update
 
@@ -1001,7 +1004,7 @@ namespace LinqToDB.Linq.Builder
 				result = UpdateNesting(context, result);
 			}
 
-			if (cache)
+			if (cache && result is SqlPlaceholderExpression)
 			{
 				_cachedSql[cacheKey]               = result;
 				_preciseCachedSql[preciseCacheKey] = result;
@@ -1797,8 +1800,8 @@ namespace LinqToDB.Linq.Builder
 			ISqlExpression? r = null;
 
 			var columnDescriptor = SuggestColumnDescriptor(context, left, right, flags);
-			var leftExpr         = ConvertToSqlExpr(context, left, flags, columnDescriptor: columnDescriptor);
-			var rightExpr        = ConvertToSqlExpr(context, right, flags, columnDescriptor: columnDescriptor);
+			var leftExpr         = ConvertToSqlExpr(context, left, flags | ProjectFlags.Keys, columnDescriptor: columnDescriptor);
+			var rightExpr        = ConvertToSqlExpr(context, right, flags | ProjectFlags.Keys, columnDescriptor: columnDescriptor);
 
 			switch (nodeType)
 			{
@@ -4003,7 +4006,7 @@ namespace LinqToDB.Linq.Builder
 
 		public SqlPlaceholderExpression MakeColumn(SelectQuery? parentQuery, SqlPlaceholderExpression sqlPlaceholder)
 		{
-			var key = new ColumnCacheKey(sqlPlaceholder.Path, sqlPlaceholder.SelectQuery);
+			var key = new ColumnCacheKey(sqlPlaceholder.Path, sqlPlaceholder.Type, parentQuery);
 
 			if (_columnCache.TryGetValue(key, out var placeholder))
 				return placeholder;

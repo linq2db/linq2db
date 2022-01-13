@@ -60,6 +60,11 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (SequenceHelper.IsSameContext(path, this) && (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot)))
 					return path;
+
+				if (flags.HasFlag(ProjectFlags.Expression))
+				{
+					flags = flags & ~ProjectFlags.Expression | ProjectFlags.SQL;
+				}
 				
 				return base.MakeExpression(path, flags);
 			}

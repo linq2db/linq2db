@@ -1146,7 +1146,7 @@ namespace LinqToDB.Linq.Builder
 
 			var contextForKeys = context;
 
-			if (context is JoinBuilder.GroupJoinContext groupJoin)
+			/*if (context is JoinBuilder.GroupJoinContext groupJoin)
 			{
 				// GroupJoin contains keys in second and third parameters. We will create query based on these keys
 
@@ -1175,7 +1175,7 @@ namespace LinqToDB.Linq.Builder
 				//queryableDetail = InjectQuery(queryableDetail, filteredQueryableDetail, mappingSchema);
 				queryableDetail = filteredQueryableDetail;
 			}
-			else
+			else*/
 			{
 				var searchExpression = queryableDetail;
 

@@ -319,8 +319,8 @@ namespace LinqToDB.Linq.Builder
 			{
 				sqlExpression = null;
 				//Test conversion success, do it again
-				actual = ConvertToSqlExpr(context, expression, flags, columnDescriptor: columnDescriptor);
-				if (actual is not SqlPlaceholderExpression placeholder)
+				var newActual = ConvertToSqlExpr(context, expression, flags, columnDescriptor: columnDescriptor);
+				if (newActual is not SqlPlaceholderExpression placeholder)
 					return false;
 
 				sqlExpression = placeholder.Sql;
@@ -757,11 +757,6 @@ namespace LinqToDB.Linq.Builder
 
 					return new TransformInfo(expr);
 				});
-
-			if (!flags.HasFlag(ProjectFlags.Test))
-			{
-				result = UpdateNesting(context, result);
-			}
 
 			return result;
 		}

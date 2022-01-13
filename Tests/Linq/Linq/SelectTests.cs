@@ -1109,7 +1109,7 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void TestConditionalInProjection([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestConditionalInProjection([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new []
@@ -1159,7 +1159,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConditionalInProjectionSubquery([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestConditionalInProjectionSubquery([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new []

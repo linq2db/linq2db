@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Linq.Expressions;
-using LinqToDB.Common.Internal;
-using LinqToDB.Extensions;
-using LinqToDB.Linq.Builder;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Expressions
 {
+	using Common.Internal;
+	using LinqToDB.Extensions;
+	using SqlQuery;
+
 	class SqlPlaceholderExpression : Expression
 	{
 		public SqlPlaceholderExpression(SelectQuery selectQuery, ISqlExpression sql, Expression path, Type? convertType = null, string? alias = null, int? index = null)
@@ -58,6 +58,46 @@ namespace LinqToDB.Expressions
 			if (Index != null)
 				return $"SQL[{Index}]: {{{Sql}}}";
 			return $"SQL: {{{Sql}}}";
+		}
+
+		protected bool Equals(SqlPlaceholderExpression other)
+		{
+			return SelectQuery.Equals(other.SelectQuery)                        &&
+			       ExpressionEqualityComparer.Instance.Equals(Path, other.Path) &&
+			       Index       == other.Index                                   &&
+			       ConvertType == other.ConvertType;
+		}
+
+		public override bool Equals(object? obj)
+		{
+			if (ReferenceEquals(null, obj))
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, obj))
+			{
+				return true;
+			}
+
+			if (obj.GetType() != GetType())
+			{
+				return false;
+			}
+
+			return Equals((SqlPlaceholderExpression)obj);
+		}
+
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				var hashCode = SelectQuery.GetHashCode();
+				hashCode = (hashCode * 397) ^ ExpressionEqualityComparer.Instance.GetHashCode(Path);
+				hashCode = (hashCode * 397) ^ Index.GetHashCode();
+				hashCode = (hashCode * 397) ^ (ConvertType != null ? ConvertType.GetHashCode() : 0);
+				return hashCode;
+			}
 		}
 	}
 

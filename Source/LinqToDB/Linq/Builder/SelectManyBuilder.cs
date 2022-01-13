@@ -27,7 +27,7 @@ namespace LinqToDB.Linq.Builder
 
 			var expr = SequenceHelper.PrepareBody(collectionSelector, sequence).Unwrap();
 
-			var collectionInfo = new BuildInfo(sequence, expr, new SelectQuery());
+			var collectionInfo = new BuildInfo(sequence, expr, new SelectQuery()) { CreateSubQuery = true };
 			var collection     = builder.BuildSequence(collectionInfo);
 
 			var context        = new SelectContext(buildInfo.Parent, resultSelector, buildInfo.IsSubQuery, sequence, collection);
@@ -50,6 +50,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				JoinType.Inner => isLeftJoin ? JoinType.OuterApply : JoinType.CrossApply,
 				JoinType.Auto  => isLeftJoin ? JoinType.OuterApply : JoinType.CrossApply,
+				JoinType.Left  => JoinType.OuterApply,
 				JoinType.Full  => JoinType.FullApply,
 				JoinType.Right => JoinType.RightApply,
 				_ => joinType

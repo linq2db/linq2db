@@ -71,67 +71,6 @@ namespace LinqToDB.Linq.Builder
 			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
 		{
 			return null;
-
-			/*
-			var isAsync = methodCall.Method.Name.EndsWith("Async");
-
-			if (methodCall.Arguments.Count == (isAsync ? 3 : 2))
-			{
-				var predicate = (LambdaExpression)methodCall.Arguments[1].Unwrap();
-				var info      = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), predicate.Parameters[0], true);
-
-				if (info != null)
-				{
-					info.Expression = methodCall.Transform(
-						(methodCall, info, predicate),
-						static (context, ex) => ConvertMethod(context.methodCall, 0, context.info, context.predicate.Parameters[0], ex));
-					info.Parameter  = param;
-
-					return info;
-				}
-			}
-			else
-			{
-				var argument = methodCall.Arguments[0];
-				var info     = builder.ConvertSequence(new BuildInfo(buildInfo, argument), null, true);
-
-				if (info != null)
-				{
-					var prevGenericType = typeof(IEnumerable<>).GetGenericType(argument.Type);
-					var genericType     = typeof(IEnumerable<>).GetGenericType(info.Expression.Type);
-
-					if (genericType == null || prevGenericType == null)
-						throw new InvalidOperationException();
-
-					var newArgument = info.Expression;
-					var elementType = genericType.GetGenericArguments()[0];
-
-					if (typeof(ExpressionHolder<,>).IsSameOrParentOf(elementType))
-					{
-						var selectMethod = typeof(IQueryable<>).IsSameOrParentOf(info.Expression.Type)
-							? Methods.Queryable.Select
-							: Methods.Enumerable.Select;
-
-						var entityParam     = Expression.Parameter(elementType);
-						var selectCall = TypeHelper.MakeMethodCall(selectMethod, info.Expression,
-							Expression.Quote(
-								Expression.Lambda(
-									Expression.PropertyOrField(entityParam, nameof(ExpressionHolder<int, int>.ex)),
-									entityParam)
-							));
-
-						newArgument = selectCall;
-					}
-
-					info.Expression = methodCall.Update(methodCall.Object, new[] {newArgument});
-
-					info.Parameter = param;
-
-					return info;
-				}
-			}
-
-			return null;*/
 		}
 
 		public class FirstSingleContext : SequenceContextBase

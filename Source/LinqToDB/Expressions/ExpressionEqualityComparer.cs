@@ -320,8 +320,7 @@ namespace LinqToDB.Expressions
 					return true;
 				}
 
-				if (a == null
-					|| b == null)
+				if (a == null || b == null)
 				{
 					return false;
 				}
@@ -699,8 +698,7 @@ namespace LinqToDB.Expressions
 					return true;
 				}
 
-				if (a == null
-					|| b == null)
+				if (a == null || b == null)
 				{
 					return false;
 				}
