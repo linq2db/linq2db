@@ -169,59 +169,6 @@ namespace LinqToDB.Linq.Builder
 			return ctx;
 		}
 
-		internal ISqlExpression SubQueryToSql(IBuildContext context, MethodCallExpression expression)
-		{
-			var subQueryCtx = GetSubQueryContext(context, expression);
-			var sequence    = subQueryCtx.Context;
-			var subSql      = sequence.GetSubQuery(context);
-
-			if (subSql == null)
-			{
-				var query    = context.SelectQuery;
-				var subQuery = sequence.SelectQuery;
-
-				// This code should be moved to context.
-				//
-				if (!query.GroupBy.IsEmpty && !subQuery.Where.IsEmpty)
-				{
-					var fromGroupBy = false;
-					foreach (var p in sequence.SelectQuery.Properties.OfType<Tuple<string, SelectQuery>>())
-					{
-						if (p.Item1 == "from_group_by" && ReferenceEquals(p.Item2, context.SelectQuery))
-						{
-							fromGroupBy = true;
-							break;
-						}
-					}
-
-					if (fromGroupBy)
-					{
-						if (subQuery.Select.Columns.Count == 1 &&
-							subQuery.Select.Columns[0].Expression.ElementType == QueryElementType.SqlFunction &&
-							subQuery.GroupBy.IsEmpty && !subQuery.Select.HasModifier && !subQuery.HasSetOperators &&
-							subQuery.Where.SearchCondition.Conditions.Count == 1)
-						{
-							var cond = subQuery.Where.SearchCondition.Conditions[0];
-
-							if (cond.Predicate.ElementType == QueryElementType.ExprExprPredicate && query.GroupBy.Items.Count == 1 ||
-								cond.Predicate.ElementType == QueryElementType.SearchCondition &&
-								query.GroupBy.Items.Count == ((SqlSearchCondition)cond.Predicate).Conditions.Count)
-							{
-								var func = (SqlFunction)subQuery.Select.Columns[0].Expression;
-
-								if (CountBuilder.MethodNames.Contains(func.Name))
-									return SqlFunction.CreateCount(func.SystemType, query);
-							}
-						}
-					}
-				}
-
-				subSql = sequence.SelectQuery;
-			}
-
-			return subSql;
-		}
-
 		#endregion
 
 		#region IsSubQuery

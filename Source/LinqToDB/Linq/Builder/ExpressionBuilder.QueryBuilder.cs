@@ -23,7 +23,6 @@ namespace LinqToDB.Linq.Builder
 	{
 		#region BuildExpression
 
-		readonly HashSet<Expression>                    _skippedExpressions   = new ();
 		readonly Dictionary<Expression,UnaryExpression> _convertedExpressions = new ();
 
 		public void UpdateConvertedExpression(Expression oldExpression, Expression newExpression)
@@ -209,7 +208,7 @@ namespace LinqToDB.Linq.Builder
 						if (context.map.TryGetValue(expr, out var mapped))
 							return mapped;
 
-						if (expr is SqlPlaceholderExpression placeholder && placeholder.SelectQuery != null)
+						if (expr is SqlPlaceholderExpression placeholder)
 						{
 							do
 							{
@@ -232,20 +231,6 @@ namespace LinqToDB.Linq.Builder
 					});
 
 			return withColumns;
-		}
-
-		static bool IsSameParentTree(IBuildContext upToContext, IBuildContext? tested)
-		{
-			var current = tested;
-			while (current != null)
-			{
-				if (current == upToContext || current.SelectQuery == upToContext.SelectQuery)
-					return true;
-
-				current = current.Parent;
-			}
-
-			return false;
 		}
 
 		static bool IsSameParentTree(QueryInformation info, SelectQuery testedQuery)
@@ -343,7 +328,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				//Test conversion success, do it again
 				converted = ConvertToSqlExpr(context, expression, flags);
-				if (converted is not SqlPlaceholderExpression placeholder)
+				if (converted is not SqlPlaceholderExpression)
 					return null;
 			}
 
@@ -361,31 +346,27 @@ namespace LinqToDB.Linq.Builder
 				(builder: this, context, flags, alias, translated),
 				static (context, expr) =>
 				{
-					if (context.builder.CanBeCompiled(expr) && context.flags.HasFlag(ProjectFlags.Expression))
+					// Shortcut: if expression can be compiled we can live it as is but inject accessors 
+					//
+					if (context.flags.HasFlag(ProjectFlags.Expression) && context.builder.CanBeCompiled(expr))
 					{
-						if (context.builder.ParametersContext._expressionAccessors.TryGetValue(expr, out var accessor))
+						// correct expression based on accessors
+
+						var valueAccessor = context.builder.ParametersContext.ReplaceParameter(
+							context.builder.ParametersContext._expressionAccessors, expr, false, s => { });
+
+						var valueExpr = valueAccessor.ValueExpression;
+
+						if (valueExpr.Type != expr.Type)
 						{
-							// get data from parameter accessor
-
-							var valueAccessor = context.builder.ParametersContext.ReplaceParameter(
-								context.builder.ParametersContext._expressionAccessors, expr, false, s => { });
-
-							var valueExpr = valueAccessor.ValueExpression;
-
-							if (valueExpr.Type != expr.Type)
-							{
-								valueExpr = Expression.Convert(valueExpr.UnwrapConvert(), expr.Type);
-							}
-
-							return new TransformInfo(valueExpr, true);
+							valueExpr = Expression.Convert(valueExpr.UnwrapConvert(), expr.Type);
 						}
+
+						return new TransformInfo(valueExpr, true);
 					}
 
 					if (context.translated.TryGetValue(expr, out var replaced))
 						return new TransformInfo(replaced, true);
-
-					if (context.builder._skippedExpressions.Contains(expr))
-						return new TransformInfo(expr, true);
 
 					switch (expr.NodeType)
 					{
