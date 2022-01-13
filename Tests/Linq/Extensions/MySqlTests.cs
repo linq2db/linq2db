@@ -9,23 +9,23 @@ using NUnit.Framework;
 namespace Tests.Extensions
 {
 	[TestFixture]
-	public class MySqlTests : TestBase
+	public partial class MySqlTests : TestBase
 	{
 		[Test]
 		public void QueryHintTest([IncludeDataSources(true, TestProvName.AllMySql)] string context,
 			[Values(
-				MySqlHints.QueryHint.Bka,                      MySqlHints.QueryHint.NoBka,
-				MySqlHints.QueryHint.Bnl,                      MySqlHints.QueryHint.NoBnl,
-				MySqlHints.QueryHint.DerivedConditionPushDown, MySqlHints.QueryHint.NoDerivedConditionPushDown,
-				MySqlHints.QueryHint.HashJoin,                 MySqlHints.QueryHint.NoHashJoin,
-				MySqlHints.QueryHint.Merge,                    MySqlHints.QueryHint.NoMerge
+				MySqlHints.Query.Bka,                      MySqlHints.Query.NoBka,
+				MySqlHints.Query.Bnl,                      MySqlHints.Query.NoBnl,
+				MySqlHints.Query.DerivedConditionPushDown, MySqlHints.Query.NoDerivedConditionPushDown,
+				MySqlHints.Query.HashJoin,                 MySqlHints.Query.NoHashJoin,
+				MySqlHints.Query.Merge,                    MySqlHints.Query.NoMerge
 			)] string hint)
 		{
 			using var db = GetDataContext(context);
 
 			var q =
 				(
-					from p in db.Parent.TableHint(MySqlHints.TableHint.NoBka).TableID("Pr")
+					from p in db.Parent.TableHint(MySqlHints.Table.NoBka).TableID("Pr")
 					from c in db.Child.TableID("Ch")
 					select p
 				)
@@ -39,15 +39,15 @@ namespace Tests.Extensions
 		[Test]
 		public void IndexHintTest([IncludeDataSources(true, TestProvName.AllMySql)] string context,
 			[Values(
-				MySqlHints.IndexHint.GroupIndex, MySqlHints.IndexHint.NoGroupIndex,
-				MySqlHints.IndexHint.Index,      MySqlHints.IndexHint.NoIndex,
-				MySqlHints.IndexHint.IndexMerge, MySqlHints.IndexHint.NoIndexMerge,
-				MySqlHints.IndexHint.JoinIndex,  MySqlHints.IndexHint.NoJoinIndex,
-				MySqlHints.IndexHint.Mrr,        MySqlHints.IndexHint.NoMrr,
-				MySqlHints.IndexHint.NoIcp,
-				MySqlHints.IndexHint.NoRangeOptimization,
-				MySqlHints.IndexHint.OrderIndex, MySqlHints.IndexHint.NoOrderIndex,
-				MySqlHints.IndexHint.SkipScan,   MySqlHints.IndexHint.NoSkipScan
+				MySqlHints.Table.GroupIndex, MySqlHints.Table.NoGroupIndex,
+				MySqlHints.Table.Index,      MySqlHints.Table.NoIndex,
+				MySqlHints.Table.IndexMerge, MySqlHints.Table.NoIndexMerge,
+				MySqlHints.Table.JoinIndex,  MySqlHints.Table.NoJoinIndex,
+				MySqlHints.Table.Mrr,        MySqlHints.Table.NoMrr,
+				MySqlHints.Table.NoIcp,
+				MySqlHints.Table.NoRangeOptimization,
+				MySqlHints.Table.OrderIndex, MySqlHints.Table.NoOrderIndex,
+				MySqlHints.Table.SkipScan,   MySqlHints.Table.NoSkipScan
 			)] string hint)
 		{
 			using var db = GetDataContext(context);
@@ -64,7 +64,7 @@ namespace Tests.Extensions
 		[Test]
 		public void TableSubQueryHintTest([IncludeDataSources(true, TestProvName.AllMySql)] string context,
 			[Values(
-				MySqlHints.QueryHint.SemiJoin, MySqlHints.QueryHint.NoSemiJoin
+				MySqlHints.Query.SemiJoin, MySqlHints.Query.NoSemiJoin
 			)] string hint)
 		{
 			using var db = GetDataContext(context);
@@ -80,6 +80,7 @@ namespace Tests.Extensions
 					.AsSubQuery("qq")
 				select p
 			)
+			.AsMySql()
 			.QueryBlockHint(hint, "@qq", "FIRSTMATCH", "LOOSESCAN");
 
 			_ = q.ToList();
@@ -90,11 +91,11 @@ namespace Tests.Extensions
 		[Test]
 		public void TableHintTest([IncludeDataSources(true, TestProvName.AllMySql)] string context,
 			[Values(
-				MySqlHints.TableHint.Bka,                      MySqlHints.TableHint.NoBka,
-				MySqlHints.TableHint.Bnl,                      MySqlHints.TableHint.NoBnl,
-				MySqlHints.TableHint.DerivedConditionPushDown, MySqlHints.TableHint.NoDerivedConditionPushDown,
-				MySqlHints.TableHint.HashJoin,                 MySqlHints.TableHint.NoHashJoin,
-				MySqlHints.TableHint.Merge,                    MySqlHints.TableHint.NoMerge
+				MySqlHints.Table.Bka,                      MySqlHints.Table.NoBka,
+				MySqlHints.Table.Bnl,                      MySqlHints.Table.NoBnl,
+				MySqlHints.Table.DerivedConditionPushDown, MySqlHints.Table.NoDerivedConditionPushDown,
+				MySqlHints.Table.HashJoin,                 MySqlHints.Table.NoHashJoin,
+				MySqlHints.Table.Merge,                    MySqlHints.Table.NoMerge
 				)] string hint)
 		{
 			using var db = GetDataContext(context);
@@ -117,7 +118,7 @@ namespace Tests.Extensions
 			(
 				from p in db.Parent
 				select p
-			).QueryHint(MySqlHints.QueryHint.SetVar, "sort_buffer_size=16M");
+			).QueryHint(MySqlHints.Query.SetVar, "sort_buffer_size=16M");
 
 			_ = q.ToList();
 
@@ -133,7 +134,7 @@ namespace Tests.Extensions
 			(
 				from p in db.Parent
 				select p
-			).QueryHint(MySqlHints.QueryHint.ResourceGroup, "USR_default");
+			).QueryHint(MySqlHints.Query.ResourceGroup, "USR_default");
 
 			_ = q.ToList();
 
@@ -146,7 +147,7 @@ namespace Tests.Extensions
 			using var db = GetDataContext(context);
 
 			var q =
-				from p in db.Parent.TableHint(MySqlHints.IndexHint.Index, "parent_ix")
+				from p in db.Parent.TableHint(MySqlHints.Table.Index, "parent_ix")
 				select p;
 
 			_ = q.ToList();
@@ -165,7 +166,7 @@ namespace Tests.Extensions
 				join p in db.Parent on c.ParentID equals p.ParentID
 				select p
 			)
-			.QueryHint(MySqlHints.QueryHint.MaxExecutionTime(1000));
+			.QueryHint(MySqlHints.Query.MaxExecutionTime(1000));
 
 			_ = q.ToList();
 
@@ -183,15 +184,64 @@ namespace Tests.Extensions
 
 			var q =
 			(
-				from p in db.Child.IndexHint(hint, "IX_ChildIndex", "IX_ChildIndex2").With(MySqlHints.TableHint.Bka)
+				from p in db.Child.IndexHint(hint, "IX_ChildIndex", "IX_ChildIndex2").With(MySqlHints.Table.Bka)
 				select p
 			)
-			.QueryHint(MySqlHints.QueryHint.MaxExecutionTime(1000));
+			.QueryHint(MySqlHints.Query.MaxExecutionTime(1000));
 
 			_ = q.ToList();
 
 			Assert.That(LastQuery, Contains.Substring("SELECT /*+ BKA(p) MAX_EXECUTION_TIME(1000) */"));
 			Assert.That(LastQuery, Contains.Substring($"`Child` `p` {hint}(IX_ChildIndex, IX_ChildIndex2)"));
+		}
+
+		[Test]
+		public void QueryHintSemiJoinWithQueryBlockTest([IncludeDataSources(true, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				(
+					from p in
+						(
+							from p in db.Parent
+							from c in db.Child
+							select p
+						)
+						.AsSubQuery("qq")
+					select p
+				)
+				.AsMySql()
+				.SemiJoinHintWithQueryBlock("@qq", "FIRSTMATCH", "LOOSESCAN");
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {MySqlHints.Query.SemiJoin}(@qq FIRSTMATCH, LOOSESCAN)"));
+		}
+
+		[Test]
+		public void QueryHintNoSemiJoinWithQueryBlockTest([IncludeDataSources(true, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				(
+					from p in
+						(
+							from p in db.Parent
+							from c in db.Child
+							select p
+						)
+						.AsSubQuery("qq")
+					select p
+				)
+				.AsMySql()
+				.NoSemiJoinHintWithQueryBlock("@qq", "FIRSTMATCH", "LOOSESCAN");
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {MySqlHints.Query.NoSemiJoin}(@qq FIRSTMATCH, LOOSESCAN)"));
+			Assert.That(LastQuery, Contains.Substring("\tSELECT /*+ QB_NAME(qq) */"));
 		}
 	}
 }

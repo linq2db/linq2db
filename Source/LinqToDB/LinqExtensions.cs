@@ -11,7 +11,7 @@ using JetBrains.Annotations;
 namespace LinqToDB
 {
 	using Async;
-	using DataProvider.Oracle;
+	using DataProvider;
 	using Expressions;
 	using Linq;
 	using Linq.Builder;
@@ -534,10 +534,6 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Adds a query hint to a generated query.
-		/// <code>
-		/// // will produce following SQL code in generated query: INNER LOOP JOIN
-		/// var tableWithHint = db.Table.JoinHint("LOOP");
-		/// </code>
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="source">Query source.</param>

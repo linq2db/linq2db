@@ -19,6 +19,16 @@
 
 		<PackageReference Include="NodaTime" />
 
+		<None Update="Extensions\MySqlTests.tt">
+			<LastGenOutput>MySqlTests.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<Compile Update="Extensions\MySqlTests.generated.cs">
+			<DependentUpon>MySqlTests.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+		</Compile>
+
 		<None Update="Extensions\OracleTests.tt">
 			<LastGenOutput>OracleTests.generated.cs</LastGenOutput>
 			<Generator>TextTemplatingFileGenerator</Generator>

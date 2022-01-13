@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.MySql
 	using Configuration;
 	using Data;
 
-	public static class MySqlTools
+	public static partial class MySqlTools
 	{
 		static readonly Lazy<IDataProvider> _mySqlDataProvider          = DataConnection.CreateDataProvider<MySqlDataProviderMySqlOfficial>();
 		static readonly Lazy<IDataProvider> _mySqlConnectorDataProvider = DataConnection.CreateDataProvider<MySqlDataProviderMySqlConnector>();

@@ -28,6 +28,16 @@
 		<EmbeddedResource Include="SqlQuery\ReservedWordsFirebird.txt" />
 		<EmbeddedResource Include="SqlQuery\ReservedWordsPostgres.txt" />
 
+		<None Update="DataProvider\MySql\MySqlHints.tt">
+			<LastGenOutput>MySqlHints.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<Compile Update="DataProvider\MySql\MySqlHints.generated.cs">
+			<DependentUpon>MySqlHints.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+		</Compile>
+
 		<None Update="DataProvider\Oracle\OracleHints.tt">
 			<LastGenOutput>OracleHints.generated.cs</LastGenOutput>
 			<Generator>TextTemplatingFileGenerator</Generator>
