@@ -14,399 +14,6 @@ namespace Tests.Extensions
 	partial class OracleTests
 	{
 		[Test]
-		public void TableHintFullTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Parent
-					.AsOracle()
-					.FullHint()
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.Full}(p) */"));
-		}
-
-		[Test]
-		public void TableHintFullInScopeTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-			(
-				from p in db.Parent
-				join c in db.Child on p.ParentID equals c.ParentID
-				select p
-			)
-			.AsOracle()
-			.FullInScopeHint();
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.Full}(p) {OracleHints.Table.Full}(c_1) */"));
-		}
-
-		[Test]
-		public void TableHintClusterTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Parent
-					.AsOracle()
-					.ClusterHint()
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.Cluster}(p) */"));
-		}
-
-		[Test]
-		public void TableHintClusterInScopeTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-			(
-				from p in db.Parent
-				join c in db.Child on p.ParentID equals c.ParentID
-				select p
-			)
-			.AsOracle()
-			.ClusterInScopeHint();
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.Cluster}(p) {OracleHints.Table.Cluster}(c_1) */"));
-		}
-
-		[Test]
-		public void TableHintHashTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Parent
-					.AsOracle()
-					.HashHint()
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.Hash}(p) */"));
-		}
-
-		[Test]
-		public void TableHintHashInScopeTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-			(
-				from p in db.Parent
-				join c in db.Child on p.ParentID equals c.ParentID
-				select p
-			)
-			.AsOracle()
-			.HashInScopeHint();
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.Hash}(p) {OracleHints.Table.Hash}(c_1) */"));
-		}
-
-		[Test]
-		public void IndexHintIndexTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Parent
-					.AsOracle()
-					.IndexHint("parent_ix", "parent2_ix")
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.Index}(p parent_ix parent2_ix) */"));
-		}
-
-		[Test]
-		public void IndexHintIndexAscTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Parent
-					.AsOracle()
-					.IndexAscHint("parent_ix", "parent2_ix")
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.IndexAsc}(p parent_ix parent2_ix) */"));
-		}
-
-		[Test]
-		public void IndexHintIndexCombineTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Parent
-					.AsOracle()
-					.IndexCombineHint("parent_ix", "parent2_ix")
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.IndexCombine}(p parent_ix parent2_ix) */"));
-		}
-
-		[Test]
-		public void IndexHintIndexJoinTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Parent
-					.AsOracle()
-					.IndexJoinHint("parent_ix", "parent2_ix")
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.IndexJoin}(p parent_ix parent2_ix) */"));
-		}
-
-		[Test]
-		public void IndexHintIndexDescTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Parent
-					.AsOracle()
-					.IndexDescHint("parent_ix", "parent2_ix")
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.IndexDesc}(p parent_ix parent2_ix) */"));
-		}
-
-		[Test]
-		public void IndexHintIndexFFSTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Parent
-					.AsOracle()
-					.IndexFFSHint("parent_ix", "parent2_ix")
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.IndexFFS}(p parent_ix parent2_ix) */"));
-		}
-
-		[Test]
-		public void IndexHintIndexFastFullScanTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Parent
-					.AsOracle()
-					.IndexFastFullScanHint("parent_ix", "parent2_ix")
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.IndexFastFullScan}(p parent_ix parent2_ix) */"));
-		}
-
-		[Test]
-		public void IndexHintIndexSSTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Parent
-					.AsOracle()
-					.IndexSSHint("parent_ix", "parent2_ix")
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.IndexSS}(p parent_ix parent2_ix) */"));
-		}
-
-		[Test]
-		public void IndexHintIndexSkipScanTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Parent
-					.AsOracle()
-					.IndexSkipScanHint("parent_ix", "parent2_ix")
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.IndexSkipScan}(p parent_ix parent2_ix) */"));
-		}
-
-		[Test]
-		public void IndexHintIndexSSAscTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Parent
-					.AsOracle()
-					.IndexSSAscHint("parent_ix", "parent2_ix")
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.IndexSSAsc}(p parent_ix parent2_ix) */"));
-		}
-
-		[Test]
-		public void IndexHintIndexSkipScanAscTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Parent
-					.AsOracle()
-					.IndexSkipScanAscHint("parent_ix", "parent2_ix")
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.IndexSkipScanAsc}(p parent_ix parent2_ix) */"));
-		}
-
-		[Test]
-		public void IndexHintIndexSSDescTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Parent
-					.AsOracle()
-					.IndexSSDescHint("parent_ix", "parent2_ix")
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.IndexSSDesc}(p parent_ix parent2_ix) */"));
-		}
-
-		[Test]
-		public void IndexHintIndexSkipScanDescTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Parent
-					.AsOracle()
-					.IndexSkipScanDescHint("parent_ix", "parent2_ix")
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.IndexSkipScanDesc}(p parent_ix parent2_ix) */"));
-		}
-
-		[Test]
-		public void IndexHintNoIndexTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Parent
-					.AsOracle()
-					.NoIndexHint("parent_ix", "parent2_ix")
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.NoIndex}(p parent_ix parent2_ix) */"));
-		}
-
-		[Test]
-		public void IndexHintNoIndexFFSTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Parent
-					.AsOracle()
-					.NoIndexFFSHint("parent_ix", "parent2_ix")
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.NoIndexFFS}(p parent_ix parent2_ix) */"));
-		}
-
-		[Test]
-		public void IndexHintNoIndexFastFullScanTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Parent
-					.AsOracle()
-					.NoIndexFastFullScanHint("parent_ix", "parent2_ix")
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.NoIndexFastFullScan}(p parent_ix parent2_ix) */"));
-		}
-
-		[Test]
-		public void IndexHintNoIndexSSTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Parent
-					.AsOracle()
-					.NoIndexSSHint("parent_ix", "parent2_ix")
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.NoIndexSS}(p parent_ix parent2_ix) */"));
-		}
-
-		[Test]
-		public void IndexHintNoIndexSkipScanTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Parent
-					.AsOracle()
-					.NoIndexSkipScanHint("parent_ix", "parent2_ix")
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.NoIndexSkipScan}(p parent_ix parent2_ix) */"));
-		}
-
-		[Test]
 		public void QueryHintAllRowsTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -422,7 +29,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.AllRows} */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.AllRows} */"));
 		}
 
 		[Test]
@@ -441,7 +48,1138 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.FirstRows(10)} */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.FirstRows(10)} */"));
+		}
+
+		[Test]
+		public void TableHintClusterTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.ClusterHint()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.Cluster}(p) */"));
+		}
+
+		[Test]
+		public void TableHintClusterInScopeTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Parent
+				join c in db.Child on p.ParentID equals c.ParentID
+				select p
+			)
+			.AsOracle()
+			.ClusterInScopeHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.Cluster}(p) {OracleHints.Hint.Cluster}(c_1) */"));
+		}
+
+		[Test]
+		public void QueryHintClusteringTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.ClusteringHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.Clustering} */"));
+		}
+
+		[Test]
+		public void QueryHintNoClusteringTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.NoClusteringHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoClustering} */"));
+		}
+
+		[Test]
+		public void TableHintFullTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.FullHint()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.Full}(p) */"));
+		}
+
+		[Test]
+		public void TableHintFullInScopeTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Parent
+				join c in db.Child on p.ParentID equals c.ParentID
+				select p
+			)
+			.AsOracle()
+			.FullInScopeHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.Full}(p) {OracleHints.Hint.Full}(c_1) */"));
+		}
+
+		[Test]
+		public void TableHintHashTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.HashHint()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.Hash}(p) */"));
+		}
+
+		[Test]
+		public void TableHintHashInScopeTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Parent
+				join c in db.Child on p.ParentID equals c.ParentID
+				select p
+			)
+			.AsOracle()
+			.HashInScopeHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.Hash}(p) {OracleHints.Hint.Hash}(c_1) */"));
+		}
+
+		[Test]
+		public void IndexHintIndexTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.IndexHint("parent_ix", "parent2_ix")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.Index}(p parent_ix parent2_ix) */"));
+		}
+
+		[Test]
+		public void IndexHintIndexAscTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.IndexAscHint("parent_ix", "parent2_ix")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.IndexAsc}(p parent_ix parent2_ix) */"));
+		}
+
+		[Test]
+		public void IndexHintIndexCombineTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.IndexCombineHint("parent_ix", "parent2_ix")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.IndexCombine}(p parent_ix parent2_ix) */"));
+		}
+
+		[Test]
+		public void IndexHintIndexJoinTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.IndexJoinHint("parent_ix", "parent2_ix")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.IndexJoin}(p parent_ix parent2_ix) */"));
+		}
+
+		[Test]
+		public void IndexHintIndexDescTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.IndexDescHint("parent_ix", "parent2_ix")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.IndexDesc}(p parent_ix parent2_ix) */"));
+		}
+
+		[Test]
+		public void IndexHintIndexFFSTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.IndexFFSHint("parent_ix", "parent2_ix")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.IndexFFS}(p parent_ix parent2_ix) */"));
+		}
+
+		[Test]
+		public void IndexHintIndexFastFullScanTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.IndexFastFullScanHint("parent_ix", "parent2_ix")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.IndexFastFullScan}(p parent_ix parent2_ix) */"));
+		}
+
+		[Test]
+		public void IndexHintIndexSSTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.IndexSSHint("parent_ix", "parent2_ix")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.IndexSS}(p parent_ix parent2_ix) */"));
+		}
+
+		[Test]
+		public void IndexHintIndexSkipScanTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.IndexSkipScanHint("parent_ix", "parent2_ix")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.IndexSkipScan}(p parent_ix parent2_ix) */"));
+		}
+
+		[Test]
+		public void IndexHintIndexSSAscTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.IndexSSAscHint("parent_ix", "parent2_ix")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.IndexSSAsc}(p parent_ix parent2_ix) */"));
+		}
+
+		[Test]
+		public void IndexHintIndexSkipScanAscTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.IndexSkipScanAscHint("parent_ix", "parent2_ix")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.IndexSkipScanAsc}(p parent_ix parent2_ix) */"));
+		}
+
+		[Test]
+		public void IndexHintIndexSSDescTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.IndexSSDescHint("parent_ix", "parent2_ix")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.IndexSSDesc}(p parent_ix parent2_ix) */"));
+		}
+
+		[Test]
+		public void IndexHintIndexSkipScanDescTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.IndexSkipScanDescHint("parent_ix", "parent2_ix")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.IndexSkipScanDesc}(p parent_ix parent2_ix) */"));
+		}
+
+		[Test]
+		public void QueryHintNativeFullOuterJoinTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.NativeFullOuterJoinHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NativeFullOuterJoin} */"));
+		}
+
+		[Test]
+		public void QueryHintNoNativeFullOuterJoinTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.NoNativeFullOuterJoinHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoNativeFullOuterJoin} */"));
+		}
+
+		[Test]
+		public void IndexHintNoIndexTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.NoIndexHint("parent_ix", "parent2_ix")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoIndex}(p parent_ix parent2_ix) */"));
+		}
+
+		[Test]
+		public void IndexHintNoIndexFFSTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.NoIndexFFSHint("parent_ix", "parent2_ix")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoIndexFFS}(p parent_ix parent2_ix) */"));
+		}
+
+		[Test]
+		public void IndexHintNoIndexFastFullScanTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.NoIndexFastFullScanHint("parent_ix", "parent2_ix")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoIndexFastFullScan}(p parent_ix parent2_ix) */"));
+		}
+
+		[Test]
+		public void IndexHintNoIndexSSTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.NoIndexSSHint("parent_ix", "parent2_ix")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoIndexSS}(p parent_ix parent2_ix) */"));
+		}
+
+		[Test]
+		public void IndexHintNoIndexSkipScanTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.NoIndexSkipScanHint("parent_ix", "parent2_ix")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoIndexSkipScan}(p parent_ix parent2_ix) */"));
+		}
+
+		[Test]
+		public void TableHintInMemoryTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.InMemoryHint()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.InMemory}(p) */"));
+		}
+
+		[Test]
+		public void TableHintInMemoryInScopeTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Parent
+				join c in db.Child on p.ParentID equals c.ParentID
+				select p
+			)
+			.AsOracle()
+			.InMemoryInScopeHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.InMemory}(p) {OracleHints.Hint.InMemory}(c_1) */"));
+		}
+
+		[Test]
+		public void TableHintNoInMemoryTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.NoInMemoryHint()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoInMemory}(p) */"));
+		}
+
+		[Test]
+		public void TableHintNoInMemoryInScopeTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Parent
+				join c in db.Child on p.ParentID equals c.ParentID
+				select p
+			)
+			.AsOracle()
+			.NoInMemoryInScopeHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoInMemory}(p) {OracleHints.Hint.NoInMemory}(c_1) */"));
+		}
+
+		[Test]
+		public void TableHintInMemoryPruningTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.InMemoryPruningHint()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.InMemoryPruning}(p) */"));
+		}
+
+		[Test]
+		public void TableHintInMemoryPruningInScopeTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Parent
+				join c in db.Child on p.ParentID equals c.ParentID
+				select p
+			)
+			.AsOracle()
+			.InMemoryPruningInScopeHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.InMemoryPruning}(p) {OracleHints.Hint.InMemoryPruning}(c_1) */"));
+		}
+
+		[Test]
+		public void TableHintNoInMemoryPruningTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.NoInMemoryPruningHint()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoInMemoryPruning}(p) */"));
+		}
+
+		[Test]
+		public void TableHintNoInMemoryPruningInScopeTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Parent
+				join c in db.Child on p.ParentID equals c.ParentID
+				select p
+			)
+			.AsOracle()
+			.NoInMemoryPruningInScopeHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoInMemoryPruning}(p) {OracleHints.Hint.NoInMemoryPruning}(c_1) */"));
+		}
+
+		[Test]
+		public void QueryHintUseBandTest4([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child.TableID("cc")
+				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.UseBandHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.UseBand}(c_1 p) */"));
+		}
+
+		[Test]
+		public void QueryHintNoUseBandTest4([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child.TableID("cc")
+				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.NoUseBandHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoUseBand}(c_1 p) */"));
+		}
+
+		[Test]
+		public void QueryHintUseCubeTest4([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child.TableID("cc")
+				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.UseCubeHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.UseCube}(c_1 p) */"));
+		}
+
+		[Test]
+		public void QueryHintNoUseCubeTest4([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child.TableID("cc")
+				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.NoUseCubeHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoUseCube}(c_1 p) */"));
+		}
+
+		[Test]
+		public void QueryHintUseHashTest4([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child.TableID("cc")
+				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.UseHashHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.UseHash}(c_1 p) */"));
+		}
+
+		[Test]
+		public void QueryHintNoUseHashTest4([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child.TableID("cc")
+				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.NoUseHashHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoUseHash}(c_1 p) */"));
+		}
+
+		[Test]
+		public void QueryHintUseMergeTest4([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child.TableID("cc")
+				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.UseMergeHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.UseMerge}(c_1 p) */"));
+		}
+
+		[Test]
+		public void QueryHintNoUseMergeTest4([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child.TableID("cc")
+				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.NoUseMergeHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoUseMerge}(c_1 p) */"));
+		}
+
+		[Test]
+		public void QueryHintUseNLTest4([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child.TableID("cc")
+				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.UseNLHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.UseNL}(c_1 p) */"));
+		}
+
+		[Test]
+		public void QueryHintUseNestedLoopTest4([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child.TableID("cc")
+				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.UseNestedLoopHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.UseNestedLoop}(c_1 p) */"));
+		}
+
+		[Test]
+		public void QueryHintNoUseNLTest4([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child.TableID("cc")
+				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.NoUseNLHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoUseNL}(c_1 p) */"));
+		}
+
+		[Test]
+		public void QueryHintNoUseNestedLoopTest4([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child.TableID("cc")
+				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.NoUseNestedLoopHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoUseNestedLoop}(c_1 p) */"));
+		}
+
+		[Test]
+		public void IndexHintUseNLWithIndexTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.UseNLWithIndexHint("parent_ix", "parent2_ix")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.UseNLWithIndex}(p parent_ix parent2_ix) */"));
+		}
+
+		[Test]
+		public void IndexHintUseNestedLoopWithIndexTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.UseNestedLoopWithIndexHint("parent_ix", "parent2_ix")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.UseNestedLoopWithIndex}(p parent_ix parent2_ix) */"));
+		}
+
+		[Test]
+		public void QueryHintEnableParallelDmlTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.EnableParallelDmlHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.EnableParallelDml} */"));
+		}
+
+		[Test]
+		public void QueryHintDisableParallelDmlTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.DisableParallelDmlHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.DisableParallelDml} */"));
+		}
+
+		[Test]
+		public void QueryHintPQConcurrentUnionTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.PQConcurrentUnionHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.PQConcurrentUnion} */"));
+		}
+
+		[Test]
+		public void QueryHintPQConcurrentUnionTest3([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.QueryName("qb")
+			.AsOracle()
+			.PQConcurrentUnionHint("@qb");
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Hint.PQConcurrentUnion}(@qb) */"));
+		}
+
+		[Test]
+		public void QueryHintNoPQConcurrentUnionTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.NoPQConcurrentUnionHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoPQConcurrentUnion} */"));
+		}
+
+		[Test]
+		public void QueryHintNoPQConcurrentUnionTest3([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.QueryName("qb")
+			.AsOracle()
+			.NoPQConcurrentUnionHint("@qb");
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Hint.NoPQConcurrentUnion}(@qb) */"));
+		}
+
+		[Test]
+		public void QueryHintPQFilterSerialTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.PQFilterSerialHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.PQFilterSerial} */"));
+		}
+
+		[Test]
+		public void QueryHintPQFilterNoneTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.PQFilterNoneHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.PQFilterNone} */"));
+		}
+
+		[Test]
+		public void QueryHintPQFilterHashTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.PQFilterHashHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.PQFilterHash} */"));
+		}
+
+		[Test]
+		public void QueryHintPQFilterRandomTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.PQFilterRandomHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.PQFilterRandom} */"));
+		}
+
+		[Test]
+		public void TableHintPQSkewTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.PQSkewHint()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.PQSkew}(p) */"));
+		}
+
+		[Test]
+		public void TableHintPQSkewInScopeTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Parent
+				join c in db.Child on p.ParentID equals c.ParentID
+				select p
+			)
+			.AsOracle()
+			.PQSkewInScopeHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.PQSkew}(p) {OracleHints.Hint.PQSkew}(c_1) */"));
+		}
+
+		[Test]
+		public void TableHintNoPQSkewTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsOracle()
+					.NoPQSkewHint()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoPQSkew}(p) */"));
+		}
+
+		[Test]
+		public void TableHintNoPQSkewInScopeTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Parent
+				join c in db.Child on p.ParentID equals c.ParentID
+				select p
+			)
+			.AsOracle()
+			.NoPQSkewInScopeHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoPQSkew}(p) {OracleHints.Hint.NoPQSkew}(c_1) */"));
 		}
 
 		[Test]
@@ -460,7 +1198,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.NoQueryTransformation} */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoQueryTransformation} */"));
 		}
 
 		[Test]
@@ -479,7 +1217,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.UseConcat} */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.UseConcat} */"));
 		}
 
 		[Test]
@@ -499,7 +1237,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Query.UseConcat}(@qb) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Hint.UseConcat}(@qb) */"));
 		}
 
 		[Test]
@@ -518,7 +1256,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.NoExpand} */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoExpand} */"));
 		}
 
 		[Test]
@@ -538,7 +1276,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Query.NoExpand}(@qb) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Hint.NoExpand}(@qb) */"));
 		}
 
 		[Test]
@@ -557,7 +1295,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.Rewrite} */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.Rewrite} */"));
 		}
 
 		[Test]
@@ -577,7 +1315,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Query.Rewrite}(@qb) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Hint.Rewrite}(@qb) */"));
 		}
 
 		[Test]
@@ -596,7 +1334,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.NoRewrite} */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoRewrite} */"));
 		}
 
 		[Test]
@@ -616,7 +1354,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Query.NoRewrite}(@qb) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Hint.NoRewrite}(@qb) */"));
 		}
 
 		[Test]
@@ -635,7 +1373,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.Merge} */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.Merge} */"));
 		}
 
 		[Test]
@@ -655,7 +1393,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Query.Merge}(@qb) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Hint.Merge}(@qb) */"));
 		}
 
 		[Test]
@@ -671,7 +1409,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.Merge}(p) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.Merge}(p) */"));
 		}
 
 		[Test]
@@ -690,7 +1428,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.Merge}(p) {OracleHints.Table.Merge}(c_1) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.Merge}(p) {OracleHints.Hint.Merge}(c_1) */"));
 		}
 
 		[Test]
@@ -709,7 +1447,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.NoMerge} */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoMerge} */"));
 		}
 
 		[Test]
@@ -729,7 +1467,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Query.NoMerge}(@qb) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Hint.NoMerge}(@qb) */"));
 		}
 
 		[Test]
@@ -745,7 +1483,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.NoMerge}(p) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoMerge}(p) */"));
 		}
 
 		[Test]
@@ -764,7 +1502,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.NoMerge}(p) {OracleHints.Table.NoMerge}(c_1) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoMerge}(p) {OracleHints.Hint.NoMerge}(c_1) */"));
 		}
 
 		[Test]
@@ -783,7 +1521,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.StarTransformation} */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.StarTransformation} */"));
 		}
 
 		[Test]
@@ -803,7 +1541,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Query.StarTransformation}(@qb) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Hint.StarTransformation}(@qb) */"));
 		}
 
 		[Test]
@@ -822,7 +1560,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.NoStarTransformation} */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoStarTransformation} */"));
 		}
 
 		[Test]
@@ -842,7 +1580,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Query.NoStarTransformation}(@qb) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Hint.NoStarTransformation}(@qb) */"));
 		}
 
 		[Test]
@@ -858,7 +1596,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.Fact}(p) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.Fact}(p) */"));
 		}
 
 		[Test]
@@ -877,7 +1615,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.Fact}(p) {OracleHints.Table.Fact}(c_1) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.Fact}(p) {OracleHints.Hint.Fact}(c_1) */"));
 		}
 
 		[Test]
@@ -893,7 +1631,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.NoFact}(p) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoFact}(p) */"));
 		}
 
 		[Test]
@@ -912,7 +1650,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.NoFact}(p) {OracleHints.Table.NoFact}(c_1) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoFact}(p) {OracleHints.Hint.NoFact}(c_1) */"));
 		}
 
 		[Test]
@@ -931,7 +1669,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.Unnest} */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.Unnest} */"));
 		}
 
 		[Test]
@@ -951,7 +1689,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Query.Unnest}(@qb) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Hint.Unnest}(@qb) */"));
 		}
 
 		[Test]
@@ -970,7 +1708,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.NoUnnest} */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoUnnest} */"));
 		}
 
 		[Test]
@@ -990,7 +1728,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Query.NoUnnest}(@qb) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Hint.NoUnnest}(@qb) */"));
 		}
 
 		[Test]
@@ -1009,7 +1747,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.Leading}(c_1 p) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.Leading}(c_1 p) */"));
 		}
 
 		[Test]
@@ -1028,175 +1766,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.Ordered} */"));
-		}
-
-		[Test]
-		public void QueryHintUseNLTest4([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-			(
-				from c in db.Child.TableID("cc")
-				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
-				select p
-			)
-			.AsOracle()
-			.UseNLHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.UseNL}(c_1 p) */"));
-		}
-
-		[Test]
-		public void QueryHintUseNestedLoopTest4([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-			(
-				from c in db.Child.TableID("cc")
-				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
-				select p
-			)
-			.AsOracle()
-			.UseNestedLoopHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.UseNestedLoop}(c_1 p) */"));
-		}
-
-		[Test]
-		public void QueryHintNoUseNLTest4([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-			(
-				from c in db.Child.TableID("cc")
-				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
-				select p
-			)
-			.AsOracle()
-			.NoUseNLHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.NoUseNL}(c_1 p) */"));
-		}
-
-		[Test]
-		public void QueryHintNoUseNestedLoopTest4([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-			(
-				from c in db.Child.TableID("cc")
-				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
-				select p
-			)
-			.AsOracle()
-			.NoUseNestedLoopHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.NoUseNestedLoop}(c_1 p) */"));
-		}
-
-		[Test]
-		public void QueryHintUseMergeTest4([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-			(
-				from c in db.Child.TableID("cc")
-				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
-				select p
-			)
-			.AsOracle()
-			.UseMergeHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.UseMerge}(c_1 p) */"));
-		}
-
-		[Test]
-		public void QueryHintNoUseMergeTest4([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-			(
-				from c in db.Child.TableID("cc")
-				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
-				select p
-			)
-			.AsOracle()
-			.NoUseMergeHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.NoUseMerge}(c_1 p) */"));
-		}
-
-		[Test]
-		public void QueryHintUseHashTest4([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-			(
-				from c in db.Child.TableID("cc")
-				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
-				select p
-			)
-			.AsOracle()
-			.UseHashHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.UseHash}(c_1 p) */"));
-		}
-
-		[Test]
-		public void QueryHintNoUseHashTest4([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-			(
-				from c in db.Child.TableID("cc")
-				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
-				select p
-			)
-			.AsOracle()
-			.NoUseHashHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.NoUseHash}(c_1 p) */"));
-		}
-
-		[Test]
-		public void IndexHintUseNestedLoopWithIndexTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from p in db.Parent
-					.AsOracle()
-					.UseNestedLoopWithIndexHint("parent_ix", "parent2_ix")
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.UseNestedLoopWithIndex}(p parent_ix parent2_ix) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.Ordered} */"));
 		}
 
 		[Test]
@@ -1215,7 +1785,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.Parallel} */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.Parallel} */"));
 		}
 
 		[Test]
@@ -1231,7 +1801,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.NoParallel}(p) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoParallel}(p) */"));
 		}
 
 		[Test]
@@ -1250,7 +1820,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.NoParallel}(p) {OracleHints.Table.NoParallel}(c_1) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoParallel}(p) {OracleHints.Hint.NoParallel}(c_1) */"));
 		}
 
 		[Test]
@@ -1269,7 +1839,26 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.Append} */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.Append} */"));
+		}
+
+		[Test]
+		public void QueryHintAppendValuesTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.AppendValuesHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.AppendValues} */"));
 		}
 
 		[Test]
@@ -1288,7 +1877,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.NoAppend} */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoAppend} */"));
 		}
 
 		[Test]
@@ -1304,7 +1893,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.Cache}(p) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.Cache}(p) */"));
 		}
 
 		[Test]
@@ -1323,7 +1912,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.Cache}(p) {OracleHints.Table.Cache}(c_1) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.Cache}(p) {OracleHints.Hint.Cache}(c_1) */"));
 		}
 
 		[Test]
@@ -1339,7 +1928,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.NoCache}(p) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoCache}(p) */"));
 		}
 
 		[Test]
@@ -1358,7 +1947,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.NoCache}(p) {OracleHints.Table.NoCache}(c_1) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoCache}(p) {OracleHints.Hint.NoCache}(c_1) */"));
 		}
 
 		[Test]
@@ -1377,7 +1966,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.PushPredicate} */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.PushPredicate} */"));
 		}
 
 		[Test]
@@ -1397,7 +1986,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Query.PushPredicate}(@qb) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Hint.PushPredicate}(@qb) */"));
 		}
 
 		[Test]
@@ -1413,7 +2002,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.PushPredicate}(p) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.PushPredicate}(p) */"));
 		}
 
 		[Test]
@@ -1432,7 +2021,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.PushPredicate}(p) {OracleHints.Table.PushPredicate}(c_1) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.PushPredicate}(p) {OracleHints.Hint.PushPredicate}(c_1) */"));
 		}
 
 		[Test]
@@ -1452,7 +2041,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Query.PushSubQueries}(@qb) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Hint.PushSubQueries}(@qb) */"));
 		}
 
 		[Test]
@@ -1472,7 +2061,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Query.NoPushSubQueries}(@qb) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Hint.NoPushSubQueries}(@qb) */"));
 		}
 
 		[Test]
@@ -1491,7 +2080,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.CursorSharingExact} */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.CursorSharingExact} */"));
 		}
 
 		[Test]
@@ -1507,7 +2096,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.DrivingSite}(p) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.DrivingSite}(p) */"));
 		}
 
 		[Test]
@@ -1526,7 +2115,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.DrivingSite}(p) {OracleHints.Table.DrivingSite}(c_1) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.DrivingSite}(p) {OracleHints.Hint.DrivingSite}(c_1) */"));
 		}
 
 		[Test]
@@ -1545,7 +2134,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.ModelMinAnalysis} */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.ModelMinAnalysis} */"));
 		}
 
 		[Test]
@@ -1561,7 +2150,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.PxJoinFilter}(p) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.PxJoinFilter}(p) */"));
 		}
 
 		[Test]
@@ -1580,7 +2169,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.PxJoinFilter}(p) {OracleHints.Table.PxJoinFilter}(c_1) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.PxJoinFilter}(p) {OracleHints.Hint.PxJoinFilter}(c_1) */"));
 		}
 
 		[Test]
@@ -1596,7 +2185,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.NoPxJoinFilter}(p) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoPxJoinFilter}(p) */"));
 		}
 
 		[Test]
@@ -1615,7 +2204,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.NoPxJoinFilter}(p) {OracleHints.Table.NoPxJoinFilter}(c_1) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoPxJoinFilter}(p) {OracleHints.Hint.NoPxJoinFilter}(c_1) */"));
 		}
 
 		[Test]
@@ -1634,7 +2223,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.NoXmlQueryRewrite} */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoXmlQueryRewrite} */"));
 		}
 
 		[Test]
@@ -1653,7 +2242,102 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.NoXmlIndexRewrite} */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoXmlIndexRewrite} */"));
+		}
+
+		[Test]
+		public void QueryHintFreshMaterializedViewTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.FreshMaterializedViewHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.FreshMaterializedView} */"));
+		}
+
+		[Test]
+		public void QueryHintFreshMVTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.FreshMVHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.FreshMV} */"));
+		}
+
+		[Test]
+		public void QueryHintGroupingTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.GroupingHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.Grouping} */"));
+		}
+
+		[Test]
+		public void QueryHintMonitorTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.MonitorHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.Monitor} */"));
+		}
+
+		[Test]
+		public void QueryHintNoMonitorTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsOracle()
+			.NoMonitorHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.NoMonitor} */"));
 		}
 
 	}

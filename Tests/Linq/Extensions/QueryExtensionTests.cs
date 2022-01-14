@@ -4,9 +4,10 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.DataProvider.Access;
+using LinqToDB.DataProvider.Oracle;
+using LinqToDB.DataProvider.MySql;
 using LinqToDB.DataProvider.SqlCe;
 using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.DataProvider.Oracle;
 
 using NUnit.Framework;
 
@@ -57,7 +58,7 @@ namespace Tests.Extensions
 
 			var q =
 			(
-				from p in db.Parent
+				from t in db.Child
 					.AsSqlServer()
 						.WithNoLock()
 						.WithNoWait()
@@ -66,7 +67,9 @@ namespace Tests.Extensions
 					.AsOracle()
 						.FullHint()
 						.HashHint()
-				select p
+					.AsMySql()
+						.UseIndexHint("IX_ChildIndex")
+				select t
 			)
 			.AsSqlServer()
 				.WithReadUncommittedInScope()
@@ -74,24 +77,30 @@ namespace Tests.Extensions
 			.AsOracle()
 				.ParallelHint(2)
 			.AsAccess()
-				.WithOwnerAccessOption();
+				.WithOwnerAccessOption()
+			.AsMySql()
+				.MaxExecutionTimeHint(1000);
 
 			_ = q.ToList();
 
-			string sqlCeHints, sqlServerHints, oracleHints;
+			string sqlCeHints, sqlServerHints, oracleHints, mySqlHints, accessHints;
 
 			var testSql = new[]
 			{
-				sqlCeHints     = "[Parent] [p] WITH (NoLock)",
-				sqlServerHints = "[Parent] [p] WITH (NoLock, NoWait, ReadUncommitted)",
-				oracleHints    = "SELECT /*+ FULL(p) HASH(p) PARALLEL(2) */",
+				accessHints    = "WITH OWNERACCESS OPTION",
+				oracleHints    = "SELECT /*+ FULL(t) HASH(t) PARALLEL(2) */",
+				mySqlHints     = "SELECT /*+ MAX_EXECUTION_TIME(1000) */",
+				sqlCeHints     = "[Child] [t] WITH (NoLock)",
+				sqlServerHints = "[Child] [t] WITH (NoLock, NoWait, ReadUncommitted)",
 			};
 
 			string? current = null;
 
-			if      (context.StartsWith("SqlCe"))     current = sqlCeHints;
-			else if (context.StartsWith("SqlServer")) current = sqlServerHints;
+			if      (context.StartsWith("Access"))    current = accessHints;
 			else if (context.StartsWith("Oracle"))    current = oracleHints;
+			else if (context.StartsWith("MySql"))     current = mySqlHints;
+			else if (context.StartsWith("SqlCe"))     current = sqlCeHints;
+			else if (context.StartsWith("SqlServer")) current = sqlServerHints;
 
 			if (current != null)
 			{

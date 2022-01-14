@@ -14,192 +14,220 @@ namespace LinqToDB.DataProvider.Oracle
 	public static partial class OracleHints
 	{
 <#
-	GenerateTableHint ("Full");
-	GenerateTableHint ("Cluster");
-	GenerateTableHint ("Hash");
+	GenerateQuery ("AllRows");
+	GenerateQuery2("FirstRows");
 
-	GenerateIndexHint ("Index");
-	GenerateIndexHint ("IndexAsc");
-	GenerateIndexHint ("IndexCombine");
-	GenerateIndexHint ("IndexJoin");
-	GenerateIndexHint ("IndexDesc");
-	GenerateIndexHint ("IndexFFS");
-	GenerateIndexHint ("IndexFastFullScan");
-	GenerateIndexHint ("IndexSS");
-	GenerateIndexHint ("IndexSkipScan");
-	GenerateIndexHint ("IndexSSAsc");
-	GenerateIndexHint ("IndexSkipScanAsc");
-	GenerateIndexHint ("IndexSSDesc");
-	GenerateIndexHint ("IndexSkipScanDesc");
-	GenerateIndexHint ("NoIndex");
-	GenerateIndexHint ("NoIndexFFS");
-	GenerateIndexHint ("NoIndexFastFullScan");
-	GenerateIndexHint ("NoIndexSS");
-	GenerateIndexHint ("NoIndexSkipScan");
+	GenerateTable ("Cluster");
+	GenerateQuery ("Clustering");
+	GenerateQuery ("NoClustering");
+	GenerateTable ("Full");
+	GenerateTable ("Hash");
 
-	GenerateQueryHint ("AllRows");
-	GenerateQueryHint2("FirstRows");
+	GenerateIndex ("Index");
+	GenerateIndex ("IndexAsc");
+	GenerateIndex ("IndexCombine");
+	GenerateIndex ("IndexJoin");
+	GenerateIndex ("IndexDesc");
+	GenerateIndex ("IndexFFS");
+	GenerateIndex ("IndexFastFullScan");
+	GenerateIndex ("IndexSS");
+	GenerateIndex ("IndexSkipScan");
+	GenerateIndex ("IndexSSAsc");
+	GenerateIndex ("IndexSkipScanAsc");
+	GenerateIndex ("IndexSSDesc");
+	GenerateIndex ("IndexSkipScanDesc");
+	GenerateQuery ("NativeFullOuterJoin");  GenerateQuery("NoNativeFullOuterJoin");
+	GenerateIndex ("NoIndex");
+	GenerateIndex ("NoIndexFFS");
+	GenerateIndex ("NoIndexFastFullScan");
+	GenerateIndex ("NoIndexSS");
+	GenerateIndex ("NoIndexSkipScan");
 
-	GenerateQueryHint ("NoQueryTransformation");
-	GenerateQueryHint ("UseConcat");            GenerateQueryHint3("UseConcat");
-	GenerateQueryHint ("NoExpand");             GenerateQueryHint3("NoExpand");
-	GenerateQueryHint ("Rewrite");              GenerateQueryHint3("Rewrite");
-	GenerateQueryHint ("NoRewrite");            GenerateQueryHint3("NoRewrite");
-	GenerateQueryHint ("Merge");                GenerateQueryHint3("Merge");              GenerateTableHint("Merge");
-	GenerateQueryHint ("NoMerge");              GenerateQueryHint3("NoMerge");            GenerateTableHint("NoMerge");
-	GenerateQueryHint ("StarTransformation");   GenerateQueryHint3("StarTransformation");
-	GenerateQueryHint ("NoStarTransformation"); GenerateQueryHint3("NoStarTransformation");
-	GenerateTableHint ("Fact");
-	GenerateTableHint ("NoFact");
-	GenerateQueryHint ("Unnest");               GenerateQueryHint3("Unnest");
-	GenerateQueryHint ("NoUnnest");             GenerateQueryHint3("NoUnnest");
+	GenerateTable ("InMemory");
+	GenerateTable ("NoInMemory");
+	GenerateTable ("InMemoryPruning");
+	GenerateTable ("NoInMemoryPruning");
 
-	GenerateQueryHint4("Leading");
-	GenerateQueryHint ("Ordered");
+	GenerateQuery4("UseBand");                 GenerateQuery4("NoUseBand");
+	GenerateQuery4("UseCube");                 GenerateQuery4("NoUseCube");
+	GenerateQuery4("UseHash");                 GenerateQuery4("NoUseHash");
+	GenerateQuery4("UseMerge");                GenerateQuery4("NoUseMerge");
+	GenerateQuery4("UseNL");                   GenerateQuery4("UseNestedLoop");
+	GenerateQuery4("NoUseNL");                 GenerateQuery4("NoUseNestedLoop");
+	GenerateIndex ("UseNLWithIndex");
+	GenerateIndex ("UseNestedLoopWithIndex");
 
-	GenerateQueryHint4("UseNL");    GenerateQueryHint4("UseNestedLoop");
-	GenerateQueryHint4("NoUseNL");  GenerateQueryHint4("NoUseNestedLoop");
-	GenerateQueryHint4("UseMerge"); GenerateQueryHint4("NoUseMerge");
-	GenerateQueryHint4("UseHash");  GenerateQueryHint4("NoUseHash");
-	GenerateIndexHint ("UseNestedLoopWithIndex");
+	GenerateQuery ("EnableParallelDml");
+	GenerateQuery ("DisableParallelDml");
 
-	GenerateQueryHint ("Parallel");
-	GenerateTableHint ("NoParallel");
+	GenerateQuery ("PQConcurrentUnion");       GenerateQuery3("PQConcurrentUnion");
+	GenerateQuery ("NoPQConcurrentUnion");     GenerateQuery3("NoPQConcurrentUnion");
+	GenerateQuery ("PQFilterSerial");
+	GenerateQuery ("PQFilterNone");
+	GenerateQuery ("PQFilterHash");
+	GenerateQuery ("PQFilterRandom");
+	GenerateTable ("PQSkew");
+	GenerateTable ("NoPQSkew");
 
-	GenerateQueryHint ("Append");
-	GenerateQueryHint ("NoAppend");
-	GenerateTableHint ("Cache");
-	GenerateTableHint ("NoCache");
-	GenerateQueryHint ("PushPredicate");        GenerateQueryHint3("PushPredicate");      GenerateTableHint("PushPredicate");
-	GenerateQueryHint ("NoPushPredicate");      GenerateQueryHint3("NoPushPredicate");    GenerateTableHint("NoPushPredicate");
-	GenerateQueryHint3("PushSubQueries");
-	GenerateQueryHint3("NoPushSubQueries");
-	GenerateQueryHint ("CursorSharingExact");
-	GenerateTableHint ("DrivingSite");
-	GenerateQueryHint ("ModelMinAnalysis");
-	GenerateTableHint ("PxJoinFilter");
-	GenerateTableHint ("NoPxJoinFilter");
-	GenerateQueryHint ("NoXmlQueryRewrite");
-	GenerateQueryHint ("NoXmlIndexRewrite");
+	GenerateQuery ("NoQueryTransformation");
+	GenerateQuery ("UseConcat");               GenerateQuery3("UseConcat");
+	GenerateQuery ("NoExpand");                GenerateQuery3("NoExpand");
+	GenerateQuery ("Rewrite");                 GenerateQuery3("Rewrite");
+	GenerateQuery ("NoRewrite");               GenerateQuery3("NoRewrite");
+	GenerateQuery ("Merge");                   GenerateQuery3("Merge");              GenerateTable("Merge");
+	GenerateQuery ("NoMerge");                 GenerateQuery3("NoMerge");            GenerateTable("NoMerge");
+	GenerateQuery ("StarTransformation");      GenerateQuery3("StarTransformation");
+	GenerateQuery ("NoStarTransformation");    GenerateQuery3("NoStarTransformation");
+	GenerateTable ("Fact");
+	GenerateTable ("NoFact");
+	GenerateQuery ("Unnest");                  GenerateQuery3("Unnest");
+	GenerateQuery ("NoUnnest");                GenerateQuery3("NoUnnest");
+
+	GenerateQuery4("Leading");
+	GenerateQuery ("Ordered");
+
+	GenerateQuery ("Parallel");
+	GenerateTable ("NoParallel");
+
+	GenerateQuery ("Append");
+	GenerateQuery ("AppendValues");
+	GenerateQuery ("NoAppend");
+	GenerateTable ("Cache");
+	GenerateTable ("NoCache");
+	GenerateQuery ("PushPredicate");           GenerateQuery3("PushPredicate");    GenerateTable("PushPredicate");
+	GenerateQuery ("NoPushPredicate");         GenerateQuery3("NoPushPredicate");  GenerateTable("NoPushPredicate");
+	GenerateQuery3("PushSubQueries");
+	GenerateQuery3("NoPushSubQueries");
+	GenerateQuery ("CursorSharingExact");
+	GenerateTable ("DrivingSite");
+	GenerateQuery ("ModelMinAnalysis");
+	GenerateTable ("PxJoinFilter");
+	GenerateTable ("NoPxJoinFilter");
+	GenerateQuery ("NoXmlQueryRewrite");
+	GenerateQuery ("NoXmlIndexRewrite");
+	GenerateQuery ("FreshMaterializedView");
+	GenerateQuery ("FreshMV");
+	GenerateQuery ("Grouping");
+	GenerateQuery ("Monitor");                 GenerateQuery ("NoMonitor");
 #>
 	}
 }
 <#+
-void GenerateTableHint(string hint)
+void GenerateTable(string hint)
 {
 #>
 		[ExpressionMethod(ProviderName.Oracle, nameof(<#= hint #>TableHintImpl))]
 		public static IOracleSpecificTable<TSource> <#= hint #>Hint<TSource>(this IOracleSpecificTable<TSource> table)
 			where TSource : notnull
 		{
-			return OracleHints.TableHint(table, Table.<#= hint #>);
+			return OracleHints.TableHint(table, Hint.<#= hint #>);
 		}
 		static Expression<Func<IOracleSpecificTable<TSource>,IOracleSpecificTable<TSource>>> <#= hint #>TableHintImpl<TSource>()
 			where TSource : notnull
 		{
-			return table => OracleHints.TableHint(table, Table.<#= hint #>);
+			return table => OracleHints.TableHint(table, Hint.<#= hint #>);
 		}
 
 		[ExpressionMethod(ProviderName.Oracle, nameof(<#= hint #>InScopeHintImpl))]
 		public static IOracleSpecificQueryable<TSource> <#= hint #>InScopeHint<TSource>(this IOracleSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
-			return OracleHints.TablesInScopeHint(query, Table.<#= hint #>);
+			return OracleHints.TablesInScopeHint(query, Hint.<#= hint #>);
 		}
 		static Expression<Func<IOracleSpecificQueryable<TSource>,IOracleSpecificQueryable<TSource>>> <#= hint #>InScopeHintImpl<TSource>()
 			where TSource : notnull
 		{
-			return query => OracleHints.TablesInScopeHint(query, Table.<#= hint #>);
+			return query => OracleHints.TablesInScopeHint(query, Hint.<#= hint #>);
 		}
 
 <#+
 }
 
-void GenerateIndexHint(string hint)
+void GenerateIndex(string hint)
 {
 #>
 		[ExpressionMethod(ProviderName.Oracle, nameof(<#= hint #>IndexHintImpl))]
 		public static IOracleSpecificTable<TSource> <#= hint #>Hint<TSource>(this IOracleSpecificTable<TSource> table, params string[] indexNames)
 			where TSource : notnull
 		{
-			return OracleHints.TableHint(table, Table.<#= hint #>, indexNames);
+			return OracleHints.TableHint(table, Hint.<#= hint #>, indexNames);
 		}
 		static Expression<Func<IOracleSpecificTable<TSource>,string[],IOracleSpecificTable<TSource>>> <#= hint #>IndexHintImpl<TSource>()
 			where TSource : notnull
 		{
-			return (table, indexNames) => OracleHints.TableHint(table, Table.<#= hint #>, indexNames);
+			return (table, indexNames) => OracleHints.TableHint(table, Hint.<#= hint #>, indexNames);
 		}
 
 <#+
 }
 
-void GenerateQueryHint(string hint)
+void GenerateQuery(string hint)
 {
 #>
 		[ExpressionMethod(nameof(<#= hint #>HintImpl))]
 		public static IOracleSpecificQueryable<TSource> <#= hint #>Hint<TSource>(this IOracleSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
-			return OracleHints.QueryHint(query, Query.<#= hint #>);
+			return OracleHints.QueryHint(query, Hint.<#= hint #>);
 		}
 		static Expression<Func<IOracleSpecificQueryable<TSource>,IOracleSpecificQueryable<TSource>>> <#= hint #>HintImpl<TSource>()
 			where TSource : notnull
 		{
-			return query => OracleHints.QueryHint(query, Query.<#= hint #>);
+			return query => OracleHints.QueryHint(query, Hint.<#= hint #>);
 		}
 
 <#+
 }
 
-void GenerateQueryHint2(string hint)
+void GenerateQuery2(string hint)
 {
 #>
 		[ExpressionMethod(nameof(<#= hint #>HintImpl2))]
 		public static IOracleSpecificQueryable<TSource> <#= hint #>Hint<TSource>(this IOracleSpecificQueryable<TSource> query, int value)
 			where TSource : notnull
 		{
-			return OracleHints.QueryHint(query, Query.<#= hint #>(value));
+			return OracleHints.QueryHint(query, Hint.<#= hint #>(value));
 		}
 		static Expression<Func<IOracleSpecificQueryable<TSource>,int,IOracleSpecificQueryable<TSource>>> <#= hint #>HintImpl2<TSource>()
 			where TSource : notnull
 		{
-			return (query, value) => OracleHints.QueryHint(query, Query.<#= hint #>(value));
+			return (query, value) => OracleHints.QueryHint(query, Hint.<#= hint #>(value));
 		}
 
 <#+
 }
 
-void GenerateQueryHint3(string hint)
+void GenerateQuery3(string hint)
 {
 #>
 		[ExpressionMethod(nameof(<#= hint #>HintImpl3))]
 		public static IOracleSpecificQueryable<TSource> <#= hint #>Hint<TSource>(this IOracleSpecificQueryable<TSource> query, string queryBlock)
 			where TSource : notnull
 		{
-			return OracleHints.QueryHint(query, Query.<#= hint #>, queryBlock);
+			return OracleHints.QueryHint(query, Hint.<#= hint #>, queryBlock);
 		}
 		static Expression<Func<IOracleSpecificQueryable<TSource>,string,IOracleSpecificQueryable<TSource>>> <#= hint #>HintImpl3<TSource>()
 			where TSource : notnull
 		{
-			return (query, queryBlock) => OracleHints.QueryHint(query, Query.<#= hint #>, queryBlock);
+			return (query, queryBlock) => OracleHints.QueryHint(query, Hint.<#= hint #>, queryBlock);
 		}
 
 <#+
 }
 
-void GenerateQueryHint4(string hint)
+void GenerateQuery4(string hint)
 {
 #>
 		[ExpressionMethod(nameof(<#= hint #>HintImpl4))]
 		public static IOracleSpecificQueryable<TSource> <#= hint #>Hint<TSource>(this IOracleSpecificQueryable<TSource> query, params Sql.SqlID[] tableIDs)
 			where TSource : notnull
 		{
-			return OracleHints.QueryHint(query, Query.<#= hint #>, tableIDs);
+			return OracleHints.QueryHint(query, Hint.<#= hint #>, tableIDs);
 		}
 		static Expression<Func<IOracleSpecificQueryable<TSource>,Sql.SqlID[],IOracleSpecificQueryable<TSource>>> <#= hint #>HintImpl4<TSource>()
 			where TSource : notnull
 		{
-			return (query, tableIDs) => OracleHints.QueryHint(query, Query.<#= hint #>, tableIDs);
+			return (query, tableIDs) => OracleHints.QueryHint(query, Hint.<#= hint #>, tableIDs);
 		}
 
 <#+

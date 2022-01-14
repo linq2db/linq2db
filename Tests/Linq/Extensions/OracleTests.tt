@@ -20,77 +20,105 @@ namespace Tests.Extensions
 	partial class OracleTests
 	{
 <#
-	GenerateTableTest ("Full");
-	GenerateTableTest ("Cluster");
-	GenerateTableTest ("Hash");
+	GenerateQuery ("AllRows");
+	GenerateQuery2("FirstRows");
 
-	GenerateIndexTest ("Index");
-	GenerateIndexTest ("IndexAsc");
-	GenerateIndexTest ("IndexCombine");
-	GenerateIndexTest ("IndexJoin");
-	GenerateIndexTest ("IndexDesc");
-	GenerateIndexTest ("IndexFFS");
-	GenerateIndexTest ("IndexFastFullScan");
-	GenerateIndexTest ("IndexSS");
-	GenerateIndexTest ("IndexSkipScan");
-	GenerateIndexTest ("IndexSSAsc");
-	GenerateIndexTest ("IndexSkipScanAsc");
-	GenerateIndexTest ("IndexSSDesc");
-	GenerateIndexTest ("IndexSkipScanDesc");
-	GenerateIndexTest ("NoIndex");
-	GenerateIndexTest ("NoIndexFFS");
-	GenerateIndexTest ("NoIndexFastFullScan");
-	GenerateIndexTest ("NoIndexSS");
-	GenerateIndexTest ("NoIndexSkipScan");
+	GenerateTable ("Cluster");
+	GenerateQuery ("Clustering");
+	GenerateQuery ("NoClustering");
+	GenerateTable ("Full");
+	GenerateTable ("Hash");
 
-	GenerateQueryTest ("AllRows");
-	GenerateQueryTest2("FirstRows");
+	GenerateIndex ("Index");
+	GenerateIndex ("IndexAsc");
+	GenerateIndex ("IndexCombine");
+	GenerateIndex ("IndexJoin");
+	GenerateIndex ("IndexDesc");
+	GenerateIndex ("IndexFFS");
+	GenerateIndex ("IndexFastFullScan");
+	GenerateIndex ("IndexSS");
+	GenerateIndex ("IndexSkipScan");
+	GenerateIndex ("IndexSSAsc");
+	GenerateIndex ("IndexSkipScanAsc");
+	GenerateIndex ("IndexSSDesc");
+	GenerateIndex ("IndexSkipScanDesc");
+	GenerateQuery ("NativeFullOuterJoin");     GenerateQuery("NoNativeFullOuterJoin");
+	GenerateIndex ("NoIndex");
+	GenerateIndex ("NoIndexFFS");
+	GenerateIndex ("NoIndexFastFullScan");
+	GenerateIndex ("NoIndexSS");
+	GenerateIndex ("NoIndexSkipScan");
 
-	GenerateQueryTest ("NoQueryTransformation");
-	GenerateQueryTest ("UseConcat");            GenerateQueryTest3("UseConcat");
-	GenerateQueryTest ("NoExpand");             GenerateQueryTest3("NoExpand");
-	GenerateQueryTest ("Rewrite");              GenerateQueryTest3("Rewrite");
-	GenerateQueryTest ("NoRewrite");            GenerateQueryTest3("NoRewrite");
-	GenerateQueryTest ("Merge");                GenerateQueryTest3("Merge");   GenerateTableTest("Merge");
-	GenerateQueryTest ("NoMerge");              GenerateQueryTest3("NoMerge"); GenerateTableTest("NoMerge");
-	GenerateQueryTest ("StarTransformation");   GenerateQueryTest3("StarTransformation");
-	GenerateQueryTest ("NoStarTransformation"); GenerateQueryTest3("NoStarTransformation");
-	GenerateTableTest ("Fact");
-	GenerateTableTest ("NoFact");
-	GenerateQueryTest ("Unnest");               GenerateQueryTest3("Unnest");
-	GenerateQueryTest ("NoUnnest");             GenerateQueryTest3("NoUnnest");
+	GenerateTable ("InMemory");
+	GenerateTable ("NoInMemory");
+	GenerateTable ("InMemoryPruning");
+	GenerateTable ("NoInMemoryPruning");
 
-	GenerateQueryTest4("Leading");
-	GenerateQueryTest ("Ordered");
+	GenerateQuery4("UseBand");                 GenerateQuery4("NoUseBand");
+	GenerateQuery4("UseCube");                 GenerateQuery4("NoUseCube");
+	GenerateQuery4("UseHash");                 GenerateQuery4("NoUseHash");
+	GenerateQuery4("UseMerge");                GenerateQuery4("NoUseMerge");
+	GenerateQuery4("UseNL");                   GenerateQuery4("UseNestedLoop");
+	GenerateQuery4("NoUseNL");                 GenerateQuery4("NoUseNestedLoop");
+	GenerateIndex ("UseNLWithIndex");
+	GenerateIndex ("UseNestedLoopWithIndex");
 
-	GenerateQueryTest4("UseNL");    GenerateQueryTest4("UseNestedLoop");
-	GenerateQueryTest4("NoUseNL");  GenerateQueryTest4("NoUseNestedLoop");
-	GenerateQueryTest4("UseMerge"); GenerateQueryTest4("NoUseMerge");
-	GenerateQueryTest4("UseHash");  GenerateQueryTest4("NoUseHash");
-	GenerateIndexTest ("UseNestedLoopWithIndex");
+	GenerateQuery ("EnableParallelDml");
+	GenerateQuery ("DisableParallelDml");
 
-	GenerateQueryTest ("Parallel");
-	GenerateTableTest ("NoParallel");
+	GenerateQuery ("PQConcurrentUnion");       GenerateQuery3("PQConcurrentUnion");
+	GenerateQuery ("NoPQConcurrentUnion");     GenerateQuery3("NoPQConcurrentUnion");
+	GenerateQuery ("PQFilterSerial");
+	GenerateQuery ("PQFilterNone");
+	GenerateQuery ("PQFilterHash");
+	GenerateQuery ("PQFilterRandom");
+	GenerateTable ("PQSkew");
+	GenerateTable ("NoPQSkew");
 
-	GenerateQueryTest ("Append");
-	GenerateQueryTest ("NoAppend");
-	GenerateTableTest ("Cache");
-	GenerateTableTest ("NoCache");
-	GenerateQueryTest ("PushPredicate");        GenerateQueryTest3("PushPredicate");      GenerateTableTest("PushPredicate");
-	GenerateQueryTest3("PushSubQueries");
-	GenerateQueryTest3("NoPushSubQueries");
-	GenerateQueryTest ("CursorSharingExact");
-	GenerateTableTest ("DrivingSite");
-	GenerateQueryTest ("ModelMinAnalysis");
-	GenerateTableTest ("PxJoinFilter");
-	GenerateTableTest ("NoPxJoinFilter");
-	GenerateQueryTest ("NoXmlQueryRewrite");
-	GenerateQueryTest ("NoXmlIndexRewrite");
+	GenerateQuery ("NoQueryTransformation");
+	GenerateQuery ("UseConcat");               GenerateQuery3("UseConcat");
+	GenerateQuery ("NoExpand");                GenerateQuery3("NoExpand");
+	GenerateQuery ("Rewrite");                 GenerateQuery3("Rewrite");
+	GenerateQuery ("NoRewrite");               GenerateQuery3("NoRewrite");
+	GenerateQuery ("Merge");                   GenerateQuery3("Merge");                 GenerateTable("Merge");
+	GenerateQuery ("NoMerge");                 GenerateQuery3("NoMerge");               GenerateTable("NoMerge");
+	GenerateQuery ("StarTransformation");      GenerateQuery3("StarTransformation");
+	GenerateQuery ("NoStarTransformation");    GenerateQuery3("NoStarTransformation");
+	GenerateTable ("Fact");
+	GenerateTable ("NoFact");
+	GenerateQuery ("Unnest");                  GenerateQuery3("Unnest");
+	GenerateQuery ("NoUnnest");                GenerateQuery3("NoUnnest");
+
+	GenerateQuery4("Leading");
+	GenerateQuery ("Ordered");
+
+	GenerateQuery ("Parallel");
+	GenerateTable ("NoParallel");
+
+	GenerateQuery ("Append");
+	GenerateQuery ("AppendValues");
+	GenerateQuery ("NoAppend");
+	GenerateTable ("Cache");
+	GenerateTable ("NoCache");
+	GenerateQuery ("PushPredicate");           GenerateQuery3("PushPredicate");      GenerateTable("PushPredicate");
+	GenerateQuery3("PushSubQueries");
+	GenerateQuery3("NoPushSubQueries");
+	GenerateQuery ("CursorSharingExact");
+	GenerateTable ("DrivingSite");
+	GenerateQuery ("ModelMinAnalysis");
+	GenerateTable ("PxJoinFilter");
+	GenerateTable ("NoPxJoinFilter");
+	GenerateQuery ("NoXmlQueryRewrite");
+	GenerateQuery ("NoXmlIndexRewrite");
+	GenerateQuery ("FreshMaterializedView");
+	GenerateQuery ("FreshMV");
+	GenerateQuery ("Grouping");
+	GenerateQuery ("Monitor");                 GenerateQuery ("NoMonitor");
 #>
 	}
 }
 <#+
-void GenerateTableTest(string test, string version = "")
+void GenerateTable(string test, string version = "")
 {
 #>
 		[Test]
@@ -106,7 +134,7 @@ void GenerateTableTest(string test, string version = "")
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.<#= test #>}(p) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.<#= test #>}(p) */"));
 		}
 
 		[Test]
@@ -125,13 +153,13 @@ void GenerateTableTest(string test, string version = "")
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.<#= test #>}(p) {OracleHints.Table.<#= test #>}(c_1) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.<#= test #>}(p) {OracleHints.Hint.<#= test #>}(c_1) */"));
 		}
 
 <#+
 }
 
-void GenerateIndexTest(string test, string version = "")
+void GenerateIndex(string test, string version = "")
 {
 #>
 		[Test]
@@ -147,13 +175,13 @@ void GenerateIndexTest(string test, string version = "")
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Table.<#= test #>}(p parent_ix parent2_ix) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.<#= test #>}(p parent_ix parent2_ix) */"));
 		}
 
 <#+
 }
 
-void GenerateQueryTest(string test, string version = "")
+void GenerateQuery(string test, string version = "")
 {
 #>
 		[Test]
@@ -172,13 +200,13 @@ void GenerateQueryTest(string test, string version = "")
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.<#= test #>} */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.<#= test #>} */"));
 		}
 
 <#+
 }
 
-void GenerateQueryTest2(string test, string version = "")
+void GenerateQuery2(string test, string version = "")
 {
 #>
 		[Test]
@@ -197,13 +225,13 @@ void GenerateQueryTest2(string test, string version = "")
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.<#= test #>(10)} */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.<#= test #>(10)} */"));
 		}
 
 <#+
 }
 
-void GenerateQueryTest3(string test, string version = "")
+void GenerateQuery3(string test, string version = "")
 {
 #>
 		[Test]
@@ -223,13 +251,13 @@ void GenerateQueryTest3(string test, string version = "")
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Query.<#= test #>}(@qb) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ QB_NAME(qb) {OracleHints.Hint.<#= test #>}(@qb) */"));
 		}
 
 <#+
 }
 
-void GenerateQueryTest4(string test, string version = "")
+void GenerateQuery4(string test, string version = "")
 {
 #>
 		[Test]
@@ -248,7 +276,7 @@ void GenerateQueryTest4(string test, string version = "")
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Query.<#= test #>}(c_1 p) */"));
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {OracleHints.Hint.<#= test #>}(c_1 p) */"));
 		}
 
 <#+
