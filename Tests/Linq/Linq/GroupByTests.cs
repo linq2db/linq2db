@@ -2052,7 +2052,6 @@ namespace Tests.Linq
 			[Column] public DateTime TimeStamp;
 		}
 
-		[ActiveIssue(680)]
 		[Test]
 		public void Issue680Test([DataSources(false)] string context)
 		{

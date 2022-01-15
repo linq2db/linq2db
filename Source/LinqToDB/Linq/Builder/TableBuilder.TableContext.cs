@@ -253,7 +253,13 @@ namespace LinqToDB.Linq.Builder
 
 			public IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				return null;
+				if (!buildInfo.CreateSubQuery)
+					return this;
+
+				var expr = Builder.GetSequenceExpression(this);
+				var context = Builder.BuildSequence(new BuildInfo(buildInfo, expr));
+
+				return context;
 			}
 
 			public virtual SqlStatement GetResultStatement()

@@ -1069,7 +1069,11 @@ namespace LinqToDB.SqlQuery
 
 			var isQueryOK = !query.DoNotRemove && query.From.Tables.Count == 1;
 
-			isQueryOK = isQueryOK && (concatWhere || query.Where.IsEmpty && query.Having.IsEmpty);
+			if (parentJoinedTable != null)
+				isQueryOK = isQueryOK && query.Having.IsEmpty;
+			else
+				isQueryOK = isQueryOK && (concatWhere || query.Where.IsEmpty && query.Having.IsEmpty);
+
 			isQueryOK = isQueryOK && !query.HasSetOperators && query.GroupBy.IsEmpty && !query.Select.HasModifier;
 			//isQueryOK = isQueryOK && (_flags.IsDistinctOrderBySupported || query.Select.IsDistinct );
 
@@ -1227,7 +1231,18 @@ namespace LinqToDB.SqlQuery
 			if (query.From.Tables[0].Alias == null)
 				query.From.Tables[0].Alias = childSource.Alias;
 
-			if (!query.Where. IsEmpty) ConcatSearchCondition(_selectQuery.Where,  query.Where);
+			if (!query.Where.IsEmpty)
+			{
+				if (parentJoinedTable != null)
+				{
+					parentJoinedTable.Condition.EnsureConjunction().Conditions.AddRange(query.Where.SearchCondition.Conditions);
+				}
+				else
+				{
+					ConcatSearchCondition(_selectQuery.Where, query.Where);
+				}
+			};
+
 			if (!query.Having.IsEmpty) ConcatSearchCondition(_selectQuery.Having, query.Having);
 
 			((ISqlExpressionWalkable)top).Walk(WalkOptions.Default, (query, selectQuery: _selectQuery), static (ctx, expr) =>
@@ -1279,7 +1294,7 @@ namespace LinqToDB.SqlQuery
 					return;
 
 				if (sql.Select.HasModifier)
-					throw new NotImplementedException();
+					throw new NotImplementedException("Translating to ROW_NUMBER query is not implemented yet.");
 
 				var whereToIgnore = new HashSet<IQueryElement> { sql.Where };
 

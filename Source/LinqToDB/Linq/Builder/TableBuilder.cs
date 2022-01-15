@@ -86,13 +86,6 @@ namespace LinqToDB.Linq.Builder
 						if (attr != null)
 							return BuildContextType.TableFunctionAttribute;
 
-						if (mc.IsAssociation(builder.MappingSchema))
-						{
-							parentContext = builder.GetContext(buildInfo.Parent, expression);
-							if (parentContext != null)
-								return BuildContextType.Association;
-						}
-
 						break;
 					}
 
@@ -101,40 +94,7 @@ namespace LinqToDB.Linq.Builder
 					if (typeof(ITable<>).IsSameOrParentOf(expression.Type))
 						return BuildContextType.MemberAccess;
 
-					/*// Looking for association.
-					//
-					if (buildInfo.IsSubQuery/* && buildInfo.SelectQuery.From.Tables.Count == 0#1#)
-					{
-						parentContext = buildInfo.Parent;
-						if (expression.GetLevel(builder.MappingSchema) == 1)
-							parentContext = builder.GetContext(parentContext, expression);
-						//builder.GetContext(buildInfo.Parent, expression);
-						if (parentContext != null)
-							parentContext = parentContext.GetContext(expression, 0, new BuildInfo(buildInfo, expression, new SelectQuery()));
-						if (parentContext != null)
-							return BuildContextType.Association;
-					}*/
-
 					break;
-
-				case ExpressionType.Parameter:
-					{
-						if (buildInfo.IsSubQuery && buildInfo.SelectQuery.From.Tables.Count == 0)
-						{
-							// It should be handled by GroupByElementBuilder 
-							//
-							if (typeof(IGrouping<,>).IsSameOrParentOf(expression.Type))
-								break;
-							
-							parentContext = builder.GetContext(buildInfo.Parent, expression);
-							if (parentContext != null)
-							{
-								return BuildContextType.Association;
-							}
-						}
-
-						break;
-					}
 			}
 
 			return BuildContextType.None;

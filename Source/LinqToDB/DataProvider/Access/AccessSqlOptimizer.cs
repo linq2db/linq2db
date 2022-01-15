@@ -59,11 +59,6 @@ namespace LinqToDB.DataProvider.Access
 			return statement;
 		}
 
-		public override bool ConvertCountSubQuery(SelectQuery subQuery)
-		{
-			return !subQuery.Where.IsEmpty;
-		}
-
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext> visitor)
 		{
 			var like = ConvertSearchStringPredicateViaLike(predicate, visitor);

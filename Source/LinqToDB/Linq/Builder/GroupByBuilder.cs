@@ -353,7 +353,7 @@ namespace LinqToDB.Linq.Builder
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if (SequenceHelper.IsSameContext(path, this) &&
-				    (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.Test)))
+				    (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AggregtionRoot) || flags.HasFlag(ProjectFlags.Test)))
 				{
 					return path;
 				}
@@ -833,7 +833,11 @@ namespace LinqToDB.Linq.Builder
 					ExpressionHelper.PropertyOrField(buildExpression, "Key"),
 					_key.Lambda.Body);
 
-				expr = TypeHelper.MakeMethodCall(Methods.Enumerable.Select, expr, Element.Lambda);
+				// do repeat simple projection
+				if (Element.Lambda.Body != Element.Lambda.Parameters[0])
+				{
+					expr = TypeHelper.MakeMethodCall(Methods.Enumerable.Select, expr, Element.Lambda);
+				}
 
 				return expr;
 			}
@@ -846,7 +850,7 @@ namespace LinqToDB.Linq.Builder
 				if (!buildInfo.IsSubQuery)
 					return this;
 
-				if (buildInfo.IsAggregation)
+				if (buildInfo.IsAggregation && !buildInfo.CreateSubQuery)
 				{
 					return this;
 				}

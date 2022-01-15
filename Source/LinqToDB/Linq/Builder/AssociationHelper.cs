@@ -86,7 +86,7 @@ namespace LinqToDB.Linq.Builder
 			if (definedQueryMethod == null)
 			{
 				var parentParam = Expression.Parameter(parentType, "parent");
-				var childParam  = Expression.Parameter(objectType, association.AliasName);
+				var childParam  = Expression.Parameter(objectType, association.GenerateAlias());
 
 				var parentAccessor = TypeAccessor.GetAccessor(parentType);
 				var childAccessor  = TypeAccessor.GetAccessor(objectType);
