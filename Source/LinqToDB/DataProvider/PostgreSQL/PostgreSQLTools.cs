@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Data;
 
 	[PublicAPI]
-	public static class PostgreSQLTools
+	public static partial class PostgreSQLTools
 	{
 		static readonly Lazy<IDataProvider> _postgreSQLDataProvider92 = DataConnection.CreateDataProvider<PostgreSQLDataProvider92>();
 		static readonly Lazy<IDataProvider> _postgreSQLDataProvider93 = DataConnection.CreateDataProvider<PostgreSQLDataProvider93>();

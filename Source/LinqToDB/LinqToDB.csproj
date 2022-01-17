@@ -38,6 +38,16 @@
 			<AutoGen>True</AutoGen>
 		</Compile>
 
+		<None Update="DataProvider\PostgreSQL\PostgreSQLHints.tt">
+			<LastGenOutput>PostgreSQLHints.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<Compile Update="DataProvider\PostgreSQL\PostgreSQLHints.generated.cs">
+			<DependentUpon>PostgreSQLHints.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+		</Compile>
+
 		<None Update="DataProvider\Oracle\OracleHints.tt">
 			<LastGenOutput>OracleHints.generated.cs</LastGenOutput>
 			<Generator>TextTemplatingFileGenerator</Generator>

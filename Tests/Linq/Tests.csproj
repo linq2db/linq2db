@@ -29,6 +29,16 @@
 			<AutoGen>True</AutoGen>
 		</Compile>
 
+		<None Update="Extensions\PostgreSQLTests.tt">
+			<LastGenOutput>PostgreSQLTests.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<Compile Update="Extensions\PostgreSQLTests.generated.cs">
+			<DependentUpon>PostgreSQLTests.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+		</Compile>
+
 		<None Update="Extensions\OracleTests.tt">
 			<LastGenOutput>OracleTests.generated.cs</LastGenOutput>
 			<Generator>TextTemplatingFileGenerator</Generator>

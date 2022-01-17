@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace Tests.Extensions
 {
 	[TestFixture]
-	public class PostgreSQLTests : TestBase
+	public partial class PostgreSQLTests : TestBase
 	{
 		[Test]
 		public void HintTest([IncludeDataSources(true, TestProvName.AllPostgreSQL95Plus)] string context,
@@ -139,6 +139,7 @@ namespace Tests.Extensions
 
 			var q =
 				from p in db.Person.TableID("Pr")
+					.AsPostgreSQL()
 					.SubQueryTableHint(PostgreSQLHints.ForUpdate, Sql.TableAlias("Pr"))
 				where p.ID > 0
 				select p;
@@ -159,6 +160,7 @@ namespace Tests.Extensions
 				join c in db.Child.TableID("Ch") on p.ParentID equals c.ParentID
 				select p
 			)
+			.AsPostgreSQL()
 			.SubQueryTableHint(PostgreSQLHints.ForUpdate, PostgreSQLHints.SkipLocked, Sql.TableAlias("Pr"), Sql.TableAlias("Ch"));
 
 			_ = q.ToList();

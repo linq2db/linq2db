@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 	// https://www.postgresql.org/docs/current/sql-select.html
 	//
-	public static class PostgreSQLHints
+	public static partial class PostgreSQLHints
 	{
 		public const string ForUpdate      = "FOR UPDATE";
 		public const string ForNoKeyUpdate = "FOR NO KEY UPDATE";
@@ -69,21 +69,21 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		/// <returns>Query source with join hints.</returns>
 		[LinqTunnel, Pure]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
-		public static IQueryable<TSource> SubQueryTableHint<TSource>(
-			this IQueryable<TSource> source,
+		public static IPostgreSQLSpecificQueryable<TSource> SubQueryTableHint<TSource>(
+			this IPostgreSQLSpecificQueryable<TSource> source,
 			[SqlQueryDependent] string hint,
 			[SqlQueryDependent] params Sql.SqlID[] tableIDs)
 			where TSource : notnull
 		{
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
-			return currentSource.Provider.CreateQuery<TSource>(
+			return new PostgreSQLSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(SubQueryTableHint, source, hint, tableIDs),
 					currentSource.Expression,
 					Expression.Constant(hint),
-					Expression.NewArrayInit(typeof(Sql.SqlID), tableIDs.Select(p => Expression.Constant(p)))));
+					Expression.NewArrayInit(typeof(Sql.SqlID), tableIDs.Select(p => Expression.Constant(p))))));
 		}
 
 		/// <summary>
@@ -101,8 +101,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		/// <returns>Query source with join hints.</returns>
 		[LinqTunnel, Pure]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
-		public static IQueryable<TSource> SubQueryTableHint<TSource>(
-			this IQueryable<TSource> source,
+		public static IPostgreSQLSpecificQueryable<TSource> SubQueryTableHint<TSource>(
+			this IPostgreSQLSpecificQueryable<TSource> source,
 			[SqlQueryDependent] string hint,
 			[SqlQueryDependent] string hint2,
 			[SqlQueryDependent] params Sql.SqlID[] tableIDs)
@@ -110,14 +110,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
 
-			return currentSource.Provider.CreateQuery<TSource>(
+			return new PostgreSQLSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(SubQueryTableHint, source, hint, hint2, tableIDs),
 					currentSource.Expression,
 					Expression.Constant(hint),
 					Expression.Constant(hint2),
-					Expression.NewArrayInit(typeof(Sql.SqlID), tableIDs.Select(p => Expression.Constant(p)))));
+					Expression.NewArrayInit(typeof(Sql.SqlID), tableIDs.Select(p => Expression.Constant(p))))));
 		}
 	}
 }
