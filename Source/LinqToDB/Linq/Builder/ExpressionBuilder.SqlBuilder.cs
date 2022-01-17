@@ -149,7 +149,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region SubQueryToSql
 
-		public IBuildContext GetSubQuery(IBuildContext context, MethodCallExpression expr)
+		public IBuildContext GetSubQuery(IBuildContext context, Expression expr)
 		{
 			var info = new BuildInfo(context, expr, new SelectQuery {ParentSelect = context.SelectQuery})
 			{
@@ -900,10 +900,10 @@ namespace LinqToDB.Linq.Builder
 			string? alias = null)
 		{
 			// remove keys flag. We can cache SQL
-			flags &= ~ProjectFlags.Keys;
+			var cacheFlags = flags & ~ProjectFlags.Keys;
 
-			var cacheKey        = new SqlCacheKey(expression, null, columnDescriptor, null, flags);
-			var preciseCacheKey = new SqlCacheKey(expression, null, columnDescriptor, context.SelectQuery, flags);
+			var cacheKey        = new SqlCacheKey(expression, null, columnDescriptor, null, cacheFlags);
+			var preciseCacheKey = new SqlCacheKey(expression, null, columnDescriptor, context.SelectQuery, cacheFlags);
 
 			if (_preciseCachedSql.TryGetValue(preciseCacheKey, out var sqlExpr))
 			{
@@ -3862,15 +3862,19 @@ namespace LinqToDB.Linq.Builder
 		/// <returns></returns>
 		public Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			path = ExposeExpression(path); 
+			path = ExposeExpression(path);
 
-			// try to find already converted to SQL
-			var sqlKey = new SqlCacheKey(path, null, null, null, ProjectFlags.SQL);
-			if (_cachedSql.TryGetValue(sqlKey, out var cachedSql))
+			if (!(flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AggregtionRoot) ||
+			      flags.HasFlag(ProjectFlags.AssociationRoot)))
 			{
-				return cachedSql;
+				// try to find already converted to SQL
+				var sqlKey = new SqlCacheKey(path, null, null, null, ProjectFlags.SQL);
+				if (_cachedSql.TryGetValue(sqlKey, out var cachedSql))
+				{
+					return cachedSql;
+				}
 			}
-			
+
 			var key = new SqlCacheKey(path, null, null, null, flags);
 
 			if (_expressionCache.TryGetValue(key, out var expression))

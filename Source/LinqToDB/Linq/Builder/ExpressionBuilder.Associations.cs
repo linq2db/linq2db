@@ -114,6 +114,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		Dictionary<SqlCacheKey, Expression>? _associations;
+		HashSet<Expression>?                 _isOuterAssociations;
 
 		public Expression TryCreateAssociation(Expression expression, ContextRefExpression rootContext, ProjectFlags flags)
 		{
@@ -134,7 +135,18 @@ namespace LinqToDB.Linq.Builder
 
 			var loadWith = GetLoadWith(rootContext.BuildContext);
 
-			var isOuter = associationDescriptor.CanBeNull;
+			bool isOuter = false;
+
+			if (associationDescriptor.IsList)
+			{
+				if (_isOuterAssociations?.Contains(rootContext) == true)
+					isOuter = true;
+			}
+			else
+			{
+				isOuter = associationDescriptor.CanBeNull || _isOuterAssociations?.Contains(rootContext) == true;
+			}
+
 			var association = AssociationHelper.BuildAssociationQuery(this, rootContext, memberInfo, associationDescriptor, !associationDescriptor.IsList, loadWith, ref isOuter);
 
 			associationExpression = association;
@@ -149,6 +161,13 @@ namespace LinqToDB.Linq.Builder
 				sequence.SetAlias(associationDescriptor.GenerateAlias());
 
 				associationExpression = new ContextRefExpression(association.Type, sequence);
+
+				if (isOuter)
+				{
+					var root = MakeExpression(associationExpression, ProjectFlags.AssociationRoot);
+					_isOuterAssociations ??= new HashSet<Expression>(ExpressionEqualityComparer.Instance);
+					_isOuterAssociations.Add(root);
+				}
 			}
 
 			_associations[key] = associationExpression;

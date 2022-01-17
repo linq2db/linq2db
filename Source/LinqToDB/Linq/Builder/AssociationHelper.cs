@@ -119,8 +119,8 @@ namespace LinqToDB.Linq.Builder
 
 				if (expressionPredicate != null)
 				{
-					shouldAddDefaultIfEmpty = true;
-					shouldAddCacheCheck = true;
+					shouldAddDefaultIfEmpty = shouldAddDefaultIfEmpty || inline;
+					shouldAddCacheCheck     = true;
 
 					var replacedBody = expressionPredicate.GetBody(parentParam, childParam);
 
@@ -270,7 +270,22 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				isLeft = false;
+				if (shouldAddDefaultIfEmpty)
+				{
+					var body = definedQueryMethod.Body.Unwrap();
+
+					body = Expression.Call(
+						(typeof(IQueryable<>).IsSameOrParentOf(body.Type)
+							? Methods.Queryable.DefaultIfEmpty
+							: Methods.Enumerable.DefaultIfEmpty).MakeGenericMethod(objectType), body);
+
+					definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters);
+					isLeft             = true;
+				}
+				else
+				{
+					isLeft = false;
+				}
 			}
 
 			definedQueryMethod = (LambdaExpression)builder.ConvertExpressionTree(definedQueryMethod);

@@ -101,6 +101,17 @@ namespace LinqToDB.Linq.Builder
 
 			public Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
+				if (flags.HasFlag(ProjectFlags.Root) && SequenceHelper.IsSameContext(path, this))
+				{
+					return path;
+				}
+
+				if (SequenceHelper.IsSameContext(path, this))
+				{
+					var result = GetGroupJoinCall();
+					return result;
+				}
+
 				return path;
 			}
 

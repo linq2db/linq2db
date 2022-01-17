@@ -50,7 +50,12 @@ namespace LinqToDB.Linq.Builder
 		Expression ConvertAssignmentArgument(Dictionary<Expression, Expression> translated, IBuildContext context, Expression expr, MemberInfo? memberInfo, ProjectFlags flags,
 			string? alias)
 		{
-			var resultExpr = BuildSqlExpression(translated, context, expr, flags, alias);
+			var resultExpr = TryConvertToSqlExpr(context, expr, flags);
+
+			if (resultExpr == null)
+			{
+				resultExpr = BuildSqlExpression(translated, context, expr, flags, alias);
+			}
 
 			if (resultExpr is SqlPlaceholderExpression placeholder)
 			{
@@ -582,6 +587,19 @@ namespace LinqToDB.Linq.Builder
 										buildExpr,
 										context.flags, context.alias);
 								}
+								else
+								{
+									//TODO: maybe remove
+									throw new NotImplementedException();
+									var info = new BuildInfo(context.context, contextRef, new SelectQuery {ParentSelect = context.context.SelectQuery});
+
+									if (context.builder.IsSequence(info))
+									{
+										return new TransformInfo(
+											context.builder.GetSubQueryExpression(context.context, contextRef, false,
+												context.alias), false, true);
+									}
+								}
 
 								context.translated[expr] = buildExpr;
 
@@ -603,9 +621,9 @@ namespace LinqToDB.Linq.Builder
 
 		class SubQueryContextInfo
 		{
-			public MethodCallExpression Method  = null!;
-			public IBuildContext        Context = null!;
-			public Expression?          Expression;
+			public Expression    SequenceExpression  = null!;
+			public IBuildContext Context = null!;
+			public Expression?   Expression;
 		}
 
 		public Expression CorrectRoot(Expression expr)
@@ -649,15 +667,15 @@ namespace LinqToDB.Linq.Builder
 
 		List<SubQueryContextInfo>? _buildContextCache;
 
-		SubQueryContextInfo GetSubQueryContext(IBuildContext context, MethodCallExpression expr)
+		SubQueryContextInfo GetSubQueryContext(IBuildContext context, Expression expr)
 		{
-			var testExpression = (MethodCallExpression)CorrectRoot(expr);
+			var testExpression = CorrectRoot(expr);
 
 			_buildContextCache ??= new List<SubQueryContextInfo>();
 
 			foreach (var item in _buildContextCache)
 			{
-				if (testExpression.EqualsTo(item.Method, OptimizationContext.GetSimpleEqualsToContext(false)))
+				if (testExpression.EqualsTo(item.SequenceExpression, OptimizationContext.GetSimpleEqualsToContext(false)))
 					return item;
 			}
 
@@ -679,14 +697,14 @@ namespace LinqToDB.Linq.Builder
 
 			var ctx = GetSubQuery(context, testExpression);
 
-			var info = new SubQueryContextInfo { Method = testExpression, Context = ctx };
+			var info = new SubQueryContextInfo { SequenceExpression = testExpression, Context = ctx };
 
 			_buildContextCache.Add(info);
 
 			return info;
 		}
 
-		public Expression GetSubQueryExpression(IBuildContext context, MethodCallExpression expr, bool enforceServerSide, string? alias)
+		public Expression GetSubQueryExpression(IBuildContext context, Expression expr, bool enforceServerSide, string? alias)
 		{
 			var info = GetSubQueryContext(context, expr);
 			if (info.Expression == null)

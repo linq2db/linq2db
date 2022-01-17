@@ -63,6 +63,11 @@ namespace LinqToDB.Linq.Builder
 			return context;
 		}
 
+		public static bool IsDefaultIfEmpty(IBuildContext context)
+		{
+			return UnwrapSubqueryContext(context) is DefaultIfEmptyBuilder.DefaultIfEmptyContext;
+		}
+
 		public static Expression RequireSqlExpression(this IBuildContext context, Expression? path)
 		{
 			var sql = context.Builder.MakeExpression(path, ProjectFlags.SQL);

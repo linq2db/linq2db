@@ -42,7 +42,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var isLeftJoin =
-				SequenceHelper.UnwrapSubqueryContext(collection) is DefaultIfEmptyBuilder.DefaultIfEmptyContext ||
+				SequenceHelper.IsDefaultIfEmpty(collection) ||
 				collectionInfo.JoinType == JoinType.Left;
 
 			var joinType = collectionInfo.JoinType;

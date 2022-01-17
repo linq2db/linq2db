@@ -42,37 +42,17 @@ namespace LinqToDB.Linq.Builder
 
 		public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 		{
-			expression = SequenceHelper.CorrectExpression(expression, this, Context);
-
-			var indexes = SubQuery
-				.ConvertToIndex(expression, level, flags)
-				.ToArray();
-
-			var result = indexes
-				.Select(idx => new SqlInfo(idx.MemberChain, idx.Index < 0 ? idx.Sql : SubQuery.SelectQuery.Select.Columns[idx.Index], idx.Index))
-				.ToArray();
-
-			return result;
+			throw new NotImplementedException();
 		}
 
-		// JoinContext has similar logic. Consider to review it.
-		//
 		public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 		{
-			return ConvertToSql(expression, level, flags)
-				.Select(idx => idx
-					.WithQuery(SelectQuery)
-					.WithIndex(GetIndex(idx.Index, idx.Sql)))
-				.ToArray();
+			throw new NotImplementedException();
 		}
 
 		public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 		{
-			return requestFlag switch
-			{
-				RequestFor.SubQuery => IsExpressionResult.True,
-				_                   => base.IsExpression(expression, level, requestFlag),
-			};
+			throw new NotImplementedException();
 		}
 
 		protected virtual bool OptimizeColumns => true;
@@ -80,19 +60,12 @@ namespace LinqToDB.Linq.Builder
 
 		protected virtual int GetIndex(int index, ISqlExpression column)
 		{
-			if (!ColumnIndexes.TryGetValue(index, out var idx))
-			{
-				idx = OptimizeColumns ? SelectQuery.Select.Add(column) : SelectQuery.Select.AddNew(column);
-				ColumnIndexes.Add(index, idx);
-			}
-
-			return idx;
+			throw new NotImplementedException();
 		}
 
 		public override int ConvertToParentIndex(int index, IBuildContext context)
 		{
-			var idx = context == this ? index : GetIndex(index, context.SelectQuery.Select.Columns[index]);
-			return Parent?.ConvertToParentIndex(idx, this) ?? idx;
+			throw new NotImplementedException();
 		}
 
 		public override void SetAlias(string? alias)
