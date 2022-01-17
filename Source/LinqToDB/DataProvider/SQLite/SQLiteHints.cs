@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			public const string NotIndexed = "NOT INDEXED";
 
-			[Sql.Function]
+			[Sql.Expression("INDEXED BY {0}")]
 			public static string IndexedBy(string value)
 			{
 				return "INDEXED BY " + value;

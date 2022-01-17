@@ -351,5 +351,9 @@ namespace LinqToDB.DataProvider.Access
 				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine);
 			}
 		}
+
+		protected override void StartStatementQueryExtensions(SelectQuery? selectQuery)
+		{
+		}
 	}
 }

@@ -1106,14 +1106,6 @@ namespace LinqToDB.Linq
 			{ M(() => SqlBoolean.False),         N(() => L<bool>           (()               => false)) },
 
 			#endregion
-
-//			#region SqlID
-//
-//			{ M(() => Sql.TableAlias(null!)), N(() => L<string,Sql.SqlID>(id => new Sql.SqlID(Sql.SqlIDType.TableAlias, id))) },
-//			{ M(() => Sql.TableName (null!)), N(() => L<string,Sql.SqlID>(id => new Sql.SqlID(Sql.SqlIDType.TableName,  id))) },
-//			{ M(() => Sql.TableSpec (null!)), N(() => L<string,Sql.SqlID>(id => new Sql.SqlID(Sql.SqlIDType.TableSpec,  id))) },
-//
-//			#endregion
 		};
 
 		#endregion
