@@ -17,7 +17,7 @@ namespace Tests.Extensions
 			using var db = GetDataContext(context);
 
 			var q =
-				from p in db.Person.TableHint(SQLiteHints.TableHint.IndexedBy("IX_PersonDesc"))
+				from p in db.Person.TableHint(SQLiteHints.Hint.IndexedBy("IX_PersonDesc"))
 				where p.ID > 0
 				select p;
 
@@ -32,7 +32,7 @@ namespace Tests.Extensions
 			using var db = GetDataContext(context);
 
 			var q =
-				from p in db.Person.IndexedBy("IX_PersonDesc")
+				from p in db.Person.AsSQLite().IndexedByHint("IX_PersonDesc")
 				where p.ID > 0
 				select p;
 
@@ -47,7 +47,7 @@ namespace Tests.Extensions
 			using var db = GetDataContext(context);
 
 			var q =
-				from p in db.Person.TableHint(SQLiteHints.TableHint.NotIndexed)
+				from p in db.Person.TableHint(SQLiteHints.Hint.NotIndexed)
 				where p.ID > 0
 				select p;
 
@@ -62,7 +62,7 @@ namespace Tests.Extensions
 			using var db = GetDataContext(context);
 
 			var q =
-				from p in db.Person.NotIndexed()
+				from p in db.Person.AsSQLite().NotIndexedHint()
 				where p.ID > 0
 				select p;
 
@@ -77,7 +77,7 @@ namespace Tests.Extensions
 			using var db = GetDataContext(context);
 
 			(
-				from p in db.Person.TableHint(SQLiteHints.TableHint.IndexedBy("IX_PersonDesc"))
+				from p in db.Person.TableHint(SQLiteHints.Hint.IndexedBy("IX_PersonDesc"))
 				where p.ID > 1000000
 				select p
 			)
@@ -92,7 +92,7 @@ namespace Tests.Extensions
 			using var db = GetDataContext(context);
 
 			(
-				from p in db.Person.TableHint(SQLiteHints.TableHint.IndexedBy("IX_PersonDesc"))
+				from p in db.Person.TableHint(SQLiteHints.Hint.IndexedBy("IX_PersonDesc"))
 				where p.ID > 1000000
 				select p
 			)

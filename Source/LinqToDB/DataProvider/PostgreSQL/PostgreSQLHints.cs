@@ -68,7 +68,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		/// <param name="tableIDs">Table IDs.</param>
 		/// <returns>Query source with join hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(null, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.PostgreSQL, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
+		[Sql.QueryExtension(null,                    Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
 		public static IPostgreSQLSpecificQueryable<TSource> SubQueryTableHint<TSource>(
 			this IPostgreSQLSpecificQueryable<TSource> source,
 			[SqlQueryDependent] string hint,
@@ -100,7 +101,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		/// <param name="tableIDs">Table IDs.</param>
 		/// <returns>Query source with join hints.</returns>
 		[LinqTunnel, Pure]
-		[Sql.QueryExtension(null, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.PostgreSQL, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
+		[Sql.QueryExtension(null,                    Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
 		public static IPostgreSQLSpecificQueryable<TSource> SubQueryTableHint<TSource>(
 			this IPostgreSQLSpecificQueryable<TSource> source,
 			[SqlQueryDependent] string hint,

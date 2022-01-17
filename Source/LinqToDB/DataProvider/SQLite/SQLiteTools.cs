@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.SQLite
 	using Configuration;
 	using Data;
 
-	public static class SQLiteTools
+	public static partial class SQLiteTools
 	{
 		static readonly Lazy<IDataProvider> _SQLiteClassicDataProvider = DataConnection.CreateDataProvider<SQLiteDataProviderClassic>();
 		static readonly Lazy<IDataProvider> _SQLiteMSDataProvider      = DataConnection.CreateDataProvider<SQLiteDataProviderMS>();

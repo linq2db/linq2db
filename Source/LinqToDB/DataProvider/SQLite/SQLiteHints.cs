@@ -1,11 +1,17 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.DataProvider.SQLite
 {
+	using Expressions;
+	using Linq;
+	using SqlProvider;
+
 	public static class SQLiteHints
 	{
-		public static class TableHint
+		public static class Hint
 		{
 			public const string NotIndexed = "NOT INDEXED";
 
@@ -17,29 +23,43 @@ namespace LinqToDB.DataProvider.SQLite
 		}
 
 		[ExpressionMethod(nameof(IndexedByImpl))]
-		public static ITable<TSource> IndexedBy<TSource>(this ITable<TSource> table, string indexName)
+		public static ISQLiteSpecificTable<TSource> IndexedByHint<TSource>(this ISQLiteSpecificTable<TSource> table, string indexName)
 			where TSource : notnull
 		{
-			return table.TableHint(TableHint.IndexedBy(indexName));
+			return table.TableHint(Hint.IndexedBy(indexName));
 		}
 
-		static Expression<Func<ITable<TSource>,string,ITable<TSource>>> IndexedByImpl<TSource>()
+		static Expression<Func<ISQLiteSpecificTable<TSource>,string,ISQLiteSpecificTable<TSource>>> IndexedByImpl<TSource>()
 			where TSource : notnull
 		{
-			return (table, indexName) => table.TableHint(TableHint.IndexedBy(indexName));
+			return (table, indexName) => table.TableHint(Hint.IndexedBy(indexName));
 		}
 
 		[ExpressionMethod(nameof(NotIndexedImpl))]
-		public static ITable<TSource> NotIndexed<TSource>(this ITable<TSource> table)
+		public static ISQLiteSpecificTable<TSource> NotIndexedHint<TSource>(this ISQLiteSpecificTable<TSource> table)
 			where TSource : notnull
 		{
-			return table.TableHint(TableHint.NotIndexed);
+			return table.TableHint(Hint.NotIndexed);
 		}
 
-		static Expression<Func<ITable<TSource>,ITable<TSource>>> NotIndexedImpl<TSource>()
+		static Expression<Func<ISQLiteSpecificTable<TSource>,ISQLiteSpecificTable<TSource>>> NotIndexedImpl<TSource>()
 			where TSource : notnull
 		{
-			return table => table.TableHint(TableHint.NotIndexed);
+			return table => table.TableHint(Hint.NotIndexed);
+		}
+
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.SQLite, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
+		public static ISQLiteSpecificTable<TSource> TableHint<TSource>(this ISQLiteSpecificTable<TSource> table, [SqlQueryDependent] string hint)
+			where TSource : notnull
+		{
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(TableHint, table, hint),
+				table.Expression, Expression.Constant(hint));
+
+			return table;
 		}
 	}
 }

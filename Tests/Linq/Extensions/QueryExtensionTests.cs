@@ -6,7 +6,9 @@ using LinqToDB;
 using LinqToDB.DataProvider.Access;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.DataProvider.MySql;
+using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.DataProvider.SqlCe;
+using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.SqlServer;
 
 using NUnit.Framework;
@@ -58,7 +60,7 @@ namespace Tests.Extensions
 
 			var q =
 			(
-				from t in db.Child
+				from t in db.Child.TableID("ch")
 					.AsSqlServer()
 						.WithNoLock()
 						.WithNoWait()
@@ -69,6 +71,8 @@ namespace Tests.Extensions
 						.HashHint()
 					.AsMySql()
 						.UseIndexHint("IX_ChildIndex")
+					.AsSQLite()
+						.NotIndexedHint()
 				select t
 			)
 			.AsSqlServer()
@@ -79,28 +83,34 @@ namespace Tests.Extensions
 			.AsAccess()
 				.WithOwnerAccessOption()
 			.AsMySql()
-				.MaxExecutionTimeHint(1000);
+				.MaxExecutionTimeHint(1000)
+			.AsPostgreSQL()
+				.ForShareHint(Sql.TableAlias("ch"));
 
 			_ = q.ToList();
 
-			string sqlCeHints, sqlServerHints, oracleHints, mySqlHints, accessHints;
+			string sqlCeHints, sqlServerHints, oracleHints, mySqlHints, accessHints, postgreSQLHints, sqliteHints;
 
 			var testSql = new[]
 			{
-				accessHints    = "WITH OWNERACCESS OPTION",
-				oracleHints    = "SELECT /*+ FULL(t) HASH(t) PARALLEL(2) */",
-				mySqlHints     = "SELECT /*+ MAX_EXECUTION_TIME(1000) */",
-				sqlCeHints     = "[Child] [t] WITH (NoLock)",
-				sqlServerHints = "[Child] [t] WITH (NoLock, NoWait, ReadUncommitted)",
+				accessHints     = "WITH OWNERACCESS OPTION",
+				oracleHints     = "SELECT /*+ FULL(t) HASH(t) PARALLEL(2) */",
+				mySqlHints      = "SELECT /*+ MAX_EXECUTION_TIME(1000) */",
+				sqlCeHints      = "[Child] [t] WITH (NoLock)",
+				sqlServerHints  = "[Child] [t] WITH (NoLock, NoWait, ReadUncommitted)",
+				postgreSQLHints = "FOR SHARE OF t",
+				sqliteHints     = "NOT INDEXED",
 			};
 
 			string? current = null;
 
-			if      (context.StartsWith("Access"))    current = accessHints;
-			else if (context.StartsWith("Oracle"))    current = oracleHints;
-			else if (context.StartsWith("MySql"))     current = mySqlHints;
-			else if (context.StartsWith("SqlCe"))     current = sqlCeHints;
-			else if (context.StartsWith("SqlServer")) current = sqlServerHints;
+			if      (context.StartsWith("Access"))     current = accessHints;
+			else if (context.StartsWith("Oracle"))     current = oracleHints;
+			else if (context.StartsWith("MySql"))      current = mySqlHints;
+			else if (context.StartsWith("SqlCe"))      current = sqlCeHints;
+			else if (context.StartsWith("SqlServer"))  current = sqlServerHints;
+			else if (context.StartsWith("PostgreSQL")) current = postgreSQLHints;
+			else if (context.StartsWith("SQLite"))     current = sqliteHints;
 
 			if (current != null)
 			{
