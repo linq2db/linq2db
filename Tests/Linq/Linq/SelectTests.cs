@@ -773,18 +773,14 @@ namespace Tests.Linq
 
 				var query3 = query2.Where(p => p.InfoAll.ParentID!.Value > 0 || p.InfoAll.Value1 > 0  || p.InfoAll.Value2 > 0);
 
-				/*
 				query3 = query3
 					.OrderBy(q => q.InfoAll.ParentID)
 					.ThenBy(q => q.InfoAll.Value1)
 					.ThenBy(q => q.InfoAll.Value2);
 
-				*/
-				var zz = query3.ToArray();
+				AssertQuery(query3);
 
-				//AssertQuery(query3);
-
-				//var _ = query3.ToArray();
+				var _ = query3.ToArray();
 			}
 		}
 
