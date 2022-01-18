@@ -2614,6 +2614,8 @@ namespace LinqToDB.Linq.Builder
 
 		internal void BuildSearchCondition(IBuildContext? context, Expression expression, List<SqlCondition> conditions)
 		{
+			expression = GetRemoveNullPropagationTransformer(true).Transform(expression);
+
 			switch (expression.NodeType)
 			{
 				case ExpressionType.And     :
@@ -2854,15 +2856,33 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		private TransformVisitor<ExpressionBuilder>? _removeNullPropagationTransformer;
+		private TransformVisitor<ExpressionBuilder>? _removeNullPropagationTransformerForSearch;
 		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private TransformVisitor<ExpressionBuilder> GetRemoveNullPropagationTransformer()
+		private TransformVisitor<ExpressionBuilder> GetRemoveNullPropagationTransformer(bool forSearch)
 		{
-			return _removeNullPropagationTransformer ??= TransformVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.RemoveNullPropagation(e));
+			if (forSearch)
+				return _removeNullPropagationTransformerForSearch ??= TransformVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.RemoveNullPropagation(e, true));
+			else
+				return _removeNullPropagationTransformer ??= TransformVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.RemoveNullPropagation(e, false));
 		}
 
-		Expression RemoveNullPropagation(Expression expr)
+		Expression RemoveNullPropagation(Expression expr, bool forSearch)
 		{
+			bool IsAcceptableType(Type type)
+			{
+				if (!forSearch)
+					return type.IsNullableType();
+
+				if (type != typeof(string) && typeof(IEnumerable<>).IsSameOrParentOf(type))
+					return true;
+
+				if (!MappingSchema.IsScalarType(type))
+					return true;
+
+				return false;
+			}
+
 			// Do not modify parameters
 			//
 			if (CanBeCompiled(expr))
@@ -2881,13 +2901,13 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (nullRight && nullLeft)
 							{
-								return GetRemoveNullPropagationTransformer().Transform(conditional.IfFalse);
+								return GetRemoveNullPropagationTransformer(forSearch).Transform(conditional.IfFalse);
 							}
 							else if (IsNullConstant(conditional.IfFalse)
-								&& ((nullRight && binary.Left.Type.IsNullableType() ||
-									(nullLeft  && binary.Right.Type.IsNullableType()))))
+								&& ((nullRight && IsAcceptableType(binary.Left.Type) ||
+									(nullLeft  && IsAcceptableType(binary.Right.Type)))))
 							{
-								return GetRemoveNullPropagationTransformer().Transform(conditional.IfTrue);
+								return GetRemoveNullPropagationTransformer(forSearch).Transform(conditional.IfTrue);
 							}
 						}
 					}
@@ -2900,13 +2920,13 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (nullRight && nullLeft)
 							{
-								return GetRemoveNullPropagationTransformer().Transform(conditional.IfTrue);
+								return GetRemoveNullPropagationTransformer(forSearch).Transform(conditional.IfTrue);
 							}
 							else if (IsNullConstant(conditional.IfTrue)
-							         && ((nullRight && binary.Left.Type.IsNullableType() ||
-							              (nullLeft && binary.Right.Type.IsNullableType()))))
+							         && ((nullRight && IsAcceptableType(binary.Left.Type) ||
+							              (nullLeft && IsAcceptableType(binary.Right.Type)))))
 							{
-								return GetRemoveNullPropagationTransformer().Transform(conditional.IfFalse);
+								return GetRemoveNullPropagationTransformer(forSearch).Transform(conditional.IfFalse);
 							}
 						}
 					}
@@ -2961,7 +2981,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			expression = GetRemoveNullPropagationTransformer().Transform(expression);
+			expression = GetRemoveNullPropagationTransformer(false).Transform(expression);
 
 			switch (expression.NodeType)
 			{
