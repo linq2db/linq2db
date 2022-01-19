@@ -777,6 +777,10 @@ namespace LinqToDB.Linq.Builder
 								return info;
 							}
 
+							var sql = subQueryContextInfo.Context.GetSubQuery(context);
+							if (sql != null)
+								return new[] { new SqlInfo(sql) };
+
 							return new[] { new SqlInfo(subQueryContextInfo.Context.SelectQuery) };
 						}
 					}

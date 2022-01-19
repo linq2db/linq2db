@@ -68,5 +68,25 @@ namespace Tests.UserTests
 				var data2 = permissions.ToList(); 
 			}
 		}
+
+
+		[Test]
+		public void SubQueryAny([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<EmployeeScheduleSection>())
+			using (db.CreateLocalTable<EmployeeScheduleSectionAdditionalPermission>())
+			{
+				var query = from ess in db.GetTable<EmployeeScheduleSection>()
+					let hasAdditionalPermissions = ess.AdditionalPermissions.Any(y => y.IsActive)
+					where hasAdditionalPermissions
+					select new
+					{
+						SectionID = ess.ID,
+					};
+
+				var result = query.ToList();
+			}
+		}
 	}
 }
