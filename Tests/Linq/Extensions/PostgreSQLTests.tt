@@ -52,14 +52,14 @@ void GenerateQuery(string hint, string hint2)
 			if (hint2 == "SkipLocked")
 			{
 #>
-				var skipLocked = context == ProviderName.PostgreSQL95 ? " SkipLocked" : "";
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.<#= hint #>}{skipLocked}"));
+			var skipLocked = LastQuery.Contains(ProviderName.PostgreSQL95) ? " SKIP LOCKED" : "";
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.<#= hint #>}{skipLocked}"));
 <#+
 			}
 			else
 			{
 #>
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.<#= hint #>}<#= hint2.Length == 0 ? "" : " {PostgreSQLHints." + hint2 + "}" #>"));
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.<#= hint #>}<#= hint2.Length == 0 ? "" : " {PostgreSQLHints." + hint2 + "}" #>"));
 <#+
 			}
 #>
@@ -85,14 +85,14 @@ void GenerateQuery(string hint, string hint2)
 			if (hint2 == "SkipLocked")
 			{
 #>
-				var skipLocked = context == ProviderName.PostgreSQL95 ? " SkipLocked" : "";
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.<#= hint #>} OF p, c_1{skipLocked}"));
+			var skipLocked = LastQuery.Contains(ProviderName.PostgreSQL95) ? " SKIP LOCKED" : "";
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.<#= hint #>} OF p, c_1{skipLocked}"));
 <#+
 			}
 			else
 			{
 #>
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.<#= hint #>} OF p, c_1<#= hint2.Length == 0 ? "" : " {PostgreSQLHints." + hint2 + "}" #>"));
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.<#= hint #>} OF p, c_1<#= hint2.Length == 0 ? "" : " {PostgreSQLHints." + hint2 + "}" #>"));
 <#+
 			}
 #>

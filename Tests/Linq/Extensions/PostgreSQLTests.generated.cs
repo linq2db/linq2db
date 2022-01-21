@@ -29,7 +29,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForUpdate}"));
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForUpdate}"));
 		}
 
 		[Test]
@@ -48,7 +48,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForUpdate} OF p, c_1"));
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForUpdate} OF p, c_1"));
 		}
 
 		[Test]
@@ -67,7 +67,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForUpdate} {PostgreSQLHints.NoWait}"));
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForUpdate} {PostgreSQLHints.NoWait}"));
 		}
 
 		[Test]
@@ -86,7 +86,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForUpdate} OF p, c_1 {PostgreSQLHints.NoWait}"));
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForUpdate} OF p, c_1 {PostgreSQLHints.NoWait}"));
 		}
 
 		[Test]
@@ -105,8 +105,8 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-				var skipLocked = context == ProviderName.PostgreSQL95 ? " SkipLocked" : "";
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForUpdate}{skipLocked}"));
+			var skipLocked = LastQuery.Contains(ProviderName.PostgreSQL95) ? " SKIP LOCKED" : "";
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForUpdate}{skipLocked}"));
 		}
 
 		[Test]
@@ -125,8 +125,8 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-				var skipLocked = context == ProviderName.PostgreSQL95 ? " SkipLocked" : "";
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForUpdate} OF p, c_1{skipLocked}"));
+			var skipLocked = LastQuery.Contains(ProviderName.PostgreSQL95) ? " SKIP LOCKED" : "";
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForUpdate} OF p, c_1{skipLocked}"));
 		}
 
 		[Test]
@@ -145,7 +145,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForNoKeyUpdate}"));
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForNoKeyUpdate}"));
 		}
 
 		[Test]
@@ -164,7 +164,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForNoKeyUpdate} OF p, c_1"));
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForNoKeyUpdate} OF p, c_1"));
 		}
 
 		[Test]
@@ -183,7 +183,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForNoKeyUpdate} {PostgreSQLHints.NoWait}"));
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForNoKeyUpdate} {PostgreSQLHints.NoWait}"));
 		}
 
 		[Test]
@@ -202,7 +202,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForNoKeyUpdate} OF p, c_1 {PostgreSQLHints.NoWait}"));
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForNoKeyUpdate} OF p, c_1 {PostgreSQLHints.NoWait}"));
 		}
 
 		[Test]
@@ -221,8 +221,8 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-				var skipLocked = context == ProviderName.PostgreSQL95 ? " SkipLocked" : "";
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForNoKeyUpdate}{skipLocked}"));
+			var skipLocked = LastQuery.Contains(ProviderName.PostgreSQL95) ? " SKIP LOCKED" : "";
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForNoKeyUpdate}{skipLocked}"));
 		}
 
 		[Test]
@@ -241,8 +241,8 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-				var skipLocked = context == ProviderName.PostgreSQL95 ? " SkipLocked" : "";
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForNoKeyUpdate} OF p, c_1{skipLocked}"));
+			var skipLocked = LastQuery.Contains(ProviderName.PostgreSQL95) ? " SKIP LOCKED" : "";
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForNoKeyUpdate} OF p, c_1{skipLocked}"));
 		}
 
 		[Test]
@@ -261,7 +261,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForShare}"));
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForShare}"));
 		}
 
 		[Test]
@@ -280,7 +280,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForShare} OF p, c_1"));
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForShare} OF p, c_1"));
 		}
 
 		[Test]
@@ -299,7 +299,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForShare} {PostgreSQLHints.NoWait}"));
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForShare} {PostgreSQLHints.NoWait}"));
 		}
 
 		[Test]
@@ -318,7 +318,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForShare} OF p, c_1 {PostgreSQLHints.NoWait}"));
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForShare} OF p, c_1 {PostgreSQLHints.NoWait}"));
 		}
 
 		[Test]
@@ -337,8 +337,8 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-				var skipLocked = context == ProviderName.PostgreSQL95 ? " SkipLocked" : "";
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForShare}{skipLocked}"));
+			var skipLocked = LastQuery.Contains(ProviderName.PostgreSQL95) ? " SKIP LOCKED" : "";
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForShare}{skipLocked}"));
 		}
 
 		[Test]
@@ -357,8 +357,8 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-				var skipLocked = context == ProviderName.PostgreSQL95 ? " SkipLocked" : "";
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForShare} OF p, c_1{skipLocked}"));
+			var skipLocked = LastQuery.Contains(ProviderName.PostgreSQL95) ? " SKIP LOCKED" : "";
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForShare} OF p, c_1{skipLocked}"));
 		}
 
 		[Test]
@@ -377,7 +377,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForKeyShare}"));
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForKeyShare}"));
 		}
 
 		[Test]
@@ -396,7 +396,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForKeyShare} OF p, c_1"));
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForKeyShare} OF p, c_1"));
 		}
 
 		[Test]
@@ -415,7 +415,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForKeyShare} {PostgreSQLHints.NoWait}"));
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForKeyShare} {PostgreSQLHints.NoWait}"));
 		}
 
 		[Test]
@@ -434,7 +434,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForKeyShare} OF p, c_1 {PostgreSQLHints.NoWait}"));
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForKeyShare} OF p, c_1 {PostgreSQLHints.NoWait}"));
 		}
 
 		[Test]
@@ -453,8 +453,8 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-				var skipLocked = context == ProviderName.PostgreSQL95 ? " SkipLocked" : "";
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForKeyShare}{skipLocked}"));
+			var skipLocked = LastQuery.Contains(ProviderName.PostgreSQL95) ? " SKIP LOCKED" : "";
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForKeyShare}{skipLocked}"));
 		}
 
 		[Test]
@@ -473,8 +473,8 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-				var skipLocked = context == ProviderName.PostgreSQL95 ? " SkipLocked" : "";
-				Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForKeyShare} OF p, c_1{skipLocked}"));
+			var skipLocked = LastQuery.Contains(ProviderName.PostgreSQL95) ? " SKIP LOCKED" : "";
+			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForKeyShare} OF p, c_1{skipLocked}"));
 		}
 
 	}
