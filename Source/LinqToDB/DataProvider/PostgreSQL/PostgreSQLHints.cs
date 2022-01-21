@@ -30,7 +30,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			{
 				var hint = (string)((SqlValue)sqlQueryExtension.Arguments["hint"]).Value!;
 
-				if (hint == ForNoKeyUpdate && sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL92))
+				if (hint is ForNoKeyUpdate or ForKeyShare && sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL92))
 					return;
 
 				stringBuilder.Append(hint);

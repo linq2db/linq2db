@@ -130,7 +130,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void QueryHintForNoKeyUpdateTest([IncludeDataSources(true, TestProvName.AllPostgreSQL93Plus)] string context)
+		public void QueryHintForNoKeyUpdateTest([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -145,11 +145,14 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
+			if (LastQuery.Contains(ProviderName.PostgreSQL92))
+				return;
+
 			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForNoKeyUpdate}"));
 		}
 
 		[Test]
-		public void QueryHintForNoKeyUpdateTest2([IncludeDataSources(true, TestProvName.AllPostgreSQL93Plus)] string context)
+		public void QueryHintForNoKeyUpdateTest2([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -164,11 +167,14 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
+			if (LastQuery.Contains(ProviderName.PostgreSQL92))
+				return;
+
 			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForNoKeyUpdate} OF p, c_1"));
 		}
 
 		[Test]
-		public void QueryHintForNoKeyUpdateNoWaitTest([IncludeDataSources(true, TestProvName.AllPostgreSQL93Plus)] string context)
+		public void QueryHintForNoKeyUpdateNoWaitTest([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -183,11 +189,14 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
+			if (LastQuery.Contains(ProviderName.PostgreSQL92))
+				return;
+
 			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForNoKeyUpdate} {PostgreSQLHints.NoWait}"));
 		}
 
 		[Test]
-		public void QueryHintForNoKeyUpdateNoWaitTest2([IncludeDataSources(true, TestProvName.AllPostgreSQL93Plus)] string context)
+		public void QueryHintForNoKeyUpdateNoWaitTest2([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -202,11 +211,14 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
+			if (LastQuery.Contains(ProviderName.PostgreSQL92))
+				return;
+
 			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForNoKeyUpdate} OF p, c_1 {PostgreSQLHints.NoWait}"));
 		}
 
 		[Test]
-		public void QueryHintForNoKeyUpdateSkipLockedTest([IncludeDataSources(true, TestProvName.AllPostgreSQL93Plus)] string context)
+		public void QueryHintForNoKeyUpdateSkipLockedTest([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -221,12 +233,15 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
+			if (LastQuery.Contains(ProviderName.PostgreSQL92))
+				return;
+
 			var skipLocked = LastQuery.Contains(ProviderName.PostgreSQL95) ? " SKIP LOCKED" : "";
 			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForNoKeyUpdate}{skipLocked}"));
 		}
 
 		[Test]
-		public void QueryHintForNoKeyUpdateSkipLockedTest2([IncludeDataSources(true, TestProvName.AllPostgreSQL93Plus)] string context)
+		public void QueryHintForNoKeyUpdateSkipLockedTest2([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -240,6 +255,9 @@ namespace Tests.Extensions
 			.ForNoKeyUpdateSkipLockedHint(Sql.TableAlias("Pr"), Sql.TableAlias("Ch"));
 
 			_ = q.ToList();
+
+			if (LastQuery.Contains(ProviderName.PostgreSQL92))
+				return;
 
 			var skipLocked = LastQuery.Contains(ProviderName.PostgreSQL95) ? " SKIP LOCKED" : "";
 			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForNoKeyUpdate} OF p, c_1{skipLocked}"));
@@ -377,6 +395,9 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
+			if (LastQuery.Contains(ProviderName.PostgreSQL92))
+				return;
+
 			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForKeyShare}"));
 		}
 
@@ -395,6 +416,9 @@ namespace Tests.Extensions
 			.ForKeyShareHint(Sql.TableAlias("Pr"), Sql.TableAlias("Ch"));
 
 			_ = q.ToList();
+
+			if (LastQuery.Contains(ProviderName.PostgreSQL92))
+				return;
 
 			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForKeyShare} OF p, c_1"));
 		}
@@ -415,6 +439,9 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
+			if (LastQuery.Contains(ProviderName.PostgreSQL92))
+				return;
+
 			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForKeyShare} {PostgreSQLHints.NoWait}"));
 		}
 
@@ -433,6 +460,9 @@ namespace Tests.Extensions
 			.ForKeyShareNoWaitHint(Sql.TableAlias("Pr"), Sql.TableAlias("Ch"));
 
 			_ = q.ToList();
+
+			if (LastQuery.Contains(ProviderName.PostgreSQL92))
+				return;
 
 			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForKeyShare} OF p, c_1 {PostgreSQLHints.NoWait}"));
 		}
@@ -453,6 +483,9 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
+			if (LastQuery.Contains(ProviderName.PostgreSQL92))
+				return;
+
 			var skipLocked = LastQuery.Contains(ProviderName.PostgreSQL95) ? " SKIP LOCKED" : "";
 			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForKeyShare}{skipLocked}"));
 		}
@@ -472,6 +505,9 @@ namespace Tests.Extensions
 			.ForKeyShareSkipLockedHint(Sql.TableAlias("Pr"), Sql.TableAlias("Ch"));
 
 			_ = q.ToList();
+
+			if (LastQuery.Contains(ProviderName.PostgreSQL92))
+				return;
 
 			var skipLocked = LastQuery.Contains(ProviderName.PostgreSQL95) ? " SKIP LOCKED" : "";
 			Assert.That(LastQuery, Contains.Substring($"{PostgreSQLHints.ForKeyShare} OF p, c_1{skipLocked}"));

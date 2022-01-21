@@ -31,10 +31,9 @@ namespace Tests.Extensions
 
 void GenerateQuery(string hint, string hint2)
 {
-	var version = hint == "ForNoKeyUpdate" ? "93Plus" : "";
 #>
 		[Test]
-		public void QueryHint<#= hint #><#= hint2 #>Test([IncludeDataSources(true, TestProvName.AllPostgreSQL<#= version #>)] string context)
+		public void QueryHint<#= hint #><#= hint2 #>Test([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -50,6 +49,15 @@ void GenerateQuery(string hint, string hint2)
 			_ = q.ToList();
 
 <#+
+			if (hint is "ForNoKeyUpdate" or "ForKeyShare")
+			{
+#>
+			if (LastQuery.Contains(ProviderName.PostgreSQL92))
+				return;
+
+<#+
+			}
+
 			if (hint2 == "SkipLocked")
 			{
 #>
@@ -67,7 +75,7 @@ void GenerateQuery(string hint, string hint2)
 		}
 
 		[Test]
-		public void QueryHint<#= hint #><#= hint2 #>Test2([IncludeDataSources(true, TestProvName.AllPostgreSQL<#= version #>)] string context)
+		public void QueryHint<#= hint #><#= hint2 #>Test2([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -83,6 +91,15 @@ void GenerateQuery(string hint, string hint2)
 			_ = q.ToList();
 
 <#+
+			if (hint is "ForNoKeyUpdate" or "ForKeyShare")
+			{
+#>
+			if (LastQuery.Contains(ProviderName.PostgreSQL92))
+				return;
+
+<#+
+			}
+
 			if (hint2 == "SkipLocked")
 			{
 #>
