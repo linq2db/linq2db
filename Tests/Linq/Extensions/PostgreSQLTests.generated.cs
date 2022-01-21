@@ -130,7 +130,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void QueryHintForNoKeyUpdateTest([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void QueryHintForNoKeyUpdateTest([IncludeDataSources(true, TestProvName.AllPostgreSQL93Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -149,7 +149,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void QueryHintForNoKeyUpdateTest2([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void QueryHintForNoKeyUpdateTest2([IncludeDataSources(true, TestProvName.AllPostgreSQL93Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -168,7 +168,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void QueryHintForNoKeyUpdateNoWaitTest([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void QueryHintForNoKeyUpdateNoWaitTest([IncludeDataSources(true, TestProvName.AllPostgreSQL93Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -187,7 +187,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void QueryHintForNoKeyUpdateNoWaitTest2([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void QueryHintForNoKeyUpdateNoWaitTest2([IncludeDataSources(true, TestProvName.AllPostgreSQL93Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -206,7 +206,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void QueryHintForNoKeyUpdateSkipLockedTest([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void QueryHintForNoKeyUpdateSkipLockedTest([IncludeDataSources(true, TestProvName.AllPostgreSQL93Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -226,7 +226,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void QueryHintForNoKeyUpdateSkipLockedTest2([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void QueryHintForNoKeyUpdateSkipLockedTest2([IncludeDataSources(true, TestProvName.AllPostgreSQL93Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 

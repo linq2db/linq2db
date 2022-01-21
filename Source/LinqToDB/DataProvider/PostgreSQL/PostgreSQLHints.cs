@@ -28,9 +28,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			void ISqlQueryExtensionBuilder.Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 			{
-				var hint = (SqlValue)sqlQueryExtension.Arguments["hint"];
+				var hint = (string)((SqlValue)sqlQueryExtension.Arguments["hint"]).Value!;
 
-				stringBuilder.Append((string)hint.Value!);
+				if (hint == ForNoKeyUpdate && sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL92))
+					return;
+
+				stringBuilder.Append(hint);
 
 				var idCount = (int)((SqlValue)sqlQueryExtension.Arguments["tableIDs.Count"]).Value!;
 
