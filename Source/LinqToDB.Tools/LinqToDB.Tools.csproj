@@ -11,5 +11,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
+
+		<PackageReference Include="Humanizer.Core" />
 	</ItemGroup>
 </Project>

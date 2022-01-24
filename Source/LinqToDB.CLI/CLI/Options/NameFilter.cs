@@ -54,5 +54,31 @@ namespace LinqToDB.CLI
 				return true;
 			}
 		}
+
+		/// <summary>
+		/// Apply filter to database object name.
+		/// </summary>
+		/// <param name="schema">Object schema name.</param>
+		/// <param name="name">Object name.</param>
+		/// <returns><c>true</c> if name pass filter, <c>false</c> otherwise.</returns>
+		public bool ApplyTo(string? schema, string name)
+		{
+			if (_exactNames.Contains(name))
+				return true;
+
+			if (schema != null && _schemaNames.TryGetValue(schema, out var names) && names.Contains(name))
+				return true;
+
+			foreach (var regex in _regexes.Values)
+				if (regex.Match(name).Success)
+					return true;
+
+			if (schema != null && _schemaRegexes.TryGetValue(schema, out var regexes))
+				foreach (var regex in regexes.Values)
+					if (regex.Match(name).Success)
+						return true;
+
+			return false;
+		}
 	}
 }

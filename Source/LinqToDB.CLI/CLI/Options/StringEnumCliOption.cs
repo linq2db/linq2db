@@ -117,7 +117,7 @@ namespace LinqToDB.CLI
 					foreach (var value in Values)
 					{
 						if (stringValue == value.Value)
-							return rawValue;
+							return stringValue;
 					}
 				}
 			}

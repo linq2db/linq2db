@@ -13,6 +13,8 @@ nuget.exe Pack ..\BuiltNuGet\linq2db.AspNet.nuspec -OutputDirectory ..\BuiltNuGe
 nuget.exe Pack ..\BuiltNuGet\linq2db.Tools.nuspec -OutputDirectory ..\BuiltNuGet\built
 )
 
+nuget.exe Pack ..\BuiltNuGet\linq2db.cli.nuspec -OutputDirectory ..\BuiltNuGet\built
+
 REM disable new T4 nugets publishing, prepare for their obsoletion and removal
 goto eof:
 nuget.exe Pack ..\BuiltNuGet\linq2db.Access.nuspec -OutputDirectory ..\BuiltNuGet\built

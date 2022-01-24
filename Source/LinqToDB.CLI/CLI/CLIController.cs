@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LinqToDB.CLI
 {
@@ -63,7 +64,7 @@ namespace LinqToDB.CLI
 				{
 					var unknownArgs = new List<string>();
 
-					IReadOnlyDictionary<CliOption, object?>? options = null;
+					Dictionary<CliOption, object?>? options = null;
 					if (command.HasOptions)
 					{
 						(options, var hasErrors) = ParseCommandOptions(command, args, unknownArgs);
@@ -71,7 +72,7 @@ namespace LinqToDB.CLI
 							return StatusCodes.INVALID_ARGUMENTS;
 					}
 
-					return command.Execute(this, args, options ?? new Dictionary<CliOption, object?>(), unknownArgs);
+					return command.Execute(this, args, options ?? new(), unknownArgs);
 				}
 			}
 
@@ -84,8 +85,9 @@ namespace LinqToDB.CLI
 
 		private (Dictionary<CliOption, object?> options, bool hasErrors) ParseCommandOptions(CliCommand command, string[] args, List<string> unknownArgs)
 		{
-			var hasErrors  = false;
-			var cliOptions = new Dictionary<CliOption, object?>();
+			var hasErrors          = false;
+			var cliOptions         = new Dictionary<CliOption, object?>();
+			var conflictingOptions = new HashSet<CliOption>();
 
 			// arg[0] is command name
 			for (var i = 1; i < args.Length; i++)
@@ -129,6 +131,12 @@ namespace LinqToDB.CLI
 						Console.Error.WriteLine("Duplicate option: {0}", args[i]);
 						hasErrors = true;
 					}
+					else if (conflictingOptions.Contains(option))
+					{
+						var incompatibleOptions = command.GetIncompatibleOptions(option)!;
+						Console.Error.WriteLine("Option '{0}' conflicts with other option(s): {1}", args[i], string.Join(", ", incompatibleOptions.Select(o => $"--{o.Name}")));
+						hasErrors = true;
+					}
 					else if (!option.AllowInCli)
 					{
 						Console.Error.WriteLine("Option '{0}' not allowed in command line", args[i]);
@@ -143,6 +151,14 @@ namespace LinqToDB.CLI
 					else
 					{
 						i++;
+
+						var incompatibleOptions = command.GetIncompatibleOptions(option);
+						if (incompatibleOptions != null)
+						{
+							foreach (var opt in incompatibleOptions)
+								conflictingOptions.Add(opt);
+						}
+
 						var value = option.ParseCLI(command, args[i]);
 						if (value == null)
 						{

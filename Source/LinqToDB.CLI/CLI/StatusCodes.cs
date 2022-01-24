@@ -17,5 +17,9 @@
 		/// Command failed with unhadnled exception.
 		/// </summary>
 		public const int INTERNAL_ERROR    = -2;
+		/// <summary>
+		/// Command failed with expected error.
+		/// </summary>
+		public const int EXPECTED_ERROR    = -3;
 	}
 }

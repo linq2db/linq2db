@@ -2,31 +2,64 @@
 	<Import Project="..\..\Build\linq2db.Source.props" />
 
 	<PropertyGroup>
-		<AssemblyName>linq2db.CLI</AssemblyName>
 		<RootNamespace>LinqToDB.CLI</RootNamespace>
-
-		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.CLI.xml</DocumentationFile>
-		<TargetFrameworks>net6.0</TargetFrameworks>
+		<AssemblyName>dotnet-linq2db</AssemblyName>
+		<TargetFrameworks>netcoreapp3.1</TargetFrameworks>
+		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 		<OutputType>Exe</OutputType>
 		<WarningsAsErrors>true</WarningsAsErrors>
-
 		<SignAssembly>False</SignAssembly>
+		<RollForward>Major</RollForward>
 	</PropertyGroup>
+
+	<PropertyGroup Condition="$(RID) != ''">
+		<AppHostRuntimeIdentifier>$(RID)</AppHostRuntimeIdentifier>
+		<OutputPath>bin\$(Configuration)\apphosts\$(RID)</OutputPath>
+	</PropertyGroup>
+
+	<!--
+	Generate arch-specific executables.
+	Because .net executable is actually renamed platform-specific apphost.exe + application built as assembly dll we only need platform-specific apphost.exe files.
+	All this msbuild stuff clearly wasn't designed for being customizable, so it look like a hack, but works.
+	-->
+	<Target Name="BuildSpecific" AfterTargets="Build" Condition=" '$(RID)' == '' ">
+		<!--we need to remove apphost.exe as Build target doesn't validate already existing file to be compatible with requested RID-->
+		<Delete Files="obj\$(Configuration)\netcoreapp3.1\apphost.exe" />
+		<MSBuild Projects="$(MSBuildProjectFullPath)" Properties="RID=win-x86;Platform=$(Platform);Configuration=$(Configuration)" Targets="Build" />
+		<Delete Files="obj\$(Configuration)\netcoreapp3.1\apphost.exe" />
+		<MSBuild Projects="$(MSBuildProjectFullPath)" Properties="RID=win-x64;Platform=$(Platform);Configuration=$(Configuration)" Targets="Build" />
+	
+		<!--cleanup for pack-->
+		<ItemGroup>
+			<JunkFiles Condition="$(Configuration) == 'Release'"
+				 Include="
+					bin\Release\netcoreapp3.1\dotnet-linq2db.runtimeconfig.dev.json;
+					bin\Release\netcoreapp3.1\*.pdb;
+					bin\Release\netcoreapp3.1\*.xml;" />
+		</ItemGroup>
+
+		<Delete Condition="$(Configuration) == 'Release'" Files="@(JunkFiles)" />
+	</Target>
+	
+	<Target Name="CopyHosts" AfterTargets="Build" Condition=" '$(RID)' != '' ">
+		<Copy SourceFiles="bin\$(Configuration)\apphosts\$(RID)\netcoreapp3.1\$(AssemblyName).exe" DestinationFiles="bin\$(Configuration)\netcoreapp3.1\$(AssemblyName).$(RID).exe" />
+	</Target>
 
 	<ItemGroup>
 		<!--TODO: move codegeneration to linq2db.Tools-->
-		<ProjectReference Include="..\LinqToDB.CodeGen\LinqToDB.CodeGen.csproj" />
-
-		<PackageReference Include="Microsoft.Extensions.Configuration.Json" />
-
-		<PackageReference Include="Humanizer.Core" />
+		<ProjectReference Include="..\LinqToDB.Tools\LinqToDB.Tools.csproj" />
 
 		<!--providers-->
+		<PackageReference Include="System.Data.SQLite.Core" />
+
+		<!--
+
+
 		<PackageReference Include="System.Data.SqlClient" />
 		<PackageReference Include="Microsoft.Data.SqlClient" />
 		<PackageReference Include="dotMorten.Microsoft.SqlServer.Types" />
 
-		<PackageReference Include="System.Data.SQLite.Core" />
+		
 		<PackageReference Include="Microsoft.Data.SQLite" />
 		
 		<PackageReference Include="Npgsql" />
@@ -44,13 +77,7 @@
 
 		<PackageReference Include="IBM.Data.DB2.Core" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
 		<PackageReference Include="IBM.Data.DB2.Core-lnx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
-		<PackageReference Include="IBM.Data.DB2.Core-osx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' " />
+		<PackageReference Include="IBM.Data.DB2.Core-osx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' " />-->
 
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Include="Configuration\*.json">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
 	</ItemGroup>
 </Project>

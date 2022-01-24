@@ -9,10 +9,11 @@ namespace LinqToDB.CLI
 	/// </summary>
 	internal abstract class CliCommand
 	{
-		private readonly Dictionary<OptionCategory, List<CliOption>> _optionsByCategory  = new ();
+		private readonly Dictionary<OptionCategory, List<CliOption>>           _optionsByCategory   = new ();
 		// TODO: replace with HashSet if not used as it also ensures command name/shortname is unique
-		private readonly Dictionary<string, CliOption>               _optionsByName      = new ();
-		private readonly Dictionary<char, CliOption>                 _optionsByShortName = new ();
+		private readonly Dictionary<string, CliOption>                         _optionsByName       = new ();
+		private readonly Dictionary<char, CliOption>                           _optionsByShortName  = new ();
+		private readonly Dictionary<CliOption, IReadOnlyCollection<CliOption>> _incompatibleOptions = new ();
 
 		/// <summary>
 		/// Base CLI command constructor.
@@ -86,6 +87,19 @@ namespace LinqToDB.CLI
 		}
 
 		/// <summary>
+		/// Returns list of options, not compatible with <paramref name="forOption"/> option.
+		/// </summary>
+		/// <param name="forOption">For which option return incompatible options.</param>
+		/// <returns>List of incompatible options or <c>null</c>, if <paramref name="forOption"/> option has no conflicts with other options.</returns>
+		public IEnumerable<CliOption>? GetIncompatibleOptions(CliOption forOption)
+		{
+			if (_incompatibleOptions.TryGetValue(forOption, out var options))
+				return options;
+
+			return null;
+		}
+
+		/// <summary>
 		/// Gets all command options.
 		/// </summary>
 		public IEnumerable<CliOption> AllOptions => _optionsByName.Values;
@@ -112,17 +126,34 @@ namespace LinqToDB.CLI
 		}
 
 		/// <summary>
+		/// Register several command options that cannot be used together with specific category.
+		/// </summary>
+		/// <param name="category">Options category (same category for all provided options).</param>
+		/// <param name="options">Command options to register. At least two options required.</param>
+		protected void AddMutuallyExclusiveOptions(OptionCategory category, params CliOption[] options)
+		{
+			if (options.Length < 2)
+				throw new InvalidOperationException($"{nameof(AddMutuallyExclusiveOptions)} requires at least two options, but {options.Length} were provided");
+
+			foreach (var option in options)
+			{
+				AddOption(category, option);
+				_incompatibleOptions.Add(option, options.Where(_ => _ != option).ToArray());
+			}
+		}
+
+		/// <summary>
 		/// Execute command with provided parameters.
 		/// </summary>
 		/// <param name="controller">CLI controller instance.</param>
 		/// <param name="rawArgs">Raw list of CLI arguments.</param>
-		/// <param name="options">Parsed command options with values.</param>
+		/// <param name="options">Parsed command options with values. Command allowed to modify dictionary (e.g. remove processed options to detect options without handler).</param>
 		/// <param name="unknownArgs">List of unrecognized arguments.</param>
 		/// <returns>Command execution status code.</returns>
 		public abstract int Execute(
-			CLIController                           controller,
-			string[]                                rawArgs,
-			IReadOnlyDictionary<CliOption, object?> options,
-			IReadOnlyCollection<string>             unknownArgs);
+			CLIController                  controller,
+			string[]                       rawArgs,
+			Dictionary<CliOption, object?> options,
+			IReadOnlyCollection<string>    unknownArgs);
 	}
 }

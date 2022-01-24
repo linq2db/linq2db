@@ -55,7 +55,7 @@ namespace LinqToDB.CLI
 
 			foreach (var categoryProperty in json.RootElement.EnumerateObject())
 			{
-				var category = command.Categories.SingleOrDefault(c => c.Name == categoryProperty.Name);
+				var category = command.Categories.SingleOrDefault(c => c.JsonProperty == categoryProperty.Name);
 
 				if (category == null)
 				{

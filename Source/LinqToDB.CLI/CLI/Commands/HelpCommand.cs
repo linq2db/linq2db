@@ -23,10 +23,10 @@ namespace LinqToDB.CLI
 		}
 
 		public override int Execute(
-			CLIController                           controller,
-			string[]                                rawArgs,
-			IReadOnlyDictionary<CliOption, object?> options,
-			IReadOnlyCollection<string>             unknownArgs)
+			CLIController                  controller,
+			string[]                       rawArgs,
+			Dictionary<CliOption, object?> options,
+			IReadOnlyCollection<string>    unknownArgs)
 		{
 			if (options.Count == 0 && (rawArgs.Length == 0 || (rawArgs.Length == 1 && rawArgs[0] == "help")))
 			{
@@ -139,6 +139,11 @@ namespace LinqToDB.CLI
 					// option data type
 					Console.Out.Write("{0}   type: ", indent);
 					Console.Out.WriteLine(type);
+
+					// display options, that cannot be used together with current option
+					var incompatibleWith = command.GetIncompatibleOptions(option);
+					if (incompatibleWith != null)
+						Console.Out.WriteLine("{0}   cannot use with: {1}", indent, string.Join(", ", incompatibleWith.Select(o => $"--{o.Name}")));
 
 					// option property path in json or "not allowed" text if not supported
 					Console.Out.Write("{0}   json: ", indent);
