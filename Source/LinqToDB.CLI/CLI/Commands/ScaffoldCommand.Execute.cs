@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using LinqToDB.CodeModel;
 using LinqToDB.Data;
@@ -68,6 +70,9 @@ namespace LinqToDB.CLI
 			options.Remove(General.ConnectionString, out value);
 			var connectionString = (string)value!;
 
+			options.Remove(General.ProviderLocation, out value);
+			var providerLocation = (string?)value;
+
 			// assert that all provided options handled
 			if (options.Count > 0)
 			{
@@ -79,43 +84,44 @@ namespace LinqToDB.CLI
 			}
 
 			// perform scaffolding
-			return Scaffold(settings, provider, connectionString, output, overwrite);
+			return Scaffold(settings, provider, providerLocation, connectionString, output, overwrite);
 		}
 
-		private int Scaffold(ScaffoldOptions settings, string provider, string connectionString, string output, bool overwrite)
+		private int Scaffold(ScaffoldOptions settings, string provider, string? providerLocation, string connectionString, string output, bool overwrite)
 		{
-			using (var dc = GetConnection(provider, connectionString))
+			using var dc = GetConnection(provider, providerLocation, connectionString);
+			if (dc == null)
+				return StatusCodes.EXPECTED_ERROR;
+
+			var generator  = new Scaffolder(LanguageProviders.CSharp, HumanizerNameConverter.Instance, settings);
+			var dataModel  = generator.LoadDataModel(dc);
+			var sqlBuilder = dc.DataProvider.CreateSqlBuilder(dc.MappingSchema);
+			var files      = generator.GenerateCodeModel(
+				sqlBuilder,
+				dataModel,
+				MetadataBuilders.GetAttributeBasedMetadataBuilder(generator.Language, sqlBuilder),
+				SqlBoolEqualityConverter.Create(generator.Language));
+			var sourceCode = generator.GenerateSourceCode(files);
+
+			Directory.CreateDirectory(output);
+
+			for (var i = 0; i < sourceCode.Length; i++)
 			{
-				var generator  = new Scaffolder(LanguageProviders.CSharp, HumanizerNameConverter.Instance, settings);
-				var dataModel  = generator.LoadDataModel(dc);
-				var sqlBuilder = dc.DataProvider.CreateSqlBuilder(dc.MappingSchema);
-				var files      = generator.GenerateCodeModel(
-						sqlBuilder,
-						dataModel,
-						MetadataBuilders.GetAttributeBasedMetadataBuilder(generator.Language, sqlBuilder),
-						SqlBoolEqualityConverter.Create(generator.Language));
-				var sourceCode = generator.GenerateSourceCode(files);
-
-				Directory.CreateDirectory(output);
-
-				for (var i = 0; i < sourceCode.Length; i++)
+				// TODO: add file name normalization/deduplication?
+				var fileName = $@"{output}\{sourceCode[i].FileName}";
+				if (File.Exists(fileName) && !overwrite)
 				{
-					// TODO: add file name normalization/deduplication?
-					var fileName = $@"{output}\{sourceCode[i].FileName}";
-					if (File.Exists(fileName) && !overwrite)
-					{
-						Console.WriteLine($"File '{fileName}' already exists. Specify '--overwrite true' option if you want to ovrerwrite existing files");
-						return StatusCodes.EXPECTED_ERROR;
-					}
-
-					File.WriteAllText(fileName, sourceCode[i].Code);
+					Console.WriteLine($"File '{fileName}' already exists. Specify '--overwrite true' option if you want to ovrerwrite existing files");
+					return StatusCodes.EXPECTED_ERROR;
 				}
+
+				File.WriteAllText(fileName, sourceCode[i].Code);
 			}
 
 			return StatusCodes.SUCCESS;
 		}
 
-		private DataConnection GetConnection(string provider, string connectionString)
+		private DataConnection? GetConnection(string provider, string? providerLocation, string connectionString)
 		{
 			// general rules:
 			// - specify specific provider used by tool if linq2db supports multiple providers for database
@@ -149,12 +155,39 @@ namespace LinqToDB.CLI
 				case ProviderName.Sybase:
 					provider                           = ProviderName.SybaseManaged;
 					break;
+				case ProviderName.SqlCe:
+					if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+					{
+						Console.Error.WriteLine($"SQL Server Compact Edition not supported on non-Windows platforms");
+						return null;
+					}
+
+					var assemblyPath = providerLocation ?? Path.Combine(Environment.GetEnvironmentVariable(IntPtr.Size == 4 ? "ProgramFiles(x86)" : "ProgramFiles")!, @"Microsoft SQL Server Compact Edition\v4.0\Private\System.Data.SqlServerCe.dll");
+					if (!File.Exists(assemblyPath))
+					{
+						Console.Error.WriteLine(@$"Cannot locate Server Compact Edition installation.
+Probed location: {assemblyPath}.
+Possible reasons:
+1. SQL Server CE not installed => install SQL CE runtime (e.g. from here https://www.microsoft.com/en-us/download/details.aspx?id=30709)
+2. SQL Server CE runtime architecture doesn't match process architecture => add '--architecture x86' or '--architecture x64' scaffold option
+3. SQL Server CE runtime has custom location => specify path to System.Data.SqlServerCe.dll using '--provider-location <path_to_assembly>' option");
+						return null;
+					}
+
+					var assembly = Assembly.LoadFrom(assemblyPath);
+					DbProviderFactories.RegisterFactory("System.Data.SqlServerCe.4.0", assembly.GetType("System.Data.SqlServerCe.SqlCeProviderFactory")!);
+					break;
 				default:
-					throw new InvalidOperationException($"Unsupported database provider: {provider}");
+					Console.Error.WriteLine($"Unsupported database provider: {provider}");
+					return null;
 			}
 
-			var dataProvider = DataConnection.GetDataProvider(provider, connectionString)
-				?? throw new InvalidOperationException($"Cannot create database provider: {provider}");
+			var dataProvider = DataConnection.GetDataProvider(provider, connectionString);
+			if (dataProvider == null)
+			{
+				Console.Error.WriteLine($"Cannot create database provider: {provider}");
+				return null;
+			}
 
 			return new DataConnection(dataProvider, connectionString);
 		}

@@ -44,7 +44,11 @@ namespace LinqToDB.CLI
 				return null;
 			}
 
-			var json = JsonDocument.Parse(File.ReadAllText(rawValue));
+			var options = new JsonDocumentOptions()
+			{
+				CommentHandling = JsonCommentHandling.Skip
+			};
+			var json = JsonDocument.Parse(File.ReadAllText(rawValue), options);
 
 			if (json.RootElement.ValueKind != JsonValueKind.Object)
 			{

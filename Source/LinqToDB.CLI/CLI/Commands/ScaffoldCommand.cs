@@ -28,6 +28,7 @@ namespace LinqToDB.CLI
 			AddOption(_generalOptions, General.Output);
 			AddOption(_generalOptions, General.Overwrite);
 			AddOption(_generalOptions, General.Provider);
+			AddOption(_generalOptions, General.ProviderLocation);
 			AddOption(_generalOptions, General.ConnectionString);
 			AddOption(_generalOptions, General.Architecture);
 			AddOption(_generalOptions, General.OptionsTemplate);

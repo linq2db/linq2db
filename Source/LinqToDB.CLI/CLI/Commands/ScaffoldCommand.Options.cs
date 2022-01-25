@@ -101,6 +101,22 @@ JSON file example:
 					});
 
 			/// <summary>
+			/// Database provider location option.
+			/// </summary>
+			public static readonly CliOption ProviderLocation = new StringCliOption(
+					"provider-location",
+					'l',
+					false,
+					false,
+					"database provider location",
+					@"Allows user to specify path to database provider for some databases.
+Supported databases:
+- SQL Server Compact Edition : value is a full path to System.Data.SqlServerCe.dll assembly from Private folder of SQL CE installation",
+					null,
+					null,
+					null);
+
+			/// <summary>
 			/// Connection string option.
 			/// </summary>
 			public static readonly CliOption ConnectionString = new StringCliOption(
