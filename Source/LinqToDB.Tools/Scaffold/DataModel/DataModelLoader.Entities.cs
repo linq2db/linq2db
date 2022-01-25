@@ -17,15 +17,11 @@ namespace LinqToDB.Scaffold
 		/// </summary>
 		/// <param name="dataContext">Current data model's data context descriptor.</param>
 		/// <param name="table">Table or view schema data.</param>
-		/// <param name="primaryKey">Table primary key schema data.</param>
-		/// <param name="identity">Table identity schema data.</param>
 		/// <param name="defaultSchemas">List of default database schema names.</param>
 		/// <param name="baseType">Optional base entity class type.</param>
 		private void BuildEntity(
 			DataContextModel dataContext,
 			TableLikeObject  table,
-			PrimaryKey?      primaryKey,
-			Identity?        identity,
 			ISet<string>     defaultSchemas,
 			IType?           baseType)
 		{
@@ -85,7 +81,7 @@ namespace LinqToDB.Scaffold
 			// add entity to lookup
 			_entities.Add(table.Name, new TableWithEntity(table, entity));
 
-			BuildEntityColumns(table, primaryKey, identity, entity);
+			BuildEntityColumns(table, entity);
 
 			// add entity to model
 			if (isNonDefaultSchema && _options.DataModel.GenerateSchemaAsType)
@@ -98,10 +94,8 @@ namespace LinqToDB.Scaffold
 		/// Converts schema's table/view columns, primary key and identity information to entity columns.
 		/// </summary>
 		/// <param name="table">Table/view schema object.</param>
-		/// <param name="primaryKey">Table primary key object.</param>
-		/// <param name="identity">Table identity schema object.</param>
 		/// <param name="entity">Entity.</param>
-		private void BuildEntityColumns(TableLikeObject table, PrimaryKey? primaryKey, Identity? identity, EntityModel entity)
+		private void BuildEntityColumns(TableLikeObject table, EntityModel entity)
 		{
 			Dictionary<string, ColumnModel> entityColumnsMap;
 			_columns.Add(entity, entityColumnsMap = new());
@@ -145,14 +139,14 @@ namespace LinqToDB.Scaffold
 				columnMetadata.CanBeNull    = column.Nullable;
 				columnMetadata.SkipOnInsert = !column.Insertable;
 				columnMetadata.SkipOnUpdate = !column.Updatable;
-				columnMetadata.IsIdentity   = identity != null && identity.Column == column.Name;
+				columnMetadata.IsIdentity   = table.Identity != null && table.Identity.Column == column.Name;
 
-				if (primaryKey != null)
+				if (table.PrimaryKey != null)
 				{
-					columnMetadata.IsPrimaryKey = primaryKey.Columns.Contains(column.Name);
+					columnMetadata.IsPrimaryKey = table.PrimaryKey.Columns.Contains(column.Name);
 
-					if (columnMetadata.IsPrimaryKey && primaryKey.Columns.Count > 1)
-						columnMetadata.PrimaryKeyOrder = primaryKey.GetColumnPositionInKey(column);
+					if (columnMetadata.IsPrimaryKey && table.PrimaryKey.Columns.Count > 1)
+						columnMetadata.PrimaryKeyOrder = table.PrimaryKey.GetColumnPositionInKey(column);
 				}
 			}
 		}

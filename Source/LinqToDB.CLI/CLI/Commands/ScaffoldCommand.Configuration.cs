@@ -147,18 +147,18 @@ namespace LinqToDB.CLI
 			// objects to load
 			if (options.Remove(SchemaOptions.LoadedObjects, out var value))
 			{
-				SchemaObjects objects = 0;
+				var objects = SchemaObjects.None;
 				foreach (var strVal in (string[])value!)
 				{
 					switch (strVal)
 					{
-						case "table"             : objects &= SchemaObjects.Table;             break;
-						case "view"              : objects &= SchemaObjects.View;              break;
-						case "foreign-key"       : objects &= SchemaObjects.ForeignKey;        break;
-						case "stored-procedure"  : objects &= SchemaObjects.StoredProcedure;   break;
-						case "scalar-function"   : objects &= SchemaObjects.ScalarFunction;    break;
-						case "table-function"    : objects &= SchemaObjects.TableFunction;     break;
-						case "aggregate-function": objects &= SchemaObjects.AggregateFunction; break;
+						case "table"             : objects |= SchemaObjects.Table;             break;
+						case "view"              : objects |= SchemaObjects.View;              break;
+						case "foreign-key"       : objects |= SchemaObjects.ForeignKey;        break;
+						case "stored-procedure"  : objects |= SchemaObjects.StoredProcedure;   break;
+						case "scalar-function"   : objects |= SchemaObjects.ScalarFunction;    break;
+						case "table-function"    : objects |= SchemaObjects.TableFunction;     break;
+						case "aggregate-function": objects |= SchemaObjects.AggregateFunction; break;
 					}
 				}
 				settings.LoadedObjects = objects;

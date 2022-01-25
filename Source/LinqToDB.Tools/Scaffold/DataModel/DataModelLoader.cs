@@ -87,14 +87,14 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 			if (_options.Schema.LoadedObjects.HasFlag(SchemaObjects.Table))
 			{
 				foreach (var table in _schemaProvider.GetTables())
-					BuildEntity(dataContext, table, table.PrimaryKey, table.Identity, defaultSchemas, baseEntityType);
+					BuildEntity(dataContext, table, defaultSchemas, baseEntityType);
 			}
 
 			// load views as entities
 			if (_options.Schema.LoadedObjects.HasFlag(SchemaObjects.View))
 			{
 				foreach (var view in _schemaProvider.GetViews())
-					BuildEntity(dataContext, view, null, view.Identity, defaultSchemas, baseEntityType);
+					BuildEntity(dataContext, view, defaultSchemas, baseEntityType);
 			}
 
 			// load foreign keys as associations

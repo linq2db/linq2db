@@ -31,11 +31,9 @@
 
 		<!--cleanup for pack-->
 		<ItemGroup>
-			<JunkFiles Condition="$(Configuration) == 'Release'"
-				 Include="
-					bin\Release\netcoreapp3.1\dotnet-linq2db.runtimeconfig.dev.json;
-					bin\Release\netcoreapp3.1\*.pdb;
-					bin\Release\netcoreapp3.1\*.xml;" />
+			<JunkFiles
+				Condition="$(Configuration) == 'Release'"
+				Include="bin\Release\netcoreapp3.1\dotnet-linq2db.runtimeconfig.dev.json;bin\Release\netcoreapp3.1\*.pdb;bin\Release\netcoreapp3.1\*.xml;" />
 		</ItemGroup>
 
 		<Delete Condition="$(Configuration) == 'Release'" Files="@(JunkFiles)" />
@@ -50,30 +48,25 @@
 		<ProjectReference Include="..\LinqToDB.Tools\LinqToDB.Tools.csproj" />
 
 		<!--providers-->
-		<PackageReference Include="System.Data.SQLite.Core" />
-		<PackageReference Include="Microsoft.Data.SqlClient" />
+		<PackageReference Include="System.Data.SQLite.Core"         />
+		<PackageReference Include="Microsoft.Data.SqlClient"        />
+		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
+		<PackageReference Include="MySqlConnector"                  />
+		<PackageReference Include="Oracle.ManagedDataAccess.Core"   />
+		<PackageReference Include="Npgsql"                          />
+		<PackageReference Include="AdoNetCore.AseClient"            />
 
 		<!--
 
 
-		<PackageReference Include="System.Data.SqlClient" />
-		<PackageReference Include="dotMorten.Microsoft.SqlServer.Types" />
-
 		
-		<PackageReference Include="Microsoft.Data.SQLite" />
-		
-		<PackageReference Include="Npgsql" />
 
-		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
 
-		<PackageReference Include="MySqlConnector" />
 
 		<PackageReference Include="System.Data.OleDb" />
 		<PackageReference Include="System.Data.Odbc" />
 
-		<PackageReference Include="AdoNetCore.AseClient" />
 
-		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
 
 		<PackageReference Include="IBM.Data.DB2.Core" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
 		<PackageReference Include="IBM.Data.DB2.Core-lnx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />

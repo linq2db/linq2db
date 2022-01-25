@@ -11,6 +11,10 @@ namespace LinqToDB.Schema
 	public enum SchemaObjects
 	{
 		/// <summary>
+		/// Nothing selected.
+		/// </summary>
+		None              = 0,
+		/// <summary>
 		/// Table.
 		/// </summary>
 		Table             = 1,

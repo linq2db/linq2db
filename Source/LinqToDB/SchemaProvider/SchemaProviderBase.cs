@@ -46,7 +46,7 @@ namespace LinqToDB.SchemaProvider
 
 			if (options != null)
 			{
-				if (options.IncludedSchemas != null)
+				if (options.IncludedSchemas != null && options.IncludedSchemas.Length > 0)
 				{
 					schemas.Clear();
 					foreach (var schema in options.IncludedSchemas)
@@ -54,7 +54,7 @@ namespace LinqToDB.SchemaProvider
 							schemas.Add(schema!);
 				}
 
-				if (options.ExcludedSchemas != null)
+				if (options.ExcludedSchemas != null && options.ExcludedSchemas.Length > 0)
 					foreach (var schema in options.ExcludedSchemas)
 						if (!string.IsNullOrEmpty(schema))
 							schemas.Remove(schema!);

@@ -375,12 +375,7 @@ namespace LinqToDB.Schema
 				}
 
 				if (column.IsPrimaryKey)
-				{
-					if (table.IsView)
-						throw new InvalidOperationException($"Primary key found on view {tableName}");
-
 					hasPrimaryKey = true;
-				}
 			}
 
 			if (hasPrimaryKey)
@@ -399,7 +394,7 @@ namespace LinqToDB.Schema
 					ParseForeignKey(fk);
 
 			if (table.IsView)
-				_views.Add(new View(tableName, description, columns, identity));
+				_views.Add(new View(tableName, description, columns, identity, primaryKey));
 			else
 				_tables.Add(new Table(tableName, description, columns, identity, primaryKey));
 		}
@@ -654,15 +649,21 @@ namespace LinqToDB.Schema
 				|| options.LoadedObjects.HasFlag(SchemaObjects.TableFunction)
 				|| options.LoadedObjects.HasFlag(SchemaObjects.AggregateFunction);
 
-			if (options.IncludeSchemas)
-				legacyOptions.IncludedSchemas = options.Schemas.ToArray();
-			else
-				legacyOptions.ExcludedSchemas = options.Schemas.ToArray();
+			if (options.Schemas.Count > 0)
+			{
+				if (options.IncludeSchemas)
+					legacyOptions.IncludedSchemas = options.Schemas.ToArray();
+				else
+					legacyOptions.ExcludedSchemas = options.Schemas.ToArray();
+			}
 
-			if (options.IncludeCatalogs)
-				legacyOptions.IncludedCatalogs = options.Catalogs.ToArray();
-			else
-				legacyOptions.ExcludedCatalogs = options.Catalogs.ToArray();
+			if (options.Catalogs.Count > 0)
+			{
+				if (options.IncludeCatalogs)
+					legacyOptions.IncludedCatalogs = options.Catalogs.ToArray();
+				else
+					legacyOptions.ExcludedCatalogs = options.Catalogs.ToArray();
+			}
 
 			legacyOptions.LoadProcedure = p =>
 			{

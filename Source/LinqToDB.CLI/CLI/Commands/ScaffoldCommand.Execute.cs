@@ -6,6 +6,8 @@ using System.IO;
 using System.Runtime.InteropServices;
 using LinqToDB.CodeModel;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.Oracle;
+using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Metadata;
 using LinqToDB.Naming;
@@ -115,14 +117,37 @@ namespace LinqToDB.CLI
 
 		private DataConnection GetConnection(string provider, string connectionString)
 		{
+			// general rules:
+			// - specify specific provider used by tool if linq2db supports multiple providers for database
+			// - if multiple dialects (versions) of db supported - make sure version detection enabled
+			// other considerations:
+			// - generate error for databases with windows-only support (e.g. access, sqlce)
+			// - allow user to specify provider discovery hints (e.g. provider path) for unmanaged providers
 			switch (provider)
 			{
 				case ProviderName.SQLite:
-					provider = ProviderName.SQLiteClassic;
+					provider                           = ProviderName.SQLiteClassic;
 					break;
 				case ProviderName.SqlServer:
-					SqlServerTools.AutoDetectProvider = true;
-					SqlServerTools.Provider           = SqlServerProvider.MicrosoftDataSqlClient;
+					SqlServerTools.AutoDetectProvider  = true;
+					SqlServerTools.Provider            = SqlServerProvider.MicrosoftDataSqlClient;
+					break;
+				case ProviderName.Firebird:
+					// TODO: don't forget to add versioning here after Firebird versioning feature merged
+					break;
+				case ProviderName.MySql:
+					// TODO: remove provider hint after MySQL.Data support removed
+					provider                           = ProviderName.MySqlConnector;
+					break;
+				case ProviderName.Oracle:
+					OracleTools.AutoDetectProvider     = true;
+					provider                           = ProviderName.OracleManaged;
+					break;
+				case ProviderName.PostgreSQL:
+					PostgreSQLTools.AutoDetectProvider = true;
+					break;
+				case ProviderName.Sybase:
+					provider                           = ProviderName.SybaseManaged;
 					break;
 				default:
 					throw new InvalidOperationException($"Unsupported database provider: {provider}");

@@ -16,5 +16,5 @@ namespace LinqToDB.Schema
 		IReadOnlyCollection<Column> Columns,
 		Identity?                   Identity,
 		PrimaryKey?                 PrimaryKey)
-		: TableLikeObject(Name, Description, Columns, Identity);
+		: TableLikeObject(Name, Description, Columns, Identity, PrimaryKey);
 }
