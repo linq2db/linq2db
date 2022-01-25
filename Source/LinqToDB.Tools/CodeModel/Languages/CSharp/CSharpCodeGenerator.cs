@@ -134,8 +134,12 @@ namespace LinqToDB.CodeModel
 
 		protected override void Visit(CodeFile file)
 		{
+			// hardcoded sequence with newline spacers
 			VisitList(file.Header);
+			Visit(CodeEmptyLine.Instance);
 			VisitList(file.Imports);
+			Visit(CodeEmptyLine.Instance);
+
 			_currentImports = file.Imports;
 			VisitList(file);
 		}

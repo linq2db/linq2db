@@ -86,8 +86,7 @@ JSON file example:
 					{
 						// TODO: implement provider discovery for access
 						new (false, DatabaseType.Access    .ToString(), "MS Access (requires OLE DB or/and ODBC provider installed)"),
-						new (false, DatabaseType.DB2LUW    .ToString(), "IBM DB2 LUW"                                               ),
-						new (false, DatabaseType.DB2zOS    .ToString(), "IBM DB2 z/OS"                                              ),
+						new (false, DatabaseType.DB2       .ToString(), "IBM DB2 LUW or z/OS"                                       ),
 						new (false, DatabaseType.Firebird  .ToString(), "Firebird"                                                  ),
 						new (false, DatabaseType.Informix  .ToString(), "IBM Informix"                                              ),
 						new (false, DatabaseType.SQLServer .ToString(), "MS SQL Server (including Azure SQL Server)"                ),
@@ -609,7 +608,7 @@ Naming options is an object with following properties:
 						"{ \"dataModel\": { \"association-collection\": \"[]\" } }",
 						"{ \"dataModel\": { \"association-collection\": \"System.Collections.Generic.List<>\" } }",
 					},
-					new[] { "System.Linq.IQueryable<>" });
+					new[] { "System.Collections.Generic.IEnumerable<>" });
 
 			/// <summary>
 			/// Reuse of known entity mappings for procedure/table function return record option.
@@ -1308,8 +1307,7 @@ string // also you can put table function name as string directly to list
 		private enum DatabaseType
 		{
 			Access,
-			DB2LUW,
-			DB2zOS,
+			DB2,
 			Firebird,
 			Informix,
 			SQLServer,

@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using LinqToDB.CodeModel;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.DataProvider.SqlServer;
@@ -52,8 +53,7 @@ namespace LinqToDB.CLI
 			var provider     = providerName switch
 			{
 				DatabaseType.Access     => ProviderName.Access,
-				DatabaseType.DB2LUW     => ProviderName.DB2LUW,
-				DatabaseType.DB2zOS     => ProviderName.DB2zOS,
+				DatabaseType.DB2        => ProviderName.DB2,
 				DatabaseType.Firebird   => ProviderName.Firebird,
 				DatabaseType.Informix   => ProviderName.Informix,
 				DatabaseType.SQLServer  => ProviderName.SqlServer,
@@ -207,6 +207,31 @@ Possible reasons:
 						var assembly = Assembly.LoadFrom(assemblyPath);
 						DbProviderFactories.RegisterFactory("Sap.Data.Hana", assembly.GetType("Sap.Data.Hana.HanaFactory")!);
 					}
+					break;
+				}
+				case ProviderName.Informix:
+				case ProviderName.DB2:
+				{
+					if (provider == ProviderName.Informix)
+						provider = ProviderName.InformixDB2;
+					else
+						DB2Tools.AutoDetectProvider = true;
+
+					if (providerLocation == null || !File.Exists(providerLocation))
+					{
+						// we cannot add 90 Megabytes (compressed size) of native provider for single db just because we can
+						Console.Error.WriteLine(@$"Cannot locate IBM.Data.DB2.Core.dll provider assembly.
+Due to huge size of it, we don't include IBM.Data.DB2 provider into installation.
+You need to install it manually and specify provider path using '--provider-location <path_to_assembly>' option.
+Provider could be downloaded from:
+- for Windows: https://www.nuget.org/packages/IBM.Data.DB2.Core
+- for Linux: https://www.nuget.org/packages/IBM.Data.DB2.Core-lnx
+- for macOS: https://www.nuget.org/packages/IBM.Data.DB2.Core-osx");
+						return null;
+					}
+
+					var assembly = Assembly.LoadFrom(providerLocation);
+					DbProviderFactories.RegisterFactory("IBM.Data.DB2", assembly.GetType("IBM.Data.DB2.Core.DB2Factory")!);
 					break;
 				}
 				default:

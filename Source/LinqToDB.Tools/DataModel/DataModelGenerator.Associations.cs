@@ -87,9 +87,8 @@ namespace LinqToDB.DataModel
 				else if (_dataModel.AssociationCollectionType != null)
 					tagetType = _dataModel.AssociationCollectionType.WithTypeArguments(tagetType);
 				else
-					// default type is IQueryable to emphasize that associations are
-					// query-time objects by default if not used with eager load
-					tagetType = WellKnownTypes.System.Linq.IQueryable(tagetType);
+					// default type is IEnumerable
+					tagetType = WellKnownTypes.System.Collections.Generic.IEnumerable(tagetType);
 			}
 			else // if one-to-one association targets nullable columns, association is nullable
 				tagetType = tagetType.WithNullability(true);

@@ -278,7 +278,7 @@ namespace LinqToDB.Scaffold
 		/// When specified, many-sided association property/method will use specified type as return type.
 		/// Type must be open generic type with one type argument, e.g. <see cref="IEnumerable{T}"/>, <see cref="List{T}"/> or <see cref="ICollection{T}"/>.
 		/// E.g. <code>"System.Collections.Generic.List&lt;&gt;"</code>
-		/// If not configured, <see cref="IQueryable{T}"/> type will be used.
+		/// If not configured, <see cref="IEnumerable{T}"/> type will be used.
 		/// Option ignored if <see cref="AssociationCollectionType"/> set to <c>true</c>.
 		/// <list type="bullet">
 		/// <item>Default: not set</item>
