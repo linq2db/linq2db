@@ -1,11 +1,10 @@
 ﻿#if NETFRAMEWORK
-using System;
 using System.ServiceModel;
 
 namespace LinqToDB.ServiceModel
 {
 	[ServiceContract]
-	public interface ILinqService
+	public interface IWcfLinqService
 	{
 		[OperationContract] LinqServiceInfo GetInfo        (string? configuration);
 		[OperationContract] int             ExecuteNonQuery(string? configuration, string queryData);

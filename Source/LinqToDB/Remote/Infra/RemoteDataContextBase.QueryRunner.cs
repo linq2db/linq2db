@@ -1,5 +1,4 @@
-﻿#if NETFRAMEWORK
-using System;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -14,9 +13,6 @@ namespace LinqToDB.ServiceModel
 	using LinqToDB.Data;
 	using SqlProvider;
 	using SqlQuery;
-#if !NATIVE_ASYNC
-	using Tools;
-#endif
 
 	public abstract partial class RemoteDataContextBase
 	{
@@ -113,8 +109,9 @@ namespace LinqToDB.ServiceModel
 
 							var value = parameterValue.Value;
 
-							if (value is string || value is char)
-								value = "'" + value.ToString().Replace("'", "''") + "'";
+							if(value != null)
+								if (value is string || value is char)
+									value = "'" + value!.ToString()!.Replace("'", "''") + "'";
 
 							sb
 								.Append("-- SET ")
@@ -225,12 +222,12 @@ namespace LinqToDB.ServiceModel
 
 				var result = LinqServiceSerializer.DeserializeResult(_dataContext.SerializationMappingSchema, ret);
 
-				return new DataReaderWrapper(new ServiceModelDataReader(_dataContext.SerializationMappingSchema, result));
+				return new DataReaderWrapper(new RemoteDataReader(_dataContext.SerializationMappingSchema, result));
 			}
 
 			class DataReaderAsync : IDataReaderAsync
 			{
-				public DataReaderAsync(ServiceModelDataReader dataReader)
+				public DataReaderAsync(RemoteDataReader dataReader)
 				{
 					DataReader = dataReader;
 				}
@@ -242,7 +239,11 @@ namespace LinqToDB.ServiceModel
 					if (cancellationToken.IsCancellationRequested)
 					{
 						var task = new TaskCompletionSource<bool>();
+#if NET6_PLUS
+						task.SetCanceled(cancellationToken);
+#else
 						task.SetCanceled();
+#endif
 						return task.Task;
 					}
 
@@ -302,7 +303,7 @@ namespace LinqToDB.ServiceModel
 				var ret = await _client.ExecuteReaderAsync(_dataContext.Configuration, data).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				var result = LinqServiceSerializer.DeserializeResult(_dataContext.SerializationMappingSchema, ret);
-				var reader = new ServiceModelDataReader(_dataContext.SerializationMappingSchema, result);
+				var reader = new RemoteDataReader(_dataContext.SerializationMappingSchema, result);
 
 				return new DataReaderAsync(reader);
 			}
@@ -360,4 +361,3 @@ namespace LinqToDB.ServiceModel
 		}
 	}
 }
-#endif

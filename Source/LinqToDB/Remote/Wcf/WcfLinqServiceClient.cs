@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.ServiceModel
 {
-	class LinqSoapServiceClient : ClientBase<ILinqSoapClient>, ILinqClient, IDisposable
+	class WcfLinqServiceClient : ClientBase<IWcfLinqClient>, ILinqClient, IDisposable
 	{
 #region Init
 
-		public LinqSoapServiceClient(string endpointConfigurationName)                                : base(endpointConfigurationName) { }
-		public LinqSoapServiceClient(string endpointConfigurationName, string remoteAddress)          : base(endpointConfigurationName, remoteAddress) { }
-		public LinqSoapServiceClient(string endpointConfigurationName, EndpointAddress remoteAddress) : base(endpointConfigurationName, remoteAddress) { }
-		public LinqSoapServiceClient(Binding binding, EndpointAddress remoteAddress)                  : base(binding, remoteAddress) { }
+		public WcfLinqServiceClient(string endpointConfigurationName)                                : base(endpointConfigurationName) { }
+		public WcfLinqServiceClient(string endpointConfigurationName, string remoteAddress)          : base(endpointConfigurationName, remoteAddress) { }
+		public WcfLinqServiceClient(string endpointConfigurationName, EndpointAddress remoteAddress) : base(endpointConfigurationName, remoteAddress) { }
+		public WcfLinqServiceClient(Binding binding, EndpointAddress remoteAddress)                  : base(binding, remoteAddress) { }
 
 #endregion
 
@@ -61,7 +61,7 @@ namespace LinqToDB.ServiceModel
 
 		public Task<string> ExecuteReaderAsync(string? configuration, string queryData)
 		{
-			throw new NotImplementedException();
+			return Channel.ExecuteReaderAsync(configuration, queryData);
 		}
 
 		public Task<int> ExecuteBatchAsync(string? configuration, string queryData)

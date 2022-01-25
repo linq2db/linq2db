@@ -1,5 +1,4 @@
-﻿#if NETFRAMEWORK
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -52,7 +51,7 @@ namespace LinqToDB.ServiceModel
 					var info = client.GetInfo(Configuration);
 
 					var type = Type.GetType(info.MappingSchemaType)!;
-					var ms   = new RemoteMappingSchema(ContextIDPrefix, (MappingSchema)Activator.CreateInstance(type));
+					var ms   = new RemoteMappingSchema(ContextIDPrefix, (MappingSchema)Activator.CreateInstance(type)!);
 
 					_configurationInfo = new ConfigurationInfo
 					{
@@ -137,7 +136,7 @@ namespace LinqToDB.ServiceModel
 		SqlProviderFlags IDataContext.SqlProviderFlags      => GetConfigurationInfo().LinqServiceInfo.SqlProviderFlags;
 		TableOptions     IDataContext.SupportedTableOptions => GetConfigurationInfo().LinqServiceInfo.SupportedTableOptions;
 
-		Type IDataContext.DataReaderType => typeof(ServiceModelDataReader);
+		Type IDataContext.DataReaderType => typeof(RemoteDataReader);
 
 		Expression IDataContext.GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
@@ -371,4 +370,3 @@ namespace LinqToDB.ServiceModel
 
 	}
 }
-#endif

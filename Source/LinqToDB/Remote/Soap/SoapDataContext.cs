@@ -2,39 +2,38 @@
 using System;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
-using LinqToDB.Interceptors;
 
 namespace LinqToDB.ServiceModel
 {
-	public class ServiceModelDataContext : RemoteDataContextBase
+	public class SoapDataContext : RemoteDataContextBase
 	{
-#region Init
+		#region Init
 
-		ServiceModelDataContext()
+		SoapDataContext()
 		{
 		}
 
-		public ServiceModelDataContext(string endpointConfigurationName)
+		public SoapDataContext(string endpointConfigurationName)
 			: this()
 		{
 			_endpointConfigurationName = endpointConfigurationName ?? throw new ArgumentNullException(nameof(endpointConfigurationName));
 		}
 
-		public ServiceModelDataContext(string endpointConfigurationName, string remoteAddress)
+		public SoapDataContext(string endpointConfigurationName, string remoteAddress)
 			: this()
 		{
 			_endpointConfigurationName = endpointConfigurationName ?? throw new ArgumentNullException(nameof(endpointConfigurationName));
 			_remoteAddress             = remoteAddress             ?? throw new ArgumentNullException(nameof(remoteAddress));
 		}
 
-		public ServiceModelDataContext(string endpointConfigurationName, EndpointAddress endpointAddress)
+		public SoapDataContext(string endpointConfigurationName, EndpointAddress endpointAddress)
 			: this()
 		{
 			_endpointConfigurationName = endpointConfigurationName ?? throw new ArgumentNullException(nameof(endpointConfigurationName));
 			_endpointAddress           = endpointAddress           ?? throw new ArgumentNullException(nameof(endpointAddress));
 		}
 
-		public ServiceModelDataContext(Binding binding, EndpointAddress endpointAddress)
+		public SoapDataContext(Binding binding, EndpointAddress endpointAddress)
 			: this()
 		{
 			Binding          = binding         ?? throw new ArgumentNullException(nameof(binding));
@@ -45,29 +44,29 @@ namespace LinqToDB.ServiceModel
 		string?          _remoteAddress;
 		EndpointAddress? _endpointAddress;
 
-		public Binding? Binding { get; private set; }
+		public Binding?  Binding { get; private set; }
 
-#endregion
+		#endregion
 
-#region Overrides
+		#region Overrides
 
 		protected override ILinqClient GetClient()
 		{
 			if (Binding != null)
-				return new LinqServiceClient(Binding, _endpointAddress!);
+				return new SoapLinqServiceClient(Binding, _endpointAddress!);
 
 			if (_endpointAddress != null)
-				return new LinqServiceClient(_endpointConfigurationName!, _endpointAddress);
+				return new SoapLinqServiceClient(_endpointConfigurationName!, _endpointAddress);
 
 			if (_remoteAddress != null)
-				return new LinqServiceClient(_endpointConfigurationName!, _remoteAddress);
+				return new SoapLinqServiceClient(_endpointConfigurationName!, _remoteAddress);
 
-			return new LinqServiceClient(_endpointConfigurationName!);
+			return new SoapLinqServiceClient(_endpointConfigurationName!);
 		}
 
 		protected override IDataContext Clone()
 		{
-			return new ServiceModelDataContext
+			return new SoapDataContext
 			{
 				MappingSchema              = MappingSchema,
 				Configuration              = Configuration,
@@ -78,9 +77,9 @@ namespace LinqToDB.ServiceModel
 			};
 		}
 
-		protected override string ContextIDPrefix => "LinqService";
+		protected override string ContextIDPrefix => "LinqSoapService";
 
-#endregion
+		#endregion
 	}
 }
 #endif

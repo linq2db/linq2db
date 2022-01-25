@@ -1,7 +1,8 @@
-﻿#if NETFRAMEWORK
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
+
+#nullable disable
 
 namespace LinqToDB.ServiceModel
 {
@@ -9,9 +10,9 @@ namespace LinqToDB.ServiceModel
 	using System.Data.Common;
 	using Mapping;
 
-	class ServiceModelDataReader : DbDataReader
+	class RemoteDataReader : DbDataReader
 	{
-		public ServiceModelDataReader(MappingSchema mappingSchema, LinqServiceResult result)
+		public RemoteDataReader(MappingSchema mappingSchema, LinqServiceResult result)
 		{
 			_mappingSchema = mappingSchema;
 			_result = result;
@@ -24,13 +25,13 @@ namespace LinqToDB.ServiceModel
 		readonly LinqServiceResult      _result;
 		readonly Dictionary<string,int> _ordinal = new ();
 
-		string?[]? _data;
+		string[] _data;
 		int        _current = -1;
 
 		#region DbDataRecord
 
-		public override object? this[int ordinal] => GetValue(ordinal);
-		public override object? this[string name] => GetValue(GetOrdinal(name));
+		public override object this[int ordinal] => GetValue(ordinal)!;
+		public override object this[string name] => GetValue(GetOrdinal(name))!;
 
 		public override int  FieldCount => _result.FieldCount;
 		public override bool HasRows    => _result.Data.Count > 0;
@@ -49,7 +50,7 @@ namespace LinqToDB.ServiceModel
 		public override long     GetInt64   (int ordinal) => (long    )GetValue(ordinal)!;
 		public override string   GetString  (int ordinal) => (string  )GetValue(ordinal)!;
 
-		public override object? GetValue(int ordinal)
+		public override object GetValue(int ordinal)
 		{
 			var type = _result.FieldTypes[ordinal];
 			var value = _data![ordinal];
@@ -59,7 +60,7 @@ namespace LinqToDB.ServiceModel
 
 		public override bool IsDBNull(int ordinal) => _data![ordinal] == null;
 
-		public override string GetDataTypeName(int ordinal) => GetFieldType(ordinal).FullName;
+		public override string GetDataTypeName(int ordinal) => GetFieldType(ordinal).FullName!;
 		public override Type   GetFieldType   (int ordinal) => _result.FieldTypes[ordinal];
 		public override string GetName        (int ordinal) => _result.FieldNames[ordinal];
 		public override int    GetOrdinal     (string name) => _ordinal[name];
@@ -94,4 +95,3 @@ namespace LinqToDB.ServiceModel
 		#endregion
 	}
 }
-#endif

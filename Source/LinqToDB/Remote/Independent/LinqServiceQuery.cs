@@ -1,5 +1,4 @@
-﻿#if NETFRAMEWORK
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace LinqToDB.ServiceModel
 {
@@ -11,4 +10,3 @@ namespace LinqToDB.ServiceModel
 		public IReadOnlyCollection<string>? QueryHints { get; set; }
 	}
 }
-#endif

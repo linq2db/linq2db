@@ -1,5 +1,4 @@
-﻿#if NETFRAMEWORK
-using System;
+﻿using System;
 using System.Linq.Expressions;
 
 namespace LinqToDB.ServiceModel
@@ -132,4 +131,3 @@ namespace LinqToDB.ServiceModel
 		}
 	}
 }
-#endif

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.ServiceModel
 {
 	[ServiceContract]
-	public interface ILinqSoapClient
+	public interface ISoapLinqClient
 	{
 		[OperationContract(Action="http://tempuri.org/ILinqService/GetInfo",         ReplyAction="http://tempuri.org/ILinqService/GetInfoResponse")]         LinqServiceInfo GetInfo        (string? configuration);
 		[OperationContract(Action="http://tempuri.org/ILinqService/ExecuteNonQuery", ReplyAction="http://tempuri.org/ILinqService/ExecuteNonQueryResponse")] int             ExecuteNonQuery(string? configuration, string queryData);

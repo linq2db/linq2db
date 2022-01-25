@@ -7,7 +7,7 @@ using LinqToDB.ServiceModel;
 
 namespace Tests.Model
 {
-	public class TestServiceModelDataContext : ServiceModelDataContext, ITestDataContext
+	public class TestServiceModelDataContext : WcfDataContext, ITestDataContext
 	{
 		private readonly Action? _onDispose;
 

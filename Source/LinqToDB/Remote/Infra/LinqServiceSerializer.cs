@@ -1,5 +1,4 @@
-﻿#if NETFRAMEWORK
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -85,7 +84,7 @@ namespace LinqToDB.ServiceModel
 				}
 				else
 				{
-					var elementType = type.GetElementType();
+					var elementType = type.GetElementType()!;
 
 					Builder.Append(' ');
 
@@ -544,13 +543,13 @@ namespace LinqToDB.ServiceModel
 
 				if (type.IsArray)
 				{
-					var elem = type.GetElementType();
+					var elem = type.GetElementType()!;
 
 					Func<DeserializerBase,object?> deserializer;
 
 					lock (_arrayDeserializers)
 					{
-						if (!_arrayDeserializers.TryGetValue(elem, out deserializer))
+						if (!_arrayDeserializers.TryGetValue(elem, out deserializer!))
 						{
 							var helper = (IDeserializerHelper)Activator.CreateInstance(typeof(DeserializerHelper<>).MakeGenericType(elem))!;
 							_arrayDeserializers.Add(elem, deserializer = helper.GetArray);
@@ -1999,7 +1998,8 @@ namespace LinqToDB.ServiceModel
 
 							var c = new SqlInsertClause { Into = into, WithIdentity = wid };
 
-							c.Items.AddRange(items);
+							if(items != null)
+								c.Items.AddRange(items);
 							obj = c;
 
 							break;
@@ -2013,8 +2013,10 @@ namespace LinqToDB.ServiceModel
 
 							var c = new SqlUpdateClause { Table = table };
 
-							c.Items.AddRange(items);
-							c.Keys. AddRange(keys);
+							if (items != null)
+								c.Items.AddRange(items);
+							if (keys != null)
+								c.Keys.AddRange(keys);
 							obj = c;
 
 							break;
@@ -2025,7 +2027,8 @@ namespace LinqToDB.ServiceModel
 							var items = ReadArray<CteClause>();
 
 							var c = new SqlWithClause();
-							c.Clauses.AddRange(items);
+							if (items != null)
+								c.Clauses.AddRange(items);
 
 							obj = c;
 
@@ -2418,7 +2421,7 @@ namespace LinqToDB.ServiceModel
 				{
 					FieldCount   = fieldCount,
 					RowCount     = ReadInt(),
-					QueryID      = new Guid(ReadString()),
+					QueryID      = new Guid(ReadString()!),
 					FieldNames   = new string[fieldCount],
 					FieldTypes   = new Type  [fieldCount],
 					Data         = new List<string[]>(),
@@ -2525,7 +2528,7 @@ namespace LinqToDB.ServiceModel
 
 			lock (_arrayTypes)
 			{
-				if (!_arrayTypes.TryGetValue(elementType, out arrayType))
+				if (!_arrayTypes.TryGetValue(elementType, out arrayType!))
 				{
 					var helper = (IArrayHelper)Activator.CreateInstance(typeof(ArrayHelper<>).MakeGenericType(elementType))!;
 					_arrayTypes.Add(elementType, arrayType = helper.GetArrayType());
@@ -2541,7 +2544,7 @@ namespace LinqToDB.ServiceModel
 
 			lock (_arrayConverters)
 			{
-				if (!_arrayConverters.TryGetValue(elementType, out converter))
+				if (!_arrayConverters.TryGetValue(elementType, out converter!))
 				{
 					var helper = (IArrayHelper)Activator.CreateInstance(typeof(ArrayHelper<>).MakeGenericType(elementType))!;
 					_arrayConverters.Add(elementType, converter = helper.ConvertToArray);
@@ -2554,4 +2557,3 @@ namespace LinqToDB.ServiceModel
 		#endregion
 	}
 }
-#endif

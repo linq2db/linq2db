@@ -1,10 +1,7 @@
-﻿#if NETFRAMEWORK
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.ServiceModel;
 using System.Threading.Tasks;
-using System.Web.Services;
 
 namespace LinqToDB.ServiceModel
 {
@@ -13,27 +10,20 @@ namespace LinqToDB.ServiceModel
 	using Expressions;
 	using Extensions;
 	using Linq;
-	using LinqToDB.DataProvider;
 	using Mapping;
 	using SqlQuery;
 
-	[ServiceBehavior  (InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
-	[WebService       (Namespace  = "http://tempuri.org/")]
-	[WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
 	public class LinqService : ILinqService
 	{
-		public LinqService()
-		{
-		}
-
-		public LinqService(MappingSchema? mappingSchema)
-		{
-			_mappingSchema = mappingSchema;
-		}
-
-		public bool AllowUpdates { get; set; }
-
+		private MappingSchema? _serializationMappingSchema;
 		private MappingSchema? _mappingSchema;
+
+		public bool AllowUpdates
+		{
+			get;
+			set;
+		}
+
 		public MappingSchema? MappingSchema
 		{
 			get => _mappingSchema;
@@ -44,10 +34,18 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		private  MappingSchema? _serializationMappingSchema;
-		internal MappingSchema   SerializationMappingSchema => _serializationMappingSchema ??= new SerializationMappingSchema(_mappingSchema);
+		internal MappingSchema SerializationMappingSchema => _serializationMappingSchema ??= new SerializationMappingSchema(_mappingSchema);
 
-		public static Func<string,Type?> TypeResolver = _ => null;
+		public static Func<string, Type?> TypeResolver = _ => null;
+
+		public LinqService()
+		{
+		}
+
+		public LinqService(MappingSchema? mappingSchema)
+		{
+			_mappingSchema = mappingSchema;
+		}
 
 		public virtual DataConnection CreateDataContext(string? configuration)
 		{
@@ -69,30 +67,20 @@ namespace LinqToDB.ServiceModel
 
 #region ILinqService Members
 
-		[WebMethod]
 		public virtual LinqServiceInfo GetInfo(string? configuration)
 		{
 			using var ctx = CreateDataContext(configuration);
 
 			return new LinqServiceInfo
 			{
-				MappingSchemaType     = ctx.DataProvider.MappingSchema.GetType().AssemblyQualifiedName,
-				SqlBuilderType        = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema).GetType().AssemblyQualifiedName,
-				SqlOptimizerType      = ctx.DataProvider.GetSqlOptimizer().GetType().AssemblyQualifiedName,
+				MappingSchemaType     = ctx.DataProvider.MappingSchema.GetType().AssemblyQualifiedName!,
+				SqlBuilderType        = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema).GetType().AssemblyQualifiedName!,
+				SqlOptimizerType      = ctx.DataProvider.GetSqlOptimizer().GetType().AssemblyQualifiedName!,
 				SqlProviderFlags      = ctx.DataProvider.SqlProviderFlags,
 				SupportedTableOptions = ctx.DataProvider.SupportedTableOptions
 			};
 		}
 
-		class QueryContext : IQueryContext
-		{
-			public SqlStatement    Statement   { get; set; } = null!;
-			public object?         Context     { get; set; }
-			public SqlParameter[]? Parameters  { get; set; }
-			public AliasesContext? Aliases     { get; set; }
-		}
-
-		[WebMethod]
 		public int ExecuteNonQuery(string? configuration, string queryData)
 		{
 			try
@@ -108,7 +96,7 @@ namespace LinqToDB.ServiceModel
 
 				return DataConnection.QueryRunner.ExecuteNonQuery(db, new QueryContext
 				{
-					Statement  = query.Statement
+					Statement = query.Statement
 				}, new SqlParameterValues());
 			}
 			catch (Exception exception)
@@ -118,7 +106,6 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		[WebMethod]
 		public object? ExecuteScalar(string? configuration, string queryData)
 		{
 			try
@@ -144,7 +131,6 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		[WebMethod]
 		public string ExecuteReader(string? configuration, string queryData)
 		{
 			try
@@ -263,7 +249,6 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-		[WebMethod]
 		public int ExecuteBatch(string? configuration, string queryData)
 		{
 			try
@@ -300,7 +285,18 @@ namespace LinqToDB.ServiceModel
 			}
 		}
 
-#endregion
+		#endregion
+
+		#region private classes
+
+		private class QueryContext : IQueryContext
+		{
+			public SqlStatement Statement { get; set; } = null!;
+			public object? Context { get; set; }
+			public SqlParameter[]? Parameters { get; set; }
+			public AliasesContext? Aliases { get; set; }
+		}
+
+		#endregion
 	}
 }
-#endif

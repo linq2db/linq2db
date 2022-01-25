@@ -7,7 +7,7 @@ namespace LinqToDB.ServiceModel
 	[ServiceContract]
 	[ServiceKnownType(typeof(LinqServiceQuery))]
 	[ServiceKnownType(typeof(LinqServiceResult))]
-	public interface ILinqClient
+	public interface IWcfLinqClient
 	{
 		[OperationContract(Action="http://tempuri.org/ILinqService/GetInfo",         ReplyAction="http://tempuri.org/ILinqService/GetInfoResponse")]         LinqServiceInfo GetInfo        (string? configuration);
 		[OperationContract(Action="http://tempuri.org/ILinqService/ExecuteNonQuery", ReplyAction="http://tempuri.org/ILinqService/ExecuteNonQueryResponse")] int             ExecuteNonQuery(string? configuration, string queryData);
