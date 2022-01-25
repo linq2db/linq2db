@@ -33,7 +33,7 @@ namespace LinqToDB.CLI
 			Examples,
 			JsonExamples)
 	{
-		public override object? ParseCLI(CliCommand command, string rawValue)
+		public override object? ParseCLI(CliCommand command, string rawValue, out string? errorDetails)
 		{
 			var filter = new NameFilter();
 
@@ -42,13 +42,17 @@ namespace LinqToDB.CLI
 			foreach (var name in names)
 			{
 				if (name == string.Empty || !filter.AddName(null, name))
+				{
+					errorDetails = $"comma-separated list contains empty or duplicate elements: {rawValue}";
 					return null;
+				}
 			}
 
+			errorDetails = null;
 			return filter;
 		}
 
-		public override object? ParseJSON(JsonElement rawValue)
+		public override object? ParseJSON(JsonElement rawValue, out string? errorDetails)
 		{
 			if (rawValue.ValueKind == JsonValueKind.Array)
 			{
@@ -68,21 +72,50 @@ namespace LinqToDB.CLI
 							string? schema = null;
 							switch (property.Name)
 							{
-								case "name"  :
-									if (name != null || regex != null || property.Value.ValueKind != JsonValueKind.String)
+								case "name":
+									if (name != null)
+									{
+										errorDetails = $"duplicate 'name' property";
 										return null;
+									}
+									if (regex != null)
+									{
+										errorDetails = $"both 'name' and 'regex' properties specified";
+										return null;
+									}
+									if (property.Value.ValueKind != JsonValueKind.String)
+									{
+										errorDetails = $"'name' should be string but was '{property.Value.ValueKind}'";
+										return null;
+									}
 
 									name = property.Value.GetString()!;
 									break;
-								case "regex" :
-									if (name != null || regex != null || property.Value.ValueKind != JsonValueKind.String)
+								case "regex":
+									if (name != null)
+									{
+										errorDetails = $"duplicate 'regex' property";
 										return null;
+									}
+									if (regex != null)
+									{
+										errorDetails = $"both 'name' and 'regex' properties specified";
+										return null;
+									}
+									if (property.Value.ValueKind != JsonValueKind.String)
+									{
+										errorDetails = $"'regex' should be string but was '{property.Value.ValueKind}'";
+										return null;
+									}
 
 									regex = property.Value.GetString()!;
 									break;
 								case "schema":
 									if (hasSchema)
+									{
+										errorDetails = $"duplicate 'schema' property";
 										return null;
+									}
 
 									hasSchema = true;
 
@@ -90,11 +123,15 @@ namespace LinqToDB.CLI
 										break;
 
 									if (property.Value.ValueKind != JsonValueKind.String)
+									{
+										errorDetails = $"'schema' should be string but was '{property.Value.ValueKind}'";
 										return null;
+									}
 
 									schema = property.Value.GetString()!;
 									break;
-								default      :
+								default:
+									errorDetails = $"unknown property '{property.Name}'";
 									return null;
 							}
 
@@ -103,16 +140,24 @@ namespace LinqToDB.CLI
 							else if (regex != null)
 								filter.AddRegularExpression(schema, regex);
 							else
+							{
+								errorDetails = $"'name' or 'regex' property required";
 								return null;
+							}
 						}
 					}
 					else
+					{
+						errorDetails = $"string or object expected but '{element.ValueKind}' provided";
 						return null;
+					}
 				}
 
+				errorDetails = null;
 				return filter;
 			}
 
+			errorDetails = $"array expected but '{rawValue.ValueKind}' provided";
 			return null;
 		}
 	}

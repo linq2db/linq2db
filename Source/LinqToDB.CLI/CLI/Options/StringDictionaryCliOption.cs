@@ -34,7 +34,7 @@ namespace LinqToDB.CLI
 			Examples,
 			JsonExamples)
 	{
-		public override object? ParseCLI(CliCommand command, string rawValue)
+		public override object? ParseCLI(CliCommand command, string rawValue, out string? errorDetails)
 		{
 			var result = new Dictionary<string, string>();
 			foreach (var entry in rawValue.Split(','))
@@ -42,17 +42,24 @@ namespace LinqToDB.CLI
 				var parts = entry.Split('=');
 
 				if (parts.Length != 2)
+				{
+					errorDetails = $"option element should be a key=value string but got '{entry}'";
 					return null;
+				}
 				if (result.ContainsKey(parts[0]))
+				{
+					errorDetails = $"duplicate key '{parts[0]}'";
 					return null;
+				}
 
 				result.Add(parts[0], parts[1]);
 			}
 
+			errorDetails = null;
 			return result;
 		}
 
-		public override object? ParseJSON(JsonElement rawValue)
+		public override object? ParseJSON(JsonElement rawValue, out string? errorDetails)
 		{
 			if (rawValue.ValueKind == JsonValueKind.Object)
 			{
@@ -61,17 +68,25 @@ namespace LinqToDB.CLI
 				foreach (var property in rawValue.EnumerateObject())
 				{
 					if (result.ContainsKey(property.Name))
+					{
+						errorDetails = $"duplicate property '{property.Name}'";
 						return null;
+					}
 
 					if (property.Value.ValueKind != JsonValueKind.String)
+					{
+						errorDetails = $"property '{property.Name}' should have string type, but got '{property.Value.ValueKind}'";
 						return null;
+					}
 
 					result.Add(property.Name, property.Value.GetString()!);
 				}
 
+				errorDetails = null;
 				return result;
 			}
 
+			errorDetails = $"object expected but got '{rawValue.ValueKind}'";
 			return null;
 		}
 	}

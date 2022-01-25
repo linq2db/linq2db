@@ -38,15 +38,17 @@ namespace LinqToDB.CLI
 			Examples,
 			JsonExamples)
 	{
-		public override object? ParseCLI(CliCommand command, string rawValue)
+		public override object? ParseCLI(CliCommand command, string rawValue, out string? errorDetails)
 		{
+			errorDetails = null;
+
 			if (AllowMultiple)
 				return rawValue.Split(',');
 
 			return rawValue;
 		}
 
-		public override object? ParseJSON(JsonElement rawValue)
+		public override object? ParseJSON(JsonElement rawValue, out string? errorDetails)
 		{
 			if (AllowMultiple)
 			{
@@ -57,20 +59,28 @@ namespace LinqToDB.CLI
 					foreach (var value in rawValue.EnumerateArray())
 					{
 						if (value.ValueKind != JsonValueKind.String)
+						{
+							errorDetails = $"array should contain strings but '{value.ValueKind}' value found";
 							return null;
+						}
 						values.Add(value.GetString()!);
 					}
 				}
 
+				errorDetails = null;
 				return values.ToArray();
 
 			}
 			else
 			{
 				if (rawValue.ValueKind == JsonValueKind.String)
+				{
+					errorDetails = null;
 					return rawValue.GetString()!;
+				}
 			}
 
+			errorDetails = $"string expected but got '{rawValue.ValueKind}'";
 			return null;
 		}
 	}

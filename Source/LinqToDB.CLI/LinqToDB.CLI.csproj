@@ -28,7 +28,7 @@
 		<MSBuild Projects="$(MSBuildProjectFullPath)" Properties="RID=win-x86;Platform=$(Platform);Configuration=$(Configuration)" Targets="Build" />
 		<Delete Files="obj\$(Configuration)\netcoreapp3.1\apphost.exe" />
 		<MSBuild Projects="$(MSBuildProjectFullPath)" Properties="RID=win-x64;Platform=$(Platform);Configuration=$(Configuration)" Targets="Build" />
-	
+
 		<!--cleanup for pack-->
 		<ItemGroup>
 			<JunkFiles Condition="$(Configuration) == 'Release'"
@@ -40,7 +40,7 @@
 
 		<Delete Condition="$(Configuration) == 'Release'" Files="@(JunkFiles)" />
 	</Target>
-	
+
 	<Target Name="CopyHosts" AfterTargets="Build" Condition=" '$(RID)' != '' ">
 		<Copy SourceFiles="bin\$(Configuration)\apphosts\$(RID)\netcoreapp3.1\$(AssemblyName).exe" DestinationFiles="bin\$(Configuration)\netcoreapp3.1\$(AssemblyName).$(RID).exe" />
 	</Target>
@@ -51,12 +51,12 @@
 
 		<!--providers-->
 		<PackageReference Include="System.Data.SQLite.Core" />
+		<PackageReference Include="Microsoft.Data.SqlClient" />
 
 		<!--
 
 
 		<PackageReference Include="System.Data.SqlClient" />
-		<PackageReference Include="Microsoft.Data.SqlClient" />
 		<PackageReference Include="dotMorten.Microsoft.SqlServer.Types" />
 
 		

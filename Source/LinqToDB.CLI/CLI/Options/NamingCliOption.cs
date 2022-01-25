@@ -31,16 +31,20 @@ namespace LinqToDB.CLI
 			null,
 			JsonExamples)
 	{
-		public override object? ParseCLI(CliCommand command, string rawValue)
+		public override object? ParseCLI(CliCommand command, string rawValue, out string? errorDetails)
 		{
 			// not supported from CLI
+			errorDetails = null;
 			return null;
 		}
 
-		public override object? ParseJSON(JsonElement rawValue)
+		public override object? ParseJSON(JsonElement rawValue, out string? errorDetails)
 		{
 			if (rawValue.ValueKind != JsonValueKind.Object)
+			{
+				errorDetails = $"expected object, but got {rawValue.ValueKind}";
 				return null;
+			}
 
 			var properties = new HashSet<string>();
 
@@ -49,15 +53,22 @@ namespace LinqToDB.CLI
 			foreach (var property in rawValue.EnumerateObject())
 			{
 				if (!properties.Add(property.Name))
+				{
+					errorDetails = $"duplicate property '{property.Name}'";
 					return null;
+				}
 
 				switch (property.Name)
 				{
 					case "case"                            :
 						if (property.Value.ValueKind != JsonValueKind.String)
+						{
+							errorDetails = $"case : expected string value, but got {property.Value.ValueKind}";
 							return null;
+						}
 
-						switch (property.Value.GetString()!)
+						var caseValue = property.Value.GetString()!;
+						switch (caseValue.ToLowerInvariant())
 						{
 							case "none"         : options.Casing = NameCasing.None                 ; break;
 							case "camel_case"   : options.Casing = NameCasing.CamelCase            ; break;
@@ -67,21 +78,29 @@ namespace LinqToDB.CLI
 							case "t4"           : options.Casing = NameCasing.T4CompatNonPluralized; break;
 							case "t4_pluralized": options.Casing = NameCasing.T4CompatPluralized   ; break;
 							case "upper_case"   : options.Casing = NameCasing.UpperCase            ; break;
-							default             : return null;
+							default             :
+								errorDetails = $"case : unknown value: '{caseValue}'";
+								return null;
 						}
 
 						break;
 					case "pluralization"                   :
 						if (property.Value.ValueKind != JsonValueKind.String)
+						{
+							errorDetails = $"pluralization : expected string value, but got {property.Value.ValueKind}";
 							return null;
+						}
 
-						switch (property.Value.GetString()!)
+						var pluralizationValue = property.Value.GetString()!;
+						switch (pluralizationValue.ToLowerInvariant())
 						{
 							case "none"                      : options.Pluralization =Pluralization.None                 ; break;
 							case "plural"                    : options.Pluralization =Pluralization.Plural               ; break;
 							case "plural_multiple_characters": options.Pluralization =Pluralization.PluralIfLongerThanOne; break;
 							case "singular"                  : options.Pluralization =Pluralization.Singular             ; break;
-							default                          : return null;
+							default                          :
+								errorDetails = $"pluralization : unknown value: '{pluralizationValue}'";
+								return null;
 						}
 						
 						break;
@@ -91,7 +110,10 @@ namespace LinqToDB.CLI
 						else if (property.Value.ValueKind == JsonValueKind.String)
 							options.Prefix = property.Value.GetString()!;
 						else
+						{
+							errorDetails = $"prefix : expected string value, but got {property.Value.ValueKind}";
 							return null;
+						}
 						break;
 					case "suffix"                          :
 						if (property.Value.ValueKind == JsonValueKind.Null || property.Value.ValueKind == JsonValueKind.Undefined)
@@ -99,17 +121,26 @@ namespace LinqToDB.CLI
 						else if (property.Value.ValueKind == JsonValueKind.String)
 							options.Suffix = property.Value.GetString()!;
 						else
+						{
+							errorDetails = $"suffix : expected string value, but got {property.Value.ValueKind}";
 							return null;
+						}
 						break;
 					case "transformation"                  :
 						if (property.Value.ValueKind != JsonValueKind.String)
+						{
+							errorDetails = $"transformation : expected string value, but got {property.Value.ValueKind}";
 							return null;
+						}
 
-						switch (property.Value.GetString()!)
+						var transformationValue = property.Value.GetString()!;
+						switch (transformationValue.ToLowerInvariant())
 						{
 							case "split_by_underscore": options.Transformation = NameTransformation.SplitByUnderscore; break;
 							case "t4"                 : options.Transformation = NameTransformation.T4Compat         ; break;
-							default                   : return null;
+							default                   :
+								errorDetails = $"transformation : unknown value: '{transformationValue}'";
+								return null;
 						}
 						
 						break;
@@ -119,7 +150,10 @@ namespace LinqToDB.CLI
 						else if (property.Value.ValueKind == JsonValueKind.False)
 							options.PluralizeOnlyIfLastWordIsText = false;
 						else
+						{
+							errorDetails = $"pluralize_if_ends_with_word_only : expected boolean value, but got {property.Value.ValueKind}";
 							return null;
+						}
 						break;
 					case "ignore_all_caps"                 :
 						if (property.Value.ValueKind == JsonValueKind.True)
@@ -127,13 +161,18 @@ namespace LinqToDB.CLI
 						else if (property.Value.ValueKind == JsonValueKind.False)
 							options.DontCaseAllCaps = false;
 						else
+						{
+							errorDetails = $"ignore_all_caps : expected boolean value, but got {property.Value.ValueKind}";
 							return null;
+						}
 						break;
 					default                                :
+						errorDetails = $"unexpected property '{property.Name}'";
 						return null;
 				}
 			}
 
+			errorDetails = null;
 			return options;
 		}
 	}

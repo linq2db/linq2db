@@ -6,7 +6,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using LinqToDB.CodeModel;
 using LinqToDB.Data;
-using LinqToDB.DataProvider.SQLite;
+using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Metadata;
 using LinqToDB.Naming;
 using LinqToDB.Scaffold;
@@ -118,10 +118,20 @@ namespace LinqToDB.CLI
 			switch (provider)
 			{
 				case ProviderName.SQLite:
-					return new DataConnection(SQLiteTools.GetDataProvider(ProviderName.SQLiteClassic), connectionString);
+					provider = ProviderName.SQLiteClassic;
+					break;
+				case ProviderName.SqlServer:
+					SqlServerTools.AutoDetectProvider = true;
+					SqlServerTools.Provider           = SqlServerProvider.MicrosoftDataSqlClient;
+					break;
 				default:
 					throw new InvalidOperationException($"Unsupported database provider: {provider}");
 			}
+
+			var dataProvider = DataConnection.GetDataProvider(provider, connectionString)
+				?? throw new InvalidOperationException($"Cannot create database provider: {provider}");
+
+			return new DataConnection(dataProvider, connectionString);
 		}
 
 		/// <summary>

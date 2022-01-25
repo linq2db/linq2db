@@ -34,18 +34,20 @@ namespace LinqToDB.CLI
 		/// </summary>
 		/// <param name="command">Option's command descriptor.</param>
 		/// <param name="rawValue">Option's value argument.</param>
+		/// <param name="errorDetails">Optional error details on failue (when method returns <c>null</c>).</param>
 		/// <returns>
 		/// Returns parsed value or <c>null</c> on error.
 		/// </returns>
-		public abstract object? ParseCLI(CliCommand command, string rawValue);
+		public abstract object? ParseCLI(CliCommand command, string rawValue, out string? errorDetails);
 
 		/// <summary>
 		/// Parse option value(s) using value from JSON.
 		/// </summary>
 		/// <param name="rawValue">Option's property value in JSON.</param>
+		/// <param name="errorDetails">Optional error details on failue (when method returns <c>null</c>).</param>
 		/// <returns>
 		/// Returns parsed value or <c>null</c> on error.
 		/// </returns>
-		public abstract object? ParseJSON(JsonElement rawValue);
+		public abstract object? ParseJSON(JsonElement rawValue, out string? errorDetails);
 	}
 }

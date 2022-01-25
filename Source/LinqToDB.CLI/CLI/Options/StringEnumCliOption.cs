@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.Json;
 
 namespace LinqToDB.CLI
@@ -14,6 +15,7 @@ namespace LinqToDB.CLI
 	/// <param name="DetailedHelp">Optional detailed help for option.</param>
 	/// <param name="Examples">Optional list of option use examples.</param>
 	/// <param name="JsonExamples">Optional list of option use examples in JSON.</param>
+	/// <param name="CaseSensitive">Define option value parsing mode - case-sensitive or case-insensitive.</param>
 	/// <param name="Values">List of allowed values (with defaults).</param>
 	internal sealed record StringEnumCliOption(
 		string             Name,
@@ -24,6 +26,7 @@ namespace LinqToDB.CLI
 		string?            DetailedHelp,
 		string[]?          Examples,
 		string[]?          JsonExamples,
+		bool               CaseSensitive,
 		StringEnumOption[] Values)
 		: CliOption(
 			Name,
@@ -38,7 +41,7 @@ namespace LinqToDB.CLI
 			Examples,
 			JsonExamples)
 	{
-		public override object? ParseCLI(CliCommand command, string rawValue)
+		public override object? ParseCLI(CliCommand command, string rawValue, out string? errorDetails)
 		{
 			// we don't operate with large lists to bother with Values lookup optimization with dictionary
 			if (AllowMultiple)
@@ -49,33 +52,41 @@ namespace LinqToDB.CLI
 					var found = false;
 					foreach (var value in Values)
 					{
-						if (rawValue == value.Value)
+						if (string.Equals(val, value.Value, CaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase))
 						{
-							values.Add(rawValue);
+							values.Add(value.Value);
 							found = true;
 							break;
 						}
 					}
 
 					if (!found)
+					{
+						errorDetails = $"unknown value '{val}'";
 						return null;
+					}
 				}
 
+				errorDetails = null;
 				return values.ToArray();
 			}
 			else
 			{
 				foreach (var value in Values)
 				{
-					if (rawValue == value.Value)
-						return rawValue;
+					if (string.Equals(rawValue, value.Value, CaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase))
+					{
+						errorDetails = null;
+						return value.Value;
+					}
 				}
 
+				errorDetails = $"unknown value '{rawValue}'";
 				return null;
 			}
 		}
 
-		public override object? ParseJSON(JsonElement rawValue)
+		public override object? ParseJSON(JsonElement rawValue, out string? errorDetails)
 		{
 			if (AllowMultiple)
 			{
@@ -86,27 +97,37 @@ namespace LinqToDB.CLI
 					foreach (var element in rawValue.EnumerateArray())
 					{
 						if (element.ValueKind != JsonValueKind.String)
+						{
+							errorDetails = $"array should contain strings but got '{rawValue.ValueKind}' value";
 							return null;
+						}
 
 						var stringValue = element.GetString()!;
 
 						var found = false;
 						foreach (var value in Values)
 						{
-							if (stringValue == value.Value)
+							if (string.Equals(stringValue, value.Value, CaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase))
 							{
 								found = true;
-								values.Add(stringValue);
+								values.Add(value.Value);
 								break;
 							}
 						}
 
-							if (!found)
+						if (!found)
+						{
+							errorDetails = $"unknown value '{stringValue}'";
 							return null;
+						}
 					}
 
+					errorDetails = null;
 					return values.ToArray();
 				}
+
+				errorDetails = $"array expected but got '{rawValue.ValueKind}'";
+				return null;
 			}
 			else
 			{
@@ -116,13 +137,20 @@ namespace LinqToDB.CLI
 
 					foreach (var value in Values)
 					{
-						if (stringValue == value.Value)
-							return stringValue;
+						if (string.Equals(stringValue, value.Value, CaseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase))
+						{
+							errorDetails = null;
+							return value.Value;
+						}
 					}
-				}
-			}
 
-			return null;
+					errorDetails = $"unknown value '{stringValue}'";
+					return null;
+				}
+
+				errorDetails = $"string expected but got '{rawValue.ValueKind}'";
+				return null;
+			}
 		}
 	}
 }

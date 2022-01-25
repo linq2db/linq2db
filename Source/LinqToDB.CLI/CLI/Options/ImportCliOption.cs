@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -33,15 +32,15 @@ namespace LinqToDB.CLI
 			Examples,
 			null)
 	{
-		public override object? ParseCLI(CliCommand command, string rawValue)
+		public override object? ParseCLI(CliCommand command, string rawValue, out string? errorDetails)
 		{
-			var results = new Dictionary<CliOption, object?>();
+			var results  = new Dictionary<CliOption, object?>();
 
 			// as json parsing errors could be tricky for user to identify, we should log detailed errors here
 			// currently we parse json using fail-fast approach
 			if (!File.Exists(rawValue))
 			{
-				Console.Error.WriteLine("JSON ({0}): object expected as root element", rawValue);
+				errorDetails = $"JSON ({rawValue}): object expected as root element";
 				return null;
 			}
 
@@ -49,7 +48,7 @@ namespace LinqToDB.CLI
 
 			if (json.RootElement.ValueKind != JsonValueKind.Object)
 			{
-				Console.Error.WriteLine("JSON ({0}): object expected as root element", rawValue);
+				errorDetails = $"JSON ({rawValue}): object expected as root element";
 				return null;
 			}
 
@@ -59,7 +58,7 @@ namespace LinqToDB.CLI
 
 				if (category == null)
 				{
-					Console.Error.WriteLine("JSON ({0}): unknown property: {1}", rawValue, categoryProperty.Name);
+					errorDetails = $"JSON ({rawValue}): unknown property: {categoryProperty.Name}";
 					return null;
 				}
 
@@ -71,7 +70,7 @@ namespace LinqToDB.CLI
 
 				if (categoryProperty.Value.ValueKind != JsonValueKind.Object)
 				{
-					Console.Error.WriteLine("JSON ({0}): property '{1}' must be object", rawValue, categoryProperty.Name);
+					errorDetails = $"JSON ({rawValue}): property '{categoryProperty.Name}' must be object";
 					return null;
 				}
 
@@ -80,32 +79,32 @@ namespace LinqToDB.CLI
 					var option = command.GetOptionByName(optionProperty.Name);
 					if (option == null)
 					{
-						Console.Error.WriteLine("JSON ({0}): unknown property '{1}.{2}'", rawValue, categoryProperty.Name, optionProperty.Name);
+						errorDetails = $"JSON ({rawValue}): unknown property '{categoryProperty.Name}.{optionProperty.Name}'";
 						return null;
 					}
 					if (!categoryOptions.Contains(option))
 					{
-						Console.Error.WriteLine("JSON ({0}): property '{2}' doesn't belong to '{1}'", rawValue, categoryProperty.Name, optionProperty.Name);
+						errorDetails = $"JSON ({rawValue}): property '{categoryProperty.Name}' doesn't belong to '{optionProperty.Name}'";
 						return null;
 					}
 
 					if (!option.AllowInJson)
 					{
-						Console.Error.WriteLine("JSON ({0}): option '{1}.{2}' not supported in JSON", rawValue, categoryProperty.Name, optionProperty.Name);
+						errorDetails = $"JSON ({rawValue}): option '{categoryProperty.Name}.{optionProperty.Name}' not supported in JSON";
 						return null;
 					}
 
 					if (results.ContainsKey(option))
 					{
 						// TODO: is it possible or json parser will throw earlier?
-						Console.Error.WriteLine("JSON ({0}): option '{1}.{2}' specified multiple times", rawValue, categoryProperty.Name, optionProperty.Name);
+						errorDetails = $"JSON ({rawValue}): option '{categoryProperty.Name}.{optionProperty.Name}' specified multiple times";
 						return null;
 					}
 
-					var value = option.ParseJSON(optionProperty.Value);
+					var value = option.ParseJSON(optionProperty.Value, out errorDetails);
 					if (value == null)
 					{
-						Console.Error.WriteLine("JSON ({0}): cannot parse option '{1}.{2}' value: {3}", rawValue, categoryProperty.Name, optionProperty.Name, optionProperty.Value);
+						errorDetails = $"JSON ({rawValue}): cannot parse option '{categoryProperty.Name}.{optionProperty.Name}' value '{optionProperty.Value}' : {errorDetails}";
 						return null;
 					}
 
@@ -113,12 +112,14 @@ namespace LinqToDB.CLI
 				}
 			}
 
+			errorDetails = null;
 			return results;
 		}
 
-		public override object? ParseJSON(JsonElement rawValue)
+		public override object? ParseJSON(JsonElement rawValue, out string? errorDetails)
 		{
 			// we don't support JSON import from JSON
+			errorDetails = null;
 			return null;
 		}
 	}

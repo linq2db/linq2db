@@ -81,6 +81,7 @@ JSON file example:
 					null,
 					null,
 					null,
+					false,
 					new StringEnumOption[]
 					{
 						// TODO: implement provider discovery for access
@@ -129,6 +130,7 @@ Example of platform-specific providers:
  - thin wrappers over native provider (e.g. IBM.Data.DB2 providers)",
 					null,
 					null,
+					false,
 					new StringEnumOption[]
 					{
 						new (false, "x86", "x86 architecture"),
@@ -147,6 +149,7 @@ Example of platform-specific providers:
 					@"Specify this option only if you want to to use scaffolding options, similar to used by old T4 templates by default",
 					null,
 					null,
+					false,
 					new StringEnumOption[]
 					{
 						new (true , "default", "set of parameters, used by default (as specified in option help)"),
@@ -884,6 +887,7 @@ Naming options is an object with following properties:
 					null,
 					new[] { "--objects table,stored-procedure,table-function" },
 					new[] { "{ \"schema\": { \"objects\": [\"table\", \"view\", \"table-function\"] } }" },
+					false,
 					new StringEnumOption[]
 					{
 						new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.Table            ) != 0, "table"             , "load tables"                    ),

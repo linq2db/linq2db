@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.Json;
 
 namespace LinqToDB.CLI
@@ -37,23 +38,39 @@ namespace LinqToDB.CLI
 			Examples,
 			JsonExamples)
 	{
-		public override object? ParseCLI(CliCommand command, string rawValue)
+		public override object? ParseCLI(CliCommand command, string rawValue, out string? errorDetails)
 		{
-			if (rawValue == "true")
+			if (string.Equals(rawValue, "true", StringComparison.OrdinalIgnoreCase))
+			{
+				errorDetails = null;
 				return true;
-			if (rawValue == "false")
-				return false;
+			}
 
+			if (string.Equals(rawValue, "false", StringComparison.OrdinalIgnoreCase))
+			{
+				errorDetails = null;
+				return false;
+			}
+
+			errorDetails = $"expected true or false";
 			return null;
 		}
 
-		public override object? ParseJSON(JsonElement rawValue)
+		public override object? ParseJSON(JsonElement rawValue, out string? errorDetails)
 		{
 			if (rawValue.ValueKind == JsonValueKind.True)
+			{
+				errorDetails = null;
 				return true;
-			if (rawValue.ValueKind == JsonValueKind.False)
-				return false;
+			}
 
+			if (rawValue.ValueKind == JsonValueKind.False)
+			{
+				errorDetails = null;
+				return false;
+			}
+
+			errorDetails = $"expected boolean value, but got {rawValue.ValueKind}";
 			return null;
 		}
 	}
