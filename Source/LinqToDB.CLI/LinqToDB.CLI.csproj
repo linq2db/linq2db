@@ -56,21 +56,6 @@
 		<PackageReference Include="Npgsql"                          />
 		<PackageReference Include="AdoNetCore.AseClient"            />
 		<PackageReference Include="System.Data.Odbc"                />
-
-		<!--
-
-
-		
-
-
-
-		<PackageReference Include="System.Data.OleDb" />
-
-
-
-		<PackageReference Include="IBM.Data.DB2.Core" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
-		<PackageReference Include="IBM.Data.DB2.Core-lnx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
-		<PackageReference Include="IBM.Data.DB2.Core-osx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' " />-->
-
+		<PackageReference Include="System.Data.OleDb"               />
 	</ItemGroup>
 </Project>

@@ -234,6 +234,22 @@ Provider could be downloaded from:
 					DbProviderFactories.RegisterFactory("IBM.Data.DB2", assembly.GetType("IBM.Data.DB2.Core.DB2Factory")!);
 					break;
 				}
+				case ProviderName.Access:
+				{
+					if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+					{
+						Console.Error.WriteLine($"MS Access not supported on non-Windows platforms");
+						return null;
+					}
+
+					var isOleDb = connectionString.Contains("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase)
+						|| connectionString.Contains("Microsoft.ACE.OLEDB", StringComparison.OrdinalIgnoreCase);
+
+					if (!isOleDb)
+						provider = ProviderName.AccessOdbc;
+
+					break;
+				}
 				default:
 					Console.Error.WriteLine($"Unsupported database provider: {provider}");
 					return null;
