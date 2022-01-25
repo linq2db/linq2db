@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace LinqToDB.ServiceModel
+namespace LinqToDB.Remote.Independent
 {
 	using Common;
 	using Data;
@@ -12,6 +12,7 @@ namespace LinqToDB.ServiceModel
 	using Linq;
 	using Mapping;
 	using SqlQuery;
+	using LinqToDB.Remote.Infra;
 
 	public class LinqService : ILinqService
 	{

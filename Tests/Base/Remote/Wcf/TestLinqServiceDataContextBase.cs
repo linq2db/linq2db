@@ -1,6 +1,8 @@
 ﻿#if NET472
 using LinqToDB;
-using LinqToDB.ServiceModel;
+using LinqToDB.Remote.Independent;
+using LinqToDB.Remote.Infra;
+using LinqToDB.Remote;
 
 namespace Tests.ServiceModel
 {

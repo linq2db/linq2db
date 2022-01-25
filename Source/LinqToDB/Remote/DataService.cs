@@ -5,7 +5,7 @@ using System.Data.Services.Providers;
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace LinqToDB.ServiceModel
+namespace LinqToDB.Remote
 {
 	using Extensions;
 	using Expressions;

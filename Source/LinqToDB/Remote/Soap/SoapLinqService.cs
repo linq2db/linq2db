@@ -1,8 +1,9 @@
 ﻿#if NETFRAMEWORK
 using System;
 using System.Web.Services;
+using LinqToDB.Remote.Independent;
 
-namespace LinqToDB.ServiceModel
+namespace LinqToDB.Remote.Soap
 {
 	[WebService       (Namespace  = "http://tempuri.org/")]
 	[WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]

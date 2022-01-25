@@ -1,7 +1,7 @@
 ﻿#if NET472
 using System.Threading.Tasks;
-
-using LinqToDB.ServiceModel;
+using LinqToDB.Remote.Independent;
+using LinqToDB.Remote;
 
 namespace Tests.ServiceModel
 {

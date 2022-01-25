@@ -3,15 +3,15 @@ using System;
 using System.ServiceModel;
 using System.Threading.Tasks;
 using LinqToDB;
-using LinqToDB.ServiceModel;
+using LinqToDB.Remote.Wcf;
 
 namespace Tests.Model
 {
-	public class TestServiceModelDataContext : WcfDataContext, ITestDataContext
+	public class TestWcfDataContext : WcfDataContext, ITestDataContext
 	{
 		private readonly Action? _onDispose;
 
-		public TestServiceModelDataContext(int ip, Action? onDispose = null) : base(
+		public TestWcfDataContext(int ip, Action? onDispose = null) : base(
 			new NetTcpBinding(SecurityMode.None)
 			{
 				MaxReceivedMessageSize = 10000000,

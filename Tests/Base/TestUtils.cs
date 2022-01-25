@@ -177,7 +177,7 @@ namespace Tests
 		private static string GetContextName(IDataContext db)
 		{
 #if NET472
-			if (db is TestServiceModelDataContext linqDb)
+			if (db is TestWcfDataContext linqDb)
 				return linqDb.Configuration!;
 #endif
 

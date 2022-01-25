@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace LinqToDB.ServiceModel
+namespace LinqToDB.Remote.Infra
 {
 	using System;
 	using Interceptors;

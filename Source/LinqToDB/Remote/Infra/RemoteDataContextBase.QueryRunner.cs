@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LinqToDB.ServiceModel
+namespace LinqToDB.Remote.Infra
 {
 	using System.Data.Common;
 	using Common.Internal;

@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.ServiceModel
+﻿namespace LinqToDB.Remote.Infra
 {
 	using LinqToDB.Common;
 	using Mapping;

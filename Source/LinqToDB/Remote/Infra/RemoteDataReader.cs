@@ -4,11 +4,12 @@ using System.Data;
 
 #nullable disable
 
-namespace LinqToDB.ServiceModel
+namespace LinqToDB.Remote.Infra
 {
 	using System.Collections;
 	using System.Data.Common;
 	using Mapping;
+	using LinqToDB.Remote.Independent;
 
 	class RemoteDataReader : DbDataReader
 	{

@@ -2,8 +2,9 @@
 using System;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
+using LinqToDB.Remote.Infra;
 
-namespace LinqToDB.ServiceModel
+namespace LinqToDB.Remote.Soap
 {
 	public class SoapDataContext : RemoteDataContextBase
 	{

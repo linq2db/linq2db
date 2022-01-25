@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace LinqToDB.ServiceModel
+namespace LinqToDB.Remote.Independent
 {
 	public class LinqServiceResult
 	{

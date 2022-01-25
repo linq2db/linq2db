@@ -2,11 +2,11 @@
 using System;
 
 using LinqToDB;
-using LinqToDB.ServiceModel;
 
 namespace Tests.ServiceModel
 {
 	using Model;
+	using LinqToDB.Remote.Independent;
 
 	public class TestLinqServiceDataContext : TestLinqServiceDataContextBase, ITestDataContext
 	{

@@ -3,8 +3,9 @@ using System;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.Threading.Tasks;
+using LinqToDB.Remote.Independent;
 
-namespace LinqToDB.ServiceModel
+namespace LinqToDB.Remote.Wcf
 {
 	class WcfLinqServiceClient : ClientBase<IWcfLinqClient>, ILinqClient, IDisposable
 	{

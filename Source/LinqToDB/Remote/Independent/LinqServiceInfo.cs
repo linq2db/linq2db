@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.ServiceModel
+﻿namespace LinqToDB.Remote.Independent
 {
 	using SqlProvider;
 

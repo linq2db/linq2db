@@ -21,7 +21,6 @@ using LinqToDB.Tools.Comparers;
 #if NET472
 using System.ServiceModel;
 using System.ServiceModel.Description;
-using LinqToDB.ServiceModel;
 #endif
 
 using NUnit.Framework;
@@ -33,6 +32,8 @@ namespace Tests
 	using LinqToDB.Interceptors;
 	using Model;
 	using Tools;
+	using LinqToDB.Remote.Independent;
+	using LinqToDB.Remote.Infra;
 
 	public partial class TestBase
 	{
@@ -469,7 +470,7 @@ namespace Tests
 					if (interceptor != null)
 						_service!.AddInterceptor(interceptor);
 
-					dx = new TestServiceModelDataContext(
+					dx = new TestWcfDataContext(
 						IP + TestExternals.RunID,
 						() =>
 						{

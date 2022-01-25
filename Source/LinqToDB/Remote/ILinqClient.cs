@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
+using LinqToDB.Remote.Independent;
 
-namespace LinqToDB.ServiceModel
+namespace LinqToDB.Remote
 {
 	public interface ILinqClient
 	{

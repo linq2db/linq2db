@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
-namespace LinqToDB.ServiceModel
+namespace LinqToDB.Remote.Infra
 {
 	using System.Data.Common;
 	using Expressions;
@@ -16,6 +16,7 @@ namespace LinqToDB.ServiceModel
 	using LinqToDB.Interceptors;
 	using Mapping;
 	using SqlProvider;
+	using LinqToDB.Remote.Independent;
 
 	[PublicAPI]
 	public abstract partial class RemoteDataContextBase : IDataContext

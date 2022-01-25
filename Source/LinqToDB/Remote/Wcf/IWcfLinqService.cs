@@ -1,7 +1,8 @@
 ﻿#if NETFRAMEWORK
 using System.ServiceModel;
+using LinqToDB.Remote.Independent;
 
-namespace LinqToDB.ServiceModel
+namespace LinqToDB.Remote.Wcf
 {
 	[ServiceContract]
 	public interface IWcfLinqService

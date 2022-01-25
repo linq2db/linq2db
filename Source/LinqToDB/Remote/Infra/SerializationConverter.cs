@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-namespace LinqToDB.ServiceModel
+namespace LinqToDB.Remote.Infra
 {
 	using Common;
 	using Common.Internal.Cache;

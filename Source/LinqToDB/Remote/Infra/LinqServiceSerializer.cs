@@ -7,12 +7,14 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 
-namespace LinqToDB.ServiceModel
+namespace LinqToDB.Remote.Infra
 {
 	using Common;
 	using Extensions;
 	using Mapping;
 	using SqlQuery;
+	using LinqToDB.Remote.Independent;
+
 
 	static class LinqServiceSerializer
 	{

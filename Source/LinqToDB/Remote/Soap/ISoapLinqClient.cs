@@ -1,8 +1,9 @@
 ﻿#if NETFRAMEWORK
 using System.ServiceModel;
 using System.Threading.Tasks;
+using LinqToDB.Remote.Independent;
 
-namespace LinqToDB.ServiceModel
+namespace LinqToDB.Remote.Soap
 {
 	[ServiceContract]
 	public interface ISoapLinqClient

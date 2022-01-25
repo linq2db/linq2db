@@ -1,8 +1,9 @@
 ﻿#if NETFRAMEWORK
 using System;
 using System.ServiceModel;
+using LinqToDB.Remote.Independent;
 
-namespace LinqToDB.ServiceModel
+namespace LinqToDB.Remote.Wcf
 {
 	[ServiceBehavior  (InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
 	public class WcfLinqService : IWcfLinqService
