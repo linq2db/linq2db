@@ -78,7 +78,7 @@ namespace LinqToDB.Remote.Soap
 			};
 		}
 
-		protected override string ContextIDPrefix => "LinqSoapService";
+		protected override string ContextIDPrefix => "SoapRemoteLinqService";
 
 		#endregion
 	}

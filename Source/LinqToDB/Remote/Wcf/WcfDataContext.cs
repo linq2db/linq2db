@@ -78,7 +78,7 @@ namespace LinqToDB.Remote.Wcf
 			};
 		}
 
-		protected override string ContextIDPrefix => "LinqService";
+		protected override string ContextIDPrefix => "WcfRemoteLinqService";
 
 #endregion
 	}

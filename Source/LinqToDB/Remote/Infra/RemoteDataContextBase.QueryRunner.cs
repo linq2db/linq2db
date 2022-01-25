@@ -13,6 +13,9 @@ namespace LinqToDB.Remote.Infra
 	using LinqToDB.Data;
 	using SqlProvider;
 	using SqlQuery;
+#if !NATIVE_ASYNC
+	using Tools;
+#endif
 
 	public abstract partial class RemoteDataContextBase
 	{
