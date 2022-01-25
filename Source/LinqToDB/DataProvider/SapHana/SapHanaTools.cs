@@ -91,7 +91,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
-			if (connectionString.IndexOf("HDBODBC", StringComparison.InvariantCultureIgnoreCase) >= 0)
+			if (connectionString.IndexOf("HDBODBC", StringComparison.OrdinalIgnoreCase) >= 0)
 				return _hanaOdbcDataProvider.Value;
 
 			switch (css.ProviderName)
@@ -110,7 +110,7 @@ namespace LinqToDB.DataProvider.SapHana
 						goto case ProviderName.SapHana;
 					break;
 				case ProviderName.SapHana                  :
-					if (css.Name.IndexOf("ODBC", StringComparison.InvariantCultureIgnoreCase) >= 0)
+					if (css.Name.IndexOf("ODBC", StringComparison.OrdinalIgnoreCase) >= 0)
 						return _hanaOdbcDataProvider.Value;
 
 					return GetDataProvider();

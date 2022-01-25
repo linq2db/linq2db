@@ -55,6 +55,7 @@
 		<PackageReference Include="Oracle.ManagedDataAccess.Core"   />
 		<PackageReference Include="Npgsql"                          />
 		<PackageReference Include="AdoNetCore.AseClient"            />
+		<PackageReference Include="System.Data.Odbc"                />
 
 		<!--
 
@@ -64,7 +65,6 @@
 
 
 		<PackageReference Include="System.Data.OleDb" />
-		<PackageReference Include="System.Data.Odbc" />
 
 
 

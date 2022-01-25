@@ -132,30 +132,31 @@ namespace LinqToDB.CLI
 			switch (provider)
 			{
 				case ProviderName.SQLite:
-					provider                           = ProviderName.SQLiteClassic;
+					provider = ProviderName.SQLiteClassic;
 					break;
 				case ProviderName.SqlServer:
-					SqlServerTools.AutoDetectProvider  = true;
-					SqlServerTools.Provider            = SqlServerProvider.MicrosoftDataSqlClient;
+					SqlServerTools.AutoDetectProvider = true;
+					SqlServerTools.Provider = SqlServerProvider.MicrosoftDataSqlClient;
 					break;
 				case ProviderName.Firebird:
 					// TODO: don't forget to add versioning here after Firebird versioning feature merged
 					break;
 				case ProviderName.MySql:
 					// TODO: remove provider hint after MySQL.Data support removed
-					provider                           = ProviderName.MySqlConnector;
+					provider = ProviderName.MySqlConnector;
 					break;
 				case ProviderName.Oracle:
-					OracleTools.AutoDetectProvider     = true;
-					provider                           = ProviderName.OracleManaged;
+					OracleTools.AutoDetectProvider = true;
+					provider = ProviderName.OracleManaged;
 					break;
 				case ProviderName.PostgreSQL:
 					PostgreSQLTools.AutoDetectProvider = true;
 					break;
 				case ProviderName.Sybase:
-					provider                           = ProviderName.SybaseManaged;
+					provider = ProviderName.SybaseManaged;
 					break;
 				case ProviderName.SqlCe:
+				{
 					if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 					{
 						Console.Error.WriteLine($"SQL Server Compact Edition not supported on non-Windows platforms");
@@ -177,6 +178,37 @@ Possible reasons:
 					var assembly = Assembly.LoadFrom(assemblyPath);
 					DbProviderFactories.RegisterFactory("System.Data.SqlServerCe.4.0", assembly.GetType("System.Data.SqlServerCe.SqlCeProviderFactory")!);
 					break;
+				}
+				case ProviderName.SapHana:
+				{
+					var isOdbc = connectionString.Contains("HDBODBC", StringComparison.OrdinalIgnoreCase);
+					if (!isOdbc && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+					{
+						Console.Error.WriteLine($"Only ODBC provider for SAP HANA supported on non-Windows platforms. Provided connection string doesn't look like HANA ODBC connection string.");
+						return null;
+					}
+
+					provider = isOdbc ? ProviderName.SapHanaOdbc : ProviderName.SapHanaNative;
+
+					if (!isOdbc)
+					{
+						var assemblyPath = providerLocation ?? Path.Combine(Environment.GetEnvironmentVariable(IntPtr.Size == 4 ? "ProgramFiles(x86)" : "ProgramFiles")!, @"sap\hdbclient\dotnetcore\v2.1\Sap.Data.Hana.Core.v2.1.dll");
+						if (!File.Exists(assemblyPath))
+						{
+							Console.Error.WriteLine(@$"Cannot locate SAP HANA native client installation.
+Probed location: {assemblyPath}.
+Possible reasons:
+1. HDB client not installed => install HDB client for .net core
+2. HDB architecture doesn't match process architecture => add '--architecture x86' or '--architecture x64' scaffold option
+3. HDB client installed at custom location => specify path to Sap.Data.Hana.Core.v2.1.dll using '--provider-location <path_to_assembly>' option");
+							return null;
+						}
+
+						var assembly = Assembly.LoadFrom(assemblyPath);
+						DbProviderFactories.RegisterFactory("Sap.Data.Hana", assembly.GetType("Sap.Data.Hana.HanaFactory")!);
+					}
+					break;
+				}
 				default:
 					Console.Error.WriteLine($"Unsupported database provider: {provider}");
 					return null;
