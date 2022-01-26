@@ -16,7 +16,7 @@ namespace LinqToDB.Schema
 	/// <summary>
 	/// Default schema provider implementation over existing <see cref="SchemaProvider.ISchemaProvider.GetSchema(DataConnection, GetSchemaOptions?)"/> API.
 	/// </summary>
-	internal sealed class LegacySchemaProvider : ISchemaProvider, ITypeMappingProvider
+	public sealed class LegacySchemaProvider : ISchemaProvider, ITypeMappingProvider
 	{
 		// cached results of linq2db API results conversion to schema models
 		private readonly List<Table>             _tables             = new ();
@@ -47,7 +47,7 @@ namespace LinqToDB.Schema
 		private readonly bool              _isAccessOdbc;
 		private readonly bool              _isSystemDataSqlite;
 
-		internal LegacySchemaProvider(DataConnection connection, SchemaOptions options, ILanguageProvider languageProvider)
+		public LegacySchemaProvider(DataConnection connection, SchemaOptions options, ILanguageProvider languageProvider)
 		{
 			_options           = options;
 			_languageProvider  = languageProvider;
@@ -151,7 +151,7 @@ namespace LinqToDB.Schema
 
 			if (!proc.IsFunction)
 			{
-				_procedures.Add(new StoredProcedure(dbName, description, parameters, schemaError, resultSet != null ? new List<IReadOnlyCollection<ResultColumn>>() { resultSet } : null, result));
+				_procedures.Add(new StoredProcedure(dbName, description, parameters, schemaError, resultSet != null ? new [] { resultSet } : null, result));
 			}
 			else if (proc.IsTableFunction)
 			{

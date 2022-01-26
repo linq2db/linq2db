@@ -13,11 +13,11 @@ namespace LinqToDB.Schema
 	/// <param name="ResultSets">Result sets schema or <c>null</c> if schema load failed.</param>
 	/// <param name="Result">Procedure scalar return value descriptor.</param>
 	public sealed record StoredProcedure(
-		ObjectName                                        Name,
-		string?                                           Description,
-		IReadOnlyCollection<Parameter>                    Parameters,
-		Exception?                                        SchemaError,
-		IReadOnlyList<IReadOnlyCollection<ResultColumn>>? ResultSets,
-		Result                                            Result)
+		ObjectName                                  Name,
+		string?                                     Description,
+		IReadOnlyCollection<Parameter>              Parameters,
+		Exception?                                  SchemaError,
+		IReadOnlyList<IReadOnlyList<ResultColumn>>? ResultSets,
+		Result                                      Result)
 		: CallableObject(CallableKind.StoredProcedure, Name, Description, Parameters);
 }

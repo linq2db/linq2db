@@ -111,7 +111,8 @@ JSON file example:
 					@"Allows user to specify path to database provider for some databases.
 Supported databases:
 - SQL Server Compact Edition : value is a full path to System.Data.SqlServerCe.dll assembly from Private folder of SQL CE installation
-- SAP HANA : value is a full path to Sap.Data.Hana.Core.v2.1.dll assembly from HDB client installation folder",
+- SAP HANA                   : value is a full path to Sap.Data.Hana.Core.v2.1.dll assembly from HDB client installation folder
+- IBM DB2 and Informix       : value is a full path to IBM.Data.DB2.Core.dll assembly in DB2 provider folder",
 					null,
 					null,
 					null);
@@ -126,6 +127,28 @@ Supported databases:
 					false,
 					"database connection string",
 					null,
+					null,
+					null,
+					null);
+
+			/// <summary>
+			/// Connection string option.
+			/// </summary>
+			public static readonly CliOption AdditionalConnectionString = new StringCliOption(
+					"additional-connection",
+					null,
+					false,
+					false,
+					"secondary database connection string",
+					@"Allows user to specify additional database connection using different provider. This option supported only for Access and require that main and additional connection strings use OLE DB and ODBC (in any order).
+This is caused by fact that both OLE DB and ODBC Access providers return incomplete or invalid information in different places. Using database schema data from both providers allows us to build complete and proper database schema.
+List of known issues, solved this way:
+- OLE DB doesn't provide information about autoincrement (counter) columns
+- OLE DB returns nullable type for procedure column returned for table counter column
+- ODBC doesn't provide information about primary keys and foreign keys
+- ODBC marks all columns in tables and procedure results as nullable except counter and bit
+- ODBC doesn't provide length information for text-based procedure parameter type
+- ODBC doesn't show some procedures in schema (no logic traced)",
 					null,
 					null,
 					null);

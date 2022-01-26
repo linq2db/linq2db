@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace LinqToDB.CodeModel
@@ -264,10 +265,10 @@ namespace LinqToDB.CodeModel
 					}
 				}
 
-				// generate column value per-row
-				for (var i = 0; i < rows.Length; i++)
+				if (skip == null || !skip.All(skip => skip))
 				{
-					if (skip == null || !skip[i])
+					// generate column value per-row
+					for (var i = 0; i < rows.Length; i++)
 					{
 						// column is not skipped
 						if (skipRow[i])
@@ -283,7 +284,10 @@ namespace LinqToDB.CodeModel
 							}
 
 							// and then generate column value
-							rows[i].Append(_value);
+							if (skip == null || !skip[i])
+								rows[i].Append(_value);
+							else
+								prePadding[i] = _value.Length;
 						}
 					}
 				}

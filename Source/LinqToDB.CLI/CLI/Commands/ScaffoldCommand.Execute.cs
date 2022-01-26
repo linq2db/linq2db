@@ -15,6 +15,7 @@ using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Metadata;
 using LinqToDB.Naming;
 using LinqToDB.Scaffold;
+using LinqToDB.Schema;
 
 namespace LinqToDB.CLI
 {
@@ -73,6 +74,9 @@ namespace LinqToDB.CLI
 			options.Remove(General.ProviderLocation, out value);
 			var providerLocation = (string?)value;
 
+			options.Remove(General.AdditionalConnectionString, out value);
+			var additionalConnectionString = (string?)value;
+
 			// assert that all provided options handled
 			if (options.Count > 0)
 			{
@@ -84,17 +88,38 @@ namespace LinqToDB.CLI
 			}
 
 			// perform scaffolding
-			return Scaffold(settings, provider, providerLocation, connectionString, output, overwrite);
+			return Scaffold(settings, provider, providerLocation, connectionString, additionalConnectionString, output, overwrite);
 		}
 
-		private int Scaffold(ScaffoldOptions settings, string provider, string? providerLocation, string connectionString, string output, bool overwrite)
+		private int Scaffold(
+			ScaffoldOptions settings,
+			string          provider,
+			string?         providerLocation,
+			string          connectionString,
+			string?         additionalConnectionString,
+			string          output,
+			bool            overwrite)
 		{
-			using var dc = GetConnection(provider, providerLocation, connectionString);
+			using var dc  = GetConnection(provider, providerLocation, connectionString, additionalConnectionString, out var secondaryConnection);
+			using var sdc = secondaryConnection;
 			if (dc == null)
 				return StatusCodes.EXPECTED_ERROR;
 
+			var language = LanguageProviders.CSharp;
+
+			var legacyProvider   = new LegacySchemaProvider(dc, settings.Schema, language);
+			ISchemaProvider      schemaProvider       = legacyProvider;
+			ITypeMappingProvider typeMappingsProvider = legacyProvider;
+
+			if (sdc != null)
+			{
+				var secondLegacyProvider = new LegacySchemaProvider(sdc, settings.Schema, language);
+				schemaProvider           = new MergedAccessSchemaProvider(legacyProvider, secondLegacyProvider);
+				typeMappingsProvider     = new AggregateTypeMappingsProvider(legacyProvider, secondLegacyProvider);
+			}
+
 			var generator  = new Scaffolder(LanguageProviders.CSharp, HumanizerNameConverter.Instance, settings);
-			var dataModel  = generator.LoadDataModel(dc);
+			var dataModel  = generator.LoadDataModel(schemaProvider, typeMappingsProvider);
 			var sqlBuilder = dc.DataProvider.CreateSqlBuilder(dc.MappingSchema);
 			var files      = generator.GenerateCodeModel(
 				sqlBuilder,
@@ -121,8 +146,11 @@ namespace LinqToDB.CLI
 			return StatusCodes.SUCCESS;
 		}
 
-		private DataConnection? GetConnection(string provider, string? providerLocation, string connectionString)
+		private DataConnection? GetConnection(string provider, string? providerLocation, string connectionString, string? additionalConnectionString, out DataConnection? secondaryConnection)
 		{
+			secondaryConnection = null;
+			var returnSecondary = false;
+
 			// general rules:
 			// - specify specific provider used by tool if linq2db supports multiple providers for database
 			// - if multiple dialects (versions) of db supported - make sure version detection enabled
@@ -248,6 +276,34 @@ Provider could be downloaded from:
 					if (!isOleDb)
 						provider = ProviderName.AccessOdbc;
 
+					if (additionalConnectionString == null)
+						Console.Out.WriteLine($"WARNING: it is recommended to use '--additional-connection <secondary_connection>' option with Access for better results");
+					else
+					{
+						var isSecondaryOleDb = additionalConnectionString.Contains("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase)
+						|| additionalConnectionString.Contains("Microsoft.ACE.OLEDB", StringComparison.OrdinalIgnoreCase);
+
+						if (isOleDb == isSecondaryOleDb)
+						{
+							Console.Error.WriteLine($"Main and secondary connection strings must use different providers. One should be OLE DB provider and another ODBC provider.");
+							return null;
+						}
+
+						var secondaryProvider = isSecondaryOleDb ? ProviderName.Access : ProviderName.AccessOdbc;
+
+						var secondaryDataProvider = DataConnection.GetDataProvider(secondaryProvider, additionalConnectionString);
+						if (secondaryDataProvider == null)
+						{
+							Console.Error.WriteLine($"Cannot create database provider '{provider}' for secondary connection");
+							return null;
+						}
+
+						secondaryConnection = new DataConnection(secondaryDataProvider, additionalConnectionString);
+						// to simplify things for caller (no need to detect connection type)
+						// returned connection should be OLE DB and additional - ODBC
+						returnSecondary     = isSecondaryOleDb;
+					}
+
 					break;
 				}
 				default:
@@ -259,10 +315,20 @@ Provider could be downloaded from:
 			if (dataProvider == null)
 			{
 				Console.Error.WriteLine($"Cannot create database provider: {provider}");
+				secondaryConnection?.Dispose();
 				return null;
 			}
 
-			return new DataConnection(dataProvider, connectionString);
+			var dc = new DataConnection(dataProvider, connectionString);
+
+			if (secondaryConnection != null && returnSecondary)
+			{
+				var tmp             = secondaryConnection;
+				secondaryConnection = dc;
+				return tmp;
+			}
+
+			return dc;
 		}
 
 		/// <summary>

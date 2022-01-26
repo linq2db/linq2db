@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using LinqToDB.CodeModel;
 using LinqToDB.Common;
-using LinqToDB.Data;
 using LinqToDB.DataModel;
 using LinqToDB.Metadata;
 using LinqToDB.Naming;
@@ -41,16 +40,18 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Loads database schema into <see cref="DatabaseModel"/> object.
 		/// </summary>
+		/// <param name="schemaProvider">Database schema provider.</param>
+		/// <param name="typeMappingsProvider">Database types mappings provider.</param>
 		/// <returns>Loaded database model instance.</returns>
-		public DatabaseModel LoadDataModel(DataConnection dataConnection)
+		public DatabaseModel LoadDataModel(
+			ISchemaProvider      schemaProvider,
+			ITypeMappingProvider typeMappingsProvider)
 		{
-			var schemaProvider = new LegacySchemaProvider(dataConnection, _options.Schema, Language);
-			
 			return new DataModelLoader(
 				_namingServices,
 				Language,
 				schemaProvider,
-				schemaProvider,
+				typeMappingsProvider,
 				_options)
 				.LoadSchema();
 		}

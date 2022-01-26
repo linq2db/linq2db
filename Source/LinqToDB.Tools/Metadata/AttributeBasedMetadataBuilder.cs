@@ -54,7 +54,13 @@ namespace LinqToDB.Metadata
 			if (metadata.Name != null)
 				attr.Parameter(_builder.Constant(metadata.Name, true));
 
-			attr.Parameter(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_CanBeNull, _builder.Constant(metadata.CanBeNull, true));
+			// generate only "CanBeNull = false" only for non-default cases (where linq2db already infer nullability from type):
+			// - for reference type is is true by default
+			// - for value type it is false
+			// - for nullable value type it is true
+			if ((!propertyBuilder.Property.Type.Type.IsValueType && !metadata.CanBeNull)
+				|| (propertyBuilder.Property.Type.Type.IsValueType && metadata.CanBeNull != propertyBuilder.Property.Type.Type.IsNullable))
+				attr.Parameter(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_CanBeNull, _builder.Constant(metadata.CanBeNull, true));
 
 			if (metadata.Configuration != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_Configuration, _builder.Constant(metadata.Configuration , true));
 			if (metadata.DataType      != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_DataType     , _builder.Constant(metadata.DataType.Value, true));
