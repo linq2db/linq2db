@@ -56,8 +56,8 @@ namespace LinqToDB.Expressions
 		public override string ToString()
 		{
 			if (Index != null)
-				return $"SQL[{Index}]: {{{Sql}}}";
-			return $"SQL: {{{Sql}}}";
+				return $"SQL[{Index}]({SelectQuery.SourceID}): {{{Sql}}}";
+			return $"SQL({SelectQuery.SourceID}): {{{Sql}}}";
 		}
 
 		protected bool Equals(SqlPlaceholderExpression other)

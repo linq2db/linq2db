@@ -23,12 +23,8 @@ namespace LinqToDB.Linq.Builder
 			var sequence         = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var buildInStatement = false;
 
-			if (sequence.SelectQuery.Select.TakeValue != null ||
-			    sequence.SelectQuery.Select.SkipValue != null)
-			{
-				sequence         = new SubQueryContext(sequence);
-				buildInStatement = true;
-			}
+			sequence         = new SubQueryContext(sequence);
+			buildInStatement = true;
 
 			return new ContainsContext(buildInfo.Parent, methodCall, sequence, buildInStatement);
 		}
@@ -61,6 +57,8 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
+				throw new NotImplementedException();
+
 				var sql = GetSubQuery(null);
 
 				var sq = new SqlSelectStatement();
@@ -77,60 +75,27 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				var info  = ConvertToIndex(expression, level, ConvertFlags.Field)[0];
-				var index = info.Index;
-				if (Parent != null)
-					index = ConvertToParentIndex(index, Parent);
-				return Builder.BuildSql(typeof(bool), index, info.Sql);
+				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
-				if (expression == null)
-				{
-					var sql   = GetSubQuery(null);
-					var query = SelectQuery;
-
-					if (Parent != null)
-						query = Parent.SelectQuery;
-
-					return new[] { new SqlInfo(sql, query) };
-				}
-
-				throw new InvalidOperationException();
+				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
-				var sql = ConvertToSql(expression, level, flags);
-
-				if (sql[0].Index < 0)
-					sql[0] = sql[0].WithIndex(sql[0].Query!.Select.Add(sql[0].Sql));
-
-				return sql;
+				throw new NotImplementedException();
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				if (expression == null)
-				{
-					switch (requestFlag)
-					{
-						case RequestFor.Expression :
-						case RequestFor.Field      : return IsExpressionResult.False;
-					}
-				}
-
-				return requestFlag switch
-				{
-					RequestFor.Root => IsExpressionResult.False,
-					_               => throw new InvalidOperationException(),
-				};
+				throw new NotImplementedException();
 			}
 
 			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				throw new InvalidOperationException();
+				return this;
 			}
 
 			ISqlExpression? _subQuerySql;
@@ -170,6 +135,53 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				return _subQuerySql;
+			}
+
+			private SqlPlaceholderExpression? _placeholder;
+
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				if (!(flags.HasFlag(ProjectFlags.SQL) || flags.HasFlag(ProjectFlags.Expression)))
+					return base.MakeExpression(path, flags);
+
+				if (_placeholder != null)
+					return _placeholder;
+
+				_placeholder = CreatePlaceholder(ProjectFlags.SQL);
+
+				return _placeholder;
+			}
+
+			private SqlPlaceholderExpression CreatePlaceholder(ProjectFlags flags)
+			{
+				var args  = _methodCall.Method.GetGenericArguments();
+				var param = Expression.Parameter(args[0], "param");
+				var expr  = _methodCall.Arguments[1];
+
+				var subQueryCtx = (SubQueryContext)Sequence;
+
+				var testPlaceholder = Builder.TryConvertToSqlExpr(Parent, expr, flags) as SqlPlaceholderExpression;
+
+				var contextRef = new ContextRefExpression(args[0], subQueryCtx.SubQuery);
+				var sequencePlaceholder = Builder.TryConvertToSqlExpr(subQueryCtx.SubQuery, contextRef, flags) as SqlPlaceholderExpression;
+
+				SqlCondition cond;
+
+				if ((Sequence.SelectQuery != SelectQuery || _buildInStatement) && testPlaceholder != null && sequencePlaceholder != null)
+				{
+					_ = Builder.ToColumns(Sequence, sequencePlaceholder);
+					cond = new SqlCondition(false, new SqlPredicate.InSubQuery(testPlaceholder.Sql, false, SelectQuery));
+				}
+				else
+				{
+					var condition = Expression.Lambda(ExpressionBuilder.Equal(Builder.MappingSchema, param, expr), param);
+					var sequence  = Builder.BuildWhere(Parent, Sequence, condition, true, false, false);
+					cond = new SqlCondition(false, new SqlPredicate.FuncLike(SqlFunction.CreateExists(sequence.SelectQuery)));
+				}
+
+				var subQuerySql = new SqlSearchCondition(cond);
+
+				return ExpressionBuilder.CreatePlaceholder(Parent, subQuerySql, _methodCall);
 			}
 		}
 	}

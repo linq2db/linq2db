@@ -127,7 +127,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (SequenceHelper.IsSameContext(path, this))
 			{
-				if (flags.HasFlag(ProjectFlags.Root))
+				if (flags.HasFlag(ProjectFlags.Root) ||flags.HasFlag(ProjectFlags.AssociationRoot))
 				{
 					if (Body is ContextRefExpression)
 						return Body;

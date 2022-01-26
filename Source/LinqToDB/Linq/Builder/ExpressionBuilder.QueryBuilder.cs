@@ -265,6 +265,10 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression UpdateNesting(IBuildContext upToContext, Expression expression)
 		{
+			// short path
+			if (expression is SqlPlaceholderExpression currentPlaceholder && currentPlaceholder.SelectQuery == upToContext.SelectQuery)
+				return expression;
+
 			var info  = new QueryInformation(upToContext.SelectQuery);
 
 			var withColumns =

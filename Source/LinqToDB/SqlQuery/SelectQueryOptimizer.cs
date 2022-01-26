@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using LinqToDB.Common;
+using LinqToDB.SqlProvider;
 
 namespace LinqToDB.SqlQuery
 {
-	using Common;
-	using SqlProvider;
-
 	class SelectQueryOptimizer
 	{
 		public SelectQueryOptimizer(SqlProviderFlags flags, EvaluationContext evaluationContext, IQueryElement rootElement, SelectQuery selectQuery, int level, params IQueryElement[] dependencies)
@@ -250,7 +249,7 @@ namespace LinqToDB.SqlQuery
 						case QueryElementType.IsNullPredicate     :
 						case QueryElementType.InSubQueryPredicate :
 							{
-								var expr = (SqlPredicate.Expr)e;
+								var expr                                                    = (SqlPredicate.Expr)e;
 								if (context.dic.TryGetValue(expr.Expr1, out ex)) expr.Expr1 = ex;
 								break;
 							}
@@ -265,7 +264,7 @@ namespace LinqToDB.SqlQuery
 
 						case QueryElementType.ExprExprPredicate :
 							{
-								var expr = (SqlPredicate.ExprExpr)e;
+								var expr                                                    = (SqlPredicate.ExprExpr)e;
 								if (context.dic.TryGetValue(expr.Expr1, out ex)) expr.Expr1 = ex;
 								if (context.dic.TryGetValue(expr.Expr2, out ex)) expr.Expr2 = ex;
 								break;
@@ -291,7 +290,7 @@ namespace LinqToDB.SqlQuery
 
 						case QueryElementType.BetweenPredicate :
 							{
-								var expr = (SqlPredicate.Between)e;
+								var expr                                                    = (SqlPredicate.Between)e;
 								if (context.dic.TryGetValue(expr.Expr1, out ex)) expr.Expr1 = ex;
 								if (context.dic.TryGetValue(expr.Expr2, out ex)) expr.Expr2 = ex;
 								if (context.dic.TryGetValue(expr.Expr3, out ex)) expr.Expr3 = ex;
@@ -600,7 +599,7 @@ namespace LinqToDB.SqlQuery
 
 				if (cond.Predicate.ElementType == QueryElementType.ExprPredicate)
 				{
-					var expr = (SqlPredicate.Expr)cond.Predicate;
+					var expr      = (SqlPredicate.Expr)cond.Predicate;
 					var boolValue = QueryHelper.GetBoolValue(expr.Expr1, context);
 
 					if (boolValue != null)
@@ -1043,7 +1042,7 @@ namespace LinqToDB.SqlQuery
 					return true;
 				}
 
-				if (QueryHelper.IsComplexExpression(expr))
+				if (expr.IsComplexExpression())
 				{
 					var dependsCount = QueryHelper.DependencyCount(parentQuery, column, elementsToIgnore);
 
@@ -1335,7 +1334,7 @@ namespace LinqToDB.SqlQuery
 					{
 						if (e.ElementType == QueryElementType.Column || e.ElementType == QueryElementType.SqlField)
 						{
-							if (QueryHelper.IsDependsOn(e, visitor.Context.toCheck, null))
+							if (QueryHelper.IsDependsOn(e, visitor.Context.toCheck))
 							{
 								var newExpr = visitor.Context.sql.Select.AddColumn((ISqlExpression)e);
 
@@ -1580,7 +1579,7 @@ namespace LinqToDB.SqlQuery
 					if (_flags.IsDistinctOrderBySupported)
 						continue;
 
-					if (Configuration.Linq.KeepDistinctOrdered)
+					if (Common.Configuration.Linq.KeepDistinctOrdered)
 					{
 						// trying to convert to GROUP BY quivalent
 						QueryHelper.TryConvertOrderedDistinctToGroupBy(query, _flags);
@@ -1644,21 +1643,25 @@ namespace LinqToDB.SqlQuery
 
 		SelectQuery MoveOuterJoinsToSubQuery(SelectQuery selectQuery)
 		{
+			if (!_flags.IsSubQueryColumnSupported)
+				return selectQuery;
+
 			var mappings = new Dictionary<ISqlExpression, ISqlExpression>();
 
 			selectQuery.VisitParentFirst((flags: _flags, mappings, context: _evaluationContext), static (ctx, e) =>
 			{
 				if (e is SelectQuery sq)
 				{
-					foreach (var table in sq.From.Tables)
+					for (var ti = 0; ti < sq.From.Tables.Count; ti++)
 					{
+						var table = sq.From.Tables[ti];
 						for (int j = table.Joins.Count - 1; j >= 0; j--)
 						{
 							var join = table.Joins[j];
 							if (join.JoinType == JoinType.OuterApply || join.JoinType == JoinType.Left)
 							{
 								if (join.Table.Source is SelectQuery tsQuery &&
-								    tsQuery.Select.Columns.Count == 1 &&
+								    tsQuery.Select.Columns.Count == 1         &&
 								    IsLimitedToOneRecord(tsQuery, ctx.context))
 								{
 									// where we can start analyzing that we can move join to subquery
@@ -1674,12 +1677,17 @@ namespace LinqToDB.SqlQuery
 											}
 										}
 
+
+										var mainQuery = table.Source as SelectQuery;
+										if (mainQuery?.Select.HasModifier == true)
+											continue;
+
 										// moving whole join to subquery
 
 										table.Joins.RemoveAt(j);
 										tsQuery.Where.ConcatSearchCondition(join.Condition);
 
-										if (table.Source is SelectQuery mainQuery)
+										if (mainQuery != null)
 										{
 											// moving into FROM query
 
@@ -1701,10 +1709,13 @@ namespace LinqToDB.SqlQuery
 													return e;
 												});
 
-											tsQuery.Walk(WalkOptions.Default, (mainQuery, testedColumn, newColumn),
-												static (ctx, e) =>
+
+											var newQuery = tsQuery.ConvertAll((mainQuery, testedColumn, newColumn),
+												allowMutation: true,
+												static (visitor, e) =>
 												{
-													if (e is SqlColumn column && column.Parent == ctx.mainQuery)
+													if (e is SqlColumn column &&
+													    column.Parent == visitor.Context.mainQuery)
 													{
 														return column.Expression;
 													}
@@ -1712,23 +1723,28 @@ namespace LinqToDB.SqlQuery
 													return e;
 												});
 
+											newColumn.Expression = newQuery;
+
 											// restore at index
 											mainQuery.Select.Columns.Insert(idx, newColumn);
-
 										}
 										else
 										{
 											// replacing column with subquery
-											sq.Walk(WalkOptions.Default, (query: tsQuery, column: testedColumn),
-												(ctx, e) =>
+
+											var newQuery = sq.ConvertAll((query: tsQuery, column: testedColumn),
+												allowMutation: true,
+												static (visitor, e) =>
 												{
-													if (e == ctx.column)
-														return ctx.query;
+													if (e == visitor.Context.column)
+														return visitor.Context.query;
 
 													return e;
 												});
-										}
 
+											if (!ReferenceEquals(sq, newQuery))
+												throw new InvalidOperationException("Query should be not changed.");
+										}
 									}
 								}
 							}

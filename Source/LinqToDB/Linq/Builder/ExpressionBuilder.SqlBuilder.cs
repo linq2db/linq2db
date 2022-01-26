@@ -910,9 +910,10 @@ namespace LinqToDB.Linq.Builder
 				return sqlExpr;
 			}
 
-			var cache = null != expression.Find(1, (_, e) => e is ContextRefExpression);
+			var cache = expression is SqlPlaceholderExpression ||
+			            null != expression.Find(1, (_, e) => e is ContextRefExpression);
 
-			if (cache && _cachedSql.TryGetValue(cacheKey, out sqlExpr) && false)
+			/*if (cache && _cachedSql.TryGetValue(cacheKey, out sqlExpr) && false)
 			{
 				// conversion found but needs nesting update
 
@@ -921,7 +922,7 @@ namespace LinqToDB.Linq.Builder
 				_preciseCachedSql[preciseCacheKey] = sqlExpr;
 
 				return sqlExpr;
-			}
+			}*/
 
 			ISqlExpression? sql = null;
 
@@ -951,10 +952,19 @@ namespace LinqToDB.Linq.Builder
 				result = UpdateNesting(context, result);
 			}
 
-			if (cache && result is SqlPlaceholderExpression)
+			if (cache && result is SqlPlaceholderExpression placeholder)
 			{
-				_cachedSql[cacheKey]               = result;
-				_preciseCachedSql[preciseCacheKey] = result;
+				if (!flags.HasFlag(ProjectFlags.Test) && placeholder.SelectQuery != context.SelectQuery)
+				{
+					// recreate placeholder
+					placeholder = CreatePlaceholder(context.SelectQuery, placeholder.Sql, placeholder.Path,
+						placeholder.ConvertType, placeholder.Alias, placeholder.Index);
+
+					result = placeholder;
+				}
+
+				_cachedSql[cacheKey]               = placeholder;
+				_preciseCachedSql[preciseCacheKey] = placeholder;
 			}
 
 			return result;
@@ -1743,6 +1753,13 @@ namespace LinqToDB.Linq.Builder
 			if (context == null)
 				throw new InvalidOperationException();
 
+			if (left.NodeType == ExpressionType.New || right.NodeType == ExpressionType.New)
+			{
+				var p = ConvertNewObjectComparison(context!, nodeType, left, right);
+				if (p != null)
+					return p;
+			}
+
 			ISqlExpression? l = null;
 			ISqlExpression? r = null;
 
@@ -1750,22 +1767,22 @@ namespace LinqToDB.Linq.Builder
 			var leftExpr         = ConvertToSqlExpr(context, left, flags | ProjectFlags.Keys, columnDescriptor: columnDescriptor);
 			var rightExpr        = ConvertToSqlExpr(context, right, flags | ProjectFlags.Keys, columnDescriptor: columnDescriptor);
 
+			if (leftExpr is SqlPlaceholderExpression placeholderLeft)
+			{
+				l = placeholderLeft.Sql;
+			}
+
+			if (rightExpr is SqlPlaceholderExpression placeholderRight)
+			{
+				r = placeholderRight.Sql;
+			}
+
 			switch (nodeType)
 			{
 				case ExpressionType.Equal:
 				case ExpressionType.NotEqual:
 
 					var isNot = nodeType == ExpressionType.NotEqual;
-
-					if (leftExpr is SqlPlaceholderExpression placeholderLeft)
-					{
-						l = placeholderLeft.Sql;
-					}
-
-					if (rightExpr is SqlPlaceholderExpression placeholderRight)
-					{
-						r = placeholderRight.Sql;
-					}
 
 					if (l != null && r != null)
 						break;
@@ -3959,24 +3976,19 @@ namespace LinqToDB.Linq.Builder
 					expression = path;
 			}
 
-			_expressionCache[key] = expression;
-
-			// project again
-			do
+			if (!ReferenceEquals(expression, path))
 			{
-				var newExpr = MakeExpression(expression, flags);
-				if (ReferenceEquals(expression, newExpr))
-					break;
-				expression = newExpr;
-			} while (true);
+				expression = MakeExpression(expression, flags);
+			}
 
+			_expressionCache[key] = expression;
 
 			return expression;
 		}
 
 		public SqlPlaceholderExpression MakeColumn(SelectQuery? parentQuery, SqlPlaceholderExpression sqlPlaceholder)
 		{
-			var key = new ColumnCacheKey(sqlPlaceholder.Path, sqlPlaceholder.Type, parentQuery);
+			var key = new ColumnCacheKey(sqlPlaceholder.Path, sqlPlaceholder.Type, sqlPlaceholder.SelectQuery);
 
 			if (_columnCache.TryGetValue(key, out var placeholder))
 				return placeholder;

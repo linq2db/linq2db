@@ -59,12 +59,15 @@ namespace LinqToDB.Linq.Builder
 				builder.BuildTake(sequence, takeExpression, null);
 			}
 
+			var isOuter = false;
+
 			if (forceOuter || methodCall.Method.Name.Contains("OrDefault"))
 			{
 				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null);
+				isOuter  = true;
 			}
 
-			return new FirstSingleContext(buildInfo.Parent, sequence, methodCall, buildInfo.IsSubQuery, buildInfo.IsAssociation);
+			return new FirstSingleContext(buildInfo.Parent, sequence, methodCall, buildInfo.IsSubQuery, buildInfo.IsAssociation, isOuter);
 		}
 
 		protected override SequenceConvertInfo? Convert(
@@ -75,18 +78,20 @@ namespace LinqToDB.Linq.Builder
 
 		public class FirstSingleContext : SequenceContextBase
 		{
-			public FirstSingleContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall, bool isSubQuery, bool isAssociation)
+			public FirstSingleContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall, bool isSubQuery, bool isAssociation, bool isOuter)
 				: base(parent, sequence, null)
 			{
 				_methodCall   = methodCall;
 				IsSubQuery    = isSubQuery;
 				IsAssociation = isAssociation;
+				IsOuter       = isOuter;
 			}
 
 			readonly MethodCallExpression _methodCall;
 
 			public bool IsSubQuery    { get; }
 			public bool IsAssociation { get; }
+			public bool IsOuter       { get; }
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
@@ -189,7 +194,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					_isJoinCreated = true;
 
-					var join = SelectQuery.OuterApply();
+					var join = IsOuter ? SelectQuery.OuterApply() : SelectQuery.CrossApply();
 					join.JoinedTable.IsWeak = true;
 
 					Parent!.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
@@ -275,14 +280,17 @@ namespace LinqToDB.Linq.Builder
 				throw new NotImplementedException();
 			}
 
-			private SqlPlaceholderExpression? _subquerySql;
-
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				var projected = base.MakeExpression(path, flags);
 
 				if (!flags.HasFlag(ProjectFlags.Test))
 				{
+					if (flags.HasFlag(ProjectFlags.SQL))
+					{
+						projected = Builder.ConvertToSqlExpr(Sequence, projected, flags);
+					}
+
 					if (IsSubQuery)
 					{
 						// Bad thing here. We expect that SelectQueryOptimizer will transfer OUTER APPLY to ROW_NUMBER query. We have to predict it here

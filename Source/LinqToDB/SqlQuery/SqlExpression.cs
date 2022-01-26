@@ -197,6 +197,8 @@ namespace LinqToDB.SqlQuery
 						return NeedsEqual(expr.Parameters[0]);
 					return true;
 				}
+				case QueryElementType.SearchCondition :
+					return false;
 				case QueryElementType.SqlFunction :
 
 					var f = (SqlFunction)ex;

@@ -76,19 +76,6 @@ namespace Tests.Linq
 			{
 				IEnumerable<int> ids = new[] { 1, 2 };
 
-				var eids = Parent
-					.Where(p => ids.Contains(p.ParentID))
-					.Select(p => p.Value1 == null ? p.ParentID : p.ParentID + 1)
-					.Distinct();
-
-				var expected = eids.Select(id =>
-					new
-					{
-						id,
-						Count1 = Child.Where(p => p.ParentID == id).Count(),
-						Count2 = Child.Where(p => p.ParentID == id && p.ParentID == _testValue).Count(),
-					});
-
 				var rids   = db.Parent
 					.Where(p => ids.Contains(p.ParentID))
 					.Select(p => p.Value1 == null ? p.ParentID : p.ParentID + 1)
@@ -100,6 +87,21 @@ namespace Tests.Linq
 						id,
 						Count1 = db.Child.Where(p => p.ParentID == id).Count(),
 						Count2 = db.Child.Where(p => p.ParentID == id && p.ParentID == _testValue).Count(),
+					}).ToList();
+
+				return;
+
+				var eids = Parent
+					.Where(p => ids.Contains(p.ParentID))
+					.Select(p => p.Value1 == null ? p.ParentID : p.ParentID + 1)
+					.Distinct();
+
+				var expected = eids.Select(id =>
+					new
+					{
+						id,
+						Count1 = Child.Where(p => p.ParentID == id).Count(),
+						Count2 = Child.Where(p => p.ParentID == id && p.ParentID == _testValue).Count(),
 					});
 
 				AreEqual(expected, result);
@@ -189,7 +191,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ObjectCompare([DataSources(ProviderName.Access)] string context)
+		public void ObjectCompare([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -254,10 +256,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubSub1([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2,
-			TestProvName.AllOracle)]
-			string context)
+		public void SubSub1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -292,15 +291,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubSub2([DataSources(
-			TestProvName.AllAccess,
-			ProviderName.DB2,
-			TestProvName.AllOracle,
-			TestProvName.AllMySql,
-			TestProvName.AllSybase,
-			TestProvName.AllInformix,
-			TestProvName.AllSapHana)]
-			string context)
+		public void SubSub2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -386,11 +377,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubSub21([DataSources(
-			ProviderName.SqlCe, ProviderName.DB2,
-			TestProvName.AllOracle,
-			ProviderName.Access)]
-			string context)
+		public void SubSub21([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -433,9 +420,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubSub211([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2,
-			TestProvName.AllOracle)]
+		public void SubSub211([DataSources]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -481,10 +466,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubSub212([DataSources(
-			ProviderName.SqlCe, TestProvName.AllAccess, ProviderName.DB2,
-			TestProvName.AllOracle)]
-			string context)
+		public void SubSub212([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -527,10 +509,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubSub22([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2,
-			TestProvName.AllOracle, TestProvName.AllSapHana)]
-			string context)
+		public void SubSub22([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
