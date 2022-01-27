@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Remove="Properties\appsettings.Development.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="protobuf-net.Grpc.AspNetCore" Version="1.0.152" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="6.0.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.Grpc\LinqToDB.Remote.Grpc.csproj" />
+    <ProjectReference Include="..\..\..\..\Source\LinqToDB\LinqToDB.csproj" />
+  </ItemGroup>
+
+</Project>

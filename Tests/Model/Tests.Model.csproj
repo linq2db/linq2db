@@ -6,4 +6,9 @@
 		<AssemblyName>linq2db.Model</AssemblyName>
 	</PropertyGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="..\..\Source\LinqToDB.Remote.Soap\LinqToDB.Remote.Soap.csproj" />
+	  <ProjectReference Include="..\..\Source\LinqToDB.Remote.Wcf\LinqToDB.Remote.Wcf.csproj" />
+	</ItemGroup>
+
 </Project>

@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+<!--
+нужна помощь здесь
+отключен - не разобрался с централизованным управлением версиями пакетов
+	<Import Project="..\..\Build\linq2db.Source.props" />
+-->
+	<PropertyGroup>
+		<AssemblyName>linq2db.remote.grpc</AssemblyName>
+		<RootNamespace>LinqToDB.Remote.Grpc</RootNamespace>
+
+		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.remote.grpc.xml</DocumentationFile>
+		<TargetFrameworks>net6.0</TargetFrameworks>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
+	</ItemGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
+		<DefineConstants>OVERRIDETOSTRING;$(DefineConstants)</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<DefineConstants>NATIVE_ASYNC;$(DefineConstants)</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+<!-- по той же причине етот пакет убран
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
+-->
+		<PackageReference Include="Grpc.Net.Client" Version="2.42.0" />
+		<PackageReference Include="protobuf-net.Grpc.AspNetCore" Version="1.0.152" />
+	</ItemGroup>
+</Project>

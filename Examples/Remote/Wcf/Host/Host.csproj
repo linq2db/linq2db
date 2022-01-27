@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net4.5.2</TargetFramework>
+    <LangVersion>Latest</LangVersion>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.Wcf\LinqToDB.Remote.Wcf.csproj" />
+    <ProjectReference Include="..\..\..\..\Source\LinqToDB\LinqToDB.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.ServiceModel" />
+  </ItemGroup>
+
+</Project>

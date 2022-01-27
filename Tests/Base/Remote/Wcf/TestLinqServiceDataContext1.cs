@@ -6,7 +6,7 @@ using LinqToDB;
 namespace Tests.ServiceModel
 {
 	using Model;
-	using LinqToDB.Remote.Independent;
+	using LinqToDB.Remote;
 
 	public class TestLinqServiceDataContext : TestLinqServiceDataContextBase, ITestDataContext
 	{

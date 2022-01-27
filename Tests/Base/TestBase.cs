@@ -32,8 +32,7 @@ namespace Tests
 	using LinqToDB.Interceptors;
 	using Model;
 	using Tools;
-	using LinqToDB.Remote.Independent;
-	using LinqToDB.Remote.Infra;
+	using LinqToDB.Remote;
 
 	public partial class TestBase
 	{

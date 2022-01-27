@@ -1,6 +1,5 @@
 ﻿#if NET472
 using System.Threading.Tasks;
-using LinqToDB.Remote.Independent;
 using LinqToDB.Remote;
 
 namespace Tests.ServiceModel
@@ -30,7 +29,7 @@ namespace Tests.ServiceModel
 			return _linqService.ExecuteNonQuery(configuration, queryData);
 		}
 
-		public object? ExecuteScalar(string? configuration, string queryData)
+		public string? ExecuteScalar(string? configuration, string queryData)
 		{
 			return _linqService.ExecuteScalar(configuration, queryData);
 		}
@@ -55,7 +54,7 @@ namespace Tests.ServiceModel
 			return Task.Run(() => _linqService.ExecuteNonQuery(configuration, queryData));
 		}
 
-		public Task<object?> ExecuteScalarAsync(string? configuration, string queryData)
+		public Task<string?> ExecuteScalarAsync(string? configuration, string queryData)
 		{
 			return Task.Run(() => _linqService.ExecuteScalar(configuration, queryData));
 		}

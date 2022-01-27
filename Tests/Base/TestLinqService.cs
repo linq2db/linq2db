@@ -3,7 +3,7 @@ using System;
 using LinqToDB.Data;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
-using LinqToDB.Remote.Independent;
+using LinqToDB.Remote;
 
 namespace Tests
 {

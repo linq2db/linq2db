@@ -1,0 +1,1 @@
+﻿<%@ ServiceHost Language="C#" Debug="true" Service="WebHost.SoapRemoteLinqService" CodeBehind="SoapRemoteLinqService.svc.cs" %>

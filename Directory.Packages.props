@@ -78,6 +78,13 @@
 		<PackageVersion Include="System.ComponentModel.Annotations"         Version="5.0.0"  />
 	</ItemGroup>
 
+	<!-- remote targets -->
+<!-- нужна помощь здесь
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
+		<PackageReference Include="Grpc.Net.Client"                         Version="2.42.0" />
+		<PackageReference Include="protobuf-net.Grpc.AspNetCore"            Version="1.0.152" />
+	</ItemGroup>
+-->
 	<!--test targets-->
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
 		<!--used only for netfx, but adding it to main group produce conflicts-->

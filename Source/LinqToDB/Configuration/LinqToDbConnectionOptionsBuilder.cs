@@ -105,6 +105,7 @@ namespace LinqToDB.Configuration
 			string configurationString)
 		{
 			CheckAssignSetupType(ConnectionSetupType.ConfigurationString);
+
 			ConfigurationString = configurationString ?? throw new ArgumentNullException(nameof(configurationString));
 			return this;
 		}

@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\..\Build\linq2db.Source.props" />
+
+	<PropertyGroup>
+		<AssemblyName>linq2db.remote.soap</AssemblyName>
+		<RootNamespace>LinqToDB.Remote.Soap</RootNamespace>
+
+		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.remote.soap.xml</DocumentationFile>
+		<TargetFrameworks>net45;net46;net472;</TargetFrameworks>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- T4 support -->
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+	</ItemGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
+		<DefineConstants>OVERRIDETOSTRING;$(DefineConstants)</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(TargetFramework)' != 'net45' AND '$(TargetFramework)' != 'net46' ">
+		<DefineConstants>NATIVE_ASYNC;$(DefineConstants)</DefineConstants>
+	</PropertyGroup>
+
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' OR '$(TargetFramework)' == 'net472' ">
+		<Reference Include="Microsoft.CSharp" />
+		<Reference Include="System.Configuration" />
+		<Reference Include="System.Data.DataSetExtensions" />
+		<Reference Include="System.Data.Linq" />
+		<Reference Include="System.Data.Services" />
+		<Reference Include="System.ServiceModel" />
+		<Reference Include="System.Web.Services" />
+		<Reference Include="System.ComponentModel.DataAnnotations" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' != 'net45' AND '$(TargetFramework)' != 'net46' ">
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
+	</ItemGroup>
+</Project>
