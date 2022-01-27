@@ -1726,6 +1726,34 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertCompare
 
+		static LambdaExpression BuildMemberPathLambda(Expression path)
+		{
+			var memberPath = new List<MemberInfo>();
+
+			var current = path;
+			do
+			{
+				if (current is MemberExpression me)
+				{
+					current = me.Expression;
+					memberPath.Add(me.Member);
+				}
+				else if (current is ContextRefExpression)
+					break;
+				else
+					throw new InvalidOperationException($"Unexpected expression for constructing parameter `{path}`");
+			} while (true);
+
+			var        param = Expression.Parameter(current.Type, "o");
+			Expression body  = param;
+			for (int i = memberPath.Count - 1; i >= 0; i--)
+			{
+				body = Expression.MakeMemberAccess(body, memberPath[i]);
+			}
+
+			return Expression.Lambda(body, param);
+		}
+
 		public ISqlPredicate? ConvertCompare(IBuildContext? context, ExpressionType nodeType, Expression left, Expression right, ProjectFlags flags)
 		{
 			SqlSearchCondition? GenerateNullComaprison(List<SqlPlaceholderExpression> placeholders, bool isNot)
@@ -1746,19 +1774,38 @@ namespace LinqToDB.Linq.Builder
 				return searchCondition;
 			}
 
+			SqlSearchCondition? GenerateObjectComparison(List<SqlPlaceholderExpression> placeholders, Expression paramExpr)
+			{
+				if (placeholders.Count == 0)
+					return null;
+
+				var searchCondition = new SqlSearchCondition();
+				foreach (var placeholder in placeholders)
+				{
+					var accessLambda = BuildMemberPathLambda(placeholder.Path);
+
+					var paramExpression = InternalExtensions.ApplyLambdaToExpression(accessLambda, paramExpr);
+
+					var paramSql = ConvertToSql(context, paramExpression,
+						columnDescriptor: QueryHelper.GetColumnDescriptor(placeholder.Sql));
+
+					var predicate =
+						new SqlPredicate.ExprExpr(
+							placeholder.Sql,
+							nodeType == ExpressionType.Equal ? SqlPredicate.Operator.Equal : SqlPredicate.Operator.NotEqual,
+							paramSql, Configuration.Linq.CompareNullsAsValues ? true : null);
+
+					searchCondition.Conditions.Add(new SqlCondition(false, predicate, nodeType == ExpressionType.NotEqual));
+				}
+
+				return searchCondition;
+			}
 
 			if (!RestoreCompare(ref left, ref right))
 				RestoreCompare(ref right, ref left);
 
 			if (context == null)
 				throw new InvalidOperationException();
-
-			if (left.NodeType == ExpressionType.New || right.NodeType == ExpressionType.New)
-			{
-				var p = ConvertNewObjectComparison(context!, nodeType, left, right);
-				if (p != null)
-					return p;
-			}
 
 			ISqlExpression? l = null;
 			ISqlExpression? r = null;
@@ -1798,6 +1845,16 @@ namespace LinqToDB.Linq.Builder
 					if (r is SqlValue rv && rv.Value == null)
 					{
 						return GenerateNullComaprison(leftPlaceholders, isNot);
+					}
+
+					if (rightPlaceholders.Count > 0 && l is SqlParameter lParam)
+					{
+						return GenerateObjectComparison(rightPlaceholders, left);
+					}
+
+					if (leftPlaceholders.Count > 0 && r is SqlParameter rParam)
+					{
+						return GenerateObjectComparison(leftPlaceholders, right);
 					}
 
 					if (leftPlaceholders.Count == 0 || rightPlaceholders.Count == 0)

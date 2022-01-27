@@ -246,6 +246,11 @@ namespace LinqToDB.Expressions
 							path = ConvertPathTo(typeof(ContextConstructionExpression));
 							Path(construction.InnerExpression, ReflectionHelper.ContextConstruction.InnerExpression);
 						}
+						else if (expr is SqlGenericConstructorExpression generic)
+						{
+							path = ConvertPathTo(typeof(SqlGenericConstructorExpression));
+							Path(generic.Assignments, ReflectionHelper.SqlGenericConstructor.Assignments, AssignmentsPath);
+						}
 						else
 						{
 							if (expr.CanReduce)
@@ -295,6 +300,13 @@ namespace LinqToDB.Expressions
 					break;
 			}
 		}
+
+		private void AssignmentsPath(SqlGenericConstructorExpression.Assignment assignment)
+		{
+			ConvertPathTo(typeof(SqlGenericConstructorExpression.Assignment));
+			Path(assignment.Expression, ReflectionHelper.SqlGenericConstructorAssignment.Expression);
+		}
+
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private Expression ConvertPathTo(Type type)

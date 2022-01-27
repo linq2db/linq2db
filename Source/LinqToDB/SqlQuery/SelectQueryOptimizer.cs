@@ -1026,7 +1026,7 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			if (expr.Find(static ex => ex is SelectQuery || QueryHelper.IsAggregationOrWindowFunction(ex)) == null)
+			if (expr.Find(static ex => QueryHelper.IsAggregationOrWindowFunction(ex)) == null)
 			{
 				var elementsToIgnore = new HashSet<IQueryElement> { query };
 

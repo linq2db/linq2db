@@ -43,6 +43,7 @@ namespace Tests.Linq
 					select new Person(p.PersonID - 1) { FirstName = p.FirstName });
 		}
 
+		[ActiveIssue("TrimeEnd do not remove \r\n")]
 		[Test]
 		public void DoNotMakeSubQuery([DataSources] string context)
 		{
@@ -1805,6 +1806,8 @@ namespace Tests.Linq
 		[Test]
 		public void BooleanSubquery([DataSources] string context)
 		{
+			//TODO: Store in SelectQuery IsSingleRecord information, to allow optimizer moving CrossApply to SubQuery Column
+
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<WhereWithBool>(new List<WhereWithBool>(){new WhereWithBool()
 			{

@@ -104,13 +104,13 @@ namespace LinqToDB.Linq.Builder
 
 			var members = BuildMembers(context, entityDescriptor, flags);
 
-			/*if (flags.HasFlag(ProjectFlags.SQL))
+			if (flags.HasFlag(ProjectFlags.SQL))
 			{
 				var assignments = members
-					.Select(x => new SqlGenericConstructorExpression.Assignment(x.column.MemberInfo, x.expr)).ToList();
+					.Select(x => new SqlGenericConstructorExpression.Assignment(x.Member, x.Expression)).ToList();
 
-				return new SqlGenericConstructorExpression(assignments);
-			}*/
+				return new SqlGenericConstructorExpression(entityType, assignments);
+			}
 
 			//if (flags.HasFlag(ProjectFlags.Expression))
 			{

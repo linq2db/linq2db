@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
@@ -248,8 +249,13 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.Extension:
 				{
-					if (expr.CanReduce)
-						Visit(expr.Reduce());
+					if (expr is SqlGenericConstructorExpression generic)
+					{
+						Visit(generic.Assignments.Select(a => a.Expression));
+					}
+					else
+						if (expr.CanReduce)
+							Visit(expr.Reduce());
 
 					break;
 				}
