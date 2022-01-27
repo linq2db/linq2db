@@ -77,7 +77,7 @@ namespace LinqToDB.Linq.Builder
 			if (conditionIndex != -1)
 			{
 				var condition     = (LambdaExpression)methodCall.Arguments[conditionIndex].Unwrap();
-				var conditionExpr = condition.GetBody(selector.Parameters[0], selector.Parameters[1]);
+				var conditionExpr =  SequenceHelper.PrepareBody(condition, outerContext, innerContext);
 
 				conditionExpr = builder.ConvertExpression(conditionExpr);
 

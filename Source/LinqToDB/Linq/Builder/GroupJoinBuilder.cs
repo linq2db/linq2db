@@ -27,7 +27,7 @@ namespace LinqToDB.Linq.Builder
 
 			var outerKey = SequenceHelper.PrepareBody(outerKeyLambda, outerContext);
 
-			var innerContext = new GroupJoinInnerContext(buildInfo.Parent, builder, outerKey,
+			var innerContext = new GroupJoinInnerContext(buildInfo.Parent, outerContext.SelectQuery, builder, outerKey,
 				innerKeyLambda, innerExpression);
 
 			var context = new SelectContext(buildInfo.Parent, resultLambda, buildInfo.IsSubQuery, outerContext, innerContext);
@@ -44,7 +44,7 @@ namespace LinqToDB.Linq.Builder
 		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 		class GroupJoinInnerContext : IBuildContext
 		{
-			public GroupJoinInnerContext(IBuildContext? parent, ExpressionBuilder builder,
+			public GroupJoinInnerContext(IBuildContext? parent, SelectQuery outerQuery, ExpressionBuilder builder,
 				Expression outerKey, LambdaExpression innerKeyLambda,
 				Expression innerExpression)
 			{
@@ -54,8 +54,7 @@ namespace LinqToDB.Linq.Builder
 				InnerKeyLambda  = innerKeyLambda;
 				InnerExpression = innerExpression;
 
-				//fake
-				SelectQuery = new SelectQuery();
+				SelectQuery = outerQuery;
 
 				Builder.Contexts.Add(this);
 	#if DEBUG

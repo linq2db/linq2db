@@ -30,7 +30,12 @@ namespace LinqToDB.Linq.Builder
 			var collectionInfo = new BuildInfo(sequence, expr, new SelectQuery()) { CreateSubQuery = true };
 			var collection     = builder.BuildSequence(collectionInfo);
 
-			var context        = new SelectContext(buildInfo.Parent, resultSelector, buildInfo.IsSubQuery, sequence, collection);
+			if (collectionInfo.JoinType == JoinType.Full || collectionInfo.JoinType == JoinType.Right)
+				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null);
+
+			IBuildContext context = new SelectContext(buildInfo.Parent, resultSelector, buildInfo.IsSubQuery, sequence,
+				collection);
+
 			context.SetAlias(collectionSelector.Parameters[0].Name);
 
 			string? collectionAlias = null;
