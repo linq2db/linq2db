@@ -10,6 +10,7 @@
 
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.remote.grpc.xml</DocumentationFile>
 		<TargetFrameworks>net6.0</TargetFrameworks>
+		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
 	<ItemGroup>

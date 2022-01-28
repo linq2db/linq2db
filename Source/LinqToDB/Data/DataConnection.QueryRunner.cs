@@ -416,23 +416,38 @@ namespace LinqToDB.Data
 
 			#region ExecuteScalar
 
+			static async Task<object?> ExecuteScalarImplAsync(
+				DataConnection dataConnection,
+				ExecutionPreparedQuery executionQuery,
+				CancellationToken cancellationToken
+				)
+			{
+				var idParam = GetParameter(dataConnection, executionQuery);
+
+				if (executionQuery.PreparedQuery.Commands.Length == 1)
+				{
+					if (idParam != null)
+					{
+						// This is because the firebird provider does not return any parameters via ExecuteReader
+						// the rest of the providers must support this mode
+						await dataConnection.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+						return idParam.Value;
+					}
+
+					return await dataConnection.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				}
+
+				await dataConnection.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+				InitCommand(dataConnection, executionQuery, 1);
+
+				return await dataConnection.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			}
+
 			static object? ExecuteScalarImpl(DataConnection dataConnection, ExecutionPreparedQuery executionQuery)
 			{
-				DbParameter? idParam = null;
-
-				if (dataConnection.DataProvider.SqlProviderFlags.IsIdentityParameterRequired)
-				{
-					if (executionQuery.PreparedQuery.Statement.NeedsIdentity())
-					{
-						idParam = dataConnection.CurrentCommand!.CreateParameter();
-
-						idParam.ParameterName = "IDENTITY_PARAMETER";
-						idParam.Direction     = ParameterDirection.Output;
-						idParam.DbType        = DbType.Decimal;
-
-						dataConnection.CurrentCommand!.Parameters.Add(idParam);
-					}
-				}
+				var idParam = GetParameter(dataConnection, executionQuery);
 
 				if (executionQuery.PreparedQuery.Commands.Length == 1)
 				{
@@ -453,6 +468,43 @@ namespace LinqToDB.Data
 				InitCommand(dataConnection, executionQuery, 1);
 
 				return dataConnection.ExecuteScalar();
+			}
+
+			private static DbParameter? GetParameter(DataConnection dataConnection, ExecutionPreparedQuery executionQuery)
+			{
+				DbParameter? idParam = null;
+
+				if (dataConnection.DataProvider.SqlProviderFlags.IsIdentityParameterRequired)
+				{
+					if (executionQuery.PreparedQuery.Statement.NeedsIdentity())
+					{
+						idParam = dataConnection.CurrentCommand!.CreateParameter();
+
+						idParam.ParameterName = "IDENTITY_PARAMETER";
+						idParam.Direction = ParameterDirection.Output;
+						idParam.DbType = DbType.Decimal;
+
+						dataConnection.CurrentCommand!.Parameters.Add(idParam);
+					}
+				}
+
+				return idParam;
+			}
+
+			public static Task<object?> ExecuteScalarAsync(
+				DataConnection dataConnection,
+				IQueryContext context,
+				IReadOnlyParameterValues? parameterValues,
+				CancellationToken cancellationToken
+				)
+			{
+				var preparedQuery      = GetCommand(dataConnection, context, parameterValues, false);
+				var commandsParameters = GetParameters(dataConnection, preparedQuery, parameterValues, false);
+				var executionQuery     = new ExecutionPreparedQuery(preparedQuery, commandsParameters);
+
+				InitFirstCommand(dataConnection, executionQuery);
+
+				return ExecuteScalarImplAsync(dataConnection, executionQuery, cancellationToken);
 			}
 
 			public static object? ExecuteScalar(DataConnection dataConnection, IQueryContext context, IReadOnlyParameterValues? parameterValues)

@@ -15,7 +15,7 @@ namespace LinqToDB.Remote.Grpc.Dto
 		public string QueryData
 		{
 			get; set;
-		}
+		} = null!;
 	}
 
 }

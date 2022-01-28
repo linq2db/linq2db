@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Remote
 {
+	using System.Threading;
 	using Common;
 	using Data;
 	using Expressions;
@@ -98,6 +99,64 @@ namespace LinqToDB.Remote
 				{
 					Statement = query.Statement
 				}, new SqlParameterValues());
+			}
+			catch (Exception exception)
+			{
+				HandleException(exception);
+				throw;
+			}
+		}
+
+		public async Task<string?> ExecuteScalarAsync(
+			string? configuration,
+			string queryData,
+			CancellationToken cancellationToken
+			)
+		{
+			try
+			{
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, queryData);
+
+				ValidateQuery(query);
+
+				using var db = CreateDataContext(configuration);
+				using var _  = db.DataProvider.ExecuteScope(db);
+
+				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
+
+				var scalar = await DataConnection.QueryRunner.ExecuteScalarAsync(
+					db,
+					new QueryContext
+					{
+						Statement  = query.Statement
+					},
+					null,
+					cancellationToken
+					).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+				string? result = null;
+				if (scalar != null)
+				{
+					var lsr = new LinqServiceResult
+					{
+						QueryID    = Guid.NewGuid(),
+						FieldCount = 1,
+						RowCount = 1,
+						FieldNames = new string[] { "scalar" },
+						FieldTypes = new Type[] { scalar.GetType() },
+						Data       = new List<string[]>
+						{
+							new []
+							{
+								SerializationConverter.Serialize(SerializationMappingSchema, scalar)
+							}
+						},
+					};
+
+					result = LinqServiceSerializer.Serialize(SerializationMappingSchema, lsr);
+				}
+
+				return result;
 			}
 			catch (Exception exception)
 			{

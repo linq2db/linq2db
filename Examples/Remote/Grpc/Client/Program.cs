@@ -12,7 +12,7 @@ namespace Client
 			Console.WriteLine("---------------------------------------------------------------------");
 			await UpdateNewCategoryAsync(identity);
 			Console.WriteLine("---------------------------------------------------------------------");
-			ReadScalar();
+			await ReadScalarAsync();
 			Console.WriteLine("---------------------------------------------------------------------");
 			ReadCollection();
 			Console.WriteLine("---------------------------------------------------------------------");
@@ -52,7 +52,7 @@ namespace Client
 			}
 		}
 
-		private static void ReadScalar()
+		private static async Task ReadScalarAsync()
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -65,7 +65,7 @@ namespace Client
 						Name = c.CategoryName
 					};
 
-				var row = q.First();
+				var row = await q.FirstAsync();
 				Console.WriteLine(row.Id + " : " + row.Name);
 			}
 		}

@@ -1,6 +1,8 @@
-﻿using LinqToDB.Remote.Grpc.Dto;
+﻿using Grpc.Core;
+using LinqToDB.Remote.Grpc.Dto;
 using ProtoBuf.Grpc;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.Remote.Grpc
@@ -80,9 +82,11 @@ namespace LinqToDB.Remote.Grpc
 
 		public Task<string?> ExecuteScalarAsync(GrpcConfigurationQuery caq, CallContext context = default)
 		{
-			//TODO: modify LinqService to support async
-			var result = _linqService.ExecuteScalar(caq.Configuration, caq.QueryData);
-			return Task.FromResult(result);
+			return _linqService.ExecuteScalarAsync(
+				caq.Configuration,
+				caq.QueryData,
+				context.ServerCallContext?.CancellationToken ?? CancellationToken.None
+				);
 		}
 
 	}
