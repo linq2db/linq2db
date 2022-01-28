@@ -164,7 +164,7 @@ namespace Tests.Extensions
 			)
 			.QueryHint(SqlServerHints.Query.Recompile)
 			.QueryHint(SqlServerHints.Query.Fast(10))
-			.QueryHint(SqlServerHints.Query.MaxGrantPercent(25));
+			.QueryHint(SqlServerHints.Query.HashJoin);
 
 			_ = q.ToList();
 		}
