@@ -1,18 +1,22 @@
 ﻿<#@ template debug="true" hostspecific="true" language="C#" #>
 <#@ output extension=".generated.cs" #>
 <#@ assembly name="$(SolutionDir)Source\LinqToDB.Tools\bin\Debug\net46\linq2db.dll" #>
+<#@ include file="..\..\..\..\LinqToDB.Templates\LinqToDB.SqlServer.ttinclude"   once="true" #>
 <#@ include file="..\..\..\..\LinqToDB.Templates\PluralizationService.ttinclude" once="true" #>
-<#@ include file="..\..\..\..\LinqToDB.Templates\LinqToDB.SqlServer.ttinclude"   once="true" #><#@ import namespace="LinqToDB" #>
+<#@ import namespace="LinqToDB" #>
 <#
 	NamespaceName                = "LinqToDB.Tools.DataProvider.SqlServer.Schemas";
+	DataContextName              = "SystemDB";
 	EnableNullableReferenceTypes = true;
-	GenerateDatabaseInfo         = true;
 	GenerateSchemaAsType         = true;
-	GenerateDataTypes            = true;
+//	GenerateDbTypes              = true;
 	OneToManyAssociationType     = "IList<{0}>";
 
 	SingularizeClassNames             = false;
 	PluralizeDataContextPropertyNames = false;
+	NormalizeNamesWithoutUnderscores  = true;
+	PluralizeForeignKeyNames          = false;
+	SingularizeForeignKeyNames        = true;
 
 	SchemaNameMapping.Add("sys",                "System");
 	SchemaNameMapping.Add("INFORMATION_SCHEMA", "Information");
@@ -20,6 +24,16 @@
 	LoadDatabaseSchema = LoadSystemDatabaseSchema;
 
 	LoadSqlServerMetadata(".", "master", SqlServerVersion.v2012);
+
+	foreach (var tt in Tables)
+	{
+		var t = tt.Value;
+
+		foreach (var c in t.Columns)
+			if (c.Value.ColumnName.EndsWith("_id"))
+				c.Value.MemberName = c.Value.MemberName.Substring(0, c.Value.MemberName.Length - 1) + "D";
+	}
+
 	GenerateModel();
 #>
 <#+
@@ -32,7 +46,7 @@ DatabaseSchema LoadSystemDatabaseSchema(DataConnection dataConnection, GetSchema
 		column_name = null as string,
 		column_id   = 0,
 		type_name   = null as string,
-		max_length  = 0,
+		max_length  = null as int?,
 		precision   = 0,
 		scale       = 0,
 		is_nullable = false
@@ -43,10 +57,10 @@ select
 	c.name                          column_name,
 	c.column_id,
 	t.name                          type_name,
-	t.max_length,
-	t.precision,
-	t.scale,
-	t.is_nullable
+	c.max_length,
+	c.precision,
+	c.scale,
+	c.is_nullable
 from sys.all_objects o
 join sys.all_views v on o.object_id = v.object_id
 join sys.all_columns c on o.object_id = c.object_id
@@ -62,7 +76,7 @@ order by OBJECT_SCHEMA_NAME(o.object_id), o.name, c.column_id
 		group c by new { c.schema_name, c.view_name } into gs
 		select new TableSchema
 		{
-			ID         = $"[]{gs.Key.schema_name}].[{gs.Key.view_name}]",
+			ID         = $"[{gs.Key.schema_name}].[{gs.Key.view_name}]",
 			SchemaName = gs.Key.schema_name,
 			TableName  = gs.Key.view_name,
 			TypeName   = gs.Key.view_name,
@@ -80,10 +94,10 @@ order by OBJECT_SCHEMA_NAME(o.object_id), o.name, c.column_id
 							"tinyint"          => "tinyint",
 							"smallint"         => "smallint",
 							"bigint"           => "bigint",
-							"datetime"         => $"datetime({c.precision},{c.scale})",
-							"datetime2"        => $"datetime2({c.precision},{c.scale})",
-							"datetimeoffset"   => $"datetimeoffset({c.precision},{c.scale})",
-							"time"             => $"time({c.precision},{c.scale})",
+							"datetime"         => "datetime",
+							"datetime2"        => c.scale == 0 ? "datetime2"      : $"datetime2({c.scale})",
+							"datetimeoffset"   => c.scale == 0 ? "datetimeoffset" : $"datetimeoffset({c.scale})",
+							"time"             => c.scale == 0 ? "time"           : $"time({c.scale})",
 							"sql_variant"      => "sql_variant",
 							"sysname"          => "sysname",
 							"bit"              => "bit",
@@ -91,18 +105,43 @@ order by OBJECT_SCHEMA_NAME(o.object_id), o.name, c.column_id
 							"numeric"          => $"numeric({c.precision},{c.scale})",
 							"float"            => "float",
 							"real"             => "real",
-							"char"             => $"char({c.max_length / 2})",
-							"nchar"            => $"nchar({c.max_length / 2})",
-							"nvarchar"         => $"nvarchar({c.max_length / 2})",
-							"varchar"          => $"varchar({c.max_length / 2})",
-							"varbinary"        => $"varbinary({c.max_length})",
-							"binary"           => $"binary({c.max_length})",
-							"image"            => $"image({c.max_length})",
+							"char"             => $"char({(     c.max_length == null ? "max" : c.max_length)})",
+							"nchar"            => $"nchar({(    c.max_length == null ? "max" : c.max_length / 2)})",
+							"nvarchar"         => $"nvarchar({( c.max_length == null ? "max" : c.max_length / 2)})",
+							"varchar"          => $"varchar({(  c.max_length == null ? "max" : c.max_length)})",
+							"varbinary"        => $"varbinary({(c.max_length == null ? "max" : c.max_length)})",
+							"binary"           => $"binary({(   c.max_length == null ? "max" : c.max_length)})",
+							"image"            => $"image({(    c.max_length == null ? "max" : c.max_length)})",
 							var t              => throw new NotImplementedException($"Not implemented type {t}")
 						},
 					IsNullable           = c.is_nullable,
 					MemberName           = c.column_name,
-					MemberType           = "int",
+					MemberType           = c.type_name switch
+					{
+						"int"              => "int",
+						"tinyint"          => "byte",
+						"smallint"         => "short",
+						"bigint"           => "long",
+						"datetime"         => "DateTime",
+						"datetime2"        => "DateTime",
+						"datetimeoffset"   => "DateTimeOffset",
+						"time"             => "TimeSpan",
+						"sql_variant"      => "object",
+						"sysname"          => "string",
+						"bit"              => "bool",
+						"uniqueidentifier" => "Guid",
+						"numeric"          => "decimal",
+						"float"            => "double",
+						"real"             => "float",
+						"char"             => "string",
+						"nchar"            => "string",
+						"nvarchar"         => "string",
+						"varchar"          => "string",
+						"varbinary"        => "byte[]",
+						"binary"           => "byte[]",
+						"image"            => "byte[]",
+						var t              => throw new NotImplementedException($"Not implemented type {t}")
+					} + (c.is_nullable ? "?" : ""),
 					SystemType           = typeof(int),
 					DataType             = LinqToDB.DataType.Char,
 					Length               = c.max_length / 2,
@@ -114,14 +153,58 @@ order by OBJECT_SCHEMA_NAME(o.object_id), o.name, c.column_id
 		}
 	).ToList();
 
+	var allObjectsTable = tables.First(t => t.ID is "[sys].[all_objects]");
+	var objectsTable    = tables.First(t => t.ID is "[sys].[objects]");
+
+	foreach (var t in tables)
+	{
+		if (t != allObjectsTable && t != objectsTable)
+		{
+			var column = t.Columns.FirstOrDefault(c => c.ColumnName is "object_id");
+
+			if (column != null)
+			{
+				var otherTable  = t.TableName!.StartsWith("all_") ? allObjectsTable : objectsTable;
+				var otherColumn = otherTable.Columns.First(c => c.ColumnName is "object_id");
+
+				var backReference = new ForeignKeySchema
+				{
+					KeyName         = t.TableName,
+					OtherTable      = t,
+					ThisColumns     = new (new[] { otherColumn }),
+					OtherColumns    = new (new[] { column }),
+					CanBeNull       = true,
+					MemberName      = t.TypeName,
+					AssociationType = LinqToDB.SchemaProvider.AssociationType.OneToMany,
+				};
+
+				otherTable.ForeignKeys.Add(backReference);
+
+				t.ForeignKeys.Add(new()
+				{
+					KeyName         = otherTable.TableName!,
+					OtherTable      = otherTable,
+					ThisColumns     = new (new[] { column }),
+					OtherColumns    = new (new[] { otherColumn }),
+					CanBeNull       = false,
+					MemberName      = "Object",
+					BackReference   = backReference,
+					AssociationType = LinqToDB.SchemaProvider.AssociationType.ManyToOne,
+				});
+			}
+		}
+	}
+
+	var dbc = (System.Data.Common.DbConnection)dataConnection.Connection;
+
 	return new()
 	{
-		DataSource                    = ".",
-		Database                      = "master",
-		ServerVersion                 = "none",
-		Tables                        = tables,
-		Procedures                    = new(),
-		DataTypesSchema               = new(),
+		DataSource      = dbc.DataSource!,
+		Database        = dbc.Database,
+		ServerVersion   = dbc.ServerVersion!,
+		Tables          = tables,
+		Procedures      = new(),
+		DataTypesSchema = new(),
 	};
 }
 #>
