@@ -27,8 +27,8 @@ namespace LinqToDB.Remote.Wcf
 
 
 
-		[OperationContract(Action= "http://tempuri.org/IWcfLinqService/GetInfo",         ReplyAction= "http://tempuri.org/IWcfLinqService/GetInfoResponse")]
-		Task<LinqServiceInfo> GetInfoAsync(string? configuration);
+		//[OperationContract(Action= "http://tempuri.org/IWcfLinqService/GetInfo",         ReplyAction= "http://tempuri.org/IWcfLinqService/GetInfoResponse")]
+		//Task<LinqServiceInfo> GetInfoAsync(string? configuration);
 
 		[OperationContract(Action= "http://tempuri.org/IWcfLinqService/ExecuteNonQuery", ReplyAction= "http://tempuri.org/IWcfLinqService/ExecuteNonQueryResponse")]
 		Task<int> ExecuteNonQueryAsync(string? configuration, string queryData);

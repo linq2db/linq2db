@@ -82,6 +82,50 @@ namespace LinqToDB.Remote
 			};
 		}
 
+		#region ExecuteNonQuery + ExecuteNonQueryAsync
+
+		/// <summary>
+		/// In case of change of the logic of this method, DO NOT FORGET
+		/// to change the sibling method.
+		/// </summary>
+		public async Task<int> ExecuteNonQueryAsync(
+			string? configuration,
+			string queryData,
+			CancellationToken cancellationToken
+			)
+		{
+			try
+			{
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, queryData);
+
+				ValidateQuery(query);
+
+				using var db = CreateDataContext(configuration);
+				using var _  = db.DataProvider.ExecuteScope(db);
+
+				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
+
+				return await DataConnection.QueryRunner.ExecuteNonQueryAsync(
+					db,
+					new QueryContext
+					{
+						Statement = query.Statement
+					},
+					new SqlParameterValues(),
+					cancellationToken
+					).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			}
+			catch (Exception exception)
+			{
+				HandleException(exception);
+				throw;
+			}
+		}
+
+		/// <summary>
+		/// In case of change of the logic of this method, DO NOT FORGET
+		/// to change the sibling method.
+		/// </summary>
 		public int ExecuteNonQuery(string? configuration, string queryData)
 		{
 			try
@@ -107,6 +151,14 @@ namespace LinqToDB.Remote
 			}
 		}
 
+		#endregion
+
+		#region ExecuteScalar + ExecuteScalarAsync
+
+		/// <summary>
+		/// In case of change of the logic of this method, DO NOT FORGET
+		/// to change the sibling method.
+		/// </summary>
 		public async Task<string?> ExecuteScalarAsync(
 			string? configuration,
 			string queryData,
@@ -134,27 +186,7 @@ namespace LinqToDB.Remote
 					cancellationToken
 					).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
-				string? result = null;
-				if (scalar != null)
-				{
-					var lsr = new LinqServiceResult
-					{
-						QueryID    = Guid.NewGuid(),
-						FieldCount = 1,
-						RowCount = 1,
-						FieldNames = new string[] { "scalar" },
-						FieldTypes = new Type[] { scalar.GetType() },
-						Data       = new List<string[]>
-						{
-							new []
-							{
-								SerializationConverter.Serialize(SerializationMappingSchema, scalar)
-							}
-						},
-					};
-
-					result = LinqServiceSerializer.Serialize(SerializationMappingSchema, lsr);
-				}
+				var result = ProcessScalar(scalar);
 
 				return result;
 			}
@@ -165,6 +197,10 @@ namespace LinqToDB.Remote
 			}
 		}
 
+		/// <summary>
+		/// In case of change of the logic of this method, DO NOT FORGET
+		/// to change the sibling method.
+		/// </summary>
 		public string? ExecuteScalar(string? configuration, string queryData)
 		{
 			try
@@ -183,27 +219,7 @@ namespace LinqToDB.Remote
 					Statement  = query.Statement
 				}, null);
 
-				string? result = null;
-				if (scalar != null)
-				{
-					var lsr = new LinqServiceResult
-					{
-						QueryID    = Guid.NewGuid(),
-						FieldCount = 1,
-						RowCount = 1,
-						FieldNames = new string[] { "scalar" },
-						FieldTypes = new Type[] { scalar.GetType() },
-						Data       = new List<string[]>
-						{
-							new []
-							{
-								SerializationConverter.Serialize(SerializationMappingSchema, scalar)
-							}
-						},
-					};
-
-					result = LinqServiceSerializer.Serialize(SerializationMappingSchema, lsr);
-				}
+				var result = ProcessScalar(scalar);
 
 				return result;
 			}
@@ -214,6 +230,83 @@ namespace LinqToDB.Remote
 			}
 		}
 
+		private string? ProcessScalar(object? scalar)
+		{
+			string? result = null;
+			if (scalar != null)
+			{
+				var lsr = new LinqServiceResult
+				{
+					QueryID    = Guid.NewGuid(),
+					FieldCount = 1,
+					RowCount = 1,
+					FieldNames = new string[] { "scalar" },
+					FieldTypes = new Type[] { scalar.GetType() },
+					Data       = new List<string[]>
+						{
+							new []
+							{
+								SerializationConverter.Serialize(SerializationMappingSchema, scalar)
+							}
+						},
+				};
+
+				result = LinqServiceSerializer.Serialize(SerializationMappingSchema, lsr);
+			}
+
+			return result;
+		}
+
+		#endregion
+
+		#region ExecuteReader + ExecuteReaderAsync
+
+		/// <summary>
+		/// In case of change of the logic of this method, DO NOT FORGET
+		/// to change the sibling method.
+		/// </summary>
+		public async Task<string> ExecuteReaderAsync(
+			string? configuration,
+			string queryData,
+			CancellationToken cancellationToken
+			)
+		{
+			try
+			{
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, queryData);
+
+				ValidateQuery(query);
+
+				using var db = CreateDataContext(configuration);
+				using var _  = db.DataProvider.ExecuteScope(db);
+
+				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
+
+				using var rd = await DataConnection.QueryRunner.ExecuteReaderAsync(
+					db,
+					new QueryContext
+					{
+						Statement  = query.Statement
+					},
+					SqlParameterValues.Empty,
+					cancellationToken
+					).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+				var ret = ProcessDataReaderWrapper(query, db, rd);
+
+				return LinqServiceSerializer.Serialize(SerializationMappingSchema, ret);
+			}
+			catch (Exception exception)
+			{
+				HandleException(exception);
+				throw;
+			}
+		}
+
+		/// <summary>
+		/// In case of change of the logic of this method, DO NOT FORGET
+		/// to change the sibling method.
+		/// </summary>
 		public string ExecuteReader(string? configuration, string queryData)
 		{
 			try
@@ -229,91 +322,10 @@ namespace LinqToDB.Remote
 
 				using var rd = DataConnection.QueryRunner.ExecuteReader(db, new QueryContext
 				{
-					Statement  = query.Statement
+					Statement = query.Statement
 				}, SqlParameterValues.Empty);
 
-				var reader = DataReaderWrapCache.TryUnwrapDataReader(db.MappingSchema, rd.DataReader!);
-
-				var ret = new LinqServiceResult
-				{
-					QueryID    = Guid.NewGuid(),
-					FieldCount = rd.DataReader!.FieldCount,
-					FieldNames = new string[rd.DataReader!.FieldCount],
-					FieldTypes = new Type  [rd.DataReader!.FieldCount],
-					Data       = new List<string[]>(),
-				};
-
-				var names = new HashSet<string>();
-				var select = GetQuerySelect(query);
-
-				for (var i = 0; i < ret.FieldCount; i++)
-				{
-					var name = rd.DataReader!.GetName(i);
-					var idx  = 0;
-
-					if (names.Contains(name))
-					{
-						while (names.Contains(name = "c" + ++idx))
-						{
-						}
-					}
-
-					names.Add(name);
-
-					ret.FieldNames[i] = name;
-					// ugh...
-					// still if it fails here due to empty columns - it is a bug in columns generation
-
-					var fieldType = select.Select.Columns[i].SystemType!;
-
-					// async compiled query support
-					if (fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(Task<>))
-						fieldType = fieldType.GetGenericArguments()[0];
-
-
-					if (fieldType.IsEnum || fieldType.IsNullable() && fieldType.ToNullableUnderlying().IsEnum)
-					{
-						var stringConverter = db.MappingSchema.GetConverter(new DbDataType(typeof(string)), new DbDataType(fieldType), false);
-						if (stringConverter != null)
-							fieldType = typeof(string);
-						else
-						{
-							var type = Converter.GetDefaultMappingFromEnumType(db.MappingSchema, fieldType);
-							if (type != null)
-							{
-								fieldType = type;
-							}
-						}
-					}
-
-					ret.FieldTypes[i] = fieldType;
-				}
-
-				var columnReaders = new ConvertFromDataReaderExpression.ColumnReader[rd.DataReader!.FieldCount];
-
-				for (var i = 0; i < ret.FieldCount; i++)
-					columnReaders[i] = new ConvertFromDataReaderExpression.ColumnReader(db, db.MappingSchema,
-						ret.FieldTypes[i], i, QueryHelper.GetValueConverter(select.Select.Columns[i]), true);
-
-				while (rd.DataReader!.Read())
-				{
-					var data = new string  [rd.DataReader!.FieldCount];
-
-					ret.RowCount++;
-
-					for (var i = 0; i < ret.FieldCount; i++)
-					{
-						if (!rd.DataReader!.IsDBNull(i))
-						{
-							var value = columnReaders[i].GetValue(reader);
-
-							if (value != null)
-								data[i] = SerializationConverter.Serialize(SerializationMappingSchema, value);
-						}
-					}
-
-					ret.Data.Add(data);
-				}
+				var ret = ProcessDataReaderWrapper(query, db, rd);
 
 				return LinqServiceSerializer.Serialize(SerializationMappingSchema, ret);
 			}
@@ -323,6 +335,96 @@ namespace LinqToDB.Remote
 				throw;
 			}
 		}
+
+		private LinqServiceResult ProcessDataReaderWrapper(LinqServiceQuery query, DataConnection db, DataReaderWrapper rd)
+		{
+			var reader = DataReaderWrapCache.TryUnwrapDataReader(db.MappingSchema, rd.DataReader!);
+
+			var ret = new LinqServiceResult
+			{
+				QueryID    = Guid.NewGuid(),
+				FieldCount = rd.DataReader!.FieldCount,
+				FieldNames = new string[rd.DataReader!.FieldCount],
+				FieldTypes = new Type  [rd.DataReader!.FieldCount],
+				Data       = new List<string[]>(),
+			};
+
+			var names = new HashSet<string>();
+			var select = GetQuerySelect(query);
+
+			for (var i = 0; i < ret.FieldCount; i++)
+			{
+				var name = rd.DataReader!.GetName(i);
+				var idx  = 0;
+
+				if (names.Contains(name))
+				{
+					while (names.Contains(name = "c" + ++idx))
+					{
+					}
+				}
+
+				names.Add(name);
+
+				ret.FieldNames[i] = name;
+				// ugh...
+				// still if it fails here due to empty columns - it is a bug in columns generation
+
+				var fieldType = select.Select.Columns[i].SystemType!;
+
+				// async compiled query support
+				if (fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(Task<>))
+					fieldType = fieldType.GetGenericArguments()[0];
+
+
+				if (fieldType.IsEnum || fieldType.IsNullable() && fieldType.ToNullableUnderlying().IsEnum)
+				{
+					var stringConverter = db.MappingSchema.GetConverter(new DbDataType(typeof(string)), new DbDataType(fieldType), false);
+					if (stringConverter != null)
+						fieldType = typeof(string);
+					else
+					{
+						var type = Converter.GetDefaultMappingFromEnumType(db.MappingSchema, fieldType);
+						if (type != null)
+						{
+							fieldType = type;
+						}
+					}
+				}
+
+				ret.FieldTypes[i] = fieldType;
+			}
+
+			var columnReaders = new ConvertFromDataReaderExpression.ColumnReader[rd.DataReader!.FieldCount];
+
+			for (var i = 0; i < ret.FieldCount; i++)
+				columnReaders[i] = new ConvertFromDataReaderExpression.ColumnReader(db, db.MappingSchema,
+					ret.FieldTypes[i], i, QueryHelper.GetValueConverter(select.Select.Columns[i]), true);
+
+			while (rd.DataReader!.Read())
+			{
+				var data = new string  [rd.DataReader!.FieldCount];
+
+				ret.RowCount++;
+
+				for (var i = 0; i < ret.FieldCount; i++)
+				{
+					if (!rd.DataReader!.IsDBNull(i))
+					{
+						var value = columnReaders[i].GetValue(reader);
+
+						if (value != null)
+							data[i] = SerializationConverter.Serialize(SerializationMappingSchema, value);
+					}
+				}
+
+				ret.Data.Add(data);
+			}
+
+			return ret;
+		}
+
+		#endregion
 
 		private static SelectQuery GetQuerySelect(LinqServiceQuery query)
 		{

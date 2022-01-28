@@ -44,10 +44,10 @@ namespace LinqToDB.Remote.Wcf
 			return Channel.ExecuteBatch(configuration, queryData);
 		}
 
-		public Task<LinqServiceInfo> GetInfoAsync(string? configuration)
-		{
-			return Channel.GetInfoAsync(configuration);
-		}
+		//public Task<LinqServiceInfo> GetInfoAsync(string? configuration)
+		//{
+		//	return Channel.GetInfoAsync(configuration);
+		//}
 
 		public Task<int> ExecuteNonQueryAsync(string? configuration, string queryData)
 		{

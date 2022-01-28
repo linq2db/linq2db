@@ -360,6 +360,58 @@ namespace LinqToDB.Data
 
 			#region ExecuteNonQuery
 
+			/// <summary>
+			/// In case of change the logic of this method, DO NOT FORGET
+			/// to change the sibling method.
+			/// </summary>
+			static async Task<int> ExecuteNonQueryImplAsync(
+				DataConnection dataConnection,
+				ExecutionPreparedQuery executionQuery,
+				CancellationToken cancellationToken
+				)
+			{
+				if (executionQuery.PreparedQuery.Commands.Length == 1)
+				{
+					InitFirstCommand(dataConnection, executionQuery);
+
+					return await dataConnection.ExecuteNonQueryAsync(null!, cancellationToken)
+						.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				}
+
+				var rowsAffected = -1;
+
+				for (var i = 0; i < executionQuery.PreparedQuery.Commands.Length; i++)
+				{
+					InitCommand(dataConnection, executionQuery, i);
+
+					if (i < executionQuery.PreparedQuery.Commands.Length - 1 && executionQuery.PreparedQuery.Commands[i].Command.StartsWith("DROP"))
+					{
+						try
+						{
+							await dataConnection.ExecuteNonQueryAsync(null!, cancellationToken)
+								.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						}
+						catch (Exception)
+						{
+						}
+					}
+					else
+					{
+						var n = await dataConnection.ExecuteNonQueryAsync(null!, cancellationToken)
+							.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+						if (i == 0)
+							rowsAffected = n;
+					}
+				}
+
+				return rowsAffected;
+			}
+
+			/// <summary>
+			/// In case of change the logic of this method, DO NOT FORGET
+			/// to change the sibling method.
+			/// </summary>
 			static int ExecuteNonQueryImpl(DataConnection dataConnection, ExecutionPreparedQuery executionQuery)
 			{
 				if (executionQuery.PreparedQuery.Commands.Length == 1)
@@ -403,6 +455,29 @@ namespace LinqToDB.Data
 				return ExecuteNonQueryImpl(_dataConnection, _executionQuery!);
 			}
 
+			/// <summary>
+			/// In case of change the logic of this method, DO NOT FORGET
+			/// to change the sibling method.
+			/// </summary>
+			public static async Task<int> ExecuteNonQueryAsync(
+				DataConnection dataConnection,
+				IQueryContext context,
+				IReadOnlyParameterValues? parameterValues,
+				CancellationToken cancellationToken
+				)
+			{
+				var preparedQuery      = GetCommand(dataConnection, context, parameterValues, false);
+				var commandsParameters = GetParameters(dataConnection, preparedQuery, parameterValues, false);
+				var executionQuery     = new ExecutionPreparedQuery(preparedQuery, commandsParameters);
+
+				return await ExecuteNonQueryImplAsync(dataConnection, executionQuery, cancellationToken)
+					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			}
+
+			/// <summary>
+			/// In case of change the logic of this method, DO NOT FORGET
+			/// to change the sibling method.
+			/// </summary>
 			public static int ExecuteNonQuery(DataConnection dataConnection, IQueryContext context, IReadOnlyParameterValues? parameterValues)
 			{
 				var preparedQuery      = GetCommand(dataConnection, context, parameterValues, false);
@@ -416,6 +491,10 @@ namespace LinqToDB.Data
 
 			#region ExecuteScalar
 
+			/// <summary>
+			/// In case of change the logic of this method, DO NOT FORGET
+			/// to change the sibling method.
+			/// </summary>
 			static async Task<object?> ExecuteScalarImplAsync(
 				DataConnection dataConnection,
 				ExecutionPreparedQuery executionQuery,
@@ -445,6 +524,10 @@ namespace LinqToDB.Data
 				return await dataConnection.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 
+			/// <summary>
+			/// In case of change the logic of this method, DO NOT FORGET
+			/// to change the sibling method.
+			/// </summary>
 			static object? ExecuteScalarImpl(DataConnection dataConnection, ExecutionPreparedQuery executionQuery)
 			{
 				var idParam = GetIdentityParameter(dataConnection, executionQuery);
@@ -491,6 +574,10 @@ namespace LinqToDB.Data
 				return idParam;
 			}
 
+			/// <summary>
+			/// In case of change the logic of this method, DO NOT FORGET
+			/// to change the sibling method.
+			/// </summary>
 			public static Task<object?> ExecuteScalarAsync(
 				DataConnection dataConnection,
 				IQueryContext context,
@@ -507,6 +594,10 @@ namespace LinqToDB.Data
 				return ExecuteScalarImplAsync(dataConnection, executionQuery, cancellationToken);
 			}
 
+			/// <summary>
+			/// In case of change the logic of this method, DO NOT FORGET
+			/// to change the sibling method.
+			/// </summary>
 			public static object? ExecuteScalar(DataConnection dataConnection, IQueryContext context, IReadOnlyParameterValues? parameterValues)
 			{
 				var preparedQuery      = GetCommand(dataConnection, context, parameterValues, false);
@@ -559,6 +650,28 @@ namespace LinqToDB.Data
 
 			#region ExecuteReader
 
+			/// <summary>
+			/// In case of change the logic of this method, DO NOT FORGET
+			/// to change the sibling method.
+			/// </summary>
+			public static Task<DataReaderWrapper> ExecuteReaderAsync(
+				DataConnection dataConnection,
+				IQueryContext context,
+				IReadOnlyParameterValues? parameterValues,
+				CancellationToken cancellationToken
+				)
+			{
+				var executionQuery = CreateExecutionQuery(dataConnection, context, parameterValues, false);
+
+				InitFirstCommand(dataConnection, executionQuery);
+
+				return dataConnection.ExecuteReaderAsync(null!, CommandBehavior.Default, cancellationToken);
+			}
+
+			/// <summary>
+			/// In case of change the logic of this method, DO NOT FORGET
+			/// to change the sibling method.
+			/// </summary>
 			public static DataReaderWrapper ExecuteReader(DataConnection dataConnection, IQueryContext context, IReadOnlyParameterValues? parameterValues)
 			{
 				var executionQuery = CreateExecutionQuery(dataConnection, context, parameterValues, false);
@@ -677,7 +790,8 @@ namespace LinqToDB.Data
 			{
 				_isAsync = true;
 
-				await _dataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await _dataConnection.EnsureConnectionAsync(cancellationToken)
+					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				SetCommand();
 

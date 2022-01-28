@@ -1,5 +1,4 @@
-﻿using Grpc.Core;
-using LinqToDB.Remote.Grpc.Dto;
+﻿using LinqToDB.Remote.Grpc.Dto;
 using ProtoBuf.Grpc;
 using System;
 using System.Threading;
@@ -52,14 +51,16 @@ namespace LinqToDB.Remote.Grpc
 
 
 
-		public Task<GrpcLinqServiceInfo> GetInfoAsync(GrpcConfiguration configuration, CallContext context = default)
-		{
-			//TODO: modify LinqService to support async
-			var result = _linqService.GetInfo(
-				configuration.Configuration
-				);
-			return Task.FromResult<GrpcLinqServiceInfo>(result);
-		}
+		//public Task<GrpcLinqServiceInfo> GetInfoAsync(GrpcConfiguration configuration, CallContext context = default)
+		//{
+		//	//here is nothing to do asynchronously; leave it as is now
+
+		//	var result = _linqService.GetInfo(
+		//		configuration.Configuration
+		//		);
+
+		//	return Task.FromResult<GrpcLinqServiceInfo>(result);
+		//}
 
 		public Task<GrpcInt> ExecuteBatchAsync(GrpcConfigurationQuery caq, CallContext context = default)
 		{
@@ -68,18 +69,26 @@ namespace LinqToDB.Remote.Grpc
 			return Task.FromResult<GrpcInt>(result);
 		}
 
-		public Task<GrpcInt> ExecuteNonQueryAsync(GrpcConfigurationQuery caq, CallContext context = default)
+		public async Task<GrpcInt> ExecuteNonQueryAsync(GrpcConfigurationQuery caq, CallContext context = default)
 		{
-			//TODO: modify LinqService to support async
-			var result = _linqService.ExecuteNonQuery(caq.Configuration, caq.QueryData);
-			return Task.FromResult<GrpcInt>(result);
+			var result = await _linqService.ExecuteNonQueryAsync(
+				caq.Configuration,
+				caq.QueryData,
+				context.ServerCallContext?.CancellationToken ?? CancellationToken.None
+				).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+			return result;
 		}
 
-		public Task<GrpcString> ExecuteReaderAsync(GrpcConfigurationQuery caq, CallContext context = default)
+		public async Task<GrpcString> ExecuteReaderAsync(GrpcConfigurationQuery caq, CallContext context = default)
 		{
-			//TODO: modify LinqService to support async
-			var result = _linqService.ExecuteReader(caq.Configuration, caq.QueryData);
-			return Task.FromResult<GrpcString>(result);
+			var result = await _linqService.ExecuteReaderAsync(
+				caq.Configuration,
+				caq.QueryData,
+				context.ServerCallContext?.CancellationToken ?? CancellationToken.None
+				).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+			return result;
 		}
 
 		public async Task<GrpcString> ExecuteScalarAsync(GrpcConfigurationQuery caq, CallContext context = default)

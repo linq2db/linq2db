@@ -87,16 +87,16 @@ namespace LinqToDB.Remote.Grpc
 
 
 
-		public async Task<LinqServiceInfo> GetInfoAsync(string? configuration)
-		{
-			var result = await _client.GetInfoAsync(
-				new GrpcConfiguration
-				{
-					Configuration = configuration
-				}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext); ;
+		//public async Task<LinqServiceInfo> GetInfoAsync(string? configuration)
+		//{
+		//	var result = await _client.GetInfoAsync(
+		//		new GrpcConfiguration
+		//		{
+		//			Configuration = configuration
+		//		}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext); ;
 
-			return result;
-		}
+		//	return result;
+		//}
 
 		public async Task<int> ExecuteNonQueryAsync(string? configuration, string queryData)
 		{
@@ -119,9 +119,7 @@ namespace LinqToDB.Remote.Grpc
 					QueryData = queryData
 				}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			var ret = result.Value;
-
-			return ret;
+			return result;
 		}
 
 		public async Task<string> ExecuteReaderAsync(string? configuration, string queryData)

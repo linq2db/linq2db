@@ -26,8 +26,8 @@ namespace LinqToDB.Remote.Soap
 
 
 
-		[OperationContract(Action= "http://tempuri.org/ISoapLinqService/GetInfo",         ReplyAction= "http://tempuri.org/ISoapLinqService/GetInfoResponse")]
-		Task<LinqServiceInfo> GetInfoAsync        (string? configuration);
+		//[OperationContract(Action= "http://tempuri.org/ISoapLinqService/GetInfo",         ReplyAction= "http://tempuri.org/ISoapLinqService/GetInfoResponse")]
+		//Task<LinqServiceInfo> GetInfoAsync        (string? configuration);
 		
 		[OperationContract(Action= "http://tempuri.org/ISoapLinqService/ExecuteNonQuery", ReplyAction= "http://tempuri.org/ISoapLinqService/ExecuteNonQueryResponse")]
 		Task<int>             ExecuteNonQueryAsync(string? configuration, string queryData);

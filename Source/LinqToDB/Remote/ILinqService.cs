@@ -12,6 +12,20 @@ namespace LinqToDB.Remote
 		int             ExecuteBatch   (string? configuration, string queryData);
 
 
+
+		Task<int> ExecuteNonQueryAsync(
+			string? configuration,
+			string queryData,
+			CancellationToken cancellationToken
+			);
+
+
+		Task<string> ExecuteReaderAsync(
+			string? configuration,
+			string queryData,
+			CancellationToken cancellationToken
+			);
+
 		Task<string?> ExecuteScalarAsync(
 			string? configuration,
 			string queryData,

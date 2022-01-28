@@ -10,7 +10,7 @@ namespace LinqToDB.Remote
 		string          ExecuteReader  (string? configuration, string queryData);
 		int             ExecuteBatch   (string? configuration, string queryData);
 
-		Task<LinqServiceInfo> GetInfoAsync        (string? configuration);
+		//Task<LinqServiceInfo> GetInfoAsync        (string? configuration);
 		Task<int>             ExecuteNonQueryAsync(string? configuration, string queryData);
 		Task<string?>         ExecuteScalarAsync  (string? configuration, string queryData);
 		Task<string>          ExecuteReaderAsync  (string? configuration, string queryData);
