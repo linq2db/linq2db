@@ -157,7 +157,8 @@ namespace LinqToDB.SqlQuery
 					{
 						IsParameterDependent = selectQuery.IsParameterDependent,
 						DoNotRemove          = selectQuery.DoNotRemove,
-						QueryName            = selectQuery.QueryName
+						QueryName            = selectQuery.QueryName,
+						SqlQueryExtensions   = selectQuery.SqlQueryExtensions,
 					};
 
 					_objectTree.Add(element, clone = newSelectQuery);

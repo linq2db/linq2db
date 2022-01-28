@@ -43,7 +43,7 @@ namespace LinqToDB.SqlProvider
 
 		/// <summary>
 		/// Provider supports:
-		/// INNER JOIN a ON 1 = 1 
+		/// INNER JOIN a ON 1 = 1
 		/// </summary>
 		public bool IsInnerJoinAsCrossSupported           { get; set; }
 
@@ -94,7 +94,7 @@ namespace LinqToDB.SqlProvider
 		/// (
 		///		SELECT
 		///			SUM(sub.Column)
-		///		FROM 
+		///		FROM
 		///			(
 		///				SELECT inner.FieldX + outer.FieldOuter AS Column
 		///				FROM table2 inner
@@ -113,7 +113,15 @@ namespace LinqToDB.SqlProvider
 		/// FROM B
 		/// </code> syntax
 		/// </summary>
-		public bool IsUpdateFromSupported                 { get; set; }
+		public bool IsUpdateFromSupported             { get; set; }
+
+		/// <summary>
+		/// Provider supports Naming Query Blocks
+		/// <code>
+		/// QB_NAME(qb)
+		/// </code>
+		/// </summary>
+		public bool IsNamingQueryBlockSupported       { get; set; }
 
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
@@ -181,6 +189,8 @@ namespace LinqToDB.SqlProvider
 				^ IsUpdateFromSupported                        .GetHashCode()
 				^ DefaultMultiQueryIsolationLevel              .GetHashCode()
 				^ AcceptsOuterExpressionInAggregate            .GetHashCode()
+				^ IsNamingQueryBlockSupported                  .GetHashCode()
+				^ IsNamingQueryBlockSupported                  .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -217,7 +227,7 @@ namespace LinqToDB.SqlProvider
 				&& IsCountDistinctSupported             == other.IsCountDistinctSupported
 				&& IsUpdateFromSupported                == other.IsUpdateFromSupported
 				&& DefaultMultiQueryIsolationLevel      == other.DefaultMultiQueryIsolationLevel
-				&& AcceptsOuterExpressionInAggregate    == other.AcceptsOuterExpressionInAggregate
+				&& IsNamingQueryBlockSupported          == other.IsNamingQueryBlockSupported
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                    == other.CustomFlags.Count
 				&& (CustomFlags.Count                   == 0

@@ -222,6 +222,8 @@ namespace LinqToDB.SqlProvider
 
 				if (statement is SqlSelectStatement)
 				{
+					if (statement.SelectQuery.SqlQueryExtensions != null)
+						(child.SqlQueryExtensions ??= new()).AddRange(statement.SelectQuery.SqlQueryExtensions);
 					statement.SelectQuery = child;
 				}
 				else

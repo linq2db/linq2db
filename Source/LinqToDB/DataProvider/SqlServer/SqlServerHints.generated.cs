@@ -765,26 +765,26 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static ISqlServerSpecificQueryable<TSource> OptionDisableScaleOutExecution<TSource>(this ISqlServerSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
-			return query.QueryHint(Query.DisableScaleOutExecution);
+			return query.QueryHint2019Plus(Query.DisableScaleOutExecution);
 		}
 
 		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> OptionDisableScaleOutExecutionImpl<TSource>()
 			where TSource : notnull
 		{
-			return query => query.QueryHint(Query.DisableScaleOutExecution);
+			return query => query.QueryHint2019Plus(Query.DisableScaleOutExecution);
 		}
 
 		[ExpressionMethod(nameof(OptionIgnoreNonClusteredColumnStoreIndexImpl))]
 		public static ISqlServerSpecificQueryable<TSource> OptionIgnoreNonClusteredColumnStoreIndex<TSource>(this ISqlServerSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
-			return query.QueryHint(Query.IgnoreNonClusteredColumnStoreIndex);
+			return query.QueryHint2012Plus(Query.IgnoreNonClusteredColumnStoreIndex);
 		}
 
 		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> OptionIgnoreNonClusteredColumnStoreIndexImpl<TSource>()
 			where TSource : notnull
 		{
-			return query => query.QueryHint(Query.IgnoreNonClusteredColumnStoreIndex);
+			return query => query.QueryHint2012Plus(Query.IgnoreNonClusteredColumnStoreIndex);
 		}
 
 		[ExpressionMethod(nameof(OptionKeepPlanImpl))]
@@ -869,26 +869,26 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static ISqlServerSpecificQueryable<TSource> OptionNoPerformanceSpool<TSource>(this ISqlServerSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
-			return query.QueryHint(Query.NoPerformanceSpool);
+			return query.QueryHint2019Plus(Query.NoPerformanceSpool);
 		}
 
 		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> OptionNoPerformanceSpoolImpl<TSource>()
 			where TSource : notnull
 		{
-			return query => query.QueryHint(Query.NoPerformanceSpool);
+			return query => query.QueryHint2019Plus(Query.NoPerformanceSpool);
 		}
 
 		[ExpressionMethod(nameof(OptionOptimizeForUnknownImpl))]
 		public static ISqlServerSpecificQueryable<TSource> OptionOptimizeForUnknown<TSource>(this ISqlServerSpecificQueryable<TSource> query)
 			where TSource : notnull
 		{
-			return query.QueryHint(Query.OptimizeForUnknown);
+			return query.QueryHint2008Plus(Query.OptimizeForUnknown);
 		}
 
 		static Expression<Func<ISqlServerSpecificQueryable<TSource>,ISqlServerSpecificQueryable<TSource>>> OptionOptimizeForUnknownImpl<TSource>()
 			where TSource : notnull
 		{
-			return query => query.QueryHint(Query.OptimizeForUnknown);
+			return query => query.QueryHint2008Plus(Query.OptimizeForUnknown);
 		}
 
 		[ExpressionMethod(nameof(OptionQueryTraceOnImpl))]

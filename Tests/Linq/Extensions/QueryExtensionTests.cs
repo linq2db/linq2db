@@ -22,7 +22,7 @@ namespace Tests.Extensions
 	public class QueryExtensionTests : TestBase
 	{
 		[Test]
-		public void SelfJoinWithDifferentHint([NorthwindDataContext] string context)
+		public void SelfJoinWithDifferentHintTest([NorthwindDataContext] string context)
 		{
 			using var db = new NorthwindDB(context);
 
@@ -38,7 +38,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SelfJoinWithDifferentHint2([NorthwindDataContext] string context)
+		public void SelfJoinWithDifferentHintTest2([NorthwindDataContext] string context)
 		{
 			using var db = new NorthwindDB(context);
 

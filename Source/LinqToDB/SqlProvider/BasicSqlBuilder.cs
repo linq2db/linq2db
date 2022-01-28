@@ -43,6 +43,7 @@ namespace LinqToDB.SqlProvider
 		public    OptimizationContext OptimizationContext { get; protected set; } = null!;
 		public    MappingSchema       MappingSchema       { get; }
 		public    StringBuilder       StringBuilder       { get; set; } = null!;
+		public    SqlProviderFlags    SqlProviderFlags    { get; }
 
 		protected IDataProvider?      DataProvider;
 		protected ValueToSqlConverter ValueToSqlConverter => MappingSchema.ValueToSqlConverter;
@@ -50,7 +51,6 @@ namespace LinqToDB.SqlProvider
 		protected int                 Indent;
 		protected Step                BuildStep;
 		protected ISqlOptimizer       SqlOptimizer;
-		protected SqlProviderFlags    SqlProviderFlags;
 		protected bool                SkipAlias;
 
 		#endregion
@@ -329,7 +329,7 @@ namespace LinqToDB.SqlProvider
 			var queryName = QueryName;
 			var tablePath = TablePath;
 
-			if (selectStatement.SelectQuery.QueryName is not null)
+			if (selectStatement.SelectQuery.QueryName is not null && SqlProviderFlags.IsNamingQueryBlockSupported)
 			{
 				QueryName = selectStatement.SelectQuery.QueryName;
 				TablePath = null;

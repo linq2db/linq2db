@@ -117,8 +117,6 @@ namespace LinqToDB.SqlQuery
 
 						break;
 					}
-
-
 				}
 
 				return true;
@@ -1252,7 +1250,7 @@ namespace LinqToDB.SqlQuery
 				result.UniqueKeys.AddRange(uniqueKeys);
 
 //			if (query.SqlQueryExtensions != null)
-//				result.
+//				result.sql
 
 			return result;
 		}

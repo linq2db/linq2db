@@ -118,7 +118,8 @@ namespace Tests.Extensions
 			(
 				from p in db.Parent
 				select p
-			).QueryHint(MySqlHints.Query.SetVar, "sort_buffer_size=16M");
+			)
+			.QueryHint(MySqlHints.Query.SetVar, "sort_buffer_size=16M");
 
 			_ = q.ToList();
 

@@ -84,7 +84,9 @@ namespace Tests.Extensions
 							from p in
 								(
 									from p in db.Parent
-									join c in db.Child.SubQueryHint(PostgreSQLHints.ForUpdate) on p.ParentID equals c.ParentID
+									join c in db.Child
+										.SubQueryHint(PostgreSQLHints.ForUpdate)
+										on p.ParentID equals c.ParentID
 									select p
 								)
 							select p
@@ -92,6 +94,7 @@ namespace Tests.Extensions
 						.SubQueryHint(PostgreSQLHints.ForShare)
 					select p
 				)
+				.QueryName("aa")
 				.SubQueryHint(PostgreSQLHints.ForKeyShare)
 				;
 

@@ -34,6 +34,7 @@ namespace LinqToDB.DataProvider.MySql
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
+			SqlProviderFlags.IsNamingQueryBlockSupported       = true;
 
 			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
 

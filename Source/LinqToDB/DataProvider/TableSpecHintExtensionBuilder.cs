@@ -27,7 +27,7 @@ namespace LinqToDB.DataProvider
 
 			stringBuilder.Append(alias);
 
-			if (sqlBuilder.QueryName is not null)
+			if (sqlBuilder.QueryName is not null && sqlBuilder.SqlProviderFlags.IsNamingQueryBlockSupported)
 				stringBuilder
 					.Append('@')
 					.Append(sqlBuilder.QueryName)

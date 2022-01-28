@@ -31,13 +31,13 @@ namespace LinqToDB.SqlProvider
 		string           GetMaxValueSql       (EntityDescriptor entity, ColumnDescriptor column);
 		void             BuildExpression      (ISqlExpression expr, bool buildTableName, bool checkParentheses, bool throwExceptionIfTableNotFound);
 
-		string        Name          { get; }
-		MappingSchema MappingSchema { get; }
-		StringBuilder StringBuilder { get; }
-
-		public Dictionary<string,TableIDInfo>? TableIDs  { get; }
-		string?                                TablePath { get; }
-		string?                                QueryName { get; }
+		string                                 Name             { get; }
+		MappingSchema                          MappingSchema    { get; }
+		StringBuilder                          StringBuilder    { get; }
+		SqlProviderFlags                       SqlProviderFlags { get; }
+		public Dictionary<string,TableIDInfo>? TableIDs         { get; }
+		string?                                TablePath        { get; }
+		string?                                QueryName        { get; }
 
 		string? BuildSqlID(Sql.SqlID id);
 	}
