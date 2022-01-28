@@ -102,13 +102,17 @@ public static Func<string, bool>  IsValueType    = IsValueTypeDefault;
 public static Func<string,string> ToPlural       = s => s + "s";
 public static Func<string,string> ToSingular     = s => s;
 
+static Func<DataConnection,GetSchemaOptions,DatabaseSchema> LoadDatabaseSchema = (dataConnection, schemaOptions) =>
+{
+	var sp = dataConnection.DataProvider.GetSchemaProvider();
+	return sp.GetSchema(dataConnection, schemaOptions);
+};
 
 void LoadServerMetadata(DataConnection dataConnection)
 {
 	SqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
 
-	var sp = dataConnection.DataProvider.GetSchemaProvider();
-	var db = sp.GetSchema(dataConnection, GetSchemaOptions);
+	var db = LoadDatabaseSchema(dataConnection, GetSchemaOptions);
 
 	if (DatabaseName == null && GenerateDatabaseName)
 		DatabaseName = db.Database;

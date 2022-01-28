@@ -1,0 +1,128 @@
+﻿<#@ template debug="true" hostspecific="true" language="C#" #>
+<#@ output extension=".generated.cs" #>
+<#@ assembly name="$(SolutionDir)Source\LinqToDB.Tools\bin\Debug\net46\linq2db.dll" #>
+<#@ include file="..\..\..\..\LinqToDB.Templates\PluralizationService.ttinclude" once="true" #>
+<#@ include file="..\..\..\..\LinqToDB.Templates\LinqToDB.SqlServer.ttinclude"   once="true" #><#@ import namespace="LinqToDB" #>
+<#
+	NamespaceName                = "LinqToDB.Tools.DataProvider.SqlServer.Schemas";
+	EnableNullableReferenceTypes = true;
+	GenerateDatabaseInfo         = true;
+	GenerateSchemaAsType         = true;
+	GenerateDataTypes            = true;
+	OneToManyAssociationType     = "IList<{0}>";
+
+	SingularizeClassNames             = false;
+	PluralizeDataContextPropertyNames = false;
+
+	SchemaNameMapping.Add("sys",                "System");
+	SchemaNameMapping.Add("INFORMATION_SCHEMA", "Information");
+
+	LoadDatabaseSchema = LoadSystemDatabaseSchema;
+
+	LoadSqlServerMetadata(".", "master", SqlServerVersion.v2012);
+	GenerateModel();
+#>
+<#+
+DatabaseSchema LoadSystemDatabaseSchema(DataConnection dataConnection, GetSchemaOptions schemaOptions)
+{
+	var columns = dataConnection.Query(new
+	{
+		schema_name = null as string,
+		view_name   = null as string,
+		column_name = null as string,
+		column_id   = 0,
+		type_name   = null as string,
+		max_length  = 0,
+		precision   = 0,
+		scale       = 0,
+		is_nullable = false
+	}, @"
+select
+	OBJECT_SCHEMA_NAME(o.object_id) schema_name,
+	o.name                          view_name,
+	c.name                          column_name,
+	c.column_id,
+	t.name                          type_name,
+	t.max_length,
+	t.precision,
+	t.scale,
+	t.is_nullable
+from sys.all_objects o
+join sys.all_views v on o.object_id = v.object_id
+join sys.all_columns c on o.object_id = c.object_id
+join sys.types t on c.user_type_id = t.user_type_id
+where o.is_ms_shipped = 1
+order by OBJECT_SCHEMA_NAME(o.object_id), o.name, c.column_id
+");
+
+	var tables =
+	(
+		from  c in columns
+		where c.schema_name != "dbo"
+		group c by new { c.schema_name, c.view_name } into gs
+		select new TableSchema
+		{
+			ID         = $"[]{gs.Key.schema_name}].[{gs.Key.view_name}]",
+			SchemaName = gs.Key.schema_name,
+			TableName  = gs.Key.view_name,
+			TypeName   = gs.Key.view_name,
+			IsView     = true,
+			Columns    =
+			(
+				from c in gs
+				orderby c.column_id
+				select new ColumnSchema
+				{
+					ColumnName           = c.column_name,
+					ColumnType           = c.type_name switch
+						{
+							"int"              => "int",
+							"tinyint"          => "tinyint",
+							"smallint"         => "smallint",
+							"bigint"           => "bigint",
+							"datetime"         => $"datetime({c.precision},{c.scale})",
+							"datetime2"        => $"datetime2({c.precision},{c.scale})",
+							"datetimeoffset"   => $"datetimeoffset({c.precision},{c.scale})",
+							"time"             => $"time({c.precision},{c.scale})",
+							"sql_variant"      => "sql_variant",
+							"sysname"          => "sysname",
+							"bit"              => "bit",
+							"uniqueidentifier" => "uniqueidentifier",
+							"numeric"          => $"numeric({c.precision},{c.scale})",
+							"float"            => "float",
+							"real"             => "real",
+							"char"             => $"char({c.max_length / 2})",
+							"nchar"            => $"nchar({c.max_length / 2})",
+							"nvarchar"         => $"nvarchar({c.max_length / 2})",
+							"varchar"          => $"varchar({c.max_length / 2})",
+							"varbinary"        => $"varbinary({c.max_length})",
+							"binary"           => $"binary({c.max_length})",
+							"image"            => $"image({c.max_length})",
+							var t              => throw new NotImplementedException($"Not implemented type {t}")
+						},
+					IsNullable           = c.is_nullable,
+					MemberName           = c.column_name,
+					MemberType           = "int",
+					SystemType           = typeof(int),
+					DataType             = LinqToDB.DataType.Char,
+					Length               = c.max_length / 2,
+					Precision            = c.precision,
+					Scale                = c.scale,
+				}
+			).ToList(),
+			ForeignKeys = new(),
+		}
+	).ToList();
+
+	return new()
+	{
+		DataSource                    = ".",
+		Database                      = "master",
+		ServerVersion                 = "none",
+		Tables                        = tables,
+		Procedures                    = new(),
+		DataTypesSchema               = new(),
+	};
+}
+#>
+
