@@ -422,7 +422,7 @@ namespace LinqToDB.Data
 				CancellationToken cancellationToken
 				)
 			{
-				var idParam = GetParameter(dataConnection, executionQuery);
+				var idParam = GetIdentityParameter(dataConnection, executionQuery);
 
 				if (executionQuery.PreparedQuery.Commands.Length == 1)
 				{
@@ -447,7 +447,7 @@ namespace LinqToDB.Data
 
 			static object? ExecuteScalarImpl(DataConnection dataConnection, ExecutionPreparedQuery executionQuery)
 			{
-				var idParam = GetParameter(dataConnection, executionQuery);
+				var idParam = GetIdentityParameter(dataConnection, executionQuery);
 
 				if (executionQuery.PreparedQuery.Commands.Length == 1)
 				{
@@ -470,7 +470,7 @@ namespace LinqToDB.Data
 				return dataConnection.ExecuteScalar();
 			}
 
-			private static DbParameter? GetParameter(DataConnection dataConnection, ExecutionPreparedQuery executionQuery)
+			private static DbParameter? GetIdentityParameter(DataConnection dataConnection, ExecutionPreparedQuery executionQuery)
 			{
 				DbParameter? idParam = null;
 

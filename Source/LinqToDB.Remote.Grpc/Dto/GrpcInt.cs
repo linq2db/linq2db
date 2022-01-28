@@ -2,6 +2,7 @@
 
 namespace LinqToDB.Remote.Grpc.Dto
 {
+
 	[DataContract]
 	public class GrpcInt
 	{

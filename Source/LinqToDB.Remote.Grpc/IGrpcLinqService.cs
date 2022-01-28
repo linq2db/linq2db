@@ -16,10 +16,10 @@ namespace LinqToDB.Remote.Grpc
 		GrpcInt ExecuteNonQuery(GrpcConfigurationQuery caq, CallContext context = default);
 
 		[OperationContract(Name = "ExecuteScalar")]
-		string? ExecuteScalar(GrpcConfigurationQuery caq, CallContext context = default);
+		GrpcString ExecuteScalar(GrpcConfigurationQuery caq, CallContext context = default);
 
 		[OperationContract(Name = "ExecuteReader")]
-		string ExecuteReader(GrpcConfigurationQuery caq, CallContext context = default);
+		GrpcString ExecuteReader(GrpcConfigurationQuery caq, CallContext context = default);
 
 		[OperationContract(Name = "ExecuteBatch")]
 		GrpcInt ExecuteBatch(GrpcConfigurationQuery caq, CallContext context = default);
@@ -35,10 +35,10 @@ namespace LinqToDB.Remote.Grpc
 		Task<GrpcInt> ExecuteNonQueryAsync(GrpcConfigurationQuery caq, CallContext context = default);
 
 		[OperationContract(Name = "ExecuteScalarAsync")]
-		Task<string?> ExecuteScalarAsync(GrpcConfigurationQuery caq, CallContext context = default);
+		Task<GrpcString> ExecuteScalarAsync(GrpcConfigurationQuery caq, CallContext context = default);
 
 		[OperationContract(Name = "ExecuteReaderAsync")]
-		Task<string> ExecuteReaderAsync(GrpcConfigurationQuery caq, CallContext context = default);
+		Task<GrpcString> ExecuteReaderAsync(GrpcConfigurationQuery caq, CallContext context = default);
 
 		[OperationContract(Name = "ExecuteBatchAsync")]
 		Task<GrpcInt> ExecuteBatchAsync(GrpcConfigurationQuery caq, CallContext context = default);

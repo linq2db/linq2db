@@ -31,7 +31,8 @@ namespace LinqToDB.Remote.Grpc
 				new GrpcConfiguration
 				{
 					Configuration = configuration
-				});
+				}
+				);
 
 			return result;
 		}
@@ -59,12 +60,19 @@ namespace LinqToDB.Remote.Grpc
 
 		public string ExecuteReader(string? configuration, string queryData)
 		{
-			return _client.ExecuteReader(
+			var ret = _client.ExecuteReader(
 				new GrpcConfigurationQuery
 				{
 					Configuration = configuration,
 					QueryData = queryData
-				});
+				}).Value;
+
+			if(ret == null)
+			{
+				throw new LinqToDBException("Return value is not allowed to be null");
+			}
+
+			return ret;
 		}
 
 		public int ExecuteBatch(string? configuration, string queryData)
@@ -102,24 +110,37 @@ namespace LinqToDB.Remote.Grpc
 			return result;
 		}
 
-		public Task<string?> ExecuteScalarAsync(string? configuration, string queryData)
+		public async Task<string?> ExecuteScalarAsync(string? configuration, string queryData)
 		{
-			return _client.ExecuteScalarAsync(
+			var result = await _client.ExecuteScalarAsync(
 				new GrpcConfigurationQuery
 				{
 					Configuration = configuration,
 					QueryData = queryData
-				});
+				}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+			var ret = result.Value;
+
+			return ret;
 		}
 
-		public Task<string> ExecuteReaderAsync(string? configuration, string queryData)
+		public async Task<string> ExecuteReaderAsync(string? configuration, string queryData)
 		{
-			return _client.ExecuteReaderAsync(
+			var result = await _client.ExecuteReaderAsync(
 				new GrpcConfigurationQuery
 				{
 					Configuration = configuration,
 					QueryData = queryData
-				});
+				}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+			var ret = result.Value;
+
+			if (ret == null)
+			{
+				throw new LinqToDBException("Return value is not allowed to be null");
+			}
+
+			return ret;
 		}
 
 		public async Task<int> ExecuteBatchAsync(string? configuration, string queryData)
@@ -129,7 +150,7 @@ namespace LinqToDB.Remote.Grpc
 				{
 					Configuration = configuration,
 					QueryData = queryData
-				}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext); ;
+				}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return result;
 		}

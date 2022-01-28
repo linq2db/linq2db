@@ -40,12 +40,12 @@ namespace LinqToDB.Remote.Grpc
 			return _linqService.ExecuteNonQuery(caq.Configuration, caq.QueryData);
 		}
 
-		public string ExecuteReader(GrpcConfigurationQuery caq, CallContext context = default)
+		public GrpcString ExecuteReader(GrpcConfigurationQuery caq, CallContext context = default)
 		{
 			return _linqService.ExecuteReader(caq.Configuration, caq.QueryData);
 		}
 
-		public string? ExecuteScalar(GrpcConfigurationQuery caq, CallContext context = default)
+		public GrpcString ExecuteScalar(GrpcConfigurationQuery caq, CallContext context = default)
 		{
 			return _linqService.ExecuteScalar(caq.Configuration, caq.QueryData);
 		}
@@ -55,7 +55,9 @@ namespace LinqToDB.Remote.Grpc
 		public Task<GrpcLinqServiceInfo> GetInfoAsync(GrpcConfiguration configuration, CallContext context = default)
 		{
 			//TODO: modify LinqService to support async
-			var result = _linqService.GetInfo(configuration.Configuration);
+			var result = _linqService.GetInfo(
+				configuration.Configuration
+				);
 			return Task.FromResult<GrpcLinqServiceInfo>(result);
 		}
 
@@ -73,20 +75,22 @@ namespace LinqToDB.Remote.Grpc
 			return Task.FromResult<GrpcInt>(result);
 		}
 
-		public Task<string> ExecuteReaderAsync(GrpcConfigurationQuery caq, CallContext context = default)
+		public Task<GrpcString> ExecuteReaderAsync(GrpcConfigurationQuery caq, CallContext context = default)
 		{
 			//TODO: modify LinqService to support async
 			var result = _linqService.ExecuteReader(caq.Configuration, caq.QueryData);
-			return Task.FromResult(result);
+			return Task.FromResult<GrpcString>(result);
 		}
 
-		public Task<string?> ExecuteScalarAsync(GrpcConfigurationQuery caq, CallContext context = default)
+		public async Task<GrpcString> ExecuteScalarAsync(GrpcConfigurationQuery caq, CallContext context = default)
 		{
-			return _linqService.ExecuteScalarAsync(
+			var result = await _linqService.ExecuteScalarAsync(
 				caq.Configuration,
 				caq.QueryData,
 				context.ServerCallContext?.CancellationToken ?? CancellationToken.None
-				);
+				).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+			return result;
 		}
 
 	}
