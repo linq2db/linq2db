@@ -374,7 +374,7 @@ namespace LinqToDB.Data
 				{
 					InitFirstCommand(dataConnection, executionQuery);
 
-					return await dataConnection.ExecuteNonQueryAsync(null!, cancellationToken)
+					return await dataConnection.ExecuteNonQueryAsync(cancellationToken)
 						.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				}
 
@@ -388,7 +388,7 @@ namespace LinqToDB.Data
 					{
 						try
 						{
-							await dataConnection.ExecuteNonQueryAsync(null!, cancellationToken)
+							await dataConnection.ExecuteNonQueryAsync(cancellationToken)
 								.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 						}
 						catch (Exception)
@@ -397,7 +397,7 @@ namespace LinqToDB.Data
 					}
 					else
 					{
-						var n = await dataConnection.ExecuteNonQueryAsync(null!, cancellationToken)
+						var n = await dataConnection.ExecuteNonQueryAsync(cancellationToken)
 							.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 						if (i == 0)
@@ -509,19 +509,19 @@ namespace LinqToDB.Data
 					{
 						// This is because the firebird provider does not return any parameters via ExecuteReader
 						// the rest of the providers must support this mode
-						await dataConnection.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						await dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 						return idParam.Value;
 					}
 
-					return await dataConnection.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					return await dataConnection.ExecuteScalarDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				}
 
-				await dataConnection.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				InitCommand(dataConnection, executionQuery, 1);
 
-				return await dataConnection.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				return await dataConnection.ExecuteScalarDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 
 			/// <summary>
@@ -665,7 +665,7 @@ namespace LinqToDB.Data
 
 				InitFirstCommand(dataConnection, executionQuery);
 
-				return dataConnection.ExecuteReaderAsync(null!, CommandBehavior.Default, cancellationToken);
+				return dataConnection.ExecuteReaderAsync(CommandBehavior.Default, cancellationToken);
 			}
 
 			/// <summary>
@@ -760,7 +760,7 @@ namespace LinqToDB.Data
 				{
 					InitFirstCommand(_dataConnection, _executionQuery);
 
-					return await _dataConnection.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					return await _dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				}
 
 				for (var i = 0; i < _executionQuery.PreparedQuery.Commands.Length; i++)
@@ -771,7 +771,7 @@ namespace LinqToDB.Data
 					{
 						try
 						{
-							await _dataConnection.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+							await _dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 						}
 						catch
 						{
@@ -779,7 +779,7 @@ namespace LinqToDB.Data
 					}
 					else
 					{
-						await _dataConnection.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						await _dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 					}
 				}
 
@@ -817,19 +817,19 @@ namespace LinqToDB.Data
 					{
 						// it is done because Firebird does not return parameters through ExecuteReader
 						// Other providers should support such mode
-						await _dataConnection.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						await _dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 						return idparam.Value;
 					}
 
-					return await _dataConnection.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					return await _dataConnection.ExecuteScalarDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				}
 
-				await _dataConnection.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await _dataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				InitCommand(_dataConnection, _executionQuery, 1);
 
-				return await _dataConnection.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				return await _dataConnection.ExecuteScalarDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 		}
 	}
