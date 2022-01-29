@@ -30,8 +30,6 @@ namespace LinqToDB.Common
 		/// <summary>
 		/// Internal API.
 		/// </summary>
-		/// <param name="expression"></param>
-		/// <returns></returns>
 		public static TDelegate CompileExpression<TDelegate>(this Expression<TDelegate> expression)
 			where TDelegate : Delegate
 		{
@@ -41,8 +39,6 @@ namespace LinqToDB.Common
 		/// <summary>
 		/// Internal API.
 		/// </summary>
-		/// <param name="expression"></param>
-		/// <returns></returns>
 		public static Delegate CompileExpression(this LambdaExpression expression)
 		{
 			return _compiler?.Invoke(expression) ?? expression.Compile();

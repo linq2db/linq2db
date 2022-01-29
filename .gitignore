@@ -22,5 +22,3 @@ linq2db.sln.ide/
 *.lock.json
 /.idea/
 /.temp
-/Source/LinqToDB.CLI/Configuration/
-/Source/LinqToDB.CLI/Generated/

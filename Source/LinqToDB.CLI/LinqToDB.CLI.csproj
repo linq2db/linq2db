@@ -44,7 +44,6 @@
 	</Target>
 
 	<ItemGroup>
-		<!--TODO: move codegeneration to linq2db.Tools-->
 		<ProjectReference Include="..\LinqToDB.Tools\LinqToDB.Tools.csproj" />
 
 		<!--providers-->

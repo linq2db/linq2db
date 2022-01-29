@@ -78,13 +78,13 @@ namespace LinqToDB.CodeModel
 				switch (cat)
 				{
 					// lazy validation for now
-					case UnicodeCategory.UppercaseLetter:
-					case UnicodeCategory.TitlecaseLetter:
-					case UnicodeCategory.LowercaseLetter:
+					case UnicodeCategory.UppercaseLetter   :
+					case UnicodeCategory.TitlecaseLetter   :
+					case UnicodeCategory.LowercaseLetter   :
 					case UnicodeCategory.DecimalDigitNumber:
 						sb.Append(chr);
 						break;
-					default:
+					default                                :
 						sb.Append('_');
 						break;
 				}

@@ -53,7 +53,6 @@ namespace LinqToDB.CodeModel
 			/// <returns>Max length of column between all rows.</returns>
 			public abstract int GetMaxLength(TData data);
 
-			// TODO: I believe we can simply this method, need to review column group rendering logic
 			/// <summary>
 			/// Writes column data for each row.
 			/// </summary>
