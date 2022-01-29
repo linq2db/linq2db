@@ -61,9 +61,9 @@ select
 	c.precision,
 	c.scale,
 	c.is_nullable
-from sys.all_objects o
-join sys.all_views v on o.object_id = v.object_id
-join sys.all_columns c on o.object_id = c.object_id
+from sys.system_objects o
+join sys.system_views v on o.object_id = v.object_id
+join sys.system_columns c on o.object_id = c.object_id
 join sys.types t on c.user_type_id = t.user_type_id
 where o.is_ms_shipped = 1
 order by OBJECT_SCHEMA_NAME(o.object_id), o.name, c.column_id
@@ -153,44 +153,66 @@ order by OBJECT_SCHEMA_NAME(o.object_id), o.name, c.column_id
 		}
 	).ToList();
 
-	var allObjectsTable = tables.First(t => t.ID is "[sys].[all_objects]");
-	var objectsTable    = tables.First(t => t.ID is "[sys].[objects]");
+	SetForeignKeys("[sys].[all_objects]",    "object_id", "AllObject",    t => t.TableName!.StartsWith("all_"),    "all_views");
+	SetForeignKeys("[sys].[system_objects]", "object_id", "SystemObject", t => t.TableName!.StartsWith("system_"), "system_views");
+	SetForeignKeys("[sys].[objects]",        "object_id", "Object",       t => !t.TableName!.StartsWith("all_") && !t.TableName!.StartsWith("system_"),
+		// http://t-sql.ru/Download/SystemViewsPoster/2008.pdf
+		"assembly_modules",    // sys.objects.type in ('TA', 'PC', 'FS', 'FT')
+		"default_constraints", // sys.objects.type in ('D')
+		"check_constraints",   // sys.objects.type in ('C')
+		"foreign_keys",        // sys.objects.type in ('F')
+		"key_constraints",     // sys.objects.type in (‘UQ’, ‘PK’) AND sys.key_constraints.parent_object_id is not null
+		"service_queues",      // sys.objects.type in ('SQ')
+		"synonyms",            // sys.objects.type in ('SN')
+		"tables",              // sys.objects.type in ('U')
+		"views"                // sys.objects.type in ('V')
+		);
 
-	foreach (var t in tables)
+	void SetForeignKeys(string masterTableID, string columnName, string memberName, Func<TableSchema,bool> filter, params string[] oneToOneTableNames)
 	{
-		if (t != allObjectsTable && t != objectsTable)
+		var masterTable    = tables.First(t => t.ID == masterTableID);
+		var masterColumn   = masterTable.Columns.First(c => c.ColumnName == columnName);
+		var oneToOneTables = new HashSet<string>(oneToOneTableNames);
+
+		foreach (var t in tables)
 		{
-			var column = t.Columns.FirstOrDefault(c => c.ColumnName is "object_id");
-
-			if (column != null)
+			if (t != masterTable && filter(t))
 			{
-				var otherTable  = t.TableName!.StartsWith("all_") ? allObjectsTable : objectsTable;
-				var otherColumn = otherTable.Columns.First(c => c.ColumnName is "object_id");
+				var column = t.Columns.FirstOrDefault(c => c.ColumnName == columnName);
 
-				var backReference = new ForeignKeySchema
+				if (column != null)
 				{
-					KeyName         = t.TableName,
-					OtherTable      = t,
-					ThisColumns     = new (new[] { otherColumn }),
-					OtherColumns    = new (new[] { column }),
-					CanBeNull       = true,
-					MemberName      = t.TypeName,
-					AssociationType = LinqToDB.SchemaProvider.AssociationType.OneToMany,
-				};
+					var isOneToOneTables = oneToOneTables.Contains(t.TableName!);
 
-				otherTable.ForeignKeys.Add(backReference);
+					var backReference = new ForeignKeySchema
+					{
+						KeyName         = t.TableName!,
+						OtherTable      = t,
+						ThisColumns     = new (new[] { masterColumn }),
+						OtherColumns    = new (new[] { column }),
+						CanBeNull       = true,
+						MemberName      = t.TypeName,
+						AssociationType = isOneToOneTables
+							? LinqToDB.SchemaProvider.AssociationType.OneToOne
+							: LinqToDB.SchemaProvider.AssociationType.OneToMany,
+					};
 
-				t.ForeignKeys.Add(new()
-				{
-					KeyName         = otherTable.TableName!,
-					OtherTable      = otherTable,
-					ThisColumns     = new (new[] { column }),
-					OtherColumns    = new (new[] { otherColumn }),
-					CanBeNull       = false,
-					MemberName      = "Object",
-					BackReference   = backReference,
-					AssociationType = LinqToDB.SchemaProvider.AssociationType.ManyToOne,
-				});
+					masterTable.ForeignKeys.Add(backReference);
+
+					t.ForeignKeys.Add(new()
+					{
+						KeyName         = masterTable.TableName!,
+						OtherTable      = masterTable,
+						ThisColumns     = new (new[] { column }),
+						OtherColumns    = new (new[] { masterColumn }),
+						CanBeNull       = false,
+						MemberName      = memberName,
+						BackReference   = backReference,
+						AssociationType = isOneToOneTables
+							? LinqToDB.SchemaProvider.AssociationType.OneToOne
+							: LinqToDB.SchemaProvider.AssociationType.ManyToOne,
+					});
+				}
 			}
 		}
 	}

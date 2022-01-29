@@ -257,6 +257,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 		var keyName = (key.k.OtherTable.IsDefaultSchema ? null : key.k.OtherTable.SchemaName + ".")
 			+ key.k.OtherTable.TableName + "."
 			+ key.KeyName;
+
 		key.t.table.ForeignKeys.Add(keyName, key.key);
 
 		if (key.k.BackReference != null)
