@@ -434,7 +434,7 @@ namespace LinqToDB.Remote
 				QueryType.Insert => ((SqlInsertStatement)query.Statement).Output!.OutputQuery!,
 				QueryType.Delete => ((SqlDeleteStatement)query.Statement).Output!.OutputQuery!,
 				QueryType.Update => ((SqlUpdateStatement)query.Statement).Output!.OutputQuery!,
-				QueryType.Merge => ((SqlMergeStatement)query.Statement).Output!.OutputQuery!,
+				QueryType.Merge  => ((SqlMergeStatement )query.Statement).Output!.OutputQuery!,
 				_ => throw new NotImplementedException($"Query type not supported: {query.Statement.QueryType}"),
 			};
 		}
@@ -481,10 +481,10 @@ namespace LinqToDB.Remote
 
 		private class QueryContext : IQueryContext
 		{
-			public SqlStatement Statement { get; set; } = null!;
-			public object? Context { get; set; }
+			public SqlStatement    Statement  { get; set; } = null!;
+			public object?         Context    { get; set; }
 			public SqlParameter[]? Parameters { get; set; }
-			public AliasesContext? Aliases { get; set; }
+			public AliasesContext? Aliases    { get; set; }
 		}
 
 		#endregion

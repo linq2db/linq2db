@@ -53,6 +53,7 @@ Other allowed target defines:
 - `NETCOREAPP3_1` - `netcoreapp3.1` target ifdef
 - `NETSTANDARD2_0` - `netstandard2.0` target ifdef
 - `NETCOREAPP2_1` - `netcoreapp2.1` target ifdef
+- `NET6_PLUS` - `net6.0` and the next ones (i.e. NET 7 etc) target ifdef.
 - `NET6_0` - `net6.0` target ifdef
 - `NET45` - `net45` target ifdef
 - `NET46` - `net46` target ifdef

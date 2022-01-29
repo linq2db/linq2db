@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net4.5.2</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
     <LangVersion>Latest</LangVersion>
     <OutputType>Exe</OutputType>
   </PropertyGroup>

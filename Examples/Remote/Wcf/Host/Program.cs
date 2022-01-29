@@ -7,11 +7,6 @@ namespace Host
 {
 	class Program
 	{
-		public static string IP
-		{
-			get; private set;
-		}
-
 		static void Main(string[] args)
 		{
 			var host = new ServiceHost(
