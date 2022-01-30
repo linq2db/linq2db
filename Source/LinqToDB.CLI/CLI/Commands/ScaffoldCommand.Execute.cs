@@ -77,6 +77,9 @@ namespace LinqToDB.CLI
 			options.Remove(General.AdditionalConnectionString, out value);
 			var additionalConnectionString = (string?)value;
 
+			options.Remove(General.T4Template, out value);
+			var t4templatePath = (string?)value;
+
 			// assert that all provided options handled
 			if (options.Count > 0)
 			{
@@ -85,6 +88,14 @@ namespace LinqToDB.CLI
 
 				// throw exception as it is implementation bug, not bad input or other expected error
 				throw new InvalidOperationException($"Not all options handled by {Name} command");
+			}
+
+			// apply T4 template
+			if (t4templatePath != null)
+			{
+				var res = ApplyTemplate(settings, t4templatePath);
+				if (res != StatusCodes.SUCCESS)
+					return res;
 			}
 
 			// perform scaffolding

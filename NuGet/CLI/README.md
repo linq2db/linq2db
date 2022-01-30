@@ -27,6 +27,7 @@ Available commands:
 - `dotnet linq2db help`: prints general help
 - `dotnet linq2db help scaffold`: prints help for `scaffold` command
 - `dotnet linq2db scaffold <options>`: performs database model scaffolding
+- `dotnet linq2db template [-o template_path]`: creates base T4 template file for programmatical scaffolding customization
 
 For list of available options, use `dotnet linq2db help scaffold` command.
 

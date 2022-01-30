@@ -21,5 +21,9 @@
 		/// Command failed with expected error.
 		/// </summary>
 		public const int EXPECTED_ERROR    = -3;
+		/// <summary>
+		/// T4 template processing error.
+		/// </summary>
+		public const int T4_ERROR          = -4;
 	}
 }

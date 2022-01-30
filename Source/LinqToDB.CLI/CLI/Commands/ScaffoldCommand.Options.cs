@@ -185,7 +185,7 @@ Example of platform-specific providers:
 					false,
 					false,
 					"select base set of default options",
-					@"Specify this option only if you want to to use scaffolding options, similar to used by old T4 templates by default",
+					"Specify this option only if you want to to use scaffolding options, similar to used by old T4 templates by default",
 					null,
 					null,
 					false,
@@ -194,6 +194,20 @@ Example of platform-specific providers:
 						new (true , "default", "set of parameters, used by default (as specified in option help)"),
 						new (false, "t4"     , "set of parameters, similar to T4 defaults (compat. option)"      ),
 					});
+
+			/// <summary>
+			/// T4 template path option.
+			/// </summary>
+			public static readonly CliOption T4Template = new StringCliOption(
+					"t4",
+					null,
+					false,
+					false,
+					"specify path to T4 template with scaffolding customization logic",
+					"To create T4 template use 'dotnet linq2db template' command to generate initial template file and edit it with required customizations",
+					null,
+					null,
+					null);
 		}
 
 		/// <summary>

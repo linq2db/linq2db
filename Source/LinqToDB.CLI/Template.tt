@@ -1,5 +1,5 @@
 ﻿// @template directive is pre-configured and shouldn't be edited
-<#@ template language="C#" inherits="LinqToDB.Tools.LinqToDBHost" linePragmas="false" #>
+<#@ template language="C#" inherits="LinqToDB.LinqToDBHost" linePragmas="false" #>
 
 <#
 // specify additional references using @assembly directive. E.g. (remove space before @):
