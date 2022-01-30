@@ -10,7 +10,7 @@ namespace Tests
 	{
 		// used to detect baseline overwrites by another test(case)
 		// case-insensitive to support windoze file system
-		private static readonly ISet<string> _baselines = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+		private static readonly ISet<string> _baselines = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
 		internal static void Write(string baselinesPath, string baseline)
 		{

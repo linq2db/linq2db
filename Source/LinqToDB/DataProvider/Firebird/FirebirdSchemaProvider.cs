@@ -213,7 +213,7 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			var dataTypes = base.GetDataTypes(dataConnection);
 
-			var knownTypes = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+			var knownTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 			foreach (var dataType in dataTypes)
 			{
 				knownTypes.Add(dataType.TypeName);

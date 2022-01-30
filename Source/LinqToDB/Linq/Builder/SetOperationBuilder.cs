@@ -294,7 +294,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 
-				var nonUnique = unionMembers.GroupBy(m => m.Alias, StringComparer.InvariantCultureIgnoreCase)
+				var nonUnique = unionMembers.GroupBy(m => m.Alias, StringComparer.OrdinalIgnoreCase)
 					.Where(g => g.Count() > 1);
 
 				foreach (var g in nonUnique)
