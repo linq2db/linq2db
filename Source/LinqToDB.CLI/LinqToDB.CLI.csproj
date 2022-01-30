@@ -44,17 +44,24 @@
 	</Target>
 
 	<ItemGroup>
+	  <EmbeddedResource Include="Template.tt" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\LinqToDB.Tools\LinqToDB.Tools.csproj" />
 
 		<!--providers-->
-		<PackageReference Include="System.Data.SQLite.Core"         />
-		<PackageReference Include="Microsoft.Data.SqlClient"        />
+		<PackageReference Include="System.Data.SQLite.Core" />
+		<PackageReference Include="Microsoft.Data.SqlClient" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
-		<PackageReference Include="MySqlConnector"                  />
-		<PackageReference Include="Oracle.ManagedDataAccess.Core"   />
-		<PackageReference Include="Npgsql"                          />
-		<PackageReference Include="AdoNetCore.AseClient"            />
-		<PackageReference Include="System.Data.Odbc"                />
-		<PackageReference Include="System.Data.OleDb"               />
+		<PackageReference Include="MySqlConnector" />
+		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
+		<PackageReference Include="Npgsql" />
+		<PackageReference Include="AdoNetCore.AseClient" />
+		<PackageReference Include="System.Data.Odbc" />
+		<PackageReference Include="System.Data.OleDb" />
+		<!--T4 support-->
+		<PackageReference Include="Mono.TextTemplating" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
 	</ItemGroup>
 </Project>

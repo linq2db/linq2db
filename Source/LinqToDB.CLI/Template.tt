@@ -1,0 +1,22 @@
+﻿// @template directive is pre-configured and shouldn't be edited
+<#@ template language="C#" inherits="LinqToDB.Tools.LinqToDBHost" linePragmas="false" #>
+
+<#
+// specify additional references using @assembly directive. E.g. (remove space before @):
+// <# @ assembly name="c:\path_to\Npgsql.dll" #>
+// linq2db.dll, linq2db.Tools.dll, and runtime's System*.dll assemblies already refereced
+#>
+
+// specify additional namespace imports (usings) here
+<#@ import namespace="System" #>
+
+<#
+// TODO: add extension points with help
+
+// TODO: remove
+// test event
+Events.TestEvent += message =>
+{
+	Console.WriteLine(message);
+};
+#>

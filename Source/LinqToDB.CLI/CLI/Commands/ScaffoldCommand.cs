@@ -2,11 +2,15 @@
 
 namespace LinqToDB.CLI
 {
+	/// <summary>
+	/// Scaffold command implementation.
+	/// </summary>
 	internal sealed partial class ScaffoldCommand : CliCommand
 	{
 		private ScaffoldCommand()
 			: base(
 				"scaffold",
+				true,
 				true,
 				"<options>",
 				"generate database data model classes from database schema",
