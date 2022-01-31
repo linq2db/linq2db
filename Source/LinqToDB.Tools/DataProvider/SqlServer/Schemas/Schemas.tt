@@ -23,11 +23,51 @@
 
 	LoadDatabaseSchema = LoadSystemDatabaseSchema;
 
+	BeforeGenerateLinqToDBModel = () =>
+	{
+		foreach (var t in Tables.Values)
+		{
+			if (t.TableName.StartsWith("sys") && !t.TableName.StartsWith("system_"))
+			{
+				t.Schema = "Compatibility";
+			}
+			else if (t.TableName.StartsWith("dm_"))
+			{
+				t.Schema = "DynamicManagement";
+			}
+			else if (t.TableName.StartsWith("xml_") ||
+				t.TableName is
+					"column_xml_schema_collection_usages" or
+					"parameter_xml_schema_collection_usages" or
+					"selective_xml_index_paths")
+			{
+				t.Schema = "Xml";
+			}
+		}
+	};
+
 	LoadSqlServerMetadata(".", "master", SqlServerVersion.v2012);
+
+	var dic = new[]
+	{
+		"SysAltFiles", "SysCacheObjects", "SysCharSets", "SysCsContainers", "SysCurConfigs", "SysCursorColumns", "SysCursorRefs", "SysCursorTables",
+		"SysFileGroups", "SysForeignKeys", "SysFullTextCatalogs", "SysIndexKeys", "SysLockInfo", "SysOleDBUsers", "SysOpenTapes", "SysPerfInfo", "SysRemoteLogins"
+	}
+	.ToDictionary(n => n.ToLower(), n => n);
 
 	foreach (var tt in Tables)
 	{
 		var t = tt.Value;
+
+		if (dic.TryGetValue(t.TableName, out var name))
+			t.DataContextPropertyName = t.TypeName = name;
+		else if (t.TableName.StartsWith("sys") && !t.TableName.StartsWith("system_"))
+		{
+			var a = t.TypeName.ToCharArray();
+			a[3] = char.ToUpper(a[3]);
+
+			t.DataContextPropertyName = t.TypeName = new (a);
+		}
 
 		foreach (var c in t.Columns)
 			if (c.Value.ColumnName.EndsWith("_id"))
@@ -89,31 +129,31 @@ order by OBJECT_SCHEMA_NAME(o.object_id), o.name, c.column_id
 				{
 					ColumnName           = c.column_name,
 					ColumnType           = c.type_name switch
-						{
-							"int"              => "int",
-							"tinyint"          => "tinyint",
-							"smallint"         => "smallint",
-							"bigint"           => "bigint",
-							"datetime"         => "datetime",
-							"datetime2"        => c.scale == 0 ? "datetime2"      : $"datetime2({c.scale})",
-							"datetimeoffset"   => c.scale == 0 ? "datetimeoffset" : $"datetimeoffset({c.scale})",
-							"time"             => c.scale == 0 ? "time"           : $"time({c.scale})",
-							"sql_variant"      => "sql_variant",
-							"sysname"          => "sysname",
-							"bit"              => "bit",
-							"uniqueidentifier" => "uniqueidentifier",
-							"numeric"          => $"numeric({c.precision},{c.scale})",
-							"float"            => "float",
-							"real"             => "real",
-							"char"             => $"char({(     c.max_length == null ? "max" : c.max_length)})",
-							"nchar"            => $"nchar({(    c.max_length == null ? "max" : c.max_length / 2)})",
-							"nvarchar"         => $"nvarchar({( c.max_length == null ? "max" : c.max_length / 2)})",
-							"varchar"          => $"varchar({(  c.max_length == null ? "max" : c.max_length)})",
-							"varbinary"        => $"varbinary({(c.max_length == null ? "max" : c.max_length)})",
-							"binary"           => $"binary({(   c.max_length == null ? "max" : c.max_length)})",
-							"image"            => $"image({(    c.max_length == null ? "max" : c.max_length)})",
-							var t              => throw new NotImplementedException($"Not implemented type {t}")
-						},
+					{
+						"int"              => "int",
+						"tinyint"          => "tinyint",
+						"smallint"         => "smallint",
+						"bigint"           => "bigint",
+						"datetime"         => "datetime",
+						"datetime2"        => c.scale == 0 ? "datetime2"      : $"datetime2({c.scale})",
+						"datetimeoffset"   => c.scale == 0 ? "datetimeoffset" : $"datetimeoffset({c.scale})",
+						"time"             => c.scale == 0 ? "time"           : $"time({c.scale})",
+						"sql_variant"      => "sql_variant",
+						"sysname"          => "sysname",
+						"bit"              => "bit",
+						"uniqueidentifier" => "uniqueidentifier",
+						"numeric"          => $"numeric({c.precision},{c.scale})",
+						"float"            => "float",
+						"real"             => "real",
+						"char"             => $"char({(     c.max_length == null ? "max" : c.max_length)})",
+						"nchar"            => $"nchar({(    c.max_length == null ? "max" : c.max_length / 2)})",
+						"nvarchar"         => $"nvarchar({( c.max_length == null ? "max" : c.max_length / 2)})",
+						"varchar"          => $"varchar({(  c.max_length == null ? "max" : c.max_length)})",
+						"varbinary"        => $"varbinary({(c.max_length == null ? "max" : c.max_length)})",
+						"binary"           => $"binary({(   c.max_length == null ? "max" : c.max_length)})",
+						"image"            => $"image({(    c.max_length == null ? "max" : c.max_length)})",
+						var t              => throw new NotImplementedException($"Not implemented type {t}")
+					},
 					IsNullable           = c.is_nullable,
 					MemberName           = c.column_name,
 					MemberType           = c.type_name switch
@@ -143,7 +183,7 @@ order by OBJECT_SCHEMA_NAME(o.object_id), o.name, c.column_id
 						var t              => throw new NotImplementedException($"Not implemented type {t}")
 					} + (c.is_nullable ? "?" : ""),
 					SystemType           = typeof(int),
-					DataType             = LinqToDB.DataType.Char,
+					DataType             = DataType.Char,
 					Length               = c.max_length / 2,
 					Precision            = c.precision,
 					Scale                = c.scale,

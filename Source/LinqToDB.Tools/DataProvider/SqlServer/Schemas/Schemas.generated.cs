@@ -27,13 +27,19 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 
 		#region Schemas
 
-		public InformationSchema.DataContext Information { get; set; } = null!;
-		public SystemSchema.DataContext      System      { get; set; } = null!;
+		public CompatibilitySchema.DataContext     Compatibility     { get; set; } = null!;
+		public DynamicManagementSchema.DataContext DynamicManagement { get; set; } = null!;
+		public InformationSchema.DataContext       Information       { get; set; } = null!;
+		public SystemSchema.DataContext            System            { get; set; } = null!;
+		public XmlSchema.DataContext               Xml               { get; set; } = null!;
 
 		public void InitSchemas()
 		{
-			Information = new InformationSchema.DataContext(this);
-			System      = new SystemSchema.     DataContext(this);
+			Compatibility     = new CompatibilitySchema.    DataContext(this);
+			DynamicManagement = new DynamicManagementSchema.DataContext(this);
+			Information       = new InformationSchema.      DataContext(this);
+			System            = new SystemSchema.           DataContext(this);
+			Xml               = new XmlSchema.              DataContext(this);
 		}
 
 		#endregion
@@ -73,31 +79,49 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		partial void InitMappingSchema();
 	}
 
-	public static partial class InformationSchema
+	public static partial class CompatibilitySchema
 	{
 		public partial class DataContext
 		{
-			public ITable<CheckConstraints>       CheckConstraints       { get { return _dataContext.GetTable<CheckConstraints>(); } }
-			public ITable<ColumnDomainUsage>      ColumnDomainUsage      { get { return _dataContext.GetTable<ColumnDomainUsage>(); } }
-			public ITable<ColumnPrivileges>       ColumnPrivileges       { get { return _dataContext.GetTable<ColumnPrivileges>(); } }
-			public ITable<Columns>                Columns                { get { return _dataContext.GetTable<Columns>(); } }
-			public ITable<ConstraintColumnUsage>  ConstraintColumnUsage  { get { return _dataContext.GetTable<ConstraintColumnUsage>(); } }
-			public ITable<ConstraintTableUsage>   ConstraintTableUsage   { get { return _dataContext.GetTable<ConstraintTableUsage>(); } }
-			public ITable<DomainConstraints>      DomainConstraints      { get { return _dataContext.GetTable<DomainConstraints>(); } }
-			public ITable<Domains>                Domains                { get { return _dataContext.GetTable<Domains>(); } }
-			public ITable<KeyColumnUsage>         KeyColumnUsage         { get { return _dataContext.GetTable<KeyColumnUsage>(); } }
-			public ITable<Parameters>             Parameters             { get { return _dataContext.GetTable<Parameters>(); } }
-			public ITable<ReferentialConstraints> ReferentialConstraints { get { return _dataContext.GetTable<ReferentialConstraints>(); } }
-			public ITable<RoutineColumns>         RoutineColumns         { get { return _dataContext.GetTable<RoutineColumns>(); } }
-			public ITable<Routines>               Routines               { get { return _dataContext.GetTable<Routines>(); } }
-			public ITable<Schemata>               Schemata               { get { return _dataContext.GetTable<Schemata>(); } }
-			public ITable<Sequences>              Sequences              { get { return _dataContext.GetTable<Sequences>(); } }
-			public ITable<TableConstraints>       TableConstraints       { get { return _dataContext.GetTable<TableConstraints>(); } }
-			public ITable<TablePrivileges>        TablePrivileges        { get { return _dataContext.GetTable<TablePrivileges>(); } }
-			public ITable<Tables>                 Tables                 { get { return _dataContext.GetTable<Tables>(); } }
-			public ITable<ViewColumnUsage>        ViewColumnUsage        { get { return _dataContext.GetTable<ViewColumnUsage>(); } }
-			public ITable<Views>                  Views                  { get { return _dataContext.GetTable<Views>(); } }
-			public ITable<ViewTableUsage>         ViewTableUsage         { get { return _dataContext.GetTable<ViewTableUsage>(); } }
+			public ITable<SysAltFiles>         SysAltFiles         { get { return _dataContext.GetTable<SysAltFiles>(); } }
+			public ITable<SysCacheObjects>     SysCacheObjects     { get { return _dataContext.GetTable<SysCacheObjects>(); } }
+			public ITable<SysCharSets>         SysCharSets         { get { return _dataContext.GetTable<SysCharSets>(); } }
+			public ITable<SysColumns>          SysColumns          { get { return _dataContext.GetTable<SysColumns>(); } }
+			public ITable<SysComments>         SysComments         { get { return _dataContext.GetTable<SysComments>(); } }
+			public ITable<SysConfigures>       SysConfigures       { get { return _dataContext.GetTable<SysConfigures>(); } }
+			public ITable<SysConstraints>      SysConstraints      { get { return _dataContext.GetTable<SysConstraints>(); } }
+			public ITable<SysCsContainers>     SysCsContainers     { get { return _dataContext.GetTable<SysCsContainers>(); } }
+			public ITable<SysCurConfigs>       SysCurConfigs       { get { return _dataContext.GetTable<SysCurConfigs>(); } }
+			public ITable<SysCursorColumns>    SysCursorColumns    { get { return _dataContext.GetTable<SysCursorColumns>(); } }
+			public ITable<SysCursorRefs>       SysCursorRefs       { get { return _dataContext.GetTable<SysCursorRefs>(); } }
+			public ITable<SysCursors>          SysCursors          { get { return _dataContext.GetTable<SysCursors>(); } }
+			public ITable<SysCursorTables>     SysCursorTables     { get { return _dataContext.GetTable<SysCursorTables>(); } }
+			public ITable<SysDatabases>        SysDatabases        { get { return _dataContext.GetTable<SysDatabases>(); } }
+			public ITable<SysDepends>          SysDepends          { get { return _dataContext.GetTable<SysDepends>(); } }
+			public ITable<SysDevices>          SysDevices          { get { return _dataContext.GetTable<SysDevices>(); } }
+			public ITable<SysFileGroups>       SysFileGroups       { get { return _dataContext.GetTable<SysFileGroups>(); } }
+			public ITable<SysFiles>            SysFiles            { get { return _dataContext.GetTable<SysFiles>(); } }
+			public ITable<SysForeignKeys>      SysForeignKeys      { get { return _dataContext.GetTable<SysForeignKeys>(); } }
+			public ITable<SysFullTextCatalogs> SysFullTextCatalogs { get { return _dataContext.GetTable<SysFullTextCatalogs>(); } }
+			public ITable<SysIndexes>          SysIndexes          { get { return _dataContext.GetTable<SysIndexes>(); } }
+			public ITable<SysIndexKeys>        SysIndexKeys        { get { return _dataContext.GetTable<SysIndexKeys>(); } }
+			public ITable<SysLanguages>        SysLanguages        { get { return _dataContext.GetTable<SysLanguages>(); } }
+			public ITable<SysLockInfo>         SysLockInfo         { get { return _dataContext.GetTable<SysLockInfo>(); } }
+			public ITable<SysLogins>           SysLogins           { get { return _dataContext.GetTable<SysLogins>(); } }
+			public ITable<SysMembers>          SysMembers          { get { return _dataContext.GetTable<SysMembers>(); } }
+			public ITable<SysMessages>         SysMessages         { get { return _dataContext.GetTable<SysMessages>(); } }
+			public ITable<SysObjects>          SysObjects          { get { return _dataContext.GetTable<SysObjects>(); } }
+			public ITable<SysOleDBUsers>       SysOleDBUsers       { get { return _dataContext.GetTable<SysOleDBUsers>(); } }
+			public ITable<SysOpenTapes>        SysOpenTapes        { get { return _dataContext.GetTable<SysOpenTapes>(); } }
+			public ITable<SysPerfInfo>         SysPerfInfo         { get { return _dataContext.GetTable<SysPerfInfo>(); } }
+			public ITable<SysPermissions>      SysPermissions      { get { return _dataContext.GetTable<SysPermissions>(); } }
+			public ITable<SysProcesses>        SysProcesses        { get { return _dataContext.GetTable<SysProcesses>(); } }
+			public ITable<SysProtects>         SysProtects         { get { return _dataContext.GetTable<SysProtects>(); } }
+			public ITable<SysReferences>       SysReferences       { get { return _dataContext.GetTable<SysReferences>(); } }
+			public ITable<SysRemoteLogins>     SysRemoteLogins     { get { return _dataContext.GetTable<SysRemoteLogins>(); } }
+			public ITable<SysServers>          SysServers          { get { return _dataContext.GetTable<SysServers>(); } }
+			public ITable<SysTypes>            SysTypes            { get { return _dataContext.GetTable<SysTypes>(); } }
+			public ITable<SysUsers>            SysUsers            { get { return _dataContext.GetTable<SysUsers>(); } }
 
 			private readonly IDataContext _dataContext;
 
@@ -107,888 +131,926 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			}
 		}
 
-		[Table(Schema="INFORMATION_SCHEMA", Name="CHECK_CONSTRAINTS", IsView=true)]
-		public partial class CheckConstraints
+		[Table(Schema="sys", Name="sysaltfiles", IsView=true)]
+		public partial class SysAltFiles
 		{
-			[Column("CONSTRAINT_CATALOG"),    Nullable] public string? ConstraintCatalog { get; set; } // nvarchar(128)
-			[Column("CONSTRAINT_SCHEMA"),     Nullable] public string? ConstraintSchema  { get; set; } // nvarchar(128)
-			[Column("CONSTRAINT_NAME"),    NotNull    ] public string  ConstraintName    { get; set; } = null!; // sysname
-			[Column("CHECK_CLAUSE"),          Nullable] public string? CheckClause       { get; set; } // nvarchar(4000)
+			[Column("fileid"),      Nullable] public short?  Fileid   { get; set; } // smallint
+			[Column("groupid"),     Nullable] public short?  Groupid  { get; set; } // smallint
+			[Column("size"),     NotNull    ] public int     Size     { get; set; } // int
+			[Column("maxsize"),  NotNull    ] public int     Maxsize  { get; set; } // int
+			[Column("growth"),   NotNull    ] public int     Growth   { get; set; } // int
+			[Column("status"),      Nullable] public int?    Status   { get; set; } // int
+			[Column("perf"),        Nullable] public int?    Perf     { get; set; } // int
+			[Column("dbid"),        Nullable] public short?  Dbid     { get; set; } // smallint
+			[Column("name"),     NotNull    ] public string  Name     { get; set; } = null!; // sysname
+			[Column("filename"),    Nullable] public string? Filename { get; set; } // nvarchar(260)
 		}
 
-		[Table(Schema="INFORMATION_SCHEMA", Name="COLUMN_DOMAIN_USAGE", IsView=true)]
-		public partial class ColumnDomainUsage
+		[Table(Schema="sys", Name="syscacheobjects", IsView=true)]
+		public partial class SysCacheObjects
 		{
-			[Column("DOMAIN_CATALOG"),    Nullable] public string? DomainCatalog { get; set; } // nvarchar(128)
-			[Column("DOMAIN_SCHEMA"),     Nullable] public string? DomainSchema  { get; set; } // nvarchar(128)
-			[Column("DOMAIN_NAME"),    NotNull    ] public string  DomainName    { get; set; } = null!; // sysname
-			[Column("TABLE_CATALOG"),     Nullable] public string? TableCatalog  { get; set; } // nvarchar(128)
-			[Column("TABLE_SCHEMA"),      Nullable] public string? TableSchema   { get; set; } // nvarchar(128)
-			[Column("TABLE_NAME"),     NotNull    ] public string  TableName     { get; set; } = null!; // sysname
-			[Column("COLUMN_NAME"),       Nullable] public string? ColumnName    { get; set; } // sysname
+			[Column("bucketid"),     NotNull    ] public int     Bucketid     { get; set; } // int
+			[Column("cacheobjtype"), NotNull    ] public string  Cacheobjtype { get; set; } = null!; // nvarchar(50)
+			[Column("objtype"),      NotNull    ] public string  Objtype      { get; set; } = null!; // nvarchar(20)
+			[Column("objid"),           Nullable] public int?    Objid        { get; set; } // int
+			[Column("dbid"),            Nullable] public short?  Dbid         { get; set; } // smallint
+			[Column("dbidexec"),        Nullable] public short?  Dbidexec     { get; set; } // smallint
+			[Column("uid"),             Nullable] public short?  Uid          { get; set; } // smallint
+			[Column("refcounts"),    NotNull    ] public int     Refcounts    { get; set; } // int
+			[Column("usecounts"),    NotNull    ] public int     Usecounts    { get; set; } // int
+			[Column("pagesused"),       Nullable] public int?    Pagesused    { get; set; } // int
+			[Column("setopts"),         Nullable] public int?    Setopts      { get; set; } // int
+			[Column("langid"),          Nullable] public short?  Langid       { get; set; } // smallint
+			[Column("dateformat"),      Nullable] public short?  Dateformat   { get; set; } // smallint
+			[Column("status"),          Nullable] public int?    Status       { get; set; } // int
+			[Column("lasttime"),        Nullable] public long?   Lasttime     { get; set; } // bigint
+			[Column("maxexectime"),     Nullable] public long?   Maxexectime  { get; set; } // bigint
+			[Column("avgexectime"),     Nullable] public long?   Avgexectime  { get; set; } // bigint
+			[Column("lastreads"),       Nullable] public long?   Lastreads    { get; set; } // bigint
+			[Column("lastwrites"),      Nullable] public long?   Lastwrites   { get; set; } // bigint
+			[Column("sqlbytes"),        Nullable] public int?    Sqlbytes     { get; set; } // int
+			[Column("sql"),             Nullable] public string? Sql          { get; set; } // nvarchar(3900)
 		}
 
-		[Table(Schema="INFORMATION_SCHEMA", Name="COLUMN_PRIVILEGES", IsView=true)]
-		public partial class ColumnPrivileges
+		[Table(Schema="sys", Name="syscharsets", IsView=true)]
+		public partial class SysCharSets
 		{
-			[Column("GRANTOR"),           Nullable] public string? Grantor       { get; set; } // nvarchar(128)
-			[Column("GRANTEE"),           Nullable] public string? Grantee       { get; set; } // nvarchar(128)
-			[Column("TABLE_CATALOG"),     Nullable] public string? TableCatalog  { get; set; } // nvarchar(128)
-			[Column("TABLE_SCHEMA"),      Nullable] public string? TableSchema   { get; set; } // nvarchar(128)
-			[Column("TABLE_NAME"),     NotNull    ] public string  TableName     { get; set; } = null!; // sysname
-			[Column("COLUMN_NAME"),       Nullable] public string? ColumnName    { get; set; } // sysname
-			[Column("PRIVILEGE_TYPE"),    Nullable] public string? PrivilegeType { get; set; } // varchar(10)
-			[Column("IS_GRANTABLE"),      Nullable] public string? IsGrantable   { get; set; } // varchar(3)
+			[Column("type"),             NotNull    ] public short   Type             { get; set; } // smallint
+			[Column("id"),               NotNull    ] public byte    Id               { get; set; } // tinyint
+			[Column("csid"),             NotNull    ] public byte    Csid             { get; set; } // tinyint
+			[Column("status"),              Nullable] public short?  Status           { get; set; } // smallint
+			[Column("name"),             NotNull    ] public string  Name             { get; set; } = null!; // nvarchar(128)
+			[Column("description"),      NotNull    ] public string  Description      { get; set; } = null!; // nvarchar(255)
+			[Column("binarydefinition"),    Nullable] public byte[]? Binarydefinition { get; set; } // varbinary(6000)
+			[Column("definition"),          Nullable] public byte[]? Definition       { get; set; } // image(16)
 		}
 
-		[Table(Schema="INFORMATION_SCHEMA", Name="COLUMNS", IsView=true)]
-		public partial class Columns
+		[Table(Schema="sys", Name="syscolumns", IsView=true)]
+		public partial class SysColumns
 		{
-			[Column("TABLE_CATALOG"),               Nullable] public string? TableCatalog           { get; set; } // nvarchar(128)
-			[Column("TABLE_SCHEMA"),                Nullable] public string? TableSchema            { get; set; } // nvarchar(128)
-			[Column("TABLE_NAME"),               NotNull    ] public string  TableName              { get; set; } = null!; // sysname
-			[Column("COLUMN_NAME"),                 Nullable] public string? ColumnName             { get; set; } // sysname
-			[Column("ORDINAL_POSITION"),            Nullable] public int?    OrdinalPosition        { get; set; } // int
-			[Column("COLUMN_DEFAULT"),              Nullable] public string? ColumnDefault          { get; set; } // nvarchar(4000)
-			[Column("IS_NULLABLE"),                 Nullable] public string? IsNullable             { get; set; } // varchar(3)
-			[Column("DATA_TYPE"),                   Nullable] public string? DataType               { get; set; } // nvarchar(128)
-			[Column("CHARACTER_MAXIMUM_LENGTH"),    Nullable] public int?    CharacterMaximumLength { get; set; } // int
-			[Column("CHARACTER_OCTET_LENGTH"),      Nullable] public int?    CharacterOctetLength   { get; set; } // int
-			[Column("NUMERIC_PRECISION"),           Nullable] public byte?   NumericPrecision       { get; set; } // tinyint
-			[Column("NUMERIC_PRECISION_RADIX"),     Nullable] public short?  NumericPrecisionRadix  { get; set; } // smallint
-			[Column("NUMERIC_SCALE"),               Nullable] public int?    NumericScale           { get; set; } // int
-			[Column("DATETIME_PRECISION"),          Nullable] public short?  DatetimePrecision      { get; set; } // smallint
-			[Column("CHARACTER_SET_CATALOG"),       Nullable] public string? CharacterSetCatalog    { get; set; } // sysname
-			[Column("CHARACTER_SET_SCHEMA"),        Nullable] public string? CharacterSetSchema     { get; set; } // sysname
-			[Column("CHARACTER_SET_NAME"),          Nullable] public string? CharacterSetName       { get; set; } // sysname
-			[Column("COLLATION_CATALOG"),           Nullable] public string? CollationCatalog       { get; set; } // sysname
-			[Column("COLLATION_SCHEMA"),            Nullable] public string? CollationSchema        { get; set; } // sysname
-			[Column("COLLATION_NAME"),              Nullable] public string? CollationName          { get; set; } // sysname
-			[Column("DOMAIN_CATALOG"),              Nullable] public string? DomainCatalog          { get; set; } // sysname
-			[Column("DOMAIN_SCHEMA"),               Nullable] public string? DomainSchema           { get; set; } // sysname
-			[Column("DOMAIN_NAME"),                 Nullable] public string? DomainName             { get; set; } // sysname
+			[Column("name"),            Nullable] public string? Name         { get; set; } // sysname
+			[Column("id"),           NotNull    ] public int     Id           { get; set; } // int
+			[Column("xtype"),        NotNull    ] public byte    Xtype        { get; set; } // tinyint
+			[Column("typestat"),        Nullable] public byte?   Typestat     { get; set; } // tinyint
+			[Column("xusertype"),       Nullable] public short?  Xusertype    { get; set; } // smallint
+			[Column("length"),       NotNull    ] public short   Length       { get; set; } // smallint
+			[Column("xprec"),        NotNull    ] public byte    Xprec        { get; set; } // tinyint
+			[Column("xscale"),       NotNull    ] public byte    Xscale       { get; set; } // tinyint
+			[Column("colid"),           Nullable] public short?  Colid        { get; set; } // smallint
+			[Column("xoffset"),         Nullable] public short?  Xoffset      { get; set; } // smallint
+			[Column("bitpos"),          Nullable] public byte?   Bitpos       { get; set; } // tinyint
+			[Column("reserved"),        Nullable] public byte?   Reserved     { get; set; } // tinyint
+			[Column("colstat"),         Nullable] public short?  Colstat      { get; set; } // smallint
+			[Column("cdefault"),     NotNull    ] public int     Cdefault     { get; set; } // int
+			[Column("domain"),       NotNull    ] public int     Domain       { get; set; } // int
+			[Column("number"),          Nullable] public short?  Number       { get; set; } // smallint
+			[Column("colorder"),        Nullable] public short?  Colorder     { get; set; } // smallint
+			[Column("autoval"),         Nullable] public byte[]? Autoval      { get; set; } // varbinary(8000)
+			[Column("offset"),          Nullable] public short?  Offset       { get; set; } // smallint
+			[Column("collationid"),     Nullable] public int?    Collationid  { get; set; } // int
+			[Column("language"),        Nullable] public int?    Language     { get; set; } // int
+			[Column("status"),          Nullable] public byte?   Status       { get; set; } // tinyint
+			[Column("type"),         NotNull    ] public byte    Type         { get; set; } // tinyint
+			[Column("usertype"),        Nullable] public short?  Usertype     { get; set; } // smallint
+			[Column("printfmt"),        Nullable] public string? Printfmt     { get; set; } // varchar(255)
+			[Column("prec"),            Nullable] public short?  Prec         { get; set; } // smallint
+			[Column("scale"),           Nullable] public int?    Scale        { get; set; } // int
+			[Column("iscomputed"),      Nullable] public int?    Iscomputed   { get; set; } // int
+			[Column("isoutparam"),      Nullable] public int?    Isoutparam   { get; set; } // int
+			[Column("isnullable"),      Nullable] public int?    Isnullable   { get; set; } // int
+			[Column("collation"),       Nullable] public string? Collation    { get; set; } // sysname
+			[Column("tdscollation"),    Nullable] public byte[]? Tdscollation { get; set; } // binary(5)
 		}
 
-		[Table(Schema="INFORMATION_SCHEMA", Name="CONSTRAINT_COLUMN_USAGE", IsView=true)]
-		public partial class ConstraintColumnUsage
+		[Table(Schema="sys", Name="syscomments", IsView=true)]
+		public partial class SysComments
 		{
-			[Column("TABLE_CATALOG"),         Nullable] public string? TableCatalog      { get; set; } // nvarchar(128)
-			[Column("TABLE_SCHEMA"),          Nullable] public string? TableSchema       { get; set; } // nvarchar(128)
-			[Column("TABLE_NAME"),         NotNull    ] public string  TableName         { get; set; } = null!; // sysname
-			[Column("COLUMN_NAME"),           Nullable] public string? ColumnName        { get; set; } // nvarchar(128)
-			[Column("CONSTRAINT_CATALOG"),    Nullable] public string? ConstraintCatalog { get; set; } // nvarchar(128)
-			[Column("CONSTRAINT_SCHEMA"),     Nullable] public string? ConstraintSchema  { get; set; } // nvarchar(128)
-			[Column("CONSTRAINT_NAME"),    NotNull    ] public string  ConstraintName    { get; set; } = null!; // sysname
+			[Column("id"),         NotNull    ] public int     Id         { get; set; } // int
+			[Column("number"),        Nullable] public short?  Number     { get; set; } // smallint
+			[Column("colid"),      NotNull    ] public short   Colid      { get; set; } // smallint
+			[Column("status"),     NotNull    ] public short   Status     { get; set; } // smallint
+			[Column("ctext"),         Nullable] public byte[]? Ctext      { get; set; } // varbinary(8000)
+			[Column("texttype"),      Nullable] public short?  Texttype   { get; set; } // smallint
+			[Column("language"),      Nullable] public short?  Language   { get; set; } // smallint
+			[Column("encrypted"),  NotNull    ] public bool    Encrypted  { get; set; } // bit
+			[Column("compressed"), NotNull    ] public bool    Compressed { get; set; } // bit
+			[Column("text"),          Nullable] public string? Text       { get; set; } // nvarchar(4000)
 		}
 
-		[Table(Schema="INFORMATION_SCHEMA", Name="CONSTRAINT_TABLE_USAGE", IsView=true)]
-		public partial class ConstraintTableUsage
+		[Table(Schema="sys", Name="sysconfigures", IsView=true)]
+		public partial class SysConfigures
 		{
-			[Column("TABLE_CATALOG"),         Nullable] public string? TableCatalog      { get; set; } // nvarchar(128)
-			[Column("TABLE_SCHEMA"),          Nullable] public string? TableSchema       { get; set; } // nvarchar(128)
-			[Column("TABLE_NAME"),         NotNull    ] public string  TableName         { get; set; } = null!; // sysname
-			[Column("CONSTRAINT_CATALOG"),    Nullable] public string? ConstraintCatalog { get; set; } // nvarchar(128)
-			[Column("CONSTRAINT_SCHEMA"),     Nullable] public string? ConstraintSchema  { get; set; } // nvarchar(128)
-			[Column("CONSTRAINT_NAME"),    NotNull    ] public string  ConstraintName    { get; set; } = null!; // sysname
+			[Column("value"),      Nullable] public int?   Value   { get; set; } // int
+			[Column("config"),  NotNull    ] public int    Config  { get; set; } // int
+			[Column("comment"), NotNull    ] public string Comment { get; set; } = null!; // nvarchar(255)
+			[Column("status"),     Nullable] public short? Status  { get; set; } // smallint
 		}
 
-		[Table(Schema="INFORMATION_SCHEMA", Name="DOMAIN_CONSTRAINTS", IsView=true)]
-		public partial class DomainConstraints
+		[Table(Schema="sys", Name="sysconstraints", IsView=true)]
+		public partial class SysConstraints
 		{
-			[Column("CONSTRAINT_CATALOG"),    Nullable] public string? ConstraintCatalog { get; set; } // nvarchar(128)
-			[Column("CONSTRAINT_SCHEMA"),     Nullable] public string? ConstraintSchema  { get; set; } // nvarchar(128)
-			[Column("CONSTRAINT_NAME"),    NotNull    ] public string  ConstraintName    { get; set; } = null!; // sysname
-			[Column("DOMAIN_CATALOG"),        Nullable] public string? DomainCatalog     { get; set; } // nvarchar(128)
-			[Column("DOMAIN_SCHEMA"),         Nullable] public string? DomainSchema      { get; set; } // nvarchar(128)
-			[Column("DOMAIN_NAME"),        NotNull    ] public string  DomainName        { get; set; } = null!; // sysname
-			[Column("IS_DEFERRABLE"),      NotNull    ] public string  IsDeferrable      { get; set; } = null!; // varchar(2)
-			[Column("INITIALLY_DEFERRED"), NotNull    ] public string  InitiallyDeferred { get; set; } = null!; // varchar(2)
+			[Column("constid"), NotNull    ] public int    Constid { get; set; } // int
+			[Column("id"),      NotNull    ] public int    Id      { get; set; } // int
+			[Column("colid"),      Nullable] public short? Colid   { get; set; } // smallint
+			[Column("spare1"),     Nullable] public byte?  Spare1  { get; set; } // tinyint
+			[Column("status"),     Nullable] public int?   Status  { get; set; } // int
+			[Column("actions"),    Nullable] public int?   Actions { get; set; } // int
+			[Column("error"),      Nullable] public int?   Error   { get; set; } // int
 		}
 
-		[Table(Schema="INFORMATION_SCHEMA", Name="DOMAINS", IsView=true)]
-		public partial class Domains
+		[Table(Schema="sys", Name="syscscontainers", IsView=true)]
+		public partial class SysCsContainers
 		{
-			[Column("DOMAIN_CATALOG"),              Nullable] public string? DomainCatalog          { get; set; } // nvarchar(128)
-			[Column("DOMAIN_SCHEMA"),               Nullable] public string? DomainSchema           { get; set; } // nvarchar(128)
-			[Column("DOMAIN_NAME"),              NotNull    ] public string  DomainName             { get; set; } = null!; // sysname
-			[Column("DATA_TYPE"),                   Nullable] public string? DataType               { get; set; } // nvarchar(128)
-			[Column("CHARACTER_MAXIMUM_LENGTH"),    Nullable] public int?    CharacterMaximumLength { get; set; } // int
-			[Column("CHARACTER_OCTET_LENGTH"),      Nullable] public int?    CharacterOctetLength   { get; set; } // int
-			[Column("COLLATION_CATALOG"),           Nullable] public string? CollationCatalog       { get; set; } // sysname
-			[Column("COLLATION_SCHEMA"),            Nullable] public string? CollationSchema        { get; set; } // sysname
-			[Column("COLLATION_NAME"),              Nullable] public string? CollationName          { get; set; } // sysname
-			[Column("CHARACTER_SET_CATALOG"),       Nullable] public string? CharacterSetCatalog    { get; set; } // sysname
-			[Column("CHARACTER_SET_SCHEMA"),        Nullable] public string? CharacterSetSchema     { get; set; } // sysname
-			[Column("CHARACTER_SET_NAME"),          Nullable] public string? CharacterSetName       { get; set; } // sysname
-			[Column("NUMERIC_PRECISION"),           Nullable] public byte?   NumericPrecision       { get; set; } // tinyint
-			[Column("NUMERIC_PRECISION_RADIX"),     Nullable] public short?  NumericPrecisionRadix  { get; set; } // smallint
-			[Column("NUMERIC_SCALE"),               Nullable] public int?    NumericScale           { get; set; } // int
-			[Column("DATETIME_PRECISION"),          Nullable] public short?  DatetimePrecision      { get; set; } // smallint
-			[Column("DOMAIN_DEFAULT"),              Nullable] public string? DomainDefault          { get; set; } // nvarchar(4000)
+			[Column("blob_container_id"),   NotNull    ] public short   BlobContainerID   { get; set; } // smallint
+			[Column("blob_container_url"),     Nullable] public string? BlobContainerUrl  { get; set; } // nvarchar(261)
+			[Column("blob_container_type"),    Nullable] public byte?   BlobContainerType { get; set; } // tinyint
 		}
 
-		[Table(Schema="INFORMATION_SCHEMA", Name="KEY_COLUMN_USAGE", IsView=true)]
-		public partial class KeyColumnUsage
+		[Table(Schema="sys", Name="syscurconfigs", IsView=true)]
+		public partial class SysCurConfigs
 		{
-			[Column("CONSTRAINT_CATALOG"),    Nullable] public string? ConstraintCatalog { get; set; } // nvarchar(128)
-			[Column("CONSTRAINT_SCHEMA"),     Nullable] public string? ConstraintSchema  { get; set; } // nvarchar(128)
-			[Column("CONSTRAINT_NAME"),    NotNull    ] public string  ConstraintName    { get; set; } = null!; // sysname
-			[Column("TABLE_CATALOG"),         Nullable] public string? TableCatalog      { get; set; } // nvarchar(128)
-			[Column("TABLE_SCHEMA"),          Nullable] public string? TableSchema       { get; set; } // nvarchar(128)
-			[Column("TABLE_NAME"),         NotNull    ] public string  TableName         { get; set; } = null!; // sysname
-			[Column("COLUMN_NAME"),           Nullable] public string? ColumnName        { get; set; } // nvarchar(128)
-			[Column("ORDINAL_POSITION"),   NotNull    ] public int     OrdinalPosition   { get; set; } // int
+			[Column("value"),   NotNull    ] public int    Value   { get; set; } // int
+			[Column("config"),     Nullable] public short? Config  { get; set; } // smallint
+			[Column("comment"), NotNull    ] public string Comment { get; set; } = null!; // nvarchar(255)
+			[Column("status"),     Nullable] public short? Status  { get; set; } // smallint
 		}
 
-		[Table(Schema="INFORMATION_SCHEMA", Name="PARAMETERS", IsView=true)]
-		public partial class Parameters
+		[Table(Schema="sys", Name="syscursorcolumns", IsView=true)]
+		public partial class SysCursorColumns
 		{
-			[Column("SPECIFIC_CATALOG"),             Nullable] public string? SpecificCatalog        { get; set; } // nvarchar(128)
-			[Column("SPECIFIC_SCHEMA"),              Nullable] public string? SpecificSchema         { get; set; } // nvarchar(128)
-			[Column("SPECIFIC_NAME"),             NotNull    ] public string  SpecificName           { get; set; } = null!; // sysname
-			[Column("ORDINAL_POSITION"),          NotNull    ] public int     OrdinalPosition        { get; set; } // int
-			[Column("PARAMETER_MODE"),               Nullable] public string? ParameterMode          { get; set; } // nvarchar(10)
-			[Column("IS_RESULT"),                    Nullable] public string? IsResult               { get; set; } // nvarchar(10)
-			[Column("AS_LOCATOR"),                   Nullable] public string? AsLocator              { get; set; } // nvarchar(10)
-			[Column("PARAMETER_NAME"),               Nullable] public string? ParameterName          { get; set; } // sysname
-			[Column("DATA_TYPE"),                 NotNull    ] public string  DataType               { get; set; } = null!; // nvarchar(128)
-			[Column("CHARACTER_MAXIMUM_LENGTH"),     Nullable] public int?    CharacterMaximumLength { get; set; } // int
-			[Column("CHARACTER_OCTET_LENGTH"),       Nullable] public int?    CharacterOctetLength   { get; set; } // int
-			[Column("COLLATION_CATALOG"),            Nullable] public string? CollationCatalog       { get; set; } // sysname
-			[Column("COLLATION_SCHEMA"),             Nullable] public string? CollationSchema        { get; set; } // sysname
-			[Column("COLLATION_NAME"),               Nullable] public string? CollationName          { get; set; } // sysname
-			[Column("CHARACTER_SET_CATALOG"),        Nullable] public string? CharacterSetCatalog    { get; set; } // sysname
-			[Column("CHARACTER_SET_SCHEMA"),         Nullable] public string? CharacterSetSchema     { get; set; } // sysname
-			[Column("CHARACTER_SET_NAME"),           Nullable] public string? CharacterSetName       { get; set; } // sysname
-			[Column("NUMERIC_PRECISION"),            Nullable] public byte?   NumericPrecision       { get; set; } // tinyint
-			[Column("NUMERIC_PRECISION_RADIX"),      Nullable] public short?  NumericPrecisionRadix  { get; set; } // smallint
-			[Column("NUMERIC_SCALE"),                Nullable] public int?    NumericScale           { get; set; } // int
-			[Column("DATETIME_PRECISION"),           Nullable] public short?  DatetimePrecision      { get; set; } // smallint
-			[Column("INTERVAL_TYPE"),                Nullable] public string? IntervalType           { get; set; } // nvarchar(30)
-			[Column("INTERVAL_PRECISION"),           Nullable] public short?  IntervalPrecision      { get; set; } // smallint
-			[Column("USER_DEFINED_TYPE_CATALOG"),    Nullable] public string? UserDefinedTypeCatalog { get; set; } // sysname
-			[Column("USER_DEFINED_TYPE_SCHEMA"),     Nullable] public string? UserDefinedTypeSchema  { get; set; } // sysname
-			[Column("USER_DEFINED_TYPE_NAME"),       Nullable] public string? UserDefinedTypeName    { get; set; } // sysname
-			[Column("SCOPE_CATALOG"),                Nullable] public string? ScopeCatalog           { get; set; } // sysname
-			[Column("SCOPE_SCHEMA"),                 Nullable] public string? ScopeSchema            { get; set; } // sysname
-			[Column("SCOPE_NAME"),                   Nullable] public string? ScopeName              { get; set; } // sysname
+			[Column("cursor_handle"),                NotNull    ] public int     CursorHandle               { get; set; } // int
+			[Column("column_name"),                     Nullable] public string? ColumnName                 { get; set; } // nvarchar(128)
+			[Column("ordinal_position"),             NotNull    ] public int     OrdinalPosition            { get; set; } // int
+			[Column("column_characteristics_flags"), NotNull    ] public int     ColumnCharacteristicsFlags { get; set; } // int
+			[Column("column_size"),                  NotNull    ] public int     ColumnSize                 { get; set; } // int
+			[Column("data_type_sql"),                NotNull    ] public int     DataTypeSql                { get; set; } // int
+			[Column("column_precision"),             NotNull    ] public byte    ColumnPrecision            { get; set; } // tinyint
+			[Column("column_scale"),                 NotNull    ] public byte    ColumnScale                { get; set; } // tinyint
+			[Column("order_position"),               NotNull    ] public int     OrderPosition              { get; set; } // int
+			[Column("order_direction"),                 Nullable] public string? OrderDirection             { get; set; } // nvarchar(1)
+			[Column("hidden_column"),                NotNull    ] public short   HiddenColumn               { get; set; } // smallint
+			[Column("columnid"),                     NotNull    ] public int     Columnid                   { get; set; } // int
+			[Column("objectid"),                     NotNull    ] public int     Objectid                   { get; set; } // int
+			[Column("dbid"),                         NotNull    ] public int     Dbid                       { get; set; } // int
+			[Column("dbname"),                          Nullable] public string? Dbname                     { get; set; } // nvarchar(128)
 		}
 
-		[Table(Schema="INFORMATION_SCHEMA", Name="REFERENTIAL_CONSTRAINTS", IsView=true)]
-		public partial class ReferentialConstraints
+		[Table(Schema="sys", Name="syscursorrefs", IsView=true)]
+		public partial class SysCursorRefs
 		{
-			[Column("CONSTRAINT_CATALOG"),           Nullable] public string? ConstraintCatalog       { get; set; } // nvarchar(128)
-			[Column("CONSTRAINT_SCHEMA"),            Nullable] public string? ConstraintSchema        { get; set; } // nvarchar(128)
-			[Column("CONSTRAINT_NAME"),           NotNull    ] public string  ConstraintName          { get; set; } = null!; // sysname
-			[Column("UNIQUE_CONSTRAINT_CATALOG"),    Nullable] public string? UniqueConstraintCatalog { get; set; } // nvarchar(128)
-			[Column("UNIQUE_CONSTRAINT_SCHEMA"),     Nullable] public string? UniqueConstraintSchema  { get; set; } // nvarchar(128)
-			[Column("UNIQUE_CONSTRAINT_NAME"),       Nullable] public string? UniqueConstraintName    { get; set; } // sysname
-			[Column("MATCH_OPTION"),                 Nullable] public string? MatchOption             { get; set; } // varchar(7)
-			[Column("UPDATE_RULE"),                  Nullable] public string? UpdateRule              { get; set; } // varchar(11)
-			[Column("DELETE_RULE"),                  Nullable] public string? DeleteRule              { get; set; } // varchar(11)
+			[Column("reference_name"),    Nullable] public string? ReferenceName { get; set; } // nvarchar(128)
+			[Column("cursor_scope"),   NotNull    ] public byte    CursorScope   { get; set; } // tinyint
+			[Column("cursor_handl"),   NotNull    ] public int     CursorHandl   { get; set; } // int
 		}
 
-		[Table(Schema="INFORMATION_SCHEMA", Name="ROUTINE_COLUMNS", IsView=true)]
-		public partial class RoutineColumns
+		[Table(Schema="sys", Name="syscursors", IsView=true)]
+		public partial class SysCursors
 		{
-			[Column("TABLE_CATALOG"),               Nullable] public string? TableCatalog           { get; set; } // nvarchar(128)
-			[Column("TABLE_SCHEMA"),                Nullable] public string? TableSchema            { get; set; } // nvarchar(128)
-			[Column("TABLE_NAME"),               NotNull    ] public string  TableName              { get; set; } = null!; // sysname
-			[Column("COLUMN_NAME"),                 Nullable] public string? ColumnName             { get; set; } // sysname
-			[Column("ORDINAL_POSITION"),         NotNull    ] public int     OrdinalPosition        { get; set; } // int
-			[Column("COLUMN_DEFAULT"),              Nullable] public string? ColumnDefault          { get; set; } // nvarchar(4000)
-			[Column("IS_NULLABLE"),                 Nullable] public string? IsNullable             { get; set; } // varchar(3)
-			[Column("DATA_TYPE"),                   Nullable] public string? DataType               { get; set; } // nvarchar(128)
-			[Column("CHARACTER_MAXIMUM_LENGTH"),    Nullable] public int?    CharacterMaximumLength { get; set; } // int
-			[Column("CHARACTER_OCTET_LENGTH"),      Nullable] public int?    CharacterOctetLength   { get; set; } // int
-			[Column("NUMERIC_PRECISION"),           Nullable] public byte?   NumericPrecision       { get; set; } // tinyint
-			[Column("NUMERIC_PRECISION_RADIX"),     Nullable] public short?  NumericPrecisionRadix  { get; set; } // smallint
-			[Column("NUMERIC_SCALE"),               Nullable] public int?    NumericScale           { get; set; } // int
-			[Column("DATETIME_PRECISION"),          Nullable] public short?  DatetimePrecision      { get; set; } // smallint
-			[Column("CHARACTER_SET_CATALOG"),       Nullable] public string? CharacterSetCatalog    { get; set; } // sysname
-			[Column("CHARACTER_SET_SCHEMA"),        Nullable] public string? CharacterSetSchema     { get; set; } // sysname
-			[Column("CHARACTER_SET_NAME"),          Nullable] public string? CharacterSetName       { get; set; } // sysname
-			[Column("COLLATION_CATALOG"),           Nullable] public string? CollationCatalog       { get; set; } // sysname
-			[Column("COLLATION_SCHEMA"),            Nullable] public string? CollationSchema        { get; set; } // sysname
-			[Column("COLLATION_NAME"),              Nullable] public string? CollationName          { get; set; } // sysname
-			[Column("DOMAIN_CATALOG"),              Nullable] public string? DomainCatalog          { get; set; } // sysname
-			[Column("DOMAIN_SCHEMA"),               Nullable] public string? DomainSchema           { get; set; } // sysname
-			[Column("DOMAIN_NAME"),                 Nullable] public string? DomainName             { get; set; } // sysname
+			[Column("cursor_handle"),  NotNull    ] public int      CursorHandle  { get; set; } // int
+			[Column("cursor_name"),       Nullable] public string?  CursorName    { get; set; } // nvarchar(128)
+			[Column("status"),         NotNull    ] public int      Status        { get; set; } // int
+			[Column("model"),          NotNull    ] public byte     Model         { get; set; } // tinyint
+			[Column("concurrency"),    NotNull    ] public byte     Concurrency   { get; set; } // tinyint
+			[Column("scrollable"),     NotNull    ] public byte     Scrollable    { get; set; } // tinyint
+			[Column("open_status"),    NotNull    ] public byte     OpenStatus    { get; set; } // tinyint
+			[Column("cursor_rows"),       Nullable] public decimal? CursorRows    { get; set; } // numeric(10,0)
+			[Column("fetch_status"),   NotNull    ] public short    FetchStatus   { get; set; } // smallint
+			[Column("column_count"),   NotNull    ] public short    ColumnCount   { get; set; } // smallint
+			[Column("row_count"),         Nullable] public decimal? RowCount      { get; set; } // numeric(10,0)
+			[Column("last_operation"), NotNull    ] public byte     LastOperation { get; set; } // tinyint
 		}
 
-		[Table(Schema="INFORMATION_SCHEMA", Name="ROUTINES", IsView=true)]
-		public partial class Routines
+		[Table(Schema="sys", Name="syscursortables", IsView=true)]
+		public partial class SysCursorTables
 		{
-			[Column("SPECIFIC_CATALOG"),            Nullable] public string?  SpecificCatalog        { get; set; } // nvarchar(128)
-			[Column("SPECIFIC_SCHEMA"),             Nullable] public string?  SpecificSchema         { get; set; } // nvarchar(128)
-			[Column("SPECIFIC_NAME"),            NotNull    ] public string   SpecificName           { get; set; } = null!; // sysname
-			[Column("ROUTINE_CATALOG"),             Nullable] public string?  RoutineCatalog         { get; set; } // nvarchar(128)
-			[Column("ROUTINE_SCHEMA"),              Nullable] public string?  RoutineSchema          { get; set; } // nvarchar(128)
-			[Column("ROUTINE_NAME"),             NotNull    ] public string   RoutineName            { get; set; } = null!; // sysname
-			[Column("ROUTINE_TYPE"),                Nullable] public string?  RoutineType            { get; set; } // nvarchar(20)
-			[Column("MODULE_CATALOG"),              Nullable] public string?  ModuleCatalog          { get; set; } // sysname
-			[Column("MODULE_SCHEMA"),               Nullable] public string?  ModuleSchema           { get; set; } // sysname
-			[Column("MODULE_NAME"),                 Nullable] public string?  ModuleName             { get; set; } // sysname
-			[Column("UDT_CATALOG"),                 Nullable] public string?  UdtCatalog             { get; set; } // sysname
-			[Column("UDT_SCHEMA"),                  Nullable] public string?  UdtSchema              { get; set; } // sysname
-			[Column("UDT_NAME"),                    Nullable] public string?  UdtName                { get; set; } // sysname
-			[Column("DATA_TYPE"),                   Nullable] public string?  DataType               { get; set; } // sysname
-			[Column("CHARACTER_MAXIMUM_LENGTH"),    Nullable] public int?     CharacterMaximumLength { get; set; } // int
-			[Column("CHARACTER_OCTET_LENGTH"),      Nullable] public int?     CharacterOctetLength   { get; set; } // int
-			[Column("COLLATION_CATALOG"),           Nullable] public string?  CollationCatalog       { get; set; } // sysname
-			[Column("COLLATION_SCHEMA"),            Nullable] public string?  CollationSchema        { get; set; } // sysname
-			[Column("COLLATION_NAME"),              Nullable] public string?  CollationName          { get; set; } // sysname
-			[Column("CHARACTER_SET_CATALOG"),       Nullable] public string?  CharacterSetCatalog    { get; set; } // sysname
-			[Column("CHARACTER_SET_SCHEMA"),        Nullable] public string?  CharacterSetSchema     { get; set; } // sysname
-			[Column("CHARACTER_SET_NAME"),          Nullable] public string?  CharacterSetName       { get; set; } // sysname
-			[Column("NUMERIC_PRECISION"),           Nullable] public byte?    NumericPrecision       { get; set; } // tinyint
-			[Column("NUMERIC_PRECISION_RADIX"),     Nullable] public short?   NumericPrecisionRadix  { get; set; } // smallint
-			[Column("NUMERIC_SCALE"),               Nullable] public int?     NumericScale           { get; set; } // int
-			[Column("DATETIME_PRECISION"),          Nullable] public short?   DatetimePrecision      { get; set; } // smallint
-			[Column("INTERVAL_TYPE"),               Nullable] public string?  IntervalType           { get; set; } // nvarchar(30)
-			[Column("INTERVAL_PRECISION"),          Nullable] public short?   IntervalPrecision      { get; set; } // smallint
-			[Column("TYPE_UDT_CATALOG"),            Nullable] public string?  TypeUdtCatalog         { get; set; } // sysname
-			[Column("TYPE_UDT_SCHEMA"),             Nullable] public string?  TypeUdtSchema          { get; set; } // sysname
-			[Column("TYPE_UDT_NAME"),               Nullable] public string?  TypeUdtName            { get; set; } // sysname
-			[Column("SCOPE_CATALOG"),               Nullable] public string?  ScopeCatalog           { get; set; } // sysname
-			[Column("SCOPE_SCHEMA"),                Nullable] public string?  ScopeSchema            { get; set; } // sysname
-			[Column("SCOPE_NAME"),                  Nullable] public string?  ScopeName              { get; set; } // sysname
-			[Column("MAXIMUM_CARDINALITY"),         Nullable] public long?    MaximumCardinality     { get; set; } // bigint
-			[Column("DTD_IDENTIFIER"),              Nullable] public string?  DtdIdentifier          { get; set; } // sysname
-			[Column("ROUTINE_BODY"),                Nullable] public string?  RoutineBody            { get; set; } // nvarchar(30)
-			[Column("ROUTINE_DEFINITION"),          Nullable] public string?  RoutineDefinition      { get; set; } // nvarchar(4000)
-			[Column("EXTERNAL_NAME"),               Nullable] public string?  ExternalName           { get; set; } // sysname
-			[Column("EXTERNAL_LANGUAGE"),           Nullable] public string?  ExternalLanguage       { get; set; } // nvarchar(30)
-			[Column("PARAMETER_STYLE"),             Nullable] public string?  ParameterStyle         { get; set; } // nvarchar(30)
-			[Column("IS_DETERMINISTIC"),            Nullable] public string?  IsDeterministic        { get; set; } // nvarchar(10)
-			[Column("SQL_DATA_ACCESS"),             Nullable] public string?  SqlDataAccess          { get; set; } // nvarchar(30)
-			[Column("IS_NULL_CALL"),                Nullable] public string?  IsNullCall             { get; set; } // nvarchar(10)
-			[Column("SQL_PATH"),                    Nullable] public string?  SqlPath                { get; set; } // sysname
-			[Column("SCHEMA_LEVEL_ROUTINE"),        Nullable] public string?  SchemaLevelRoutine     { get; set; } // nvarchar(10)
-			[Column("MAX_DYNAMIC_RESULT_SETS"),     Nullable] public short?   MaxDynamicResultSets   { get; set; } // smallint
-			[Column("IS_USER_DEFINED_CAST"),        Nullable] public string?  IsUserDefinedCast      { get; set; } // nvarchar(10)
-			[Column("IS_IMPLICITLY_INVOCABLE"),     Nullable] public string?  IsImplicitlyInvocable  { get; set; } // nvarchar(10)
-			[Column("CREATED"),                  NotNull    ] public DateTime Created                { get; set; } // datetime
-			[Column("LAST_ALTERED"),             NotNull    ] public DateTime LastAltered            { get; set; } // datetime
+			[Column("cursor_handle"),  NotNull    ] public int     CursorHandle  { get; set; } // int
+			[Column("table_owner"),       Nullable] public string? TableOwner    { get; set; } // nvarchar(128)
+			[Column("table_name"),        Nullable] public string? TableName     { get; set; } // nvarchar(128)
+			[Column("optimizer_hint"), NotNull    ] public short   OptimizerHint { get; set; } // smallint
+			[Column("lock_type"),      NotNull    ] public short   LockType      { get; set; } // smallint
+			[Column("server_name"),       Nullable] public string? ServerName    { get; set; } // nvarchar(128)
+			[Column("objectid"),       NotNull    ] public int     Objectid      { get; set; } // int
+			[Column("dbid"),           NotNull    ] public int     Dbid          { get; set; } // int
+			[Column("dbname"),            Nullable] public string? Dbname        { get; set; } // nvarchar(128)
 		}
 
-		[Table(Schema="INFORMATION_SCHEMA", Name="SCHEMATA", IsView=true)]
-		public partial class Schemata
+		[Table(Schema="sys", Name="sysdatabases", IsView=true)]
+		public partial class SysDatabases
 		{
-			[Column("CATALOG_NAME"),                     Nullable] public string? CatalogName                { get; set; } // nvarchar(128)
-			[Column("SCHEMA_NAME"),                   NotNull    ] public string  SchemaName                 { get; set; } = null!; // sysname
-			[Column("SCHEMA_OWNER"),                     Nullable] public string? SchemaOwner                { get; set; } // nvarchar(128)
-			[Column("DEFAULT_CHARACTER_SET_CATALOG"),    Nullable] public string? DefaultCharacterSetCatalog { get; set; } // sysname
-			[Column("DEFAULT_CHARACTER_SET_SCHEMA"),     Nullable] public string? DefaultCharacterSetSchema  { get; set; } // sysname
-			[Column("DEFAULT_CHARACTER_SET_NAME"),       Nullable] public string? DefaultCharacterSetName    { get; set; } // sysname
+			[Column("name"),         Nullable] public string?   Name      { get; set; } // sysname
+			[Column("dbid"),         Nullable] public short?    Dbid      { get; set; } // smallint
+			[Column("sid"),          Nullable] public byte[]?   Sid       { get; set; } // varbinary(85)
+			[Column("mode"),         Nullable] public short?    Mode      { get; set; } // smallint
+			[Column("status"),       Nullable] public int?      Status    { get; set; } // int
+			[Column("status2"),      Nullable] public int?      Status2   { get; set; } // int
+			[Column("crdate"),    NotNull    ] public DateTime  Crdate    { get; set; } // datetime
+			[Column("reserved"),     Nullable] public DateTime? Reserved  { get; set; } // datetime
+			[Column("category"),     Nullable] public int?      Category  { get; set; } // int
+			[Column("cmptlevel"), NotNull    ] public byte      Cmptlevel { get; set; } // tinyint
+			[Column("filename"),     Nullable] public string?   Filename  { get; set; } // nvarchar(260)
+			[Column("version"),      Nullable] public short?    Version   { get; set; } // smallint
 		}
 
-		[Table(Schema="INFORMATION_SCHEMA", Name="SEQUENCES", IsView=true)]
-		public partial class Sequences
+		[Table(Schema="sys", Name="sysdepends", IsView=true)]
+		public partial class SysDepends
 		{
-			[Column("SEQUENCE_CATALOG"),              Nullable] public string? SequenceCatalog          { get; set; } // nvarchar(128)
-			[Column("SEQUENCE_SCHEMA"),               Nullable] public string? SequenceSchema           { get; set; } // nvarchar(128)
-			[Column("SEQUENCE_NAME"),              NotNull    ] public string  SequenceName             { get; set; } = null!; // sysname
-			[Column("DATA_TYPE"),                  NotNull    ] public string  DataType                 { get; set; } = null!; // nvarchar(128)
-			[Column("NUMERIC_PRECISION"),          NotNull    ] public byte    NumericPrecision         { get; set; } // tinyint
-			[Column("NUMERIC_PRECISION_RADIX"),       Nullable] public short?  NumericPrecisionRadix    { get; set; } // smallint
-			[Column("NUMERIC_SCALE"),                 Nullable] public int?    NumericScale             { get; set; } // int
-			[Column("START_VALUE"),                NotNull    ] public object  StartValue               { get; set; } = null!; // sql_variant
-			[Column("MINIMUM_VALUE"),              NotNull    ] public object  MinimumValue             { get; set; } = null!; // sql_variant
-			[Column("MAXIMUM_VALUE"),              NotNull    ] public object  MaximumValue             { get; set; } = null!; // sql_variant
-			[Column("INCREMENT"),                  NotNull    ] public object  Increment                { get; set; } = null!; // sql_variant
-			[Column("CYCLE_OPTION"),                  Nullable] public bool?   CycleOption              { get; set; } // bit
-			[Column("DECLARED_DATA_TYPE"),         NotNull    ] public string  DeclaredDataType         { get; set; } = null!; // sysname
-			[Column("DECLARED_NUMERIC_PRECISION"), NotNull    ] public byte    DeclaredNumericPrecision { get; set; } // tinyint
-			[Column("DECLARED_NUMERIC_SCALE"),     NotNull    ] public byte    DeclaredNumericScale     { get; set; } // tinyint
+			[Column("id"),        NotNull    ] public int    Id        { get; set; } // int
+			[Column("depid"),     NotNull    ] public int    Depid     { get; set; } // int
+			[Column("number"),       Nullable] public short? Number    { get; set; } // smallint
+			[Column("depnumber"),    Nullable] public short? Depnumber { get; set; } // smallint
+			[Column("status"),       Nullable] public short? Status    { get; set; } // smallint
+			[Column("deptype"),   NotNull    ] public byte   Deptype   { get; set; } // tinyint
+			[Column("depdbid"),      Nullable] public short? Depdbid   { get; set; } // smallint
+			[Column("depsiteid"),    Nullable] public short? Depsiteid { get; set; } // smallint
+			[Column("selall"),    NotNull    ] public bool   Selall    { get; set; } // bit
+			[Column("resultobj"), NotNull    ] public bool   Resultobj { get; set; } // bit
+			[Column("readobj"),   NotNull    ] public bool   Readobj   { get; set; } // bit
 		}
 
-		[Table(Schema="INFORMATION_SCHEMA", Name="TABLE_CONSTRAINTS", IsView=true)]
-		public partial class TableConstraints
+		[Table(Schema="sys", Name="sysdevices", IsView=true)]
+		public partial class SysDevices
 		{
-			[Column("CONSTRAINT_CATALOG"),    Nullable] public string? ConstraintCatalog { get; set; } // nvarchar(128)
-			[Column("CONSTRAINT_SCHEMA"),     Nullable] public string? ConstraintSchema  { get; set; } // nvarchar(128)
-			[Column("CONSTRAINT_NAME"),    NotNull    ] public string  ConstraintName    { get; set; } = null!; // sysname
-			[Column("TABLE_CATALOG"),         Nullable] public string? TableCatalog      { get; set; } // nvarchar(128)
-			[Column("TABLE_SCHEMA"),          Nullable] public string? TableSchema       { get; set; } // nvarchar(128)
-			[Column("TABLE_NAME"),            Nullable] public string? TableName         { get; set; } // sysname
-			[Column("CONSTRAINT_TYPE"),       Nullable] public string? ConstraintType    { get; set; } // varchar(11)
-			[Column("IS_DEFERRABLE"),      NotNull    ] public string  IsDeferrable      { get; set; } = null!; // varchar(2)
-			[Column("INITIALLY_DEFERRED"), NotNull    ] public string  InitiallyDeferred { get; set; } = null!; // varchar(2)
+			[Column("name"),      NotNull    ] public string  Name      { get; set; } = null!; // sysname
+			[Column("size"),         Nullable] public int?    Size      { get; set; } // int
+			[Column("low"),          Nullable] public int?    Low       { get; set; } // int
+			[Column("high"),         Nullable] public int?    High      { get; set; } // int
+			[Column("status"),       Nullable] public short?  Status    { get; set; } // smallint
+			[Column("cntrltype"),    Nullable] public short?  Cntrltype { get; set; } // smallint
+			[Column("phyname"),      Nullable] public string? Phyname   { get; set; } // nvarchar(260)
 		}
 
-		[Table(Schema="INFORMATION_SCHEMA", Name="TABLE_PRIVILEGES", IsView=true)]
-		public partial class TablePrivileges
+		[Table(Schema="sys", Name="sysfilegroups", IsView=true)]
+		public partial class SysFileGroups
 		{
-			[Column("GRANTOR"),           Nullable] public string? Grantor       { get; set; } // nvarchar(128)
-			[Column("GRANTEE"),           Nullable] public string? Grantee       { get; set; } // nvarchar(128)
-			[Column("TABLE_CATALOG"),     Nullable] public string? TableCatalog  { get; set; } // nvarchar(128)
-			[Column("TABLE_SCHEMA"),      Nullable] public string? TableSchema   { get; set; } // nvarchar(128)
-			[Column("TABLE_NAME"),     NotNull    ] public string  TableName     { get; set; } = null!; // sysname
-			[Column("PRIVILEGE_TYPE"),    Nullable] public string? PrivilegeType { get; set; } // varchar(10)
-			[Column("IS_GRANTABLE"),      Nullable] public string? IsGrantable   { get; set; } // varchar(3)
+			[Column("groupid"),        Nullable] public short? Groupid     { get; set; } // smallint
+			[Column("allocpolicy"),    Nullable] public short? Allocpolicy { get; set; } // smallint
+			[Column("status"),         Nullable] public int?   Status      { get; set; } // int
+			[Column("groupname"),   NotNull    ] public string Groupname   { get; set; } = null!; // sysname
 		}
 
-		[Table(Schema="INFORMATION_SCHEMA", Name="TABLES", IsView=true)]
-		public partial class Tables
+		[Table(Schema="sys", Name="sysfiles", IsView=true)]
+		public partial class SysFiles
 		{
-			[Column("TABLE_CATALOG"),    Nullable] public string? TableCatalog { get; set; } // nvarchar(128)
-			[Column("TABLE_SCHEMA"),     Nullable] public string? TableSchema  { get; set; } // sysname
-			[Column("TABLE_NAME"),    NotNull    ] public string  TableName    { get; set; } = null!; // sysname
-			[Column("TABLE_TYPE"),       Nullable] public string? TableType    { get; set; } // varchar(10)
+			[Column("fileid"),      Nullable] public short?  Fileid   { get; set; } // smallint
+			[Column("groupid"),     Nullable] public short?  Groupid  { get; set; } // smallint
+			[Column("size"),     NotNull    ] public int     Size     { get; set; } // int
+			[Column("maxsize"),  NotNull    ] public int     Maxsize  { get; set; } // int
+			[Column("growth"),   NotNull    ] public int     Growth   { get; set; } // int
+			[Column("status"),      Nullable] public int?    Status   { get; set; } // int
+			[Column("perf"),        Nullable] public int?    Perf     { get; set; } // int
+			[Column("name"),     NotNull    ] public string  Name     { get; set; } = null!; // sysname
+			[Column("filename"),    Nullable] public string? Filename { get; set; } // nvarchar(260)
 		}
 
-		[Table(Schema="INFORMATION_SCHEMA", Name="VIEW_COLUMN_USAGE", IsView=true)]
-		public partial class ViewColumnUsage
+		[Table(Schema="sys", Name="sysforeignkeys", IsView=true)]
+		public partial class SysForeignKeys
 		{
-			[Column("VIEW_CATALOG"),     Nullable] public string? ViewCatalog  { get; set; } // nvarchar(128)
-			[Column("VIEW_SCHEMA"),      Nullable] public string? ViewSchema   { get; set; } // nvarchar(128)
-			[Column("VIEW_NAME"),     NotNull    ] public string  ViewName     { get; set; } = null!; // sysname
-			[Column("TABLE_CATALOG"),    Nullable] public string? TableCatalog { get; set; } // nvarchar(128)
-			[Column("TABLE_SCHEMA"),     Nullable] public string? TableSchema  { get; set; } // nvarchar(128)
-			[Column("TABLE_NAME"),    NotNull    ] public string  TableName    { get; set; } = null!; // sysname
-			[Column("COLUMN_NAME"),      Nullable] public string? ColumnName   { get; set; } // sysname
+			[Column("constid"), NotNull    ] public int    Constid { get; set; } // int
+			[Column("fkeyid"),  NotNull    ] public int    Fkeyid  { get; set; } // int
+			[Column("rkeyid"),  NotNull    ] public int    Rkeyid  { get; set; } // int
+			[Column("fkey"),       Nullable] public short? Fkey    { get; set; } // smallint
+			[Column("rkey"),       Nullable] public short? Rkey    { get; set; } // smallint
+			[Column("keyno"),      Nullable] public short? Keyno   { get; set; } // smallint
 		}
 
-		[Table(Schema="INFORMATION_SCHEMA", Name="VIEWS", IsView=true)]
-		public partial class Views
+		[Table(Schema="sys", Name="sysfulltextcatalogs", IsView=true)]
+		public partial class SysFullTextCatalogs
 		{
-			[Column("TABLE_CATALOG"),      Nullable] public string? TableCatalog   { get; set; } // nvarchar(128)
-			[Column("TABLE_SCHEMA"),       Nullable] public string? TableSchema    { get; set; } // nvarchar(128)
-			[Column("TABLE_NAME"),      NotNull    ] public string  TableName      { get; set; } = null!; // sysname
-			[Column("VIEW_DEFINITION"),    Nullable] public string? ViewDefinition { get; set; } // nvarchar(4000)
-			[Column("CHECK_OPTION"),       Nullable] public string? CheckOption    { get; set; } // varchar(7)
-			[Column("IS_UPDATABLE"),    NotNull    ] public string  IsUpdatable    { get; set; } = null!; // varchar(2)
+			[Column("ftcatid"),    Nullable] public short?  Ftcatid { get; set; } // smallint
+			[Column("name"),    NotNull    ] public string  Name    { get; set; } = null!; // sysname
+			[Column("status"),     Nullable] public short?  Status  { get; set; } // smallint
+			[Column("path"),       Nullable] public string? Path    { get; set; } // nvarchar(260)
 		}
 
-		[Table(Schema="INFORMATION_SCHEMA", Name="VIEW_TABLE_USAGE", IsView=true)]
-		public partial class ViewTableUsage
+		[Table(Schema="sys", Name="sysindexes", IsView=true)]
+		public partial class SysIndexes
 		{
-			[Column("VIEW_CATALOG"),     Nullable] public string? ViewCatalog  { get; set; } // nvarchar(128)
-			[Column("VIEW_SCHEMA"),      Nullable] public string? ViewSchema   { get; set; } // nvarchar(128)
-			[Column("VIEW_NAME"),     NotNull    ] public string  ViewName     { get; set; } = null!; // sysname
-			[Column("TABLE_CATALOG"),    Nullable] public string? TableCatalog { get; set; } // nvarchar(128)
-			[Column("TABLE_SCHEMA"),     Nullable] public string? TableSchema  { get; set; } // nvarchar(128)
-			[Column("TABLE_NAME"),    NotNull    ] public string  TableName    { get; set; } = null!; // sysname
+			[Column("id"),        NotNull    ] public int     Id             { get; set; } // int
+			[Column("status"),       Nullable] public int?    Status         { get; set; } // int
+			[Column("first"),        Nullable] public byte[]? First          { get; set; } // binary(6)
+			[Column("indid"),        Nullable] public short?  Indid          { get; set; } // smallint
+			[Column("root"),         Nullable] public byte[]? Root           { get; set; } // binary(6)
+			[Column("minlen"),       Nullable] public short?  Minlen         { get; set; } // smallint
+			[Column("keycnt"),       Nullable] public short?  Keycnt         { get; set; } // smallint
+			[Column("groupid"),      Nullable] public short?  Groupid        { get; set; } // smallint
+			[Column("dpages"),       Nullable] public int?    Dpages         { get; set; } // int
+			[Column("reserved"),     Nullable] public int?    Reserved       { get; set; } // int
+			[Column("used"),         Nullable] public int?    Used           { get; set; } // int
+			[Column("rowcnt"),       Nullable] public long?   Rowcnt         { get; set; } // bigint
+			[Column("rowmodctr"),    Nullable] public int?    Rowmodctr      { get; set; } // int
+			[Column("reserved3"),    Nullable] public byte?   Reserved3      { get; set; } // tinyint
+			[Column("reserved4"),    Nullable] public byte?   Reserved4      { get; set; } // tinyint
+			[Column("xmaxlen"),      Nullable] public short?  Xmaxlen        { get; set; } // smallint
+			[Column("maxirow"),      Nullable] public short?  Maxirow        { get; set; } // smallint
+			[Column(),               Nullable] public byte?   OrigFillFactor { get; set; } // tinyint
+			[Column(),               Nullable] public byte?   StatVersion    { get; set; } // tinyint
+			[Column("reserved2"),    Nullable] public int?    Reserved2      { get; set; } // int
+			[Column(),               Nullable] public byte[]? FirstIAM       { get; set; } // binary(6)
+			[Column("impid"),        Nullable] public short?  Impid          { get; set; } // smallint
+			[Column("lockflags"),    Nullable] public short?  Lockflags      { get; set; } // smallint
+			[Column("pgmodctr"),     Nullable] public int?    Pgmodctr       { get; set; } // int
+			[Column("keys"),         Nullable] public byte[]? Keys           { get; set; } // varbinary(1088)
+			[Column("name"),         Nullable] public string? Name           { get; set; } // sysname
+			[Column("statblob"),     Nullable] public byte[]? Statblob       { get; set; } // image(16)
+			[Column("maxlen"),       Nullable] public int?    Maxlen         { get; set; } // int
+			[Column("rows"),         Nullable] public int?    Rows           { get; set; } // int
+		}
+
+		[Table(Schema="sys", Name="sysindexkeys", IsView=true)]
+		public partial class SysIndexKeys
+		{
+			[Column("id"),    NotNull    ] public int    Id    { get; set; } // int
+			[Column("indid"),    Nullable] public short? Indid { get; set; } // smallint
+			[Column("colid"),    Nullable] public short? Colid { get; set; } // smallint
+			[Column("keyno"),    Nullable] public short? Keyno { get; set; } // smallint
+		}
+
+		[Table(Schema="sys", Name="syslanguages", IsView=true)]
+		public partial class SysLanguages
+		{
+			[Column("langid"),      NotNull    ] public short   Langid      { get; set; } // smallint
+			[Column("dateformat"),  NotNull    ] public string  Dateformat  { get; set; } = null!; // nchar(3)
+			[Column("datefirst"),   NotNull    ] public byte    Datefirst   { get; set; } // tinyint
+			[Column("upgrade"),        Nullable] public int?    Upgrade     { get; set; } // int
+			[Column("name"),        NotNull    ] public string  Name        { get; set; } = null!; // nvarchar(128)
+			[Column("alias"),       NotNull    ] public string  Alias       { get; set; } = null!; // nvarchar(128)
+			[Column("months"),         Nullable] public string? Months      { get; set; } // nvarchar(372)
+			[Column("shortmonths"),    Nullable] public string? Shortmonths { get; set; } // nvarchar(132)
+			[Column("days"),           Nullable] public string? Days        { get; set; } // nvarchar(217)
+			[Column("lcid"),        NotNull    ] public int     Lcid        { get; set; } // int
+			[Column("msglangid"),   NotNull    ] public short   Msglangid   { get; set; } // smallint
+		}
+
+		[Table(Schema="sys", Name="syslockinfo", IsView=true)]
+		public partial class SysLockInfo
+		{
+			[Column("rsc_text"),           NotNull    ] public string RscText           { get; set; } = null!; // nchar(32)
+			[Column("rsc_bin"),            NotNull    ] public byte[] RscBin            { get; set; } = null!; // binary(16)
+			[Column("rsc_valblk"),         NotNull    ] public byte[] RscValblk         { get; set; } = null!; // binary(16)
+			[Column("rsc_dbid"),           NotNull    ] public short  RscDbid           { get; set; } // smallint
+			[Column("rsc_indid"),          NotNull    ] public short  RscIndid          { get; set; } // smallint
+			[Column("rsc_objid"),          NotNull    ] public int    RscObjid          { get; set; } // int
+			[Column("rsc_type"),           NotNull    ] public byte   RscType           { get; set; } // tinyint
+			[Column("rsc_flag"),           NotNull    ] public byte   RscFlag           { get; set; } // tinyint
+			[Column("req_mode"),           NotNull    ] public byte   ReqMode           { get; set; } // tinyint
+			[Column("req_status"),         NotNull    ] public byte   ReqStatus         { get; set; } // tinyint
+			[Column("req_refcnt"),         NotNull    ] public short  ReqRefcnt         { get; set; } // smallint
+			[Column("req_cryrefcnt"),      NotNull    ] public short  ReqCryrefcnt      { get; set; } // smallint
+			[Column("req_lifetime"),       NotNull    ] public int    ReqLifetime       { get; set; } // int
+			[Column("req_spid"),           NotNull    ] public int    ReqSpid           { get; set; } // int
+			[Column("req_ecid"),           NotNull    ] public int    ReqEcid           { get; set; } // int
+			[Column("req_ownertype"),      NotNull    ] public short  ReqOwnertype      { get; set; } // smallint
+			[Column("req_transactionID"),     Nullable] public long?  ReqTransactionID  { get; set; } // bigint
+			[Column("req_transactionUOW"),    Nullable] public Guid?  ReqTransactionUOW { get; set; } // uniqueidentifier
+		}
+
+		[Table(Schema="sys", Name="syslogins", IsView=true)]
+		public partial class SysLogins
+		{
+			[Column("sid"),              Nullable] public byte[]?  Sid           { get; set; } // varbinary(85)
+			[Column("status"),           Nullable] public short?   Status        { get; set; } // smallint
+			[Column("createdate"),    NotNull    ] public DateTime Createdate    { get; set; } // datetime
+			[Column("updatedate"),    NotNull    ] public DateTime Updatedate    { get; set; } // datetime
+			[Column("accdate"),       NotNull    ] public DateTime Accdate       { get; set; } // datetime
+			[Column("totcpu"),           Nullable] public int?     Totcpu        { get; set; } // int
+			[Column("totio"),            Nullable] public int?     Totio         { get; set; } // int
+			[Column("spacelimit"),       Nullable] public int?     Spacelimit    { get; set; } // int
+			[Column("timelimit"),        Nullable] public int?     Timelimit     { get; set; } // int
+			[Column("resultlimit"),      Nullable] public int?     Resultlimit   { get; set; } // int
+			[Column("name"),          NotNull    ] public string   Name          { get; set; } = null!; // sysname
+			[Column("dbname"),           Nullable] public string?  Dbname        { get; set; } // sysname
+			[Column("password"),         Nullable] public string?  Password      { get; set; } // sysname
+			[Column("language"),         Nullable] public string?  Language      { get; set; } // sysname
+			[Column("denylogin"),        Nullable] public int?     Denylogin     { get; set; } // int
+			[Column("hasaccess"),        Nullable] public int?     Hasaccess     { get; set; } // int
+			[Column("isntname"),         Nullable] public int?     Isntname      { get; set; } // int
+			[Column("isntgroup"),        Nullable] public int?     Isntgroup     { get; set; } // int
+			[Column("isntuser"),         Nullable] public int?     Isntuser      { get; set; } // int
+			[Column("sysadmin"),         Nullable] public int?     Sysadmin      { get; set; } // int
+			[Column("securityadmin"),    Nullable] public int?     Securityadmin { get; set; } // int
+			[Column("serveradmin"),      Nullable] public int?     Serveradmin   { get; set; } // int
+			[Column("setupadmin"),       Nullable] public int?     Setupadmin    { get; set; } // int
+			[Column("processadmin"),     Nullable] public int?     Processadmin  { get; set; } // int
+			[Column("diskadmin"),        Nullable] public int?     Diskadmin     { get; set; } // int
+			[Column("dbcreator"),        Nullable] public int?     Dbcreator     { get; set; } // int
+			[Column("bulkadmin"),        Nullable] public int?     Bulkadmin     { get; set; } // int
+			[Column("loginname"),     NotNull    ] public string   Loginname     { get; set; } = null!; // sysname
+		}
+
+		[Table(Schema="sys", Name="sysmembers", IsView=true)]
+		public partial class SysMembers
+		{
+			[Column("memberuid"), Nullable] public short? Memberuid { get; set; } // smallint
+			[Column("groupuid"),  Nullable] public short? Groupuid  { get; set; } // smallint
+		}
+
+		[Table(Schema="sys", Name="sysmessages", IsView=true)]
+		public partial class SysMessages
+		{
+			[Column("error"),       NotNull    ] public int     Error       { get; set; } // int
+			[Column("severity"),       Nullable] public byte?   Severity    { get; set; } // tinyint
+			[Column("dlevel"),         Nullable] public short?  Dlevel      { get; set; } // smallint
+			[Column("description"),    Nullable] public string? Description { get; set; } // nvarchar(255)
+			[Column("msglangid"),   NotNull    ] public short   Msglangid   { get; set; } // smallint
+		}
+
+		[Table(Schema="sys", Name="sysobjects", IsView=true)]
+		public partial class SysObjects
+		{
+			[Column("name"),             NotNull    ] public string   Name           { get; set; } = null!; // sysname
+			[Column("id"),               NotNull    ] public int      Id             { get; set; } // int
+			[Column("xtype"),            NotNull    ] public string   Xtype          { get; set; } = null!; // char(2)
+			[Column("uid"),                 Nullable] public short?   Uid            { get; set; } // smallint
+			[Column("info"),                Nullable] public short?   Info           { get; set; } // smallint
+			[Column("status"),              Nullable] public int?     Status         { get; set; } // int
+			[Column("base_schema_ver"),     Nullable] public int?     BaseSchemaVer  { get; set; } // int
+			[Column("replinfo"),            Nullable] public int?     Replinfo       { get; set; } // int
+			[Column("parent_obj"),       NotNull    ] public int      ParentObj      { get; set; } // int
+			[Column("crdate"),           NotNull    ] public DateTime Crdate         { get; set; } // datetime
+			[Column("ftcatid"),             Nullable] public short?   Ftcatid        { get; set; } // smallint
+			[Column("schema_ver"),          Nullable] public int?     SchemaVer      { get; set; } // int
+			[Column("stats_schema_ver"),    Nullable] public int?     StatsSchemaVer { get; set; } // int
+			[Column("type"),                Nullable] public string?  Type           { get; set; } // char(2)
+			[Column("userstat"),            Nullable] public short?   Userstat       { get; set; } // smallint
+			[Column("sysstat"),             Nullable] public short?   Sysstat        { get; set; } // smallint
+			[Column("indexdel"),            Nullable] public short?   Indexdel       { get; set; } // smallint
+			[Column("refdate"),          NotNull    ] public DateTime Refdate        { get; set; } // datetime
+			[Column("version"),             Nullable] public int?     Version        { get; set; } // int
+			[Column("deltrig"),             Nullable] public int?     Deltrig        { get; set; } // int
+			[Column("instrig"),             Nullable] public int?     Instrig        { get; set; } // int
+			[Column("updtrig"),             Nullable] public int?     Updtrig        { get; set; } // int
+			[Column("seltrig"),             Nullable] public int?     Seltrig        { get; set; } // int
+			[Column("category"),            Nullable] public int?     Category       { get; set; } // int
+			[Column("cache"),               Nullable] public short?   Cache          { get; set; } // smallint
+		}
+
+		[Table(Schema="sys", Name="sysoledbusers", IsView=true)]
+		public partial class SysOleDBUsers
+		{
+			[Column("rmtsrvid"),       Nullable] public short?   Rmtsrvid    { get; set; } // smallint
+			[Column("rmtloginame"),    Nullable] public string?  Rmtloginame { get; set; } // sysname
+			[Column("rmtpassword"),    Nullable] public string?  Rmtpassword { get; set; } // sysname
+			[Column("loginsid"),       Nullable] public byte[]?  Loginsid    { get; set; } // varbinary(85)
+			[Column("status"),         Nullable] public short?   Status      { get; set; } // smallint
+			[Column("changedate"),  NotNull    ] public DateTime Changedate  { get; set; } // datetime
+		}
+
+		[Table(Schema="sys", Name="sysopentapes", IsView=true)]
+		public partial class SysOpenTapes
+		{
+			[Column("openTape"), NotNull] public string OpenTape { get; set; } = null!; // nvarchar(64)
+		}
+
+		[Table(Schema="sys", Name="sysperfinfo", IsView=true)]
+		public partial class SysPerfInfo
+		{
+			[Column("object_name"),   NotNull    ] public string  ObjectName   { get; set; } = null!; // nchar(128)
+			[Column("counter_name"),  NotNull    ] public string  CounterName  { get; set; } = null!; // nchar(128)
+			[Column("instance_name"),    Nullable] public string? InstanceName { get; set; } // nchar(128)
+			[Column("cntr_value"),    NotNull    ] public long    CntrValue    { get; set; } // bigint
+			[Column("cntr_type"),     NotNull    ] public int     CntrType     { get; set; } // int
+		}
+
+		[Table(Schema="sys", Name="syspermissions", IsView=true)]
+		public partial class SysPermissions
+		{
+			[Column("id"),      NotNull    ] public int     Id      { get; set; } // int
+			[Column("grantee"),    Nullable] public short?  Grantee { get; set; } // smallint
+			[Column("grantor"),    Nullable] public short?  Grantor { get; set; } // smallint
+			[Column("actadd"),     Nullable] public short?  Actadd  { get; set; } // smallint
+			[Column("actmod"),     Nullable] public short?  Actmod  { get; set; } // smallint
+			[Column("seladd"),     Nullable] public byte[]? Seladd  { get; set; } // varbinary(4000)
+			[Column("selmod"),     Nullable] public byte[]? Selmod  { get; set; } // varbinary(4000)
+			[Column("updadd"),     Nullable] public byte[]? Updadd  { get; set; } // varbinary(4000)
+			[Column("updmod"),     Nullable] public byte[]? Updmod  { get; set; } // varbinary(4000)
+			[Column("refadd"),     Nullable] public byte[]? Refadd  { get; set; } // varbinary(4000)
+			[Column("refmod"),     Nullable] public byte[]? Refmod  { get; set; } // varbinary(4000)
+		}
+
+		[Table(Schema="sys", Name="sysprocesses", IsView=true)]
+		public partial class SysProcesses
+		{
+			[Column("spid"),          NotNull    ] public short    Spid         { get; set; } // smallint
+			[Column("kpid"),          NotNull    ] public short    Kpid         { get; set; } // smallint
+			[Column("blocked"),       NotNull    ] public short    Blocked      { get; set; } // smallint
+			[Column("waittype"),      NotNull    ] public byte[]   Waittype     { get; set; } = null!; // binary(2)
+			[Column("waittime"),      NotNull    ] public long     Waittime     { get; set; } // bigint
+			[Column("lastwaittype"),  NotNull    ] public string   Lastwaittype { get; set; } = null!; // nchar(32)
+			[Column("waitresource"),  NotNull    ] public string   Waitresource { get; set; } = null!; // nchar(256)
+			[Column("dbid"),          NotNull    ] public short    Dbid         { get; set; } // smallint
+			[Column("uid"),              Nullable] public short?   Uid          { get; set; } // smallint
+			[Column("cpu"),           NotNull    ] public int      Cpu          { get; set; } // int
+			[Column("physical_io"),   NotNull    ] public long     PhysicalIo   { get; set; } // bigint
+			[Column("memusage"),      NotNull    ] public int      Memusage     { get; set; } // int
+			[Column("login_time"),    NotNull    ] public DateTime LoginTime    { get; set; } // datetime
+			[Column("last_batch"),    NotNull    ] public DateTime LastBatch    { get; set; } // datetime
+			[Column("ecid"),          NotNull    ] public short    Ecid         { get; set; } // smallint
+			[Column("open_tran"),     NotNull    ] public short    OpenTran     { get; set; } // smallint
+			[Column("status"),        NotNull    ] public string   Status       { get; set; } = null!; // nchar(30)
+			[Column("sid"),           NotNull    ] public byte[]   Sid          { get; set; } = null!; // binary(86)
+			[Column("hostname"),      NotNull    ] public string   Hostname     { get; set; } = null!; // nchar(128)
+			[Column("program_name"),  NotNull    ] public string   ProgramName  { get; set; } = null!; // nchar(128)
+			[Column("hostprocess"),   NotNull    ] public string   Hostprocess  { get; set; } = null!; // nchar(10)
+			[Column("cmd"),           NotNull    ] public string   Cmd          { get; set; } = null!; // nchar(26)
+			[Column("nt_domain"),     NotNull    ] public string   NtDomain     { get; set; } = null!; // nchar(128)
+			[Column("nt_username"),   NotNull    ] public string   NtUsername   { get; set; } = null!; // nchar(128)
+			[Column("net_address"),   NotNull    ] public string   NetAddress   { get; set; } = null!; // nchar(12)
+			[Column("net_library"),   NotNull    ] public string   NetLibrary   { get; set; } = null!; // nchar(12)
+			[Column("loginame"),      NotNull    ] public string   Loginame     { get; set; } = null!; // nchar(128)
+			[Column("context_info"),  NotNull    ] public byte[]   ContextInfo  { get; set; } = null!; // binary(128)
+			[Column("sql_handle"),    NotNull    ] public byte[]   SqlHandle    { get; set; } = null!; // binary(20)
+			[Column("stmt_start"),    NotNull    ] public int      StmtStart    { get; set; } // int
+			[Column("stmt_end"),      NotNull    ] public int      StmtEnd      { get; set; } // int
+			[Column("request_id"),    NotNull    ] public int      RequestID    { get; set; } // int
+			[Column("page_resource"),    Nullable] public byte[]?  PageResource { get; set; } // varbinary(8)
+		}
+
+		[Table(Schema="sys", Name="sysprotects", IsView=true)]
+		public partial class SysProtects
+		{
+			[Column("id"),          NotNull    ] public int     Id          { get; set; } // int
+			[Column("uid"),            Nullable] public short?  Uid         { get; set; } // smallint
+			[Column("action"),         Nullable] public byte?   Action      { get; set; } // tinyint
+			[Column("protecttype"),    Nullable] public byte?   Protecttype { get; set; } // tinyint
+			[Column("columns"),        Nullable] public byte[]? Columns     { get; set; } // varbinary(8000)
+			[Column("grantor"),        Nullable] public short?  Grantor     { get; set; } // smallint
+		}
+
+		[Table(Schema="sys", Name="sysreferences", IsView=true)]
+		public partial class SysReferences
+		{
+			[Column("constid"),   NotNull    ] public int     Constid   { get; set; } // int
+			[Column("fkeyid"),    NotNull    ] public int     Fkeyid    { get; set; } // int
+			[Column("rkeyid"),       Nullable] public int?    Rkeyid    { get; set; } // int
+			[Column("rkeyindid"),    Nullable] public short?  Rkeyindid { get; set; } // smallint
+			[Column("keycnt"),       Nullable] public short?  Keycnt    { get; set; } // smallint
+			[Column("forkeys"),      Nullable] public byte[]? Forkeys   { get; set; } // varbinary(32)
+			[Column("refkeys"),      Nullable] public byte[]? Refkeys   { get; set; } // varbinary(32)
+			[Column("fkeydbid"),     Nullable] public short?  Fkeydbid  { get; set; } // smallint
+			[Column("rkeydbid"),     Nullable] public short?  Rkeydbid  { get; set; } // smallint
+			[Column("fkey1"),        Nullable] public short?  Fkey1     { get; set; } // smallint
+			[Column("fkey2"),        Nullable] public short?  Fkey2     { get; set; } // smallint
+			[Column("fkey3"),        Nullable] public short?  Fkey3     { get; set; } // smallint
+			[Column("fkey4"),        Nullable] public short?  Fkey4     { get; set; } // smallint
+			[Column("fkey5"),        Nullable] public short?  Fkey5     { get; set; } // smallint
+			[Column("fkey6"),        Nullable] public short?  Fkey6     { get; set; } // smallint
+			[Column("fkey7"),        Nullable] public short?  Fkey7     { get; set; } // smallint
+			[Column("fkey8"),        Nullable] public short?  Fkey8     { get; set; } // smallint
+			[Column("fkey9"),        Nullable] public short?  Fkey9     { get; set; } // smallint
+			[Column("fkey10"),       Nullable] public short?  Fkey10    { get; set; } // smallint
+			[Column("fkey11"),       Nullable] public short?  Fkey11    { get; set; } // smallint
+			[Column("fkey12"),       Nullable] public short?  Fkey12    { get; set; } // smallint
+			[Column("fkey13"),       Nullable] public short?  Fkey13    { get; set; } // smallint
+			[Column("fkey14"),       Nullable] public short?  Fkey14    { get; set; } // smallint
+			[Column("fkey15"),       Nullable] public short?  Fkey15    { get; set; } // smallint
+			[Column("fkey16"),       Nullable] public short?  Fkey16    { get; set; } // smallint
+			[Column("rkey1"),        Nullable] public short?  Rkey1     { get; set; } // smallint
+			[Column("rkey2"),        Nullable] public short?  Rkey2     { get; set; } // smallint
+			[Column("rkey3"),        Nullable] public short?  Rkey3     { get; set; } // smallint
+			[Column("rkey4"),        Nullable] public short?  Rkey4     { get; set; } // smallint
+			[Column("rkey5"),        Nullable] public short?  Rkey5     { get; set; } // smallint
+			[Column("rkey6"),        Nullable] public short?  Rkey6     { get; set; } // smallint
+			[Column("rkey7"),        Nullable] public short?  Rkey7     { get; set; } // smallint
+			[Column("rkey8"),        Nullable] public short?  Rkey8     { get; set; } // smallint
+			[Column("rkey9"),        Nullable] public short?  Rkey9     { get; set; } // smallint
+			[Column("rkey10"),       Nullable] public short?  Rkey10    { get; set; } // smallint
+			[Column("rkey11"),       Nullable] public short?  Rkey11    { get; set; } // smallint
+			[Column("rkey12"),       Nullable] public short?  Rkey12    { get; set; } // smallint
+			[Column("rkey13"),       Nullable] public short?  Rkey13    { get; set; } // smallint
+			[Column("rkey14"),       Nullable] public short?  Rkey14    { get; set; } // smallint
+			[Column("rkey15"),       Nullable] public short?  Rkey15    { get; set; } // smallint
+			[Column("rkey16"),       Nullable] public short?  Rkey16    { get; set; } // smallint
+		}
+
+		[Table(Schema="sys", Name="sysremotelogins", IsView=true)]
+		public partial class SysRemoteLogins
+		{
+			[Column("remoteserverid"),    Nullable] public short?   Remoteserverid { get; set; } // smallint
+			[Column("remoteusername"),    Nullable] public string?  Remoteusername { get; set; } // sysname
+			[Column("status"),            Nullable] public short?   Status         { get; set; } // smallint
+			[Column("sid"),               Nullable] public byte[]?  Sid            { get; set; } // varbinary(85)
+			[Column("changedate"),     NotNull    ] public DateTime Changedate     { get; set; } // datetime
+		}
+
+		[Table(Schema="sys", Name="sysservers", IsView=true)]
+		public partial class SysServers
+		{
+			[Column("srvid"),                   Nullable] public short?   Srvid                { get; set; } // smallint
+			[Column("srvstatus"),               Nullable] public short?   Srvstatus            { get; set; } // smallint
+			[Column("srvname"),              NotNull    ] public string   Srvname              { get; set; } = null!; // sysname
+			[Column("srvproduct"),           NotNull    ] public string   Srvproduct           { get; set; } = null!; // sysname
+			[Column("providername"),         NotNull    ] public string   Providername         { get; set; } = null!; // nvarchar(128)
+			[Column("datasource"),              Nullable] public string?  Datasource           { get; set; } // nvarchar(4000)
+			[Column("location"),                Nullable] public string?  Location             { get; set; } // nvarchar(4000)
+			[Column("providerstring"),          Nullable] public string?  Providerstring       { get; set; } // nvarchar(4000)
+			[Column("schemadate"),           NotNull    ] public DateTime Schemadate           { get; set; } // datetime
+			[Column("topologyx"),               Nullable] public int?     Topologyx            { get; set; } // int
+			[Column("topologyy"),               Nullable] public int?     Topologyy            { get; set; } // int
+			[Column("catalog"),                 Nullable] public string?  Catalog              { get; set; } // sysname
+			[Column("srvcollation"),            Nullable] public string?  Srvcollation         { get; set; } // sysname
+			[Column("connecttimeout"),          Nullable] public int?     Connecttimeout       { get; set; } // int
+			[Column("querytimeout"),            Nullable] public int?     Querytimeout         { get; set; } // int
+			[Column("srvnetname"),              Nullable] public string?  Srvnetname           { get; set; } // char(30)
+			[Column("isremote"),                Nullable] public bool?    Isremote             { get; set; } // bit
+			[Column("rpc"),                  NotNull    ] public bool     Rpc                  { get; set; } // bit
+			[Column("pub"),                  NotNull    ] public bool     Pub                  { get; set; } // bit
+			[Column("sub"),                     Nullable] public bool?    Sub                  { get; set; } // bit
+			[Column("dist"),                    Nullable] public bool?    Dist                 { get; set; } // bit
+			[Column("dpub"),                    Nullable] public bool?    Dpub                 { get; set; } // bit
+			[Column("rpcout"),               NotNull    ] public bool     Rpcout               { get; set; } // bit
+			[Column("dataaccess"),           NotNull    ] public bool     Dataaccess           { get; set; } // bit
+			[Column("collationcompatible"),  NotNull    ] public bool     Collationcompatible  { get; set; } // bit
+			[Column("system"),               NotNull    ] public bool     System               { get; set; } // bit
+			[Column("useremotecollation"),   NotNull    ] public bool     Useremotecollation   { get; set; } // bit
+			[Column("lazyschemavalidation"), NotNull    ] public bool     Lazyschemavalidation { get; set; } // bit
+			[Column("collation"),               Nullable] public string?  Collation            { get; set; } // sysname
+			[Column("nonsqlsub"),               Nullable] public bool?    Nonsqlsub            { get; set; } // bit
+		}
+
+		[Table(Schema="sys", Name="systypes", IsView=true)]
+		public partial class SysTypes
+		{
+			[Column("name"),        NotNull    ] public string  Name        { get; set; } = null!; // sysname
+			[Column("xtype"),       NotNull    ] public byte    Xtype       { get; set; } // tinyint
+			[Column("status"),         Nullable] public byte?   Status      { get; set; } // tinyint
+			[Column("xusertype"),      Nullable] public short?  Xusertype   { get; set; } // smallint
+			[Column("length"),      NotNull    ] public short   Length      { get; set; } // smallint
+			[Column("xprec"),       NotNull    ] public byte    Xprec       { get; set; } // tinyint
+			[Column("xscale"),      NotNull    ] public byte    Xscale      { get; set; } // tinyint
+			[Column("tdefault"),    NotNull    ] public int     Tdefault    { get; set; } // int
+			[Column("domain"),      NotNull    ] public int     Domain      { get; set; } // int
+			[Column("uid"),            Nullable] public short?  Uid         { get; set; } // smallint
+			[Column("reserved"),       Nullable] public short?  Reserved    { get; set; } // smallint
+			[Column("collationid"),    Nullable] public int?    Collationid { get; set; } // int
+			[Column("usertype"),       Nullable] public short?  Usertype    { get; set; } // smallint
+			[Column("variable"),    NotNull    ] public bool    Variable    { get; set; } // bit
+			[Column("allownulls"),     Nullable] public bool?   Allownulls  { get; set; } // bit
+			[Column("type"),        NotNull    ] public byte    Type        { get; set; } // tinyint
+			[Column("printfmt"),       Nullable] public string? Printfmt    { get; set; } // varchar(255)
+			[Column("prec"),           Nullable] public short?  Prec        { get; set; } // smallint
+			[Column("scale"),          Nullable] public byte?   Scale       { get; set; } // tinyint
+			[Column("collation"),      Nullable] public string? Collation   { get; set; } // sysname
+		}
+
+		[Table(Schema="sys", Name="sysusers", IsView=true)]
+		public partial class SysUsers
+		{
+			[Column("uid"),            Nullable] public short?   Uid         { get; set; } // smallint
+			[Column("status"),         Nullable] public short?   Status      { get; set; } // smallint
+			[Column("name"),        NotNull    ] public string   Name        { get; set; } = null!; // sysname
+			[Column("sid"),            Nullable] public byte[]?  Sid         { get; set; } // varbinary(85)
+			[Column("roles"),          Nullable] public byte[]?  Roles       { get; set; } // varbinary(2048)
+			[Column("createdate"),  NotNull    ] public DateTime Createdate  { get; set; } // datetime
+			[Column("updatedate"),  NotNull    ] public DateTime Updatedate  { get; set; } // datetime
+			[Column("altuid"),         Nullable] public short?   Altuid      { get; set; } // smallint
+			[Column("password"),       Nullable] public byte[]?  Password    { get; set; } // varbinary(256)
+			[Column("gid"),            Nullable] public short?   Gid         { get; set; } // smallint
+			[Column("environ"),        Nullable] public string?  Environ     { get; set; } // varchar(255)
+			[Column("hasdbaccess"),    Nullable] public int?     Hasdbaccess { get; set; } // int
+			[Column("islogin"),        Nullable] public int?     Islogin     { get; set; } // int
+			[Column("isntname"),       Nullable] public int?     Isntname    { get; set; } // int
+			[Column("isntgroup"),      Nullable] public int?     Isntgroup   { get; set; } // int
+			[Column("isntuser"),       Nullable] public int?     Isntuser    { get; set; } // int
+			[Column("issqluser"),      Nullable] public int?     Issqluser   { get; set; } // int
+			[Column("isaliased"),      Nullable] public int?     Isaliased   { get; set; } // int
+			[Column("issqlrole"),      Nullable] public int?     Issqlrole   { get; set; } // int
+			[Column("isapprole"),      Nullable] public int?     Isapprole   { get; set; } // int
 		}
 	}
 
-	public static partial class SystemSchema
+	public static partial class DynamicManagementSchema
 	{
 		public partial class DataContext
 		{
-			public ITable<AllColumns>                                         AllColumns                                         { get { return _dataContext.GetTable<AllColumns>(); } }
-			public ITable<AllObjects>                                         AllObjects                                         { get { return _dataContext.GetTable<AllObjects>(); } }
-			public ITable<AllocationUnits>                                    AllocationUnits                                    { get { return _dataContext.GetTable<AllocationUnits>(); } }
-			public ITable<AllParameters>                                      AllParameters                                      { get { return _dataContext.GetTable<AllParameters>(); } }
-			public ITable<AllSqlModules>                                      AllSqlModules                                      { get { return _dataContext.GetTable<AllSqlModules>(); } }
-			public ITable<AllViews>                                           AllViews                                           { get { return _dataContext.GetTable<AllViews>(); } }
-			public ITable<Assemblies>                                         Assemblies                                         { get { return _dataContext.GetTable<Assemblies>(); } }
-			public ITable<AssemblyFiles>                                      AssemblyFiles                                      { get { return _dataContext.GetTable<AssemblyFiles>(); } }
-			public ITable<AssemblyModules>                                    AssemblyModules                                    { get { return _dataContext.GetTable<AssemblyModules>(); } }
-			public ITable<AssemblyReferences>                                 AssemblyReferences                                 { get { return _dataContext.GetTable<AssemblyReferences>(); } }
-			public ITable<AssemblyTypes>                                      AssemblyTypes                                      { get { return _dataContext.GetTable<AssemblyTypes>(); } }
-			public ITable<AsymmetricKeys>                                     AsymmetricKeys                                     { get { return _dataContext.GetTable<AsymmetricKeys>(); } }
-			public ITable<AvailabilityDatabasesCluster>                       AvailabilityDatabasesCluster                       { get { return _dataContext.GetTable<AvailabilityDatabasesCluster>(); } }
-			public ITable<AvailabilityGroupListenerIpAddresses>               AvailabilityGroupListenerIpAddresses               { get { return _dataContext.GetTable<AvailabilityGroupListenerIpAddresses>(); } }
-			public ITable<AvailabilityGroupListeners>                         AvailabilityGroupListeners                         { get { return _dataContext.GetTable<AvailabilityGroupListeners>(); } }
-			public ITable<AvailabilityGroups>                                 AvailabilityGroups                                 { get { return _dataContext.GetTable<AvailabilityGroups>(); } }
-			public ITable<AvailabilityGroupsCluster>                          AvailabilityGroupsCluster                          { get { return _dataContext.GetTable<AvailabilityGroupsCluster>(); } }
-			public ITable<AvailabilityReadOnlyRoutingLists>                   AvailabilityReadOnlyRoutingLists                   { get { return _dataContext.GetTable<AvailabilityReadOnlyRoutingLists>(); } }
-			public ITable<AvailabilityReplicas>                               AvailabilityReplicas                               { get { return _dataContext.GetTable<AvailabilityReplicas>(); } }
-			public ITable<BackupDevices>                                      BackupDevices                                      { get { return _dataContext.GetTable<BackupDevices>(); } }
-			public ITable<Certificates>                                       Certificates                                       { get { return _dataContext.GetTable<Certificates>(); } }
-			public ITable<ChangeTrackingDatabases>                            ChangeTrackingDatabases                            { get { return _dataContext.GetTable<ChangeTrackingDatabases>(); } }
-			public ITable<ChangeTrackingTables>                               ChangeTrackingTables                               { get { return _dataContext.GetTable<ChangeTrackingTables>(); } }
-			public ITable<CheckConstraints>                                   CheckConstraints                                   { get { return _dataContext.GetTable<CheckConstraints>(); } }
-			public ITable<ColumnEncryptionKeys>                               ColumnEncryptionKeys                               { get { return _dataContext.GetTable<ColumnEncryptionKeys>(); } }
-			public ITable<ColumnEncryptionKeyValues>                          ColumnEncryptionKeyValues                          { get { return _dataContext.GetTable<ColumnEncryptionKeyValues>(); } }
-			public ITable<ColumnMasterKeys>                                   ColumnMasterKeys                                   { get { return _dataContext.GetTable<ColumnMasterKeys>(); } }
-			public ITable<Columns>                                            Columns                                            { get { return _dataContext.GetTable<Columns>(); } }
-			public ITable<ColumnStoreDictionaries>                            ColumnStoreDictionaries                            { get { return _dataContext.GetTable<ColumnStoreDictionaries>(); } }
-			public ITable<ColumnStoreRowGroups>                               ColumnStoreRowGroups                               { get { return _dataContext.GetTable<ColumnStoreRowGroups>(); } }
-			public ITable<ColumnStoreSegments>                                ColumnStoreSegments                                { get { return _dataContext.GetTable<ColumnStoreSegments>(); } }
-			public ITable<ColumnTypeUsages>                                   ColumnTypeUsages                                   { get { return _dataContext.GetTable<ColumnTypeUsages>(); } }
-			public ITable<ColumnXmlSchemaCollectionUsages>                    ColumnXmlSchemaCollectionUsages                    { get { return _dataContext.GetTable<ColumnXmlSchemaCollectionUsages>(); } }
-			public ITable<ComputedColumns>                                    ComputedColumns                                    { get { return _dataContext.GetTable<ComputedColumns>(); } }
-			public ITable<Configurations>                                     Configurations                                     { get { return _dataContext.GetTable<Configurations>(); } }
-			public ITable<ConversationEndpoints>                              ConversationEndpoints                              { get { return _dataContext.GetTable<ConversationEndpoints>(); } }
-			public ITable<ConversationGroups>                                 ConversationGroups                                 { get { return _dataContext.GetTable<ConversationGroups>(); } }
-			public ITable<ConversationPriorities>                             ConversationPriorities                             { get { return _dataContext.GetTable<ConversationPriorities>(); } }
-			public ITable<Credentials>                                        Credentials                                        { get { return _dataContext.GetTable<Credentials>(); } }
-			public ITable<CryptographicProviders>                             CryptographicProviders                             { get { return _dataContext.GetTable<CryptographicProviders>(); } }
-			public ITable<CryptProperties>                                    CryptProperties                                    { get { return _dataContext.GetTable<CryptProperties>(); } }
-			public ITable<DatabaseAuditSpecificationDetails>                  DatabaseAuditSpecificationDetails                  { get { return _dataContext.GetTable<DatabaseAuditSpecificationDetails>(); } }
-			public ITable<DatabaseAuditSpecifications>                        DatabaseAuditSpecifications                        { get { return _dataContext.GetTable<DatabaseAuditSpecifications>(); } }
-			public ITable<DatabaseAutomaticTuningMode>                        DatabaseAutomaticTuningMode                        { get { return _dataContext.GetTable<DatabaseAutomaticTuningMode>(); } }
-			public ITable<DatabaseAutomaticTuningOptions>                     DatabaseAutomaticTuningOptions                     { get { return _dataContext.GetTable<DatabaseAutomaticTuningOptions>(); } }
-			public ITable<DatabaseCredentials>                                DatabaseCredentials                                { get { return _dataContext.GetTable<DatabaseCredentials>(); } }
-			public ITable<DatabaseFiles>                                      DatabaseFiles                                      { get { return _dataContext.GetTable<DatabaseFiles>(); } }
-			public ITable<DatabaseFilestreamOptions>                          DatabaseFilestreamOptions                          { get { return _dataContext.GetTable<DatabaseFilestreamOptions>(); } }
-			public ITable<DatabaseMirroring>                                  DatabaseMirroring                                  { get { return _dataContext.GetTable<DatabaseMirroring>(); } }
-			public ITable<DatabaseMirroringEndpoints>                         DatabaseMirroringEndpoints                         { get { return _dataContext.GetTable<DatabaseMirroringEndpoints>(); } }
-			public ITable<DatabaseMirroringWitnesses>                         DatabaseMirroringWitnesses                         { get { return _dataContext.GetTable<DatabaseMirroringWitnesses>(); } }
-			public ITable<DatabasePermissions>                                DatabasePermissions                                { get { return _dataContext.GetTable<DatabasePermissions>(); } }
-			public ITable<DatabasePrincipals>                                 DatabasePrincipals                                 { get { return _dataContext.GetTable<DatabasePrincipals>(); } }
-			public ITable<DatabaseQueryStoreOptions>                          DatabaseQueryStoreOptions                          { get { return _dataContext.GetTable<DatabaseQueryStoreOptions>(); } }
-			public ITable<DatabaseRecoveryStatus>                             DatabaseRecoveryStatus                             { get { return _dataContext.GetTable<DatabaseRecoveryStatus>(); } }
-			public ITable<DatabaseRoleMembers>                                DatabaseRoleMembers                                { get { return _dataContext.GetTable<DatabaseRoleMembers>(); } }
-			public ITable<Databases>                                          Databases                                          { get { return _dataContext.GetTable<Databases>(); } }
-			public ITable<DatabaseScopedConfigurations>                       DatabaseScopedConfigurations                       { get { return _dataContext.GetTable<DatabaseScopedConfigurations>(); } }
-			public ITable<DatabaseScopedCredentials>                          DatabaseScopedCredentials                          { get { return _dataContext.GetTable<DatabaseScopedCredentials>(); } }
-			public ITable<DataSpaces>                                         DataSpaces                                         { get { return _dataContext.GetTable<DataSpaces>(); } }
-			public ITable<DefaultConstraints>                                 DefaultConstraints                                 { get { return _dataContext.GetTable<DefaultConstraints>(); } }
-			public ITable<DestinationDataSpaces>                              DestinationDataSpaces                              { get { return _dataContext.GetTable<DestinationDataSpaces>(); } }
-			public ITable<DmAuditActions>                                     DmAuditActions                                     { get { return _dataContext.GetTable<DmAuditActions>(); } }
-			public ITable<DmAuditClassTypeMap>                                DmAuditClassTypeMap                                { get { return _dataContext.GetTable<DmAuditClassTypeMap>(); } }
-			public ITable<DmBrokerActivatedTasks>                             DmBrokerActivatedTasks                             { get { return _dataContext.GetTable<DmBrokerActivatedTasks>(); } }
-			public ITable<DmBrokerConnections>                                DmBrokerConnections                                { get { return _dataContext.GetTable<DmBrokerConnections>(); } }
-			public ITable<DmBrokerForwardedMessages>                          DmBrokerForwardedMessages                          { get { return _dataContext.GetTable<DmBrokerForwardedMessages>(); } }
-			public ITable<DmBrokerQueueMonitors>                              DmBrokerQueueMonitors                              { get { return _dataContext.GetTable<DmBrokerQueueMonitors>(); } }
-			public ITable<DmCacheHitStats>                                    DmCacheHitStats                                    { get { return _dataContext.GetTable<DmCacheHitStats>(); } }
-			public ITable<DmCacheSize>                                        DmCacheSize                                        { get { return _dataContext.GetTable<DmCacheSize>(); } }
-			public ITable<DmCacheStats>                                       DmCacheStats                                       { get { return _dataContext.GetTable<DmCacheStats>(); } }
-			public ITable<DmCdcErrors>                                        DmCdcErrors                                        { get { return _dataContext.GetTable<DmCdcErrors>(); } }
-			public ITable<DmCdcLogScanSessions>                               DmCdcLogScanSessions                               { get { return _dataContext.GetTable<DmCdcLogScanSessions>(); } }
-			public ITable<DmClrAppdomains>                                    DmClrAppdomains                                    { get { return _dataContext.GetTable<DmClrAppdomains>(); } }
-			public ITable<DmClrLoadedAssemblies>                              DmClrLoadedAssemblies                              { get { return _dataContext.GetTable<DmClrLoadedAssemblies>(); } }
-			public ITable<DmClrProperties>                                    DmClrProperties                                    { get { return _dataContext.GetTable<DmClrProperties>(); } }
-			public ITable<DmClrTasks>                                         DmClrTasks                                         { get { return _dataContext.GetTable<DmClrTasks>(); } }
-			public ITable<DmClusterEndpoints>                                 DmClusterEndpoints                                 { get { return _dataContext.GetTable<DmClusterEndpoints>(); } }
-			public ITable<DmColumnEncryptionEnclave>                          DmColumnEncryptionEnclave                          { get { return _dataContext.GetTable<DmColumnEncryptionEnclave>(); } }
-			public ITable<DmColumnEncryptionEnclaveOperationStats>            DmColumnEncryptionEnclaveOperationStats            { get { return _dataContext.GetTable<DmColumnEncryptionEnclaveOperationStats>(); } }
-			public ITable<DmColumnStoreObjectPool>                            DmColumnStoreObjectPool                            { get { return _dataContext.GetTable<DmColumnStoreObjectPool>(); } }
-			public ITable<DmCryptographicProviderProperties>                  DmCryptographicProviderProperties                  { get { return _dataContext.GetTable<DmCryptographicProviderProperties>(); } }
-			public ITable<DmDatabaseEncryptionKeys>                           DmDatabaseEncryptionKeys                           { get { return _dataContext.GetTable<DmDatabaseEncryptionKeys>(); } }
-			public ITable<DmDbColumnStoreRowGroupOperationalStats>            DmDbColumnStoreRowGroupOperationalStats            { get { return _dataContext.GetTable<DmDbColumnStoreRowGroupOperationalStats>(); } }
-			public ITable<DmDbColumnStoreRowGroupPhysicalStats>               DmDbColumnStoreRowGroupPhysicalStats               { get { return _dataContext.GetTable<DmDbColumnStoreRowGroupPhysicalStats>(); } }
-			public ITable<DmDbDataPools>                                      DmDbDataPools                                      { get { return _dataContext.GetTable<DmDbDataPools>(); } }
-			public ITable<DmDbExternalLanguageStats>                          DmDbExternalLanguageStats                          { get { return _dataContext.GetTable<DmDbExternalLanguageStats>(); } }
-			public ITable<DmDbExternalScriptExecutionStats>                   DmDbExternalScriptExecutionStats                   { get { return _dataContext.GetTable<DmDbExternalScriptExecutionStats>(); } }
-			public ITable<DmDbFileSpaceUsage>                                 DmDbFileSpaceUsage                                 { get { return _dataContext.GetTable<DmDbFileSpaceUsage>(); } }
-			public ITable<DmDbFtsIndexPhysicalStats>                          DmDbFtsIndexPhysicalStats                          { get { return _dataContext.GetTable<DmDbFtsIndexPhysicalStats>(); } }
-			public ITable<DmDbIndexUsageStats>                                DmDbIndexUsageStats                                { get { return _dataContext.GetTable<DmDbIndexUsageStats>(); } }
-			public ITable<DmDbLogSpaceUsage>                                  DmDbLogSpaceUsage                                  { get { return _dataContext.GetTable<DmDbLogSpaceUsage>(); } }
-			public ITable<DmDbMirroringAutoPageRepair>                        DmDbMirroringAutoPageRepair                        { get { return _dataContext.GetTable<DmDbMirroringAutoPageRepair>(); } }
-			public ITable<DmDbMirroringConnections>                           DmDbMirroringConnections                           { get { return _dataContext.GetTable<DmDbMirroringConnections>(); } }
-			public ITable<DmDbMirroringPastActions>                           DmDbMirroringPastActions                           { get { return _dataContext.GetTable<DmDbMirroringPastActions>(); } }
-			public ITable<DmDbMissingIndexDetails>                            DmDbMissingIndexDetails                            { get { return _dataContext.GetTable<DmDbMissingIndexDetails>(); } }
-			public ITable<DmDbMissingIndexGroups>                             DmDbMissingIndexGroups                             { get { return _dataContext.GetTable<DmDbMissingIndexGroups>(); } }
-			public ITable<DmDbMissingIndexGroupStats>                         DmDbMissingIndexGroupStats                         { get { return _dataContext.GetTable<DmDbMissingIndexGroupStats>(); } }
-			public ITable<DmDbMissingIndexGroupStatsQuery>                    DmDbMissingIndexGroupStatsQuery                    { get { return _dataContext.GetTable<DmDbMissingIndexGroupStatsQuery>(); } }
-			public ITable<DmDbPartitionStats>                                 DmDbPartitionStats                                 { get { return _dataContext.GetTable<DmDbPartitionStats>(); } }
-			public ITable<DmDbPersistedSkuFeatures>                           DmDbPersistedSkuFeatures                           { get { return _dataContext.GetTable<DmDbPersistedSkuFeatures>(); } }
-			public ITable<DmDbRdaMigrationStatus>                             DmDbRdaMigrationStatus                             { get { return _dataContext.GetTable<DmDbRdaMigrationStatus>(); } }
-			public ITable<DmDbRdaSchemaUpdateStatus>                          DmDbRdaSchemaUpdateStatus                          { get { return _dataContext.GetTable<DmDbRdaSchemaUpdateStatus>(); } }
-			public ITable<DmDbScriptLevel>                                    DmDbScriptLevel                                    { get { return _dataContext.GetTable<DmDbScriptLevel>(); } }
-			public ITable<DmDbSessionSpaceUsage>                              DmDbSessionSpaceUsage                              { get { return _dataContext.GetTable<DmDbSessionSpaceUsage>(); } }
-			public ITable<DmDbStoragePools>                                   DmDbStoragePools                                   { get { return _dataContext.GetTable<DmDbStoragePools>(); } }
-			public ITable<DmDbTaskSpaceUsage>                                 DmDbTaskSpaceUsage                                 { get { return _dataContext.GetTable<DmDbTaskSpaceUsage>(); } }
-			public ITable<DmDbTuningRecommendations>                          DmDbTuningRecommendations                          { get { return _dataContext.GetTable<DmDbTuningRecommendations>(); } }
-			public ITable<DmDbUncontainedEntities>                            DmDbUncontainedEntities                            { get { return _dataContext.GetTable<DmDbUncontainedEntities>(); } }
-			public ITable<DmDbXtpCheckpointFiles>                             DmDbXtpCheckpointFiles                             { get { return _dataContext.GetTable<DmDbXtpCheckpointFiles>(); } }
-			public ITable<DmDbXtpCheckpointInternals>                         DmDbXtpCheckpointInternals                         { get { return _dataContext.GetTable<DmDbXtpCheckpointInternals>(); } }
-			public ITable<DmDbXtpCheckpointStats>                             DmDbXtpCheckpointStats                             { get { return _dataContext.GetTable<DmDbXtpCheckpointStats>(); } }
-			public ITable<DmDbXtpGcCycleStats>                                DmDbXtpGcCycleStats                                { get { return _dataContext.GetTable<DmDbXtpGcCycleStats>(); } }
-			public ITable<DmDbXtpHashIndexStats>                              DmDbXtpHashIndexStats                              { get { return _dataContext.GetTable<DmDbXtpHashIndexStats>(); } }
-			public ITable<DmDbXtpIndexStats>                                  DmDbXtpIndexStats                                  { get { return _dataContext.GetTable<DmDbXtpIndexStats>(); } }
-			public ITable<DmDbXtpMemoryConsumers>                             DmDbXtpMemoryConsumers                             { get { return _dataContext.GetTable<DmDbXtpMemoryConsumers>(); } }
-			public ITable<DmDbXtpNonclusteredIndexStats>                      DmDbXtpNonclusteredIndexStats                      { get { return _dataContext.GetTable<DmDbXtpNonclusteredIndexStats>(); } }
-			public ITable<DmDbXtpObjectStats>                                 DmDbXtpObjectStats                                 { get { return _dataContext.GetTable<DmDbXtpObjectStats>(); } }
-			public ITable<DmDbXtpTableMemoryStats>                            DmDbXtpTableMemoryStats                            { get { return _dataContext.GetTable<DmDbXtpTableMemoryStats>(); } }
-			public ITable<DmDbXtpTransactions>                                DmDbXtpTransactions                                { get { return _dataContext.GetTable<DmDbXtpTransactions>(); } }
-			public ITable<DmDistributedExchangeStats>                         DmDistributedExchangeStats                         { get { return _dataContext.GetTable<DmDistributedExchangeStats>(); } }
-			public ITable<DmExecBackgroundJobQueue>                           DmExecBackgroundJobQueue                           { get { return _dataContext.GetTable<DmExecBackgroundJobQueue>(); } }
-			public ITable<DmExecBackgroundJobQueueStats>                      DmExecBackgroundJobQueueStats                      { get { return _dataContext.GetTable<DmExecBackgroundJobQueueStats>(); } }
-			public ITable<DmExecCachedPlans>                                  DmExecCachedPlans                                  { get { return _dataContext.GetTable<DmExecCachedPlans>(); } }
-			public ITable<DmExecComputeNodeErrors>                            DmExecComputeNodeErrors                            { get { return _dataContext.GetTable<DmExecComputeNodeErrors>(); } }
-			public ITable<DmExecComputeNodes>                                 DmExecComputeNodes                                 { get { return _dataContext.GetTable<DmExecComputeNodes>(); } }
-			public ITable<DmExecComputeNodeStatus>                            DmExecComputeNodeStatus                            { get { return _dataContext.GetTable<DmExecComputeNodeStatus>(); } }
-			public ITable<DmExecComputePools>                                 DmExecComputePools                                 { get { return _dataContext.GetTable<DmExecComputePools>(); } }
-			public ITable<DmExecConnections>                                  DmExecConnections                                  { get { return _dataContext.GetTable<DmExecConnections>(); } }
-			public ITable<DmExecDistributedRequests>                          DmExecDistributedRequests                          { get { return _dataContext.GetTable<DmExecDistributedRequests>(); } }
-			public ITable<DmExecDistributedRequestSteps>                      DmExecDistributedRequestSteps                      { get { return _dataContext.GetTable<DmExecDistributedRequestSteps>(); } }
-			public ITable<DmExecDistributedSqlRequests>                       DmExecDistributedSqlRequests                       { get { return _dataContext.GetTable<DmExecDistributedSqlRequests>(); } }
-			public ITable<DmExecDmsServices>                                  DmExecDmsServices                                  { get { return _dataContext.GetTable<DmExecDmsServices>(); } }
-			public ITable<DmExecDmsWorkers>                                   DmExecDmsWorkers                                   { get { return _dataContext.GetTable<DmExecDmsWorkers>(); } }
-			public ITable<DmExecExternalOperations>                           DmExecExternalOperations                           { get { return _dataContext.GetTable<DmExecExternalOperations>(); } }
-			public ITable<DmExecExternalWork>                                 DmExecExternalWork                                 { get { return _dataContext.GetTable<DmExecExternalWork>(); } }
-			public ITable<DmExecFunctionStats>                                DmExecFunctionStats                                { get { return _dataContext.GetTable<DmExecFunctionStats>(); } }
-			public ITable<DmExecProcedureStats>                               DmExecProcedureStats                               { get { return _dataContext.GetTable<DmExecProcedureStats>(); } }
-			public ITable<DmExecQueryMemoryGrants>                            DmExecQueryMemoryGrants                            { get { return _dataContext.GetTable<DmExecQueryMemoryGrants>(); } }
-			public ITable<DmExecQueryOptimizerInfo>                           DmExecQueryOptimizerInfo                           { get { return _dataContext.GetTable<DmExecQueryOptimizerInfo>(); } }
-			public ITable<DmExecQueryOptimizerMemoryGateways>                 DmExecQueryOptimizerMemoryGateways                 { get { return _dataContext.GetTable<DmExecQueryOptimizerMemoryGateways>(); } }
-			public ITable<DmExecQueryParallelWorkers>                         DmExecQueryParallelWorkers                         { get { return _dataContext.GetTable<DmExecQueryParallelWorkers>(); } }
-			public ITable<DmExecQueryProfiles>                                DmExecQueryProfiles                                { get { return _dataContext.GetTable<DmExecQueryProfiles>(); } }
-			public ITable<DmExecQueryResourceSemaphores>                      DmExecQueryResourceSemaphores                      { get { return _dataContext.GetTable<DmExecQueryResourceSemaphores>(); } }
-			public ITable<DmExecQueryStats>                                   DmExecQueryStats                                   { get { return _dataContext.GetTable<DmExecQueryStats>(); } }
-			public ITable<DmExecQueryTransformationStats>                     DmExecQueryTransformationStats                     { get { return _dataContext.GetTable<DmExecQueryTransformationStats>(); } }
-			public ITable<DmExecRequests>                                     DmExecRequests                                     { get { return _dataContext.GetTable<DmExecRequests>(); } }
-			public ITable<DmExecSessions>                                     DmExecSessions                                     { get { return _dataContext.GetTable<DmExecSessions>(); } }
-			public ITable<DmExecSessionWaitStats>                             DmExecSessionWaitStats                             { get { return _dataContext.GetTable<DmExecSessionWaitStats>(); } }
-			public ITable<DmExecTriggerStats>                                 DmExecTriggerStats                                 { get { return _dataContext.GetTable<DmExecTriggerStats>(); } }
-			public ITable<DmExecValidUseHints>                                DmExecValidUseHints                                { get { return _dataContext.GetTable<DmExecValidUseHints>(); } }
-			public ITable<DmExternalScriptExecutionStats>                     DmExternalScriptExecutionStats                     { get { return _dataContext.GetTable<DmExternalScriptExecutionStats>(); } }
-			public ITable<DmExternalScriptRequests>                           DmExternalScriptRequests                           { get { return _dataContext.GetTable<DmExternalScriptRequests>(); } }
-			public ITable<DmExternalScriptResourceUsageStats>                 DmExternalScriptResourceUsageStats                 { get { return _dataContext.GetTable<DmExternalScriptResourceUsageStats>(); } }
-			public ITable<DmFilestreamFileIoHandles>                          DmFilestreamFileIoHandles                          { get { return _dataContext.GetTable<DmFilestreamFileIoHandles>(); } }
-			public ITable<DmFilestreamFileIoRequests>                         DmFilestreamFileIoRequests                         { get { return _dataContext.GetTable<DmFilestreamFileIoRequests>(); } }
-			public ITable<DmFilestreamNonTransactedHandles>                   DmFilestreamNonTransactedHandles                   { get { return _dataContext.GetTable<DmFilestreamNonTransactedHandles>(); } }
-			public ITable<DmFtsActiveCatalogs>                                DmFtsActiveCatalogs                                { get { return _dataContext.GetTable<DmFtsActiveCatalogs>(); } }
-			public ITable<DmFtsFdhosts>                                       DmFtsFdhosts                                       { get { return _dataContext.GetTable<DmFtsFdhosts>(); } }
-			public ITable<DmFtsIndexPopulation>                               DmFtsIndexPopulation                               { get { return _dataContext.GetTable<DmFtsIndexPopulation>(); } }
-			public ITable<DmFtsMemoryBuffers>                                 DmFtsMemoryBuffers                                 { get { return _dataContext.GetTable<DmFtsMemoryBuffers>(); } }
-			public ITable<DmFtsMemoryPools>                                   DmFtsMemoryPools                                   { get { return _dataContext.GetTable<DmFtsMemoryPools>(); } }
-			public ITable<DmFtsOutstandingBatches>                            DmFtsOutstandingBatches                            { get { return _dataContext.GetTable<DmFtsOutstandingBatches>(); } }
-			public ITable<DmFtsPopulationRanges>                              DmFtsPopulationRanges                              { get { return _dataContext.GetTable<DmFtsPopulationRanges>(); } }
-			public ITable<DmFtsSemanticSimilarityPopulation>                  DmFtsSemanticSimilarityPopulation                  { get { return _dataContext.GetTable<DmFtsSemanticSimilarityPopulation>(); } }
-			public ITable<DmHadrAgThreads>                                    DmHadrAgThreads                                    { get { return _dataContext.GetTable<DmHadrAgThreads>(); } }
-			public ITable<DmHadrAutomaticSeeding>                             DmHadrAutomaticSeeding                             { get { return _dataContext.GetTable<DmHadrAutomaticSeeding>(); } }
-			public ITable<DmHadrAutoPageRepair>                               DmHadrAutoPageRepair                               { get { return _dataContext.GetTable<DmHadrAutoPageRepair>(); } }
-			public ITable<DmHadrAvailabilityGroupStates>                      DmHadrAvailabilityGroupStates                      { get { return _dataContext.GetTable<DmHadrAvailabilityGroupStates>(); } }
-			public ITable<DmHadrAvailabilityReplicaClusterNodes>              DmHadrAvailabilityReplicaClusterNodes              { get { return _dataContext.GetTable<DmHadrAvailabilityReplicaClusterNodes>(); } }
-			public ITable<DmHadrAvailabilityReplicaClusterStates>             DmHadrAvailabilityReplicaClusterStates             { get { return _dataContext.GetTable<DmHadrAvailabilityReplicaClusterStates>(); } }
-			public ITable<DmHadrAvailabilityReplicaStates>                    DmHadrAvailabilityReplicaStates                    { get { return _dataContext.GetTable<DmHadrAvailabilityReplicaStates>(); } }
-			public ITable<DmHadrCluster>                                      DmHadrCluster                                      { get { return _dataContext.GetTable<DmHadrCluster>(); } }
-			public ITable<DmHadrClusterMembers>                               DmHadrClusterMembers                               { get { return _dataContext.GetTable<DmHadrClusterMembers>(); } }
-			public ITable<DmHadrClusterNetworks>                              DmHadrClusterNetworks                              { get { return _dataContext.GetTable<DmHadrClusterNetworks>(); } }
-			public ITable<DmHadrDatabaseReplicaClusterStates>                 DmHadrDatabaseReplicaClusterStates                 { get { return _dataContext.GetTable<DmHadrDatabaseReplicaClusterStates>(); } }
-			public ITable<DmHadrDatabaseReplicaStates>                        DmHadrDatabaseReplicaStates                        { get { return _dataContext.GetTable<DmHadrDatabaseReplicaStates>(); } }
-			public ITable<DmHadrDbThreads>                                    DmHadrDbThreads                                    { get { return _dataContext.GetTable<DmHadrDbThreads>(); } }
-			public ITable<DmHadrInstanceNodeMap>                              DmHadrInstanceNodeMap                              { get { return _dataContext.GetTable<DmHadrInstanceNodeMap>(); } }
-			public ITable<DmHadrNameIdMap>                                    DmHadrNameIdMap                                    { get { return _dataContext.GetTable<DmHadrNameIdMap>(); } }
-			public ITable<DmHadrPhysicalSeedingStats>                         DmHadrPhysicalSeedingStats                         { get { return _dataContext.GetTable<DmHadrPhysicalSeedingStats>(); } }
-			public ITable<DmHpcDeviceStats>                                   DmHpcDeviceStats                                   { get { return _dataContext.GetTable<DmHpcDeviceStats>(); } }
-			public ITable<DmHpcThreadProxyStats>                              DmHpcThreadProxyStats                              { get { return _dataContext.GetTable<DmHpcThreadProxyStats>(); } }
-			public ITable<DmIoBackupTapes>                                    DmIoBackupTapes                                    { get { return _dataContext.GetTable<DmIoBackupTapes>(); } }
-			public ITable<DmIoClusterSharedDrives>                            DmIoClusterSharedDrives                            { get { return _dataContext.GetTable<DmIoClusterSharedDrives>(); } }
-			public ITable<DmIoClusterValidPathNames>                          DmIoClusterValidPathNames                          { get { return _dataContext.GetTable<DmIoClusterValidPathNames>(); } }
-			public ITable<DmIoPendingIoRequests>                              DmIoPendingIoRequests                              { get { return _dataContext.GetTable<DmIoPendingIoRequests>(); } }
-			public ITable<DmLogpoolHashentries>                               DmLogpoolHashentries                               { get { return _dataContext.GetTable<DmLogpoolHashentries>(); } }
-			public ITable<DmLogpoolStats>                                     DmLogpoolStats                                     { get { return _dataContext.GetTable<DmLogpoolStats>(); } }
-			public ITable<DmOsBufferDescriptors>                              DmOsBufferDescriptors                              { get { return _dataContext.GetTable<DmOsBufferDescriptors>(); } }
-			public ITable<DmOsBufferPoolExtensionConfiguration>               DmOsBufferPoolExtensionConfiguration               { get { return _dataContext.GetTable<DmOsBufferPoolExtensionConfiguration>(); } }
-			public ITable<DmOsChildInstances>                                 DmOsChildInstances                                 { get { return _dataContext.GetTable<DmOsChildInstances>(); } }
-			public ITable<DmOsClusterNodes>                                   DmOsClusterNodes                                   { get { return _dataContext.GetTable<DmOsClusterNodes>(); } }
-			public ITable<DmOsClusterProperties>                              DmOsClusterProperties                              { get { return _dataContext.GetTable<DmOsClusterProperties>(); } }
-			public ITable<DmOsDispatcherPools>                                DmOsDispatcherPools                                { get { return _dataContext.GetTable<DmOsDispatcherPools>(); } }
-			public ITable<DmOsDispatchers>                                    DmOsDispatchers                                    { get { return _dataContext.GetTable<DmOsDispatchers>(); } }
-			public ITable<DmOsEnumerateFixedDrives>                           DmOsEnumerateFixedDrives                           { get { return _dataContext.GetTable<DmOsEnumerateFixedDrives>(); } }
-			public ITable<DmOsHostInfo>                                       DmOsHostInfo                                       { get { return _dataContext.GetTable<DmOsHostInfo>(); } }
-			public ITable<DmOsHosts>                                          DmOsHosts                                          { get { return _dataContext.GetTable<DmOsHosts>(); } }
-			public ITable<DmOsJobObject>                                      DmOsJobObject                                      { get { return _dataContext.GetTable<DmOsJobObject>(); } }
-			public ITable<DmOsLatchStats>                                     DmOsLatchStats                                     { get { return _dataContext.GetTable<DmOsLatchStats>(); } }
-			public ITable<DmOsLoadedModules>                                  DmOsLoadedModules                                  { get { return _dataContext.GetTable<DmOsLoadedModules>(); } }
-			public ITable<DmOsMemoryAllocations>                              DmOsMemoryAllocations                              { get { return _dataContext.GetTable<DmOsMemoryAllocations>(); } }
-			public ITable<DmOsMemoryBrokerClerks>                             DmOsMemoryBrokerClerks                             { get { return _dataContext.GetTable<DmOsMemoryBrokerClerks>(); } }
-			public ITable<DmOsMemoryBrokers>                                  DmOsMemoryBrokers                                  { get { return _dataContext.GetTable<DmOsMemoryBrokers>(); } }
-			public ITable<DmOsMemoryCacheClockHands>                          DmOsMemoryCacheClockHands                          { get { return _dataContext.GetTable<DmOsMemoryCacheClockHands>(); } }
-			public ITable<DmOsMemoryCacheCounters>                            DmOsMemoryCacheCounters                            { get { return _dataContext.GetTable<DmOsMemoryCacheCounters>(); } }
-			public ITable<DmOsMemoryCacheEntries>                             DmOsMemoryCacheEntries                             { get { return _dataContext.GetTable<DmOsMemoryCacheEntries>(); } }
-			public ITable<DmOsMemoryCacheHashTables>                          DmOsMemoryCacheHashTables                          { get { return _dataContext.GetTable<DmOsMemoryCacheHashTables>(); } }
-			public ITable<DmOsMemoryClerks>                                   DmOsMemoryClerks                                   { get { return _dataContext.GetTable<DmOsMemoryClerks>(); } }
-			public ITable<DmOsMemoryNodeAccessStats>                          DmOsMemoryNodeAccessStats                          { get { return _dataContext.GetTable<DmOsMemoryNodeAccessStats>(); } }
-			public ITable<DmOsMemoryNodes>                                    DmOsMemoryNodes                                    { get { return _dataContext.GetTable<DmOsMemoryNodes>(); } }
-			public ITable<DmOsMemoryObjects>                                  DmOsMemoryObjects                                  { get { return _dataContext.GetTable<DmOsMemoryObjects>(); } }
-			public ITable<DmOsMemoryPools>                                    DmOsMemoryPools                                    { get { return _dataContext.GetTable<DmOsMemoryPools>(); } }
-			public ITable<DmOsNodes>                                          DmOsNodes                                          { get { return _dataContext.GetTable<DmOsNodes>(); } }
-			public ITable<DmOsPerformanceCounters>                            DmOsPerformanceCounters                            { get { return _dataContext.GetTable<DmOsPerformanceCounters>(); } }
-			public ITable<DmOsProcessMemory>                                  DmOsProcessMemory                                  { get { return _dataContext.GetTable<DmOsProcessMemory>(); } }
-			public ITable<DmOsRingBuffers>                                    DmOsRingBuffers                                    { get { return _dataContext.GetTable<DmOsRingBuffers>(); } }
-			public ITable<DmOsSchedulers>                                     DmOsSchedulers                                     { get { return _dataContext.GetTable<DmOsSchedulers>(); } }
-			public ITable<DmOsServerDiagnosticsLogConfigurations>             DmOsServerDiagnosticsLogConfigurations             { get { return _dataContext.GetTable<DmOsServerDiagnosticsLogConfigurations>(); } }
-			public ITable<DmOsSpinlockStats>                                  DmOsSpinlockStats                                  { get { return _dataContext.GetTable<DmOsSpinlockStats>(); } }
-			public ITable<DmOsStacks>                                         DmOsStacks                                         { get { return _dataContext.GetTable<DmOsStacks>(); } }
-			public ITable<DmOsSublatches>                                     DmOsSublatches                                     { get { return _dataContext.GetTable<DmOsSublatches>(); } }
-			public ITable<DmOsSysInfo>                                        DmOsSysInfo                                        { get { return _dataContext.GetTable<DmOsSysInfo>(); } }
-			public ITable<DmOsSysMemory>                                      DmOsSysMemory                                      { get { return _dataContext.GetTable<DmOsSysMemory>(); } }
-			public ITable<DmOsTasks>                                          DmOsTasks                                          { get { return _dataContext.GetTable<DmOsTasks>(); } }
-			public ITable<DmOsThreads>                                        DmOsThreads                                        { get { return _dataContext.GetTable<DmOsThreads>(); } }
-			public ITable<DmOsVirtualAddressDump>                             DmOsVirtualAddressDump                             { get { return _dataContext.GetTable<DmOsVirtualAddressDump>(); } }
-			public ITable<DmOsWaitingTasks>                                   DmOsWaitingTasks                                   { get { return _dataContext.GetTable<DmOsWaitingTasks>(); } }
-			public ITable<DmOsWaitStats>                                      DmOsWaitStats                                      { get { return _dataContext.GetTable<DmOsWaitStats>(); } }
-			public ITable<DmOsWindowsInfo>                                    DmOsWindowsInfo                                    { get { return _dataContext.GetTable<DmOsWindowsInfo>(); } }
-			public ITable<DmOsWorkerLocalStorage>                             DmOsWorkerLocalStorage                             { get { return _dataContext.GetTable<DmOsWorkerLocalStorage>(); } }
-			public ITable<DmOsWorkers>                                        DmOsWorkers                                        { get { return _dataContext.GetTable<DmOsWorkers>(); } }
-			public ITable<DmPalCpuStats>                                      DmPalCpuStats                                      { get { return _dataContext.GetTable<DmPalCpuStats>(); } }
-			public ITable<DmPalDiskStats>                                     DmPalDiskStats                                     { get { return _dataContext.GetTable<DmPalDiskStats>(); } }
-			public ITable<DmPalNetStats>                                      DmPalNetStats                                      { get { return _dataContext.GetTable<DmPalNetStats>(); } }
-			public ITable<DmPalProcesses>                                     DmPalProcesses                                     { get { return _dataContext.GetTable<DmPalProcesses>(); } }
-			public ITable<DmPalSpinlockStats>                                 DmPalSpinlockStats                                 { get { return _dataContext.GetTable<DmPalSpinlockStats>(); } }
-			public ITable<DmPalVmStats>                                       DmPalVmStats                                       { get { return _dataContext.GetTable<DmPalVmStats>(); } }
-			public ITable<DmPalWaitStats>                                     DmPalWaitStats                                     { get { return _dataContext.GetTable<DmPalWaitStats>(); } }
-			public ITable<DmQnSubscriptions>                                  DmQnSubscriptions                                  { get { return _dataContext.GetTable<DmQnSubscriptions>(); } }
-			public ITable<DmReplArticles>                                     DmReplArticles                                     { get { return _dataContext.GetTable<DmReplArticles>(); } }
-			public ITable<DmReplSchemas>                                      DmReplSchemas                                      { get { return _dataContext.GetTable<DmReplSchemas>(); } }
-			public ITable<DmReplTranhash>                                     DmReplTranhash                                     { get { return _dataContext.GetTable<DmReplTranhash>(); } }
-			public ITable<DmReplTraninfo>                                     DmReplTraninfo                                     { get { return _dataContext.GetTable<DmReplTraninfo>(); } }
-			public ITable<DmResourceGovernorConfiguration>                    DmResourceGovernorConfiguration                    { get { return _dataContext.GetTable<DmResourceGovernorConfiguration>(); } }
-			public ITable<DmResourceGovernorExternalResourcePoolAffinity>     DmResourceGovernorExternalResourcePoolAffinity     { get { return _dataContext.GetTable<DmResourceGovernorExternalResourcePoolAffinity>(); } }
-			public ITable<DmResourceGovernorExternalResourcePools>            DmResourceGovernorExternalResourcePools            { get { return _dataContext.GetTable<DmResourceGovernorExternalResourcePools>(); } }
-			public ITable<DmResourceGovernorResourcePoolAffinity>             DmResourceGovernorResourcePoolAffinity             { get { return _dataContext.GetTable<DmResourceGovernorResourcePoolAffinity>(); } }
-			public ITable<DmResourceGovernorResourcePools>                    DmResourceGovernorResourcePools                    { get { return _dataContext.GetTable<DmResourceGovernorResourcePools>(); } }
-			public ITable<DmResourceGovernorResourcePoolVolumes>              DmResourceGovernorResourcePoolVolumes              { get { return _dataContext.GetTable<DmResourceGovernorResourcePoolVolumes>(); } }
-			public ITable<DmResourceGovernorWorkloadGroups>                   DmResourceGovernorWorkloadGroups                   { get { return _dataContext.GetTable<DmResourceGovernorWorkloadGroups>(); } }
-			public ITable<DmServerAuditStatus>                                DmServerAuditStatus                                { get { return _dataContext.GetTable<DmServerAuditStatus>(); } }
-			public ITable<DmServerMemoryDumps>                                DmServerMemoryDumps                                { get { return _dataContext.GetTable<DmServerMemoryDumps>(); } }
-			public ITable<DmServerRegistry>                                   DmServerRegistry                                   { get { return _dataContext.GetTable<DmServerRegistry>(); } }
-			public ITable<DmServerServices>                                   DmServerServices                                   { get { return _dataContext.GetTable<DmServerServices>(); } }
-			public ITable<DmTcpListenerStates>                                DmTcpListenerStates                                { get { return _dataContext.GetTable<DmTcpListenerStates>(); } }
-			public ITable<DmTranAbortedTransactions>                          DmTranAbortedTransactions                          { get { return _dataContext.GetTable<DmTranAbortedTransactions>(); } }
-			public ITable<DmTranActiveSnapshotDatabaseTransactions>           DmTranActiveSnapshotDatabaseTransactions           { get { return _dataContext.GetTable<DmTranActiveSnapshotDatabaseTransactions>(); } }
-			public ITable<DmTranActiveTransactions>                           DmTranActiveTransactions                           { get { return _dataContext.GetTable<DmTranActiveTransactions>(); } }
-			public ITable<DmTranCommitTable>                                  DmTranCommitTable                                  { get { return _dataContext.GetTable<DmTranCommitTable>(); } }
-			public ITable<DmTranCurrentSnapshot>                              DmTranCurrentSnapshot                              { get { return _dataContext.GetTable<DmTranCurrentSnapshot>(); } }
-			public ITable<DmTranCurrentTransaction>                           DmTranCurrentTransaction                           { get { return _dataContext.GetTable<DmTranCurrentTransaction>(); } }
-			public ITable<DmTranDatabaseTransactions>                         DmTranDatabaseTransactions                         { get { return _dataContext.GetTable<DmTranDatabaseTransactions>(); } }
-			public ITable<DmTranGlobalRecoveryTransactions>                   DmTranGlobalRecoveryTransactions                   { get { return _dataContext.GetTable<DmTranGlobalRecoveryTransactions>(); } }
-			public ITable<DmTranGlobalTransactions>                           DmTranGlobalTransactions                           { get { return _dataContext.GetTable<DmTranGlobalTransactions>(); } }
-			public ITable<DmTranGlobalTransactionsEnlistments>                DmTranGlobalTransactionsEnlistments                { get { return _dataContext.GetTable<DmTranGlobalTransactionsEnlistments>(); } }
-			public ITable<DmTranGlobalTransactionsLog>                        DmTranGlobalTransactionsLog                        { get { return _dataContext.GetTable<DmTranGlobalTransactionsLog>(); } }
-			public ITable<DmTranLocks>                                        DmTranLocks                                        { get { return _dataContext.GetTable<DmTranLocks>(); } }
-			public ITable<DmTranPersistentVersionStore>                       DmTranPersistentVersionStore                       { get { return _dataContext.GetTable<DmTranPersistentVersionStore>(); } }
-			public ITable<DmTranPersistentVersionStoreStats>                  DmTranPersistentVersionStoreStats                  { get { return _dataContext.GetTable<DmTranPersistentVersionStoreStats>(); } }
-			public ITable<DmTranSessionTransactions>                          DmTranSessionTransactions                          { get { return _dataContext.GetTable<DmTranSessionTransactions>(); } }
-			public ITable<DmTranTopVersionGenerators>                         DmTranTopVersionGenerators                         { get { return _dataContext.GetTable<DmTranTopVersionGenerators>(); } }
-			public ITable<DmTranTransactionsSnapshot>                         DmTranTransactionsSnapshot                         { get { return _dataContext.GetTable<DmTranTransactionsSnapshot>(); } }
-			public ITable<DmTranVersionStore>                                 DmTranVersionStore                                 { get { return _dataContext.GetTable<DmTranVersionStore>(); } }
-			public ITable<DmTranVersionStoreSpaceUsage>                       DmTranVersionStoreSpaceUsage                       { get { return _dataContext.GetTable<DmTranVersionStoreSpaceUsage>(); } }
-			public ITable<DmXeMapValues>                                      DmXeMapValues                                      { get { return _dataContext.GetTable<DmXeMapValues>(); } }
-			public ITable<DmXeObjectColumns>                                  DmXeObjectColumns                                  { get { return _dataContext.GetTable<DmXeObjectColumns>(); } }
-			public ITable<DmXeObjects>                                        DmXeObjects                                        { get { return _dataContext.GetTable<DmXeObjects>(); } }
-			public ITable<DmXePackages>                                       DmXePackages                                       { get { return _dataContext.GetTable<DmXePackages>(); } }
-			public ITable<DmXeSessionEventActions>                            DmXeSessionEventActions                            { get { return _dataContext.GetTable<DmXeSessionEventActions>(); } }
-			public ITable<DmXeSessionEvents>                                  DmXeSessionEvents                                  { get { return _dataContext.GetTable<DmXeSessionEvents>(); } }
-			public ITable<DmXeSessionObjectColumns>                           DmXeSessionObjectColumns                           { get { return _dataContext.GetTable<DmXeSessionObjectColumns>(); } }
-			public ITable<DmXeSessions>                                       DmXeSessions                                       { get { return _dataContext.GetTable<DmXeSessions>(); } }
-			public ITable<DmXeSessionTargets>                                 DmXeSessionTargets                                 { get { return _dataContext.GetTable<DmXeSessionTargets>(); } }
-			public ITable<DmXtpGcQueueStats>                                  DmXtpGcQueueStats                                  { get { return _dataContext.GetTable<DmXtpGcQueueStats>(); } }
-			public ITable<DmXtpGcStats>                                       DmXtpGcStats                                       { get { return _dataContext.GetTable<DmXtpGcStats>(); } }
-			public ITable<DmXtpSystemMemoryConsumers>                         DmXtpSystemMemoryConsumers                         { get { return _dataContext.GetTable<DmXtpSystemMemoryConsumers>(); } }
-			public ITable<DmXtpThreads>                                       DmXtpThreads                                       { get { return _dataContext.GetTable<DmXtpThreads>(); } }
-			public ITable<DmXtpTransactionRecentRows>                         DmXtpTransactionRecentRows                         { get { return _dataContext.GetTable<DmXtpTransactionRecentRows>(); } }
-			public ITable<DmXtpTransactionStats>                              DmXtpTransactionStats                              { get { return _dataContext.GetTable<DmXtpTransactionStats>(); } }
-			public ITable<EdgeConstraintClauses>                              EdgeConstraintClauses                              { get { return _dataContext.GetTable<EdgeConstraintClauses>(); } }
-			public ITable<EdgeConstraints>                                    EdgeConstraints                                    { get { return _dataContext.GetTable<EdgeConstraints>(); } }
-			public ITable<Endpoints>                                          Endpoints                                          { get { return _dataContext.GetTable<Endpoints>(); } }
-			public ITable<EndpointWebmethods>                                 EndpointWebmethods                                 { get { return _dataContext.GetTable<EndpointWebmethods>(); } }
-			public ITable<EventNotificationEventTypes>                        EventNotificationEventTypes                        { get { return _dataContext.GetTable<EventNotificationEventTypes>(); } }
-			public ITable<EventNotifications>                                 EventNotifications                                 { get { return _dataContext.GetTable<EventNotifications>(); } }
-			public ITable<Events>                                             Events                                             { get { return _dataContext.GetTable<Events>(); } }
-			public ITable<ExtendedProcedures>                                 ExtendedProcedures                                 { get { return _dataContext.GetTable<ExtendedProcedures>(); } }
-			public ITable<ExtendedProperties>                                 ExtendedProperties                                 { get { return _dataContext.GetTable<ExtendedProperties>(); } }
-			public ITable<ExternalDataSources>                                ExternalDataSources                                { get { return _dataContext.GetTable<ExternalDataSources>(); } }
-			public ITable<ExternalFileFormats>                                ExternalFileFormats                                { get { return _dataContext.GetTable<ExternalFileFormats>(); } }
-			public ITable<ExternalLanguageFiles>                              ExternalLanguageFiles                              { get { return _dataContext.GetTable<ExternalLanguageFiles>(); } }
-			public ITable<ExternalLanguages>                                  ExternalLanguages                                  { get { return _dataContext.GetTable<ExternalLanguages>(); } }
-			public ITable<ExternalLibraries>                                  ExternalLibraries                                  { get { return _dataContext.GetTable<ExternalLibraries>(); } }
-			public ITable<ExternalLibrariesInstalled>                         ExternalLibrariesInstalled                         { get { return _dataContext.GetTable<ExternalLibrariesInstalled>(); } }
-			public ITable<ExternalLibraryFiles>                               ExternalLibraryFiles                               { get { return _dataContext.GetTable<ExternalLibraryFiles>(); } }
-			public ITable<ExternalLibrarySetupErrors>                         ExternalLibrarySetupErrors                         { get { return _dataContext.GetTable<ExternalLibrarySetupErrors>(); } }
-			public ITable<ExternalTableColumns>                               ExternalTableColumns                               { get { return _dataContext.GetTable<ExternalTableColumns>(); } }
-			public ITable<ExternalTables>                                     ExternalTables                                     { get { return _dataContext.GetTable<ExternalTables>(); } }
-			public ITable<Filegroups>                                         Filegroups                                         { get { return _dataContext.GetTable<Filegroups>(); } }
-			public ITable<Filetables>                                         Filetables                                         { get { return _dataContext.GetTable<Filetables>(); } }
-			public ITable<FiletableSystemDefinedObjects>                      FiletableSystemDefinedObjects                      { get { return _dataContext.GetTable<FiletableSystemDefinedObjects>(); } }
-			public ITable<ForeignKeyColumns>                                  ForeignKeyColumns                                  { get { return _dataContext.GetTable<ForeignKeyColumns>(); } }
-			public ITable<ForeignKeys>                                        ForeignKeys                                        { get { return _dataContext.GetTable<ForeignKeys>(); } }
-			public ITable<FulltextCatalogs>                                   FulltextCatalogs                                   { get { return _dataContext.GetTable<FulltextCatalogs>(); } }
-			public ITable<FulltextDocumentTypes>                              FulltextDocumentTypes                              { get { return _dataContext.GetTable<FulltextDocumentTypes>(); } }
-			public ITable<FulltextIndexCatalogUsages>                         FulltextIndexCatalogUsages                         { get { return _dataContext.GetTable<FulltextIndexCatalogUsages>(); } }
-			public ITable<FulltextIndexColumns>                               FulltextIndexColumns                               { get { return _dataContext.GetTable<FulltextIndexColumns>(); } }
-			public ITable<FulltextIndexes>                                    FulltextIndexes                                    { get { return _dataContext.GetTable<FulltextIndexes>(); } }
-			public ITable<FulltextIndexFragments>                             FulltextIndexFragments                             { get { return _dataContext.GetTable<FulltextIndexFragments>(); } }
-			public ITable<FulltextLanguages>                                  FulltextLanguages                                  { get { return _dataContext.GetTable<FulltextLanguages>(); } }
-			public ITable<FulltextSemanticLanguages>                          FulltextSemanticLanguages                          { get { return _dataContext.GetTable<FulltextSemanticLanguages>(); } }
-			public ITable<FulltextSemanticLanguageStatisticsDatabase>         FulltextSemanticLanguageStatisticsDatabase         { get { return _dataContext.GetTable<FulltextSemanticLanguageStatisticsDatabase>(); } }
-			public ITable<FulltextStoplists>                                  FulltextStoplists                                  { get { return _dataContext.GetTable<FulltextStoplists>(); } }
-			public ITable<FulltextStopwords>                                  FulltextStopwords                                  { get { return _dataContext.GetTable<FulltextStopwords>(); } }
-			public ITable<FulltextSystemStopwords>                            FulltextSystemStopwords                            { get { return _dataContext.GetTable<FulltextSystemStopwords>(); } }
-			public ITable<FunctionOrderColumns>                               FunctionOrderColumns                               { get { return _dataContext.GetTable<FunctionOrderColumns>(); } }
-			public ITable<HashIndexes>                                        HashIndexes                                        { get { return _dataContext.GetTable<HashIndexes>(); } }
-			public ITable<HttpEndpoints>                                      HttpEndpoints                                      { get { return _dataContext.GetTable<HttpEndpoints>(); } }
-			public ITable<IdentityColumns>                                    IdentityColumns                                    { get { return _dataContext.GetTable<IdentityColumns>(); } }
-			public ITable<IndexColumns>                                       IndexColumns                                       { get { return _dataContext.GetTable<IndexColumns>(); } }
-			public ITable<Indexes>                                            Indexes                                            { get { return _dataContext.GetTable<Indexes>(); } }
-			public ITable<IndexResumableOperations>                           IndexResumableOperations                           { get { return _dataContext.GetTable<IndexResumableOperations>(); } }
-			public ITable<InternalPartitions>                                 InternalPartitions                                 { get { return _dataContext.GetTable<InternalPartitions>(); } }
-			public ITable<InternalTables>                                     InternalTables                                     { get { return _dataContext.GetTable<InternalTables>(); } }
-			public ITable<KeyConstraints>                                     KeyConstraints                                     { get { return _dataContext.GetTable<KeyConstraints>(); } }
-			public ITable<KeyEncryptions>                                     KeyEncryptions                                     { get { return _dataContext.GetTable<KeyEncryptions>(); } }
-			public ITable<LinkedLogins>                                       LinkedLogins                                       { get { return _dataContext.GetTable<LinkedLogins>(); } }
-			public ITable<LoginToken>                                         LoginToken                                         { get { return _dataContext.GetTable<LoginToken>(); } }
-			public ITable<MaskedColumns>                                      MaskedColumns                                      { get { return _dataContext.GetTable<MaskedColumns>(); } }
-			public ITable<MasterFiles>                                        MasterFiles                                        { get { return _dataContext.GetTable<MasterFiles>(); } }
-			public ITable<MasterKeyPasswords>                                 MasterKeyPasswords                                 { get { return _dataContext.GetTable<MasterKeyPasswords>(); } }
-			public ITable<MemoryOptimizedTablesInternalAttributes>            MemoryOptimizedTablesInternalAttributes            { get { return _dataContext.GetTable<MemoryOptimizedTablesInternalAttributes>(); } }
-			public ITable<Messages>                                           Messages                                           { get { return _dataContext.GetTable<Messages>(); } }
-			public ITable<MessageTypeXmlSchemaCollectionUsages>               MessageTypeXmlSchemaCollectionUsages               { get { return _dataContext.GetTable<MessageTypeXmlSchemaCollectionUsages>(); } }
-			public ITable<ModuleAssemblyUsages>                               ModuleAssemblyUsages                               { get { return _dataContext.GetTable<ModuleAssemblyUsages>(); } }
-			public ITable<NumberedProcedureParameters>                        NumberedProcedureParameters                        { get { return _dataContext.GetTable<NumberedProcedureParameters>(); } }
-			public ITable<NumberedProcedures>                                 NumberedProcedures                                 { get { return _dataContext.GetTable<NumberedProcedures>(); } }
-			public ITable<Objects>                                            Objects                                            { get { return _dataContext.GetTable<Objects>(); } }
-			public ITable<Openkeys>                                           Openkeys                                           { get { return _dataContext.GetTable<Openkeys>(); } }
-			public ITable<Parameters>                                         Parameters                                         { get { return _dataContext.GetTable<Parameters>(); } }
-			public ITable<ParameterTypeUsages>                                ParameterTypeUsages                                { get { return _dataContext.GetTable<ParameterTypeUsages>(); } }
-			public ITable<ParameterXmlSchemaCollectionUsages>                 ParameterXmlSchemaCollectionUsages                 { get { return _dataContext.GetTable<ParameterXmlSchemaCollectionUsages>(); } }
-			public ITable<PartitionFunctions>                                 PartitionFunctions                                 { get { return _dataContext.GetTable<PartitionFunctions>(); } }
-			public ITable<PartitionParameters>                                PartitionParameters                                { get { return _dataContext.GetTable<PartitionParameters>(); } }
-			public ITable<PartitionRangeValues>                               PartitionRangeValues                               { get { return _dataContext.GetTable<PartitionRangeValues>(); } }
-			public ITable<Partitions>                                         Partitions                                         { get { return _dataContext.GetTable<Partitions>(); } }
-			public ITable<PartitionSchemes>                                   PartitionSchemes                                   { get { return _dataContext.GetTable<PartitionSchemes>(); } }
-			public ITable<Periods>                                            Periods                                            { get { return _dataContext.GetTable<Periods>(); } }
-			public ITable<PlanGuides>                                         PlanGuides                                         { get { return _dataContext.GetTable<PlanGuides>(); } }
-			public ITable<Procedures>                                         Procedures                                         { get { return _dataContext.GetTable<Procedures>(); } }
-			public ITable<QueryContextSettings>                               QueryContextSettings                               { get { return _dataContext.GetTable<QueryContextSettings>(); } }
-			public ITable<QueryStorePlan>                                     QueryStorePlan                                     { get { return _dataContext.GetTable<QueryStorePlan>(); } }
-			public ITable<QueryStoreQuery>                                    QueryStoreQuery                                    { get { return _dataContext.GetTable<QueryStoreQuery>(); } }
-			public ITable<QueryStoreQueryText>                                QueryStoreQueryText                                { get { return _dataContext.GetTable<QueryStoreQueryText>(); } }
-			public ITable<QueryStoreRuntimeStats>                             QueryStoreRuntimeStats                             { get { return _dataContext.GetTable<QueryStoreRuntimeStats>(); } }
-			public ITable<QueryStoreRuntimeStatsInterval>                     QueryStoreRuntimeStatsInterval                     { get { return _dataContext.GetTable<QueryStoreRuntimeStatsInterval>(); } }
-			public ITable<QueryStoreWaitStats>                                QueryStoreWaitStats                                { get { return _dataContext.GetTable<QueryStoreWaitStats>(); } }
-			public ITable<RegisteredSearchProperties>                         RegisteredSearchProperties                         { get { return _dataContext.GetTable<RegisteredSearchProperties>(); } }
-			public ITable<RegisteredSearchPropertyLists>                      RegisteredSearchPropertyLists                      { get { return _dataContext.GetTable<RegisteredSearchPropertyLists>(); } }
-			public ITable<RemoteDataArchiveDatabases>                         RemoteDataArchiveDatabases                         { get { return _dataContext.GetTable<RemoteDataArchiveDatabases>(); } }
-			public ITable<RemoteDataArchiveTables>                            RemoteDataArchiveTables                            { get { return _dataContext.GetTable<RemoteDataArchiveTables>(); } }
-			public ITable<RemoteLogins>                                       RemoteLogins                                       { get { return _dataContext.GetTable<RemoteLogins>(); } }
-			public ITable<RemoteServiceBindings>                              RemoteServiceBindings                              { get { return _dataContext.GetTable<RemoteServiceBindings>(); } }
-			public ITable<ResourceGovernorConfiguration>                      ResourceGovernorConfiguration                      { get { return _dataContext.GetTable<ResourceGovernorConfiguration>(); } }
-			public ITable<ResourceGovernorExternalResourcePoolAffinity>       ResourceGovernorExternalResourcePoolAffinity       { get { return _dataContext.GetTable<ResourceGovernorExternalResourcePoolAffinity>(); } }
-			public ITable<ResourceGovernorExternalResourcePools>              ResourceGovernorExternalResourcePools              { get { return _dataContext.GetTable<ResourceGovernorExternalResourcePools>(); } }
-			public ITable<ResourceGovernorResourcePoolAffinity>               ResourceGovernorResourcePoolAffinity               { get { return _dataContext.GetTable<ResourceGovernorResourcePoolAffinity>(); } }
-			public ITable<ResourceGovernorResourcePools>                      ResourceGovernorResourcePools                      { get { return _dataContext.GetTable<ResourceGovernorResourcePools>(); } }
-			public ITable<ResourceGovernorWorkloadGroups>                     ResourceGovernorWorkloadGroups                     { get { return _dataContext.GetTable<ResourceGovernorWorkloadGroups>(); } }
-			public ITable<Routes>                                             Routes                                             { get { return _dataContext.GetTable<Routes>(); } }
-			public ITable<Schemas>                                            Schemas                                            { get { return _dataContext.GetTable<Schemas>(); } }
-			public ITable<SecurableClasses>                                   SecurableClasses                                   { get { return _dataContext.GetTable<SecurableClasses>(); } }
-			public ITable<SecurityPolicies>                                   SecurityPolicies                                   { get { return _dataContext.GetTable<SecurityPolicies>(); } }
-			public ITable<SecurityPredicates>                                 SecurityPredicates                                 { get { return _dataContext.GetTable<SecurityPredicates>(); } }
-			public ITable<SelectiveXmlIndexNamespaces>                        SelectiveXmlIndexNamespaces                        { get { return _dataContext.GetTable<SelectiveXmlIndexNamespaces>(); } }
-			public ITable<SelectiveXmlIndexPaths>                             SelectiveXmlIndexPaths                             { get { return _dataContext.GetTable<SelectiveXmlIndexPaths>(); } }
-			public ITable<SensitivityClassifications>                         SensitivityClassifications                         { get { return _dataContext.GetTable<SensitivityClassifications>(); } }
-			public ITable<Sequences>                                          Sequences                                          { get { return _dataContext.GetTable<Sequences>(); } }
-			public ITable<ServerAssemblyModules>                              ServerAssemblyModules                              { get { return _dataContext.GetTable<ServerAssemblyModules>(); } }
-			public ITable<ServerAudits>                                       ServerAudits                                       { get { return _dataContext.GetTable<ServerAudits>(); } }
-			public ITable<ServerAuditSpecificationDetails>                    ServerAuditSpecificationDetails                    { get { return _dataContext.GetTable<ServerAuditSpecificationDetails>(); } }
-			public ITable<ServerAuditSpecifications>                          ServerAuditSpecifications                          { get { return _dataContext.GetTable<ServerAuditSpecifications>(); } }
-			public ITable<ServerEventNotifications>                           ServerEventNotifications                           { get { return _dataContext.GetTable<ServerEventNotifications>(); } }
-			public ITable<ServerEvents>                                       ServerEvents                                       { get { return _dataContext.GetTable<ServerEvents>(); } }
-			public ITable<ServerEventSessionActions>                          ServerEventSessionActions                          { get { return _dataContext.GetTable<ServerEventSessionActions>(); } }
-			public ITable<ServerEventSessionEvents>                           ServerEventSessionEvents                           { get { return _dataContext.GetTable<ServerEventSessionEvents>(); } }
-			public ITable<ServerEventSessionFields>                           ServerEventSessionFields                           { get { return _dataContext.GetTable<ServerEventSessionFields>(); } }
-			public ITable<ServerEventSessions>                                ServerEventSessions                                { get { return _dataContext.GetTable<ServerEventSessions>(); } }
-			public ITable<ServerEventSessionTargets>                          ServerEventSessionTargets                          { get { return _dataContext.GetTable<ServerEventSessionTargets>(); } }
-			public ITable<ServerFileAudits>                                   ServerFileAudits                                   { get { return _dataContext.GetTable<ServerFileAudits>(); } }
-			public ITable<ServerMemoryOptimizedHybridBufferPoolConfiguration> ServerMemoryOptimizedHybridBufferPoolConfiguration { get { return _dataContext.GetTable<ServerMemoryOptimizedHybridBufferPoolConfiguration>(); } }
-			public ITable<ServerPermissions>                                  ServerPermissions                                  { get { return _dataContext.GetTable<ServerPermissions>(); } }
-			public ITable<ServerPrincipalCredentials>                         ServerPrincipalCredentials                         { get { return _dataContext.GetTable<ServerPrincipalCredentials>(); } }
-			public ITable<ServerPrincipals>                                   ServerPrincipals                                   { get { return _dataContext.GetTable<ServerPrincipals>(); } }
-			public ITable<ServerRoleMembers>                                  ServerRoleMembers                                  { get { return _dataContext.GetTable<ServerRoleMembers>(); } }
-			public ITable<Servers>                                            Servers                                            { get { return _dataContext.GetTable<Servers>(); } }
-			public ITable<ServerSqlModules>                                   ServerSqlModules                                   { get { return _dataContext.GetTable<ServerSqlModules>(); } }
-			public ITable<ServerTriggerEvents>                                ServerTriggerEvents                                { get { return _dataContext.GetTable<ServerTriggerEvents>(); } }
-			public ITable<ServerTriggers>                                     ServerTriggers                                     { get { return _dataContext.GetTable<ServerTriggers>(); } }
-			public ITable<ServiceBrokerEndpoints>                             ServiceBrokerEndpoints                             { get { return _dataContext.GetTable<ServiceBrokerEndpoints>(); } }
-			public ITable<ServiceContractMessageUsages>                       ServiceContractMessageUsages                       { get { return _dataContext.GetTable<ServiceContractMessageUsages>(); } }
-			public ITable<ServiceContracts>                                   ServiceContracts                                   { get { return _dataContext.GetTable<ServiceContracts>(); } }
-			public ITable<ServiceContractUsages>                              ServiceContractUsages                              { get { return _dataContext.GetTable<ServiceContractUsages>(); } }
-			public ITable<ServiceMessageTypes>                                ServiceMessageTypes                                { get { return _dataContext.GetTable<ServiceMessageTypes>(); } }
-			public ITable<ServiceQueues>                                      ServiceQueues                                      { get { return _dataContext.GetTable<ServiceQueues>(); } }
-			public ITable<ServiceQueueUsages>                                 ServiceQueueUsages                                 { get { return _dataContext.GetTable<ServiceQueueUsages>(); } }
-			public ITable<Services>                                           Services                                           { get { return _dataContext.GetTable<Services>(); } }
-			public ITable<SoapEndpoints>                                      SoapEndpoints                                      { get { return _dataContext.GetTable<SoapEndpoints>(); } }
-			public ITable<SpatialIndexes>                                     SpatialIndexes                                     { get { return _dataContext.GetTable<SpatialIndexes>(); } }
-			public ITable<SpatialIndexTessellations>                          SpatialIndexTessellations                          { get { return _dataContext.GetTable<SpatialIndexTessellations>(); } }
-			public ITable<SpatialReferenceSystems>                            SpatialReferenceSystems                            { get { return _dataContext.GetTable<SpatialReferenceSystems>(); } }
-			public ITable<SqlDependencies>                                    SqlDependencies                                    { get { return _dataContext.GetTable<SqlDependencies>(); } }
-			public ITable<SqlExpressionDependencies>                          SqlExpressionDependencies                          { get { return _dataContext.GetTable<SqlExpressionDependencies>(); } }
-			public ITable<SqlFeatureRestrictions>                             SqlFeatureRestrictions                             { get { return _dataContext.GetTable<SqlFeatureRestrictions>(); } }
-			public ITable<SqlLogins>                                          SqlLogins                                          { get { return _dataContext.GetTable<SqlLogins>(); } }
-			public ITable<SqlModules>                                         SqlModules                                         { get { return _dataContext.GetTable<SqlModules>(); } }
-			public ITable<Stats>                                              Stats                                              { get { return _dataContext.GetTable<Stats>(); } }
-			public ITable<StatsColumns>                                       StatsColumns                                       { get { return _dataContext.GetTable<StatsColumns>(); } }
-			public ITable<SymmetricKeys>                                      SymmetricKeys                                      { get { return _dataContext.GetTable<SymmetricKeys>(); } }
-			public ITable<Synonyms>                                           Synonyms                                           { get { return _dataContext.GetTable<Synonyms>(); } }
-			public ITable<Sysaltfiles>                                        Sysaltfiles                                        { get { return _dataContext.GetTable<Sysaltfiles>(); } }
-			public ITable<Syscacheobjects>                                    Syscacheobjects                                    { get { return _dataContext.GetTable<Syscacheobjects>(); } }
-			public ITable<Syscharsets>                                        Syscharsets                                        { get { return _dataContext.GetTable<Syscharsets>(); } }
-			public ITable<Syscolumns>                                         Syscolumns                                         { get { return _dataContext.GetTable<Syscolumns>(); } }
-			public ITable<Syscomments>                                        Syscomments                                        { get { return _dataContext.GetTable<Syscomments>(); } }
-			public ITable<Sysconfigures>                                      Sysconfigures                                      { get { return _dataContext.GetTable<Sysconfigures>(); } }
-			public ITable<Sysconstraints>                                     Sysconstraints                                     { get { return _dataContext.GetTable<Sysconstraints>(); } }
-			public ITable<Syscscontainers>                                    Syscscontainers                                    { get { return _dataContext.GetTable<Syscscontainers>(); } }
-			public ITable<Syscurconfigs>                                      Syscurconfigs                                      { get { return _dataContext.GetTable<Syscurconfigs>(); } }
-			public ITable<Syscursorcolumns>                                   Syscursorcolumns                                   { get { return _dataContext.GetTable<Syscursorcolumns>(); } }
-			public ITable<Syscursorrefs>                                      Syscursorrefs                                      { get { return _dataContext.GetTable<Syscursorrefs>(); } }
-			public ITable<Syscursors>                                         Syscursors                                         { get { return _dataContext.GetTable<Syscursors>(); } }
-			public ITable<Syscursortables>                                    Syscursortables                                    { get { return _dataContext.GetTable<Syscursortables>(); } }
-			public ITable<Sysdatabases>                                       Sysdatabases                                       { get { return _dataContext.GetTable<Sysdatabases>(); } }
-			public ITable<Sysdepends>                                         Sysdepends                                         { get { return _dataContext.GetTable<Sysdepends>(); } }
-			public ITable<Sysdevices>                                         Sysdevices                                         { get { return _dataContext.GetTable<Sysdevices>(); } }
-			public ITable<Sysfilegroups>                                      Sysfilegroups                                      { get { return _dataContext.GetTable<Sysfilegroups>(); } }
-			public ITable<Sysfiles>                                           Sysfiles                                           { get { return _dataContext.GetTable<Sysfiles>(); } }
-			public ITable<Sysforeignkeys>                                     Sysforeignkeys                                     { get { return _dataContext.GetTable<Sysforeignkeys>(); } }
-			public ITable<Sysfulltextcatalogs>                                Sysfulltextcatalogs                                { get { return _dataContext.GetTable<Sysfulltextcatalogs>(); } }
-			public ITable<Sysindexes>                                         Sysindexes                                         { get { return _dataContext.GetTable<Sysindexes>(); } }
-			public ITable<Sysindexkeys>                                       Sysindexkeys                                       { get { return _dataContext.GetTable<Sysindexkeys>(); } }
-			public ITable<Syslanguages>                                       Syslanguages                                       { get { return _dataContext.GetTable<Syslanguages>(); } }
-			public ITable<Syslockinfo>                                        Syslockinfo                                        { get { return _dataContext.GetTable<Syslockinfo>(); } }
-			public ITable<Syslogins>                                          Syslogins                                          { get { return _dataContext.GetTable<Syslogins>(); } }
-			public ITable<Sysmembers>                                         Sysmembers                                         { get { return _dataContext.GetTable<Sysmembers>(); } }
-			public ITable<Sysmessages>                                        Sysmessages                                        { get { return _dataContext.GetTable<Sysmessages>(); } }
-			public ITable<Sysobjects>                                         Sysobjects                                         { get { return _dataContext.GetTable<Sysobjects>(); } }
-			public ITable<Sysoledbusers>                                      Sysoledbusers                                      { get { return _dataContext.GetTable<Sysoledbusers>(); } }
-			public ITable<Sysopentapes>                                       Sysopentapes                                       { get { return _dataContext.GetTable<Sysopentapes>(); } }
-			public ITable<Sysperfinfo>                                        Sysperfinfo                                        { get { return _dataContext.GetTable<Sysperfinfo>(); } }
-			public ITable<Syspermissions>                                     Syspermissions                                     { get { return _dataContext.GetTable<Syspermissions>(); } }
-			public ITable<Sysprocesses>                                       Sysprocesses                                       { get { return _dataContext.GetTable<Sysprocesses>(); } }
-			public ITable<Sysprotects>                                        Sysprotects                                        { get { return _dataContext.GetTable<Sysprotects>(); } }
-			public ITable<Sysreferences>                                      Sysreferences                                      { get { return _dataContext.GetTable<Sysreferences>(); } }
-			public ITable<Sysremotelogins>                                    Sysremotelogins                                    { get { return _dataContext.GetTable<Sysremotelogins>(); } }
-			public ITable<Sysservers>                                         Sysservers                                         { get { return _dataContext.GetTable<Sysservers>(); } }
-			public ITable<SystemColumns>                                      SystemColumns                                      { get { return _dataContext.GetTable<SystemColumns>(); } }
-			public ITable<SystemComponentsSurfaceAreaConfiguration>           SystemComponentsSurfaceAreaConfiguration           { get { return _dataContext.GetTable<SystemComponentsSurfaceAreaConfiguration>(); } }
-			public ITable<SystemInternalsAllocationUnits>                     SystemInternalsAllocationUnits                     { get { return _dataContext.GetTable<SystemInternalsAllocationUnits>(); } }
-			public ITable<SystemInternalsPartitionColumns>                    SystemInternalsPartitionColumns                    { get { return _dataContext.GetTable<SystemInternalsPartitionColumns>(); } }
-			public ITable<SystemInternalsPartitions>                          SystemInternalsPartitions                          { get { return _dataContext.GetTable<SystemInternalsPartitions>(); } }
-			public ITable<SystemObjects>                                      SystemObjects                                      { get { return _dataContext.GetTable<SystemObjects>(); } }
-			public ITable<SystemParameters>                                   SystemParameters                                   { get { return _dataContext.GetTable<SystemParameters>(); } }
-			public ITable<SystemSqlModules>                                   SystemSqlModules                                   { get { return _dataContext.GetTable<SystemSqlModules>(); } }
-			public ITable<SystemViews>                                        SystemViews                                        { get { return _dataContext.GetTable<SystemViews>(); } }
-			public ITable<Systypes>                                           Systypes                                           { get { return _dataContext.GetTable<Systypes>(); } }
-			public ITable<Sysusers>                                           Sysusers                                           { get { return _dataContext.GetTable<Sysusers>(); } }
-			public ITable<Tables>                                             Tables                                             { get { return _dataContext.GetTable<Tables>(); } }
-			public ITable<TableTypes>                                         TableTypes                                         { get { return _dataContext.GetTable<TableTypes>(); } }
-			public ITable<TcpEndpoints>                                       TcpEndpoints                                       { get { return _dataContext.GetTable<TcpEndpoints>(); } }
-			public ITable<TimeZoneInfo>                                       TimeZoneInfo                                       { get { return _dataContext.GetTable<TimeZoneInfo>(); } }
-			public ITable<TraceCategories>                                    TraceCategories                                    { get { return _dataContext.GetTable<TraceCategories>(); } }
-			public ITable<TraceColumns>                                       TraceColumns                                       { get { return _dataContext.GetTable<TraceColumns>(); } }
-			public ITable<TraceEventBindings>                                 TraceEventBindings                                 { get { return _dataContext.GetTable<TraceEventBindings>(); } }
-			public ITable<TraceEvents>                                        TraceEvents                                        { get { return _dataContext.GetTable<TraceEvents>(); } }
-			public ITable<Traces>                                             Traces                                             { get { return _dataContext.GetTable<Traces>(); } }
-			public ITable<TraceSubclassValues>                                TraceSubclassValues                                { get { return _dataContext.GetTable<TraceSubclassValues>(); } }
-			public ITable<TransmissionQueue>                                  TransmissionQueue                                  { get { return _dataContext.GetTable<TransmissionQueue>(); } }
-			public ITable<TriggerEvents>                                      TriggerEvents                                      { get { return _dataContext.GetTable<TriggerEvents>(); } }
-			public ITable<TriggerEventTypes>                                  TriggerEventTypes                                  { get { return _dataContext.GetTable<TriggerEventTypes>(); } }
-			public ITable<Triggers>                                           Triggers                                           { get { return _dataContext.GetTable<Triggers>(); } }
-			public ITable<TrustedAssemblies>                                  TrustedAssemblies                                  { get { return _dataContext.GetTable<TrustedAssemblies>(); } }
-			public ITable<TypeAssemblyUsages>                                 TypeAssemblyUsages                                 { get { return _dataContext.GetTable<TypeAssemblyUsages>(); } }
-			public ITable<Types>                                              Types                                              { get { return _dataContext.GetTable<Types>(); } }
-			public ITable<UserToken>                                          UserToken                                          { get { return _dataContext.GetTable<UserToken>(); } }
-			public ITable<ViaEndpoints>                                       ViaEndpoints                                       { get { return _dataContext.GetTable<ViaEndpoints>(); } }
-			public ITable<Views>                                              Views                                              { get { return _dataContext.GetTable<Views>(); } }
-			public ITable<XmlIndexes>                                         XmlIndexes                                         { get { return _dataContext.GetTable<XmlIndexes>(); } }
-			public ITable<XmlSchemaAttributes>                                XmlSchemaAttributes                                { get { return _dataContext.GetTable<XmlSchemaAttributes>(); } }
-			public ITable<XmlSchemaCollections>                               XmlSchemaCollections                               { get { return _dataContext.GetTable<XmlSchemaCollections>(); } }
-			public ITable<XmlSchemaComponentPlacements>                       XmlSchemaComponentPlacements                       { get { return _dataContext.GetTable<XmlSchemaComponentPlacements>(); } }
-			public ITable<XmlSchemaComponents>                                XmlSchemaComponents                                { get { return _dataContext.GetTable<XmlSchemaComponents>(); } }
-			public ITable<XmlSchemaElements>                                  XmlSchemaElements                                  { get { return _dataContext.GetTable<XmlSchemaElements>(); } }
-			public ITable<XmlSchemaFacets>                                    XmlSchemaFacets                                    { get { return _dataContext.GetTable<XmlSchemaFacets>(); } }
-			public ITable<XmlSchemaModelGroups>                               XmlSchemaModelGroups                               { get { return _dataContext.GetTable<XmlSchemaModelGroups>(); } }
-			public ITable<XmlSchemaNamespaces>                                XmlSchemaNamespaces                                { get { return _dataContext.GetTable<XmlSchemaNamespaces>(); } }
-			public ITable<XmlSchemaTypes>                                     XmlSchemaTypes                                     { get { return _dataContext.GetTable<XmlSchemaTypes>(); } }
-			public ITable<XmlSchemaWildcardNamespaces>                        XmlSchemaWildcardNamespaces                        { get { return _dataContext.GetTable<XmlSchemaWildcardNamespaces>(); } }
-			public ITable<XmlSchemaWildcards>                                 XmlSchemaWildcards                                 { get { return _dataContext.GetTable<XmlSchemaWildcards>(); } }
+			public ITable<DmAuditActions>                                 DmAuditActions                                 { get { return _dataContext.GetTable<DmAuditActions>(); } }
+			public ITable<DmAuditClassTypeMap>                            DmAuditClassTypeMap                            { get { return _dataContext.GetTable<DmAuditClassTypeMap>(); } }
+			public ITable<DmBrokerActivatedTasks>                         DmBrokerActivatedTasks                         { get { return _dataContext.GetTable<DmBrokerActivatedTasks>(); } }
+			public ITable<DmBrokerConnections>                            DmBrokerConnections                            { get { return _dataContext.GetTable<DmBrokerConnections>(); } }
+			public ITable<DmBrokerForwardedMessages>                      DmBrokerForwardedMessages                      { get { return _dataContext.GetTable<DmBrokerForwardedMessages>(); } }
+			public ITable<DmBrokerQueueMonitors>                          DmBrokerQueueMonitors                          { get { return _dataContext.GetTable<DmBrokerQueueMonitors>(); } }
+			public ITable<DmCacheHitStats>                                DmCacheHitStats                                { get { return _dataContext.GetTable<DmCacheHitStats>(); } }
+			public ITable<DmCacheSize>                                    DmCacheSize                                    { get { return _dataContext.GetTable<DmCacheSize>(); } }
+			public ITable<DmCacheStats>                                   DmCacheStats                                   { get { return _dataContext.GetTable<DmCacheStats>(); } }
+			public ITable<DmCdcErrors>                                    DmCdcErrors                                    { get { return _dataContext.GetTable<DmCdcErrors>(); } }
+			public ITable<DmCdcLogScanSessions>                           DmCdcLogScanSessions                           { get { return _dataContext.GetTable<DmCdcLogScanSessions>(); } }
+			public ITable<DmClrAppdomains>                                DmClrAppdomains                                { get { return _dataContext.GetTable<DmClrAppdomains>(); } }
+			public ITable<DmClrLoadedAssemblies>                          DmClrLoadedAssemblies                          { get { return _dataContext.GetTable<DmClrLoadedAssemblies>(); } }
+			public ITable<DmClrProperties>                                DmClrProperties                                { get { return _dataContext.GetTable<DmClrProperties>(); } }
+			public ITable<DmClrTasks>                                     DmClrTasks                                     { get { return _dataContext.GetTable<DmClrTasks>(); } }
+			public ITable<DmClusterEndpoints>                             DmClusterEndpoints                             { get { return _dataContext.GetTable<DmClusterEndpoints>(); } }
+			public ITable<DmColumnEncryptionEnclave>                      DmColumnEncryptionEnclave                      { get { return _dataContext.GetTable<DmColumnEncryptionEnclave>(); } }
+			public ITable<DmColumnEncryptionEnclaveOperationStats>        DmColumnEncryptionEnclaveOperationStats        { get { return _dataContext.GetTable<DmColumnEncryptionEnclaveOperationStats>(); } }
+			public ITable<DmColumnStoreObjectPool>                        DmColumnStoreObjectPool                        { get { return _dataContext.GetTable<DmColumnStoreObjectPool>(); } }
+			public ITable<DmCryptographicProviderProperties>              DmCryptographicProviderProperties              { get { return _dataContext.GetTable<DmCryptographicProviderProperties>(); } }
+			public ITable<DmDatabaseEncryptionKeys>                       DmDatabaseEncryptionKeys                       { get { return _dataContext.GetTable<DmDatabaseEncryptionKeys>(); } }
+			public ITable<DmDbColumnStoreRowGroupOperationalStats>        DmDbColumnStoreRowGroupOperationalStats        { get { return _dataContext.GetTable<DmDbColumnStoreRowGroupOperationalStats>(); } }
+			public ITable<DmDbColumnStoreRowGroupPhysicalStats>           DmDbColumnStoreRowGroupPhysicalStats           { get { return _dataContext.GetTable<DmDbColumnStoreRowGroupPhysicalStats>(); } }
+			public ITable<DmDbDataPools>                                  DmDbDataPools                                  { get { return _dataContext.GetTable<DmDbDataPools>(); } }
+			public ITable<DmDbExternalLanguageStats>                      DmDbExternalLanguageStats                      { get { return _dataContext.GetTable<DmDbExternalLanguageStats>(); } }
+			public ITable<DmDbExternalScriptExecutionStats>               DmDbExternalScriptExecutionStats               { get { return _dataContext.GetTable<DmDbExternalScriptExecutionStats>(); } }
+			public ITable<DmDbFileSpaceUsage>                             DmDbFileSpaceUsage                             { get { return _dataContext.GetTable<DmDbFileSpaceUsage>(); } }
+			public ITable<DmDbFtsIndexPhysicalStats>                      DmDbFtsIndexPhysicalStats                      { get { return _dataContext.GetTable<DmDbFtsIndexPhysicalStats>(); } }
+			public ITable<DmDbIndexUsageStats>                            DmDbIndexUsageStats                            { get { return _dataContext.GetTable<DmDbIndexUsageStats>(); } }
+			public ITable<DmDbLogSpaceUsage>                              DmDbLogSpaceUsage                              { get { return _dataContext.GetTable<DmDbLogSpaceUsage>(); } }
+			public ITable<DmDbMirroringAutoPageRepair>                    DmDbMirroringAutoPageRepair                    { get { return _dataContext.GetTable<DmDbMirroringAutoPageRepair>(); } }
+			public ITable<DmDbMirroringConnections>                       DmDbMirroringConnections                       { get { return _dataContext.GetTable<DmDbMirroringConnections>(); } }
+			public ITable<DmDbMirroringPastActions>                       DmDbMirroringPastActions                       { get { return _dataContext.GetTable<DmDbMirroringPastActions>(); } }
+			public ITable<DmDbMissingIndexDetails>                        DmDbMissingIndexDetails                        { get { return _dataContext.GetTable<DmDbMissingIndexDetails>(); } }
+			public ITable<DmDbMissingIndexGroups>                         DmDbMissingIndexGroups                         { get { return _dataContext.GetTable<DmDbMissingIndexGroups>(); } }
+			public ITable<DmDbMissingIndexGroupStats>                     DmDbMissingIndexGroupStats                     { get { return _dataContext.GetTable<DmDbMissingIndexGroupStats>(); } }
+			public ITable<DmDbMissingIndexGroupStatsQuery>                DmDbMissingIndexGroupStatsQuery                { get { return _dataContext.GetTable<DmDbMissingIndexGroupStatsQuery>(); } }
+			public ITable<DmDbPartitionStats>                             DmDbPartitionStats                             { get { return _dataContext.GetTable<DmDbPartitionStats>(); } }
+			public ITable<DmDbPersistedSkuFeatures>                       DmDbPersistedSkuFeatures                       { get { return _dataContext.GetTable<DmDbPersistedSkuFeatures>(); } }
+			public ITable<DmDbRdaMigrationStatus>                         DmDbRdaMigrationStatus                         { get { return _dataContext.GetTable<DmDbRdaMigrationStatus>(); } }
+			public ITable<DmDbRdaSchemaUpdateStatus>                      DmDbRdaSchemaUpdateStatus                      { get { return _dataContext.GetTable<DmDbRdaSchemaUpdateStatus>(); } }
+			public ITable<DmDbScriptLevel>                                DmDbScriptLevel                                { get { return _dataContext.GetTable<DmDbScriptLevel>(); } }
+			public ITable<DmDbSessionSpaceUsage>                          DmDbSessionSpaceUsage                          { get { return _dataContext.GetTable<DmDbSessionSpaceUsage>(); } }
+			public ITable<DmDbStoragePools>                               DmDbStoragePools                               { get { return _dataContext.GetTable<DmDbStoragePools>(); } }
+			public ITable<DmDbTaskSpaceUsage>                             DmDbTaskSpaceUsage                             { get { return _dataContext.GetTable<DmDbTaskSpaceUsage>(); } }
+			public ITable<DmDbTuningRecommendations>                      DmDbTuningRecommendations                      { get { return _dataContext.GetTable<DmDbTuningRecommendations>(); } }
+			public ITable<DmDbUncontainedEntities>                        DmDbUncontainedEntities                        { get { return _dataContext.GetTable<DmDbUncontainedEntities>(); } }
+			public ITable<DmDbXtpCheckpointFiles>                         DmDbXtpCheckpointFiles                         { get { return _dataContext.GetTable<DmDbXtpCheckpointFiles>(); } }
+			public ITable<DmDbXtpCheckpointInternals>                     DmDbXtpCheckpointInternals                     { get { return _dataContext.GetTable<DmDbXtpCheckpointInternals>(); } }
+			public ITable<DmDbXtpCheckpointStats>                         DmDbXtpCheckpointStats                         { get { return _dataContext.GetTable<DmDbXtpCheckpointStats>(); } }
+			public ITable<DmDbXtpGcCycleStats>                            DmDbXtpGcCycleStats                            { get { return _dataContext.GetTable<DmDbXtpGcCycleStats>(); } }
+			public ITable<DmDbXtpHashIndexStats>                          DmDbXtpHashIndexStats                          { get { return _dataContext.GetTable<DmDbXtpHashIndexStats>(); } }
+			public ITable<DmDbXtpIndexStats>                              DmDbXtpIndexStats                              { get { return _dataContext.GetTable<DmDbXtpIndexStats>(); } }
+			public ITable<DmDbXtpMemoryConsumers>                         DmDbXtpMemoryConsumers                         { get { return _dataContext.GetTable<DmDbXtpMemoryConsumers>(); } }
+			public ITable<DmDbXtpNonclusteredIndexStats>                  DmDbXtpNonclusteredIndexStats                  { get { return _dataContext.GetTable<DmDbXtpNonclusteredIndexStats>(); } }
+			public ITable<DmDbXtpObjectStats>                             DmDbXtpObjectStats                             { get { return _dataContext.GetTable<DmDbXtpObjectStats>(); } }
+			public ITable<DmDbXtpTableMemoryStats>                        DmDbXtpTableMemoryStats                        { get { return _dataContext.GetTable<DmDbXtpTableMemoryStats>(); } }
+			public ITable<DmDbXtpTransactions>                            DmDbXtpTransactions                            { get { return _dataContext.GetTable<DmDbXtpTransactions>(); } }
+			public ITable<DmDistributedExchangeStats>                     DmDistributedExchangeStats                     { get { return _dataContext.GetTable<DmDistributedExchangeStats>(); } }
+			public ITable<DmExecBackgroundJobQueue>                       DmExecBackgroundJobQueue                       { get { return _dataContext.GetTable<DmExecBackgroundJobQueue>(); } }
+			public ITable<DmExecBackgroundJobQueueStats>                  DmExecBackgroundJobQueueStats                  { get { return _dataContext.GetTable<DmExecBackgroundJobQueueStats>(); } }
+			public ITable<DmExecCachedPlans>                              DmExecCachedPlans                              { get { return _dataContext.GetTable<DmExecCachedPlans>(); } }
+			public ITable<DmExecComputeNodeErrors>                        DmExecComputeNodeErrors                        { get { return _dataContext.GetTable<DmExecComputeNodeErrors>(); } }
+			public ITable<DmExecComputeNodes>                             DmExecComputeNodes                             { get { return _dataContext.GetTable<DmExecComputeNodes>(); } }
+			public ITable<DmExecComputeNodeStatus>                        DmExecComputeNodeStatus                        { get { return _dataContext.GetTable<DmExecComputeNodeStatus>(); } }
+			public ITable<DmExecComputePools>                             DmExecComputePools                             { get { return _dataContext.GetTable<DmExecComputePools>(); } }
+			public ITable<DmExecConnections>                              DmExecConnections                              { get { return _dataContext.GetTable<DmExecConnections>(); } }
+			public ITable<DmExecDistributedRequests>                      DmExecDistributedRequests                      { get { return _dataContext.GetTable<DmExecDistributedRequests>(); } }
+			public ITable<DmExecDistributedRequestSteps>                  DmExecDistributedRequestSteps                  { get { return _dataContext.GetTable<DmExecDistributedRequestSteps>(); } }
+			public ITable<DmExecDistributedSqlRequests>                   DmExecDistributedSqlRequests                   { get { return _dataContext.GetTable<DmExecDistributedSqlRequests>(); } }
+			public ITable<DmExecDmsServices>                              DmExecDmsServices                              { get { return _dataContext.GetTable<DmExecDmsServices>(); } }
+			public ITable<DmExecDmsWorkers>                               DmExecDmsWorkers                               { get { return _dataContext.GetTable<DmExecDmsWorkers>(); } }
+			public ITable<DmExecExternalOperations>                       DmExecExternalOperations                       { get { return _dataContext.GetTable<DmExecExternalOperations>(); } }
+			public ITable<DmExecExternalWork>                             DmExecExternalWork                             { get { return _dataContext.GetTable<DmExecExternalWork>(); } }
+			public ITable<DmExecFunctionStats>                            DmExecFunctionStats                            { get { return _dataContext.GetTable<DmExecFunctionStats>(); } }
+			public ITable<DmExecProcedureStats>                           DmExecProcedureStats                           { get { return _dataContext.GetTable<DmExecProcedureStats>(); } }
+			public ITable<DmExecQueryMemoryGrants>                        DmExecQueryMemoryGrants                        { get { return _dataContext.GetTable<DmExecQueryMemoryGrants>(); } }
+			public ITable<DmExecQueryOptimizerInfo>                       DmExecQueryOptimizerInfo                       { get { return _dataContext.GetTable<DmExecQueryOptimizerInfo>(); } }
+			public ITable<DmExecQueryOptimizerMemoryGateways>             DmExecQueryOptimizerMemoryGateways             { get { return _dataContext.GetTable<DmExecQueryOptimizerMemoryGateways>(); } }
+			public ITable<DmExecQueryParallelWorkers>                     DmExecQueryParallelWorkers                     { get { return _dataContext.GetTable<DmExecQueryParallelWorkers>(); } }
+			public ITable<DmExecQueryProfiles>                            DmExecQueryProfiles                            { get { return _dataContext.GetTable<DmExecQueryProfiles>(); } }
+			public ITable<DmExecQueryResourceSemaphores>                  DmExecQueryResourceSemaphores                  { get { return _dataContext.GetTable<DmExecQueryResourceSemaphores>(); } }
+			public ITable<DmExecQueryStats>                               DmExecQueryStats                               { get { return _dataContext.GetTable<DmExecQueryStats>(); } }
+			public ITable<DmExecQueryTransformationStats>                 DmExecQueryTransformationStats                 { get { return _dataContext.GetTable<DmExecQueryTransformationStats>(); } }
+			public ITable<DmExecRequests>                                 DmExecRequests                                 { get { return _dataContext.GetTable<DmExecRequests>(); } }
+			public ITable<DmExecSessions>                                 DmExecSessions                                 { get { return _dataContext.GetTable<DmExecSessions>(); } }
+			public ITable<DmExecSessionWaitStats>                         DmExecSessionWaitStats                         { get { return _dataContext.GetTable<DmExecSessionWaitStats>(); } }
+			public ITable<DmExecTriggerStats>                             DmExecTriggerStats                             { get { return _dataContext.GetTable<DmExecTriggerStats>(); } }
+			public ITable<DmExecValidUseHints>                            DmExecValidUseHints                            { get { return _dataContext.GetTable<DmExecValidUseHints>(); } }
+			public ITable<DmExternalScriptExecutionStats>                 DmExternalScriptExecutionStats                 { get { return _dataContext.GetTable<DmExternalScriptExecutionStats>(); } }
+			public ITable<DmExternalScriptRequests>                       DmExternalScriptRequests                       { get { return _dataContext.GetTable<DmExternalScriptRequests>(); } }
+			public ITable<DmExternalScriptResourceUsageStats>             DmExternalScriptResourceUsageStats             { get { return _dataContext.GetTable<DmExternalScriptResourceUsageStats>(); } }
+			public ITable<DmFilestreamFileIoHandles>                      DmFilestreamFileIoHandles                      { get { return _dataContext.GetTable<DmFilestreamFileIoHandles>(); } }
+			public ITable<DmFilestreamFileIoRequests>                     DmFilestreamFileIoRequests                     { get { return _dataContext.GetTable<DmFilestreamFileIoRequests>(); } }
+			public ITable<DmFilestreamNonTransactedHandles>               DmFilestreamNonTransactedHandles               { get { return _dataContext.GetTable<DmFilestreamNonTransactedHandles>(); } }
+			public ITable<DmFtsActiveCatalogs>                            DmFtsActiveCatalogs                            { get { return _dataContext.GetTable<DmFtsActiveCatalogs>(); } }
+			public ITable<DmFtsFdhosts>                                   DmFtsFdhosts                                   { get { return _dataContext.GetTable<DmFtsFdhosts>(); } }
+			public ITable<DmFtsIndexPopulation>                           DmFtsIndexPopulation                           { get { return _dataContext.GetTable<DmFtsIndexPopulation>(); } }
+			public ITable<DmFtsMemoryBuffers>                             DmFtsMemoryBuffers                             { get { return _dataContext.GetTable<DmFtsMemoryBuffers>(); } }
+			public ITable<DmFtsMemoryPools>                               DmFtsMemoryPools                               { get { return _dataContext.GetTable<DmFtsMemoryPools>(); } }
+			public ITable<DmFtsOutstandingBatches>                        DmFtsOutstandingBatches                        { get { return _dataContext.GetTable<DmFtsOutstandingBatches>(); } }
+			public ITable<DmFtsPopulationRanges>                          DmFtsPopulationRanges                          { get { return _dataContext.GetTable<DmFtsPopulationRanges>(); } }
+			public ITable<DmFtsSemanticSimilarityPopulation>              DmFtsSemanticSimilarityPopulation              { get { return _dataContext.GetTable<DmFtsSemanticSimilarityPopulation>(); } }
+			public ITable<DmHadrAgThreads>                                DmHadrAgThreads                                { get { return _dataContext.GetTable<DmHadrAgThreads>(); } }
+			public ITable<DmHadrAutomaticSeeding>                         DmHadrAutomaticSeeding                         { get { return _dataContext.GetTable<DmHadrAutomaticSeeding>(); } }
+			public ITable<DmHadrAutoPageRepair>                           DmHadrAutoPageRepair                           { get { return _dataContext.GetTable<DmHadrAutoPageRepair>(); } }
+			public ITable<DmHadrAvailabilityGroupStates>                  DmHadrAvailabilityGroupStates                  { get { return _dataContext.GetTable<DmHadrAvailabilityGroupStates>(); } }
+			public ITable<DmHadrAvailabilityReplicaClusterNodes>          DmHadrAvailabilityReplicaClusterNodes          { get { return _dataContext.GetTable<DmHadrAvailabilityReplicaClusterNodes>(); } }
+			public ITable<DmHadrAvailabilityReplicaClusterStates>         DmHadrAvailabilityReplicaClusterStates         { get { return _dataContext.GetTable<DmHadrAvailabilityReplicaClusterStates>(); } }
+			public ITable<DmHadrAvailabilityReplicaStates>                DmHadrAvailabilityReplicaStates                { get { return _dataContext.GetTable<DmHadrAvailabilityReplicaStates>(); } }
+			public ITable<DmHadrCluster>                                  DmHadrCluster                                  { get { return _dataContext.GetTable<DmHadrCluster>(); } }
+			public ITable<DmHadrClusterMembers>                           DmHadrClusterMembers                           { get { return _dataContext.GetTable<DmHadrClusterMembers>(); } }
+			public ITable<DmHadrClusterNetworks>                          DmHadrClusterNetworks                          { get { return _dataContext.GetTable<DmHadrClusterNetworks>(); } }
+			public ITable<DmHadrDatabaseReplicaClusterStates>             DmHadrDatabaseReplicaClusterStates             { get { return _dataContext.GetTable<DmHadrDatabaseReplicaClusterStates>(); } }
+			public ITable<DmHadrDatabaseReplicaStates>                    DmHadrDatabaseReplicaStates                    { get { return _dataContext.GetTable<DmHadrDatabaseReplicaStates>(); } }
+			public ITable<DmHadrDbThreads>                                DmHadrDbThreads                                { get { return _dataContext.GetTable<DmHadrDbThreads>(); } }
+			public ITable<DmHadrInstanceNodeMap>                          DmHadrInstanceNodeMap                          { get { return _dataContext.GetTable<DmHadrInstanceNodeMap>(); } }
+			public ITable<DmHadrNameIdMap>                                DmHadrNameIdMap                                { get { return _dataContext.GetTable<DmHadrNameIdMap>(); } }
+			public ITable<DmHadrPhysicalSeedingStats>                     DmHadrPhysicalSeedingStats                     { get { return _dataContext.GetTable<DmHadrPhysicalSeedingStats>(); } }
+			public ITable<DmHpcDeviceStats>                               DmHpcDeviceStats                               { get { return _dataContext.GetTable<DmHpcDeviceStats>(); } }
+			public ITable<DmHpcThreadProxyStats>                          DmHpcThreadProxyStats                          { get { return _dataContext.GetTable<DmHpcThreadProxyStats>(); } }
+			public ITable<DmIoBackupTapes>                                DmIoBackupTapes                                { get { return _dataContext.GetTable<DmIoBackupTapes>(); } }
+			public ITable<DmIoClusterSharedDrives>                        DmIoClusterSharedDrives                        { get { return _dataContext.GetTable<DmIoClusterSharedDrives>(); } }
+			public ITable<DmIoClusterValidPathNames>                      DmIoClusterValidPathNames                      { get { return _dataContext.GetTable<DmIoClusterValidPathNames>(); } }
+			public ITable<DmIoPendingIoRequests>                          DmIoPendingIoRequests                          { get { return _dataContext.GetTable<DmIoPendingIoRequests>(); } }
+			public ITable<DmLogpoolHashentries>                           DmLogpoolHashentries                           { get { return _dataContext.GetTable<DmLogpoolHashentries>(); } }
+			public ITable<DmLogpoolStats>                                 DmLogpoolStats                                 { get { return _dataContext.GetTable<DmLogpoolStats>(); } }
+			public ITable<DmOsBufferDescriptors>                          DmOsBufferDescriptors                          { get { return _dataContext.GetTable<DmOsBufferDescriptors>(); } }
+			public ITable<DmOsBufferPoolExtensionConfiguration>           DmOsBufferPoolExtensionConfiguration           { get { return _dataContext.GetTable<DmOsBufferPoolExtensionConfiguration>(); } }
+			public ITable<DmOsChildInstances>                             DmOsChildInstances                             { get { return _dataContext.GetTable<DmOsChildInstances>(); } }
+			public ITable<DmOsClusterNodes>                               DmOsClusterNodes                               { get { return _dataContext.GetTable<DmOsClusterNodes>(); } }
+			public ITable<DmOsClusterProperties>                          DmOsClusterProperties                          { get { return _dataContext.GetTable<DmOsClusterProperties>(); } }
+			public ITable<DmOsDispatcherPools>                            DmOsDispatcherPools                            { get { return _dataContext.GetTable<DmOsDispatcherPools>(); } }
+			public ITable<DmOsDispatchers>                                DmOsDispatchers                                { get { return _dataContext.GetTable<DmOsDispatchers>(); } }
+			public ITable<DmOsEnumerateFixedDrives>                       DmOsEnumerateFixedDrives                       { get { return _dataContext.GetTable<DmOsEnumerateFixedDrives>(); } }
+			public ITable<DmOsHostInfo>                                   DmOsHostInfo                                   { get { return _dataContext.GetTable<DmOsHostInfo>(); } }
+			public ITable<DmOsHosts>                                      DmOsHosts                                      { get { return _dataContext.GetTable<DmOsHosts>(); } }
+			public ITable<DmOsJobObject>                                  DmOsJobObject                                  { get { return _dataContext.GetTable<DmOsJobObject>(); } }
+			public ITable<DmOsLatchStats>                                 DmOsLatchStats                                 { get { return _dataContext.GetTable<DmOsLatchStats>(); } }
+			public ITable<DmOsLoadedModules>                              DmOsLoadedModules                              { get { return _dataContext.GetTable<DmOsLoadedModules>(); } }
+			public ITable<DmOsMemoryAllocations>                          DmOsMemoryAllocations                          { get { return _dataContext.GetTable<DmOsMemoryAllocations>(); } }
+			public ITable<DmOsMemoryBrokerClerks>                         DmOsMemoryBrokerClerks                         { get { return _dataContext.GetTable<DmOsMemoryBrokerClerks>(); } }
+			public ITable<DmOsMemoryBrokers>                              DmOsMemoryBrokers                              { get { return _dataContext.GetTable<DmOsMemoryBrokers>(); } }
+			public ITable<DmOsMemoryCacheClockHands>                      DmOsMemoryCacheClockHands                      { get { return _dataContext.GetTable<DmOsMemoryCacheClockHands>(); } }
+			public ITable<DmOsMemoryCacheCounters>                        DmOsMemoryCacheCounters                        { get { return _dataContext.GetTable<DmOsMemoryCacheCounters>(); } }
+			public ITable<DmOsMemoryCacheEntries>                         DmOsMemoryCacheEntries                         { get { return _dataContext.GetTable<DmOsMemoryCacheEntries>(); } }
+			public ITable<DmOsMemoryCacheHashTables>                      DmOsMemoryCacheHashTables                      { get { return _dataContext.GetTable<DmOsMemoryCacheHashTables>(); } }
+			public ITable<DmOsMemoryClerks>                               DmOsMemoryClerks                               { get { return _dataContext.GetTable<DmOsMemoryClerks>(); } }
+			public ITable<DmOsMemoryNodeAccessStats>                      DmOsMemoryNodeAccessStats                      { get { return _dataContext.GetTable<DmOsMemoryNodeAccessStats>(); } }
+			public ITable<DmOsMemoryNodes>                                DmOsMemoryNodes                                { get { return _dataContext.GetTable<DmOsMemoryNodes>(); } }
+			public ITable<DmOsMemoryObjects>                              DmOsMemoryObjects                              { get { return _dataContext.GetTable<DmOsMemoryObjects>(); } }
+			public ITable<DmOsMemoryPools>                                DmOsMemoryPools                                { get { return _dataContext.GetTable<DmOsMemoryPools>(); } }
+			public ITable<DmOsNodes>                                      DmOsNodes                                      { get { return _dataContext.GetTable<DmOsNodes>(); } }
+			public ITable<DmOsPerformanceCounters>                        DmOsPerformanceCounters                        { get { return _dataContext.GetTable<DmOsPerformanceCounters>(); } }
+			public ITable<DmOsProcessMemory>                              DmOsProcessMemory                              { get { return _dataContext.GetTable<DmOsProcessMemory>(); } }
+			public ITable<DmOsRingBuffers>                                DmOsRingBuffers                                { get { return _dataContext.GetTable<DmOsRingBuffers>(); } }
+			public ITable<DmOsSchedulers>                                 DmOsSchedulers                                 { get { return _dataContext.GetTable<DmOsSchedulers>(); } }
+			public ITable<DmOsServerDiagnosticsLogConfigurations>         DmOsServerDiagnosticsLogConfigurations         { get { return _dataContext.GetTable<DmOsServerDiagnosticsLogConfigurations>(); } }
+			public ITable<DmOsSpinlockStats>                              DmOsSpinlockStats                              { get { return _dataContext.GetTable<DmOsSpinlockStats>(); } }
+			public ITable<DmOsStacks>                                     DmOsStacks                                     { get { return _dataContext.GetTable<DmOsStacks>(); } }
+			public ITable<DmOsSublatches>                                 DmOsSublatches                                 { get { return _dataContext.GetTable<DmOsSublatches>(); } }
+			public ITable<DmOsSysInfo>                                    DmOsSysInfo                                    { get { return _dataContext.GetTable<DmOsSysInfo>(); } }
+			public ITable<DmOsSysMemory>                                  DmOsSysMemory                                  { get { return _dataContext.GetTable<DmOsSysMemory>(); } }
+			public ITable<DmOsTasks>                                      DmOsTasks                                      { get { return _dataContext.GetTable<DmOsTasks>(); } }
+			public ITable<DmOsThreads>                                    DmOsThreads                                    { get { return _dataContext.GetTable<DmOsThreads>(); } }
+			public ITable<DmOsVirtualAddressDump>                         DmOsVirtualAddressDump                         { get { return _dataContext.GetTable<DmOsVirtualAddressDump>(); } }
+			public ITable<DmOsWaitingTasks>                               DmOsWaitingTasks                               { get { return _dataContext.GetTable<DmOsWaitingTasks>(); } }
+			public ITable<DmOsWaitStats>                                  DmOsWaitStats                                  { get { return _dataContext.GetTable<DmOsWaitStats>(); } }
+			public ITable<DmOsWindowsInfo>                                DmOsWindowsInfo                                { get { return _dataContext.GetTable<DmOsWindowsInfo>(); } }
+			public ITable<DmOsWorkerLocalStorage>                         DmOsWorkerLocalStorage                         { get { return _dataContext.GetTable<DmOsWorkerLocalStorage>(); } }
+			public ITable<DmOsWorkers>                                    DmOsWorkers                                    { get { return _dataContext.GetTable<DmOsWorkers>(); } }
+			public ITable<DmPalCpuStats>                                  DmPalCpuStats                                  { get { return _dataContext.GetTable<DmPalCpuStats>(); } }
+			public ITable<DmPalDiskStats>                                 DmPalDiskStats                                 { get { return _dataContext.GetTable<DmPalDiskStats>(); } }
+			public ITable<DmPalNetStats>                                  DmPalNetStats                                  { get { return _dataContext.GetTable<DmPalNetStats>(); } }
+			public ITable<DmPalProcesses>                                 DmPalProcesses                                 { get { return _dataContext.GetTable<DmPalProcesses>(); } }
+			public ITable<DmPalSpinlockStats>                             DmPalSpinlockStats                             { get { return _dataContext.GetTable<DmPalSpinlockStats>(); } }
+			public ITable<DmPalVmStats>                                   DmPalVmStats                                   { get { return _dataContext.GetTable<DmPalVmStats>(); } }
+			public ITable<DmPalWaitStats>                                 DmPalWaitStats                                 { get { return _dataContext.GetTable<DmPalWaitStats>(); } }
+			public ITable<DmQnSubscriptions>                              DmQnSubscriptions                              { get { return _dataContext.GetTable<DmQnSubscriptions>(); } }
+			public ITable<DmReplArticles>                                 DmReplArticles                                 { get { return _dataContext.GetTable<DmReplArticles>(); } }
+			public ITable<DmReplSchemas>                                  DmReplSchemas                                  { get { return _dataContext.GetTable<DmReplSchemas>(); } }
+			public ITable<DmReplTranhash>                                 DmReplTranhash                                 { get { return _dataContext.GetTable<DmReplTranhash>(); } }
+			public ITable<DmReplTraninfo>                                 DmReplTraninfo                                 { get { return _dataContext.GetTable<DmReplTraninfo>(); } }
+			public ITable<DmResourceGovernorConfiguration>                DmResourceGovernorConfiguration                { get { return _dataContext.GetTable<DmResourceGovernorConfiguration>(); } }
+			public ITable<DmResourceGovernorExternalResourcePoolAffinity> DmResourceGovernorExternalResourcePoolAffinity { get { return _dataContext.GetTable<DmResourceGovernorExternalResourcePoolAffinity>(); } }
+			public ITable<DmResourceGovernorExternalResourcePools>        DmResourceGovernorExternalResourcePools        { get { return _dataContext.GetTable<DmResourceGovernorExternalResourcePools>(); } }
+			public ITable<DmResourceGovernorResourcePoolAffinity>         DmResourceGovernorResourcePoolAffinity         { get { return _dataContext.GetTable<DmResourceGovernorResourcePoolAffinity>(); } }
+			public ITable<DmResourceGovernorResourcePools>                DmResourceGovernorResourcePools                { get { return _dataContext.GetTable<DmResourceGovernorResourcePools>(); } }
+			public ITable<DmResourceGovernorResourcePoolVolumes>          DmResourceGovernorResourcePoolVolumes          { get { return _dataContext.GetTable<DmResourceGovernorResourcePoolVolumes>(); } }
+			public ITable<DmResourceGovernorWorkloadGroups>               DmResourceGovernorWorkloadGroups               { get { return _dataContext.GetTable<DmResourceGovernorWorkloadGroups>(); } }
+			public ITable<DmServerAuditStatus>                            DmServerAuditStatus                            { get { return _dataContext.GetTable<DmServerAuditStatus>(); } }
+			public ITable<DmServerMemoryDumps>                            DmServerMemoryDumps                            { get { return _dataContext.GetTable<DmServerMemoryDumps>(); } }
+			public ITable<DmServerRegistry>                               DmServerRegistry                               { get { return _dataContext.GetTable<DmServerRegistry>(); } }
+			public ITable<DmServerServices>                               DmServerServices                               { get { return _dataContext.GetTable<DmServerServices>(); } }
+			public ITable<DmTcpListenerStates>                            DmTcpListenerStates                            { get { return _dataContext.GetTable<DmTcpListenerStates>(); } }
+			public ITable<DmTranAbortedTransactions>                      DmTranAbortedTransactions                      { get { return _dataContext.GetTable<DmTranAbortedTransactions>(); } }
+			public ITable<DmTranActiveSnapshotDatabaseTransactions>       DmTranActiveSnapshotDatabaseTransactions       { get { return _dataContext.GetTable<DmTranActiveSnapshotDatabaseTransactions>(); } }
+			public ITable<DmTranActiveTransactions>                       DmTranActiveTransactions                       { get { return _dataContext.GetTable<DmTranActiveTransactions>(); } }
+			public ITable<DmTranCommitTable>                              DmTranCommitTable                              { get { return _dataContext.GetTable<DmTranCommitTable>(); } }
+			public ITable<DmTranCurrentSnapshot>                          DmTranCurrentSnapshot                          { get { return _dataContext.GetTable<DmTranCurrentSnapshot>(); } }
+			public ITable<DmTranCurrentTransaction>                       DmTranCurrentTransaction                       { get { return _dataContext.GetTable<DmTranCurrentTransaction>(); } }
+			public ITable<DmTranDatabaseTransactions>                     DmTranDatabaseTransactions                     { get { return _dataContext.GetTable<DmTranDatabaseTransactions>(); } }
+			public ITable<DmTranGlobalRecoveryTransactions>               DmTranGlobalRecoveryTransactions               { get { return _dataContext.GetTable<DmTranGlobalRecoveryTransactions>(); } }
+			public ITable<DmTranGlobalTransactions>                       DmTranGlobalTransactions                       { get { return _dataContext.GetTable<DmTranGlobalTransactions>(); } }
+			public ITable<DmTranGlobalTransactionsEnlistments>            DmTranGlobalTransactionsEnlistments            { get { return _dataContext.GetTable<DmTranGlobalTransactionsEnlistments>(); } }
+			public ITable<DmTranGlobalTransactionsLog>                    DmTranGlobalTransactionsLog                    { get { return _dataContext.GetTable<DmTranGlobalTransactionsLog>(); } }
+			public ITable<DmTranLocks>                                    DmTranLocks                                    { get { return _dataContext.GetTable<DmTranLocks>(); } }
+			public ITable<DmTranPersistentVersionStore>                   DmTranPersistentVersionStore                   { get { return _dataContext.GetTable<DmTranPersistentVersionStore>(); } }
+			public ITable<DmTranPersistentVersionStoreStats>              DmTranPersistentVersionStoreStats              { get { return _dataContext.GetTable<DmTranPersistentVersionStoreStats>(); } }
+			public ITable<DmTranSessionTransactions>                      DmTranSessionTransactions                      { get { return _dataContext.GetTable<DmTranSessionTransactions>(); } }
+			public ITable<DmTranTopVersionGenerators>                     DmTranTopVersionGenerators                     { get { return _dataContext.GetTable<DmTranTopVersionGenerators>(); } }
+			public ITable<DmTranTransactionsSnapshot>                     DmTranTransactionsSnapshot                     { get { return _dataContext.GetTable<DmTranTransactionsSnapshot>(); } }
+			public ITable<DmTranVersionStore>                             DmTranVersionStore                             { get { return _dataContext.GetTable<DmTranVersionStore>(); } }
+			public ITable<DmTranVersionStoreSpaceUsage>                   DmTranVersionStoreSpaceUsage                   { get { return _dataContext.GetTable<DmTranVersionStoreSpaceUsage>(); } }
+			public ITable<DmXeMapValues>                                  DmXeMapValues                                  { get { return _dataContext.GetTable<DmXeMapValues>(); } }
+			public ITable<DmXeObjectColumns>                              DmXeObjectColumns                              { get { return _dataContext.GetTable<DmXeObjectColumns>(); } }
+			public ITable<DmXeObjects>                                    DmXeObjects                                    { get { return _dataContext.GetTable<DmXeObjects>(); } }
+			public ITable<DmXePackages>                                   DmXePackages                                   { get { return _dataContext.GetTable<DmXePackages>(); } }
+			public ITable<DmXeSessionEventActions>                        DmXeSessionEventActions                        { get { return _dataContext.GetTable<DmXeSessionEventActions>(); } }
+			public ITable<DmXeSessionEvents>                              DmXeSessionEvents                              { get { return _dataContext.GetTable<DmXeSessionEvents>(); } }
+			public ITable<DmXeSessionObjectColumns>                       DmXeSessionObjectColumns                       { get { return _dataContext.GetTable<DmXeSessionObjectColumns>(); } }
+			public ITable<DmXeSessions>                                   DmXeSessions                                   { get { return _dataContext.GetTable<DmXeSessions>(); } }
+			public ITable<DmXeSessionTargets>                             DmXeSessionTargets                             { get { return _dataContext.GetTable<DmXeSessionTargets>(); } }
+			public ITable<DmXtpGcQueueStats>                              DmXtpGcQueueStats                              { get { return _dataContext.GetTable<DmXtpGcQueueStats>(); } }
+			public ITable<DmXtpGcStats>                                   DmXtpGcStats                                   { get { return _dataContext.GetTable<DmXtpGcStats>(); } }
+			public ITable<DmXtpSystemMemoryConsumers>                     DmXtpSystemMemoryConsumers                     { get { return _dataContext.GetTable<DmXtpSystemMemoryConsumers>(); } }
+			public ITable<DmXtpThreads>                                   DmXtpThreads                                   { get { return _dataContext.GetTable<DmXtpThreads>(); } }
+			public ITable<DmXtpTransactionRecentRows>                     DmXtpTransactionRecentRows                     { get { return _dataContext.GetTable<DmXtpTransactionRecentRows>(); } }
+			public ITable<DmXtpTransactionStats>                          DmXtpTransactionStats                          { get { return _dataContext.GetTable<DmXtpTransactionStats>(); } }
 
 			private readonly IDataContext _dataContext;
 
@@ -996,1261 +1058,6 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			{
 				_dataContext = dataContext;
 			}
-		}
-
-		[Table(Schema="sys", Name="all_columns", IsView=true)]
-		public partial class AllColumns
-		{
-			[Column("object_id"),                           NotNull    ] public int     ObjectID                        { get; set; } // int
-			[Column("name"),                                   Nullable] public string? Name                            { get; set; } // sysname
-			[Column("column_id"),                           NotNull    ] public int     ColumnID                        { get; set; } // int
-			[Column("system_type_id"),                      NotNull    ] public byte    SystemTypeID                    { get; set; } // tinyint
-			[Column("user_type_id"),                        NotNull    ] public int     UserTypeID                      { get; set; } // int
-			[Column("max_length"),                          NotNull    ] public short   MaxLength                       { get; set; } // smallint
-			[Column("precision"),                           NotNull    ] public byte    Precision                       { get; set; } // tinyint
-			[Column("scale"),                               NotNull    ] public byte    Scale                           { get; set; } // tinyint
-			[Column("collation_name"),                         Nullable] public string? CollationName                   { get; set; } // sysname
-			[Column("is_nullable"),                            Nullable] public bool?   IsNullable                      { get; set; } // bit
-			[Column("is_ansi_padded"),                      NotNull    ] public bool    IsAnsiPadded                    { get; set; } // bit
-			[Column("is_rowguidcol"),                       NotNull    ] public bool    IsRowguidcol                    { get; set; } // bit
-			[Column("is_identity"),                         NotNull    ] public bool    IsIdentity                      { get; set; } // bit
-			[Column("is_computed"),                         NotNull    ] public bool    IsComputed                      { get; set; } // bit
-			[Column("is_filestream"),                       NotNull    ] public bool    IsFilestream                    { get; set; } // bit
-			[Column("is_replicated"),                          Nullable] public bool?   IsReplicated                    { get; set; } // bit
-			[Column("is_non_sql_subscribed"),                  Nullable] public bool?   IsNonSqlSubscribed              { get; set; } // bit
-			[Column("is_merge_published"),                     Nullable] public bool?   IsMergePublished                { get; set; } // bit
-			[Column("is_dts_replicated"),                      Nullable] public bool?   IsDtsReplicated                 { get; set; } // bit
-			[Column("is_xml_document"),                     NotNull    ] public bool    IsXmlDocument                   { get; set; } // bit
-			[Column("xml_collection_id"),                   NotNull    ] public int     XmlCollectionID                 { get; set; } // int
-			[Column("default_object_id"),                   NotNull    ] public int     DefaultObjectID                 { get; set; } // int
-			[Column("rule_object_id"),                      NotNull    ] public int     RuleObjectID                    { get; set; } // int
-			[Column("is_sparse"),                              Nullable] public bool?   IsSparse                        { get; set; } // bit
-			[Column("is_column_set"),                          Nullable] public bool?   IsColumnSet                     { get; set; } // bit
-			[Column("generated_always_type"),                  Nullable] public byte?   GeneratedAlwaysType             { get; set; } // tinyint
-			[Column("generated_always_type_desc"),             Nullable] public string? GeneratedAlwaysTypeDesc         { get; set; } // nvarchar(60)
-			[Column("encryption_type"),                        Nullable] public int?    EncryptionType                  { get; set; } // int
-			[Column("encryption_type_desc"),                   Nullable] public string? EncryptionTypeDesc              { get; set; } // nvarchar(64)
-			[Column("encryption_algorithm_name"),              Nullable] public string? EncryptionAlgorithmName         { get; set; } // sysname
-			[Column("column_encryption_key_id"),               Nullable] public int?    ColumnEncryptionKeyID           { get; set; } // int
-			[Column("column_encryption_key_database_name"),    Nullable] public string? ColumnEncryptionKeyDatabaseName { get; set; } // sysname
-			[Column("is_hidden"),                              Nullable] public bool?   IsHidden                        { get; set; } // bit
-			[Column("is_masked"),                           NotNull    ] public bool    IsMasked                        { get; set; } // bit
-			[Column("graph_type"),                             Nullable] public int?    GraphType                       { get; set; } // int
-			[Column("graph_type_desc"),                        Nullable] public string? GraphTypeDesc                   { get; set; } // nvarchar(60)
-
-			#region Associations
-
-			/// <summary>
-			/// all_objects
-			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="all_objects", BackReferenceName="AllColumns")]
-			public SystemSchema.AllObjects AllObject { get; set; } = null!;
-
-			#endregion
-		}
-
-		[Table(Schema="sys", Name="all_objects", IsView=true)]
-		public partial class AllObjects
-		{
-			[Column("name"),                NotNull    ] public string   Name              { get; set; } = null!; // sysname
-			[Column("object_id"),           NotNull    ] public int      ObjectID          { get; set; } // int
-			[Column("principal_id"),           Nullable] public int?     PrincipalID       { get; set; } // int
-			[Column("schema_id"),           NotNull    ] public int      SchemaID          { get; set; } // int
-			[Column("parent_object_id"),    NotNull    ] public int      ParentObjectID    { get; set; } // int
-			[Column("type"),                   Nullable] public string?  Type              { get; set; } // char(2)
-			[Column("type_desc"),              Nullable] public string?  TypeDesc          { get; set; } // nvarchar(60)
-			[Column("create_date"),         NotNull    ] public DateTime CreateDate        { get; set; } // datetime
-			[Column("modify_date"),         NotNull    ] public DateTime ModifyDate        { get; set; } // datetime
-			[Column("is_ms_shipped"),          Nullable] public bool?    IsMsShipped       { get; set; } // bit
-			[Column("is_published"),           Nullable] public bool?    IsPublished       { get; set; } // bit
-			[Column("is_schema_published"),    Nullable] public bool?    IsSchemaPublished { get; set; } // bit
-
-			#region Associations
-
-			/// <summary>
-			/// all_columns
-			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<SystemSchema.AllColumns> AllColumns { get; set; } = null!;
-
-			/// <summary>
-			/// all_parameters
-			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<SystemSchema.AllParameters> AllParameters { get; set; } = null!;
-
-			/// <summary>
-			/// all_sql_modules
-			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<SystemSchema.AllSqlModules> AllSqlModules { get; set; } = null!;
-
-			/// <summary>
-			/// all_views
-			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
-			public SystemSchema.AllViews? AllView { get; set; }
-
-			#endregion
-		}
-
-		[Table(Schema="sys", Name="allocation_units", IsView=true)]
-		public partial class AllocationUnits
-		{
-			[Column("allocation_unit_id"), NotNull    ] public long    AllocationUnitID { get; set; } // bigint
-			[Column("type"),               NotNull    ] public byte    Type             { get; set; } // tinyint
-			[Column("type_desc"),             Nullable] public string? TypeDesc         { get; set; } // nvarchar(60)
-			[Column("container_id"),       NotNull    ] public long    ContainerID      { get; set; } // bigint
-			[Column("data_space_id"),         Nullable] public int?    DataSpaceID      { get; set; } // int
-			[Column("total_pages"),        NotNull    ] public long    TotalPages       { get; set; } // bigint
-			[Column("used_pages"),         NotNull    ] public long    UsedPages        { get; set; } // bigint
-			[Column("data_pages"),         NotNull    ] public long    DataPages        { get; set; } // bigint
-		}
-
-		[Table(Schema="sys", Name="all_parameters", IsView=true)]
-		public partial class AllParameters
-		{
-			[Column("object_id"),                           NotNull    ] public int     ObjectID                        { get; set; } // int
-			[Column("name"),                                   Nullable] public string? Name                            { get; set; } // sysname
-			[Column("parameter_id"),                        NotNull    ] public int     ParameterID                     { get; set; } // int
-			[Column("system_type_id"),                      NotNull    ] public byte    SystemTypeID                    { get; set; } // tinyint
-			[Column("user_type_id"),                        NotNull    ] public int     UserTypeID                      { get; set; } // int
-			[Column("max_length"),                          NotNull    ] public short   MaxLength                       { get; set; } // smallint
-			[Column("precision"),                           NotNull    ] public byte    Precision                       { get; set; } // tinyint
-			[Column("scale"),                               NotNull    ] public byte    Scale                           { get; set; } // tinyint
-			[Column("is_output"),                           NotNull    ] public bool    IsOutput                        { get; set; } // bit
-			[Column("is_cursor_ref"),                       NotNull    ] public bool    IsCursorRef                     { get; set; } // bit
-			[Column("has_default_value"),                   NotNull    ] public bool    HasDefaultValue                 { get; set; } // bit
-			[Column("is_xml_document"),                     NotNull    ] public bool    IsXmlDocument                   { get; set; } // bit
-			[Column("default_value"),                          Nullable] public object? DefaultValue                    { get; set; } // sql_variant
-			[Column("xml_collection_id"),                   NotNull    ] public int     XmlCollectionID                 { get; set; } // int
-			[Column("is_readonly"),                         NotNull    ] public bool    IsReadonly                      { get; set; } // bit
-			[Column("is_nullable"),                            Nullable] public bool?   IsNullable                      { get; set; } // bit
-			[Column("encryption_type"),                        Nullable] public int?    EncryptionType                  { get; set; } // int
-			[Column("encryption_type_desc"),                   Nullable] public string? EncryptionTypeDesc              { get; set; } // nvarchar(64)
-			[Column("encryption_algorithm_name"),              Nullable] public string? EncryptionAlgorithmName         { get; set; } // sysname
-			[Column("column_encryption_key_id"),               Nullable] public int?    ColumnEncryptionKeyID           { get; set; } // int
-			[Column("column_encryption_key_database_name"),    Nullable] public string? ColumnEncryptionKeyDatabaseName { get; set; } // sysname
-
-			#region Associations
-
-			/// <summary>
-			/// all_objects
-			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="all_objects", BackReferenceName="AllParameters")]
-			public SystemSchema.AllObjects AllObject { get; set; } = null!;
-
-			#endregion
-		}
-
-		[Table(Schema="sys", Name="all_sql_modules", IsView=true)]
-		public partial class AllSqlModules
-		{
-			[Column("object_id"),               NotNull    ] public int     ObjectID              { get; set; } // int
-			[Column("definition"),                 Nullable] public string? Definition            { get; set; } // nvarchar(0)
-			[Column("uses_ansi_nulls"),            Nullable] public bool?   UsesAnsiNulls         { get; set; } // bit
-			[Column("uses_quoted_identifier"),     Nullable] public bool?   UsesQuotedIdentifier  { get; set; } // bit
-			[Column("is_schema_bound"),            Nullable] public bool?   IsSchemaBound         { get; set; } // bit
-			[Column("uses_database_collation"),    Nullable] public bool?   UsesDatabaseCollation { get; set; } // bit
-			[Column("is_recompiled"),              Nullable] public bool?   IsRecompiled          { get; set; } // bit
-			[Column("null_on_null_input"),         Nullable] public bool?   NullOnNullInput       { get; set; } // bit
-			[Column("execute_as_principal_id"),    Nullable] public int?    ExecuteAsPrincipalID  { get; set; } // int
-			[Column("uses_native_compilation"),    Nullable] public bool?   UsesNativeCompilation { get; set; } // bit
-			[Column("inline_type"),                Nullable] public bool?   InlineType            { get; set; } // bit
-			[Column("is_inlineable"),              Nullable] public bool?   IsInlineable          { get; set; } // bit
-
-			#region Associations
-
-			/// <summary>
-			/// all_objects
-			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="all_objects", BackReferenceName="AllSqlModules")]
-			public SystemSchema.AllObjects AllObject { get; set; } = null!;
-
-			#endregion
-		}
-
-		[Table(Schema="sys", Name="all_views", IsView=true)]
-		public partial class AllViews
-		{
-			[Column("name"),                        NotNull    ] public string   Name                     { get; set; } = null!; // sysname
-			[Column("object_id"),                   NotNull    ] public int      ObjectID                 { get; set; } // int
-			[Column("principal_id"),                   Nullable] public int?     PrincipalID              { get; set; } // int
-			[Column("schema_id"),                   NotNull    ] public int      SchemaID                 { get; set; } // int
-			[Column("parent_object_id"),            NotNull    ] public int      ParentObjectID           { get; set; } // int
-			[Column("type"),                        NotNull    ] public string   Type                     { get; set; } = null!; // char(2)
-			[Column("type_desc"),                      Nullable] public string?  TypeDesc                 { get; set; } // nvarchar(60)
-			[Column("create_date"),                 NotNull    ] public DateTime CreateDate               { get; set; } // datetime
-			[Column("modify_date"),                 NotNull    ] public DateTime ModifyDate               { get; set; } // datetime
-			[Column("is_ms_shipped"),                  Nullable] public bool?    IsMsShipped              { get; set; } // bit
-			[Column("is_published"),                   Nullable] public bool?    IsPublished              { get; set; } // bit
-			[Column("is_schema_published"),            Nullable] public bool?    IsSchemaPublished        { get; set; } // bit
-			[Column("is_replicated"),                  Nullable] public bool?    IsReplicated             { get; set; } // bit
-			[Column("has_replication_filter"),         Nullable] public bool?    HasReplicationFilter     { get; set; } // bit
-			[Column("has_opaque_metadata"),            Nullable] public bool?    HasOpaqueMetadata        { get; set; } // bit
-			[Column("has_unchecked_assembly_data"),    Nullable] public bool?    HasUncheckedAssemblyData { get; set; } // bit
-			[Column("with_check_option"),              Nullable] public bool?    WithCheckOption          { get; set; } // bit
-			[Column("is_date_correlation_view"),       Nullable] public bool?    IsDateCorrelationView    { get; set; } // bit
-			[Column("is_tracked_by_cdc"),              Nullable] public bool?    IsTrackedByCdc           { get; set; } // bit
-			[Column("has_snapshot"),                   Nullable] public bool?    HasSnapshot              { get; set; } // bit
-
-			#region Associations
-
-			/// <summary>
-			/// all_objects
-			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="all_objects", BackReferenceName="AllView")]
-			public SystemSchema.AllObjects AllObject { get; set; } = null!;
-
-			#endregion
-		}
-
-		[Table(Schema="sys", Name="assemblies", IsView=true)]
-		public partial class Assemblies
-		{
-			[Column("name"),                NotNull    ] public string   Name              { get; set; } = null!; // sysname
-			[Column("principal_id"),           Nullable] public int?     PrincipalID       { get; set; } // int
-			[Column("assembly_id"),         NotNull    ] public int      AssemblyID        { get; set; } // int
-			[Column("clr_name"),               Nullable] public string?  ClrName           { get; set; } // nvarchar(4000)
-			[Column("permission_set"),         Nullable] public byte?    PermissionSet     { get; set; } // tinyint
-			[Column("permission_set_desc"),    Nullable] public string?  PermissionSetDesc { get; set; } // nvarchar(60)
-			[Column("is_visible"),          NotNull    ] public bool     IsVisible         { get; set; } // bit
-			[Column("create_date"),         NotNull    ] public DateTime CreateDate        { get; set; } // datetime
-			[Column("modify_date"),         NotNull    ] public DateTime ModifyDate        { get; set; } // datetime
-			[Column("is_user_defined"),        Nullable] public bool?    IsUserDefined     { get; set; } // bit
-		}
-
-		[Table(Schema="sys", Name="assembly_files", IsView=true)]
-		public partial class AssemblyFiles
-		{
-			[Column("assembly_id"), NotNull    ] public int     AssemblyID { get; set; } // int
-			[Column("name"),           Nullable] public string? Name       { get; set; } // nvarchar(260)
-			[Column("file_id"),     NotNull    ] public int     FileID     { get; set; } // int
-			[Column("content"),        Nullable] public byte[]? Content    { get; set; } // varbinary(-1)
-		}
-
-		[Table(Schema="sys", Name="assembly_modules", IsView=true)]
-		public partial class AssemblyModules
-		{
-			[Column("object_id"),               NotNull    ] public int     ObjectID             { get; set; } // int
-			[Column("assembly_id"),             NotNull    ] public int     AssemblyID           { get; set; } // int
-			[Column("assembly_class"),             Nullable] public string? AssemblyClass        { get; set; } // nvarchar(128)
-			[Column("assembly_method"),            Nullable] public string? AssemblyMethod       { get; set; } // nvarchar(128)
-			[Column("null_on_null_input"),         Nullable] public bool?   NullOnNullInput      { get; set; } // bit
-			[Column("execute_as_principal_id"),    Nullable] public int?    ExecuteAsPrincipalID { get; set; } // int
-
-			#region Associations
-
-			/// <summary>
-			/// objects
-			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="objects", BackReferenceName="AssemblyModule")]
-			public SystemSchema.Objects Object { get; set; } = null!;
-
-			#endregion
-		}
-
-		[Table(Schema="sys", Name="assembly_references", IsView=true)]
-		public partial class AssemblyReferences
-		{
-			[Column("assembly_id"),            NotNull] public int AssemblyID           { get; set; } // int
-			[Column("referenced_assembly_id"), NotNull] public int ReferencedAssemblyID { get; set; } // int
-		}
-
-		[Table(Schema="sys", Name="assembly_types", IsView=true)]
-		public partial class AssemblyTypes
-		{
-			[Column("name"),                    NotNull    ] public string  Name                  { get; set; } = null!; // sysname
-			[Column("system_type_id"),          NotNull    ] public byte    SystemTypeID          { get; set; } // tinyint
-			[Column("user_type_id"),            NotNull    ] public int     UserTypeID            { get; set; } // int
-			[Column("schema_id"),               NotNull    ] public int     SchemaID              { get; set; } // int
-			[Column("principal_id"),               Nullable] public int?    PrincipalID           { get; set; } // int
-			[Column("max_length"),              NotNull    ] public short   MaxLength             { get; set; } // smallint
-			[Column("precision"),               NotNull    ] public byte    Precision             { get; set; } // tinyint
-			[Column("scale"),                   NotNull    ] public byte    Scale                 { get; set; } // tinyint
-			[Column("collation_name"),             Nullable] public string? CollationName         { get; set; } // sysname
-			[Column("is_nullable"),                Nullable] public bool?   IsNullable            { get; set; } // bit
-			[Column("is_user_defined"),         NotNull    ] public bool    IsUserDefined         { get; set; } // bit
-			[Column("is_assembly_type"),        NotNull    ] public bool    IsAssemblyType        { get; set; } // bit
-			[Column("default_object_id"),       NotNull    ] public int     DefaultObjectID       { get; set; } // int
-			[Column("rule_object_id"),          NotNull    ] public int     RuleObjectID          { get; set; } // int
-			[Column("assembly_id"),             NotNull    ] public int     AssemblyID            { get; set; } // int
-			[Column("assembly_class"),             Nullable] public string? AssemblyClass         { get; set; } // sysname
-			[Column("is_binary_ordered"),          Nullable] public bool?   IsBinaryOrdered       { get; set; } // bit
-			[Column("is_fixed_length"),            Nullable] public bool?   IsFixedLength         { get; set; } // bit
-			[Column("prog_id"),                    Nullable] public string? ProgID                { get; set; } // nvarchar(40)
-			[Column("assembly_qualified_name"),    Nullable] public string? AssemblyQualifiedName { get; set; } // nvarchar(4000)
-			[Column("is_table_type"),           NotNull    ] public bool    IsTableType           { get; set; } // bit
-		}
-
-		[Table(Schema="sys", Name="asymmetric_keys", IsView=true)]
-		public partial class AsymmetricKeys
-		{
-			[Column("name"),                         NotNull    ] public string  Name                       { get; set; } = null!; // sysname
-			[Column("principal_id"),                    Nullable] public int?    PrincipalID                { get; set; } // int
-			[Column("asymmetric_key_id"),            NotNull    ] public int     AsymmetricKeyID            { get; set; } // int
-			[Column("pvt_key_encryption_type"),      NotNull    ] public string  PvtKeyEncryptionType       { get; set; } = null!; // char(2)
-			[Column("pvt_key_encryption_type_desc"),    Nullable] public string? PvtKeyEncryptionTypeDesc   { get; set; } // nvarchar(60)
-			[Column("thumbprint"),                   NotNull    ] public byte[]  Thumbprint                 { get; set; } = null!; // varbinary(64)
-			[Column("algorithm"),                    NotNull    ] public string  Algorithm                  { get; set; } = null!; // char(2)
-			[Column("algorithm_desc"),                  Nullable] public string? AlgorithmDesc              { get; set; } // nvarchar(60)
-			[Column("key_length"),                   NotNull    ] public int     KeyLength                  { get; set; } // int
-			[Column("sid"),                             Nullable] public byte[]? Sid                        { get; set; } // varbinary(85)
-			[Column("string_sid"),                      Nullable] public string? StringSid                  { get; set; } // nvarchar(128)
-			[Column("public_key"),                   NotNull    ] public byte[]  PublicKey                  { get; set; } = null!; // varbinary(-1)
-			[Column("attested_by"),                     Nullable] public string? AttestedBy                 { get; set; } // nvarchar(260)
-			[Column("provider_type"),                   Nullable] public string? ProviderType               { get; set; } // nvarchar(60)
-			[Column("cryptographic_provider_guid"),     Nullable] public Guid?   CryptographicProviderGuid  { get; set; } // uniqueidentifier
-			[Column("cryptographic_provider_algid"),    Nullable] public object? CryptographicProviderAlgid { get; set; } // sql_variant
-		}
-
-		[Table(Schema="sys", Name="availability_databases_cluster", IsView=true)]
-		public partial class AvailabilityDatabasesCluster
-		{
-			[Column("group_id"),          NotNull    ] public Guid     GroupID         { get; set; } // uniqueidentifier
-			[Column("group_database_id"), NotNull    ] public Guid     GroupDatabaseID { get; set; } // uniqueidentifier
-			[Column("database_name"),        Nullable] public string?  DatabaseName    { get; set; } // sysname
-			[Column("truncation_lsn"),       Nullable] public decimal? TruncationLsn   { get; set; } // numeric(25,0)
-		}
-
-		[Table(Schema="sys", Name="availability_group_listener_ip_addresses", IsView=true)]
-		public partial class AvailabilityGroupListenerIpAddresses
-		{
-			[Column("listener_id"),                     Nullable] public string? ListenerID                { get; set; } // nvarchar(36)
-			[Column("ip_address"),                      Nullable] public string? IpAddress                 { get; set; } // nvarchar(48)
-			[Column("ip_subnet_mask"),                  Nullable] public string? IpSubnetMask              { get; set; } // nvarchar(15)
-			[Column("is_dhcp"),                      NotNull    ] public bool    IsDhcp                    { get; set; } // bit
-			[Column("network_subnet_ip"),               Nullable] public string? NetworkSubnetIp           { get; set; } // nvarchar(48)
-			[Column("network_subnet_prefix_length"),    Nullable] public int?    NetworkSubnetPrefixLength { get; set; } // int
-			[Column("network_subnet_ipv4_mask"),        Nullable] public string? NetworkSubnetIpv4Mask     { get; set; } // nvarchar(48)
-			[Column("state"),                           Nullable] public byte?   State                     { get; set; } // tinyint
-			[Column("state_desc"),                      Nullable] public string? StateDesc                 { get; set; } // nvarchar(60)
-		}
-
-		[Table(Schema="sys", Name="availability_group_listeners", IsView=true)]
-		public partial class AvailabilityGroupListeners
-		{
-			[Column("group_id"),                             NotNull    ] public Guid    GroupID                          { get; set; } // uniqueidentifier
-			[Column("listener_id"),                             Nullable] public string? ListenerID                       { get; set; } // nvarchar(36)
-			[Column("dns_name"),                                Nullable] public string? DnsName                          { get; set; } // nvarchar(63)
-			[Column("port"),                                    Nullable] public int?    Port                             { get; set; } // int
-			[Column("is_conformant"),                        NotNull    ] public bool    IsConformant                     { get; set; } // bit
-			[Column("ip_configuration_string_from_cluster"),    Nullable] public string? IpConfigurationStringFromCluster { get; set; } // nvarchar(4000)
-		}
-
-		[Table(Schema="sys", Name="availability_groups", IsView=true)]
-		public partial class AvailabilityGroups
-		{
-			[Column("group_id"),                                    NotNull    ] public Guid    GroupID                                 { get; set; } // uniqueidentifier
-			[Column("name"),                                           Nullable] public string? Name                                    { get; set; } // sysname
-			[Column("resource_id"),                                    Nullable] public string? ResourceID                              { get; set; } // nvarchar(40)
-			[Column("resource_group_id"),                              Nullable] public string? ResourceGroupID                         { get; set; } // nvarchar(40)
-			[Column("failure_condition_level"),                        Nullable] public int?    FailureConditionLevel                   { get; set; } // int
-			[Column("health_check_timeout"),                           Nullable] public int?    HealthCheckTimeout                      { get; set; } // int
-			[Column("automated_backup_preference"),                    Nullable] public byte?   AutomatedBackupPreference               { get; set; } // tinyint
-			[Column("automated_backup_preference_desc"),               Nullable] public string? AutomatedBackupPreferenceDesc           { get; set; } // nvarchar(60)
-			[Column("version"),                                        Nullable] public short?  Version                                 { get; set; } // smallint
-			[Column("basic_features"),                                 Nullable] public bool?   BasicFeatures                           { get; set; } // bit
-			[Column("dtc_support"),                                    Nullable] public bool?   DtcSupport                              { get; set; } // bit
-			[Column("db_failover"),                                    Nullable] public bool?   DbFailover                              { get; set; } // bit
-			[Column("is_distributed"),                                 Nullable] public bool?   IsDistributed                           { get; set; } // bit
-			[Column("cluster_type"),                                   Nullable] public byte?   ClusterType                             { get; set; } // tinyint
-			[Column("cluster_type_desc"),                              Nullable] public string? ClusterTypeDesc                         { get; set; } // nvarchar(60)
-			[Column("required_synchronized_secondaries_to_commit"),    Nullable] public int?    RequiredSynchronizedSecondariesToCommit { get; set; } // int
-			[Column("sequence_number"),                                Nullable] public long?   SequenceNumber                          { get; set; } // bigint
-			[Column("is_contained"),                                   Nullable] public bool?   IsContained                             { get; set; } // bit
-		}
-
-		[Table(Schema="sys", Name="availability_groups_cluster", IsView=true)]
-		public partial class AvailabilityGroupsCluster
-		{
-			[Column("group_id"),                         NotNull    ] public Guid    GroupID                       { get; set; } // uniqueidentifier
-			[Column("name"),                                Nullable] public string? Name                          { get; set; } // sysname
-			[Column("resource_id"),                         Nullable] public string? ResourceID                    { get; set; } // nvarchar(40)
-			[Column("resource_group_id"),                   Nullable] public string? ResourceGroupID               { get; set; } // nvarchar(40)
-			[Column("failure_condition_level"),             Nullable] public int?    FailureConditionLevel         { get; set; } // int
-			[Column("health_check_timeout"),                Nullable] public int?    HealthCheckTimeout            { get; set; } // int
-			[Column("automated_backup_preference"),         Nullable] public byte?   AutomatedBackupPreference     { get; set; } // tinyint
-			[Column("automated_backup_preference_desc"),    Nullable] public string? AutomatedBackupPreferenceDesc { get; set; } // nvarchar(60)
-		}
-
-		[Table(Schema="sys", Name="availability_read_only_routing_lists", IsView=true)]
-		public partial class AvailabilityReadOnlyRoutingLists
-		{
-			[Column("replica_id"),           NotNull] public Guid ReplicaID         { get; set; } // uniqueidentifier
-			[Column("routing_priority"),     NotNull] public int  RoutingPriority   { get; set; } // int
-			[Column("read_only_replica_id"), NotNull] public Guid ReadOnlyReplicaID { get; set; } // uniqueidentifier
-		}
-
-		[Table(Schema="sys", Name="availability_replicas", IsView=true)]
-		public partial class AvailabilityReplicas
-		{
-			[Column("replica_id"),                            Nullable] public Guid?     ReplicaID                         { get; set; } // uniqueidentifier
-			[Column("group_id"),                              Nullable] public Guid?     GroupID                           { get; set; } // uniqueidentifier
-			[Column("replica_metadata_id"),                   Nullable] public int?      ReplicaMetadataID                 { get; set; } // int
-			[Column("replica_server_name"),                   Nullable] public string?   ReplicaServerName                 { get; set; } // nvarchar(256)
-			[Column("owner_sid"),                             Nullable] public byte[]?   OwnerSid                          { get; set; } // varbinary(85)
-			[Column("endpoint_url"),                          Nullable] public string?   EndpointUrl                       { get; set; } // nvarchar(256)
-			[Column("availability_mode"),                     Nullable] public byte?     AvailabilityMode                  { get; set; } // tinyint
-			[Column("availability_mode_desc"),                Nullable] public string?   AvailabilityModeDesc              { get; set; } // nvarchar(60)
-			[Column("failover_mode"),                         Nullable] public byte?     FailoverMode                      { get; set; } // tinyint
-			[Column("failover_mode_desc"),                    Nullable] public string?   FailoverModeDesc                  { get; set; } // nvarchar(60)
-			[Column("session_timeout"),                       Nullable] public int?      SessionTimeout                    { get; set; } // int
-			[Column("primary_role_allow_connections"),        Nullable] public byte?     PrimaryRoleAllowConnections       { get; set; } // tinyint
-			[Column("primary_role_allow_connections_desc"),   Nullable] public string?   PrimaryRoleAllowConnectionsDesc   { get; set; } // nvarchar(60)
-			[Column("secondary_role_allow_connections"),      Nullable] public byte?     SecondaryRoleAllowConnections     { get; set; } // tinyint
-			[Column("secondary_role_allow_connections_desc"), Nullable] public string?   SecondaryRoleAllowConnectionsDesc { get; set; } // nvarchar(60)
-			[Column("create_date"),                           Nullable] public DateTime? CreateDate                        { get; set; } // datetime
-			[Column("modify_date"),                           Nullable] public DateTime? ModifyDate                        { get; set; } // datetime
-			[Column("backup_priority"),                       Nullable] public int?      BackupPriority                    { get; set; } // int
-			[Column("read_only_routing_url"),                 Nullable] public string?   ReadOnlyRoutingUrl                { get; set; } // nvarchar(256)
-			[Column("seeding_mode"),                          Nullable] public byte?     SeedingMode                       { get; set; } // tinyint
-			[Column("seeding_mode_desc"),                     Nullable] public string?   SeedingModeDesc                   { get; set; } // nvarchar(60)
-			[Column("read_write_routing_url"),                Nullable] public string?   ReadWriteRoutingUrl               { get; set; } // nvarchar(256)
-		}
-
-		[Table(Schema="sys", Name="backup_devices", IsView=true)]
-		public partial class BackupDevices
-		{
-			[Column("name"),          NotNull    ] public string  Name         { get; set; } = null!; // sysname
-			[Column("type"),             Nullable] public byte?   Type         { get; set; } // tinyint
-			[Column("type_desc"),        Nullable] public string? TypeDesc     { get; set; } // nvarchar(60)
-			[Column("physical_name"),    Nullable] public string? PhysicalName { get; set; } // nvarchar(260)
-		}
-
-		[Table(Schema="sys", Name="certificates", IsView=true)]
-		public partial class Certificates
-		{
-			[Column("name"),                         NotNull    ] public string    Name                     { get; set; } = null!; // sysname
-			[Column("certificate_id"),               NotNull    ] public int       CertificateID            { get; set; } // int
-			[Column("principal_id"),                    Nullable] public int?      PrincipalID              { get; set; } // int
-			[Column("pvt_key_encryption_type"),      NotNull    ] public string    PvtKeyEncryptionType     { get; set; } = null!; // char(2)
-			[Column("pvt_key_encryption_type_desc"),    Nullable] public string?   PvtKeyEncryptionTypeDesc { get; set; } // nvarchar(60)
-			[Column("is_active_for_begin_dialog"),      Nullable] public bool?     IsActiveForBeginDialog   { get; set; } // bit
-			[Column("issuer_name"),                     Nullable] public string?   IssuerName               { get; set; } // nvarchar(442)
-			[Column("cert_serial_number"),              Nullable] public string?   CertSerialNumber         { get; set; } // nvarchar(64)
-			[Column("sid"),                             Nullable] public byte[]?   Sid                      { get; set; } // varbinary(85)
-			[Column("string_sid"),                      Nullable] public string?   StringSid                { get; set; } // nvarchar(128)
-			[Column("subject"),                         Nullable] public string?   Subject                  { get; set; } // nvarchar(4000)
-			[Column("expiry_date"),                     Nullable] public DateTime? ExpiryDate               { get; set; } // datetime
-			[Column("start_date"),                      Nullable] public DateTime? StartDate                { get; set; } // datetime
-			[Column("thumbprint"),                   NotNull    ] public byte[]    Thumbprint               { get; set; } = null!; // varbinary(64)
-			[Column("attested_by"),                     Nullable] public string?   AttestedBy               { get; set; } // nvarchar(260)
-			[Column("pvt_key_last_backup_date"),        Nullable] public DateTime? PvtKeyLastBackupDate     { get; set; } // datetime
-			[Column("key_length"),                      Nullable] public int?      KeyLength                { get; set; } // int
-		}
-
-		[Table(Schema="sys", Name="change_tracking_databases", IsView=true)]
-		public partial class ChangeTrackingDatabases
-		{
-			[Column("database_id"),                 NotNull    ] public int     DatabaseID               { get; set; } // int
-			[Column("is_auto_cleanup_on"),             Nullable] public byte?   IsAutoCleanupOn          { get; set; } // tinyint
-			[Column("retention_period"),               Nullable] public int?    RetentionPeriod          { get; set; } // int
-			[Column("retention_period_units"),         Nullable] public byte?   RetentionPeriodUnits     { get; set; } // tinyint
-			[Column("retention_period_units_desc"),    Nullable] public string? RetentionPeriodUnitsDesc { get; set; } // nvarchar(60)
-			[Column("max_cleanup_version"),            Nullable] public long?   MaxCleanupVersion        { get; set; } // bigint
-		}
-
-		[Table(Schema="sys", Name="change_tracking_tables", IsView=true)]
-		public partial class ChangeTrackingTables
-		{
-			[Column("object_id"),                   NotNull    ] public int   ObjectID                { get; set; } // int
-			[Column("is_track_columns_updated_on"), NotNull    ] public bool  IsTrackColumnsUpdatedOn { get; set; } // bit
-			[Column("min_valid_version"),              Nullable] public long? MinValidVersion         { get; set; } // bigint
-			[Column("begin_version"),                  Nullable] public long? BeginVersion            { get; set; } // bigint
-			[Column("cleanup_version"),                Nullable] public long? CleanupVersion          { get; set; } // bigint
-
-			#region Associations
-
-			/// <summary>
-			/// objects
-			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ChangeTrackingTables")]
-			public SystemSchema.Objects Object { get; set; } = null!;
-
-			#endregion
-		}
-
-		[Table(Schema="sys", Name="check_constraints", IsView=true)]
-		public partial class CheckConstraints
-		{
-			[Column("name"),                    NotNull    ] public string   Name                  { get; set; } = null!; // sysname
-			[Column("object_id"),               NotNull    ] public int      ObjectID              { get; set; } // int
-			[Column("principal_id"),               Nullable] public int?     PrincipalID           { get; set; } // int
-			[Column("schema_id"),               NotNull    ] public int      SchemaID              { get; set; } // int
-			[Column("parent_object_id"),        NotNull    ] public int      ParentObjectID        { get; set; } // int
-			[Column("type"),                       Nullable] public string?  Type                  { get; set; } // char(2)
-			[Column("type_desc"),                  Nullable] public string?  TypeDesc              { get; set; } // nvarchar(60)
-			[Column("create_date"),             NotNull    ] public DateTime CreateDate            { get; set; } // datetime
-			[Column("modify_date"),             NotNull    ] public DateTime ModifyDate            { get; set; } // datetime
-			[Column("is_ms_shipped"),           NotNull    ] public bool     IsMsShipped           { get; set; } // bit
-			[Column("is_published"),            NotNull    ] public bool     IsPublished           { get; set; } // bit
-			[Column("is_schema_published"),     NotNull    ] public bool     IsSchemaPublished     { get; set; } // bit
-			[Column("is_disabled"),             NotNull    ] public bool     IsDisabled            { get; set; } // bit
-			[Column("is_not_for_replication"),  NotNull    ] public bool     IsNotForReplication   { get; set; } // bit
-			[Column("is_not_trusted"),          NotNull    ] public bool     IsNotTrusted          { get; set; } // bit
-			[Column("parent_column_id"),        NotNull    ] public int      ParentColumnID        { get; set; } // int
-			[Column("definition"),                 Nullable] public string?  Definition            { get; set; } // nvarchar(0)
-			[Column("uses_database_collation"),    Nullable] public bool?    UsesDatabaseCollation { get; set; } // bit
-			[Column("is_system_named"),         NotNull    ] public bool     IsSystemNamed         { get; set; } // bit
-
-			#region Associations
-
-			/// <summary>
-			/// objects
-			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="objects", BackReferenceName="CheckConstraint")]
-			public SystemSchema.Objects Object { get; set; } = null!;
-
-			#endregion
-		}
-
-		[Table(Schema="sys", Name="column_encryption_keys", IsView=true)]
-		public partial class ColumnEncryptionKeys
-		{
-			[Column("name"),                     NotNull] public string   Name                  { get; set; } = null!; // sysname
-			[Column("column_encryption_key_id"), NotNull] public int      ColumnEncryptionKeyID { get; set; } // int
-			[Column("create_date"),              NotNull] public DateTime CreateDate            { get; set; } // datetime
-			[Column("modify_date"),              NotNull] public DateTime ModifyDate            { get; set; } // datetime
-		}
-
-		[Table(Schema="sys", Name="column_encryption_key_values", IsView=true)]
-		public partial class ColumnEncryptionKeyValues
-		{
-			[Column("column_encryption_key_id"),  NotNull    ] public int     ColumnEncryptionKeyID   { get; set; } // int
-			[Column("column_master_key_id"),      NotNull    ] public int     ColumnMasterKeyID       { get; set; } // int
-			[Column("encrypted_value"),              Nullable] public byte[]? EncryptedValue          { get; set; } // varbinary(8000)
-			[Column("encryption_algorithm_name"),    Nullable] public string? EncryptionAlgorithmName { get; set; } // sysname
-		}
-
-		[Table(Schema="sys", Name="column_master_keys", IsView=true)]
-		public partial class ColumnMasterKeys
-		{
-			[Column("name"),                       NotNull    ] public string   Name                     { get; set; } = null!; // sysname
-			[Column("column_master_key_id"),       NotNull    ] public int      ColumnMasterKeyID        { get; set; } // int
-			[Column("create_date"),                NotNull    ] public DateTime CreateDate               { get; set; } // datetime
-			[Column("modify_date"),                NotNull    ] public DateTime ModifyDate               { get; set; } // datetime
-			[Column("key_store_provider_name"),       Nullable] public string?  KeyStoreProviderName     { get; set; } // sysname
-			[Column("key_path"),                      Nullable] public string?  KeyPath                  { get; set; } // nvarchar(4000)
-			[Column("allow_enclave_computations"), NotNull    ] public int      AllowEnclaveComputations { get; set; } // int
-			[Column("signature"),                     Nullable] public byte[]?  Signature                { get; set; } // varbinary(8000)
-		}
-
-		[Table(Schema="sys", Name="columns", IsView=true)]
-		public partial class Columns
-		{
-			[Column("object_id"),                           NotNull    ] public int     ObjectID                        { get; set; } // int
-			[Column("name"),                                   Nullable] public string? Name                            { get; set; } // sysname
-			[Column("column_id"),                           NotNull    ] public int     ColumnID                        { get; set; } // int
-			[Column("system_type_id"),                      NotNull    ] public byte    SystemTypeID                    { get; set; } // tinyint
-			[Column("user_type_id"),                        NotNull    ] public int     UserTypeID                      { get; set; } // int
-			[Column("max_length"),                          NotNull    ] public short   MaxLength                       { get; set; } // smallint
-			[Column("precision"),                           NotNull    ] public byte    Precision                       { get; set; } // tinyint
-			[Column("scale"),                               NotNull    ] public byte    Scale                           { get; set; } // tinyint
-			[Column("collation_name"),                         Nullable] public string? CollationName                   { get; set; } // sysname
-			[Column("is_nullable"),                            Nullable] public bool?   IsNullable                      { get; set; } // bit
-			[Column("is_ansi_padded"),                      NotNull    ] public bool    IsAnsiPadded                    { get; set; } // bit
-			[Column("is_rowguidcol"),                       NotNull    ] public bool    IsRowguidcol                    { get; set; } // bit
-			[Column("is_identity"),                         NotNull    ] public bool    IsIdentity                      { get; set; } // bit
-			[Column("is_computed"),                         NotNull    ] public bool    IsComputed                      { get; set; } // bit
-			[Column("is_filestream"),                       NotNull    ] public bool    IsFilestream                    { get; set; } // bit
-			[Column("is_replicated"),                          Nullable] public bool?   IsReplicated                    { get; set; } // bit
-			[Column("is_non_sql_subscribed"),                  Nullable] public bool?   IsNonSqlSubscribed              { get; set; } // bit
-			[Column("is_merge_published"),                     Nullable] public bool?   IsMergePublished                { get; set; } // bit
-			[Column("is_dts_replicated"),                      Nullable] public bool?   IsDtsReplicated                 { get; set; } // bit
-			[Column("is_xml_document"),                     NotNull    ] public bool    IsXmlDocument                   { get; set; } // bit
-			[Column("xml_collection_id"),                   NotNull    ] public int     XmlCollectionID                 { get; set; } // int
-			[Column("default_object_id"),                   NotNull    ] public int     DefaultObjectID                 { get; set; } // int
-			[Column("rule_object_id"),                      NotNull    ] public int     RuleObjectID                    { get; set; } // int
-			[Column("is_sparse"),                              Nullable] public bool?   IsSparse                        { get; set; } // bit
-			[Column("is_column_set"),                          Nullable] public bool?   IsColumnSet                     { get; set; } // bit
-			[Column("generated_always_type"),                  Nullable] public byte?   GeneratedAlwaysType             { get; set; } // tinyint
-			[Column("generated_always_type_desc"),             Nullable] public string? GeneratedAlwaysTypeDesc         { get; set; } // nvarchar(60)
-			[Column("encryption_type"),                        Nullable] public int?    EncryptionType                  { get; set; } // int
-			[Column("encryption_type_desc"),                   Nullable] public string? EncryptionTypeDesc              { get; set; } // nvarchar(64)
-			[Column("encryption_algorithm_name"),              Nullable] public string? EncryptionAlgorithmName         { get; set; } // sysname
-			[Column("column_encryption_key_id"),               Nullable] public int?    ColumnEncryptionKeyID           { get; set; } // int
-			[Column("column_encryption_key_database_name"),    Nullable] public string? ColumnEncryptionKeyDatabaseName { get; set; } // sysname
-			[Column("is_hidden"),                              Nullable] public bool?   IsHidden                        { get; set; } // bit
-			[Column("is_masked"),                           NotNull    ] public bool    IsMasked                        { get; set; } // bit
-			[Column("graph_type"),                             Nullable] public int?    GraphType                       { get; set; } // int
-			[Column("graph_type_desc"),                        Nullable] public string? GraphTypeDesc                   { get; set; } // nvarchar(60)
-
-			#region Associations
-
-			/// <summary>
-			/// objects
-			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="Columns")]
-			public SystemSchema.Objects Object { get; set; } = null!;
-
-			#endregion
-		}
-
-		[Table(Schema="sys", Name="column_store_dictionaries", IsView=true)]
-		public partial class ColumnStoreDictionaries
-		{
-			[Column("partition_id"),  Nullable] public long? PartitionID  { get; set; } // bigint
-			[Column("hobt_id"),       Nullable] public long? HobtID       { get; set; } // bigint
-			[Column("column_id"),     Nullable] public int?  ColumnID     { get; set; } // int
-			[Column("dictionary_id"), Nullable] public int?  DictionaryID { get; set; } // int
-			[Column("version"),       Nullable] public int?  Version      { get; set; } // int
-			[Column("type"),          Nullable] public int?  Type         { get; set; } // int
-			[Column("last_id"),       Nullable] public int?  LastID       { get; set; } // int
-			[Column("entry_count"),   Nullable] public long? EntryCount   { get; set; } // bigint
-			[Column("on_disk_size"),  Nullable] public long? OnDiskSize   { get; set; } // bigint
-		}
-
-		[Table(Schema="sys", Name="column_store_row_groups", IsView=true)]
-		public partial class ColumnStoreRowGroups
-		{
-			[Column("object_id"),              Nullable] public int?   ObjectID         { get; set; } // int
-			[Column("index_id"),               Nullable] public int?   IndexID          { get; set; } // int
-			[Column("partition_number"),       Nullable] public int?   PartitionNumber  { get; set; } // int
-			[Column("row_group_id"),           Nullable] public int?   RowGroupID       { get; set; } // int
-			[Column("delta_store_hobt_id"),    Nullable] public long?  DeltaStoreHobtID { get; set; } // bigint
-			[Column("state"),                  Nullable] public byte?  State            { get; set; } // tinyint
-			[Column("state_description"),   NotNull    ] public string StateDescription { get; set; } = null!; // nvarchar(60)
-			[Column("total_rows"),             Nullable] public long?  TotalRows        { get; set; } // bigint
-			[Column("deleted_rows"),           Nullable] public long?  DeletedRows      { get; set; } // bigint
-			[Column("size_in_bytes"),          Nullable] public long?  SizeInBytes      { get; set; } // bigint
-
-			#region Associations
-
-			/// <summary>
-			/// objects
-			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ColumnStoreRowGroups")]
-			public SystemSchema.Objects Object { get; set; } = null!;
-
-			#endregion
-		}
-
-		[Table(Schema="sys", Name="column_store_segments", IsView=true)]
-		public partial class ColumnStoreSegments
-		{
-			[Column("partition_id"),            Nullable] public long?   PartitionID           { get; set; } // bigint
-			[Column("hobt_id"),                 Nullable] public long?   HobtID                { get; set; } // bigint
-			[Column("column_id"),               Nullable] public int?    ColumnID              { get; set; } // int
-			[Column("segment_id"),              Nullable] public int?    SegmentID             { get; set; } // int
-			[Column("version"),                 Nullable] public int?    Version               { get; set; } // int
-			[Column("encoding_type"),           Nullable] public int?    EncodingType          { get; set; } // int
-			[Column("row_count"),               Nullable] public int?    RowCount              { get; set; } // int
-			[Column("has_nulls"),               Nullable] public int?    HasNulls              { get; set; } // int
-			[Column("base_id"),                 Nullable] public long?   BaseID                { get; set; } // bigint
-			[Column("magnitude"),               Nullable] public double? Magnitude             { get; set; } // float
-			[Column("primary_dictionary_id"),   Nullable] public int?    PrimaryDictionaryID   { get; set; } // int
-			[Column("secondary_dictionary_id"), Nullable] public int?    SecondaryDictionaryID { get; set; } // int
-			[Column("min_data_id"),             Nullable] public long?   MinDataID             { get; set; } // bigint
-			[Column("max_data_id"),             Nullable] public long?   MaxDataID             { get; set; } // bigint
-			[Column("null_value"),              Nullable] public long?   NullValue             { get; set; } // bigint
-			[Column("on_disk_size"),            Nullable] public long?   OnDiskSize            { get; set; } // bigint
-		}
-
-		[Table(Schema="sys", Name="column_type_usages", IsView=true)]
-		public partial class ColumnTypeUsages
-		{
-			[Column("object_id"),    NotNull] public int ObjectID   { get; set; } // int
-			[Column("column_id"),    NotNull] public int ColumnID   { get; set; } // int
-			[Column("user_type_id"), NotNull] public int UserTypeID { get; set; } // int
-
-			#region Associations
-
-			/// <summary>
-			/// objects
-			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ColumnTypeUsages")]
-			public SystemSchema.Objects Object { get; set; } = null!;
-
-			#endregion
-		}
-
-		[Table(Schema="sys", Name="column_xml_schema_collection_usages", IsView=true)]
-		public partial class ColumnXmlSchemaCollectionUsages
-		{
-			[Column("object_id"),         NotNull] public int ObjectID        { get; set; } // int
-			[Column("column_id"),         NotNull] public int ColumnID        { get; set; } // int
-			[Column("xml_collection_id"), NotNull] public int XmlCollectionID { get; set; } // int
-
-			#region Associations
-
-			/// <summary>
-			/// objects
-			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ColumnXmlSchemaCollectionUsages")]
-			public SystemSchema.Objects Object { get; set; } = null!;
-
-			#endregion
-		}
-
-		[Table(Schema="sys", Name="computed_columns", IsView=true)]
-		public partial class ComputedColumns
-		{
-			[Column("object_id"),                           NotNull    ] public int     ObjectID                        { get; set; } // int
-			[Column("name"),                                   Nullable] public string? Name                            { get; set; } // sysname
-			[Column("column_id"),                           NotNull    ] public int     ColumnID                        { get; set; } // int
-			[Column("system_type_id"),                      NotNull    ] public byte    SystemTypeID                    { get; set; } // tinyint
-			[Column("user_type_id"),                        NotNull    ] public int     UserTypeID                      { get; set; } // int
-			[Column("max_length"),                          NotNull    ] public short   MaxLength                       { get; set; } // smallint
-			[Column("precision"),                           NotNull    ] public byte    Precision                       { get; set; } // tinyint
-			[Column("scale"),                               NotNull    ] public byte    Scale                           { get; set; } // tinyint
-			[Column("collation_name"),                         Nullable] public string? CollationName                   { get; set; } // sysname
-			[Column("is_nullable"),                            Nullable] public bool?   IsNullable                      { get; set; } // bit
-			[Column("is_ansi_padded"),                      NotNull    ] public bool    IsAnsiPadded                    { get; set; } // bit
-			[Column("is_rowguidcol"),                       NotNull    ] public bool    IsRowguidcol                    { get; set; } // bit
-			[Column("is_identity"),                         NotNull    ] public bool    IsIdentity                      { get; set; } // bit
-			[Column("is_filestream"),                       NotNull    ] public bool    IsFilestream                    { get; set; } // bit
-			[Column("is_replicated"),                          Nullable] public bool?   IsReplicated                    { get; set; } // bit
-			[Column("is_non_sql_subscribed"),                  Nullable] public bool?   IsNonSqlSubscribed              { get; set; } // bit
-			[Column("is_merge_published"),                     Nullable] public bool?   IsMergePublished                { get; set; } // bit
-			[Column("is_dts_replicated"),                      Nullable] public bool?   IsDtsReplicated                 { get; set; } // bit
-			[Column("is_xml_document"),                     NotNull    ] public bool    IsXmlDocument                   { get; set; } // bit
-			[Column("xml_collection_id"),                   NotNull    ] public int     XmlCollectionID                 { get; set; } // int
-			[Column("default_object_id"),                   NotNull    ] public int     DefaultObjectID                 { get; set; } // int
-			[Column("rule_object_id"),                      NotNull    ] public int     RuleObjectID                    { get; set; } // int
-			[Column("definition"),                             Nullable] public string? Definition                      { get; set; } // nvarchar(0)
-			[Column("uses_database_collation"),             NotNull    ] public bool    UsesDatabaseCollation           { get; set; } // bit
-			[Column("is_persisted"),                        NotNull    ] public bool    IsPersisted                     { get; set; } // bit
-			[Column("is_computed"),                         NotNull    ] public bool    IsComputed                      { get; set; } // bit
-			[Column("is_sparse"),                           NotNull    ] public bool    IsSparse                        { get; set; } // bit
-			[Column("is_column_set"),                       NotNull    ] public bool    IsColumnSet                     { get; set; } // bit
-			[Column("generated_always_type"),                  Nullable] public byte?   GeneratedAlwaysType             { get; set; } // tinyint
-			[Column("generated_always_type_desc"),             Nullable] public string? GeneratedAlwaysTypeDesc         { get; set; } // nvarchar(60)
-			[Column("encryption_type"),                        Nullable] public int?    EncryptionType                  { get; set; } // int
-			[Column("encryption_type_desc"),                   Nullable] public string? EncryptionTypeDesc              { get; set; } // nvarchar(64)
-			[Column("encryption_algorithm_name"),              Nullable] public string? EncryptionAlgorithmName         { get; set; } // nvarchar(128)
-			[Column("column_encryption_key_id"),               Nullable] public int?    ColumnEncryptionKeyID           { get; set; } // int
-			[Column("column_encryption_key_database_name"),    Nullable] public string? ColumnEncryptionKeyDatabaseName { get; set; } // sysname
-			[Column("is_hidden"),                           NotNull    ] public bool    IsHidden                        { get; set; } // bit
-			[Column("is_masked"),                           NotNull    ] public bool    IsMasked                        { get; set; } // bit
-			[Column("graph_type"),                             Nullable] public int?    GraphType                       { get; set; } // int
-			[Column("graph_type_desc"),                        Nullable] public string? GraphTypeDesc                   { get; set; } // nvarchar(60)
-
-			#region Associations
-
-			/// <summary>
-			/// objects
-			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ComputedColumns")]
-			public SystemSchema.Objects Object { get; set; } = null!;
-
-			#endregion
-		}
-
-		[Table(Schema="sys", Name="configurations", IsView=true)]
-		public partial class Configurations
-		{
-			[Column("configuration_id"), NotNull    ] public int     ConfigurationID { get; set; } // int
-			[Column("name"),             NotNull    ] public string  Name            { get; set; } = null!; // nvarchar(35)
-			[Column("value"),               Nullable] public object? Value           { get; set; } // sql_variant
-			[Column("minimum"),             Nullable] public object? Minimum         { get; set; } // sql_variant
-			[Column("maximum"),             Nullable] public object? Maximum         { get; set; } // sql_variant
-			[Column("value_in_use"),        Nullable] public object? ValueInUse      { get; set; } // sql_variant
-			[Column("description"),      NotNull    ] public string  Description     { get; set; } = null!; // nvarchar(255)
-			[Column("is_dynamic"),       NotNull    ] public bool    IsDynamic       { get; set; } // bit
-			[Column("is_advanced"),      NotNull    ] public bool    IsAdvanced      { get; set; } // bit
-		}
-
-		[Table(Schema="sys", Name="conversation_endpoints", IsView=true)]
-		public partial class ConversationEndpoints
-		{
-			[Column("conversation_handle"),             NotNull    ] public Guid     ConversationHandle           { get; set; } // uniqueidentifier
-			[Column("conversation_id"),                 NotNull    ] public Guid     ConversationID               { get; set; } // uniqueidentifier
-			[Column("is_initiator"),                    NotNull    ] public bool     IsInitiator                  { get; set; } // bit
-			[Column("service_contract_id"),             NotNull    ] public int      ServiceContractID            { get; set; } // int
-			[Column("conversation_group_id"),           NotNull    ] public Guid     ConversationGroupID          { get; set; } // uniqueidentifier
-			[Column("service_id"),                      NotNull    ] public int      ServiceID                    { get; set; } // int
-			[Column("lifetime"),                        NotNull    ] public DateTime Lifetime                     { get; set; } // datetime
-			[Column("state"),                           NotNull    ] public string   State                        { get; set; } = null!; // char(2)
-			[Column("state_desc"),                         Nullable] public string?  StateDesc                    { get; set; } // nvarchar(60)
-			[Column("far_service"),                     NotNull    ] public string   FarService                   { get; set; } = null!; // nvarchar(256)
-			[Column("far_broker_instance"),                Nullable] public string?  FarBrokerInstance            { get; set; } // nvarchar(128)
-			[Column("principal_id"),                    NotNull    ] public int      PrincipalID                  { get; set; } // int
-			[Column("far_principal_id"),                NotNull    ] public int      FarPrincipalID               { get; set; } // int
-			[Column("outbound_session_key_identifier"), NotNull    ] public Guid     OutboundSessionKeyIdentifier { get; set; } // uniqueidentifier
-			[Column("inbound_session_key_identifier"),  NotNull    ] public Guid     InboundSessionKeyIdentifier  { get; set; } // uniqueidentifier
-			[Column("security_timestamp"),              NotNull    ] public DateTime SecurityTimestamp            { get; set; } // datetime
-			[Column("dialog_timer"),                    NotNull    ] public DateTime DialogTimer                  { get; set; } // datetime
-			[Column("send_sequence"),                   NotNull    ] public long     SendSequence                 { get; set; } // bigint
-			[Column("last_send_tran_id"),               NotNull    ] public byte[]   LastSendTranID               { get; set; } = null!; // binary(6)
-			[Column("end_dialog_sequence"),             NotNull    ] public long     EndDialogSequence            { get; set; } // bigint
-			[Column("receive_sequence"),                NotNull    ] public long     ReceiveSequence              { get; set; } // bigint
-			[Column("receive_sequence_frag"),           NotNull    ] public int      ReceiveSequenceFrag          { get; set; } // int
-			[Column("system_sequence"),                 NotNull    ] public long     SystemSequence               { get; set; } // bigint
-			[Column("first_out_of_order_sequence"),     NotNull    ] public long     FirstOutOfOrderSequence      { get; set; } // bigint
-			[Column("last_out_of_order_sequence"),      NotNull    ] public long     LastOutOfOrderSequence       { get; set; } // bigint
-			[Column("last_out_of_order_frag"),          NotNull    ] public int      LastOutOfOrderFrag           { get; set; } // int
-			[Column("is_system"),                       NotNull    ] public bool     IsSystem                     { get; set; } // bit
-			[Column("priority"),                        NotNull    ] public byte     Priority                     { get; set; } // tinyint
-		}
-
-		[Table(Schema="sys", Name="conversation_groups", IsView=true)]
-		public partial class ConversationGroups
-		{
-			[Column("conversation_group_id"), NotNull    ] public Guid  ConversationGroupID { get; set; } // uniqueidentifier
-			[Column("service_id"),            NotNull    ] public int   ServiceID           { get; set; } // int
-			[Column("is_system"),                Nullable] public bool? IsSystem            { get; set; } // bit
-		}
-
-		[Table(Schema="sys", Name="conversation_priorities", IsView=true)]
-		public partial class ConversationPriorities
-		{
-			[Column("priority_id"),         NotNull    ] public int     PriorityID        { get; set; } // int
-			[Column("name"),                NotNull    ] public string  Name              { get; set; } = null!; // sysname
-			[Column("service_contract_id"),    Nullable] public int?    ServiceContractID { get; set; } // int
-			[Column("local_service_id"),       Nullable] public int?    LocalServiceID    { get; set; } // int
-			[Column("remote_service_name"),    Nullable] public string? RemoteServiceName { get; set; } // nvarchar(256)
-			[Column("priority"),            NotNull    ] public byte    Priority          { get; set; } // tinyint
-		}
-
-		[Table(Schema="sys", Name="credentials", IsView=true)]
-		public partial class Credentials
-		{
-			[Column("credential_id"),       NotNull    ] public int      CredentialID       { get; set; } // int
-			[Column("name"),                NotNull    ] public string   Name               { get; set; } = null!; // sysname
-			[Column("credential_identity"),    Nullable] public string?  CredentialIdentity { get; set; } // nvarchar(4000)
-			[Column("create_date"),         NotNull    ] public DateTime CreateDate         { get; set; } // datetime
-			[Column("modify_date"),         NotNull    ] public DateTime ModifyDate         { get; set; } // datetime
-			[Column("target_type"),            Nullable] public string?  TargetType         { get; set; } // nvarchar(60)
-			[Column("target_id"),              Nullable] public int?     TargetID           { get; set; } // int
-		}
-
-		[Table(Schema="sys", Name="cryptographic_providers", IsView=true)]
-		public partial class CryptographicProviders
-		{
-			[Column("provider_id"), NotNull    ] public int     ProviderID { get; set; } // int
-			[Column("name"),        NotNull    ] public string  Name       { get; set; } = null!; // sysname
-			[Column("guid"),           Nullable] public Guid?   Guid       { get; set; } // uniqueidentifier
-			[Column("version"),        Nullable] public string? Version    { get; set; } // nvarchar(24)
-			[Column("dll_path"),       Nullable] public string? DllPath    { get; set; } // nvarchar(520)
-			[Column("is_enabled"),  NotNull    ] public bool    IsEnabled  { get; set; } // bit
-		}
-
-		[Table(Schema="sys", Name="crypt_properties", IsView=true)]
-		public partial class CryptProperties
-		{
-			[Column("class"),           NotNull    ] public byte    @class        { get; set; } // tinyint
-			[Column("class_desc"),         Nullable] public string? ClassDesc     { get; set; } // nvarchar(60)
-			[Column("major_id"),        NotNull    ] public int     MajorID       { get; set; } // int
-			[Column("thumbprint"),      NotNull    ] public byte[]  Thumbprint    { get; set; } = null!; // varbinary(32)
-			[Column("crypt_type"),      NotNull    ] public string  CryptType     { get; set; } = null!; // char(4)
-			[Column("crypt_type_desc"),    Nullable] public string? CryptTypeDesc { get; set; } // nvarchar(60)
-			[Column("crypt_property"),  NotNull    ] public byte[]  CryptProperty { get; set; } = null!; // varbinary(-1)
-		}
-
-		[Table(Schema="sys", Name="database_audit_specification_details", IsView=true)]
-		public partial class DatabaseAuditSpecificationDetails
-		{
-			[Column("database_specification_id"), NotNull    ] public int     DatabaseSpecificationID { get; set; } // int
-			[Column("audit_action_id"),           NotNull    ] public string  AuditActionID           { get; set; } = null!; // char(4)
-			[Column("audit_action_name"),            Nullable] public string? AuditActionName         { get; set; } // nvarchar(60)
-			[Column("class"),                     NotNull    ] public byte    @class                  { get; set; } // tinyint
-			[Column("class_desc"),                   Nullable] public string? ClassDesc               { get; set; } // nvarchar(60)
-			[Column("major_id"),                  NotNull    ] public int     MajorID                 { get; set; } // int
-			[Column("minor_id"),                  NotNull    ] public int     MinorID                 { get; set; } // int
-			[Column("audited_principal_id"),      NotNull    ] public int     AuditedPrincipalID      { get; set; } // int
-			[Column("audited_result"),               Nullable] public string? AuditedResult           { get; set; } // nvarchar(60)
-			[Column("is_group"),                     Nullable] public bool?   IsGroup                 { get; set; } // bit
-		}
-
-		[Table(Schema="sys", Name="database_audit_specifications", IsView=true)]
-		public partial class DatabaseAuditSpecifications
-		{
-			[Column("database_specification_id"), NotNull    ] public int      DatabaseSpecificationID { get; set; } // int
-			[Column("name"),                      NotNull    ] public string   Name                    { get; set; } = null!; // sysname
-			[Column("create_date"),               NotNull    ] public DateTime CreateDate              { get; set; } // datetime
-			[Column("modify_date"),               NotNull    ] public DateTime ModifyDate              { get; set; } // datetime
-			[Column("audit_guid"),                   Nullable] public Guid?    AuditGuid               { get; set; } // uniqueidentifier
-			[Column("is_state_enabled"),             Nullable] public bool?    IsStateEnabled          { get; set; } // bit
-		}
-
-		[Table(Schema="sys", Name="database_automatic_tuning_mode", IsView=true)]
-		public partial class DatabaseAutomaticTuningMode
-		{
-			[Column("desired_state"),      Nullable] public short?  DesiredState     { get; set; } // smallint
-			[Column("desired_state_desc"), Nullable] public string? DesiredStateDesc { get; set; } // nvarchar(60)
-			[Column("actual_state"),       Nullable] public short?  ActualState      { get; set; } // smallint
-			[Column("actual_state_desc"),  Nullable] public string? ActualStateDesc  { get; set; } // nvarchar(60)
-		}
-
-		[Table(Schema="sys", Name="database_automatic_tuning_options", IsView=true)]
-		public partial class DatabaseAutomaticTuningOptions
-		{
-			[Column("name"),               Nullable] public string? Name             { get; set; } // nvarchar(128)
-			[Column("desired_state"),      Nullable] public short?  DesiredState     { get; set; } // smallint
-			[Column("desired_state_desc"), Nullable] public string? DesiredStateDesc { get; set; } // nvarchar(60)
-			[Column("actual_state"),       Nullable] public short?  ActualState      { get; set; } // smallint
-			[Column("actual_state_desc"),  Nullable] public string? ActualStateDesc  { get; set; } // nvarchar(60)
-			[Column("reason"),             Nullable] public short?  Reason           { get; set; } // smallint
-			[Column("reason_desc"),        Nullable] public string? ReasonDesc       { get; set; } // nvarchar(60)
-		}
-
-		[Table(Schema="sys", Name="database_credentials", IsView=true)]
-		public partial class DatabaseCredentials
-		{
-			[Column("name"),                NotNull    ] public string   Name               { get; set; } = null!; // sysname
-			[Column("principal_id"),        NotNull    ] public int      PrincipalID        { get; set; } // int
-			[Column("credential_id"),       NotNull    ] public int      CredentialID       { get; set; } // int
-			[Column("credential_identity"),    Nullable] public string?  CredentialIdentity { get; set; } // nvarchar(4000)
-			[Column("create_date"),         NotNull    ] public DateTime CreateDate         { get; set; } // datetime
-			[Column("modify_date"),         NotNull    ] public DateTime ModifyDate         { get; set; } // datetime
-			[Column("target_type"),            Nullable] public string?  TargetType         { get; set; } // nvarchar(60)
-			[Column("target_id"),              Nullable] public int?     TargetID           { get; set; } // int
-		}
-
-		[Table(Schema="sys", Name="database_files", IsView=true)]
-		public partial class DatabaseFiles
-		{
-			[Column("file_id"),                  NotNull    ] public int       FileID                { get; set; } // int
-			[Column("file_guid"),                   Nullable] public Guid?     FileGuid              { get; set; } // uniqueidentifier
-			[Column("type"),                     NotNull    ] public byte      Type                  { get; set; } // tinyint
-			[Column("type_desc"),                   Nullable] public string?   TypeDesc              { get; set; } // nvarchar(60)
-			[Column("data_space_id"),            NotNull    ] public int       DataSpaceID           { get; set; } // int
-			[Column("name"),                     NotNull    ] public string    Name                  { get; set; } = null!; // sysname
-			[Column("physical_name"),               Nullable] public string?   PhysicalName          { get; set; } // nvarchar(260)
-			[Column("state"),                       Nullable] public byte?     State                 { get; set; } // tinyint
-			[Column("state_desc"),                  Nullable] public string?   StateDesc             { get; set; } // nvarchar(60)
-			[Column("size"),                     NotNull    ] public int       Size                  { get; set; } // int
-			[Column("max_size"),                 NotNull    ] public int       MaxSize               { get; set; } // int
-			[Column("growth"),                   NotNull    ] public int       Growth                { get; set; } // int
-			[Column("is_media_read_only"),       NotNull    ] public bool      IsMediaReadOnly       { get; set; } // bit
-			[Column("is_read_only"),             NotNull    ] public bool      IsReadOnly            { get; set; } // bit
-			[Column("is_sparse"),                NotNull    ] public bool      IsSparse              { get; set; } // bit
-			[Column("is_percent_growth"),        NotNull    ] public bool      IsPercentGrowth       { get; set; } // bit
-			[Column("is_name_reserved"),         NotNull    ] public bool      IsNameReserved        { get; set; } // bit
-			[Column("is_persistent_log_buffer"), NotNull    ] public bool      IsPersistentLogBuffer { get; set; } // bit
-			[Column("create_lsn"),                  Nullable] public decimal?  CreateLsn             { get; set; } // numeric(25,0)
-			[Column("drop_lsn"),                    Nullable] public decimal?  DropLsn               { get; set; } // numeric(25,0)
-			[Column("read_only_lsn"),               Nullable] public decimal?  ReadOnlyLsn           { get; set; } // numeric(25,0)
-			[Column("read_write_lsn"),              Nullable] public decimal?  ReadWriteLsn          { get; set; } // numeric(25,0)
-			[Column("differential_base_lsn"),       Nullable] public decimal?  DifferentialBaseLsn   { get; set; } // numeric(25,0)
-			[Column("differential_base_guid"),      Nullable] public Guid?     DifferentialBaseGuid  { get; set; } // uniqueidentifier
-			[Column("differential_base_time"),      Nullable] public DateTime? DifferentialBaseTime  { get; set; } // datetime
-			[Column("redo_start_lsn"),              Nullable] public decimal?  RedoStartLsn          { get; set; } // numeric(25,0)
-			[Column("redo_start_fork_guid"),        Nullable] public Guid?     RedoStartForkGuid     { get; set; } // uniqueidentifier
-			[Column("redo_target_lsn"),             Nullable] public decimal?  RedoTargetLsn         { get; set; } // numeric(25,0)
-			[Column("redo_target_fork_guid"),       Nullable] public Guid?     RedoTargetForkGuid    { get; set; } // uniqueidentifier
-			[Column("backup_lsn"),                  Nullable] public decimal?  BackupLsn             { get; set; } // numeric(25,0)
-		}
-
-		[Table(Schema="sys", Name="database_filestream_options", IsView=true)]
-		public partial class DatabaseFilestreamOptions
-		{
-			[Column("database_id"),                NotNull    ] public int     DatabaseID              { get; set; } // int
-			[Column("non_transacted_access"),      NotNull    ] public byte    NonTransactedAccess     { get; set; } // tinyint
-			[Column("non_transacted_access_desc"), NotNull    ] public string  NonTransactedAccessDesc { get; set; } = null!; // nvarchar(60)
-			[Column("directory_name"),                Nullable] public string? DirectoryName           { get; set; } // nvarchar(256)
-		}
-
-		[Table(Schema="sys", Name="database_mirroring", IsView=true)]
-		public partial class DatabaseMirroring
-		{
-			[Column("database_id"),                  NotNull    ] public int      DatabaseID                 { get; set; } // int
-			[Column("mirroring_guid"),                  Nullable] public Guid?    MirroringGuid              { get; set; } // uniqueidentifier
-			[Column("mirroring_state"),                 Nullable] public byte?    MirroringState             { get; set; } // tinyint
-			[Column("mirroring_state_desc"),            Nullable] public string?  MirroringStateDesc         { get; set; } // nvarchar(60)
-			[Column("mirroring_role"),                  Nullable] public byte?    MirroringRole              { get; set; } // tinyint
-			[Column("mirroring_role_desc"),             Nullable] public string?  MirroringRoleDesc          { get; set; } // nvarchar(60)
-			[Column("mirroring_role_sequence"),         Nullable] public int?     MirroringRoleSequence      { get; set; } // int
-			[Column("mirroring_safety_level"),          Nullable] public byte?    MirroringSafetyLevel       { get; set; } // tinyint
-			[Column("mirroring_safety_level_desc"),     Nullable] public string?  MirroringSafetyLevelDesc   { get; set; } // nvarchar(60)
-			[Column("mirroring_safety_sequence"),       Nullable] public int?     MirroringSafetySequence    { get; set; } // int
-			[Column("mirroring_partner_name"),          Nullable] public string?  MirroringPartnerName       { get; set; } // nvarchar(128)
-			[Column("mirroring_partner_instance"),      Nullable] public string?  MirroringPartnerInstance   { get; set; } // nvarchar(128)
-			[Column("mirroring_witness_name"),          Nullable] public string?  MirroringWitnessName       { get; set; } // nvarchar(128)
-			[Column("mirroring_witness_state"),         Nullable] public byte?    MirroringWitnessState      { get; set; } // tinyint
-			[Column("mirroring_witness_state_desc"),    Nullable] public string?  MirroringWitnessStateDesc  { get; set; } // nvarchar(60)
-			[Column("mirroring_failover_lsn"),          Nullable] public decimal? MirroringFailoverLsn       { get; set; } // numeric(25,0)
-			[Column("mirroring_connection_timeout"),    Nullable] public int?     MirroringConnectionTimeout { get; set; } // int
-			[Column("mirroring_redo_queue"),            Nullable] public int?     MirroringRedoQueue         { get; set; } // int
-			[Column("mirroring_redo_queue_type"),       Nullable] public string?  MirroringRedoQueueType     { get; set; } // nvarchar(60)
-			[Column("mirroring_end_of_log_lsn"),        Nullable] public decimal? MirroringEndOfLogLsn       { get; set; } // numeric(25,0)
-			[Column("mirroring_replication_lsn"),       Nullable] public decimal? MirroringReplicationLsn    { get; set; } // numeric(25,0)
-		}
-
-		[Table(Schema="sys", Name="database_mirroring_endpoints", IsView=true)]
-		public partial class DatabaseMirroringEndpoints
-		{
-			[Column("name"),                      NotNull    ] public string  Name                    { get; set; } = null!; // sysname
-			[Column("endpoint_id"),               NotNull    ] public int     EndpointID              { get; set; } // int
-			[Column("principal_id"),                 Nullable] public int?    PrincipalID             { get; set; } // int
-			[Column("protocol"),                  NotNull    ] public byte    Protocol                { get; set; } // tinyint
-			[Column("protocol_desc"),                Nullable] public string? ProtocolDesc            { get; set; } // nvarchar(60)
-			[Column("type"),                      NotNull    ] public byte    Type                    { get; set; } // tinyint
-			[Column("type_desc"),                    Nullable] public string? TypeDesc                { get; set; } // nvarchar(60)
-			[Column("state"),                        Nullable] public byte?   State                   { get; set; } // tinyint
-			[Column("state_desc"),                   Nullable] public string? StateDesc               { get; set; } // nvarchar(60)
-			[Column("is_admin_endpoint"),         NotNull    ] public bool    IsAdminEndpoint         { get; set; } // bit
-			[Column("role"),                         Nullable] public byte?   Role                    { get; set; } // tinyint
-			[Column("role_desc"),                    Nullable] public string? RoleDesc                { get; set; } // nvarchar(60)
-			[Column("is_encryption_enabled"),     NotNull    ] public bool    IsEncryptionEnabled     { get; set; } // bit
-			[Column("connection_auth"),           NotNull    ] public byte    ConnectionAuth          { get; set; } // tinyint
-			[Column("connection_auth_desc"),         Nullable] public string? ConnectionAuthDesc      { get; set; } // nvarchar(60)
-			[Column("certificate_id"),            NotNull    ] public int     CertificateID           { get; set; } // int
-			[Column("encryption_algorithm"),      NotNull    ] public byte    EncryptionAlgorithm     { get; set; } // tinyint
-			[Column("encryption_algorithm_desc"),    Nullable] public string? EncryptionAlgorithmDesc { get; set; } // nvarchar(60)
-		}
-
-		[Table(Schema="sys", Name="database_mirroring_witnesses", IsView=true)]
-		public partial class DatabaseMirroringWitnesses
-		{
-			[Column("database_name"),                NotNull    ] public string  DatabaseName              { get; set; } = null!; // sysname
-			[Column("principal_server_name"),           Nullable] public string? PrincipalServerName       { get; set; } // sysname
-			[Column("mirror_server_name"),              Nullable] public string? MirrorServerName          { get; set; } // sysname
-			[Column("safety_level"),                 NotNull    ] public byte    SafetyLevel               { get; set; } // tinyint
-			[Column("safety_level_desc"),               Nullable] public string? SafetyLevelDesc           { get; set; } // nvarchar(60)
-			[Column("safety_sequence_number"),       NotNull    ] public int     SafetySequenceNumber      { get; set; } // int
-			[Column("role_sequence_number"),         NotNull    ] public int     RoleSequenceNumber        { get; set; } // int
-			[Column("mirroring_guid"),               NotNull    ] public Guid    MirroringGuid             { get; set; } // uniqueidentifier
-			[Column("family_guid"),                  NotNull    ] public Guid    FamilyGuid                { get; set; } // uniqueidentifier
-			[Column("is_suspended"),                    Nullable] public bool?   IsSuspended               { get; set; } // bit
-			[Column("is_suspended_sequence_number"), NotNull    ] public int     IsSuspendedSequenceNumber { get; set; } // int
-			[Column("partner_sync_state"),              Nullable] public byte?   PartnerSyncState          { get; set; } // tinyint
-			[Column("partner_sync_state_desc"),         Nullable] public string? PartnerSyncStateDesc      { get; set; } // nvarchar(60)
-		}
-
-		[Table(Schema="sys", Name="database_permissions", IsView=true)]
-		public partial class DatabasePermissions
-		{
-			[Column("class"),                NotNull    ] public byte    @class             { get; set; } // tinyint
-			[Column("class_desc"),              Nullable] public string? ClassDesc          { get; set; } // nvarchar(60)
-			[Column("major_id"),             NotNull    ] public int     MajorID            { get; set; } // int
-			[Column("minor_id"),             NotNull    ] public int     MinorID            { get; set; } // int
-			[Column("grantee_principal_id"), NotNull    ] public int     GranteePrincipalID { get; set; } // int
-			[Column("grantor_principal_id"), NotNull    ] public int     GrantorPrincipalID { get; set; } // int
-			[Column("type"),                 NotNull    ] public string  Type               { get; set; } = null!; // char(4)
-			[Column("permission_name"),         Nullable] public string? PermissionName     { get; set; } // nvarchar(128)
-			[Column("state"),                NotNull    ] public string  State              { get; set; } = null!; // char(1)
-			[Column("state_desc"),              Nullable] public string? StateDesc          { get; set; } // nvarchar(60)
-		}
-
-		[Table(Schema="sys", Name="database_principals", IsView=true)]
-		public partial class DatabasePrincipals
-		{
-			[Column("name"),                                NotNull    ] public string   Name                             { get; set; } = null!; // sysname
-			[Column("principal_id"),                        NotNull    ] public int      PrincipalID                      { get; set; } // int
-			[Column("type"),                                NotNull    ] public string   Type                             { get; set; } = null!; // char(1)
-			[Column("type_desc"),                              Nullable] public string?  TypeDesc                         { get; set; } // nvarchar(60)
-			[Column("default_schema_name"),                    Nullable] public string?  DefaultSchemaName                { get; set; } // sysname
-			[Column("create_date"),                         NotNull    ] public DateTime CreateDate                       { get; set; } // datetime
-			[Column("modify_date"),                         NotNull    ] public DateTime ModifyDate                       { get; set; } // datetime
-			[Column("owning_principal_id"),                    Nullable] public int?     OwningPrincipalID                { get; set; } // int
-			[Column("sid"),                                    Nullable] public byte[]?  Sid                              { get; set; } // varbinary(85)
-			[Column("is_fixed_role"),                       NotNull    ] public bool     IsFixedRole                      { get; set; } // bit
-			[Column("authentication_type"),                 NotNull    ] public int      AuthenticationType               { get; set; } // int
-			[Column("authentication_type_desc"),               Nullable] public string?  AuthenticationTypeDesc           { get; set; } // nvarchar(60)
-			[Column("default_language_name"),                  Nullable] public string?  DefaultLanguageName              { get; set; } // sysname
-			[Column("default_language_lcid"),                  Nullable] public int?     DefaultLanguageLcid              { get; set; } // int
-			[Column("allow_encrypted_value_modifications"), NotNull    ] public bool     AllowEncryptedValueModifications { get; set; } // bit
-		}
-
-		[Table(Schema="sys", Name="database_query_store_options", IsView=true)]
-		public partial class DatabaseQueryStoreOptions
-		{
-			[Column("desired_state"),                              NotNull    ] public short   DesiredState                         { get; set; } // smallint
-			[Column("desired_state_desc"),                            Nullable] public string? DesiredStateDesc                     { get; set; } // nvarchar(60)
-			[Column("actual_state"),                               NotNull    ] public short   ActualState                          { get; set; } // smallint
-			[Column("actual_state_desc"),                             Nullable] public string? ActualStateDesc                      { get; set; } // nvarchar(60)
-			[Column("readonly_reason"),                               Nullable] public int?    ReadonlyReason                       { get; set; } // int
-			[Column("current_storage_size_mb"),                       Nullable] public long?   CurrentStorageSizeMb                 { get; set; } // bigint
-			[Column("flush_interval_seconds"),                        Nullable] public long?   FlushIntervalSeconds                 { get; set; } // bigint
-			[Column("interval_length_minutes"),                       Nullable] public long?   IntervalLengthMinutes                { get; set; } // bigint
-			[Column("max_storage_size_mb"),                           Nullable] public long?   MaxStorageSizeMb                     { get; set; } // bigint
-			[Column("stale_query_threshold_days"),                    Nullable] public long?   StaleQueryThresholdDays              { get; set; } // bigint
-			[Column("max_plans_per_query"),                           Nullable] public long?   MaxPlansPerQuery                     { get; set; } // bigint
-			[Column("query_capture_mode"),                         NotNull    ] public short   QueryCaptureMode                     { get; set; } // smallint
-			[Column("query_capture_mode_desc"),                       Nullable] public string? QueryCaptureModeDesc                 { get; set; } // nvarchar(60)
-			[Column("capture_policy_execution_count"),                Nullable] public int?    CapturePolicyExecutionCount          { get; set; } // int
-			[Column("capture_policy_total_compile_cpu_time_ms"),      Nullable] public long?   CapturePolicyTotalCompileCpuTimeMs   { get; set; } // bigint
-			[Column("capture_policy_total_execution_cpu_time_ms"),    Nullable] public long?   CapturePolicyTotalExecutionCpuTimeMs { get; set; } // bigint
-			[Column("capture_policy_stale_threshold_hours"),          Nullable] public int?    CapturePolicyStaleThresholdHours     { get; set; } // int
-			[Column("size_based_cleanup_mode"),                    NotNull    ] public short   SizeBasedCleanupMode                 { get; set; } // smallint
-			[Column("size_based_cleanup_mode_desc"),                  Nullable] public string? SizeBasedCleanupModeDesc             { get; set; } // nvarchar(60)
-			[Column("wait_stats_capture_mode"),                    NotNull    ] public short   WaitStatsCaptureMode                 { get; set; } // smallint
-			[Column("wait_stats_capture_mode_desc"),                  Nullable] public string? WaitStatsCaptureModeDesc             { get; set; } // nvarchar(60)
-			[Column("actual_state_additional_info"),                  Nullable] public string? ActualStateAdditionalInfo            { get; set; } // nvarchar(4000)
-		}
-
-		[Table(Schema="sys", Name="database_recovery_status", IsView=true)]
-		public partial class DatabaseRecoveryStatus
-		{
-			[Column("database_id"),              NotNull    ] public int      DatabaseID            { get; set; } // int
-			[Column("database_guid"),               Nullable] public Guid?    DatabaseGuid          { get; set; } // uniqueidentifier
-			[Column("family_guid"),                 Nullable] public Guid?    FamilyGuid            { get; set; } // uniqueidentifier
-			[Column("last_log_backup_lsn"),         Nullable] public decimal? LastLogBackupLsn      { get; set; } // numeric(25,0)
-			[Column("recovery_fork_guid"),          Nullable] public Guid?    RecoveryForkGuid      { get; set; } // uniqueidentifier
-			[Column("first_recovery_fork_guid"),    Nullable] public Guid?    FirstRecoveryForkGuid { get; set; } // uniqueidentifier
-			[Column("fork_point_lsn"),              Nullable] public decimal? ForkPointLsn          { get; set; } // numeric(25,0)
-		}
-
-		[Table(Schema="sys", Name="database_role_members", IsView=true)]
-		public partial class DatabaseRoleMembers
-		{
-			[Column("role_principal_id"),   NotNull] public int RolePrincipalID   { get; set; } // int
-			[Column("member_principal_id"), NotNull] public int MemberPrincipalID { get; set; } // int
-		}
-
-		[Table(Schema="sys", Name="databases", IsView=true)]
-		public partial class Databases
-		{
-			[Column("name"),                                          Nullable] public string?  Name                                 { get; set; } // sysname
-			[Column("database_id"),                                NotNull    ] public int      DatabaseID                           { get; set; } // int
-			[Column("source_database_id"),                            Nullable] public int?     SourceDatabaseID                     { get; set; } // int
-			[Column("owner_sid"),                                     Nullable] public byte[]?  OwnerSid                             { get; set; } // varbinary(85)
-			[Column("create_date"),                                NotNull    ] public DateTime CreateDate                           { get; set; } // datetime
-			[Column("compatibility_level"),                        NotNull    ] public byte     CompatibilityLevel                   { get; set; } // tinyint
-			[Column("collation_name"),                                Nullable] public string?  CollationName                        { get; set; } // sysname
-			[Column("user_access"),                                   Nullable] public byte?    UserAccess                           { get; set; } // tinyint
-			[Column("user_access_desc"),                              Nullable] public string?  UserAccessDesc                       { get; set; } // nvarchar(60)
-			[Column("is_read_only"),                                  Nullable] public bool?    IsReadOnly                           { get; set; } // bit
-			[Column("is_auto_close_on"),                           NotNull    ] public bool     IsAutoCloseOn                        { get; set; } // bit
-			[Column("is_auto_shrink_on"),                             Nullable] public bool?    IsAutoShrinkOn                       { get; set; } // bit
-			[Column("state"),                                         Nullable] public byte?    State                                { get; set; } // tinyint
-			[Column("state_desc"),                                    Nullable] public string?  StateDesc                            { get; set; } // nvarchar(60)
-			[Column("is_in_standby"),                                 Nullable] public bool?    IsInStandby                          { get; set; } // bit
-			[Column("is_cleanly_shutdown"),                           Nullable] public bool?    IsCleanlyShutdown                    { get; set; } // bit
-			[Column("is_supplemental_logging_enabled"),               Nullable] public bool?    IsSupplementalLoggingEnabled         { get; set; } // bit
-			[Column("snapshot_isolation_state"),                      Nullable] public byte?    SnapshotIsolationState               { get; set; } // tinyint
-			[Column("snapshot_isolation_state_desc"),                 Nullable] public string?  SnapshotIsolationStateDesc           { get; set; } // nvarchar(60)
-			[Column("is_read_committed_snapshot_on"),                 Nullable] public bool?    IsReadCommittedSnapshotOn            { get; set; } // bit
-			[Column("recovery_model"),                                Nullable] public byte?    RecoveryModel                        { get; set; } // tinyint
-			[Column("recovery_model_desc"),                           Nullable] public string?  RecoveryModelDesc                    { get; set; } // nvarchar(60)
-			[Column("page_verify_option"),                            Nullable] public byte?    PageVerifyOption                     { get; set; } // tinyint
-			[Column("page_verify_option_desc"),                       Nullable] public string?  PageVerifyOptionDesc                 { get; set; } // nvarchar(60)
-			[Column("is_auto_create_stats_on"),                       Nullable] public bool?    IsAutoCreateStatsOn                  { get; set; } // bit
-			[Column("is_auto_create_stats_incremental_on"),           Nullable] public bool?    IsAutoCreateStatsIncrementalOn       { get; set; } // bit
-			[Column("is_auto_update_stats_on"),                       Nullable] public bool?    IsAutoUpdateStatsOn                  { get; set; } // bit
-			[Column("is_auto_update_stats_async_on"),                 Nullable] public bool?    IsAutoUpdateStatsAsyncOn             { get; set; } // bit
-			[Column("is_ansi_null_default_on"),                       Nullable] public bool?    IsAnsiNullDefaultOn                  { get; set; } // bit
-			[Column("is_ansi_nulls_on"),                              Nullable] public bool?    IsAnsiNullsOn                        { get; set; } // bit
-			[Column("is_ansi_padding_on"),                            Nullable] public bool?    IsAnsiPaddingOn                      { get; set; } // bit
-			[Column("is_ansi_warnings_on"),                           Nullable] public bool?    IsAnsiWarningsOn                     { get; set; } // bit
-			[Column("is_arithabort_on"),                              Nullable] public bool?    IsArithabortOn                       { get; set; } // bit
-			[Column("is_concat_null_yields_null_on"),                 Nullable] public bool?    IsConcatNullYieldsNullOn             { get; set; } // bit
-			[Column("is_numeric_roundabort_on"),                      Nullable] public bool?    IsNumericRoundabortOn                { get; set; } // bit
-			[Column("is_quoted_identifier_on"),                       Nullable] public bool?    IsQuotedIdentifierOn                 { get; set; } // bit
-			[Column("is_recursive_triggers_on"),                      Nullable] public bool?    IsRecursiveTriggersOn                { get; set; } // bit
-			[Column("is_cursor_close_on_commit_on"),                  Nullable] public bool?    IsCursorCloseOnCommitOn              { get; set; } // bit
-			[Column("is_local_cursor_default"),                       Nullable] public bool?    IsLocalCursorDefault                 { get; set; } // bit
-			[Column("is_fulltext_enabled"),                           Nullable] public bool?    IsFulltextEnabled                    { get; set; } // bit
-			[Column("is_trustworthy_on"),                             Nullable] public bool?    IsTrustworthyOn                      { get; set; } // bit
-			[Column("is_db_chaining_on"),                             Nullable] public bool?    IsDbChainingOn                       { get; set; } // bit
-			[Column("is_parameterization_forced"),                    Nullable] public bool?    IsParameterizationForced             { get; set; } // bit
-			[Column("is_master_key_encrypted_by_server"),          NotNull    ] public bool     IsMasterKeyEncryptedByServer         { get; set; } // bit
-			[Column("is_query_store_on"),                             Nullable] public bool?    IsQueryStoreOn                       { get; set; } // bit
-			[Column("is_published"),                               NotNull    ] public bool     IsPublished                          { get; set; } // bit
-			[Column("is_subscribed"),                              NotNull    ] public bool     IsSubscribed                         { get; set; } // bit
-			[Column("is_merge_published"),                         NotNull    ] public bool     IsMergePublished                     { get; set; } // bit
-			[Column("is_distributor"),                             NotNull    ] public bool     IsDistributor                        { get; set; } // bit
-			[Column("is_sync_with_backup"),                        NotNull    ] public bool     IsSyncWithBackup                     { get; set; } // bit
-			[Column("service_broker_guid"),                        NotNull    ] public Guid     ServiceBrokerGuid                    { get; set; } // uniqueidentifier
-			[Column("is_broker_enabled"),                          NotNull    ] public bool     IsBrokerEnabled                      { get; set; } // bit
-			[Column("log_reuse_wait"),                                Nullable] public byte?    LogReuseWait                         { get; set; } // tinyint
-			[Column("log_reuse_wait_desc"),                           Nullable] public string?  LogReuseWaitDesc                     { get; set; } // nvarchar(60)
-			[Column("is_date_correlation_on"),                     NotNull    ] public bool     IsDateCorrelationOn                  { get; set; } // bit
-			[Column("is_cdc_enabled"),                             NotNull    ] public bool     IsCdcEnabled                         { get; set; } // bit
-			[Column("is_encrypted"),                                  Nullable] public bool?    IsEncrypted                          { get; set; } // bit
-			[Column("is_honor_broker_priority_on"),                   Nullable] public bool?    IsHonorBrokerPriorityOn              { get; set; } // bit
-			[Column("replica_id"),                                    Nullable] public Guid?    ReplicaID                            { get; set; } // uniqueidentifier
-			[Column("group_database_id"),                             Nullable] public Guid?    GroupDatabaseID                      { get; set; } // uniqueidentifier
-			[Column("resource_pool_id"),                              Nullable] public int?     ResourcePoolID                       { get; set; } // int
-			[Column("default_language_lcid"),                         Nullable] public short?   DefaultLanguageLcid                  { get; set; } // smallint
-			[Column("default_language_name"),                         Nullable] public string?  DefaultLanguageName                  { get; set; } // nvarchar(128)
-			[Column("default_fulltext_language_lcid"),                Nullable] public int?     DefaultFulltextLanguageLcid          { get; set; } // int
-			[Column("default_fulltext_language_name"),                Nullable] public string?  DefaultFulltextLanguageName          { get; set; } // nvarchar(128)
-			[Column("is_nested_triggers_on"),                         Nullable] public bool?    IsNestedTriggersOn                   { get; set; } // bit
-			[Column("is_transform_noise_words_on"),                   Nullable] public bool?    IsTransformNoiseWordsOn              { get; set; } // bit
-			[Column("two_digit_year_cutoff"),                         Nullable] public short?   TwoDigitYearCutoff                   { get; set; } // smallint
-			[Column("containment"),                                   Nullable] public byte?    Containment                          { get; set; } // tinyint
-			[Column("containment_desc"),                              Nullable] public string?  ContainmentDesc                      { get; set; } // nvarchar(60)
-			[Column("target_recovery_time_in_seconds"),               Nullable] public int?     TargetRecoveryTimeInSeconds          { get; set; } // int
-			[Column("delayed_durability"),                            Nullable] public int?     DelayedDurability                    { get; set; } // int
-			[Column("delayed_durability_desc"),                       Nullable] public string?  DelayedDurabilityDesc                { get; set; } // nvarchar(60)
-			[Column("is_memory_optimized_elevate_to_snapshot_on"),    Nullable] public bool?    IsMemoryOptimizedElevateToSnapshotOn { get; set; } // bit
-			[Column("is_federation_member"),                          Nullable] public bool?    IsFederationMember                   { get; set; } // bit
-			[Column("is_remote_data_archive_enabled"),                Nullable] public bool?    IsRemoteDataArchiveEnabled           { get; set; } // bit
-			[Column("is_mixed_page_allocation_on"),                   Nullable] public bool?    IsMixedPageAllocationOn              { get; set; } // bit
-			[Column("is_temporal_history_retention_enabled"),         Nullable] public bool?    IsTemporalHistoryRetentionEnabled    { get; set; } // bit
-			[Column("catalog_collation_type"),                     NotNull    ] public int      CatalogCollationType                 { get; set; } // int
-			[Column("catalog_collation_type_desc"),                   Nullable] public string?  CatalogCollationTypeDesc             { get; set; } // nvarchar(60)
-			[Column("physical_database_name"),                        Nullable] public string?  PhysicalDatabaseName                 { get; set; } // nvarchar(128)
-			[Column("is_result_set_caching_on"),                      Nullable] public bool?    IsResultSetCachingOn                 { get; set; } // bit
-			[Column("is_accelerated_database_recovery_on"),           Nullable] public bool?    IsAcceleratedDatabaseRecoveryOn      { get; set; } // bit
-			[Column("is_tempdb_spill_to_remote_store"),               Nullable] public bool?    IsTempdbSpillToRemoteStore           { get; set; } // bit
-			[Column("is_stale_page_detection_on"),                    Nullable] public bool?    IsStalePageDetectionOn               { get; set; } // bit
-			[Column("is_memory_optimized_enabled"),                   Nullable] public bool?    IsMemoryOptimizedEnabled             { get; set; } // bit
-		}
-
-		[Table(Schema="sys", Name="database_scoped_configurations", IsView=true)]
-		public partial class DatabaseScopedConfigurations
-		{
-			[Column("configuration_id"),    Nullable] public int?    ConfigurationID   { get; set; } // int
-			[Column("name"),                Nullable] public string? Name              { get; set; } // nvarchar(60)
-			[Column("value"),               Nullable] public object? Value             { get; set; } // sql_variant
-			[Column("value_for_secondary"), Nullable] public object? ValueForSecondary { get; set; } // sql_variant
-			[Column("is_value_default"),    Nullable] public bool?   IsValueDefault    { get; set; } // bit
-		}
-
-		[Table(Schema="sys", Name="database_scoped_credentials", IsView=true)]
-		public partial class DatabaseScopedCredentials
-		{
-			[Column("name"),                NotNull    ] public string   Name               { get; set; } = null!; // sysname
-			[Column("principal_id"),        NotNull    ] public int      PrincipalID        { get; set; } // int
-			[Column("credential_id"),       NotNull    ] public int      CredentialID       { get; set; } // int
-			[Column("credential_identity"),    Nullable] public string?  CredentialIdentity { get; set; } // nvarchar(4000)
-			[Column("create_date"),         NotNull    ] public DateTime CreateDate         { get; set; } // datetime
-			[Column("modify_date"),         NotNull    ] public DateTime ModifyDate         { get; set; } // datetime
-			[Column("target_type"),            Nullable] public string?  TargetType         { get; set; } // nvarchar(60)
-			[Column("target_id"),              Nullable] public int?     TargetID           { get; set; } // int
-		}
-
-		[Table(Schema="sys", Name="data_spaces", IsView=true)]
-		public partial class DataSpaces
-		{
-			[Column("name"),          NotNull    ] public string  Name        { get; set; } = null!; // sysname
-			[Column("data_space_id"), NotNull    ] public int     DataSpaceID { get; set; } // int
-			[Column("type"),          NotNull    ] public string  Type        { get; set; } = null!; // char(2)
-			[Column("type_desc"),        Nullable] public string? TypeDesc    { get; set; } // nvarchar(60)
-			[Column("is_default"),    NotNull    ] public bool    IsDefault   { get; set; } // bit
-			[Column("is_system"),        Nullable] public bool?   IsSystem    { get; set; } // bit
-		}
-
-		[Table(Schema="sys", Name="default_constraints", IsView=true)]
-		public partial class DefaultConstraints
-		{
-			[Column("name"),                NotNull    ] public string   Name              { get; set; } = null!; // sysname
-			[Column("object_id"),           NotNull    ] public int      ObjectID          { get; set; } // int
-			[Column("principal_id"),           Nullable] public int?     PrincipalID       { get; set; } // int
-			[Column("schema_id"),           NotNull    ] public int      SchemaID          { get; set; } // int
-			[Column("parent_object_id"),    NotNull    ] public int      ParentObjectID    { get; set; } // int
-			[Column("type"),                   Nullable] public string?  Type              { get; set; } // char(2)
-			[Column("type_desc"),              Nullable] public string?  TypeDesc          { get; set; } // nvarchar(60)
-			[Column("create_date"),         NotNull    ] public DateTime CreateDate        { get; set; } // datetime
-			[Column("modify_date"),         NotNull    ] public DateTime ModifyDate        { get; set; } // datetime
-			[Column("is_ms_shipped"),       NotNull    ] public bool     IsMsShipped       { get; set; } // bit
-			[Column("is_published"),        NotNull    ] public bool     IsPublished       { get; set; } // bit
-			[Column("is_schema_published"), NotNull    ] public bool     IsSchemaPublished { get; set; } // bit
-			[Column("parent_column_id"),    NotNull    ] public int      ParentColumnID    { get; set; } // int
-			[Column("definition"),             Nullable] public string?  Definition        { get; set; } // nvarchar(0)
-			[Column("is_system_named"),     NotNull    ] public bool     IsSystemNamed     { get; set; } // bit
-
-			#region Associations
-
-			/// <summary>
-			/// objects
-			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="objects", BackReferenceName="DefaultConstraint")]
-			public SystemSchema.Objects Object { get; set; } = null!;
-
-			#endregion
-		}
-
-		[Table(Schema="sys", Name="destination_data_spaces", IsView=true)]
-		public partial class DestinationDataSpaces
-		{
-			[Column("partition_scheme_id"), NotNull] public int PartitionSchemeID { get; set; } // int
-			[Column("destination_id"),      NotNull] public int DestinationID     { get; set; } // int
-			[Column("data_space_id"),       NotNull] public int DataSpaceID       { get; set; } // int
 		}
 
 		[Table(Schema="sys", Name="dm_audit_actions", IsView=true)]
@@ -6430,6 +5237,1886 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("drop_table_memory_attempts"),   NotNull] public long DropTableMemoryAttempts    { get; set; } // bigint
 			[Column("drop_table_memory_failures"),   NotNull] public long DropTableMemoryFailures    { get; set; } // bigint
 		}
+	}
+
+	public static partial class InformationSchema
+	{
+		public partial class DataContext
+		{
+			public ITable<CheckConstraints>       CheckConstraints       { get { return _dataContext.GetTable<CheckConstraints>(); } }
+			public ITable<ColumnDomainUsage>      ColumnDomainUsage      { get { return _dataContext.GetTable<ColumnDomainUsage>(); } }
+			public ITable<ColumnPrivileges>       ColumnPrivileges       { get { return _dataContext.GetTable<ColumnPrivileges>(); } }
+			public ITable<Columns>                Columns                { get { return _dataContext.GetTable<Columns>(); } }
+			public ITable<ConstraintColumnUsage>  ConstraintColumnUsage  { get { return _dataContext.GetTable<ConstraintColumnUsage>(); } }
+			public ITable<ConstraintTableUsage>   ConstraintTableUsage   { get { return _dataContext.GetTable<ConstraintTableUsage>(); } }
+			public ITable<DomainConstraints>      DomainConstraints      { get { return _dataContext.GetTable<DomainConstraints>(); } }
+			public ITable<Domains>                Domains                { get { return _dataContext.GetTable<Domains>(); } }
+			public ITable<KeyColumnUsage>         KeyColumnUsage         { get { return _dataContext.GetTable<KeyColumnUsage>(); } }
+			public ITable<Parameters>             Parameters             { get { return _dataContext.GetTable<Parameters>(); } }
+			public ITable<ReferentialConstraints> ReferentialConstraints { get { return _dataContext.GetTable<ReferentialConstraints>(); } }
+			public ITable<RoutineColumns>         RoutineColumns         { get { return _dataContext.GetTable<RoutineColumns>(); } }
+			public ITable<Routines>               Routines               { get { return _dataContext.GetTable<Routines>(); } }
+			public ITable<Schemata>               Schemata               { get { return _dataContext.GetTable<Schemata>(); } }
+			public ITable<Sequences>              Sequences              { get { return _dataContext.GetTable<Sequences>(); } }
+			public ITable<TableConstraints>       TableConstraints       { get { return _dataContext.GetTable<TableConstraints>(); } }
+			public ITable<TablePrivileges>        TablePrivileges        { get { return _dataContext.GetTable<TablePrivileges>(); } }
+			public ITable<Tables>                 Tables                 { get { return _dataContext.GetTable<Tables>(); } }
+			public ITable<ViewColumnUsage>        ViewColumnUsage        { get { return _dataContext.GetTable<ViewColumnUsage>(); } }
+			public ITable<Views>                  Views                  { get { return _dataContext.GetTable<Views>(); } }
+			public ITable<ViewTableUsage>         ViewTableUsage         { get { return _dataContext.GetTable<ViewTableUsage>(); } }
+
+			private readonly IDataContext _dataContext;
+
+			public DataContext(IDataContext dataContext)
+			{
+				_dataContext = dataContext;
+			}
+		}
+
+		[Table(Schema="INFORMATION_SCHEMA", Name="CHECK_CONSTRAINTS", IsView=true)]
+		public partial class CheckConstraints
+		{
+			[Column("CONSTRAINT_CATALOG"),    Nullable] public string? ConstraintCatalog { get; set; } // nvarchar(128)
+			[Column("CONSTRAINT_SCHEMA"),     Nullable] public string? ConstraintSchema  { get; set; } // nvarchar(128)
+			[Column("CONSTRAINT_NAME"),    NotNull    ] public string  ConstraintName    { get; set; } = null!; // sysname
+			[Column("CHECK_CLAUSE"),          Nullable] public string? CheckClause       { get; set; } // nvarchar(4000)
+		}
+
+		[Table(Schema="INFORMATION_SCHEMA", Name="COLUMN_DOMAIN_USAGE", IsView=true)]
+		public partial class ColumnDomainUsage
+		{
+			[Column("DOMAIN_CATALOG"),    Nullable] public string? DomainCatalog { get; set; } // nvarchar(128)
+			[Column("DOMAIN_SCHEMA"),     Nullable] public string? DomainSchema  { get; set; } // nvarchar(128)
+			[Column("DOMAIN_NAME"),    NotNull    ] public string  DomainName    { get; set; } = null!; // sysname
+			[Column("TABLE_CATALOG"),     Nullable] public string? TableCatalog  { get; set; } // nvarchar(128)
+			[Column("TABLE_SCHEMA"),      Nullable] public string? TableSchema   { get; set; } // nvarchar(128)
+			[Column("TABLE_NAME"),     NotNull    ] public string  TableName     { get; set; } = null!; // sysname
+			[Column("COLUMN_NAME"),       Nullable] public string? ColumnName    { get; set; } // sysname
+		}
+
+		[Table(Schema="INFORMATION_SCHEMA", Name="COLUMN_PRIVILEGES", IsView=true)]
+		public partial class ColumnPrivileges
+		{
+			[Column("GRANTOR"),           Nullable] public string? Grantor       { get; set; } // nvarchar(128)
+			[Column("GRANTEE"),           Nullable] public string? Grantee       { get; set; } // nvarchar(128)
+			[Column("TABLE_CATALOG"),     Nullable] public string? TableCatalog  { get; set; } // nvarchar(128)
+			[Column("TABLE_SCHEMA"),      Nullable] public string? TableSchema   { get; set; } // nvarchar(128)
+			[Column("TABLE_NAME"),     NotNull    ] public string  TableName     { get; set; } = null!; // sysname
+			[Column("COLUMN_NAME"),       Nullable] public string? ColumnName    { get; set; } // sysname
+			[Column("PRIVILEGE_TYPE"),    Nullable] public string? PrivilegeType { get; set; } // varchar(10)
+			[Column("IS_GRANTABLE"),      Nullable] public string? IsGrantable   { get; set; } // varchar(3)
+		}
+
+		[Table(Schema="INFORMATION_SCHEMA", Name="COLUMNS", IsView=true)]
+		public partial class Columns
+		{
+			[Column("TABLE_CATALOG"),               Nullable] public string? TableCatalog           { get; set; } // nvarchar(128)
+			[Column("TABLE_SCHEMA"),                Nullable] public string? TableSchema            { get; set; } // nvarchar(128)
+			[Column("TABLE_NAME"),               NotNull    ] public string  TableName              { get; set; } = null!; // sysname
+			[Column("COLUMN_NAME"),                 Nullable] public string? ColumnName             { get; set; } // sysname
+			[Column("ORDINAL_POSITION"),            Nullable] public int?    OrdinalPosition        { get; set; } // int
+			[Column("COLUMN_DEFAULT"),              Nullable] public string? ColumnDefault          { get; set; } // nvarchar(4000)
+			[Column("IS_NULLABLE"),                 Nullable] public string? IsNullable             { get; set; } // varchar(3)
+			[Column("DATA_TYPE"),                   Nullable] public string? DataType               { get; set; } // nvarchar(128)
+			[Column("CHARACTER_MAXIMUM_LENGTH"),    Nullable] public int?    CharacterMaximumLength { get; set; } // int
+			[Column("CHARACTER_OCTET_LENGTH"),      Nullable] public int?    CharacterOctetLength   { get; set; } // int
+			[Column("NUMERIC_PRECISION"),           Nullable] public byte?   NumericPrecision       { get; set; } // tinyint
+			[Column("NUMERIC_PRECISION_RADIX"),     Nullable] public short?  NumericPrecisionRadix  { get; set; } // smallint
+			[Column("NUMERIC_SCALE"),               Nullable] public int?    NumericScale           { get; set; } // int
+			[Column("DATETIME_PRECISION"),          Nullable] public short?  DatetimePrecision      { get; set; } // smallint
+			[Column("CHARACTER_SET_CATALOG"),       Nullable] public string? CharacterSetCatalog    { get; set; } // sysname
+			[Column("CHARACTER_SET_SCHEMA"),        Nullable] public string? CharacterSetSchema     { get; set; } // sysname
+			[Column("CHARACTER_SET_NAME"),          Nullable] public string? CharacterSetName       { get; set; } // sysname
+			[Column("COLLATION_CATALOG"),           Nullable] public string? CollationCatalog       { get; set; } // sysname
+			[Column("COLLATION_SCHEMA"),            Nullable] public string? CollationSchema        { get; set; } // sysname
+			[Column("COLLATION_NAME"),              Nullable] public string? CollationName          { get; set; } // sysname
+			[Column("DOMAIN_CATALOG"),              Nullable] public string? DomainCatalog          { get; set; } // sysname
+			[Column("DOMAIN_SCHEMA"),               Nullable] public string? DomainSchema           { get; set; } // sysname
+			[Column("DOMAIN_NAME"),                 Nullable] public string? DomainName             { get; set; } // sysname
+		}
+
+		[Table(Schema="INFORMATION_SCHEMA", Name="CONSTRAINT_COLUMN_USAGE", IsView=true)]
+		public partial class ConstraintColumnUsage
+		{
+			[Column("TABLE_CATALOG"),         Nullable] public string? TableCatalog      { get; set; } // nvarchar(128)
+			[Column("TABLE_SCHEMA"),          Nullable] public string? TableSchema       { get; set; } // nvarchar(128)
+			[Column("TABLE_NAME"),         NotNull    ] public string  TableName         { get; set; } = null!; // sysname
+			[Column("COLUMN_NAME"),           Nullable] public string? ColumnName        { get; set; } // nvarchar(128)
+			[Column("CONSTRAINT_CATALOG"),    Nullable] public string? ConstraintCatalog { get; set; } // nvarchar(128)
+			[Column("CONSTRAINT_SCHEMA"),     Nullable] public string? ConstraintSchema  { get; set; } // nvarchar(128)
+			[Column("CONSTRAINT_NAME"),    NotNull    ] public string  ConstraintName    { get; set; } = null!; // sysname
+		}
+
+		[Table(Schema="INFORMATION_SCHEMA", Name="CONSTRAINT_TABLE_USAGE", IsView=true)]
+		public partial class ConstraintTableUsage
+		{
+			[Column("TABLE_CATALOG"),         Nullable] public string? TableCatalog      { get; set; } // nvarchar(128)
+			[Column("TABLE_SCHEMA"),          Nullable] public string? TableSchema       { get; set; } // nvarchar(128)
+			[Column("TABLE_NAME"),         NotNull    ] public string  TableName         { get; set; } = null!; // sysname
+			[Column("CONSTRAINT_CATALOG"),    Nullable] public string? ConstraintCatalog { get; set; } // nvarchar(128)
+			[Column("CONSTRAINT_SCHEMA"),     Nullable] public string? ConstraintSchema  { get; set; } // nvarchar(128)
+			[Column("CONSTRAINT_NAME"),    NotNull    ] public string  ConstraintName    { get; set; } = null!; // sysname
+		}
+
+		[Table(Schema="INFORMATION_SCHEMA", Name="DOMAIN_CONSTRAINTS", IsView=true)]
+		public partial class DomainConstraints
+		{
+			[Column("CONSTRAINT_CATALOG"),    Nullable] public string? ConstraintCatalog { get; set; } // nvarchar(128)
+			[Column("CONSTRAINT_SCHEMA"),     Nullable] public string? ConstraintSchema  { get; set; } // nvarchar(128)
+			[Column("CONSTRAINT_NAME"),    NotNull    ] public string  ConstraintName    { get; set; } = null!; // sysname
+			[Column("DOMAIN_CATALOG"),        Nullable] public string? DomainCatalog     { get; set; } // nvarchar(128)
+			[Column("DOMAIN_SCHEMA"),         Nullable] public string? DomainSchema      { get; set; } // nvarchar(128)
+			[Column("DOMAIN_NAME"),        NotNull    ] public string  DomainName        { get; set; } = null!; // sysname
+			[Column("IS_DEFERRABLE"),      NotNull    ] public string  IsDeferrable      { get; set; } = null!; // varchar(2)
+			[Column("INITIALLY_DEFERRED"), NotNull    ] public string  InitiallyDeferred { get; set; } = null!; // varchar(2)
+		}
+
+		[Table(Schema="INFORMATION_SCHEMA", Name="DOMAINS", IsView=true)]
+		public partial class Domains
+		{
+			[Column("DOMAIN_CATALOG"),              Nullable] public string? DomainCatalog          { get; set; } // nvarchar(128)
+			[Column("DOMAIN_SCHEMA"),               Nullable] public string? DomainSchema           { get; set; } // nvarchar(128)
+			[Column("DOMAIN_NAME"),              NotNull    ] public string  DomainName             { get; set; } = null!; // sysname
+			[Column("DATA_TYPE"),                   Nullable] public string? DataType               { get; set; } // nvarchar(128)
+			[Column("CHARACTER_MAXIMUM_LENGTH"),    Nullable] public int?    CharacterMaximumLength { get; set; } // int
+			[Column("CHARACTER_OCTET_LENGTH"),      Nullable] public int?    CharacterOctetLength   { get; set; } // int
+			[Column("COLLATION_CATALOG"),           Nullable] public string? CollationCatalog       { get; set; } // sysname
+			[Column("COLLATION_SCHEMA"),            Nullable] public string? CollationSchema        { get; set; } // sysname
+			[Column("COLLATION_NAME"),              Nullable] public string? CollationName          { get; set; } // sysname
+			[Column("CHARACTER_SET_CATALOG"),       Nullable] public string? CharacterSetCatalog    { get; set; } // sysname
+			[Column("CHARACTER_SET_SCHEMA"),        Nullable] public string? CharacterSetSchema     { get; set; } // sysname
+			[Column("CHARACTER_SET_NAME"),          Nullable] public string? CharacterSetName       { get; set; } // sysname
+			[Column("NUMERIC_PRECISION"),           Nullable] public byte?   NumericPrecision       { get; set; } // tinyint
+			[Column("NUMERIC_PRECISION_RADIX"),     Nullable] public short?  NumericPrecisionRadix  { get; set; } // smallint
+			[Column("NUMERIC_SCALE"),               Nullable] public int?    NumericScale           { get; set; } // int
+			[Column("DATETIME_PRECISION"),          Nullable] public short?  DatetimePrecision      { get; set; } // smallint
+			[Column("DOMAIN_DEFAULT"),              Nullable] public string? DomainDefault          { get; set; } // nvarchar(4000)
+		}
+
+		[Table(Schema="INFORMATION_SCHEMA", Name="KEY_COLUMN_USAGE", IsView=true)]
+		public partial class KeyColumnUsage
+		{
+			[Column("CONSTRAINT_CATALOG"),    Nullable] public string? ConstraintCatalog { get; set; } // nvarchar(128)
+			[Column("CONSTRAINT_SCHEMA"),     Nullable] public string? ConstraintSchema  { get; set; } // nvarchar(128)
+			[Column("CONSTRAINT_NAME"),    NotNull    ] public string  ConstraintName    { get; set; } = null!; // sysname
+			[Column("TABLE_CATALOG"),         Nullable] public string? TableCatalog      { get; set; } // nvarchar(128)
+			[Column("TABLE_SCHEMA"),          Nullable] public string? TableSchema       { get; set; } // nvarchar(128)
+			[Column("TABLE_NAME"),         NotNull    ] public string  TableName         { get; set; } = null!; // sysname
+			[Column("COLUMN_NAME"),           Nullable] public string? ColumnName        { get; set; } // nvarchar(128)
+			[Column("ORDINAL_POSITION"),   NotNull    ] public int     OrdinalPosition   { get; set; } // int
+		}
+
+		[Table(Schema="INFORMATION_SCHEMA", Name="PARAMETERS", IsView=true)]
+		public partial class Parameters
+		{
+			[Column("SPECIFIC_CATALOG"),             Nullable] public string? SpecificCatalog        { get; set; } // nvarchar(128)
+			[Column("SPECIFIC_SCHEMA"),              Nullable] public string? SpecificSchema         { get; set; } // nvarchar(128)
+			[Column("SPECIFIC_NAME"),             NotNull    ] public string  SpecificName           { get; set; } = null!; // sysname
+			[Column("ORDINAL_POSITION"),          NotNull    ] public int     OrdinalPosition        { get; set; } // int
+			[Column("PARAMETER_MODE"),               Nullable] public string? ParameterMode          { get; set; } // nvarchar(10)
+			[Column("IS_RESULT"),                    Nullable] public string? IsResult               { get; set; } // nvarchar(10)
+			[Column("AS_LOCATOR"),                   Nullable] public string? AsLocator              { get; set; } // nvarchar(10)
+			[Column("PARAMETER_NAME"),               Nullable] public string? ParameterName          { get; set; } // sysname
+			[Column("DATA_TYPE"),                 NotNull    ] public string  DataType               { get; set; } = null!; // nvarchar(128)
+			[Column("CHARACTER_MAXIMUM_LENGTH"),     Nullable] public int?    CharacterMaximumLength { get; set; } // int
+			[Column("CHARACTER_OCTET_LENGTH"),       Nullable] public int?    CharacterOctetLength   { get; set; } // int
+			[Column("COLLATION_CATALOG"),            Nullable] public string? CollationCatalog       { get; set; } // sysname
+			[Column("COLLATION_SCHEMA"),             Nullable] public string? CollationSchema        { get; set; } // sysname
+			[Column("COLLATION_NAME"),               Nullable] public string? CollationName          { get; set; } // sysname
+			[Column("CHARACTER_SET_CATALOG"),        Nullable] public string? CharacterSetCatalog    { get; set; } // sysname
+			[Column("CHARACTER_SET_SCHEMA"),         Nullable] public string? CharacterSetSchema     { get; set; } // sysname
+			[Column("CHARACTER_SET_NAME"),           Nullable] public string? CharacterSetName       { get; set; } // sysname
+			[Column("NUMERIC_PRECISION"),            Nullable] public byte?   NumericPrecision       { get; set; } // tinyint
+			[Column("NUMERIC_PRECISION_RADIX"),      Nullable] public short?  NumericPrecisionRadix  { get; set; } // smallint
+			[Column("NUMERIC_SCALE"),                Nullable] public int?    NumericScale           { get; set; } // int
+			[Column("DATETIME_PRECISION"),           Nullable] public short?  DatetimePrecision      { get; set; } // smallint
+			[Column("INTERVAL_TYPE"),                Nullable] public string? IntervalType           { get; set; } // nvarchar(30)
+			[Column("INTERVAL_PRECISION"),           Nullable] public short?  IntervalPrecision      { get; set; } // smallint
+			[Column("USER_DEFINED_TYPE_CATALOG"),    Nullable] public string? UserDefinedTypeCatalog { get; set; } // sysname
+			[Column("USER_DEFINED_TYPE_SCHEMA"),     Nullable] public string? UserDefinedTypeSchema  { get; set; } // sysname
+			[Column("USER_DEFINED_TYPE_NAME"),       Nullable] public string? UserDefinedTypeName    { get; set; } // sysname
+			[Column("SCOPE_CATALOG"),                Nullable] public string? ScopeCatalog           { get; set; } // sysname
+			[Column("SCOPE_SCHEMA"),                 Nullable] public string? ScopeSchema            { get; set; } // sysname
+			[Column("SCOPE_NAME"),                   Nullable] public string? ScopeName              { get; set; } // sysname
+		}
+
+		[Table(Schema="INFORMATION_SCHEMA", Name="REFERENTIAL_CONSTRAINTS", IsView=true)]
+		public partial class ReferentialConstraints
+		{
+			[Column("CONSTRAINT_CATALOG"),           Nullable] public string? ConstraintCatalog       { get; set; } // nvarchar(128)
+			[Column("CONSTRAINT_SCHEMA"),            Nullable] public string? ConstraintSchema        { get; set; } // nvarchar(128)
+			[Column("CONSTRAINT_NAME"),           NotNull    ] public string  ConstraintName          { get; set; } = null!; // sysname
+			[Column("UNIQUE_CONSTRAINT_CATALOG"),    Nullable] public string? UniqueConstraintCatalog { get; set; } // nvarchar(128)
+			[Column("UNIQUE_CONSTRAINT_SCHEMA"),     Nullable] public string? UniqueConstraintSchema  { get; set; } // nvarchar(128)
+			[Column("UNIQUE_CONSTRAINT_NAME"),       Nullable] public string? UniqueConstraintName    { get; set; } // sysname
+			[Column("MATCH_OPTION"),                 Nullable] public string? MatchOption             { get; set; } // varchar(7)
+			[Column("UPDATE_RULE"),                  Nullable] public string? UpdateRule              { get; set; } // varchar(11)
+			[Column("DELETE_RULE"),                  Nullable] public string? DeleteRule              { get; set; } // varchar(11)
+		}
+
+		[Table(Schema="INFORMATION_SCHEMA", Name="ROUTINE_COLUMNS", IsView=true)]
+		public partial class RoutineColumns
+		{
+			[Column("TABLE_CATALOG"),               Nullable] public string? TableCatalog           { get; set; } // nvarchar(128)
+			[Column("TABLE_SCHEMA"),                Nullable] public string? TableSchema            { get; set; } // nvarchar(128)
+			[Column("TABLE_NAME"),               NotNull    ] public string  TableName              { get; set; } = null!; // sysname
+			[Column("COLUMN_NAME"),                 Nullable] public string? ColumnName             { get; set; } // sysname
+			[Column("ORDINAL_POSITION"),         NotNull    ] public int     OrdinalPosition        { get; set; } // int
+			[Column("COLUMN_DEFAULT"),              Nullable] public string? ColumnDefault          { get; set; } // nvarchar(4000)
+			[Column("IS_NULLABLE"),                 Nullable] public string? IsNullable             { get; set; } // varchar(3)
+			[Column("DATA_TYPE"),                   Nullable] public string? DataType               { get; set; } // nvarchar(128)
+			[Column("CHARACTER_MAXIMUM_LENGTH"),    Nullable] public int?    CharacterMaximumLength { get; set; } // int
+			[Column("CHARACTER_OCTET_LENGTH"),      Nullable] public int?    CharacterOctetLength   { get; set; } // int
+			[Column("NUMERIC_PRECISION"),           Nullable] public byte?   NumericPrecision       { get; set; } // tinyint
+			[Column("NUMERIC_PRECISION_RADIX"),     Nullable] public short?  NumericPrecisionRadix  { get; set; } // smallint
+			[Column("NUMERIC_SCALE"),               Nullable] public int?    NumericScale           { get; set; } // int
+			[Column("DATETIME_PRECISION"),          Nullable] public short?  DatetimePrecision      { get; set; } // smallint
+			[Column("CHARACTER_SET_CATALOG"),       Nullable] public string? CharacterSetCatalog    { get; set; } // sysname
+			[Column("CHARACTER_SET_SCHEMA"),        Nullable] public string? CharacterSetSchema     { get; set; } // sysname
+			[Column("CHARACTER_SET_NAME"),          Nullable] public string? CharacterSetName       { get; set; } // sysname
+			[Column("COLLATION_CATALOG"),           Nullable] public string? CollationCatalog       { get; set; } // sysname
+			[Column("COLLATION_SCHEMA"),            Nullable] public string? CollationSchema        { get; set; } // sysname
+			[Column("COLLATION_NAME"),              Nullable] public string? CollationName          { get; set; } // sysname
+			[Column("DOMAIN_CATALOG"),              Nullable] public string? DomainCatalog          { get; set; } // sysname
+			[Column("DOMAIN_SCHEMA"),               Nullable] public string? DomainSchema           { get; set; } // sysname
+			[Column("DOMAIN_NAME"),                 Nullable] public string? DomainName             { get; set; } // sysname
+		}
+
+		[Table(Schema="INFORMATION_SCHEMA", Name="ROUTINES", IsView=true)]
+		public partial class Routines
+		{
+			[Column("SPECIFIC_CATALOG"),            Nullable] public string?  SpecificCatalog        { get; set; } // nvarchar(128)
+			[Column("SPECIFIC_SCHEMA"),             Nullable] public string?  SpecificSchema         { get; set; } // nvarchar(128)
+			[Column("SPECIFIC_NAME"),            NotNull    ] public string   SpecificName           { get; set; } = null!; // sysname
+			[Column("ROUTINE_CATALOG"),             Nullable] public string?  RoutineCatalog         { get; set; } // nvarchar(128)
+			[Column("ROUTINE_SCHEMA"),              Nullable] public string?  RoutineSchema          { get; set; } // nvarchar(128)
+			[Column("ROUTINE_NAME"),             NotNull    ] public string   RoutineName            { get; set; } = null!; // sysname
+			[Column("ROUTINE_TYPE"),                Nullable] public string?  RoutineType            { get; set; } // nvarchar(20)
+			[Column("MODULE_CATALOG"),              Nullable] public string?  ModuleCatalog          { get; set; } // sysname
+			[Column("MODULE_SCHEMA"),               Nullable] public string?  ModuleSchema           { get; set; } // sysname
+			[Column("MODULE_NAME"),                 Nullable] public string?  ModuleName             { get; set; } // sysname
+			[Column("UDT_CATALOG"),                 Nullable] public string?  UdtCatalog             { get; set; } // sysname
+			[Column("UDT_SCHEMA"),                  Nullable] public string?  UdtSchema              { get; set; } // sysname
+			[Column("UDT_NAME"),                    Nullable] public string?  UdtName                { get; set; } // sysname
+			[Column("DATA_TYPE"),                   Nullable] public string?  DataType               { get; set; } // sysname
+			[Column("CHARACTER_MAXIMUM_LENGTH"),    Nullable] public int?     CharacterMaximumLength { get; set; } // int
+			[Column("CHARACTER_OCTET_LENGTH"),      Nullable] public int?     CharacterOctetLength   { get; set; } // int
+			[Column("COLLATION_CATALOG"),           Nullable] public string?  CollationCatalog       { get; set; } // sysname
+			[Column("COLLATION_SCHEMA"),            Nullable] public string?  CollationSchema        { get; set; } // sysname
+			[Column("COLLATION_NAME"),              Nullable] public string?  CollationName          { get; set; } // sysname
+			[Column("CHARACTER_SET_CATALOG"),       Nullable] public string?  CharacterSetCatalog    { get; set; } // sysname
+			[Column("CHARACTER_SET_SCHEMA"),        Nullable] public string?  CharacterSetSchema     { get; set; } // sysname
+			[Column("CHARACTER_SET_NAME"),          Nullable] public string?  CharacterSetName       { get; set; } // sysname
+			[Column("NUMERIC_PRECISION"),           Nullable] public byte?    NumericPrecision       { get; set; } // tinyint
+			[Column("NUMERIC_PRECISION_RADIX"),     Nullable] public short?   NumericPrecisionRadix  { get; set; } // smallint
+			[Column("NUMERIC_SCALE"),               Nullable] public int?     NumericScale           { get; set; } // int
+			[Column("DATETIME_PRECISION"),          Nullable] public short?   DatetimePrecision      { get; set; } // smallint
+			[Column("INTERVAL_TYPE"),               Nullable] public string?  IntervalType           { get; set; } // nvarchar(30)
+			[Column("INTERVAL_PRECISION"),          Nullable] public short?   IntervalPrecision      { get; set; } // smallint
+			[Column("TYPE_UDT_CATALOG"),            Nullable] public string?  TypeUdtCatalog         { get; set; } // sysname
+			[Column("TYPE_UDT_SCHEMA"),             Nullable] public string?  TypeUdtSchema          { get; set; } // sysname
+			[Column("TYPE_UDT_NAME"),               Nullable] public string?  TypeUdtName            { get; set; } // sysname
+			[Column("SCOPE_CATALOG"),               Nullable] public string?  ScopeCatalog           { get; set; } // sysname
+			[Column("SCOPE_SCHEMA"),                Nullable] public string?  ScopeSchema            { get; set; } // sysname
+			[Column("SCOPE_NAME"),                  Nullable] public string?  ScopeName              { get; set; } // sysname
+			[Column("MAXIMUM_CARDINALITY"),         Nullable] public long?    MaximumCardinality     { get; set; } // bigint
+			[Column("DTD_IDENTIFIER"),              Nullable] public string?  DtdIdentifier          { get; set; } // sysname
+			[Column("ROUTINE_BODY"),                Nullable] public string?  RoutineBody            { get; set; } // nvarchar(30)
+			[Column("ROUTINE_DEFINITION"),          Nullable] public string?  RoutineDefinition      { get; set; } // nvarchar(4000)
+			[Column("EXTERNAL_NAME"),               Nullable] public string?  ExternalName           { get; set; } // sysname
+			[Column("EXTERNAL_LANGUAGE"),           Nullable] public string?  ExternalLanguage       { get; set; } // nvarchar(30)
+			[Column("PARAMETER_STYLE"),             Nullable] public string?  ParameterStyle         { get; set; } // nvarchar(30)
+			[Column("IS_DETERMINISTIC"),            Nullable] public string?  IsDeterministic        { get; set; } // nvarchar(10)
+			[Column("SQL_DATA_ACCESS"),             Nullable] public string?  SqlDataAccess          { get; set; } // nvarchar(30)
+			[Column("IS_NULL_CALL"),                Nullable] public string?  IsNullCall             { get; set; } // nvarchar(10)
+			[Column("SQL_PATH"),                    Nullable] public string?  SqlPath                { get; set; } // sysname
+			[Column("SCHEMA_LEVEL_ROUTINE"),        Nullable] public string?  SchemaLevelRoutine     { get; set; } // nvarchar(10)
+			[Column("MAX_DYNAMIC_RESULT_SETS"),     Nullable] public short?   MaxDynamicResultSets   { get; set; } // smallint
+			[Column("IS_USER_DEFINED_CAST"),        Nullable] public string?  IsUserDefinedCast      { get; set; } // nvarchar(10)
+			[Column("IS_IMPLICITLY_INVOCABLE"),     Nullable] public string?  IsImplicitlyInvocable  { get; set; } // nvarchar(10)
+			[Column("CREATED"),                  NotNull    ] public DateTime Created                { get; set; } // datetime
+			[Column("LAST_ALTERED"),             NotNull    ] public DateTime LastAltered            { get; set; } // datetime
+		}
+
+		[Table(Schema="INFORMATION_SCHEMA", Name="SCHEMATA", IsView=true)]
+		public partial class Schemata
+		{
+			[Column("CATALOG_NAME"),                     Nullable] public string? CatalogName                { get; set; } // nvarchar(128)
+			[Column("SCHEMA_NAME"),                   NotNull    ] public string  SchemaName                 { get; set; } = null!; // sysname
+			[Column("SCHEMA_OWNER"),                     Nullable] public string? SchemaOwner                { get; set; } // nvarchar(128)
+			[Column("DEFAULT_CHARACTER_SET_CATALOG"),    Nullable] public string? DefaultCharacterSetCatalog { get; set; } // sysname
+			[Column("DEFAULT_CHARACTER_SET_SCHEMA"),     Nullable] public string? DefaultCharacterSetSchema  { get; set; } // sysname
+			[Column("DEFAULT_CHARACTER_SET_NAME"),       Nullable] public string? DefaultCharacterSetName    { get; set; } // sysname
+		}
+
+		[Table(Schema="INFORMATION_SCHEMA", Name="SEQUENCES", IsView=true)]
+		public partial class Sequences
+		{
+			[Column("SEQUENCE_CATALOG"),              Nullable] public string? SequenceCatalog          { get; set; } // nvarchar(128)
+			[Column("SEQUENCE_SCHEMA"),               Nullable] public string? SequenceSchema           { get; set; } // nvarchar(128)
+			[Column("SEQUENCE_NAME"),              NotNull    ] public string  SequenceName             { get; set; } = null!; // sysname
+			[Column("DATA_TYPE"),                  NotNull    ] public string  DataType                 { get; set; } = null!; // nvarchar(128)
+			[Column("NUMERIC_PRECISION"),          NotNull    ] public byte    NumericPrecision         { get; set; } // tinyint
+			[Column("NUMERIC_PRECISION_RADIX"),       Nullable] public short?  NumericPrecisionRadix    { get; set; } // smallint
+			[Column("NUMERIC_SCALE"),                 Nullable] public int?    NumericScale             { get; set; } // int
+			[Column("START_VALUE"),                NotNull    ] public object  StartValue               { get; set; } = null!; // sql_variant
+			[Column("MINIMUM_VALUE"),              NotNull    ] public object  MinimumValue             { get; set; } = null!; // sql_variant
+			[Column("MAXIMUM_VALUE"),              NotNull    ] public object  MaximumValue             { get; set; } = null!; // sql_variant
+			[Column("INCREMENT"),                  NotNull    ] public object  Increment                { get; set; } = null!; // sql_variant
+			[Column("CYCLE_OPTION"),                  Nullable] public bool?   CycleOption              { get; set; } // bit
+			[Column("DECLARED_DATA_TYPE"),         NotNull    ] public string  DeclaredDataType         { get; set; } = null!; // sysname
+			[Column("DECLARED_NUMERIC_PRECISION"), NotNull    ] public byte    DeclaredNumericPrecision { get; set; } // tinyint
+			[Column("DECLARED_NUMERIC_SCALE"),     NotNull    ] public byte    DeclaredNumericScale     { get; set; } // tinyint
+		}
+
+		[Table(Schema="INFORMATION_SCHEMA", Name="TABLE_CONSTRAINTS", IsView=true)]
+		public partial class TableConstraints
+		{
+			[Column("CONSTRAINT_CATALOG"),    Nullable] public string? ConstraintCatalog { get; set; } // nvarchar(128)
+			[Column("CONSTRAINT_SCHEMA"),     Nullable] public string? ConstraintSchema  { get; set; } // nvarchar(128)
+			[Column("CONSTRAINT_NAME"),    NotNull    ] public string  ConstraintName    { get; set; } = null!; // sysname
+			[Column("TABLE_CATALOG"),         Nullable] public string? TableCatalog      { get; set; } // nvarchar(128)
+			[Column("TABLE_SCHEMA"),          Nullable] public string? TableSchema       { get; set; } // nvarchar(128)
+			[Column("TABLE_NAME"),            Nullable] public string? TableName         { get; set; } // sysname
+			[Column("CONSTRAINT_TYPE"),       Nullable] public string? ConstraintType    { get; set; } // varchar(11)
+			[Column("IS_DEFERRABLE"),      NotNull    ] public string  IsDeferrable      { get; set; } = null!; // varchar(2)
+			[Column("INITIALLY_DEFERRED"), NotNull    ] public string  InitiallyDeferred { get; set; } = null!; // varchar(2)
+		}
+
+		[Table(Schema="INFORMATION_SCHEMA", Name="TABLE_PRIVILEGES", IsView=true)]
+		public partial class TablePrivileges
+		{
+			[Column("GRANTOR"),           Nullable] public string? Grantor       { get; set; } // nvarchar(128)
+			[Column("GRANTEE"),           Nullable] public string? Grantee       { get; set; } // nvarchar(128)
+			[Column("TABLE_CATALOG"),     Nullable] public string? TableCatalog  { get; set; } // nvarchar(128)
+			[Column("TABLE_SCHEMA"),      Nullable] public string? TableSchema   { get; set; } // nvarchar(128)
+			[Column("TABLE_NAME"),     NotNull    ] public string  TableName     { get; set; } = null!; // sysname
+			[Column("PRIVILEGE_TYPE"),    Nullable] public string? PrivilegeType { get; set; } // varchar(10)
+			[Column("IS_GRANTABLE"),      Nullable] public string? IsGrantable   { get; set; } // varchar(3)
+		}
+
+		[Table(Schema="INFORMATION_SCHEMA", Name="TABLES", IsView=true)]
+		public partial class Tables
+		{
+			[Column("TABLE_CATALOG"),    Nullable] public string? TableCatalog { get; set; } // nvarchar(128)
+			[Column("TABLE_SCHEMA"),     Nullable] public string? TableSchema  { get; set; } // sysname
+			[Column("TABLE_NAME"),    NotNull    ] public string  TableName    { get; set; } = null!; // sysname
+			[Column("TABLE_TYPE"),       Nullable] public string? TableType    { get; set; } // varchar(10)
+		}
+
+		[Table(Schema="INFORMATION_SCHEMA", Name="VIEW_COLUMN_USAGE", IsView=true)]
+		public partial class ViewColumnUsage
+		{
+			[Column("VIEW_CATALOG"),     Nullable] public string? ViewCatalog  { get; set; } // nvarchar(128)
+			[Column("VIEW_SCHEMA"),      Nullable] public string? ViewSchema   { get; set; } // nvarchar(128)
+			[Column("VIEW_NAME"),     NotNull    ] public string  ViewName     { get; set; } = null!; // sysname
+			[Column("TABLE_CATALOG"),    Nullable] public string? TableCatalog { get; set; } // nvarchar(128)
+			[Column("TABLE_SCHEMA"),     Nullable] public string? TableSchema  { get; set; } // nvarchar(128)
+			[Column("TABLE_NAME"),    NotNull    ] public string  TableName    { get; set; } = null!; // sysname
+			[Column("COLUMN_NAME"),      Nullable] public string? ColumnName   { get; set; } // sysname
+		}
+
+		[Table(Schema="INFORMATION_SCHEMA", Name="VIEWS", IsView=true)]
+		public partial class Views
+		{
+			[Column("TABLE_CATALOG"),      Nullable] public string? TableCatalog   { get; set; } // nvarchar(128)
+			[Column("TABLE_SCHEMA"),       Nullable] public string? TableSchema    { get; set; } // nvarchar(128)
+			[Column("TABLE_NAME"),      NotNull    ] public string  TableName      { get; set; } = null!; // sysname
+			[Column("VIEW_DEFINITION"),    Nullable] public string? ViewDefinition { get; set; } // nvarchar(4000)
+			[Column("CHECK_OPTION"),       Nullable] public string? CheckOption    { get; set; } // varchar(7)
+			[Column("IS_UPDATABLE"),    NotNull    ] public string  IsUpdatable    { get; set; } = null!; // varchar(2)
+		}
+
+		[Table(Schema="INFORMATION_SCHEMA", Name="VIEW_TABLE_USAGE", IsView=true)]
+		public partial class ViewTableUsage
+		{
+			[Column("VIEW_CATALOG"),     Nullable] public string? ViewCatalog  { get; set; } // nvarchar(128)
+			[Column("VIEW_SCHEMA"),      Nullable] public string? ViewSchema   { get; set; } // nvarchar(128)
+			[Column("VIEW_NAME"),     NotNull    ] public string  ViewName     { get; set; } = null!; // sysname
+			[Column("TABLE_CATALOG"),    Nullable] public string? TableCatalog { get; set; } // nvarchar(128)
+			[Column("TABLE_SCHEMA"),     Nullable] public string? TableSchema  { get; set; } // nvarchar(128)
+			[Column("TABLE_NAME"),    NotNull    ] public string  TableName    { get; set; } = null!; // sysname
+		}
+	}
+
+	public static partial class SystemSchema
+	{
+		public partial class DataContext
+		{
+			public ITable<AllColumns>                                         AllColumns                                         { get { return _dataContext.GetTable<AllColumns>(); } }
+			public ITable<AllObjects>                                         AllObjects                                         { get { return _dataContext.GetTable<AllObjects>(); } }
+			public ITable<AllocationUnits>                                    AllocationUnits                                    { get { return _dataContext.GetTable<AllocationUnits>(); } }
+			public ITable<AllParameters>                                      AllParameters                                      { get { return _dataContext.GetTable<AllParameters>(); } }
+			public ITable<AllSqlModules>                                      AllSqlModules                                      { get { return _dataContext.GetTable<AllSqlModules>(); } }
+			public ITable<AllViews>                                           AllViews                                           { get { return _dataContext.GetTable<AllViews>(); } }
+			public ITable<Assemblies>                                         Assemblies                                         { get { return _dataContext.GetTable<Assemblies>(); } }
+			public ITable<AssemblyFiles>                                      AssemblyFiles                                      { get { return _dataContext.GetTable<AssemblyFiles>(); } }
+			public ITable<AssemblyModules>                                    AssemblyModules                                    { get { return _dataContext.GetTable<AssemblyModules>(); } }
+			public ITable<AssemblyReferences>                                 AssemblyReferences                                 { get { return _dataContext.GetTable<AssemblyReferences>(); } }
+			public ITable<AssemblyTypes>                                      AssemblyTypes                                      { get { return _dataContext.GetTable<AssemblyTypes>(); } }
+			public ITable<AsymmetricKeys>                                     AsymmetricKeys                                     { get { return _dataContext.GetTable<AsymmetricKeys>(); } }
+			public ITable<AvailabilityDatabasesCluster>                       AvailabilityDatabasesCluster                       { get { return _dataContext.GetTable<AvailabilityDatabasesCluster>(); } }
+			public ITable<AvailabilityGroupListenerIpAddresses>               AvailabilityGroupListenerIpAddresses               { get { return _dataContext.GetTable<AvailabilityGroupListenerIpAddresses>(); } }
+			public ITable<AvailabilityGroupListeners>                         AvailabilityGroupListeners                         { get { return _dataContext.GetTable<AvailabilityGroupListeners>(); } }
+			public ITable<AvailabilityGroups>                                 AvailabilityGroups                                 { get { return _dataContext.GetTable<AvailabilityGroups>(); } }
+			public ITable<AvailabilityGroupsCluster>                          AvailabilityGroupsCluster                          { get { return _dataContext.GetTable<AvailabilityGroupsCluster>(); } }
+			public ITable<AvailabilityReadOnlyRoutingLists>                   AvailabilityReadOnlyRoutingLists                   { get { return _dataContext.GetTable<AvailabilityReadOnlyRoutingLists>(); } }
+			public ITable<AvailabilityReplicas>                               AvailabilityReplicas                               { get { return _dataContext.GetTable<AvailabilityReplicas>(); } }
+			public ITable<BackupDevices>                                      BackupDevices                                      { get { return _dataContext.GetTable<BackupDevices>(); } }
+			public ITable<Certificates>                                       Certificates                                       { get { return _dataContext.GetTable<Certificates>(); } }
+			public ITable<ChangeTrackingDatabases>                            ChangeTrackingDatabases                            { get { return _dataContext.GetTable<ChangeTrackingDatabases>(); } }
+			public ITable<ChangeTrackingTables>                               ChangeTrackingTables                               { get { return _dataContext.GetTable<ChangeTrackingTables>(); } }
+			public ITable<CheckConstraints>                                   CheckConstraints                                   { get { return _dataContext.GetTable<CheckConstraints>(); } }
+			public ITable<ColumnEncryptionKeys>                               ColumnEncryptionKeys                               { get { return _dataContext.GetTable<ColumnEncryptionKeys>(); } }
+			public ITable<ColumnEncryptionKeyValues>                          ColumnEncryptionKeyValues                          { get { return _dataContext.GetTable<ColumnEncryptionKeyValues>(); } }
+			public ITable<ColumnMasterKeys>                                   ColumnMasterKeys                                   { get { return _dataContext.GetTable<ColumnMasterKeys>(); } }
+			public ITable<Columns>                                            Columns                                            { get { return _dataContext.GetTable<Columns>(); } }
+			public ITable<ColumnStoreDictionaries>                            ColumnStoreDictionaries                            { get { return _dataContext.GetTable<ColumnStoreDictionaries>(); } }
+			public ITable<ColumnStoreRowGroups>                               ColumnStoreRowGroups                               { get { return _dataContext.GetTable<ColumnStoreRowGroups>(); } }
+			public ITable<ColumnStoreSegments>                                ColumnStoreSegments                                { get { return _dataContext.GetTable<ColumnStoreSegments>(); } }
+			public ITable<ColumnTypeUsages>                                   ColumnTypeUsages                                   { get { return _dataContext.GetTable<ColumnTypeUsages>(); } }
+			public ITable<ComputedColumns>                                    ComputedColumns                                    { get { return _dataContext.GetTable<ComputedColumns>(); } }
+			public ITable<Configurations>                                     Configurations                                     { get { return _dataContext.GetTable<Configurations>(); } }
+			public ITable<ConversationEndpoints>                              ConversationEndpoints                              { get { return _dataContext.GetTable<ConversationEndpoints>(); } }
+			public ITable<ConversationGroups>                                 ConversationGroups                                 { get { return _dataContext.GetTable<ConversationGroups>(); } }
+			public ITable<ConversationPriorities>                             ConversationPriorities                             { get { return _dataContext.GetTable<ConversationPriorities>(); } }
+			public ITable<Credentials>                                        Credentials                                        { get { return _dataContext.GetTable<Credentials>(); } }
+			public ITable<CryptographicProviders>                             CryptographicProviders                             { get { return _dataContext.GetTable<CryptographicProviders>(); } }
+			public ITable<CryptProperties>                                    CryptProperties                                    { get { return _dataContext.GetTable<CryptProperties>(); } }
+			public ITable<DatabaseAuditSpecificationDetails>                  DatabaseAuditSpecificationDetails                  { get { return _dataContext.GetTable<DatabaseAuditSpecificationDetails>(); } }
+			public ITable<DatabaseAuditSpecifications>                        DatabaseAuditSpecifications                        { get { return _dataContext.GetTable<DatabaseAuditSpecifications>(); } }
+			public ITable<DatabaseAutomaticTuningMode>                        DatabaseAutomaticTuningMode                        { get { return _dataContext.GetTable<DatabaseAutomaticTuningMode>(); } }
+			public ITable<DatabaseAutomaticTuningOptions>                     DatabaseAutomaticTuningOptions                     { get { return _dataContext.GetTable<DatabaseAutomaticTuningOptions>(); } }
+			public ITable<DatabaseCredentials>                                DatabaseCredentials                                { get { return _dataContext.GetTable<DatabaseCredentials>(); } }
+			public ITable<DatabaseFiles>                                      DatabaseFiles                                      { get { return _dataContext.GetTable<DatabaseFiles>(); } }
+			public ITable<DatabaseFilestreamOptions>                          DatabaseFilestreamOptions                          { get { return _dataContext.GetTable<DatabaseFilestreamOptions>(); } }
+			public ITable<DatabaseMirroring>                                  DatabaseMirroring                                  { get { return _dataContext.GetTable<DatabaseMirroring>(); } }
+			public ITable<DatabaseMirroringEndpoints>                         DatabaseMirroringEndpoints                         { get { return _dataContext.GetTable<DatabaseMirroringEndpoints>(); } }
+			public ITable<DatabaseMirroringWitnesses>                         DatabaseMirroringWitnesses                         { get { return _dataContext.GetTable<DatabaseMirroringWitnesses>(); } }
+			public ITable<DatabasePermissions>                                DatabasePermissions                                { get { return _dataContext.GetTable<DatabasePermissions>(); } }
+			public ITable<DatabasePrincipals>                                 DatabasePrincipals                                 { get { return _dataContext.GetTable<DatabasePrincipals>(); } }
+			public ITable<DatabaseQueryStoreOptions>                          DatabaseQueryStoreOptions                          { get { return _dataContext.GetTable<DatabaseQueryStoreOptions>(); } }
+			public ITable<DatabaseRecoveryStatus>                             DatabaseRecoveryStatus                             { get { return _dataContext.GetTable<DatabaseRecoveryStatus>(); } }
+			public ITable<DatabaseRoleMembers>                                DatabaseRoleMembers                                { get { return _dataContext.GetTable<DatabaseRoleMembers>(); } }
+			public ITable<Databases>                                          Databases                                          { get { return _dataContext.GetTable<Databases>(); } }
+			public ITable<DatabaseScopedConfigurations>                       DatabaseScopedConfigurations                       { get { return _dataContext.GetTable<DatabaseScopedConfigurations>(); } }
+			public ITable<DatabaseScopedCredentials>                          DatabaseScopedCredentials                          { get { return _dataContext.GetTable<DatabaseScopedCredentials>(); } }
+			public ITable<DataSpaces>                                         DataSpaces                                         { get { return _dataContext.GetTable<DataSpaces>(); } }
+			public ITable<DefaultConstraints>                                 DefaultConstraints                                 { get { return _dataContext.GetTable<DefaultConstraints>(); } }
+			public ITable<DestinationDataSpaces>                              DestinationDataSpaces                              { get { return _dataContext.GetTable<DestinationDataSpaces>(); } }
+			public ITable<EdgeConstraintClauses>                              EdgeConstraintClauses                              { get { return _dataContext.GetTable<EdgeConstraintClauses>(); } }
+			public ITable<EdgeConstraints>                                    EdgeConstraints                                    { get { return _dataContext.GetTable<EdgeConstraints>(); } }
+			public ITable<Endpoints>                                          Endpoints                                          { get { return _dataContext.GetTable<Endpoints>(); } }
+			public ITable<EndpointWebmethods>                                 EndpointWebmethods                                 { get { return _dataContext.GetTable<EndpointWebmethods>(); } }
+			public ITable<EventNotificationEventTypes>                        EventNotificationEventTypes                        { get { return _dataContext.GetTable<EventNotificationEventTypes>(); } }
+			public ITable<EventNotifications>                                 EventNotifications                                 { get { return _dataContext.GetTable<EventNotifications>(); } }
+			public ITable<Events>                                             Events                                             { get { return _dataContext.GetTable<Events>(); } }
+			public ITable<ExtendedProcedures>                                 ExtendedProcedures                                 { get { return _dataContext.GetTable<ExtendedProcedures>(); } }
+			public ITable<ExtendedProperties>                                 ExtendedProperties                                 { get { return _dataContext.GetTable<ExtendedProperties>(); } }
+			public ITable<ExternalDataSources>                                ExternalDataSources                                { get { return _dataContext.GetTable<ExternalDataSources>(); } }
+			public ITable<ExternalFileFormats>                                ExternalFileFormats                                { get { return _dataContext.GetTable<ExternalFileFormats>(); } }
+			public ITable<ExternalLanguageFiles>                              ExternalLanguageFiles                              { get { return _dataContext.GetTable<ExternalLanguageFiles>(); } }
+			public ITable<ExternalLanguages>                                  ExternalLanguages                                  { get { return _dataContext.GetTable<ExternalLanguages>(); } }
+			public ITable<ExternalLibraries>                                  ExternalLibraries                                  { get { return _dataContext.GetTable<ExternalLibraries>(); } }
+			public ITable<ExternalLibrariesInstalled>                         ExternalLibrariesInstalled                         { get { return _dataContext.GetTable<ExternalLibrariesInstalled>(); } }
+			public ITable<ExternalLibraryFiles>                               ExternalLibraryFiles                               { get { return _dataContext.GetTable<ExternalLibraryFiles>(); } }
+			public ITable<ExternalLibrarySetupErrors>                         ExternalLibrarySetupErrors                         { get { return _dataContext.GetTable<ExternalLibrarySetupErrors>(); } }
+			public ITable<ExternalTableColumns>                               ExternalTableColumns                               { get { return _dataContext.GetTable<ExternalTableColumns>(); } }
+			public ITable<ExternalTables>                                     ExternalTables                                     { get { return _dataContext.GetTable<ExternalTables>(); } }
+			public ITable<Filegroups>                                         Filegroups                                         { get { return _dataContext.GetTable<Filegroups>(); } }
+			public ITable<Filetables>                                         Filetables                                         { get { return _dataContext.GetTable<Filetables>(); } }
+			public ITable<FiletableSystemDefinedObjects>                      FiletableSystemDefinedObjects                      { get { return _dataContext.GetTable<FiletableSystemDefinedObjects>(); } }
+			public ITable<ForeignKeyColumns>                                  ForeignKeyColumns                                  { get { return _dataContext.GetTable<ForeignKeyColumns>(); } }
+			public ITable<ForeignKeys>                                        ForeignKeys                                        { get { return _dataContext.GetTable<ForeignKeys>(); } }
+			public ITable<FulltextCatalogs>                                   FulltextCatalogs                                   { get { return _dataContext.GetTable<FulltextCatalogs>(); } }
+			public ITable<FulltextDocumentTypes>                              FulltextDocumentTypes                              { get { return _dataContext.GetTable<FulltextDocumentTypes>(); } }
+			public ITable<FulltextIndexCatalogUsages>                         FulltextIndexCatalogUsages                         { get { return _dataContext.GetTable<FulltextIndexCatalogUsages>(); } }
+			public ITable<FulltextIndexColumns>                               FulltextIndexColumns                               { get { return _dataContext.GetTable<FulltextIndexColumns>(); } }
+			public ITable<FulltextIndexes>                                    FulltextIndexes                                    { get { return _dataContext.GetTable<FulltextIndexes>(); } }
+			public ITable<FulltextIndexFragments>                             FulltextIndexFragments                             { get { return _dataContext.GetTable<FulltextIndexFragments>(); } }
+			public ITable<FulltextLanguages>                                  FulltextLanguages                                  { get { return _dataContext.GetTable<FulltextLanguages>(); } }
+			public ITable<FulltextSemanticLanguages>                          FulltextSemanticLanguages                          { get { return _dataContext.GetTable<FulltextSemanticLanguages>(); } }
+			public ITable<FulltextSemanticLanguageStatisticsDatabase>         FulltextSemanticLanguageStatisticsDatabase         { get { return _dataContext.GetTable<FulltextSemanticLanguageStatisticsDatabase>(); } }
+			public ITable<FulltextStoplists>                                  FulltextStoplists                                  { get { return _dataContext.GetTable<FulltextStoplists>(); } }
+			public ITable<FulltextStopwords>                                  FulltextStopwords                                  { get { return _dataContext.GetTable<FulltextStopwords>(); } }
+			public ITable<FulltextSystemStopwords>                            FulltextSystemStopwords                            { get { return _dataContext.GetTable<FulltextSystemStopwords>(); } }
+			public ITable<FunctionOrderColumns>                               FunctionOrderColumns                               { get { return _dataContext.GetTable<FunctionOrderColumns>(); } }
+			public ITable<HashIndexes>                                        HashIndexes                                        { get { return _dataContext.GetTable<HashIndexes>(); } }
+			public ITable<HttpEndpoints>                                      HttpEndpoints                                      { get { return _dataContext.GetTable<HttpEndpoints>(); } }
+			public ITable<IdentityColumns>                                    IdentityColumns                                    { get { return _dataContext.GetTable<IdentityColumns>(); } }
+			public ITable<IndexColumns>                                       IndexColumns                                       { get { return _dataContext.GetTable<IndexColumns>(); } }
+			public ITable<Indexes>                                            Indexes                                            { get { return _dataContext.GetTable<Indexes>(); } }
+			public ITable<IndexResumableOperations>                           IndexResumableOperations                           { get { return _dataContext.GetTable<IndexResumableOperations>(); } }
+			public ITable<InternalPartitions>                                 InternalPartitions                                 { get { return _dataContext.GetTable<InternalPartitions>(); } }
+			public ITable<InternalTables>                                     InternalTables                                     { get { return _dataContext.GetTable<InternalTables>(); } }
+			public ITable<KeyConstraints>                                     KeyConstraints                                     { get { return _dataContext.GetTable<KeyConstraints>(); } }
+			public ITable<KeyEncryptions>                                     KeyEncryptions                                     { get { return _dataContext.GetTable<KeyEncryptions>(); } }
+			public ITable<LinkedLogins>                                       LinkedLogins                                       { get { return _dataContext.GetTable<LinkedLogins>(); } }
+			public ITable<LoginToken>                                         LoginToken                                         { get { return _dataContext.GetTable<LoginToken>(); } }
+			public ITable<MaskedColumns>                                      MaskedColumns                                      { get { return _dataContext.GetTable<MaskedColumns>(); } }
+			public ITable<MasterFiles>                                        MasterFiles                                        { get { return _dataContext.GetTable<MasterFiles>(); } }
+			public ITable<MasterKeyPasswords>                                 MasterKeyPasswords                                 { get { return _dataContext.GetTable<MasterKeyPasswords>(); } }
+			public ITable<MemoryOptimizedTablesInternalAttributes>            MemoryOptimizedTablesInternalAttributes            { get { return _dataContext.GetTable<MemoryOptimizedTablesInternalAttributes>(); } }
+			public ITable<Messages>                                           Messages                                           { get { return _dataContext.GetTable<Messages>(); } }
+			public ITable<MessageTypeXmlSchemaCollectionUsages>               MessageTypeXmlSchemaCollectionUsages               { get { return _dataContext.GetTable<MessageTypeXmlSchemaCollectionUsages>(); } }
+			public ITable<ModuleAssemblyUsages>                               ModuleAssemblyUsages                               { get { return _dataContext.GetTable<ModuleAssemblyUsages>(); } }
+			public ITable<NumberedProcedureParameters>                        NumberedProcedureParameters                        { get { return _dataContext.GetTable<NumberedProcedureParameters>(); } }
+			public ITable<NumberedProcedures>                                 NumberedProcedures                                 { get { return _dataContext.GetTable<NumberedProcedures>(); } }
+			public ITable<Objects>                                            Objects                                            { get { return _dataContext.GetTable<Objects>(); } }
+			public ITable<Openkeys>                                           Openkeys                                           { get { return _dataContext.GetTable<Openkeys>(); } }
+			public ITable<Parameters>                                         Parameters                                         { get { return _dataContext.GetTable<Parameters>(); } }
+			public ITable<ParameterTypeUsages>                                ParameterTypeUsages                                { get { return _dataContext.GetTable<ParameterTypeUsages>(); } }
+			public ITable<PartitionFunctions>                                 PartitionFunctions                                 { get { return _dataContext.GetTable<PartitionFunctions>(); } }
+			public ITable<PartitionParameters>                                PartitionParameters                                { get { return _dataContext.GetTable<PartitionParameters>(); } }
+			public ITable<PartitionRangeValues>                               PartitionRangeValues                               { get { return _dataContext.GetTable<PartitionRangeValues>(); } }
+			public ITable<Partitions>                                         Partitions                                         { get { return _dataContext.GetTable<Partitions>(); } }
+			public ITable<PartitionSchemes>                                   PartitionSchemes                                   { get { return _dataContext.GetTable<PartitionSchemes>(); } }
+			public ITable<Periods>                                            Periods                                            { get { return _dataContext.GetTable<Periods>(); } }
+			public ITable<PlanGuides>                                         PlanGuides                                         { get { return _dataContext.GetTable<PlanGuides>(); } }
+			public ITable<Procedures>                                         Procedures                                         { get { return _dataContext.GetTable<Procedures>(); } }
+			public ITable<QueryContextSettings>                               QueryContextSettings                               { get { return _dataContext.GetTable<QueryContextSettings>(); } }
+			public ITable<QueryStorePlan>                                     QueryStorePlan                                     { get { return _dataContext.GetTable<QueryStorePlan>(); } }
+			public ITable<QueryStoreQuery>                                    QueryStoreQuery                                    { get { return _dataContext.GetTable<QueryStoreQuery>(); } }
+			public ITable<QueryStoreQueryText>                                QueryStoreQueryText                                { get { return _dataContext.GetTable<QueryStoreQueryText>(); } }
+			public ITable<QueryStoreRuntimeStats>                             QueryStoreRuntimeStats                             { get { return _dataContext.GetTable<QueryStoreRuntimeStats>(); } }
+			public ITable<QueryStoreRuntimeStatsInterval>                     QueryStoreRuntimeStatsInterval                     { get { return _dataContext.GetTable<QueryStoreRuntimeStatsInterval>(); } }
+			public ITable<QueryStoreWaitStats>                                QueryStoreWaitStats                                { get { return _dataContext.GetTable<QueryStoreWaitStats>(); } }
+			public ITable<RegisteredSearchProperties>                         RegisteredSearchProperties                         { get { return _dataContext.GetTable<RegisteredSearchProperties>(); } }
+			public ITable<RegisteredSearchPropertyLists>                      RegisteredSearchPropertyLists                      { get { return _dataContext.GetTable<RegisteredSearchPropertyLists>(); } }
+			public ITable<RemoteDataArchiveDatabases>                         RemoteDataArchiveDatabases                         { get { return _dataContext.GetTable<RemoteDataArchiveDatabases>(); } }
+			public ITable<RemoteDataArchiveTables>                            RemoteDataArchiveTables                            { get { return _dataContext.GetTable<RemoteDataArchiveTables>(); } }
+			public ITable<RemoteLogins>                                       RemoteLogins                                       { get { return _dataContext.GetTable<RemoteLogins>(); } }
+			public ITable<RemoteServiceBindings>                              RemoteServiceBindings                              { get { return _dataContext.GetTable<RemoteServiceBindings>(); } }
+			public ITable<ResourceGovernorConfiguration>                      ResourceGovernorConfiguration                      { get { return _dataContext.GetTable<ResourceGovernorConfiguration>(); } }
+			public ITable<ResourceGovernorExternalResourcePoolAffinity>       ResourceGovernorExternalResourcePoolAffinity       { get { return _dataContext.GetTable<ResourceGovernorExternalResourcePoolAffinity>(); } }
+			public ITable<ResourceGovernorExternalResourcePools>              ResourceGovernorExternalResourcePools              { get { return _dataContext.GetTable<ResourceGovernorExternalResourcePools>(); } }
+			public ITable<ResourceGovernorResourcePoolAffinity>               ResourceGovernorResourcePoolAffinity               { get { return _dataContext.GetTable<ResourceGovernorResourcePoolAffinity>(); } }
+			public ITable<ResourceGovernorResourcePools>                      ResourceGovernorResourcePools                      { get { return _dataContext.GetTable<ResourceGovernorResourcePools>(); } }
+			public ITable<ResourceGovernorWorkloadGroups>                     ResourceGovernorWorkloadGroups                     { get { return _dataContext.GetTable<ResourceGovernorWorkloadGroups>(); } }
+			public ITable<Routes>                                             Routes                                             { get { return _dataContext.GetTable<Routes>(); } }
+			public ITable<Schemas>                                            Schemas                                            { get { return _dataContext.GetTable<Schemas>(); } }
+			public ITable<SecurableClasses>                                   SecurableClasses                                   { get { return _dataContext.GetTable<SecurableClasses>(); } }
+			public ITable<SecurityPolicies>                                   SecurityPolicies                                   { get { return _dataContext.GetTable<SecurityPolicies>(); } }
+			public ITable<SecurityPredicates>                                 SecurityPredicates                                 { get { return _dataContext.GetTable<SecurityPredicates>(); } }
+			public ITable<SelectiveXmlIndexNamespaces>                        SelectiveXmlIndexNamespaces                        { get { return _dataContext.GetTable<SelectiveXmlIndexNamespaces>(); } }
+			public ITable<SensitivityClassifications>                         SensitivityClassifications                         { get { return _dataContext.GetTable<SensitivityClassifications>(); } }
+			public ITable<Sequences>                                          Sequences                                          { get { return _dataContext.GetTable<Sequences>(); } }
+			public ITable<ServerAssemblyModules>                              ServerAssemblyModules                              { get { return _dataContext.GetTable<ServerAssemblyModules>(); } }
+			public ITable<ServerAudits>                                       ServerAudits                                       { get { return _dataContext.GetTable<ServerAudits>(); } }
+			public ITable<ServerAuditSpecificationDetails>                    ServerAuditSpecificationDetails                    { get { return _dataContext.GetTable<ServerAuditSpecificationDetails>(); } }
+			public ITable<ServerAuditSpecifications>                          ServerAuditSpecifications                          { get { return _dataContext.GetTable<ServerAuditSpecifications>(); } }
+			public ITable<ServerEventNotifications>                           ServerEventNotifications                           { get { return _dataContext.GetTable<ServerEventNotifications>(); } }
+			public ITable<ServerEvents>                                       ServerEvents                                       { get { return _dataContext.GetTable<ServerEvents>(); } }
+			public ITable<ServerEventSessionActions>                          ServerEventSessionActions                          { get { return _dataContext.GetTable<ServerEventSessionActions>(); } }
+			public ITable<ServerEventSessionEvents>                           ServerEventSessionEvents                           { get { return _dataContext.GetTable<ServerEventSessionEvents>(); } }
+			public ITable<ServerEventSessionFields>                           ServerEventSessionFields                           { get { return _dataContext.GetTable<ServerEventSessionFields>(); } }
+			public ITable<ServerEventSessions>                                ServerEventSessions                                { get { return _dataContext.GetTable<ServerEventSessions>(); } }
+			public ITable<ServerEventSessionTargets>                          ServerEventSessionTargets                          { get { return _dataContext.GetTable<ServerEventSessionTargets>(); } }
+			public ITable<ServerFileAudits>                                   ServerFileAudits                                   { get { return _dataContext.GetTable<ServerFileAudits>(); } }
+			public ITable<ServerMemoryOptimizedHybridBufferPoolConfiguration> ServerMemoryOptimizedHybridBufferPoolConfiguration { get { return _dataContext.GetTable<ServerMemoryOptimizedHybridBufferPoolConfiguration>(); } }
+			public ITable<ServerPermissions>                                  ServerPermissions                                  { get { return _dataContext.GetTable<ServerPermissions>(); } }
+			public ITable<ServerPrincipalCredentials>                         ServerPrincipalCredentials                         { get { return _dataContext.GetTable<ServerPrincipalCredentials>(); } }
+			public ITable<ServerPrincipals>                                   ServerPrincipals                                   { get { return _dataContext.GetTable<ServerPrincipals>(); } }
+			public ITable<ServerRoleMembers>                                  ServerRoleMembers                                  { get { return _dataContext.GetTable<ServerRoleMembers>(); } }
+			public ITable<Servers>                                            Servers                                            { get { return _dataContext.GetTable<Servers>(); } }
+			public ITable<ServerSqlModules>                                   ServerSqlModules                                   { get { return _dataContext.GetTable<ServerSqlModules>(); } }
+			public ITable<ServerTriggerEvents>                                ServerTriggerEvents                                { get { return _dataContext.GetTable<ServerTriggerEvents>(); } }
+			public ITable<ServerTriggers>                                     ServerTriggers                                     { get { return _dataContext.GetTable<ServerTriggers>(); } }
+			public ITable<ServiceBrokerEndpoints>                             ServiceBrokerEndpoints                             { get { return _dataContext.GetTable<ServiceBrokerEndpoints>(); } }
+			public ITable<ServiceContractMessageUsages>                       ServiceContractMessageUsages                       { get { return _dataContext.GetTable<ServiceContractMessageUsages>(); } }
+			public ITable<ServiceContracts>                                   ServiceContracts                                   { get { return _dataContext.GetTable<ServiceContracts>(); } }
+			public ITable<ServiceContractUsages>                              ServiceContractUsages                              { get { return _dataContext.GetTable<ServiceContractUsages>(); } }
+			public ITable<ServiceMessageTypes>                                ServiceMessageTypes                                { get { return _dataContext.GetTable<ServiceMessageTypes>(); } }
+			public ITable<ServiceQueues>                                      ServiceQueues                                      { get { return _dataContext.GetTable<ServiceQueues>(); } }
+			public ITable<ServiceQueueUsages>                                 ServiceQueueUsages                                 { get { return _dataContext.GetTable<ServiceQueueUsages>(); } }
+			public ITable<Services>                                           Services                                           { get { return _dataContext.GetTable<Services>(); } }
+			public ITable<SoapEndpoints>                                      SoapEndpoints                                      { get { return _dataContext.GetTable<SoapEndpoints>(); } }
+			public ITable<SpatialIndexes>                                     SpatialIndexes                                     { get { return _dataContext.GetTable<SpatialIndexes>(); } }
+			public ITable<SpatialIndexTessellations>                          SpatialIndexTessellations                          { get { return _dataContext.GetTable<SpatialIndexTessellations>(); } }
+			public ITable<SpatialReferenceSystems>                            SpatialReferenceSystems                            { get { return _dataContext.GetTable<SpatialReferenceSystems>(); } }
+			public ITable<SqlDependencies>                                    SqlDependencies                                    { get { return _dataContext.GetTable<SqlDependencies>(); } }
+			public ITable<SqlExpressionDependencies>                          SqlExpressionDependencies                          { get { return _dataContext.GetTable<SqlExpressionDependencies>(); } }
+			public ITable<SqlFeatureRestrictions>                             SqlFeatureRestrictions                             { get { return _dataContext.GetTable<SqlFeatureRestrictions>(); } }
+			public ITable<SqlLogins>                                          SqlLogins                                          { get { return _dataContext.GetTable<SqlLogins>(); } }
+			public ITable<SqlModules>                                         SqlModules                                         { get { return _dataContext.GetTable<SqlModules>(); } }
+			public ITable<Stats>                                              Stats                                              { get { return _dataContext.GetTable<Stats>(); } }
+			public ITable<StatsColumns>                                       StatsColumns                                       { get { return _dataContext.GetTable<StatsColumns>(); } }
+			public ITable<SymmetricKeys>                                      SymmetricKeys                                      { get { return _dataContext.GetTable<SymmetricKeys>(); } }
+			public ITable<Synonyms>                                           Synonyms                                           { get { return _dataContext.GetTable<Synonyms>(); } }
+			public ITable<SystemColumns>                                      SystemColumns                                      { get { return _dataContext.GetTable<SystemColumns>(); } }
+			public ITable<SystemComponentsSurfaceAreaConfiguration>           SystemComponentsSurfaceAreaConfiguration           { get { return _dataContext.GetTable<SystemComponentsSurfaceAreaConfiguration>(); } }
+			public ITable<SystemInternalsAllocationUnits>                     SystemInternalsAllocationUnits                     { get { return _dataContext.GetTable<SystemInternalsAllocationUnits>(); } }
+			public ITable<SystemInternalsPartitionColumns>                    SystemInternalsPartitionColumns                    { get { return _dataContext.GetTable<SystemInternalsPartitionColumns>(); } }
+			public ITable<SystemInternalsPartitions>                          SystemInternalsPartitions                          { get { return _dataContext.GetTable<SystemInternalsPartitions>(); } }
+			public ITable<SystemObjects>                                      SystemObjects                                      { get { return _dataContext.GetTable<SystemObjects>(); } }
+			public ITable<SystemParameters>                                   SystemParameters                                   { get { return _dataContext.GetTable<SystemParameters>(); } }
+			public ITable<SystemSqlModules>                                   SystemSqlModules                                   { get { return _dataContext.GetTable<SystemSqlModules>(); } }
+			public ITable<SystemViews>                                        SystemViews                                        { get { return _dataContext.GetTable<SystemViews>(); } }
+			public ITable<Tables>                                             Tables                                             { get { return _dataContext.GetTable<Tables>(); } }
+			public ITable<TableTypes>                                         TableTypes                                         { get { return _dataContext.GetTable<TableTypes>(); } }
+			public ITable<TcpEndpoints>                                       TcpEndpoints                                       { get { return _dataContext.GetTable<TcpEndpoints>(); } }
+			public ITable<TimeZoneInfo>                                       TimeZoneInfo                                       { get { return _dataContext.GetTable<TimeZoneInfo>(); } }
+			public ITable<TraceCategories>                                    TraceCategories                                    { get { return _dataContext.GetTable<TraceCategories>(); } }
+			public ITable<TraceColumns>                                       TraceColumns                                       { get { return _dataContext.GetTable<TraceColumns>(); } }
+			public ITable<TraceEventBindings>                                 TraceEventBindings                                 { get { return _dataContext.GetTable<TraceEventBindings>(); } }
+			public ITable<TraceEvents>                                        TraceEvents                                        { get { return _dataContext.GetTable<TraceEvents>(); } }
+			public ITable<Traces>                                             Traces                                             { get { return _dataContext.GetTable<Traces>(); } }
+			public ITable<TraceSubclassValues>                                TraceSubclassValues                                { get { return _dataContext.GetTable<TraceSubclassValues>(); } }
+			public ITable<TransmissionQueue>                                  TransmissionQueue                                  { get { return _dataContext.GetTable<TransmissionQueue>(); } }
+			public ITable<TriggerEvents>                                      TriggerEvents                                      { get { return _dataContext.GetTable<TriggerEvents>(); } }
+			public ITable<TriggerEventTypes>                                  TriggerEventTypes                                  { get { return _dataContext.GetTable<TriggerEventTypes>(); } }
+			public ITable<Triggers>                                           Triggers                                           { get { return _dataContext.GetTable<Triggers>(); } }
+			public ITable<TrustedAssemblies>                                  TrustedAssemblies                                  { get { return _dataContext.GetTable<TrustedAssemblies>(); } }
+			public ITable<TypeAssemblyUsages>                                 TypeAssemblyUsages                                 { get { return _dataContext.GetTable<TypeAssemblyUsages>(); } }
+			public ITable<Types>                                              Types                                              { get { return _dataContext.GetTable<Types>(); } }
+			public ITable<UserToken>                                          UserToken                                          { get { return _dataContext.GetTable<UserToken>(); } }
+			public ITable<ViaEndpoints>                                       ViaEndpoints                                       { get { return _dataContext.GetTable<ViaEndpoints>(); } }
+			public ITable<Views>                                              Views                                              { get { return _dataContext.GetTable<Views>(); } }
+
+			private readonly IDataContext _dataContext;
+
+			public DataContext(IDataContext dataContext)
+			{
+				_dataContext = dataContext;
+			}
+		}
+
+		[Table(Schema="sys", Name="all_columns", IsView=true)]
+		public partial class AllColumns
+		{
+			[Column("object_id"),                           NotNull    ] public int     ObjectID                        { get; set; } // int
+			[Column("name"),                                   Nullable] public string? Name                            { get; set; } // sysname
+			[Column("column_id"),                           NotNull    ] public int     ColumnID                        { get; set; } // int
+			[Column("system_type_id"),                      NotNull    ] public byte    SystemTypeID                    { get; set; } // tinyint
+			[Column("user_type_id"),                        NotNull    ] public int     UserTypeID                      { get; set; } // int
+			[Column("max_length"),                          NotNull    ] public short   MaxLength                       { get; set; } // smallint
+			[Column("precision"),                           NotNull    ] public byte    Precision                       { get; set; } // tinyint
+			[Column("scale"),                               NotNull    ] public byte    Scale                           { get; set; } // tinyint
+			[Column("collation_name"),                         Nullable] public string? CollationName                   { get; set; } // sysname
+			[Column("is_nullable"),                            Nullable] public bool?   IsNullable                      { get; set; } // bit
+			[Column("is_ansi_padded"),                      NotNull    ] public bool    IsAnsiPadded                    { get; set; } // bit
+			[Column("is_rowguidcol"),                       NotNull    ] public bool    IsRowguidcol                    { get; set; } // bit
+			[Column("is_identity"),                         NotNull    ] public bool    IsIdentity                      { get; set; } // bit
+			[Column("is_computed"),                         NotNull    ] public bool    IsComputed                      { get; set; } // bit
+			[Column("is_filestream"),                       NotNull    ] public bool    IsFilestream                    { get; set; } // bit
+			[Column("is_replicated"),                          Nullable] public bool?   IsReplicated                    { get; set; } // bit
+			[Column("is_non_sql_subscribed"),                  Nullable] public bool?   IsNonSqlSubscribed              { get; set; } // bit
+			[Column("is_merge_published"),                     Nullable] public bool?   IsMergePublished                { get; set; } // bit
+			[Column("is_dts_replicated"),                      Nullable] public bool?   IsDtsReplicated                 { get; set; } // bit
+			[Column("is_xml_document"),                     NotNull    ] public bool    IsXmlDocument                   { get; set; } // bit
+			[Column("xml_collection_id"),                   NotNull    ] public int     XmlCollectionID                 { get; set; } // int
+			[Column("default_object_id"),                   NotNull    ] public int     DefaultObjectID                 { get; set; } // int
+			[Column("rule_object_id"),                      NotNull    ] public int     RuleObjectID                    { get; set; } // int
+			[Column("is_sparse"),                              Nullable] public bool?   IsSparse                        { get; set; } // bit
+			[Column("is_column_set"),                          Nullable] public bool?   IsColumnSet                     { get; set; } // bit
+			[Column("generated_always_type"),                  Nullable] public byte?   GeneratedAlwaysType             { get; set; } // tinyint
+			[Column("generated_always_type_desc"),             Nullable] public string? GeneratedAlwaysTypeDesc         { get; set; } // nvarchar(60)
+			[Column("encryption_type"),                        Nullable] public int?    EncryptionType                  { get; set; } // int
+			[Column("encryption_type_desc"),                   Nullable] public string? EncryptionTypeDesc              { get; set; } // nvarchar(64)
+			[Column("encryption_algorithm_name"),              Nullable] public string? EncryptionAlgorithmName         { get; set; } // sysname
+			[Column("column_encryption_key_id"),               Nullable] public int?    ColumnEncryptionKeyID           { get; set; } // int
+			[Column("column_encryption_key_database_name"),    Nullable] public string? ColumnEncryptionKeyDatabaseName { get; set; } // sysname
+			[Column("is_hidden"),                              Nullable] public bool?   IsHidden                        { get; set; } // bit
+			[Column("is_masked"),                           NotNull    ] public bool    IsMasked                        { get; set; } // bit
+			[Column("graph_type"),                             Nullable] public int?    GraphType                       { get; set; } // int
+			[Column("graph_type_desc"),                        Nullable] public string? GraphTypeDesc                   { get; set; } // nvarchar(60)
+
+			#region Associations
+
+			/// <summary>
+			/// all_objects
+			/// </summary>
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="all_objects", BackReferenceName="AllColumns")]
+			public SystemSchema.AllObjects AllObject { get; set; } = null!;
+
+			#endregion
+		}
+
+		[Table(Schema="sys", Name="all_objects", IsView=true)]
+		public partial class AllObjects
+		{
+			[Column("name"),                NotNull    ] public string   Name              { get; set; } = null!; // sysname
+			[Column("object_id"),           NotNull    ] public int      ObjectID          { get; set; } // int
+			[Column("principal_id"),           Nullable] public int?     PrincipalID       { get; set; } // int
+			[Column("schema_id"),           NotNull    ] public int      SchemaID          { get; set; } // int
+			[Column("parent_object_id"),    NotNull    ] public int      ParentObjectID    { get; set; } // int
+			[Column("type"),                   Nullable] public string?  Type              { get; set; } // char(2)
+			[Column("type_desc"),              Nullable] public string?  TypeDesc          { get; set; } // nvarchar(60)
+			[Column("create_date"),         NotNull    ] public DateTime CreateDate        { get; set; } // datetime
+			[Column("modify_date"),         NotNull    ] public DateTime ModifyDate        { get; set; } // datetime
+			[Column("is_ms_shipped"),          Nullable] public bool?    IsMsShipped       { get; set; } // bit
+			[Column("is_published"),           Nullable] public bool?    IsPublished       { get; set; } // bit
+			[Column("is_schema_published"),    Nullable] public bool?    IsSchemaPublished { get; set; } // bit
+
+			#region Associations
+
+			/// <summary>
+			/// all_columns
+			/// </summary>
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			public IList<SystemSchema.AllColumns> AllColumns { get; set; } = null!;
+
+			/// <summary>
+			/// all_parameters
+			/// </summary>
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			public IList<SystemSchema.AllParameters> AllParameters { get; set; } = null!;
+
+			/// <summary>
+			/// all_sql_modules
+			/// </summary>
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
+			public IList<SystemSchema.AllSqlModules> AllSqlModules { get; set; } = null!;
+
+			/// <summary>
+			/// all_views
+			/// </summary>
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
+			public SystemSchema.AllViews? AllView { get; set; }
+
+			#endregion
+		}
+
+		[Table(Schema="sys", Name="allocation_units", IsView=true)]
+		public partial class AllocationUnits
+		{
+			[Column("allocation_unit_id"), NotNull    ] public long    AllocationUnitID { get; set; } // bigint
+			[Column("type"),               NotNull    ] public byte    Type             { get; set; } // tinyint
+			[Column("type_desc"),             Nullable] public string? TypeDesc         { get; set; } // nvarchar(60)
+			[Column("container_id"),       NotNull    ] public long    ContainerID      { get; set; } // bigint
+			[Column("data_space_id"),         Nullable] public int?    DataSpaceID      { get; set; } // int
+			[Column("total_pages"),        NotNull    ] public long    TotalPages       { get; set; } // bigint
+			[Column("used_pages"),         NotNull    ] public long    UsedPages        { get; set; } // bigint
+			[Column("data_pages"),         NotNull    ] public long    DataPages        { get; set; } // bigint
+		}
+
+		[Table(Schema="sys", Name="all_parameters", IsView=true)]
+		public partial class AllParameters
+		{
+			[Column("object_id"),                           NotNull    ] public int     ObjectID                        { get; set; } // int
+			[Column("name"),                                   Nullable] public string? Name                            { get; set; } // sysname
+			[Column("parameter_id"),                        NotNull    ] public int     ParameterID                     { get; set; } // int
+			[Column("system_type_id"),                      NotNull    ] public byte    SystemTypeID                    { get; set; } // tinyint
+			[Column("user_type_id"),                        NotNull    ] public int     UserTypeID                      { get; set; } // int
+			[Column("max_length"),                          NotNull    ] public short   MaxLength                       { get; set; } // smallint
+			[Column("precision"),                           NotNull    ] public byte    Precision                       { get; set; } // tinyint
+			[Column("scale"),                               NotNull    ] public byte    Scale                           { get; set; } // tinyint
+			[Column("is_output"),                           NotNull    ] public bool    IsOutput                        { get; set; } // bit
+			[Column("is_cursor_ref"),                       NotNull    ] public bool    IsCursorRef                     { get; set; } // bit
+			[Column("has_default_value"),                   NotNull    ] public bool    HasDefaultValue                 { get; set; } // bit
+			[Column("is_xml_document"),                     NotNull    ] public bool    IsXmlDocument                   { get; set; } // bit
+			[Column("default_value"),                          Nullable] public object? DefaultValue                    { get; set; } // sql_variant
+			[Column("xml_collection_id"),                   NotNull    ] public int     XmlCollectionID                 { get; set; } // int
+			[Column("is_readonly"),                         NotNull    ] public bool    IsReadonly                      { get; set; } // bit
+			[Column("is_nullable"),                            Nullable] public bool?   IsNullable                      { get; set; } // bit
+			[Column("encryption_type"),                        Nullable] public int?    EncryptionType                  { get; set; } // int
+			[Column("encryption_type_desc"),                   Nullable] public string? EncryptionTypeDesc              { get; set; } // nvarchar(64)
+			[Column("encryption_algorithm_name"),              Nullable] public string? EncryptionAlgorithmName         { get; set; } // sysname
+			[Column("column_encryption_key_id"),               Nullable] public int?    ColumnEncryptionKeyID           { get; set; } // int
+			[Column("column_encryption_key_database_name"),    Nullable] public string? ColumnEncryptionKeyDatabaseName { get; set; } // sysname
+
+			#region Associations
+
+			/// <summary>
+			/// all_objects
+			/// </summary>
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="all_objects", BackReferenceName="AllParameters")]
+			public SystemSchema.AllObjects AllObject { get; set; } = null!;
+
+			#endregion
+		}
+
+		[Table(Schema="sys", Name="all_sql_modules", IsView=true)]
+		public partial class AllSqlModules
+		{
+			[Column("object_id"),               NotNull    ] public int     ObjectID              { get; set; } // int
+			[Column("definition"),                 Nullable] public string? Definition            { get; set; } // nvarchar(0)
+			[Column("uses_ansi_nulls"),            Nullable] public bool?   UsesAnsiNulls         { get; set; } // bit
+			[Column("uses_quoted_identifier"),     Nullable] public bool?   UsesQuotedIdentifier  { get; set; } // bit
+			[Column("is_schema_bound"),            Nullable] public bool?   IsSchemaBound         { get; set; } // bit
+			[Column("uses_database_collation"),    Nullable] public bool?   UsesDatabaseCollation { get; set; } // bit
+			[Column("is_recompiled"),              Nullable] public bool?   IsRecompiled          { get; set; } // bit
+			[Column("null_on_null_input"),         Nullable] public bool?   NullOnNullInput       { get; set; } // bit
+			[Column("execute_as_principal_id"),    Nullable] public int?    ExecuteAsPrincipalID  { get; set; } // int
+			[Column("uses_native_compilation"),    Nullable] public bool?   UsesNativeCompilation { get; set; } // bit
+			[Column("inline_type"),                Nullable] public bool?   InlineType            { get; set; } // bit
+			[Column("is_inlineable"),              Nullable] public bool?   IsInlineable          { get; set; } // bit
+
+			#region Associations
+
+			/// <summary>
+			/// all_objects
+			/// </summary>
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="all_objects", BackReferenceName="AllSqlModules")]
+			public SystemSchema.AllObjects AllObject { get; set; } = null!;
+
+			#endregion
+		}
+
+		[Table(Schema="sys", Name="all_views", IsView=true)]
+		public partial class AllViews
+		{
+			[Column("name"),                        NotNull    ] public string   Name                     { get; set; } = null!; // sysname
+			[Column("object_id"),                   NotNull    ] public int      ObjectID                 { get; set; } // int
+			[Column("principal_id"),                   Nullable] public int?     PrincipalID              { get; set; } // int
+			[Column("schema_id"),                   NotNull    ] public int      SchemaID                 { get; set; } // int
+			[Column("parent_object_id"),            NotNull    ] public int      ParentObjectID           { get; set; } // int
+			[Column("type"),                        NotNull    ] public string   Type                     { get; set; } = null!; // char(2)
+			[Column("type_desc"),                      Nullable] public string?  TypeDesc                 { get; set; } // nvarchar(60)
+			[Column("create_date"),                 NotNull    ] public DateTime CreateDate               { get; set; } // datetime
+			[Column("modify_date"),                 NotNull    ] public DateTime ModifyDate               { get; set; } // datetime
+			[Column("is_ms_shipped"),                  Nullable] public bool?    IsMsShipped              { get; set; } // bit
+			[Column("is_published"),                   Nullable] public bool?    IsPublished              { get; set; } // bit
+			[Column("is_schema_published"),            Nullable] public bool?    IsSchemaPublished        { get; set; } // bit
+			[Column("is_replicated"),                  Nullable] public bool?    IsReplicated             { get; set; } // bit
+			[Column("has_replication_filter"),         Nullable] public bool?    HasReplicationFilter     { get; set; } // bit
+			[Column("has_opaque_metadata"),            Nullable] public bool?    HasOpaqueMetadata        { get; set; } // bit
+			[Column("has_unchecked_assembly_data"),    Nullable] public bool?    HasUncheckedAssemblyData { get; set; } // bit
+			[Column("with_check_option"),              Nullable] public bool?    WithCheckOption          { get; set; } // bit
+			[Column("is_date_correlation_view"),       Nullable] public bool?    IsDateCorrelationView    { get; set; } // bit
+			[Column("is_tracked_by_cdc"),              Nullable] public bool?    IsTrackedByCdc           { get; set; } // bit
+			[Column("has_snapshot"),                   Nullable] public bool?    HasSnapshot              { get; set; } // bit
+
+			#region Associations
+
+			/// <summary>
+			/// all_objects
+			/// </summary>
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="all_objects", BackReferenceName="AllView")]
+			public SystemSchema.AllObjects AllObject { get; set; } = null!;
+
+			#endregion
+		}
+
+		[Table(Schema="sys", Name="assemblies", IsView=true)]
+		public partial class Assemblies
+		{
+			[Column("name"),                NotNull    ] public string   Name              { get; set; } = null!; // sysname
+			[Column("principal_id"),           Nullable] public int?     PrincipalID       { get; set; } // int
+			[Column("assembly_id"),         NotNull    ] public int      AssemblyID        { get; set; } // int
+			[Column("clr_name"),               Nullable] public string?  ClrName           { get; set; } // nvarchar(4000)
+			[Column("permission_set"),         Nullable] public byte?    PermissionSet     { get; set; } // tinyint
+			[Column("permission_set_desc"),    Nullable] public string?  PermissionSetDesc { get; set; } // nvarchar(60)
+			[Column("is_visible"),          NotNull    ] public bool     IsVisible         { get; set; } // bit
+			[Column("create_date"),         NotNull    ] public DateTime CreateDate        { get; set; } // datetime
+			[Column("modify_date"),         NotNull    ] public DateTime ModifyDate        { get; set; } // datetime
+			[Column("is_user_defined"),        Nullable] public bool?    IsUserDefined     { get; set; } // bit
+		}
+
+		[Table(Schema="sys", Name="assembly_files", IsView=true)]
+		public partial class AssemblyFiles
+		{
+			[Column("assembly_id"), NotNull    ] public int     AssemblyID { get; set; } // int
+			[Column("name"),           Nullable] public string? Name       { get; set; } // nvarchar(260)
+			[Column("file_id"),     NotNull    ] public int     FileID     { get; set; } // int
+			[Column("content"),        Nullable] public byte[]? Content    { get; set; } // varbinary(-1)
+		}
+
+		[Table(Schema="sys", Name="assembly_modules", IsView=true)]
+		public partial class AssemblyModules
+		{
+			[Column("object_id"),               NotNull    ] public int     ObjectID             { get; set; } // int
+			[Column("assembly_id"),             NotNull    ] public int     AssemblyID           { get; set; } // int
+			[Column("assembly_class"),             Nullable] public string? AssemblyClass        { get; set; } // nvarchar(128)
+			[Column("assembly_method"),            Nullable] public string? AssemblyMethod       { get; set; } // nvarchar(128)
+			[Column("null_on_null_input"),         Nullable] public bool?   NullOnNullInput      { get; set; } // bit
+			[Column("execute_as_principal_id"),    Nullable] public int?    ExecuteAsPrincipalID { get; set; } // int
+
+			#region Associations
+
+			/// <summary>
+			/// objects
+			/// </summary>
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="objects", BackReferenceName="AssemblyModule")]
+			public SystemSchema.Objects Object { get; set; } = null!;
+
+			#endregion
+		}
+
+		[Table(Schema="sys", Name="assembly_references", IsView=true)]
+		public partial class AssemblyReferences
+		{
+			[Column("assembly_id"),            NotNull] public int AssemblyID           { get; set; } // int
+			[Column("referenced_assembly_id"), NotNull] public int ReferencedAssemblyID { get; set; } // int
+		}
+
+		[Table(Schema="sys", Name="assembly_types", IsView=true)]
+		public partial class AssemblyTypes
+		{
+			[Column("name"),                    NotNull    ] public string  Name                  { get; set; } = null!; // sysname
+			[Column("system_type_id"),          NotNull    ] public byte    SystemTypeID          { get; set; } // tinyint
+			[Column("user_type_id"),            NotNull    ] public int     UserTypeID            { get; set; } // int
+			[Column("schema_id"),               NotNull    ] public int     SchemaID              { get; set; } // int
+			[Column("principal_id"),               Nullable] public int?    PrincipalID           { get; set; } // int
+			[Column("max_length"),              NotNull    ] public short   MaxLength             { get; set; } // smallint
+			[Column("precision"),               NotNull    ] public byte    Precision             { get; set; } // tinyint
+			[Column("scale"),                   NotNull    ] public byte    Scale                 { get; set; } // tinyint
+			[Column("collation_name"),             Nullable] public string? CollationName         { get; set; } // sysname
+			[Column("is_nullable"),                Nullable] public bool?   IsNullable            { get; set; } // bit
+			[Column("is_user_defined"),         NotNull    ] public bool    IsUserDefined         { get; set; } // bit
+			[Column("is_assembly_type"),        NotNull    ] public bool    IsAssemblyType        { get; set; } // bit
+			[Column("default_object_id"),       NotNull    ] public int     DefaultObjectID       { get; set; } // int
+			[Column("rule_object_id"),          NotNull    ] public int     RuleObjectID          { get; set; } // int
+			[Column("assembly_id"),             NotNull    ] public int     AssemblyID            { get; set; } // int
+			[Column("assembly_class"),             Nullable] public string? AssemblyClass         { get; set; } // sysname
+			[Column("is_binary_ordered"),          Nullable] public bool?   IsBinaryOrdered       { get; set; } // bit
+			[Column("is_fixed_length"),            Nullable] public bool?   IsFixedLength         { get; set; } // bit
+			[Column("prog_id"),                    Nullable] public string? ProgID                { get; set; } // nvarchar(40)
+			[Column("assembly_qualified_name"),    Nullable] public string? AssemblyQualifiedName { get; set; } // nvarchar(4000)
+			[Column("is_table_type"),           NotNull    ] public bool    IsTableType           { get; set; } // bit
+		}
+
+		[Table(Schema="sys", Name="asymmetric_keys", IsView=true)]
+		public partial class AsymmetricKeys
+		{
+			[Column("name"),                         NotNull    ] public string  Name                       { get; set; } = null!; // sysname
+			[Column("principal_id"),                    Nullable] public int?    PrincipalID                { get; set; } // int
+			[Column("asymmetric_key_id"),            NotNull    ] public int     AsymmetricKeyID            { get; set; } // int
+			[Column("pvt_key_encryption_type"),      NotNull    ] public string  PvtKeyEncryptionType       { get; set; } = null!; // char(2)
+			[Column("pvt_key_encryption_type_desc"),    Nullable] public string? PvtKeyEncryptionTypeDesc   { get; set; } // nvarchar(60)
+			[Column("thumbprint"),                   NotNull    ] public byte[]  Thumbprint                 { get; set; } = null!; // varbinary(64)
+			[Column("algorithm"),                    NotNull    ] public string  Algorithm                  { get; set; } = null!; // char(2)
+			[Column("algorithm_desc"),                  Nullable] public string? AlgorithmDesc              { get; set; } // nvarchar(60)
+			[Column("key_length"),                   NotNull    ] public int     KeyLength                  { get; set; } // int
+			[Column("sid"),                             Nullable] public byte[]? Sid                        { get; set; } // varbinary(85)
+			[Column("string_sid"),                      Nullable] public string? StringSid                  { get; set; } // nvarchar(128)
+			[Column("public_key"),                   NotNull    ] public byte[]  PublicKey                  { get; set; } = null!; // varbinary(-1)
+			[Column("attested_by"),                     Nullable] public string? AttestedBy                 { get; set; } // nvarchar(260)
+			[Column("provider_type"),                   Nullable] public string? ProviderType               { get; set; } // nvarchar(60)
+			[Column("cryptographic_provider_guid"),     Nullable] public Guid?   CryptographicProviderGuid  { get; set; } // uniqueidentifier
+			[Column("cryptographic_provider_algid"),    Nullable] public object? CryptographicProviderAlgid { get; set; } // sql_variant
+		}
+
+		[Table(Schema="sys", Name="availability_databases_cluster", IsView=true)]
+		public partial class AvailabilityDatabasesCluster
+		{
+			[Column("group_id"),          NotNull    ] public Guid     GroupID         { get; set; } // uniqueidentifier
+			[Column("group_database_id"), NotNull    ] public Guid     GroupDatabaseID { get; set; } // uniqueidentifier
+			[Column("database_name"),        Nullable] public string?  DatabaseName    { get; set; } // sysname
+			[Column("truncation_lsn"),       Nullable] public decimal? TruncationLsn   { get; set; } // numeric(25,0)
+		}
+
+		[Table(Schema="sys", Name="availability_group_listener_ip_addresses", IsView=true)]
+		public partial class AvailabilityGroupListenerIpAddresses
+		{
+			[Column("listener_id"),                     Nullable] public string? ListenerID                { get; set; } // nvarchar(36)
+			[Column("ip_address"),                      Nullable] public string? IpAddress                 { get; set; } // nvarchar(48)
+			[Column("ip_subnet_mask"),                  Nullable] public string? IpSubnetMask              { get; set; } // nvarchar(15)
+			[Column("is_dhcp"),                      NotNull    ] public bool    IsDhcp                    { get; set; } // bit
+			[Column("network_subnet_ip"),               Nullable] public string? NetworkSubnetIp           { get; set; } // nvarchar(48)
+			[Column("network_subnet_prefix_length"),    Nullable] public int?    NetworkSubnetPrefixLength { get; set; } // int
+			[Column("network_subnet_ipv4_mask"),        Nullable] public string? NetworkSubnetIpv4Mask     { get; set; } // nvarchar(48)
+			[Column("state"),                           Nullable] public byte?   State                     { get; set; } // tinyint
+			[Column("state_desc"),                      Nullable] public string? StateDesc                 { get; set; } // nvarchar(60)
+		}
+
+		[Table(Schema="sys", Name="availability_group_listeners", IsView=true)]
+		public partial class AvailabilityGroupListeners
+		{
+			[Column("group_id"),                             NotNull    ] public Guid    GroupID                          { get; set; } // uniqueidentifier
+			[Column("listener_id"),                             Nullable] public string? ListenerID                       { get; set; } // nvarchar(36)
+			[Column("dns_name"),                                Nullable] public string? DnsName                          { get; set; } // nvarchar(63)
+			[Column("port"),                                    Nullable] public int?    Port                             { get; set; } // int
+			[Column("is_conformant"),                        NotNull    ] public bool    IsConformant                     { get; set; } // bit
+			[Column("ip_configuration_string_from_cluster"),    Nullable] public string? IpConfigurationStringFromCluster { get; set; } // nvarchar(4000)
+		}
+
+		[Table(Schema="sys", Name="availability_groups", IsView=true)]
+		public partial class AvailabilityGroups
+		{
+			[Column("group_id"),                                    NotNull    ] public Guid    GroupID                                 { get; set; } // uniqueidentifier
+			[Column("name"),                                           Nullable] public string? Name                                    { get; set; } // sysname
+			[Column("resource_id"),                                    Nullable] public string? ResourceID                              { get; set; } // nvarchar(40)
+			[Column("resource_group_id"),                              Nullable] public string? ResourceGroupID                         { get; set; } // nvarchar(40)
+			[Column("failure_condition_level"),                        Nullable] public int?    FailureConditionLevel                   { get; set; } // int
+			[Column("health_check_timeout"),                           Nullable] public int?    HealthCheckTimeout                      { get; set; } // int
+			[Column("automated_backup_preference"),                    Nullable] public byte?   AutomatedBackupPreference               { get; set; } // tinyint
+			[Column("automated_backup_preference_desc"),               Nullable] public string? AutomatedBackupPreferenceDesc           { get; set; } // nvarchar(60)
+			[Column("version"),                                        Nullable] public short?  Version                                 { get; set; } // smallint
+			[Column("basic_features"),                                 Nullable] public bool?   BasicFeatures                           { get; set; } // bit
+			[Column("dtc_support"),                                    Nullable] public bool?   DtcSupport                              { get; set; } // bit
+			[Column("db_failover"),                                    Nullable] public bool?   DbFailover                              { get; set; } // bit
+			[Column("is_distributed"),                                 Nullable] public bool?   IsDistributed                           { get; set; } // bit
+			[Column("cluster_type"),                                   Nullable] public byte?   ClusterType                             { get; set; } // tinyint
+			[Column("cluster_type_desc"),                              Nullable] public string? ClusterTypeDesc                         { get; set; } // nvarchar(60)
+			[Column("required_synchronized_secondaries_to_commit"),    Nullable] public int?    RequiredSynchronizedSecondariesToCommit { get; set; } // int
+			[Column("sequence_number"),                                Nullable] public long?   SequenceNumber                          { get; set; } // bigint
+			[Column("is_contained"),                                   Nullable] public bool?   IsContained                             { get; set; } // bit
+		}
+
+		[Table(Schema="sys", Name="availability_groups_cluster", IsView=true)]
+		public partial class AvailabilityGroupsCluster
+		{
+			[Column("group_id"),                         NotNull    ] public Guid    GroupID                       { get; set; } // uniqueidentifier
+			[Column("name"),                                Nullable] public string? Name                          { get; set; } // sysname
+			[Column("resource_id"),                         Nullable] public string? ResourceID                    { get; set; } // nvarchar(40)
+			[Column("resource_group_id"),                   Nullable] public string? ResourceGroupID               { get; set; } // nvarchar(40)
+			[Column("failure_condition_level"),             Nullable] public int?    FailureConditionLevel         { get; set; } // int
+			[Column("health_check_timeout"),                Nullable] public int?    HealthCheckTimeout            { get; set; } // int
+			[Column("automated_backup_preference"),         Nullable] public byte?   AutomatedBackupPreference     { get; set; } // tinyint
+			[Column("automated_backup_preference_desc"),    Nullable] public string? AutomatedBackupPreferenceDesc { get; set; } // nvarchar(60)
+		}
+
+		[Table(Schema="sys", Name="availability_read_only_routing_lists", IsView=true)]
+		public partial class AvailabilityReadOnlyRoutingLists
+		{
+			[Column("replica_id"),           NotNull] public Guid ReplicaID         { get; set; } // uniqueidentifier
+			[Column("routing_priority"),     NotNull] public int  RoutingPriority   { get; set; } // int
+			[Column("read_only_replica_id"), NotNull] public Guid ReadOnlyReplicaID { get; set; } // uniqueidentifier
+		}
+
+		[Table(Schema="sys", Name="availability_replicas", IsView=true)]
+		public partial class AvailabilityReplicas
+		{
+			[Column("replica_id"),                            Nullable] public Guid?     ReplicaID                         { get; set; } // uniqueidentifier
+			[Column("group_id"),                              Nullable] public Guid?     GroupID                           { get; set; } // uniqueidentifier
+			[Column("replica_metadata_id"),                   Nullable] public int?      ReplicaMetadataID                 { get; set; } // int
+			[Column("replica_server_name"),                   Nullable] public string?   ReplicaServerName                 { get; set; } // nvarchar(256)
+			[Column("owner_sid"),                             Nullable] public byte[]?   OwnerSid                          { get; set; } // varbinary(85)
+			[Column("endpoint_url"),                          Nullable] public string?   EndpointUrl                       { get; set; } // nvarchar(256)
+			[Column("availability_mode"),                     Nullable] public byte?     AvailabilityMode                  { get; set; } // tinyint
+			[Column("availability_mode_desc"),                Nullable] public string?   AvailabilityModeDesc              { get; set; } // nvarchar(60)
+			[Column("failover_mode"),                         Nullable] public byte?     FailoverMode                      { get; set; } // tinyint
+			[Column("failover_mode_desc"),                    Nullable] public string?   FailoverModeDesc                  { get; set; } // nvarchar(60)
+			[Column("session_timeout"),                       Nullable] public int?      SessionTimeout                    { get; set; } // int
+			[Column("primary_role_allow_connections"),        Nullable] public byte?     PrimaryRoleAllowConnections       { get; set; } // tinyint
+			[Column("primary_role_allow_connections_desc"),   Nullable] public string?   PrimaryRoleAllowConnectionsDesc   { get; set; } // nvarchar(60)
+			[Column("secondary_role_allow_connections"),      Nullable] public byte?     SecondaryRoleAllowConnections     { get; set; } // tinyint
+			[Column("secondary_role_allow_connections_desc"), Nullable] public string?   SecondaryRoleAllowConnectionsDesc { get; set; } // nvarchar(60)
+			[Column("create_date"),                           Nullable] public DateTime? CreateDate                        { get; set; } // datetime
+			[Column("modify_date"),                           Nullable] public DateTime? ModifyDate                        { get; set; } // datetime
+			[Column("backup_priority"),                       Nullable] public int?      BackupPriority                    { get; set; } // int
+			[Column("read_only_routing_url"),                 Nullable] public string?   ReadOnlyRoutingUrl                { get; set; } // nvarchar(256)
+			[Column("seeding_mode"),                          Nullable] public byte?     SeedingMode                       { get; set; } // tinyint
+			[Column("seeding_mode_desc"),                     Nullable] public string?   SeedingModeDesc                   { get; set; } // nvarchar(60)
+			[Column("read_write_routing_url"),                Nullable] public string?   ReadWriteRoutingUrl               { get; set; } // nvarchar(256)
+		}
+
+		[Table(Schema="sys", Name="backup_devices", IsView=true)]
+		public partial class BackupDevices
+		{
+			[Column("name"),          NotNull    ] public string  Name         { get; set; } = null!; // sysname
+			[Column("type"),             Nullable] public byte?   Type         { get; set; } // tinyint
+			[Column("type_desc"),        Nullable] public string? TypeDesc     { get; set; } // nvarchar(60)
+			[Column("physical_name"),    Nullable] public string? PhysicalName { get; set; } // nvarchar(260)
+		}
+
+		[Table(Schema="sys", Name="certificates", IsView=true)]
+		public partial class Certificates
+		{
+			[Column("name"),                         NotNull    ] public string    Name                     { get; set; } = null!; // sysname
+			[Column("certificate_id"),               NotNull    ] public int       CertificateID            { get; set; } // int
+			[Column("principal_id"),                    Nullable] public int?      PrincipalID              { get; set; } // int
+			[Column("pvt_key_encryption_type"),      NotNull    ] public string    PvtKeyEncryptionType     { get; set; } = null!; // char(2)
+			[Column("pvt_key_encryption_type_desc"),    Nullable] public string?   PvtKeyEncryptionTypeDesc { get; set; } // nvarchar(60)
+			[Column("is_active_for_begin_dialog"),      Nullable] public bool?     IsActiveForBeginDialog   { get; set; } // bit
+			[Column("issuer_name"),                     Nullable] public string?   IssuerName               { get; set; } // nvarchar(442)
+			[Column("cert_serial_number"),              Nullable] public string?   CertSerialNumber         { get; set; } // nvarchar(64)
+			[Column("sid"),                             Nullable] public byte[]?   Sid                      { get; set; } // varbinary(85)
+			[Column("string_sid"),                      Nullable] public string?   StringSid                { get; set; } // nvarchar(128)
+			[Column("subject"),                         Nullable] public string?   Subject                  { get; set; } // nvarchar(4000)
+			[Column("expiry_date"),                     Nullable] public DateTime? ExpiryDate               { get; set; } // datetime
+			[Column("start_date"),                      Nullable] public DateTime? StartDate                { get; set; } // datetime
+			[Column("thumbprint"),                   NotNull    ] public byte[]    Thumbprint               { get; set; } = null!; // varbinary(64)
+			[Column("attested_by"),                     Nullable] public string?   AttestedBy               { get; set; } // nvarchar(260)
+			[Column("pvt_key_last_backup_date"),        Nullable] public DateTime? PvtKeyLastBackupDate     { get; set; } // datetime
+			[Column("key_length"),                      Nullable] public int?      KeyLength                { get; set; } // int
+		}
+
+		[Table(Schema="sys", Name="change_tracking_databases", IsView=true)]
+		public partial class ChangeTrackingDatabases
+		{
+			[Column("database_id"),                 NotNull    ] public int     DatabaseID               { get; set; } // int
+			[Column("is_auto_cleanup_on"),             Nullable] public byte?   IsAutoCleanupOn          { get; set; } // tinyint
+			[Column("retention_period"),               Nullable] public int?    RetentionPeriod          { get; set; } // int
+			[Column("retention_period_units"),         Nullable] public byte?   RetentionPeriodUnits     { get; set; } // tinyint
+			[Column("retention_period_units_desc"),    Nullable] public string? RetentionPeriodUnitsDesc { get; set; } // nvarchar(60)
+			[Column("max_cleanup_version"),            Nullable] public long?   MaxCleanupVersion        { get; set; } // bigint
+		}
+
+		[Table(Schema="sys", Name="change_tracking_tables", IsView=true)]
+		public partial class ChangeTrackingTables
+		{
+			[Column("object_id"),                   NotNull    ] public int   ObjectID                { get; set; } // int
+			[Column("is_track_columns_updated_on"), NotNull    ] public bool  IsTrackColumnsUpdatedOn { get; set; } // bit
+			[Column("min_valid_version"),              Nullable] public long? MinValidVersion         { get; set; } // bigint
+			[Column("begin_version"),                  Nullable] public long? BeginVersion            { get; set; } // bigint
+			[Column("cleanup_version"),                Nullable] public long? CleanupVersion          { get; set; } // bigint
+
+			#region Associations
+
+			/// <summary>
+			/// objects
+			/// </summary>
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ChangeTrackingTables")]
+			public SystemSchema.Objects Object { get; set; } = null!;
+
+			#endregion
+		}
+
+		[Table(Schema="sys", Name="check_constraints", IsView=true)]
+		public partial class CheckConstraints
+		{
+			[Column("name"),                    NotNull    ] public string   Name                  { get; set; } = null!; // sysname
+			[Column("object_id"),               NotNull    ] public int      ObjectID              { get; set; } // int
+			[Column("principal_id"),               Nullable] public int?     PrincipalID           { get; set; } // int
+			[Column("schema_id"),               NotNull    ] public int      SchemaID              { get; set; } // int
+			[Column("parent_object_id"),        NotNull    ] public int      ParentObjectID        { get; set; } // int
+			[Column("type"),                       Nullable] public string?  Type                  { get; set; } // char(2)
+			[Column("type_desc"),                  Nullable] public string?  TypeDesc              { get; set; } // nvarchar(60)
+			[Column("create_date"),             NotNull    ] public DateTime CreateDate            { get; set; } // datetime
+			[Column("modify_date"),             NotNull    ] public DateTime ModifyDate            { get; set; } // datetime
+			[Column("is_ms_shipped"),           NotNull    ] public bool     IsMsShipped           { get; set; } // bit
+			[Column("is_published"),            NotNull    ] public bool     IsPublished           { get; set; } // bit
+			[Column("is_schema_published"),     NotNull    ] public bool     IsSchemaPublished     { get; set; } // bit
+			[Column("is_disabled"),             NotNull    ] public bool     IsDisabled            { get; set; } // bit
+			[Column("is_not_for_replication"),  NotNull    ] public bool     IsNotForReplication   { get; set; } // bit
+			[Column("is_not_trusted"),          NotNull    ] public bool     IsNotTrusted          { get; set; } // bit
+			[Column("parent_column_id"),        NotNull    ] public int      ParentColumnID        { get; set; } // int
+			[Column("definition"),                 Nullable] public string?  Definition            { get; set; } // nvarchar(0)
+			[Column("uses_database_collation"),    Nullable] public bool?    UsesDatabaseCollation { get; set; } // bit
+			[Column("is_system_named"),         NotNull    ] public bool     IsSystemNamed         { get; set; } // bit
+
+			#region Associations
+
+			/// <summary>
+			/// objects
+			/// </summary>
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="objects", BackReferenceName="CheckConstraint")]
+			public SystemSchema.Objects Object { get; set; } = null!;
+
+			#endregion
+		}
+
+		[Table(Schema="sys", Name="column_encryption_keys", IsView=true)]
+		public partial class ColumnEncryptionKeys
+		{
+			[Column("name"),                     NotNull] public string   Name                  { get; set; } = null!; // sysname
+			[Column("column_encryption_key_id"), NotNull] public int      ColumnEncryptionKeyID { get; set; } // int
+			[Column("create_date"),              NotNull] public DateTime CreateDate            { get; set; } // datetime
+			[Column("modify_date"),              NotNull] public DateTime ModifyDate            { get; set; } // datetime
+		}
+
+		[Table(Schema="sys", Name="column_encryption_key_values", IsView=true)]
+		public partial class ColumnEncryptionKeyValues
+		{
+			[Column("column_encryption_key_id"),  NotNull    ] public int     ColumnEncryptionKeyID   { get; set; } // int
+			[Column("column_master_key_id"),      NotNull    ] public int     ColumnMasterKeyID       { get; set; } // int
+			[Column("encrypted_value"),              Nullable] public byte[]? EncryptedValue          { get; set; } // varbinary(8000)
+			[Column("encryption_algorithm_name"),    Nullable] public string? EncryptionAlgorithmName { get; set; } // sysname
+		}
+
+		[Table(Schema="sys", Name="column_master_keys", IsView=true)]
+		public partial class ColumnMasterKeys
+		{
+			[Column("name"),                       NotNull    ] public string   Name                     { get; set; } = null!; // sysname
+			[Column("column_master_key_id"),       NotNull    ] public int      ColumnMasterKeyID        { get; set; } // int
+			[Column("create_date"),                NotNull    ] public DateTime CreateDate               { get; set; } // datetime
+			[Column("modify_date"),                NotNull    ] public DateTime ModifyDate               { get; set; } // datetime
+			[Column("key_store_provider_name"),       Nullable] public string?  KeyStoreProviderName     { get; set; } // sysname
+			[Column("key_path"),                      Nullable] public string?  KeyPath                  { get; set; } // nvarchar(4000)
+			[Column("allow_enclave_computations"), NotNull    ] public int      AllowEnclaveComputations { get; set; } // int
+			[Column("signature"),                     Nullable] public byte[]?  Signature                { get; set; } // varbinary(8000)
+		}
+
+		[Table(Schema="sys", Name="columns", IsView=true)]
+		public partial class Columns
+		{
+			[Column("object_id"),                           NotNull    ] public int     ObjectID                        { get; set; } // int
+			[Column("name"),                                   Nullable] public string? Name                            { get; set; } // sysname
+			[Column("column_id"),                           NotNull    ] public int     ColumnID                        { get; set; } // int
+			[Column("system_type_id"),                      NotNull    ] public byte    SystemTypeID                    { get; set; } // tinyint
+			[Column("user_type_id"),                        NotNull    ] public int     UserTypeID                      { get; set; } // int
+			[Column("max_length"),                          NotNull    ] public short   MaxLength                       { get; set; } // smallint
+			[Column("precision"),                           NotNull    ] public byte    Precision                       { get; set; } // tinyint
+			[Column("scale"),                               NotNull    ] public byte    Scale                           { get; set; } // tinyint
+			[Column("collation_name"),                         Nullable] public string? CollationName                   { get; set; } // sysname
+			[Column("is_nullable"),                            Nullable] public bool?   IsNullable                      { get; set; } // bit
+			[Column("is_ansi_padded"),                      NotNull    ] public bool    IsAnsiPadded                    { get; set; } // bit
+			[Column("is_rowguidcol"),                       NotNull    ] public bool    IsRowguidcol                    { get; set; } // bit
+			[Column("is_identity"),                         NotNull    ] public bool    IsIdentity                      { get; set; } // bit
+			[Column("is_computed"),                         NotNull    ] public bool    IsComputed                      { get; set; } // bit
+			[Column("is_filestream"),                       NotNull    ] public bool    IsFilestream                    { get; set; } // bit
+			[Column("is_replicated"),                          Nullable] public bool?   IsReplicated                    { get; set; } // bit
+			[Column("is_non_sql_subscribed"),                  Nullable] public bool?   IsNonSqlSubscribed              { get; set; } // bit
+			[Column("is_merge_published"),                     Nullable] public bool?   IsMergePublished                { get; set; } // bit
+			[Column("is_dts_replicated"),                      Nullable] public bool?   IsDtsReplicated                 { get; set; } // bit
+			[Column("is_xml_document"),                     NotNull    ] public bool    IsXmlDocument                   { get; set; } // bit
+			[Column("xml_collection_id"),                   NotNull    ] public int     XmlCollectionID                 { get; set; } // int
+			[Column("default_object_id"),                   NotNull    ] public int     DefaultObjectID                 { get; set; } // int
+			[Column("rule_object_id"),                      NotNull    ] public int     RuleObjectID                    { get; set; } // int
+			[Column("is_sparse"),                              Nullable] public bool?   IsSparse                        { get; set; } // bit
+			[Column("is_column_set"),                          Nullable] public bool?   IsColumnSet                     { get; set; } // bit
+			[Column("generated_always_type"),                  Nullable] public byte?   GeneratedAlwaysType             { get; set; } // tinyint
+			[Column("generated_always_type_desc"),             Nullable] public string? GeneratedAlwaysTypeDesc         { get; set; } // nvarchar(60)
+			[Column("encryption_type"),                        Nullable] public int?    EncryptionType                  { get; set; } // int
+			[Column("encryption_type_desc"),                   Nullable] public string? EncryptionTypeDesc              { get; set; } // nvarchar(64)
+			[Column("encryption_algorithm_name"),              Nullable] public string? EncryptionAlgorithmName         { get; set; } // sysname
+			[Column("column_encryption_key_id"),               Nullable] public int?    ColumnEncryptionKeyID           { get; set; } // int
+			[Column("column_encryption_key_database_name"),    Nullable] public string? ColumnEncryptionKeyDatabaseName { get; set; } // sysname
+			[Column("is_hidden"),                              Nullable] public bool?   IsHidden                        { get; set; } // bit
+			[Column("is_masked"),                           NotNull    ] public bool    IsMasked                        { get; set; } // bit
+			[Column("graph_type"),                             Nullable] public int?    GraphType                       { get; set; } // int
+			[Column("graph_type_desc"),                        Nullable] public string? GraphTypeDesc                   { get; set; } // nvarchar(60)
+
+			#region Associations
+
+			/// <summary>
+			/// objects
+			/// </summary>
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="Columns")]
+			public SystemSchema.Objects Object { get; set; } = null!;
+
+			#endregion
+		}
+
+		[Table(Schema="sys", Name="column_store_dictionaries", IsView=true)]
+		public partial class ColumnStoreDictionaries
+		{
+			[Column("partition_id"),  Nullable] public long? PartitionID  { get; set; } // bigint
+			[Column("hobt_id"),       Nullable] public long? HobtID       { get; set; } // bigint
+			[Column("column_id"),     Nullable] public int?  ColumnID     { get; set; } // int
+			[Column("dictionary_id"), Nullable] public int?  DictionaryID { get; set; } // int
+			[Column("version"),       Nullable] public int?  Version      { get; set; } // int
+			[Column("type"),          Nullable] public int?  Type         { get; set; } // int
+			[Column("last_id"),       Nullable] public int?  LastID       { get; set; } // int
+			[Column("entry_count"),   Nullable] public long? EntryCount   { get; set; } // bigint
+			[Column("on_disk_size"),  Nullable] public long? OnDiskSize   { get; set; } // bigint
+		}
+
+		[Table(Schema="sys", Name="column_store_row_groups", IsView=true)]
+		public partial class ColumnStoreRowGroups
+		{
+			[Column("object_id"),              Nullable] public int?   ObjectID         { get; set; } // int
+			[Column("index_id"),               Nullable] public int?   IndexID          { get; set; } // int
+			[Column("partition_number"),       Nullable] public int?   PartitionNumber  { get; set; } // int
+			[Column("row_group_id"),           Nullable] public int?   RowGroupID       { get; set; } // int
+			[Column("delta_store_hobt_id"),    Nullable] public long?  DeltaStoreHobtID { get; set; } // bigint
+			[Column("state"),                  Nullable] public byte?  State            { get; set; } // tinyint
+			[Column("state_description"),   NotNull    ] public string StateDescription { get; set; } = null!; // nvarchar(60)
+			[Column("total_rows"),             Nullable] public long?  TotalRows        { get; set; } // bigint
+			[Column("deleted_rows"),           Nullable] public long?  DeletedRows      { get; set; } // bigint
+			[Column("size_in_bytes"),          Nullable] public long?  SizeInBytes      { get; set; } // bigint
+
+			#region Associations
+
+			/// <summary>
+			/// objects
+			/// </summary>
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ColumnStoreRowGroups")]
+			public SystemSchema.Objects Object { get; set; } = null!;
+
+			#endregion
+		}
+
+		[Table(Schema="sys", Name="column_store_segments", IsView=true)]
+		public partial class ColumnStoreSegments
+		{
+			[Column("partition_id"),            Nullable] public long?   PartitionID           { get; set; } // bigint
+			[Column("hobt_id"),                 Nullable] public long?   HobtID                { get; set; } // bigint
+			[Column("column_id"),               Nullable] public int?    ColumnID              { get; set; } // int
+			[Column("segment_id"),              Nullable] public int?    SegmentID             { get; set; } // int
+			[Column("version"),                 Nullable] public int?    Version               { get; set; } // int
+			[Column("encoding_type"),           Nullable] public int?    EncodingType          { get; set; } // int
+			[Column("row_count"),               Nullable] public int?    RowCount              { get; set; } // int
+			[Column("has_nulls"),               Nullable] public int?    HasNulls              { get; set; } // int
+			[Column("base_id"),                 Nullable] public long?   BaseID                { get; set; } // bigint
+			[Column("magnitude"),               Nullable] public double? Magnitude             { get; set; } // float
+			[Column("primary_dictionary_id"),   Nullable] public int?    PrimaryDictionaryID   { get; set; } // int
+			[Column("secondary_dictionary_id"), Nullable] public int?    SecondaryDictionaryID { get; set; } // int
+			[Column("min_data_id"),             Nullable] public long?   MinDataID             { get; set; } // bigint
+			[Column("max_data_id"),             Nullable] public long?   MaxDataID             { get; set; } // bigint
+			[Column("null_value"),              Nullable] public long?   NullValue             { get; set; } // bigint
+			[Column("on_disk_size"),            Nullable] public long?   OnDiskSize            { get; set; } // bigint
+		}
+
+		[Table(Schema="sys", Name="column_type_usages", IsView=true)]
+		public partial class ColumnTypeUsages
+		{
+			[Column("object_id"),    NotNull] public int ObjectID   { get; set; } // int
+			[Column("column_id"),    NotNull] public int ColumnID   { get; set; } // int
+			[Column("user_type_id"), NotNull] public int UserTypeID { get; set; } // int
+
+			#region Associations
+
+			/// <summary>
+			/// objects
+			/// </summary>
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ColumnTypeUsages")]
+			public SystemSchema.Objects Object { get; set; } = null!;
+
+			#endregion
+		}
+
+		[Table(Schema="sys", Name="computed_columns", IsView=true)]
+		public partial class ComputedColumns
+		{
+			[Column("object_id"),                           NotNull    ] public int     ObjectID                        { get; set; } // int
+			[Column("name"),                                   Nullable] public string? Name                            { get; set; } // sysname
+			[Column("column_id"),                           NotNull    ] public int     ColumnID                        { get; set; } // int
+			[Column("system_type_id"),                      NotNull    ] public byte    SystemTypeID                    { get; set; } // tinyint
+			[Column("user_type_id"),                        NotNull    ] public int     UserTypeID                      { get; set; } // int
+			[Column("max_length"),                          NotNull    ] public short   MaxLength                       { get; set; } // smallint
+			[Column("precision"),                           NotNull    ] public byte    Precision                       { get; set; } // tinyint
+			[Column("scale"),                               NotNull    ] public byte    Scale                           { get; set; } // tinyint
+			[Column("collation_name"),                         Nullable] public string? CollationName                   { get; set; } // sysname
+			[Column("is_nullable"),                            Nullable] public bool?   IsNullable                      { get; set; } // bit
+			[Column("is_ansi_padded"),                      NotNull    ] public bool    IsAnsiPadded                    { get; set; } // bit
+			[Column("is_rowguidcol"),                       NotNull    ] public bool    IsRowguidcol                    { get; set; } // bit
+			[Column("is_identity"),                         NotNull    ] public bool    IsIdentity                      { get; set; } // bit
+			[Column("is_filestream"),                       NotNull    ] public bool    IsFilestream                    { get; set; } // bit
+			[Column("is_replicated"),                          Nullable] public bool?   IsReplicated                    { get; set; } // bit
+			[Column("is_non_sql_subscribed"),                  Nullable] public bool?   IsNonSqlSubscribed              { get; set; } // bit
+			[Column("is_merge_published"),                     Nullable] public bool?   IsMergePublished                { get; set; } // bit
+			[Column("is_dts_replicated"),                      Nullable] public bool?   IsDtsReplicated                 { get; set; } // bit
+			[Column("is_xml_document"),                     NotNull    ] public bool    IsXmlDocument                   { get; set; } // bit
+			[Column("xml_collection_id"),                   NotNull    ] public int     XmlCollectionID                 { get; set; } // int
+			[Column("default_object_id"),                   NotNull    ] public int     DefaultObjectID                 { get; set; } // int
+			[Column("rule_object_id"),                      NotNull    ] public int     RuleObjectID                    { get; set; } // int
+			[Column("definition"),                             Nullable] public string? Definition                      { get; set; } // nvarchar(0)
+			[Column("uses_database_collation"),             NotNull    ] public bool    UsesDatabaseCollation           { get; set; } // bit
+			[Column("is_persisted"),                        NotNull    ] public bool    IsPersisted                     { get; set; } // bit
+			[Column("is_computed"),                         NotNull    ] public bool    IsComputed                      { get; set; } // bit
+			[Column("is_sparse"),                           NotNull    ] public bool    IsSparse                        { get; set; } // bit
+			[Column("is_column_set"),                       NotNull    ] public bool    IsColumnSet                     { get; set; } // bit
+			[Column("generated_always_type"),                  Nullable] public byte?   GeneratedAlwaysType             { get; set; } // tinyint
+			[Column("generated_always_type_desc"),             Nullable] public string? GeneratedAlwaysTypeDesc         { get; set; } // nvarchar(60)
+			[Column("encryption_type"),                        Nullable] public int?    EncryptionType                  { get; set; } // int
+			[Column("encryption_type_desc"),                   Nullable] public string? EncryptionTypeDesc              { get; set; } // nvarchar(64)
+			[Column("encryption_algorithm_name"),              Nullable] public string? EncryptionAlgorithmName         { get; set; } // nvarchar(128)
+			[Column("column_encryption_key_id"),               Nullable] public int?    ColumnEncryptionKeyID           { get; set; } // int
+			[Column("column_encryption_key_database_name"),    Nullable] public string? ColumnEncryptionKeyDatabaseName { get; set; } // sysname
+			[Column("is_hidden"),                           NotNull    ] public bool    IsHidden                        { get; set; } // bit
+			[Column("is_masked"),                           NotNull    ] public bool    IsMasked                        { get; set; } // bit
+			[Column("graph_type"),                             Nullable] public int?    GraphType                       { get; set; } // int
+			[Column("graph_type_desc"),                        Nullable] public string? GraphTypeDesc                   { get; set; } // nvarchar(60)
+
+			#region Associations
+
+			/// <summary>
+			/// objects
+			/// </summary>
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ComputedColumns")]
+			public SystemSchema.Objects Object { get; set; } = null!;
+
+			#endregion
+		}
+
+		[Table(Schema="sys", Name="configurations", IsView=true)]
+		public partial class Configurations
+		{
+			[Column("configuration_id"), NotNull    ] public int     ConfigurationID { get; set; } // int
+			[Column("name"),             NotNull    ] public string  Name            { get; set; } = null!; // nvarchar(35)
+			[Column("value"),               Nullable] public object? Value           { get; set; } // sql_variant
+			[Column("minimum"),             Nullable] public object? Minimum         { get; set; } // sql_variant
+			[Column("maximum"),             Nullable] public object? Maximum         { get; set; } // sql_variant
+			[Column("value_in_use"),        Nullable] public object? ValueInUse      { get; set; } // sql_variant
+			[Column("description"),      NotNull    ] public string  Description     { get; set; } = null!; // nvarchar(255)
+			[Column("is_dynamic"),       NotNull    ] public bool    IsDynamic       { get; set; } // bit
+			[Column("is_advanced"),      NotNull    ] public bool    IsAdvanced      { get; set; } // bit
+		}
+
+		[Table(Schema="sys", Name="conversation_endpoints", IsView=true)]
+		public partial class ConversationEndpoints
+		{
+			[Column("conversation_handle"),             NotNull    ] public Guid     ConversationHandle           { get; set; } // uniqueidentifier
+			[Column("conversation_id"),                 NotNull    ] public Guid     ConversationID               { get; set; } // uniqueidentifier
+			[Column("is_initiator"),                    NotNull    ] public bool     IsInitiator                  { get; set; } // bit
+			[Column("service_contract_id"),             NotNull    ] public int      ServiceContractID            { get; set; } // int
+			[Column("conversation_group_id"),           NotNull    ] public Guid     ConversationGroupID          { get; set; } // uniqueidentifier
+			[Column("service_id"),                      NotNull    ] public int      ServiceID                    { get; set; } // int
+			[Column("lifetime"),                        NotNull    ] public DateTime Lifetime                     { get; set; } // datetime
+			[Column("state"),                           NotNull    ] public string   State                        { get; set; } = null!; // char(2)
+			[Column("state_desc"),                         Nullable] public string?  StateDesc                    { get; set; } // nvarchar(60)
+			[Column("far_service"),                     NotNull    ] public string   FarService                   { get; set; } = null!; // nvarchar(256)
+			[Column("far_broker_instance"),                Nullable] public string?  FarBrokerInstance            { get; set; } // nvarchar(128)
+			[Column("principal_id"),                    NotNull    ] public int      PrincipalID                  { get; set; } // int
+			[Column("far_principal_id"),                NotNull    ] public int      FarPrincipalID               { get; set; } // int
+			[Column("outbound_session_key_identifier"), NotNull    ] public Guid     OutboundSessionKeyIdentifier { get; set; } // uniqueidentifier
+			[Column("inbound_session_key_identifier"),  NotNull    ] public Guid     InboundSessionKeyIdentifier  { get; set; } // uniqueidentifier
+			[Column("security_timestamp"),              NotNull    ] public DateTime SecurityTimestamp            { get; set; } // datetime
+			[Column("dialog_timer"),                    NotNull    ] public DateTime DialogTimer                  { get; set; } // datetime
+			[Column("send_sequence"),                   NotNull    ] public long     SendSequence                 { get; set; } // bigint
+			[Column("last_send_tran_id"),               NotNull    ] public byte[]   LastSendTranID               { get; set; } = null!; // binary(6)
+			[Column("end_dialog_sequence"),             NotNull    ] public long     EndDialogSequence            { get; set; } // bigint
+			[Column("receive_sequence"),                NotNull    ] public long     ReceiveSequence              { get; set; } // bigint
+			[Column("receive_sequence_frag"),           NotNull    ] public int      ReceiveSequenceFrag          { get; set; } // int
+			[Column("system_sequence"),                 NotNull    ] public long     SystemSequence               { get; set; } // bigint
+			[Column("first_out_of_order_sequence"),     NotNull    ] public long     FirstOutOfOrderSequence      { get; set; } // bigint
+			[Column("last_out_of_order_sequence"),      NotNull    ] public long     LastOutOfOrderSequence       { get; set; } // bigint
+			[Column("last_out_of_order_frag"),          NotNull    ] public int      LastOutOfOrderFrag           { get; set; } // int
+			[Column("is_system"),                       NotNull    ] public bool     IsSystem                     { get; set; } // bit
+			[Column("priority"),                        NotNull    ] public byte     Priority                     { get; set; } // tinyint
+		}
+
+		[Table(Schema="sys", Name="conversation_groups", IsView=true)]
+		public partial class ConversationGroups
+		{
+			[Column("conversation_group_id"), NotNull    ] public Guid  ConversationGroupID { get; set; } // uniqueidentifier
+			[Column("service_id"),            NotNull    ] public int   ServiceID           { get; set; } // int
+			[Column("is_system"),                Nullable] public bool? IsSystem            { get; set; } // bit
+		}
+
+		[Table(Schema="sys", Name="conversation_priorities", IsView=true)]
+		public partial class ConversationPriorities
+		{
+			[Column("priority_id"),         NotNull    ] public int     PriorityID        { get; set; } // int
+			[Column("name"),                NotNull    ] public string  Name              { get; set; } = null!; // sysname
+			[Column("service_contract_id"),    Nullable] public int?    ServiceContractID { get; set; } // int
+			[Column("local_service_id"),       Nullable] public int?    LocalServiceID    { get; set; } // int
+			[Column("remote_service_name"),    Nullable] public string? RemoteServiceName { get; set; } // nvarchar(256)
+			[Column("priority"),            NotNull    ] public byte    Priority          { get; set; } // tinyint
+		}
+
+		[Table(Schema="sys", Name="credentials", IsView=true)]
+		public partial class Credentials
+		{
+			[Column("credential_id"),       NotNull    ] public int      CredentialID       { get; set; } // int
+			[Column("name"),                NotNull    ] public string   Name               { get; set; } = null!; // sysname
+			[Column("credential_identity"),    Nullable] public string?  CredentialIdentity { get; set; } // nvarchar(4000)
+			[Column("create_date"),         NotNull    ] public DateTime CreateDate         { get; set; } // datetime
+			[Column("modify_date"),         NotNull    ] public DateTime ModifyDate         { get; set; } // datetime
+			[Column("target_type"),            Nullable] public string?  TargetType         { get; set; } // nvarchar(60)
+			[Column("target_id"),              Nullable] public int?     TargetID           { get; set; } // int
+		}
+
+		[Table(Schema="sys", Name="cryptographic_providers", IsView=true)]
+		public partial class CryptographicProviders
+		{
+			[Column("provider_id"), NotNull    ] public int     ProviderID { get; set; } // int
+			[Column("name"),        NotNull    ] public string  Name       { get; set; } = null!; // sysname
+			[Column("guid"),           Nullable] public Guid?   Guid       { get; set; } // uniqueidentifier
+			[Column("version"),        Nullable] public string? Version    { get; set; } // nvarchar(24)
+			[Column("dll_path"),       Nullable] public string? DllPath    { get; set; } // nvarchar(520)
+			[Column("is_enabled"),  NotNull    ] public bool    IsEnabled  { get; set; } // bit
+		}
+
+		[Table(Schema="sys", Name="crypt_properties", IsView=true)]
+		public partial class CryptProperties
+		{
+			[Column("class"),           NotNull    ] public byte    @class        { get; set; } // tinyint
+			[Column("class_desc"),         Nullable] public string? ClassDesc     { get; set; } // nvarchar(60)
+			[Column("major_id"),        NotNull    ] public int     MajorID       { get; set; } // int
+			[Column("thumbprint"),      NotNull    ] public byte[]  Thumbprint    { get; set; } = null!; // varbinary(32)
+			[Column("crypt_type"),      NotNull    ] public string  CryptType     { get; set; } = null!; // char(4)
+			[Column("crypt_type_desc"),    Nullable] public string? CryptTypeDesc { get; set; } // nvarchar(60)
+			[Column("crypt_property"),  NotNull    ] public byte[]  CryptProperty { get; set; } = null!; // varbinary(-1)
+		}
+
+		[Table(Schema="sys", Name="database_audit_specification_details", IsView=true)]
+		public partial class DatabaseAuditSpecificationDetails
+		{
+			[Column("database_specification_id"), NotNull    ] public int     DatabaseSpecificationID { get; set; } // int
+			[Column("audit_action_id"),           NotNull    ] public string  AuditActionID           { get; set; } = null!; // char(4)
+			[Column("audit_action_name"),            Nullable] public string? AuditActionName         { get; set; } // nvarchar(60)
+			[Column("class"),                     NotNull    ] public byte    @class                  { get; set; } // tinyint
+			[Column("class_desc"),                   Nullable] public string? ClassDesc               { get; set; } // nvarchar(60)
+			[Column("major_id"),                  NotNull    ] public int     MajorID                 { get; set; } // int
+			[Column("minor_id"),                  NotNull    ] public int     MinorID                 { get; set; } // int
+			[Column("audited_principal_id"),      NotNull    ] public int     AuditedPrincipalID      { get; set; } // int
+			[Column("audited_result"),               Nullable] public string? AuditedResult           { get; set; } // nvarchar(60)
+			[Column("is_group"),                     Nullable] public bool?   IsGroup                 { get; set; } // bit
+		}
+
+		[Table(Schema="sys", Name="database_audit_specifications", IsView=true)]
+		public partial class DatabaseAuditSpecifications
+		{
+			[Column("database_specification_id"), NotNull    ] public int      DatabaseSpecificationID { get; set; } // int
+			[Column("name"),                      NotNull    ] public string   Name                    { get; set; } = null!; // sysname
+			[Column("create_date"),               NotNull    ] public DateTime CreateDate              { get; set; } // datetime
+			[Column("modify_date"),               NotNull    ] public DateTime ModifyDate              { get; set; } // datetime
+			[Column("audit_guid"),                   Nullable] public Guid?    AuditGuid               { get; set; } // uniqueidentifier
+			[Column("is_state_enabled"),             Nullable] public bool?    IsStateEnabled          { get; set; } // bit
+		}
+
+		[Table(Schema="sys", Name="database_automatic_tuning_mode", IsView=true)]
+		public partial class DatabaseAutomaticTuningMode
+		{
+			[Column("desired_state"),      Nullable] public short?  DesiredState     { get; set; } // smallint
+			[Column("desired_state_desc"), Nullable] public string? DesiredStateDesc { get; set; } // nvarchar(60)
+			[Column("actual_state"),       Nullable] public short?  ActualState      { get; set; } // smallint
+			[Column("actual_state_desc"),  Nullable] public string? ActualStateDesc  { get; set; } // nvarchar(60)
+		}
+
+		[Table(Schema="sys", Name="database_automatic_tuning_options", IsView=true)]
+		public partial class DatabaseAutomaticTuningOptions
+		{
+			[Column("name"),               Nullable] public string? Name             { get; set; } // nvarchar(128)
+			[Column("desired_state"),      Nullable] public short?  DesiredState     { get; set; } // smallint
+			[Column("desired_state_desc"), Nullable] public string? DesiredStateDesc { get; set; } // nvarchar(60)
+			[Column("actual_state"),       Nullable] public short?  ActualState      { get; set; } // smallint
+			[Column("actual_state_desc"),  Nullable] public string? ActualStateDesc  { get; set; } // nvarchar(60)
+			[Column("reason"),             Nullable] public short?  Reason           { get; set; } // smallint
+			[Column("reason_desc"),        Nullable] public string? ReasonDesc       { get; set; } // nvarchar(60)
+		}
+
+		[Table(Schema="sys", Name="database_credentials", IsView=true)]
+		public partial class DatabaseCredentials
+		{
+			[Column("name"),                NotNull    ] public string   Name               { get; set; } = null!; // sysname
+			[Column("principal_id"),        NotNull    ] public int      PrincipalID        { get; set; } // int
+			[Column("credential_id"),       NotNull    ] public int      CredentialID       { get; set; } // int
+			[Column("credential_identity"),    Nullable] public string?  CredentialIdentity { get; set; } // nvarchar(4000)
+			[Column("create_date"),         NotNull    ] public DateTime CreateDate         { get; set; } // datetime
+			[Column("modify_date"),         NotNull    ] public DateTime ModifyDate         { get; set; } // datetime
+			[Column("target_type"),            Nullable] public string?  TargetType         { get; set; } // nvarchar(60)
+			[Column("target_id"),              Nullable] public int?     TargetID           { get; set; } // int
+		}
+
+		[Table(Schema="sys", Name="database_files", IsView=true)]
+		public partial class DatabaseFiles
+		{
+			[Column("file_id"),                  NotNull    ] public int       FileID                { get; set; } // int
+			[Column("file_guid"),                   Nullable] public Guid?     FileGuid              { get; set; } // uniqueidentifier
+			[Column("type"),                     NotNull    ] public byte      Type                  { get; set; } // tinyint
+			[Column("type_desc"),                   Nullable] public string?   TypeDesc              { get; set; } // nvarchar(60)
+			[Column("data_space_id"),            NotNull    ] public int       DataSpaceID           { get; set; } // int
+			[Column("name"),                     NotNull    ] public string    Name                  { get; set; } = null!; // sysname
+			[Column("physical_name"),               Nullable] public string?   PhysicalName          { get; set; } // nvarchar(260)
+			[Column("state"),                       Nullable] public byte?     State                 { get; set; } // tinyint
+			[Column("state_desc"),                  Nullable] public string?   StateDesc             { get; set; } // nvarchar(60)
+			[Column("size"),                     NotNull    ] public int       Size                  { get; set; } // int
+			[Column("max_size"),                 NotNull    ] public int       MaxSize               { get; set; } // int
+			[Column("growth"),                   NotNull    ] public int       Growth                { get; set; } // int
+			[Column("is_media_read_only"),       NotNull    ] public bool      IsMediaReadOnly       { get; set; } // bit
+			[Column("is_read_only"),             NotNull    ] public bool      IsReadOnly            { get; set; } // bit
+			[Column("is_sparse"),                NotNull    ] public bool      IsSparse              { get; set; } // bit
+			[Column("is_percent_growth"),        NotNull    ] public bool      IsPercentGrowth       { get; set; } // bit
+			[Column("is_name_reserved"),         NotNull    ] public bool      IsNameReserved        { get; set; } // bit
+			[Column("is_persistent_log_buffer"), NotNull    ] public bool      IsPersistentLogBuffer { get; set; } // bit
+			[Column("create_lsn"),                  Nullable] public decimal?  CreateLsn             { get; set; } // numeric(25,0)
+			[Column("drop_lsn"),                    Nullable] public decimal?  DropLsn               { get; set; } // numeric(25,0)
+			[Column("read_only_lsn"),               Nullable] public decimal?  ReadOnlyLsn           { get; set; } // numeric(25,0)
+			[Column("read_write_lsn"),              Nullable] public decimal?  ReadWriteLsn          { get; set; } // numeric(25,0)
+			[Column("differential_base_lsn"),       Nullable] public decimal?  DifferentialBaseLsn   { get; set; } // numeric(25,0)
+			[Column("differential_base_guid"),      Nullable] public Guid?     DifferentialBaseGuid  { get; set; } // uniqueidentifier
+			[Column("differential_base_time"),      Nullable] public DateTime? DifferentialBaseTime  { get; set; } // datetime
+			[Column("redo_start_lsn"),              Nullable] public decimal?  RedoStartLsn          { get; set; } // numeric(25,0)
+			[Column("redo_start_fork_guid"),        Nullable] public Guid?     RedoStartForkGuid     { get; set; } // uniqueidentifier
+			[Column("redo_target_lsn"),             Nullable] public decimal?  RedoTargetLsn         { get; set; } // numeric(25,0)
+			[Column("redo_target_fork_guid"),       Nullable] public Guid?     RedoTargetForkGuid    { get; set; } // uniqueidentifier
+			[Column("backup_lsn"),                  Nullable] public decimal?  BackupLsn             { get; set; } // numeric(25,0)
+		}
+
+		[Table(Schema="sys", Name="database_filestream_options", IsView=true)]
+		public partial class DatabaseFilestreamOptions
+		{
+			[Column("database_id"),                NotNull    ] public int     DatabaseID              { get; set; } // int
+			[Column("non_transacted_access"),      NotNull    ] public byte    NonTransactedAccess     { get; set; } // tinyint
+			[Column("non_transacted_access_desc"), NotNull    ] public string  NonTransactedAccessDesc { get; set; } = null!; // nvarchar(60)
+			[Column("directory_name"),                Nullable] public string? DirectoryName           { get; set; } // nvarchar(256)
+		}
+
+		[Table(Schema="sys", Name="database_mirroring", IsView=true)]
+		public partial class DatabaseMirroring
+		{
+			[Column("database_id"),                  NotNull    ] public int      DatabaseID                 { get; set; } // int
+			[Column("mirroring_guid"),                  Nullable] public Guid?    MirroringGuid              { get; set; } // uniqueidentifier
+			[Column("mirroring_state"),                 Nullable] public byte?    MirroringState             { get; set; } // tinyint
+			[Column("mirroring_state_desc"),            Nullable] public string?  MirroringStateDesc         { get; set; } // nvarchar(60)
+			[Column("mirroring_role"),                  Nullable] public byte?    MirroringRole              { get; set; } // tinyint
+			[Column("mirroring_role_desc"),             Nullable] public string?  MirroringRoleDesc          { get; set; } // nvarchar(60)
+			[Column("mirroring_role_sequence"),         Nullable] public int?     MirroringRoleSequence      { get; set; } // int
+			[Column("mirroring_safety_level"),          Nullable] public byte?    MirroringSafetyLevel       { get; set; } // tinyint
+			[Column("mirroring_safety_level_desc"),     Nullable] public string?  MirroringSafetyLevelDesc   { get; set; } // nvarchar(60)
+			[Column("mirroring_safety_sequence"),       Nullable] public int?     MirroringSafetySequence    { get; set; } // int
+			[Column("mirroring_partner_name"),          Nullable] public string?  MirroringPartnerName       { get; set; } // nvarchar(128)
+			[Column("mirroring_partner_instance"),      Nullable] public string?  MirroringPartnerInstance   { get; set; } // nvarchar(128)
+			[Column("mirroring_witness_name"),          Nullable] public string?  MirroringWitnessName       { get; set; } // nvarchar(128)
+			[Column("mirroring_witness_state"),         Nullable] public byte?    MirroringWitnessState      { get; set; } // tinyint
+			[Column("mirroring_witness_state_desc"),    Nullable] public string?  MirroringWitnessStateDesc  { get; set; } // nvarchar(60)
+			[Column("mirroring_failover_lsn"),          Nullable] public decimal? MirroringFailoverLsn       { get; set; } // numeric(25,0)
+			[Column("mirroring_connection_timeout"),    Nullable] public int?     MirroringConnectionTimeout { get; set; } // int
+			[Column("mirroring_redo_queue"),            Nullable] public int?     MirroringRedoQueue         { get; set; } // int
+			[Column("mirroring_redo_queue_type"),       Nullable] public string?  MirroringRedoQueueType     { get; set; } // nvarchar(60)
+			[Column("mirroring_end_of_log_lsn"),        Nullable] public decimal? MirroringEndOfLogLsn       { get; set; } // numeric(25,0)
+			[Column("mirroring_replication_lsn"),       Nullable] public decimal? MirroringReplicationLsn    { get; set; } // numeric(25,0)
+		}
+
+		[Table(Schema="sys", Name="database_mirroring_endpoints", IsView=true)]
+		public partial class DatabaseMirroringEndpoints
+		{
+			[Column("name"),                      NotNull    ] public string  Name                    { get; set; } = null!; // sysname
+			[Column("endpoint_id"),               NotNull    ] public int     EndpointID              { get; set; } // int
+			[Column("principal_id"),                 Nullable] public int?    PrincipalID             { get; set; } // int
+			[Column("protocol"),                  NotNull    ] public byte    Protocol                { get; set; } // tinyint
+			[Column("protocol_desc"),                Nullable] public string? ProtocolDesc            { get; set; } // nvarchar(60)
+			[Column("type"),                      NotNull    ] public byte    Type                    { get; set; } // tinyint
+			[Column("type_desc"),                    Nullable] public string? TypeDesc                { get; set; } // nvarchar(60)
+			[Column("state"),                        Nullable] public byte?   State                   { get; set; } // tinyint
+			[Column("state_desc"),                   Nullable] public string? StateDesc               { get; set; } // nvarchar(60)
+			[Column("is_admin_endpoint"),         NotNull    ] public bool    IsAdminEndpoint         { get; set; } // bit
+			[Column("role"),                         Nullable] public byte?   Role                    { get; set; } // tinyint
+			[Column("role_desc"),                    Nullable] public string? RoleDesc                { get; set; } // nvarchar(60)
+			[Column("is_encryption_enabled"),     NotNull    ] public bool    IsEncryptionEnabled     { get; set; } // bit
+			[Column("connection_auth"),           NotNull    ] public byte    ConnectionAuth          { get; set; } // tinyint
+			[Column("connection_auth_desc"),         Nullable] public string? ConnectionAuthDesc      { get; set; } // nvarchar(60)
+			[Column("certificate_id"),            NotNull    ] public int     CertificateID           { get; set; } // int
+			[Column("encryption_algorithm"),      NotNull    ] public byte    EncryptionAlgorithm     { get; set; } // tinyint
+			[Column("encryption_algorithm_desc"),    Nullable] public string? EncryptionAlgorithmDesc { get; set; } // nvarchar(60)
+		}
+
+		[Table(Schema="sys", Name="database_mirroring_witnesses", IsView=true)]
+		public partial class DatabaseMirroringWitnesses
+		{
+			[Column("database_name"),                NotNull    ] public string  DatabaseName              { get; set; } = null!; // sysname
+			[Column("principal_server_name"),           Nullable] public string? PrincipalServerName       { get; set; } // sysname
+			[Column("mirror_server_name"),              Nullable] public string? MirrorServerName          { get; set; } // sysname
+			[Column("safety_level"),                 NotNull    ] public byte    SafetyLevel               { get; set; } // tinyint
+			[Column("safety_level_desc"),               Nullable] public string? SafetyLevelDesc           { get; set; } // nvarchar(60)
+			[Column("safety_sequence_number"),       NotNull    ] public int     SafetySequenceNumber      { get; set; } // int
+			[Column("role_sequence_number"),         NotNull    ] public int     RoleSequenceNumber        { get; set; } // int
+			[Column("mirroring_guid"),               NotNull    ] public Guid    MirroringGuid             { get; set; } // uniqueidentifier
+			[Column("family_guid"),                  NotNull    ] public Guid    FamilyGuid                { get; set; } // uniqueidentifier
+			[Column("is_suspended"),                    Nullable] public bool?   IsSuspended               { get; set; } // bit
+			[Column("is_suspended_sequence_number"), NotNull    ] public int     IsSuspendedSequenceNumber { get; set; } // int
+			[Column("partner_sync_state"),              Nullable] public byte?   PartnerSyncState          { get; set; } // tinyint
+			[Column("partner_sync_state_desc"),         Nullable] public string? PartnerSyncStateDesc      { get; set; } // nvarchar(60)
+		}
+
+		[Table(Schema="sys", Name="database_permissions", IsView=true)]
+		public partial class DatabasePermissions
+		{
+			[Column("class"),                NotNull    ] public byte    @class             { get; set; } // tinyint
+			[Column("class_desc"),              Nullable] public string? ClassDesc          { get; set; } // nvarchar(60)
+			[Column("major_id"),             NotNull    ] public int     MajorID            { get; set; } // int
+			[Column("minor_id"),             NotNull    ] public int     MinorID            { get; set; } // int
+			[Column("grantee_principal_id"), NotNull    ] public int     GranteePrincipalID { get; set; } // int
+			[Column("grantor_principal_id"), NotNull    ] public int     GrantorPrincipalID { get; set; } // int
+			[Column("type"),                 NotNull    ] public string  Type               { get; set; } = null!; // char(4)
+			[Column("permission_name"),         Nullable] public string? PermissionName     { get; set; } // nvarchar(128)
+			[Column("state"),                NotNull    ] public string  State              { get; set; } = null!; // char(1)
+			[Column("state_desc"),              Nullable] public string? StateDesc          { get; set; } // nvarchar(60)
+		}
+
+		[Table(Schema="sys", Name="database_principals", IsView=true)]
+		public partial class DatabasePrincipals
+		{
+			[Column("name"),                                NotNull    ] public string   Name                             { get; set; } = null!; // sysname
+			[Column("principal_id"),                        NotNull    ] public int      PrincipalID                      { get; set; } // int
+			[Column("type"),                                NotNull    ] public string   Type                             { get; set; } = null!; // char(1)
+			[Column("type_desc"),                              Nullable] public string?  TypeDesc                         { get; set; } // nvarchar(60)
+			[Column("default_schema_name"),                    Nullable] public string?  DefaultSchemaName                { get; set; } // sysname
+			[Column("create_date"),                         NotNull    ] public DateTime CreateDate                       { get; set; } // datetime
+			[Column("modify_date"),                         NotNull    ] public DateTime ModifyDate                       { get; set; } // datetime
+			[Column("owning_principal_id"),                    Nullable] public int?     OwningPrincipalID                { get; set; } // int
+			[Column("sid"),                                    Nullable] public byte[]?  Sid                              { get; set; } // varbinary(85)
+			[Column("is_fixed_role"),                       NotNull    ] public bool     IsFixedRole                      { get; set; } // bit
+			[Column("authentication_type"),                 NotNull    ] public int      AuthenticationType               { get; set; } // int
+			[Column("authentication_type_desc"),               Nullable] public string?  AuthenticationTypeDesc           { get; set; } // nvarchar(60)
+			[Column("default_language_name"),                  Nullable] public string?  DefaultLanguageName              { get; set; } // sysname
+			[Column("default_language_lcid"),                  Nullable] public int?     DefaultLanguageLcid              { get; set; } // int
+			[Column("allow_encrypted_value_modifications"), NotNull    ] public bool     AllowEncryptedValueModifications { get; set; } // bit
+		}
+
+		[Table(Schema="sys", Name="database_query_store_options", IsView=true)]
+		public partial class DatabaseQueryStoreOptions
+		{
+			[Column("desired_state"),                              NotNull    ] public short   DesiredState                         { get; set; } // smallint
+			[Column("desired_state_desc"),                            Nullable] public string? DesiredStateDesc                     { get; set; } // nvarchar(60)
+			[Column("actual_state"),                               NotNull    ] public short   ActualState                          { get; set; } // smallint
+			[Column("actual_state_desc"),                             Nullable] public string? ActualStateDesc                      { get; set; } // nvarchar(60)
+			[Column("readonly_reason"),                               Nullable] public int?    ReadonlyReason                       { get; set; } // int
+			[Column("current_storage_size_mb"),                       Nullable] public long?   CurrentStorageSizeMb                 { get; set; } // bigint
+			[Column("flush_interval_seconds"),                        Nullable] public long?   FlushIntervalSeconds                 { get; set; } // bigint
+			[Column("interval_length_minutes"),                       Nullable] public long?   IntervalLengthMinutes                { get; set; } // bigint
+			[Column("max_storage_size_mb"),                           Nullable] public long?   MaxStorageSizeMb                     { get; set; } // bigint
+			[Column("stale_query_threshold_days"),                    Nullable] public long?   StaleQueryThresholdDays              { get; set; } // bigint
+			[Column("max_plans_per_query"),                           Nullable] public long?   MaxPlansPerQuery                     { get; set; } // bigint
+			[Column("query_capture_mode"),                         NotNull    ] public short   QueryCaptureMode                     { get; set; } // smallint
+			[Column("query_capture_mode_desc"),                       Nullable] public string? QueryCaptureModeDesc                 { get; set; } // nvarchar(60)
+			[Column("capture_policy_execution_count"),                Nullable] public int?    CapturePolicyExecutionCount          { get; set; } // int
+			[Column("capture_policy_total_compile_cpu_time_ms"),      Nullable] public long?   CapturePolicyTotalCompileCpuTimeMs   { get; set; } // bigint
+			[Column("capture_policy_total_execution_cpu_time_ms"),    Nullable] public long?   CapturePolicyTotalExecutionCpuTimeMs { get; set; } // bigint
+			[Column("capture_policy_stale_threshold_hours"),          Nullable] public int?    CapturePolicyStaleThresholdHours     { get; set; } // int
+			[Column("size_based_cleanup_mode"),                    NotNull    ] public short   SizeBasedCleanupMode                 { get; set; } // smallint
+			[Column("size_based_cleanup_mode_desc"),                  Nullable] public string? SizeBasedCleanupModeDesc             { get; set; } // nvarchar(60)
+			[Column("wait_stats_capture_mode"),                    NotNull    ] public short   WaitStatsCaptureMode                 { get; set; } // smallint
+			[Column("wait_stats_capture_mode_desc"),                  Nullable] public string? WaitStatsCaptureModeDesc             { get; set; } // nvarchar(60)
+			[Column("actual_state_additional_info"),                  Nullable] public string? ActualStateAdditionalInfo            { get; set; } // nvarchar(4000)
+		}
+
+		[Table(Schema="sys", Name="database_recovery_status", IsView=true)]
+		public partial class DatabaseRecoveryStatus
+		{
+			[Column("database_id"),              NotNull    ] public int      DatabaseID            { get; set; } // int
+			[Column("database_guid"),               Nullable] public Guid?    DatabaseGuid          { get; set; } // uniqueidentifier
+			[Column("family_guid"),                 Nullable] public Guid?    FamilyGuid            { get; set; } // uniqueidentifier
+			[Column("last_log_backup_lsn"),         Nullable] public decimal? LastLogBackupLsn      { get; set; } // numeric(25,0)
+			[Column("recovery_fork_guid"),          Nullable] public Guid?    RecoveryForkGuid      { get; set; } // uniqueidentifier
+			[Column("first_recovery_fork_guid"),    Nullable] public Guid?    FirstRecoveryForkGuid { get; set; } // uniqueidentifier
+			[Column("fork_point_lsn"),              Nullable] public decimal? ForkPointLsn          { get; set; } // numeric(25,0)
+		}
+
+		[Table(Schema="sys", Name="database_role_members", IsView=true)]
+		public partial class DatabaseRoleMembers
+		{
+			[Column("role_principal_id"),   NotNull] public int RolePrincipalID   { get; set; } // int
+			[Column("member_principal_id"), NotNull] public int MemberPrincipalID { get; set; } // int
+		}
+
+		[Table(Schema="sys", Name="databases", IsView=true)]
+		public partial class Databases
+		{
+			[Column("name"),                                          Nullable] public string?  Name                                 { get; set; } // sysname
+			[Column("database_id"),                                NotNull    ] public int      DatabaseID                           { get; set; } // int
+			[Column("source_database_id"),                            Nullable] public int?     SourceDatabaseID                     { get; set; } // int
+			[Column("owner_sid"),                                     Nullable] public byte[]?  OwnerSid                             { get; set; } // varbinary(85)
+			[Column("create_date"),                                NotNull    ] public DateTime CreateDate                           { get; set; } // datetime
+			[Column("compatibility_level"),                        NotNull    ] public byte     CompatibilityLevel                   { get; set; } // tinyint
+			[Column("collation_name"),                                Nullable] public string?  CollationName                        { get; set; } // sysname
+			[Column("user_access"),                                   Nullable] public byte?    UserAccess                           { get; set; } // tinyint
+			[Column("user_access_desc"),                              Nullable] public string?  UserAccessDesc                       { get; set; } // nvarchar(60)
+			[Column("is_read_only"),                                  Nullable] public bool?    IsReadOnly                           { get; set; } // bit
+			[Column("is_auto_close_on"),                           NotNull    ] public bool     IsAutoCloseOn                        { get; set; } // bit
+			[Column("is_auto_shrink_on"),                             Nullable] public bool?    IsAutoShrinkOn                       { get; set; } // bit
+			[Column("state"),                                         Nullable] public byte?    State                                { get; set; } // tinyint
+			[Column("state_desc"),                                    Nullable] public string?  StateDesc                            { get; set; } // nvarchar(60)
+			[Column("is_in_standby"),                                 Nullable] public bool?    IsInStandby                          { get; set; } // bit
+			[Column("is_cleanly_shutdown"),                           Nullable] public bool?    IsCleanlyShutdown                    { get; set; } // bit
+			[Column("is_supplemental_logging_enabled"),               Nullable] public bool?    IsSupplementalLoggingEnabled         { get; set; } // bit
+			[Column("snapshot_isolation_state"),                      Nullable] public byte?    SnapshotIsolationState               { get; set; } // tinyint
+			[Column("snapshot_isolation_state_desc"),                 Nullable] public string?  SnapshotIsolationStateDesc           { get; set; } // nvarchar(60)
+			[Column("is_read_committed_snapshot_on"),                 Nullable] public bool?    IsReadCommittedSnapshotOn            { get; set; } // bit
+			[Column("recovery_model"),                                Nullable] public byte?    RecoveryModel                        { get; set; } // tinyint
+			[Column("recovery_model_desc"),                           Nullable] public string?  RecoveryModelDesc                    { get; set; } // nvarchar(60)
+			[Column("page_verify_option"),                            Nullable] public byte?    PageVerifyOption                     { get; set; } // tinyint
+			[Column("page_verify_option_desc"),                       Nullable] public string?  PageVerifyOptionDesc                 { get; set; } // nvarchar(60)
+			[Column("is_auto_create_stats_on"),                       Nullable] public bool?    IsAutoCreateStatsOn                  { get; set; } // bit
+			[Column("is_auto_create_stats_incremental_on"),           Nullable] public bool?    IsAutoCreateStatsIncrementalOn       { get; set; } // bit
+			[Column("is_auto_update_stats_on"),                       Nullable] public bool?    IsAutoUpdateStatsOn                  { get; set; } // bit
+			[Column("is_auto_update_stats_async_on"),                 Nullable] public bool?    IsAutoUpdateStatsAsyncOn             { get; set; } // bit
+			[Column("is_ansi_null_default_on"),                       Nullable] public bool?    IsAnsiNullDefaultOn                  { get; set; } // bit
+			[Column("is_ansi_nulls_on"),                              Nullable] public bool?    IsAnsiNullsOn                        { get; set; } // bit
+			[Column("is_ansi_padding_on"),                            Nullable] public bool?    IsAnsiPaddingOn                      { get; set; } // bit
+			[Column("is_ansi_warnings_on"),                           Nullable] public bool?    IsAnsiWarningsOn                     { get; set; } // bit
+			[Column("is_arithabort_on"),                              Nullable] public bool?    IsArithabortOn                       { get; set; } // bit
+			[Column("is_concat_null_yields_null_on"),                 Nullable] public bool?    IsConcatNullYieldsNullOn             { get; set; } // bit
+			[Column("is_numeric_roundabort_on"),                      Nullable] public bool?    IsNumericRoundabortOn                { get; set; } // bit
+			[Column("is_quoted_identifier_on"),                       Nullable] public bool?    IsQuotedIdentifierOn                 { get; set; } // bit
+			[Column("is_recursive_triggers_on"),                      Nullable] public bool?    IsRecursiveTriggersOn                { get; set; } // bit
+			[Column("is_cursor_close_on_commit_on"),                  Nullable] public bool?    IsCursorCloseOnCommitOn              { get; set; } // bit
+			[Column("is_local_cursor_default"),                       Nullable] public bool?    IsLocalCursorDefault                 { get; set; } // bit
+			[Column("is_fulltext_enabled"),                           Nullable] public bool?    IsFulltextEnabled                    { get; set; } // bit
+			[Column("is_trustworthy_on"),                             Nullable] public bool?    IsTrustworthyOn                      { get; set; } // bit
+			[Column("is_db_chaining_on"),                             Nullable] public bool?    IsDbChainingOn                       { get; set; } // bit
+			[Column("is_parameterization_forced"),                    Nullable] public bool?    IsParameterizationForced             { get; set; } // bit
+			[Column("is_master_key_encrypted_by_server"),          NotNull    ] public bool     IsMasterKeyEncryptedByServer         { get; set; } // bit
+			[Column("is_query_store_on"),                             Nullable] public bool?    IsQueryStoreOn                       { get; set; } // bit
+			[Column("is_published"),                               NotNull    ] public bool     IsPublished                          { get; set; } // bit
+			[Column("is_subscribed"),                              NotNull    ] public bool     IsSubscribed                         { get; set; } // bit
+			[Column("is_merge_published"),                         NotNull    ] public bool     IsMergePublished                     { get; set; } // bit
+			[Column("is_distributor"),                             NotNull    ] public bool     IsDistributor                        { get; set; } // bit
+			[Column("is_sync_with_backup"),                        NotNull    ] public bool     IsSyncWithBackup                     { get; set; } // bit
+			[Column("service_broker_guid"),                        NotNull    ] public Guid     ServiceBrokerGuid                    { get; set; } // uniqueidentifier
+			[Column("is_broker_enabled"),                          NotNull    ] public bool     IsBrokerEnabled                      { get; set; } // bit
+			[Column("log_reuse_wait"),                                Nullable] public byte?    LogReuseWait                         { get; set; } // tinyint
+			[Column("log_reuse_wait_desc"),                           Nullable] public string?  LogReuseWaitDesc                     { get; set; } // nvarchar(60)
+			[Column("is_date_correlation_on"),                     NotNull    ] public bool     IsDateCorrelationOn                  { get; set; } // bit
+			[Column("is_cdc_enabled"),                             NotNull    ] public bool     IsCdcEnabled                         { get; set; } // bit
+			[Column("is_encrypted"),                                  Nullable] public bool?    IsEncrypted                          { get; set; } // bit
+			[Column("is_honor_broker_priority_on"),                   Nullable] public bool?    IsHonorBrokerPriorityOn              { get; set; } // bit
+			[Column("replica_id"),                                    Nullable] public Guid?    ReplicaID                            { get; set; } // uniqueidentifier
+			[Column("group_database_id"),                             Nullable] public Guid?    GroupDatabaseID                      { get; set; } // uniqueidentifier
+			[Column("resource_pool_id"),                              Nullable] public int?     ResourcePoolID                       { get; set; } // int
+			[Column("default_language_lcid"),                         Nullable] public short?   DefaultLanguageLcid                  { get; set; } // smallint
+			[Column("default_language_name"),                         Nullable] public string?  DefaultLanguageName                  { get; set; } // nvarchar(128)
+			[Column("default_fulltext_language_lcid"),                Nullable] public int?     DefaultFulltextLanguageLcid          { get; set; } // int
+			[Column("default_fulltext_language_name"),                Nullable] public string?  DefaultFulltextLanguageName          { get; set; } // nvarchar(128)
+			[Column("is_nested_triggers_on"),                         Nullable] public bool?    IsNestedTriggersOn                   { get; set; } // bit
+			[Column("is_transform_noise_words_on"),                   Nullable] public bool?    IsTransformNoiseWordsOn              { get; set; } // bit
+			[Column("two_digit_year_cutoff"),                         Nullable] public short?   TwoDigitYearCutoff                   { get; set; } // smallint
+			[Column("containment"),                                   Nullable] public byte?    Containment                          { get; set; } // tinyint
+			[Column("containment_desc"),                              Nullable] public string?  ContainmentDesc                      { get; set; } // nvarchar(60)
+			[Column("target_recovery_time_in_seconds"),               Nullable] public int?     TargetRecoveryTimeInSeconds          { get; set; } // int
+			[Column("delayed_durability"),                            Nullable] public int?     DelayedDurability                    { get; set; } // int
+			[Column("delayed_durability_desc"),                       Nullable] public string?  DelayedDurabilityDesc                { get; set; } // nvarchar(60)
+			[Column("is_memory_optimized_elevate_to_snapshot_on"),    Nullable] public bool?    IsMemoryOptimizedElevateToSnapshotOn { get; set; } // bit
+			[Column("is_federation_member"),                          Nullable] public bool?    IsFederationMember                   { get; set; } // bit
+			[Column("is_remote_data_archive_enabled"),                Nullable] public bool?    IsRemoteDataArchiveEnabled           { get; set; } // bit
+			[Column("is_mixed_page_allocation_on"),                   Nullable] public bool?    IsMixedPageAllocationOn              { get; set; } // bit
+			[Column("is_temporal_history_retention_enabled"),         Nullable] public bool?    IsTemporalHistoryRetentionEnabled    { get; set; } // bit
+			[Column("catalog_collation_type"),                     NotNull    ] public int      CatalogCollationType                 { get; set; } // int
+			[Column("catalog_collation_type_desc"),                   Nullable] public string?  CatalogCollationTypeDesc             { get; set; } // nvarchar(60)
+			[Column("physical_database_name"),                        Nullable] public string?  PhysicalDatabaseName                 { get; set; } // nvarchar(128)
+			[Column("is_result_set_caching_on"),                      Nullable] public bool?    IsResultSetCachingOn                 { get; set; } // bit
+			[Column("is_accelerated_database_recovery_on"),           Nullable] public bool?    IsAcceleratedDatabaseRecoveryOn      { get; set; } // bit
+			[Column("is_tempdb_spill_to_remote_store"),               Nullable] public bool?    IsTempdbSpillToRemoteStore           { get; set; } // bit
+			[Column("is_stale_page_detection_on"),                    Nullable] public bool?    IsStalePageDetectionOn               { get; set; } // bit
+			[Column("is_memory_optimized_enabled"),                   Nullable] public bool?    IsMemoryOptimizedEnabled             { get; set; } // bit
+		}
+
+		[Table(Schema="sys", Name="database_scoped_configurations", IsView=true)]
+		public partial class DatabaseScopedConfigurations
+		{
+			[Column("configuration_id"),    Nullable] public int?    ConfigurationID   { get; set; } // int
+			[Column("name"),                Nullable] public string? Name              { get; set; } // nvarchar(60)
+			[Column("value"),               Nullable] public object? Value             { get; set; } // sql_variant
+			[Column("value_for_secondary"), Nullable] public object? ValueForSecondary { get; set; } // sql_variant
+			[Column("is_value_default"),    Nullable] public bool?   IsValueDefault    { get; set; } // bit
+		}
+
+		[Table(Schema="sys", Name="database_scoped_credentials", IsView=true)]
+		public partial class DatabaseScopedCredentials
+		{
+			[Column("name"),                NotNull    ] public string   Name               { get; set; } = null!; // sysname
+			[Column("principal_id"),        NotNull    ] public int      PrincipalID        { get; set; } // int
+			[Column("credential_id"),       NotNull    ] public int      CredentialID       { get; set; } // int
+			[Column("credential_identity"),    Nullable] public string?  CredentialIdentity { get; set; } // nvarchar(4000)
+			[Column("create_date"),         NotNull    ] public DateTime CreateDate         { get; set; } // datetime
+			[Column("modify_date"),         NotNull    ] public DateTime ModifyDate         { get; set; } // datetime
+			[Column("target_type"),            Nullable] public string?  TargetType         { get; set; } // nvarchar(60)
+			[Column("target_id"),              Nullable] public int?     TargetID           { get; set; } // int
+		}
+
+		[Table(Schema="sys", Name="data_spaces", IsView=true)]
+		public partial class DataSpaces
+		{
+			[Column("name"),          NotNull    ] public string  Name        { get; set; } = null!; // sysname
+			[Column("data_space_id"), NotNull    ] public int     DataSpaceID { get; set; } // int
+			[Column("type"),          NotNull    ] public string  Type        { get; set; } = null!; // char(2)
+			[Column("type_desc"),        Nullable] public string? TypeDesc    { get; set; } // nvarchar(60)
+			[Column("is_default"),    NotNull    ] public bool    IsDefault   { get; set; } // bit
+			[Column("is_system"),        Nullable] public bool?   IsSystem    { get; set; } // bit
+		}
+
+		[Table(Schema="sys", Name="default_constraints", IsView=true)]
+		public partial class DefaultConstraints
+		{
+			[Column("name"),                NotNull    ] public string   Name              { get; set; } = null!; // sysname
+			[Column("object_id"),           NotNull    ] public int      ObjectID          { get; set; } // int
+			[Column("principal_id"),           Nullable] public int?     PrincipalID       { get; set; } // int
+			[Column("schema_id"),           NotNull    ] public int      SchemaID          { get; set; } // int
+			[Column("parent_object_id"),    NotNull    ] public int      ParentObjectID    { get; set; } // int
+			[Column("type"),                   Nullable] public string?  Type              { get; set; } // char(2)
+			[Column("type_desc"),              Nullable] public string?  TypeDesc          { get; set; } // nvarchar(60)
+			[Column("create_date"),         NotNull    ] public DateTime CreateDate        { get; set; } // datetime
+			[Column("modify_date"),         NotNull    ] public DateTime ModifyDate        { get; set; } // datetime
+			[Column("is_ms_shipped"),       NotNull    ] public bool     IsMsShipped       { get; set; } // bit
+			[Column("is_published"),        NotNull    ] public bool     IsPublished       { get; set; } // bit
+			[Column("is_schema_published"), NotNull    ] public bool     IsSchemaPublished { get; set; } // bit
+			[Column("parent_column_id"),    NotNull    ] public int      ParentColumnID    { get; set; } // int
+			[Column("definition"),             Nullable] public string?  Definition        { get; set; } // nvarchar(0)
+			[Column("is_system_named"),     NotNull    ] public bool     IsSystemNamed     { get; set; } // bit
+
+			#region Associations
+
+			/// <summary>
+			/// objects
+			/// </summary>
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="objects", BackReferenceName="DefaultConstraint")]
+			public SystemSchema.Objects Object { get; set; } = null!;
+
+			#endregion
+		}
+
+		[Table(Schema="sys", Name="destination_data_spaces", IsView=true)]
+		public partial class DestinationDataSpaces
+		{
+			[Column("partition_scheme_id"), NotNull] public int PartitionSchemeID { get; set; } // int
+			[Column("destination_id"),      NotNull] public int DestinationID     { get; set; } // int
+			[Column("data_space_id"),       NotNull] public int DataSpaceID       { get; set; } // int
+		}
 
 		[Table(Schema="sys", Name="edge_constraint_clauses", IsView=true)]
 		public partial class EdgeConstraintClauses
@@ -7617,7 +8304,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// column_xml_schema_collection_usages
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<SystemSchema.ColumnXmlSchemaCollectionUsages> ColumnXmlSchemaCollectionUsages { get; set; } = null!;
+			public IList<XmlSchema.ColumnXmlSchemaCollectionUsages> ColumnXmlSchemaCollectionUsages { get; set; } = null!;
 
 			/// <summary>
 			/// computed_columns
@@ -7635,115 +8322,115 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// dm_column_store_object_pool
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<SystemSchema.DmColumnStoreObjectPool> DmColumnStoreObjectPool { get; set; } = null!;
+			public IList<DynamicManagementSchema.DmColumnStoreObjectPool> DmColumnStoreObjectPool { get; set; } = null!;
 
 			/// <summary>
 			/// dm_db_column_store_row_group_operational_stats
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<SystemSchema.DmDbColumnStoreRowGroupOperationalStats> DmDbColumnStoreRowGroupOperationalStats { get; set; } = null!;
+			public IList<DynamicManagementSchema.DmDbColumnStoreRowGroupOperationalStats> DmDbColumnStoreRowGroupOperationalStats { get; set; } = null!;
 
 			/// <summary>
 			/// dm_db_column_store_row_group_physical_stats
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<SystemSchema.DmDbColumnStoreRowGroupPhysicalStats> DmDbColumnStoreRowGroupPhysicalStats { get; set; } = null!;
+			public IList<DynamicManagementSchema.DmDbColumnStoreRowGroupPhysicalStats> DmDbColumnStoreRowGroupPhysicalStats { get; set; } = null!;
 
 			/// <summary>
 			/// dm_db_fts_index_physical_stats
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<SystemSchema.DmDbFtsIndexPhysicalStats> DmDbFtsIndexPhysicalStats { get; set; } = null!;
+			public IList<DynamicManagementSchema.DmDbFtsIndexPhysicalStats> DmDbFtsIndexPhysicalStats { get; set; } = null!;
 
 			/// <summary>
 			/// dm_db_index_usage_stats
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<SystemSchema.DmDbIndexUsageStats> DmDbIndexUsageStats { get; set; } = null!;
+			public IList<DynamicManagementSchema.DmDbIndexUsageStats> DmDbIndexUsageStats { get; set; } = null!;
 
 			/// <summary>
 			/// dm_db_missing_index_details
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<SystemSchema.DmDbMissingIndexDetails> DmDbMissingIndexDetails { get; set; } = null!;
+			public IList<DynamicManagementSchema.DmDbMissingIndexDetails> DmDbMissingIndexDetails { get; set; } = null!;
 
 			/// <summary>
 			/// dm_db_partition_stats
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<SystemSchema.DmDbPartitionStats> DmDbPartitionStats { get; set; } = null!;
+			public IList<DynamicManagementSchema.DmDbPartitionStats> DmDbPartitionStats { get; set; } = null!;
 
 			/// <summary>
 			/// dm_db_xtp_hash_index_stats
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<SystemSchema.DmDbXtpHashIndexStats> DmDbXtpHashIndexStats { get; set; } = null!;
+			public IList<DynamicManagementSchema.DmDbXtpHashIndexStats> DmDbXtpHashIndexStats { get; set; } = null!;
 
 			/// <summary>
 			/// dm_db_xtp_index_stats
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<SystemSchema.DmDbXtpIndexStats> DmDbXtpIndexStats { get; set; } = null!;
+			public IList<DynamicManagementSchema.DmDbXtpIndexStats> DmDbXtpIndexStats { get; set; } = null!;
 
 			/// <summary>
 			/// dm_db_xtp_memory_consumers
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<SystemSchema.DmDbXtpMemoryConsumers> DmDbXtpMemoryConsumers { get; set; } = null!;
+			public IList<DynamicManagementSchema.DmDbXtpMemoryConsumers> DmDbXtpMemoryConsumers { get; set; } = null!;
 
 			/// <summary>
 			/// dm_db_xtp_nonclustered_index_stats
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<SystemSchema.DmDbXtpNonclusteredIndexStats> DmDbXtpNonclusteredIndexStats { get; set; } = null!;
+			public IList<DynamicManagementSchema.DmDbXtpNonclusteredIndexStats> DmDbXtpNonclusteredIndexStats { get; set; } = null!;
 
 			/// <summary>
 			/// dm_db_xtp_object_stats
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<SystemSchema.DmDbXtpObjectStats> DmDbXtpObjectStats { get; set; } = null!;
+			public IList<DynamicManagementSchema.DmDbXtpObjectStats> DmDbXtpObjectStats { get; set; } = null!;
 
 			/// <summary>
 			/// dm_db_xtp_table_memory_stats
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<SystemSchema.DmDbXtpTableMemoryStats> DmDbXtpTableMemoryStats { get; set; } = null!;
+			public IList<DynamicManagementSchema.DmDbXtpTableMemoryStats> DmDbXtpTableMemoryStats { get; set; } = null!;
 
 			/// <summary>
 			/// dm_exec_function_stats
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<SystemSchema.DmExecFunctionStats> DmExecFunctionStats { get; set; } = null!;
+			public IList<DynamicManagementSchema.DmExecFunctionStats> DmExecFunctionStats { get; set; } = null!;
 
 			/// <summary>
 			/// dm_exec_procedure_stats
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<SystemSchema.DmExecProcedureStats> DmExecProcedureStats { get; set; } = null!;
+			public IList<DynamicManagementSchema.DmExecProcedureStats> DmExecProcedureStats { get; set; } = null!;
 
 			/// <summary>
 			/// dm_exec_query_profiles
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<SystemSchema.DmExecQueryProfiles> DmExecQueryProfiles { get; set; } = null!;
+			public IList<DynamicManagementSchema.DmExecQueryProfiles> DmExecQueryProfiles { get; set; } = null!;
 
 			/// <summary>
 			/// dm_exec_trigger_stats
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<SystemSchema.DmExecTriggerStats> DmExecTriggerStats { get; set; } = null!;
+			public IList<DynamicManagementSchema.DmExecTriggerStats> DmExecTriggerStats { get; set; } = null!;
 
 			/// <summary>
 			/// dm_filestream_non_transacted_handles
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<SystemSchema.DmFilestreamNonTransactedHandles> DmFilestreamNonTransactedHandles { get; set; } = null!;
+			public IList<DynamicManagementSchema.DmFilestreamNonTransactedHandles> DmFilestreamNonTransactedHandles { get; set; } = null!;
 
 			/// <summary>
 			/// dm_qn_subscriptions
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<SystemSchema.DmQnSubscriptions> DmQnSubscriptions { get; set; } = null!;
+			public IList<DynamicManagementSchema.DmQnSubscriptions> DmQnSubscriptions { get; set; } = null!;
 
 			/// <summary>
 			/// edge_constraint_clauses
@@ -7923,7 +8610,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// parameter_xml_schema_collection_usages
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<SystemSchema.ParameterXmlSchemaCollectionUsages> ParameterXmlSchemaCollectionUsages { get; set; } = null!;
+			public IList<XmlSchema.ParameterXmlSchemaCollectionUsages> ParameterXmlSchemaCollectionUsages { get; set; } = null!;
 
 			/// <summary>
 			/// partitions
@@ -7977,7 +8664,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// selective_xml_index_paths
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<SystemSchema.SelectiveXmlIndexPaths> SelectiveXmlIndexPaths { get; set; } = null!;
+			public IList<XmlSchema.SelectiveXmlIndexPaths> SelectiveXmlIndexPaths { get; set; } = null!;
 
 			/// <summary>
 			/// sequences
@@ -8103,7 +8790,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// xml_indexes
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<SystemSchema.XmlIndexes> XmlIndexes { get; set; } = null!;
+			public IList<XmlSchema.XmlIndexes> XmlIndexes { get; set; } = null!;
 
 			#endregion
 		}
@@ -8169,24 +8856,6 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// objects
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ParameterTypeUsages")]
-			public SystemSchema.Objects Object { get; set; } = null!;
-
-			#endregion
-		}
-
-		[Table(Schema="sys", Name="parameter_xml_schema_collection_usages", IsView=true)]
-		public partial class ParameterXmlSchemaCollectionUsages
-		{
-			[Column("object_id"),         NotNull] public int ObjectID        { get; set; } // int
-			[Column("parameter_id"),      NotNull] public int ParameterID     { get; set; } // int
-			[Column("xml_collection_id"), NotNull] public int XmlCollectionID { get; set; } // int
-
-			#region Associations
-
-			/// <summary>
-			/// objects
-			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ParameterXmlSchemaCollectionUsages")]
 			public SystemSchema.Objects Object { get; set; } = null!;
 
 			#endregion
@@ -8767,41 +9436,6 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// objects
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="SelectiveXmlIndexNamespaces")]
-			public SystemSchema.Objects Object { get; set; } = null!;
-
-			#endregion
-		}
-
-		[Table(Schema="sys", Name="selective_xml_index_paths", IsView=true)]
-		public partial class SelectiveXmlIndexPaths
-		{
-			[Column("object_id"),                     NotNull    ] public int     ObjectID                  { get; set; } // int
-			[Column("index_id"),                      NotNull    ] public int     IndexID                   { get; set; } // int
-			[Column("path_id"),                          Nullable] public int?    PathID                    { get; set; } // int
-			[Column("path"),                             Nullable] public string? Path                      { get; set; } // nvarchar(4000)
-			[Column("name"),                             Nullable] public string? Name                      { get; set; } // nvarchar(128)
-			[Column("path_type"),                        Nullable] public byte?   PathType                  { get; set; } // tinyint
-			[Column("path_type_desc"),                   Nullable] public string? PathTypeDesc              { get; set; } // nvarchar(128)
-			[Column("xml_component_id"),                 Nullable] public int?    XmlComponentID            { get; set; } // int
-			[Column("xquery_type_description"),          Nullable] public string? XqueryTypeDescription     { get; set; } // nvarchar(4000)
-			[Column("is_xquery_type_inferred"),          Nullable] public bool?   IsXqueryTypeInferred      { get; set; } // bit
-			[Column("xquery_max_length"),                Nullable] public int?    XqueryMaxLength           { get; set; } // int
-			[Column("is_xquery_max_length_inferred"),    Nullable] public bool?   IsXqueryMaxLengthInferred { get; set; } // bit
-			[Column("is_node"),                          Nullable] public bool?   IsNode                    { get; set; } // bit
-			[Column("system_type_id"),                   Nullable] public byte?   SystemTypeID              { get; set; } // tinyint
-			[Column("user_type_id"),                     Nullable] public byte?   UserTypeID                { get; set; } // tinyint
-			[Column("max_length"),                       Nullable] public short?  MaxLength                 { get; set; } // smallint
-			[Column("precision"),                        Nullable] public byte?   Precision                 { get; set; } // tinyint
-			[Column("scale"),                            Nullable] public byte?   Scale                     { get; set; } // tinyint
-			[Column("collation_name"),                   Nullable] public string? CollationName             { get; set; } // sysname
-			[Column("is_singleton"),                     Nullable] public bool?   IsSingleton               { get; set; } // bit
-
-			#region Associations
-
-			/// <summary>
-			/// objects
-			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="SelectiveXmlIndexPaths")]
 			public SystemSchema.Objects Object { get; set; } = null!;
 
 			#endregion
@@ -9626,642 +10260,6 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
-		[Table(Schema="sys", Name="sysaltfiles", IsView=true)]
-		public partial class Sysaltfiles
-		{
-			[Column("fileid"),      Nullable] public short?  Fileid   { get; set; } // smallint
-			[Column("groupid"),     Nullable] public short?  Groupid  { get; set; } // smallint
-			[Column("size"),     NotNull    ] public int     Size     { get; set; } // int
-			[Column("maxsize"),  NotNull    ] public int     Maxsize  { get; set; } // int
-			[Column("growth"),   NotNull    ] public int     Growth   { get; set; } // int
-			[Column("status"),      Nullable] public int?    Status   { get; set; } // int
-			[Column("perf"),        Nullable] public int?    Perf     { get; set; } // int
-			[Column("dbid"),        Nullable] public short?  Dbid     { get; set; } // smallint
-			[Column("name"),     NotNull    ] public string  Name     { get; set; } = null!; // sysname
-			[Column("filename"),    Nullable] public string? Filename { get; set; } // nvarchar(260)
-		}
-
-		[Table(Schema="sys", Name="syscacheobjects", IsView=true)]
-		public partial class Syscacheobjects
-		{
-			[Column("bucketid"),     NotNull    ] public int     Bucketid     { get; set; } // int
-			[Column("cacheobjtype"), NotNull    ] public string  Cacheobjtype { get; set; } = null!; // nvarchar(50)
-			[Column("objtype"),      NotNull    ] public string  Objtype      { get; set; } = null!; // nvarchar(20)
-			[Column("objid"),           Nullable] public int?    Objid        { get; set; } // int
-			[Column("dbid"),            Nullable] public short?  Dbid         { get; set; } // smallint
-			[Column("dbidexec"),        Nullable] public short?  Dbidexec     { get; set; } // smallint
-			[Column("uid"),             Nullable] public short?  Uid          { get; set; } // smallint
-			[Column("refcounts"),    NotNull    ] public int     Refcounts    { get; set; } // int
-			[Column("usecounts"),    NotNull    ] public int     Usecounts    { get; set; } // int
-			[Column("pagesused"),       Nullable] public int?    Pagesused    { get; set; } // int
-			[Column("setopts"),         Nullable] public int?    Setopts      { get; set; } // int
-			[Column("langid"),          Nullable] public short?  Langid       { get; set; } // smallint
-			[Column("dateformat"),      Nullable] public short?  Dateformat   { get; set; } // smallint
-			[Column("status"),          Nullable] public int?    Status       { get; set; } // int
-			[Column("lasttime"),        Nullable] public long?   Lasttime     { get; set; } // bigint
-			[Column("maxexectime"),     Nullable] public long?   Maxexectime  { get; set; } // bigint
-			[Column("avgexectime"),     Nullable] public long?   Avgexectime  { get; set; } // bigint
-			[Column("lastreads"),       Nullable] public long?   Lastreads    { get; set; } // bigint
-			[Column("lastwrites"),      Nullable] public long?   Lastwrites   { get; set; } // bigint
-			[Column("sqlbytes"),        Nullable] public int?    Sqlbytes     { get; set; } // int
-			[Column("sql"),             Nullable] public string? Sql          { get; set; } // nvarchar(3900)
-		}
-
-		[Table(Schema="sys", Name="syscharsets", IsView=true)]
-		public partial class Syscharsets
-		{
-			[Column("type"),             NotNull    ] public short   Type             { get; set; } // smallint
-			[Column("id"),               NotNull    ] public byte    Id               { get; set; } // tinyint
-			[Column("csid"),             NotNull    ] public byte    Csid             { get; set; } // tinyint
-			[Column("status"),              Nullable] public short?  Status           { get; set; } // smallint
-			[Column("name"),             NotNull    ] public string  Name             { get; set; } = null!; // nvarchar(128)
-			[Column("description"),      NotNull    ] public string  Description      { get; set; } = null!; // nvarchar(255)
-			[Column("binarydefinition"),    Nullable] public byte[]? Binarydefinition { get; set; } // varbinary(6000)
-			[Column("definition"),          Nullable] public byte[]? Definition       { get; set; } // image(16)
-		}
-
-		[Table(Schema="sys", Name="syscolumns", IsView=true)]
-		public partial class Syscolumns
-		{
-			[Column("name"),            Nullable] public string? Name         { get; set; } // sysname
-			[Column("id"),           NotNull    ] public int     Id           { get; set; } // int
-			[Column("xtype"),        NotNull    ] public byte    Xtype        { get; set; } // tinyint
-			[Column("typestat"),        Nullable] public byte?   Typestat     { get; set; } // tinyint
-			[Column("xusertype"),       Nullable] public short?  Xusertype    { get; set; } // smallint
-			[Column("length"),       NotNull    ] public short   Length       { get; set; } // smallint
-			[Column("xprec"),        NotNull    ] public byte    Xprec        { get; set; } // tinyint
-			[Column("xscale"),       NotNull    ] public byte    Xscale       { get; set; } // tinyint
-			[Column("colid"),           Nullable] public short?  Colid        { get; set; } // smallint
-			[Column("xoffset"),         Nullable] public short?  Xoffset      { get; set; } // smallint
-			[Column("bitpos"),          Nullable] public byte?   Bitpos       { get; set; } // tinyint
-			[Column("reserved"),        Nullable] public byte?   Reserved     { get; set; } // tinyint
-			[Column("colstat"),         Nullable] public short?  Colstat      { get; set; } // smallint
-			[Column("cdefault"),     NotNull    ] public int     Cdefault     { get; set; } // int
-			[Column("domain"),       NotNull    ] public int     Domain       { get; set; } // int
-			[Column("number"),          Nullable] public short?  Number       { get; set; } // smallint
-			[Column("colorder"),        Nullable] public short?  Colorder     { get; set; } // smallint
-			[Column("autoval"),         Nullable] public byte[]? Autoval      { get; set; } // varbinary(8000)
-			[Column("offset"),          Nullable] public short?  Offset       { get; set; } // smallint
-			[Column("collationid"),     Nullable] public int?    Collationid  { get; set; } // int
-			[Column("language"),        Nullable] public int?    Language     { get; set; } // int
-			[Column("status"),          Nullable] public byte?   Status       { get; set; } // tinyint
-			[Column("type"),         NotNull    ] public byte    Type         { get; set; } // tinyint
-			[Column("usertype"),        Nullable] public short?  Usertype     { get; set; } // smallint
-			[Column("printfmt"),        Nullable] public string? Printfmt     { get; set; } // varchar(255)
-			[Column("prec"),            Nullable] public short?  Prec         { get; set; } // smallint
-			[Column("scale"),           Nullable] public int?    Scale        { get; set; } // int
-			[Column("iscomputed"),      Nullable] public int?    Iscomputed   { get; set; } // int
-			[Column("isoutparam"),      Nullable] public int?    Isoutparam   { get; set; } // int
-			[Column("isnullable"),      Nullable] public int?    Isnullable   { get; set; } // int
-			[Column("collation"),       Nullable] public string? Collation    { get; set; } // sysname
-			[Column("tdscollation"),    Nullable] public byte[]? Tdscollation { get; set; } // binary(5)
-		}
-
-		[Table(Schema="sys", Name="syscomments", IsView=true)]
-		public partial class Syscomments
-		{
-			[Column("id"),         NotNull    ] public int     Id         { get; set; } // int
-			[Column("number"),        Nullable] public short?  Number     { get; set; } // smallint
-			[Column("colid"),      NotNull    ] public short   Colid      { get; set; } // smallint
-			[Column("status"),     NotNull    ] public short   Status     { get; set; } // smallint
-			[Column("ctext"),         Nullable] public byte[]? Ctext      { get; set; } // varbinary(8000)
-			[Column("texttype"),      Nullable] public short?  Texttype   { get; set; } // smallint
-			[Column("language"),      Nullable] public short?  Language   { get; set; } // smallint
-			[Column("encrypted"),  NotNull    ] public bool    Encrypted  { get; set; } // bit
-			[Column("compressed"), NotNull    ] public bool    Compressed { get; set; } // bit
-			[Column("text"),          Nullable] public string? Text       { get; set; } // nvarchar(4000)
-		}
-
-		[Table(Schema="sys", Name="sysconfigures", IsView=true)]
-		public partial class Sysconfigures
-		{
-			[Column("value"),      Nullable] public int?   Value   { get; set; } // int
-			[Column("config"),  NotNull    ] public int    Config  { get; set; } // int
-			[Column("comment"), NotNull    ] public string Comment { get; set; } = null!; // nvarchar(255)
-			[Column("status"),     Nullable] public short? Status  { get; set; } // smallint
-		}
-
-		[Table(Schema="sys", Name="sysconstraints", IsView=true)]
-		public partial class Sysconstraints
-		{
-			[Column("constid"), NotNull    ] public int    Constid { get; set; } // int
-			[Column("id"),      NotNull    ] public int    Id      { get; set; } // int
-			[Column("colid"),      Nullable] public short? Colid   { get; set; } // smallint
-			[Column("spare1"),     Nullable] public byte?  Spare1  { get; set; } // tinyint
-			[Column("status"),     Nullable] public int?   Status  { get; set; } // int
-			[Column("actions"),    Nullable] public int?   Actions { get; set; } // int
-			[Column("error"),      Nullable] public int?   Error   { get; set; } // int
-		}
-
-		[Table(Schema="sys", Name="syscscontainers", IsView=true)]
-		public partial class Syscscontainers
-		{
-			[Column("blob_container_id"),   NotNull    ] public short   BlobContainerID   { get; set; } // smallint
-			[Column("blob_container_url"),     Nullable] public string? BlobContainerUrl  { get; set; } // nvarchar(261)
-			[Column("blob_container_type"),    Nullable] public byte?   BlobContainerType { get; set; } // tinyint
-		}
-
-		[Table(Schema="sys", Name="syscurconfigs", IsView=true)]
-		public partial class Syscurconfigs
-		{
-			[Column("value"),   NotNull    ] public int    Value   { get; set; } // int
-			[Column("config"),     Nullable] public short? Config  { get; set; } // smallint
-			[Column("comment"), NotNull    ] public string Comment { get; set; } = null!; // nvarchar(255)
-			[Column("status"),     Nullable] public short? Status  { get; set; } // smallint
-		}
-
-		[Table(Schema="sys", Name="syscursorcolumns", IsView=true)]
-		public partial class Syscursorcolumns
-		{
-			[Column("cursor_handle"),                NotNull    ] public int     CursorHandle               { get; set; } // int
-			[Column("column_name"),                     Nullable] public string? ColumnName                 { get; set; } // nvarchar(128)
-			[Column("ordinal_position"),             NotNull    ] public int     OrdinalPosition            { get; set; } // int
-			[Column("column_characteristics_flags"), NotNull    ] public int     ColumnCharacteristicsFlags { get; set; } // int
-			[Column("column_size"),                  NotNull    ] public int     ColumnSize                 { get; set; } // int
-			[Column("data_type_sql"),                NotNull    ] public int     DataTypeSql                { get; set; } // int
-			[Column("column_precision"),             NotNull    ] public byte    ColumnPrecision            { get; set; } // tinyint
-			[Column("column_scale"),                 NotNull    ] public byte    ColumnScale                { get; set; } // tinyint
-			[Column("order_position"),               NotNull    ] public int     OrderPosition              { get; set; } // int
-			[Column("order_direction"),                 Nullable] public string? OrderDirection             { get; set; } // nvarchar(1)
-			[Column("hidden_column"),                NotNull    ] public short   HiddenColumn               { get; set; } // smallint
-			[Column("columnid"),                     NotNull    ] public int     Columnid                   { get; set; } // int
-			[Column("objectid"),                     NotNull    ] public int     Objectid                   { get; set; } // int
-			[Column("dbid"),                         NotNull    ] public int     Dbid                       { get; set; } // int
-			[Column("dbname"),                          Nullable] public string? Dbname                     { get; set; } // nvarchar(128)
-		}
-
-		[Table(Schema="sys", Name="syscursorrefs", IsView=true)]
-		public partial class Syscursorrefs
-		{
-			[Column("reference_name"),    Nullable] public string? ReferenceName { get; set; } // nvarchar(128)
-			[Column("cursor_scope"),   NotNull    ] public byte    CursorScope   { get; set; } // tinyint
-			[Column("cursor_handl"),   NotNull    ] public int     CursorHandl   { get; set; } // int
-		}
-
-		[Table(Schema="sys", Name="syscursors", IsView=true)]
-		public partial class Syscursors
-		{
-			[Column("cursor_handle"),  NotNull    ] public int      CursorHandle  { get; set; } // int
-			[Column("cursor_name"),       Nullable] public string?  CursorName    { get; set; } // nvarchar(128)
-			[Column("status"),         NotNull    ] public int      Status        { get; set; } // int
-			[Column("model"),          NotNull    ] public byte     Model         { get; set; } // tinyint
-			[Column("concurrency"),    NotNull    ] public byte     Concurrency   { get; set; } // tinyint
-			[Column("scrollable"),     NotNull    ] public byte     Scrollable    { get; set; } // tinyint
-			[Column("open_status"),    NotNull    ] public byte     OpenStatus    { get; set; } // tinyint
-			[Column("cursor_rows"),       Nullable] public decimal? CursorRows    { get; set; } // numeric(10,0)
-			[Column("fetch_status"),   NotNull    ] public short    FetchStatus   { get; set; } // smallint
-			[Column("column_count"),   NotNull    ] public short    ColumnCount   { get; set; } // smallint
-			[Column("row_count"),         Nullable] public decimal? RowCount      { get; set; } // numeric(10,0)
-			[Column("last_operation"), NotNull    ] public byte     LastOperation { get; set; } // tinyint
-		}
-
-		[Table(Schema="sys", Name="syscursortables", IsView=true)]
-		public partial class Syscursortables
-		{
-			[Column("cursor_handle"),  NotNull    ] public int     CursorHandle  { get; set; } // int
-			[Column("table_owner"),       Nullable] public string? TableOwner    { get; set; } // nvarchar(128)
-			[Column("table_name"),        Nullable] public string? TableName     { get; set; } // nvarchar(128)
-			[Column("optimizer_hint"), NotNull    ] public short   OptimizerHint { get; set; } // smallint
-			[Column("lock_type"),      NotNull    ] public short   LockType      { get; set; } // smallint
-			[Column("server_name"),       Nullable] public string? ServerName    { get; set; } // nvarchar(128)
-			[Column("objectid"),       NotNull    ] public int     Objectid      { get; set; } // int
-			[Column("dbid"),           NotNull    ] public int     Dbid          { get; set; } // int
-			[Column("dbname"),            Nullable] public string? Dbname        { get; set; } // nvarchar(128)
-		}
-
-		[Table(Schema="sys", Name="sysdatabases", IsView=true)]
-		public partial class Sysdatabases
-		{
-			[Column("name"),         Nullable] public string?   Name      { get; set; } // sysname
-			[Column("dbid"),         Nullable] public short?    Dbid      { get; set; } // smallint
-			[Column("sid"),          Nullable] public byte[]?   Sid       { get; set; } // varbinary(85)
-			[Column("mode"),         Nullable] public short?    Mode      { get; set; } // smallint
-			[Column("status"),       Nullable] public int?      Status    { get; set; } // int
-			[Column("status2"),      Nullable] public int?      Status2   { get; set; } // int
-			[Column("crdate"),    NotNull    ] public DateTime  Crdate    { get; set; } // datetime
-			[Column("reserved"),     Nullable] public DateTime? Reserved  { get; set; } // datetime
-			[Column("category"),     Nullable] public int?      Category  { get; set; } // int
-			[Column("cmptlevel"), NotNull    ] public byte      Cmptlevel { get; set; } // tinyint
-			[Column("filename"),     Nullable] public string?   Filename  { get; set; } // nvarchar(260)
-			[Column("version"),      Nullable] public short?    Version   { get; set; } // smallint
-		}
-
-		[Table(Schema="sys", Name="sysdepends", IsView=true)]
-		public partial class Sysdepends
-		{
-			[Column("id"),        NotNull    ] public int    Id        { get; set; } // int
-			[Column("depid"),     NotNull    ] public int    Depid     { get; set; } // int
-			[Column("number"),       Nullable] public short? Number    { get; set; } // smallint
-			[Column("depnumber"),    Nullable] public short? Depnumber { get; set; } // smallint
-			[Column("status"),       Nullable] public short? Status    { get; set; } // smallint
-			[Column("deptype"),   NotNull    ] public byte   Deptype   { get; set; } // tinyint
-			[Column("depdbid"),      Nullable] public short? Depdbid   { get; set; } // smallint
-			[Column("depsiteid"),    Nullable] public short? Depsiteid { get; set; } // smallint
-			[Column("selall"),    NotNull    ] public bool   Selall    { get; set; } // bit
-			[Column("resultobj"), NotNull    ] public bool   Resultobj { get; set; } // bit
-			[Column("readobj"),   NotNull    ] public bool   Readobj   { get; set; } // bit
-		}
-
-		[Table(Schema="sys", Name="sysdevices", IsView=true)]
-		public partial class Sysdevices
-		{
-			[Column("name"),      NotNull    ] public string  Name      { get; set; } = null!; // sysname
-			[Column("size"),         Nullable] public int?    Size      { get; set; } // int
-			[Column("low"),          Nullable] public int?    Low       { get; set; } // int
-			[Column("high"),         Nullable] public int?    High      { get; set; } // int
-			[Column("status"),       Nullable] public short?  Status    { get; set; } // smallint
-			[Column("cntrltype"),    Nullable] public short?  Cntrltype { get; set; } // smallint
-			[Column("phyname"),      Nullable] public string? Phyname   { get; set; } // nvarchar(260)
-		}
-
-		[Table(Schema="sys", Name="sysfilegroups", IsView=true)]
-		public partial class Sysfilegroups
-		{
-			[Column("groupid"),        Nullable] public short? Groupid     { get; set; } // smallint
-			[Column("allocpolicy"),    Nullable] public short? Allocpolicy { get; set; } // smallint
-			[Column("status"),         Nullable] public int?   Status      { get; set; } // int
-			[Column("groupname"),   NotNull    ] public string Groupname   { get; set; } = null!; // sysname
-		}
-
-		[Table(Schema="sys", Name="sysfiles", IsView=true)]
-		public partial class Sysfiles
-		{
-			[Column("fileid"),      Nullable] public short?  Fileid   { get; set; } // smallint
-			[Column("groupid"),     Nullable] public short?  Groupid  { get; set; } // smallint
-			[Column("size"),     NotNull    ] public int     Size     { get; set; } // int
-			[Column("maxsize"),  NotNull    ] public int     Maxsize  { get; set; } // int
-			[Column("growth"),   NotNull    ] public int     Growth   { get; set; } // int
-			[Column("status"),      Nullable] public int?    Status   { get; set; } // int
-			[Column("perf"),        Nullable] public int?    Perf     { get; set; } // int
-			[Column("name"),     NotNull    ] public string  Name     { get; set; } = null!; // sysname
-			[Column("filename"),    Nullable] public string? Filename { get; set; } // nvarchar(260)
-		}
-
-		[Table(Schema="sys", Name="sysforeignkeys", IsView=true)]
-		public partial class Sysforeignkeys
-		{
-			[Column("constid"), NotNull    ] public int    Constid { get; set; } // int
-			[Column("fkeyid"),  NotNull    ] public int    Fkeyid  { get; set; } // int
-			[Column("rkeyid"),  NotNull    ] public int    Rkeyid  { get; set; } // int
-			[Column("fkey"),       Nullable] public short? Fkey    { get; set; } // smallint
-			[Column("rkey"),       Nullable] public short? Rkey    { get; set; } // smallint
-			[Column("keyno"),      Nullable] public short? Keyno   { get; set; } // smallint
-		}
-
-		[Table(Schema="sys", Name="sysfulltextcatalogs", IsView=true)]
-		public partial class Sysfulltextcatalogs
-		{
-			[Column("ftcatid"),    Nullable] public short?  Ftcatid { get; set; } // smallint
-			[Column("name"),    NotNull    ] public string  Name    { get; set; } = null!; // sysname
-			[Column("status"),     Nullable] public short?  Status  { get; set; } // smallint
-			[Column("path"),       Nullable] public string? Path    { get; set; } // nvarchar(260)
-		}
-
-		[Table(Schema="sys", Name="sysindexes", IsView=true)]
-		public partial class Sysindexes
-		{
-			[Column("id"),        NotNull    ] public int     Id             { get; set; } // int
-			[Column("status"),       Nullable] public int?    Status         { get; set; } // int
-			[Column("first"),        Nullable] public byte[]? First          { get; set; } // binary(6)
-			[Column("indid"),        Nullable] public short?  Indid          { get; set; } // smallint
-			[Column("root"),         Nullable] public byte[]? Root           { get; set; } // binary(6)
-			[Column("minlen"),       Nullable] public short?  Minlen         { get; set; } // smallint
-			[Column("keycnt"),       Nullable] public short?  Keycnt         { get; set; } // smallint
-			[Column("groupid"),      Nullable] public short?  Groupid        { get; set; } // smallint
-			[Column("dpages"),       Nullable] public int?    Dpages         { get; set; } // int
-			[Column("reserved"),     Nullable] public int?    Reserved       { get; set; } // int
-			[Column("used"),         Nullable] public int?    Used           { get; set; } // int
-			[Column("rowcnt"),       Nullable] public long?   Rowcnt         { get; set; } // bigint
-			[Column("rowmodctr"),    Nullable] public int?    Rowmodctr      { get; set; } // int
-			[Column("reserved3"),    Nullable] public byte?   Reserved3      { get; set; } // tinyint
-			[Column("reserved4"),    Nullable] public byte?   Reserved4      { get; set; } // tinyint
-			[Column("xmaxlen"),      Nullable] public short?  Xmaxlen        { get; set; } // smallint
-			[Column("maxirow"),      Nullable] public short?  Maxirow        { get; set; } // smallint
-			[Column(),               Nullable] public byte?   OrigFillFactor { get; set; } // tinyint
-			[Column(),               Nullable] public byte?   StatVersion    { get; set; } // tinyint
-			[Column("reserved2"),    Nullable] public int?    Reserved2      { get; set; } // int
-			[Column(),               Nullable] public byte[]? FirstIAM       { get; set; } // binary(6)
-			[Column("impid"),        Nullable] public short?  Impid          { get; set; } // smallint
-			[Column("lockflags"),    Nullable] public short?  Lockflags      { get; set; } // smallint
-			[Column("pgmodctr"),     Nullable] public int?    Pgmodctr       { get; set; } // int
-			[Column("keys"),         Nullable] public byte[]? Keys           { get; set; } // varbinary(1088)
-			[Column("name"),         Nullable] public string? Name           { get; set; } // sysname
-			[Column("statblob"),     Nullable] public byte[]? Statblob       { get; set; } // image(16)
-			[Column("maxlen"),       Nullable] public int?    Maxlen         { get; set; } // int
-			[Column("rows"),         Nullable] public int?    Rows           { get; set; } // int
-		}
-
-		[Table(Schema="sys", Name="sysindexkeys", IsView=true)]
-		public partial class Sysindexkeys
-		{
-			[Column("id"),    NotNull    ] public int    Id    { get; set; } // int
-			[Column("indid"),    Nullable] public short? Indid { get; set; } // smallint
-			[Column("colid"),    Nullable] public short? Colid { get; set; } // smallint
-			[Column("keyno"),    Nullable] public short? Keyno { get; set; } // smallint
-		}
-
-		[Table(Schema="sys", Name="syslanguages", IsView=true)]
-		public partial class Syslanguages
-		{
-			[Column("langid"),      NotNull    ] public short   Langid      { get; set; } // smallint
-			[Column("dateformat"),  NotNull    ] public string  Dateformat  { get; set; } = null!; // nchar(3)
-			[Column("datefirst"),   NotNull    ] public byte    Datefirst   { get; set; } // tinyint
-			[Column("upgrade"),        Nullable] public int?    Upgrade     { get; set; } // int
-			[Column("name"),        NotNull    ] public string  Name        { get; set; } = null!; // nvarchar(128)
-			[Column("alias"),       NotNull    ] public string  Alias       { get; set; } = null!; // nvarchar(128)
-			[Column("months"),         Nullable] public string? Months      { get; set; } // nvarchar(372)
-			[Column("shortmonths"),    Nullable] public string? Shortmonths { get; set; } // nvarchar(132)
-			[Column("days"),           Nullable] public string? Days        { get; set; } // nvarchar(217)
-			[Column("lcid"),        NotNull    ] public int     Lcid        { get; set; } // int
-			[Column("msglangid"),   NotNull    ] public short   Msglangid   { get; set; } // smallint
-		}
-
-		[Table(Schema="sys", Name="syslockinfo", IsView=true)]
-		public partial class Syslockinfo
-		{
-			[Column("rsc_text"),           NotNull    ] public string RscText           { get; set; } = null!; // nchar(32)
-			[Column("rsc_bin"),            NotNull    ] public byte[] RscBin            { get; set; } = null!; // binary(16)
-			[Column("rsc_valblk"),         NotNull    ] public byte[] RscValblk         { get; set; } = null!; // binary(16)
-			[Column("rsc_dbid"),           NotNull    ] public short  RscDbid           { get; set; } // smallint
-			[Column("rsc_indid"),          NotNull    ] public short  RscIndid          { get; set; } // smallint
-			[Column("rsc_objid"),          NotNull    ] public int    RscObjid          { get; set; } // int
-			[Column("rsc_type"),           NotNull    ] public byte   RscType           { get; set; } // tinyint
-			[Column("rsc_flag"),           NotNull    ] public byte   RscFlag           { get; set; } // tinyint
-			[Column("req_mode"),           NotNull    ] public byte   ReqMode           { get; set; } // tinyint
-			[Column("req_status"),         NotNull    ] public byte   ReqStatus         { get; set; } // tinyint
-			[Column("req_refcnt"),         NotNull    ] public short  ReqRefcnt         { get; set; } // smallint
-			[Column("req_cryrefcnt"),      NotNull    ] public short  ReqCryrefcnt      { get; set; } // smallint
-			[Column("req_lifetime"),       NotNull    ] public int    ReqLifetime       { get; set; } // int
-			[Column("req_spid"),           NotNull    ] public int    ReqSpid           { get; set; } // int
-			[Column("req_ecid"),           NotNull    ] public int    ReqEcid           { get; set; } // int
-			[Column("req_ownertype"),      NotNull    ] public short  ReqOwnertype      { get; set; } // smallint
-			[Column("req_transactionID"),     Nullable] public long?  ReqTransactionID  { get; set; } // bigint
-			[Column("req_transactionUOW"),    Nullable] public Guid?  ReqTransactionUOW { get; set; } // uniqueidentifier
-		}
-
-		[Table(Schema="sys", Name="syslogins", IsView=true)]
-		public partial class Syslogins
-		{
-			[Column("sid"),              Nullable] public byte[]?  Sid           { get; set; } // varbinary(85)
-			[Column("status"),           Nullable] public short?   Status        { get; set; } // smallint
-			[Column("createdate"),    NotNull    ] public DateTime Createdate    { get; set; } // datetime
-			[Column("updatedate"),    NotNull    ] public DateTime Updatedate    { get; set; } // datetime
-			[Column("accdate"),       NotNull    ] public DateTime Accdate       { get; set; } // datetime
-			[Column("totcpu"),           Nullable] public int?     Totcpu        { get; set; } // int
-			[Column("totio"),            Nullable] public int?     Totio         { get; set; } // int
-			[Column("spacelimit"),       Nullable] public int?     Spacelimit    { get; set; } // int
-			[Column("timelimit"),        Nullable] public int?     Timelimit     { get; set; } // int
-			[Column("resultlimit"),      Nullable] public int?     Resultlimit   { get; set; } // int
-			[Column("name"),          NotNull    ] public string   Name          { get; set; } = null!; // sysname
-			[Column("dbname"),           Nullable] public string?  Dbname        { get; set; } // sysname
-			[Column("password"),         Nullable] public string?  Password      { get; set; } // sysname
-			[Column("language"),         Nullable] public string?  Language      { get; set; } // sysname
-			[Column("denylogin"),        Nullable] public int?     Denylogin     { get; set; } // int
-			[Column("hasaccess"),        Nullable] public int?     Hasaccess     { get; set; } // int
-			[Column("isntname"),         Nullable] public int?     Isntname      { get; set; } // int
-			[Column("isntgroup"),        Nullable] public int?     Isntgroup     { get; set; } // int
-			[Column("isntuser"),         Nullable] public int?     Isntuser      { get; set; } // int
-			[Column("sysadmin"),         Nullable] public int?     Sysadmin      { get; set; } // int
-			[Column("securityadmin"),    Nullable] public int?     Securityadmin { get; set; } // int
-			[Column("serveradmin"),      Nullable] public int?     Serveradmin   { get; set; } // int
-			[Column("setupadmin"),       Nullable] public int?     Setupadmin    { get; set; } // int
-			[Column("processadmin"),     Nullable] public int?     Processadmin  { get; set; } // int
-			[Column("diskadmin"),        Nullable] public int?     Diskadmin     { get; set; } // int
-			[Column("dbcreator"),        Nullable] public int?     Dbcreator     { get; set; } // int
-			[Column("bulkadmin"),        Nullable] public int?     Bulkadmin     { get; set; } // int
-			[Column("loginname"),     NotNull    ] public string   Loginname     { get; set; } = null!; // sysname
-		}
-
-		[Table(Schema="sys", Name="sysmembers", IsView=true)]
-		public partial class Sysmembers
-		{
-			[Column("memberuid"), Nullable] public short? Memberuid { get; set; } // smallint
-			[Column("groupuid"),  Nullable] public short? Groupuid  { get; set; } // smallint
-		}
-
-		[Table(Schema="sys", Name="sysmessages", IsView=true)]
-		public partial class Sysmessages
-		{
-			[Column("error"),       NotNull    ] public int     Error       { get; set; } // int
-			[Column("severity"),       Nullable] public byte?   Severity    { get; set; } // tinyint
-			[Column("dlevel"),         Nullable] public short?  Dlevel      { get; set; } // smallint
-			[Column("description"),    Nullable] public string? Description { get; set; } // nvarchar(255)
-			[Column("msglangid"),   NotNull    ] public short   Msglangid   { get; set; } // smallint
-		}
-
-		[Table(Schema="sys", Name="sysobjects", IsView=true)]
-		public partial class Sysobjects
-		{
-			[Column("name"),             NotNull    ] public string   Name           { get; set; } = null!; // sysname
-			[Column("id"),               NotNull    ] public int      Id             { get; set; } // int
-			[Column("xtype"),            NotNull    ] public string   Xtype          { get; set; } = null!; // char(2)
-			[Column("uid"),                 Nullable] public short?   Uid            { get; set; } // smallint
-			[Column("info"),                Nullable] public short?   Info           { get; set; } // smallint
-			[Column("status"),              Nullable] public int?     Status         { get; set; } // int
-			[Column("base_schema_ver"),     Nullable] public int?     BaseSchemaVer  { get; set; } // int
-			[Column("replinfo"),            Nullable] public int?     Replinfo       { get; set; } // int
-			[Column("parent_obj"),       NotNull    ] public int      ParentObj      { get; set; } // int
-			[Column("crdate"),           NotNull    ] public DateTime Crdate         { get; set; } // datetime
-			[Column("ftcatid"),             Nullable] public short?   Ftcatid        { get; set; } // smallint
-			[Column("schema_ver"),          Nullable] public int?     SchemaVer      { get; set; } // int
-			[Column("stats_schema_ver"),    Nullable] public int?     StatsSchemaVer { get; set; } // int
-			[Column("type"),                Nullable] public string?  Type           { get; set; } // char(2)
-			[Column("userstat"),            Nullable] public short?   Userstat       { get; set; } // smallint
-			[Column("sysstat"),             Nullable] public short?   Sysstat        { get; set; } // smallint
-			[Column("indexdel"),            Nullable] public short?   Indexdel       { get; set; } // smallint
-			[Column("refdate"),          NotNull    ] public DateTime Refdate        { get; set; } // datetime
-			[Column("version"),             Nullable] public int?     Version        { get; set; } // int
-			[Column("deltrig"),             Nullable] public int?     Deltrig        { get; set; } // int
-			[Column("instrig"),             Nullable] public int?     Instrig        { get; set; } // int
-			[Column("updtrig"),             Nullable] public int?     Updtrig        { get; set; } // int
-			[Column("seltrig"),             Nullable] public int?     Seltrig        { get; set; } // int
-			[Column("category"),            Nullable] public int?     Category       { get; set; } // int
-			[Column("cache"),               Nullable] public short?   Cache          { get; set; } // smallint
-		}
-
-		[Table(Schema="sys", Name="sysoledbusers", IsView=true)]
-		public partial class Sysoledbusers
-		{
-			[Column("rmtsrvid"),       Nullable] public short?   Rmtsrvid    { get; set; } // smallint
-			[Column("rmtloginame"),    Nullable] public string?  Rmtloginame { get; set; } // sysname
-			[Column("rmtpassword"),    Nullable] public string?  Rmtpassword { get; set; } // sysname
-			[Column("loginsid"),       Nullable] public byte[]?  Loginsid    { get; set; } // varbinary(85)
-			[Column("status"),         Nullable] public short?   Status      { get; set; } // smallint
-			[Column("changedate"),  NotNull    ] public DateTime Changedate  { get; set; } // datetime
-		}
-
-		[Table(Schema="sys", Name="sysopentapes", IsView=true)]
-		public partial class Sysopentapes
-		{
-			[Column("openTape"), NotNull] public string OpenTape { get; set; } = null!; // nvarchar(64)
-		}
-
-		[Table(Schema="sys", Name="sysperfinfo", IsView=true)]
-		public partial class Sysperfinfo
-		{
-			[Column("object_name"),   NotNull    ] public string  ObjectName   { get; set; } = null!; // nchar(128)
-			[Column("counter_name"),  NotNull    ] public string  CounterName  { get; set; } = null!; // nchar(128)
-			[Column("instance_name"),    Nullable] public string? InstanceName { get; set; } // nchar(128)
-			[Column("cntr_value"),    NotNull    ] public long    CntrValue    { get; set; } // bigint
-			[Column("cntr_type"),     NotNull    ] public int     CntrType     { get; set; } // int
-		}
-
-		[Table(Schema="sys", Name="syspermissions", IsView=true)]
-		public partial class Syspermissions
-		{
-			[Column("id"),      NotNull    ] public int     Id      { get; set; } // int
-			[Column("grantee"),    Nullable] public short?  Grantee { get; set; } // smallint
-			[Column("grantor"),    Nullable] public short?  Grantor { get; set; } // smallint
-			[Column("actadd"),     Nullable] public short?  Actadd  { get; set; } // smallint
-			[Column("actmod"),     Nullable] public short?  Actmod  { get; set; } // smallint
-			[Column("seladd"),     Nullable] public byte[]? Seladd  { get; set; } // varbinary(4000)
-			[Column("selmod"),     Nullable] public byte[]? Selmod  { get; set; } // varbinary(4000)
-			[Column("updadd"),     Nullable] public byte[]? Updadd  { get; set; } // varbinary(4000)
-			[Column("updmod"),     Nullable] public byte[]? Updmod  { get; set; } // varbinary(4000)
-			[Column("refadd"),     Nullable] public byte[]? Refadd  { get; set; } // varbinary(4000)
-			[Column("refmod"),     Nullable] public byte[]? Refmod  { get; set; } // varbinary(4000)
-		}
-
-		[Table(Schema="sys", Name="sysprocesses", IsView=true)]
-		public partial class Sysprocesses
-		{
-			[Column("spid"),          NotNull    ] public short    Spid         { get; set; } // smallint
-			[Column("kpid"),          NotNull    ] public short    Kpid         { get; set; } // smallint
-			[Column("blocked"),       NotNull    ] public short    Blocked      { get; set; } // smallint
-			[Column("waittype"),      NotNull    ] public byte[]   Waittype     { get; set; } = null!; // binary(2)
-			[Column("waittime"),      NotNull    ] public long     Waittime     { get; set; } // bigint
-			[Column("lastwaittype"),  NotNull    ] public string   Lastwaittype { get; set; } = null!; // nchar(32)
-			[Column("waitresource"),  NotNull    ] public string   Waitresource { get; set; } = null!; // nchar(256)
-			[Column("dbid"),          NotNull    ] public short    Dbid         { get; set; } // smallint
-			[Column("uid"),              Nullable] public short?   Uid          { get; set; } // smallint
-			[Column("cpu"),           NotNull    ] public int      Cpu          { get; set; } // int
-			[Column("physical_io"),   NotNull    ] public long     PhysicalIo   { get; set; } // bigint
-			[Column("memusage"),      NotNull    ] public int      Memusage     { get; set; } // int
-			[Column("login_time"),    NotNull    ] public DateTime LoginTime    { get; set; } // datetime
-			[Column("last_batch"),    NotNull    ] public DateTime LastBatch    { get; set; } // datetime
-			[Column("ecid"),          NotNull    ] public short    Ecid         { get; set; } // smallint
-			[Column("open_tran"),     NotNull    ] public short    OpenTran     { get; set; } // smallint
-			[Column("status"),        NotNull    ] public string   Status       { get; set; } = null!; // nchar(30)
-			[Column("sid"),           NotNull    ] public byte[]   Sid          { get; set; } = null!; // binary(86)
-			[Column("hostname"),      NotNull    ] public string   Hostname     { get; set; } = null!; // nchar(128)
-			[Column("program_name"),  NotNull    ] public string   ProgramName  { get; set; } = null!; // nchar(128)
-			[Column("hostprocess"),   NotNull    ] public string   Hostprocess  { get; set; } = null!; // nchar(10)
-			[Column("cmd"),           NotNull    ] public string   Cmd          { get; set; } = null!; // nchar(26)
-			[Column("nt_domain"),     NotNull    ] public string   NtDomain     { get; set; } = null!; // nchar(128)
-			[Column("nt_username"),   NotNull    ] public string   NtUsername   { get; set; } = null!; // nchar(128)
-			[Column("net_address"),   NotNull    ] public string   NetAddress   { get; set; } = null!; // nchar(12)
-			[Column("net_library"),   NotNull    ] public string   NetLibrary   { get; set; } = null!; // nchar(12)
-			[Column("loginame"),      NotNull    ] public string   Loginame     { get; set; } = null!; // nchar(128)
-			[Column("context_info"),  NotNull    ] public byte[]   ContextInfo  { get; set; } = null!; // binary(128)
-			[Column("sql_handle"),    NotNull    ] public byte[]   SqlHandle    { get; set; } = null!; // binary(20)
-			[Column("stmt_start"),    NotNull    ] public int      StmtStart    { get; set; } // int
-			[Column("stmt_end"),      NotNull    ] public int      StmtEnd      { get; set; } // int
-			[Column("request_id"),    NotNull    ] public int      RequestID    { get; set; } // int
-			[Column("page_resource"),    Nullable] public byte[]?  PageResource { get; set; } // varbinary(8)
-		}
-
-		[Table(Schema="sys", Name="sysprotects", IsView=true)]
-		public partial class Sysprotects
-		{
-			[Column("id"),          NotNull    ] public int     Id          { get; set; } // int
-			[Column("uid"),            Nullable] public short?  Uid         { get; set; } // smallint
-			[Column("action"),         Nullable] public byte?   Action      { get; set; } // tinyint
-			[Column("protecttype"),    Nullable] public byte?   Protecttype { get; set; } // tinyint
-			[Column("columns"),        Nullable] public byte[]? Columns     { get; set; } // varbinary(8000)
-			[Column("grantor"),        Nullable] public short?  Grantor     { get; set; } // smallint
-		}
-
-		[Table(Schema="sys", Name="sysreferences", IsView=true)]
-		public partial class Sysreferences
-		{
-			[Column("constid"),   NotNull    ] public int     Constid   { get; set; } // int
-			[Column("fkeyid"),    NotNull    ] public int     Fkeyid    { get; set; } // int
-			[Column("rkeyid"),       Nullable] public int?    Rkeyid    { get; set; } // int
-			[Column("rkeyindid"),    Nullable] public short?  Rkeyindid { get; set; } // smallint
-			[Column("keycnt"),       Nullable] public short?  Keycnt    { get; set; } // smallint
-			[Column("forkeys"),      Nullable] public byte[]? Forkeys   { get; set; } // varbinary(32)
-			[Column("refkeys"),      Nullable] public byte[]? Refkeys   { get; set; } // varbinary(32)
-			[Column("fkeydbid"),     Nullable] public short?  Fkeydbid  { get; set; } // smallint
-			[Column("rkeydbid"),     Nullable] public short?  Rkeydbid  { get; set; } // smallint
-			[Column("fkey1"),        Nullable] public short?  Fkey1     { get; set; } // smallint
-			[Column("fkey2"),        Nullable] public short?  Fkey2     { get; set; } // smallint
-			[Column("fkey3"),        Nullable] public short?  Fkey3     { get; set; } // smallint
-			[Column("fkey4"),        Nullable] public short?  Fkey4     { get; set; } // smallint
-			[Column("fkey5"),        Nullable] public short?  Fkey5     { get; set; } // smallint
-			[Column("fkey6"),        Nullable] public short?  Fkey6     { get; set; } // smallint
-			[Column("fkey7"),        Nullable] public short?  Fkey7     { get; set; } // smallint
-			[Column("fkey8"),        Nullable] public short?  Fkey8     { get; set; } // smallint
-			[Column("fkey9"),        Nullable] public short?  Fkey9     { get; set; } // smallint
-			[Column("fkey10"),       Nullable] public short?  Fkey10    { get; set; } // smallint
-			[Column("fkey11"),       Nullable] public short?  Fkey11    { get; set; } // smallint
-			[Column("fkey12"),       Nullable] public short?  Fkey12    { get; set; } // smallint
-			[Column("fkey13"),       Nullable] public short?  Fkey13    { get; set; } // smallint
-			[Column("fkey14"),       Nullable] public short?  Fkey14    { get; set; } // smallint
-			[Column("fkey15"),       Nullable] public short?  Fkey15    { get; set; } // smallint
-			[Column("fkey16"),       Nullable] public short?  Fkey16    { get; set; } // smallint
-			[Column("rkey1"),        Nullable] public short?  Rkey1     { get; set; } // smallint
-			[Column("rkey2"),        Nullable] public short?  Rkey2     { get; set; } // smallint
-			[Column("rkey3"),        Nullable] public short?  Rkey3     { get; set; } // smallint
-			[Column("rkey4"),        Nullable] public short?  Rkey4     { get; set; } // smallint
-			[Column("rkey5"),        Nullable] public short?  Rkey5     { get; set; } // smallint
-			[Column("rkey6"),        Nullable] public short?  Rkey6     { get; set; } // smallint
-			[Column("rkey7"),        Nullable] public short?  Rkey7     { get; set; } // smallint
-			[Column("rkey8"),        Nullable] public short?  Rkey8     { get; set; } // smallint
-			[Column("rkey9"),        Nullable] public short?  Rkey9     { get; set; } // smallint
-			[Column("rkey10"),       Nullable] public short?  Rkey10    { get; set; } // smallint
-			[Column("rkey11"),       Nullable] public short?  Rkey11    { get; set; } // smallint
-			[Column("rkey12"),       Nullable] public short?  Rkey12    { get; set; } // smallint
-			[Column("rkey13"),       Nullable] public short?  Rkey13    { get; set; } // smallint
-			[Column("rkey14"),       Nullable] public short?  Rkey14    { get; set; } // smallint
-			[Column("rkey15"),       Nullable] public short?  Rkey15    { get; set; } // smallint
-			[Column("rkey16"),       Nullable] public short?  Rkey16    { get; set; } // smallint
-		}
-
-		[Table(Schema="sys", Name="sysremotelogins", IsView=true)]
-		public partial class Sysremotelogins
-		{
-			[Column("remoteserverid"),    Nullable] public short?   Remoteserverid { get; set; } // smallint
-			[Column("remoteusername"),    Nullable] public string?  Remoteusername { get; set; } // sysname
-			[Column("status"),            Nullable] public short?   Status         { get; set; } // smallint
-			[Column("sid"),               Nullable] public byte[]?  Sid            { get; set; } // varbinary(85)
-			[Column("changedate"),     NotNull    ] public DateTime Changedate     { get; set; } // datetime
-		}
-
-		[Table(Schema="sys", Name="sysservers", IsView=true)]
-		public partial class Sysservers
-		{
-			[Column("srvid"),                   Nullable] public short?   Srvid                { get; set; } // smallint
-			[Column("srvstatus"),               Nullable] public short?   Srvstatus            { get; set; } // smallint
-			[Column("srvname"),              NotNull    ] public string   Srvname              { get; set; } = null!; // sysname
-			[Column("srvproduct"),           NotNull    ] public string   Srvproduct           { get; set; } = null!; // sysname
-			[Column("providername"),         NotNull    ] public string   Providername         { get; set; } = null!; // nvarchar(128)
-			[Column("datasource"),              Nullable] public string?  Datasource           { get; set; } // nvarchar(4000)
-			[Column("location"),                Nullable] public string?  Location             { get; set; } // nvarchar(4000)
-			[Column("providerstring"),          Nullable] public string?  Providerstring       { get; set; } // nvarchar(4000)
-			[Column("schemadate"),           NotNull    ] public DateTime Schemadate           { get; set; } // datetime
-			[Column("topologyx"),               Nullable] public int?     Topologyx            { get; set; } // int
-			[Column("topologyy"),               Nullable] public int?     Topologyy            { get; set; } // int
-			[Column("catalog"),                 Nullable] public string?  Catalog              { get; set; } // sysname
-			[Column("srvcollation"),            Nullable] public string?  Srvcollation         { get; set; } // sysname
-			[Column("connecttimeout"),          Nullable] public int?     Connecttimeout       { get; set; } // int
-			[Column("querytimeout"),            Nullable] public int?     Querytimeout         { get; set; } // int
-			[Column("srvnetname"),              Nullable] public string?  Srvnetname           { get; set; } // char(30)
-			[Column("isremote"),                Nullable] public bool?    Isremote             { get; set; } // bit
-			[Column("rpc"),                  NotNull    ] public bool     Rpc                  { get; set; } // bit
-			[Column("pub"),                  NotNull    ] public bool     Pub                  { get; set; } // bit
-			[Column("sub"),                     Nullable] public bool?    Sub                  { get; set; } // bit
-			[Column("dist"),                    Nullable] public bool?    Dist                 { get; set; } // bit
-			[Column("dpub"),                    Nullable] public bool?    Dpub                 { get; set; } // bit
-			[Column("rpcout"),               NotNull    ] public bool     Rpcout               { get; set; } // bit
-			[Column("dataaccess"),           NotNull    ] public bool     Dataaccess           { get; set; } // bit
-			[Column("collationcompatible"),  NotNull    ] public bool     Collationcompatible  { get; set; } // bit
-			[Column("system"),               NotNull    ] public bool     System               { get; set; } // bit
-			[Column("useremotecollation"),   NotNull    ] public bool     Useremotecollation   { get; set; } // bit
-			[Column("lazyschemavalidation"), NotNull    ] public bool     Lazyschemavalidation { get; set; } // bit
-			[Column("collation"),               Nullable] public string?  Collation            { get; set; } // sysname
-			[Column("nonsqlsub"),               Nullable] public bool?    Nonsqlsub            { get; set; } // bit
-		}
-
 		[Table(Schema="sys", Name="system_columns", IsView=true)]
 		public partial class SystemColumns
 		{
@@ -10562,56 +10560,6 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			public SystemSchema.SystemObjects SystemObject { get; set; } = null!;
 
 			#endregion
-		}
-
-		[Table(Schema="sys", Name="systypes", IsView=true)]
-		public partial class Systypes
-		{
-			[Column("name"),        NotNull    ] public string  Name        { get; set; } = null!; // sysname
-			[Column("xtype"),       NotNull    ] public byte    Xtype       { get; set; } // tinyint
-			[Column("status"),         Nullable] public byte?   Status      { get; set; } // tinyint
-			[Column("xusertype"),      Nullable] public short?  Xusertype   { get; set; } // smallint
-			[Column("length"),      NotNull    ] public short   Length      { get; set; } // smallint
-			[Column("xprec"),       NotNull    ] public byte    Xprec       { get; set; } // tinyint
-			[Column("xscale"),      NotNull    ] public byte    Xscale      { get; set; } // tinyint
-			[Column("tdefault"),    NotNull    ] public int     Tdefault    { get; set; } // int
-			[Column("domain"),      NotNull    ] public int     Domain      { get; set; } // int
-			[Column("uid"),            Nullable] public short?  Uid         { get; set; } // smallint
-			[Column("reserved"),       Nullable] public short?  Reserved    { get; set; } // smallint
-			[Column("collationid"),    Nullable] public int?    Collationid { get; set; } // int
-			[Column("usertype"),       Nullable] public short?  Usertype    { get; set; } // smallint
-			[Column("variable"),    NotNull    ] public bool    Variable    { get; set; } // bit
-			[Column("allownulls"),     Nullable] public bool?   Allownulls  { get; set; } // bit
-			[Column("type"),        NotNull    ] public byte    Type        { get; set; } // tinyint
-			[Column("printfmt"),       Nullable] public string? Printfmt    { get; set; } // varchar(255)
-			[Column("prec"),           Nullable] public short?  Prec        { get; set; } // smallint
-			[Column("scale"),          Nullable] public byte?   Scale       { get; set; } // tinyint
-			[Column("collation"),      Nullable] public string? Collation   { get; set; } // sysname
-		}
-
-		[Table(Schema="sys", Name="sysusers", IsView=true)]
-		public partial class Sysusers
-		{
-			[Column("uid"),            Nullable] public short?   Uid         { get; set; } // smallint
-			[Column("status"),         Nullable] public short?   Status      { get; set; } // smallint
-			[Column("name"),        NotNull    ] public string   Name        { get; set; } = null!; // sysname
-			[Column("sid"),            Nullable] public byte[]?  Sid         { get; set; } // varbinary(85)
-			[Column("roles"),          Nullable] public byte[]?  Roles       { get; set; } // varbinary(2048)
-			[Column("createdate"),  NotNull    ] public DateTime Createdate  { get; set; } // datetime
-			[Column("updatedate"),  NotNull    ] public DateTime Updatedate  { get; set; } // datetime
-			[Column("altuid"),         Nullable] public short?   Altuid      { get; set; } // smallint
-			[Column("password"),       Nullable] public byte[]?  Password    { get; set; } // varbinary(256)
-			[Column("gid"),            Nullable] public short?   Gid         { get; set; } // smallint
-			[Column("environ"),        Nullable] public string?  Environ     { get; set; } // varchar(255)
-			[Column("hasdbaccess"),    Nullable] public int?     Hasdbaccess { get; set; } // int
-			[Column("islogin"),        Nullable] public int?     Islogin     { get; set; } // int
-			[Column("isntname"),       Nullable] public int?     Isntname    { get; set; } // int
-			[Column("isntgroup"),      Nullable] public int?     Isntgroup   { get; set; } // int
-			[Column("isntuser"),       Nullable] public int?     Isntuser    { get; set; } // int
-			[Column("issqluser"),      Nullable] public int?     Issqluser   { get; set; } // int
-			[Column("isaliased"),      Nullable] public int?     Isaliased   { get; set; } // int
-			[Column("issqlrole"),      Nullable] public int?     Issqlrole   { get; set; } // int
-			[Column("isapprole"),      Nullable] public int?     Isapprole   { get; set; } // int
 		}
 
 		[Table(Schema="sys", Name="tables", IsView=true)]
@@ -10954,6 +10902,106 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// objects
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="objects", BackReferenceName="View")]
+			public SystemSchema.Objects Object { get; set; } = null!;
+
+			#endregion
+		}
+	}
+
+	public static partial class XmlSchema
+	{
+		public partial class DataContext
+		{
+			public ITable<ColumnXmlSchemaCollectionUsages>    ColumnXmlSchemaCollectionUsages    { get { return _dataContext.GetTable<ColumnXmlSchemaCollectionUsages>(); } }
+			public ITable<ParameterXmlSchemaCollectionUsages> ParameterXmlSchemaCollectionUsages { get { return _dataContext.GetTable<ParameterXmlSchemaCollectionUsages>(); } }
+			public ITable<SelectiveXmlIndexPaths>             SelectiveXmlIndexPaths             { get { return _dataContext.GetTable<SelectiveXmlIndexPaths>(); } }
+			public ITable<XmlIndexes>                         XmlIndexes                         { get { return _dataContext.GetTable<XmlIndexes>(); } }
+			public ITable<XmlSchemaAttributes>                XmlSchemaAttributes                { get { return _dataContext.GetTable<XmlSchemaAttributes>(); } }
+			public ITable<XmlSchemaCollections>               XmlSchemaCollections               { get { return _dataContext.GetTable<XmlSchemaCollections>(); } }
+			public ITable<XmlSchemaComponentPlacements>       XmlSchemaComponentPlacements       { get { return _dataContext.GetTable<XmlSchemaComponentPlacements>(); } }
+			public ITable<XmlSchemaComponents>                XmlSchemaComponents                { get { return _dataContext.GetTable<XmlSchemaComponents>(); } }
+			public ITable<XmlSchemaElements>                  XmlSchemaElements                  { get { return _dataContext.GetTable<XmlSchemaElements>(); } }
+			public ITable<XmlSchemaFacets>                    XmlSchemaFacets                    { get { return _dataContext.GetTable<XmlSchemaFacets>(); } }
+			public ITable<XmlSchemaModelGroups>               XmlSchemaModelGroups               { get { return _dataContext.GetTable<XmlSchemaModelGroups>(); } }
+			public ITable<XmlSchemaNamespaces>                XmlSchemaNamespaces                { get { return _dataContext.GetTable<XmlSchemaNamespaces>(); } }
+			public ITable<XmlSchemaTypes>                     XmlSchemaTypes                     { get { return _dataContext.GetTable<XmlSchemaTypes>(); } }
+			public ITable<XmlSchemaWildcardNamespaces>        XmlSchemaWildcardNamespaces        { get { return _dataContext.GetTable<XmlSchemaWildcardNamespaces>(); } }
+			public ITable<XmlSchemaWildcards>                 XmlSchemaWildcards                 { get { return _dataContext.GetTable<XmlSchemaWildcards>(); } }
+
+			private readonly IDataContext _dataContext;
+
+			public DataContext(IDataContext dataContext)
+			{
+				_dataContext = dataContext;
+			}
+		}
+
+		[Table(Schema="sys", Name="column_xml_schema_collection_usages", IsView=true)]
+		public partial class ColumnXmlSchemaCollectionUsages
+		{
+			[Column("object_id"),         NotNull] public int ObjectID        { get; set; } // int
+			[Column("column_id"),         NotNull] public int ColumnID        { get; set; } // int
+			[Column("xml_collection_id"), NotNull] public int XmlCollectionID { get; set; } // int
+
+			#region Associations
+
+			/// <summary>
+			/// objects
+			/// </summary>
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ColumnXmlSchemaCollectionUsages")]
+			public SystemSchema.Objects Object { get; set; } = null!;
+
+			#endregion
+		}
+
+		[Table(Schema="sys", Name="parameter_xml_schema_collection_usages", IsView=true)]
+		public partial class ParameterXmlSchemaCollectionUsages
+		{
+			[Column("object_id"),         NotNull] public int ObjectID        { get; set; } // int
+			[Column("parameter_id"),      NotNull] public int ParameterID     { get; set; } // int
+			[Column("xml_collection_id"), NotNull] public int XmlCollectionID { get; set; } // int
+
+			#region Associations
+
+			/// <summary>
+			/// objects
+			/// </summary>
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ParameterXmlSchemaCollectionUsages")]
+			public SystemSchema.Objects Object { get; set; } = null!;
+
+			#endregion
+		}
+
+		[Table(Schema="sys", Name="selective_xml_index_paths", IsView=true)]
+		public partial class SelectiveXmlIndexPaths
+		{
+			[Column("object_id"),                     NotNull    ] public int     ObjectID                  { get; set; } // int
+			[Column("index_id"),                      NotNull    ] public int     IndexID                   { get; set; } // int
+			[Column("path_id"),                          Nullable] public int?    PathID                    { get; set; } // int
+			[Column("path"),                             Nullable] public string? Path                      { get; set; } // nvarchar(4000)
+			[Column("name"),                             Nullable] public string? Name                      { get; set; } // nvarchar(128)
+			[Column("path_type"),                        Nullable] public byte?   PathType                  { get; set; } // tinyint
+			[Column("path_type_desc"),                   Nullable] public string? PathTypeDesc              { get; set; } // nvarchar(128)
+			[Column("xml_component_id"),                 Nullable] public int?    XmlComponentID            { get; set; } // int
+			[Column("xquery_type_description"),          Nullable] public string? XqueryTypeDescription     { get; set; } // nvarchar(4000)
+			[Column("is_xquery_type_inferred"),          Nullable] public bool?   IsXqueryTypeInferred      { get; set; } // bit
+			[Column("xquery_max_length"),                Nullable] public int?    XqueryMaxLength           { get; set; } // int
+			[Column("is_xquery_max_length_inferred"),    Nullable] public bool?   IsXqueryMaxLengthInferred { get; set; } // bit
+			[Column("is_node"),                          Nullable] public bool?   IsNode                    { get; set; } // bit
+			[Column("system_type_id"),                   Nullable] public byte?   SystemTypeID              { get; set; } // tinyint
+			[Column("user_type_id"),                     Nullable] public byte?   UserTypeID                { get; set; } // tinyint
+			[Column("max_length"),                       Nullable] public short?  MaxLength                 { get; set; } // smallint
+			[Column("precision"),                        Nullable] public byte?   Precision                 { get; set; } // tinyint
+			[Column("scale"),                            Nullable] public byte?   Scale                     { get; set; } // tinyint
+			[Column("collation_name"),                   Nullable] public string? CollationName             { get; set; } // sysname
+			[Column("is_singleton"),                     Nullable] public bool?   IsSingleton               { get; set; } // bit
+
+			#region Associations
+
+			/// <summary>
+			/// objects
+			/// </summary>
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="SelectiveXmlIndexPaths")]
 			public SystemSchema.Objects Object { get; set; } = null!;
 
 			#endregion
