@@ -1,42 +1,41 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
-    <LangVersion>Latest</LangVersion>
-    <OutputType>Exe</OutputType>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net472</TargetFramework>
+		<LangVersion>Latest</LangVersion>
+		<OutputType>Exe</OutputType>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.Wcf\LinqToDB.Remote.Wcf.csproj" />
-    <ProjectReference Include="..\..\..\..\Source\LinqToDB\LinqToDB.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.Wcf\LinqToDB.Remote.Wcf.csproj" />
+		<ProjectReference Include="..\..\..\..\Source\LinqToDB\LinqToDB.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <!-- здесь выглядит плохо - для т4 подключил пакет "старой" версии; надо наверное как-то подключить по файловой системе, не придумал как -->
-    <PackageReference Include="linq2db.t4models" Version="3.6.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Include="../../../../Source/LinqToDB.Templates/*.ttinclude" LinkBase="Templates" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Content Include="Northwind.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Northwind.generated.cs</LastGenOutput>
-    </Content>
-  </ItemGroup>
+	<ItemGroup>
+		<Content Include="Northwind.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Northwind.generated.cs</LastGenOutput>
+		</Content>
+	</ItemGroup>
 
-  <ItemGroup>
-    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
-  </ItemGroup>
+	<ItemGroup>
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="System.ServiceModel" />
-  </ItemGroup>
+	<ItemGroup>
+		<Reference Include="System.ServiceModel" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Compile Update="Northwind.generated.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Northwind.tt</DependentUpon>
-    </Compile>
-  </ItemGroup>
+	<ItemGroup>
+		<Compile Update="Northwind.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Northwind.tt</DependentUpon>
+		</Compile>
+	</ItemGroup>
 
 </Project>
