@@ -286,7 +286,7 @@ namespace Tests.Linq
 		{
 			using (var db = new NorthwindDB(context))
 			{
-				var q = 
+				var q =
 					from t in db.Product
 					from c in db.FreeTextTable<Northwind.Category, int>(db.Category, c => c.Description, "sweetest candy bread and dry meat").Where(f => f.Key == t.CategoryID).DefaultIfEmpty()
 					orderby t.ProductName descending
@@ -301,7 +301,7 @@ namespace Tests.Linq
 		{
 			using (var db = new NorthwindDB(context))
 			{
-				var q 
+				var q
 					= from t in db.Product
 					from c in db.FreeTextTable<Northwind.Category, int>(db.Category, c => c.Description, "sweetest candy bread and dry meat").Where(f => f.Key == t.CategoryID).DefaultIfEmpty()
 					orderby t.ProductName descending
