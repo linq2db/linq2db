@@ -190,7 +190,6 @@ namespace LinqToDB.SqlProvider
 				^ DefaultMultiQueryIsolationLevel              .GetHashCode()
 				^ AcceptsOuterExpressionInAggregate            .GetHashCode()
 				^ IsNamingQueryBlockSupported                  .GetHashCode()
-				^ IsNamingQueryBlockSupported                  .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -227,6 +226,7 @@ namespace LinqToDB.SqlProvider
 				&& IsCountDistinctSupported             == other.IsCountDistinctSupported
 				&& IsUpdateFromSupported                == other.IsUpdateFromSupported
 				&& DefaultMultiQueryIsolationLevel      == other.DefaultMultiQueryIsolationLevel
+				&& AcceptsOuterExpressionInAggregate    == other.AcceptsOuterExpressionInAggregate
 				&& IsNamingQueryBlockSupported          == other.IsNamingQueryBlockSupported
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                    == other.CustomFlags.Count

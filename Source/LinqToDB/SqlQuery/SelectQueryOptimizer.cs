@@ -1249,9 +1249,6 @@ namespace LinqToDB.SqlQuery
 			if (uniqueKeys != null)
 				result.UniqueKeys.AddRange(uniqueKeys);
 
-//			if (query.SqlQueryExtensions != null)
-//				result.sql
-
 			return result;
 		}
 

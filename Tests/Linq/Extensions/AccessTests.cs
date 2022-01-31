@@ -12,7 +12,7 @@ namespace Tests.Extensions
 	public class AccessTests : TestBase
 	{
 		[Test]
-		public void QueryHintTest([IncludeDataSources(TestProvName.AllAccess)] string context)
+		public void QueryHintTest([IncludeDataSources(true, TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -29,7 +29,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void WithOwnerAccessOptionTest([IncludeDataSources(TestProvName.AllAccess)] string context)
+		public void WithOwnerAccessOptionTest([IncludeDataSources(true, TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 

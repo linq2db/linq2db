@@ -21,7 +21,7 @@ namespace Tests.Extensions
 	public class DocExampleTests : TestBase
 	{
 		[Test]
-		public void AccessTest([IncludeDataSources(TestProvName.AllAccess)] string context)
+		public void AccessTest([IncludeDataSources(true, TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -221,6 +221,3 @@ namespace Tests.Extensions
 		}
 	}
 }
-
-/*
- */
