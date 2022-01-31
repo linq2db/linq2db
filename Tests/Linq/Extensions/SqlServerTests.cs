@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data.SqlClient;
 using System.Linq;
 
 using LinqToDB;
@@ -687,9 +686,8 @@ namespace Tests.Extensions
 			{
 				_ = q.ToList();
 			}
-			catch (SqlException ex) when (ex.Number == 8622)
-			{
-			}
+			catch (System.Data.SqlClient.SqlException    ex) when (ex.Number == 8622) {}
+			catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 8622) {}
 
 			Assert.That(LastQuery, Contains.Substring("WITH (ForceSeek)"));
 		}
@@ -710,9 +708,8 @@ namespace Tests.Extensions
 			{
 				_ = q.ToList();
 			}
-			catch (SqlException ex) when (ex.Number == 8622)
-			{
-			}
+			catch (System.Data.SqlClient.SqlException    ex) when (ex.Number == 8622) {}
+			catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 8622) {}
 
 			Assert.That(LastQuery, Contains.Substring("WITH (ForceSeek, Index(IX_ChildIndex))"));
 		}
@@ -732,9 +729,8 @@ namespace Tests.Extensions
 			{
 				_ = q.ToList();
 			}
-			catch (SqlException ex) when (ex.Number == 8622)
-			{
-			}
+			catch (System.Data.SqlClient.SqlException    ex) when (ex.Number == 8622) {}
+			catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 8622) {}
 
 			Assert.That(LastQuery, Contains.Substring("WITH (ForceSeek, Index(IX_ChildIndex))"));
 		}
@@ -754,9 +750,8 @@ namespace Tests.Extensions
 			{
 				_ = q.ToList();
 			}
-			catch (SqlException ex) when (ex.Number == 8622)
-			{
-			}
+			catch (System.Data.SqlClient.SqlException    ex) when (ex.Number == 8622) {}
+			catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 8622) {}
 
 			Assert.That(LastQuery, Contains.Substring("WITH (ForceSeek(IX_ChildIndex([ParentID])))"));
 		}
