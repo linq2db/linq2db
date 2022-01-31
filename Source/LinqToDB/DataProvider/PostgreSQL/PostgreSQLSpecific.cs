@@ -35,21 +35,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 	public static partial class PostgreSQLTools
 	{
-		/*
-		[LinqTunnel, Pure]
-		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
-		public static IPostgreSQLSpecificTable<TSource> AsPostgreSQL<TSource>(this ITable<TSource> table)
-			where TSource : notnull
-		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(AsPostgreSQL, table),
-				table.Expression);
-
-			return new PostgreSQLSpecificTable<TSource>(table);
-		}
-		*/
-
 		[LinqTunnel, Pure]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static IPostgreSQLSpecificQueryable<TSource> AsPostgreSQL<TSource>(this IQueryable<TSource> source)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.SqlClient;
 using System.Linq;
 
 using LinqToDB;
@@ -671,7 +672,7 @@ namespace Tests.Extensions
 			Assert.That(LastQuery, Contains.Substring("WITH (Index(IX_ChildIndex, IX_ChildIndex))"));
 		}
 
-		[Test, Explicit]
+		[Test]
 		public void WithForceSeekTest([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -682,13 +683,42 @@ namespace Tests.Extensions
 					.WithForceSeek()
 				select p;
 
-			_ = q.ToList();
+			try
+			{
+				_ = q.ToList();
+			}
+			catch (SqlException ex) when (ex.Number == 8622)
+			{
+			}
 
 			Assert.That(LastQuery, Contains.Substring("WITH (ForceSeek)"));
 		}
 
-		[Test, Explicit]
+		[Test]
 		public void WithForceSeekTest2([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Child
+					.AsSqlServer()
+					.WithForceSeek()
+					.WithIndex("IX_ChildIndex")
+				select p;
+
+			try
+			{
+				_ = q.ToList();
+			}
+			catch (SqlException ex) when (ex.Number == 8622)
+			{
+			}
+
+			Assert.That(LastQuery, Contains.Substring("WITH (ForceSeek, Index(IX_ChildIndex))"));
+		}
+
+		[Test]
+		public void WithForceSeekTest3([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -698,25 +728,37 @@ namespace Tests.Extensions
 					.WithForceSeek("IX_ChildIndex")
 				select p;
 
-			_ = q.ToList();
+			try
+			{
+				_ = q.ToList();
+			}
+			catch (SqlException ex) when (ex.Number == 8622)
+			{
+			}
 
-			Assert.That(LastQuery, Contains.Substring("WITH (ForceSeek(IX_ChildIndex))"));
+			Assert.That(LastQuery, Contains.Substring("WITH (ForceSeek, Index(IX_ChildIndex))"));
 		}
 
-		[Test, Explicit]
-		public void WithForceSeekTest3([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		[Test]
+		public void WithForceSeekTest4([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
 			var q =
 				from p in db.Child
 					.AsSqlServer()
-					.WithForceSeek()
+					.WithForceSeek("IX_ChildIndex", c => c.ParentID)
 				select p;
 
-			_ = q.ToList();
+			try
+			{
+				_ = q.ToList();
+			}
+			catch (SqlException ex) when (ex.Number == 8622)
+			{
+			}
 
-			Assert.That(LastQuery, Contains.Substring("WITH (ForceSeek)"));
+			Assert.That(LastQuery, Contains.Substring("WITH (ForceSeek(IX_ChildIndex([ParentID])))"));
 		}
 
 		[Test]

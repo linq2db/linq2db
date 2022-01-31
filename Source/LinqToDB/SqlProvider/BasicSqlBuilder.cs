@@ -2895,6 +2895,11 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.Append(')');
 		}
 
+		void ISqlBuilder.BuildExpression(StringBuilder sb, ISqlExpression expr, bool buildTableName)
+		{
+			WithStringBuilder(sb, () => BuildExpression(expr, buildTableName, true));
+		}
+
 		#endregion
 
 		#region BuildValue

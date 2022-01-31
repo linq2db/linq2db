@@ -189,7 +189,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 					for (var i = 0; i < count; i++)
 					{
-						sqlBuilder.BuildExpression(sqlQueryExtension.Arguments[$"columns.{i}"], false, false, false);
+						sqlBuilder.BuildExpression(sqlBuilder.StringBuilder, sqlQueryExtension.Arguments[$"columns.{i}"], false);
 						stringBuilder.Append(", ");
 					}
 
@@ -743,7 +743,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Query source with join hints.</returns>
 		[LinqTunnel, Pure]
 		[Sql.QueryExtension(ProviderName.SqlServer2019, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
-		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
+		[Sql.QueryExtension(null,                       Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificQueryable<TSource> QueryHint2019Plus<TSource>(this ISqlServerSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
