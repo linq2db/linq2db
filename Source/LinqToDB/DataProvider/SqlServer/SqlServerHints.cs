@@ -122,18 +122,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				return string.Format(CultureInfo.InvariantCulture, "QUERYTRACEON {0}", value);
 			}
-
-			[Sql.Expression("USE HINT ({0})")]
-			public static string UseHint(string value)
-			{
-				return string.Format(CultureInfo.InvariantCulture, "USE HINT ({0})", value);
-			}
-
-			[Sql.Expression("USE PLAN N'{0}'")]
-			public static string UsePlan(string value)
-			{
-				return $"USE PLAN N'{value}'";
-			}
 		}
 
 		#region SqlServerSpecific Hints
@@ -336,19 +324,6 @@ namespace LinqToDB.DataProvider.SqlServer
 					currentSource.Expression,
 					Expression.Constant(tableID),
 					Expression.NewArrayInit(typeof(string), values.Select(Expression.Constant)))));
-		}
-
-		[ExpressionMethod(nameof(OptionUsePlanImpl))]
-		public static ISqlServerSpecificQueryable<TSource> OptionUsePlan<TSource>(this ISqlServerSpecificQueryable<TSource> query, string xmlPlan)
-			where TSource : notnull
-		{
-			return query.QueryHint(Query.UsePlan(xmlPlan));
-		}
-
-		static Expression<Func<ISqlServerSpecificQueryable<TSource>,string,ISqlServerSpecificQueryable<TSource>>> OptionUsePlanImpl<TSource>()
-			where TSource : notnull
-		{
-			return (query, xmlPlan) => query.QueryHint(Query.UsePlan(xmlPlan));
 		}
 
 		#endregion
