@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Data;
 
-#nullable disable
-
 namespace LinqToDB.Remote
 {
 	using System.Collections;
@@ -25,7 +23,7 @@ namespace LinqToDB.Remote
 		readonly LinqServiceResult      _result;
 		readonly Dictionary<string,int> _ordinal = new ();
 
-		string[] _data;
+		string?[]? _data;
 		int        _current = -1;
 
 		#region DbDataRecord
@@ -50,7 +48,9 @@ namespace LinqToDB.Remote
 		public override long     GetInt64   (int ordinal) => (long    )GetValue(ordinal)!;
 		public override string   GetString  (int ordinal) => (string  )GetValue(ordinal)!;
 
-		public override object GetValue(int ordinal)
+		public override object GetValue(int ordinal) => GetValueInternal(ordinal) ?? throw new InvalidOperationException("Value is NULL");
+
+		private object? GetValueInternal(int ordinal)
 		{
 			var type = _result.FieldTypes[ordinal];
 			var value = _data![ordinal];
@@ -83,8 +83,8 @@ namespace LinqToDB.Remote
 			return false;
 		}
 
-		public override long        GetBytes      (int ordinal, long dataOffset, byte[] buffer, int bufferOffset, int length) => throw new NotImplementedException();
-		public override long        GetChars      (int ordinal, long dataOffset, char[] buffer, int bufferOffset, int length) => throw new NotImplementedException();
+		public override long        GetBytes      (int ordinal, long dataOffset, byte[]? buffer, int bufferOffset, int length) => throw new NotImplementedException();
+		public override long        GetChars      (int ordinal, long dataOffset, char[]? buffer, int bufferOffset, int length) => throw new NotImplementedException();
 		public override int         GetValues     (object[] values) => throw new NotImplementedException();
 		public override IEnumerator GetEnumerator () => throw new NotImplementedException();
 		public override DataTable   GetSchemaTable() => throw new NotImplementedException();

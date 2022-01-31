@@ -546,11 +546,11 @@ namespace LinqToDB.Remote
 				{
 					var elem = type.GetElementType()!;
 
-					Func<DeserializerBase,object?> deserializer;
+					Func<DeserializerBase,object?>? deserializer;
 
 					lock (_arrayDeserializers)
 					{
-						if (!_arrayDeserializers.TryGetValue(elem, out deserializer!))
+						if (!_arrayDeserializers.TryGetValue(elem, out deserializer))
 						{
 							var helper = (IDeserializerHelper)Activator.CreateInstance(typeof(DeserializerHelper<>).MakeGenericType(elem))!;
 							_arrayDeserializers.Add(elem, deserializer = helper.GetArray);
@@ -2525,11 +2525,11 @@ namespace LinqToDB.Remote
 
 		static Type GetArrayType(Type elementType)
 		{
-			Type arrayType;
+			Type? arrayType;
 
 			lock (_arrayTypes)
 			{
-				if (!_arrayTypes.TryGetValue(elementType, out arrayType!))
+				if (!_arrayTypes.TryGetValue(elementType, out arrayType))
 				{
 					var helper = (IArrayHelper)Activator.CreateInstance(typeof(ArrayHelper<>).MakeGenericType(elementType))!;
 					_arrayTypes.Add(elementType, arrayType = helper.GetArrayType());
@@ -2541,11 +2541,11 @@ namespace LinqToDB.Remote
 
 		static object ConvertIEnumerableToArray(object list, Type elementType)
 		{
-			Func<object,object> converter;
+			Func<object,object>? converter;
 
 			lock (_arrayConverters)
 			{
-				if (!_arrayConverters.TryGetValue(elementType, out converter!))
+				if (!_arrayConverters.TryGetValue(elementType, out converter))
 				{
 					var helper = (IArrayHelper)Activator.CreateInstance(typeof(ArrayHelper<>).MakeGenericType(elementType))!;
 					_arrayConverters.Add(elementType, converter = helper.ConvertToArray);
