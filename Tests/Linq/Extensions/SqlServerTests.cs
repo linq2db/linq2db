@@ -807,24 +807,6 @@ namespace Tests.Extensions
 			Assert.That(LastQuery, Contains.Substring("OPTION (USE HINT('ASSUME_JOIN_PREDICATE_DEPENDS_ON_FILTERS'))"));
 		}
 
-		[Test, Explicit]
-		public void OptionUsePlanTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				(
-					from c in db.Child.TableID("pp")
-					join p in db.Parent on c.ParentID equals p.ParentID
-					select p
-				)
-				.AsSqlServer()
-				.OptionUsePlan("<xml/>");
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring("OPTION (TABLE HINT(c_1, NoLock))"));
-		}
 
 		[Test]
 		public void OptionUseTableTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
