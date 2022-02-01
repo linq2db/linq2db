@@ -27,6 +27,8 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 
 		#region Schemas
 
+		public AvailabilityGroupSchema.DataContext AvailabilityGroup { get; set; } = null!;
+		public ChangeTrackingSchema.DataContext    ChangeTracking    { get; set; } = null!;
 		public CompatibilitySchema.DataContext     Compatibility     { get; set; } = null!;
 		public DynamicManagementSchema.DataContext DynamicManagement { get; set; } = null!;
 		public InformationSchema.DataContext       Information       { get; set; } = null!;
@@ -35,6 +37,8 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 
 		public void InitSchemas()
 		{
+			AvailabilityGroup = new AvailabilityGroupSchema.DataContext(this);
+			ChangeTracking    = new ChangeTrackingSchema.   DataContext(this);
 			Compatibility     = new CompatibilitySchema.    DataContext(this);
 			DynamicManagement = new DynamicManagementSchema.DataContext(this);
 			Information       = new InformationSchema.      DataContext(this);
@@ -77,6 +81,485 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
+	}
+
+	public static partial class AvailabilityGroupSchema
+	{
+		public partial class DataContext
+		{
+			/// <summary>
+			/// Contains one row for each availability database on the instance of SQL Server that is hosting an availability replica for any Always On availability group in the Windows Server Failover Clustering (WSFC) cluster, regardless of whether the local copy database has been joined to the availability group yet.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-availability-databases-cluster-transact-sql?view=sql-server-ver15'>sys.availability_databases_cluster</a>.
+			/// </summary>
+			public ITable<AvailabilityDatabasesCluster>         AvailabilityDatabasesCluster         { get { return _dataContext.GetTable<AvailabilityDatabasesCluster>(); } }
+			/// <summary>
+			/// Returns a row for every IP address that is associated with any Always On availability group listener in the Windows Server Failover Clustering (WSFC) cluster.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-availability-group-listener-ip-addresses-transact-sql?view=sql-server-ver15'>sys.availability_group_listener_ip_addresses</a>.
+			/// </summary>
+			public ITable<AvailabilityGroupListenerIpAddresses> AvailabilityGroupListenerIpAddresses { get { return _dataContext.GetTable<AvailabilityGroupListenerIpAddresses>(); } }
+			/// <summary>
+			/// For each Always On availability group, returns either zero rows indicating that no network name is associated with the availability group, or returns a row for each availability-group listener configuration in the Windows Server Failover Clustering (WSFC) cluster. This view displays the real-time configuration gathered from cluster.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-availability-group-listeners-transact-sql?view=sql-server-ver15'>sys.availability_group_listeners</a>.
+			/// </summary>
+			public ITable<AvailabilityGroupListeners>           AvailabilityGroupListeners           { get { return _dataContext.GetTable<AvailabilityGroupListeners>(); } }
+			/// <summary>
+			/// Returns a row for each availability group for which the local instance of SQL Server hosts an availability replica. Each row contains a cached copy of the availability group metadata.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-availability-groups-transact-sql?view=sql-server-ver15'>sys.availability_groups</a>.
+			/// </summary>
+			public ITable<AvailabilityGroups>                   AvailabilityGroups                   { get { return _dataContext.GetTable<AvailabilityGroups>(); } }
+			/// <summary>
+			/// Returns a row for each Always On availability group in the Windows Server Failover Clustering (WSFC) . Each row contains the availability group metadata from the WSFC cluster.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-availability-groups-cluster-transact-sql?view=sql-server-ver15'>sys.availability_groups_cluster</a>.
+			/// </summary>
+			public ITable<AvailabilityGroupsCluster>            AvailabilityGroupsCluster            { get { return _dataContext.GetTable<AvailabilityGroupsCluster>(); } }
+			/// <summary>
+			/// Returns a row for the read only routing list of each availability replica in an Always On availability group in the WSFC failover cluster.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-availability-read-only-routing-lists-transact-sql?view=sql-server-ver15'>sys.availability_read_only_routing_lists</a>.
+			/// </summary>
+			public ITable<AvailabilityReadOnlyRoutingLists>     AvailabilityReadOnlyRoutingLists     { get { return _dataContext.GetTable<AvailabilityReadOnlyRoutingLists>(); } }
+			/// <summary>
+			/// Returns a row for each of the availability replicas that belong to any Always On availability group in the WSFC failover cluster.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-availability-replicas-transact-sql?view=sql-server-ver15'>sys.availability_replicas</a>.
+			/// </summary>
+			public ITable<AvailabilityReplicas>                 AvailabilityReplicas                 { get { return _dataContext.GetTable<AvailabilityReplicas>(); } }
+
+			private readonly IDataContext _dataContext;
+
+			public DataContext(IDataContext dataContext)
+			{
+				_dataContext = dataContext;
+			}
+		}
+
+		/// <summary>
+		/// Contains one row for each availability database on the instance of SQL Server that is hosting an availability replica for any Always On availability group in the Windows Server Failover Clustering (WSFC) cluster, regardless of whether the local copy database has been joined to the availability group yet.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-availability-databases-cluster-transact-sql?view=sql-server-ver15'>sys.availability_databases_cluster</a>.
+		/// </summary>
+		[Table(Schema="sys", Name="availability_databases_cluster", IsView=true)]
+		public partial class AvailabilityDatabasesCluster
+		{
+			/// <summary>
+			/// Unique identifier of the availability group in which the availability group, if any, in which the database is participating.<br/> NULL = database is not part of an availability replica of in availability group.
+			/// </summary>
+			[Column("group_id"),          NotNull    ] public Guid     GroupID         { get; set; } // uniqueidentifier
+			/// <summary>
+			/// Unique identifier of the database within the availability group, if any, in which the database is participating. <b>group_database_id</b> is the same for this database on the primary replica and on every secondary replica on which the database has been joined to the availability group.<br/> NULL = database is not part of an availability replica in any availability group.
+			/// </summary>
+			[Column("group_database_id"), NotNull    ] public Guid     GroupDatabaseID { get; set; } // uniqueidentifier
+			/// <summary>
+			/// Name of the database that was added to the availability group.
+			/// </summary>
+			[Column("database_name"),        Nullable] public string?  DatabaseName    { get; set; } // sysname
+			[Column("truncation_lsn"),       Nullable] public decimal? TruncationLsn   { get; set; } // numeric(25,0)
+		}
+
+		/// <summary>
+		/// Returns a row for every IP address that is associated with any Always On availability group listener in the Windows Server Failover Clustering (WSFC) cluster.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-availability-group-listener-ip-addresses-transact-sql?view=sql-server-ver15'>sys.availability_group_listener_ip_addresses</a>.
+		/// </summary>
+		[Table(Schema="sys", Name="availability_group_listener_ip_addresses", IsView=true)]
+		public partial class AvailabilityGroupListenerIpAddresses
+		{
+			/// <summary>
+			/// Resource GUID from Windows Server Failover Clustering (WSFC) cluster.
+			/// </summary>
+			[Column("listener_id"),                     Nullable] public string? ListenerID                { get; set; } // nvarchar(36)
+			/// <summary>
+			/// Configured virtual IP address of the availability group listener. Returns a single IPv4 or IPv6 address.
+			/// </summary>
+			[Column("ip_address"),                      Nullable] public string? IpAddress                 { get; set; } // nvarchar(48)
+			/// <summary>
+			/// Configured IP subnet mask for the IPv4 address, if any, that is configured for the availability group listener.<br/> NULL = IPv6 subnet
+			/// </summary>
+			[Column("ip_subnet_mask"),                  Nullable] public string? IpSubnetMask              { get; set; } // nvarchar(15)
+			/// <summary>
+			/// Whether the IP address is configured by DHCP, one of:<br/> 0 = IP address is not configured by DHCP.<br/> 1 = IP address is configured by DHCP
+			/// </summary>
+			[Column("is_dhcp"),                      NotNull    ] public bool    IsDhcp                    { get; set; } // bit
+			/// <summary>
+			/// Network subnet IP address that specifies the subnet to which the IP address belongs.
+			/// </summary>
+			[Column("network_subnet_ip"),               Nullable] public string? NetworkSubnetIp           { get; set; } // nvarchar(48)
+			/// <summary>
+			/// Network subnet prefix length of the subnet to which the IP address belongs.
+			/// </summary>
+			[Column("network_subnet_prefix_length"),    Nullable] public int?    NetworkSubnetPrefixLength { get; set; } // int
+			/// <summary>
+			/// Network subnet mask of the subnet to which the IP address belongs. <b>network_subnet_ipv4_mask</b> to specify the DHCP &lt;network_subnet_option&gt; options in a WITH DHCP clause of the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/statements/create-availability-group-transact-sql?view=sql-server-ver15'>CREATE AVAILABILITY GROUP</a> or <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/statements/alter-availability-group-transact-sql?view=sql-server-ver15'>ALTER AVAILABILITY GROUP</a>Transact-SQL statement.<br/> NULL = IPv6 subnet
+			/// </summary>
+			[Column("network_subnet_ipv4_mask"),        Nullable] public string? NetworkSubnetIpv4Mask     { get; set; } // nvarchar(45)
+			/// <summary>
+			/// IP resource ONLINE/OFFLINE state from the WSFC cluster, one of:<br/> 1 = Online. IP resource is online.<br/> 0 = Offline. IP resource is offline.<br/> 2 = Online Pending. IP resource is offline but is being brought online.<br/> 3 = Failed. IP resource was being brought online but failed.
+			/// </summary>
+			[Column("state"),                           Nullable] public byte?   State                     { get; set; } // tinyint
+			/// <summary>
+			/// Description of <b>state</b>, one of:<br/> ONLINE<br/> OFFLINE<br/> ONLINE_PENDING<br/> FAILED
+			/// </summary>
+			[Column("state_desc"),                      Nullable] public string? StateDesc                 { get; set; } // nvarchar(60)
+		}
+
+		/// <summary>
+		/// For each Always On availability group, returns either zero rows indicating that no network name is associated with the availability group, or returns a row for each availability-group listener configuration in the Windows Server Failover Clustering (WSFC) cluster. This view displays the real-time configuration gathered from cluster.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-availability-group-listeners-transact-sql?view=sql-server-ver15'>sys.availability_group_listeners</a>.
+		/// </summary>
+		[Table(Schema="sys", Name="availability_group_listeners", IsView=true)]
+		public partial class AvailabilityGroupListeners
+		{
+			/// <summary>
+			/// Availability group ID (<b>group_id</b>) from <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-availability-groups-transact-sql?view=sql-server-ver15'>sys.availability_groups</a>.
+			/// </summary>
+			[Column("group_id"),                             NotNull    ] public Guid    GroupID                          { get; set; } // uniqueidentifier
+			/// <summary>
+			/// GUID from the cluster resource ID.
+			/// </summary>
+			[Column("listener_id"),                             Nullable] public string? ListenerID                       { get; set; } // nvarchar(36)
+			/// <summary>
+			/// Configured network name (hostname) of the availability group listener.
+			/// </summary>
+			[Column("dns_name"),                                Nullable] public string? DnsName                          { get; set; } // nvarchar(63)
+			/// <summary>
+			/// The TCP port number configured for the availability group listener.<br/> NULL = Listener was configured outside SQL Server and its port number has not been added to the availability group. To add the port, pleaseuse the MODIFY LISTENER  option of the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/statements/alter-availability-group-transact-sql?view=sql-server-ver15'>ALTER AVAILABILITY GROUP</a>Transact-SQL statement.
+			/// </summary>
+			[Column("port"),                                    Nullable] public int?    Port                             { get; set; } // int
+			/// <summary>
+			/// Whether this IP configuration is conformant, one of:<br/> 1 = Listener is conformant. Only &amp;quot;OR&amp;quot; relations exist among its Internet Protocol (IP) addresses. <em>Conformant</em> encompasses every an IP configuration that was created by the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/statements/create-availability-group-transact-sql?view=sql-server-ver15'>CREATE AVAILABILITY GROUP</a>Transact-SQL statement. In addition, if an IP configuration that was created outside of SQL Server, for example by using the WSFC Failover Cluster Manager, but can be modified by the ALTER AVAILABILITY GROUP tsql statement, the IP configuration qualifies as conformant.<br/> 0 = Listener is nonconformant. Typically, this indicates  an IP address that could not be configured by using SQL Server commands and, instead, was defined directly in the WSFC cluster.
+			/// </summary>
+			[Column("is_conformant"),                        NotNull    ] public bool    IsConformant                     { get; set; } // bit
+			/// <summary>
+			/// Cluster IP configuration strings, if any, for this listener. NULL = Listener has no virtual IP addresses. For example:<br/> IPv4 address:  <i>65.55.39.10</i>.<br/> IPv6 address:  <i>2001::4898:23:1002:20f:1fff:feff:b3a3</i>
+			/// </summary>
+			[Column("ip_configuration_string_from_cluster"),    Nullable] public string? IpConfigurationStringFromCluster { get; set; } // nvarchar(max)
+		}
+
+		/// <summary>
+		/// Returns a row for each availability group for which the local instance of SQL Server hosts an availability replica. Each row contains a cached copy of the availability group metadata.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-availability-groups-transact-sql?view=sql-server-ver15'>sys.availability_groups</a>.
+		/// </summary>
+		[Table(Schema="sys", Name="availability_groups", IsView=true)]
+		public partial class AvailabilityGroups
+		{
+			/// <summary>
+			/// Unique identifier (GUID) of the availability group.
+			/// </summary>
+			[Column("group_id"),                                    NotNull    ] public Guid    GroupID                                 { get; set; } // uniqueidentifier
+			/// <summary>
+			/// Name of the availability group. This is a user-specified name that must be unique within the Windows Server Failover Cluster (WSFC).
+			/// </summary>
+			[Column("name"),                                           Nullable] public string? Name                                    { get; set; } // sysname
+			/// <summary>
+			/// Resource ID for the WSFC cluster resource.
+			/// </summary>
+			[Column("resource_id"),                                    Nullable] public string? ResourceID                              { get; set; } // nvarchar(40)
+			/// <summary>
+			/// Resource Group ID for the WSFC cluster resource group of the availability group.
+			/// </summary>
+			[Column("resource_group_id"),                              Nullable] public string? ResourceGroupID                         { get; set; } // nvarchar(40)
+			/// <summary>
+			/// User-defined failure condition level under which an automatic failover must be triggered, one of the integer values shown in the table immediately below this table.<br/> The failure-condition levels (1-5) range from the least restrictive, level 1, to the most restrictive, level 5. A given condition level encompasses all of the less restrictive levels. Thus, the strictest condition level, 5, includes the four less restrictive condition levels (1-4), level 4 includes levels 1-3, and so forth.<br/> To change this value, use the FAILURE_CONDITION_LEVEL option of the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/statements/alter-availability-group-transact-sql?view=sql-server-ver15'>ALTER AVAILABILITY GROUP</a>Transact-SQL statement.
+			/// </summary>
+			[Column("failure_condition_level"),                        Nullable] public int?    FailureConditionLevel                   { get; set; } // int
+			/// <summary>
+			/// Wait time (in milliseconds) for the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../system-stored-procedures/sp-server-diagnostics-transact-sql?view=sql-server-ver15'>sp_server_diagnostics</a> system stored procedure to return server-health information, before the server instance is assumed to be slow or not responding. The default value is 30000 milliseconds (30 seconds).<br/> To change this value, use the HEALTH_CHECK_TIMEOUT option of the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/statements/alter-availability-group-transact-sql?view=sql-server-ver15'>ALTER AVAILABILITY GROUP</a>Transact-SQL statement.
+			/// </summary>
+			[Column("health_check_timeout"),                           Nullable] public int?    HealthCheckTimeout                      { get; set; } // int
+			/// <summary>
+			/// Preferred location for performing backups on the availability databases in this availability group. The following are the possible values and their descriptions.<br/> <br/> 0 : Primary. Backups should always occur on the primary replica.<br/> 1 : Secondary only. Performing backups on a secondary replica is preferable.<br/> 2 : Prefer Secondary. Performing backups on a secondary replica preferable, but performing backups on the primary replica is acceptable if no secondary replica is available for backup operations. This is the default behavior.<br/> 3 : Any Replica. No preference about whether backups are performed on the primary replica or on a secondary replica.<br/> <br/> For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../database-engine/availability-groups/windows/active-secondaries-backup-on-secondary-replicas-always-on-availability-groups?view=sql-server-ver15'>Active Secondaries: Backup on Secondary Replicas (Always On Availability Groups)</a>.
+			/// </summary>
+			[Column("automated_backup_preference"),                    Nullable] public byte?   AutomatedBackupPreference               { get; set; } // tinyint
+			/// <summary>
+			/// Description of <b>automated_backup_preference</b>, one of:<br/> PRIMARY<br/> SECONDARY_ONLY<br/> SECONDARY<br/> NONE
+			/// </summary>
+			[Column("automated_backup_preference_desc"),               Nullable] public string? AutomatedBackupPreferenceDesc           { get; set; } // nvarchar(60)
+			/// <summary>
+			/// The version of the availability group metadata stored in the Windows Failover Cluster. This version number is incremented when new features are added.
+			/// </summary>
+			[Column("version"),                                        Nullable] public short?  Version                                 { get; set; } // smallint
+			/// <summary>
+			/// Specifies whether this is a Basic availability group. For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../database-engine/availability-groups/windows/basic-availability-groups-always-on-availability-groups?view=sql-server-ver15'>Basic Availability Groups (Always On Availability Groups)</a>.
+			/// </summary>
+			[Column("basic_features"),                                 Nullable] public bool?   BasicFeatures                           { get; set; } // bit
+			/// <summary>
+			/// Specifies whether DTC support has been enabled for this availability group. The <b>DTC_SUPPORT</b> option of <b>CREATE AVAILABILITY GROUP</b> controls this setting.
+			/// </summary>
+			[Column("dtc_support"),                                    Nullable] public bool?   DtcSupport                              { get; set; } // bit
+			/// <summary>
+			/// Specifies whether the availability group supports failover for database health conditions. The <b>DB_FAILOVER</b> option of <b>CREATE AVAILABILITY GROUP</b> controls this setting.
+			/// </summary>
+			[Column("db_failover"),                                    Nullable] public bool?   DbFailover                              { get; set; } // bit
+			/// <summary>
+			/// Specifies whether this is a distributed availability group. For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../database-engine/availability-groups/windows/distributed-availability-groups?view=sql-server-ver15'>Distributed Availability Groups (Always On Availability Groups)</a>.
+			/// </summary>
+			[Column("is_distributed"),                                 Nullable] public bool?   IsDistributed                           { get; set; } // bit
+			/// <summary>
+			/// 0: Windows Server failover cluster <br/><br/>1: External cluster (for example, Linux Pacemaker)<br/><br/>2: None
+			/// </summary>
+			[Column("cluster_type"),                                   Nullable] public byte?   ClusterType                             { get; set; } // tinyint
+			/// <summary>
+			/// Text description of cluster type
+			/// </summary>
+			[Column("cluster_type_desc"),                              Nullable] public string? ClusterTypeDesc                         { get; set; } // nvarchar(60)
+			/// <summary>
+			/// The number of secondary replicas that must be in a synchronized state for a commit  to complete
+			/// </summary>
+			[Column("required_synchronized_secondaries_to_commit"),    Nullable] public int?    RequiredSynchronizedSecondariesToCommit { get; set; } // int
+			/// <summary>
+			/// Identifies the availability group configuration sequence. Incrementally increases every time the availability group primary replica updates the configuration of the group.
+			/// </summary>
+			[Column("sequence_number"),                                Nullable] public long?   SequenceNumber                          { get; set; } // bigint
+			/// <summary>
+			/// 1: Big data cluster master instance configured for high-availability. <br/> 0: all other.
+			/// </summary>
+			[Column("is_contained"),                                   Nullable] public bool?   IsContained                             { get; set; } // bit
+		}
+
+		/// <summary>
+		/// Returns a row for each Always On availability group in the Windows Server Failover Clustering (WSFC) . Each row contains the availability group metadata from the WSFC cluster.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-availability-groups-cluster-transact-sql?view=sql-server-ver15'>sys.availability_groups_cluster</a>.
+		/// </summary>
+		[Table(Schema="sys", Name="availability_groups_cluster", IsView=true)]
+		public partial class AvailabilityGroupsCluster
+		{
+			/// <summary>
+			/// Unique identifier (GUID) of the availability group.
+			/// </summary>
+			[Column("group_id"),                         NotNull    ] public Guid    GroupID                       { get; set; } // uniqueidentifier
+			/// <summary>
+			/// Name of the availability group. This is a user-specified name that must be unique within the Windows Server Failover Cluster (WSFC).
+			/// </summary>
+			[Column("name"),                                Nullable] public string? Name                          { get; set; } // sysname
+			/// <summary>
+			/// Resource ID for the WSFC cluster resource.
+			/// </summary>
+			[Column("resource_id"),                         Nullable] public string? ResourceID                    { get; set; } // nvarchar(40)
+			/// <summary>
+			/// Resource Group ID for the WSFC cluster resource group of the availability group.
+			/// </summary>
+			[Column("resource_group_id"),                   Nullable] public string? ResourceGroupID               { get; set; } // nvarchar(40)
+			/// <summary>
+			/// User-defined failure condition level under which an automatic failover must be triggered, one of the following integer values:<br/> 1: Specifies that an automatic failover should be initiated when any of the following occurs: <br/>- The SQL Server service is down.<br/>- The lease of the availability group for connecting to the WSFC failover cluster expires because no ACK is received from the server instance. For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/https://techcommunity.microsoft.com/t5/sql-server-support/how-it-works-sql-server-alwayson-lease-timeout/ba-p/317268&quot; data-linktype=&quot;external&quot;&gt;How It Works: SQL Server Always On Lease Timeout</a>.<br/> 2: Specifies that an automatic failover should be initiated when any of the following occurs:  <br/>- The instance of SQL Server does not connect to cluster, and the user-specified <b>health_check_timeout</b> threshold of the availability group is exceeded. <br/>- The availability replica is in failed state. <br/>3: Specifies that an automatic failover should be initiated on critical SQL Server internal errors, such as orphaned spinlocks, serious write-access violations, or too much dumping. This is the default value. <br/>4: Specifies that an automatic failover should be initiated on moderate SQL Server internal errors, such as a persistent out-of-memory condition in the SQL Server internal resource pool.<br/>5: Specifies that an automatic failover should be initiated on any qualified failure conditions, including:<br/>- Exhaustion of SQL Engine worker-threads. <br/>- Detection of an unsolvable deadlock.<br/> The failure-condition levels (1-5) range from the least restrictive, level 1, to the most restrictive, level 5. A given condition level encompasses all of the less restrictive levels. Thus, the strictest condition level, 5, includes the four less restrictive condition levels (1-4), level 4 includes levels 1-3, and so forth.<br/> To change this value, use the FAILURE_CONDITION_LEVEL option of the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/statements/alter-availability-group-transact-sql?view=sql-server-ver15'>ALTER AVAILABILITY GROUP</a>Transact-SQL statement.
+			/// </summary>
+			[Column("failure_condition_level"),             Nullable] public int?    FailureConditionLevel         { get; set; } // int
+			/// <summary>
+			/// Wait time (in milliseconds) for the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../system-stored-procedures/sp-server-diagnostics-transact-sql?view=sql-server-ver15'>sp_server_diagnostics</a> system stored procedure to return server-health information, before the server instance is assumed to be slow or not responding. The default value is 30000 milliseconds (30 seconds).<br/> To change this value, use the HEALTH_CHECK_TIMEOUT option of <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/statements/alter-availability-group-transact-sql?view=sql-server-ver15'>ALTER AVAILABILITY GROUP</a>Transact-SQL statement.
+			/// </summary>
+			[Column("health_check_timeout"),                Nullable] public int?    HealthCheckTimeout            { get; set; } // int
+			/// <summary>
+			/// Preferred location for performing backups on the availability databases in this availability group. One of the following values:<br/> 0: Primary. Backups should always occur on the primary replica.<br/>1: Secondary only. Performing backups on a secondary replica is preferable.<br/>2: Prefer Secondary. Performing backups on a secondary replica preferable, but performing backups on the primary replica is acceptable if no secondary replica is available for backup operations. This is the default behavior.<br/>3: Any Replica. No preference about whether backups are performed on the primary replica or on a secondary replica.<br/> For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../database-engine/availability-groups/windows/active-secondaries-backup-on-secondary-replicas-always-on-availability-groups?view=sql-server-ver15'>Active Secondaries: Backup on Secondary Replicas (Always On Availability Groups)</a>.
+			/// </summary>
+			[Column("automated_backup_preference"),         Nullable] public byte?   AutomatedBackupPreference     { get; set; } // tinyint
+			/// <summary>
+			/// Description of <b>automated_backup_preference</b>, one of:<br/> PRIMARY<br/> SECONDARY_ONLY<br/> SECONDARY<br/> NONE
+			/// </summary>
+			[Column("automated_backup_preference_desc"),    Nullable] public string? AutomatedBackupPreferenceDesc { get; set; } // nvarchar(60)
+		}
+
+		/// <summary>
+		/// Returns a row for the read only routing list of each availability replica in an Always On availability group in the WSFC failover cluster.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-availability-read-only-routing-lists-transact-sql?view=sql-server-ver15'>sys.availability_read_only_routing_lists</a>.
+		/// </summary>
+		[Table(Schema="sys", Name="availability_read_only_routing_lists", IsView=true)]
+		public partial class AvailabilityReadOnlyRoutingLists
+		{
+			/// <summary>
+			/// Unique ID of the availability replica that owns the routing list.
+			/// </summary>
+			[Column("replica_id"),           NotNull] public Guid ReplicaID         { get; set; } // uniqueidentifier
+			/// <summary>
+			/// Priority order for routing (1 is first, 2 is second, and so forth).
+			/// </summary>
+			[Column("routing_priority"),     NotNull] public int  RoutingPriority   { get; set; } // int
+			/// <summary>
+			/// Unique ID of the availability replica to which a read-only workload will be routed.
+			/// </summary>
+			[Column("read_only_replica_id"), NotNull] public Guid ReadOnlyReplicaID { get; set; } // uniqueidentifier
+		}
+
+		/// <summary>
+		/// Returns a row for each of the availability replicas that belong to any Always On availability group in the WSFC failover cluster.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-availability-replicas-transact-sql?view=sql-server-ver15'>sys.availability_replicas</a>.
+		/// </summary>
+		[Table(Schema="sys", Name="availability_replicas", IsView=true)]
+		public partial class AvailabilityReplicas
+		{
+			/// <summary>
+			/// Unique ID of the replica.
+			/// </summary>
+			[Column("replica_id"),                            Nullable] public Guid?     ReplicaID                         { get; set; } // uniqueidentifier
+			/// <summary>
+			/// Unique ID of the availability group to which the replica belongs.
+			/// </summary>
+			[Column("group_id"),                              Nullable] public Guid?     GroupID                           { get; set; } // uniqueidentifier
+			/// <summary>
+			/// ID for the local metadata object for availability replicas in the Database Engine.
+			/// </summary>
+			[Column("replica_metadata_id"),                   Nullable] public int?      ReplicaMetadataID                 { get; set; } // int
+			/// <summary>
+			/// Server name of the instance of SQL Server that is hosting this replica and, for a non-default instance, its instance name.
+			/// </summary>
+			[Column("replica_server_name"),                   Nullable] public string?   ReplicaServerName                 { get; set; } // nvarchar(256)
+			/// <summary>
+			/// Security identifier (SID) registered to this server instance for the external owner of this availability replica.<br/> NULL for non-local availability replicas.
+			/// </summary>
+			[Column("owner_sid"),                             Nullable] public byte[]?   OwnerSid                          { get; set; } // varbinary(85)
+			/// <summary>
+			/// String representation of the user-specified database mirroring endpoint that is used by connections between primary and secondary replicas for data synchronization. For information about the syntax of endpoint URLs, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../database-engine/availability-groups/windows/specify-endpoint-url-adding-or-modifying-availability-replica?view=sql-server-ver15'>Specify the Endpoint URL When Adding or Modifying an Availability Replica (SQL Server)</a>.<br/> NULL = Unable to talk to the WSFC failover cluster.<br/> To change this endpoint, use the ENDPOINT_URL option of <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/statements/alter-availability-group-transact-sql?view=sql-server-ver15'>ALTER AVAILABILITY GROUP</a>Transact-SQL statement.
+			/// </summary>
+			[Column("endpoint_url"),                          Nullable] public string?   EndpointUrl                       { get; set; } // nvarchar(128)
+			/// <summary>
+			/// The availability mode of the replica, one of:<br/> 0 | Asynchronous commit. The primary replica can commit transactions without waiting for the secondary to write the log to disk.<br/> 1 | Synchronous commit. The primary replica waits to commit a given transaction until the secondary replica has written the transaction to disk.<br/><br/>4 | Configuration only. The primary replica sends availability group configuration metadata to the replica synchronously. User data is not transmitted to the replica. Available in SQL Server 2017 CU1 and later.<br/> For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../database-engine/availability-groups/windows/availability-modes-always-on-availability-groups?view=sql-server-ver15'>Availability Modes (Always On Availability Groups)</a>.
+			/// </summary>
+			[Column("availability_mode"),                     Nullable] public byte?     AvailabilityMode                  { get; set; } // tinyint
+			/// <summary>
+			/// Description of <b>availability_mode</b>, one of:<br/> ASYNCHRONOUS_COMMIT<br/> SYNCHRONOUS_COMMIT<br/> CONFIGURATION_ONLY<br/> To change this the availability mode of an availability replica, use the AVAILABILITY_MODE option of <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/statements/alter-availability-group-transact-sql?view=sql-server-ver15'>ALTER AVAILABILITY GROUP</a>Transact-SQL statement.<br/><br/>You cannot change the availability mode of a replica to CONFIGURATION_ONLY. You cannot change a CONFIGURATION_ONLY replica to a secondary or primary replica.
+			/// </summary>
+			[Column("availability_mode_desc"),                Nullable] public string?   AvailabilityModeDesc              { get; set; } // nvarchar(60)
+			/// <summary>
+			/// The <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../database-engine/availability-groups/windows/failover-and-failover-modes-always-on-availability-groups?view=sql-server-ver15'>failover mode</a> of the availability replica, one of:<br/> 0 | Automatic failover. The replica is a potential target for automatic failovers.  Automatic failover is supported only if the availability mode is set to synchronous commit (<b>availability_mode</b> = 1) and the availability replica is currently synchronized.<br/> 1 | Manual failover. A failover to a secondary replica set to manual failover must be manually initiated by the database administrator. The type of failover that is performed will depend on whether the secondary replica is synchronized, as follows:<br/> If the availability replica is not synchronizing or is still synchronizing, only forced failover (with possible data loss) can occur.<br/> If the availability mode is set to synchronous commit (<b>availability_mode</b> = 1) and the availability replica is currently synchronized, manual failover without data loss can occur.<br/> To view a rollup of the database synchronization health of every availability database in an availability replica, use the <b>synchronization_health</b> and <b>synchronization_health_desc</b> columns of  the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../system-dynamic-management-views/sys-dm-hadr-availability-replica-states-transact-sql?view=sql-server-ver15'>sys.dm_hadr_availability_replica_states</a> dynamic management view. The rollup considers the synchronization state of every availability database and the availability mode of its availability replica.<br/> <b>Note:</b> To view the synchronization health of a given availability database, query the <b>synchronization_state</b> and <b>synchronization_health</b> columns of the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../system-dynamic-management-views/sys-dm-hadr-database-replica-states-transact-sql?view=sql-server-ver15'>sys.dm_hadr_database_replica_states</a> dynamic management view.
+			/// </summary>
+			[Column("failover_mode"),                         Nullable] public byte?     FailoverMode                      { get; set; } // tinyint
+			/// <summary>
+			/// Description of <b>failover_mode</b>, one of:<br/> MANUAL<br/> AUTOMATIC<br/> To change the failover mode, use the FAILOVER_MODE option of <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/statements/alter-availability-group-transact-sql?view=sql-server-ver15'>ALTER AVAILABILITY GROUP</a>Transact-SQL statement.
+			/// </summary>
+			[Column("failover_mode_desc"),                    Nullable] public string?   FailoverModeDesc                  { get; set; } // nvarchar(60)
+			/// <summary>
+			/// The time-out period, in seconds. The time-out period is the maximum time that the replica waits to receive a message  from another replica before considering connection between the primary and secondary replica have failed. Session timeout detects whether secondaries are connected the primary replica.<br/> On detecting a failed connection with a secondary replica, the primary replica  considers the secondary replica to be NOT_SYNCHRONIZED. On detecting a failed connection with the primary replica, a secondary replica simply attempts to reconnect.<br/> <b>Note:</b> Session timeouts do not cause automatic failovers.<br/> To change this value, use the SESSION_TIMEOUT option of <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/statements/alter-availability-group-transact-sql?view=sql-server-ver15'>ALTER AVAILABILITY GROUP</a>Transact-SQL statement.
+			/// </summary>
+			[Column("session_timeout"),                       Nullable] public int?      SessionTimeout                    { get; set; } // int
+			/// <summary>
+			/// Whether the availability allows all connections or only read-write connections, one of:<br/> 2 = All (default)<br/> 3 = Read write
+			/// </summary>
+			[Column("primary_role_allow_connections"),        Nullable] public byte?     PrimaryRoleAllowConnections       { get; set; } // tinyint
+			/// <summary>
+			/// Description of <b>primary_role_allow_connections</b>, one of:<br/> ALL<br/> READ_WRITE
+			/// </summary>
+			[Column("primary_role_allow_connections_desc"),   Nullable] public string?   PrimaryRoleAllowConnectionsDesc   { get; set; } // nvarchar(60)
+			/// <summary>
+			/// Whether an availability replica that is performing the secondary role (that is, a secondary replica) can accept connections from clients, one of:<br/> 0 = No. No connections are allowed to the databases in the secondary replica, and the databases are not available for read access. This is the default setting.<br/> 1 = Read only. Only read-only connections are allowed to the databases in the secondary replica. All database(s) in the replica are available for read access.<br/> 2 = All. All connections are allowed to the databases in the secondary replica for read-only access.<br/> For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../database-engine/availability-groups/windows/active-secondaries-readable-secondary-replicas-always-on-availability-groups?view=sql-server-ver15'>Active Secondaries: Readable Secondary Replicas (Always On Availability Groups)</a>.
+			/// </summary>
+			[Column("secondary_role_allow_connections"),      Nullable] public byte?     SecondaryRoleAllowConnections     { get; set; } // tinyint
+			/// <summary>
+			/// Description of <b>secondary_role_allow_connections</b>, one of:<br/> NO<br/> READ_ONLY<br/> ALL
+			/// </summary>
+			[Column("secondary_role_allow_connections_desc"), Nullable] public string?   SecondaryRoleAllowConnectionsDesc { get; set; } // nvarchar(60)
+			/// <summary>
+			/// Date that the replica was created.<br/> NULL = Replica not on this server instance.
+			/// </summary>
+			[Column("create_date"),                           Nullable] public DateTime? CreateDate                        { get; set; } // datetime
+			/// <summary>
+			/// Date that the replica was last modified.<br/> NULL = Replica not on this server instance.
+			/// </summary>
+			[Column("modify_date"),                           Nullable] public DateTime? ModifyDate                        { get; set; } // datetime
+			/// <summary>
+			/// Represents the user-specified priority for performing backups on this replica relative to the other replicas in the same availability group. The value is an integer in the range of 0..100.<br/> For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../database-engine/availability-groups/windows/active-secondaries-backup-on-secondary-replicas-always-on-availability-groups?view=sql-server-ver15'>Active Secondaries: Backup on Secondary Replicas (Always On Availability Groups)</a>.
+			/// </summary>
+			[Column("backup_priority"),                       Nullable] public int?      BackupPriority                    { get; set; } // int
+			/// <summary>
+			/// Connectivity endpoint (URL) of the read only availability replica. For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../database-engine/availability-groups/windows/configure-read-only-routing-for-an-availability-group-sql-server?view=sql-server-ver15'>Configure Read-Only Routing for an Availability Group (SQL Server)</a>.
+			/// </summary>
+			[Column("read_only_routing_url"),                 Nullable] public string?   ReadOnlyRoutingUrl                { get; set; } // nvarchar(256)
+			/// <summary>
+			/// One of: <br/> 0: Automatic &lt;/br&gt;<br/> 1: Manual
+			/// </summary>
+			[Column("seeding_mode"),                          Nullable] public byte?     SeedingMode                       { get; set; } // tinyint
+			/// <summary>
+			/// Describes seeding mode. <br/> AUTOMATIC &lt;/br&gt;<br/>MANUAL
+			/// </summary>
+			[Column("seeding_mode_desc"),                     Nullable] public string?   SeedingModeDesc                   { get; set; } // nvarchar(60)
+			[Column("read_write_routing_url"),                Nullable] public string?   ReadWriteRoutingUrl               { get; set; } // nvarchar(256)
+		}
+	}
+
+	public static partial class ChangeTrackingSchema
+	{
+		public partial class DataContext
+		{
+			/// <summary>
+			/// Returns one row for each database that has change tracking enabled.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/change-tracking-catalog-views-sys-change-tracking-databases?view=sql-server-ver15'>sys.change_tracking_databases</a>.
+			/// </summary>
+			public ITable<ChangeTrackingDatabases> ChangeTrackingDatabases { get { return _dataContext.GetTable<ChangeTrackingDatabases>(); } }
+			/// <summary>
+			/// Returns one row for each table in the current database that has change tracking enabled.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/change-tracking-catalog-views-sys-change-tracking-tables?view=sql-server-ver15'>sys.change_tracking_tables</a>.
+			/// </summary>
+			public ITable<ChangeTrackingTables>    ChangeTrackingTables    { get { return _dataContext.GetTable<ChangeTrackingTables>(); } }
+
+			private readonly IDataContext _dataContext;
+
+			public DataContext(IDataContext dataContext)
+			{
+				_dataContext = dataContext;
+			}
+		}
+
+		/// <summary>
+		/// Returns one row for each database that has change tracking enabled.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/change-tracking-catalog-views-sys-change-tracking-databases?view=sql-server-ver15'>sys.change_tracking_databases</a>.
+		/// </summary>
+		[Table(Schema="sys", Name="change_tracking_databases", IsView=true)]
+		public partial class ChangeTrackingDatabases
+		{
+			/// <summary>
+			/// ID of the database. This is unique within the instance of SQL Server.
+			/// </summary>
+			[Column("database_id"),                 NotNull    ] public int     DatabaseID               { get; set; } // int
+			/// <summary>
+			/// Indicates whether change tracking data is automatically cleaned up after the configured retention period:<br/> 0 = Off<br/> 1 = On
+			/// </summary>
+			[Column("is_auto_cleanup_on"),             Nullable] public byte?   IsAutoCleanupOn          { get; set; } // bit
+			/// <summary>
+			/// If autocleanup is being used, the retention period specifies how long the change tracking data is kept in the database.
+			/// </summary>
+			[Column("retention_period"),               Nullable] public int?    RetentionPeriod          { get; set; } // int
+			/// <summary>
+			/// Unit of time for the retention period:<br/> 1 = Minutes<br/> 2 = Hours<br/> 3 = Days
+			/// </summary>
+			[Column("retention_period_units"),         Nullable] public byte?   RetentionPeriodUnits     { get; set; } // tinyint
+			/// <summary>
+			/// Specifies the description of the retention period:<br/> Minutes<br/> Hours<br/> Days
+			/// </summary>
+			[Column("retention_period_units_desc"),    Nullable] public string? RetentionPeriodUnitsDesc { get; set; } // nvarchar(60)
+			[Column("max_cleanup_version"),            Nullable] public long?   MaxCleanupVersion        { get; set; } // bigint
+		}
+
+		/// <summary>
+		/// Returns one row for each table in the current database that has change tracking enabled.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/change-tracking-catalog-views-sys-change-tracking-tables?view=sql-server-ver15'>sys.change_tracking_tables</a>.
+		/// </summary>
+		[Table(Schema="sys", Name="change_tracking_tables", IsView=true)]
+		public partial class ChangeTrackingTables
+		{
+			/// <summary>
+			/// ID of a table that has a change journal. The table can have a change journal even if change tracking is currently off.<br/> The table ID is unique within the database.
+			/// </summary>
+			[Column("object_id"),                   NotNull    ] public int   ObjectID                { get; set; } // int
+			/// <summary>
+			/// Current state of change tracking on the table:<br/> 0 = OFF<br/> 1 = ON
+			/// </summary>
+			[Column("is_track_columns_updated_on"), NotNull    ] public bool  IsTrackColumnsUpdatedOn { get; set; } // bit
+			/// <summary>
+			/// Minimum valid version of change tracking information that is available for the table.<br/> When obtaining changes from the table that is associated with this row, the value of last_sync_version must be greater than or equal to the version reported by this column. For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../system-functions/change-tracking-min-valid-version-transact-sql?view=sql-server-ver15'>CHANGE_TRACKING_MIN_VALID_VERSION (Transact-SQL)</a>.
+			/// </summary>
+			[Column("min_valid_version"),              Nullable] public long? MinValidVersion         { get; set; } // bigint
+			/// <summary>
+			/// Version of the database when change tracking began for the table. This version is usually indicates when change tracking was enabled, but this value is reset if the table is truncated.
+			/// </summary>
+			[Column("begin_version"),                  Nullable] public long? BeginVersion            { get; set; } // bigint
+			/// <summary>
+			/// Version up to which cleanup might have removed change tracking information.
+			/// </summary>
+			[Column("cleanup_version"),                Nullable] public long? CleanupVersion          { get; set; } // bigint
+
+			#region Associations
+
+			/// <summary>
+			/// objects
+			/// </summary>
+			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ChangeTrackingTables")]
+			public SystemSchema.Objects Object { get; set; } = null!;
+
+			#endregion
+		}
 	}
 
 	public static partial class CompatibilitySchema
@@ -5643,38 +6126,89 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 	{
 		public partial class DataContext
 		{
+			/// <summary>
+			/// Shows the union of all columns belonging to user-defined objects and system objects.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-all-columns-transact-sql?view=sql-server-ver15'>sys.all_columns</a>.
+			/// </summary>
 			public ITable<AllColumns>                                         AllColumns                                         { get { return _dataContext.GetTable<AllColumns>(); } }
+			/// <summary>
+			/// Shows the UNION of all schema-scoped user-defined objects and system objects.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-all-objects-transact-sql?view=sql-server-ver15'>sys.all_objects</a>.
+			/// </summary>
 			public ITable<AllObjects>                                         AllObjects                                         { get { return _dataContext.GetTable<AllObjects>(); } }
+			/// <summary>
+			/// Contains a row for each allocation unit in the database.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-allocation-units-transact-sql?view=sql-server-ver15'>sys.allocation_units</a>.
+			/// </summary>
 			public ITable<AllocationUnits>                                    AllocationUnits                                    { get { return _dataContext.GetTable<AllocationUnits>(); } }
+			/// <summary>
+			/// Shows the union of all parameters that belong to user-defined or system objects.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-all-parameters-transact-sql?view=sql-server-ver15'>sys.all_parameters</a>.
+			/// </summary>
 			public ITable<AllParameters>                                      AllParameters                                      { get { return _dataContext.GetTable<AllParameters>(); } }
+			/// <summary>
+			/// Returns the union of <b>sys.sql_modules</b> and <b>sys.system_sql_modules</b>.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-all-sql-modules-transact-sql?view=sql-server-ver15'>sys.all_sql_modules</a>.
+			/// </summary>
 			public ITable<AllSqlModules>                                      AllSqlModules                                      { get { return _dataContext.GetTable<AllSqlModules>(); } }
+			/// <summary>
+			/// Shows the UNION of all user-defined and system views.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-all-views-transact-sql?view=sql-server-ver15'>sys.all_views</a>.
+			/// </summary>
 			public ITable<AllViews>                                           AllViews                                           { get { return _dataContext.GetTable<AllViews>(); } }
 			public ITable<Assemblies>                                         Assemblies                                         { get { return _dataContext.GetTable<Assemblies>(); } }
 			public ITable<AssemblyFiles>                                      AssemblyFiles                                      { get { return _dataContext.GetTable<AssemblyFiles>(); } }
+			/// <summary>
+			/// Returns one row for each function, procedure or trigger that is defined by a common language runtime (CLR) assembly. This catalog view maps CLR stored procedures, CLR triggers, or CLR functions to their underlying implementation. Objects of type TA, AF, PC, FS, and FT have an associated assembly module. To find the association between the object and the assembly, you can join this catalog view to other catalog views. For example, when you create a CLR stored procedure, it is represented by one row in <b>sys.objects</b>, one row in <b>sys.procedures</b> (which inherits from <b>sys.objects</b>), and one row in <b>sys.assembly_modules</b>. The stored procedure itself is represented by the metadata in <b>sys.objects</b> and <b>sys.procedures</b>. References to the procedure&apos;s underlying CLR implementation are found in <b>sys.assembly_modules</b>.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-assembly-modules-transact-sql?view=sql-server-ver15'>sys.assembly_modules</a>.
+			/// </summary>
 			public ITable<AssemblyModules>                                    AssemblyModules                                    { get { return _dataContext.GetTable<AssemblyModules>(); } }
 			public ITable<AssemblyReferences>                                 AssemblyReferences                                 { get { return _dataContext.GetTable<AssemblyReferences>(); } }
+			/// <summary>
+			/// Contains a row for each user-defined type that is defined by a CLR assembly. The following <b>sys.assembly_types</b> appear in the list of inherited columns (see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-types-transact-sql?view=sql-server-ver15'>sys.types (Transact-SQL)</a>) after <b>rule_object_id</b>.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-assembly-types-transact-sql?view=sql-server-ver15'>sys.assembly_types</a>.
+			/// </summary>
 			public ITable<AssemblyTypes>                                      AssemblyTypes                                      { get { return _dataContext.GetTable<AssemblyTypes>(); } }
 			public ITable<AsymmetricKeys>                                     AsymmetricKeys                                     { get { return _dataContext.GetTable<AsymmetricKeys>(); } }
-			public ITable<AvailabilityDatabasesCluster>                       AvailabilityDatabasesCluster                       { get { return _dataContext.GetTable<AvailabilityDatabasesCluster>(); } }
-			public ITable<AvailabilityGroupListenerIpAddresses>               AvailabilityGroupListenerIpAddresses               { get { return _dataContext.GetTable<AvailabilityGroupListenerIpAddresses>(); } }
-			public ITable<AvailabilityGroupListeners>                         AvailabilityGroupListeners                         { get { return _dataContext.GetTable<AvailabilityGroupListeners>(); } }
-			public ITable<AvailabilityGroups>                                 AvailabilityGroups                                 { get { return _dataContext.GetTable<AvailabilityGroups>(); } }
-			public ITable<AvailabilityGroupsCluster>                          AvailabilityGroupsCluster                          { get { return _dataContext.GetTable<AvailabilityGroupsCluster>(); } }
-			public ITable<AvailabilityReadOnlyRoutingLists>                   AvailabilityReadOnlyRoutingLists                   { get { return _dataContext.GetTable<AvailabilityReadOnlyRoutingLists>(); } }
-			public ITable<AvailabilityReplicas>                               AvailabilityReplicas                               { get { return _dataContext.GetTable<AvailabilityReplicas>(); } }
 			public ITable<BackupDevices>                                      BackupDevices                                      { get { return _dataContext.GetTable<BackupDevices>(); } }
 			public ITable<Certificates>                                       Certificates                                       { get { return _dataContext.GetTable<Certificates>(); } }
-			public ITable<ChangeTrackingDatabases>                            ChangeTrackingDatabases                            { get { return _dataContext.GetTable<ChangeTrackingDatabases>(); } }
-			public ITable<ChangeTrackingTables>                               ChangeTrackingTables                               { get { return _dataContext.GetTable<ChangeTrackingTables>(); } }
+			/// <summary>
+			/// Contains a row for each object that is a CHECK constraint, with <b>sys.objects.type</b> = &apos;C&apos;.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-check-constraints-transact-sql?view=sql-server-ver15'>sys.check_constraints</a>.
+			/// </summary>
 			public ITable<CheckConstraints>                                   CheckConstraints                                   { get { return _dataContext.GetTable<CheckConstraints>(); } }
 			public ITable<ColumnEncryptionKeys>                               ColumnEncryptionKeys                               { get { return _dataContext.GetTable<ColumnEncryptionKeys>(); } }
 			public ITable<ColumnEncryptionKeyValues>                          ColumnEncryptionKeyValues                          { get { return _dataContext.GetTable<ColumnEncryptionKeyValues>(); } }
 			public ITable<ColumnMasterKeys>                                   ColumnMasterKeys                                   { get { return _dataContext.GetTable<ColumnMasterKeys>(); } }
+			/// <summary>
+			/// Returns a row for each column of an object that has columns, such as views or tables. The following is a list of object types that have columns:<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-columns-transact-sql?view=sql-server-ver15'>sys.columns</a>.
+			/// </summary>
 			public ITable<Columns>                                            Columns                                            { get { return _dataContext.GetTable<Columns>(); } }
+			/// <summary>
+			/// Contains a row for each dictionary used in xVelocity memory optimized columnstore indexes. Dictionaries are used to encode some, but not all data types, therefore not all columns in a columnstore index have dictionaries. A dictionary can exist as a primary dictionary (for all segments) and possibly for other secondary dictionaries used for a subset of the column&apos;s segments.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-column-store-dictionaries-transact-sql?view=sql-server-ver15'>sys.column_store_dictionaries</a>.
+			/// </summary>
 			public ITable<ColumnStoreDictionaries>                            ColumnStoreDictionaries                            { get { return _dataContext.GetTable<ColumnStoreDictionaries>(); } }
+			/// <summary>
+			/// Provides clustered columnstore index information on a per-segment basis to help the administrator make system management decisions. <b>sys.column_store_row_groups</b> has a column for the total number of rows physically stored (including those marked as deleted) and a column for the number of rows marked as deleted. Use <b>sys.column_store_row_groups</b> to determine which row groups have a high percentage of deleted rows and should be rebuilt.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-column-store-row-groups-transact-sql?view=sql-server-ver15'>sys.column_store_row_groups</a>.
+			/// </summary>
 			public ITable<ColumnStoreRowGroups>                               ColumnStoreRowGroups                               { get { return _dataContext.GetTable<ColumnStoreRowGroups>(); } }
+			/// <summary>
+			/// Returns one row for each column segment in a columnstore index. There is one column segment per column per rowgroup. For example, a table with 10 rowgroups and 34 columns returns 340 rows.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-column-store-segments-transact-sql?view=sql-server-ver15'>sys.column_store_segments</a>.
+			/// </summary>
 			public ITable<ColumnStoreSegments>                                ColumnStoreSegments                                { get { return _dataContext.GetTable<ColumnStoreSegments>(); } }
+			/// <summary>
+			/// Contains one row for each column that is of user-defined type.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-column-type-usages-transact-sql?view=sql-server-ver15'>sys.column_type_usages</a>.
+			/// </summary>
 			public ITable<ColumnTypeUsages>                                   ColumnTypeUsages                                   { get { return _dataContext.GetTable<ColumnTypeUsages>(); } }
+			/// <summary>
+			/// Contains a row for each column found in <b>sys.columns</b> that is a computed-column.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-computed-columns-transact-sql?view=sql-server-ver15'>sys.computed_columns</a>.
+			/// </summary>
 			public ITable<ComputedColumns>                                    ComputedColumns                                    { get { return _dataContext.GetTable<ComputedColumns>(); } }
 			public ITable<Configurations>                                     Configurations                                     { get { return _dataContext.GetTable<Configurations>(); } }
 			public ITable<ConversationEndpoints>                              ConversationEndpoints                              { get { return _dataContext.GetTable<ConversationEndpoints>(); } }
@@ -5702,23 +6236,59 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			public ITable<DatabaseScopedConfigurations>                       DatabaseScopedConfigurations                       { get { return _dataContext.GetTable<DatabaseScopedConfigurations>(); } }
 			public ITable<DatabaseScopedCredentials>                          DatabaseScopedCredentials                          { get { return _dataContext.GetTable<DatabaseScopedCredentials>(); } }
 			public ITable<DataSpaces>                                         DataSpaces                                         { get { return _dataContext.GetTable<DataSpaces>(); } }
+			/// <summary>
+			/// Contains a row for each object that is a default definition (created as part of a CREATE TABLE or ALTER TABLE statement instead of a CREATE DEFAULT statement), with <b>sys.objects.type</b> = D.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-default-constraints-transact-sql?view=sql-server-ver15'>sys.default_constraints</a>.
+			/// </summary>
 			public ITable<DefaultConstraints>                                 DefaultConstraints                                 { get { return _dataContext.GetTable<DefaultConstraints>(); } }
 			public ITable<DestinationDataSpaces>                              DestinationDataSpaces                              { get { return _dataContext.GetTable<DestinationDataSpaces>(); } }
 			public ITable<EdgeConstraintClauses>                              EdgeConstraintClauses                              { get { return _dataContext.GetTable<EdgeConstraintClauses>(); } }
 			public ITable<EdgeConstraints>                                    EdgeConstraints                                    { get { return _dataContext.GetTable<EdgeConstraints>(); } }
 			public ITable<Endpoints>                                          Endpoints                                          { get { return _dataContext.GetTable<Endpoints>(); } }
 			public ITable<EndpointWebmethods>                                 EndpointWebmethods                                 { get { return _dataContext.GetTable<EndpointWebmethods>(); } }
+			/// <summary>
+			/// Returns a row for each event or event group on which an event notification can fire.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-event-notification-event-types-transact-sql?view=sql-server-ver15'>sys.event_notification_event_types</a>.
+			/// </summary>
 			public ITable<EventNotificationEventTypes>                        EventNotificationEventTypes                        { get { return _dataContext.GetTable<EventNotificationEventTypes>(); } }
+			/// <summary>
+			/// Returns a row for each object that is an event notification, with <b>sys.objects.type</b> = EN.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-event-notifications-transact-sql?view=sql-server-ver15'>sys.event_notifications</a>.
+			/// </summary>
 			public ITable<EventNotifications>                                 EventNotifications                                 { get { return _dataContext.GetTable<EventNotifications>(); } }
+			/// <summary>
+			/// Contains a row for each event for which a trigger or event notification fires. These events represent the event types that are specified when the trigger or event notification is created by using <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/statements/create-trigger-transact-sql?view=sql-server-ver15'>CREATE TRIGGER</a> or <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/statements/create-event-notification-transact-sql?view=sql-server-ver15'>CREATE EVENT NOTIFICATION</a>.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-events-transact-sql?view=sql-server-ver15'>sys.events</a>.
+			/// </summary>
 			public ITable<Events>                                             Events                                             { get { return _dataContext.GetTable<Events>(); } }
+			/// <summary>
+			/// Contains a row for each object that is an extended stored procedure, with <b>sys.objects.type</b> = X. Because extended stored procedures are installed into the <b>master</b> database, they are only visible from that database context. Selecting from the <b>sys.extended_procedures</b> view in any other database context will return an empty result set.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-extended-procedures-transact-sql?view=sql-server-ver15'>sys.extended_procedures</a>.
+			/// </summary>
 			public ITable<ExtendedProcedures>                                 ExtendedProcedures                                 { get { return _dataContext.GetTable<ExtendedProcedures>(); } }
 			public ITable<ExtendedProperties>                                 ExtendedProperties                                 { get { return _dataContext.GetTable<ExtendedProperties>(); } }
 			public ITable<ExternalDataSources>                                ExternalDataSources                                { get { return _dataContext.GetTable<ExternalDataSources>(); } }
 			public ITable<ExternalFileFormats>                                ExternalFileFormats                                { get { return _dataContext.GetTable<ExternalFileFormats>(); } }
+			/// <summary>
+			/// This catalog view provides a list of the external language extension files in the database. <b>R</b> and <b>Python</b> are reserved names and no external language can be created with those specific names.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-external-language-files-transact-sql?view=sql-server-ver15'>sys.external_language_files</a>.
+			/// </summary>
 			public ITable<ExternalLanguageFiles>                              ExternalLanguageFiles                              { get { return _dataContext.GetTable<ExternalLanguageFiles>(); } }
+			/// <summary>
+			/// This catalog view provides a list of the external languages in the database. <b>R</b> and <b>Python</b> are reserved names and no external language can be created with those specific names.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-external-languages-transact-sql?view=sql-server-ver15'>sys.external_languages</a>.
+			/// </summary>
 			public ITable<ExternalLanguages>                                  ExternalLanguages                                  { get { return _dataContext.GetTable<ExternalLanguages>(); } }
+			/// <summary>
+			/// Supports the management of package libraries related to external runtimes such as R, Python, and Java.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-external-libraries-transact-sql?view=sql-server-ver15'>sys.external_libraries</a>.
+			/// </summary>
 			public ITable<ExternalLibraries>                                  ExternalLibraries                                  { get { return _dataContext.GetTable<ExternalLibraries>(); } }
 			public ITable<ExternalLibrariesInstalled>                         ExternalLibrariesInstalled                         { get { return _dataContext.GetTable<ExternalLibrariesInstalled>(); } }
+			/// <summary>
+			/// Lists a row for each file that makes up an external library.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-external-library-files-transact-sql?view=sql-server-ver15'>sys.external_library_files</a>.
+			/// </summary>
 			public ITable<ExternalLibraryFiles>                               ExternalLibraryFiles                               { get { return _dataContext.GetTable<ExternalLibraryFiles>(); } }
 			public ITable<ExternalLibrarySetupErrors>                         ExternalLibrarySetupErrors                         { get { return _dataContext.GetTable<ExternalLibrarySetupErrors>(); } }
 			public ITable<ExternalTableColumns>                               ExternalTableColumns                               { get { return _dataContext.GetTable<ExternalTableColumns>(); } }
@@ -5726,7 +6296,15 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			public ITable<Filegroups>                                         Filegroups                                         { get { return _dataContext.GetTable<Filegroups>(); } }
 			public ITable<Filetables>                                         Filetables                                         { get { return _dataContext.GetTable<Filetables>(); } }
 			public ITable<FiletableSystemDefinedObjects>                      FiletableSystemDefinedObjects                      { get { return _dataContext.GetTable<FiletableSystemDefinedObjects>(); } }
+			/// <summary>
+			/// Contains a row for each column, or set of columns, that comprise a foreign key.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-foreign-key-columns-transact-sql?view=sql-server-ver15'>sys.foreign_key_columns</a>.
+			/// </summary>
 			public ITable<ForeignKeyColumns>                                  ForeignKeyColumns                                  { get { return _dataContext.GetTable<ForeignKeyColumns>(); } }
+			/// <summary>
+			/// Contains a row per object that is a FOREIGN KEY constraint, with <b>sys.object.type</b> = F.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-foreign-keys-transact-sql?view=sql-server-ver15'>sys.foreign_keys</a>.
+			/// </summary>
 			public ITable<ForeignKeys>                                        ForeignKeys                                        { get { return _dataContext.GetTable<ForeignKeys>(); } }
 			public ITable<FulltextCatalogs>                                   FulltextCatalogs                                   { get { return _dataContext.GetTable<FulltextCatalogs>(); } }
 			public ITable<FulltextDocumentTypes>                              FulltextDocumentTypes                              { get { return _dataContext.GetTable<FulltextDocumentTypes>(); } }
@@ -5740,39 +6318,124 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			public ITable<FulltextStoplists>                                  FulltextStoplists                                  { get { return _dataContext.GetTable<FulltextStoplists>(); } }
 			public ITable<FulltextStopwords>                                  FulltextStopwords                                  { get { return _dataContext.GetTable<FulltextStopwords>(); } }
 			public ITable<FulltextSystemStopwords>                            FulltextSystemStopwords                            { get { return _dataContext.GetTable<FulltextSystemStopwords>(); } }
+			/// <summary>
+			/// Returns one row per column that is a part of an <b>ORDER</b> expression of a common language runtime (CLR) table-valued function.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-function-order-columns-transact-sql?view=sql-server-ver15'>sys.function_order_columns</a>.
+			/// </summary>
 			public ITable<FunctionOrderColumns>                               FunctionOrderColumns                               { get { return _dataContext.GetTable<FunctionOrderColumns>(); } }
+			/// <summary>
+			/// Shows the current hash indexes and the hash index properties. Hash indexes are supported only on <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../in-memory-oltp/overview-and-usage-scenarios?view=sql-server-ver15'>In-Memory OLTP (In-Memory Optimization)</a>.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-hash-indexes-transact-sql?view=sql-server-ver15'>sys.hash_indexes</a>.
+			/// </summary>
 			public ITable<HashIndexes>                                        HashIndexes                                        { get { return _dataContext.GetTable<HashIndexes>(); } }
 			public ITable<HttpEndpoints>                                      HttpEndpoints                                      { get { return _dataContext.GetTable<HttpEndpoints>(); } }
+			/// <summary>
+			/// Contains a row for each column that is an identity column.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-identity-columns-transact-sql?view=sql-server-ver15'>sys.identity_columns</a>.
+			/// </summary>
 			public ITable<IdentityColumns>                                    IdentityColumns                                    { get { return _dataContext.GetTable<IdentityColumns>(); } }
+			/// <summary>
+			/// Contains one row per column that is part of a <b>sys.indexes</b> index or unordered table (heap).<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-index-columns-transact-sql?view=sql-server-ver15'>sys.index_columns</a>.
+			/// </summary>
 			public ITable<IndexColumns>                                       IndexColumns                                       { get { return _dataContext.GetTable<IndexColumns>(); } }
+			/// <summary>
+			/// Contains a row per index or heap of a tabular object, such as a table, view, or table-valued function.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-indexes-transact-sql?view=sql-server-ver15'>sys.indexes</a>.
+			/// </summary>
 			public ITable<Indexes>                                            Indexes                                            { get { return _dataContext.GetTable<Indexes>(); } }
+			/// <summary>
+			/// <b>sys.index_resumable_operations</b> is a system view that monitors and checks the current execution status for resumable Index rebuild or creation.<br/>
+			/// <b>Applies to</b>: SQL Server (2017 and newer), and Azure SQL Database<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-index-resumable-operations?view=sql-server-ver15'>sys.index_resumable_operations</a>.
+			/// </summary>
 			public ITable<IndexResumableOperations>                           IndexResumableOperations                           { get { return _dataContext.GetTable<IndexResumableOperations>(); } }
+			/// <summary>
+			/// Returns one row for each rowset that tracks internal data for columnstore indexes on disk-based tables. These rowsets are internal to columnstore indexes and track deleted rows, rowgroup mappings, and delta store rowgroups. They track data for each for each table partition; every table has at least one partition. SQL Server re-creates the rowsets each time it rebuilds the columnstore index.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-internal-partitions-transact-sql?view=sql-server-ver15'>sys.internal_partitions</a>.
+			/// </summary>
 			public ITable<InternalPartitions>                                 InternalPartitions                                 { get { return _dataContext.GetTable<InternalPartitions>(); } }
+			/// <summary>
+			/// Returns one row for each object that is an internal table. Internal tables are automatically generated by SQL Server to support various features. For example, when you create a primary XML index, SQL Server automatically creates an internal table to persist the shredded XML document data. Internal tables appear in the <b>sys</b> schema of every database and have unique, system-generated names that indicate their function, for example, <b>xml_index_nodes_2021582240_32001</b> or <b>queue_messages_1977058079</b><br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-internal-tables-transact-sql?view=sql-server-ver15'>sys.internal_tables</a>.
+			/// </summary>
 			public ITable<InternalTables>                                     InternalTables                                     { get { return _dataContext.GetTable<InternalTables>(); } }
+			/// <summary>
+			/// Contains a row for each object that is a primary key or unique constraint. Includes <b>sys.objects.type</b> PK and UQ.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-key-constraints-transact-sql?view=sql-server-ver15'>sys.key_constraints</a>.
+			/// </summary>
 			public ITable<KeyConstraints>                                     KeyConstraints                                     { get { return _dataContext.GetTable<KeyConstraints>(); } }
 			public ITable<KeyEncryptions>                                     KeyEncryptions                                     { get { return _dataContext.GetTable<KeyEncryptions>(); } }
 			public ITable<LinkedLogins>                                       LinkedLogins                                       { get { return _dataContext.GetTable<LinkedLogins>(); } }
 			public ITable<LoginToken>                                         LoginToken                                         { get { return _dataContext.GetTable<LoginToken>(); } }
+			/// <summary>
+			/// Use the <b>sys.masked_columns</b> view to query for table-columns that have a dynamic data masking function applied to them. This view inherits from the <b>sys.columns</b> view. It returns all columns in the <b>sys.columns</b> view, plus the <b>is_masked</b> and <b>masking_function</b> columns, indicating if the column is masked, and if so, what masking function is defined. This view only shows the columns on which there is a masking function applied.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-masked-columns-transact-sql?view=sql-server-ver15'>sys.masked_columns</a>.
+			/// </summary>
 			public ITable<MaskedColumns>                                      MaskedColumns                                      { get { return _dataContext.GetTable<MaskedColumns>(); } }
 			public ITable<MasterFiles>                                        MasterFiles                                        { get { return _dataContext.GetTable<MasterFiles>(); } }
 			public ITable<MasterKeyPasswords>                                 MasterKeyPasswords                                 { get { return _dataContext.GetTable<MasterKeyPasswords>(); } }
+			/// <summary>
+			/// Contains a row for each internal memory-optimized table used for storing user memory-optimized tables. Each user table corresponds to one or more internal tables. A single table is used for the core data storage. Additional internal tables are used to support features such as temporal, columnstore index and off-row (LOB) storage for memory-optimized tables.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-memory-optimized-tables-internal-attributes-transact-sql?view=sql-server-ver15'>sys.memory_optimized_tables_internal_attributes</a>.
+			/// </summary>
 			public ITable<MemoryOptimizedTablesInternalAttributes>            MemoryOptimizedTablesInternalAttributes            { get { return _dataContext.GetTable<MemoryOptimizedTablesInternalAttributes>(); } }
 			public ITable<Messages>                                           Messages                                           { get { return _dataContext.GetTable<Messages>(); } }
 			public ITable<MessageTypeXmlSchemaCollectionUsages>               MessageTypeXmlSchemaCollectionUsages               { get { return _dataContext.GetTable<MessageTypeXmlSchemaCollectionUsages>(); } }
+			/// <summary>
+			/// Returns a row for each module-to-assembly reference.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-module-assembly-usages-transact-sql?view=sql-server-ver15'>sys.module_assembly_usages</a>.
+			/// </summary>
 			public ITable<ModuleAssemblyUsages>                               ModuleAssemblyUsages                               { get { return _dataContext.GetTable<ModuleAssemblyUsages>(); } }
+			/// <summary>
+			/// Contains one row for each parameter of a numbered procedure. When you create a numbered stored procedure, the base procedure is number 1. All subsequent procedures have numbers 2, 3, and so forth. <b>sys.numbered_procedure_parameters</b> contains the parameter definitions for all subsequent procedures, numbered 2 and greater. This view does not show parameters for the base stored procedure (number = 1). The base stored procedure is similar to a nonnumbered stored procedure. Therefore, its parameters are represented in <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-parameters-transact-sql?view=sql-server-ver15'>sys.parameters (Transact-SQL)</a>.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-numbered-procedure-parameters-transact-sql?view=sql-server-ver15'>sys.numbered_procedure_parameters</a>.
+			/// </summary>
 			public ITable<NumberedProcedureParameters>                        NumberedProcedureParameters                        { get { return _dataContext.GetTable<NumberedProcedureParameters>(); } }
+			/// <summary>
+			/// Contains a row for each SQL Server stored procedure that was created as a numbered procedure. This does not show a row for the base (number = 1) stored procedure. Entries for the base stored procedures can be found in views such as <b>sys.objects</b> and <b>sys.procedures</b>.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-numbered-procedures-transact-sql?view=sql-server-ver15'>sys.numbered_procedures</a>.
+			/// </summary>
 			public ITable<NumberedProcedures>                                 NumberedProcedures                                 { get { return _dataContext.GetTable<NumberedProcedures>(); } }
+			/// <summary>
+			/// Contains a row for each user-defined, schema-scoped object that is created within a database, including natively compiled scalar user-defined function.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-objects-transact-sql?view=sql-server-ver15'>sys.objects</a>.
+			/// </summary>
 			public ITable<Objects>                                            Objects                                            { get { return _dataContext.GetTable<Objects>(); } }
 			public ITable<Openkeys>                                           Openkeys                                           { get { return _dataContext.GetTable<Openkeys>(); } }
+			/// <summary>
+			/// Contains a row for each parameter of an object that accepts parameters. If the object is a scalar function, there is also a single row describing the return value. That row will have a <b>parameter_id</b> value of 0.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-parameters-transact-sql?view=sql-server-ver15'>sys.parameters</a>.
+			/// </summary>
 			public ITable<Parameters>                                         Parameters                                         { get { return _dataContext.GetTable<Parameters>(); } }
+			/// <summary>
+			/// Returns one row for each parameter that is of user-defined type.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-parameter-type-usages-transact-sql?view=sql-server-ver15'>sys.parameter_type_usages</a>.
+			/// </summary>
 			public ITable<ParameterTypeUsages>                                ParameterTypeUsages                                { get { return _dataContext.GetTable<ParameterTypeUsages>(); } }
 			public ITable<PartitionFunctions>                                 PartitionFunctions                                 { get { return _dataContext.GetTable<PartitionFunctions>(); } }
 			public ITable<PartitionParameters>                                PartitionParameters                                { get { return _dataContext.GetTable<PartitionParameters>(); } }
 			public ITable<PartitionRangeValues>                               PartitionRangeValues                               { get { return _dataContext.GetTable<PartitionRangeValues>(); } }
+			/// <summary>
+			/// Contains a row for each partition of all the tables and most types of indexes in the database. Special index types such as Full-Text, Spatial, and XML are not included in this view. All tables and indexes in SQL Server contain at least one partition, whether or not they are explicitly partitioned.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-partitions-transact-sql?view=sql-server-ver15'>sys.partitions</a>.
+			/// </summary>
 			public ITable<Partitions>                                         Partitions                                         { get { return _dataContext.GetTable<Partitions>(); } }
 			public ITable<PartitionSchemes>                                   PartitionSchemes                                   { get { return _dataContext.GetTable<PartitionSchemes>(); } }
+			/// <summary>
+			/// Returns a row for each table for which periods have been defined.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-periods-transact-sql?view=sql-server-ver15'>sys.periods</a>.
+			/// </summary>
 			public ITable<Periods>                                            Periods                                            { get { return _dataContext.GetTable<Periods>(); } }
+			/// <summary>
+			/// Contains a row for each plan guide in the database.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-plan-guides-transact-sql?view=sql-server-ver15'>sys.plan_guides</a>.
+			/// </summary>
 			public ITable<PlanGuides>                                         PlanGuides                                         { get { return _dataContext.GetTable<PlanGuides>(); } }
+			/// <summary>
+			/// Contains a row for each object that is a procedure of some kind, with <b>sys.objects.type</b> = P, X, RF, and PC.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-procedures-transact-sql?view=sql-server-ver15'>sys.procedures</a>.
+			/// </summary>
 			public ITable<Procedures>                                         Procedures                                         { get { return _dataContext.GetTable<Procedures>(); } }
 			public ITable<QueryContextSettings>                               QueryContextSettings                               { get { return _dataContext.GetTable<QueryContextSettings>(); } }
 			public ITable<QueryStorePlan>                                     QueryStorePlan                                     { get { return _dataContext.GetTable<QueryStorePlan>(); } }
@@ -5800,12 +6463,28 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			public ITable<SecurityPredicates>                                 SecurityPredicates                                 { get { return _dataContext.GetTable<SecurityPredicates>(); } }
 			public ITable<SelectiveXmlIndexNamespaces>                        SelectiveXmlIndexNamespaces                        { get { return _dataContext.GetTable<SelectiveXmlIndexNamespaces>(); } }
 			public ITable<SensitivityClassifications>                         SensitivityClassifications                         { get { return _dataContext.GetTable<SensitivityClassifications>(); } }
+			/// <summary>
+			/// Contains a row for each sequence object in a database.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-sequences-transact-sql?view=sql-server-ver15'>sys.sequences</a>.
+			/// </summary>
 			public ITable<Sequences>                                          Sequences                                          { get { return _dataContext.GetTable<Sequences>(); } }
+			/// <summary>
+			/// Contains one row for each assembly module for the server-level triggers of type TA. This view maps assembly triggers to the underlying CLR implementation. You can join this relation to <b>sys.server_triggers</b>. The assembly must be loaded into the <b>master</b> database. The tuple (object_id) is the key for the relation.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-server-assembly-modules-transact-sql?view=sql-server-ver15'>sys.server_assembly_modules</a>.
+			/// </summary>
 			public ITable<ServerAssemblyModules>                              ServerAssemblyModules                              { get { return _dataContext.GetTable<ServerAssemblyModules>(); } }
 			public ITable<ServerAudits>                                       ServerAudits                                       { get { return _dataContext.GetTable<ServerAudits>(); } }
 			public ITable<ServerAuditSpecificationDetails>                    ServerAuditSpecificationDetails                    { get { return _dataContext.GetTable<ServerAuditSpecificationDetails>(); } }
 			public ITable<ServerAuditSpecifications>                          ServerAuditSpecifications                          { get { return _dataContext.GetTable<ServerAuditSpecifications>(); } }
+			/// <summary>
+			/// Returns a row for each server-level event notification object.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-server-event-notifications-transact-sql?view=sql-server-ver15'>sys.server_event_notifications</a>.
+			/// </summary>
 			public ITable<ServerEventNotifications>                           ServerEventNotifications                           { get { return _dataContext.GetTable<ServerEventNotifications>(); } }
+			/// <summary>
+			/// Contains one row for each event for which a server-level event-notification or server-level DDL trigger fires. The columns <b>object_id</b> and <b>type</b> uniquely identify the server event.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-server-events-transact-sql?view=sql-server-ver15'>sys.server_events</a>.
+			/// </summary>
 			public ITable<ServerEvents>                                       ServerEvents                                       { get { return _dataContext.GetTable<ServerEvents>(); } }
 			public ITable<ServerEventSessionActions>                          ServerEventSessionActions                          { get { return _dataContext.GetTable<ServerEventSessionActions>(); } }
 			public ITable<ServerEventSessionEvents>                           ServerEventSessionEvents                           { get { return _dataContext.GetTable<ServerEventSessionEvents>(); } }
@@ -5819,8 +6498,20 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			public ITable<ServerPrincipals>                                   ServerPrincipals                                   { get { return _dataContext.GetTable<ServerPrincipals>(); } }
 			public ITable<ServerRoleMembers>                                  ServerRoleMembers                                  { get { return _dataContext.GetTable<ServerRoleMembers>(); } }
 			public ITable<Servers>                                            Servers                                            { get { return _dataContext.GetTable<Servers>(); } }
+			/// <summary>
+			/// Contains the set of SQL modules for server-level triggers of type TR. You can join this relation to sys.server_triggers. The tuple (object_id) is the key of the relation.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-server-sql-modules-transact-sql?view=sql-server-ver15'>sys.server_sql_modules</a>.
+			/// </summary>
 			public ITable<ServerSqlModules>                                   ServerSqlModules                                   { get { return _dataContext.GetTable<ServerSqlModules>(); } }
+			/// <summary>
+			/// Contains one row for each event for which a server-level (synchronous) trigger fires.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-server-trigger-events-transact-sql?view=sql-server-ver15'>sys.server_trigger_events</a>.
+			/// </summary>
 			public ITable<ServerTriggerEvents>                                ServerTriggerEvents                                { get { return _dataContext.GetTable<ServerTriggerEvents>(); } }
+			/// <summary>
+			/// Contains the set of all server-level DDL triggers with object_type of TR or TA. In the case of CLR triggers, the assembly must be loaded into the <b>master</b> database. All server-level DDL trigger names exist in a single, global scope.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-server-triggers-transact-sql?view=sql-server-ver15'>sys.server_triggers</a>.
+			/// </summary>
 			public ITable<ServerTriggers>                                     ServerTriggers                                     { get { return _dataContext.GetTable<ServerTriggers>(); } }
 			public ITable<ServiceBrokerEndpoints>                             ServiceBrokerEndpoints                             { get { return _dataContext.GetTable<ServiceBrokerEndpoints>(); } }
 			public ITable<ServiceContractMessageUsages>                       ServiceContractMessageUsages                       { get { return _dataContext.GetTable<ServiceContractMessageUsages>(); } }
@@ -5834,25 +6525,77 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			public ITable<SpatialIndexes>                                     SpatialIndexes                                     { get { return _dataContext.GetTable<SpatialIndexes>(); } }
 			public ITable<SpatialIndexTessellations>                          SpatialIndexTessellations                          { get { return _dataContext.GetTable<SpatialIndexTessellations>(); } }
 			public ITable<SpatialReferenceSystems>                            SpatialReferenceSystems                            { get { return _dataContext.GetTable<SpatialReferenceSystems>(); } }
+			/// <summary>
+			/// Contains a row for each dependency on a referenced entity as referenced in the Transact-SQL expression or statements that define some other referencing object.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-sql-dependencies-transact-sql?view=sql-server-ver15'>sys.sql_dependencies</a>.
+			/// </summary>
 			public ITable<SqlDependencies>                                    SqlDependencies                                    { get { return _dataContext.GetTable<SqlDependencies>(); } }
+			/// <summary>
+			/// Contains one row for each by-name dependency on a user-defined entity in the current database. This includes dependences between natively compiled, scalar user-defined functions and other SQL Server modules. A dependency between two entities is created when one entity, called the <em>referenced entity</em>, appears by name in a persisted SQL expression of another entity, called the <em>referencing entity</em>. For example, when a table is referenced in the definition of a view, the view, as the referencing entity, depends on the table, the referenced entity. If the table is dropped, the view is unusable.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-sql-expression-dependencies-transact-sql?view=sql-server-ver15'>sys.sql_expression_dependencies</a>.
+			/// </summary>
 			public ITable<SqlExpressionDependencies>                          SqlExpressionDependencies                          { get { return _dataContext.GetTable<SqlExpressionDependencies>(); } }
 			public ITable<SqlFeatureRestrictions>                             SqlFeatureRestrictions                             { get { return _dataContext.GetTable<SqlFeatureRestrictions>(); } }
 			public ITable<SqlLogins>                                          SqlLogins                                          { get { return _dataContext.GetTable<SqlLogins>(); } }
+			/// <summary>
+			/// Returns a row for each object that is an SQL language-defined module in SQL Server, including natively compiled scalar user-defined function. Objects of type P, RF, V, TR, FN, IF, TF, and R have an associated SQL module. Stand-alone defaults, objects of type D, also have an SQL module definition in this view. For a description of these types, see the <i>type</i> column in the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-objects-transact-sql?view=sql-server-ver15'>sys.objects</a> catalog view.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-sql-modules-transact-sql?view=sql-server-ver15'>sys.sql_modules</a>.
+			/// </summary>
 			public ITable<SqlModules>                                         SqlModules                                         { get { return _dataContext.GetTable<SqlModules>(); } }
+			/// <summary>
+			/// Contains a row for each statistics object that exists for the tables, indexes, and indexed views in the database in SQL Server. Every index will have a corresponding statistics row with the same name and ID (<b>index_id</b> = <b>stats_id</b>), but not every statistics row has a corresponding index.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-stats-transact-sql?view=sql-server-ver15'>sys.stats</a>.
+			/// </summary>
 			public ITable<Stats>                                              Stats                                              { get { return _dataContext.GetTable<Stats>(); } }
+			/// <summary>
+			/// Contains a row for each column that is part of <b>sys.stats</b> statistics.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-stats-columns-transact-sql?view=sql-server-ver15'>sys.stats_columns</a>.
+			/// </summary>
 			public ITable<StatsColumns>                                       StatsColumns                                       { get { return _dataContext.GetTable<StatsColumns>(); } }
 			public ITable<SymmetricKeys>                                      SymmetricKeys                                      { get { return _dataContext.GetTable<SymmetricKeys>(); } }
+			/// <summary>
+			/// Contains a row for each synonym object that is <b>sys.objects.type</b> = SN.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-synonyms-transact-sql?view=sql-server-ver15'>sys.synonyms</a>.
+			/// </summary>
 			public ITable<Synonyms>                                           Synonyms                                           { get { return _dataContext.GetTable<Synonyms>(); } }
+			/// <summary>
+			/// Contains a row for each column of system objects that have columns.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-system-columns-transact-sql?view=sql-server-ver15'>sys.system_columns</a>.
+			/// </summary>
 			public ITable<SystemColumns>                                      SystemColumns                                      { get { return _dataContext.GetTable<SystemColumns>(); } }
 			public ITable<SystemComponentsSurfaceAreaConfiguration>           SystemComponentsSurfaceAreaConfiguration           { get { return _dataContext.GetTable<SystemComponentsSurfaceAreaConfiguration>(); } }
 			public ITable<SystemInternalsAllocationUnits>                     SystemInternalsAllocationUnits                     { get { return _dataContext.GetTable<SystemInternalsAllocationUnits>(); } }
 			public ITable<SystemInternalsPartitionColumns>                    SystemInternalsPartitionColumns                    { get { return _dataContext.GetTable<SystemInternalsPartitionColumns>(); } }
 			public ITable<SystemInternalsPartitions>                          SystemInternalsPartitions                          { get { return _dataContext.GetTable<SystemInternalsPartitions>(); } }
+			/// <summary>
+			/// Contains one row for all schema-scoped system objects that are included with Microsoft SQL Server. All system objects are contained in the schemas named sys or INFORMATION_SCHEMA.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-system-objects-transact-sql?view=sql-server-ver15'>sys.system_objects</a>.
+			/// </summary>
 			public ITable<SystemObjects>                                      SystemObjects                                      { get { return _dataContext.GetTable<SystemObjects>(); } }
+			/// <summary>
+			/// Contains one row for each system object that has parameters.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-system-parameters-transact-sql?view=sql-server-ver15'>sys.system_parameters</a>.
+			/// </summary>
 			public ITable<SystemParameters>                                   SystemParameters                                   { get { return _dataContext.GetTable<SystemParameters>(); } }
+			/// <summary>
+			/// Returns one row per system object that contains an SQL language-defined module. System objects of type FN, IF, P, PC, TF, V have an associated SQL module. To identify the containing object, you can join this view to <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-system-objects-transact-sql?view=sql-server-ver15'>sys.system_objects</a>.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-system-sql-modules-transact-sql?view=sql-server-ver15'>sys.system_sql_modules</a>.
+			/// </summary>
 			public ITable<SystemSqlModules>                                   SystemSqlModules                                   { get { return _dataContext.GetTable<SystemSqlModules>(); } }
+			/// <summary>
+			/// Contains one row for each system view that is shipped with SQL Server. All system views are contained in the schemas named <b>sys</b> or <b>INFORMATION_SCHEMA</b>.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-system-views-transact-sql?view=sql-server-ver15'>sys.system_views</a>.
+			/// </summary>
 			public ITable<SystemViews>                                        SystemViews                                        { get { return _dataContext.GetTable<SystemViews>(); } }
+			/// <summary>
+			/// Returns a row for each user table in SQL Server.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-tables-transact-sql?view=sql-server-ver15'>sys.tables</a>.
+			/// </summary>
 			public ITable<Tables>                                             Tables                                             { get { return _dataContext.GetTable<Tables>(); } }
+			/// <summary>
+			/// Displays properties of user-defined table types in SQL Server. A table type is a type from which table variables or table-valued parameters could be declared. Each table type has a <b>type_table_object_id</b> that is a foreign key into the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-objects-transact-sql?view=sql-server-ver15'>sys.objects</a> catalog view. You can use this ID column to query various catalog views, in a way that is similar to an <b>object_id</b> column of a regular table, to discover the structure of the table type such as its columns and constraints.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-table-types-transact-sql?view=sql-server-ver15'>sys.table_types</a>.
+			/// </summary>
 			public ITable<TableTypes>                                         TableTypes                                         { get { return _dataContext.GetTable<TableTypes>(); } }
 			public ITable<TcpEndpoints>                                       TcpEndpoints                                       { get { return _dataContext.GetTable<TcpEndpoints>(); } }
 			public ITable<TimeZoneInfo>                                       TimeZoneInfo                                       { get { return _dataContext.GetTable<TimeZoneInfo>(); } }
@@ -5863,14 +6606,38 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			public ITable<Traces>                                             Traces                                             { get { return _dataContext.GetTable<Traces>(); } }
 			public ITable<TraceSubclassValues>                                TraceSubclassValues                                { get { return _dataContext.GetTable<TraceSubclassValues>(); } }
 			public ITable<TransmissionQueue>                                  TransmissionQueue                                  { get { return _dataContext.GetTable<TransmissionQueue>(); } }
+			/// <summary>
+			/// Contains a row per event for which a trigger fires.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-trigger-events-transact-sql?view=sql-server-ver15'>sys.trigger_events</a>.
+			/// </summary>
 			public ITable<TriggerEvents>                                      TriggerEvents                                      { get { return _dataContext.GetTable<TriggerEvents>(); } }
+			/// <summary>
+			/// Returns a row for each event or event group on which a trigger can fire.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-trigger-event-types-transact-sql?view=sql-server-ver15'>sys.trigger_event_types</a>.
+			/// </summary>
 			public ITable<TriggerEventTypes>                                  TriggerEventTypes                                  { get { return _dataContext.GetTable<TriggerEventTypes>(); } }
+			/// <summary>
+			/// Contains a row for each object that is a trigger, with a type of TR or TA. DML trigger names are schema-scoped and, therefore, are visible in <b>sys.objects</b>. DDL trigger names are scoped by the parent entity and are only visible in this view.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-triggers-transact-sql?view=sql-server-ver15'>sys.triggers</a>.
+			/// </summary>
 			public ITable<Triggers>                                           Triggers                                           { get { return _dataContext.GetTable<Triggers>(); } }
 			public ITable<TrustedAssemblies>                                  TrustedAssemblies                                  { get { return _dataContext.GetTable<TrustedAssemblies>(); } }
+			/// <summary>
+			/// Contains one row per type to assembly reference.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-type-assembly-usages-transact-sql?view=sql-server-ver15'>sys.type_assembly_usages</a>.
+			/// </summary>
 			public ITable<TypeAssemblyUsages>                                 TypeAssemblyUsages                                 { get { return _dataContext.GetTable<TypeAssemblyUsages>(); } }
+			/// <summary>
+			/// Contains a row for each system and user-defined type.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-types-transact-sql?view=sql-server-ver15'>sys.types</a>.
+			/// </summary>
 			public ITable<Types>                                              Types                                              { get { return _dataContext.GetTable<Types>(); } }
 			public ITable<UserToken>                                          UserToken                                          { get { return _dataContext.GetTable<UserToken>(); } }
 			public ITable<ViaEndpoints>                                       ViaEndpoints                                       { get { return _dataContext.GetTable<ViaEndpoints>(); } }
+			/// <summary>
+			/// Contains a row for each view object, with <b>sys.objects.type</b> = V.<br/>
+			/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-views-transact-sql?view=sql-server-ver15'>sys.views</a>.
+			/// </summary>
 			public ITable<Views>                                              Views                                              { get { return _dataContext.GetTable<Views>(); } }
 
 			private readonly IDataContext _dataContext;
@@ -5881,35 +6648,120 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			}
 		}
 
+		/// <summary>
+		/// Shows the union of all columns belonging to user-defined objects and system objects.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-all-columns-transact-sql?view=sql-server-ver15'>sys.all_columns</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="all_columns", IsView=true)]
 		public partial class AllColumns
 		{
+			/// <summary>
+			/// ID of the object to which this column belongs.
+			/// </summary>
 			[Column("object_id"),                           NotNull    ] public int     ObjectID                        { get; set; } // int
+			/// <summary>
+			/// Name of the column. Is unique within the object.
+			/// </summary>
 			[Column("name"),                                   Nullable] public string? Name                            { get; set; } // sysname
+			/// <summary>
+			/// ID of the column. Is unique within the object.<br/> Column IDs might not be sequential.
+			/// </summary>
 			[Column("column_id"),                           NotNull    ] public int     ColumnID                        { get; set; } // int
+			/// <summary>
+			/// ID of the system-type of the column.
+			/// </summary>
 			[Column("system_type_id"),                      NotNull    ] public byte    SystemTypeID                    { get; set; } // tinyint
+			/// <summary>
+			/// ID of the type of the column as defined by the user.<br/> To return the name of the type, join to the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-types-transact-sql?view=sql-server-ver15'>sys.types</a> catalog view on this column.
+			/// </summary>
 			[Column("user_type_id"),                        NotNull    ] public int     UserTypeID                      { get; set; } // int
+			/// <summary>
+			/// Maximum length (in bytes) of the column.<br/> -1 = Column data type is <b>varchar(max)</b>, <b>nvarchar(max)</b>, <b>varbinary(max)</b>, or <b>xml</b>.<br/> For <b>text</b> columns, the max_length value will be 16 or the value set by sp_tableoption &apos;text in row&apos;.
+			/// </summary>
 			[Column("max_length"),                          NotNull    ] public short   MaxLength                       { get; set; } // smallint
+			/// <summary>
+			/// Precision of the column if numeric-based; otherwise, 0.
+			/// </summary>
 			[Column("precision"),                           NotNull    ] public byte    Precision                       { get; set; } // tinyint
+			/// <summary>
+			/// Scale of the column if numeric-based; otherwise, 0.
+			/// </summary>
 			[Column("scale"),                               NotNull    ] public byte    Scale                           { get; set; } // tinyint
+			/// <summary>
+			/// Name of the collation of the column if character-based; otherwise, NULL.
+			/// </summary>
 			[Column("collation_name"),                         Nullable] public string? CollationName                   { get; set; } // sysname
+			/// <summary>
+			/// 1 = Column is nullable.
+			/// </summary>
 			[Column("is_nullable"),                            Nullable] public bool?   IsNullable                      { get; set; } // bit
+			/// <summary>
+			/// 1 = Column uses ANSI_PADDING ON behavior if character, binary, or variant.<br/> 0 = Column is not character, binary, or variant.
+			/// </summary>
 			[Column("is_ansi_padded"),                      NotNull    ] public bool    IsAnsiPadded                    { get; set; } // bit
+			/// <summary>
+			/// 1 = Column is a declared ROWGUIDCOL.
+			/// </summary>
 			[Column("is_rowguidcol"),                       NotNull    ] public bool    IsRowguidcol                    { get; set; } // bit
+			/// <summary>
+			/// 1 = Column has identity values
+			/// </summary>
 			[Column("is_identity"),                         NotNull    ] public bool    IsIdentity                      { get; set; } // bit
+			/// <summary>
+			/// 1 = Column is a computed column.
+			/// </summary>
 			[Column("is_computed"),                         NotNull    ] public bool    IsComputed                      { get; set; } // bit
+			/// <summary>
+			/// 1 = Column is declared to use filestream storage.
+			/// </summary>
 			[Column("is_filestream"),                       NotNull    ] public bool    IsFilestream                    { get; set; } // bit
+			/// <summary>
+			/// 1 = Column is replicated.
+			/// </summary>
 			[Column("is_replicated"),                          Nullable] public bool?   IsReplicated                    { get; set; } // bit
+			/// <summary>
+			/// 1 = Column has a non-SQL Server subscriber.
+			/// </summary>
 			[Column("is_non_sql_subscribed"),                  Nullable] public bool?   IsNonSqlSubscribed              { get; set; } // bit
+			/// <summary>
+			/// 1 = Column is merge-published.
+			/// </summary>
 			[Column("is_merge_published"),                     Nullable] public bool?   IsMergePublished                { get; set; } // bit
+			/// <summary>
+			/// 1 = Column is replicated by using SSIS.
+			/// </summary>
 			[Column("is_dts_replicated"),                      Nullable] public bool?   IsDtsReplicated                 { get; set; } // bit
+			/// <summary>
+			/// 1 = Content is a complete XML document.<br/> 0 = Content is a document fragment, or the column data type is not XML.
+			/// </summary>
 			[Column("is_xml_document"),                     NotNull    ] public bool    IsXmlDocument                   { get; set; } // bit
+			/// <summary>
+			/// Non-zero if the column&apos;s data type is <b>xml</b> and the XML is typed. The value will be the ID of the collection containing the column&apos;s validating XML schema namespace<br/> 0 = no XML schema collection.
+			/// </summary>
 			[Column("xml_collection_id"),                   NotNull    ] public int     XmlCollectionID                 { get; set; } // int
+			/// <summary>
+			/// ID of the default object, regardless of whether it is a stand-alone <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../system-stored-procedures/sp-bindefault-transact-sql?view=sql-server-ver15'>sys.sp_bindefault</a>, or an in-line, column-level DEFAULT constraint. The parent_object_id column of an inline column-level default object is a reference back to the table itself.<br/> 0 = No default.
+			/// </summary>
 			[Column("default_object_id"),                   NotNull    ] public int     DefaultObjectID                 { get; set; } // int
+			/// <summary>
+			/// ID of the stand-alone rule bound to the column by using sys.sp_bindrule.<br/> 0 = No stand-alone rule.<br/> For column-level CHECK constraints, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-check-constraints-transact-sql?view=sql-server-ver15'>sys.check_constraints (Transact-SQL)</a>.
+			/// </summary>
 			[Column("rule_object_id"),                      NotNull    ] public int     RuleObjectID                    { get; set; } // int
+			/// <summary>
+			/// 1 = Column is a sparse column. For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../tables/use-sparse-columns?view=sql-server-ver15'>Use Sparse Columns</a>.
+			/// </summary>
 			[Column("is_sparse"),                              Nullable] public bool?   IsSparse                        { get; set; } // bit
+			/// <summary>
+			/// 1 = Column is a column set. For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../tables/use-column-sets?view=sql-server-ver15'>Use Column Sets</a>.
+			/// </summary>
 			[Column("is_column_set"),                          Nullable] public bool?   IsColumnSet                     { get; set; } // bit
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, SQL Database. 7, 8, 9, 10 only applies to SQL Database.<br/> Identifies when the column value is generated (will always be 0 for columns in system tables):<br/> 0 = NOT_APPLICABLE<br/> 1 = AS_ROW_START<br/> 2 = AS_ROW_END<br/>7 = AS_TRANSACTION_ID_START<br/>8 = AS_TRANSACTION_ID_END<br/>9 = AS_SEQUENCE_NUMBER_START<br/>10 = AS_SEQUENCE_NUMBER_END<br/> For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../tables/temporal-tables?view=sql-server-ver15'>Temporal Tables (Relational databases)</a>.
+			/// </summary>
 			[Column("generated_always_type"),                  Nullable] public byte?   GeneratedAlwaysType             { get; set; } // tinyint
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, SQL Database.<br/> Textual description of <i>generated_always_type</i>&apos;s value (always NOT_APPLICABLE for columns in system tables) <br/> NOT_APPLICABLE<br/> AS_ROW_START<br/> AS_ROW_END<br/><br/><b>Applies to</b>: SQL Database<br/><br/>AS_TRANSACTION_ID_START<br/>AS_TRANSACTION_ID_END<br/>AS_SEQUENCE_NUMBER_START<br/>AS_SEQUENCE_NUMBER_END
+			/// </summary>
 			[Column("generated_always_type_desc"),             Nullable] public string? GeneratedAlwaysTypeDesc         { get; set; } // nvarchar(60)
 			[Column("encryption_type"),                        Nullable] public int?    EncryptionType                  { get; set; } // int
 			[Column("encryption_type_desc"),                   Nullable] public string? EncryptionTypeDesc              { get; set; } // nvarchar(64)
@@ -5932,20 +6784,60 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Shows the UNION of all schema-scoped user-defined objects and system objects.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-all-objects-transact-sql?view=sql-server-ver15'>sys.all_objects</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="all_objects", IsView=true)]
 		public partial class AllObjects
 		{
+			/// <summary>
+			/// Object name.
+			/// </summary>
 			[Column("name"),                NotNull    ] public string   Name              { get; set; } = null!; // sysname
+			/// <summary>
+			/// Object identification number. Is unique within a database.
+			/// </summary>
 			[Column("object_id"),           NotNull    ] public int      ObjectID          { get; set; } // int
+			/// <summary>
+			/// ID of the individual owner if different from the schema owner. By default, schema-contained objects are owned by the schema owner. However, another owner can be specified by using the ALTER AUTHORIZATION statement to change ownership.<br/> Is NULL if there is no alternative individual owner.<br/> Is NULL if the object type is one of the following:<br/> C = CHECK constraint<br/> D = DEFAULT (constraint or stand-alone)<br/> F = FOREIGN KEY constraint<br/> PK = PRIMARY KEY constraint<br/> R = Rule (old-style, stand-alone)<br/> TA = Assembly (CLR) trigger<br/> TR = SQL trigger<br/> UQ = UNIQUE constraint
+			/// </summary>
 			[Column("principal_id"),           Nullable] public int?     PrincipalID       { get; set; } // int
+			/// <summary>
+			/// ID of the schema that contains the object.<br/> For all schema scoped system objects that are included with SQL Server, this value is always in (schema_id(&apos;sys&apos;), schema_id(&apos;INFORMATION_SCHEMA&apos;)).
+			/// </summary>
 			[Column("schema_id"),           NotNull    ] public int      SchemaID          { get; set; } // int
+			/// <summary>
+			/// ID of the object to which this object belongs.<br/> 0 = Not a child object.
+			/// </summary>
 			[Column("parent_object_id"),    NotNull    ] public int      ParentObjectID    { get; set; } // int
+			/// <summary>
+			/// Object type:<br/> AF = Aggregate function (CLR)<br/> C = CHECK constraint<br/> D = DEFAULT (constraint or stand-alone)<br/> F = FOREIGN KEY constraint<br/> FN = SQL scalar function<br/> FS = Assembly (CLR) scalar-function<br/> FT = Assembly (CLR) table-valued function<br/> IF = SQL inline table-valued function<br/> IT = Internal table<br/> P = SQL Stored Procedure<br/> PC = Assembly (CLR) stored-procedure<br/> PG = Plan guide<br/> PK = PRIMARY KEY constraint<br/> R = Rule (old-style, stand-alone)<br/> RF = Replication-filter-procedure<br/> S = System base table<br/> SN = Synonym<br/> SO = Sequence object<br/> SQ = Service queue<br/> TA = Assembly (CLR) DML trigger<br/> TF = SQL table-valued-function<br/> TR = SQL DML trigger<br/> TT = Table type<br/> U = Table (user-defined)<br/> UQ = UNIQUE constraint<br/> V = View<br/> X = Extended stored procedure
+			/// </summary>
 			[Column("type"),                   Nullable] public string?  Type              { get; set; } // char(2)
+			/// <summary>
+			/// Description of the object type. AGGREGATE_FUNCTION<br/> CHECK_CONSTRAINT<br/> DEFAULT_CONSTRAINT<br/> FOREIGN_KEY_CONSTRAINT<br/> SQL_SCALAR_FUNCTION<br/> CLR_SCALAR_FUNCTION<br/> CLR_TABLE_VALUED_FUNCTION<br/> SQL_INLINE_TABLE_VALUED_FUNCTION<br/> INTERNAL_TABLE<br/> SQL_STORED_PROCEDURE<br/> CLR_STORED_PROCEDURE<br/> PLAN_GUIDE<br/> PRIMARY_KEY_CONSTRAINT<br/> RULE<br/> REPLICATION_FILTER_PROCEDURE<br/> SYSTEM_TABLE<br/> SYNONYM<br/> SERVICE_QUEUE<br/> CLR_TRIGGER<br/> SQL_TABLE_VALUED_FUNCTION<br/> SQL_TRIGGER<br/> TABLE_TYPE<br/> USER_TABLE<br/> UNIQUE_CONSTRAINT<br/> VIEW<br/> EXTENDED_STORED_PROCEDURE
+			/// </summary>
 			[Column("type_desc"),              Nullable] public string?  TypeDesc          { get; set; } // nvarchar(60)
+			/// <summary>
+			/// Date the object was created.
+			/// </summary>
 			[Column("create_date"),         NotNull    ] public DateTime CreateDate        { get; set; } // datetime
+			/// <summary>
+			/// Date the object was last modified by using an ALTER statement. If the object is a table or a view, modify_date also changes when an index on the table or view is created or modified.
+			/// </summary>
 			[Column("modify_date"),         NotNull    ] public DateTime ModifyDate        { get; set; } // datetime
+			/// <summary>
+			/// Object created by an internal SQL Server component.
+			/// </summary>
 			[Column("is_ms_shipped"),          Nullable] public bool?    IsMsShipped       { get; set; } // bit
+			/// <summary>
+			/// Object is published.
+			/// </summary>
 			[Column("is_published"),           Nullable] public bool?    IsPublished       { get; set; } // bit
+			/// <summary>
+			/// Only the schema of the object is published.
+			/// </summary>
 			[Column("is_schema_published"),    Nullable] public bool?    IsSchemaPublished { get; set; } // bit
 
 			#region Associations
@@ -5977,42 +6869,137 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Contains a row for each allocation unit in the database.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-allocation-units-transact-sql?view=sql-server-ver15'>sys.allocation_units</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="allocation_units", IsView=true)]
 		public partial class AllocationUnits
 		{
+			/// <summary>
+			/// ID of the allocation unit. Is unique within a database.
+			/// </summary>
 			[Column("allocation_unit_id"), NotNull    ] public long    AllocationUnitID { get; set; } // bigint
+			/// <summary>
+			/// Type of allocation unit:<br/> 0 = Dropped<br/> 1 = In-row data (all data types, except LOB data types)<br/> 2 = Large object (LOB) data (<b>text</b>, <b>ntext</b>, <b>image</b>, <b>xml</b>, large value types, and CLR user-defined types)<br/> 3 = Row-overflow data
+			/// </summary>
 			[Column("type"),               NotNull    ] public byte    Type             { get; set; } // tinyint
+			/// <summary>
+			/// Description of the allocation unit type:<br/> <b>DROPPED</b><br/> <b>IN_ROW_DATA</b><br/> <b>LOB_DATA</b><br/> <b>ROW_OVERFLOW_DATA</b>
+			/// </summary>
 			[Column("type_desc"),             Nullable] public string? TypeDesc         { get; set; } // nvarchar(60)
+			/// <summary>
+			/// ID of the storage container associated with the allocation unit.<br/> If type = 1 or 3 in a rowstore index container_id = sys.partitions.hobt_id.<br/> If type = 1 or 3 in a columnstore index, container_id = sys.column_store_row_groups.delta_store_hobt_id.<br/> If type is 2, then container_id = sys.partitions.partition_id.<br/> 0 = Allocation unit marked for deferred drop
+			/// </summary>
 			[Column("container_id"),       NotNull    ] public long    ContainerID      { get; set; } // bigint
+			/// <summary>
+			/// ID of the filegroup in which this allocation unit resides.
+			/// </summary>
 			[Column("data_space_id"),         Nullable] public int?    DataSpaceID      { get; set; } // int
+			/// <summary>
+			/// Total number of pages allocated or reserved by this allocation unit.
+			/// </summary>
 			[Column("total_pages"),        NotNull    ] public long    TotalPages       { get; set; } // bigint
+			/// <summary>
+			/// Number of total pages actually in use.
+			/// </summary>
 			[Column("used_pages"),         NotNull    ] public long    UsedPages        { get; set; } // bigint
+			/// <summary>
+			/// Number of used pages that have:<br/> In-row data<br/> LOB data<br/> Row-overflow data<br/> <br/> Note that the value returned excludes internal index pages and allocation-management pages.
+			/// </summary>
 			[Column("data_pages"),         NotNull    ] public long    DataPages        { get; set; } // bigint
 		}
 
+		/// <summary>
+		/// Shows the union of all parameters that belong to user-defined or system objects.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-all-parameters-transact-sql?view=sql-server-ver15'>sys.all_parameters</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="all_parameters", IsView=true)]
 		public partial class AllParameters
 		{
+			/// <summary>
+			/// ID of the object to which this parameter belongs.
+			/// </summary>
 			[Column("object_id"),                           NotNull    ] public int     ObjectID                        { get; set; } // int
+			/// <summary>
+			/// Name of parameter. Is unique within the object. If the object is a scalar function, the parameter name is an empty string in the row representing the return value.
+			/// </summary>
 			[Column("name"),                                   Nullable] public string? Name                            { get; set; } // sysname
+			/// <summary>
+			/// ID of parameter. Is unique within the object. If the object is a scalar function, <b>parameter_id</b> = 0 represents the return value.
+			/// </summary>
 			[Column("parameter_id"),                        NotNull    ] public int     ParameterID                     { get; set; } // int
+			/// <summary>
+			/// ID of the system type of the parameter.
+			/// </summary>
 			[Column("system_type_id"),                      NotNull    ] public byte    SystemTypeID                    { get; set; } // tinyint
+			/// <summary>
+			/// ID of the type of the parameter as defined by the user.<br/> To return the name of the type, join to the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-types-transact-sql?view=sql-server-ver15'>sys.types</a> catalog view on this column.
+			/// </summary>
 			[Column("user_type_id"),                        NotNull    ] public int     UserTypeID                      { get; set; } // int
+			/// <summary>
+			/// Maximum length of the parameter, in bytes.<br/> -1 = Column data type is <b>varchar(max)</b>, <b>nvarchar(max)</b>, <b>varbinary(max)</b>, or <b>xml</b>.
+			/// </summary>
 			[Column("max_length"),                          NotNull    ] public short   MaxLength                       { get; set; } // smallint
+			/// <summary>
+			/// Precision of the parameter if it is numeric-based; otherwise, 0.
+			/// </summary>
 			[Column("precision"),                           NotNull    ] public byte    Precision                       { get; set; } // tinyint
+			/// <summary>
+			/// Scale of the parameter if it is numeric-based; otherwise, 0.
+			/// </summary>
 			[Column("scale"),                               NotNull    ] public byte    Scale                           { get; set; } // tinyint
+			/// <summary>
+			/// 1 = Parameter is output (or return); otherwise, 0.
+			/// </summary>
 			[Column("is_output"),                           NotNull    ] public bool    IsOutput                        { get; set; } // bit
+			/// <summary>
+			/// 1 = Parameter is a cursor reference parameter.
+			/// </summary>
 			[Column("is_cursor_ref"),                       NotNull    ] public bool    IsCursorRef                     { get; set; } // bit
+			/// <summary>
+			/// 1 = Parameter has a default value.<br/> SQL Server only maintains default values for CLR objects in this catalog view; therefore, this column will always have a value of 0 for Transact-SQL objects. To view the default value of a parameter in a Transact-SQL object, query the <b>definition</b> column of the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-sql-modules-transact-sql?view=sql-server-ver15'>sys.sql_modules</a> catalog view, or use the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/functions/object-definition-transact-sql?view=sql-server-ver15'>OBJECT_DEFINITION</a> system function.
+			/// </summary>
 			[Column("has_default_value"),                   NotNull    ] public bool    HasDefaultValue                 { get; set; } // bit
+			/// <summary>
+			/// 1 = Content is a complete XML document.<br/> 0 = Content is a document fragment or the data type of the column is not <b>xml</b>.
+			/// </summary>
 			[Column("is_xml_document"),                     NotNull    ] public bool    IsXmlDocument                   { get; set; } // bit
+			/// <summary>
+			/// If <b>has_default_value</b> is 1, the value of this column is the value of the default for the parameter; otherwise <i>NULL</i>.
+			/// </summary>
 			[Column("default_value"),                          Nullable] public object? DefaultValue                    { get; set; } // sql_variant
+			/// <summary>
+			/// Is the ID of the XML schema collection used to validate the parameter.<br/> Nonzero if the data type of the parameter is <b>xml</b> and the XML is typed.<br/> 0 = There is no XML schema collection, or the parameter is not XML.
+			/// </summary>
 			[Column("xml_collection_id"),                   NotNull    ] public int     XmlCollectionID                 { get; set; } // int
+			/// <summary>
+			/// 1 =  Parameter is READONLY; otherwise, 0.
+			/// </summary>
 			[Column("is_readonly"),                         NotNull    ] public bool    IsReadonly                      { get; set; } // bit
+			/// <summary>
+			/// 1 = Parameter is nullable. (the default).<br/> 0 = Parameter is not nullable, for more efficient execution of natively-compiled stored procedures.
+			/// </summary>
 			[Column("is_nullable"),                            Nullable] public bool?   IsNullable                      { get; set; } // bit
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, SQL Database.<br/> Encryption type:<br/> 1 = Deterministic encryption<br/> 2 = Randomized encryption
+			/// </summary>
 			[Column("encryption_type"),                        Nullable] public int?    EncryptionType                  { get; set; } // int
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, SQL Database.<br/> Encryption type description:<br/> RANDOMIZED<br/> DETERMINISTIC
+			/// </summary>
 			[Column("encryption_type_desc"),                   Nullable] public string? EncryptionTypeDesc              { get; set; } // nvarchar(64)
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, SQL Database.<br/> Name of encryption algorithm.<br/> Only AEAD_AES_256_CBC_HMAC_SHA_512 is supported.
+			/// </summary>
 			[Column("encryption_algorithm_name"),              Nullable] public string? EncryptionAlgorithmName         { get; set; } // sysname
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, SQL Database.<br/> ID of the CEK.
+			/// </summary>
 			[Column("column_encryption_key_id"),               Nullable] public int?    ColumnEncryptionKeyID           { get; set; } // int
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, SQL Database.<br/> The name of the database where the column encryption key exists if different than the database of the column. Is <i>NULL</i> if the key exists in the same database as the column.
+			/// </summary>
 			[Column("column_encryption_key_database_name"),    Nullable] public string? ColumnEncryptionKeyDatabaseName { get; set; } // sysname
 
 			#region Associations
@@ -6026,18 +7013,52 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Returns the union of <b>sys.sql_modules</b> and <b>sys.system_sql_modules</b>.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-all-sql-modules-transact-sql?view=sql-server-ver15'>sys.all_sql_modules</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="all_sql_modules", IsView=true)]
 		public partial class AllSqlModules
 		{
+			/// <summary>
+			/// ID of the object of the containing object. Is unique within a database.
+			/// </summary>
 			[Column("object_id"),               NotNull    ] public int     ObjectID              { get; set; } // int
-			[Column("definition"),                 Nullable] public string? Definition            { get; set; } // nvarchar(0)
+			/// <summary>
+			/// SQL text that defines this module.<br/> NULL = Encrypted
+			/// </summary>
+			[Column("definition"),                 Nullable] public string? Definition            { get; set; } // nvarchar(max)
+			/// <summary>
+			/// Module was created with SET ANSI_NULLS ON.
+			/// </summary>
 			[Column("uses_ansi_nulls"),            Nullable] public bool?   UsesAnsiNulls         { get; set; } // bit
+			/// <summary>
+			/// Module was created with SET QUOTED_IDENTIFIER ON.
+			/// </summary>
 			[Column("uses_quoted_identifier"),     Nullable] public bool?   UsesQuotedIdentifier  { get; set; } // bit
+			/// <summary>
+			/// Module was created with the SCHEMABINDING option.
+			/// </summary>
 			[Column("is_schema_bound"),            Nullable] public bool?   IsSchemaBound         { get; set; } // bit
+			/// <summary>
+			/// 1 = Schema-bound module definition depends on the default-collation of the database for correct evaluation; otherwise, 0. Such a dependency prevents changing the default collation of the database.
+			/// </summary>
 			[Column("uses_database_collation"),    Nullable] public bool?   UsesDatabaseCollation { get; set; } // bit
+			/// <summary>
+			/// Procedure was created using the WITH RECOMPILE option.
+			/// </summary>
 			[Column("is_recompiled"),              Nullable] public bool?   IsRecompiled          { get; set; } // bit
+			/// <summary>
+			/// Module was declared to produce a NULL output on any NULL input.
+			/// </summary>
 			[Column("null_on_null_input"),         Nullable] public bool?   NullOnNullInput       { get; set; } // bit
+			/// <summary>
+			/// ID of the EXECUTE AS database principal.<br/> NULL by default or if EXECUTE AS CALLER.<br/> ID of the specified principal if EXECUTE AS SELF or EXECUTE AS &lt;principal&gt;.<br/> -2 = EXECUTE AS OWNER.
+			/// </summary>
 			[Column("execute_as_principal_id"),    Nullable] public int?    ExecuteAsPrincipalID  { get; set; } // int
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2014 (12.x) and later.<br/> 0 = not natively compiled<br/> 1 = is natively compiled<br/> The default value is 0.
+			/// </summary>
 			[Column("uses_native_compilation"),    Nullable] public bool?   UsesNativeCompilation { get; set; } // bit
 			[Column("inline_type"),                Nullable] public bool?   InlineType            { get; set; } // bit
 			[Column("is_inlineable"),              Nullable] public bool?   IsInlineable          { get; set; } // bit
@@ -6053,6 +7074,10 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Shows the UNION of all user-defined and system views.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-all-views-transact-sql?view=sql-server-ver15'>sys.all_views</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="all_views", IsView=true)]
 		public partial class AllViews
 		{
@@ -6068,11 +7093,29 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("is_ms_shipped"),                  Nullable] public bool?    IsMsShipped              { get; set; } // bit
 			[Column("is_published"),                   Nullable] public bool?    IsPublished              { get; set; } // bit
 			[Column("is_schema_published"),            Nullable] public bool?    IsSchemaPublished        { get; set; } // bit
+			/// <summary>
+			/// 1 = View is replicated.
+			/// </summary>
 			[Column("is_replicated"),                  Nullable] public bool?    IsReplicated             { get; set; } // bit
+			/// <summary>
+			/// 1 = View has a replication filter.
+			/// </summary>
 			[Column("has_replication_filter"),         Nullable] public bool?    HasReplicationFilter     { get; set; } // bit
+			/// <summary>
+			/// 1 = VIEW_METADATA option specified for view. For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/statements/create-view-transact-sql?view=sql-server-ver15'>CREATE VIEW (Transact-SQL)</a>.
+			/// </summary>
 			[Column("has_opaque_metadata"),            Nullable] public bool?    HasOpaqueMetadata        { get; set; } // bit
+			/// <summary>
+			/// 1 = Table contains persisted data that depends on an assembly whose definition changed during the last ALTER ASSEMBLY. Resets to 0 after the next successful DBCC CHECKDB or DBCC CHECKTABLE.
+			/// </summary>
 			[Column("has_unchecked_assembly_data"),    Nullable] public bool?    HasUncheckedAssemblyData { get; set; } // bit
+			/// <summary>
+			/// 1 = WITH CHECK OPTION was specified in the view definition.
+			/// </summary>
 			[Column("with_check_option"),              Nullable] public bool?    WithCheckOption          { get; set; } // bit
+			/// <summary>
+			/// 1 = View was created automatically by the system to store correlation information between datetime columns. Creation of this view was enabled by setting DATE_CORRELATION_OPTIMIZATION to <b>ON</b>.
+			/// </summary>
 			[Column("is_date_correlation_view"),       Nullable] public bool?    IsDateCorrelationView    { get; set; } // bit
 			[Column("is_tracked_by_cdc"),              Nullable] public bool?    IsTrackedByCdc           { get; set; } // bit
 			[Column("has_snapshot"),                   Nullable] public bool?    HasSnapshot              { get; set; } // bit
@@ -6112,14 +7155,36 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("content"),        Nullable] public byte[]? Content    { get; set; } // varbinary(-1)
 		}
 
+		/// <summary>
+		/// Returns one row for each function, procedure or trigger that is defined by a common language runtime (CLR) assembly. This catalog view maps CLR stored procedures, CLR triggers, or CLR functions to their underlying implementation. Objects of type TA, AF, PC, FS, and FT have an associated assembly module. To find the association between the object and the assembly, you can join this catalog view to other catalog views. For example, when you create a CLR stored procedure, it is represented by one row in <b>sys.objects</b>, one row in <b>sys.procedures</b> (which inherits from <b>sys.objects</b>), and one row in <b>sys.assembly_modules</b>. The stored procedure itself is represented by the metadata in <b>sys.objects</b> and <b>sys.procedures</b>. References to the procedure&apos;s underlying CLR implementation are found in <b>sys.assembly_modules</b>.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-assembly-modules-transact-sql?view=sql-server-ver15'>sys.assembly_modules</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="assembly_modules", IsView=true)]
 		public partial class AssemblyModules
 		{
+			/// <summary>
+			/// Object identification number of the SQL object. Is unique within a database.
+			/// </summary>
 			[Column("object_id"),               NotNull    ] public int     ObjectID             { get; set; } // int
+			/// <summary>
+			/// ID of the assembly from which this module was created.
+			/// </summary>
 			[Column("assembly_id"),             NotNull    ] public int     AssemblyID           { get; set; } // int
-			[Column("assembly_class"),             Nullable] public string? AssemblyClass        { get; set; } // nvarchar(128)
-			[Column("assembly_method"),            Nullable] public string? AssemblyMethod       { get; set; } // nvarchar(128)
+			/// <summary>
+			/// Name of the class within the assembly that defines this module.
+			/// </summary>
+			[Column("assembly_class"),             Nullable] public string? AssemblyClass        { get; set; } // sysname
+			/// <summary>
+			/// Name of the method within the <b>assembly_class</b> that defines this module.<br/> NULL for aggregate functions (AF).
+			/// </summary>
+			[Column("assembly_method"),            Nullable] public string? AssemblyMethod       { get; set; } // sysname
+			/// <summary>
+			/// Module was declared to produce a NULL output for any NULL input.
+			/// </summary>
 			[Column("null_on_null_input"),         Nullable] public bool?   NullOnNullInput      { get; set; } // bit
+			/// <summary>
+			/// ID of the database principal under which the context execution occurs, as specified by the EXECUTE AS clause of the CLR function, stored procedure, or trigger.<br/> NULL = EXECUTE AS CALLER. This is the default.<br/> ID of the specified database principal = EXECUTE AS SELF, EXECUTE AS <em>user_name</em>, or EXECUTE AS <em>login_name</em>.<br/> -2 = EXECUTE AS OWNER.
+			/// </summary>
 			[Column("execute_as_principal_id"),    Nullable] public int?    ExecuteAsPrincipalID { get; set; } // int
 
 			#region Associations
@@ -6140,6 +7205,10 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("referenced_assembly_id"), NotNull] public int ReferencedAssemblyID { get; set; } // int
 		}
 
+		/// <summary>
+		/// Contains a row for each user-defined type that is defined by a CLR assembly. The following <b>sys.assembly_types</b> appear in the list of inherited columns (see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-types-transact-sql?view=sql-server-ver15'>sys.types (Transact-SQL)</a>) after <b>rule_object_id</b>.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-assembly-types-transact-sql?view=sql-server-ver15'>sys.assembly_types</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="assembly_types", IsView=true)]
 		public partial class AssemblyTypes
 		{
@@ -6157,11 +7226,29 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("is_assembly_type"),        NotNull    ] public bool    IsAssemblyType        { get; set; } // bit
 			[Column("default_object_id"),       NotNull    ] public int     DefaultObjectID       { get; set; } // int
 			[Column("rule_object_id"),          NotNull    ] public int     RuleObjectID          { get; set; } // int
+			/// <summary>
+			/// ID of the assembly from which this type was created.
+			/// </summary>
 			[Column("assembly_id"),             NotNull    ] public int     AssemblyID            { get; set; } // int
+			/// <summary>
+			/// Name of the class within the assembly that defines this type.
+			/// </summary>
 			[Column("assembly_class"),             Nullable] public string? AssemblyClass         { get; set; } // sysname
+			/// <summary>
+			/// Sorting the bytes of this type is equivalent to sorting using comparison operators on the type.
+			/// </summary>
 			[Column("is_binary_ordered"),          Nullable] public bool?   IsBinaryOrdered       { get; set; } // bit
+			/// <summary>
+			/// Length of the type is always the same as max_length.
+			/// </summary>
 			[Column("is_fixed_length"),            Nullable] public bool?   IsFixedLength         { get; set; } // bit
+			/// <summary>
+			/// ProgID of the type as exposed to COM.
+			/// </summary>
 			[Column("prog_id"),                    Nullable] public string? ProgID                { get; set; } // nvarchar(40)
+			/// <summary>
+			/// Assembly qualified type name. The name is in a format suitable to be passed to Type.GetType().
+			/// </summary>
 			[Column("assembly_qualified_name"),    Nullable] public string? AssemblyQualifiedName { get; set; } // nvarchar(4000)
 			[Column("is_table_type"),           NotNull    ] public bool    IsTableType           { get; set; } // bit
 		}
@@ -6185,111 +7272,6 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("provider_type"),                   Nullable] public string? ProviderType               { get; set; } // nvarchar(60)
 			[Column("cryptographic_provider_guid"),     Nullable] public Guid?   CryptographicProviderGuid  { get; set; } // uniqueidentifier
 			[Column("cryptographic_provider_algid"),    Nullable] public object? CryptographicProviderAlgid { get; set; } // sql_variant
-		}
-
-		[Table(Schema="sys", Name="availability_databases_cluster", IsView=true)]
-		public partial class AvailabilityDatabasesCluster
-		{
-			[Column("group_id"),          NotNull    ] public Guid     GroupID         { get; set; } // uniqueidentifier
-			[Column("group_database_id"), NotNull    ] public Guid     GroupDatabaseID { get; set; } // uniqueidentifier
-			[Column("database_name"),        Nullable] public string?  DatabaseName    { get; set; } // sysname
-			[Column("truncation_lsn"),       Nullable] public decimal? TruncationLsn   { get; set; } // numeric(25,0)
-		}
-
-		[Table(Schema="sys", Name="availability_group_listener_ip_addresses", IsView=true)]
-		public partial class AvailabilityGroupListenerIpAddresses
-		{
-			[Column("listener_id"),                     Nullable] public string? ListenerID                { get; set; } // nvarchar(36)
-			[Column("ip_address"),                      Nullable] public string? IpAddress                 { get; set; } // nvarchar(48)
-			[Column("ip_subnet_mask"),                  Nullable] public string? IpSubnetMask              { get; set; } // nvarchar(15)
-			[Column("is_dhcp"),                      NotNull    ] public bool    IsDhcp                    { get; set; } // bit
-			[Column("network_subnet_ip"),               Nullable] public string? NetworkSubnetIp           { get; set; } // nvarchar(48)
-			[Column("network_subnet_prefix_length"),    Nullable] public int?    NetworkSubnetPrefixLength { get; set; } // int
-			[Column("network_subnet_ipv4_mask"),        Nullable] public string? NetworkSubnetIpv4Mask     { get; set; } // nvarchar(48)
-			[Column("state"),                           Nullable] public byte?   State                     { get; set; } // tinyint
-			[Column("state_desc"),                      Nullable] public string? StateDesc                 { get; set; } // nvarchar(60)
-		}
-
-		[Table(Schema="sys", Name="availability_group_listeners", IsView=true)]
-		public partial class AvailabilityGroupListeners
-		{
-			[Column("group_id"),                             NotNull    ] public Guid    GroupID                          { get; set; } // uniqueidentifier
-			[Column("listener_id"),                             Nullable] public string? ListenerID                       { get; set; } // nvarchar(36)
-			[Column("dns_name"),                                Nullable] public string? DnsName                          { get; set; } // nvarchar(63)
-			[Column("port"),                                    Nullable] public int?    Port                             { get; set; } // int
-			[Column("is_conformant"),                        NotNull    ] public bool    IsConformant                     { get; set; } // bit
-			[Column("ip_configuration_string_from_cluster"),    Nullable] public string? IpConfigurationStringFromCluster { get; set; } // nvarchar(4000)
-		}
-
-		[Table(Schema="sys", Name="availability_groups", IsView=true)]
-		public partial class AvailabilityGroups
-		{
-			[Column("group_id"),                                    NotNull    ] public Guid    GroupID                                 { get; set; } // uniqueidentifier
-			[Column("name"),                                           Nullable] public string? Name                                    { get; set; } // sysname
-			[Column("resource_id"),                                    Nullable] public string? ResourceID                              { get; set; } // nvarchar(40)
-			[Column("resource_group_id"),                              Nullable] public string? ResourceGroupID                         { get; set; } // nvarchar(40)
-			[Column("failure_condition_level"),                        Nullable] public int?    FailureConditionLevel                   { get; set; } // int
-			[Column("health_check_timeout"),                           Nullable] public int?    HealthCheckTimeout                      { get; set; } // int
-			[Column("automated_backup_preference"),                    Nullable] public byte?   AutomatedBackupPreference               { get; set; } // tinyint
-			[Column("automated_backup_preference_desc"),               Nullable] public string? AutomatedBackupPreferenceDesc           { get; set; } // nvarchar(60)
-			[Column("version"),                                        Nullable] public short?  Version                                 { get; set; } // smallint
-			[Column("basic_features"),                                 Nullable] public bool?   BasicFeatures                           { get; set; } // bit
-			[Column("dtc_support"),                                    Nullable] public bool?   DtcSupport                              { get; set; } // bit
-			[Column("db_failover"),                                    Nullable] public bool?   DbFailover                              { get; set; } // bit
-			[Column("is_distributed"),                                 Nullable] public bool?   IsDistributed                           { get; set; } // bit
-			[Column("cluster_type"),                                   Nullable] public byte?   ClusterType                             { get; set; } // tinyint
-			[Column("cluster_type_desc"),                              Nullable] public string? ClusterTypeDesc                         { get; set; } // nvarchar(60)
-			[Column("required_synchronized_secondaries_to_commit"),    Nullable] public int?    RequiredSynchronizedSecondariesToCommit { get; set; } // int
-			[Column("sequence_number"),                                Nullable] public long?   SequenceNumber                          { get; set; } // bigint
-			[Column("is_contained"),                                   Nullable] public bool?   IsContained                             { get; set; } // bit
-		}
-
-		[Table(Schema="sys", Name="availability_groups_cluster", IsView=true)]
-		public partial class AvailabilityGroupsCluster
-		{
-			[Column("group_id"),                         NotNull    ] public Guid    GroupID                       { get; set; } // uniqueidentifier
-			[Column("name"),                                Nullable] public string? Name                          { get; set; } // sysname
-			[Column("resource_id"),                         Nullable] public string? ResourceID                    { get; set; } // nvarchar(40)
-			[Column("resource_group_id"),                   Nullable] public string? ResourceGroupID               { get; set; } // nvarchar(40)
-			[Column("failure_condition_level"),             Nullable] public int?    FailureConditionLevel         { get; set; } // int
-			[Column("health_check_timeout"),                Nullable] public int?    HealthCheckTimeout            { get; set; } // int
-			[Column("automated_backup_preference"),         Nullable] public byte?   AutomatedBackupPreference     { get; set; } // tinyint
-			[Column("automated_backup_preference_desc"),    Nullable] public string? AutomatedBackupPreferenceDesc { get; set; } // nvarchar(60)
-		}
-
-		[Table(Schema="sys", Name="availability_read_only_routing_lists", IsView=true)]
-		public partial class AvailabilityReadOnlyRoutingLists
-		{
-			[Column("replica_id"),           NotNull] public Guid ReplicaID         { get; set; } // uniqueidentifier
-			[Column("routing_priority"),     NotNull] public int  RoutingPriority   { get; set; } // int
-			[Column("read_only_replica_id"), NotNull] public Guid ReadOnlyReplicaID { get; set; } // uniqueidentifier
-		}
-
-		[Table(Schema="sys", Name="availability_replicas", IsView=true)]
-		public partial class AvailabilityReplicas
-		{
-			[Column("replica_id"),                            Nullable] public Guid?     ReplicaID                         { get; set; } // uniqueidentifier
-			[Column("group_id"),                              Nullable] public Guid?     GroupID                           { get; set; } // uniqueidentifier
-			[Column("replica_metadata_id"),                   Nullable] public int?      ReplicaMetadataID                 { get; set; } // int
-			[Column("replica_server_name"),                   Nullable] public string?   ReplicaServerName                 { get; set; } // nvarchar(256)
-			[Column("owner_sid"),                             Nullable] public byte[]?   OwnerSid                          { get; set; } // varbinary(85)
-			[Column("endpoint_url"),                          Nullable] public string?   EndpointUrl                       { get; set; } // nvarchar(256)
-			[Column("availability_mode"),                     Nullable] public byte?     AvailabilityMode                  { get; set; } // tinyint
-			[Column("availability_mode_desc"),                Nullable] public string?   AvailabilityModeDesc              { get; set; } // nvarchar(60)
-			[Column("failover_mode"),                         Nullable] public byte?     FailoverMode                      { get; set; } // tinyint
-			[Column("failover_mode_desc"),                    Nullable] public string?   FailoverModeDesc                  { get; set; } // nvarchar(60)
-			[Column("session_timeout"),                       Nullable] public int?      SessionTimeout                    { get; set; } // int
-			[Column("primary_role_allow_connections"),        Nullable] public byte?     PrimaryRoleAllowConnections       { get; set; } // tinyint
-			[Column("primary_role_allow_connections_desc"),   Nullable] public string?   PrimaryRoleAllowConnectionsDesc   { get; set; } // nvarchar(60)
-			[Column("secondary_role_allow_connections"),      Nullable] public byte?     SecondaryRoleAllowConnections     { get; set; } // tinyint
-			[Column("secondary_role_allow_connections_desc"), Nullable] public string?   SecondaryRoleAllowConnectionsDesc { get; set; } // nvarchar(60)
-			[Column("create_date"),                           Nullable] public DateTime? CreateDate                        { get; set; } // datetime
-			[Column("modify_date"),                           Nullable] public DateTime? ModifyDate                        { get; set; } // datetime
-			[Column("backup_priority"),                       Nullable] public int?      BackupPriority                    { get; set; } // int
-			[Column("read_only_routing_url"),                 Nullable] public string?   ReadOnlyRoutingUrl                { get; set; } // nvarchar(256)
-			[Column("seeding_mode"),                          Nullable] public byte?     SeedingMode                       { get; set; } // tinyint
-			[Column("seeding_mode_desc"),                     Nullable] public string?   SeedingModeDesc                   { get; set; } // nvarchar(60)
-			[Column("read_write_routing_url"),                Nullable] public string?   ReadWriteRoutingUrl               { get; set; } // nvarchar(256)
 		}
 
 		[Table(Schema="sys", Name="backup_devices", IsView=true)]
@@ -6323,37 +7305,10 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("key_length"),                      Nullable] public int?      KeyLength                { get; set; } // int
 		}
 
-		[Table(Schema="sys", Name="change_tracking_databases", IsView=true)]
-		public partial class ChangeTrackingDatabases
-		{
-			[Column("database_id"),                 NotNull    ] public int     DatabaseID               { get; set; } // int
-			[Column("is_auto_cleanup_on"),             Nullable] public byte?   IsAutoCleanupOn          { get; set; } // tinyint
-			[Column("retention_period"),               Nullable] public int?    RetentionPeriod          { get; set; } // int
-			[Column("retention_period_units"),         Nullable] public byte?   RetentionPeriodUnits     { get; set; } // tinyint
-			[Column("retention_period_units_desc"),    Nullable] public string? RetentionPeriodUnitsDesc { get; set; } // nvarchar(60)
-			[Column("max_cleanup_version"),            Nullable] public long?   MaxCleanupVersion        { get; set; } // bigint
-		}
-
-		[Table(Schema="sys", Name="change_tracking_tables", IsView=true)]
-		public partial class ChangeTrackingTables
-		{
-			[Column("object_id"),                   NotNull    ] public int   ObjectID                { get; set; } // int
-			[Column("is_track_columns_updated_on"), NotNull    ] public bool  IsTrackColumnsUpdatedOn { get; set; } // bit
-			[Column("min_valid_version"),              Nullable] public long? MinValidVersion         { get; set; } // bigint
-			[Column("begin_version"),                  Nullable] public long? BeginVersion            { get; set; } // bigint
-			[Column("cleanup_version"),                Nullable] public long? CleanupVersion          { get; set; } // bigint
-
-			#region Associations
-
-			/// <summary>
-			/// objects
-			/// </summary>
-			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ChangeTrackingTables")]
-			public SystemSchema.Objects Object { get; set; } = null!;
-
-			#endregion
-		}
-
+		/// <summary>
+		/// Contains a row for each object that is a CHECK constraint, with <b>sys.objects.type</b> = &apos;C&apos;.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-check-constraints-transact-sql?view=sql-server-ver15'>sys.check_constraints</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="check_constraints", IsView=true)]
 		public partial class CheckConstraints
 		{
@@ -6369,12 +7324,33 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("is_ms_shipped"),           NotNull    ] public bool     IsMsShipped           { get; set; } // bit
 			[Column("is_published"),            NotNull    ] public bool     IsPublished           { get; set; } // bit
 			[Column("is_schema_published"),     NotNull    ] public bool     IsSchemaPublished     { get; set; } // bit
+			/// <summary>
+			/// CHECK constraint is disabled.
+			/// </summary>
 			[Column("is_disabled"),             NotNull    ] public bool     IsDisabled            { get; set; } // bit
+			/// <summary>
+			/// CHECK constraint was created with the NOT FOR REPLICATION option.
+			/// </summary>
 			[Column("is_not_for_replication"),  NotNull    ] public bool     IsNotForReplication   { get; set; } // bit
+			/// <summary>
+			/// CHECK constraint has not been verified by the system for all rows.
+			/// </summary>
 			[Column("is_not_trusted"),          NotNull    ] public bool     IsNotTrusted          { get; set; } // bit
+			/// <summary>
+			/// 0 indicates a table-level CHECK constraint.<br/> Non-zero value indicates that this is a column-level CHECK constraint defined on the column with the specified ID value.
+			/// </summary>
 			[Column("parent_column_id"),        NotNull    ] public int      ParentColumnID        { get; set; } // int
-			[Column("definition"),                 Nullable] public string?  Definition            { get; set; } // nvarchar(0)
+			/// <summary>
+			/// SQL expression that defines this CHECK constraint.
+			/// </summary>
+			[Column("definition"),                 Nullable] public string?  Definition            { get; set; } // nvarchar(max)
+			/// <summary>
+			/// 1 = The constraint definition depends on the default collation of the database for correct evaluation; otherwise, 0. Such a dependency prevents changing the database default collation.
+			/// </summary>
 			[Column("uses_database_collation"),    Nullable] public bool?    UsesDatabaseCollation { get; set; } // bit
+			/// <summary>
+			/// 1 = Name was generated by system.<br/> 0 = Name was supplied by the user.
+			/// </summary>
 			[Column("is_system_named"),         NotNull    ] public bool     IsSystemNamed         { get; set; } // bit
 
 			#region Associations
@@ -6419,44 +7395,156 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("signature"),                     Nullable] public byte[]?  Signature                { get; set; } // varbinary(8000)
 		}
 
+		/// <summary>
+		/// Returns a row for each column of an object that has columns, such as views or tables. The following is a list of object types that have columns:<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-columns-transact-sql?view=sql-server-ver15'>sys.columns</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="columns", IsView=true)]
 		public partial class Columns
 		{
+			/// <summary>
+			/// ID of the object to which this column belongs.
+			/// </summary>
 			[Column("object_id"),                           NotNull    ] public int     ObjectID                        { get; set; } // int
+			/// <summary>
+			/// Name of the column. Is unique within the object.
+			/// </summary>
 			[Column("name"),                                   Nullable] public string? Name                            { get; set; } // sysname
+			/// <summary>
+			/// ID of the column. Is unique within the object.<br/> Column IDs might not be sequential.
+			/// </summary>
 			[Column("column_id"),                           NotNull    ] public int     ColumnID                        { get; set; } // int
+			/// <summary>
+			/// ID of the system type of the column.
+			/// </summary>
 			[Column("system_type_id"),                      NotNull    ] public byte    SystemTypeID                    { get; set; } // tinyint
+			/// <summary>
+			/// ID of the type of the column as defined by the user.<br/> To return the name of the type, join to the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-types-transact-sql?view=sql-server-ver15'>sys.types</a> catalog view on this column.
+			/// </summary>
 			[Column("user_type_id"),                        NotNull    ] public int     UserTypeID                      { get; set; } // int
+			/// <summary>
+			/// Maximum length (in bytes) of the column.<br/> -1 = Column data type is <b>varchar(max)</b>, <b>nvarchar(max)</b>, <b>varbinary(max)</b>, or <b>xml</b>.<br/> For <b>text</b>, <b>ntext</b>, and <b>image</b> columns, the max_length value will be 16 (representing the 16-byte pointer only) or the value set by sp_tableoption &apos;text in row&apos;.
+			/// </summary>
 			[Column("max_length"),                          NotNull    ] public short   MaxLength                       { get; set; } // smallint
+			/// <summary>
+			/// Precision of the column if numeric-based; otherwise, 0.
+			/// </summary>
 			[Column("precision"),                           NotNull    ] public byte    Precision                       { get; set; } // tinyint
+			/// <summary>
+			/// Scale of column if numeric-based; otherwise, 0.
+			/// </summary>
 			[Column("scale"),                               NotNull    ] public byte    Scale                           { get; set; } // tinyint
+			/// <summary>
+			/// Name of the collation of the column if character-based; otherwise <i>NULL</i>.
+			/// </summary>
 			[Column("collation_name"),                         Nullable] public string? CollationName                   { get; set; } // sysname
+			/// <summary>
+			/// 1 = Column is nullable.
+			/// </summary>
 			[Column("is_nullable"),                            Nullable] public bool?   IsNullable                      { get; set; } // bit
+			/// <summary>
+			/// 1 = Column uses ANSI_PADDING ON behavior if character, binary, or variant.<br/> 0 = Column is not character, binary, or variant.
+			/// </summary>
 			[Column("is_ansi_padded"),                      NotNull    ] public bool    IsAnsiPadded                    { get; set; } // bit
+			/// <summary>
+			/// 1 = Column is a declared ROWGUIDCOL.
+			/// </summary>
 			[Column("is_rowguidcol"),                       NotNull    ] public bool    IsRowguidcol                    { get; set; } // bit
+			/// <summary>
+			/// 1 = Column has identity values
+			/// </summary>
 			[Column("is_identity"),                         NotNull    ] public bool    IsIdentity                      { get; set; } // bit
+			/// <summary>
+			/// 1 = Column is a computed column.
+			/// </summary>
 			[Column("is_computed"),                         NotNull    ] public bool    IsComputed                      { get; set; } // bit
+			/// <summary>
+			/// 1 = Column is a FILESTREAM column.
+			/// </summary>
 			[Column("is_filestream"),                       NotNull    ] public bool    IsFilestream                    { get; set; } // bit
+			/// <summary>
+			/// 1 = Column is replicated.
+			/// </summary>
 			[Column("is_replicated"),                          Nullable] public bool?   IsReplicated                    { get; set; } // bit
+			/// <summary>
+			/// 1 = Column has a non-SQL Server subscriber.
+			/// </summary>
 			[Column("is_non_sql_subscribed"),                  Nullable] public bool?   IsNonSqlSubscribed              { get; set; } // bit
+			/// <summary>
+			/// 1 = Column is merge-published.
+			/// </summary>
 			[Column("is_merge_published"),                     Nullable] public bool?   IsMergePublished                { get; set; } // bit
+			/// <summary>
+			/// 1 = Column is replicated by using SSIS.
+			/// </summary>
 			[Column("is_dts_replicated"),                      Nullable] public bool?   IsDtsReplicated                 { get; set; } // bit
+			/// <summary>
+			/// 1 = Content is a complete XML document.<br/> 0 = Content is a document fragment or the column data type is not <b>xml</b>.
+			/// </summary>
 			[Column("is_xml_document"),                     NotNull    ] public bool    IsXmlDocument                   { get; set; } // bit
+			/// <summary>
+			/// Nonzero if the data type of the column is <b>xml</b> and the XML is typed. The value will be the ID of the collection containing the validating XML schema namespace of the column.<br/> 0 = No XML schema collection.
+			/// </summary>
 			[Column("xml_collection_id"),                   NotNull    ] public int     XmlCollectionID                 { get; set; } // int
+			/// <summary>
+			/// ID of the default object, regardless of whether it is a stand-alone object <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../system-stored-procedures/sp-bindefault-transact-sql?view=sql-server-ver15'>sys.sp_bindefault</a>, or an inline, column-level DEFAULT constraint. The parent_object_id column of an inline column-level default object is a reference back to the table itself.<br/> 0 = No default.
+			/// </summary>
 			[Column("default_object_id"),                   NotNull    ] public int     DefaultObjectID                 { get; set; } // int
+			/// <summary>
+			/// ID of the stand-alone rule bound to the column by using sys.sp_bindrule.<br/> 0 = No stand-alone rule. For column-level CHECK constraints, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-check-constraints-transact-sql?view=sql-server-ver15'>sys.check_constraints (Transact-SQL)</a>.
+			/// </summary>
 			[Column("rule_object_id"),                      NotNull    ] public int     RuleObjectID                    { get; set; } // int
+			/// <summary>
+			/// 1 = Column is a sparse column. For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../tables/use-sparse-columns?view=sql-server-ver15'>Use Sparse Columns</a>.
+			/// </summary>
 			[Column("is_sparse"),                              Nullable] public bool?   IsSparse                        { get; set; } // bit
+			/// <summary>
+			/// 1 = Column is a column set. For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../tables/use-sparse-columns?view=sql-server-ver15'>Use Sparse Columns</a>.
+			/// </summary>
 			[Column("is_column_set"),                          Nullable] public bool?   IsColumnSet                     { get; set; } // bit
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, SQL Database. 7, 8, 9, 10 only applies to SQL Database.<br/> Identifies when the column value is generated (will always be 0 for columns in system tables):<br/> 0 = NOT_APPLICABLE<br/> 1 = AS_ROW_START<br/> 2 = AS_ROW_END<br/>7 = AS_TRANSACTION_ID_START<br/>8 = AS_TRANSACTION_ID_END<br/>9 = AS_SEQUENCE_NUMBER_START<br/>10 = AS_SEQUENCE_NUMBER_END<br/> For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../tables/temporal-tables?view=sql-server-ver15'>Temporal Tables (Relational databases)</a>.
+			/// </summary>
 			[Column("generated_always_type"),                  Nullable] public byte?   GeneratedAlwaysType             { get; set; } // tinyint
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, SQL Database.<br/> Textual description of <i>generated_always_type</i>&apos;s value (always NOT_APPLICABLE for columns in system tables) <br/> NOT_APPLICABLE<br/> AS_ROW_START<br/> AS_ROW_END<br/><br/><b>Applies to</b>: SQL Database<br/><br/>AS_TRANSACTION_ID_START<br/>AS_TRANSACTION_ID_END<br/>AS_SEQUENCE_NUMBER_START<br/>AS_SEQUENCE_NUMBER_END
+			/// </summary>
 			[Column("generated_always_type_desc"),             Nullable] public string? GeneratedAlwaysTypeDesc         { get; set; } // nvarchar(60)
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, SQL Database.<br/> Encryption type:<br/> 1 = Deterministic encryption<br/> 2 = Randomized encryption
+			/// </summary>
 			[Column("encryption_type"),                        Nullable] public int?    EncryptionType                  { get; set; } // int
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, SQL Database.<br/> Encryption type description:<br/> RANDOMIZED<br/> DETERMINISTIC
+			/// </summary>
 			[Column("encryption_type_desc"),                   Nullable] public string? EncryptionTypeDesc              { get; set; } // nvarchar(64)
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, SQL Database.<br/> Name of encryption algorithm.<br/> Only AEAD_AES_256_CBC_HMAC_SHA_512 is supported.
+			/// </summary>
 			[Column("encryption_algorithm_name"),              Nullable] public string? EncryptionAlgorithmName         { get; set; } // sysname
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, SQL Database.<br/> ID of the CEK.
+			/// </summary>
 			[Column("column_encryption_key_id"),               Nullable] public int?    ColumnEncryptionKeyID           { get; set; } // int
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, SQL Database.<br/> The name of the database where the column encryption key exists if different than the database of the column. <i>NULL</i> if the key exists in the same database as the column.
+			/// </summary>
 			[Column("column_encryption_key_database_name"),    Nullable] public string? ColumnEncryptionKeyDatabaseName { get; set; } // sysname
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2019 (15.x) and later, SQL Database.<br/> Indicates if the column is hidden:<br/> 0 = regular, not-hidden, visible column<br/> 1 = hidden column
+			/// </summary>
 			[Column("is_hidden"),                              Nullable] public bool?   IsHidden                        { get; set; } // bit
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2019 (15.x) and later, SQL Database.<br/> Indicates if the column is masked by a dynamic data masking:<br/> 0 = regular, not-masked column<br/> 1 = column is masked
+			/// </summary>
 			[Column("is_masked"),                           NotNull    ] public bool    IsMasked                        { get; set; } // bit
+			/// <summary>
+			/// Internal column with a set of values. The values are between 1-8 for graph columns and <i>NULL</i> for others.
+			/// </summary>
 			[Column("graph_type"),                             Nullable] public int?    GraphType                       { get; set; } // int
+			/// <summary>
+			/// internal column with a set of values
+			/// </summary>
 			[Column("graph_type_desc"),                        Nullable] public string? GraphTypeDesc                   { get; set; } // nvarchar(60)
 
 			#region Associations
@@ -6470,32 +7558,97 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Contains a row for each dictionary used in xVelocity memory optimized columnstore indexes. Dictionaries are used to encode some, but not all data types, therefore not all columns in a columnstore index have dictionaries. A dictionary can exist as a primary dictionary (for all segments) and possibly for other secondary dictionaries used for a subset of the column&apos;s segments.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-column-store-dictionaries-transact-sql?view=sql-server-ver15'>sys.column_store_dictionaries</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="column_store_dictionaries", IsView=true)]
 		public partial class ColumnStoreDictionaries
 		{
+			/// <summary>
+			/// Indicates the partition ID. Is unique within a database.
+			/// </summary>
 			[Column("partition_id"),  Nullable] public long? PartitionID  { get; set; } // bigint
+			/// <summary>
+			/// ID of the heap or B-tree index (HoBT) for the table that has this columnstore index.
+			/// </summary>
 			[Column("hobt_id"),       Nullable] public long? HobtID       { get; set; } // bigint
+			/// <summary>
+			/// ID of the columnstore column starting with 1. The first column has ID = 1, the second column has ID = 2, etc.
+			/// </summary>
 			[Column("column_id"),     Nullable] public int?  ColumnID     { get; set; } // int
+			/// <summary>
+			/// There can be two kinds of dictionaries, global and local, associated with a column segment. A dictionary_id of 0 represents the global dictionary that is shared across all column segments (one for each row group) for that column.
+			/// </summary>
 			[Column("dictionary_id"), Nullable] public int?  DictionaryID { get; set; } // int
+			/// <summary>
+			/// Version of the dictionary format.
+			/// </summary>
 			[Column("version"),       Nullable] public int?  Version      { get; set; } // int
+			/// <summary>
+			/// Dictionary type:<br/> 1 - Hash dictionary containing <b>int</b> values<br/> 2 - Not used<br/> 3 - Hash dictionary containing string values<br/> 4 - Hash dictionary containing <b>float</b> values<br/> For more information about dictionaries, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../indexes/columnstore-indexes-overview?view=sql-server-ver15'>Columnstore Indexes Guide</a>.
+			/// </summary>
 			[Column("type"),          Nullable] public int?  Type         { get; set; } // int
+			/// <summary>
+			/// The last data ID in the dictionary.
+			/// </summary>
 			[Column("last_id"),       Nullable] public int?  LastID       { get; set; } // int
+			/// <summary>
+			/// Number of entries in the dictionary.
+			/// </summary>
 			[Column("entry_count"),   Nullable] public long? EntryCount   { get; set; } // bigint
+			/// <summary>
+			/// Size of dictionary in bytes.
+			/// </summary>
 			[Column("on_disk_size"),  Nullable] public long? OnDiskSize   { get; set; } // bigint
 		}
 
+		/// <summary>
+		/// Provides clustered columnstore index information on a per-segment basis to help the administrator make system management decisions. <b>sys.column_store_row_groups</b> has a column for the total number of rows physically stored (including those marked as deleted) and a column for the number of rows marked as deleted. Use <b>sys.column_store_row_groups</b> to determine which row groups have a high percentage of deleted rows and should be rebuilt.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-column-store-row-groups-transact-sql?view=sql-server-ver15'>sys.column_store_row_groups</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="column_store_row_groups", IsView=true)]
 		public partial class ColumnStoreRowGroups
 		{
+			/// <summary>
+			/// The id of the table on which this index is defined.
+			/// </summary>
 			[Column("object_id"),              Nullable] public int?   ObjectID         { get; set; } // int
+			/// <summary>
+			/// ID of the index for the table that has this columnstore index.
+			/// </summary>
 			[Column("index_id"),               Nullable] public int?   IndexID          { get; set; } // int
+			/// <summary>
+			/// ID of the table partition that holds row group row_group_id. You can use partition_number to join this DMV to sys.partitions.
+			/// </summary>
 			[Column("partition_number"),       Nullable] public int?   PartitionNumber  { get; set; } // int
+			/// <summary>
+			/// The row group number associated with this row group. This is unique within the partition.<br/> -1 = tail of an in-memory table.
+			/// </summary>
 			[Column("row_group_id"),           Nullable] public int?   RowGroupID       { get; set; } // int
+			/// <summary>
+			/// The hobt_id for OPEN row group in the delta store.<br/> NULL if the row group is not in the delta store.<br/> NULL for the tail of an in-memory table.
+			/// </summary>
 			[Column("delta_store_hobt_id"),    Nullable] public long?  DeltaStoreHobtID { get; set; } // bigint
+			/// <summary>
+			/// ID number associated with the state_description.<br/> 0 = INVISIBLE<br/> 1 = OPEN<br/> 2 = CLOSED<br/> 3 = COMPRESSED <br/> 4 = TOMBSTONE
+			/// </summary>
 			[Column("state"),                  Nullable] public byte?  State            { get; set; } // tinyint
+			/// <summary>
+			/// Description of the persistent state of the row group:<br/> INVISIBLE -A hidden compressed segment in the process of being built from data in a delta store. Read actions will use the delta store until the invisible compressed segment is completed. Then the new segment is made visible, and the source delta store is removed.<br/> OPEN - A read/write row group that is accepting new records. An open row group is still in rowstore format and has not been compressed to columnstore format.<br/> CLOSED - A row group that has been filled, but not yet compressed by the tuple mover process.<br/> COMPRESSED - A row group that has filled and compressed.
+			/// </summary>
 			[Column("state_description"),   NotNull    ] public string StateDescription { get; set; } = null!; // nvarchar(60)
+			/// <summary>
+			/// Total rows physically stored in the row group. Some may have been deleted but they are still stored. The maximum number of rows in a row group is 1,048,576 (hexadecimal FFFFF).
+			/// </summary>
 			[Column("total_rows"),             Nullable] public long?  TotalRows        { get; set; } // bigint
+			/// <summary>
+			/// Total rows in the row group marked deleted. This is always 0 for DELTA row groups.
+			/// </summary>
 			[Column("deleted_rows"),           Nullable] public long?  DeletedRows      { get; set; } // bigint
+			/// <summary>
+			/// Size in bytes of all the data in this row group (not including metadata or shared dictionaries), for both DELTA and COLUMNSTORE rowgroups.
+			/// </summary>
 			[Column("size_in_bytes"),          Nullable] public long?  SizeInBytes      { get; set; } // bigint
 
 			#region Associations
@@ -6509,32 +7662,97 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Returns one row for each column segment in a columnstore index. There is one column segment per column per rowgroup. For example, a table with 10 rowgroups and 34 columns returns 340 rows.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-column-store-segments-transact-sql?view=sql-server-ver15'>sys.column_store_segments</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="column_store_segments", IsView=true)]
 		public partial class ColumnStoreSegments
 		{
+			/// <summary>
+			/// Indicates the partition ID. Is unique within a database.
+			/// </summary>
 			[Column("partition_id"),            Nullable] public long?   PartitionID           { get; set; } // bigint
+			/// <summary>
+			/// ID of the heap or B-tree index (HoBT) for the table that has this columnstore index.
+			/// </summary>
 			[Column("hobt_id"),                 Nullable] public long?   HobtID                { get; set; } // bigint
+			/// <summary>
+			/// ID of the columnstore column.
+			/// </summary>
 			[Column("column_id"),               Nullable] public int?    ColumnID              { get; set; } // int
+			/// <summary>
+			/// ID of the rowgroup. For backward compatibility, the column name continues to be called segment_id even though this is the rowgroup ID. You can uniquely identify a segment using &lt;hobt_id, partition_id, column_id&gt;, &lt;segment_id&gt;.
+			/// </summary>
 			[Column("segment_id"),              Nullable] public int?    SegmentID             { get; set; } // int
+			/// <summary>
+			/// Version of the column segment format.
+			/// </summary>
 			[Column("version"),                 Nullable] public int?    Version               { get; set; } // int
+			/// <summary>
+			/// Type of encoding used for that segment:<br/> 1 = VALUE_BASED - non-string/binary with no dictionary (similar to 4 with some internal variations)<br/> 2 = VALUE_HASH_BASED - non-string/binary column with common values in dictionary<br/> 3 = STRING_HASH_BASED - string/binary column with common values in dictionary<br/> 4 = STORE_BY_VALUE_BASED - non-string/binary with no dictionary<br/> 5 = STRING_STORE_BY_VALUE_BASED - string/binary with no dictionary<br/> For more information, see the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-column-store-segments-transact-sql?view=sql-server-ver15#remarks'>Remarks</a> section.
+			/// </summary>
 			[Column("encoding_type"),           Nullable] public int?    EncodingType          { get; set; } // int
+			/// <summary>
+			/// Number of rows in the row group.
+			/// </summary>
 			[Column("row_count"),               Nullable] public int?    RowCount              { get; set; } // int
+			/// <summary>
+			/// 1 if the column segment has null values.
+			/// </summary>
 			[Column("has_nulls"),               Nullable] public int?    HasNulls              { get; set; } // int
+			/// <summary>
+			/// Base value ID if encoding type 1 is being used. If encoding type 1 is not being used, base_id is set to -1.
+			/// </summary>
 			[Column("base_id"),                 Nullable] public long?   BaseID                { get; set; } // bigint
+			/// <summary>
+			/// Magnitude if encoding type 1 is being used. If encoding type 1 is not being used, magnitude is set to -1.
+			/// </summary>
 			[Column("magnitude"),               Nullable] public double? Magnitude             { get; set; } // float
+			/// <summary>
+			/// A value of 0 represents the global dictionary. A value of -1 indicates that there is no global dictionary created for this column.
+			/// </summary>
 			[Column("primary_dictionary_id"),   Nullable] public int?    PrimaryDictionaryID   { get; set; } // int
+			/// <summary>
+			/// A non-zero value points to the local dictionary for this column in the current segment (i.e. the rowgroup). A value of -1 indicates that there is no local dictionary for this segment.
+			/// </summary>
 			[Column("secondary_dictionary_id"), Nullable] public int?    SecondaryDictionaryID { get; set; } // int
+			/// <summary>
+			/// Minimum data ID in the column segment.
+			/// </summary>
 			[Column("min_data_id"),             Nullable] public long?   MinDataID             { get; set; } // bigint
+			/// <summary>
+			/// Maximum data ID in the column segment.
+			/// </summary>
 			[Column("max_data_id"),             Nullable] public long?   MaxDataID             { get; set; } // bigint
+			/// <summary>
+			/// Value used to represent nulls.
+			/// </summary>
 			[Column("null_value"),              Nullable] public long?   NullValue             { get; set; } // bigint
+			/// <summary>
+			/// Size of segment in bytes.
+			/// </summary>
 			[Column("on_disk_size"),            Nullable] public long?   OnDiskSize            { get; set; } // bigint
 		}
 
+		/// <summary>
+		/// Contains one row for each column that is of user-defined type.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-column-type-usages-transact-sql?view=sql-server-ver15'>sys.column_type_usages</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="column_type_usages", IsView=true)]
 		public partial class ColumnTypeUsages
 		{
+			/// <summary>
+			/// ID of the object to which this column belongs.
+			/// </summary>
 			[Column("object_id"),    NotNull] public int ObjectID   { get; set; } // int
+			/// <summary>
+			/// ID of the column. Is unique within the object.
+			/// </summary>
 			[Column("column_id"),    NotNull] public int ColumnID   { get; set; } // int
+			/// <summary>
+			/// ID of the user-defined type.<br/> To return the name of the type, join to the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-types-transact-sql?view=sql-server-ver15'>sys.types</a> catalog view on this column.
+			/// </summary>
 			[Column("user_type_id"), NotNull] public int UserTypeID { get; set; } // int
 
 			#region Associations
@@ -6548,6 +7766,10 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Contains a row for each column found in <b>sys.columns</b> that is a computed-column.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-computed-columns-transact-sql?view=sql-server-ver15'>sys.computed_columns</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="computed_columns", IsView=true)]
 		public partial class ComputedColumns
 		{
@@ -6573,8 +7795,17 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("xml_collection_id"),                   NotNull    ] public int     XmlCollectionID                 { get; set; } // int
 			[Column("default_object_id"),                   NotNull    ] public int     DefaultObjectID                 { get; set; } // int
 			[Column("rule_object_id"),                      NotNull    ] public int     RuleObjectID                    { get; set; } // int
-			[Column("definition"),                             Nullable] public string? Definition                      { get; set; } // nvarchar(0)
+			/// <summary>
+			/// SQL text that defines this computed-column.
+			/// </summary>
+			[Column("definition"),                             Nullable] public string? Definition                      { get; set; } // nvarchar(max)
+			/// <summary>
+			/// 1 = The column definition depends on the default collation of the database for correct evaluation; otherwise, 0. Such a dependency prevents changing the database default collation.
+			/// </summary>
 			[Column("uses_database_collation"),             NotNull    ] public bool    UsesDatabaseCollation           { get; set; } // bit
+			/// <summary>
+			/// Computed column is persisted.
+			/// </summary>
 			[Column("is_persisted"),                        NotNull    ] public bool    IsPersisted                     { get; set; } // bit
 			[Column("is_computed"),                         NotNull    ] public bool    IsComputed                      { get; set; } // bit
 			[Column("is_sparse"),                           NotNull    ] public bool    IsSparse                        { get; set; } // bit
@@ -7080,6 +8311,10 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("is_system"),        Nullable] public bool?   IsSystem    { get; set; } // bit
 		}
 
+		/// <summary>
+		/// Contains a row for each object that is a default definition (created as part of a CREATE TABLE or ALTER TABLE statement instead of a CREATE DEFAULT statement), with <b>sys.objects.type</b> = D.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-default-constraints-transact-sql?view=sql-server-ver15'>sys.default_constraints</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="default_constraints", IsView=true)]
 		public partial class DefaultConstraints
 		{
@@ -7095,8 +8330,17 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("is_ms_shipped"),       NotNull    ] public bool     IsMsShipped       { get; set; } // bit
 			[Column("is_published"),        NotNull    ] public bool     IsPublished       { get; set; } // bit
 			[Column("is_schema_published"), NotNull    ] public bool     IsSchemaPublished { get; set; } // bit
+			/// <summary>
+			/// ID of the column in <b>parent_object_id</b> to which this default belongs.
+			/// </summary>
 			[Column("parent_column_id"),    NotNull    ] public int      ParentColumnID    { get; set; } // int
-			[Column("definition"),             Nullable] public string?  Definition        { get; set; } // nvarchar(0)
+			/// <summary>
+			/// SQL expression that defines this default.
+			/// </summary>
+			[Column("definition"),             Nullable] public string?  Definition        { get; set; } // nvarchar(max)
+			/// <summary>
+			/// 1 = Name was generated by system.<br/> 0 = Name was supplied by the user.
+			/// </summary>
 			[Column("is_system_named"),     NotNull    ] public bool     IsSystemNamed     { get; set; } // bit
 
 			#region Associations
@@ -7197,27 +8441,77 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("result_format_desc"),    Nullable] public string? ResultFormatDesc { get; set; } // nvarchar(60)
 		}
 
+		/// <summary>
+		/// Returns a row for each event or event group on which an event notification can fire.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-event-notification-event-types-transact-sql?view=sql-server-ver15'>sys.event_notification_event_types</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="event_notification_event_types", IsView=true)]
 		public partial class EventNotificationEventTypes
 		{
+			/// <summary>
+			/// Type of event or event group that causes an event notification to fire.
+			/// </summary>
 			[Column("type"),        NotNull    ] public int     Type       { get; set; } // int
-			[Column("type_name"),      Nullable] public string? TypeName   { get; set; } // nvarchar(64)
+			/// <summary>
+			/// Name of an event or event group. This can be specified in the FOR clause of a <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/statements/create-event-notification-transact-sql?view=sql-server-ver15'>CREATE EVENT NOTIFICATION</a> statement.
+			/// </summary>
+			[Column("type_name"),      Nullable] public string? TypeName   { get; set; } // nvarchar(128)
+			/// <summary>
+			/// Type of event group that is the parent of the event or event group.
+			/// </summary>
 			[Column("parent_type"),    Nullable] public int?    ParentType { get; set; } // int
 		}
 
+		/// <summary>
+		/// Returns a row for each object that is an event notification, with <b>sys.objects.type</b> = EN.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-event-notifications-transact-sql?view=sql-server-ver15'>sys.event_notifications</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="event_notifications", IsView=true)]
 		public partial class EventNotifications
 		{
+			/// <summary>
+			/// Event notification name.
+			/// </summary>
 			[Column("name"),              NotNull    ] public string   Name            { get; set; } = null!; // sysname
+			/// <summary>
+			/// Object identification number. Is unique within a database.
+			/// </summary>
 			[Column("object_id"),         NotNull    ] public int      ObjectID        { get; set; } // int
+			/// <summary>
+			/// Class of parent.<br/> 0 = Database<br/> 1 = Object or Column
+			/// </summary>
 			[Column("parent_class"),      NotNull    ] public byte     ParentClass     { get; set; } // tinyint
+			/// <summary>
+			/// DATABASE<br/> OBJECT_OR_COLUMN
+			/// </summary>
 			[Column("parent_class_desc"),    Nullable] public string?  ParentClassDesc { get; set; } // nvarchar(60)
+			/// <summary>
+			/// Non-zero ID of the parent object.<br/> 0 = The parent class is the database.
+			/// </summary>
 			[Column("parent_id"),         NotNull    ] public int      ParentID        { get; set; } // int
+			/// <summary>
+			/// Date created.
+			/// </summary>
 			[Column("create_date"),       NotNull    ] public DateTime CreateDate      { get; set; } // datetime
+			/// <summary>
+			/// Always equals <b>create_date</b>.
+			/// </summary>
 			[Column("modify_date"),       NotNull    ] public DateTime ModifyDate      { get; set; } // datetime
+			/// <summary>
+			/// Name of the target service to which the notification is sent.
+			/// </summary>
 			[Column("service_name"),         Nullable] public string?  ServiceName     { get; set; } // nvarchar(256)
+			/// <summary>
+			/// Broker instance to which the notification is sent.
+			/// </summary>
 			[Column("broker_instance"),      Nullable] public string?  BrokerInstance  { get; set; } // nvarchar(128)
+			/// <summary>
+			/// SID of the login who created the event notification.<br/> Is NULL if the FAN_IN option is not specified.
+			/// </summary>
 			[Column("creator_sid"),          Nullable] public byte[]?  CreatorSid      { get; set; } // varbinary(85)
+			/// <summary>
+			/// ID of the database principal that owns this event notification.
+			/// </summary>
 			[Column("principal_id"),         Nullable] public int?     PrincipalID     { get; set; } // int
 
 			#region Associations
@@ -7231,15 +8525,37 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Contains a row for each event for which a trigger or event notification fires. These events represent the event types that are specified when the trigger or event notification is created by using <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/statements/create-trigger-transact-sql?view=sql-server-ver15'>CREATE TRIGGER</a> or <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/statements/create-event-notification-transact-sql?view=sql-server-ver15'>CREATE EVENT NOTIFICATION</a>.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-events-transact-sql?view=sql-server-ver15'>sys.events</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="events", IsView=true)]
 		public partial class Events
 		{
+			/// <summary>
+			/// ID of the trigger or event notification. This value, together with <b>type</b>, uniquely identifies the row.
+			/// </summary>
 			[Column("object_id"),             NotNull    ] public int     ObjectID           { get; set; } // int
+			/// <summary>
+			/// Event that causes the trigger to fire.
+			/// </summary>
 			[Column("type"),                  NotNull    ] public int     Type               { get; set; } // int
-			[Column("type_desc"),             NotNull    ] public string  TypeDesc           { get; set; } = null!; // nvarchar(128)
+			/// <summary>
+			/// Description of the event that causes the trigger to fire.
+			/// </summary>
+			[Column("type_desc"),             NotNull    ] public string  TypeDesc           { get; set; } = null!; // nvarchar(60)
+			/// <summary>
+			/// 1 = Trigger event.<br/> 0 = Notification event.
+			/// </summary>
 			[Column("is_trigger_event"),         Nullable] public bool?   IsTriggerEvent     { get; set; } // bit
+			/// <summary>
+			/// Event group on which the trigger or event notification is created, or null if not created on an event group.
+			/// </summary>
 			[Column("event_group_type"),         Nullable] public int?    EventGroupType     { get; set; } // int
-			[Column("event_group_type_desc"),    Nullable] public string? EventGroupTypeDesc { get; set; } // nvarchar(128)
+			/// <summary>
+			/// Description of the event group on which the trigger or event notification is created, or null if not created on an event group.
+			/// </summary>
+			[Column("event_group_type_desc"),    Nullable] public string? EventGroupTypeDesc { get; set; } // nvarchar(60)
 
 			#region Associations
 
@@ -7252,6 +8568,10 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Contains a row for each object that is an extended stored procedure, with <b>sys.objects.type</b> = X. Because extended stored procedures are installed into the <b>master</b> database, they are only visible from that database context. Selecting from the <b>sys.extended_procedures</b> view in any other database context will return an empty result set.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-extended-procedures-transact-sql?view=sql-server-ver15'>sys.extended_procedures</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="extended_procedures", IsView=true)]
 		public partial class ExtendedProcedures
 		{
@@ -7267,6 +8587,9 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("is_ms_shipped"),       NotNull    ] public bool     IsMsShipped       { get; set; } // bit
 			[Column("is_published"),        NotNull    ] public bool     IsPublished       { get; set; } // bit
 			[Column("is_schema_published"), NotNull    ] public bool     IsSchemaPublished { get; set; } // bit
+			/// <summary>
+			/// Name, including path, of the DLL for this extended stored procedure.
+			/// </summary>
 			[Column("dll_name"),               Nullable] public string?  DllName           { get; set; } // nvarchar(260)
 
 			#region Associations
@@ -7324,35 +8647,98 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("first_row"),           Nullable] public int?    FirstRow        { get; set; } // int
 		}
 
+		/// <summary>
+		/// This catalog view provides a list of the external language extension files in the database. <b>R</b> and <b>Python</b> are reserved names and no external language can be created with those specific names.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-external-language-files-transact-sql?view=sql-server-ver15'>sys.external_language_files</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="external_language_files", IsView=true)]
 		public partial class ExternalLanguageFiles
 		{
+			/// <summary>
+			/// ID of the external language
+			/// </summary>
 			[Column("external_language_id"),  NotNull    ] public int     ExternalLanguageID   { get; set; } // int
-			[Column("content"),                  Nullable] public byte[]? Content              { get; set; } // varbinary(-1)
+			/// <summary>
+			/// Content of the external language extension file
+			/// </summary>
+			[Column("content"),                  Nullable] public byte[]? Content              { get; set; } // varbinary(max)
+			/// <summary>
+			/// Name of the language extension file
+			/// </summary>
 			[Column("file_name"),                Nullable] public string? FileName             { get; set; } // sysname
+			/// <summary>
+			/// ID of the host platform on which SQL Server is installed
+			/// </summary>
 			[Column("platform"),                 Nullable] public byte?   Platform             { get; set; } // tinyint
+			/// <summary>
+			/// Name of the host platform. Valid values are <i>WINDOWS</i>, <i>LINUX</i>.
+			/// </summary>
 			[Column("platform_desc"),            Nullable] public string? PlatformDesc         { get; set; } // nvarchar(60)
+			/// <summary>
+			/// External language parameters
+			/// </summary>
 			[Column("parameters"),               Nullable] public string? Parameters           { get; set; } // sysname
+			/// <summary>
+			/// External language environment variables
+			/// </summary>
 			[Column("environment_variables"),    Nullable] public string? EnvironmentVariables { get; set; } // sysname
 		}
 
+		/// <summary>
+		/// This catalog view provides a list of the external languages in the database. <b>R</b> and <b>Python</b> are reserved names and no external language can be created with those specific names.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-external-languages-transact-sql?view=sql-server-ver15'>sys.external_languages</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="external_languages", IsView=true)]
 		public partial class ExternalLanguages
 		{
+			/// <summary>
+			/// ID of the external language
+			/// </summary>
 			[Column("external_language_id"), NotNull    ] public int      ExternalLanguageID { get; set; } // int
+			/// <summary>
+			/// Name of the external language. Is unique within the database. R and Python are reserved names per instance
+			/// </summary>
 			[Column("language"),                Nullable] public string?  Language           { get; set; } // sysname
-			[Column("create_date"),          NotNull    ] public DateTime CreateDate         { get; set; } // datetime
+			/// <summary>
+			/// Date and time of creation
+			/// </summary>
+			[Column("create_date"),          NotNull    ] public DateTime CreateDate         { get; set; } // datetime2
+			/// <summary>
+			/// ID of the principal that owns this external library
+			/// </summary>
 			[Column("principal_id"),            Nullable] public int?     PrincipalID        { get; set; } // int
 		}
 
+		/// <summary>
+		/// Supports the management of package libraries related to external runtimes such as R, Python, and Java.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-external-libraries-transact-sql?view=sql-server-ver15'>sys.external_libraries</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="external_libraries", IsView=true)]
 		public partial class ExternalLibraries
 		{
+			/// <summary>
+			/// ID of the external library object.
+			/// </summary>
 			[Column("external_library_id"), NotNull    ] public int     ExternalLibraryID { get; set; } // int
+			/// <summary>
+			/// Name of the external library. Is unique within the database per owner.
+			/// </summary>
 			[Column("name"),                   Nullable] public string? Name              { get; set; } // sysname
+			/// <summary>
+			/// ID of the principal that owns this external library.
+			/// </summary>
 			[Column("principal_id"),           Nullable] public int?    PrincipalID       { get; set; } // int
+			/// <summary>
+			/// Name of the language or runtime that supports the external library. Valid values are &apos;R&apos;, &apos;Python&apos;, and &apos;Java&apos;. Additional runtimes might be added in future.
+			/// </summary>
 			[Column("language"),               Nullable] public string? Language          { get; set; } // sysname
+			/// <summary>
+			/// 0 for public scope; 1 for private scope
+			/// </summary>
 			[Column("scope"),               NotNull    ] public int     Scope             { get; set; } // int
+			/// <summary>
+			/// Indicates whether the package is public or private
+			/// </summary>
 			[Column("scope_desc"),          NotNull    ] public string  ScopeDesc         { get; set; } = null!; // varchar(7)
 		}
 
@@ -7367,12 +8753,28 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("mdversion"),           NotNull] public byte[] Mdversion         { get; set; } = null!; // binary(8)
 		}
 
+		/// <summary>
+		/// Lists a row for each file that makes up an external library.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-external-library-files-transact-sql?view=sql-server-ver15'>sys.external_library_files</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="external_library_files", IsView=true)]
 		public partial class ExternalLibraryFiles
 		{
+			/// <summary>
+			/// ID of the external library object.
+			/// </summary>
 			[Column("external_library_id"), NotNull    ] public int     ExternalLibraryID { get; set; } // int
-			[Column("content"),                Nullable] public byte[]? Content           { get; set; } // varbinary(-1)
+			/// <summary>
+			/// Content of the external library file artifact.
+			/// </summary>
+			[Column("content"),                Nullable] public byte[]? Content           { get; set; } // varbinary(max)
+			/// <summary>
+			/// ID of the host platform on which SQL Server is installed.
+			/// </summary>
 			[Column("platform"),               Nullable] public byte?   Platform          { get; set; } // tinyint
+			/// <summary>
+			/// Name of the host platform. Valid values are <i>WINDOWS</i>, <i>LINUX</i>.
+			/// </summary>
 			[Column("platform_desc"),          Nullable] public string? PlatformDesc      { get; set; } // nvarchar(60)
 		}
 
@@ -7499,17 +8901,43 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Contains a row for each column, or set of columns, that comprise a foreign key.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-foreign-key-columns-transact-sql?view=sql-server-ver15'>sys.foreign_key_columns</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="foreign_key_columns", IsView=true)]
 		public partial class ForeignKeyColumns
 		{
+			/// <summary>
+			/// ID of the FOREIGN KEY constraint.
+			/// </summary>
 			[Column("constraint_object_id"), NotNull] public int ConstraintObjectID { get; set; } // int
+			/// <summary>
+			/// ID of the column, or set of columns, that comprise the FOREIGN KEY (<em>1..n</em> where n=number of columns).
+			/// </summary>
 			[Column("constraint_column_id"), NotNull] public int ConstraintColumnID { get; set; } // int
+			/// <summary>
+			/// ID of the parent of the constraint, which is the referencing object.
+			/// </summary>
 			[Column("parent_object_id"),     NotNull] public int ParentObjectID     { get; set; } // int
+			/// <summary>
+			/// ID of the parent column, which is the referencing column.
+			/// </summary>
 			[Column("parent_column_id"),     NotNull] public int ParentColumnID     { get; set; } // int
+			/// <summary>
+			/// ID of the referenced object, which has the candidate key.
+			/// </summary>
 			[Column("referenced_object_id"), NotNull] public int ReferencedObjectID { get; set; } // int
+			/// <summary>
+			/// ID of the referenced column (candidate key column).
+			/// </summary>
 			[Column("referenced_column_id"), NotNull] public int ReferencedColumnID { get; set; } // int
 		}
 
+		/// <summary>
+		/// Contains a row per object that is a FOREIGN KEY constraint, with <b>sys.object.type</b> = F.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-foreign-keys-transact-sql?view=sql-server-ver15'>sys.foreign_keys</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="foreign_keys", IsView=true)]
 		public partial class ForeignKeys
 		{
@@ -7525,15 +8953,45 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("is_ms_shipped"),                  NotNull    ] public bool     IsMsShipped                 { get; set; } // bit
 			[Column("is_published"),                   NotNull    ] public bool     IsPublished                 { get; set; } // bit
 			[Column("is_schema_published"),            NotNull    ] public bool     IsSchemaPublished           { get; set; } // bit
+			/// <summary>
+			/// ID of the referenced object.
+			/// </summary>
 			[Column("referenced_object_id"),              Nullable] public int?     ReferencedObjectID          { get; set; } // int
+			/// <summary>
+			/// ID of the key index within the referenced object.
+			/// </summary>
 			[Column("key_index_id"),                      Nullable] public int?     KeyIndexID                  { get; set; } // int
+			/// <summary>
+			/// FOREIGN KEY constraint is disabled.
+			/// </summary>
 			[Column("is_disabled"),                    NotNull    ] public bool     IsDisabled                  { get; set; } // bit
+			/// <summary>
+			/// FOREIGN KEY constraint was created by using the NOT FOR REPLICATION option.
+			/// </summary>
 			[Column("is_not_for_replication"),         NotNull    ] public bool     IsNotForReplication         { get; set; } // bit
+			/// <summary>
+			/// FOREIGN KEY constraint has not been verified by the system.
+			/// </summary>
 			[Column("is_not_trusted"),                 NotNull    ] public bool     IsNotTrusted                { get; set; } // bit
+			/// <summary>
+			/// The referential action that was declared for this FOREIGN KEY when a delete happens.<br/> 0 = No action<br/> 1 = Cascade<br/> 2 = Set null<br/> 3 = Set default
+			/// </summary>
 			[Column("delete_referential_action"),         Nullable] public byte?    DeleteReferentialAction     { get; set; } // tinyint
+			/// <summary>
+			/// Description of the referential action that was declared for this FOREIGN KEY when a delete occurs:<br/> NO_ACTION<br/> CASCADE<br/> SET_NULL<br/> SET_DEFAULT
+			/// </summary>
 			[Column("delete_referential_action_desc"),    Nullable] public string?  DeleteReferentialActionDesc { get; set; } // nvarchar(60)
+			/// <summary>
+			/// The referential action that was declared for this FOREIGN KEY when an update happens.<br/> 0 = No action<br/> 1 = Cascade<br/> 2 = Set null<br/> 3 = Set default
+			/// </summary>
 			[Column("update_referential_action"),         Nullable] public byte?    UpdateReferentialAction     { get; set; } // tinyint
+			/// <summary>
+			/// Description of the referential action that was declared for this FOREIGN KEY when an update happens:<br/> NO_ACTION<br/> CASCADE<br/> SET_NULL<br/> SET_DEFAULT
+			/// </summary>
 			[Column("update_referential_action_desc"),    Nullable] public string?  UpdateReferentialActionDesc { get; set; } // nvarchar(60)
+			/// <summary>
+			/// 1 = Name was generated by the system.<br/> 0 = Name was supplied by the user.
+			/// </summary>
 			[Column("is_system_named"),                NotNull    ] public bool     IsSystemNamed               { get; set; } // bit
 
 			#region Associations
@@ -7700,12 +9158,28 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("language_id"), NotNull    ] public int     LanguageID { get; set; } // int
 		}
 
+		/// <summary>
+		/// Returns one row per column that is a part of an <b>ORDER</b> expression of a common language runtime (CLR) table-valued function.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-function-order-columns-transact-sql?view=sql-server-ver15'>sys.function_order_columns</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="function_order_columns", IsView=true)]
 		public partial class FunctionOrderColumns
 		{
+			/// <summary>
+			/// ID of the object (CLR table-valued function) the order is defined on.
+			/// </summary>
 			[Column("object_id"),       NotNull    ] public int   ObjectID      { get; set; } // int
+			/// <summary>
+			/// ID of the order column. <b>order_column_id</b> is unique only within <b>object_id</b>.<br/> <b>order_column_id</b> represents the position of this column in the ordering.
+			/// </summary>
 			[Column("order_column_id"), NotNull    ] public int   OrderColumnID { get; set; } // int
+			/// <summary>
+			/// ID of the column in <b>object_id</b>.<br/> <b>column_id</b> is unique only within <b>object_id</b>.
+			/// </summary>
 			[Column("column_id"),       NotNull    ] public int   ColumnID      { get; set; } // int
+			/// <summary>
+			/// 1 = order column has a descending sort direction.<br/> 0 = order column has an ascending sort direction.
+			/// </summary>
 			[Column("is_descending"),      Nullable] public bool? IsDescending  { get; set; } // bit
 
 			#region Associations
@@ -7719,6 +9193,10 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Shows the current hash indexes and the hash index properties. Hash indexes are supported only on <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../in-memory-oltp/overview-and-usage-scenarios?view=sql-server-ver15'>In-Memory OLTP (In-Memory Optimization)</a>.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-hash-indexes-transact-sql?view=sql-server-ver15'>sys.hash_indexes</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="hash_indexes", IsView=true)]
 		public partial class HashIndexes
 		{
@@ -7741,6 +9219,9 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("allow_page_locks"),              Nullable] public bool?   AllowPageLocks          { get; set; } // bit
 			[Column("has_filter"),                    Nullable] public bool?   HasFilter               { get; set; } // bit
 			[Column("filter_definition"),             Nullable] public string? FilterDefinition        { get; set; } // nvarchar(0)
+			/// <summary>
+			/// Count of hash buckets for hash indexes.<br/> For more information about the bucket_count value, including guidelines for setting the value, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/statements/create-table-transact-sql?view=sql-server-ver15'>CREATE TABLE (Transact-SQL)</a>.
+			/// </summary>
 			[Column("bucket_count"),               NotNull    ] public int     BucketCount             { get; set; } // int
 			[Column("auto_created"),                  Nullable] public bool?   AutoCreated             { get; set; } // bit
 
@@ -7785,6 +9266,10 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("is_compression_enabled"),     NotNull    ] public bool    IsCompressionEnabled    { get; set; } // bit
 		}
 
+		/// <summary>
+		/// Contains a row for each column that is an identity column.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-identity-columns-transact-sql?view=sql-server-ver15'>sys.identity_columns</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="identity_columns", IsView=true)]
 		public partial class IdentityColumns
 		{
@@ -7810,9 +9295,21 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("xml_collection_id"),                   NotNull    ] public int     XmlCollectionID                 { get; set; } // int
 			[Column("default_object_id"),                   NotNull    ] public int     DefaultObjectID                 { get; set; } // int
 			[Column("rule_object_id"),                      NotNull    ] public int     RuleObjectID                    { get; set; } // int
+			/// <summary>
+			/// Seed value for this identity column. The data type of the seed value is the same as the data type of the column itself.
+			/// </summary>
 			[Column("seed_value"),                             Nullable] public object? SeedValue                       { get; set; } // sql_variant
+			/// <summary>
+			/// Increment value for this identity column. The data type of the seed value is the same as the data type of the column itself.
+			/// </summary>
 			[Column("increment_value"),                        Nullable] public object? IncrementValue                  { get; set; } // sql_variant
+			/// <summary>
+			/// Last value generated for this identity column. The data type of the seed value is the same as the data type of the column itself.
+			/// </summary>
 			[Column("last_value"),                             Nullable] public object? LastValue                       { get; set; } // sql_variant
+			/// <summary>
+			/// Identity column is declared NOT FOR REPLICATION. <b>Note:</b> This column does not apply to Azure Synapse Analytics.
+			/// </summary>
 			[Column("is_not_for_replication"),                 Nullable] public bool?   IsNotForReplication             { get; set; } // bit
 			[Column("is_computed"),                         NotNull    ] public bool    IsComputed                      { get; set; } // bit
 			[Column("is_sparse"),                           NotNull    ] public bool    IsSparse                        { get; set; } // bit
@@ -7840,17 +9337,48 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Contains one row per column that is part of a <b>sys.indexes</b> index or unordered table (heap).<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-index-columns-transact-sql?view=sql-server-ver15'>sys.index_columns</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="index_columns", IsView=true)]
 		public partial class IndexColumns
 		{
+			/// <summary>
+			/// ID of the object the index is defined on.
+			/// </summary>
 			[Column("object_id"),                  NotNull    ] public int   ObjectID                { get; set; } // int
+			/// <summary>
+			/// ID of the index in which the column is defined.
+			/// </summary>
 			[Column("index_id"),                   NotNull    ] public int   IndexID                 { get; set; } // int
+			/// <summary>
+			/// ID of the index column. <b>index_column_id</b> is unique only within <b>index_id</b>.
+			/// </summary>
 			[Column("index_column_id"),            NotNull    ] public int   IndexColumnID           { get; set; } // int
+			/// <summary>
+			/// ID of the column in <b>object_id</b>.<br/> 0 = Row Identifier (RID) in a nonclustered index.<br/> <b>column_id</b> is unique only within <b>object_id</b>.
+			/// </summary>
 			[Column("column_id"),                  NotNull    ] public int   ColumnID                { get; set; } // int
+			/// <summary>
+			/// Ordinal (1-based) within set of key-columns.<br/> 0 = Not a key column, or is an XML index, a columnstore index, or a spatial index.<br/> Note: An XML or spatial index cannot be a key because the underlying columns are not comparable, meaning that their values cannot be ordered.
+			/// </summary>
 			[Column("key_ordinal"),                NotNull    ] public byte  KeyOrdinal              { get; set; } // tinyint
+			/// <summary>
+			/// Ordinal (1-based) within set of partitioning columns. A clustered columnstore index can have at most 1 partitioning column.<br/> 0 = Not a partitioning column.
+			/// </summary>
 			[Column("partition_ordinal"),          NotNull    ] public byte  PartitionOrdinal        { get; set; } // tinyint
+			/// <summary>
+			/// 1 = Index key column has a descending sort direction.<br/> 0 = Index key column has an ascending sort direction, or the column is part of a columnstore or hash index.
+			/// </summary>
 			[Column("is_descending_key"),             Nullable] public bool? IsDescendingKey         { get; set; } // bit
+			/// <summary>
+			/// 1 = Column is a nonkey column added to the index by using the CREATE INDEX INCLUDE clause, or the column is part of a columnstore index.<br/> 0 = Column is not an included column.<br/> Columns implicitly added because they are part of the clustering key are not listed in <b>sys.index_columns</b>.<br/> Columns implicitly added because they are a partitioning column are returned as 0.
+			/// </summary>
 			[Column("is_included_column"),            Nullable] public bool? IsIncludedColumn        { get; set; } // bit
+			/// <summary>
+			/// Ordinal (1-based) within set of order columns in an ordered clustered columnstore index.
+			/// </summary>
 			[Column("column_store_order_ordinal"), NotNull    ] public byte  ColumnStoreOrderOrdinal { get; set; } // tinyint
 
 			#region Associations
@@ -7864,31 +9392,101 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Contains a row per index or heap of a tabular object, such as a table, view, or table-valued function.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-indexes-transact-sql?view=sql-server-ver15'>sys.indexes</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="indexes", IsView=true)]
 		public partial class Indexes
 		{
+			/// <summary>
+			/// ID of the object to which this index belongs.
+			/// </summary>
 			[Column("object_id"),                   NotNull    ] public int     ObjectID                 { get; set; } // int
+			/// <summary>
+			/// Name of the index. <b>name</b> is unique only within the object.<br/> NULL = Heap
+			/// </summary>
 			[Column("name"),                           Nullable] public string? Name                     { get; set; } // sysname
+			/// <summary>
+			/// ID of the index. <b>index_id</b> is unique only within the object.<br/> 0 = Heap<br/> 1 = Clustered index<br/> &gt; 1 = Nonclustered index
+			/// </summary>
 			[Column("index_id"),                    NotNull    ] public int     IndexID                  { get; set; } // int
+			/// <summary>
+			/// Type of index:<br/> 0 = Heap<br/> 1 = Clustered rowstore (b-tree)<br/> 2 = Nonclustered rowstore (b-tree)<br/> 3 = XML<br/> 4 = Spatial<br/> 5 = Clustered columnstore index. <b>Applies to</b>: SQL Server 2014 (12.x) and later.<br/> 6 = Nonclustered columnstore index. <b>Applies to</b>: SQL Server 2012 (11.x) and later.<br/> 7 = Nonclustered hash index. <b>Applies to</b>: SQL Server 2014 (12.x) and later.
+			/// </summary>
 			[Column("type"),                        NotNull    ] public byte    Type                     { get; set; } // tinyint
+			/// <summary>
+			/// Description of index type:<br/> HEAP<br/> CLUSTERED<br/> NONCLUSTERED<br/> XML<br/> SPATIAL<br/> CLUSTERED COLUMNSTORE - <b>Applies to</b>: SQL Server 2014 (12.x) and later.<br/> NONCLUSTERED COLUMNSTORE - <b>Applies to</b>: SQL Server 2012 (11.x) and later.<br/> NONCLUSTERED HASH : NONCLUSTERED HASH indexes are supported only on memory-optimized tables. The sys.hash_indexes view shows the current hash indexes and the hash properties. For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-hash-indexes-transact-sql?view=sql-server-ver15'>sys.hash_indexes (Transact-SQL)</a>. <b>Applies to</b>: SQL Server 2014 (12.x) and later.
+			/// </summary>
 			[Column("type_desc"),                      Nullable] public string? TypeDesc                 { get; set; } // nvarchar(60)
+			/// <summary>
+			/// 1 = Index is unique.<br/> 0 = Index is not unique.<br/> Always 0 for clustered columnstore indexes.
+			/// </summary>
 			[Column("is_unique"),                      Nullable] public bool?   IsUnique                 { get; set; } // bit
+			/// <summary>
+			/// ID of the data space for this index. Data space is either a filegroup or partition scheme.<br/> 0 = <b>object_id</b> is a table-valued function or in-memory index.
+			/// </summary>
 			[Column("data_space_id"),                  Nullable] public int?    DataSpaceID              { get; set; } // int
+			/// <summary>
+			/// 1 = IGNORE_DUP_KEY is ON.<br/> 0 = IGNORE_DUP_KEY is OFF.
+			/// </summary>
 			[Column("ignore_dup_key"),                 Nullable] public bool?   IgnoreDupKey             { get; set; } // bit
+			/// <summary>
+			/// 1 = Index is part of a PRIMARY KEY constraint.<br/> Always 0 for clustered columnstore indexes.
+			/// </summary>
 			[Column("is_primary_key"),                 Nullable] public bool?   IsPrimaryKey             { get; set; } // bit
+			/// <summary>
+			/// 1 = Index is part of a UNIQUE constraint.<br/> Always 0 for clustered columnstore indexes.
+			/// </summary>
 			[Column("is_unique_constraint"),           Nullable] public bool?   IsUniqueConstraint       { get; set; } // bit
+			/// <summary>
+			/// &gt; 0 = FILLFACTOR percentage used when the index was created or rebuilt.<br/> 0 = Default value<br/> Always 0 for clustered columnstore indexes.
+			/// </summary>
 			[Column("fill_factor"),                 NotNull    ] public byte    FillFactor               { get; set; } // tinyint
+			/// <summary>
+			/// 1 = PADINDEX is ON.<br/> 0 = PADINDEX is OFF.<br/> Always 0 for clustered columnstore indexes.
+			/// </summary>
 			[Column("is_padded"),                      Nullable] public bool?   IsPadded                 { get; set; } // bit
+			/// <summary>
+			/// 1 = Index is disabled.<br/> 0 = Index is not disabled.
+			/// </summary>
 			[Column("is_disabled"),                    Nullable] public bool?   IsDisabled               { get; set; } // bit
+			/// <summary>
+			/// 1 = Index is hypothetical and cannot be used directly as a data access path. Hypothetical indexes hold column-level statistics.<br/> 0 = Index is not hypothetical.
+			/// </summary>
 			[Column("is_hypothetical"),                Nullable] public bool?   IsHypothetical           { get; set; } // bit
 			[Column("is_ignored_in_optimization"),     Nullable] public bool?   IsIgnoredInOptimization  { get; set; } // bit
+			/// <summary>
+			/// 1 = Index allows row locks.<br/> 0 = Index does not allow row locks.<br/> Always 0 for clustered columnstore indexes.
+			/// </summary>
 			[Column("allow_row_locks"),                Nullable] public bool?   AllowRowLocks            { get; set; } // bit
+			/// <summary>
+			/// 1 = Index allows page locks.<br/> 0 = Index does not allow page locks.<br/> Always 0 for clustered columnstore indexes.
+			/// </summary>
 			[Column("allow_page_locks"),               Nullable] public bool?   AllowPageLocks           { get; set; } // bit
+			/// <summary>
+			/// 1 = Index has a filter and only contains rows that satisfy the filter definition.<br/> 0 = Index does not have a filter.
+			/// </summary>
 			[Column("has_filter"),                     Nullable] public bool?   HasFilter                { get; set; } // bit
-			[Column("filter_definition"),              Nullable] public string? FilterDefinition         { get; set; } // nvarchar(0)
+			/// <summary>
+			/// Expression for the subset of rows included in the filtered index.<br/> NULL for heap, non-filtered index, or insufficient permissions on the table.
+			/// </summary>
+			[Column("filter_definition"),              Nullable] public string? FilterDefinition         { get; set; } // nvarchar(max)
+			/// <summary>
+			/// &gt; 0 = Columnstore index compression delay specified in minutes.<br/> NULL = Columnstore index rowgroup compression delay is managed automatically.
+			/// </summary>
 			[Column("compression_delay"),              Nullable] public int?    CompressionDelay         { get; set; } // int
+			/// <summary>
+			/// 1 = Index is configured to suppress duplicate key messages during an index rebuild operation.<br/> <b>0</b> = Index is not configured to suppress duplicate key messages during an index rebuild operation.<br/><br/><b>Applies to:</b> SQL Server (Starting with SQL Server 2017 (14.x)), Azure SQL Database, and Azure SQL Managed Instance
+			/// </summary>
 			[Column("suppress_dup_key_messages"),      Nullable] public bool?   SuppressDupKeyMessages   { get; set; } // bit
+			/// <summary>
+			/// 1 = Index was created by the automatic tuning.<br/><br/>0 = Index was created by the user.<br/><br/><b>Applies to:</b> Azure SQL Database
+			/// </summary>
 			[Column("auto_created"),                   Nullable] public bool?   AutoCreated              { get; set; } // bit
+			/// <summary>
+			/// 1 = Index has last-page insert optimization enabled.<br/><br/>0 = Default value. Index has last-page insert optimization disabled.<br/><br/><b>Applies to:</b> SQL Server (Starting with SQL Server 2019 (15.x)), Azure SQL Database, and Azure SQL Managed Instance
+			/// </summary>
 			[Column("optimize_for_sequential_key"),    Nullable] public bool?   OptimizeForSequentialKey { get; set; } // bit
 
 			#region Associations
@@ -7902,21 +9500,62 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// <b>sys.index_resumable_operations</b> is a system view that monitors and checks the current execution status for resumable Index rebuild or creation.<br/>
+		/// <b>Applies to</b>: SQL Server (2017 and newer), and Azure SQL Database<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-index-resumable-operations?view=sql-server-ver15'>sys.index_resumable_operations</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="index_resumable_operations", IsView=true)]
 		public partial class IndexResumableOperations
 		{
+			/// <summary>
+			/// ID of the object to which this index belongs (not nullable).
+			/// </summary>
 			[Column("object_id"),            NotNull    ] public int       ObjectID           { get; set; } // int
+			/// <summary>
+			/// ID of the index (not nullable). <b>index_id</b> is unique only within the object.
+			/// </summary>
 			[Column("index_id"),             NotNull    ] public int       IndexID            { get; set; } // int
-			[Column("name"),                 NotNull    ] public string    Name               { get; set; } = null!; // nvarchar(128)
-			[Column("sql_text"),                Nullable] public string?   SqlText            { get; set; } // nvarchar(0)
+			/// <summary>
+			/// Name of the index. <b>name</b> is unique only within the object.
+			/// </summary>
+			[Column("name"),                 NotNull    ] public string    Name               { get; set; } = null!; // sysname
+			/// <summary>
+			/// DDL T-SQL statement text
+			/// </summary>
+			[Column("sql_text"),                Nullable] public string?   SqlText            { get; set; } // nvarchar(max)
 			[Column("last_max_dop_used"),    NotNull    ] public short     LastMaxDopUsed     { get; set; } // smallint
+			/// <summary>
+			/// Partition number within the owning index or heap. For non-partitioned tables and indexes or in case all partitions are being rebuild the value of this column is NULL.
+			/// </summary>
 			[Column("partition_number"),        Nullable] public int?      PartitionNumber    { get; set; } // int
+			/// <summary>
+			/// Operational state for resumable index:<br/><br/>0=Running<br/><br/>1=Pause
+			/// </summary>
 			[Column("state"),                NotNull    ] public byte      State              { get; set; } // tinyint
+			/// <summary>
+			/// Description of the operational state for resumable index (running or Paused)
+			/// </summary>
 			[Column("state_desc"),              Nullable] public string?   StateDesc          { get; set; } // nvarchar(60)
+			/// <summary>
+			/// Index operation start time (not nullable)
+			/// </summary>
 			[Column("start_time"),           NotNull    ] public DateTime  StartTime          { get; set; } // datetime
-			[Column("last_pause_time"),         Nullable] public DateTime? LastPauseTime      { get; set; } // datetime
+			/// <summary>
+			/// Index operation last pause time (nullable). NULL if operation is running and never paused.
+			/// </summary>
+			[Column("last_pause_time"),         Nullable] public DateTime? LastPauseTime      { get; set; } // datatime
+			/// <summary>
+			/// Total execution time from start time in minutes (not nullable)
+			/// </summary>
 			[Column("total_execution_time"), NotNull    ] public int       TotalExecutionTime { get; set; } // int
-			[Column("percent_complete"),     NotNull    ] public double    PercentComplete    { get; set; } // float
+			/// <summary>
+			/// Index operation progress completion in % ( not nullable).
+			/// </summary>
+			[Column("percent_complete"),     NotNull    ] public double    PercentComplete    { get; set; } // real
+			/// <summary>
+			/// Total number of index pages allocated by the index build operation for the new and mapping indexes ( not nullable ).
+			/// </summary>
 			[Column("page_count"),           NotNull    ] public long      PageCount          { get; set; } // bigint
 
 			#region Associations
@@ -7930,19 +9569,53 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Returns one row for each rowset that tracks internal data for columnstore indexes on disk-based tables. These rowsets are internal to columnstore indexes and track deleted rows, rowgroup mappings, and delta store rowgroups. They track data for each for each table partition; every table has at least one partition. SQL Server re-creates the rowsets each time it rebuilds the columnstore index.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-internal-partitions-transact-sql?view=sql-server-ver15'>sys.internal_partitions</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="internal_partitions", IsView=true)]
 		public partial class InternalPartitions
 		{
+			/// <summary>
+			/// Partition ID for this partition. This is unique within a database.
+			/// </summary>
 			[Column("partition_id"),              NotNull    ] public long    PartitionID            { get; set; } // bigint
+			/// <summary>
+			/// Object ID for the table that contains the partition.
+			/// </summary>
 			[Column("object_id"),                 NotNull    ] public int     ObjectID               { get; set; } // int
+			/// <summary>
+			/// Index ID for the columnstore index defined on the table.<br/> 1 = clustered columnstore index<br/> 2 = nonclustered columnstore index
+			/// </summary>
 			[Column("index_id"),                  NotNull    ] public int     IndexID                { get; set; } // int
+			/// <summary>
+			/// The partition number.<br/> 1 = first partition of a partitioned table, or the single partition of a nonpartitioned table.<br/> 2 = second partition, and so on.
+			/// </summary>
 			[Column("partition_number"),          NotNull    ] public int     PartitionNumber        { get; set; } // int
+			/// <summary>
+			/// ID of the internal rowset object (HoBT). This is a good key for joining with other DMVs to get more information about the physical characteristics of the internal rowset.
+			/// </summary>
 			[Column("hobt_id"),                   NotNull    ] public long    HobtID                 { get; set; } // bigint
+			/// <summary>
+			/// Rowset objects that track internal data for the columnstore index.<br/> 2 = COLUMN_STORE_DELETE_BITMAP<br/> 3 = COLUMN_STORE_DELTA_STORE<br/> 4 = COLUMN_STORE_DELETE_BUFFER<br/> 5 = COLUMN_STORE_MAPPING_INDEX
+			/// </summary>
 			[Column("internal_object_type"),         Nullable] public byte?   InternalObjectType     { get; set; } // tinyint
+			/// <summary>
+			/// COLUMN_STORE_DELETE_BITMAP - This bitmap index tracks rows that are marked as deleted from the columnstore. The bitmap is for every rowgroup since partitions can have rows in multiple rowgroups. The rows are that are still physically present and taking up space in the columnstore.<br/> COLUMN_STORE_DELTA_STORE - Stores groups of rows, called rowgroups, that have not been compressed into columnar storage. Each table partition can have zero or more deltastore rowgroups.<br/> COLUMN_STORE_DELETE_BUFFER - For maintaining deletes to updateable nonclustered columnstore indexes. When a query deletes a row from the underlying rowstore table, the delete buffer tracks the deletion from the columnstore. When the number of deleted rows exceed 1048576, they are merged back into the delete bitmap by background Tuple Mover thread or by an explicit Reorganize command.  At any given point in time, the union of the delete bitmap and the delete buffer represents all deleted rows.<br/> COLUMN_STORE_MAPPING_INDEX - Used only when the clustered columnstore index has a secondary nonclustered index. This maps nonclustered index keys to the correct rowgroup and row ID in the columnstore. It only stores keys for rows that move to a different rowgroup; this occurs when a delta rowgroup is compressed into the columnstore, and when a merge operation merges rows from two different rowgroups.
+			/// </summary>
 			[Column("internal_object_type_desc"),    Nullable] public string? InternalObjectTypeDesc { get; set; } // nvarchar(60)
 			[Column("row_group_id"),                 Nullable] public int?    RowGroupID             { get; set; } // int
+			/// <summary>
+			/// Approximate number of rows in this partition.
+			/// </summary>
 			[Column("rows"),                         Nullable] public long?   Rows                   { get; set; } // bigint
+			/// <summary>
+			/// The state of compression for the rowset:<br/> 0 = NONE<br/> 1 = ROW<br/> 2 = PAGE
+			/// </summary>
 			[Column("data_compression"),             Nullable] public byte?   DataCompression        { get; set; } // tinyint
+			/// <summary>
+			/// The state of compression for each partition. Possible values for rowstore tables are NONE, ROW, and PAGE. Possible values for columnstore tables are COLUMNSTORE and COLUMNSTORE_ARCHIVE.
+			/// </summary>
 			[Column("data_compression_desc"),        Nullable] public string? DataCompressionDesc    { get; set; } // nvarchar(60)
 
 			#region Associations
@@ -7956,6 +9629,10 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Returns one row for each object that is an internal table. Internal tables are automatically generated by SQL Server to support various features. For example, when you create a primary XML index, SQL Server automatically creates an internal table to persist the shredded XML document data. Internal tables appear in the <b>sys</b> schema of every database and have unique, system-generated names that indicate their function, for example, <b>xml_index_nodes_2021582240_32001</b> or <b>queue_messages_1977058079</b><br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-internal-tables-transact-sql?view=sql-server-ver15'>sys.internal_tables</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="internal_tables", IsView=true)]
 		public partial class InternalTables
 		{
@@ -7971,11 +9648,29 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("is_ms_shipped"),               Nullable] public bool?    IsMsShipped           { get; set; } // bit
 			[Column("is_published"),                Nullable] public bool?    IsPublished           { get; set; } // bit
 			[Column("is_schema_published"),         Nullable] public bool?    IsSchemaPublished     { get; set; } // bit
+			/// <summary>
+			/// Type of the internal table:<br/> 3 = <b>query_disk_store_query_hints</b><br/> 4 = <b>query_disk_store_query_template_parameterization</b><br/> 6 = <b>query_disk_store_wait_stats</b><br/> 201 = <b>queue_messages</b><br/> 202 = <b>xml_index_nodes</b><br/> 203 = <b>fulltext_catalog_freelist</b><br/> 205 = <b>query_notification</b><br/> 206 = <b>service_broker_map</b><br/> 207 = <b>extended_indexes</b> (such as a spatial index)<br/> 208 = <b>filestream_tombstone</b><br/> 209 = <b>change_tracking</b><br/> 210 = <b>tracked_committed_transactions</b><br/> 220 = <b>contained_features</b><br/> 225 = <b>filetable_updates</b><br/> 236 = <b>selective_xml_index_node_table</b><br/> 240 = <b>query_disk_store_query_text</b><br/> 241 = <b>query_disk_store_query</b><br/> 242 = <b>query_disk_store_plan</b><br/> 243 = <b>query_disk_store_runtime_stats</b><br/> 244 = <b>query_disk_store_runtime_stats_interval</b><br/> 245 = <b>query_context_settings</b>
+			/// </summary>
 			[Column("internal_type"),               Nullable] public byte?    InternalType          { get; set; } // tinyint
+			/// <summary>
+			/// Description of the type of internal table:<br/> QUERY_DISK_STORE_QUERY_HINTS<br/> QUERY_DISK_STORE_QUERY_TEMPLATE_PARAMETERIZATION<br/> QUERY_DISK_STORE_WAIT_STATS<br/> QUEUE_MESSAGES<br/> XML_INDEX_NODES<br/> FULLTEXT_CATALOG_FREELIST<br/> FULLTEXT_CATALOG_MAP<br/> QUERY_NOTIFICATION<br/> SERVICE_BROKER_MAP<br/> EXTENDED_INDEXES<br/> FILESTREAM_TOMBSTONE<br/> CHANGE_TRACKING<br/> TRACKED_COMMITTED_TRANSACTIONS<br/> CONTAINED_FEATURES<br/> FILETABLE_UPDATES<br/> SELECTIVE_XML_INDEX_NODE_TABLE<br/> QUERY_DISK_STORE_QUERY_TEXT<br/> QUERY_DISK_STORE_QUERY<br/> QUERY_DISK_STORE_PLAN<br/> QUERY_DISK_STORE_RUNTIME_STATS<br/> QUERY_DISK_STORE_RUNTIME_STATS_INTERVAL<br/> QUERY_CONTEXT_SETTINGS
+			/// </summary>
 			[Column("internal_type_desc"),          Nullable] public string?  InternalTypeDesc      { get; set; } // nvarchar(60)
+			/// <summary>
+			/// ID of the parent, regardless of whether it is schema-scoped or not. Otherwise, 0 if there is no parent.<br/> <b>queue_messages</b> = <b>object_id</b> of queue<br/> <b>xml_index_nodes</b> = <b>object_id</b> of the xml index<br/> <b>fulltext_catalog_freelist</b> = <b>fulltext_catalog_id</b> of the full-text catalog<br/> <b>fulltext_index_map</b> = <b>object_id</b> of the full-text index<br/> <b>query_notification</b>, or <b>service_broker_map</b> = 0<br/> <b>extended_indexes</b> = <b>object_id</b> of an extended index, such as a spatial index<br/> <b>object_id</b> of the table for which table tracking is enabled = <b>change_tracking</b>
+			/// </summary>
 			[Column("parent_id"),                   Nullable] public int?     ParentID              { get; set; } // int
+			/// <summary>
+			/// Minor ID of the parent.<br/> <b>xml_index_nodes</b> = <b>index_id</b> of the XML index<br/> <b>extended_indexes</b> = <b>index_id</b> of an extended index, such as a spatial index<br/> 0 = <b>queue_messages</b>, <b>fulltext_catalog_freelist</b>, <b>fulltext_index_map</b>, <b>query_notification</b>, <b>service_broker_map</b>, or <b>change_tracking</b>
+			/// </summary>
 			[Column("parent_minor_id"),             Nullable] public int?     ParentMinorID         { get; set; } // int
+			/// <summary>
+			/// Non-zero value is the ID of data space (filegroup or partition-scheme) that holds the large object (LOB) data for this table.
+			/// </summary>
 			[Column("lob_data_space_id"),        NotNull    ] public int      LobDataSpaceID        { get; set; } // int
+			/// <summary>
+			/// Reserved for future use.
+			/// </summary>
 			[Column("filestream_data_space_id"),    Nullable] public int?     FilestreamDataSpaceID { get; set; } // int
 
 			#region Associations
@@ -7989,6 +9684,10 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Contains a row for each object that is a primary key or unique constraint. Includes <b>sys.objects.type</b> PK and UQ.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-key-constraints-transact-sql?view=sql-server-ver15'>sys.key_constraints</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="key_constraints", IsView=true)]
 		public partial class KeyConstraints
 		{
@@ -8004,7 +9703,13 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("is_ms_shipped"),       NotNull    ] public bool     IsMsShipped       { get; set; } // bit
 			[Column("is_published"),        NotNull    ] public bool     IsPublished       { get; set; } // bit
 			[Column("is_schema_published"), NotNull    ] public bool     IsSchemaPublished { get; set; } // bit
+			/// <summary>
+			/// ID of the corresponding unique index in the parent object that was created to enforce this constraint.
+			/// </summary>
 			[Column("unique_index_id"),        Nullable] public int?     UniqueIndexID     { get; set; } // int
+			/// <summary>
+			/// 1 = Name was generated by system.<br/> 0 = Name was supplied by the user.
+			/// </summary>
 			[Column("is_system_named"),     NotNull    ] public bool     IsSystemNamed     { get; set; } // bit
 			[Column("is_enforced"),            Nullable] public bool?    IsEnforced        { get; set; } // bit
 
@@ -8049,11 +9754,24 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("usage"),        Nullable] public string? Usage       { get; set; } // nvarchar(128)
 		}
 
+		/// <summary>
+		/// Use the <b>sys.masked_columns</b> view to query for table-columns that have a dynamic data masking function applied to them. This view inherits from the <b>sys.columns</b> view. It returns all columns in the <b>sys.columns</b> view, plus the <b>is_masked</b> and <b>masking_function</b> columns, indicating if the column is masked, and if so, what masking function is defined. This view only shows the columns on which there is a masking function applied.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-masked-columns-transact-sql?view=sql-server-ver15'>sys.masked_columns</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="masked_columns", IsView=true)]
 		public partial class MaskedColumns
 		{
+			/// <summary>
+			/// ID of the object to which this column belongs.
+			/// </summary>
 			[Column("object_id"),                           NotNull    ] public int     ObjectID                        { get; set; } // int
+			/// <summary>
+			/// Name of the column. Is unique within the object.
+			/// </summary>
 			[Column("name"),                                   Nullable] public string? Name                            { get; set; } // sysname
+			/// <summary>
+			/// ID of the column. Is unique within the object.<br/> Column IDs might not be sequential.
+			/// </summary>
 			[Column("column_id"),                           NotNull    ] public int     ColumnID                        { get; set; } // int
 			[Column("system_type_id"),                      NotNull    ] public byte    SystemTypeID                    { get; set; } // tinyint
 			[Column("user_type_id"),                        NotNull    ] public int     UserTypeID                      { get; set; } // int
@@ -8080,6 +9798,9 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("is_computed"),                         NotNull    ] public bool    IsComputed                      { get; set; } // bit
 			[Column("is_sparse"),                           NotNull    ] public bool    IsSparse                        { get; set; } // bit
 			[Column("is_column_set"),                       NotNull    ] public bool    IsColumnSet                     { get; set; } // bit
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, SQL Database. 7, 8, 9, 10 only applies to SQL Database.<br/> Identifies when the column value is generated (will always be 0 for columns in system tables):<br/> 0 = NOT_APPLICABLE<br/> 1 = AS_ROW_START<br/> 2 = AS_ROW_END<br/>7 = AS_TRANSACTION_ID_START<br/>8 = AS_TRANSACTION_ID_END<br/>9 = AS_SEQUENCE_NUMBER_START<br/>10 = AS_SEQUENCE_NUMBER_END<br/> For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../tables/temporal-tables?view=sql-server-ver15'>Temporal Tables (Relational databases)</a>.
+			/// </summary>
 			[Column("generated_always_type"),                  Nullable] public byte?   GeneratedAlwaysType             { get; set; } // tinyint
 			[Column("generated_always_type_desc"),             Nullable] public string? GeneratedAlwaysTypeDesc         { get; set; } // nvarchar(60)
 			[Column("encryption_type"),                        Nullable] public int?    EncryptionType                  { get; set; } // int
@@ -8088,7 +9809,13 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("column_encryption_key_id"),               Nullable] public int?    ColumnEncryptionKeyID           { get; set; } // int
 			[Column("column_encryption_key_database_name"),    Nullable] public string? ColumnEncryptionKeyDatabaseName { get; set; } // sysname
 			[Column("is_hidden"),                           NotNull    ] public bool    IsHidden                        { get; set; } // bit
+			/// <summary>
+			/// Indicates if the column is masked. 1 indicates masked.
+			/// </summary>
 			[Column("is_masked"),                              Nullable] public bool?   IsMasked                        { get; set; } // bit
+			/// <summary>
+			/// The masking function for the column.
+			/// </summary>
 			[Column("masking_function"),                       Nullable] public string? MaskingFunction                 { get; set; } // nvarchar(4000)
 			[Column("graph_type"),                             Nullable] public int?    GraphType                       { get; set; } // int
 			[Column("graph_type_desc"),                        Nullable] public string? GraphTypeDesc                   { get; set; } // nvarchar(60)
@@ -8148,6 +9875,10 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("family_guid"),      Nullable] public Guid? FamilyGuid   { get; set; } // uniqueidentifier
 		}
 
+		/// <summary>
+		/// Contains a row for each internal memory-optimized table used for storing user memory-optimized tables. Each user table corresponds to one or more internal tables. A single table is used for the core data storage. Additional internal tables are used to support features such as temporal, columnstore index and off-row (LOB) storage for memory-optimized tables.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-memory-optimized-tables-internal-attributes-transact-sql?view=sql-server-ver15'>sys.memory_optimized_tables_internal_attributes</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="memory_optimized_tables_internal_attributes", IsView=true)]
 		public partial class MemoryOptimizedTablesInternalAttributes
 		{
@@ -8185,10 +9916,20 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("xml_collection_id"), NotNull] public int XmlCollectionID { get; set; } // int
 		}
 
+		/// <summary>
+		/// Returns a row for each module-to-assembly reference.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-module-assembly-usages-transact-sql?view=sql-server-ver15'>sys.module_assembly_usages</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="module_assembly_usages", IsView=true)]
 		public partial class ModuleAssemblyUsages
 		{
+			/// <summary>
+			/// Object identification number of the SQL object. Is unique within a database.
+			/// </summary>
 			[Column("object_id"),   NotNull] public int ObjectID   { get; set; } // int
+			/// <summary>
+			/// ID of the assembly from which this module was created.
+			/// </summary>
 			[Column("assembly_id"), NotNull] public int AssemblyID { get; set; } // int
 
 			#region Associations
@@ -8202,19 +9943,56 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Contains one row for each parameter of a numbered procedure. When you create a numbered stored procedure, the base procedure is number 1. All subsequent procedures have numbers 2, 3, and so forth. <b>sys.numbered_procedure_parameters</b> contains the parameter definitions for all subsequent procedures, numbered 2 and greater. This view does not show parameters for the base stored procedure (number = 1). The base stored procedure is similar to a nonnumbered stored procedure. Therefore, its parameters are represented in <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-parameters-transact-sql?view=sql-server-ver15'>sys.parameters (Transact-SQL)</a>.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-numbered-procedure-parameters-transact-sql?view=sql-server-ver15'>sys.numbered_procedure_parameters</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="numbered_procedure_parameters", IsView=true)]
 		public partial class NumberedProcedureParameters
 		{
+			/// <summary>
+			/// ID of the object to which this parameter belongs.
+			/// </summary>
 			[Column("object_id"),        NotNull    ] public int     ObjectID        { get; set; } // int
+			/// <summary>
+			/// Number of this procedure within the object, 2 or greater.
+			/// </summary>
 			[Column("procedure_number"), NotNull    ] public short   ProcedureNumber { get; set; } // smallint
+			/// <summary>
+			/// Name of the parameter. Is unique within <b>procedure_number</b>.
+			/// </summary>
 			[Column("name"),                Nullable] public string? Name            { get; set; } // sysname
+			/// <summary>
+			/// ID of the parameter. Is unique within the <b>procedure_number</b>.
+			/// </summary>
 			[Column("parameter_id"),     NotNull    ] public int     ParameterID     { get; set; } // int
+			/// <summary>
+			/// ID of the system type of the parameter
+			/// </summary>
 			[Column("system_type_id"),   NotNull    ] public byte    SystemTypeID    { get; set; } // tinyint
+			/// <summary>
+			/// ID of the type, as defined by user, of the parameter.
+			/// </summary>
 			[Column("user_type_id"),     NotNull    ] public int     UserTypeID      { get; set; } // int
+			/// <summary>
+			/// Maximum length of the parameter in bytes.<br/> -1 = Column data type is varchar(max), nvarchar(max), or varbinary(max).
+			/// </summary>
 			[Column("max_length"),       NotNull    ] public short   MaxLength       { get; set; } // smallint
+			/// <summary>
+			/// Precision of the parameter if numeric-based; otherwise, 0.
+			/// </summary>
 			[Column("precision"),        NotNull    ] public byte    Precision       { get; set; } // tinyint
+			/// <summary>
+			/// Scale of the parameter if numeric-based; otherwise, 0.
+			/// </summary>
 			[Column("scale"),            NotNull    ] public byte    Scale           { get; set; } // tinyint
+			/// <summary>
+			/// 1 = Parameter is output or return; otherwise, 0
+			/// </summary>
 			[Column("is_output"),        NotNull    ] public bool    IsOutput        { get; set; } // bit
+			/// <summary>
+			/// 1 = Parameter is a cursor-reference parameter.
+			/// </summary>
 			[Column("is_cursor_ref"),    NotNull    ] public bool    IsCursorRef     { get; set; } // bit
 
 			#region Associations
@@ -8228,12 +10006,25 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Contains a row for each SQL Server stored procedure that was created as a numbered procedure. This does not show a row for the base (number = 1) stored procedure. Entries for the base stored procedures can be found in views such as <b>sys.objects</b> and <b>sys.procedures</b>.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-numbered-procedures-transact-sql?view=sql-server-ver15'>sys.numbered_procedures</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="numbered_procedures", IsView=true)]
 		public partial class NumberedProcedures
 		{
+			/// <summary>
+			/// ID of the object of the stored procedure.
+			/// </summary>
 			[Column("object_id"),        NotNull    ] public int     ObjectID        { get; set; } // int
+			/// <summary>
+			/// Number of this procedure within the object, 2 or greater.
+			/// </summary>
 			[Column("procedure_number"),    Nullable] public short?  ProcedureNumber { get; set; } // smallint
-			[Column("definition"),          Nullable] public string? Definition      { get; set; } // nvarchar(0)
+			/// <summary>
+			/// The SQL Server text that defines this procedure.<br/> NULL = encrypted.
+			/// </summary>
+			[Column("definition"),          Nullable] public string? Definition      { get; set; } // nvarchar(max)
 
 			#region Associations
 
@@ -8246,20 +10037,60 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Contains a row for each user-defined, schema-scoped object that is created within a database, including natively compiled scalar user-defined function.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-objects-transact-sql?view=sql-server-ver15'>sys.objects</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="objects", IsView=true)]
 		public partial class Objects
 		{
+			/// <summary>
+			/// Object name.
+			/// </summary>
 			[Column("name"),                NotNull    ] public string   Name              { get; set; } = null!; // sysname
+			/// <summary>
+			/// Object identification number. Is unique within a database.
+			/// </summary>
 			[Column("object_id"),           NotNull    ] public int      ObjectID          { get; set; } // int
+			/// <summary>
+			/// ID of the individual owner, if different from the schema owner. By default, schema-contained objects are owned by the schema owner. However, an alternate owner can be specified by using the ALTER AUTHORIZATION statement to change ownership.<br/> Is NULL if there is no alternate individual owner.<br/> Is NULL if the object type is one of the following:<br/> C = CHECK constraint<br/> D = DEFAULT (constraint or stand-alone)<br/> F = FOREIGN KEY constraint<br/> PK = PRIMARY KEY constraint<br/> R = Rule (old-style, stand-alone)<br/> TA = Assembly (CLR-integration) trigger<br/> TR = SQL trigger<br/> UQ = UNIQUE constraint<br/> EC = Edge constraint
+			/// </summary>
 			[Column("principal_id"),           Nullable] public int?     PrincipalID       { get; set; } // int
+			/// <summary>
+			/// ID of the schema that the object is contained in.<br/> Schema-scoped system objects are always contained in the sys or INFORMATION_SCHEMA schemas.
+			/// </summary>
 			[Column("schema_id"),           NotNull    ] public int      SchemaID          { get; set; } // int
+			/// <summary>
+			/// ID of the object to which this object belongs.<br/> 0 = Not a child object.
+			/// </summary>
 			[Column("parent_object_id"),    NotNull    ] public int      ParentObjectID    { get; set; } // int
+			/// <summary>
+			/// Object type:<br/> AF = Aggregate function (CLR)<br/> C = CHECK constraint<br/> D = DEFAULT (constraint or stand-alone)<br/> F = FOREIGN KEY constraint<br/> FN = SQL scalar function<br/> FS = Assembly (CLR) scalar-function<br/> FT = Assembly (CLR) table-valued function<br/> IF = SQL inline table-valued function<br/> IT = Internal table<br/> P = SQL Stored Procedure<br/> PC = Assembly (CLR) stored-procedure<br/> PG = Plan guide<br/> PK = PRIMARY KEY constraint<br/> R = Rule (old-style, stand-alone)<br/> RF = Replication-filter-procedure<br/> S = System base table<br/> SN = Synonym<br/> SO = Sequence object<br/> U = Table (user-defined)<br/> V = View<br/> EC = Edge constraint <br/> <br/> <b>Applies to</b>: SQL Server 2012 (11.x) and later.<br/> SQ = Service queue<br/> TA = Assembly (CLR) DML trigger<br/> TF = SQL table-valued-function<br/> TR = SQL DML trigger<br/> TT = Table type<br/> UQ = UNIQUE constraint<br/> X = Extended stored procedure<br/> <br/> <b>Applies to</b>: SQL Server 2014 (12.x) and later, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW).<br/> ST = STATS_TREE<br/> <br/> <b>Applies to</b>: SQL Server 2016 (13.x) and later, Azure SQL Database, Azure Synapse Analytics, Analytics Platform System (PDW).<br/> ET = External Table
+			/// </summary>
 			[Column("type"),                   Nullable] public string?  Type              { get; set; } // char(2)
+			/// <summary>
+			/// Description of the object type:<br/> AGGREGATE_FUNCTION<br/> CHECK_CONSTRAINT<br/> CLR_SCALAR_FUNCTION<br/> CLR_STORED_PROCEDURE<br/> CLR_TABLE_VALUED_FUNCTION<br/> CLR_TRIGGER<br/> DEFAULT_CONSTRAINT<br/> EXTENDED_STORED_PROCEDURE<br/> FOREIGN_KEY_CONSTRAINT<br/> INTERNAL_TABLE<br/> PLAN_GUIDE<br/> PRIMARY_KEY_CONSTRAINT<br/> REPLICATION_FILTER_PROCEDURE<br/> RULE<br/> SEQUENCE_OBJECT<br/> <br/> <b>Applies to</b>: SQL Server 2012 (11.x) and later.<br/>  SERVICE_QUEUE<br/> SQL_INLINE_TABLE_VALUED_FUNCTION<br/> SQL_SCALAR_FUNCTION<br/> SQL_STORED_PROCEDURE<br/> SQL_TABLE_VALUED_FUNCTION<br/> SQL_TRIGGER<br/> SYNONYM<br/> SYSTEM_TABLE<br/> TABLE_TYPE<br/> UNIQUE_CONSTRAINT<br/> USER_TABLE<br/> VIEW
+			/// </summary>
 			[Column("type_desc"),              Nullable] public string?  TypeDesc          { get; set; } // nvarchar(60)
+			/// <summary>
+			/// Date the object was created.
+			/// </summary>
 			[Column("create_date"),         NotNull    ] public DateTime CreateDate        { get; set; } // datetime
+			/// <summary>
+			/// Date the object was last modified by using an ALTER statement. If the object is a table or a view, modify_date also changes when an index on the table or view is created or altered.
+			/// </summary>
 			[Column("modify_date"),         NotNull    ] public DateTime ModifyDate        { get; set; } // datetime
+			/// <summary>
+			/// Object is created by an internal SQL Server component.
+			/// </summary>
 			[Column("is_ms_shipped"),       NotNull    ] public bool     IsMsShipped       { get; set; } // bit
+			/// <summary>
+			/// Object is published.
+			/// </summary>
 			[Column("is_published"),        NotNull    ] public bool     IsPublished       { get; set; } // bit
+			/// <summary>
+			/// Only the schema of the object is published.
+			/// </summary>
 			[Column("is_schema_published"), NotNull    ] public bool     IsSchemaPublished { get; set; } // bit
 
 			#region Associations
@@ -8274,7 +10105,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// change_tracking_tables
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<SystemSchema.ChangeTrackingTables> ChangeTrackingTables { get; set; } = null!;
+			public IList<ChangeTrackingSchema.ChangeTrackingTables> ChangeTrackingTables { get; set; } = null!;
 
 			/// <summary>
 			/// check_constraints
@@ -8807,29 +10638,96 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("status"),        Nullable] public short?    Status       { get; set; } // smallint
 		}
 
+		/// <summary>
+		/// Contains a row for each parameter of an object that accepts parameters. If the object is a scalar function, there is also a single row describing the return value. That row will have a <b>parameter_id</b> value of 0.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-parameters-transact-sql?view=sql-server-ver15'>sys.parameters</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="parameters", IsView=true)]
 		public partial class Parameters
 		{
+			/// <summary>
+			/// ID of the object to which this parameter belongs.
+			/// </summary>
 			[Column("object_id"),                           NotNull    ] public int     ObjectID                        { get; set; } // int
+			/// <summary>
+			/// Name of the parameter. Is unique within the object.<br/> If the object is a scalar function, the parameter name is an empty string in the row representing the return value.
+			/// </summary>
 			[Column("name"),                                   Nullable] public string? Name                            { get; set; } // sysname
+			/// <summary>
+			/// ID of the parameter. Is unique within the object.<br/> If the object is a scalar function, <b>parameter_id</b> = 0 represents the return value.
+			/// </summary>
 			[Column("parameter_id"),                        NotNull    ] public int     ParameterID                     { get; set; } // int
+			/// <summary>
+			/// ID of the system type of the parameter.
+			/// </summary>
 			[Column("system_type_id"),                      NotNull    ] public byte    SystemTypeID                    { get; set; } // tinyint
+			/// <summary>
+			/// ID of the type of the parameter as defined by the user.<br/> To return the name of the type, join to the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-types-transact-sql?view=sql-server-ver15'>sys.types</a> catalog view on this column.
+			/// </summary>
 			[Column("user_type_id"),                        NotNull    ] public int     UserTypeID                      { get; set; } // int
+			/// <summary>
+			/// Maximum length of the parameter, in bytes.<br/> Value = -1 when the column data type is <b>varchar(max)</b>, <b>nvarchar(max)</b>, <b>varbinary(max)</b>, or <b>xml</b>.
+			/// </summary>
 			[Column("max_length"),                          NotNull    ] public short   MaxLength                       { get; set; } // smallint
+			/// <summary>
+			/// Precision of the parameter if numeric-based; otherwise, 0.
+			/// </summary>
 			[Column("precision"),                           NotNull    ] public byte    Precision                       { get; set; } // tinyint
+			/// <summary>
+			/// Scale of the parameter if numeric-based; otherwise, 0.
+			/// </summary>
 			[Column("scale"),                               NotNull    ] public byte    Scale                           { get; set; } // tinyint
+			/// <summary>
+			/// 1 = Parameter is OUTPUT or RETURN; otherwise, 0.
+			/// </summary>
 			[Column("is_output"),                           NotNull    ] public bool    IsOutput                        { get; set; } // bit
+			/// <summary>
+			/// 1 = Parameter is a cursor-reference parameter.
+			/// </summary>
 			[Column("is_cursor_ref"),                       NotNull    ] public bool    IsCursorRef                     { get; set; } // bit
+			/// <summary>
+			/// 1 = Parameter has default value.<br/> SQL Server only maintains default values for CLR objects in this catalog view; therefore, this column has a value of 0 for Transact-SQL objects. To view the default value of a parameter in a Transact-SQL object, query the <b>definition</b> column of the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-sql-modules-transact-sql?view=sql-server-ver15'>sys.sql_modules</a> catalog view, or use the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/functions/object-definition-transact-sql?view=sql-server-ver15'>OBJECT_DEFINITION</a> system function.
+			/// </summary>
 			[Column("has_default_value"),                   NotNull    ] public bool    HasDefaultValue                 { get; set; } // bit
+			/// <summary>
+			/// 1 = Content is a complete XML document.<br/> 0 = Content is a document fragment, or the data type of the column is not <b>xml</b>.
+			/// </summary>
 			[Column("is_xml_document"),                     NotNull    ] public bool    IsXmlDocument                   { get; set; } // bit
+			/// <summary>
+			/// If <b>has_default_value</b> is 1, the value of this column is the value of the default for the parameter; otherwise <i>NULL</i>.
+			/// </summary>
 			[Column("default_value"),                          Nullable] public object? DefaultValue                    { get; set; } // sql_variant
+			/// <summary>
+			/// Non-zero if the data type of the parameter is <b>xml</b> and the XML is typed. The value is the ID of the collection containing the validating XML schema namespace of the parameter.<br/> 0 = No XML schema collection.
+			/// </summary>
 			[Column("xml_collection_id"),                   NotNull    ] public int     XmlCollectionID                 { get; set; } // int
+			/// <summary>
+			/// 1 = Parameter is  READONLY; otherwise, 0.
+			/// </summary>
 			[Column("is_readonly"),                         NotNull    ] public bool    IsReadonly                      { get; set; } // bit
+			/// <summary>
+			/// 1 = Parameter is nullable. (the default).<br/> 0 = Parameter is not nullable, for more efficient execution of natively-compiled stored procedures.
+			/// </summary>
 			[Column("is_nullable"),                            Nullable] public bool?   IsNullable                      { get; set; } // bit
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, SQL Database.<br/> Encryption type:<br/> 1 = Deterministic encryption<br/> 2 = Randomized encryption
+			/// </summary>
 			[Column("encryption_type"),                        Nullable] public int?    EncryptionType                  { get; set; } // int
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, SQL Database.<br/> Encryption type description:<br/> RANDOMIZED<br/> DETERMINISTIC
+			/// </summary>
 			[Column("encryption_type_desc"),                   Nullable] public string? EncryptionTypeDesc              { get; set; } // nvarchar(64)
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, SQL Database.<br/> Name of encryption algorithm.<br/> Only AEAD_AES_256_CBC_HMAC_SHA_512 is supported.
+			/// </summary>
 			[Column("encryption_algorithm_name"),              Nullable] public string? EncryptionAlgorithmName         { get; set; } // sysname
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, SQL Database.<br/> ID of the CEK.
+			/// </summary>
 			[Column("column_encryption_key_id"),               Nullable] public int?    ColumnEncryptionKeyID           { get; set; } // int
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, SQL Database.<br/> The name of the database where the column encryption key exists if different than the database of the column. Is <i>NULL</i> if the key exists in the same database as the column.
+			/// </summary>
 			[Column("column_encryption_key_database_name"),    Nullable] public string? ColumnEncryptionKeyDatabaseName { get; set; } // sysname
 
 			#region Associations
@@ -8843,11 +10741,24 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Returns one row for each parameter that is of user-defined type.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-parameter-type-usages-transact-sql?view=sql-server-ver15'>sys.parameter_type_usages</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="parameter_type_usages", IsView=true)]
 		public partial class ParameterTypeUsages
 		{
+			/// <summary>
+			/// ID of the object to which this parameter belongs.
+			/// </summary>
 			[Column("object_id"),    NotNull] public int ObjectID    { get; set; } // int
+			/// <summary>
+			/// ID of the parameter. Is unique within the object.
+			/// </summary>
 			[Column("parameter_id"), NotNull] public int ParameterID { get; set; } // int
+			/// <summary>
+			/// ID of the user-defined type.<br/> To return the name of the type, join to the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-types-transact-sql?view=sql-server-ver15'>sys.types</a> catalog view on this column.
+			/// </summary>
 			[Column("user_type_id"), NotNull] public int UserTypeID  { get; set; } // int
 
 			#region Associations
@@ -8897,17 +10808,48 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("value"),           Nullable] public object? Value       { get; set; } // sql_variant
 		}
 
+		/// <summary>
+		/// Contains a row for each partition of all the tables and most types of indexes in the database. Special index types such as Full-Text, Spatial, and XML are not included in this view. All tables and indexes in SQL Server contain at least one partition, whether or not they are explicitly partitioned.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-partitions-transact-sql?view=sql-server-ver15'>sys.partitions</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="partitions", IsView=true)]
 		public partial class Partitions
 		{
+			/// <summary>
+			/// Indicates the partition ID. Is unique within a database.
+			/// </summary>
 			[Column("partition_id"),            NotNull    ] public long    PartitionID           { get; set; } // bigint
+			/// <summary>
+			/// Indicates the ID of the object to which this partition belongs. Every table or view is composed of at least one partition.
+			/// </summary>
 			[Column("object_id"),               NotNull    ] public int     ObjectID              { get; set; } // int
+			/// <summary>
+			/// Indicates the ID of the index within the object to which this partition belongs.<br/> 0 = heap<br/>1 = clustered index<br/>2 or greater = nonclustered index
+			/// </summary>
 			[Column("index_id"),                NotNull    ] public int     IndexID               { get; set; } // int
+			/// <summary>
+			/// Is a 1-based partition number within the owning index or heap. For non-partitioned tables and indexes, the value of this column is 1.
+			/// </summary>
 			[Column("partition_number"),        NotNull    ] public int     PartitionNumber       { get; set; } // int
+			/// <summary>
+			/// Indicates the ID of the data heap or B-tree (HoBT) that contains the rows for this partition.
+			/// </summary>
 			[Column("hobt_id"),                 NotNull    ] public long    HobtID                { get; set; } // bigint
+			/// <summary>
+			/// Indicates the approximate number of rows in this partition.
+			/// </summary>
 			[Column("rows"),                       Nullable] public long?   Rows                  { get; set; } // bigint
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2012 (11.x) and later.<br/> Indicates the ID of the FILESTREAM filegroup stored on this partition.
+			/// </summary>
 			[Column("filestream_filegroup_id"), NotNull    ] public short   FilestreamFilegroupID { get; set; } // smallint
+			/// <summary>
+			/// Indicates the state of compression for each partition:<br/> 0 = NONE <br/>1 = ROW <br/>2 = PAGE <br/>3 = COLUMNSTORE : <b>Applies to</b>: SQL Server 2012 (11.x) and later<br/>4 = COLUMNSTORE_ARCHIVE : <b>Applies to</b>: SQL Server 2014 (12.x) and later<br/> <b>Note:</b> Full text indexes will be compressed in any edition of SQL Server.
+			/// </summary>
 			[Column("data_compression"),        NotNull    ] public byte    DataCompression       { get; set; } // tinyint
+			/// <summary>
+			/// Indicates the state of compression for each partition. Possible values for rowstore tables are NONE, ROW, and PAGE. Possible values for columnstore tables are COLUMNSTORE and COLUMNSTORE_ARCHIVE.
+			/// </summary>
 			[Column("data_compression_desc"),      Nullable] public string? DataCompressionDesc   { get; set; } // nvarchar(60)
 
 			#region Associations
@@ -8933,14 +10875,36 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("function_id"),   NotNull    ] public int     FunctionID  { get; set; } // int
 		}
 
+		/// <summary>
+		/// Returns a row for each table for which periods have been defined.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-periods-transact-sql?view=sql-server-ver15'>sys.periods</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="periods", IsView=true)]
 		public partial class Periods
 		{
+			/// <summary>
+			/// Name of the period
+			/// </summary>
 			[Column("name"),                Nullable] public string? Name           { get; set; } // sysname
+			/// <summary>
+			/// The numeric value representing the type of period:<br/> 1 = system-time period
+			/// </summary>
 			[Column("period_type"),         Nullable] public byte?   PeriodType     { get; set; } // tinyint
+			/// <summary>
+			/// The text description of the type of column:<br/> SYSTEM_TIME_PERIOD
+			/// </summary>
 			[Column("period_type_desc"),    Nullable] public string? PeriodTypeDesc { get; set; } // nvarchar(60)
+			/// <summary>
+			/// The id of the table containing the period_type column
+			/// </summary>
 			[Column("object_id"),        NotNull    ] public int     ObjectID       { get; set; } // int
+			/// <summary>
+			/// The id of the column that defines the lower period boundary
+			/// </summary>
 			[Column("start_column_id"),  NotNull    ] public int     StartColumnID  { get; set; } // int
+			/// <summary>
+			/// The id of the column that defines the upper period boundary
+			/// </summary>
 			[Column("end_column_id"),    NotNull    ] public int     EndColumnID    { get; set; } // int
 
 			#region Associations
@@ -8954,23 +10918,67 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Contains a row for each plan guide in the database.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-plan-guides-transact-sql?view=sql-server-ver15'>sys.plan_guides</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="plan_guides", IsView=true)]
 		public partial class PlanGuides
 		{
+			/// <summary>
+			/// Unique identifier of the plan guide in the database.
+			/// </summary>
 			[Column("plan_guide_id"),   NotNull    ] public int      PlanGuideID   { get; set; } // int
+			/// <summary>
+			/// Name of the plan guide.
+			/// </summary>
 			[Column("name"),            NotNull    ] public string   Name          { get; set; } = null!; // sysname
+			/// <summary>
+			/// Date and time the plan guide was created.
+			/// </summary>
 			[Column("create_date"),     NotNull    ] public DateTime CreateDate    { get; set; } // datetime
-			[Column("modify_date"),     NotNull    ] public DateTime ModifyDate    { get; set; } // datetime
+			/// <summary>
+			/// Date the plan guide was last modified.
+			/// </summary>
+			[Column("modify_date"),     NotNull    ] public DateTime ModifyDate    { get; set; } // Datetime
+			/// <summary>
+			/// 1 = Plan guide is disabled.<br/> 0 = Plan guide is enabled.
+			/// </summary>
 			[Column("is_disabled"),     NotNull    ] public bool     IsDisabled    { get; set; } // bit
-			[Column("query_text"),         Nullable] public string?  QueryText     { get; set; } // nvarchar(0)
+			/// <summary>
+			/// Text of the query on which the plan guide is created.
+			/// </summary>
+			[Column("query_text"),         Nullable] public string?  QueryText     { get; set; } // nvarchar(max)
+			/// <summary>
+			/// Identifies the scope of the plan guide.<br/> 1 = OBJECT<br/> 2 = SQL<br/> 3 = TEMPLATE
+			/// </summary>
 			[Column("scope_type"),      NotNull    ] public byte     ScopeType     { get; set; } // tinyint
+			/// <summary>
+			/// Description of scope of the plan guide.<br/> OBJECT<br/> SQL<br/> TEMPLATE
+			/// </summary>
 			[Column("scope_type_desc"),    Nullable] public string?  ScopeTypeDesc { get; set; } // nvarchar(60)
-			[Column("scope_object_id"),    Nullable] public int?     ScopeObjectID { get; set; } // int
-			[Column("scope_batch"),        Nullable] public string?  ScopeBatch    { get; set; } // nvarchar(0)
-			[Column("parameters"),         Nullable] public string?  Parameters    { get; set; } // nvarchar(0)
-			[Column("hints"),              Nullable] public string?  Hints         { get; set; } // nvarchar(0)
+			/// <summary>
+			/// object_id of the object defining the scope of the plan guide, if the scope is OBJECT.<br/> NULL if the plan guide is not scoped to OBJECT.
+			/// </summary>
+			[Column("scope_object_id"),    Nullable] public int?     ScopeObjectID { get; set; } // Int
+			/// <summary>
+			/// Batch text, if <b>scope_type</b> is SQL.<br/> NULL if batch type is not SQL.<br/> If NULL and <b>scope_type</b> is SQL, the value of <b>query_text</b> applies.
+			/// </summary>
+			[Column("scope_batch"),        Nullable] public string?  ScopeBatch    { get; set; } // nvarchar(max)
+			/// <summary>
+			/// The string defining the list of parameters associated with the plan guide.<br/> NULL = No parameter list is associated with the plan guide.
+			/// </summary>
+			[Column("parameters"),         Nullable] public string?  Parameters    { get; set; } // nvarchar(max)
+			/// <summary>
+			/// The OPTION clause hints associated with the plan guide.
+			/// </summary>
+			[Column("hints"),              Nullable] public string?  Hints         { get; set; } // nvarchar(max)
 		}
 
+		/// <summary>
+		/// Contains a row for each object that is a procedure of some kind, with <b>sys.objects.type</b> = P, X, RF, and PC.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-procedures-transact-sql?view=sql-server-ver15'>sys.procedures</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="procedures", IsView=true)]
 		public partial class Procedures
 		{
@@ -8986,9 +10994,21 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("is_ms_shipped"),             NotNull    ] public bool     IsMsShipped            { get; set; } // bit
 			[Column("is_published"),              NotNull    ] public bool     IsPublished            { get; set; } // bit
 			[Column("is_schema_published"),       NotNull    ] public bool     IsSchemaPublished      { get; set; } // bit
+			/// <summary>
+			/// 1 = Procedure is auto-executed at the server startup; otherwise, 0. Can only be set for procedures in the master database.
+			/// </summary>
 			[Column("is_auto_executed"),          NotNull    ] public bool     IsAutoExecuted         { get; set; } // bit
+			/// <summary>
+			/// Execution of this procedure is replicated.
+			/// </summary>
 			[Column("is_execution_replicated"),      Nullable] public bool?    IsExecutionReplicated  { get; set; } // bit
+			/// <summary>
+			/// Replication of the procedure execution is done only when the transaction can be serialized.
+			/// </summary>
 			[Column("is_repl_serializable_only"),    Nullable] public bool?    IsReplSerializableOnly { get; set; } // bit
+			/// <summary>
+			/// During execution, the procedure skips constraints marked NOT FOR REPLICATION.
+			/// </summary>
 			[Column("skips_repl_constraints"),       Nullable] public bool?    SkipsReplConstraints   { get; set; } // bit
 
 			#region Associations
@@ -9456,6 +11476,10 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("rank_desc"),              Nullable] public string? RankDesc          { get; set; } // varchar(8)
 		}
 
+		/// <summary>
+		/// Contains a row for each sequence object in a database.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-sequences-transact-sql?view=sql-server-ver15'>sys.sequences</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="sequences", IsView=true)]
 		public partial class Sequences
 		{
@@ -9471,20 +11495,62 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("is_ms_shipped"),       NotNull    ] public bool     IsMsShipped       { get; set; } // bit
 			[Column("is_published"),        NotNull    ] public bool     IsPublished       { get; set; } // bit
 			[Column("is_schema_published"), NotNull    ] public bool     IsSchemaPublished { get; set; } // bit
-			[Column("start_value"),         NotNull    ] public object   StartValue        { get; set; } = null!; // sql_variant
-			[Column("increment"),           NotNull    ] public object   Increment         { get; set; } = null!; // sql_variant
-			[Column("minimum_value"),       NotNull    ] public object   MinimumValue      { get; set; } = null!; // sql_variant
-			[Column("maximum_value"),       NotNull    ] public object   MaximumValue      { get; set; } = null!; // sql_variant
-			[Column("is_cycling"),             Nullable] public bool?    IsCycling         { get; set; } // bit
-			[Column("is_cached"),              Nullable] public bool?    IsCached          { get; set; } // bit
-			[Column("cache_size"),             Nullable] public int?     CacheSize         { get; set; } // int
-			[Column("system_type_id"),      NotNull    ] public byte     SystemTypeID      { get; set; } // tinyint
-			[Column("user_type_id"),        NotNull    ] public int      UserTypeID        { get; set; } // int
-			[Column("precision"),           NotNull    ] public byte     Precision         { get; set; } // tinyint
-			[Column("scale"),                  Nullable] public byte?    Scale             { get; set; } // tinyint
-			[Column("current_value"),       NotNull    ] public object   CurrentValue      { get; set; } = null!; // sql_variant
-			[Column("is_exhausted"),        NotNull    ] public bool     IsExhausted       { get; set; } // bit
-			[Column("last_used_value"),        Nullable] public object?  LastUsedValue     { get; set; } // sql_variant
+			/// <summary>
+			/// The starting value for the sequence object. If the sequence object is restarted by using ALTER SEQUENCE it will restart at this value. When the sequence object cycles it proceeds to the <b>minimum_value</b> or <b>maximum_value</b>, not the <b>start_value</b>.
+			/// </summary>
+			[Column("start_value"),         NotNull    ] public object   StartValue        { get; set; } = null!; // sql_variant NOT NULL
+			/// <summary>
+			/// The value that is used to increment the sequence object after each generated value.
+			/// </summary>
+			[Column("increment"),           NotNull    ] public object   Increment         { get; set; } = null!; // sql_variant NOT NULL
+			/// <summary>
+			/// The minimum value that can be generated by the sequence object. After this value is reached, the sequence object will either return an error when trying to generate more values or restart if the CYCLE option is specified. If no MINVALUE has been specified, this column returns the minimum value supported by the sequence generator&apos;s data type.
+			/// </summary>
+			[Column("minimum_value"),       NotNull    ] public object   MinimumValue      { get; set; } = null!; // sql_variant NULL
+			/// <summary>
+			/// The maximum value that can be generated by the sequence object. After this value is reached the sequence object will either start returning an error when trying to generate more values or restart if the CYCLE option is specified. If no MAXVALUE has been specified this column returns the maximum value supported by the sequence object&apos;s data type.
+			/// </summary>
+			[Column("maximum_value"),       NotNull    ] public object   MaximumValue      { get; set; } = null!; // sql_variant NULL
+			/// <summary>
+			/// Returns 0 if NO CYCLE has been specified for the sequence object and 1 if CYCLE has been specified.
+			/// </summary>
+			[Column("is_cycling"),             Nullable] public bool?    IsCycling         { get; set; } // bit NOT NULL
+			/// <summary>
+			/// Returns 0 if NO CACHE has been specified for the sequence object and 1 if CACHE has been specified.
+			/// </summary>
+			[Column("is_cached"),              Nullable] public bool?    IsCached          { get; set; } // bit NOT NULL
+			/// <summary>
+			/// Returns the specified cache size for the sequence object. This column contains NULL if the sequence was created with the NO CACHE option or if CACHE was specified without specifying a cache size. If the value specified by the cache size is larger than the maximum number of values that can be returned by the sequence object, that unobtainable cache size is still displayed.
+			/// </summary>
+			[Column("cache_size"),             Nullable] public int?     CacheSize         { get; set; } // int NULL
+			/// <summary>
+			/// ID of the system type for sequence object&apos;s data type.
+			/// </summary>
+			[Column("system_type_id"),      NotNull    ] public byte     SystemTypeID      { get; set; } // tinyint NOT NULL
+			/// <summary>
+			/// ID of the data type for the sequence object as defined by the user.
+			/// </summary>
+			[Column("user_type_id"),        NotNull    ] public int      UserTypeID        { get; set; } // int NOT NULL
+			/// <summary>
+			/// Max precision of the data type.
+			/// </summary>
+			[Column("precision"),           NotNull    ] public byte     Precision         { get; set; } // tinyint NOT NULL
+			/// <summary>
+			/// Max scale of the type. Scale is returned together with precision to give users complete metadata. Scale is always 0 for sequence objects because only integer types are allowed.
+			/// </summary>
+			[Column("scale"),                  Nullable] public byte?    Scale             { get; set; } // tinyint NOT NULL
+			/// <summary>
+			/// The last value obligated. That is, the value returned from the most recent execution of the NEXT VALUE FOR function or the last value from executing the <b>sp_sequence_get_range</b> procedure. Returns the START WITH value if the sequence has never been used.
+			/// </summary>
+			[Column("current_value"),       NotNull    ] public object   CurrentValue      { get; set; } = null!; // sql_variant NOT NULL
+			/// <summary>
+			/// 0 indicates that more values can be generated from the sequence. 1 indicates that the sequence object has reached the MAXVALUE parameter and the sequence is not set to CYCLE. The NEXT VALUE FOR function returns an error until the sequence is restarted by using ALTER SEQUENCE.
+			/// </summary>
+			[Column("is_exhausted"),        NotNull    ] public bool     IsExhausted       { get; set; } // bit NOT NULL
+			/// <summary>
+			/// Returns the last value generated by the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/functions/next-value-for-transact-sql?view=sql-server-ver15'>Next Value For</a> function. Applies to SQL Server 2017 and later.
+			/// </summary>
+			[Column("last_used_value"),        Nullable] public object?  LastUsedValue     { get; set; } // sql_variant NULL
 
 			#region Associations
 
@@ -9497,13 +11563,32 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Contains one row for each assembly module for the server-level triggers of type TA. This view maps assembly triggers to the underlying CLR implementation. You can join this relation to <b>sys.server_triggers</b>. The assembly must be loaded into the <b>master</b> database. The tuple (object_id) is the key for the relation.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-server-assembly-modules-transact-sql?view=sql-server-ver15'>sys.server_assembly_modules</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="server_assembly_modules", IsView=true)]
 		public partial class ServerAssemblyModules
 		{
+			/// <summary>
+			/// This is a FOREIGN KEY reference back to the object upon which this assembly module is defined.
+			/// </summary>
 			[Column("object_id"),               NotNull    ] public int     ObjectID             { get; set; } // int
+			/// <summary>
+			/// ID of the assembly from which this module was created. The assembly must be loaded into the master database.
+			/// </summary>
 			[Column("assembly_id"),             NotNull    ] public int     AssemblyID           { get; set; } // int
-			[Column("assembly_class"),             Nullable] public string? AssemblyClass        { get; set; } // nvarchar(128)
-			[Column("assembly_method"),            Nullable] public string? AssemblyMethod       { get; set; } // nvarchar(128)
+			/// <summary>
+			/// Name of the class within assembly that defines this module.
+			/// </summary>
+			[Column("assembly_class"),             Nullable] public string? AssemblyClass        { get; set; } // sysname
+			/// <summary>
+			/// Name of the method within the class that defines this module. Is NULL for aggregate functions (AF).
+			/// </summary>
+			[Column("assembly_method"),            Nullable] public string? AssemblyMethod       { get; set; } // sysname
+			/// <summary>
+			/// ID of the EXECUTE AS server principal.<br/> NULL by default or if EXECUTE AS CALLER.<br/> ID of the specified principal if EXECUTE AS SELF EXECUTE AS &lt;principal&gt;.<br/> -2 = EXECUTE AS OWNER.
+			/// </summary>
 			[Column("execute_as_principal_id"),    Nullable] public int?    ExecuteAsPrincipalID { get; set; } // int
 
 			#region Associations
@@ -9561,19 +11646,56 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("is_state_enabled"),           Nullable] public bool?    IsStateEnabled        { get; set; } // bit
 		}
 
+		/// <summary>
+		/// Returns a row for each server-level event notification object.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-server-event-notifications-transact-sql?view=sql-server-ver15'>sys.server_event_notifications</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="server_event_notifications", IsView=true)]
 		public partial class ServerEventNotifications
 		{
+			/// <summary>
+			/// Server event notification name. Is unique across all server-level event notifications.
+			/// </summary>
 			[Column("name"),              NotNull    ] public string   Name            { get; set; } = null!; // sysname
+			/// <summary>
+			/// Object identification number. Is unique within the <b>master</b> database.
+			/// </summary>
 			[Column("object_id"),         NotNull    ] public int      ObjectID        { get; set; } // int
+			/// <summary>
+			/// Class of parent. Is always 100 = Server.
+			/// </summary>
 			[Column("parent_class"),      NotNull    ] public byte     ParentClass     { get; set; } // tinyint
+			/// <summary>
+			/// Description of class of parent. Is always SERVER.
+			/// </summary>
 			[Column("parent_class_desc"),    Nullable] public string?  ParentClassDesc { get; set; } // nvarchar(60)
+			/// <summary>
+			/// Is always 0.
+			/// </summary>
 			[Column("parent_id"),         NotNull    ] public int      ParentID        { get; set; } // int
+			/// <summary>
+			/// Date created.
+			/// </summary>
 			[Column("create_date"),       NotNull    ] public DateTime CreateDate      { get; set; } // datetime
+			/// <summary>
+			/// Date object was last modified by using an ALTER statement.
+			/// </summary>
 			[Column("modify_date"),       NotNull    ] public DateTime ModifyDate      { get; set; } // datetime
+			/// <summary>
+			/// Name of the target service to which the notification is sent.
+			/// </summary>
 			[Column("service_name"),         Nullable] public string?  ServiceName     { get; set; } // nvarchar(256)
+			/// <summary>
+			/// The service broker where the named target service is defined.
+			/// </summary>
 			[Column("broker_instance"),      Nullable] public string?  BrokerInstance  { get; set; } // nvarchar(128)
+			/// <summary>
+			/// SID of the login executing the statement that creates the event notification. NULL if WITH FAN_IN is not specified in the event notification definition.
+			/// </summary>
 			[Column("creator_sid"),          Nullable] public byte[]?  CreatorSid      { get; set; } // varbinary(85)
+			/// <summary>
+			/// ID of the server principal that owns this.
+			/// </summary>
 			[Column("principal_id"),         Nullable] public int?     PrincipalID     { get; set; } // int
 
 			#region Associations
@@ -9587,15 +11709,34 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Contains one row for each event for which a server-level event-notification or server-level DDL trigger fires. The columns <b>object_id</b> and <b>type</b> uniquely identify the server event.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-server-events-transact-sql?view=sql-server-ver15'>sys.server_events</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="server_events", IsView=true)]
 		public partial class ServerEvents
 		{
+			/// <summary>
+			/// ID of the server-level event notification or server-level DDL trigger to fire.
+			/// </summary>
 			[Column("object_id"),             NotNull    ] public int     ObjectID           { get; set; } // int
+			/// <summary>
+			/// Type of the event that causes the event notification or DDL trigger to fire.
+			/// </summary>
 			[Column("type"),                  NotNull    ] public int     Type               { get; set; } // int
-			[Column("type_desc"),             NotNull    ] public string  TypeDesc           { get; set; } = null!; // nvarchar(128)
+			/// <summary>
+			/// Description of the event that causes the DDL trigger or event notification to fire.
+			/// </summary>
+			[Column("type_desc"),             NotNull    ] public string  TypeDesc           { get; set; } = null!; // nvarchar(60)
 			[Column("is_trigger_event"),         Nullable] public bool?   IsTriggerEvent     { get; set; } // bit
+			/// <summary>
+			/// Event group on which the trigger or event notification is created, or null if not created on an event group.
+			/// </summary>
 			[Column("event_group_type"),         Nullable] public int?    EventGroupType     { get; set; } // int
-			[Column("event_group_type_desc"),    Nullable] public string? EventGroupTypeDesc { get; set; } // nvarchar(128)
+			/// <summary>
+			/// Description of the event group on which the trigger or event notification is created, or null if not created on an event group
+			/// </summary>
+			[Column("event_group_type_desc"),    Nullable] public string? EventGroupTypeDesc { get; set; } // nvarchar(60)
 
 			#region Associations
 
@@ -9786,13 +11927,32 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("is_rda_server"),                                   Nullable] public bool?    IsRdaServer                             { get; set; } // bit
 		}
 
+		/// <summary>
+		/// Contains the set of SQL modules for server-level triggers of type TR. You can join this relation to sys.server_triggers. The tuple (object_id) is the key of the relation.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-server-sql-modules-transact-sql?view=sql-server-ver15'>sys.server_sql_modules</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="server_sql_modules", IsView=true)]
 		public partial class ServerSqlModules
 		{
+			/// <summary>
+			/// This is a FOREIGN KEY reference back to the server-level trigger where this module is defined.
+			/// </summary>
 			[Column("object_id"),               NotNull    ] public int     ObjectID             { get; set; } // int
-			[Column("definition"),                 Nullable] public string? Definition           { get; set; } // nvarchar(0)
+			/// <summary>
+			/// SQL text that defines this module.<br/> NULL = Encrypted.
+			/// </summary>
+			[Column("definition"),                 Nullable] public string? Definition           { get; set; } // nvarchar(max)
+			/// <summary>
+			/// Module was created with ANSI NULLS set option set to ON.
+			/// </summary>
 			[Column("uses_ansi_nulls"),            Nullable] public bool?   UsesAnsiNulls        { get; set; } // bit
+			/// <summary>
+			/// Module was created with QUOTED IDENTIFIER set option set to ON.
+			/// </summary>
 			[Column("uses_quoted_identifier"),     Nullable] public bool?   UsesQuotedIdentifier { get; set; } // bit
+			/// <summary>
+			/// ID of the EXECUTE AS server principal.<br/> NULL by default or if EXECUTE AS CALLER<br/> ID of the specified principal if EXECUTE AS SELF EXECUTE AS principal-2 = EXECUTE AS OWNER.
+			/// </summary>
 			[Column("execute_as_principal_id"),    Nullable] public int?    ExecuteAsPrincipalID { get; set; } // int
 
 			#region Associations
@@ -9806,6 +11966,10 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Contains one row for each event for which a server-level (synchronous) trigger fires.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-server-trigger-events-transact-sql?view=sql-server-ver15'>sys.server_trigger_events</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="server_trigger_events", IsView=true)]
 		public partial class ServerTriggerEvents
 		{
@@ -9813,7 +11977,13 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("type"),                  NotNull    ] public int     Type               { get; set; } // int
 			[Column("type_desc"),             NotNull    ] public string  TypeDesc           { get; set; } = null!; // nvarchar(128)
 			[Column("is_trigger_event"),         Nullable] public bool?   IsTriggerEvent     { get; set; } // bit
+			/// <summary>
+			/// Trigger is marked to be the first to fire for this event.
+			/// </summary>
 			[Column("is_first"),                 Nullable] public bool?   IsFirst            { get; set; } // bit
+			/// <summary>
+			/// Trigger is marked to be the last to fire for this event.
+			/// </summary>
 			[Column("is_last"),                  Nullable] public bool?   IsLast             { get; set; } // bit
 			[Column("event_group_type"),         Nullable] public int?    EventGroupType     { get; set; } // int
 			[Column("event_group_type_desc"),    Nullable] public string? EventGroupTypeDesc { get; set; } // nvarchar(128)
@@ -9829,19 +11999,56 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Contains the set of all server-level DDL triggers with object_type of TR or TA. In the case of CLR triggers, the assembly must be loaded into the <b>master</b> database. All server-level DDL trigger names exist in a single, global scope.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-server-triggers-transact-sql?view=sql-server-ver15'>sys.server_triggers</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="server_triggers", IsView=true)]
 		public partial class ServerTriggers
 		{
+			/// <summary>
+			/// Name of the trigger.
+			/// </summary>
 			[Column("name"),              NotNull    ] public string   Name            { get; set; } = null!; // sysname
+			/// <summary>
+			/// ID of the object.
+			/// </summary>
 			[Column("object_id"),         NotNull    ] public int      ObjectID        { get; set; } // int
+			/// <summary>
+			/// Class of parent. Is always:<br/> 100 = Server
+			/// </summary>
 			[Column("parent_class"),      NotNull    ] public byte     ParentClass     { get; set; } // tinyint
+			/// <summary>
+			/// Description of class of parent. Is always:<br/> SERVER.
+			/// </summary>
 			[Column("parent_class_desc"),    Nullable] public string?  ParentClassDesc { get; set; } // nvarchar(60)
+			/// <summary>
+			/// Always 0 for triggers on the SERVER.
+			/// </summary>
 			[Column("parent_id"),         NotNull    ] public int      ParentID        { get; set; } // int
+			/// <summary>
+			/// Object type:<br/> TA = Assembly (CLR) trigger<br/> TR = SQL trigger
+			/// </summary>
 			[Column("type"),              NotNull    ] public string   Type            { get; set; } = null!; // char(2)
+			/// <summary>
+			/// Description of the class of the object type.<br/> CLR_TRIGGER<br/> SQL_TRIGGER
+			/// </summary>
 			[Column("type_desc"),            Nullable] public string?  TypeDesc        { get; set; } // nvarchar(60)
+			/// <summary>
+			/// Date the trigger was created.
+			/// </summary>
 			[Column("create_date"),       NotNull    ] public DateTime CreateDate      { get; set; } // datetime
+			/// <summary>
+			/// Date the trigger was last modified by using an ALTER statement.
+			/// </summary>
 			[Column("modify_date"),       NotNull    ] public DateTime ModifyDate      { get; set; } // datetime
+			/// <summary>
+			/// Trigger created on behalf of the user by an internal SQL Server component.
+			/// </summary>
 			[Column("is_ms_shipped"),     NotNull    ] public bool     IsMsShipped     { get; set; } // bit
+			/// <summary>
+			/// 1 = Trigger is disabled.
+			/// </summary>
 			[Column("is_disabled"),       NotNull    ] public bool     IsDisabled      { get; set; } // bit
 
 			#region Associations
@@ -10069,17 +12276,48 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("unit_conversion_factor"),          Nullable] public double? UnitConversionFactor         { get; set; } // float
 		}
 
+		/// <summary>
+		/// Contains a row for each dependency on a referenced entity as referenced in the Transact-SQL expression or statements that define some other referencing object.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-sql-dependencies-transact-sql?view=sql-server-ver15'>sys.sql_dependencies</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="sql_dependencies", IsView=true)]
 		public partial class SqlDependencies
 		{
+			/// <summary>
+			/// Identifies the class of the referenced entity:<br/> 0 = Object or column (non-schema-bound references only)<br/> 1 = Object or column (schema-bound references)<br/> 2 = Types (schema-bound references)<br/> 3 = XML Schema collections (schema-bound references)<br/> 4 = Partition function (schema-bound references)
+			/// </summary>
 			[Column("class"),               NotNull    ] public byte    @class            { get; set; } // tinyint
+			/// <summary>
+			/// Description of class of referenced entity:<br/> <b>OBJECT_OR_COLUMN_REFERENCE_NON_SCHEMA_BOUND</b><br/> <b>OBJECT_OR_COLUMN_REFERENCE_SCHEMA_BOUND</b><br/> <b>TYPE_REFERENCE</b><br/> <b>XML_SCHEMA_COLLECTION_REFERENCE</b><br/> <b>PARTITION_FUNCTION_REFERENCE</b>
+			/// </summary>
 			[Column("class_desc"),             Nullable] public string? ClassDesc         { get; set; } // nvarchar(60)
+			/// <summary>
+			/// ID of the referencing object.
+			/// </summary>
 			[Column("object_id"),           NotNull    ] public int     ObjectID          { get; set; } // int
+			/// <summary>
+			/// If the referencing ID is a column, ID of referencing column; otherwise, 0.
+			/// </summary>
 			[Column("column_id"),           NotNull    ] public int     ColumnID          { get; set; } // int
+			/// <summary>
+			/// ID of the referenced entity, interpreted by value of class, according to:<br/> 0, 1 = Object ID of object or column.<br/> 2 = Type ID.<br/> 3 = XML Schema collection ID.
+			/// </summary>
 			[Column("referenced_major_id"), NotNull    ] public int     ReferencedMajorID { get; set; } // int
+			/// <summary>
+			/// Minor-ID of the referenced entity, interpreted by value of class, as shown in the following.<br/> When class =:<br/> 0, <b>referenced_minor_id</b> is a column ID; or if not a column, it is 0.<br/> 1, <b>referenced_minor_id</b> is a column ID; or if not a column, it is 0.<br/> Otherwise, <b>referenced_minor_id</b> = 0.
+			/// </summary>
 			[Column("referenced_minor_id"), NotNull    ] public int     ReferencedMinorID { get; set; } // int
+			/// <summary>
+			/// Object or column is selected.
+			/// </summary>
 			[Column("is_selected"),         NotNull    ] public bool    IsSelected        { get; set; } // bit
+			/// <summary>
+			/// Object or column is updated.
+			/// </summary>
 			[Column("is_updated"),          NotNull    ] public bool    IsUpdated         { get; set; } // bit
+			/// <summary>
+			/// Object is used in SELECT * clause (object-level only).
+			/// </summary>
 			[Column("is_select_all"),       NotNull    ] public bool    IsSelectAll       { get; set; } // bit
 
 			#region Associations
@@ -10093,23 +12331,72 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Contains one row for each by-name dependency on a user-defined entity in the current database. This includes dependences between natively compiled, scalar user-defined functions and other SQL Server modules. A dependency between two entities is created when one entity, called the <em>referenced entity</em>, appears by name in a persisted SQL expression of another entity, called the <em>referencing entity</em>. For example, when a table is referenced in the definition of a view, the view, as the referencing entity, depends on the table, the referenced entity. If the table is dropped, the view is unusable.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-sql-expression-dependencies-transact-sql?view=sql-server-ver15'>sys.sql_expression_dependencies</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="sql_expression_dependencies", IsView=true)]
 		public partial class SqlExpressionDependencies
 		{
+			/// <summary>
+			/// ID of the referencing entity. Is not nullable.
+			/// </summary>
 			[Column("referencing_id"),            NotNull    ] public int     ReferencingID          { get; set; } // int
+			/// <summary>
+			/// Column ID when the referencing entity is a column; otherwise 0. Is not nullable.
+			/// </summary>
 			[Column("referencing_minor_id"),      NotNull    ] public int     ReferencingMinorID     { get; set; } // int
+			/// <summary>
+			/// Class of the referencing entity.<br/> 1 = Object or column<br/> 12 = Database DDL trigger<br/> 13 = Server DDL trigger<br/> Is not nullable.
+			/// </summary>
 			[Column("referencing_class"),            Nullable] public byte?   ReferencingClass       { get; set; } // tinyint
+			/// <summary>
+			/// Description of the class of referencing entity.<br/> OBJECT_OR_COLUMN<br/> DATABASE_DDL_TRIGGER<br/> SERVER_DDL_TRIGGER<br/> Is not nullable.
+			/// </summary>
 			[Column("referencing_class_desc"),       Nullable] public string? ReferencingClassDesc   { get; set; } // nvarchar(60)
+			/// <summary>
+			/// 1 = Referenced entity is schema-bound.<br/> 0 = Referenced entity is non-schema-bound.<br/> Is not nullable.
+			/// </summary>
 			[Column("is_schema_bound_reference"), NotNull    ] public bool    IsSchemaBoundReference { get; set; } // bit
+			/// <summary>
+			/// Class of the referenced entity.<br/> 1 = Object or column<br/> 6 = Type<br/> 10 = XML schema collection<br/> 21 = Partition function<br/> Is not nullable.
+			/// </summary>
 			[Column("referenced_class"),             Nullable] public byte?   ReferencedClass        { get; set; } // tinyint
+			/// <summary>
+			/// Description of class of referenced entity.<br/> OBJECT_OR_COLUMN<br/> TYPE<br/> XML_SCHEMA_COLLECTION<br/> PARTITION_FUNCTION<br/> Is not nullable.
+			/// </summary>
 			[Column("referenced_class_desc"),        Nullable] public string? ReferencedClassDesc    { get; set; } // nvarchar(60)
-			[Column("referenced_server_name"),       Nullable] public string? ReferencedServerName   { get; set; } // nvarchar(128)
-			[Column("referenced_database_name"),     Nullable] public string? ReferencedDatabaseName { get; set; } // nvarchar(128)
-			[Column("referenced_schema_name"),       Nullable] public string? ReferencedSchemaName   { get; set; } // nvarchar(128)
-			[Column("referenced_entity_name"),       Nullable] public string? ReferencedEntityName   { get; set; } // nvarchar(128)
+			/// <summary>
+			/// Name of the server of the referenced entity.<br/> This column is populated for cross-server dependencies that are made by specifying a valid four-part name. For information about multipart names, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/language-elements/transact-sql-syntax-conventions-transact-sql?view=sql-server-ver15'>Transact-SQL Syntax Conventions (Transact-SQL)</a>.<br/> NULL for non-schema-bound entities for which the entity was referenced without specifying a four-part name.<br/> NULL for schema-bound entities because they must be in the same database and therefore can only be defined using a two-part (<em>schema.object</em>) name.
+			/// </summary>
+			[Column("referenced_server_name"),       Nullable] public string? ReferencedServerName   { get; set; } // sysname
+			/// <summary>
+			/// Name of the database of the referenced entity.<br/> This column is populated for cross-database or cross-server references that are made by specifying a valid three-part or four-part name.<br/> NULL for non-schema-bound references when specified using a one-part or two-part name.<br/> NULL for schema-bound entities because they must be in the same database and therefore can only be defined using a two-part (<em>schema.object</em>) name.
+			/// </summary>
+			[Column("referenced_database_name"),     Nullable] public string? ReferencedDatabaseName { get; set; } // sysname
+			/// <summary>
+			/// Schema in which the referenced entity belongs.<br/> NULL for non-schema-bound references in which the entity was referenced without specifying the schema name.<br/> Never NULL for schema-bound references because schema-bound entities must be defined and referenced by using a two-part name.
+			/// </summary>
+			[Column("referenced_schema_name"),       Nullable] public string? ReferencedSchemaName   { get; set; } // sysname
+			/// <summary>
+			/// Name of the referenced entity. Is not nullable.
+			/// </summary>
+			[Column("referenced_entity_name"),       Nullable] public string? ReferencedEntityName   { get; set; } // sysname
+			/// <summary>
+			/// ID of the referenced entity. The value of this column is never NULL for schema-bound references. The value of this column is always NULL for cross-server and cross-database references.<br/> NULL for references within the database if the ID cannot be determined. For non-schema-bound references, the ID cannot be resolved in the following cases:<br/> The referenced entity does not exist in the database.<br/> The schema of the referenced entity depends on the schema of the caller and is resolved at run time. In this case, is_caller_dependent is set to 1.
+			/// </summary>
 			[Column("referenced_id"),                Nullable] public int?    ReferencedID           { get; set; } // int
+			/// <summary>
+			/// ID of the referenced column when the referencing entity is a column; otherwise 0. Is not nullable.<br/> A referenced entity is a column when a column is identified by name in the referencing entity, or when the parent entity is used in a SELECT * statement.
+			/// </summary>
 			[Column("referenced_minor_id"),       NotNull    ] public int     ReferencedMinorID      { get; set; } // int
+			/// <summary>
+			/// Indicates that schema binding for the referenced entity occurs at runtime; therefore, resolution of the entity ID depends on the schema of the caller. This occurs when the referenced entity is a stored procedure, extended stored procedure, or a non-schema-bound user-defined function called in an EXECUTE statement.<br/> 1 = The referenced entity is caller dependent and is resolved at runtime. In this case, referenced_id is NULL.<br/> 0 = The referenced entity ID is not caller dependent.<br/> Always 0 for schema-bound references and for cross-database and cross-server references that explicitly specify a schema name. For example, a reference to an entity in the format <i>EXEC MyDatabase.MySchema.MyProc</i> is not caller dependent. However, a reference in the format <i>EXEC MyDatabase..MyProc</i> is caller dependent.
+			/// </summary>
 			[Column("is_caller_dependent"),       NotNull    ] public bool    IsCallerDependent      { get; set; } // bit
+			/// <summary>
+			/// Indicates the reference is ambiguous and can resolve at run time to a user-defined function, a user-defined type (UDT), or an xquery reference to a column of type <b>xml</b>.<br/> For example, assume that the statement <i>SELECT Sales.GetOrder() FROM Sales.MySales</i> is defined in a stored procedure. Until the stored procedure is executed, it is not known whether <i>Sales.GetOrder()</i> is a user-defined function in the <i>Sales</i> schema or column named <i>Sales</i> of type UDT with a method named <i>GetOrder()</i>.<br/> 1 = Reference is ambiguous.<br/> 0 = Reference is unambiguous or the entity can be successfully bound when the view is called.<br/> Always 0 for schema bound references.
+			/// </summary>
 			[Column("is_ambiguous"),              NotNull    ] public bool    IsAmbiguous            { get; set; } // bit
 		}
 
@@ -10140,20 +12427,60 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("password_hash"),            Nullable] public byte[]?  PasswordHash        { get; set; } // varbinary(256)
 		}
 
+		/// <summary>
+		/// Returns a row for each object that is an SQL language-defined module in SQL Server, including natively compiled scalar user-defined function. Objects of type P, RF, V, TR, FN, IF, TF, and R have an associated SQL module. Stand-alone defaults, objects of type D, also have an SQL module definition in this view. For a description of these types, see the <i>type</i> column in the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-objects-transact-sql?view=sql-server-ver15'>sys.objects</a> catalog view.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-sql-modules-transact-sql?view=sql-server-ver15'>sys.sql_modules</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="sql_modules", IsView=true)]
 		public partial class SqlModules
 		{
+			/// <summary>
+			/// ID of the object of the containing object. Is unique within a database.
+			/// </summary>
 			[Column("object_id"),               NotNull    ] public int     ObjectID              { get; set; } // int
-			[Column("definition"),                 Nullable] public string? Definition            { get; set; } // nvarchar(0)
+			/// <summary>
+			/// SQL text that defines this module. This value can also be obtained using the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/functions/object-definition-transact-sql?view=sql-server-ver15'>OBJECT_DEFINITION</a> built-in function.<br/> NULL = Encrypted.
+			/// </summary>
+			[Column("definition"),                 Nullable] public string? Definition            { get; set; } // nvarchar(max)
+			/// <summary>
+			/// Module was created with SET ANSI_NULLS ON.<br/> Will always be = 0 for rules and defaults.
+			/// </summary>
 			[Column("uses_ansi_nulls"),            Nullable] public bool?   UsesAnsiNulls         { get; set; } // bit
+			/// <summary>
+			/// Module was created with SET QUOTED_IDENTIFIER ON.
+			/// </summary>
 			[Column("uses_quoted_identifier"),     Nullable] public bool?   UsesQuotedIdentifier  { get; set; } // bit
+			/// <summary>
+			/// Module was created with SCHEMABINDING option.<br/> Always contains a value of 1 for natively compiled stored procedures.
+			/// </summary>
 			[Column("is_schema_bound"),            Nullable] public bool?   IsSchemaBound         { get; set; } // bit
+			/// <summary>
+			/// 1 = Schema-bound module definition depends on the default-collation of the database for correct evaluation; otherwise, 0. Such a dependency prevents changing the database&apos;s default collation.
+			/// </summary>
 			[Column("uses_database_collation"),    Nullable] public bool?   UsesDatabaseCollation { get; set; } // bit
+			/// <summary>
+			/// Procedure was created WITH RECOMPILE option.
+			/// </summary>
 			[Column("is_recompiled"),              Nullable] public bool?   IsRecompiled          { get; set; } // bit
+			/// <summary>
+			/// Module was declared to produce a <i>NULL</i> output on any <i>NULL</i> input.
+			/// </summary>
 			[Column("null_on_null_input"),         Nullable] public bool?   NullOnNullInput       { get; set; } // bit
-			[Column("execute_as_principal_id"),    Nullable] public int?    ExecuteAsPrincipalID  { get; set; } // int
+			/// <summary>
+			/// ID of the EXECUTE AS database principal.<br/> <i>NULL</i> by default or if EXECUTE AS CALLER.<br/> ID of the specified principal if EXECUTE AS SELF or EXECUTE AS &lt;principal&gt;.<br/> -2 = EXECUTE AS OWNER.
+			/// </summary>
+			[Column("execute_as_principal_id"),    Nullable] public int?    ExecuteAsPrincipalID  { get; set; } // Int
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2014 (12.x) through SQL Server 2014 (12.x).<br/> 0 = not natively compiled<br/> 1 = is natively compiled<br/> The default value is 0.
+			/// </summary>
 			[Column("uses_native_compilation"),    Nullable] public bool?   UsesNativeCompilation { get; set; } // bit
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2019 (15.x) and later.<br/><br/>Indicates whether inlining is turned on for the module currently. <br/><br/>0 = inlining is turned off<br/> 1 = inlining is turned on.<br/> For scalar user-defined functions (UDFs), the value will be 1 if inlining is turned on (explicitly or implicitly). The value will always be 1 for inline table-valued functions (TVFs), and 0 for other module types.<br/>
+			/// </summary>
 			[Column("inline_type"),                Nullable] public bool?   InlineType            { get; set; } // bit
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2019 (15.x) and later.<br/><br/>Indicates whether the module is inlineable or not. Inlineability is based on the conditions specified <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../user-defined-functions/scalar-udf-inlining?view=sql-server-ver15#inlineable-scalar-udfs-requirements'>here</a>.<br/> 0 = not inlineable<br/> 1 = is inlineable. <br/> For scalar user-defined functions (UDFs), the value will be 1 if the UDF is inlineable, and 0 otherwise. It always contains a value of 1 for inline table-valued functions (TVFs), and 0 for all other module types.<br/>
+			/// </summary>
 			[Column("is_inlineable"),              Nullable] public bool?   IsInlineable          { get; set; } // bit
 
 			#region Associations
@@ -10167,22 +12494,65 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Contains a row for each statistics object that exists for the tables, indexes, and indexed views in the database in SQL Server. Every index will have a corresponding statistics row with the same name and ID (<b>index_id</b> = <b>stats_id</b>), but not every statistics row has a corresponding index.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-stats-transact-sql?view=sql-server-ver15'>sys.stats</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="stats", IsView=true)]
 		public partial class Stats
 		{
+			/// <summary>
+			/// ID of the object to which these statistics belong.
+			/// </summary>
 			[Column("object_id"),                    NotNull    ] public int     ObjectID                  { get; set; } // int
-			[Column("name"),                            Nullable] public string? Name                      { get; set; } // nvarchar(128)
+			/// <summary>
+			/// Name of the statistics. Is unique within the object.
+			/// </summary>
+			[Column("name"),                            Nullable] public string? Name                      { get; set; } // sysname
+			/// <summary>
+			/// ID of the statistics. Is unique within the object.<br/><br/>If statistics correspond to an index, the <em>stats_id</em> value is the same as the <em>index_id</em> value in the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-indexes-transact-sql?view=sql-server-ver15'>sys.indexes</a> catalog view.
+			/// </summary>
 			[Column("stats_id"),                     NotNull    ] public int     StatsID                   { get; set; } // int
+			/// <summary>
+			/// Indicates whether the statistics were automatically created by SQL Server.<br/> 0 = Statistics were not automatically created by SQL Server.<br/> 1 = Statistics were automatically created by SQL Server.
+			/// </summary>
 			[Column("auto_created"),                    Nullable] public bool?   AutoCreated               { get; set; } // bit
+			/// <summary>
+			/// Indicates whether the statistics were created by a user.<br/> 0 = Statistics were not created by a user.<br/> 1 = Statistics were created by a user.
+			/// </summary>
 			[Column("user_created"),                    Nullable] public bool?   UserCreated               { get; set; } // bit
+			/// <summary>
+			/// Indicates whether the statistics were created with the <b>NORECOMPUTE</b> option.<br/> 0 = Statistics were not created with the <b>NORECOMPUTE</b> option.<br/> 1 = Statistics were created with the <b>NORECOMPUTE</b> option.
+			/// </summary>
 			[Column("no_recompute"),                    Nullable] public bool?   NoRecompute               { get; set; } // bit
+			/// <summary>
+			/// 0 = Statistics do not have a filter and are computed on all rows.<br/> 1 = Statistics have a filter and are computed only on rows that satisfy the filter definition.
+			/// </summary>
 			[Column("has_filter"),                      Nullable] public bool?   HasFilter                 { get; set; } // bit
-			[Column("filter_definition"),               Nullable] public string? FilterDefinition          { get; set; } // nvarchar(0)
+			/// <summary>
+			/// Expression for the subset of rows included in filtered statistics.<br/> NULL = Non-filtered statistics.
+			/// </summary>
+			[Column("filter_definition"),               Nullable] public string? FilterDefinition          { get; set; } // nvarchar(max)
+			/// <summary>
+			/// Indicates whether the statistics is temporary. Temporary statistics support Always On availability groups secondary databases that are enabled for read-only access.<br/> 0 = The statistics is not temporary.<br/> 1 = The statistics is temporary.<br/><br/><b>Applies to</b>: SQL Server (Starting with SQL Server 2012 (11.x))
+			/// </summary>
 			[Column("is_temporary"),                    Nullable] public bool?   IsTemporary               { get; set; } // bit
+			/// <summary>
+			/// Indicate whether the statistics are created as incremental statistics.<br/> 0 = The statistics are not incremental.<br/> 1 = The statistics are incremental.<br/><br/><b>Applies to</b>: SQL Server (Starting with SQL Server 2014 (12.x))
+			/// </summary>
 			[Column("is_incremental"),                  Nullable] public bool?   IsIncremental             { get; set; } // bit
+			/// <summary>
+			/// Indicates whether the statistics were created or updated with the PERSIST_SAMPLE_PERCENT option.<br/> <b>0</b> = Statistics are not persisting the sample percentage.<br/> 1 = Statistics were created or updated with the PERSIST_SAMPLE_PERCENT option.<br/><br/><b>Applies to</b>: SQL Server (Starting with SQL Server 2019 (15.x))
+			/// </summary>
 			[Column("has_persisted_sample"),            Nullable] public bool?   HasPersistedSample        { get; set; } // bit
+			/// <summary>
+			/// Indicates the method by which statistics are created.<br/><br/><b>0</b> = Sort based statistics<br/><br/>1 = Internal use only<br/><br/><b>Applies to</b>: SQL Server (Starting with SQL Server 2019 (15.x))
+			/// </summary>
 			[Column("stats_generation_method"),      NotNull    ] public int     StatsGenerationMethod     { get; set; } // int
-			[Column("stats_generation_method_desc"), NotNull    ] public string  StatsGenerationMethodDesc { get; set; } = null!; // varchar(80)
+			/// <summary>
+			/// The text description of the method by which statistics are created.<br/><br/>Sort based statistics<br/><br/>Internal use only<br/><br/><b>Applies to</b>: SQL Server (Starting with SQL Server 2019 (15.x))
+			/// </summary>
+			[Column("stats_generation_method_desc"), NotNull    ] public string  StatsGenerationMethodDesc { get; set; } = null!; // varchar(255)
 
 			#region Associations
 
@@ -10195,12 +12565,28 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Contains a row for each column that is part of <b>sys.stats</b> statistics.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-stats-columns-transact-sql?view=sql-server-ver15'>sys.stats_columns</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="stats_columns", IsView=true)]
 		public partial class StatsColumns
 		{
+			/// <summary>
+			/// ID of the object of which this column is part.
+			/// </summary>
 			[Column("object_id"),       NotNull    ] public int  ObjectID      { get; set; } // int
+			/// <summary>
+			/// ID of the statistics of which this column is part.<br/><br/>If statistics correspond to an index, the <em>stats_id</em> value is the same as the <em>index_id</em> value in the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-indexes-transact-sql?view=sql-server-ver15'>sys.indexes</a> catalog view.
+			/// </summary>
 			[Column("stats_id"),        NotNull    ] public int  StatsID       { get; set; } // int
+			/// <summary>
+			/// 1-based ordinal within set of stats columns.
+			/// </summary>
 			[Column("stats_column_id"),    Nullable] public int? StatsColumnID { get; set; } // int
+			/// <summary>
+			/// ID of the column from <b>sys.columns</b>.
+			/// </summary>
 			[Column("column_id"),          Nullable] public int? ColumnID      { get; set; } // int
 
 			#region Associations
@@ -10232,6 +12618,10 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("cryptographic_provider_algid"),    Nullable] public object?  CryptographicProviderAlgid { get; set; } // sql_variant
 		}
 
+		/// <summary>
+		/// Contains a row for each synonym object that is <b>sys.objects.type</b> = SN.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-synonyms-transact-sql?view=sql-server-ver15'>sys.synonyms</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="synonyms", IsView=true)]
 		public partial class Synonyms
 		{
@@ -10247,6 +12637,9 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("is_ms_shipped"),       NotNull    ] public bool     IsMsShipped       { get; set; } // bit
 			[Column("is_published"),        NotNull    ] public bool     IsPublished       { get; set; } // bit
 			[Column("is_schema_published"), NotNull    ] public bool     IsSchemaPublished { get; set; } // bit
+			/// <summary>
+			/// Fully quoted name of the object to which the user of this synonym is redirected.
+			/// </summary>
 			[Column("base_object_name"),       Nullable] public string?  BaseObjectName    { get; set; } // nvarchar(1035)
 
 			#region Associations
@@ -10260,35 +12653,120 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Contains a row for each column of system objects that have columns.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-system-columns-transact-sql?view=sql-server-ver15'>sys.system_columns</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="system_columns", IsView=true)]
 		public partial class SystemColumns
 		{
+			/// <summary>
+			/// ID of the object to which this column belongs.
+			/// </summary>
 			[Column("object_id"),                           NotNull    ] public int     ObjectID                        { get; set; } // int
+			/// <summary>
+			/// Name of the column. Is unique within the object.
+			/// </summary>
 			[Column("name"),                                   Nullable] public string? Name                            { get; set; } // sysname
+			/// <summary>
+			/// ID of the column. Is unique within the object.<br/> Column IDs might not be sequential.
+			/// </summary>
 			[Column("column_id"),                           NotNull    ] public int     ColumnID                        { get; set; } // int
+			/// <summary>
+			/// ID of the system-type of the column
+			/// </summary>
 			[Column("system_type_id"),                      NotNull    ] public byte    SystemTypeID                    { get; set; } // tinyint
+			/// <summary>
+			/// ID of the type of the column as defined by the user.<br/> To return the name of the type, join to the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-types-transact-sql?view=sql-server-ver15'>sys.types</a> catalog view on this column.
+			/// </summary>
 			[Column("user_type_id"),                        NotNull    ] public int     UserTypeID                      { get; set; } // int
+			/// <summary>
+			/// Maximum length (in bytes) of column.<br/> -1 = Column data type is <b>varchar(max)</b>, <b>nvarchar(max)</b>, <b>varbinary(max)</b>, or <b>xml</b>.<br/> For <b>text</b> columns, the <b>max_length</b> value will be 16 or the value set by <b>sp_tableoption</b> &apos;text in row&apos;.
+			/// </summary>
 			[Column("max_length"),                          NotNull    ] public short   MaxLength                       { get; set; } // smallint
+			/// <summary>
+			/// Precision of the column if numeric-based; otherwise, 0.
+			/// </summary>
 			[Column("precision"),                           NotNull    ] public byte    Precision                       { get; set; } // tinyint
+			/// <summary>
+			/// Scale of the column if numeric-based; otherwise, 0.
+			/// </summary>
 			[Column("scale"),                               NotNull    ] public byte    Scale                           { get; set; } // tinyint
+			/// <summary>
+			/// Name of the collation of the column if character-based; otherwise, NULL.
+			/// </summary>
 			[Column("collation_name"),                         Nullable] public string? CollationName                   { get; set; } // sysname
+			/// <summary>
+			/// 1 = Column is nullable.
+			/// </summary>
 			[Column("is_nullable"),                            Nullable] public bool?   IsNullable                      { get; set; } // bit
+			/// <summary>
+			/// 1 = Column uses ANSI_PADDING ON behavior if character, binary, or variant.<br/> 0 = Column is not character, binary, or variant.
+			/// </summary>
 			[Column("is_ansi_padded"),                      NotNull    ] public bool    IsAnsiPadded                    { get; set; } // bit
+			/// <summary>
+			/// 1 = Column is a declared ROWGUIDCOL.
+			/// </summary>
 			[Column("is_rowguidcol"),                       NotNull    ] public bool    IsRowguidcol                    { get; set; } // bit
+			/// <summary>
+			/// 1 = Column has identity values.
+			/// </summary>
 			[Column("is_identity"),                         NotNull    ] public bool    IsIdentity                      { get; set; } // bit
+			/// <summary>
+			/// 1 = Column is a computed column.
+			/// </summary>
 			[Column("is_computed"),                         NotNull    ] public bool    IsComputed                      { get; set; } // bit
+			/// <summary>
+			/// 1 = Column is declared to use filestream storage.
+			/// </summary>
 			[Column("is_filestream"),                       NotNull    ] public bool    IsFilestream                    { get; set; } // bit
+			/// <summary>
+			/// 1 = Column is replicated.
+			/// </summary>
 			[Column("is_replicated"),                       NotNull    ] public bool    IsReplicated                    { get; set; } // bit
+			/// <summary>
+			/// 1 = Column has a non-SQL Server subscriber.
+			/// </summary>
 			[Column("is_non_sql_subscribed"),               NotNull    ] public bool    IsNonSqlSubscribed              { get; set; } // bit
+			/// <summary>
+			/// 1 = Column is merge-published.
+			/// </summary>
 			[Column("is_merge_published"),                  NotNull    ] public bool    IsMergePublished                { get; set; } // bit
+			/// <summary>
+			/// 1 = Column is replicated by using SSIS.
+			/// </summary>
 			[Column("is_dts_replicated"),                   NotNull    ] public bool    IsDtsReplicated                 { get; set; } // bit
+			/// <summary>
+			/// 1 = Content is a complete XML document.<br/> 0 = Content is a document fragment, or the column data type is not <b>xml</b>.
+			/// </summary>
 			[Column("is_xml_document"),                     NotNull    ] public bool    IsXmlDocument                   { get; set; } // bit
+			/// <summary>
+			/// Non-zero if the column data type is <b>xml</b> and the XML is typed. The value will be the ID of the collection containing the validating XML schema namespace of the column.<br/> 0 = No XML schema collection.
+			/// </summary>
 			[Column("xml_collection_id"),                   NotNull    ] public int     XmlCollectionID                 { get; set; } // int
+			/// <summary>
+			/// ID of the default object, regardless of whether it is a stand-alone <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../system-stored-procedures/sp-bindefault-transact-sql?view=sql-server-ver15'>sys.sp_bindefault</a>, or an inline, column-level DEFAULT constraint. The <b>parent_object_id</b> column of an inline column-level default object is a reference back to the table itself. Or, 0 if there is no default.
+			/// </summary>
 			[Column("default_object_id"),                   NotNull    ] public int     DefaultObjectID                 { get; set; } // int
+			/// <summary>
+			/// ID of the stand-alone rule bound to the column by using <b>sys.sp_bindrule</b>.<br/> 0 = No stand-alone rule.<br/> For column-level CHECK constraints, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-check-constraints-transact-sql?view=sql-server-ver15'>sys.check_constraints (Transact-SQL)</a>.
+			/// </summary>
 			[Column("rule_object_id"),                      NotNull    ] public int     RuleObjectID                    { get; set; } // int
+			/// <summary>
+			/// 1 = Column is a sparse column. For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../tables/use-sparse-columns?view=sql-server-ver15'>Use Sparse Columns</a>.
+			/// </summary>
 			[Column("is_sparse"),                           NotNull    ] public bool    IsSparse                        { get; set; } // bit
+			/// <summary>
+			/// 1 = Column is a column set. For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../tables/use-column-sets?view=sql-server-ver15'>Use Column Sets</a>.
+			/// </summary>
 			[Column("is_column_set"),                       NotNull    ] public bool    IsColumnSet                     { get; set; } // bit
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, SQL Database. 7, 8, 9, 10 only applies to SQL Database.<br/> Identifies when the column value is generated (will always be 0 for columns in system tables):<br/> 0 = NOT_APPLICABLE<br/> 1 = AS_ROW_START<br/> 2 = AS_ROW_END<br/>7 = AS_TRANSACTION_ID_START<br/>8 = AS_TRANSACTION_ID_END<br/>9 = AS_SEQUENCE_NUMBER_START<br/>10 = AS_SEQUENCE_NUMBER_END<br/> For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../tables/temporal-tables?view=sql-server-ver15'>Temporal Tables (Relational databases)</a>.
+			/// </summary>
 			[Column("generated_always_type"),                  Nullable] public byte?   GeneratedAlwaysType             { get; set; } // tinyint
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, SQL Database.<br/> Textual description of <i>generated_always_type</i>&apos;s value (always NOT_APPLICABLE for columns in system tables) <br/> NOT_APPLICABLE<br/> AS_ROW_START<br/> AS_ROW_END<br/><br/><b>Applies to</b>: SQL Database<br/><br/>AS_TRANSACTION_ID_START<br/>AS_TRANSACTION_ID_END<br/>AS_SEQUENCE_NUMBER_START<br/>AS_SEQUENCE_NUMBER_END
+			/// </summary>
 			[Column("generated_always_type_desc"),             Nullable] public string? GeneratedAlwaysTypeDesc         { get; set; } // nvarchar(60)
 			[Column("encryption_type"),                        Nullable] public int?    EncryptionType                  { get; set; } // int
 			[Column("encryption_type_desc"),                   Nullable] public string? EncryptionTypeDesc              { get; set; } // nvarchar(64)
@@ -10413,20 +12891,60 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Contains one row for all schema-scoped system objects that are included with Microsoft SQL Server. All system objects are contained in the schemas named sys or INFORMATION_SCHEMA.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-system-objects-transact-sql?view=sql-server-ver15'>sys.system_objects</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="system_objects", IsView=true)]
 		public partial class SystemObjects
 		{
+			/// <summary>
+			/// Object name.
+			/// </summary>
 			[Column("name"),                NotNull    ] public string   Name              { get; set; } = null!; // sysname
+			/// <summary>
+			/// Object identification number. Is unique within a database.
+			/// </summary>
 			[Column("object_id"),           NotNull    ] public int      ObjectID          { get; set; } // int
+			/// <summary>
+			/// ID of the individual owner if different from the schema owner. By default, schema-contained objects are owned by the schema owner. However, another owner can be specified by using the ALTER AUTHORIZATION statement to change ownership.<br/> Is NULL if there is no other individual owner.<br/> Is NULL if the object type is one of the following:<br/> C = CHECK constraint<br/> D = DEFAULT (constraint or stand-alone)<br/> F = FOREIGN KEY constraint<br/> PK = PRIMARY KEY constraint<br/> R = Rule (old-style, stand-alone)<br/> TA = Assembly (CLR) trigger<br/> TR = SQL trigger<br/> UQ = UNIQUE constraint
+			/// </summary>
 			[Column("principal_id"),           Nullable] public int?     PrincipalID       { get; set; } // int
+			/// <summary>
+			/// ID of the schema that the object is contained in.<br/> For all schema-scoped system objects that included with SQL Server, this value will always be in (schema_id(&apos;sys&apos;), schema_id(&apos;INFORMATION_SCHEMA&apos;))
+			/// </summary>
 			[Column("schema_id"),           NotNull    ] public int      SchemaID          { get; set; } // int
+			/// <summary>
+			/// ID of the object to which this object belongs.<br/> 0 = Not a child object.
+			/// </summary>
 			[Column("parent_object_id"),       Nullable] public int?     ParentObjectID    { get; set; } // int
+			/// <summary>
+			/// Object type:<br/> AF = Aggregate function (CLR)<br/> C = CHECK constraint<br/> D = DEFAULT (constraint or stand-alone)<br/> F = FOREIGN KEY constraint<br/> FN = SQL scalar function<br/> FS = Assembly (CLR) scalar-function<br/> FT = Assembly (CLR) table-valued function<br/> IF = SQL inline table-valued function<br/> IT = Internal table<br/> P = SQL Stored Procedure<br/> PC = Assembly (CLR) stored-procedure<br/> PG = Plan guide<br/> PK = PRIMARY KEY constraint<br/> R = Rule (old-style, stand-alone)<br/> RF = Replication-filter-procedure<br/> S = System base table<br/> SN = Synonym<br/> SQ = Service queue<br/> TA = Assembly (CLR) DML trigger<br/> TF = SQL table-valued-function<br/> TR = SQL DML trigger<br/> TT = Table type<br/> U = Table (user-defined)<br/> UQ = UNIQUE constraint<br/> V = View<br/> X = Extended stored procedure
+			/// </summary>
 			[Column("type"),                NotNull    ] public string   Type              { get; set; } = null!; // char(2)
+			/// <summary>
+			/// Description of the object type. AGGREGATE_FUNCTION<br/> CHECK_CONSTRAINT<br/> DEFAULT_CONSTRAINT<br/> FOREIGN_KEY_CONSTRAINT<br/> SQL_SCALAR_FUNCTION<br/> CLR_SCALAR_FUNCTION<br/> CLR_TABLE_VALUED_FUNCTION<br/> SQL_INLINE_TABLE_VALUED_FUNCTION<br/> INTERNAL_TABLE<br/> SQL_STORED_PROCEDURE<br/> CLR_STORED_PROCEDURE<br/> PLAN_GUIDE<br/> PRIMARY_KEY_CONSTRAINT<br/> RULE<br/> REPLICATION_FILTER_PROCEDURE<br/> SYSTEM_TABLE<br/> SYNONYM<br/> SERVICE_QUEUE<br/> CLR_TRIGGER<br/> SQL_TABLE_VALUED_FUNCTION<br/> SQL_TRIGGER<br/> TABLE_TYPE<br/> USER_TABLE<br/> UNIQUE_CONSTRAINT<br/> VIEW<br/> EXTENDED_STORED_PROCEDURE
+			/// </summary>
 			[Column("type_desc"),              Nullable] public string?  TypeDesc          { get; set; } // nvarchar(60)
+			/// <summary>
+			/// Date the object was created.
+			/// </summary>
 			[Column("create_date"),         NotNull    ] public DateTime CreateDate        { get; set; } // datetime
+			/// <summary>
+			/// Date the object was last modified by using an ALTER statement. If the object is a table or a view, modify_date also changes when a clustered index on the table or view is created or altered.
+			/// </summary>
 			[Column("modify_date"),         NotNull    ] public DateTime ModifyDate        { get; set; } // datetime
+			/// <summary>
+			/// Object is created by an internal Microsoft SQL Server component.
+			/// </summary>
 			[Column("is_ms_shipped"),          Nullable] public bool?    IsMsShipped       { get; set; } // bit
+			/// <summary>
+			/// Object is published.
+			/// </summary>
 			[Column("is_published"),           Nullable] public bool?    IsPublished       { get; set; } // bit
+			/// <summary>
+			/// Only the schema of the object is published.
+			/// </summary>
 			[Column("is_schema_published"),    Nullable] public bool?    IsSchemaPublished { get; set; } // bit
 
 			#region Associations
@@ -10464,29 +12982,96 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Contains one row for each system object that has parameters.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-system-parameters-transact-sql?view=sql-server-ver15'>sys.system_parameters</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="system_parameters", IsView=true)]
 		public partial class SystemParameters
 		{
+			/// <summary>
+			/// ID of the object to which this parameter belongs.
+			/// </summary>
 			[Column("object_id"),                           NotNull    ] public int     ObjectID                        { get; set; } // int
+			/// <summary>
+			/// Name of the parameter. Is unique within the object.<br/> If the object is a scalar function, the parameter name is an empty string in the row representing the return value.
+			/// </summary>
 			[Column("name"),                                   Nullable] public string? Name                            { get; set; } // sysname
+			/// <summary>
+			/// ID of the parameter. Is unique within the object. If the object is a scalar function, <b>parameter_id</b> = 0 represents the return value.
+			/// </summary>
 			[Column("parameter_id"),                        NotNull    ] public int     ParameterID                     { get; set; } // int
+			/// <summary>
+			/// ID of the system type of the parameter.
+			/// </summary>
 			[Column("system_type_id"),                      NotNull    ] public byte    SystemTypeID                    { get; set; } // tinyint
+			/// <summary>
+			/// ID of the type of the parameter as defined by the user.<br/> To return the name of the type, join to the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-types-transact-sql?view=sql-server-ver15'>sys.types</a> catalog view on this column.
+			/// </summary>
 			[Column("user_type_id"),                        NotNull    ] public int     UserTypeID                      { get; set; } // int
+			/// <summary>
+			/// Maximum length of the parameter, in bytes. Value will be -1 for when column data type is <b>varchar(max)</b>, <b>nvarchar(max)</b>, <b>varbinary(max)</b>, or <b>xml</b>.
+			/// </summary>
 			[Column("max_length"),                          NotNull    ] public short   MaxLength                       { get; set; } // smallint
+			/// <summary>
+			/// Precision of the parameter if numeric-based; otherwise, 0.
+			/// </summary>
 			[Column("precision"),                           NotNull    ] public byte    Precision                       { get; set; } // tinyint
+			/// <summary>
+			/// Scale of the parameter if numeric-based; otherwise, 0.
+			/// </summary>
 			[Column("scale"),                               NotNull    ] public byte    Scale                           { get; set; } // tinyint
+			/// <summary>
+			/// 1 = Parameter is output (or return); otherwise, 0.
+			/// </summary>
 			[Column("is_output"),                           NotNull    ] public bool    IsOutput                        { get; set; } // bit
+			/// <summary>
+			/// 1 = Parameter is a cursor-reference parameter.
+			/// </summary>
 			[Column("is_cursor_ref"),                       NotNull    ] public bool    IsCursorRef                     { get; set; } // bit
+			/// <summary>
+			/// 1 = Parameter has default value.<br/> SQL Server only maintains default values for CLR objects in this catalog view; therefore, this column will always have a value of 0 for Transact-SQL objects. To view the default value of a parameter in a Transact-SQL object, query the <b>definition</b> column of the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-sql-modules-transact-sql?view=sql-server-ver15'>sys.sql_modules</a> catalog view, or use the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/functions/object-definition-transact-sql?view=sql-server-ver15'>OBJECT_DEFINITION</a> system function.
+			/// </summary>
 			[Column("has_default_value"),                   NotNull    ] public bool    HasDefaultValue                 { get; set; } // bit
+			/// <summary>
+			/// 1 = Content is a complete XML document.<br/> 0 = Content is a document fragment or the data type of the column is not <b>xml</b>.
+			/// </summary>
 			[Column("is_xml_document"),                     NotNull    ] public bool    IsXmlDocument                   { get; set; } // bit
+			/// <summary>
+			/// If <b>has_default_value</b> is 1, the value of this column is the value of the default for the parameter; otherwise <i>NULL</i>.
+			/// </summary>
 			[Column("default_value"),                          Nullable] public object? DefaultValue                    { get; set; } // sql_variant
+			/// <summary>
+			/// Non-zero if the data type of the parameter is <b>xml</b> and the XML is typed. The value is the ID of the collection that contains the validating XML schema namespace for the parameter.<br/> 0 = There is no XML schema collection.
+			/// </summary>
 			[Column("xml_collection_id"),                   NotNull    ] public int     XmlCollectionID                 { get; set; } // int
+			/// <summary>
+			/// 1 =  Parameter is READONLY; otherwise, 0.
+			/// </summary>
 			[Column("is_readonly"),                         NotNull    ] public bool    IsReadonly                      { get; set; } // bit
+			/// <summary>
+			/// 1 = Parameter is nullable. (the default).<br/> 0 = Parameter is not nullable, for more efficient execution of natively-compiled stored procedures.
+			/// </summary>
 			[Column("is_nullable"),                            Nullable] public bool?   IsNullable                      { get; set; } // bit
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, SQL Database.<br/> Encryption type:<br/> 1 = Deterministic encryption<br/> 2 = Randomized encryption
+			/// </summary>
 			[Column("encryption_type"),                        Nullable] public int?    EncryptionType                  { get; set; } // int
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, SQL Database.<br/> Encryption type description:<br/> RANDOMIZED<br/> DETERMINISTIC
+			/// </summary>
 			[Column("encryption_type_desc"),                   Nullable] public string? EncryptionTypeDesc              { get; set; } // nvarchar(64)
-			[Column("encryption_algorithm_name"),              Nullable] public string? EncryptionAlgorithmName         { get; set; } // nvarchar(128)
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, SQL Database.<br/> Name of encryption algorithm.<br/> Only AEAD_AES_256_CBC_HMAC_SHA_512 is supported.
+			/// </summary>
+			[Column("encryption_algorithm_name"),              Nullable] public string? EncryptionAlgorithmName         { get; set; } // sysname
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, SQL Database.<br/> ID of the CEK.
+			/// </summary>
 			[Column("column_encryption_key_id"),               Nullable] public int?    ColumnEncryptionKeyID           { get; set; } // int
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, SQL Database.<br/> The name of the database where the column encryption key exists if different than the database of the column. <i>NULL</i> if the key exists in the same database as the column.
+			/// </summary>
 			[Column("column_encryption_key_database_name"),    Nullable] public string? ColumnEncryptionKeyDatabaseName { get; set; } // sysname
 
 			#region Associations
@@ -10500,17 +13085,48 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Returns one row per system object that contains an SQL language-defined module. System objects of type FN, IF, P, PC, TF, V have an associated SQL module. To identify the containing object, you can join this view to <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-system-objects-transact-sql?view=sql-server-ver15'>sys.system_objects</a>.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-system-sql-modules-transact-sql?view=sql-server-ver15'>sys.system_sql_modules</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="system_sql_modules", IsView=true)]
 		public partial class SystemSqlModules
 		{
+			/// <summary>
+			/// Object identification number of the containing object, unique within a database.
+			/// </summary>
 			[Column("object_id"),               NotNull    ] public int     ObjectID              { get; set; } // int
-			[Column("definition"),                 Nullable] public string? Definition            { get; set; } // nvarchar(0)
+			/// <summary>
+			/// SQL text that defines this module.
+			/// </summary>
+			[Column("definition"),                 Nullable] public string? Definition            { get; set; } // nvarchar(max)
+			/// <summary>
+			/// 1 = Module was created with the SET ANSI_NULLS database option ON.<br/> Always returns 1.
+			/// </summary>
 			[Column("uses_ansi_nulls"),         NotNull    ] public bool    UsesAnsiNulls         { get; set; } // bit
+			/// <summary>
+			/// 1 = Module was created with SET QUOTED_IDENTIFIER ON.<br/> Always returns 1.
+			/// </summary>
 			[Column("uses_quoted_identifier"),  NotNull    ] public bool    UsesQuotedIdentifier  { get; set; } // bit
+			/// <summary>
+			/// 0 = Module was not created with the SCHEMABINDING option.<br/> Always returns 0.
+			/// </summary>
 			[Column("is_schema_bound"),         NotNull    ] public bool    IsSchemaBound         { get; set; } // bit
+			/// <summary>
+			/// 0 = Module does not depend on the default collation of the database.<br/> Always returns 0.
+			/// </summary>
 			[Column("uses_database_collation"), NotNull    ] public bool    UsesDatabaseCollation { get; set; } // bit
+			/// <summary>
+			/// 0 = Procedure was not created by using the WITH RECOMPILE option.<br/> Always returns 0.
+			/// </summary>
 			[Column("is_recompiled"),           NotNull    ] public bool    IsRecompiled          { get; set; } // bit
+			/// <summary>
+			/// 0 = Module was not created to produce a NULL output on any NULL input.<br/> Always returns 0.
+			/// </summary>
 			[Column("null_on_null_input"),      NotNull    ] public bool    NullOnNullInput       { get; set; } // bit
+			/// <summary>
+			/// Always returns NULL
+			/// </summary>
 			[Column("execute_as_principal_id"),    Nullable] public int?    ExecuteAsPrincipalID  { get; set; } // int
 			[Column("uses_native_compilation"), NotNull    ] public bool    UsesNativeCompilation { get; set; } // bit
 			[Column("inline_type"),             NotNull    ] public bool    InlineType            { get; set; } // bit
@@ -10527,6 +13143,10 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Contains one row for each system view that is shipped with SQL Server. All system views are contained in the schemas named <b>sys</b> or <b>INFORMATION_SCHEMA</b>.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-system-views-transact-sql?view=sql-server-ver15'>sys.system_views</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="system_views", IsView=true)]
 		public partial class SystemViews
 		{
@@ -10542,11 +13162,29 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("is_ms_shipped"),                  Nullable] public bool?    IsMsShipped              { get; set; } // bit
 			[Column("is_published"),                   Nullable] public bool?    IsPublished              { get; set; } // bit
 			[Column("is_schema_published"),            Nullable] public bool?    IsSchemaPublished        { get; set; } // bit
+			/// <summary>
+			/// 1 = View is replicated.
+			/// </summary>
 			[Column("is_replicated"),               NotNull    ] public bool     IsReplicated             { get; set; } // bit
+			/// <summary>
+			/// 1 = View has a replication filter.
+			/// </summary>
 			[Column("has_replication_filter"),      NotNull    ] public bool     HasReplicationFilter     { get; set; } // bit
+			/// <summary>
+			/// 1 = VIEW_METADATA option specified for view. For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/statements/create-view-transact-sql?view=sql-server-ver15'>CREATE VIEW (Transact-SQL)</a>.
+			/// </summary>
 			[Column("has_opaque_metadata"),         NotNull    ] public bool     HasOpaqueMetadata        { get; set; } // bit
+			/// <summary>
+			/// 1 = Table contains persisted data that depends on an assembly whose definition changed during the last ALTER ASSEMBLY. Will be reset to 0 after the next successful DBCC CHECKDB or DBCC CHECKTABLE.
+			/// </summary>
 			[Column("has_unchecked_assembly_data"), NotNull    ] public bool     HasUncheckedAssemblyData { get; set; } // bit
+			/// <summary>
+			/// 1 = WITH CHECK OPTION was specified in the view definition.
+			/// </summary>
 			[Column("with_check_option"),           NotNull    ] public bool     WithCheckOption          { get; set; } // bit
+			/// <summary>
+			/// 1 = View was created automatically by the system to store correlation information between <b>datetime</b> columns. Creation of this view was enabled by setting DATE_CORRELATION_OPTIMIZATION to ON.
+			/// </summary>
 			[Column("is_date_correlation_view"),    NotNull    ] public bool     IsDateCorrelationView    { get; set; } // bit
 			[Column("is_tracked_by_cdc"),           NotNull    ] public bool     IsTrackedByCdc           { get; set; } // bit
 			[Column("has_snapshot"),                NotNull    ] public bool     HasSnapshot              { get; set; } // bit
@@ -10562,6 +13200,10 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Returns a row for each user table in SQL Server.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-tables-transact-sql?view=sql-server-ver15'>sys.tables</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="tables", IsView=true)]
 		public partial class Tables
 		{
@@ -10577,34 +13219,121 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("is_ms_shipped"),                      NotNull    ] public bool     IsMsShipped                    { get; set; } // bit
 			[Column("is_published"),                       NotNull    ] public bool     IsPublished                    { get; set; } // bit
 			[Column("is_schema_published"),                NotNull    ] public bool     IsSchemaPublished              { get; set; } // bit
+			/// <summary>
+			/// A nonzero value is the ID of the data space (filegroup or partition scheme) that holds the large object binary (LOB) data for this table. Examples of LOB data types include <b>varbinary(max)</b>, <b>varchar(max)</b>, <b>geography</b>, or <b>xml</b>.<br/> 0 = The table does not LOB data.
+			/// </summary>
 			[Column("lob_data_space_id"),                  NotNull    ] public int      LobDataSpaceID                 { get; set; } // int
+			/// <summary>
+			/// Is the data space ID for a FILESTREAM filegroup or a partition scheme that consists of FILESTREAM filegroups.<br/> To report the name of a FILESTREAM filegroup, execute the query <i>SELECT FILEGROUP_NAME (filestream_data_space_id) FROM sys.tables</i>.<br/> sys.tables can be joined to the following views on filestream_data_space_id = data_space_id.<br/> - sys.filegroups<br/> - sys.partition_schemes<br/> - sys.indexes<br/> - sys.allocation_units<br/> - sys.fulltext_catalogs<br/> - sys.data_spaces<br/> - sys.destination_data_spaces<br/> - sys.master_files<br/> - sys.database_files<br/> - backupfilegroup (join on filegroup_id)
+			/// </summary>
 			[Column("filestream_data_space_id"),              Nullable] public int?     FilestreamDataSpaceID          { get; set; } // int
+			/// <summary>
+			/// Maximum column ID ever used by this table.
+			/// </summary>
 			[Column("max_column_id_used"),                 NotNull    ] public int      MaxColumnIdUsed                { get; set; } // int
+			/// <summary>
+			/// Table is locked on bulk load. For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../system-stored-procedures/sp-tableoption-transact-sql?view=sql-server-ver15'>sp_tableoption (Transact-SQL)</a>.
+			/// </summary>
 			[Column("lock_on_bulk_load"),                  NotNull    ] public bool     LockOnBulkLoad                 { get; set; } // bit
+			/// <summary>
+			/// Table was created with the SET ANSI_NULLS database option ON.
+			/// </summary>
 			[Column("uses_ansi_nulls"),                       Nullable] public bool?    UsesAnsiNulls                  { get; set; } // bit
+			/// <summary>
+			/// 1 = Table is published using snapshot replication or transactional replication.
+			/// </summary>
 			[Column("is_replicated"),                         Nullable] public bool?    IsReplicated                   { get; set; } // bit
+			/// <summary>
+			/// 1 = Table has a replication filter.
+			/// </summary>
 			[Column("has_replication_filter"),                Nullable] public bool?    HasReplicationFilter           { get; set; } // bit
+			/// <summary>
+			/// 1 = Table is published using merge replication.
+			/// </summary>
 			[Column("is_merge_published"),                    Nullable] public bool?    IsMergePublished               { get; set; } // bit
+			/// <summary>
+			/// 1 = Table is subscribed using an immediate updating subscription.
+			/// </summary>
 			[Column("is_sync_tran_subscribed"),               Nullable] public bool?    IsSyncTranSubscribed           { get; set; } // bit
+			/// <summary>
+			/// 1 = Table contains persisted data that depends on an assembly whose definition changed during the last ALTER ASSEMBLY. Will be reset to 0 after the next successful DBCC CHECKDB or DBCC CHECKTABLE.
+			/// </summary>
 			[Column("has_unchecked_assembly_data"),        NotNull    ] public bool     HasUncheckedAssemblyData       { get; set; } // bit
+			/// <summary>
+			/// The maximum bytes allowed for text in row.<br/> 0 = Text in row option is not set. For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../system-stored-procedures/sp-tableoption-transact-sql?view=sql-server-ver15'>sp_tableoption (Transact-SQL)</a>.
+			/// </summary>
 			[Column("text_in_row_limit"),                     Nullable] public int?     TextInRowLimit                 { get; set; } // int
+			/// <summary>
+			/// 1 = Large value types are stored out-of-row. For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../system-stored-procedures/sp-tableoption-transact-sql?view=sql-server-ver15'>sp_tableoption (Transact-SQL)</a>.
+			/// </summary>
 			[Column("large_value_types_out_of_row"),          Nullable] public bool?    LargeValueTypesOutOfRow        { get; set; } // bit
+			/// <summary>
+			/// 1 = Table is enabled for change data capture. For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../system-stored-procedures/sys-sp-cdc-enable-table-transact-sql?view=sql-server-ver15'>sys.sp_cdc_enable_table (Transact-SQL)</a>.
+			/// </summary>
 			[Column("is_tracked_by_cdc"),                     Nullable] public bool?    IsTrackedByCdc                 { get; set; } // bit
+			/// <summary>
+			/// The value of the LOCK_ESCALATION option for the table:<br/> 0 = TABLE<br/> 1 = DISABLE<br/> 2 = AUTO
+			/// </summary>
 			[Column("lock_escalation"),                       Nullable] public byte?    LockEscalation                 { get; set; } // tinyint
+			/// <summary>
+			/// A text description of the lock_escalation option for the table. Possible values are: TABLE, AUTO, and DISABLE.
+			/// </summary>
 			[Column("lock_escalation_desc"),                  Nullable] public string?  LockEscalationDesc             { get; set; } // nvarchar(60)
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2012 (11.x) and later and Azure SQL Database.<br/> 1 = Table is a FileTable.<br/> For more information about FileTables, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../blob/filetables-sql-server?view=sql-server-ver15'>FileTables (SQL Server)</a>.
+			/// </summary>
 			[Column("is_filetable"),                          Nullable] public bool?    IsFiletable                    { get; set; } // bit
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2014 (12.x) and later and Azure SQL Database.<br/> The following are the possible values:<br/> 0 = not memory optimized.<br/> 1 = is memory optimized.<br/> A value of 0 is the default value.<br/> Memory optimized tables are in-memory user tables, the schema of which is persisted on disk similar to other user tables. Memory optimized tables can be accessed from natively compiled stored procedures.
+			/// </summary>
 			[Column("is_memory_optimized"),                   Nullable] public bool?    IsMemoryOptimized              { get; set; } // bit
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2014 (12.x) and later and Azure SQL Database.<br/> The following are possible values:<br/> 0 = SCHEMA_AND_DATA<br/> 1 = SCHEMA_ONLY<br/> The value of 0 is the default value.
+			/// </summary>
 			[Column("durability"),                            Nullable] public byte?    Durability                     { get; set; } // tinyint
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2014 (12.x) and later and Azure SQL Database.<br/> The following are the possible values:<br/> SCHEMA_ONLY<br/> SCHEMA_AND_DATA<br/> The value of SCHEMA_AND_DATA indicates that the table is a durable, in-memory table. SCHEMA_AND_DATA is the default value for memory optimized tables. The value of SCHEMA_ONLY indicates that the table data will not be persisted upon restart of the database with memory optimized objects.
+			/// </summary>
 			[Column("durability_desc"),                       Nullable] public string?  DurabilityDesc                 { get; set; } // nvarchar(60)
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later and Azure SQL Database.<br/> The numeric value representing the type of table:<br/> 0 = NON_TEMPORAL_TABLE<br/> 1 = HISTORY_TABLE (associated with a temporal table)<br/> 2 = SYSTEM_VERSIONED_TEMPORAL_TABLE
+			/// </summary>
 			[Column("temporal_type"),                         Nullable] public byte?    TemporalType                   { get; set; } // tinyint
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later and Azure SQL Database.<br/> The text description of the type of table:<br/> NON_TEMPORAL_TABLE<br/> HISTORY_TABLE<br/> SYSTEM_VERSIONED_TEMPORAL_TABLE
+			/// </summary>
 			[Column("temporal_type_desc"),                    Nullable] public string?  TemporalTypeDesc               { get; set; } // nvarchar(60)
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later and Azure SQL Database.<br/> When temporal_type = 2 or ledger_type = 2 returns object_id of the table that maintains historical data for a temporal table, otherwise returns NULL.
+			/// </summary>
 			[Column("history_table_id"),                      Nullable] public int?     HistoryTableID                 { get; set; } // int
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later and Azure SQL Database<br/> Indicates whether the table is Stretch-enabled.<br/> 0 = The table is not Stretch-enabled.<br/> 1 = The table is Stretch-enabled.<br/> For more info, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../sql-server/stretch-database/stretch-database?view=sql-server-ver15'>Stretch Database</a>.
+			/// </summary>
 			[Column("is_remote_data_archive_enabled"),        Nullable] public bool?    IsRemoteDataArchiveEnabled     { get; set; } // bit
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2016 (13.x) and later, Azure SQL Database, and Azure Synapse Analytics.<br/> Indicates table is an external table.<br/> 0 = The table is not an external table.<br/> 1 = The table is an external table.
+			/// </summary>
 			[Column("is_external"),                        NotNull    ] public bool     IsExternal                     { get; set; } // bit
+			/// <summary>
+			/// <b>Applies to</b>: Azure SQL Database. <br/><br/>The numeric value representing duration of the temporal history retention period in units specified with history_retention_period_unit.
+			/// </summary>
 			[Column("history_retention_period"),              Nullable] public int?     HistoryRetentionPeriod         { get; set; } // int
+			/// <summary>
+			/// <b>Applies to</b>: Azure SQL Database. <br/><br/>The numeric value representing type of temporal history retention period unit. <br/><br/>-1: INFINITE <br/><br/>3: DAY <br/><br/>4: WEEK <br/><br/>5: MONTH <br/><br/>6: YEAR
+			/// </summary>
 			[Column("history_retention_period_unit"),         Nullable] public int?     HistoryRetentionPeriodUnit     { get; set; } // int
+			/// <summary>
+			/// <b>Applies to</b>: Azure SQL Database. <br/><br/>The text description of type of temporal history retention period unit. <br/><br/>INFINITE <br/><br/>DAY <br/><br/>WEEK <br/><br/>MONTH <br/><br/>YEAR
+			/// </summary>
 			[Column("history_retention_period_unit_desc"),    Nullable] public string?  HistoryRetentionPeriodUnitDesc { get; set; } // nvarchar(10)
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2017 (14.x) and Azure SQL Database. <br/><br/>1 = This is a graph Node table. <br/><br/>0 = This is not a graph Node table.
+			/// </summary>
 			[Column("is_node"),                               Nullable] public bool?    IsNode                         { get; set; } // bit
+			/// <summary>
+			/// <b>Applies to</b>: Azure SQL Database. <br/><br/>1 = This is a graph Edge table. <br/><br/>0 = This is not a graph Edge table.
+			/// </summary>
 			[Column("is_edge"),                               Nullable] public bool?    IsEdge                         { get; set; } // bit
 
 			#region Associations
@@ -10618,6 +13347,10 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Displays properties of user-defined table types in SQL Server. A table type is a type from which table variables or table-valued parameters could be declared. Each table type has a <b>type_table_object_id</b> that is a foreign key into the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-objects-transact-sql?view=sql-server-ver15'>sys.objects</a> catalog view. You can use this ID column to query various catalog views, in a way that is similar to an <b>object_id</b> column of a regular table, to discover the structure of the table type such as its columns and constraints.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-table-types-transact-sql?view=sql-server-ver15'>sys.table_types</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="table_types", IsView=true)]
 		public partial class TableTypes
 		{
@@ -10636,7 +13369,13 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("default_object_id"),    NotNull    ] public int     DefaultObjectID   { get; set; } // int
 			[Column("rule_object_id"),       NotNull    ] public int     RuleObjectID      { get; set; } // int
 			[Column("is_table_type"),        NotNull    ] public bool    IsTableType       { get; set; } // bit
+			/// <summary>
+			/// Object identification number. This number is unique within a database.
+			/// </summary>
 			[Column("type_table_object_id"), NotNull    ] public int     TypeTableObjectID { get; set; } // int
+			/// <summary>
+			/// <b>Applies to</b>: SQL Server 2014 (12.x) and later.<br/> The following are the possible values:<br/> 0 = is not memory optimized<br/> 1 = is memory optimized<br/> A value of 0 is the default value.<br/> Table types are always created with DURABILITY = SCHEMA_ONLY. Only the schema is persisted on disk.
+			/// </summary>
 			[Column("is_memory_optimized"),     Nullable] public bool?   IsMemoryOptimized { get; set; } // bit
 		}
 
@@ -10751,16 +13490,32 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("priority"),                NotNull    ] public byte     Priority              { get; set; } // tinyint
 		}
 
+		/// <summary>
+		/// Contains a row per event for which a trigger fires.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-trigger-events-transact-sql?view=sql-server-ver15'>sys.trigger_events</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="trigger_events", IsView=true)]
 		public partial class TriggerEvents
 		{
 			[Column("object_id"),             NotNull    ] public int     ObjectID           { get; set; } // int
 			[Column("type"),                  NotNull    ] public int     Type               { get; set; } // int
 			[Column("type_desc"),             NotNull    ] public string  TypeDesc           { get; set; } = null!; // nvarchar(128)
+			/// <summary>
+			/// Trigger is marked to be the first to fire for this event.
+			/// </summary>
 			[Column("is_first"),                 Nullable] public bool?   IsFirst            { get; set; } // bit
+			/// <summary>
+			/// Trigger is marked to be the last to fire for this event.
+			/// </summary>
 			[Column("is_last"),                  Nullable] public bool?   IsLast             { get; set; } // bit
+			/// <summary>
+			/// Event group on which the trigger is created, or null if not created on an event group.
+			/// </summary>
 			[Column("event_group_type"),         Nullable] public int?    EventGroupType     { get; set; } // int
-			[Column("event_group_type_desc"),    Nullable] public string? EventGroupTypeDesc { get; set; } // nvarchar(128)
+			/// <summary>
+			/// Description of the event group on which the trigger is created, or null if not created on an event group.
+			/// </summary>
+			[Column("event_group_type_desc"),    Nullable] public string? EventGroupTypeDesc { get; set; } // nvarchar(60)
 			[Column("is_trigger_event"),         Nullable] public bool?   IsTriggerEvent     { get; set; } // bit
 
 			#region Associations
@@ -10774,29 +13529,85 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#endregion
 		}
 
+		/// <summary>
+		/// Returns a row for each event or event group on which a trigger can fire.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-trigger-event-types-transact-sql?view=sql-server-ver15'>sys.trigger_event_types</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="trigger_event_types", IsView=true)]
 		public partial class TriggerEventTypes
 		{
+			/// <summary>
+			/// Type of event or event group that causes a trigger to fire.
+			/// </summary>
 			[Column("type"),        NotNull    ] public int     Type       { get; set; } // int
+			/// <summary>
+			/// Name of an event or event group. This can be specified in the FOR clause of a <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/statements/create-trigger-transact-sql?view=sql-server-ver15'>CREATE TRIGGER</a> statement.
+			/// </summary>
 			[Column("type_name"),      Nullable] public string? TypeName   { get; set; } // nvarchar(64)
+			/// <summary>
+			/// Type of event group that is the parent of the event or event group.
+			/// </summary>
 			[Column("parent_type"),    Nullable] public int?    ParentType { get; set; } // int
 		}
 
+		/// <summary>
+		/// Contains a row for each object that is a trigger, with a type of TR or TA. DML trigger names are schema-scoped and, therefore, are visible in <b>sys.objects</b>. DDL trigger names are scoped by the parent entity and are only visible in this view.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-triggers-transact-sql?view=sql-server-ver15'>sys.triggers</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="triggers", IsView=true)]
 		public partial class Triggers
 		{
+			/// <summary>
+			/// Trigger name. DML trigger names are schema-scoped. DDL trigger names are scoped with respect to the parent entity.
+			/// </summary>
 			[Column("name"),                   NotNull    ] public string   Name                { get; set; } = null!; // sysname
+			/// <summary>
+			/// Object identification number. Is unique within a database.
+			/// </summary>
 			[Column("object_id"),              NotNull    ] public int      ObjectID            { get; set; } // int
+			/// <summary>
+			/// Class of the parent of the trigger.<br/> 0 = Database, for the DDL triggers.<br/> 1 = Object or column for the DML triggers.
+			/// </summary>
 			[Column("parent_class"),           NotNull    ] public byte     ParentClass         { get; set; } // tinyint
+			/// <summary>
+			/// Description of the parent class of the trigger.<br/> DATABASE<br/> OBJECT_OR_COLUMN
+			/// </summary>
 			[Column("parent_class_desc"),         Nullable] public string?  ParentClassDesc     { get; set; } // nvarchar(60)
+			/// <summary>
+			/// ID of the parent of the trigger, as follows:<br/> 0 = Triggers that are database-parented triggers.<br/> For DML triggers, this is the <b>object_id</b> of the table or view on which the DML trigger is defined.
+			/// </summary>
 			[Column("parent_id"),              NotNull    ] public int      ParentID            { get; set; } // int
+			/// <summary>
+			/// Object type:<br/> TA = Assembly (CLR) trigger<br/> TR = SQL trigger
+			/// </summary>
 			[Column("type"),                   NotNull    ] public string   Type                { get; set; } = null!; // char(2)
+			/// <summary>
+			/// Description of object type.<br/> CLR_TRIGGER<br/> SQL_TRIGGER
+			/// </summary>
 			[Column("type_desc"),                 Nullable] public string?  TypeDesc            { get; set; } // nvarchar(60)
+			/// <summary>
+			/// Date the trigger was created.
+			/// </summary>
 			[Column("create_date"),            NotNull    ] public DateTime CreateDate          { get; set; } // datetime
+			/// <summary>
+			/// Date the object was last modified by using an ALTER statement.
+			/// </summary>
 			[Column("modify_date"),            NotNull    ] public DateTime ModifyDate          { get; set; } // datetime
+			/// <summary>
+			/// Trigger created on behalf of the user by an internal SQL Server component.
+			/// </summary>
 			[Column("is_ms_shipped"),          NotNull    ] public bool     IsMsShipped         { get; set; } // bit
+			/// <summary>
+			/// Trigger is disabled.
+			/// </summary>
 			[Column("is_disabled"),            NotNull    ] public bool     IsDisabled          { get; set; } // bit
+			/// <summary>
+			/// Trigger was created as NOT FOR REPLICATION.
+			/// </summary>
 			[Column("is_not_for_replication"), NotNull    ] public bool     IsNotForReplication { get; set; } // bit
+			/// <summary>
+			/// 1 = INSTEAD OF triggers<br/> 0 = AFTER triggers.
+			/// </summary>
 			[Column("is_instead_of_trigger"),  NotNull    ] public bool     IsInsteadOfTrigger  { get; set; } // bit
 
 			#region Associations
@@ -10819,30 +13630,89 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("created_by"),  NotNull    ] public string   CreatedBy   { get; set; } = null!; // nvarchar(128)
 		}
 
+		/// <summary>
+		/// Contains one row per type to assembly reference.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-type-assembly-usages-transact-sql?view=sql-server-ver15'>sys.type_assembly_usages</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="type_assembly_usages", IsView=true)]
 		public partial class TypeAssemblyUsages
 		{
+			/// <summary>
+			/// ID of the type<br/> To return the name of the type, join to the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-types-transact-sql?view=sql-server-ver15'>sys.types</a> catalog view on this column.
+			/// </summary>
 			[Column("user_type_id"), NotNull] public int UserTypeID { get; set; } // int
+			/// <summary>
+			/// ID of the assembly
+			/// </summary>
 			[Column("assembly_id"),  NotNull] public int AssemblyID { get; set; } // int
 		}
 
+		/// <summary>
+		/// Contains a row for each system and user-defined type.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-types-transact-sql?view=sql-server-ver15'>sys.types</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="types", IsView=true)]
 		public partial class Types
 		{
+			/// <summary>
+			/// Name of the type. Is unique within the schema.
+			/// </summary>
 			[Column("name"),              NotNull    ] public string  Name            { get; set; } = null!; // sysname
+			/// <summary>
+			/// ID of the internal system-type of the type.
+			/// </summary>
 			[Column("system_type_id"),    NotNull    ] public byte    SystemTypeID    { get; set; } // tinyint
+			/// <summary>
+			/// ID of the type. Is unique within the database. For system data types, <b>user_type_id</b> = <b>system_type_id</b>.
+			/// </summary>
 			[Column("user_type_id"),      NotNull    ] public int     UserTypeID      { get; set; } // int
+			/// <summary>
+			/// ID of the schema to which the type belongs.
+			/// </summary>
 			[Column("schema_id"),         NotNull    ] public int     SchemaID        { get; set; } // int
+			/// <summary>
+			/// ID of the individual owner if different from schema owner. By default, schema-contained objects are owned by the schema owner. However, an alternate owner can be specified by using the ALTER AUTHORIZATION statement to change ownership.<br/> NULL if there is no alternate individual owner.
+			/// </summary>
 			[Column("principal_id"),         Nullable] public int?    PrincipalID     { get; set; } // int
+			/// <summary>
+			/// Maximum length (in bytes) of the type.<br/> -1 = Column data type is <b>varchar(max)</b>, <b>nvarchar(max)</b>, <b>varbinary(max)</b>, or <b>xml</b>.<br/> For <b>text</b> columns, the <b>max_length</b> value will be 16.
+			/// </summary>
 			[Column("max_length"),        NotNull    ] public short   MaxLength       { get; set; } // smallint
+			/// <summary>
+			/// Max precision of the type if it is numeric-based; otherwise, 0.
+			/// </summary>
 			[Column("precision"),         NotNull    ] public byte    Precision       { get; set; } // tinyint
+			/// <summary>
+			/// Max scale of the type if it is numeric-based; otherwise, 0.
+			/// </summary>
 			[Column("scale"),             NotNull    ] public byte    Scale           { get; set; } // tinyint
+			/// <summary>
+			/// Name of the collation of the type if it is character-based; other wise, NULL.
+			/// </summary>
 			[Column("collation_name"),       Nullable] public string? CollationName   { get; set; } // sysname
+			/// <summary>
+			/// Type is nullable.
+			/// </summary>
 			[Column("is_nullable"),          Nullable] public bool?   IsNullable      { get; set; } // bit
+			/// <summary>
+			/// 1 = User-defined type.<br/> 0 = SQL Server system data type.
+			/// </summary>
 			[Column("is_user_defined"),   NotNull    ] public bool    IsUserDefined   { get; set; } // bit
+			/// <summary>
+			/// 1 = Implementation of the type is defined in a CLR assembly.<br/> 0 = Type is based on a SQL Server system data type.
+			/// </summary>
 			[Column("is_assembly_type"),  NotNull    ] public bool    IsAssemblyType  { get; set; } // bit
+			/// <summary>
+			/// ID of the stand-alone default that is bound to the type by using <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../system-stored-procedures/sp-bindefault-transact-sql?view=sql-server-ver15'>sp_bindefault</a>.<br/> 0 = No default exists.
+			/// </summary>
 			[Column("default_object_id"), NotNull    ] public int     DefaultObjectID { get; set; } // int
+			/// <summary>
+			/// ID of the stand-alone rule that is bound to the type by using <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../system-stored-procedures/sp-bindrule-transact-sql?view=sql-server-ver15'>sp_bindrule</a>.<br/> 0 = No rule exists.
+			/// </summary>
 			[Column("rule_object_id"),    NotNull    ] public int     RuleObjectID    { get; set; } // int
+			/// <summary>
+			/// Indicates the type is a table.
+			/// </summary>
 			[Column("is_table_type"),     NotNull    ] public bool    IsTableType     { get; set; } // bit
 		}
 
@@ -10872,6 +13742,10 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("discriminator"),        Nullable] public string? Discriminator   { get; set; } // nvarchar(128)
 		}
 
+		/// <summary>
+		/// Contains a row for each view object, with <b>sys.objects.type</b> = V.<br/>
+		/// See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-views-transact-sql?view=sql-server-ver15'>sys.views</a>.
+		/// </summary>
 		[Table(Schema="sys", Name="views", IsView=true)]
 		public partial class Views
 		{
@@ -10887,11 +13761,29 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("is_ms_shipped"),               NotNull    ] public bool     IsMsShipped              { get; set; } // bit
 			[Column("is_published"),                NotNull    ] public bool     IsPublished              { get; set; } // bit
 			[Column("is_schema_published"),         NotNull    ] public bool     IsSchemaPublished        { get; set; } // bit
+			/// <summary>
+			/// 1 = View is replicated.
+			/// </summary>
 			[Column("is_replicated"),                  Nullable] public bool?    IsReplicated             { get; set; } // bit
+			/// <summary>
+			/// 1 = View has a replication filter.
+			/// </summary>
 			[Column("has_replication_filter"),         Nullable] public bool?    HasReplicationFilter     { get; set; } // bit
+			/// <summary>
+			/// 1 = VIEW_METADATA option specified for view. For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/../../t-sql/statements/create-view-transact-sql?view=sql-server-ver15'>CREATE VIEW (Transact-SQL)</a>.
+			/// </summary>
 			[Column("has_opaque_metadata"),         NotNull    ] public bool     HasOpaqueMetadata        { get; set; } // bit
+			/// <summary>
+			/// 1 = View contains persisted data that depends on an assembly whose definition changed during the last ALTER ASSEMBLY. Resets to 0 after the next successful DBCC CHECKDB or DBCC CHECKTABLE.
+			/// </summary>
 			[Column("has_unchecked_assembly_data"), NotNull    ] public bool     HasUncheckedAssemblyData { get; set; } // bit
+			/// <summary>
+			/// 1 = WITH CHECK OPTION was specified in the view definition.
+			/// </summary>
 			[Column("with_check_option"),           NotNull    ] public bool     WithCheckOption          { get; set; } // bit
+			/// <summary>
+			/// 1 = View was created automatically by the system to store correlation information between datetime columns. Creation of this view was enabled by setting DATE_CORRELATION_OPTIMIZATION to ON.
+			/// </summary>
 			[Column("is_date_correlation_view"),    NotNull    ] public bool     IsDateCorrelationView    { get; set; } // bit
 			[Column("is_tracked_by_cdc"),              Nullable] public bool?    IsTrackedByCdc           { get; set; } // bit
 			[Column("has_snapshot"),                   Nullable] public bool?    HasSnapshot              { get; set; } // bit
