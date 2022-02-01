@@ -441,9 +441,9 @@ namespace LinqToDB.Linq.Builder
 
 			var cond = (ConditionalExpression)expr;
 
-			if (cond.Test.NodeType == ExpressionType.Equal || cond.Test.NodeType == ExpressionType.NotEqual)
-			{
-				var b = (BinaryExpression)cond.Test;
+					if (cond.Test.NodeType == ExpressionType.Equal || cond.Test.NodeType == ExpressionType.NotEqual)
+					{
+						var b = (BinaryExpression)cond.Test;
 
 				Expression? cnt = null;
 				Expression? obj = null;
