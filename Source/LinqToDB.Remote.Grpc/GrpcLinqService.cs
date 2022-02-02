@@ -23,7 +23,7 @@ namespace LinqToDB.Remote.Grpc
 		}
 
 
-		public GrpcLinqServiceInfo GetInfo(GrpcConfiguration configuration, CallContext context = default)
+		public LinqServiceInfo GetInfo(GrpcConfiguration configuration, CallContext context = default)
 		{
 			var result = _linqService.GetInfo(configuration.Configuration);
 			return result;

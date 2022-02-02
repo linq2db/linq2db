@@ -10,7 +10,7 @@ namespace LinqToDB.Remote.Grpc
 	public interface IGrpcLinqService
 	{
 		[OperationContract(Name = "GetInfo")]
-		GrpcLinqServiceInfo GetInfo(GrpcConfiguration configuration, CallContext context = default);
+		LinqServiceInfo GetInfo(GrpcConfiguration configuration, CallContext context = default);
 
 		[OperationContract(Name = "ExecuteNonQuery")]
 		GrpcInt ExecuteNonQuery(GrpcConfigurationQuery caq, CallContext context = default);
@@ -29,7 +29,7 @@ namespace LinqToDB.Remote.Grpc
 
 
 		//[OperationContract(Name = "GetInfoAsync")]
-		//Task<GrpcLinqServiceInfo> GetInfoAsync(GrpcConfiguration configuration, CallContext context = default);
+		//Task<LinqServiceInfo> GetInfoAsync(GrpcConfiguration configuration, CallContext context = default);
 
 		[OperationContract(Name = "ExecuteNonQueryAsync")]
 		Task<GrpcInt> ExecuteNonQueryAsync(GrpcConfigurationQuery caq, CallContext context = default);
