@@ -1,23 +1,22 @@
 <Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\..\..\linq2db.Examples.props" />
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFramework>net6.0</TargetFramework>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
+		<TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Grpc.Net.Client" Version="2.42.0" />
+		<PackageReference Include="linq2db.t4models"/>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Grpc.Net.Client"/>
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.Grpc\LinqToDB.Remote.Grpc.csproj" />
 		<ProjectReference Include="..\..\..\..\Source\LinqToDB\LinqToDB.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<None Include="../../../../Source/LinqToDB.Templates/*.ttinclude" LinkBase="Templates" />
 	</ItemGroup>
 
 	<ItemGroup>

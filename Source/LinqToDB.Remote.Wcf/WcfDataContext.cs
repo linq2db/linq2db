@@ -3,7 +3,7 @@ using System;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 
-namespace LinqToDB.Remote.Wcf
+namespace LinqToDB.Remote.WCF
 {
 	public class WcfDataContext : RemoteDataContextBase
 	{

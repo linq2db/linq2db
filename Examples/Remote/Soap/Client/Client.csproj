@@ -1,18 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\..\..\linq2db.Examples.props" />
 
 	<PropertyGroup>
 		<TargetFramework>net452</TargetFramework>
-		<LangVersion>Latest</LangVersion>
 		<OutputType>Exe</OutputType>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.Soap\LinqToDB.Remote.Soap.csproj" />
-		<ProjectReference Include="..\..\..\..\Source\LinqToDB\LinqToDB.csproj" />
+		<PackageReference Include="linq2db.t4models" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="../../../../Source/LinqToDB.Templates/*.ttinclude" LinkBase="Templates" />
+		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.Soap\LinqToDB.Remote.Soap.csproj" />
+		<ProjectReference Include="..\..\..\..\Source\LinqToDB\LinqToDB.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -1,4 +1,7 @@
-﻿namespace Server
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
+
+namespace Server
 {
 	public class Program
 	{

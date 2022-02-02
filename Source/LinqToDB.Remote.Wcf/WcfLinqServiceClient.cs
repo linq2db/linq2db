@@ -4,7 +4,7 @@ using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.Threading.Tasks;
 
-namespace LinqToDB.Remote.Wcf
+namespace LinqToDB.Remote.WCF
 {
 	class WcfLinqServiceClient : ClientBase<IWcfLinqClient>, ILinqClient, IDisposable
 	{
@@ -17,7 +17,7 @@ namespace LinqToDB.Remote.Wcf
 
 #endregion
 
-#region ILinqService Members
+#region ILinqClient Members
 
 		public LinqServiceInfo GetInfo(string? configuration)
 		{

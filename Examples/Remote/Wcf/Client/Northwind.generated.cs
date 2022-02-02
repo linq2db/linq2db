@@ -23,7 +23,7 @@ namespace DataModels
 	/// Data Source    : .
 	/// Server Version : 15.00.2080
 	/// </summary>
-	public partial class NorthwindDB : LinqToDB.Remote.Wcf.WcfDataContext
+	public partial class NorthwindDB : LinqToDB.Remote.WCF.WcfDataContext
 	{
 		public ITable<AlphabeticalListOfProduct>  AlphabeticalListOfProducts   { get { return this.GetTable<AlphabeticalListOfProduct>(); } }
 		public ITable<Category>                   Categories                   { get { return this.GetTable<Category>(); } }

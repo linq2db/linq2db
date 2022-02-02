@@ -2,7 +2,7 @@
 using System.ServiceModel;
 using System.Threading.Tasks;
 
-namespace LinqToDB.Remote.Wcf
+namespace LinqToDB.Remote.WCF
 {
 	[ServiceContract]
 	[ServiceKnownType(typeof(LinqServiceQuery))]

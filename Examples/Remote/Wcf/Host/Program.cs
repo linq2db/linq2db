@@ -2,23 +2,25 @@
 using System.ServiceModel;
 using System.ServiceModel.Description;
 
-
 namespace Host
 {
+	using LinqToDB.Remote;
+	using LinqToDB.Remote.WCF;
+
 	class Program
 	{
 		static void Main(string[] args)
 		{
 			var host = new ServiceHost(
-				new LinqToDB.Remote.Wcf.WcfLinqService(
-					new LinqToDB.Remote.LinqService() { AllowUpdates = true }),
+				new WcfLinqService(
+					new LinqService() { AllowUpdates = true }),
 				new Uri("net.tcp://localhost:30304"));
 
 			host.Description.Behaviors.Add(new ServiceMetadataBehavior());
 			host.Description.Behaviors.Find<ServiceDebugBehavior>().IncludeExceptionDetailInFaults = true;
 			host.AddServiceEndpoint(typeof(IMetadataExchange), MetadataExchangeBindings.CreateMexTcpBinding(), "mex");
 			host.AddServiceEndpoint(
-				typeof(LinqToDB.Remote.Wcf.IWcfLinqService),
+				typeof(IWcfLinqService),
 				new NetTcpBinding(SecurityMode.None)
 				{
 					MaxReceivedMessageSize = 10000000,

@@ -3,7 +3,7 @@
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.Remote.WCF</AssemblyName>
-		<RootNamespace>LinqToDB.Remote.Wcf</RootNamespace>
+		<RootNamespace>LinqToDB.Remote.WCF</RootNamespace>
 
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.remote.wcf.xml</DocumentationFile>
 		<TargetFrameworks>net472</TargetFrameworks>

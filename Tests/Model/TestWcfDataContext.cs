@@ -3,7 +3,7 @@ using System;
 using System.ServiceModel;
 using System.Threading.Tasks;
 using LinqToDB;
-using LinqToDB.Remote.Wcf;
+using LinqToDB.Remote.WCF;
 
 namespace Tests.Model
 {

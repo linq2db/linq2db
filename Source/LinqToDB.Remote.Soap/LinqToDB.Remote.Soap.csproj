@@ -2,7 +2,7 @@
 	<Import Project="..\..\Build\linq2db.Source.props" />
 
 	<PropertyGroup>
-		<AssemblyName>linq2db.remote.soap</AssemblyName>
+		<AssemblyName>linq2db.Remote.Soap</AssemblyName>
 		<RootNamespace>LinqToDB.Remote.Soap</RootNamespace>
 
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.remote.soap.xml</DocumentationFile>

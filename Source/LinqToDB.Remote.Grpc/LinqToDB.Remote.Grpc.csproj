@@ -1,15 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-<!--
-нужна помощь здесь
-отключен - не разобрался с централизованным управлением версиями пакетов
 	<Import Project="..\..\Build\linq2db.Source.props" />
--->
+
 	<PropertyGroup>
-		<AssemblyName>linq2db.remote.grpc</AssemblyName>
+		<AssemblyName>linq2db.Remote.Grpc</AssemblyName>
 		<RootNamespace>LinqToDB.Remote.Grpc</RootNamespace>
 
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.remote.grpc.xml</DocumentationFile>
-		<TargetFrameworks>net6.0</TargetFrameworks>
+		<TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
@@ -26,10 +23,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-<!-- по той же причине етот пакет убран
-		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
--->
-		<PackageReference Include="Grpc.Net.Client" Version="2.42.0" />
-		<PackageReference Include="protobuf-net.Grpc.AspNetCore" Version="1.0.152" />
+		<PackageReference Include="Grpc.Net.Client" />
+		<PackageReference Include="protobuf-net.Grpc.AspNetCore" />
 	</ItemGroup>
 </Project>
