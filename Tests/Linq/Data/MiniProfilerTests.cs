@@ -67,10 +67,10 @@ namespace Tests.Data
 
 			private static IDataProvider GetDataProvider()
 			{
-				return new SqlServerDataProvider("MiniProfiler." + ProviderName.SqlServer2000, SqlServerVersion.v2012, SqlServerProvider.SystemDataSqlClient);
+				return new SqlServerDataProvider("MiniProfiler." + ProviderName.SqlServer2012, SqlServerVersion.v2012, SqlServerProvider.SystemDataSqlClient);
 			}
 
-			private static IDbConnection GetConnection(string configurationString)
+			private static DbConnection GetConnection(string configurationString)
 			{
 				var dbConnection = new SqlConnection(GetConnectionString(configurationString));
 				return new ProfiledDbConnection(dbConnection, MiniProfiler.Current);
@@ -284,14 +284,14 @@ namespace Tests.Data
 
 		public class LinqMySqlDataProvider : MySqlDataProvider
 		{
-			private readonly Func<string, IDbConnection> _connectionFactory;
-			public LinqMySqlDataProvider(Func<string, IDbConnection> connectionFactory)
+			private readonly Func<string, DbConnection> _connectionFactory;
+			public LinqMySqlDataProvider(Func<string, DbConnection> connectionFactory)
 				: base(ProviderName.MySqlOfficial)
 			{
 				_connectionFactory = connectionFactory;
 			}
 
-			protected override IDbConnection CreateConnectionInternal(string connectionString)
+			protected override DbConnection CreateConnectionInternal(string connectionString)
 			{
 				return _connectionFactory(connectionString);
 			}
@@ -331,8 +331,8 @@ namespace Tests.Data
 			switch (type)
 			{
 				case ConnectionType.MiniProfiler:
-					ms.SetConvertExpression<ProfiledDbConnection, IDbConnection>(db => db.WrappedConnection);
-					ms.SetConvertExpression<ProfiledDbDataReader, IDataReader>(db => db.WrappedReader);
+					ms.SetConvertExpression<ProfiledDbConnection, DbConnection>(db => db.WrappedConnection);
+					ms.SetConvertExpression<ProfiledDbDataReader, DbDataReader>(db => db.WrappedReader);
 					break;
 			}
 
@@ -1036,17 +1036,17 @@ namespace Tests.Data
 						var options = new BulkCopyOptions()
 						{
 							BulkCopyType       = BulkCopyType.ProviderSpecific,
-							NotifyAfter        = 500,
+							NotifyAfter        = 100,
 							RowsCopiedCallback = arg => copied = arg.RowsCopied,
 							KeepIdentity       = true
 						};
 
 						db.BulkCopy(
 							options,
-							Enumerable.Range(0, 1000).Select(n => new SybaseTests.AllType() { ID = 2000 + n, bitDataType = true }));
+							Enumerable.Range(0, 500).Select(n => new SybaseTests.AllType() { ID = 2000 + n, bitDataType = true }));
 
 						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
-						Assert.AreEqual(1000, copied);
+						Assert.AreEqual(500, copied);
 					}
 					finally
 					{
@@ -1241,6 +1241,9 @@ namespace Tests.Data
 						trace = ti.SqlText;
 				};
 
+				var commandInterceptor = new SaveWrappedCommandInterceptor(wrapped);
+				db.AddInterceptor(commandInterceptor);
+
 				var ntextValue = "тест";
 				Assert.AreEqual(ntextValue, db.Execute<string>("SELECT :p FROM SYS.DUAL", new DataParameter("p", ntextValue, DataType.NText)));
 				Assert.True(trace.Contains("DECLARE @p NClob "));
@@ -1258,7 +1261,7 @@ namespace Tests.Data
 				var dtoValue = db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset) { Precision = 6});
 				dtoVal = dtoVal.AddTicks(-1 * (dtoVal.Ticks % 10));
 				Assert.AreEqual(dtoVal, dtoValue);
-				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampTZType, ((IDbDataParameter)db.Command.Parameters[0]).Value.GetType());
+				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampTZType, commandInterceptor.Parameters[0].Value.GetType());
 
 				// bulk copy without transaction (transaction not supported)
 				TestBulkCopy();
@@ -1270,30 +1273,21 @@ namespace Tests.Data
 
 				// dbcommand properties
 				db.DisposeCommand();
-				// clean instance
-				dynamic cmd = wrapped ? ((ProfiledDbCommand)db.Command).InternalCommand : db.Command;
 
-				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.CommandType, cmd.GetType());
-				var bindByName = cmd.BindByName;
-				var initialLONGFetchSizeSetter = cmd.InitialLONGFetchSize;
-				var arrayBindCount = cmd.ArrayBindCount;
-				Assert.AreEqual(false, bindByName);
-				Assert.AreEqual(0, initialLONGFetchSizeSetter);
-				Assert.AreEqual(0, arrayBindCount);
 				db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset));
-				// instance, used for query
-				cmd = wrapped ? ((ProfiledDbCommand)db.Command).InternalCommand : db.Command;
+
+				dynamic cmd = commandInterceptor.Command!;
 				if (unmapped)
 				{
 					Assert.AreEqual(false, cmd.BindByName);
 					Assert.AreEqual(0, cmd.InitialLONGFetchSize);
-					Assert.AreEqual(0, arrayBindCount);
+					Assert.AreEqual(0, cmd.ArrayBindCount);
 				}
 				else
 				{
 					Assert.AreEqual(true, cmd.BindByName);
 					Assert.AreEqual(-1, cmd.InitialLONGFetchSize);
-					Assert.AreEqual(0, arrayBindCount);
+					Assert.AreEqual(0, cmd.ArrayBindCount);
 				}
 
 				void TestBulkCopy()
@@ -1335,6 +1329,9 @@ namespace Tests.Data
 						trace = ti.SqlText;
 				};
 
+				var commandInterceptor = new SaveWrappedCommandInterceptor(wrapped);
+				db.AddInterceptor(commandInterceptor);
+
 				var ntextValue = "тест";
 				Assert.AreEqual(ntextValue, db.Execute<string>("SELECT :p FROM SYS.DUAL", new DataParameter("p", ntextValue, DataType.NText)));
 				Assert.True(trace.Contains("DECLARE @p NClob "));
@@ -1358,7 +1355,7 @@ namespace Tests.Data
 					var dtoValue = db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset) { Precision = 6 });
 					dtoVal = dtoVal.AddTicks(-1 * (dtoVal.Ticks % 10));
 					Assert.AreEqual(dtoVal, dtoValue);
-					Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampTZType, ((IDbDataParameter)db.Command.Parameters[0]!).Value!.GetType()!);
+					Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.OracleTimeStampTZType, commandInterceptor.Parameters[0].Value!.GetType()!);
 				}
 
 				// bulk copy without transaction (transaction not supported)
@@ -1370,30 +1367,21 @@ namespace Tests.Data
 
 				// dbcommand properties
 				db.DisposeCommand();
-				// clean instance
-				dynamic cmd = wrapped ? ((ProfiledDbCommand)db.Command).InternalCommand : db.Command;
 
-				Assert.AreEqual(((OracleDataProvider)db.DataProvider).Adapter.CommandType, cmd.GetType());
-				var bindByName = cmd.BindByName;
-				var initialLONGFetchSizeSetter = cmd.InitialLONGFetchSize;
-				var arrayBindCount = cmd.ArrayBindCount;
-				Assert.AreEqual(false, bindByName);
-				Assert.AreEqual(0, initialLONGFetchSizeSetter);
-				Assert.AreEqual(0, arrayBindCount);
 				db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset));
-				// instance, used for query
-				cmd = wrapped ? ((ProfiledDbCommand)db.Command).InternalCommand : db.Command;
+
+				dynamic cmd = commandInterceptor.Command!;
 				if (unmapped)
 				{
 					Assert.AreEqual(false, cmd.BindByName);
 					Assert.AreEqual(0, cmd.InitialLONGFetchSize);
-					Assert.AreEqual(0, arrayBindCount);
+					Assert.AreEqual(0, cmd.ArrayBindCount);
 				}
 				else
 				{
 					Assert.AreEqual(true, cmd.BindByName);
 					Assert.AreEqual(-1, cmd.InitialLONGFetchSize);
-					Assert.AreEqual(0, arrayBindCount);
+					Assert.AreEqual(0, cmd.ArrayBindCount);
 				}
 
 				void TestBulkCopy()
@@ -1580,15 +1568,15 @@ namespace Tests.Data
 
 		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Type connectionType, string? csExtra = null)
 		{
-			return CreateDataConnection(provider, context, type, cs => (IDbConnection)Activator.CreateInstance(connectionType, cs)!, csExtra);
+			return CreateDataConnection(provider, context, type, cs => (DbConnection)Activator.CreateInstance(connectionType, cs)!, csExtra);
 		}
 
 		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, string connectionTypeName, string? csExtra = null)
 		{
-			return CreateDataConnection(provider, context, type, cs => (IDbConnection)Activator.CreateInstance(Type.GetType(connectionTypeName, true)!, cs)!, csExtra);
+			return CreateDataConnection(provider, context, type, cs => (DbConnection)Activator.CreateInstance(Type.GetType(connectionTypeName, true)!, cs)!, csExtra);
 		}
 
-		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Func<string, IDbConnection> connectionFactory, string? csExtra = null)
+		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Func<string, DbConnection> connectionFactory, string? csExtra = null)
 		{
 			var ms = new MappingSchema();
 			DataConnection? db = null;
@@ -1602,7 +1590,7 @@ namespace Tests.Data
 					case ConnectionType.MiniProfilerNoMappings      :
 					case ConnectionType.MiniProfiler                :
 						Assert.IsNotNull(MiniProfiler.Current);
-						return new ProfiledDbConnection((DbConnection)cn, MiniProfiler.Current);
+						return new ProfiledDbConnection(cn, MiniProfiler.Current);
 				}
 
 				return cn;
@@ -1611,10 +1599,10 @@ namespace Tests.Data
 			switch (type)
 			{
 				case ConnectionType.MiniProfiler:
-					ms.SetConvertExpression<ProfiledDbConnection,  IDbConnection> (db => db.WrappedConnection);
-					ms.SetConvertExpression<ProfiledDbDataReader,  IDataReader>   (db => db.WrappedReader);
-					ms.SetConvertExpression<ProfiledDbTransaction, IDbTransaction>(db => db.WrappedTransaction);
-					ms.SetConvertExpression<ProfiledDbCommand,     IDbCommand>    (db => db.InternalCommand);
+					ms.SetConvertExpression<ProfiledDbConnection, DbConnection>  (db => db.WrappedConnection);
+					ms.SetConvertExpression<ProfiledDbDataReader,  DbDataReader> (db => db.WrappedReader);
+					ms.SetConvertExpression<ProfiledDbTransaction, DbTransaction>(db => db.WrappedTransaction);
+					ms.SetConvertExpression<ProfiledDbCommand,     DbCommand>    (db => db.InternalCommand);
 					break;
 			}
 

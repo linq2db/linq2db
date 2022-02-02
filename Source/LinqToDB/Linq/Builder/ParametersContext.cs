@@ -386,7 +386,7 @@ namespace LinqToDB.Linq.Builder
 			if (name == null && expression.Type == typeof(DataParameter))
 			{
 				var dp = expression.EvaluateExpression<DataParameter>();
-				if (dp?.Name?.IsNullOrEmpty() == false)
+				if (dp != null && !string.IsNullOrEmpty(dp.Name))
 					name = dp.Name;
 			}
 

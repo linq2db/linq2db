@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Data;
 using System.Data.SqlTypes;
+using System.Data.Common;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -9,7 +11,6 @@ namespace LinqToDB.DataProvider.DB2
 	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using System.Collections.Generic;
 
 	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder
 	{
@@ -226,7 +227,7 @@ namespace LinqToDB.DataProvider.DB2
 			return base.BuildTableName(sb, null, database, schema, table, tableOptions);
 		}
 
-		protected override string? GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(DbParameter parameter)
 		{
 			if (parameter.DbType == DbType.Decimal && parameter.Value is decimal decValue)
 			{

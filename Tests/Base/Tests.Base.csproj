@@ -16,6 +16,8 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net472' ">
+		<Reference Include="Microsoft.CSharp" />
+		
 		<None Update="SqlServerTypes\x64\msvcr120.dll">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>

@@ -970,7 +970,7 @@ namespace Tests.xUpdate
 				TestProvName.AllSapHana)]
 			string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var ids = new[] { 10000, 20000 };
 
@@ -1094,7 +1094,6 @@ namespace Tests.xUpdate
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000,
 				TestProvName.AllSapHana)]
 			string context)
 		{
@@ -1132,7 +1131,6 @@ namespace Tests.xUpdate
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000,
 				TestProvName.AllSapHana,
 				TestProvName.AllFirebird,
 				TestProvName.AllSQLite,
@@ -1178,7 +1176,6 @@ namespace Tests.xUpdate
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000,
 				TestProvName.AllSapHana,
 				TestProvName.AllFirebird,
 				TestProvName.AllSQLite,
@@ -1229,7 +1226,6 @@ namespace Tests.xUpdate
 				TestProvName.AllFirebird,
 				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
-				ProviderName.SqlServer2000,
 				TestProvName.AllSapHana)]
 			string context)
 		{

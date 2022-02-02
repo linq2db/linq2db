@@ -15,6 +15,7 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using LinqToDB.Common;
+	using LinqToDB.Data;
 	using Model;
 
 	[TestFixture]
@@ -356,7 +357,7 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.SqlCe,
 				TestProvName.AllAccess,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
+				ProviderName.SqlServer2005,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
@@ -387,7 +388,7 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.SqlCe,
 				TestProvName.AllAccess,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
+				ProviderName.SqlServer2005,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
@@ -421,7 +422,7 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.SqlCe,
 				TestProvName.AllAccess,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
+				ProviderName.SqlServer2005,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
@@ -597,7 +598,7 @@ namespace Tests.Linq
 		{
 			List<PersonCharTest> list;
 
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 				list = db.GetTable<PersonCharTest>().ToList();
 
 			using (var db = GetDataContext(context))
@@ -611,7 +612,7 @@ namespace Tests.Linq
 		{
 			List<PersonCharTest> list;
 
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 				list = db.GetTable<PersonCharTest>().ToList();
 
 			using (var db = GetDataContext(context))
@@ -625,7 +626,7 @@ namespace Tests.Linq
 		{
 			List<PersonCharTest> list;
 
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 				list = db.GetTable<PersonCharTest>().ToList();
 
 			using (var db = GetDataContext(context))

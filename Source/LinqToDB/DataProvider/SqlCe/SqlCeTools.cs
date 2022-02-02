@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Reflection;
 
 namespace LinqToDB.DataProvider.SqlCe
@@ -42,12 +43,12 @@ namespace LinqToDB.DataProvider.SqlCe
 			return new DataConnection(_sqlCeDataProvider.Value, connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection)
+		public static DataConnection CreateDataConnection(DbConnection connection)
 		{
 			return new DataConnection(_sqlCeDataProvider.Value, connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction)
+		public static DataConnection CreateDataConnection(DbTransaction transaction)
 		{
 			return new DataConnection(_sqlCeDataProvider.Value, transaction);
 		}
@@ -77,23 +78,6 @@ namespace LinqToDB.DataProvider.SqlCe
 		#region BulkCopy
 
 		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
-
-		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
-		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection               dataConnection,
-			IEnumerable<T>               source,
-			int                          maxBatchSize       = 1000,
-			Action<BulkCopyRowsCopied>?  rowsCopiedCallback = null)
-			where T : class
-		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.MultipleRows,
-					MaxBatchSize       = maxBatchSize,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
-		}
 
 		#endregion
 	}

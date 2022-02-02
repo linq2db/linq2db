@@ -97,7 +97,7 @@ namespace Tests.Linq
 		[Test]
 		public void SubQueryCount([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				AreEqual(
 					from p in Parent
@@ -213,7 +213,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupBy23([DataSources(ProviderName.SqlCe, TestProvName.AllOracle, ProviderName.SqlServer2000, TestProvName.AllAccess)] string context)
+		public void GroupBy23([DataSources(ProviderName.SqlCe, TestProvName.AllOracle, TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

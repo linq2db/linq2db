@@ -11,6 +11,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Extensions;
 	using Reflection;
+	using System.Data.Common;
 
 	class SelectBuilder : MethodCallBuilder
 	{
@@ -83,7 +84,7 @@ namespace LinqToDB.Linq.Builder
 				if (expr.Type != typeof(T))
 					expr = Expression.Convert(expr, typeof(T));
 
-				var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,IDataReader,Expression,object?[]?,object?[]?,int,T>>(
+				var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,DbDataReader,Expression,object?[]?,object?[]?,int,T>>(
 					Builder.BuildBlock(expr), new []
 					{
 						ExpressionBuilder.QueryRunnerParam,

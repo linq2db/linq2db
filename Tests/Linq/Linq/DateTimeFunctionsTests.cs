@@ -102,7 +102,7 @@ namespace Tests.Linq
 		[Test]
 		public void CurrentTimestampUtc(
 			[DataSources(ProviderName.Access, TestProvName.AllFirebird, ProviderName.SqlCe,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005)]
+				ProviderName.SqlServer2005)]
 			string context)
 		{
 			using (new DisableBaseline("Server-side date generation test"))
@@ -259,7 +259,7 @@ namespace Tests.Linq
 		[Test]
 		public void DatePartWeekNumberingType([DataSources(false)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var dates = new[]
 				{

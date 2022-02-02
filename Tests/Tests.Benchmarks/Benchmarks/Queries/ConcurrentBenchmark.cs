@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Threading;
+
 using BenchmarkDotNet.Attributes;
+
 using LinqToDB.Benchmarks.Mappings;
 using LinqToDB.Benchmarks.TestProvider;
 using LinqToDB.Data;
@@ -21,7 +24,7 @@ namespace LinqToDB.Benchmarks.Queries
 		private const int                                            _iterations        = 2;
 		private long?                                                _userId            = 100500;
 		private DataConnection[]                                     _db                = null!;
-		private IDbConnection                                        _cn                = null!;
+		private DbConnection                                        _cn                = null!;
 		private static Func<DataConnection, long?, IQueryable<User>> _compiled          = null!;
 		private volatile int                                         _doneCount;
 
@@ -93,7 +96,7 @@ namespace LinqToDB.Benchmarks.Queries
 		[ParamsSource(nameof(ThreadCountDataProvider))]
 		public int ThreadCount { get; set; }
 
-		public IEnumerable<int> ThreadCountDataProvider => new[] { 16, 32, 64 };
+		public IEnumerable<int> ThreadCountDataProvider => new[] {16, 32, 64};
 
 		[Benchmark]
 		public void Linq()

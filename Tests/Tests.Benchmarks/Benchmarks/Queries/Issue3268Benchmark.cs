@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 
 using BenchmarkDotNet.Attributes;
@@ -15,7 +16,7 @@ namespace LinqToDB.Benchmarks.Queries
 	{
 		private const int      _iterations = 2;
 		private DataConnection _db     = null!;
-		private IDbConnection  _cn     = null!;
+		private DbConnection   _cn     = null!;
 		private Func<DataConnection, int, int> _compiled         = null!;
 		private Func<DataConnection, int, int> _compiledNullable = null!;
 

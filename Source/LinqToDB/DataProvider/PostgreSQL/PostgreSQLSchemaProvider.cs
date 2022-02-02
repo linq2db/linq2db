@@ -195,10 +195,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			var excludeSchemas =
 				new HashSet<string?>(
-					ExcludedSchemas.Where(s => !s.IsNullOrEmpty()).Union(new[] { "pg_catalog", "information_schema" }),
+					ExcludedSchemas.Where(s => !string.IsNullOrEmpty(s)).Union(new[] { "pg_catalog", "information_schema" }),
 					StringComparer.OrdinalIgnoreCase);
 			
-			var includeSchemas = new HashSet<string?>(IncludedSchemas.Where(s => !s.IsNullOrEmpty()), StringComparer.OrdinalIgnoreCase);
+			var includeSchemas = new HashSet<string?>(IncludedSchemas.Where(s => !string.IsNullOrEmpty(s)), StringComparer.OrdinalIgnoreCase);
 			
 			if (includeSchemas.Count > 0)
 			{
@@ -224,7 +224,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			{
 				var schemasToIncludeStr =
 					string.Join(", ", includeSchemas.Select(s => ToDatabaseLiteral(dataConnection, s)));
-				if (!schemaFilter.IsNullOrEmpty())
+				if (!string.IsNullOrEmpty(schemaFilter))
 					schemaFilter += " AND ";
 				schemaFilter += $@"{schemaColumnName} IN ({schemasToIncludeStr})";
 			}
@@ -356,9 +356,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							IsNullable   = isNullable,
 							Ordinal      = ordinal,
 							DataType     = dataType,
-							Length       = rd.IsDBNull(6) ? (int?)null : rd.GetInt32(6),
-							Precision    = rd.IsDBNull(7) ? (int?)null : rd.GetInt32(7),
-							Scale        = rd.IsDBNull(8) ? (int?)null : rd.GetInt32(8),
+							Length       = rd.IsDBNull(6) ? null : rd.GetInt32(6),
+							Precision    = rd.IsDBNull(7) ? null : rd.GetInt32(7),
+							Scale        = rd.IsDBNull(8) ? null : rd.GetInt32(8),
 							IsIdentity   = rd.GetBoolean(9),
 							SkipOnInsert = rd.GetBoolean(10),
 							SkipOnUpdate = rd.GetBoolean(11),
@@ -550,8 +550,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return base.GetProviderSpecificType(dataType);
 		}
 
-		static Regex _matchArray = new Regex(@"^(.*)(\[\]){1}$", RegexOptions.Compiled);
-		static Regex _matchType  = new Regex(@"^(.*)(\(\d+(,\s*\d+)?\))(.*){1}$", RegexOptions.Compiled);
+		static Regex _matchArray = new (@"^(.*)(\[\]){1}$", RegexOptions.Compiled);
+		static Regex _matchType  = new (@"^(.*)(\(\d+(,\s*\d+)?\))(.*){1}$", RegexOptions.Compiled);
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo,
 			long? length, int? precision, int? scale, GetSchemaOptions options)
@@ -611,7 +611,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				// ignore generated length, precision, scale
 				dataType = typeMatch.Groups[1].Value.Trim();
 				var suffix = typeMatch.Groups[4].Value?.Trim();
-				if (!suffix.IsNullOrEmpty())
+				if (!string.IsNullOrEmpty(suffix))
 					dataType = dataType + " " + suffix;
 			}
 

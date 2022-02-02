@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Reflection;
 using System.Text;
 
@@ -21,7 +21,6 @@ namespace LinqToDB.DataProvider.SqlServer
 		// System.Data
 		// and/or
 		// System.Data.SqlClient
-		static readonly Lazy<IDataProvider> _sqlServerDataProvider2000sdc = CreateDataProvider<SqlServerDataProvider2000SystemDataSqlClient>();
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2005sdc = CreateDataProvider<SqlServerDataProvider2005SystemDataSqlClient>();
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2008sdc = CreateDataProvider<SqlServerDataProvider2008SystemDataSqlClient>();
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2012sdc = CreateDataProvider<SqlServerDataProvider2012SystemDataSqlClient>();
@@ -30,7 +29,6 @@ namespace LinqToDB.DataProvider.SqlServer
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2017sdc = CreateDataProvider<SqlServerDataProvider2017SystemDataSqlClient>();
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2019sdc = CreateDataProvider<SqlServerDataProvider2019SystemDataSqlClient>();
 		// Microsoft.Data.SqlClient
-		static readonly Lazy<IDataProvider> _sqlServerDataProvider2000mdc = CreateDataProvider<SqlServerDataProvider2000MicrosoftDataSqlClient>();
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2005mdc = CreateDataProvider<SqlServerDataProvider2005MicrosoftDataSqlClient>();
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2008mdc = CreateDataProvider<SqlServerDataProvider2008MicrosoftDataSqlClient>();
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2012mdc = CreateDataProvider<SqlServerDataProvider2012MicrosoftDataSqlClient>();
@@ -95,7 +93,6 @@ namespace LinqToDB.DataProvider.SqlServer
 					// SqlClient use dot prefix, as SqlClient itself used by some other providers
 				case var providerName when providerName.Contains("SqlServer") || providerName.Contains(".SqlClient"):
 				case ProviderName.SqlServer:
-					if (css.Name.Contains("2000") || css.ProviderName?.Contains("2000") == true) return GetDataProvider(SqlServerVersion.v2000, provider);
 					if (css.Name.Contains("2005") || css.ProviderName?.Contains("2005") == true) return GetDataProvider(SqlServerVersion.v2005, provider);
 					if (css.Name.Contains("2008") || css.ProviderName?.Contains("2008") == true) return GetDataProvider(SqlServerVersion.v2008, provider);
 					if (css.Name.Contains("2012") || css.ProviderName?.Contains("2012") == true) return GetDataProvider(SqlServerVersion.v2012, provider);
@@ -116,8 +113,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 								if (int.TryParse(conn.ServerVersion.Split('.')[0], out var version))
 								{
-									if (version <= 8) // sql server v6 - v2000
-										return GetDataProvider(SqlServerVersion.v2000, provider);
+									if (version <= 8)
+										// sql server <= 2000
+										return null;
 
 									using (var cmd = conn.CreateCommand())
 									{
@@ -138,8 +136,9 @@ namespace LinqToDB.DataProvider.SqlServer
 											return GetDataProvider(SqlServerVersion.v2008, provider);
 										if (level >= 90)
 											return GetDataProvider(SqlServerVersion.v2005, provider);
-										if (level >= 80)
-											return GetDataProvider(SqlServerVersion.v2000, provider);
+										if (level < 90)
+											// sql server <= 2000
+											return null;
 
 										switch (version)
 										{
@@ -178,7 +177,6 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			return (provider, version) switch
 			{
-				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2000) => _sqlServerDataProvider2000sdc.Value,
 				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2005) => _sqlServerDataProvider2005sdc.Value,
 				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2012) => _sqlServerDataProvider2012sdc.Value,
 				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2014) => _sqlServerDataProvider2014sdc.Value,
@@ -186,7 +184,6 @@ namespace LinqToDB.DataProvider.SqlServer
 				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2017) => _sqlServerDataProvider2017sdc.Value,
 				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2019) => _sqlServerDataProvider2019sdc.Value,
 				(SqlServerProvider.SystemDataSqlClient,    _                     ) => _sqlServerDataProvider2008sdc.Value,
-				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2000) => _sqlServerDataProvider2000mdc.Value,
 				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2005) => _sqlServerDataProvider2005mdc.Value,
 				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2012) => _sqlServerDataProvider2012mdc.Value,
 				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2014) => _sqlServerDataProvider2014mdc.Value,
@@ -239,7 +236,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		public static DataConnection CreateDataConnection(
-			IDbConnection     connection,
+			DbConnection      connection,
 			SqlServerVersion  version  = SqlServerVersion.v2008,
 			SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 		{
@@ -247,7 +244,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		public static DataConnection CreateDataConnection(
-			IDbTransaction    transaction,
+			DbTransaction     transaction,
 			SqlServerVersion  version  = SqlServerVersion.v2008,
 			SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
 		{
@@ -260,31 +257,6 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.ProviderSpecific;
 
-		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
-		public static BulkCopyRowsCopied ProviderSpecificBulkCopy<T>(
-			DataConnection              dataConnection,
-			IEnumerable<T>              source,
-			int?                        maxBatchSize       = null,
-			int?                        bulkCopyTimeout    = null,
-			bool                        keepIdentity       = false,
-			bool                        checkConstraints   = false,
-			int                         notifyAfter        = 0,
-			Action<BulkCopyRowsCopied>? rowsCopiedCallback = null)
-			where T : class
-		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.ProviderSpecific,
-					MaxBatchSize       = maxBatchSize,
-					BulkCopyTimeout    = bulkCopyTimeout,
-					KeepIdentity       = keepIdentity,
-					CheckConstraints   = checkConstraints,
-					NotifyAfter        = notifyAfter,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
-		}
-
 		#endregion
 
 		[Obsolete("Use 'QueryHint(Hints.Option.Recompile)' instead.")]
@@ -292,11 +264,5 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			public const string OptionRecompile = "OPTION(RECOMPILE)";
 		}
-
-		[Obsolete("This field is not used by linq2db. Configure reader expressions on DataProvider directly")]
-		public static Func<IDataReader,int,decimal> DataReaderGetMoney   = (dr, i) => dr.GetDecimal(i);
-
-		[Obsolete("This field is not used by linq2db. Configure reader expressions on DataProvider directly")]
-		public static Func<IDataReader,int,decimal> DataReaderGetDecimal = (dr, i) => dr.GetDecimal(i);
 	}
 }

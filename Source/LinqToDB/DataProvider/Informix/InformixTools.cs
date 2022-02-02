@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.IO;
 
 namespace LinqToDB.DataProvider.Informix
@@ -84,46 +85,29 @@ namespace LinqToDB.DataProvider.Informix
 #endif
 		}
 
-#region CreateDataConnection
+		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString, string? providerName = null)
 		{
 			return new DataConnection(GetDataProvider(providerName), connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection, string? providerName = null)
+		public static DataConnection CreateDataConnection(DbConnection connection, string? providerName = null)
 		{
 			return new DataConnection(GetDataProvider(providerName), connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction, string? providerName = null)
+		public static DataConnection CreateDataConnection(DbTransaction transaction, string? providerName = null)
 		{
 			return new DataConnection(GetDataProvider(providerName), transaction);
 		}
 
-#endregion
+		#endregion
 
-#region BulkCopy
+		#region BulkCopy
 
 		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.ProviderSpecific;
 
-		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
-		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection              dataConnection,
-			IEnumerable<T>              source,
-			int                         maxBatchSize       = 1000,
-			Action<BulkCopyRowsCopied>? rowsCopiedCallback = null)
-			where T : class
-		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.ProviderSpecific,
-					MaxBatchSize       = maxBatchSize,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
-		}
-
-#endregion
+		#endregion
 	}
 }

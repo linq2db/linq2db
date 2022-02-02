@@ -16,7 +16,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -65,7 +65,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);
@@ -117,7 +117,7 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				PrepareAssociationsData(db);

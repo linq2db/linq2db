@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -54,7 +56,7 @@ namespace Tests.Linq
 			var semaphore = new Semaphore(0, poolCount);
 
 			var threads = new Thread[threadCount];
-			var results = new Tuple<TParam, TResult, string, IDataParameterCollection?, Exception?>[threadCount];
+			var results = new Tuple<TParam, TResult, string, DbParameter[], Exception?>[threadCount];
 
 			for (var i = 0; i < threadCount; i++)
 			{
@@ -69,13 +71,16 @@ namespace Tests.Linq
 						{
 							using (var threadDb = (DataConnection)GetDataContext(context))
 							{
+								var commandInterceptor = new SaveCommandInterceptor();
+								threadDb.AddInterceptor(commandInterceptor);
+
 								var result = queryFunc(threadDb, param);
-								results[n] = Tuple.Create(param, result, threadDb.LastQuery!, threadDb.LastParameters, (Exception?)null);
+								results[n] = Tuple.Create(param, result, threadDb.LastQuery!, commandInterceptor.Parameters, (Exception?)null);
 							}
 						}
 						catch (Exception e)
 						{
-							results[n] = Tuple.Create(param, default(TResult), "", (IDataParameterCollection?)null, e)!;
+							results[n] = Tuple.Create(param, default(TResult), "", (DbParameter[]?)null, e)!;
 						}
 
 					}
@@ -118,7 +123,7 @@ namespace Tests.Linq
 					if (result.Item4 != null)
 					{
 						var sb = new StringBuilder();
-						dc.DataProvider.CreateSqlBuilder(dc.MappingSchema).PrintParameters(sb, result.Item4.OfType<IDbDataParameter>());
+						dc.DataProvider.CreateSqlBuilder(dc.MappingSchema).PrintParameters(sb, result.Item4.OfType<DbParameter>());
 						TestContext.WriteLine(sb);
 					}
 					TestContext.WriteLine();

@@ -56,11 +56,6 @@ namespace LinqToDB
 		/// </summary>
 		public const string SqlServer     = "SqlServer";
 		/// <summary>
-		/// Microsoft SQL Server 2000 provider.
-		/// Used as configuration name for SQL Server 2000 mapping schema <see cref="DataProvider.SqlServer.SqlServer2000MappingSchema"/>.
-		/// </summary>
-		public const string SqlServer2000 = "SqlServer.2000";
-		/// <summary>
 		/// Microsoft SQL Server 2005 provider.
 		/// Used as configuration name for SQL Server 2005 mapping schema <see cref="DataProvider.SqlServer.SqlServer2005MappingSchema"/>.
 		/// </summary>

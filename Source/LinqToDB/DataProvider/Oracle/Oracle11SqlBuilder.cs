@@ -9,6 +9,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using SqlProvider;
 	using System.Text;
 	using Mapping;
+	using System.Data.Common;
 
 	partial class Oracle11SqlBuilder : BasicSqlBuilder
 	{
@@ -514,7 +515,7 @@ END;",
 			}
 		}
 
-		protected override string? GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(DbParameter parameter)
 		{
 			if (DataProvider is OracleDataProvider provider)
 			{

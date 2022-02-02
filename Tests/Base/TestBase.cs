@@ -10,10 +10,11 @@ using System.Text;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Data.DbCommandProcessor;
+using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider.Informix;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
+using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.Tools;
@@ -39,16 +40,19 @@ namespace Tests
 		{
 			// offset 40 is not used by any timezone, so we can detect tz handling issues, which could be hidden when offset match current TZ
 			public static readonly DateTimeOffset DateTimeOffset    = new DateTimeOffset(2020, 2, 29, 17, 54, 55, 123, TimeSpan.FromMinutes(40)).AddTicks(1234);
-			public static readonly DateTimeOffset DateTimeOffsetUtc = new DateTimeOffset(2020, 2, 29, 17, 9, 55, 123, TimeSpan.Zero).AddTicks(1234);
+			public static readonly DateTimeOffset DateTimeOffsetUtc = new DateTimeOffset(2020, 2, 29, 17, 9,  55, 123, TimeSpan.Zero).AddTicks(1234);
 			public static readonly DateTime       DateTime          = new DateTime(2020, 2, 29, 17, 54, 55, 123).AddTicks(1234);
 			public static readonly DateTime       DateTimeUtc       = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1234);
 			public static readonly DateTime       DateTime4Utc      = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1000);
-			public static readonly DateTime       Date              = new (2020, 2, 29);
+			public static readonly DateTime       Date              = new(2020, 2, 29);
 			public static readonly TimeSpan       TimeOfDay         = new TimeSpan(0, 17, 54, 55, 123).Add(TimeSpan.FromTicks(1234));
 			public static readonly TimeSpan       TimeOfDay4        = new TimeSpan(0, 17, 54, 55, 123).Add(TimeSpan.FromTicks(1000));
-			public static readonly Guid           Guid1             = new ("bc7b663d-0fde-4327-8f92-5d8cc3a11d11");
-			public static readonly Guid           Guid2             = new ("a948600d-de21-4f74-8ac2-9516b287076e");
-			public static readonly Guid           Guid3             = new ("bd3973a5-4323-4dd8-9f4f-df9f93e2a627");
+			public static readonly Guid           Guid1             = new("bc7b663d-0fde-4327-8f92-5d8cc3a11d11");
+			public static readonly Guid           Guid2             = new("a948600d-de21-4f74-8ac2-9516b287076e");
+			public static readonly Guid           Guid3             = new("bd3973a5-4323-4dd8-9f4f-df9f93e2a627");
+			public static readonly Guid           Guid4             = new("76b1c875-2287-4b82-a23b-7967c5eafed8");
+			public static readonly Guid           Guid5             = new("656606a4-6e36-4431-add6-85f886a1c7c2");
+			public static readonly Guid           Guid6             = new("66aa9df9-260f-4a2b-ac50-9ca8ce7ad725");
 
 			public static byte[] Binary(int size)
 			{
@@ -232,7 +236,7 @@ namespace Tests
 
 			DefaultProvider = testSettings.DefaultConfiguration;
 
-			if (!DefaultProvider.IsNullOrEmpty())
+			if (!string.IsNullOrEmpty(DefaultProvider))
 			{
 				DataConnection.DefaultConfiguration = DefaultProvider;
 #if !NET472
@@ -341,7 +345,7 @@ namespace Tests
 #if NET472
 		const           int          IP = 22654;
 		static          bool         _isHostOpen;
-		static          LinqService? _service;
+		static          TestLinqService? _service;
 		static readonly object       _syncRoot = new ();
 #endif
 
@@ -364,7 +368,7 @@ namespace Tests
 					return;
 				}
 
-				host        = new ServiceHost(_service = new LinqService(ms) { AllowUpdates = true }, new Uri("net.tcp://localhost:" + (IP + TestExternals.RunID)));
+				host        = new ServiceHost(_service = new TestLinqService(ms, null, false) { AllowUpdates = true }, new Uri("net.tcp://localhost:" + (IP + TestExternals.RunID)));
 				_isHostOpen = true;
 			}
 
@@ -426,7 +430,6 @@ namespace Tests
 			TestProvName.SqlServer2019SequentialAccess,
 			TestProvName.SqlServer2019FastExpressionCompiler,
 			TestProvName.SqlServerContained,
-			ProviderName.SqlServer2000,
 			ProviderName.SqlServer2005,
 			TestProvName.SqlAzure,
 			ProviderName.PostgreSQL,
@@ -447,7 +450,12 @@ namespace Tests
 			ProviderName.SapHanaOdbc
 		}).ToList();
 
-		protected ITestDataContext GetDataContext(string configuration, MappingSchema? ms = null, bool testLinqService = true)
+		protected ITestDataContext GetDataContext(
+			string         configuration,
+			MappingSchema? ms                       = null,
+			bool           testLinqService          = true,
+			IInterceptor?  interceptor              = null,
+			bool           suppressSequentialAccess = false)
 		{
 			if (configuration.EndsWith(".LinqService"))
 			{
@@ -456,9 +464,25 @@ namespace Tests
 
 				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
 
-				var dx  = testLinqService
-					? new ServiceModel.TestLinqServiceDataContext(new LinqService(ms) { AllowUpdates = true }) { Configuration = str }
-					: new TestServiceModelDataContext(IP + TestExternals.RunID) { Configuration = str } as RemoteDataContextBase;
+				RemoteDataContextBase dx;
+
+				if (testLinqService)
+					dx = new ServiceModel.TestLinqServiceDataContext(new TestLinqService(ms, interceptor, suppressSequentialAccess) { AllowUpdates = true }) { Configuration = str };
+				else
+				{
+					_service!.SuppressSequentialAccess = suppressSequentialAccess;
+					if (interceptor != null)
+						_service!.AddInterceptor(interceptor);
+
+					dx = new TestServiceModelDataContext(
+						IP + TestExternals.RunID,
+						() =>
+						{
+							_service!.SuppressSequentialAccess = false;
+							if (interceptor != null)
+								_service!.RemoveInterceptor();
+						}) { Configuration = str };
+				}
 
 				Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
 
@@ -471,6 +495,21 @@ namespace Tests
 #endif
 			}
 
+			return GetDataConnection(configuration, ms, interceptor, suppressSequentialAccess: suppressSequentialAccess);
+		}
+
+		protected TestDataConnection GetDataConnection(
+			string         configuration,
+			MappingSchema? ms                       = null,
+			IInterceptor?  interceptor              = null,
+			IRetryPolicy?  retryPolicy              = null,
+			bool           suppressSequentialAccess = false)
+		{
+			if (configuration.EndsWith(".LinqService"))
+			{
+				throw new InvalidOperationException($"Call {nameof(GetDataContext)} for remote context creation");
+			}
+
 			Debug.WriteLine(configuration, "Provider ");
 
 			var res = new TestDataConnection(configuration);
@@ -480,9 +519,20 @@ namespace Tests
 			// add extra mapping schema to not share mappers with other sql2017/2019 providers
 			// use same schema to use cache within test provider scope
 			if (configuration == TestProvName.SqlServer2019SequentialAccess)
+			{
+				if (!suppressSequentialAccess)
+					res.AddInterceptor(SequentialAccessCommandInterceptor.Instance);
+
 				res.AddMappingSchema(_sequentialAccessSchema);
+			}
 			else if (configuration == TestProvName.SqlServer2019FastExpressionCompiler)
 				res.AddMappingSchema(_fecSchema);
+
+			if (interceptor != null)
+				res.AddInterceptor(interceptor);
+
+			if (retryPolicy != null)
+				res.RetryPolicy = retryPolicy;
 
 			return res;
 		}
@@ -1324,7 +1374,6 @@ namespace Tests
 			{
 				case TestProvName.SqlAzure                           :
 				case ProviderName.SqlServer                          :
-				case ProviderName.SqlServer2000                      :
 				case ProviderName.SqlServer2005                      :
 				case ProviderName.SqlServer2008                      :
 				case ProviderName.SqlServer2012                      :
@@ -1361,7 +1410,6 @@ namespace Tests
 			if (provider == TestProvName.SqlServer2019SequentialAccess)
 			{
 				Configuration.OptimizeForSequentialAccess = true;
-				DbCommandProcessorExtensions.Instance = new SequentialAccessCommandProcessor();
 			}
 			else if (provider == TestProvName.SqlServer2019FastExpressionCompiler)
 			{
@@ -1377,7 +1425,6 @@ namespace Tests
 			if (provider == TestProvName.SqlServer2019SequentialAccess)
 			{
 				Configuration.OptimizeForSequentialAccess = false;
-				DbCommandProcessorExtensions.Instance = null;
 			}
 			if (provider == TestProvName.SqlServer2019FastExpressionCompiler)
 			{

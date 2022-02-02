@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.IO;
 using System.Reflection;
 
@@ -100,12 +101,12 @@ namespace LinqToDB.DataProvider.Sybase
 			return new DataConnection(GetDataProvider(providerName), connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(IDbConnection connection, string? providerName = null)
+		public static DataConnection CreateDataConnection(DbConnection connection, string? providerName = null)
 		{
 			return new DataConnection(GetDataProvider(providerName), connection);
 		}
 
-		public static DataConnection CreateDataConnection(IDbTransaction transaction, string? providerName = null)
+		public static DataConnection CreateDataConnection(DbTransaction transaction, string? providerName = null)
 		{
 			return new DataConnection(GetDataProvider(providerName), transaction);
 		}
@@ -122,23 +123,6 @@ namespace LinqToDB.DataProvider.Sybase
 		/// Those are provider bugs and could be fixed in latest versions.
 		/// </summary>
 		public static BulkCopyType DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
-
-		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
-		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection              dataConnection,
-			IEnumerable<T>              source,
-			int                         maxBatchSize       = 1000,
-			Action<BulkCopyRowsCopied>? rowsCopiedCallback = null)
-			where T : class
-		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.MultipleRows,
-					MaxBatchSize       = maxBatchSize,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
-		}
 
 		#endregion
 	}

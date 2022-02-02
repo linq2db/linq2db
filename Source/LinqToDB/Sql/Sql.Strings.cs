@@ -237,27 +237,6 @@ namespace LinqToDB
 			}
 		}
 
-		class SqlServer2000ConcatWsBuilder : BaseEmulationConcatWsBuilder
-		{
-			protected override SqlExpression IsNullExpression(ISqlExpression value)
-			{
-				return new SqlExpression(typeof(string), "ISNULL({0}, '')", Precedence.Primary, value);
-			}
-
-			protected override SqlExpression StringConcatExpression(ISqlExpression value1, ISqlExpression value2)
-			{
-				return new SqlExpression(typeof(string), "{0} + {1}", value1, value2);
-			}
-
-			protected override SqlExpression TruncateExpression(ISqlExpression value, ISqlExpression separator)
-			{
-				// you can read more about this gore code here:
-				// https://stackoverflow.com/questions/2025585
-				return new SqlExpression(typeof(string), "SUBSTRING({0}, LEN(CONVERT(NVARCHAR(4000), {1}) + N'!'), 4000)",
-					Precedence.Primary, value, separator);
-			}
-		}
-
 		class SqliteConcatWsBuilder : BaseEmulationConcatWsBuilder
 		{
 			protected override SqlExpression IsNullExpression(ISqlExpression value)
@@ -288,7 +267,6 @@ namespace LinqToDB
 		[Extension(PN.PostgreSQL,    "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = null)]
 		[Extension(PN.MySql,         "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = null)]
 		[Extension(PN.SqlServer,     "", BuilderType = typeof(OldSqlServerConcatWsBuilder))]
-		[Extension(PN.SqlServer2000, "", BuilderType = typeof(SqlServer2000ConcatWsBuilder))]
 		[Extension(PN.SQLite,        "", BuilderType = typeof(SqliteConcatWsBuilder))]
 		public static string ConcatStrings(
 			[ExprParameter] string separator,

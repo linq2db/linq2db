@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Data.Common;
+using System.Text;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using System.Data;
-	using System.Text;
 	using Mapping;
 	using SqlProvider;
 
@@ -36,7 +36,7 @@ namespace LinqToDB.DataProvider.Access
 			return base.Convert(sb, value, convertType);
 		}
 
-		protected override string? GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(DbParameter parameter)
 		{
 			if (DataProvider is AccessODBCDataProvider provider)
 			{

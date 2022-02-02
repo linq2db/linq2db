@@ -1,8 +1,8 @@
 ﻿#if NETFRAMEWORK
 using System;
+using System.Data.Common;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -15,6 +15,7 @@ namespace LinqToDB.ServiceModel
 	using DataProvider;
 	using Expressions;
 	using Extensions;
+	using Interceptors;
 	using Mapping;
 	using SqlProvider;
 
@@ -138,7 +139,7 @@ namespace LinqToDB.ServiceModel
 
 		Type IDataContext.DataReaderType => typeof(ServiceModelDataReader);
 
-		Expression IDataContext.GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
+		Expression IDataContext.GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType)
 		{
 			var dataType   = reader.GetFieldType(idx);
 			var methodInfo = GetReaderMethodInfo(dataType);
@@ -155,26 +156,26 @@ namespace LinqToDB.ServiceModel
 		{
 			switch (type.ToNullableUnderlying().GetTypeCodeEx())
 			{
-				case TypeCode.Boolean  : return MemberHelper.MethodOf<IDataReader>(r => r.GetBoolean (0));
-				case TypeCode.Byte     : return MemberHelper.MethodOf<IDataReader>(r => r.GetByte    (0));
-				case TypeCode.Char     : return MemberHelper.MethodOf<IDataReader>(r => r.GetChar    (0));
-				case TypeCode.Int16    : return MemberHelper.MethodOf<IDataReader>(r => r.GetInt16   (0));
-				case TypeCode.Int32    : return MemberHelper.MethodOf<IDataReader>(r => r.GetInt32   (0));
-				case TypeCode.Int64    : return MemberHelper.MethodOf<IDataReader>(r => r.GetInt64   (0));
-				case TypeCode.Single   : return MemberHelper.MethodOf<IDataReader>(r => r.GetFloat   (0));
-				case TypeCode.Double   : return MemberHelper.MethodOf<IDataReader>(r => r.GetDouble  (0));
-				case TypeCode.String   : return MemberHelper.MethodOf<IDataReader>(r => r.GetString  (0));
-				case TypeCode.Decimal  : return MemberHelper.MethodOf<IDataReader>(r => r.GetDecimal (0));
-				case TypeCode.DateTime : return MemberHelper.MethodOf<IDataReader>(r => r.GetDateTime(0));
+				case TypeCode.Boolean  : return MemberHelper.MethodOf<DbDataReader>(r => r.GetBoolean (0));
+				case TypeCode.Byte     : return MemberHelper.MethodOf<DbDataReader>(r => r.GetByte    (0));
+				case TypeCode.Char     : return MemberHelper.MethodOf<DbDataReader>(r => r.GetChar    (0));
+				case TypeCode.Int16    : return MemberHelper.MethodOf<DbDataReader>(r => r.GetInt16   (0));
+				case TypeCode.Int32    : return MemberHelper.MethodOf<DbDataReader>(r => r.GetInt32   (0));
+				case TypeCode.Int64    : return MemberHelper.MethodOf<DbDataReader>(r => r.GetInt64   (0));
+				case TypeCode.Single   : return MemberHelper.MethodOf<DbDataReader>(r => r.GetFloat   (0));
+				case TypeCode.Double   : return MemberHelper.MethodOf<DbDataReader>(r => r.GetDouble  (0));
+				case TypeCode.String   : return MemberHelper.MethodOf<DbDataReader>(r => r.GetString  (0));
+				case TypeCode.Decimal  : return MemberHelper.MethodOf<DbDataReader>(r => r.GetDecimal (0));
+				case TypeCode.DateTime : return MemberHelper.MethodOf<DbDataReader>(r => r.GetDateTime(0));
 			}
 
 			if (type == typeof(Guid))
-				return MemberHelper.MethodOf<IDataReader>(r => r.GetGuid(0));
+				return MemberHelper.MethodOf<DbDataReader>(r => r.GetGuid(0));
 
-			return MemberHelper.MethodOf<IDataReader>(dr => dr.GetValue(0));
+			return MemberHelper.MethodOf<DbDataReader>(dr => dr.GetValue(0));
 		}
 
-		bool? IDataContext.IsDBNullAllowed(IDataReader reader, int idx)
+		bool? IDataContext.IsDBNullAllowed(DbDataReader reader, int idx)
 		{
 			return null;
 		}
@@ -204,7 +205,7 @@ namespace LinqToDB.ServiceModel
 												typeof(MappingSchema),
 												typeof(ISqlOptimizer),
 												typeof(SqlProviderFlags)
-											}),
+											}) ?? throw new InvalidOperationException($"Constructor for type '{type.Name}' not found."),
 											new Expression[]
 											{
 												Expression.Constant(null, typeof(IDataProvider)),
@@ -236,15 +237,12 @@ namespace LinqToDB.ServiceModel
 							if (!_sqlOptimizers.TryGetValue(key, out _getSqlOptimizer))
 								_sqlOptimizers.Add(key, _getSqlOptimizer =
 									Expression.Lambda<Func<ISqlOptimizer>>(
-										Expression.New(
-											type.GetConstructor(new[]
-											{
-												typeof(SqlProviderFlags)
-											}),
-											new Expression[]
-											{
-												Expression.Constant(((IDataContext)this).SqlProviderFlags)
-											})).CompileExpression());
+											Expression.New(
+												type.GetConstructor(new[] {typeof(SqlProviderFlags)}) ??
+												throw new InvalidOperationException(
+													$"Constructor for type '{type.Name}' not found."),
+												Expression.Constant(((IDataContext)this).SqlProviderFlags)))
+										.CompileExpression());
 				}
 
 				return _getSqlOptimizer;
@@ -314,13 +312,13 @@ namespace LinqToDB.ServiceModel
 		{
 			ThrowOnDisposed();
 
-			return Clone();
+			var ctx = Clone();
+
+			if (_contextInterceptors != null)
+				ctx.AddInterceptor(_contextInterceptors.Clone());
+
+			return ctx;
 		}
-
-		public event EventHandler? OnClosing;
-
-		/// <inheritdoc/>
-		public Action<EntityCreatedEventArgs>? OnEntityCreated { get; set; }
 
 		protected bool Disposed { get; private set; }
 
@@ -332,36 +330,40 @@ namespace LinqToDB.ServiceModel
 
 		void IDataContext.Close()
 		{
-			Close();
+			if (_contextInterceptors != null)
+				_contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosing(arg), new DataContextEventData(this));
+
+			if (_contextInterceptors != null)
+				_contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosed(arg), new DataContextEventData(this));
 		}
 
-		Task IDataContext.CloseAsync()
+		async Task IDataContext.CloseAsync()
 		{
-			Close();
-			return TaskEx.CompletedTask;
+			if (_contextInterceptors != null)
+				await _contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosingAsync(arg), new DataContextEventData(this))
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+			if (_contextInterceptors != null)
+				await _contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosedAsync(arg), new DataContextEventData(this))
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-		void Close()
-		{
-			OnClosing?.Invoke(this, EventArgs.Empty);
-		}
-
-		public void Dispose()
+		public virtual void Dispose()
 		{
 			Disposed = true;
 
-			Close();
+			((IDataContext)this).Close();
 		}
 
 #if !NATIVE_ASYNC
-		public Task DisposeAsync()
+		public virtual Task DisposeAsync()
 		{
 			Disposed = true;
 
 			return ((IDataContext)this).CloseAsync();
 		}
 #else
-		public ValueTask DisposeAsync()
+		public virtual ValueTask DisposeAsync()
 		{
 			Disposed = true;
 

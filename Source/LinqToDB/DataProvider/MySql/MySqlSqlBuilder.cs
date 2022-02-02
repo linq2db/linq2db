@@ -6,6 +6,7 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.MySql
 {
+	using System.Data.Common;
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
@@ -517,7 +518,7 @@ namespace LinqToDB.DataProvider.MySql
 			return sb.Append(table);
 		}
 
-		protected override string? GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(DbParameter parameter)
 		{
 			if (DataProvider is MySqlDataProvider provider)
 			{

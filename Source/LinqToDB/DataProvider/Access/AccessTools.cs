@@ -4,6 +4,7 @@ using System.Data;
 
 namespace LinqToDB.DataProvider.Access
 {
+	using System.Data.Common;
 	using System.IO;
 	using System.Security;
 	using Data;
@@ -73,7 +74,7 @@ namespace LinqToDB.DataProvider.Access
 		/// <param name="connection">Connection instance.</param>
 		/// <param name="providerName">Provider name.</param>
 		/// <returns><see cref="DataConnection"/> instance.</returns>
-		public static DataConnection CreateDataConnection(IDbConnection connection, string? providerName = null)
+		public static DataConnection CreateDataConnection(DbConnection connection, string? providerName = null)
 		{
 			return new DataConnection(GetDataProvider(providerName), connection);
 		}
@@ -84,7 +85,7 @@ namespace LinqToDB.DataProvider.Access
 		/// <param name="transaction">Transaction instance.</param>
 		/// <param name="providerName">Provider name.</param>
 		/// <returns><see cref="DataConnection"/> instance.</returns>
-		public static DataConnection CreateDataConnection(IDbTransaction transaction, string? providerName = null)
+		public static DataConnection CreateDataConnection(DbTransaction transaction, string? providerName = null)
 		{
 			return new DataConnection(GetDataProvider(providerName), transaction);
 		}
@@ -150,25 +151,6 @@ namespace LinqToDB.DataProvider.Access
 		/// Default value: <see cref="BulkCopyType.MultipleRows"/>.
 		/// </summary>
 		public static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
-
-		// If user has DataConnection - he can call BulkCopy directly and Tools methods only provide some
-		// defaults for parameters
-		[Obsolete("Please use the BulkCopy extension methods within DataConnectionExtensions")]
-		public static BulkCopyRowsCopied MultipleRowsCopy<T>(
-			DataConnection              dataConnection,
-			IEnumerable<T>              source,
-			int                         maxBatchSize       = 1000,
-			Action<BulkCopyRowsCopied>? rowsCopiedCallback = null)
-			where T : class
-		{
-			return dataConnection.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType       = BulkCopyType.MultipleRows,
-					MaxBatchSize       = maxBatchSize,
-					RowsCopiedCallback = rowsCopiedCallback,
-				}, source);
-		}
 		#endregion
 	}
 }

@@ -497,7 +497,7 @@ namespace Tests.Linq
 		[Test]
 		public void MultipleUse([IncludeDataSources(TestProvName.AllSqlServer2005Plus, TestProvName.AllPostgreSQL93Plus, TestProvName.AllOracle12)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var q = db.Child
 					.Select(g => new
@@ -1038,7 +1038,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue845Test([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable<Employee>())
 			using (db.CreateLocalTable<Department>())
 			{

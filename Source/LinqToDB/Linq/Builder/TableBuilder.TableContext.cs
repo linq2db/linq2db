@@ -12,6 +12,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
 	using LinqToDB.Expressions;
+	using Interceptors;
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
@@ -310,24 +311,11 @@ namespace LinqToDB.Linq.Builder
 			[UsedImplicitly]
 			static object OnEntityCreated(IDataContext context, object entity, TableOptions tableOptions, string? tableName, string? schemaName, string? databaseName, string? serverName)
 			{
-				var onEntityCreated = context.OnEntityCreated;
-
-				if (onEntityCreated != null)
-				{
-					var args = new EntityCreatedEventArgs
+				EntityCreatedEventData? args = null;
+				foreach (var interceptor in context.GetInterceptors<IDataContextInterceptor>())
 					{
-						Entity       = entity,
-						DataContext  = context,
-						TableOptions = tableOptions,
-						TableName    = tableName,
-						SchemaName   = schemaName,
-						DatabaseName = databaseName,
-						ServerName   = serverName
-					};
-
-					onEntityCreated(args);
-
-					return args.Entity;
+					args   ??= new EntityCreatedEventData(context, tableOptions, tableName, schemaName, databaseName, serverName);
+					entity   = interceptor.EntityCreated(args.Value, entity);
 				}
 
 				return entity;
@@ -338,8 +326,6 @@ namespace LinqToDB.Linq.Builder
 
 			Expression NotifyEntityCreated(Expression expr)
 			{
-				if (Builder.DataContext is IEntityServices)
-				{
 					expr =
 						Expression.Convert(
 							Expression.Call(
@@ -353,8 +339,6 @@ namespace LinqToDB.Linq.Builder
 								Expression.Constant(SqlTable.Server,       typeof(string))
 							),
 							expr.Type);
-				}
-
 
 				return expr;
 			}
@@ -699,8 +683,8 @@ namespace LinqToDB.Linq.Builder
 							if (!found)
 							{
 								found = EntityDescriptor.Aliases != null &&
-										EntityDescriptor.Aliases.TryGetValue(field.Name, out var alias) &&
-										alias == sqlField.Name;
+								        EntityDescriptor.Aliases.TryGetValue(field.Name, out var alias) &&
+								        alias == sqlField.Name;
 							}
 
 							if (found)
@@ -1145,7 +1129,7 @@ namespace LinqToDB.Linq.Builder
 								return IsExpressionResult.True;
 
 							if (contextInfo.CurrentExpression == null
-								|| contextInfo.CurrentExpression.GetLevel(Builder.MappingSchema) == contextInfo.CurrentLevel)
+							    || contextInfo.CurrentExpression.GetLevel(Builder.MappingSchema) == contextInfo.CurrentLevel)
 								return IsExpressionResult.False;
 
 							return contextInfo.Context.IsExpression(contextInfo.CurrentExpression,
@@ -1170,7 +1154,7 @@ namespace LinqToDB.Linq.Builder
 								return IsExpressionResult.False;
 
 							if (contextInfo.CurrentExpression == null
-								|| contextInfo.CurrentExpression.GetLevel(Builder.MappingSchema) == contextInfo.CurrentLevel)
+							    || contextInfo.CurrentExpression.GetLevel(Builder.MappingSchema) == contextInfo.CurrentLevel)
 								return new IsExpressionResult(true, contextInfo.Context);
 
 							return contextInfo.Context.IsExpression(contextInfo.CurrentExpression,
@@ -1263,7 +1247,7 @@ namespace LinqToDB.Linq.Builder
 						var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 
 						if (levelExpression == expression && expression.NodeType == ExpressionType.MemberAccess ||
-							expression.NodeType == ExpressionType.Call)
+						    expression.NodeType == ExpressionType.Call)
 						{
 							var tableLevel  = FindContextExpression(expression, level, true, true)!;
 
@@ -1626,7 +1610,7 @@ namespace LinqToDB.Linq.Builder
 								if (!descriptor.IsList && !AssociationsToSubQueries)
 								{
 									if (_associationContexts == null ||
-										!_associationContexts.TryGetValue(accessorMember, out var foundInfo))
+									    !_associationContexts.TryGetValue(accessorMember, out var foundInfo))
 									{
 
 										if (forceInner)
