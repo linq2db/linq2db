@@ -104,7 +104,7 @@ namespace LinqToDB.Linq.Builder
 
 			var members = BuildMembers(context, entityDescriptor, flags);
 
-			if (flags.HasFlag(ProjectFlags.SQL))
+			if (flags.HasFlag(ProjectFlags.SQL) || flags.HasFlag(ProjectFlags.Test))
 			{
 				var assignments = members
 					.Select(x => new SqlGenericConstructorExpression.Assignment(x.Member, x.Expression)).ToList();

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -9,7 +8,6 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using SqlQuery;
 	using Common;
-	using Reflection;
 
 	class FirstSingleBuilder : MethodCallBuilder
 	{
@@ -25,32 +23,40 @@ namespace LinqToDB.Linq.Builder
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
+			if (buildInfo.Parent != null)
+			{
+				builder.PushNestingQueryParent(buildInfo.Parent.SelectQuery);
+			}
+
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+
+			if (buildInfo.Parent != null)
+			{
+				builder.PopNestingQueryParent();
+			}
+
 			var take     = 0;
 
 			var forceOuter = buildInfo.Parent is DefaultIfEmptyBuilder.DefaultIfEmptyContext; 
 
-			if (!buildInfo.IsSubQuery || builder.DataContext.SqlProviderFlags.IsSubQueryTakeSupported)
+			switch (methodCall.Method.Name)
 			{
-				switch (methodCall.Method.Name)
-				{
-					case "First"                :
-					case "FirstOrDefault"       :
-					case "FirstAsync"           :
-					case "FirstOrDefaultAsync"  :
-						take = 1;
-						break;
+				case "First"                :
+				case "FirstOrDefault"       :
+				case "FirstAsync"           :
+				case "FirstOrDefaultAsync"  :
+					take = 1;
+					break;
 
-					case "Single"               :
-					case "SingleOrDefault"      :
-					case "SingleAsync"          :
-					case "SingleOrDefaultAsync" :
-						if (!buildInfo.IsSubQuery)
-							if (buildInfo.SelectQuery.Select.TakeValue == null || buildInfo.SelectQuery.Select.TakeValue is SqlValue takeValue && (int)takeValue.Value! >= 2)
-								take = 2;
+				case "Single"               :
+				case "SingleOrDefault"      :
+				case "SingleAsync"          :
+				case "SingleOrDefaultAsync" :
+					if (!buildInfo.IsSubQuery)
+						if (buildInfo.SelectQuery.Select.TakeValue == null || buildInfo.SelectQuery.Select.TakeValue is SqlValue takeValue && (int)takeValue.Value! >= 2)
+							take = 2;
 
-						break;
-				}
+					break;
 			}
 
 			if (take != 0)

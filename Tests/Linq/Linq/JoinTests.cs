@@ -1099,8 +1099,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinSubQueryCount([DataSources(
-			TestProvName.AllAccess, ProviderName.SqlCe)]
+		public void JoinSubQueryCount([DataSources]
 			string context)
 		{
 			var n = 1;
@@ -1122,7 +1121,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinSubQuerySum([DataSources(ProviderName.SqlCe)] string context)
+		public void JoinSubQuerySum([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1860,7 +1859,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnLeftWithConditions([DataSources(TestProvName.AllSQLite)] string context)
+		public void SqlRightJoinWithInnerJoinOnLeftWithConditions([DataSources(ProviderName.Access, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

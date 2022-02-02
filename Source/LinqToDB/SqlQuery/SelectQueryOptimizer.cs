@@ -1078,27 +1078,35 @@ namespace LinqToDB.SqlQuery
 
 			if (isQueryOK && parentJoinedTable != null && parentJoinedTable.JoinType != JoinType.Inner)
 			{
-				var sqlTableSource = query.From.Tables[0];
-				if (sqlTableSource.Joins.Count > 0)
+				if (parentJoinedTable.JoinType == JoinType.Full || parentJoinedTable.JoinType == JoinType.Right)
 				{
-					var hasOtherJoin = false;
-					foreach (var join in sqlTableSource.Joins)
+					isQueryOK = query.Where.IsEmpty;
+				}
+				else
+				{
+					var sqlTableSource = query.From.Tables[0];
+					if (sqlTableSource.Joins.Count > 0)
 					{
-						if (join.JoinType != parentJoinedTable.JoinType)
+						var hasOtherJoin = false;
+						foreach (var join in sqlTableSource.Joins)
 						{
-							hasOtherJoin = true;
-							break;
+							if (join.JoinType != parentJoinedTable.JoinType)
+							{
+								hasOtherJoin = true;
+								break;
+							}
 						}
-					}
 
-					if (hasOtherJoin)
-						isQueryOK = false;
-					else
-					{
-						// check that this subquery do not infer with parent join via other joined tables
-						var joinSources = new HashSet<ISqlTableSource>(sqlTableSource.Joins.Select(static j => j.Table.Source));
-						if (QueryHelper.IsDependsOn(parentJoinedTable.Condition, joinSources))
+						if (hasOtherJoin)
 							isQueryOK = false;
+						else
+						{
+							// check that this subquery do not infer with parent join via other joined tables
+							var joinSources =
+								new HashSet<ISqlTableSource>(sqlTableSource.Joins.Select(static j => j.Table.Source));
+							if (QueryHelper.IsDependsOn(parentJoinedTable.Condition, joinSources))
+								isQueryOK = false;
+						}
 					}
 				}
 			}
@@ -1271,7 +1279,7 @@ namespace LinqToDB.SqlQuery
 				joinSources.Add(joinTable.Table);
 				foreach (var join in joinSource.Joins)
 				{
-					if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply|| join.JoinType == JoinType.FullApply|| join.JoinType == JoinType.RightApply)
+					if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply|| join.JoinType == JoinType.FullApply || join.JoinType == JoinType.RightApply)
 					{
 						OptimizeApply(parentQuery, joinSources, joinSource, join, isApplySupported,
 							optimizeColumns);
@@ -1289,13 +1297,13 @@ namespace LinqToDB.SqlQuery
 				var sql   = (SelectQuery)joinSource.Source;
 				var isAgg = sql.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
 
-				if (isApplySupported && (isAgg || sql.Select.HasModifier))
+				if (isApplySupported && sql.Select.HasModifier)
 					return;
 
 				if (sql.Select.HasModifier)
 					throw new NotImplementedException("Translating to ROW_NUMBER query is not implemented yet.");
 
-				var whereToIgnore = new HashSet<IQueryElement> { sql.Where };
+				var whereToIgnore = new HashSet<IQueryElement> { sql.Where, sql.Select };
 
 				// we cannot optimize apply because reference to parent sources are used inside the query
 				if (QueryHelper.IsDependsOn(sql, parentTableSources, whereToIgnore))
@@ -1330,15 +1338,23 @@ namespace LinqToDB.SqlQuery
 				for (int i = 0; i < searchCondition.Count; i++)
 				{
 					var cond    = searchCondition[i];
-					var newCond = cond.Convert((sql, toCheck, toIgnore), static (visitor, e) =>
+					var newCond = cond.Convert((sql, toCheck, toIgnore, isAgg), static (visitor, e) =>
 					{
 						if (e.ElementType == QueryElementType.Column || e.ElementType == QueryElementType.SqlField)
 						{
 							if (QueryHelper.IsDependsOn(e, visitor.Context.toCheck))
 							{
-								var newExpr = visitor.Context.sql.Select.AddColumn((ISqlExpression)e);
+								if (e is not SqlColumn clm || clm.Parent != visitor.Context.sql)
+								{
+									var newExpr = visitor.Context.sql.Select.AddColumn((ISqlExpression)e);
 
-								return newExpr;
+									if (visitor.Context.isAgg)
+									{
+										visitor.Context.sql.Select.GroupBy.Items.Add((ISqlExpression)e);
+									}
+
+									return newExpr;
+								}
 							}
 						}
 
@@ -1598,16 +1614,19 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		static bool IsLimitedToOneRecord(SelectQuery selectQuery, EvaluationContext context)
+		static bool IsLimitedToOneRecord(SelectQuery selectQuery, EvaluationContext context, out bool byTake)
 		{
 			if (selectQuery.Select.TakeValue != null &&
 			    selectQuery.Select.TakeValue.TryEvaluateExpression(context, out var takeValue))
 			{
+				byTake = true;
 				if (takeValue is int intValue)
 				{
 					return intValue == 1;
 				}
 			}
+
+			byTake = false;
 
 			if (selectQuery.Select.Columns.Count == 1)
 			{
@@ -1662,8 +1681,11 @@ namespace LinqToDB.SqlQuery
 							{
 								if (join.Table.Source is SelectQuery tsQuery &&
 								    tsQuery.Select.Columns.Count == 1         &&
-								    IsLimitedToOneRecord(tsQuery, ctx.context))
+								    IsLimitedToOneRecord(tsQuery, ctx.context, out var byTake))
 								{
+									if (byTake && !ctx.flags.IsSubQueryTakeSupported)
+										continue;
+
 									// where we can start analyzing that we can move join to subquery
 									var testedColumn = tsQuery.Select.Columns[0];
 									if (IsUniqueUsage(sq, testedColumn))

@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Expressions
 {
+	[DebuggerDisplay("new {Type.Name} ( ... )")]
 	public class SqlGenericConstructorExpression : Expression
 	{
 		public ReadOnlyCollection<Assignment> Assignments { get; }
 
+		[DebuggerDisplay("{MemberInfo.Name} = {Expression}")]
 		public class Assignment
 		{
 			public Assignment(MemberInfo memberInfo, Expression expression)

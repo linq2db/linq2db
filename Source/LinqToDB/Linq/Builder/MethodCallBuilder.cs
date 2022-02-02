@@ -28,7 +28,12 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			return builder.IsSequence(new BuildInfo(buildInfo, ((MethodCallExpression)buildInfo.Expression).Arguments[0]));
+			var mc = (MethodCallExpression)buildInfo.Expression;
+
+			if (!mc.IsQueryable())
+				return false;
+
+			return builder.IsSequence(new BuildInfo(buildInfo, mc.Arguments[0]));
 		}
 
 		public virtual bool IsAggregationContext(ExpressionBuilder builder, BuildInfo buildInfo) => false;

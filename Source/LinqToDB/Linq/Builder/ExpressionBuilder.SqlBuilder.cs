@@ -60,7 +60,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public IBuildContext BuildWhere(IBuildContext? parent, IBuildContext sequence, LambdaExpression condition,
-			bool checkForSubQuery, bool enforceHaving, bool aggregationTest)
+			bool checkForSubQuery, bool enforceHaving, bool isTest)
 		{
 			var originalContextRef = new ContextRefExpression(condition.Parameters[0].Type, sequence);
 			var body               = condition.GetBody(originalContextRef);
@@ -68,17 +68,23 @@ namespace LinqToDB.Linq.Builder
 
 			var prevSequence = sequence;
 
-			if (parent == null && (sequence is not SubQueryContext subquery || !subquery.SelectQuery.IsSimple))
+			if (sequence is not SubQueryContext subquery)
 			{
 				sequence = new SubQueryContext(prevSequence);
 			}
 
-			var searchContext = parent ?? sequence;
-			if (sequence is GroupByBuilder.AggregationRoot)
-				searchContext = sequence;
+			if (parent != null)
+			{
+				PushNestingQueryParent(parent.SelectQuery);
+			}
 
 			var sc = new SqlSearchCondition();
-			BuildSearchCondition(searchContext, expr, aggregationTest ? ProjectFlags.Test : ProjectFlags.SQL, sc.Conditions);
+			BuildSearchCondition(sequence, expr, isTest ? ProjectFlags.Test : ProjectFlags.SQL, sc.Conditions);
+
+			if (parent != null)
+			{
+				PopNestingQueryParent();
+			}
 
 			sequence.SelectQuery.Where.ConcatSearchCondition(sc);
 
@@ -149,11 +155,12 @@ namespace LinqToDB.Linq.Builder
 
 		#region SubQueryToSql
 
-		public IBuildContext GetSubQuery(IBuildContext context, Expression expr)
+		public IBuildContext GetSubQuery(IBuildContext context, Expression expr, bool isTest)
 		{
 			var info = new BuildInfo(context, expr, new SelectQuery {ParentSelect = context.SelectQuery})
 			{
-				CreateSubQuery = true
+				CreateSubQuery = true,
+				IsTest = isTest
 			};
 
 			var ctx  = BuildSequence(info);
@@ -662,7 +669,7 @@ namespace LinqToDB.Linq.Builder
 						var mc = (MethodCallExpression)expression;
 						if (IsSubQuery(callCtx, mc))
 						{
-							var subQueryContextInfo = GetSubQueryContext(callCtx, mc);
+							var subQueryContextInfo = GetSubQueryContext(callCtx, mc, false);
 							if (subQueryContextInfo.Context.IsExpression(null, 0, RequestFor.Object).Result)
 							{
 								var info = subQueryContextInfo.Context.ConvertToSql(null, 0, ConvertFlags.All);
@@ -954,7 +961,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (cache && result is SqlPlaceholderExpression placeholder)
 			{
-				if (!flags.HasFlag(ProjectFlags.Test) && placeholder.SelectQuery != context.SelectQuery)
+				if (!flags.HasFlag(ProjectFlags.Test) && placeholder.SelectQuery != context.SelectQuery && placeholder.Sql is not SqlColumn)
 				{
 					// recreate placeholder
 					placeholder = CreatePlaceholder(context.SelectQuery, placeholder.Sql, placeholder.Path,
@@ -1188,6 +1195,8 @@ namespace LinqToDB.Linq.Builder
 
 					if (!ReferenceEquals(newExpr, ma))
 					{
+						if (newExpr is SqlPlaceholderExpression)
+							return newExpr;
 						return ConvertToSqlExpr(context, newExpr, flags, unwrap, columnDescriptor, isPureExpression);
 					}
 
@@ -1299,7 +1308,7 @@ namespace LinqToDB.Linq.Builder
 					var buildInfo = new BuildInfo((IBuildContext?)null, e, new SelectQuery());
 					if (IsSequence(buildInfo))
 					{
-						var subqueryCtx  = GetSubQueryContext(context, e);
+						var subqueryCtx  = GetSubQueryContext(context, e, flags.HasFlag(ProjectFlags.Test));
 						var subqueryExpr = new ContextRefExpression(e.Type, subqueryCtx.Context);
 
 						return ConvertToSqlExpr(context, subqueryExpr, flags, unwrap, columnDescriptor, isPureExpression);
@@ -1738,10 +1747,9 @@ namespace LinqToDB.Linq.Builder
 					current = me.Expression;
 					memberPath.Add(me.Member);
 				}
-				else if (current is ContextRefExpression)
+				else 
 					break;
-				else
-					throw new InvalidOperationException($"Unexpected expression for constructing parameter `{path}`");
+
 			} while (true);
 
 			var        param = Expression.Parameter(current.Type, "o");
@@ -2339,221 +2347,6 @@ namespace LinqToDB.Linq.Builder
 				throw new LinqToDBException($"Type {result.Type.Name} does not have member {memberPath.Last().Name}.");
 
 			return result;
-		}
-
-		public ISqlPredicate? ConvertObjectComparison(
-			ExpressionType nodeType,
-			IBuildContext leftContext,
-			Expression left,
-			IBuildContext rightContext,
-			Expression right)
-		{
-			var qsl = GetContext(leftContext,  left);
-			var qsr = GetContext(rightContext, right);
-
-			var sl = qsl != null && qsl.IsExpression(left,  0, RequestFor.Object).Result;
-			var sr = qsr != null && qsr.IsExpression(right, 0, RequestFor.Object).Result;
-
-			bool      isNull;
-			SqlInfo[] lcols;
-
-			var rmembers = new Dictionary<MemberInfo,Expression>(new MemberInfoComparer());
-
-			if (sl == false && sr == false)
-			{
-				var lmembers = new Dictionary<MemberInfo,Expression>(new MemberInfoComparer());
-
-				var isl = ProcessProjection(lmembers, left);
-				var isr = ProcessProjection(rmembers, right);
-
-				if (!isl && !isr)
-					return null;
-
-				if (lmembers.Count == 0)
-				{
-					var r = right;
-					right = left;
-					left = r;
-
-					var c = rightContext;
-					rightContext = leftContext;
-					leftContext = c;
-
-					var q = qsr;
-					qsl = q;
-
-					sr = false;
-
-					var lm   = lmembers;
-					lmembers = rmembers;
-					rmembers = lm;
-				}
-
-				isNull = right.IsNullValue();
-				lcols  = new SqlInfo[lmembers.Count];
-				var idx = 0;
-				foreach (var m in lmembers)
-				{
-					lcols[idx] = new SqlInfo(m.Key, ConvertToSql(leftContext, m.Value));
-					idx++;
-				}
-			}
-			else
-			{
-				if (sl == false)
-				{
-					var r = right;
-					right = left;
-					left  = r;
-
-					var c        = rightContext;
-					rightContext = leftContext;
-					// value not used below: https://pvs-studio.com/ru/blog/posts/csharp/0887/
-					// but! we have test that fails in this place (TestDefaultExpression_08)
-					// so it could be incomplete implementation
-					//leftContext = c;
-
-					var q = qsr;
-					qsl   = q;
-
-					sr = false;
-				}
-
-				isNull = right.IsNullValue();
-				lcols  = qsl!.ConvertToSql(left, 0, ConvertFlags.Key);
-
-				if (!sr)
-					ProcessProjection(rmembers, right);
-			}
-
-			if (lcols.Length == 0)
-				return null;
-
-			var condition = new SqlSearchCondition();
-
-			foreach (var lcol in lcols)
-			{
-				if (lcol.Sql is SelectQuery innerQuery && isNull)
-				{
-					var existsPredicate = new SqlPredicate.FuncLike(SqlFunction.CreateExists(innerQuery));
-					condition.Conditions.Add(new SqlCondition(nodeType == ExpressionType.Equal, existsPredicate));
-					continue;
-				}
-
-				if (lcol.MemberChain.Length == 0)
-					throw new InvalidOperationException();
-
-				ISqlExpression? rcol = null;
-
-				var lmember = lcol.MemberChain[lcol.MemberChain.Length - 1];
-
-				var columnDescriptor = QueryHelper.GetColumnDescriptor(lcol.Sql);
-
-				if (sr)
-				{
-					var memeberPath = ConstructMemberPath(lcol.MemberChain, right, true)!;
-					rcol = ConvertToSql(rightContext, memeberPath, unwrap: false, columnDescriptor: columnDescriptor);
-				}
-				else if (rmembers.Count != 0)
-					rcol = ConvertToSql(rightContext, rmembers[lmember], unwrap: false, columnDescriptor: columnDescriptor);
-
-				var rex =
-					isNull ?
-						MappingSchema.GetSqlValue(right.Type, null) :
-						rcol ?? ParametersContext.GetParameter(right, lmember, columnDescriptor);
-
-				var predicate = new SqlPredicate.ExprExpr(
-					lcol.Sql,
-					nodeType == ExpressionType.Equal ? SqlPredicate.Operator.Equal : SqlPredicate.Operator.NotEqual,
-					rex, Configuration.Linq.CompareNullsAsValues ? true : null);
-
-				condition.Conditions.Add(new SqlCondition(false, predicate));
-			}
-
-			if (nodeType == ExpressionType.NotEqual)
-				foreach (var c in condition.Conditions)
-					c.IsOr = true;
-
-			return condition;
-		}
-
-		internal ISqlPredicate? ConvertNewObjectComparison(IBuildContext context, ExpressionType nodeType, Expression left, Expression right)
-		{
-			left = FindExpression(left);
-			right = FindExpression(right);
-
-			var condition = new SqlSearchCondition();
-
-			if (left.NodeType != ExpressionType.New)
-			{
-				var temp = left;
-				left = right;
-				right = temp;
-			}
-
-			var newExpr  = (NewExpression)left;
-
-			// ReSharper disable ConditionIsAlwaysTrueOrFalse
-			// ReSharper disable HeuristicUnreachableCode
-			if (newExpr.Members == null)
-				return null;
-			// ReSharper restore HeuristicUnreachableCode
-			// ReSharper restore ConditionIsAlwaysTrueOrFalse
-
-			for (var i = 0; i < newExpr.Arguments.Count; i++)
-			{
-				var lex = ConvertToSql(context, newExpr.Arguments[i]);
-				var rex =
-					right is NewExpression newRight ?
-						ConvertToSql(context, newRight.Arguments[i]) :
-						ParametersContext.GetParameter(right, newExpr.Members[i], QueryHelper.GetColumnDescriptor(lex));
-
-				var predicate =
-					new SqlPredicate.ExprExpr(
-						lex,
-						nodeType == ExpressionType.Equal ? SqlPredicate.Operator.Equal : SqlPredicate.Operator.NotEqual,
-						rex, Configuration.Linq.CompareNullsAsValues ? true : null);
-
-				condition.Conditions.Add(new SqlCondition(false, predicate));
-			}
-
-			if (nodeType == ExpressionType.NotEqual)
-				foreach (var c in condition.Conditions)
-					c.IsOr = true;
-
-			return condition;
-		}
-
-		static Expression FindExpression(Expression expr)
-		{
-			var ret = _findExpressionVisitor.Find(expr);
-
-			if (ret == null)
-				throw new NotImplementedException();
-
-			return ret;
-		}
-
-		private static readonly FindVisitor<object?> _findExpressionVisitor = FindVisitor<object?>.Create(FindExpressionFind);
-
-		static bool FindExpressionFind(Expression pi)
-		{
-			switch (pi.NodeType)
-			{
-				case ExpressionType.Convert:
-				{
-					var e = (UnaryExpression)pi;
-
-					return
-						e.Operand.NodeType == ExpressionType.ArrayIndex &&
-						ReferenceEquals(((BinaryExpression)e.Operand).Left, ParametersParam);
-				}
-				case ExpressionType.MemberAccess:
-				case ExpressionType.New         :
-					return true;
-			}
-
-			return false;
 		}
 
 		#endregion

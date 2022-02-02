@@ -200,8 +200,6 @@ namespace LinqToDB.Linq.Builder
 
 		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			if (buildInfo.IsAggregation)
-				return false;
 			return true;
 		}
 	}

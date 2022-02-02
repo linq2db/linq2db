@@ -73,7 +73,9 @@ namespace LinqToDB.SqlQuery
 				case JoinType.Left       : sb.Append("LEFT JOIN ");   break;
 				case JoinType.CrossApply : sb.Append("CROSS APPLY "); break;
 				case JoinType.OuterApply : sb.Append("OUTER APPLY "); break;
-				default                  : sb.Append("SOME JOIN "); break;
+				case JoinType.Right      : sb.Append("RIGHT JOIN ");  break;
+				case JoinType.Full       : sb.Append("FULL JOIN ");   break;
+				default                  : sb.Append("SOME JOIN ");   break;
 			}
 
 			((IQueryElement)Table).ToString(sb, dic);

@@ -53,6 +53,14 @@ namespace LinqToDB.Expressions
 			return this;
 		}
 
+		public SqlPlaceholderExpression WithPath(Expression path)
+		{
+			if (ExpressionEqualityComparer.Instance.Equals(path, Path))
+				return this;
+
+			return new SqlPlaceholderExpression(SelectQuery, Sql, path, Type, Alias, Index);
+		}
+
 		public override string ToString()
 		{
 			if (Index != null)

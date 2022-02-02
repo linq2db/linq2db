@@ -27,9 +27,15 @@ namespace LinqToDB.Linq.Builder
 
 			var expr = SequenceHelper.PrepareBody(collectionSelector, sequence).Unwrap();
 
+			builder.PushNestingQueryParent(sequence.SelectQuery);
+
 			var collectionInfo = new BuildInfo(sequence, expr, new SelectQuery()) { CreateSubQuery = true };
 			var collection     = builder.BuildSequence(collectionInfo);
 
+			builder.PopNestingQueryParent();
+
+			// DefaultIfEmptyContext wil handle correctly projecting NULL objects
+			//
 			if (collectionInfo.JoinType == JoinType.Full || collectionInfo.JoinType == JoinType.Right)
 				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null);
 

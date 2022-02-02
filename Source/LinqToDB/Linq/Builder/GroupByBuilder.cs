@@ -169,7 +169,7 @@ namespace LinqToDB.Linq.Builder
 			var currentPlaceholders = new List<SqlPlaceholderExpression>();
 			if (groupingKind != GroupingType.GroupBySets)
 			{
-				AppendGrouping(groupingSubquery, currentPlaceholders, builder, dataSequence, key.Body);
+				AppendGrouping(groupingSubquery, currentPlaceholders, builder, dataSequence, key.Body, buildInfo.GetFlags());
 			}
 			else
 			{
@@ -209,9 +209,9 @@ namespace LinqToDB.Linq.Builder
 		/// <param name="builder"></param>
 		/// <param name="onSequence">Context from which level we want to get groping SQL.</param>
 		/// <param name="path">Actual expression which should be translated to grouping keys.</param>
-		static void AppendGrouping(IBuildContext sequence, List<SqlPlaceholderExpression> currentPlaceholders, ExpressionBuilder builder, IBuildContext onSequence, Expression path)
+		static void AppendGrouping(IBuildContext sequence, List<SqlPlaceholderExpression> currentPlaceholders, ExpressionBuilder builder, IBuildContext onSequence, Expression path, ProjectFlags flags)
 		{
-			var groupSqlExpr = builder.ConvertToSqlExpr(onSequence, path, ProjectFlags.SQL | ProjectFlags.Keys);
+			var groupSqlExpr = builder.ConvertToSqlExpr(onSequence, path, flags | ProjectFlags.Keys);
 
 			// only keys
 			groupSqlExpr = builder.UpdateNesting(sequence, groupSqlExpr);
