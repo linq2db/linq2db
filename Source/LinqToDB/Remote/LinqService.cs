@@ -84,10 +84,7 @@ namespace LinqToDB.Remote
 
 		#region ExecuteNonQuery + ExecuteNonQueryAsync
 
-		/// <summary>
-		/// In case of change of the logic of this method, DO NOT FORGET
-		/// to change the sibling method.
-		/// </summary>
+		// In case of change of the logic of this method, DO NOT FORGET to change the sibling method.
 		public async Task<int> ExecuteNonQueryAsync(
 			string? configuration,
 			string queryData,
@@ -122,10 +119,7 @@ namespace LinqToDB.Remote
 			}
 		}
 
-		/// <summary>
-		/// In case of change of the logic of this method, DO NOT FORGET
-		/// to change the sibling method.
-		/// </summary>
+		// In case of change of the logic of this method, DO NOT FORGET to change the sibling method.
 		public int ExecuteNonQuery(string? configuration, string queryData)
 		{
 			try
@@ -155,10 +149,7 @@ namespace LinqToDB.Remote
 
 		#region ExecuteScalar + ExecuteScalarAsync
 
-		/// <summary>
-		/// In case of change of the logic of this method, DO NOT FORGET
-		/// to change the sibling method.
-		/// </summary>
+		// In case of change of the logic of this method, DO NOT FORGET to change the sibling method.
 		public async Task<string?> ExecuteScalarAsync(
 			string? configuration,
 			string queryData,
@@ -197,10 +188,7 @@ namespace LinqToDB.Remote
 			}
 		}
 
-		/// <summary>
-		/// In case of change of the logic of this method, DO NOT FORGET
-		/// to change the sibling method.
-		/// </summary>
+		// In case of change of the logic of this method, DO NOT FORGET to change the sibling method.
 		public string? ExecuteScalar(string? configuration, string queryData)
 		{
 			try
@@ -261,10 +249,7 @@ namespace LinqToDB.Remote
 
 		#region ExecuteReader + ExecuteReaderAsync
 
-		/// <summary>
-		/// In case of change of the logic of this method, DO NOT FORGET
-		/// to change the sibling method.
-		/// </summary>
+		// In case of change of the logic of this method, DO NOT FORGET to change the sibling method.
 		public async Task<string> ExecuteReaderAsync(
 			string? configuration,
 			string queryData,
@@ -303,10 +288,7 @@ namespace LinqToDB.Remote
 			}
 		}
 
-		/// <summary>
-		/// In case of change of the logic of this method, DO NOT FORGET
-		/// to change the sibling method.
-		/// </summary>
+		// In case of change of the logic of this method, DO NOT FORGET to change the sibling method.
 		public string ExecuteReader(string? configuration, string queryData)
 		{
 			try
