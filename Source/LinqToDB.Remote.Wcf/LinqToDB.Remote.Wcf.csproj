@@ -6,16 +6,12 @@
 		<RootNamespace>LinqToDB.Remote.WCF</RootNamespace>
 
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.remote.wcf.xml</DocumentationFile>
-		<TargetFrameworks>net472</TargetFrameworks>
+		<TargetFrameworks>net45</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
 	  <ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
 	</ItemGroup>
-
-	<PropertyGroup Condition=" '$(TargetFramework)' != 'net45' AND '$(TargetFramework)' != 'net46' ">
-		<DefineConstants>NATIVE_ASYNC;$(DefineConstants)</DefineConstants>
-	</PropertyGroup>
 
 	<ItemGroup>
 		<Reference Include="Microsoft.CSharp" />
@@ -26,6 +22,5 @@
 		<Reference Include="System.ServiceModel" />
 		<Reference Include="System.Web.Services" />
 		<Reference Include="System.ComponentModel.DataAnnotations" />
-		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
 	</ItemGroup>
 </Project>

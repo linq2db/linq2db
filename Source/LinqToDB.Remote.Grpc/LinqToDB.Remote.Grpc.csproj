@@ -6,7 +6,7 @@
 		<RootNamespace>LinqToDB.Remote.Grpc</RootNamespace>
 
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.remote.grpc.xml</DocumentationFile>
-		<TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
+		<TargetFrameworks>netcoreapp3.1</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>

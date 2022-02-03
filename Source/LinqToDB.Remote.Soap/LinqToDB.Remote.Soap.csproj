@@ -6,7 +6,7 @@
 		<RootNamespace>LinqToDB.Remote.Soap</RootNamespace>
 
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.remote.soap.xml</DocumentationFile>
-		<TargetFrameworks>net45;net46;net472;</TargetFrameworks>
+		<TargetFrameworks>net45;net472;</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -16,7 +16,6 @@
 	<PropertyGroup Condition=" '$(TargetFramework)' != 'net45' AND '$(TargetFramework)' != 'net46' ">
 		<DefineConstants>NATIVE_ASYNC;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
-
 
 	<ItemGroup>
 		<Reference Include="Microsoft.CSharp" />
