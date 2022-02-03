@@ -211,9 +211,8 @@ namespace LinqToDB.DataProvider
 		protected internal static string GetTableName<T>(ISqlBuilder sqlBuilder, BulkCopyOptions options, ITable<T> table, bool escaped = true)
 			where T : notnull
 		{
-			var sqlTable = new SqlTable
+			var sqlTable = new SqlTable(typeof(T), null)
 			{
-				ObjectType   = typeof(T),
 				Server       = options.ServerName   ?? table.ServerName,
 				Database     = options.DatabaseName ?? table.DatabaseName,
 				Schema       = options.SchemaName   ?? table.SchemaName,

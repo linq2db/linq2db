@@ -129,7 +129,7 @@ namespace LinqToDB.Common.Internal
 			builder.Append('>');
 		}
 
-		public static FieldInfo GetFieldInfo(this Type type, string fieldName)
+		public static FieldInfo? GetFieldInfo(this Type type, string fieldName)
 			=> type.GetRuntimeFields().FirstOrDefault(f => f.Name == fieldName && !f.IsStatic);
 
 		public static IEnumerable<string> GetNamespaces(this Type type)
@@ -230,7 +230,6 @@ namespace LinqToDB.Common.Internal
 				    || genericDefinition == typeof(Tuple<,,,,>)
 				    || genericDefinition == typeof(Tuple<,,,,,>)
 				    || genericDefinition == typeof(Tuple<,,,,,,>)
-				    || genericDefinition == typeof(Tuple<,,,,,,,>)
 				    || genericDefinition == typeof(Tuple<,,,,,,,>))
 				{
 					return true;

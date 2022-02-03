@@ -65,35 +65,35 @@ namespace Tests
 		object IDataRecord.this[string name] => throw new NotImplementedException();
 		object IDataRecord.this[int i      ] => throw new NotImplementedException();
 
-		void        IDataReader.Close          (                                                                    ) => throw new NotImplementedException();
-		DataTable   IDataReader.GetSchemaTable (                                                                    ) => throw new NotImplementedException();
-		bool        IDataReader.NextResult     (                                                                    ) => throw new NotImplementedException();
-		bool        IDataReader.Read           (                                                                    ) => throw new NotImplementedException();
+		void        IDataReader.Close          (                                                                     ) => throw new NotImplementedException();
+		DataTable   IDataReader.GetSchemaTable (                                                                     ) => throw new NotImplementedException();
+		bool        IDataReader.NextResult     (                                                                     ) => throw new NotImplementedException();
+		bool        IDataReader.Read           (                                                                     ) => throw new NotImplementedException();
 
-		bool        IDataRecord.GetBoolean     (int i                                                               ) => throw new NotImplementedException();
-		byte        IDataRecord.GetByte        (int i                                                               ) => throw new NotImplementedException();
-		long        IDataRecord.GetBytes       (int i, long fieldOffset, byte[] buffer, int bufferoffset, int length) => throw new NotImplementedException();
-		char        IDataRecord.GetChar        (int i                                                               ) => throw new NotImplementedException();
-		long        IDataRecord.GetChars       (int i, long fieldoffset, char[] buffer, int bufferoffset, int length) => throw new NotImplementedException();
-		IDataReader IDataRecord.GetData        (int i                                                               ) => throw new NotImplementedException();
-		string      IDataRecord.GetDataTypeName(int i                                                               ) => throw new NotImplementedException();
-		DateTime    IDataRecord.GetDateTime    (int i                                                               ) => throw new NotImplementedException();
-		decimal     IDataRecord.GetDecimal     (int i                                                               ) => throw new NotImplementedException();
-		double      IDataRecord.GetDouble      (int i                                                               ) => throw new NotImplementedException();
-		Type        IDataRecord.GetFieldType   (int i                                                               ) => throw new NotImplementedException();
-		float       IDataRecord.GetFloat       (int i                                                               ) => throw new NotImplementedException();
-		Guid        IDataRecord.GetGuid        (int i                                                               ) => throw new NotImplementedException();
-		short       IDataRecord.GetInt16       (int i                                                               ) => throw new NotImplementedException();
-		int         IDataRecord.GetInt32       (int i                                                               ) => throw new NotImplementedException();
-		long        IDataRecord.GetInt64       (int i                                                               ) => throw new NotImplementedException();
-		string      IDataRecord.GetName        (int i                                                               ) => throw new NotImplementedException();
-		int         IDataRecord.GetOrdinal     (string name                                                         ) => throw new NotImplementedException();
-		string      IDataRecord.GetString      (int i                                                               ) => throw new NotImplementedException();
-		object      IDataRecord.GetValue       (int i                                                               ) => throw new NotImplementedException();
-		int         IDataRecord.GetValues      (object[] values                                                     ) => throw new NotImplementedException();
-		bool        IDataRecord.IsDBNull       (int i                                                               ) => throw new NotImplementedException();
+		bool        IDataRecord.GetBoolean     (int i                                                                ) => throw new NotImplementedException();
+		byte        IDataRecord.GetByte        (int i                                                                ) => throw new NotImplementedException();
+		long        IDataRecord.GetBytes       (int i, long fieldOffset, byte[]? buffer, int bufferoffset, int length) => throw new NotImplementedException();
+		char        IDataRecord.GetChar        (int i                                                                ) => throw new NotImplementedException();
+		long        IDataRecord.GetChars       (int i, long fieldoffset, char[]? buffer, int bufferoffset, int length) => throw new NotImplementedException();
+		IDataReader IDataRecord.GetData        (int i                                                                ) => throw new NotImplementedException();
+		string      IDataRecord.GetDataTypeName(int i                                                                ) => throw new NotImplementedException();
+		DateTime    IDataRecord.GetDateTime    (int i                                                                ) => throw new NotImplementedException();
+		decimal     IDataRecord.GetDecimal     (int i                                                                ) => throw new NotImplementedException();
+		double      IDataRecord.GetDouble      (int i                                                                ) => throw new NotImplementedException();
+		Type        IDataRecord.GetFieldType   (int i                                                                ) => throw new NotImplementedException();
+		float       IDataRecord.GetFloat       (int i                                                                ) => throw new NotImplementedException();
+		Guid        IDataRecord.GetGuid        (int i                                                                ) => throw new NotImplementedException();
+		short       IDataRecord.GetInt16       (int i                                                                ) => throw new NotImplementedException();
+		int         IDataRecord.GetInt32       (int i                                                                ) => throw new NotImplementedException();
+		long        IDataRecord.GetInt64       (int i                                                                ) => throw new NotImplementedException();
+		string      IDataRecord.GetName        (int i                                                                ) => throw new NotImplementedException();
+		int         IDataRecord.GetOrdinal     (string name                                                          ) => throw new NotImplementedException();
+		string      IDataRecord.GetString      (int i                                                                ) => throw new NotImplementedException();
+		object      IDataRecord.GetValue       (int i                                                                ) => throw new NotImplementedException();
+		int         IDataRecord.GetValues      (object[] values                                                      ) => throw new NotImplementedException();
+		bool        IDataRecord.IsDBNull       (int i                                                                ) => throw new NotImplementedException();
 
-		void        IDisposable.Dispose        (                                                                    ) => throw new NotImplementedException();
+		void        IDisposable.Dispose        (                                                                     ) => throw new NotImplementedException();
 	}
 
 	internal class TestNoopDbCommand : DbCommand
@@ -236,14 +236,14 @@ namespace Tests
 
 	internal class TestNoopDbParameterCollection : DbParameterCollection
 	{
-		private List<TestNoopDbParameter> _parameters = new List<TestNoopDbParameter>();
+		private List<TestNoopDbParameter> _parameters = new ();
 
 		public override int Count => _parameters.Count;
 
-		public override bool IsFixedSize => throw new NotImplementedException();
-		public override bool IsReadOnly => throw new NotImplementedException();
-		public override bool IsSynchronized => throw new NotImplementedException();
-		public override object SyncRoot => throw new NotImplementedException();
+		public override bool   IsFixedSize    => throw new NotImplementedException();
+		public override bool   IsReadOnly     => throw new NotImplementedException();
+		public override bool   IsSynchronized => throw new NotImplementedException();
+		public override object SyncRoot       => throw new NotImplementedException();
 
 		public override int Add(object value)
 		{

@@ -22,7 +22,7 @@ namespace LinqToDB.Tools.Comparers
 			if (obj == null)
 				return 0;
 
-			return obj.Aggregate(0, (acc, val) => acc ^ _elementComparer.GetHashCode(val));
+			return obj.Aggregate(0, (acc, val) => acc ^ _elementComparer.GetHashCode(val!));
 		}
 
 		public override bool Equals(T[]? x, T[]? y)

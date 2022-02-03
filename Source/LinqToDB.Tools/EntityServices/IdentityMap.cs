@@ -8,8 +8,6 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Tools.EntityServices
 {
-	using System.Diagnostics.CodeAnalysis;
-
 	[PublicAPI]
 	public class IdentityMap : IDisposable
 	{
@@ -20,13 +18,13 @@ namespace LinqToDB.Tools.EntityServices
 		}
 
 		readonly IDataContext                          _dataContext;
-		readonly ConcurrentDictionary<Type,IEntityMap> _entityMapDic = new ConcurrentDictionary<Type,IEntityMap>();
+		readonly ConcurrentDictionary<Type,IEntityMap> _entityMapDic = new ();
 
 		IEntityMap GetOrAddEntityMap(Type entityType)
 		{
 			return _entityMapDic.GetOrAdd(
 				entityType,
-				key => (IEntityMap)Activator.CreateInstance(typeof(EntityMap<>).MakeGenericType(key), _dataContext));
+				key => (IEntityMap)Activator.CreateInstance(typeof(EntityMap<>).MakeGenericType(key), _dataContext)!);
 		}
 
 		void OnEntityCreated(EntityCreatedEventArgs args)
