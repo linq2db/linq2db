@@ -7,8 +7,8 @@
 			"SqlServer.Contained"
 			// uncomment when FEC issues fixed
 			//"SqlServer.2019.FEC",
-			// FTS not awailable in default images, need to use custom one
-			//"Northwind", 
+			// FTS not available in default images, need to use custom one
+			//"Northwind",
 		],
 		"Connections": {
 			"SqlServer": {

@@ -35,9 +35,9 @@ namespace LinqToDB.SqlProvider
 
 		public virtual SqlStatement Finalize(SqlStatement statement)
 		{
+			FixRootSelect (statement);
 			FixEmptySelect(statement);
-
-			FinalizeCte(statement);
+			FinalizeCte   (statement);
 
 			var evaluationContext = new EvaluationContext(null);
 
@@ -195,6 +195,55 @@ namespace LinqToDB.SqlProvider
 			return statement;
 		}
 
+		bool FixRootSelect(SqlStatement statement)
+		{
+			if (statement.SelectQuery is {} query         &&
+				query.Select.HasModifier == false         &&
+				query.DoNotRemove        == false         &&
+				query.QueryName is null                   &&
+				query.Where.  IsEmpty                     &&
+				query.GroupBy.IsEmpty                     &&
+				query.Having. IsEmpty                     &&
+				query.OrderBy.IsEmpty                     &&
+				query.From.Tables is { Count : 1 } tables &&
+				tables[0].Source  is SelectQuery   child  &&
+				tables[0].Joins.Count      == 0           &&
+				child.DoNotRemove          == false       &&
+				query.Select.Columns.Count == child.Select.Columns.Count)
+			{
+				for (var i = 0; i < query.Select.Columns.Count; i++)
+				{
+					var pc = query.Select.Columns[i];
+					var cc = child.Select.Columns[i];
+
+					if (pc.Expression != cc)
+						return false;
+				}
+
+				if (statement is SqlSelectStatement)
+				{
+					if (statement.SelectQuery.SqlQueryExtensions != null)
+						(child.SqlQueryExtensions ??= new()).AddRange(statement.SelectQuery.SqlQueryExtensions);
+					statement.SelectQuery = child;
+				}
+				else
+				{
+					var dic = new Dictionary<ISqlExpression,ISqlExpression>(query.Select.Columns.Count + 1)
+					{
+						{ statement.SelectQuery, child }
+					};
+
+					foreach (var pc in query.Select.Columns)
+						dic.Add(pc, pc.Expression);
+
+					statement.Walk(WalkOptions.Default, dic, static (d, ex) => d.TryGetValue(ex, out var e) ? e : ex);
+				}
+
+				return true;
+			}
+
+			return false;
+		}
 
 		protected virtual void FixEmptySelect(SqlStatement statement)
 		{
@@ -307,7 +356,7 @@ namespace LinqToDB.SqlProvider
 			return hasParameters;
 		}
 
-		static T NormalizeExpressions<T>(T expression, bool allowMutation) 
+		static T NormalizeExpressions<T>(T expression, bool allowMutation)
 			where T : class, IQueryElement
 		{
 			var result = expression.ConvertAll(allowMutation: allowMutation, static (visitor, e) =>
@@ -455,7 +504,7 @@ namespace LinqToDB.SqlProvider
 							};
 						}))
 							continue;
-						
+
 						ctx.Modified = false;
 
 						var nc = cond.ConvertAll(ctx, true, static (v, e) =>
@@ -478,7 +527,7 @@ namespace LinqToDB.SqlProvider
 
 									break;
 								}
-								
+
 								case QueryElementType.Column:
 								{
 									var column = (SqlColumn)e;
@@ -653,7 +702,7 @@ namespace LinqToDB.SqlProvider
 							var nc = cond.ConvertAll(ctx, true, static (v, e) =>
 							{
 								var ne = e;
-								
+
 								switch (e.ElementType)
 								{
 									case QueryElementType.SqlField:
@@ -822,7 +871,7 @@ namespace LinqToDB.SqlProvider
 			{
 				return CreateSqlValue(value, func.GetExpressionType(), func.Parameters);
 			}
-			
+
 			switch (func.Name)
 			{
 				case "CASE":
@@ -972,7 +1021,7 @@ namespace LinqToDB.SqlProvider
 							return new SqlPredicate.NotExpr(sc, true, Precedence.LogicalNegation);
 						return sc;
 					}
-				}				
+				}
 			}
 			return isTrue;
 		}
@@ -988,7 +1037,7 @@ namespace LinqToDB.SqlProvider
 			{
 				func = expr.Expr1 as SqlFunction;
 				isValue = expr.Expr2.TryEvaluateExpression(context, out value);
-			}	
+			}
 
 			if (isValue && func != null && func.Name == "CASE")
 			{
@@ -1021,7 +1070,7 @@ namespace LinqToDB.SqlProvider
 									if (n1 == 1) return ee1;
 									if (n2 == 1) return ee2;
 
-									return 
+									return
 										new SqlPredicate.ExprExpr(
 											ee1.Expr1,
 											e == 0 ? SqlPredicate.Operator.Equal :
@@ -1099,7 +1148,7 @@ namespace LinqToDB.SqlProvider
 				var newExpr = expr switch
 				{
 					(SqlBinaryExpression binary, var op, var v, _) when v.CanBeEvaluated(context) =>
-				
+
 						// binary < v
 						binary switch
 						{
@@ -1117,7 +1166,7 @@ namespace LinqToDB.SqlProvider
 						},
 
 					(var v, var op, SqlBinaryExpression binary, _) when v.CanBeEvaluated(context) =>
-				
+
 						// v < binary
 						binary switch
 						{
@@ -1211,8 +1260,8 @@ namespace LinqToDB.SqlProvider
 
 								return transformed;
 							}
-						}							
-							
+						}
+
 						if (expr.Expr1 is ISqlPredicate)
 						{
 							var boolValue2 = QueryHelper.GetBoolValue(expr.Expr2, context);
@@ -1304,6 +1353,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 		private readonly SqlDataType _typeWrapper = new (default(DbDataType));
+
 		public virtual IQueryElement OptimizeQueryElement(ConvertVisitor<RunOptimizationContext> visitor, IQueryElement element)
 		{
 			switch (element.ElementType)
@@ -1318,6 +1368,10 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.SqlValue:
 				{
 					var value = (SqlValue)element;
+
+					if (value.Value is Sql.SqlID)
+						break;
+
 					if (visitor.Context.MappingSchema != null)
 					{
 						// TODO:
@@ -1325,6 +1379,7 @@ namespace LinqToDB.SqlProvider
 						// as currently we cannot change ValueConverter signatures, we use pre-created instance of type wrapper
 						//var dataType = new SqlDataType(value.ValueType);
 						_typeWrapper.Type = value.ValueType;
+
 						if (!visitor.Context.MappingSchema.ValueToSqlConverter.CanConvert(_typeWrapper, value.Value))
 						{
 							// we cannot generate SQL literal, so just convert to parameter
@@ -1803,7 +1858,7 @@ namespace LinqToDB.SqlProvider
 						{
 							visitor.CurrentElement = expr;
 							return false;
-						}	
+						}
 						return true;
 					});
 
@@ -1844,7 +1899,7 @@ namespace LinqToDB.SqlProvider
 			{
 				if (mappingSchema == null)
 					throw new InvalidOperationException("MappingSchema is required for conversion");
-				
+
 				newElement = RunOptimization(newElement, optimizationContext, this, mappingSchema, true,
 					static(visitor, e) =>
 					{
@@ -1893,7 +1948,7 @@ namespace LinqToDB.SqlProvider
 
 						return new SqlPredicate.ExprExpr(expr1, exprExpr.Operator, expr2, exprExpr.WithNull);
 					}
-					
+
 					break;
 				}
 				case QueryElementType.IsTruePredicate:
@@ -2538,7 +2593,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 		/// <summary>
-		/// Corrects situation when update table is located in JOIN clause. 
+		/// Corrects situation when update table is located in JOIN clause.
 		/// Usually it is generated by associations.
 		/// </summary>
 		/// <param name="statement">Statement to examine.</param>
@@ -2797,7 +2852,7 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.ExprPredicate:
 				{
 					var exprExpr = (SqlPredicate.Expr)element;
-					
+
 					if (exprExpr.Expr1.IsMutable())
 						return true;
 					return false;
@@ -3044,7 +3099,7 @@ namespace LinqToDB.SqlProvider
 			return QueryHelper.WrapQuery(
 				(predicate, context, supportsEmptyOrderBy),
 				statement,
-				static (context, query, _) => 
+				static (context, query, _) =>
 				{
 					if ((query.Select.TakeValue == null || query.Select.TakeHints != null) && query.Select.SkipValue == null)
 						return 0;
@@ -3105,7 +3160,7 @@ namespace LinqToDB.SqlProvider
 					query.Select.SkipValue = null;
 					query.Select.Take(null, null);
 
-				}, 
+				},
 				allowMutation: true,
 				withStack: false);
 		}
@@ -3130,9 +3185,9 @@ namespace LinqToDB.SqlProvider
 					var projectionItemsCount = columnItems.Union(orderItems).Count();
 					if (projectionItemsCount < columnItems.Count)
 					{
-						// Sort columns not in projection, transforming to 
+						// Sort columns not in projection, transforming to
 						/*
-							 SELECT {S.columnItems}, S.RN FROM 
+							 SELECT {S.columnItems}, S.RN FROM
 							 (
 								  SELECT {columnItems + orderItems}, RN = ROW_NUMBER() OVER (PARTITION BY {columnItems} ORDER BY {orderItems}) FROM T
 							 )
@@ -3171,9 +3226,9 @@ namespace LinqToDB.SqlProvider
 					}
 					else
 					{
-						// All sorting columns in projection, transforming to 
+						// All sorting columns in projection, transforming to
 						/*
-							 SELECT {S.columnItems} FROM 
+							 SELECT {S.columnItems} FROM
 							 (
 								  SELECT DISTINCT {columnItems} FROM T
 							 )
@@ -3200,7 +3255,7 @@ namespace LinqToDB.SqlProvider
 
 			return expr;
 		}
-		
+
 		protected static bool IsBooleanParameter(ISqlExpression expr, int count, int i)
 		{
 			if ((i % 2 == 1 || i == count - 1) && expr.SystemType == typeof(bool) || expr.SystemType == typeof(bool?))

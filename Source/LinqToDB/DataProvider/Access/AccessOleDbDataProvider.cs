@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
+
 using OleDbType = LinqToDB.DataProvider.OleDbProviderAdapter.OleDbType;
 
 namespace LinqToDB.DataProvider.Access
@@ -16,13 +17,7 @@ namespace LinqToDB.DataProvider.Access
 
 	public class AccessOleDbDataProvider : DynamicDataProviderBase<OleDbProviderAdapter>
 	{
-		public AccessOleDbDataProvider()
-			: this(ProviderName.Access, MappingSchemaInstance)
-		{
-		}
-
-		protected AccessOleDbDataProvider(string name, MappingSchema mappingSchema)
-			: base(name, mappingSchema, OleDbProviderAdapter.GetInstance())
+		public AccessOleDbDataProvider() : base(ProviderName.Access, MappingSchemaInstance, OleDbProviderAdapter.GetInstance())
 		{
 			SqlProviderFlags.AcceptsTakeAsParameter           = false;
 			SqlProviderFlags.IsSkipSupported                  = false;

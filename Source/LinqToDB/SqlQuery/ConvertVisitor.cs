@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using LinqToDB.ServiceModel;
 
 namespace LinqToDB.SqlQuery
 {
@@ -912,8 +913,7 @@ namespace LinqToDB.SqlQuery
 
 					case QueryElementType.SqlQuery:
 					{
-						var q = (SelectQuery)element;
-
+						var q  = (SelectQuery)element;
 						var fc = (SqlFromClause?)   ConvertInternal(q.From   ) ?? q.From;
 						var sc = (SqlSelectClause?) ConvertInternal(q.Select ) ?? q.Select;
 						var wc = (SqlWhereClause?)  ConvertInternal(q.Where  ) ?? q.Where;
@@ -923,6 +923,7 @@ namespace LinqToDB.SqlQuery
 						var us = q.HasSetOperators ?Convert(q.SetOperators)     : q.SetOperators;
 
 						List<ISqlExpression[]>? uk = null;
+
 						if (q.HasUniqueKeys)
 							uk = ConvertListArray(q.UniqueKeys, null) ?? q.UniqueKeys;
 
@@ -995,7 +996,8 @@ namespace LinqToDB.SqlQuery
 
 							nq.Init(sc, fc, wc, gc, hc, oc, us, uk,
 								q.ParentSelect,
-								q.IsParameterDependent);
+								q.IsParameterDependent,
+								q.QueryName);
 
 							// update visited in case if columns were cloned
 							if (objTree != null)
@@ -1004,6 +1006,7 @@ namespace LinqToDB.SqlQuery
 
 							newElement = nq;
 						}
+
 						break;
 					}
 
@@ -1359,6 +1362,26 @@ namespace LinqToDB.SqlQuery
 
 					default:
 						throw new InvalidOperationException($"Convert visitor not implemented for element {element.ElementType}");
+				}
+
+				if (element != newElement && element is IQueryExtendible { SqlQueryExtensions: { Count: > 0 } } qe && newElement is IQueryExtendible ne)
+				{
+					ne.SqlQueryExtensions = new(qe.SqlQueryExtensions.Count);
+
+					foreach (var item in qe.SqlQueryExtensions)
+					{
+						var ext = new SqlQueryExtension
+						{
+							Configuration = item.Configuration,
+							Scope         = item.Scope,
+							BuilderType   = item.BuilderType,
+						};
+
+						foreach (var arg in item.Arguments)
+							ext.Arguments.Add(arg.Key, (ISqlExpression)ConvertInternal(arg.Value));
+
+						ne.SqlQueryExtensions.Add(ext);
+					}
 				}
 			}
 			Pop();

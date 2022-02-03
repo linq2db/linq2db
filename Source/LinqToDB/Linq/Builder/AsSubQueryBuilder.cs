@@ -10,13 +10,17 @@ namespace LinqToDB.Linq.Builder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("AsSubQuery");
+			return methodCall.IsQueryable(nameof(LinqExtensions.AsSubQuery));
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+
 			sequence.SelectQuery.DoNotRemove = true;
+
+			if (methodCall.Arguments.Count > 1)
+				sequence.SelectQuery.QueryName = (string?)methodCall.Arguments[1].EvaluateExpression();
 
 			var elementType = methodCall.Arguments[0].Type.GetGenericArguments()[0];
 			if (typeof(IGrouping<,>).IsSameOrParentOf(elementType))
@@ -30,16 +34,10 @@ namespace LinqToDB.Linq.Builder
 				sequence = new SubQueryContext(sequence);
 				sequence = new SelectContext(buildInfo.Parent, lambda, sequence);
 			}
-			else 
+			else
 				sequence = new SubQueryContext(sequence);
-			
-			return sequence;
-		}
 
-		protected override SequenceConvertInfo? Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo,
-			ParameterExpression? param)
-		{
-			return null;
+			return sequence;
 		}
 	}
 }

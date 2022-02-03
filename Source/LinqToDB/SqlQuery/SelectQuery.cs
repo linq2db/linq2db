@@ -7,8 +7,10 @@ using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
+	using ServiceModel;
+
 	[DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
-	public class SelectQuery : ISqlTableSource
+	public class SelectQuery : ISqlTableSource, IQueryExtendible
 	{
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		protected string DebugSqlText => SqlText;
@@ -19,12 +21,12 @@ namespace LinqToDB.SqlQuery
 		{
 			SourceID = Interlocked.Increment(ref SourceIDCounter);
 
-			Select  = new SqlSelectClause (this);
-			From    = new SqlFromClause   (this);
-			Where   = new SqlWhereClause  (this);
-			GroupBy = new SqlGroupByClause(this);
-			Having  = new SqlWhereClause  (this);
-			OrderBy = new SqlOrderByClause(this);
+			Select  = new(this);
+			From    = new(this);
+			Where   = new(this);
+			GroupBy = new(this);
+			Having  = new(this);
+			OrderBy = new(this);
 		}
 
 		internal SelectQuery(int id)
@@ -39,10 +41,11 @@ namespace LinqToDB.SqlQuery
 			SqlGroupByClause        groupBy,
 			SqlWhereClause          having,
 			SqlOrderByClause        orderBy,
-			List<SqlSetOperator>?   setOparators,
+			List<SqlSetOperator>?   setOperators,
 			List<ISqlExpression[]>? uniqueKeys,
 			SelectQuery?            parentSelect,
-			bool                    parameterDependent)
+			bool                    parameterDependent,
+			string?                 queryName)
 		{
 			Select               = select;
 			From                 = from;
@@ -50,9 +53,10 @@ namespace LinqToDB.SqlQuery
 			GroupBy              = groupBy;
 			Having               = having;
 			OrderBy              = orderBy;
-			_setOperators        = setOparators;
+			_setOperators        = setOperators;
 			ParentSelect         = parentSelect;
 			IsParameterDependent = parameterDependent;
+			QueryName            = queryName;
 
 			if (uniqueKeys != null)
 				UniqueKeys.AddRange(uniqueKeys);
@@ -75,17 +79,19 @@ namespace LinqToDB.SqlQuery
 		public SqlWhereClause   Having  { get; internal set; } = null!;
 		public SqlOrderByClause OrderBy { get; internal set; } = null!;
 
-		private List<object>? _properties;
-		public  List<object>   Properties => _properties ??= new List<object>();
+		private List<object>?   _properties;
+		public  List<object>    Properties => _properties ??= new List<object>();
 
-		public SelectQuery?   ParentSelect         { get; set; }
-		public bool           IsSimple => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty && !HasSetOperators;
-		public bool           IsParameterDependent { get; set; }
+		public SelectQuery?     ParentSelect         { get; set; }
+		public bool             IsSimple => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty && !HasSetOperators;
+		public bool             IsParameterDependent { get; set; }
 
 		/// <summary>
 		/// Gets or sets flag when sub-query can be removed during optimization.
 		/// </summary>
-		public bool               DoNotRemove         { get; set; }
+		public bool                     DoNotRemove        { get; set; }
+		public string?                  QueryName          { get; set; }
+		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }
 
 		private List<ISqlExpression[]>? _uniqueKeys;
 
@@ -103,9 +109,8 @@ namespace LinqToDB.SqlQuery
 		#region Union
 
 		private List<SqlSetOperator>? _setOperators;
-		public  List<SqlSetOperator>   SetOperators => _setOperators ??= new List<SqlSetOperator>();
-
-		public  bool            HasSetOperators    => _setOperators != null && _setOperators.Count > 0;
+		public  List<SqlSetOperator>   SetOperators    => _setOperators ??= new List<SqlSetOperator>();
+		public  bool                   HasSetOperators => _setOperators != null && _setOperators.Count > 0;
 
 		public void AddUnion(SelectQuery union, bool isAll)
 		{
@@ -178,7 +183,6 @@ namespace LinqToDB.SqlQuery
 
 		public bool CanBeNull => true;
 		public int Precedence => SqlQuery.Precedence.Unknown;
-
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
@@ -256,7 +260,7 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		List<ISqlExpression>? _keys;
+		List<ISqlExpression>?    _keys;
 
 		public IList<ISqlExpression> GetKeys(bool allIfEmpty)
 		{

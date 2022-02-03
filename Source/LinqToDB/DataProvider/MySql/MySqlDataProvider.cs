@@ -12,6 +12,9 @@ namespace LinqToDB.DataProvider.MySql
 	using Mapping;
 	using SqlProvider;
 
+	class MySqlDataProviderMySqlOfficial  : MySqlDataProvider { public MySqlDataProviderMySqlOfficial()  : base(ProviderName.MySqlOfficial)  {} }
+	class MySqlDataProviderMySqlConnector : MySqlDataProvider { public MySqlDataProviderMySqlConnector() : base(ProviderName.MySqlConnector) {} }
+
 	public class MySqlDataProvider : DynamicDataProviderBase<MySqlProviderAdapter>
 	{
 		public MySqlDataProvider(string name)
@@ -32,6 +35,7 @@ namespace LinqToDB.DataProvider.MySql
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
+			SqlProviderFlags.IsNamingQueryBlockSupported       = true;
 
 			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
 

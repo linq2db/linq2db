@@ -13,12 +13,17 @@ namespace LinqToDB.DataProvider.Oracle
 	using Mapping;
 	using SqlProvider;
 
+	class OracleDataProviderNative11  : OracleDataProvider { public OracleDataProviderNative11()  : base(ProviderName.OracleNative,  OracleVersion.v11) {} }
+	class OracleDataProviderNative12  : OracleDataProvider { public OracleDataProviderNative12()  : base(ProviderName.OracleNative,  OracleVersion.v12) {} }
+	class OracleDataProviderManaged11 : OracleDataProvider { public OracleDataProviderManaged11() : base(ProviderName.OracleManaged, OracleVersion.v11) {} }
+	class OracleDataProviderManaged12 : OracleDataProvider { public OracleDataProviderManaged12() : base(ProviderName.OracleManaged, OracleVersion.v12) {} }
+
 	public class OracleDataProvider : DynamicDataProviderBase<OracleProviderAdapter>
 	{
-		public OracleDataProvider(string name) : this(name, OracleVersion.v12)
-		{ }
+		protected internal OracleDataProvider(string name) : this(name, OracleVersion.v12)
+		{}
 
-		public OracleDataProvider(string name, OracleVersion version)
+		protected internal OracleDataProvider(string name, OracleVersion version)
 			: base(
 				name,
 				GetMappingSchema(name, OracleProviderAdapter.GetInstance(name).MappingSchema),
@@ -33,6 +38,7 @@ namespace LinqToDB.DataProvider.Oracle
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.ReadCommitted;
+			SqlProviderFlags.IsNamingQueryBlockSupported       = true;
 
 			if (version >= OracleVersion.v12)
 			{

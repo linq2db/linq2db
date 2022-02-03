@@ -15,12 +15,11 @@ namespace LinqToDB.DataProvider.Firebird
 
 	public class FirebirdDataProvider : DynamicDataProviderBase<FirebirdProviderAdapter>
 	{
-		public FirebirdDataProvider()
-			: this(ProviderName.Firebird, null, null)
+		public FirebirdDataProvider() : this(ProviderName.Firebird, null, null)
 		{
 		}
 
-		public FirebirdDataProvider(ISqlOptimizer sqlOptimizer)
+		protected internal FirebirdDataProvider(ISqlOptimizer sqlOptimizer)
 			: this(ProviderName.Firebird, null, sqlOptimizer)
 		{
 		}

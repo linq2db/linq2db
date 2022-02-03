@@ -31,7 +31,7 @@ namespace LinqToDB.Linq.Builder
 			SetOperation setOperation;
 			switch (methodCall.Method.Name)
 			{
-				case "Concat"       : 
+				case "Concat"       :
 				case "UnionAll"     : setOperation = SetOperation.UnionAll;     break;
 				case "Union"        : setOperation = SetOperation.Union;        break;
 				case "Except"       : setOperation = SetOperation.Except;       break;
@@ -93,12 +93,6 @@ namespace LinqToDB.Linq.Builder
 			set1.SelectQuery.SetOperators.Add(setOperator);
 
 			return new SetOperationContext(set1, set2, methodCall);
-		}
-
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
 		}
 
 		#endregion

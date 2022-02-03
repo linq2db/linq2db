@@ -6,6 +6,11 @@ namespace LinqToDB.Linq.Builder
 {
 	class TagQueryBuilder : MethodCallBuilder
 	{
+		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		{
+			return methodCall.IsQueryable(nameof(LinqExtensions.TagQuery));
+		}
+
 		private static readonly char[] NewLine = new[] { '\r', '\n' };
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -21,16 +26,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return sequence;
-		}
-
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsQueryable(nameof(LinqExtensions.TagQuery));
-		}
-
-		protected override SequenceConvertInfo? Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
 		}
 	}
 }

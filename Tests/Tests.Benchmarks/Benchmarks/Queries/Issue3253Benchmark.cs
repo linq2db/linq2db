@@ -4,7 +4,7 @@ using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
-using LinqToDB.Benchmarks.Mappings;
+
 using LinqToDB.Benchmarks.TestProvider;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SQLite;
@@ -24,7 +24,7 @@ namespace LinqToDB.Benchmarks.Queries
 		public void Setup()
 		{
 			_cn = new MockDbConnection(new QueryResult() { Return = 1 }, ConnectionState.Open);
-			_db = new DataConnection(new SQLiteDataProvider(ProviderName.SQLiteMS), _cn);
+			_db = new DataConnection(SQLiteTools.GetDataProvider(ProviderName.SQLiteMS), _cn);
 
 			_compiledInsert = CompiledQuery.Compile<DataConnection, string, string, string, decimal, decimal, int>((ctx, key, value1, value2, value3, value4) =>
 				ctx.GetTable<TESTTABLE>()

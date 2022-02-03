@@ -85,6 +85,7 @@ namespace Tests
 		public const string AllSqlServer2012Plus   = "SqlServer.2012,SqlServer.2014,SqlServer.2017,SqlServer.2019,SqlServer.2019.SA,SqlServer.2019.FEC,SqlServer.Contained,SqlAzure";
 		public const string AllSqlServer2016Plus   = "SqlServer.2016,SqlServer.2017,SqlServer.2019,SqlServer.2019.SA,SqlServer.2019.FEC,SqlServer.Contained,SqlAzure";
 		public const string AllSqlServer2017Plus   = "SqlServer.2017,SqlServer.2019,SqlServer.2019.SA,SqlServer.2019.FEC,SqlServer.Contained,SqlAzure";
+		public const string AllSqlServer2019Plus   = "SqlServer.2019,SqlServer.2019.SA,SqlServer.2019.FEC,SqlAzure";
 		public const string AllSQLiteNorthwind     = "Northwind.SQLite,Northwind.SQLite.MS";
 		public const string AllSapHana             = "SapHana.Native,SapHana.Odbc";
 		public const string AllInformix            = ProviderName.Informix + "," + ProviderName.InformixDB2;

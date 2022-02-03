@@ -49,6 +49,9 @@ namespace LinqToDB.Expressions
 			if (includingArrays && type.IsArray)
 				return type.GetElementType()!.IsConstantable(includingArrays);
 
+			if (type == typeof(Sql.SqlID))
+				return true;
+
 			return false;
 		}
 
@@ -159,7 +162,7 @@ namespace LinqToDB.Expressions
 					break;
 				}
 			}
-			
+
 			return expr;
 		}
 
@@ -558,7 +561,7 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Convert:
 				case ExpressionType.ConvertChecked:
 					{
-						var unary = (UnaryExpression)expr;
+						var unary   = (UnaryExpression)expr;
 						var operand = unary.Operand.EvaluateExpression();
 						if (operand == null)
 							return null;
@@ -584,9 +587,10 @@ namespace LinqToDB.Expressions
 							}
 							return propertyInfo.GetValue(obj, null);
 						}
-						
+
 						break;
 					}
+
 				case ExpressionType.Call:
 					{
 						var mc = (MethodCallExpression)expr;
@@ -595,7 +599,7 @@ namespace LinqToDB.Expressions
 
 						if (instance == null && mc.Method.IsNullableGetValueOrDefault())
 							return null;
-						
+
 						return mc.Method.Invoke(instance, arguments);
 					}
 			}
@@ -606,16 +610,17 @@ namespace LinqToDB.Expressions
 
 		public static Expression? GetArgumentByName(this MethodCallExpression methodCall, string parameterName)
 		{
-			var arguments = methodCall.Arguments;
+			var arguments  = methodCall.Arguments;
 			var parameters = methodCall.Method.GetParameters();
-			for (int i = 0; i < parameters.Length; i++)
+
+			for (var i = 0; i < parameters.Length; i++)
 				if (parameters[i].Name == parameterName)
 					return arguments[i];
+
 			return default;
 		}
 
 		#endregion
-
 
 		public static bool IsEvaluable(this Expression? expression)
 		{
@@ -689,7 +694,7 @@ namespace LinqToDB.Expressions
 						newExpr = Expression.Constant(EvaluateExpression(unary));
 						break;
 					}
-					case MemberExpression me when me.Expression?.NodeType == ExpressionType.Constant:
+					case MemberExpression { Expression: { NodeType: ExpressionType.Constant }} me:
 					{
 						newExpr = Expression.Constant(EvaluateExpression(me));
 						break;
@@ -699,7 +704,7 @@ namespace LinqToDB.Expressions
 						newExpr = Expression.Constant(EvaluateExpression(be));
 						break;
 					}
-					case BinaryExpression be when be.NodeType == ExpressionType.AndAlso:
+					case BinaryExpression { NodeType: ExpressionType.AndAlso } be:
 					{
 						if (IsEvaluable(be.Left))
 						{
@@ -720,7 +725,7 @@ namespace LinqToDB.Expressions
 
 						break;
 					}
-					case BinaryExpression be when be.NodeType == ExpressionType.OrElse:
+					case BinaryExpression { NodeType: ExpressionType.OrElse } be:
 					{
 						if (IsEvaluable(be.Left))
 						{

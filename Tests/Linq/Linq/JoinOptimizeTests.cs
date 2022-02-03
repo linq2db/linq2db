@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Diagnostics;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -626,10 +627,11 @@ namespace Tests.Linq
 		{
 			using (var db = new NorthwindDB(context))
 			{
-				var query = from p in db.GetTable<AdressEntity>().With("NOLOCK")
-						 join a in db.GetTable<AdressEntity>().With("READUNCOMMITTED")
-						 on p.Id equals a.Id //PK column
-						 select p;
+				var query =
+					from p in db.GetTable<AdressEntity>().With("NOLOCK")
+					join a in db.GetTable<AdressEntity>().With("READUNCOMMITTED")
+					on p.Id equals a.Id //PK column
+					select p;
 
 				Assert.AreEqual(1, query.GetTableSource().Joins.Count);
 			}

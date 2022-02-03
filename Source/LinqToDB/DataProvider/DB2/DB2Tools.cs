@@ -14,23 +14,8 @@ namespace LinqToDB.DataProvider.DB2
 	[PublicAPI]
 	public static class DB2Tools
 	{
-		private static readonly Lazy<IDataProvider> _db2DataProviderzOS = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new DB2DataProvider(ProviderName.DB2zOS, DB2Version.zOS);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
-
-		private static readonly Lazy<IDataProvider> _db2DataProviderLUW = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new DB2DataProvider(ProviderName.DB2LUW, DB2Version.LUW);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
+		static readonly Lazy<IDataProvider> _db2DataProviderzOS = DataConnection.CreateDataProvider<DB2zOSDataProvider>();
+		static readonly Lazy<IDataProvider> _db2DataProviderLUW = DataConnection.CreateDataProvider<DB2LUWDataProvider>();
 
 		public static bool AutoDetectProvider { get; set; } = true;
 

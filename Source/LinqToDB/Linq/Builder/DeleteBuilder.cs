@@ -115,12 +115,6 @@ namespace LinqToDB.Linq.Builder
 			return new DeleteContext(buildInfo.Parent, sequence);
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
 		class DeleteContext : SequenceContextBase
 		{
 			public enum DeleteType

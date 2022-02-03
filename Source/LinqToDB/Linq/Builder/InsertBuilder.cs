@@ -180,7 +180,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (insertType == InsertContext.InsertType.InsertOutput || insertType == InsertContext.InsertType.InsertOutputInto)
 				{
-					outputExpression = 
+					outputExpression =
 						(LambdaExpression?)methodCall.GetArgumentByName("outputExpression")?.Unwrap()
 						?? BuildDefaultOutputExpression(methodCall.Method.GetGenericArguments().Last());
 
@@ -238,12 +238,6 @@ namespace LinqToDB.Linq.Builder
 				return new InsertWithOutputContext(buildInfo.Parent, sequence, outputContext!, outputExpression!);
 
 			return new InsertContext(buildInfo.Parent, sequence, insertType, outputExpression);
-		}
-
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
 		}
 
 		#endregion
@@ -431,12 +425,6 @@ namespace LinqToDB.Linq.Builder
 
 				return sequence;
 			}
-
-			protected override SequenceConvertInfo? Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-			{
-				return null;
-			}
 		}
 
 		#endregion
@@ -480,7 +468,7 @@ namespace LinqToDB.Linq.Builder
 						sequence,
 						insertStatement.Insert.Into,
 						insertStatement.Insert.Items);
-				}				
+				}
 				else
 					UpdateBuilder.ParseSet(
 						builder,
@@ -493,12 +481,6 @@ namespace LinqToDB.Linq.Builder
 				insertStatement.Insert.Items.RemoveDuplicatesFromTail((s1, s2) => s1.Column.Equals(s2.Column));
 
 				return sequence;
-			}
-
-			protected override SequenceConvertInfo? Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-			{
-				return null;
 			}
 		}
 

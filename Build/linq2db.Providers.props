@@ -16,7 +16,6 @@
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net472'">
 		<!--Cannot use Any CPU due to native providers-->
 		<PlatformTarget>x86</PlatformTarget>
-
 	</PropertyGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">

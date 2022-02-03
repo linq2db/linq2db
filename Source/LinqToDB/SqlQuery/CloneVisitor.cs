@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using LinqToDB.Common;
 using LinqToDB.Linq.Builder;
+using LinqToDB.ServiceModel;
 
 namespace LinqToDB.SqlQuery
 {
@@ -155,7 +156,9 @@ namespace LinqToDB.SqlQuery
 					var newSelectQuery = new SelectQuery(Interlocked.Increment(ref SelectQuery.SourceIDCounter))
 					{
 						IsParameterDependent = selectQuery.IsParameterDependent,
-						DoNotRemove          = selectQuery.DoNotRemove
+						DoNotRemove          = selectQuery.DoNotRemove,
+						QueryName            = selectQuery.QueryName,
+						SqlQueryExtensions   = selectQuery.SqlQueryExtensions,
 					};
 
 					_objectTree.Add(element, clone = newSelectQuery);
@@ -769,7 +772,7 @@ namespace LinqToDB.SqlQuery
 						var rows   = new List<ISqlExpression[]>(values.Rows.Count);
 						CloneInto(rows, values.Rows);
 						clone = new SqlValuesTable(fields, fields.Select(f => f.ColumnDescriptor?.MemberInfo).ToArray(), rows);
-					}	
+					}
 					break;
 
 				}
@@ -782,6 +785,28 @@ namespace LinqToDB.SqlQuery
 				//case QueryElementType.MergeSourceTable:
 				default:
 					throw new NotImplementedException($"Unsupported query element type: {element.GetType()} ({element.ElementType})");
+			}
+
+			if (element is IQueryExtendible { SqlQueryExtensions: {} } qe)
+			{
+				var te = (IQueryExtendible)clone;
+
+				te.SqlQueryExtensions = new(qe.SqlQueryExtensions.Count);
+
+				foreach (var item in qe.SqlQueryExtensions)
+				{
+					var ext = new SqlQueryExtension
+					{
+						Configuration = item.Configuration,
+						Scope         = item.Scope,
+						BuilderType   = item.BuilderType,
+					};
+
+					foreach (var arg in item.Arguments)
+						ext.Arguments.Add(arg.Key, Clone(arg.Value));
+
+					te.SqlQueryExtensions.Add(ext);
+				}
 			}
 
 			return (T)clone;

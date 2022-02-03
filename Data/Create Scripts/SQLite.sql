@@ -42,6 +42,9 @@ INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Tester', 'Testerson', 
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('Jane',   'Doe',       'F');
 INSERT INTO Person (FirstName, LastName, MiddleName, Gender) VALUES ('Jürgen', 'König', 'Ko', 'M');
 
+CREATE INDEX IX_PersonAsc  ON Person(PersonID ASC);
+CREATE INDEX IX_PersonDesc ON Person(PersonID DESC);
+
 --
 -- Doctor Table Extension
 --

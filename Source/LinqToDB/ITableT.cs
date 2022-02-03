@@ -12,11 +12,12 @@ namespace LinqToDB
 	public interface ITable<out T> : IExpressionQuery<T>
 		where T : notnull
 	{
-		string?      ServerName    { get; }
-		string?      DatabaseName  { get; }
-		string?      SchemaName    { get; }
-		string       TableName     { get; }
-		TableOptions TableOptions  { get; }
+		string?      ServerName   { get; }
+		string?      DatabaseName { get; }
+		string?      SchemaName   { get; }
+		string       TableName    { get; }
+		TableOptions TableOptions { get; }
+		string?      TableID      { get; }
 
 		//TODO: replace with extension method
 		string GetTableName();

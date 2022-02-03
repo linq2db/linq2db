@@ -85,6 +85,11 @@ namespace LinqToDB
 		/// </summary>
 		public const string SqlServer2017 = "SqlServer.2017";
 		/// <summary>
+		/// Microsoft SQL Server 2019 provider.
+		/// Used as configuration name for SQL Server 2019 mapping schema <see cref="DataProvider.SqlServer.SqlServer2019MappingSchema"/>.
+		/// </summary>
+		public const string SqlServer2019 = "SqlServer.2019";
+		/// <summary>
 		/// MySql provider.
 		/// Used as configuration name for MySql mapping schema <see cref="DataProvider.MySql.MySqlMappingSchema"/>.
 		/// </summary>

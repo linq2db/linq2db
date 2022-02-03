@@ -10,7 +10,6 @@ using System.Text;
 using System.Threading;
 
 using JetBrains.Annotations;
-using LinqToDB.Common.Internal.Cache;
 
 namespace LinqToDB.Data
 {
@@ -19,7 +18,7 @@ namespace LinqToDB.Data
 	using Configuration;
 	using DataProvider;
 	using Expressions;
-	using LinqToDB.Interceptors;
+	using Interceptors;
 	using Mapping;
 	using RetryPolicy;
 
@@ -228,16 +227,16 @@ namespace LinqToDB.Data
 		{
 			if (options == null)
 				throw new ArgumentNullException(nameof(options));
-			
+
 			if (!options.IsValidConfigForConnectionType(this))
 				throw new LinqToDBException(
 					$"Improper options type used to create DataConnection {GetType()}, try creating a public constructor calling base and accepting type {nameof(LinqToDbConnectionOptions)}<{GetType().Name}>");
-			
+
 			InitConfig();
 
 			DbConnection?  localConnection  = null;
 			DbTransaction? localTransaction = null;
-			
+
 			switch (options.SetupType)
 			{
 				case ConnectionSetupType.ConfigurationString:
@@ -253,7 +252,7 @@ namespace LinqToDB.Data
 					break;
 
 				case ConnectionSetupType.ConnectionString:
-					if (options.ProviderName == null && options.DataProvider == null) 
+					if (options.ProviderName == null && options.DataProvider == null)
 						throw new LinqToDBException("DataProvider was not specified");
 
 					IDataProvider? dataProvider;
@@ -272,7 +271,7 @@ namespace LinqToDB.Data
 					ConnectionString = options.ConnectionString;
 					MappingSchema    = DataProvider.MappingSchema;
 					break;
-				
+
 				case ConnectionSetupType.ConnectionFactory:
 					//copy to tmp variable so that if the factory in options gets changed later we will still use the old one
 					//is this expected?
@@ -280,14 +279,14 @@ namespace LinqToDB.Data
 					_connectionFactory = () =>
 					{
 						var connection = originalConnectionFactory();
-						
+
 						return connection;
 					};
 
 					DataProvider  = options.DataProvider!;
 					MappingSchema = DataProvider.MappingSchema;
 					break;
-				
+
 				case ConnectionSetupType.Connection:
 					{
 						localConnection    = options.DbConnection;
@@ -992,6 +991,17 @@ namespace LinqToDB.Data
 			_configurations.AddOrUpdate(configuration, info, (s,i) => info);
 		}
 
+		internal static Lazy<IDataProvider> CreateDataProvider<T>()
+			where T : IDataProvider, new()
+		{
+			return new(() =>
+			{
+				var provider = new T();
+				AddDataProvider(provider);
+				return provider;
+			}, true);
+		}
+
 		class ConnectionStringSettings : IConnectionStringSettings
 		{
 			public ConnectionStringSettings(
@@ -1596,7 +1606,7 @@ namespace LinqToDB.Data
 		/// Gets list of query hints (writable collection), that will be used only for next query, executed through current connection.
 		/// </summary>
 		public  List<string>  NextQueryHints => _nextQueryHints ??= new List<string>();
-		
+
 		/// <summary>
 		/// Adds additional mapping schema to current connection.
 		/// </summary>

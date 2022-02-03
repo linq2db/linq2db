@@ -1,28 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using Common;
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using Mapping;
 	using System.Data.Common;
 
 	abstract class SqlServerSqlBuilder : BasicSqlBuilder
 	{
-		protected readonly SqlServerDataProvider? Provider;
-
-		protected SqlServerSqlBuilder(
-			SqlServerDataProvider? provider,
-			MappingSchema          mappingSchema,
-			ISqlOptimizer          sqlOptimizer,
-			SqlProviderFlags       sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		protected SqlServerSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
-			Provider = provider;
+		}
+
+		protected SqlServerSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		{
 		}
 
 		protected override string? FirstFormat(SelectQuery selectQuery)
@@ -52,8 +49,8 @@ namespace LinqToDB.DataProvider.SqlServer
 					StringBuilder.Append(' ');
 					BuildCreateTableFieldType(identityField);
 					StringBuilder
-							.AppendLine(")")
-							.AppendLine();
+						.AppendLine(")")
+						.AppendLine();
 				}
 			}
 
@@ -395,7 +392,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.Guid      : StringBuilder.Append("UniqueIdentifier"); return;
 				case DataType.Variant   : StringBuilder.Append("Sql_Variant");      return;
 				case DataType.NVarChar  :
-					if (type.Type.Length == null || type.Type.Length > 4000 || type.Type.Length < 1)
+					if (type.Type.Length is null or > 4000 or < 1)
 					{
 						StringBuilder
 							.Append(type.Type.DataType)
@@ -407,7 +404,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				case DataType.VarChar   :
 				case DataType.VarBinary :
-					if (type.Type.Length == null || type.Type.Length > 8000 || type.Type.Length < 1)
+					if (type.Type.Length is null or > 8000 or < 1)
 					{
 						StringBuilder
 							.Append(type.Type.DataType)
@@ -435,11 +432,11 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override string? GetTypeName(DbParameter parameter)
 		{
-			if (Provider != null)
+			if (DataProvider is SqlServerDataProvider provider)
 			{
-				var param = Provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
-					return Provider.Adapter.GetTypeName(param);
+					return provider.Adapter.GetTypeName(param);
 			}
 
 			return base.GetTypeName(parameter);
@@ -447,11 +444,11 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override string? GetUdtTypeName(DbParameter parameter)
 		{
-			if (Provider != null)
+			if (DataProvider is SqlServerDataProvider provider)
 			{
-				var param = Provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
-					return Provider.Adapter.GetUdtTypeName(param);
+					return provider.Adapter.GetUdtTypeName(param);
 			}
 
 			return base.GetUdtTypeName(parameter);
@@ -459,11 +456,11 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override string? GetProviderTypeName(DbParameter parameter)
 		{
-			if (Provider != null)
+			if (DataProvider is SqlServerDataProvider provider)
 			{
-				var param = Provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
-					return Provider.Adapter.GetDbType(param).ToString();
+					return provider.Adapter.GetDbType(param).ToString();
 			}
 
 			return base.GetProviderTypeName(parameter);
@@ -514,5 +511,43 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
+
+		protected override void BuildTableExtensions(SqlTable table, string alias)
+		{
+			if (table.SqlQueryExtensions is not null)
+				BuildTableExtensions(StringBuilder, table, alias, " WITH (", ", ", ")");
+		}
+
+		protected override bool BuildJoinType(SqlJoinedTable join, SqlSearchCondition condition)
+		{
+			if (join.SqlQueryExtensions != null)
+			{
+				var ext = join.SqlQueryExtensions.LastOrDefault(e => e.Scope is Sql.QueryExtensionScope.JoinHint);
+
+				if (ext?.Arguments["hint"] is SqlValue v)
+				{
+					var h = (string)v.Value!;
+
+					switch (join.JoinType)
+					{
+						case JoinType.Inner when SqlProviderFlags.IsCrossJoinSupported && condition.Conditions.IsNullOrEmpty() :
+							                       StringBuilder.Append($"CROSS {h} JOIN "); return false;
+						case JoinType.Inner      : StringBuilder.Append($"INNER {h} JOIN "); return true;
+						case JoinType.Left       : StringBuilder.Append($"LEFT {h} JOIN ");  return true;
+						case JoinType.Right      : StringBuilder.Append($"RIGHT {h} JOIN "); return true;
+						case JoinType.Full       : StringBuilder.Append($"FULL {h} JOIN ");  return true;
+						default                  : throw new InvalidOperationException();
+					}
+				}
+			}
+
+			return base.BuildJoinType(join, condition);
+		}
+
+		protected override void BuildQueryExtensions(SqlStatement statement)
+		{
+			if (statement.SqlQueryExtensions is not null)
+				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, "OPTION (", ", ", ")");
+		}
 	}
 }

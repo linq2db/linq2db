@@ -56,7 +56,7 @@ namespace LinqToDB.ServiceModel
 					var b  = li.CheckNullLambda.Body;
 					var ps = li.CheckNullLambda.Parameters;
 
-					var p = Expression.Parameter(typeof(object), "p");
+					var p  = Expression.Parameter(typeof(object), "p");
 					var ex = Expression.Lambda<Func<object, string>>(
 						b.Transform(
 							(ps, enumType, p),
@@ -103,7 +103,7 @@ namespace LinqToDB.ServiceModel
 							if (type == typeof(int) || type == typeof(long))
 								enumType = to;
 							to = type;
-						}	
+						}
 						else
 						{
 							enumType = to;

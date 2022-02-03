@@ -9,8 +9,9 @@ namespace LinqToDB.SqlQuery
 	using Common;
 	using Data;
 	using Mapping;
+	using ServiceModel;
 
-	public class SqlTable : ISqlTableSource
+	public class SqlTable : ISqlTableSource, IQueryExtendible
 	{
 		#region Init
 
@@ -28,7 +29,8 @@ namespace LinqToDB.SqlQuery
 			IEnumerable<SqlField>    fields,
 			SqlTableType             sqlTableType,
 			ISqlExpression[]?        tableArguments,
-			TableOptions             tableOptions)
+			TableOptions             tableOptions,
+			string?                  tableID)
 			: this(objectType, id)
 		{
 			Name               = name;
@@ -38,6 +40,7 @@ namespace LinqToDB.SqlQuery
 			Schema             = schema;
 			PhysicalName       = physicalName;
 			SequenceAttributes = sequenceAttributes;
+			ID                 = tableID;
 
 			AddRange(fields);
 
@@ -141,8 +144,9 @@ namespace LinqToDB.SqlQuery
 			foreach (var field in table.Fields)
 				Add(new SqlField(field));
 
-			SqlTableType   = table.SqlTableType;
-			TableArguments = table.TableArguments;
+			SqlTableType       = table.SqlTableType;
+			TableArguments     = table.TableArguments;
+			SqlQueryExtensions = table.SqlQueryExtensions;
 		}
 
 		public SqlTable(SqlTable table, IEnumerable<SqlField> fields, ISqlExpression[] tableArguments)
@@ -158,8 +162,9 @@ namespace LinqToDB.SqlQuery
 
 			AddRange(fields);
 
-			SqlTableType   = table.SqlTableType;
-			TableArguments = tableArguments;
+			SqlTableType       = table.SqlTableType;
+			TableArguments     = tableArguments;
+			SqlQueryExtensions = table.SqlQueryExtensions;
 		}
 
 		#endregion
@@ -194,12 +199,14 @@ namespace LinqToDB.SqlQuery
 		public virtual SqlTableType      SqlTableType   { get; set; }
 		public         ISqlExpression[]? TableArguments { get; set; }
 		public         TableOptions      TableOptions   { get; set; }
-
-		private readonly Dictionary<string, SqlField> _fieldsLookup   = new ();
+		public virtual string?           ID             { get; set; }
 
 		// list user to preserve order of fields in queries
-		private readonly List<SqlField>                  _orderedFields  = new ();
-		public           IReadOnlyList<SqlField>         Fields => _orderedFields;
+		readonly List<SqlField>              _orderedFields = new();
+		readonly Dictionary<string,SqlField> _fieldsLookup  = new();
+
+		public IReadOnlyList<SqlField>  Fields             => _orderedFields;
+		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }
 
 		// identity fields cached, as it is most used fields filter
 		private readonly List<SqlField>                  _identityFields = new ();
@@ -326,6 +333,10 @@ namespace LinqToDB.SqlQuery
 			if (TableArguments != null)
 				for (var i = 0; i < TableArguments.Length; i++)
 					TableArguments[i] = TableArguments[i].Walk(options, context, func)!;
+
+			if (SqlQueryExtensions != null)
+				foreach (var e in SqlQueryExtensions)
+					e.Walk(options, context, func);
 
 			return func(context, this);
 		}

@@ -598,9 +598,9 @@ namespace Tests.Linq
 		[Test]
 		public void UpdateTest(
 			[DataSources(
-				TestProvName.AllAccess, 
-				ProviderName.DB2, 
-				TestProvName.AllSybase, 
+				TestProvName.AllAccess,
+				ProviderName.DB2,
+				TestProvName.AllSybase,
 				ProviderName.SqlCe,
 				TestProvName.AllInformix)]
 			string context, [Values(1, 2)] int iteration)
@@ -874,7 +874,6 @@ namespace Tests.Linq
 				personWithList.Should().HaveCountGreaterThan(0);
 				personWithList.All(p => p.SomeList!.Count == 0).Should().BeTrue();
 			}
-
 		}
 	}
 }

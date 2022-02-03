@@ -6,19 +6,12 @@ using System.Reflection;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
+	using Configuration;
 	using Data;
-	using LinqToDB.Configuration;
 
 	public static class SqlCeTools
 	{
-		private static readonly Lazy<IDataProvider> _sqlCeDataProvider = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new SqlCeDataProvider();
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
+		static readonly Lazy<IDataProvider> _sqlCeDataProvider = DataConnection.CreateDataProvider<SqlCeDataProvider>();
 
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
