@@ -273,40 +273,17 @@ namespace LinqToDB.Linq.Builder
 			return false;
 		}
 
-
-		List<QueryInformation> _parentQueryStack = new();
-
-		public void PushNestingQueryParent(SelectQuery parentQuery)
-		{
-			if (_parentQueryStack.Count > 0 && _parentQueryStack[_parentQueryStack.Count - 1].RootQuery == parentQuery)
-			{
-				_parentQueryStack.Add(_parentQueryStack[_parentQueryStack.Count - 1]);
-			}
-			else
-			{
-				_parentQueryStack.Add(new QueryInformation(parentQuery));
-			}
-		}
-
-		public void PopNestingQueryParent()
-		{
-			var idx = _parentQueryStack.Count - 1;
-			if (idx < 0)
-				throw new InvalidOperationException();
-			_parentQueryStack.RemoveAt(idx);
-		}
-
 		public Expression UpdateNesting(IBuildContext upToContext, Expression expression)
 		{
 			// short path
 			if (expression is SqlPlaceholderExpression currentPlaceholder && currentPlaceholder.SelectQuery == upToContext.SelectQuery)
 				return expression;
 
-			PushNestingQueryParent(upToContext.SelectQuery);
+			var info = new QueryInformation(upToContext.SelectQuery);
 
 			var withColumns =
 				expression.Transform(
-					(builder: this, upToContext),
+					(builder: this, upToContext, info),
 					static (context, expr) =>
 					{
 						if (expr is SqlErrorExpression error)
@@ -314,28 +291,21 @@ namespace LinqToDB.Linq.Builder
 
 						if (expr is SqlPlaceholderExpression placeholder && !ReferenceEquals(context.upToContext.SelectQuery, placeholder.SelectQuery))
 						{
-							for (var i = context.builder._parentQueryStack.Count - 1; i >= 0; i--)
+							if (IsSameParentTree(context.info, placeholder.SelectQuery))
 							{
-								var info = context.builder._parentQueryStack[i];
-
-								if (IsSameParentTree(info, placeholder.SelectQuery))
+								do
 								{
-									do
-									{
-										var parentQuery = info.GetParentQuery(placeholder.SelectQuery);
+									var parentQuery = context.info.GetParentQuery(placeholder.SelectQuery);
 
-										if (parentQuery == null)
-											break;
+									if (parentQuery == null)
+										break;
 
-										placeholder = context.builder.MakeColumn(parentQuery, placeholder);
+									placeholder = context.builder.MakeColumn(parentQuery, placeholder);
 
-										if (ReferenceEquals(info.RootQuery, parentQuery))
-											break;
+									if (ReferenceEquals(context.upToContext.SelectQuery, parentQuery))
+										break;
 
-									} while (true);
-
-									break;
-								}
+								} while (true);
 							}
 
 							return placeholder;
@@ -343,8 +313,6 @@ namespace LinqToDB.Linq.Builder
 
 						return expr;
 					});
-
-			PopNestingQueryParent();
 
 			return withColumns;
 		}

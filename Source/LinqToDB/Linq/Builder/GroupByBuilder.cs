@@ -424,6 +424,8 @@ namespace LinqToDB.Linq.Builder
 					expr = TypeHelper.MakeMethodCall(Methods.Enumerable.Select, expr, Element.Lambda);
 				}
 
+				expr = SequenceHelper.MoveToScopedContext(expr, this);
+
 				return expr;
 			}
 
@@ -445,7 +447,7 @@ namespace LinqToDB.Linq.Builder
 
 				var expr = MakeSubQueryExpression(buildInfo.Expression);
 
-				var ctx = Builder.BuildSequence(new BuildInfo(buildInfo, expr) { IsAggregation = false });
+				var ctx = Builder.BuildSequence(new BuildInfo(buildInfo, expr) { IsAggregation = false});
 
 				return ctx;
 			}

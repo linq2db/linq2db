@@ -23,17 +23,13 @@ namespace LinqToDB.Linq.Builder
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
+			var argument = methodCall.Arguments[0];
 			if (buildInfo.Parent != null)
 			{
-				builder.PushNestingQueryParent(buildInfo.Parent.SelectQuery);
+				argument = SequenceHelper.MoveToScopedContext(argument, buildInfo.Parent);
 			}
 
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-
-			if (buildInfo.Parent != null)
-			{
-				builder.PopNestingQueryParent();
-			}
+			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, argument));
 
 			var take     = 0;
 

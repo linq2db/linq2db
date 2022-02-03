@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -35,5 +36,14 @@ namespace LinqToDB.Expressions
 
 		public override ExpressionType NodeType => ExpressionType.Extension;
 		public override Type           Type     => ObjectType;
+
+		public override string ToString()
+		{
+			var assignments = string.Join(",\n", Assignments.Select(a => $"\t{a.MemberInfo.Name} = {a.Expression}"));
+
+			var result = $"new {Type.Name}\n{{\n{assignments}\n}}";
+
+			return result;
+		}
 	}
 }

@@ -25,14 +25,10 @@ namespace LinqToDB.Linq.Builder
 
 			sequence = new SubQueryContext(sequence);
 
-			var expr = SequenceHelper.PrepareBody(collectionSelector, sequence).Unwrap();
-
-			builder.PushNestingQueryParent(sequence.SelectQuery);
+			var expr = SequenceHelper.PrepareBody(collectionSelector, new ScopeContext(sequence)).Unwrap();
 
 			var collectionInfo = new BuildInfo(sequence, expr, new SelectQuery()) { CreateSubQuery = true };
 			var collection     = builder.BuildSequence(collectionInfo);
-
-			builder.PopNestingQueryParent();
 
 			// DefaultIfEmptyContext wil handle correctly projecting NULL objects
 			//

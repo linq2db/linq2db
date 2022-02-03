@@ -26,7 +26,13 @@ namespace LinqToDB.Linq.Builder
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var argument = methodCall.Arguments[0];
+			if (buildInfo.Parent != null)
+			{
+				argument = SequenceHelper.MoveToScopedContext(argument, buildInfo.Parent);
+			}
+
+			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, argument));
 
 			JoinType joinType;
 			var conditionIndex = 1;

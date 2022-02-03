@@ -160,9 +160,12 @@ namespace LinqToDB.Linq.Builder
 						InnerKeyLambda.Body),
 					InnerKeyLambda.Parameters[0]);
 
-				var expr = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(filterLambda.Parameters[0].Type),
+				var expr = (Expression)Expression.Call(
+					Methods.Queryable.Where.MakeGenericMethod(filterLambda.Parameters[0].Type),
 					InnerExpression,
 					filterLambda);
+
+				expr = SequenceHelper.MoveToScopedContext(expr, this);
 
 				return expr;
 			}

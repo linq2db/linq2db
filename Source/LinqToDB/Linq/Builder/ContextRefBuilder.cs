@@ -14,23 +14,37 @@ namespace LinqToDB.Linq.Builder
 			return buildInfo.IsAggregation ? ProjectFlags.AggregtionRoot : ProjectFlags.Root;
 		}
 
-		public bool CanBuild(ExpressionBuilder builder, BuildInfo buildInfo)
+		Expression CalcBuildContext(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			var root = builder.MakeExpression(buildInfo.Expression, GetRootProjectFlags(buildInfo));
 			if (ExpressionEqualityComparer.Instance.Equals(root, buildInfo.Expression))
 			{
 				if (root is ContextRefExpression)
-					return true;
-				return false;
+					return root;
+
+				var newExpression = builder.MakeExpression(root, buildInfo.GetFlags());
+
+				return newExpression;
 			}
 
-			return builder.IsSequence(new BuildInfo(buildInfo, root));
+			return root;
+		}
+
+		public bool CanBuild(ExpressionBuilder builder, BuildInfo buildInfo)
+		{
+			var root = CalcBuildContext(builder, buildInfo);
+
+			if (!ReferenceEquals(root, buildInfo.Expression))
+				return builder.IsSequence(new BuildInfo(buildInfo, root));
+
+			return root is ContextRefExpression;
 		}
 
 		public IBuildContext BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			var root = builder.MakeExpression(buildInfo.Expression, GetRootProjectFlags(buildInfo));
-			if (!ExpressionEqualityComparer.Instance.Equals(root, buildInfo.Expression) || root is not ContextRefExpression contextRef)
+			var root = CalcBuildContext(builder, buildInfo);
+
+			if (root is not ContextRefExpression contextRef)
 				return builder.BuildSequence(new BuildInfo(buildInfo, root));
 
 			var context = contextRef.BuildContext;
@@ -49,15 +63,10 @@ namespace LinqToDB.Linq.Builder
 
 		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			var root = builder.MakeExpression(buildInfo.Expression, GetRootProjectFlags(buildInfo));
-			if (!ExpressionEqualityComparer.Instance.Equals(root, buildInfo.Expression))
+			var root = CalcBuildContext(builder, buildInfo);
+
+			if (root is not ContextRefExpression contextRef)
 				return builder.IsSequence(new BuildInfo(buildInfo, root));
-
-			if (buildInfo.Expression is not ContextRefExpression contextRef)
-				return false;
-
-			if (buildInfo.IsAggregation)
-				return contextRef.BuildContext is GroupByBuilder.GroupByContext;
 
 			return true;
 		}

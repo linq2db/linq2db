@@ -42,6 +42,29 @@ namespace LinqToDB.Linq.Builder
 			return expression;
 		}
 
+		public static Expression ReplaceContext(Expression expression, IBuildContext current, IBuildContext onContext)
+		{
+			var newExpression = expression.Transform((expression, current, onContext), (ctx, e) =>
+			{
+				if (e.NodeType              == ExpressionType.Extension && e is ContextRefExpression contextRef &&
+				    contextRef.BuildContext == ctx.current)
+				{
+					return new ContextRefExpression(contextRef.Type, ctx.onContext);
+				}
+
+				return e;
+			});
+
+			return newExpression;
+		}
+
+		public static Expression MoveToScopedContext(Expression expression, IBuildContext current)
+		{
+			var scoped = new ScopeContext(current);
+			var newExpression = ReplaceContext(expression, current, scoped);
+			return newExpression;
+		}
+
 		public static TableBuilder.TableContext? GetTableContext(IBuildContext context)
 		{
 			var contextRef = new ContextRefExpression(typeof(object), context);

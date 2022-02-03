@@ -1034,13 +1034,13 @@ namespace LinqToDB.SqlQuery
 				if (depends)
 					return true;
 
-				if (!_flags.AcceptsOuterExpressionInAggregate && 
+				/*if (!_flags.AcceptsOuterExpressionInAggregate && 
 				    column.Expression.ElementType != QueryElementType.Column &&
 				    QueryHelper.HasOuterReferences(parentQuery, column))
 				{
 					// handle case when aggregate expression has outer references. SQL Server will fail.
 					return true;
-				}
+				}*/
 
 				if (expr.IsComplexExpression())
 				{
@@ -1298,6 +1298,9 @@ namespace LinqToDB.SqlQuery
 				var isAgg = sql.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
 
 				if (isApplySupported && sql.Select.HasModifier)
+					return;
+
+				if (isApplySupported && isAgg)
 					return;
 
 				if (sql.Select.HasModifier)

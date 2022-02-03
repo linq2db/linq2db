@@ -62,29 +62,17 @@ namespace LinqToDB.Linq.Builder
 		public IBuildContext BuildWhere(IBuildContext? parent, IBuildContext sequence, LambdaExpression condition,
 			bool checkForSubQuery, bool enforceHaving, bool isTest)
 		{
+			if (sequence is not SubQueryContext subquery)
+			{
+				sequence = new SubQueryContext(sequence);
+			}
+
 			var originalContextRef = new ContextRefExpression(condition.Parameters[0].Type, sequence);
 			var body               = condition.GetBody(originalContextRef);
 			var expr               = ConvertExpression(body.Unwrap());
 
-			var prevSequence = sequence;
-
-			if (sequence is not SubQueryContext subquery)
-			{
-				sequence = new SubQueryContext(prevSequence);
-			}
-
-			if (parent != null)
-			{
-				PushNestingQueryParent(parent.SelectQuery);
-			}
-
 			var sc = new SqlSearchCondition();
 			BuildSearchCondition(sequence, expr, isTest ? ProjectFlags.Test : ProjectFlags.SQL, sc.Conditions);
-
-			if (parent != null)
-			{
-				PopNestingQueryParent();
-			}
 
 			sequence.SelectQuery.Where.ConcatSearchCondition(sc);
 

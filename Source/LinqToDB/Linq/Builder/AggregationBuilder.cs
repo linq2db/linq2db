@@ -175,7 +175,7 @@ namespace LinqToDB.Linq.Builder
 
 			// force ExpressionBuilder to cache Aggregation SQL. It will be used later for BuildWhere.
 			_ = builder.ConvertToSqlExpr(context, new ContextRefExpression(methodCall.Method.ReturnType, context),
-				ProjectFlags.SQL);
+				buildInfo.GetFlags());
 
 			return context;
 		}
