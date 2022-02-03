@@ -61,7 +61,7 @@ namespace LinqToDB.Remote.Soap
 
 		public Task<string> ExecuteReaderAsync(string? configuration, string queryData)
 		{
-			throw new NotImplementedException();
+			return Channel.ExecuteReaderAsync(configuration, queryData);
 		}
 
 		public Task<int> ExecuteBatchAsync(string? configuration, string queryData)

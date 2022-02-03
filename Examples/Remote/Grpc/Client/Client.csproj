@@ -3,15 +3,19 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
+		<TargetFrameworks>netcoreapp3.1</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="linq2db.t4models"/>
+	  <Compile Include="..\..\Program.cs" Link="Program.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Grpc.Net.Client"/>
+		<PackageReference Include="linq2db.t4models" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Grpc.Net.Client" />
 	</ItemGroup>
 
 	<ItemGroup>

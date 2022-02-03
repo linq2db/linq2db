@@ -7,7 +7,6 @@
 
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.remote.grpc.xml</DocumentationFile>
 		<TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
-		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
 	<ItemGroup>

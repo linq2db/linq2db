@@ -10,15 +10,10 @@ namespace Client
 	{
 		static async Task Main(string[] args)
 		{
-			Console.WriteLine("---------------------------------------------------------------------");
 			var identity = await InsertNewCategoryAsync();
-			Console.WriteLine("---------------------------------------------------------------------");
 			await UpdateNewCategoryAsync(identity);
-			Console.WriteLine("---------------------------------------------------------------------");
 			await ReadScalarAsync();
-			Console.WriteLine("---------------------------------------------------------------------");
 			ReadCollection();
-			Console.WriteLine("---------------------------------------------------------------------");
 
 			Console.ReadLine();
 		}
@@ -32,7 +27,7 @@ namespace Client
 					.Set(c => c.CategoryName, c => c.CategoryName + "!")
 					.UpdateAsync();
 
-				Console.WriteLine("Category Updated, Identity = " + categoryId);
+				Console.WriteLine("Category updated: Identity = " + categoryId);
 			}
 		}
 
@@ -69,7 +64,7 @@ namespace Client
 					};
 
 				var row = await q.FirstAsync();
-				Console.WriteLine(row.Id + " : " + row.Name);
+				Console.WriteLine("Category read: " + row.Id + " : " + row.Name);
 			}
 		}
 
@@ -86,6 +81,8 @@ namespace Client
 						ProductName = p.ProductName,
 						CategoryName = c.CategoryName
 					};
+
+				Console.WriteLine("All categories:");
 
 				foreach (var c in q)
 					Console.WriteLine(c.CategoryName + " : " + (c.ProductName ?? "null"));

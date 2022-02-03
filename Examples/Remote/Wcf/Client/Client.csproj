@@ -7,6 +7,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Include="..\..\Program.cs" Link="Program.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="linq2db.t4models" />
 	</ItemGroup>
 
