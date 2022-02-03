@@ -13,7 +13,7 @@ namespace Client
 			var identity = await InsertNewCategoryAsync();
 			await UpdateNewCategoryAsync(identity);
 			await ReadScalarAsync();
-			ReadCollection();
+			await ReadCollectionAsync();
 
 			Console.ReadLine();
 		}
@@ -68,7 +68,7 @@ namespace Client
 			}
 		}
 
-		private static void ReadCollection()
+		private static async Task ReadCollectionAsync()
 		{
 			using (var db = new NorthwindDB())
 			{
@@ -84,7 +84,7 @@ namespace Client
 
 				Console.WriteLine("All categories:");
 
-				foreach (var c in q)
+				foreach (var c in await q.ToListAsync())
 					Console.WriteLine(c.CategoryName + " : " + (c.ProductName ?? "null"));
 			}
 		}
