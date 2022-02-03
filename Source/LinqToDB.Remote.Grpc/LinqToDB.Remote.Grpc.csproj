@@ -13,14 +13,6 @@
 	  <ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
 	</ItemGroup>
 
-	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
-		<DefineConstants>OVERRIDETOSTRING;$(DefineConstants)</DefineConstants>
-	</PropertyGroup>
-
-	<PropertyGroup>
-		<DefineConstants>NATIVE_ASYNC;$(DefineConstants)</DefineConstants>
-	</PropertyGroup>
-
 	<ItemGroup>
 		<PackageReference Include="Grpc.Net.Client" />
 		<PackageReference Include="protobuf-net.Grpc.AspNetCore" />

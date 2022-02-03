@@ -252,7 +252,7 @@ namespace LinqToDB.Remote
 					if (cancellationToken.IsCancellationRequested)
 					{
 						var task = new TaskCompletionSource<bool>();
-#if NET6_PLUS
+#if NET6_0_OR_GREATER
 						task.SetCanceled(cancellationToken);
 #else
 						task.SetCanceled();
