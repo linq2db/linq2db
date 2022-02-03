@@ -68,7 +68,7 @@ namespace LinqToDB.SqlProvider
 
 		/// <summary>
 		/// Provider supports:
-		/// INNER JOIN a ON 1 = 1 
+		/// INNER JOIN a ON 1 = 1
 		/// </summary>
 		[DataMember(Order = 22)]
 		public bool IsInnerJoinAsCrossSupported           { get; set; }
@@ -126,7 +126,7 @@ namespace LinqToDB.SqlProvider
 		/// (
 		///		SELECT
 		///			SUM(sub.Column)
-		///		FROM 
+		///		FROM
 		///			(
 		///				SELECT inner.FieldX + outer.FieldOuter AS Column
 		///				FROM table2 inner
@@ -147,7 +147,16 @@ namespace LinqToDB.SqlProvider
 		/// </code> syntax
 		/// </summary>
 		[DataMember(Order = 30)]
-		public bool IsUpdateFromSupported                 { get; set; }
+		public bool IsUpdateFromSupported             { get; set; }
+
+		/// <summary>
+		/// Provider supports Naming Query Blocks
+		/// <code>
+		/// QB_NAME(qb)
+		/// </code>
+		/// </summary>
+		[DataMember(Order = 31)]
+		public bool IsNamingQueryBlockSupported       { get; set; }
 
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
@@ -171,13 +180,13 @@ namespace LinqToDB.SqlProvider
 		/// Used when there is query which needs several additional database request for completing query.
 		/// Default is <see cref="IsolationLevel.RepeatableRead"/>
 		/// </summary>
-		[DataMember(Order = 31)]
+		[DataMember(Order = 32)]
 		public IsolationLevel DefaultMultiQueryIsolationLevel { get; set; } = IsolationLevel.RepeatableRead;
 
 		/// <summary>
 		/// Flags for use by external providers.
 		/// </summary>
-		[DataMember(Order = 32)]
+		[DataMember(Order = 33)]
 		public List<string> CustomFlags { get; set; } = new List<string>();
 
 		#region Equality
@@ -217,6 +226,7 @@ namespace LinqToDB.SqlProvider
 				^ IsUpdateFromSupported                        .GetHashCode()
 				^ DefaultMultiQueryIsolationLevel              .GetHashCode()
 				^ AcceptsOuterExpressionInAggregate            .GetHashCode()
+				^ IsNamingQueryBlockSupported                  .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -254,6 +264,7 @@ namespace LinqToDB.SqlProvider
 				&& IsUpdateFromSupported                == other.IsUpdateFromSupported
 				&& DefaultMultiQueryIsolationLevel      == other.DefaultMultiQueryIsolationLevel
 				&& AcceptsOuterExpressionInAggregate    == other.AcceptsOuterExpressionInAggregate
+				&& IsNamingQueryBlockSupported          == other.IsNamingQueryBlockSupported
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                    == other.CustomFlags.Count
 				&& (CustomFlags.Count                   == 0

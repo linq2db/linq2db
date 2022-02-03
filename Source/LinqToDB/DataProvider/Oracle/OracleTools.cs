@@ -52,42 +52,12 @@ namespace LinqToDB.DataProvider.Oracle
 	public static partial class OracleTools
 	{
 #if NETFRAMEWORK
-		private static readonly Lazy<IDataProvider> _oracleNativeDataProvider11 = new (() =>
-		{
-			var provider = new OracleDataProvider(ProviderName.OracleNative, OracleVersion.v11);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
-
-		private static readonly Lazy<IDataProvider> _oracleNativeDataProvider12 = new (() =>
-		{
-			var provider = new OracleDataProvider(ProviderName.OracleNative, OracleVersion.v12);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
+		static readonly Lazy<IDataProvider> _oracleNativeDataProvider11 = DataConnection.CreateDataProvider<OracleDataProviderNative11>();
+		static readonly Lazy<IDataProvider> _oracleNativeDataProvider12 = DataConnection.CreateDataProvider<OracleDataProviderNative12>();
 #endif
 
-		private static readonly Lazy<IDataProvider> _oracleManagedDataProvider11 = new (() =>
-		{
-			var provider = new OracleDataProvider(ProviderName.OracleManaged, OracleVersion.v11);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
-
-		private static readonly Lazy<IDataProvider> _oracleManagedDataProvider12 = new (() =>
-		{
-			var provider = new OracleDataProvider(ProviderName.OracleManaged, OracleVersion.v12);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
+		static readonly Lazy<IDataProvider> _oracleManagedDataProvider11 = DataConnection.CreateDataProvider<OracleDataProviderManaged11>();
+		static readonly Lazy<IDataProvider> _oracleManagedDataProvider12 = DataConnection.CreateDataProvider<OracleDataProviderManaged12>();
 
 		public static bool AutoDetectProvider { get; set; } = true;
 
@@ -144,11 +114,11 @@ namespace LinqToDB.DataProvider.Oracle
 
 		private static OracleVersion DetectProviderVersion(IConnectionStringSettings css, string connectionString, bool managed)
 		{
-
-			OracleProviderAdapter providerAdapter;
 			try
 			{
 				var cs = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
+
+				OracleProviderAdapter providerAdapter;
 
 #if NETFRAMEWORK
 				if (!managed)
@@ -249,7 +219,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				ProviderName.OracleNative  => GetVersionedDataProvider(version.Value, false),
 				ProviderName.OracleManaged => GetVersionedDataProvider(version.Value, true),
-				_						   => 
+				_						   =>
 					DetectedProviderName == ProviderName.OracleNative
 					? GetVersionedDataProvider(version.Value, false)
 					: GetVersionedDataProvider(version.Value, true),
@@ -272,7 +242,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public static void ResolveOracle(Assembly assembly) => new AssemblyResolver(assembly, assembly.FullName!);
 
-#region CreateDataConnection
+		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString, string? providerName = null)
 		{
@@ -289,9 +259,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return new DataConnection(GetDataProvider(providerName), transaction);
 		}
 
-#endregion
+		#endregion
 
-#region BulkCopy
+		#region BulkCopy
 
 		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
 

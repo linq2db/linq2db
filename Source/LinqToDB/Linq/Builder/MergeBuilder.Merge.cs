@@ -42,12 +42,6 @@ namespace LinqToDB.Linq.Builder
 
 				return new MergeContext(merge, target);
 			}
-
-			protected override SequenceConvertInfo? Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-			{
-				return null;
-			}
 		}
 	}
 }

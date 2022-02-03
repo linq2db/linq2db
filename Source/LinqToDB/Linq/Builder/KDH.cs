@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Linq.Builder
 {
-	public static class KDH
+	static class KDH
 	{
 		public static KDH<TKey, TData> Create<TKey, TData>(TKey key, TData data)
 		{
@@ -11,7 +11,7 @@ namespace LinqToDB.Linq.Builder
 	}
 
 	[DebuggerDisplay("Key: {Key}, Data: {Data}")]
-	public class KDH<TKey, TData>
+	class KDH<TKey, TData>
 	{
 		public KDH()
 		{
@@ -28,7 +28,7 @@ namespace LinqToDB.Linq.Builder
 	}
 
 	[DebuggerDisplay("Key: {Key}, Data: {Data}")]
-	public class FKDH<TKey, TData>
+	class FKDH<TKey, TData>
 	{
 		public FKDH()
 		{
@@ -43,5 +43,4 @@ namespace LinqToDB.Linq.Builder
 		public TKey  Key  { get; set; } = default!;
 		public TData Data { get; set; } = default!;
 	}
-
 }

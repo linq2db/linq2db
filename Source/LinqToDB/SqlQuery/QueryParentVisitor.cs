@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using LinqToDB.Remote;
 
 namespace LinqToDB.SqlQuery
 {
@@ -34,7 +35,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (element == null || !_all && VisitedElements.ContainsKey(element))
 				return;
-			
+
 			if (!_all)
 				VisitedElements.Add(element, element);
 
@@ -405,6 +406,13 @@ namespace LinqToDB.SqlQuery
 
 				default:
 					throw new InvalidOperationException($"Visit visitor not implemented for element {element.ElementType}");
+			}
+
+			if (element is IQueryExtendible { SqlQueryExtensions: { Count: > 0 } } qe)
+			{
+				foreach (var ext in qe.SqlQueryExtensions)
+				foreach (var arg in ext.Arguments)
+					Visit(arg.Value);
 			}
 		}
 

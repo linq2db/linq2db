@@ -1052,7 +1052,7 @@ namespace Tests.Linq
 		}
 
 		class Entity1711
-		{ 
+		{
 			public long Id { get; set; }
 		}
 
@@ -1195,7 +1195,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable<Issue2981Entity>(new[]
 			{
-				new Issue2981Entity {OwnerId = 1}, 
+				new Issue2981Entity {OwnerId = 1},
 				new Issue2981Entity {OwnerId = 2}
 			});
 			using var t2 = db.CreateLocalTable<Issue2981OwnerEntity>(new[] {new Issue2981OwnerEntity {Id = 1}});

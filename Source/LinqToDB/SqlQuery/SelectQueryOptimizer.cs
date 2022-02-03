@@ -117,8 +117,6 @@ namespace LinqToDB.SqlQuery
 
 						break;
 					}
-
-
 				}
 
 				return true;
@@ -277,7 +275,7 @@ namespace LinqToDB.SqlQuery
 								if (context.dic.TryGetValue(expr.FalseValue, out ex)) expr.FalseValue = ex;
 								break;
 							}
-						
+
 						case QueryElementType.LikePredicate :
 							{
 								var expr = (SqlPredicate.Like)e;
@@ -459,7 +457,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (!_selectQuery.GroupBy.IsEmpty)
 			{
-				// Remove constants. 
+				// Remove constants.
 				//
 				for (int i = _selectQuery.GroupBy.Items.Count - 1; i >= 0; i--)
 				{
@@ -479,7 +477,7 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 		}
-		
+
 		private void CorrectColumns()
 		{
 			if (!_selectQuery.GroupBy.IsEmpty && _selectQuery.Select.Columns.Count == 0)
@@ -551,7 +549,7 @@ namespace LinqToDB.SqlQuery
 
 					if ((exprExpr.Operator == SqlPredicate.Operator.Equal ||
 					     exprExpr.Operator == SqlPredicate.Operator.NotEqual)
-					    && exprExpr.Expr1 is SqlValue value1 && value1.Value != null 
+					    && exprExpr.Expr1 is SqlValue value1 && value1.Value != null
 					    && exprExpr.Expr2 is SqlValue value2 && value2.Value != null
 					    && value1.GetType() == value2.GetType())
 					{
@@ -873,6 +871,12 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
+		static void ApplySubQueryExtensions(SelectQuery mainQuery, SelectQuery subQuery)
+		{
+			if (subQuery.SqlQueryExtensions is not null)
+				(mainQuery.SqlQueryExtensions ??= new()).AddRange(subQuery.SqlQueryExtensions);
+		}
+
 		SqlTableSource OptimizeSubQuery(
 			SelectQuery parentQuery,
 			SqlTableSource source,
@@ -898,7 +902,10 @@ namespace LinqToDB.SqlQuery
 				if (table != jt.Table)
 				{
 					if (jt.Table.Source is SelectQuery sql)
-						ApplySubsequentOrder(_selectQuery, sql);
+					{
+						ApplySubQueryExtensions(_selectQuery, sql);
+						ApplySubsequentOrder   (_selectQuery, sql);
+					}
 
 					jt.Table = table;
 				}
@@ -1020,7 +1027,7 @@ namespace LinqToDB.SqlQuery
 				if (depends)
 					return true;
 
-				if (!_flags.AcceptsOuterExpressionInAggregate && 
+				if (!_flags.AcceptsOuterExpressionInAggregate &&
 				    column.Expression.ElementType != QueryElementType.Column &&
 				    QueryHelper.HasOuterReferences(parentQuery, column))
 				{
@@ -1052,11 +1059,21 @@ namespace LinqToDB.SqlQuery
 		{
 			var query = (SelectQuery)childSource.Source;
 
-			var isQueryOK = !query.DoNotRemove && query.From.Tables.Count == 1;
-
-			isQueryOK = isQueryOK && (concatWhere || query.Where.IsEmpty && query.Having.IsEmpty);
-			isQueryOK = isQueryOK && !query.HasSetOperators && query.GroupBy.IsEmpty && !query.Select.HasModifier;
+			var isQueryOK =
+				query.DoNotRemove        == false                            &&
+				query.From.Tables.Count  == 1                                &&
+				(concatWhere || query.Where.IsEmpty && query.Having.IsEmpty) &&
+				query.HasSetOperators    == false                            &&
+				query.GroupBy.IsEmpty                                        &&
+				query.Select.HasModifier == false;
 			//isQueryOK = isQueryOK && (_flags.IsDistinctOrderBySupported || query.Select.IsDistinct );
+
+			if (isQueryOK && query.QueryName is not null)
+			{
+				isQueryOK =
+					_selectQuery.QueryName is null &&
+					_selectQuery.From.Tables.Count(t => t.Source is SelectQuery { QueryName: { } }) <= 1;
+			}
 
 			if (isQueryOK && parentJoinedTable != null && parentJoinedTable.JoinType != JoinType.Inner)
 			{
@@ -1089,9 +1106,11 @@ namespace LinqToDB.SqlQuery
 				return childSource;
 
 			var isColumnsOK = (allColumns && !query.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)));
+
 			if (!isColumnsOK)
 			{
 				isColumnsOK = true;
+
 				foreach (var column in query.Select.Columns)
 				{
 					if (CheckColumn(parentQuery, column, column.Expression, query, optimizeValues, optimizeColumns))
@@ -1113,7 +1132,7 @@ namespace LinqToDB.SqlQuery
 						foreach (var column in groupingSet.Items.OfType<SqlColumn>())
 							if (column.Parent == query && QueryHelper.IsConstantFast(column.Expression))
 								constCount++;
-						
+
 						if (constCount == groupingSet.Items.Count)
 						{
 							isColumnsOK = false;
@@ -1137,6 +1156,8 @@ namespace LinqToDB.SqlQuery
 			if (!isColumnsOK)
 				return childSource;
 
+			_selectQuery.QueryName ??= query.QueryName;
+
 			var map = new Dictionary<ISqlExpression,ISqlExpression>(query.Select.Columns.Count, Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
 			var aliasesMap = new Dictionary<ISqlExpression,string>(query.Select.Columns.Count, Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
 
@@ -1147,12 +1168,13 @@ namespace LinqToDB.SqlQuery
 					map.Add(c, c.Expression);
 					if (c.RawAlias != null)
 						aliasesMap.Add(c.Expression, c.RawAlias);
-				}			
+				}
 			}
 
 			map.Add(query.All, query.From.Tables[0].All);
 
 			List<ISqlExpression[]>? uniqueKeys = null;
+
 			if ((parentJoinedTable == null || parentJoinedTable.JoinType == JoinType.Inner) && query.HasUniqueKeys)
 				uniqueKeys = query.UniqueKeys;
 
@@ -1208,9 +1230,7 @@ namespace LinqToDB.SqlQuery
 			});
 
 			query.From.Tables[0].Joins.AddRange(childSource.Joins);
-
-			if (query.From.Tables[0].Alias == null)
-				query.From.Tables[0].Alias = childSource.Alias;
+			query.From.Tables[0].Alias ??= childSource.Alias;
 
 			if (!query.Where. IsEmpty) ConcatSearchCondition(_selectQuery.Where,  query.Where);
 			if (!query.Having.IsEmpty) ConcatSearchCondition(_selectQuery.Having, query.Having);
@@ -1374,8 +1394,11 @@ namespace LinqToDB.SqlQuery
 
 					if (table != joinTable.Table)
 					{
-						if (joinTable.Table.Source is SelectQuery q && q.OrderBy.Items.Count > 0)
-							ApplySubsequentOrder(_selectQuery, q);
+						if (joinTable.Table.Source is SelectQuery q)
+						{
+							ApplySubQueryExtensions(_selectQuery, q);
+							ApplySubsequentOrder   (_selectQuery, q);
+						}
 
 						joinTable.Table = table;
 
@@ -1431,9 +1454,11 @@ namespace LinqToDB.SqlQuery
 
 				if (table != _selectQuery.From.Tables[i])
 				{
-					if (!_selectQuery.Select.Columns.All(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
+					if (_selectQuery.From.Tables[i].Source is SelectQuery sql)
 					{
-						if (_selectQuery.From.Tables[i].Source is SelectQuery sql)
+						ApplySubQueryExtensions(_selectQuery, sql);
+
+						if (!_selectQuery.Select.Columns.All(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
 							ApplySubsequentOrder(_selectQuery, sql);
 					}
 
@@ -1464,7 +1489,7 @@ namespace LinqToDB.SqlQuery
 						{
 							return column.Expression;
 						}
-					
+
 						return e;
 					});
 
@@ -1477,8 +1502,8 @@ namespace LinqToDB.SqlQuery
 			//TODO: Failed SelectQueryTests.JoinScalarTest
 			//Needs optimization refactor for 3.X
 			/*
-			if (_selectQuery.IsSimple 
-			    && _selectQuery.From.Tables.Count == 1 
+			if (_selectQuery.IsSimple
+			    && _selectQuery.From.Tables.Count == 1
 				&& _selectQuery.From.Tables[0].Joins.Count == 0
 			    && _selectQuery.From.Tables[0].Source is SelectQuery selectQuery
 				&& selectQuery.IsSimple

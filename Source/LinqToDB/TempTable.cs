@@ -508,6 +508,7 @@ namespace LinqToDB
 		public string?      SchemaName   => _table.SchemaName;
 		public string       TableName    => _table.TableName;
 		public TableOptions TableOptions => _table.TableOptions;
+		public string?      TableID      => _table.TableID;
 
 		public string GetTableName()
 		{
@@ -523,6 +524,7 @@ namespace LinqToDB
 		ITable<T> ITableMutable<T>.ChangeSchemaName  (string? schemaName)   => ((ITableMutable<T>)_table).ChangeSchemaName  (schemaName);
 		ITable<T> ITableMutable<T>.ChangeTableName   (string tableName)     => ((ITableMutable<T>)_table).ChangeTableName   (tableName);
 		ITable<T> ITableMutable<T>.ChangeTableOptions(TableOptions options) => ((ITableMutable<T>)_table).ChangeTableOptions(options);
+		ITable<T> ITableMutable<T>.ChangeTableID     (string? tableID)      => ((ITableMutable<T>)_table).ChangeTableID     (tableID);
 
 		#endregion
 

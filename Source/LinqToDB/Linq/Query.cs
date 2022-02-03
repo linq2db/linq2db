@@ -28,7 +28,7 @@ namespace LinqToDB.Linq
 		public Func<IDataContext,Expression,object?[]?,object?[]?,object?>                         GetElement      = null!;
 		public Func<IDataContext,Expression,object?[]?,object?[]?,CancellationToken,Task<object?>> GetElementAsync = null!;
 
-#region Init
+		#region Init
 
 		internal readonly List<QueryInfo> Queries = new (1);
 
@@ -46,9 +46,9 @@ namespace LinqToDB.Linq
 			InlineParameters = dataContext.InlineParameters;
 		}
 
-#endregion
+		#endregion
 
-#region Compare
+		#region Compare
 
 		internal readonly string           ContextID;
 		internal readonly Type             ContextType;
@@ -127,9 +127,9 @@ namespace LinqToDB.Linq
 			_queryableMemberAccessorDic = null;
 		}
 
-#endregion
+		#endregion
 
-#region Helpers
+		#region Helpers
 
 		ConcurrentDictionary<Type,Func<object,object>>? _enumConverters;
 
@@ -156,9 +156,9 @@ namespace LinqToDB.Linq
 			return converter(value);
 		}
 
-#endregion
+		#endregion
 
-#region Cache Support
+		#region Cache Support
 
 		internal static readonly ConcurrentQueue<Action> CacheCleaners = new ();
 
@@ -175,9 +175,9 @@ namespace LinqToDB.Linq
 			}
 		}
 
-#endregion
+		#endregion
 
-#region Eager Loading
+		#region Eager Loading
 
 		private Tuple<
 			object?,
@@ -232,12 +232,12 @@ namespace LinqToDB.Linq
 			return preambles;
 		}
 
-#endregion
+		#endregion
 	}
 
 	class Query<T> : Query
 	{
-#region Init
+		#region Init
 
 		internal Query(IDataContext dataContext, Expression? expression)
 			: base(dataContext, expression)
@@ -250,7 +250,10 @@ namespace LinqToDB.Linq
 			var statement = parseContext.GetResultStatement();
 
 			if (parseContext.Builder.Tag != null)
-				(statement.Tag ??= new SqlComment()).Lines.AddRange(parseContext.Builder.Tag.Lines);
+				(statement.Tag ??= new()).Lines.AddRange(parseContext.Builder.Tag.Lines);
+
+			if (parseContext.Builder.SqlQueryExtensions != null)
+				(statement.SqlQueryExtensions ??= new()).AddRange(parseContext.Builder.SqlQueryExtensions);
 
 			Queries.Add(new QueryInfo
 			{
@@ -259,9 +262,9 @@ namespace LinqToDB.Linq
 			});
 		}
 
-#endregion
+		#endregion
 
-#region Properties & Fields
+		#region Properties & Fields
 
 		public bool DoNotCache;
 
@@ -269,9 +272,10 @@ namespace LinqToDB.Linq
 		public Func<IDataContext,Expression,object?[]?,object?[]?,IAsyncEnumerable<T>> GetIAsyncEnumerable = null!;
 		public Func<IDataContext,Expression,object?[]?,object?[]?,Func<T,bool>,CancellationToken,Task> GetForEachAsync = null!;
 
-#endregion
+		#endregion
 
-#region Query cache
+		#region Query cache
+
 		[Flags]
 		enum QueryFlags
 		{
@@ -458,9 +462,9 @@ namespace LinqToDB.Linq
 			}
 		}
 
-#endregion
+		#endregion
 
-#region Query
+		#region Query
 
 		private static readonly QueryCache _queryCache = new ();
 
@@ -553,7 +557,7 @@ namespace LinqToDB.Linq
 			return query;
 		}
 
-#endregion
+		#endregion
 	}
 
 	class QueryInfo : IQueryContext

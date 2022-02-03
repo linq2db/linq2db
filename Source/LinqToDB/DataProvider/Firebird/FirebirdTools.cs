@@ -14,14 +14,7 @@ namespace LinqToDB.DataProvider.Firebird
 	[PublicAPI]
 	public static class FirebirdTools
 	{
-		private static readonly Lazy<IDataProvider> _firebirdDataProvider = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new FirebirdDataProvider();
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
+		static readonly Lazy<IDataProvider> _firebirdDataProvider = DataConnection.CreateDataProvider<FirebirdDataProvider>();
 
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{

@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+
 using LinqToDB.Extensions;
 using LinqToDB.SqlQuery;
 
@@ -54,12 +55,6 @@ namespace LinqToDB.Linq.Builder
 			context.FieldIndex = context.SelectQuery.Select.Add(sqlExpression, methodCall.Method.Name);
 
 			return context;
-		}
-
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
 		}
 
 		internal class ChainContext : SequenceContextBase

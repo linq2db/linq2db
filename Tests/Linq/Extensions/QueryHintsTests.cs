@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 
 using NUnit.Framework;
 
-namespace Tests.Linq
+namespace Tests.Extensions
 {
 	[TestFixture]
 	public class QueryHintsTests : TestBase
@@ -61,7 +62,9 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
+#pragma warning disable CS0618
 				db.QueryHints.Add(SqlServerTools.Sql.OptionRecompile);
+#pragma warning restore CS0618
 
 				var q = db.Parent.Select(p => p);
 
@@ -88,7 +91,9 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
+#pragma warning disable CS0618
 				db.NextQueryHints.Add(SqlServerTools.Sql.OptionRecompile);
+#pragma warning restore CS0618
 
 				var q = db.Parent.Select(p => p);
 

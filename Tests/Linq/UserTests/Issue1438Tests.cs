@@ -47,7 +47,7 @@ namespace Tests.UserTests
 		[Test]
 		public void SpecificTest([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] bool avoidProviderSpecificApi)
 		{
-			var provider = new PostgreSQLDataProvider(PostgreSQLVersion.v95);
+			var provider = new PostgreSQLDataProvider95();
 			var cs       = DataConnection.GetConnectionString(context);
 
 			using (var cn = new NpgsqlConnection(cs))

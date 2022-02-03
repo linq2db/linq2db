@@ -213,11 +213,15 @@ namespace LinqToDB.Linq
 
 		public static void MakeAlternativeInsertOrUpdate(Query query)
 		{
-			var firstStatement = (SqlInsertOrUpdateStatement)query.Queries[0].Statement;
+			var firstStatement  = (SqlInsertOrUpdateStatement)query.Queries[0].Statement;
+			var cloned          = firstStatement.Clone();
+			var insertStatement = new SqlInsertStatement(cloned.SelectQuery)
+			{
+				Insert             = cloned.Insert,
+				Tag                = cloned.Tag,
+				SqlQueryExtensions = cloned.SqlQueryExtensions
+			};
 
-			var cloned         = firstStatement.Clone();
-
-			var insertStatement = new SqlInsertStatement(cloned.SelectQuery) {Insert = cloned.Insert, Tag = cloned.Tag};
 			insertStatement.SelectQuery.From.Tables.Clear();
 
 			query.Queries.Add(new QueryInfo
@@ -234,7 +238,12 @@ namespace LinqToDB.Linq
 			//TODO! looks not working solution
 			if (firstStatement.Update.Items.Count > 0)
 			{
-				query.Queries[0].Statement = new SqlUpdateStatement(firstStatement.SelectQuery) {Update = firstStatement.Update, Tag = firstStatement.Tag};
+				query.Queries[0].Statement = new SqlUpdateStatement(firstStatement.SelectQuery)
+				{
+					Update             = firstStatement.Update,
+					Tag                = firstStatement.Tag,
+					SqlQueryExtensions = firstStatement.SqlQueryExtensions
+				};
 				SetNonQueryQuery2(query);
 			}
 			else

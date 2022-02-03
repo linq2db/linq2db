@@ -161,7 +161,7 @@ namespace LinqToDB
 				SqlPredicate predicate = left.CanBeNull || right.CanBeNull
 					? new SqlPredicate.IsDistinct(left, isNot, right)
 					: new SqlPredicate.ExprExpr(left, isNot ? SqlPredicate.Operator.Equal : SqlPredicate.Operator.NotEqual, right, withNull: null);
-				
+
 				builder.ResultExpression = new SqlSearchCondition(
 					new SqlCondition(isNot: false, predicate)
 				);
@@ -397,8 +397,10 @@ namespace LinqToDB
 
 		[Property(PN.PostgreSQL,    "TimeStamp",      ServerSideOnly=true)]
 		[Property(PN.Firebird,      "TimeStamp",      ServerSideOnly=true)]
+		[Property(PN.SqlServer2019, "DateTimeOffset", ServerSideOnly=true)]
 		[Property(PN.SqlServer2017, "DateTimeOffset", ServerSideOnly=true)]
 		[Property(PN.SqlServer2016, "DateTimeOffset", ServerSideOnly=true)]
+		[Property(PN.SqlServer2014, "DateTimeOffset", ServerSideOnly=true)]
 		[Property(PN.SqlServer2012, "DateTimeOffset", ServerSideOnly=true)]
 		[Property(PN.SqlServer2008, "DateTimeOffset", ServerSideOnly=true)]
 		[Property(PN.SapHana,       "TimeStamp",      ServerSideOnly=true)]
@@ -734,10 +736,10 @@ namespace LinqToDB
 
 		/*
 		 * marked internal as we don't have plans now to expose it directly (used by string.IsNullOrWhiteSpace mapping)
-		 * 
+		 *
 		 * implementation tries to mimic .NET implementation of string.IsNullOrWhiteSpace (except null check part):
 		 * return true if string doesn't contain any symbols except White_Space codepoints from Unicode.
-		 * 
+		 *
 		 * Known limitations:
 		 * 1. [Access] we handle only following WS:
 		 * - 0x20 (SPACE)
@@ -754,6 +756,7 @@ namespace LinqToDB
 		[Extension(PN.Informix,      typeof(IsNullOrWhiteSpaceInformixBuilder),      IsPredicate = true)]
 		[Extension(PN.SqlServer,     typeof(IsNullOrWhiteSpaceSqlServerBuilder),     IsPredicate = true)]
 		[Extension(PN.SqlServer2017, typeof(IsNullOrWhiteSpaceSqlServer2017Builder), IsPredicate = true)]
+		[Extension(PN.SqlServer2019, typeof(IsNullOrWhiteSpaceSqlServer2017Builder), IsPredicate = true)]
 		[Extension(PN.Access,        typeof(IsNullOrWhiteSpaceAccessBuilder),        IsPredicate = true)]
 		[Extension(PN.Sybase,        typeof(IsNullOrWhiteSpaceSybaseBuilder),        IsPredicate = true)]
 		[Extension(PN.MySql,         typeof(IsNullOrWhiteSpaceMySqlBuilder),         IsPredicate = true)]

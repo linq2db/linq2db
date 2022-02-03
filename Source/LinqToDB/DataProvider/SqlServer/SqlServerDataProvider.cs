@@ -16,6 +16,22 @@ namespace LinqToDB.DataProvider.SqlServer
 	using SchemaProvider;
 	using SqlProvider;
 
+	class SqlServerDataProvider2005SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2005SystemDataSqlClient   () : base(ProviderName.SqlServer2005, SqlServerVersion.v2005, SqlServerProvider.SystemDataSqlClient)    {} }
+
+	class SqlServerDataProvider2008SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2008SystemDataSqlClient   () : base(ProviderName.SqlServer2008, SqlServerVersion.v2008, SqlServerProvider.SystemDataSqlClient)    {} }
+	class SqlServerDataProvider2012SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2012SystemDataSqlClient   () : base(ProviderName.SqlServer2012, SqlServerVersion.v2012, SqlServerProvider.SystemDataSqlClient)    {} }
+	class SqlServerDataProvider2014SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2014SystemDataSqlClient   () : base(ProviderName.SqlServer2014, SqlServerVersion.v2014, SqlServerProvider.SystemDataSqlClient)    {} }
+	class SqlServerDataProvider2016SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2016SystemDataSqlClient   () : base(ProviderName.SqlServer2016, SqlServerVersion.v2016, SqlServerProvider.SystemDataSqlClient)    {} }
+	class SqlServerDataProvider2017SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2017SystemDataSqlClient   () : base(ProviderName.SqlServer2017, SqlServerVersion.v2017, SqlServerProvider.SystemDataSqlClient)    {} }
+	class SqlServerDataProvider2019SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2019SystemDataSqlClient   () : base(ProviderName.SqlServer2019, SqlServerVersion.v2019, SqlServerProvider.SystemDataSqlClient)    {} }
+	class SqlServerDataProvider2005MicrosoftDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2005MicrosoftDataSqlClient() : base(ProviderName.SqlServer2005, SqlServerVersion.v2005, SqlServerProvider.MicrosoftDataSqlClient) {} }
+	class SqlServerDataProvider2008MicrosoftDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2008MicrosoftDataSqlClient() : base(ProviderName.SqlServer2008, SqlServerVersion.v2008, SqlServerProvider.MicrosoftDataSqlClient) {} }
+	class SqlServerDataProvider2012MicrosoftDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2012MicrosoftDataSqlClient() : base(ProviderName.SqlServer2012, SqlServerVersion.v2012, SqlServerProvider.MicrosoftDataSqlClient) {} }
+	class SqlServerDataProvider2014MicrosoftDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2014MicrosoftDataSqlClient() : base(ProviderName.SqlServer2014, SqlServerVersion.v2014, SqlServerProvider.MicrosoftDataSqlClient) {} }
+	class SqlServerDataProvider2016MicrosoftDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2016MicrosoftDataSqlClient() : base(ProviderName.SqlServer2016, SqlServerVersion.v2016, SqlServerProvider.MicrosoftDataSqlClient) {} }
+	class SqlServerDataProvider2017MicrosoftDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2017MicrosoftDataSqlClient() : base(ProviderName.SqlServer2017, SqlServerVersion.v2017, SqlServerProvider.MicrosoftDataSqlClient) {} }
+	class SqlServerDataProvider2019MicrosoftDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2019MicrosoftDataSqlClient() : base(ProviderName.SqlServer2019, SqlServerVersion.v2019, SqlServerProvider.MicrosoftDataSqlClient) {} }
+
 	public class SqlServerDataProvider : DynamicDataProviderBase<SqlServerProviderAdapter>
 	{
 		#region Init
@@ -27,18 +43,18 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public SqlServerDataProvider(string name, SqlServerVersion version, SqlServerProvider provider)
 			: base(
-				  name,
-				  MappingSchemaInstance.Get(version),
-				  SqlServerProviderAdapter.GetInstance(provider))
+				name,
+				MappingSchemaInstance.Get(version),
+				SqlServerProviderAdapter.GetInstance(provider))
 		{
 			Version  = version;
 			Provider = provider;
 
-			SqlProviderFlags.IsDistinctOrderBySupported       = false;
-			SqlProviderFlags.IsSubQueryOrderBySupported       = false;
-			SqlProviderFlags.IsDistinctSetOperationsSupported = true;
-			SqlProviderFlags.IsCountDistinctSupported         = true;
-			SqlProviderFlags.IsUpdateFromSupported            = true;
+			SqlProviderFlags.IsDistinctOrderBySupported        = false;
+			SqlProviderFlags.IsSubQueryOrderBySupported        = false;
+			SqlProviderFlags.IsDistinctSetOperationsSupported  = true;
+			SqlProviderFlags.IsCountDistinctSupported          = true;
+			SqlProviderFlags.IsUpdateFromSupported             = true;
 			SqlProviderFlags.AcceptsOuterExpressionInAggregate = false;
 			SqlProviderFlags.IsApplyJoinSupported              = true;
 			SqlProviderFlags.TakeHintsSupported                = TakeHints.Percent | TakeHints.WithTies;
@@ -53,8 +69,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				SqlServerVersion.v2005 => new SqlServer2005SqlOptimizer(SqlProviderFlags),
 				SqlServerVersion.v2012 => new SqlServer2012SqlOptimizer(SqlProviderFlags),
+				SqlServerVersion.v2014 => new SqlServer2014SqlOptimizer(SqlProviderFlags),
 				SqlServerVersion.v2016 => new SqlServer2016SqlOptimizer(SqlProviderFlags),
 				SqlServerVersion.v2017 => new SqlServer2017SqlOptimizer(SqlProviderFlags),
+				SqlServerVersion.v2019 => new SqlServer2019SqlOptimizer(SqlProviderFlags),
 				_                      => new SqlServer2008SqlOptimizer(SqlProviderFlags),
 			};
 
@@ -102,8 +120,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			public static readonly MappingSchema SqlServer2005MappingSchema = new SqlServer2005MappingSchema();
 			public static readonly MappingSchema SqlServer2008MappingSchema = new SqlServer2008MappingSchema();
 			public static readonly MappingSchema SqlServer2012MappingSchema = new SqlServer2012MappingSchema();
+			public static readonly MappingSchema SqlServer2014MappingSchema = new SqlServer2014MappingSchema();
 			public static readonly MappingSchema SqlServer2016MappingSchema = new SqlServer2016MappingSchema();
 			public static readonly MappingSchema SqlServer2017MappingSchema = new SqlServer2017MappingSchema();
+			public static readonly MappingSchema SqlServer2019MappingSchema = new SqlServer2019MappingSchema();
 
 			public static MappingSchema Get(SqlServerVersion version)
 			{
@@ -111,8 +131,10 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					SqlServerVersion.v2005 => SqlServer2005MappingSchema,
 					SqlServerVersion.v2012 => SqlServer2012MappingSchema,
+					SqlServerVersion.v2014 => SqlServer2014MappingSchema,
 					SqlServerVersion.v2016 => SqlServer2016MappingSchema,
 					SqlServerVersion.v2017 => SqlServer2017MappingSchema,
+					SqlServerVersion.v2019 => SqlServer2019MappingSchema,
 					_                      => SqlServer2008MappingSchema,
 				};
 			}
@@ -134,8 +156,10 @@ namespace LinqToDB.DataProvider.SqlServer
 				SqlServerVersion.v2005 => new SqlServer2005SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
 				SqlServerVersion.v2008 => new SqlServer2008SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
 				SqlServerVersion.v2012 => new SqlServer2012SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
+				SqlServerVersion.v2014 => new SqlServer2014SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
 				SqlServerVersion.v2016 => new SqlServer2016SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
 				SqlServerVersion.v2017 => new SqlServer2017SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
+				SqlServerVersion.v2019 => new SqlServer2019SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
 				_                      => throw new InvalidOperationException(),
 			};
 		}

@@ -76,7 +76,7 @@ namespace LinqToDB.Linq.Builder
 					var isImmutable = QueryHelper.IsConstant(sqlInfo.Sql);
 					if (isImmutable)
 						continue;
-					
+
 					// possible we have to extend this list
 					//
 					isComplex = null != sqlInfo.Sql.Find(QueryElementType.SqlQuery);
@@ -91,7 +91,7 @@ namespace LinqToDB.Linq.Builder
 				wrapped = true;
 			}
 
-	
+
 			if (!isContinuousOrder && !Configuration.Linq.DoNotClearOrderBys)
 				sequence.SelectQuery.OrderBy.Items.Clear();
 
@@ -101,17 +101,11 @@ namespace LinqToDB.Linq.Builder
 				//
 				if (QueryHelper.IsConstant(expr.Sql))
 					continue;
-			
+
 				sequence.SelectQuery.OrderBy.Expr(expr.Sql, methodCall.Method.Name.EndsWith("Descending"));
 			}
 
 			return sequence;
-		}
-
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
 		}
 	}
 }

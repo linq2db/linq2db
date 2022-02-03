@@ -19,7 +19,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			if (sequence is TableBuilder.TableContext table 
+			if (sequence is TableBuilder.TableContext table
 				&& table.InheritanceMapping.Count > 0)
 			{
 				var objectType = methodCall.Type.GetGenericArguments()[0];
@@ -77,12 +77,6 @@ namespace LinqToDB.Linq.Builder
 				});
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
 		#region OfTypeContext
 
 		class OfTypeContext : PassThroughContext
@@ -93,7 +87,7 @@ namespace LinqToDB.Linq.Builder
 				_methodCall = methodCall;
 			}
 
-			private readonly MethodCallExpression _methodCall;
+			readonly MethodCallExpression _methodCall;
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{

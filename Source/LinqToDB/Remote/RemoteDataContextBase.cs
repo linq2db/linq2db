@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.Common;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -9,11 +10,11 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Remote
 {
-	using System.Data.Common;
+	using Common;
+	using DataProvider;
 	using Expressions;
 	using Extensions;
-	using LinqToDB.Common;
-	using LinqToDB.Interceptors;
+	using Interceptors;
 	using Mapping;
 	using SqlProvider;
 
@@ -28,7 +29,7 @@ namespace LinqToDB.Remote
 			public MappingSchema   MappingSchema   = null!;
 		}
 
-		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new ();
+		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new();
 
 		class RemoteMappingSchema : MappingSchema
 		{
@@ -49,7 +50,6 @@ namespace LinqToDB.Remote
 				try
 				{
 					var info = client.GetInfo(Configuration);
-
 					var type = Type.GetType(info.MappingSchemaType)!;
 					var ms   = new RemoteMappingSchema(ContextIDPrefix, (MappingSchema)Activator.CreateInstance(type)!);
 
@@ -87,7 +87,7 @@ namespace LinqToDB.Remote
 		}
 
 		private  MappingSchema? _serializationMappingSchema;
-		internal MappingSchema  SerializationMappingSchema => _serializationMappingSchema ??= new SerializationMappingSchema(MappingSchema);
+		internal MappingSchema   SerializationMappingSchema => _serializationMappingSchema ??= new SerializationMappingSchema(MappingSchema);
 
 		public  bool InlineParameters { get; set; }
 		public  bool CloseAfterUse    { get; set; }
@@ -200,12 +200,14 @@ namespace LinqToDB.Remote
 										Expression.New(
 											type.GetConstructor(new[]
 											{
+												typeof(IDataProvider),
 												typeof(MappingSchema),
 												typeof(ISqlOptimizer),
 												typeof(SqlProviderFlags)
 											}) ?? throw new InvalidOperationException($"Constructor for type '{type.Name}' not found."),
 											new Expression[]
 											{
+												Expression.Constant(null, typeof(IDataProvider)),
 												Expression.Constant(((IDataContext)this).MappingSchema),
 												Expression.Constant(GetSqlOptimizer()),
 												Expression.Constant(((IDataContext)this).SqlProviderFlags)
