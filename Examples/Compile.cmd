@@ -34,20 +34,13 @@ if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\2022\BuildTools" (
 
 set "msbuild_path=%root_path%\MSBuild\Current\Bin\amd64\MSBuild.exe"
 
-REM Grpc
-"%msbuild_path%" /v:m /target:Clean Remote\Grpc\Grpc.sln /property:Configuration=Debug
-"%msbuild_path%" /v:m /target:Clean Remote\Grpc\Grpc.sln /property:Configuration=Release
-"%msbuild_path%" /v:m Remote\Grpc\Grpc.sln /property:Configuration=Debug
-"%msbuild_path%" /v:m Remote\Grpc\Grpc.sln /property:Configuration=Release
+for /f "delims=" %%a in ('dir /s /b .\*.sln') do (
+echo ----------------------------------------------------------------------------
+echo Compiling %%a
+echo ----------------------------------------------------------------------------
 
-REM Soap
-"%msbuild_path%" /v:m /target:Clean Remote\Soap\Soap.sln /property:Configuration=Debug
-"%msbuild_path%" /v:m /target:Clean Remote\Soap\Soap.sln /property:Configuration=Release
-"%msbuild_path%" /v:m Remote\Grpc\Grpc.sln /property:Configuration=Debug
-"%msbuild_path%" /v:m Remote\Grpc\Grpc.sln /property:Configuration=Release
-
-REM Wcf
-"%msbuild_path%" /v:m /target:Clean Remote\Wcf\Wcf.sln /property:Configuration=Debug
-"%msbuild_path%" /v:m /target:Clean Remote\Wcf\Wcf.sln /property:Configuration=Release
-"%msbuild_path%" /v:m Remote\Wcf\Wcf.sln /property:Configuration=Debug
-"%msbuild_path%" /v:m Remote\Wcf\Wcf.sln /property:Configuration=Release
+"%msbuild_path%" /v:m /target:Clean %%a /property:Configuration=Debug
+"%msbuild_path%" /v:m /target:Clean %%a /property:Configuration=Release
+"%msbuild_path%" /v:m %%a /property:Configuration=Debug
+"%msbuild_path%" /v:m %%a /property:Configuration=Release
+)
