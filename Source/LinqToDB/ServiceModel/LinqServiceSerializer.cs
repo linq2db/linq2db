@@ -1423,6 +1423,15 @@ namespace LinqToDB.ServiceModel
 							break;
 						};
 
+					case QueryElementType.SqlRow:
+						{
+							var elem = (SqlRow)e;
+							
+							Append(elem.Values);
+
+							break;
+						}
+
 					case QueryElementType.OutputClause:
 						{
 							var elem = (SqlOutputClause)e;
@@ -2299,6 +2308,13 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SqlAliasPlaceholder :
 						{
 							obj = new SqlAliasPlaceholder();
+							break;
+						}
+
+					case QueryElementType.SqlRow:
+						{
+							var values = ReadArray<ISqlExpression>()!;
+							obj        = new SqlRow(values);
 							break;
 						}
 

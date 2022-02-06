@@ -442,7 +442,7 @@ namespace LinqToDB.Linq.Builder
 			IBuildContext                   fieldsContext,
 			IBuildContext                   valuesContext,
 			SqlTable?                       table,
-			List<SqlSetExpression> items)
+			List<SqlSetExpression>          items)
 		{
 			extract = (LambdaExpression)builder.ConvertExpression(extract);
 			var ext = extract.Body.Unwrap();
@@ -665,7 +665,8 @@ namespace LinqToDB.Linq.Builder
 						sequence,
 						updateStatement.Update.Items);
 
-				updateStatement.Update.Items.RemoveDuplicatesFromTail((s1, s2) => s1.Column.Equals(s2.Column));
+				updateStatement.Update.Items.RemoveDuplicatesFromTail((s1, s2) => 
+					s1.Row == null && s2.Row == null && s1.Column.Equals(s2.Column));
 
 				return sequence;
 			}

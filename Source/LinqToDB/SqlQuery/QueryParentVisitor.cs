@@ -399,6 +399,10 @@ namespace LinqToDB.SqlQuery
 					VisitX((SqlValuesTable)element);
 					break;
 
+				case QueryElementType.SqlRow:
+					VisitX((SqlRow)element);
+					break;
+
 				case QueryElementType.MergeOperationClause:
 					VisitX((SqlMergeOperationClause)element);
 					break;
@@ -569,6 +573,11 @@ namespace LinqToDB.SqlQuery
 		void VisitX(SqlExpression element)
 		{
 			foreach (var v in element.Parameters) Visit(v);
+		}
+
+		void VisitX(SqlRow element)
+		{
+			foreach (var v in element.Values) Visit(v);
 		}
 
 		void VisitX(SqlObjectExpression element)

@@ -1252,7 +1252,7 @@ namespace LinqToDB.SqlProvider
 						}
 					}
 
-					if (expr.Expr1.IsSqlRow())
+					if (expr.Expr1.ElementType == QueryElementType.SqlRow)
 						return OptimizeRowExprExpr(expr, context);
 
 					switch (expr.Operator)
@@ -1301,7 +1301,7 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.InListPredicate:
 				{
 					var inList = (InList)predicate;
-					if (inList.Expr1.IsSqlRow())
+					if (inList.Expr1.ElementType == QueryElementType.SqlRow)
 						return OptimizeRowInList(inList);
 					break;
 				}
@@ -1348,13 +1348,13 @@ namespace LinqToDB.SqlProvider
 					if (op is not (Operator.Equal or Operator.NotEqual))
 						throw new LinqException("Null SqlRow is only allowed in equality comparisons");
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.IsNull))
-						return RowIsNullFallback(predicate.Expr1.GetSqlRowValues(), op == Operator.NotEqual);
+						return RowIsNullFallback((SqlRow)predicate.Expr1, op == Operator.NotEqual);
 					break;
 
 				// ROW(a, b) operator ROW(c, d)
-				case SqlExpression rhs:
+				case SqlRow rhs:
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Comparisons))
-						return RowComparisonFallback(op, predicate.Expr1.GetSqlRowValues(), rhs.Parameters);
+						return RowComparisonFallback(op, (SqlRow)predicate.Expr1, rhs);
 					break;
 
 				// ROW(a, b) operator (SELECT c, d)
@@ -1394,17 +1394,17 @@ namespace LinqToDB.SqlProvider
 				: new InList(predicate.Expr1, withNull: null, predicate.IsNot, predicate.Values);
 		}
 
-		protected ISqlPredicate RowIsNullFallback(ISqlExpression[] values1, bool isNot)
+		protected ISqlPredicate RowIsNullFallback(SqlRow row, bool isNot)
 		{
 			var rewrite = new SqlSearchCondition();
 			// (a, b) is null     => a is null     and b is null
 			// (a, b) is not null => a is not null and b is not null
-			for (int i = 0; i < values1.Length; ++i)
-				rewrite.Conditions.Add(new SqlCondition(false, new IsNull(values1[i], isNot)));
+			foreach (var value in row.Values)
+				rewrite.Conditions.Add(new SqlCondition(false, new IsNull(value, isNot)));
 			return rewrite;
 		}
 
-		protected ISqlPredicate RowComparisonFallback(Operator op, ISqlExpression[] values1, ISqlExpression[] values2)
+		protected ISqlPredicate RowComparisonFallback(Operator op, SqlRow row1, SqlRow row2)
 		{
 			var rewrite = new SqlSearchCondition();
 						
@@ -1412,8 +1412,10 @@ namespace LinqToDB.SqlProvider
 			{			
 				// (a1, a2) =  (b1, b2) => a1 =  b1 and a2 = b2
 				// (a1, a2) <> (b1, b2) => a1 <> b1 or  a2 <> b2
-				for (int i = 0; i < values1.Length; ++i)
-					rewrite.Conditions.Add(new SqlCondition(false, new ExprExpr(values1[i], op, values2[i], withNull: null), isOr: op == Operator.NotEqual ));
+				bool isOr = op == Operator.NotEqual;
+				var compares = row1.Values.Zip(row2.Values, (a, b) => new ExprExpr(a, op, b, withNull: null));
+				foreach (var comp in compares)
+					rewrite.Conditions.Add(new SqlCondition(false, comp, isOr));
 				return rewrite;
 			}
 
@@ -1424,6 +1426,8 @@ namespace LinqToDB.SqlProvider
 				// (a1, a2, a3) <  (b1, b2, b3) => a1 < b1 or (a1 = b1 and a2 < b2) or (a1 = b1 and a2 = b2 and a3 <  b3)
 				// (a1, a2, a3) <= (b1, b2, b3) => a1 < b1 or (a1 = b1 and a2 < b2) or (a1 = b1 and a2 = b2 and a3 <= b3)
 				var strictOp = op is Operator.Greater or Operator.GreaterOrEqual ? Operator.Greater : Operator.Less;
+				var values1 = row1.Values;
+				var values2 = row2.Values;
 				for (int i = 0; i < values1.Length; ++i)
 				{
 					for (int j = 0; j < i; j++)

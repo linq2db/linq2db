@@ -2620,6 +2620,21 @@ namespace LinqToDB.SqlProvider
 
 					break;
 
+				case QueryElementType.SqlRow:
+					{
+						var row = (SqlRow) expr;
+						StringBuilder.Append('(');
+						foreach (var value in row.Values)
+						{
+							BuildExpression(value, buildTableName, checkParentheses, throwExceptionIfTableNotFound);
+							StringBuilder.Append(InlineComma);
+						}
+						StringBuilder.Length -= InlineComma.Length; // Note that SqlRow are never empty
+						StringBuilder.Append(')');
+
+						break;
+					}
+
 				default:
 					throw new InvalidOperationException($"Unexpected expression type {expr.ElementType}");
 			}

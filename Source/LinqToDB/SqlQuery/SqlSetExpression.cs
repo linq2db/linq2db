@@ -21,22 +21,34 @@ namespace LinqToDB.SqlQuery
 			Row        = row;
 			Expression = expression;
 
+			// The length-checks _should_ never failed thanks to C# type-checking.
+			// We do them in case someone attempts to build invalid expressions with unsafe casts or similar.
+
 			if (expression is SelectQuery subquery)
 			{
 				var columns = subquery.Select.Columns;
+				if (columns.Count != row.Length)
+					throw new LinqToDBException("Arity of row expression and subquery do not match.");
 				for (int i = 0; i < row.Length; i++)				
 					RefineDbParameter(row[i], columns[i].Expression);
 			}
+			else if (expression is SqlRow sqlRow)
+			{
+				var values = sqlRow.Values;
+				if (values.Length != row.Length)
+					throw new LinqToDBException("Arity of row expressions do not match.");
+				for (int i = 0; i < values.Length; i++)
+					RefineDbParameter(values[i], values[i]);
+			}
 			else if (expression != null)
 			{
-				var values = expression.GetSqlRowValues();
-				for (int i = 0; i < row.Length; i++)
-					RefineDbParameter(row[i], values[i]);
+				throw new ArgumentException("An array of expressions can only be SET to a subquery or row expression", nameof(expression));
 			}
 		}
 
 		// Most places (e.g. Insert) that use SqlSetExpression don't support the Row variant and access Column directly.
 		// In those places, an invalid query that was built with SqlRow will throw LinqToDBException.
+		// Codepaths that support Row (e.g. Update) will first check whether the `Row` property below is not null.
 		public ISqlExpression Column 
 		{
 			get => this.column ?? throw new LinqToDBException("SET (SqlRow) not supported here.");
@@ -46,8 +58,7 @@ namespace LinqToDB.SqlQuery
 				this.column = value;
 			}
 		} 
-
-		// Codepaths that support Row (e.g. Update) will first check whether this property is not null.
+		
 		public ISqlExpression[]? Row
 		{ 
 			get => this.row;

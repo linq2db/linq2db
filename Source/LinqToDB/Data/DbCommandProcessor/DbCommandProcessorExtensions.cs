@@ -38,8 +38,8 @@ namespace LinqToDB.Data.DbCommandProcessor
 			Instance == null ? cmd.ExecuteNonQueryAsync(token) : Instance.ExecuteNonQueryAsync(cmd, token);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static DbDataReader ExecuteReaderExt(this IDbCommand cmd, CommandBehavior commandBehavior) =>
-			Instance == null ? ((DbCommand)cmd).ExecuteReader(commandBehavior) : Instance.ExecuteReader((DbCommand)cmd, commandBehavior);
+		public static IDataReader ExecuteReaderExt(this IDbCommand cmd, CommandBehavior commandBehavior) =>
+			Instance == null ? cmd.ExecuteReader(commandBehavior) : Instance.ExecuteReader((DbCommand)cmd, commandBehavior);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Task<DbDataReader> ExecuteReaderExtAsync(this DbCommand cmd, CommandBehavior commandBehavior, CancellationToken token) =>

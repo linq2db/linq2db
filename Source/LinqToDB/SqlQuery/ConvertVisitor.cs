@@ -1367,6 +1367,18 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+					case QueryElementType.SqlRow:
+					{
+						var row    = (SqlRow)element;
+						var values = Convert(row.Values);
+
+						if (values != null && !ReferenceEquals(row.Values, values))
+						{
+							newElement = new SqlRow(values);
+						}
+						break;
+					}
+
 					case QueryElementType.SqlField:
 					case QueryElementType.SqlParameter:
 					case QueryElementType.SqlValue:

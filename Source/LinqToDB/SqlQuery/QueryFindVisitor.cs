@@ -385,6 +385,11 @@ namespace LinqToDB.SqlQuery
 							Find(((SqlValuesTable)element).Rows?.SelectMany(static r => r));
 					}
 
+				case QueryElementType.SqlRow:
+					{
+						return Find(((SqlRow)element).Values);
+					}
+
 				case QueryElementType.SqlField:
 				case QueryElementType.SqlParameter:
 				case QueryElementType.SqlValue:

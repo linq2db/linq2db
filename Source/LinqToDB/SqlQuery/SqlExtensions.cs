@@ -147,21 +147,11 @@ namespace LinqToDB.SqlQuery
 				return selectQuery;
 		}
 
-		internal static bool IsSqlRow(this ISqlExpression expression) 
-			=> expression.SystemType?.IsSqlRow() ?? false;
-
 		internal static bool IsSqlRow(this Expression expression)
 			=> expression.Type.IsSqlRow();
 
 		private static bool IsSqlRow(this Type type)
 			=> type.IsGenericType == true && type.GetGenericTypeDefinition() == typeof(Sql.SqlRow<,>);
-
-		internal static ISqlExpression[] GetSqlRowValues(this ISqlExpression expr)
-		{
-			return expr is SqlExpression row
-				? row.Parameters
-				: throw new LinqToDBException("Calls to Sql.Row() are the only valid expressions of type SqlRow.");
-		}
 
 		internal static ReadOnlyCollection<Expression> GetSqlRowValues(this Expression expr)
 		{
