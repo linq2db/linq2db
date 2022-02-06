@@ -143,6 +143,15 @@ namespace LinqToDB.Scaffold
 		/// </list>
 		/// </summary>
 		public Func<ObjectName, bool> LoadTableFunction { get; set; } = _ => true;
+
+		/// <summary>
+		/// Generate RETURN_VALUE stored procedure parameter for SQL Server.
+		/// <list type="bullet">
+		/// <item>Default: <c>false</c></item>
+		/// <item>In T4 compability mode: false</item>
+		/// </list>
+		/// </summary>
+		public bool EnableSqlServerReturnValue { get; set; }
 		#endregion
 	}
 }

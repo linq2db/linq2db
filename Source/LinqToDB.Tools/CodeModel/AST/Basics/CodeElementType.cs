@@ -148,6 +148,10 @@
 		/// Assignment statement.
 		/// </summary>
 		AssignmentStatement,
+		/// <summary>
+		/// Await statement.
+		/// </summary>
+		AwaitStatement,
 
 		// expressions
 
@@ -215,6 +219,10 @@
 		/// Throw expression.
 		/// </summary>
 		ThrowExpression,
+		/// <summary>
+		/// Await expression.
+		/// </summary>
+		AwaitExpression,
 
 		// l-value nodes
 

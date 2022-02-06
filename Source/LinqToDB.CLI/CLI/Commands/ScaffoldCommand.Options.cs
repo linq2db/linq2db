@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using LinqToDB.DataModel;
 using LinqToDB.Naming;
 using LinqToDB.Scaffold;
 
@@ -82,22 +83,18 @@ JSON file example:
 					null,
 					null,
 					false,
-					new StringEnumOption[]
-					{
-						// TODO: implement provider discovery for access
-						new (false, DatabaseType.Access    .ToString(), "MS Access (requires OLE DB or/and ODBC provider installed)"),
-						new (false, DatabaseType.DB2       .ToString(), "IBM DB2 LUW or z/OS"                                       ),
-						new (false, DatabaseType.Firebird  .ToString(), "Firebird"                                                  ),
-						new (false, DatabaseType.Informix  .ToString(), "IBM Informix"                                              ),
-						new (false, DatabaseType.SQLServer .ToString(), "MS SQL Server (including Azure SQL Server)"                ),
-						new (false, DatabaseType.MySQL     .ToString(), "MySQL/MariaDB"                                             ),
-						new (false, DatabaseType.Oracle    .ToString(), "Oracle Database"                                           ),
-						new (false, DatabaseType.PostgreSQL.ToString(), "PostgreSQL"                                                ),
-						new (false, DatabaseType.SqlCe     .ToString(), "MS SQL Server Compact"                                     ),
-						new (false, DatabaseType.SQLite    .ToString(), "SQLite"                                                    ),
-						new (false, DatabaseType.Sybase    .ToString(), "SAP/Sybase ASE"                                            ),
-						new (false, DatabaseType.SapHana   .ToString(), "SAP HANA"                                                  ),
-					});
+					new (false, DatabaseType.Access    .ToString(), "MS Access (requires OLE DB or/and ODBC provider installed)"),
+					new (false, DatabaseType.DB2       .ToString(), "IBM DB2 LUW or z/OS"                                       ),
+					new (false, DatabaseType.Firebird  .ToString(), "Firebird"                                                  ),
+					new (false, DatabaseType.Informix  .ToString(), "IBM Informix"                                              ),
+					new (false, DatabaseType.SQLServer .ToString(), "MS SQL Server (including Azure SQL Server)"                ),
+					new (false, DatabaseType.MySQL     .ToString(), "MySQL/MariaDB"                                             ),
+					new (false, DatabaseType.Oracle    .ToString(), "Oracle Database"                                           ),
+					new (false, DatabaseType.PostgreSQL.ToString(), "PostgreSQL"                                                ),
+					new (false, DatabaseType.SqlCe     .ToString(), "MS SQL Server Compact"                                     ),
+					new (false, DatabaseType.SQLite    .ToString(), "SQLite"                                                    ),
+					new (false, DatabaseType.Sybase    .ToString(), "SAP/Sybase ASE"                                            ),
+					new (false, DatabaseType.SapHana   .ToString(), "SAP HANA"                                                  ));
 
 			/// <summary>
 			/// Database provider location option.
@@ -170,11 +167,8 @@ Example of platform-specific providers:
 					null,
 					null,
 					false,
-					new StringEnumOption[]
-					{
-						new (false, "x86", "x86 architecture"),
-						new (false, "x64", "x64 architecture"),
-					});
+					new (false, "x86", "x86 architecture"),
+					new (false, "x64", "x64 architecture"));
 
 			/// <summary>
 			/// Base options template option.
@@ -189,11 +183,8 @@ Example of platform-specific providers:
 					null,
 					null,
 					false,
-					new StringEnumOption[]
-					{
-						new (true , "default", "set of parameters, used by default (as specified in option help)"),
-						new (false, "t4"     , "set of parameters, similar to T4 defaults (compat. option)"      ),
-					});
+					new (true , "default", "set of parameters, used by default (as specified in option help)"),
+					new (false, "t4"     , "set of parameters, similar to T4 defaults (compat. option)"      ));
 
 			/// <summary>
 			/// T4 template path option.
@@ -713,6 +704,22 @@ Naming options is an object with following properties:
 					_defaultOptions.DataModel.GenerateProcedureResultAsList);
 
 			/// <summary>
+			/// Specify stored procedure sync/async mapping generation option.
+			/// </summary>
+			public static readonly CliOption StoredProcedureTypes = new StringEnumCliOption(
+					"procedure-types",
+					null,
+					false,
+					true,
+					"enables generation of sync and async versions of stored procedure mapping",
+					null,
+					null,
+					null,
+					false,
+					new StringEnumOption(_defaultOptions.DataModel.GenerateProcedureSync , "sync" , "generate sync stored procedure call mappings" ),
+					new StringEnumOption(_defaultOptions.DataModel.GenerateProcedureAsync, "async", "generate async stored procedure call mappings"));
+
+			/// <summary>
 			/// Emit database type name for stored procedure parameters option.
 			/// </summary>
 			public static readonly CliOption DbTypeInProcedures = new BooleanCliOption(
@@ -741,15 +748,28 @@ Naming options is an object with following properties:
 			/// <summary>
 			/// Generate Find extension method for entity option.
 			/// </summary>
-			public static readonly CliOption GenerateFind = new BooleanCliOption(
+			public static readonly CliOption GenerateFind = new StringEnumCliOption(
 					"find-methods",
 					null,
 					false,
-					"enable generation of Find() extension methods to load entity by primary key value",
+					true,
+					"enable generation of extension methods to access entity by primary key",
 					null,
 					null,
 					null,
-					_defaultOptions.DataModel.GenerateFindExtensions);
+					false,
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByPkOnTable           ) != 0, "sync-pk-table"       , "generate sync entity load extension on table object with primary key parameters: Entity?            Find     (this ITable<Entity> table, pk_fields)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnTable      ) != 0, "async-pk-table"      , "generate sync entity load extension on table object with primary key parameters: Task<Entity?>      FindAsync(this ITable<Entity> table, pk_fields, CancellationToken)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByPkOnTable      ) != 0, "query-pk-table"      , "generate entity query extension on table object with primary key parameters    : IQueryable<Entity> FindQuery(this ITable<Entity> table, pk_fields)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByPkOnContext         ) != 0, "sync-pk-context"     , "generate sync entity load extension on table object with primary key parameters: Entity?            Find     (this DataContext    db   , pk_fields)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnContext    ) != 0, "async-pk-context"    , "generate sync entity load extension on table object with primary key parameters: Task<Entity?>      FindAsync(this DataContext    db   , pk_fields, CancellationToken)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnContext    ) != 0, "query-pk-context"    , "generate entity query extension on table object with primary key parameters    : IQueryable<Entity> FindQuery(this DataContext    db   , pk_fields)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByRecordOnTable       ) != 0, "sync-entity-table"   , "generate sync entity load extension on table object with entity parameter      : Entity?            Find     (this ITable<Entity> table, Entity row)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByRecordOnTable  ) != 0, "async-entity-table"  , "generate sync entity load extension on table object with entity parameter      : Task<Entity?>      FindAsync(this ITable<Entity> table, Entity row, CancellationToken)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByRecordOnTable  ) != 0, "query-entity-table"  , "generate entity query extension on table object with entity parameter          : IQueryable<Entity> FindQuery(this ITable<Entity> table, Entity row)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByRecordOnContext     ) != 0, "sync-entity-context" , "generate sync entity load extension on generated context with entity parameter : Entity?            Find     (this DataContext>   db   , Entity row)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByRecordOnContext) != 0, "async-entity-context", "generate sync entity load extension on generated context with entity parameter : Task<Entity?>      FindAsync(this DataContext    db   , Entity row, CancellationToken)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByRecordOnContext) != 0, "query-entity-context", "generate entity query extension on generated context with entity parameter     : IQueryable<Entity> FindQuery(this DataContext    db   , Entity row)"));
 
 			/// <summary>
 			/// Order Find extension method parameters by primary key column ordinal instead of order by parameter name option.
@@ -855,7 +875,27 @@ Naming options is an object with following properties:
 				"proc-or-func-result-class-name",
 				"procedure or table function custom result record mapping class naming options",
 				_defaultOptions.DataModel.ProcedureResultClassNameOptions);
-			
+
+			/// <summary>
+			/// Stored procedure async results wrapper class naming option.
+			/// </summary>
+			public static readonly CliOption AsyncProcResultClassNaming = DefineNamingOption(
+				"async-proc-multi-result-class-name",
+				@"results wrapper/holder class naming options for async signature of stored procedure with multiple results. E.g.
+- procedure with one or more return, out or in-out parameters and rowcount value;
+- procedure with one or more return, out or in-out parameters and result table.",
+				_defaultOptions.DataModel.AsyncProcedureResultClassNameOptions);
+
+			/// <summary>
+			/// Stored procedure async results wrapper class properties naming option.
+			/// </summary>
+			public static readonly CliOption AsyncProcResultClassPropertyNaming = DefineNamingOption(
+				"async-proc-multi-result-property-name",
+				@"results wrapper/holder class properties naming options for async signature of stored procedure with multiple results. E.g.
+- procedure with one or more return, out or in-out parameters and rowcount value;
+- procedure with one or more return, out or in-out parameters and result table.",
+				_defaultOptions.DataModel.AsyncProcedureResultClassPropertiesNameOptions);
+
 			/// <summary>
 			/// Stored procedure or table function result-set record column property naming option.
 			/// </summary>
@@ -941,16 +981,13 @@ Naming options is an object with following properties:
 					new[] { "--objects table,stored-procedure,table-function" },
 					new[] { "{ \"schema\": { \"objects\": [\"table\", \"view\", \"table-function\"] } }" },
 					false,
-					new StringEnumOption[]
-					{
-						new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.Table            ) != 0, "table"             , "load tables"                    ),
-						new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.View             ) != 0, "view"              , "load views"                     ),
-						new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.ForeignKey       ) != 0, "foreign-key"       , "load foreign key constrains"    ),
-						new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.StoredProcedure  ) != 0, "stored-procedure"  , "load stored procedures"         ),
-						new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.ScalarFunction   ) != 0, "scalar-function"   , "load scalar functions"          ),
-						new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.TableFunction    ) != 0, "table-function"    , "load table functions"           ),
-						new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.AggregateFunction) != 0, "aggregate-function", "load aggregate/window functions"),
-					});
+					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.Table            ) != 0, "table"             , "load tables"                    ),
+					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.View             ) != 0, "view"              , "load views"                     ),
+					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.ForeignKey       ) != 0, "foreign-key"       , "load foreign key constrains"    ),
+					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.StoredProcedure  ) != 0, "stored-procedure"  , "load stored procedures"         ),
+					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.ScalarFunction   ) != 0, "scalar-function"   , "load scalar functions"          ),
+					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.TableFunction    ) != 0, "table-function"    , "load table functions"           ),
+					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.AggregateFunction) != 0, "aggregate-function", "load aggregate/window functions"));
 
 			/// <summary>
 			/// Prefer provider-specific types over general .net types for columns and parameters option.
@@ -1059,6 +1096,19 @@ Naming options is an object with following properties:
 					null,
 					null,
 					_defaultOptions.Schema.LoadProceduresSchema);
+
+			/// <summary>
+			/// Load result-set schema for stored procedures option.
+			/// </summary>
+			public static readonly CliOption EnableSqlServerReturnValue = new BooleanCliOption(
+					"mssql-enable-return-value-parameter",
+					null,
+					false,
+					"(only for SQL Server) enable generation of RETURN_VALUE parameter for stored procedures",
+					null,
+					null,
+					null,
+					_defaultOptions.Schema.EnableSqlServerReturnValue);
 
 			/// <summary>
 			/// Table load filter option.

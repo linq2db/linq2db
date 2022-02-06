@@ -10,8 +10,9 @@ namespace LinqToDB.DataModel
 		/// Defines addtional schema classes.
 		/// </summary>
 		/// <param name="schema">Schema model.</param>
+		/// <param name="contextType">Main context type.</param>
 		/// <returns>Type of schema context-like class.</returns>
-		private IType BuildAdditionalSchema(AdditionalSchemaModel schema)
+		private IType BuildAdditionalSchema(AdditionalSchemaModel schema, IType contextType)
 		{
 			// generated code for additional schema looks like:
 			/*
@@ -51,6 +52,7 @@ namespace LinqToDB.DataModel
 				entity => DefineClass(schemaEntities, entity.Class),
 				schemaContext.Properties(true),
 				false,
+				contextType,
 				AST.Member(schemaContext.Type.This, ctxField.Field.Reference),
 				() => findMethods);
 

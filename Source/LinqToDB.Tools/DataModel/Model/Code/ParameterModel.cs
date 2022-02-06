@@ -30,5 +30,21 @@ namespace LinqToDB.DataModel
 		/// Gets or sets parameter direction.
 		/// </summary>
 		public CodeParameterDirection Direction   { get; set; }
+
+		/// <summary>
+		/// Return parameter model with new direction or same model if direction not changed.
+		/// </summary>
+		/// <param name="direction">New parameter direction.</param>
+		/// <returns>Parameter model with new direction or same model if direction not changed.</returns>
+		public ParameterModel WithDirection(CodeParameterDirection direction)
+		{
+			if (direction == Direction)
+				return this;
+
+			return new ParameterModel(Name, Type, direction)
+			{
+				Description = Description
+			};
+		}
 	}
 }

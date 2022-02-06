@@ -3,6 +3,7 @@ using System.Linq;
 using LinqToDB.Schema;
 using LinqToDB.CodeModel;
 using LinqToDB.Common;
+using System.Collections.Generic;
 
 namespace LinqToDB.DataModel
 {
@@ -31,7 +32,9 @@ namespace LinqToDB.DataModel
 			Func<RegionGroup>    proceduresGroup,
 			IType                dataContextType)
 		{
-			// generated code sample:
+			// TODO: refactor procedures generation logic. it became chaotic after async support added
+
+			// generated code sample (without async version):
 			/*
 			 * #region Procedure1
 			 * public static IEnumerable<Procedure1Result> Procedure1(this DataConnection dataConnection, int? input, ref int? output)
@@ -77,10 +80,87 @@ namespace LinqToDB.DataModel
 					return;
 			}
 
+			var methodsGroup                       = (region ??= proceduresGroup().New(storedProcedure.Method.Name)).Methods(false);
+			var useOrdinalMapping                  = false;
+			ResultTableModel? customTable          = null;
+			IType?           returnElementType     = null;
+			// QueryProc type- and regular parameters
+			CodeProperty[]? customRecordProperties = null;
+			AsyncProcedureResult? asyncResult      = null;
+			var classes                            = region.Classes();
+
+			// generate custom result type if needed
+			if (storedProcedure.Results.Count > 1)
+			{
+				// TODO: right now we don't have schema API that could load multiple result sets
+				// still it makes sense to implement multiple resultsets generation in future even without
+				// schema API, as user could define resultsets manually
+				throw new NotImplementedException("Multiple result-sets stored procedure generation not imlpemented yet");
+			}
+			else if (storedProcedure.Results.Count == 1)
+			{
+				// for stored procedure call with result set we use QueryProc API
+				(customTable, var mappedTable, asyncResult) = storedProcedure.Results[0];
+
+				// if procedure result table contains unique and not empty column names, we use columns mappings
+				// otherwise we should bind columns manually by ordinal (as we don't have by-ordinal mapping conventions support)
+				useOrdinalMapping = customTable != null
+					// number of columns remains same after empty names and duplicates removed?
+					&& customTable.Columns.Select(c => c.Metadata.Name).Where(_ => !string.IsNullOrEmpty(_)).Distinct().Count() != customTable.Columns.Count;
+
+				if (customTable != null)
+					(returnElementType, customRecordProperties) = BuildCustomResultClass(customTable, classes, !useOrdinalMapping);
+				else if (mappedTable != null)
+					returnElementType = _entityBuilders[mappedTable].Type.Type;
+			}
+
+			if (_options.DataModel.GenerateProcedureSync)
+				BuildStoredProcedureMethod(storedProcedure, dataContextType, methodsGroup, useOrdinalMapping, customTable, returnElementType, customRecordProperties, classes, null, false);
+			if (_options.DataModel.GenerateProcedureAsync)
+				BuildStoredProcedureMethod(storedProcedure, dataContextType, methodsGroup, useOrdinalMapping, customTable, returnElementType, customRecordProperties, classes, asyncResult, true);
+		}
+
+		/// <summary>
+		/// Generates sync or async  stored procedure mapping method.
+		/// </summary>
+		/// <param name="storedProcedure">Stored procedure model.</param>
+		/// <param name="dataContextType">Data context class type.</param>
+		/// <param name="methodsGroup">Method group to add new mapping method.</param>
+		/// <param name="useOrdinalMapping">If <c>true</c>, by-ordinal mapping used for result mapping instead of by-name mapping.</param>
+		/// <param name="customTable">Custom result record model.</param>
+		/// <param name="returnElementType">Type of result record for procedure with result.</param>
+		/// <param name="customRecordProperties">Column properties for custom result record type.</param>
+		/// <param name="classes">Procedure classes group.</param>
+		/// <param name="asyncResult">Optional result class model for async signature.</param>
+		/// <param name="async">If <c>true</c>, generate async version of mapping.</param>
+		private void BuildStoredProcedureMethod(
+			StoredProcedureModel  storedProcedure,
+			IType                 dataContextType,
+			MethodGroup           methodsGroup,
+			bool                  useOrdinalMapping,
+			ResultTableModel?     customTable,
+			IType?                returnElementType,
+			CodeProperty[]?       customRecordProperties,
+			ClassGroup            classes,
+			AsyncProcedureResult? asyncResult,
+			bool                  async)
+		{
+			var hasParameters = storedProcedure.Parameters.Count > 0 || storedProcedure.Return != null;
+
+			// generate ToList materialization call or mark method async in two cases:
+			// - when return type of mapping is List<T>
+			// - when procedure has non-input parameters
+			var toListRequired        = _options.DataModel.GenerateProcedureResultAsList && storedProcedure.Results.Count == 1 && (storedProcedure.Results[0].Entity != null || storedProcedure.Results[0].CustomTable != null);
+			var toListOrAsyncRequired = toListRequired
+				|| storedProcedure.Return != null
+				|| storedProcedure.Parameters.Any(p => p.Parameter.Direction != CodeParameterDirection.In);
+
 			// declare mapping method
 			var method = DefineMethod(
-				(region ??= proceduresGroup().New(storedProcedure.Method.Name)).Methods(false),
-				storedProcedure.Method);
+				methodsGroup,
+				storedProcedure.Method,
+				async,
+				async && toListOrAsyncRequired);
 
 			// declare data context parameter (extension `this` parameter)
 			var ctxParam = AST.Parameter(
@@ -92,18 +172,17 @@ namespace LinqToDB.DataModel
 			var body = method.Body();
 
 			// array of procedure parameters (DataParameter objects)
-			CodeVariable?              parametersVar    = null;
-			// bindings of parameter values to output parameters of method after procedure call
-			CodeAssignmentStatement[]? parameterRebinds = null;
-
-			var hasParameters = storedProcedure.Parameters.Count > 0 || storedProcedure.Return != null;
+			CodeVariable?                            parametersVar             = null;
+			CodeAssignmentStatement[]?               parameterRebinds          = null;
+			Dictionary<FunctionParameterModel, int>? rebindedParametersIndexes = null;
 			if (hasParameters)
 			{
-				// preparations for parameters with return value (out, inout and ret parameters)
-				var resultParametersCount = storedProcedure.Parameters.Count(p => p.Parameter.Direction != CodeParameterDirection.In)
-					+ (storedProcedure.Return != null ? 1 : 0);
+				var resultParametersCount = storedProcedure.Parameters.Count(p => p.Parameter.Direction != CodeParameterDirection.In) + (storedProcedure.Return != null ? 1 : 0);
+				// bindings of parameter values to output parameters of method after procedure call
 				parameterRebinds          = resultParametersCount > 0 ? new CodeAssignmentStatement[resultParametersCount] : Array<CodeAssignmentStatement>.Empty;
 				var rebindIndex           = 0;
+				if (resultParametersCount > 0)
+					rebindedParametersIndexes = new(resultParametersCount);
 
 				// DataParameter collection initialization
 				var parameterValues = new ICodeExpression[storedProcedure.Parameters.Count + (storedProcedure.Return != null ? 1 : 0)];
@@ -113,38 +192,58 @@ namespace LinqToDB.DataModel
 				for (var i = 0; i < storedProcedure.Parameters.Count; i++)
 				{
 					var p     = storedProcedure.Parameters[i];
-					var param = DefineParameter(method, p.Parameter);
+					ILValue? rebindTo = null;
+					var rebindRequired = p.Parameter.Direction != CodeParameterDirection.In;
+
+					CodeParameter param;
+					if (async && p.Parameter.Direction != CodeParameterDirection.In)
+						param = DefineParameter(method, p.Parameter.WithDirection(CodeParameterDirection.In));
+					else
+						param = DefineParameter(method, p.Parameter);
+
+					if (rebindRequired)
+						rebindTo = param.Reference;
 
 					parameterValues[i] = BuildProcedureParameter(
 						param,
-						false,
+						param.Type.Type,
+						p.Direction,
+						rebindTo,
 						p.DbName,
 						p.DataType,
 						p.Type,
 						parametersVar,
-						storedProcedure.Parameters.Count,
-						parameterRebinds,
+						i,
+						parameterRebinds!,
 						rebindIndex);
 
 					if (p.Parameter.Direction != CodeParameterDirection.In)
+					{
+						rebindedParametersIndexes!.Add(p, rebindIndex);
 						rebindIndex++;
+					}
 				}
 
 				// build return parameter
 				if (storedProcedure.Return != null)
 				{
-					var param = DefineParameter(method, storedProcedure.Return.Parameter);
+					CodeParameter? param = null;
+					if (!async)
+						param = DefineParameter(method, storedProcedure.Return.Parameter);
 
 					parameterValues[storedProcedure.Parameters.Count] = BuildProcedureParameter(
 						param,
-						true,
+						storedProcedure.Return.Parameter.Type,
+						System.Data.ParameterDirection.ReturnValue,
+						param?.Reference ?? AST.Variable(AST.Name("fake"), storedProcedure.Return.Parameter.Type, false).Reference,
 						storedProcedure.Return.DbName ?? STORED_PROCEDURE_DEFAULT_RETURN_PARAMETER,
 						storedProcedure.Return.DataType,
 						storedProcedure.Return.Type,
 						parametersVar,
 						storedProcedure.Parameters.Count,
-						parameterRebinds,
+						parameterRebinds!,
 						rebindIndex);
+					rebindedParametersIndexes!.Add(storedProcedure.Return, rebindIndex);
 				}
 
 				var parametersArray = AST.Assign(
@@ -153,51 +252,63 @@ namespace LinqToDB.DataModel
 				body.Append(parametersArray);
 			}
 
+			CodeParameter? cancellationTokenParameter = null;
+			if (async)
+				cancellationTokenParameter = DefineParameter(
+					method,
+					new ParameterModel(CANCELLATION_TOKEN_PARAMETER, WellKnownTypes.System.Threading.CancellationToken, CodeParameterDirection.In),
+					AST.Default(WellKnownTypes.System.Threading.CancellationToken, true));
+
 			ICodeExpression? returnValue = null;
 
-			if (storedProcedure.Results.Count > 1)
-				// TODO: right now we don't have schema API that could load multiple result sets
-				// still it makes sense to implement multiple resultsets generation in future even without
-				// schema API, as user could define resultsets manually
-				throw new NotImplementedException("Multiple result-sets stored procedure generation not imlpemented yet");
-			else if (storedProcedure.Results.Count == 0)
+			IType returnType;
+
+			if (storedProcedure.Results.Count == 0 || (storedProcedure.Results.Count == 1 && storedProcedure.Results[0].CustomTable == null && storedProcedure.Results[0].Entity == null))
 			{
 				// for stored procedure call without result set we use ExecuteProc API
 				// prepare call parameters
-				var executeProcParameters    = new ICodeExpression[hasParameters ? 3 : 2];
-				executeProcParameters[0]     = ctxParam.Reference;
-				executeProcParameters[1]     = AST.Constant(BuildFunctionName(storedProcedure.Name), true);
+				var parametersCount          = (hasParameters ? 3 : 2) + (async ? 1 : 0);
+				var executeProcParameters    = new ICodeExpression[parametersCount];
+				executeProcParameters[0] = ctxParam.Reference;
+				executeProcParameters[1] = AST.Constant(BuildFunctionName(storedProcedure.Name), true);
+				if (async)
+					executeProcParameters[2] = cancellationTokenParameter!.Reference;
 				if (hasParameters)
-					executeProcParameters[2] = parametersVar!.Reference;
+					executeProcParameters[async ? 3 : 2] = parametersVar!.Reference;
 
-				method.Returns(WellKnownTypes.System.Int32);
-				returnValue = AST.ExtCall(
-					WellKnownTypes.LinqToDB.Data.DataConnectionExtensions,
-					WellKnownTypes.LinqToDB.Data.DataConnectionExtensions_ExecuteProc,
-					WellKnownTypes.System.Int32,
-					executeProcParameters);
+				returnType = WellKnownTypes.System.Int32;
+				if (async)
+				{
+					returnValue = AST.ExtCall(
+						WellKnownTypes.LinqToDB.Data.DataConnectionExtensions,
+						WellKnownTypes.LinqToDB.Data.DataConnectionExtensions_ExecuteProcAsync,
+						WellKnownTypes.System.Int32,
+						executeProcParameters);
+
+					if (asyncResult != null)
+					{
+						var rowCountVar = AST.Variable(
+							AST.Name(STORED_PROCEDURE_RESULT_VARIABLE),
+							WellKnownTypes.System.Int32,
+							true);
+						body.Append(AST.Assign(rowCountVar, AST.AwaitExpression(returnValue)));
+						returnValue = rowCountVar.Reference;
+					}
+				}
+				else
+				{
+					returnValue = AST.ExtCall(
+						WellKnownTypes.LinqToDB.Data.DataConnectionExtensions,
+						WellKnownTypes.LinqToDB.Data.DataConnectionExtensions_ExecuteProc,
+						WellKnownTypes.System.Int32,
+						executeProcParameters);
+				}
 			}
-			else
+			else if (storedProcedure.Results.Count == 1)
 			{
-				// for stored procedure call with result set we use QueryProc API
-				var (customTable, mappedTable) = storedProcedure.Results[0];
-
 				// QueryProc type- and regular parameters
 				IType[]           queryProcTypeArgs;
 				ICodeExpression[] queryProcParameters;
-				IType             returnElementType;
-
-				// if procedure result table contains unique and not empty column names, we use columns mappings
-				// otherwise we should bind columns manually by ordinal (as we don't have by-ordinal mapping conventions support)
-				var useOrdinalMapping = customTable != null
-					// number of columns remains same after empty names and duplicates removed?
-					&& customTable.Columns.Select(c => c.Metadata.Name).Where(_ => !string.IsNullOrEmpty(_)).Distinct().Count() != customTable.Columns.Count;
-
-				CodeProperty[]? customRecordProperties = null;
-				if (customTable != null)
-					(returnElementType, customRecordProperties) = BuildCustomResultClass(customTable, region, !useOrdinalMapping);
-				else
-					returnElementType = _entityBuilders[mappedTable!].Type.Type;
 
 				if (useOrdinalMapping)
 				{
@@ -212,7 +323,7 @@ namespace LinqToDB.DataModel
 					 * }
 					 */
 
-					queryProcParameters = new ICodeExpression[hasParameters ? 4 : 3];
+					queryProcParameters = new ICodeExpression[(hasParameters ? 4 : 3) + (async ? 1 : 0)];
 
 					// generate positional mapping lambda
 					// TODO: switch to ColumnReader.GetValue in future to utilize more precise mapping
@@ -223,7 +334,7 @@ namespace LinqToDB.DataModel
 						WellKnownTypes.System.Data.Common.DbDataReader);
 					var initializers       = new CodeAssignmentStatement[customTable!.Columns.Count];
 					var lambda             = AST
-						.Lambda(WellKnownTypes.System.Func(returnElementType, WellKnownTypes.System.Data.Common.DbDataReader), true)
+						.Lambda(WellKnownTypes.System.Func(returnElementType!, WellKnownTypes.System.Data.Common.DbDataReader), true)
 							.Parameter(drParam);
 					queryProcParameters[1] = lambda.Method;
 
@@ -253,7 +364,7 @@ namespace LinqToDB.DataModel
 							.Append(
 								AST.Return(
 									AST.New(
-										returnElementType,
+										returnElementType!,
 										Array<ICodeExpression>.Empty,
 										initializers)));
 
@@ -262,73 +373,144 @@ namespace LinqToDB.DataModel
 				else
 				{
 					// use built-in record mapping by column names
-					queryProcParameters = new ICodeExpression[hasParameters ? 3 : 2];
-					queryProcTypeArgs   = new[] { returnElementType };
+					queryProcParameters = new ICodeExpression[(hasParameters ? 3 : 2) + (async ? 1 : 0)];
+					queryProcTypeArgs = new[] { returnElementType! };
 				}
 
 				queryProcParameters[0] = ctxParam.Reference;
-				queryProcParameters[queryProcParameters.Length - (hasParameters ? 2 : 1)] = AST.Constant(BuildFunctionName(storedProcedure.Name), true);
+				queryProcParameters[^((hasParameters ? 2 : 1) + (async ? 1 : 0))] = AST.Constant(BuildFunctionName(storedProcedure.Name), true);
+				if (async)
+					queryProcParameters[hasParameters ? ^2 : ^1] = cancellationTokenParameter!.Reference;
 				if (hasParameters)
-					queryProcParameters[queryProcParameters.Length - 1] = parametersVar!.Reference;
+					queryProcParameters[^1] = parametersVar!.Reference;
 
-				method.Returns(
-					_options.DataModel.GenerateProcedureResultAsList
-						? WellKnownTypes.System.Collections.Generic.List(returnElementType)
-						: WellKnownTypes.System.Collections.Generic.IEnumerable(returnElementType));
+				returnType = _options.DataModel.GenerateProcedureResultAsList
+					? WellKnownTypes.System.Collections.Generic.List(returnElementType!)
+					: WellKnownTypes.System.Collections.Generic.IEnumerable(returnElementType!);
 
 				// generated QueryProc call
-				returnValue = AST.ExtCall(
-					WellKnownTypes.LinqToDB.Data.DataConnectionExtensions,
-					WellKnownTypes.LinqToDB.Data.DataConnectionExtensions_QueryProc,
-					WellKnownTypes.System.Collections.Generic.IEnumerable(returnElementType),
-					queryProcTypeArgs,
-					false,
-					queryProcParameters);
-
-				// generate ToList materialization call in two cases:
-				// - when return type of mapping is List<T>
-				// - when procedure has non-input parameters, because parameter values only available after
-				//   full data set read from data reader
-				if (_options.DataModel.GenerateProcedureResultAsList
-					|| parameterRebinds?.Length > 0)
+				if (async)
 				{
 					returnValue = AST.ExtCall(
-						WellKnownTypes.System.Linq.Enumerable,
-						WellKnownTypes.System.Linq.Enumerable_ToList,
-						WellKnownTypes.System.Collections.Generic.List(returnElementType),
-						new[] { returnElementType },
-						true,
-						returnValue);
+						WellKnownTypes.LinqToDB.Data.DataConnectionExtensions,
+						WellKnownTypes.LinqToDB.Data.DataConnectionExtensions_QueryProcAsync,
+						WellKnownTypes.System.Threading.Tasks.Task(WellKnownTypes.System.Collections.Generic.IEnumerable(returnElementType!)),
+						queryProcTypeArgs,
+						false,
+						queryProcParameters);
+				}
+				else
+				{
+					returnValue = AST.ExtCall(
+						WellKnownTypes.LinqToDB.Data.DataConnectionExtensions,
+						WellKnownTypes.LinqToDB.Data.DataConnectionExtensions_QueryProc,
+						WellKnownTypes.System.Collections.Generic.IEnumerable(returnElementType!),
+						queryProcTypeArgs,
+						false,
+						queryProcParameters);
+				}
+
+				if (toListOrAsyncRequired)
+				{
+					if (async)
+					{
+						var listVar = AST.Variable(
+							AST.Name(STORED_PROCEDURE_RESULT_VARIABLE),
+							WellKnownTypes.System.Collections.Generic.List(returnElementType!),
+							true);
+						body.Append(AST.Assign(listVar, AST.AwaitExpression(returnValue)));
+						returnValue = AST.ExtCall(
+							WellKnownTypes.System.Linq.Enumerable,
+							WellKnownTypes.System.Linq.Enumerable_ToList,
+							WellKnownTypes.System.Collections.Generic.List(returnElementType!),
+							new[] { returnElementType! },
+							true,
+							listVar.Reference);
+					}
+					else
+					{
+						returnValue = AST.ExtCall(
+							WellKnownTypes.System.Linq.Enumerable,
+							WellKnownTypes.System.Linq.Enumerable_ToList,
+							WellKnownTypes.System.Collections.Generic.List(returnElementType!),
+							new[] { returnElementType! },
+							true,
+							returnValue);
+					}
 				}
 			}
+			// unreachable currently
+			else
+				throw new NotImplementedException();
 
 			// if procedure contains non-input parameters, we need to read their values from DataParameter
 			// and bind to mapping method parameters
 			if (parameterRebinds?.Length > 0)
 			{
-				// save API call to variable
-				var callProcVar = AST.Variable(
-					AST.Name(STORED_PROCEDURE_RETURN_VARIABLE),
-					method.Method.ReturnType!.Type,
-					true);
-				body.Append(AST.Assign(callProcVar, returnValue));
+				var result = returnValue;
+				if (toListRequired)
+				{
+					// save API call to variable
+					var callProcVar = AST.Variable(
+						AST.Name(STORED_PROCEDURE_RETURN_VARIABLE),
+						returnType,
+						true);
+						body.Append(AST.Assign(callProcVar, returnValue!));
+					result = callProcVar.Reference;
+				}
 
-				// emit rebind statements
-				foreach (var rebind in parameterRebinds)
-					body.Append(rebind);
+				if (async && asyncResult != null)
+				{
+					// as async methods cannot have ref/out parameters, we generate result class to contain out/ref/return parameters and result set
+					var resultClassBuilder = DefineClass(classes, asyncResult.Class);
+					var properties         = resultClassBuilder.Properties(true);
+					var initializers       = new CodeAssignmentStatement[parameterRebinds.Length + 1];
 
-				// return result value
-				body.Append(AST.Return(callProcVar.Reference));
+					asyncResult.MainResult.Type = returnType;
+					var prop                    = DefineProperty(properties, asyncResult.MainResult);
+					initializers[0]             = AST.Assign(prop.Property.Reference, result);
+
+					// order parameters to always generate properties in same order
+					var idx = 0;
+					foreach (var parameter in asyncResult.ParameterProperties.OrderBy(k => k.Value.Name))
+					{
+						prop                  = DefineProperty(properties, parameter.Value);
+						initializers[idx + 1] = AST.Assign(prop.Property.Reference, parameterRebinds[rebindedParametersIndexes![parameter.Key]].RValue);
+						idx++;
+					}
+
+					// TODO: return type update
+					body.Append(AST.Return(AST.New(resultClassBuilder.Type.Type, Array<ICodeExpression>.Empty, initializers)));
+
+					returnType = resultClassBuilder.Type.Type;
+
+				}
+				else
+				{
+					// emit rebind statements
+					foreach (var rebind in parameterRebinds)
+						body.Append(rebind);
+
+					// return result value
+					body.Append(AST.Return(result));
+				}
 			}
 			else
 				body.Append(AST.Return(returnValue));
+
+			if (async)
+				returnType = WellKnownTypes.System.Threading.Tasks.Task(returnType);
+
+			method.Returns(returnType);
 		}
 
 		/// <summary>
 		/// Generates code for stored procedure parameter.
 		/// </summary>
 		/// <param name="parameter">Parameter definition node.</param>
-		/// <param name="returnParameter">Return parameter flag.</param>
+		/// <param name="valueType">Parameter value type.</param>
+		/// <param name="direction">Parameter direction enum value.</param>
+		/// <param name="rebindTo">lvalue to store out/ref parameter value.</param>
 		/// <param name="parameterName">Database name of parameter.</param>
 		/// <param name="dataType"><see cref="DataType"/>, associated with parameter.</param>
 		/// <param name="dbType">Database paramer type.</param>
@@ -338,15 +520,17 @@ namespace LinqToDB.DataModel
 		/// <param name="rebindIndex">Index if parameter in rebind array.</param>
 		/// <returns></returns>
 		private ICodeExpression BuildProcedureParameter(
-			CodeParameter             parameter,
-			bool                      returnParameter,
-			string?                   parameterName,
-			DataType?                 dataType,
-			DatabaseType?             dbType,
-			CodeVariable              parametersVar,
-			int                       parameterIndex,
-			CodeAssignmentStatement[] parameterRebinds,
-			int                       rebindIndex)
+			CodeParameter?                 parameter,
+			IType                          valueType,
+			System.Data.ParameterDirection direction,
+			ILValue?                       rebindTo,
+			string?                        parameterName,
+			DataType?                      dataType,
+			DatabaseType?                  dbType,
+			CodeVariable                   parametersVar,
+			int                            parameterIndex,
+			CodeAssignmentStatement[]      parameterRebinds,
+			int                            rebindIndex)
 		{
 			// DataParameter constructor arguments
 			var ctorParams = new ICodeExpression[dataType != null ? 3 : 2];
@@ -354,14 +538,16 @@ namespace LinqToDB.DataModel
 			ctorParams[0] = AST.Constant(parameterName ?? string.Format(STORED_PROCEDURE_PARAMETER_TEMPLATE, parameterIndex), true);
 			// pass parameter value for in and inout parameters
 			// otherwise pass null
-			ctorParams[1] = parameter.Direction == CodeParameterDirection.In || parameter.Direction == CodeParameterDirection.Ref ? parameter.Reference : AST.Null(WellKnownTypes.System.ObjectNullable, true);
+			ctorParams[1] = direction == System.Data.ParameterDirection.Input || direction == System.Data.ParameterDirection.InputOutput
+				? parameter!.Reference
+				: AST.Null(WellKnownTypes.System.ObjectNullable, true);
 			if (dataType != null)
 				ctorParams[2] = AST.Constant(dataType.Value, true);
 
 			// DataParameter initialization statements
 			// calculate initializers count to allocate array or known size intead of list to array conversion
 			var initializersCount = 0;
-			if (parameter.Direction != CodeParameterDirection.In)
+			if (direction != System.Data.ParameterDirection.Input)
 				initializersCount++;
 			if (dbType != null)
 			{
@@ -378,17 +564,8 @@ namespace LinqToDB.DataModel
 			var ctorInitializers = new CodeAssignmentStatement[initializersCount];
 			var initializersIdx  = 0;
 
-			if (parameter.Direction != CodeParameterDirection.In)
+			if (direction != System.Data.ParameterDirection.Input)
 			{
-				System.Data.ParameterDirection direction = default;
-
-				if (parameter.Direction == CodeParameterDirection.Out && !returnParameter)
-					direction = System.Data.ParameterDirection.Output;
-				else if (parameter.Direction == CodeParameterDirection.Ref)
-					direction = System.Data.ParameterDirection.InputOutput;
-				else if (returnParameter)
-					direction = System.Data.ParameterDirection.ReturnValue;
-
 				ctorInitializers[initializersIdx] = AST.Assign(WellKnownTypes.LinqToDB.Data.DataParameter_Direction, AST.Constant(direction, true));
 				initializersIdx++;
 			}
@@ -421,15 +598,15 @@ namespace LinqToDB.DataModel
 			}
 
 			// for returning parameter generate rebind statement
-			if (parameter.Direction != CodeParameterDirection.In)
+			if (rebindTo != null)
 			{
 				parameterRebinds[rebindIndex] = AST.Assign(
-					parameter.Reference,
+					rebindTo,
 					AST.Call(
 						new CodeTypeReference(WellKnownTypes.LinqToDB.Common.Converter),
 						WellKnownTypes.LinqToDB.Common.Converter_ChangeTypeTo,
-						parameter.Type.Type,
-						new[] { parameter.Type.Type },
+						valueType,
+						new[] { valueType },
 						false,
 						AST.Member(
 							AST.Index(

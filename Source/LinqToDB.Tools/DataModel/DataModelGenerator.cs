@@ -135,6 +135,7 @@ namespace LinqToDB.DataModel
 				entity => DefineFileClass(entity.Class),
 				dataContextBuilder.Properties(true),
 				contextIsDataConnection,
+				dataContextBuilder.Type.Type,
 				dataContextBuilder.Type.This,
 				() => findMethodsGroup ??= getExtensionsClass().Regions().New(FIND_METHODS_REGION).Methods(false));
 
@@ -143,7 +144,7 @@ namespace LinqToDB.DataModel
 			foreach (var schema in _dataModel.DataContext.AdditionalSchemas.Values)
 			{
 				// build schema classes and entities
-				var schemaContextType = BuildAdditionalSchema(schema);
+				var schemaContextType = BuildAdditionalSchema(schema, dataContextBuilder.Type.Type);
 
 				// add schema reference to data context class
 				var schemaProp = contextSchemaProperties!

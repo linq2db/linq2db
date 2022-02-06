@@ -68,7 +68,7 @@ namespace LinqToDB.DataModel
 			if (tableFunction.Result.Entity != null)
 				returnEntity = _entityBuilders[tableFunction.Result.Entity].Type.Type;
 			else
-				returnEntity = BuildCustomResultClass(tableFunction.Result.CustomTable!, region, true).resultClassType;
+				returnEntity = BuildCustomResultClass(tableFunction.Result.CustomTable!, region.Classes(), true).resultClassType;
 
 			// set return type
 			// T4 used ITable<T> for return type, but there is no reason to use ITable<T> over IQueryable<T>

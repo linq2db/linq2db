@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Threading;
 
 namespace LinqToDB.DataModel
 {
@@ -43,22 +44,43 @@ namespace LinqToDB.DataModel
 		private const string EXTENSIONS_CLASS                             = "ExtensionMethods";
 
 		/// <summary>
+		/// Async method suffix.
+		/// </summary>
+		private const string ASYNC_SUFFIX                                 = "Async";
+
+		/// <summary>
+		/// <see cref="CancellationToken"/> parameter name.
+		/// </summary>
+		private const string CANCELLATION_TOKEN_PARAMETER                 = "cancellationToken";
+
+		/// <summary>
 		/// Find method filter expression parameter.
 		/// </summary>
-		private const string FIND_ENTITY_PARAMETER                        = "e";
+		private const string FIND_ENTITY_FILTER_PARAMETER                 = "e";
 		/// <summary>
 		/// Find method table parameter name.
 		/// </summary>
 		private const string FIND_TABLE_PARAMETER                         = "table";
 		/// <summary>
+		/// Find method entity object parameter name.
+		/// </summary>
+		private const string FIND_CONTEXT_PARAMETER                       = "db";
+		/// <summary>
+		/// Find method entity parameter name.
+		/// </summary>
+		private const string FIND_ENTITY_PARAMETER                        = "record";
+		/// <summary>
 		/// Find extension method name.
 		/// </summary>
 		private const string FIND_METHOD                                  = "Find";
 		/// <summary>
+		/// FindQuery extension method name.
+		/// </summary>
+		private const string FIND_QUERY_SUFFIX                            = "Query";
+		/// <summary>
 		/// Find extension methods region.
 		/// </summary>
 		private const string FIND_METHODS_REGION                          = "Table Extensions";
-
 
 		/// <summary>
 		/// Assocation properties region name.
@@ -154,6 +176,10 @@ namespace LinqToDB.DataModel
 		/// Stored procedure mapping return value variable name.
 		/// </summary>
 		private const string STORED_PROCEDURE_RETURN_VARIABLE             = "ret";
+		/// <summary>
+		/// Stored procedure mapping results list variable name.
+		/// </summary>
+		private const string STORED_PROCEDURE_RESULT_VARIABLE             = "result";
 		/// <summary>
 		/// Stored procedure nameless non-return parameter naming template.
 		/// Parameter: parameter index.

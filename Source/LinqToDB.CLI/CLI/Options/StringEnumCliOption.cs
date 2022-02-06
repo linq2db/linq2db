@@ -18,16 +18,16 @@ namespace LinqToDB.CLI
 	/// <param name="CaseSensitive">Define option value parsing mode - case-sensitive or case-insensitive.</param>
 	/// <param name="Values">List of allowed values (with defaults).</param>
 	internal sealed record StringEnumCliOption(
-		string             Name,
-		char?              ShortName,
-		bool               Required,
-		bool               AllowMultiple,
-		string             Help,
-		string?            DetailedHelp,
-		string[]?          Examples,
-		string[]?          JsonExamples,
-		bool               CaseSensitive,
-		StringEnumOption[] Values)
+		       string             Name,
+		       char?              ShortName,
+		       bool               Required,
+		       bool               AllowMultiple,
+		       string             Help,
+		       string?            DetailedHelp,
+		       string[]?          Examples,
+		       string[]?          JsonExamples,
+		       bool               CaseSensitive,
+		params StringEnumOption[] Values)
 		: CliOption(
 			Name,
 			ShortName,

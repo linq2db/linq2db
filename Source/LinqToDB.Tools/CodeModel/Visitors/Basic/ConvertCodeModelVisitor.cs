@@ -54,6 +54,8 @@ namespace LinqToDB.CodeModel
 				case CodeElementType.RegionGroup         : return Visit((RegionGroup             )node);
 				case CodeElementType.AssignmentStatement : return Visit((CodeAssignmentStatement )node);
 				case CodeElementType.AssignmentExpression: return Visit((CodeAssignmentExpression)node);
+				case CodeElementType.AwaitStatement      : return Visit((CodeAwaitStatement      )node);
+				case CodeElementType.AwaitExpression     : return Visit((CodeAwaitExpression     )node);
 				case CodeElementType.New                 : return Visit((CodeNew                 )node);
 				case CodeElementType.ClassGroup          : return Visit((ClassGroup              )node);
 				case CodeElementType.FieldGroup          : return Visit((FieldGroup              )node);
@@ -246,6 +248,26 @@ namespace LinqToDB.CodeModel
 			return expression;
 		}
 
+		protected virtual ICodeElement Visit(CodeAwaitStatement statement)
+		{
+			var task = (ICodeExpression)Visit(statement.Task);
+
+			if (task != statement.Task)
+				return new CodeAwaitStatement(task);
+
+			return statement;
+		}
+
+		protected virtual ICodeElement Visit(CodeAwaitExpression expression)
+		{
+			var task = (ICodeExpression)Visit(expression.Task);
+
+			if (task != expression.Task)
+				return new CodeAwaitExpression(task);
+
+			return expression;
+		}
+
 		protected virtual ICodeElement Visit(CodeFile file)
 		{
 			var header  = VisitList(file.Header );
@@ -408,10 +430,12 @@ namespace LinqToDB.CodeModel
 
 		protected virtual ICodeElement Visit(CodeParameter parameter)
 		{
-			var name = (CodeIdentifier)Visit(parameter.Name);
+			var name         =                                  (CodeIdentifier )Visit(parameter.Name        );
+			var defaultValue = parameter.DefaultValue != null ? (ICodeExpression)Visit(parameter.DefaultValue) : null;
 
-			if (name != parameter.Name)
-				return new CodeParameter(parameter.Type, name, parameter.Direction);
+			if (name         != parameter.Name ||
+				defaultValue != parameter.DefaultValue)
+				return new CodeParameter(parameter.Type, name, parameter.Direction, defaultValue);
 
 			return parameter;
 		}

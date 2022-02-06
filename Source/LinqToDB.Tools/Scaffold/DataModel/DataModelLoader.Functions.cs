@@ -4,6 +4,7 @@ using LinqToDB.Metadata;
 using LinqToDB.Schema;
 using LinqToDB.CodeModel;
 using LinqToDB.DataModel;
+using System.Linq;
 
 namespace LinqToDB.Scaffold
 {
@@ -227,7 +228,8 @@ namespace LinqToDB.Scaffold
 					var paramName    = _namingServices.NormalizeIdentifier(_options.DataModel.ProcedureParameterNameOptions, scalarResult.Name ?? "return");
 					funcModel.Return = new FunctionParameterModel(
 						new ParameterModel(paramName, (typeMapping?.CLRType ?? WellKnownTypes.System.Object).WithNullability(scalarResult.Nullable),
-						CodeParameterDirection.Out))
+						CodeParameterDirection.Out),
+						System.Data.ParameterDirection.ReturnValue)
 					{
 						Type       = scalarResult.Type,
 						DataType   = typeMapping?.DataType,
@@ -238,6 +240,7 @@ namespace LinqToDB.Scaffold
 				}
 			}
 
+			FunctionResult? resultModel = null;
 			if (func.ResultSets?.Count > 1)
 			{
 				// TODO: to support multi-result sets we need at least one implementation in schema provider
@@ -245,7 +248,43 @@ namespace LinqToDB.Scaffold
 			}
 			else if (func.ResultSets?.Count == 1)
 			{
-				funcModel.Results.Add(PrepareResultSetModel(func.Name, func.ResultSets[0]));
+				funcModel.Results.Add(resultModel = PrepareResultSetModel(func.Name, func.ResultSets[0]));
+			}
+
+			// prepare async result class descriptor if needed
+			var returningParameters = funcModel.Parameters.Where(p => p.Direction != System.Data.ParameterDirection.Input).ToList();
+			if (funcModel.Return != null)
+				returningParameters.Add(funcModel.Return);
+			if (returningParameters.Count > 0)
+			{
+				var asyncResult = new AsyncProcedureResult(
+					new ClassModel(
+						_namingServices.NormalizeIdentifier(_options.DataModel.AsyncProcedureResultClassNameOptions,
+						func.Name.Name))
+					{
+						IsPublic  = true
+					}, new PropertyModel("Result")
+					{
+						IsPublic  = true,
+						IsDefault = true,
+						HasSetter = true
+					});
+
+				foreach (var parameter in returningParameters)
+				{
+					asyncResult.ParameterProperties.Add(
+						parameter,
+						new PropertyModel(_namingServices.NormalizeIdentifier(_options.DataModel.AsyncProcedureResultClassPropertiesNameOptions, parameter.Parameter.Name), parameter.Parameter.Type)
+						{
+							IsPublic  = true,
+							IsDefault = true,
+							HasSetter = true
+						});
+				}
+
+				// TODO: next line will need refactoring if we add multi-set support
+				funcModel.Results.Clear();
+				funcModel.Results.Add(new FunctionResult(resultModel?.CustomTable, resultModel?.Entity, asyncResult));
 			}
 
 			if (isNonDefaultSchema && _options.DataModel.GenerateSchemaAsType)
@@ -266,12 +305,13 @@ namespace LinqToDB.Scaffold
 				var typeMapping = _typeMappingsProvider.GetTypeMapping(param.Type);
 				var paramName   = _namingServices.NormalizeIdentifier(_options.DataModel.ProcedureParameterNameOptions, param.Name);
 
-				CodeParameterDirection direction;
+				CodeParameterDirection         direction;
+				System.Data.ParameterDirection metadataDirection;
 				switch (param.Direction)
 				{
-					case ParameterDirection.Input      : direction = CodeParameterDirection.In ; break;
-					case ParameterDirection.InputOutput: direction = CodeParameterDirection.Ref; break;
-					case ParameterDirection.Output     : direction = CodeParameterDirection.Out; break;
+					case ParameterDirection.Input      : direction = CodeParameterDirection.In ; metadataDirection = System.Data.ParameterDirection.Input      ; break;
+					case ParameterDirection.InputOutput: direction = CodeParameterDirection.Ref; metadataDirection = System.Data.ParameterDirection.InputOutput; break;
+					case ParameterDirection.Output     : direction = CodeParameterDirection.Out; metadataDirection = System.Data.ParameterDirection.Output     ; break;
 					default                            :
 						throw new InvalidOperationException($"Unsupported parameter direction: {param.Direction}");
 				}
@@ -284,7 +324,7 @@ namespace LinqToDB.Scaffold
 					Description = param.Description
 				};
 
-				var fp = new FunctionParameterModel(parameterModel)
+				var fp = new FunctionParameterModel(parameterModel, metadataDirection)
 				{
 					DbName     = param.Name,
 					Type       = param.Type,
@@ -380,7 +420,7 @@ namespace LinqToDB.Scaffold
 							}
 
 							if (match)
-								return new FunctionResult(null, _entities[schemaObject.Name].Entity);
+								return new FunctionResult(null, _entities[schemaObject.Name].Entity, null);
 						}
 					}
 				}
@@ -422,7 +462,7 @@ namespace LinqToDB.Scaffold
 				model.Columns.Add(colModel);
 			}
 
-			return new FunctionResult(model, null);
+			return new FunctionResult(model, null, null);
 		}
 	}
 }

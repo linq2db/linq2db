@@ -40,9 +40,9 @@ namespace LinqToDB.DataModel
 		/// </summary>
 		public PropertyModel?    ContextProperty  { get; set; }
 		/// <summary>
-		/// Gets or sets flag to enable Find extension method generation for entity.
+		/// Gets or sets enum value that defines which Find entity extension methods to generate.
 		/// </summary>
-		public bool              HasFindExtension { get; set; }
+		public FindTypes         FindExtensions   { get; set; }
 		/// <summary>
 		/// Entity columns collection. Code for columns generated in same order as columns ordered in this list.
 		/// </summary>

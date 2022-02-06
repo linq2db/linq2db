@@ -61,6 +61,8 @@ namespace LinqToDB.CodeModel
 				case CodeElementType.RegionGroup         : Visit((RegionGroup             )node); break;
 				case CodeElementType.AssignmentStatement : Visit((CodeAssignmentStatement )node); break;
 				case CodeElementType.AssignmentExpression: Visit((CodeAssignmentExpression)node); break;
+				case CodeElementType.AwaitStatement      : Visit((CodeAwaitStatement      )node); break;
+				case CodeElementType.AwaitExpression     : Visit((CodeAwaitExpression     )node); break;
 				case CodeElementType.New                 : Visit((CodeNew                 )node); break;
 				case CodeElementType.ClassGroup          : Visit((ClassGroup              )node); break;
 				case CodeElementType.FieldGroup          : Visit((FieldGroup              )node); break;
@@ -97,8 +99,10 @@ namespace LinqToDB.CodeModel
 		protected abstract void Visit(CodeField                field     );
 		protected abstract void Visit(CodeDefault              expression);
 		protected abstract void Visit(CodeNew                  expression);
-		protected abstract void Visit(CodeAssignmentStatement  statement);
+		protected abstract void Visit(CodeAssignmentStatement  statement );
 		protected abstract void Visit(CodeAssignmentExpression expression);
+		protected abstract void Visit(CodeAwaitStatement       statement );
+		protected abstract void Visit(CodeAwaitExpression      expression);
 		protected abstract void Visit(CodeImport               import    );
 		protected abstract void Visit(CodePragma               pragma    );
 		protected abstract void Visit(CodeFile                 file      );

@@ -73,6 +73,7 @@ namespace LinqToDB.CLI
 			AddOption(_dataModelOptions, DataModel.ReuseEntitiesInFunctions);
 			AddOption(_dataModelOptions, DataModel.TableFunctionReturnsITable);
 			AddOption(_dataModelOptions, DataModel.EmitSchemaErrors);
+			AddOption(_dataModelOptions, DataModel.StoredProcedureTypes);
 			AddOption(_dataModelOptions, DataModel.SkipProceduresWithSchemaErrors);
 			AddOption(_dataModelOptions, DataModel.ReturnListFromProcedures);
 			AddOption(_dataModelOptions, DataModel.DbTypeInProcedures);
@@ -91,6 +92,8 @@ namespace LinqToDB.CLI
 			AddOption(_dataModelOptions, DataModel.ProcOrFuncMethodNaming);
 			AddOption(_dataModelOptions, DataModel.ProcOrFuncParameterNaming);
 			AddOption(_dataModelOptions, DataModel.ProcOrFuncResultClassNaming);
+			AddOption(_dataModelOptions, DataModel.AsyncProcResultClassNaming);
+			AddOption(_dataModelOptions, DataModel.AsyncProcResultClassPropertyNaming);
 			AddOption(_dataModelOptions, DataModel.ProcOrFuncResultColumnPropertyNaming);
 			AddOption(_dataModelOptions, DataModel.TableFunctionMethodInfoNaming);
 			AddOption(_dataModelOptions, DataModel.FunctionTupleClassNaming);
@@ -107,6 +110,7 @@ namespace LinqToDB.CLI
 			AddOption(_schemaOptions, SchemaOptions.IgnoreDuplicateFKs);
 			AddOption(_schemaOptions, SchemaOptions.UseSafeSchemaLoadOnly);
 			AddOption(_schemaOptions, SchemaOptions.LoadProcedureSchema);
+			AddOption(_schemaOptions, SchemaOptions.EnableSqlServerReturnValue);
 			//defaultOptions.Schema.IncludeSchemas + defaultOptions.Schema.Schemas
 			//defaultOptions.Schema.ExcludeSchemas + defaultOptions.Schema.Schemas
 			AddMutuallyExclusiveOptions(_schemaOptions, SchemaOptions.IncludedSchemas, SchemaOptions.ExcludedSchemas);

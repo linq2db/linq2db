@@ -36,5 +36,9 @@ namespace LinqToDB.CodeModel
 		/// Read-only field.
 		/// </summary>
 		ReadOnly = 32,
+		/// <summary>
+		/// Async method.
+		/// </summary>
+		Async = 64,
 	}
 }

@@ -38,6 +38,16 @@ namespace LinqToDB.CodeModel
 		}
 
 		/// <summary>
+		/// Mark method as async.
+		/// </summary>
+		/// <returns>Builder instance.</returns>
+		public TBuilder Async()
+		{
+			Method.Attributes |= Modifiers.Async;
+			return (TBuilder)this;
+		}
+
+		/// <summary>
 		/// Mark method as partial.
 		/// </summary>
 		/// <returns>Builder instance.</returns>

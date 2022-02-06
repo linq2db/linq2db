@@ -13,10 +13,11 @@ namespace LinqToDB.DataModel
 		/// </summary>
 		/// <param name="method">Method builder.</param>
 		/// <param name="model">Parameter model.</param>
+		/// <param name="defaultValue">Optional default value for parameter.</param>
 		/// <returns>Created parameter AST node.</returns>
-		private CodeParameter DefineParameter(MethodBuilder method, ParameterModel model)
+		private CodeParameter DefineParameter(MethodBuilder method, ParameterModel model, ICodeExpression? defaultValue = null)
 		{
-			var parameter = AST.Parameter(model.Type, AST.Name(model.Name), model.Direction);
+			var parameter = AST.Parameter(model.Type, AST.Name(model.Name), model.Direction, defaultValue);
 
 			method.Parameter(parameter);
 
@@ -124,15 +125,18 @@ namespace LinqToDB.DataModel
 		/// </summary>
 		/// <param name="methods">Methods group that owns new method.</param>
 		/// <param name="model">Method model.</param>
+		/// <param name="async">If <c>true</c>, append <see cref="ASYNC_SUFFIX"/> to method name.</param>
+		/// <param name="withAwait">If <c>true</c>, method contains <c>await</c> operations and should be marked with <c>async</c> modifier.</param>
 		/// <returns>Method builder instance.</returns>
-		private MethodBuilder DefineMethod(MethodGroup methods, MethodModel model)
+		private MethodBuilder DefineMethod(MethodGroup methods, MethodModel model, bool async = false, bool withAwait = false)
 		{
-			var builder = methods.New(AST.Name(model.Name));
+			var builder = methods.New(AST.Name(async ? model.Name + ASYNC_SUFFIX : model.Name));
 
 			if (model.Public   ) builder.Public   ();
 			if (model.Static   ) builder.Static   ();
 			if (model.Partial  ) builder.Partial  ();
 			if (model.Extension) builder.Extension();
+			if (withAwait)       builder.Async    ();
 
 			if (model.Summary != null)
 				builder.XmlComment().Summary(model.Summary);

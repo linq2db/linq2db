@@ -112,8 +112,11 @@ namespace LinqToDB.DataModel
 			RegionGroup                                          tableFunctionsRegion,
 			Func<(BlockBuilder cctorBody, CodeReference schema)> getSchemaConfigurator)
 		{
-			foreach (var proc in schema.StoredProcedures)
-				BuildStoredProcedure(proc, storedProceduresRegion, procedureDataContextType);
+			if (_options.DataModel.GenerateProcedureSync || _options.DataModel.GenerateProcedureAsync)
+			{
+				foreach (var proc in schema.StoredProcedures)
+					BuildStoredProcedure(proc, storedProceduresRegion, procedureDataContextType);
+			}
 
 			foreach (var func in schema.ScalarFunctions)
 				BuildScalarFunction(func, scalarFunctionsRegion, getSchemaConfigurator);
@@ -130,7 +133,7 @@ namespace LinqToDB.DataModel
 		/// in cases when there is no suitable entity mapping for it.
 		/// </summary>
 		/// <param name="model">Result record model.</param>
-		/// <param name="region">Region for custom result classes.</param>
+		/// <param name="classes">Procedure classes group.</param>
 		/// <param name="withMapping">Indicate wether we need to generate mapping attributes for generated class columns.
 		/// Column mappings needed for table function records (as we use them as query sources) and could be missing
 		/// for stored procedures in cases when returned columns cannot be mapped due to duplicate/missing column names, which
@@ -138,12 +141,12 @@ namespace LinqToDB.DataModel
 		/// <returns>Generated class and column properties.</returns>
 		private (IType resultClassType, CodeProperty[] properties) BuildCustomResultClass(
 			ResultTableModel model,
-			RegionBuilder    region,
+			ClassGroup       classes,
 			bool             withMapping)
 		{
 			var properties = new CodeProperty[model.Columns.Count];
 
-			var resultClassBuilder = DefineClass(region.Classes(), model.Class);
+			var resultClassBuilder = DefineClass(classes, model.Class);
 
 			var columnsGroup = resultClassBuilder.Properties(true);
 

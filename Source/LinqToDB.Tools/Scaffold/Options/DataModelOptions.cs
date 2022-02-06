@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using LinqToDB.Configuration;
 using LinqToDB.Data;
+using LinqToDB.DataModel;
 using LinqToDB.Naming;
 using LinqToDB.Schema;
 
@@ -352,6 +353,22 @@ namespace LinqToDB.Scaffold
 		/// </summary>
 		public NormalizationOptions ProcedureResultClassNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None, Suffix = "Result" };
 		/// <summary>
+		/// Gets or sets name generation and normalization rules for custom mapping class for async stored procedure results wrapper for procedure with multiple returns.
+		/// <list type="bullet">
+		/// <item>Default: TODO</item>
+		/// <item>In T4 compability mode: TODO</item>
+		/// </list>
+		/// </summary>
+		public NormalizationOptions AsyncProcedureResultClassNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None, Suffix = "Results" };
+		/// <summary>
+		/// Gets or sets name generation and normalization rules for custom mapping class properties for async stored procedure results wrapper for procedure with multiple returns.
+		/// <list type="bullet">
+		/// <item>Default: TODO</item>
+		/// <item>In T4 compability mode: TODO</item>
+		/// </list>
+		/// </summary>
+		public NormalizationOptions AsyncProcedureResultClassPropertiesNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };
+		/// <summary>
 		/// Gets or sets name generation and normalization rules for column properties of custom mapping class for result record of stored procedure or table function.
 		/// <list type="bullet">
 		/// <item>Default: TODO</item>
@@ -409,6 +426,24 @@ namespace LinqToDB.Scaffold
 		/// </list>
 		/// </summary>
 		public bool GenerateProcedureParameterDbType { get; set; }
+
+		/// <summary>
+		/// Enables generation of sync version of stored procedure mapping.
+		/// <list type="bullet">
+		/// <item>Default: <c>true</c></item>
+		/// <item>In T4 compability mode: <c>true</c></item>
+		/// </list>
+		/// </summary>
+		public bool GenerateProcedureSync { get; set; } = true;
+
+		/// <summary>
+		/// Enables generation of async version of stored procedure mapping.
+		/// <list type="bullet">
+		/// <item>Default: <c>true</c></item>
+		/// <item>In T4 compability mode: <c>false</c></item>
+		/// </list>
+		/// </summary>
+		public bool GenerateProcedureAsync { get; set; } = true;
 		#endregion
 
 		#region Schemas
@@ -451,13 +486,13 @@ namespace LinqToDB.Scaffold
 
 		#region Find Extensions
 		/// <summary>
-		/// Enables generation of extension methods to load entity by primary key value (using name Find for generated method).
+		/// Enables generation of extension methods to access entity by primary key value (using name Find/FindAsync/FindQuery for generated method).
 		/// <list type="bullet">
-		/// <item>Default: <c>true</c></item>
-		/// <item>In T4 compability mode: <c>TODO</c></item>
+		/// <item>Default: <c><see cref="FindTypes.FindByPkOnTable"/> | <see cref="FindTypes.FindAsyncByPkOnTable"/></c></item>
+		/// <item>In T4 compability mode: <see cref="FindTypes.FindByPkOnTable"/></item>
 		/// </list>
 		/// </summary>
-		public bool GenerateFindExtensions { get; set; } = true;
+		public FindTypes GenerateFindExtensions { get; set; } = FindTypes.FindByPkOnTable | FindTypes.FindAsyncByPkOnTable;
 
 		/// <summary>
 		/// Specifies order of primary key column parameters in Find method for entity with composite primary key.

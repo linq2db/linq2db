@@ -76,7 +76,7 @@ namespace LinqToDB.Scaffold
 						IsPublic = true,
 						Summary  = table.Description
 					});
-			entity.HasFindExtension = _options.DataModel.GenerateFindExtensions;
+			entity.FindExtensions = _options.DataModel.GenerateFindExtensions;
 
 			// add entity to lookup
 			_entities.Add(table.Name, new TableWithEntity(table, entity));

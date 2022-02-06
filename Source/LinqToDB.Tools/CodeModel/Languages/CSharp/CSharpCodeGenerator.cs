@@ -338,6 +338,12 @@ namespace LinqToDB.CodeModel
 			Visit(parameter.Type);
 			Write(' ');
 			Visit(parameter.Name);
+
+			if (parameter.DefaultValue != null)
+			{
+				Write(" = ");
+				Visit(parameter.DefaultValue);
+			}
 		}
 
 		protected override void Visit(CodeXmlComment doc)
@@ -811,6 +817,14 @@ namespace LinqToDB.CodeModel
 		{
 			WriteNewLineDelimitedList(group.Members);
 		}
+
+		protected override void Visit(CodeAwaitStatement statement) => WriteAwait(statement.Task);
+		protected override void Visit(CodeAwaitExpression expression) => WriteAwait(expression.Task);
+		private            void WriteAwait(ICodeExpression task)
+		{
+			Write("await ");
+			Visit(task);
+		}
 		#endregion
 
 		#region reusable helpers
@@ -863,6 +877,9 @@ namespace LinqToDB.CodeModel
 
 			if (attributes.HasFlag(Modifiers.Static))
 				Write("static ");
+
+			if (attributes.HasFlag(Modifiers.Async))
+				Write("async ");
 
 			if (attributes.HasFlag(Modifiers.ReadOnly))
 				Write("readonly ");

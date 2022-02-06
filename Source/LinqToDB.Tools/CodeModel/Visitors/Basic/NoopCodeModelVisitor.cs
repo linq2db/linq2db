@@ -65,6 +65,16 @@
 			Visit(expression.RValue);
 		}
 
+		protected override void Visit(CodeAwaitStatement statement)
+		{
+			Visit(statement.Task);
+		}
+
+		protected override void Visit(CodeAwaitExpression expression)
+		{
+			Visit(expression.Task);
+		}
+
 		protected override void Visit(CodeBinary expression)
 		{
 			Visit(expression.Left);
@@ -143,8 +153,8 @@
 
 		protected override void Visit(CodeParameter parameter)
 		{
-			if (parameter.Type != null)
-				Visit(parameter.Type);
+			if (parameter.Type         != null) Visit(parameter.Type);
+			if (parameter.DefaultValue != null) Visit(parameter.DefaultValue);
 
 			Visit(parameter.Name);
 		}

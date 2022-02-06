@@ -6,5 +6,6 @@
 	/// </summary>
 	/// <param name="CustomTable">Custom record class descriptor.</param>
 	/// <param name="Entity">Function/procedure returns known entity as record.</param>
-	public sealed record FunctionResult(ResultTableModel? CustomTable, EntityModel? Entity);
+	/// <param name="AsyncResult">Stored procedure return class model for async signature.</param>
+	public sealed record FunctionResult(ResultTableModel? CustomTable, EntityModel? Entity, AsyncProcedureResult? AsyncResult);
 }

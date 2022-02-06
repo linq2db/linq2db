@@ -176,8 +176,9 @@ namespace LinqToDB.CodeModel
 		/// <param name="type">Parameter type.</param>
 		/// <param name="name">Parameter name.</param>
 		/// <param name="direction">Parameter direction.</param>
+		/// <param name="defaultValue">Parameter default value.</param>
 		/// <returns>Parameter element instance.</returns>
-		public CodeParameter Parameter(IType type, CodeIdentifier name, CodeParameterDirection direction) => new (type, name, direction);
+		public CodeParameter Parameter(IType type, CodeIdentifier name, CodeParameterDirection direction, ICodeExpression? defaultValue = null) => new (type, name, direction, defaultValue);
 
 		/// <summary>
 		/// Create default expression.
@@ -193,7 +194,7 @@ namespace LinqToDB.CodeModel
 		/// <param name="name">Parameter name.</param>
 		/// <param name="type">Parameter type.</param>
 		/// <returns>Parameter instance.</returns>
-		public CodeParameter LambdaParameter(CodeIdentifier name, IType type) => new(type, name, CodeParameterDirection.In);
+		public CodeParameter LambdaParameter(CodeIdentifier name, IType type) => new(type, name, CodeParameterDirection.In, null);
 
 		/// <summary>
 		/// Creates return statement/expression.
@@ -280,6 +281,20 @@ namespace LinqToDB.CodeModel
 		/// <param name="rvalue">Assigned value.</param>
 		/// <returns>Assignment statement/expression instance.</returns>
 		public CodeAssignmentStatement Assign(ILValue lvalue, ICodeExpression rvalue) => new(lvalue, rvalue);
+
+		/// <summary>
+		/// Creates await expression.
+		/// </summary>
+		/// <param name="task">Task expression to await.</param>
+		/// <returns>Await expression instance.</returns>
+		public CodeAwaitExpression AwaitExpression(ICodeExpression task) => new(task);
+
+		/// <summary>
+		/// Creates await statement.
+		/// </summary>
+		/// <param name="task">Task expression to await.</param>
+		/// <returns>Await statement instance.</returns>
+		public CodeAwaitStatement AwaitStatement(ICodeExpression task) => new(task);
 
 		/// <summary>
 		/// Creates variable declaration.

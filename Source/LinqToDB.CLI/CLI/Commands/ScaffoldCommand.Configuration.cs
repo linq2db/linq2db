@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using LinqToDB.DataModel;
 using LinqToDB.Naming;
 using LinqToDB.Scaffold;
 using LinqToDB.Schema;
@@ -88,13 +90,52 @@ namespace LinqToDB.CLI
 			if (options.Remove(DataModel.ReturnListFromProcedures      , out value)) settings.GenerateProcedureResultAsList      = (bool)value!;
 			if (options.Remove(DataModel.DbTypeInProcedures            , out value)) settings.GenerateProcedureParameterDbType   = (bool)value!;
 			if (options.Remove(DataModel.SchemasAsTypes                , out value)) settings.GenerateSchemaAsType               = (bool)value!;
-			if (options.Remove(DataModel.GenerateFind                  , out value)) settings.GenerateFindExtensions             = (bool)value!;
 			if (options.Remove(DataModel.FindParametersInOrdinalOrder  , out value)) settings.OrderFindParametersByColumnOrdinal = (bool)value!;
 
 			// strings
 			if (options.Remove(DataModel.BaseEntity          , out value)) settings.BaseEntityClass  = (string)value!;
 			if (options.Remove(DataModel.DataContextName     , out value)) settings.ContextClassName = (string)value!;
 			if (options.Remove(DataModel.DataContextBaseClass, out value)) settings.BaseContextClass = (string)value!;
+
+			// stored procedure signatures
+			if (options.Remove(DataModel.StoredProcedureTypes, out value))
+			{
+				foreach (var strVal in (string[])value!)
+				{
+					switch (strVal)
+					{
+						case "sync" : settings.GenerateProcedureSync  = true; break;
+						case "async": settings.GenerateProcedureAsync = true; break;
+						default     : throw new InvalidOperationException($"Unsuppored value for option {DataModel.StoredProcedureTypes.Name}: {strVal}");
+					}
+				}
+			}
+
+			// Find method variants
+			if (options.Remove(DataModel.GenerateFind, out value))
+			{
+				var findTypes = FindTypes.None;
+				foreach (var strVal in (string[])value!)
+				{
+					switch (strVal)
+					{
+						case "sync-pk-table"       : findTypes |= FindTypes.FindByPkOnTable           ; break;
+						case "async-pk-table"      : findTypes |= FindTypes.FindAsyncByPkOnTable      ; break;
+						case "query-pk-table"      : findTypes |= FindTypes.FindQueryByPkOnTable      ; break;
+						case "sync-entity-table"   : findTypes |= FindTypes.FindByRecordOnTable       ; break;
+						case "async-entity-table"  : findTypes |= FindTypes.FindAsyncByRecordOnTable  ; break;
+						case "query-entity-table"  : findTypes |= FindTypes.FindQueryByRecordOnTable  ; break;
+						case "sync-pk-context"     : findTypes |= FindTypes.FindByPkOnContext         ; break;
+						case "async-pk-context"    : findTypes |= FindTypes.FindAsyncByPkOnContext    ; break;
+						case "query-pk-context"    : findTypes |= FindTypes.FindQueryByPkOnContext    ; break;
+						case "sync-entity-context" : findTypes |= FindTypes.FindByRecordOnContext     ; break;
+						case "async-entity-context": findTypes |= FindTypes.FindAsyncByRecordOnContext; break;
+						case "query-entity-context": findTypes |= FindTypes.FindQueryByRecordOnContext; break;
+						default                    : throw new InvalidOperationException($"Unsuppored value for option {DataModel.GenerateFind.Name}: {strVal}");
+					}
+				}
+				settings.GenerateFindExtensions = findTypes;
+			}
 
 			// association many-side type
 			if (options.Remove(DataModel.AssociationCollectionType, out value))
@@ -118,23 +159,25 @@ namespace LinqToDB.CLI
 			}
 
 			// naming options
-			if (options.Remove(DataModel.DataContextClassNaming              , out value)) settings.DataContextClassNameOptions                  = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.EntityClassNaming                   , out value)) settings.EntityClassNameOptions                       = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.EntityColumnPropertyNaming          , out value)) settings.EntityColumnPropertyNameOptions              = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.EntityContextPropertyNaming         , out value)) settings.EntityContextPropertyNameOptions             = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.AssociationNaming                   , out value)) settings.SourceAssociationPropertyNameOptions         = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.AssocationBackReferenceSingleNaming , out value)) settings.TargetSingularAssociationPropertyNameOptions = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.AssocationBackReferenceManyNaming   , out value)) settings.TargetMultipleAssociationPropertyNameOptions = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.ProcOrFuncMethodNaming              , out value)) settings.ProcedureNameOptions                         = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.ProcOrFuncParameterNaming           , out value)) settings.ProcedureParameterNameOptions                = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.ProcOrFuncResultClassNaming         , out value)) settings.ProcedureResultClassNameOptions              = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.ProcOrFuncResultColumnPropertyNaming, out value)) settings.ProcedureResultColumnPropertyNameOptions     = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.TableFunctionMethodInfoNaming       , out value)) settings.TableFunctionMethodInfoFieldNameOptions      = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.FunctionTupleClassNaming            , out value)) settings.FunctionTupleResultClassNameOptions          = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.FunctionTupleFieldPropertyNaming    , out value)) settings.FunctionTupleResultPropertyNameOptions       = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.SchemaWrapperClassNaming            , out value)) settings.SchemaClassNameOptions                       = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.SchemaContextPropertyNaming         , out value)) settings.SchemaPropertyOptions                        = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.FindParameterNaming                 , out value)) settings.FindParameterNameOptions                     = (NormalizationOptions)value!;
+			if (options.Remove(DataModel.DataContextClassNaming              , out value)) settings.DataContextClassNameOptions                    = (NormalizationOptions)value!;
+			if (options.Remove(DataModel.EntityClassNaming                   , out value)) settings.EntityClassNameOptions                         = (NormalizationOptions)value!;
+			if (options.Remove(DataModel.EntityColumnPropertyNaming          , out value)) settings.EntityColumnPropertyNameOptions                = (NormalizationOptions)value!;
+			if (options.Remove(DataModel.EntityContextPropertyNaming         , out value)) settings.EntityContextPropertyNameOptions               = (NormalizationOptions)value!;
+			if (options.Remove(DataModel.AssociationNaming                   , out value)) settings.SourceAssociationPropertyNameOptions           = (NormalizationOptions)value!;
+			if (options.Remove(DataModel.AssocationBackReferenceSingleNaming , out value)) settings.TargetSingularAssociationPropertyNameOptions   = (NormalizationOptions)value!;
+			if (options.Remove(DataModel.AssocationBackReferenceManyNaming   , out value)) settings.TargetMultipleAssociationPropertyNameOptions   = (NormalizationOptions)value!;
+			if (options.Remove(DataModel.ProcOrFuncMethodNaming              , out value)) settings.ProcedureNameOptions                           = (NormalizationOptions)value!;
+			if (options.Remove(DataModel.ProcOrFuncParameterNaming           , out value)) settings.ProcedureParameterNameOptions                  = (NormalizationOptions)value!;
+			if (options.Remove(DataModel.ProcOrFuncResultClassNaming         , out value)) settings.ProcedureResultClassNameOptions                = (NormalizationOptions)value!;
+			if (options.Remove(DataModel.AsyncProcResultClassNaming          , out value)) settings.AsyncProcedureResultClassNameOptions           = (NormalizationOptions)value!;
+			if (options.Remove(DataModel.AsyncProcResultClassPropertyNaming  , out value)) settings.AsyncProcedureResultClassPropertiesNameOptions = (NormalizationOptions)value!;
+			if (options.Remove(DataModel.ProcOrFuncResultColumnPropertyNaming, out value)) settings.ProcedureResultColumnPropertyNameOptions       = (NormalizationOptions)value!;
+			if (options.Remove(DataModel.TableFunctionMethodInfoNaming       , out value)) settings.TableFunctionMethodInfoFieldNameOptions        = (NormalizationOptions)value!;
+			if (options.Remove(DataModel.FunctionTupleClassNaming            , out value)) settings.FunctionTupleResultClassNameOptions            = (NormalizationOptions)value!;
+			if (options.Remove(DataModel.FunctionTupleFieldPropertyNaming    , out value)) settings.FunctionTupleResultPropertyNameOptions         = (NormalizationOptions)value!;
+			if (options.Remove(DataModel.SchemaWrapperClassNaming            , out value)) settings.SchemaClassNameOptions                         = (NormalizationOptions)value!;
+			if (options.Remove(DataModel.SchemaContextPropertyNaming         , out value)) settings.SchemaPropertyOptions                          = (NormalizationOptions)value!;
+			if (options.Remove(DataModel.FindParameterNaming                 , out value)) settings.FindParameterNameOptions                       = (NormalizationOptions)value!;
 		}
 
 		/// <summary>
@@ -197,10 +240,11 @@ namespace LinqToDB.CLI
 			}
 
 			// simple flags
-			if (options.Remove(SchemaOptions.PreferProviderTypes  , out value)) settings.PreferProviderSpecificTypes = (bool)value!;
-			if (options.Remove(SchemaOptions.IgnoreDuplicateFKs   , out value)) settings.IgnoreDuplicateForeignKeys  = (bool)value!;
-			if (options.Remove(SchemaOptions.UseSafeSchemaLoadOnly, out value)) settings.UseSafeSchemaLoad           = (bool)value!;
-			if (options.Remove(SchemaOptions.LoadProcedureSchema  , out value)) settings.LoadProceduresSchema        = (bool)value!;
+			if (options.Remove(SchemaOptions.PreferProviderTypes       , out value)) settings.PreferProviderSpecificTypes = (bool)value!;
+			if (options.Remove(SchemaOptions.IgnoreDuplicateFKs        , out value)) settings.IgnoreDuplicateForeignKeys  = (bool)value!;
+			if (options.Remove(SchemaOptions.UseSafeSchemaLoadOnly     , out value)) settings.UseSafeSchemaLoad           = (bool)value!;
+			if (options.Remove(SchemaOptions.LoadProcedureSchema       , out value)) settings.LoadProceduresSchema        = (bool)value!;
+			if (options.Remove(SchemaOptions.EnableSqlServerReturnValue, out value)) settings.EnableSqlServerReturnValue  = (bool)value!;
 
 			// table/view filter delegate
 			var         includeTables = false;

@@ -46,6 +46,7 @@ namespace LinqToDB.Schema
 		private readonly bool              _isAccessOleDb;
 		private readonly bool              _isAccessOdbc;
 		private readonly bool              _isSystemDataSqlite;
+		private readonly bool              _isSqlServer;
 
 		public LegacySchemaProvider(DataConnection connection, SchemaOptions options, ILanguageProvider languageProvider)
 		{
@@ -59,6 +60,7 @@ namespace LinqToDB.Schema
 			_isSystemDataSqlite = _providerName == "SQLite.Classic";
 			_isAccessOleDb      = _providerName == "Access";
 			_isAccessOdbc       = _providerName == "Access.Odbc";
+			_isSqlServer        = _providerName.Contains(ProviderName.SqlServer);
 
 			// load schema from legacy API and convrt it into new model
 			ParseSchema(
@@ -246,6 +248,15 @@ namespace LinqToDB.Schema
 				}
 				else
 					result = new VoidResult();
+			}
+
+			// https://github.com/linq2db/linq2db/issues/1897
+			if (_isSqlServer && !proc.IsFunction && _options.EnableSqlServerReturnValue)
+			{
+				// https://docs.microsoft.com/en-us/sql/t-sql/language-elements/return-transact-sql
+				var type            = new DatabaseType("INT", 0, 0, 0);
+				_typeMappings[type] = new TypeMapping(WellKnownTypes.System.Int32, DataType.Int32);
+				parameters.Add(new Parameter("@return", null, type, false, ParameterDirection.Output));
 			}
 
 			return (parameters, result);

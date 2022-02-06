@@ -5,6 +5,8 @@ using System.Data.SqlTypes;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using LinqToDB.Common;
 using LinqToDB.Configuration;
 using LinqToDB.Data;
@@ -236,6 +238,26 @@ namespace LinqToDB.CodeModel
 					public static IType List(IType elementType) => _listT.WithTypeArguments(elementType);
 				}
 			}
+
+			public static class Threading
+			{
+				/// <summary>
+				/// <see cref="global::System.Threading.CancellationToken"/> type descriptor.
+				/// </summary>
+				public static IType CancellationToken { get; } = Parser.Parse(typeof(CancellationToken));
+
+				public static class Tasks
+				{
+					private static readonly IType _taskT = Parser.Parse(typeof(Task<>));
+
+					/// <summary>
+					/// Returns <see cref="Task{TResult}"/> type descriptor.
+					/// </summary>
+					/// <param name="valueType">Value type.</param>
+					/// <returns>Type descriptor.</returns>
+					public static IType Task(IType valueType) => _taskT.WithTypeArguments(valueType);
+				}
+			}
 		}
 
 		public static class Microsoft
@@ -278,6 +300,11 @@ namespace LinqToDB.CodeModel
 			/// <see cref="DataExtensions"/> type descriptor.
 			/// </summary>
 			public static IType DataExtensions            { get; } = Parser.Parse(typeof(DataExtensions));
+
+			/// <summary>
+			/// <see cref="global::LinqToDB.AsyncExtensions"/> type descriptor.
+			/// </summary>
+			public static IType AsyncExtensions           { get; } = Parser.Parse(typeof(AsyncExtensions));
 
 			/// <summary>
 			/// <see cref="IDataContext.MappingSchema"/> property reference.
@@ -354,6 +381,15 @@ namespace LinqToDB.CodeModel
 			/// <see cref="Sql.TableFunctionAttribute.ArgIndices"/> property reference.
 			/// </summary>
 			public static CodeIdentifier Sql_TableFunctionAttribute_ArgIndices    { get; } = new CodeIdentifier(nameof(Sql.TableFunctionAttribute.ArgIndices), true);
+
+			/// <summary>
+			/// <see cref="AsyncExtensions.FirstOrDefaultAsync{TSource}(IQueryable{TSource}, Expression{Func{TSource, bool}}, CancellationToken)"/> method reference.
+			/// </summary>
+			public static CodeIdentifier AsyncExtensions_FirstOrDefaultAsync { get; } = new CodeIdentifier(nameof(global::LinqToDB.AsyncExtensions.FirstOrDefaultAsync), true);
+			/// <summary>
+			/// <see cref="AsyncExtensions.ToListAsync{TSource}(IQueryable{TSource}, CancellationToken)"/> method reference.
+			/// </summary>
+			public static CodeIdentifier AsyncExtensions_ToListAsync { get; } = new CodeIdentifier(nameof(global::LinqToDB.AsyncExtensions.ToListAsync), true);
 
 			/// <summary>
 			/// Returns <see cref="ITable{T}"/> type descriptor.
@@ -620,9 +656,17 @@ namespace LinqToDB.CodeModel
 				/// </summary>
 				public static CodeIdentifier DataConnectionExtensions_ExecuteProc { get; } = new CodeIdentifier(nameof(global::LinqToDB.Data.DataConnectionExtensions.ExecuteProc), true);
 				/// <summary>
+				/// DataConnectionExtensions.ExecuteProcAsync method reference.
+				/// </summary>
+				public static CodeIdentifier DataConnectionExtensions_ExecuteProcAsync { get; } = new CodeIdentifier(nameof(global::LinqToDB.Data.DataConnectionExtensions.ExecuteProcAsync), true);
+				/// <summary>
 				/// DataConnectionExtensions.QueryProc method reference.
 				/// </summary>
 				public static CodeIdentifier DataConnectionExtensions_QueryProc   { get; } = new CodeIdentifier(nameof(global::LinqToDB.Data.DataConnectionExtensions.QueryProc), true);
+				/// <summary>
+				/// DataConnectionExtensions.QueryProcAsync method reference.
+				/// </summary>
+				public static CodeIdentifier DataConnectionExtensions_QueryProcAsync { get; } = new CodeIdentifier(nameof(global::LinqToDB.Data.DataConnectionExtensions.QueryProcAsync), true);
 
 				/// <summary>
 				/// <see cref="DataParameter.Direction"/> property reference.
