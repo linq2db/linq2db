@@ -283,24 +283,5 @@ namespace LinqToDB.DataProvider.Oracle
 			func = ConvertFunctionParameters(func, false);
 			return base.ConvertFunction(func);
 		}
-
-		protected override ISqlPredicate OptimizeRowExprExpr(SqlPredicate.ExprExpr predicate, EvaluationContext context)
-		{
-			// Oracle needs brackets around the right-hand side to disambiguate the syntax, e.g.:
-			// (1, 2) = ( (3, 4) )
-
-			// Ensure we're not in Row() == null situation (Expr2 would be SqlValue with constant null)
-			// Also avoid applying the brackets in an infinite loop, as the Optimizer will be called again with new node
-			var newPredicate = predicate.Expr2 is SqlExpression expr && !expr.Expr.StartsWith("((")
-				? new SqlPredicate.ExprExpr(
-					predicate.Expr1,
-					predicate.Operator,
-					new SqlExpression(expr.SystemType, $"({expr.Expr})", Precedence.Primary, expr.Parameters),
-					withNull: null
-				)
-				: predicate;
-
-			return base.OptimizeRowExprExpr(newPredicate, context);
-		}
 	}
 }

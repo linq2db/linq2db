@@ -39,6 +39,7 @@ namespace LinqToDB.DataProvider.SQLite
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = true;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.Serializable;
+			SqlProviderFlags.RowConstructorSupport             = RowFeature.Comparisons;
 
 			_sqlOptimizer = new SQLiteSqlOptimizer(SqlProviderFlags);
 

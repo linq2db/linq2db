@@ -252,6 +252,20 @@ namespace LinqToDB.DataProvider.Oracle
 				throwExceptionIfTableNotFound);
 		}
 
+		protected override void BuildPredicateRhsX(int precedence, ISqlExpression expression)
+		{
+			// Oracle needs brackets around the right-hand side to disambiguate the syntax, e.g.:
+			// (1, 2) = ( (3, 4) )
+			if (expression.ElementType == QueryElementType.SqlRow)
+			{
+				StringBuilder.Append('(');
+				BuildExpression(precedence, expression);
+				StringBuilder.Append(')');
+			}
+			else
+				BuildExpression(precedence, expression);
+		}
+
 		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
 		{
 			StringBuilder.Append("DECODE(");

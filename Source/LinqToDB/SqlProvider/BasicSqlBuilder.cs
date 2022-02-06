@@ -2098,8 +2098,11 @@ namespace LinqToDB.SqlProvider
 				case SqlPredicate.Operator.NotLess        : StringBuilder.Append(" !< "); break;
 			}
 
-			BuildExpression(GetPrecedence(expr), expr.Expr2);
+			BuildPredicateRhsX(GetPrecedence(expr), expr.Expr2);
 		}
+		
+		protected virtual void BuildPredicateRhsX(int precedence, ISqlExpression expression)
+			=> BuildExpression(precedence, expression);
 
 		protected virtual void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
 		{
@@ -2621,19 +2624,8 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				case QueryElementType.SqlRow:
-					{
-						var row = (SqlRow) expr;
-						StringBuilder.Append('(');
-						foreach (var value in row.Values)
-						{
-							BuildExpression(value, buildTableName, checkParentheses, throwExceptionIfTableNotFound);
-							StringBuilder.Append(InlineComma);
-						}
-						StringBuilder.Length -= InlineComma.Length; // Note that SqlRow are never empty
-						StringBuilder.Append(')');
-
-						break;
-					}
+					BuildSqlRow((SqlRow) expr, buildTableName, checkParentheses, throwExceptionIfTableNotFound);
+					break;
 
 				default:
 					throw new InvalidOperationException($"Unexpected expression type {expr.ElementType}");
@@ -2718,6 +2710,18 @@ namespace LinqToDB.SqlProvider
 			BuildExpression(value);
 			StringBuilder.Append(" AS ");
 			BuildDataType(dataType, false);
+			StringBuilder.Append(')');
+		}
+
+		protected virtual void BuildSqlRow(SqlRow expr, bool buildTableName, bool checkParentheses, bool throwExceptionIfTableNotFound)
+		{
+			StringBuilder.Append('(');
+			foreach (var value in expr.Values)
+			{
+				BuildExpression(value, buildTableName, checkParentheses, throwExceptionIfTableNotFound);
+				StringBuilder.Append(InlineComma);
+			}
+			StringBuilder.Length -= InlineComma.Length; // Note that SqlRow are never empty
 			StringBuilder.Append(')');
 		}
 

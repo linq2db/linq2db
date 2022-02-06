@@ -27,6 +27,10 @@ namespace LinqToDB
 			public static bool operator <= (SqlRow<T1, T2> x, SqlRow<T1, T2> y)
 				=> throw new NotImplementedException();
 
+			// The precise semantics of Overlaps are too complicated to emulate,
+			// so there is no fallback for DBs that don't support it natively.
+			// Note that SQL standard doesn't define OVERLAPS for all comparable data types, such as numbers.
+			// RDBMS only support OVERLAPS for date(-time) and interval types.		
 			[Overlaps(PN.DB2)]
 			[Overlaps(PN.Oracle)]
 			[Overlaps(PN.PostgreSQL)]

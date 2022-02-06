@@ -1337,7 +1337,7 @@ namespace LinqToDB.SqlProvider
 
 		#region SqlRow
 
-		protected virtual ISqlPredicate OptimizeRowExprExpr(ExprExpr predicate, EvaluationContext context)
+		protected ISqlPredicate OptimizeRowExprExpr(ExprExpr predicate, EvaluationContext context)
 		{
 			var op = predicate.Operator;
 
