@@ -14,19 +14,18 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Mapping;
 	using SqlProvider;
 
-	class PostgreSQLDataProvider92 : PostgreSQLDataProvider { public PostgreSQLDataProvider92() : base(ProviderName.PostgreSQL92, PostgreSQLVersion.v92) {} }
-	class PostgreSQLDataProvider93 : PostgreSQLDataProvider { public PostgreSQLDataProvider93() : base(ProviderName.PostgreSQL93, PostgreSQLVersion.v93) {} }
-
+	public class PostgreSQLDataProvider92 : PostgreSQLDataProvider { public PostgreSQLDataProvider92() : base(ProviderName.PostgreSQL92, PostgreSQLVersion.v92) {} }
+	public class PostgreSQLDataProvider93 : PostgreSQLDataProvider { public PostgreSQLDataProvider93() : base(ProviderName.PostgreSQL93, PostgreSQLVersion.v93) {} }
 	public class PostgreSQLDataProvider95 : PostgreSQLDataProvider { public PostgreSQLDataProvider95() : base(ProviderName.PostgreSQL95, PostgreSQLVersion.v95) {} }
 
 	public class PostgreSQLDataProvider : DynamicDataProviderBase<NpgsqlProviderAdapter>
 	{
-		protected PostgreSQLDataProvider(PostgreSQLVersion version)
+		public PostgreSQLDataProvider(PostgreSQLVersion version)
 			: this(GetProviderName(version), version)
 		{
 		}
 
-		protected PostgreSQLDataProvider(string name, PostgreSQLVersion version)
+		public PostgreSQLDataProvider(string name, PostgreSQLVersion version)
 			: base(
 				name,
 				GetMappingSchema(version, NpgsqlProviderAdapter.GetInstance().MappingSchema),

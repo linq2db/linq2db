@@ -12,12 +12,12 @@ namespace LinqToDB.DataProvider.Informix
 	using Mapping;
 	using SqlProvider;
 
-	class InformixDataProviderInformix : InformixDataProvider { public InformixDataProviderInformix() : base(ProviderName.Informix)    {} }
-	class InformixDataProviderDB2      : InformixDataProvider { public InformixDataProviderDB2()      : base(ProviderName.InformixDB2) {} }
+	public class InformixDataProviderInformix : InformixDataProvider { public InformixDataProviderInformix() : base(ProviderName.Informix)    {} }
+	public class InformixDataProviderDB2      : InformixDataProvider { public InformixDataProviderDB2()      : base(ProviderName.InformixDB2) {} }
 
 	public abstract class InformixDataProvider : DynamicDataProviderBase<InformixProviderAdapter>
 	{
-		protected InformixDataProvider(string providerName)
+		public InformixDataProvider(string providerName)
 			: base(
 				providerName,
 				GetMappingSchema(providerName, InformixProviderAdapter.GetInstance(providerName).MappingSchema),

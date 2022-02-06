@@ -14,8 +14,8 @@ namespace LinqToDB.DataProvider.SQLite
 	using SchemaProvider;
 	using SqlProvider;
 
-	class SQLiteDataProviderClassic : SQLiteDataProvider { public SQLiteDataProviderClassic() : base(ProviderName.SQLiteClassic) {} }
-	class SQLiteDataProviderMS      : SQLiteDataProvider { public SQLiteDataProviderMS()      : base(ProviderName.SQLiteMS)      {} }
+	public class SQLiteDataProviderClassic : SQLiteDataProvider { public SQLiteDataProviderClassic() : base(ProviderName.SQLiteClassic) {} }
+	public class SQLiteDataProviderMS      : SQLiteDataProvider { public SQLiteDataProviderMS()      : base(ProviderName.SQLiteMS)      {} }
 
 	public class SQLiteDataProvider : DynamicDataProviderBase<SQLiteProviderAdapter>
 	{
@@ -25,7 +25,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="name">If ProviderName.SQLite is provided,
 		/// the detection mechanism preferring System.Data.SQLite
 		/// to Microsoft.Data.Sqlite will be used.</param>
-		protected SQLiteDataProvider(string name)
+		public SQLiteDataProvider(string name)
 			: this(name, MappingSchemaInstance.Get(name))
 		{
 		}

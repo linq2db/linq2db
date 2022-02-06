@@ -19,7 +19,7 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 		}
 
-		protected internal FirebirdDataProvider(ISqlOptimizer sqlOptimizer)
+		public FirebirdDataProvider(ISqlOptimizer sqlOptimizer)
 			: this(ProviderName.Firebird, null, sqlOptimizer)
 		{
 		}
