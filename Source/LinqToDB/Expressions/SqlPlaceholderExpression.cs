@@ -9,22 +9,24 @@ namespace LinqToDB.Expressions
 
 	class SqlPlaceholderExpression : Expression
 	{
-		public SqlPlaceholderExpression(SelectQuery selectQuery, ISqlExpression sql, Expression path, Type? convertType = null, string? alias = null, int? index = null)
+		public SqlPlaceholderExpression(SelectQuery selectQuery, ISqlExpression sql, Expression path, Type? convertType = null, string? alias = null, int? index = null, Expression? trackingPath = null)
 		{
-			SelectQuery = selectQuery;
-			Path        = path;
-			ConvertType = convertType;
-			Alias       = alias;
-			Index       = index;
-			Sql         = sql;
+			SelectQuery  = selectQuery;
+			Path         = path;
+			ConvertType  = convertType;
+			Alias        = alias;
+			Index        = index;
+			Sql          = sql;
+			TrackingPath = trackingPath;
 		}
 
-		public SelectQuery    SelectQuery { get; }
-		public Expression     Path        { get; }
-		public int?           Index       { get; }
-		public string?        Alias       { get; set; }
-		public ISqlExpression Sql         { get; }
-		public Type?          ConvertType { get; }
+		public SelectQuery    SelectQuery  { get; }
+		public Expression     Path         { get; }
+		public Expression?    TrackingPath { get; }
+		public int?           Index        { get; }
+		public string?        Alias        { get; set; }
+		public ISqlExpression Sql          { get; }
+		public Type?          ConvertType  { get; }
 
 
 		public override ExpressionType NodeType => ExpressionType.Extension;
@@ -36,7 +38,7 @@ namespace LinqToDB.Expressions
 			if (!Type.IsNullableType())
 			{
 				var type = Type.AsNullable();
-				return new SqlPlaceholderExpression(SelectQuery, Sql, Path, type, Alias, Index);
+				return new SqlPlaceholderExpression(SelectQuery, Sql, Path, type, Alias, Index, TrackingPath);
 			}
 
 			return this;
@@ -47,7 +49,7 @@ namespace LinqToDB.Expressions
 			if (Type.IsNullable())
 			{
 				var type = Type.GetGenericArguments()[0];
-				return new SqlPlaceholderExpression(SelectQuery, Sql, Path, type, Alias, Index);
+				return new SqlPlaceholderExpression(SelectQuery, Sql, Path, type, Alias, Index, TrackingPath);
 			}
 
 			return this;
@@ -58,7 +60,15 @@ namespace LinqToDB.Expressions
 			if (ExpressionEqualityComparer.Instance.Equals(path, Path))
 				return this;
 
-			return new SqlPlaceholderExpression(SelectQuery, Sql, path, Type, Alias, Index);
+			return new SqlPlaceholderExpression(SelectQuery, Sql, path, Type, Alias, Index, TrackingPath);
+		}
+
+		public SqlPlaceholderExpression WithTrackingPath(Expression trackingPath)
+		{
+			if (ExpressionEqualityComparer.Instance.Equals(trackingPath, TrackingPath))
+				return this;
+
+			return new SqlPlaceholderExpression(SelectQuery, Sql, Path, Type, Alias, Index, trackingPath);
 		}
 
 		public override string ToString()

@@ -302,10 +302,15 @@ namespace LinqToDB.Linq.Builder
 
 				var result = base.MakeExpression(path, newFlags);
 
-				result = Builder.ConvertToSqlExpr(this, result, newFlags);
-
-				// appending missing keys
-				AppendGroupBy(Builder, GroupByContext.CurrentPlaceholders, GroupByContext.SubQuery.SelectQuery, result);
+				if (newFlags.HasFlag(ProjectFlags.SQL))
+				{
+					result = Builder.ConvertToSqlExpr(this, result, newFlags);
+					// appending missing keys
+					AppendGroupBy(Builder, GroupByContext.CurrentPlaceholders, GroupByContext.SubQuery.SelectQuery, result);
+					
+					// we return SQL nested as GroupByContext
+					result = Builder.UpdateNesting(GroupByContext, result);
+				}
 
 				return result;
 			}

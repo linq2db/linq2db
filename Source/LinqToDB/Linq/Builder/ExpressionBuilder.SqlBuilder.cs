@@ -1200,15 +1200,21 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					*/
-					var buildInfo = new BuildInfo(context, ma.Expression, context.SelectQuery);
 
-					if (IsSequence(buildInfo))
+					if (ma.Expression is not ContextRefExpression)
 					{
-						var sequence = BuildSequence(buildInfo);
+						var buildInfo = new BuildInfo(context, ma.Expression, context.SelectQuery);
 
-						newExpr = ma.Update(new ContextRefExpression(ma.Expression.Type, sequence));
-						return ConvertToSqlExpr(context, newExpr, flags, unwrap, columnDescriptor, isPureExpression);
+						if (IsSequence(buildInfo))
+						{
+							var sequence = BuildSequence(buildInfo);
+
+							newExpr = ma.Update(new ContextRefExpression(ma.Expression.Type, sequence));
+							return ConvertToSqlExpr(context, newExpr, flags, unwrap, columnDescriptor,
+								isPureExpression);
+						}
 					}
+
 					/*
 					var ctx = GetContext(context, expression);
 
@@ -1778,7 +1784,7 @@ namespace LinqToDB.Linq.Builder
 				var searchCondition = new SqlSearchCondition();
 				foreach (var placeholder in placeholders)
 				{
-					var accessLambda = BuildMemberPathLambda(placeholder.Path);
+					var accessLambda = BuildMemberPathLambda(placeholder.TrackingPath ?? placeholder.Path);
 
 					var paramExpression = InternalExtensions.ApplyLambdaToExpression(accessLambda, paramExpr);
 
@@ -3809,7 +3815,13 @@ namespace LinqToDB.Linq.Builder
 			if (expression == null)
 			{
 				if (rootContext != null)
+				{
 					expression = rootContext.BuildContext.MakeExpression(path, flags);
+					if (expression is SqlEagerLoadExpression eager && rootContext.BuildContext != eager.BuildContext)
+					{
+						expression = new SqlEagerLoadExpression(rootContext.BuildContext, path, GetSequenceExpression(rootContext.BuildContext));
+					}
+				}	
 				else
 					expression = path;
 			}

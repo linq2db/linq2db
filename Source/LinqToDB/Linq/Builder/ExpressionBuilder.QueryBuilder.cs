@@ -61,11 +61,11 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (memberInfo != null)
 				{
-					var path = Expression.MakeMemberAccess(pathExpr, memberInfo);
+					var trackingPath = Expression.MakeMemberAccess(pathExpr, memberInfo);
 
 					// this Path used later in ConvertCompare
 					//
-					placeholder = placeholder.WithPath(path);
+					placeholder = placeholder.WithTrackingPath(trackingPath);
 					resultExpr  = placeholder;
 				}
 
@@ -584,6 +584,12 @@ namespace LinqToDB.Linq.Builder
 								return new TransformInfo(buildExpr);
 							}
 
+							return new TransformInfo(expr);
+						}
+
+						case ExpressionType.Lambda:
+						case ExpressionType.Parameter:
+						{
 							return new TransformInfo(expr);
 						}
 					}
