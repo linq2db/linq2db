@@ -15,7 +15,7 @@
 			// DB2 LUW 9/10 supports only FETCH, v11 adds OFFSET, but for that we need to introduce versions into DB2 provider first
 			statement = SeparateDistinctFromPagination(statement, q => q.Select.SkipValue != null);
 			statement = ReplaceDistinctOrderByWithRowNumber(statement, q => q.Select.SkipValue != null);
-			statement = ReplaceTakeSkipWithRowNumber(statement, query => query.Select.SkipValue != null && SqlProviderFlags.GetIsSkipSupportedFlag(query.Select.TakeValue, query.Select.SkipValue), true);
+			statement = ReplaceTakeSkipWithRowNumber(SqlProviderFlags, statement, static (SqlProviderFlags, query) => query.Select.SkipValue != null && SqlProviderFlags.GetIsSkipSupportedFlag(query.Select.TakeValue, query.Select.SkipValue), true);
 
 			// This is mutable part
 			return statement.QueryType switch
@@ -32,10 +32,9 @@
 
 		public override string[] LikeCharactersToEscape => DB2LikeCharactersToEscape;
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor visitor,
-			EvaluationContext context)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
 		{
-			expression = base.ConvertExpressionImpl(expression, visitor, context);
+			expression = base.ConvertExpressionImpl(expression, visitor);
 
 			if (expression is SqlBinaryExpression be)
 			{

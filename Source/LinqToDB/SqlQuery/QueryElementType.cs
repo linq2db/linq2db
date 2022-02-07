@@ -20,6 +20,7 @@
 		SearchStringPredicate,
 		BetweenPredicate,
 		IsNullPredicate,
+		IsDistinctPredicate,
 		IsTruePredicate,
 		InSubQueryPredicate,
 		InListPredicate,
@@ -64,7 +65,7 @@
 		DropTableStatement,
 		TruncateTableStatement,
 
-		MergeSourceTable,
+		SqlTableLikeSource,
 		MergeOperationClause,
 
 		GroupingSet,

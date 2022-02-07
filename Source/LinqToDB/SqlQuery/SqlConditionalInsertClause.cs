@@ -4,7 +4,7 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlConditionalInsertClause : IQueryElement, ISqlExpressionWalkable, ICloneableElement
+	public class SqlConditionalInsertClause : IQueryElement, ISqlExpressionWalkable
 	{
 		public SqlInsertClause     Insert { get; }
 		public SqlSearchCondition? When   { get; }
@@ -17,11 +17,11 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable
 
-		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			((ISqlExpressionWalkable?)When)?.Walk(options, func);
+			((ISqlExpressionWalkable?)When)?.Walk(options, context, func);
 
-			((ISqlExpressionWalkable)Insert).Walk(options, func);
+			((ISqlExpressionWalkable)Insert).Walk(options, context, func);
 
 			return null;
 		}
@@ -44,15 +44,6 @@ namespace LinqToDB.SqlQuery
 			((IQueryElement)Insert).ToString(sb, dic);
 
 			return sb;
-		}
-
-		#endregion
-
-		#region ICloneableElement
-
-		ICloneableElement ICloneableElement.Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			throw new NotImplementedException();
 		}
 
 		#endregion

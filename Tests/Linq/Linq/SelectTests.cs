@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using FluentAssertions;
 #if NET472
 using System.Windows.Forms;
 #endif
@@ -9,20 +10,15 @@ using System.Windows.Forms;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Extensions;
+using LinqToDB.Linq;
 using LinqToDB.Reflection;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using System.Data;
-	using System.Data.Common;
-	using System.Threading;
-	using System.Threading.Tasks;
 	using LinqToDB.Common;
-	using LinqToDB.Data.DbCommandProcessor;
 	using Model;
 
 	[TestFixture]
@@ -1046,6 +1042,57 @@ namespace Tests.Linq
 
 				Assert.NotNull(result[0].Child);
 				Assert.Null(result[1].Child);
+			}
+		}
+
+
+		class IntermediateChildResult
+		{
+			public int?   ParentId { get; set; }
+			public Child? Child    { get; set; }
+		}
+
+		[Test]
+		public void TestConditionalProjectionOptimization(
+			[IncludeDataSources(false, TestProvName.AllSQLite)] string context, 
+			[Values(true, false)] bool includeChild,
+			[Values(1, 2)] int iteration)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from c in db.Child
+				select new IntermediateChildResult { ParentId = c.ParentID, Child = includeChild ? c : null };
+
+			var cacheMissCount = Query<IntermediateChildResult>.CacheMissCount;
+
+			var result = query.ToArray().First();
+
+			void CheckResult()
+			{
+				if (includeChild)
+				{
+					result.Child.Should().NotBeNull();
+				}
+				else
+				{
+					result.Child.Should().BeNull();
+
+					((DataConnection)db).LastQuery.Should().NotContain("ChildID");
+				}
+			}
+
+			CheckResult();
+
+			includeChild = !includeChild;
+
+			result = query.ToArray().First();
+
+			CheckResult();
+
+			if (iteration > 1)
+			{
+				Query<IntermediateChildResult>.CacheMissCount.Should().Be(cacheMissCount);
 			}
 		}
 

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlInsertClause : IQueryElement, ISqlExpressionWalkable, ICloneableElement
+	public class SqlInsertClause : IQueryElement, ISqlExpressionWalkable
 	{
 		public SqlInsertClause()
 		{
@@ -30,36 +30,14 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			var clone = new SqlInsertClause { WithIdentity = WithIdentity };
-
-			if (Into != null)
-				clone.Into = (SqlTable)Into.Clone(objectTree, doClone);
-
-			foreach (var item in Items)
-				clone.Items.Add((SqlSetExpression)item.Clone(objectTree, doClone));
-
-			objectTree.Add(this, clone);
-
-			return clone;
-		}
-
-		#endregion
-
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			((ISqlExpressionWalkable?)Into)?.Walk(options, func);
+			((ISqlExpressionWalkable?)Into)?.Walk(options, context, func);
 
 			foreach (var t in Items)
-				((ISqlExpressionWalkable)t).Walk(options, func);
+				((ISqlExpressionWalkable)t).Walk(options, context, func);
 
 			return null;
 		}

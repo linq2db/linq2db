@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -62,26 +61,12 @@ namespace LinqToDB.SqlQuery
 			return true;
 		}
 
-		public ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		public ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			for (var i = 0; i < Items.Count; i++)
-				Items[i] = Items[i].Walk(options, func)!;
+				Items[i] = Items[i].Walk(options, context, func)!;
 
-			return func(this);
-		}
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				clone = new SqlGroupingSet();
-				((SqlGroupingSet)clone).Items.AddRange(Items.Select(i => (ISqlExpression)i.Clone(objectTree, doClone)));
-			}
-
-			return clone;
+			return func(context, this);
 		}
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)

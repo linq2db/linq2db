@@ -21,7 +21,7 @@ stages:
   jobs:
   - job: build_job
     pool:
-      vmImage: 'windows-2019'
+      vmImage: 'windows-2022'
     displayName: 'Build'
 
     steps:

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -29,31 +28,13 @@ namespace LinqToDB.SqlQuery
 			return SelectQuery.ToString(sb, dic);
 		}
 
-		public override ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			With?.Walk(options, func);
-			var newQuery = SelectQuery.Walk(options, func);
+			With?.Walk(options, context, func);
+			var newQuery = SelectQuery.Walk(options, context, func);
 			if (!ReferenceEquals(newQuery, SelectQuery))
 				SelectQuery = (SelectQuery)newQuery;
 			return null;
-		}
-
-		public override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			var clone = new SqlSelectStatement();
-
-			if (Tag != null)
-				clone.Tag = (SqlComment)Tag.Clone(objectTree, doClone);
-
-			if (SelectQuery != null)
-				clone.SelectQuery = (SelectQuery)SelectQuery.Clone(objectTree, doClone);
-
-			if (With != null)
-				clone.With = (SqlWithClause)With.Clone(objectTree, doClone);
-
-			objectTree.Add(this, clone);
-
-			return clone;
 		}
 	}
 }

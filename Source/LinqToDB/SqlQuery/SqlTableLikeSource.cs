@@ -42,10 +42,10 @@ namespace LinqToDB.SqlQuery
 		public SelectQuery?     SourceQuery      { get; internal set; }
 		public ISqlTableSource  Source => (ISqlTableSource?)SourceQuery ?? SourceEnumerable!;
 
-		public void WalkQueries(Func<SelectQuery, SelectQuery> func)
+		public void WalkQueries<TContext>(TContext context, Func<TContext, SelectQuery, SelectQuery> func)
 		{
 			if (SourceQuery != null)
-				SourceQuery = func(SourceQuery);
+				SourceQuery = func(context, SourceQuery);
 		}
 
 		public bool IsParameterDependent
@@ -93,7 +93,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement
 
-		QueryElementType IQueryElement.ElementType => QueryElementType.MergeSourceTable;
+		QueryElementType IQueryElement.ElementType => QueryElementType.SqlTableLikeSource;
 
 		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
@@ -118,9 +118,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable
 
-		public ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		public ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			return SourceQuery?.Walk(options, func);
+			return SourceQuery?.Walk(options, context, func);
 		}
 
 		#endregion
@@ -135,12 +135,6 @@ namespace LinqToDB.SqlQuery
 
 		bool ISqlExpression.Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer) => throw new NotImplementedException();
 		
-		#endregion
-
-		#region ICloneableElement
-
-		ICloneableElement ICloneableElement.Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone) => throw new NotImplementedException();
-
 		#endregion
 
 		#region IEquatable

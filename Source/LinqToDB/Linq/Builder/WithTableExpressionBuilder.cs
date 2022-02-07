@@ -8,15 +8,17 @@ namespace LinqToDB.Linq.Builder
 
 	class WithTableExpressionBuilder : MethodCallBuilder
 	{
+		private static readonly string[] MethodNames = { "With", "WithTableExpression" };
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("With", "WithTableExpression");
+			return methodCall.IsQueryable(MethodNames);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			var table    = (TableBuilder.TableContext)sequence;
+			var table    = SequenceHelper.GetTableContext(sequence) ?? throw new LinqToDBException($"Cannot get table context from {sequence.GetType()}");
 			var value    = (string)methodCall.Arguments[1].EvaluateExpression()!;
 
 			table.SqlTable.SqlTableType   = SqlTableType.Expression;

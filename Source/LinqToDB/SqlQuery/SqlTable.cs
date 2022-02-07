@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -15,29 +14,29 @@ namespace LinqToDB.SqlQuery
 	{
 		#region Init
 
-		public SqlTable()
+		protected internal SqlTable(Type objectType, int? sourceId)
 		{
-			SourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
+			SourceID   = sourceId ?? Interlocked.Increment(ref SelectQuery.SourceIDCounter);
+			ObjectType = objectType;
 		}
 
 		internal SqlTable(
 			int id, string? name, string alias,
 			string? server, string? database, string? schema, string? physicalName,
-			Type?                    objectType,
+			Type                     objectType,
 			SequenceNameAttribute[]? sequenceAttributes,
-			SqlField[]               fields,
+			IEnumerable<SqlField>    fields,
 			SqlTableType             sqlTableType,
 			ISqlExpression[]?        tableArguments,
 			TableOptions             tableOptions)
+			: this(objectType, id)
 		{
-			SourceID           = id;
 			Name               = name;
 			Alias              = alias;
 			Server             = server;
 			Database           = database;
 			Schema             = schema;
 			PhysicalName       = physicalName;
-			ObjectType         = objectType;
 			SequenceAttributes = sequenceAttributes;
 
 			AddRange(fields);
@@ -52,7 +51,7 @@ namespace LinqToDB.SqlQuery
 		#region Init from type
 
 		public SqlTable(MappingSchema mappingSchema, Type objectType, string? physicalName = null)
-			: this()
+			: this(objectType, null)
 		{
 			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
 
@@ -62,7 +61,6 @@ namespace LinqToDB.SqlQuery
 			Database     = ed.DatabaseName;
 			Schema       = ed.SchemaName;
 			Name         = ed.TableName;
-			ObjectType   = objectType;
 			PhysicalName = physicalName ?? Name;
 			TableOptions = ed.TableOptions;
 
@@ -72,32 +70,32 @@ namespace LinqToDB.SqlQuery
 
 				Add(field);
 
-				if (field.Type!.Value.DataType == DataType.Undefined)
+				if (field.Type.DataType == DataType.Undefined)
 				{
-					var dataType = mappingSchema.GetDataType(field.Type!.Value.SystemType);
+					var dataType = mappingSchema.GetDataType(field.Type.SystemType);
 
 					if (dataType.Type.DataType == DataType.Undefined)
 					{
-						dataType = mappingSchema.GetUnderlyingDataType(field.Type!.Value.SystemType, out var canBeNull);
+						dataType = mappingSchema.GetUnderlyingDataType(field.Type.SystemType, out var canBeNull);
 
 						if (canBeNull)
 							field.CanBeNull = true;
 					}
 
-					field.Type = field.Type!.Value.WithDataType(dataType.Type.DataType);
+					field.Type = field.Type.WithDataType(dataType.Type.DataType);
 
 					// try to get type from converter
-					if (field.Type!.Value.DataType == DataType.Undefined)
+					if (field.Type.DataType == DataType.Undefined)
 					{
 						try
 						{
 							var converter = mappingSchema.GetConverter(
-								field.Type!.Value,
+								field.Type,
 								new DbDataType(typeof(DataParameter)), true);
 
-							var parameter = converter?.ConvertValueToParameter?.Invoke(DefaultValue.GetValue(field.Type!.Value.SystemType, mappingSchema));
+							var parameter = converter?.ConvertValueToParameter?.Invoke(DefaultValue.GetValue(field.Type.SystemType, mappingSchema));
 							if (parameter != null)
-								field.Type = field.Type!.Value.WithDataType(parameter.DataType);
+								field.Type = field.Type.WithDataType(parameter.DataType);
 						}
 						catch
 						{
@@ -105,9 +103,9 @@ namespace LinqToDB.SqlQuery
 						}
 					}
 
-					if (field.Type!.Value.Length    == null) field.Type = field.Type!.Value.WithLength   (dataType.Type.Length);
-					if (field.Type!.Value.Precision == null) field.Type = field.Type!.Value.WithPrecision(dataType.Type.Precision);
-					if (field.Type!.Value.Scale     == null) field.Type = field.Type!.Value.WithScale    (dataType.Type.Scale);
+					if (field.Type.Length    == null) field.Type = field.Type.WithLength   (dataType.Type.Length);
+					if (field.Type.Precision == null) field.Type = field.Type.WithPrecision(dataType.Type.Precision);
+					if (field.Type.Scale     == null) field.Type = field.Type.WithScale    (dataType.Type.Scale);
 				}
 			}
 
@@ -130,7 +128,7 @@ namespace LinqToDB.SqlQuery
 		#region Init from Table
 
 		public SqlTable(SqlTable table)
-			: this()
+			: this(table.ObjectType, null)
 		{
 			Alias              = table.Alias;
 			Server             = table.Server;
@@ -138,7 +136,6 @@ namespace LinqToDB.SqlQuery
 			Schema             = table.Schema;
 			Name               = table.Name;
 			PhysicalName       = table.PhysicalName;
-			ObjectType         = table.ObjectType;
 			SequenceAttributes = table.SequenceAttributes;
 
 			foreach (var field in table.Fields)
@@ -149,7 +146,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public SqlTable(SqlTable table, IEnumerable<SqlField> fields, ISqlExpression[] tableArguments)
-			: this()
+			: this(table.ObjectType, null)
 		{
 			Alias              = table.Alias;
 			Server             = table.Server;
@@ -157,7 +154,6 @@ namespace LinqToDB.SqlQuery
 			Schema             = table.Schema;
 			Name               = table.Name;
 			PhysicalName       = table.PhysicalName;
-			ObjectType         = table.ObjectType;
 			SequenceAttributes = table.SequenceAttributes;
 
 			AddRange(fields);
@@ -193,20 +189,20 @@ namespace LinqToDB.SqlQuery
 		public         string?           Server         { get; set; }
 		public         string?           Database       { get; set; }
 		public         string?           Schema         { get; set; }
-		public         Type?             ObjectType     { get; set; }
+		public         Type              ObjectType     { get; protected internal set; }
 		public virtual string?           PhysicalName   { get; set; }
 		public virtual SqlTableType      SqlTableType   { get; set; }
 		public         ISqlExpression[]? TableArguments { get; set; }
 		public         TableOptions      TableOptions   { get; set; }
 
-		private readonly Dictionary<string, SqlField> _fieldsLookup   = new Dictionary<string, SqlField>();
+		private readonly Dictionary<string, SqlField> _fieldsLookup   = new ();
 
 		// list user to preserve order of fields in queries
-		private readonly List<SqlField>                  _orderedFields  = new List<SqlField>();
-		public IReadOnlyCollection<SqlField>   Fields => _orderedFields;
+		private readonly List<SqlField>                  _orderedFields  = new ();
+		public           IReadOnlyList<SqlField>         Fields => _orderedFields;
 
 		// identity fields cached, as it is most used fields filter
-		private readonly List<SqlField>                  _identityFields = new List<SqlField>();
+		private readonly List<SqlField>                  _identityFields = new ();
 		public IReadOnlyList<SqlField> IdentityFields => _identityFields;
 
 		internal void ClearFields()
@@ -216,7 +212,7 @@ namespace LinqToDB.SqlQuery
 			_identityFields.Clear();
 		}
 
-		public SequenceNameAttribute[]? SequenceAttributes { get; protected set; }
+		public SequenceNameAttribute[]? SequenceAttributes { get; protected internal set; }
 
 		private SqlField? _all;
 		public  SqlField   All => _all ??= SqlField.All(this);
@@ -263,7 +259,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlTableSource Members
 
-		public int SourceID { get; protected set; }
+		public int SourceID { get; }
 
 		List<ISqlExpression>? _keyFields;
 
@@ -286,54 +282,9 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				var table = new SqlTable
-				{
-					Name               = Name,
-					Alias              = Alias,
-					Server             = Server,
-					Database           = Database,
-					Schema             = Schema,
-					PhysicalName       = PhysicalName,
-					ObjectType         = ObjectType,
-					SqlTableType       = SqlTableType,
-					SequenceAttributes = SequenceAttributes,
-				};
-
-				table.ClearFields();
-
-				foreach (var field in Fields)
-				{
-					var fc = new SqlField(field);
-
-					objectTree.Add(field, fc);
-					table.     Add(fc);
-				}
-
-				TableArguments = TableArguments?.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray();
-
-				objectTree.Add(this, table);
-				objectTree.Add(All,  table.All);
-
-				clone = table;
-			}
-
-			return clone;
-		}
-
-		#endregion
-
 		#region IQueryElement Members
 
-		public virtual QueryElementType ElementType { [DebuggerStepThrough] get; } = QueryElementType.SqlTable;
+		public virtual QueryElementType ElementType => QueryElementType.SqlTable;
 
 		public virtual StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
@@ -349,8 +300,8 @@ namespace LinqToDB.SqlQuery
 
 		public bool CanBeNull { get; set; } = true;
 
-		int   ISqlExpression.Precedence => Precedence.Primary;
-		Type? ISqlExpression.SystemType => ObjectType;
+		int  ISqlExpression.Precedence => Precedence.Primary;
+		Type ISqlExpression.SystemType => ObjectType;
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
@@ -370,20 +321,21 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		public virtual ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public virtual ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			if (TableArguments != null)
 				for (var i = 0; i < TableArguments.Length; i++)
-					TableArguments[i] = TableArguments[i].Walk(options, func)!;
+					TableArguments[i] = TableArguments[i].Walk(options, context, func)!;
 
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion
 
 		#region System tables
+
 		internal static SqlTable Inserted(Type objectType)
-			=> new SqlTable(objectType)
+			=> new (objectType)
 			{
 				Name         = "INSERTED",
 				PhysicalName = "INSERTED",
@@ -392,8 +344,9 @@ namespace LinqToDB.SqlQuery
 				Server       = null,
 				SqlTableType = SqlTableType.SystemTable,
 			};
+
 		internal static SqlTable Deleted(Type objectType)
-			=> new SqlTable(objectType)
+			=> new (objectType)
 			{
 				Name         = "DELETED",
 				PhysicalName = "DELETED",
@@ -402,6 +355,7 @@ namespace LinqToDB.SqlQuery
 				Server       = null,
 				SqlTableType = SqlTableType.SystemTable,
 			};
+
 		#endregion
 	}
 }

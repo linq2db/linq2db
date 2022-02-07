@@ -65,13 +65,13 @@ namespace LinqToDB.Linq.Builder
 			var mapper         = builder.MappingSchema.GetEntityDescriptor(fromType);
 			var discriminators = mapper.InheritanceMapping;
 
-			return builder.MakeIsPredicate(context, discriminators, toType,
-				name =>
+			return builder.MakeIsPredicate((context, table), context, discriminators, toType,
+				static (context, name) =>
 				{
-					var field  = table[name] ?? throw new LinqException($"Field {name} not found in table {table}");
+					var field  = context.table[name] ?? throw new LinqException($"Field {name} not found in table {context.table}");
 					var member = field.ColumnDescriptor.MemberInfo;
-					var expr   = Expression.MakeMemberAccess(Expression.Parameter(member.DeclaringType, "p"), member);
-					var sql    = context.ConvertToSql(expr, 1, ConvertFlags.Field)[0].Sql;
+					var expr   = Expression.MakeMemberAccess(Expression.Parameter(member.DeclaringType!, "p"), member);
+					var sql    = context.context.ConvertToSql(expr, 1, ConvertFlags.Field)[0].Sql;
 
 					return sql;
 				});

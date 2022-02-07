@@ -44,8 +44,9 @@ namespace LinqToDB.DataProvider.Access
 			}
 		}
 
-		public override bool IsNestedJoinSupported => false;
-		public override bool WrapJoinCondition     => true;
+		public override    bool IsNestedJoinSupported   => false;
+		public override    bool WrapJoinCondition       => true;
+		protected override bool IsValuesSyntaxSupported => false;
 
 		#region Skip / Take Support
 
@@ -146,6 +147,21 @@ namespace LinqToDB.DataProvider.Access
 			}
 
 			base.BuildBinaryExpression(expr);
+		}
+
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
+		{
+			StringBuilder.Append("IIF(");
+			BuildExpression(Precedence.Comparison, expr.Expr1);
+			StringBuilder.Append(" = ");
+			BuildExpression(Precedence.Comparison, expr.Expr2);
+			StringBuilder.Append(" OR ");
+			BuildExpression(Precedence.Comparison, expr.Expr1);
+			StringBuilder.Append(" IS NULL AND ");
+			BuildExpression(Precedence.Comparison, expr.Expr2);
+			StringBuilder
+				.Append(" IS NULL, 0, 1) = ")
+				.Append(expr.IsNot ? '0' : '1');
 		}
 
 		protected override void BuildFunction(SqlFunction func)

@@ -252,6 +252,17 @@ namespace LinqToDB.DataProvider.Oracle
 				throwExceptionIfTableNotFound);
 		}
 
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
+		{
+			StringBuilder.Append("DECODE(");
+			BuildExpression(Precedence.Unknown, expr.Expr1);
+			StringBuilder.Append(", ");
+			BuildExpression(Precedence.Unknown, expr.Expr2);
+			StringBuilder
+				.Append(", 0, 1) = ")
+				.Append(expr.IsNot ? '0' : '1');
+		}
+
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
 			BuildInsertOrUpdateQueryAsMerge(insertOrUpdate, "FROM SYS.DUAL");

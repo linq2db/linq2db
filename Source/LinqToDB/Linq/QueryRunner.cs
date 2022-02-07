@@ -22,6 +22,7 @@ namespace LinqToDB.Linq
 	using Data;
 	using Extensions;
 	using LinqToDB.Expressions;
+	using LinqToDB.Reflection;
 	using SqlQuery;
 
 	static partial class QueryRunner
@@ -38,7 +39,7 @@ namespace LinqToDB.Linq
 				QueryCache.Clear();
 			}
 
-			internal static MemoryCache QueryCache { get; } = new MemoryCache(new MemoryCacheOptions());
+			internal static MemoryCache<IStructuralEquatable> QueryCache { get; } = new (new ());
 		}
 
 #region Mapper
@@ -124,31 +125,30 @@ namespace LinqToDB.Linq
 				Type         dataReaderType,
 				bool         slowMode)
 			{
-				var variableType  = dataReader.GetType();
-
-				ParameterExpression? oldVariable = null;
-				ParameterExpression? newVariable = null;
-
 				Expression expression;
+				var ctx = new TransformMapperExpressionContext(_expression, context, dataReader, dataReaderType);
 				if (slowMode)
 				{
-					expression = _expression.Transform(e =>
-					{
-						if (e is ConvertFromDataReaderExpression ex)
-							return new ConvertFromDataReaderExpression(ex.Type, ex.Index, ex.Converter, newVariable!, context).Reduce();
+					expression = _expression.Transform(
+						ctx,
+						static (context, e) =>
+						{
+							if (e is ConvertFromDataReaderExpression ex)
+								return new ConvertFromDataReaderExpression(ex.Type, ex.Index, ex.Converter, context.NewVariable!, context.Context).Reduce();
 
-						return replaceVariable(e);
-					});
+							return ReplaceVariable(context, e);
+						});
 				}
 				else
 				{
 					expression = _expression.Transform(
-						e =>
+						ctx,
+						static (context, e) =>
 						{
 							if (e is ConvertFromDataReaderExpression ex)
-								return ex.Reduce(context, dataReader, newVariable!).Transform(replaceVariable);
+								return ex.Reduce(context.Context, context.DataReader, context.NewVariable!).Transform(context, ReplaceVariable);
 
-							return replaceVariable(e);
+							return ReplaceVariable(context, e);
 						});
 				}
 
@@ -156,26 +156,45 @@ namespace LinqToDB.Linq
 					expression = SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(expression, dataReader.FieldCount, reduce: false);
 
 				return (Expression<Func<IQueryRunner, IDataReader, T>>)expression;
+			}
 
-				Expression replaceVariable(Expression e)
+			static Expression ReplaceVariable(TransformMapperExpressionContext context, Expression e)
+			{
+				if (e is ParameterExpression vex && vex.Name == "ldr")
 				{
-					if (e is ParameterExpression vex && vex.Name == "ldr")
-					{
-						oldVariable = vex;
-						return newVariable ??= Expression.Variable(variableType, "ldr");
-					}
-
-					if (e is BinaryExpression bex
-						&& bex.NodeType == ExpressionType.Assign
-						&& bex.Left == oldVariable)
-					{
-						Expression dataReaderExpression = Expression.Convert(_expression.Parameters[1], dataReaderType);
-
-						return Expression.Assign(newVariable, dataReaderExpression);
-					}
-
-					return e;
+					context.OldVariable = vex;
+					return context.NewVariable ??= Expression.Variable(context.DataReader.GetType(), "ldr");
 				}
+
+				if (e is BinaryExpression bex
+					&& bex.NodeType == ExpressionType.Assign
+					&& bex.Left     == context.OldVariable)
+				{
+					Expression dataReaderExpression = Expression.Convert(context.Expression.Parameters[1], context.DataReaderType);
+
+					return Expression.Assign(context.NewVariable!, dataReaderExpression);
+				}
+
+				return e;
+			}
+
+			class TransformMapperExpressionContext
+			{
+				public TransformMapperExpressionContext(Expression<Func<IQueryRunner, IDataReader, T>> expression, IDataContext context, IDataReader dataReader, Type dataReaderType)
+				{
+					Expression     = expression;
+					Context        = context;
+					DataReader     = dataReader;
+					DataReaderType = dataReaderType;
+				}
+
+				public Expression<Func<IQueryRunner,IDataReader,T>> Expression;
+				public readonly IDataContext                        Context;
+				public readonly IDataReader                         DataReader;
+				public readonly Type                                DataReaderType;
+
+				public ParameterExpression? OldVariable;
+				public ParameterExpression? NewVariable;
 			}
 		}
 
@@ -232,7 +251,7 @@ namespace LinqToDB.Linq
 					var etype = type.GetItemType();
 
 					if (etype == null || etype == typeof(object) || etype.IsEnum ||
-						type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>) &&
+						type.IsNullable() &&
 						etype.GetGenericArguments()[0].IsEnum)
 					{
 						var values = new List<object?>();
@@ -264,11 +283,9 @@ namespace LinqToDB.Linq
 
 		internal static ParameterAccessor GetParameter(Type type, IDataContext dataContext, SqlField field)
 		{
-			var exprParam = Expression.Parameter(typeof(Expression), "expr");
-
 			Expression getter = Expression.Convert(
 				Expression.Property(
-					Expression.Convert(exprParam, typeof(ConstantExpression)),
+					Expression.Convert(ExpressionBuilder.ExpressionParam, typeof(ConstantExpression)),
 					ReflectionHelper.Constant.Value),
 				type);
 
@@ -284,8 +301,8 @@ namespace LinqToDB.Linq
 			{
 				dbDataTypeExpression = Expression.Call(Expression.Constant(field.ColumnDescriptor.GetDbDataType(false)),
 					DbDataType.WithSetValuesMethodInfo,
-					Expression.PropertyOrField(valueGetter, nameof(DataParameter.DbDataType)));
-				valueGetter          = Expression.PropertyOrField(valueGetter, nameof(DataParameter.Value));
+					Expression.Property(valueGetter, Methods.LinqToDB.DataParameter.DbDataType));
+				valueGetter          = Expression.Property(valueGetter, Methods.LinqToDB.DataParameter.Value);
 			}
 			else
 			{
@@ -293,8 +310,8 @@ namespace LinqToDB.Linq
 				dbDataTypeExpression = Expression.Constant(dbDataType);
 			}
 
-			var param = ExpressionBuilder.CreateParameterAccessor(
-				dataContext, valueGetter, getter, dbDataTypeExpression, valueGetter, exprParam, Expression.Parameter(typeof(object[]), "ps"), Expression.Parameter(typeof(IDataContext), "ctx"), field.Name.Replace('.', '_'));
+			var param = ParametersContext.CreateParameterAccessor(
+				dataContext, valueGetter, getter, dbDataTypeExpression, valueGetter, parametersExpression: null, name: field.Name.Replace('.', '_'));
 
 			return param;
 		}
@@ -728,7 +745,7 @@ namespace LinqToDB.Linq
 			{
 				using (var dr = runner.ExecuteReader())
 				{
-					while (dr.Read())
+					if (dr.Read())
 					{
 						var value = mapper.Map(dataContext, runner, dr);
 						runner.RowsCount++;

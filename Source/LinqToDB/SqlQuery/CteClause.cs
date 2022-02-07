@@ -9,7 +9,7 @@ using LinqToDB.Common;
 namespace LinqToDB.SqlQuery
 {
 	[DebuggerDisplay("CTE({CteID}, {Name})")]
-	public class CteClause : IQueryElement, ICloneableElement, ISqlExpressionWalkable
+	public class CteClause : IQueryElement, ISqlExpressionWalkable
 	{
 		SqlField[]? _fields = Array<SqlField>.Empty;
 
@@ -18,7 +18,7 @@ namespace LinqToDB.SqlQuery
 		public SqlField[]? Fields
 		{
 			get => _fields;
-			private set => _fields = value;
+			internal set => _fields = value;
 		}
 
 		public int          CteID       { get; } = Interlocked.Increment(ref CteIDCounter);
@@ -42,7 +42,7 @@ namespace LinqToDB.SqlQuery
 
 		internal CteClause(
 			SelectQuery?          body,
-			ICollection<SqlField> fields,
+			IEnumerable<SqlField> fields,
 			Type                  objectType,
 			bool                  isRecursive,
 			string?               name)
@@ -80,16 +80,9 @@ namespace LinqToDB.SqlQuery
 			return sb.Append($"CTE({CteID}, {Name})");
 		}
 
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
+		public ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			var newClause = new CteClause((SelectQuery) Body!.Clone(objectTree, doClone), ObjectType, IsRecursive, Name);
-			newClause.Fields = Fields?.Select(f => (SqlField)f.Clone(objectTree, doClone)).ToArray();
-			return newClause;
-		}
-
-		public ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
-		{
-			Body = Body?.Walk(options, func) as SelectQuery;
+			Body = Body?.Walk(options, context, func) as SelectQuery;
 
 			return null;
 		}

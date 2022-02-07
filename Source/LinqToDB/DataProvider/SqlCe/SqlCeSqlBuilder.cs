@@ -45,7 +45,10 @@ namespace LinqToDB.DataProvider.SqlCe
 			return "OFFSET {0} ROWS";
 		}
 
-		protected override bool   OffsetFirst => true;
+		protected override bool OffsetFirst                   => true;
+		protected override bool IsValuesSyntaxSupported       => false;
+		protected override bool SupportsColumnAliasesInSource => true;
+		protected override bool RequiresConstantColumnAliases => true;
 
 		public override int CommandCount(SqlStatement statement)
 		{
@@ -166,5 +169,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
+
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
 	}
 }

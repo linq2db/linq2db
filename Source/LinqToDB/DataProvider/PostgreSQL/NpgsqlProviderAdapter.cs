@@ -57,7 +57,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			Action<IDbDataParameter, NpgsqlDbType> dbTypeSetter,
 			Func  <IDbDataParameter, NpgsqlDbType> dbTypeGetter,
 
-			Func<IDbConnection, string, NpgsqlBinaryImporter> beginBinaryImport)
+			Func<IDbConnection, string, NpgsqlBinaryImporter>                           beginBinaryImport,
+			Func<IDbConnection, string, CancellationToken, Task<NpgsqlBinaryImporter>>? beginBinaryImportAsync)
 		{
 			ConnectionType  = connectionType;
 			DataReaderType  = dataReaderType;
@@ -84,7 +85,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SetDbType = dbTypeSetter;
 			GetDbType = dbTypeGetter;
 
-			BeginBinaryImport          = beginBinaryImport;
+			BeginBinaryImport      = beginBinaryImport;
+			BeginBinaryImportAsync = beginBinaryImportAsync;
 
 			// because NpgsqlDbType enumeration changes often (compared to other providers)
 			// we should create lookup list of mapped fields, defined in used npgsql version
@@ -129,16 +131,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public bool IsDbTypeSupported(NpgsqlDbType type) => _knownDbTypes.ContainsKey(type);
 
-		public NpgsqlDbType ApplyDbTypeFlags(NpgsqlDbType type, bool isArray, bool isRange, bool convertAlways)
+		public NpgsqlDbType ApplyDbTypeFlags(NpgsqlDbType type, bool isArray, bool isRange, bool isMultiRange, bool convertAlways)
 		{
 			// don't apply conversions if flags not applied, otherwise it could return incorrect results
-			if (!isArray && !isRange)
+			if (!isArray && !isRange && !isMultiRange)
 				return convertAlways ? (NpgsqlDbType)_knownDbTypes[type] : type;
 
 			// a bit of magic to properly handle different numeric values for enums in npgsql 3 and 4
 			var result = _knownDbTypes[type];
-			if (isArray) result |= _knownDbTypes[NpgsqlDbType.Array];
-			if (isRange) result |= _knownDbTypes[NpgsqlDbType.Range];
+			if (isArray     ) result |= _knownDbTypes[NpgsqlDbType.Array];
+			if (isRange     ) result |= _knownDbTypes[NpgsqlDbType.Range];
+			if (isMultiRange) result |= _knownDbTypes[NpgsqlDbType.Multirange];
 
 			// because resulting value will not map to any prefefined value, enum conversion will be performed
 			// by value
@@ -148,7 +151,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		private readonly Func<string, NpgsqlConnection> _connectionCreator;
 		public NpgsqlConnection CreateConnection(string connectionString) => _connectionCreator(connectionString);
 
-		public Func<IDbConnection, string, NpgsqlBinaryImporter> BeginBinaryImport { get; }
+		public Func<IDbConnection, string, NpgsqlBinaryImporter>                           BeginBinaryImport      { get; }
+		public Func<IDbConnection, string, CancellationToken, Task<NpgsqlBinaryImporter>>? BeginBinaryImportAsync { get; }
 
 		public MappingSchema MappingSchema { get; }
 
@@ -195,11 +199,21 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 						var pConnection = Expression.Parameter(typeof(IDbConnection));
 						var pCommand    = Expression.Parameter(typeof(string));
+						var pToken      = Expression.Parameter(typeof(CancellationToken));
 
 						var beginBinaryImport = Expression.Lambda<Func<IDbConnection, string, NpgsqlBinaryImporter>>(
 								typeMapper.MapExpression((IDbConnection conn, string command) => typeMapper.Wrap<NpgsqlBinaryImporter>(((NpgsqlConnection)conn).BeginBinaryImport(command)), pConnection, pCommand),
 								pConnection, pCommand)
 							.CompileExpression();
+
+						Func<IDbConnection, string, CancellationToken, Task<NpgsqlBinaryImporter>>? beginBinaryImportAsync = null;
+						if (connectionType.GetMethod(nameof(BeginBinaryImportAsync)) != null)
+						{
+							beginBinaryImportAsync = Expression.Lambda<Func<IDbConnection, string, CancellationToken, Task<NpgsqlBinaryImporter>>>(
+									typeMapper.MapExpression((IDbConnection conn, string command, CancellationToken cancellationToken) => typeMapper.WrapTask<NpgsqlBinaryImporter>(((NpgsqlConnection)conn).BeginBinaryImportAsync(command, cancellationToken), npgsqlBinaryImporterType, cancellationToken), pConnection, pCommand, pToken),
+									pConnection, pCommand, pToken)
+								.CompileExpression();
+						}
 
 						// create mapping schema
 						var mappingSchema = new MappingSchema();
@@ -333,7 +347,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							dbTypeBuilder.BuildSetter<IDbDataParameter>(),
 							dbTypeBuilder.BuildGetter<IDbDataParameter>(),
 
-							beginBinaryImport);
+							beginBinaryImport,
+							beginBinaryImportAsync);
 
 						void AddUdtType(Type type)
 						{
@@ -364,7 +379,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public enum NpgsqlDbType
 		{
 			Abstime                        = 33,
-			Array                          = -2147483648,
 			Bigint                         = 1,
 			Bit                            = 25,
 			Boolean                        = 2,
@@ -414,7 +428,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			Path                           = 14,
 			Point                          = 15,
 			Polygon                        = 16,
-			Range                          = 1073741824,
 			Real                           = 17,
 			Refcursor                      = 23,
 			/// <summary>
@@ -464,8 +477,29 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			LQuery                         = 61,
 			LTree                          = 60,
 			LTxtQuery                      = 62,
-			PgLsn                          = 59
+			PgLsn                          = 59,
+			// v5.0.10+
+			Xid8                           = 64,
+			// v6.0.0+
+			IntegerRange                   = Range | Integer,
+			BigIntRange                    = Range | Bigint,
+			NumericRange                   = Range | Numeric,
+			TimestampRange                 = Range | Timestamp,
+			TimestampTzRange               = Range | TimestampTZ,
+			DateRange                      = Range | Date,
+			IntegerMultirange              = Multirange | Integer,
+			BigIntMultirange               = Multirange | Bigint,
+			NumericMultirange              = Multirange | Numeric,
+			TimestampMultirange            = Multirange | Timestamp,
+			TimestampTzMultirange          = Multirange | TimestampTZ,
+			DateMultirange                 = Multirange | Date,
 
+			// flags
+			Array      = int.MinValue,
+			// 3.2.7+
+			Range      = 0x40000000,
+			// v6.0.0+
+			Multirange = 0x20000000,
 		}
 
 		[Wrapper]
@@ -493,7 +527,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			public void    Dispose()         => ((Action<NpgsqlConnection>)CompiledWrappers[2])(this);
 
 			// not implemented, as it is not called from wrapper
-			internal NpgsqlBinaryImporter BeginBinaryImport(string copyFromCommand) => throw new NotImplementedException();
+			internal NpgsqlBinaryImporter       BeginBinaryImport(string copyFromCommand) => throw new NotImplementedException();
+			internal Task<NpgsqlBinaryImporter> BeginBinaryImportAsync(string copyFromCommand, CancellationToken cancellationToken) => throw new NotImplementedException();
 		}
 
 		#region BulkCopy

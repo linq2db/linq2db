@@ -1,18 +1,20 @@
-﻿using LinqToDB.Expressions;
-using LinqToDB.SqlQuery;
-using System.Linq;
+﻿using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
+	using SqlQuery;
+
+	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
+
 	internal partial class MergeBuilder
 	{
 		internal class UpdateWhenMatchedThenDelete : MethodCallBuilder
 		{
 			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
-				return methodCall.Method.IsGenericMethod
-					&& LinqExtensions.UpdateWhenMatchedAndThenDeleteMethodInfo == methodCall.Method.GetGenericMethodDefinition();
+				return methodCall.IsSameGenericMethod(UpdateWhenMatchedAndThenDeleteMethodInfo);
 			}
 
 			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -28,7 +30,7 @@ namespace LinqToDB.Linq.Builder
 				var setter          = methodCall.Arguments[2];
 				var deletePredicate = methodCall.Arguments[3];
 
-				if (!(setter is ConstantExpression constSetter) || constSetter.Value != null)
+				if (!setter.IsNullValue())
 				{
 					var setterExpression = (LambdaExpression)setter.Unwrap();
 					UpdateBuilder.BuildSetterWithContext(
@@ -49,20 +51,21 @@ namespace LinqToDB.Linq.Builder
 					foreach (var field in sqlTable.Fields.Where(f => f.IsUpdatable).Except(keys))
 					{
 						var expression = LinqToDB.Expressions.Extensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, param);
-						var expr       = mergeContext.SourceContext.ConvertToSql(builder.ConvertExpression(expression), 1, ConvertFlags.Field)[0].Sql;
+						var tgtExpr    = mergeContext.TargetContext.ConvertToSql(builder.ConvertExpression(expression), 1, ConvertFlags.Field)[0].Sql;
+						var srcExpr    = mergeContext.SourceContext.ConvertToSql(builder.ConvertExpression(expression), 1, ConvertFlags.Field)[0].Sql;
 
-						operation.Items.Add(new SqlSetExpression(field, expr));
+						operation.Items.Add(new SqlSetExpression(tgtExpr, srcExpr));
 					}
 				}
 
-				if (!(predicate is ConstantExpression constPredicate) || constPredicate.Value != null)
+				if (!predicate.IsNullValue())
 				{
 					var predicateCondition = (LambdaExpression)predicate.Unwrap();
 
 					operation.Where = BuildSearchCondition(builder, statement, mergeContext.TargetContext, mergeContext.SourceContext, predicateCondition);
 				}
 
-				if (!(deletePredicate is ConstantExpression constDeletePredicate) || constDeletePredicate.Value != null)
+				if (!deletePredicate.IsNullValue())
 				{
 					var deleteCondition = (LambdaExpression)deletePredicate.Unwrap();
 	

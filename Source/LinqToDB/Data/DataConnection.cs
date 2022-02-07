@@ -1073,7 +1073,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		public IDbConnection Connection => EnsureConnection().Connection;
 
-		internal IAsyncDbConnection EnsureConnection()
+		internal IAsyncDbConnection EnsureConnection(bool connect = true)
 		{
 			CheckAndThrowOnDisposed();
 
@@ -1093,7 +1093,7 @@ namespace LinqToDB.Data
 			else if (RetryPolicy != null && _connection is not RetryingDbConnection)
 				_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
 
-			if (_connection.State == ConnectionState.Closed)
+			if (connect && _connection.State == ConnectionState.Closed)
 			{
 				OnBeforeConnectionOpen?.Invoke(this, _connection.Connection);
 				_connection.Open();
@@ -1179,17 +1179,16 @@ namespace LinqToDB.Data
 		/// </summary>
 		public IDataParameterCollection? LastParameters;
 
-		internal void InitCommand(CommandType commandType, string sql, DataParameter[]? parameters, List<string>? queryHints, bool withParameters)
+		internal void InitCommand(CommandType commandType, string sql, DataParameter[]? parameters, IReadOnlyCollection<string>? queryHints, bool withParameters)
 		{
 			if (queryHints?.Count > 0)
 			{
 				var sqlProvider = DataProvider.CreateSqlBuilder(MappingSchema);
-				sql = sqlProvider.ApplyQueryHints(sql, queryHints);
-				queryHints.Clear();
+				sql             = sqlProvider.ApplyQueryHints(sql, queryHints);
 			}
 
 			DataProvider.InitCommand(this, commandType, sql, parameters, withParameters);
-			LastQuery = Command.CommandText;
+			LastQuery      = Command.CommandText;
 			LastParameters = Command.Parameters;
 		}
 
@@ -1603,8 +1602,6 @@ namespace LinqToDB.Data
 		/// </summary>
 		public  List<string>  NextQueryHints => _nextQueryHints ??= new List<string>();
 		
-		private static readonly MemoryCache _combinedSchemas = new (new MemoryCacheOptions());
-
 		/// <summary>
 		/// Adds additional mapping schema to current connection.
 		/// </summary>
@@ -1613,16 +1610,8 @@ namespace LinqToDB.Data
 		/// <returns>Current connection object.</returns>
 		public DataConnection AddMappingSchema(MappingSchema mappingSchema)
 		{
-			var key = new { BaseSchema = MappingSchema.ConfigurationID, AddedSchema = mappingSchema.ConfigurationID };
-			MappingSchema = _combinedSchemas.GetOrCreate(
-				key,
-				new { BaseSchema = MappingSchema, AddedSchema = mappingSchema },
-				static (entry, key, context) => 
-				{
-					entry.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
-					return new MappingSchema(context.AddedSchema, context.BaseSchema);
-				});
-			_id            = null;
+			MappingSchema = MappingSchema.CombineSchemas(MappingSchema, mappingSchema);
+			_id           = null;
 
 			return this;
 		}

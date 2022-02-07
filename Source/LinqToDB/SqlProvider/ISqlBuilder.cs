@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
 using System.Text;
 
@@ -15,6 +14,7 @@ namespace LinqToDB.SqlProvider
 
 		StringBuilder    ConvertTableName     (StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions);
 		StringBuilder    BuildTableName       (StringBuilder sb, string? server, string? database, string? schema, string table, TableOptions tableOptions);
+		StringBuilder    BuildDataType        (StringBuilder sb, SqlDataType dataType);
 		string?          GetTableServerName   (SqlTable table);
 		string?          GetTableDatabaseName (SqlTable table);
 		string?          GetTableSchemaName   (SqlTable table);
@@ -24,7 +24,7 @@ namespace LinqToDB.SqlProvider
 		ISqlExpression?  GetIdentityExpression(SqlTable table);
 
 		StringBuilder    PrintParameters      (StringBuilder sb, IEnumerable<IDbDataParameter>? parameters);
-		string           ApplyQueryHints      (string sqlText, List<string> queryHints);
+		string           ApplyQueryHints      (string sqlText, IReadOnlyCollection<string> queryHints);
 
 		string           GetReserveSequenceValuesSql(int count, string sequenceName);
 		string           GetMaxValueSql       (EntityDescriptor entity, ColumnDescriptor column);

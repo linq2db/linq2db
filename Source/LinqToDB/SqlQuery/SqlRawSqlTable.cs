@@ -14,10 +14,10 @@ namespace LinqToDB.SqlQuery
 		public ISqlExpression[] Parameters { get; }
 
 		public SqlRawSqlTable(
-			MappingSchema mappingSchema,
-			Type objectType,
-			string sql,
-			params ISqlExpression[] parameters)
+			MappingSchema    mappingSchema,
+			Type             objectType,
+			string           sql,
+			ISqlExpression[] parameters)
 			: base(mappingSchema, objectType)
 		{
 			SQL        = sql        ?? throw new ArgumentNullException(nameof(sql));
@@ -38,7 +38,8 @@ namespace LinqToDB.SqlQuery
 			Parameters = parameters;
 		}
 
-		public SqlRawSqlTable(SqlRawSqlTable table, IEnumerable<SqlField> fields, ISqlExpression[] parameters)
+		public SqlRawSqlTable(SqlRawSqlTable table, ISqlExpression[] parameters)
+			: base(table.ObjectType, null)
 		{
 			Alias              = table.Alias;
 			Server             = table.Server;
@@ -46,13 +47,10 @@ namespace LinqToDB.SqlQuery
 			Schema             = table.Schema;
 
 			PhysicalName       = table.PhysicalName;
-			ObjectType         = table.ObjectType;
 			SequenceAttributes = table.SequenceAttributes;
 
 			SQL                = table.SQL;
 			Parameters         = parameters;
-
-			AddRange(fields);
 		}
 
 		public override QueryElementType ElementType  => QueryElementType.SqlRawSqlTable;
@@ -81,13 +79,13 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		public override ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public override ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			if (Parameters != null)
 				for (var i = 0; i < Parameters.Length; i++)
-					Parameters[i] = Parameters[i].Walk(options, func)!;
+					Parameters[i] = Parameters[i].Walk(options, context, func)!;
 
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion

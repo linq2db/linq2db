@@ -6,14 +6,14 @@
 	partial class Oracle11SqlBuilder
 	{
 		// Oracle doesn't support TABLE_ALIAS(COLUMN_ALIAS, ...) syntax
-		protected override bool MergeSupportsColumnAliasesInSource => false;
+		protected override bool SupportsColumnAliasesInSource => false;
 
 		// NULL value in sort leads to "cannot insert NULL into (TARGET.NON_NULL_COLUMN)" error in insert command
 		// TODO: find a way to workaround it
-		protected override bool MergeEmptySourceSupported => false;
+		protected override bool isEmptyValuesSourceSupported => true;
 
-		// VALUES(...) syntax not supported in MERGE source
-		protected override bool MergeSupportsSourceDirectValues => false;
+		// VALUES(...) syntax not supported by Oracle
+		protected override bool IsValuesSyntaxSupported => false;
 
 		// bad thing that user can change this table, but broken merge will be minor issue in this case
 		protected override string FakeTable => "dual";

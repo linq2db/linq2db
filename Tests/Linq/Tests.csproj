@@ -15,13 +15,7 @@
 		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
 
 		<PackageReference Include="NodaTime" />
-		<PackageReference Include="Actian.Client" />
-
-	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
-		<!-- transient -->
-		<PackageReference Include="System.Security.Cryptography.Cng" />
+    <PackageReference Include="Actian.Client" />
 	</ItemGroup>
 
 </Project>

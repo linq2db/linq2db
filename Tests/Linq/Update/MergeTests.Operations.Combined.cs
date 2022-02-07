@@ -752,6 +752,8 @@ namespace Tests.xUpdate
 
 				if (context.Contains("Sybase"))
 					Assert.AreEqual(3, rows);
+				else if (context.Contains("Native") && context.Contains("Oracle"))
+					Assert.AreEqual(-1, rows);
 				else
 					Assert.AreEqual(2, rows);
 

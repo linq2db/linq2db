@@ -1311,6 +1311,8 @@ namespace Tests.xUpdate
 
 				try
 				{
+					db.Person.Where(p => p.FirstName == "John" && p.LastName == "Shepard").Delete();
+
 					id = await db.Person.InsertWithInt32IdentityAsync(() => new Person
 					{
 						FirstName = "John",
@@ -1335,6 +1337,61 @@ namespace Tests.xUpdate
 							() => new Patient
 							{
 								PersonID  = id,
+								//Diagnosis = diagnosis,
+							});
+
+						diagnosis = (diagnosis.Length + i).ToString();
+					}
+
+					Assert.AreEqual("3", (await db.Patient.SingleAsync(p => p.PersonID == id)).Diagnosis);
+				}
+				finally
+				{
+					await db.Patient.DeleteAsync(p => p.PersonID == id);
+					await db.Person. DeleteAsync(p => p.ID       == id);
+				}
+			}
+		}
+
+		[Test]
+		public async Task InsertOrUpdate3xAsync([InsertOrUpdateDataSources] string context)
+		{
+			ResetPersonIdentity(context);
+
+			using (var db = GetDataContext(context))
+			{
+				var id = 0;
+
+				try
+				{
+					db.Person.Where(p => p.FirstName == "John" && p.LastName == "Shepard").Delete();
+
+					id = await db.Person.InsertWithInt32IdentityAsync(() => new Person
+					{
+						FirstName = "John",
+						LastName  = "Shepard",
+						Gender    = Gender.Male
+					});
+
+					var diagnosis = "abc";
+
+					var id2 = id;
+
+					for (var i = 0; i < 3; i++)
+					{
+						await db.Patient.InsertOrUpdateAsync(
+							() => new Patient
+							{
+								PersonID  = id,
+								Diagnosis = "abc",
+							},
+							p => new Patient
+							{
+								Diagnosis = (p.Diagnosis.Length + i).ToString(),
+							},
+							() => new Patient
+							{
+								PersonID = id2,
 								//Diagnosis = diagnosis,
 							});
 
@@ -2055,14 +2112,258 @@ namespace Tests.xUpdate
 			}
 		}
 
+		#region InsertIfNotExists (https://github.com/linq2db/linq2db/issues/3005)
+		private int GetEmptyRowCount(string context)
+		{
+			var provider = GetProviderName(context, out _);
 
-#region issue 2243
+			// those providers generate IF (), which doesn't return rowcount if not entered
+			// for some reason it doesn't affect managed sybase provider (provider bug?)
+			// and oracle native provider always was "special"
+			return provider == ProviderName.Sybase
+				|| provider == ProviderName.OracleNative
+				|| provider == TestProvName.Oracle11Native
+				|| provider == ProviderName.SqlServer2000
+				|| provider == ProviderName.SqlServer2005
+				? -1
+				: 0;
+		}
+
+		private int GetNonEmptyRowCount(string context)
+		{
+			var provider = GetProviderName(context, out _);
+
+			// oracle native provider and rowcount are not familiar with each other
+			return provider == ProviderName.OracleNative
+				|| provider == TestProvName.Oracle11Native
+				? -1
+				: 1;
+		}
+
+		[Test]
+		public void InsertIfNotExists_EmptyInit1([InsertOrUpdateDataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<TestInsertOrReplaceInfo>())
+			{
+				var cnt1 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					p => new TestInsertOrReplaceInfo() { });
+				var cnt2 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					p => new TestInsertOrReplaceInfo() { });
+
+				Assert.AreEqual(GetNonEmptyRowCount(context), cnt1);
+				Assert.AreEqual(GetEmptyRowCount(context), cnt2);
+			}
+		}
+
+		[Test]
+		public void InsertIfNotExists_EmptyInit2([InsertOrUpdateDataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<TestInsertOrReplaceInfo>())
+			{
+				var cnt1 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					p => new TestInsertOrReplaceInfo() { },
+					() => new TestInsertOrReplaceInfo() { Id = 1 });
+				var cnt2 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					p => new TestInsertOrReplaceInfo() { },
+					() => new TestInsertOrReplaceInfo() { Id = 1 });
+
+				Assert.AreEqual(GetNonEmptyRowCount(context), cnt1);
+				Assert.AreEqual(GetEmptyRowCount(context), cnt2);
+			}
+		}
+
+		[Test]
+		public void InsertIfNotExists_EmptyNew1([InsertOrUpdateDataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<TestInsertOrReplaceInfo>())
+			{
+				var cnt1 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					p => new TestInsertOrReplaceInfo());
+				var cnt2 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					p => new TestInsertOrReplaceInfo());
+
+				Assert.AreEqual(GetNonEmptyRowCount(context), cnt1);
+				Assert.AreEqual(GetEmptyRowCount(context), cnt2);
+			}
+		}
+
+		[Test]
+		public void InsertIfNotExists_EmptyNew2([InsertOrUpdateDataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<TestInsertOrReplaceInfo>())
+			{
+				var cnt1 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					p => new TestInsertOrReplaceInfo(),
+					() => new TestInsertOrReplaceInfo() { Id = 1 });
+				var cnt2 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					p => new TestInsertOrReplaceInfo(),
+					() => new TestInsertOrReplaceInfo() { Id = 1 });
+
+				Assert.AreEqual(GetNonEmptyRowCount(context), cnt1);
+				Assert.AreEqual(GetEmptyRowCount(context), cnt2);
+			}
+		}
+
+		[Test]
+		public void InsertIfNotExists_NullExpr1([InsertOrUpdateDataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<TestInsertOrReplaceInfo>())
+			{
+				var cnt1 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					p => null);
+				var cnt2 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					p => null);
+
+				Assert.AreEqual(GetNonEmptyRowCount(context), cnt1);
+				Assert.AreEqual(GetEmptyRowCount(context), cnt2);
+			}
+		}
+
+		[Test]
+		public void InsertIfNotExists_NullExpr2([InsertOrUpdateDataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<TestInsertOrReplaceInfo>())
+			{
+				var cnt1 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					p => null,
+					() => new TestInsertOrReplaceInfo() { Id = 1 });
+				var cnt2 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					p => null,
+					() => new TestInsertOrReplaceInfo() { Id = 1 });
+
+				Assert.AreEqual(GetNonEmptyRowCount(context), cnt1);
+				Assert.AreEqual(GetEmptyRowCount(context), cnt2);
+			}
+		}
+
+		[Test]
+		public void InsertIfNotExists_Null1([InsertOrUpdateDataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<TestInsertOrReplaceInfo>())
+			{
+				var cnt1 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					null);
+				var cnt2 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					null);
+
+				Assert.AreEqual(GetNonEmptyRowCount(context), cnt1);
+				Assert.AreEqual(GetEmptyRowCount(context), cnt2);
+			}
+		}
+
+		[Test]
+		public void InsertIfNotExists_Null2([InsertOrUpdateDataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<TestInsertOrReplaceInfo>())
+			{
+				var cnt1 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					null,
+					() => new TestInsertOrReplaceInfo() { Id = 1 });
+				var cnt2 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					null,
+					() => new TestInsertOrReplaceInfo() { Id = 1 });
+
+				Assert.AreEqual(GetNonEmptyRowCount(context), cnt1);
+				Assert.AreEqual(GetEmptyRowCount(context), cnt2);
+			}
+		}
+		#endregion
+
+		#region issue 2243
 		[Table("test_insert_or_replace")]
 		public partial class TestInsertOrReplaceInfo
 		{
 			[Column("id"), PrimaryKey, NotNull]                   public int       Id        { get; set; } // bigint
 			[Column("name"), Nullable]                            public string?   Name      { get; set; } // character varying(100)
-			[Column("created_by", SkipOnUpdate = true), NotNull]  public string?   CreatedBy { get; set; } // character varying(100)
+			[Column("created_by", SkipOnUpdate = true), Nullable] public string?   CreatedBy { get; set; } // character varying(100)
 			[Column("updated_by", SkipOnInsert = true), Nullable] public string?   UpdatedBy { get; set; } // character varying(100)
 		}
 

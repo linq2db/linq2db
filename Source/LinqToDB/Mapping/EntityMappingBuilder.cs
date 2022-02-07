@@ -524,7 +524,7 @@ namespace LinqToDB.Mapping
 
 		/// <summary>
 		/// Sets Table options.
-		/// See <see cref="TableExtensions.TableOptions{T}(ITable{T},LinqToDB.TableOptions)"/> method for support information per provider.
+		/// See <see cref="TableExtensions.TableOptions{T}(ITable{T},TableOptions)"/> method for support information per provider.
 		/// </summary>
 		/// <param name="tableOptions">Table options.</param>
 		/// <returns>Returns current fluent entity mapping builder.</returns>
@@ -604,7 +604,7 @@ namespace LinqToDB.Mapping
 			var queryParam   = Expression.Parameter(typeof(IQueryable<TEntity>), "q");
 			var dcParam      = Expression.Parameter(typeof(TDataContext), "dc");
 			var replaceParam = filter.Parameters[1];
-			var filterBody   = filter.Body.Transform(e => e == replaceParam ? dcParam : e);
+			var filterBody   = filter.Body.Replace(replaceParam, dcParam);
 			var filterLambda = Expression.Lambda(filterBody, filter.Parameters[0]);
 			var body         = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(typeof(TEntity)), queryParam, filterLambda);
 			var lambda       = Expression.Lambda<Func<IQueryable<TEntity>, TDataContext, IQueryable<TEntity>>>(body, queryParam, dcParam);
@@ -699,10 +699,10 @@ namespace LinqToDB.Mapping
 		}
 
 		internal EntityMappingBuilder<TEntity> SetAttribute<TA>(
-			Func<TA>                  getNew,
-			Action<TA>                modifyExisting,
-			Func<TA, string?>         configGetter,
-			Func<IEnumerable<TA>, TA> existingGetter)
+			Func<TA>                   getNew,
+			Action<TA>                 modifyExisting,
+			Func<TA, string?>          configGetter,
+			Func<IEnumerable<TA>, TA?> existingGetter)
 			where TA : Attribute
 		{
 			var attr = existingGetter(GetAttributes(typeof(TEntity), configGetter));
@@ -726,7 +726,7 @@ namespace LinqToDB.Mapping
 			Action<bool,TA>                     modifyExisting,
 			Func<TA,string?>                    configGetter,
 			Func<TA,TA>?                        overrideAttribute = null,
-			Func<IEnumerable<TA>, TA>?          existingGetter    = null
+			Func<IEnumerable<TA>, TA?>?         existingGetter    = null
 			)
 			where TA : Attribute
 		{
@@ -788,7 +788,7 @@ namespace LinqToDB.Mapping
 			return this;
 		}
 
-		private TA GetExisting<TA>(IEnumerable<TA> attrs)
+		private TA? GetExisting<TA>(IEnumerable<TA> attrs)
 			where TA : Attribute
 		{
 			return attrs.FirstOrDefault();

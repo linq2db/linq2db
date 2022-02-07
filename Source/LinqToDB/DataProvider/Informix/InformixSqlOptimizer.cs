@@ -82,16 +82,16 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			CheckAliases(statement, int.MaxValue);
 
-			new QueryVisitor().VisitAll(statement, SetQueryParameter);
+			statement.VisitAll(SetQueryParameter);
 
 			// TODO: test if it works and enable support with type-cast like it is done for Firebird
 			// Informix doesn't support parameters in select list
 			var ignore = statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count == 0;
 			if (!ignore)
-				new QueryVisitor().VisitAll(statement, e =>
+				statement.VisitAll(static e =>
 				{
 					if (e is SqlSelectClause select)
-						new QueryVisitor().VisitAll(select, ClearQueryParameter);
+						select.VisitAll(ClearQueryParameter);
 				});
 
 			return base.Finalize(statement);
@@ -116,10 +116,9 @@ namespace LinqToDB.DataProvider.Informix
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor visitor,
-			EvaluationContext context)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
 		{
-			expression = base.ConvertExpressionImpl(expression, visitor, context);
+			expression = base.ConvertExpressionImpl(expression, visitor);
 
 			if (expression is SqlBinaryExpression be)
 			{

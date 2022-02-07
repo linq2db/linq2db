@@ -22,6 +22,7 @@ namespace LinqToDB.Linq
 {
 	using Common;
 	using Extensions;
+	using LinqToDB.Common.Internal;
 	using LinqToDB.Expressions;
 	using Mapping;
 
@@ -485,7 +486,7 @@ namespace LinqToDB.Linq
 		{
 			public void SetInfo(MappingSchema mappingSchema)
 			{
-				if (!typeof(T).IsClass && !typeof(T).IsInterface && !typeof(T).IsNullable())
+				if (!typeof(T).IsNullableType())
 				{
 					var gtype    = typeof(GetValueOrDefaultExpressionInfo<>).MakeGenericType(typeof(T));
 					var provider = (ISetInfo)Activator.CreateInstance(gtype)!;

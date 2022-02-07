@@ -15,6 +15,12 @@ namespace LinqToDB.DataProvider
 
 	public class BasicBulkCopy
 	{
+		protected virtual int MaxParameters => 999;
+		protected virtual int MaxSqlLength => 100000;
+
+		protected virtual bool CastOnUnionAll         => false;
+		protected virtual bool TypeAllUnionParameters => false;
+
 		public virtual BulkCopyRowsCopied BulkCopy<T>(BulkCopyType bulkCopyType, ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 			where T : notnull
 		{
@@ -205,9 +211,8 @@ namespace LinqToDB.DataProvider
 		protected internal static string GetTableName<T>(ISqlBuilder sqlBuilder, BulkCopyOptions options, ITable<T> table, bool escaped = true)
 			where T : notnull
 		{
-			var sqlTable = new SqlTable
+			var sqlTable = new SqlTable(typeof(T), null)
 			{
-				ObjectType   = typeof(T),
 				Server       = options.ServerName   ?? table.ServerName,
 				Database     = options.DatabaseName ?? table.DatabaseName,
 				Schema       = options.SchemaName   ?? table.SchemaName,
@@ -344,20 +349,35 @@ namespace LinqToDB.DataProvider
 			Action<MultipleRowsHelper>                prepFunction,
 			Action<MultipleRowsHelper,object,string?> addFunction,
 			Action<MultipleRowsHelper>                finishFunction,
-			int                                       maxParameters = 10000,
-			int                                       maxSqlLength  = 100000)
+			int                                       maxParameters,
+			int                                       maxSqlLength)
 		{
+			var adjustedBatchSize = helper.Options.UseParameters ?  Math.Min(helper.BatchSize, helper.Options.MaxParametersForBatch.GetValueOrDefault(maxParameters) / helper.Columns.Length): helper.BatchSize;
 			prepFunction(helper);
 
 			foreach (var item in source)
 			{
+				helper.LastRowParameterIndex = helper.ParameterIndex;
+				helper.LastRowStringIndex    = helper.StringBuilder.Length;
 				addFunction(helper, item!, from);
-
-				if (helper.CurrentCount >= helper.BatchSize || helper.Parameters.Count > maxParameters || helper.StringBuilder.Length > maxSqlLength)
+				var needRemove = helper.Parameters.Count > maxParameters ||
+				                 helper.StringBuilder.Length > maxSqlLength;
+				var isSingle = helper.CurrentCount == 1;
+				if (helper.CurrentCount >= adjustedBatchSize || needRemove)
 				{
+					if (needRemove && !isSingle)
+					{
+						helper.Parameters.RemoveRange(helper.LastRowParameterIndex, helper.ParameterIndex-helper.LastRowParameterIndex);
+						helper.StringBuilder.Length = helper.LastRowStringIndex;
+						helper.RowsCopied.RowsCopied--;	
+					}
 					finishFunction(helper);
 					if (!helper.Execute())
 						return helper.RowsCopied;
+					if (needRemove && !isSingle)
+					{
+						addFunction(helper, item!, from);	
+					}
 				}
 			}
 
@@ -378,20 +398,36 @@ namespace LinqToDB.DataProvider
 			Action<MultipleRowsHelper, object, string?> addFunction,
 			Action<MultipleRowsHelper>                  finishFunction,
 			CancellationToken                           cancellationToken,
-			int                                         maxParameters = 10000,
-			int                                         maxSqlLength  = 100000)
+			int                                         maxParameters,
+			int                                         maxSqlLength)
 		{
+			var adjustedBatchSize = helper.Options.UseParameters ?  Math.Min(helper.BatchSize, helper.Options.MaxParametersForBatch.GetValueOrDefault(maxParameters) / helper.Columns.Length): helper.BatchSize;
 			prepFunction(helper);
 
 			foreach (var item in source)
 			{
+				helper.LastRowParameterIndex = helper.ParameterIndex;
+				helper.LastRowStringIndex    = helper.StringBuilder.Length;
 				addFunction(helper, item!, from);
 
-				if (helper.CurrentCount >= helper.BatchSize || helper.Parameters.Count > maxParameters || helper.StringBuilder.Length > maxSqlLength)
+				var needRemove = helper.Parameters.Count     > maxParameters ||
+				                 helper.StringBuilder.Length > maxSqlLength;
+				var isSingle = helper.CurrentCount == 1;
+				if (helper.CurrentCount >= adjustedBatchSize || needRemove)
 				{
+					if (needRemove && !isSingle)
+					{
+						helper.Parameters.RemoveRange(helper.LastRowParameterIndex, helper.ParameterIndex-helper.LastRowParameterIndex);
+						helper.StringBuilder.Length = helper.LastRowStringIndex;
+						helper.RowsCopied.RowsCopied--;
+					}
 					finishFunction(helper);
 					if (!await helper.ExecuteAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 						return helper.RowsCopied;
+					if (needRemove && !isSingle)
+					{
+						addFunction(helper, item!, from);	
+					}
 				}
 			}
 
@@ -413,20 +449,36 @@ namespace LinqToDB.DataProvider
 			Action<MultipleRowsHelper, object, string?> addFunction,
 			Action<MultipleRowsHelper>                  finishFunction,
 			CancellationToken                           cancellationToken,
-			int                                         maxParameters = 10000,
-			int                                         maxSqlLength  = 100000)
+			int                                         maxParameters,
+			int                                         maxSqlLength)
 		{
+			var adjustedBatchSize = helper.Options.UseParameters ?  Math.Min(helper.BatchSize, helper.Options.MaxParametersForBatch.GetValueOrDefault(maxParameters) / helper.Columns.Length): helper.BatchSize;
 			prepFunction(helper);
 
 			await foreach (var item in source.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext).WithCancellation(cancellationToken))
 			{
+				helper.LastRowParameterIndex = helper.ParameterIndex;
+				helper.LastRowStringIndex    = helper.StringBuilder.Length;
 				addFunction(helper, item!, from);
 
-				if (helper.CurrentCount >= helper.BatchSize || helper.Parameters.Count > maxParameters || helper.StringBuilder.Length > maxSqlLength)
+				var needRemove = helper.Parameters.Count     > maxParameters ||
+				                 helper.StringBuilder.Length > maxSqlLength;
+				var isSingle = helper.CurrentCount == 1;
+				if (helper.CurrentCount >= adjustedBatchSize || needRemove)
 				{
+					if (needRemove && !isSingle)
+					{
+						helper.Parameters.RemoveRange(helper.LastRowParameterIndex, helper.ParameterIndex-helper.LastRowParameterIndex);
+						helper.StringBuilder.Length = helper.LastRowStringIndex;
+						helper.RowsCopied.RowsCopied--;	
+					}
 					finishFunction(helper);
 					if (!await helper.ExecuteAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 						return helper.RowsCopied;
+					if (needRemove && !isSingle)
+					{
+						addFunction(helper, item!, from);	
+					}
 				}
 			}
 
@@ -445,14 +497,14 @@ namespace LinqToDB.DataProvider
 			=> MultipleRowsCopy1(new MultipleRowsHelper<T>(table, options), source);
 
 		protected BulkCopyRowsCopied MultipleRowsCopy1(MultipleRowsHelper helper, IEnumerable source)
-			=> MultipleRowsCopyHelper(helper, source, null, MultipleRowsCopy1Prep, MultipleRowsCopy1Add, MultipleRowsCopy1Finish);
+			=> MultipleRowsCopyHelper(helper, source, null, MultipleRowsCopy1Prep, MultipleRowsCopy1Add, MultipleRowsCopy1Finish,MaxParameters, MaxSqlLength);
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy1Async<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 			where T : notnull
 			=> MultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy1Async(MultipleRowsHelper helper, IEnumerable source, CancellationToken cancellationToken)
-			=> MultipleRowsCopyHelperAsync(helper, source, null, MultipleRowsCopy1Prep, MultipleRowsCopy1Add, MultipleRowsCopy1Finish, cancellationToken);
+			=> MultipleRowsCopyHelperAsync(helper, source, null, MultipleRowsCopy1Prep, MultipleRowsCopy1Add, MultipleRowsCopy1Finish, cancellationToken, MaxParameters, MaxSqlLength);
 
 #if NATIVE_ASYNC
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy1Async<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
@@ -461,7 +513,7 @@ namespace LinqToDB.DataProvider
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy1Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		where T: notnull
-			=> MultipleRowsCopyHelperAsync(helper, source, null, MultipleRowsCopy1Prep, MultipleRowsCopy1Add, MultipleRowsCopy1Finish, cancellationToken);
+			=> MultipleRowsCopyHelperAsync(helper, source, null, MultipleRowsCopy1Prep, MultipleRowsCopy1Add, MultipleRowsCopy1Finish, cancellationToken, MaxParameters, MaxSqlLength);
 #endif
 
 		private void MultipleRowsCopy1Prep(MultipleRowsHelper helper)
@@ -496,7 +548,7 @@ namespace LinqToDB.DataProvider
 			helper.StringBuilder
 				.AppendLine()
 				.Append('(');
-			helper.BuildColumns(item!);
+			helper.BuildColumns(item);
 			helper.StringBuilder.Append("),");
 
 			helper.RowsCopied.RowsCopied++;
@@ -513,14 +565,14 @@ namespace LinqToDB.DataProvider
 			=> MultipleRowsCopy2(new MultipleRowsHelper<T>(table, options), source, from);
 
 		protected BulkCopyRowsCopied MultipleRowsCopy2(MultipleRowsHelper helper, IEnumerable source, string from)
-			=> MultipleRowsCopyHelper(helper, source, from, MultipleRowsCopy2Prep, MultipleRowsCopy2Add, MultipleRowsCopy2Finish);
+			=> MultipleRowsCopyHelper(helper, source, from, MultipleRowsCopy2Prep, MultipleRowsCopy2Add, MultipleRowsCopy2Finish, MaxParameters, MaxSqlLength);
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy2Async<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, string from, CancellationToken cancellationToken)
 			where T : notnull
 			=> MultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, from, cancellationToken);
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy2Async(MultipleRowsHelper helper, IEnumerable source, string from, CancellationToken cancellationToken)
-			=> MultipleRowsCopyHelperAsync(helper, source, from, MultipleRowsCopy2Prep, MultipleRowsCopy2Add, MultipleRowsCopy2Finish, cancellationToken);
+			=> MultipleRowsCopyHelperAsync(helper, source, from, MultipleRowsCopy2Prep, MultipleRowsCopy2Add, MultipleRowsCopy2Finish, cancellationToken, MaxParameters, MaxSqlLength);
 
 #if NATIVE_ASYNC
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy2Async<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, string from, CancellationToken cancellationToken)
@@ -529,7 +581,7 @@ namespace LinqToDB.DataProvider
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy2Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, string from, CancellationToken cancellationToken)
 		where T: notnull
-			=> MultipleRowsCopyHelperAsync(helper, source, from, MultipleRowsCopy2Prep, MultipleRowsCopy2Add, MultipleRowsCopy2Finish, cancellationToken);
+			=> MultipleRowsCopyHelperAsync(helper, source, from, MultipleRowsCopy2Prep, MultipleRowsCopy2Add, MultipleRowsCopy2Finish, cancellationToken, MaxParameters, MaxSqlLength);
 #endif
 
 		private void MultipleRowsCopy2Prep(MultipleRowsHelper helper)
@@ -560,7 +612,7 @@ namespace LinqToDB.DataProvider
 			helper.StringBuilder
 				.AppendLine()
 				.Append("SELECT ");
-			helper.BuildColumns(item!);
+			helper.BuildColumns(item, castParameters: CastOnUnionAll, castAllRows: TypeAllUnionParameters);
 			helper.StringBuilder.Append(from);
 			helper.StringBuilder.Append(" UNION ALL");
 
@@ -574,15 +626,15 @@ namespace LinqToDB.DataProvider
 		}
 
 		protected BulkCopyRowsCopied MultipleRowsCopy3(MultipleRowsHelper helper, BulkCopyOptions options, IEnumerable source, string from)
-			=> MultipleRowsCopyHelper(helper, source, from, MultipleRowsCopy3Prep, MultipleRowsCopy3Add, MultipleRowsCopy3Finish);
+			=> MultipleRowsCopyHelper(helper, source, from, MultipleRowsCopy3Prep, MultipleRowsCopy3Add, MultipleRowsCopy3Finish, MaxParameters, MaxSqlLength);
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy3Async(MultipleRowsHelper helper, BulkCopyOptions options, IEnumerable source, string from, CancellationToken cancellationToken)
-			=> MultipleRowsCopyHelperAsync(helper, source, from, MultipleRowsCopy3Prep, MultipleRowsCopy3Add, MultipleRowsCopy3Finish, cancellationToken);
+			=> MultipleRowsCopyHelperAsync(helper, source, from, MultipleRowsCopy3Prep, MultipleRowsCopy3Add, MultipleRowsCopy3Finish, cancellationToken, MaxParameters, MaxSqlLength);
 
 #if NATIVE_ASYNC
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy3Async<T>(MultipleRowsHelper helper, BulkCopyOptions options, IAsyncEnumerable<T> source, string from, CancellationToken cancellationToken)
 		where T: notnull
-			=> MultipleRowsCopyHelperAsync(helper, source, from, MultipleRowsCopy3Prep, MultipleRowsCopy3Add, MultipleRowsCopy3Finish, cancellationToken);
+			=> MultipleRowsCopyHelperAsync(helper, source, from, MultipleRowsCopy3Prep, MultipleRowsCopy3Add, MultipleRowsCopy3Finish, cancellationToken, MaxParameters, MaxSqlLength);
 #endif
 
 		private void MultipleRowsCopy3Prep(MultipleRowsHelper helper)
@@ -615,7 +667,7 @@ namespace LinqToDB.DataProvider
 			helper.StringBuilder
 				.AppendLine()
 				.Append("\tSELECT ");
-			helper.BuildColumns(item);
+			helper.BuildColumns(item, castParameters: CastOnUnionAll, castAllRows : TypeAllUnionParameters);
 			helper.StringBuilder.Append(from);
 			helper.StringBuilder.Append(" UNION ALL");
 

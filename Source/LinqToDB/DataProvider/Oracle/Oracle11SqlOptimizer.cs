@@ -5,8 +5,6 @@ namespace LinqToDB.DataProvider.Oracle
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
-	using Mapping;
-	using Tools;
 
 	public class Oracle11SqlOptimizer : BasicSqlOptimizer
 	{
@@ -51,7 +49,10 @@ namespace LinqToDB.DataProvider.Oracle
 
 					// Oracle saves empty string as null to database, so we need predicate modification before sending query
 					//
-					if (expr.Operator.In(SqlPredicate.Operator.Equal, SqlPredicate.Operator.NotEqual, SqlPredicate.Operator.GreaterOrEqual, SqlPredicate.Operator.LessOrEqual) && expr.WithNull == true)
+					if ((expr.Operator == SqlPredicate.Operator.Equal          ||
+						 expr.Operator == SqlPredicate.Operator.NotEqual       ||
+						 expr.Operator == SqlPredicate.Operator.GreaterOrEqual ||
+						 expr.Operator == SqlPredicate.Operator.LessOrEqual) && expr.WithNull == true)
 					{
 						if (expr.Expr1.SystemType == typeof(string) && expr.Expr1.CanBeEvaluated(true))
 							return true;
@@ -65,7 +66,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return false;
 		}
 
-		public override ISqlPredicate ConvertPredicateImpl(MappingSchema mappingSchema, ISqlPredicate predicate, ConvertVisitor visitor, OptimizationContext optimizationContext)
+		public override ISqlPredicate ConvertPredicateImpl(ISqlPredicate predicate, ConvertVisitor<RunOptimizationContext> visitor)
 		{
 			switch (predicate.ElementType)
 			{
@@ -75,10 +76,14 @@ namespace LinqToDB.DataProvider.Oracle
 
 					// Oracle saves empty string as null to database, so we need predicate modification before sending query
 					//
-					if (expr.Operator.In(SqlPredicate.Operator.Equal, SqlPredicate.Operator.NotEqual, SqlPredicate.Operator.GreaterOrEqual, SqlPredicate.Operator.LessOrEqual) && expr.WithNull == true)
+					if (expr.WithNull == true &&
+						(expr.Operator == SqlPredicate.Operator.Equal          ||
+						 expr.Operator == SqlPredicate.Operator.NotEqual       ||
+						 expr.Operator == SqlPredicate.Operator.GreaterOrEqual ||
+						 expr.Operator == SqlPredicate.Operator.LessOrEqual))
 					{
 						if (expr.Expr1.SystemType == typeof(string) &&
-						    expr.Expr1.TryEvaluateExpression(optimizationContext.Context, out var value1) && value1 is string string1)
+						    expr.Expr1.TryEvaluateExpression(visitor.Context.OptimizationContext.Context, out var value1) && value1 is string string1)
 						{
 							if (string1 == "")
 							{
@@ -90,7 +95,7 @@ namespace LinqToDB.DataProvider.Oracle
 						}
 
 						if (expr.Expr2.SystemType == typeof(string) &&
-						    expr.Expr2.TryEvaluateExpression(optimizationContext.Context, out var value2) && value2 is string string2)
+						    expr.Expr2.TryEvaluateExpression(visitor.Context.OptimizationContext.Context, out var value2) && value2 is string string2)
 						{
 							if (string2 == "")
 							{
@@ -105,15 +110,14 @@ namespace LinqToDB.DataProvider.Oracle
 				}
 			}
 
-			predicate = base.ConvertPredicateImpl(mappingSchema, predicate, visitor, optimizationContext);
+			predicate = base.ConvertPredicateImpl(predicate, visitor);
 
 			return predicate;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor visitor,
-			EvaluationContext context)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
 		{
-			expression = base.ConvertExpressionImpl(expression, visitor, context);
+			expression = base.ConvertExpressionImpl(expression, visitor);
 
 			if (expression is SqlBinaryExpression be)
 			{
@@ -220,8 +224,10 @@ namespace LinqToDB.DataProvider.Oracle
 		/// <returns>The same <paramref name="statement"/> or modified statement when optimization has been performed.</returns>
 		protected SqlStatement ReplaceTakeSkipWithRowNum(SqlStatement statement, bool onlySubqueries)
 		{
-			return QueryHelper.WrapQuery(statement,
-				(query, _) =>
+			return QueryHelper.WrapQuery(
+				(object?)null,
+				statement,
+				static (_, query, _) =>
 				{
 					if (query.Select.TakeValue == null && query.Select.SkipValue == null)
 						return 0;
@@ -238,8 +244,8 @@ namespace LinqToDB.DataProvider.Oracle
 					}
 						
 					return 1;
-				}
-				, queries =>
+				},
+				static (_, queries) =>
 				{
 					var query = queries[queries.Count - 1];
 					var processingQuery = queries[queries.Count - 2];
@@ -268,8 +274,8 @@ namespace LinqToDB.DataProvider.Oracle
 					query.Select.Take(null, null);
 
 				},
-				allowMutation: true
-				);
+				allowMutation: true,
+				withStack: false);
 		}
 
 		protected override ISqlExpression ConvertFunction(SqlFunction func)

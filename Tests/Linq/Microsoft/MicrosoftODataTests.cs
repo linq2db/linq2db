@@ -1,21 +1,30 @@
-﻿#if NET472
+﻿#if !NETCOREAPP2_1
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Reflection;
-using System.Web.Http;
-using System.Web.Http.Hosting;
 using LinqToDB;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
+using NUnit.Framework;
+
+#if NETFRAMEWORK
+using System.Net.Http;
+using System.Web.Http;
+using System.Web.Http.Hosting;
 using Microsoft.AspNet.OData;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;
 using Microsoft.AspNet.OData.Query;
 using Microsoft.AspNet.OData.Routing;
-using NUnit.Framework;
+#else
+using Microsoft.OData.UriParser;
+using Microsoft.OData.ModelBuilder;
+using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+#endif
 
 namespace Tests.OData.Microsoft
 {
@@ -40,7 +49,7 @@ namespace Tests.OData.Microsoft
 		{
 			var elementType = query.ElementType;
 			var method = _toArray.MakeGenericMethod(elementType);
-			return (ICollection)method.Invoke(null, new object[] { query });
+			return (ICollection)method.Invoke(null, new object[] { query })!;
 		}
 
 		public class ODataQueries
@@ -101,21 +110,35 @@ namespace Tests.OData.Microsoft
 				var path = new ODataPath();
 				ODataQueryContext queryContext = new ODataQueryContext(model, typeof(PersonClass), path);
 
+				var uri = new Uri("http://localhost:15580" + testCase.Query);
+#if NETFRAMEWORK
 				var request = new HttpRequestMessage()
 				{
 					Method = HttpMethod.Get,
-					RequestUri =
-						new Uri("http://localhost:15580" + testCase.Query)
+					RequestUri = uri
 				};
 
 				var config = new HttpConfiguration();
 				config.EnableDependencyInjection();
 
 				request.Properties.Add(HttpPropertyKeys.HttpConfigurationKey, config);
+#else
+				// https://github.com/OData/AspNetCoreOData/blob/master/test/Microsoft.AspNetCore.OData.Tests/Extensions/RequestFactory.cs#L78
+				var  httpContext    = new DefaultHttpContext();
+				HttpRequest request = httpContext.Request;
 
+				IServiceCollection services = new ServiceCollection();
+				httpContext.RequestServices = services.BuildServiceProvider();
+
+				request.Method      = "GET";
+				request.Scheme      = uri.Scheme;
+				request.Host        = uri.IsDefaultPort ? new HostString(uri.Host) : new HostString(uri.Host, uri.Port);
+				request.QueryString = new QueryString(uri.Query);
+				request.Path        = new PathString(uri.AbsolutePath);
+#endif
 				var options = new ODataQueryOptions(queryContext, request);
 
-				var resultQuery = options.ApplyTo(table);
+				var resultQuery  = options.ApplyTo(table);
 				var materialized = Materialize(resultQuery);
 				Assert.That(materialized.Count, Is.EqualTo(1));
 			}

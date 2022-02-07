@@ -634,7 +634,6 @@ CREATE PROCEDURE `Issue2313Results`(
 
 -- SKIP MySql55 BEGIN
 -- SKIP MySql BEGIN
--- SKIP MariaDB BEGIN
 	IN `Json` JSON,
 	IN `Geometry` GEOMETRY,
 	IN `Point` POINT,
@@ -644,7 +643,6 @@ CREATE PROCEDURE `Issue2313Results`(
 	IN `MultiLineString` MULTILINESTRING,
 	IN `MultiPolygon` MULTIPOLYGON,
 	IN `GeometryCollection` GEOMETRYCOLLECTION,
--- SKIP MariaDB END
 -- SKIP MySql END
 -- SKIP MySql55 END
 
@@ -696,7 +694,6 @@ BEGIN
 
 -- SKIP MySql55 BEGIN
 -- SKIP MySql BEGIN
--- SKIP MariaDB BEGIN
 	,`Json`,
 	`Geometry`,
 	`Point`,
@@ -706,11 +703,20 @@ BEGIN
 	`MultiLineString`,
 	`MultiPolygon`,
 	`GeometryCollection`
--- SKIP MariaDB END
 -- SKIP MySql END
 -- SKIP MySql55 END
 
 
 	FROM Person;
 END
+GO
+
+DROP TABLE `CollatedTable`
+GO
+CREATE TABLE `CollatedTable`
+(
+	`Id`				INT NOT NULL,
+	`CaseSensitive`		VARCHAR(20) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+	`CaseInsensitive`	VARCHAR(20) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL
+)
 GO

@@ -36,9 +36,10 @@ namespace LinqToDB.DataProvider.SapHana
 			SqlProviderFlags.IsDistinctOrderBySupported = false;
 
 			//not supported flags
-			SqlProviderFlags.IsSubQueryTakeSupported     = false;
-			SqlProviderFlags.IsApplyJoinSupported        = false;
-			SqlProviderFlags.IsInsertOrUpdateSupported   = false;
+			SqlProviderFlags.IsSubQueryTakeSupported           = false;
+			SqlProviderFlags.IsApplyJoinSupported              = false;
+			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
+			SqlProviderFlags.AcceptsOuterExpressionInAggregate = false;
 
 			_sqlOptimizer = new SapHanaSqlOptimizer(SqlProviderFlags);
 		}
@@ -52,7 +53,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			if (commandType == CommandType.StoredProcedure)
 			{
-				commandText = $"{{ CALL {commandText} ({string.Join(",", parameters.Select(x => "?"))}) }}";
+				commandText = $"{{ CALL {commandText} ({string.Join(",", (parameters ?? Array<DataParameter>.Empty).Select(x => "?"))}) }}";
 				commandType = CommandType.Text;
 			}
 

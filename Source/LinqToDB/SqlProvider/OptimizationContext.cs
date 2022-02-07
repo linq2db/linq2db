@@ -15,8 +15,10 @@ namespace LinqToDB.SqlProvider
 			new(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
 
 		private List<SqlParameter>? _actualParameters;
-		private HashSet<string>? _usedParameterNames;
-		
+		private HashSet<string>?    _usedParameterNames;
+
+		private Dictionary<(DbDataType, string, object?), SqlParameter>? _dynamicParameters;
+
 		public OptimizationContext(EvaluationContext context, AliasesContext aliases, 
 			bool isParameterOrderDepended)
 		{
@@ -28,7 +30,6 @@ namespace LinqToDB.SqlProvider
 		public EvaluationContext Context                  { get; }
 		public bool              IsParameterOrderDepended { get; }
 		public AliasesContext    Aliases                  { get; }
-
 
 		public bool IsOptimized(IQueryElement element, [NotNullWhen(true)] out IQueryElement? newExpr)
 		{
@@ -56,7 +57,6 @@ namespace LinqToDB.SqlProvider
 		{
 			_optimized[element] = newExpr;
 		}
-
 
 		public bool HasParameters() => _actualParameters != null && _actualParameters.Count > 0;
 
@@ -91,6 +91,22 @@ namespace LinqToDB.SqlProvider
 			return parameter;
 		}
 
+		public SqlParameter SuggestDynamicParameter(DbDataType dbDataType, string name, object? value)
+		{
+			var key = (dbDataType, name, value);
+
+			if (_dynamicParameters == null || !_dynamicParameters.TryGetValue(key, out var param))
+			{
+				// converting to SQL Parameter
+				param = new SqlParameter(dbDataType, name, value);
+
+				_dynamicParameters ??= new();
+				_dynamicParameters.Add(key, param);
+			}
+
+			return param;
+		}
+
 		private void CorrectParamName(SqlParameter parameter)
 		{
 			if (_usedParameterNames == null)
@@ -122,6 +138,30 @@ namespace LinqToDB.SqlProvider
 		{
 			_usedParameterNames = null;
 			_actualParameters = null;
+		}
+
+		private ConvertVisitor<BasicSqlOptimizer.RunOptimizationContext>? _visitor;
+
+		private int _nestingLevel;
+		public T ConvertAll<T>(
+			BasicSqlOptimizer.RunOptimizationContext context,
+			T                                        element,
+			Func<ConvertVisitor<BasicSqlOptimizer.RunOptimizationContext>, IQueryElement, IQueryElement> convertAction,
+			Func<ConvertVisitor<BasicSqlOptimizer.RunOptimizationContext>, bool>                         parentAction)
+			where T : class, IQueryElement
+		{
+			if (_visitor == null)
+				_visitor = new ConvertVisitor<BasicSqlOptimizer.RunOptimizationContext>(context, convertAction, true, false, false, parentAction);
+			else
+				_visitor.Reset(context, convertAction, true, false, false, parentAction);
+
+			// temporary(?) guard
+			if (_nestingLevel > 0)
+				throw new InvalidOperationException("Nested optimization detected");
+			_nestingLevel++;
+			var res = (T?)_visitor.ConvertInternal(element) ?? element;
+			_nestingLevel--;
+			return res;
 		}
 	}
 }

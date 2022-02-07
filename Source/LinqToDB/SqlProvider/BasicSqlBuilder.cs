@@ -647,8 +647,8 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
-			BuildUpdateTable(selectQuery, updateClause);
-			BuildUpdateSet  (selectQuery, updateClause);
+			BuildUpdateTable (selectQuery, updateClause);
+			BuildUpdateSet   (selectQuery, updateClause);
 		}
 
 		protected virtual void BuildUpdateTable(SelectQuery selectQuery, SqlUpdateClause updateClause)
@@ -726,6 +726,10 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected virtual void BuildOutputSubclause(SqlStatement statement, SqlInsertClause insertClause)
+		{
+		}
+
+		protected virtual void BuildOutputSubclause(SqlOutputClause? output)
 		{
 		}
 
@@ -930,7 +934,6 @@ namespace LinqToDB.SqlProvider
 		protected void BuildInsertOrUpdateQueryAsUpdateInsert(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
 			BuildTag(insertOrUpdate);
-			AppendIndent().AppendLine("BEGIN TRAN").AppendLine();
 
 			var buildUpdate = insertOrUpdate.Update.Items.Count > 0;
 			if (buildUpdate)
@@ -1006,7 +1009,6 @@ namespace LinqToDB.SqlProvider
 			AppendIndent().AppendLine("END");
 
 			StringBuilder.AppendLine();
-			AppendIndent().AppendLine("COMMIT");
 		}
 
 		#endregion
@@ -1099,7 +1101,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildCreateTableStatement(SqlCreateTableStatement createTable)
 		{
-			var table = createTable.Table!;
+			var table = createTable.Table;
 
 			BuildStartCreateTableStatement(createTable);
 
@@ -1111,14 +1113,6 @@ namespace LinqToDB.SqlProvider
 			var orderedFields = table.Fields.OrderBy(_ => _.CreateOrder >= 0 ? 0 : (_.CreateOrder == null ? 1 : 2)).ThenBy(_ => _.CreateOrder);
 			var fields = orderedFields.Select(f => new CreateFieldInfo { Field = f, StringBuilder = new StringBuilder() }).ToList();
 			var maxlen = 0;
-
-			void AppendToMax(bool addCreateFormat)
-			{
-				foreach (var field in fields)
-					if (addCreateFormat || field.Field.CreateFormat == null)
-						while (maxlen > field.StringBuilder.Length)
-							field.StringBuilder.Append(' ');
-			}
 
 			var isAnyCreateFormat = false;
 
@@ -1135,7 +1129,7 @@ namespace LinqToDB.SqlProvider
 					isAnyCreateFormat = true;
 			}
 
-			AppendToMax(true);
+			AppendToMax(fields, maxlen, true);
 
 			if (isAnyCreateFormat)
 				foreach (var field in fields)
@@ -1148,8 +1142,8 @@ namespace LinqToDB.SqlProvider
 			{
 				field.StringBuilder.Append(' ');
 
-				if (!string.IsNullOrEmpty(field.Field.Type!.Value.DbType))
-					field.StringBuilder.Append(field.Field.Type!.Value.DbType);
+				if (!string.IsNullOrEmpty(field.Field.Type.DbType))
+					field.StringBuilder.Append(field.Field.Type.DbType);
 				else
 				{
 					var sb = StringBuilder;
@@ -1164,7 +1158,7 @@ namespace LinqToDB.SqlProvider
 					maxlen = field.StringBuilder.Length;
 			}
 
-			AppendToMax(true);
+			AppendToMax(fields, maxlen, true);
 
 			if (isAnyCreateFormat)
 			{
@@ -1209,7 +1203,7 @@ namespace LinqToDB.SqlProvider
 					}
 				}
 
-				AppendToMax(false);
+				AppendToMax(fields, maxlen, false);
 			}
 
 			// Build nullable attribute.
@@ -1234,7 +1228,7 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 
-			AppendToMax(false);
+			AppendToMax(fields, maxlen, false);
 
 			// Build identity attribute.
 			//
@@ -1250,7 +1244,7 @@ namespace LinqToDB.SqlProvider
 
 					if (field.Field.CreateFormat != null)
 					{
-						if (field.Field.CreateFormat != null && field.Identity.Length == 0)
+						if (field.Identity.Length == 0)
 						{
 							field.Identity = field.StringBuilder.ToString() + ' ';
 							field.StringBuilder.Length = 0;
@@ -1262,7 +1256,7 @@ namespace LinqToDB.SqlProvider
 					}
 				}
 
-				AppendToMax(false);
+				AppendToMax(fields, maxlen, false);
 			}
 
 			// Build fields.
@@ -1302,7 +1296,7 @@ namespace LinqToDB.SqlProvider
 			{
 				StringBuilder.AppendLine(Comma).AppendLine();
 
-				BuildCreateTablePrimaryKey(createTable, ConvertInline("PK_" + createTable.Table!.PhysicalName, ConvertType.NameToQueryTable),
+				BuildCreateTablePrimaryKey(createTable, ConvertInline("PK_" + createTable.Table.PhysicalName, ConvertType.NameToQueryTable),
 					pk.Select(f => ConvertInline(f.Field.PhysicalName, ConvertType.NameToQueryField)));
 			}
 
@@ -1311,6 +1305,14 @@ namespace LinqToDB.SqlProvider
 			AppendIndent().AppendLine(")");
 
 			BuildEndCreateTableStatement(createTable);
+
+			static void AppendToMax(IEnumerable<CreateFieldInfo> fields, int maxlen, bool addCreateFormat)
+			{
+				foreach (var field in fields)
+					if (addCreateFormat || field.Field.CreateFormat == null)
+						while (maxlen > field.StringBuilder.Length)
+							field.StringBuilder.Append(' ');
+			}
 		}
 
 		internal void BuildTypeName(StringBuilder sb, SqlDataType type)
@@ -1419,7 +1421,7 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				case QueryElementType.SqlCteTable     :
-				case QueryElementType.MergeSourceTable:
+				case QueryElementType.SqlTableLikeSource:
 					StringBuilder.Append(GetPhysicalTableName(table, alias));
 					break;
 
@@ -1454,11 +1456,101 @@ namespace LinqToDB.SqlProvider
 
 					break;
 
+				case QueryElementType.SqlValuesTable:
+				{
+					if (alias == null)
+						throw new LinqToDBException("Alias required for SqlValuesTable.");
+					BuildSqlValuesTable((SqlValuesTable)table, alias, out var aliasBuilt);
+					buildAlias = !aliasBuilt;
+					break;
+				}
+
 				default:
 					throw new InvalidOperationException($"Unexpected table type {table.ElementType}");
 			}
 
 			return buildAlias;
+		}
+
+		protected virtual void BuildSqlValuesTable(SqlValuesTable valuesTable, string alias, out bool aliasBuilt)
+		{
+			valuesTable = ConvertElement(valuesTable);
+			var rows = valuesTable.BuildRows(OptimizationContext.Context);
+			if (rows?.Count > 0)
+			{
+				StringBuilder.Append(OpenParens);
+
+				if (IsValuesSyntaxSupported)
+					BuildValues(valuesTable, rows);
+				else
+					BuildValuesAsSelectsUnion(valuesTable.Fields, valuesTable, rows);
+
+				StringBuilder.Append(')');
+			}
+			else if (isEmptyValuesSourceSupported)
+			{
+				StringBuilder.Append(OpenParens);
+				BuildEmptyValues(valuesTable);
+				StringBuilder.Append(')');
+			}
+			else
+				throw new LinqToDBException($"{Name} doesn't support values with empty source");
+
+			aliasBuilt = IsValuesSyntaxSupported;
+			if (aliasBuilt)
+			{
+				BuildSqlValuesAlias(valuesTable, alias);
+			}
+		}
+
+		private void BuildSqlValuesAlias(SqlValuesTable valuesTable, string alias)
+		{
+			valuesTable = ConvertElement(valuesTable);
+			StringBuilder.Append(' ');
+
+			ConvertTableName(StringBuilder, null, null, null, alias, TableOptions.NotSet);
+
+			if (SupportsColumnAliasesInSource)
+			{
+				StringBuilder.Append(OpenParens);
+
+				var first = true;
+				foreach (var field in valuesTable.Fields)
+				{
+					if (!first)
+						StringBuilder.Append(Comma).Append(' ');
+
+					first = false;
+					Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+				}
+
+				StringBuilder.Append(')');
+			}
+		}
+
+		protected void BuildEmptyValues(SqlValuesTable valuesTable)
+		{
+			StringBuilder.Append("SELECT ");
+			for (var i = 0; i < valuesTable.Fields.Count; i++)
+			{
+				if (i > 0)
+					StringBuilder.Append(InlineComma);
+				var field = valuesTable.Fields[i];
+				if (IsSqlValuesTableValueTypeRequired(valuesTable, Array<ISqlExpression[]>.Empty, -1, i))
+					BuildTypedExpression(new SqlDataType(field), new SqlValue(field.Type, null));
+				else
+					BuildExpression(new SqlValue(field.Type, null));
+				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+			}
+
+			if (FakeTable != null)
+			{
+				StringBuilder.Append(" FROM ");
+				BuildFakeTableName();
+			}
+
+			StringBuilder
+				.Append(" WHERE 1 = 0");
 		}
 
 		protected void BuildTableName(SqlTableSource ts, bool buildName, bool buildAlias)
@@ -1908,6 +2000,10 @@ namespace LinqToDB.SqlProvider
 
 					break;
 
+				case QueryElementType.IsDistinctPredicate:
+					BuildIsDistinctPredicate((SqlPredicate.IsDistinct)predicate);
+					break;
+
 				case QueryElementType.InSubQueryPredicate:
 					{
 						BuildExpression(GetPrecedence((SqlPredicate.InSubQuery)predicate), ((SqlPredicate.InSubQuery)predicate).Expr1);
@@ -1964,7 +2060,6 @@ namespace LinqToDB.SqlProvider
 					}
 
 					break;
-
 				default:
 					throw new InvalidOperationException($"Unexpected predicate type {predicate.ElementType}");
 			}
@@ -1987,6 +2082,32 @@ namespace LinqToDB.SqlProvider
 			}
 
 			BuildExpression(GetPrecedence(expr), expr.Expr2);
+		}
+
+		protected virtual void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
+		{
+			BuildExpression(GetPrecedence(expr), expr.Expr1);
+			StringBuilder.Append(expr.IsNot ? " IS NOT DISTINCT FROM " : " IS DISTINCT FROM ");
+			BuildExpression(GetPrecedence(expr), expr.Expr2);
+		}
+
+		protected void BuildIsDistinctPredicateFallback(SqlPredicate.IsDistinct expr)
+		{
+			// This is the fallback implementation of IS DISTINCT FROM 
+			// for all providers that don't support the standard syntax
+			// nor have a proprietary alternative
+			expr.Expr1.ShouldCheckForNull();
+			StringBuilder.Append("CASE WHEN ");
+			BuildExpression(Precedence.Comparison, expr.Expr1);
+			StringBuilder.Append(" = ");
+			BuildExpression(Precedence.Comparison, expr.Expr2);
+			StringBuilder.Append(" OR ");
+			BuildExpression(Precedence.Comparison, expr.Expr1);
+			StringBuilder.Append(" IS NULL AND ");
+			BuildExpression(Precedence.Comparison, expr.Expr2);
+			StringBuilder
+				.Append(" IS NULL THEN 0 ELSE 1 END = ")
+				.Append(expr.IsNot ? '0' : '1');
 		}
 
 		static SqlField GetUnderlayingField(ISqlExpression expr)
@@ -2246,7 +2367,10 @@ namespace LinqToDB.SqlProvider
 			var precedence = GetPrecedence(predicate);
 
 			BuildExpression(precedence, predicate.Expr1);
-			StringBuilder.Append(predicate.IsNot ? " NOT LIKE " : " LIKE ");
+			StringBuilder
+				.Append(predicate.IsNot ? " NOT " : " ")
+				.Append(predicate.FunctionName ?? "LIKE")
+				.Append(' ');
 			BuildExpression(precedence, predicate.Expr2);
 
 			if (predicate.Escape != null)
@@ -2682,6 +2806,22 @@ namespace LinqToDB.SqlProvider
 		#endregion
 
 		#region BuildDataType
+		
+		/// <summary>
+		/// Appends an <see cref="SqlDataType"/>'s String to a provided <see cref="StringBuilder"/>
+		/// </summary>
+		/// <param name="sb"></param>
+		/// <param name="dataType"></param>
+		/// <returns>The stringbuilder with the type information appended.</returns>
+		public StringBuilder BuildDataType(StringBuilder sb,
+			SqlDataType dataType)
+		{
+			WithStringBuilder(sb, () =>
+			{
+				BuildDataType(dataType, false);
+			});
+			return sb;
+		}
 		protected void BuildDataType(SqlDataType type, bool forCreateTable)
 		{
 			if (!string.IsNullOrEmpty(type.Type.DbType))
@@ -2901,7 +3041,7 @@ namespace LinqToDB.SqlProvider
 						var alias = ((SqlTable)table).Alias;
 						return alias != "$" && alias != "$F" ? alias : null;
 					}
-				case QueryElementType.MergeSourceTable:
+				case QueryElementType.SqlTableLikeSource:
 					return null;
 
 				default:
@@ -3002,7 +3142,7 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.SqlRawSqlTable:
 					return GetTablePhysicalName((SqlTable)table)!;
 
-				case QueryElementType.MergeSourceTable:
+				case QueryElementType.SqlTableLikeSource:
 					return ConvertInline(((SqlTableLikeSource)table).Name, ConvertType.NameToQueryTable);
 
 				default:
@@ -3226,7 +3366,7 @@ namespace LinqToDB.SqlProvider
 				sb.Append(value);
 		}
 
-		public string ApplyQueryHints(string sqlText, List<string> queryHints)
+		public string ApplyQueryHints(string sqlText, IReadOnlyCollection<string> queryHints)
 		{
 			var sb = new StringBuilder();
 

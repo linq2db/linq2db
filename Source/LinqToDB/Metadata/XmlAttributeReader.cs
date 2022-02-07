@@ -98,7 +98,7 @@ namespace LinqToDB.Metadata
 					return Tuple.Create(name, val);
 				});
 
-				return new AttributeInfo(aname, values.ToDictionary(v => v.Item1, v => (object?)v.Item2));
+				return new AttributeInfo(aname, values.ToDictionary(v => v.Item1, v => v.Item2));
 			});
 
 			return attrs.ToArray();
@@ -107,6 +107,9 @@ namespace LinqToDB.Metadata
 		static Dictionary<string,MetaTypeInfo> LoadStream(Stream xmlDocStream, string fileName)
 		{
 			var doc = XDocument.Load(new StreamReader(xmlDocStream));
+
+			if (doc.Root == null)
+				throw new MetadataException($"'{fileName}': Root element missing.");
 
 			return doc.Root.Elements().Where(e => e.Name.LocalName == "Type").Select(t =>
 			{

@@ -4,10 +4,9 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	using Common;
 	using Mapping;
 
-	public class SqlCteTable : SqlTable, ICloneableElement
+	public class SqlCteTable : SqlTable
 	{
 		public          CteClause? Cte  { get; private set; }
 
@@ -22,6 +21,10 @@ namespace LinqToDB.SqlQuery
 			get => Cte?.Name ?? base.PhysicalName;
 			set => base.PhysicalName = value;
 		}
+
+		// required by Clone :-/
+		internal string? BaseName         => base.Name;
+		internal string? BasePhysicalName => base.PhysicalName;
 
 		public SqlCteTable(
 			MappingSchema mappingSchema,
@@ -42,7 +45,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal SqlCteTable(int id, string alias, SqlField[] fields)
-			: base(id, null, alias, string.Empty, string.Empty, string.Empty, null, null, null, fields, SqlTableType.Cte, null, TableOptions.NotSet)
+			: base(id, null, alias, string.Empty, string.Empty, string.Empty, null, null!, null, fields, SqlTableType.Cte, null, TableOptions.NotSet)
 		{
 		}
 
@@ -55,6 +58,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public SqlCteTable(SqlCteTable table, IEnumerable<SqlField> fields, CteClause cte)
+			: base(table.ObjectType, null)
 		{
 			Alias              = table.Alias;
 			Server             = table.Server;
@@ -62,7 +66,6 @@ namespace LinqToDB.SqlQuery
 			Schema             = table.Schema;
 
 			PhysicalName       = table.PhysicalName;
-			ObjectType         = table.ObjectType;
 			SequenceAttributes = table.SequenceAttributes;
 
 			Cte                = cte;
@@ -87,43 +90,5 @@ namespace LinqToDB.SqlQuery
 
 
 		#endregion
-
-		ICloneableElement ICloneableElement.Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				var table = new SqlCteTable(this, Array<SqlField>.Empty, Cte == null ? throw new InvalidOperationException("Cte is null") : (CteClause)Cte.Clone(objectTree, doClone))
-				{
-					Name               = base.Name,
-					Alias              = Alias,
-					Server             = Server,
-					Database           = Database,
-					Schema             = Schema,
-					PhysicalName       = base.PhysicalName,
-					ObjectType         = ObjectType,
-					SqlTableType       = SqlTableType,
-				};
-
-				table.ClearFields();
-
-				foreach (var field in Fields)
-				{
-					var fc = new SqlField(field);
-
-					objectTree.Add(field, fc);
-					table.     Add(fc);
-				}
-
-				objectTree.Add(this, table);
-				objectTree.Add(All,  table.All);
-
-				clone = table;
-			}
-
-			return clone;
-		}
 	}
 }

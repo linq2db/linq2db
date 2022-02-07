@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Reflection;
 
 namespace LinqToDB.Linq
@@ -8,7 +7,7 @@ namespace LinqToDB.Linq
 
 	class MemberInfoComparer : IEqualityComparer<MemberInfo>
 	{
-		public static MemberInfoComparer Instance = new MemberInfoComparer();
+		public static MemberInfoComparer Instance = new ();
 
 		public bool Equals(MemberInfo? x, MemberInfo? y)
 		{

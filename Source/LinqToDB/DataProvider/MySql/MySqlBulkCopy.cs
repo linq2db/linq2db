@@ -11,12 +11,24 @@ namespace LinqToDB.DataProvider.MySql
 
 	class MySqlBulkCopy : BasicBulkCopy
 	{
-		private readonly MySqlDataProvider _provider;
+		/// <summary>
+		/// Settings based on https://www.jooq.org/doc/3.12/manual/sql-building/dsl-context/custom-settings/settings-inline-threshold/
+		/// MySQL supports more but realistically this might be too much already for practical cases. 
+		/// </summary>
+		protected override int               MaxParameters => 32767;
+		/// <summary>
+		/// MySQL can support much larger sizes, based on
+		/// https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html#sysvar_max_allowed_packet
+		/// But we keep a smaller number here to avoid choking the network.
+		/// </summary>
+		protected override int               MaxSqlLength  => 327670;
+		private readonly   MySqlDataProvider _provider;
 
 		public MySqlBulkCopy(MySqlDataProvider provider)
 		{
 			_provider = provider;
 		}
+
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
 			ITable<T>       table,
 			BulkCopyOptions options,
@@ -80,13 +92,13 @@ namespace LinqToDB.DataProvider.MySql
 		private ProviderConnections? TryGetProviderConnections<T>(ITable<T> table)
 			where T : notnull
 		{
-			if (table.DataContext is DataConnection dataConnection && _provider.Adapter.BulkCopy != null)
+			if (table.TryGetDataConnection(out var dataConnection) && _provider.Adapter.BulkCopy != null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, dataConnection.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
 
 				var transaction = dataConnection.Transaction;
 				if (connection != null && transaction != null)
-					transaction = _provider.TryGetProviderTransaction(transaction, dataConnection.MappingSchema);
+					transaction = _provider.TryGetProviderTransaction(transaction, table.DataContext.MappingSchema);
 
 				if (connection != null && (dataConnection.Transaction == null || transaction != null))
 				{
@@ -112,9 +124,9 @@ namespace LinqToDB.DataProvider.MySql
 			var dataConnection = providerConnections.DataConnection;
 			var connection     = providerConnections.ProviderConnection;
 			var transaction    = providerConnections.ProviderTransaction;
-			var ed             = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-			var sb             = _provider.CreateSqlBuilder(dataConnection.MappingSchema);
+			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema);
 			var rc             = new BulkCopyRowsCopied();
 
 			var bc = _provider.Adapter.BulkCopy!.Create(connection, transaction);
@@ -152,23 +164,13 @@ namespace LinqToDB.DataProvider.MySql
 				await TraceActionAsync(
 					dataConnection,
 					() =>
-					((
-#if !NETFRAMEWORK
-							bc.CanWriteToServerAsync2 ||
-#endif
-							bc.CanWriteToServerAsync)
-					? "INSERT ASYNC BULK " : "INSERT BULK ")
+					(bc.HasWriteToServerAsync ? "INSERT ASYNC BULK " : "INSERT BULK ")
 					+ tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
 					async () => {
-#if !NETFRAMEWORK
-						if (bc.CanWriteToServerAsync2)
-							await bc.WriteToServerAsync2(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						if (bc.HasWriteToServerAsync)
+							await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 						else
-#endif
-							if (bc.CanWriteToServerAsync)
-								await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-							else
-								bc.WriteToServer(rd);
+							bc.WriteToServer(rd);
 						return rd.Count;
 					}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
@@ -191,9 +193,9 @@ namespace LinqToDB.DataProvider.MySql
 			var dataConnection = providerConnections.DataConnection;
 			var connection     = providerConnections.ProviderConnection;
 			var transaction    = providerConnections.ProviderTransaction;
-			var ed             = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-			var sb             = _provider.CreateSqlBuilder(dataConnection.MappingSchema);
+			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema);
 			var rc             = new BulkCopyRowsCopied();
 
 			var bc = _provider.Adapter.BulkCopy!.Create(connection, transaction);
@@ -256,12 +258,12 @@ namespace LinqToDB.DataProvider.MySql
 			where T: notnull
 		{
 			var dataConnection = providerConnections.DataConnection;
-			var connection = providerConnections.ProviderConnection;
-			var transaction = providerConnections.ProviderTransaction;
-			var ed      = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
-			var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-			var sb      = _provider.CreateSqlBuilder(dataConnection.MappingSchema);
-			var rc      = new BulkCopyRowsCopied();
+			var connection     = providerConnections.ProviderConnection;
+			var transaction    = providerConnections.ProviderTransaction;
+			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
+			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
+			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema);
+			var rc             = new BulkCopyRowsCopied();
 
 			var bc = _provider.Adapter.BulkCopy!.Create(connection, transaction);
 			if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
@@ -295,15 +297,12 @@ namespace LinqToDB.DataProvider.MySql
 
 				await TraceActionAsync(
 					dataConnection,
-					() => (bc.CanWriteToServerAsync2 || bc.CanWriteToServerAsync ? "INSERT ASYNC BULK " : "INSERT BULK ") + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
+					() => (bc.HasWriteToServerAsync ? "INSERT ASYNC BULK " : "INSERT BULK ") + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
 					async () => {
-						if (bc.CanWriteToServerAsync2)
-							await bc.WriteToServerAsync2(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						if (bc.HasWriteToServerAsync)
+							await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 						else
-							if (bc.CanWriteToServerAsync)
-								await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-							else
-								bc.WriteToServer(rd);
+							bc.WriteToServer(rd);
 						return rd.Count;
 					}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 

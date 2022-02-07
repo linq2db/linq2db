@@ -1,17 +1,19 @@
-﻿using LinqToDB.Expressions;
-using LinqToDB.SqlQuery;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
+	using SqlQuery;
+
+	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
+
 	internal partial class MergeBuilder
 	{
 		internal class InsertWhenNotMatched : MethodCallBuilder
 		{
 			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
-				return methodCall.Method.IsGenericMethod
-					&& LinqExtensions.InsertWhenNotMatchedAndMethodInfo == methodCall.Method.GetGenericMethodDefinition();
+				return methodCall.IsSameGenericMethod(InsertWhenNotMatchedAndMethodInfo);
 			}
 
 			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -25,7 +27,7 @@ namespace LinqToDB.Linq.Builder
 				var predicate = methodCall.Arguments[1];
 				var setter    = methodCall.Arguments[2];
 
-				if (!(setter is ConstantExpression constSetter) || constSetter.Value != null)
+				if (!setter.IsNullValue())
 				{
 					var setterExpression = (LambdaExpression)setter.Unwrap();
 					mergeContext.AddSourceParameter(setterExpression.Parameters[0]);
@@ -49,9 +51,10 @@ namespace LinqToDB.Linq.Builder
 						if (field.IsInsertable)
 						{
 							var expression = LinqToDB.Expressions.Extensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, param);
-							var expr       = mergeContext.SourceContext.ConvertToSql(builder.ConvertExpression(expression), 1, ConvertFlags.Field)[0].Sql;
+							var tgtExpr    = mergeContext.TargetContext.ConvertToSql(builder.ConvertExpression(expression), 1, ConvertFlags.Field)[0].Sql;
+							var srcExpr    = mergeContext.SourceContext.ConvertToSql(builder.ConvertExpression(expression), 1, ConvertFlags.Field)[0].Sql;
 
-							operation.Items.Add(new SqlSetExpression(field, expr));
+							operation.Items.Add(new SqlSetExpression(tgtExpr, srcExpr));
 						}
 						else if (field.IsIdentity)
 						{
@@ -63,7 +66,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				if (!(predicate is ConstantExpression constPredicate) || constPredicate.Value != null)
+				if (!predicate.IsNullValue())
 				{
 					var condition     = (LambdaExpression)predicate.Unwrap();
 					var conditionExpr = builder.ConvertExpression(condition.Body.Unwrap());

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Text;
+using LinqToDB.Linq;
 
 namespace LinqToDB.SqlQuery
 {
@@ -61,10 +63,14 @@ namespace LinqToDB.SqlQuery
 
 		public ISqlExpression UnderlyingExpression()
 		{
-			var current = Expression;
+			var current = QueryHelper.UnwrapExpression(Expression);
 			while (current.ElementType == QueryElementType.Column)
 			{
-				current = ((SqlColumn)current).Expression;
+				var column      = (SqlColumn)current;
+				var columnQuery = column.Parent;
+				if (columnQuery == null || columnQuery.HasSetOperators || QueryHelper.EnumerateLevelSources(columnQuery).Take(2).Count() > 1)
+					break;
+				current = QueryHelper.UnwrapExpression(column.Expression);
 			}
 
 			return current;
@@ -201,22 +207,6 @@ namespace LinqToDB.SqlQuery
 		public int   Precedence => SqlQuery.Precedence.Primary;
 		public Type? SystemType => Expression.SystemType;
 
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			var parent = (SelectQuery?)Parent?.Clone(objectTree, doClone);
-
-			if (!objectTree.TryGetValue(this, out var clone))
-				objectTree.Add(this, clone = new SqlColumn(
-					parent,
-					(ISqlExpression)Expression.Clone(objectTree, doClone),
-					RawAlias));
-
-			return clone;
-		}
-
 		#endregion
 
 		#region IEquatable<ISqlExpression> Members
@@ -233,15 +223,15 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		public ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			if (!(options.SkipColumns && Expression is SqlColumn))
-				Expression = Expression.Walk(options, func)!;
+				Expression = Expression.Walk(options, context, func)!;
 
 			if (options.ProcessParent)
-				Parent = (SelectQuery)func(Parent!);
+				Parent = (SelectQuery)func(context, Parent!);
 
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion

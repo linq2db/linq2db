@@ -16,6 +16,7 @@ namespace LinqToDB.Extensions
 {
 	using System.Diagnostics.CodeAnalysis;
 	using Expressions;
+	using LinqToDB.Common;
 
 	[PublicAPI]
 	public static class ReflectionExtensions
@@ -28,12 +29,6 @@ namespace LinqToDB.Extensions
 
 		public static MemberInfo[] GetPublicInstanceValueMembers(this Type type)
 		{
-			if (type.IsAnonymous())
-			{
-				type.GetConstructors().Single()
-					.GetParameters().Select((p, i) => new { p.Name, i }).ToDictionary(_ => _.Name, _ => _.i);
-			}
-
 			var members = type.GetMembers(BindingFlags.Instance | BindingFlags.Public)
 				.Where(m => m.IsFieldEx() || m.IsPropertyEx() && ((PropertyInfo)m).GetIndexParameters().Length == 0);
 
@@ -73,8 +68,28 @@ namespace LinqToDB.Extensions
 		/// <returns><see cref="MemberInfo"/> or null</returns>
 		public static MemberInfo? GetMemberEx(this Type type, MemberInfo memberInfo)
 		{
+			if (memberInfo.ReflectedType == type)
+				return memberInfo;
+
 			if (memberInfo.IsPropertyEx())
-				return type.GetProperty(memberInfo.Name);
+			{
+				var props = type.GetProperties();
+
+				PropertyInfo? foundByName = null;
+				foreach (var prop in props)
+				{
+					if (prop.Name == memberInfo.Name)
+					{
+						foundByName ??= prop;
+						if (prop.GetMemberType() == memberInfo.GetMemberType())
+						{
+							return prop;
+						}
+					}
+				}
+
+				return foundByName;
+			}
 
 			if (memberInfo.IsFieldEx())
 				return type.GetField   (memberInfo.Name);
@@ -283,37 +298,28 @@ namespace LinqToDB.Extensions
 
 #region Attributes cache
 
-		static readonly ConcurrentDictionary<Type, object[]> _typeAttributesTopInternal = new ();
+		static readonly ConcurrentDictionary<Type, IReadOnlyCollection<object>> _typeAttributesTopInternal = new ();
 
-		static void GetAttributesInternal(List<object> list, Type type)
+		static IReadOnlyCollection<object> GetAttributesInternal(Type type)
 		{
-			if (_typeAttributesTopInternal.TryGetValue(type, out var attrs))
-			{
-				list.AddRange(attrs);
-			}
-			else
-			{
-				GetAttributesTreeInternal(list, type);
-				_typeAttributesTopInternal[type] = list.ToArray();
-			}
+			return _typeAttributesTopInternal.GetOrAdd(type, static type => GetAttributesTreeInternal(type));
 		}
 
-		static readonly ConcurrentDictionary<Type, object[]> _typeAttributesInternal = new ();
+		static readonly ConcurrentDictionary<Type, IReadOnlyCollection<object>> _typeAttributesInternal = new ();
 
-		static void GetAttributesTreeInternal(List<object> list, Type type)
+		static IReadOnlyCollection<object> GetAttributesTreeInternal(Type type)
 		{
-			var attrs = _typeAttributesInternal.GetOrAdd(type, x => type.GetCustomAttributes(false));
-
-			list.AddRange(attrs);
+			IReadOnlyCollection<object> attrs = _typeAttributesInternal.GetOrAdd(type, x => type.GetCustomAttributes(false));
 
 			if (type.IsInterface)
-				return;
+				return attrs;
 
 			// Reflection returns interfaces for the whole inheritance chain.
 			// So, we are going to get some hemorrhoid here to restore the inheritance sequence.
 			//
 			var interfaces      = type.GetInterfaces();
 			var nBaseInterfaces = type.BaseType != null? type.BaseType.GetInterfaces().Length: 0;
+			List<object>? list  = null;
 
 			for (var i = 0; i < interfaces.Length; i++)
 			{
@@ -338,14 +344,38 @@ namespace LinqToDB.Extensions
 						continue;
 				}
 
-				GetAttributesTreeInternal(list, intf);
+				var ifaceAttrs = GetAttributesTreeInternal(intf);
+				if (ifaceAttrs.Count > 0)
+				{
+					if (list != null)
+						list.AddRange(ifaceAttrs);
+					else if (attrs.Count == 0)
+						attrs = ifaceAttrs;
+					else
+						(list ??= new(attrs)).AddRange(ifaceAttrs);
+				}
 			}
 
 			if (type.BaseType != null && type.BaseType != typeof(object))
-				GetAttributesTreeInternal(list, type.BaseType);
+			{
+				var baseAttrs = GetAttributesTreeInternal(type.BaseType);
+				if (baseAttrs.Count > 0)
+				{
+					if (list != null)
+						list.AddRange(baseAttrs);
+					else if (attrs.Count == 0)
+						attrs = baseAttrs;
+					else
+						(list ??= new(attrs)).AddRange(baseAttrs);
+				}
+			}
+
+			if (list != null   ) return list;
+			if (attrs.Count > 0) return attrs;
+			return Array<object>.Empty;
 		}
 
-#endregion
+		#endregion
 
 		/// <summary>
 		/// Returns an array of custom attributes applied to a type.
@@ -360,16 +390,9 @@ namespace LinqToDB.Extensions
 		{
 			if (type == null) throw new ArgumentNullException(nameof(type));
 
-			if (!CacheHelper<T>.TypeAttributes.TryGetValue(type, out var attrs))
-			{
-				var list = new List<object>();
-
-				GetAttributesInternal(list, type);
-
-				CacheHelper<T>.TypeAttributes[type] = attrs = list.OfType<T>().ToArray();
-			}
-
-			return attrs;
+			return CacheHelper<T>.TypeAttributes.GetOrAdd(
+				type,
+				static type => GetAttributesInternal(type).OfType<T>().ToArray());
 		}
 
 		/// <summary>
@@ -388,12 +411,11 @@ namespace LinqToDB.Extensions
 		}
 
 		/// <summary>
-		/// Gets a value indicating whether a type (or type's element type)
-		/// instance can be null in the underlying data store.
+		/// Returns true, if type is <see cref="Nullable{T}"/> type.
 		/// </summary>
 		/// <param name="type">A <see cref="Type"/> instance. </param>
-		/// <returns> True, if the type parameter is a closed generic nullable type; otherwise, False.</returns>
-		/// <remarks>Arrays of Nullable types are treated as Nullable types.</remarks>
+		/// <returns><c>true</c>, if <paramref name="type"/> represents <see cref="Nullable{T}"/> type; otherwise, <c>false</c>.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsNullable(this Type type)
 		{
 			return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
@@ -430,12 +452,14 @@ namespace LinqToDB.Extensions
 		/// <summary>
 		/// Wraps type into <see cref="Nullable{T}"/> class.
 		/// </summary>
-		/// <param name="type">Value type to wrap.</param>
+		/// <param name="type">Value type to wrap. Must be value type (except <see cref="Nullable{T}"/> itself).</param>
 		/// <returns>Type, wrapped by <see cref="Nullable{T}"/>.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Type AsNullable(this Type type)
 		{
-			if (type == null)          throw new ArgumentNullException(nameof(type));
+			if (type == null)      throw new ArgumentNullException(nameof(type));
 			if (!type.IsValueType) throw new ArgumentException($"{type} is not a value type");
+			if (type.IsNullable()) throw new ArgumentException($"{type} is nullable type already");
 
 			return typeof(Nullable<>).MakeGenericType(type);
 		}
@@ -464,6 +488,8 @@ namespace LinqToDB.Extensions
 			yield return member.DeclaringType!;
 		}
 
+		static readonly ConcurrentDictionary<(Type parent, Type child), bool> _isSameOrParentOf = new ();
+
 		/// <summary>
 		/// Determines whether the specified types are considered equal.
 		/// </summary>
@@ -479,35 +505,40 @@ namespace LinqToDB.Extensions
 			if (parent == null) throw new ArgumentNullException(nameof(parent));
 			if (child  == null) throw new ArgumentNullException(nameof(child));
 
-			if (parent == child ||
-				child.IsEnum && Enum.GetUnderlyingType(child) == parent ||
-				child.IsSubclassOf(parent))
-			{
+			if (parent == child)
 				return true;
-			}
 
-			if (parent.IsGenericTypeDefinition)
-				for (var t = child; t != typeof(object) && t != null; t = t.BaseType)
-					if (t.IsGenericType && t.GetGenericTypeDefinition() == parent)
-						return true;
-
-			if (parent.IsInterface)
+			return _isSameOrParentOf.GetOrAdd((parent, child), static key =>
 			{
-				var interfaces = child.GetInterfaces();
+				var (parent, child) = key;
 
-				foreach (var t in interfaces)
-				{
-					if (parent.IsGenericTypeDefinition)
-					{
+				if (child.IsEnum && Enum.GetUnderlyingType(child) == parent ||
+					child.IsSubclassOf(parent))
+					return true;
+
+				if (parent.IsGenericTypeDefinition)
+					for (var t = child; t != typeof(object) && t != null; t = t.BaseType)
 						if (t.IsGenericType && t.GetGenericTypeDefinition() == parent)
 							return true;
-					}
-					else if (t == parent)
-						return true;
-				}
-			}
 
-			return false;
+				if (parent.IsInterface)
+				{
+					var interfaces = child.GetInterfaces();
+
+					foreach (var t in interfaces)
+					{
+						if (parent.IsGenericTypeDefinition)
+						{
+							if (t.IsGenericType && t.GetGenericTypeDefinition() == parent)
+								return true;
+						}
+						else if (t == parent)
+							return true;
+					}
+				}
+
+				return false;
+			});
 		}
 
 		/// <summary>
@@ -708,7 +739,7 @@ namespace LinqToDB.Extensions
 			if (type == null)
 				return null;
 
-			return _getItemTypeCache.GetOrAdd(type, t =>
+			return _getItemTypeCache.GetOrAdd(type, static t =>
 			{
 				if (t == typeof(object))
 					return null;
@@ -917,27 +948,24 @@ namespace LinqToDB.Extensions
 		{
 			return
 				member.Name == "Value" &&
-				member.DeclaringType!.IsGenericType &&
-				member.DeclaringType.GetGenericTypeDefinition() == typeof(Nullable<>);
+				member.DeclaringType!.IsNullable();
 		}
 
 		public static bool IsNullableHasValueMember(this MemberInfo member)
 		{
 			return
 				member.Name == "HasValue" &&
-				member.DeclaringType!.IsGenericType &&
-				member.DeclaringType.GetGenericTypeDefinition() == typeof(Nullable<>);
+				member.DeclaringType!.IsNullable();
 		}
 
 		public static bool IsNullableGetValueOrDefault(this MemberInfo member)
 		{
 			return
 				member.Name == "GetValueOrDefault" &&
-				member.DeclaringType!.IsGenericType &&
-				member.DeclaringType.GetGenericTypeDefinition() == typeof(Nullable<>);
+				member.DeclaringType!.IsNullable();
 		}
 
-		static readonly Dictionary<Type,HashSet<Type>> _castDic = new Dictionary<Type,HashSet<Type>>()
+		static readonly Dictionary<Type,HashSet<Type>> _castDic = new ()
 		{
 			{ typeof(decimal), new HashSet<Type> { typeof(sbyte), typeof(byte),   typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(char)                } },
 			{ typeof(double),  new HashSet<Type> { typeof(sbyte), typeof(byte),   typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(char), typeof(float) } },
@@ -1103,7 +1131,7 @@ namespace LinqToDB.Extensions
 			if (!method.IsGenericMethod || method.IsGenericMethodDefinition)
 				return method;
 
-			return _methodDefinitionCache.GetOrAdd(method, mi => mi.GetGenericMethodDefinition());
+			return _methodDefinitionCache.GetOrAdd(method, static mi => mi.GetGenericMethodDefinition());
 		}
 	}
 }

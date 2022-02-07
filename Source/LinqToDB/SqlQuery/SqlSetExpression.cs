@@ -4,7 +4,7 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlSetExpression : IQueryElement, ISqlExpressionWalkable, ICloneableElement
+	public class SqlSetExpression : IQueryElement, ISqlExpressionWalkable
 	{
 		public SqlSetExpression(ISqlExpression column, ISqlExpression? expression)
 		{
@@ -49,31 +49,12 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				objectTree.Add(this, clone = new SqlSetExpression(
-					(ISqlExpression)Column.    Clone(objectTree, doClone),
-					(ISqlExpression)Expression!.Clone(objectTree, doClone)));
-			}
-
-			return clone;
-		}
-
-		#endregion
-
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression? ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			Column     = Column.     Walk(options, func)!;
-			Expression = Expression?.Walk(options, func);
+			Column     = Column.     Walk(options, context, func)!;
+			Expression = Expression?.Walk(options, context, func);
 			return null;
 		}
 

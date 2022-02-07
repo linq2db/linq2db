@@ -89,9 +89,9 @@ namespace LinqToDB.Tools.Comparers
 			readonly Func<T,T,bool> _equals;
 			readonly Func<T,int>    _getHashCode;
 
-			public override bool Equals     (T x, T y) => x != null ? y != null && _equals(x, y) : y == null;
+			public override bool Equals     (T? x, T? y) => x != null ? y != null && _equals(x, y) : y == null;
 
-			public override int  GetHashCode(T obj)    => obj == null ? 0 : _getHashCode(obj);
+			public override int  GetHashCode(T obj)      => obj == null ? 0 : _getHashCode(obj);
 
 			internal static Comparer<T>? DefaultInstance;
 		}
@@ -113,7 +113,7 @@ namespace LinqToDB.Tools.Comparers
 		public static IEqualityComparer GetEqualityComparer(Type type)
 		{
 			var method = _getEqualityComparerMethodInfo.MakeGenericMethod(type);
-			return (IEqualityComparer)method.Invoke(null, null);
+			return (IEqualityComparer)method.Invoke(null, null)!;
 		}
 
 		/// <summary>
@@ -193,7 +193,7 @@ namespace LinqToDB.Tools.Comparers
 			});
 
 			var expression = expressions
-				.DefaultIfEmpty(ExpressionHelper.TrueConstant)
+				.DefaultIfEmpty(ExpressionInstances.True)
 				.Aggregate(Expression.AndAlso);
 
 			return Expression.Lambda<Func<T,T,bool>>(expression, x, y).CompileExpression();
@@ -208,7 +208,7 @@ namespace LinqToDB.Tools.Comparers
 			else if (type != typeof(string) && typeof(IEnumerable).IsAssignableFrom(type))
 				comparerType = typeof(IEnumerable<>).IsSameOrParentOf(type)
 					? typeof(EnumerableEqualityComparer<>).MakeGenericType(type.IsArray
-						? type.GetElementType()
+						? type.GetElementType()!
 						: type.GetGenericArguments()[0])
 					: typeof(EnumerableEqualityComparer);
 			else if (type.IsClass &&  (type.Name.StartsWith("<>") || !type.GetMethods().Any(m => m.Name == "Equals" && m.DeclaringType == type)))
@@ -228,7 +228,7 @@ namespace LinqToDB.Tools.Comparers
 				}
 			}
 
-			return Expression.MakeMemberAccess(null, comparerType.GetProperty("Default"));
+			return Expression.MakeMemberAccess(null, comparerType.GetProperty("Default")!);
 		}
 
 		[Pure]

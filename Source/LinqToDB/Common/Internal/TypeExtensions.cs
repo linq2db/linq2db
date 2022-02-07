@@ -2,16 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
-using JetBrains.Annotations;
 using LinqToDB.Extensions;
-using LinqToDB.Tools;
 
 namespace LinqToDB.Common.Internal
 {
 	public static class TypeExtensions
 	{
-		private static readonly Dictionary<Type, string> _builtInTypeNames = new Dictionary<Type, string>
+		private static readonly Dictionary<Type, string> _builtInTypeNames = new ()
 		{
 			{ typeof(bool),    "bool"    },
 			{ typeof(byte),    "byte"    },
@@ -130,7 +129,7 @@ namespace LinqToDB.Common.Internal
 			builder.Append('>');
 		}
 
-		public static FieldInfo GetFieldInfo(this Type type, string fieldName)
+		public static FieldInfo? GetFieldInfo(this Type type, string fieldName)
 			=> type.GetRuntimeFields().FirstOrDefault(f => f.Name == fieldName && !f.IsStatic);
 
 		public static IEnumerable<string> GetNamespaces(this Type type)
@@ -155,34 +154,89 @@ namespace LinqToDB.Common.Internal
 			}
 		}
 
+		public static Type UnwrapNullableType(this Type type)
+			=> Nullable.GetUnderlyingType(type) ?? type;
+
+		/// <summary>
+		/// Returns <c>true</c> if type is reference type or <see cref="Nullable{T}"/>.
+		/// </summary>
+		/// <param name="type">Type to test.</param>
+		/// <returns><c>true</c> if type is reference type or <see cref="Nullable{T}"/>.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsNullableType(this Type type)
+			=> !type.IsValueType || type.IsNullable();
+
+
+		public static bool IsInteger(this Type type)
+		{
+			type = type.UnwrapNullableType();
+
+			return type    == typeof(int)
+			       || type == typeof(long)
+			       || type == typeof(short)
+			       || type == typeof(byte)
+			       || type == typeof(uint)
+			       || type == typeof(ulong)
+			       || type == typeof(ushort)
+			       || type == typeof(sbyte)
+			       || type == typeof(char);
+		}
+
 		public static bool IsNumericType(this Type? type)
 		{
-			return type != null && type.In(
-				typeof(byte),
-				typeof(decimal),
-				typeof(double),
-				typeof(float),
-				typeof(int),
-				typeof(long),
-				typeof(sbyte),
-				typeof(short),
-				typeof(uint),
-				typeof(ulong),
-				typeof(ushort)
-			);
+			if (type == null)
+				return false;
+
+			type = type.UnwrapNullableType();
+
+			return type.IsInteger()
+			       || type == typeof(decimal)
+			       || type == typeof(float)
+			       || type == typeof(double);
+		}
+
+		public static bool IsSignedInteger(this Type type)
+		{
+			return type    == typeof(int)
+			       || type == typeof(long)
+			       || type == typeof(short)
+			       || type == typeof(sbyte);
 		}
 
 		public static bool IsSignedType(this Type? type)
 		{
-			return type != null && type.In(
-				typeof(decimal),
-				typeof(double),
-				typeof(float),
-				typeof(int),
-				typeof(long),
-				typeof(short)
-			);
+			return type != null &&
+			       (IsSignedInteger(type)
+			        || type == typeof(decimal)
+			        || type == typeof(double)
+			        || type == typeof(float)
+			       );
 		}
 
+		public static bool IsTupleType(this Type type)
+		{
+			if (type == typeof(Tuple))
+			{
+				return true;
+			}
+
+			if (type.IsGenericType)
+			{
+				var genericDefinition = type.GetGenericTypeDefinition();
+				if (genericDefinition    == typeof(Tuple<>)
+				    || genericDefinition == typeof(Tuple<,>)
+				    || genericDefinition == typeof(Tuple<,,>)
+				    || genericDefinition == typeof(Tuple<,,,>)
+				    || genericDefinition == typeof(Tuple<,,,,>)
+				    || genericDefinition == typeof(Tuple<,,,,,>)
+				    || genericDefinition == typeof(Tuple<,,,,,,>)
+				    || genericDefinition == typeof(Tuple<,,,,,,,>))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
 	}
 }

@@ -36,10 +36,9 @@ namespace LinqToDB.DataProvider.MySql
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor visitor,
-			EvaluationContext context)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
 		{
-			expression = base.ConvertExpressionImpl(expression, visitor, context);
+			expression = base.ConvertExpressionImpl(expression, visitor);
 
 			if (expression is SqlBinaryExpression be)
 			{
@@ -102,6 +101,67 @@ namespace LinqToDB.DataProvider.MySql
 			}
 
 			return expression;
+		}
+
+		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext> visitor)
+		{
+			var caseSensitive = predicate.CaseSensitive.EvaluateBoolExpression(visitor.Context.OptimizationContext.Context);
+
+			if (caseSensitive == null || caseSensitive == false)
+			{
+				var searchExpr = predicate.Expr2;
+				var dataExpr = predicate.Expr1;
+
+				if (caseSensitive == false)
+				{
+					searchExpr = new SqlFunction(typeof(string), "$ToLower$", searchExpr);
+					dataExpr   = new SqlFunction(typeof(string), "$ToLower$", dataExpr);
+				}
+
+				ISqlPredicate? newPredicate = null;
+				switch (predicate.Kind)
+				{
+					case SqlPredicate.SearchString.SearchKind.Contains:
+					{
+						newPredicate = new SqlPredicate.ExprExpr(
+							new SqlFunction(typeof(int), "LOCATE", searchExpr, dataExpr), SqlPredicate.Operator.Greater,
+							new SqlValue(0), null);
+						break;
+					}
+				}
+
+				if (newPredicate != null)
+				{
+					if (predicate.IsNot)
+					{
+						newPredicate = new SqlSearchCondition(new SqlCondition(true, newPredicate));
+					}
+
+					return newPredicate;
+				}
+
+				if (caseSensitive == false)
+				{
+					predicate = new SqlPredicate.SearchString(
+						dataExpr,
+						predicate.IsNot,
+						searchExpr,
+						predicate.Kind,
+						new SqlValue(false));
+				}
+			}
+
+			if (caseSensitive == true)
+			{
+				predicate = new SqlPredicate.SearchString(
+					new SqlExpression(typeof(string), $"{{0}} COLLATE utf8_bin", Precedence.Primary, predicate.Expr1),
+					predicate.IsNot,
+					predicate.Expr2,
+					predicate.Kind,
+					new SqlValue(false));
+			}
+
+			return ConvertSearchStringPredicateViaLike(predicate, visitor);
 		}
 	}
 }

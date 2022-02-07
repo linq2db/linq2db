@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Common;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
@@ -14,6 +15,8 @@ namespace LinqToDB.Linq.Builder
 
 	static class AssociationHelper
 	{
+		private static readonly MethodInfo[] DefaultIfEmptyMethods = new [] { Methods.Queryable.DefaultIfEmpty, Methods.Queryable.DefaultIfEmptyValue };
+
 		// Returns
 		// (ParentType p) => dc.GetTable<ObjectType>().Where(...)
 		// (ParentType p) => dc.GetTable<ObjectType>().Where(...).DefaultIfEmpty
@@ -36,9 +39,9 @@ namespace LinqToDB.Linq.Builder
 			{
 				// here we tell for Expression Comparer to compare optimized Association expressions
 				//
-				definedQueryMethod = (LambdaExpression)builder.AddQueryableMemberAccessors(onMember, builder.DataContext, (mi, dc) =>
+				definedQueryMethod = (LambdaExpression)builder.AddQueryableMemberAccessors((association, parentType, objectType), onMember, builder.DataContext, static (context, mi, dc) =>
 				{
-					var queryLambda         = association.GetQueryMethod(parentType, objectType) ?? throw new InvalidOperationException();
+					var queryLambda         = context.association.GetQueryMethod(context.parentType, context.objectType) ?? throw new InvalidOperationException();
 					var optimizationContext = new ExpressionTreeOptimizationContext(dc);
 					var optimizedExpr       = optimizationContext.ExposeExpression(queryLambda);
 					    optimizedExpr       = optimizationContext.ExpandQueryableMethods(optimizedExpr);
@@ -64,7 +67,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				var body = definedQueryMethod.Body.Transform(e =>
+				var body = definedQueryMethod.Body.Transform(parameterMatch, static (parameterMatch, e) =>
 				{
 					if (e.NodeType == ExpressionType.Parameter &&
 					    parameterMatch.TryGetValue((ParameterExpression)e, out var newExpression))
@@ -152,7 +155,7 @@ namespace LinqToDB.Linq.Builder
 				if (bodyExpression.NodeType == ExpressionType.Call)
 				{
 					var mc = (MethodCallExpression)bodyExpression;
-					if (mc.IsSameGenericMethod(Methods.Queryable.DefaultIfEmpty, Methods.Queryable.DefaultIfEmptyValue))
+					if (mc.IsSameGenericMethod(DefaultIfEmptyMethods))
 						shouldAddDefaultIfEmpty = false;
 				}
 			}
@@ -162,7 +165,7 @@ namespace LinqToDB.Linq.Builder
 				// here we tell for Expression Comparer to compare optimized Association expressions
 				//
 				var closureExpr    = definedQueryMethod;
-				definedQueryMethod = (LambdaExpression)builder.AddQueryableMemberAccessors(onMember, builder.DataContext, (mi, dc) =>
+				definedQueryMethod = (LambdaExpression)builder.AddQueryableMemberAccessors(closureExpr, onMember, builder.DataContext, static (closureExpr, mi, dc) =>
 				{
 					var optimizationContext = new ExpressionTreeOptimizationContext(dc);
 					var optimizedExpr       = optimizationContext.ExposeExpression(closureExpr);
@@ -174,8 +177,8 @@ namespace LinqToDB.Linq.Builder
 
 			if (loadWith != null)
 			{
-				var associationLoadWith = GetLoadWith(loadWith)?
-					.FirstOrDefault(li => li.Info.MemberInfo == association.MemberInfo);
+				var associationLoadWith = GetLoadWith(loadWith)
+					.FirstOrDefault(li => MemberInfoEqualityComparer.Default.Equals(li.Info.MemberInfo, association.MemberInfo));
 
 				if (associationLoadWith != null &&
 				    (associationLoadWith.Info.MemberFilter != null || associationLoadWith.Info.FilterFunc != null))
@@ -205,11 +208,11 @@ namespace LinqToDB.Linq.Builder
 						else
 						{
 							var filterDelegate = loadWithFunc.EvaluateExpression<Delegate>() ??
-							                     throw new LinqException("Cannot convert filter function '{loadWithFunc}' to Delegate.");
+							                     throw new LinqException($"Cannot convert filter function '{loadWithFunc}' to Delegate.");
 
-							var arumentType = filterDelegate.GetType().GetGenericArguments()[0].GetGenericArguments()[0];
+							var argumentType = filterDelegate.GetType().GetGenericArguments()[0].GetGenericArguments()[0];
 							// check for fake argument q => q
-							if (arumentType.IsSameOrParentOf(objectType))
+							if (argumentType.IsSameOrParentOf(objectType))
 							{
 								
 								var query = ExpressionQueryImpl.CreateQuery(objectType, builder.DataContext, body);
@@ -321,19 +324,19 @@ namespace LinqToDB.Linq.Builder
 		public static Expression EnrichTablesWithLoadWith(IDataContext dataContext, Expression expression, Type entityType, List<LoadWithInfo[]> loadWith, MappingSchema mappingSchema)
 		{
 			var tableType     = typeof(ITable<>).MakeGenericType(entityType);
-			var newExpression = expression.Transform(e =>
-			{
-				if (e.NodeType == ExpressionType.Call)
+			var newExpression = expression.Transform(
+				(tableType, dataContext, entityType, loadWith, mappingSchema),
+				static (context, e) =>
 				{
-					var mc = (MethodCallExpression)e;
-					if (mc.IsQueryable("GetTable") && tableType.IsSameOrParentOf(mc.Type))
+					if (e.NodeType == ExpressionType.Call)
 					{
-						e = EnrichLoadWith(dataContext, mc, entityType, loadWith, mappingSchema);
+						var mc = (MethodCallExpression)e;
+						if (mc.IsQueryable("GetTable") && context.tableType.IsSameOrParentOf(mc.Type))
+							e = EnrichLoadWith(context.dataContext, mc, context.entityType, context.loadWith, context.mappingSchema);
 					}
-				}
 
-				return e;
-			});
+					return e;
+				});
 
 			return newExpression;
 		}
@@ -357,7 +360,7 @@ namespace LinqToDB.Linq.Builder
 					var isEnumerableMember =
 						EagerLoading.IsEnumerableType(memberType, mappingSchema);
 
-					var desiredType = member.MemberInfo.IsMethodEx() ? currentEntityType : member.MemberInfo.DeclaringType;
+					var desiredType = member.MemberInfo.IsMethodEx() ? currentEntityType : member.MemberInfo.DeclaringType!;
 
 					var entityParam = Expression.Parameter(currentEntityType, "e");
 					var loadBody    = desiredType == currentEntityType
@@ -451,7 +454,7 @@ namespace LinqToDB.Linq.Builder
 			if (loadWith != null)
 			{
 				loadWithFunc = GetLoadWith(loadWith)?
-					.FirstOrDefault(li => li.Info.MemberInfo == memberInfo)?.Info.FilterFunc?.EvaluateExpression() as Delegate;
+					.FirstOrDefault(li => MemberInfoEqualityComparer.Default.Equals(li.Info.MemberInfo, memberInfo))?.Info.FilterFunc?.EvaluateExpression() as Delegate;
 			}
 
 			return loadWithFunc;

@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.Expressions
 {
 	using Common;
+	using LinqToDB.Common.Internal;
 	using LinqToDB.Extensions;
 	using LinqToDB.Linq;
 	using LinqToDB.Reflection;
@@ -52,7 +53,7 @@ namespace LinqToDB.Expressions
 			var columnReader = new ColumnReader(dataContext, dataContext.MappingSchema, _type, _idx, Converter, slowMode);
 
 			if (slowMode && Configuration.OptimizeForSequentialAccess)
-				return Convert(Call(Constant(columnReader), Methods.LinqToDB.ColumnReader.GetValueSequential, _dataReaderParam, Expression.Call(_dataReaderParam, Methods.ADONet.IsDBNull, Expression.Constant(_idx)), Expression.Call(Methods.LinqToDB.ColumnReader.RawValuePlaceholder)), _type);
+				return Convert(Call(Constant(columnReader), Methods.LinqToDB.ColumnReader.GetValueSequential, _dataReaderParam, Call(_dataReaderParam, Methods.ADONet.IsDBNull, ExpressionInstances.Int32Array(_idx)), Call(Methods.LinqToDB.ColumnReader.RawValuePlaceholder)), _type);
 			else
 				return Convert(Call(Constant(columnReader), Methods.LinqToDB.ColumnReader.GetValue, _dataReaderParam), _type);
 		}
@@ -103,8 +104,8 @@ namespace LinqToDB.Expressions
 
 				switch (l.Parameters.Count)
 				{
-					case 1 : ex = l.GetBody(dataReaderExpr);                break;
-					case 2 : ex = l.GetBody(dataReaderExpr, Constant(idx)); break;
+					case 1 : ex = l.GetBody(dataReaderExpr);                                 break;
+					case 2 : ex = l.GetBody(dataReaderExpr, ExpressionInstances.Int32(idx)); break;
 				}
 			}
 
@@ -117,7 +118,7 @@ namespace LinqToDB.Expressions
 				if (converter.HandlesNulls)
 				{
 					ex = Condition(
-						Call(dataReaderExpr, Methods.ADONet.IsDBNull, Constant(idx)),
+						Call(dataReaderExpr, Methods.ADONet.IsDBNull, ExpressionInstances.Int32Array(idx)),
 						Constant(mappingSchema.GetDefaultValue(expectedType), expectedType),
 						ex);
 				}
@@ -130,7 +131,7 @@ namespace LinqToDB.Expressions
 				ex = InternalExtensions.ApplyLambdaToExpression(converter.FromProviderExpression, ex);
 				if (toType != ex.Type && toType.IsAssignableFrom(ex.Type))
 				{
-					ex = Expression.Convert(ex, toType);
+					ex = Convert(ex, toType);
 				}
 					
 			}
@@ -165,7 +166,7 @@ namespace LinqToDB.Expressions
 			    (forceNullCheck || (dataContext.IsDBNullAllowed(dataReader, idx) ?? true)))
 			{
 				ex = Condition(
-					Call(dataReaderExpr, Methods.ADONet.IsDBNull, Constant(idx)),
+					Call(dataReaderExpr, Methods.ADONet.IsDBNull, ExpressionInstances.Int32Array(idx)),
 					Constant(mappingSchema.GetDefaultValue(type), type),
 					ex);
 			}
@@ -255,14 +256,13 @@ namespace LinqToDB.Expressions
 				if (!_slowRawReaders.TryGetValue(fromType, out var func))
 				{
 					var dataReaderParameter = Parameter(typeof(IDataReader));
-					var isNullParameter     = Parameter(typeof(bool));
 					var dataReaderExpr      = Convert(dataReaderParameter, dataReader.GetType());
 
 					MethodCallExpression rawExpr = null!;
 					foreach (var type in forTypes)
 					{
 						var expr           = GetColumnReader(_dataContext, _mappingSchema, dataReader, type, _converter, ColumnIndex, dataReaderExpr, _slowMode);
-						var currentRawExpr = SequentialAccessHelper.ExtractRawValueReader(expr, isNullParameter, ColumnIndex);
+						var currentRawExpr = SequentialAccessHelper.ExtractRawValueReader(expr, ColumnIndex);
 
 						if (rawExpr == null)
 							rawExpr = currentRawExpr;
@@ -320,9 +320,9 @@ namespace LinqToDB.Expressions
 				}
 			}
 
-			readonly ConcurrentDictionary<Type, Func<IDataReader, object?>>   _columnConverters     = new ConcurrentDictionary<Type,Func<IDataReader,object?>>();
-			readonly ConcurrentDictionary<Type, Func<bool, object?, object?>> _slowColumnConverters = new ConcurrentDictionary<Type,Func<bool,object?,object?>>();
-			readonly ConcurrentDictionary<Type, Func<IDataReader, object>>    _slowRawReaders       = new ConcurrentDictionary<Type,Func<IDataReader,object>>();
+			readonly ConcurrentDictionary<Type, Func<IDataReader, object?>>   _columnConverters     = new ();
+			readonly ConcurrentDictionary<Type, Func<bool, object?, object?>> _slowColumnConverters = new ();
+			readonly ConcurrentDictionary<Type, Func<IDataReader, object>>    _slowRawReaders       = new ();
 
 			readonly IDataContext     _dataContext;
 			readonly MappingSchema    _mappingSchema;
@@ -340,9 +340,9 @@ namespace LinqToDB.Expressions
 
 		public ConvertFromDataReaderExpression MakeNullable()
 		{
-			if (Type.IsValueType && !Type.IsNullable())
+			if (!Type.IsNullableType())
 			{
-				var type = typeof(Nullable<>).MakeGenericType(Type);
+				var type = Type.AsNullable();
 				return new ConvertFromDataReaderExpression(type, _idx, Converter, _dataReaderParam);
 			}
 
@@ -351,7 +351,7 @@ namespace LinqToDB.Expressions
 
 		public ConvertFromDataReaderExpression MakeNotNullable()
 		{
-			if (typeof(Nullable<>).IsSameOrParentOf(Type))
+			if (Type.IsNullable())
 			{
 				var type = Type.GetGenericArguments()[0];
 				return new ConvertFromDataReaderExpression(type, _idx, Converter, _dataReaderParam);

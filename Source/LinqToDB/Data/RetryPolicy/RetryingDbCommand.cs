@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -24,6 +25,7 @@ namespace LinqToDB.Data.RetryPolicy
 			_command.Prepare();
 		}
 
+		[AllowNull]
 		public override string CommandText
 		{
 			get => _command.CommandText;
@@ -48,7 +50,7 @@ namespace LinqToDB.Data.RetryPolicy
 			set => _command.UpdatedRowSource = value;
 		}
 
-		protected override DbConnection DbConnection
+		protected override DbConnection? DbConnection
 		{
 			get => _command.Connection;
 			set => _command.Connection = value;
@@ -56,7 +58,7 @@ namespace LinqToDB.Data.RetryPolicy
 
 		protected override DbParameterCollection DbParameterCollection => _command.Parameters;
 
-		protected override DbTransaction DbTransaction
+		protected override DbTransaction? DbTransaction
 		{
 			get => _command.Transaction;
 			set => _command.Transaction = value;

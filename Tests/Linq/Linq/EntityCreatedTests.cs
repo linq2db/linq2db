@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-
+using FluentAssertions;
 using LinqToDB;
 
 using NUnit.Framework;
@@ -34,6 +34,9 @@ namespace Tests.Linq
 		{
 			if (_checkEntityIdentity && args.Entity is Parent p)
 			{
+				args.TableOptions.Should().Be(TableOptions.NotSet);
+				args.TableName.Should().Be(nameof(Parent));
+
 				if (_parents.TryGetValue(p.ParentID, out var pr))
 				{
 					args.Entity = pr;

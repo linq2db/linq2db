@@ -19,8 +19,8 @@ namespace LinqToDB.Data
 		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(IDataReader),  "rd");
 		public        readonly ParameterExpression DataReaderLocal;
 
-		public readonly List<ParameterExpression>  BlockVariables   = new List<ParameterExpression>();
-		public readonly List<Expression>           BlockExpressions = new List<Expression>();
+		public readonly List<ParameterExpression>  BlockVariables   = new ();
+		public readonly List<Expression>           BlockExpressions = new ();
 
 		public IDataContext           DataContext   { get; }
 		public MappingSchema          MappingSchema { get; }
@@ -159,7 +159,7 @@ namespace LinqToDB.Data
 
 				exprs.AddRange(
 					members.Where(m => m.Column.MemberAccessor.IsComplex).Select(m =>
-						m.Column.MemberAccessor.SetterExpression!.GetBody(obj, m.Expr)));
+						m.Column.MemberAccessor.SetterExpression.GetBody(obj, m.Expr)));
 
 				exprs.Add(obj);
 
@@ -295,7 +295,7 @@ namespace LinqToDB.Data
 
 			var lambda = Expression.Lambda<Func<IDataReader,T>>(BuildBlock(expr), DataReaderParam);
 
-			if (Common.Configuration.OptimizeForSequentialAccess)
+			if (Configuration.OptimizeForSequentialAccess)
 				lambda = (Expression<Func<IDataReader, T>>)SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(lambda, Reader.FieldCount, reduce: true);
 
 			return lambda.CompileExpression();
@@ -360,7 +360,7 @@ namespace LinqToDB.Data
 					var isNullExpr = Expression.Call(
 						DataReaderLocal,
 						ReflectionHelper.DataReader.IsDBNull,
-						Expression.Constant(dindex));
+						ExpressionInstances.Int32Array(dindex));
 
 					if (mapping.m.Code == null)
 					{

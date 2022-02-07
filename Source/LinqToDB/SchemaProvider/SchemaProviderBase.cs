@@ -216,7 +216,7 @@ namespace LinqToDB.SchemaProvider
 					var otherColumn =
 					(
 						from c in otherTable.Columns
-						where string.Compare(c.ColumnName, fk.OtherColumn, stringComparison)  == 0
+						where string.Equals(c.ColumnName, fk.OtherColumn, stringComparison)
 						select c
 					).SingleOrDefault();
 
@@ -265,7 +265,7 @@ namespace LinqToDB.SchemaProvider
 
 				if (procs != null)
 				{
-					var procParams = GetProcedureParameters(dataConnection, procs, options);
+					var procParams = (IEnumerable<ProcedureParameterInfo>?)GetProcedureParameters(dataConnection, procs, options) ?? Array<ProcedureParameterInfo>.Empty;
 
 					procedures =
 					(
@@ -511,7 +511,7 @@ namespace LinqToDB.SchemaProvider
 				return null;
 
 			return
-				options.PreferProviderSpecificTypes == true
+				options.PreferProviderSpecificTypes
 				? (ProviderSpecificDataTypesDic.TryGetValue(typeName, out var dt) ? dt : DataTypesDic                .TryGetValue(typeName, out dt) ? dt : null)
 				: (DataTypesDic                .TryGetValue(typeName, out dt)     ? dt : ProviderSpecificDataTypesDic.TryGetValue(typeName, out dt) ? dt : null);
 		}
@@ -519,7 +519,7 @@ namespace LinqToDB.SchemaProvider
 		protected DataTypeInfo? GetDataTypeByProviderDbType(int typeId, GetSchemaOptions options)
 		{
 			return
-				options.PreferProviderSpecificTypes == true
+				options.PreferProviderSpecificTypes
 				? (ProviderSpecificDataTypesByProviderDbTypeDic.TryGetValue(typeId, out var dt) ? dt : DataTypesByProviderDbTypeDic                .TryGetValue(typeId, out dt) ? dt : null)
 				: (DataTypesByProviderDbTypeDic                .TryGetValue(typeId, out dt)     ? dt : ProviderSpecificDataTypesByProviderDbTypeDic.TryGetValue(typeId, out dt) ? dt : null);
 		}
@@ -579,8 +579,8 @@ namespace LinqToDB.SchemaProvider
 			return DataTypesSchema.AsEnumerable()
 				.Select(t => new DataTypeInfo
 				{
-					TypeName         = t.Field<string>("TypeName"),
-					DataType         = t.Field<string>("DataType"),
+					TypeName         = t.Field<string>("TypeName")!,
+					DataType         = t.Field<string>("DataType")!,
 					CreateFormat     = t.Field<string>("CreateFormat"),
 					CreateParameters = t.Field<string>("CreateParameters"),
 					ProviderDbType   = t.Field<int>   ("ProviderDbType"),
@@ -692,7 +692,7 @@ namespace LinqToDB.SchemaProvider
 			if (type.IsGenericType)
 				memberType = $"{type.Name.Split('`')[0]}<{string.Join(", ", type.GetGenericArguments().Select(t => ToTypeName(t, false)))}>";
 
-			if (!type.IsClass && isNullable)
+			if (type.IsValueType && isNullable)
 				memberType += "?";
 
 			return memberType;

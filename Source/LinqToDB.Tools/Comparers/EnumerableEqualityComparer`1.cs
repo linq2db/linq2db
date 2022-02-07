@@ -24,10 +24,10 @@ namespace LinqToDB.Tools.Comparers
 			if (obj == null)
 				return 0;
 
-			return obj.Aggregate(0, (acc, val) => acc ^ _elementComparer.GetHashCode(val));
+			return obj.Aggregate(0, (acc, val) => acc ^ _elementComparer.GetHashCode(val!));
 		}
 
-		public override bool Equals(IEnumerable<T> x, IEnumerable<T> y)
+		public override bool Equals(IEnumerable<T>? x, IEnumerable<T>? y)
 		{
 			if (x == null && y == null)
 				return true;

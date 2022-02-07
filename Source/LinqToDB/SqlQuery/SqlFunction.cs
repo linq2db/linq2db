@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -76,12 +75,12 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			for (var i = 0; i < Parameters.Length; i++)
-				Parameters[i] = Parameters[i].Walk(options, func)!;
+				Parameters[i] = Parameters[i].Walk(options, context, func)!;
 
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion
@@ -106,28 +105,7 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				objectTree.Add(this, clone = new SqlFunction(
-					SystemType,
-					Name,
-					IsAggregate,
-					Precedence,
-					Parameters.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray())
-				{
-					CanBeNull = CanBeNull, DoNotOptimize = DoNotOptimize
-				});
-			}
-
-			return clone;
-		}
+		#region Equals Members
 
 		int? _hashCode;
 
@@ -191,8 +169,5 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
-
-
-
 	}
 }

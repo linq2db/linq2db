@@ -46,7 +46,7 @@ namespace Tests.Samples
 					if (!(query.From.Tables[0].Source is SqlTable source))
 						return statement;
 
-					var descriptor = MappingSchema.GetEntityDescriptor(source.ObjectType!);
+					var descriptor = MappingSchema.GetEntityDescriptor(source.ObjectType);
 					if (descriptor == null)
 						return statement;
 
@@ -79,7 +79,7 @@ namespace Tests.Samples
 				else if (statement.QueryType == QueryType.Insert || statement.QueryType == QueryType.InsertOrUpdate)
 				{
 					var source          = statement.RequireInsertClause().Into!;
-					var descriptor      = MappingSchema.GetEntityDescriptor(source.ObjectType!);
+					var descriptor      = MappingSchema.GetEntityDescriptor(source.ObjectType);
 					var rowVersion      = descriptor.Columns.SingleOrDefault(c => c.MemberAccessor.GetAttribute<RowVersionAttribute>() != null);
 
 					if (rowVersion == null)

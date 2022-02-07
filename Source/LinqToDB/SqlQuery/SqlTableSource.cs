@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading;
 
@@ -92,15 +91,15 @@ namespace LinqToDB.SqlQuery
 
 		public List<SqlJoinedTable> Joins { get; } = new List<SqlJoinedTable>();
 
-		public void ForEach(Action<SqlTableSource> action, HashSet<SelectQuery> visitedQueries)
+		public void ForEach<TContext>(TContext context, Action<TContext, SqlTableSource> action, HashSet<SelectQuery> visitedQueries)
 		{
 			foreach (var join in Joins)
-				join.Table.ForEach(action, visitedQueries);
+				join.Table.ForEach(context, action, visitedQueries);
 
-			action(this);
+			action(context, this);
 
 			if (Source is SelectQuery query && visitedQueries.Contains(query))
-				query.ForEachTable(action, visitedQueries);
+				query.ForEachTable(context, action, visitedQueries);
 		}
 
 		public IEnumerable<ISqlTableSource> GetTables()
@@ -142,12 +141,12 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		public ISqlExpression Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			Source = (ISqlTableSource)Source.Walk(options, func)!;
+			Source = (ISqlTableSource)Source.Walk(options, context, func)!;
 
 			foreach (var t in Joins)
-				((ISqlExpressionWalkable)t).Walk(options, func);
+				((ISqlExpressionWalkable)t).Walk(options, context, func);
 
 			return this;
 		}
@@ -162,30 +161,6 @@ namespace LinqToDB.SqlQuery
 		IList<ISqlExpression> ISqlTableSource.GetKeys(bool allIfEmpty)
 		{
 			return Source.GetKeys(allIfEmpty);
-		}
-
-		#endregion
-
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				var ts = new SqlTableSource((ISqlTableSource)Source.Clone(objectTree, doClone), _alias);
-
-				objectTree.Add(this, clone = ts);
-
-				ts.Joins.AddRange(Joins.Select(jt => (SqlJoinedTable)jt.Clone(objectTree, doClone)));
-
-				if (HasUniqueKeys)
-					ts.UniqueKeys.AddRange(UniqueKeys.Select(uk => uk.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray()));
-			}
-
-			return clone;
 		}
 
 		#endregion

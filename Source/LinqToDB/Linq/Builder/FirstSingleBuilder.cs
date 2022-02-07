@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -8,16 +9,18 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using SqlQuery;
 	using Common;
+	using Reflection;
 
 	class FirstSingleBuilder : MethodCallBuilder
 	{
-		public static string[] MethodNames = { "First", "FirstOrDefault", "Single", "SingleOrDefault" };
+		public  static readonly string[] MethodNames      = { "First"     , "FirstOrDefault"     , "Single"     , "SingleOrDefault"      };
+		private static readonly string[] MethodNamesAsync = { "FirstAsync", "FirstOrDefaultAsync", "SingleAsync", "SingleOrDefaultAsync" };
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			return
-				methodCall.IsQueryable     (MethodNames) && methodCall.Arguments.Count == 1 ||
-				methodCall.IsAsyncExtension(MethodNames) && methodCall.Arguments.Count == 2;
+				methodCall.IsQueryable     (MethodNames     ) && methodCall.Arguments.Count == 1 ||
+				methodCall.IsAsyncExtension(MethodNamesAsync) && methodCall.Arguments.Count == 2;
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -74,7 +77,9 @@ namespace LinqToDB.Linq.Builder
 
 				if (info != null)
 				{
-					info.Expression = methodCall.Transform(ex => ConvertMethod(methodCall, 0, info, predicate.Parameters[0], ex));
+					info.Expression = methodCall.Transform(
+						(methodCall, info, predicate),
+						static (context, ex) => ConvertMethod(context.methodCall, 0, context.info, context.predicate.Parameters[0], ex));
 					info.Parameter  = param;
 
 					return info;
@@ -82,12 +87,40 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				var info = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), null, true);
+				var argument = methodCall.Arguments[0];
+				var info     = builder.ConvertSequence(new BuildInfo(buildInfo, argument), null, true);
 
 				if (info != null)
 				{
-					info.Expression = methodCall.Transform(ex => ConvertMethod(methodCall, 0, info, null, ex));
-					info.Parameter  = param;
+					var prevGenericType = typeof(IEnumerable<>).GetGenericType(argument.Type);
+					var genericType     = typeof(IEnumerable<>).GetGenericType(info.Expression.Type);
+
+					if (genericType == null || prevGenericType == null)
+						throw new InvalidOperationException();
+
+					var newArgument = info.Expression;
+					var elementType = genericType.GetGenericArguments()[0];
+
+					if (typeof(ExpressionHolder<,>).IsSameOrParentOf(elementType))
+					{
+						var selectMethod = typeof(IQueryable<>).IsSameOrParentOf(info.Expression.Type)
+							? Methods.Queryable.Select
+							: Methods.Enumerable.Select;
+
+						var entityParam     = Expression.Parameter(elementType);
+						var selectCall = TypeHelper.MakeMethodCall(selectMethod, info.Expression,
+							Expression.Quote(
+								Expression.Lambda(
+									Expression.PropertyOrField(entityParam, nameof(ExpressionHolder<int, int>.ex)),
+									entityParam)
+							));
+
+						newArgument = selectCall;
+					}
+
+					info.Expression = methodCall.Update(methodCall.Object, new[] {newArgument});
+
+					info.Parameter = param;
 
 					return info;
 				}
@@ -266,7 +299,7 @@ namespace LinqToDB.Linq.Builder
 							Expression.Call(
 								ExpressionBuilder.DataReaderParam,
 								ReflectionHelper.DataReader.IsDBNull,
-								Expression.Constant(GetCheckNullIndex())),
+								ExpressionInstances.Int32Array(GetCheckNullIndex())),
 							defaultValue,
 							expr);
 

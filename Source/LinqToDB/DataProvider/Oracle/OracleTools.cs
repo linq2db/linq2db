@@ -10,17 +10,48 @@ namespace LinqToDB.DataProvider.Oracle
 	using Configuration;
 	using Data;
 
+	/// <summary>
+	/// Defines type of multi-row INSERT operation to generate for <see cref="BulkCopyType.RowByRow"/> bulk copy mode.
+	/// </summary>
 	public enum AlternativeBulkCopy
 	{
+		/// <summary>
+		/// This mode generates INSERT ALL statement.
+		/// Note that INSERT ALL doesn't support sequences and will use single generated value for all rows.
+		/// <code>
+		/// INSERT ALL
+		///     INTO target_table VALUES(/*row data*/)
+		///     ...
+		///     INTO target_table VALUES(/*row data*/)
+		/// </code>
+		/// </summary>
 		InsertAll,
+		/// <summary>
+		/// This mode performs regular INSERT INTO query with array of values for each column.
+		/// <code>
+		/// INSERT INTO target_table(/*columns*/)
+		///     VALUES(:column1ArrayParameter, ..., :columnXArrayParameter)
+		/// </code>
+		/// </summary>
 		InsertInto,
+		/// <summary>
+		/// This mode generates INSERT ... SELECT statement.
+		/// <code>
+		/// INSERT INTO target_table(/*columns*/)
+		///     SELECT /*row data*/ FROM DUAL
+		///     UNION ALL
+		///     ...
+		///     UNION ALL
+		///     SELECT /*row data*/ FROM DUAL
+		/// </code>
+		/// </summary>
 		InsertDual
 	}
 
 	public static partial class OracleTools
 	{
 #if NETFRAMEWORK
-		private static readonly Lazy<IDataProvider> _oracleNativeDataProvider11 = new Lazy<IDataProvider>(() =>
+		private static readonly Lazy<IDataProvider> _oracleNativeDataProvider11 = new (() =>
 		{
 			var provider = new OracleDataProvider(ProviderName.OracleNative, OracleVersion.v11);
 
@@ -29,7 +60,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return provider;
 		}, true);
 
-		private static readonly Lazy<IDataProvider> _oracleNativeDataProvider12 = new Lazy<IDataProvider>(() =>
+		private static readonly Lazy<IDataProvider> _oracleNativeDataProvider12 = new (() =>
 		{
 			var provider = new OracleDataProvider(ProviderName.OracleNative, OracleVersion.v12);
 
@@ -39,7 +70,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}, true);
 #endif
 
-		private static readonly Lazy<IDataProvider> _oracleManagedDataProvider11 = new Lazy<IDataProvider>(() =>
+		private static readonly Lazy<IDataProvider> _oracleManagedDataProvider11 = new (() =>
 		{
 			var provider = new OracleDataProvider(ProviderName.OracleManaged, OracleVersion.v11);
 
@@ -48,7 +79,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return provider;
 		}, true);
 
-		private static readonly Lazy<IDataProvider> _oracleManagedDataProvider12 = new Lazy<IDataProvider>(() =>
+		private static readonly Lazy<IDataProvider> _oracleManagedDataProvider12 = new (() =>
 		{
 			var provider = new OracleDataProvider(ProviderName.OracleManaged, OracleVersion.v12);
 
@@ -301,8 +332,12 @@ namespace LinqToDB.DataProvider.Oracle
 				}, source);
 		}
 
-#endregion
+		#endregion
 
+		/// <summary>
+		/// Specifies type of multi-row INSERT operation to generate for <see cref="BulkCopyType.RowByRow"/> bulk copy mode.
+		/// Default value: <see cref="AlternativeBulkCopy.InsertAll"/>.
+		/// </summary>
 		public static AlternativeBulkCopy UseAlternativeBulkCopy = AlternativeBulkCopy.InsertAll;
 
 		[Obsolete("This field is not used by linq2db. Configure reader expressions on DataProvider directly")]

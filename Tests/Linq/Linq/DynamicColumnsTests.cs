@@ -569,8 +569,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(Details = "https://stackoverflow.com/questions/61081571")]
-		public void DynamicGoesBanana1([IncludeDataSources(true, TestProvName.AllSQLiteClassic)] string context)
+		[ActiveIssue("https://stackoverflow.com/questions/61081571", Details = "Expression 't.Id' is not a Field.")]
+		public void DynamicGoesBanana1([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 
 			using (var db = GetDataContext(context))
@@ -630,5 +630,20 @@ namespace Tests.Linq
 			}
 		}
 
+
+		[Test]
+		public void Issue3158([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				Assert.DoesNotThrow(() => {
+					(from p in db.GetTable<PersonWithoutDynamicStore>()
+					 join d in db.Doctor on p.ID equals d.PersonID
+					 from pa in db.Patient.LeftJoin(pa => pa.Diagnosis == Sql.Property<string>(p, "FirstName"))
+					 select new { p.ID, pa.Diagnosis })
+					.ToList();
+				});
+			}
+		}
 	}
 }

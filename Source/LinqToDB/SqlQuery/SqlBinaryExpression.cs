@@ -68,12 +68,12 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			Expr1 = Expr1.Walk(options, func)!;
-			Expr2 = Expr2.Walk(options, func)!;
+			Expr1 = Expr1.Walk(options, context, func)!;
+			Expr2 = Expr2.Walk(options, context, func)!;
 
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion
@@ -122,28 +122,6 @@ namespace LinqToDB.SqlQuery
 				Expr1.Equals(expr.Expr1, comparer) &&
 				Expr2.Equals(expr.Expr2, comparer) &&
 				comparer(this, other);
-		}
-
-		#endregion
-
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				objectTree.Add(this, clone = new SqlBinaryExpression(
-					SystemType,
-					(ISqlExpression)Expr1.Clone(objectTree, doClone),
-					Operation,
-					(ISqlExpression)Expr2.Clone(objectTree, doClone),
-					Precedence));
-			}
-
-			return clone;
 		}
 
 		#endregion

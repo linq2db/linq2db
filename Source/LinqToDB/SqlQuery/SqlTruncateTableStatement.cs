@@ -31,29 +31,11 @@ namespace LinqToDB.SqlQuery
 			return sb;
 		}
 
-		public override ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			Table = ((ISqlExpressionWalkable?)Table)?.Walk(options, func) as SqlTable;
+			Table = ((ISqlExpressionWalkable?)Table)?.Walk(options, context, func) as SqlTable;
 
 			return null;
-		}
-
-		public override ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			var clone = new SqlTruncateTableStatement();
-
-			if (Tag != null)
-				clone.Tag = (SqlComment)Tag.Clone(objectTree, doClone);
-
-			if (Table != null)
-				clone.Table = (SqlTable)Table.Clone(objectTree, doClone);
-
-			objectTree.Add(this, clone);
-
-			return clone;
 		}
 
 		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
@@ -61,11 +43,11 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		public override void WalkQueries(Func<SelectQuery, SelectQuery> func)
+		public override void WalkQueries<TContext>(TContext context, Func<TContext, SelectQuery, SelectQuery> func)
 		{
 			if (SelectQuery != null)
 			{
-				var newQuery = func(SelectQuery);
+				var newQuery = func(context, SelectQuery);
 				if (!ReferenceEquals(newQuery, SelectQuery))
 					SelectQuery = newQuery;
 			}

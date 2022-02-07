@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
@@ -1792,6 +1792,88 @@ namespace Tests.Linq
 		{
 			return value => value == "1" ? "test" : value;
 		}
+
+		class WhereWithBool
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column]
+			public bool BoolValue { get; set; }
+		}
+
+		[Test]
+		public void BooleanSubquery([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<WhereWithBool>(new List<WhereWithBool>(){new WhereWithBool()
+			{
+				Id = 1,
+				BoolValue = true
+			}}))
+			{
+				var query =
+					from t in table
+					where table.Single(x => x.Id == 1).BoolValue
+					select t;
+
+				var result = query.ToArray();
+			}
+		}
+
+		class WhereWithString
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column]
+			public string? StringValue { get; set; }
+		}
+
+		[Test]
+		public void CaseOptimization([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(new List<WhereWithString>{new()
+			{
+				Id        = 1,
+				StringValue = "Str1"
+			}}))
+			{
+				// ReSharper disable RedundantCast
+				var query = table.Where(x =>
+					(x.StringValue == null ? (bool?)null : (bool?)x.StringValue.Contains("Str")) == true);
+				// ReSharper restore RedundantCast
+
+				var result = query.ToArray();
+
+				var str = query.ToString();
+
+				str.Should().NotContain("NULL");
+			}
+		}
+
+		[Test]
+		public void CaseOptimizationNullable([DataSources(TestProvName.AllSQLite)] string context, [Values(2, null)] int? filterValue)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(new List<WhereWithString>{new()
+				{
+					Id          = 1,
+					StringValue = "Str1"
+				}}))
+			{
+				var query = table.Where(x => filterValue.HasValue ? x.Id == filterValue : true);
+
+				var result = query.ToArray();
+
+				if (filterValue == null)
+					result.Should().HaveCount(1);
+				else
+					result.Should().HaveCount(0);
+			}
+		}
+
 
 		#region issue 2424
 		class Isue2424Table

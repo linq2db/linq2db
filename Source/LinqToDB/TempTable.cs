@@ -467,7 +467,7 @@ namespace LinqToDB
 			{
 				if (t.IsAnonymous())
 				{
-					var nctor = (NewExpression?)items.Expression.Find(e => e.NodeType == ExpressionType.New && e.Type == t)!;
+					var nctor = (NewExpression?)items.Expression.Find(t, static (t, e) => e.NodeType == ExpressionType.New && e.Type == t);
 
 					MemberInfo[]    members;
 					ConstructorInfo ctor;
@@ -479,8 +479,8 @@ namespace LinqToDB
 					}
 					else
 					{
-						ctor    = nctor.Constructor;
-						members = nctor.Members
+						ctor    = nctor.Constructor!;
+						members = nctor.Members!
 							.Select(m => m is MethodInfo info ? info.GetPropertyInfo()! : m)
 							.ToArray();
 					}
@@ -538,7 +538,7 @@ namespace LinqToDB
 			return _table.CreateQuery<TElement>(expression);
 		}
 
-		object IQueryProvider.Execute(Expression expression)
+		object? IQueryProvider.Execute(Expression expression)
 		{
 			return _table.Execute(expression);
 		}

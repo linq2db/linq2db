@@ -21,13 +21,17 @@ namespace LinqToDB.Mapping
 		/// Creates descriptor instance.
 		/// </summary>
 		/// <param name="mappingSchema">Mapping schema, associated with descriptor.</param>
+		/// <param name="entityDescriptor">Entity descriptor.</param>
 		/// <param name="columnAttribute">Column attribute, from which descriptor data should be extracted.</param>
 		/// <param name="memberAccessor">Column mapping member accessor.</param>
-		public ColumnDescriptor(MappingSchema mappingSchema, ColumnAttribute? columnAttribute, MemberAccessor memberAccessor)
+		/// <param name="hasInheritanceMapping">Owning entity included in inheritance mapping.</param>
+		public ColumnDescriptor(MappingSchema mappingSchema, EntityDescriptor entityDescriptor, ColumnAttribute? columnAttribute, MemberAccessor memberAccessor, bool hasInheritanceMapping)
 		{
-			MappingSchema  = mappingSchema;
-			MemberAccessor = memberAccessor;
-			MemberInfo     = memberAccessor.MemberInfo;
+			MappingSchema         = mappingSchema;
+			EntityDescriptor      = entityDescriptor;
+			MemberAccessor        = memberAccessor;
+			MemberInfo            = memberAccessor.MemberInfo;
+			HasInheritanceMapping = hasInheritanceMapping;
 
 			if (MemberInfo.IsFieldEx())
 			{
@@ -84,7 +88,7 @@ namespace LinqToDB.Mapping
 			}
 			else
 			{
-				var expr = ExpressionHelper.PropertyOrField(Expression.Constant(null, MemberInfo.DeclaringType), Storage);
+				var expr = ExpressionHelper.PropertyOrField(Expression.Constant(null, MemberInfo.DeclaringType!), Storage);
 				StorageType = expr.Type;
 				StorageInfo = expr.Member;
 			}
@@ -172,14 +176,24 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Gets MappingSchema for current ColumnDescriptor
+		/// Gets MappingSchema for current ColumnDescriptor.
 		/// </summary>
 		public MappingSchema  MappingSchema   { get; }
+
+		/// <summary>
+		/// Gets Entity descriptor.
+		/// </summary>
+		public EntityDescriptor EntityDescriptor { get; }
 
 		/// <summary>
 		/// Gets column mapping member accessor.
 		/// </summary>
 		public MemberAccessor MemberAccessor  { get; }
+
+		/// <summary>
+		/// Indicates that owning entity included in inheritance mapping.
+		/// </summary>
+		public bool HasInheritanceMapping { get; }
 
 		/// <summary>
 		/// Gets column mapping member (field or property).
@@ -394,8 +408,11 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public IValueConverter? ValueConverter  { get; }
 
-		LambdaExpression?    _getterValueLambda;
-		LambdaExpression?    _getterParameterLambda;
+		LambdaExpression?    _getDbValueLambda;
+		Expression?          _getDefaultDbValueExpression;
+		LambdaExpression?    _getDbParamLambda;
+		Expression?          _getDefaultDbParamExpression;
+
 		Func<object,object>? _getter;
 
 		/// <summary>
@@ -490,6 +507,8 @@ namespace LinqToDB.Mapping
 
 			if (dataType == DataType.Undefined)
 				dataType = mappingSchema.GetDataType(systemType).Type.DataType;
+			if (dataType == DataType.Undefined)
+				dataType = mappingSchema.GetUnderlyingDataType(systemType, out var _).Type.DataType;
 
 			return dataType;
 		}
@@ -500,8 +519,8 @@ namespace LinqToDB.Mapping
 		/// <returns>Returns Lambda which extracts member value to database type.</returns>
 		public LambdaExpression GetDbValueLambda()
 		{
-			if (_getterValueLambda != null)
-				return _getterValueLambda;
+			if (_getDbValueLambda != null)
+				return _getDbValueLambda;
 
 			var paramGetter = GetDbParamLambda();
 
@@ -515,8 +534,32 @@ namespace LinqToDB.Mapping
 						paramGetter.Parameters);
 			}
 
-			_getterValueLambda = paramGetter;
-			return _getterValueLambda;
+			_getDbValueLambda = paramGetter;
+			return _getDbValueLambda;
+		}
+
+		/// <summary>
+		/// Returns Lambda for extracting column value, converted to database type, from entity object.
+		/// </summary>
+		/// <returns>Returns Lambda which extracts member value to database type.</returns>
+		public Expression GetDefaultDbValueExpression()
+		{
+			if (_getDefaultDbValueExpression != null)
+				return _getDefaultDbValueExpression;
+
+			var paramGetter = GetDefaultDbParamExpression();
+
+			if (typeof(DataParameter).IsSameOrParentOf(paramGetter.Type))
+			{
+				var param             = Expression.Parameter(typeof(DataParameter), "p");
+				var convertExpression = Expression.Lambda(ExpressionHelper.PropertyOrField(param, "Value"), param);
+
+				convertExpression = MappingSchema.AddNullCheck(convertExpression);
+				paramGetter       = InternalExtensions.ApplyLambdaToExpression(convertExpression, paramGetter);
+			}
+
+			_getDefaultDbValueExpression = paramGetter;
+			return _getDefaultDbValueExpression;
 		}
 
 		/// <summary>
@@ -525,17 +568,85 @@ namespace LinqToDB.Mapping
 		/// <returns>Returns Lambda which extracts member value to database type or <see cref="DataParameter"/>.</returns>
 		public LambdaExpression GetDbParamLambda()
 		{
-			if (_getterParameterLambda != null)
-				return _getterParameterLambda;
+			if (_getDbParamLambda != null)
+				return _getDbParamLambda;
 
 			var objParam   = Expression.Parameter(MemberAccessor.TypeAccessor.Type, "obj");
 			var getterExpr = MemberAccessor.GetterExpression.GetBody(objParam);
 			var dbDataType = GetDbDataType(true);
 
+			if (IsDiscriminator && MemberAccessor.HasSetter)
+			{
+				var param = Expression.Parameter(getterExpr.Type, "v");
+
+				var current = EntityDescriptor;
+				do
+				{
+					if (current.InheritanceMapping.Count > 0)
+						break;
+
+					if (current.ObjectType.BaseType == typeof(object) || current.ObjectType.BaseType == null)
+						break;
+
+					current = MappingSchema.GetEntityDescriptor(current.ObjectType.BaseType!);
+
+				} while (true);
+
+
+				if (current.InheritanceMapping.Count > 0)
+				{
+					// suggest default discriminator value
+
+					var defaultValue = current.InheritanceMapping.FirstOrDefault(m => m.IsDefault);
+					var valueExpr = MappingSchema.GenerateConvertedValueExpression(defaultValue?.Code, param.Type);
+
+					for (var index = current.InheritanceMapping.Count - 1; index >= 0; index--)
+					{
+						var mapping = current.InheritanceMapping[index];
+						valueExpr = Expression.Condition(Expression.TypeIs(objParam, mapping.Type),
+							MappingSchema.GenerateConvertedValueExpression(mapping.Code, param.Type), valueExpr);
+					}
+
+					Expression defaultCheckExpression = param.Type == typeof(string)
+						? Expression.Call(typeof(string), nameof(string.IsNullOrEmpty), Type.EmptyTypes, param)
+						: Expression.Equal(param, new DefaultValueExpression(MappingSchema, param.Type));
+
+					var suggestLambda = Expression.Lambda(
+						Expression.Condition(
+							defaultCheckExpression,
+							valueExpr,
+							param
+						),
+						param
+					);
+
+					getterExpr = InternalExtensions.ApplyLambdaToExpression(suggestLambda, getterExpr);
+				}
+
+			}
+
 			getterExpr = ApplyConversions(getterExpr, dbDataType, true);
 
-			_getterParameterLambda = Expression.Lambda(getterExpr, objParam);
-			return _getterParameterLambda;
+			_getDbParamLambda = Expression.Lambda(getterExpr, objParam);
+			return _getDbParamLambda;
+		}
+
+		/// <summary>
+		/// Returns default column value, converted to database type or <see cref="DataParameter"/>.
+		/// </summary>
+		public Expression GetDefaultDbParamExpression()
+		{
+			if (_getDefaultDbParamExpression != null)
+				return _getDefaultDbParamExpression;
+
+			Expression defaultExpression = new DefaultValueExpression(MappingSchema, MemberAccessor.Type);
+
+			var dbDataType = GetDbDataType(true);
+
+			defaultExpression = ApplyConversions(defaultExpression, dbDataType, true);
+
+			_getDefaultDbParamExpression = defaultExpression;
+			return _getDefaultDbParamExpression;
 		}
 
 		/// <summary>
@@ -621,11 +732,20 @@ namespace LinqToDB.Mapping
 			if (_getter == null)
 			{
 				var objParam      = Expression.Parameter(typeof(object), "obj");
-				var objExpression = Expression.Convert(objParam, MemberAccessor.TypeAccessor.Type);
 
+				var objExpression = Expression.Convert(objParam, MemberAccessor.TypeAccessor.Type);
 				var getterExpr    = InternalExtensions.ApplyLambdaToExpression(GetDbValueLambda(), objExpression);
 
-				var getterLambda = Expression.Lambda<Func<object,object>>(Expression.Convert(getterExpr, typeof(object)), objParam);
+				if (HasInheritanceMapping)
+				{
+					// Additional check that column member belong to proper entity
+					// 
+					getterExpr = Expression.Condition(Expression.TypeIs(objParam, MemberAccessor.TypeAccessor.Type),
+						getterExpr, GetDefaultDbValueExpression());
+				}
+
+				var getterLambda = Expression.Lambda<Func<object, object>>(Expression.Convert(getterExpr, typeof(object)), objParam);
+
 				_getter = getterLambda.CompileExpression();
 			}
 

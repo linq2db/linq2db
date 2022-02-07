@@ -14,7 +14,6 @@ using LinqToDB.Data.DbCommandProcessor;
 using LinqToDB.DataProvider.Informix;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.Tools;
@@ -153,6 +152,8 @@ namespace Tests
 			var configName = "CORE31";
 #elif NET5_0
 			var configName = "NET50";
+#elif NET6_0
+			var configName = "NET60";
 #elif NET472
 			var configName = "NET472";
 #else
@@ -420,6 +421,7 @@ namespace Tests
 			TestProvName.SqlServer2019,
 			TestProvName.SqlServer2019SequentialAccess,
 			TestProvName.SqlServer2019FastExpressionCompiler,
+			TestProvName.SqlServerContained,
 			ProviderName.SqlServer2000,
 			ProviderName.SqlServer2005,
 			TestProvName.SqlAzure,
@@ -431,6 +433,7 @@ namespace Tests
 			TestProvName.PostgreSQL11,
 			TestProvName.PostgreSQL12,
 			TestProvName.PostgreSQL13,
+			TestProvName.PostgreSQL14,
 			ProviderName.MySql,
 			ProviderName.MySqlConnector,
 			TestProvName.MySql55,
@@ -456,7 +459,7 @@ namespace Tests
 				Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
 
 				if (ms != null)
-					dx.MappingSchema = new MappingSchema(dx.MappingSchema, ms);
+					dx.MappingSchema = MappingSchema.CombineSchemas(dx.MappingSchema, ms);
 
 				return (ITestDataContext)dx;
 #else
@@ -1054,7 +1057,65 @@ namespace Tests
 			// on CI we test two configurations:
 			// linux/mac: db is case sensitive, catalog is case insensitive
 			// windows: both db and catalog are case sensitive
-			return GetProviderName(context, out var _) == TestProvName.SqlServer2019;
+			var provider = GetProviderName(context, out var _);
+
+			return provider == TestProvName.SqlServer2019
+				|| CustomizationSupport.Interceptor.IsCaseSensitiveDB(provider)
+				;
+		}
+
+		/// <summary>
+		/// Returns case-sensitivity of string comparison (e.g. using LIKE) without explicit collation specified.
+		/// Depends on database implementation or database collation.
+		/// </summary>
+		protected bool IsCaseSensitiveComparison(string context)
+		{
+			var provider = GetProviderName(context, out var _);
+
+			// we intentionally configure Sql Server 2019 test database to be case-sensitive to test
+			// linq2db support for this configuration
+			// on CI we test two configurations:
+			// linux/mac: db is case sensitive, catalog is case insensitive
+			// windows: both db and catalog are case sensitive
+			return provider == TestProvName.SqlServer2019
+				|| provider == ProviderName.DB2
+				|| provider.StartsWith(ProviderName.Firebird)
+				|| provider.StartsWith(ProviderName.Informix)
+				|| provider.StartsWith(ProviderName.Oracle)
+				|| provider.StartsWith(ProviderName.PostgreSQL)
+				|| provider.StartsWith(ProviderName.SapHana)
+				|| provider.StartsWith(ProviderName.Sybase)
+				|| CustomizationSupport.Interceptor.IsCaseSensitiveComparison(provider)
+				;
+		}
+
+		/// <summary>
+		/// Returns status of test CollatedTable - wether it is configured to have proper column collations or
+		/// use database defaults (<see cref="IsCaseSensitiveComparison"/>).
+		/// </summary>
+		protected bool IsCollatedTableConfigured(string context)
+		{
+			var provider = GetProviderName(context, out var _);
+
+			// unconfigured providers (some could be configured in theory):
+			// Access : no such concept as collation on column level (db-only)
+			// DB2
+			// Informix
+			// Oracle (in theory v12 has collations, but to enable them you need to complete quite a quest...)
+			// PostgreSQL (v12 + custom collation required (no default CI collations))
+			// SAP HANA
+			// SQL CE
+			// Sybase ASE
+			return provider == TestProvName.SqlAzure
+				|| provider == TestProvName.MariaDB
+				|| provider == TestProvName.AllOracleNative
+				|| provider.StartsWith(ProviderName.SqlServer)
+				|| provider.StartsWith(ProviderName.Firebird)
+				|| provider.StartsWith(ProviderName.MySql)
+				// while it is configured, LIKE in SQLite is case-insensitive (for ASCII only though)
+				//|| provider.StartsWith(ProviderName.SQLite)
+				|| CustomizationSupport.Interceptor.IsCollatedTableConfigured(provider)
+				;
 		}
 
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, bool allowEmpty = false)
@@ -1183,7 +1244,7 @@ namespace Tests
 			var expr    = query.Expression;
 			var loaded  = new Dictionary<Type, Expression>();
 			var actual  = query.ToArray();
-			var newExpr = expr.Transform(e =>
+			var newExpr = expr.Transform(loaded, static (loaded, e) =>
 			{
 				if (e.NodeType == ExpressionType.Call)
 				{
@@ -1257,19 +1318,20 @@ namespace Tests
 			var finalTableName = tableName;
 			switch (GetProviderName(context, out var _))
 			{
-				case TestProvName.SqlAzure:
-				case ProviderName.SqlServer:
-				case ProviderName.SqlServer2000:
-				case ProviderName.SqlServer2005:
-				case ProviderName.SqlServer2008:
-				case ProviderName.SqlServer2012:
-				case ProviderName.SqlServer2014:
-				case ProviderName.SqlServer2016:
-				case ProviderName.SqlServer2017:
-				case TestProvName.SqlServer2019:
-				case TestProvName.SqlServer2019SequentialAccess:
+				case TestProvName.SqlAzure                           :
+				case ProviderName.SqlServer                          :
+				case ProviderName.SqlServer2000                      :
+				case ProviderName.SqlServer2005                      :
+				case ProviderName.SqlServer2008                      :
+				case ProviderName.SqlServer2012                      :
+				case ProviderName.SqlServer2014                      :
+				case ProviderName.SqlServer2016                      :
+				case ProviderName.SqlServer2017                      :
+				case TestProvName.SqlServer2019                      :
+				case TestProvName.SqlServer2019SequentialAccess      :
 				case TestProvName.SqlServer2019FastExpressionCompiler:
-				{
+				case TestProvName.SqlServerContained                 :
+					{
 					if (!tableName.StartsWith("#"))
 						finalTableName = "#" + tableName;
 					break;
@@ -1384,6 +1446,7 @@ namespace Tests
 				if (!_dic.TryGetValue(context, out var list))
 				{
 					using (new DisableLogging())
+					using (new DisableLogging())
 					using (var db = new DataConnection(context))
 					{
 						list = db.GetTable<T>().ToList();
@@ -1410,210 +1473,6 @@ namespace Tests
 		}
 	}
 
-	public class GuardGrouping : IDisposable
-	{
-		private readonly bool _oldValue = Configuration.Linq.GuardGrouping;
-
-		public GuardGrouping(bool enable)
-		{
-			Configuration.Linq.GuardGrouping = enable;
-		}
-
-		public void Dispose()
-		{
-			Configuration.Linq.GuardGrouping = _oldValue;
-		}
-	}
-
-	public class ParameterizeTakeSkip : IDisposable
-	{
-		private readonly bool _oldValue = Configuration.Linq.ParameterizeTakeSkip;
-
-		public ParameterizeTakeSkip(bool enable)
-		{
-			Configuration.Linq.ParameterizeTakeSkip = enable;
-		}
-
-		public void Dispose()
-		{
-			Configuration.Linq.ParameterizeTakeSkip = _oldValue;
-		}
-	}
-
-	public class PreloadGroups : IDisposable
-	{
-		private readonly bool _oldValue = Configuration.Linq.PreloadGroups;
-
-		public PreloadGroups(bool enable)
-		{
-			Configuration.Linq.PreloadGroups = enable;
-		}
-
-		public void Dispose()
-		{
-			Configuration.Linq.PreloadGroups = _oldValue;
-		}
-	}
-
-	public class GenerateExpressionTest : IDisposable
-	{
-		private readonly bool _oldValue = Configuration.Linq.GenerateExpressionTest;
-
-		public GenerateExpressionTest(bool enable)
-		{
-			Configuration.Linq.GenerateExpressionTest = enable;
-		}
-
-		public void Dispose()
-		{
-			Configuration.Linq.GenerateExpressionTest = _oldValue;
-		}
-	}
-
-	public class DoNotClearOrderBys : IDisposable
-	{
-		private readonly bool _oldValue = Configuration.Linq.DoNotClearOrderBys;
-
-		public DoNotClearOrderBys(bool enable)
-		{
-			Configuration.Linq.DoNotClearOrderBys = enable;
-		}
-
-		public void Dispose()
-		{
-			Configuration.Linq.DoNotClearOrderBys = _oldValue;
-		}
-	}
-
-	public class GenerateFinalAliases : IDisposable
-	{
-		private readonly bool _oldValue = Configuration.Sql.GenerateFinalAliases;
-
-		public GenerateFinalAliases(bool enable)
-		{
-			Configuration.Sql.GenerateFinalAliases = enable;
-		}
-
-		public void Dispose()
-		{
-			Configuration.Sql.GenerateFinalAliases = _oldValue;
-		}
-	}
-
-	public class SerializeAssemblyQualifiedName : IDisposable
-	{
-		private readonly bool _oldValue = Configuration.LinqService.SerializeAssemblyQualifiedName;
-
-		public SerializeAssemblyQualifiedName(bool enable)
-		{
-			Configuration.LinqService.SerializeAssemblyQualifiedName = enable;
-		}
-
-		public void Dispose()
-		{
-			Configuration.LinqService.SerializeAssemblyQualifiedName = _oldValue;
-		}
-	}
-
-	public class DisableLogging : IDisposable
-	{
-		private readonly CustomTestContext _ctx;
-		private readonly bool _oldState;
-
-		public DisableLogging()
-		{
-			_ctx   = CustomTestContext.Get();
-			_oldState = _ctx.Get<bool>(CustomTestContext.TRACE_DISABLED);
-			_ctx.Set(CustomTestContext.TRACE_DISABLED, true);
-		}
-
-		public void Dispose()
-		{
-			_ctx.Set(CustomTestContext.TRACE_DISABLED, _oldState);
-		}
-	}
-
-	public class DisableBaseline : IDisposable
-	{
-		private readonly CustomTestContext _ctx;
-		private readonly bool _oldState;
-
-		public DisableBaseline(string reason, bool disable = true)
-		{
-			_ctx = CustomTestContext.Get();
-			_oldState = _ctx.Get<bool>(CustomTestContext.BASELINE_DISABLED);
-			_ctx.Set(CustomTestContext.BASELINE_DISABLED, disable);
-		}
-
-		public void Dispose()
-		{
-			_ctx.Set(CustomTestContext.BASELINE_DISABLED, _oldState);
-		}
-	}
-
-	public class DisableQueryCache : IDisposable
-	{
-		private readonly bool _oldValue = Configuration.Linq.DisableQueryCache;
-
-		public DisableQueryCache(bool value = true)
-		{
-			Configuration.Linq.DisableQueryCache = value;
-		}
-
-		public void Dispose()
-		{
-			Configuration.Linq.DisableQueryCache = _oldValue;
-		}
-	}
-
-	public class WithoutJoinOptimization : IDisposable
-	{
-		public WithoutJoinOptimization(bool opimizerSwitch = false)
-		{
-			Configuration.Linq.OptimizeJoins = opimizerSwitch;
-			Query.ClearCaches();
-		}
-
-		public void Dispose()
-		{
-			Configuration.Linq.OptimizeJoins = true;
-		}
-	}
-
-	public class DeletePerson : IDisposable
-	{
-		readonly IDataContext _db;
-
-		public DeletePerson(IDataContext db)
-		{
-			_db = db;
-			Delete(_db);
-		}
-
-		public void Dispose()
-		{
-			Delete(_db);
-		}
-
-		readonly Func<IDataContext,int> Delete =
-			CompiledQuery.Compile<IDataContext, int>(db => db.GetTable<Person>().Delete(_ => _.ID > TestBase.MaxPersonID));
-
-	}
-
-	public class WithoutComparisonNullCheck : IDisposable
-	{
-		public WithoutComparisonNullCheck()
-		{
-			Configuration.Linq.CompareNullsAsValues = false;
-		}
-
-		public void Dispose()
-		{
-			Configuration.Linq.CompareNullsAsValues = true;
-			Query.ClearCaches();
-		}
-	}
-
 	public static class TestExternals
 	{
 		public static string? LogFilePath;
@@ -1633,34 +1492,6 @@ namespace Tests
 				_logWriter.WriteLine(text);
 				_logWriter.Flush();
 			}
-		}
-	}
-
-	public class CustomCommandProcessor : IDisposable
-	{
-		private readonly IDbCommandProcessor? _original = DbCommandProcessorExtensions.Instance;
-		public CustomCommandProcessor(IDbCommandProcessor? processor)
-		{
-			DbCommandProcessorExtensions.Instance = processor;
-		}
-
-		public void Dispose()
-		{
-			DbCommandProcessorExtensions.Instance = _original;
-		}
-	}
-
-	public class OptimizeForSequentialAccess : IDisposable
-	{
-		private readonly bool _original = Configuration.OptimizeForSequentialAccess;
-		public OptimizeForSequentialAccess(bool enable)
-		{
-			Configuration.OptimizeForSequentialAccess = enable;
-		}
-
-		public void Dispose()
-		{
-			Configuration.OptimizeForSequentialAccess = _original;
 		}
 	}
 }

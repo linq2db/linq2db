@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
@@ -166,23 +166,38 @@ namespace LinqToDB.SqlQuery
 			if (!selectQuery.Where.IsEmpty)
 				items.Add(selectQuery.Where);
 
+			var ctx = new BuildParentHierarchyContext(this, selectQuery);
 			foreach (var item in items)
 			{
-				IQueryElement? parent = null;
-				new QueryVisitor().VisitParentFirst(item, e =>
+				ctx.Parent = null;
+				item.VisitParentFirst(ctx, static (context, e) =>
 				{
 					if (e is SelectQuery q)
 					{
-						RegisterHierachry(selectQuery, q, new HierarchyInfo(selectQuery, HierarchyType.InnerQuery, parent));
-						BuildParentHierarchy(q);
+						context.Info.RegisterHierachry(context.SelectQuery, q, new HierarchyInfo(context.SelectQuery, HierarchyType.InnerQuery, context.Parent));
+						context.Info.BuildParentHierarchy(q);
 						return false;
 					}
 
-					parent = e;
+					context.Parent = e;
 
 					return true;
 				});
 			}
+		}
+
+		private class BuildParentHierarchyContext
+		{
+			public BuildParentHierarchyContext(QueryInformation qi, SelectQuery selectQuery)
+			{
+				Info        = qi;
+				SelectQuery = selectQuery;
+			}
+
+			public readonly QueryInformation Info;
+			public readonly SelectQuery      SelectQuery;
+
+			public IQueryElement? Parent;
 		}
 
 		public enum HierarchyType

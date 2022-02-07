@@ -32,8 +32,6 @@ namespace LinqToDB.Linq.Builder
 
 		public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 		{
-			if (expression == null) throw new ArgumentNullException(nameof(expression));
-
 			expression = SequenceHelper.CorrectExpression(expression, this, SubQuery);
 
 			return SubQuery
@@ -48,10 +46,8 @@ namespace LinqToDB.Linq.Builder
 				.ToArray();
 		}
 
-		SqlField RegisterSourceField(ISqlExpression baseExpression, ISqlExpression expression, int index, MemberInfo member)
+		SqlField RegisterSourceField(ISqlExpression baseExpression, ISqlExpression expression, int index, MemberInfo? member)
 		{
-			if (expression == null) throw new ArgumentNullException(nameof(expression));
-
 			var sourceField = Source.RegisterSourceField(baseExpression, expression, index, () =>
 			{
 				var f = QueryHelper.GetUnderlyingField(baseExpression ?? expression);
