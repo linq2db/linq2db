@@ -69,6 +69,9 @@ namespace Tests.Linq
 			ints.Count(i => Row(i.One, i.Nil, i.Three) == Row(i.One, (int?)i.Two, i.Three))
 				.Should().Be(0);
 
+			ints.Count(i => Row(1, i.Nil, 3) == Row(i.One, i.Nil, i.Three))
+				.Should().Be(0);
+
 			ints.Count(i => Row(1, (int?)null, 3) == Row(i.One, i.Nil, i.Three))
 				.Should().Be(0);
 		}
@@ -87,6 +90,9 @@ namespace Tests.Linq
 
 			ints.Count(i => Row(i.One, i.Nil, i.Three) != Row(i.One, (int?)i.Two, i.Three))
 				.Should().Be(0);
+
+			ints.Count(i => Row(1, i.Nil, 4) != Row(i.One, i.Nil, i.Three))
+				.Should().Be(1);
 
 			ints.Count(i => Row(1, (int?)null, 4) != Row(i.One, i.Nil, i.Three))
 				.Should().Be(1);

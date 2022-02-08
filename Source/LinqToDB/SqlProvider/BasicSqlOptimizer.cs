@@ -1354,7 +1354,7 @@ namespace LinqToDB.SqlProvider
 				// ROW(a, b) operator ROW(c, d)
 				case SqlRow rhs:
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Comparisons))
-						return RowComparisonFallback(op, (SqlRow)predicate.Expr1, rhs);
+						return RowComparisonFallback(op, (SqlRow)predicate.Expr1, rhs, context);
 					break;
 
 				// ROW(a, b) operator (SELECT c, d)
@@ -1404,7 +1404,7 @@ namespace LinqToDB.SqlProvider
 			return rewrite;
 		}
 
-		protected ISqlPredicate RowComparisonFallback(Operator op, SqlRow row1, SqlRow row2)
+		protected ISqlPredicate RowComparisonFallback(Operator op, SqlRow row1, SqlRow row2, EvaluationContext context)
 		{
 			var rewrite = new SqlSearchCondition();
 						
@@ -1413,7 +1413,20 @@ namespace LinqToDB.SqlProvider
 				// (a1, a2) =  (b1, b2) => a1 =  b1 and a2 = b2
 				// (a1, a2) <> (b1, b2) => a1 <> b1 or  a2 <> b2
 				bool isOr = op == Operator.NotEqual;
-				var compares = row1.Values.Zip(row2.Values, (a, b) => new ExprExpr(a, op, b, withNull: null));
+				var compares = row1.Values.Zip(row2.Values, (a, b) => 
+				{
+					// There is a trap here, neither `a` nor `b` should be a constant null value,
+					// because ExprExpr reduces `a == null` to `a is null`,
+					// which is not the same and not equivalent to the Row expression.
+					// Technically the expression should evaluate to `unknown` but linq2db has no support
+					// for that and immediately coerces to `false`
+					if (a.TryEvaluateExpression(context, out var val) && val == null ||
+						b.TryEvaluateExpression(context, out     val) && val == null)
+					{
+						return new SqlPredicate.Expr(new SqlValue(false));
+					}
+					return new ExprExpr(a, op, b, withNull: null);
+				});
 				foreach (var comp in compares)
 					rewrite.Conditions.Add(new SqlCondition(false, comp, isOr));
 				return rewrite;
