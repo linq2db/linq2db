@@ -239,6 +239,7 @@ namespace Tests.Data
 				_onConnectionOpeningAsync = onConnectionOpeningAsync;
 				_onConnectionOpenedAsync = onConnectionOpenedAsync;
 			}
+
 			public override void ConnectionOpened(ConnectionOpenedEventData eventData, DbConnection connection)
 			{
 				_onConnectionOpened?.Invoke(eventData, connection);

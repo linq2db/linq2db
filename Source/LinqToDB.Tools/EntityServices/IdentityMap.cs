@@ -8,7 +8,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Tools.EntityServices
 {
-	using LinqToDB.Interceptors;
+	using Interceptors;
 
 	[PublicAPI]
 	public class IdentityMap : DataContextInterceptor, IDisposable
@@ -56,7 +56,7 @@ namespace LinqToDB.Tools.EntityServices
 			where T : class, new()
 		{
 			if (_dataContext != null)
-			return GetEntityMap<T>().GetEntity(_dataContext, key);
+				return GetEntityMap<T>().GetEntity(_dataContext, key);
 
 			throw new ObjectDisposedException(nameof(IdentityMap));
 		}

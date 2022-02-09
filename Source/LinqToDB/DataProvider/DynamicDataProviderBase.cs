@@ -207,7 +207,7 @@ namespace LinqToDB.DataProvider
 			{
 				// don't think it makes sense to lock creation of new converter
 				var converterExpr = ms.GetConvertExpression(valueType, typeof(TResult), false, false);
-				
+
 				if (converterExpr != null)
 				{
 					var param = Expression.Parameter(typeof(TResult));
