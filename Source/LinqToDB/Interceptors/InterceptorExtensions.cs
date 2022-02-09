@@ -1,16 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.Common;
-using LinqToDB.Data;
-using LinqToDB.Interceptors;
 
 namespace LinqToDB
 {
+	using Data;
+	using Interceptors;
+
 	/// <summary>
 	/// Contains extensions that add one-time interceptors to connection.
 	/// </summary>
 	public static class InterceptorExtensions
 	{
 		#region ICommandInterceptor
+
 		// CommandInitialized
 
 		/// <summary>
@@ -32,6 +35,82 @@ namespace LinqToDB
 		{
 			dataContext.AddInterceptor(new OneTimeCommandInterceptor(onCommandInitialized));
 		}
+
 		#endregion
+
+		public static void AddInterceptor(this IInterceptable interceptable, IInterceptor interceptor)
+		{
+			Add<IEntityServiceInterceptor>();
+
+			void Add<T>()
+				where T : IInterceptor
+			{
+				if (interceptable is IInterceptable<T> ii && interceptor is T i) ii.AddInterceptor(i);
+			}
+		}
+
+		public static void AddInterceptor<T>(this IInterceptable<T> interceptable, T interceptor)
+			where T : IInterceptor
+		{
+			if (interceptable.Interceptor == null)
+				interceptable.Interceptor = interceptor;
+			else if (interceptable.Interceptor is AggregatedInterceptor<T> aggregated)
+				aggregated.Add(interceptor);
+			else if (interceptable is IInterceptable<IEntityServiceInterceptor> entityServiceInterceptable)
+				entityServiceInterceptable.Interceptor = new AggregatedEntityServiceInterceptor
+				{
+					Interceptors =
+					{
+						entityServiceInterceptable.Interceptor!,
+						(IEntityServiceInterceptor)interceptor
+					}
+				};
+			else
+				throw new NotImplementedException($"AddInterceptor for '{typeof(T).Name}' is not implemented.");
+
+			interceptable.InterceptorAdded(interceptor);
+		}
+
+		internal static void RemoveInterceptor<T>(this IInterceptable<T> interceptable, IInterceptor interceptor)
+			where T : IInterceptor
+		{
+			if (interceptor is T i)
+			{
+				switch (interceptable.Interceptor)
+				{
+					case null :
+						break;
+					case AggregatedInterceptor<T> ae :
+						ae.Remove(i);
+						break;
+					case IInterceptor e when e == interceptor :
+						interceptable.Interceptor = default;
+						break;
+				}
+			}
+		}
+
+		internal static IEnumerable<T> GetInterceptors<T>(this IInterceptable<T> interceptable)
+			where T : IInterceptor
+		{
+			if (interceptable.Interceptor == null)
+				yield break;
+
+			if (interceptable.Interceptor is AggregatedInterceptor<T> ai)
+				foreach (var interceptor in ai.GetInterceptors())
+					yield return interceptor;
+			else
+				yield return interceptable.Interceptor;
+		}
+
+
+		internal static TA Clone<TA,TI>(this AggregatedInterceptor<TI> aggregatedInterceptor)
+			where TI : IInterceptor
+			where TA : AggregatedInterceptor<TI>, new()
+		{
+			var clone = new TA();
+			clone.Interceptors.AddRange(aggregatedInterceptor.Interceptors);
+			return clone;
+		}
 	}
 }

@@ -1,18 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LinqToDB.Data
 {
+	using Common;
 	using Interceptors;
 
-	public partial class DataConnection : IEntityServiceInterceptable
+	public partial class DataConnection : IInterceptable<IEntityServiceInterceptor>
 	{
 		AggregatedInterceptor<ICommandInterceptor>?       _commandInterceptors;
 		AggregatedInterceptor<IConnectionInterceptor>?    _connectionInterceptors;
 		AggregatedInterceptor<IDataContextInterceptor>?   _contextInterceptors;
-		AggregatedInterceptor<IEntityServiceInterceptor>? _entityServiceInterceptors;
 
-		AggregatedInterceptor<IEntityServiceInterceptor>? IEntityServiceInterceptable.Interceptors => _entityServiceInterceptors;
+		IEntityServiceInterceptor? _entityServiceInterceptor;
+		IEntityServiceInterceptor? IInterceptable<IEntityServiceInterceptor>.Interceptor
+		{
+			get => _entityServiceInterceptor;
+			set => _entityServiceInterceptor = value;
+		}
 
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)
@@ -20,7 +26,7 @@ namespace LinqToDB.Data
 			Add(ref _commandInterceptors);
 			Add(ref _connectionInterceptors);
 			Add(ref _contextInterceptors);
-			Add(ref _entityServiceInterceptors);
+			InterceptorExtensions.AddInterceptor(this, interceptor);
 
 			void Add<T>(ref AggregatedInterceptor<T>? aggregator)
 				where T : IInterceptor
@@ -48,69 +54,48 @@ namespace LinqToDB.Data
 			if (_contextInterceptors != null && interceptor is IDataContextInterceptor contextInterceptor)
 				_contextInterceptors.Remove(contextInterceptor);
 
-			if (_entityServiceInterceptors != null && interceptor is IEntityServiceInterceptor entityServiceInterceptor)
-				_entityServiceInterceptors.Remove(entityServiceInterceptor);
+			InterceptorExtensions.RemoveInterceptor((IInterceptable<IEntityServiceInterceptor>)this, interceptor);
 		}
 
 		IEnumerable<TInterceptor> IDataContext.GetInterceptors<TInterceptor>()
 		{
-			if (_commandInterceptors == null && _connectionInterceptors == null && _contextInterceptors == null && _entityServiceInterceptors == null)
-				yield break;
+			if (_commandInterceptors == null && _connectionInterceptors == null && _contextInterceptors == null && _entityServiceInterceptor == null)
+				return Array<TInterceptor>.Empty;
 
-			var type = typeof(TInterceptor);
-
-			if (type == typeof(ICommandInterceptor))
+			switch (typeof(TInterceptor))
 			{
-				if (_commandInterceptors != null)
-					foreach (var interceptor in _commandInterceptors.GetInterceptors())
-						yield return (TInterceptor)interceptor;
-				yield break;
+				case ICommandInterceptor:
+					if (_commandInterceptors != null)
+						return (IEnumerable<TInterceptor>)_commandInterceptors.GetInterceptors();
+					break;
+				case IConnectionInterceptor:
+					if (_connectionInterceptors != null)
+						return (IEnumerable<TInterceptor>)_connectionInterceptors.GetInterceptors();
+					break;
+				case IDataContextInterceptor:
+					if (_contextInterceptors != null)
+						return (IEnumerable<TInterceptor>)_contextInterceptors.GetInterceptors();
+					break;
+				case IEntityServiceInterceptor:
+					return (IEnumerable<TInterceptor>)InterceptorExtensions.GetInterceptors((IInterceptable<IEntityServiceInterceptor>)this);
 			}
 
-			if (type == typeof(IConnectionInterceptor))
-			{
-				if (_connectionInterceptors != null)
-					foreach (var interceptor in _connectionInterceptors.GetInterceptors())
-						yield return (TInterceptor)interceptor;
-				yield break;
-			}
+			IEnumerable<TInterceptor> result = Array<TInterceptor>.Empty;
 
-			if (type == typeof(IDataContextInterceptor))
-			{
-				if (_contextInterceptors != null)
-					foreach (var interceptor in _contextInterceptors.GetInterceptors())
-						yield return (TInterceptor)interceptor;
-				yield break;
-			}
+			if (_commandInterceptors != null)
+				result = result.Concat(_commandInterceptors.GetInterceptors().Cast<TInterceptor>());
 
-			if (type == typeof(IEntityServiceInterceptor))
-			{
-				if (_entityServiceInterceptors != null)
-					foreach (var interceptor in _entityServiceInterceptors.GetInterceptors())
-						yield return (TInterceptor)interceptor;
-				yield break;
-			}
+			if (_connectionInterceptors != null)
+				result = result.Concat(_connectionInterceptors.GetInterceptors().Cast<TInterceptor>());
 
-			if (type == typeof(IInterceptor))
-			{
-				if (_commandInterceptors != null)
-					foreach (var interceptor in _commandInterceptors.GetInterceptors())
-						yield return (TInterceptor)interceptor;
+			if (_contextInterceptors != null)
+				result = result.Concat(_contextInterceptors.GetInterceptors().Cast<TInterceptor>());
 
-				if (_connectionInterceptors != null)
-					foreach (var interceptor in _connectionInterceptors.GetInterceptors())
-						yield return (TInterceptor)interceptor;
+			return result.Union(InterceptorExtensions.GetInterceptors((IInterceptable<IEntityServiceInterceptor>)this).Cast<TInterceptor>());
+		}
 
-				if (_contextInterceptors != null)
-					foreach (var interceptor in _contextInterceptors.GetInterceptors())
-						yield return (TInterceptor)interceptor;
-
-				if (_entityServiceInterceptors != null)
-					foreach (var interceptor in _entityServiceInterceptors.GetInterceptors())
-						yield return (TInterceptor)interceptor;
-
-				yield break;
-			}
+		void IInterceptable.InterceptorAdded(IInterceptor interceptor)
+		{
 		}
 	}
 }

@@ -308,15 +308,9 @@ namespace LinqToDB.Linq.Builder
 
 			static object OnEntityCreated(IDataContext context, object entity, TableOptions tableOptions, string? tableName, string? schemaName, string? databaseName, string? serverName)
 			{
-				if (context is IEntityServiceInterceptable { Interceptors: {} } entityService)
-				{
-					var args = new EntityCreatedEventData(context, tableOptions, tableName, schemaName, databaseName, serverName);
-
-					foreach (var interceptor in entityService.Interceptors.GetInterceptors())
-						entity = interceptor.EntityCreated(args, entity);
-				}
-
-				return entity;
+				return context is IInterceptable<IEntityServiceInterceptor> entityService ?
+					entityService.Interceptor?.EntityCreated(new(context, tableOptions, tableName, schemaName, databaseName, serverName), entity) ?? entity :
+					entity;
 			}
 
 			static readonly MethodInfo _onEntityCreatedMethodInfo = MemberHelper.MethodOf(() =>
@@ -324,7 +318,7 @@ namespace LinqToDB.Linq.Builder
 
 			Expression NotifyEntityCreated(Expression expr)
 			{
-				if (Builder.DataContext is IEntityServiceInterceptable { Interceptors: {} })
+				if (Builder.DataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: {} })
 				{
 					expr = Expression.Convert(
 						Expression.Call(

@@ -6,20 +6,24 @@ namespace LinqToDB.ServiceModel
 	using System;
 	using Interceptors;
 
-	public abstract partial class RemoteDataContextBase : IEntityServiceInterceptable
+	public abstract partial class RemoteDataContextBase : IInterceptable<IEntityServiceInterceptor>
 	{
 		// remote context interceptors support is quite limited and supports only IDataContextInterceptor
 		// interceptors, but not other interceptors, including AggregatedInterceptor<T>
-		AggregatedInterceptor<IDataContextInterceptor>?   _contextInterceptors;
-		AggregatedInterceptor<IEntityServiceInterceptor>? _entityServiceInterceptors;
+		AggregatedInterceptor<IDataContextInterceptor>? _contextInterceptors;
 
-		AggregatedInterceptor<IEntityServiceInterceptor>? IEntityServiceInterceptable.Interceptors => _entityServiceInterceptors;
+		IEntityServiceInterceptor? _entityServiceInterceptor;
+		IEntityServiceInterceptor? IInterceptable<IEntityServiceInterceptor>.Interceptor
+		{
+			get => _entityServiceInterceptor;
+			set => _entityServiceInterceptor = value;
+		}
 
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)
 		{
 			Add(ref _contextInterceptors);
-			Add(ref _entityServiceInterceptors);
+			InterceptorExtensions.AddInterceptor(this, interceptor);
 
 			void Add<T>(ref AggregatedInterceptor<T>? aggregator)
 				where T : IInterceptor
@@ -38,7 +42,7 @@ namespace LinqToDB.ServiceModel
 
 		IEnumerable<TInterceptor> IDataContext.GetInterceptors<TInterceptor>()
 		{
-			if (_contextInterceptors == null && _entityServiceInterceptors == null)
+			if (_contextInterceptors == null && _entityServiceInterceptor == null)
 				yield break;
 
 			var type = typeof(TInterceptor);
@@ -53,9 +57,15 @@ namespace LinqToDB.ServiceModel
 
 			if (type == typeof(IEntityServiceInterceptor))
 			{
-				if (_entityServiceInterceptors != null)
-					foreach (var interceptor in _entityServiceInterceptors.GetInterceptors())
-						yield return (TInterceptor)interceptor;
+				if (_entityServiceInterceptor != null)
+				{
+					if (_entityServiceInterceptor is AggregatedEntityServiceInterceptor entityServiceInterceptor)
+						foreach (var interceptor in entityServiceInterceptor.GetInterceptors())
+							yield return (TInterceptor)interceptor;
+					else
+						yield return (TInterceptor)_entityServiceInterceptor;
+				}
+
 				yield break;
 			}
 
@@ -65,13 +75,23 @@ namespace LinqToDB.ServiceModel
 					foreach (var interceptor in _contextInterceptors.GetInterceptors())
 						yield return (TInterceptor)interceptor;
 
-				if (_entityServiceInterceptors != null)
-					foreach (var interceptor in _entityServiceInterceptors.GetInterceptors())
-						yield return (TInterceptor)interceptor;
+				if (_entityServiceInterceptor != null)
+				{
+					if (_entityServiceInterceptor is AggregatedEntityServiceInterceptor entityServiceInterceptor)
+						foreach (var interceptor in entityServiceInterceptor.GetInterceptors())
+							yield return (TInterceptor)interceptor;
+					else
+						yield return (TInterceptor)_entityServiceInterceptor;
+				}
 
 				yield break;
 			}
 		}
+
+		void IInterceptable.InterceptorAdded(IInterceptor interceptor)
+		{
+		}
 	}
 }
+
 #endif

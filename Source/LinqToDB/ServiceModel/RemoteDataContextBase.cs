@@ -312,10 +312,12 @@ namespace LinqToDB.ServiceModel
 		{
 			ThrowOnDisposed();
 
-			var ctx = Clone();
+			var ctx = (RemoteDataContextBase)Clone();
 
-			if (_contextInterceptors       != null) ctx.AddInterceptor(_contextInterceptors.      Clone());
-			if (_entityServiceInterceptors != null) ctx.AddInterceptor(_entityServiceInterceptors.Clone());
+			if (_contextInterceptors != null)
+				ctx.AddInterceptor(_contextInterceptors.Clone());
+
+			ctx._entityServiceInterceptor = _entityServiceInterceptor is AggregatedEntityServiceInterceptor ai ? (AggregatedEntityServiceInterceptor)ai.Clone() : _entityServiceInterceptor;
 
 			return ctx;
 		}

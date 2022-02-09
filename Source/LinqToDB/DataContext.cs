@@ -25,7 +25,7 @@ namespace LinqToDB
 	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
 	/// </summary>
 	[PublicAPI]
-	public class DataContext : IDataContext, IEntityServiceInterceptable
+	public class DataContext : IDataContext, IInterceptable<IEntityServiceInterceptor>
 	{
 		private          LinqToDbConnectionOptions        _prebuiltOptions;
 		private readonly LinqToDbConnectionOptionsBuilder _optionsBuilder = new ();
@@ -654,13 +654,18 @@ namespace LinqToDB
 			public int          QueryNumber      { get => _queryRunner!.QueryNumber;      set => _queryRunner!.QueryNumber      = value; }
 		}
 
-#region Interceptors
+		#region Interceptors
+
 		AggregatedInterceptor<ICommandInterceptor>?       _commandInterceptors;
 		AggregatedInterceptor<IConnectionInterceptor>?    _connectionInterceptors;
 		AggregatedInterceptor<IDataContextInterceptor>?   _contextInterceptors;
-		AggregatedInterceptor<IEntityServiceInterceptor>? _entityServiceInterceptors;
 
-		AggregatedInterceptor<IEntityServiceInterceptor>? IEntityServiceInterceptable.Interceptors => _entityServiceInterceptors;
+		IEntityServiceInterceptor? _entityServiceInterceptor;
+		IEntityServiceInterceptor? IInterceptable<IEntityServiceInterceptor>.Interceptor
+		{
+			get => _entityServiceInterceptor;
+			set => _entityServiceInterceptor = value;
+		}
 
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)
@@ -668,7 +673,7 @@ namespace LinqToDB
 			Add(ref _commandInterceptors);
 			Add(ref _connectionInterceptors);
 			Add(ref _contextInterceptors);
-			Add(ref _entityServiceInterceptors);
+			InterceptorExtensions.AddInterceptor(this, interceptor);
 
 			void Add<T>(ref AggregatedInterceptor<T>? aggregator)
 				where T : IInterceptor
@@ -703,7 +708,7 @@ namespace LinqToDB
 
 		IEnumerable<TInterceptor> IDataContext.GetInterceptors<TInterceptor>()
 		{
-			if (_commandInterceptors == null && _connectionInterceptors == null && _contextInterceptors == null && _entityServiceInterceptors == null)
+			if (_commandInterceptors == null && _connectionInterceptors == null && _contextInterceptors == null && _entityServiceInterceptor == null)
 				yield break;
 
 			var type = typeof(TInterceptor);
@@ -734,9 +739,15 @@ namespace LinqToDB
 
 			if (type == typeof(IEntityServiceInterceptor))
 			{
-				if (_entityServiceInterceptors != null)
-					foreach (var interceptor in _entityServiceInterceptors.GetInterceptors())
-						yield return (TInterceptor)interceptor;
+				if (_entityServiceInterceptor != null)
+				{
+					if (_entityServiceInterceptor is AggregatedEntityServiceInterceptor entityServiceInterceptor)
+						foreach (var interceptor in entityServiceInterceptor.GetInterceptors())
+							yield return (TInterceptor)interceptor;
+					else
+						yield return (TInterceptor)_entityServiceInterceptor;
+				}
+
 				yield break;
 			}
 
@@ -754,14 +765,25 @@ namespace LinqToDB
 					foreach (var interceptor in _contextInterceptors.GetInterceptors())
 						yield return (TInterceptor)interceptor;
 
-				if (_entityServiceInterceptors != null)
-					foreach (var interceptor in _entityServiceInterceptors.GetInterceptors())
-						yield return (TInterceptor)interceptor;
+				if (_entityServiceInterceptor != null)
+				{
+					if (_entityServiceInterceptor is AggregatedEntityServiceInterceptor entityServiceInterceptor)
+						foreach (var interceptor in entityServiceInterceptor.GetInterceptors())
+							yield return (TInterceptor)interceptor;
+					else
+						yield return (TInterceptor)_entityServiceInterceptor;
+				}
 
 				yield break;
 			}
 		}
 
 		#endregion
+
+		void IInterceptable.InterceptorAdded(IInterceptor interceptor)
+		{
+			_optionsBuilder.WithInterceptor(interceptor);
+			_prebuiltOptions = _optionsBuilder.Build();
+		}
 	}
 }

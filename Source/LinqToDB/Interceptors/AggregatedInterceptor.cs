@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Interceptors
 {
-	internal sealed class AggregatedInterceptor<TInterceptor>: IInterceptor where TInterceptor : IInterceptor
+	class AggregatedInterceptor<TInterceptor>: IInterceptor
+		where TInterceptor : IInterceptor
 	{
-		private readonly List<TInterceptor> _interceptors = new ();
+		readonly List<TInterceptor> _interceptors = new ();
+		public   List<TInterceptor> Interceptors => _interceptors;
 
 		// as we support interceptor removal we should delay removal when interceptors collection enumerated to
 		// avoid errors
@@ -31,7 +33,7 @@ namespace LinqToDB.Interceptors
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void RemoveDelayed()
+		protected void RemoveDelayed()
 		{
 			foreach (var interceptor in _removeList)
 				_interceptors.Remove(interceptor);
@@ -202,10 +204,31 @@ namespace LinqToDB.Interceptors
 			}
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected T Apply<T>(Func<T> func)
+		{
+			_enumerating = true;
+
+			try
+			{
+				return func();
+			}
+			finally
+			{
+				_enumerating = false;
+				RemoveDelayed();
+			}
+		}
+
+		protected virtual AggregatedInterceptor<TInterceptor> Create()
+		{
+			return new();
+		}
+
 		public AggregatedInterceptor<TInterceptor> Clone()
 		{
-			var clone = new AggregatedInterceptor<TInterceptor>();
-			clone._interceptors.AddRange(_interceptors);
+			var clone = Create();
+			clone.Interceptors.AddRange(Interceptors);
 			return clone;
 		}
 	}

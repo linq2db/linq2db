@@ -45,7 +45,7 @@ namespace LinqToDB.Linq
 			SqlOptimizer            = dataContext.GetSqlOptimizer();
 			SqlProviderFlags        = dataContext.SqlProviderFlags;
 			InlineParameters        = dataContext.InlineParameters;
-			IsEntityServiceProvided = dataContext is IEntityServiceInterceptable { Interceptors: {} };
+			IsEntityServiceProvided = dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: {} };
 		}
 
 		#endregion
@@ -65,13 +65,13 @@ namespace LinqToDB.Linq
 		protected bool Compare(IDataContext dataContext, Expression expr)
 		{
 			return
-				ContextID.Length        == dataContext.ContextID.Length &&
-				ContextID               == dataContext.ContextID        &&
-				ConfigurationID.Length  == dataContext.MappingSchema.ConfigurationID.Length &&
-				ConfigurationID         == dataContext.MappingSchema.ConfigurationID &&
-				InlineParameters        == dataContext.InlineParameters &&
-				ContextType             == dataContext.GetType()        &&
-				IsEntityServiceProvided == dataContext is IEntityServiceInterceptable { Interceptors: {} } &&
+				ContextID.Length        == dataContext.ContextID.Length                                                 &&
+				ContextID               == dataContext.ContextID                                                        &&
+				ConfigurationID.Length  == dataContext.MappingSchema.ConfigurationID.Length                             &&
+				ConfigurationID         == dataContext.MappingSchema.ConfigurationID                                    &&
+				InlineParameters        == dataContext.InlineParameters                                                 &&
+				ContextType             == dataContext.GetType()                                                        &&
+				IsEntityServiceProvided == dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: {} } &&
 				Expression!.EqualsTo(expr, dataContext, _queryableAccessorDic, _queryableMemberAccessorDic, _queryDependedObjects);
 		}
 

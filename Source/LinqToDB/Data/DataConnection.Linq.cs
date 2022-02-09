@@ -3,6 +3,7 @@ using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Interceptors;
 
 namespace LinqToDB.Data
 {
@@ -70,20 +71,20 @@ namespace LinqToDB.Data
 			if (forNestedQuery && _connection != null && IsMarsEnabled)
 				return new DataConnection(DataProvider, _connection.Connection)
 				{
-					MappingSchema              = MappingSchema,
-					TransactionAsync           = TransactionAsync,
-					IsMarsEnabled              = IsMarsEnabled,
-					ConnectionString           = ConnectionString,
-					RetryPolicy                = RetryPolicy,
-					CommandTimeout             = CommandTimeout,
-					InlineParameters           = InlineParameters,
-					ThrowOnDisposed            = ThrowOnDisposed,
-					_queryHints                = _queryHints?.Count > 0 ? _queryHints.ToList() : null,
-					OnTraceConnection          = OnTraceConnection,
-					_commandInterceptors       = _commandInterceptors?.Clone(),
-					_connectionInterceptors    = _connectionInterceptors?.Clone(),
-					_contextInterceptors       = _contextInterceptors?.Clone(),
-					_entityServiceInterceptors = _entityServiceInterceptors?.Clone(),
+					MappingSchema             = MappingSchema,
+					TransactionAsync          = TransactionAsync,
+					IsMarsEnabled             = IsMarsEnabled,
+					ConnectionString          = ConnectionString,
+					RetryPolicy               = RetryPolicy,
+					CommandTimeout            = CommandTimeout,
+					InlineParameters          = InlineParameters,
+					ThrowOnDisposed           = ThrowOnDisposed,
+					_queryHints               = _queryHints?.Count > 0 ? _queryHints.ToList() : null,
+					OnTraceConnection         = OnTraceConnection,
+					_commandInterceptors      = _commandInterceptors?.   Clone(),
+					_connectionInterceptors   = _connectionInterceptors?.Clone(),
+					_contextInterceptors      = _contextInterceptors?.   Clone(),
+					_entityServiceInterceptor = _entityServiceInterceptor is AggregatedEntityServiceInterceptor ai ? (AggregatedEntityServiceInterceptor)ai.Clone() : _entityServiceInterceptor,
 				};
 
 			return (DataConnection)Clone();
