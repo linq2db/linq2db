@@ -568,40 +568,40 @@ namespace Tests.Data
 			{
 				var personsCount = db.GetTable<Person>().Count();
 
-				db.GetTable<Person>().ToList();
+				_ = db.GetTable<Person>().ToList();
 
-				var interceptor = new TestDataContextInterceptor();
+				var interceptor = new TestEntityServiceInterceptor();
 
 				db.AddInterceptor(interceptor);
 
-				db.GetTable<Person>().ToList();
+				_ = db.GetTable<Person>().ToList();
 				Assert.AreEqual(personsCount, interceptor.EntityCreatedCallCounter);
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
 					interceptor.EntityCreatedCallCounter = 0;
-					cdb.GetTable<Person>().ToList();
+					_ = cdb.GetTable<Person>().ToList();
 					Assert.AreEqual(personsCount, interceptor.EntityCreatedCallCounter);
 
 					interceptor.EntityCreatedCallCounter = 0;
-					db.GetTable<Person>().ToList();
+					_ = db.GetTable<Person>().ToList();
 					Assert.AreEqual(personsCount, interceptor.EntityCreatedCallCounter);
 
-					cdb.GetTable<Person>().ToList();
+					_ = cdb.GetTable<Person>().ToList();
 					Assert.AreEqual(personsCount * 2, interceptor.EntityCreatedCallCounter);
 				}
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
 					interceptor.EntityCreatedCallCounter = 0;
-					cdb.GetTable<Person>().ToList();
+					_ = cdb.GetTable<Person>().ToList();
 
 					Assert.AreEqual(personsCount, interceptor.EntityCreatedCallCounter);
 				}
 			}
 		}
 
-		private class TestDataContextInterceptor : DataContextInterceptor
+		class TestEntityServiceInterceptor : EntityServiceInterceptor
 		{
 			public int EntityCreatedCallCounter { get; set; }
 			public override object EntityCreated(EntityCreatedEventData eventData, object entity)
@@ -609,12 +609,14 @@ namespace Tests.Data
 				EntityCreatedCallCounter++;
 				return base.EntityCreated(eventData, entity);
 			}
+		}
 
+		class TestDataContextInterceptor : DataContextInterceptor
+		{
 			public int OnClosingCallCounter { get; set; }
 			public int OnClosedCallCounter { get; set; }
 			public int OnClosedAsyncCallCounter { get; set; }
 			public int OnClosingAsyncCallCounter { get; set; }
-
 
 			public override void OnClosing(DataContextEventData eventData)
 			{

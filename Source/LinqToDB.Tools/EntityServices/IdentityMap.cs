@@ -11,7 +11,7 @@ namespace LinqToDB.Tools.EntityServices
 	using Interceptors;
 
 	[PublicAPI]
-	public class IdentityMap : DataContextInterceptor, IDisposable
+	public class IdentityMap : EntityServiceInterceptor, IDisposable
 	{
 		public IdentityMap(IDataContext dataContext)
 		{

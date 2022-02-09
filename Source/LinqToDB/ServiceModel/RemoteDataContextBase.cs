@@ -314,8 +314,8 @@ namespace LinqToDB.ServiceModel
 
 			var ctx = Clone();
 
-			if (_contextInterceptors != null)
-				ctx.AddInterceptor(_contextInterceptors.Clone());
+			if (_contextInterceptors       != null) ctx.AddInterceptor(_contextInterceptors.      Clone());
+			if (_entityServiceInterceptors != null) ctx.AddInterceptor(_entityServiceInterceptors.Clone());
 
 			return ctx;
 		}

@@ -4,17 +4,20 @@ using System.Data.Common;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.Data
 {
+	using Model;
+
 	[TestFixture]
 	public class InterceptorsTests : TestBase
 	{
@@ -1062,11 +1065,11 @@ namespace Tests.Data
 			using (var db = GetDataContext(context))
 			{
 				var count = db.Person.Count();
-				var interceptor1 = new TestDataContextInterceptor();
-				var interceptor2 = new TestDataContextInterceptor();
+				var interceptor1 = new TestEntityServiceInterceptor();
+				var interceptor2 = new TestEntityServiceInterceptor();
 				db.AddInterceptor(interceptor1);
 
-				db.Person.ToList();
+				_ = db.Person.ToList();
 
 				Assert.AreEqual(count, interceptor1.EntityCreatedContexts.Count);
 				Assert.True(interceptor1.EntityCreatedContexts.All(ctx => ctx == db));
@@ -1075,7 +1078,7 @@ namespace Tests.Data
 				using (var clonedDb = (IDataContext)((IDataContext)db).Clone(true))
 				{
 					clonedDb.AddInterceptor(interceptor2);
-					clonedDb.GetTable<Person>().ToList();
+					_ = clonedDb.GetTable<Person>().ToList();
 
 					Assert.AreEqual(count, interceptor1.EntityCreatedContexts.Count);
 					Assert.AreEqual(count, interceptor2.EntityCreatedContexts.Count);
@@ -1091,8 +1094,8 @@ namespace Tests.Data
 			using (var db = new DataContext(context))
 			{
 				var count = db.GetTable<Person>().Count();
-				var interceptor1 = new TestDataContextInterceptor();
-				var interceptor2 = new TestDataContextInterceptor();
+				var interceptor1 = new TestEntityServiceInterceptor();
+				var interceptor2 = new TestEntityServiceInterceptor();
 				db.AddInterceptor(interceptor1);
 
 				db.GetTable<Person>().ToList();
@@ -1714,7 +1717,7 @@ namespace Tests.Data
 			}
 		}
 
-		private class TestDataContextInterceptor : DataContextInterceptor
+		class TestEntityServiceInterceptor : EntityServiceInterceptor
 		{
 			public List<IDataContext> EntityCreatedContexts { get; } = new ();
 
@@ -1723,7 +1726,10 @@ namespace Tests.Data
 				EntityCreatedContexts.Add(eventData.Context);
 				return base.EntityCreated(eventData, entity);
 			}
+		}
 
+		class TestDataContextInterceptor : DataContextInterceptor
+		{
 			public Dictionary<IDataContext, int> OnClosedContexts       { get; } = new();
 			public Dictionary<IDataContext, int> OnClosingContexts      { get; } = new();
 			public Dictionary<IDataContext, int> OnClosedAsyncContexts  { get; } = new();

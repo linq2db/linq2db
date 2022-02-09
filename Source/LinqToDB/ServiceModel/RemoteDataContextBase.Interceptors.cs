@@ -13,7 +13,7 @@ namespace LinqToDB.ServiceModel
 		AggregatedInterceptor<IDataContextInterceptor>?   _contextInterceptors;
 		AggregatedInterceptor<IEntityServiceInterceptor>? _entityServiceInterceptors;
 
-		AggregatedInterceptor<IEntityServiceInterceptor>? IEntityServiceInterceptable.Interceptors { get; }
+		AggregatedInterceptor<IEntityServiceInterceptor>? IEntityServiceInterceptable.Interceptors => _entityServiceInterceptors;
 
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)

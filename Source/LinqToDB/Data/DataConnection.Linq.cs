@@ -70,19 +70,20 @@ namespace LinqToDB.Data
 			if (forNestedQuery && _connection != null && IsMarsEnabled)
 				return new DataConnection(DataProvider, _connection.Connection)
 				{
-					MappingSchema               = MappingSchema,
-					TransactionAsync            = TransactionAsync,
-					IsMarsEnabled               = IsMarsEnabled,
-					ConnectionString            = ConnectionString,
-					RetryPolicy                 = RetryPolicy,
-					CommandTimeout              = CommandTimeout,
-					InlineParameters            = InlineParameters,
-					ThrowOnDisposed             = ThrowOnDisposed,
-					_queryHints                 = _queryHints?.Count > 0 ? _queryHints.ToList() : null,
-					OnTraceConnection           = OnTraceConnection,
-					_commandInterceptors        = _commandInterceptors?.Clone(),
-					_connectionInterceptors     = _connectionInterceptors?.Clone(),
-					_contextInterceptors        = _contextInterceptors?.Clone(),
+					MappingSchema              = MappingSchema,
+					TransactionAsync           = TransactionAsync,
+					IsMarsEnabled              = IsMarsEnabled,
+					ConnectionString           = ConnectionString,
+					RetryPolicy                = RetryPolicy,
+					CommandTimeout             = CommandTimeout,
+					InlineParameters           = InlineParameters,
+					ThrowOnDisposed            = ThrowOnDisposed,
+					_queryHints                = _queryHints?.Count > 0 ? _queryHints.ToList() : null,
+					OnTraceConnection          = OnTraceConnection,
+					_commandInterceptors       = _commandInterceptors?.Clone(),
+					_connectionInterceptors    = _connectionInterceptors?.Clone(),
+					_contextInterceptors       = _contextInterceptors?.Clone(),
+					_entityServiceInterceptors = _entityServiceInterceptors?.Clone(),
 				};
 
 			return (DataConnection)Clone();
