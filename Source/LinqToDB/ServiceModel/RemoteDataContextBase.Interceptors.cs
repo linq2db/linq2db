@@ -6,37 +6,70 @@ namespace LinqToDB.ServiceModel
 	using System;
 	using Interceptors;
 
-	public abstract partial class RemoteDataContextBase
+	public abstract partial class RemoteDataContextBase : IEntityServiceInterceptable
 	{
 		// remote context interceptors support is quite limited and supports only IDataContextInterceptor
 		// interceptors, but not other interceptors, including AggregatedInterceptor<T>
-		private AggregatedInterceptor<IDataContextInterceptor>? _contextInterceptors;
+		AggregatedInterceptor<IDataContextInterceptor>?   _contextInterceptors;
+		AggregatedInterceptor<IEntityServiceInterceptor>? _entityServiceInterceptors;
+
+		AggregatedInterceptor<IEntityServiceInterceptor>? IEntityServiceInterceptable.Interceptors { get; }
 
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)
 		{
-			if (interceptor is AggregatedInterceptor<IDataContextInterceptor> aggregateContextInterceptor)
-			{
-				if (_contextInterceptors != null)
-					throw new InvalidOperationException($"{nameof(AggregatedInterceptor<IDataContextInterceptor>)}<{nameof(IDataContextInterceptor)}> already exists");
-				_contextInterceptors = aggregateContextInterceptor;
-			}
+			Add(ref _contextInterceptors);
+			Add(ref _entityServiceInterceptors);
 
-			if (interceptor is IDataContextInterceptor contextInterceptor)
-				(_contextInterceptors ??= new AggregatedInterceptor<IDataContextInterceptor>()).Add(contextInterceptor);
+			void Add<T>(ref AggregatedInterceptor<T>? aggregator)
+				where T : IInterceptor
+			{
+				if (interceptor is T i)
+					(aggregator ??= new ()).Add(i);
+
+				if (interceptor is AggregatedInterceptor<T> ai)
+				{
+					if (aggregator != null)
+						throw new InvalidOperationException($"{nameof(AggregatedInterceptor<T>)}<{nameof(T)}> already exists");
+					aggregator = ai;
+				}
+			}
 		}
 
 		IEnumerable<TInterceptor> IDataContext.GetInterceptors<TInterceptor>()
 		{
-			if (_contextInterceptors == null)
+			if (_contextInterceptors == null && _entityServiceInterceptors == null)
 				yield break;
 
 			var type = typeof(TInterceptor);
 
-			if (type == typeof(IDataContextInterceptor) || type == typeof(IInterceptor))
+			if (type == typeof(IDataContextInterceptor))
 			{
-				foreach (var interceptor in _contextInterceptors.GetInterceptors())
-					yield return (TInterceptor)interceptor;
+				if (_contextInterceptors != null)
+					foreach (var interceptor in _contextInterceptors.GetInterceptors())
+						yield return (TInterceptor)interceptor;
+				yield break;
+			}
+
+			if (type == typeof(IEntityServiceInterceptor))
+			{
+				if (_entityServiceInterceptors != null)
+					foreach (var interceptor in _entityServiceInterceptors.GetInterceptors())
+						yield return (TInterceptor)interceptor;
+				yield break;
+			}
+
+			if (type == typeof(IInterceptor))
+			{
+				if (_contextInterceptors != null)
+					foreach (var interceptor in _contextInterceptors.GetInterceptors())
+						yield return (TInterceptor)interceptor;
+
+				if (_entityServiceInterceptors != null)
+					foreach (var interceptor in _entityServiceInterceptors.GetInterceptors())
+						yield return (TInterceptor)interceptor;
+
+				yield break;
 			}
 		}
 	}

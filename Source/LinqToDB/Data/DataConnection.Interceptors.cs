@@ -1,53 +1,39 @@
-﻿namespace LinqToDB.Data
-{
-	using System;
-	using System.Collections.Generic;
-	using LinqToDB.Interceptors;
+﻿using System;
+using System.Collections.Generic;
 
-	public partial class DataConnection
+namespace LinqToDB.Data
+{
+	using Interceptors;
+
+	public partial class DataConnection : IEntityServiceInterceptable
 	{
-		private AggregatedInterceptor<ICommandInterceptor>?     _commandInterceptors;
-		private AggregatedInterceptor<IConnectionInterceptor>?  _connectionInterceptors;
-		private AggregatedInterceptor<IDataContextInterceptor>? _contextInterceptors;
+		AggregatedInterceptor<ICommandInterceptor>?       _commandInterceptors;
+		AggregatedInterceptor<IConnectionInterceptor>?    _connectionInterceptors;
+		AggregatedInterceptor<IDataContextInterceptor>?   _contextInterceptors;
+		AggregatedInterceptor<IEntityServiceInterceptor>? _entityServiceInterceptors;
+
+		AggregatedInterceptor<IEntityServiceInterceptor>? IEntityServiceInterceptable.Interceptors { get; }
 
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)
 		{
-			// command interceptors
-			if (interceptor is ICommandInterceptor commandInterceptor)
-				(_commandInterceptors ??= new AggregatedInterceptor<ICommandInterceptor>()).Add(commandInterceptor);
+			Add(ref _commandInterceptors);
+			Add(ref _connectionInterceptors);
+			Add(ref _contextInterceptors);
+			Add(ref _entityServiceInterceptors);
 
-			if (interceptor is AggregatedInterceptor<ICommandInterceptor> aggregateCommandInterceptor)
+			void Add<T>(ref AggregatedInterceptor<T>? aggregator)
+				where T : IInterceptor
 			{
-				if (_commandInterceptors != null)
-					// this actually shouldn't be possible
-					throw new InvalidOperationException($"{nameof(AggregatedInterceptor<ICommandInterceptor>)}<{nameof(ICommandInterceptor)}> already exists");
-				else
-					_commandInterceptors = aggregateCommandInterceptor;
-			}
+				if (interceptor is T i)
+					(aggregator ??= new ()).Add(i);
 
-			// connection interceptors
-			if (interceptor is IConnectionInterceptor connectionInterceptor)
-				(_connectionInterceptors ??= new AggregatedInterceptor<IConnectionInterceptor>()).Add(connectionInterceptor);
-
-			if (interceptor is AggregatedInterceptor<IConnectionInterceptor> aggregateConnectionInterceptor)
-			{
-				if (_connectionInterceptors != null)
-					throw new InvalidOperationException($"{nameof(AggregatedInterceptor<IConnectionInterceptor>)}<{nameof(IConnectionInterceptor)}> already exists");
-				else
-					_connectionInterceptors = aggregateConnectionInterceptor;
-			}
-
-			// context interceptors
-			if (interceptor is IDataContextInterceptor contextInterceptor)
-				(_contextInterceptors ??= new AggregatedInterceptor<IDataContextInterceptor>()).Add(contextInterceptor);
-
-			if (interceptor is AggregatedInterceptor<IDataContextInterceptor> aggregateContextInterceptor)
-			{
-				if (_contextInterceptors != null)
-					throw new InvalidOperationException($"{nameof(AggregatedInterceptor<IDataContextInterceptor>)}<{nameof(IDataContextInterceptor)}> already exists");
-				else
-					_contextInterceptors = aggregateContextInterceptor;
+				if (interceptor is AggregatedInterceptor<T> ai)
+				{
+					if (aggregator != null)
+						throw new InvalidOperationException($"{nameof(AggregatedInterceptor<T>)}<{nameof(T)}> already exists");
+					aggregator = ai;
+				}
 			}
 		}
 
@@ -61,11 +47,14 @@
 
 			if (_contextInterceptors != null && interceptor is IDataContextInterceptor contextInterceptor)
 				_contextInterceptors.Remove(contextInterceptor);
+
+			if (_entityServiceInterceptors != null && interceptor is IEntityServiceInterceptor entityServiceInterceptor)
+				_entityServiceInterceptors.Remove(entityServiceInterceptor);
 		}
 
 		IEnumerable<TInterceptor> IDataContext.GetInterceptors<TInterceptor>()
 		{
-			if (_commandInterceptors == null && _connectionInterceptors == null && _contextInterceptors == null)
+			if (_commandInterceptors == null && _connectionInterceptors == null && _contextInterceptors == null && _entityServiceInterceptors == null)
 				yield break;
 
 			var type = typeof(TInterceptor);
@@ -73,64 +62,55 @@
 			if (type == typeof(ICommandInterceptor))
 			{
 				if (_commandInterceptors != null)
-				{
 					foreach (var interceptor in _commandInterceptors.GetInterceptors())
 						yield return (TInterceptor)interceptor;
-
-				}
-
 				yield break;
 			}
 
 			if (type == typeof(IConnectionInterceptor))
 			{
 				if (_connectionInterceptors != null)
-				{
 					foreach (var interceptor in _connectionInterceptors.GetInterceptors())
 						yield return (TInterceptor)interceptor;
-
-				}
-
 				yield break;
 			}
 
 			if (type == typeof(IDataContextInterceptor))
 			{
 				if (_contextInterceptors != null)
-				{
 					foreach (var interceptor in _contextInterceptors.GetInterceptors())
 						yield return (TInterceptor)interceptor;
+				yield break;
+			}
 
-				}
-
+			if (type == typeof(IEntityServiceInterceptor))
+			{
+				if (_entityServiceInterceptors != null)
+					foreach (var interceptor in _entityServiceInterceptors.GetInterceptors())
+						yield return (TInterceptor)interceptor;
 				yield break;
 			}
 
 			if (type == typeof(IInterceptor))
 			{
 				if (_commandInterceptors != null)
-				{
 					foreach (var interceptor in _commandInterceptors.GetInterceptors())
 						yield return (TInterceptor)interceptor;
-				}
 
 				if (_connectionInterceptors != null)
-				{
 					foreach (var interceptor in _connectionInterceptors.GetInterceptors())
 						yield return (TInterceptor)interceptor;
 
-				}
-
 				if (_contextInterceptors != null)
-				{
 					foreach (var interceptor in _contextInterceptors.GetInterceptors())
 						yield return (TInterceptor)interceptor;
 
-				}
+				if (_entityServiceInterceptors != null)
+					foreach (var interceptor in _entityServiceInterceptors.GetInterceptors())
+						yield return (TInterceptor)interceptor;
 
 				yield break;
 			}
 		}
-
 	}
 }
