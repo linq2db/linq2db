@@ -40,6 +40,7 @@ namespace LinqToDB
 
 		public static void AddInterceptor(this IInterceptable interceptable, IInterceptor interceptor)
 		{
+			Add<IDataContextInterceptor>();
 			Add<IEntityServiceInterceptor>();
 
 			void Add<T>()
@@ -56,14 +57,15 @@ namespace LinqToDB
 				interceptable.Interceptor = interceptor;
 			else if (interceptable.Interceptor is AggregatedInterceptor<T> aggregated)
 				aggregated.Add(interceptor);
-			else if (interceptable is IInterceptable<IEntityServiceInterceptor> entityServiceInterceptable)
-				entityServiceInterceptable.Interceptor = new AggregatedEntityServiceInterceptor
+			else if (interceptable is IInterceptable<IDataContextInterceptor> dci && interceptor is IDataContextInterceptor dc)
+				dci.Interceptor = new AggregatedDataContextInterceptor
 				{
-					Interceptors =
-					{
-						entityServiceInterceptable.Interceptor!,
-						(IEntityServiceInterceptor)interceptor
-					}
+					Interceptors = { dci.Interceptor!, dc }
+				};
+			else if (interceptable is IInterceptable<IEntityServiceInterceptor> esi && interceptor is IEntityServiceInterceptor es)
+				esi.Interceptor = new AggregatedEntityServiceInterceptor
+				{
+					Interceptors = { esi.Interceptor!, es }
 				};
 			else
 				throw new NotImplementedException($"AddInterceptor for '{typeof(T).Name}' is not implemented.");

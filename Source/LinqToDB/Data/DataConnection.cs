@@ -1122,8 +1122,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		public virtual void Close()
 		{
-			if (_contextInterceptors != null)
-				_contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosing(arg), new DataContextEventData(this));
+			_dataContextInterceptor?.OnClosing(new (this));
 
 			DisposeCommand();
 
@@ -1144,8 +1143,7 @@ namespace LinqToDB.Data
 					_connection.Close();
 			}
 
-			if (_contextInterceptors != null)
-				_contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosed(arg), new DataContextEventData(this));
+			_dataContextInterceptor?.OnClosed(new (this));
 		}
 
 		#endregion
@@ -1660,8 +1658,8 @@ namespace LinqToDB.Data
 				OnTraceConnection         = OnTraceConnection,
 				_commandInterceptors      = _commandInterceptors?.   Clone(),
 				_connectionInterceptors   = _connectionInterceptors?.Clone(),
-				_contextInterceptors      = _contextInterceptors?.   Clone(),
-				_entityServiceInterceptor = _entityServiceInterceptor is AggregatedEntityServiceInterceptor ai ? (AggregatedEntityServiceInterceptor)ai.Clone() : _entityServiceInterceptor,
+				_dataContextInterceptor   = _dataContextInterceptor   is AggregatedDataContextInterceptor   dc ? (AggregatedDataContextInterceptor)  dc.Clone() : _dataContextInterceptor,
+				_entityServiceInterceptor = _entityServiceInterceptor is AggregatedEntityServiceInterceptor es ? (AggregatedEntityServiceInterceptor)es.Clone() : _entityServiceInterceptor,
 			};
 		}
 

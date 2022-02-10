@@ -1215,7 +1215,7 @@ namespace Tests.Data
 			{
 				db.AddInterceptor(interceptor1);
 
-				db.GetTable<Person>().ToList();
+				_ = db.GetTable<Person>().ToList();
 
 				Assert.AreEqual(1, interceptor1.OnClosedContexts.Count);
 				Assert.True(interceptor1.OnClosedContexts.Keys.Single() is DataConnection);
@@ -1229,7 +1229,7 @@ namespace Tests.Data
 				using (var clonedDb = cloned = (IDataContext)((IDataContext)db).Clone(true))
 				{
 					clonedDb.AddInterceptor(interceptor2);
-					clonedDb.GetTable<Person>().ToList();
+					_ = clonedDb.GetTable<Person>().ToList();
 
 					Assert.AreEqual(2, interceptor1.OnClosedContexts.Count);
 					Assert.True(interceptor1.OnClosedContexts.Keys.All(_ => _ is DataConnection));

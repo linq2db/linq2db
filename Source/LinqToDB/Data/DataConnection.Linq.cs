@@ -83,7 +83,7 @@ namespace LinqToDB.Data
 					OnTraceConnection         = OnTraceConnection,
 					_commandInterceptors      = _commandInterceptors?.   Clone(),
 					_connectionInterceptors   = _connectionInterceptors?.Clone(),
-					_contextInterceptors      = _contextInterceptors?.   Clone(),
+					_dataContextInterceptor   = _dataContextInterceptor   is AggregatedDataContextInterceptor   dc ? (AggregatedDataContextInterceptor)  dc.Clone() : _dataContextInterceptor,
 					_entityServiceInterceptor = _entityServiceInterceptor is AggregatedEntityServiceInterceptor ai ? (AggregatedEntityServiceInterceptor)ai.Clone() : _entityServiceInterceptor,
 				};
 

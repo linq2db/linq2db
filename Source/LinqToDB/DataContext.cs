@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
 using JetBrains.Annotations;
+using LinqToDB.Common;
 
 namespace LinqToDB
 {
@@ -25,7 +27,7 @@ namespace LinqToDB
 	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
 	/// </summary>
 	[PublicAPI]
-	public class DataContext : IDataContext, IInterceptable<IEntityServiceInterceptor>
+	public class DataContext : IDataContext, IInterceptable<IDataContextInterceptor>, IInterceptable<IEntityServiceInterceptor>
 	{
 		private          LinqToDbConnectionOptions        _prebuiltOptions;
 		private readonly LinqToDbConnectionOptionsBuilder _optionsBuilder = new ();
@@ -476,41 +478,36 @@ namespace LinqToDB
 
 		void IDataContext.Close()
 		{
-			if (_contextInterceptors != null)
-				_contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosing(arg), new DataContextEventData(this));
-
+			_dataContextInterceptor?.OnClosing(new (this));
 
 			if (_dataConnection != null)
 			{
-				if (_dataConnection.QueryHints.    Count > 0) (_queryHints     ??= new List<string>()).AddRange(_dataConnection.QueryHints);
-				if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new List<string>()).AddRange(_dataConnection.NextQueryHints);
+				if (_dataConnection.QueryHints.    Count > 0) (_queryHints     ??= new ()).AddRange(_dataConnection.QueryHints);
+				if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new ()).AddRange(_dataConnection.NextQueryHints);
 
 				_dataConnection.Dispose();
 				_dataConnection = null;
 			}
 
-			if (_contextInterceptors != null)
-				_contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosed(arg), new DataContextEventData(this));
+			_dataContextInterceptor?.OnClosed(new (this));
 		}
 
 		async Task IDataContext.CloseAsync()
 		{
-			if (_contextInterceptors != null)
-				await _contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosingAsync(arg), new DataContextEventData(this))
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			if (_dataContextInterceptor != null)
+				await _dataContextInterceptor.OnClosingAsync(new (this)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			if (_dataConnection != null)
 			{
-				if (_dataConnection.QueryHints.    Count > 0) (_queryHints     ??= new List<string>()).AddRange(_dataConnection.QueryHints);
-				if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new List<string>()).AddRange(_dataConnection.NextQueryHints);
+				if (_dataConnection.QueryHints.    Count > 0) (_queryHints     ??= new ()).AddRange(_dataConnection.QueryHints);
+				if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new ()).AddRange(_dataConnection.NextQueryHints);
 
 				await _dataConnection.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				_dataConnection = null;
 			}
 
-			if (_contextInterceptors != null)
-				await _contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosedAsync(arg), new DataContextEventData(this))
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			if (_dataContextInterceptor != null)
+				await _dataContextInterceptor.OnClosedAsync(new (this)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
 		/// <summary>
@@ -658,7 +655,13 @@ namespace LinqToDB
 
 		AggregatedInterceptor<ICommandInterceptor>?       _commandInterceptors;
 		AggregatedInterceptor<IConnectionInterceptor>?    _connectionInterceptors;
-		AggregatedInterceptor<IDataContextInterceptor>?   _contextInterceptors;
+
+		IDataContextInterceptor? _dataContextInterceptor;
+		IDataContextInterceptor? IInterceptable<IDataContextInterceptor>.Interceptor
+		{
+			get => _dataContextInterceptor;
+			set => _dataContextInterceptor = value;
+		}
 
 		IEntityServiceInterceptor? _entityServiceInterceptor;
 		IEntityServiceInterceptor? IInterceptable<IEntityServiceInterceptor>.Interceptor
@@ -672,7 +675,6 @@ namespace LinqToDB
 		{
 			Add(ref _commandInterceptors);
 			Add(ref _connectionInterceptors);
-			Add(ref _contextInterceptors);
 			InterceptorExtensions.AddInterceptor(this, interceptor);
 
 			void Add<T>(ref AggregatedInterceptor<T>? aggregator)
@@ -708,74 +710,34 @@ namespace LinqToDB
 
 		IEnumerable<TInterceptor> IDataContext.GetInterceptors<TInterceptor>()
 		{
-			if (_commandInterceptors == null && _connectionInterceptors == null && _contextInterceptors == null && _entityServiceInterceptor == null)
-				yield break;
+			if (_commandInterceptors == null && _connectionInterceptors == null && _dataContextInterceptor == null && _entityServiceInterceptor == null)
+				return Array<TInterceptor>.Empty;
 
-			var type = typeof(TInterceptor);
-
-			if (type == typeof(ICommandInterceptor))
+			switch (typeof(TInterceptor))
 			{
-				if (_commandInterceptors != null)
-					foreach (var interceptor in _commandInterceptors.GetInterceptors())
-						yield return (TInterceptor)interceptor;
-				yield break;
+				case ICommandInterceptor:
+					if (_commandInterceptors != null)
+						return (IEnumerable<TInterceptor>)_commandInterceptors.GetInterceptors();
+					break;
+				case IConnectionInterceptor:
+					if (_connectionInterceptors != null)
+						return (IEnumerable<TInterceptor>)_connectionInterceptors.GetInterceptors();
+					break;
+				case IDataContextInterceptor   : return (IEnumerable<TInterceptor>)((IInterceptable<IDataContextInterceptor>)  this).GetInterceptors();
+				case IEntityServiceInterceptor : return (IEnumerable<TInterceptor>)((IInterceptable<IEntityServiceInterceptor>)this).GetInterceptors();
 			}
 
-			if (type == typeof(IConnectionInterceptor))
-			{
-				if (_connectionInterceptors != null)
-					foreach (var interceptor in _connectionInterceptors.GetInterceptors())
-						yield return (TInterceptor)interceptor;
-				yield break;
-			}
+			IEnumerable<TInterceptor> result = Array<TInterceptor>.Empty;
 
-			if (type == typeof(IDataContextInterceptor))
-			{
-				if (_contextInterceptors != null)
-					foreach (var interceptor in _contextInterceptors.GetInterceptors())
-						yield return (TInterceptor)interceptor;
-				yield break;
-			}
+			if (_commandInterceptors != null)
+				result = result.Concat(_commandInterceptors.GetInterceptors().Cast<TInterceptor>());
 
-			if (type == typeof(IEntityServiceInterceptor))
-			{
-				if (_entityServiceInterceptor != null)
-				{
-					if (_entityServiceInterceptor is AggregatedEntityServiceInterceptor entityServiceInterceptor)
-						foreach (var interceptor in entityServiceInterceptor.GetInterceptors())
-							yield return (TInterceptor)interceptor;
-					else
-						yield return (TInterceptor)_entityServiceInterceptor;
-				}
+			if (_connectionInterceptors != null)
+				result = result.Concat(_connectionInterceptors.GetInterceptors().Cast<TInterceptor>());
 
-				yield break;
-			}
-
-			if (type == typeof(IInterceptor))
-			{
-				if (_commandInterceptors != null)
-					foreach (var interceptor in _commandInterceptors.GetInterceptors())
-						yield return (TInterceptor)interceptor;
-
-				if (_connectionInterceptors != null)
-					foreach (var interceptor in _connectionInterceptors.GetInterceptors())
-						yield return (TInterceptor)interceptor;
-
-				if (_contextInterceptors != null)
-					foreach (var interceptor in _contextInterceptors.GetInterceptors())
-						yield return (TInterceptor)interceptor;
-
-				if (_entityServiceInterceptor != null)
-				{
-					if (_entityServiceInterceptor is AggregatedEntityServiceInterceptor entityServiceInterceptor)
-						foreach (var interceptor in entityServiceInterceptor.GetInterceptors())
-							yield return (TInterceptor)interceptor;
-					else
-						yield return (TInterceptor)_entityServiceInterceptor;
-				}
-
-				yield break;
-			}
+			return result
+				.Union(((IInterceptable<IDataContextInterceptor>)  this).GetInterceptors().Cast<TInterceptor>())
+				.Union(((IInterceptable<IEntityServiceInterceptor>)this).GetInterceptors().Cast<TInterceptor>());
 		}
 
 		#endregion

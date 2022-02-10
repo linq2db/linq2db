@@ -127,7 +127,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Commits started (if any) transaction, associated with connection.
-		/// If underlying provider doesn't support asynchonous commit, it will be performed synchonously.
+		/// If underlying provider doesn't support asynchronous commit, it will be performed synchronously.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
@@ -177,9 +177,8 @@ namespace LinqToDB.Data
 		/// <returns>Asynchronous operation completion task.</returns>
 		public virtual async Task CloseAsync()
 		{
-			if (_contextInterceptors != null)
-				await _contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosingAsync(arg), new DataContextEventData(this))
-					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			if (_dataContextInterceptor != null)
+				await _dataContextInterceptor.OnClosingAsync(new (this)).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			DisposeCommand();
 
@@ -200,9 +199,8 @@ namespace LinqToDB.Data
 					await _connection.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 
-			if (_contextInterceptors != null)
-				await _contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosedAsync(arg), new DataContextEventData(this))
-					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			if (_dataContextInterceptor != null)
+				await _dataContextInterceptor.OnClosedAsync(new (this)).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
 		/// <summary>

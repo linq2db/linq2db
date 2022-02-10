@@ -193,9 +193,25 @@ namespace LinqToDB.Interceptors
 			try
 			{
 				foreach (var interceptor in _interceptors)
-					result = await apply(interceptor, arg1, arg2, arg3, result, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext); ;
+					result = await apply(interceptor, arg1, arg2, arg3, result, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				return result;
+			}
+			finally
+			{
+				_enumerating = false;
+				RemoveDelayed();
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected void Apply(Action func)
+		{
+			_enumerating = true;
+
+			try
+			{
+				func();
 			}
 			finally
 			{
@@ -212,6 +228,22 @@ namespace LinqToDB.Interceptors
 			try
 			{
 				return func();
+			}
+			finally
+			{
+				_enumerating = false;
+				RemoveDelayed();
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected async Task Apply(Func<Task> func)
+		{
+			_enumerating = true;
+
+			try
+			{
+				await func().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 			finally
 			{

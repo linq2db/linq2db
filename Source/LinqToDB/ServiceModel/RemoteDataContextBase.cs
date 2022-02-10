@@ -314,10 +314,8 @@ namespace LinqToDB.ServiceModel
 
 			var ctx = (RemoteDataContextBase)Clone();
 
-			if (_contextInterceptors != null)
-				ctx.AddInterceptor(_contextInterceptors.Clone());
-
-			ctx._entityServiceInterceptor = _entityServiceInterceptor is AggregatedEntityServiceInterceptor ai ? (AggregatedEntityServiceInterceptor)ai.Clone() : _entityServiceInterceptor;
+			ctx._dataContextInterceptor   = _dataContextInterceptor   is AggregatedDataContextInterceptor   dc ? (AggregatedDataContextInterceptor)  dc.Clone() : _dataContextInterceptor;
+			ctx._entityServiceInterceptor = _entityServiceInterceptor is AggregatedEntityServiceInterceptor es ? (AggregatedEntityServiceInterceptor)es.Clone() : _entityServiceInterceptor;
 
 			return ctx;
 		}
@@ -332,22 +330,17 @@ namespace LinqToDB.ServiceModel
 
 		void IDataContext.Close()
 		{
-			if (_contextInterceptors != null)
-				_contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosing(arg), new DataContextEventData(this));
-
-			if (_contextInterceptors != null)
-				_contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosed(arg), new DataContextEventData(this));
+			_dataContextInterceptor?.OnClosing(new (this));
+			_dataContextInterceptor?.OnClosed (new (this));
 		}
 
 		async Task IDataContext.CloseAsync()
 		{
-			if (_contextInterceptors != null)
-				await _contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosingAsync(arg), new DataContextEventData(this))
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-
-			if (_contextInterceptors != null)
-				await _contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosedAsync(arg), new DataContextEventData(this))
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			if (_dataContextInterceptor != null)
+			{
+				await _dataContextInterceptor.OnClosingAsync(new (this)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await _dataContextInterceptor.OnClosedAsync (new (this)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
 		}
 
 		public virtual void Dispose()

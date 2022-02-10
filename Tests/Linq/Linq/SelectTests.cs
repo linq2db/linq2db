@@ -1020,15 +1020,15 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new []
 			{
-				new MainEntityObject{Id = 1, MainValue = "MainValue 1"}, 
-				new MainEntityObject{Id = 2, MainValue = "MainValue 2"}, 
+				new MainEntityObject{Id = 1, MainValue = "MainValue 1"},
+				new MainEntityObject{Id = 2, MainValue = "MainValue 2"},
 			}))
 			using (db.CreateLocalTable(new []
 			{
 				new ChildEntityObject{Id = 1, Value = "Value 1"}
 			}))
 			{
-				var query = 
+				var query =
 					from m in db.GetTable<MainEntityObject>()
 					from c in db.GetTable<ChildEntityObject>().LeftJoin(c => c.Id == m.Id)
 					select new DtoResult
@@ -1054,7 +1054,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void TestConditionalProjectionOptimization(
-			[IncludeDataSources(false, TestProvName.AllSQLite)] string context, 
+			[IncludeDataSources(false, TestProvName.AllSQLite)] string context,
 			[Values(true, false)] bool includeChild,
 			[Values(1, 2)] int iteration)
 		{
@@ -1103,8 +1103,8 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new []
 			{
-				new MainEntityObject{Id = 1, MainValue = "MainValue 1"}, 
-				new MainEntityObject{Id = 2, MainValue = "MainValue 2"}, 
+				new MainEntityObject{Id = 1, MainValue = "MainValue 1"},
+				new MainEntityObject{Id = 2, MainValue = "MainValue 2"},
 			}))
 			using (db.CreateLocalTable(new []
 			{
@@ -1153,18 +1153,18 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new []
 			{
-				new MainEntityObject{Id = 1, MainValue = "MainValue 1"}, 
-				new MainEntityObject{Id = 2, MainValue = "MainValue 2"}, 
+				new MainEntityObject{Id = 1, MainValue = "MainValue 1"},
+				new MainEntityObject{Id = 2, MainValue = "MainValue 2"},
 			}))
 			using (db.CreateLocalTable(new []
 			{
 				new ChildEntityObject{Id = 1, Value = "Value 1"}
 			}))
 			{
-				var query = 
+				var query =
 					(from m in db.GetTable<MainEntityObject>()
 					from c in db.GetTable<ChildEntityObject>().LeftJoin(c => c.Id == m.Id)
-					select new 
+					select new
 					{
 						c.Id,
 						Value = (c != null) ? c.Value : (m.MainValue != null ? m.MainValue : "")
@@ -1514,7 +1514,7 @@ namespace Tests.Linq
 				 	.OrderBy(_ => _.Parent.ParentID);
 
 
-				var expectedQuery = 
+				var expectedQuery =
 					from p in Parent
 					from c1 in Child.Where(c => c.ParentID == p.ParentID).Take(1).DefaultIfEmpty()
 					let children = Child.Where(c => c.ChildID > 2).Select(c => new { c.ChildID, c.ParentID })
@@ -1551,7 +1551,7 @@ namespace Tests.Linq
 				}
 			}
 		}
-		
+
 		[Test]
 		public void ToStringTest([DataSources] string context)
 		{
@@ -1567,7 +1567,7 @@ namespace Tests.Linq
 				id = 2;
 
 				var sql2 = query.ToString();
-				
+
 				Assert.That(sql1, Is.Not.EqualTo(sql2));
 			}
 		}
@@ -1655,14 +1655,14 @@ namespace Tests.Linq
 
 
 		[Table("test_mapping_column_2_prop")]
-		public partial class TestMappingColumn1PropInfo 
+		public partial class TestMappingColumn1PropInfo
 		{
 			[Column("id"),          PrimaryKey] public long Id         { get; set; } // bigint
 			[Column("test_number"), NotNull   ] public long TestNumber { get; set; } // bigint
 		}
 
 		[Table("test_mapping_column_2_prop")]
-		public partial class TestMappingColumn2PropInfo 
+		public partial class TestMappingColumn2PropInfo
 		{
 			[Column("test_number"), NotNull   ] public long TestNumber { get; set; } // bigint
 

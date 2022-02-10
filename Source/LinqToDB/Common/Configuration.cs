@@ -71,7 +71,7 @@ namespace LinqToDB.Common
 		/// Default value: <c>false</c>.
 		/// </summary>
 		public static bool OptimizeForSequentialAccess;
-		
+
 		/// <summary>
 		/// Determines the length after which logging of binary data in SQL will be truncated.
 		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>
