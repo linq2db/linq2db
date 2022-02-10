@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 namespace LinqToDB.Data
 {
 	using Async;
-	using LinqToDB.Common;
-	using LinqToDB.Interceptors;
+	using Common;
+	using Interceptors;
 	using RetryPolicy;
 
 	public partial class DataConnection
@@ -96,16 +96,16 @@ namespace LinqToDB.Data
 			{
 				try
 				{
-					if (_connectionInterceptors != null)
-						await _connectionInterceptors.Apply((interceptor, arg1, arg2, ct) => interceptor.ConnectionOpeningAsync(arg1, arg2, ct), new ConnectionOpeningEventData(this), _connection.Connection, cancellationToken)
+					if (_connectionInterceptor != null)
+						await _connectionInterceptor.ConnectionOpeningAsync(new (this), _connection.Connection, cancellationToken)
 							.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 					await _connection.OpenAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 					_closeConnection = true;
 
-					if (_connectionInterceptors != null)
-						await _connectionInterceptors.Apply((interceptor, arg1, arg2, ct) => interceptor.ConnectionOpenedAsync(arg1, arg2, ct), new ConnectionOpenedEventData(this), _connection.Connection, cancellationToken)
+					if (_connectionInterceptor != null)
+						await _connectionInterceptor.ConnectionOpenedAsync(new (this), _connection.Connection, cancellationToken)
 							.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				}
 				catch (Exception ex)

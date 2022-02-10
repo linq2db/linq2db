@@ -40,6 +40,7 @@ namespace LinqToDB
 
 		public static void AddInterceptor(this IInterceptable interceptable, IInterceptor interceptor)
 		{
+			Add<IConnectionInterceptor>();
 			Add<IDataContextInterceptor>();
 			Add<IEntityServiceInterceptor>();
 
@@ -57,6 +58,11 @@ namespace LinqToDB
 				interceptable.Interceptor = interceptor;
 			else if (interceptable.Interceptor is AggregatedInterceptor<T> aggregated)
 				aggregated.Add(interceptor);
+			else if (interceptable is IInterceptable<IConnectionInterceptor> ci && interceptor is IConnectionInterceptor c)
+				ci.Interceptor = new AggregatedConnectionInterceptor
+				{
+					Interceptors = { ci.Interceptor!, c }
+				};
 			else if (interceptable is IInterceptable<IDataContextInterceptor> dci && interceptor is IDataContextInterceptor dc)
 				dci.Interceptor = new AggregatedDataContextInterceptor
 				{

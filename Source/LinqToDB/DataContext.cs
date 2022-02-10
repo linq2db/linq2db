@@ -27,7 +27,10 @@ namespace LinqToDB
 	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
 	/// </summary>
 	[PublicAPI]
-	public class DataContext : IDataContext, IInterceptable<IDataContextInterceptor>, IInterceptable<IEntityServiceInterceptor>
+	public class DataContext : IDataContext,
+		IInterceptable<IConnectionInterceptor>,
+		IInterceptable<IDataContextInterceptor>,
+		IInterceptable<IEntityServiceInterceptor>
 	{
 		private          LinqToDbConnectionOptions        _prebuiltOptions;
 		private readonly LinqToDbConnectionOptionsBuilder _optionsBuilder = new ();
@@ -654,7 +657,13 @@ namespace LinqToDB
 		#region Interceptors
 
 		AggregatedInterceptor<ICommandInterceptor>?       _commandInterceptors;
-		AggregatedInterceptor<IConnectionInterceptor>?    _connectionInterceptors;
+
+		IConnectionInterceptor? _connectionInterceptor;
+		IConnectionInterceptor? IInterceptable<IConnectionInterceptor>.Interceptor
+		{
+			get => _connectionInterceptor;
+			set => _connectionInterceptor = value;
+		}
 
 		IDataContextInterceptor? _dataContextInterceptor;
 		IDataContextInterceptor? IInterceptable<IDataContextInterceptor>.Interceptor
@@ -674,7 +683,6 @@ namespace LinqToDB
 		public void AddInterceptor(IInterceptor interceptor)
 		{
 			Add(ref _commandInterceptors);
-			Add(ref _connectionInterceptors);
 			InterceptorExtensions.AddInterceptor(this, interceptor);
 
 			void Add<T>(ref AggregatedInterceptor<T>? aggregator)
@@ -710,7 +718,7 @@ namespace LinqToDB
 
 		IEnumerable<TInterceptor> IDataContext.GetInterceptors<TInterceptor>()
 		{
-			if (_commandInterceptors == null && _connectionInterceptors == null && _dataContextInterceptor == null && _entityServiceInterceptor == null)
+			if (_commandInterceptors == null && _connectionInterceptor == null && _dataContextInterceptor == null && _entityServiceInterceptor == null)
 				return Array<TInterceptor>.Empty;
 
 			switch (typeof(TInterceptor))
@@ -719,10 +727,7 @@ namespace LinqToDB
 					if (_commandInterceptors != null)
 						return (IEnumerable<TInterceptor>)_commandInterceptors.GetInterceptors();
 					break;
-				case IConnectionInterceptor:
-					if (_connectionInterceptors != null)
-						return (IEnumerable<TInterceptor>)_connectionInterceptors.GetInterceptors();
-					break;
+				case IConnectionInterceptor    : return (IEnumerable<TInterceptor>)((IInterceptable<IConnectionInterceptor>)   this).GetInterceptors();
 				case IDataContextInterceptor   : return (IEnumerable<TInterceptor>)((IInterceptable<IDataContextInterceptor>)  this).GetInterceptors();
 				case IEntityServiceInterceptor : return (IEnumerable<TInterceptor>)((IInterceptable<IEntityServiceInterceptor>)this).GetInterceptors();
 			}
@@ -732,10 +737,8 @@ namespace LinqToDB
 			if (_commandInterceptors != null)
 				result = result.Concat(_commandInterceptors.GetInterceptors().Cast<TInterceptor>());
 
-			if (_connectionInterceptors != null)
-				result = result.Concat(_connectionInterceptors.GetInterceptors().Cast<TInterceptor>());
-
 			return result
+				.Union(((IInterceptable<IConnectionInterceptor>)   this).GetInterceptors().Cast<TInterceptor>())
 				.Union(((IInterceptable<IDataContextInterceptor>)  this).GetInterceptors().Cast<TInterceptor>())
 				.Union(((IInterceptable<IEntityServiceInterceptor>)this).GetInterceptors().Cast<TInterceptor>());
 		}

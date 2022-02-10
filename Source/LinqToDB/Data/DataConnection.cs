@@ -356,8 +356,8 @@ namespace LinqToDB.Data
 
 			if (localConnection != null)
 			{
-				_connection = localConnection is IAsyncDbConnection asyncDbConection
-					? asyncDbConection
+				_connection = localConnection is IAsyncDbConnection asyncDbConnection
+					? asyncDbConnection
 					: AsyncFactory.Create(localConnection);
 			}
 
@@ -1104,14 +1104,12 @@ namespace LinqToDB.Data
 
 			if (connect && _connection.State == ConnectionState.Closed)
 			{
-				if (_connectionInterceptors != null)
-					_connectionInterceptors.Apply((interceptor, arg1, arg2) => interceptor.ConnectionOpening(arg1, arg2), new ConnectionOpeningEventData(this), _connection.Connection);
+				_connectionInterceptor?.ConnectionOpening(new (this), _connection.Connection);
 
 				_connection.Open();
 				_closeConnection = true;
 
-				if (_connectionInterceptors != null)
-					_connectionInterceptors.Apply((interceptor, arg1, arg2) => interceptor.ConnectionOpened(arg1, arg2), new ConnectionOpenedEventData(this), _connection.Connection);
+				_connectionInterceptor?.ConnectionOpened(new (this), _connection.Connection);
 			}
 
 			return _connection;
@@ -1657,7 +1655,7 @@ namespace LinqToDB.Data
 				_queryHints               = _queryHints?.Count > 0 ? _queryHints.ToList() : null,
 				OnTraceConnection         = OnTraceConnection,
 				_commandInterceptors      = _commandInterceptors?.   Clone(),
-				_connectionInterceptors   = _connectionInterceptors?.Clone(),
+				_connectionInterceptor    = _connectionInterceptor    is AggregatedConnectionInterceptor    c  ? (AggregatedConnectionInterceptor)   c. Clone() : _connectionInterceptor,
 				_dataContextInterceptor   = _dataContextInterceptor   is AggregatedDataContextInterceptor   dc ? (AggregatedDataContextInterceptor)  dc.Clone() : _dataContextInterceptor,
 				_entityServiceInterceptor = _entityServiceInterceptor is AggregatedEntityServiceInterceptor es ? (AggregatedEntityServiceInterceptor)es.Clone() : _entityServiceInterceptor,
 			};

@@ -82,7 +82,7 @@ namespace LinqToDB.Data
 					_queryHints               = _queryHints?.Count > 0 ? _queryHints.ToList() : null,
 					OnTraceConnection         = OnTraceConnection,
 					_commandInterceptors      = _commandInterceptors?.   Clone(),
-					_connectionInterceptors   = _connectionInterceptors?.Clone(),
+					_connectionInterceptor    = _connectionInterceptor    is AggregatedConnectionInterceptor    c  ? (AggregatedConnectionInterceptor)   c. Clone() : _connectionInterceptor,
 					_dataContextInterceptor   = _dataContextInterceptor   is AggregatedDataContextInterceptor   dc ? (AggregatedDataContextInterceptor)  dc.Clone() : _dataContextInterceptor,
 					_entityServiceInterceptor = _entityServiceInterceptor is AggregatedEntityServiceInterceptor ai ? (AggregatedEntityServiceInterceptor)ai.Clone() : _entityServiceInterceptor,
 				};
