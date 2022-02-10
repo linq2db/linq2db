@@ -44,7 +44,7 @@ namespace LinqToDB.Data
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)
 		{
-			InterceptorExtensions.AddInterceptor(this, interceptor);
+			this.AddInterceptorImpl(interceptor);
 		}
 
 		internal void RemoveInterceptor(IInterceptor interceptor)
@@ -73,10 +73,6 @@ namespace LinqToDB.Data
 				((IInterceptable<IConnectionInterceptor>)   this).GetInterceptors().Cast<TInterceptor>()).Union(
 				((IInterceptable<IDataContextInterceptor>)  this).GetInterceptors().Cast<TInterceptor>()).Union(
 				((IInterceptable<IEntityServiceInterceptor>)this).GetInterceptors().Cast<TInterceptor>());
-		}
-
-		void IInterceptable.InterceptorAdded(IInterceptor interceptor)
-		{
 		}
 	}
 }

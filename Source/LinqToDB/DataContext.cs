@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
 using JetBrains.Annotations;
-using LinqToDB.Common;
 
 namespace LinqToDB
 {
@@ -18,7 +16,6 @@ namespace LinqToDB
 	using Configuration;
 	using Data;
 	using DataProvider;
-	using Interceptors;
 	using Linq;
 	using Mapping;
 	using SqlProvider;
@@ -27,11 +24,7 @@ namespace LinqToDB
 	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
 	/// </summary>
 	[PublicAPI]
-	public class DataContext : IDataContext,
-		IInterceptable<ICommandInterceptor>,
-		IInterceptable<IConnectionInterceptor>,
-		IInterceptable<IDataContextInterceptor>,
-		IInterceptable<IEntityServiceInterceptor>
+	public partial class DataContext : IDataContext
 	{
 		private          LinqToDbConnectionOptions        _prebuiltOptions;
 		private readonly LinqToDbConnectionOptionsBuilder _optionsBuilder = new ();
@@ -649,70 +642,6 @@ namespace LinqToDB
 			public Expression?  MapperExpression { get => _queryRunner!.MapperExpression; set => _queryRunner!.MapperExpression = value; }
 			public int          RowsCount        { get => _queryRunner!.RowsCount;        set => _queryRunner!.RowsCount        = value; }
 			public int          QueryNumber      { get => _queryRunner!.QueryNumber;      set => _queryRunner!.QueryNumber      = value; }
-		}
-
-		#region Interceptors
-
-		ICommandInterceptor? _commandInterceptor;
-		ICommandInterceptor? IInterceptable<ICommandInterceptor>.Interceptor
-		{
-			get => _commandInterceptor;
-			set => _commandInterceptor = value;
-		}
-
-		IConnectionInterceptor? _connectionInterceptor;
-		IConnectionInterceptor? IInterceptable<IConnectionInterceptor>.Interceptor
-		{
-			get => _connectionInterceptor;
-			set => _connectionInterceptor = value;
-		}
-
-		IDataContextInterceptor? _dataContextInterceptor;
-		IDataContextInterceptor? IInterceptable<IDataContextInterceptor>.Interceptor
-		{
-			get => _dataContextInterceptor;
-			set => _dataContextInterceptor = value;
-		}
-
-		IEntityServiceInterceptor? _entityServiceInterceptor;
-		IEntityServiceInterceptor? IInterceptable<IEntityServiceInterceptor>.Interceptor
-		{
-			get => _entityServiceInterceptor;
-			set => _entityServiceInterceptor = value;
-		}
-
-		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
-		public void AddInterceptor(IInterceptor interceptor)
-		{
-			InterceptorExtensions.AddInterceptor(this, interceptor);
-		}
-
-		IEnumerable<TInterceptor> IDataContext.GetInterceptors<TInterceptor>()
-		{
-			if (_commandInterceptor == null && _connectionInterceptor == null && _dataContextInterceptor == null && _entityServiceInterceptor == null)
-				return Array<TInterceptor>.Empty;
-
-			switch (typeof(TInterceptor))
-			{
-				case ICommandInterceptor       : return (IEnumerable<TInterceptor>)((IInterceptable<ICommandInterceptor>)      this).GetInterceptors();
-				case IConnectionInterceptor    : return (IEnumerable<TInterceptor>)((IInterceptable<IConnectionInterceptor>)   this).GetInterceptors();
-				case IDataContextInterceptor   : return (IEnumerable<TInterceptor>)((IInterceptable<IDataContextInterceptor>)  this).GetInterceptors();
-				case IEntityServiceInterceptor : return (IEnumerable<TInterceptor>)((IInterceptable<IEntityServiceInterceptor>)this).GetInterceptors();
-			}
-
-			return
-				((IInterceptable<ICommandInterceptor>)      this).GetInterceptors().Cast<TInterceptor>(). Union(
-				((IInterceptable<IConnectionInterceptor>)   this).GetInterceptors().Cast<TInterceptor>()).Union(
-				((IInterceptable<IDataContextInterceptor>)  this).GetInterceptors().Cast<TInterceptor>()).Union(
-				((IInterceptable<IEntityServiceInterceptor>)this).GetInterceptors().Cast<TInterceptor>());
-		}
-
-		#endregion
-
-		void IInterceptable.InterceptorAdded(IInterceptor interceptor)
-		{
-			_optionsBuilder.WithInterceptor(interceptor);
-			_prebuiltOptions = _optionsBuilder.Build();
 		}
 	}
 }

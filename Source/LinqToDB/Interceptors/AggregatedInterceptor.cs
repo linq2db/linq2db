@@ -33,6 +33,7 @@ namespace LinqToDB.Interceptors
 		{
 			foreach (var interceptor in _removeList)
 				Interceptors.Remove(interceptor);
+			_removeList.Clear();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

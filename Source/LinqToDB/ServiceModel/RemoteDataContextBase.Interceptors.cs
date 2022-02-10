@@ -1,10 +1,10 @@
 ﻿#if NETFRAMEWORK
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace LinqToDB.ServiceModel
 {
-	using System;
 	using Interceptors;
 
 	public abstract partial class RemoteDataContextBase :
@@ -30,7 +30,7 @@ namespace LinqToDB.ServiceModel
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)
 		{
-			InterceptorExtensions.AddInterceptor(this, interceptor);
+			this.AddInterceptorImpl(interceptor);
 		}
 
 		IEnumerable<TInterceptor> IDataContext.GetInterceptors<TInterceptor>()
@@ -47,10 +47,6 @@ namespace LinqToDB.ServiceModel
 			return
 				((IInterceptable<IDataContextInterceptor>)  this).GetInterceptors().Cast<TInterceptor>().Union(
 				((IInterceptable<IEntityServiceInterceptor>)this).GetInterceptors().Cast<TInterceptor>());
-		}
-
-		void IInterceptable.InterceptorAdded(IInterceptor interceptor)
-		{
 		}
 	}
 }

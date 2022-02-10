@@ -4,7 +4,6 @@ namespace LinqToDB.Interceptors
 {
 	public interface IInterceptable
 	{
-		void InterceptorAdded(IInterceptor interceptor);
 	}
 
 	public interface IInterceptable<T> : IInterceptable

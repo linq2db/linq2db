@@ -38,24 +38,24 @@ namespace LinqToDB
 
 		#endregion
 
-		public static void AddInterceptor(this IInterceptable interceptable, IInterceptor interceptor)
+		internal static void AddInterceptorImpl(this IInterceptable interceptable, IInterceptor interceptor)
 		{
 			switch (interceptor)
 			{
-				case ICommandInterceptor       cm : AddInterceptor((IInterceptable<ICommandInterceptor>)      interceptable, cm); break;
-				case IConnectionInterceptor    cn : AddInterceptor((IInterceptable<IConnectionInterceptor>)   interceptable, cn); break;
-				case IDataContextInterceptor   dc : AddInterceptor((IInterceptable<IDataContextInterceptor>)  interceptable, dc); break;
-				case IEntityServiceInterceptor es : AddInterceptor((IInterceptable<IEntityServiceInterceptor>)interceptable, es); break;
+				case ICommandInterceptor       cm : AddInterceptorImpl((IInterceptable<ICommandInterceptor>)      interceptable, cm); break;
+				case IConnectionInterceptor    cn : AddInterceptorImpl((IInterceptable<IConnectionInterceptor>)   interceptable, cn); break;
+				case IDataContextInterceptor   dc : AddInterceptorImpl((IInterceptable<IDataContextInterceptor>)  interceptable, dc); break;
+				case IEntityServiceInterceptor es : AddInterceptorImpl((IInterceptable<IEntityServiceInterceptor>)interceptable, es); break;
 			}
 		}
 
-		public static void AddInterceptor<T>(this IInterceptable<T> interceptable, T interceptor)
+		internal static void AddInterceptorImpl<T>(this IInterceptable<T> interceptable, T interceptor)
 			where T : IInterceptor
 		{
 			if (interceptable.Interceptor == null)
 				interceptable.Interceptor = interceptor;
 			else if (interceptable.Interceptor is AggregatedInterceptor<T> aggregated)
-				aggregated.Add(interceptor);
+				aggregated.Interceptors.Add(interceptor);
 			else if (interceptable is IInterceptable<ICommandInterceptor> cmi && interceptor is ICommandInterceptor cm)
 				cmi.Interceptor = new AggregatedCommandInterceptor
 				{
@@ -78,8 +78,6 @@ namespace LinqToDB
 				};
 			else
 				throw new NotImplementedException($"AddInterceptor for '{typeof(T).Name}' is not implemented.");
-
-			interceptable.InterceptorAdded(interceptor);
 		}
 
 		internal static void RemoveInterceptor<T>(this IInterceptable<T> interceptable, IInterceptor interceptor)
