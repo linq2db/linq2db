@@ -1042,6 +1042,64 @@ namespace Tests.Linq
 			query.Invoking(q => q.ToList()).Should().NotThrow();
 		}		
 
+		[Test]
+		public void ConcatEntities([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = 
+					(from p in db.Parent where p.ParentID == 1 select p).Concat(
+					(from p in db.Parent where p.ParentID == 2 select p));
+
+				AssertQuery(query);
+			}
+		}
+
+		class ConcatEntity
+		{
+			public int? IntValue { get; set; }
+
+			public class ConcatSubEntity
+			{
+				public int Id { get; set; }
+				public int? Value { get; set; }
+			}
+
+			public ConcatSubEntity? Entity { get; set; }
+		}
+
+		[Test]
+		public void ConcatEqualSelects([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					(from p in db.Parent
+					where p.ParentID == 1
+					select new ConcatEntity
+					{
+						IntValue = p.ParentID + 1,
+						Entity = new ConcatEntity.ConcatSubEntity
+						{
+							Id = p.ParentID
+						}, 
+					})
+					.Concat(
+					from p in db.Parent
+					where p.ParentID == 2
+					select new ConcatEntity
+					{
+						Entity = new ConcatEntity.ConcatSubEntity
+						{
+							Id = p.ParentID
+						}, 
+					});
+
+				var zz = query.Select(x => new {x.IntValue, x.Entity.Id}).Where(x => x.IntValue == null).ToArray();
+
+				//AssertQuery(query);
+			}
+		}
 
 	}
 }

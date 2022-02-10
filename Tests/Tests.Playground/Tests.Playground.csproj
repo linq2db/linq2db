@@ -10,6 +10,7 @@
 	<ItemGroup>
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
 		<Compile Include="..\Linq\Linq\AssociationTests.cs" Link="AssociationTests.cs" />
+		<Compile Include="..\Linq\Linq\ConcatUnionTests.cs" Link="ConcatUnionTests.cs" />
 		<Compile Include="..\Linq\Linq\ConditionalTests.cs" Link="ConditionalTests.cs" />
 		<Compile Include="..\Linq\Linq\EnumerableInQuery.cs" Link="EnumerableInQuery.cs" />
 		<Compile Include="..\Linq\Linq\ExpressionsTests.cs" Link="ExpressionsTests.cs" />

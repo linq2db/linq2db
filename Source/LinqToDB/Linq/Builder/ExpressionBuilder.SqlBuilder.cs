@@ -3521,12 +3521,20 @@ namespace LinqToDB.Linq.Builder
 						return placeholder;
 					}
 
-					if (member != null && body is ContextRefExpression contextRef)
+					if (member != null)
 					{
-						var ma      = Expression.MakeMemberAccess(contextRef, member);
-						var newPath = nextPath![0].Replace(next!, ma);
+						if (body is ContextRefExpression contextRef)
+						{
+							var ma      = Expression.MakeMemberAccess(contextRef, member);
+							var newPath = nextPath![0].Replace(next!, ma);
 
-						return context.Builder.MakeExpression(newPath, flags);
+							return context.Builder.MakeExpression(newPath, flags);
+						}
+
+						if (body is SqlGenericConstructorExpression genericConstructor)
+						{
+							throw new NotImplementedException();
+						}
 					}
 
 					throw new NotImplementedException();
@@ -3851,6 +3859,11 @@ namespace LinqToDB.Linq.Builder
 
 			var idx    = sqlPlaceholder.SelectQuery.Select.Add(sqlPlaceholder.Sql);
 			var column = sqlPlaceholder.SelectQuery.Select.Columns[idx];
+
+			if (!string.IsNullOrEmpty(alias))
+			{
+				column.RawAlias = alias;
+			}
 
 			placeholder = CreatePlaceholder(parentQuery, column, sqlPlaceholder.Path, sqlPlaceholder.ConvertType, alias, idx);
 
