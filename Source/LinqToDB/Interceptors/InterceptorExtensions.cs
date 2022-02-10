@@ -40,14 +40,12 @@ namespace LinqToDB
 
 		public static void AddInterceptor(this IInterceptable interceptable, IInterceptor interceptor)
 		{
-			Add<IConnectionInterceptor>();
-			Add<IDataContextInterceptor>();
-			Add<IEntityServiceInterceptor>();
-
-			void Add<T>()
-				where T : IInterceptor
+			switch (interceptor)
 			{
-				if (interceptable is IInterceptable<T> ii && interceptor is T i) ii.AddInterceptor(i);
+				case ICommandInterceptor       cm : AddInterceptor((IInterceptable<ICommandInterceptor>)      interceptable, cm); break;
+				case IConnectionInterceptor    cn : AddInterceptor((IInterceptable<IConnectionInterceptor>)   interceptable, cn); break;
+				case IDataContextInterceptor   dc : AddInterceptor((IInterceptable<IDataContextInterceptor>)  interceptable, dc); break;
+				case IEntityServiceInterceptor es : AddInterceptor((IInterceptable<IEntityServiceInterceptor>)interceptable, es); break;
 			}
 		}
 
@@ -58,6 +56,11 @@ namespace LinqToDB
 				interceptable.Interceptor = interceptor;
 			else if (interceptable.Interceptor is AggregatedInterceptor<T> aggregated)
 				aggregated.Add(interceptor);
+			else if (interceptable is IInterceptable<ICommandInterceptor> cmi && interceptor is ICommandInterceptor cm)
+				cmi.Interceptor = new AggregatedCommandInterceptor
+				{
+					Interceptors = { cmi.Interceptor!, cm }
+				};
 			else if (interceptable is IInterceptable<IConnectionInterceptor> ci && interceptor is IConnectionInterceptor c)
 				ci.Interceptor = new AggregatedConnectionInterceptor
 				{
@@ -105,7 +108,7 @@ namespace LinqToDB
 				yield break;
 
 			if (interceptable.Interceptor is AggregatedInterceptor<T> ai)
-				foreach (var interceptor in ai.GetInterceptors())
+				foreach (var interceptor in ai.Interceptors)
 					yield return interceptor;
 			else
 				yield return interceptable.Interceptor;

@@ -28,6 +28,7 @@ namespace LinqToDB
 	/// </summary>
 	[PublicAPI]
 	public class DataContext : IDataContext,
+		IInterceptable<ICommandInterceptor>,
 		IInterceptable<IConnectionInterceptor>,
 		IInterceptable<IDataContextInterceptor>,
 		IInterceptable<IEntityServiceInterceptor>
@@ -53,12 +54,11 @@ namespace LinqToDB
 		/// <see cref="DataConnection.DefaultConfiguration"/> for more details.
 		/// </param>
 		public DataContext(string? configurationString)
-			: this(
-				  new LinqToDbConnectionOptionsBuilder()
-				  .UseConfigurationString(
-					  configurationString ?? DataConnection.DefaultConfiguration
+			: this(new LinqToDbConnectionOptionsBuilder()
+				.UseConfigurationString(
+					configurationString ?? DataConnection.DefaultConfiguration
 						?? throw new ArgumentNullException($"Neither {nameof(configurationString)} nor {nameof(DataConnection)}.{DataConnection.DefaultConfiguration} specified"))
-				  .Build())
+				.Build())
 		{
 		}
 
@@ -68,12 +68,11 @@ namespace LinqToDB
 		/// <param name="dataProvider">Database provider implementation.</param>
 		/// <param name="connectionString">Database connection string.</param>
 		public DataContext(IDataProvider dataProvider, string connectionString)
-			: this(
-				  new LinqToDbConnectionOptionsBuilder()
-				  .UseConnectionString(
-					  dataProvider     ?? throw new ArgumentNullException(nameof(dataProvider)),
-					  connectionString ?? throw new ArgumentNullException(nameof(connectionString)))
-				  .Build())
+			: this(new LinqToDbConnectionOptionsBuilder()
+				.UseConnectionString(
+					dataProvider     ?? throw new ArgumentNullException(nameof(dataProvider)),
+					connectionString ?? throw new ArgumentNullException(nameof(connectionString)))
+				.Build())
 		{
 		}
 
@@ -83,12 +82,11 @@ namespace LinqToDB
 		/// <param name="providerName">Name of database provider to use with this connection. <see cref="ProviderName"/> class for list of providers.</param>
 		/// <param name="connectionString">Database connection string to use for connection with database.</param>
 		public DataContext( string providerName, string connectionString)
-			: this(
-				  new LinqToDbConnectionOptionsBuilder()
-				  .UseConnectionString(
-					  providerName     ?? throw new ArgumentNullException(nameof(providerName)),
-					  connectionString ?? throw new ArgumentNullException(nameof(connectionString)))
-				  .Build())
+			: this(new LinqToDbConnectionOptionsBuilder()
+				.UseConnectionString(
+					providerName     ?? throw new ArgumentNullException(nameof(providerName)),
+					connectionString ?? throw new ArgumentNullException(nameof(connectionString)))
+				.Build())
 		{
 		}
 
@@ -104,7 +102,6 @@ namespace LinqToDB
 			if (options.OnTrace       != null) _optionsBuilder.WithTracing     (options.OnTrace);
 			if (options.TraceLevel    != null) _optionsBuilder.WithTraceLevel  (options.TraceLevel.Value);
 			if (options.WriteTrace    != null) _optionsBuilder.WriteTraceWith  (options.WriteTrace);
-
 
 			var dataProvider = options.DataProvider;
 			if (dataProvider == null)
@@ -656,7 +653,12 @@ namespace LinqToDB
 
 		#region Interceptors
 
-		AggregatedInterceptor<ICommandInterceptor>?       _commandInterceptors;
+		ICommandInterceptor? _commandInterceptor;
+		ICommandInterceptor? IInterceptable<ICommandInterceptor>.Interceptor
+		{
+			get => _commandInterceptor;
+			set => _commandInterceptor = value;
+		}
 
 		IConnectionInterceptor? _connectionInterceptor;
 		IConnectionInterceptor? IInterceptable<IConnectionInterceptor>.Interceptor
@@ -682,65 +684,27 @@ namespace LinqToDB
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)
 		{
-			Add(ref _commandInterceptors);
 			InterceptorExtensions.AddInterceptor(this, interceptor);
-
-			void Add<T>(ref AggregatedInterceptor<T>? aggregator)
-				where T : IInterceptor
-			{
-				if (interceptor is AggregatedInterceptor<T> ai)
-				{
-					if (aggregator != null)
-						// this actually shouldn't be possible
-						throw new InvalidOperationException($"{nameof(AggregatedInterceptor<T>)}<{nameof(T)}> already exists");
-					aggregator = ai.Clone();
-
-					_optionsBuilder.WithInterceptor(aggregator);
-					_prebuiltOptions = _optionsBuilder.Build();
-				}
-
-				if (interceptor is T i)
-				{
-					if (aggregator == null)
-					{
-						aggregator = new ();
-						if (_dataConnection != null)
-							_dataConnection.AddInterceptor(aggregator);
-
-						_optionsBuilder.WithInterceptor(aggregator);
-						_prebuiltOptions = _optionsBuilder.Build();
-					}
-
-					aggregator.Add(i);
-				}
-			}
 		}
 
 		IEnumerable<TInterceptor> IDataContext.GetInterceptors<TInterceptor>()
 		{
-			if (_commandInterceptors == null && _connectionInterceptor == null && _dataContextInterceptor == null && _entityServiceInterceptor == null)
+			if (_commandInterceptor == null && _connectionInterceptor == null && _dataContextInterceptor == null && _entityServiceInterceptor == null)
 				return Array<TInterceptor>.Empty;
 
 			switch (typeof(TInterceptor))
 			{
-				case ICommandInterceptor:
-					if (_commandInterceptors != null)
-						return (IEnumerable<TInterceptor>)_commandInterceptors.GetInterceptors();
-					break;
+				case ICommandInterceptor       : return (IEnumerable<TInterceptor>)((IInterceptable<ICommandInterceptor>)      this).GetInterceptors();
 				case IConnectionInterceptor    : return (IEnumerable<TInterceptor>)((IInterceptable<IConnectionInterceptor>)   this).GetInterceptors();
 				case IDataContextInterceptor   : return (IEnumerable<TInterceptor>)((IInterceptable<IDataContextInterceptor>)  this).GetInterceptors();
 				case IEntityServiceInterceptor : return (IEnumerable<TInterceptor>)((IInterceptable<IEntityServiceInterceptor>)this).GetInterceptors();
 			}
 
-			IEnumerable<TInterceptor> result = Array<TInterceptor>.Empty;
-
-			if (_commandInterceptors != null)
-				result = result.Concat(_commandInterceptors.GetInterceptors().Cast<TInterceptor>());
-
-			return result
-				.Union(((IInterceptable<IConnectionInterceptor>)   this).GetInterceptors().Cast<TInterceptor>())
-				.Union(((IInterceptable<IDataContextInterceptor>)  this).GetInterceptors().Cast<TInterceptor>())
-				.Union(((IInterceptable<IEntityServiceInterceptor>)this).GetInterceptors().Cast<TInterceptor>());
+			return
+				((IInterceptable<ICommandInterceptor>)      this).GetInterceptors().Cast<TInterceptor>(). Union(
+				((IInterceptable<IConnectionInterceptor>)   this).GetInterceptors().Cast<TInterceptor>()).Union(
+				((IInterceptable<IDataContextInterceptor>)  this).GetInterceptors().Cast<TInterceptor>()).Union(
+				((IInterceptable<IEntityServiceInterceptor>)this).GetInterceptors().Cast<TInterceptor>());
 		}
 
 		#endregion

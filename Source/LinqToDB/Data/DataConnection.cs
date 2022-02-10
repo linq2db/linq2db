@@ -1177,8 +1177,8 @@ namespace LinqToDB.Data
 
 		internal void CommitCommandInit()
 		{
-			if (_commandInterceptors != null)
-				_command = _commandInterceptors.Apply((interceptor, arg1, arg2) => interceptor.CommandInitialized(arg1, arg2), new CommandEventData(this), _command!);
+			if (_commandInterceptor != null)
+				_command = _commandInterceptor.CommandInitialized(new (this), _command!);
 
 			LastQuery = _command!.CommandText;
 		}
@@ -1244,8 +1244,8 @@ namespace LinqToDB.Data
 		{
 			var result = Option<int>.None;
 
-			if (_commandInterceptors != null)
-				result = _commandInterceptors.Apply((interceptor, arg1, arg2, arg3) => interceptor.ExecuteNonQuery(arg1, arg2, arg3), new CommandEventData(this), command, result);
+			if (_commandInterceptor != null)
+				result = _commandInterceptor.ExecuteNonQuery(new (this), command, result);
 
 			return result.HasValue
 				? result.Value
@@ -1317,8 +1317,8 @@ namespace LinqToDB.Data
 		{
 			var result = Option<object?>.None;
 
-			if (_commandInterceptors != null)
-				result = _commandInterceptors.Apply((interceptor, arg1, arg2, arg3) => interceptor.ExecuteScalar(arg1, arg2, arg3), new CommandEventData(this), command, result);
+			if (_commandInterceptor != null)
+				result = _commandInterceptor.ExecuteScalar(new (this), command, result);
 
 			return result.HasValue
 				? result.Value
@@ -1389,15 +1389,16 @@ namespace LinqToDB.Data
 		{
 			var result = Option<DbDataReader>.None;
 
-			if (_commandInterceptors != null)
-				result = _commandInterceptors.Apply((interceptor, arg1, arg2, arg3, arg4) => interceptor.ExecuteReader(arg1, arg2, arg3, arg4), new CommandEventData(this), _command!, commandBehavior, result);
+			if (_commandInterceptor != null)
+				result = _commandInterceptor.ExecuteReader(new (this), _command!, commandBehavior, result);
 
 			var rd = result.HasValue
 				? result.Value
 				: _command!.ExecuteReader(commandBehavior);
 
 			var wrapper = new DataReaderWrapper(this, rd, _command!);
-			_command    = null;
+
+			_command = null;
 
 			return wrapper;
 		}
@@ -1581,7 +1582,7 @@ namespace LinqToDB.Data
 		#region MappingSchema
 
 		/// <summary>
-		/// Gets maping schema, used for current connection.
+		/// Gets mapping schema, used for current connection.
 		/// </summary>
 		public  MappingSchema  MappingSchema { get; private set; }
 
@@ -1654,7 +1655,7 @@ namespace LinqToDB.Data
 				ThrowOnDisposed           = ThrowOnDisposed,
 				_queryHints               = _queryHints?.Count > 0 ? _queryHints.ToList() : null,
 				OnTraceConnection         = OnTraceConnection,
-				_commandInterceptors      = _commandInterceptors?.   Clone(),
+				_commandInterceptor       = _commandInterceptor       is AggregatedCommandInterceptor       cm ? (AggregatedCommandInterceptor)      cm.Clone() : _commandInterceptor,
 				_connectionInterceptor    = _connectionInterceptor    is AggregatedConnectionInterceptor    c  ? (AggregatedConnectionInterceptor)   c. Clone() : _connectionInterceptor,
 				_dataContextInterceptor   = _dataContextInterceptor   is AggregatedDataContextInterceptor   dc ? (AggregatedDataContextInterceptor)  dc.Clone() : _dataContextInterceptor,
 				_entityServiceInterceptor = _entityServiceInterceptor is AggregatedEntityServiceInterceptor es ? (AggregatedEntityServiceInterceptor)es.Clone() : _entityServiceInterceptor,

@@ -214,7 +214,7 @@ namespace Tests.Data
 					Assert.False(triggered2);
 					Assert.False(triggered3);
 
-					db.GetTable<Child>().ToList();
+					_ = db.GetTable<Child>().ToList();
 
 					Assert.True(interceptor1.CommandInitializedTriggered);
 					Assert.True(interceptor2.CommandInitializedTriggered);
@@ -230,7 +230,7 @@ namespace Tests.Data
 					interceptor2.CommandInitializedTriggered = false;
 					interceptor3.CommandInitializedTriggered = false;
 
-					db.GetTable<Person>().ToList();
+					_ = db.GetTable<Person>().ToList();
 
 					Assert.True(interceptor1.CommandInitializedTriggered);
 					Assert.True(interceptor2.CommandInitializedTriggered);
@@ -244,7 +244,7 @@ namespace Tests.Data
 					interceptor2.CommandInitializedTriggered = false;
 					interceptor3.CommandInitializedTriggered = false;
 
-					clonedDb.GetTable<Child>().ToList();
+					_ = clonedDb.GetTable<Child>().ToList();
 
 					Assert.True(interceptor1.CommandInitializedTriggered);
 					Assert.True(interceptor2.CommandInitializedTriggered);
@@ -258,7 +258,7 @@ namespace Tests.Data
 					interceptor1.CommandInitializedTriggered = false;
 					interceptor2.CommandInitializedTriggered = false;
 
-					clonedDb.GetTable<Person>().ToList();
+					_ = clonedDb.GetTable<Person>().ToList();
 
 					Assert.True(interceptor1.CommandInitializedTriggered);
 					Assert.True(interceptor2.CommandInitializedTriggered);

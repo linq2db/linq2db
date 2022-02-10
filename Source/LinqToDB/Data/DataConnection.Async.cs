@@ -9,7 +9,6 @@ namespace LinqToDB.Data
 {
 	using Async;
 	using Common;
-	using Interceptors;
 	using RetryPolicy;
 
 	public partial class DataConnection
@@ -223,8 +222,8 @@ namespace LinqToDB.Data
 		{
 			var result = Option<int>.None;
 
-			if (_commandInterceptors != null)
-				result = await _commandInterceptors.Apply((interceptor, arg1, arg2, arg3, ct) => interceptor.ExecuteNonQueryAsync(arg1, arg2, arg3, ct), new CommandEventData(this), CurrentCommand!, result, cancellationToken)
+			if (_commandInterceptor != null)
+				result = await _commandInterceptor.ExecuteNonQueryAsync(new (this), CurrentCommand!, result, cancellationToken)
 					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			return result.HasValue
@@ -297,8 +296,8 @@ namespace LinqToDB.Data
 		{
 			var result = Option<object?>.None;
 
-			if (_commandInterceptors != null)
-				result = await _commandInterceptors.Apply((interceptor, arg1, arg2, arg3, ct) => interceptor.ExecuteScalarAsync(arg1, arg2, arg3, ct), new CommandEventData(this), CurrentCommand!, result, cancellationToken)
+			if (_commandInterceptor != null)
+				result = await _commandInterceptor.ExecuteScalarAsync(new (this), CurrentCommand!, result, cancellationToken)
 					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			return result.HasValue
@@ -373,8 +372,8 @@ namespace LinqToDB.Data
 		{
 			var result = Option<DbDataReader>.None;
 
-			if (_commandInterceptors != null)
-				result = await _commandInterceptors.Apply((interceptor, arg1, arg2, arg3, arg4, ct) => interceptor.ExecuteReaderAsync(arg1, arg2, arg3, arg4, ct), new CommandEventData(this), CurrentCommand!, commandBehavior, result, cancellationToken)
+			if (_commandInterceptor != null)
+				result = await _commandInterceptor.ExecuteReaderAsync(new (this), CurrentCommand!, commandBehavior, result, cancellationToken)
 					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			var dr = result.HasValue
