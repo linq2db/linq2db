@@ -1414,18 +1414,18 @@ namespace LinqToDB.SqlProvider
 				// (a1, a2) <> (b1, b2) => a1 <> b1 or  a2 <> b2
 				bool isOr = op == Operator.NotEqual;
 				var compares = row1.Values.Zip(row2.Values, (a, b) => 
-				{
+				{					
 					// There is a trap here, neither `a` nor `b` should be a constant null value,
 					// because ExprExpr reduces `a == null` to `a is null`,
 					// which is not the same and not equivalent to the Row expression.
-					// Technically the expression should evaluate to `unknown` but linq2db has no support
-					// for that and immediately coerces to `false`
-					if (a.TryEvaluateExpression(context, out var val) && val == null ||
-						b.TryEvaluateExpression(context, out     val) && val == null)
-					{
-						return new SqlPredicate.Expr(new SqlValue(false));
-					}
-					return new ExprExpr(a, op, b, withNull: null);
+					// We use `a >= null` instead, which is equivalent (always evaluates to `unknown`) but is never reduced by ExprExpr.
+					// Reducing to `false` is an inaccuracy that causes problems when composed in more complicated ways,
+					// e.g. the NOT IN SqlRow tests fail.
+					Operator nullSafeOp = a.TryEvaluateExpression(context, out var val) && val == null ||
+																b.TryEvaluateExpression(context, out     val) && val == null
+						? Operator.GreaterOrEqual
+						: op;
+					return new ExprExpr(a, nullSafeOp, b, withNull: null);
 				});
 				foreach (var comp in compares)
 					rewrite.Conditions.Add(new SqlCondition(false, comp, isOr));
