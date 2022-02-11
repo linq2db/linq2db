@@ -60,7 +60,7 @@ namespace LinqToDB.Linq
 				public bool                                          IsFaulted;
 			}
 
-			public T Map(IDataContext context, IQueryRunner queryRunner, DbDataReader dataReader, ReaderMapperInfo mapperInfo)
+			public T Map(IDataContext context, IQueryRunner queryRunner, DbDataReader dataReader, ref ReaderMapperInfo mapperInfo)
 			{
 				try
 				{
@@ -68,35 +68,40 @@ namespace LinqToDB.Linq
 				}
 				// SqlNullValueException: MySqlData
 				// OracleNullValueException: managed and native oracle providers
-				catch (Exception ex) when (ex is FormatException || ex is InvalidCastException || ex is LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException"))
+				catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException"))
 				{
 					// TODO: debug cases when our tests go into slow-mode (e.g. sqlite.ms)
 					if (mapperInfo.IsFaulted)
 						throw;
 
-					if (context.GetTraceSwitch().TraceInfo)
-						context.WriteTraceLine(
-							$"Mapper has switched to slow mode. Mapping exception: {ex.Message}",
-							context.GetTraceSwitch().DisplayName,
-							TraceLevel.Error);
-
-					queryRunner.MapperExpression = mapperInfo.MapperExpression;
-
-					var dataReaderType = dataReader.GetType();
-					var expression     = TransformMapperExpression(context, dataReader, dataReaderType, true);
-					var expr           = mapperInfo.MapperExpression; // create new instance to avoid race conditions without locks
-
-					mapperInfo = new ReaderMapperInfo()
-					{
-						MapperExpression = expr,
-						Mapper           = expression.CompileExpression(),
-						IsFaulted        = true
-					};
-
-					_mappers[dataReaderType] = mapperInfo;
-
-					return mapperInfo.Mapper(queryRunner, dataReader);
+					return ReMapOnException(context, queryRunner, dataReader, ref mapperInfo, ex);
 				}
+			}
+
+			public T ReMapOnException(IDataContext context, IQueryRunner queryRunner, DbDataReader dataReader, ref ReaderMapperInfo mapperInfo, Exception ex)
+			{
+				if (context.GetTraceSwitch().TraceInfo)
+					context.WriteTraceLine(
+						$"Mapper has switched to slow mode. Mapping exception: {ex.Message}",
+						context.GetTraceSwitch().DisplayName,
+						TraceLevel.Error);
+
+				queryRunner.MapperExpression = mapperInfo.MapperExpression;
+
+				var dataReaderType = dataReader.GetType();
+				var expression     = TransformMapperExpression(context, dataReader, dataReaderType, true);
+				var expr           = mapperInfo.MapperExpression; // create new instance to avoid race conditions without locks
+
+				mapperInfo = new ReaderMapperInfo()
+				{
+					MapperExpression = expr,
+					Mapper           = expression.CompileExpression(),
+					IsFaulted        = true
+				};
+
+				_mappers[dataReaderType] = mapperInfo;
+
+				return mapperInfo.Mapper(queryRunner, dataReader);
 			}
 
 			public ReaderMapperInfo GetMapperInfo(IDataContext context, IQueryRunner queryRunner, DbDataReader dataReader)
@@ -375,7 +380,8 @@ namespace LinqToDB.Linq
 			using var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps, preambles);
 			using var dr     = runner.ExecuteReader();
 
-			var dataReader = DataReaderWrapCache.TryUnwrapDataReader(dataContext.MappingSchema, dr.DataReader!);
+			var dataReader     = dr.DataReader!;
+			var origDataReader = DataReaderWrapCache.TryUnwrapDataReader(dataContext.MappingSchema, dataReader);
 
 			if (dataReader.Read())
 			{
@@ -385,7 +391,24 @@ namespace LinqToDB.Linq
 				do
 				{
 					count++;
-					yield return mapper.Map(dataContext, runner, dataReader, mapperInfo);
+//					yield return mapper.Map(dataContext, runner, origDataReader, ref mapperInfo);
+
+					T res;
+
+					try
+					{
+						res = mapperInfo.Mapper(runner, origDataReader);
+					}
+					catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException"))
+					{
+						// TODO: debug cases when our tests go into slow-mode (e.g. sqlite.ms)
+						if (mapperInfo.IsFaulted)
+							throw;
+
+						res = mapper.ReMapOnException(dataContext, runner, origDataReader, ref mapperInfo, ex);
+					}
+
+					yield return res;
 				}
 				while (dataReader.Read());
 
@@ -436,7 +459,7 @@ namespace LinqToDB.Linq
 						do
 						{
 							count++;
-							if (!func(mapper.Map(dataContext, runner, dataReader, mapperInfo)))
+							if (!func(mapper.Map(dataContext, runner, dataReader, ref mapperInfo)))
 								break;
 						}
 						while (take-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
@@ -519,7 +542,7 @@ namespace LinqToDB.Linq
 
 					_queryRunner.RowsCount++;
 
-					Current = _mapper.Map(_dataContext, _queryRunner, dataReader, mapperInfo);
+					Current = _mapper.Map(_dataContext, _queryRunner, dataReader, ref mapperInfo);
 
 					return true;
 				}
@@ -672,21 +695,7 @@ namespace LinqToDB.Linq
 			return
 				Expression.Lambda<Func<IQueryRunner, DbDataReader, T>>(
 					block.Update(
-						//new[]
-						//{
-						//	dataContextVar,
-						//	expressionVar,
-						//	parametersVar,
-						//	preamblesVar
-						//}
 						locals.Concat(block.Variables),
-						//new[]
-						//{
-						//	Expression.Assign(dataContextVar, Expression.Property(queryRunnerParam, _dataContextInfo)),
-						//	Expression.Assign(expressionVar , Expression.Property(queryRunnerParam, _expressionInfo)),
-						//	Expression.Assign(parametersVar , Expression.Property(queryRunnerParam, _parametersInfo)),
-						//	Expression.Assign(preamblesVar  , Expression.Property(queryRunnerParam, _preamblesInfo))
-						//}
 						exprs.Concat(block.Expressions)),
 					queryRunnerParam,
 					dataReaderParam);
@@ -781,7 +790,7 @@ namespace LinqToDB.Linq
 			if (dataReader.Read())
 			{
 				runner.RowsCount++;
-				return mapper.Map(dataContext, runner, dataReader, mapperInfo);
+				return mapper.Map(dataContext, runner, dataReader, ref mapperInfo);
 			}
 
 			return Array<T>.Empty.First();
@@ -814,7 +823,7 @@ namespace LinqToDB.Linq
 					{
 						var dataReader = DataReaderWrapCache.TryUnwrapDataReader(dataContext.MappingSchema, dr.DataReader);
 						var mapperInfo = mapper.GetMapperInfo(dataContext, runner, dataReader);
-						var item       = mapper.Map(dataContext, runner, dataReader, mapperInfo);
+						var item       = mapper.Map(dataContext, runner, dataReader, ref mapperInfo);
 
 						runner.RowsCount++;
 
