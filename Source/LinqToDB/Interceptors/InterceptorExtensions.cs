@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data.Common;
 
 namespace LinqToDB
@@ -99,27 +98,10 @@ namespace LinqToDB
 			}
 		}
 
-		internal static IEnumerable<T> GetInterceptors<T>(this IInterceptable<T> interceptable)
+		internal static T? CloneAggregated<T>(this T? interceptor)
 			where T : IInterceptor
 		{
-			if (interceptable.Interceptor == null)
-				yield break;
-
-			if (interceptable.Interceptor is AggregatedInterceptor<T> ai)
-				foreach (var interceptor in ai.Interceptors)
-					yield return interceptor;
-			else
-				yield return interceptable.Interceptor;
-		}
-
-
-		internal static TA Clone<TA,TI>(this AggregatedInterceptor<TI> aggregatedInterceptor)
-			where TI : IInterceptor
-			where TA : AggregatedInterceptor<TI>, new()
-		{
-			var clone = new TA();
-			clone.Interceptors.AddRange(aggregatedInterceptor.Interceptors);
-			return clone;
+			return interceptor is AggregatedInterceptor<T> ai ? (T?)(object?)ai.Clone() : interceptor;
 		}
 	}
 }

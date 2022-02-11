@@ -92,10 +92,6 @@ namespace Tests.Samples
 			}
 
 			public void AddInterceptor(IInterceptor interceptor) => _context.AddInterceptor(interceptor);
-
-			public IEnumerable<TInterceptor> GetInterceptors<TInterceptor>()
-				where TInterceptor : IInterceptor
-				=> _context.GetInterceptors<TInterceptor>();
 		}
 
 		public class Entity

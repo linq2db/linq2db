@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace LinqToDB.Data
 {
-	using Common;
 	using Interceptors;
 
 	public partial class DataConnection :
@@ -53,26 +50,6 @@ namespace LinqToDB.Data
 			((IInterceptable<IConnectionInterceptor>)   this).RemoveInterceptor(interceptor);
 			((IInterceptable<IDataContextInterceptor>)  this).RemoveInterceptor(interceptor);
 			((IInterceptable<IEntityServiceInterceptor>)this).RemoveInterceptor(interceptor);
-		}
-
-		IEnumerable<TInterceptor> IDataContext.GetInterceptors<TInterceptor>()
-		{
-			if (_commandInterceptor == null && _connectionInterceptor == null && _dataContextInterceptor == null && _entityServiceInterceptor == null)
-				return Array<TInterceptor>.Empty;
-
-			switch (typeof(TInterceptor))
-			{
-				case ICommandInterceptor       : return (IEnumerable<TInterceptor>)((IInterceptable<ICommandInterceptor>)      this).GetInterceptors();
-				case IConnectionInterceptor    : return (IEnumerable<TInterceptor>)((IInterceptable<IConnectionInterceptor>)   this).GetInterceptors();
-				case IDataContextInterceptor   : return (IEnumerable<TInterceptor>)((IInterceptable<IDataContextInterceptor>)  this).GetInterceptors();
-				case IEntityServiceInterceptor : return (IEnumerable<TInterceptor>)((IInterceptable<IEntityServiceInterceptor>)this).GetInterceptors();
-			}
-
-			return
-				((IInterceptable<IConnectionInterceptor>)   this).GetInterceptors().Cast<TInterceptor>(). Union(
-				((IInterceptable<IConnectionInterceptor>)   this).GetInterceptors().Cast<TInterceptor>()).Union(
-				((IInterceptable<IDataContextInterceptor>)  this).GetInterceptors().Cast<TInterceptor>()).Union(
-				((IInterceptable<IEntityServiceInterceptor>)this).GetInterceptors().Cast<TInterceptor>());
 		}
 	}
 }

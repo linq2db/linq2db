@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace LinqToDB
 {
-	using Common;
 	using Interceptors;
 
 	public partial class DataContext :
@@ -52,11 +49,11 @@ namespace LinqToDB
 				case IEntityServiceInterceptor es : Add(ref _entityServiceInterceptor, es); break;
 			}
 
-			void Add<TA,TI>(ref TA? aggregator, TI interceptor)
+			void Add<TA,TI>(ref TA? aggregator, TI intercept)
 				where TI : IInterceptor
 				where TA : AggregatedInterceptor<TI>, new()
 			{
-				if (interceptor is AggregatedInterceptor<TI> ai)
+				if (intercept is AggregatedInterceptor<TI> ai)
 				{
 					if (aggregator != null)
 						// this actually shouldn't be possible
@@ -79,29 +76,9 @@ namespace LinqToDB
 						_prebuiltOptions = _optionsBuilder.Build();
 					}
 
-					aggregator.Interceptors.Add(interceptor);
+					aggregator.Interceptors.Add(intercept);
 				}
 			}
-		}
-
-		IEnumerable<TInterceptor> IDataContext.GetInterceptors<TInterceptor>()
-		{
-			if (_commandInterceptor == null && _connectionInterceptor == null && _dataContextInterceptor == null && _entityServiceInterceptor == null)
-				return Array<TInterceptor>.Empty;
-
-			switch (typeof(TInterceptor))
-			{
-				case ICommandInterceptor:       return (IEnumerable<TInterceptor>)((IInterceptable<ICommandInterceptor>)      this).GetInterceptors();
-				case IConnectionInterceptor:    return (IEnumerable<TInterceptor>)((IInterceptable<IConnectionInterceptor>)   this).GetInterceptors();
-				case IDataContextInterceptor:   return (IEnumerable<TInterceptor>)((IInterceptable<IDataContextInterceptor>)  this).GetInterceptors();
-				case IEntityServiceInterceptor: return (IEnumerable<TInterceptor>)((IInterceptable<IEntityServiceInterceptor>)this).GetInterceptors();
-			}
-
-			return
-				((IInterceptable<ICommandInterceptor>)      this).GetInterceptors().Cast<TInterceptor>().Union(
-				((IInterceptable<IConnectionInterceptor>)   this).GetInterceptors().Cast<TInterceptor>()).Union(
-				((IInterceptable<IDataContextInterceptor>)  this).GetInterceptors().Cast<TInterceptor>()).Union(
-				((IInterceptable<IEntityServiceInterceptor>)this).GetInterceptors().Cast<TInterceptor>());
 		}
 	}
 }

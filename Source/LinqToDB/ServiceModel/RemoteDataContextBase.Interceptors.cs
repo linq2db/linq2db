@@ -1,7 +1,5 @@
 ﻿#if NETFRAMEWORK
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace LinqToDB.ServiceModel
 {
@@ -31,22 +29,6 @@ namespace LinqToDB.ServiceModel
 		public void AddInterceptor(IInterceptor interceptor)
 		{
 			this.AddInterceptorImpl(interceptor);
-		}
-
-		IEnumerable<TInterceptor> IDataContext.GetInterceptors<TInterceptor>()
-		{
-			if (_dataContextInterceptor == null && _entityServiceInterceptor == null)
-				return Enumerable.Empty<TInterceptor>();
-
-			switch (typeof(TInterceptor))
-			{
-				case IDataContextInterceptor   : return (IEnumerable<TInterceptor>)((IInterceptable<IDataContextInterceptor>)  this).GetInterceptors();
-				case IEntityServiceInterceptor : return (IEnumerable<TInterceptor>)((IInterceptable<IEntityServiceInterceptor>)this).GetInterceptors();
-			}
-
-			return
-				((IInterceptable<IDataContextInterceptor>)  this).GetInterceptors().Cast<TInterceptor>().Union(
-				((IInterceptable<IEntityServiceInterceptor>)this).GetInterceptors().Cast<TInterceptor>());
 		}
 	}
 }

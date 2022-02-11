@@ -1,15 +1,15 @@
 ﻿using System;
+using System.Data;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
 namespace LinqToDB.Common
 {
-	using System.Data;
-	using System.Linq.Expressions;
-	using System.Threading.Tasks;
 	using Data;
 	using Data.RetryPolicy;
-	using LinqToDB.Linq;
+	using Linq;
 
 	/// <summary>
 	/// Contains LINQ expression compilation options.

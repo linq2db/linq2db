@@ -1653,12 +1653,12 @@ namespace LinqToDB.Data
 				CommandTimeout            = CommandTimeout,
 				InlineParameters          = InlineParameters,
 				ThrowOnDisposed           = ThrowOnDisposed,
-				_queryHints               = _queryHints?.Count > 0 ? _queryHints.ToList() : null,
 				OnTraceConnection         = OnTraceConnection,
-				_commandInterceptor       = _commandInterceptor       is AggregatedCommandInterceptor       cm ? (AggregatedCommandInterceptor)      cm.Clone() : _commandInterceptor,
-				_connectionInterceptor    = _connectionInterceptor    is AggregatedConnectionInterceptor    c  ? (AggregatedConnectionInterceptor)   c. Clone() : _connectionInterceptor,
-				_dataContextInterceptor   = _dataContextInterceptor   is AggregatedDataContextInterceptor   dc ? (AggregatedDataContextInterceptor)  dc.Clone() : _dataContextInterceptor,
-				_entityServiceInterceptor = _entityServiceInterceptor is AggregatedEntityServiceInterceptor es ? (AggregatedEntityServiceInterceptor)es.Clone() : _entityServiceInterceptor,
+				_queryHints               = _queryHints?.Count > 0 ? _queryHints.ToList() : null,
+				_commandInterceptor       = _commandInterceptor      .CloneAggregated(),
+				_connectionInterceptor    = _connectionInterceptor   .CloneAggregated(),
+				_dataContextInterceptor   = _dataContextInterceptor  .CloneAggregated(),
+				_entityServiceInterceptor = _entityServiceInterceptor.CloneAggregated(),
 			};
 		}
 

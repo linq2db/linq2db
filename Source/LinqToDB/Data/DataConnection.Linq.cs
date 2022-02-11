@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -81,10 +80,10 @@ namespace LinqToDB.Data
 					ThrowOnDisposed           = ThrowOnDisposed,
 					_queryHints               = _queryHints?.Count > 0 ? _queryHints.ToList() : null,
 					OnTraceConnection         = OnTraceConnection,
-					_commandInterceptor       = _commandInterceptor       is AggregatedCommandInterceptor       cm ? (AggregatedCommandInterceptor)      cm.Clone() : _commandInterceptor,
-					_connectionInterceptor    = _connectionInterceptor    is AggregatedConnectionInterceptor    c  ? (AggregatedConnectionInterceptor)   c. Clone() : _connectionInterceptor,
-					_dataContextInterceptor   = _dataContextInterceptor   is AggregatedDataContextInterceptor   dc ? (AggregatedDataContextInterceptor)  dc.Clone() : _dataContextInterceptor,
-					_entityServiceInterceptor = _entityServiceInterceptor is AggregatedEntityServiceInterceptor ai ? (AggregatedEntityServiceInterceptor)ai.Clone() : _entityServiceInterceptor,
+					_commandInterceptor       = _commandInterceptor      .CloneAggregated(),
+					_connectionInterceptor    = _connectionInterceptor   .CloneAggregated(),
+					_dataContextInterceptor   = _dataContextInterceptor  .CloneAggregated(),
+					_entityServiceInterceptor = _entityServiceInterceptor.CloneAggregated(),
 				};
 
 			return (DataConnection)Clone();

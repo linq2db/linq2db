@@ -1,17 +1,17 @@
 ﻿using System;
-using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
-using LinqToDB.Common;
-using LinqToDB.Common.Internal.Cache;
-using LinqToDB.Expressions;
-using LinqToDB.Mapping;
 
 namespace LinqToDB.Linq
 {
-	internal static class DataReaderWrapCache
+	using Common;
+	using LinqToDB.Common.Internal.Cache;
+	using LinqToDB.Expressions;
+	using Mapping;
+
+	static class DataReaderWrapCache
 	{
-		private static readonly MemoryCache<(Type dataReaderType, string schemaId)> _readerMappings = new (new ());
+		static readonly MemoryCache<(Type dataReaderType, string schemaId)> _readerMappings = new (new ());
 
 		static DataReaderWrapCache()
 		{
