@@ -2,10 +2,11 @@
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-using LinqToDB.Data;
 
 namespace LinqToDB.Linq
 {
+	using Data;
+
 	public interface IQueryRunner: IDisposable
 #if NATIVE_ASYNC
 		, IAsyncDisposable
@@ -52,7 +53,7 @@ namespace LinqToDB.Linq
 		/// Returns SQL text for query.
 		/// </summary>
 		/// <returns>Query SQL text.</returns>
-		string                GetSqlText     ();
+		string                 GetSqlText          ();
 
 		Expression     Expression       { get; }
 		IDataContext   DataContext      { get; }
