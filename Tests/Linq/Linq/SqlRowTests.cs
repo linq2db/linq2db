@@ -360,7 +360,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Overlaps(
-			[DataSources(TestProvName.AllOracle, TestProvName.AllPostgreSQL, ProviderName.InformixDB2)] string context)
+			[IncludeDataSources(TestProvName.AllOracle, TestProvName.AllPostgreSQL, ProviderName.InformixDB2)] string context)
 		{
 			using var db   = GetDataContext(context);
 			using var ints = SetupIntsTable(db);
