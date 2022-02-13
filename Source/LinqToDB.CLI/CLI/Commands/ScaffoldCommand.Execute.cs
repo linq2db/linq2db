@@ -77,8 +77,8 @@ namespace LinqToDB.CLI
 			options.Remove(General.AdditionalConnectionString, out value);
 			var additionalConnectionString = (string?)value;
 
-			options.Remove(General.T4Template, out value);
-			var t4templatePath = (string?)value;
+			options.Remove(General.Interceptors, out value);
+			var interceptorsPath = (string?)value;
 
 			// assert that all provided options handled
 			if (options.Count > 0)
@@ -90,22 +90,24 @@ namespace LinqToDB.CLI
 				throw new InvalidOperationException($"Not all options handled by {Name} command");
 			}
 
-			// apply T4 template
-			if (t4templatePath != null)
+			// load interceptors from T4 template or assembly
+			ScaffoldInterceptors? interceptors = null;
+			if (interceptorsPath != null)
 			{
-				var res = ApplyTemplate(settings, t4templatePath);
+				(var res, interceptors) = LoadInterceptors(interceptorsPath);
 				if (res != StatusCodes.SUCCESS)
 					return res;
 			}
 
 			// perform scaffolding
-			return Scaffold(settings, provider, providerLocation, connectionString, additionalConnectionString, output, overwrite);
+			return Scaffold(settings, interceptors, provider, providerLocation, connectionString, additionalConnectionString, output, overwrite);
 		}
 
 		private int Scaffold(
-			ScaffoldOptions settings,
-			string          provider,
-			string?         providerLocation,
+			ScaffoldOptions       settings,
+			ScaffoldInterceptors? interceptors,
+			string                provider,
+			string?               providerLocation,
 			string          connectionString,
 			string?         additionalConnectionString,
 			string          output,
@@ -129,7 +131,7 @@ namespace LinqToDB.CLI
 				typeMappingsProvider     = new AggregateTypeMappingsProvider(legacyProvider, secondLegacyProvider);
 			}
 
-			var generator  = new Scaffolder(LanguageProviders.CSharp, HumanizerNameConverter.Instance, settings);
+			var generator  = new Scaffolder(LanguageProviders.CSharp, HumanizerNameConverter.Instance, settings, interceptors);
 			var dataModel  = generator.LoadDataModel(schemaProvider, typeMappingsProvider);
 			var sqlBuilder = dc.DataProvider.CreateSqlBuilder(dc.MappingSchema);
 			var files      = generator.GenerateCodeModel(

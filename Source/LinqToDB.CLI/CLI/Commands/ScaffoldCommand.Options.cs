@@ -187,15 +187,23 @@ Example of platform-specific providers:
 					new (false, "t4"     , "set of parameters, similar to T4 defaults (compat. option)"      ));
 
 			/// <summary>
-			/// T4 template path option.
+			/// T4 template or custom assembly path option.
 			/// </summary>
-			public static readonly CliOption T4Template = new StringCliOption(
-					"t4",
+			public static readonly CliOption Interceptors = new StringCliOption(
+					"customize",
 					null,
 					false,
 					false,
-					"specify path to T4 template with scaffolding customization logic",
-					"To create T4 template use 'dotnet linq2db template' command to generate initial template file and edit it with required customizations",
+					"specify path to T4 template or assembly with scaffolding customization logic",
+					@$"Option accepts path to file with customization logic which could be:
+- assembly (recognized by .dll extension);
+- T4 template.
+
+If you choose T4, you can create initial empty template using 'dotnet linq2db template' command. It will generate initial template file with pre-generated extension points which you can modify to implement required customizations.
+Customization using compiled assembly has several requirements:
+- it should be compatible with current runtime, used by 'dotnet linq2db' tool (netcoreapp3.1 by default);
+- assembly should contain exactly one interceptor class with customization logic. It should be inherited from {nameof(ScaffoldInterceptors)} and has default public constructor;
+- linq2db.Tools version should match tool's version to avoid possible compatibility issues/errors.",
 					null,
 					null,
 					null);

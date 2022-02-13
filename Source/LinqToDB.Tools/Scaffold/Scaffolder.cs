@@ -16,8 +16,9 @@ namespace LinqToDB.Scaffold
 	/// </summary>
 	public sealed class Scaffolder
 	{
-		private readonly NamingServices  _namingServices;
-		private readonly ScaffoldOptions _options;
+		private readonly NamingServices        _namingServices;
+		private readonly ScaffoldOptions       _options;
+		private readonly ScaffoldInterceptors? _interceptors;
 
 		/// <summary>
 		/// Creates instance of data model codegerator from database connection.
@@ -25,11 +26,13 @@ namespace LinqToDB.Scaffold
 		/// <param name="languageProvider">Language provider to use for data model codegeneration.</param>
 		/// <param name="nameConverter"><see cref="INameConversionProvider"/> pluralization service implementation.</param>
 		/// <param name="options">Scaffolding process customization options.</param>
-		public Scaffolder(ILanguageProvider languageProvider, INameConversionProvider nameConverter, ScaffoldOptions options)
+		/// <param name="interceptors">Optional custom scaffold interceptors.</param>
+		public Scaffolder(ILanguageProvider languageProvider, INameConversionProvider nameConverter, ScaffoldOptions options, ScaffoldInterceptors? interceptors)
 		{
 			Language        = languageProvider;
 			_namingServices = new NamingServices(nameConverter);
 			_options        = options;
+			_interceptors   = interceptors;
 		}
 
 		/// <summary>
@@ -52,7 +55,8 @@ namespace LinqToDB.Scaffold
 				Language,
 				schemaProvider,
 				typeMappingsProvider,
-				_options)
+				_options,
+				_interceptors)
 				.LoadSchema();
 		}
 

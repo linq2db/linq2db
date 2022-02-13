@@ -102,12 +102,12 @@ namespace LinqToDB.Scaffold
 
 			foreach (var column in table.Columns)
 			{
-				var typeMapping    = _typeMappingsProvider.GetTypeMapping(column.Type);
+				var typeMapping    = MapType(column.Type);
 				var columnMetadata = new ColumnMetadata() { Name = column.Name };
 				var propertyName   = _namingServices.NormalizeIdentifier(
 					_options.DataModel.EntityColumnPropertyNameOptions,
 					column.Name);
-				var propertyType   = (typeMapping?.CLRType ?? WellKnownTypes.System.Object).WithNullability(column.Nullable);
+				var propertyType   = typeMapping.CLRType.WithNullability(column.Nullable);
 
 				var columnProperty = new PropertyModel(propertyName, propertyType)
 				{
@@ -134,7 +134,7 @@ namespace LinqToDB.Scaffold
 					columnMetadata.DbType = columnMetadata.DbType with { Scale = null };
 
 				if (_options.DataModel.GenerateDataType)
-					columnMetadata.DataType = typeMapping?.DataType;
+					columnMetadata.DataType = typeMapping.DataType;
 
 				columnMetadata.CanBeNull    = column.Nullable;
 				columnMetadata.SkipOnInsert = !column.Insertable;

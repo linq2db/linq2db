@@ -48,8 +48,8 @@ namespace LinqToDB.Scaffold
 			if (func.Result is not ScalarResult scalarResult)
 				throw new InvalidOperationException($"Aggregate function {func.Name} returns non-scalar value.");
 
-			var typeMapping = _typeMappingsProvider.GetTypeMapping(scalarResult.Type);
-			var funcModel   = new AggregateFunctionModel(name, method, metadata, (typeMapping?.CLRType ?? WellKnownTypes.System.Object).WithNullability(scalarResult.Nullable));
+			var typeMapping = MapType(scalarResult.Type);
+			var funcModel   = new AggregateFunctionModel(name, method, metadata, typeMapping.CLRType.WithNullability(scalarResult.Nullable));
 
 			BuildParameters(func.Parameters, funcModel.Parameters);
 
@@ -94,8 +94,8 @@ namespace LinqToDB.Scaffold
 				case ResultKind.Scalar:
 				{
 					var scalarResult = (ScalarResult)func.Result;
-					var typeMapping  = _typeMappingsProvider.GetTypeMapping(scalarResult.Type);
-					funcModel.Return = (typeMapping?.CLRType ?? WellKnownTypes.System.Object).WithNullability(scalarResult.Nullable);
+					var typeMapping  = MapType(scalarResult.Type);
+					funcModel.Return = typeMapping.CLRType.WithNullability(scalarResult.Nullable);
 					// TODO: DataType not used by current scalar function mapping API
 					break;
 				}
@@ -119,9 +119,9 @@ namespace LinqToDB.Scaffold
 					// fields order must be preserved, as tuple fields mapped by ordinal
 					foreach (var field in tupleResult.Fields)
 					{
-						var typeMapping = _typeMappingsProvider.GetTypeMapping(field.Type);
+						var typeMapping = MapType(field.Type);
 
-						var prop = new PropertyModel(_namingServices.NormalizeIdentifier(_options.DataModel.FunctionTupleResultPropertyNameOptions, field.Name ?? "Field"), (typeMapping?.CLRType ?? WellKnownTypes.System.Object).WithNullability(field.Nullable))
+						var prop = new PropertyModel(_namingServices.NormalizeIdentifier(_options.DataModel.FunctionTupleResultPropertyNameOptions, field.Name ?? "Field"), typeMapping.CLRType.WithNullability(field.Nullable))
 						{
 							IsPublic  = true,
 							IsDefault = true,
@@ -129,7 +129,7 @@ namespace LinqToDB.Scaffold
 						};
 						funcModel.ReturnTuple.Fields.Add(new TupleFieldModel(prop, field.Type)
 						{
-							DataType = typeMapping?.DataType
+							DataType = typeMapping.DataType
 						});
 					}
 					break;
@@ -223,16 +223,16 @@ namespace LinqToDB.Scaffold
 				case ResultKind.Scalar:
 				{
 					var scalarResult = (ScalarResult)func.Result;
-					var typeMapping  = _typeMappingsProvider.GetTypeMapping(scalarResult.Type);
+					var typeMapping  = MapType(scalarResult.Type);
 
 					var paramName    = _namingServices.NormalizeIdentifier(_options.DataModel.ProcedureParameterNameOptions, scalarResult.Name ?? "return");
 					funcModel.Return = new FunctionParameterModel(
-						new ParameterModel(paramName, (typeMapping?.CLRType ?? WellKnownTypes.System.Object).WithNullability(scalarResult.Nullable),
+						new ParameterModel(paramName, typeMapping.CLRType.WithNullability(scalarResult.Nullable),
 						CodeParameterDirection.Out),
 						System.Data.ParameterDirection.ReturnValue)
 					{
 						Type       = scalarResult.Type,
-						DataType   = typeMapping?.DataType,
+						DataType   = typeMapping.DataType,
 						DbName     = scalarResult.Name,
 						IsNullable = scalarResult.Nullable
 					};
@@ -302,7 +302,7 @@ namespace LinqToDB.Scaffold
 		{
 			foreach (var param in parameters)
 			{
-				var typeMapping = _typeMappingsProvider.GetTypeMapping(param.Type);
+				var typeMapping = MapType(param.Type);
 				var paramName   = _namingServices.NormalizeIdentifier(_options.DataModel.ProcedureParameterNameOptions, param.Name);
 
 				CodeParameterDirection         direction;
@@ -318,7 +318,7 @@ namespace LinqToDB.Scaffold
 
 				var parameterModel = new ParameterModel(
 					paramName,
-					(typeMapping?.CLRType ?? WellKnownTypes.System.Object).WithNullability(param.Nullable),
+					typeMapping.CLRType.WithNullability(param.Nullable),
 					direction)
 				{
 					Description = param.Description
@@ -328,7 +328,7 @@ namespace LinqToDB.Scaffold
 				{
 					DbName     = param.Name,
 					Type       = param.Type,
-					DataType   = typeMapping?.DataType,
+					DataType   = typeMapping.DataType,
 					IsNullable = param.Nullable
 				};
 
@@ -437,13 +437,13 @@ namespace LinqToDB.Scaffold
 
 			foreach (var col in columns)
 			{
-				var typeMapping = _typeMappingsProvider.GetTypeMapping(col.Type);
+				var typeMapping = MapType(col.Type);
 
 				var metadata = new ColumnMetadata()
 				{
 					Name         = col.Name ?? string.Empty,
 					DbType       = col.Type,
-					DataType     = typeMapping?.DataType,
+					DataType     = typeMapping.DataType,
 					CanBeNull    = col.Nullable,
 					SkipOnInsert = true,
 					SkipOnUpdate = true
@@ -451,7 +451,7 @@ namespace LinqToDB.Scaffold
 
 				var property  = new PropertyModel(
 					_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureResultColumnPropertyNameOptions, col.Name ?? "Column"),
-					(typeMapping?.CLRType ?? WellKnownTypes.System.Object).WithNullability(col.Nullable))
+					typeMapping.CLRType.WithNullability(col.Nullable))
 				{
 					IsPublic  = true,
 					HasSetter = true,

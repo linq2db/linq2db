@@ -12,6 +12,8 @@ namespace LinqToDB.Scaffold
 	/// </summary>
 	public sealed partial class DataModelLoader
 	{
+		private static readonly TypeMapping _unmappedType = new(WellKnownTypes.System.Object, null);
+
 		private record TableWithEntity(TableLikeObject TableOrView, EntityModel Entity);
 
 		// language-specific naming services for initial normalization of identifiers in data model
@@ -32,19 +34,22 @@ namespace LinqToDB.Scaffold
 
 		// various settings to customize scaffolding process
 		private readonly ScaffoldOptions        _options;
+		private readonly ScaffoldInterceptors   _interceptors;
 
 		public DataModelLoader(
 			NamingServices         namingServices,
 			ILanguageProvider      languageProvider,
 			ISchemaProvider        schemaProvider,
 			ITypeMappingProvider   typeMappingsProvider,
-			ScaffoldOptions        options)
+			ScaffoldOptions        options,
+			ScaffoldInterceptors?  interceptors)
 		{
 			_namingServices       = namingServices;
 			_languageProvider     = languageProvider;
 			_schemaProvider       = schemaProvider;
 			_typeMappingsProvider = typeMappingsProvider;
 			_options              = options;
+			_interceptors   = interceptors ?? NoOpScaffoldInterceptors.Instance;
 		}
 
 		/// <summary>
@@ -86,14 +91,14 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 			// load tables as entities
 			if (_options.Schema.LoadedObjects.HasFlag(SchemaObjects.Table))
 			{
-				foreach (var table in _schemaProvider.GetTables())
+				foreach (var table in _interceptors.GetTables(_schemaProvider.GetTables()))
 					BuildEntity(dataContext, table, defaultSchemas, baseEntityType);
 			}
 
 			// load views as entities
 			if (_options.Schema.LoadedObjects.HasFlag(SchemaObjects.View))
 			{
-				foreach (var view in _schemaProvider.GetViews())
+				foreach (var view in _interceptors.GetViews(_schemaProvider.GetViews()))
 					BuildEntity(dataContext, view, defaultSchemas, baseEntityType);
 			}
 
@@ -102,7 +107,7 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 			{
 				Dictionary<(ObjectName from, ObjectName to), List<ISet<ForeignKeyColumnMapping>>>? duplicateFKs = null;
 
-				foreach (var fk in _schemaProvider.GetForeignKeys())
+				foreach (var fk in _interceptors.GetForeignKeys(_schemaProvider.GetForeignKeys()))
 				{
 					// detect and skip duplicate foreign keys
 					if (_options.Schema.IgnoreDuplicateForeignKeys)
@@ -152,32 +157,48 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 			// load stored procedures
 			if (_options.Schema.LoadedObjects.HasFlag(SchemaObjects.StoredProcedure))
 			{
-				foreach (var proc in _schemaProvider.GetProcedures(_options.Schema.LoadProceduresSchema, _options.Schema.UseSafeSchemaLoad))
+				foreach (var proc in _interceptors.GetProcedures(_schemaProvider.GetProcedures(_options.Schema.LoadProceduresSchema, _options.Schema.UseSafeSchemaLoad)))
 					BuildStoredProcedure(dataContext, proc, defaultSchemas);
 			}
 
 			// load table functions
 			if (_options.Schema.LoadedObjects.HasFlag(SchemaObjects.TableFunction))
 			{
-				foreach (var func in _schemaProvider.GetTableFunctions())
+				foreach (var func in _interceptors.GetTableFunctions(_schemaProvider.GetTableFunctions()))
 					BuildTableFunction(dataContext, func, defaultSchemas);
 			}
 
 			// load scalar functions
 			if (_options.Schema.LoadedObjects.HasFlag(SchemaObjects.ScalarFunction))
 			{
-				foreach (var func in _schemaProvider.GetScalarFunctions())
+				foreach (var func in _interceptors.GetScalarFunctions(_schemaProvider.GetScalarFunctions()))
 					BuildScalarFunction(dataContext, func, defaultSchemas);
 			}
 
 			// load aggregate functions
 			if (_options.Schema.LoadedObjects.HasFlag(SchemaObjects.AggregateFunction))
 			{
-				foreach (var func in _schemaProvider.GetAggregateFunctions())
+				foreach (var func in _interceptors.GetAggregateFunctions(_schemaProvider.GetAggregateFunctions()))
 					BuildAggregateFunction(dataContext, func, defaultSchemas);
 			}
 
 			return model;
+		}
+
+		private readonly Dictionary<DatabaseType, TypeMapping> _typeResolveCache = new();
+		private TypeMapping MapType(DatabaseType databaseType)
+		{
+			if (_typeResolveCache.TryGetValue(databaseType, out var mapping))
+			{
+				return mapping;
+			}
+
+			mapping = _typeMappingsProvider.GetTypeMapping(databaseType) ?? _unmappedType;
+			mapping = _interceptors.GetTypeMapping(databaseType, _languageProvider.TypeParser, mapping);
+
+			_typeResolveCache.Add(databaseType, mapping);
+
+			return mapping;
 		}
 	}
 }

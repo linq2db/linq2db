@@ -27,6 +27,7 @@
 		<PackageVersion Include="FluentAssertions"                          Version="6.2.0"       />
 		<PackageVersion Include="Mono.TextTemplating"                       Version="2.2.1"       />
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp"             Version="4.0.1"       />
+		<PackageVersion Include="Microsoft.Extensions.DependencyModel"      Version="6.0.0"       />
 		<!--data providers-->
 		<PackageVersion Include="MySql.Data"                                Version="8.0.27"      />
 		<PackageVersion Include="AdoNetCore.AseClient"                      Version="0.19.2"      />

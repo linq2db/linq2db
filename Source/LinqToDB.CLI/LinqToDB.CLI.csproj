@@ -63,5 +63,8 @@
 		<!--T4 support-->
 		<PackageReference Include="Mono.TextTemplating" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+		<!--interceptor dependencies resolve-->
+		<PackageReference Include="Microsoft.Extensions.DependencyModel" />
+
 	</ItemGroup>
 </Project>
