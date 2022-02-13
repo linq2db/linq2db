@@ -377,12 +377,12 @@ namespace Tests.Linq
 				  .Overlaps(Row(DTO.Parse("2020-10-03"), DTO.Parse("2020-11-09"))))
 				.Should().Be(1);
 
-			ints.Count(i => Row(DT.Parse("2020-10-05"), TimeSpan.Parse("6"))
-				  .Overlaps(Row(DT.Parse("2020-10-03"), TimeSpan.Parse("1"))))
+			ints.Count(i => Row(DT.Parse("2020-10-03"), TimeSpan.Parse("6"))
+				  .Overlaps(Row(DT.Parse("2020-10-05"), TimeSpan.Parse("1"))))
 				.Should().Be(1);
 
-			ints.Count(i => Row(DT.Parse("2020-10-05"), TimeSpan.Parse("6"))
-				  .Overlaps(Row(DT.Parse("2020-10-03"), (TimeSpan?)null)))
+			ints.Count(i => Row(DT.Parse("2020-10-03"), TimeSpan.Parse("6"))
+				  .Overlaps(Row(DT.Parse("2020-10-05"), (TimeSpan?)null)))
 				.Should().Be(1);
 		}
 
