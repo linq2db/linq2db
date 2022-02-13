@@ -15,7 +15,7 @@ namespace LinqToDB.Scaffold
 		/// Ignored if target language doesn't support nullable reference types.
 		/// <list type="bullet">
 		/// <item>Default: <c>true</c></item>
-		/// <item>In T4 compability mode: <c>TODO</c></item>
+		/// <item>In T4 compability mode: <c>true</c></item>
 		/// </list>
 		/// </summary>
 		public bool EnableNullableReferenceTypes { get; set; } = true;
@@ -24,7 +24,7 @@ namespace LinqToDB.Scaffold
 		/// Gets or sets string, used for a single indentation level in generated code.
 		/// <list type="bullet">
 		/// <item>Default: <c>"\t"</c></item>
-		/// <item>In T4 compability mode: <c>TODO</c></item>
+		/// <item>In T4 compability mode: <c>"\t"</c></item>
 		/// </list>
 		/// </summary>
 		public string Indent { get; set; } = "\t";
@@ -33,7 +33,7 @@ namespace LinqToDB.Scaffold
 		/// Gets or sets string, used as newline sequence in generated code.
 		/// <list type="bullet">
 		/// <item>Default: <see cref="Environment.NewLine"/></item>
-		/// <item>In T4 compability mode: <c>TODO</c></item>
+		/// <item>In T4 compability mode: <c>"\r\n"</c></item>
 		/// </list>
 		/// </summary>
 		public string NewLine { get; set; } = Environment.NewLine;
@@ -43,7 +43,7 @@ namespace LinqToDB.Scaffold
 		/// Applicable only to code, generated without &lt;auto-generated /&gt; comment.
 		/// <list type="bullet">
 		/// <item>Default: <c>true</c></item>
-		/// <item>In T4 compability mode: <c>TODO</c></item>
+		/// <item>In T4 compability mode: <c>true</c> (both CS1573 and CS1591, T4 supporessed only CS1591)</item>
 		/// </list>
 		/// </summary>
 		public bool SuppressMissingXmlDocWarnings { get; set; } = true;
@@ -88,7 +88,7 @@ namespace LinqToDB.Scaffold
 		/// Gets or sets namespace name for generated code.
 		/// <list type="bullet">
 		/// <item>Default: <c>"DataModel"</c></item>
-		/// <item>In T4 compability mode: TODO</item>
+		/// <item>In T4 compability mode: <c>"DataModel"</c></item>
 		/// </list>
 		/// </summary>
 		public string? Namespace { get; set; } = "DataModel";

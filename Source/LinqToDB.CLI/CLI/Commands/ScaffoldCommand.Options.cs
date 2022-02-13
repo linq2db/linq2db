@@ -950,7 +950,7 @@ Naming options is an object with following properties:
 			public static readonly CliOption SchemaContextPropertyNaming = DefineNamingOption(
 				"schema-context-property-name",
 				"non-default schema context property in main context naming options",
-				_defaultOptions.DataModel.SchemaPropertyOptions);
+				_defaultOptions.DataModel.SchemaPropertyNameOptions);
 
 			/// <summary>
 			/// Find extension method parameters naming option.

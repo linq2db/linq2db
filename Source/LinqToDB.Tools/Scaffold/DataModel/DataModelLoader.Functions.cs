@@ -354,7 +354,7 @@ namespace LinqToDB.Scaffold
 					baseName);
 
 				var contextPropertyName = _namingServices.NormalizeIdentifier(
-					_options.DataModel.SchemaPropertyOptions,
+					_options.DataModel.SchemaPropertyNameOptions,
 					baseName);
 
 				var wrapperClass = new ClassModel(

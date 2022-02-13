@@ -176,7 +176,7 @@ namespace LinqToDB.CLI
 			if (options.Remove(DataModel.FunctionTupleClassNaming            , out value)) settings.FunctionTupleResultClassNameOptions            = (NormalizationOptions)value!;
 			if (options.Remove(DataModel.FunctionTupleFieldPropertyNaming    , out value)) settings.FunctionTupleResultPropertyNameOptions         = (NormalizationOptions)value!;
 			if (options.Remove(DataModel.SchemaWrapperClassNaming            , out value)) settings.SchemaClassNameOptions                         = (NormalizationOptions)value!;
-			if (options.Remove(DataModel.SchemaContextPropertyNaming         , out value)) settings.SchemaPropertyOptions                          = (NormalizationOptions)value!;
+			if (options.Remove(DataModel.SchemaContextPropertyNaming         , out value)) settings.SchemaPropertyNameOptions                      = (NormalizationOptions)value!;
 			if (options.Remove(DataModel.FindParameterNaming                 , out value)) settings.FindParameterNameOptions                       = (NormalizationOptions)value!;
 		}
 

@@ -22,7 +22,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of Database name in mappings (for tables, views, procedures and functions).
 		/// <list type="bullet">
 		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>TODO</c></item>
+		/// <item>In T4 compability mode: <c>false</c></item>
 		/// </list>
 		/// </summary>
 		public bool IncludeDatabaseName { get; set; }
@@ -31,7 +31,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of Schema name for default schemas in mappings (for tables, views, procedures and functions).
 		/// <list type="bullet">
 		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>TODO</c></item>
+		/// <item>In T4 compability mode: <c>true</c></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateDefaultSchema { get; set; }
@@ -97,8 +97,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables generation of <see cref="DataType"/> enum value for entity column mapping.
 		/// <list type="bullet">
-		/// <item>Default: <c>TODO</c></item>
-		/// <item>In T4 compability mode: <c>TODO</c></item>
+		/// <item>Default: <c>false</c></item>
+		/// <item>In T4 compability mode: <c>false</c></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateDataType { get; set; }
@@ -106,8 +106,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables generation of database type name for entity column mapping.
 		/// <list type="bullet">
-		/// <item>Default: <c>TODO</c></item>
-		/// <item>In T4 compability mode: <c>TODO</c></item>
+		/// <item>Default: <c>false</c></item>
+		/// <item>In T4 compability mode: <c>false</c></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateDbType { get; set; }
@@ -115,8 +115,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables generation of database type length for entity column mapping.
 		/// <list type="bullet">
-		/// <item>Default: <c>TODO</c></item>
-		/// <item>In T4 compability mode: <c>TODO</c></item>
+		/// <item>Default: <c>false</c></item>
+		/// <item>In T4 compability mode: <c>false</c></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateLength { get; set; }
@@ -124,8 +124,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables generation of database type precision for entity column mapping.
 		/// <list type="bullet">
-		/// <item>Default: <c>TODO</c></item>
-		/// <item>In T4 compability mode: <c>TODO</c></item>
+		/// <item>Default: <c>false</c></item>
+		/// <item>In T4 compability mode: <c>false</c></item>
 		/// </list>
 		/// </summary>
 		public bool GeneratePrecision { get; set; }
@@ -133,8 +133,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables generation of database type scale for entity column mapping.
 		/// <list type="bullet">
-		/// <item>Default: <c>TODO</c></item>
-		/// <item>In T4 compability mode: <c>TODO</c></item>
+		/// <item>Default: <c>false</c></item>
+		/// <item>In T4 compability mode: <c>false</c></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateScale { get; set; }
@@ -146,7 +146,7 @@ namespace LinqToDB.Scaffold
 		/// Includes database name, data source and server version values if available from schema provider for current database.
 		/// <list type="bullet">
 		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>TODO</c></item>
+		/// <item>In T4 compability mode: <c>false</c></item>
 		/// </list>
 		/// </summary>
 		public bool IncludeDatabaseInfo { get; set; }
@@ -155,7 +155,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of default data context constructor.
 		/// <list type="bullet">
 		/// <item>Default: <c>true</c></item>
-		/// <item>In T4 compability mode: <c>TODO</c></item>
+		/// <item>In T4 compability mode: <c>true</c></item>
 		/// </list>
 		/// </summary>
 		public bool HasDefaultConstructor { get; set; } = true;
@@ -164,7 +164,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of data context constructor with <c>(<see cref="string"/> configurationName)</c> parameter.
 		/// <list type="bullet">
 		/// <item>Default: <c>true</c></item>
-		/// <item>In T4 compability mode: <c>TODO</c></item>
+		/// <item>In T4 compability mode: <c>true</c></item>
 		/// </list>
 		/// </summary>
 		public bool HasConfigurationConstructor { get; set; } = true;
@@ -173,7 +173,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of data context constructor with non-generic <c>(<see cref="LinqToDbConnectionOptions"/> options)</c> parameter.
 		/// <list type="bullet">
 		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>TODO</c></item>
+		/// <item>In T4 compability mode: <c>true</c></item>
 		/// </list>
 		/// </summary>
 		public bool HasUntypedOptionsConstructor { get; set; }
@@ -183,7 +183,7 @@ namespace LinqToDB.Scaffold
 		/// where <c>T</c> is generated data context class.
 		/// <list type="bullet">
 		/// <item>Default: <c>true</c></item>
-		/// <item>In T4 compability mode: <c>TODO</c></item>
+		/// <item>In T4 compability mode: <c>true</c></item>
 		/// </list>
 		/// </summary>
 		public bool HasTypedOptionsConstructor { get; set; } = true;
@@ -251,7 +251,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of associations for foreign keys as entity properties.
 		/// <list type="bullet">
 		/// <item>Default: <c>true</c></item>
-		/// <item>In T4 compability mode: <c>TODO</c></item>
+		/// <item>In T4 compability mode: <c>true</c></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateAssociations { get; set; } = true;
@@ -260,7 +260,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of associations for foreign keys as extension methods (with entity as extended type).
 		/// <list type="bullet">
 		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>TODO</c></item>
+		/// <item>In T4 compability mode: <c>false</c></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateAssociationExtensions { get; set; }
@@ -270,7 +270,7 @@ namespace LinqToDB.Scaffold
 		/// Otherwise see <see cref="AssociationCollectionType"/> setting.
 		/// <list type="bullet">
 		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>TODO</c></item>
+		/// <item>In T4 compability mode: <c>false</c></item>
 		/// </list>
 		/// </summary>
 		public bool AssociationCollectionAsArray { get; set; }
@@ -294,7 +294,7 @@ namespace LinqToDB.Scaffold
 		/// Enables reuse of generated entity mapping class and stored procedure or table function return record type, when record mappings match known entity mappings (record has same set of columns by name and type including nullability as entity).
 		/// <list type="bullet">
 		/// <item>Default: <c>true</c></item>
-		/// <item>In T4 compability mode: <c>TODO</c></item>
+		/// <item>In T4 compability mode: <c>true</c></item>
 		/// </list>
 		/// </summary>
 		public bool MapProcedureResultToEntity { get; set; } = true;
@@ -391,7 +391,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of error if stored procedure or table function schema load failed.
 		/// <list type="bullet">
 		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>TODO</c></item>
+		/// <item>In T4 compability mode: <c>true</c></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateProceduresSchemaError { get; set; }
@@ -403,7 +403,7 @@ namespace LinqToDB.Scaffold
 		/// table function must have return result set.
 		/// <list type="bullet">
 		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>TODO</c></item>
+		/// <item>In T4 compability mode: <c>false</c></item>
 		/// </list>
 		/// </summary>
 		public bool SkipProceduresWithSchemaErrors { get; set; }
@@ -413,7 +413,7 @@ namespace LinqToDB.Scaffold
 		/// Otherwise <see cref="IEnumerable{T}"/> type used.
 		/// <list type="bullet">
 		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>TODO</c></item>
+		/// <item>In T4 compability mode: <c>false</c></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateProcedureResultAsList { get; set; }
@@ -422,7 +422,7 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of database type name in stored procedure parameter mapping.
 		/// <list type="bullet">
 		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>TODO</c></item>
+		/// <item>In T4 compability mode: <c>false</c></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateProcedureParameterDbType { get; set; }
@@ -463,13 +463,13 @@ namespace LinqToDB.Scaffold
 		/// <item>In T4 compability mode: TODO</item>
 		/// </list>
 		/// </summary>
-		public NormalizationOptions SchemaPropertyOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };
+		public NormalizationOptions SchemaPropertyNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };
 
 		/// <summary>
 		/// Enables generation of context for entities and procedures/functions from non-default schemas in separate context-like class.
 		/// <list type="bullet">
 		/// <item>Default: <c>true</c></item>
-		/// <item>In T4 compability mode: <c>TODO</c></item>
+		/// <item>In T4 compability mode: <c>false</c></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateSchemaAsType { get; set; } = true;

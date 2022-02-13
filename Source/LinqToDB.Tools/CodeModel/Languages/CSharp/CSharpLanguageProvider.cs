@@ -11,7 +11,7 @@ namespace LinqToDB.CodeModel
 	{
 		// 1573: Parameter ? has no matching param tag in the XML comment https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/compiler-messages/cs1573
 		// 1591: Missing XML comment for publicly visible type or member https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/compiler-messages/cs1591
-		private static readonly string[] _xmlDocWarnings = new [] {"1573", "1591" };
+		private static readonly string[] _xmlDocWarnings = new [] { "1573", "1591" };
 
 		private readonly IReadOnlyDictionary<IType, string> _aliasedTypes;
 		private readonly CodeIdentifierComparer             _identifierComparer;
