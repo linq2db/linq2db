@@ -1340,6 +1340,9 @@ namespace LinqToDB.SqlProvider
 		protected ISqlPredicate OptimizeRowExprExpr(ExprExpr predicate, EvaluationContext context)
 		{
 			var op = predicate.Operator;
+			var feature = op is Operator.Equal or Operator.NotEqual 
+				? RowFeature.Equality 
+				: RowFeature.Comparisons;
 
 			switch (predicate.Expr2)
 			{
@@ -1353,13 +1356,13 @@ namespace LinqToDB.SqlProvider
 
 				// ROW(a, b) operator ROW(c, d)
 				case SqlRow rhs:
-					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Comparisons))
+					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(feature))
 						return RowComparisonFallback(op, (SqlRow)predicate.Expr1, rhs, context);
 					break;
 
 				// ROW(a, b) operator (SELECT c, d)
 				case SelectQuery _:
-					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Comparisons))
+					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(feature))
 						throw new LinqException("SqlRow comparisons to SELECT are not supported by this DB provider");
 					break;
 
