@@ -363,6 +363,10 @@ namespace LinqToDB.CLI
 			// prepare references for compilation
 			var referencesList = new List<MetadataReference>();
 
+			// normalize assembly pathes
+			for (var i = 0; i < referencesFromTemplate.Length; i++)
+				referencesFromTemplate[i] = Path.GetFullPath(referencesFromTemplate[i]);
+
 			// imports from T4
 			referencesList.AddRange(referencesFromTemplate.Select(file => MetadataReference.CreateFromFile(file)));
 
@@ -394,7 +398,29 @@ namespace LinqToDB.CLI
 			references = referencesList;
 			imports    = usings;
 
+			// register assembly resolver for loaded template
+			RegisterAssemblyResolver(referencesFromTemplate);
+
 			return StatusCodes.SUCCESS;
+		}
+
+		private void RegisterAssemblyResolver(string[] assemblyFiles)
+		{
+			if (assemblyFiles.Length == 0)
+				return;
+
+			var assemblyLookup = assemblyFiles.Distinct().ToDictionary(_ => Path.GetFileNameWithoutExtension(Path.GetFileName(_)));
+
+			AssemblyLoadContext.Default.Resolving += (context, name) =>
+			{
+				// TODO: verbose logging
+				Console.WriteLine($"AssemblyResolve: {name}");
+
+				if (assemblyLookup.TryGetValue(name.Name!, out var path))
+					return Assembly.LoadFile(path);
+
+				return null;
+			};
 		}
 	}
 }

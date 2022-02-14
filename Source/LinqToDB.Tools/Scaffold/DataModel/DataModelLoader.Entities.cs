@@ -57,7 +57,7 @@ namespace LinqToDB.Scaffold
 				className = table.Name.Schema + "_" + className;
 
 			// entity class properties
-			var classModel       = new ClassModel(className, _options.CodeGeneration.ClassPerFile ? className : dataContext.Class.FileName!);
+			var classModel       = new ClassModel(_options.CodeGeneration.ClassPerFile ? className : dataContext.Class.FileName!, className);
 			classModel.Summary = table.Description;
 			classModel.BaseType = baseType;
 			classModel.IsPublic = true;
@@ -288,7 +288,7 @@ namespace LinqToDB.Scaffold
 			var name = otherTable.Name;
 
 			// T4 compatibility mode use logic, similar to one, used by old T4 templates
-			if (settings.Transformation == NameTransformation.T4Compat)
+			if (settings.Transformation == NameTransformation.Association)
 			{
 				// approximate port of SetForeignKeyMemberName T4 method.
 				// Approximate, because not all logic could be converted due to difference in generation pipeline
@@ -304,59 +304,56 @@ namespace LinqToDB.Scaffold
 				//		name = ToValidName(newName);
 				//}
 
-				//if (newName == null)
+				newName = fkName;
+
+				// if column name provided - generate association name based on column name
+				if (firstFromColumnName != null && firstFromColumnName.ToLower().EndsWith("id"))
 				{
-					newName = fkName;
-
-					// if column name provided - generate association name based on column name
-					if (firstFromColumnName != null && firstFromColumnName.ToLower().EndsWith("id"))
-					{
-						// if column name provided and ends with ID suffix
-						// we trim ID part and possible _ connectors before it
-						newName = firstFromColumnName;
-						newName = newName.Substring(0, newName.Length - "id".Length).TrimEnd('_');
-						// here name could become empty if column name was ID
-					}
-					else
-					{
-						// if column name not provided - use FK name for association name
-
-						// remove FK_ prefix
-						if (newName.StartsWith("FK_"))
-							newName = newName.Substring(3);
-
-						// - split name into words using _ as separator
-						// - remove words that match target table name, schema or any of default schema
-						// - concat remaining words back into single name
-						newName = string.Concat(newName
-							.Split('_')
-							.Where(_ =>
-								_.Length > 0 && _ != otherTable.Name &&
-								(otherTable.Schema == null || defaultSchemas.Contains(otherTable.Schema) || _ != otherTable.Schema)));
-
-						// remove trailing digits
-						// note that new implementation match all digits, not just 0-9 as it was in T4
-						var skip = true;
-						newName  = string.Concat(newName.EnumerateCharacters().Reverse().Select(_ =>
-						{
-							if (skip)
-							{
-								if (_.category == UnicodeCategory.DecimalDigitNumber)
-									return string.Empty;
-								else
-									skip = false;
-							}
-
-							return _.codePoint;
-						}).Reverse());
-					}
-
-					// if resulting name is empty - just use:
-					// - for self-reference relation (to same table): table name
-					// - otherwise: foreign key name without changes
-					if (string.IsNullOrEmpty(newName))
-						newName = thisTable == otherTable ? thisTable.Name : fkName;
+					// if column name provided and ends with ID suffix
+					// we trim ID part and possible _ connectors before it
+					newName = firstFromColumnName;
+					newName = newName.Substring(0, newName.Length - "id".Length).TrimEnd('_');
+					// here name could become empty if column name was ID
 				}
+				else
+				{
+					// if column name not provided - use FK name for association name
+
+					// remove FK_ prefix
+					if (newName.StartsWith("FK_"))
+						newName = newName.Substring(3);
+
+					// - split name into words using _ as separator
+					// - remove words that match target table name, schema or any of default schema
+					// - concat remaining words back into single name
+					newName = string.Concat(newName
+						.Split('_')
+						.Where(_ =>
+							_.Length > 0 && _ != otherTable.Name &&
+							(otherTable.Schema == null || defaultSchemas.Contains(otherTable.Schema) || _ != otherTable.Schema)));
+
+					// remove trailing digits
+					// note that new implementation match all digits, not just 0-9 as it was in T4
+					var skip = true;
+					newName  = string.Concat(newName.EnumerateCharacters().Reverse().Select(_ =>
+					{
+						if (skip)
+						{
+							if (_.category == UnicodeCategory.DecimalDigitNumber)
+								return string.Empty;
+							else
+								skip = false;
+						}
+
+						return _.codePoint;
+					}).Reverse());
+				}
+
+				// if resulting name is empty - just use:
+				// - for self-reference relation (to same table): table name
+				// - otherwise: foreign key name without changes
+				if (string.IsNullOrEmpty(newName))
+					newName = thisTable == otherTable ? thisTable.Name : fkName;
 
 				name = newName;
 			}

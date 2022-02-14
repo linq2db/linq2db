@@ -12,8 +12,8 @@
 		SplitByUnderscore,
 		// used by DataModelLoader.GenerateAssociationName() method
 		/// <summary>
-		/// Association name generation strategy, inherited from T4 templates.
+		/// Association name generation strategy, similar to T4 templates implementation. Includes <see cref="SplitByUnderscore"/> behavior.
 		/// </summary>
-		T4Compat,
+		Association,
 	}
 }

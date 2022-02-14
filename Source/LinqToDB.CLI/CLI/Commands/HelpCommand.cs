@@ -296,7 +296,7 @@ namespace LinqToDB.CLI
 						switch (namingOption.Default.Transformation)
 						{
 							case NameTransformation.SplitByUnderscore: value = "\"split_by_underscore\""; break;
-							case NameTransformation.T4Compat         : value = "\"t4\"";                  break;
+							case NameTransformation.Association      : value = "\"association\"";         break;
 							default                                  :
 								throw new InvalidOperationException($"Unknown transformation option: {namingOption.Default.Transformation}");
 						}

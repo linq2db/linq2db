@@ -1,7 +1,8 @@
 ﻿// @template directive is pre-configured and shouldn't be edited
 <#@ template language="C#" inherits="LinqToDB.LinqToDBHost" linePragmas="false" #>
 
-// specify additional references using @assembly directive. E.g. (remove space before #@):
+// specify additional references using @assembly directive. E.g. (remove space before #@)
+// (full path expected or you can get "The given assembly name or codebase was invalid" error)
 // < #@ assembly name="c:\path_to\Npgsql.dll" #>
 // linq2db.dll, linq2db.Tools.dll, and runtime's System*.dll assemblies already refereced
 

@@ -52,29 +52,29 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Gets or sets name generation and normalization rules for entity column properties.
 		/// <list type="bullet">
-		/// <item>Default: TODO</item>
-		/// <item>In T4 compability mode: TODO</item>
+		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
+		/// <item>In T4 compability mode: <see cref="NameCasing.T4CompatNonPluralized"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
 		/// </list>
 		/// </summary>
-		public NormalizationOptions EntityColumnPropertyNameOptions { get; set; } = new() { Casing = NameCasing.T4CompatNonPluralized, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };
+		public NormalizationOptions EntityColumnPropertyNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };
 
 		/// <summary>
 		/// Gets or sets name generation and normalization rules for entity classes.
 		/// <list type="bullet">
-		/// <item>Default: TODO</item>
-		/// <item>In T4 compability mode: TODO</item>
+		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <see cref="Pluralization.Singular"/>, <c>PluralizeOnlyIfLastWordIsText = true</c></item>
+		/// <item>In T4 compability mode: <see cref="NameCasing.T4CompatNonPluralized"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <see cref="Pluralization.Singular"/>, <c>PluralizeOnlyIfLastWordIsText = true</c></item>
 		/// </list>
 		/// </summary>
-		public NormalizationOptions EntityClassNameOptions { get; set; } = new() { Casing = NameCasing.T4CompatNonPluralized, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.Singular, PluralizeOnlyIfLastWordIsText = true };
+		public NormalizationOptions EntityClassNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.Singular, PluralizeOnlyIfLastWordIsText = true };
 
 		/// <summary>
 		/// Gets or sets name generation and normalization rules for entity table access property in data context class.
 		/// <list type="bullet">
-		/// <item>Default: TODO</item>
-		/// <item>In T4 compability mode: TODO</item>
+		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <see cref="Pluralization.PluralIfLongerThanOne"/>, <c>PluralizeOnlyIfLastWordIsText = true</c></item>
+		/// <item>In T4 compability mode: <see cref="NameCasing.T4CompatPluralized"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <see cref="Pluralization.PluralIfLongerThanOne"/>, <c>PluralizeOnlyIfLastWordIsText = true</c></item>
 		/// </list>
 		/// </summary>
-		public NormalizationOptions EntityContextPropertyNameOptions { get; set; } = new() { Casing = NameCasing.T4CompatPluralized, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.PluralIfLongerThanOne, PluralizeOnlyIfLastWordIsText = true };
+		public NormalizationOptions EntityContextPropertyNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.PluralIfLongerThanOne, PluralizeOnlyIfLastWordIsText = true };
 
 		/// <summary>
 		/// Gets or sets custom name generator for entity class name.
@@ -212,8 +212,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Gets or sets name generation and normalization rules for data context class name.
 		/// <list type="bullet">
-		/// <item>Default: TODO</item>
-		/// <item>In T4 compability mode: TODO</item>
+		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Suffix = "DB"</c></item>
+		/// <item>In T4 compability mode:  <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Suffix = "DB"</c></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions DataContextClassNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None, Suffix = "DB" };
@@ -223,29 +223,29 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Gets or sets name generation and normalization rules for assocation from foreign key source entity side.
 		/// <list type="bullet">
-		/// <item>Default: TODO</item>
-		/// <item>In T4 compability mode: TODO</item>
+		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.Association"/></item>
+		/// <item>In T4 compability mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.Association"/></item>
 		/// </list>
 		/// </summary>
-		public NormalizationOptions SourceAssociationPropertyNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.T4Compat, Pluralization = Pluralization.None };
+		public NormalizationOptions SourceAssociationPropertyNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.Association, Pluralization = Pluralization.None };
 
 		/// <summary>
 		/// Gets or sets name generation and normalization rules for assocation from foreign key target entity side with singular cardinality.
 		/// <list type="bullet">
-		/// <item>Default: TODO</item>
-		/// <item>In T4 compability mode: TODO</item>
+		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.Association"/></item>
+		/// <item>In T4 compability mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.Association"/></item>
 		/// </list>
 		/// </summary>
-		public NormalizationOptions TargetSingularAssociationPropertyNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.T4Compat, Pluralization = Pluralization.None };
+		public NormalizationOptions TargetSingularAssociationPropertyNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.Association, Pluralization = Pluralization.None };
 
 		/// <summary>
 		/// Gets or sets name generation and normalization rules for assocation from foreign key target entity side with multiple cardinality.
 		/// <list type="bullet">
-		/// <item>Default: TODO</item>
-		/// <item>In T4 compability mode: TODO</item>
+		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.Association"/>, <see cref="Pluralization.PluralIfLongerThanOne"/></item>
+		/// <item>In T4 compability mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.Association"/>, <see cref="Pluralization.PluralIfLongerThanOne"/></item>
 		/// </list>
 		/// </summary>
-		public NormalizationOptions TargetMultipleAssociationPropertyNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.T4Compat, Pluralization = Pluralization.PluralIfLongerThanOne };
+		public NormalizationOptions TargetMultipleAssociationPropertyNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.Association, Pluralization = Pluralization.PluralIfLongerThanOne };
 
 		/// <summary>
 		/// Enables generation of associations for foreign keys as entity properties.
@@ -302,8 +302,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Gets or sets name generation and normalization rules for stored procedures and functions method parameters.
 		/// <list type="bullet">
-		/// <item>Default: TODO</item>
-		/// <item>In T4 compability mode: TODO</item>
+		/// <item>Default: <see cref="NameCasing.CamelCase"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
+		/// <item>In T4 compability mode: <see cref="NameCasing.CamelCase"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions ProcedureParameterNameOptions { get; set; } = new() { Casing = NameCasing.CamelCase, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };
@@ -311,8 +311,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Gets or sets name generation and normalization rules for stored procedures and functions method names.
 		/// <list type="bullet">
-		/// <item>Default: TODO</item>
-		/// <item>In T4 compability mode: TODO</item>
+		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
+		/// <item>In T4 compability mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions ProcedureNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };
@@ -320,8 +320,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Gets or sets name generation and normalization rules for mapping class for result tuple value of scalar function.
 		/// <list type="bullet">
-		/// <item>Default: TODO</item>
-		/// <item>In T4 compability mode: TODO</item>
+		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Suffix = "Result"</c></item>
+		/// <item>In T4 compability mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Suffix = "Result"</c></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions FunctionTupleResultClassNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None, Suffix = "Result" };
@@ -329,8 +329,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Gets or sets name generation and normalization rules for field properies of result tuple value mapping class of scalar function.
 		/// <list type="bullet">
-		/// <item>Default: TODO</item>
-		/// <item>In T4 compability mode: TODO</item>
+		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
+		/// <item>In T4 compability mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions FunctionTupleResultPropertyNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };
@@ -338,8 +338,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Gets or sets name generation and normalization rules for field to store <see cref="MethodInfo"/> for table function mapping method.
 		/// <list type="bullet">
-		/// <item>Default: TODO</item>
-		/// <item>In T4 compability mode: TODO</item>
+		/// <item>Default: <see cref="NameCasing.CamelCase"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Prefix = "_"</c></item>
+		/// <item>In T4 compability mode: <see cref="NameCasing.CamelCase"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Prefix = "_"</c></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions TableFunctionMethodInfoFieldNameOptions { get; set; } = new() { Casing = NameCasing.CamelCase, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None, Prefix = "_" };
@@ -347,35 +347,35 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Gets or sets name generation and normalization rules for custom mapping class for result record of stored procedure or table function.
 		/// <list type="bullet">
-		/// <item>Default: TODO</item>
-		/// <item>In T4 compability mode: TODO</item>
+		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Suffix = "Result"</c></item>
+		/// <item>In T4 compability mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Suffix = "Result"</c></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions ProcedureResultClassNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None, Suffix = "Result" };
 		/// <summary>
 		/// Gets or sets name generation and normalization rules for custom mapping class for async stored procedure results wrapper for procedure with multiple returns.
 		/// <list type="bullet">
-		/// <item>Default: TODO</item>
-		/// <item>In T4 compability mode: TODO</item>
+		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Suffix = "Results"</c></item>
+		/// <item>In T4 compability mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Suffix = "Results"</c></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions AsyncProcedureResultClassNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None, Suffix = "Results" };
 		/// <summary>
 		/// Gets or sets name generation and normalization rules for custom mapping class properties for async stored procedure results wrapper for procedure with multiple returns.
 		/// <list type="bullet">
-		/// <item>Default: TODO</item>
-		/// <item>In T4 compability mode: TODO</item>
+		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
+		/// <item>In T4 compability mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions AsyncProcedureResultClassPropertiesNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };
 		/// <summary>
 		/// Gets or sets name generation and normalization rules for column properties of custom mapping class for result record of stored procedure or table function.
 		/// <list type="bullet">
-		/// <item>Default: TODO</item>
-		/// <item>In T4 compability mode: TODO</item>
+		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
+		/// <item>In T4 compability mode: <see cref="NameCasing.None"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
 		/// </list>
 		/// </summary>
-		public NormalizationOptions ProcedureResultColumnPropertyNameOptions { get; set; } = new() { Casing = NameCasing.None, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };
+		public NormalizationOptions ProcedureResultColumnPropertyNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };
 
 		/// <summary>
 		/// When <c>true</c>, table function mapping use <see cref="ITable{T}"/> as return type.
@@ -450,8 +450,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Gets or sets name generation and normalization rules for wrapper class for non-default schema (when <see cref="GenerateSchemaAsType"/> option enabled).
 		/// <list type="bullet">
-		/// <item>Default: TODO</item>
-		/// <item>In T4 compability mode: TODO</item>
+		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Suffix = "Schema"</c></item>
+		/// <item>In T4 compability mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Suffix = "Schema"</c></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions SchemaClassNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None, Suffix = "Schema" };
@@ -459,8 +459,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Gets or sets name generation and normalization rules for non-default schema data context class accessor property on main data context (when <see cref="GenerateSchemaAsType"/> option enabled).
 		/// <list type="bullet">
-		/// <item>Default: TODO</item>
-		/// <item>In T4 compability mode: TODO</item>
+		/// <item>Default: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
+		/// <item>In T4 compability mode: <see cref="NameCasing.Pascal"/>, <see cref="NameTransformation.SplitByUnderscore"/></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions SchemaPropertyNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };
@@ -506,8 +506,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Gets or sets name generation and normalization rules for Find entity extension method parameters.
 		/// <list type="bullet">
-		/// <item>Default: TODO</item>
-		/// <item>In T4 compability mode: TODO</item>
+		/// <item>Default: <see cref="NameCasing.CamelCase"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>DontCaseAllCaps = false</c></item>
+		/// <item>In T4 compability mode: <see cref="NameCasing.CamelCase"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>DontCaseAllCaps = false</c></item>
 		/// </list>
 		/// </summary>
 		public NormalizationOptions FindParameterNameOptions { get; set; } = new() { Casing = NameCasing.CamelCase, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None, DontCaseAllCaps = false };

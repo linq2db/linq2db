@@ -1,4 +1,5 @@
 ﻿using LinqToDB.DataModel;
+using LinqToDB.Naming;
 using LinqToDB.Schema;
 
 namespace LinqToDB.Scaffold
@@ -52,9 +53,6 @@ namespace LinqToDB.Scaffold
 			options.DataModel.IncludeDatabaseName                            = false;
 			options.DataModel.GenerateDefaultSchema                          = true;
 			options.DataModel.BaseEntityClass                                = null;
-			//options.DataModel.EntityColumnPropertyNameOptions                = null;
-			//options.DataModel.EntityClassNameOptions                         = null;
-			//options.DataModel.EntityContextPropertyNameOptions               = null;
 			options.DataModel.EntityClassNameProvider                        = null;
 			options.DataModel.EntityContextPropertyNameProvider              = null;
 			options.DataModel.GenerateDataType                               = false;
@@ -69,24 +67,11 @@ namespace LinqToDB.Scaffold
 			options.DataModel.HasTypedOptionsConstructor                     = true;
 			options.DataModel.ContextClassName                               = null;
 			options.DataModel.BaseContextClass                               = null;
-			//options.DataModel.DataContextClassNameOptions                    = null;
-			//options.DataModel.SourceAssociationPropertyNameOptions           = null;
-			//options.DataModel.TargetSingularAssociationPropertyNameOptions   = null;
-			//options.DataModel.TargetMultipleAssociationPropertyNameOptions   = null;
 			options.DataModel.GenerateAssociations                           = true;
 			options.DataModel.GenerateAssociationExtensions                  = false;
 			options.DataModel.AssociationCollectionAsArray                   = false;
 			options.DataModel.AssociationCollectionType                      = null;
 			options.DataModel.MapProcedureResultToEntity                     = true;
-			//options.DataModel.ProcedureParameterNameOptions                  = null;
-			//options.DataModel.ProcedureNameOptions                           = null;
-			//options.DataModel.FunctionTupleResultClassNameOptions            = null;
-			//options.DataModel.FunctionTupleResultPropertyNameOptions         = null;
-			//options.DataModel.TableFunctionMethodInfoFieldNameOptions        = null;
-			//options.DataModel.ProcedureResultClassNameOptions                = null;
-			//options.DataModel.AsyncProcedureResultClassNameOptions           = null;
-			//options.DataModel.AsyncProcedureResultClassPropertiesNameOptions = null;
-			//options.DataModel.ProcedureResultColumnPropertyNameOptions       = null;
 			options.DataModel.TableFunctionReturnsTable                      = true;
 			options.DataModel.GenerateProceduresSchemaError                  = true;
 			options.DataModel.SkipProceduresWithSchemaErrors                 = false;
@@ -94,12 +79,28 @@ namespace LinqToDB.Scaffold
 			options.DataModel.GenerateProcedureParameterDbType               = false;
 			options.DataModel.GenerateProcedureSync                          = true;
 			options.DataModel.GenerateProcedureAsync                         = false;
-			//options.DataModel.SchemaClassNameOptions                         = null;
-			//options.DataModel.SchemaPropertyNameOptions                      = null;
 			options.DataModel.GenerateSchemaAsType                           = false;
 			options.DataModel.GenerateFindExtensions                         = FindTypes.FindByPkOnTable;
 			options.DataModel.OrderFindParametersByColumnOrdinal             = false;
-			//options.DataModel.FindParameterNameOptions                       = null;
+			options.DataModel.EntityColumnPropertyNameOptions                = new() { Casing = NameCasing.T4CompatNonPluralized, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None                                                        };
+			options.DataModel.EntityClassNameOptions                         = new() { Casing = NameCasing.T4CompatNonPluralized, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.Singular             , PluralizeOnlyIfLastWordIsText = true };
+			options.DataModel.EntityContextPropertyNameOptions               = new() { Casing = NameCasing.T4CompatPluralized   , Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.PluralIfLongerThanOne, PluralizeOnlyIfLastWordIsText = true };
+			options.DataModel.DataContextClassNameOptions                    = new() { Casing = NameCasing.Pascal               , Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None                 , Suffix = "DB"                        };
+			options.DataModel.SourceAssociationPropertyNameOptions           = new() { Casing = NameCasing.Pascal               , Transformation = NameTransformation.Association      , Pluralization = Pluralization.None                                                        };
+			options.DataModel.TargetSingularAssociationPropertyNameOptions   = new() { Casing = NameCasing.Pascal               , Transformation = NameTransformation.Association      , Pluralization = Pluralization.None                                                        };
+			options.DataModel.TargetMultipleAssociationPropertyNameOptions   = new() { Casing = NameCasing.Pascal               , Transformation = NameTransformation.Association      , Pluralization = Pluralization.PluralIfLongerThanOne                                       };
+			options.DataModel.ProcedureParameterNameOptions                  = new() { Casing = NameCasing.CamelCase            , Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None                                                        };
+			options.DataModel.ProcedureNameOptions                           = new() { Casing = NameCasing.Pascal               , Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None                                                        };
+			options.DataModel.FunctionTupleResultClassNameOptions            = new() { Casing = NameCasing.Pascal               , Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None                 , Suffix = "Result"                    };
+			options.DataModel.FunctionTupleResultPropertyNameOptions         = new() { Casing = NameCasing.Pascal               , Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None                                                        };
+			options.DataModel.TableFunctionMethodInfoFieldNameOptions        = new() { Casing = NameCasing.CamelCase            , Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None                 , Prefix = "_"                         };
+			options.DataModel.ProcedureResultClassNameOptions                = new() { Casing = NameCasing.Pascal               , Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None                 , Suffix = "Result"                    };
+			options.DataModel.AsyncProcedureResultClassNameOptions           = new() { Casing = NameCasing.Pascal               , Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None                 , Suffix = "Results"                   };
+			options.DataModel.AsyncProcedureResultClassPropertiesNameOptions = new() { Casing = NameCasing.Pascal               , Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None                                                        };
+			options.DataModel.ProcedureResultColumnPropertyNameOptions       = new() { Casing = NameCasing.None                 , Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None                                                        };
+			options.DataModel.SchemaClassNameOptions                         = new() { Casing = NameCasing.Pascal               , Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None                 , Suffix = "Schema"                    };
+			options.DataModel.SchemaPropertyNameOptions                      = new() { Casing = NameCasing.Pascal               , Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None                                                        };
+			options.DataModel.FindParameterNameOptions                       = new() { Casing = NameCasing.CamelCase            , Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None                 , DontCaseAllCaps = false              };
 			options.DataModel.SchemaMap.Clear();
 
 			// code generation options

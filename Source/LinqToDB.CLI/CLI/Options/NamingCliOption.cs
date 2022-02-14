@@ -137,7 +137,7 @@ namespace LinqToDB.CLI
 						switch (transformationValue.ToLowerInvariant())
 						{
 							case "split_by_underscore": options.Transformation = NameTransformation.SplitByUnderscore; break;
-							case "t4"                 : options.Transformation = NameTransformation.T4Compat         ; break;
+							case "association"        : options.Transformation = NameTransformation.Association      ; break;
 							default                   :
 								errorDetails = $"transformation : unknown value: '{transformationValue}'";
 								return null;

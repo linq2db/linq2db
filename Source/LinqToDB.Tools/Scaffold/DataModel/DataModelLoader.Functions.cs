@@ -357,9 +357,7 @@ namespace LinqToDB.Scaffold
 					_options.DataModel.SchemaPropertyNameOptions,
 					baseName);
 
-				var wrapperClass = new ClassModel(
-					schemaClassName,
-					_options.CodeGeneration.ClassPerFile ? schemaClassName : dataContext.Class.FileName!)
+				var wrapperClass = new ClassModel(_options.CodeGeneration.ClassPerFile ? schemaClassName : dataContext.Class.FileName!, schemaClassName)
 				{
 					IsPublic  = true,
 					IsPartial = true,

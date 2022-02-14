@@ -32,7 +32,7 @@ namespace LinqToDB.Naming
 			{
 				// first split identifier into text/non-text fragments, optionally treat underscore as discarded separator
 				var words = SplitIntoWords(name, settings.Transformation == NameTransformation.SplitByUnderscore
-							|| settings.Transformation == NameTransformation.T4Compat);
+							|| settings.Transformation == NameTransformation.Association);
 
 				// find last word to apply pluralization to it (if configured)
 				var lastTextIndex = -1;
