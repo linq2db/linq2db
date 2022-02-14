@@ -1668,5 +1668,40 @@ namespace Tests.Linq
 					.ToList();
 			}
 		}
+
+		[Test]
+		public void Issue3423LeadLagDefault([DataSources(
+			TestProvName.AllSqlServer2008Minus,
+			TestProvName.AllSybase,
+			ProviderName.SqlCe,
+			TestProvName.AllAccess,
+			ProviderName.Firebird,
+			TestProvName.MySql55,
+			// doesn't support 3-rd parameter for LEAD
+			TestProvName.MariaDB)] string context)
+		{
+			// #3423: LEAD and LAG `default` parameter can be a type other than int.
+			var data = new Issue1799Table3[] 
+			{
+				new() { ProcessID = 1, ProcessName = "One" },
+				new() { ProcessID = 2, ProcesSName = "Two" },
+			};
+			using (var db    = GetDataContext(context))
+			using (var table = db.CreateLocalTable(data))
+			{
+				var leads = table.Select(p => Sql.Ext.Lead(p.ProcessName, 1, "None")
+												 	 .Over().OrderBy(p.ProcessID).ToValue())
+								 .ToArray();
+
+				CollectionAssert.AreEqual(new[] { "Two", "None" }, leads);
+
+
+				var lags = table.Select(p => Sql.Ext.Lag(p.ProcessName, 1, "None")
+												 	.Over().OrderBy(p.ProcessID).ToValue())
+								.ToArray();
+
+				CollectionAssert.AreEqual(new[] { "None", "One" }, leads);
+			}
+		}
 	}
 }
