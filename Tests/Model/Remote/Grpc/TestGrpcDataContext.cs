@@ -1,30 +1,18 @@
-﻿#if NET472
+﻿#if NETCOREAPP3_1_OR_GREATER
 using System;
-using System.ServiceModel;
 using System.Threading.Tasks;
 using LinqToDB;
-using LinqToDB.Remote.WCF;
+using LinqToDB.Remote.Grpc;
 
-namespace Tests.Model
+namespace Tests.Model.Remote.Grpc
 {
-	public class TestWcfDataContext : WcfDataContext, ITestDataContext
+	public class TestGrpcDataContext : GrpcDataContext, ITestDataContext
 	{
 		private readonly Action? _onDispose;
 
-		public TestWcfDataContext(int ip, Action? onDispose = null) : base(
-			new NetTcpBinding(SecurityMode.None)
-			{
-				MaxReceivedMessageSize = 10000000,
-				MaxBufferPoolSize      = 10000000,
-				MaxBufferSize          = 10000000,
-				CloseTimeout           = new TimeSpan(00, 01, 00),
-				OpenTimeout            = new TimeSpan(00, 01, 00),
-				ReceiveTimeout         = new TimeSpan(00, 10, 00),
-				SendTimeout            = new TimeSpan(00, 10, 00),
-			},
-			new EndpointAddress("net.tcp://localhost:" + ip + "/LinqOverWCF"))
+		public TestGrpcDataContext(string address, Action? onDispose = null)
+			: base(address)
 		{
-			((NetTcpBinding)Binding!).ReaderQuotas.MaxStringContentLength = 1000000;
 			_onDispose = onDispose;
 		}
 

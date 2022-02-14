@@ -20,9 +20,15 @@ using LinqToDB.Reflection;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 
-#if NET472
+#if NETFRAMEWORK
 using System.ServiceModel;
 using System.ServiceModel.Description;
+#elif NETCOREAPP3_1_OR_GREATER
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using ProtoBuf.Grpc.Server;
 #endif
 
 using NUnit.Framework;
@@ -33,6 +39,13 @@ namespace Tests
 	using Model;
 	using Tools;
 	using LinqToDB.Remote;
+	using Tests.Remote;
+#if NETFRAMEWORK
+	using LinqToDB.Remote.WCF;
+	using Tests.Model.Remote.WCF;
+#elif NETCOREAPP3_1_OR_GREATER
+	using Tests.Model.Remote.Grpc;
+#endif
 
 	public partial class TestBase
 	{
@@ -342,16 +355,21 @@ namespace Tests
 			return fileName;
 		}
 
-#if NET472
-		const           int          IP = 22654;
-		static          bool         _isHostOpen;
-		static          TestLinqService? _service;
-		static readonly object       _syncRoot = new ();
+#if NETFRAMEWORK || NETCOREAPP3_1_OR_GREATER
+		const           int                 Port = 22654;
+		static          bool                _isHostOpen;
+		static readonly object              _syncRoot = new ();
 #endif
 
-		static void OpenHost(MappingSchema? ms)
+#if NETFRAMEWORK
+		static          TestWcfLinqService?  _service;
+#elif NETCOREAPP3_1_OR_GREATER
+		static          TestGrpcLinqService? _service;
+#endif
+
+#if NETFRAMEWORK
+		static void OpenWcfHost(MappingSchema? ms)
 		{
-#if NET472
 			if (_isHostOpen)
 			{
 				_service!.MappingSchema = ms;
@@ -368,7 +386,7 @@ namespace Tests
 					return;
 				}
 
-				host        = new ServiceHost(_service = new TestLinqService(ms, null, false) { AllowUpdates = true }, new Uri("net.tcp://localhost:" + (IP + TestExternals.RunID)));
+				host        = new ServiceHost(_service = new TestWcfLinqService(new LinqService(ms), null, false) { AllowUpdates = true }, new Uri("net.tcp://localhost:" + (Port + TestExternals.RunID)));
 				_isHostOpen = true;
 			}
 
@@ -376,7 +394,7 @@ namespace Tests
 			host.Description.Behaviors.Find<ServiceDebugBehavior>().IncludeExceptionDetailInFaults = true;
 			host.AddServiceEndpoint(typeof(IMetadataExchange), MetadataExchangeBindings.CreateMexTcpBinding(), "mex");
 			host.AddServiceEndpoint(
-				typeof(ILinqService),
+				typeof(IWcfLinqService),
 				new NetTcpBinding(SecurityMode.None)
 				{
 					MaxReceivedMessageSize = 10000000,
@@ -391,9 +409,87 @@ namespace Tests
 
 			host.Open();
 
-			TestExternals.Log($"host opened, Address : {host.BaseAddresses[0]}");
-#endif
+			TestExternals.Log($"WCF host opened, Address : {host.BaseAddresses[0]}");
 		}
+#elif NETCOREAPP3_1_OR_GREATER
+		static void OpenGrpcHost(
+			MappingSchema? ms,
+			IInterceptor?  interceptor,
+			bool           suppressSequentialAccess
+			)
+		{
+			if (_isHostOpen)
+			{
+				_service!.MappingSchema = ms;
+				return;
+			}
+
+			lock (_syncRoot)
+			{
+				if (_isHostOpen)
+				{
+					_service!.MappingSchema = ms;
+					return;
+				}
+
+				_service = new TestGrpcLinqService(
+					new LinqService()
+					{
+						AllowUpdates = true
+					},
+					interceptor,
+					suppressSequentialAccess
+					);
+			}
+
+			Host.CreateDefaultBuilder()
+				.ConfigureWebHostDefaults(webBuilder =>
+				{
+					webBuilder.UseStartup<Startup>();
+				}).Build().Run();
+
+			_isHostOpen = true;
+
+			TestExternals.Log($"grpc host opened");
+		}
+#endif
+
+#if NETCOREAPP3_1_OR_GREATER
+		public class Startup
+		{
+			public void ConfigureServices(IServiceCollection services)
+			{
+				//// Set up Linq2DB connection
+				//DataConnection.DefaultSettings = new LinqToDB.Remote.Grpc.Linq2DbSettings(
+				//	"Northwind",
+				//	ProviderName.SqlServer,
+				//	"Server=.;Database=Northwind;Trusted_Connection=True"
+				//	);
+
+				if(_service == null)
+				{
+					throw new InvalidOperationException("Grpc service should be created first");
+				}
+
+				services.AddGrpc();
+				services.AddCodeFirstGrpc();
+				services.AddSingleton(p => _service);
+
+			}
+
+			public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+			{
+				app.UseDeveloperExceptionPage();
+
+				app.UseRouting();
+
+				app.UseEndpoints(endpoints =>
+				{
+					endpoints.MapGrpcService<TestGrpcLinqService>();
+				});
+			}
+		}
+#endif
 
 		public static readonly HashSet<string> UserProviders;
 		public static readonly string?         DefaultProvider;
@@ -450,6 +546,8 @@ namespace Tests
 			ProviderName.SapHanaOdbc
 		}).ToList();
 
+		private const string LinqServiceSuffix = ".LinqService";
+
 		protected ITestDataContext GetDataContext(
 			string         configuration,
 			MappingSchema? ms                       = null,
@@ -457,55 +555,99 @@ namespace Tests
 			IInterceptor?  interceptor              = null,
 			bool           suppressSequentialAccess = false)
 		{
-			if (configuration.EndsWith(".LinqService"))
+			if (!configuration.EndsWith(LinqServiceSuffix))
 			{
-#if NET472
-				OpenHost(ms);
-
-				var str = configuration.Substring(0, configuration.Length - ".LinqService".Length);
-
-				RemoteDataContextBase dx;
-
-				if (testLinqService)
-					dx = new ServiceModel.TestLinqServiceDataContext(new TestLinqService(ms, interceptor, suppressSequentialAccess) { AllowUpdates = true }) { Configuration = str };
-				else
-				{
-					_service!.SuppressSequentialAccess = suppressSequentialAccess;
-					if (interceptor != null)
-						_service!.AddInterceptor(interceptor);
-
-					dx = new TestWcfDataContext(
-						IP + TestExternals.RunID,
-						() =>
-						{
-							_service!.SuppressSequentialAccess = false;
-							if (interceptor != null)
-								_service!.RemoveInterceptor();
-						}) { Configuration = str };
-				}
-
-				Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
-
-				if (ms != null)
-					dx.MappingSchema = MappingSchema.CombineSchemas(dx.MappingSchema, ms);
-
-				return (ITestDataContext)dx;
-#else
-				configuration = configuration.Substring(0, configuration.Length - ".LinqService".Length);
-#endif
+				return GetDataConnection(configuration, ms, interceptor, suppressSequentialAccess: suppressSequentialAccess);
 			}
 
-			return GetDataConnection(configuration, ms, interceptor, suppressSequentialAccess: suppressSequentialAccess);
-		}
+#if NETFRAMEWORK
+			OpenWcfHost(ms);
 
-		protected TestDataConnection GetDataConnection(
+			var str = configuration.Substring(0, configuration.Length - LinqServiceSuffix.Length);
+
+			RemoteDataContextBase dx;
+
+			//if (testLinqService)
+			//{
+			//	throw new NotImplementedException();
+			//	//dx = new ServiceModel.TestLinqServiceDataContext(new TestWcfLinqClient(ms, interceptor, suppressSequentialAccess) { AllowUpdates = true }) { Configuration = str };
+			//}
+			//else
+			{
+				_service!.SuppressSequentialAccess = suppressSequentialAccess;
+				if (interceptor != null)
+				{
+					_service!.AddInterceptor(interceptor);
+				}
+
+				dx = new TestWcfDataContext(
+					Port + TestExternals.RunID,
+					() =>
+					{
+						_service!.SuppressSequentialAccess = false;
+						if (interceptor != null)
+							_service!.RemoveInterceptor();
+					})
+				{ Configuration = str };
+			}
+
+			Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
+
+			if (ms != null)
+				dx.MappingSchema = MappingSchema.CombineSchemas(dx.MappingSchema, ms);
+
+			return (ITestDataContext)dx;
+#elif NETCOREAPP3_1_OR_GREATER
+			OpenGrpcHost(ms, interceptor, suppressSequentialAccess);
+
+			var str = configuration.Substring(0, configuration.Length - LinqServiceSuffix.Length);
+
+			RemoteDataContextBase dx;
+
+			//if (testLinqService)
+			//{
+			//	throw new NotImplementedException();
+			//	//dx = new ServiceModel.TestLinqServiceDataContext(new TestWcfLinqClient(ms, interceptor, suppressSequentialAccess) { AllowUpdates = true }) { Configuration = str };
+			//}
+			//else
+			{
+				_service!.SuppressSequentialAccess = suppressSequentialAccess;
+				if (interceptor != null)
+				{
+					_service!.AddInterceptor(interceptor);
+				}
+
+				dx = new TestGrpcDataContext(
+					$"localhost:{Port + TestExternals.RunID}",
+					() =>
+					{
+						_service!.SuppressSequentialAccess = false;
+						if (interceptor != null)
+							_service!.RemoveInterceptor();
+					})
+				{ Configuration = str };
+			}
+
+			Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
+
+			if (ms != null)
+				dx.MappingSchema = MappingSchema.CombineSchemas(dx.MappingSchema, ms);
+
+			return (ITestDataContext)dx;
+#else
+			throw new NotImplementedException();
+#endif
+
+			}
+
+			protected TestDataConnection GetDataConnection(
 			string         configuration,
 			MappingSchema? ms                       = null,
 			IInterceptor?  interceptor              = null,
 			IRetryPolicy?  retryPolicy              = null,
 			bool           suppressSequentialAccess = false)
 		{
-			if (configuration.EndsWith(".LinqService"))
+			if (configuration.EndsWith(LinqServiceSuffix))
 			{
 				throw new InvalidOperationException($"Call {nameof(GetDataContext)} for remote context creation");
 			}
@@ -674,7 +816,7 @@ namespace Tests
 			}
 		}
 
-		#region Parent/Child Model
+#region Parent/Child Model
 
 		private   List<Parent>?      _parent;
 		protected IEnumerable<Parent> Parent
@@ -836,9 +978,9 @@ namespace Tests
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region Inheritance Parent/Child Model
+#region Inheritance Parent/Child Model
 
 		private   List<InheritanceParentBase>? _inheritanceParent;
 		protected List<InheritanceParentBase>   InheritanceParent
@@ -872,9 +1014,9 @@ namespace Tests
 			}
 		}
 
-		#endregion
+#endregion
 
-		#region Northwind
+#region Northwind
 
 		public TestBaseNorthwind GetNorthwindAsList(string context)
 		{
@@ -1067,7 +1209,7 @@ namespace Tests
 			}
 		}
 
-		#endregion
+#endregion
 
 		protected IEnumerable<LinqDataTypes2> AdjustExpectedData(ITestDataContext db, IEnumerable<LinqDataTypes2> data)
 		{

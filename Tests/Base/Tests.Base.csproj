@@ -34,4 +34,15 @@
 		<PackageReference Include="Microsoft.SqlServer.Types" />
 
 	</ItemGroup>
+
+	<!-- grpc testing packages -->
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'net5.0' OR '$(TargetFramework)' == 'net6.0' ">
+		<ProjectReference Include="..\..\Source\LinqToDB.Remote.Grpc\LinqToDB.Remote.Grpc.csproj" />
+
+		<PackageReference Include="protobuf-net.Grpc.AspNetCore" />
+		<PackageReference Include="System.Configuration.ConfigurationManager" />
+		<PackageReference Include="System.Data.SqlClient" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+	</ItemGroup>
+
 </Project>

@@ -69,5 +69,9 @@
 			<DependentUpon>SqlCeTests.tt</DependentUpon>
 		</Compile>
 	</ItemGroup>
-
+<!--
+	<ItemGroup>
+	  <PackageReference Update="NUnit3TestAdapter" />
+	</ItemGroup>
+-->
 </Project>

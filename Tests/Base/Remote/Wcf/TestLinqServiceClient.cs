@@ -1,75 +1,75 @@
-﻿#if NET472
-using System.Threading.Tasks;
-using LinqToDB.Remote;
+﻿//#if NET472
+//using System.Threading.Tasks;
+//using LinqToDB.Remote;
 
-namespace Tests.ServiceModel
-{
-	class TestLinqServiceClient : ILinqClient
-	{
-#region Init
+//namespace Tests.ServiceModel
+//{
+//	class TestLinqServiceClient : ILinqClient
+//	{
+//#region Init
 
-		public TestLinqServiceClient(LinqService linqService)
-		{
-			_linqService = linqService;
-		}
+//		public TestLinqServiceClient(LinqService linqService)
+//		{
+//			_linqService = linqService;
+//		}
 
-		readonly LinqService _linqService;
+//		readonly LinqService _linqService;
 
-#endregion
+//#endregion
 
-#region ILinqService Members
+//#region ILinqService Members
 
-		public LinqServiceInfo GetInfo(string? configuration)
-		{
-			return _linqService.GetInfo(configuration);
-		}
+//		public LinqServiceInfo GetInfo(string? configuration)
+//		{
+//			return _linqService.GetInfo(configuration);
+//		}
 
-		public int ExecuteNonQuery(string? configuration, string queryData)
-		{
-			return _linqService.ExecuteNonQuery(configuration, queryData);
-		}
+//		public int ExecuteNonQuery(string? configuration, string queryData)
+//		{
+//			return _linqService.ExecuteNonQuery(configuration, queryData);
+//		}
 
-		public string? ExecuteScalar(string? configuration, string queryData)
-		{
-			return _linqService.ExecuteScalar(configuration, queryData);
-		}
+//		public string? ExecuteScalar(string? configuration, string queryData)
+//		{
+//			return _linqService.ExecuteScalar(configuration, queryData);
+//		}
 
-		public string ExecuteReader(string? configuration, string queryData)
-		{
-			return _linqService.ExecuteReader(configuration, queryData);
-		}
+//		public string ExecuteReader(string? configuration, string queryData)
+//		{
+//			return _linqService.ExecuteReader(configuration, queryData);
+//		}
 
-		public int ExecuteBatch(string? configuration, string queryData)
-		{
-			return _linqService.ExecuteBatch(configuration, queryData);
-		}
+//		public int ExecuteBatch(string? configuration, string queryData)
+//		{
+//			return _linqService.ExecuteBatch(configuration, queryData);
+//		}
 
-		public Task<LinqServiceInfo> GetInfoAsync(string? configuration)
-		{
-			return Task.Run(() => _linqService.GetInfo(configuration));
-		}
+//		public Task<LinqServiceInfo> GetInfoAsync(string? configuration)
+//		{
+//			return Task.Run(() => _linqService.GetInfo(configuration));
+//		}
 
-		public Task<int> ExecuteNonQueryAsync(string? configuration, string queryData)
-		{
-			return Task.Run(() => _linqService.ExecuteNonQuery(configuration, queryData));
-		}
+//		public Task<int> ExecuteNonQueryAsync(string? configuration, string queryData)
+//		{
+//			return Task.Run(() => _linqService.ExecuteNonQuery(configuration, queryData));
+//		}
 
-		public Task<string?> ExecuteScalarAsync(string? configuration, string queryData)
-		{
-			return Task.Run(() => _linqService.ExecuteScalar(configuration, queryData));
-		}
+//		public Task<string?> ExecuteScalarAsync(string? configuration, string queryData)
+//		{
+//			return Task.Run(() => _linqService.ExecuteScalar(configuration, queryData));
+//		}
 
-		public Task<string> ExecuteReaderAsync(string? configuration, string queryData)
-		{
-			return Task.Run(() => _linqService.ExecuteReader(configuration, queryData));
-		}
+//		public Task<string> ExecuteReaderAsync(string? configuration, string queryData)
+//		{
+//			return Task.Run(() => _linqService.ExecuteReader(configuration, queryData));
+//		}
 
-		public Task<int> ExecuteBatchAsync(string? configuration, string queryData)
-		{
-			return Task.Run(() => _linqService.ExecuteBatch(configuration, queryData));
-		}
+//		public Task<int> ExecuteBatchAsync(string? configuration, string queryData)
+//		{
+//			return Task.Run(() => _linqService.ExecuteBatch(configuration, queryData));
+//		}
 
-#endregion
-	}
-}
-#endif
+//#endregion
+//	}
+//}
+//#endif

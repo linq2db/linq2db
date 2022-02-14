@@ -23,7 +23,13 @@ namespace Server
 
 			services.AddGrpc();
 			services.AddCodeFirstGrpc();
-			services.AddSingleton(p => (ILinqService)new LinqService() { AllowUpdates = true });
+			services.AddSingleton(p =>
+				new GrpcLinqService(
+					new LinqService()
+					{
+						AllowUpdates = true
+					}
+				));
 		}
 
 		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

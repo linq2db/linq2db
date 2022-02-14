@@ -10,9 +10,15 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
 
+
 namespace Tests
 {
 	using Model;
+#if NETFRAMEWORK
+	using Tests.Model.Remote.WCF;
+#elif NETCOREAPP3_1_OR_GREATER
+	using Tests.Model.Remote.Grpc;
+#endif
 
 	public static class TestUtils
 	{
@@ -176,9 +182,11 @@ namespace Tests
 
 		private static string GetContextName(IDataContext db)
 		{
-#if NET472
+#if NETFRAMEWORK 
 			if (db is TestWcfDataContext linqDb)
-				return linqDb.Configuration!;
+#elif NETCOREAPP3_1_OR_GREATER
+			if (db is TestGrpcDataContext linqDb)
+					return linqDb.Configuration!;
 #endif
 
 			if (db is TestDataConnection testDb)

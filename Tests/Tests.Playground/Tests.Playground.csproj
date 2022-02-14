@@ -10,5 +10,9 @@
 	<ItemGroup>
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
 	</ItemGroup>
-
+<!--
+	<ItemGroup>
+	  <PackageReference Update="NUnit3TestAdapter" />
+	</ItemGroup>
+-->
 </Project>

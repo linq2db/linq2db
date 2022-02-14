@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using LinqToDB.Remote.Grpc;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 
 namespace Server
@@ -7,7 +8,8 @@ namespace Server
 	{
 		public static void Main(string[] args)
 		{
-			CreateHostBuilder(args).Build().Run();
+			var hb = CreateHostBuilder(args).Build();
+			hb.Run();
 		}
 
 		public static IHostBuilder CreateHostBuilder(string[] args) =>
