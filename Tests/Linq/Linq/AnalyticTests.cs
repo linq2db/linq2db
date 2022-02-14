@@ -1684,7 +1684,7 @@ namespace Tests.Linq
 			var data = new Issue1799Table3[] 
 			{
 				new() { ProcessID = 1, ProcessName = "One" },
-				new() { ProcessID = 2, ProcesSName = "Two" },
+				new() { ProcessID = 2, ProcessName = "Two" },
 			};
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(data))
