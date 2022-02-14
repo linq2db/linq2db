@@ -45,6 +45,7 @@ namespace Tests
 	using Tests.Model.Remote.WCF;
 #elif NETCOREAPP3_1_OR_GREATER
 	using Tests.Model.Remote.Grpc;
+	using System.Net;
 #endif
 
 	public partial class TestBase
@@ -442,11 +443,16 @@ namespace Tests
 					);
 			}
 
-			Host.CreateDefaultBuilder()
-				.ConfigureWebHostDefaults(webBuilder =>
+			var hb = Host.CreateDefaultBuilder();
+			hb.ConfigureWebHostDefaults(
+				webBuilder =>
 				{
 					webBuilder.UseStartup<Startup>();
-				}).Build().Run();
+
+					webBuilder.UseUrls($"https://localhost:{(Port + TestExternals.RunID)}");
+				}).Build().Start();
+
+			//not sure does we need to wait for grpc server starts?
 
 			_isHostOpen = true;
 
@@ -618,7 +624,7 @@ namespace Tests
 				}
 
 				dx = new TestGrpcDataContext(
-					$"localhost:{Port + TestExternals.RunID}",
+					$"https://localhost:{Port + TestExternals.RunID}",
 					() =>
 					{
 						_service!.SuppressSequentialAccess = false;

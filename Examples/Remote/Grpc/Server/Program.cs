@@ -1,4 +1,5 @@
-﻿using LinqToDB.Remote.Grpc;
+﻿using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 
@@ -6,10 +7,17 @@ namespace Server
 {
 	public class Program
 	{
-		public static void Main(string[] args)
+		public static async Task Main(string[] args)
 		{
 			var hb = CreateHostBuilder(args).Build();
-			hb.Run();
+			await hb.StartAsync();
+
+			Console.WriteLine("Press Enter to stop server");
+			Console.ReadLine();
+
+			await hb.StopAsync();
+
+			hb.Dispose();
 		}
 
 		public static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -17,6 +25,7 @@ namespace Server
 				.ConfigureWebHostDefaults(webBuilder =>
 				{
 					webBuilder.UseStartup<Startup>();
+					webBuilder.UseUrls("https://localhost:15001");
 				});
 	}
 }
