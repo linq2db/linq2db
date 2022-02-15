@@ -1727,25 +1727,25 @@ namespace Tests.Linq
 												 	 .Over().OrderBy(p.ProcessID).ToValue())
 								 .ToArray();
 
-				CollectionAssert.AreEqual(new string[] { "Three", "Four", null, null }, leads);
+				CollectionAssert.AreEqual(new string?[] { "Three", "Four", null, null }, leads);
 
 				leads = table.Select(p => Sql.Ext.Lead(p.ProcessName)
 											 	 .Over().OrderBy(p.ProcessID).ToValue())
 							 .ToArray();
 
-				CollectionAssert.AreEqual(new string[] { "Two", "Three", "Four", null }, leads);
+				CollectionAssert.AreEqual(new string?[] { "Two", "Three", "Four", null }, leads);
 
 				var lags = table.Select(p => Sql.Ext.Lag(p.ProcessName, 2)
 												 	.Over().OrderBy(p.ProcessID).ToValue())
 								.ToArray();
 
-				CollectionAssert.AreEqual(new string[] { null, null, "One", "Two" }, lags);
+				CollectionAssert.AreEqual(new string?[] { null, null, "One", "Two" }, lags);
 				
 				lags = table.Select(p => Sql.Ext.Lag(p.ProcessName)
 										 	.Over().OrderBy(p.ProcessID).ToValue())
 							.ToArray();
 
-				CollectionAssert.AreEqual(new string[] { null, "One", "Two", "Three" }, lags);
+				CollectionAssert.AreEqual(new string?[] { null, "One", "Two", "Three" }, lags);
 			}
 		}
 	}
