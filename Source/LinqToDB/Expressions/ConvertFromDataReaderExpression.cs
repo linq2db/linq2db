@@ -61,7 +61,7 @@ namespace LinqToDB.Expressions
 
 		public Expression Reduce(IDataContext dataContext, DbDataReader dataReader)
 		{
-			dataReader = DataReaderWrapCache.TryUnwrapDataReader(dataContext.MappingSchema, dataReader);
+			dataReader = dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(dataContext, dataReader) ?? dataReader;
 
 			return GetColumnReader(dataContext, dataContext.MappingSchema, dataReader, _type, Converter, _idx, _dataReaderParam, forceNullCheck: false);
 		}

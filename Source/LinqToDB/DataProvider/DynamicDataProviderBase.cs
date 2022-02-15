@@ -172,23 +172,29 @@ namespace LinqToDB.DataProvider
 			return TryConvertProviderType(_parameterConverters, Adapter.ParameterType, parameter, ms);
 		}
 
-		public virtual DbCommand? TryGetProviderCommand(DbCommand command, MappingSchema ms)
+		public virtual DbCommand? TryGetProviderCommand(IDataContext dataContext, DbCommand command)
 		{
 			// remove retry policy wrapper
 			if (command is RetryingDbCommand rcmd)
 				command = rcmd.UnderlyingObject;
 
-			return TryConvertProviderType(_commandConverters, Adapter.CommandType, command, ms);
+			command = dataContext.UnwrapDataObjectInterceptor?.UnwrapCommand(dataContext, command) ?? command;
+			return Adapter.CommandType.IsSameOrParentOf(command.GetType()) ? command : null;
 		}
 
-		public virtual DbConnection? TryGetProviderConnection(DbConnection connection, MappingSchema ms)
+		public virtual DbConnection? TryGetProviderConnection(IDataContext dataContext, DbConnection connection)
 		{
-			return TryConvertProviderType(_connectionConverters, Adapter.ConnectionType, connection, ms);
+//			return TryConvertProviderType(_connectionConverters, Adapter.ConnectionType, connection, dataContext.MappingSchema);
+
+			connection = dataContext.UnwrapDataObjectInterceptor?.UnwrapConnection(dataContext, connection) ?? connection;
+			return Adapter.ConnectionType.IsSameOrParentOf(connection.GetType()) ? connection : null;
+
 		}
 
-		public virtual DbTransaction? TryGetProviderTransaction(DbTransaction transaction, MappingSchema ms)
+		public virtual DbTransaction? TryGetProviderTransaction(IDataContext dataContext, DbTransaction transaction)
 		{
-			return TryConvertProviderType(_transactionConverters, Adapter.TransactionType, transaction, ms);
+			transaction = dataContext.UnwrapDataObjectInterceptor?.UnwrapTransaction(dataContext, transaction) ?? transaction;
+			return Adapter.TransactionType.IsSameOrParentOf(transaction.GetType()) ? transaction : null;
 		}
 
 		private static TResult? TryConvertProviderType<TResult>(

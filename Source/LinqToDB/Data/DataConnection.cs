@@ -18,7 +18,6 @@ namespace LinqToDB.Data
 	using Configuration;
 	using DataProvider;
 	using Expressions;
-	using Interceptors;
 	using Mapping;
 	using RetryPolicy;
 

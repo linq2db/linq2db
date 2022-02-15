@@ -124,7 +124,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			command = base.InitCommand(dataConnection, command, commandType, commandText, parameters, withParameters);
 
-			var rawCommand = TryGetProviderCommand(command, dataConnection.MappingSchema);
+			var rawCommand = TryGetProviderCommand(dataConnection, command);
 
 			if (rawCommand != null)
 			{

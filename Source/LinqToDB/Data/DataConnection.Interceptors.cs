@@ -8,7 +8,8 @@ namespace LinqToDB.Data
 		IInterceptable<ICommandInterceptor>,
 		IInterceptable<IConnectionInterceptor>,
 		IInterceptable<IDataContextInterceptor>,
-		IInterceptable<IEntityServiceInterceptor>
+		IInterceptable<IEntityServiceInterceptor>,
+		IInterceptable<IUnwrapDataObjectInterceptor>
 	{
 		ICommandInterceptor? _commandInterceptor;
 		ICommandInterceptor? IInterceptable<ICommandInterceptor>.Interceptor
@@ -38,6 +39,15 @@ namespace LinqToDB.Data
 			set => _entityServiceInterceptor = value;
 		}
 
+		IUnwrapDataObjectInterceptor? IDataContext.UnwrapDataObjectInterceptor => _unwrapDataObjectInterceptor;
+
+		IUnwrapDataObjectInterceptor? _unwrapDataObjectInterceptor;
+		IUnwrapDataObjectInterceptor? IInterceptable<IUnwrapDataObjectInterceptor>.Interceptor
+		{
+			get => _unwrapDataObjectInterceptor;
+			set => _unwrapDataObjectInterceptor = value;
+		}
+
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)
 		{
@@ -46,10 +56,11 @@ namespace LinqToDB.Data
 
 		internal void RemoveInterceptor(IInterceptor interceptor)
 		{
-			((IInterceptable<ICommandInterceptor>)      this).RemoveInterceptor(interceptor);
-			((IInterceptable<IConnectionInterceptor>)   this).RemoveInterceptor(interceptor);
-			((IInterceptable<IDataContextInterceptor>)  this).RemoveInterceptor(interceptor);
-			((IInterceptable<IEntityServiceInterceptor>)this).RemoveInterceptor(interceptor);
+			((IInterceptable<ICommandInterceptor>)         this).RemoveInterceptor(interceptor);
+			((IInterceptable<IConnectionInterceptor>)      this).RemoveInterceptor(interceptor);
+			((IInterceptable<IDataContextInterceptor>)     this).RemoveInterceptor(interceptor);
+			((IInterceptable<IEntityServiceInterceptor>)   this).RemoveInterceptor(interceptor);
+			((IInterceptable<IUnwrapDataObjectInterceptor>)this).RemoveInterceptor(interceptor);
 		}
 	}
 }

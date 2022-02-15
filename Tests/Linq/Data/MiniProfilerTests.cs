@@ -2,7 +2,11 @@
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
+using System.Data.SqlTypes;
+using System.Globalization;
 using System.Linq;
+using System.Numerics;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -14,10 +18,11 @@ using LinqToDB.DataProvider.SapHana;
 using LinqToDB.DataProvider.SqlCe;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
+
 using StackExchange.Profiling;
 using StackExchange.Profiling.Data;
-using Tests.Model;
 
 #if !NETCOREAPP2_1
 using MySqlDataDateTime           = MySql.Data.Types.MySqlDateTime;
@@ -25,27 +30,31 @@ using MySqlDataDecimal            = MySql.Data.Types.MySqlDecimal;
 using MySqlConnectorDateTime      = MySqlConnector.MySqlDateTime;
 using MySqlDataMySqlConnection    = MySql.Data.MySqlClient.MySqlConnection;
 #endif
-using System.Globalization;
+
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.DB2;
-using IBM.Data.DB2Types;
-using Tests.DataProvider;
-using System.Data.SqlTypes;
-using Microsoft.SqlServer.Types;
 using LinqToDB.DataProvider.Sybase;
 using LinqToDB.DataProvider.Informix;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.DataProvider.PostgreSQL;
-using System.Threading.Tasks;
 using LinqToDB.Common;
+
+using IBM.Data.DB2Types;
+
+using Microsoft.SqlServer.Types;
+
 using FirebirdSql.Data.Types;
-using System.Numerics;
+
+using LinqToDB.Interceptors;
 #if NET472
 using IBM.Data.Informix;
 #endif
 
 namespace Tests.Data
 {
+	using DataProvider;
+	using Model;
+
 	[TestFixture]
 	public class MiniProfilerTests : TestBase
 	{
@@ -1578,9 +1587,8 @@ namespace Tests.Data
 
 		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Func<string, DbConnection> connectionFactory, string? csExtra = null)
 		{
-			var ms = new MappingSchema();
-			DataConnection? db = null;
-			db = new DataConnection(provider, () =>
+			//var ms = new MappingSchema();
+			var db = new DataConnection(provider, () =>
 			{
 				// don't create connection using provider, or it will initialize types
 				var cn = connectionFactory(DataConnection.GetConnectionString(context) + csExtra);
@@ -1599,16 +1607,40 @@ namespace Tests.Data
 			switch (type)
 			{
 				case ConnectionType.MiniProfiler:
-					ms.SetConvertExpression<ProfiledDbConnection, DbConnection>  (db => db.WrappedConnection);
-					ms.SetConvertExpression<ProfiledDbDataReader,  DbDataReader> (db => db.WrappedReader);
-					ms.SetConvertExpression<ProfiledDbTransaction, DbTransaction>(db => db.WrappedTransaction);
-					ms.SetConvertExpression<ProfiledDbCommand,     DbCommand>    (db => db.InternalCommand);
+					db.AddInterceptor(new UnwrapProfilerInterceptor());
+					//ms.SetConvertExpression<ProfiledDbConnection,  DbConnection> (db => db.WrappedConnection);
+					//ms.SetConvertExpression<ProfiledDbDataReader,  DbDataReader> (db => db.WrappedReader);
+					//ms.SetConvertExpression<ProfiledDbTransaction, DbTransaction>(db => db.WrappedTransaction);
+					//ms.SetConvertExpression<ProfiledDbCommand,     DbCommand>    (db => db.InternalCommand);
 					break;
 			}
 
-			db.AddMappingSchema(ms);
+			//db.AddMappingSchema(ms);
 
 			return db;
+		}
+
+		class UnwrapProfilerInterceptor : UnwrapDataObjectInterceptor
+		{
+			public override DbConnection UnwrapConnection(IDataContext dataContext, DbConnection connection)
+			{
+				return connection is ProfiledDbConnection c ? c.WrappedConnection : connection;
+			}
+
+			public override DbTransaction UnwrapTransaction(IDataContext dataContext, DbTransaction transaction)
+			{
+				return transaction is ProfiledDbTransaction t ? t.WrappedTransaction : transaction;
+			}
+
+			public override DbCommand UnwrapCommand(IDataContext dataContext, DbCommand command)
+			{
+				return command is ProfiledDbCommand c ? c.InternalCommand : command;
+			}
+
+			public override DbDataReader UnwrapDataReader(IDataContext dataContext, DbDataReader dataReader)
+			{
+				return dataReader is ProfiledDbDataReader dr ? dr.WrappedReader : dataReader;
+			}
 		}
 	}
 }

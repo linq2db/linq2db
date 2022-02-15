@@ -7,7 +7,8 @@ namespace LinqToDB.ServiceModel
 
 	public abstract partial class RemoteDataContextBase :
 		IInterceptable<IDataContextInterceptor>,
-		IInterceptable<IEntityServiceInterceptor>
+		IInterceptable<IEntityServiceInterceptor>,
+		IInterceptable<IUnwrapDataObjectInterceptor>
 	{
 		// remote context interceptors support is quite limited and supports only IDataContextInterceptor
 		// interceptors, but not other interceptors, including AggregatedInterceptor<T>
@@ -23,6 +24,15 @@ namespace LinqToDB.ServiceModel
 		{
 			get => _entityServiceInterceptor;
 			set => _entityServiceInterceptor = value;
+		}
+
+		IUnwrapDataObjectInterceptor? IDataContext.UnwrapDataObjectInterceptor => _unwrapDataObjectInterceptor;
+
+		AggregatedUnwrapDataObjectInterceptor? _unwrapDataObjectInterceptor;
+		IUnwrapDataObjectInterceptor? IInterceptable<IUnwrapDataObjectInterceptor>.Interceptor
+		{
+			get => _unwrapDataObjectInterceptor;
+			set => _unwrapDataObjectInterceptor = (AggregatedUnwrapDataObjectInterceptor?)value;
 		}
 
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>

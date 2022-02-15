@@ -26,6 +26,7 @@ namespace LinqToDB.Linq
 				static (entry, ms) =>
 				{
 					var expr = ms.GetConvertExpression(entry.Key.dataReaderType, typeof(DbDataReader), false, false);
+
 					if (expr != null)
 					{
 						var param = Expression.Parameter(typeof(DbDataReader));

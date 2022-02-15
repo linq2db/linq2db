@@ -8,7 +8,8 @@ namespace LinqToDB
 		IInterceptable<ICommandInterceptor>,
 		IInterceptable<IConnectionInterceptor>,
 		IInterceptable<IDataContextInterceptor>,
-		IInterceptable<IEntityServiceInterceptor>
+		IInterceptable<IEntityServiceInterceptor>,
+		IInterceptable<IUnwrapDataObjectInterceptor>
 	{
 		AggregatedCommandInterceptor? _commandInterceptor;
 		ICommandInterceptor? IInterceptable<ICommandInterceptor>.Interceptor
@@ -38,15 +39,25 @@ namespace LinqToDB
 			set => _entityServiceInterceptor = (AggregatedEntityServiceInterceptor?)value;
 		}
 
+		IUnwrapDataObjectInterceptor? IDataContext.UnwrapDataObjectInterceptor => _unwrapDataObjectInterceptor;
+
+		AggregatedUnwrapDataObjectInterceptor? _unwrapDataObjectInterceptor;
+		IUnwrapDataObjectInterceptor? IInterceptable<IUnwrapDataObjectInterceptor>.Interceptor
+		{
+			get => _unwrapDataObjectInterceptor;
+			set => _unwrapDataObjectInterceptor = (AggregatedUnwrapDataObjectInterceptor?)value;
+		}
+
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)
 		{
 			switch (interceptor)
 			{
-				case ICommandInterceptor       cm : Add(ref _commandInterceptor,       cm); break;
-				case IConnectionInterceptor    cn : Add(ref _connectionInterceptor,    cn); break;
-				case IDataContextInterceptor   dc : Add(ref _dataContextInterceptor,   dc); break;
-				case IEntityServiceInterceptor es : Add(ref _entityServiceInterceptor, es); break;
+				case ICommandInterceptor          cm : Add(ref _commandInterceptor,          cm); break;
+				case IConnectionInterceptor       cn : Add(ref _connectionInterceptor,       cn); break;
+				case IDataContextInterceptor      dc : Add(ref _dataContextInterceptor,      dc); break;
+				case IEntityServiceInterceptor    es : Add(ref _entityServiceInterceptor,    es); break;
+				case IUnwrapDataObjectInterceptor wr : Add(ref _unwrapDataObjectInterceptor, wr); break;
 			}
 
 			void Add<TA,TI>(ref TA? aggregator, TI intercept)

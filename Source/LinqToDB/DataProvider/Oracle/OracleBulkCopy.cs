@@ -3,13 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using System.Threading;
-	using System.Threading.Tasks;
+	using Common;
 	using Data;
-	using LinqToDB.Common;
 	using SqlProvider;
 
 	class OracleBulkCopy : BasicBulkCopy
@@ -43,7 +43,7 @@ namespace LinqToDB.DataProvider.Oracle
 			if (table.TryGetDataConnection(out var dataConnection) && _provider.Adapter.BulkCopy != null
 				&& serverName == null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 
 				if (connection != null)
 				{
@@ -131,7 +131,7 @@ namespace LinqToDB.DataProvider.Oracle
 					}
 				}
 			}
-			
+
 
 			return MultipleRowsCopy(table, options, source);
 		}

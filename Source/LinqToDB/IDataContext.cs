@@ -9,7 +9,7 @@ namespace LinqToDB
 	using System.Data.Common;
 	using System.Threading.Tasks;
 	using Linq;
-	using LinqToDB.Interceptors;
+	using Interceptors;
 	using Mapping;
 	using SqlProvider;
 
@@ -119,5 +119,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <param name="interceptor">Interceptor.</param>
 		void AddInterceptor(IInterceptor interceptor);
+
+		IUnwrapDataObjectInterceptor? UnwrapDataObjectInterceptor { get; }
 	}
 }

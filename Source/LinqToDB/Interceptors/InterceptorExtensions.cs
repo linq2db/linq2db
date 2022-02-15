@@ -41,10 +41,11 @@ namespace LinqToDB
 		{
 			switch (interceptor)
 			{
-				case ICommandInterceptor       cm : AddInterceptorImpl((IInterceptable<ICommandInterceptor>)      interceptable, cm); break;
-				case IConnectionInterceptor    cn : AddInterceptorImpl((IInterceptable<IConnectionInterceptor>)   interceptable, cn); break;
-				case IDataContextInterceptor   dc : AddInterceptorImpl((IInterceptable<IDataContextInterceptor>)  interceptable, dc); break;
-				case IEntityServiceInterceptor es : AddInterceptorImpl((IInterceptable<IEntityServiceInterceptor>)interceptable, es); break;
+				case ICommandInterceptor          cm : AddInterceptorImpl((IInterceptable<ICommandInterceptor>)         interceptable, cm); break;
+				case IConnectionInterceptor       cn : AddInterceptorImpl((IInterceptable<IConnectionInterceptor>)      interceptable, cn); break;
+				case IDataContextInterceptor      dc : AddInterceptorImpl((IInterceptable<IDataContextInterceptor>)     interceptable, dc); break;
+				case IEntityServiceInterceptor    es : AddInterceptorImpl((IInterceptable<IEntityServiceInterceptor>)   interceptable, es); break;
+				case IUnwrapDataObjectInterceptor wr : AddInterceptorImpl((IInterceptable<IUnwrapDataObjectInterceptor>)interceptable, wr); break;
 			}
 		}
 
@@ -55,28 +56,26 @@ namespace LinqToDB
 				interceptable.Interceptor = interceptor;
 			else if (interceptable.Interceptor is AggregatedInterceptor<T> aggregated)
 				aggregated.Interceptors.Add(interceptor);
-			else if (interceptable is IInterceptable<ICommandInterceptor> cmi && interceptor is ICommandInterceptor cm)
-				cmi.Interceptor = new AggregatedCommandInterceptor
-				{
-					Interceptors = { cmi.Interceptor!, cm }
-				};
-			else if (interceptable is IInterceptable<IConnectionInterceptor> ci && interceptor is IConnectionInterceptor c)
-				ci.Interceptor = new AggregatedConnectionInterceptor
-				{
-					Interceptors = { ci.Interceptor!, c }
-				};
-			else if (interceptable is IInterceptable<IDataContextInterceptor> dci && interceptor is IDataContextInterceptor dc)
-				dci.Interceptor = new AggregatedDataContextInterceptor
-				{
-					Interceptors = { dci.Interceptor!, dc }
-				};
-			else if (interceptable is IInterceptable<IEntityServiceInterceptor> esi && interceptor is IEntityServiceInterceptor es)
-				esi.Interceptor = new AggregatedEntityServiceInterceptor
-				{
-					Interceptors = { esi.Interceptor!, es }
-				};
-			else
-				throw new NotImplementedException($"AddInterceptor for '{typeof(T).Name}' is not implemented.");
+			else switch (interceptable)
+			{
+				case IInterceptable<ICommandInterceptor> cmi when interceptor is ICommandInterceptor cm:
+					cmi.Interceptor = new AggregatedCommandInterceptor          { Interceptors = { cmi.Interceptor!, cm } };
+					break;
+				case IInterceptable<IConnectionInterceptor> ci when interceptor is IConnectionInterceptor c:
+					ci.Interceptor = new AggregatedConnectionInterceptor        { Interceptors = { ci. Interceptor!, c  } };
+					break;
+				case IInterceptable<IDataContextInterceptor> dci when interceptor is IDataContextInterceptor dc:
+					dci.Interceptor = new AggregatedDataContextInterceptor      { Interceptors = { dci.Interceptor!, dc } };
+					break;
+				case IInterceptable<IEntityServiceInterceptor> esi when interceptor is IEntityServiceInterceptor es:
+					esi.Interceptor = new AggregatedEntityServiceInterceptor    { Interceptors = { esi.Interceptor!, es } };
+					break;
+				case IInterceptable<IUnwrapDataObjectInterceptor> wri when interceptor is IUnwrapDataObjectInterceptor wr:
+					wri.Interceptor = new AggregatedUnwrapDataObjectInterceptor { Interceptors = { wri.Interceptor!, wr } };
+					break;
+				default:
+					throw new NotImplementedException($"AddInterceptor for '{typeof(T).Name}' is not implemented.");
+			}
 		}
 
 		internal static void RemoveInterceptor<T>(this IInterceptable<T> interceptable, IInterceptor interceptor)
