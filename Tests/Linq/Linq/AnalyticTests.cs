@@ -1700,7 +1700,7 @@ namespace Tests.Linq
 												 	.Over().OrderBy(p.ProcessID).ToValue())
 								.ToArray();
 
-				CollectionAssert.AreEqual(new[] { "None", "One" }, leads);
+				CollectionAssert.AreEqual(new[] { "None", "One" }, lags);
 			}
 		}
 	}
