@@ -1670,7 +1670,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue3423LeadLagDefault([DataSources(
+		public void LeadLagWithStringDefault([DataSources(
 			TestProvName.AllSqlServer2008Minus,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
