@@ -46,6 +46,7 @@ namespace Tests
 #elif NETCOREAPP3_1_OR_GREATER
 	using Tests.Model.Remote.Grpc;
 	using System.Net;
+	using System.Threading;
 #endif
 
 	public partial class TestBase
@@ -449,7 +450,7 @@ namespace Tests
 				{
 					webBuilder.UseStartup<Startup>();
 
-					webBuilder.UseUrls($"https://localhost:{(Port + TestExternals.RunID)}");
+					webBuilder.UseUrls($"https://localhost:{GetGrpcPort()}");
 				}).Build().Start();
 
 			//not sure does we need to wait for grpc server starts?
@@ -458,6 +459,12 @@ namespace Tests
 
 			TestExternals.Log($"grpc host opened");
 		}
+
+		//Environment.CurrentManagedThreadId need for a parallel test like <see cref="DataConnectionTests.MultipleConnectionsTest"/>
+		private static int GetGrpcPort()
+		{
+			return Port + (Environment.CurrentManagedThreadId % 1000) + TestExternals.RunID;
+		}
 #endif
 
 #if NETCOREAPP3_1_OR_GREATER
@@ -465,13 +472,6 @@ namespace Tests
 		{
 			public void ConfigureServices(IServiceCollection services)
 			{
-				//// Set up Linq2DB connection
-				//DataConnection.DefaultSettings = new LinqToDB.Remote.Grpc.Linq2DbSettings(
-				//	"Northwind",
-				//	ProviderName.SqlServer,
-				//	"Server=.;Database=Northwind;Trusted_Connection=True"
-				//	);
-
 				if(_service == null)
 				{
 					throw new InvalidOperationException("Grpc service should be created first");
@@ -624,7 +624,7 @@ namespace Tests
 				}
 
 				dx = new TestGrpcDataContext(
-					$"https://localhost:{Port + TestExternals.RunID}",
+					$"https://localhost:{GetGrpcPort()}",
 					() =>
 					{
 						_service!.SuppressSequentialAccess = false;

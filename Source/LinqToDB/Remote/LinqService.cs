@@ -232,9 +232,11 @@ namespace LinqToDB.Remote
 					FieldTypes = new Type[] { scalar.GetType() },
 					Data       = new List<string[]>
 						{
-							new []
+							new string[]
 							{
-								SerializationConverter.Serialize(SerializationMappingSchema, scalar)
+								scalar == DBNull.Value
+									? string.Empty
+									: SerializationConverter.Serialize(SerializationMappingSchema, scalar)
 							}
 						},
 				};

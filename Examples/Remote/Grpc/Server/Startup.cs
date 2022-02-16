@@ -28,7 +28,8 @@ namespace Server
 					new LinqService()
 					{
 						AllowUpdates = true
-					}
+					},
+					true
 				));
 		}
 

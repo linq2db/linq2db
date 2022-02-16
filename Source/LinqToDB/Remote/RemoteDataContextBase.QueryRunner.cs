@@ -202,7 +202,11 @@ namespace LinqToDB.Remote
 				{
 					var lsr = LinqServiceSerializer.DeserializeResult(_dataContext.SerializationMappingSchema, ret);
 					var value = lsr.Data[0][0];
-					result = SerializationConverter.Deserialize(_dataContext.SerializationMappingSchema, lsr.FieldTypes[0], value);
+
+					if (!string.IsNullOrEmpty(value))
+					{
+						result = SerializationConverter.Deserialize(_dataContext.SerializationMappingSchema, lsr.FieldTypes[0], value);
+					}
 				}
 
 				return result;

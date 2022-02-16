@@ -32,7 +32,7 @@ namespace Tests.Remote
 			IInterceptor? interceptor,
 			bool suppressSequentialAccess
 			)
-			: base(linqService)
+			: base(linqService, true)
 		{
 			_linqService = linqService;
 			_interceptor = interceptor;

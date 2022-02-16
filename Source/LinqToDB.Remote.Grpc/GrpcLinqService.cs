@@ -1,4 +1,5 @@
-﻿using LinqToDB.Remote.Grpc.Dto;
+﻿using Grpc.Core;
+using LinqToDB.Remote.Grpc.Dto;
 using ProtoBuf.Grpc;
 using System;
 using System.Threading;
@@ -9,9 +10,11 @@ namespace LinqToDB.Remote.Grpc
 	public class GrpcLinqService : IGrpcLinqService
 	{
 		private readonly ILinqService _linqService;
+		private readonly bool _transferInternalExceptionToClient;
 
 		public GrpcLinqService(
-			ILinqService linqService
+			ILinqService linqService,
+			bool transferInternalExceptionToClient
 			)
 		{
 			if (linqService is null)
@@ -20,33 +23,78 @@ namespace LinqToDB.Remote.Grpc
 			}
 
 			_linqService = linqService;
+			_transferInternalExceptionToClient = transferInternalExceptionToClient;
 		}
 
 
 		public LinqServiceInfo GetInfo(GrpcConfiguration configuration, CallContext context = default)
 		{
-			var result = _linqService.GetInfo(configuration.Configuration);
-			return result;
+			try
+			{
+				var result = _linqService.GetInfo(configuration.Configuration);
+				return result;
+			}
+			catch (Exception exception)
+			when (_transferInternalExceptionToClient)
+			{
+				throw new RpcException(new Status(StatusCode.Unknown, exception.Message));
+			}
 		}
 
 		public GrpcInt ExecuteBatch(GrpcConfigurationQuery caq, CallContext context = default)
 		{
-			return _linqService.ExecuteBatch(caq.Configuration, caq.QueryData);
+			try
+			{
+				var result = _linqService.ExecuteBatch(caq.Configuration, caq.QueryData);
+				return result;
+			}
+			catch (Exception exception)
+			when (_transferInternalExceptionToClient)
+			{
+				throw new RpcException(new Status(StatusCode.Unknown, exception.Message));
+			}
 		}
 
 		public GrpcInt ExecuteNonQuery(GrpcConfigurationQuery caq, CallContext context = default)
 		{
-			return _linqService.ExecuteNonQuery(caq.Configuration, caq.QueryData);
+			try
+			{
+				var result = _linqService.ExecuteNonQuery(caq.Configuration, caq.QueryData);
+				return result;
+			}
+			catch (Exception exception)
+			when (_transferInternalExceptionToClient)
+			{
+				throw new RpcException(new Status(StatusCode.Unknown, exception.Message));
+			}
 		}
 
 		public GrpcString ExecuteReader(GrpcConfigurationQuery caq, CallContext context = default)
 		{
-			return _linqService.ExecuteReader(caq.Configuration, caq.QueryData);
+			try
+			{
+				var result = _linqService.ExecuteReader(caq.Configuration, caq.QueryData);
+				return result;
+			}
+			catch (Exception exception)
+			when(_transferInternalExceptionToClient)
+			{
+				throw new RpcException(new Status(StatusCode.Unknown, exception.Message));
+			}
 		}
 
 		public GrpcString ExecuteScalar(GrpcConfigurationQuery caq, CallContext context = default)
 		{
-			return _linqService.ExecuteScalar(caq.Configuration, caq.QueryData);
+			try
+			{
+				var result = _linqService.ExecuteScalar(caq.Configuration, caq.QueryData);
+				return result;
+			}
+			catch (Exception exception)
+			when (_transferInternalExceptionToClient)
+			{
+				throw new RpcException(new Status(StatusCode.Unknown, exception.Message));
+			}
 		}
 
 
@@ -64,42 +112,74 @@ namespace LinqToDB.Remote.Grpc
 
 		public Task<GrpcInt> ExecuteBatchAsync(GrpcConfigurationQuery caq, CallContext context = default)
 		{
-			//TODO: modify LinqService to support async
-			var result = _linqService.ExecuteBatch(caq.Configuration, caq.QueryData);
-			return Task.FromResult<GrpcInt>(result);
+			try
+			{
+				//TODO: modify LinqService to support async
+				var result = _linqService.ExecuteBatch(caq.Configuration, caq.QueryData);
+				return Task.FromResult<GrpcInt>(result);
+			}
+			catch (Exception exception)
+			when (_transferInternalExceptionToClient)
+			{
+				throw new RpcException(new Status(StatusCode.Unknown, exception.Message));
+			}
 		}
 
 		public async Task<GrpcInt> ExecuteNonQueryAsync(GrpcConfigurationQuery caq, CallContext context = default)
 		{
-			var result = await _linqService.ExecuteNonQueryAsync(
-				caq.Configuration,
-				caq.QueryData,
-				context.ServerCallContext?.CancellationToken ?? CancellationToken.None
-				).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			try
+			{
+				var result = await _linqService.ExecuteNonQueryAsync(
+					caq.Configuration,
+					caq.QueryData,
+					context.ServerCallContext?.CancellationToken ?? CancellationToken.None
+					).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			return result;
+				return result;
+			}
+			catch (Exception exception)
+			when (_transferInternalExceptionToClient)
+			{
+				throw new RpcException(new Status(StatusCode.Unknown, exception.Message));
+			}
 		}
 
 		public async Task<GrpcString> ExecuteReaderAsync(GrpcConfigurationQuery caq, CallContext context = default)
 		{
-			var result = await _linqService.ExecuteReaderAsync(
-				caq.Configuration,
-				caq.QueryData,
-				context.ServerCallContext?.CancellationToken ?? CancellationToken.None
-				).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			try
+			{
+				var result = await _linqService.ExecuteReaderAsync(
+					caq.Configuration,
+					caq.QueryData,
+					context.ServerCallContext?.CancellationToken ?? CancellationToken.None
+					).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			return result;
+				return result;
+			}
+			catch (Exception exception)
+			when (_transferInternalExceptionToClient)
+			{
+				throw new RpcException(new Status(StatusCode.Unknown, exception.Message));
+			}
 		}
 
 		public async Task<GrpcString> ExecuteScalarAsync(GrpcConfigurationQuery caq, CallContext context = default)
 		{
-			var result = await _linqService.ExecuteScalarAsync(
-				caq.Configuration,
-				caq.QueryData,
-				context.ServerCallContext?.CancellationToken ?? CancellationToken.None
-				).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			try
+			{
+				var result = await _linqService.ExecuteScalarAsync(
+					caq.Configuration,
+					caq.QueryData,
+					context.ServerCallContext?.CancellationToken ?? CancellationToken.None
+					).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			return result;
+				return result;
+			}
+			catch (Exception exception)
+			when (_transferInternalExceptionToClient)
+			{
+				throw new RpcException(new Status(StatusCode.Unknown, exception.Message));
+			}
 		}
 
 	}
