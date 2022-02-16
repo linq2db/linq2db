@@ -1710,7 +1710,8 @@ namespace Tests.Linq
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
-			ProviderName.Firebird,
+			// Firebird excluded because of #2839, the test data is inserted with padding and then expectations fail
+			// ProviderName.Firebird,
 			TestProvName.MySql55)] string context)
 		{
 			var data = new Issue1799Table3[] 
