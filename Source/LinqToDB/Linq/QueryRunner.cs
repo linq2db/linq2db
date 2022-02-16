@@ -229,9 +229,8 @@ namespace LinqToDB.Linq
 #endif
 		}
 
-		static int EvaluateTakeSkipValue(Query query, Expression expr, IDataContext? db, object?[]? ps, int qn,
-			ISqlExpression sqlExpr)
-				{
+		static int EvaluateTakeSkipValue(Query query, Expression expr, IDataContext? db, object?[]? ps, int qn, ISqlExpression sqlExpr)
+		{
 			var parameterValues = new SqlParameterValues();
 			SetParameters(query, expr, db, ps, qn, parameterValues);
 
@@ -252,7 +251,7 @@ namespace LinqToDB.Linq
 
 				if (value is IEnumerable vs)
 				{
-					var type = vs.GetType();
+					var type  = vs.GetType();
 					var etype = type.GetItemType();
 
 					if (etype == null || etype == typeof(object) || etype.IsEnum ||
@@ -297,10 +296,9 @@ namespace LinqToDB.Linq
 			var descriptor    = field.ColumnDescriptor;
 			var dbValueLambda = descriptor.GetDbParamLambda();
 
-			Expression? valueGetter;
 			Expression? dbDataTypeExpression;
 
-			valueGetter = InternalExtensions.ApplyLambdaToExpression(dbValueLambda, getter);
+			var valueGetter = InternalExtensions.ApplyLambdaToExpression(dbValueLambda, getter);
 
 			if (typeof(DataParameter).IsSameOrParentOf(valueGetter.Type))
 			{
@@ -321,7 +319,7 @@ namespace LinqToDB.Linq
 			return param;
 		}
 
-		private static Type GetType<T>(T obj, IDataContext db)
+		static Type GetType<T>(T obj, IDataContext db)
 			//=> typeof(T);
 			//=> obj.GetType();
 			=> db.MappingSchema.GetEntityDescriptor(typeof(T)).InheritanceMapping?.Count > 0 ? obj!.GetType() : typeof(T);
@@ -331,10 +329,10 @@ namespace LinqToDB.Linq
 		#region SetRunQuery
 
 		public delegate int TakeSkipDelegate(
-			Query                    query,
-			Expression               expression,
-			IDataContext?            dataContext,
-			object?[]?               ps);
+			Query         query,
+			Expression    expression,
+			IDataContext? dataContext,
+			object?[]?    ps);
 
 		static Tuple<
 			Func<Query,IDataContext,Mapper<T>,Expression,object?[]?,object?[]?,int,IEnumerable<T>>,
@@ -394,13 +392,11 @@ namespace LinqToDB.Linq
 
 				do
 				{
-//					yield return mapper.Map(dataContext, runner, origDataReader, ref mapperInfo);
-
 					T res;
 
 					try
 					{
-						res =  mapperInfo.Mapper(runner, origDataReader);
+						res = mapperInfo.Mapper(runner, origDataReader);
 						runner.RowsCount++;
 					}
 					catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException"))

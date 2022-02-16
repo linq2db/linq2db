@@ -1,23 +1,40 @@
 ﻿using System;
-using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
-using System.Data.SqlTypes;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
+using System.Data.SqlTypes;
+
+using FirebirdSql.Data.Types;
+
+using IBM.Data.DB2Types;
+
+#if NET472
+using IBM.Data.Informix;
+#endif
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Access;
+using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.Firebird;
+using LinqToDB.DataProvider.Informix;
 using LinqToDB.DataProvider.MySql;
+using LinqToDB.DataProvider.Oracle;
+using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.DataProvider.SapHana;
 using LinqToDB.DataProvider.SqlCe;
+using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.DataProvider.Sybase;
+using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
+
+using Microsoft.SqlServer.Types;
 
 using NUnit.Framework;
 
@@ -29,25 +46,6 @@ using MySqlDataDateTime           = MySql.Data.Types.MySqlDateTime;
 using MySqlDataDecimal            = MySql.Data.Types.MySqlDecimal;
 using MySqlConnectorDateTime      = MySqlConnector.MySqlDateTime;
 using MySqlDataMySqlConnection    = MySql.Data.MySqlClient.MySqlConnection;
-#endif
-
-using LinqToDB.DataProvider.SQLite;
-using LinqToDB.DataProvider.DB2;
-using LinqToDB.DataProvider.Sybase;
-using LinqToDB.DataProvider.Informix;
-using LinqToDB.DataProvider.Oracle;
-using LinqToDB.DataProvider.PostgreSQL;
-using LinqToDB.Common;
-
-using IBM.Data.DB2Types;
-
-using Microsoft.SqlServer.Types;
-
-using FirebirdSql.Data.Types;
-
-using LinqToDB.Interceptors;
-#if NET472
-using IBM.Data.Informix;
 #endif
 
 namespace Tests.Data
@@ -91,7 +89,7 @@ namespace Tests.Data
 		{
 			using (var mpcon = new MiniProfilerDataContext(context))
 			{
-				mpcon.GetTable<Northwind.Category>().ToList();
+				_ = mpcon.GetTable<Northwind.Category>().ToList();
 			}
 		}
 
@@ -1608,10 +1606,10 @@ namespace Tests.Data
 			{
 				case ConnectionType.MiniProfiler:
 					db.AddInterceptor(new UnwrapProfilerInterceptor());
-					//ms.SetConvertExpression<ProfiledDbConnection,  DbConnection> (db => db.WrappedConnection);
-					//ms.SetConvertExpression<ProfiledDbDataReader,  DbDataReader> (db => db.WrappedReader);
-					//ms.SetConvertExpression<ProfiledDbTransaction, DbTransaction>(db => db.WrappedTransaction);
-					//ms.SetConvertExpression<ProfiledDbCommand,     DbCommand>    (db => db.InternalCommand);
+//					ms.SetConvertExpression<ProfiledDbConnection, DbConnection> (db => db.WrappedConnection);
+//					ms.SetConvertExpression<ProfiledDbDataReader, DbDataReader> (db => db.WrappedReader);
+//					ms.SetConvertExpression<ProfiledDbTransaction,DbTransaction>(db => db.WrappedTransaction);
+//					ms.SetConvertExpression<ProfiledDbCommand,    DbCommand>    (db => db.InternalCommand);
 					break;
 			}
 

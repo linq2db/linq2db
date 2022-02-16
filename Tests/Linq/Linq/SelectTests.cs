@@ -491,8 +491,6 @@ namespace Tests.Linq
 						.OrderByDescending(m => m.ChildID)
 						.Where(m => m.Parent != null && m.ParentID > 0);
 
-				var lll = q.ToList();
-
 				var lines =
 					q.Select(
 						(m, i) =>

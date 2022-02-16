@@ -184,8 +184,6 @@ namespace LinqToDB.DataProvider
 
 		public virtual DbConnection? TryGetProviderConnection(IDataContext dataContext, DbConnection connection)
 		{
-//			return TryConvertProviderType(_connectionConverters, Adapter.ConnectionType, connection, dataContext.MappingSchema);
-
 			connection = dataContext.UnwrapDataObjectInterceptor?.UnwrapConnection(dataContext, connection) ?? connection;
 			return Adapter.ConnectionType.IsSameOrParentOf(connection.GetType()) ? connection : null;
 

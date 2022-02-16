@@ -14,7 +14,6 @@ using System.Runtime.CompilerServices;
 using System.Diagnostics;
 
 using JetBrains.Annotations;
-using LinqToDB.Interceptors;
 
 // type, readertype, configID, sql, additionalKey, isScalar
 using QueryKey = System.ValueTuple<System.Type, System.Type, int, string, string?, bool>;
@@ -23,10 +22,10 @@ namespace LinqToDB.Data
 {
 	using Async;
 	using Common;
+	using Common.Internal.Cache;
 	using Expressions;
 	using Extensions;
-	using LinqToDB.Common.Internal.Cache;
-	using LinqToDB.Linq;
+	using Linq;
 	using Mapping;
 	using Reflection;
 
@@ -328,8 +327,8 @@ namespace LinqToDB.Data
 				{
 					if (rd.DataReader!.Read())
 					{
+						var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
 						var reader        = ((IDataContext)DataConnection).UnwrapDataObjectInterceptor?.UnwrapDataReader(DataConnection, rd.DataReader!) ?? rd.DataReader!;
-						var additionalKey = GetCommandAdditionalKey(reader, typeof(T));
 						var objectReader  = GetObjectReader<T>(DataConnection, reader, CommandText, additionalKey);
 						var isFaulted     = false;
 
@@ -347,9 +346,8 @@ namespace LinqToDB.Data
 									throw;
 
 								isFaulted    = true;
-								objectReader = GetObjectReader2<T>(DataConnection, reader, CommandText,
-									additionalKey);
-								result = objectReader(reader);
+								objectReader = GetObjectReader2<T>(DataConnection, reader, CommandText, additionalKey);
+								result       = objectReader(reader);
 							}
 
 							rowCount++;
@@ -436,8 +434,8 @@ namespace LinqToDB.Data
 				{
 					if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
+						var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
 						var reader        = ((IDataContext)DataConnection).UnwrapDataObjectInterceptor?.UnwrapDataReader(DataConnection, rd.DataReader!) ?? rd.DataReader!;
-						var additionalKey = GetCommandAdditionalKey(reader, typeof(T));
 						var objectReader  = GetObjectReader<T>(DataConnection, reader, CommandText, additionalKey);
 						var isFaulted     = false;
 
@@ -974,8 +972,8 @@ namespace LinqToDB.Data
 			{
 				if (rd.DataReader!.Read())
 				{
+					var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
 					var reader        = ((IDataContext)DataConnection).UnwrapDataObjectInterceptor?.UnwrapDataReader(DataConnection, rd.DataReader!) ?? rd.DataReader!;
-					var additionalKey = GetCommandAdditionalKey(reader, typeof(T));
 					var objectReader  = GetObjectReader<T>(DataConnection, reader, CommandText, additionalKey);
 
 #if DEBUG
@@ -1588,21 +1586,11 @@ namespace LinqToDB.Data
 
 					var expr = dataConnection.MappingSchema.GetConvertExpression(o.Key.readerType, typeof(DbDataReader), false, false);
 
+					///// !!!!!
 					if (expr != null)
 					{
 						expr = Expression.Lambda(Expression.Convert(expr.Body, dataConnection.DataProvider.DataReaderType), expr.Parameters);
 					}
-//					else if (((IDataContext)dataConnection).UnwrapDataObjectInterceptor != null)
-//					{
-//						var p = Expression.Parameter(o.Key.readerType, "dr");
-//						expr = Expression.Lambda(
-//							Expression.Call(
-//								Expression.Constant(((IDataContext)dataConnection).UnwrapDataObjectInterceptor),
-//								MethodHelper.GetMethodInfo(((IDataContext)dataConnection).UnwrapDataObjectInterceptor.UnwrapDataReader, dataConnection, (DbDataReader)null!),
-//								Expression.Constant(dataConnection),
-//								p),
-//							p);
-//					}
 
 					return expr;
 				});
