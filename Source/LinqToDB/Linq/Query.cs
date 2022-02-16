@@ -10,6 +10,10 @@ using System.Threading.Tasks;
 
 // ReSharper disable StaticMemberInGenericType
 
+#if NET6_0_OR_GREATER
+[assembly: System.Reflection.Metadata.MetadataUpdateHandler(typeof(LinqToDB.Linq.Query<>))]
+#endif
+
 namespace LinqToDB.Linq
 {
 #if !NATIVE_ASYNC
@@ -232,7 +236,8 @@ namespace LinqToDB.Linq
 			return preambles;
 		}
 
-#endregion
+		#endregion
+		
 	}
 
 	class Query<T> : Query
@@ -552,8 +557,15 @@ namespace LinqToDB.Linq
 
 			return query;
 		}
+		#endregion
 
-#endregion
+		#region Hot reload compatibility
+		private static void ClearCache(Type[]? updatedTypes)
+		{
+			ClearCaches();
+			ClearCache();
+		}
+		#endregion
 	}
 
 	class QueryInfo : IQueryContext

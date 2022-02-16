@@ -38,6 +38,7 @@ namespace LinqToDB.Linq
 		// This property is helpful in Debug Mode.
 		//
 		[JetBrains.Annotations.UsedImplicitly]
+		[CLSCompliant(false)]
 		// ReSharper disable once InconsistentNaming
 		public string _sqlText => SqlText;
 #endif

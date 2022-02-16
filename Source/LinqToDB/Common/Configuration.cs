@@ -237,7 +237,7 @@ namespace LinqToDB.Common
 			/// Default value: <c>false</c>.
 			/// <para />
 			/// It is not recommended to enable this option as it could lead to severe slowdown. Better approach will be
-			/// to call <see cref="Query{T}.ClearCache"/> method to cleanup cache after queries, that produce severe memory leaks you need to fix.
+			/// to call <see cref="Query{T}.ClearCache()"/> method to cleanup cache after queries, that produce severe memory leaks you need to fix.
 			/// <para />
 			/// <a href="https://github.com/linq2db/linq2db/issues/256">More details</a>.
 			/// </summary>
