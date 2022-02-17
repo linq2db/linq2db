@@ -335,16 +335,12 @@ namespace Tests.Data
 			var ms = new MappingSchema();
 			ms.SetConvertExpression<MySqlDataDateTime, string>(value => value.Value.ToBinary().ToString(CultureInfo.InvariantCulture));
 			ms.SetConvertExpression<string, MySqlDataDateTime>(value => new MySqlDataDateTime(DateTime.FromBinary(long.Parse(value, CultureInfo.InvariantCulture))));
-			switch (type)
-			{
-				case ConnectionType.MiniProfiler:
-					ms.SetConvertExpression<ProfiledDbConnection, DbConnection>(db => db.WrappedConnection);
-					ms.SetConvertExpression<ProfiledDbDataReader, DbDataReader>(db => db.WrappedReader);
-					break;
-			}
 
 			using (var db = GetDataContext(testContext + (isLinq ? ".LinqService" : null), ms))
 			{
+				if (type == ConnectionType.MiniProfiler)
+					db.AddInterceptor(new UnwrapProfilerInterceptor());
+
 				var dtValue = new DateTime(2012, 12, 12, 12, 12, 12, 0);
 
 				// ExecuteReader
@@ -1585,7 +1581,6 @@ namespace Tests.Data
 
 		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Func<string, DbConnection> connectionFactory, string? csExtra = null)
 		{
-			//var ms = new MappingSchema();
 			var db = new DataConnection(provider, () =>
 			{
 				// don't create connection using provider, or it will initialize types
@@ -1606,19 +1601,13 @@ namespace Tests.Data
 			{
 				case ConnectionType.MiniProfiler:
 					db.AddInterceptor(new UnwrapProfilerInterceptor());
-//					ms.SetConvertExpression<ProfiledDbConnection, DbConnection> (db => db.WrappedConnection);
-//					ms.SetConvertExpression<ProfiledDbDataReader, DbDataReader> (db => db.WrappedReader);
-//					ms.SetConvertExpression<ProfiledDbTransaction,DbTransaction>(db => db.WrappedTransaction);
-//					ms.SetConvertExpression<ProfiledDbCommand,    DbCommand>    (db => db.InternalCommand);
 					break;
 			}
-
-			//db.AddMappingSchema(ms);
 
 			return db;
 		}
 
-		class UnwrapProfilerInterceptor : UnwrapDataObjectInterceptor
+		internal class UnwrapProfilerInterceptor : UnwrapDataObjectInterceptor
 		{
 			public override DbConnection UnwrapConnection(IDataContext dataContext, DbConnection connection)
 			{

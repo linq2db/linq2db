@@ -28,11 +28,11 @@ namespace LinqToDB.ServiceModel
 
 		IUnwrapDataObjectInterceptor? IDataContext.UnwrapDataObjectInterceptor => _unwrapDataObjectInterceptor;
 
-		AggregatedUnwrapDataObjectInterceptor? _unwrapDataObjectInterceptor;
+		IUnwrapDataObjectInterceptor? _unwrapDataObjectInterceptor;
 		IUnwrapDataObjectInterceptor? IInterceptable<IUnwrapDataObjectInterceptor>.Interceptor
 		{
 			get => _unwrapDataObjectInterceptor;
-			set => _unwrapDataObjectInterceptor = (AggregatedUnwrapDataObjectInterceptor?)value;
+			set => _unwrapDataObjectInterceptor = value;
 		}
 
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>

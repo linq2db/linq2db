@@ -16,15 +16,16 @@ namespace LinqToDB.DataProvider
 
 	public interface IDataProvider
 	{
-		string             Name                  { get; }
-		string?            ConnectionNamespace   { get; }
-		Type               DataReaderType        { get; }
-		MappingSchema      MappingSchema         { get; }
-		SqlProviderFlags   SqlProviderFlags      { get; }
-		TableOptions       SupportedTableOptions { get; }
-		DbConnection       CreateConnection      (string connectionString);
-		ISqlBuilder        CreateSqlBuilder      (MappingSchema mappingSchema);
-		ISqlOptimizer      GetSqlOptimizer       ();
+		string           Name                  { get; }
+		string?          ConnectionNamespace   { get; }
+		Type             DataReaderType        { get; }
+		MappingSchema    MappingSchema         { get; }
+		SqlProviderFlags SqlProviderFlags      { get; }
+		TableOptions     SupportedTableOptions { get; }
+		void             InitContext           (IDataContext dataContext);
+		DbConnection     CreateConnection      (string        connectionString);
+		ISqlBuilder      CreateSqlBuilder      (MappingSchema mappingSchema);
+		ISqlOptimizer    GetSqlOptimizer       ();
 		/// <summary>
 		/// Initializes <see cref="DataConnection"/> command object.
 		/// </summary>

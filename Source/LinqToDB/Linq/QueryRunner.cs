@@ -117,7 +117,7 @@ namespace LinqToDB.Linq
 
 					var mapper = mapperExpression.CompileExpression();
 
-					mapperInfo = new() {MapperExpression = mapperExpression, Mapper = mapper};
+					mapperInfo = new() { MapperExpression = mapperExpression, Mapper = mapper };
 
 					_mappers.TryAdd(dataReaderType, mapperInfo);
 				}
@@ -388,7 +388,7 @@ namespace LinqToDB.Linq
 			if (dataReader.Read())
 			{
 				var origDataReader = dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(dataContext, dataReader) ?? dataReader;
-				var mapperInfo     = mapper.GetMapperInfo(dataContext, runner, dataReader);
+				var mapperInfo     = mapper.GetMapperInfo(dataContext, runner, origDataReader);
 
 				do
 				{
@@ -480,7 +480,7 @@ namespace LinqToDB.Linq
 
 			IQueryRunner?     _queryRunner;
 			IDataReaderAsync? _dataReader;
-			int              _take;
+			int               _take;
 
 			public AsyncEnumeratorImpl(
 				Query             query,

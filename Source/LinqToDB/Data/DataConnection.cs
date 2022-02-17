@@ -73,9 +73,9 @@ namespace LinqToDB.Data
 		/// <param name="connectionString">Database connection string to use for connection with database.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
 		public DataConnection(
-				string        providerName,
-				string        connectionString,
-				MappingSchema mappingSchema)
+			string        providerName,
+			string        connectionString,
+			MappingSchema mappingSchema)
 			: this(new LinqToDbConnectionOptionsBuilder().UseConnectionString(providerName, connectionString).UseMappingSchema(mappingSchema))
 		{
 		}
@@ -364,6 +364,8 @@ namespace LinqToDB.Data
 			{
 				TransactionAsync = AsyncFactory.Create(localTransaction);
 			}
+
+			DataProvider.InitContext(this);
 		}
 
 		#endregion
@@ -720,6 +722,17 @@ namespace LinqToDB.Data
 			_providerDetectors.Add(providerDetector);
 		}
 
+		/// <summary>
+		/// Registers database provider factory method.
+		/// Factory accepts connection string settings and connection string. Could return <c>null</c>, if cannot create provider
+		/// instance using provided options.
+		/// </summary>
+		/// <param name="providerDetector">Factory method delegate.</param>
+		public static void InsertProviderDetector(Func<IConnectionStringSettings,string,IDataProvider?> providerDetector)
+		{
+			_providerDetectors.Insert(0, providerDetector);
+		}
+
 		static void InitConnectionStrings()
 		{
 			if (DefaultSettings == null)
@@ -889,9 +902,8 @@ namespace LinqToDB.Data
 
 			public static IDataProvider? GetDataProvider(IConnectionStringSettings css, string connectionString)
 			{
-				var configuration            = css.Name;
-				var providerName             = css.ProviderName;
-
+				var configuration = css.Name;
+				var providerName  = css.ProviderName;
 				var dataProvider  = _providerDetectors.Select(d => d(css, connectionString)).FirstOrDefault(dp => dp != null);
 
 				if (dataProvider == null)
@@ -1063,6 +1075,20 @@ namespace LinqToDB.Data
 			InitConfig();
 
 			return GetConfigurationInfo(configurationString).ConnectionString;
+		}
+
+		/// <summary>
+		/// Returns connection string for specified configuration name or NULL.
+		/// </summary>
+		/// <param name="configurationString">Configuration.</param>
+		/// <returns>Connection string or NULL.</returns>
+		public static string? TryGetConnectionString(string? configurationString)
+		{
+			InitConfig();
+
+			var key = configurationString ?? DefaultConfiguration;
+
+			return key != null && _configurations.TryGetValue(key, out var ci) ? ci.ConnectionString : null;
 		}
 
 		#endregion
@@ -1241,10 +1267,10 @@ namespace LinqToDB.Data
 
 		protected virtual int ExecuteNonQuery(DbCommand command)
 		{
-			var result = Option<int>.None;
+			if (_commandInterceptor == null)
+				return command.ExecuteNonQuery();
 
-			if (_commandInterceptor != null)
-				result = _commandInterceptor.ExecuteNonQuery(new (this), command, result);
+			var result = _commandInterceptor.ExecuteNonQuery(new (this), command, Option<int>.None);
 
 			return result.HasValue
 				? result.Value
