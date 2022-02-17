@@ -37,7 +37,7 @@ namespace LinqToDB.Remote.Grpc
 			catch (Exception exception)
 			when (_transferInternalExceptionToClient)
 			{
-				throw new RpcException(new Status(StatusCode.Unknown, exception.Message));
+				throw new RpcException(new Status(StatusCode.Unknown, exception.ToString()));
 			}
 		}
 
@@ -51,7 +51,7 @@ namespace LinqToDB.Remote.Grpc
 			catch (Exception exception)
 			when (_transferInternalExceptionToClient)
 			{
-				throw new RpcException(new Status(StatusCode.Unknown, exception.Message));
+				throw new RpcException(new Status(StatusCode.Unknown, exception.ToString()));
 			}
 		}
 
@@ -65,7 +65,7 @@ namespace LinqToDB.Remote.Grpc
 			catch (Exception exception)
 			when (_transferInternalExceptionToClient)
 			{
-				throw new RpcException(new Status(StatusCode.Unknown, exception.Message));
+				throw new RpcException(new Status(StatusCode.Unknown, exception.ToString()));
 			}
 		}
 
@@ -79,7 +79,7 @@ namespace LinqToDB.Remote.Grpc
 			catch (Exception exception)
 			when(_transferInternalExceptionToClient)
 			{
-				throw new RpcException(new Status(StatusCode.Unknown, exception.Message));
+				throw new RpcException(new Status(StatusCode.Unknown, exception.ToString()));
 			}
 		}
 
@@ -93,7 +93,7 @@ namespace LinqToDB.Remote.Grpc
 			catch (Exception exception)
 			when (_transferInternalExceptionToClient)
 			{
-				throw new RpcException(new Status(StatusCode.Unknown, exception.Message));
+				throw new RpcException(new Status(StatusCode.Unknown, exception.ToString()));
 			}
 		}
 
@@ -121,7 +121,7 @@ namespace LinqToDB.Remote.Grpc
 			catch (Exception exception)
 			when (_transferInternalExceptionToClient)
 			{
-				throw new RpcException(new Status(StatusCode.Unknown, exception.Message));
+				throw new RpcException(new Status(StatusCode.Unknown, exception.ToString()));
 			}
 		}
 
@@ -140,7 +140,7 @@ namespace LinqToDB.Remote.Grpc
 			catch (Exception exception)
 			when (_transferInternalExceptionToClient)
 			{
-				throw new RpcException(new Status(StatusCode.Unknown, exception.Message));
+				throw new RpcException(new Status(StatusCode.Unknown, exception.ToString()));
 			}
 		}
 
@@ -159,7 +159,7 @@ namespace LinqToDB.Remote.Grpc
 			catch (Exception exception)
 			when (_transferInternalExceptionToClient)
 			{
-				throw new RpcException(new Status(StatusCode.Unknown, exception.Message));
+				throw new RpcException(new Status(StatusCode.Unknown, exception.ToString()));
 			}
 		}
 
@@ -178,7 +178,7 @@ namespace LinqToDB.Remote.Grpc
 			catch (Exception exception)
 			when (_transferInternalExceptionToClient)
 			{
-				throw new RpcException(new Status(StatusCode.Unknown, exception.Message));
+				throw new RpcException(new Status(StatusCode.Unknown, exception.ToString()));
 			}
 		}
 
