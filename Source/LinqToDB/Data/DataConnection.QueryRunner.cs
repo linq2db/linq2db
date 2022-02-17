@@ -87,7 +87,7 @@ namespace LinqToDB.Data
 				for (var index = 0; index < _executionQuery!.PreparedQuery.Commands.Length; index++)
 				{
 					var queryCommand = _executionQuery.PreparedQuery.Commands[index];
-					sqlProvider.PrintParameters(sb, _executionQuery.CommandsParameters[index]);
+					sqlProvider.PrintParameters(_dataConnection, sb, _executionQuery.CommandsParameters[index]);
 
 					sb.AppendLine(queryCommand.Command);
 

@@ -49,5 +49,15 @@ namespace LinqToDB.Interceptors
 				return dataReader;
 			});
 		}
+
+		public DbParameter UnwrapParameter(IDataContext dataContext, DbParameter parameter)
+		{
+			return Apply(() =>
+			{
+				foreach (var interceptor in Interceptors)
+					parameter = interceptor.UnwrapParameter(dataContext, parameter);
+				return parameter;
+			});
+		}
 	}
 }

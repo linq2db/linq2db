@@ -1158,7 +1158,12 @@ namespace Tests.Data
 						Assert.AreEqual(ConnectionState.Open, cn.State);
 						try
 						{
-							Assert.AreEqual(ConnectionState.Closed, clonedConnection.State);
+							var c = ((IDataContext)db).UnwrapDataObjectInterceptor?.UnwrapConnection(db, clonedConnection);
+
+							// bug in Miniprofiler.
+							//
+							if (c != null)
+								Assert.AreEqual(ConnectionState.Closed, clonedConnection.State);
 						}
 						catch (ObjectDisposedException)
 						{

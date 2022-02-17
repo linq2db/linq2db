@@ -1628,6 +1628,11 @@ namespace Tests.Data
 			{
 				return dataReader is ProfiledDbDataReader dr ? dr.WrappedReader : dataReader;
 			}
+
+			public override DbParameter UnwrapParameter(IDataContext dataContext, DbParameter parameter)
+			{
+				return parameter;
+			}
 		}
 	}
 }

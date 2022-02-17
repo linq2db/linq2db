@@ -162,7 +162,6 @@ namespace LinqToDB.ServiceModel
 					Statement  = query.Statement
 				}, SqlParameterValues.Empty);
 
-//				var reader = DataReaderWrapCache.TryUnwrapDataReader(db.MappingSchema, rd.DataReader!);
 				var reader = ((IDataContext)db).UnwrapDataObjectInterceptor?.UnwrapDataReader(db, rd.DataReader!) ?? rd.DataReader!;
 
 				var ret = new LinqServiceResult

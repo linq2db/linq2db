@@ -715,13 +715,13 @@ namespace LinqToDB.Data
 
 		class ReaderAsyncEnumerator<T> : IAsyncEnumerator<T>
 		{
-			readonly CommandInfo      _commandInfo;
-			readonly DbDataReader     _rd;
-			readonly string?          _additionalKey;
-			Func<DbDataReader, T>     _objectReader;
-			bool                      _isFaulted;
-			bool                      _isFinished;
-			CancellationToken         _cancellationToken;
+			readonly CommandInfo  _commandInfo;
+			readonly DbDataReader _rd;
+			readonly string?      _additionalKey;
+			Func<DbDataReader,T>  _objectReader;
+			bool                  _isFaulted;
+			bool                  _isFinished;
+			CancellationToken     _cancellationToken;
 
 			public ReaderAsyncEnumerator(CommandInfo commandInfo, DbDataReader rd, CancellationToken cancellationToken)
 			{

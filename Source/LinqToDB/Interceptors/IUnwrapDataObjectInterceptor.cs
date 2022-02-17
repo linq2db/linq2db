@@ -9,5 +9,6 @@ namespace LinqToDB.Interceptors
 		DbTransaction UnwrapTransaction(IDataContext dataContext, DbTransaction transaction);
 		DbCommand     UnwrapCommand    (IDataContext dataContext, DbCommand     command);
 		DbDataReader  UnwrapDataReader (IDataContext dataContext, DbDataReader  dataReader);
+		DbParameter   UnwrapParameter  (IDataContext dataContext, DbParameter   parameter);
 	}
 }

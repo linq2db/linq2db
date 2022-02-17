@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using System.Data.Common;
 	using Common;
 	using Data;
 	using Linq.Internal;
@@ -158,7 +157,7 @@ namespace LinqToDB.DataProvider.Informix
 
 			if (idsType != null && db2Type != null)
 			{
-				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(dataConnection, parameter);
 				if (param != null)
 				{
 					if (Adapter.SetIfxType != null)

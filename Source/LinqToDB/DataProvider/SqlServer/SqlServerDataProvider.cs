@@ -202,7 +202,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
-			var param = TryGetProviderParameter(parameter, MappingSchema);
+			var param = TryGetProviderParameter(dataConnection, parameter);
 
 			switch (dataType.DataType)
 			{
@@ -337,7 +337,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			if (type != null)
 			{
-				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(dataConnection, parameter);
 				if (param != null)
 				{
 					Adapter.SetDbType(param, type.Value);
