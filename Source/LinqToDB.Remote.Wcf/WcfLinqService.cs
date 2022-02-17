@@ -8,37 +8,80 @@ namespace LinqToDB.Remote.WCF
 	public class WcfLinqService : IWcfLinqService
 	{
 		private readonly ILinqService _linqService;
+		private readonly bool _transferInternalExceptionToClient;
 
 		public WcfLinqService(
-			ILinqService linqService
+			ILinqService linqService,
+			bool transferInternalExceptionToClient
 			)
 		{
 			_linqService = linqService ?? throw new ArgumentNullException(nameof(linqService));
+			_transferInternalExceptionToClient = transferInternalExceptionToClient;
 		}
 
 		public LinqServiceInfo GetInfo(string? configuration)
 		{
-			return _linqService.GetInfo(configuration);
+			try
+			{
+				return _linqService.GetInfo(configuration);
+			}
+			catch (Exception exception)
+			when (_transferInternalExceptionToClient)
+			{
+				throw new FaultException(exception.ToString());
+			}
 		}
 
 		public int ExecuteBatch(string? configuration, string queryData)
 		{
-			return _linqService.ExecuteBatch(configuration, queryData);
+			try
+			{
+				return _linqService.ExecuteBatch(configuration, queryData);
+			}
+			catch (Exception exception)
+			when (_transferInternalExceptionToClient)
+			{
+				throw new FaultException(exception.ToString());
+			}
 		}
 
 		public int ExecuteNonQuery(string? configuration, string queryData)
 		{
-			return _linqService.ExecuteNonQuery(configuration, queryData);
+			try
+			{
+				return _linqService.ExecuteNonQuery(configuration, queryData);
+			}
+			catch (Exception exception)
+			when (_transferInternalExceptionToClient)
+			{
+				throw new FaultException(exception.ToString());
+			}
 		}
 
 		public string ExecuteReader(string? configuration, string queryData)
 		{
-			return _linqService.ExecuteReader(configuration, queryData);
+			try
+			{
+				return _linqService.ExecuteReader(configuration, queryData);
+			}
+			catch (Exception exception)
+			when (_transferInternalExceptionToClient)
+			{
+				throw new FaultException(exception.ToString());
+			}
 		}
 
 		public object? ExecuteScalar(string? configuration, string queryData)
 		{
-			return _linqService.ExecuteScalar(configuration, queryData);
+			try
+			{
+				return _linqService.ExecuteScalar(configuration, queryData);
+			}
+			catch (Exception exception)
+			when (_transferInternalExceptionToClient)
+			{
+				throw new FaultException(exception.ToString());
+			}
 		}
 	}
 }

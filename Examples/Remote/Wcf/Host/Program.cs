@@ -13,7 +13,8 @@ namespace Host
 		{
 			var host = new ServiceHost(
 				new WcfLinqService(
-					new LinqService() { AllowUpdates = true }),
+					new LinqService() { AllowUpdates = true },
+					true),
 				new Uri("net.tcp://localhost:30304"));
 
 			host.Description.Behaviors.Add(new ServiceMetadataBehavior());

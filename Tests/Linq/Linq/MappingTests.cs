@@ -449,7 +449,7 @@ namespace Tests.Linq
 				if (isLinqService)
 				{
 #if NETFRAMEWORK
-					var fe = Assert.Throws<FaultException<ExceptionDetail>>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
+					var fe = Assert.Throws<FaultException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
 					Assert.True(fe.Message.ToLowerInvariant().Contains("firstname"));
 #elif NETCOREAPP3_1_OR_GREATER
 					var fe = Assert.Throws<Grpc.Core.RpcException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;

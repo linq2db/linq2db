@@ -1,7 +1,9 @@
 ﻿using System.Linq;
 
-#if NET472
+#if NETFRAMEWORK
 using System.ServiceModel;
+#elif NETCOREAPP3_1_OR_GREATER
+using Grpc.Core;
 #endif
 
 using LinqToDB;
@@ -87,8 +89,10 @@ namespace Tests.UserTests
 
 				if (throws && context.Contains(".LinqService"))
 				{
-#if NET472
-					Assert.Throws<FaultException<ExceptionDetail>>(() => table.ToList());
+#if NETFRAMEWORK
+					Assert.Throws<FaultException>(() => table.ToList());
+#elif NETCOREAPP3_1_OR_GREATER
+					Assert.Throws<RpcException>(() => table.ToList());
 #endif
 				}
 				else if (throws)
