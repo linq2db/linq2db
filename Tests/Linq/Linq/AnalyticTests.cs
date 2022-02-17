@@ -1677,6 +1677,9 @@ namespace Tests.Linq
 			TestProvName.AllAccess,
 			ProviderName.Firebird,
 			TestProvName.MySql55,
+#if NETFRAMEWORK
+			ProviderName.SQLiteMS, // TODO: time to switch to modern sqlite.ms version for netfx
+#endif
 			// doesn't support 3-rd parameter for LEAD
 			TestProvName.MariaDB)] string context)
 		{
@@ -1710,6 +1713,9 @@ namespace Tests.Linq
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
+#if NETFRAMEWORK
+			ProviderName.SQLiteMS, // TODO: time to switch to modern sqlite.ms version for netfx
+#endif
 			// All Firebird excluded because of #2839, test data is inserted with padding and then expectations fail
 			TestProvName.AllFirebird,
 			TestProvName.MySql55)] string context)
