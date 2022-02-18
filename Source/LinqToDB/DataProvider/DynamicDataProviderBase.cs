@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
@@ -156,7 +154,6 @@ namespace LinqToDB.DataProvider
 
 		public virtual DbParameter? TryGetProviderParameter(IDataContext dataContext, DbParameter parameter)
 		{
-			parameter = dataContext.UnwrapDataObjectInterceptor?.UnwrapParameter(dataContext, parameter) ?? parameter;
 			return Adapter.ParameterType.IsSameOrParentOf(parameter.GetType()) ? parameter : null;
 		}
 
