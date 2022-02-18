@@ -1,10 +1,11 @@
 ﻿using System;
+using Grpc.Net.Client;
 
 namespace LinqToDB.Remote.Grpc
 {
 	public class GrpcDataContext : RemoteDataContextBase
 	{
-		private readonly string _address;
+		protected readonly string _address;
 
 		#region Init
 
@@ -26,7 +27,11 @@ namespace LinqToDB.Remote.Grpc
 
 		protected override ILinqClient GetClient()
 		{
-			return new GrpcLinqServiceClient(_address);
+			var channel = GrpcChannel.ForAddress(
+				_address
+				);
+
+			return new GrpcLinqServiceClient(channel);
 		}
 
 		protected override IDataContext Clone()

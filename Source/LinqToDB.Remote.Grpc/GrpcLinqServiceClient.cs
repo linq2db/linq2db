@@ -14,11 +14,11 @@ namespace LinqToDB.Remote.Grpc
 		#region Init
 
 		public GrpcLinqServiceClient(
-			string address
+			GrpcChannel channel
 			)
 		{
-			_channel = GrpcChannel.ForAddress(address);
-			_client = _channel.CreateGrpcService<IGrpcLinqService>();
+			_channel = channel;
+			_client = channel.CreateGrpcService<IGrpcLinqService>();
 		}
 
 		#endregion

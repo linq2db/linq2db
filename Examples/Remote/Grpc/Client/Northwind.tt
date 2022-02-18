@@ -53,11 +53,12 @@
 	NamespaceName = "DataModels";
 
 	// to configure GetSchemaOptions properties, add them here, before load metadata call
-	BaseDataContextClass = "LinqToDB.Remote.Grpc.GrpcDataContext";
+	BaseDataContextClass = "ExampleGrpcDataContext";
 	GenerateConstructors = false;
 	GetSchemaOptions.GetProcedures = false;
 
 	Model.Usings.Add("System.ServiceModel");
+	Model.Usings.Add("Client");
 
 //	LoadSqlServerMetadata("MyServer", "MyDatabase", "User", "Password");
 //	LoadSqlServerMetadata(".", "MyDatabase"); // Integrated Security
@@ -73,7 +74,7 @@ namespace DataModels
 {
 	public partial class NorthwindDB
 	{
-		public NorthwindDB() : base("https://localhost:5001")
+		public NorthwindDB() : base("https://localhost:15001")
 		{
 		}
 	}

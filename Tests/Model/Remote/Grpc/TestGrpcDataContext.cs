@@ -1,7 +1,10 @@
 ﻿#if NETCOREAPP3_1_OR_GREATER
 using System;
+using System.Net.Http;
 using System.Threading.Tasks;
+using Grpc.Net.Client;
 using LinqToDB;
+using LinqToDB.Remote;
 using LinqToDB.Remote.Grpc;
 
 namespace Tests.Model.Remote.Grpc
@@ -39,6 +42,24 @@ namespace Tests.Model.Remote.Grpc
 		public ITable<TestIdentity>           TestIdentity           => this.GetTable<TestIdentity>();
 		public ITable<InheritanceParentBase>  InheritanceParent      => this.GetTable<InheritanceParentBase>();
 		public ITable<InheritanceChildBase>   InheritanceChild       => this.GetTable<InheritanceChildBase>();
+
+		protected override ILinqClient GetClient()
+		{
+			var channel = GrpcChannel.ForAddress(
+				_address,
+				new GrpcChannelOptions
+				{
+					HttpClient = new HttpClient(
+						new HttpClientHandler
+						{
+							ServerCertificateCustomValidationCallback =
+								(httpRequestMessage, x509Certificate2, x509Chain, sslPolicyErrors) => true
+						})
+				}
+				);
+
+			return new GrpcLinqServiceClient(channel);
+		}
 
 		public ITable<Parent> GetParentByID(int? id)
 		{
