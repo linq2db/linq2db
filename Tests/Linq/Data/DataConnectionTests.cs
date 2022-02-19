@@ -388,6 +388,8 @@ namespace Tests.Data
 		[ActiveIssue("Fails due to connection limit for development version when run with nonmanaged provider", Configuration = ProviderName.SybaseManaged)]
 		public void MultipleConnectionsTest([DataSources(TestProvName.AllInformix)] string context)
 		{
+			using var psr = new Tests.Remote.ServerContainer.PortStatusRestorer(_serverContainer, false);
+
 			using (new DisableBaseline("Multi-threading"))
 			{
 				var exceptions = new ConcurrentBag<Exception>();

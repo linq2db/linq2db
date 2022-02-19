@@ -20,16 +20,7 @@ using LinqToDB.Reflection;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 
-#if NETFRAMEWORK
-using System.ServiceModel;
-using System.ServiceModel.Description;
-#elif NETCOREAPP3_1_OR_GREATER
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using ProtoBuf.Grpc.Server;
-#endif
+using Tests.Remote.ServerContainer;
 
 using NUnit.Framework;
 using NUnit.Framework.Internal;
@@ -38,16 +29,6 @@ namespace Tests
 {
 	using Model;
 	using Tools;
-	using LinqToDB.Remote;
-	using Tests.Remote;
-#if NETFRAMEWORK
-	using LinqToDB.Remote.WCF;
-	using Tests.Model.Remote.WCF;
-#elif NETCOREAPP3_1_OR_GREATER
-	using Tests.Model.Remote.Grpc;
-	using System.Net;
-	using System.Threading;
-#endif
 
 	public partial class TestBase
 	{
@@ -260,7 +241,7 @@ namespace Tests
 			}
 
 #if NET472
-			LinqService.TypeResolver = str =>
+			LinqToDB.Remote.LinqService.TypeResolver = str =>
 			{
 				return str switch
 				{
@@ -357,144 +338,10 @@ namespace Tests
 			return fileName;
 		}
 
-#if NETFRAMEWORK || NETCOREAPP3_1_OR_GREATER
-		const           int                 Port = 22654;
-		static          bool                _isHostOpen;
-		static readonly object              _syncRoot = new ();
-#endif
-
 #if NETFRAMEWORK
-		static          TestWcfLinqService?  _service;
+		public static          WcfServerContainer  _serverContainer  = new ();
 #elif NETCOREAPP3_1_OR_GREATER
-		static          TestGrpcLinqService? _service;
-#endif
-
-#if NETFRAMEWORK
-		static void OpenWcfHost(MappingSchema? ms)
-		{
-			if (_isHostOpen)
-			{
-				_service!.MappingSchema = ms;
-				return;
-			}
-
-			ServiceHost host;
-
-			lock (_syncRoot)
-			{
-				if (_isHostOpen)
-				{
-					_service!.MappingSchema = ms;
-					return;
-				}
-
-				host        = new ServiceHost(_service = new TestWcfLinqService(new LinqService(ms), null, false) { AllowUpdates = true }, new Uri("net.tcp://localhost:" + (Port + TestExternals.RunID)));
-				_isHostOpen = true;
-			}
-
-			host.Description.Behaviors.Add(new ServiceMetadataBehavior());
-			host.Description.Behaviors.Find<ServiceDebugBehavior>().IncludeExceptionDetailInFaults = true;
-			host.AddServiceEndpoint(typeof(IMetadataExchange), MetadataExchangeBindings.CreateMexTcpBinding(), "mex");
-			host.AddServiceEndpoint(
-				typeof(IWcfLinqService),
-				new NetTcpBinding(SecurityMode.None)
-				{
-					MaxReceivedMessageSize = 10000000,
-					MaxBufferPoolSize      = 10000000,
-					MaxBufferSize          = 10000000,
-					CloseTimeout           = new TimeSpan(00, 01, 00),
-					OpenTimeout            = new TimeSpan(00, 01, 00),
-					ReceiveTimeout         = new TimeSpan(00, 10, 00),
-					SendTimeout            = new TimeSpan(00, 10, 00),
-				},
-				"LinqOverWCF");
-
-			host.Open();
-
-			TestExternals.Log($"WCF host opened, Address : {host.BaseAddresses[0]}");
-		}
-#elif NETCOREAPP3_1_OR_GREATER
-		static void OpenGrpcHost(
-			MappingSchema? ms,
-			IInterceptor?  interceptor,
-			bool           suppressSequentialAccess
-			)
-		{
-			if (_isHostOpen)
-			{
-				_service!.MappingSchema = ms;
-				return;
-			}
-
-			lock (_syncRoot)
-			{
-				if (_isHostOpen)
-				{
-					_service!.MappingSchema = ms;
-					return;
-				}
-
-				_service = new TestGrpcLinqService(
-					new LinqService()
-					{
-						AllowUpdates = true
-					},
-					interceptor,
-					suppressSequentialAccess
-					);
-			}
-
-			var hb = Host.CreateDefaultBuilder();
-			hb.ConfigureWebHostDefaults(
-				webBuilder =>
-				{
-					webBuilder.UseStartup<Startup>();
-
-					webBuilder.UseUrls($"https://localhost:{GetGrpcPort()}");
-				}).Build().Start();
-
-			//not sure does we need to wait for grpc server starts?
-
-			_isHostOpen = true;
-
-			TestExternals.Log($"grpc host opened");
-		}
-
-		//Environment.CurrentManagedThreadId need for a parallel test like <see cref="DataConnectionTests.MultipleConnectionsTest"/>
-		private static int GetGrpcPort()
-		{
-			return Port + (Environment.CurrentManagedThreadId % 1000) + TestExternals.RunID;
-		}
-#endif
-
-#if NETCOREAPP3_1_OR_GREATER
-		public class Startup
-		{
-			public void ConfigureServices(IServiceCollection services)
-			{
-				if(_service == null)
-				{
-					throw new InvalidOperationException("Grpc service should be created first");
-				}
-
-				services.AddGrpc();
-				services.AddCodeFirstGrpc();
-				services.AddSingleton(p => _service);
-
-			}
-
-			public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-			{
-				app.UseDeveloperExceptionPage();
-
-				app.UseRouting();
-
-				app.UseEndpoints(endpoints =>
-				{
-					endpoints.MapGrpcService<TestGrpcLinqService>();
-				});
-			}
-		}
+		public static          GrpcServerContainer  _serverContainer = new ();
 #endif
 
 		public static readonly HashSet<string> UserProviders;
@@ -566,87 +413,17 @@ namespace Tests
 				return GetDataConnection(configuration, ms, interceptor, suppressSequentialAccess: suppressSequentialAccess);
 			}
 
-#if NETFRAMEWORK
-			OpenWcfHost(ms);
-
+#if NETFRAMEWORK || NETCOREAPP3_1_OR_GREATER
 			var str = configuration.Substring(0, configuration.Length - LinqServiceSuffix.Length);
-
-			RemoteDataContextBase dx;
-
-			//if (testLinqService)
-			//{
-			//	throw new NotImplementedException();
-			//	//dx = new ServiceModel.TestLinqServiceDataContext(new TestWcfLinqClient(ms, interceptor, suppressSequentialAccess) { AllowUpdates = true }) { Configuration = str };
-			//}
-			//else
-			{
-				_service!.SuppressSequentialAccess = suppressSequentialAccess;
-				if (interceptor != null)
-				{
-					_service!.AddInterceptor(interceptor);
-				}
-
-				dx = new TestWcfDataContext(
-					Port + TestExternals.RunID,
-					() =>
-					{
-						_service!.SuppressSequentialAccess = false;
-						if (interceptor != null)
-							_service!.RemoveInterceptor();
-					})
-				{ Configuration = str };
-			}
-
-			Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
-
-			if (ms != null)
-				dx.MappingSchema = MappingSchema.CombineSchemas(dx.MappingSchema, ms);
-
-			return (ITestDataContext)dx;
-#elif NETCOREAPP3_1_OR_GREATER
-			OpenGrpcHost(ms, interceptor, suppressSequentialAccess);
-
-			var str = configuration.Substring(0, configuration.Length - LinqServiceSuffix.Length);
-
-			RemoteDataContextBase dx;
-
-			//if (testLinqService)
-			//{
-			//	throw new NotImplementedException();
-			//	//dx = new ServiceModel.TestLinqServiceDataContext(new TestWcfLinqClient(ms, interceptor, suppressSequentialAccess) { AllowUpdates = true }) { Configuration = str };
-			//}
-			//else
-			{
-				_service!.SuppressSequentialAccess = suppressSequentialAccess;
-				if (interceptor != null)
-				{
-					_service!.AddInterceptor(interceptor);
-				}
-
-				dx = new TestGrpcDataContext(
-					$"https://localhost:{GetGrpcPort()}",
-					() =>
-					{
-						_service!.SuppressSequentialAccess = false;
-						if (interceptor != null)
-							_service!.RemoveInterceptor();
-					})
-				{ Configuration = str };
-			}
-
-			Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
-
-			if (ms != null)
-				dx.MappingSchema = MappingSchema.CombineSchemas(dx.MappingSchema, ms);
-
-			return (ITestDataContext)dx;
+			var dx = _serverContainer.Prepare(ms, interceptor, suppressSequentialAccess, str);
+			return dx;
 #else
 			throw new NotImplementedException();
 #endif
 
-			}
+		}
 
-			protected TestDataConnection GetDataConnection(
+		protected TestDataConnection GetDataConnection(
 				string         configuration,
 				MappingSchema? ms                       = null,
 				IInterceptor?  interceptor              = null,

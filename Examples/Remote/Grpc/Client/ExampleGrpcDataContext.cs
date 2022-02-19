@@ -22,8 +22,7 @@ namespace Client
 					HttpClient = new HttpClient(
 						new HttpClientHandler
 						{
-							ServerCertificateCustomValidationCallback =
-								(httpRequestMessage, x509Certificate2, x509Chain, sslPolicyErrors) => true
+							ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
 						})
 				}
 				);

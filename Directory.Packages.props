@@ -57,8 +57,8 @@
 		<PackageVersion Include="System.Configuration.ConfigurationManager" Version="6.0.0"       />
 		<PackageVersion Include="linq2db.t4models"                          Version="4.0.0-preview.10" />
 		<PackageVersion Include="Grpc.Net.Client"                           Version="2.42.0"      />
-		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"              Version="1.0.152"     />
-		<PackageVersion Include="protobuf-net.Grpc"                         Version="1.0.152"     />
+		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"              Version="1.0.162"     />
+		<PackageVersion Include="protobuf-net.Grpc"                         Version="1.0.162"     />
 	</ItemGroup>
 	
 	<!--linq2db targets-->

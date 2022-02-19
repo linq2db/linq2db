@@ -1,11 +1,12 @@
 ﻿using System;
-using LinqToDB.Data;
-using LinqToDB.Interceptors;
-using LinqToDB.Mapping;
-using LinqToDB.Remote;
 
 namespace Tests.Remote
 {
+	using LinqToDB.Data;
+	using LinqToDB.Interceptors;
+	using LinqToDB.Mapping;
+	using LinqToDB.Remote;
+
 #if NETCOREAPP3_1_OR_GREATER
 	using LinqToDB.Remote.Grpc;
 
