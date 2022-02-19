@@ -13,6 +13,7 @@ using LinqToDB.DataProvider.Firebird;
 
 namespace Tests
 {
+	using System.Diagnostics;
 	using Model;
 #if NETFRAMEWORK
 	using Tests.Model.Remote.WCF;
@@ -91,7 +92,11 @@ namespace Tests
 		/// </summary>
 		public static string GetSchemaName(IDataContext db)
 		{
-			switch (GetContextName(db))
+			var contextName = GetContextName(db);
+
+			Debug.WriteLine($"Detected context name: {contextName}");
+
+			switch (contextName)
 			{
 				case ProviderName.Informix                           :
 				case ProviderName.InformixDB2                        :
@@ -186,8 +191,8 @@ namespace Tests
 			if (db is TestWcfDataContext linqDb)
 #elif NETCOREAPP3_1_OR_GREATER
 			if (db is TestGrpcDataContext linqDb)
-					return linqDb.Configuration!;
 #endif
+				return linqDb.Configuration!;
 
 			if (db is TestDataConnection testDb)
 				return testDb.ConfigurationString!;

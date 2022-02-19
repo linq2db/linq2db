@@ -647,11 +647,11 @@ namespace Tests
 			}
 
 			protected TestDataConnection GetDataConnection(
-			string         configuration,
-			MappingSchema? ms                       = null,
-			IInterceptor?  interceptor              = null,
-			IRetryPolicy?  retryPolicy              = null,
-			bool           suppressSequentialAccess = false)
+				string         configuration,
+				MappingSchema? ms                       = null,
+				IInterceptor?  interceptor              = null,
+				IRetryPolicy?  retryPolicy              = null,
+				bool           suppressSequentialAccess = false)
 		{
 			if (configuration.EndsWith(LinqServiceSuffix))
 			{
