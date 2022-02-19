@@ -117,12 +117,7 @@ namespace Tests.Remote.ServerContainer
 		//Environment.CurrentManagedThreadId need for a parallel test like <see cref= "DataConnectionTests.MultipleConnectionsTest" />
 		public int GetPort()
 		{
-			if(KeepSamePortBetweenThreads)
-			{
-				return Port;
-			}
-
-			return Port + (Environment.CurrentManagedThreadId % 1000) + TestExternals.RunID;
+			return Port + TestExternals.RunID;
 		}
 
 	}
