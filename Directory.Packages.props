@@ -102,6 +102,8 @@
 		<PackageVersion Include="MySqlConnector"                                        Version="0.69.10"       />
 		<!--legacy odata library for netcoreapp2.1-->
 		<PackageVersion Include="Microsoft.AspNetCore.OData"                            Version="7.5.12"        />
+		<!--https://docs.microsoft.com/en-us/dotnet/core/compatibility/core-libraries/6.0/older-framework-versions-dropped-->
+		<PackageVersion Include="System.Data.Odbc"                                      Version="5.0.0"         />
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp2.1' ">
 		<!--main version-->
