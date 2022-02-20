@@ -126,7 +126,7 @@ namespace LinqToDB.DataProvider.Informix
 				// IDS provider needs short values for bulk copy, but chars still for regular SQL
 				if (parameter is BulkCopyReader.Parameter)
 				{
-					value    = (short)(b == true ? 1 : 0);
+					value    = (short)(b ? 1 : 0);
 					dataType = dataType.WithDataType(DataType.Int16);
 				}
 				else
