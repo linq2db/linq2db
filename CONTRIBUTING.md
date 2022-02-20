@@ -143,7 +143,12 @@ public class Test: TestBase // TestBase - base class, provides base methods and 
 ### Configure data providers for tests
 
 `DataSourcesAttribute` generates tests for each enabled data provider. Configuration is taken
-from `.\Tests\Linq\DataProviders.json` and `.\Tests\Linq\UserDataProviders.json` (used first, if exists).
+from `.\Tests\DataProviders.json` and `.\Tests\UserDataProviders.json` (used first, if exists).
+
+
+Repository already contains pre-configured `UserDataProviders.json.template` configuration with basic setup for SQLite-based testing and all you need is to rename it to `UserDataProviders.json`, add connection string for other databases you want to test.
+`UserDataProviders.json` will be ignored by git, so you can edit it freely.
+
 
 Configuration file is used to specify user-specific settings such as connection strings to test databases and
 list of providers to test.

@@ -437,9 +437,7 @@ namespace LinqToDB.Linq
 							// do reorder only if it is not blocked and cache wasn't replaced by new one
 							if (i > 0 && version == _version && allowReordering)
 							{
-								var index      = indexes[i];
-								indexes[i]     = indexes[i - 1];
-								indexes[i - 1] = index;
+								(indexes[i - 1], indexes[i]) = (indexes[i], indexes[i - 1]);
 							}
 
 							return cache[idx].Query;
