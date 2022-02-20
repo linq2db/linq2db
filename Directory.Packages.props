@@ -30,7 +30,8 @@
 		<PackageVersion Include="AdoNetCore.AseClient"                      Version="0.19.2"      />
 		<PackageVersion Include="System.Data.SqlClient"                     Version="4.8.3"       />
 		<PackageVersion Include="Microsoft.Data.SqlClient"                  Version="4.1.0"       />
-		<PackageVersion Include="System.Data.Odbc"                          Version="6.0.0"       />
+		<!--https://github.com/dotnet/sdk/issues/24033
+		<PackageVersion Include="System.Data.Odbc"                          Version="6.0.0"       />-->
 		<PackageVersion Include="System.Data.OleDb"                         Version="6.0.0"       />
 		<PackageVersion Include="Oracle.ManagedDataAccess"                  Version="21.5.0"      />
 		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"           Version="8.5.4"       />
@@ -77,6 +78,8 @@
 		https://github.com/Azure/azure-functions-host/issues/6893
 		-->
 		<PackageVersion Include="System.ComponentModel.Annotations"         Version="4.7.0"  />
+		<!--https://github.com/dotnet/sdk/issues/24033-->
+		<PackageVersion Include="System.Data.Odbc"                          Version="6.0.0"  />
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp3.1' ">
 		<PackageVersion Include="System.ComponentModel.Annotations"         Version="5.0.0"  />
@@ -111,7 +114,7 @@
 		<PackageVersion Include="IBM.Data.DB2.Core"                                     Version="3.1.0.500"     />
 		<PackageVersion Include="IBM.Data.DB2.Core-lnx"                                 Version="3.1.0.500"     />
 		<PackageVersion Include="IBM.Data.DB2.Core-osx"                                 Version="3.1.0.500"     />
-		<PackageVersion Include="Microsoft.AspNetCore.OData"                            Version="8.0.8"         />
+		<PackageVersion Include="Microsoft.AspNetCore.OData"                            Version="8.0.4"         />
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
 		<!-- explicitly reference specific version of transient dependency to avoid MSB3277 -->
@@ -123,6 +126,8 @@
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net5.0' OR '$(TargetFramework)' == 'net6.0' ">
 		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="6.0.2"         />
+		<!--https://github.com/dotnet/sdk/issues/24033-->
+		<PackageVersion Include="System.Data.Odbc"                                      Version="6.0.0"         />
 	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp2.1' AND '$(TargetFramework)' != 'netcoreapp3.1' ">
 		<PackageVersion Include="MySqlConnector"                                        Version="2.1.7"         />

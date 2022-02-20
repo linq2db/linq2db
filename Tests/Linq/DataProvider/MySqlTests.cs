@@ -154,7 +154,7 @@ namespace Tests.DataProvider
 					DecimalN = null,
 				};
 
-				// test instert
+				// test insert
 				db.Insert(testRecord1);
 				db.Insert(testRecord2);
 
@@ -169,7 +169,31 @@ namespace Tests.DataProvider
 				//Assert.AreEqual(value2, records[1].Decimal);
 				//Assert.IsNull(records[1].DecimalN);
 
-				// cannot test filtering as there is no equality/comparison defined on .net type
+				// test insert linq (to force parameters)
+				tb.Delete();
+				tb.Insert(() => new BigDecimalMySqlDataTable()
+				{
+					Id       = 1,
+					Decimal  = value1,
+					DecimalN = value2,
+				});
+				tb.Insert(() => new BigDecimalMySqlDataTable()
+				{
+					Id       = 2,
+					Decimal  = value2,
+					DecimalN = null,
+				});
+
+				// test select (not really as it is broken badly in provider)
+				// IsDBNull fails with exception, so we cannot fix it easily
+				Assert.Throws<OverflowException>(() => tb.Single());
+				//var records = tb.OrderBy(_ => _.Id).ToArray();
+				//Assert.AreEqual(1, records[0].Id);
+				//Assert.AreEqual(value1, records[0].Decimal);
+				//Assert.AreEqual(value2, records[0].DecimalN);
+				//Assert.AreEqual(2, records[1].Id);
+				//Assert.AreEqual(value2, records[1].Decimal);
+				//Assert.IsNull(records[1].DecimalN);
 
 				// test bulk copy
 				tb.Delete();
@@ -223,12 +247,36 @@ namespace Tests.DataProvider
 					DecimalN = null,
 				};
 
-				// test instert
+				// test insert
 				db.Insert(testRecord1);
 				db.Insert(testRecord2);
 
 				// test select
 				var records = tb.OrderBy(_ => _.Id).ToArray();
+				Assert.AreEqual(1, records[0].Id);
+				Assert.AreEqual(value1, records[0].Decimal);
+				Assert.AreEqual(value2, records[0].DecimalN);
+				Assert.AreEqual(2, records[1].Id);
+				Assert.AreEqual(value2, records[1].Decimal);
+				Assert.IsNull(records[1].DecimalN);
+
+				// test insert linq (to force parameters)
+				tb.Delete();
+				tb.Insert(() => new BigDecimalMySqlConnectorTable()
+				{
+					Id       = 1,
+					Decimal  = value1,
+					DecimalN = value2,
+				});
+				tb.Insert(() => new BigDecimalMySqlConnectorTable()
+				{
+					Id       = 2,
+					Decimal  = value2,
+					DecimalN = null,
+				});
+
+				// test select
+				records = tb.OrderBy(_ => _.Id).ToArray();
 				Assert.AreEqual(1, records[0].Id);
 				Assert.AreEqual(value1, records[0].Decimal);
 				Assert.AreEqual(value2, records[0].DecimalN);
