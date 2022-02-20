@@ -411,7 +411,7 @@ namespace LinqToDB.SqlQuery
 					throw new InvalidOperationException($"Visit visitor not implemented for element {element.ElementType}");
 			}
 
-			if (element is IQueryExtendible { SqlQueryExtensions: { Count: > 0 } } qe)
+			if (element is IQueryExtendible { SqlQueryExtensions.Count: > 0 } qe)
 			{
 				foreach (var ext in qe.SqlQueryExtensions)
 				foreach (var arg in ext.Arguments)

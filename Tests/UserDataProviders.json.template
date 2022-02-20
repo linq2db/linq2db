@@ -26,7 +26,6 @@
 			// Various versions of SQL Server
 			//"SqlServer",
 			//"Northwind",
-			//"SqlServer.2000",
 			//"SqlServer.2005",
 			//"SqlServer.2005.1",
 			//"SqlServer.2008",
@@ -113,7 +112,6 @@
 			// Various versions of SQL Server
 			//"SqlServer",
 			//"Northwind",
-			//"SqlServer.2000",
 			//"SqlServer.2005",
 			//"SqlServer.2005.1",
 			//"SqlServer.2008",
@@ -198,7 +196,6 @@
 			// Various versions of SQL Server
 			//"SqlServer",
 			//"Northwind",
-			//"SqlServer.2000",
 			//"SqlServer.2005",
 			//"SqlServer.2005.1",
 			//"SqlServer.2008",
@@ -283,7 +280,6 @@
 			// Various versions of SQL Server
 			//"SqlServer",
 			//"Northwind",
-			//"SqlServer.2000",
 			//"SqlServer.2005",
 			//"SqlServer.2005.1",
 			//"SqlServer.2008",
@@ -368,7 +364,6 @@
 			// Various versions of SQL Server
 			//"SqlServer",
 			//"Northwind",
-			//"SqlServer.2000",
 			//"SqlServer.2005",
 			//"SqlServer.2005.1",
 			//"SqlServer.2008",
@@ -434,10 +429,6 @@
 		"Connections": {
 			"SqlServer": {
 				"Provider": "SqlServer",
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
-			},
-			"SqlServer.2000": {
-				"Provider": "System.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"SqlServer.2005": {
