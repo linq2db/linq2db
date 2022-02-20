@@ -240,24 +240,15 @@ namespace Tests.DataProvider
 
 				// test bulk copy
 				tb.Delete();
-				if (bulkCopyType == BulkCopyType.ProviderSpecific)
-				{
-					// for now (as of MySqlConnector v2.1.6) MySqlDecimal type bulk copy handler missing for MySqlConnector side
-					var ex = Assert.Throws<MySqlConnector.MySqlException>(() => db.BulkCopy(new BulkCopyOptions() { BulkCopyType = bulkCopyType }, new[] { testRecord1, testRecord2 }));
-					Assert.True(ex?.InnerException is NotSupportedException);
-				}
-				else
-				{
-					db.BulkCopy(new BulkCopyOptions() { BulkCopyType = bulkCopyType }, new[] { testRecord1, testRecord2 });
+				db.BulkCopy(new BulkCopyOptions() { BulkCopyType = bulkCopyType }, new[] { testRecord1, testRecord2 });
 
-					records = tb.OrderBy(_ => _.Id).ToArray();
-					Assert.AreEqual(1, records[0].Id);
-					Assert.AreEqual(value1, records[0].Decimal);
-					Assert.AreEqual(value2, records[0].DecimalN);
-					Assert.AreEqual(2, records[1].Id);
-					Assert.AreEqual(value2, records[1].Decimal);
-					Assert.IsNull(records[1].DecimalN);
-				}
+				records = tb.OrderBy(_ => _.Id).ToArray();
+				Assert.AreEqual(1, records[0].Id);
+				Assert.AreEqual(value1, records[0].Decimal);
+				Assert.AreEqual(value2, records[0].DecimalN);
+				Assert.AreEqual(2, records[1].Id);
+				Assert.AreEqual(value2, records[1].Decimal);
+				Assert.IsNull(records[1].DecimalN);
 			}
 		}
 #endif
