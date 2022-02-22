@@ -1,23 +1,45 @@
 ﻿using System;
-using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
+using System.Globalization;
 using System.Linq;
+using System.Numerics;
+using System.Threading.Tasks;
+using System.Data.SqlTypes;
+
+using FirebirdSql.Data.Types;
+
+using IBM.Data.DB2Types;
+
+#if NET472
+using IBM.Data.Informix;
+#endif
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Access;
+using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.Firebird;
+using LinqToDB.DataProvider.Informix;
 using LinqToDB.DataProvider.MySql;
+using LinqToDB.DataProvider.Oracle;
+using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.DataProvider.SapHana;
 using LinqToDB.DataProvider.SqlCe;
+using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.DataProvider.Sybase;
+using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
+
+using Microsoft.SqlServer.Types;
+
 using NUnit.Framework;
+
 using StackExchange.Profiling;
 using StackExchange.Profiling.Data;
-using Tests.Model;
 
 #if !NETCOREAPP2_1
 using MySqlDataDateTime           = MySql.Data.Types.MySqlDateTime;
@@ -25,27 +47,12 @@ using MySqlDataDecimal            = MySql.Data.Types.MySqlDecimal;
 using MySqlConnectorDateTime      = MySqlConnector.MySqlDateTime;
 using MySqlDataMySqlConnection    = MySql.Data.MySqlClient.MySqlConnection;
 #endif
-using System.Globalization;
-using LinqToDB.DataProvider.SQLite;
-using LinqToDB.DataProvider.DB2;
-using IBM.Data.DB2Types;
-using Tests.DataProvider;
-using System.Data.SqlTypes;
-using Microsoft.SqlServer.Types;
-using LinqToDB.DataProvider.Sybase;
-using LinqToDB.DataProvider.Informix;
-using LinqToDB.DataProvider.Oracle;
-using LinqToDB.DataProvider.PostgreSQL;
-using System.Threading.Tasks;
-using LinqToDB.Common;
-using FirebirdSql.Data.Types;
-using System.Numerics;
-#if NET472
-using IBM.Data.Informix;
-#endif
 
 namespace Tests.Data
 {
+	using DataProvider;
+	using Model;
+
 	[TestFixture]
 	public class MiniProfilerTests : TestBase
 	{
@@ -82,7 +89,7 @@ namespace Tests.Data
 		{
 			using (var mpcon = new MiniProfilerDataContext(context))
 			{
-				mpcon.GetTable<Northwind.Category>().ToList();
+				_ = mpcon.GetTable<Northwind.Category>().ToList();
 			}
 		}
 
@@ -328,16 +335,12 @@ namespace Tests.Data
 			var ms = new MappingSchema();
 			ms.SetConvertExpression<MySqlDataDateTime, string>(value => value.Value.ToBinary().ToString(CultureInfo.InvariantCulture));
 			ms.SetConvertExpression<string, MySqlDataDateTime>(value => new MySqlDataDateTime(DateTime.FromBinary(long.Parse(value, CultureInfo.InvariantCulture))));
-			switch (type)
-			{
-				case ConnectionType.MiniProfiler:
-					ms.SetConvertExpression<ProfiledDbConnection, DbConnection>(db => db.WrappedConnection);
-					ms.SetConvertExpression<ProfiledDbDataReader, DbDataReader>(db => db.WrappedReader);
-					break;
-			}
 
 			using (var db = GetDataContext(testContext + (isLinq ? ".LinqService" : null), ms))
 			{
+				if (type == ConnectionType.MiniProfiler)
+					db.AddInterceptor(new UnwrapProfilerInterceptor());
+
 				var dtValue = new DateTime(2012, 12, 12, 12, 12, 12, 0);
 
 				// ExecuteReader
@@ -1578,9 +1581,7 @@ namespace Tests.Data
 
 		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Func<string, DbConnection> connectionFactory, string? csExtra = null)
 		{
-			var ms = new MappingSchema();
-			DataConnection? db = null;
-			db = new DataConnection(provider, () =>
+			var db = new DataConnection(provider, () =>
 			{
 				// don't create connection using provider, or it will initialize types
 				var cn = connectionFactory(DataConnection.GetConnectionString(context) + csExtra);
@@ -1599,16 +1600,34 @@ namespace Tests.Data
 			switch (type)
 			{
 				case ConnectionType.MiniProfiler:
-					ms.SetConvertExpression<ProfiledDbConnection, DbConnection>  (db => db.WrappedConnection);
-					ms.SetConvertExpression<ProfiledDbDataReader,  DbDataReader> (db => db.WrappedReader);
-					ms.SetConvertExpression<ProfiledDbTransaction, DbTransaction>(db => db.WrappedTransaction);
-					ms.SetConvertExpression<ProfiledDbCommand,     DbCommand>    (db => db.InternalCommand);
+					db.AddInterceptor(new UnwrapProfilerInterceptor());
 					break;
 			}
 
-			db.AddMappingSchema(ms);
-
 			return db;
+		}
+
+		internal class UnwrapProfilerInterceptor : UnwrapDataObjectInterceptor
+		{
+			public override DbConnection UnwrapConnection(IDataContext dataContext, DbConnection connection)
+			{
+				return connection is ProfiledDbConnection c ? c.WrappedConnection : connection;
+			}
+
+			public override DbTransaction UnwrapTransaction(IDataContext dataContext, DbTransaction transaction)
+			{
+				return transaction is ProfiledDbTransaction t ? t.WrappedTransaction : transaction;
+			}
+
+			public override DbCommand UnwrapCommand(IDataContext dataContext, DbCommand command)
+			{
+				return command is ProfiledDbCommand c ? c.InternalCommand : command;
+			}
+
+			public override DbDataReader UnwrapDataReader(IDataContext dataContext, DbDataReader dataReader)
+			{
+				return dataReader is ProfiledDbDataReader dr ? dr.WrappedReader : dataReader;
+			}
 		}
 	}
 }

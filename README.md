@@ -713,39 +713,16 @@ public class DbDataContext : DataConnection
   public DbDataContext() : base("Northwind") {}
   
 #else
-
-  // use static instance of mapping schema
-  // never create mapping schema per-connection
-  // or it will seriously affect performance
-  private static readonly MappingSchema _miniProfilerMappings = new ();
-  
-  static DbDataContext()
-  {
-    // this is important part:
-    // here we tell linq2db how to access underlying ADO.NET classes of used provider
-    // if you don't configure those mappings, linq2db will be unable to use
-    // provider-specific functionality which could lead to loss or unavailability
-    //of some functionality when profiled connection enabled
-    _miniProfilerMappings.SetConvertExpression<ProfiledDbConnection,  DbConnection> (
-        db => db.WrappedConnection);
-    _miniProfilerMappings.SetConvertExpression<ProfiledDbDataReader,  DbDataReader> (
-        db => db.WrappedReader);
-    _miniProfilerMappings.SetConvertExpression<ProfiledDbTransaction, DbTransaction>(
-        db => db.WrappedTransaction);
-    _miniProfilerMappings.SetConvertExpression<ProfiledDbCommand,     DbCommand>    (
-        db => db.InternalCommand);
-  }
-
   public DbDataContext()
       : base(
           // get data provider instance using
-          // <DB_NAME>Tools.GetDataProvider()
-          // helpers
+          // <DB_NAME>Tools.GetDataProvider() helpers
           // In this case we use SQL Server provider
           SqlServerTools.GetDataProvider(SqlServerVersion.v2012),
-          GetConnection(),
-          _miniProfilerMappings)
-  { }
+          GetConnection())
+  {
+    AddInterceptor(new UnwrapProfilerInterceptor());
+  }
 
   // wrap connection into profiler wrapper
   private static DbConnection GetConnection()
@@ -758,6 +735,30 @@ public class DbDataContext : DataConnection
      return new StackExchange.Profiling.Data.ProfiledDbConnection(
                                                  dbConnection,
                                                  MiniProfiler.Current);
+  }
+
+  // define UnwrapDataObjectInterceptor
+  class UnwrapProfilerInterceptor : UnwrapDataObjectInterceptor
+  {
+    public override DbConnection UnwrapConnection(IDataContext dataContext, DbConnection connection)
+    {
+      return connection is ProfiledDbConnection c ? c.WrappedConnection : connection;
+    }
+
+    public override DbTransaction UnwrapTransaction(IDataContext dataContext, DbTransaction transaction)
+    {
+       return transaction is ProfiledDbTransaction t ? t.WrappedTransaction : transaction;
+    }
+
+    public override DbCommand UnwrapCommand(IDataContext dataContext, DbCommand command)
+    {
+      return command is ProfiledDbCommand c ? c.InternalCommand : command;
+    }
+
+    public override DbDataReader UnwrapDataReader(IDataContext dataContext, DbDataReader dataReader)
+    {
+      return dataReader is ProfiledDbDataReader dr ? dr.WrappedReader : dataReader;
+    }
   }
 #endif
 }

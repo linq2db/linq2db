@@ -3397,17 +3397,17 @@ namespace LinqToDB.SqlProvider
 			sb.Append(parameter.ParameterName);
 		}
 
-		protected virtual string? GetTypeName(DbParameter parameter)
+		protected virtual string? GetTypeName(IDataContext dataContext, DbParameter parameter)
 		{
 			return null;
 		}
 
-		protected virtual string? GetUdtTypeName(DbParameter parameter)
+		protected virtual string? GetUdtTypeName(IDataContext dataContext, DbParameter parameter)
 		{
 			return null;
 		}
 
-		protected virtual string? GetProviderTypeName(DbParameter parameter)
+		protected virtual string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
 			return parameter.DbType switch
 			{
@@ -3421,17 +3421,17 @@ namespace LinqToDB.SqlProvider
 			};
 		}
 
-		protected virtual void PrintParameterType(StringBuilder sb, DbParameter parameter)
+		protected virtual void PrintParameterType(IDataContext dataContext, StringBuilder sb, DbParameter parameter)
 		{
-			var typeName = GetTypeName(parameter);
+			var typeName = GetTypeName(dataContext, parameter);
 			if (!string.IsNullOrEmpty(typeName))
 				sb.Append(typeName).Append(" -- ");
 
-			var udtTypeName = GetUdtTypeName(parameter);
+			var udtTypeName = GetUdtTypeName(dataContext, parameter);
 			if (!string.IsNullOrEmpty(udtTypeName))
 				sb.Append(udtTypeName).Append(" -- ");
 
-			var t1 = GetProviderTypeName(parameter);
+			var t1 = GetProviderTypeName(dataContext, parameter);
 			var t2 = parameter.DbType.ToString();
 
 			sb.Append(t1);
@@ -3501,7 +3501,7 @@ namespace LinqToDB.SqlProvider
 				sb.Append(" -- ").Append(t2);
 		}
 
-		public virtual StringBuilder PrintParameters(StringBuilder sb, IEnumerable<DbParameter>? parameters)
+		public virtual StringBuilder PrintParameters(IDataContext dataContext, StringBuilder sb, IEnumerable<DbParameter>? parameters)
 		{
 			if (parameters != null)
 			{
@@ -3510,7 +3510,7 @@ namespace LinqToDB.SqlProvider
 					sb.Append("DECLARE ");
 					PrintParameterName(sb, p);
 					sb.Append(' ');
-					PrintParameterType(sb, p);
+					PrintParameterType(dataContext, sb, p);
 					sb.AppendLine();
 
 					sb.Append("SET     ");

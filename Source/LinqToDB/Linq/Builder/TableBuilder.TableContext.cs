@@ -6,8 +6,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-using JetBrains.Annotations;
-
 namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
@@ -48,7 +46,7 @@ namespace LinqToDB.Linq.Builder
 
 			internal bool           ForceLeftJoinAssociations { get; set; }
 
-			public bool             AssociationsToSubQueries { get; set; }
+			public bool             AssociationsToSubQueries  { get; set; }
 
 			#endregion
 
@@ -308,37 +306,33 @@ namespace LinqToDB.Linq.Builder
 				return _variable = Builder.BuildVariable(expr);
 			}
 
-			[UsedImplicitly]
 			static object OnEntityCreated(IDataContext context, object entity, TableOptions tableOptions, string? tableName, string? schemaName, string? databaseName, string? serverName)
 			{
-				EntityCreatedEventData? args = null;
-				foreach (var interceptor in context.GetInterceptors<IDataContextInterceptor>())
-					{
-					args   ??= new EntityCreatedEventData(context, tableOptions, tableName, schemaName, databaseName, serverName);
-					entity   = interceptor.EntityCreated(args.Value, entity);
-				}
-
-				return entity;
+				return context is IInterceptable<IEntityServiceInterceptor> entityService ?
+					entityService.Interceptor?.EntityCreated(new(context, tableOptions, tableName, schemaName, databaseName, serverName), entity) ?? entity :
+					entity;
 			}
 
-			private static readonly MethodInfo _onEntityCreatedMethodInfo = MemberHelper.MethodOf(() =>
+			static readonly MethodInfo _onEntityCreatedMethodInfo = MemberHelper.MethodOf(() =>
 				OnEntityCreated(null!, null!, TableOptions.NotSet, null, null, null, null));
 
 			Expression NotifyEntityCreated(Expression expr)
 			{
-					expr =
-						Expression.Convert(
-							Expression.Call(
-								_onEntityCreatedMethodInfo,
-								ExpressionBuilder.DataContextParam,
-								expr,
-								Expression.Constant(SqlTable.TableOptions),
-								Expression.Constant(SqlTable.PhysicalName, typeof(string)),
-								Expression.Constant(SqlTable.Schema,       typeof(string)),
-								Expression.Constant(SqlTable.Database,     typeof(string)),
-								Expression.Constant(SqlTable.Server,       typeof(string))
-							),
-							expr.Type);
+				if (Builder.DataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: {} })
+				{
+					expr = Expression.Convert(
+						Expression.Call(
+							_onEntityCreatedMethodInfo,
+							ExpressionBuilder.DataContextParam,
+							expr,
+							Expression.Constant(SqlTable.TableOptions),
+							Expression.Constant(SqlTable.PhysicalName, typeof(string)),
+							Expression.Constant(SqlTable.Schema,       typeof(string)),
+							Expression.Constant(SqlTable.Database,     typeof(string)),
+							Expression.Constant(SqlTable.Server,       typeof(string))
+						),
+						expr.Type);
+				}
 
 				return expr;
 			}

@@ -87,7 +87,7 @@ namespace LinqToDB.Data
 				for (var index = 0; index < _executionQuery!.PreparedQuery.Commands.Length; index++)
 				{
 					var queryCommand = _executionQuery.PreparedQuery.Commands[index];
-					sqlProvider.PrintParameters(sb, _executionQuery.CommandsParameters[index]);
+					sqlProvider.PrintParameters(_dataConnection, sb, _executionQuery.CommandsParameters[index]);
 
 					sb.AppendLine(queryCommand.Command);
 
@@ -290,17 +290,17 @@ namespace LinqToDB.Data
 
 				try
 				{
-				for (var index = 0; index < pq.Commands.Length; index++)
-				{
-					var command = pq.Commands[index];
-					if (command.SqlParameters.Length == 0)
-						continue;
-
-					var parms = new DbParameter[command.SqlParameters.Length];
-
-					for (var i = 0; i < command.SqlParameters.Length; i++)
+					for (var index = 0; index < pq.Commands.Length; index++)
 					{
-						var sqlp = command.SqlParameters[i];
+						var command = pq.Commands[index];
+						if (command.SqlParameters.Length == 0)
+							continue;
+
+						var parms = new DbParameter[command.SqlParameters.Length];
+
+						for (var i = 0; i < command.SqlParameters.Length; i++)
+						{
+							var sqlp = command.SqlParameters[i];
 
 							if (dbCommand == null)
 							{
@@ -310,10 +310,10 @@ namespace LinqToDB.Data
 							}
 
 							parms[i] = CreateParameter(dataConnection, dbCommand, sqlp, sqlp.GetParameterValue(parameterValues), forGetSqlText);
-					}
+						}
 
-					result[index] = parms;
-				}
+						result[index] = parms;
+					}
 				}
 				finally
 				{

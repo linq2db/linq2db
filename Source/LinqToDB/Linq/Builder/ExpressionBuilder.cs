@@ -161,6 +161,18 @@ namespace LinqToDB.Linq.Builder
 		public static readonly ParameterExpression ParametersParam  = Expression.Parameter(typeof(object[]),     "ps");
 		public static readonly ParameterExpression ExpressionParam  = Expression.Parameter(typeof(Expression),   "expr");
 
+		static bool _isDataContextParamInitialized;
+
+		public static ParameterExpression GetDataContextParam()
+		{
+			if (!_isDataContextParamInitialized)
+			{
+				_isDataContextParamInitialized = true;
+			}
+
+			return DataContextParam;
+		}
+
 		public MappingSchema MappingSchema => DataContext.MappingSchema;
 
 		#endregion

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlTypes;
@@ -100,7 +101,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			if (type != null)
 			{
-				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(dataConnection, parameter);
 				if (param != null)
 				{
 					Adapter.SetDbType(param, type.Value);
@@ -115,7 +116,7 @@ namespace LinqToDB.DataProvider.SqlCe
 				case DataType.UInt32     : parameter.DbType = DbType.Int64;             return;
 				case DataType.UInt64     : parameter.DbType = DbType.Decimal;           return;
 				case DataType.VarNumeric : parameter.DbType = DbType.Decimal;           return;
-				case DataType.Char       : 
+				case DataType.Char       :
 				case DataType.NChar      : parameter.DbType = DbType.String;            return;
 				case DataType.Date       :
 				case DataType.DateTime2  : parameter.DbType = DbType.DateTime;          return;

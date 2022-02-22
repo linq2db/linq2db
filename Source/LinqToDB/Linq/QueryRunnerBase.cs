@@ -1,11 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	using LinqToDB.Data;
+	using Data;
 	using SqlQuery;
 
 	abstract class QueryRunnerBase : IQueryRunner

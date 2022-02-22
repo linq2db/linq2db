@@ -8,8 +8,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.Data
 {
 	using Async;
-	using LinqToDB.Common;
-	using LinqToDB.Interceptors;
+	using Common;
 	using RetryPolicy;
 
 	public partial class DataConnection
@@ -96,16 +95,16 @@ namespace LinqToDB.Data
 			{
 				try
 				{
-					if (_connectionInterceptors != null)
-						await _connectionInterceptors.Apply((interceptor, arg1, arg2, ct) => interceptor.ConnectionOpeningAsync(arg1, arg2, ct), new ConnectionOpeningEventData(this), _connection.Connection, cancellationToken)
+					if (_connectionInterceptor != null)
+						await _connectionInterceptor.ConnectionOpeningAsync(new (this), _connection.Connection, cancellationToken)
 							.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 					await _connection.OpenAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 					_closeConnection = true;
 
-					if (_connectionInterceptors != null)
-						await _connectionInterceptors.Apply((interceptor, arg1, arg2, ct) => interceptor.ConnectionOpenedAsync(arg1, arg2, ct), new ConnectionOpenedEventData(this), _connection.Connection, cancellationToken)
+					if (_connectionInterceptor != null)
+						await _connectionInterceptor.ConnectionOpenedAsync(new (this), _connection.Connection, cancellationToken)
 							.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				}
 				catch (Exception ex)
@@ -127,7 +126,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Commits started (if any) transaction, associated with connection.
-		/// If underlying provider doesn't support asynchonous commit, it will be performed synchonously.
+		/// If underlying provider doesn't support asynchronous commit, it will be performed synchronously.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
@@ -177,9 +176,8 @@ namespace LinqToDB.Data
 		/// <returns>Asynchronous operation completion task.</returns>
 		public virtual async Task CloseAsync()
 		{
-			if (_contextInterceptors != null)
-				await _contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosingAsync(arg), new DataContextEventData(this))
-					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			if (_dataContextInterceptor != null)
+				await _dataContextInterceptor.OnClosingAsync(new (this)).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			DisposeCommand();
 
@@ -200,9 +198,8 @@ namespace LinqToDB.Data
 					await _connection.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 
-			if (_contextInterceptors != null)
-				await _contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosedAsync(arg), new DataContextEventData(this))
-					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			if (_dataContextInterceptor != null)
+				await _dataContextInterceptor.OnClosedAsync(new (this)).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
 		/// <summary>
@@ -225,8 +222,8 @@ namespace LinqToDB.Data
 		{
 			var result = Option<int>.None;
 
-			if (_commandInterceptors != null)
-				result = await _commandInterceptors.Apply((interceptor, arg1, arg2, arg3, ct) => interceptor.ExecuteNonQueryAsync(arg1, arg2, arg3, ct), new CommandEventData(this), CurrentCommand!, result, cancellationToken)
+			if (_commandInterceptor != null)
+				result = await _commandInterceptor.ExecuteNonQueryAsync(new (this), CurrentCommand!, result, cancellationToken)
 					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			return result.HasValue
@@ -299,8 +296,8 @@ namespace LinqToDB.Data
 		{
 			var result = Option<object?>.None;
 
-			if (_commandInterceptors != null)
-				result = await _commandInterceptors.Apply((interceptor, arg1, arg2, arg3, ct) => interceptor.ExecuteScalarAsync(arg1, arg2, arg3, ct), new CommandEventData(this), CurrentCommand!, result, cancellationToken)
+			if (_commandInterceptor != null)
+				result = await _commandInterceptor.ExecuteScalarAsync(new (this), CurrentCommand!, result, cancellationToken)
 					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			return result.HasValue
@@ -375,8 +372,8 @@ namespace LinqToDB.Data
 		{
 			var result = Option<DbDataReader>.None;
 
-			if (_commandInterceptors != null)
-				result = await _commandInterceptors.Apply((interceptor, arg1, arg2, arg3, arg4, ct) => interceptor.ExecuteReaderAsync(arg1, arg2, arg3, arg4, ct), new CommandEventData(this), CurrentCommand!, commandBehavior, result, cancellationToken)
+			if (_commandInterceptor != null)
+				result = await _commandInterceptor.ExecuteReaderAsync(new (this), CurrentCommand!, commandBehavior, result, cancellationToken)
 					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			var dr = result.HasValue

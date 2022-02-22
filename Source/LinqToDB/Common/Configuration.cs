@@ -1,15 +1,15 @@
 ﻿using System;
+using System.Data;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
 namespace LinqToDB.Common
 {
-	using System.Data;
-	using System.Linq.Expressions;
-	using System.Threading.Tasks;
 	using Data;
 	using Data.RetryPolicy;
-	using LinqToDB.Linq;
+	using Linq;
 
 	/// <summary>
 	/// Contains LINQ expression compilation options.
@@ -71,7 +71,7 @@ namespace LinqToDB.Common
 		/// Default value: <c>false</c>.
 		/// </summary>
 		public static bool OptimizeForSequentialAccess;
-		
+
 		/// <summary>
 		/// Determines the length after which logging of binary data in SQL will be truncated.
 		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>

@@ -1,17 +1,13 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider
 {
-	using System.Data.Common;
-	using Expressions;
+	using Common;
+	using Data.RetryPolicy;
 	using Extensions;
-	using LinqToDB.Common;
-	using LinqToDB.Data.RetryPolicy;
 	using Mapping;
 
 	public abstract class DynamicDataProviderBase<TProviderMappings> : DataProviderBase
@@ -156,75 +152,31 @@ namespace LinqToDB.DataProvider
 
 		#region Provider Type Converters
 
-		// That's fine, as TryGetValue and indexer are lock-free operations for ConcurrentDictionary.
-		// In general I don't expect more than one wrapper used (e.g. miniprofiler), still it's not a big deal
-		// to support multiple wrappers
-		//
-		// Actually it should be fine to remove support for DbParameter wrappers, as it's probably something
-		// nobody will do
-		private readonly IDictionary<Type, Func<DbParameter  , DbParameter  >?> _parameterConverters   = new ConcurrentDictionary<Type, Func<DbParameter  , DbParameter  >?>();
-		private readonly IDictionary<Type, Func<DbCommand    , DbCommand    >?> _commandConverters     = new ConcurrentDictionary<Type, Func<DbCommand    , DbCommand    >?>();
-		private readonly IDictionary<Type, Func<DbConnection , DbConnection >?> _connectionConverters  = new ConcurrentDictionary<Type, Func<DbConnection , DbConnection >?>();
-		private readonly IDictionary<Type, Func<DbTransaction, DbTransaction>?> _transactionConverters = new ConcurrentDictionary<Type, Func<DbTransaction, DbTransaction>?>();
-
-		public virtual DbParameter? TryGetProviderParameter(DbParameter parameter, MappingSchema ms)
+		public virtual DbParameter? TryGetProviderParameter(IDataContext dataContext, DbParameter parameter)
 		{
-			return TryConvertProviderType(_parameterConverters, Adapter.ParameterType, parameter, ms);
+			return Adapter.ParameterType.IsSameOrParentOf(parameter.GetType()) ? parameter : null;
 		}
 
-		public virtual DbCommand? TryGetProviderCommand(DbCommand command, MappingSchema ms)
+		public virtual DbCommand? TryGetProviderCommand(IDataContext dataContext, DbCommand command)
 		{
 			// remove retry policy wrapper
 			if (command is RetryingDbCommand rcmd)
 				command = rcmd.UnderlyingObject;
 
-			return TryConvertProviderType(_commandConverters, Adapter.CommandType, command, ms);
+			command = dataContext.UnwrapDataObjectInterceptor?.UnwrapCommand(dataContext, command) ?? command;
+			return Adapter.CommandType.IsSameOrParentOf(command.GetType()) ? command : null;
 		}
 
-		public virtual DbConnection? TryGetProviderConnection(DbConnection connection, MappingSchema ms)
+		public virtual DbConnection? TryGetProviderConnection(IDataContext dataContext, DbConnection connection)
 		{
-			return TryConvertProviderType(_connectionConverters, Adapter.ConnectionType, connection, ms);
+			connection = dataContext.UnwrapDataObjectInterceptor?.UnwrapConnection(dataContext, connection) ?? connection;
+			return Adapter.ConnectionType.IsSameOrParentOf(connection.GetType()) ? connection : null;
 		}
 
-		public virtual DbTransaction? TryGetProviderTransaction(DbTransaction transaction, MappingSchema ms)
+		public virtual DbTransaction? TryGetProviderTransaction(IDataContext dataContext, DbTransaction transaction)
 		{
-			return TryConvertProviderType(_transactionConverters, Adapter.TransactionType, transaction, ms);
-		}
-
-		private static TResult? TryConvertProviderType<TResult>(
-			IDictionary<Type, Func<TResult, TResult>?> converters,
-			Type expectedType,
-			TResult value,
-			MappingSchema ms)
-			where TResult : class
-		{
-			var valueType = value.GetType();
-
-			if (expectedType.IsSameOrParentOf(valueType))
-				return value;
-
-			if (!converters.TryGetValue(valueType, out var converter))
-			{
-				// don't think it makes sense to lock creation of new converter
-				var converterExpr = ms.GetConvertExpression(valueType, typeof(TResult), false, false);
-				
-				if (converterExpr != null)
-				{
-					var param = Expression.Parameter(typeof(TResult));
-					converter = (Func<TResult, TResult>)Expression
-						.Lambda(
-							converterExpr.GetBody(Expression.Convert(param, valueType)),
-							param)
-						.CompileExpression();
-
-					converters[valueType] = converter;
-				}
-			}
-
-			if (converter != null)
-				return converter(value);
-
-			return null;
+			transaction = dataContext.UnwrapDataObjectInterceptor?.UnwrapTransaction(dataContext, transaction) ?? transaction;
+			return Adapter.TransactionType.IsSameOrParentOf(transaction.GetType()) ? transaction : null;
 		}
 
 		#endregion
