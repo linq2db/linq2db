@@ -63,6 +63,11 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" />
 		<AdditionalFiles Include="$(MSBuildThisFileDirectory)/BannedSymbols.txt" />
+
+		<PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>build; analyzers</IncludeAssets>
+		</PackageReference>
 	</ItemGroup>
 
 </Project>
