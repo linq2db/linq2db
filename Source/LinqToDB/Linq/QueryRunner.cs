@@ -55,32 +55,16 @@ namespace LinqToDB.Linq
 			readonly ConcurrentDictionary<Type, ReaderMapperInfo> _mappers = new ();
 
 
-			class ReaderMapperInfo
+			internal class ReaderMapperInfo
 			{
 				public Expression<Func<IQueryRunner, IDataReader, T>> MapperExpression = null!;
 				public Func<IQueryRunner, IDataReader, T>             Mapper = null!;
 				public bool                                           IsFaulted;
 			}
 
-			public T Map(IDataContext context, IQueryRunner queryRunner, IDataReader dataReader)
+			public T Map(IDataContext context, IQueryRunner queryRunner, IDataReader dataReader, ref ReaderMapperInfo mapperInfo)
 			{
-				// unwrap early
-				// https://github.com/linq2db/linq2db/issues/2499
-				dataReader = DataReaderWrapCache.TryUnwrapDataReader(context.MappingSchema, dataReader);
-
-				var dataReaderType = dataReader.GetType();
-
-				if (!_mappers.TryGetValue(dataReaderType, out var mapperInfo))
-				{
-					var mapperExpression = TransformMapperExpression(context, dataReader, dataReaderType, false);
-
-					queryRunner.MapperExpression = mapperExpression;
-
-					var mapper = mapperExpression.CompileExpression();
-					mapperInfo = new ReaderMapperInfo() { MapperExpression = mapperExpression, Mapper = mapper };
-					_mappers.TryAdd(dataReaderType, mapperInfo);
-				}
-
+				// DO NOT MERGE (v.3.x change only)
 				try
 				{
 					return mapperInfo.Mapper(queryRunner, dataReader);
@@ -93,29 +77,56 @@ namespace LinqToDB.Linq
 					if (mapperInfo.IsFaulted)
 						throw;
 
-					if (context.GetTraceSwitch().TraceInfo)
-						context.WriteTraceLine(
-							$"Mapper has switched to slow mode. Mapping exception: {ex.Message}",
-							context.GetTraceSwitch().DisplayName,
-							TraceLevel.Error);
-
-					queryRunner.MapperExpression = mapperInfo.MapperExpression;
-
-					var expression = TransformMapperExpression(context, dataReader, dataReaderType, true);
-
-					// create new instance to avoid race conditions without locks
-					var expr   = mapperInfo.MapperExpression;
-					mapperInfo = new ReaderMapperInfo()
-					{
-						MapperExpression = expr,
-						Mapper           = expression.CompileExpression(),
-						IsFaulted        = true
-					};
-
-					_mappers[dataReaderType] = mapperInfo;
-
-					return mapperInfo.Mapper(queryRunner, dataReader);
+					return ReMapOnException(context, queryRunner, dataReader, ref mapperInfo, ex);
 				}
+			}
+
+			// DO NOT MERGE (v.3.x change only)
+			public T ReMapOnException(IDataContext context, IQueryRunner queryRunner, IDataReader dataReader, ref ReaderMapperInfo mapperInfo, Exception ex)
+			{
+				if (context.GetTraceSwitch().TraceInfo)
+					context.WriteTraceLine(
+						$"Mapper has switched to slow mode. Mapping exception: {ex.Message}",
+						context.GetTraceSwitch().DisplayName,
+						TraceLevel.Error);
+
+				queryRunner.MapperExpression = mapperInfo.MapperExpression;
+
+				var dataReaderType = dataReader.GetType();
+				var expression     = TransformMapperExpression(context, dataReader, dataReaderType, true);
+				var expr           = mapperInfo.MapperExpression; // create new instance to avoid race conditions without locks
+
+				mapperInfo = new ReaderMapperInfo()
+				{
+					MapperExpression = expr,
+					Mapper           = expression.CompileExpression(),
+					IsFaulted        = true
+				};
+
+				_mappers[dataReaderType] = mapperInfo;
+
+				return mapperInfo.Mapper(queryRunner, dataReader);
+			}
+
+			// DO NOT MERGE (v.3.x change only)
+			public ReaderMapperInfo GetMapperInfo(IDataContext context, IQueryRunner queryRunner, IDataReader dataReader)
+			{
+				var dataReaderType = dataReader.GetType();
+
+				if (!_mappers.TryGetValue(dataReaderType, out var mapperInfo))
+				{
+					var mapperExpression = TransformMapperExpression(context, dataReader, dataReaderType, false);
+
+					queryRunner.MapperExpression = mapperExpression;
+
+					var mapper = mapperExpression.CompileExpression();
+
+					mapperInfo = new() { MapperExpression = mapperExpression, Mapper = mapper };
+
+					_mappers.TryAdd(dataReaderType, mapperInfo);
+				}
+
+				return mapperInfo;
 			}
 
 			// transform extracted to separate method to avoid closures allocation on mapper cache hit
@@ -377,17 +388,37 @@ namespace LinqToDB.Linq
 			object?[]?   preambles,
 			int          queryNumber)
 		{
-			using (var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps, preambles))
-			using (var dr     = runner.ExecuteReader())
+			// DO NOT MERGE (v.3.x change only)
+			using var runner     = dataContext.GetQueryRunner(query, queryNumber, expression, ps, preambles);
+			using var dataReader = runner.ExecuteReader();
+
+			if (dataReader.Read())
 			{
-				while (dr.Read())
+				var origDataReader = DataReaderWrapCache.TryUnwrapDataReader(dataContext.MappingSchema, dataReader);
+				var mapperInfo     = mapper.GetMapperInfo(dataContext, runner, origDataReader);
+
+				do
 				{
-					var value = mapper.Map(dataContext, runner, dr);
-					runner.RowsCount++;
-					yield return value;
+					T res;
+
+					try
+					{
+						res = mapperInfo.Mapper(runner, origDataReader);
+						runner.RowsCount++;
+					}
+					catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException"))
+					{
+						// TODO: debug cases when our tests go into slow-mode (e.g. sqlite.ms)
+						if (mapperInfo.IsFaulted)
+							throw;
+
+						res = mapper.ReMapOnException(dataContext, runner, origDataReader, ref mapperInfo, ex);
+					}
+
+					yield return res;
 				}
-			}
-		}
+				while (dataReader.Read());
+			}		}
 
 		static async Task ExecuteQueryAsync<T>(
 			Query                         query,
@@ -423,11 +454,19 @@ namespace LinqToDB.Linq
 
 					var take = takeAction?.Invoke(query, expression, dataContext, ps) ?? int.MaxValue;
 
-					while (take-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					// DO NOT MERGE (v.3.x change only)
+					if (take-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
-						runner.RowsCount++;
-						if (!func(mapper.Map(dataContext, runner, dr.DataReader)))
-							break;
+						var dataReader = DataReaderWrapCache.TryUnwrapDataReader(dataContext.MappingSchema, dr.DataReader);
+						var mapperInfo = mapper.GetMapperInfo(dataContext, runner, dataReader);
+
+						do
+						{
+							if (!func(mapper.Map(dataContext, runner, dataReader, ref mapperInfo)))
+								break;
+							runner.RowsCount++;
+						}
+						while (take-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
 					}
 				}
 			}
@@ -501,9 +540,13 @@ namespace LinqToDB.Linq
 
 				if (_take-- > 0 && await _dataReader!.ReadAsync(_cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
-					_queryRunner.RowsCount++;
+					// DO NOT MERGE (v.3.x change only)
+					var dataReader = DataReaderWrapCache.TryUnwrapDataReader(_dataContext.MappingSchema, _dataReader.DataReader);
+					var mapperInfo = _mapper.GetMapperInfo(_dataContext, _queryRunner, dataReader);
 
-					Current = _mapper.Map(_dataContext, _queryRunner, _dataReader.DataReader);
+					Current = _mapper.Map(_dataContext, _queryRunner, dataReader, ref mapperInfo);
+
+					_queryRunner.RowsCount++;
 
 					return true;
 				}
@@ -528,7 +571,7 @@ namespace LinqToDB.Linq
 				if (_queryRunner != null)
 					await _queryRunner.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
-				if (_dataReader != null) 
+				if (_dataReader != null)
 					await _dataReader.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				_queryRunner = null;
@@ -741,20 +784,21 @@ namespace LinqToDB.Linq
 			object?[]?     ps,
 			object?[]?     preambles)
 		{
-			using (var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles))
-			{
-				using (var dr = runner.ExecuteReader())
-				{
-					if (dr.Read())
-					{
-						var value = mapper.Map(dataContext, runner, dr);
-						runner.RowsCount++;
-						return value;
-					}
-				}
+			// DO NOT MERGE (v.3.x change only)
+			using var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles);
+			using var dr     = runner.ExecuteReader();
 
-				return Array<T>.Empty.First();
+			var dataReader = DataReaderWrapCache.TryUnwrapDataReader(dataContext.MappingSchema, dr);
+			var mapperInfo = mapper.GetMapperInfo(dataContext, runner, dataReader);
+
+			if (dr.Read())
+			{
+				var ret = mapper.Map(dataContext, runner, dataReader, ref mapperInfo);
+				runner.RowsCount++;
+				return ret;
 			}
+
+			return Array<T>.Empty.First();
 		}
 
 		static async Task<T> ExecuteElementAsync<T>(
@@ -782,11 +826,14 @@ namespace LinqToDB.Linq
 				{
 					if (await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
+						// DO NOT MERGE (v.3.x change only)
+						var dataReader = DataReaderWrapCache.TryUnwrapDataReader(dataContext.MappingSchema, dr.DataReader);
+						var mapperInfo = mapper.GetMapperInfo(dataContext, runner, dataReader);
+						var item       = mapper.Map(dataContext, runner, dataReader, ref mapperInfo);
+
+						var ret = dataContext.MappingSchema.ChangeTypeTo<T>(item);
 						runner.RowsCount++;
-
-						var item = mapper.Map(dataContext, runner, dr.DataReader);
-
-						return dataContext.MappingSchema.ChangeTypeTo<T>(item);
+						return ret;
 					}
 
 					return Array<T>.Empty.First();
