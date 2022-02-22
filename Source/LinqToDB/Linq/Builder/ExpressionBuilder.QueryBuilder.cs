@@ -432,9 +432,9 @@ namespace LinqToDB.Linq.Builder
 
 			var cond = (ConditionalExpression)expr;
 
-			if (cond.Test.NodeType == ExpressionType.Equal || cond.Test.NodeType == ExpressionType.NotEqual)
-			{
-				var b = (BinaryExpression)cond.Test;
+					if (cond.Test.NodeType == ExpressionType.Equal || cond.Test.NodeType == ExpressionType.NotEqual)
+					{
+						var b = (BinaryExpression)cond.Test;
 
 				Expression? cnt = null;
 				Expression? obj = null;
@@ -522,7 +522,7 @@ namespace LinqToDB.Linq.Builder
 				switch (expr)
 				{
 					case MemberExpression me:
-						expr = me.Expression;
+						expr = me.Expression!;
 						continue;
 					case MethodCallExpression mc when mc.IsQueryable():
 						expr = mc.Arguments[0];
@@ -937,7 +937,7 @@ namespace LinqToDB.Linq.Builder
 									{
 										var me = (MemberExpression)e;
 
-										var parentType = me.Expression.Type;
+										var parentType = me.Expression!.Type;
 										var childType  = me.Type;
 
 										var queryMethod = AssociationHelper.CreateAssociationQueryLambda(context.context.Builder,

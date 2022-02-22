@@ -102,6 +102,7 @@ namespace Tests
 				case TestProvName.PostgreSQL11                       :
 				case TestProvName.PostgreSQL12                       :
 				case TestProvName.PostgreSQL13                       :
+				case TestProvName.PostgreSQL14                       :
 				case ProviderName.DB2                                :
 				case ProviderName.Sybase                             :
 				case ProviderName.SybaseManaged                      :
@@ -217,6 +218,7 @@ namespace Tests
 				case TestProvName.PostgreSQL11                       :
 				case TestProvName.PostgreSQL12                       :
 				case TestProvName.PostgreSQL13                       :
+				case TestProvName.PostgreSQL14                       :
 				case ProviderName.DB2                                :
 				case ProviderName.Sybase                             :
 				case ProviderName.SybaseManaged                      :
@@ -373,6 +375,7 @@ namespace Tests
 				case TestProvName.PostgreSQL11                       :
 				case TestProvName.PostgreSQL12                       :
 				case TestProvName.PostgreSQL13                       :
+				case TestProvName.PostgreSQL14                       :
 					return "POSIX";
 				case ProviderName.SQLiteClassic                      :
 				case ProviderName.SQLiteMS                           :

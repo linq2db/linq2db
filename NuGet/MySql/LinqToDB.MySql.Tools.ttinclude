@@ -2,7 +2,7 @@
 <#@ include file="LinqToDB.Tools.ttinclude" once="true"                     #>
 <#@ include file="LinqToDB.MySql.ttinclude" once="true"                     #>
 <#
-var toolsPath = GetProviderToolsPath("MySqlConnector", "MySqlConnector, Version=1.0.0.0, Culture=neutral, PublicKeyToken=d33d3e53aa5f8c92");
+var toolsPath = GetProviderToolsPath("MySqlConnector", "MySqlConnector, Version=2.0.0.0, Culture=neutral, PublicKeyToken=d33d3e53aa5f8c92");
 
 LoadAssembly("System.Memory"                    , toolsPath);
 LoadAssembly("System.Buffers"                   , toolsPath);

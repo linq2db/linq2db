@@ -9,7 +9,7 @@ namespace Tests.UserTests
 	class Issue1298Tests : TestBase
 	{
 		[Table("qwerty")]
-		public class qwerty
+		public class Qwerty
 		{
 			[Column]
 			public long Id { get; set; }
@@ -62,10 +62,10 @@ namespace Tests.UserTests
 			using (db.BeginTransaction())
 			{
 				db.CreateTable<mega_composites>();
-				db.CreateTable<qwerty>();
+				db.CreateTable<Qwerty>();
 
-				db.Insert(new qwerty() { Id = 1, asdfgh = "res1" });
-				db.Insert(new qwerty() { Id = 100500, asdfgh = "res100500" });
+				db.Insert(new Qwerty() { Id = 1, asdfgh = "res1" });
+				db.Insert(new Qwerty() { Id = 100500, asdfgh = "res100500" });
 
 				db.Insert(new mega_composites()
 				{
@@ -105,7 +105,7 @@ namespace Tests.UserTests
 									.Select(x => new __mega_composites_View
 									{
 										ref1 = x.ref1,
-										__face_ref1 = db.GetTable<qwerty>().Where(q => q.Id == x.ref1).Select(q => q.asdfgh).FirstOrDefault()
+										__face_ref1 = db.GetTable<Qwerty>().Where(q => q.Id == x.ref1).Select(q => q.asdfgh).FirstOrDefault()
 									}).Take(2).ToArray();
 
 				Assert.NotNull(ref1);
@@ -113,17 +113,17 @@ namespace Tests.UserTests
 
 		}
 
-		[Test, ActiveIssue(1298)]
+		[Test, ActiveIssue(1298, Details = "Expression 'x.y1' is not a Field.")]
 		public void Issue1298Test1([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = new DataConnection(context))
 			using (db.BeginTransaction())
 			{
 				db.CreateTable<mega_composites>();
-				db.CreateTable<qwerty>();
+				db.CreateTable<Qwerty>();
 
-				db.Insert(new qwerty() { Id = 1, asdfgh = "res1" });
-				db.Insert(new qwerty() { Id = 100500, asdfgh = "res100500" });
+				db.Insert(new Qwerty() { Id = 1, asdfgh = "res1" });
+				db.Insert(new Qwerty() { Id = 100500, asdfgh = "res100500" });
 
 				db.Insert(new mega_composites()
 				{
@@ -163,7 +163,7 @@ namespace Tests.UserTests
 									.Select(x => new __mega_composites_View
 									{
 										y1 = x.y1,
-										__face_y1_q1_ref1 = db.GetTable<qwerty>().Where(q => q.Id == x.y1.q1.ref1).Select(q => q.asdfgh).FirstOrDefault()
+										__face_y1_q1_ref1 = db.GetTable<Qwerty>().Where(q => q.Id == x.y1.q1.ref1).Select(q => q.asdfgh).FirstOrDefault()
 									}).Take(2).ToArray();
 
 				Assert.NotNull(ref1);

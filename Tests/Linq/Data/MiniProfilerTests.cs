@@ -19,10 +19,12 @@ using StackExchange.Profiling;
 using StackExchange.Profiling.Data;
 using Tests.Model;
 
+#if !NETCOREAPP2_1
 using MySqlDataDateTime           = MySql.Data.Types.MySqlDateTime;
 using MySqlDataDecimal            = MySql.Data.Types.MySqlDecimal;
 using MySqlConnectorDateTime      = MySqlConnector.MySqlDateTime;
 using MySqlDataMySqlConnection    = MySql.Data.MySqlClient.MySqlConnection;
+#endif
 using System.Globalization;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.DB2;
@@ -251,6 +253,7 @@ namespace Tests.Data
 			public DateTime Value { get; set; }
 		}
 
+#if !NETCOREAPP2_1
 		class MapperExpressionTest2
 		{
 			public MySqlDataDateTime Value { get; set; }
@@ -476,6 +479,7 @@ namespace Tests.Data
 				db.DataProvider.GetSchemaProvider().GetSchema(db);
 			}
 		}
+#endif
 
 		[Test]
 		public void TestSystemSqlite([IncludeDataSources(ProviderName.SQLiteClassic)] string context, [Values] ConnectionType type)
@@ -1454,7 +1458,9 @@ namespace Tests.Data
 
 				// provider-specific type classes and readers
 				var dateValue = new DateTime(1234, 11, 22);
+#pragma warning disable CS0618 // Type or member is obsolete
 				var ndateValue = db.Execute<NpgsqlTypes.NpgsqlDate>("SELECT @p", new DataParameter("@p", dateValue, DataType.Date));
+#pragma warning restore CS0618 // Type or member is obsolete
 				Assert.AreEqual(dateValue, (DateTime)ndateValue);
 				var rawValue = db.Execute<object>("SELECT @p", new DataParameter("@p", dateValue, DataType.Date));
 				Assert.True    (rawValue is DateTime);

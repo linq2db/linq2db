@@ -111,8 +111,8 @@ namespace LinqToDB.Linq.Builder
 								if (ma1.Member != ma2.Member)
 									break;
 
-								ex1 = ma1.Expression;
-								ex2 = ma2.Expression;
+								ex1 = ma1.Expression!;
+								ex2 = ma2.Expression!;
 							}
 						}
 					}

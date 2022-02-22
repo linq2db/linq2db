@@ -5,8 +5,7 @@
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
 
-#pragma warning disable 1591
-#pragma warning disable 618
+#pragma warning disable 1572, 1591, 618
 #nullable enable
 
 using System;
@@ -1418,5 +1417,3 @@ namespace PostreSQLDataContext
 		}
 	}
 }
-
-#pragma warning restore 1591

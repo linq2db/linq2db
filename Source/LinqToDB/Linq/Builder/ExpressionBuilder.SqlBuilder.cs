@@ -287,7 +287,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region IsSubQuery
 
-		public bool IsSubQuery(IBuildContext context, MethodCallExpression call)
+		bool IsSubQuery(IBuildContext context, MethodCallExpression call)
 		{
 			var isAggregate = call.IsAggregate(MappingSchema);
 
@@ -328,7 +328,7 @@ namespace LinqToDB.Linq.Builder
 			return false;
 		}
 
-		bool IsSubQuerySource(IBuildContext context, Expression expr)
+		bool IsSubQuerySource(IBuildContext context, Expression? expr)
 		{
 			if (expr == null)
 				return false;
@@ -388,7 +388,7 @@ namespace LinqToDB.Linq.Builder
 				return Expression.Call(
 					null,
 					MemberHelper.MethodOf<T?>(p => Sql.ToNotNull(p)),
-					expression.Expression);
+					expression.Expression!);
 			}
 		}
 
@@ -636,7 +636,7 @@ namespace LinqToDB.Linq.Builder
 							throw new LinqToDBException($"Can't convert {wpi} to expression.");
 						}
 
-						var result = n < 0 ? context.pi.Object : context.pi.Arguments[n];
+						var result = n < 0 ? context.pi.Object! : context.pi.Arguments[n];
 
 						if (result.Type != wpi.Type)
 						{
@@ -659,7 +659,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression? ConvertNew(NewExpression pi)
 		{
-			var lambda = Expressions.ConvertMember(MappingSchema, pi.Type, pi.Constructor);
+			var lambda = Expressions.ConvertMember(MappingSchema, pi.Type, pi.Constructor!);
 
 			if (lambda != null)
 			{
@@ -668,14 +668,14 @@ namespace LinqToDB.Linq.Builder
 				var pn    = 0;
 
 				foreach (var p in lambda.Parameters)
-					parms.Add(p.Name, pn++);
+					parms.Add(p.Name!, pn++);
 
 				return ef.Transform((pi, parms), static (context, wpi) =>
 				{
 					if (wpi.NodeType == ExpressionType.Parameter)
 					{
 						var pe   = (ParameterExpression)wpi;
-						var n    = context.parms[pe.Name];
+						var n    = context.parms[pe.Name!];
 						return context.pi.Arguments[n];
 					}
 
@@ -1764,7 +1764,7 @@ namespace LinqToDB.Linq.Builder
 						&& (op2.Type == Enum.GetUnderlyingType(op1conv.Operand.Type) || op2.Type == typeof(int)))
 				{
 					op1 = op1conv.Operand;
-					op2 = Expression.Constant(Enum.ToObject(op1conv.Operand.Type, ((ConstantExpression)op2).Value), op1conv.Operand.Type);
+					op2 = Expression.Constant(Enum.ToObject(op1conv.Operand.Type, ((ConstantExpression)op2).Value!), op1conv.Operand.Type);
 					return true;
 				}
 				// here underlying type used
@@ -1866,7 +1866,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				case ExpressionType.Constant:
 				{
-					var name = Enum.GetName(type, ((ConstantExpression)value).Value);
+					var name = Enum.GetName(type, ((ConstantExpression)value).Value!);
 
 					// ReSharper disable ConditionIsAlwaysTrueOrFalse
 					// ReSharper disable HeuristicUnreachableCode
@@ -1995,22 +1995,14 @@ namespace LinqToDB.Linq.Builder
 
 				if (lmembers.Count == 0)
 				{
-					var r = right;
-					right = left;
-					left = r;
-
-					var c = rightContext;
-					rightContext = leftContext;
-					leftContext = c;
-
-					var q = qsr;
-					qsl = q;
+					(left, right)               = (right, left);
+					(leftContext, rightContext) = (rightContext, leftContext);
+					var q                       = qsr;
+					qsl                         = q;
 
 					sr = false;
 
-					var lm   = lmembers;
-					lmembers = rmembers;
-					rmembers = lm;
+					(rmembers, lmembers) = (lmembers, rmembers);
 				}
 
 				isNull = right.IsNullValue();
@@ -2026,13 +2018,11 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (sl == false)
 				{
-					var r = right;
-					right = left;
-					left  = r;
-
-					var c        = rightContext;
-					rightContext = leftContext;
-					leftContext  = c;
+					(left, right)               = (right, left);
+					// leftContext value not used below: https://pvs-studio.com/ru/blog/posts/csharp/0887/
+					// but! we have test that fails in this place (TestDefaultExpression_08)
+					// so it could be incomplete implementation
+					(leftContext, rightContext) = (rightContext, leftContext);
 
 					var q = qsr;
 					qsl   = q;
@@ -2100,16 +2090,14 @@ namespace LinqToDB.Linq.Builder
 
 		internal ISqlPredicate? ConvertNewObjectComparison(IBuildContext context, ExpressionType nodeType, Expression left, Expression right)
 		{
-			left = FindExpression(left);
+			left  = FindExpression(left);
 			right = FindExpression(right);
 
 			var condition = new SqlSearchCondition();
 
 			if (left.NodeType != ExpressionType.New)
 			{
-				var temp = left;
-				left = right;
-				right = temp;
+				(right, left) = (left, right);
 			}
 
 			var newExpr  = (NewExpression)left;
@@ -2387,9 +2375,9 @@ namespace LinqToDB.Linq.Builder
 		{
 			var e = expression;
 
-			var descriptor = SuggestColumnDescriptor(context, e.Object, e.Arguments[0]);
+			var descriptor = SuggestColumnDescriptor(context, e.Object!, e.Arguments[0]);
 
-			var o = ConvertToSql(context, e.Object,       unwrap: false, descriptor);
+			var o = ConvertToSql(context, e.Object!,      unwrap: false, descriptor);
 			var a = ConvertToSql(context, e.Arguments[0], unwrap: false, descriptor);
 
 			return new SqlPredicate.SearchString(o, false, a, kind, caseSensitive);
@@ -2986,7 +2974,7 @@ namespace LinqToDB.Linq.Builder
 
 						var isScalar = MappingSchema.IsScalarType(expr.Type);
 						if (!isScalar)
-							CollectParameters(expr.Type, expr.Constructor, expr.Arguments);
+							CollectParameters(expr.Type, expr.Constructor!, expr.Arguments);
 
 						return members.Count > 0 || !isScalar;
 					}

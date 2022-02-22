@@ -12,8 +12,22 @@
 		</summary>
 		<tags>linq linq2db SQLite LinqToDB ORM database DB SQL</tags>
 		<dependencies>
-			<dependency id="linq2db"                version="3.0.0"  />
-			<dependency id="Microsoft.Data.Sqlite"  version="5.0.11" />
+			<group targetFramework=".NETFramework4.5.1">
+				<dependency id="linq2db" version="3.0.0"  />
+				<dependency id="Microsoft.Data.Sqlite"  version="1.1.1"  />
+			</group>
+			<group targetFramework=".NETFramework4.7.2">
+				<dependency id="linq2db" version="3.0.0"  />
+				<dependency id="Microsoft.Data.Sqlite"  version="5.0.14" />
+			</group>
+			<group targetFramework="netstandard2.0">
+				<dependency id="linq2db" version="3.0.0"  />
+				<dependency id="Microsoft.Data.Sqlite"  version="5.0.14" />
+			</group>
+			<group targetFramework="net5.0">
+				<dependency id="linq2db"                version="3.0.0"  />
+				<dependency id="Microsoft.Data.Sqlite"  version="6.0.2"  />
+			</group>
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None" />

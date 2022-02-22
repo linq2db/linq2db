@@ -9,11 +9,11 @@
 		"Connections": {
 			"SqlServer": {
 				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;"
+				"ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.2017": {
 				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestData2017;User Id=sa;Password=Password12!;"
+				"ConnectionString": "Server=localhost;Database=TestData2017;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			}
 		}
 	}

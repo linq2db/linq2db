@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 
 namespace LinqToDB.AspNet.Logging
@@ -27,7 +27,7 @@ namespace LinqToDB.AspNet.Logging
 				_                  => LogLevel.None,
 			};
 
-			_logger.Log(logLevel, 0, message, null, (s, exception) => s);
+			_logger.Log(logLevel, 0, message, null, (s, exception) => s ?? string.Empty);
 		}
 	}
 }

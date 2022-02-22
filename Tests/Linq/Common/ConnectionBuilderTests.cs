@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -15,7 +15,7 @@ namespace Tests.Common
 	{
 		private class TestLoggerFactory : ILoggerFactory
 		{
-			public List<TestLogger> Loggers = new List<TestLogger>();
+			public List<TestLogger> Loggers = new ();
 
 			public void Dispose()
 			{
@@ -35,13 +35,13 @@ namespace Tests.Common
 
 		private class TestLogger : ILogger
 		{
-			public List<string> Messages = new List<string>();
+			public List<string> Messages = new ();
 
 			public void Log<TState>(LogLevel logLevel,
 				EventId eventId,
 				TState state,
-				Exception exception,
-				Func<TState, Exception, string> formatter)
+				Exception? exception,
+				Func<TState, Exception?, string> formatter)
 			{
 				var message = formatter(state, exception);
 				Messages.Add(message);
@@ -52,9 +52,13 @@ namespace Tests.Common
 				return false;
 			}
 
-			public IDisposable? BeginScope<TState>(TState state)
+			public IDisposable BeginScope<TState>(TState state) => new Disposable();
+
+			private class Disposable : IDisposable
 			{
-				return null;
+				void IDisposable.Dispose()
+				{
+				}
 			}
 		}
 

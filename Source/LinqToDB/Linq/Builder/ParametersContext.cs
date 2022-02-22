@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using LinqToDB.Common;
@@ -262,7 +261,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (name == null)
 						{
-							if (columnDescriptor.MemberName.Contains('.'))
+							if (columnDescriptor.MemberName.Contains("."))
 								name = columnDescriptor.ColumnName;
 							else
 								name = columnDescriptor.MemberName;
@@ -279,7 +278,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (typeof(DataParameter).IsSameOrParentOf(newExpr.ValueExpression.Type))
 				{
-					newExpr.DbDataTypeExpression = Expression.PropertyOrField(newExpr.ValueExpression, nameof(DataParameter.DbDataType));
+					newExpr.DbDataTypeExpression = Expression.Property(newExpr.ValueExpression, Methods.LinqToDB.DataParameter.DbDataType);
 
 					if (columnDescriptor != null)
 					{
@@ -288,7 +287,7 @@ namespace LinqToDB.Linq.Builder
 							DbDataType.WithSetValuesMethodInfo, newExpr.DbDataTypeExpression);
 					}
 
-					newExpr.ValueExpression = Expression.PropertyOrField(newExpr.ValueExpression, nameof(DataParameter.Value));
+					newExpr.ValueExpression = Expression.Property(newExpr.ValueExpression, Methods.LinqToDB.DataParameter.Value);
 				}
 			}
 
@@ -324,7 +323,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			result.ValueExpression = expression.Transform(
-				(forceConstant, (expression as MemberExpression)?.Member, expressionAccessors, result, setName, this.MappingSchema),
+				(forceConstant, (expression as MemberExpression)?.Member, expressionAccessors, result, setName, MappingSchema),
 				static (context, expr) =>
 				{
 					if (expr.NodeType == ExpressionType.Constant)
@@ -456,7 +455,7 @@ namespace LinqToDB.Linq.Builder
 						if (ma.Member.IsNullableValueMember())
 						{
 							return Expression.Condition(
-								Expression.Equal(ma.Expression, Expression.Constant(null, ma.Expression.Type)),
+								Expression.Equal(ma.Expression!, Expression.Constant(null, ma.Expression!.Type)),
 								Expression.Default(e.Type),
 								e);
 						}
@@ -484,14 +483,14 @@ namespace LinqToDB.Linq.Builder
 			return accessorExpression;
 		}
 
-		internal ISqlExpression GetParameter(Expression ex, MemberInfo? member, ColumnDescriptor? columnDescriptor)
+		internal ISqlExpression GetParameter(Expression ex, MemberInfo member, ColumnDescriptor? columnDescriptor)
 		{
 			if (member is MethodInfo mi)
-				member = mi.GetPropertyInfo();
+				member = mi.GetPropertyInfo()!; // ??
 
 			var vte  = ReplaceParameter(_expressionAccessors, ex, forceConstant: false, null);
 			var par  = vte.ValueExpression;
-			var expr = Expression.MakeMemberAccess(par.Type == typeof(object) ? Expression.Convert(par, member?.DeclaringType ?? typeof(object)) : par, member);
+			var expr = Expression.MakeMemberAccess(par.Type == typeof(object) ? Expression.Convert(par, member.DeclaringType ?? typeof(object)) : par, member);
 
 			vte.ValueExpression = expr;
 
