@@ -1,44 +1,46 @@
 ﻿#if NETFRAMEWORK
-using System.Collections.Generic;
+using System;
 
 namespace LinqToDB.ServiceModel
 {
-	using System;
 	using Interceptors;
 
-	public abstract partial class RemoteDataContextBase
+	public abstract partial class RemoteDataContextBase :
+		IInterceptable<IDataContextInterceptor>,
+		IInterceptable<IEntityServiceInterceptor>,
+		IInterceptable<IUnwrapDataObjectInterceptor>
 	{
 		// remote context interceptors support is quite limited and supports only IDataContextInterceptor
 		// interceptors, but not other interceptors, including AggregatedInterceptor<T>
-		private AggregatedInterceptor<IDataContextInterceptor>? _contextInterceptors;
+		IDataContextInterceptor? _dataContextInterceptor;
+		IDataContextInterceptor? IInterceptable<IDataContextInterceptor>.Interceptor
+		{
+			get => _dataContextInterceptor;
+			set => _dataContextInterceptor= value;
+		}
+
+		IEntityServiceInterceptor? _entityServiceInterceptor;
+		IEntityServiceInterceptor? IInterceptable<IEntityServiceInterceptor>.Interceptor
+		{
+			get => _entityServiceInterceptor;
+			set => _entityServiceInterceptor = value;
+		}
+
+		IUnwrapDataObjectInterceptor? IDataContext.UnwrapDataObjectInterceptor => _unwrapDataObjectInterceptor;
+
+		IUnwrapDataObjectInterceptor? _unwrapDataObjectInterceptor;
+		IUnwrapDataObjectInterceptor? IInterceptable<IUnwrapDataObjectInterceptor>.Interceptor
+		{
+			get => _unwrapDataObjectInterceptor;
+			set => _unwrapDataObjectInterceptor = value;
+		}
 
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)
 		{
-			if (interceptor is AggregatedInterceptor<IDataContextInterceptor> aggregateContextInterceptor)
-			{
-				if (_contextInterceptors != null)
-					throw new InvalidOperationException($"{nameof(AggregatedInterceptor<IDataContextInterceptor>)}<{nameof(IDataContextInterceptor)}> already exists");
-				_contextInterceptors = aggregateContextInterceptor;
-			}
-
-			if (interceptor is IDataContextInterceptor contextInterceptor)
-				(_contextInterceptors ??= new AggregatedInterceptor<IDataContextInterceptor>()).Add(contextInterceptor);
-		}
-
-		IEnumerable<TInterceptor> IDataContext.GetInterceptors<TInterceptor>()
-		{
-			if (_contextInterceptors == null)
-				yield break;
-
-			var type = typeof(TInterceptor);
-
-			if (type == typeof(IDataContextInterceptor) || type == typeof(IInterceptor))
-			{
-				foreach (var interceptor in _contextInterceptors.GetInterceptors())
-					yield return (TInterceptor)interceptor;
-			}
+			this.AddInterceptorImpl(interceptor);
 		}
 	}
 }
+
 #endif

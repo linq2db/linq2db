@@ -44,7 +44,6 @@ namespace Tests
 		/// </summary>
 		public const string SQLiteClassicMiniProfilerMapped   = "SQLite.Classic.MPM";
 
-
 		/// <summary>
 		/// Fake provider, which doesn't execute any real queries. Could be used for tests, that shouldn't be affected
 		/// by real database access.

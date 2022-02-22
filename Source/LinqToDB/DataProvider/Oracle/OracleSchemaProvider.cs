@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override string GetDataSourceName(DataConnection dbConnection)
 		{
-			var connection = _provider.TryGetProviderConnection(dbConnection.Connection, dbConnection.MappingSchema);
+			var connection = _provider.TryGetProviderConnection(dbConnection, dbConnection.Connection);
 			if (connection == null)
 				return string.Empty;
 
@@ -40,7 +40,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override string GetDatabaseName(DataConnection dbConnection)
 		{
-			var connection = _provider.TryGetProviderConnection(dbConnection.Connection, dbConnection.MappingSchema);
+			var connection = _provider.TryGetProviderConnection(dbConnection, dbConnection.Connection);
 			if (connection == null)
 				return string.Empty;
 

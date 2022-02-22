@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.SapHana
@@ -83,11 +82,11 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			if (table.TryGetDataConnection(out var dataConnection))
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
-
+				var connection  = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 				var transaction = dataConnection.Transaction;
+
 				if (connection != null && transaction != null)
-					transaction = _provider.TryGetProviderTransaction(transaction, table.DataContext.MappingSchema);
+					transaction = _provider.TryGetProviderTransaction(dataConnection, transaction);
 
 				if (connection != null && (dataConnection.Transaction == null || transaction != null))
 				{
@@ -141,7 +140,7 @@ namespace LinqToDB.DataProvider.SapHana
 				if (options.MaxBatchSize.HasValue)
 					bc.BatchSize = options.MaxBatchSize.Value;
 
-				if (options.BulkCopyTimeout.HasValue) 
+				if (options.BulkCopyTimeout.HasValue)
 					bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
 				else if (Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
 					bc.BulkCopyTimeout = connection.ConnectionTimeout;
@@ -216,7 +215,7 @@ namespace LinqToDB.DataProvider.SapHana
 				if (options.MaxBatchSize.HasValue)
 					bc.BatchSize = options.MaxBatchSize.Value;
 
-				if (options.BulkCopyTimeout.HasValue) 
+				if (options.BulkCopyTimeout.HasValue)
 					bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
 				else if (Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
 					bc.BulkCopyTimeout = connection.ConnectionTimeout;

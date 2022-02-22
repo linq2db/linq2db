@@ -8,7 +8,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-
 using System.Xml;
 using System.Xml.Linq;
 
@@ -81,6 +80,10 @@ namespace LinqToDB.DataProvider
 		public abstract TableOptions     SupportedTableOptions { get; }
 
 		public static Func<IDataProvider, DbConnection, DbConnection>? OnConnectionCreated { get; set; }
+
+		public virtual void InitContext(IDataContext dataContext)
+		{
+		}
 
 		public DbConnection CreateConnection(string connectionString)
 		{

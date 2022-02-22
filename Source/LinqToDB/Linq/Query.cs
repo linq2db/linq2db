@@ -18,6 +18,7 @@ namespace LinqToDB.Linq
 	using Builder;
 	using Common;
 	using Common.Logging;
+	using Interceptors;
 	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlProvider;
@@ -36,14 +37,15 @@ namespace LinqToDB.Linq
 
 		internal Query(IDataContext dataContext, Expression? expression)
 		{
-			ContextID        = dataContext.ContextID;
-			ContextType      = dataContext.GetType();
-			Expression       = expression;
-			MappingSchema    = dataContext.MappingSchema;
-			ConfigurationID  = dataContext.MappingSchema.ConfigurationID;
-			SqlOptimizer     = dataContext.GetSqlOptimizer();
-			SqlProviderFlags = dataContext.SqlProviderFlags;
-			InlineParameters = dataContext.InlineParameters;
+			ContextID               = dataContext.ContextID;
+			ContextType             = dataContext.GetType();
+			Expression              = expression;
+			MappingSchema           = dataContext.MappingSchema;
+			ConfigurationID         = dataContext.MappingSchema.ConfigurationID;
+			SqlOptimizer            = dataContext.GetSqlOptimizer();
+			SqlProviderFlags        = dataContext.SqlProviderFlags;
+			InlineParameters        = dataContext.InlineParameters;
+			IsEntityServiceProvided = dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: {} };
 		}
 
 		#endregion
@@ -58,16 +60,18 @@ namespace LinqToDB.Linq
 		internal readonly bool             InlineParameters;
 		internal readonly ISqlOptimizer    SqlOptimizer;
 		internal readonly SqlProviderFlags SqlProviderFlags;
+		internal readonly bool             IsEntityServiceProvided;
 
 		protected bool Compare(IDataContext dataContext, Expression expr)
 		{
 			return
-				ContextID.Length       == dataContext.ContextID.Length &&
-				ContextID              == dataContext.ContextID        &&
-				ConfigurationID.Length == dataContext.MappingSchema.ConfigurationID.Length &&
-				ConfigurationID        == dataContext.MappingSchema.ConfigurationID &&
-				InlineParameters       == dataContext.InlineParameters &&
-				ContextType            == dataContext.GetType()        &&
+				ContextID.Length        == dataContext.ContextID.Length                                                 &&
+				ContextID               == dataContext.ContextID                                                        &&
+				ConfigurationID.Length  == dataContext.MappingSchema.ConfigurationID.Length                             &&
+				ConfigurationID         == dataContext.MappingSchema.ConfigurationID                                    &&
+				InlineParameters        == dataContext.InlineParameters                                                 &&
+				ContextType             == dataContext.GetType()                                                        &&
+				IsEntityServiceProvided == dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: {} } &&
 				Expression!.EqualsTo(expr, dataContext, _queryableAccessorDic, _queryableMemberAccessorDic, _queryDependedObjects);
 		}
 

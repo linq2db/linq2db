@@ -94,11 +94,11 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			if (table.TryGetDataConnection(out var dataConnection))
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
-
+				var connection  = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 				var transaction = dataConnection.Transaction;
+
 				if (connection != null && transaction != null)
-					transaction = _provider.TryGetProviderTransaction(transaction, table.DataContext.MappingSchema);
+					transaction = _provider.TryGetProviderTransaction(dataConnection, transaction);
 
 				if (connection != null && (dataConnection.Transaction == null || transaction != null))
 				{

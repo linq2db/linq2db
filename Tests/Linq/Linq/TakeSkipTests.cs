@@ -5,12 +5,13 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using LinqToDB.Linq;
 	using Model;
 
 	[TestFixture]
@@ -466,7 +467,7 @@ namespace Tests.Linq
 			TestProvName.AllSQLite,
 			TestProvName.AllSybase,
 			TestProvName.AllAccess)]
-			string context, 
+			string context,
 			[Values] bool withParameters)
 		{
 			using (new ParameterizeTakeSkip(withParameters))
@@ -526,7 +527,7 @@ namespace Tests.Linq
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
 			TestProvName.AllAccess)]
-			string context, 
+			string context,
 			[Values] bool withParameters)
 		{
 			using (new ParameterizeTakeSkip(withParameters))
@@ -546,7 +547,7 @@ namespace Tests.Linq
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
 			TestProvName.AllAccess)]
-			string context, 
+			string context,
 			[Values] bool withParameters)
 		{
 			using (new ParameterizeTakeSkip(withParameters))
@@ -1239,7 +1240,7 @@ namespace Tests.Linq
 
 					if (i == 2)
 						Assert.That(missCount, Is.EqualTo(Query<TakeSkipClass>.CacheMissCount));
-					
+
 				}
 			}
 		}

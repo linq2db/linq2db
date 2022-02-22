@@ -1,16 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Common;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using System;
-	using System.Data;
-	using System.Data.Common;
-	using System.Linq;
-	using System.Threading;
-	using System.Threading.Tasks;
+	using Common;
 	using Data;
-	using LinqToDB.Common;
-	using LinqToDB.SqlProvider;
+	using SqlProvider;
 
 	class InformixBulkCopy : BasicBulkCopy
 	{
@@ -30,7 +29,7 @@ namespace LinqToDB.DataProvider.Informix
 			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null)
 				&& table.TryGetDataConnection(out var dataConnection) && dataConnection.Transaction == null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 
 				if (connection != null)
 				{
@@ -66,7 +65,7 @@ namespace LinqToDB.DataProvider.Informix
 			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null)
 				&& table.TryGetDataConnection(out var dataConnection) && dataConnection.Transaction == null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 
 				if (connection != null)
 				{
@@ -104,7 +103,7 @@ namespace LinqToDB.DataProvider.Informix
 			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null)
 				&& table.TryGetDataConnection(out var dataConnection) && dataConnection.Transaction == null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
+				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 
 				if (connection != null)
 				{

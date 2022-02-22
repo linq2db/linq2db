@@ -22,10 +22,10 @@ namespace LinqToDB.Data
 {
 	using Async;
 	using Common;
+	using Common.Internal.Cache;
 	using Expressions;
 	using Extensions;
-	using LinqToDB.Common.Internal.Cache;
-	using LinqToDB.Linq;
+	using Linq;
 	using Mapping;
 	using Reflection;
 
@@ -332,8 +332,8 @@ namespace LinqToDB.Data
 					if (rd.DataReader!.Read())
 					{
 						var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
-						var objectReader  = GetObjectReader<T>(DataConnection, rd.DataReader!, CommandText,
-							additionalKey);
+						var reader        = ((IDataContext)DataConnection).UnwrapDataObjectInterceptor?.UnwrapDataReader(DataConnection, rd.DataReader!) ?? rd.DataReader!;
+						var objectReader  = GetObjectReader<T>(DataConnection, reader, CommandText, additionalKey);
 						var isFaulted = false;
 
 						do
@@ -342,7 +342,7 @@ namespace LinqToDB.Data
 
 							try
 							{
-								result = objectReader(rd.DataReader!);
+								result = objectReader(reader);
 							}
 							catch (InvalidCastException)
 							{
@@ -350,9 +350,8 @@ namespace LinqToDB.Data
 									throw;
 
 								isFaulted    = true;
-								objectReader = GetObjectReader2<T>(DataConnection, rd.DataReader!, CommandText,
-									additionalKey);
-								result = objectReader(rd.DataReader!);
+								objectReader = GetObjectReader2<T>(DataConnection, reader, CommandText, additionalKey);
+								result       = objectReader(reader);
 							}
 
 							rowCount++;
@@ -383,7 +382,6 @@ namespace LinqToDB.Data
 						}
 					}
 				}
-
 		}
 
 		#endregion
@@ -445,7 +443,8 @@ namespace LinqToDB.Data
 					if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
 						var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
-						var objectReader  = GetObjectReader<T>(DataConnection, rd.DataReader!, CommandText, additionalKey);
+						var reader        = ((IDataContext)DataConnection).UnwrapDataObjectInterceptor?.UnwrapDataReader(DataConnection, rd.DataReader!) ?? rd.DataReader!;
+						var objectReader  = GetObjectReader<T>(DataConnection, reader, CommandText, additionalKey);
 					var isFaulted     = false;
 
 					do
@@ -454,7 +453,7 @@ namespace LinqToDB.Data
 
 						try
 						{
-								result = objectReader(rd.DataReader!);
+								result = objectReader(reader);
 						}
 						catch (InvalidCastException)
 						{
@@ -462,8 +461,8 @@ namespace LinqToDB.Data
 								throw;
 
 							isFaulted    = true;
-								objectReader = GetObjectReader2<T>(DataConnection, rd.DataReader!, CommandText, additionalKey);
-								result       = objectReader(rd.DataReader!);
+								objectReader = GetObjectReader2<T>(DataConnection, reader, CommandText, additionalKey);
+								result       = objectReader(reader);
 						}
 
 						action(result);
@@ -986,23 +985,25 @@ namespace LinqToDB.Data
 				if (rd.DataReader!.Read())
 				{
 					var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
-					var objectReader  = GetObjectReader<T>(DataConnection, rd.DataReader!, CommandText, additionalKey);
+					var reader        = ((IDataContext)DataConnection).UnwrapDataObjectInterceptor?.UnwrapDataReader(DataConnection, rd.DataReader!) ?? rd.DataReader!;
+					var objectReader  = GetObjectReader<T>(DataConnection, reader, CommandText, additionalKey);
 
 					try
 					{
-						result = objectReader(rd.DataReader!);
+						result = objectReader(reader);
 					}
 					catch (InvalidCastException)
 					{
-						result = GetObjectReader2<T>(DataConnection, rd.DataReader!, CommandText, additionalKey)(rd.DataReader!);
+						result = GetObjectReader2<T>(DataConnection, reader, CommandText, additionalKey)(reader);
 					}
 					catch (FormatException)
 					{
-						result = GetObjectReader2<T>(DataConnection, rd.DataReader!, CommandText, additionalKey)(rd.DataReader!);
+						result = GetObjectReader2<T>(DataConnection, reader, CommandText, additionalKey)(reader);
 					}
 			}
 
 				stopwatch.Stop();
+
 				if (DataConnection.TraceSwitchConnection.TraceInfo)
 				{
 					DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: false)
@@ -1580,11 +1581,11 @@ namespace LinqToDB.Data
 		{
 			var parameter      = Expression.Parameter(typeof(DbDataReader));
 			var dataReaderExpr = (Expression)Expression.Convert(parameter, dataReader.GetType());
+			var readerType     = dataReader.GetType();
 
 			Expression? expr;
-
-			var readerType = dataReader.GetType();
 			LambdaExpression? converterExpr = null;
+
 			if (dataConnection.DataProvider.DataReaderType != readerType)
 			{
 				converterExpr    = _dataReaderConverter.GetOrCreate(
@@ -1595,6 +1596,8 @@ namespace LinqToDB.Data
 					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
 
 						var expr = dataConnection.MappingSchema.GetConvertExpression(o.Key.readerType, typeof(DbDataReader), false, false);
+
+					///// !!!!!
 					if (expr != null)
 					{
 						expr      = Expression.Lambda(Expression.Convert(expr.Body, dataConnection.DataProvider.DataReaderType), expr.Parameters);
@@ -1694,7 +1697,6 @@ namespace LinqToDB.Data
 			return lex.CompileExpression();
 		}
 
-
 		static readonly ConstructorInfo _expandoObjectConstructor = MemberHelper.ConstructorOf(() => new ExpandoObject());
 		static readonly MethodInfo      _expandoAddMethodInfo     = MemberHelper.MethodOf(() => ((IDictionary<string, object>)null!).Add("", ""));
 		
@@ -1718,6 +1720,7 @@ namespace LinqToDB.Data
 					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
 
 						var expr = dataConnection.MappingSchema.GetConvertExpression(o.Key.readerType, typeof(DbDataReader), false, false);
+
 					if (expr != null)
 					{
 						expr = Expression.Lambda(Expression.Convert(expr.Body, dataConnection.DataProvider.DataReaderType), expr.Parameters);

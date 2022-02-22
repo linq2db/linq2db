@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.MySql
 	{
 		/// <summary>
 		/// Settings based on https://www.jooq.org/doc/3.12/manual/sql-building/dsl-context/custom-settings/settings-inline-threshold/
-		/// MySQL supports more but realistically this might be too much already for practical cases. 
+		/// MySQL supports more but realistically this might be too much already for practical cases.
 		/// </summary>
 		protected override int               MaxParameters => 32767;
 		/// <summary>
@@ -94,11 +94,11 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			if (table.TryGetDataConnection(out var dataConnection) && _provider.Adapter.BulkCopy != null)
 			{
-				var connection = _provider.TryGetProviderConnection(dataConnection.Connection, table.DataContext.MappingSchema);
-
+				var connection  = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 				var transaction = dataConnection.Transaction;
+
 				if (connection != null && transaction != null)
-					transaction = _provider.TryGetProviderTransaction(transaction, table.DataContext.MappingSchema);
+					transaction = _provider.TryGetProviderTransaction(dataConnection, transaction);
 
 				if (connection != null && (dataConnection.Transaction == null || transaction != null))
 				{
