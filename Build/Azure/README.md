@@ -59,7 +59,7 @@ Legend:
 - :x: - test job not implemented yet
 - `netfx`: .NET Framework (4.7.2)
 - `netcore`: .NET Core 3.1 OR .NET 5.0 / 6.0
-- :door: - Windows 2022, 2019 or 2016 (depends on used docker image for database)
+- :door: - Windows 2022 or 2019 (for docker-images with win2019 dependency)
 - :penguin: - Linux (Ununtu 20.04)
 - :green_apple: - MacOS Catalina 10.15
 
@@ -95,9 +95,6 @@ Legend:
 |MySQL 8<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.28|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MySQL 8<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 0.69.10/1.3.14/2.1.7|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MariaDB 10<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.28|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 9.2<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 6.0.3 |:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 9.3<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 6.0.3 |:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 9.5<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 6.0.3 |:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 10<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 6.0.3 |:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 11<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 6.0.3 |:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 12<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 6.0.3 |:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|

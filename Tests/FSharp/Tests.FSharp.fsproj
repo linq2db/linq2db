@@ -24,5 +24,4 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
 	</ItemGroup>
-
 </Project>
