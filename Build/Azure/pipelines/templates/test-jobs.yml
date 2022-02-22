@@ -382,7 +382,6 @@ jobs:
       framework: 'net5.0'
       titleFramework: 'NET5.0'
       with_baselines: ${{ parameters.with_baselines }}
-      installnet5: true
 
 ############################
 #  Tests: Windows (NET6.0) #
@@ -481,7 +480,6 @@ jobs:
       framework: 'net5.0'
       titleFramework: 'NET5.0'
       with_baselines: ${{ parameters.with_baselines }}
-      installnet5: true
 
 ###################################
 #  Tests: Windows (NETCOREAPP2_1) #
