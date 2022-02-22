@@ -22,15 +22,14 @@ steps:
   displayName: 'Install .net 5'
   inputs:
     packageType: sdk
-    version: 5.0.x
+    version: 5.x
   condition: eq('${{ parameters.installnet5 }}', 'true')
 
 - task: UseDotNet@2
   displayName: 'Install .net 6'
   inputs:
     packageType: sdk
-    version: 6.0.x
-  condition: eq('${{ parameters.installnet6 }}', 'true')
+    version: 6.x
 
 - task: CmdLine@2
   inputs:
