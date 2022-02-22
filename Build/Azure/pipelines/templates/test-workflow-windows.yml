@@ -30,7 +30,7 @@ steps:
   inputs:
     packageType: sdk
     version: 5.x
-  condition: eq('${{ parameters.installnet5 }}', 'true')
+  condition: eq('${{ parameters.framework }}', 'net5.0')
 
 - task: UseDotNet@2
   displayName: 'Install .net 6'
