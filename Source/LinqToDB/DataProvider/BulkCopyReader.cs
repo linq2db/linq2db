@@ -11,6 +11,7 @@ using System.Threading;
 
 namespace LinqToDB.DataProvider
 {
+	using System.Diagnostics.CodeAnalysis;
 	using System.Threading.Tasks;
 	using Common;
 	using LinqToDB.Async;
@@ -131,8 +132,10 @@ namespace LinqToDB.DataProvider
 			public DbType             DbType        { get; set; }
 			public ParameterDirection Direction     { get; set; }
 			public bool               IsNullable    { get { return Value == null || Value is DBNull; } }
-			public string?            ParameterName { get; set; }
-			public string?            SourceColumn  { get; set; }
+			[AllowNull]
+			public string             ParameterName { get; set; }
+			[AllowNull]
+			public string             SourceColumn  { get; set; }
 			public DataRowVersion     SourceVersion { get; set; }
 			public object?            Value         { get; set; }
 			public byte               Precision     { get; set; }
@@ -152,7 +155,9 @@ namespace LinqToDB.DataProvider
 			return _dataConnection.DataProvider.ConvertParameterType(_columns[ordinal].MemberType, _columnTypes[ordinal]);
 		}
 
-		public override object? GetValue(int ordinal)
+		public override object GetValue(int ordinal) => GetValueInternal(ordinal) ?? throw new InvalidOperationException("Value is NULL");
+
+		private object? GetValueInternal(int ordinal)
 		{
 			var value = _columns[ordinal].GetValue(Current);
 
@@ -178,12 +183,12 @@ namespace LinqToDB.DataProvider
 
 		public override int FieldCount => _columns.Count;
 
-		public override long GetBytes(int ordinal, long dataOffset, byte[] buffer, int bufferOffset, int length)
+		public override long GetBytes(int ordinal, long dataOffset, byte[]? buffer, int bufferOffset, int length)
 		{
 			throw new NotImplementedException();
 		}
 
-		public override long GetChars(int ordinal, long dataOffset, char[] buffer, int bufferOffset, int length)
+		public override long GetChars(int ordinal, long dataOffset, char[]? buffer, int bufferOffset, int length)
 		{
 			throw new NotImplementedException();
 		}
@@ -202,7 +207,7 @@ namespace LinqToDB.DataProvider
 		public override string      GetString      (int ordinal) => throw new NotImplementedException();
 		public override decimal     GetDecimal     (int ordinal) => throw new NotImplementedException();
 		public override DateTime    GetDateTime    (int ordinal) => throw new NotImplementedException();
-		public override bool        IsDBNull       (int ordinal) => GetValue(ordinal) == null;
+		public override bool        IsDBNull       (int ordinal) => GetValueInternal(ordinal) == null;
 
 		public override object this[int i]       => throw new NotImplementedException();
 		public override object this[string name] => throw new NotImplementedException();

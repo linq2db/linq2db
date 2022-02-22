@@ -138,7 +138,9 @@ namespace Tests.DataProvider
 
 						new TypeTestData("timestampDataType",   (n,t,c) => t.TestTypeEx<DateTime?>         (c, n, DataType.DateTime2),      new DateTime(2012, 12, 12, 12, 12, 12)),
 						new TypeTestData("timestampTZDataType", (n,t,c) => t.TestTypeEx<DateTimeOffset?>   (c, n, DataType.DateTimeOffset), new DateTimeOffset(2012, 12, 12, 11, 12, 12, new TimeSpan(-5, 0, 0))),
+#pragma warning disable CS0618 // Type or member is obsolete
 						new TypeTestData("dateDataType",    0,  (n,t,c) => t.TestTypeEx<NpgsqlDate?>       (c, n, skipDefaultNull:true),    new NpgsqlDate(2012, 12, 12)),
+#pragma warning restore CS0618 // Type or member is obsolete
 						new TypeTestData("dateDataType",    1,  (n,t,c) => t.TestTypeEx<DateTime?>         (c, n, DataType.Date),           new DateTime(2012, 12, 12)),
 
 						new TypeTestData("charDataType",    0,  (n,t,c) => t.TestTypeEx<char?>             (c, n, DataType.Char),                           '1'),
@@ -826,10 +828,16 @@ namespace Tests.DataProvider
 		{
 			PostgreSQLTools.GetDataProvider().CreateConnection(DataConnection.GetConnectionString(context));
 
+#pragma warning disable CS0618 // Type or member is obsolete
 			var d = new NpgsqlDateTime(TestData.Date);
+#pragma warning restore CS0618 // Type or member is obsolete
 			var o = new DateTimeOffset(TestData.Date);
+#pragma warning disable CS0618 // Type or member is obsolete
 			var c1 = PostgreSQLTools.GetDataProvider().MappingSchema.GetConvertExpression<NpgsqlDateTime, DateTimeOffset>();
+#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning disable CS0618 // Type or member is obsolete
 			var c2 = PostgreSQLTools.GetDataProvider().MappingSchema.GetConvertExpression<NpgsqlDateTime, DateTimeOffset?>();
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			Assert.IsNotNull(c1);
 			Assert.IsNotNull(c2);
@@ -851,12 +859,18 @@ namespace Tests.DataProvider
 			[Column]                                   public double?  doubleDataType                   { get; set; }
 			[Column]                                   public float?   realDataType                     { get; set; }
 			// time/date/intertval
+#pragma warning disable CS0618 // Type or member is obsolete
 			[Column]                                   public NpgsqlDateTime? timestampDataType         { get; set; }
+#pragma warning restore CS0618 // Type or member is obsolete
 			[Column]                                   public DateTimeOffset? timestampTZDataType       { get; set; }
+#pragma warning disable CS0618 // Type or member is obsolete
 			[Column]                                   public NpgsqlDate?     dateDataType              { get; set; }
+#pragma warning restore CS0618 // Type or member is obsolete
 			[Column(DbType = "time")]                  public TimeSpan?       timeDataType              { get; set; }
 			[Column  (DbType = "time with time zone")] public DateTimeOffset? timeTZDataType            { get; set; }
+#pragma warning disable CS0618 // Type or member is obsolete
 			[Column]                                   public NpgsqlTimeSpan? intervalDataType          { get; set; }
+#pragma warning restore CS0618 // Type or member is obsolete
 			[Column(DataType = DataType.Interval)]     public TimeSpan?       intervalDataType2         { get; set; }
 			// text
 			[Column]                                   public char?   charDataType                      { get; set; }
@@ -894,6 +908,7 @@ namespace Tests.DataProvider
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL11)]
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL12)]
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL13)]
+			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL14)]
 			                                           public PhysicalAddress? macaddr8DataType         { get; set; }
 			// json
 			[Column]                                   public string? jsonDataType                      { get; set; }
@@ -919,7 +934,8 @@ namespace Tests.DataProvider
 			var macaddr8Supported = providerName == TestProvName.PostgreSQL10
 				|| providerName == TestProvName.PostgreSQL11
 				|| providerName == TestProvName.PostgreSQL12
-				|| providerName == TestProvName.PostgreSQL13;
+				|| providerName == TestProvName.PostgreSQL13
+				|| providerName == TestProvName.PostgreSQL14;
 			var lineSupported     = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			var jsonbSupported    = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			var testData = new[]
@@ -937,9 +953,13 @@ namespace Tests.DataProvider
 					doubleDataType      = double.MaxValue,
 					realDataType        = float.MaxValue,
 
+#pragma warning disable CS0618 // Type or member is obsolete
 					timestampDataType   = new NpgsqlDateTime(2010, 5, 30, 1, 2, 3, 4),
+#pragma warning restore CS0618 // Type or member is obsolete
 					timestampTZDataType = new DateTimeOffset(2011, 3, 22, 10, 11, 12, 13, TimeSpan.FromMinutes(30)),
+#pragma warning disable CS0618 // Type or member is obsolete
 					dateDataType        = new NpgsqlDate(2010, 5, 30),
+#pragma warning restore CS0618 // Type or member is obsolete
 					timeDataType        = new TimeSpan(0, 1, 2, 3, 4),
 					// npgsql4 uses 2/1/1 instead of 1/1/1 as date part in npgsql3
 					timeTZDataType      = new DateTimeOffset(1, 1, 2, 10, 11, 12, 13, TimeSpan.FromMinutes(30)),
@@ -1069,7 +1089,8 @@ namespace Tests.DataProvider
 			var macaddr8Supported = providerName == TestProvName.PostgreSQL10
 				|| providerName == TestProvName.PostgreSQL11
 				|| providerName == TestProvName.PostgreSQL12
-				|| providerName == TestProvName.PostgreSQL13;
+				|| providerName == TestProvName.PostgreSQL13
+				|| providerName == TestProvName.PostgreSQL14;
 			var lineSupported     = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			var jsonbSupported    = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
 			var testData = new[]
@@ -1087,9 +1108,13 @@ namespace Tests.DataProvider
 					doubleDataType      = double.MaxValue,
 					realDataType        = float.MaxValue,
 
+#pragma warning disable CS0618 // Type or member is obsolete
 					timestampDataType   = new NpgsqlDateTime(2010, 5, 30, 1, 2, 3, 4),
+#pragma warning restore CS0618 // Type or member is obsolete
 					timestampTZDataType = new DateTimeOffset(2011, 3, 22, 10, 11, 12, 13, TimeSpan.FromMinutes(30)),
+#pragma warning disable CS0618 // Type or member is obsolete
 					dateDataType        = new NpgsqlDate(2010, 5, 30),
+#pragma warning restore CS0618 // Type or member is obsolete
 					timeDataType        = new TimeSpan(0, 1, 2, 3, 4),
 					// npgsql4 uses 2/1/1 instead of 1/1/1 as date part in npgsql3
 					timeTZDataType      = new DateTimeOffset(1, 1, 2, 10, 11, 12, 13, TimeSpan.FromMinutes(30)),
@@ -1471,12 +1496,13 @@ namespace Tests.DataProvider
 
 		private static MappingSchema CreateRangesMapping()
 		{
-			NpgsqlRange<DateTime> ConvertToNpgSqlRange(SomeRange<DateTime> r)
+			NpgsqlRange<DateTime> ConvertToNpgSqlRange(SomeRange<DateTime> r, bool withTimeZone)
 			{
+				// specify proper kind for npgsql 6
 				var range = NpgsqlRange<DateTime>.Empty;
 					range = new NpgsqlRange<DateTime>(
-						r.Start ?? default, true,  r.Start == null,
-						r.End   ?? default, false, r.End == null);
+						DateTime.SpecifyKind(r.Start ?? default, withTimeZone ? DateTimeKind.Utc : DateTimeKind.Unspecified), true,  r.Start == null,
+						DateTime.SpecifyKind(r.End   ?? default, withTimeZone ? DateTimeKind.Utc : DateTimeKind.Unspecified), false, r.End == null);
 
 				return range;
 			}
@@ -1500,13 +1526,13 @@ namespace Tests.DataProvider
 
 			mapping.SetConverter<SomeRange<DateTime>, DataParameter>(r =>
 			{
-				var range = ConvertToNpgSqlRange(r);
+				var range = ConvertToNpgSqlRange(r, true);
 				return new DataParameter("", range, "tstzrange");
 			}, new DbDataType(typeof(SomeRange<DateTime>)), new DbDataType(typeof(DataParameter), "tstzrange"));
 
 			mapping.SetConverter<SomeRange<DateTime>, DataParameter>(r =>
 			{
-				var range = ConvertToNpgSqlRange(r);
+				var range = ConvertToNpgSqlRange(r, false);
 				return new DataParameter("", range, "tsrange");
 			}, new DbDataType(typeof(SomeRange<DateTime>)), new DbDataType(typeof(DataParameter), "tsrange"));
 
@@ -1907,7 +1933,7 @@ namespace Tests.DataProvider
 				var range1 = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 3), true);
 				var range2 = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), false, new DateTime(2000, 3, 3), false);
 				var range3 = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3, 4, 5, 6), new DateTime(2000, 4, 3, 4, 5, 6));
-				var range4 = new NpgsqlRange<DateTime>(new DateTime(2000, 4, 3, 4, 5, 6, DateTimeKind.Local), new DateTime(2000, 5, 3, 4, 5, 6, DateTimeKind.Local));
+				var range4 = new NpgsqlRange<DateTime>(new DateTime(2000, 4, 3, 4, 5, 6, DateTimeKind.Utc), new DateTime(2000, 5, 3, 4, 5, 6, DateTimeKind.Utc));
 				db.Insert(new NpgsqlTableWithDateRanges
 				{
 					DateRangeInclusive = range1,
@@ -1921,7 +1947,15 @@ namespace Tests.DataProvider
 				Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 4), false), record.DateRangeInclusive);
 				Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000, 2, 4), true, new DateTime(2000, 3, 3), false), record.DateRangeExclusive);
 				Assert.AreEqual(range3, record.TSRange);
+
+#if NETCOREAPP3_1 || NET5_0 || NET6_0
+				// npgsql 6+
 				Assert.AreEqual(range4, record.TSTZRange);
+#else
+				// pre-v6 returned data with Local kind
+				range4 = new NpgsqlRange<DateTime>(range4.LowerBound.ToLocalTime(), range4.UpperBound.ToLocalTime());
+				Assert.AreEqual(range4, record.TSTZRange);
+#endif
 			}
 		}
 
@@ -1941,9 +1975,7 @@ namespace Tests.DataProvider
 							DateRangeInclusive = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 3), true),
 							DateRangeExclusive = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), false, new DateTime(2000, 3, 3), false),
 							TSRange            = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 2, 3, 4, 5, 6), true, new DateTime(2000 + i, 4, 3, 4, 5, 6), true),
-							// DateTimeKind.Local used, because npgsql will return values with DateTimeKind.Local kind
-							// passing DateTimeKind.Utc values will require offset calculations in assert, as DateTime.Equals ignore kind in comparison
-							TSTZRange          = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 4, 3, 4, 5, 6, DateTimeKind.Local), true, new DateTime(2000 + i, 5, 3, 4, 5, 6, DateTimeKind.Local), true),
+							TSTZRange          = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 4, 3, 4, 5, 6, DateTimeKind.Utc), true, new DateTime(2000 + i, 5, 3, 4, 5, 6, DateTimeKind.Utc), true),
 						};
 					})
 					.ToArray();
@@ -1953,6 +1985,12 @@ namespace Tests.DataProvider
 				var records = table.OrderBy(_ => _.Id).ToArray();
 
 				Assert.AreEqual(100, records.Length);
+
+#if !NETCOREAPP3_1 && !NET5_0 && !NET6_0
+				// pre-v6 returned data with Local kind
+				foreach (var item in items)
+					item.TSTZRange = new NpgsqlRange<DateTime>(item.TSTZRange.LowerBound.ToLocalTime(), true, item.TSTZRange.UpperBound.ToLocalTime(), true);
+#endif
 
 				AreEqual(
 					items.Select(t => new
@@ -1987,9 +2025,7 @@ namespace Tests.DataProvider
 							DateRangeInclusive = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 3), true),
 							DateRangeExclusive = new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), false, new DateTime(2000, 3, 3), false),
 							TSRange            = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 2, 3, 4, 5, 6), true, new DateTime(2000 + i, 4, 3, 4, 5, 6), true),
-							// DateTimeKind.Local used, because npgsql will return values with DateTimeKind.Local kind
-							// passing DateTimeKind.Utc values will require offset calculations in assert, as DateTime.Equals ignore kind in comparison
-							TSTZRange          = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 4, 3, 4, 5, 6, DateTimeKind.Local), true, new DateTime(2000 + i, 5, 3, 4, 5, 6, DateTimeKind.Local), true),
+							TSTZRange          = new NpgsqlRange<DateTime>(new DateTime(2000 + i, 4, 3, 4, 5, 6, DateTimeKind.Utc), true, new DateTime(2000 + i, 5, 3, 4, 5, 6, DateTimeKind.Utc), true),
 						};
 					})
 					.ToArray();
@@ -1999,6 +2035,12 @@ namespace Tests.DataProvider
 				var records = await table.OrderBy(_ => _.Id).ToArrayAsync();
 
 				Assert.AreEqual(100, records.Length);
+
+#if !NETCOREAPP3_1 && !NET5_0 && !NET6_0
+				// pre-v6 returned data with Local kind
+				foreach (var item in items)
+					item.TSTZRange = new NpgsqlRange<DateTime>(item.TSTZRange.LowerBound.ToLocalTime(), true, item.TSTZRange.UpperBound.ToLocalTime(), true);
+#endif
 
 				AreEqual(
 					items.Select(t => new
@@ -2131,7 +2173,9 @@ namespace Tests.DataProvider
 		{
 			[Column, PrimaryKey, Identity]         public int             ID                { get; set; }
 			[Column]                               public TimeSpan?       timeDataType      { get; set; }
+#pragma warning disable CS0618 // Type or member is obsolete
 			[Column]                               public NpgsqlTimeSpan? intervalDataType  { get; set; }
+#pragma warning restore CS0618 // Type or member is obsolete
 			[Column(DataType = DataType.Interval)] public TimeSpan?       intervalDataType2 { get; set; }
 		}
 
@@ -2173,7 +2217,9 @@ namespace Tests.DataProvider
 		public class DateProviderSpecific
 		{
 			[Column, PrimaryKey, Identity] public int         ID { get; set; }
+#pragma warning disable CS0618 // Type or member is obsolete
 			[Column]                       public NpgsqlDate? dateDataType { get; set; }
+#pragma warning restore CS0618 // Type or member is obsolete
 		}
 
 		[Table("AllTypes")]
@@ -2195,7 +2241,9 @@ namespace Tests.DataProvider
 					var date2 = TestData.Date.AddDays(5);
 					db.GetTable<DateProviderSpecific>().Insert(() => new DateProviderSpecific()
 					{
+#pragma warning disable CS0618 // Type or member is obsolete
 						dateDataType = (NpgsqlDate)date1
+#pragma warning restore CS0618 // Type or member is obsolete
 					});
 
 					db.GetTable<DateCommon>().Insert(() => new DateCommon()

@@ -5,7 +5,7 @@
 // </auto-generated>
 //---------------------------------------------------------------------------------------------------
 
-#pragma warning disable 1591
+#pragma warning disable 1572, 1591
 #nullable enable
 
 using System;
@@ -487,5 +487,3 @@ namespace SQLiteDataContext
 		#endregion
 	}
 }
-
-#pragma warning restore 1591

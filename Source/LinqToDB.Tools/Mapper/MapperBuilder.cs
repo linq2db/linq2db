@@ -59,8 +59,7 @@ namespace LinqToDB.Tools.Mapper
 		/// </summary>
 		/// <returns>Mapping expression.</returns>
 		[Pure]
-		public Mapper<TFrom,TTo> GetMapper()
-			=> new Mapper<TFrom,TTo>(this);
+		public Mapper<TFrom,TTo> GetMapper() => new (this);
 
 		/// <summary>
 		/// Sets mapping schema.
@@ -395,7 +394,7 @@ namespace LinqToDB.Tools.Mapper
 		/// </summary>
 		/// <returns><see cref="ExpressionBuilder"/>.</returns>
 		internal ExpressionBuilder GetExpressionMapper()
-			=> new ExpressionBuilder(this, MemberMappers?.Select(mm => Tuple.Create(GetMembersInfo(mm.ToMember), mm.Setter)).ToArray());
+			=> new (this, MemberMappers?.Select(mm => Tuple.Create(GetMembersInfo(mm.ToMember), mm.Setter)).ToArray());
 
 		/// <summary>
 		/// Gets the <see cref="MemberInfo"/>.
@@ -466,7 +465,7 @@ namespace LinqToDB.Tools.Mapper
 
 							yield return member;
 
-							expression = mExpr.Expression;
+							expression = mExpr.Expression!;
 
 							break;
 						}

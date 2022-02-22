@@ -62,7 +62,7 @@ namespace Tests.Linq
 
 			public ISqlExpression ToSql(Expression expression)
 			{
-				return new SqlTable()
+				return new SqlTable(typeof(T), null)
 				{
 					PhysicalName = _table.TableName
 				};

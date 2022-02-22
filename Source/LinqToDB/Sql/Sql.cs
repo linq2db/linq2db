@@ -518,6 +518,7 @@ namespace LinqToDB
 		[Function  (PN.SqlCe,     "Len",                               PreferServerSide = true)]
 		[Function  (PN.Sybase,    "Len",                               PreferServerSide = true)]
 		[Function  (PN.MySql,     "Char_Length",                       PreferServerSide = true)]
+		[Function  (PN.Informix,  "CHAR_LENGTH",                       PreferServerSide = true)]
 		[Expression(PN.DB2LUW,    "CHARACTER_LENGTH({0},CODEUNITS32)", PreferServerSide = true)]
 		public static int? Length(string str)
 		{
@@ -1249,46 +1250,46 @@ namespace LinqToDB
 
 		#region Math Functions
 
-		[Function] public static decimal? Abs    (decimal? value) { return value == null ? null : (decimal?)Math.Abs    (value.Value); }
-		[Function] public static double?  Abs    (double?  value) { return value == null ? null : (double?) Math.Abs    (value.Value); }
-		[Function] public static short?   Abs    (short?   value) { return value == null ? null : (short?)  Math.Abs    (value.Value); }
-		[Function] public static int?     Abs    (int?     value) { return value == null ? null : (int?)    Math.Abs    (value.Value); }
-		[Function] public static long?    Abs    (long?    value) { return value == null ? null : (long?)   Math.Abs    (value.Value); }
+		[Function] public static decimal? Abs    (decimal? value) => value == null ? null : Math.Abs (value.Value);
+		[Function] public static double?  Abs    (double?  value) => value == null ? null : Math.Abs (value.Value);
+		[Function] public static short?   Abs    (short?   value) => value == null ? null : Math.Abs (value.Value);
+		[Function] public static int?     Abs    (int?     value) => value == null ? null : Math.Abs (value.Value);
+		[Function] public static long?    Abs    (long?    value) => value == null ? null : Math.Abs (value.Value);
 		[CLSCompliant(false)]
-		[Function] public static sbyte?   Abs    (sbyte?   value) { return value == null ? null : (sbyte?)  Math.Abs    (value.Value); }
-		[Function] public static float?   Abs    (float?   value) { return value == null ? null : (float?)  Math.Abs    (value.Value); }
+		[Function] public static sbyte?   Abs    (sbyte?   value) => value == null ? null : Math.Abs (value.Value);
+		[Function] public static float?   Abs    (float?   value) => value == null ? null : Math.Abs (value.Value);
 
-		[Function] public static double?  Acos   (double?  value) { return value == null ? null : (double?) Math.Acos   (value.Value); }
-		[Function] public static double?  Asin   (double?  value) { return value == null ? null : (double?) Math.Asin   (value.Value); }
+		[Function] public static double?  Acos   (double?  value) => value == null ? null : Math.Acos(value.Value);
+		[Function] public static double?  Asin   (double?  value) => value == null ? null : Math.Asin(value.Value);
 
 		[Function(PN.Access, "Atn")]
-		[Function] public static double?  Atan   (double?  value) { return value == null ? null : (double?) Math.Atan   (value.Value); }
+		[Function] public static double?  Atan   (double?  value) => value == null ? null : Math.Atan(value.Value);
 
 		[CLSCompliant(false)]
 		[Function(PN.SqlServer, "Atn2")]
 		[Function(PN.DB2,       "Atan2", 1, 0)]
 		[Function(PN.SqlCe,     "Atn2")]
 		[Function(PN.Sybase,    "Atn2")]
-		[Function] public static double?  Atan2  (double? x, double? y) { return x == null || y == null? null : (double?)Math.Atan2(x.Value, y.Value); }
+		[Function] public static double?  Atan2  (double? x, double? y) { return x == null || y == null? null : Math.Atan2(x.Value, y.Value); }
 
 		[Function(PN.Informix, "Ceil")]
 		[Function(PN.Oracle,   "Ceil")]
 		[Function(PN.SapHana,  "Ceil")]
-		[Function] public static decimal? Ceiling(decimal? value) { return value == null ? null : (decimal?)decimal.Ceiling(value.Value); }
+		[Function] public static decimal? Ceiling(decimal? value) => value == null ? null : decimal.Ceiling(value.Value);
 
 		[Function(PN.Informix, "Ceil")]
 		[Function(PN.Oracle,   "Ceil")]
 		[Function(PN.SapHana,  "Ceil")]
-		[Function] public static double?  Ceiling(double?  value) { return value == null ? null : (double?)Math.Ceiling(value.Value); }
+		[Function] public static double?  Ceiling(double?  value) => value == null ? null : Math.Ceiling(value.Value);
 
-		[Function] public static double?  Cos    (double?  value) { return value == null ? null : (double?)Math.Cos    (value.Value); }
+		[Function] public static double?  Cos    (double?  value) => value == null ? null : Math.Cos    (value.Value);
 
-		[Function] public static double?  Cosh   (double?  value) { return value == null ? null : (double?)Math.Cosh   (value.Value); }
+		[Function] public static double?  Cosh   (double?  value) => value == null ? null : Math.Cosh   (value.Value);
 
 		[Function] public static double?  Cot    (double?  value) { return value == null ? null : (double?)Math.Cos(value.Value) / Math.Sin(value.Value); }
 
-		[Function] public static decimal? Degrees(decimal? value) { return value == null ? null : (decimal?)(value.Value * 180m / (decimal)Math.PI); }
-		[Function] public static double?  Degrees(double?  value) { return value == null ? null : (double?) (value.Value * 180 / Math.PI); }
+		[Function] public static decimal? Degrees(decimal? value) => value == null ? null : (value.Value * 180m / (decimal)Math.PI);
+		[Function] public static double?  Degrees(double?  value) => value == null ? null : (value.Value * 180 / Math.PI);
 		[Function] public static short?   Degrees(short?   value) { return value == null ? null : (short?)  (value.Value * 180 / Math.PI); }
 		[Function] public static int?     Degrees(int?     value) { return value == null ? null : (int?)    (value.Value * 180 / Math.PI); }
 		[Function] public static long?    Degrees(long?    value) { return value == null ? null : (long?)   (value.Value * 180 / Math.PI); }
@@ -1296,13 +1297,13 @@ namespace LinqToDB
 		[Function] public static sbyte?   Degrees(sbyte?   value) { return value == null ? null : (sbyte?)  (value.Value * 180 / Math.PI); }
 		[Function] public static float?   Degrees(float?   value) { return value == null ? null : (float?)  (value.Value * 180 / Math.PI); }
 
-		[Function] public static double?  Exp    (double?  value) { return value == null ? null : (double?)Math.Exp    (value.Value); }
+		[Function] public static double?  Exp    (double?  value) => value == null ? null : Math.Exp(value.Value);
 
 		[Function(PN.Access, "Int")]
-		[Function] public static decimal? Floor  (decimal? value) { return value == null ? null : (decimal?)decimal.Floor(value.Value); }
+		[Function] public static decimal? Floor  (decimal? value) => value == null ? null : decimal.Floor(value.Value);
 
 		[Function(PN.Access, "Int")]
-		[Function] public static double?  Floor  (double?  value) { return value == null ? null : (double?) Math.   Floor(value.Value); }
+		[Function] public static double?  Floor  (double?  value) => value == null ? null : Math.Floor(value.Value);
 
 		[Function(PN.Informix,   "LogN")]
 		[Function(PN.Oracle,     "Ln")]
@@ -1316,16 +1317,16 @@ namespace LinqToDB
 		[Function(PN.Firebird,   "Ln")]
 		[Function(PN.PostgreSQL, "Ln")]
 		[Function(PN.SapHana,    "Ln")]
-		[Function] public static double?  Log    (double?  value) { return value == null ? null : (double?) Math.Log     (value.Value); }
+		[Function] public static double?  Log    (double?  value) => value == null ? null : Math.Log(value.Value);
 
 		[Function(PN.PostgreSQL, "Log")]
 		[Expression(PN.SapHana,  "Log(10,{0})")]
-		[Function] public static double?  Log10  (double?  value) { return value == null ? null : (double?) Math.Log10   (value.Value); }
+		[Function] public static double?  Log10  (double?  value) => value == null ? null : Math.Log10(value.Value);
 
 		[Function]
 		public static double?  Log(double? newBase, double? value)
 		{
-			return value == null || newBase == null ? null : (double?)Math.Log(value.Value, newBase.Value);
+			return value == null || newBase == null ? null : Math.Log(value.Value, newBase.Value);
 		}
 
 		[Function]
@@ -1338,19 +1339,19 @@ namespace LinqToDB
 		[Function]
 		public static double?  Power(double? x, double? y)
 		{
-			return x == null || y == null ? null : (double?)Math.Pow(x.Value, y.Value);
+			return x == null || y == null ? null : Math.Pow(x.Value, y.Value);
 		}
 
 		[Function]
 		public static decimal? RoundToEven(decimal? value)
 		{
-			return value == null ? null : (decimal?)Math.Round(value.Value, MidpointRounding.ToEven);
+			return value == null ? null : Math.Round(value.Value, MidpointRounding.ToEven);
 		}
 
 		[Function]
 		public static double? RoundToEven(double? value)
 		{
-			return value == null ? null : (double?) Math.Round(value.Value, MidpointRounding.ToEven);
+			return value == null ? null : Math.Round(value.Value, MidpointRounding.ToEven);
 		}
 
 		[Function] public static decimal? Round(decimal? value) { return Round(value, 0); }
@@ -1359,42 +1360,42 @@ namespace LinqToDB
 		[Function]
 		public static decimal? Round(decimal? value, int? precision)
 		{
-			return value == null || precision == null? null : (decimal?)Math.Round(value.Value, precision.Value, MidpointRounding.AwayFromZero);
+			return value == null || precision == null ? null : Math.Round(value.Value, precision.Value, MidpointRounding.AwayFromZero);
 		}
 
 		[Function]
 		public static double? Round(double? value, int? precision)
 		{
-			return value == null || precision == null? null : (double?) Math.Round(value.Value, precision.Value, MidpointRounding.AwayFromZero);
+			return value == null || precision == null ? null : Math.Round(value.Value, precision.Value, MidpointRounding.AwayFromZero);
 		}
 
 		[Function]
 		public static decimal? RoundToEven(decimal? value, int? precision)
 		{
-			return value == null || precision == null? null : (decimal?)Math.Round(value.Value, precision.Value, MidpointRounding.ToEven);
+			return value == null || precision == null ? null : Math.Round(value.Value, precision.Value, MidpointRounding.ToEven);
 		}
 
 		[Function]
 		public static double? RoundToEven(double?  value, int? precision)
 		{
-			return value == null || precision == null? null : (double?) Math.Round(value.Value, precision.Value, MidpointRounding.ToEven);
+			return value == null || precision == null ? null : Math.Round(value.Value, precision.Value, MidpointRounding.ToEven);
 		}
 
-		[Function(PN.Access, "Sgn"), Sql.Function] public static int? Sign(decimal? value) { return value == null ? null : (int?)Math.Sign(value.Value); }
-		[Function(PN.Access, "Sgn"), Sql.Function] public static int? Sign(double?  value) { return value == null ? null : (int?)Math.Sign(value.Value); }
-		[Function(PN.Access, "Sgn"), Sql.Function] public static int? Sign(short?   value) { return value == null ? null : (int?)Math.Sign(value.Value); }
-		[Function(PN.Access, "Sgn"), Sql.Function] public static int? Sign(int?     value) { return value == null ? null : (int?)Math.Sign(value.Value); }
-		[Function(PN.Access, "Sgn"), Sql.Function] public static int? Sign(long?    value) { return value == null ? null : (int?)Math.Sign(value.Value); }
+		[Function(PN.Access, "Sgn"), Function] public static int? Sign(decimal? value) => value == null ? null : Math.Sign(value.Value);
+		[Function(PN.Access, "Sgn"), Function] public static int? Sign(double?  value) => value == null ? null : Math.Sign(value.Value);
+		[Function(PN.Access, "Sgn"), Function] public static int? Sign(short?   value) => value == null ? null : Math.Sign(value.Value);
+		[Function(PN.Access, "Sgn"), Function] public static int? Sign(int?     value) => value == null ? null : Math.Sign(value.Value);
+		[Function(PN.Access, "Sgn"), Function] public static int? Sign(long?    value) => value == null ? null : Math.Sign(value.Value);
 		[CLSCompliant(false)]
-		[Function(PN.Access, "Sgn"), Sql.Function] public static int? Sign(sbyte?   value) { return value == null ? null : (int?)Math.Sign(value.Value); }
-		[Function(PN.Access, "Sgn"), Sql.Function] public static int? Sign(float?   value) { return value == null ? null : (int?)Math.Sign(value.Value); }
+		[Function(PN.Access, "Sgn"), Function] public static int? Sign(sbyte?   value) => value == null ? null : Math.Sign(value.Value);
+		[Function(PN.Access, "Sgn"), Function] public static int? Sign(float?   value) => value == null ? null : Math.Sign(value.Value);
 
-		[Function] public static double?  Sin     (double?  value) { return value == null ? null : (double?)Math.Sin (value.Value); }
-		[Function] public static double?  Sinh    (double?  value) { return value == null ? null : (double?)Math.Sinh(value.Value); }
+		[Function] public static double?  Sin     (double?  value) => value == null ? null : Math.Sin (value.Value);
+		[Function] public static double?  Sinh    (double?  value) => value == null ? null : Math.Sinh(value.Value);
 		[Function(PN.Access, "Sqr")]
-		[Function] public static double?  Sqrt    (double?  value) { return value == null ? null : (double?)Math.Sqrt(value.Value); }
-		[Function] public static double?  Tan     (double?  value) { return value == null ? null : (double?)Math.Tan (value.Value); }
-		[Function] public static double?  Tanh    (double?  value) { return value == null ? null : (double?)Math.Tanh(value.Value); }
+		[Function] public static double?  Sqrt    (double?  value) => value == null ? null : Math.Sqrt(value.Value);
+		[Function] public static double?  Tan     (double?  value) => value == null ? null : Math.Tan (value.Value);
+		[Function] public static double?  Tanh    (double?  value) => value == null ? null : Math.Tanh(value.Value);
 
 		[Expression(PN.SqlServer,  "Round({0}, 0, 1)")]
 		[Expression(PN.DB2,        "Truncate({0}, 0)")]
@@ -1408,7 +1409,7 @@ namespace LinqToDB
 		[Function]
 		public static decimal? Truncate(decimal? value)
 		{
-			return value == null ? null : (decimal?)decimal.Truncate(value.Value);
+			return value == null ? null : decimal.Truncate(value.Value);
 		}
 
 		[Expression(PN.SqlServer,  "Round({0}, 0, 1)")]
@@ -1423,7 +1424,7 @@ namespace LinqToDB
 		[Function]
 		public static double? Truncate(double? value)
 		{
-			return value == null ? null : (double?) Math.Truncate(value.Value);
+			return value == null ? null : Math.Truncate(value.Value);
 		}
 
 		#endregion

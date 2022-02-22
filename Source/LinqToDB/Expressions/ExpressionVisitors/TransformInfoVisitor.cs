@@ -279,7 +279,7 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Index:
 				{
 					var e = (IndexExpression)expr;
-					var o = Transform(e.Object);
+					var o = Transform(e.Object!);
 					var a = Transform(e.Arguments);
 
 					return e.Update(o, a);

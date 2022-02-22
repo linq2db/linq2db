@@ -19,6 +19,6 @@
 	GenerateModel();
 
 	GenerationEnvironment.Replace(
-		"#pragma warning disable 1591",
-		"#pragma warning disable 1591\r\n#pragma warning disable 618");
+		"#pragma warning disable 1572, 1591",
+		"#pragma warning disable 1572, 1591, 618");
 #>

@@ -6,10 +6,12 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Async;
-
 namespace LinqToDB.Linq
 {
+#if !NATIVE_ASYNC
+	using Async;
+#endif
+
 	class PersistentTable<T> : ITable<T>
 		where T : notnull
 	{
@@ -52,7 +54,7 @@ namespace LinqToDB.Linq
 			return _query.Provider.CreateQuery<TElement>(expression);
 		}
 
-		public object Execute(Expression expression)
+		public object? Execute(Expression expression)
 		{
 			return _query.Provider.Execute(expression);
 		}

@@ -4,7 +4,7 @@ parameters:
 jobs:
 - job: build_job
   pool:
-    vmImage: 'windows-2019'
+    vmImage: 'windows-2022'
   displayName: 'Build'
 
   steps:
@@ -56,6 +56,16 @@ jobs:
       nobuild: true
     displayName: Publish Test Project for net 5.0
 
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: 'publish'
+      projects: '**/Tests/Linq/Tests.csproj'
+      publishWebProjects: false
+      zipAfterPublish: false
+      arguments: -f net6.0 -c $(build_configuration)
+      nobuild: true
+    displayName: Publish Test Project for net 6.0
+
   - task: CopyFiles@2
     inputs:
       targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472'
@@ -86,6 +96,13 @@ jobs:
 
   - task: CopyFiles@2
     inputs:
+      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net6.0/publish'
+      sourceFolder: '$(Build.SourcesDirectory)/Tests'
+      contents: 'DataProviders.json'
+    displayName: Copy test settings for NET 6.0
+
+  - task: CopyFiles@2
+    inputs:
       targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472/configs'
       sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/net472'
     displayName: Copy test configs for NETFX472
@@ -107,6 +124,12 @@ jobs:
       targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net5.0/publish/configs'
       sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/net50'
     displayName: Copy test configs for NET 5.0
+
+  - task: CopyFiles@2
+    inputs:
+      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net6.0/publish/configs'
+      sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/net60'
+    displayName: Copy test configs for NET 6.0
 
   - task: CmdLine@2
     inputs:
@@ -130,6 +153,12 @@ jobs:
       targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net5.0/publish/scripts'
       sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/scripts'
     displayName: Copy test scripts for NET5.0
+
+  - task: CopyFiles@2
+    inputs:
+      targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net6.0/publish/scripts'
+      sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/scripts'
+    displayName: Copy test scripts for NET6.0
 
   - task: CopyFiles@2
     inputs:
@@ -166,6 +195,12 @@ jobs:
       path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net5.0/publish'
       artifact: '$(net50_tests)'
     displayName: Publish test artifacts for NET 5.0
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net6.0/publish'
+      artifact: '$(net60_tests)'
+    displayName: Publish test artifacts for NET 6.0
 
   - task: PublishPipelineArtifact@1
     inputs:

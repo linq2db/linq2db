@@ -5,15 +5,17 @@ namespace LinqToDB.DataProvider.MySql
 {
 	using System.Collections.Generic;
 	using System.Linq.Expressions;
+	using System.Text;
 	using System.Threading;
 	using System.Threading.Tasks;
 	using LinqToDB.Expressions;
 	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
 
 	public class MySqlProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _mysqlDataSyncRoot      = new object();
-		private static readonly object _mysqlConnectorSyncRoot = new object();
+		private static readonly object _mysqlDataSyncRoot      = new ();
+		private static readonly object _mysqlConnectorSyncRoot = new ();
 
 		private static MySqlProviderAdapter? _mysqlDataInstance;
 		private static MySqlProviderAdapter? _mysqlConnectorInstance;
@@ -49,7 +51,7 @@ namespace LinqToDB.DataProvider.MySql
 			Type  mySqlDateTimeType,
 			Type  mySqlGeometryType,
 
-			Func<object, decimal>? mySqlDecimalGetter,
+			Func<object, string>? mySqlDecimalGetter,
 
 			Func<IDbDataParameter, object> dbTypeGetter,
 
@@ -97,19 +99,19 @@ namespace LinqToDB.DataProvider.MySql
 		public MappingSchema MappingSchema { get; }
 
 		/// <summary>
-		/// Not supported by MySqlConnector.
+		/// Not supported by MySqlConnector prior to 2.1.0.
 		/// </summary>
 		public Type? MySqlDecimalType  { get; }
 		public Type  MySqlDateTimeType { get; }
 		public Type  MySqlGeometryType { get; }
 
 		/// <summary>
-		/// Not supported by MySqlConnector.
+		/// Not needed for MySqlConnector as it supports MySqlDecimal parameters.
 		/// </summary>
-		public Func<object, decimal>? MySqlDecimalGetter { get; }
+		public Func<object, string>? MySqlDecimalGetter { get; }
 
 		/// <summary>
-		/// Not supported by MySqlConnector.
+		/// Not supported by MySqlConnector prior to 2.1.0.
 		/// </summary>
 		public string? GetMySqlDecimalMethodName { get; }
 
@@ -165,6 +167,8 @@ namespace LinqToDB.DataProvider.MySql
 			}
 		}
 
+		private static void AppendAction(StringBuilder sb, string value) => sb.Append(value);
+
 		private class MySqlData
 		{
 			internal static MySqlProviderAdapter CreateAdapter()
@@ -189,12 +193,19 @@ namespace LinqToDB.DataProvider.MySql
 				typeMapper.RegisterTypeWrapper<MySqlDateTime>(mySqlDateTimeType);
 				typeMapper.RegisterTypeWrapper<MySqlDecimal>(mySqlDecimalType);
 
-				var dbTypeGetter      = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType).BuildGetter<IDbDataParameter>();
-				var decimalGetter     = typeMapper.Type<MySqlDecimal>().Member(p => p.Value).BuildGetter<object>();
-				var dateTimeConverter = typeMapper.MapLambda((MySqlDateTime dt) => dt.GetDateTime());
+				var dbTypeGetter       = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType).BuildGetter<IDbDataParameter>();
+				var decimalGetter      = typeMapper.BuildFunc<object, string>(typeMapper.MapLambda((object value) => ((MySqlDecimal)value).ToString()));
+				var toDecimalConverter = typeMapper.MapLambda((MySqlDecimal d) => d.Value);
+				var toDoubleConverter  = typeMapper.MapLambda((MySqlDecimal d) => d.ToDouble());
+				var dateTimeConverter  = typeMapper.MapLambda((MySqlDateTime dt) => dt.GetDateTime());
 
 				var mappingSchema = new MappingSchema();
+
 				mappingSchema.SetDataType(mySqlDecimalType, DataType.Decimal);
+				mappingSchema.SetConvertExpression(mySqlDecimalType, typeof(decimal), toDecimalConverter);
+				mappingSchema.SetConvertExpression(mySqlDecimalType, typeof(double), toDoubleConverter);
+				mappingSchema.SetValueToSqlConverter(mySqlDecimalType, typeMapper.BuildAction<StringBuilder, SqlDataType, object>(typeMapper.MapActionLambda((StringBuilder sb, SqlDataType type, object value) => AppendAction(sb, ((MySqlDecimal)value).ToString()))));
+
 				mappingSchema.SetDataType(mySqlDateTimeType, DataType.DateTime2);
 				mappingSchema.SetConvertExpression(mySqlDateTimeType, typeof(DateTime), dateTimeConverter);
 
@@ -227,7 +238,9 @@ namespace LinqToDB.DataProvider.MySql
 			[Wrapper]
 			private class MySqlDecimal
 			{
-				public decimal Value { get; }
+				public          decimal Value      => throw new NotImplementedException();
+				public          double  ToDouble() => throw new NotImplementedException();
+				public override string  ToString() => throw new NotImplementedException();
 			}
 
 			[Wrapper]
@@ -284,8 +297,10 @@ namespace LinqToDB.DataProvider.MySql
 
 		internal class MySqlConnector
 		{
-			private static readonly Version MinBulkCopyVersion = new Version(0, 67);
-			private static readonly Version MinModernVersion   = new Version(1, 0);
+			private static readonly Version MinBulkCopyVersion     = new (0, 67);
+			private static readonly Version MinModernVersion       = new (1, 0);
+			// actually it was added in 2.1.0, but assembly version wasn't updated
+			private static readonly Version MinMySqlDecimalVersion = new (2, 0);
 
 			internal static MySqlProviderAdapter CreateAdapter()
 			{
@@ -307,11 +322,14 @@ namespace LinqToDB.DataProvider.MySql
 				var dbType            = assembly.GetType($"{clientNamespace}.MySqlDbType"     , true)!;
 				var mySqlDateTimeType = assembly.GetType($"{typesNamespace}.MySqlDateTime"    , true)!;
 				var mySqlGeometryType = assembly.GetType($"{typesNamespace}.MySqlGeometry"    , true)!;
+				var mySqlDecimalType  = assembly.GetName().Version >= MinMySqlDecimalVersion ? assembly.GetType($"{typesNamespace}.MySqlDecimal", false) : null;
 
 				var typeMapper = new TypeMapper();
 				typeMapper.RegisterTypeWrapper<MySqlParameter>(parameterType);
 				typeMapper.RegisterTypeWrapper<MySqlDbType   >(dbType);
 				typeMapper.RegisterTypeWrapper<MySqlDateTime >(mySqlDateTimeType);
+				if (mySqlDecimalType != null)
+					typeMapper.RegisterTypeWrapper<MySqlDecimal>(mySqlDecimalType);
 
 				typeMapper.RegisterTypeWrapper<MySqlConnection >(connectionType);
 				typeMapper.RegisterTypeWrapper<MySqlTransaction>(transactionType);
@@ -319,15 +337,18 @@ namespace LinqToDB.DataProvider.MySql
 				BulkCopyAdapter? bulkCopy = null;
 				if (hasBulkCopy)
 				{
-					var bulkCopyType                   = assembly.GetType($"{clientNamespace}.MySqlBulkCopy", true)!;
+					var bulkCopyType                   = assembly.GetType($"{clientNamespace}.MySqlBulkCopy"              , true)!;
 					var bulkRowsCopiedEventHandlerType = assembly.GetType($"{clientNamespace}.MySqlRowsCopiedEventHandler", true)!;
 					var bulkCopyColumnMappingType      = assembly.GetType($"{clientNamespace}.MySqlBulkCopyColumnMapping" , true)!;
 					var rowsCopiedEventArgsType        = assembly.GetType($"{clientNamespace}.MySqlRowsCopiedEventArgs"   , true)!;
+					var bulkCopyResultType             = assembly.GetType($"{clientNamespace}.MySqlBulkCopyResult"        , false)!;
 
 					typeMapper.RegisterTypeWrapper<MySqlBulkCopy              >(bulkCopyType!);
 					typeMapper.RegisterTypeWrapper<MySqlRowsCopiedEventHandler>(bulkRowsCopiedEventHandlerType);
 					typeMapper.RegisterTypeWrapper<MySqlBulkCopyColumnMapping >(bulkCopyColumnMappingType);
 					typeMapper.RegisterTypeWrapper<MySqlRowsCopiedEventArgs   >(rowsCopiedEventArgsType);
+					if (bulkCopyResultType != null)
+						typeMapper.RegisterTypeWrapper<MySqlBulkCopyResult    >(bulkCopyResultType);
 					typeMapper.FinalizeMappings();
 
 					bulkCopy = new BulkCopyAdapter(
@@ -344,6 +365,18 @@ namespace LinqToDB.DataProvider.MySql
 				mappingSchema.SetDataType(mySqlDateTimeType, DataType.DateTime2);
 				mappingSchema.SetConvertExpression(mySqlDateTimeType, typeof(DateTime), dateTimeConverter);
 
+				if (mySqlDecimalType != null)
+				{
+					var toDecimalConverter = typeMapper.MapLambda((MySqlDecimal d) => d.Value);
+					var toDoubleConverter  = typeMapper.MapLambda((MySqlDecimal d) => d.ToDouble());
+
+					mappingSchema.SetDataType(mySqlDecimalType, DataType.Decimal);
+					mappingSchema.SetConvertExpression(mySqlDecimalType, typeof(decimal), toDecimalConverter);
+					mappingSchema.SetValueToSqlConverter(mySqlDecimalType, typeMapper.BuildAction<StringBuilder, SqlDataType, object>(typeMapper.MapActionLambda((StringBuilder sb, SqlDataType type, object value) => AppendAction(sb, ((MySqlDecimal)value).ToString()))));
+
+					mappingSchema.SetConvertExpression(mySqlDecimalType, typeof(double) , toDoubleConverter);
+				}
+
 				return new MySqlProviderAdapter(
 					MySqlProvider.MySqlConnector,
 					connectionType,
@@ -351,12 +384,12 @@ namespace LinqToDB.DataProvider.MySql
 					parameterType,
 					commandType,
 					transactionType,
-					null,
+					mySqlDecimalType,
 					mySqlDateTimeType,
 					mySqlGeometryType,
 					null,
 					p => typeGetter(p),
-					null,
+					mySqlDecimalType != null ? "GetMySqlDecimal" : null,
 					"GetDateTimeOffset",
 					"GetMySqlDateTime",
 					typesNamespace,
@@ -365,6 +398,14 @@ namespace LinqToDB.DataProvider.MySql
 			}
 
 			#region wrappers
+			[Wrapper]
+			private class MySqlDecimal
+			{
+				public          decimal Value      => throw new NotImplementedException();
+				public          double  ToDouble() => throw new NotImplementedException();
+				public override string  ToString() => throw new NotImplementedException();
+			}
+
 			[Wrapper]
 			private class MySqlDateTime
 			{
@@ -441,8 +482,9 @@ namespace LinqToDB.DataProvider.MySql
 				private static object[] Wrappers { get; }
 					= new object[]
 				{
-					// [0]: WriteToServer
-					(Expression<Action<MySqlBulkCopy, IDataReader>>               )((MySqlBulkCopy this_, IDataReader            dataReader) => this_.WriteToServer(dataReader)),
+					// [0]: WriteToServer (version < 2.0.0)
+					new Tuple<LambdaExpression, bool>
+					((Expression<Action<MySqlBulkCopy, IDataReader>>               )((MySqlBulkCopy this_, IDataReader            dataReader) => this_.WriteToServer1(dataReader)), true),
 					// [1]: get NotifyAfter
 					(Expression<Func<MySqlBulkCopy, int>>                         )((MySqlBulkCopy this_                                   ) => this_.NotifyAfter),
 					// [2]: get BulkCopyTimeout
@@ -457,13 +499,22 @@ namespace LinqToDB.DataProvider.MySql
 					PropertySetter((MySqlBulkCopy this_) => this_.BulkCopyTimeout),
 					// [7]: set DestinationTableName
 					PropertySetter((MySqlBulkCopy this_) => this_.DestinationTableName),
-					// [8]: WriteToServerAsync
+					// [8]: WriteToServerAsync (version < 2.0.0)
 					new Tuple<LambdaExpression, bool>
-					((Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, Task>>     )((MySqlBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync (dataReader, cancellationToken)), true),
+					((Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, Task>>     )((MySqlBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync1 (dataReader, cancellationToken)), true),
+					// [9]: WriteToServer (version >= 2.0.0)
+					new Tuple<LambdaExpression, bool>
+					((Expression<Func<MySqlBulkCopy, IDataReader, MySqlBulkCopyResult>>)((MySqlBulkCopy this_, IDataReader            dataReader) => this_.WriteToServer2(dataReader)), true),
+					// [10]: WriteToServerAsync (version >= 2.0.0)
+					new Tuple<LambdaExpression, bool>
+					((Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, Task<MySqlBulkCopyResult>>>)((MySqlBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync2 (dataReader, cancellationToken)), true),
 #if !NETFRAMEWORK
-					// [9]: WriteToServerAsync
+					// [11]: WriteToServerAsync (version < 2.0.0)
 					new Tuple<LambdaExpression, bool>
-					((Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask>>)((MySqlBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync2(dataReader, cancellationToken)), true),
+					((Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask>>)((MySqlBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync3(dataReader, cancellationToken)), true),
+					// [12]: WriteToServerAsync (version >= 2.0.0)
+					new Tuple<LambdaExpression, bool>
+					((Expression<Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask<MySqlBulkCopyResult>>>)((MySqlBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync4(dataReader, cancellationToken)), true),
 #endif
 				};
 
@@ -479,18 +530,69 @@ namespace LinqToDB.DataProvider.MySql
 
 				public MySqlBulkCopy(MySqlConnection connection, MySqlTransaction? transaction) => throw new NotImplementedException();
 
-				public void WriteToServer(IDataReader dataReader) => ((Action<MySqlBulkCopy, IDataReader>)CompiledWrappers[0])(this, dataReader);
-				public Task WriteToServerAsync      (IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken,      Task>)CompiledWrappers[8])(this, dataReader, cancellationToken);
-				public bool CanWriteToServerAsync => CompiledWrappers[8] != null;
+				[TypeWrapperName("WriteToServer")]
+				private void WriteToServer1(IDataReader dataReader) => ((Action<MySqlBulkCopy, IDataReader>)CompiledWrappers[0])(this, dataReader);
+				[TypeWrapperName("WriteToServer")]
+				private MySqlBulkCopyResult WriteToServer2(IDataReader dataReader) => ((Func<MySqlBulkCopy, IDataReader, MySqlBulkCopyResult>)CompiledWrappers[9])(this, dataReader);
+
+				[TypeWrapperName("WriteToServerAsync")]
+				private Task WriteToServerAsync1      (IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken,      Task>)CompiledWrappers[8])(this, dataReader, cancellationToken);
+				[TypeWrapperName("WriteToServerAsync")]
+				[return: CustomMapper(typeof(GenericTaskToTaskMapper))]
+				private Task<MySqlBulkCopyResult> WriteToServerAsync2(IDataReader dataReader, CancellationToken cancellationToken) => throw new InvalidOperationException();
+
+				private bool CanWriteToServer1 => CompiledWrappers[0] != null;
+				private bool CanWriteToServer2 => CompiledWrappers[9] != null;
+				private bool CanWriteToServerAsync1 => CompiledWrappers[8] != null;
+				private bool CanWriteToServerAsync2 => CompiledWrappers[10] != null;
 #if !NETFRAMEWORK
 				[TypeWrapperName("WriteToServerAsync")]
-				public ValueTask WriteToServerAsync2(IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask>)CompiledWrappers[9])(this, dataReader, cancellationToken);
-				public bool CanWriteToServerAsync2 => CompiledWrappers[9] != null;
+				private ValueTask WriteToServerAsync3(IDataReader dataReader, CancellationToken cancellationToken) => ((Func<MySqlBulkCopy, IDataReader, CancellationToken, ValueTask>)CompiledWrappers[11])(this, dataReader, cancellationToken);
+				[TypeWrapperName("WriteToServerAsync")]
+				[return: CustomMapper(typeof(GenericTaskToTaskMapper))]
+				private ValueTask<MySqlBulkCopyResult> WriteToServerAsync4(IDataReader dataReader, CancellationToken cancellationToken) => throw new InvalidOperationException();
+				private bool CanWriteToServerAsync3 => CompiledWrappers[11] != null;
+				private bool CanWriteToServerAsync4 => CompiledWrappers[12] != null;
 #else
 				[TypeWrapperName("WriteToServerAsync")]
-				public Task WriteToServerAsync2(IDataReader dataReader, CancellationToken cancellationToken) => throw new InvalidOperationException();
-				public bool CanWriteToServerAsync2 => false;
+				private Task WriteToServerAsync3(IDataReader dataReader, CancellationToken cancellationToken) => throw new InvalidOperationException();
+				[TypeWrapperName("WriteToServerAsync")]
+				[return: CustomMapper(typeof(GenericTaskToTaskMapper))]
+				private Task<MySqlBulkCopyResult> WriteToServerAsync4(IDataReader dataReader, CancellationToken cancellationToken) => throw new InvalidOperationException();
+				private bool CanWriteToServerAsync3 => false;
+				private bool CanWriteToServerAsync4 => false;
 #endif
+				public void WriteToServer(IDataReader dataReader)
+				{
+					if (CanWriteToServer2)
+						WriteToServer2(dataReader);
+					else if (CanWriteToServer1)
+						WriteToServer1(dataReader);
+					else
+						throw new InvalidOperationException("BulkCopy.WriteToServer implementation not configured");
+				}
+
+				public bool HasWriteToServerAsync => CanWriteToServerAsync1 || CanWriteToServerAsync2 || CanWriteToServerAsync3 || CanWriteToServerAsync4;
+
+				public async Task WriteToServerAsync(IDataReader dataReader, CancellationToken cancellationToken)
+				{
+					if (CanWriteToServerAsync4)
+					{
+						var action = (Func<MySqlBulkCopy, IDataReader, CancellationToken, Task>)CompiledWrappers[12];
+						await action(this, dataReader, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					}
+					else if (CanWriteToServerAsync3)
+						await WriteToServerAsync3(dataReader, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					else if (CanWriteToServerAsync2)
+					{
+						var action = (Func<MySqlBulkCopy, IDataReader, CancellationToken, Task>)CompiledWrappers[10];
+						await action(this, dataReader, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					}
+					else if (CanWriteToServerAsync1)
+						await WriteToServerAsync1(dataReader, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					else
+						throw new InvalidOperationException("BulkCopy.WriteToServerAsync implementation not configured");
+				}
 
 				public int NotifyAfter
 				{
@@ -557,8 +659,8 @@ namespace LinqToDB.DataProvider.MySql
 			[Wrapper]
 			public delegate void MySqlRowsCopiedEventHandler(object sender, MySqlRowsCopiedEventArgs e);
 
-			#endregion
-			#endregion
+#endregion
+#endregion
 		}
 
 		[Wrapper]
@@ -569,6 +671,14 @@ namespace LinqToDB.DataProvider.MySql
 			}
 
 			public MySqlBulkCopyColumnMapping(int sourceOrdinal, string destinationColumn, string? expression = null) => throw new NotImplementedException();
+		}
+
+		[Wrapper]
+		internal class MySqlBulkCopyResult : TypeWrapper
+		{
+			public MySqlBulkCopyResult(object instance) : base(instance, null)
+			{
+			}
 		}
 	}
 }
