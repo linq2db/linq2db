@@ -7,8 +7,8 @@
 		<LangVersion>latest</LangVersion>
 		<WarningLevel>5</WarningLevel>
 		
-		<!--see notes in Directory.Packages.props-->
-		<ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+		<!--https://github.com/dotnet/fsharp/issues/12315-->
+		<DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -25,15 +25,4 @@
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="FSharp.Core" Version="6.0.3" />
-		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
-
-		<!--workaround for Directory.Packages.props issue-->
-		<PackageReference Update="Newtonsoft.Json" Version="13.0.1" />
-		<PackageReference Update="System.Collections.Immutable" Version="6.0.0" />
-		<PackageReference Update="NUnit" Version="3.13.2" />
-		<PackageReference Update="FluentAssertions " Version="6.5.1" />
-		<PackageReference Update="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.3" />
-	</ItemGroup>
 </Project>

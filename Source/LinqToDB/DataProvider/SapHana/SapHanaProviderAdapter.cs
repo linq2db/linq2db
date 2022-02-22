@@ -1,5 +1,4 @@
-﻿#if NETFRAMEWORK || NETCOREAPP
-using System;
+﻿using System;
 using System.Data;
 
 namespace LinqToDB.DataProvider.SapHana
@@ -320,4 +319,3 @@ namespace LinqToDB.DataProvider.SapHana
 		#endregion
 	}
 }
-#endif

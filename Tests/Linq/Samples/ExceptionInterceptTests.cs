@@ -5,10 +5,7 @@ using System.Threading.Tasks;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Mapping;
 using NUnit.Framework;
-
-#if NET472
 using System.Data.SQLite;
-#endif
 
 namespace Tests.Samples
 {
@@ -90,7 +87,6 @@ namespace Tests.Samples
 			public int ID { get; set; }
 		}
 
-#if NET472
 		[Test]
 		public void StandardExceptionExecuteReader([IncludeDataSources(TestProvName.AllSQLiteClassic)]
 			string context)
@@ -103,7 +99,6 @@ namespace Tests.Samples
 				}
 			});
 		}
-#endif
 
 		[Test]
 		public void InterceptedExceptionExecuteReader([DataSources(false)] string context)

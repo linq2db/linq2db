@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using FluentAssertions;
-#if NET472
-using System.Windows.Forms;
-#endif
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -461,20 +458,28 @@ namespace Tests.Linq
 					from p in db.Parent select new { Max = GetList(p.ParentID).Max() });
 		}
 
-#if NET472
+		public class ListViewItem
+		{
+			public ListViewItem(string[] items)
+			{
+			}
+
+			public bool    Checked    { get; set; }
+			public int     ImageIndex { get; set; }
+			public object? Tag        { get; set; }
+		}
 		[Test]
 		public void ConstractClass([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				db.Parent.Select(f =>
-					new ListViewItem(new[] { "", f.ParentID.ToString(), f.Value1.ToString() })
+					new ListViewItem(new[] { "", f.ParentID.ToString()!, f.Value1.ToString()! })
 					{
 						Checked    = true,
 						ImageIndex = 0,
 						Tag        = f.ParentID
 					}).ToList();
 		}
-#endif
 
 		static string ConvertString(string s, int? i, bool b, int n)
 		{

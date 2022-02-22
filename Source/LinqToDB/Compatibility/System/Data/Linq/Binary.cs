@@ -14,7 +14,7 @@ namespace System.Data.Linq
 		private byte[] _bytes;
 		private int?   _hashCode;
 
-		public Binary(byte[] value)
+		public Binary(byte[]? value)
 		{
 			if(value == null)
 			{
@@ -37,7 +37,7 @@ namespace System.Data.Linq
 
 		public int Length => _bytes.Length;
 
-		public static implicit operator Binary(byte[] value) => new Binary(value);
+		public static implicit operator Binary(byte[]? value) => new Binary(value);
 
 		public bool Equals(Binary? other) => EqualsTo(other);
 

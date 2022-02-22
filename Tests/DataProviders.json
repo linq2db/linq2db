@@ -38,16 +38,6 @@
 		]
 	},
 
-	"CORE21": {
-		"BasedOn": "LocalConnectionStrings",
-		"DefaultConfiguration": "SQLite.Default",
-		"Providers": [
-			"SQLite.MS",
-			"Northwind.SQLite.MS",
-			"TestNoopProvider"
-		]
-	},
-
 	"CORE31": {
 		"BasedOn": "LocalConnectionStrings",
 		"DefaultConfiguration": "SQLite.Default",
@@ -79,12 +69,6 @@
 	},
 
 	"NET472.Azure": {
-		"BasedOn": "AzureConnectionStrings",
-		"DefaultConfiguration": "SQLite.Default",
-		"TraceLevel": "Info"
-	},
-
-	"CORE21.Azure": {
 		"BasedOn": "AzureConnectionStrings",
 		"DefaultConfiguration": "SQLite.Default",
 		"TraceLevel": "Info"

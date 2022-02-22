@@ -185,7 +185,7 @@ namespace LinqToDB.Data
 				DataConnection.DataProvider.ExecuteScope(DataConnection));
 		}
 
-		IEnumerable<T> ReadEnumerator<T>(DataReaderWrapper rd, Func<DbDataReader, T> objectReader, IDisposable? scope)
+		IEnumerable<T> ReadEnumerator<T>(DataReaderWrapper rd, Func<DbDataReader, T> objectReader, IExecutionScope? scope)
 		{
 			using (scope)
 			using (rd)
@@ -242,7 +242,11 @@ namespace LinqToDB.Data
 
 			InitCommand();
 
+#if !NATIVE_ASYNC
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
+#else
+			await using (DataConnection.DataProvider.ExecuteScope(DataConnection))
+#endif
 			{
 #if NETSTANDARD2_1PLUS
 				var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
@@ -316,7 +320,7 @@ namespace LinqToDB.Data
 			return typeof(object) == type || typeof(ExpandoObject) == type;
 		}
 		
-		IEnumerable<T> ReadEnumerator<T>(DataReaderWrapper rd, IDisposable? scope, bool disposeReader = true)
+		IEnumerable<T> ReadEnumerator<T>(DataReaderWrapper rd, IExecutionScope? scope, bool disposeReader = true)
 		{
 			var startedOn = DateTime.UtcNow;
 			var stopwatch = Stopwatch.StartNew();
@@ -425,7 +429,11 @@ namespace LinqToDB.Data
 
 			InitCommand();
 
+#if !NATIVE_ASYNC
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
+#else
+			await using (DataConnection.DataProvider.ExecuteScope(DataConnection))
+#endif
 			{
 #if NETSTANDARD2_1PLUS
 				var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
@@ -580,7 +588,11 @@ namespace LinqToDB.Data
 
 			T result;
 
+#if !NATIVE_ASYNC
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
+#else
+			await using (DataConnection.DataProvider.ExecuteScope(DataConnection))
+#endif
 			{
 #if NETSTANDARD2_1PLUS
 				var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
@@ -976,11 +988,6 @@ namespace LinqToDB.Data
 					var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
 					var objectReader  = GetObjectReader<T>(DataConnection, rd.DataReader!, CommandText, additionalKey);
 
-#if DEBUG
-					//var value = rd.GetValue(0);
-					//return default (T);
-#endif
-
 					try
 					{
 						result = objectReader(rd.DataReader!);
@@ -1047,7 +1054,11 @@ namespace LinqToDB.Data
 
 			T result = default!;
 
+#if !NATIVE_ASYNC
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
+#else
+			await using (DataConnection.DataProvider.ExecuteScope(DataConnection))
+#endif
 			{
 #if NETSTANDARD2_1PLUS
 				var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);

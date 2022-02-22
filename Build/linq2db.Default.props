@@ -34,12 +34,6 @@
 		<GenerateNeutralResourcesLanguageAttribute>false</GenerateNeutralResourcesLanguageAttribute>
 
 		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-
-		<!--TODO: remove props below with netcoreapp2.1-->
-		<!--disable whinings about netcoreapp2.1 EOL-->
-		<CheckEolTargetFramework>false</CheckEolTargetFramework>
-		<!--disable System.Security.AccessControl netcoreapp2.1 warnings-->
-		<SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Code Analysis Setup">
@@ -63,6 +57,11 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" />
 		<AdditionalFiles Include="$(MSBuildThisFileDirectory)/BannedSymbols.txt" />
+
+		<PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>build; analyzers</IncludeAssets>
+		</PackageReference>
 	</ItemGroup>
 
 </Project>

@@ -47,7 +47,6 @@ parameters:
 
 # TARGET FRAMEWORK SELECTORS
 # - enable_fw_net472    (true/false string) : enables testrun against .net framework 4.7.2
-# - enable_fw_netcore21 (true/false string) : enables testrun against .net core 2.1
 # - enable_fw_netcore31 (true/false string) : enables testrun against .net core 3.1
 # - enable_fw_net50     (true/false string) : enables testrun against .net 5.0
 # - enable_fw_net60     (true/false string) : enables testrun against .net 6.0
@@ -92,7 +91,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: true
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: true
           enable_fw_net60: true
@@ -113,7 +111,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: true
-          enable_fw_netcore21: false
           enable_fw_netcore31: true
           enable_fw_net50: true
           enable_fw_net60: true
@@ -133,7 +130,6 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: false
@@ -153,7 +149,6 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: false
@@ -172,7 +167,6 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: false
@@ -192,7 +186,6 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: false
@@ -212,7 +205,6 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: false
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -232,7 +224,6 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: false
-          enable_fw_netcore21: false # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
           enable_fw_netcore31: false # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
           enable_fw_net50: false # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
           enable_fw_net60: false
@@ -253,7 +244,6 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -277,7 +267,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
-          enable_fw_netcore21: false
           enable_fw_netcore31: true
           enable_fw_net50: true
           enable_fw_net60: false
@@ -300,7 +289,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -325,7 +313,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: true
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -349,7 +336,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
-          enable_fw_netcore21: false
           enable_fw_netcore31: true
           enable_fw_net50: false
           enable_fw_net60: false
@@ -372,7 +358,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -395,7 +380,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -418,7 +402,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -443,7 +426,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: true
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -467,7 +449,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -491,7 +472,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -515,7 +495,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: true
           enable_fw_net60: false
@@ -539,7 +518,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -560,7 +538,6 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -580,7 +557,6 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -600,7 +576,6 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -620,7 +595,6 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -640,7 +614,6 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -660,7 +633,6 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -680,7 +652,6 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -700,7 +671,6 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -720,7 +690,6 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -740,7 +709,6 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -765,7 +733,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: true
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -790,7 +757,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: true
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -815,7 +781,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos:  true
           enable_fw_net472: true
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: true
           enable_fw_net60: false
@@ -840,7 +805,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos:  true
           enable_fw_net472: true
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: true
           enable_fw_net60: false
@@ -864,7 +828,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: true
           enable_fw_net60: false
@@ -888,7 +851,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -911,7 +873,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -935,7 +896,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -958,7 +918,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -981,7 +940,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true
@@ -1007,7 +965,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: true
           enable_fw_net60: false
@@ -1033,7 +990,6 @@ jobs:
           enable_os_ubuntu: false # true (needs working docker image)
           enable_os_macos: # false true (needs working docker image)
           enable_fw_net472: false
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: true
           enable_fw_net60: false
@@ -1058,7 +1014,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: true
           enable_fw_net60: false
@@ -1082,7 +1037,6 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: false # start takes 'forever'
           enable_fw_net472: false
-          enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
           enable_fw_net60: true

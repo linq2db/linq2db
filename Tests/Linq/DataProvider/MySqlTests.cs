@@ -1,4 +1,7 @@
-﻿using System;
+﻿extern alias MySqlData;
+extern alias MySqlConnector;
+
+using System;
 using System.Data.Linq;
 using System.Linq;
 using System.Xml;
@@ -19,14 +22,15 @@ using LinqToDB.DataProvider.MySql;
 using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
-
-#if !NETCOREAPP2_1
-using MySqlDataDateTime      = MySql.Data.Types.MySqlDateTime;
-using MySqlDataDecimal       = MySql.Data.Types.MySqlDecimal;
-using MySqlConnectorDateTime = MySqlConnector.MySqlDateTime;
-#if NET5_0_OR_GREATER
-using MySqlConnectorDecimal  = MySqlConnector.MySqlDecimal;
+using MySqlDataDateTime      = MySqlData::MySql.Data.Types.MySqlDateTime;
+using MySqlDataDecimal       = MySqlData::MySql.Data.Types.MySqlDecimal;
+#if NETFRAMEWORK
+using MySqlConnectorDateTime = MySqlConnector::MySql.Data.Types.MySqlDateTime;
+#else
+using MySqlConnectorDateTime = MySqlConnector::MySqlConnector.MySqlDateTime;
 #endif
+#if NET5_0_OR_GREATER
+using MySqlConnectorDecimal  = MySqlConnector::MySqlConnector.MySqlDecimal;
 #endif
 
 namespace Tests.DataProvider
@@ -93,7 +97,6 @@ namespace Tests.DataProvider
 				Assert.That(TestType<string>					(conn, "enumDataType"),                                    Is.EqualTo("Green"));
 				Assert.That(TestType<string>					(conn, "setDataType"),                                     Is.EqualTo("one"));
 
-#if !NETCOREAPP2_1
 				using (new DisableBaseline("Platform-specific baselines"))
 				{
 					if (context != ProviderName.MySqlConnector && context != TestProvName.MariaDB)
@@ -116,11 +119,9 @@ namespace Tests.DataProvider
 							Assert.That(TestType<MySqlConnectorDateTime?>(conn, "datetimeDataType", DataType.DateTime), Is.EqualTo(new MySqlConnectorDateTime(2012, 12, 12, 12, 12, 12, 0)));
 					}
 				}
-#endif
 			}
 		}
 
-#if !NETCOREAPP2_1
 		[Table]
 		public class BigDecimalMySqlDataTable
 		{
@@ -209,10 +210,8 @@ namespace Tests.DataProvider
 				//Assert.IsNull(records[1].DecimalN);
 			}
 		}
-#endif
 
 #if NET5_0_OR_GREATER
-
 		[Table]
 		public class BigDecimalMySqlConnectorTable
 		{

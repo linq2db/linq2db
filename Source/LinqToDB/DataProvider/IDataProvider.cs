@@ -37,6 +37,9 @@ namespace LinqToDB.DataProvider
 		/// <returns>Initialized command instance.</returns>
 		DbCommand          InitCommand           (DataConnection dataConnection, DbCommand command, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters);
 		void               DisposeCommand        (DbCommand command);
+#if NETSTANDARD2_1PLUS
+		ValueTask          DisposeCommandAsync   (DbCommand command);
+#endif
 		object?            GetConnectionInfo     (DataConnection dataConnection, string parameterName);
 		Expression         GetReaderExpression   (DbDataReader reader, int idx, Expression readerExpression, Type toType);
 		bool?              IsDBNullAllowed       (DbDataReader reader, int idx);
@@ -44,15 +47,15 @@ namespace LinqToDB.DataProvider
 		Type               ConvertParameterType  (Type type, DbDataType dataType);
 		CommandBehavior    GetCommandBehavior    (CommandBehavior commandBehavior);
 		/// <summary>
-		/// Returns context object to wrap calls of Execute* methods.
+		/// Returns scoped context object to wrap calls of Execute* methods.
 		/// Using this, provider could e.g. change thread culture during Execute* calls.
 		/// Following calls wrapped right now:
 		/// DataConnection.ExecuteNonQuery
 		/// DataConnection.ExecuteReader.
 		/// </summary>
 		/// <param name="dataConnection">Data connection instance used with scope.</param>
-		/// <returns>Returns disposable scope object. Cannot be null.</returns>
-		IDisposable?       ExecuteScope          (DataConnection dataConnection);
+		/// <returns>Returns disposable scope object. Can be <c>null</c>.</returns>
+		IExecutionScope?   ExecuteScope          (DataConnection dataConnection);
 
 		ISchemaProvider    GetSchemaProvider     ();
 

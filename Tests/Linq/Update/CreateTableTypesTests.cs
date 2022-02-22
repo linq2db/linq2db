@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using System.Text.Json;
 using JetBrains.Annotations;
 
 using LinqToDB;
@@ -9,8 +9,6 @@ using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
-
-using Newtonsoft.Json;
 
 using NUnit.Framework;
 
@@ -176,14 +174,14 @@ namespace Tests.xUpdate
 				.HasColumn(e => e.Id);
 			testCase.ColumnBuilder(entity);
 
-			ms.SetConverter<List<(uint, string)>, string>(JsonConvert.SerializeObject);
+			ms.SetConverter<List<(uint, string)>, string>(_ => JsonSerializer.Serialize(_));
 			ms.SetConverter<List<(uint, string)>, DataParameter>(x =>
 				new DataParameter()
 				{
-					Value = JsonConvert.SerializeObject(x),
+					Value = JsonSerializer.Serialize(x),
 					DataType = DataType.NVarChar
 				});
-			ms.SetConverter<string, List<(uint, string)>?>(JsonConvert.DeserializeObject<List<(uint, string)>>);
+			ms.SetConverter<string, List<(uint, string)>?>(_ => JsonSerializer.Deserialize<List<(uint, string)>>(_));
 
 			using (var db    = GetDataContext(context, ms))
 			using (var table = db.CreateLocalTable<CreateTableTypes>())

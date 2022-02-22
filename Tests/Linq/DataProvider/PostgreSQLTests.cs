@@ -1945,15 +1945,7 @@ namespace Tests.DataProvider
 				Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000, 2, 3), true, new DateTime(2000, 3, 4), false), record.DateRangeInclusive);
 				Assert.AreEqual(new NpgsqlRange<DateTime>(new DateTime(2000, 2, 4), true, new DateTime(2000, 3, 3), false), record.DateRangeExclusive);
 				Assert.AreEqual(range3, record.TSRange);
-
-#if NETCOREAPP3_1 || NET5_0 || NET6_0
-				// npgsql 6+
 				Assert.AreEqual(range4, record.TSTZRange);
-#else
-				// pre-v6 returned data with Local kind
-				range4 = new NpgsqlRange<DateTime>(range4.LowerBound.ToLocalTime(), range4.UpperBound.ToLocalTime());
-				Assert.AreEqual(range4, record.TSTZRange);
-#endif
 			}
 		}
 
@@ -1983,12 +1975,6 @@ namespace Tests.DataProvider
 				var records = table.OrderBy(_ => _.Id).ToArray();
 
 				Assert.AreEqual(100, records.Length);
-
-#if !NETCOREAPP3_1 && !NET5_0 && !NET6_0
-				// pre-v6 returned data with Local kind
-				foreach (var item in items)
-					item.TSTZRange = new NpgsqlRange<DateTime>(item.TSTZRange.LowerBound.ToLocalTime(), true, item.TSTZRange.UpperBound.ToLocalTime(), true);
-#endif
 
 				AreEqual(
 					items.Select(t => new
@@ -2033,12 +2019,6 @@ namespace Tests.DataProvider
 				var records = await table.OrderBy(_ => _.Id).ToArrayAsync();
 
 				Assert.AreEqual(100, records.Length);
-
-#if !NETCOREAPP3_1 && !NET5_0 && !NET6_0
-				// pre-v6 returned data with Local kind
-				foreach (var item in items)
-					item.TSTZRange = new NpgsqlRange<DateTime>(item.TSTZRange.LowerBound.ToLocalTime(), true, item.TSTZRange.UpperBound.ToLocalTime(), true);
-#endif
 
 				AreEqual(
 					items.Select(t => new

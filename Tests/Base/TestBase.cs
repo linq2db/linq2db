@@ -130,17 +130,6 @@ namespace Tests
 			// Configuration.Linq.GenerateExpressionTest  = true;
 			var assemblyPath = typeof(TestBase).Assembly.GetPath()!;
 
-#if NET472
-			try
-			{
-				SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
-			}
-			catch // this can fail during tests discovering with NUnitTestAdapter
-			{
-				// ignore
-			}
-#endif
-
 			Environment.CurrentDirectory = assemblyPath;
 
 			TestExternals.Log($"CurrentDirectory          : {Environment.CurrentDirectory}");
@@ -155,9 +144,7 @@ namespace Tests
 			var userDataProvidersJson =
 				File.Exists(userDataProvidersJsonFile) ? File.ReadAllText(userDataProvidersJsonFile) : null;
 
-#if NETCOREAPP2_1
-			var configName = "CORE21";
-#elif NETCOREAPP3_1
+#if NETCOREAPP3_1
 			var configName = "CORE31";
 #elif NET5_0
 			var configName = "NET50";
@@ -166,7 +153,6 @@ namespace Tests
 #elif NET472
 			var configName = "NET472";
 #else
-			var configName = "";
 #error Unknown framework
 #endif
 
@@ -175,6 +161,7 @@ namespace Tests
 			configName += ".Azure";
 #endif
 			var testSettings = SettingsReader.Deserialize(configName, dataProvidersJson, userDataProvidersJson);
+			testSettings.Connections ??= new();
 
 			CopyDatabases();
 
@@ -218,10 +205,13 @@ namespace Tests
 				TestContext.WriteLine(str);
 				TestExternals.Log(str);
 
-				DataConnection.AddOrSetConfiguration(
-					provider.Key,
-					provider.Value.ConnectionString,
-					provider.Value.Provider ?? "");
+				if (provider.Value.ConnectionString != null)
+				{
+					DataConnection.AddOrSetConfiguration(
+						provider.Key,
+						provider.Value.ConnectionString,
+						provider.Value.Provider ?? "");
+				}
 			}
 #endif
 

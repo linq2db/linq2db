@@ -9,29 +9,14 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Model\Tests.Model.csproj" />
 
-		<PackageReference Include="NUnit3TestAdapter" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" />
-		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
-		<PackageReference Include="FastExpressionCompiler" />
+		<PackageReference Include="NUnit" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net472' ">
 		<Reference Include="Microsoft.CSharp" />
-		
-		<None Update="SqlServerTypes\x64\msvcr120.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="SqlServerTypes\x64\SqlServerSpatial140.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="SqlServerTypes\x86\msvcr120.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="SqlServerTypes\x86\SqlServerSpatial140.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
+		<Reference Include="System.ServiceModel" />
 
-		<PackageReference Include="Microsoft.SqlServer.Types" />
-
+		<PackageReference Include="System.Text.Json" />
 	</ItemGroup>
+
 </Project>

@@ -57,12 +57,7 @@ namespace Tests
 		public static void Init()
 		{
 			// initialize miniprofiler or it will not wrap non-connection objects
-#if NET472
-			MiniProfiler.Settings.ProfilerProvider = new SingletonProfilerProvider();
-			MiniProfiler.Start();
-#else
 			MiniProfiler.DefaultOptions.StartProfiler();
-#endif
 
 			DataConnection.AddDataProvider(TestProvName.SQLiteClassicMiniProfilerMapped  , new SQLiteMiniprofilerProvider(true ));
 			DataConnection.AddDataProvider(TestProvName.SQLiteClassicMiniProfilerUnmapped, new SQLiteMiniprofilerProvider(false));

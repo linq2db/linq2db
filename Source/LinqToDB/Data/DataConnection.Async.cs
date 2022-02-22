@@ -14,6 +14,20 @@ namespace LinqToDB.Data
 
 	public partial class DataConnection
 	{
+#if NETSTANDARD2_1PLUS
+		/// <summary>
+		/// This is internal API and is not intended for use by Linq To DB applications.
+		/// </summary>
+		public async ValueTask DisposeCommandAsync()
+		{
+			if (_command != null)
+			{
+				await DataProvider.DisposeCommandAsync(_command);
+				_command = null;
+			}
+		}
+#endif
+
 		/// <summary>
 		/// Starts new transaction asynchronously for current connection with default isolation level. If connection already has transaction, it will be rolled back.
 		/// </summary>
@@ -181,7 +195,11 @@ namespace LinqToDB.Data
 				await _contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosingAsync(arg), new DataContextEventData(this))
 					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
+#if NETSTANDARD2_1PLUS
+			await DisposeCommandAsync();
+#else
 			DisposeCommand();
+#endif
 
 			if (TransactionAsync != null && _closeTransaction)
 			{
@@ -237,7 +255,11 @@ namespace LinqToDB.Data
 		internal async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
 		{
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
+#if NATIVE_ASYNC
+				await using (DataProvider.ExecuteScope(this))
+#else
 				using (DataProvider.ExecuteScope(this))
+#endif
 					return await ExecuteNonQueryAsync(CurrentCommand!, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			var now = DateTime.UtcNow;
@@ -256,7 +278,11 @@ namespace LinqToDB.Data
 			try
 			{
 				int ret;
+#if NATIVE_ASYNC
+				await using (DataProvider.ExecuteScope(this))
+#else
 				using (DataProvider.ExecuteScope(this))
+#endif
 					ret = await ExecuteNonQueryAsync(CurrentCommand!, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				if (TraceSwitchConnection.TraceInfo)
@@ -311,7 +337,11 @@ namespace LinqToDB.Data
 		internal async Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
 		{
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
+#if NATIVE_ASYNC
+				await using (DataProvider.ExecuteScope(this))
+#else
 				using (DataProvider.ExecuteScope(this))
+#endif
 					return await ExecuteScalarAsync(CurrentCommand!, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			var now = DateTime.UtcNow;
@@ -330,7 +360,11 @@ namespace LinqToDB.Data
 			try
 			{
 				object? ret;
+#if NATIVE_ASYNC
+				await using (DataProvider.ExecuteScope(this))
+#else
 				using (DataProvider.ExecuteScope(this))
+#endif
 					ret = await ExecuteScalarAsync(CurrentCommand!, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				if (TraceSwitchConnection.TraceInfo)
@@ -394,7 +428,11 @@ namespace LinqToDB.Data
 			CancellationToken cancellationToken)
 		{
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
+#if NATIVE_ASYNC
+				await using (DataProvider.ExecuteScope(this))
+#else
 				using (DataProvider.ExecuteScope(this))
+#endif
 					return await ExecuteReaderAsync(CurrentCommand!, commandBehavior, cancellationToken)
 						.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
@@ -415,7 +453,11 @@ namespace LinqToDB.Data
 			{
 				DataReaderWrapper ret;
 
+#if NATIVE_ASYNC
+				await using (DataProvider.ExecuteScope(this))
+#else
 				using (DataProvider.ExecuteScope(this))
+#endif
 					ret = await ExecuteReaderAsync(CurrentCommand!, commandBehavior, cancellationToken)
 						.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 

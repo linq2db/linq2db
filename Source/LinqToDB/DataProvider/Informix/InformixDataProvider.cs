@@ -81,7 +81,7 @@ namespace LinqToDB.DataProvider.Informix
 				return dr.GetDecimal(idx);
 		}
 
-		public override IDisposable ExecuteScope(DataConnection dataConnection) => new InvariantCultureRegion(base.ExecuteScope(dataConnection));
+		public override IExecutionScope ExecuteScope(DataConnection dataConnection) => new InvariantCultureRegion(null);
 
 		public override TableOptions SupportedTableOptions =>
 			TableOptions.IsTemporary               |

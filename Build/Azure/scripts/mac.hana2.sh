@@ -50,12 +50,6 @@ cat <<-EOJSON > UserDataProviders.json
             }
         }
     },
-    "CORE21.Azure": {
-        "BasedOn": "BASE.Azure",
-        "Providers": [
-            "SapHana.Odbc"
-        ]
-    },
     "CORE31.Azure": {
         "BasedOn": "BASE.Azure",
         "Providers": [

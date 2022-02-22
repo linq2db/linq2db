@@ -4,8 +4,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-using FirebirdSql.Data.FirebirdClient;
-
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
@@ -279,9 +277,9 @@ namespace Tests
 
 			public override void Dispose()
 			{
-				if (DataContext is DataConnection dc && dc.Connection is FbConnection fbc )
+				if (DataContext is DataConnection dc && dc.DataProvider.Name.Contains(ProviderName.Firebird))
 				{
-					FbConnection.ClearPool(fbc);
+					FirebirdTools.ClearAllPools();
 				}
 
 				DataContext.Close();

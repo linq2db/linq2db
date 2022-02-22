@@ -1452,9 +1452,6 @@ namespace Tests.Data
 			[IncludeDataSources(false,
 				TestProvName.AllOracle,
 				ProviderName.SqlCe,
-#if NET472
-				ProviderName.SQLiteMS,
-#endif
 				ProviderName.SybaseManaged)] string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -1704,9 +1701,6 @@ namespace Tests.Data
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				TestProvName.AllSQLiteClassic,
-#if NET472
-				ProviderName.SQLiteMS,
-#endif
 				TestProvName.AllSqlServer,
 				TestProvName.AllSybase)] string context)
 		{

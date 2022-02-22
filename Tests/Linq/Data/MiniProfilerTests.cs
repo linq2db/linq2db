@@ -1,4 +1,7 @@
-﻿using System;
+﻿extern alias MySqlData;
+extern alias MySqlConnector;
+
+using System;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
@@ -19,11 +22,11 @@ using StackExchange.Profiling;
 using StackExchange.Profiling.Data;
 using Tests.Model;
 
-#if !NETCOREAPP2_1
-using MySqlDataDateTime           = MySql.Data.Types.MySqlDateTime;
-using MySqlDataDecimal            = MySql.Data.Types.MySqlDecimal;
-using MySqlConnectorDateTime      = MySqlConnector.MySqlDateTime;
-using MySqlDataMySqlConnection    = MySql.Data.MySqlClient.MySqlConnection;
+using MySqlDataMySqlConnection = MySqlData::MySql.Data.MySqlClient.MySqlConnection;
+using MySqlDataDateTime        = MySqlData::MySql.Data.Types.MySqlDateTime;
+using MySqlDataDecimal         = MySqlData::MySql.Data.Types.MySqlDecimal;
+#if NET5_0_OR_GREATER
+using MySqlConnectorDateTime   = MySqlConnector::MySqlConnector.MySqlDateTime;
 #endif
 using System.Globalization;
 using LinqToDB.DataProvider.SQLite;
@@ -253,7 +256,6 @@ namespace Tests.Data
 			public DateTime Value { get; set; }
 		}
 
-#if !NETCOREAPP2_1
 		class MapperExpressionTest2
 		{
 			public MySqlDataDateTime Value { get; set; }
@@ -299,6 +301,7 @@ namespace Tests.Data
 
 		// tests support of data reader methods by LinqService
 		// full of hacks to made test work as expected
+#if !NETFRAMEWORK
 		[Test]
 		public void TestLinqService([IncludeDataSources(true, ProviderName.MySql)] string context, [Values] ConnectionType type)
 		{
@@ -350,6 +353,7 @@ namespace Tests.Data
 				//Assert.AreEqual(dtValue, ((MySqlDataDateTime)rawDtValue).Value);
 			}
 		}
+#endif
 
 		[Test]
 		public void TestMySqlData([IncludeDataSources(TestProvName.AllMySqlData)] string context, [Values] ConnectionType type)
@@ -427,6 +431,7 @@ namespace Tests.Data
 				};
 
 				// test provider-specific type readers
+#if NET5_0_OR_GREATER
 				var dtValue = new DateTime(2012, 12, 12, 12, 12, 12, 0);
 				Assert.AreEqual(dtValue, db.Execute<MySqlConnectorDateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", dtValue, DataType.DateTime)).GetDateTime());
 				Assert.AreEqual(dtValue, db.Execute<MySqlConnectorDateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", dtValue, DataType.DateTime)).GetDateTime());
@@ -441,6 +446,7 @@ namespace Tests.Data
 					Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.DateTime)));
 					Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.DateTime2)));
 				}
+#endif
 
 				// assert provider-specific parameter type name
 				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE tinyintDataType = @p", new DataParameter("@p", (sbyte)111, DataType.SByte)));
@@ -479,7 +485,6 @@ namespace Tests.Data
 				db.DataProvider.GetSchemaProvider().GetSchema(db);
 			}
 		}
-#endif
 
 		[Test]
 		public void TestSystemSqlite([IncludeDataSources(ProviderName.SQLiteClassic)] string context, [Values] ConnectionType type)

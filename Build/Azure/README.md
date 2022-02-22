@@ -1,6 +1,5 @@
 ﻿This directory contains test configs and setup scripts for test jobs on Azure Pipelines
 - `net472` folder stores test job configs for .NET 4.7.2 Windows tests
-- `netcoreapp21` folder stores test job configs for `netcoreapp2.1` test runs for Windows, Linux and MacOS
 - `netcoreapp31` folder stores test job configs for `netcoreapp3.1` test runs for Windows, Linux and MacOS
 - `net50` folder stores test job configs for `net5.0` test runs for Windows, Linux and MacOS
 - `net60` folder stores test job configs for `net6.0` test runs for Windows, Linux and MacOS
@@ -59,7 +58,7 @@ Legend:
 - :heavy_check_mark: - test job implemented
 - :x: - test job not implemented yet
 - `netfx`: .NET Framework (4.7.2)
-- `netcore`: .NET Core 2.1/3.1 OR .NET 5.0 / 6.0
+- `netcore`: .NET Core 3.1 OR .NET 5.0 / 6.0
 - :door: - Windows 2022, 2019 or 2016 (depends on used docker image for database)
 - :penguin: - Linux (Ununtu 20.04)
 - :green_apple: - MacOS Catalina 10.15
@@ -67,11 +66,10 @@ Legend:
 | Database (version): provider \ Target framework (OS) | netfx :door: | netcore :door: | netcore :penguin: | netcore :green_apple: |
 |:---|:---:|:---:|:---:|:---:|
 |TestNoopProvider<sup>[1](#notes)</sup>|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|SQLite [3.13.0](https://www.sqlite.org/releaselog/3_13_0.html)<sup>[2](#notes)</sup><br>[Microsoft.Data.SQLite](https://www.nuget.org/packages/Microsoft.Data.SQLite/) 1.1.1<br>with NorthwindDB Tests|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
-|SQLite [3.33.0](https://www.sqlite.org/releaselog/3_33_0.html) / [3.35.5](https://www.sqlite.org/releaselog/3_35_5.html)<br>[Microsoft.Data.SQLite](https://www.nuget.org/packages/Microsoft.Data.SQLite/) 5.0.14 / 6.0.2<br>with NorthwindDB Tests|:heavy_minus_sign:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
+|SQLite [3.35.5](https://www.sqlite.org/releaselog/3_35_5.html)<br>[Microsoft.Data.SQLite](https://www.nuget.org/packages/Microsoft.Data.SQLite/) 6.0.2<br>with NorthwindDB Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |SQLite [3.37.0](https://www.sqlite.org/draft/releaselog/current.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/) 1.0.115.5<br>with NorthwindDB Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|SQLite [3.37.0](https://www.sqlite.org/draft/releaselog/current.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/) 1.0.115.5<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/) 4.2.22 (core)<br>[MiniProfiler](https://www.nuget.org/packages/MiniProfiler/) 3.2.0.157 (netfx)<br>without mappings to underlying provider|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|SQLite [3.37.0](https://www.sqlite.org/draft/releaselog/current.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/) 1.0.115.5<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/) 4.2.22 (core)<br>[MiniProfiler](https://www.nuget.org/packages/MiniProfiler/) 3.2.0.157 (netfx)<br>with mappings to underlying provider|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
+|SQLite [3.37.0](https://www.sqlite.org/draft/releaselog/current.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/) 1.0.115.5<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/) 4.2.22<br>without mappings to underlying provider|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
+|SQLite [3.37.0](https://www.sqlite.org/draft/releaselog/current.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/) 1.0.115.5<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/) 4.2.22<br>with mappings to underlying provider|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |Access<sup>[3](#notes)</sup><br>Jet 4.0 OLE DB|:heavy_check_mark:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
 |Access<sup>[3](#notes)</sup><br>ACE 12 OLE DB|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
 |Access<br>MDB ODBC|:heavy_check_mark:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
@@ -97,14 +95,14 @@ Legend:
 |MySQL 8<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.28|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MySQL 8<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 0.69.10/1.3.14/2.1.7|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MariaDB 10<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.28|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 9.2<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.1.10 (netfx) / 5.0.12 (core2.1) / 6.0.3 (core3.1+)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 9.3<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.1.10 (netfx) / 5.0.12 (core2.1) / 6.0.3 (core3.1+)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 9.5<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.1.10 (netfx) / 5.0.12 (core2.1) / 6.0.3 (core3.1+)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 10<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.1.10 (netfx) / 5.0.12 (core2.1) / 6.0.3 (core3.1+)|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 11<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.1.10 (netfx) / 5.0.12 (core2.1) / 6.0.3 (core3.1+)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 12<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.1.10 (netfx) / 5.0.12 (core2.1) / 6.0.3 (core3.1+)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 13<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.1.10 (netfx) / 5.0.12 (core2.1) / 6.0.3 (core3.1+)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|PostgreSQL 14<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 4.1.10 (netfx) / 5.0.12 (core2.1) / 6.0.3 (core3.1+)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 9.2<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 6.0.3 |:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 9.3<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 6.0.3 |:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 9.5<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 6.0.3 |:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 10<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 6.0.3 |:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 11<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 6.0.3 |:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 12<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 6.0.3 |:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 13<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 6.0.3 |:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 14<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 6.0.3 |:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |DB2 LUW 11.5.0.0a<br>[IBM.Data.DB2](https://www.nuget.org/packages/IBM.Data.DB.Provider/) 11.5.5010.4 (netfx)<br>[IBM.Data.DB2.Core](https://www.nuget.org/packages/IBM.Data.DB2.Core/) 2.2.0.100 ([osx](https://www.nuget.org/packages/IBM.Data.DB2.Core-osx/) 2.0.0.100, [lin](https://www.nuget.org/packages/IBM.Data.DB2.Core-lnx/) 2.2.0.100) (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Informix 12.10.FC12W1DE<br>IBM.Data.Informix (SQLI) 4.0.410.10|:x:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
 |Informix 14.10<br>IBM.Data.Informix (SQLI) 4.0.410.10|:x:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
@@ -117,19 +115,19 @@ Legend:
 |SAP/Sybase ASE 16.2<br>[AdoNetCore.AseClient](https://www.nuget.org/packages/AdoNetCore.AseClient/) 0.19.2|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |SAP/Sybase ASE 16.2<br>Native Client|:x:|:x:|:x:|:x:|
 |Oracle 11g XE<br>Native Client 4.122.19.1 |:x:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
-|Oracle 11g XE<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) 21.5.0 (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) 2.19.140/3.21.50 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|Oracle 11g XE<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) 21.5.0 (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) 3.21.50 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Oracle 12c<br>Native Client|:x:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
-|Oracle 12c<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) 21.5.0 (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) 2.19.140/3.21.50 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|Oracle 12c<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) 21.5.0 (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) 3.21.50 (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Oracle 18c XE<br>Native Client|:x:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
-|Oracle 18c XE<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) 21.5.0 (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) 2.19.140/3.21.50 (core)|:x:|:x:|:x:|:x:|
+|Oracle 18c XE<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) 21.5.0 (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) 3.21.50 (core)|:x:|:x:|:x:|:x:|
 |Firebird 2.1<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/) 8.5.4|:x:|:x:|:x:|:x:|
 |Firebird 2.5<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/) 8.5.4|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Firebird 3.0<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/) 8.5.4|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|Firebird 4.0 (RC1)<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/) 8.5.4|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|Firebird 4.0<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/) 8.5.4|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 
 ###### Notes:
 1. `TestNoopProvider` is a fake test provider to perform tests without database dependencies
-2. `1.1.1` is the last version of `Microsoft.Data.SQLite`, that supports .NET Framework, so we use it for `net4.7.2` test configuration and recent version for `netcore`
+2. ~removed~
 3. needs System.Data.OleDb 4.7.1+ for .Net Core support (contains critical [issue](https://github.com/dotnet/runtime/issues/36954) that could crash application, so ODBC provider is recommended for .net core)
 4. for SQL CE right now we don't run .net core tests
 5. Northwind FTS SQL Server tests not enabled yet, as we need SQL Server images with full-text search included
@@ -144,7 +142,7 @@ Legend:
 |`ProviderName.DB2zOS`|not used||
 |`ProviderName.Firebird`|Firebird 2.5|Should be used for latest version of FB and this one replaced with `Firebird25`|
 |`TestProvName.Firebird3`|Firebird 3.0||
-|`TestProvName.Firebird4`|Firebird 4.0 (RC1)||
+|`TestProvName.Firebird4`|Firebird 4.0||
 |`ProviderName.Informix`|Informix 12 (IDS or SQLI using IBM.Data.Informix)| TODO: move to v14|
 |`ProviderName.InformixDB2`|Informix 12 (IDS using IBM.Data.DB2)| TODO: move to v14|
 |`TestProvName.SqlAzure`|Azure Sql||
