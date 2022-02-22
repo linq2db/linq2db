@@ -15,18 +15,24 @@ steps:
   condition: eq('${{ parameters.framework }}', 'netcoreapp2.1')
 
 - task: UseDotNet@2
+  displayName: 'Install .net core 3.1'
+  inputs:
+    packageType: sdk
+    version: 3.1.x
+  condition: eq('${{ parameters.framework }}', 'netcoreapp3.1')
+
+- task: UseDotNet@2
   displayName: 'Install .net 5'
   inputs:
     packageType: sdk
-    version: 5.0.x
+    version: 5.x
   condition: eq('${{ parameters.framework }}', 'net5.0')
 
 - task: UseDotNet@2
   displayName: 'Install .net 6'
   inputs:
     packageType: sdk
-    version: 6.0.x
-  condition: eq('${{ parameters.framework }}', 'net6.0')
+    version: 6.x
 
 - task: CmdLine@2
   inputs:
