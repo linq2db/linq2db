@@ -202,8 +202,9 @@ dotnet_style_qualification_for_property = false:refactoring
 dotnet_style_qualification_for_method = false:refactoring
 dotnet_style_qualification_for_event = false:refactoring
 
-dotnet_diagnostic.IDE0004.severity = error # IDE0004: Remove unnecessary cast
-dotnet_diagnostic.IDE0005.severity = warning # IDE0005: Remove unnecessary import
+# IDE0004: don't enable, very slow on our code-base, requires research/bug report
+dotnet_diagnostic.IDE0004.severity = none # IDE0004: Remove unnecessary cast
+dotnet_diagnostic.IDE0005.severity = none # IDE0005: Remove unnecessary import
 
 # not reviewed yet rules
 dotnet_diagnostic.IDE0007.severity = none # IDE0007: Use 'var' instead of explicit type
@@ -255,7 +256,11 @@ dotnet_diagnostic.IDE0079.severity = none # IDE0079: Remove unnecessary suppress
 dotnet_diagnostic.IDE0080.severity = none # IDE0080: Remove unnecessary suppression operator
 dotnet_diagnostic.IDE0081.severity = none # IDE0081: Remove ByVal
 dotnet_diagnostic.IDE0083.severity = none # IDE0083: Use pattern matching (not operator)
+dotnet_diagnostic.IDE0090.severity = none # IDE0090: new expression can be simplified
+dotnet_diagnostic.IDE0100.severity = none # IDE0100: remove redundant equality
+dotnet_diagnostic.IDE0120.severity = none # IDE0120: Simplify LINQ expression
 dotnet_diagnostic.IDE0130.severity = none # IDE0130: Namespace does not match folder structure
+dotnet_diagnostic.IDE0150.severity = none # IDE0150: null check can be clarified
 dotnet_diagnostic.IDE1006.severity = none # IDE1006: Naming rule violation
 
 dotnet_diagnostic.CS1998.severity = error # CS1998: Async method lacks 'await' operators and will run synchronously

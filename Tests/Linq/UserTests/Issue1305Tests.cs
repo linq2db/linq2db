@@ -9,7 +9,7 @@ namespace Tests.UserTests
 {
 	/// <summary>
 	/// Test fixes to Issue #1305.
-	/// Before fix fields in derived tables were added first in the column order by <see cref="DataExtensions.CreateTable{T}(IDataContext, string, string, string, string, string, LinqToDB.SqlQuery.DefaultNullable)"/>.
+	/// Before fix fields in derived tables were added first in the column order by <see cref="DataExtensions.CreateTable{T}(IDataContext, string?, string?, string?, string?, string?, LinqToDB.SqlQuery.DefaultNullable, string?, TableOptions)"/>.
 	/// </summary>
 	[TestFixture]
 	public class Issue1305Tests : TestBase

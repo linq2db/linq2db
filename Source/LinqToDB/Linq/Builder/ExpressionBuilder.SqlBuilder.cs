@@ -1998,22 +1998,14 @@ namespace LinqToDB.Linq.Builder
 
 				if (lmembers.Count == 0)
 				{
-					var r = right;
-					right = left;
-					left = r;
-
-					var c = rightContext;
-					rightContext = leftContext;
-					leftContext = c;
-
-					var q = qsr;
-					qsl = q;
+					(left, right)               = (right, left);
+					(leftContext, rightContext) = (rightContext, leftContext);
+					var q                       = qsr;
+					qsl                         = q;
 
 					sr = false;
 
-					var lm   = lmembers;
-					lmembers = rmembers;
-					rmembers = lm;
+					(rmembers, lmembers) = (lmembers, rmembers);
 				}
 
 				isNull = right.IsNullValue();
@@ -2029,16 +2021,11 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (sl == false)
 				{
-					var r = right;
-					right = left;
-					left  = r;
-
-					var c        = rightContext;
-					rightContext = leftContext;
-					// value not used below: https://pvs-studio.com/ru/blog/posts/csharp/0887/
+					(left, right)               = (right, left);
+					// leftContext value not used below: https://pvs-studio.com/ru/blog/posts/csharp/0887/
 					// but! we have test that fails in this place (TestDefaultExpression_08)
 					// so it could be incomplete implementation
-					//leftContext = c;
+					(leftContext, rightContext) = (rightContext, leftContext);
 
 					var q = qsr;
 					qsl   = q;
@@ -2106,16 +2093,14 @@ namespace LinqToDB.Linq.Builder
 
 		internal ISqlPredicate? ConvertNewObjectComparison(IBuildContext context, ExpressionType nodeType, Expression left, Expression right)
 		{
-			left = FindExpression(left);
+			left  = FindExpression(left);
 			right = FindExpression(right);
 
 			var condition = new SqlSearchCondition();
 
 			if (left.NodeType != ExpressionType.New)
 			{
-				var temp = left;
-				left = right;
-				right = temp;
+				(right, left) = (left, right);
 			}
 
 			var newExpr  = (NewExpression)left;

@@ -1364,7 +1364,7 @@ namespace LinqToDB.SqlQuery
 						throw new InvalidOperationException($"Convert visitor not implemented for element {element.ElementType}");
 				}
 
-				if (element != newElement && element is IQueryExtendible { SqlQueryExtensions: { Count: > 0 } } qe && newElement is IQueryExtendible ne)
+				if (element != newElement && element is IQueryExtendible { SqlQueryExtensions.Count: > 0 } qe && newElement is IQueryExtendible ne)
 				{
 					ne.SqlQueryExtensions = new(qe.SqlQueryExtensions.Count);
 

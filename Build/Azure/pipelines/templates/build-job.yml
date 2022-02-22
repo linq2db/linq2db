@@ -35,6 +35,7 @@ jobs:
       arguments: -f netcoreapp2.1 -c $(build_configuration)
       nobuild: true
     displayName: Publish Test Project for netcore 2.1
+    condition: false
 
   - task: DotNetCoreCLI@2
     inputs:
@@ -79,6 +80,7 @@ jobs:
       sourceFolder: '$(Build.SourcesDirectory)/Tests'
       contents: 'DataProviders.json'
     displayName: Copy test settings for NETCOREAPP2.1
+    condition: false
 
   - task: CopyFiles@2
     inputs:
@@ -112,6 +114,7 @@ jobs:
       targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.1/publish/configs'
       sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/netcoreapp21'
     displayName: Copy test configs for NETCOREAPP2.1
+    condition: false
 
   - task: CopyFiles@2
     inputs:
@@ -141,6 +144,7 @@ jobs:
       targetFolder: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.1/publish/scripts'
       sourceFolder: '$(Build.SourcesDirectory)/Build/Azure/scripts'
     displayName: Copy test scripts for NETCOREAPP2.1
+    condition: false
 
   - task: CopyFiles@2
     inputs:
@@ -183,6 +187,7 @@ jobs:
       path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/netcoreapp2.1/publish'
       artifact: '$(netcore21_tests)'
     displayName: Publish test artifacts for NETCOREAPP2.1
+    condition: false
 
   - task: PublishPipelineArtifact@1
     inputs:

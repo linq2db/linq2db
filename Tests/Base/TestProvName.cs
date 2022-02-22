@@ -60,6 +60,7 @@ namespace Tests
 		public const string AllMySqlServer57Plus   = "MySql,MySqlConnector";
 		// MySql.Data server providers (no mysqlconnector)
 		public const string AllMySqlData           = "MySql,MySql55";
+		public const string AllMySqlConnector      = "MySqlConnector,MariaDB";
 		public const string AllMySqlWithCTE        = "MySql,MariaDB";
 		public const string AllPostgreSQL          = "PostgreSQL,PostgreSQL.9.2,PostgreSQL.9.3,PostgreSQL.9.5,PostgreSQL.10,PostgreSQL.11,PostgreSQL.12,PostgreSQL.13,PostgreSQL.14";
 		public const string AllPostgreSQLLess10    = "PostgreSQL.9.2,PostgreSQL.9.3,PostgreSQL.9.5";
