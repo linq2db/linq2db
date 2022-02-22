@@ -2,7 +2,7 @@
 	<Import Project="linq2db.Tests.props" />
 
 	<PropertyGroup>
-		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3270</MSBuildWarningsAsMessages>
+		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3270;MSB3277</MSBuildWarningsAsMessages>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -21,7 +21,7 @@ namespace LinqToDB.Data
 		{
 			if (_command != null)
 			{
-				await DataProvider.DisposeCommandAsync(_command);
+				await DataProvider.DisposeCommandAsync(_command).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				_command = null;
 			}
 		}
@@ -194,7 +194,7 @@ namespace LinqToDB.Data
 				await _dataContextInterceptor.OnClosingAsync(new (this)).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 #if NETSTANDARD2_1PLUS
-			await DisposeCommandAsync();
+			await DisposeCommandAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 #else
 			DisposeCommand();
 #endif

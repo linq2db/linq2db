@@ -150,7 +150,7 @@ namespace LinqToDB.Data
 #if !NATIVE_ASYNC
 					_executionScope.Dispose();
 #else
-					await _executionScope.DisposeAsync();
+					await _executionScope.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 #endif
 
 				if (_dataConnection.TraceSwitchConnection.TraceInfo)
@@ -169,7 +169,7 @@ namespace LinqToDB.Data
 #if !NATIVE_ASYNC
 				return base.DisposeAsync();
 #else
-				await base.DisposeAsync();
+				await base.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 #endif
 			}
 

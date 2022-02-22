@@ -4,7 +4,6 @@
 
 	<PropertyGroup>
 		<NoWarn>$(NoWarn);CS0649</NoWarn>
-		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
 	</PropertyGroup>
 
 	<ItemGroup>

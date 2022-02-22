@@ -216,7 +216,7 @@ namespace LinqToDB.DataProvider.Informix
 #else
 			using ((IDisposable)new InvariantCultureRegion(null))
 #endif
-				return await base.MultipleRowsCopyAsync(table, options, source, cancellationToken);
+				return await base.MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
 #if NATIVE_ASYNC
@@ -224,7 +224,7 @@ namespace LinqToDB.DataProvider.Informix
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			await using (new InvariantCultureRegion(null))
-				return await base.MultipleRowsCopyAsync(table, options, source, cancellationToken);
+				return await base.MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 #endif
 	}

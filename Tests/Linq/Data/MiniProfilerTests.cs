@@ -1,51 +1,55 @@
-﻿extern alias MySqlData;
-extern alias MySqlConnector;
+﻿extern alias MySqlConnector;
+extern alias MySqlData;
 
 using System;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
+using System.Data.SqlTypes;
+using System.Globalization;
 using System.Linq;
+using System.Numerics;
+using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Access;
+using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.Firebird;
+using LinqToDB.DataProvider.Informix;
 using LinqToDB.DataProvider.MySql;
+using LinqToDB.DataProvider.Oracle;
+using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.DataProvider.SapHana;
 using LinqToDB.DataProvider.SqlCe;
+using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.DataProvider.Sybase;
+using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
+
+using FirebirdSql.Data.Types;
+using IBM.Data.DB2Types;
+using Microsoft.SqlServer.Types;
 using NUnit.Framework;
 using StackExchange.Profiling;
 using StackExchange.Profiling.Data;
-using Tests.Model;
-
-using MySqlDataMySqlConnection = MySqlData::MySql.Data.MySqlClient.MySqlConnection;
-using MySqlDataDateTime        = MySqlData::MySql.Data.Types.MySqlDateTime;
-using MySqlDataDecimal         = MySqlData::MySql.Data.Types.MySqlDecimal;
-#if NET5_0_OR_GREATER
-using MySqlConnectorDateTime   = MySqlConnector::MySqlConnector.MySqlDateTime;
-#endif
-using System.Globalization;
-using LinqToDB.DataProvider.SQLite;
-using LinqToDB.DataProvider.DB2;
-using IBM.Data.DB2Types;
 using Tests.DataProvider;
-using System.Data.SqlTypes;
-using Microsoft.SqlServer.Types;
-using LinqToDB.DataProvider.Sybase;
-using LinqToDB.DataProvider.Informix;
-using LinqToDB.DataProvider.Oracle;
-using LinqToDB.DataProvider.PostgreSQL;
-using System.Threading.Tasks;
-using LinqToDB.Common;
-using FirebirdSql.Data.Types;
-using System.Numerics;
+using Tests.Model;
 #if NET472
 using IBM.Data.Informix;
 #endif
+
+#if NETFRAMEWORK
+using MySqlConnectorDateTime   = MySqlConnector::MySql.Data.Types.MySqlDateTime;
+#else
+using MySqlConnectorDateTime   = MySqlConnector::MySqlConnector.MySqlDateTime;
+#endif
+using MySqlDataDateTime        = MySqlData::MySql.Data.Types.MySqlDateTime;
+using MySqlDataDecimal         = MySqlData::MySql.Data.Types.MySqlDecimal;
+using MySqlDataMySqlConnection = MySqlData::MySql.Data.MySqlClient.MySqlConnection;
 
 namespace Tests.Data
 {
@@ -427,7 +431,6 @@ namespace Tests.Data
 				};
 
 				// test provider-specific type readers
-#if NET5_0_OR_GREATER
 				var dtValue = new DateTime(2012, 12, 12, 12, 12, 12, 0);
 				Assert.AreEqual(dtValue, db.Execute<MySqlConnectorDateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", dtValue, DataType.DateTime)).GetDateTime());
 				Assert.AreEqual(dtValue, db.Execute<MySqlConnectorDateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", dtValue, DataType.DateTime)).GetDateTime());
@@ -442,7 +445,6 @@ namespace Tests.Data
 					Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.DateTime)));
 					Assert.AreEqual(dtValue, db.Execute<DateTime>("SELECT Cast(@p as datetime)", new DataParameter("@p", new MySqlConnectorDateTime(dtValue), DataType.DateTime2)));
 				}
-#endif
 
 				// assert provider-specific parameter type name
 				Assert.AreEqual(2, db.Execute<int>("SELECT ID FROM AllTypes WHERE tinyintDataType = @p", new DataParameter("@p", (sbyte)111, DataType.SByte)));
