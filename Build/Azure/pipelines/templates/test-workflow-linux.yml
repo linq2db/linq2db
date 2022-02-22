@@ -8,6 +8,13 @@ steps:
 - checkout: none
 
 - task: UseDotNet@2
+  displayName: 'Install .net core 2.1'
+  inputs:
+    packageType: sdk
+    version: 2.1.x
+  condition: eq('${{ parameters.framework }}', 'netcoreapp2.1')
+
+- task: UseDotNet@2
   displayName: 'Install .net 5'
   inputs:
     packageType: sdk
