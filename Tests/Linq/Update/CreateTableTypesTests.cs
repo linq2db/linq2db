@@ -174,14 +174,16 @@ namespace Tests.xUpdate
 				.HasColumn(e => e.Id);
 			testCase.ColumnBuilder(entity);
 
-			ms.SetConverter<List<(uint, string)>, string>(_ => JsonSerializer.Serialize(_));
+			var options = new JsonSerializerOptions () { IncludeFields = true };
+
+			ms.SetConverter<List<(uint, string)>, string>(_ => JsonSerializer.Serialize(_, options));
 			ms.SetConverter<List<(uint, string)>, DataParameter>(x =>
 				new DataParameter()
 				{
-					Value = JsonSerializer.Serialize(x),
+					Value = JsonSerializer.Serialize(x, options),
 					DataType = DataType.NVarChar
 				});
-			ms.SetConverter<string, List<(uint, string)>?>(_ => JsonSerializer.Deserialize<List<(uint, string)>>(_));
+			ms.SetConverter<string, List<(uint, string)>?>(_ => JsonSerializer.Deserialize<List<(uint, string)>>(_, options));
 
 			using (var db    = GetDataContext(context, ms))
 			using (var table = db.CreateLocalTable<CreateTableTypes>())
