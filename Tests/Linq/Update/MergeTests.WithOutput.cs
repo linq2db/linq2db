@@ -1,8 +1,12 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Async;
+
 using NUnit.Framework;
 
 namespace Tests.xUpdate
@@ -67,7 +71,7 @@ namespace Tests.xUpdate
 				record.inserted.Field1.Should().Be(10);
 			}
 		}
-		
+
 		[Test]
 		public async Task MergeWithOutputFullAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -126,7 +130,7 @@ namespace Tests.xUpdate
 				record.inserted.Field1.Should().Be(10);
 			}
 		}
-		
+
 		[Test]
 		public void MergeWithOutputProjected([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{

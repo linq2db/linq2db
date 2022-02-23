@@ -156,7 +156,7 @@ namespace LinqToDB.SqlProvider
 
 						var sqlBuilder = ((BasicSqlBuilder)CreateSqlBuilder());
 						sqlBuilder.BuildSql(commandNumber,
-							new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb, 
+							new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb,
 							optimizationContext, indent,
 							skipAlias);
 					}
@@ -555,11 +555,11 @@ namespace LinqToDB.SqlProvider
 			{
 				if (!first)
 					StringBuilder.AppendLine(Comma);
+
 				first = false;
 
 				var addAlias = true;
-
-				var expr = ConvertElement(col.Expression);
+				var expr     = ConvertElement(col.Expression);
 
 				AppendIndent();
 				BuildColumnExpression(selectQuery, expr, col.Alias, ref addAlias);
@@ -579,7 +579,7 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.AppendLine();
 		}
 
-		protected virtual void BuildColumnsExpressions(IReadOnlyList<ISqlExpression> expressions)
+		protected virtual void BuildOutputColumnExpressions(IReadOnlyList<ISqlExpression> expressions)
 		{
 			Indent++;
 
@@ -589,10 +589,10 @@ namespace LinqToDB.SqlProvider
 			{
 				if (!first)
 					StringBuilder.AppendLine(Comma);
+
 				first = false;
 
-				var addAlias = true;
-
+				var addAlias  = true;
 				var converted = ConvertElement(expr);
 
 				AppendIndent();
@@ -717,6 +717,7 @@ namespace LinqToDB.SqlProvider
 			{
 				if (!first)
 					StringBuilder.AppendLine(Comma);
+
 				first = false;
 
 				AppendIndent();
@@ -775,7 +776,8 @@ namespace LinqToDB.SqlProvider
 
 				++Indent;
 
-				bool first = true;
+				var first = true;
+
 				if (output.HasOutputItems)
 				{
 					foreach (var oi in output.OutputItems)
@@ -797,7 +799,7 @@ namespace LinqToDB.SqlProvider
 
 				if (output.OutputColumns != null)
 				{
-					BuildColumnsExpressions(output.OutputColumns);
+					BuildOutputColumnExpressions(output.OutputColumns);
 				}
 
 				if (output.OutputTable != null)
@@ -894,7 +896,7 @@ namespace LinqToDB.SqlProvider
 
 				BuildOutputSubclause(statement, insertClause);
 
-				if (statement.QueryType == QueryType.InsertOrUpdate || 
+				if (statement.QueryType == QueryType.InsertOrUpdate ||
 					statement.QueryType == QueryType.MultiInsert ||
 					statement.EnsureQuery().From.Tables.Count == 0)
 				{
@@ -1588,7 +1590,7 @@ namespace LinqToDB.SqlProvider
 
 				StringBuilder.Append(')');
 			}
-			else if (isEmptyValuesSourceSupported)
+			else if (IsEmptyValuesSourceSupported)
 			{
 				StringBuilder.Append(OpenParens);
 				BuildEmptyValues(valuesTable);
@@ -2194,7 +2196,7 @@ namespace LinqToDB.SqlProvider
 
 		protected void BuildIsDistinctPredicateFallback(SqlPredicate.IsDistinct expr)
 		{
-			// This is the fallback implementation of IS DISTINCT FROM 
+			// This is the fallback implementation of IS DISTINCT FROM
 			// for all providers that don't support the standard syntax
 			// nor have a proprietary alternative
 			expr.Expr1.ShouldCheckForNull();
@@ -2536,7 +2538,7 @@ namespace LinqToDB.SqlProvider
 							else
 							{
 								var table = GetTableAlias(ts);
-								var len = StringBuilder.Length;
+								var len   = StringBuilder.Length;
 
 								if (table == null)
 									StringBuilder.Append(GetPhysicalTableName(field.Table, null, true));
@@ -2907,7 +2909,7 @@ namespace LinqToDB.SqlProvider
 		#endregion
 
 		#region BuildDataType
-		
+
 		/// <summary>
 		/// Appends an <see cref="SqlDataType"/>'s String to a provided <see cref="StringBuilder"/>
 		/// </summary>
@@ -3420,7 +3422,7 @@ namespace LinqToDB.SqlProvider
 						sb.Append(
 							$"-- value above truncated for logging, actual length is {binaryData.Length}");
 					}
-					else if (p.Value is string s && 
+					else if (p.Value is string s &&
 					         Configuration.MaxStringParameterLengthLogging >= 0 &&
 					         s.Length > Configuration.MaxStringParameterLengthLogging &&
 					         ValueToSqlConverter.CanConvert(typeof(string)))

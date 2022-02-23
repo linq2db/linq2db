@@ -1,8 +1,11 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
+
 using NUnit.Framework;
 
 namespace Tests.xUpdate
@@ -430,7 +433,7 @@ namespace Tests.xUpdate
 							Value    = s.Value    + param,
 							ValueStr = s.ValueStr + param,
 						}),
-					target.ToArray(), 
+					target.ToArray(),
 					ComparerBuilder.GetEqualityComparer<DestinationTable>());
 			}
 		}
@@ -466,7 +469,7 @@ namespace Tests.xUpdate
 							Value    = s.Value    + param,
 							ValueStr = s.ValueStr + param,
 						}),
-					target.ToArray(), 
+					target.ToArray(),
 					ComparerBuilder.GetEqualityComparer<DestinationTable>());
 			}
 		}

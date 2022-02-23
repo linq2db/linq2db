@@ -311,12 +311,43 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
 		{
-			var table = deleteStatement.Table != null ?
-				(deleteStatement.SelectQuery.From.FindTableSource(deleteStatement.Table) ?? deleteStatement.Table) :
-				deleteStatement.SelectQuery.From.Tables[0];
+			ISqlTableSource? table;
 
-			AppendIndent().Append("DELETE ");
-			Convert(StringBuilder, GetTableAlias(table)!, ConvertType.NameToQueryTableAlias);
+			if (deleteStatement.Table != null)
+			{
+				table = deleteStatement.SelectQuery.From.FindTableSource(deleteStatement.Table) ?? deleteStatement.Table;
+			}
+			else
+			{
+				var tables = deleteStatement.SelectQuery.From.Tables;
+
+				table = tables[0];
+
+				if (deleteStatement.Output != null && tables.Count == 1 && tables[0].Joins.Count == 0)
+				{
+					var t = table;
+
+					while (t is SqlTableSource sqlTableSource)
+					{
+						sqlTableSource.Alias = null;
+						t                    = sqlTableSource.Source;
+					}
+
+					if (t is SqlTable sqlTable)
+						sqlTable.Alias = null;
+
+					table = null;
+				}
+			}
+
+			AppendIndent().Append("DELETE");
+
+			if (table != null)
+			{
+				StringBuilder.Append(' ');
+				Convert(StringBuilder, GetTableAlias(table)!, ConvertType.NameToQueryTableAlias);
+			}
+
 			StringBuilder.AppendLine();
 		}
 
