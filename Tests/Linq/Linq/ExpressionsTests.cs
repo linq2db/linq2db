@@ -241,7 +241,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression8([DataSources(ProviderName.SQLiteMS)] string context)
+		public void MethodExpression8([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

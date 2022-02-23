@@ -229,7 +229,7 @@ namespace Tests.xUpdate
 
 		private async Task<bool> ExecuteAsync(DataConnection db, string context, Func<Task> perform, bool? keepIdentity, BulkCopyType copyType)
 		{
-			if (context.Contains("Firebird")
+			if (context.IsAnyOf(TestProvName.AllFirebird)
 				&& keepIdentity == true
 				&& (copyType    == BulkCopyType.Default
 					|| copyType == BulkCopyType.MultipleRows
@@ -242,7 +242,7 @@ namespace Tests.xUpdate
 			}
 
 			bool notSupported = false;
-			if (context.Contains(ProviderName.Informix))
+			if (context.IsAnyOf(TestProvName.AllInformix))
 			{
 				notSupported = !((InformixDataProvider)db.DataProvider).Adapter.IsIDSProvider
 					|| copyType == BulkCopyType.MultipleRows;
@@ -253,7 +253,7 @@ namespace Tests.xUpdate
 					|| context  == ProviderName.Access
 					|| context  == ProviderName.AccessOdbc
 					|| notSupported
-					|| (context.StartsWith(ProviderName.SapHana)
+					|| (context.IsAnyOf(TestProvName.AllSapHana)
 						&& (copyType == BulkCopyType.MultipleRows || copyType == BulkCopyType.Default))
 					|| (context == ProviderName.SapHanaOdbc && copyType == BulkCopyType.ProviderSpecific))
 				&& keepIdentity == true)

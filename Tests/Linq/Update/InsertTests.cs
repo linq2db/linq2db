@@ -621,7 +621,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertUnion1([DataSources(ProviderName.SQLiteMS)] string context)
+		public void InsertUnion1([DataSources] string context)
 		{
 			Child.Count();
 
@@ -1797,11 +1797,11 @@ namespace Tests.xUpdate
 		{
 			var tableName  = "xxPerson";
 
-			if (context.StartsWith("Firebird"))
+			if (context.IsAnyOf(TestProvName.AllFirebird))
 			{
-				tableName += context.StartsWith(TestProvName.Firebird4)
+				tableName += context.IsAnyOf(TestProvName.Firebird4)
 					? "_f4"
-					: (context.StartsWith(TestProvName.Firebird3)
+					: (context.IsAnyOf(TestProvName.Firebird3)
 						? "_f3"
 						: "_f");
 
@@ -1811,7 +1811,7 @@ namespace Tests.xUpdate
 				tableName += "_" + methodName;
 			}
 
-			if (context.StartsWith("Oracle"))
+			if (context.IsAnyOf(TestProvName.AllOracle))
 			{
 				tableName += "_o";
 
@@ -1915,7 +1915,7 @@ namespace Tests.xUpdate
 		public void InsertOrReplaceByTableName([InsertOrUpdateDataSources] string context)
 		{
 			const string? schemaName = null;
-			var tableName  = "xxPatient" + (context.Contains("Firebird") ? TestUtils.GetNext().ToString() : string.Empty);
+			var tableName  = "xxPatient" + (context.IsAnyOf(TestProvName.AllFirebird) ? TestUtils.GetNext().ToString() : string.Empty);
 
 			using (var db = GetDataContext(context))
 			{
@@ -1961,7 +1961,7 @@ namespace Tests.xUpdate
 		public async Task InsertOrReplaceByTableNameAsync([DataSources] string context)
 		{
 			const string? schemaName = null;
-			var tableName  = "xxPatient" + (context.Contains("Firebird") ? TestUtils.GetNext().ToString() : string.Empty);
+			var tableName  = "xxPatient" + (context.IsAnyOf(TestProvName.AllFirebird) ? TestUtils.GetNext().ToString() : string.Empty);
 
 			using (var db = GetDataContext(context))
 			{

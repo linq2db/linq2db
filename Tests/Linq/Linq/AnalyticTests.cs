@@ -1321,7 +1321,7 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
 			ProviderName.Firebird,
-			TestProvName.MySql55,
+			TestProvName.AllMySql55,
 			// doesn't support LAG with 3 parameters
 			TestProvName.MariaDB)] string context)
 		{
@@ -1364,7 +1364,7 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
 			ProviderName.Firebird,
-			TestProvName.MySql55,
+			TestProvName.AllMySql55,
 			// doesn't support 3-rd parameter for LEAD
 			TestProvName.MariaDB)] string context)
 		{
@@ -1405,7 +1405,7 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
 			ProviderName.Firebird,
-			TestProvName.MySql55)] string context)
+			TestProvName.AllMySql55)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1444,7 +1444,7 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
 			ProviderName.Firebird,
-			TestProvName.MySql55)] string context)
+			TestProvName.AllMySql55)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1487,7 +1487,7 @@ namespace Tests.Linq
 			ProviderName.Firebird,
 			TestProvName.AllSQLite,
 			TestProvName.AllSapHana,
-			TestProvName.MySql55,
+			TestProvName.AllMySql55,
 			TestProvName.MariaDB)] string context)
 		{
 			using (var db    = GetDataContext(context))
@@ -1551,7 +1551,7 @@ namespace Tests.Linq
 			ProviderName.Firebird,
 			TestProvName.AllInformix,
 			TestProvName.AllOracle,
-			TestProvName.MySql55)] string context)
+			TestProvName.AllMySql55)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Issue1799Table1>())
@@ -1605,7 +1605,7 @@ namespace Tests.Linq
 			ProviderName.Firebird,
 			TestProvName.AllInformix,
 			TestProvName.AllOracle,
-			TestProvName.MySql55)] string context)
+			TestProvName.AllMySql55)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Issue1799Table1>())
@@ -1658,7 +1658,7 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
 			ProviderName.Firebird,
-			TestProvName.MySql55,
+			TestProvName.AllMySql55,
 			// doesn't support 3-rd parameter for LEAD
 			TestProvName.MariaDB)] string context)
 		{
@@ -1694,7 +1694,7 @@ namespace Tests.Linq
 			TestProvName.AllAccess,
 			// All Firebird excluded because of #2839, test data is inserted with padding and then expectations fail
 			TestProvName.AllFirebird,
-			TestProvName.MySql55)] string context)
+			TestProvName.AllMySql55)] string context)
 		{
 			var data = new Issue1799Table3[] 
 			{

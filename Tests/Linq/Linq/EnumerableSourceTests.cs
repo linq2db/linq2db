@@ -773,7 +773,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void StringSubQuery(
-			[DataSources(ProviderName.SQLiteMS, TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase,
+			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase,
 				TestProvName.AllSybase, TestProvName.AllInformix)]
 			string context, [Values(1, 2)] int iteration)
 		{
@@ -830,7 +830,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void NullConstantProjection(
-			[DataSources(ProviderName.SQLiteMS, TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase,
+			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase,
 				TestProvName.AllSybase, TestProvName.AllInformix)]
 			string context, [Values(1, 2)] int iteration)
 		{
@@ -854,7 +854,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void ConstantProjection(
-			[DataSources(ProviderName.SQLiteMS, TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase,
+			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase,
 				TestProvName.AllSybase, TestProvName.AllInformix)]
 			string context, [Values(1, 2)] int iteration)
 		{

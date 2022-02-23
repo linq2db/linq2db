@@ -119,7 +119,6 @@ namespace Tests.Linq
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllInformix,
 				ProviderName.DB2,
-				ProviderName.SQLiteMS,
 				TestProvName.AllSapHana)]
 			string context)
 		{

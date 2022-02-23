@@ -186,7 +186,6 @@
 				"Provider": "IBM.Data.DB2",
 				"ConnectionString": "Server=DBHost:50001;Database=TESTDATA;UID=Administrator;PWD=TestPassword;"
 			},
-			"Firebird": { "ConnectionString": "DataSource=dbhost;Database=C:\\Data\\TestData.fdb;User Id=SYSDBA;Password=masterkey" },
 			"Informix": {
 				"Provider": "IBM.Data.Informix",
 				"ConnectionString": "Host=DBHost;Service=9088;Server=ol_informix1170;Protocol=onsoctcp;Database=TestData;UID=informix;PWD=TestPassword;"
@@ -207,6 +206,10 @@
 			"PostgreSQL.12" : { "Provider": "Npgsql", "ConnectionString": "Server=DBHost;Port=5433;Database=TestData;User Id=postgres;Password=TestPassword;Pooling=true;MinPoolSize=10;MaxPoolSize=100;" },
 			"PostgreSQL.13" : { "Provider": "Npgsql", "ConnectionString": "Server=DBHost;Port=5433;Database=TestData;User Id=postgres;Password=TestPassword;Pooling=true;MinPoolSize=10;MaxPoolSize=100;" },
 			"PostgreSQL.14" : { "Provider": "Npgsql", "ConnectionString": "Server=DBHost;Port=5433;Database=TestData;User Id=postgres;Password=TestPassword;Pooling=true;MinPoolSize=10;MaxPoolSize=100;" },
+
+			"Firebird": { "ConnectionString": "DataSource=dbhost;Database=C:\\Data\\TestData.fdb;User Id=SYSDBA;Password=masterkey" },
+			"Firebird3": { "ConnectionString": "DataSource=dbhost;Database=C:\\Data\\TestData3.fdb;User Id=SYSDBA;Password=masterkey" },
+			"Firebird4": { "ConnectionString": "DataSource=dbhost;Database=C:\\Data\\TestData4.fdb;User Id=SYSDBA;Password=masterkey" },
 
 			"Oracle.Native": {
 				"Provider": "Oracle.DataAccess.Client",
@@ -252,6 +255,10 @@
 			"PostgreSQL.12": { "Provider": "Npgsql", "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100" },
 			"PostgreSQL.13": { "Provider": "Npgsql", "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100" },
 			"PostgreSQL.14": { "Provider": "Npgsql", "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100" },
+
+			"Firebird" : { "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8"                    },
+			"Firebird3": { "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled" },
+			"Firebird4": { "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled" },
 
 			"SqlServer": {
 				"Provider": "System.Data.SqlClient",
@@ -305,15 +312,6 @@
 				"Provider": "AdoNetCore.AseClient",
 				"ConnectionString": "Data Source=127.0.0.1;Port=5000;Database=TestDataCore;Uid=sa;Password=myPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;"
 			},
-			"Firebird": { "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8" },
-			"Firebird3": {
-				"Provider": "FirebirdSql.Data.FirebirdClient",
-				"ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled"
-			},
-			"Firebird4": {
-				"Provider": "FirebirdSql.Data.FirebirdClient",
-				"ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled"
-			},
 			"Oracle.Managed": {
 				"Provider": "Oracle.ManagedDataAccess.Client",
 				"ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=ORC12)));User Id=system;Password=oracle;"
@@ -340,6 +338,8 @@
 
 	"All.Providers": {
 		"Providers": [
+			"TestNoopProvider",
+			"SQLite.Default",
 			"SQLite.Classic",
 			"SQLite.MS",
 			"Northwind.SQLite",
@@ -360,11 +360,13 @@
 			"PostgreSQL.12",
 			"PostgreSQL.13",
 			"PostgreSQL.14",
+			"Firebird",
+			"Firebird3",
+			"Firebird4",
 
 			"Access",
 			"Access.Odbc",
 			"SqlCe",
-			"SQLite.Default",
 			"SqlServer",
 			"SqlServer.2014",
 			"SqlServer.2012",
@@ -375,15 +377,13 @@
 			"SqlServer.2005.1",
 			"SqlAzure",
 			"DB2",
-			"Firebird",
 			"Informix",
 			"Oracle.Native",
 			"Oracle.Managed",
 			"Sybase",
 			"Sybase.Managed",
 			"SapHana",
-			"Northwind",
-			"TestNoopProvider"
+			"Northwind"
 		]
 	},
 

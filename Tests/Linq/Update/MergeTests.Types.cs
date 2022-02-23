@@ -343,7 +343,7 @@ namespace Tests.xUpdate
 #endif
 		}, Details = "Native provider from SAP HANA 2 SPS04 045 cannot digest null/DBNull/byte[0] binary parameters")]
 		[Test]
-		public void TestMergeTypes([DataSources(true, ProviderName.SQLiteMS)] string context)
+		public void TestMergeTypes([DataSources(true)] string context)
 		{
 			var isIDS = IsIDSProvider(context);
 
@@ -375,11 +375,11 @@ namespace Tests.xUpdate
 			Assert.AreEqual(expected.Id, actual.Id);
 			Assert.AreEqual(expected.FieldInt32, actual.FieldInt32);
 
-			if (!provider.StartsWith("Access"))
+			if (!provider.IsAnyOf(TestProvName.AllAccess))
 				Assert.AreEqual(expected.FieldInt64, actual.FieldInt64);
 
-			if (provider != ProviderName.Sybase && provider != ProviderName.SybaseManaged)
-				if (!provider.StartsWith("Access"))
+			if (!provider.IsAnyOf(TestProvName.AllSybase))
+				if (!provider.IsAnyOf(TestProvName.AllAccess))
 					Assert.AreEqual(expected.FieldBoolean, actual.FieldBoolean);
 				else
 					Assert.AreEqual(expected.FieldBoolean ?? false, actual.FieldBoolean);
@@ -393,7 +393,7 @@ namespace Tests.xUpdate
 
 			Assert.AreEqual(expected.FieldFloat, actual.FieldFloat);
 
-			if (!provider.Contains("Firebird"))
+			if (!provider.IsAnyOf(TestProvName.AllFirebird))
 				Assert.AreEqual(expected.FieldDouble, actual.FieldDouble);
 
 			AssertDateTime(expected.FieldDateTime, actual.FieldDateTime, provider);
@@ -402,15 +402,15 @@ namespace Tests.xUpdate
 
 			AssertBinary(expected.FieldBinary, actual.FieldBinary, provider);
 
-			if (!provider.Contains(ProviderName.Informix))
+			if (!provider.IsAnyOf(TestProvName.AllInformix))
 				Assert.AreEqual(expected.FieldGuid, actual.FieldGuid);
 
-			if (!provider.Contains("SQLite"))
+			if (!provider.IsAnyOf(TestProvName.AllSQLite))
 				Assert.AreEqual(expected.FieldDecimal, actual.FieldDecimal);
 
 			if (   provider != ProviderName.SqlServer2005
 				&& provider != ProviderName.SqlCe
-				&& !provider.Contains("Oracle"))
+				&& !provider.IsAnyOf(TestProvName.AllOracle))
 				Assert.AreEqual(expected.FieldDate, actual.FieldDate);
 
 			AssertTime(expected.FieldTime, actual.FieldTime, provider);
@@ -430,26 +430,25 @@ namespace Tests.xUpdate
 		{
 			if (expected != null)
 			{
-				if (   provider == ProviderName.Sybase
-					|| provider == ProviderName.SybaseManaged
+				if (   provider.IsAnyOf(TestProvName.AllSybase)
 					|| provider == ProviderName.SqlCe)
 					expected = expected.TrimEnd(' ');
 			}
 
-			if (!provider.Contains(ProviderName.Informix))
+			if (!provider.IsAnyOf(TestProvName.AllInformix))
 				Assert.AreEqual(expected, actual);
 		}
 
 		private static void AssertBinary(byte[]? expected, byte[]? actual, string provider)
 		{
-			if (provider.Contains(ProviderName.Informix)
-				|| provider.Contains("Oracle")
-				|| provider.Contains("Firebird"))
+			if (provider.IsAnyOf(TestProvName.AllInformix)
+				|| provider.IsAnyOf(TestProvName.AllOracle)
+				|| provider.IsAnyOf(TestProvName.AllFirebird))
 				return;
 
 			if (expected != null)
 			{
-				if (provider == ProviderName.Sybase || provider == ProviderName.SybaseManaged)
+				if (provider.IsAnyOf(TestProvName.AllSybase))
 				{
 					while (expected.Length > 1 && expected[expected.Length - 1] == 0)
 						expected = expected.Take(expected.Length - 1).ToArray();
@@ -518,7 +517,7 @@ namespace Tests.xUpdate
 				if (provider.IsAnyOf(TestProvName.AllMySqlServer57Plus) && expected.Value.Millisecond > 500)
 					expected = expected.Value.AddSeconds(1);
 
-				if (provider == ProviderName.Sybase || provider == ProviderName.SybaseManaged)
+				if (provider.IsAnyOf(TestProvName.AllSybase))
 				{
 					switch (expected.Value.Millisecond % 10)
 					{
@@ -570,14 +569,11 @@ namespace Tests.xUpdate
 		private static void AssertTime(TimeSpan? expected, TimeSpan? actual, string provider)
 		{
 			if (   provider == ProviderName.SqlServer2005
-				|| provider.Contains("Oracle")
-				|| provider == ProviderName.SqlCe
-				|| provider == ProviderName.SQLiteClassic
-				|| provider == TestProvName.SQLiteClassicMiniProfilerMapped
-				|| provider == TestProvName.SQLiteClassicMiniProfilerUnmapped
-				|| provider == ProviderName.SQLiteMS
-				|| provider == TestProvName.MySql55
-				|| provider.Contains("Firebird"))
+				|| provider.IsAnyOf(TestProvName.AllOracle)
+				|| provider.IsAnyOf(TestProvName.AllSQLite)
+				|| provider.IsAnyOf(TestProvName.AllMySql55)
+				|| provider.IsAnyOf(TestProvName.AllFirebird)
+				|| provider == ProviderName.SqlCe)
 				return;
 
 			if (expected != null)

@@ -1267,21 +1267,20 @@ namespace Tests.Data
 			[DataSources(false)] string context, [Values] bool withScope)
 		{
 			if (withScope && (
-				context == ProviderName.DB2                 ||
-				context == ProviderName.InformixDB2         ||
-				context == ProviderName.SapHanaOdbc         ||
-				context == ProviderName.SqlCe               ||
-				context == ProviderName.Sybase              ||
+				context == ProviderName.DB2                                 ||
+				context == ProviderName.InformixDB2                         ||
+				context == ProviderName.SapHanaOdbc                         ||
+				context == ProviderName.SqlCe                               ||
+				context == ProviderName.Sybase                              ||
 #if !NET472
-				(context.Contains("Oracle") && context.Contains("Managed")) ||
-				context == ProviderName.SapHanaNative       ||
+				context.IsAnyOf(TestProvName.AllOracleManaged)              ||
+				context.IsAnyOf(ProviderName.SapHanaNative)                 ||
 #endif
-				TestProvName.AllMySqlData.Contains(context) ||
-				context.StartsWith("Access")                ||
-				context.Contains("SqlServer")               ||
-				context.Contains("SqlAzure")                ||
-				context.Contains("PostgreSQL")              ||
-				context.Contains(ProviderName.SQLiteClassic)
+				context.IsAnyOf(TestProvName.AllMySqlData)                  ||
+				context.IsAnyOf(TestProvName.AllAccess)                     ||
+				context.IsAnyOf(TestProvName.AllSqlServer)                  ||
+				context.IsAnyOf(TestProvName.AllPostgreSQL)                 ||
+				context.IsAnyOf(TestProvName.AllSQLiteClassic)
 				))
 			{
 				// Access: The ITransactionLocal interface is not supported by the 'Microsoft.Jet.OLEDB.4.0' provider.  Local transactions are unavailable with the current provider.

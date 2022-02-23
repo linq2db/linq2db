@@ -57,7 +57,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConvertToInt64([DataSources(ProviderName.SQLiteMS)] string context)
+		public void ConvertToInt64([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -84,7 +84,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConvertToInt32([DataSources(ProviderName.SQLiteMS)] string context)
+		public void ConvertToInt32([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -111,7 +111,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConvertToInt16([DataSources(ProviderName.SQLiteMS)] string context)
+		public void ConvertToInt16([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -138,7 +138,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConvertToSByte([DataSources(ProviderName.SQLiteMS)] string context)
+		public void ConvertToSByte([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -178,7 +178,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConvertToUInt64([DataSources(ProviderName.SQLiteMS)] string context)
+		public void ConvertToUInt64([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -196,7 +196,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConvertToUInt32([DataSources(ProviderName.SQLiteMS)] string context)
+		public void ConvertToUInt32([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -215,7 +215,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConvertToUInt16([DataSources(ProviderName.SQLiteMS)] string context)
+		public void ConvertToUInt16([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -233,7 +233,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConvertToByte([DataSources(ProviderName.SQLiteMS)] string context)
+		public void ConvertToByte([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

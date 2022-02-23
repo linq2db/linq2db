@@ -170,7 +170,7 @@ namespace Tests
 
 		public static bool ProviderNeedsTimeFix(this IDataContext db, string context)
 		{
-			if (!context.IsAnyOf(TestProvName.AllMySql57Plus))
+			if (context.IsAnyOf(TestProvName.AllMySql55))
 			{
 				// MySql versions prior to 5.6.4 do not store fractional seconds so we need to trim
 				// them from expected data too

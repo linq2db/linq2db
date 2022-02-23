@@ -104,7 +104,7 @@ namespace Tests.Linq
 						if (!SkipChar(context))
 							query = query.Value(_ => _.String, record.String);
 
-						if (context.Contains("Firebird"))
+						if (context.IsAnyOf(TestProvName.AllFirebird))
 							query = db.GetTable<StringTestTable>().Value(_ => _.String, record.String);
 
 						query.Insert();
@@ -118,15 +118,15 @@ namespace Tests.Linq
 					{
 						if (!SkipChar(context))
 						{
-							if (context.Contains("Sybase"))
+							if (context.IsAnyOf(TestProvName.AllSybase))
 								Assert.AreEqual(testData[i].String?.TrimEnd(' ')?.TrimEnd('\0'), records[i].String);
 							else
 								Assert.AreEqual(testData[i].String?.TrimEnd(' '), records[i].String);
 						}
 
-						if (!context.Contains("Firebird"))
+						if (!context.IsAnyOf(TestProvName.AllFirebird))
 						{
-							if (context.Contains("Sybase"))
+							if (context.IsAnyOf(TestProvName.AllSybase))
 								Assert.AreEqual(testData[i].NString?.TrimEnd(' ')?.TrimEnd('\0'), records[i].NString);
 							else
 								Assert.AreEqual(testData[i].NString?.TrimEnd(' '), records[i].NString);
@@ -230,7 +230,7 @@ namespace Tests.Linq
 						if (!SkipChar(context))
 							query = query.Value(_ => _.Char, record.Char);
 
-						if (context.Contains(ProviderName.Firebird))
+						if (context.IsAnyOf(TestProvName.AllFirebird))
 							query = db.GetTable<CharTestTable>().Value(_ => _.Char, record.Char);
 
 						query.Insert();
@@ -242,7 +242,7 @@ namespace Tests.Linq
 
 					for (var i = 0; i < records.Length; i++)
 					{
-						if (context.StartsWith(ProviderName.SapHana))
+						if (context.IsAnyOf(TestProvName.AllSapHana))
 						{
 							// SAP or provider trims space and we return default value, which is \0 for char
 							// or we insert it incorrectly?
@@ -261,7 +261,7 @@ namespace Tests.Linq
 
 						if (!SkipChar(context))
 						{
-							if (context.Contains("Sybase"))
+							if (context.IsAnyOf(TestProvName.AllSybase))
 								Assert.AreEqual(testData[i].Char == '\0' ? ' ' : testData[i].Char, records[i].Char);
 							else
 								Assert.AreEqual(testData[i].Char, records[i].Char);
@@ -270,9 +270,9 @@ namespace Tests.Linq
 						if (context.IsAnyOf(TestProvName.AllMySql))
 							// for some reason mysql doesn't insert space
 							Assert.AreEqual(testData[i].NChar == ' ' ? '\0' : testData[i].NChar, records[i].NChar);
-						else if (!context.Contains(ProviderName.Firebird))
+						else if (!context.IsAnyOf(TestProvName.AllFirebird))
 						{
-							if (context.Contains("Sybase"))
+							if (context.IsAnyOf(TestProvName.AllSybase))
 								Assert.AreEqual(testData[i].NChar == '\0' ? ' ' : testData[i].NChar, records[i].NChar);
 							else
 								Assert.AreEqual(testData[i].NChar, records[i].NChar);

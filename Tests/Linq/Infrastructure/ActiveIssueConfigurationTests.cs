@@ -26,9 +26,7 @@ namespace Tests.Infrastructure
 			{
 				case TestProvName.NoopProvider:
 					return;
-				case TestProvName.Firebird4:
-				case TestProvName.Firebird3:
-				case ProviderName.Firebird:
+				case string when configuration.IsAnyOf(TestProvName.AllFirebird):
 					Assert.Fail("This test should be available only for explicit run");
 					break;
 			}
@@ -47,9 +45,7 @@ namespace Tests.Infrastructure
 			{
 				case TestProvName.NoopProvider:
 					return;
-				case TestProvName.Firebird4:
-				case TestProvName.Firebird3:
-				case ProviderName.Firebird:
+				case string when configuration.IsAnyOf(TestProvName.AllFirebird):
 					Assert.Fail("This test should be available only for explicit run");
 					break;
 			}
