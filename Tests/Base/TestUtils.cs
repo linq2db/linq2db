@@ -164,7 +164,7 @@ namespace Tests
 					TestProvName.AllSybase,
 					TestProvName.AllSqlServer)                        => db.GetTable<LinqDataTypes>().Select(_ => DbName()).First(),
 				string when context.IsAnyOf(TestProvName.AllInformix) => db.GetTable<LinqDataTypes>().Select(_ => DbInfo("dbname")).First(),
-				_                                                     => "NO_DATABASE_NAME"
+				_                                                     => NO_DATABASE_NAME
 			};
 		}
 

@@ -15,7 +15,7 @@ namespace Tests.xUpdate
 		public void TestParameters1([MergeDataContextSource(
 			false,
 			TestProvName.AllOracle,
-			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
+			TestProvName.AllSybase, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -74,7 +74,7 @@ namespace Tests.xUpdate
 		public void TestParameters3([MergeDataContextSource(
 			false,
 			TestProvName.AllOracle,
-			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
+			TestProvName.AllSybase, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -288,7 +288,7 @@ namespace Tests.xUpdate
 		public void TestParametersInDeleteCondition([MergeDataContextSource(
 			false,
 			TestProvName.AllOracle,
-			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
+			TestProvName.AllSybase, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{

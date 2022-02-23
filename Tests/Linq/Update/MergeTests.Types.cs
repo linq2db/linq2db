@@ -552,8 +552,7 @@ namespace Tests.xUpdate
 			{
 				switch (provider)
 				{
-					case ProviderName.Sybase:
-					case ProviderName.SybaseManaged:
+					case string when provider.IsAnyOf(TestProvName.AllSybase):
 					case ProviderName.SqlCe:
 						expected = expected.TrimEnd(' ');
 						break;
@@ -633,7 +632,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void TestTypesInsertByMerge([MergeDataContextSource(
-			TestProvName.AllInformix, ProviderName.Sybase, ProviderName.SybaseManaged)]
+			TestProvName.AllInformix, TestProvName.AllSybase)]
 			string context)
 		{
 			var isIDS = IsIDSProvider(context);

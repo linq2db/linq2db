@@ -16,7 +16,7 @@ namespace Tests.xUpdate
 	{
 		// ASE: just fails
 		[Test]
-		public void Merge([MergeDataContextSource(ProviderName.Sybase, ProviderName.SybaseManaged)] string context)
+		public void Merge([MergeDataContextSource(TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -186,7 +186,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeChar1([MergeDataContextSource(
 			false,
-			ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix)]
+			ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllInformix)]
 			string context)
 		{
 			ResetAllTypesIdentity(context);

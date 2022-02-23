@@ -774,6 +774,7 @@ namespace Tests.Linq
 		[Test]
 		public void StringSubQuery(
 			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase,
+				ProviderName.SQLiteMS,
 				TestProvName.AllSybase, TestProvName.AllInformix)]
 			string context, [Values(1, 2)] int iteration)
 		{

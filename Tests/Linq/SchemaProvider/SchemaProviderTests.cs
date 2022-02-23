@@ -35,7 +35,7 @@ namespace Tests.SchemaProvider
 
 		// TODO: temporary disabled for oracle, as it takes 10 minutes for Oracle12 to process schema exceptions
 		[Test]
-		public void Test([DataSources(false, TestProvName.AllOracle12)]
+		public void Test([DataSources(false, TestProvName.AllOracle12, ProviderName.SQLiteMS)]
 			string context)
 		{
 			using (var conn = GetDataConnection(context))

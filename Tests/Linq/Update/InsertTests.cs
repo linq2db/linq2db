@@ -2120,9 +2120,8 @@ namespace Tests.xUpdate
 			// those providers generate IF (), which doesn't return rowcount if not entered
 			// for some reason it doesn't affect managed sybase provider (provider bug?)
 			// and oracle native provider always was "special"
-			return provider == ProviderName.Sybase
-				|| provider == ProviderName.OracleNative
-				|| provider == TestProvName.Oracle11Native
+			return provider.IsAnyOf(ProviderName.Sybase)
+				|| provider.IsAnyOf(TestProvName.AllOracleNative)
 				|| provider == ProviderName.SqlServer2005
 				? -1
 				: 0;
@@ -2133,8 +2132,7 @@ namespace Tests.xUpdate
 			var provider = GetProviderName(context, out _);
 
 			// oracle native provider and rowcount are not familiar with each other
-			return provider == ProviderName.OracleNative
-				|| provider == TestProvName.Oracle11Native
+			return provider.IsAnyOf(TestProvName.AllOracleNative)
 				? -1
 				: 1;
 		}

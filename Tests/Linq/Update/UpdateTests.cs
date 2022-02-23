@@ -981,7 +981,7 @@ namespace Tests.xUpdate
 					.Set(y => y.BoolValue, y => y.Tables2.All(x => x.Value1 == 1))
 					.Update();
 
-				if (!context.StartsWith(ProviderName.Sybase))
+				if (!context.IsAnyOf(TestProvName.AllSybase))
 				{
 					var idx = db.LastQuery!.IndexOf("INNER JOIN");
 

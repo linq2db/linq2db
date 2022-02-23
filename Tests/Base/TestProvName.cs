@@ -109,6 +109,10 @@ namespace Tests
 		public const string AllFirebird      = $"{AllFirebirdLess4},{Firebird4}";
 		#endregion
 
+		#region Sybase
+		public const string AllSybase = $"{ProviderName.Sybase},{ProviderName.SybaseManaged}";
+		#endregion
+
 		public const string Northwind         = "Northwind";
 		public const string Oracle11Native    = "Oracle.11.Native";
 		public const string Oracle11Managed   = "Oracle.11.Managed";
@@ -130,7 +134,6 @@ namespace Tests
 		public const string AllOracleNative        = "Oracle.Native,Oracle.11.Native";
 		public const string AllOracle11            = "Oracle.11.Native,Oracle.11.Managed";
 		public const string AllOracle12            = "Oracle.Native,Oracle.Managed";
-		public const string AllSybase              = "Sybase,Sybase.Managed";
 		public const string AllSqlServer           = "SqlServer.2005,SqlServer.2008,SqlServer.2012,SqlServer.2014,SqlServer.2016,SqlServer.2017,SqlServer.2019,SqlServer.2019.SA,SqlServer.2019.FEC,SqlServer.Contained,SqlAzure";
 		public const string AllSqlServer2005Minus  = "SqlServer.2005";
 		public const string AllSqlServer2008Minus  = "SqlServer.2005,SqlServer.2008";
