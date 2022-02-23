@@ -42,9 +42,11 @@
 
 			// MySQL and MariaDB
 			//"MySql",
-			//"MySql55"
 			//"MySqlConnector",
+			//"MySql55",
+			//"MySql55Connector",
 			//"MariaDB",
+			//"MariaDBConnector",
 
 			// PostgreSQL
 			//"PostgreSQL.9.2",
@@ -55,7 +57,6 @@
 			//"PostgreSQL.12",
 			//"PostgreSQL.13",
 			//"PostgreSQL.14",
-			//"PostgreSQL",
 
 			// OleDB and ODBC MS Access providers
 			//"Access",
@@ -128,9 +129,11 @@
 
 			// MySQL and MariaDB
 			//"MySql",
-			//"MySql55"
 			//"MySqlConnector",
+			//"MySql55",
+			//"MySql55Connector",
 			//"MariaDB",
+			//"MariaDBConnector",
 
 			// PostgreSQL
 			//"PostgreSQL.9.2",
@@ -141,7 +144,6 @@
 			//"PostgreSQL.12",
 			//"PostgreSQL.13",
 			//"PostgreSQL.14",
-			//"PostgreSQL",
 
 			// OleDB and ODBC MS Access providers
 			//"Access",
@@ -212,9 +214,11 @@
 
 			// MySQL and MariaDB
 			//"MySql",
-			//"MySql55"
 			//"MySqlConnector",
+			//"MySql55",
+			//"MySql55Connector",
 			//"MariaDB",
+			//"MariaDBConnector",
 
 			// PostgreSQL
 			//"PostgreSQL.9.2",
@@ -225,7 +229,6 @@
 			//"PostgreSQL.12",
 			//"PostgreSQL.13",
 			//"PostgreSQL.14",
-			//"PostgreSQL",
 
 			// OleDB and ODBC MS Access providers
 			//"Access",
@@ -296,9 +299,11 @@
 
 			// MySQL and MariaDB
 			//"MySql",
-			//"MySql55"
 			//"MySqlConnector",
+			//"MySql55",
+			//"MySql55Connector",
 			//"MariaDB",
+			//"MariaDBConnector",
 
 			// PostgreSQL
 			//"PostgreSQL.9.2",
@@ -309,7 +314,6 @@
 			//"PostgreSQL.12",
 			//"PostgreSQL.13",
 			//"PostgreSQL.14",
-			//"PostgreSQL",
 
 			// OleDB and ODBC MS Access providers
 			//"Access",
@@ -423,15 +427,23 @@
 				"Provider": "MySql",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
+			"MySqlConnector": {
+				"Provider": "MySqlConnector",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
 			"MySql55": {
 				"Provider": "MySql",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"MariaDB": {
+			"MySql55Connector": {
 				"Provider": "MySqlConnector",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"MySqlConnector": {
+			"MariaDB": {
+				"Provider": "MySql",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"MariaDBConnector": {
 				"Provider": "MySqlConnector",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
@@ -449,10 +461,6 @@
 			},
 			"Oracle.11.Managed": {
 				"Provider": "Oracle.ManagedDataAccess.Client",
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
-			},
-			"PostgreSQL": {
-				"Provider": "Npgsql",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"PostgreSQL.9.2": {

@@ -208,7 +208,7 @@ namespace Tests.DataProvider
 				var value = data.Func(typeName, this, conn);
 				if (data.Result is NpgsqlPoint)
 				{
-					Assert.IsTrue(object.Equals(value, data.Result));
+					Assert.IsTrue(Equals(value, data.Result));
 				}
 				else
 				{
@@ -503,8 +503,9 @@ namespace Tests.DataProvider
 			[MapValue("B")] BB
 		}
 
+		// works with v9 too, but requires npgsql < 6
 		[Test]
-		public void TestEnum1([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void TestEnum1([IncludeDataSources(TestProvName.AllPostgreSQL10Plus)] string context)
 		{
 			using (var conn = GetDataConnection(context))
 			{
@@ -928,14 +929,9 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyTest([Values] BulkTestMode mode, [IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			var providerName      = GetProviderName(context, out var _);
-			var macaddr8Supported = providerName == TestProvName.PostgreSQL10
-				|| providerName == TestProvName.PostgreSQL11
-				|| providerName == TestProvName.PostgreSQL12
-				|| providerName == TestProvName.PostgreSQL13
-				|| providerName == TestProvName.PostgreSQL14;
-			var lineSupported     = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
-			var jsonbSupported    = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
+			var macaddr8Supported = context.IsAnyOf(TestProvName.AllPostgreSQL10Plus);
+			var lineSupported     = context.IsAnyOf(TestProvName.AllPostgreSQL95Plus);
+			var jsonbSupported    = context.IsAnyOf(TestProvName.AllPostgreSQL95Plus);
 			var testData = new[]
 			{
 				// test null values
@@ -1083,14 +1079,9 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task BulkCopyTestAsync([Values]BulkTestMode mode, [IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			var providerName      = GetProviderName(context, out var _);
-			var macaddr8Supported = providerName == TestProvName.PostgreSQL10
-				|| providerName == TestProvName.PostgreSQL11
-				|| providerName == TestProvName.PostgreSQL12
-				|| providerName == TestProvName.PostgreSQL13
-				|| providerName == TestProvName.PostgreSQL14;
-			var lineSupported     = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
-			var jsonbSupported    = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
+			var macaddr8Supported = context.IsAnyOf(TestProvName.AllPostgreSQL10Plus);
+			var lineSupported     = context.IsAnyOf(TestProvName.AllPostgreSQL95Plus);
+			var jsonbSupported    = context.IsAnyOf(TestProvName.AllPostgreSQL95Plus);
 			var testData = new[]
 			{
 				// test null values

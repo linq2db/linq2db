@@ -135,11 +135,11 @@ namespace Tests.Linq
 		public void CreateIfNotExistsTest([IncludeDataSources(
 			true,
 			ProviderName.DB2,
-			ProviderName.Informix,
-			ProviderName.Firebird,
+			TestProvName.AllInformix,
+			TestProvName.AllFirebird,
 			TestProvName.AllMySql,
 			TestProvName.AllOracle,
-			ProviderName.PostgreSQL,
+			TestProvName.AllPostgreSQL,
 			TestProvName.AllSQLite,
 			TestProvName.AllSqlServer2005Plus,
 			TestProvName.AllSybase)] string context)
@@ -163,11 +163,11 @@ namespace Tests.Linq
 		public void CreateTempIfNotExistsTest([IncludeDataSources(
 			false,
 			ProviderName.DB2,
-			ProviderName.Informix,
-			ProviderName.Firebird,
+			TestProvName.AllInformix,
+			TestProvName.AllFirebird,
 			TestProvName.AllMySql,
 			TestProvName.AllOracle,
-			ProviderName.PostgreSQL,
+			TestProvName.AllPostgreSQL,
 			TestProvName.AllSQLite,
 			TestProvName.AllSqlServer2005Plus,
 			TestProvName.AllSybase)] string context)

@@ -35,7 +35,7 @@ namespace Tests.SchemaProvider
 
 		// TODO: temporary disabled for oracle, as it takes 10 minutes for Oracle12 to process schema exceptions
 		[Test]
-		public void Test([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector, TestProvName.AllOracle12)]
+		public void Test([DataSources(false, TestProvName.AllOracle12)]
 			string context)
 		{
 			using (var conn = GetDataConnection(context))
@@ -261,7 +261,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void IncludeExcludeCatalogTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector)]
+		public void IncludeExcludeCatalogTest([DataSources(false)]
 			string context)
 		{
 			using (var conn = GetDataConnection(context))
@@ -279,7 +279,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void IncludeExcludeSchemaTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector)]
+		public void IncludeExcludeSchemaTest([DataSources(false)]
 			string context)
 		{
 			using (new DisableBaseline("TODO: exclude schema list is not stable, db2 schema provider needs refactoring", GetProviderName(context, out var _) == ProviderName.DB2))
@@ -344,7 +344,7 @@ namespace Tests.SchemaProvider
 		// TODO: temporary disabled for oracle, as it takes 10 minutes for Oracle12 to process schema exceptions
 		// Access.Odbc: no FK information available for provider
 		[Test]
-		public void PrimaryForeignKeyTest([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector, TestProvName.AllOracle12, ProviderName.AccessOdbc)]
+		public void PrimaryForeignKeyTest([DataSources(false, TestProvName.AllOracle12, ProviderName.AccessOdbc)]
 			string context)
 		{
 			using (var db = GetDataConnection(context))

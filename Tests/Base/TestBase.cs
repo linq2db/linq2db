@@ -389,56 +389,28 @@ namespace Tests
 		public static readonly string?         DefaultProvider;
 		public static readonly HashSet<string> SkipCategories;
 
-		public static readonly List<string> Providers = CustomizationSupport.Interceptor.GetSupportedProviders(new List<string>
+		public static readonly IReadOnlyList<string> Providers = CustomizationSupport.Interceptor.GetSupportedProviders(new List<string>
 		{
 #if NET472
+			// test providers with .net framework provider only
 			ProviderName.Sybase,
-			ProviderName.OracleNative,
-			TestProvName.Oracle11Native,
+			TestProvName.AllOracleNative,
 			ProviderName.Informix,
 #endif
+			// multi-tfm providers
 			ProviderName.SqlCe,
-			ProviderName.Access,
-			ProviderName.AccessOdbc,
+			TestProvName.AllAccess,
 			ProviderName.DB2,
 			ProviderName.InformixDB2,
-			ProviderName.SQLiteClassic,
-			TestProvName.SQLiteClassicMiniProfilerMapped,
-			TestProvName.SQLiteClassicMiniProfilerUnmapped,
+			TestProvName.AllSQLite,
+			TestProvName.AllOracleManaged,
 			ProviderName.SybaseManaged,
-			ProviderName.OracleManaged,
-			TestProvName.Oracle11Managed,
-			ProviderName.Firebird,
-			TestProvName.Firebird3,
-			TestProvName.Firebird4,
-			ProviderName.SqlServer2008,
-			ProviderName.SqlServer2012,
-			ProviderName.SqlServer2014,
-			ProviderName.SqlServer2016,
-			ProviderName.SqlServer2017,
-			TestProvName.SqlServer2019,
-			TestProvName.SqlServer2019SequentialAccess,
-			TestProvName.SqlServer2019FastExpressionCompiler,
-			TestProvName.SqlServerContained,
-			ProviderName.SqlServer2005,
-			TestProvName.SqlAzure,
-			ProviderName.PostgreSQL,
-			ProviderName.PostgreSQL92,
-			ProviderName.PostgreSQL93,
-			ProviderName.PostgreSQL95,
-			TestProvName.PostgreSQL10,
-			TestProvName.PostgreSQL11,
-			TestProvName.PostgreSQL12,
-			TestProvName.PostgreSQL13,
-			TestProvName.PostgreSQL14,
-			ProviderName.MySql,
-			ProviderName.MySqlConnector,
-			TestProvName.MySql55,
-			TestProvName.MariaDB,
-			ProviderName.SQLiteMS,
-			ProviderName.SapHanaNative,
-			ProviderName.SapHanaOdbc
-		}).ToList();
+			TestProvName.AllFirebird,
+			TestProvName.AllSqlServer,
+			TestProvName.AllPostgreSQL,
+			TestProvName.AllMySql,
+			TestProvName.AllSapHana
+		}.SplitAll()).ToList();
 
 		protected ITestDataContext GetDataContext(
 			string         configuration,
@@ -540,10 +512,7 @@ namespace Tests
 				case ProviderName.Informix:
 					token = '?'; break;
 				case ProviderName.SapHanaNative:
-				case TestProvName.Oracle11Managed:
-				case TestProvName.Oracle11Native:
-				case ProviderName.OracleManaged:
-				case ProviderName.OracleNative:
+				case string when context.IsAnyOf(TestProvName.AllOracle):
 					token = ':'; break;
 			}
 
@@ -1123,12 +1092,12 @@ namespace Tests
 			// windows: both db and catalog are case sensitive
 			return provider == TestProvName.SqlServer2019
 				|| provider == ProviderName.DB2
-				|| provider.StartsWith(ProviderName.Firebird)
-				|| provider.StartsWith(ProviderName.Informix)
-				|| provider.StartsWith(ProviderName.Oracle)
-				|| provider.StartsWith(ProviderName.PostgreSQL)
-				|| provider.StartsWith(ProviderName.SapHana)
-				|| provider.StartsWith(ProviderName.Sybase)
+				|| provider.IsAnyOf(TestProvName.AllFirebird)
+				|| provider.IsAnyOf(TestProvName.AllInformix)
+				|| provider.IsAnyOf(TestProvName.AllOracle)
+				|| provider.IsAnyOf(TestProvName.AllPostgreSQL)
+				|| provider.IsAnyOf(TestProvName.AllSapHana)
+				|| provider.IsAnyOf(TestProvName.AllSybase)
 				|| CustomizationSupport.Interceptor.IsCaseSensitiveComparison(provider)
 				;
 		}
@@ -1150,12 +1119,10 @@ namespace Tests
 			// SAP HANA
 			// SQL CE
 			// Sybase ASE
-			return provider == TestProvName.SqlAzure
-				|| provider == TestProvName.MariaDB
-				|| provider == TestProvName.AllOracleNative
-				|| provider.StartsWith(ProviderName.SqlServer)
-				|| provider.StartsWith(ProviderName.Firebird)
-				|| provider.StartsWith(ProviderName.MySql)
+			return provider.IsAnyOf(TestProvName.AllOracleNative)
+				|| provider.IsAnyOf(TestProvName.AllSqlServer)
+				|| provider.IsAnyOf(TestProvName.AllFirebird)
+				|| provider.IsAnyOf(TestProvName.AllMySql)
 				// while it is configured, LIKE in SQLite is case-insensitive (for ASCII only though)
 				//|| provider.StartsWith(ProviderName.SQLite)
 				|| CustomizationSupport.Interceptor.IsCollatedTableConfigured(provider)
@@ -1360,21 +1327,10 @@ namespace Tests
 		public static string GetTempTableName(string tableName, string context)
 		{
 			var finalTableName = tableName;
-			switch (GetProviderName(context, out var _))
+			switch (context)
 			{
-				case TestProvName.SqlAzure                           :
-				case ProviderName.SqlServer                          :
-				case ProviderName.SqlServer2005                      :
-				case ProviderName.SqlServer2008                      :
-				case ProviderName.SqlServer2012                      :
-				case ProviderName.SqlServer2014                      :
-				case ProviderName.SqlServer2016                      :
-				case ProviderName.SqlServer2017                      :
-				case TestProvName.SqlServer2019                      :
-				case TestProvName.SqlServer2019SequentialAccess      :
-				case TestProvName.SqlServer2019FastExpressionCompiler:
-				case TestProvName.SqlServerContained                 :
-					{
+				case string when context.IsAnyOf(TestProvName.AllSqlServer):
+				{
 					if (!tableName.StartsWith("#"))
 						finalTableName = "#" + tableName;
 					break;

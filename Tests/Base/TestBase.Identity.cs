@@ -55,7 +55,7 @@ namespace Tests
 
 					};
 						break;
-					case string prov when prov.StartsWith("MySql") || prov.StartsWith("MariaDB"):
+					case string prov when prov.IsAnyOf(TestProvName.AllMySql):
 						sql = new[] { $"ALTER TABLE Person AUTO_INCREMENT = {lastValue + 1}" };
 						break;
 					case string prov when prov.StartsWith("Oracle"):
@@ -156,7 +156,7 @@ CREATE COLUMN TABLE ""Person"" (
 						$"ALTER TABLE AllTypes ADD CONSTRAINT PRIMARY KEY (ID)",
 					};
 						break;
-					case string prov when prov.StartsWith("MySql") || prov.StartsWith("MariaDB"):
+					case string prov when prov.IsAnyOf(TestProvName.AllMySql):
 						sql = new[] { $"ALTER TABLE `AllTypes` AUTO_INCREMENT = {lastValue + 1}" };
 						break;
 					case string prov when prov.StartsWith("Oracle"):

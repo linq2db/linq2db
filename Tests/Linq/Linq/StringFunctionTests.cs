@@ -1738,8 +1738,7 @@ namespace Tests.Linq
 			// providers doesn't support IConvertible parameter coercion
 			ProviderName.SQLiteMS,
 			ProviderName.DB2,
-			ProviderName.MySqlConnector,
-			TestProvName.MariaDB,
+			TestProvName.AllMySqlConnector,
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllInformix,
 			TestProvName.AllSybase)] string context)

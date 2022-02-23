@@ -1,13 +1,16 @@
 ﻿{
 	"NET60.Azure": {
 		"Providers": [
-			// add it here, as we don't want separate job for it
+			// not sqlite, but should go somewhere
 			"TestNoopProvider",
 			// System.Data.SQLite
 			"SQLite.Classic",
 			"Northwind.SQLite",
 			"SQLite.Classic.MPU",
-			"SQLite.Classic.MPM"
+			"SQLite.Classic.MPM",
+			// Microsoft.Data.SQLite
+			"SQLite.MS",
+			"Northwind.SQLite.MS"
 		]
 	}
 }

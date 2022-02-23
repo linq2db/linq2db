@@ -29,7 +29,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"\n{hint}"));
+			Assert.That(LastQuery, Contains.Substring($"\n{hint}").Using(StringComparison.Ordinal));
 		}
 
 		[Test]
@@ -67,9 +67,9 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"\n\t\t{hint}"));
-			Assert.That(LastQuery, Contains.Substring("\nFOR SHARE"));
-			Assert.That(LastQuery, Contains.Substring("\nFOR KEY SHARE"));
+			Assert.That(LastQuery, Contains.Substring($"\n\t\t{hint}").Using(StringComparison.Ordinal));
+			Assert.That(LastQuery, Contains.Substring("\nFOR SHARE").Using(StringComparison.Ordinal));
+			Assert.That(LastQuery, Contains.Substring("\nFOR KEY SHARE").Using(StringComparison.Ordinal));
 		}
 
 		[Test]
@@ -100,9 +100,9 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring("\nFOR UPDATE"));
-			Assert.That(LastQuery, Contains.Substring("\nFOR SHARE"));
-			Assert.That(LastQuery, Contains.Substring("\nFOR KEY SHARE"));
+			Assert.That(LastQuery, Contains.Substring("\nFOR UPDATE").Using(StringComparison.Ordinal));
+			Assert.That(LastQuery, Contains.Substring("\nFOR SHARE").Using(StringComparison.Ordinal));
+			Assert.That(LastQuery, Contains.Substring("\nFOR KEY SHARE").Using(StringComparison.Ordinal));
 		}
 
 		[Test]
@@ -130,9 +130,9 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"\n\t\t\tFOR UPDATE"));
-			Assert.That(LastQuery, Contains.Substring($"\nFOR SHARE"));
-			Assert.That(LastQuery, Contains.Substring($"\nFOR KEY SHARE NOWAIT"));
+			Assert.That(LastQuery, Contains.Substring($"\n\t\t\tFOR UPDATE").Using(StringComparison.Ordinal));
+			Assert.That(LastQuery, Contains.Substring($"\nFOR SHARE").Using(StringComparison.Ordinal));
+			Assert.That(LastQuery, Contains.Substring($"\nFOR KEY SHARE NOWAIT").Using(StringComparison.Ordinal));
 		}
 
 		[Test]

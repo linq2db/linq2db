@@ -305,9 +305,8 @@ namespace Tests.Data
 
 		// tests support of data reader methods by LinqService
 		// full of hacks to made test work as expected
-#if !NETFRAMEWORK
 		[Test]
-		public void TestLinqService([IncludeDataSources(true, ProviderName.MySql)] string context, [Values] ConnectionType type)
+		public void TestLinqService([IncludeDataSources(true, TestProvName.AllMySqlData)] string context, [Values] ConnectionType type)
 		{
 			var provider = GetProviderName(context, out var isLinq);
 
@@ -353,7 +352,6 @@ namespace Tests.Data
 				//Assert.AreEqual(dtValue, ((MySqlDataDateTime)rawDtValue).Value);
 			}
 		}
-#endif
 
 		[Test]
 		public void TestMySqlData([IncludeDataSources(TestProvName.AllMySqlData)] string context, [Values] ConnectionType type)
@@ -418,10 +416,15 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task TestMySqlConnector([IncludeDataSources(ProviderName.MySqlConnector)] string context, [Values] ConnectionType type)
+		public async Task TestMySqlConnector([IncludeDataSources(TestProvName.AllMySqlConnector)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-			using (var db = CreateDataConnection(new MySqlDataProviderMySqlConnector(), context, type, "MySqlConnector.MySqlConnection, MySqlConnector", ";AllowZeroDateTime=true"))
+#if NETFRAMEWORK
+			var connectionTypeName = "MySql.Data.MySqlClient.MySqlConnection, MySqlConnector";
+#else
+			var connectionTypeName = "MySqlConnector.MySqlConnection, MySqlConnector";
+#endif
+			using (var db = CreateDataConnection(new MySqlDataProviderMySqlConnector(), context, type, connectionTypeName, ";AllowZeroDateTime=true"))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>

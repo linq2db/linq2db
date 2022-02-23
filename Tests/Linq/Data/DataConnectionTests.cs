@@ -1217,20 +1217,17 @@ namespace Tests.Data
 			[DataSources(false)] string context, [Values] bool withScope)
 		{
 			if (withScope && (
-				context == ProviderName.DB2            ||
-				context == ProviderName.InformixDB2    ||
-				context == ProviderName.MySqlConnector ||
-				context == TestProvName.MariaDB        ||
-				context == ProviderName.SapHanaNative  ||
-				context == ProviderName.SqlCe          ||
-				context == ProviderName.Sybase         ||
-				context.Contains("Firebird")           ||
-				context.Contains("Oracle")             ||
-				context.Contains("PostgreSQL")         ||
-				context.Contains("SqlServer")          ||
-				context.Contains("SqlAzure")           ||
-				context.Contains(ProviderName.SQLiteClassic)
-				))
+				context == ProviderName.DB2                     ||
+				context == ProviderName.InformixDB2             ||
+				context == ProviderName.SapHanaNative           ||
+				context == ProviderName.SqlCe                   ||
+				context == ProviderName.Sybase                  ||
+				context.IsAnyOf(TestProvName.AllMySqlConnector) ||
+				context.IsAnyOf(TestProvName.AllFirebird)       ||
+				context.IsAnyOf(TestProvName.AllOracle)         ||
+				context.IsAnyOf(TestProvName.AllPostgreSQL)     ||
+				context.IsAnyOf(TestProvName.AllSqlServer)      ||
+				context.IsAnyOf(TestProvName.AllSQLiteClassic)))
 			{
 				// DB2: ERROR [58005] [IBM][DB2.NET] SQL0902 An unexpected exception has occurred in  Process: 22188 Thread 16 AppDomain: Name:domain-1b9769ae-linq2db.Tests.dll
 				// Firebird: SQL error code = -204 Table unknown CATEGORIES

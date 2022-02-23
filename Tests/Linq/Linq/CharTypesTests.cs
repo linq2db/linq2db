@@ -22,9 +22,6 @@ namespace Tests.Linq
 			[Column(Configuration = ProviderName.DB2,			 IsColumn = false)]
 			[Column(Configuration = ProviderName.PostgreSQL,	 IsColumn = false)]
 			[Column(Configuration = ProviderName.MySql,			 IsColumn = false)]
-			[Column(Configuration = ProviderName.MySqlConnector, IsColumn = false)]
-			[Column(Configuration = TestProvName.MySql55,        IsColumn = false)]
-			[Column(Configuration = TestProvName.MariaDB,        IsColumn = false)]
 			public string? String;
 
 			[Column("ncharDataType")]
@@ -32,9 +29,6 @@ namespace Tests.Linq
 			[Column("CHAR20DATATYPE" , Configuration = ProviderName.DB2)]
 			[Column("char20DataType" , Configuration = ProviderName.PostgreSQL)]
 			[Column("char20DataType" , Configuration = ProviderName.MySql)]
-			[Column("char20DataType" , Configuration = ProviderName.MySqlConnector)]
-			[Column("char20DataType" , Configuration = TestProvName.MySql55)]
-			[Column("char20DataType" , Configuration = TestProvName.MariaDB)]
 			[Column(                   Configuration = ProviderName.Firebird, IsColumn = false)]
 			public string? NString;
 		}
@@ -51,9 +45,6 @@ namespace Tests.Linq
 			[Column(Configuration = ProviderName.DB2,			 IsColumn = false)]
 			[Column(Configuration = ProviderName.PostgreSQL,	 IsColumn = false)]
 			[Column(Configuration = ProviderName.MySql,			 IsColumn = false)]
-			[Column(Configuration = ProviderName.MySqlConnector, IsColumn = false)]
-			[Column(Configuration = TestProvName.MySql55,		 IsColumn = false)]
-			[Column(Configuration = TestProvName.MariaDB,		 IsColumn = false)]
 			public char? Char;
 
 			[Column("ncharDataType"  , DataType = DataType.NChar)]
@@ -61,9 +52,6 @@ namespace Tests.Linq
 			[Column("CHAR20DATATYPE" , DataType = DataType.NChar, Configuration = ProviderName.DB2)]
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = ProviderName.PostgreSQL)]
 			[Column("char20DataType" , DataType = DataType.NChar, Configuration = ProviderName.MySql)]
-			[Column("char20DataType" , DataType = DataType.NChar, Configuration = ProviderName.MySqlConnector)]
-			[Column("char20DataType" , DataType = DataType.NChar, Configuration = TestProvName.MySql55)]
-			[Column("char20DataType" , DataType = DataType.NChar, Configuration = TestProvName.MariaDB)]
 			[Column(                   Configuration = ProviderName.Firebird, IsColumn = false)]
 			public char? NChar;
 		}
@@ -155,21 +143,18 @@ namespace Tests.Linq
 
 		private CharTestTable[] GetCharData([DataSources] string context)
 		{
-			var provider = GetProviderName(context, out var _);
-
 			// filter out null-character test cases for servers/providers without support
-			if (   context.Contains(ProviderName.PostgreSQL)
-				|| provider == ProviderName.DB2
-				|| provider == ProviderName.SqlCe
-				|| context.Contains(ProviderName.SapHana))
+			if (   context.IsAnyOf(TestProvName.AllPostgreSQL)
+				|| context.IsAnyOf(ProviderName.DB2, ProviderName.SqlCe)
+				|| context.IsAnyOf(TestProvName.AllSapHana))
 				return CharTestData.Where(_ => _.NChar != '\0').ToArray();
 
 			// I wonder why
-			if (context.Contains(ProviderName.Firebird))
+			if (context.IsAnyOf(TestProvName.AllFirebird))
 				return CharTestData.Where(_ => _.NChar != '\xA0').ToArray();
 
 			// also strange
-			if (context.Contains(TestProvName.AllInformix))
+			if (context.IsAnyOf(TestProvName.AllInformix))
 				return CharTestData.Where(_ => _.NChar != '\0' && (_.NChar ?? 0) < byte.MaxValue).ToArray();
 
 			return CharTestData;
@@ -180,20 +165,19 @@ namespace Tests.Linq
 			var provider = GetProviderName(context, out var _);
 
 			// filter out null-character test cases for servers/providers without support
-			if (context.Contains(ProviderName.PostgreSQL)
-				|| provider == ProviderName.DB2
-				|| context  == ProviderName.DB2           + ".LinqService"
-				|| context.Contains("SQLite")
-				|| provider == ProviderName.SqlCe
-				|| context.Contains(ProviderName.SapHana))
+			if (context.IsAnyOf(TestProvName.AllPostgreSQL)
+				|| context.IsAnyOf(ProviderName.DB2)
+				|| context.IsAnyOf(TestProvName.AllSQLite)
+				|| context.IsAnyOf(ProviderName.SqlCe)
+				|| context.IsAnyOf(TestProvName.AllSapHana))
 				return StringTestData.Where(_ => !(_.NString ?? string.Empty).Contains("\0")).ToArray();
 
 			// I wonder why
-			if (context.Contains(ProviderName.Firebird))
+			if (context.IsAnyOf(TestProvName.AllFirebird))
 				return StringTestData.Where(_ => !(_.NString ?? string.Empty).Contains("\xA0")).ToArray();
 
 			// also strange
-			if (context.Contains(TestProvName.AllInformix))
+			if (context.IsAnyOf(TestProvName.AllInformix))
 				return StringTestData.Where(_ => !(_.NString ?? string.Empty).Contains("\0")
 					&& !(_.NString ?? string.Empty).Any(c => (int)c > byte.MaxValue)).ToArray();
 
@@ -283,14 +267,7 @@ namespace Tests.Linq
 								Assert.AreEqual(testData[i].Char, records[i].Char);
 						}
 
-						if (context == ProviderName.MySql
-							  || context == ProviderName.MySql + ".LinqService"
-							  || context == ProviderName.MySqlConnector
-							  || context == ProviderName.MySqlConnector + ".LinqService"
-							  || context == TestProvName.MySql55
-							  || context == TestProvName.MySql55 + ".LinqService"
-							  || context == TestProvName.MariaDB
-							  || context == TestProvName.MariaDB + ".LinqService")
+						if (context.IsAnyOf(TestProvName.AllMySql))
 							// for some reason mysql doesn't insert space
 							Assert.AreEqual(testData[i].NChar == ' ' ? '\0' : testData[i].NChar, records[i].NChar);
 						else if (!context.Contains(ProviderName.Firebird))
@@ -311,19 +288,7 @@ namespace Tests.Linq
 
 		private static bool SkipChar([DataSources] string context)
 		{
-			return context == ProviderName.SqlCe
-				|| context == ProviderName.SqlCe      + ".LinqService"
-				|| context == ProviderName.DB2
-				|| context == ProviderName.DB2        + ".LinqService"
-				|| context.Contains(ProviderName.PostgreSQL)
-				|| context == ProviderName.MySql
-				|| context == ProviderName.MySql + ".LinqService"
-				|| context == ProviderName.MySqlConnector
-				|| context == ProviderName.MySqlConnector + ".LinqService"
-				|| context == TestProvName.MySql55
-				|| context == TestProvName.MySql55 + ".LinqService"
-				|| context == TestProvName.MariaDB
-				|| context == TestProvName.MariaDB    + ".LinqService";
+			return context.IsAnyOf(ProviderName.SqlCe, ProviderName.DB2, TestProvName.AllPostgreSQL, TestProvName.AllMySql);
 		}
 	}
 }

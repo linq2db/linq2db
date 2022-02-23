@@ -103,7 +103,7 @@ namespace LinqToDB
 		/// MySqlConnector provider.
 		/// Used as configuration name for MySql mapping schema <see cref="DataProvider.MySql.MySqlMappingSchema"/>.
 		/// </summary>
-		public const string MySqlConnector= "MySqlConnector";
+		public const string MySqlConnector = "MySqlConnector";
 		/// <summary>
 		/// Oracle ODP.NET autodetected provider (native or managed).
 		/// Used as configuration name for Oracle base mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema"/>.

@@ -62,7 +62,6 @@ namespace Tests.xUpdate
 			[Column(IsColumn = false, Configuration = ProviderName.Firebird)]
 			[Column(IsColumn = false, Configuration = ProviderName.Access)]
 			[Column(IsColumn = false, Configuration = ProviderName.MySql)]
-			[Column(IsColumn = false, Configuration = ProviderName.MySqlConnector)]
 			[Column(IsColumn = false, Configuration = ProviderName.SQLite)]
 			[Column(IsColumn = false, Configuration = ProviderName.SapHana)]
 			[Column(Configuration = ProviderName.Oracle, Precision = 7)]
@@ -467,27 +466,20 @@ namespace Tests.xUpdate
 		{
 			if (expected != null)
 			{
-				if (provider.Contains(ProviderName.PostgreSQL))
+				if (provider.IsAnyOf(TestProvName.AllPostgreSQL))
 					expected = expected.Value.AddTicks(-expected.Value.Ticks % 10);
 			}
 
 			if (   provider != ProviderName.SqlServer2005
 				&& provider != ProviderName.SqlCe
-				&& !provider.Contains(ProviderName.Informix)
-				&& !provider.Contains(ProviderName.Firebird)
-				&& provider != ProviderName.MySql
-				&& provider != ProviderName.MySqlConnector
-				&& provider != TestProvName.MySql55
-				&& provider != TestProvName.MariaDB
-				&& !provider.StartsWith("Access")
-				&& provider != ProviderName.SQLiteClassic
-				&& provider != TestProvName.SQLiteClassicMiniProfilerMapped
-				&& provider != TestProvName.SQLiteClassicMiniProfilerUnmapped
-				&& provider != ProviderName.SQLiteMS
-				&& provider != ProviderName.Sybase
-				&& provider != ProviderName.SybaseManaged
-				&& provider != ProviderName.DB2
-				&& !provider.StartsWith(ProviderName.SapHana))
+				&& !provider.IsAnyOf(TestProvName.AllInformix)
+				&& !provider.IsAnyOf(TestProvName.AllFirebird)
+				&& !provider.IsAnyOf(TestProvName.AllMySql)
+				&& !provider.IsAnyOf(TestProvName.AllAccess)
+				&& !provider.IsAnyOf(TestProvName.AllSQLite)
+				&& !provider.IsAnyOf(TestProvName.AllSybase)
+				&& !provider.IsAnyOf(TestProvName.AllSapHana)
+				&& provider != ProviderName.DB2)
 				Assert.AreEqual(expected, actual);
 		}
 
@@ -496,12 +488,9 @@ namespace Tests.xUpdate
 			if (expected != null)
 			{
 				if (expected == ' '
-					&& (   provider == ProviderName.MySql
-						|| provider == ProviderName.MySqlConnector
-						|| provider == TestProvName.MariaDB
-						|| provider == TestProvName.MySql55
+					&& (   provider.IsAnyOf(TestProvName.AllMySql)
 						// after migration to 2.4.126 provider + SPS4, hana or provider started to trim spaces on insert for some reason
-						|| provider.StartsWith(ProviderName.SapHana)))
+						|| provider.IsAnyOf(TestProvName.AllSapHana)))
 					expected = '\0';
 			}
 
@@ -513,12 +502,9 @@ namespace Tests.xUpdate
 			if (expected != null)
 			{
 				if (expected == ' '
-					&& (provider == ProviderName.MySql
-						|| provider == ProviderName.MySqlConnector
-						|| provider == TestProvName.MariaDB
-						|| provider == TestProvName.MySql55
+					&& (provider.IsAnyOf(TestProvName.AllMySql)
 						// after migration to 2.4.126 provider + SPS4, hana or provider started to trim spaces on insert for some reason
-						|| provider.StartsWith(ProviderName.SapHana)))
+						|| provider.IsAnyOf(TestProvName.AllSapHana)))
 					expected = '\0';
 			}
 
@@ -529,8 +515,8 @@ namespace Tests.xUpdate
 		{
 			if (expected != null)
 			{
-				if ((provider == ProviderName.MySql || provider == ProviderName.MySqlConnector)
-					&& expected.Value.Millisecond > 500) expected = expected.Value.AddSeconds(1);
+				if (provider.IsAnyOf(TestProvName.AllMySqlServer57Plus) && expected.Value.Millisecond > 500)
+					expected = expected.Value.AddSeconds(1);
 
 				if (provider == ProviderName.Sybase || provider == ProviderName.SybaseManaged)
 				{
@@ -552,12 +538,9 @@ namespace Tests.xUpdate
 					}
 				}
 
-				if (   provider == ProviderName.MySql
-					|| provider == ProviderName.MySqlConnector
-					|| provider == TestProvName.MariaDB
-					|| provider == TestProvName.MySql55
-					|| provider == ProviderName.AccessOdbc
-					|| provider.Contains("Oracle"))
+				if (   provider.IsAnyOf(TestProvName.AllMySql)
+					|| provider.IsAnyOf(TestProvName.AllOracle)
+					|| provider == ProviderName.AccessOdbc)
 					expected = expected.Value.AddMilliseconds(-expected.Value.Millisecond);
 			}
 
@@ -601,8 +584,8 @@ namespace Tests.xUpdate
 			{
 				switch (provider)
 				{
-					case ProviderName.Sybase        :
-					case ProviderName.SybaseManaged :
+					case string when provider.IsAnyOf(TestProvName.AllSybase):
+					{
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10000) * 10000);
 						switch (expected.Value.Milliseconds % 10)
 						{
@@ -623,43 +606,25 @@ namespace Tests.xUpdate
 
 						if (expected == TimeSpan.FromDays(1))
 							expected = expected.Value.Add(TimeSpan.FromMilliseconds(-4));
-
 						break;
-					case ProviderName.Firebird      :
-					case TestProvName.Firebird3     :
-					case TestProvName.Firebird4     :
+					};
+					case string when provider.IsAnyOf(TestProvName.AllFirebird):
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 1000) * 1000);
 						break;
-					case ProviderName.InformixDB2   :
-					case ProviderName.Informix      :
+					case string when provider.IsAnyOf(TestProvName.AllInformix):
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 100) * 100);
 						break;
-					case ProviderName.PostgreSQL    :
-					case ProviderName.PostgreSQL92  :
-					case ProviderName.PostgreSQL93  :
-					case ProviderName.PostgreSQL95  :
-					case TestProvName.PostgreSQL10  :
-					case TestProvName.PostgreSQL11  :
-					case TestProvName.PostgreSQL12  :
-					case TestProvName.PostgreSQL13  :
-					case TestProvName.PostgreSQL14  :
+					case string when provider.IsAnyOf(TestProvName.AllPostgreSQL):
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10) * 10);
 						break;
-					case ProviderName.DB2           :
-					case ProviderName.Access        :
-					case ProviderName.AccessOdbc    :
-					case ProviderName.SapHanaNative :
-					case ProviderName.SapHanaOdbc   :
-					case TestProvName.MariaDB       :
+					case string when provider.IsAnyOf(ProviderName.DB2, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMariaDB):
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10000000) * 10000000);
 						break;
-					case ProviderName.MySqlConnector:
-					case ProviderName.MySql         :
+					case string when provider.IsAnyOf(TestProvName.AllMySqlServer57Plus):
 						var msecs = expected.Value.Milliseconds;
+
 						if (msecs > 500)
-						{
 							expected = expected.Value.Add(TimeSpan.FromSeconds(1));
-						}
 
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10000000) * 10000000);
 

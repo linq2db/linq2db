@@ -210,7 +210,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void InnerJoinArray6(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllPostgreSQLLess10)] string context, [Values(1, 2)] int iteration)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllPostgreSQL9)] string context, [Values(1, 2)] int iteration)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -236,7 +236,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InnerJoinArray6Postgres([IncludeDataSources(TestProvName.AllPostgreSQLLess10)] string context, [Values(1, 2)] int iteration)
+		public void InnerJoinArray6Postgres([IncludeDataSources(TestProvName.AllPostgreSQL9)] string context, [Values(1, 2)] int iteration)
 		{
 			using (var db = GetDataContext(context))
 			{
