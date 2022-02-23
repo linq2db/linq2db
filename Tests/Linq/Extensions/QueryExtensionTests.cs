@@ -107,7 +107,7 @@ namespace Tests.Extensions
 			if (context.IsAnyOf(TestProvName.AllOracle         )) current = accessHints;
 			else if (context.IsAnyOf(TestProvName.AllOracle    )) current = oracleHints;
 			else if (context.IsAnyOf(TestProvName.AllMySql     )) current = mySqlHints;
-			else if (context.StartsWith("SqlCe"                )) current = sqlCeHints;
+			else if (context.IsAnyOf(ProviderName.SqlCe        )) current = sqlCeHints;
 			else if (context.IsAnyOf(TestProvName.AllSqlServer )) current = sqlServerHints;
 			else if (context.IsAnyOf(TestProvName.AllPostgreSQL)) current = postgreSQLHints;
 			else if (context.IsAnyOf(TestProvName.AllSQLite    )) current = sqliteHints;
