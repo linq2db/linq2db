@@ -1,5 +1,4 @@
 parameters:
-  isCore: false
   artifacts: ''
   framework: ''
   titleFramework: ''
@@ -62,7 +61,7 @@ steps:
   inputs:
     filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript)'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
-  condition: and(variables.title, variables.psscript, ne(${{ parameters.isCore }}, False))
+  condition: and(variables.title, variables.psscript)
   displayName: Setup tests
 
 - task: VSTest@2

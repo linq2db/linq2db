@@ -152,7 +152,6 @@ jobs:
   steps:
   - template: test-workflow-windows.yml
     parameters:
-      isCore: false
       artifacts: $(netfx472_tests)
       framework: 'net472'
       titleFramework: 'NET472'
@@ -184,7 +183,6 @@ jobs:
   steps:
   - template: test-workflow-windows.yml
     parameters:
-      isCore: false
       artifacts: $(netfx472_tests)
       framework: 'net472'
       titleFramework: 'NET472'
@@ -216,7 +214,6 @@ jobs:
   steps:
   - template: test-workflow-windows.yml
     parameters:
-      isCore: true
       artifacts: $(netcore31_tests)
       framework: 'netcoreapp3.1'
       titleFramework: 'NETCOREAPP3.1'
@@ -248,7 +245,6 @@ jobs:
   steps:
   - template: test-workflow-windows.yml
     parameters:
-      isCore: true
       artifacts: $(net50_tests)
       framework: 'net5.0'
       titleFramework: 'NET5.0'
@@ -280,7 +276,6 @@ jobs:
   steps:
   - template: test-workflow-windows.yml
     parameters:
-      isCore: true
       artifacts: $(net60_tests)
       framework: 'net6.0'
       titleFramework: 'NET6.0'
@@ -313,7 +308,6 @@ jobs:
   steps:
   - template: test-workflow-windows.yml
     parameters:
-      isCore: true
       artifacts: $(netcore31_tests)
       framework: 'netcoreapp3.1'
       titleFramework: 'NETCOREAPP3.1'
@@ -345,7 +339,6 @@ jobs:
   steps:
   - template: test-workflow-windows.yml
     parameters:
-      isCore: true
       artifacts: $(net50_tests)
       framework: 'net5.0'
       titleFramework: 'NET 5.0'
@@ -377,7 +370,6 @@ jobs:
   steps:
   - template: test-workflow-windows.yml
     parameters:
-      isCore: true
       artifacts: $(net60_tests)
       framework: 'net6.0'
       titleFramework: 'NET 6.0'
