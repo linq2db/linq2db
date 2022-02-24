@@ -122,6 +122,9 @@ namespace Tests.Extensions
 			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
 			[Values(SqlServerHints.Join.Loop, SqlServerHints.Join.Hash, SqlServerHints.Join.Merge, SqlServerHints.Join.Remote)] string hint)
 		{
+			if (hint == SqlServerHints.Join.Remote && context.IsAnyOf(TestProvName.AllSqlAzure))
+				Assert.Inconclusive("REMOTE hint not supported by Azure SQL");
+
 			using var db = GetDataContext(context);
 
 			var q =
@@ -139,6 +142,9 @@ namespace Tests.Extensions
 			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
 			[Values(SqlServerHints.Join.Loop, SqlServerHints.Join.Hash, SqlServerHints.Join.Merge, SqlServerHints.Join.Remote)] string hint)
 		{
+			if (hint == SqlServerHints.Join.Remote && context.IsAnyOf(TestProvName.AllSqlAzure))
+				Assert.Inconclusive("REMOTE hint not supported by Azure SQL");
+
 			using var db = GetDataContext(context);
 
 			var q =
@@ -177,6 +183,9 @@ namespace Tests.Extensions
 			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
 			[Values(SqlServerHints.Join.Loop, SqlServerHints.Join.Hash, SqlServerHints.Join.Merge, SqlServerHints.Join.Remote)] string hint)
 		{
+			if (hint == SqlServerHints.Join.Remote && context.IsAnyOf(TestProvName.AllSqlAzure))
+				Assert.Inconclusive("REMOTE hint not supported by Azure SQL");
+
 			using var db = GetDataContext(context);
 
 			var q = db.Child.InnerJoin(db.Parent.JoinHint(hint), (c, p) => c.ParentID == p.ParentID, (c, p) => p);
@@ -442,7 +451,7 @@ namespace Tests.Extensions
 
 		[Test]
 		public void QueryHintQueryTraceOnTest(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+			[IncludeDataSources(true, TestProvName.AllSqlServer2012PlusNoAzure)] string context)
 		{
 			using var db = GetDataContext(context);
 

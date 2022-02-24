@@ -32,6 +32,16 @@
 		<Reference Include="System.ServiceModel" />
 		
 		<PackageReference Include="Microsoft.AspNet.OData" />
+
+		<None Include="$(MSBuildThisFileDirectory)\..\Redist\SqlServerTypes\x64\*.dll">
+			<Link>SqlServerTypes/x64/%(FileName)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="$(MSBuildThisFileDirectory)\..\Redist\SqlServerTypes\x86\*.dll">
+			<Link>SqlServerTypes/x86/%(FileName)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+
 	</ItemGroup>
 	
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">

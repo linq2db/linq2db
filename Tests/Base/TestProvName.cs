@@ -144,13 +144,18 @@ namespace Tests
 		public const string AllSqlServer2008             = $"{ProviderName.SqlServer2008},{SqlServer2008MS}";
 		public const string AllSqlServer2012             = $"{ProviderName.SqlServer2012},{SqlServer2012MS}";
 		public const string AllSqlServer2014             = $"{ProviderName.SqlServer2014},{SqlServer2014MS}";
+		public const string AllSqlServer2016             = $"{ProviderName.SqlServer2016},{SqlServer2016MS}";
+		public const string AllSqlServer2017             = $"{ProviderName.SqlServer2017},{SqlServer2017MS}";
+		public const string AllSqlServer2019             = $"{ProviderName.SqlServer2019},{SqlServer2019MS},{AllSqlServerSequentialAccess},{AllSqlServerContained}";
 		public const string AllSqlServer2008Minus        = $"{AllSqlServer2005},{AllSqlServer2008}";
-		public const string AllSqlServer2019Plus         = $"{ProviderName.SqlServer2019},{SqlServer2019MS},{AllSqlServerSequentialAccess},{AllSqlServerContained},{AllSqlAzure}";
-		public const string AllSqlServer2017Plus         = $"{ProviderName.SqlServer2017},{SqlServer2017MS},{AllSqlServer2019Plus}";
-		public const string AllSqlServer2016Plus         = $"{ProviderName.SqlServer2016},{SqlServer2016MS},{AllSqlServer2017Plus}";
+		public const string AllSqlServer2019Plus         = $"{AllSqlServer2019},{AllSqlAzure}";
+		public const string AllSqlServer2017Plus         = $"{AllSqlServer2017},{AllSqlServer2019Plus}";
+		public const string AllSqlServer2016Plus         = $"{AllSqlServer2016},{AllSqlServer2017Plus}";
+		public const string AllSqlServer2012PlusNoAzure  = $"{AllSqlServer2012},{AllSqlServer2014},{AllSqlServer2016},{AllSqlServer2017},{AllSqlServer2019}";
 		public const string AllSqlServer2012Plus         = $"{AllSqlServer2012},{AllSqlServer2014},{AllSqlServer2016Plus}";
 		public const string AllSqlServer2008Plus         = $"{AllSqlServer2008},{AllSqlServer2012Plus}";
-		public const string AllSqlServer                 = $"{AllSqlServer2005},{AllSqlServer2008Plus}";
+		public const string AllSqlServerNoAzure          = $"{AllSqlServer2005},{AllSqlServer2008},{AllSqlServer2012},{AllSqlServer2014},{AllSqlServer2016},{AllSqlServer2017},{AllSqlServer2019}";
+		public const string AllSqlServer                 = $"{AllSqlServerNoAzure},{AllSqlAzure}";
 		#endregion
 
 		public const string Oracle11Native    = "Oracle.11.Native";

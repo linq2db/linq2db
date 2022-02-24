@@ -130,6 +130,18 @@ namespace Tests
 			// Configuration.Linq.GenerateExpressionTest  = true;
 			var assemblyPath = typeof(TestBase).Assembly.GetPath()!;
 
+#if NET472
+			// this is needed for machine without GAC-ed sql types (e.g. machine without SQL Server installed or CI)
+			try
+			{
+				SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
+			}
+			catch // this can fail during tests discovering with NUnitTestAdapter
+			{
+				// ignore
+			}
+#endif
+
 			Environment.CurrentDirectory = assemblyPath;
 
 			TestExternals.Log($"CurrentDirectory          : {Environment.CurrentDirectory}");
