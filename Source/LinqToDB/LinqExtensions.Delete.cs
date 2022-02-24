@@ -30,8 +30,7 @@ namespace LinqToDB
 		/// <item>MariaDB 10.0+ (doesn't support multi-table statements; database limitation)</item>
 		/// </list>
 		/// </remarks>
-		public static IEnumerable<TSource> DeleteWithOutput<TSource>(
-			                this IQueryable<TSource>          source)
+		public static IEnumerable<TSource> DeleteWithOutput<TSource>(this IQueryable<TSource> source)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
@@ -63,8 +62,8 @@ namespace LinqToDB
 		/// </list>
 		/// </remarks>
 		public static Task<TSource[]> DeleteWithOutputAsync<TSource>(
-			                this IQueryable<TSource>          source,
-							CancellationToken                  token = default)
+			this IQueryable<TSource> source,
+			CancellationToken        token = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
@@ -99,8 +98,8 @@ namespace LinqToDB
 		/// </remarks>
 		[Pure]
 		public static IEnumerable<TOutput> DeleteWithOutput<TSource,TOutput>(
-			                this IQueryable<TSource>           source,
-			                Expression<Func<TSource, TOutput>> outputExpression)
+			this IQueryable<TSource>           source,
+			Expression<Func<TSource, TOutput>> outputExpression)
 		{
 			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
@@ -137,9 +136,9 @@ namespace LinqToDB
 		/// </list>
 		/// </remarks>
 		public static Task<TOutput[]> DeleteWithOutputAsync<TSource,TOutput>(
-			                this IQueryable<TSource>           source,
-			                Expression<Func<TSource, TOutput>> outputExpression,
-							CancellationToken                  token = default)
+			this IQueryable<TSource>           source,
+			Expression<Func<TSource, TOutput>> outputExpression,
+			CancellationToken                  token = default)
 		{
 			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
@@ -170,8 +169,8 @@ namespace LinqToDB
 		/// </list>
 		/// </remarks>
 		public static int DeleteWithOutputInto<TSource,TOutput>(
-			                this IQueryable<TSource>          source,
-			                ITable<TOutput>                   outputTable)
+			this IQueryable<TSource> source,
+			ITable<TOutput>          outputTable)
 			where TOutput : notnull
 		{
 			if (source      == null) throw new ArgumentNullException(nameof(source));
@@ -183,7 +182,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(DeleteWithOutputInto, source, outputTable),
-					currentSource.Expression, 
+					currentSource.Expression,
 					((IQueryable<TOutput>)outputTable).Expression));
 		}
 
@@ -203,9 +202,9 @@ namespace LinqToDB
 		/// </list>
 		/// </remarks>
 		public static Task<int> DeleteWithOutputIntoAsync<TSource,TOutput>(
-			                this IQueryable<TSource>          source,
-			                ITable<TOutput>                   outputTable,
-							CancellationToken                 token = default)
+			this IQueryable<TSource> source,
+			ITable<TOutput>          outputTable,
+			CancellationToken        token = default)
 			where TOutput : notnull
 		{
 			if (source      == null) throw new ArgumentNullException(nameof(source));
@@ -217,7 +216,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(DeleteWithOutputInto, source, outputTable),
-					currentSource.Expression, 
+					currentSource.Expression,
 					((IQueryable<TOutput>)outputTable).Expression);
 
 			if (source is IQueryProviderAsync queryAsync)
@@ -243,9 +242,9 @@ namespace LinqToDB
 		/// </list>
 		/// </remarks>
 		public static int DeleteWithOutputInto<TSource,TOutput>(
-			                this IQueryable<TSource>          source,
-			                ITable<TOutput>                   outputTable,
-			                Expression<Func<TSource,TOutput>> outputExpression)
+			this IQueryable<TSource>          source,
+			ITable<TOutput>                   outputTable,
+			Expression<Func<TSource,TOutput>> outputExpression)
 			where TOutput : notnull
 		{
 			if (source           == null) throw new ArgumentNullException(nameof(source));
@@ -259,7 +258,7 @@ namespace LinqToDB
 					null,
 					MethodHelper.GetMethodInfo(DeleteWithOutputInto, source, outputTable, outputExpression),
 					currentSource.Expression,
-					((IQueryable<TOutput>)outputTable).Expression, 
+					((IQueryable<TOutput>)outputTable).Expression,
 					Expression.Quote(outputExpression)));
 		}
 
@@ -281,10 +280,10 @@ namespace LinqToDB
 		/// </list>
 		/// </remarks>
 		public static Task<int> DeleteWithOutputIntoAsync<TSource,TOutput>(
-			                this IQueryable<TSource>          source,
-			                ITable<TOutput>                   outputTable,
-			                Expression<Func<TSource,TOutput>> outputExpression,
-							CancellationToken                 token = default)
+			this IQueryable<TSource>          source,
+			ITable<TOutput>                   outputTable,
+			Expression<Func<TSource,TOutput>> outputExpression,
+			CancellationToken                 token = default)
 			where TOutput : notnull
 		{
 			if (source           == null) throw new ArgumentNullException(nameof(source));
@@ -298,7 +297,7 @@ namespace LinqToDB
 					null,
 					MethodHelper.GetMethodInfo(DeleteWithOutputInto, source, outputTable, outputExpression),
 					currentSource.Expression,
-					((IQueryable<TOutput>)outputTable).Expression, 
+					((IQueryable<TOutput>)outputTable).Expression,
 					Expression.Quote(outputExpression));
 
 			if (currentSource is IQueryProviderAsync queryAsync)

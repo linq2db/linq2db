@@ -13,14 +13,25 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		public override bool CanCompareSearchConditions => true;
-		
+
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
 			return statement.QueryType switch
 			{
 				QueryType.Update => CorrectMySqlUpdate((SqlUpdateStatement)statement),
+				QueryType.Delete => PrepareDelete((SqlDeleteStatement)statement),
 				_                => statement,
 			};
+		}
+
+		SqlStatement PrepareDelete(SqlDeleteStatement statement)
+		{
+			var tables = statement.SelectQuery.From.Tables;
+
+			if (statement.Output != null && tables.Count == 1 && tables[0].Joins.Count == 0)
+				tables[0].Alias = "$";
+
+			return statement;
 		}
 
 		private SqlUpdateStatement CorrectMySqlUpdate(SqlUpdateStatement statement)

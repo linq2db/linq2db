@@ -111,26 +111,13 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (operation)
 			{
-				case SetOperation.Union:
-					sb.Append("UNION");
-					break;
-				case SetOperation.UnionAll:
-					sb.Append("UNION ALL");
-					break;
-				case SetOperation.Except:
-					sb.Append("EXCEPT");
-					break;
-				case SetOperation.ExceptAll:
-					sb.Append("EXCEPT ALL");
-					break;
-				case SetOperation.Intersect:
-					sb.Append("INTERSECT");
-					break;
-				case SetOperation.IntersectAll:
-					sb.Append("INTERSECT ALL");
-					break;
-				default:
-					throw new ArgumentOutOfRangeException(nameof(operation), operation, null);
+				case SetOperation.Union        : sb.Append("UNION");         break;
+				case SetOperation.UnionAll     : sb.Append("UNION ALL");     break;
+				case SetOperation.Except       : sb.Append("EXCEPT");        break;
+				case SetOperation.ExceptAll    : sb.Append("EXCEPT ALL");    break;
+				case SetOperation.Intersect    : sb.Append("INTERSECT");     break;
+				case SetOperation.IntersectAll : sb.Append("INTERSECT ALL"); break;
+				default                        : throw new ArgumentOutOfRangeException(nameof(operation), operation, null);
 			}
 		}
 
@@ -674,8 +661,8 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
-			BuildUpdateTable    (selectQuery, updateClause);
-			BuildUpdateSet      (selectQuery, updateClause);
+			BuildUpdateTable(selectQuery, updateClause);
+			BuildUpdateSet  (selectQuery, updateClause);
 		}
 
 		protected virtual void BuildUpdateTable(SelectQuery selectQuery, SqlUpdateClause updateClause)
@@ -3127,13 +3114,13 @@ namespace LinqToDB.SqlProvider
 					{
 						var ts    = (SqlTableSource)table;
 						var alias = string.IsNullOrEmpty(ts.Alias) ? GetTableAlias(ts.Source) : ts.Alias;
-						return alias != "$" && alias != "$F" ? alias : null;
+						return alias is not ("$" or "$F") ? alias : null;
 					}
 				case QueryElementType.SqlTable        :
 				case QueryElementType.SqlCteTable     :
 					{
 						var alias = ((SqlTable)table).Alias;
-						return alias != "$" && alias != "$F" ? alias : null;
+						return alias is not ("$" or "$F") ? alias : null;
 					}
 				case QueryElementType.SqlRawSqlTable  :
 					{
@@ -3143,7 +3130,7 @@ namespace LinqToDB.SqlProvider
 							return GetTableAlias(ts);
 
 						var alias = ((SqlTable)table).Alias;
-						return alias != "$" && alias != "$F" ? alias : null;
+						return alias is not ("$" or "$F") ? alias : null;
 					}
 				case QueryElementType.SqlTableLikeSource:
 					return null;

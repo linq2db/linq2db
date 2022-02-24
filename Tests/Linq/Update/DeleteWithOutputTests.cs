@@ -97,23 +97,15 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task DeleteWithOutputAsyncTest([IncludeDataSources(true, FeatureDeleteOutputMultiple)] string context, [Values(100, 200)] int param)
 		{
-			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var expected = source
-					.Where(s => s.Id > 3)
-					.ToArray();
+			var sourceData = GetSourceData();
 
-				var output = await source
-					.Where(s => s.Id > 3)
-					.DeleteWithOutputAsync();
+			await using var db     = GetDataContext(context);
+			await using var source = db.CreateLocalTable(sourceData);
 
-				AreEqual(
-					expected,
-					output,
-					ComparerBuilder.GetEqualityComparer<TableWithData>());
-			}
+			AreEqual(
+				source.Where(s => s.Id > 3).ToList(),
+				await source.Where(s => s.Id > 3).DeleteWithOutputAsync(),
+				ComparerBuilder.GetEqualityComparer<TableWithData>());
 		}
 
 		[Test]
