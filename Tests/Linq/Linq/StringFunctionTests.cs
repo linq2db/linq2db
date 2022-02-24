@@ -255,7 +255,7 @@ namespace Tests.Linq
 			}
 		}
 
-#if NETSTANDARD2_1PLUS
+#if NETCOREAPP3_1_OR_GREATER
 		[Test]
 		public void ContainsConstantWithCase1([DataSources(ProviderName.SqlCe)] string context)
 		{
@@ -1410,7 +1410,7 @@ namespace Tests.Linq
 			public static readonly CollatedTable TestData = new () { Id = 1, CaseSensitive = "TestString", CaseInsensitive = "TestString" };
 		}
 
-#if NETSTANDARD2_1PLUS
+#if NETCOREAPP3_1_OR_GREATER
 		[Test]
 		public void ExplicitOrdinalIgnoreCase_Contains([DataSources] string context)
 		{

@@ -43,7 +43,7 @@ Solutions:
 
 Preferred target defines:
 - `NETFRAMEWORK` - `net45`, `net46` and `net472` target ifdef
-- `NETSTANDARD2_1PLUS` - targets with `netstandard2.1` support (`netstandard2.1`, `netcoreapp3.1`, `net5.0`, `net6.0`)
+- `NETSTANDARD2_1PLUS` - targets with `netstandard2.1` support (`netstandard2.1`, `netcoreapp3.1`, `net5.0`, `net6.0`). Don't use this define in test projects!
 - `NATIVE_ASYNC` - ifdef with native support for `ValueTask`, `IAsyncEnumerable<T>` and `IAsyncDisposable` types
 
 Other allowed target defines:
