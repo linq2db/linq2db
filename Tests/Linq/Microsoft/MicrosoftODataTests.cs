@@ -91,7 +91,7 @@ namespace Tests.OData.Microsoft
 
 		[Test]
 		public void SelectViaOData(
-			[IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context,
+			[IncludeDataSources(TestProvName.AllSqlServer)] string context,
 			[ValueSource(nameof(ODataQueriesTestCases))] ODataQueries testCase)
 		{
 			var modelBuilder = new ODataModelBuilder();

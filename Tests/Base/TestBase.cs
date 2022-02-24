@@ -480,15 +480,15 @@ namespace Tests
 
 			// add extra mapping schema to not share mappers with other sql2017/2019 providers
 			// use same schema to use cache within test provider scope
-			if (configuration == TestProvName.SqlServer2019SequentialAccess)
+			if (configuration.IsAnyOf(TestProvName.AllSqlServerSequentialAccess))
 			{
 				if (!suppressSequentialAccess)
 					res.AddInterceptor(SequentialAccessCommandInterceptor.Instance);
 
 				res.AddMappingSchema(_sequentialAccessSchema);
 			}
-			else if (configuration == TestProvName.SqlServer2019FastExpressionCompiler)
-				res.AddMappingSchema(_fecSchema);
+			//else if (configuration == TestProvName.SqlServer2019FastExpressionCompiler)
+			//	res.AddMappingSchema(_fecSchema);
 
 			if (interceptor != null)
 				res.AddInterceptor(interceptor);
@@ -1072,7 +1072,7 @@ namespace Tests
 			// windows: both db and catalog are case sensitive
 			var provider = GetProviderName(context, out var _);
 
-			return provider == TestProvName.SqlServer2019
+			return provider.IsAnyOf(TestProvName.AllSqlServerCS)
 				|| CustomizationSupport.Interceptor.IsCaseSensitiveDB(provider)
 				;
 		}
@@ -1090,7 +1090,7 @@ namespace Tests
 			// on CI we test two configurations:
 			// linux/mac: db is case sensitive, catalog is case insensitive
 			// windows: both db and catalog are case sensitive
-			return provider == TestProvName.SqlServer2019
+			return provider.IsAnyOf(TestProvName.AllSqlServerCS)
 				|| provider == ProviderName.DB2
 				|| provider.IsAnyOf(TestProvName.AllFirebird)
 				|| provider.IsAnyOf(TestProvName.AllInformix)
@@ -1353,11 +1353,11 @@ namespace Tests
 		{
 			// SequentialAccess-enabled provider setup
 			var (provider, _) = NUnitUtils.GetContext(TestExecutionContext.CurrentContext.CurrentTest);
-			if (provider == TestProvName.SqlServer2019SequentialAccess)
+			if (provider?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
 			{
 				Configuration.OptimizeForSequentialAccess = true;
 			}
-			else if (provider == TestProvName.SqlServer2019FastExpressionCompiler)
+			//else if (provider == TestProvName.SqlServer2019FastExpressionCompiler)
 			{
 				//Compilation.SetExpressionCompiler(_ => ExpressionCompiler.CompileFast(_, true));
 			}
@@ -1368,11 +1368,11 @@ namespace Tests
 		{
 			// SequentialAccess-enabled provider cleanup
 			var (provider, _) = NUnitUtils.GetContext(TestExecutionContext.CurrentContext.CurrentTest);
-			if (provider == TestProvName.SqlServer2019SequentialAccess)
+			if (provider?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
 			{
 				Configuration.OptimizeForSequentialAccess = false;
 			}
-			if (provider == TestProvName.SqlServer2019FastExpressionCompiler)
+			//if (provider == TestProvName.SqlServer2019FastExpressionCompiler)
 			{
 				//Compilation.SetExpressionCompiler(null);
 			}

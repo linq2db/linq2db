@@ -4,8 +4,6 @@ namespace Tests
 {
 	public static class TestProvName
 	{
-		public const string SqlAzure          = "SqlAzure";
-
 		#region SQLite
 		public const string Default                           = "SQLite.Default";
 		public const string NorthwindSQLite                   = "Northwind.SQLite";
@@ -113,14 +111,51 @@ namespace Tests
 		public const string AllSybase = $"{ProviderName.Sybase},{ProviderName.SybaseManaged}";
 		#endregion
 
-		public const string Northwind         = "Northwind";
+		#region SQL Server
+		public const string Northwind                    = "SqlServer.Northwind";
+		public const string NorthwindMS                  = "SqlServer.Northwind.MS";
+		public const string AllNorthwind                 = $"{Northwind},{NorthwindMS}";
+
+		public const string SqlAzure                     = "SqlServer.Azure";
+		public const string SqlAzureMS                   = "SqlServer.Azure.MS";
+		public const string AllSqlAzure                  = $"{SqlAzure},{SqlAzureMS}";
+
+		public const string SqlServer2005MS              = "SqlServer.2005.MS";
+		public const string SqlServer2008MS              = "SqlServer.2008.MS";
+		public const string SqlServer2012MS              = "SqlServer.2012.MS";
+		public const string SqlServer2014MS              = "SqlServer.2014.MS";
+		public const string SqlServer2016MS              = "SqlServer.2016.MS";
+		public const string SqlServer2017MS              = "SqlServer.2017.MS";
+		public const string SqlServer2019MS              = "SqlServer.2019.MS";
+
+		public const string SqlServerSequentialAccess    = "SqlServer.SA";
+		public const string SqlServerSequentialAccessMS  = "SqlServer.SA,MS";
+		public const string AllSqlServerSequentialAccess = $"{SqlServerSequentialAccess},{SqlServerSequentialAccessMS}";
+
+		public const string SqlServerContained           = "SqlServer.Contained";
+		public const string SqlServerContainedMS         = "SqlServer.Contained.MS";
+		public const string AllSqlServerContained        = $"{SqlServerContained},{SqlServerContainedMS}";
+
+		/// <summary>
+		/// Case-sensitive database.
+		/// </summary>
+		public const string AllSqlServerCS               = $"{ProviderName.SqlServer2019},{SqlServer2019MS}";
+		public const string AllSqlServer2005             = $"{ProviderName.SqlServer2005},{SqlServer2005MS}";
+		public const string AllSqlServer2008             = $"{ProviderName.SqlServer2008},{SqlServer2008MS}";
+		public const string AllSqlServer2012             = $"{ProviderName.SqlServer2012},{SqlServer2012MS}";
+		public const string AllSqlServer2014             = $"{ProviderName.SqlServer2014},{SqlServer2014MS}";
+		public const string AllSqlServer2008Minus        = $"{AllSqlServer2005},{AllSqlServer2008}";
+		public const string AllSqlServer2019Plus         = $"{ProviderName.SqlServer2019},{SqlServer2019MS},{AllSqlServerSequentialAccess},{AllSqlServerContained},{AllSqlAzure}";
+		public const string AllSqlServer2017Plus         = $"{ProviderName.SqlServer2017},{SqlServer2017MS},{AllSqlServer2019Plus}";
+		public const string AllSqlServer2016Plus         = $"{ProviderName.SqlServer2016},{SqlServer2016MS},{AllSqlServer2017Plus}";
+		public const string AllSqlServer2012Plus         = $"{AllSqlServer2012},{AllSqlServer2014},{AllSqlServer2016Plus}";
+		public const string AllSqlServer2008Plus         = $"{AllSqlServer2008},{AllSqlServer2012Plus}";
+		public const string AllSqlServer                 = $"{AllSqlServer2005},{AllSqlServer2008Plus}";
+		#endregion
+
 		public const string Oracle11Native    = "Oracle.11.Native";
 		public const string Oracle11Managed   = "Oracle.11.Managed";
-		public const string SqlServer2019     = "SqlServer.2019";
 
-		public const string SqlServer2019SequentialAccess       = "SqlServer.2019.SA";
-		public const string SqlServer2019FastExpressionCompiler = "SqlServer.2019.FEC";
-		public const string SqlServerContained                  = "SqlServer.Contained";
 
 
 		/// <summary>
@@ -134,15 +169,6 @@ namespace Tests
 		public const string AllOracleNative        = "Oracle.Native,Oracle.11.Native";
 		public const string AllOracle11            = "Oracle.11.Native,Oracle.11.Managed";
 		public const string AllOracle12            = "Oracle.Native,Oracle.Managed";
-		public const string AllSqlServer           = "SqlServer.2005,SqlServer.2008,SqlServer.2012,SqlServer.2014,SqlServer.2016,SqlServer.2017,SqlServer.2019,SqlServer.2019.SA,SqlServer.2019.FEC,SqlServer.Contained,SqlAzure";
-		public const string AllSqlServer2005Minus  = "SqlServer.2005";
-		public const string AllSqlServer2008Minus  = "SqlServer.2005,SqlServer.2008";
-		public const string AllSqlServer2005Plus   = "SqlServer.2005,SqlServer.2008,SqlServer.2012,SqlServer.2014,SqlServer.2016,SqlServer.2017,SqlServer.2019,SqlServer.2019.SA,SqlServer.2019.FEC,SqlServer.Contained,SqlAzure";
-		public const string AllSqlServer2008Plus   = "SqlServer.2008,SqlServer.2012,SqlServer.2014,SqlServer.2016,SqlServer.2017,SqlServer.2019,SqlServer.2019.SA,SqlServer.2019.FEC,SqlServer.Contained,SqlAzure";
-		public const string AllSqlServer2012Plus   = "SqlServer.2012,SqlServer.2014,SqlServer.2017,SqlServer.2019,SqlServer.2019.SA,SqlServer.2019.FEC,SqlServer.Contained,SqlAzure";
-		public const string AllSqlServer2016Plus   = "SqlServer.2016,SqlServer.2017,SqlServer.2019,SqlServer.2019.SA,SqlServer.2019.FEC,SqlServer.Contained,SqlAzure";
-		public const string AllSqlServer2017Plus   = "SqlServer.2017,SqlServer.2019,SqlServer.2019.SA,SqlServer.2019.FEC,SqlServer.Contained,SqlAzure";
-		public const string AllSqlServer2019Plus   = "SqlServer.2019,SqlServer.2019.SA,SqlServer.2019.FEC,SqlAzure";
 		public const string AllSapHana             = "SapHana.Native,SapHana.Odbc";
 		public const string AllInformix            = ProviderName.Informix + "," + ProviderName.InformixDB2;
 		public const string AllAccess              = "Access,Access.Odbc";

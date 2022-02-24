@@ -27,7 +27,7 @@ namespace Tests.Extensions
 
 		[Test]
 		public void TableHint2005PlusTest(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2005Plus)] string context,
+			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context,
 			[Values(
 				SqlServerHints.Table.HoldLock,
 				SqlServerHints.Table.NoLock,

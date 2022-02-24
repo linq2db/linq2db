@@ -220,7 +220,7 @@ namespace Tests.Linq
 		// https://connect.microsoft.com/SQLServer/feedback/details/3139577/performace-regression-for-compatibility-level-2014-for-specific-query
 		[Test]
 		public void MultipleSelect11([IncludeDataSources(
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012, TestProvName.AllSapHana)]
+			TestProvName.AllSqlServer2008, TestProvName.AllSqlServer2012, TestProvName.AllSapHana)]
 			string context)
 		{
 			var dt = DateTime.Now;

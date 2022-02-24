@@ -88,17 +88,7 @@ namespace Tests.SchemaProvider
 
 				switch (context)
 				{
-					case ProviderName.SqlServer2005                       :
-					case ProviderName.SqlServer2008                       :
-					case ProviderName.SqlServer2012                       :
-					case ProviderName.SqlServer2014                       :
-					case ProviderName.SqlServer2016                       :
-					case ProviderName.SqlServer2017                       :
-					case TestProvName.SqlServer2019                       :
-					case TestProvName.SqlServer2019SequentialAccess       :
-					case TestProvName.SqlServer2019FastExpressionCompiler :
-					case TestProvName.SqlServerContained                  :
-					case TestProvName.SqlAzure                            :
+					case string when context.IsAnyOf(TestProvName.AllSqlServer):
 						{
 							var indexTable = dbSchema.Tables.Single(t => t.TableName == "IndexTable");
 							Assert.That(indexTable.ForeignKeys.Count,                Is.EqualTo(1));
@@ -106,8 +96,7 @@ namespace Tests.SchemaProvider
 						}
 						break;
 
-					case ProviderName.Informix      :
-					case ProviderName.InformixDB2   :
+					case string when context.IsAnyOf(TestProvName.AllInformix):
 						{
 							var indexTable = dbSchema.Tables.First(t => t.TableName == "testunique");
 							Assert.That(indexTable.Columns.Count(c => c.IsPrimaryKey), Is.EqualTo(2));
@@ -118,16 +107,7 @@ namespace Tests.SchemaProvider
 
 				switch (context)
 				{
-					case ProviderName.SqlServer2008                       :
-					case ProviderName.SqlServer2012                       :
-					case ProviderName.SqlServer2014                       :
-					case ProviderName.SqlServer2016                       :
-					case ProviderName.SqlServer2017                       :
-					case TestProvName.SqlServer2019                       :
-					case TestProvName.SqlServer2019SequentialAccess       :
-					case TestProvName.SqlServer2019FastExpressionCompiler :
-					case TestProvName.SqlServerContained                  :
-					case TestProvName.SqlAzure                            :
+					case string when context.IsAnyOf(TestProvName.AllSqlServer2008Plus):
 						{
 							var tbl = dbSchema.Tables.Single(at => at.TableName == "AllTypes");
 							var col = tbl.Columns.First(c => c.ColumnName == "datetimeoffset3DataType");
@@ -371,7 +351,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void ForeignKeyMemberNameTest1([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void ForeignKeyMemberNameTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -391,7 +371,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void ForeignKeyMemberNameTest2([IncludeDataSources(TestProvName.Northwind)]
+		public void ForeignKeyMemberNameTest2([IncludeDataSources(TestProvName.AllNorthwind)]
 			string context)
 		{
 			using (var db = GetDataConnection(context))

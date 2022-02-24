@@ -186,12 +186,11 @@ The `[User]DataProviders.json` is a regular JSON file:
             "SQLite.MS",
             "Northwind.SQLite",
             "Northwind.SQLite.MS",
-            "SqlServer",
             "SqlServer.2014",
-            "SqlServer.2012", "SqlServer.2012.1",
-            "SqlServer.2008", "SqlServer.2008.1",
-            "SqlServer.2005", "SqlServer.2005.1",
-            "SqlAzure",
+            "SqlServer.2012",
+            "SqlServer.2008",
+            "SqlServer.2005",
+            "SqlServer.Azure",
             "DB2",
             "Firebird",
             "Informix",
@@ -201,7 +200,7 @@ The `[User]DataProviders.json` is a regular JSON file:
             "Oracle.Managed",
             "PostgreSQL",
             "Sybase",
-            "Northwind",
+            "SqlServer.Northwind",
             "TestNoopProvider"
         ],
 
@@ -222,17 +221,16 @@ The `[User]DataProviders.json` is a regular JSON file:
         [
             "SQLite.MS",
             "Northwind.SQLite.MS",
-            "SqlServer",
             "SqlServer.2014",
-            "SqlServer.2012", "SqlServer.2012.1",
-            "SqlServer.2008", "SqlServer.2008.1",
-            "SqlServer.2005", "SqlServer.2005.1",
-            "SqlAzure",
+            "SqlServer.2012",
+            "SqlServer.2008",
+            "SqlServer.2005",
+            "SqlServer.Azure",
             "Firebird",
             "MySql",
             "MariaDB",
             "PostgreSQL",
-            "Northwind",
+            "SqlServer.Northwind",
             "TestNoopProvider"
         ]
     },
@@ -245,7 +243,7 @@ The `[User]DataProviders.json` is a regular JSON file:
         {
             // override connection string for SqlAzure provider
             // all other providers will use default inherited connection strings from CommonConnectionStrings configuration
-            "SqlAzure" :
+            "SqlServer.Azure" :
             {
                  "Provider"         : "System.Data.SqlClient",
                  "ConnectionString" : "Server=tcp:xxxxxxxxx.database.windows.net,1433;Database=TestData;User ID=TestUser@zzzzzzzzz;Password=TestPassword;Trusted_Connection=False;Encrypt=True;"

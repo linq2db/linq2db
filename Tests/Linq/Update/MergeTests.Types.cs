@@ -408,7 +408,7 @@ namespace Tests.xUpdate
 			if (!provider.IsAnyOf(TestProvName.AllSQLite))
 				Assert.AreEqual(expected.FieldDecimal, actual.FieldDecimal);
 
-			if (   provider != ProviderName.SqlServer2005
+			if (   provider.IsAnyOf(TestProvName.AllSqlServer2005)
 				&& provider != ProviderName.SqlCe
 				&& !provider.IsAnyOf(TestProvName.AllOracle))
 				Assert.AreEqual(expected.FieldDate, actual.FieldDate);
@@ -469,7 +469,7 @@ namespace Tests.xUpdate
 					expected = expected.Value.AddTicks(-expected.Value.Ticks % 10);
 			}
 
-			if (   provider != ProviderName.SqlServer2005
+			if (   provider.IsAnyOf(TestProvName.AllSqlServer2005)
 				&& provider != ProviderName.SqlCe
 				&& !provider.IsAnyOf(TestProvName.AllInformix)
 				&& !provider.IsAnyOf(TestProvName.AllFirebird)
@@ -567,7 +567,7 @@ namespace Tests.xUpdate
 
 		private static void AssertTime(TimeSpan? expected, TimeSpan? actual, string provider)
 		{
-			if (   provider == ProviderName.SqlServer2005
+			if (   provider.IsAnyOf(TestProvName.AllSqlServer2005)
 				|| provider.IsAnyOf(TestProvName.AllOracle)
 				|| provider.IsAnyOf(TestProvName.AllSQLite)
 				|| provider.IsAnyOf(TestProvName.AllMySql55)

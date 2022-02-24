@@ -21,7 +21,7 @@ namespace Tests.xUpdate
 				TestProvName.AllAccess,
 				ProviderName.SqlCe,
 				TestProvName.AllSQLite,
-				TestProvName.AllSqlServer2005Minus,
+				TestProvName.AllSqlServer2005,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
 			}.SelectMany(_ => _.Split(',')).ToList();

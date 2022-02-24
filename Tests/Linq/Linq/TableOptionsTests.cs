@@ -112,7 +112,7 @@ namespace Tests.Linq
 			ProviderName.DB2,
 			ProviderName.Firebird,
 			ProviderName.Oracle,
-			TestProvName.AllSqlServer2005Plus,
+			TestProvName.AllSqlServer,
 			TestProvName.AllSybase)] string context,
 			[Values(true)] bool firstCall)
 		{
@@ -141,10 +141,10 @@ namespace Tests.Linq
 			TestProvName.AllOracle,
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSQLite,
-			TestProvName.AllSqlServer2005Plus,
+			TestProvName.AllSqlServer,
 			TestProvName.AllSybase)] string context)
 		{
-			if (context.StartsWith("SqlServer.20") && context.EndsWith(".LinqService"))
+			if (context.IsAnyOf(TestProvName.AllSqlServer) && context.EndsWith(".LinqService"))
 				return;
 
 			using var db = GetDataContext(context);
@@ -169,10 +169,10 @@ namespace Tests.Linq
 			TestProvName.AllOracle,
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSQLite,
-			TestProvName.AllSqlServer2005Plus,
+			TestProvName.AllSqlServer,
 			TestProvName.AllSybase)] string context)
 		{
-			if (context.StartsWith("SqlServer.20") && context.EndsWith(".LinqService"))
+			if (context.IsAnyOf(TestProvName.AllSqlServer) && context.EndsWith(".LinqService"))
 				return;
 
 			using var db = GetDataContext(context);

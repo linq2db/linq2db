@@ -22,7 +22,7 @@ namespace Tests
 		{
 			var dc = base.CreateDataContext(configuration);
 
-			if (!SuppressSequentialAccess && configuration?.Contains(TestProvName.SqlServer2019SequentialAccess) == true)
+			if (!SuppressSequentialAccess && configuration?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
 				dc.AddInterceptor(SequentialAccessCommandInterceptor.Instance);
 
 			if (_interceptor != null)

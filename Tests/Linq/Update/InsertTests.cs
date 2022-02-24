@@ -963,7 +963,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithGuidIdentity([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void InsertWithGuidIdentity([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -973,7 +973,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithGuidIdentityOutput([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void InsertWithGuidIdentityOutput([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			try
 			{
@@ -991,7 +991,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithIdentityOutput([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void InsertWithIdentityOutput([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new DeletePerson(db))
@@ -1031,7 +1031,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithGuidIdentity2([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void InsertWithGuidIdentity2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -1577,7 +1577,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void Insert14([DataSources(
 			ProviderName.SqlCe, TestProvName.AllAccess,
-			ProviderName.SqlServer2005, TestProvName.AllSybase)]
+			TestProvName.AllSqlServer2005, TestProvName.AllSybase)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1775,7 +1775,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void InsertWith([IncludeDataSources(
-			ProviderName.SqlServer2008)]//, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			TestProvName.AllSqlServer2008)]
 			string context)
 		{
 			var m = null as int?;
@@ -2122,7 +2122,7 @@ namespace Tests.xUpdate
 			// and oracle native provider always was "special"
 			return provider.IsAnyOf(ProviderName.Sybase)
 				|| provider.IsAnyOf(TestProvName.AllOracleNative)
-				|| provider == ProviderName.SqlServer2005
+				|| provider.IsAnyOf(TestProvName.AllSqlServer2005)
 				? -1
 				: 0;
 		}

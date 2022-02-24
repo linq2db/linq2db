@@ -24,21 +24,28 @@
 			//"Firebird4",
 
 			// Various versions of SQL Server
-			//"SqlServer",
-			//"Northwind",
 			//"SqlServer.2005",
-			//"SqlServer.2005.1",
+			//"SqlServer.2005.MS",
 			//"SqlServer.2008",
-			//"SqlServer.2008.1",
+			//"SqlServer.2008.MS",
 			//"SqlServer.2012",
+			//"SqlServer.2012.MS",
 			//"SqlServer.2014",
+			//"SqlServer.2014.MS",
 			//"SqlServer.2016",
+			//"SqlServer.2016.MS",
 			//"SqlServer.2017",
+			//"SqlServer.2017.MS",
 			//"SqlServer.2019",
-			//"SqlServer.2019.SA",
-			//"SqlServer.2019.FEC",
+			//"SqlServer.2019.MS",
+			//"SqlServer.SA",
+			//"SqlServer.SA.MS",
 			//"SqlServer.Contained",
-			//"SqlAzure",
+			//"SqlServer.Contained.MS",
+			//"SqlServer.Northwind",
+			//"SqlServer.Northwind.MS",
+			//"SqlServer.Azure",
+			//"SqlServer.Azure.MS",
 
 			// MySQL and MariaDB
 			//"MySql",
@@ -111,21 +118,28 @@
 			//"Firebird4",
 
 			// Various versions of SQL Server
-			//"SqlServer",
-			//"Northwind",
 			//"SqlServer.2005",
-			//"SqlServer.2005.1",
+			//"SqlServer.2005.MS",
 			//"SqlServer.2008",
-			//"SqlServer.2008.1",
+			//"SqlServer.2008.MS",
 			//"SqlServer.2012",
+			//"SqlServer.2012.MS",
 			//"SqlServer.2014",
+			//"SqlServer.2014.MS",
 			//"SqlServer.2016",
+			//"SqlServer.2016.MS",
 			//"SqlServer.2017",
+			//"SqlServer.2017.MS",
 			//"SqlServer.2019",
-			//"SqlServer.2019.SA",
-			//"SqlServer.2019.FEC",
+			//"SqlServer.2019.MS",
+			//"SqlServer.SA",
+			//"SqlServer.SA.MS",
 			//"SqlServer.Contained",
-			//"SqlAzure",
+			//"SqlServer.Contained.MS",
+			//"SqlServer.Northwind",
+			//"SqlServer.Northwind.MS",
+			//"SqlServer.Azure",
+			//"SqlServer.Azure.MS",
 
 			// MySQL and MariaDB
 			//"MySql",
@@ -196,21 +210,28 @@
 			//"Firebird4",
 
 			// Various versions of SQL Server
-			//"SqlServer",
-			//"Northwind",
 			//"SqlServer.2005",
-			//"SqlServer.2005.1",
+			//"SqlServer.2005.MS",
 			//"SqlServer.2008",
-			//"SqlServer.2008.1",
+			//"SqlServer.2008.MS",
 			//"SqlServer.2012",
+			//"SqlServer.2012.MS",
 			//"SqlServer.2014",
+			//"SqlServer.2014.MS",
 			//"SqlServer.2016",
+			//"SqlServer.2016.MS",
 			//"SqlServer.2017",
+			//"SqlServer.2017.MS",
 			//"SqlServer.2019",
-			//"SqlServer.2019.SA",
-			//"SqlServer.2019.FEC",
+			//"SqlServer.2019.MS",
+			//"SqlServer.SA",
+			//"SqlServer.SA.MS",
 			//"SqlServer.Contained",
-			//"SqlAzure",
+			//"SqlServer.Contained.MS",
+			//"SqlServer.Northwind",
+			//"SqlServer.Northwind.MS",
+			//"SqlServer.Azure",
+			//"SqlServer.Azure.MS",
 
 			// MySQL and MariaDB
 			//"MySql",
@@ -281,21 +302,28 @@
 			//"Firebird4",
 
 			// Various versions of SQL Server
-			//"SqlServer",
-			//"Northwind",
 			//"SqlServer.2005",
-			//"SqlServer.2005.1",
+			//"SqlServer.2005.MS",
 			//"SqlServer.2008",
-			//"SqlServer.2008.1",
+			//"SqlServer.2008.MS",
 			//"SqlServer.2012",
+			//"SqlServer.2012.MS",
 			//"SqlServer.2014",
+			//"SqlServer.2014.MS",
 			//"SqlServer.2016",
+			//"SqlServer.2016.MS",
 			//"SqlServer.2017",
+			//"SqlServer.2017.MS",
 			//"SqlServer.2019",
-			//"SqlServer.2019.SA",
-			//"SqlServer.2019.FEC",
+			//"SqlServer.2019.MS",
+			//"SqlServer.SA",
+			//"SqlServer.SA.MS",
 			//"SqlServer.Contained",
-			//"SqlAzure",
+			//"SqlServer.Contained.MS",
+			//"SqlServer.Northwind",
+			//"SqlServer.Northwind.MS",
+			//"SqlServer.Azure",
+			//"SqlServer.Azure.MS",
 
 			// MySQL and MariaDB
 			//"MySql",
@@ -347,60 +375,92 @@
 		// you can specify folder to save test sql baselines
 		"BaselinesPath": "",
 		"Connections": {
-			"SqlServer": {
-				"Provider": "SqlServer",
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
-			},
 			"SqlServer.2005": {
 				"Provider": "System.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"SqlServer.2005.1": {
-				"Provider": "System.Data.SqlClient",
+			"SqlServer.2005.MS": {
+				"Provider": "Microsoft.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"SqlServer.2008": {
 				"Provider": "System.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"SqlServer.2008.1": {
-				"Provider": "System.Data.SqlClient",
+			"SqlServer.2008.MS": {
+				"Provider": "Microsoft.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"SqlServer.2012": {
-				"Provider": "SqlServer",
+				"Provider": "System.Data.SqlClient",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"SqlServer.2012.MS": {
+				"Provider": "Microsoft.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"SqlServer.2014": {
 				"Provider": "System.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
+			"SqlServer.2014.MS": {
+				"Provider": "Microsoft.Data.SqlClient",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
 			"SqlServer.2016": {
 				"Provider": "System.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
+			"SqlServer.2016.MS": {
+				"Provider": "Microsoft.Data.SqlClient",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
 			"SqlServer.2017": {
+				"Provider": "System.Data.SqlClient",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"SqlServer.2017.MS": {
 				"Provider": "Microsoft.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"SqlServer.2019": {
+			"SqlServer.2018": {
+				"Provider": "System.Data.SqlClient",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"SqlServer.2018.MS": {
 				"Provider": "Microsoft.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"SqlServer.2019.SA": {
-				"Provider": "Microsoft.Data.SqlClient",
+			"SqlServer.SA": {
+				"Provider": "System.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"SqlServer.2019.FEC": {
+			"SqlServer.SA.MS": {
 				"Provider": "Microsoft.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"SqlServer.Contained": {
+				"Provider": "System.Data.SqlClient",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"SqlServer.Contained.MS": {
 				"Provider": "Microsoft.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"SqlAzure": {
-				"Provider": "SqlServer.2017",
+			"SqlServer.Northwind": {
+				"Provider": "System.Data.SqlClient",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"SqlServer.Northwind.MS": {
+				"Provider": "Microsoft.Data.SqlClient",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"SqlServer.Azure": {
+				"Provider": "System.Data.SqlClient",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"SqlServer.Azure.MS": {
+				"Provider": "Microsoft.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"DB2": {
@@ -508,10 +568,6 @@
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"SapHana.Odbc": {
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
-			},
-			"Northwind": {
-				"Provider": "System.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			}
 		}

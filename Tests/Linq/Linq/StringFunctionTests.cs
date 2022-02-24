@@ -1430,6 +1430,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(3444, Configuration = ProviderName.SqlCe)]
 		[Test]
 		public void ExplicitOrdinal_Contains([DataSources] string context)
 		{
@@ -1449,6 +1450,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(3444, Configuration = ProviderName.SqlCe)]
 		[Test]
 		public void Explicit_Contains([DataSources] string context)
 		{

@@ -55,11 +55,8 @@ namespace Tests.Data
 
 		[Test]
 		public void Test3([IncludeDataSources(
-			ProviderName.SqlServer,
 			ProviderName.SqlServer2008,
-			ProviderName.SqlServer2008 + ".1",
 			ProviderName.SqlServer2005,
-			ProviderName.SqlServer2005 + ".1",
 			TestProvName.AllAccess)]
 			string context)
 		{
@@ -107,7 +104,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void GetDataProviderTest([IncludeDataSources(ProviderName.DB2, TestProvName.AllSqlServer2005Plus)] string context)
+		public void GetDataProviderTest([IncludeDataSources(ProviderName.DB2, TestProvName.AllSqlServer)] string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
 
@@ -519,7 +516,7 @@ namespace Tests.Data
 
 		[Test]
 		[SkipCI]
-		public void CommandTimeoutTest([IncludeDataSources(ProviderName.SqlServer2014)] string context)
+		public void CommandTimeoutTest([IncludeDataSources(TestProvName.AllSqlServer2014)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -1328,7 +1325,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void Issue2676TransactionScopeTest1([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void Issue2676TransactionScopeTest1([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -1367,7 +1364,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void Issue2676TransactionScopeTest2([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void Issue2676TransactionScopeTest2([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -1404,7 +1401,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void Issue2676TransactionScopeTest3([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void Issue2676TransactionScopeTest3([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{

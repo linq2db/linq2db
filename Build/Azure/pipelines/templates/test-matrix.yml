@@ -404,7 +404,7 @@ jobs:
 
 # SQL Server
         - name: SqlServer2005
-          title: SQL Server 2005 (System.Data.SqlClient)
+          title: SQL Server 2005
           config_win: sqlserver.2005
           script_win: sqlserver.2005.cmd
           enable_os_win2019: false
@@ -421,26 +421,8 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
-        - name: SqlServer2005_MS
-          title: SQL Server 2005 (Microsoft.Data.SqlClient)
-          config_win: sqlserver.2005.ms
-          script_win: sqlserver.2005.cmd
-          enable_os_win2019: false
-          enable_os_win2022: true
-          enable_os_ubuntu: false
-          enable_os_macos: false
-          enable_fw_net472: true
-          enable_fw_netcore31: true
-          enable_fw_net50: true
-          enable_fw_net60: true
-          is_experimental: false
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
-            enabled: false
-
         - name: SqlServer2008
-          title: SQL Server 2008 (System.Data.SqlClient)
+          title: SQL Server 2008
           config_win: sqlserver.2008
           script_win: sqlserver.2008.cmd
           enable_os_win2019: false
@@ -457,26 +439,8 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
-        - name: SqlServer2008_MS
-          title: SQL Server 2008 (Microsoft.Data.SqlClient)
-          config_win: sqlserver.2008.ms
-          script_win: sqlserver.2008.cmd
-          enable_os_win2019: false
-          enable_os_win2022: true
-          enable_os_ubuntu: false
-          enable_os_macos: false
-          enable_fw_net472: true
-          enable_fw_netcore31: true
-          enable_fw_net50: true
-          enable_fw_net60: true
-          is_experimental: false
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
-            enabled: false
-
         - name: SqlServer2012
-          title: SQL Server 2012 (System.Data.SqlClient)
+          title: SQL Server 2012
           config_win: sqlserver.2012
           script_win: sqlserver.2012.cmd
           enable_os_win2019: false
@@ -493,26 +457,8 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
-        - name: SqlServer2012_MS
-          title: SQL Server 2012 (Microsoft.Data.SqlClient)
-          config_win: sqlserver.2012.ms
-          script_win: sqlserver.2012.cmd
-          enable_os_win2019: false
-          enable_os_win2022: true
-          enable_os_ubuntu: false
-          enable_os_macos: false
-          enable_fw_net472: true
-          enable_fw_netcore31: true
-          enable_fw_net50: true
-          enable_fw_net60: true
-          is_experimental: false
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
-            enabled: false
-
         - name: SqlServer2014
-          title: SQL Server 2014 (System.Data.SqlClient)
+          title: SQL Server 2014
           config_win: sqlserver.2014
           script_win: sqlserver.2014.cmd
           enable_os_win2019: false
@@ -529,26 +475,8 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
-        - name: SqlServer2014_MS
-          title: SQL Server 2014 (Microsoft.Data.SqlClient)
-          config_win: sqlserver.2014.ms
-          script_win: sqlserver.2014.cmd
-          enable_os_win2019: false
-          enable_os_win2022: true
-          enable_os_ubuntu: false
-          enable_os_macos: false
-          enable_fw_net472: true
-          enable_fw_netcore31: true
-          enable_fw_net50: true
-          enable_fw_net60: true
-          is_experimental: false
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
-            enabled: false
-
         - name: SqlServer2016
-          title: SQL Server 2016 (System.Data.SqlClient)
+          title: SQL Server 2016
           config_win: sqlserver.2016
           script_win: sqlserver.2016.cmd
           enable_os_win2019: false
@@ -565,55 +493,14 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
-        - name: SqlServer2016_MS
-          title: SQL Server 2016 (Microsoft.Data.SqlClient)
-          config_win: sqlserver.2016.ms
-          script_win: sqlserver.2016.cmd
-          enable_os_win2019: false
-          enable_os_win2022: true
-          enable_os_ubuntu: false
-          enable_os_macos: false
-          enable_fw_net472: true
-          enable_fw_netcore31: true
-          enable_fw_net50: true
-          enable_fw_net60: true
-          is_experimental: false
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
-            enabled: false
-
         - name: SqlServer2017
-          title: SQL Server 2017 (System.Data.SqlClient)
+          title: SQL Server 2017
           config_win: sqlserver.2017
-          config_linux: sqlserver.fts.2017
-          config_macos: sqlserver.fts.2017
+          config_linux: sqlserver.2017
+          config_macos: sqlserver.2017
           script_win: sqlserver.2017.cmd
           script_linux: sqlserver.2017.sh
-          script_macos: mac.sqlserver.2017.sh
-          install_docker_macos: true
-          enable_os_win2019: false
-          enable_os_win2022: true
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_net472: true
-          enable_fw_netcore31: true
-          enable_fw_net50: true
-          enable_fw_net60: true
-          is_experimental: false
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
-            enabled: false
-
-        - name: SqlServer2017_MS
-          title: SQL Server 2017 (Microsoft.Data.SqlClient)
-          config_win: sqlserver.2017.ms
-          config_linux: sqlserver.fts.2017.ms
-          config_macos: sqlserver.fts.2017.ms
-          script_win: sqlserver.2017.cmd
-          script_linux: sqlserver.2017.sh
-          script_macos: mac.sqlserver.2017.sh
+          script_macos: sqlserver.2017.sh
           install_docker_macos: true
           enable_os_win2019: false
           enable_os_win2022: true
@@ -630,36 +517,13 @@ jobs:
             enabled: false
 
         - name: SqlServer2019
-          title: SQL Server 2019 (System.Data.SqlClient)
+          title: SQL Server 2019
           config_win: sqlserver.2019
           config_linux: sqlserver.fts.2019
           config_macos: sqlserver.fts.2019
           script_win: sqlserver.2019.cmd
           script_linux: sqlserver.2019.sh
-          script_macos: mac.sqlserver.2019.sh
-          install_docker_macos: true
-          enable_os_win2019: false
-          enable_os_win2022: true
-          enable_os_ubuntu: true
-          enable_os_macos:  true
-          enable_fw_net472: true
-          enable_fw_netcore31: true
-          enable_fw_net50: true
-          enable_fw_net60: true
-          is_experimental: false
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]'))) }}:
-            enabled: false
-
-        - name: SqlServer2019_MS
-          title: SQL Server 2019 (Microsoft.Data.SqlClient)
-          config_win: sqlserver.2019.ms
-          config_linux: sqlserver.fts.2019.ms
-          config_macos: sqlserver.fts.2019.ms
-          script_win: sqlserver.2019.cmd
-          script_linux: sqlserver.2019.sh
-          script_macos: mac.sqlserver.2019.sh
+          script_macos: sqlserver.2019.sh
           install_docker_macos: true
           enable_os_win2019: false
           enable_os_win2022: true

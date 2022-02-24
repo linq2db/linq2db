@@ -102,7 +102,7 @@ namespace Tests.Linq
 		[Test]
 		public void CurrentTimestampUtc(
 			[DataSources(ProviderName.Access, TestProvName.AllFirebird, ProviderName.SqlCe,
-				ProviderName.SqlServer2005)]
+				TestProvName.AllSqlServer2005)]
 			string context)
 		{
 			using (new DisableBaseline("Server-side date generation test"))

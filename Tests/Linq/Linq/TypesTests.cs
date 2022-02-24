@@ -357,7 +357,7 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.SqlCe,
 				TestProvName.AllAccess,
-				ProviderName.SqlServer2005,
+				TestProvName.AllSqlServer2005,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
@@ -388,7 +388,7 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.SqlCe,
 				TestProvName.AllAccess,
-				ProviderName.SqlServer2005,
+				TestProvName.AllSqlServer2005,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
@@ -422,7 +422,7 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.SqlCe,
 				TestProvName.AllAccess,
-				ProviderName.SqlServer2005,
+				TestProvName.AllSqlServer2005,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,

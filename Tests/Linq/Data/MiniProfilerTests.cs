@@ -85,7 +85,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void Test1([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void Test1([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var mpcon = new MiniProfilerDataContext(context))
 			{

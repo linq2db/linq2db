@@ -87,26 +87,18 @@ Legend:
 |SAP/Sybase ASE 16.2<br>[AdoNetCore.AseClient](https://www.nuget.org/packages/AdoNetCore.AseClient/) 0.19.2|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |SAP/Sybase ASE 16.2<br>Native Client|:x:|:x:|:x:|:x:|
 |MS SQL CE|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
+|MS SQL Server 2005<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.3<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 4.1.0|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
+|MS SQL Server 2008<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.3<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 4.1.0|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
+|MS SQL Server 2012<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.3<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 4.1.0|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
+|MS SQL Server 2014<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.3<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 4.1.0|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
+|MS SQL Server 2016<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.3<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 4.1.0|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
+|MS SQL Server 2017<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.3<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 4.1.0<br>with FTS Tests|:heavy_check_mark:<sup>[5](#notes)</sup>|:heavy_check_mark:<sup>[5](#notes)</sup>|:heavy_check_mark:|:heavy_check_mark:|
+|MS SQL Server 2019<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.3<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 4.1.0<br>with FTS Tests|:heavy_check_mark:<sup>[5](#notes)</sup>|:heavy_check_mark:<sup>[5](#notes)</sup>|:heavy_check_mark:|:heavy_check_mark:|
+|Azure SQL<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.3<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 4.1.0|:x:|:x:|:x:|:x:|
 |Access<sup>[3](#notes)</sup><br>Jet 4.0 OLE DB|:heavy_check_mark:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
 |Access<sup>[3](#notes)</sup><br>ACE 12 OLE DB|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
 |Access<br>MDB ODBC|:heavy_check_mark:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
 |Access<br>MDB+ACCDB ODBC|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
-|MS SQL Server 2005<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.3|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
-|MS SQL Server 2005<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 4.1.0|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
-|MS SQL Server 2008<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.3|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
-|MS SQL Server 2008<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 4.1.0|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
-|MS SQL Server 2012<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.3|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
-|MS SQL Server 2012<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 4.1.0|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
-|MS SQL Server 2014<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.3|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
-|MS SQL Server 2014<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 4.1.0|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
-|MS SQL Server 2016<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.3|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
-|MS SQL Server 2016<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 4.1.0|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
-|MS SQL Server 2017<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.3<br>with FTS Tests|:heavy_check_mark:<sup>[5](#notes)</sup>|:heavy_check_mark:<sup>[5](#notes)</sup>|:heavy_check_mark:|:heavy_check_mark:|
-|MS SQL Server 2017<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 4.1.0<br>with FTS Tests|:heavy_check_mark:<sup>[5](#notes)</sup>|:heavy_check_mark:<sup>[5](#notes)</sup>|:heavy_check_mark:|:heavy_check_mark:|
-|MS SQL Server 2019<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.3<br>with FTS Tests|:heavy_check_mark:<sup>[5](#notes)</sup>|:heavy_check_mark:<sup>[5](#notes)</sup>|:heavy_check_mark:|:heavy_check_mark:|
-|MS SQL Server 2019<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 4.1.0<br>with FTS Tests|:heavy_check_mark:<sup>[5](#notes)</sup>|:heavy_check_mark:<sup>[5](#notes)</sup>|:heavy_check_mark:|:heavy_check_mark:|
-|Azure SQL<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/) 4.8.3|:x:|:x:|:x:|:x:|
-|Azure SQL<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/) 4.1.0|:x:|:x:|:x:|:x:|
 |DB2 LUW 11.5.0.0a<br>[IBM.Data.DB2](https://www.nuget.org/packages/IBM.Data.DB.Provider/) 11.5.5010.4 (netfx)<br>[IBM.Data.DB2.Core](https://www.nuget.org/packages/IBM.Data.DB2.Core/) 2.2.0.100 ([osx](https://www.nuget.org/packages/IBM.Data.DB2.Core-osx/) 2.0.0.100, [lin](https://www.nuget.org/packages/IBM.Data.DB2.Core-lnx/) 2.2.0.100) (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Informix 12.10.FC12W1DE<br>IBM.Data.Informix (SQLI) 4.0.410.10|:x:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
 |Informix 14.10<br>IBM.Data.Informix (SQLI) 4.0.410.10|:x:|:heavy_minus_sign:|:heavy_minus_sign:|:heavy_minus_sign:|
@@ -130,56 +122,68 @@ Legend:
 4. ~removed~
 5. Northwind FTS SQL Server tests not enabled yet, as we need SQL Server images with full-text search included
 
-###### Provider names in context of tests
+###### Test providers
 | Name | Target Database | Extra Notes |
 |:---|:---:|:---:|
-|`ProviderName.Access`|Tests against Access using OLE DB JET or ACE (depends on connection string)||
-|`ProviderName.AccessOdbc`|Tests against Access using ODBC MDB or MDB+ACCDB (depends on connection string)||
-|`ProviderName.DB2`|tests against DB2 LUW||
-|`ProviderName.DB2LUW`|not used||
-|`ProviderName.DB2zOS`|not used||
-|`ProviderName.Firebird`|Firebird 2.5|Should be used for latest version of FB and this one replaced with `Firebird25`|
-|`TestProvName.Firebird3`|Firebird 3.0||
-|`TestProvName.Firebird4`|Firebird 4.0||
-|`ProviderName.Informix`|Informix 12 (IDS or SQLI using IBM.Data.Informix)| TODO: move to v14|
-|`ProviderName.InformixDB2`|Informix 12 (IDS using IBM.Data.DB2)| TODO: move to v14|
-|`TestProvName.SqlAzure`|Azure Sql||
-|`ProviderName.SqlServer`|SQL Server (2008)|TODO: use it for latest|
-|`ProviderName.SqlServer2005`|SQL Server 2005||
-|`ProviderName.SqlServer2008`|SQL Server 2008||
-|`ProviderName.SqlServer2012`|SQL Server 2012||
-|`ProviderName.SqlServer2014`|SQL Server 2014||
-|`ProviderName.SqlServer2017`|SQL Server 2017||
-|`TestProvName.Northwind`|SQL Server FTS tests||
+|`TestProvName.NoopProvider`|fake test provider to perform tests without database dependencies|
+|`ProviderName.SQLiteClassic`|System.Data.Sqlite||
+|`ProviderName.SQLiteMS`|Microsoft.Data.Sqlite||
+|`TestProvName.SQLiteClassicMiniProfilerUnmapped`|System.Data.Sqlite + MiniProfiler|Tests compatibility with connection wrappers (without mappings to provider types)|
+|`TestProvName.SQLiteClassicMiniProfilerMapped`|System.Data.Sqlite + MiniProfiler|Tests compatibility with connection wrappers (with mappings to provider types)|
+|`TestProvName.NorthwindSQLite`|System.Data.Sqlite FTS||
+|`TestProvName.NorthwindSQLiteMS`|Microsoft.Data.Sqlite FTS||
 |`ProviderName.MySql`|Latest MySQL using MySQL.Data||
-|`TestProvName.MySql55`|MySQL 5.5||
-|`ProviderName.MySqlOfficial`|not used||
 |`ProviderName.MySqlConnector`|Latest MySQL using MySqlConnector||
+|`TestProvName.MySql55`|MySQL 5.5 using MySQL.Data||
+|`TestProvName.MySql55Connector`|MySQL 5.5 using MySqlConnector||
 |`TestProvName.MariaDB`|Latest MariaDB using MySQL.Data||
-|`ProviderName.Oracle`|not used||
-|`ProviderName.OracleNative`|Oracle 12c using native provider||
-|`ProviderName.OracleManaged`|Oracle 12c using managed provider (core version for .net core)||
-|`TestProvName.Oracle11Native`|Oracle 11g using native provider||
-|`TestProvName.Oracle11Managed`|Oracle 11g using managed provider (core version for .net core)||
-|`ProviderName.PostgreSQL`|Latest PostgreSQL (13)||
-|`ProviderName.PostgreSQL92`|PostgreSQL 9.2-||
-|`ProviderName.PostgreSQL93`|PostgreSQL [9.3-9.5)||
-|`ProviderName.PostgreSQL95`|PostgreSQL 9.5+||
+|`TestProvName.MariaDBConnector`|Latest MariaDB using MySqlConnector||
+|`ProviderName.PostgreSQL92`|PostgreSQL 9.2-|PGSQL 9 not tested by CI|
+|`ProviderName.PostgreSQL93`|PostgreSQL [9.3-9.5)|PGSQL 9 not tested by CI|
+|`ProviderName.PostgreSQL95`|PostgreSQL 9.5+|PGSQL 9 not tested by CI|
 |`TestProvName.PostgreSQL10`|PostgreSQL 10||
 |`TestProvName.PostgreSQL11`|PostgreSQL 11||
 |`TestProvName.PostgreSQL12`|PostgreSQL 12||
 |`TestProvName.PostgreSQL13`|PostgreSQL 13||
 |`TestProvName.PostgreSQL14`|PostgreSQL 14||
-|`ProviderName.SqlCe`|SQL CE||
-|`ProviderName.SQLite`|not used||
-|`ProviderName.SQLiteClassic`|System.Data.Sqlite||
-|`ProviderName.SQLiteClassicMiniProfilerUnmapped`|System.Data.Sqlite + MiniProfiler|Tests compatibility with connection wrappers (without mappings to provider types)|
-|`ProviderName.SQLiteClassicMiniProfilerMapped`|System.Data.Sqlite + MiniProfiler|Tests compatibility with connection wrappers (with mappings to provider types)|
-|`TestProvName.NorthwindSQLite`|System.Data.Sqlite FTS||
-|`ProviderName.SQLiteMS`|Microsoft.Data.Sqlite||
-|`TestProvName.NorthwindSQLiteMS`|Microsoft.Data.Sqlite FTS||
-|`ProviderName.Sybase`|Sybase ASE using official provider||
-|`ProviderName.SybaseManaged`|Sybase ASE using DataAction provider||
+|`ProviderName.Firebird`|Firebird 2.5||
+|`TestProvName.Firebird3`|Firebird 3.0||
+|`TestProvName.Firebird4`|Firebird 4.0||
+|`ProviderName.Sybase`|Sybase ASE using official unmanaged provider||
+|`ProviderName.SybaseManaged`|Sybase ASE using DataAction managed provider||
+|`ProviderName.SqlCe`|SQL CE| SQL CE 4.0 used for testing|
+
+|`ProviderName.SqlServer2005`|SQL Server 2005 using System.Data.SqlClient||
+|`TestProvName.SqlServer2005MS`|SQL Server 2005 using Microsoft.Data.SqlClient||
+|`ProviderName.SqlServer2008`|SQL Server 2008 using System.Data.SqlClient||
+|`TestProvName.SqlServer2008MS`|SQL Server 2008 using Microsoft.Data.SqlClient||
+|`ProviderName.SqlServer2012`|SQL Server 2012 using System.Data.SqlClient||
+|`TestProvName.SqlServer2012MS`|SQL Server 2012 using Microsoft.Data.SqlClient||
+|`ProviderName.SqlServer2014`|SQL Server 2014 using System.Data.SqlClient||
+|`TestProvName.SqlServer2014MS`|SQL Server 2014 using Microsoft.Data.SqlClient||
+|`ProviderName.SqlServer2017`|SQL Server 2017 using System.Data.SqlClient||
+|`TestProvName.SqlServer2017MS`|SQL Server 2017 using Microsoft.Data.SqlClient||
+|`ProviderName.SqlServer2019`|SQL Server 2019 using System.Data.SqlClient||
+|`TestProvName.SqlServer2019MS`|SQL Server 2019 using Microsoft.Data.SqlClient||
+|`TestProvName.SqlServerSA`|SQL Server latest (2019) in SequentialAccess mode using System.Data.SqlClient||
+|`TestProvName.SqlServerSAMS`|SQL Server latest (2019) in SequentialAccess mode using Microsoft.Data.SqlClient||
+|`TestProvName.SqlServerContained`|SQL Server latest (2019) in contained database mode using System.Data.SqlClient||
+|`TestProvName.SqlServerContainedMS`|SQL Server latest (2019) in contained database mode using Microsoft.Data.SqlClient||
+|`TestProvName.SqlServerAzure`|SQL Server Azure (latest) using System.Data.SqlClient||
+|`TestProvName.SqlServerAzureMS`|SQL Server Azure (latest) using Microsoft.Data.SqlClient||
+|`TestProvName.SqlServerNorthwind`|SQL Server latest (2019) Northwind database with FTS using System.Data.SqlClient||
+|`TestProvName.SqlServerNorthwindMS`|SQL Server latest (2019) Northwind database with FTS using Microsoft.Data.SqlClient||
+|`ProviderName.Access`|Tests against Access using OLE DB JET or ACE (depends on connection string)||
+|`ProviderName.AccessOdbc`|Tests against Access using ODBC MDB or MDB+ACCDB (depends on connection string)||
+|`ProviderName.DB2`|tests against DB2 LUW||
+|`ProviderName.DB2LUW`|not used||
+|`ProviderName.DB2zOS`|not used||
+|`ProviderName.Informix`|Informix 12 (IDS or SQLI using IBM.Data.Informix)| TODO: move to v14|
+|`ProviderName.InformixDB2`|Informix 12 (IDS using IBM.Data.DB2)| TODO: move to v14|
+|`ProviderName.Oracle`|not used||
+|`ProviderName.OracleNative`|Oracle 12c using native provider||
+|`ProviderName.OracleManaged`|Oracle 12c using managed provider (core version for .net core)||
+|`TestProvName.Oracle11Native`|Oracle 11g using native provider||
+|`TestProvName.Oracle11Managed`|Oracle 11g using managed provider (core version for .net core)||
 |`ProviderName.SapHanaNative`|SAP HANA 2 using native provider||
 |`ProviderName.SapHanaOdbc`|SAP HANA 2 using ODBC provider||
-|`TestProvName.NoopProvider`|fake test provider to perform tests without database dependencies|
