@@ -8,6 +8,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -30,7 +31,7 @@ namespace Tests.UserTests
 			var valueExpression = (ConstantExpression) memberExpression.Expression!;
 			var value = ((PropertyInfo) propertyExpression.Member).GetValue(fieldInfo.GetValue(valueExpression.Value))!;
 
-			builder.AddParameter("value", value.ToString()!);
+			builder.AddParameter("value", new SqlValue(value));
 		}
 	}
 

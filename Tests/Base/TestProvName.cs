@@ -129,7 +129,7 @@ namespace Tests
 		public const string SqlServer2019MS              = "SqlServer.2019.MS";
 
 		public const string SqlServerSequentialAccess    = "SqlServer.SA";
-		public const string SqlServerSequentialAccessMS  = "SqlServer.SA,MS";
+		public const string SqlServerSequentialAccessMS  = "SqlServer.SA.MS";
 		public const string AllSqlServerSequentialAccess = $"{SqlServerSequentialAccess},{SqlServerSequentialAccessMS}";
 
 		public const string SqlServerContained           = "SqlServer.Contained";
