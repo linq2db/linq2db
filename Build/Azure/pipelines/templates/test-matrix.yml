@@ -139,7 +139,7 @@ jobs:
 
         - name: Access_ACE_x64
           title: Access ACE (OLEDB/ODBC) x64
-          config_win: access.odbc.ace
+          config_win: access.ace.ace
           script_win: access.ace.x64.cmd
           enable_os_win2019: false
           enable_os_win2022: true
