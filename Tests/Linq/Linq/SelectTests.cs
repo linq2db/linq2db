@@ -953,7 +953,7 @@ namespace Tests.Linq
 				string context)
 		{
 			var sql = "select PersonID, FirstName, MiddleName, LastName, Gender from Person where PersonID = 3";
-			if (context.Contains("Oracle"))
+			if (context.IsAnyOf(TestProvName.AllOracle))
 				sql = "select \"PersonID\", \"FirstName\", \"MiddleName\", \"LastName\", \"Gender\" from \"Person\" where \"PersonID\" = 3";
 
 			using (var db = GetDataConnection(context))

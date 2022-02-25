@@ -1103,7 +1103,7 @@ namespace Tests
 			// linux/mac: db is case sensitive, catalog is case insensitive
 			// windows: both db and catalog are case sensitive
 			return provider.IsAnyOf(TestProvName.AllSqlServerCS)
-				|| provider == ProviderName.DB2
+				|| provider.IsAnyOf(ProviderName.DB2)
 				|| provider.IsAnyOf(TestProvName.AllFirebird)
 				|| provider.IsAnyOf(TestProvName.AllInformix)
 				|| provider.IsAnyOf(TestProvName.AllOracle)
@@ -1389,7 +1389,7 @@ namespace Tests
 				//Compilation.SetExpressionCompiler(null);
 			}
 
-			if (provider?.Contains("SapHana") == true)
+			if (provider?.IsAnyOf(TestProvName.AllSapHana) == true)
 			{
 				using (new DisableLogging())
 				using (new DisableBaseline("isn't baseline query"))
@@ -1431,7 +1431,7 @@ namespace Tests
 
 		protected static bool IsIDSProvider(string context)
 		{
-			if (!context.Contains("Informix"))
+			if (!context.IsAnyOf(TestProvName.AllInformix))
 				return false;
 			var providerName = GetProviderName(context, out var _);
 			if (providerName == ProviderName.InformixDB2)

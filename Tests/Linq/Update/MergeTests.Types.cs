@@ -470,7 +470,7 @@ namespace Tests.xUpdate
 			}
 
 			if (   !provider.IsAnyOf(TestProvName.AllSqlServer2005)
-				&& provider != ProviderName.SqlCe
+				&& !provider.IsAnyOf(ProviderName.SqlCe)
 				&& !provider.IsAnyOf(TestProvName.AllInformix)
 				&& !provider.IsAnyOf(TestProvName.AllFirebird)
 				&& !provider.IsAnyOf(TestProvName.AllMySql)
@@ -478,7 +478,7 @@ namespace Tests.xUpdate
 				&& !provider.IsAnyOf(TestProvName.AllSQLite)
 				&& !provider.IsAnyOf(TestProvName.AllSybase)
 				&& !provider.IsAnyOf(TestProvName.AllSapHana)
-				&& provider != ProviderName.DB2)
+				&& !provider.IsAnyOf(ProviderName.DB2))
 				Assert.AreEqual(expected, actual);
 		}
 

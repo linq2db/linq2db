@@ -49,7 +49,7 @@ public class a_CreateData : TestBase
 
 		using (var db = GetDataConnection(configString))
 		{
-			if (configString == ProviderName.OracleNative || configString == TestProvName.Oracle11Native)
+			if (configString.IsAnyOf(TestProvName.AllOracleNative))
 			{
 				// we need this to avoid errors in trigger creation when native provider
 				// recognize ":NEW" as parameter

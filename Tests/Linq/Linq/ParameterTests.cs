@@ -206,7 +206,7 @@ namespace Tests.Linq
 			{
 				var dt = TestData.DateTime;
 
-				if (context.Contains("Informix"))
+				if (context.IsAnyOf(TestProvName.AllInformix))
 					dt = new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second);
 
 				var _ = db.Types.Where(t => t.DateTimeValue == Sql.ToSql(dt)).ToList();

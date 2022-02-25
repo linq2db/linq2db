@@ -199,7 +199,7 @@ The `[User]DataProviders.json` is a regular JSON file:
             "Oracle.Native",
             "Oracle.Managed",
             "PostgreSQL",
-            "Sybase",
+            "Sybase.Managed",
             "SqlServer.Northwind",
             "TestNoopProvider"
         ],

@@ -1192,7 +1192,7 @@ namespace Tests.Linq
 						where pp.Value != 0 && pp.Value != 7
 						select pp.Value;
 
-				if (context.StartsWith("DB2"))
+				if (context.IsAnyOf(ProviderName.DB2))
 					q = q.AsQueryable().Select(t => Math.Round(t, 2));
 
 				AreEqual(

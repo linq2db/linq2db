@@ -3,6 +3,7 @@ parameters:
   framework: ''
   titleFramework: ''
   with_baselines: false
+  extra: ''
 
 steps:
 - checkout: none
@@ -89,7 +90,7 @@ steps:
   condition: and(variables.title, succeeded(), variables.script)
   displayName: Setup tests
 
-- script: dotnet test linq2db.Tests.dll --filter "TestCategory != SkipCI" -f ${{ parameters.framework }} -l trx
+- script: dotnet test linq2db.Tests.dll --filter "TestCategory != SkipCI" -f ${{ parameters.framework }} -l trx ${{ parameters.extra }}
   condition: and(variables.title, succeeded())
   displayName: 'Execute tests: $(title)'
 

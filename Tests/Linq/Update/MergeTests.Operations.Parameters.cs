@@ -471,7 +471,7 @@ namespace Tests.xUpdate
 				Assert.AreEqual(1, rows);
 
 				var paramcount = 1;
-				if (context == ProviderName.DB2)
+				if (context.IsAnyOf(ProviderName.DB2))
 					paramcount = 0;
 
 				Assert.AreEqual(paramcount, db.LastQuery!.Count(_ => _ == GetParameterToken(context)));

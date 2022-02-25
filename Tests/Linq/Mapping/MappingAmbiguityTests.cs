@@ -73,7 +73,7 @@ namespace Tests.Mapping
 					.UpdateWhenMatched()
 					.Merge();
 
-				if (context.Contains("Oracle") && context.Contains("Native"))
+				if (context.IsAnyOf(TestProvName.AllOracleNative))
 					Assert.AreEqual(-1, res);
 				else
 					Assert.AreEqual(0, res);

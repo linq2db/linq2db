@@ -1116,7 +1116,7 @@ namespace Tests.xUpdate
 						using (new DisableLogging())
 							patients = db.Patient.Where(p => p.PersonID == id).ToList();
 
-						if (context.Contains("Oracle") && context.Contains("Native"))
+						if (context.IsAnyOf(TestProvName.AllOracleNative))
 							Assert.AreEqual(-1, records);
 						else
 							Assert.AreEqual(1, records);

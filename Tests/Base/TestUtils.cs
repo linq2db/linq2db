@@ -91,7 +91,7 @@ namespace Tests
 				case string when provider.IsAnyOf(TestProvName.AllSybase)    :
 				case string when provider.IsAnyOf(TestProvName.AllSqlServer) :
 				case string when provider.IsAnyOf(TestProvName.AllSapHana)   :
-				case ProviderName.DB2                                        :
+				case string when provider.IsAnyOf(ProviderName.DB2)          :
 					return db.GetTable<LinqDataTypes>().Select(_ => SchemaName()).First();
 			}
 
@@ -288,7 +288,7 @@ namespace Tests
 			return providerName switch
 			{
 				string when providerName.IsAnyOf(TestProvName.AllOracle12)   => "latin_AI",
-				ProviderName.DB2                                             => "SYSTEM_923_DE",
+				string when providerName.IsAnyOf(ProviderName.DB2)           => "SYSTEM_923_DE",
 				string when providerName.IsAnyOf(TestProvName.AllPostgreSQL) => "POSIX",
 				string when providerName.IsAnyOf(TestProvName.AllSQLite)     => "NOCASE",
 				string when providerName.IsAnyOf(TestProvName.AllFirebird)   => "UNICODE_FSS",

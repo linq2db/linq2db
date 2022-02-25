@@ -148,6 +148,7 @@ jobs:
             config: ${{ test_config.config_win }}
             script: ${{ test_config.script_win }}
             psscript: ${{ test_config.psscript_win }}
+            extra: ${{ test_config.extra }}
 
   steps:
   - template: test-workflow-windows.yml
@@ -179,6 +180,7 @@ jobs:
             config: ${{ test_config.config_win }}
             script: ${{ test_config.script_win }}
             psscript: ${{ test_config.psscript_win }}
+            extra: ${{ test_config.extra }}
 
   steps:
   - template: test-workflow-windows.yml
@@ -210,6 +212,7 @@ jobs:
             config: ${{ test_config.config_win }}
             script: ${{ test_config.script_win }}
             psscript: ${{ test_config.psscript_win }}
+            extra: ${{ test_config.extra }}
 
   steps:
   - template: test-workflow-windows.yml
@@ -241,6 +244,7 @@ jobs:
             config: ${{ test_config.config_win }}
             script: ${{ test_config.script_win }}
             psscript: ${{ test_config.psscript_win }}
+            extra: ${{ test_config.extra }}
 
   steps:
   - template: test-workflow-windows.yml
@@ -273,6 +277,7 @@ jobs:
             script: ${{ test_config.script_linux }}
             docker_login: ${{ test_config.docker_login }}
             nuget: ${{ test_config.nuget_linux }}
+            extra: ${{ test_config.extra }}
 
   steps:
   - template: test-workflow-linux.yml
@@ -304,6 +309,7 @@ jobs:
             script: ${{ test_config.script_linux }}
             docker_login: ${{ test_config.docker_login }}
             nuget: ${{ test_config.nuget_linux }}
+            extra: ${{ test_config.extra }}
 
   steps:
   - template: test-workflow-linux.yml
@@ -335,6 +341,7 @@ jobs:
             script: ${{ test_config.script_linux }}
             docker_login: ${{ test_config.docker_login }}
             nuget: ${{ test_config.nuget_linux }}
+            extra: ${{ test_config.extra }}
 
   steps:
   - template: test-workflow-linux.yml
@@ -367,6 +374,7 @@ jobs:
             docker: ${{ test_config.install_docker_macos }}
             docker_login: ${{ test_config.docker_login }}
             nuget: ${{ test_config.nuget_macos }}
+            extra: ${{ test_config.extra }}
 
   steps:
   - template: test-workflow-macos.yml
@@ -399,6 +407,7 @@ jobs:
             docker: ${{ test_config.install_docker_macos }}
             docker_login: ${{ test_config.docker_login }}
             nuget: ${{ test_config.nuget_macos }}
+            extra: ${{ test_config.extra }}
 
   steps:
   - template: test-workflow-macos.yml
@@ -431,6 +440,7 @@ jobs:
             docker: ${{ test_config.install_docker_macos }}
             docker_login: ${{ test_config.docker_login }}
             nuget: ${{ test_config.nuget_macos }}
+            extra: ${{ test_config.extra }}
 
   steps:
   - template: test-workflow-macos.yml

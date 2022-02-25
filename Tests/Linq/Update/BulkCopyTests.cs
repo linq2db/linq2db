@@ -59,7 +59,7 @@ namespace Tests.xUpdate
 
 			ResetAllTypesIdentity(context);
 
-			if ((context == ProviderName.OracleNative || context == TestProvName.Oracle11Native) && copyType == BulkCopyType.ProviderSpecific)
+			if (context.IsAnyOf(TestProvName.AllOracleNative) && copyType == BulkCopyType.ProviderSpecific)
 				Assert.Inconclusive("Oracle BulkCopy doesn't support identity triggers");
 
 			// don't use transactions as some providers will fallback to non-provider-specific implementation then
@@ -83,7 +83,7 @@ namespace Tests.xUpdate
 
 					// oracle supports identity insert only starting from version 12c, which is not used yet for tests
 					var useGenerated = keepIdentity != true
-						|| context.Contains("Oracle");
+						|| context.IsAnyOf(TestProvName.AllOracle);
 
 					Assert.AreEqual(lastId + (!useGenerated ? 10 : 1), data[0].ID);
 					Assert.AreEqual(200, data[0].Value);
@@ -166,7 +166,7 @@ namespace Tests.xUpdate
 
 					// oracle supports identity insert only starting from version 12c, which is not used yet for tests
 					var useGenerated = keepIdentity != true
-						|| context.Contains("Oracle");
+						|| context.IsAnyOf(TestProvName.AllOracle);
 
 					Assert.AreEqual(lastId + (!useGenerated ? 10 : 1), data[0].ID);
 					Assert.AreEqual(200, data[0].Value);

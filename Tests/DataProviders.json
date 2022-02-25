@@ -94,52 +94,22 @@
 
 	"CommonConnectionStrings": {
 		"Connections": {
-			"Access": { "ConnectionString": "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
-			"Access.Data": { "ConnectionString": "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\Data\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
-			"Access.Odbc": { "ConnectionString": "Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=Database\\TestData.ODBC.mdb;" },
-			"Access.Odbc.Data": { "ConnectionString": "Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=Database\\TestData.ODBC.mdb;" },
-			"SqlCe": { "ConnectionString": "Data Source=Database\\TestData.sdf" },
-			"SqlCe.Data": { "ConnectionString": "Data Source=Database\\Data\\TestData.sdf" },
-			"SQLite.Default": {
-				"Provider": "Microsoft.Data.Sqlite",
-				"ConnectionString": "Data Source=Database/TestData.Default.sqlite"
-			},
-			"SQLite.Classic": {
-				"Provider": "SQLite",
-				"ConnectionString": "Data Source=Database/TestData.sqlite"
-			},
-			"SQLite.Classic.MPU": {
-				"Provider": "SQLite.Classic.MPU",
-				"ConnectionString": "Data Source=Database/TestData.MiniProfiler.Unmapped.sqlite"
-			},
-			"SQLite.Classic.MPM": {
-				"Provider": "SQLite.Classic.MPM",
-				"ConnectionString": "Data Source=Database/TestData.MiniProfiler.Mapped.sqlite"
-			},
-			"SQLite.Classic.Data": {
-				"Provider": "SQLite.Classic",
-				"ConnectionString": "Data Source=Database/Data/TestData.sqlite"
-			},
-			"SQLite.MS": {
-				"Provider": "SQLite.MS",
-				"ConnectionString": "Data Source=Database/TestData.MS.sqlite"
-			},
-			"SQLite.MS.Data": {
-				"Provider": "Microsoft.Data.Sqlite",
-				"ConnectionString": "Data Source=Database/Data/TestData.MS.sqlite"
-			},
-			"Northwind.SQLite": {
-				"Provider": "System.Data.SQLite",
-				"ConnectionString": "Data Source=Database/Northwind.sqlite"
-			},
-			"Northwind.SQLite.MS": {
-				"Provider": "SQLite.Microsoft",
-				"ConnectionString": "Data Source=Database/Northwind.MS.sqlite"
-			},
-			"TestNoopProvider": {
-				"Provider": "TestNoopProvider",
-				"ConnectionString": "TestNoopProvider"
-			}
+			"Access"             : { "ConnectionString": "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True"       },
+			"Access.Data"        : { "ConnectionString": "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\Data\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
+			"Access.Odbc"        : { "ConnectionString": "Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=Database\\TestData.ODBC.mdb;"                                                                  },
+			"Access.Odbc.Data"   : { "ConnectionString": "Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=Database\\TestData.ODBC.mdb;"                                                                  },
+			"SqlCe"              : { "ConnectionString": "Data Source=Database\\TestData.sdf"                                                                                                                  },
+			"SqlCe.Data"         : { "ConnectionString": "Data Source=Database\\Data\\TestData.sdf"                                                                                                            },
+			"SQLite.Default"     : { "Provider": "Microsoft.Data.Sqlite", "ConnectionString": "Data Source=Database/TestData.Default.sqlite"                                                                   },
+			"SQLite.Classic"     : { "Provider": "SQLite", "ConnectionString": "Data Source=Database/TestData.sqlite"                                                                                          },
+			"SQLite.Classic.MPU" : { "Provider": "SQLite.Classic.MPU", "ConnectionString": "Data Source=Database/TestData.MiniProfiler.Unmapped.sqlite"                                                        },
+			"SQLite.Classic.MPM" : { "Provider": "SQLite.Classic.MPM", "ConnectionString": "Data Source=Database/TestData.MiniProfiler.Mapped.sqlite"                                                          },
+			"SQLite.Classic.Data": { "Provider": "SQLite.Classic", "ConnectionString": "Data Source=Database/Data/TestData.sqlite"                                                                             },
+			"SQLite.MS"          : { "Provider": "SQLite.MS", "ConnectionString": "Data Source=Database/TestData.MS.sqlite"                                                                                    },
+			"SQLite.MS.Data"     : { "Provider": "Microsoft.Data.Sqlite", "ConnectionString": "Data Source=Database/Data/TestData.MS.sqlite"                                                                   },
+			"Northwind.SQLite"   : { "Provider": "System.Data.SQLite", "ConnectionString": "Data Source=Database/Northwind.sqlite"                                                                             },
+			"Northwind.SQLite.MS": { "Provider": "SQLite.Microsoft", "ConnectionString": "Data Source=Database/Northwind.MS.sqlite"                                                                            },
+			"TestNoopProvider"   : { "Provider": "TestNoopProvider", "ConnectionString": "TestNoopProvider"                                                                                                    }
 		}
 	},
 
@@ -322,7 +292,7 @@
 				"Provider": "AdoNetCore.AseClient",
 				"ConnectionString": "Data Source=DBHost;Port=5000;Database=TestDataCore;Uid=sa;Password=TestPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;"
 			},
-			"SapHana": {
+			"SapHana.Native": {
 				"Provider": "Sap.Data.Hana",
 				"ConnectionString": "Server=hanahost:port;Current Schema=TEST;UserID=Test;Password=TestPassword;"
 			}
@@ -372,31 +342,17 @@
 			"SqlServer.Northwind"   : { "Provider": "System.Data.SqlClient"   , "ConnectionString": "Server=localhost;Database=Northwind;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"   },
 			"SqlServer.Northwind.MS": { "Provider": "Microsoft.Data.SqlClient", "ConnectionString": "Server=localhost;Database=NorthwindMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true" },
 
-			"Sybase.Managed": {
-				"Provider": "AdoNetCore.AseClient",
-				"ConnectionString": "Data Source=127.0.0.1;Port=5000;Database=TestDataCore;Uid=sa;Password=myPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;"
-			},
-			"Oracle.Managed": {
-				"Provider": "Oracle.ManagedDataAccess.Client",
-				"ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=ORC12)));User Id=system;Password=oracle;"
-			},
-			"Oracle.11.Managed": {
-				"Provider": "Oracle.ManagedDataAccess.Client",
-				"ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=oracle;"
-			},
-			"Informix": {
-				"Provider": "Informix",
-				"ConnectionString": "Server=localhost:9089;Database=testdb;userid=informix;password=in4mix"
-			},
-			"Informix.DB2": { "ConnectionString": "Server=localhost:9089;Database=testdb;userid=informix;password=in4mix" },
-			"DB2": {
-				"Provider": "IBM.Data.DB2.Core",
-				"ConnectionString": "Server=localhost:50000;Database=testdb;UID=db2inst1;PWD=Password12!"
-			},
-			"SapHana.Odbc": {
-				"Provider": "SapHana.Odbc",
-				"ConnectionString": "<SET BY SCRIPT>"
-			}
+			"Sybase.Managed": { "Provider": "AdoNetCore.AseClient", "ConnectionString": "Data Source=127.0.0.1;Port=5000;Database=TestDataCore;Uid=sa;Password=myPassword;ConnectionTimeout=300;EnableBulkLoad=1;MinPoolSize=100;MaxPoolSize=200;" },
+
+			"Oracle.Managed"   : { "Provider": "Oracle.ManagedDataAccess.Client", "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=ORC12)));User Id=system;Password=oracle;" },
+			"Oracle.11.Managed": { "Provider": "Oracle.ManagedDataAccess.Client", "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=oracle;"    },
+
+			"Informix"    : { "Provider": "Informix", "ConnectionString": "Server=localhost:9089;Database=testdb;userid=informix;password=in4mix" },
+			"Informix.DB2": { "ConnectionString": "Server=localhost:9089;Database=testdb;userid=informix;password=in4mix"                         },
+
+			"DB2": { "Provider": "IBM.Data.DB2.Core", "ConnectionString": "Server=localhost:50000;Database=testdb;UID=db2inst1;PWD=Password12!" },
+
+			"SapHana.Odbc": { "Provider": "SapHana.Odbc", "ConnectionString": "<SET BY SCRIPT>" }
 		}
 	},
 
@@ -450,16 +406,19 @@
 			"SqlServer.Northwind.MS",
 			"SqlServer.Azure",
 			"SqlServer.Azure.MS",
-
 			"Access",
 			"Access.Odbc",
 			"DB2",
 			"Informix",
+			"Informix.DB2",
+			"Oracle.11.Native",
+			"Oracle.11.Managed",
 			"Oracle.Native",
 			"Oracle.Managed",
 			"Sybase",
 			"Sybase.Managed",
-			"SapHana"
+			"SapHana.Native",
+			"SapHana.Odbc"
 		]
 	},
 

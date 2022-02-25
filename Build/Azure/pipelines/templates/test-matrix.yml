@@ -616,28 +616,6 @@ jobs:
             enabled: false
 
 # Informix
-        - name: Informix12
-          title: Informix 12.10
-          config_linux: informix
-          config_macos: informix
-          script_linux: informix12.sh
-          script_macos: mac.informix12.sh
-          nuget_linux: IBM.Data.DB2.Core-lnx -Version 3.1.0.500
-          nuget_macos: IBM.Data.DB2.Core-osx -Version 3.1.0.500
-          install_docker_macos: true
-          enable_os_windows: false
-          enable_os_ubuntu: true # true (needs working docker image)
-          enable_os_macos: true # false true (needs working docker image)
-          enable_fw_net472: false
-          enable_fw_netcore31: true
-          enable_fw_net50: true
-          enable_fw_net60: true
-          is_experimental: false
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[informix.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[informix.all]'))) }}:
-            enabled: false
-
         - name: Informix14
           title: Informix 14.10
           config_linux: informix

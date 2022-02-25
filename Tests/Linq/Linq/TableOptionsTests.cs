@@ -111,7 +111,7 @@ namespace Tests.Linq
 		public void IsGlobalTemporaryTest([IncludeDataSources(
 			ProviderName.DB2,
 			ProviderName.Firebird,
-			ProviderName.Oracle,
+			TestProvName.AllOracle,
 			TestProvName.AllSqlServer,
 			TestProvName.AllSybase)] string context,
 			[Values(true)] bool firstCall)

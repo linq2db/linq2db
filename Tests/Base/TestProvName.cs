@@ -162,10 +162,15 @@ namespace Tests
 		public const string AllAccess              = "Access,Access.Odbc";
 		#endregion
 
-		public const string Oracle11Native    = "Oracle.11.Native";
-		public const string Oracle11Managed   = "Oracle.11.Managed";
-
-
+		#region Oracle
+		public const string Oracle11Native   = "Oracle.11.Native";
+		public const string Oracle11Managed  = "Oracle.11.Managed";
+		public const string AllOracleManaged = $"{Oracle11Managed},{ProviderName.OracleManaged}";
+		public const string AllOracleNative  = $"{Oracle11Native},{ProviderName.OracleNative}";
+		public const string AllOracle11      = $"{Oracle11Native},{Oracle11Managed}";
+		public const string AllOracle12      = $"{ProviderName.OracleNative},{ProviderName.OracleManaged}";
+		public const string AllOracle        = $"{AllOracle11},{AllOracle12}";
+		#endregion
 
 		/// <summary>
 		/// Fake provider, which doesn't execute any real queries. Could be used for tests, that shouldn't be affected
@@ -173,12 +178,7 @@ namespace Tests
 		/// </summary>
 		public const string NoopProvider  = "TestNoopProvider";
 
-		public const string AllOracle              = "Oracle.Native,Oracle.Managed,Oracle.11.Native,Oracle.11.Managed";
-		public const string AllOracleManaged       = "Oracle.Managed,Oracle.11.Managed";
-		public const string AllOracleNative        = "Oracle.Native,Oracle.11.Native";
-		public const string AllOracle11            = "Oracle.11.Native,Oracle.11.Managed";
-		public const string AllOracle12            = "Oracle.Native,Oracle.Managed";
-		public const string AllSapHana             = "SapHana.Native,SapHana.Odbc";
-		public const string AllInformix            = ProviderName.Informix + "," + ProviderName.InformixDB2;
+		public const string AllSapHana  = $"{ProviderName.SapHanaNative},{ProviderName.SapHanaOdbc}";
+		public const string AllInformix = $"{ProviderName.Informix},{ProviderName.InformixDB2}";
 	}
 }
