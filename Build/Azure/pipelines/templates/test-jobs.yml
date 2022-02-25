@@ -133,7 +133,7 @@ jobs:
 - job: test_windows_job
   pool:
     vmImage: 'windows-2022'
-  displayName: 'Tests: Windows / ${{ test_config.title }}'
+  displayName: 'Tests: Windows'
   dependsOn: create_baselines_branch
   condition: ${{ parameters.enabled }}
   variables:
@@ -165,7 +165,7 @@ jobs:
 - job: test_ubuntu_job
   pool:
     vmImage: 'ubuntu-20.04'
-  displayName: 'Tests: Linux / ${{ test_config.title }}'
+  displayName: 'Tests: Linux'
   dependsOn: create_baselines_branch
   condition: ${{ parameters.enabled }}
   variables:
@@ -197,7 +197,7 @@ jobs:
 - job: test_macos_job
   pool:
     vmImage: 'macOS-10.15'
-  displayName: 'Tests: MacOS / ${{ test_config.title }}'
+  displayName: 'Tests: MacOS'
   dependsOn: create_baselines_branch
   condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.mac_enabled }}, 'true'))
   variables:
