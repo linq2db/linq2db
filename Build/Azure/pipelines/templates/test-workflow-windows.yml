@@ -1,8 +1,4 @@
 parameters:
-  netfx: false
-  netcore31: false
-  net50: false
-  net60: false
   with_baselines: false
 
 steps:
@@ -13,14 +9,14 @@ steps:
   inputs:
     packageType: sdk
     version: 3.1.x
-  condition: eq('$(netcore31)', true)
+  condition: eq('variables.netcore311', true)
 
 - task: UseDotNet@2
   displayName: 'Install .net 5'
   inputs:
     packageType: sdk
     version: 5.x
-  condition: eq('$(netcore50)', true)
+  condition: eq('variables.net50', true)
 
 - task: UseDotNet@2
   displayName: 'Install .net 6'
@@ -39,125 +35,125 @@ steps:
   inputs:
     artifactName: netfx472_tests
     targetPath: '$(System.DefaultWorkingDirectory)\netfx'
-  condition: $(netfx)
+  condition: variables.netfx
 
 - task: DownloadPipelineArtifact@2
   inputs:
     artifactName: netcore31_tests
     targetPath: '$(System.DefaultWorkingDirectory)\netcore31'
-  condition: $(netcore31)
+  condition: variables.netcore311
 
 - task: DownloadPipelineArtifact@2
   inputs:
     artifactName: net50_tests
     targetPath: '$(System.DefaultWorkingDirectory)\net50'
-  condition: $(netcore50)
+  condition: variables.net50
 
 - task: DownloadPipelineArtifact@2
   inputs:
     artifactName: net60_tests
     targetPath: '$(System.DefaultWorkingDirectory)\net60'
-  condition: $(netcore60)
+  condition: variables.net60
 
 - task: CmdLine@2
   inputs:
     script: 'copy $(System.DefaultWorkingDirectory)\netfx\configs\$(config).json netfx\UserDataProviders.json'
     workingDirectory: '$(System.DefaultWorkingDirectory)\netfx'
   displayName: Copy test config
-  condition: $(netfx)
+  condition: variables.netfx
 
 - task: CmdLine@2
   inputs:
     script: 'copy $(System.DefaultWorkingDirectory)\netcore31\configs\$(config).json netcore31\UserDataProviders.json'
     workingDirectory: '$(System.DefaultWorkingDirectory)\netcore31'
   displayName: Copy test config
-  condition: $(netcore31)
+  condition: variables.netcore311
 
 - task: CmdLine@2
   inputs:
     script: 'copy $(System.DefaultWorkingDirectory)\net50\configs\$(config).json net50\UserDataProviders.json'
     workingDirectory: '$(System.DefaultWorkingDirectory)\net50'
   displayName: Copy test config
-  condition: $(netcore50)
+  condition: variables.net50
 
 - task: CmdLine@2
   inputs:
     script: 'copy $(System.DefaultWorkingDirectory)\net60\configs\$(config).json net60\UserDataProviders.json'
     workingDirectory: '$(System.DefaultWorkingDirectory)\net60'
   displayName: Copy test config
-  condition: $(netcore60)
+  condition: variables.net60
 
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)\netfx\scripts\$(script)'
     workingDirectory: '$(System.DefaultWorkingDirectory)\netfx'
-  condition: and($(netfx), variables.script, not(or($(netcore31), $(netcore50), parameters.net60)))
+  condition: and(variables.netfx, variables.script, not(or(variables.netcore311, variables.net50, parameters.net60)))
   displayName: Setup tests
 
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)\netcore31\scripts\$(script)'
     workingDirectory: '$(System.DefaultWorkingDirectory)\netcore31'
-  condition: and(variables.title, $(netcore31), variables.script, not(or($(netcore50), $(netcore60))))
+  condition: and(variables.title, variables.netcore311, variables.script, not(or(variables.net50, variables.net60)))
   displayName: Setup tests
 
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)\net50\scripts\$(script)'
     workingDirectory: '$(System.DefaultWorkingDirectory)\net50'
-  condition: and($(netcore50), variables.script, not($(netcore60)))
+  condition: and(variables.net50, variables.script, not(variables.net60))
   displayName: Setup tests
 
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)\net60\scripts\$(script)'
     workingDirectory: '$(System.DefaultWorkingDirectory)\net60'
-  condition: and($(netcore60), variables.script)
+  condition: and(variables.net60, variables.script)
   displayName: Setup tests
 
 - task: PowerShell@2
   inputs:
     filePath: '$(System.DefaultWorkingDirectory)\netfx\scripts\$(psscript)'
     workingDirectory: '$(System.DefaultWorkingDirectory)\netfx'
-  condition: and($(netfx), variables.psscript, not(or($(netcore31), $(netcore50), parameters.net60)))
+  condition: and(variables.netfx, variables.psscript, not(or(variables.netcore311, variables.net50, parameters.net60)))
   displayName: Setup tests
 
 - task: PowerShell@2
   inputs:
     filePath: '$(System.DefaultWorkingDirectory)\netcore31\scripts\$(psscript)'
     workingDirectory: '$(System.DefaultWorkingDirectory)\netcore31'
-  condition: and($(netcore31), variables.psscript, not(or($(netcore50), $(netcore60))))
+  condition: and(variables.netcore311, variables.psscript, not(or(variables.net50, variables.net60)))
   displayName: Setup tests
 
 - task: PowerShell@2
   inputs:
     filePath: '$(System.DefaultWorkingDirectory)\net50\scripts\$(psscript)'
     workingDirectory: '$(System.DefaultWorkingDirectory)\net50'
-  condition: and($(netcore50), variables.psscript, not($(netcore60)))
+  condition: and(variables.net50, variables.psscript, not(variables.net60))
   displayName: Setup tests
 
 - task: PowerShell@2
   inputs:
     filePath: '$(System.DefaultWorkingDirectory)\net60\scripts\$(psscript)'
     workingDirectory: '$(System.DefaultWorkingDirectory)\net60'
-  condition: and($(netcore60), variables.psscript)
+  condition: and(variables.net60, variables.psscript)
   displayName: Setup tests
 
 - script: dotnet test netfx\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net472 -l trx $(extra)
   displayName: 'Execute tests: $(title)'
-  condition: and($(netfx), variables.title, succeeded())
+  condition: and(variables.netfx, variables.title, succeeded())
 
 - script: dotnet test netcore31\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f netcoreapp31 -l trx $(extra)
   displayName: 'Execute tests: $(title)'
-  condition: and($(netcore31), variables.title, succeeded())
+  condition: and(variables.netcore311, variables.title, succeeded())
 
 - script: dotnet test net50\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net50 -l trx $(extra)
   displayName: 'Execute tests: $(title)'
-  condition: and($(netcore50), variables.title, succeeded())
+  condition: and(variables.net50, variables.title, succeeded())
 
 - script: dotnet test net60\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra)
   displayName: 'Execute tests: $(title)'
-  condition: and($(netcore60), variables.title, succeeded())
+  condition: and(variables.net60, variables.title, succeeded())
 
 - task: PublishTestResults@2
   condition: and(variables.title, succeededOrFailed())
