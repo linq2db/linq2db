@@ -39,40 +39,40 @@ steps:
   inputs:
     artifactName: netcore31_tests
     targetPath: '$(System.DefaultWorkingDirectory)/netcore31'
-  condition: parameters.netcore31
+  condition: ${{ parameters.netcore31 }}
 
 - task: DownloadPipelineArtifact@2
   inputs:
     artifactName: net50_tests
     targetPath: '$(System.DefaultWorkingDirectory)/net50'
-  condition: parameters.net50
+  condition: ${{ parameters.net50 }}
 
 - task: DownloadPipelineArtifact@2
   inputs:
     artifactName: net60_tests
     targetPath: '$(System.DefaultWorkingDirectory)/net60'
-  condition: parameters.net60
+  condition: ${{ parameters.net60 }}
 
 - task: CmdLine@2
   inputs:
     script: 'cp $(System.DefaultWorkingDirectory)/netcore31/configs/$(config).json netcore31/UserDataProviders.json'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: Copy test config
-  condition: parameters.netcore31
+  condition: ${{ parameters.netcore31 }}
 
 - task: CmdLine@2
   inputs:
     script: 'cp $(System.DefaultWorkingDirectory)/net50/configs/$(config).json net50/UserDataProviders.json'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: Copy test config
-  condition: parameters.net50
+  condition: ${{ parameters.net50 }}
 
 - task: CmdLine@2
   inputs:
     script: 'cp $(System.DefaultWorkingDirectory)/net60/configs/$(config).json net60/UserDataProviders.json'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: Copy test config
-  condition: parameters.net60
+  condition: ${{ parameters.net60 }}
 
 - task: NuGet@0
   displayName: Install nugets
@@ -80,7 +80,7 @@ steps:
     command: 'install'
     arguments: '$(nuget) -ExcludeVersion'
     workingDirectory: '$(System.DefaultWorkingDirectory)/netcore31/scripts'
-  condition: and(variables.title, variables.nuget, parameters.netcore31)
+  condition: and(variables.title, variables.nuget, ${{ parameters.netcore31 }})
 
 - task: NuGet@0
   displayName: Install nugets
@@ -88,7 +88,7 @@ steps:
     command: 'install'
     arguments: '$(nuget) -ExcludeVersion'
     workingDirectory: '$(System.DefaultWorkingDirectory)/net50/scripts'
-  condition: and(variables.title, variables.nuget, parameters.net50)
+  condition: and(variables.title, variables.nuget, ${{ parameters.net50 }})
 
 - task: NuGet@0
   displayName: Install nugets
@@ -96,60 +96,60 @@ steps:
     command: 'install'
     arguments: '$(nuget) -ExcludeVersion'
     workingDirectory: '$(System.DefaultWorkingDirectory)/net60/scripts'
-  condition: and(variables.title, variables.nuget, parameters.net60)
+  condition: and(variables.title, variables.nuget, ${{ parameters.net60 }})
 
 - task: CmdLine@2
   inputs:
     script: 'chmod +x $(script)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/netcore31/scripts'
-  condition: and(variables.title, variables.script, parameters.netcore31)
+  condition: and(variables.title, variables.script, ${{ parameters.netcore31 }})
   displayName: Mark script as executable
 
 - task: CmdLine@2
   inputs:
     script: 'chmod +x $(script)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/net50/scripts'
-  condition: and(variables.title, variables.script, parameters.net50)
+  condition: and(variables.title, variables.script, ${{ parameters.net50 }})
   displayName: Mark script as executable
 
 - task: CmdLine@2
   inputs:
     script: 'chmod +x $(script)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/net60/scripts'
-  condition: and(variables.title, variables.script, parameters.net60)
+  condition: and(variables.title, variables.script, ${{ parameters.net60 }})
   displayName: Mark script as executable
 
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)/netcore31/scripts/$(script)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/netcore31'
-  condition: and(variables.title, variables.script, parameters.netcore31, not(or(parameters.net50, parameters.net60)))
+  condition: and(variables.title, variables.script, ${{ parameters.netcore31 }}, not(or(${{ parameters.net50 }}, ${{ parameters.net60 }})))
   displayName: Setup tests
 
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)/net50/scripts/$(script)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/net50'
-  condition: and(variables.title, variables.script, parameters.net50, not(parameters.net60))
+  condition: and(variables.title, variables.script, ${{ parameters.net50 }}0, not(${{ parameters.net60 }}))
   displayName: Setup tests
 
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)/net60/scripts/$(script)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/net60'
-  condition: and(variables.title, variables.script, parameters.net60)
+  condition: and(variables.title, variables.script, ${{ parameters.net60 }})
   displayName: Setup tests
 
 - script: dotnet test ./netcore31/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f netcoreapp31 -l trx ${{ parameters.extra }}
-  condition: and(variables.title, parameters.netcore31, succeeded())
+  condition: and(variables.title, ${{ parameters.netcore31 }}, succeeded())
   displayName: 'Execute tests: $(title)'
 
 - script: dotnet test ./net50/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net50 -l trx ${{ parameters.extra }}
-  condition: and(variables.title, parameters.net50, succeeded())
+  condition: and(variables.title, ${{ parameters.net50 }}, succeeded())
   displayName: 'Execute tests: $(title)'
 
 - script: dotnet test ./net60/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx ${{ parameters.extra }}
-  condition: and(variables.title, parameters.net60, succeeded())
+  condition: and(variables.title, ${{ parameters.net60 }}, succeeded())
   displayName: 'Execute tests: $(title)'
 
 - task: PublishTestResults@2
