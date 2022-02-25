@@ -130,7 +130,7 @@ steps:
   inputs:
     script: '$(System.DefaultWorkingDirectory)/net50/scripts/$(script)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/net50'
-  condition: and(variables.title, variables.script, $(netcore50)0, not($(netcore60)))
+  condition: and(variables.title, variables.script, $(netcore50), not($(netcore60)))
   displayName: Setup tests
 
 - task: CmdLine@2
