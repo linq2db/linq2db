@@ -1,6 +1,8 @@
 ﻿{
-	"CORE31.Azure": {
+	"NET60.Azure": {
 		"Providers": [
+			// Access with Jet OLE DB provider
+			"Access",
 			"Access.Odbc"
 		],
 		"Connections": {

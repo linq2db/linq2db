@@ -250,12 +250,11 @@ namespace Tests.xUpdate
 
 			// RowByRow right now uses DataConnection.Insert which doesn't support identity insert
 			if ((copyType       == BulkCopyType.RowByRow
-					|| context  == ProviderName.Access
-					|| context  == ProviderName.AccessOdbc
+					|| context.IsAnyOf(TestProvName.AllAccess)
 					|| notSupported
 					|| (context.IsAnyOf(TestProvName.AllSapHana)
 						&& (copyType == BulkCopyType.MultipleRows || copyType == BulkCopyType.Default))
-					|| (context == ProviderName.SapHanaOdbc && copyType == BulkCopyType.ProviderSpecific))
+					|| (context.IsAnyOf(ProviderName.SapHanaOdbc) && copyType == BulkCopyType.ProviderSpecific))
 				&& keepIdentity == true)
 			{
 				var ex = Assert.CatchAsync(async () => await perform())!;

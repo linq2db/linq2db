@@ -394,7 +394,7 @@ namespace Tests.Linq
 					.ToArray();
 
 				// Access has different order in result set
-				if (!context.StartsWith(ProviderName.Access))
+				if (!context.IsAnyOf(TestProvName.AllAccess))
 					AreEqual(expected, actual);
 			}
 		}
@@ -437,7 +437,7 @@ namespace Tests.Linq
 					.ToArray();
 
 				// Access has different order in result set
-				if (!context.StartsWith(ProviderName.Access))
+				if (!context.IsAnyOf(TestProvName.AllAccess))
 					AreEqual(expected, actual);
 			}
 		}

@@ -32,6 +32,7 @@ parameters:
 # GENERAL PROPERTIES
 # - name            (string, required)            : name of test matrix entry (unique, no spaces/dots)
 # - title           (string, required)            : test run name, added to display name for testrun
+# - extra           (string, optional)            : specify additional dotnet test arguments, e.g. "--arch x86"
 # - is_experimental (true/false string, required) : experimental pipeline switch, when true - testrun enabled only for experimental pipeline,
 #                                                   when false - only for test-all/default pipelines
                     #                               switch used to debug testruns without running other testruns
@@ -99,9 +100,9 @@ jobs:
             enabled: false
 
 # Access
-        - name: Access_OLEDB_JET
-          title: Access Jet
-          config_win: access
+        - name: Access_MDB
+          title: Access MDB (Jet/ODBC)
+          config_win: access.mdb
           enable_os_win2019: false
           enable_os_win2022: true
           enable_os_ubuntu: false
@@ -111,13 +112,14 @@ jobs:
           enable_fw_net50: true
           enable_fw_net60: true
           is_experimental: false
+          extra: --arch x86
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
             enabled: false
 
-        - name: Access_OLEDB_ACE
-          title: Access ACE
+        - name: Access_ACE
+          title: Access ACE (OLEDB/ODBC) x86
           config_win: access.ace
           script_win: access.ace.cmd
           enable_os_win2019: false
@@ -129,48 +131,14 @@ jobs:
           enable_fw_net50: true
           enable_fw_net60: true
           is_experimental: false
+          extra: --arch x86
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
             enabled: false
 
-        - name: Access_ODBC_MDB
-          title: Access ODBC MDB
-          config_win: access.odbc.mdb
-          enable_os_win2019: false
-          enable_os_win2022: true
-          enable_os_ubuntu: false
-          enable_os_macos: false
-          enable_fw_net472: true
-          enable_fw_netcore31: true
-          enable_fw_net50: true
-          enable_fw_net60: true
-          is_experimental: false
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
-            enabled: false
-
-        - name: Access_ODBC_ACE
-          title: Access ODBC ACE
-          config_win: access.odbc.ace
-          script_win: access.ace.cmd
-          enable_os_win2019: false
-          enable_os_win2022: true
-          enable_os_ubuntu: false
-          enable_os_macos: false
-          enable_fw_net472: true
-          enable_fw_netcore31: true
-          enable_fw_net50: true
-          enable_fw_net60: true
-          is_experimental: false
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
-            enabled: false
-
-        - name: Access_ODBC_ACE_x64
-          title: Access ODBC ACE x64
+        - name: Access_ACE_x64
+          title: Access ACE (OLEDB/ODBC) x64
           config_win: access.odbc.ace
           script_win: access.ace.x64.cmd
           enable_os_win2019: false
@@ -182,24 +150,7 @@ jobs:
           enable_fw_net50: true
           enable_fw_net60: true
           is_experimental: false
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
-            enabled: false
-
-        - name: Access_OLEDB_ACE_x64
-          title: Access OleDb ACE x64
-          config_win: access.ace
-          script_win: access.ace.x64.cmd
-          enable_os_win2019: false
-          enable_os_win2022: true
-          enable_os_ubuntu: false
-          enable_os_macos: false
-          enable_fw_net472: true
-          enable_fw_netcore31: true # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
-          enable_fw_net50: true # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
-          enable_fw_net60: true
-          is_experimental: false
+          extra: --arch x64
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:

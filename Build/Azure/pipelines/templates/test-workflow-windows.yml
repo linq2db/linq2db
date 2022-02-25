@@ -5,7 +5,6 @@ parameters:
   with_baselines: false
   installnet5: false
   installnet6: false
-  useVsTest: false
 
 steps:
 - checkout: none
@@ -64,23 +63,12 @@ steps:
   condition: and(variables.title, variables.psscript)
   displayName: Setup tests
 
-- task: VSTest@2
-  inputs:
-    testAssemblyVer2: linq2db.Tests.dll
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
-    testFilterCriteria: 'TestCategory != SkipCI'
-    otherConsoleOptions: '/Framework:.NETFramework,Version=v4.7.2'
-    testRunTitle: 'Windows / ${{ parameters.titleFramework }} / $(title)'
-  displayName: '$(title)'
-  condition: and(eq('${{ parameters.useVsTest }}', True), variables.title, succeeded())
-
-- script: dotnet test linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:${{ parameters.framework }} /logger:trx
+- script: dotnet test linq2db.Tests.dll --filter "TestCategory != SkipCI" -f ${{ parameters.framework }} -l trx ${{ parameters.extra }}
   displayName: 'Execute tests: $(title)'
-  condition: and(ne('${{ parameters.useVsTest }}', True), variables.title, succeeded())
+  condition: and(variables.title, succeeded())
 
 - task: PublishTestResults@2
-  condition: and(ne('${{ parameters.useVsTest }}', True), variables.title, succeededOrFailed())
+  condition: and(variables.title, succeededOrFailed())
   inputs:
     testRunner: VsTest
     testResultsFiles: '**/*.trx'

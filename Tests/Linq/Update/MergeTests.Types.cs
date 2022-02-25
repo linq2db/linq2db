@@ -539,7 +539,7 @@ namespace Tests.xUpdate
 
 				if (   provider.IsAnyOf(TestProvName.AllMySql)
 					|| provider.IsAnyOf(TestProvName.AllOracle)
-					|| provider == ProviderName.AccessOdbc)
+					|| provider.IsAnyOf(ProviderName.AccessOdbc))
 					expected = expected.Value.AddMilliseconds(-expected.Value.Millisecond);
 			}
 

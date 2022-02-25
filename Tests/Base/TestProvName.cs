@@ -158,6 +158,10 @@ namespace Tests
 		public const string AllSqlServer                 = $"{AllSqlServerNoAzure},{AllSqlAzure}";
 		#endregion
 
+		#region Access
+		public const string AllAccess              = "Access,Access.Odbc";
+		#endregion
+
 		public const string Oracle11Native    = "Oracle.11.Native";
 		public const string Oracle11Managed   = "Oracle.11.Managed";
 
@@ -176,6 +180,5 @@ namespace Tests
 		public const string AllOracle12            = "Oracle.Native,Oracle.Managed";
 		public const string AllSapHana             = "SapHana.Native,SapHana.Odbc";
 		public const string AllInformix            = ProviderName.Informix + "," + ProviderName.InformixDB2;
-		public const string AllAccess              = "Access,Access.Odbc";
 	}
 }

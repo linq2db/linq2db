@@ -81,7 +81,7 @@ namespace Tests.SchemaProvider
 				AssertType<Model.LinqDataTypes>(conn.MappingSchema, dbSchema);
 				AssertType<Model.Parent>       (conn.MappingSchema, dbSchema);
 
-				if (context != ProviderName.AccessOdbc)
+				if (!context.IsAnyOf(ProviderName.AccessOdbc))
 					Assert.That(getTable("doctor").ForeignKeys.Count, Is.EqualTo(1));
 				else // no FK information for ACCESS ODBC
 					Assert.That(dbSchema.Tables.Single(t => t.TableName!.ToLower() == "doctor").ForeignKeys.Count, Is.EqualTo(0));
