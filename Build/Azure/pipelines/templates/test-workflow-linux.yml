@@ -9,20 +9,21 @@ steps:
   inputs:
     packageType: sdk
     version: 3.1.x
-  condition: variables.netcore31
+  condition: and(variables.title, variables.netcore31)
 
 - task: UseDotNet@2
   displayName: 'Install .net 5'
   inputs:
     packageType: sdk
     version: 5.x
-  condition: variables.net50
+  condition: and(variables.title, variables.net50)
 
 - task: UseDotNet@2
   displayName: 'Install .net 6'
   inputs:
     packageType: sdk
     version: 6.x
+  condition: variables.title
 
 - task: CmdLine@2
   inputs:
@@ -35,64 +36,47 @@ steps:
   inputs:
     artifactName: netcore31_tests
     targetPath: '$(System.DefaultWorkingDirectory)/netcore31'
-  condition: variables.netcore31
+  condition: and(variables.title, variables.netcore31)
 
 - task: DownloadPipelineArtifact@2
   inputs:
     artifactName: net50_tests
     targetPath: '$(System.DefaultWorkingDirectory)/net50'
-  condition: variables.net50
+  condition: and(variables.title, variables.net50)
 
 - task: DownloadPipelineArtifact@2
   inputs:
     artifactName: net60_tests
     targetPath: '$(System.DefaultWorkingDirectory)/net60'
-  condition: variables.net60
+  condition: and(variables.title, variables.net60)
 
 - task: CmdLine@2
   inputs:
     script: 'cp $(System.DefaultWorkingDirectory)/netcore31/configs/$(config).json netcore31/UserDataProviders.json'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: Copy test config
-  condition: variables.netcore31
+  condition: and(variables.title, variables.netcore31)
 
 - task: CmdLine@2
   inputs:
     script: 'cp $(System.DefaultWorkingDirectory)/net50/configs/$(config).json net50/UserDataProviders.json'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: Copy test config
-  condition: variables.net50
+  condition: and(variables.title, variables.net50)
 
 - task: CmdLine@2
   inputs:
     script: 'cp $(System.DefaultWorkingDirectory)/net60/configs/$(config).json net60/UserDataProviders.json'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: Copy test config
-  condition: variables.net60
+  condition: and(variables.title, variables.net60)
 
 - task: NuGet@0
   displayName: Install nugets
   inputs:
     command: 'install'
     arguments: '$(nuget) -ExcludeVersion'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/netcore31/scripts'
-  condition: and(variables.title, variables.nuget, variables.netcore31)
-
-- task: NuGet@0
-  displayName: Install nugets
-  inputs:
-    command: 'install'
-    arguments: '$(nuget) -ExcludeVersion'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/net50/scripts'
-  condition: and(variables.title, variables.nuget, variables.net50)
-
-- task: NuGet@0
-  displayName: Install nugets
-  inputs:
-    command: 'install'
-    arguments: '$(nuget) -ExcludeVersion'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/net60/scripts'
-  condition: and(variables.title, variables.nuget, variables.net60)
+  condition: and(variables.title, variables.nuget, or(variables.netcore31, variables.net50, variables.net60))
 
 - task: CmdLine@2
   inputs:

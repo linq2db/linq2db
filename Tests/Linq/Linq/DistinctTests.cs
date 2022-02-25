@@ -134,6 +134,9 @@ namespace Tests.Linq
 					db.Child.Select(ch => ch.ParentID).Distinct().OrderBy(ch => ch));
 		}
 
+#if AZURE
+		[ActiveIssue("provider bug. ORA-01000: maximum open cursors exceeded", Configuration = TestProvName.AllOracle12)]
+#endif
 		[Test]
 		public void DistinctJoin([DataSources] string context)
 		{
