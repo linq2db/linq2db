@@ -236,7 +236,7 @@ jobs:
   displayName: 'Create Test Baselines Pull Request'
   dependsOn:
   - create_baselines_branch # for variables flow
-  - test_windows__job
+  - test_windows_job
   - test_ubuntu_job
   - test_macos_job
   condition: dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch']
