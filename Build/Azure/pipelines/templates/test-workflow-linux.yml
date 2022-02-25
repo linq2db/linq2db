@@ -1,7 +1,7 @@
 parameters:
-  artifacts: ''
-  framework: ''
-  titleFramework: ''
+  netcore31: false
+  net50: false
+  net60: false
   with_baselines: false
   extra: ''
 
@@ -13,14 +13,14 @@ steps:
   inputs:
     packageType: sdk
     version: 3.1.x
-  condition: eq('${{ parameters.framework }}', 'netcoreapp3.1')
+  condition: eq('${{ parameters.netcore31 }}', true)
 
 - task: UseDotNet@2
   displayName: 'Install .net 5'
   inputs:
     packageType: sdk
     version: 5.x
-  condition: eq('${{ parameters.framework }}', 'net5.0')
+  condition: eq('${{ parameters.net50 }}', true)
 
 - task: UseDotNet@2
   displayName: 'Install .net 6'
@@ -37,41 +37,119 @@ steps:
 
 - task: DownloadPipelineArtifact@2
   inputs:
-    artifactName: ${{ parameters.artifacts }}
-    targetPath: '$(System.DefaultWorkingDirectory)'
-  condition: variables.title
+    artifactName: netcore31_tests
+    targetPath: '$(System.DefaultWorkingDirectory)/netcore31'
+  condition: parameters.netcore31
+
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifactName: net50_tests
+    targetPath: '$(System.DefaultWorkingDirectory)/net50'
+  condition: parameters.net50
+
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifactName: net60_tests
+    targetPath: '$(System.DefaultWorkingDirectory)/net60'
+  condition: parameters.net60
 
 - task: CmdLine@2
   inputs:
-    script: 'cp $(System.DefaultWorkingDirectory)/configs/$(config).json UserDataProviders.json'
+    script: 'cp $(System.DefaultWorkingDirectory)/netcore31/configs/$(config).json netcore31/UserDataProviders.json'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: Copy test config
-  condition: variables.title
+  condition: parameters.netcore31
+
+- task: CmdLine@2
+  inputs:
+    script: 'cp $(System.DefaultWorkingDirectory)/net50/configs/$(config).json net50/UserDataProviders.json'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+  displayName: Copy test config
+  condition: parameters.net50
+
+- task: CmdLine@2
+  inputs:
+    script: 'cp $(System.DefaultWorkingDirectory)/net60/configs/$(config).json net60/UserDataProviders.json'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+  displayName: Copy test config
+  condition: parameters.net60
 
 - task: NuGet@0
   displayName: Install nugets
   inputs:
     command: 'install'
     arguments: '$(nuget) -ExcludeVersion'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
-  condition: and(variables.title, variables.nuget)
+    workingDirectory: '$(System.DefaultWorkingDirectory)/netcore31/scripts'
+  condition: and(variables.title, variables.nuget, parameters.netcore31)
+
+- task: NuGet@0
+  displayName: Install nugets
+  inputs:
+    command: 'install'
+    arguments: '$(nuget) -ExcludeVersion'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/net50/scripts'
+  condition: and(variables.title, variables.nuget, parameters.net50)
+
+- task: NuGet@0
+  displayName: Install nugets
+  inputs:
+    command: 'install'
+    arguments: '$(nuget) -ExcludeVersion'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/net60/scripts'
+  condition: and(variables.title, variables.nuget, parameters.net60)
 
 - task: CmdLine@2
   inputs:
     script: 'chmod +x $(script)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
-  condition: and(variables.title, variables.script)
+    workingDirectory: '$(System.DefaultWorkingDirectory)/netcore31/scripts'
+  condition: and(variables.title, variables.script, parameters.netcore31)
   displayName: Mark script as executable
 
 - task: CmdLine@2
   inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(script)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)'
-  condition: and(variables.title, variables.script)
+    script: 'chmod +x $(script)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/net50/scripts'
+  condition: and(variables.title, variables.script, parameters.net50)
+  displayName: Mark script as executable
+
+- task: CmdLine@2
+  inputs:
+    script: 'chmod +x $(script)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/net60/scripts'
+  condition: and(variables.title, variables.script, parameters.net60)
+  displayName: Mark script as executable
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)/netcore31/scripts/$(script)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/netcore31'
+  condition: and(variables.title, variables.script, parameters.netcore31, not(or(parameters.net50, parameters.net60)))
   displayName: Setup tests
 
-- script: dotnet test ./linq2db.Tests.dll --filter "TestCategory != SkipCI" -f ${{ parameters.framework }} -l trx ${{ parameters.extra }}
-  condition: and(variables.title, succeeded())
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)/net50/scripts/$(script)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/net50'
+  condition: and(variables.title, variables.script, parameters.net50, not(parameters.net60))
+  displayName: Setup tests
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)/net60/scripts/$(script)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/net60'
+  condition: and(variables.title, variables.script, parameters.net60)
+  displayName: Setup tests
+
+- script: dotnet test ./netcore31/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f netcoreapp31 -l trx ${{ parameters.extra }}
+  condition: and(variables.title, parameters.netcore31, succeeded())
+  displayName: 'Execute tests: $(title)'
+
+- script: dotnet test ./net50/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net50 -l trx ${{ parameters.extra }}
+  condition: and(variables.title, parameters.net50, succeeded())
+  displayName: 'Execute tests: $(title)'
+
+- script: dotnet test ./net60/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx ${{ parameters.extra }}
+  condition: and(variables.title, parameters.net60, succeeded())
   displayName: 'Execute tests: $(title)'
 
 - task: PublishTestResults@2
@@ -79,7 +157,7 @@ steps:
   inputs:
     testRunner: VsTest
     testResultsFiles: '**/*.trx'
-    testRunTitle: 'Linux / ${{ parameters.titleFramework }} / $(title)'
+    testRunTitle: 'Linux / $(title)'
 
 - task: PowerShell@2
   inputs:
@@ -92,7 +170,7 @@ steps:
           exit 1
       }
       Write-Host "Create commit"
-      $output = git commit -m "[Linux / ${{ parameters.titleFramework }} / $(title)] baselines"
+      $output = git commit -m "[Linux / $(title)] baselines"
       if ($output -match "nothing to commit") {
           Write-Host "No baselines changes detected"
           exit 0

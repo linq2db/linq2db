@@ -104,7 +104,7 @@ namespace Tests.Extensions
 
 			string? current = null;
 
-			if (context.IsAnyOf(TestProvName.AllOracle         )) current = accessHints;
+			if (context.IsAnyOf(TestProvName.AllAccess         )) current = accessHints;
 			else if (context.IsAnyOf(TestProvName.AllOracle    )) current = oracleHints;
 			else if (context.IsAnyOf(TestProvName.AllMySql     )) current = mySqlHints;
 			else if (context.IsAnyOf(ProviderName.SqlCe        )) current = sqlCeHints;
