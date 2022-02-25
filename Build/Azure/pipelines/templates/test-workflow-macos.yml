@@ -9,7 +9,7 @@ steps:
   inputs:
     packageType: sdk
     version: 3.1.x
-  condition: eq('variables.netcore311', true)
+  condition: eq('variables.netcore31', true)
 
 - task: UseDotNet@2
   displayName: 'Install .net 5'
@@ -35,7 +35,7 @@ steps:
   inputs:
     artifactName: netcore31_tests
     targetPath: '$(System.DefaultWorkingDirectory)/netcore31'
-  condition: variables.netcore311
+  condition: variables.netcore31
 
 - task: DownloadPipelineArtifact@2
   inputs:
@@ -54,7 +54,7 @@ steps:
     script: 'cp $(System.DefaultWorkingDirectory)/netcore31/configs/$(config).json netcore31/UserDataProviders.json'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: Copy test config
-  condition: variables.netcore311
+  condition: variables.netcore31
 
 - task: CmdLine@2
   inputs:
@@ -74,13 +74,13 @@ steps:
   inputs:
     script: 'chmod +x mac.docker.sh'
     workingDirectory: '$(System.DefaultWorkingDirectory)/netcore31/scripts'
-  condition: and(variables.title, variables.docker, variables.netcore311, not(or(variables.net50, variables.net60)))
+  condition: and(variables.title, variables.docker, variables.netcore31, not(or(variables.net50, variables.net60)))
   displayName: Mark docker install script as executable
 
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)/netcore31/scripts/mac.docker.sh'
-  condition: and(variables.title, variables.docker, variables.netcore311, not(or(variables.net50, variables.net60)))
+  condition: and(variables.title, variables.docker, variables.netcore31, not(or(variables.net50, variables.net60)))
   displayName: Install Docker
 
 - task: CmdLine@2
@@ -115,7 +115,7 @@ steps:
     command: 'install'
     arguments: '$(nuget) -ExcludeVersion'
     workingDirectory: '$(System.DefaultWorkingDirectory)/netcore31/scripts'
-  condition: and(variables.title, variables.nuget, variables.netcore311)
+  condition: and(variables.title, variables.nuget, variables.netcore31)
 
 - task: NuGet@0
   displayName: Install nugets
@@ -137,7 +137,7 @@ steps:
   inputs:
     script: 'chmod +x $(script)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/netcore31/scripts'
-  condition: and(variables.title, variables.script, variables.netcore311)
+  condition: and(variables.title, variables.script, variables.netcore31)
   displayName: Mark script as executable
 
 - task: CmdLine@2
@@ -165,7 +165,7 @@ steps:
   inputs:
     script: '$(System.DefaultWorkingDirectory)/netcore31/scripts/$(script)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/netcore31'
-  condition: and(variables.title, variables.script, variables.netcore311, not(or(variables.net50, variables.net60)))
+  condition: and(variables.title, variables.script, variables.netcore31, not(or(variables.net50, variables.net60)))
   displayName: Setup tests
 
 - task: CmdLine@2
@@ -182,15 +182,15 @@ steps:
   condition: and(variables.title, variables.script, variables.net60)
   displayName: Setup tests
 
-- script: dotnet test ./netcore31/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f netcoreapp31 -l trx ${{ parameters.extra }}
-  condition: and(variables.title, variables.netcore311, succeeded())
+- script: dotnet test ./netcore31/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f netcoreapp31 -l trx $(extra)
+  condition: and(variables.title, variables.netcore31, succeeded())
   displayName: 'Execute tests: $(title)'
 
-- script: dotnet test ./net50/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net50 -l trx ${{ parameters.extra }}
+- script: dotnet test ./net50/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net50 -l trx $(extra)
   condition: and(variables.title, variables.net50, succeeded())
   displayName: 'Execute tests: $(title)'
 
-- script: dotnet test ./net60/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx ${{ parameters.extra }}
+- script: dotnet test ./net60/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra)
   condition: and(variables.title, variables.net60, succeeded())
   displayName: 'Execute tests: $(title)'
 
