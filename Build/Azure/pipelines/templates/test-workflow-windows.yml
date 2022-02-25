@@ -5,6 +5,7 @@ parameters:
   with_baselines: false
   installnet5: false
   installnet6: false
+  extra: ''
 
 steps:
 - checkout: none
