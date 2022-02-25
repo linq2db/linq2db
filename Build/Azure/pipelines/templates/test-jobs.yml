@@ -149,14 +149,14 @@ jobs:
             script: ${{ test_config.script_win }}
             psscript: ${{ test_config.psscript_win }}
             extra: ${{ test_config.extra }}
+            netfx: ${{ test_config.enable_fw_net472 }}
+            netcore31: ${{ test_config.enable_fw_netcore31 }}
+            net50: ${{ test_config.enable_fw_net50 }}
+            net60: ${{ test_config.enable_fw_net60 }}
 
   steps:
   - template: test-workflow-windows.yml
     parameters:
-      netfx: ${{ test_config.enable_fw_net472 }}
-      netcore31: ${{ test_config.enable_fw_netcore31 }}
-      net50: ${{ test_config.enable_fw_net50 }}
-      net60: ${{ test_config.enable_fw_net60 }}
       with_baselines: ${{ parameters.with_baselines }}
 
 ########################
@@ -182,13 +182,13 @@ jobs:
             docker_login: ${{ test_config.docker_login }}
             nuget: ${{ test_config.nuget_linux }}
             extra: ${{ test_config.extra }}
+            netcore31: ${{ test_config.enable_fw_netcore31 }}
+            net50: ${{ test_config.enable_fw_net50 }}
+            net60: ${{ test_config.enable_fw_net60 }}
 
   steps:
   - template: test-workflow-linux.yml
     parameters:
-      netcore31: ${{ test_config.enable_fw_netcore31 }}
-      net50: ${{ test_config.enable_fw_net50 }}
-      net60: ${{ test_config.enable_fw_net60 }}
       with_baselines: ${{ parameters.with_baselines }}
 
 #################
@@ -215,13 +215,13 @@ jobs:
             docker_login: ${{ test_config.docker_login }}
             nuget: ${{ test_config.nuget_macos }}
             extra: ${{ test_config.extra }}
+            netcore31: ${{ test_config.enable_fw_netcore31 }}
+            net50: ${{ test_config.enable_fw_net50 }}
+            net60: ${{ test_config.enable_fw_net60 }}
 
   steps:
   - template: test-workflow-macos.yml
     parameters:
-      netcore31: ${{ test_config.enable_fw_netcore31 }}
-      net50: ${{ test_config.enable_fw_net50 }}
-      net60: ${{ test_config.enable_fw_net60 }}
       with_baselines: ${{ parameters.with_baselines }}
 
 ################################################################
