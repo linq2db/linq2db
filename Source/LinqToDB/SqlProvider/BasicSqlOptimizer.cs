@@ -1731,8 +1731,8 @@ namespace LinqToDB.SqlProvider
 					return ConvertConvertion(func);
 
 
-				case "$ToLower$": return new SqlFunction(func.SystemType, "Lower", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
-				case "$ToUpper$": return new SqlFunction(func.SystemType, "Upper", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
+				case "$ToLower$": return new SqlFunction(func.SystemType, "Lower",   func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
+				case "$ToUpper$": return new SqlFunction(func.SystemType, "Upper",   func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
 				case "$Replace$": return new SqlFunction(func.SystemType, "Replace", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
 
 			}
@@ -1770,10 +1770,11 @@ namespace LinqToDB.SqlProvider
 			BasicSqlOptimizer   optimizer,
 			MappingSchema?      mappingSchema,
 			bool                register,
-			Func<ConvertVisitor<RunOptimizationContext>, IQueryElement, IQueryElement> func)
+			Func<ConvertVisitor<RunOptimizationContext>,IQueryElement,IQueryElement> func)
 		{
 			var ctx = new RunOptimizationContext(optimizationContext, optimizer, mappingSchema, register, func);
-			for (; ; )
+
+			for (;;)
 			{
 				var newElement = optimizationContext.ConvertAll(
 					ctx,
@@ -1781,10 +1782,10 @@ namespace LinqToDB.SqlProvider
 					static (visitor, e) =>
 					{
 						var prev = e;
-						var ne   = e;
+
 						for (;;)
 						{
-								ne = visitor.Context.Func(visitor, e);
+							var ne = visitor.Context.Func(visitor, e);
 
 							if (ReferenceEquals(ne, e))
 								break;
@@ -1875,7 +1876,8 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.ExprExprPredicate:
 				{
 					var exprExpr = (SqlPredicate.ExprExpr)predicate;
-					var reduced = exprExpr.Reduce(visitor.Context.OptimizationContext.Context);
+					var reduced  = exprExpr.Reduce(visitor.Context.OptimizationContext.Context);
+
 					if (!ReferenceEquals(reduced, exprExpr))
 					{
 						return reduced;
@@ -1903,10 +1905,7 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.SearchStringPredicate:
 					return ConvertSearchStringPredicate((SqlPredicate.SearchString)predicate, visitor);
 				case QueryElementType.InListPredicate:
-				{
-					var inList = (SqlPredicate.InList)predicate;
-					return ConvertInListPredicate(visitor.Context.MappingSchema!, inList, visitor.Context.OptimizationContext.Context);
-				}
+					return ConvertInListPredicate(visitor.Context.MappingSchema!, (SqlPredicate.InList)predicate, visitor.Context.OptimizationContext.Context);
 			}
 			return predicate;
 		}

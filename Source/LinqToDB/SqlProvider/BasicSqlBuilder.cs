@@ -750,15 +750,15 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildOutputSubclause(SqlOutputClause? output)
 		{
-			if (output != null && output.HasOutput)
+			if (output?.HasOutput == true)
 			{
 				AppendIndent()
 					.AppendLine(OutputKeyword);
 
-				if (output.InsertedTable != null && output.InsertedTable.SqlTableType == SqlTableType.SystemTable)
+				if (output.InsertedTable?.SqlTableType == SqlTableType.SystemTable)
 					output.InsertedTable.PhysicalName = InsertedOutputTable;
 
-				if (output.DeletedTable != null && output.DeletedTable.SqlTableType == SqlTableType.SystemTable)
+				if (output.DeletedTable?.SqlTableType == SqlTableType.SystemTable)
 					output.DeletedTable.PhysicalName = DeletedOutputTable;
 
 				++Indent;

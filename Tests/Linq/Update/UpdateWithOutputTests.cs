@@ -22,21 +22,16 @@ namespace Tests.xUpdate
 		private const string FeatureUpdateOutputWithoutOldMultiple                 = TestProvName.AllSqlServer2005Plus + "," + TestProvName.AllPostgreSQL + "," + TestProvName.AllSQLiteClassic;
 		private const string FeatureUpdateOutputInto                               = TestProvName.AllSqlServer2005Plus;
 
-		private class UpdateOutputComparer<T> : IEqualityComparer<UpdateOutput<T>>
+		class UpdateOutputComparer<T> : IEqualityComparer<UpdateOutput<T>>
 			where T : notnull
 		{
-			private readonly IEqualityComparer<T> tComparer;
-
-			public UpdateOutputComparer()
-			{
-				tComparer = ComparerBuilder.GetEqualityComparer<T>();
-			}
+			readonly IEqualityComparer<T> _comparer = ComparerBuilder.GetEqualityComparer<T>();
 
 			public bool Equals(UpdateOutput<T>? x, UpdateOutput<T>? y)
-				=> tComparer.Equals(x!.Deleted, y!.Deleted) && tComparer.Equals(x!.Inserted, y!.Inserted);
+				=> _comparer.Equals(x!.Deleted, y!.Deleted) && _comparer.Equals(x!.Inserted, y!.Inserted);
 
 			public int GetHashCode(UpdateOutput<T> obj)
-				=> tComparer.GetHashCode(obj.Deleted) * -1521134295 + tComparer.GetHashCode(obj.Inserted);
+				=> _comparer.GetHashCode(obj.Deleted) * -1521134295 + _comparer.GetHashCode(obj.Inserted);
 		}
 
 		[Table]
@@ -2342,7 +2337,7 @@ namespace Tests.xUpdate
 						new UpdateOutput<TableWithData>
 						{
 							Deleted = sourceData[6],
-							Inserted = sourceData[6] with { Id = 7 },
+							Inserted = sourceData[6] with { Id = 20 },
 						}
 					},
 					output,
@@ -2369,7 +2364,7 @@ namespace Tests.xUpdate
 						new UpdateOutput<TableWithData>
 						{
 							Deleted = sourceData[6],
-							Inserted = sourceData[6] with { Id = 7 },
+							Inserted = sourceData[6] with { Id = 20 },
 						}
 					},
 					output,
@@ -2397,7 +2392,7 @@ namespace Tests.xUpdate
 						new UpdateOutput<TableWithData>
 						{
 							Deleted = sourceData[6],
-							Inserted = sourceData[6] with { Id = 7 },
+							Inserted = sourceData[6] with { Id = 20 },
 						}
 					},
 					output,

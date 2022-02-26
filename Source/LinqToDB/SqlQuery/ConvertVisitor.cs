@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace LinqToDB.SqlQuery
 {
-	using LinqToDB.Linq.Builder;
+	using Linq.Builder;
 
 	public class ConvertVisitor<TContext>
 	{
@@ -995,7 +995,8 @@ namespace LinqToDB.SqlQuery
 
 							nq.Init(sc, fc, wc, gc, hc, oc, us, uk,
 								q.ParentSelect,
-								q.IsParameterDependent);
+								q.IsParameterDependent,
+								q.DoNotSetAliases);
 
 							// update visited in case if columns were cloned
 							if (objTree != null)

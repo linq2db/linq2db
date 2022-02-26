@@ -155,11 +155,11 @@ namespace LinqToDB.SqlQuery
 					var newSelectQuery = new SelectQuery(Interlocked.Increment(ref SelectQuery.SourceIDCounter))
 					{
 						IsParameterDependent = selectQuery.IsParameterDependent,
-						DoNotRemove          = selectQuery.DoNotRemove
+						DoNotRemove          = selectQuery.DoNotRemove,
+						DoNotSetAliases      = selectQuery.DoNotSetAliases
 					};
 
-					_objectTree.Add(element, clone = newSelectQuery);
-
+					_objectTree.Add(element,         clone = newSelectQuery);
 					_objectTree.Add(selectQuery.All, newSelectQuery.All);
 
 					if (selectQuery.ParentSelect != null)
@@ -774,7 +774,7 @@ namespace LinqToDB.SqlQuery
 						var rows   = new List<ISqlExpression[]>(values.Rows.Count);
 						CloneInto(rows, values.Rows);
 						clone = new SqlValuesTable(fields, fields.Select(f => f.ColumnDescriptor?.MemberInfo).ToArray(), rows);
-					}	
+					}
 					break;
 
 				}

@@ -100,6 +100,9 @@ namespace LinqToDB.SqlQuery
 
 		public static void PrepareQueryAndAliases(SqlStatement statement, AliasesContext? prevAliasContext, out AliasesContext newAliasContext)
 		{
+			if (statement.SelectQuery != null)
+				statement.SelectQuery.DoNotSetAliases = true;
+
 			var ctx = new PrepareQueryAndAliasesContext(prevAliasContext);
 
 			statement.VisitAll(ctx, static (context, expr) =>
@@ -164,13 +167,13 @@ namespace LinqToDB.SqlQuery
 						{
 							var query = (SelectQuery)expr;
 
-							if (query.Select.Columns.Count > 0)
+							if (query.DoNotSetAliases == false && query.Select.Columns.Count > 0)
 							{
 								Utils.MakeUniqueNames(
 									query.Select.Columns.Where(c => c.Alias != "*"),
 									null,
-									(n, a) => !ReservedWords.IsReserved(n), 
-									c => c.Alias, 
+									(n, a) => !ReservedWords.IsReserved(n),
+									c => c.Alias,
 									(c, n, a) =>
 									{
 										a?.Add(n);

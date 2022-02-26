@@ -13,7 +13,7 @@ namespace LinqToDB.Linq.Builder
 
 	class UpdateBuilder : MethodCallBuilder
 	{
-		private static readonly string[] Methods = new []
+		static readonly string[] _methods =
 		{
 			nameof(LinqExtensions.Update),
 			nameof(LinqExtensions.UpdateWithOutput),
@@ -24,7 +24,7 @@ namespace LinqToDB.Linq.Builder
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable(Methods);
+			return methodCall.IsQueryable(_methods);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -36,21 +36,23 @@ namespace LinqToDB.Linq.Builder
 				_                                           => UpdateType.Update,
 			};
 
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-
+			var sequence         = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var updateStatement  = sequence.Statement as SqlUpdateStatement ?? new SqlUpdateStatement(sequence.SelectQuery);
-			sequence.Statement   = updateStatement;
-
 			var genericArguments = methodCall.Method.GetGenericArguments();
-			Type? objectType     = default;
-
 			var outputExpression = (LambdaExpression?)methodCall.GetArgumentByName("outputExpression")?.Unwrap();
+
+			Type? objectType;
+
+			sequence.SelectQuery.DoNotSetAliases = true;
+			sequence.Statement                   = updateStatement;
+
 			static LambdaExpression? RewriteOutputExpression(LambdaExpression? expr)
 			{
 				if (expr == default) return default;
-				
+
 				var outputType = expr.Parameters[0].Type;
-				var param1 = Expression.Parameter(outputType, "source");
+				var param1     = Expression.Parameter(outputType, "source");
+
 				return Expression.Lambda(
 					// (source, deleted, inserted) => expr(deleted, inserted)
 					expr.Body,
@@ -194,6 +196,7 @@ namespace LinqToDB.Linq.Builder
 				outputExpression ??= BuildDefaultOutputExpression(objectType);
 
 				var outputContext = new UpdateOutputContext(
+					updateStatement,
 					buildInfo.Parent,
 					outputExpression,
 					sequence,
@@ -568,14 +571,23 @@ namespace LinqToDB.Linq.Builder
 
 		class UpdateOutputContext : SelectContext
 		{
-			public UpdateOutputContext(IBuildContext? parent, LambdaExpression lambda, IBuildContext source, IBuildContext deletedTable, IBuildContext insertedTable)
+			public UpdateOutputContext(
+				SqlUpdateStatement sqlUpdateStatement,
+				IBuildContext?     parent,
+				LambdaExpression   lambda,
+				IBuildContext      source,
+				IBuildContext      deletedTable,
+				IBuildContext      insertedTable)
 				: base(parent, lambda, source, deletedTable, insertedTable)
 			{
-				Statement = source.Statement;
+				_sqlUpdateStatement = sqlUpdateStatement;
+				Statement           = source.Statement;
 				Sequence[0].SelectQuery.Select.Columns.Clear();
 				Sequence[1].SelectQuery = Sequence[0].SelectQuery;
 				Sequence[2].SelectQuery = Sequence[0].SelectQuery;
 			}
+
+			readonly SqlUpdateStatement _sqlUpdateStatement;
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{

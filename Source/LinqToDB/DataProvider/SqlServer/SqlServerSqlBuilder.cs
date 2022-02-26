@@ -47,11 +47,12 @@ namespace LinqToDB.DataProvider.SqlServer
 					AppendOutputTableVariable(insertClause.Into)
 						.Append(" TABLE (");
 					Convert(StringBuilder, identityField.PhysicalName, ConvertType.NameToQueryField);
-					StringBuilder.Append(' ');
+					StringBuilder
+						.Append(' ');
 					BuildCreateTableFieldType(identityField);
 					StringBuilder
-							.AppendLine(")")
-							.AppendLine();
+						.AppendLine(")")
+						.AppendLine();
 				}
 			}
 

@@ -1084,6 +1084,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.OrderBy);
 							Append(elem.ParentSelect?.SourceID ?? 0);
 							Append(elem.IsParameterDependent);
+							Append(elem.DoNotSetAliases);
 
 							if (!elem.HasSetOperators)
 								Builder.Append(" -");
@@ -1588,7 +1589,7 @@ namespace LinqToDB.ServiceModel
 
 							obj = new SqlFunction(systemType, name, isAggregate, isPure, precedence, parameters)
 							{
-								CanBeNull = canBeNull, 
+								CanBeNull     = canBeNull,
 								DoNotOptimize = doNotOptimize
 							};
 
@@ -1829,7 +1830,7 @@ namespace LinqToDB.ServiceModel
 							var trueValue  = Read<ISqlExpression>()!;
 							var falseValue = Read<ISqlExpression>()!;
 							var withNull   = ReadInt();
-							
+
 							obj = new SqlPredicate.IsTrue(expr1, trueValue, falseValue, withNull == 3 ? null : withNull == 1, isNot);
 
 							break;
@@ -1897,6 +1898,7 @@ namespace LinqToDB.ServiceModel
 							var orderBy            = Read<SqlOrderByClause>()!;
 							var parentSql          = ReadInt();
 							var parameterDependent = ReadBool();
+							var doNotSetAliases    = ReadBool();
 							var unions             = ReadArray<SqlSetOperator>();
 
 							var query = new SelectQuery(sid);
@@ -1912,7 +1914,8 @@ namespace LinqToDB.ServiceModel
 								unions?.ToList(),
 								null, // we do not serialize unique keys
 								null,
-								parameterDependent);
+								parameterDependent,
+								doNotSetAliases);
 
 							_queries.Add(sid, query);
 
