@@ -68,7 +68,7 @@ jobs:
         if %errorlevel% neq 0 exit
         xcopy /i Build\Azure\net472 testing\configs\net472
         if %errorlevel% neq 0 exit
-        xcopy /i Build\Azure\netcoreapp31 testing\configs\netcoreapp31
+        xcopy /i Build\Azure\netcoreapp31 testing\configs\netcore31
         if %errorlevel% neq 0 exit
         xcopy /i Build\Azure\net50 testing\configs\net50
         if %errorlevel% neq 0 exit
