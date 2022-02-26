@@ -54,9 +54,9 @@ jobs:
         if %errorlevel% neq 0 exit
         xcopy /i /s Tests\Linq\bin\$(build_configuration)\netcoreapp3.1\publish testing\netcoreapp3.1
         if %errorlevel% neq 0 exit
-        xcopy /i /s Tests\Linq\bin\$(build_configuration)\net50\publish testing\net50
+        xcopy /i /s Tests\Linq\bin\$(build_configuration)\net5.0\publish testing\net50
         if %errorlevel% neq 0 exit
-        xcopy /i /s Tests\Linq\bin\$(build_configuration)\net60\publish testing\net60
+        xcopy /i /s Tests\Linq\bin\$(build_configuration)\net6.0\publish testing\net60
         if %errorlevel% neq 0 exit
         copy Tests\DataProviders.json testing\net472
         if %errorlevel% neq 0 exit
