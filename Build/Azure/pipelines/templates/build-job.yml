@@ -60,7 +60,7 @@ jobs:
         if %errorlevel% neq 0 exit
         copy Tests\DataProviders.json testing\net472
         if %errorlevel% neq 0 exit
-        copy Tests\DataProviders.json testing\netcoreapp3.1
+        copy Tests\DataProviders.json testing\netcore31
         if %errorlevel% neq 0 exit
         copy Tests\DataProviders.json testing\net50
         if %errorlevel% neq 0 exit
