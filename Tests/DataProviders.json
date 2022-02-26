@@ -301,7 +301,7 @@
 
 	"AzureConnectionStrings": {
 		"BasedOn": "CommonConnectionStrings",
-		"BaselinesPath": "./../../baselines",
+		"BaselinesPath": "./../baselines",
 		"Connections": {
 
 			"MySql"           : { "Provider": "MySql.Data"    , "ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;"                                                 },

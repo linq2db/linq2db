@@ -122,6 +122,7 @@ namespace Tests.Linq
 		}
 
 		[Table(TableOptions = TableOptions.CreateIfNotExists)]
+		[Table(TableOptions = TableOptions.CreateIfNotExists | TableOptions.IsTemporary, Configuration = ProviderName.Informix)]
 		[Table(TableOptions = TableOptions.CreateIfNotExists | TableOptions.IsTemporary, Configuration = ProviderName.SqlServer2008)]
 		[Table("##temp_table", TableOptions = TableOptions.CreateIfNotExists, Configuration = ProviderName.SqlServer2012)]
 		[UsedImplicitly]

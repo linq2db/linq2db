@@ -76,7 +76,7 @@ jobs:
         if %errorlevel% neq 0 exit
         xcopy /i Build\Azure\scripts testing\scripts
         if %errorlevel% neq 0 exit
-        copy "Data\Create Scripts\Northwind.sql" testing\scripts\Northwind.sql
+        copy "Data\Create Scripts\Northwind.sql" testing\scripts\northwind.sql
         if %errorlevel% neq 0 exit
     condition: ${{ parameters.for_tests }}
     displayName: Build Test Artifacts

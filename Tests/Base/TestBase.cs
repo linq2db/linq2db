@@ -1131,8 +1131,7 @@ namespace Tests
 			// SAP HANA
 			// SQL CE
 			// Sybase ASE
-			return provider.IsAnyOf(TestProvName.AllOracleNative)
-				|| provider.IsAnyOf(TestProvName.AllSqlServer)
+			return provider.IsAnyOf(TestProvName.AllSqlServer)
 				|| provider.IsAnyOf(TestProvName.AllFirebird)
 				|| provider.IsAnyOf(TestProvName.AllMySql)
 				// while it is configured, LIKE in SQLite is case-insensitive (for ASCII only though)
