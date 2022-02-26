@@ -56,17 +56,20 @@ parameters:
 # - config_macos (string) : contains name of test config json file for macos runs (without extension)
 
 # SETUP SCRIPT SELECTOR
-# - script_win   (string) : contains name of cmd setup script for windows runs (with extension)
-# - psscript_win (string) : contains name of powershell setup script for windows runs (with extension)
-# - script_linux (string) : contains name of shell setup script for linux runs (with extension)
-# - script_linux (string) : contains name of shell setup script for linux runs (with extension)
+# GLOBAL (run once per test instance). E.g. used to setup database once
+# - script_win_glob   (string) : contains name of global cmd setup script for windows runs (with extension)
+# - psscript_win_glob (string) : contains name of global powershell setup script for windows runs (with extension)
+# - script_linux_glob (string) : contains name of global shell setup script for linux runs (with extension)
+# - script_macos_glob (string) : contains name of global shell setup script for MacOS runs (with extension)
+# LOCAL (run once per test framework). E.g. used to setup test files for specific framework run
+# - script_win_loc   (string) : contains name of local cmd setup script for windows runs (with extension)
+# - psscript_win_loc (string) : contains name of local powershell setup script for windows runs (with extension)
+# - script_linux_loc (string) : contains name of local shell setup script for linux runs (with extension)
+# - script_macos_loc (string) : contains name of local shell setup script for MacOS runs (with extension)
 
 # MISC
 # - docker_login         (true/false string) : enables docker hub authentication for testrun image download
 # - install_docker_macos (true/false string) : enables pre-installation of docker for macos testruns
-# - nuget_linux          (string)            : command line for 'npm install' nuget preinstall command for linux testrun
-# - nuget_macos          (string)            : command line for 'npm install' nuget preinstall command for macos testrun
-#                                              nuget preinstall e.g. used for DB2 provider, which have different nugets for different platforms
 
 jobs:
   - template: test-jobs.yml
@@ -118,7 +121,7 @@ jobs:
         - name: Access_ACE
           title: Access ACE (OLEDB/ODBC) x86
           config_win: access.ace
-          script_win: access.ace.cmd
+          script_win_glob: access.ace.cmd
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
@@ -136,13 +139,13 @@ jobs:
         - name: Access_ACE_x64
           title: Access ACE (OLEDB/ODBC) x64
           config_win: access.ace
-          script_win: access.ace.x64.cmd
+          script_win_glob: access.ace.x64.cmd
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore31: true
-          enable_fw_net50: true
+          enable_fw_net50: false # https://github.com/dotnet/runtime/issues/46187
           enable_fw_net60: true
           is_experimental: false
           extra: --arch x64
@@ -155,7 +158,7 @@ jobs:
         - name: SqlCE
           title: SQL CE
           config_win: sqlce
-          psscript_win: sqlce.ps1
+          psscript_win_glob: sqlce.ps1
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
@@ -174,8 +177,8 @@ jobs:
           title: MySQL 8 (both providers)
           config_linux: mysql
           config_macos: mysql
-          script_linux: mysql.sh
-          script_macos: mac.mysql.sh
+          script_linux_glob: mysql.sh
+          script_macos_glob: mac.mysql.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
@@ -194,8 +197,8 @@ jobs:
           title: MySQL 5.5 (both providers)
           config_linux: mysql55
           config_macos: mysql55
-          script_linux: mysql55.sh
-          script_macos: mac.mysql55.sh
+          script_linux_glob: mysql55.sh
+          script_macos_glob: mac.mysql55.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
@@ -215,9 +218,8 @@ jobs:
           config_win: mariadb
           config_linux: mariadb
           config_macos: mariadb
-          script_win: mariadb.cmd
-          script_linux: mariadb.sh
-          script_macos: mac.mariadb.sh
+          script_linux_glob: mariadb.sh
+          script_macos_glob: mac.mariadb.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
@@ -238,9 +240,8 @@ jobs:
           config_win: pgsql10
           config_linux: pgsql10
           config_macos: pgsql10
-          script_win: pgsql10.cmd
-          script_linux: pgsql10.sh
-          script_macos: mac.pgsql10.sh
+          script_linux_glob: pgsql10.sh
+          script_macos_glob: mac.pgsql10.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
@@ -259,9 +260,8 @@ jobs:
           title: PostgreSQL 11
           config_linux: pgsql11
           config_macos: pgsql11
-          script: pgsql11.sh
-          script_linux: pgsql11.sh
-          script_macos: mac.pgsql11.sh
+          script_linux_glob: pgsql11.sh
+          script_macos_glob: mac.pgsql11.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
@@ -280,9 +280,8 @@ jobs:
           title: PostgreSQL 12
           config_linux: pgsql12
           config_macos: pgsql12
-          script: pgsql12.sh
-          script_linux: pgsql12.sh
-          script_macos: mac.pgsql12.sh
+          script_linux_glob: pgsql12.sh
+          script_macos_glob: mac.pgsql12.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
@@ -301,9 +300,8 @@ jobs:
           title: PostgreSQL 13
           config_linux: pgsql13
           config_macos: pgsql13
-          script: pgsql13.sh
-          script_linux: pgsql13.sh
-          script_macos: mac.pgsql13.sh
+          script_linux_glob: pgsql13.sh
+          script_macos_glob: mac.pgsql13.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
@@ -322,9 +320,8 @@ jobs:
           title: PostgreSQL 14
           config_linux: pgsql14
           config_macos: pgsql14
-          script: pgsql14.sh
-          script_linux: pgsql14.sh
-          script_macos: mac.pgsql14.sh
+          script_linux_glob: pgsql14.sh
+          script_macos_glob: mac.pgsql14.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
@@ -343,7 +340,7 @@ jobs:
         - name: SqlServer2005
           title: SQL Server 2005
           config_win: sqlserver.2005
-          script_win: sqlserver.2005.cmd
+          script_win_glob: sqlserver.2005.cmd
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
@@ -360,7 +357,7 @@ jobs:
         - name: SqlServer2008
           title: SQL Server 2008
           config_win: sqlserver.2008
-          script_win: sqlserver.2008.cmd
+          script_win_glob: sqlserver.2008.cmd
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
@@ -377,7 +374,7 @@ jobs:
         - name: SqlServer2012
           title: SQL Server 2012
           config_win: sqlserver.2012
-          script_win: sqlserver.2012.cmd
+          script_win_glob: sqlserver.2012.cmd
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
@@ -394,7 +391,7 @@ jobs:
         - name: SqlServer2014
           title: SQL Server 2014
           config_win: sqlserver.2014
-          script_win: sqlserver.2014.cmd
+          script_win_glob: sqlserver.2014.cmd
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
@@ -411,7 +408,7 @@ jobs:
         - name: SqlServer2016
           title: SQL Server 2016
           config_win: sqlserver.2016
-          script_win: sqlserver.2016.cmd
+          script_win_glob: sqlserver.2016.cmd
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
@@ -430,9 +427,9 @@ jobs:
           config_win: sqlserver.2017
           config_linux: sqlserver.2017
           config_macos: sqlserver.2017
-          script_win: sqlserver.2017.cmd
-          script_linux: sqlserver.2017.sh
-          script_macos: sqlserver.2017.sh
+          script_win_glob: sqlserver.2017.cmd
+          script_linux_glob: sqlserver.2017.sh
+          script_macos_glob: sqlserver.2017.sh
           install_docker_macos: true
           enable_os_windows: true
           enable_os_ubuntu: true
@@ -452,9 +449,9 @@ jobs:
           config_win: sqlserver.2019
           config_linux: sqlserver.fts.2019
           config_macos: sqlserver.fts.2019
-          script_win: sqlserver.2019.cmd
-          script_linux: sqlserver.2019.sh
-          script_macos: sqlserver.2019.sh
+          script_win_glob: sqlserver.2019.cmd
+          script_linux_glob: sqlserver.2019.sh
+          script_macos_glob: sqlserver.2019.sh
           install_docker_macos: true
           enable_os_windows: true
           enable_os_ubuntu: true
@@ -474,8 +471,8 @@ jobs:
           title: Sybase ASE 16
           config_linux: sybase
           config_macos: sybase
-          script_linux: sybase.sh
-          script_macos: sybase.sh
+          script_linux_glob: sybase.sh
+          script_macos_glob: sybase.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
@@ -495,8 +492,8 @@ jobs:
           title: Oracle 11g XE
           config_linux: oracle11
           config_macos: oracle11
-          script_linux: oracle11.sh
-          script_macos: oracle11.sh
+          script_linux_glob: oracle11.sh
+          script_macos_glob: oracle11.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
@@ -515,8 +512,8 @@ jobs:
           title: Oracle 12c
           config_linux: oracle12
           config_macos: oracle12
-          script_linux: oracle12.sh
-          script_macos: oracle12.sh
+          script_linux_glob: oracle12.sh
+          script_macos_glob: oracle12.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
@@ -536,8 +533,8 @@ jobs:
           title: Firebird 2.5
           config_linux: firebird25
           config_macos: firebird25
-          script_linux: firebird25.sh
-          script_macos: firebird25.sh
+          script_linux_glob: firebird25.sh
+          script_macos_glob: firebird25.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
@@ -556,8 +553,8 @@ jobs:
           title: Firebird 3.0
           config_linux: firebird3
           config_macos: firebird3
-          script_linux: firebird3.sh
-          script_macos: firebird3.sh
+          script_linux_glob: firebird3.sh
+          script_macos_glob: firebird3.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
@@ -576,8 +573,8 @@ jobs:
           title: Firebird 4.0
           config_linux: firebird4
           config_macos: firebird4
-          script_linux: firebird4.sh
-          script_macos: firebird4.sh
+          script_linux_glob: firebird4.sh
+          script_macos_glob: firebird4.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
@@ -597,10 +594,10 @@ jobs:
           title: DB2 LUW 11.5
           config_linux: db2
           config_macos: db2
-          script_linux: db2.sh
-          script_macos: mac.db2.sh
-          nuget_linux: IBM.Data.DB2.Core-lnx -Version 3.1.0.500
-          nuget_macos: IBM.Data.DB2.Core-osx -Version 3.1.0.500
+          script_linux_glob: db2.sh
+          script_macos_glob: mac.db2.sh
+          script_linux_local: db2.provider.sh
+          script_macos_local: mac.db2.provider.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
@@ -620,10 +617,10 @@ jobs:
           title: Informix 14.10
           config_linux: informix
           config_macos: informix
-          script_linux: informix14.sh
-          script_macos: mac.informix14.sh
-          nuget_linux: IBM.Data.DB2.Core-lnx -Version 3.1.0.500
-          nuget_macos: IBM.Data.DB2.Core-osx -Version 3.1.0.500
+          script_linux_glob: informix14.sh
+          script_macos_glob: mac.informix14.sh
+          script_linux_local: db2.provider.sh
+          script_macos_local: mac.db2.provider.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
@@ -643,8 +640,8 @@ jobs:
           title: SAP HANA 2
           config_linux: hana2
           config_macos: hana2
-          script_linux: hana2.sh
-          script_macos: mac.hana2.sh
+          script_linux_glob: hana2.sh
+          script_linux_loc: hana2.tests.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true

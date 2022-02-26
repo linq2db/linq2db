@@ -42,7 +42,7 @@ hxehost=$(docker logs hana2 | grep -oP "(?<=New host: ).*")
 ~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'daemon.ini'"'"','"'"'host'"'"','${hxehost}') UNSET ('"'"'diserver'"'"','"'"'instances'"'"') WITH RECONFIGURE'
 ~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'daemon.ini'"'"','"'"'host'"'"','${hxehost}') SET ('"'"'webdispatcher'"'"','"'"'instances'"'"') = '"'"'0'"'"' WITH RECONFIGURE'
 
-cat <<-EOJSON > UserDataProviders.json
+cat <<-EOJSON > HanaDataProviders.json
 {
     "BASE.Azure": {
         "BasedOn": "AzureConnectionStrings",

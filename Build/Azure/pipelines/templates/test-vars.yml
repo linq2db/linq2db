@@ -1,6 +1,0 @@
-variables:
-  netfx472_tests: netfx472_tests
-  netfx472_tests_t4: netfx472_tests_t4
-  netcore31_tests: netcore31_tests
-  net50_tests: net50_tests
-  net60_tests: net60_tests

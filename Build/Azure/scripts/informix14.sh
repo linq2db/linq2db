@@ -1,13 +1,5 @@
 #!/bin/bash
 
-rm -rf ./clidriver/*
-rm ./IBM.Data.DB2.Core.dll
-cp -a ./../IBM.Data.DB2.Core-lnx/buildTransitive/clidriver/. ./clidriver/
-cp -f ./../IBM.Data.DB2.Core-lnx/lib/netstandard2.1/IBM.Data.DB2.Core.dll ./IBM.Data.DB2.Core.dll
-
-echo "##vso[task.setvariable variable=PATH]$PATH:$PWD/clidriver/bin:$PWD/clidriver/lib"
-echo "##vso[task.setvariable variable=LD_LIBRARY_PATH]$PWD/clidriver/lib/"
-
 #docker run -d --name informix -e INIT_FILE=linq2db.sql -e LICENSE=ACCEPT -p 9089:9089 ibmcom/informix-developer-database:latest
 # newer docker images doesn't work
 docker run -d --name informix -e INIT_FILE=linq2db.sql -e LICENSE=ACCEPT -p 9089:9089 ibmcom/informix-developer-database:14.10.FC5DE

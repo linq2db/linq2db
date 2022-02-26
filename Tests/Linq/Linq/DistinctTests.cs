@@ -95,6 +95,9 @@ namespace Tests.Linq
 			}
 		}
 
+#if AZURE
+		[ActiveIssue("provider bug. ORA-01000: maximum open cursors exceeded", Configuration = TestProvName.AllOracle12)]
+#endif
 		[Test]
 		public void DistinctMax([DataSources] string context)
 		{

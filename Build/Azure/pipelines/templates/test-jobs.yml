@@ -146,8 +146,10 @@ jobs:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_win }}
-            script: ${{ test_config.script_win }}
-            psscript: ${{ test_config.psscript_win }}
+            script_glob: ${{ test_config.script_win_glob }}
+            psscript_glob: ${{ test_config.psscript_win_glob }}
+            script_loc: ${{ test_config.script_win_loc }}
+            psscript_loc: ${{ test_config.psscript_win_loc }}
             extra: ${{ test_config.extra }}
             netfx: ${{ test_config.enable_fw_net472 }}
             netcore31: ${{ test_config.enable_fw_netcore31 }}
@@ -178,9 +180,9 @@ jobs:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_linux }}
-            script: ${{ test_config.script_linux }}
+            script_glob: ${{ test_config.script_linux_glob }}
+            script_loc: ${{ test_config.script_linux_loc }}
             docker_login: ${{ test_config.docker_login }}
-            nuget: ${{ test_config.nuget_linux }}
             extra: ${{ test_config.extra }}
             netcore31: ${{ test_config.enable_fw_netcore31 }}
             net50: ${{ test_config.enable_fw_net50 }}
@@ -210,10 +212,10 @@ jobs:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_macos }}
-            script: ${{ test_config.script_macos }}
+            script_glob: ${{ test_config.script_macos_glob }}
+            script_loc: ${{ test_config.script_macos_loc }}
             docker: ${{ test_config.install_docker_macos }}
             docker_login: ${{ test_config.docker_login }}
-            nuget: ${{ test_config.nuget_macos }}
             extra: ${{ test_config.extra }}
             netcore31: ${{ test_config.enable_fw_netcore31 }}
             net50: ${{ test_config.enable_fw_net50 }}
