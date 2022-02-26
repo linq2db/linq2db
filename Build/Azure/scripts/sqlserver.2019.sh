@@ -30,6 +30,6 @@ docker exec mssql /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password12! 
 docker exec mssql /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password12! -Q 'CREATE DATABASE Northwind;'
 docker exec mssql /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password12! -Q 'CREATE DATABASE NorthwindMS;'
 
-docker cp scripts/northwind.sql mssql:/northwind.sql
+docker cp northwind.sql mssql:/northwind.sql
 docker exec mssql /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password12! -d Northwind -i /northwind.sql
 docker exec mssql /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password12! -d NorthwindMS -i /northwind.sql

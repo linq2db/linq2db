@@ -43,8 +43,24 @@ steps:
   inputs:
     filePath: '$(System.DefaultWorkingDirectory)\scripts\dotnet-install.ps1'
     workingDirectory: '$(System.DefaultWorkingDirectory)\scripts'
+    arguments: -Channel 3.1 -Architecture x86
+  condition: and(variables.title, variables.x86, succeeded(), variables.netcore31)
+  displayName: Setup tests
+
+- task: PowerShell@2
+  inputs:
+    filePath: '$(System.DefaultWorkingDirectory)\scripts\dotnet-install.ps1'
+    workingDirectory: '$(System.DefaultWorkingDirectory)\scripts'
+    arguments: -Channel 5.0 -Architecture x86
+  condition: and(variables.title, variables.x86, succeeded(), variables.net50)
+  displayName: Setup tests
+
+- task: PowerShell@2
+  inputs:
+    filePath: '$(System.DefaultWorkingDirectory)\scripts\dotnet-install.ps1'
+    workingDirectory: '$(System.DefaultWorkingDirectory)\scripts'
     arguments: -Channel 6.0 -Architecture x86
-  condition: and(variables.title, variables.x86, succeeded())
+  condition: and(variables.title, variables.x86, succeeded(), variables.net60)
   displayName: Setup tests
 
 - task: CmdLine@2
@@ -73,30 +89,30 @@ steps:
 
 - task: CmdLine@2
   inputs:
-    script: '$(System.DefaultWorkingDirectory)\scripts\$(script_glob)'
+    script: '$(System.DefaultWorkingDirectory)\scripts\$(script_global)'
     workingDirectory: '$(System.DefaultWorkingDirectory)\scripts'
-  condition: and(variables.title, variables.script_glob, succeeded())
+  condition: and(variables.title, variables.script_global, succeeded())
   displayName: Setup tests
 
 - task: PowerShell@2
   inputs:
-    filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript_glob)'
+    filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript_global)'
     workingDirectory: '$(System.DefaultWorkingDirectory)\scripts'
-  condition: and(variables.title, variables.psscript_glob, succeeded())
+  condition: and(variables.title, variables.psscript_global, succeeded())
   displayName: Setup tests
 
 - task: CmdLine@2
   inputs:
-    script: '$(System.DefaultWorkingDirectory)\scripts\$(script_loc)'
+    script: '$(System.DefaultWorkingDirectory)\scripts\$(script_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)\net472'
-  condition: and(variables.title, variables.netfx, variables.script_loc, succeeded())
+  condition: and(variables.title, variables.netfx, variables.script_local, succeeded())
   displayName: Setup tests
 
 - task: PowerShell@2
   inputs:
-    filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript_loc)'
+    filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)\net472'
-  condition: and(variables.title, variables.netfx, variables.psscript_loc, succeeded())
+  condition: and(variables.title, variables.netfx, variables.psscript_local, succeeded())
   displayName: Setup tests
 
 - script: dotnet test net472\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net472 -l trx $(extra)
@@ -105,16 +121,16 @@ steps:
 
 - task: CmdLine@2
   inputs:
-    script: '$(System.DefaultWorkingDirectory)\scripts\$(script_loc)'
+    script: '$(System.DefaultWorkingDirectory)\scripts\$(script_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)\netcore31'
-  condition: and(variables.title, variables.netcore31, variables.script_loc, succeeded())
+  condition: and(variables.title, variables.netcore31, variables.script_local, succeeded())
   displayName: Setup tests
 
 - task: PowerShell@2
   inputs:
-    filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript_loc)'
+    filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)\netcore31'
-  condition: and(variables.title, variables.netcore31, variables.psscript_loc, succeeded())
+  condition: and(variables.title, variables.netcore31, variables.psscript_local, succeeded())
   displayName: Setup tests
 
 - script: dotnet test netcore31\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f netcoreapp31 -l trx $(extra)
@@ -123,16 +139,16 @@ steps:
 
 - task: CmdLine@2
   inputs:
-    script: '$(System.DefaultWorkingDirectory)\scripts\$(script_loc)'
+    script: '$(System.DefaultWorkingDirectory)\scripts\$(script_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)\net50'
-  condition: and(variables.title, variables.net50, variables.script_loc, succeeded())
+  condition: and(variables.title, variables.net50, variables.script_local, succeeded())
   displayName: Setup tests
 
 - task: PowerShell@2
   inputs:
-    filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript_loc)'
+    filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)\net50'
-  condition: and(variables.title, variables.net50, variables.psscript_loc, succeeded())
+  condition: and(variables.title, variables.net50, variables.psscript_local, succeeded())
   displayName: Setup tests
 
 - script: dotnet test net50\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net50 -l trx $(extra)
@@ -141,16 +157,16 @@ steps:
 
 - task: CmdLine@2
   inputs:
-    script: '$(System.DefaultWorkingDirectory)\scripts\$(script_loc)'
+    script: '$(System.DefaultWorkingDirectory)\scripts\$(script_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)\net60'
-  condition: and(variables.title, variables.net60, variables.script_loc, succeeded())
+  condition: and(variables.title, variables.net60, variables.script_local, succeeded())
   displayName: Setup tests
 
 - task: PowerShell@2
   inputs:
-    filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript_loc)'
+    filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)\net60'
-  condition: and(variables.title, variables.net60, variables.psscript_loc, succeeded())
+  condition: and(variables.title, variables.net60, variables.psscript_local, succeeded())
   displayName: Setup tests
 
 - script: dotnet test net60\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra)

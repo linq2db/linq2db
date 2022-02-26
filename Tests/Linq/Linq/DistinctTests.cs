@@ -71,9 +71,6 @@ namespace Tests.Linq
 					(from p in db.Parent select new Parent { ParentID = p.Value1 ?? p.ParentID + id % 2, Value1 = id + 1 }).Distinct());
 		}
 
-#if AZURE
-		[ActiveIssue("provider bug. ORA-01000: maximum open cursors exceeded", Configuration = TestProvName.AllOracle12)]
-#endif
 		[Test]
 		public void DistinctCount([DataSources] string context)
 		{
@@ -95,9 +92,6 @@ namespace Tests.Linq
 			}
 		}
 
-#if AZURE
-		[ActiveIssue("provider bug. ORA-01000: maximum open cursors exceeded", Configuration = TestProvName.AllOracle12)]
-#endif
 		[Test]
 		public void DistinctMax([DataSources] string context)
 		{
@@ -137,9 +131,6 @@ namespace Tests.Linq
 					db.Child.Select(ch => ch.ParentID).Distinct().OrderBy(ch => ch));
 		}
 
-#if AZURE
-		[ActiveIssue("provider bug. ORA-01000: maximum open cursors exceeded", Configuration = TestProvName.AllOracle12)]
-#endif
 		[Test]
 		public void DistinctJoin([DataSources] string context)
 		{

@@ -75,16 +75,16 @@ steps:
 
 - task: CmdLine@2
   inputs:
-    script: 'chmod +x $(script_glob)'
+    script: 'chmod +x $(script_global)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
-  condition: and(variables.title, variables.script_glob, succeeded())
+  condition: and(variables.title, variables.script_global, succeeded())
   displayName: Mark script as executable
 
 - task: CmdLine@2
   inputs:
-    script: 'chmod +x $(script_loc)'
+    script: 'chmod +x $(script_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
-  condition: and(variables.title, variables.script_loc, succeeded())
+  condition: and(variables.title, variables.script_local, succeeded())
   displayName: Mark script as executable
 
 - task: Docker@2
@@ -96,16 +96,16 @@ steps:
 
 - task: CmdLine@2
   inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_glob)'
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_global)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
-  condition: and(variables.title, variables.script_glob, succeeded())
+  condition: and(variables.title, variables.script_global, succeeded())
   displayName: Setup tests
 
 - task: CmdLine@2
   inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_loc)'
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/netcore31'
-  condition: and(variables.title, variables.script_loc, variables.netcore31, succeeded())
+  condition: and(variables.title, variables.script_local, variables.netcore31, succeeded())
   displayName: Setup tests
 
 - script: dotnet test ./netcore31/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f netcoreapp31 -l trx $(extra)
@@ -114,9 +114,9 @@ steps:
 
 - task: CmdLine@2
   inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_loc)'
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/net50'
-  condition: and(variables.title, variables.script_loc, variables.net50, succeeded())
+  condition: and(variables.title, variables.script_local, variables.net50, succeeded())
   displayName: Setup tests
 
 - script: dotnet test ./net50/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net50 -l trx $(extra)
@@ -125,9 +125,9 @@ steps:
 
 - task: CmdLine@2
   inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_loc)'
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/net60'
-  condition: and(variables.title, variables.script_loc, variables.net60, succeeded())
+  condition: and(variables.title, variables.script_local, variables.net60, succeeded())
   displayName: Setup tests
 
 - script: dotnet test ./net60/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra)

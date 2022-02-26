@@ -146,10 +146,10 @@ jobs:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_win }}
-            script_glob: ${{ test_config.script_win_glob }}
-            psscript_glob: ${{ test_config.psscript_win_glob }}
-            script_loc: ${{ test_config.script_win_loc }}
-            psscript_loc: ${{ test_config.psscript_win_loc }}
+            script_global: ${{ test_config.script_win_global }}
+            psscript_global: ${{ test_config.psscript_win_global }}
+            script_local: ${{ test_config.script_win_local }}
+            psscript_local: ${{ test_config.psscript_win_local }}
             extra: ${{ test_config.extra }}
             netfx: ${{ test_config.enable_fw_net472 }}
             netcore31: ${{ test_config.enable_fw_netcore31 }}
@@ -181,8 +181,8 @@ jobs:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_linux }}
-            script_glob: ${{ test_config.script_linux_glob }}
-            script_loc: ${{ test_config.script_linux_loc }}
+            script_global: ${{ test_config.script_linux_global }}
+            script_local: ${{ test_config.script_linux_local }}
             docker_login: ${{ test_config.docker_login }}
             extra: ${{ test_config.extra }}
             netcore31: ${{ test_config.enable_fw_netcore31 }}
@@ -213,8 +213,8 @@ jobs:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_macos }}
-            script_glob: ${{ test_config.script_macos_glob }}
-            script_loc: ${{ test_config.script_macos_loc }}
+            script_global: ${{ test_config.script_macos_global }}
+            script_local: ${{ test_config.script_macos_local }}
             docker: ${{ test_config.install_docker_macos }}
             docker_login: ${{ test_config.docker_login }}
             extra: ${{ test_config.extra }}
