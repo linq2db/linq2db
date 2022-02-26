@@ -52,7 +52,7 @@ jobs:
         if %errorlevel% neq 0 exit
         xcopy /i /s Tests\Linq\bin\$(build_configuration)\net472 testing\net472
         if %errorlevel% neq 0 exit
-        xcopy /i /s Tests\Linq\bin\$(build_configuration)\netcoreapp3.1\publish testing\netcoreapp3.1
+        xcopy /i /s Tests\Linq\bin\$(build_configuration)\netcoreapp3.1\publish testing\netcore31
         if %errorlevel% neq 0 exit
         xcopy /i /s Tests\Linq\bin\$(build_configuration)\net5.0\publish testing\net50
         if %errorlevel% neq 0 exit
