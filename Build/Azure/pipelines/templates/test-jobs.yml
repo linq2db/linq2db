@@ -155,6 +155,7 @@ jobs:
             netcore31: ${{ test_config.enable_fw_netcore31 }}
             net50: ${{ test_config.enable_fw_net50 }}
             net60: ${{ test_config.enable_fw_net60 }}
+            x86: ${{ test_config.x86 }}
 
   steps:
   - template: test-workflow-windows.yml

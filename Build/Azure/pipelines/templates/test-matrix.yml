@@ -33,6 +33,7 @@ parameters:
 # - name            (string, required)            : name of test matrix entry (unique, no spaces/dots)
 # - title           (string, required)            : test run name, added to display name for testrun
 # - extra           (string, optional)            : specify additional dotnet test arguments, e.g. "--arch x86"
+# - x86             (true/false string, optional) : windows-only, install dotnet sdk x86
 # - is_experimental (true/false string, required) : experimental pipeline switch, when true - testrun enabled only for experimental pipeline,
 #                                                   when false - only for test-all/default pipelines
                     #                               switch used to debug testruns without running other testruns
@@ -112,6 +113,7 @@ jobs:
           enable_fw_net50: true
           enable_fw_net60: true
           is_experimental: false
+          x86: true
           extra: --arch x86
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
@@ -130,6 +132,7 @@ jobs:
           enable_fw_net50: true
           enable_fw_net60: true
           is_experimental: false
+          x86: true
           extra: --arch x86
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
