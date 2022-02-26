@@ -275,6 +275,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{49A3
 		Build\Azure\scripts\access.ace.x64.cmd = Build\Azure\scripts\access.ace.x64.cmd
 		Build\Azure\scripts\db2.provider.sh = Build\Azure\scripts\db2.provider.sh
 		Build\Azure\scripts\db2.sh = Build\Azure\scripts\db2.sh
+		Build\Azure\scripts\dotnet-install.ps1 = Build\Azure\scripts\dotnet-install.ps1
 		Build\Azure\scripts\firebird25.sh = Build\Azure\scripts\firebird25.sh
 		Build\Azure\scripts\firebird3.sh = Build\Azure\scripts\firebird3.sh
 		Build\Azure\scripts\firebird4.sh = Build\Azure\scripts\firebird4.sh

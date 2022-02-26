@@ -48,42 +48,42 @@ jobs:
         if %errorlevel% neq 0 exit
         dotnet publish Tests\Linq\Tests.csproj -f net6.0 -c Azure
         if %errorlevel% neq 0 exit
-        mkdir tests
+        mkdir testing
         if %errorlevel% neq 0 exit
-        xcopy /i /s Tests\Linq\bin\$(build_configuration)\net472 tests\net472
+        xcopy /i /s Tests\Linq\bin\$(build_configuration)\net472 testing\net472
         if %errorlevel% neq 0 exit
-        xcopy /i /s Tests\Linq\bin\$(build_configuration)\netcoreapp3.1\publish tests\netcoreapp3.1
+        xcopy /i /s Tests\Linq\bin\$(build_configuration)\netcoreapp3.1\publish testing\netcoreapp3.1
         if %errorlevel% neq 0 exit
-        xcopy /i /s Tests\Linq\bin\$(build_configuration)\net50\publish tests\net50
+        xcopy /i /s Tests\Linq\bin\$(build_configuration)\net50\publish testing\net50
         if %errorlevel% neq 0 exit
-        xcopy /i /s Tests\Linq\bin\$(build_configuration)\net60\publish tests\net60
+        xcopy /i /s Tests\Linq\bin\$(build_configuration)\net60\publish testing\net60
         if %errorlevel% neq 0 exit
-        copy Tests\DataProviders.json tests\net472
+        copy Tests\DataProviders.json testing\net472
         if %errorlevel% neq 0 exit
-        copy Tests\DataProviders.json tests\netcoreapp3.1
+        copy Tests\DataProviders.json testing\netcoreapp3.1
         if %errorlevel% neq 0 exit
-        copy Tests\DataProviders.json tests\net50
+        copy Tests\DataProviders.json testing\net50
         if %errorlevel% neq 0 exit
-        copy Tests\DataProviders.json tests\net60
+        copy Tests\DataProviders.json testing\net60
         if %errorlevel% neq 0 exit
-        xcopy /i Build\Azure\net472 tests\configs\net472
+        xcopy /i Build\Azure\net472 testing\configs\net472
         if %errorlevel% neq 0 exit
-        xcopy /i Build\Azure\netcoreapp31 tests\configs\netcoreapp31
+        xcopy /i Build\Azure\netcoreapp31 testing\configs\netcoreapp31
         if %errorlevel% neq 0 exit
-        xcopy /i Build\Azure\net50 tests\configs\net50
+        xcopy /i Build\Azure\net50 testing\configs\net50
         if %errorlevel% neq 0 exit
-        xcopy /i Build\Azure\net60 tests\configs\net60
+        xcopy /i Build\Azure\net60 testing\configs\net60
         if %errorlevel% neq 0 exit
-        xcopy /i Build\Azure\scripts tests\scripts
+        xcopy /i Build\Azure\scripts testing\scripts
         if %errorlevel% neq 0 exit
-        copy Data\Create Scripts\Northwind.sql tests\scripts\Northwind.sql
+        copy Data\Create Scripts\Northwind.sql testing\scripts\Northwind.sql
         if %errorlevel% neq 0 exit
     condition: ${{ parameters.for_tests }}
     displayName: Build Test Artifacts
 
   - task: PublishPipelineArtifact@1
     inputs:
-      path: '$(Build.SourcesDirectory)/Tests'
+      path: '$(Build.SourcesDirectory)/testing'
       artifact: '$(test_artifacts)'
     condition: ${{ parameters.for_tests }}
     displayName: Publish test artifacts
