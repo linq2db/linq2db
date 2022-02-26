@@ -84,7 +84,7 @@ jobs:
   - task: PublishPipelineArtifact@1
     inputs:
       path: '$(Build.SourcesDirectory)/testing'
-      artifact: '$(test_artifacts)'
+      artifact: test_artifacts
     condition: ${{ parameters.for_tests }}
     displayName: Publish test artifacts
 
