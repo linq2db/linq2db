@@ -367,6 +367,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "netcoreapp31", "netcoreapp3
 		Build\Azure\netcoreapp31\sqlserver.2016.json = Build\Azure\netcoreapp31\sqlserver.2016.json
 		Build\Azure\netcoreapp31\sqlserver.2017.json = Build\Azure\netcoreapp31\sqlserver.2017.json
 		Build\Azure\netcoreapp31\sqlserver.2019.json = Build\Azure\netcoreapp31\sqlserver.2019.json
+		Build\Azure\netcoreapp31\sqlserver.extras.json = Build\Azure\netcoreapp31\sqlserver.extras.json
 		Build\Azure\netcoreapp31\sqlserver.fts.2019.json = Build\Azure\netcoreapp31\sqlserver.fts.2019.json
 		Build\Azure\netcoreapp31\sybase.json = Build\Azure\netcoreapp31\sybase.json
 	EndProjectSection
@@ -412,6 +413,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net50", "net50", "{B528C8AE
 		Build\Azure\net50\sqlserver.2016.json = Build\Azure\net50\sqlserver.2016.json
 		Build\Azure\net50\sqlserver.2017.json = Build\Azure\net50\sqlserver.2017.json
 		Build\Azure\net50\sqlserver.2019.json = Build\Azure\net50\sqlserver.2019.json
+		Build\Azure\net50\sqlserver.extras.json = Build\Azure\net50\sqlserver.extras.json
 		Build\Azure\net50\sqlserver.fts.2019.json = Build\Azure\net50\sqlserver.fts.2019.json
 		Build\Azure\net50\sybase.json = Build\Azure\net50\sybase.json
 	EndProjectSection
@@ -445,6 +447,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net60", "net60", "{AA850554
 		Build\Azure\net60\sqlserver.2016.json = Build\Azure\net60\sqlserver.2016.json
 		Build\Azure\net60\sqlserver.2017.json = Build\Azure\net60\sqlserver.2017.json
 		Build\Azure\net60\sqlserver.2019.json = Build\Azure\net60\sqlserver.2019.json
+		Build\Azure\net60\sqlserver.extras.json = Build\Azure\net60\sqlserver.extras.json
 		Build\Azure\net60\sqlserver.fts.2019.json = Build\Azure\net60\sqlserver.fts.2019.json
 		Build\Azure\net60\sybase.json = Build\Azure\net60\sybase.json
 	EndProjectSection

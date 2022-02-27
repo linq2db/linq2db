@@ -2,11 +2,7 @@
 	"NET50.Azure": {
 		"Providers": [
 			"SqlServer.2019",
-			"SqlServer.2019.MS",
-			"SqlServer.SA",
-			"SqlServer.SA.MS",
-			"SqlServer.Contained",
-			"SqlServer.Contained.MS"
+			"SqlServer.2019.MS"
 		]
 	}
 }

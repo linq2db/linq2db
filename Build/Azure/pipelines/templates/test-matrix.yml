@@ -148,7 +148,7 @@ jobs:
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore31: true
-          enable_fw_net50: true
+          enable_fw_net50: false # https://github.com/dotnet/runtime/issues/46187
           enable_fw_net60: false # https://github.com/dotnet/runtime/issues/46187
           is_experimental: false
           extra: --arch x64

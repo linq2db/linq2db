@@ -1,0 +1,10 @@
+﻿{
+	"NETCORE31.Azure": {
+		"Providers": [
+			"SqlServer.SA",
+			"SqlServer.SA.MS",
+			"SqlServer.Contained",
+			"SqlServer.Contained.MS"
+		]
+	}
+}
