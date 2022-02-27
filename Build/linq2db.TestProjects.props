@@ -3,7 +3,7 @@
 	<Import Project="linq2db.Providers.props" />
 
 	<PropertyGroup>
-		<NoWarn>$(NoWarn);CS0649</NoWarn>
+		<NoWarn>$(NoWarn);CS0649;CS8012</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
