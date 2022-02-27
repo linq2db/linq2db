@@ -1,4 +1,5 @@
 using LinqToDB;
+using LinqToDB.Linq;
 using LinqToDB.Tools;
 using NUnit.Framework;
 using System;
@@ -14,14 +15,32 @@ namespace Tests.Linq
 	[TestFixture]
 	public class SqlRowTests : TestBase
 	{
-		private TempTable<Ints> SetupIntsTable(IDataContext db)
+		private TempTable<Ints> SetupIntsTable(IDataContext db, string? tableName = null)
 		{
 			var data = new[]
 			{
 				new Ints { One = 1, Two = 2, Three = 3, Four = 4, Five = 5, Nil = (int?)null }
 			};
 
-			return db.CreateLocalTable(data);
+			return db.CreateLocalTable(tableName, data);
+		}
+
+		[Test]
+		public void ServerSideOnly([DataSources] string context)
+		{
+			// SqlRow type can't be instantiated client-side, 
+			// it's purely a LINQ construct that is converted into SQl code.
+			
+			Action invokeRow = () => Row(1, 2);
+			invokeRow.Should().Throw<LinqException>();
+
+			using var db   = GetDataContext(context);
+			using var ints = SetupIntsTable(db);
+
+			// Top-level select Row() is forbidden. It can be done in subquery only.
+
+			Action selectRow = () => ints.Select(i => Row(i.One, 2)).ToList();
+			selectRow.Should().Throw<LinqException>();
 		}
 
 		[Test]
@@ -386,7 +405,114 @@ namespace Tests.Linq
 				.Should().Be(1);
 		}
 
-		class Ints
+		[Test]
+		public void EqualToSelect(
+			[IncludeDataSources(
+				TestProvName.AllInformix, 
+				TestProvName.AllMySql, 
+				TestProvName.AllOracle, 
+				TestProvName.AllPostgreSQL, 
+				TestProvName.AllSQLite)] string context)
+		{
+			// This feature is not emulated when there's no native support.
+			// So tests are not exhaustive, we just want to check that correct SQL is generated.
+			using var db   = GetDataContext(context);
+			using var ints = SetupIntsTable(db);
+			using var ints2 = SetupIntsTable(db, "Ints2");
+
+			ints.Count(x => Row(x.One, x.Two, x.Three) == 
+				(from y in ints2
+				 where y.Nil == null
+				 select Row(y.One, y.One + 1, 3)).Single())
+				.Should().Be(1);
+
+			// Because operator == is defined for `object`, .Single() is not required
+			ints.Count(x => Row(x.One, x.Two, x.Three) == 
+				(from y in ints2
+				 where y.Nil == null
+				 select Row(y.One, y.One + 1, 3)))
+				.Should().Be(1);
+
+			ints.Count(x => Row(x.One, x.Two, x.Three) !=
+				(from y in ints2
+				 where y.Nil == null
+				 select Row(y.One, y.One + 1, 4)).Single())
+				.Should().Be(1);
+
+			// Because operator != is defined for `object`, .Single() is not required
+			ints.Count(x => Row(x.One, x.Two, x.Three) !=
+				(from y in ints2
+				 where y.Nil == null
+				 select Row(y.One, y.One + 1, 4)))
+				.Should().Be(1);
+		}
+
+		[Test]
+		public void CompareToSelect(
+			[IncludeDataSources(
+				TestProvName.AllInformix, 
+				TestProvName.AllMySql, 
+				TestProvName.AllPostgreSQL, 
+				TestProvName.AllSQLite)] string context)
+		{
+			// This feature is not emulated when there's no native support.
+			// So tests are not exhaustive, we just want to check that correct SQL is generated.
+			using var db   = GetDataContext(context);
+			using var ints = SetupIntsTable(db);
+			using var ints2 = SetupIntsTable(db, "Ints2");
+
+			ints.Count(x => Row(x.One, x.Two, x.Nil) >
+				(from y in ints2
+				 where y.Nil == null
+				 select Row(y.One, y.One, (int?)3)).Single())
+				.Should().Be(1);
+
+			ints.Count(x => Row(x.One, x.Two, x.Three) >=
+				(from y in ints2
+				 where y.Nil == null
+				 select Row(y.One, y.One + 1, 3)).Single())
+				.Should().Be(1);
+
+			ints.Count(x => Row(x.One, x.Two, x.Nil) <
+				(from y in ints2
+				 where y.Nil == null
+				 select Row(y.One, y.Three, (int?)3)).Single())
+				.Should().Be(1);
+
+			ints.Count(x => Row(x.One, x.Two, x.Three) <=
+				(from y in ints2
+				 where y.Nil == null
+				 select Row(y.One, y.One + 1, 3)).Single())
+				.Should().Be(1);
+		}
+
+		[Test]
+		public void UpdateRowLiteral(
+			[IncludeDataSources(ProviderName.InformixDB2, TestProvName.AllPostgreSQL)] string context)
+		{			
+			var data = new[]
+			{
+				new Ints { One = 1,  Two = 2,  Three = 3,  Four = 4,  Five = 5,  Nil = (int?)null },
+				new Ints { One = 10, Two = 20, Three = 30, Four = 40, Five = 50, Nil = (int?)null },
+			};
+
+			using var db   = GetDataContext(context);
+			using var ints = db.CreateLocalTable(data);
+
+			ints.Where(i => i.One == 10)
+				.Set(i => i.One, i => i.Two * 5)
+				.Set(i => Row(i.Two, i.Three), i => Row(200, i.Three * 10))
+				.Set(i => Row(i.Four, i.Nil), i => Row(i.One * i.Four, (int?)600))
+				.Update();
+
+			ints.OrderBy(i => i.One)
+				.ToList()
+				.Should().Equal(
+					new Ints { One = 1,   Two = 2,   Three = 3,   Four = 4,   Five = 5, Nil = (int?)null },
+					new Ints { One = 100, Two = 200, Three = 300, Four = 400, Five = 5, Nil = 600 });
+		}
+
+		class Ints : IEquatable<Ints>
 		{
 			public int  One   { get; set; }
 			public int  Two   { get; set; }
@@ -394,6 +520,17 @@ namespace Tests.Linq
 			public int  Four  { get; set; }
 			public int  Five  { get; set; }
 			public int? Nil   { get; set; }
+
+			public bool Equals(Ints? other)
+			{
+				return other       != null
+					&& other.One   == One
+					&& other.Two   == Two
+					&& other.Three == Three
+					&& other.Four  == Four
+					&& other.Five  == Five
+					&& other.Nil   == Nil;
+			}
 		}
 	}
 }
