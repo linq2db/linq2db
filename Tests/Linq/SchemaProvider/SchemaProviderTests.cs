@@ -350,6 +350,7 @@ namespace Tests.SchemaProvider
 			}
 		}
 
+		[SkipCI("Unstable, depends on metadata selection order")]
 		[Test]
 		public void ForeignKeyMemberNameTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
@@ -361,12 +362,12 @@ namespace Tests.SchemaProvider
 				var table = s.Tables.Single(t => t.TableName == "TestSchemaY");
 				var fks   = table.ForeignKeys.Select(fk => fk.MemberName).ToArray();
 
-				Assert.That(fks, Is.EqualTo(new[] { "TestSchemaX", "ParentTestSchemaX", "FK_TestSchemaY_OtherID" }));
+				AreEqual(new[] { "TestSchemaX", "ParentTestSchemaX", "FK_TestSchemaY_OtherID" }, fks, _ => _.OrderBy(_ => _));
 
 				table = s.Tables.Single(t => t.TableName == "TestSchemaB");
 				fks   = table.ForeignKeys.Select(fk => fk.MemberName).ToArray();
 
-				AreEqual(fks, new[] { "OriginTestSchemaA", "TargetTestSchemaA", "Target_Test_Schema_A" }, _ => _);
+				AreEqual(new[] { "OriginTestSchemaA", "TargetTestSchemaA", "Target_Test_Schema_A" }, fks, _ => _.OrderBy(_ => _));
 			}
 		}
 

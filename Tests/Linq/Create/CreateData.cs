@@ -362,9 +362,9 @@ public class a_CreateData : TestBase
 					LASTNAME  = "König",
 				});
 
-			var sp = conn.DataProvider.GetSchemaProvider();
-
-			var schema = sp.GetSchema(conn, new GetSchemaOptions { GetProcedures = false });
+			using var _ = new DisableBaseline("Non-deterministic database cleanup");
+			var sp      = conn.DataProvider.GetSchemaProvider();
+			var schema  = sp.GetSchema(conn, new GetSchemaOptions { GetProcedures = false });
 
 			foreach (var table in schema.Tables)
 			{

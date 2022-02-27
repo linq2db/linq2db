@@ -19,4 +19,9 @@
 		<PackageReference Include="System.Text.Json" />
 	</ItemGroup>
 
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+		<!--netcoreapp31 needed due to very old transient depndency from oracle 2.19 provider-->
+		<PackageReference Include="System.Text.Json" />
+	</ItemGroup>
+
 </Project>

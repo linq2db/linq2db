@@ -469,6 +469,25 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]'))) }}:
             enabled: false
 
+# additional test runner for win as SqlServer2019 doesn't fit into time limits
+        - name: SqlServer2019Extras
+          title: SQL Server EXTRAS
+          config_win: sqlserver.extras
+          script_win_global: sqlserver.extras.cmd
+          install_docker_macos: true
+          enable_os_windows: true
+          enable_os_ubuntu: false
+          enable_os_macos:  false
+          enable_fw_net472: true
+          enable_fw_netcore31: true
+          enable_fw_net50: true
+          enable_fw_net60: true
+          is_experimental: false
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]'))) }}:
+            enabled: false
+
 # Sybase ASE
         - name: Sybase
           title: Sybase ASE 16

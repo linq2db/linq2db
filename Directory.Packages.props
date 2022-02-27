@@ -25,7 +25,9 @@
 		<PackageVersion Include="System.Data.OleDb"                                     Version="6.0.0"         />
 		<PackageVersion Include="System.Data.Odbc"                                      Version="6.0.0"         />
 		<PackageVersion Include="Oracle.ManagedDataAccess"                              Version="21.5.0"        />
-		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="3.21.50"       />
+		<!--3.21 provider currently contains bug which leads to test failure with oracle 12-->
+		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="2.19.140"      />
+		<!--<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="3.21.50"       />-->
 		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"                       Version="8.5.4"         />
 		<PackageVersion Include="System.Data.SQLite.Core"                               Version="1.0.115.5"     />
 		<PackageVersion Include="IBM.Data.DB.Provider"                                  Version="11.5.5010.4"   />
