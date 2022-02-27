@@ -1,5 +1,5 @@
 ﻿{
-	"NETCORE31.Azure": {
+	"CORE31.Azure": {
 		"Providers": [
 			"SqlServer.SA",
 			"SqlServer.SA.MS",
