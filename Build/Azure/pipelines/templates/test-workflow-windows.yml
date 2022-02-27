@@ -141,11 +141,11 @@ steps:
   condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.netcore31, 'true'), variables.psscript_local, succeeded())
   displayName: Setup tests
 
-- script: dotnet test netcore31\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f netcoreapp31 -l trx $(extra)
+- script: dotnet test netcore31\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f netcoreapp31 -l trx
   displayName: 'Tests (CORE31): $(title)'
   condition: and(eq(variables.netcore31, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
 
-- script: dotnet test netcore31x86\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f netcoreapp31 -l trx $(extra)
+- script: dotnet test netcore31x86\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f netcoreapp31 -l trx
   displayName: 'Tests (CORE31 x86): $(title)'
   condition: and(eq(variables.netcore31, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
 
@@ -177,11 +177,11 @@ steps:
   condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net50, 'true'), variables.psscript_local, succeeded())
   displayName: Setup tests
 
-- script: dotnet test net50\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net50 -l trx $(extra)
+- script: dotnet test net50\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net50 -l trx
   displayName: 'Tests (NET50): $(title)'
   condition: and(eq(variables.net50, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
 
-- script: dotnet test net50x86\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net50 -l trx $(extra)
+- script: dotnet test net50x86\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net50 -l trx
   displayName: 'Tests (NET50 x86): $(title)'
   condition: and(eq(variables.net50, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
 
@@ -213,11 +213,11 @@ steps:
   condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net60, 'true'), variables.psscript_local, succeeded())
   displayName: Setup tests
 
-- script: dotnet test net60\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra)
+- script: dotnet test net60\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx
   displayName: 'Tests (NET60): $(title)'
   condition: and(eq(variables.net60, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
 
-- script: dotnet test net60x86\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra)
+- script: dotnet test net60x86\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx
   displayName: 'Tests (NET60 x86): $(title)'
   condition: and(eq(variables.net60, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
 

@@ -114,7 +114,7 @@ jobs:
           enable_fw_net60: true
           is_experimental: false
           x86: true
-#          extra: --arch x86
+          extra: --arch x86
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
@@ -133,7 +133,7 @@ jobs:
           enable_fw_net60: true
           is_experimental: false
           x86: true
-#          extra: --arch x86
+          extra: --arch x86
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
@@ -151,7 +151,7 @@ jobs:
           enable_fw_net50: false # https://github.com/dotnet/runtime/issues/46187
           enable_fw_net60: false # https://github.com/dotnet/runtime/issues/46187
           is_experimental: false
-#          extra: --arch x64
+          extra: --arch x64
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
