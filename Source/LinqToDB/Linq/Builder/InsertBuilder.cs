@@ -178,7 +178,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (insertType == InsertContext.InsertType.InsertOutput || insertType == InsertContext.InsertType.InsertOutputInto)
 				{
-					outputExpression = 
+					outputExpression =
 						(LambdaExpression?)methodCall.GetArgumentByName("outputExpression")?.Unwrap()
 						?? BuildDefaultOutputExpression(methodCall.Method.GetGenericArguments().Last());
 
@@ -481,7 +481,7 @@ namespace LinqToDB.Linq.Builder
 						sequence,
 						insertStatement.Insert.Into,
 						insertStatement.Insert.Items);
-				}				
+				}
 				else
 					UpdateBuilder.ParseSet(
 						builder,

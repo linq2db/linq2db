@@ -8,10 +8,9 @@ namespace LinqToDB.SqlQuery
 	{
 		private List<SqlSetExpression>? _outputItems;
 
-		public SqlTable?        InsertedTable { get; set; }
-		public SqlTable?        DeletedTable  { get; set; }
-		public SqlTable?        OutputTable   { get; set; }
-		//public SelectQuery?     OutputQuery   { get; set; }
+		public SqlTable?             InsertedTable { get; set; }
+		public SqlTable?             DeletedTable  { get; set; }
+		public SqlTable?             OutputTable   { get; set; }
 		public List<ISqlExpression>? OutputColumns { get; set; }
 
 		public bool                   HasOutput      => HasOutputItems || OutputColumns != null;
@@ -33,7 +32,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
+		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext,ISqlExpression,ISqlExpression> func)
 		{
 			((ISqlExpressionWalkable?)DeletedTable )?.Walk(options, context, func);
 			((ISqlExpressionWalkable?)InsertedTable)?.Walk(options, context, func);
@@ -45,7 +44,7 @@ namespace LinqToDB.SqlQuery
 
 			if (OutputColumns != null)
 			{
-				for (int i = 0; i < OutputColumns.Count; i++)
+				for (var i = 0; i < OutputColumns.Count; i++)
 				{
 					OutputColumns[i] = OutputColumns[i].Walk(options, context, func) ?? throw new InvalidOperationException();
 				}

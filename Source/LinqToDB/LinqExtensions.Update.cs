@@ -135,8 +135,8 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(UpdateWithOutput, source, target, setter, outputExpression),
-					currentSource.Expression, 
-					((IQueryable<TTarget>)target).Expression, 
+					currentSource.Expression,
+					((IQueryable<TTarget>)target).Expression,
 					Expression.Quote(setter),
 					Expression.Quote(outputExpression)));
 		}
@@ -183,8 +183,8 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(UpdateWithOutput, source, target, setter, outputExpression),
-					currentSource.Expression, 
-					((IQueryable<TTarget>)target).Expression, 
+					currentSource.Expression,
+					((IQueryable<TTarget>)target).Expression,
 					Expression.Quote(setter),
 					Expression.Quote(outputExpression)))
 				.ToArrayAsync(token);
@@ -224,8 +224,8 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(UpdateWithOutputInto, source, target, setter, outputTable),
-					currentSource.Expression, 
-					((IQueryable<TTarget>)target).Expression, 
+					currentSource.Expression,
+					((IQueryable<TTarget>)target).Expression,
 					Expression.Quote(setter),
 					((IQueryable<TTarget>)outputTable).Expression));
 		}
@@ -266,8 +266,8 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(UpdateWithOutputInto, source, target, setter, outputTable),
-					currentSource.Expression, 
-					((IQueryable<TTarget>)target).Expression, 
+					currentSource.Expression,
+					((IQueryable<TTarget>)target).Expression,
 					Expression.Quote(setter),
 					((IQueryable<TTarget>)outputTable).Expression);
 
@@ -318,8 +318,8 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(UpdateWithOutputInto, source, target, setter, outputTable, outputExpression),
-					currentSource.Expression, 
-					((IQueryable<TTarget>)target).Expression, 
+					currentSource.Expression,
+					((IQueryable<TTarget>)target).Expression,
 					Expression.Quote(setter),
 					((IQueryable<TOutput>)outputTable).Expression,
 					Expression.Quote(outputExpression)));
@@ -368,8 +368,8 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(UpdateWithOutputInto, source, target, setter, outputTable, outputExpression),
-					currentSource.Expression, 
-					((IQueryable<TTarget>)target).Expression, 
+					currentSource.Expression,
+					((IQueryable<TTarget>)target).Expression,
 					Expression.Quote(setter),
 					((IQueryable<TOutput>)outputTable).Expression,
 					Expression.Quote(outputExpression));
@@ -729,7 +729,7 @@ namespace LinqToDB
 					null,
 					MethodHelper.GetMethodInfo(UpdateWithOutputInto, source, target, setter, outputTable, outputExpression),
 					currentSource.Expression,
-					Expression.Quote(target), 
+					Expression.Quote(target),
 					Expression.Quote(setter),
 					((IQueryable<TOutput>)outputTable).Expression,
 					Expression.Quote(outputExpression));
@@ -790,7 +790,7 @@ namespace LinqToDB
 		/// </list>
 		/// </remarks>
 		public static Task<UpdateOutput<T>[]> UpdateWithOutputAsync<T>(
-			           this IQueryable<T>         source, 
+			           this IQueryable<T>         source,
 			[InstantHandle] Expression<Func<T,T>> setter,
 			                CancellationToken     token = default)
 		{
@@ -1069,8 +1069,8 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
 		/// </list>
 		/// </remarks>
-		public static IEnumerable<UpdateOutput<T>> UpdateWithOutput<T>(
-			           this IUpdatable<T>         source)
+		[LinqTunnel, Pure]
+		public static IEnumerable<UpdateOutput<T>> UpdateWithOutput<T>(this IUpdatable<T> source)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
@@ -1099,7 +1099,7 @@ namespace LinqToDB
 		/// </list>
 		/// </remarks>
 		public static Task<UpdateOutput<T>[]> UpdateWithOutputAsync<T>(
-			           this IUpdatable<T>         source, 
+			           this IUpdatable<T>         source,
 			                CancellationToken     token = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -1123,7 +1123,7 @@ namespace LinqToDB
 		/// <param name="source">Source data query.</param>
 		/// <param name="outputExpression">Output record constructor expression.
 		/// Parameters passed are as follows: (<typeparamref name="T"/> deleted, <typeparamref name="T"/> inserted).
-		/// Expression supports only record new expression with field initializers.</param>
+		/// Expression supports only record new expression with field initializer.</param>
 		/// <returns>Output values from the update statement.</returns>
 		/// <remarks>
 		/// Database support:
@@ -1135,13 +1135,13 @@ namespace LinqToDB
 		/// </list>
 		/// </remarks>
 		public static IEnumerable<TOutput> UpdateWithOutput<T,TOutput>(
-			           this IUpdatable<T>                 source,
-			                Expression<Func<T,T,TOutput>> outputExpression)
+			this IUpdatable<T>            source,
+			Expression<Func<T,T,TOutput>> outputExpression)
 		{
-			if (source ==           null) throw new ArgumentNullException(nameof(source));
+			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
-			var query = ((Updatable<T>)source).Query;
+			var query         = ((Updatable<T>)source).Query;
 			var currentSource = ProcessSourceQueryable?.Invoke(query) ?? query;
 
 			return currentSource.Provider.CreateQuery<TOutput>(
@@ -1157,7 +1157,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <typeparam name="T">Updated table record type.</typeparam>
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
-		/// <param name="source">Source data query.</param>		
+		/// <param name="source">Source data query.</param>
 		/// <param name="outputExpression">Output record constructor expression.
 		/// Parameters passed are as follows: (<typeparamref name="T"/> deleted, <typeparamref name="T"/> inserted).
 		/// Expression supports only record new expression with field initializers.</param>

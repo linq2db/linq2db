@@ -43,8 +43,7 @@ namespace LinqToDB.Linq.Builder
 
 			Type? objectType;
 
-			sequence.SelectQuery.DoNotSetAliases = true;
-			sequence.Statement                   = updateStatement;
+			sequence.Statement = updateStatement;
 
 			static LambdaExpression? RewriteOutputExpression(LambdaExpression? expr)
 			{
@@ -196,7 +195,6 @@ namespace LinqToDB.Linq.Builder
 				outputExpression ??= BuildDefaultOutputExpression(objectType);
 
 				var outputContext = new UpdateOutputContext(
-					updateStatement,
 					buildInfo.Parent,
 					outputExpression,
 					sequence,
@@ -476,11 +474,11 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		internal static void ParseSet(
-			ExpressionBuilder               builder,
-			LambdaExpression                extract,
-			MethodCallExpression            updateMethod,
-			int                             valueIndex,
-			IBuildContext                   select,
+			ExpressionBuilder      builder,
+			LambdaExpression       extract,
+			MethodCallExpression   updateMethod,
+			int                    valueIndex,
+			IBuildContext          select,
 			List<SqlSetExpression> items)
 		{
 			var ext        = extract.Body.Unwrap();
@@ -488,6 +486,7 @@ namespace LinqToDB.Linq.Builder
 
 			ISqlExpression columnSql;
 			MemberInfo     member;
+
 			if (ext.NodeType == ExpressionType.MemberAccess)
 			{
 				var body = (MemberExpression)ext;
@@ -572,7 +571,6 @@ namespace LinqToDB.Linq.Builder
 		class UpdateOutputContext : SelectContext
 		{
 			public UpdateOutputContext(
-				SqlUpdateStatement sqlUpdateStatement,
 				IBuildContext?     parent,
 				LambdaExpression   lambda,
 				IBuildContext      source,
@@ -580,14 +578,12 @@ namespace LinqToDB.Linq.Builder
 				IBuildContext      insertedTable)
 				: base(parent, lambda, source, deletedTable, insertedTable)
 			{
-				_sqlUpdateStatement = sqlUpdateStatement;
-				Statement           = source.Statement;
+				Statement = source.Statement;
+
 				Sequence[0].SelectQuery.Select.Columns.Clear();
 				Sequence[1].SelectQuery = Sequence[0].SelectQuery;
 				Sequence[2].SelectQuery = Sequence[0].SelectQuery;
 			}
-
-			readonly SqlUpdateStatement _sqlUpdateStatement;
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
@@ -596,7 +592,27 @@ namespace LinqToDB.Linq.Builder
 
 				var updateStatement = (SqlUpdateStatement)Statement!;
 
-				updateStatement.Output!.OutputColumns = Sequence[0].SelectQuery.Select.Columns.Select(c => c.Expression).ToList();
+				var setColumns = new HashSet<string>();
+
+				foreach (var item in updateStatement.Update.Items)
+				{
+					switch (item.Column)
+					{
+						case SqlColumn { Expression : SqlField field } :
+							setColumns.Add(field.PhysicalName);
+							break;
+						case SqlField field :
+							setColumns.Add(field.PhysicalName);
+							break;
+					}
+				}
+
+				//Builder.BlockExpressions
+
+				updateStatement.Output!.OutputColumns = Sequence[0].SelectQuery.Select.Columns
+					.Select(c => c.Expression)
+					.Where (c => c is not SqlField f || setColumns.Contains(f.PhysicalName))
+					.ToList();
 
 				QueryRunner.SetRunQuery(query, mapper);
 			}

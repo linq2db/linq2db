@@ -266,6 +266,9 @@ namespace LinqToDB.SqlQuery
 			}
 
 			newAliasContext = ctx.NewAliases;
+
+			if (statement is SqlUpdateStatement updateStatement)
+				updateStatement.AfterSetAliases();
 		}
 
 		#endregion

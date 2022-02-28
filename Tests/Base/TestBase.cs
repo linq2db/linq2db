@@ -77,7 +77,7 @@ namespace Tests
 			DataConnection.TurnTraceSwitchOn();
 			DataConnection.WriteTraceLine = (message, name, level) =>
 			{
-				var ctx   = CustomTestContext.Get();
+				var ctx = CustomTestContext.Get();
 
 				if (ctx.Get<bool>(CustomTestContext.BASELINE_DISABLED) != true)
 				{

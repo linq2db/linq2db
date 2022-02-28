@@ -2336,7 +2336,34 @@ namespace Tests.xUpdate
 					{
 						new UpdateOutput<TableWithData>
 						{
-							Deleted = sourceData[6],
+							Deleted  = sourceData[6],
+							Inserted = sourceData[6] with { Id = 20 },
+						}
+					},
+					output,
+					new UpdateOutputComparer<TableWithData>());
+			}
+		}
+
+		//[Test]
+		public void Issue3044UpdateOutputWithTake2([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using (var db     = GetDataContext(context))
+			using (var source = db.CreateLocalTable(sourceData))
+			{
+				var output = source
+					.Where(i => i.Id >= 7)
+					.OrderBy(i => i.Id)
+					.Take(1)
+					.UpdateWithOutput(x => new TableWithData { Id = 20, ValueStr = x.ValueStr });
+
+				AreEqual(
+					new[]
+					{
+						new UpdateOutput<TableWithData>
+						{
+							Deleted  = sourceData[6],
 							Inserted = sourceData[6] with { Id = 20 },
 						}
 					},

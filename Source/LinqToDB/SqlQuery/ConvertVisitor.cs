@@ -1176,6 +1176,7 @@ namespace LinqToDB.SqlQuery
 						var outputС   = output.OutputColumns != null ? ConvertSafe(output.OutputColumns) : null;
 
 						List<SqlSetExpression>? outputItems = null;
+
 						if (output.HasOutputItems)
 							outputItems = ConvertSafe(output.OutputItems);
 
@@ -1248,8 +1249,8 @@ namespace LinqToDB.SqlQuery
 
 					case QueryElementType.SqlRawSqlTable:
 					{
-						var table   = (SqlRawSqlTable)element;
-						var targs   = table.Parameters == null || table.Parameters.Length == 0 ?
+						var table = (SqlRawSqlTable)element;
+						var targs = table.Parameters == null || table.Parameters.Length == 0 ?
 								null : Convert(table.Parameters);
 
 						if (targs != null && !ReferenceEquals(table.Parameters, targs))
