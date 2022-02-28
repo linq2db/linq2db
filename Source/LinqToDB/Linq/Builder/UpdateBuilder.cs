@@ -611,7 +611,7 @@ namespace LinqToDB.Linq.Builder
 
 				updateStatement.Output!.OutputColumns = Sequence[0].SelectQuery.Select.Columns
 					.Select(c => c.Expression)
-					.Where (c => c is not SqlField f || setColumns.Contains(f.PhysicalName))
+					//.Where (c => c is not SqlField f || setColumns.Contains(f.PhysicalName))
 					.ToList();
 
 				QueryRunner.SetRunQuery(query, mapper);
