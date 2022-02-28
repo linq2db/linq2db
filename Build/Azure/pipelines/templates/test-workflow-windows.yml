@@ -61,13 +61,7 @@ steps:
   inputs:
     script: 'copy $(System.DefaultWorkingDirectory)\configs\netcore31\$(config).json $(System.DefaultWorkingDirectory)\netcore31\UserDataProviders.json'
   displayName: Copy test config
-  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.netcore31, 'true'), succeeded())
-
-- task: CmdLine@2
-  inputs:
-    script: 'copy $(System.DefaultWorkingDirectory)\configs\net472\$(config).json $(System.DefaultWorkingDirectory)\net472x64\UserDataProviders.json'
-  displayName: Copy test config
-  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.netfx, 'true'), succeeded())
+  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.netcore31, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
