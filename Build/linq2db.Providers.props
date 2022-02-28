@@ -40,16 +40,23 @@
 		<PackageReference Include="System.Data.OleDb" />
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
 
-		<!--magic-->
-		<PackageReference Include="IBM.Data.DB2.Core" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
-		<PackageReference Include="IBM.Data.DB2.Core-lnx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
-		<PackageReference Include="IBM.Data.DB2.Core-osx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' "/>
-
 		<!--nuget doesn't have strong name, so we use local self-signed copy-->
 		<!--<PackageReference Include="dotMorten.Microsoft.SqlServer.Types" />-->
 		<Reference Include="Microsoft.SqlServer.Types">
 			<HintPath>$(MSBuildThisFileDirectory)\..\Redist\dotMorten.Microsoft.SqlServer.Types\Microsoft.SqlServer.Types.dll</HintPath>
 		</Reference>
 	</ItemGroup>
+
+	<!--some magic to not include x64 reference to IBM.Data.DB2.Core in x86 builds, as it fails x86 tests-->
+	<Choose>
+		<When Condition="$(X86) == ''">
+			<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
+				<!--magic-->
+				<PackageReference Include="IBM.Data.DB2.Core" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
+				<PackageReference Include="IBM.Data.DB2.Core-lnx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
+				<PackageReference Include="IBM.Data.DB2.Core-osx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' "/>
+			</ItemGroup>
+		</When>
+	</Choose>
 
 </Project>

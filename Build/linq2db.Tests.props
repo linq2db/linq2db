@@ -6,10 +6,12 @@
 		<!--net472 must be last. I know it doesn't make any sense, but it helps VS to discover .net core tests-->
 		<TargetFrameworks>netcoreapp3.1;net5.0;net6.0;net472</TargetFrameworks>
 		<Configurations>Debug;Release;Azure</Configurations>
+		<DefineConstants>$(DefineConstants)</DefineConstants>
+		<DefineConstants Condition="$(X86) != ''">$(DefineConstants);X86</DefineConstants>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Azure' ">
-		<DefineConstants>AZURE</DefineConstants>
+		<DefineConstants>$(DefineConstants);AZURE</DefineConstants>
 		<DebugSymbols>false</DebugSymbols>
 		<Optimize>true</Optimize>
 	</PropertyGroup>

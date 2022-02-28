@@ -48,11 +48,11 @@ jobs:
         if %errorlevel% neq 0 exit
         dotnet publish Tests\Linq\Tests.csproj -f net6.0 -c Azure
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f netcoreapp3.1 -c Azure -a x86 -o Tests\Linq\bin\$(build_configuration)\netcoreapp3.1\publishx86
+        dotnet publish Tests\Linq\Tests.csproj -f netcoreapp3.1 -c Azure -a x86 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\netcoreapp3.1\publishx86
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f net5.0 -c Azure -a x86 -o Tests\Linq\bin\$(build_configuration)\net5.0\publishx86
+        dotnet publish Tests\Linq\Tests.csproj -f net5.0 -c Azure -a x86 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\net5.0\publishx86
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f net6.0 -c Azure -a x86 -o Tests\Linq\bin\$(build_configuration)\net6.0\publishx86
+        dotnet publish Tests\Linq\Tests.csproj -f net6.0 -c Azure -a x86 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\net6.0\publishx86
         if %errorlevel% neq 0 exit
         mkdir testing
         if %errorlevel% neq 0 exit

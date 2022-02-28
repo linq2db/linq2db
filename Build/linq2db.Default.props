@@ -37,9 +37,9 @@
 	</PropertyGroup>
 
 	<PropertyGroup Label="Code Analysis Setup">
-		<RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
-		<!--disable on debug build to not slowdown development/testing unnecessary-->
-		<RunAnalyzersDuringBuild Condition="$(Configuration) == 'Debug'">false</RunAnalyzersDuringBuild>
+		<RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
+		<!--enable on release build only to not slowdown development/testing-->
+		<RunAnalyzersDuringBuild Condition="$(Configuration) == 'Release'">true</RunAnalyzersDuringBuild>
 		<RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
 
 		<AnalysisLevel>preview-All</AnalysisLevel>

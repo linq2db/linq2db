@@ -4,7 +4,7 @@
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests</AssemblyName>
 	</PropertyGroup>
-
+	
 	<ItemGroup>
 		<!-- T4 support -->
 		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
