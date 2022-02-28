@@ -70,6 +70,8 @@ jobs:
         if %errorlevel% neq 0 exit
         xcopy /i /s testing\net60\runtimes testing\net472x64\runtimes
         if %errorlevel% neq 0 exit
+        xcopy /i /s testing\net60\x64 testing\net472x64\x64
+        if %errorlevel% neq 0 exit
         xcopy /i /s Tests\Linq\bin\$(build_configuration)\netcoreapp3.1\publishx86 testing\netcore31x86
         if %errorlevel% neq 0 exit
         xcopy /i /s Tests\Linq\bin\$(build_configuration)\net5.0\publishx86 testing\net50x86
