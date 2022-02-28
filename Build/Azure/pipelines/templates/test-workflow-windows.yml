@@ -53,6 +53,12 @@ steps:
 
 - task: CmdLine@2
   inputs:
+    script: 'copy $(System.DefaultWorkingDirectory)\net472\DataProviders.json $(System.DefaultWorkingDirectory)\net472x64\DataProviders.json'
+  displayName: Copy test config
+  condition: and(variables.title, eq(variables.netfx, 'true'), ne(variables.x86, 'true'), succeeded())
+
+- task: CmdLine@2
+  inputs:
     script: 'copy $(System.DefaultWorkingDirectory)\configs\netcore31\$(config).json $(System.DefaultWorkingDirectory)\netcore31\UserDataProviders.json'
   displayName: Copy test config
   condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.netcore31, 'true'), succeeded())
