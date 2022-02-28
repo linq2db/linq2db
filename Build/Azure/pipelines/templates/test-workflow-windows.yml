@@ -43,7 +43,13 @@ steps:
   inputs:
     script: 'copy $(System.DefaultWorkingDirectory)\configs\net472\$(config).json $(System.DefaultWorkingDirectory)\net472\UserDataProviders.json'
   displayName: Copy test config
-  condition: and(variables.title, eq(variables.netfx, 'true'), succeeded())
+  condition: and(variables.title, eq(variables.netfx, 'true'), eq(variables.x86, 'true'), succeeded())
+
+- task: CmdLine@2
+  inputs:
+    script: 'copy $(System.DefaultWorkingDirectory)\configs\net472\$(config).json $(System.DefaultWorkingDirectory)\net472x64\UserDataProviders.json'
+  displayName: Copy test config
+  condition: and(variables.title, eq(variables.netfx, 'true'), ne(variables.x86, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
