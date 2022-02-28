@@ -4,6 +4,10 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Text;
 
+namespace IBM.Data.DB2
+{
+	public abstract class DB2Connection : DbConnection { }
+}
 namespace IBM.Data.DB2.Core
 {
 	public abstract class DB2Connection : DbConnection { }

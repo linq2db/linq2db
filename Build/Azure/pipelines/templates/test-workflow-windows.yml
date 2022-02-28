@@ -49,7 +49,13 @@ steps:
   inputs:
     script: 'copy $(System.DefaultWorkingDirectory)\configs\netcore31\$(config).json $(System.DefaultWorkingDirectory)\netcore31\UserDataProviders.json'
   displayName: Copy test config
-  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.netcore31, 'true'), succeeded())
+  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.netcore31, 'true'), succeeded())
+
+- task: CmdLine@2
+  inputs:
+    script: 'copy $(System.DefaultWorkingDirectory)\configs\net472\$(config).json $(System.DefaultWorkingDirectory)\net472x64\UserDataProviders.json'
+  displayName: Copy test config
+  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.netfx, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
@@ -99,19 +105,37 @@ steps:
   inputs:
     script: '$(System.DefaultWorkingDirectory)\scripts\$(script_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)\net472'
-  condition: and(variables.title, eq(variables.netfx, 'true'), variables.script_local, succeeded())
+  condition: and(variables.title, eq(variables.netfx, 'true'), eq(variables.x86, 'true'), variables.script_local, succeeded())
   displayName: Setup tests
 
 - task: PowerShell@2
   inputs:
     filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)\net472'
-  condition: and(variables.title, eq(variables.netfx, 'true'), variables.psscript_local, succeeded())
+  condition: and(variables.title, eq(variables.netfx, 'true'), eq(variables.x86, 'true'), variables.psscript_local, succeeded())
   displayName: Setup tests
 
 - script: dotnet test net472\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net472 -l trx $(extra)
   displayName: 'Tests (NETFX472): $(title)'
-  condition: and(eq(variables.netfx, 'true'), variables.title, succeeded())
+  condition: and(eq(variables.netfx, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)\scripts\$(script_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)\net472x64'
+  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.netfx, 'true'), variables.script_local, succeeded())
+  displayName: Setup tests
+
+- task: PowerShell@2
+  inputs:
+    filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)\netcore31x86'
+  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.netcore31, 'true'), variables.psscript_local, succeeded())
+  displayName: Setup tests
+
+- script: dotnet test net472x64\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net472 -l trx --arch x64
+  displayName: 'Tests (NETFX x64): $(title)'
+  condition: and(eq(variables.netfx, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
 
 - task: CmdLine@2
   inputs:

@@ -48,6 +48,8 @@ jobs:
         if %errorlevel% neq 0 exit
         dotnet publish Tests\Linq\Tests.csproj -f net6.0 -c Azure
         if %errorlevel% neq 0 exit
+        dotnet publish Tests\Linq\Tests.csproj -f net472 -c Azure -a x64 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\net472\publishx64
+        if %errorlevel% neq 0 exit
         dotnet publish Tests\Linq\Tests.csproj -f netcoreapp3.1 -c Azure -a x86 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\netcoreapp3.1\publishx86
         if %errorlevel% neq 0 exit
         dotnet publish Tests\Linq\Tests.csproj -f net5.0 -c Azure -a x86 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\net5.0\publishx86
@@ -63,6 +65,10 @@ jobs:
         xcopy /i /s Tests\Linq\bin\$(build_configuration)\net5.0\publish testing\net50
         if %errorlevel% neq 0 exit
         xcopy /i /s Tests\Linq\bin\$(build_configuration)\net6.0\publish testing\net60
+        if %errorlevel% neq 0 exit
+        xcopy /i /s Tests\Linq\bin\$(build_configuration)\net472\publishx64 testing\net472x64
+        if %errorlevel% neq 0 exit
+        xcopy /i /s testing\net60\runtimes testing\net472x64\runtimes
         if %errorlevel% neq 0 exit
         xcopy /i /s Tests\Linq\bin\$(build_configuration)\netcoreapp3.1\publishx86 testing\netcore31x86
         if %errorlevel% neq 0 exit
