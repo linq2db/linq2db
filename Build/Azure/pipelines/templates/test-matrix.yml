@@ -366,7 +366,7 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
-          enable_fw_netcore31: true
+          enable_fw_netcore31: false # reduce test time
           enable_fw_net50: false # reduce test time
           enable_fw_net60: true
           is_experimental: false
@@ -383,7 +383,7 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
-          enable_fw_netcore31: true
+          enable_fw_netcore31: false # reduce test time
           enable_fw_net50: false # reduce test time
           enable_fw_net60: true
           is_experimental: false
@@ -400,7 +400,7 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
-          enable_fw_netcore31: true
+          enable_fw_netcore31: false # reduce test time
           enable_fw_net50: false # reduce test time
           enable_fw_net60: true
           is_experimental: false
@@ -417,7 +417,7 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
-          enable_fw_netcore31: true
+          enable_fw_netcore31: false # reduce test time
           enable_fw_net50: false # reduce test time
           enable_fw_net60: true
           is_experimental: false
@@ -434,7 +434,7 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
-          enable_fw_netcore31: true
+          enable_fw_netcore31: false # reduce test time
           enable_fw_net50: false # reduce test time
           enable_fw_net60: true
           is_experimental: false
@@ -456,7 +456,7 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: true
-          enable_fw_netcore31: true
+          enable_fw_netcore31: false # reduce test time
           enable_fw_net50: false # reduce test time
           enable_fw_net60: true
           is_experimental: false
@@ -478,7 +478,7 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos:  true
           enable_fw_net472: true
-          enable_fw_netcore31: true
+          enable_fw_netcore31: false # reduce test time
           enable_fw_net50: false # reduce test time
           enable_fw_net60: true
           is_experimental: false
@@ -497,8 +497,8 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos:  false
           enable_fw_net472: true
-          enable_fw_netcore31: true
-          enable_fw_net50: true
+          enable_fw_netcore31: false # reduce test time
+          enable_fw_net50: false # reduce test time
           enable_fw_net60: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
