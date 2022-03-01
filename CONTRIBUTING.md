@@ -35,51 +35,47 @@ Solutions:
 
 #### Source projects
 
-| Project \ Target                                 |.NET 4.5 |.NET 4.6 |.NET 4.7.2 | .NET Standard 2.0 | .NET Core 2.1 | .NET Standard 2.1 | .NET Core 3.1 | .NET 6.0 |
-|-------------------------------------------------:|:-------:|:-------:|:---------:|:-----------------:|:-------------:|:-----------------:|:-------------:|:--------:|
-| `.\Source\LinqToDB\LinqToDB.csproj`              |    √    |    √    |     √     |         √         |       √       |         √         |       √       |    √     |
-| `.\Source\LinqToDB\LinqToDB.Tools.csproj`        |    √    |    √    |           |         √         |               |                   |               |    √     |
-| `.\Source\LinqToDB\LinqToDB.AspNet.csproj`       |    √    |         |           |         √         |               |                   |               |    √     |
+| Project \ Target                                 |.NET 4.5 |.NET 4.6 |.NET 4.7.2 | .NET Standard 2.0 | .NET Standard 2.1 | .NET Core 3.1 | .NET 6.0 |
+|-------------------------------------------------:|:-------:|:-------:|:---------:|:-----------------:|:-----------------:|:-------------:|:--------:|
+| `.\Source\LinqToDB\LinqToDB.csproj`              |    √    |    √    |     √     |         √         |         √         |       √       |    √     |
+| `.\Source\LinqToDB\LinqToDB.Tools.csproj`        |    √    |    √    |           |         √         |                   |               |    √     |
+| `.\Source\LinqToDB\LinqToDB.AspNet.csproj`       |    √    |         |           |         √         |                   |               |    √     |
 
 Preferred target defines:
 - `NETFRAMEWORK` - `net45`, `net46` and `net472` target ifdef
-- `!NETFRAMEWORK` - `netstandard2.0` and newer target ifdef
-- `NETCOREAPP` - `netcoreapp2.1` and `netcoreapp3.1` target ifdef
-- `NETSTANDARD2_1PLUS` - `netstandard2.1` and `netcoreapp3.1` target ifdef
+- `NETSTANDARD2_1PLUS` - targets with `netstandard2.1` support (`netstandard2.1`, `netcoreapp3.1`, `net5.0`, `net6.0`). Don't use this define in test projects!
 - `NATIVE_ASYNC` - ifdef with native support for `ValueTask`, `IAsyncEnumerable<T>` and `IAsyncDisposable` types
 
 Other allowed target defines:
 - `NETSTANDARD2_1` - `netstandard2.1` target ifdef
 - `NETCOREAPP3_1` - `netcoreapp3.1` target ifdef
 - `NETSTANDARD2_0` - `netstandard2.0` target ifdef
-- `NETCOREAPP2_1` - `netcoreapp2.1` target ifdef
 - `NET6_0` - `net6.0` target ifdef
 - `NET45` - `net45` target ifdef
 - `NET46` - `net46` target ifdef
 - `NET472` - `net472` target ifdef
 
 Allowed debugging defines:
-- `TRACK_BUILD`
+- `TRACK_BUILD` - ?
 - `DEBUG` - for debug code in debug build. To disable debug code use `DEBUG1` rename
 - `OVERRIDETOSTRING` - enables ToString()` overrides for AST model (must be enabled in LinqToDB.csproj by renaming existing `OVERRIDETOSTRING1` define)
 
 #### Test projects
 
-| Project \ Target                                   |.NET 4.7.2 | .NET Core 2.1 | .NET Core 3.1 | .NET 5.0 | .NET 6.0 |
-|---------------------------------------------------:|:---------:|:-------------:|:-------------:|:--------:|:--------:|
-| `.\Tests\Base\Tests.Base.csproj`                   |     √     |       √       |       √       |    √     |    √     |
-| `.\Tests\FSharp\Tests.FSharp.fsproj`               |     √     |       √       |       √       |    √     |    √     |
-| `.\Tests\Linq\Tests.csproj`                        |     √     |       √       |       √       |    √     |    √     |
-| `.\Tests\Model\Tests.Model.csproj`                 |     √     |       √       |       √       |    √     |    √     |
-| `.\Tests\Tests.Benchmarks\Tests.Benchmarks.csproj` |     √     |       √       |       √       |    √     |    √     |
-| `.\Tests\Tests.Playground\Tests.Playground.csproj` |     √     |       √       |       √       |    √     |    √     |
-| `.\Tests\Tests.T4\Tests.T4.csproj`                 |     √     |       √       |       √       |    √     |    √     |
-| `.\Tests\VisualBasic\Tests.VisualBasic.vbproj`     |     √     |       √       |       √       |    √     |    √     |
+| Project \ Target                                   |.NET 4.7.2 | .NET Core 3.1 | .NET 5.0 | .NET 6.0 |
+|---------------------------------------------------:|:---------:|:-------------:|:--------:|:--------:|
+| `.\Tests\Base\Tests.Base.csproj`                   |     √     |       √       |    √     |    √     |
+| `.\Tests\FSharp\Tests.FSharp.fsproj`               |     √     |       √       |    √     |    √     |
+| `.\Tests\Linq\Tests.csproj`                        |     √     |       √       |    √     |    √     |
+| `.\Tests\Model\Tests.Model.csproj`                 |     √     |       √       |    √     |    √     |
+| `.\Tests\Tests.Benchmarks\Tests.Benchmarks.csproj` |     √     |       √       |    √     |    √     |
+| `.\Tests\Tests.Playground\Tests.Playground.csproj` |     √     |       √       |    √     |    √     |
+| `.\Tests\Tests.T4\Tests.T4.csproj`                 |     √     |       √       |    √     |    √     |
+| `.\Tests\VisualBasic\Tests.VisualBasic.vbproj`     |     √     |       √       |    √     |    √     |
 
 
 Allowed target defines:
 - `NETCOREAPP3_1` - `netcoreapp3.1` target ifdef
-- `NETCOREAPP2_1` - `netcoreapp2.1` target ifdef
 - `NET5_0` - `net5.0` target ifdef
 - `NET6_0` - `net6.0` target ifdef
 - `NET472` - `net472` target ifdef
@@ -93,9 +89,9 @@ You can use the solution to build and run tests. Also you can build whole soluti
 * `.\Build.cmd` - builds all the projects in the solution for Debug, Release and Azure configurations
 * `.\Compile.cmd` - builds LinqToDB project for Debug and Release configurations
 * `.\Clean.cmd` - cleanups solution projects for Debug, Release and Azure configurations
-* `.\Test.cmd` - build `Debug` configuration and run tests for `net472`,  `netcoreapp2.1`, `netcoreapp3.1`, `net5.0` and `net6.0` targets. You can set other configuration by passing it as first parameter, disable test targets by passing 0 to second (for `net472`),  third (for `netcoreapp2.1`), fourth (for `netcoreapp3.1`), fifth (for `net5.0`) or sixth (for `net6.0`) parameter and format (default:html) as 7th parameter.
+* `.\Test.cmd` - build `Debug` configuration and run tests for `net472`, `netcoreapp3.1`, `net5.0` and `net6.0` targets. You can set other configuration by passing it as first parameter, disable test targets by passing 0 to second (for `net472`),  third (for `netcoreapp3.1`), fourth (for `net5.0`) or fifth (for `net6.0`) parameter and format (default:html) as 7th parameter.
 
-Example of running Release build tests for `netcoreapp2.1` only with trx as output:
+Example of running Release build tests for `netcoreapp3.1` only with trx as output:
 ```
 test.cmd Release 0 1 0 0 0 trx
 ```
@@ -190,12 +186,11 @@ The `[User]DataProviders.json` is a regular JSON file:
             "SQLite.MS",
             "Northwind.SQLite",
             "Northwind.SQLite.MS",
-            "SqlServer",
             "SqlServer.2014",
-            "SqlServer.2012", "SqlServer.2012.1",
-            "SqlServer.2008", "SqlServer.2008.1",
-            "SqlServer.2005", "SqlServer.2005.1",
-            "SqlAzure",
+            "SqlServer.2012",
+            "SqlServer.2008",
+            "SqlServer.2005",
+            "SqlServer.Azure",
             "DB2",
             "Firebird",
             "Informix",
@@ -204,8 +199,8 @@ The `[User]DataProviders.json` is a regular JSON file:
             "Oracle.Native",
             "Oracle.Managed",
             "PostgreSQL",
-            "Sybase",
-            "Northwind",
+            "Sybase.Managed",
+            "SqlServer.Northwind",
             "TestNoopProvider"
         ],
 
@@ -218,25 +213,24 @@ The `[User]DataProviders.json` is a regular JSON file:
 
     },
 
-    // .net core 2.1 test configuration
-    "CORE21" :
+    // .net 6.0 test configuration
+    "NET60" :
     {
         "BasedOn"              : "LocalConnectionStrings",
         "Providers"            :
         [
             "SQLite.MS",
             "Northwind.SQLite.MS",
-            "SqlServer",
             "SqlServer.2014",
-            "SqlServer.2012", "SqlServer.2012.1",
-            "SqlServer.2008", "SqlServer.2008.1",
-            "SqlServer.2005", "SqlServer.2005.1",
-            "SqlAzure",
+            "SqlServer.2012",
+            "SqlServer.2008",
+            "SqlServer.2005",
+            "SqlServer.Azure",
             "Firebird",
             "MySql",
             "MariaDB",
             "PostgreSQL",
-            "Northwind",
+            "SqlServer.Northwind",
             "TestNoopProvider"
         ]
     },
@@ -249,7 +243,7 @@ The `[User]DataProviders.json` is a regular JSON file:
         {
             // override connection string for SqlAzure provider
             // all other providers will use default inherited connection strings from CommonConnectionStrings configuration
-            "SqlAzure" :
+            "SqlServer.Azure" :
             {
                  "Provider"         : "System.Data.SqlClient",
                  "ConnectionString" : "Server=tcp:xxxxxxxxx.database.windows.net,1433;Database=TestData;User ID=TestUser@zzzzzzzzz;Password=TestPassword;Trusted_Connection=False;Encrypt=True;"
@@ -273,7 +267,6 @@ We do run builds and tests with:
 * [Azure Pipelines](https://dev.azure.com/linq2db/linq2db/_build?definitionId=3) [pipelines/default.yml](https://github.com/linq2db/linq2db/blob/master/Build/Azure/pipelines/default.yml).
 It builds solution, generate and publish nugets and runs tests for:
   * .Net 4.7.2
-  * .Net Core 2.1 (Windows/Linux and MacOS)
   * .Net Core 3.1 (Windows/Linux and MacOS)
   * .Net 5.0 (Windows/Linux and MacOS)
   * .Net 6.0 (Windows/Linux and MacOS)

@@ -1,5 +1,4 @@
-﻿#if NETFRAMEWORK || NETCOREAPP
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -182,4 +181,3 @@ namespace LinqToDB.DataProvider.SapHana
 		private static readonly MappingSchema MappingSchemaInstance = new SapHanaMappingSchema.NativeMappingSchema();
 	}
 }
-#endif

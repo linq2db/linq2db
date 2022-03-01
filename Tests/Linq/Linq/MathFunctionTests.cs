@@ -224,7 +224,7 @@ namespace Tests.Linq
 			{
 				var q = from t in from p in db.Types select Math.Round(p.MoneyValue, 1) where t != 0 && t != 7 select t;
 
-				if (context.StartsWith("DB2"))
+				if (context.IsAnyOf(ProviderName.DB2))
 					q = q.AsQueryable().Select(t => Math.Round(t, 1));
 
 				AreEqual(
@@ -297,7 +297,7 @@ namespace Tests.Linq
 			{
 				var q = from t in from p in db.Types select Math.Round(p.MoneyValue, 1, MidpointRounding.ToEven) where t != 0 && t != 7 select t;
 
-				if (context.StartsWith("DB2"))
+				if (context.IsAnyOf(ProviderName.DB2))
 					q = q.AsQueryable().Select(t => Math.Round(t, 1, MidpointRounding.ToEven));
 
 				AreEqual(
@@ -326,7 +326,7 @@ namespace Tests.Linq
 			{
 				var q = from t in from p in db.Types select Math.Round(p.MoneyValue, 1, mp) where t != 0 && t != 7 select t;
 
-				if (context.StartsWith("DB2"))
+				if (context.IsAnyOf(ProviderName.DB2))
 					q = q.AsQueryable().Select(t => Math.Round(t, 1, mp));
 
 				AreEqual(

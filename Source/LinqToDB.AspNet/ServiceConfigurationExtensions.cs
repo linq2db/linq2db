@@ -173,7 +173,7 @@ namespace LinqToDB.AspNet
 
 			if (!hasTypedConstructor)
 				serviceCollection.TryAdd(new ServiceDescriptor(typeof(LinqToDbConnectionOptions),
-					provider => provider.GetService(typeof(LinqToDbConnectionOptions<TContextImplementation>)), lifetime));
+					provider => provider.GetRequiredService(typeof(LinqToDbConnectionOptions<TContextImplementation>)), lifetime));
 
 			return serviceCollection;
 		}

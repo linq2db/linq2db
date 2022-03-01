@@ -1,6 +1,5 @@
 variables:
   - template: templates/shared-vars.yml
-  - template: templates/test-vars.yml
 
 trigger: none
 pr:
@@ -18,6 +17,7 @@ stages:
   - template: templates/build-job.yml
     parameters:
       for_nuget: false
+      for_tests: true
 
 #############
 # TEST JOBS #

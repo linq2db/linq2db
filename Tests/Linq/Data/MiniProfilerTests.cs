@@ -1,19 +1,15 @@
-﻿using System;
+﻿extern alias MySqlConnector;
+extern alias MySqlData;
+
+using System;
+using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
+using System.Data.SqlTypes;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
-using System.Data.SqlTypes;
-
-using FirebirdSql.Data.Types;
-
-using IBM.Data.DB2Types;
-
-#if NET472
-using IBM.Data.Informix;
-#endif
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -34,25 +30,29 @@ using LinqToDB.DataProvider.Sybase;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 
+using FirebirdSql.Data.Types;
+using IBM.Data.DB2Types;
 using Microsoft.SqlServer.Types;
-
 using NUnit.Framework;
-
 using StackExchange.Profiling;
 using StackExchange.Profiling.Data;
-
-#if !NETCOREAPP2_1
-using MySqlDataDateTime           = MySql.Data.Types.MySqlDateTime;
-using MySqlDataDecimal            = MySql.Data.Types.MySqlDecimal;
-using MySqlConnectorDateTime      = MySqlConnector.MySqlDateTime;
-using MySqlDataMySqlConnection    = MySql.Data.MySqlClient.MySqlConnection;
+using Tests.DataProvider;
+using Tests.Model;
+#if NET472
+using IBM.Data.Informix;
 #endif
+
+#if NETFRAMEWORK
+using MySqlConnectorDateTime   = MySqlConnector::MySql.Data.Types.MySqlDateTime;
+#else
+using MySqlConnectorDateTime   = MySqlConnector::MySqlConnector.MySqlDateTime;
+#endif
+using MySqlDataDateTime        = MySqlData::MySql.Data.Types.MySqlDateTime;
+using MySqlDataDecimal         = MySqlData::MySql.Data.Types.MySqlDecimal;
+using MySqlDataMySqlConnection = MySqlData::MySql.Data.MySqlClient.MySqlConnection;
 
 namespace Tests.Data
 {
-	using DataProvider;
-	using Model;
-
 	[TestFixture]
 	public class MiniProfilerTests : TestBase
 	{
@@ -85,11 +85,11 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void Test1([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void Test1([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var mpcon = new MiniProfilerDataContext(context))
 			{
-				_ = mpcon.GetTable<Northwind.Category>().ToList();
+				mpcon.GetTable<Northwind.Category>().ToList();
 			}
 		}
 
@@ -260,7 +260,6 @@ namespace Tests.Data
 			public DateTime Value { get; set; }
 		}
 
-#if !NETCOREAPP2_1
 		class MapperExpressionTest2
 		{
 			public MySqlDataDateTime Value { get; set; }
@@ -307,7 +306,7 @@ namespace Tests.Data
 		// tests support of data reader methods by LinqService
 		// full of hacks to made test work as expected
 		[Test]
-		public void TestLinqService([IncludeDataSources(true, ProviderName.MySql)] string context, [Values] ConnectionType type)
+		public void TestLinqService([IncludeDataSources(true, TestProvName.AllMySqlData)] string context, [Values] ConnectionType type)
 		{
 			var provider = GetProviderName(context, out var isLinq);
 
@@ -417,10 +416,15 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task TestMySqlConnector([IncludeDataSources(ProviderName.MySqlConnector)] string context, [Values] ConnectionType type)
+		public async Task TestMySqlConnector([IncludeDataSources(TestProvName.AllMySqlConnector)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-			using (var db = CreateDataConnection(new MySqlDataProviderMySqlConnector(), context, type, "MySqlConnector.MySqlConnection, MySqlConnector", ";AllowZeroDateTime=true"))
+#if NETFRAMEWORK
+			var connectionTypeName = "MySql.Data.MySqlClient.MySqlConnection, MySqlConnector";
+#else
+			var connectionTypeName = "MySqlConnector.MySqlConnection, MySqlConnector";
+#endif
+			using (var db = CreateDataConnection(new MySqlDataProviderMySqlConnector(), context, type, connectionTypeName, ";AllowZeroDateTime=true"))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -482,7 +486,6 @@ namespace Tests.Data
 				db.DataProvider.GetSchemaProvider().GetSchema(db);
 			}
 		}
-#endif
 
 		[Test]
 		public void TestSystemSqlite([IncludeDataSources(ProviderName.SQLiteClassic)] string context, [Values] ConnectionType type)

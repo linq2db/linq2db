@@ -140,7 +140,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StartsWithTests([DataSources(false, ProviderName.Sybase)] string context)
+		public void StartsWithTests([DataSources(false, TestProvName.AllSybase)] string context)
 		{
 			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();
@@ -168,7 +168,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void EndsWithTests([DataSources(false, ProviderName.Sybase)] string context)
+		public void EndsWithTests([DataSources(false, TestProvName.AllSybase)] string context)
 		{
 			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();
@@ -196,7 +196,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ParamOptimization([DataSources(false, ProviderName.Sybase)] string context)
+		public void ParamOptimization([DataSources(false, TestProvName.AllSybase)] string context)
 		{
 			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();
@@ -224,7 +224,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MergeInsert([MergeTests.MergeDataContextSource(false, ProviderName.Sybase, TestProvName.AllInformix)] string context)
+		public void MergeInsert([MergeTests.MergeDataContextSource(false, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();
@@ -255,13 +255,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void EagerLoadMultiLevel([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void EagerLoadMultiLevel([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-#if NETFRAMEWORK
-			if (context.Contains(ProviderName.SQLiteMS))
-				Assert.Inconclusive("Disabled due to sporadical errors due to old SQLite version (SQLite Error 5: 'database is locked')");
-#endif
-
 			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();
 

@@ -201,7 +201,7 @@ namespace LinqToDB.Data.RetryPolicy
 					OnRetry();
 				}
 
-				await TaskEx.Delay(delay.Value, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await Task.Delay(delay.Value, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 		}
 

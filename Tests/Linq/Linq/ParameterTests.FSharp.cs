@@ -4,11 +4,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using NUnit.Framework;
 
-#if NET472
 using Tests.FSharp.Models;
-#else
-using Tests.Model;
-#endif
 
 namespace Tests.Linq
 {

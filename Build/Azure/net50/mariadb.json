@@ -2,7 +2,8 @@
 	"NET50.Azure": {
 		"Providers": [
 			// MariaDB latest
-			"MariaDB"
+			"MariaDB",
+			"MariaDBConnector"
 		]
 	}
 }

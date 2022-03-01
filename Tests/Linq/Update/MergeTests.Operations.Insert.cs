@@ -1580,15 +1580,15 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				if (context != ProviderName.Sybase)
+				if (!context.IsAnyOf(ProviderName.Sybase))
 					Assert.AreEqual(5, result.Count);
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
 				AssertRow(InitialTargetData[2], result[2], null, 203);
 				AssertRow(InitialTargetData[3], result[3], null, null);
-				if (context != ProviderName.Sybase)
-				AssertRow(InitialSourceData[3], result[4], null, 216);
+				if (!context.IsAnyOf(ProviderName.Sybase))
+					AssertRow(InitialSourceData[3], result[4], null, 216);
 			}
 		}
 		#endregion

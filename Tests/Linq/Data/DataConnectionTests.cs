@@ -55,11 +55,8 @@ namespace Tests.Data
 
 		[Test]
 		public void Test3([IncludeDataSources(
-			ProviderName.SqlServer,
 			ProviderName.SqlServer2008,
-			ProviderName.SqlServer2008 + ".1",
 			ProviderName.SqlServer2005,
-			ProviderName.SqlServer2005 + ".1",
 			TestProvName.AllAccess)]
 			string context)
 		{
@@ -107,7 +104,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void GetDataProviderTest([IncludeDataSources(ProviderName.DB2, TestProvName.AllSqlServer2005Plus)] string context)
+		public void GetDataProviderTest([IncludeDataSources(ProviderName.DB2, TestProvName.AllSqlServer)] string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
 
@@ -519,7 +516,7 @@ namespace Tests.Data
 
 		[Test]
 		[SkipCI]
-		public void CommandTimeoutTest([IncludeDataSources(ProviderName.SqlServer2014)] string context)
+		public void CommandTimeoutTest([IncludeDataSources(TestProvName.AllSqlServer2014)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -1217,20 +1214,17 @@ namespace Tests.Data
 			[DataSources(false)] string context, [Values] bool withScope)
 		{
 			if (withScope && (
-				context == ProviderName.DB2            ||
-				context == ProviderName.InformixDB2    ||
-				context == ProviderName.MySqlConnector ||
-				context == TestProvName.MariaDB        ||
-				context == ProviderName.SapHanaNative  ||
-				context == ProviderName.SqlCe          ||
-				context == ProviderName.Sybase         ||
-				context.Contains("Firebird")           ||
-				context.Contains("Oracle")             ||
-				context.Contains("PostgreSQL")         ||
-				context.Contains("SqlServer")          ||
-				context.Contains("SqlAzure")           ||
-				context.Contains(ProviderName.SQLiteClassic)
-				))
+				context == ProviderName.DB2                     ||
+				context == ProviderName.InformixDB2             ||
+				context == ProviderName.SapHanaNative           ||
+				context == ProviderName.SqlCe                   ||
+				context == ProviderName.Sybase                  ||
+				context.IsAnyOf(TestProvName.AllMySqlConnector) ||
+				context.IsAnyOf(TestProvName.AllFirebird)       ||
+				context.IsAnyOf(TestProvName.AllOracle)         ||
+				context.IsAnyOf(TestProvName.AllPostgreSQL)     ||
+				context.IsAnyOf(TestProvName.AllSqlServer)      ||
+				context.IsAnyOf(TestProvName.AllSQLiteClassic)))
 			{
 				// DB2: ERROR [58005] [IBM][DB2.NET] SQL0902 An unexpected exception has occurred in  Process: 22188 Thread 16 AppDomain: Name:domain-1b9769ae-linq2db.Tests.dll
 				// Firebird: SQL error code = -204 Table unknown CATEGORIES
@@ -1270,21 +1264,20 @@ namespace Tests.Data
 			[DataSources(false)] string context, [Values] bool withScope)
 		{
 			if (withScope && (
-				context == ProviderName.DB2                 ||
-				context == ProviderName.InformixDB2         ||
-				context == ProviderName.SapHanaOdbc         ||
-				context == ProviderName.SqlCe               ||
-				context == ProviderName.Sybase              ||
+				context == ProviderName.DB2                                 ||
+				context == ProviderName.InformixDB2                         ||
+				context == ProviderName.SapHanaOdbc                         ||
+				context == ProviderName.SqlCe                               ||
+				context == ProviderName.Sybase                              ||
 #if !NET472
-				(context.Contains("Oracle") && context.Contains("Managed")) ||
-				context == ProviderName.SapHanaNative       ||
+				context.IsAnyOf(TestProvName.AllOracleManaged)              ||
+				context.IsAnyOf(ProviderName.SapHanaNative)                 ||
 #endif
-				TestProvName.AllMySqlData.Contains(context) ||
-				context.StartsWith("Access")                ||
-				context.Contains("SqlServer")               ||
-				context.Contains("SqlAzure")                ||
-				context.Contains("PostgreSQL")              ||
-				context.Contains(ProviderName.SQLiteClassic)
+				context.IsAnyOf(TestProvName.AllMySqlData)                  ||
+				context.IsAnyOf(TestProvName.AllAccess)                     ||
+				context.IsAnyOf(TestProvName.AllSqlServer)                  ||
+				context.IsAnyOf(TestProvName.AllPostgreSQL)                 ||
+				context.IsAnyOf(TestProvName.AllSQLiteClassic)
 				))
 			{
 				// Access: The ITransactionLocal interface is not supported by the 'Microsoft.Jet.OLEDB.4.0' provider.  Local transactions are unavailable with the current provider.
@@ -1332,7 +1325,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void Issue2676TransactionScopeTest1([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void Issue2676TransactionScopeTest1([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -1371,7 +1364,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void Issue2676TransactionScopeTest2([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void Issue2676TransactionScopeTest2([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -1408,7 +1401,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void Issue2676TransactionScopeTest3([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void Issue2676TransactionScopeTest3([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -1460,9 +1453,6 @@ namespace Tests.Data
 			[IncludeDataSources(false,
 				TestProvName.AllOracle,
 				ProviderName.SqlCe,
-#if NET472
-				ProviderName.SQLiteMS,
-#endif
 				ProviderName.SybaseManaged)] string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -1712,9 +1702,6 @@ namespace Tests.Data
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				TestProvName.AllSQLiteClassic,
-#if NET472
-				ProviderName.SQLiteMS,
-#endif
 				TestProvName.AllSqlServer,
 				TestProvName.AllSybase)] string context)
 		{

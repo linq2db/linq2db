@@ -9,7 +9,7 @@ namespace Tests.UserTests
 	public class Issue2478Tests : TestBase
 	{
 		[Test]
-		public void CrossApplyTest([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void CrossApplyTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -31,7 +31,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void CrossApplyParameter([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context, [Values] bool shouldFilter, [Values] bool isPositive)
+		public void CrossApplyParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] bool shouldFilter, [Values] bool isPositive)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -54,7 +54,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void CrossApplyTestExt([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void CrossApplyTestExt([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -73,7 +73,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void CrossApplyTest2([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void CrossApplyTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -96,7 +96,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void OuterApplyTest([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void OuterApplyTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -118,7 +118,7 @@ namespace Tests.UserTests
 
 		[ActiveIssue(Details = "Converted FuncLikePredicate expression is not a Predicate expression.")]
 		[Test]
-		public void ExistsRemoval([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context, [Values] bool shouldFilter, [Values] bool isPositive)
+		public void ExistsRemoval([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] bool shouldFilter, [Values] bool isPositive)
 		{
 			using (var db = GetDataContext(context))
 			{

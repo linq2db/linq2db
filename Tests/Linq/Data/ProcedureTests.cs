@@ -153,7 +153,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestQueryProcRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestQueryProcRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -172,7 +172,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task TestQueryProcAsyncRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public async Task TestQueryProcAsyncRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -191,7 +191,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestQueryProcTemplateRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestQueryProcTemplateRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -208,7 +208,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task TestQueryProcAsyncTemplateRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public async Task TestQueryProcAsyncTemplateRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -227,7 +227,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestQueryProcReaderRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestQueryProcReaderRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -246,7 +246,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task TestQueryProcAsyncReaderRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public async Task TestQueryProcAsyncReaderRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -271,7 +271,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestQueryProcMultipleRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestQueryProcMultipleRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -287,7 +287,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task TestQueryProcMultipleAsyncRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public async Task TestQueryProcMultipleAsyncRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -303,7 +303,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestExecuteProcIntRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestExecuteProcIntRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -316,7 +316,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task TestExecuteProcAsyncIntRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public async Task TestExecuteProcAsyncIntRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -329,7 +329,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestExecuteProcTRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestExecuteProcTRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -342,7 +342,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task TestExecuteProcAsyncRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public async Task TestExecuteProcAsyncRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -355,7 +355,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestExecuteReaderProcRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestExecuteReaderProcRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -376,7 +376,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task TestExecuteReaderProcAsyncRebind([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public async Task TestExecuteReaderProcAsyncRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{

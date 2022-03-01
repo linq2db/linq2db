@@ -263,24 +263,6 @@ namespace LinqToDB.Linq
 				_checkUserNamespace = false;
 			}
 
-#if DEBUG1
-#if NET45
-			var targetFramework = "net45";
-#elif NET46
-			var targetFramework = "net46";
-#elif NET472
-			var targetFramework = "net472";
-#elif NETCOREAPP2_1
-			var targetFramework = "netcoreapp2.1";
-#elif NETSTANDARD2_0
-			var targetFramework = "netstandard2.0";
-#elif NETCOREAPP3_1
-			var targetFramework = "netcoreapp3.1";
-#elif NETSTANDARD2_1
-			var targetFramework = "netstandard2.1";
-#endif
-#endif
-
 			IExpressionInfo? expr;
 
 			foreach (var configuration in mappingSchema.ConfigurationList)
@@ -536,17 +518,16 @@ namespace LinqToDB.Linq
 			{ M(() => "".Replace    (' ',' ') ), N(() => L<string?,char,char,string?>      ((string? obj,char   p0,char   p1)         => Sql.Replace  (obj, p0, p1))) },
 			{ M(() => "".Trim       ()        ), N(() => L<string?,string?>                ((string? obj)                             => Sql.Trim     (obj))) },
 
-#if NETCOREAPP
-			{ M(() => "".TrimEnd    ()        ), N(() => L<string,string?>                 ((string obj)                              =>     TrimRight(obj))) },
-			{ M(() => "".TrimStart  ()        ), N(() => L<string,string?>                 ((string obj)                              =>     TrimLeft (obj))) },
-#else
-			{ M(() => "".TrimEnd    ()        ), N(() => L<string,char[],string?>          ((string obj,char[] ch)                    =>     TrimRight(obj, ch))) },
-			{ M(() => "".TrimStart  ()        ), N(() => L<string,char[],string?>          ((string obj,char[] ch)                    =>     TrimLeft (obj, ch))) },
+#if NETSTANDARD2_1PLUS
+			{ M(() => "".TrimEnd    ()             ), N(() => L<string,string?>            ((string obj)                              => TrimRight(obj))) },
+			{ M(() => "".TrimStart  ()             ), N(() => L<string,string?>            ((string obj)                              => TrimLeft (obj))) },
 #endif
-			{ M(() => "".ToLower    ()        ), N(() => L<string?,string?>                ((string? obj)                             => Sql.Lower(obj))) },
-			{ M(() => "".ToUpper    ()        ), N(() => L<string?,string?>                ((string? obj)                             => Sql.Upper(obj))) },
-			{ M(() => "".CompareTo  ("")      ), N(() => L<string,string,int>              ((string obj,string p0)                    => ConvertToCaseCompareTo(obj, p0)!.Value)) },
-			{ M(() => "".CompareTo  (1)       ), N(() => L<string,object,int>              ((string obj,object p0)                    => ConvertToCaseCompareTo(obj, p0.ToString())!.Value)) },
+			{ M(() => "".TrimEnd    ((char[])null!)), N(() => L<string,char[],string?>     ((string obj,char[] ch)                    => TrimRight(obj, ch))) },
+			{ M(() => "".TrimStart  ((char[])null!)), N(() => L<string,char[],string?>     ((string obj,char[] ch)                    => TrimLeft (obj, ch))) },
+			{ M(() => "".ToLower    ()             ), N(() => L<string?,string?>           ((string? obj)                             => Sql.Lower(obj))) },
+			{ M(() => "".ToUpper    ()             ), N(() => L<string?,string?>           ((string? obj)                             => Sql.Upper(obj))) },
+			{ M(() => "".CompareTo  ("")           ), N(() => L<string,string,int>         ((string obj,string p0)                    => ConvertToCaseCompareTo(obj, p0)!.Value)) },
+			{ M(() => "".CompareTo  (1)            ), N(() => L<string,object,int>         ((string obj,object p0)                    => ConvertToCaseCompareTo(obj, p0.ToString())!.Value)) },
 
 			{ M(() => string.Concat((object)null!)                             ), N(() => L<object,string?>                    ((object p0)                               => p0.ToString()))           },
 			{ M(() => string.Concat((object)null!,(object)null!)               ), N(() => L<object,object,string>              ((object p0,object p1)                     => p0.ToString() + p1))      },
@@ -570,21 +551,21 @@ namespace LinqToDB.Linq
 
 			{ M(() => AltStuff("",0,0,"")), N(() => L<string,int?,int?,string,string>((string p0,int? p1,int ?p2,string p3) => Sql.Left(p0, p1 - 1) + p3 + Sql.Right(p0, p0.Length - (p1 + p2 - 1)))) },
 
-			#endregion
+#endregion
 
-			#region Binary
+#region Binary
 
 			{ M(() => ((Binary)null!).Length ), N(() => L<Binary,int>((Binary obj) => Sql.Length(obj)!.Value)) },
 
-			#endregion
+#endregion
 
-			#region Byte[]
+#region Byte[]
 
 			{ M(() => ((byte[])null!).Length ), N(() => L<byte[],int>((byte[] obj) => Sql.Length(obj)!.Value)) },
 
-			#endregion
+#endregion
 
-			#region DateTime
+#region DateTime
 
 			{ M(() => Sql.GetDate()                  ), N(() => L<DateTime>                (()                        => Sql.CurrentTimestamp2)) },
 			{ M(() => DateTime.Now                   ), N(() => L<DateTime>                (()                        => Sql.CurrentTimestamp2)) },
@@ -615,9 +596,9 @@ namespace LinqToDB.Linq
 				y.ToString() + "-" + m.ToString() + "-" + d.ToString() + " " +
 				h.ToString() + ":" + mm.ToString() + ":" + s.ToString()))) },
 
-			#endregion
+#endregion
 
-			#region DateTimeOffset
+#region DateTimeOffset
 
 			// Disabled for now. See #2512 (https://github.com/linq2db/linq2db/issues/2512)
 			// { M(() => DateTimeOffset.Now                   ), N(() => L<DateTimeOffset>                      (()                              => Sql.CurrentTzTimestamp                                 )) },
@@ -641,9 +622,9 @@ namespace LinqToDB.Linq
 			{ M(() => DateTimeOffset.Now.AddSeconds     (0)), N(() => L<DateTimeOffset,double,DateTimeOffset>((DateTimeOffset obj,double p0)  => Sql.DateAdd(Sql.DateParts.Second,      p0, obj)!.Value )) },
 			{ M(() => DateTimeOffset.Now.AddMilliseconds(0)), N(() => L<DateTimeOffset,double,DateTimeOffset>((DateTimeOffset obj,double p0)  => Sql.DateAdd(Sql.DateParts.Millisecond, p0, obj)!.Value )) },
 
-			#endregion
+#endregion
 
-			#region Parse
+#region Parse
 
 			{ M(() => bool.    Parse("")), N(() => L<string,bool>    ((string p0) => Sql.ConvertTo<bool>.    From(p0))) },
 			{ M(() => byte.    Parse("")), N(() => L<string,byte>    ((string p0) => Sql.ConvertTo<byte>.    From(p0))) },
@@ -660,9 +641,9 @@ namespace LinqToDB.Linq
 			{ M(() => uint.    Parse("")), N(() => L<string,uint>    ((string p0) => Sql.ConvertTo<uint>.    From(p0))) },
 			{ M(() => ulong.   Parse("")), N(() => L<string,ulong>   ((string p0) => Sql.ConvertTo<ulong>.   From(p0))) },
 
-			#endregion
+#endregion
 
-			#region ToString
+#region ToString
 
 //			{ M(() => ((bool)   true).ToString()), N(() => L<bool,    string>((bool    p0) => Sql.ConvertTo<string>.From(p0))) },
 //			{ M(() => ((byte)    0)  .ToString()), N(() => L<byte,    string>((byte    p0) => Sql.ConvertTo<string>.From(p0))) },
@@ -679,11 +660,11 @@ namespace LinqToDB.Linq
 //			{ M(() => ((uint)  0)    .ToString()), N(() => L<uint,    string>((uint    p0) => Sql.ConvertTo<string>.From(p0))) },
 //			{ M(() => ((ulong)  0)  .ToString()), N(() => L<ulong,    string>((ulong   p0) => Sql.ConvertTo<string>.From(p0))) },
 
-			#endregion
+#endregion
 
-			#region Convert
+#region Convert
 
-			#region ToBoolean
+#region ToBoolean
 
 			{ M(() => Convert.ToBoolean((bool)true  )), N(() => L<bool,    bool>((bool     p0) => Sql.ConvertTo<bool>.From(p0))) },
 			{ M(() => Convert.ToBoolean((byte)0     )), N(() => L<byte,    bool>((byte     p0) => Sql.ConvertTo<bool>.From(p0))) },
@@ -702,9 +683,9 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToBoolean((uint)    0 )), N(() => L<uint,    bool>((uint     p0) => Sql.ConvertTo<bool>.From(p0))) },
 			{ M(() => Convert.ToBoolean((ulong)   0 )), N(() => L<ulong,   bool>((ulong    p0) => Sql.ConvertTo<bool>.From(p0))) },
 
-			#endregion
+#endregion
 
-			#region ToByte
+#region ToByte
 
 			{ M(() => Convert.ToByte((bool)   true)), N(() => L<bool,    byte>((bool     p0) => Sql.ConvertTo<byte>.From(p0))) },
 			{ M(() => Convert.ToByte((byte)    0)  ), N(() => L<byte,    byte>((byte     p0) => Sql.ConvertTo<byte>.From(p0))) },
@@ -725,7 +706,7 @@ namespace LinqToDB.Linq
 
 #endregion
 
-			#region ToChar
+#region ToChar
 
 			{ M(() => Convert.ToChar((bool)   true)), N(() => L<bool,    char>((bool     p0) => Sql.ConvertTo<char>.From(p0))) },
 			{ M(() => Convert.ToChar((byte)    0)  ), N(() => L<byte,    char>((byte     p0) => Sql.ConvertTo<char>.From(p0))) },
@@ -744,9 +725,9 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToChar((uint)    0)  ), N(() => L<uint,    char>((uint     p0) => Sql.ConvertTo<char>.From(p0))) },
 			{ M(() => Convert.ToChar((ulong)   0)  ), N(() => L<ulong,   char>((ulong    p0) => Sql.ConvertTo<char>.From(p0))) },
 
-			#endregion
+#endregion
 
-			#region ToDateTime
+#region ToDateTime
 
 			{ M(() => Convert.ToDateTime((object)  0)  ), N(() => L<object,  DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
 			{ M(() => Convert.ToDateTime((string) "0") ), N(() => L<string,  DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
@@ -765,9 +746,9 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToDateTime((uint)    0)  ), N(() => L<uint,  DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
 			{ M(() => Convert.ToDateTime((ulong)   0)  ), N(() => L<ulong,  DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
 
-			#endregion
+#endregion
 
-			#region ToDecimal
+#region ToDecimal
 
 			{ M(() => Convert.ToDecimal((bool)   true)), N(() => L<bool,    decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
 			{ M(() => Convert.ToDecimal((byte)    0)  ), N(() => L<byte,    decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
@@ -788,7 +769,7 @@ namespace LinqToDB.Linq
 
 #endregion
 
-			#region ToDouble
+#region ToDouble
 
 			{ M(() => Convert.ToDouble((bool)   true)), N(() => L<bool,    double>(p0 => Sql.ConvertTo<double>.From(p0))) },
 			{ M(() => Convert.ToDouble((byte)    0)  ), N(() => L<byte,    double>(p0 => Sql.ConvertTo<double>.From(p0))) },
@@ -807,9 +788,9 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToDouble((uint)    0)  ), N(() => L<uint,    double>(p0 => Sql.ConvertTo<double>.From(p0))) },
 			{ M(() => Convert.ToDouble((ulong)   0)  ), N(() => L<ulong,   double>(p0 => Sql.ConvertTo<double>.From(p0))) },
 
-			#endregion
+#endregion
 
-			#region ToInt64
+#region ToInt64
 
 			{ M(() => Convert.ToInt64((bool)   true)), N(() => L<bool,    long>(p0 => Sql.ConvertTo<long>.From(p0))) },
 			{ M(() => Convert.ToInt64((byte)    0)  ), N(() => L<byte,    long>(p0 => Sql.ConvertTo<long>.From(p0))) },
@@ -828,9 +809,9 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToInt64((uint)    0)  ), N(() => L<uint,    long>(p0 => Sql.ConvertTo<long>.From(p0))) },
 			{ M(() => Convert.ToInt64((ulong)   0)  ), N(() => L<ulong,   long>(p0 => Sql.ConvertTo<long>.From(p0))) },
 
-			#endregion
+#endregion
 
-			#region ToInt32
+#region ToInt32
 
 			{ M(() => Convert.ToInt32((bool)   true)), N(() => L<bool,    int>(p0 => Sql.ConvertTo<int>.From(p0))) },
 			{ M(() => Convert.ToInt32((byte)    0)  ), N(() => L<byte,    int>(p0 => Sql.ConvertTo<int>.From(p0))) },
@@ -849,9 +830,9 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToInt32((uint)    0)  ), N(() => L<uint,    int>(p0 => Sql.ConvertTo<int>.From(p0))) },
 			{ M(() => Convert.ToInt32((ulong)   0)  ), N(() => L<ulong,   int>(p0 => Sql.ConvertTo<int>.From(p0))) },
 
-			#endregion
+#endregion
 
-			#region ToInt16
+#region ToInt16
 
 			{ M(() => Convert.ToInt16((bool)   true)), N(() => L<bool,    short>(p0 => Sql.ConvertTo<short>.From(p0))) },
 			{ M(() => Convert.ToInt16((byte)    0)  ), N(() => L<byte,    short>(p0 => Sql.ConvertTo<short>.From(p0))) },
@@ -870,9 +851,9 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToInt16((uint)    0)  ), N(() => L<uint,    short>(p0 => Sql.ConvertTo<short>.From(p0))) },
 			{ M(() => Convert.ToInt16((ulong)   0)  ), N(() => L<ulong,   short>(p0 => Sql.ConvertTo<short>.From(p0))) },
 
-			#endregion
+#endregion
 
-			#region ToSByte
+#region ToSByte
 
 			{ M(() => Convert.ToSByte((bool)   true)), N(() => L<bool,    sbyte>(p0 => Sql.ConvertTo<sbyte>.From(p0))) },
 			{ M(() => Convert.ToSByte((byte)    0)  ), N(() => L<byte,    sbyte>(p0 => Sql.ConvertTo<sbyte>.From(p0))) },
@@ -891,9 +872,9 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToSByte((uint)    0)  ), N(() => L<uint,    sbyte>(p0 => Sql.ConvertTo<sbyte>.From(p0))) },
 			{ M(() => Convert.ToSByte((ulong)   0)  ), N(() => L<ulong,   sbyte>(p0 => Sql.ConvertTo<sbyte>.From(p0))) },
 
-			#endregion
+#endregion
 
-			#region ToSingle
+#region ToSingle
 
 			{ M(() => Convert.ToSingle((bool)   true)), N(() => L<bool,    float>(p0 => Sql.ConvertTo<float>.From(p0))) },
 			{ M(() => Convert.ToSingle((byte)    0)  ), N(() => L<byte,    float>(p0 => Sql.ConvertTo<float>.From(p0))) },
@@ -912,9 +893,9 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToSingle((uint)    0)  ), N(() => L<uint,    float>(p0 => Sql.ConvertTo<float>.From(p0))) },
 			{ M(() => Convert.ToSingle((ulong)   0)  ), N(() => L<ulong,   float>(p0 => Sql.ConvertTo<float>.From(p0))) },
 
-			#endregion
+#endregion
 
-			#region ToString
+#region ToString
 
 			{ M(() => Convert.ToString((bool)   true)), N(() => L<bool,    string>(p0 => Sql.ConvertTo<string>.From(p0))) },
 			{ M(() => Convert.ToString((byte)    0)  ), N(() => L<byte,    string>(p0 => Sql.ConvertTo<string>.From(p0))) },
@@ -933,9 +914,9 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToString((uint)    0)  ), N(() => L<uint,    string>(p0 => Sql.ConvertTo<string>.From(p0))) },
 			{ M(() => Convert.ToString((ulong)   0)  ), N(() => L<ulong,   string>(p0 => Sql.ConvertTo<string>.From(p0))) },
 
-			#endregion
+#endregion
 
-			#region ToUInt16
+#region ToUInt16
 
 			{ M(() => Convert.ToUInt16((bool)   true)), N(() => L<bool,    ushort>(p0 => Sql.ConvertTo<ushort>.From(p0))) },
 			{ M(() => Convert.ToUInt16((byte)    0)  ), N(() => L<byte,    ushort>(p0 => Sql.ConvertTo<ushort>.From(p0))) },
@@ -954,9 +935,9 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToUInt16((uint)    0)  ), N(() => L<uint,    ushort>(p0 => Sql.ConvertTo<ushort>.From(p0)) ) },
 			{ M(() => Convert.ToUInt16((ulong)   0)  ), N(() => L<ulong,   ushort>(p0 => Sql.ConvertTo<ushort>.From(p0)) ) },
 
-			#endregion
+#endregion
 
-			#region ToUInt32
+#region ToUInt32
 
 			{ M(() => Convert.ToUInt32((bool)   true)), N(() => L<bool,    uint>(p0 => Sql.ConvertTo<uint>.From(p0))) },
 			{ M(() => Convert.ToUInt32((byte)    0)  ), N(() => L<byte,    uint>(p0 => Sql.ConvertTo<uint>.From(p0))) },
@@ -975,9 +956,9 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToUInt32((uint)    0)  ), N(() => L<uint,    uint>(p0 => Sql.ConvertTo<uint>.From(p0))) },
 			{ M(() => Convert.ToUInt32((ulong)   0)  ), N(() => L<ulong,   uint>(p0 => Sql.ConvertTo<uint>.From(p0))) },
 
-			#endregion
+#endregion
 
-			#region ToUInt64
+#region ToUInt64
 
 			{ M(() => Convert.ToUInt64((bool)   true)), N(() => L<bool,    ulong>(p0 => Sql.ConvertTo<ulong>.From(p0))) },
 			{ M(() => Convert.ToUInt64((byte)    0)  ), N(() => L<byte,    ulong>(p0 => Sql.ConvertTo<ulong>.From(p0))) },
@@ -996,11 +977,11 @@ namespace LinqToDB.Linq
 			{ M(() => Convert.ToUInt64((uint)    0)  ), N(() => L<uint,    ulong>(p0 => Sql.ConvertTo<ulong>.From(p0))) },
 			{ M(() => Convert.ToUInt64((ulong)   0)  ), N(() => L<ulong,   ulong>(p0 => Sql.ConvertTo<ulong>.From(p0))) },
 
-			#endregion
+#endregion
 
-			#endregion
+#endregion
 
-			#region Math
+#region Math
 
 			{ M(() => Math.Abs    ((decimal)0)), N(() => L<decimal,decimal>((decimal p) => Sql.Abs(p)!.Value )) },
 			{ M(() => Math.Abs    ((double) 0)), N(() => L<double, double> ((double  p) => Sql.Abs(p)!.Value )) },
@@ -1089,15 +1070,15 @@ namespace LinqToDB.Linq
 			{ M(() => Math.Truncate(0m)),  N(() => L<decimal,decimal>((decimal p) => Sql.Truncate(p)!.Value )) },
 			{ M(() => Math.Truncate(0.0)), N(() => L<double,double>  ((double  p) => Sql.Truncate(p)!.Value )) },
 
-			#endregion
+#endregion
 
-			#region Visual Basic Compiler Services
+#region Visual Basic Compiler Services
 
 //			{ M(() => Operators.CompareString("","",false)), L<S,S,B,I>((s1,s2,b) => b ? string.CompareOrdinal(s1.ToUpper(), s2.ToUpper()) : string.CompareOrdinal(s1, s2)) },
 
-			#endregion
+#endregion
 
-			#region SqlTypes
+#region SqlTypes
 
 			{ M(() => new SqlBoolean().Value),   N(() => L<SqlBoolean,bool>((SqlBoolean obj) => (bool)obj))          },
 			{ M(() => new SqlBoolean().IsFalse), N(() => L<SqlBoolean,bool>((SqlBoolean obj) => (bool)obj == false)) },
@@ -1105,10 +1086,10 @@ namespace LinqToDB.Linq
 			{ M(() => SqlBoolean.True),          N(() => L<bool>           (()               => true))  },
 			{ M(() => SqlBoolean.False),         N(() => L<bool>           (()               => false)) },
 
-			#endregion
+#endregion
 		};
 
-		#endregion
+#endregion
 
 		static Dictionary<string,Dictionary<MemberInfo,IExpressionInfo>> LoadMembers()
 		{
@@ -1118,7 +1099,7 @@ namespace LinqToDB.Linq
 			{
 				{ "", _commonMembers },
 
-				#region SqlServer
+#region SqlServer
 
 				{ ProviderName.SqlServer, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M(() => Sql.PadRight("",0,' ') ), N(() => L<string,int?,char,string>       ((string p0,int? p1,char p2) => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length))) },
@@ -1132,9 +1113,9 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Tanh(0)            ), N(() => L<double?,double?>               ( v    => (Sql.Exp(v) - Sql.Exp(-v)) / (Sql.Exp(v) + Sql.Exp(-v)))) },
 				}},
 
-				#endregion
+#endregion
 
-				#region SqlServer2005
+#region SqlServer2005
 
 				{ ProviderName.SqlServer2005, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M(() => Sql.MakeDateTime(0, 0, 0, 0, 0, 0) ), N(() => L<int?,int?,int?,int?,int?,int?,DateTime?>((y,m,d,h,mm,s) => Sql.Convert(Sql.DateTime2,
@@ -1143,9 +1124,9 @@ namespace LinqToDB.Linq
 					{ M(() => DateTime.Parse("")), N(() => L<string,DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0) )) },
 				}},
 
-				#endregion
+#endregion
 
-				#region SqlCe
+#region SqlCe
 
 				{ ProviderName.SqlCe, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M(() => Sql.Left    ("",0)    ), N(() => L<string?,int?,string?>    ((string? p0,int? p1)       => Sql.Substring(p0, 1, p1))) },
@@ -1161,9 +1142,9 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Tanh(0)    ), N(() => L<double?,double?>   ( v    => (Sql.Exp(v) - Sql.Exp(-v)) / (Sql.Exp(v) + Sql.Exp(-v)))) },
 				}},
 
-				#endregion
+#endregion
 
-				#region DB2
+#region DB2
 
 				{ ProviderName.DB2, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M(() => Sql.Space   (0)        ), N(() => L<int?,string>       ( p0           => Sql.Convert(Sql.VarChar(1000), Replicate(" ", p0)))) },
@@ -1183,9 +1164,9 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Log(0.0,0)), N(() => L<double?,double?,double?>   ((m,n) => Sql.Log(n) / Sql.Log(m))) },
 				}},
 
-				#endregion
+#endregion
 
-				#region Informix
+#region Informix
 
 				{ ProviderName.Informix, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M(() => Sql.Left ("",0)     ), N(() => L<string?,int?,string?>     ((string? p0,int? p1)            => Sql.Substring(p0,  1, p1)))                  },
@@ -1221,9 +1202,9 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Tanh(0)), N(() => L<double?,double?>( v => (Sql.Exp(v) - Sql.Exp(-v)) / (Sql.Exp(v) +Sql.Exp(-v)))) },
 				}},
 
-				#endregion
+#endregion
 
-				#region Oracle
+#region Oracle
 
 				{ ProviderName.Oracle, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M(() => Sql.Left ("",0)     ), N(() => L<string?,int?,string?>             ((string? p0,int? p1)            => Sql.Substring(p0, 1, p1))) },
@@ -1250,9 +1231,9 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Degrees((float?)  0)), N(() => L<float?,  float?>  ( v => (float?)  (v!.Value * (180 / Math.PI)))) },
 				}},
 
-				#endregion
+#endregion
 
-				#region Firebird
+#region Firebird
 
 				{ ProviderName.Firebird, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M<string?>(_  => Sql.Space(0         )), N(() => L<int?,string?>       ( p0           => Sql.PadRight(" ", p0, ' '))) },
@@ -1270,9 +1251,9 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.RoundToEven(0.0,0)), N(() => L<double?,int?,double?>((double? v,int? p) => (double?)Sql.RoundToEven((decimal)v!, p))) },
 				}},
 
-				#endregion
+#endregion
 
-				#region MySql
+#region MySql
 
 				{ ProviderName.MySql, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M<string>(s => Sql.Stuff(s, 0, 0, s)), N(() => L<string?,int?,int?,string?,string?>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3))) },
@@ -1282,9 +1263,9 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Tanh(0)), N(() => L<double?,double?>(v => (Sql.Exp(v) - Sql.Exp(-v)) / (Sql.Exp(v) + Sql.Exp(-v)))) },
 				}},
 
-				#endregion
+#endregion
 
-				#region PostgreSQL
+#region PostgreSQL
 
 				{ ProviderName.PostgreSQL, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M(() => Sql.Left ("",0)     ), N(() => L<string?,int?,string?>             ((p0,p1)                                 => Sql.Substring(p0, 1, p1))) },
@@ -1304,9 +1285,9 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Truncate(0.0)     ), N(() => L<double?,double?>    ((double? v)                  => (double?)Sql.Truncate((decimal)v!))) },
 				}},
 
-				#endregion
+#endregion
 
-				#region SQLite
+#region SQLite
 
 				{ ProviderName.SQLite, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M(() => Sql.Stuff   ("",0,0,"")), N(() => L<string?,int?,int?,string?,string?>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3))) },
@@ -1345,9 +1326,9 @@ namespace LinqToDB.Linq
 					{ M(() => Math.Floor ((double)0)), N(() => L<double,double>  ((double  x) => x > 0 ? (int)x : (int)(x-0.9999999999999999) )) },
 				}},
 
-				#endregion
+#endregion
 
-				#region Sybase
+#region Sybase
 
 				{ ProviderName.Sybase, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M(() => Sql.PadRight("",0,' ')), N(() => L<string,int?,char?,string>((p0,p1,p2) => p0.Length > p1 ? p0 : p0 + Replicate(p2, p1 - p0.Length))) },
@@ -1373,9 +1354,9 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Truncate(0.0)), N(() => L<double?,double?>  ((double?  v) => v >= 0 ? Sql.Floor(v) : Sql.Ceiling(v))) },
 				}},
 
-				#endregion
+#endregion
 
-				#region Access
+#region Access
 
 				{ ProviderName.Access, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M(() => Sql.Stuff   ("",0,0,"")), N(() => L<string?,int?,int?,string?,string?>((p0,p1,p2,p3) => AltStuff(p0, p1, p2, p3))) },
@@ -1430,9 +1411,9 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Truncate(0.0)), N(() => L<double?,double?>  ((double?  v) => v >= 0 ? Sql.Floor(v) : Sql.Ceiling(v))) },
 				}},
 
-				#endregion
+#endregion
 
-				#region SapHana
+#region SapHana
 
 				{ ProviderName.SapHana, new Dictionary<MemberInfo,IExpressionInfo> {
 					{ M(() => Sql.Degrees((decimal?)0)), N(() => L<decimal?,decimal?>((decimal? v) => (decimal?) (v!.Value * (180 / (decimal)Math.PI)))) },
@@ -1447,7 +1428,7 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Stuff("",0,0,"")), N(() => L<string?,int?,int?,string?,string?>((string? p0,int? p1,int? p2,string? p3) => AltStuff (p0,  p1, p2, p3)))             },
 				}},
 
-				#endregion
+#endregion
 			};
 
 #if DEBUG
@@ -1493,7 +1474,7 @@ namespace LinqToDB.Linq
 			return members;
 		}
 
-		#endregion
+#endregion
 
 		class TypeMember
 		{
@@ -1568,7 +1549,7 @@ namespace LinqToDB.Linq
 		{
 			{ "", new Dictionary<TypeMember,IExpressionInfo> {
 
-				#region ToString
+#region ToString
 
 				{ MT<bool   >(() => ((bool)   true).ToString()), N(() => L<bool,    string>((bool    p0) => Sql.ConvertTo<string>.From(p0) )) },
 				{ MT<byte   >(() => ((byte)    0)  .ToString()), N(() => L<byte,    string>((byte    p0) => Sql.ConvertTo<string>.From(p0) )) },
@@ -1585,12 +1566,12 @@ namespace LinqToDB.Linq
 				{ MT<uint   >(() => ((uint)    0)  .ToString()), N(() => L<uint,    string>((uint    p0) => Sql.ConvertTo<string>.From(p0) )) },
 				{ MT<ulong  >(() => ((ulong)   0)  .ToString()), N(() => L<ulong,   string>((ulong   p0) => Sql.ConvertTo<string>.From(p0) )) },
 
-				#endregion
+#endregion
 
 			}},
 		};
 
-		#region Sql specific
+#region Sql specific
 
 		// TODO: why chars ignored for SQL?
 		[CLSCompliant(false)]
@@ -1610,9 +1591,9 @@ namespace LinqToDB.Linq
 			return str?.TrimStart(trimChars);
 		}
 
-		#endregion
+#endregion
 
-		#region Provider specific functions
+#region Provider specific functions
 
 		[Sql.Function]
 		public static int? ConvertToCaseCompareTo(string? str, string? value)
@@ -1754,8 +1735,8 @@ namespace LinqToDB.Linq
 				new DateTime(year.Value, month.Value, day.Value);
 		}
 
-		#endregion
+#endregion
 
-		#endregion
+#endregion
 	}
 }

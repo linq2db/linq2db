@@ -1314,9 +1314,6 @@ namespace Tests.Linq
 			};
 		}
 
-#if NETFRAMEWORK
-		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
-#endif
 		[Test]
 		public void Issue1732Lag([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1324,7 +1321,7 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
 			ProviderName.Firebird,
-			TestProvName.MySql55,
+			TestProvName.AllMySql55,
 			// doesn't support LAG with 3 parameters
 			TestProvName.MariaDB)] string context)
 		{
@@ -1360,9 +1357,6 @@ namespace Tests.Linq
 			}
 		}
 
-#if NETFRAMEWORK
-		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
-#endif
 		[Test]
 		public void Issue1732Lead([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1370,7 +1364,7 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
 			ProviderName.Firebird,
-			TestProvName.MySql55,
+			TestProvName.AllMySql55,
 			// doesn't support 3-rd parameter for LEAD
 			TestProvName.MariaDB)] string context)
 		{
@@ -1404,9 +1398,6 @@ namespace Tests.Linq
 			}
 		}
 
-#if NETFRAMEWORK
-		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
-#endif
 		[Test]
 		public void Issue1732FirstValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1414,7 +1405,7 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
 			ProviderName.Firebird,
-			TestProvName.MySql55)] string context)
+			TestProvName.AllMySql55)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1446,9 +1437,6 @@ namespace Tests.Linq
 			}
 		}
 
-#if NETFRAMEWORK
-		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
-#endif
 		[Test]
 		public void Issue1732LastValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1456,7 +1444,7 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
 			ProviderName.Firebird,
-			TestProvName.MySql55)] string context)
+			TestProvName.AllMySql55)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
@@ -1499,7 +1487,7 @@ namespace Tests.Linq
 			ProviderName.Firebird,
 			TestProvName.AllSQLite,
 			TestProvName.AllSapHana,
-			TestProvName.MySql55,
+			TestProvName.AllMySql55,
 			TestProvName.MariaDB)] string context)
 		{
 			using (var db    = GetDataContext(context))
@@ -1554,9 +1542,6 @@ namespace Tests.Linq
 			[Column] public string? ProcessName { get; set; }
 		}
 
-#if NETFRAMEWORK
-		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
-#endif
 		[Test]
 		public void Issue1799Test1([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1566,7 +1551,7 @@ namespace Tests.Linq
 			ProviderName.Firebird,
 			TestProvName.AllInformix,
 			TestProvName.AllOracle,
-			TestProvName.MySql55)] string context)
+			TestProvName.AllMySql55)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Issue1799Table1>())
@@ -1611,9 +1596,6 @@ namespace Tests.Linq
 			}
 		}
 
-#if NETFRAMEWORK
-		[ActiveIssue("Old SQLite version", Configuration = ProviderName.SQLiteMS)]
-#endif
 		[Test]
 		public void Issue1799Test2([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1623,7 +1605,7 @@ namespace Tests.Linq
 			ProviderName.Firebird,
 			TestProvName.AllInformix,
 			TestProvName.AllOracle,
-			TestProvName.MySql55)] string context)
+			TestProvName.AllMySql55)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Issue1799Table1>())
@@ -1676,10 +1658,7 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
 			ProviderName.Firebird,
-			TestProvName.MySql55,
-#if NETFRAMEWORK
-			ProviderName.SQLiteMS, // TODO: time to switch to modern sqlite.ms version for netfx
-#endif
+			TestProvName.AllMySql55,
 			// doesn't support 3-rd parameter for LEAD
 			TestProvName.MariaDB)] string context)
 		{
@@ -1713,12 +1692,9 @@ namespace Tests.Linq
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
 			TestProvName.AllAccess,
-#if NETFRAMEWORK
-			ProviderName.SQLiteMS, // TODO: time to switch to modern sqlite.ms version for netfx
-#endif
 			// All Firebird excluded because of #2839, test data is inserted with padding and then expectations fail
 			TestProvName.AllFirebird,
-			TestProvName.MySql55)] string context)
+			TestProvName.AllMySql55)] string context)
 		{
 			var data = new Issue1799Table3[] 
 			{

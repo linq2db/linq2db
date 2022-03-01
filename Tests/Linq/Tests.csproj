@@ -1,14 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\Build\linq2db.Tests.Providers.props" />
+	<Import Project="..\..\Build\linq2db.TestProjects.props" />
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests</AssemblyName>
-		<!--suppress complains about IBM.Data.DB2.Core.dll-->
-		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
-
-		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 	</PropertyGroup>
-
+	
 	<ItemGroup>
 		<!-- T4 support -->
 		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
@@ -16,8 +12,6 @@
 		<ProjectReference Include="..\..\Source\LinqToDB.AspNet\LinqToDB.AspNet.csproj" />
 		<ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj" />
 		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
-
-		<PackageReference Include="NodaTime" />
 
 		<None Update="Extensions\MySqlTests.tt">
 			<LastGenOutput>MySqlTests.generated.cs</LastGenOutput>
@@ -68,6 +62,10 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>SqlCeTests.tt</DependentUpon>
 		</Compile>
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 	</ItemGroup>
 
 </Project>

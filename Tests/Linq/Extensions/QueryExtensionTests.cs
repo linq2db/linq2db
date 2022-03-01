@@ -104,13 +104,13 @@ namespace Tests.Extensions
 
 			string? current = null;
 
-			if      (context.StartsWith("Access"))     current = accessHints;
-			else if (context.StartsWith("Oracle"))     current = oracleHints;
-			else if (context.StartsWith("MySql"))      current = mySqlHints;
-			else if (context.StartsWith("SqlCe"))      current = sqlCeHints;
-			else if (context.StartsWith("SqlServer"))  current = sqlServerHints;
-			else if (context.StartsWith("PostgreSQL")) current = postgreSQLHints;
-			else if (context.StartsWith("SQLite"))     current = sqliteHints;
+			if (context.IsAnyOf(TestProvName.AllAccess         )) current = accessHints;
+			else if (context.IsAnyOf(TestProvName.AllOracle    )) current = oracleHints;
+			else if (context.IsAnyOf(TestProvName.AllMySql     )) current = mySqlHints;
+			else if (context.IsAnyOf(ProviderName.SqlCe        )) current = sqlCeHints;
+			else if (context.IsAnyOf(TestProvName.AllSqlServer )) current = sqlServerHints;
+			else if (context.IsAnyOf(TestProvName.AllPostgreSQL)) current = postgreSQLHints;
+			else if (context.IsAnyOf(TestProvName.AllSQLite    )) current = sqliteHints;
 
 			if (current != null)
 			{

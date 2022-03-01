@@ -59,7 +59,7 @@ namespace Tests.Linq
 				var expected = e1.Where(e => !e2.Contains(e, ComparerBuilder.GetEqualityComparer<SampleData>())).ToArray();
 				var actual = query.ToArray();
 
-				if (!context.Contains(ProviderName.PostgreSQL)) // postgres has a bug?
+				if (!context.IsAnyOf(TestProvName.AllPostgreSQL)) // postgres has a bug?
 					AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<SampleData>());
 			}
 		}
@@ -82,7 +82,7 @@ namespace Tests.Linq
 				var expected = e1.Where(e => e2.Contains(e, ComparerBuilder.GetEqualityComparer<SampleData>())).ToArray();
 				var actual = query.ToArray();
 
-				if (!context.Contains(ProviderName.PostgreSQL)) // postgres has a bug?
+				if (!context.IsAnyOf(TestProvName.AllPostgreSQL)) // postgres has a bug?
 					AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<SampleData>());
 			}
 		}

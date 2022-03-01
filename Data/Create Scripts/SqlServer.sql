@@ -459,6 +459,7 @@ CREATE TABLE AllTypes
 	xmlDataType              xml               NULL,
 
 -- SKIP SqlServer.2005 BEGIN
+-- SKIP SqlServer.2005.MS BEGIN
 	datetime2DataType        datetime2         NULL,
 	datetimeoffsetDataType   datetimeoffset    NULL,
 	datetimeoffset0DataType  datetimeoffset(0) NULL,
@@ -471,18 +472,27 @@ CREATE TABLE AllTypes
 	datetimeoffset7DataType  datetimeoffset(7) NULL,
 	dateDataType             date              NULL,
 	timeDataType             time              NULL
+-- SKIP SqlServer.2005.MS END
 -- SKIP SqlServer.2005 END
 
 -- SKIP SqlServer.2008 BEGIN
+-- SKIP SqlServer.2008.MS BEGIN
 -- SKIP SqlServer.2012 BEGIN
+-- SKIP SqlServer.2012.MS BEGIN
 -- SKIP SqlServer.2014 BEGIN
+-- SKIP SqlServer.2014.MS BEGIN
 -- SKIP SqlServer.2016 BEGIN
+-- SKIP SqlServer.2016.MS BEGIN
 -- SKIP SqlServer.2017 BEGIN
+-- SKIP SqlServer.2017.MS BEGIN
 -- SKIP SqlServer.2019 BEGIN
--- SKIP SqlServer.2019.SA BEGIN
--- SKIP SqlServer.2019.FEC BEGIN
+-- SKIP SqlServer.2019.MS BEGIN
+-- SKIP SqlServer.SA BEGIN
+-- SKIP SqlServer.SA.MS BEGIN
 -- SKIP SqlServer.Contained BEGIN
--- SKIP SqlAzure BEGIN
+-- SKIP SqlServer.Contained.MS BEGIN
+-- SKIP SqlServer.Azure BEGIN
+-- SKIP SqlServer.Azure.MS BEGIN
 	datetime2DataType        varchar(50)       NULL,
 	datetimeoffsetDataType   varchar(50)       NULL,
 	datetimeoffset0DataType  varchar(50)       NULL,
@@ -496,15 +506,23 @@ CREATE TABLE AllTypes
 	dateDataType             varchar(50)       NULL,
 	timeDataType             varchar(50)       NULL
 -- SKIP SqlServer.2008 END
+-- SKIP SqlServer.2008.MS END
 -- SKIP SqlServer.2012 END
+-- SKIP SqlServer.2012.MS END
 -- SKIP SqlServer.2014 END
+-- SKIP SqlServer.2014.MS END
 -- SKIP SqlServer.2016 END
+-- SKIP SqlServer.2016.MS END
 -- SKIP SqlServer.2017 END
+-- SKIP SqlServer.2017.MS END
 -- SKIP SqlServer.2019 END
--- SKIP SqlServer.2019.SA END
--- SKIP SqlServer.2019.FEC END
+-- SKIP SqlServer.2019.MS END
+-- SKIP SqlServer.SA END
+-- SKIP SqlServer.SA.MS END
 -- SKIP SqlServer.Contained END
--- SKIP SqlAzure END
+-- SKIP SqlServer.Contained.MS END
+-- SKIP SqlServer.Azure END
+-- SKIP SqlServer.Azure.MS END
 
 ) ON [PRIMARY]
 GO
@@ -549,6 +567,7 @@ SELECT
 GO
 
 -- SKIP SqlServer.2005 BEGIN
+-- SKIP SqlServer.2005.MS BEGIN
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('AllTypes2') AND type in (N'U'))
 BEGIN DROP TABLE AllTypes2 END
 GO
@@ -582,6 +601,7 @@ SELECT
 	Cast(geometry::STGeomFromText('LINESTRING (100 100, 20 180, 180 180)', 0) as geometry)
 
 GO
+-- SKIP SqlServer.2005.MS END
 -- SKIP SqlServer.2005 END
 
 
@@ -618,14 +638,16 @@ GO
 CREATE TABLE GrandChild (ParentID int, ChildID int, GrandChildID int, _ID INT IDENTITY PRIMARY KEY)
 GO
 
--- SKIP SqlAzure BEGIN
+-- SKIP SqlServer.Azure BEGIN
+-- SKIP SqlServer.Azure.MS BEGIN
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is Parent table' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Parent'
 GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This ChildID column', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'TABLE', @level1name=N'Child', @level2type=N'COLUMN', @level2name=N'ChildID'
 GO
--- SKIP SqlAzure END
+-- SKIP SqlServer.Azure END
+-- SKIP SqlServer.Azure.MS END
 
 
 CREATE FUNCTION GetParentByID(@id int)
@@ -664,6 +686,7 @@ BEGIN DROP TABLE LinqDataTypes END
 GO
 
 -- SKIP SqlServer.2005 BEGIN
+-- SKIP SqlServer.2005.MS BEGIN
 CREATE TABLE LinqDataTypes
 (
 	_ID            int IDENTITY PRIMARY KEY,
@@ -680,18 +703,27 @@ CREATE TABLE LinqDataTypes
 	StringValue    nvarchar(50) NULL
 )
 GO
+-- SKIP SqlServer.2005.MS END
 -- SKIP SqlServer.2005 END
 
 -- SKIP SqlServer.2008 BEGIN
+-- SKIP SqlServer.2008.MS BEGIN
 -- SKIP SqlServer.2012 BEGIN
+-- SKIP SqlServer.2012.MS BEGIN
 -- SKIP SqlServer.2014 BEGIN
+-- SKIP SqlServer.2014.MS BEGIN
 -- SKIP SqlServer.2016 BEGIN
+-- SKIP SqlServer.2016.MS BEGIN
 -- SKIP SqlServer.2017 BEGIN
+-- SKIP SqlServer.2017.MS BEGIN
 -- SKIP SqlServer.2019 BEGIN
--- SKIP SqlServer.2019.SA BEGIN
--- SKIP SqlServer.2019.FEC BEGIN
+-- SKIP SqlServer.2019.MS BEGIN
+-- SKIP SqlServer.SA BEGIN
+-- SKIP SqlServer.SA.MS BEGIN
 -- SKIP SqlServer.Contained BEGIN
--- SKIP SqlAzure BEGIN
+-- SKIP SqlServer.Contained.MS BEGIN
+-- SKIP SqlServer.Azure BEGIN
+-- SKIP SqlServer.Azure.MS BEGIN
 CREATE TABLE LinqDataTypes
 (
 	ID             int,
@@ -707,16 +739,24 @@ CREATE TABLE LinqDataTypes
 	StringValue    nvarchar(50)    NULL
 )
 GO
--- SKIP SqlAzure END
--- SKIP SqlServer.2012 END
--- SKIP SqlServer.2014 END
--- SKIP SqlServer.2016 END
--- SKIP SqlServer.2017 END
--- SKIP SqlServer.2019 END
--- SKIP SqlServer.2019.SA END
--- SKIP SqlServer.2019.FEC END
--- SKIP SqlServer.Contained END
 -- SKIP SqlServer.2008 END
+-- SKIP SqlServer.2008.MS END
+-- SKIP SqlServer.2012 END
+-- SKIP SqlServer.2012.MS END
+-- SKIP SqlServer.2014 END
+-- SKIP SqlServer.2014.MS END
+-- SKIP SqlServer.2016 END
+-- SKIP SqlServer.2016.MS END
+-- SKIP SqlServer.2017 END
+-- SKIP SqlServer.2017.MS END
+-- SKIP SqlServer.2019 END
+-- SKIP SqlServer.2019.MS END
+-- SKIP SqlServer.SA END
+-- SKIP SqlServer.SA.MS END
+-- SKIP SqlServer.Contained END
+-- SKIP SqlServer.Contained.MS END
+-- SKIP SqlServer.Azure END
+-- SKIP SqlServer.Azure.MS END
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestIdentity') AND type in (N'U'))
 BEGIN DROP TABLE TestIdentity END
@@ -846,6 +886,7 @@ SELECT -12345678901234.5678901234567,                            NULL,          
 GO
 
 -- SKIP SqlServer.2005 BEGIN
+-- SKIP SqlServer.2005.MS BEGIN
 
 IF EXISTS (SELECT * FROM sys.objects WHERE name = 'SqlTypes')
 BEGIN DROP TABLE [SqlTypes] END
@@ -870,6 +911,7 @@ SELECT 8, hierarchyid::Parse('/2/1/1/')
 
 GO
 
+-- SKIP SqlServer.2005.MS END
 -- SKIP SqlServer.2005 END
 
 
@@ -902,14 +944,18 @@ CREATE TABLE TestMerge1
 	FieldDouble     FLOAT(53)         NULL,
 	FieldDateTime   DATETIME          NULL,
 -- SKIP SqlServer.2005 BEGIN
+-- SKIP SqlServer.2005.MS BEGIN
 	FieldDateTime2  DATETIMEOFFSET(7) NULL,
+-- SKIP SqlServer.2005.MS END
 -- SKIP SqlServer.2005 END
 	FieldBinary     VARBINARY(20)     NULL,
 	FieldGuid       UNIQUEIDENTIFIER  NULL,
 	FieldDecimal    DECIMAL(24, 10)   NULL,
 -- SKIP SqlServer.2005 BEGIN
+-- SKIP SqlServer.2005.MS BEGIN
 	FieldDate       DATE              NULL,
 	FieldTime       TIME(7)           NULL,
+-- SKIP SqlServer.2005.MS END
 -- SKIP SqlServer.2005 END
 	FieldEnumString VARCHAR(20)       NULL,
 	FieldEnumNumber INT               NULL
@@ -935,14 +981,18 @@ CREATE TABLE TestMerge2
 	FieldDouble     FLOAT(53)         NULL,
 	FieldDateTime   DATETIME          NULL,
 -- SKIP SqlServer.2005 BEGIN
+-- SKIP SqlServer.2005.MS BEGIN
 	FieldDateTime2  DATETIMEOFFSET(7) NULL,
+-- SKIP SqlServer.2005.MS END
 -- SKIP SqlServer.2005 END
 	FieldBinary     VARBINARY(20)     NULL,
 	FieldGuid       UNIQUEIDENTIFIER  NULL,
 	FieldDecimal    DECIMAL(24, 10)   NULL,
 -- SKIP SqlServer.2005 BEGIN
+-- SKIP SqlServer.2005.MS BEGIN
 	FieldDate       DATE              NULL,
 	FieldTime       TIME(7)           NULL,
+-- SKIP SqlServer.2005.MS END
 -- SKIP SqlServer.2005 END
 	FieldEnumString VARCHAR(20)       NULL,
 	FieldEnumNumber INT               NULL
@@ -1061,6 +1111,7 @@ CREATE TABLE TestSchema.SameTableName
 )
 GO
 -- SKIP SqlServer.2005 BEGIN
+-- SKIP SqlServer.2005.MS BEGIN
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('dbo.Issue1115') AND type in (N'U'))
 BEGIN DROP TABLE dbo.Issue1115 END
 GO
@@ -1092,6 +1143,7 @@ BEGIN
 	SELECT * FROM @table AS Result
 END
 GO
+-- SKIP SqlServer.2005.MS END
 -- SKIP SqlServer.2005 END
 CREATE PROCEDURE TestSchema.TestProcedure
 AS

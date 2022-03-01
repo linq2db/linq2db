@@ -696,7 +696,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TakeWithPercent([IncludeDataSources(true, TestProvName.AllAccess, TestProvName.AllSqlServer2005Plus)] string context, [Values] bool withParameters)
+		public void TakeWithPercent([IncludeDataSources(true, TestProvName.AllAccess, TestProvName.AllSqlServer)] string context, [Values] bool withParameters)
 		{
 			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
@@ -713,7 +713,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TakeWithPercent1([IncludeDataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2005Plus)] string context, [Values] bool withParameters)
+		public void TakeWithPercent1([IncludeDataSources(TestProvName.AllAccess, TestProvName.AllSqlServer)] string context, [Values] bool withParameters)
 		{
 			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
@@ -729,7 +729,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TakeWithTies([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context, [Values] bool withParameters)
+		public void TakeWithTies([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] bool withParameters)
 		{
 			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
@@ -747,7 +747,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TakeWithTies2([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context, [Values] bool withParameters)
+		public void TakeWithTies2([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] bool withParameters)
 		{
 			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
@@ -764,7 +764,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SkipTakeWithTies([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void SkipTakeWithTies([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

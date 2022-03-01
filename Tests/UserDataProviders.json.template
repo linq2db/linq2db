@@ -24,27 +24,36 @@
 			//"Firebird4",
 
 			// Various versions of SQL Server
-			//"SqlServer",
-			//"Northwind",
 			//"SqlServer.2005",
-			//"SqlServer.2005.1",
+			//"SqlServer.2005.MS",
 			//"SqlServer.2008",
-			//"SqlServer.2008.1",
+			//"SqlServer.2008.MS",
 			//"SqlServer.2012",
+			//"SqlServer.2012.MS",
 			//"SqlServer.2014",
+			//"SqlServer.2014.MS",
 			//"SqlServer.2016",
+			//"SqlServer.2016.MS",
 			//"SqlServer.2017",
+			//"SqlServer.2017.MS",
 			//"SqlServer.2019",
-			//"SqlServer.2019.SA",
-			//"SqlServer.2019.FEC",
+			//"SqlServer.2019.MS",
+			//"SqlServer.SA",
+			//"SqlServer.SA.MS",
 			//"SqlServer.Contained",
-			//"SqlAzure",
+			//"SqlServer.Contained.MS",
+			//"SqlServer.Northwind",
+			//"SqlServer.Northwind.MS",
+			//"SqlServer.Azure",
+			//"SqlServer.Azure.MS",
 
 			// MySQL and MariaDB
 			//"MySql",
-			//"MySql55"
 			//"MySqlConnector",
+			//"MySql55",
+			//"MySql55Connector",
 			//"MariaDB",
+			//"MariaDBConnector",
 
 			// PostgreSQL
 			//"PostgreSQL.9.2",
@@ -55,7 +64,6 @@
 			//"PostgreSQL.12",
 			//"PostgreSQL.13",
 			//"PostgreSQL.14",
-			//"PostgreSQL",
 
 			// OleDB and ODBC MS Access providers
 			//"Access",
@@ -84,7 +92,7 @@
 		]
 	},
 
-	"CORE21": {
+	"CORE31": {
 		"BasedOn": "MyConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS",
 		"Providers": [
@@ -110,27 +118,36 @@
 			//"Firebird4",
 
 			// Various versions of SQL Server
-			//"SqlServer",
-			//"Northwind",
 			//"SqlServer.2005",
-			//"SqlServer.2005.1",
+			//"SqlServer.2005.MS",
 			//"SqlServer.2008",
-			//"SqlServer.2008.1",
+			//"SqlServer.2008.MS",
 			//"SqlServer.2012",
+			//"SqlServer.2012.MS",
 			//"SqlServer.2014",
+			//"SqlServer.2014.MS",
 			//"SqlServer.2016",
+			//"SqlServer.2016.MS",
 			//"SqlServer.2017",
+			//"SqlServer.2017.MS",
 			//"SqlServer.2019",
-			//"SqlServer.2019.SA",
-			//"SqlServer.2019.FEC",
+			//"SqlServer.2019.MS",
+			//"SqlServer.SA",
+			//"SqlServer.SA.MS",
 			//"SqlServer.Contained",
-			//"SqlAzure",
+			//"SqlServer.Contained.MS",
+			//"SqlServer.Northwind",
+			//"SqlServer.Northwind.MS",
+			//"SqlServer.Azure",
+			//"SqlServer.Azure.MS",
 
 			// MySQL and MariaDB
 			//"MySql",
-			//"MySql55"
 			//"MySqlConnector",
+			//"MySql55",
+			//"MySql55Connector",
 			//"MariaDB",
+			//"MariaDBConnector",
 
 			// PostgreSQL
 			//"PostgreSQL.9.2",
@@ -141,91 +158,6 @@
 			//"PostgreSQL.12",
 			//"PostgreSQL.13",
 			//"PostgreSQL.14",
-			//"PostgreSQL",
-
-			// OleDB and ODBC MS Access providers
-			//"Access",
-			//"Access.Odbc",
-
-			// SAP/Sybase ASE
-			//"Sybase.Managed",
-
-			// DB2
-			//"DB2",
-
-			// Informix
-			//"Informix.DB2",
-
-			// Oracle 11 and 12+
-			//"Oracle.11.Managed",
-			//"Oracle.11.Native",
-			//"Oracle.Managed",
-			//"Oracle.Native",
-
-			// SAP HANA 2
-			//"SapHana.Odbc",
-			//"SapHana.Native",
-		]
-	},
-
-	"CORE31": {
-		"BasedOn": "CORE21",
-		"DefaultConfiguration": "SQLite.MS",
-		"Providers": [
-			// to enable test provider uncomment it and configure connection string if need
-
-			// SQLite-based test configurations
-			"SQLite.Classic",
-			"SQLite.MS"
-			//"SQLite.Classic.MPM",
-			//"SQLite.Classic.MPU",
-			//"Northwind.SQLite",
-			//"Northwind.SQLite.MS",
-
-			// no-db test configuration
-			//"TestNoopProvider",
-
-			// SQL CE
-			//"SqlCe",
-
-			// Firebird 2.5-4
-			//"Firebird",
-			//"Firebird3",
-			//"Firebird4",
-
-			// Various versions of SQL Server
-			//"SqlServer",
-			//"Northwind",
-			//"SqlServer.2005",
-			//"SqlServer.2005.1",
-			//"SqlServer.2008",
-			//"SqlServer.2008.1",
-			//"SqlServer.2012",
-			//"SqlServer.2014",
-			//"SqlServer.2016",
-			//"SqlServer.2017",
-			//"SqlServer.2019",
-			//"SqlServer.2019.SA",
-			//"SqlServer.2019.FEC",
-			//"SqlServer.Contained",
-			//"SqlAzure",
-
-			// MySQL and MariaDB
-			//"MySql",
-			//"MySql55"
-			//"MySqlConnector",
-			//"MariaDB",
-
-			// PostgreSQL
-			//"PostgreSQL.9.2",
-			//"PostgreSQL.9.3",
-			//"PostgreSQL.9.5",
-			//"PostgreSQL.10",
-			//"PostgreSQL.11",
-			//"PostgreSQL.12",
-			//"PostgreSQL.13",
-			//"PostgreSQL.14",
-			//"PostgreSQL",
 
 			// OleDB and ODBC MS Access providers
 			//"Access",
@@ -253,7 +185,7 @@
 	},
 
 	"NET50": {
-		"BasedOn": "CORE21",
+		"BasedOn": "CORE31",
 		"DefaultConfiguration": "SQLite.MS",
 		"Providers": [
 			// to enable test provider uncomment it and configure connection string if need
@@ -278,27 +210,36 @@
 			//"Firebird4",
 
 			// Various versions of SQL Server
-			//"SqlServer",
-			//"Northwind",
 			//"SqlServer.2005",
-			//"SqlServer.2005.1",
+			//"SqlServer.2005.MS",
 			//"SqlServer.2008",
-			//"SqlServer.2008.1",
+			//"SqlServer.2008.MS",
 			//"SqlServer.2012",
+			//"SqlServer.2012.MS",
 			//"SqlServer.2014",
+			//"SqlServer.2014.MS",
 			//"SqlServer.2016",
+			//"SqlServer.2016.MS",
 			//"SqlServer.2017",
+			//"SqlServer.2017.MS",
 			//"SqlServer.2019",
-			//"SqlServer.2019.SA",
-			//"SqlServer.2019.FEC",
+			//"SqlServer.2019.MS",
+			//"SqlServer.SA",
+			//"SqlServer.SA.MS",
 			//"SqlServer.Contained",
-			//"SqlAzure",
+			//"SqlServer.Contained.MS",
+			//"SqlServer.Northwind",
+			//"SqlServer.Northwind.MS",
+			//"SqlServer.Azure",
+			//"SqlServer.Azure.MS",
 
 			// MySQL and MariaDB
 			//"MySql",
-			//"MySql55"
 			//"MySqlConnector",
+			//"MySql55",
+			//"MySql55Connector",
 			//"MariaDB",
+			//"MariaDBConnector",
 
 			// PostgreSQL
 			//"PostgreSQL.9.2",
@@ -309,7 +250,6 @@
 			//"PostgreSQL.12",
 			//"PostgreSQL.13",
 			//"PostgreSQL.14",
-			//"PostgreSQL",
 
 			// OleDB and ODBC MS Access providers
 			//"Access",
@@ -337,7 +277,7 @@
 	},
 
 	"NET60": {
-		"BasedOn": "CORE21",
+		"BasedOn": "CORE31",
 		"DefaultConfiguration": "SQLite.MS",
 		"Providers": [
 			// to enable test provider uncomment it and configure connection string if need
@@ -362,27 +302,36 @@
 			//"Firebird4",
 
 			// Various versions of SQL Server
-			//"SqlServer",
-			//"Northwind",
 			//"SqlServer.2005",
-			//"SqlServer.2005.1",
+			//"SqlServer.2005.MS",
 			//"SqlServer.2008",
-			//"SqlServer.2008.1",
+			//"SqlServer.2008.MS",
 			//"SqlServer.2012",
+			//"SqlServer.2012.MS",
 			//"SqlServer.2014",
+			//"SqlServer.2014.MS",
 			//"SqlServer.2016",
+			//"SqlServer.2016.MS",
 			//"SqlServer.2017",
+			//"SqlServer.2017.MS",
 			//"SqlServer.2019",
-			//"SqlServer.2019.SA",
-			//"SqlServer.2019.FEC",
+			//"SqlServer.2019.MS",
+			//"SqlServer.SA",
+			//"SqlServer.SA.MS",
 			//"SqlServer.Contained",
-			//"SqlAzure",
+			//"SqlServer.Contained.MS",
+			//"SqlServer.Northwind",
+			//"SqlServer.Northwind.MS",
+			//"SqlServer.Azure",
+			//"SqlServer.Azure.MS",
 
 			// MySQL and MariaDB
 			//"MySql",
-			//"MySql55"
 			//"MySqlConnector",
+			//"MySql55",
+			//"MySql55Connector",
 			//"MariaDB",
+			//"MariaDBConnector",
 
 			// PostgreSQL
 			//"PostgreSQL.9.2",
@@ -393,7 +342,6 @@
 			//"PostgreSQL.12",
 			//"PostgreSQL.13",
 			//"PostgreSQL.14",
-			//"PostgreSQL",
 
 			// OleDB and ODBC MS Access providers
 			//"Access",
@@ -427,60 +375,92 @@
 		// you can specify folder to save test sql baselines
 		"BaselinesPath": "",
 		"Connections": {
-			"SqlServer": {
-				"Provider": "SqlServer",
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
-			},
 			"SqlServer.2005": {
 				"Provider": "System.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"SqlServer.2005.1": {
-				"Provider": "System.Data.SqlClient",
+			"SqlServer.2005.MS": {
+				"Provider": "Microsoft.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"SqlServer.2008": {
 				"Provider": "System.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"SqlServer.2008.1": {
-				"Provider": "System.Data.SqlClient",
+			"SqlServer.2008.MS": {
+				"Provider": "Microsoft.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"SqlServer.2012": {
-				"Provider": "SqlServer",
+				"Provider": "System.Data.SqlClient",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"SqlServer.2012.MS": {
+				"Provider": "Microsoft.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"SqlServer.2014": {
 				"Provider": "System.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
+			"SqlServer.2014.MS": {
+				"Provider": "Microsoft.Data.SqlClient",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
 			"SqlServer.2016": {
 				"Provider": "System.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
+			"SqlServer.2016.MS": {
+				"Provider": "Microsoft.Data.SqlClient",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
 			"SqlServer.2017": {
+				"Provider": "System.Data.SqlClient",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"SqlServer.2017.MS": {
 				"Provider": "Microsoft.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"SqlServer.2019": {
+			"SqlServer.2018": {
+				"Provider": "System.Data.SqlClient",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"SqlServer.2018.MS": {
 				"Provider": "Microsoft.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"SqlServer.2019.SA": {
-				"Provider": "Microsoft.Data.SqlClient",
+			"SqlServer.SA": {
+				"Provider": "System.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"SqlServer.2019.FEC": {
+			"SqlServer.SA.MS": {
 				"Provider": "Microsoft.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"SqlServer.Contained": {
+				"Provider": "System.Data.SqlClient",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"SqlServer.Contained.MS": {
 				"Provider": "Microsoft.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"SqlAzure": {
-				"Provider": "SqlServer.2017",
+			"SqlServer.Northwind": {
+				"Provider": "System.Data.SqlClient",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"SqlServer.Northwind.MS": {
+				"Provider": "Microsoft.Data.SqlClient",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"SqlServer.Azure": {
+				"Provider": "System.Data.SqlClient",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"SqlServer.Azure.MS": {
+				"Provider": "Microsoft.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"DB2": {
@@ -507,15 +487,23 @@
 				"Provider": "MySql",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
+			"MySqlConnector": {
+				"Provider": "MySqlConnector",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
 			"MySql55": {
 				"Provider": "MySql",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"MariaDB": {
+			"MySql55Connector": {
 				"Provider": "MySqlConnector",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"MySqlConnector": {
+			"MariaDB": {
+				"Provider": "MySql",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"MariaDBConnector": {
 				"Provider": "MySqlConnector",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
@@ -533,10 +521,6 @@
 			},
 			"Oracle.11.Managed": {
 				"Provider": "Oracle.ManagedDataAccess.Client",
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
-			},
-			"PostgreSQL": {
-				"Provider": "Npgsql",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"PostgreSQL.9.2": {
@@ -584,10 +568,6 @@
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"SapHana.Odbc": {
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
-			},
-			"Northwind": {
-				"Provider": "System.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			}
 		}

@@ -535,7 +535,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue88([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Issue88([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

@@ -1,14 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\Build\linq2db.Tests.Providers.props" />
+	<Import Project="..\..\Build\linq2db.TestProjects.props" />
 
 	<PropertyGroup>
-		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 		<AssemblyName>linq2db.Tests.Playground</AssemblyName>
-		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="..\Linq\app.config" Link="app.config" />
 	</ItemGroup>
 
 </Project>

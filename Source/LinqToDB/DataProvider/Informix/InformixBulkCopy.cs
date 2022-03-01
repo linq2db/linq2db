@@ -204,23 +204,27 @@ namespace LinqToDB.DataProvider.Informix
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			using (new InvariantCultureRegion(null))
+			using ((IDisposable)new InvariantCultureRegion(null))
 				return base.MultipleRowsCopy(table, options, source);
 		}
 
-		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
+		protected override async Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			using (new InvariantCultureRegion(null))
-				return base.MultipleRowsCopyAsync(table, options, source, cancellationToken);
+#if NATIVE_ASYNC
+			await using (new InvariantCultureRegion(null))
+#else
+			using ((IDisposable)new InvariantCultureRegion(null))
+#endif
+				return await base.MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
 #if NATIVE_ASYNC
-		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
+		protected override async Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			using (new InvariantCultureRegion(null))
-				return base.MultipleRowsCopyAsync(table, options, source, cancellationToken);
+			await using (new InvariantCultureRegion(null))
+				return await base.MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 #endif
 	}

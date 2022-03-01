@@ -7,6 +7,7 @@
 		<LangVersion>latest</LangVersion>
 		<WarningLevel>5</WarningLevel>
 		
+		<!--https://github.com/dotnet/fsharp/issues/12315-->
 		<DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
 	</PropertyGroup>
 

@@ -210,12 +210,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return new PostgreSQLSchemaProvider(this);
 		}
 
-#if !NETFRAMEWORK
-		public override bool? IsDBNullAllowed(DbDataReader reader, int idx)
-		{
-			return true;
-		}
-#endif
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal object? NormalizeTimeStamp(object? value, DbDataType dataType)
 		{

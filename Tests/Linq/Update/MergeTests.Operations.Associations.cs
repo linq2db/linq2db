@@ -232,7 +232,7 @@ namespace Tests.xUpdate
 		public void OtherSourceAssociationInInsertCreate([MergeDataContextSource(
 			false,
 			TestProvName.AllOracle,
-			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
+			TestProvName.AllSybase, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -284,7 +284,7 @@ namespace Tests.xUpdate
 		public void OtherSourceAssociationInInsertCreate2([MergeDataContextSource(
 			false,
 			TestProvName.AllOracle,
-			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix, TestProvName.AllSapHana)]
+			TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllSapHana)]
 			string context)
 		{
 			ResetPersonIdentity(context);
@@ -331,7 +331,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void OtherSourceAssociationInInsertPredicate([MergeDataContextSource(
 			false,
-			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
+			TestProvName.AllSybase, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -380,7 +380,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void OtherSourceAssociationInMatch([MergeDataContextSource(
 			false,
-			ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix)]
+			ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllInformix)]
 			string context)
 		{
 			ResetPersonIdentity(context);
@@ -428,7 +428,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void OtherSourceAssociationInUpdate([MergeDataContextSource(
 			false,
-			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix)]
+			TestProvName.AllSybase, TestProvName.AllInformix)]
 			string context)
 		{
 			ResetPersonIdentity(context);
@@ -560,7 +560,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void OtherSourceAssociationInUpdatePredicate([MergeDataContextSource(
 			false,
-			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
+			TestProvName.AllSybase, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -640,7 +640,7 @@ namespace Tests.xUpdate
 		public void SameSourceAssociationInDeletePredicate([MergeDataContextSource(
 			false,
 			TestProvName.AllOracle,
-			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
+			TestProvName.AllSybase, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -675,7 +675,7 @@ namespace Tests.xUpdate
 		public void SameSourceAssociationInInsertCreate([MergeDataContextSource(
 			false,
 			TestProvName.AllOracle,
-			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
+			TestProvName.AllSybase, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -729,7 +729,7 @@ namespace Tests.xUpdate
 		public void SameSourceAssociationInInsertCreate2([MergeDataContextSource(
 			false,
 			TestProvName.AllOracle,
-			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix, TestProvName.AllSapHana)]
+			TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllSapHana)]
 			string context)
 		{
 			ResetPersonIdentity(context);
@@ -776,7 +776,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void SameSourceAssociationInInsertPredicate([MergeDataContextSource(
 			false,
-			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
+			TestProvName.AllSybase, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{
@@ -827,7 +827,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void SameSourceAssociationInMatch([MergeDataContextSource(
 			false,
-			ProviderName.DB2, ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix)]
+			ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllInformix)]
 			string context)
 		{
 			ResetPersonIdentity(context);
@@ -875,7 +875,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void SameSourceAssociationInUpdate([MergeDataContextSource(
 			false,
-			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix)]
+			TestProvName.AllSybase, TestProvName.AllInformix)]
 			string context)
 		{
 			ResetPersonIdentity(context);
@@ -1005,7 +1005,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void SameSourceAssociationInUpdatePredicate([MergeDataContextSource(
 			false,
-			ProviderName.Sybase, ProviderName.SybaseManaged, TestProvName.AllInformix,
+			TestProvName.AllSybase, TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird)]
 			string context)
 		{

@@ -34,18 +34,12 @@
 		<GenerateNeutralResourcesLanguageAttribute>false</GenerateNeutralResourcesLanguageAttribute>
 
 		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-
-		<!--TODO: remove props below with netcoreapp2.1-->
-		<!--disable whinings about netcoreapp2.1 EOL-->
-		<CheckEolTargetFramework>false</CheckEolTargetFramework>
-		<!--disable System.Security.AccessControl netcoreapp2.1 warnings-->
-		<SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Code Analysis Setup">
-		<RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
-		<!--disable on debug build to not slowdown development/testing unnecessary-->
-		<RunAnalyzersDuringBuild Condition="$(Configuration) == 'Debug'">false</RunAnalyzersDuringBuild>
+		<RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
+		<!--enable on release build only to not slowdown development/testing-->
+		<RunAnalyzersDuringBuild Condition="$(Configuration) == 'Release'">true</RunAnalyzersDuringBuild>
 		<RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
 
 		<AnalysisLevel>preview-All</AnalysisLevel>

@@ -621,7 +621,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertUnion1([DataSources(ProviderName.SQLiteMS)] string context)
+		public void InsertUnion1([DataSources] string context)
 		{
 			Child.Count();
 
@@ -963,7 +963,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithGuidIdentity([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void InsertWithGuidIdentity([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -973,7 +973,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithGuidIdentityOutput([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void InsertWithGuidIdentityOutput([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			try
 			{
@@ -991,7 +991,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithIdentityOutput([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void InsertWithIdentityOutput([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new DeletePerson(db))
@@ -1031,7 +1031,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithGuidIdentity2([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void InsertWithGuidIdentity2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -1116,7 +1116,7 @@ namespace Tests.xUpdate
 						using (new DisableLogging())
 							patients = db.Patient.Where(p => p.PersonID == id).ToList();
 
-						if (context.Contains("Oracle") && context.Contains("Native"))
+						if (context.IsAnyOf(TestProvName.AllOracleNative))
 							Assert.AreEqual(-1, records);
 						else
 							Assert.AreEqual(1, records);
@@ -1577,7 +1577,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void Insert14([DataSources(
 			ProviderName.SqlCe, TestProvName.AllAccess,
-			ProviderName.SqlServer2005, TestProvName.AllSybase)]
+			TestProvName.AllSqlServer2005, TestProvName.AllSybase)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1775,7 +1775,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void InsertWith([IncludeDataSources(
-			ProviderName.SqlServer2008)]//, ProviderName.SqlServer2012, ProviderName.SqlServer2014)]
+			TestProvName.AllSqlServer2008)]
 			string context)
 		{
 			var m = null as int?;
@@ -1797,11 +1797,11 @@ namespace Tests.xUpdate
 		{
 			var tableName  = "xxPerson";
 
-			if (context.StartsWith("Firebird"))
+			if (context.IsAnyOf(TestProvName.AllFirebird))
 			{
-				tableName += context.StartsWith(TestProvName.Firebird4)
+				tableName += context.IsAnyOf(TestProvName.Firebird4)
 					? "_f4"
-					: (context.StartsWith(TestProvName.Firebird3)
+					: (context.IsAnyOf(TestProvName.Firebird3)
 						? "_f3"
 						: "_f");
 
@@ -1811,7 +1811,7 @@ namespace Tests.xUpdate
 				tableName += "_" + methodName;
 			}
 
-			if (context.StartsWith("Oracle"))
+			if (context.IsAnyOf(TestProvName.AllOracle))
 			{
 				tableName += "_o";
 
@@ -1915,7 +1915,7 @@ namespace Tests.xUpdate
 		public void InsertOrReplaceByTableName([InsertOrUpdateDataSources] string context)
 		{
 			const string? schemaName = null;
-			var tableName  = "xxPatient" + (context.Contains("Firebird") ? TestUtils.GetNext().ToString() : string.Empty);
+			var tableName  = "xxPatient" + (context.IsAnyOf(TestProvName.AllFirebird) ? TestUtils.GetNext().ToString() : string.Empty);
 
 			using (var db = GetDataContext(context))
 			{
@@ -1961,7 +1961,7 @@ namespace Tests.xUpdate
 		public async Task InsertOrReplaceByTableNameAsync([DataSources] string context)
 		{
 			const string? schemaName = null;
-			var tableName  = "xxPatient" + (context.Contains("Firebird") ? TestUtils.GetNext().ToString() : string.Empty);
+			var tableName  = "xxPatient" + (context.IsAnyOf(TestProvName.AllFirebird) ? TestUtils.GetNext().ToString() : string.Empty);
 
 			using (var db = GetDataContext(context))
 			{
@@ -2120,10 +2120,9 @@ namespace Tests.xUpdate
 			// those providers generate IF (), which doesn't return rowcount if not entered
 			// for some reason it doesn't affect managed sybase provider (provider bug?)
 			// and oracle native provider always was "special"
-			return provider == ProviderName.Sybase
-				|| provider == ProviderName.OracleNative
-				|| provider == TestProvName.Oracle11Native
-				|| provider == ProviderName.SqlServer2005
+			return provider.IsAnyOf(ProviderName.Sybase)
+				|| provider.IsAnyOf(TestProvName.AllOracleNative)
+				|| provider.IsAnyOf(TestProvName.AllSqlServer2005)
 				? -1
 				: 0;
 		}
@@ -2133,8 +2132,7 @@ namespace Tests.xUpdate
 			var provider = GetProviderName(context, out _);
 
 			// oracle native provider and rowcount are not familiar with each other
-			return provider == ProviderName.OracleNative
-				|| provider == TestProvName.Oracle11Native
+			return provider.IsAnyOf(TestProvName.AllOracleNative)
 				? -1
 				: 1;
 		}
