@@ -6,8 +6,6 @@
 			// System.Data.SQLite
 			"SQLite.Classic",
 			"Northwind.SQLite",
-			"SQLite.Classic.MPU",
-			"SQLite.Classic.MPM",
 			// Microsoft.Data.SQLite
 			"SQLite.MS",
 			"Northwind.SQLite.MS"

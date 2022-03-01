@@ -93,7 +93,25 @@ jobs:
           enable_os_macos: true
           enable_fw_net472: true
           enable_fw_netcore31: true
-          enable_fw_net50: true
+          enable_fw_net50: false # reduce test time
+          enable_fw_net60: true
+          is_experimental: false
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]'))) }}:
+            enabled: false
+
+        - name: SQLiteExtras
+          title: SQLite (specialized tests)
+          config_win: sqlite.extras
+          config_linux: sqlite.extras
+          config_macos: sqlite.extras
+          enable_os_windows: true
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_net472: true
+          enable_fw_netcore31: true
+          enable_fw_net50: false # reduce test time
           enable_fw_net60: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]')) }}:
@@ -349,7 +367,7 @@ jobs:
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore31: true
-          enable_fw_net50: true
+          enable_fw_net50: false # reduce test time
           enable_fw_net60: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
@@ -366,7 +384,7 @@ jobs:
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore31: true
-          enable_fw_net50: true
+          enable_fw_net50: false # reduce test time
           enable_fw_net60: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
@@ -383,7 +401,7 @@ jobs:
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore31: true
-          enable_fw_net50: true
+          enable_fw_net50: false # reduce test time
           enable_fw_net60: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
@@ -400,7 +418,7 @@ jobs:
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore31: true
-          enable_fw_net50: true
+          enable_fw_net50: false # reduce test time
           enable_fw_net60: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
@@ -417,7 +435,7 @@ jobs:
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore31: true
-          enable_fw_net50: true
+          enable_fw_net50: false # reduce test time
           enable_fw_net60: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
@@ -439,7 +457,7 @@ jobs:
           enable_os_macos: true
           enable_fw_net472: true
           enable_fw_netcore31: true
-          enable_fw_net50: true
+          enable_fw_net50: false # reduce test time
           enable_fw_net60: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
@@ -461,7 +479,7 @@ jobs:
           enable_os_macos:  true
           enable_fw_net472: true
           enable_fw_netcore31: true
-          enable_fw_net50: true
+          enable_fw_net50: false # reduce test time
           enable_fw_net60: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
