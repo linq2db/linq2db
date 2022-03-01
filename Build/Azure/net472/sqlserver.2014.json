@@ -1,7 +1,8 @@
 ﻿{
 	"NET472.Azure": {
 		"Providers": [
-			"SqlServer.2014",
+			// disable to shorten test execution time
+			//"SqlServer.2014",
 			"SqlServer.2014.MS"
 		]
 	}

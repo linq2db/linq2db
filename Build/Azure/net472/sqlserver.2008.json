@@ -1,7 +1,8 @@
 ﻿{
 	"NET472.Azure": {
 		"Providers": [
-			"SqlServer.2008",
+			// disable to shorten test execution time
+			//"SqlServer.2008",
 			"SqlServer.2008.MS"
 		]
 	}
