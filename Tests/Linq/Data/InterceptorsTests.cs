@@ -1693,25 +1693,25 @@ namespace Tests.Data
 			public bool ConnectionOpeningTriggered      { get; set; }
 			public bool ConnectionOpeningAsyncTriggered { get; set; }
 
-			public override void ConnectionOpened(ConnectionOpenedEventData eventData, DbConnection connection)
+			public override void ConnectionOpened(ConnectionEventData eventData, DbConnection connection)
 			{
 				ConnectionOpenedTriggered = true;
 				base.ConnectionOpened(eventData, connection);
 			}
 
-			public override Task ConnectionOpenedAsync(ConnectionOpenedEventData eventData, DbConnection connection, CancellationToken cancellationToken)
+			public override Task ConnectionOpenedAsync(ConnectionEventData eventData, DbConnection connection, CancellationToken cancellationToken)
 			{
 				ConnectionOpenedAsyncTriggered = true;
 				return base.ConnectionOpenedAsync(eventData, connection, cancellationToken);
 			}
 
-			public override void ConnectionOpening(ConnectionOpeningEventData eventData, DbConnection connection)
+			public override void ConnectionOpening(ConnectionEventData eventData, DbConnection connection)
 			{
 				ConnectionOpeningTriggered = true;
 				base.ConnectionOpening(eventData, connection);
 			}
 
-			public override Task ConnectionOpeningAsync(ConnectionOpeningEventData eventData, DbConnection connection, CancellationToken cancellationToken)
+			public override Task ConnectionOpeningAsync(ConnectionEventData eventData, DbConnection connection, CancellationToken cancellationToken)
 			{
 				ConnectionOpeningAsyncTriggered = true;
 				return base.ConnectionOpeningAsync(eventData, connection, cancellationToken);

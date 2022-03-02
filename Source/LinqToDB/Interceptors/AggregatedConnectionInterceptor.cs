@@ -12,7 +12,7 @@ namespace LinqToDB.Interceptors
 			return new AggregatedConnectionInterceptor();
 		}
 
-		public void ConnectionOpening(ConnectionOpeningEventData eventData, DbConnection connection)
+		public void ConnectionOpening(ConnectionEventData eventData, DbConnection connection)
 		{
 			Apply(() =>
 			{
@@ -21,7 +21,7 @@ namespace LinqToDB.Interceptors
 			});
 		}
 
-		public async Task ConnectionOpeningAsync(ConnectionOpeningEventData eventData, DbConnection connection, CancellationToken cancellationToken)
+		public async Task ConnectionOpeningAsync(ConnectionEventData eventData, DbConnection connection, CancellationToken cancellationToken)
 		{
 			await Apply(async () =>
 			{
@@ -30,7 +30,7 @@ namespace LinqToDB.Interceptors
 			}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-		public void ConnectionOpened(ConnectionOpenedEventData eventData, DbConnection connection)
+		public void ConnectionOpened(ConnectionEventData eventData, DbConnection connection)
 		{
 			Apply(() =>
 			{
@@ -39,7 +39,7 @@ namespace LinqToDB.Interceptors
 			});
 		}
 
-		public async Task ConnectionOpenedAsync(ConnectionOpenedEventData eventData, DbConnection connection, CancellationToken cancellationToken)
+		public async Task ConnectionOpenedAsync(ConnectionEventData eventData, DbConnection connection, CancellationToken cancellationToken)
 		{
 			await Apply(async () =>
 			{

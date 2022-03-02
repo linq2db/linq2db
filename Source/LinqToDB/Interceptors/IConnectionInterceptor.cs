@@ -12,7 +12,7 @@ namespace LinqToDB.Interceptors
 		/// </summary>
 		/// <param name="eventData">Additional data for event.</param>
 		/// <param name="connection">Connection instance.</param>
-		void ConnectionOpening(ConnectionOpeningEventData eventData, DbConnection connection);
+		void ConnectionOpening(ConnectionEventData eventData, DbConnection connection);
 
 		/// <summary>
 		/// Event, triggered before asynchronous connection open.
@@ -20,14 +20,14 @@ namespace LinqToDB.Interceptors
 		/// <param name="eventData">Additional data for event.</param>
 		/// <param name="connection">Connection instance.</param>
 		/// <param name="cancellationToken">Cancellation token.</param>
-		Task ConnectionOpeningAsync(ConnectionOpeningEventData eventData, DbConnection connection, CancellationToken cancellationToken);
+		Task ConnectionOpeningAsync(ConnectionEventData eventData, DbConnection connection, CancellationToken cancellationToken);
 
 		/// <summary>
 		/// Event, triggered after connection opened.
 		/// </summary>
 		/// <param name="eventData">Additional data for event.</param>
 		/// <param name="connection">Connection instance.</param>
-		void ConnectionOpened(ConnectionOpenedEventData eventData, DbConnection connection);
+		void ConnectionOpened(ConnectionEventData eventData, DbConnection connection);
 
 		/// <summary>
 		/// Event, triggered after connection opened asynchronously.
@@ -35,6 +35,6 @@ namespace LinqToDB.Interceptors
 		/// <param name="eventData">Additional data for event.</param>
 		/// <param name="connection">Connection instance.</param>
 		/// <param name="cancellationToken">Cancellation token.</param>
-		Task ConnectionOpenedAsync(ConnectionOpenedEventData eventData, DbConnection connection, CancellationToken cancellationToken);
+		Task ConnectionOpenedAsync(ConnectionEventData eventData, DbConnection connection, CancellationToken cancellationToken);
 	}
 }

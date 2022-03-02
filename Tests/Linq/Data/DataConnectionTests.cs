@@ -219,17 +219,17 @@ namespace Tests.Data
 
 		private class TestConnectionInterceptor : ConnectionInterceptor
 		{
-			private readonly Action<ConnectionOpeningEventData, DbConnection>? _onConnectionOpening;
-			private readonly Action<ConnectionOpenedEventData, DbConnection>? _onConnectionOpened;
+			private readonly Action<ConnectionEventData, DbConnection>? _onConnectionOpening;
+			private readonly Action<ConnectionEventData, DbConnection>? _onConnectionOpened;
 
-			private readonly Func<ConnectionOpeningEventData, DbConnection, CancellationToken, Task>? _onConnectionOpeningAsync;
-			private readonly Func<ConnectionOpenedEventData, DbConnection, CancellationToken, Task>?  _onConnectionOpenedAsync;
+			private readonly Func<ConnectionEventData, DbConnection, CancellationToken, Task>? _onConnectionOpeningAsync;
+			private readonly Func<ConnectionEventData, DbConnection, CancellationToken, Task>?  _onConnectionOpenedAsync;
 
 			public TestConnectionInterceptor(
-				Action<ConnectionOpeningEventData, DbConnection>? onConnectionOpening,
-				Action<ConnectionOpenedEventData, DbConnection>? onConnectionOpened,
-				Func<ConnectionOpeningEventData, DbConnection, CancellationToken, Task>? onConnectionOpeningAsync,
-				Func<ConnectionOpenedEventData, DbConnection, CancellationToken, Task>? onConnectionOpenedAsync)
+				Action<ConnectionEventData, DbConnection>? onConnectionOpening,
+				Action<ConnectionEventData, DbConnection>? onConnectionOpened,
+				Func<ConnectionEventData, DbConnection, CancellationToken, Task>? onConnectionOpeningAsync,
+				Func<ConnectionEventData, DbConnection, CancellationToken, Task>? onConnectionOpenedAsync)
 			{
 				_onConnectionOpening = onConnectionOpening;
 				_onConnectionOpened  = onConnectionOpened;
@@ -237,13 +237,13 @@ namespace Tests.Data
 				_onConnectionOpenedAsync = onConnectionOpenedAsync;
 			}
 
-			public override void ConnectionOpened(ConnectionOpenedEventData eventData, DbConnection connection)
+			public override void ConnectionOpened(ConnectionEventData eventData, DbConnection connection)
 			{
 				_onConnectionOpened?.Invoke(eventData, connection);
 				base.ConnectionOpened(eventData, connection);
 			}
 
-			public override async Task ConnectionOpenedAsync(ConnectionOpenedEventData eventData, DbConnection connection, CancellationToken cancellationToken)
+			public override async Task ConnectionOpenedAsync(ConnectionEventData eventData, DbConnection connection, CancellationToken cancellationToken)
 			{
 				if (_onConnectionOpenedAsync != null)
 					await _onConnectionOpenedAsync(eventData, connection, cancellationToken);
@@ -251,13 +251,13 @@ namespace Tests.Data
 				await base.ConnectionOpenedAsync(eventData, connection, cancellationToken);
 			}
 
-			public override void ConnectionOpening(ConnectionOpeningEventData eventData, DbConnection connection)
+			public override void ConnectionOpening(ConnectionEventData eventData, DbConnection connection)
 			{
 				_onConnectionOpening?.Invoke(eventData, connection);
 				base.ConnectionOpening(eventData, connection);
 			}
 
-			public override async Task ConnectionOpeningAsync(ConnectionOpeningEventData eventData, DbConnection connection, CancellationToken cancellationToken)
+			public override async Task ConnectionOpeningAsync(ConnectionEventData eventData, DbConnection connection, CancellationToken cancellationToken)
 			{
 				if (_onConnectionOpeningAsync != null)
 					await _onConnectionOpeningAsync(eventData, connection, cancellationToken);
