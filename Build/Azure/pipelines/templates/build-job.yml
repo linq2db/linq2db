@@ -12,6 +12,18 @@ jobs:
   # mitigate https://status.dev.azure.com/_event/182998791
   - task: NuGetToolInstaller@1
 
+  - task: UseDotNet@2
+    displayName: 'Install .net core 2.1'
+    inputs:
+      packageType: sdk
+      version: 2.1.x
+
+  - task: UseDotNet@2
+    displayName: 'Install .net 6'
+    inputs:
+      packageType: sdk
+      version: 6.x
+
   - task: PowerShell@2
     inputs:
       filePath: '$(Build.SourcesDirectory)/Build/SetVersion.ps1'

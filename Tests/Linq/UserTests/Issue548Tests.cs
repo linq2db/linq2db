@@ -86,7 +86,7 @@ namespace Tests.UserTests
 		}
 
 		/// <summary>
-		/// This will reset <see cref="MappingSchema.MetadataReaders"></see>
+		/// This will reset MappingSchema.MetadataReaders
 		/// </summary>
 		/// <param name="ms"></param>
 		/// <param name="semaphore"></param>
@@ -106,8 +106,8 @@ namespace Tests.UserTests
 		}
 
 		/// <summary>
-		/// This will iterate through <see cref="MappingSchema.MetadataReaders"/>,
-		/// and had a chance to fail on <see cref="MappingSchema._metadataReaders"/> == null
+		/// This will iterate through MappingSchema.MetadataReaders
+		/// and had a chance to fail on MappingSchema._metadataReaders == null
 		/// </summary>
 		/// <param name="ms"></param>
 		/// <param name="semaphore"></param>
