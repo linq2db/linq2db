@@ -435,7 +435,7 @@ namespace Tests.Data
 						if (cn.State == ConnectionState.Closed)
 							open = true;
 					};
-				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() => 
+				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() =>
 						{
 							if (cn.State == ConnectionState.Closed)
 								openAsync = true;
@@ -1153,8 +1153,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestDisposeFlagCloning962Test2(
-			[DataSources(false)] string context, [Values] bool withScope)
+		public void TestDisposeFlagCloning962Test2([DataSources(false, TestProvName.AllMySqlData)] string context, [Values] bool withScope)
 		{
 			if (withScope && (
 				context == ProviderName.DB2                 ||
@@ -1166,7 +1165,6 @@ namespace Tests.Data
 				(context.Contains("Oracle") && context.Contains("Managed")) ||
 				context == ProviderName.SapHanaNative       ||
 #endif
-				TestProvName.AllMySqlData.Contains(context) ||
 				context.StartsWith("Access")                ||
 				context.Contains("SqlServer")               ||
 				context.Contains("SqlAzure")                ||
