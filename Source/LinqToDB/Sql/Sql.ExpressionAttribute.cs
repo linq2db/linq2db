@@ -256,7 +256,7 @@ namespace LinqToDB
 						prevNotEmptyMatch = match.Index + match.Length;
 					}
 
-					return res;
+					return res ?? string.Empty;
 				});
 
 				return str;
@@ -328,7 +328,7 @@ namespace LinqToDB
 				}
 			}
 
-			public static ISqlExpression[] PrepareArguments<TContext>(TContext context, string expressionStr, int[]? argIndices, bool addDefault, List<Expression?> knownExpressions, List<ISqlExpression>? genericTypes, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
+			public static ISqlExpression[] PrepareArguments<TContext>(TContext context, string expressionStr, int[]? argIndices, bool addDefault, List<Expression?> knownExpressions, List<ISqlExpression>? genericTypes, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression?> converter)
 			{
 				var parms = new List<ISqlExpression?>();
 

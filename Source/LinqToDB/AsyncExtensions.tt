@@ -43,11 +43,11 @@ namespace LinqToDB
 		new { Method = "LongCount",       RetType = "long",     Type = "TSource",  SParam = "TSource",  Lambda = "source.LongCount",                                  GParams = "<TSource>",         ParamType = "",                                   ParamName = "",          },
 		new { Method = "LongCount",       RetType = "long",     Type = "TSource",  SParam = "TSource",  Lambda = "() => source.LongCount(predicate)",                 GParams = "<TSource>",         ParamType = "Expression<Func<TSource,bool>>",     ParamName = "predicate", },
 
-		new { Method = "Min",             RetType = "TSource",  Type = "TSource",  SParam = "TSource",  Lambda = "source.Min",                                        GParams = "<TSource>",         ParamType = "",                                   ParamName = "",          },
-		new { Method = "Min",             RetType = "TResult",  Type = "TSource",  SParam = "TSource",  Lambda = "() => source.Min(selector)",                        GParams = "<TSource,TResult>", ParamType = "Expression<Func<TSource,TResult>>",  ParamName = "selector",  },
+		new { Method = "Min",             RetType = "TSource?", Type = "TSource",  SParam = "TSource",  Lambda = "source.Min",                                        GParams = "<TSource>",         ParamType = "",                                   ParamName = "",          },
+		new { Method = "Min",             RetType = "TResult?", Type = "TSource",  SParam = "TSource",  Lambda = "() => source.Min(selector)",                        GParams = "<TSource,TResult>", ParamType = "Expression<Func<TSource,TResult>>",  ParamName = "selector",  },
 
-		new { Method = "Max",             RetType = "TSource",  Type = "TSource",  SParam = "TSource",  Lambda = "source.Max",                                        GParams = "<TSource>",         ParamType = "",                                   ParamName = "",          },
-		new { Method = "Max",             RetType = "TResult",  Type = "TSource",  SParam = "TSource",  Lambda = "() => source.Max(selector)",                        GParams = "<TSource,TResult>", ParamType = "Expression<Func<TSource,TResult>>",  ParamName = "selector",  },
+		new { Method = "Max",             RetType = "TSource?", Type = "TSource",  SParam = "TSource",  Lambda = "source.Max",                                        GParams = "<TSource>",         ParamType = "",                                   ParamName = "",          },
+		new { Method = "Max",             RetType = "TResult?", Type = "TSource",  SParam = "TSource",  Lambda = "() => source.Max(selector)",                        GParams = "<TSource,TResult>", ParamType = "Expression<Func<TSource,TResult>>",  ParamName = "selector",  },
 
 		new { Method = "Sum",             RetType = "int",      Type = "int",      SParam = "int",      Lambda = "source.Sum",                                        GParams = "",                  ParamType = "",                                   ParamName = "",          },
 		new { Method = "Sum",             RetType = "int?",     Type = "int?",     SParam = "int?",     Lambda = "source.Sum",                                        GParams = "",                  ParamType = "",                                   ParamName = "",          },
@@ -125,7 +125,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.<#= info.Method #>Async<#= info.GParams #>(source<#= paramName #>, token);
 
-			return GetTask(<#= info.Lambda #>, token);
+			return GetTask<<#= info.RetType #>>(<#= info.Lambda #>, token);
 		}
 
 		#endregion

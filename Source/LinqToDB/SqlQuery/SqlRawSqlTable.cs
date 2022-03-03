@@ -39,6 +39,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public SqlRawSqlTable(SqlRawSqlTable table, ISqlExpression[] parameters)
+			: base(table.ObjectType, null)
 		{
 			Alias              = table.Alias;
 			Server             = table.Server;
@@ -46,7 +47,6 @@ namespace LinqToDB.SqlQuery
 			Schema             = table.Schema;
 
 			PhysicalName       = table.PhysicalName;
-			ObjectType         = table.ObjectType;
 			SequenceAttributes = table.SequenceAttributes;
 
 			SQL                = table.SQL;

@@ -21,11 +21,14 @@ using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 
 #if !NETCOREAPP2_1
-using MySqlDataDateTime = MySql.Data.Types.MySqlDateTime;
-using MySqlDataDecimal  = MySql.Data.Types.MySqlDecimal;
-
+using MySqlDataDateTime      = MySql.Data.Types.MySqlDateTime;
+using MySqlDataDecimal       = MySql.Data.Types.MySqlDecimal;
 using MySqlConnectorDateTime = MySqlConnector.MySqlDateTime;
+#if NET5_0_OR_GREATER
+using MySqlConnectorDecimal  = MySqlConnector.MySqlDecimal;
 #endif
+#endif
+
 namespace Tests.DataProvider
 {
 	using Model;
@@ -96,7 +99,6 @@ namespace Tests.DataProvider
 					if (context != ProviderName.MySqlConnector && context != TestProvName.MariaDB)
 					{
 						TestType<MySqlDataDecimal?>(conn, "decimalDataType", DataType.Decimal);
-
 						var dt1 = TestType<MySqlDataDateTime?>(conn, "datetimeDataType", DataType.DateTime);
 						var dt2 = new MySqlDataDateTime(2012, 12, 12, 12, 12, 12, 0)
 						{
@@ -107,6 +109,9 @@ namespace Tests.DataProvider
 					}
 					else
 					{
+#if NET5_0_OR_GREATER
+						TestType<MySqlConnectorDecimal?>(conn, "decimalDataType", DataType.Decimal);
+#endif
 						using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
 							Assert.That(TestType<MySqlConnectorDateTime?>(conn, "datetimeDataType", DataType.DateTime), Is.EqualTo(new MySqlConnectorDateTime(2012, 12, 12, 12, 12, 12, 0)));
 					}
@@ -114,6 +119,187 @@ namespace Tests.DataProvider
 #endif
 			}
 		}
+
+#if !NETCOREAPP2_1
+		[Table]
+		public class BigDecimalMySqlDataTable
+		{
+			[Column                            ] public int               Id       { get; set; }
+			[Column(DbType = "decimal(65, 30)")] public MySqlDataDecimal  Decimal  { get; set; }
+			[Column(DbType = "decimal(65, 30)")] public MySqlDataDecimal? DecimalN { get; set; }
+		}
+
+		[Test]
+		public void TestMySqlDataBigDecimal([IncludeDataSources(TestProvName.AllMySqlData)] string context, [Values] BulkCopyType bulkCopyType, [Values] bool inline)
+		{
+			using (var db = new DataConnection(context))
+			using (var tb = db.CreateLocalTable<BigDecimalMySqlDataTable>())
+			{
+				db.InlineParameters = inline;
+
+				// due to internal constructor we should ask provider to create parameter value for us
+				var value1 = db.Execute<MySqlDataDecimal>("SELECT 12345678901234567890123456789012345.123456789012345678901234567891");
+				var value2 = db.Execute<MySqlDataDecimal>("SELECT -12345678901234567890123456789012345.123456789012345678901234567891");
+
+				var testRecord1 = new BigDecimalMySqlDataTable()
+				{
+					Id       = 1,
+					Decimal  = value1,
+					DecimalN = value2,
+				};
+				var testRecord2 = new BigDecimalMySqlDataTable()
+				{
+					Id       = 2,
+					Decimal  = value2,
+					DecimalN = null,
+				};
+
+				// test insert
+				db.Insert(testRecord1);
+				db.Insert(testRecord2);
+
+				// test select (not really as it is broken badly in provider)
+				// IsDBNull fails with exception, so we cannot fix it easily
+				Assert.Throws<OverflowException>(() => tb.Single());
+				//var records = tb.OrderBy(_ => _.Id).ToArray();
+				//Assert.AreEqual(1, records[0].Id);
+				//Assert.AreEqual(value1, records[0].Decimal);
+				//Assert.AreEqual(value2, records[0].DecimalN);
+				//Assert.AreEqual(2, records[1].Id);
+				//Assert.AreEqual(value2, records[1].Decimal);
+				//Assert.IsNull(records[1].DecimalN);
+
+				// test insert linq (to force parameters)
+				tb.Delete();
+				tb.Insert(() => new BigDecimalMySqlDataTable()
+				{
+					Id       = 1,
+					Decimal  = value1,
+					DecimalN = value2,
+				});
+				tb.Insert(() => new BigDecimalMySqlDataTable()
+				{
+					Id       = 2,
+					Decimal  = value2,
+					DecimalN = null,
+				});
+
+				// test select (not really as it is broken badly in provider)
+				// IsDBNull fails with exception, so we cannot fix it easily
+				Assert.Throws<OverflowException>(() => tb.Single());
+				//var records = tb.OrderBy(_ => _.Id).ToArray();
+				//Assert.AreEqual(1, records[0].Id);
+				//Assert.AreEqual(value1, records[0].Decimal);
+				//Assert.AreEqual(value2, records[0].DecimalN);
+				//Assert.AreEqual(2, records[1].Id);
+				//Assert.AreEqual(value2, records[1].Decimal);
+				//Assert.IsNull(records[1].DecimalN);
+
+				// test bulk copy
+				tb.Delete();
+				db.BulkCopy(new BulkCopyOptions() { BulkCopyType = bulkCopyType }, new[] { testRecord1, testRecord2 });
+
+				Assert.Throws<OverflowException>(() => tb.Single());
+				//records = tb.OrderBy(_ => _.Id).ToArray();
+				//Assert.AreEqual(1, records[0].Id);
+				//Assert.AreEqual(value1, records[0].Decimal);
+				//Assert.AreEqual(value2, records[0].DecimalN);
+				//Assert.AreEqual(2, records[1].Id);
+				//Assert.AreEqual(value2, records[1].Decimal);
+				//Assert.IsNull(records[1].DecimalN);
+			}
+		}
+#endif
+
+#if NET5_0_OR_GREATER
+
+		[Table]
+		public class BigDecimalMySqlConnectorTable
+		{
+			[Column] public int Id { get; set; }
+			[Column(DbType = "decimal(65, 30)")] public MySqlConnectorDecimal  Decimal  { get; set; }
+			[Column(DbType = "decimal(65, 30)")] public MySqlConnectorDecimal? DecimalN { get; set; }
+		}
+
+		[Test]
+		public void TestMySqlConnectorBigDecimal([IncludeDataSources(TestProvName.AllMySqlConnector)] string context, [Values] BulkCopyType bulkCopyType, [Values] bool inline)
+		{
+			using (var db = new DataConnection(context))
+			using (var tb = db.CreateLocalTable<BigDecimalMySqlConnectorTable>())
+			{
+				db.InlineParameters = inline;
+
+				// due to internal constructor we should ask provider to create parameter value for us
+				// https://github.com/mysql-net/MySqlConnector/issues/1142
+				var value1 = db.Execute<MySqlConnectorDecimal>("SELECT 12345678901234567890123456789012345.123456789012345678901234567891");
+				var value2 = db.Execute<MySqlConnectorDecimal>("SELECT -12345678901234567890123456789012345.123456789012345678901234567891");
+
+				var testRecord1 = new BigDecimalMySqlConnectorTable()
+				{
+					Id       = 1,
+					Decimal  = value1,
+					DecimalN = value2,
+				};
+				var testRecord2 = new BigDecimalMySqlConnectorTable()
+				{
+					Id       = 2,
+					Decimal  = value2,
+					DecimalN = null,
+				};
+
+				// test insert
+				db.Insert(testRecord1);
+				db.Insert(testRecord2);
+
+				// test select
+				var records = tb.OrderBy(_ => _.Id).ToArray();
+				Assert.AreEqual(1, records[0].Id);
+				Assert.AreEqual(value1, records[0].Decimal);
+				Assert.AreEqual(value2, records[0].DecimalN);
+				Assert.AreEqual(2, records[1].Id);
+				Assert.AreEqual(value2, records[1].Decimal);
+				Assert.IsNull(records[1].DecimalN);
+
+				// test insert linq (to force parameters)
+				tb.Delete();
+				tb.Insert(() => new BigDecimalMySqlConnectorTable()
+				{
+					Id       = 1,
+					Decimal  = value1,
+					DecimalN = value2,
+				});
+				tb.Insert(() => new BigDecimalMySqlConnectorTable()
+				{
+					Id       = 2,
+					Decimal  = value2,
+					DecimalN = null,
+				});
+
+				// test select
+				records = tb.OrderBy(_ => _.Id).ToArray();
+				Assert.AreEqual(1, records[0].Id);
+				Assert.AreEqual(value1, records[0].Decimal);
+				Assert.AreEqual(value2, records[0].DecimalN);
+				Assert.AreEqual(2, records[1].Id);
+				Assert.AreEqual(value2, records[1].Decimal);
+				Assert.IsNull(records[1].DecimalN);
+
+				// cannot test filtering as there is no equality/comparison defined on .net type
+
+				// test bulk copy
+				tb.Delete();
+				db.BulkCopy(new BulkCopyOptions() { BulkCopyType = bulkCopyType }, new[] { testRecord1, testRecord2 });
+
+				records = tb.OrderBy(_ => _.Id).ToArray();
+				Assert.AreEqual(1, records[0].Id);
+				Assert.AreEqual(value1, records[0].Decimal);
+				Assert.AreEqual(value2, records[0].DecimalN);
+				Assert.AreEqual(2, records[1].Id);
+				Assert.AreEqual(value2, records[1].Decimal);
+				Assert.IsNull(records[1].DecimalN);
+			}
+		}
+#endif
 
 		[Test]
 		public void TestDate([IncludeDataSources(TestProvName.AllMySql)] string context)

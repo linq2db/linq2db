@@ -68,7 +68,7 @@ namespace LinqToDB.Linq.Builder
 			return Context.ConvertToParentIndex(index, context);
 		}
 
-		public virtual void SetAlias(string alias)
+		public virtual void SetAlias(string? alias)
 		{
 			Context.SetAlias(alias);
 		}

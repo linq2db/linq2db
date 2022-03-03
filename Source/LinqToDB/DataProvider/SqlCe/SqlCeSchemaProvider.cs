@@ -89,7 +89,7 @@ WHERE PRIMARY_KEY = 1");
 				select new ColumnInfo
 				{
 					TableID    = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME"),
-					Name       = c.Field<string>("COLUMN_NAME"),
+					Name       = c.Field<string>("COLUMN_NAME")!,
 					IsNullable = c.Field<string>("IS_NULLABLE") == "YES",
 					Ordinal    = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
 					DataType   = c.Field<string>("DATA_TYPE"),
