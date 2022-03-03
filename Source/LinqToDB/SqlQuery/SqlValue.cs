@@ -28,7 +28,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		object? _value;
-		
+
 		public object? Value
 		{
 			get => _value;
@@ -36,14 +36,14 @@ namespace LinqToDB.SqlQuery
 			{
 				if (_value == value)
 					return;
-				
+
 				_value    = value;
 				_hashCode = null;
 			}
 		}
 
 		DbDataType _valueType;
-		
+
 		public DbDataType ValueType
 		{
 			get => _valueType;

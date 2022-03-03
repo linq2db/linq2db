@@ -2364,8 +2364,8 @@ namespace Tests.xUpdate
 				{
 					new UpdateOutput<TableWithData>
 					{
-						Deleted  = sourceData[6],
-						Inserted = sourceData[6] with { Id = 20 },
+						Deleted  = sourceData[6] with { Value = default },
+						Inserted = sourceData[6] with { Id = 20, Value = default },
 					}
 				},
 				output,

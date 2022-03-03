@@ -587,34 +587,52 @@ namespace LinqToDB.Linq.Builder
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				var expr   = BuildExpression(null, 0, false);
-				var mapper = Builder.BuildMapper<T>(expr);
-
 				var updateStatement = (SqlUpdateStatement)Statement!;
 
-				var setColumns = new HashSet<string>();
-
-				foreach (var item in updateStatement.Update.Items)
+				if (updateStatement.SelectQuery.From.Tables.Count > 0 && updateStatement.SelectQuery.From.Tables[0].Source is SelectQuery)
 				{
-					switch (item.Column)
+					var expr   = BuildExpression(null, 0, false);
+
+					var setColumns = new HashSet<string>();
+
+					foreach (var item in updateStatement.Update.Items)
 					{
-						case SqlColumn { Expression : SqlField field } :
-							setColumns.Add(field.PhysicalName);
-							break;
-						case SqlField field :
-							setColumns.Add(field.PhysicalName);
-							break;
+						switch (item.Column)
+						{
+							case SqlColumn { Expression : SqlField field } :
+								setColumns.Add(field.PhysicalName);
+								break;
+							case SqlField field :
+								setColumns.Add(field.PhysicalName);
+								break;
+						}
 					}
+
+					var columns = new List<ISqlExpression>();
+
+					foreach (var c in Sequence[0].SelectQuery.Select.Columns)
+					{
+						if (c.Expression is SqlField f && !setColumns.Contains(f.PhysicalName))
+							columns.Add(new SqlExpression(c.Expression.SystemType!, $"NULL /* {f.PhysicalName} */"));
+						else
+							columns.Add(c.Expression);
+					}
+
+					var mapper = Builder.BuildMapper<T>(expr);
+
+					updateStatement.Output!.OutputColumns = columns;
+
+					QueryRunner.SetRunQuery(query, mapper);
 				}
+				else
+				{
+					var expr   = BuildExpression(null, 0, false);
+					var mapper = Builder.BuildMapper<T>(expr);
 
-				//Builder.BlockExpressions
+					updateStatement.Output!.OutputColumns = Sequence[0].SelectQuery.Select.Columns.Select(c => c.Expression).ToList();
 
-				updateStatement.Output!.OutputColumns = Sequence[0].SelectQuery.Select.Columns
-					.Select(c => c.Expression)
-					//.Where (c => c is not SqlField f || setColumns.Contains(f.PhysicalName))
-					.ToList();
-
-				QueryRunner.SetRunQuery(query, mapper);
+					QueryRunner.SetRunQuery(query, mapper);
+				}
 			}
 		}
 		#endregion
