@@ -37,6 +37,7 @@
 		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"           Version="8.5.4"       />
 		<PackageVersion Include="System.Data.SQLite.Core"                   Version="1.0.115.5"   />
 		<PackageVersion Include="IBM.Data.DB.Provider"                      Version="11.5.5010.4" />
+    <PackageVersion Include="Actian.Client" Version="3.0.0" />
 		<!--infrastructure/testing-->
 		<PackageVersion Include="MiniProfiler"                              Version="3.2.0.157"   />
 		<PackageVersion Include="MiniProfiler.Shared"                       Version="4.2.22"      />
