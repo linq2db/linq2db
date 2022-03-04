@@ -77,7 +77,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			internal static Func<object,string> GetXmlConverter(MappingSchema mappingSchema, SqlTable sqlTable)
 			{
-				var ed  = mappingSchema.GetEntityDescriptor(sqlTable.ObjectType!);
+				var ed  = mappingSchema.GetEntityDescriptor(sqlTable.ObjectType);
 
 				var converters = new Action<StringBuilder,object>[ed.Columns.Count];
 				for (var i = 0; i < ed.Columns.Count; i++)
@@ -112,7 +112,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				var exp = methodCall.Arguments[1];
 				var arg = converter(context, exp, null);
-				var ed  = mappingSchema.GetEntityDescriptor(table.ObjectType!);
+				var ed  = mappingSchema.GetEntityDescriptor(table.ObjectType);
 
 				if (arg is SqlParameter p)
 				{

@@ -108,6 +108,9 @@ namespace LinqToDB.Metadata
 		{
 			var doc = XDocument.Load(new StreamReader(xmlDocStream));
 
+			if (doc.Root == null)
+				throw new MetadataException($"'{fileName}': Root element missing.");
+
 			return doc.Root.Elements().Where(e => e.Name.LocalName == "Type").Select(t =>
 			{
 				var aname = t.Attribute("Name");

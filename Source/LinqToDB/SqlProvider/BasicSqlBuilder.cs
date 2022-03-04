@@ -577,31 +577,40 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.AppendLine();
 		}
 
-		protected virtual bool SupportsBooleanInColumn => false;
 		protected virtual bool SupportsNullInColumn    => true;
 
 		protected virtual ISqlExpression WrapBooleanExpression(ISqlExpression expr)
 		{
-			var wrap = false;
-
 			if (expr.SystemType == typeof(bool))
 			{
-				if (expr is SqlSearchCondition)
-					wrap = true;
-				else
-					wrap =
-						expr is SqlExpression ex &&
-						ex.Expr == "{0}" &&
-						ex.Parameters.Length == 1 &&
-						ex.Parameters[0] is SqlSearchCondition;
-			}
-
-			if (wrap)
-			{
-				expr = new SqlFunction(typeof(bool), "CASE", expr, new SqlValue(true), new SqlValue(false))
+				SqlSearchCondition? sc = null;
+				if (expr is SqlSearchCondition sc1)
 				{
-					DoNotOptimize = true
-				};
+					sc = sc1;
+				}
+				else if (
+					expr is SqlExpression ex      &&
+					ex.Expr              == "{0}" &&
+					ex.Parameters.Length == 1     &&
+					ex.Parameters[0] is SqlSearchCondition sc2)
+				{
+					sc = sc2;
+				}
+
+				if (sc != null)
+				{
+					if (sc.Conditions.Count == 0)
+					{
+						expr = new SqlValue(true);
+					}
+					else
+					{
+						expr = new SqlFunction(typeof(bool), "CASE", expr, new SqlValue(true), new SqlValue(false))
+						{
+							DoNotOptimize = true
+						};
+					}
+				}
 			}
 
 			return expr;
@@ -609,10 +618,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
 		{
-			if (!SupportsBooleanInColumn)
-			{
-				expr = WrapBooleanExpression(expr);
-			}
+			expr = WrapBooleanExpression(expr);
 
 			expr = WrapColumnExpression(expr);
 
@@ -1101,7 +1107,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildCreateTableStatement(SqlCreateTableStatement createTable)
 		{
-			var table = createTable.Table!;
+			var table = createTable.Table;
 
 			BuildStartCreateTableStatement(createTable);
 
@@ -1113,14 +1119,6 @@ namespace LinqToDB.SqlProvider
 			var orderedFields = table.Fields.OrderBy(_ => _.CreateOrder >= 0 ? 0 : (_.CreateOrder == null ? 1 : 2)).ThenBy(_ => _.CreateOrder);
 			var fields = orderedFields.Select(f => new CreateFieldInfo { Field = f, StringBuilder = new StringBuilder() }).ToList();
 			var maxlen = 0;
-
-			void AppendToMax(bool addCreateFormat)
-			{
-				foreach (var field in fields)
-					if (addCreateFormat || field.Field.CreateFormat == null)
-						while (maxlen > field.StringBuilder.Length)
-							field.StringBuilder.Append(' ');
-			}
 
 			var isAnyCreateFormat = false;
 
@@ -1137,7 +1135,7 @@ namespace LinqToDB.SqlProvider
 					isAnyCreateFormat = true;
 			}
 
-			AppendToMax(true);
+			AppendToMax(fields, maxlen, true);
 
 			if (isAnyCreateFormat)
 				foreach (var field in fields)
@@ -1166,7 +1164,7 @@ namespace LinqToDB.SqlProvider
 					maxlen = field.StringBuilder.Length;
 			}
 
-			AppendToMax(true);
+			AppendToMax(fields, maxlen, true);
 
 			if (isAnyCreateFormat)
 			{
@@ -1211,7 +1209,7 @@ namespace LinqToDB.SqlProvider
 					}
 				}
 
-				AppendToMax(false);
+				AppendToMax(fields, maxlen, false);
 			}
 
 			// Build nullable attribute.
@@ -1236,7 +1234,7 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 
-			AppendToMax(false);
+			AppendToMax(fields, maxlen, false);
 
 			// Build identity attribute.
 			//
@@ -1252,7 +1250,7 @@ namespace LinqToDB.SqlProvider
 
 					if (field.Field.CreateFormat != null)
 					{
-						if (field.Field.CreateFormat != null && field.Identity.Length == 0)
+						if (field.Identity.Length == 0)
 						{
 							field.Identity = field.StringBuilder.ToString() + ' ';
 							field.StringBuilder.Length = 0;
@@ -1264,7 +1262,7 @@ namespace LinqToDB.SqlProvider
 					}
 				}
 
-				AppendToMax(false);
+				AppendToMax(fields, maxlen, false);
 			}
 
 			// Build fields.
@@ -1304,7 +1302,7 @@ namespace LinqToDB.SqlProvider
 			{
 				StringBuilder.AppendLine(Comma).AppendLine();
 
-				BuildCreateTablePrimaryKey(createTable, ConvertInline("PK_" + createTable.Table!.PhysicalName, ConvertType.NameToQueryTable),
+				BuildCreateTablePrimaryKey(createTable, ConvertInline("PK_" + createTable.Table.PhysicalName, ConvertType.NameToQueryTable),
 					pk.Select(f => ConvertInline(f.Field.PhysicalName, ConvertType.NameToQueryField)));
 			}
 
@@ -1313,6 +1311,14 @@ namespace LinqToDB.SqlProvider
 			AppendIndent().AppendLine(")");
 
 			BuildEndCreateTableStatement(createTable);
+
+			static void AppendToMax(IEnumerable<CreateFieldInfo> fields, int maxlen, bool addCreateFormat)
+			{
+				foreach (var field in fields)
+					if (addCreateFormat || field.Field.CreateFormat == null)
+						while (maxlen > field.StringBuilder.Length)
+							field.StringBuilder.Append(' ');
+			}
 		}
 
 		internal void BuildTypeName(StringBuilder sb, SqlDataType type)

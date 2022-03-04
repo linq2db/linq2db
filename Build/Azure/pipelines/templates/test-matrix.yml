@@ -39,10 +39,9 @@ parameters:
 
 
 # OPERATION SYSTEM SELECTORS
+# - enable_os_win2022  (true/false string) : enables testrun for windows 2019 image (windows-2022)
 # - enable_os_win2019  (true/false string) : enables testrun for windows 2019 image (windows-2019)
-# - enable_os_win2016  (true/false string) : enables testrun for windows 2016 image (vs2017-win2016)
-# - enable_os_ubuntu18 (true/false string) : enables testrun for Ubuntu 18.04 image (ubuntu-18.04)
-# - enable_os_ubuntu20 (true/false string) : enables testrun for Ubuntu 20.04 image (ubuntu-20.04)
+# - enable_os_ubuntu   (true/false string) : enables testrun for Ubuntu 20.04 image (ubuntu-20.04)
 # - enable_os_macos    (true/false string) : enables testrun for Mac OS image (macOS-10.15)
 
 # TARGET FRAMEWORK SELECTORS
@@ -50,6 +49,7 @@ parameters:
 # - enable_fw_netcore21 (true/false string) : enables testrun against .net core 2.1
 # - enable_fw_netcore31 (true/false string) : enables testrun against .net core 3.1
 # - enable_fw_net50     (true/false string) : enables testrun against .net 5.0
+# - enable_fw_net60     (true/false string) : enables testrun against .net 6.0
 
 # TEST CONFIG SELECTOR
 # - config_win   (string) : contains name of test config json file for windows runs (without extension)
@@ -85,15 +85,15 @@ jobs:
           config_win: sqlite
           config_linux: sqlite
           config_macos: sqlite
-          enable_os_win2016: true
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: true
+          enable_os_win2022: true
+          enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: true
           enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: true
+          enable_fw_net60: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]')) }}:
             enabled: true
@@ -105,15 +105,15 @@ jobs:
           config_win: sqlite.ms
           config_linux: sqlite.ms
           config_macos: sqlite.ms
-          enable_os_win2016: true
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: true
+          enable_os_win2022: true
+          enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: true
-          enable_fw_netcore21: true
+          enable_fw_netcore21: false
           enable_fw_netcore31: true
           enable_fw_net50: true
+          enable_fw_net60: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]')) }}:
             enabled: true
@@ -124,15 +124,15 @@ jobs:
         - name: Access_OLEDB_JET
           title: Access Jet
           config_win: access
-          enable_os_win2016: false
           enable_os_win2019: true
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: false
+          enable_os_win2022: false
+          enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
@@ -143,15 +143,15 @@ jobs:
           title: Access ACE
           config_win: access.ace
           script_win: access.ace.cmd
-          enable_os_win2016: false
           enable_os_win2019: true
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: false
+          enable_os_win2022: false
+          enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
@@ -161,15 +161,15 @@ jobs:
         - name: Access_ODBC_MDB
           title: Access ODBC MDB
           config_win: access.odbc.mdb
-          enable_os_win2016: false
           enable_os_win2019: true
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: false
+          enable_os_win2022: false
+          enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
@@ -180,15 +180,15 @@ jobs:
           title: Access ODBC ACE
           config_win: access.odbc.ace
           script_win: access.ace.cmd
-          enable_os_win2016: false
           enable_os_win2019: true
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: false
+          enable_os_win2022: false
+          enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
@@ -199,15 +199,15 @@ jobs:
           title: Access ODBC ACE x64
           config_win: access.odbc.ace
           script_win: access.ace.x64.cmd
-          enable_os_win2016: true
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: false
+          enable_os_win2022: true
+          enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
@@ -218,15 +218,15 @@ jobs:
           title: Access OleDb ACE x64
           config_win: access.ace
           script_win: access.ace.x64.cmd
-          enable_os_win2016: false # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: false
+          enable_os_win2022: false
+          enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: false
           enable_fw_netcore21: false # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
           enable_fw_netcore31: false # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
           enable_fw_net50: false # true (disabled due to a lot of random crashes https://github.com/dotnet/runtime/issues/36954)
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
@@ -238,15 +238,15 @@ jobs:
           title: SQL CE
           config_win: sqlce
           psscript_win: sqlce.ps1
-          enable_os_win2016: true
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: false
+          enable_os_win2022: true
+          enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlce.all]')) }}:
             enabled: true
@@ -261,15 +261,15 @@ jobs:
           script_linux: mysql.sh
           script_macos: mac.mysql.sh
           install_docker_macos: true
-          enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: true
+          enable_os_win2022: false
+          enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: true
           enable_fw_net50: true
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
             enabled: true
@@ -283,15 +283,15 @@ jobs:
           script_linux: mysql55.sh
           script_macos: mac.mysql55.sh
           install_docker_macos: true
-          enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: true
+          enable_os_win2022: false
+          enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
             enabled: true
@@ -307,15 +307,15 @@ jobs:
           script_linux: mariadb.sh
           script_macos: mac.mariadb.sh
           install_docker_macos: true
-          enable_os_win2016: false # true (needs working docker image)
           enable_os_win2019: false # true (needs working docker image)
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: true
+          enable_os_win2022: false
+          enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
             enabled: true
@@ -330,15 +330,15 @@ jobs:
           script_linux: pgsql.sh
           script_macos: mac.pgsql.sh
           install_docker_macos: true
-          enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: true
+          enable_os_win2022: false
+          enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: false
           enable_fw_netcore31: true
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
@@ -352,15 +352,15 @@ jobs:
           script_linux: pgsql92.sh
           script_macos: mac.pgsql92.sh
           install_docker_macos: true
-          enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: true
+          enable_os_win2022: false
+          enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
@@ -374,15 +374,15 @@ jobs:
           script_linux: pgsql93.sh
           script_macos: mac.pgsql93.sh
           install_docker_macos: true
-          enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: true
+          enable_os_win2022: false
+          enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
@@ -396,15 +396,15 @@ jobs:
           script_linux: pgsql95.sh
           script_macos: mac.pgsql95.sh
           install_docker_macos: true
-          enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: true
+          enable_os_win2022: false
+          enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
@@ -420,15 +420,15 @@ jobs:
           script_linux: pgsql10.sh
           script_macos: mac.pgsql10.sh
           install_docker_macos: true
-          enable_os_win2016: false # true (needs working docker image)
           enable_os_win2019: false # true (needs working docker image)
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: true
+          enable_os_win2022: false
+          enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
@@ -443,15 +443,15 @@ jobs:
           script_linux: pgsql11.sh
           script_macos: mac.pgsql11.sh
           install_docker_macos: true
-          enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: true
+          enable_os_win2022: false
+          enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
@@ -466,15 +466,15 @@ jobs:
           script_linux: pgsql12.sh
           script_macos: mac.pgsql12.sh
           install_docker_macos: true
-          enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: true
+          enable_os_win2022: false
+          enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
@@ -489,15 +489,38 @@ jobs:
           script_linux: pgsql13.sh
           script_macos: mac.pgsql13.sh
           install_docker_macos: true
-          enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: true
+          enable_os_win2022: false
+          enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: true
+          enable_fw_net60: false
+          is_experimental: false
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
+            enabled: false
+
+        - name: PostgreSQL14
+          title: PostgreSQL 14
+          config_linux: pgsql14
+          config_macos: pgsql14
+          script: pgsql14.sh
+          script_linux: pgsql14.sh
+          script_macos: mac.pgsql14.sh
+          install_docker_macos: true
+          enable_os_win2019: false
+          enable_os_win2022: false
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_net472: false
+          enable_fw_netcore21: false
+          enable_fw_netcore31: false
+          enable_fw_net50: false
+          enable_fw_net60: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
@@ -509,15 +532,15 @@ jobs:
           title: SQL Server 2005 (System.Data.SqlClient)
           config_win: sqlserver.2005
           script_win: sqlserver.2005.cmd
-          enable_os_win2016: true
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: false
+          enable_os_win2022: true
+          enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -528,15 +551,15 @@ jobs:
           title: SQL Server 2005 (Microsoft.Data.SqlClient)
           config_win: sqlserver.2005.ms
           script_win: sqlserver.2005.cmd
-          enable_os_win2016: false # true (too many sqlserver tests)
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: false
+          enable_os_win2022: false
+          enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -547,15 +570,15 @@ jobs:
           title: SQL Server 2008 (System.Data.SqlClient)
           config_win: sqlserver.2008
           script_win: sqlserver.2008.cmd
-          enable_os_win2016: true
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: false
+          enable_os_win2022: true
+          enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -566,15 +589,15 @@ jobs:
           title: SQL Server 2008 (Microsoft.Data.SqlClient)
           config_win: sqlserver.2008.ms
           script_win: sqlserver.2008.cmd
-          enable_os_win2016: false # true (too many sqlserver tests)
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: false
+          enable_os_win2022: false
+          enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -585,15 +608,15 @@ jobs:
           title: SQL Server 2012 (System.Data.SqlClient)
           config_win: sqlserver.2012
           script_win: sqlserver.2012.cmd
-          enable_os_win2016: true
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: false
+          enable_os_win2022: true
+          enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -604,15 +627,15 @@ jobs:
           title: SQL Server 2012 (Microsoft.Data.SqlClient)
           config_win: sqlserver.2012.ms
           script_win: sqlserver.2012.cmd
-          enable_os_win2016: false # true (too many sqlserver tests)
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: false
+          enable_os_win2022: false
+          enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -623,15 +646,15 @@ jobs:
           title: SQL Server 2014 (System.Data.SqlClient)
           config_win: sqlserver.2014
           script_win: sqlserver.2014.cmd
-          enable_os_win2016: true
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: false
+          enable_os_win2022: true
+          enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -642,15 +665,15 @@ jobs:
           title: SQL Server 2014 (Microsoft.Data.SqlClient)
           config_win: sqlserver.2014.ms
           script_win: sqlserver.2014.cmd
-          enable_os_win2016: false # true (too many sqlserver tests)
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: false
+          enable_os_win2022: false
+          enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -661,15 +684,15 @@ jobs:
           title: SQL Server 2016 (System.Data.SqlClient)
           config_win: sqlserver.2016
           script_win: sqlserver.2016.cmd
-          enable_os_win2016: true
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: false
+          enable_os_win2022: true
+          enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -680,15 +703,15 @@ jobs:
           title: SQL Server 2016 (Microsoft.Data.SqlClient)
           config_win: sqlserver.2016.ms
           script_win: sqlserver.2016.cmd
-          enable_os_win2016: false # true (too many sqlserver tests)
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: false
+          enable_os_win2022: false
+          enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -704,15 +727,15 @@ jobs:
           script_linux: sqlserver.2017.sh
           script_macos: mac.sqlserver.2017.sh
           install_docker_macos: true
-          enable_os_win2016: false # disabled as MS removed docker images for sql server for no good reason
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: true
+          enable_os_win2022: false
+          enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -728,15 +751,15 @@ jobs:
           script_linux: sqlserver.2017.sh
           script_macos: mac.sqlserver.2017.sh
           install_docker_macos: true
-          enable_os_win2016: false # too many sqlserver tests
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: true
+          enable_os_win2022: false
+          enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: true
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -752,15 +775,15 @@ jobs:
           script_linux: sqlserver.2019.sh
           script_macos: mac.sqlserver.2019.sh
           install_docker_macos: true
-          enable_os_win2016: false
-          enable_os_win2019: true
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: true
+          enable_os_win2019: false
+          enable_os_win2022: true
+          enable_os_ubuntu: true
           enable_os_macos:  true
           enable_fw_net472: true
           enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: true
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
             enabled: true
@@ -776,15 +799,15 @@ jobs:
           script_linux: sqlserver.2019.sh
           script_macos: mac.sqlserver.2019.sh
           install_docker_macos: true
-          enable_os_win2016: false
-          enable_os_win2019: true
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: true
+          enable_os_win2019: false
+          enable_os_win2022: true
+          enable_os_ubuntu: true
           enable_os_macos:  true
           enable_fw_net472: true
           enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: true
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
             enabled: true
@@ -799,15 +822,15 @@ jobs:
           script_linux: sybase.sh
           script_macos: sybase.sh
           install_docker_macos: true
-          enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: true
+          enable_os_win2022: false
+          enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: true
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sybase.ase.all]')) }}:
             enabled: true
@@ -822,15 +845,15 @@ jobs:
           script_linux: oracle11.sh
           script_macos: oracle11.sh
           install_docker_macos: true
-          enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: true
+          enable_os_win2022: false
+          enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
@@ -844,15 +867,15 @@ jobs:
           script_linux: oracle12.sh
           script_macos: oracle12.sh
           install_docker_macos: true
-          enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: true
+          enable_os_win2022: false
+          enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
@@ -867,15 +890,15 @@ jobs:
           script_linux: firebird25.sh
           script_macos: firebird25.sh
           install_docker_macos: true
-          enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: true
+          enable_os_win2022: false
+          enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]')) }}:
             enabled: true
@@ -889,15 +912,15 @@ jobs:
           script_linux: firebird3.sh
           script_macos: firebird3.sh
           install_docker_macos: true
-          enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: true
+          enable_os_win2022: false
+          enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]')) }}:
             enabled: true
@@ -911,15 +934,15 @@ jobs:
           script_linux: firebird4.sh
           script_macos: firebird4.sh
           install_docker_macos: true
-          enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: true
+          enable_os_win2022: false
+          enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]')) }}:
             enabled: true
@@ -936,15 +959,15 @@ jobs:
           nuget_linux: IBM.Data.DB2.Core-lnx -Version 3.1.0.500
           nuget_macos: IBM.Data.DB2.Core-osx -Version 3.1.0.500
           install_docker_macos: true
-          enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: true
+          enable_os_win2022: false
+          enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: true
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]')) }}:
             enabled: true
@@ -961,15 +984,15 @@ jobs:
           nuget_linux: IBM.Data.DB2.Core-lnx -Version 3.1.0.500
           nuget_macos: IBM.Data.DB2.Core-osx -Version 3.1.0.500
           install_docker_macos: true
-          enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: false # true (needs working docker image)
+          enable_os_win2022: false
+          enable_os_ubuntu: false # true (needs working docker image)
           enable_os_macos: # false true (needs working docker image)
           enable_fw_net472: false
           enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: true
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[informix.all]')) }}:
             enabled: true
@@ -985,15 +1008,15 @@ jobs:
           nuget_linux: IBM.Data.DB2.Core-lnx -Version 3.1.0.500
           nuget_macos: IBM.Data.DB2.Core-osx -Version 3.1.0.500
           install_docker_macos: true
-          enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: true
+          enable_os_win2022: false
+          enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore21: false
           enable_fw_netcore31: false
           enable_fw_net50: true
+          enable_fw_net60: false
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[informix.all]')) }}:
             enabled: true
@@ -1008,15 +1031,15 @@ jobs:
           script_linux: hana2.sh
           script_macos: mac.hana2.sh
           install_docker_macos: true
-          enable_os_win2016: false
           enable_os_win2019: false
-          enable_os_ubuntu18: false
-          enable_os_ubuntu20: true
+          enable_os_win2022: false
+          enable_os_ubuntu: true
           enable_os_macos: false # start takes 'forever'
           enable_fw_net472: false
           enable_fw_netcore21: true
           enable_fw_netcore31: false
           enable_fw_net50: false
+          enable_fw_net60: false
           is_experimental: false
           docker_login: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[saphana.all]')) }}:

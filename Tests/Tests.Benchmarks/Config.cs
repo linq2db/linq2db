@@ -20,6 +20,7 @@ namespace LinqToDB.Benchmarks
 			var core21 = Job.Default.WithRuntime(CoreRuntime.Core21).WithDefault();
 			var core31 = Job.Default.WithRuntime(CoreRuntime.Core31).WithDefault();
 			var net50  = Job.Default.WithRuntime(CoreRuntime.Core50).WithDefault();
+			var net60  = Job.Default.WithRuntime(CoreRuntime.Core60).WithDefault();
 
 			return new ManualConfig()
 				.AddLogger         (DefaultConfig.Instance.GetLoggers        ().ToArray())
@@ -30,8 +31,7 @@ namespace LinqToDB.Benchmarks
 				.AddExporter       (MarkdownExporter.GitHub)
 				.AddDiagnoser      (MemoryDiagnoser.Default)
 				.WithArtifactsPath (@"..\..\..")
-				// disable 2.1/3.1 for now to save time
-				.AddJob            (net472/*, core21*/, core31, net50);
+				.AddJob            (net472/*, core21*/, core31, net50, net60);
 		}
 
 		private static Job WithDefault(this Job job)
