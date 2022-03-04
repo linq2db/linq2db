@@ -8,6 +8,7 @@
 		<tags>
 			linq linq2db LinqToDB ORM database DB SQL SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase Oracle ODP PostgreSQL DB2 Informix SapHana
 		</tags>
+		<readme>README.md</readme>
 		<dependencies>
 			<group targetFramework=".NETFramework4.5" />
 			<group targetFramework=".NETFramework4.6" />
@@ -36,6 +37,8 @@
 	</metadata>
 
 	<files>
+		<file src="README.linq2db.md"                                         target="README.md"           />
+
 		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.pdb"          target="lib\net45\"          />
 		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.xml"          target="lib\net45\"          />
 		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.dll"          target="lib\net45\"          />
