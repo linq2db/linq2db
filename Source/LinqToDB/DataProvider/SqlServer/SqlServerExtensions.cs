@@ -774,5 +774,16 @@ namespace LinqToDB.DataProvider.SqlServer
 		#endregion
 
 		#endregion
+
+		/// <summary>
+		/// Generates 'ISNULL( value, replacementValue )' function.
+		/// </summary>
+		/// <typeparam name="T">Generic type.</typeparam>
+		/// <param name="ext">Extension point.</param>
+		/// <param name="value">Value to test whether is NULL.</param>
+		/// <param name="replacementValue">Value to replace.</param>
+		/// <returns>Function returns a replacementValue if the value is NULL.</returns>
+		[Sql.Extension("ISNULL({value}, {replacementValue})", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAllParametersNullable)]
+		public static T IsNull<T>(this ISqlServerExtensions? ext, [ExprParameter] T? value, [ExprParameter] T? replacementValue) => throw new LinqException($"'{nameof(IsNull)}' is server - side method.");
 	}
 }
