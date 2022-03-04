@@ -1999,5 +1999,16 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[Test]
+		public void AsUpdatableEmptyTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Person.AsUpdatable();
+
+				var ex = Assert.Throws<LinqToDBException>(() => query.Update())!;
+				Assert.AreEqual("Update query has no setters defined.", ex.Message);
+			}
+		}
 	}
 }
