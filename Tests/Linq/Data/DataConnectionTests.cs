@@ -1153,7 +1153,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestDisposeFlagCloning962Test2([DataSources(false, TestProvName.AllMySqlData)] string context, [Values] bool withScope)
+		public void TestDisposeFlagCloning962Test2([DataSources(false)] string context, [Values] bool withScope)
 		{
 			if (withScope && (
 				context == ProviderName.DB2                 ||

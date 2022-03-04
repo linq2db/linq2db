@@ -100,7 +100,7 @@ namespace LinqToDB.SqlQuery
 
 		public static void PrepareQueryAndAliases(SqlStatement statement, AliasesContext? prevAliasContext, out AliasesContext newAliasContext)
 		{
-			if (statement.SelectQuery != null)
+			if (statement.SelectQuery != null && !(statement is SqlSelectStatement && statement.SelectQuery.From.Tables.Count == 0))
 				statement.SelectQuery.DoNotSetAliases = true;
 
 			var ctx = new PrepareQueryAndAliasesContext(prevAliasContext);
