@@ -1165,6 +1165,7 @@ namespace Tests.Data
 				(context.Contains("Oracle") && context.Contains("Managed")) ||
 				context == ProviderName.SapHanaNative       ||
 #endif
+				TestProvName.AllMySqlData.Contains(context) ||
 				context.StartsWith("Access")                ||
 				context.Contains("SqlServer")               ||
 				context.Contains("SqlAzure")                ||
@@ -1188,20 +1189,20 @@ namespace Tests.Data
 				Assert.Inconclusive("Provider not configured or has issues with TransactionScope");
 			}
 
-			TransactionScope? scope = withScope ? new TransactionScope() : null;
+			var scope = withScope ? new TransactionScope() : null;
+
 			try
 			{
-				using (var db = new DataConnection(context))
-				{
-					// test cloned data connection without LoadWith, as it doesn't use cloning in v3
-					db.Select(() => "test1");
-					using (var cdb = ((IDataContext)db).Clone(true))
-					{
-						cdb.Select(() => "test2");
+				using var db = new DataConnection(context);
 
-						scope?.Complete();
-					}
-				}
+				// test cloned data connection without LoadWith, as it doesn't use cloning in v3
+				db.Select(() => "test1");
+
+				using var cdb = ((IDataContext)db).Clone(true);
+
+				cdb.Select(() => "test2");
+
+				scope?.Complete();
 			}
 			finally
 			{
