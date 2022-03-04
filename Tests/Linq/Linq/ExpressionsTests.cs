@@ -1068,7 +1068,7 @@ namespace Tests.Linq
 
 		#region Regression: query comparison
 		[Test(Description = "Tests regression introduced in 3.5.2")]
-		public void ComparisonTest1([DataSources] string context)
+		public void ComparisonTest1([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1085,7 +1085,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "Tests regression introduced in 3.5.2")]
-		public void ComparisonTest2([DataSources] string context)
+		public void ComparisonTest2([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
