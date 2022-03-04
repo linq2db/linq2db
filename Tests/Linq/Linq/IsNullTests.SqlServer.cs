@@ -27,7 +27,7 @@ namespace Tests.Linq
 			{
 				var query = (from c in db.Category
 							 select Sql.Ext.SqlServer().IsNull(c.CategoryName, defaultCategory));
-				Assert.That(query.ToString().Contains(statement));
+				Assert.That(query.ToString()!.Contains(statement));
 
 				var results = await query.ToListAsync();
 				Assert.IsTrue(results.Any());
@@ -44,7 +44,7 @@ namespace Tests.Linq
 			using (var db = new NorthwindDB(context))
 			{
 				var supplierQuery =  GetSupplierIdWithMaxUnitPrice(categoryId, db);
-				Assert.That(supplierQuery.ToString().Contains(statement));
+				Assert.That(supplierQuery.ToString()!.Contains(statement));
 
 				var results = await supplierQuery.ToListAsync();
 				Assert.IsTrue(results.Any());
