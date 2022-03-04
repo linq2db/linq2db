@@ -2126,6 +2126,18 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[Test]
+		public void AsValueInsertableEmptyTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var vi = db.Person.AsValueInsertable();
+
+				var ex = Assert.Throws<LinqToDBException>(() => vi.Insert())!;
+				Assert.AreEqual("Insert query has no setters defined.", ex.Message);
+			}
+		}
+
 		#region InsertIfNotExists (https://github.com/linq2db/linq2db/issues/3005)
 		private int GetEmptyRowCount(string context)
 		{
