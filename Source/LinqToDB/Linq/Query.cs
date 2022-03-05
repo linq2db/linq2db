@@ -83,8 +83,7 @@ namespace LinqToDB.Linq
 			if (_queryableAccessorDic.TryGetValue(expr, out var e))
 				return _queryableAccessorList.IndexOf(e);
 
-			e = new QueryableAccessor { Accessor = qe.CompileExpression() };
-			e.Queryable = e.Accessor(expr);
+			e = new QueryableAccessor(qe.CompileExpression(), expr);
 
 			_queryableAccessorDic. Add(expr, e);
 			_queryableAccessorList.Add(e);
@@ -119,7 +118,7 @@ namespace LinqToDB.Linq
 
 		internal Expression GetIQueryable(int n, Expression expr)
 		{
-			return _queryableAccessorList[n].Accessor(expr).Expression;
+			return _queryableAccessorList[n].Queryable.Expression;
 		}
 
 		public void ClearMemberQueryableInfo()
