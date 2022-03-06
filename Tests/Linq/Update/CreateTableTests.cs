@@ -253,22 +253,22 @@ namespace Tests.xUpdate
 			}
 		}
 
-		public enum jjj
+		public enum Jjj
 		{
 			aa,
 			bb,
 		}
 		public class base_aa
 		{
-			public jjj dd { get; set; }
+			public Jjj dd { get; set; }
 		}
-		public class aa : base_aa
+		public class Aa : base_aa
 		{
 			public int     bb { get; set; }
 			public string? cc { get; set; }
 		}
 
-		public class qq
+		public class Qq
 		{
 			public int     bb { get; set; }
 			public string? cc { get; set; }
@@ -280,13 +280,13 @@ namespace Tests.xUpdate
 			using (var conn = GetDataContext(context))
 			{
 				conn.MappingSchema.GetFluentMappingBuilder()
-					.Entity<aa>()
+					.Entity<Aa>()
 						.HasTableName("aa")
 						.Property(t => t.bb).IsPrimaryKey()
 						.Property(t => t.cc)
 						.Property(t => t.dd).IsNotColumn()
 
-					.Entity<qq>()
+					.Entity<Qq>()
 						.HasTableName("aa")
 						.Property(t => t.bb).IsPrimaryKey()
 						.Property(t => t.cc)
@@ -294,27 +294,27 @@ namespace Tests.xUpdate
 
 				try
 				{
-					conn.CreateTable<qq>();
+					conn.CreateTable<Qq>();
 				}
 				catch
 				{
-					conn.DropTable<qq>();
-					conn.CreateTable<qq>();
+					conn.DropTable<Qq>();
+					conn.CreateTable<Qq>();
 				}
 
-				conn.Insert(new aa
+				conn.Insert(new Aa
 				{
 					bb = 99,
 					cc = "hallo",
-					dd = jjj.aa
+					dd = Jjj.aa
 				});
 
-				var qq = conn.GetTable<aa>().ToList().First();
+				var qq = conn.GetTable<Aa>().ToList().First();
 
 				Assert.That(qq.bb, Is.EqualTo(99));
 				Assert.That(qq.cc, Is.EqualTo("hallo"));
 
-				conn.DropTable<qq>();
+				conn.DropTable<Qq>();
 			}
 		}
 

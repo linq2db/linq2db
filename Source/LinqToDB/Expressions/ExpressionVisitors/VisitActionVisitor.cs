@@ -53,7 +53,7 @@ namespace LinqToDB.Expressions
 				Visit(item);
 		}
 
-		public void Visit(Expression expr)
+		public void Visit(Expression? expr)
 		{
 			if (expr == null)
 				return;

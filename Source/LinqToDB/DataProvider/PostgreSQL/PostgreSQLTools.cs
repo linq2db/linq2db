@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
+	using System.Runtime.CompilerServices;
 	using Configuration;
 	using Data;
 
@@ -40,7 +41,20 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return provider;
 		}, true);
 
-		public static bool AutoDetectProvider { get; set; } = true;
+		public static bool AutoDetectProvider     { get; set; } = true;
+
+		/// <summary>
+		/// Enables normalization of <see cref="DateTime"/> and <see cref="DateTimeOffset"/> data, passed to query
+		/// as parameter or passed to <see cref="DataConnectionExtensions.BulkCopy{T}(ITable{T}, IEnumerable{T})"/> APIs,
+		/// to comform with Npgsql 6 requerements:
+		/// <list type="bullet">
+		/// <item>convert <see cref="DateTimeOffset"/> value to UTC value with zero <see cref="DateTimeOffset.Offset"/></item>
+		/// <item>Use <see cref="DateTimeKind.Utc"/> for <see cref="DateTime"/> timestamptz values</item>
+		/// <item>Use <see cref="DateTimeKind.Unspecified"/> for <see cref="DateTime"/> timestamp values with <see cref="DateTimeKind.Utc"/> kind</item>
+		/// </list>
+		/// Default value: <c>true</c>.
+		/// </summary>
+		public static bool NormalizeTimestampData { get; set; } = true;
 
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{

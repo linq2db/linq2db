@@ -699,10 +699,10 @@ namespace LinqToDB.Mapping
 		}
 
 		internal EntityMappingBuilder<TEntity> SetAttribute<TA>(
-			Func<TA>                  getNew,
-			Action<TA>                modifyExisting,
-			Func<TA, string?>         configGetter,
-			Func<IEnumerable<TA>, TA> existingGetter)
+			Func<TA>                   getNew,
+			Action<TA>                 modifyExisting,
+			Func<TA, string?>          configGetter,
+			Func<IEnumerable<TA>, TA?> existingGetter)
 			where TA : Attribute
 		{
 			var attr = existingGetter(GetAttributes(typeof(TEntity), configGetter));
@@ -726,7 +726,7 @@ namespace LinqToDB.Mapping
 			Action<bool,TA>                     modifyExisting,
 			Func<TA,string?>                    configGetter,
 			Func<TA,TA>?                        overrideAttribute = null,
-			Func<IEnumerable<TA>, TA>?          existingGetter    = null
+			Func<IEnumerable<TA>, TA?>?         existingGetter    = null
 			)
 			where TA : Attribute
 		{
@@ -788,7 +788,7 @@ namespace LinqToDB.Mapping
 			return this;
 		}
 
-		private TA GetExisting<TA>(IEnumerable<TA> attrs)
+		private TA? GetExisting<TA>(IEnumerable<TA> attrs)
 			where TA : Attribute
 		{
 			return attrs.FirstOrDefault();

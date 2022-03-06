@@ -17,9 +17,8 @@ namespace LinqToDB.SqlQuery
 
 		public static bool TryEvaluateExpression(this IQueryElement expr, EvaluationContext context, out object? result)
 		{
-			var info = expr.TryEvaluateExpression(context);
-			result = info.value;
-			return info.error == null;
+			(result, var error) = expr.TryEvaluateExpression(context);
+			return error == null;
 		}
 
 		public static bool IsMutable(this IQueryElement expr)

@@ -1676,7 +1676,7 @@ namespace LinqToDB.ServiceModel
 							var database           = ReadString();
 							var schema             = ReadString();
 							var physicalName       = ReadString();
-							var objectType         = Read<Type>();
+							var objectType         = Read<Type>()!;
 							var sequenceAttributes = null as SequenceNameAttribute[];
 
 							var count = ReadCount();

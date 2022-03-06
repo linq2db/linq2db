@@ -4,17 +4,39 @@ parameters:
   framework: ''
   titleFramework: ''
   with_baselines: false
-  installnet5: false # temporary flag
+  installnet5: false
+  installnet6: false
+  useVsTest: false
 
 steps:
 - checkout: none
+
+- task: UseDotNet@2
+  displayName: 'Install .net core 2.1'
+  inputs:
+    packageType: sdk
+    version: 2.1.x
+  condition: eq('${{ parameters.framework }}', 'netcoreapp2.1')
+
+- task: UseDotNet@2
+  displayName: 'Install .net core 3.1'
+  inputs:
+    packageType: sdk
+    version: 3.1.x
+  condition: eq('${{ parameters.framework }}', 'netcoreapp3.1')
 
 - task: UseDotNet@2
   displayName: 'Install .net 5'
   inputs:
     packageType: sdk
     version: 5.x
-  condition: eq('${{ parameters.installnet5 }}', 'true')
+  condition: eq('${{ parameters.framework }}', 'net5.0')
+
+- task: UseDotNet@2
+  displayName: 'Install .net 6'
+  inputs:
+    packageType: sdk
+    version: 6.x
 
 - task: CmdLine@2
   inputs:
@@ -47,7 +69,7 @@ steps:
   inputs:
     filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript)'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
-  condition: and(variables.title, variables.psscript, ne(${{ parameters.isCore }}, False))
+  condition: and(variables.title, variables.psscript)
   displayName: Setup tests
 
 - task: VSTest@2
@@ -59,14 +81,14 @@ steps:
     otherConsoleOptions: '/Framework:.NETFramework,Version=v4.7.2'
     testRunTitle: 'Windows / ${{ parameters.titleFramework }} / $(title)'
   displayName: '$(title)'
-  condition: and(eq('${{ parameters.framework }}', 'net472'), variables.title, succeeded())
+  condition: and(eq('${{ parameters.useVsTest }}', True), variables.title, succeeded())
 
 - script: dotnet test linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:${{ parameters.framework }} /logger:trx
   displayName: 'Execute tests: $(title)'
-  condition: and(ne('${{ parameters.framework }}', 'net472'), variables.title, succeeded())
+  condition: and(ne('${{ parameters.useVsTest }}', True), variables.title, succeeded())
 
 - task: PublishTestResults@2
-  condition: and(ne('${{ parameters.framework }}', 'net472'), variables.title, succeededOrFailed())
+  condition: and(ne('${{ parameters.useVsTest }}', True), variables.title, succeededOrFailed())
   inputs:
     testRunner: VsTest
     testResultsFiles: '**/*.trx'
@@ -120,9 +142,3 @@ steps:
     EMAIL: azp@linq2db.com
     GIT_AUTHOR_NAME: Azure Pipelines Bot
     GIT_COMMITTER_NAME: Azure Pipelines Bot
-
-#    - powershell: Get-OdbcDriver | Select Name, Platform
-#      displayName: List ODBC providers
-
-#    - powershell: '[System.Data.OleDb.OleDbEnumerator]::GetRootEnumerator() | % { $_.GetValue(0) + " => " + $_.GetValue(2) }'
-#      displayName: List OLEDB providers

@@ -189,7 +189,7 @@ namespace LinqToDB.DataProvider.DB2
 						A.CREATOR,
 						A.RELNAME,
 						B.COLSEQ")
-				let   otherColumn = _primaryKeys.Where(pk => pk.TableID == fk.otherTable).ElementAtOrDefault(fk.ordinal - 1)
+				let   otherColumn = _primaryKeys!.Where(pk => pk.TableID == fk.otherTable).ElementAtOrDefault(fk.ordinal - 1)
 				where otherColumn != null
 				select new ForeignKeyInfo
 				{

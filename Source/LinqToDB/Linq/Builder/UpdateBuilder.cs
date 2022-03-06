@@ -157,6 +157,9 @@ namespace LinqToDB.Linq.Builder
 					throw new InvalidOperationException("Unknown Output Method");
 			}
 
+			if (updateStatement.Update.Items.Count == 0)
+				throw new LinqToDBException("Update query has no setters defined.");
+
 			if (updateType == UpdateType.Update)
 				return new UpdateContext(buildInfo.Parent, sequence);
 
@@ -181,8 +184,8 @@ namespace LinqToDB.Linq.Builder
 						// (source, deleted, inserted) => new UpdateOutput<T> { Deleted = deleted, Inserted = inserted, }
 						Expression.MemberInit(
 							Expression.New(returnType),
-							Expression.Bind(returnType.GetProperty("Deleted"), param2),
-							Expression.Bind(returnType.GetProperty("Inserted"), param3)),
+							Expression.Bind(returnType.GetProperty(nameof(UpdateOutput<object>.Deleted))!, param2),
+							Expression.Bind(returnType.GetProperty(nameof(UpdateOutput<object>.Inserted))!, param3)),
 						param1, param2, param3);
 				}
 
@@ -335,7 +338,7 @@ namespace LinqToDB.Linq.Builder
 
 			void BuildNew(NewExpression expression, Expression path)
 			{
-				for (var i = 0; i < expression.Members.Count; i++)
+				for (var i = 0; i < expression.Members!.Count; i++)
 				{
 					var member   = expression.Members[i];
 					var argument = expression.Arguments[i];

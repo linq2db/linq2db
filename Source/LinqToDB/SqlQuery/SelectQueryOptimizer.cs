@@ -1507,7 +1507,7 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var table in _selectQuery.From.Tables)
 			{
-				tableSources.Add(table);
+				tableSources.Add(table.Source);
 
 				foreach (var join in table.Joins)
 				{
