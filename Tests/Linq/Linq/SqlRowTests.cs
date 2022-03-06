@@ -553,8 +553,8 @@ namespace Tests.Linq
 					i => Row(i.Two, i.Three), 
 					i => (from j in ints
 						  where j.One == 1
-						  select Row(i.Two * 10, j.Three * 100)
-						 .Single()))
+						  select Row(i.Two * 10, j.Three * 100))
+						 .Single())
 				.Set(
 					i => Row(i.Four, i.Nil), 
 					i => db.SelectQuery(() => Row(i.One * i.Four, (int?)600))
