@@ -66,7 +66,6 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		[ActiveIssue(Details = "Please see issue 3161")]
 		public void CrossApplyTwice([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var db = GetDataContext(context);
