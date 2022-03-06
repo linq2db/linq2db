@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -110,6 +111,11 @@ namespace Tests.UserTests
 				})
 				.ToList();
 			Assert.That(ret.Count, Is.EqualTo(2));
+
+			// uncomment after 3161 fixed
+			//var baselines = GetCurrentBaselines();
+			//baselines.Should().Contain("SELECT", Exactly.Twice());
+			//baselines.Should().Contain("SELECT TOP", Exactly.Once());
 		}
 	}
 }
