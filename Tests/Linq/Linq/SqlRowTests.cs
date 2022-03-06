@@ -32,7 +32,7 @@ namespace Tests.Linq
 			// it's purely a LINQ construct that is converted into SQl code.
 			
 			Action invokeRow = () => Row(1, 2);
-			invokeRow.Should().Throw<LinqException>();
+			invokeRow.Should().Throw<LinqToDBException>();
 
 			using var db   = GetDataContext(context);
 			using var ints = SetupIntsTable(db);
@@ -40,7 +40,7 @@ namespace Tests.Linq
 			// Top-level select Row() is forbidden. It can be done in subquery only.
 
 			Action selectRow = () => ints.Select(i => Row(i.One, 2)).ToList();
-			selectRow.Should().Throw<LinqException>();
+			selectRow.Should().Throw<LinqToDBException>();
 		}
 
 		[Test]
