@@ -630,31 +630,40 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.AppendLine();
 		}
 
-		protected virtual bool SupportsBooleanInColumn => false;
 		protected virtual bool SupportsNullInColumn    => true;
 
 		protected virtual ISqlExpression WrapBooleanExpression(ISqlExpression expr)
 		{
-			var wrap = false;
-
 			if (expr.SystemType == typeof(bool))
 			{
-				if (expr is SqlSearchCondition)
-					wrap = true;
-				else
-					wrap =
-						expr is SqlExpression ex &&
-						ex.Expr == "{0}" &&
-						ex.Parameters.Length == 1 &&
-						ex.Parameters[0] is SqlSearchCondition;
-			}
-
-			if (wrap)
-			{
-				expr = new SqlFunction(typeof(bool), "CASE", expr, new SqlValue(true), new SqlValue(false))
+				SqlSearchCondition? sc = null;
+				if (expr is SqlSearchCondition sc1)
 				{
-					DoNotOptimize = true
-				};
+					sc = sc1;
+				}
+				else if (
+					expr is SqlExpression ex      &&
+					ex.Expr              == "{0}" &&
+					ex.Parameters.Length == 1     &&
+					ex.Parameters[0] is SqlSearchCondition sc2)
+				{
+					sc = sc2;
+				}
+
+				if (sc != null)
+				{
+					if (sc.Conditions.Count == 0)
+					{
+						expr = new SqlValue(true);
+					}
+					else
+					{
+						expr = new SqlFunction(typeof(bool), "CASE", expr, new SqlValue(true), new SqlValue(false))
+						{
+							DoNotOptimize = true
+						};
+					}
+				}
 			}
 
 			return expr;
@@ -662,10 +671,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
 		{
-			if (!SupportsBooleanInColumn)
-			{
-				expr = WrapBooleanExpression(expr);
-			}
+			expr = WrapBooleanExpression(expr);
 
 			expr = WrapColumnExpression(expr);
 

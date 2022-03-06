@@ -296,6 +296,10 @@ namespace LinqToDB.Linq
 			/// Bit set, when inline Take/Skip parameterization is enabled for query.
 			/// </summary>
 			ParameterizeTakeSkip = 0x4,
+			/// <summary>
+			/// Bit set, when PreferApply is enabled for query.
+			/// </summary>
+			PreferApply = 0x8,
 		}
 
 		class QueryCache
@@ -510,6 +514,8 @@ namespace LinqToDB.Linq
 				flags |= QueryFlags.GroupByGuard;
 			if (Configuration.Linq.ParameterizeTakeSkip)
 				flags |= QueryFlags.ParameterizeTakeSkip;
+			if (Configuration.Linq.PreferApply)
+				flags |= QueryFlags.PreferApply;
 
 			var query = _queryCache.Find(dataContext, expr, flags);
 
