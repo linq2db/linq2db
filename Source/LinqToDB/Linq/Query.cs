@@ -288,6 +288,10 @@ namespace LinqToDB.Linq
 			/// Bit set, when inline Take/Skip parameterization is enabled for query.
 			/// </summary>
 			ParameterizeTakeSkip = 0x4,
+			/// <summary>
+			/// Bit set, when PreferApply is enabled for query.
+			/// </summary>
+			PreferApply = 0x8,
 		}
 
 		class QueryCache
@@ -437,9 +441,7 @@ namespace LinqToDB.Linq
 							// do reorder only if it is not blocked and cache wasn't replaced by new one
 							if (i > 0 && version == _version && allowReordering)
 							{
-								var index      = indexes[i];
-								indexes[i]     = indexes[i - 1];
-								indexes[i - 1] = index;
+								(indexes[i - 1], indexes[i]) = (indexes[i], indexes[i - 1]);
 							}
 
 							return cache[idx].Query;
@@ -504,6 +506,8 @@ namespace LinqToDB.Linq
 				flags |= QueryFlags.GroupByGuard;
 			if (Configuration.Linq.ParameterizeTakeSkip)
 				flags |= QueryFlags.ParameterizeTakeSkip;
+			if (Configuration.Linq.PreferApply)
+				flags |= QueryFlags.PreferApply;
 
 			var query = _queryCache.Find(dataContext, expr, flags);
 

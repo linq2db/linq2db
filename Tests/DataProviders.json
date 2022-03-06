@@ -164,39 +164,39 @@
 		"Connections": {
 			"SqlServer": {
 				"Provider": "SqlServer",
-				"ConnectionString": "Server=DBHost\\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;"
+				"ConnectionString": "Server=DBHost\\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.2014": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=DBHost\\SQLSERVER2014;Database=TestData;User Id=sa;Password=TestPassword;"
+				"ConnectionString": "Server=DBHost\\SQLSERVER2014;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.2012": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=DBHost\\SQLSERVER2012;Database=TestData;User Id=sa;Password=TestPassword;MultipleActiveResultSets=True;"
+				"ConnectionString": "Server=DBHost\\SQLSERVER2012;Database=TestData;User Id=sa;Password=TestPassword;MultipleActiveResultSets=True;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.2012.1": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=DBHost\\SQLSERVER2012;Database=TestData;User Id=sa;Password=TestPassword;"
+				"ConnectionString": "Server=DBHost\\SQLSERVER2012;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.2008": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=DBHost\\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;"
+				"ConnectionString": "Server=DBHost\\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.2008.1": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=DBHost\\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;"
+				"ConnectionString": "Server=DBHost\\SQLSERVER2008;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.2005": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=DBHost\\SQLSERVER2005;Database=TestData;User Id=sa;Password=TestPassword;"
+				"ConnectionString": "Server=DBHost\\SQLSERVER2005;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.2005.1": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=DBHost\\SQLSERVER2005;Database=TestData;User Id=sa;Password=TestPassword;"
+				"ConnectionString": "Server=DBHost\\SQLSERVER2005;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.2000": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=DBHost2008\\SQLSERVER2000;Database=TestData;User Id=sa;Password=TestPassword;"
+				"ConnectionString": "Server=DBHost2008\\SQLSERVER2000;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlAzure": {
 				"Provider": "System.Data.SqlClient",
@@ -253,7 +253,7 @@
 			},
 			"Northwind": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=DBHost\\SQLSERVER2012;Database=Northwind;User Id=sa;Password=TestPassword"
+				"ConnectionString": "Server=DBHost\\SQLSERVER2012;Database=Northwind;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"
 			}
 		}
 	},
@@ -264,51 +264,51 @@
 		"Connections": {
 			"SqlServer": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;"
+				"ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
 			"Northwind": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=Northwind;User Id=sa;Password=Password12!;"
+				"ConnectionString": "Server=localhost;Database=Northwind;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.2005": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestData2005;User Id=sa;Password=Password12!;"
+				"ConnectionString": "Server=localhost;Database=TestData2005;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.2008": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestData2008;User Id=sa;Password=Password12!;"
+				"ConnectionString": "Server=localhost;Database=TestData2008;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.2012": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestData2012;User Id=sa;Password=Password12!;"
+				"ConnectionString": "Server=localhost;Database=TestData2012;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.2014": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestData2014;User Id=sa;Password=Password12!;"
+				"ConnectionString": "Server=localhost;Database=TestData2014;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.2016": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestData2016;User Id=sa;Password=Password12!;"
+				"ConnectionString": "Server=localhost;Database=TestData2016;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.2017": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestData2017;User Id=sa;Password=Password12!;"
+				"ConnectionString": "Server=localhost;Database=TestData2017;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.2019": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestData2019;User Id=sa;Password=Password12!;"
+				"ConnectionString": "Server=localhost;Database=TestData2019;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.2019.SA": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestData2019SA;User Id=sa;Password=Password12!;"
+				"ConnectionString": "Server=localhost;Database=TestData2019SA;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.2019.FEC": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestData2019FEC;User Id=sa;Password=Password12!;"
+				"ConnectionString": "Server=localhost;Database=TestData2019FEC;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.Contained": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=localhost;Database=TestDataContained;User Id=sa;Password=Password12!;"
+				"ConnectionString": "Server=localhost;Database=TestDataContained;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
 			"PostgreSQL": {
 				"Provider": "Npgsql",
@@ -459,7 +459,7 @@
 		"Connections": {
 			"SqlServer.2014": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=DBHost\\SQLSERVER2014;Database=TestData;User Id=sa;Password=TestPassword;"
+				"ConnectionString": "Server=DBHost\\SQLSERVER2014;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"
 			}
 		}
 	},
@@ -505,7 +505,7 @@
 			},
 			"SqlServer.2014": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "Server=DBHost\\SQLSERVER2014;Database=TestData;User Id=sa;Password=TestPassword;"
+				"ConnectionString": "Server=DBHost\\SQLSERVER2014;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"
 			}
 		}
 	}

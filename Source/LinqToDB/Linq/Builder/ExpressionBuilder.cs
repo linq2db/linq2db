@@ -62,6 +62,7 @@ namespace LinqToDB.Linq.Builder
 			new CastBuilder                (),
 			new OfTypeBuilder              (),
 			new AsUpdatableBuilder         (),
+			new AsValueInsertableBuilder   (),
 			new LoadWithBuilder            (),
 			new DropBuilder                (),
 			new TruncateBuilder            (),
