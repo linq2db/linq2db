@@ -1228,6 +1228,9 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450")]
 		public void TestIQueryableParameterEvaluation([DataSources] string context)
 		{
+			// cached queries affect cnt values due to extra comparisons in cache
+			LinqToDB.Linq.Query.ClearCaches();
+
 			using (var db = GetDataContext(context))
 			{
 				_cnt1       = 0;
