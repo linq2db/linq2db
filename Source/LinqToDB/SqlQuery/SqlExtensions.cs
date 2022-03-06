@@ -155,7 +155,7 @@ namespace LinqToDB.SqlQuery
 
 		internal static ReadOnlyCollection<Expression> GetSqlRowValues(this Expression expr)
 		{
-			return expr is MethodCallExpression { Method: { Name: "Row" } } call
+			return expr is MethodCallExpression { Method.Name: "Row" } call
 				? call.Arguments
 				: throw new LinqToDBException("Calls to Sql.Row() are the only valid expressions of type SqlRow.");
 		}

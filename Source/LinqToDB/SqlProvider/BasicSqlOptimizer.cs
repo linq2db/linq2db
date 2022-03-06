@@ -1361,7 +1361,7 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				// ROW(a, b) operator (SELECT c, d)
-				case SelectQuery _:
+				case SelectQuery:
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(feature))
 						throw new LinqException("SqlRow comparisons to SELECT are not supported by this DB provider");
 					break;
