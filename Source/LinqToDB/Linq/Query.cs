@@ -116,9 +116,18 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		internal Expression GetIQueryable(int n, Expression expr)
+		internal Expression GetIQueryable(int n, Expression expr, bool force)
 		{
-			return _queryableAccessorList[n].Queryable.Expression;
+			var accessor = _queryableAccessorList[n];
+			if (force)
+			{
+				if (accessor.SkipForce)
+					accessor.SkipForce = false;
+				else
+					return (accessor.Queryable = accessor.Accessor(expr)).Expression;
+			}
+
+			return accessor.Queryable.Expression;
 		}
 
 		public void ClearMemberQueryableInfo()

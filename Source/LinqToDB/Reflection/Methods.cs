@@ -21,7 +21,7 @@ namespace LinqToDB.Reflection
 	{
 		internal static class Query
 		{
-			public static readonly MethodInfo GetIQueryable = MemberHelper.MethodOf<Linq.Query>(a => a.GetIQueryable(default, default!));
+			public static readonly MethodInfo GetIQueryable = MemberHelper.MethodOf<Linq.Query>(a => a.GetIQueryable(default, default!, default));
 		}
 
 		public static class ADONet

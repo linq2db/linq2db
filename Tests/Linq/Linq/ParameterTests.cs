@@ -1277,9 +1277,9 @@ namespace Tests.Linq
 
 				Assert.AreEqual(1, persons.Count);
 				Assert.AreEqual(1, persons[0].ID);
-				Assert.AreEqual(3, _cnt1);
-				Assert.AreEqual(1, _cnt2);
-				Assert.AreEqual(1, _cnt3);
+				Assert.AreEqual(4, _cnt1);
+				Assert.AreEqual(2, _cnt2);
+				Assert.AreEqual(2, _cnt3);
 
 				_cnt1   = 0;
 				_cnt2   = 0;
@@ -1290,9 +1290,9 @@ namespace Tests.Linq
 				Assert.AreEqual(2, persons.Count);
 				Assert.AreEqual(1, persons.Count(_ => _.ID == 2));
 				Assert.AreEqual(1, persons.Count(_ => _.ID == 3));
-				Assert.AreEqual(1, _cnt1);
-				Assert.AreEqual(1, _cnt2);
-				Assert.AreEqual(1, _cnt3);
+				Assert.AreEqual(2, _cnt1);
+				Assert.AreEqual(2, _cnt2);
+				Assert.AreEqual(2, _cnt3);
 
 				_cnt1   = 0;
 				_cnt2   = 0;
@@ -1304,9 +1304,9 @@ namespace Tests.Linq
 				Assert.AreEqual(1, persons.Count(_ => _.ID == 1));
 				Assert.AreEqual(1, persons.Count(_ => _.ID == 2));
 				Assert.AreEqual(1, persons.Count(_ => _.ID == 4));
-				Assert.AreEqual(3, _cnt1);
-				Assert.AreEqual(2, _cnt2);
-				Assert.AreEqual(1, _cnt3);
+				Assert.AreEqual(4, _cnt1);
+				Assert.AreEqual(3, _cnt2);
+				Assert.AreEqual(2, _cnt3);
 			}
 
 			List<Person> Query(ITestDataContext db)
@@ -1348,6 +1348,67 @@ namespace Tests.Linq
 				return db.Person.Where(p => p.ID == paramCopy);
 
 			return db.Person.Where(p => paramCopy + 1 != p.ID);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450")]
+		public void TestIQueryableParameterEvaluationCaching([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				_cnt1       = 0;
+				_param      = 1;
+				var persons = Query(db);
+
+				Assert.AreEqual(1, persons.Count);
+				Assert.AreEqual(1, persons[0].ID);
+				//Assert.AreEqual(1, _cnt1);
+
+				_cnt1   = 0;
+				_param  = 2;
+				persons = Query(db);
+
+				Assert.AreEqual(1, persons.Count);
+				Assert.AreEqual(2, persons[0].ID);
+				//Assert.AreEqual(1, _cnt1);
+
+				_cnt1   = 0;
+				_param  = 3;
+				persons = Query(db);
+
+				Assert.AreEqual(1, persons.Count);
+				Assert.AreEqual(3, persons[0].ID);
+				//Assert.AreEqual(1, _cnt1);
+
+				_cnt1   = 0;
+				_param  = 4;
+				persons = Query(db);
+
+				Assert.AreEqual(1, persons.Count);
+				Assert.AreEqual(4, persons[0].ID);
+				//Assert.AreEqual(1, _cnt1);
+
+				_cnt1   = 0;
+				_param  = 1;
+				persons = Query(db);
+
+				Assert.AreEqual(1, persons.Count);
+				Assert.AreEqual(1, persons[0].ID);
+				//Assert.AreEqual(1, _cnt1);
+			}
+
+			List<Person> Query(ITestDataContext db)
+			{
+				return db.Person
+					.Where(_ => GetQuery4(db).Select(p => p.ID).Contains(_.ID))
+					.ToList();
+			}
+		}
+
+		private IQueryable<Person> GetQuery4(ITestDataContext db)
+		{
+			_cnt1++;
+			var paramCopy = _param;
+			return db.Person.Where(p => p.ID == paramCopy);
 		}
 
 		private int[] _params = new int[30];

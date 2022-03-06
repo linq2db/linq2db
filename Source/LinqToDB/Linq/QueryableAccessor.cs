@@ -10,9 +10,12 @@ namespace LinqToDB.Linq
 		{
 			Accessor  = accessor;
 			Queryable = accessor(expr);
+			// skip first re-evaluation by parameter setter
+			SkipForce = true;
 		}
 
-		public readonly IQueryable                  Queryable;
+		public          bool                        SkipForce;
+		public          IQueryable                  Queryable;
 		public readonly Func<Expression,IQueryable> Accessor;
 	}
 }
