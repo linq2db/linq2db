@@ -13,6 +13,7 @@ using System.Runtime.CompilerServices;
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
+	using Common.Internal;
 	using Data;
 	using LinqToDB.Expressions;
 	using Extensions;
@@ -1465,7 +1466,8 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (e.Method.DeclaringType == typeof(Enumerable) ||
 							typeof(IList).IsSameOrParentOf(e.Method.DeclaringType!) ||
-							typeof(ICollection<>).IsSameOrParentOf(e.Method.DeclaringType!))
+							typeof(ICollection<>).IsSameOrParentOf(e.Method.DeclaringType!) ||
+							typeof(IReadOnlyCollection<>).IsSameOrParentOf(e.Method.DeclaringType!))
 						{
 							predicate = ConvertInPredicate(context!, e);
 						}
@@ -2605,7 +2607,7 @@ namespace LinqToDB.Linq.Builder
 
 		internal void BuildSearchCondition(IBuildContext? context, Expression expression, List<SqlCondition> conditions)
 		{
-			expression = GetRemoveNullPropagationTransformer().Transform(expression);
+			expression = GetRemoveNullPropagationTransformer(true).Transform(expression);
 
 			switch (expression.NodeType)
 			{
@@ -2847,15 +2849,33 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		private TransformVisitor<ExpressionBuilder>? _removeNullPropagationTransformer;
-
+		private TransformVisitor<ExpressionBuilder>? _removeNullPropagationTransformerForSearch;
+		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private TransformVisitor<ExpressionBuilder> GetRemoveNullPropagationTransformer()
+		private TransformVisitor<ExpressionBuilder> GetRemoveNullPropagationTransformer(bool forSearch)
 		{
-			return _removeNullPropagationTransformer ??= TransformVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.RemoveNullPropagation(e));
+			if (forSearch)
+				return _removeNullPropagationTransformerForSearch ??= TransformVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.RemoveNullPropagation(e, true));
+			else
+				return _removeNullPropagationTransformer ??= TransformVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.RemoveNullPropagation(e, false));
 		}
 
-		Expression RemoveNullPropagation(Expression expr)
+		Expression RemoveNullPropagation(Expression expr, bool forSearch)
 		{
+			bool IsAcceptableType(Type type)
+			{
+				if (!forSearch)
+					return type.IsNullableType();
+
+				if (type != typeof(string) && typeof(IEnumerable<>).IsSameOrParentOf(type))
+					return true;
+
+				if (!MappingSchema.IsScalarType(type))
+					return true;
+
+				return false;
+			}
+
 			// Do not modify parameters
 			//
 			if (CanBeCompiled(expr))
@@ -2874,13 +2894,13 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (nullRight && nullLeft)
 							{
-								return GetRemoveNullPropagationTransformer().Transform(conditional.IfFalse);
+								return GetRemoveNullPropagationTransformer(forSearch).Transform(conditional.IfFalse);
 							}
 							else if (IsNullConstant(conditional.IfFalse)
-								&& ((nullRight && !MappingSchema.IsScalarType(binary.Left.Type)) ||
-									(nullLeft  && !MappingSchema.IsScalarType(binary.Right.Type))))
+								&& ((nullRight && IsAcceptableType(binary.Left.Type) ||
+									(nullLeft  && IsAcceptableType(binary.Right.Type)))))
 							{
-								return GetRemoveNullPropagationTransformer().Transform(conditional.IfTrue);
+								return GetRemoveNullPropagationTransformer(forSearch).Transform(conditional.IfTrue);
 							}
 						}
 					}
@@ -2893,13 +2913,13 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (nullRight && nullLeft)
 							{
-								return GetRemoveNullPropagationTransformer().Transform(conditional.IfTrue);
+								return GetRemoveNullPropagationTransformer(forSearch).Transform(conditional.IfTrue);
 							}
 							else if (IsNullConstant(conditional.IfTrue)
-								&& ((nullRight && !MappingSchema.IsScalarType(binary.Left.Type)) ||
-									(nullLeft  && !MappingSchema.IsScalarType(binary.Right.Type))))
+							         && ((nullRight && IsAcceptableType(binary.Left.Type) ||
+							              (nullLeft && IsAcceptableType(binary.Right.Type)))))
 							{
-								return GetRemoveNullPropagationTransformer().Transform(conditional.IfFalse);
+								return GetRemoveNullPropagationTransformer(forSearch).Transform(conditional.IfFalse);
 							}
 						}
 					}
@@ -2948,14 +2968,13 @@ namespace LinqToDB.Linq.Builder
 					if (members.ContainsKey(foundMember.MemberInfo))
 						continue;
 
-					var converted = GetRemoveNullPropagationTransformer().Transform(arguments[i]);
-
-					if (!foundMember.MemberInfo.GetMemberType().IsAssignableFrom(converted.Type))
-						continue;
+					var converted = arguments[i];
 
 					members.Add(foundMember.MemberInfo, converted);
 				}
 			}
+
+			expression = GetRemoveNullPropagationTransformer(false).Transform(expression);
 
 			switch (expression.NodeType)
 			{
@@ -2971,7 +2990,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								var member = expr.Members[i];
 
-								var converted = GetRemoveNullPropagationTransformer().Transform(expr.Arguments[i]);
+								var converted = expr.Arguments[i];
 								members.Add(member, converted);
 
 								if (member is MethodInfo info)
@@ -3003,7 +3022,7 @@ namespace LinqToDB.Linq.Builder
 
 						foreach (var (binding, _) in assignments.OrderBy(static a => a.order))
 						{
-							var converted = GetRemoveNullPropagationTransformer().Transform(binding.Expression);
+							var converted = binding.Expression;
 							members.Add(binding.Member, converted);
 
 							if (binding.Member is MethodInfo info)

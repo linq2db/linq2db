@@ -213,7 +213,10 @@ namespace LinqToDB.Linq.Builder
 
 			var insert = insertStatement.Insert;
 
-			var q = insert.Into!.IdentityFields
+			if (insert.Into == null)
+				throw new LinqToDBException("Insert query has no setters defined.");
+
+			var q = insert.Into.IdentityFields
 				.Except(insert.Items.Select(e => e.Column).OfType<SqlField>());
 
 			foreach (var field in q)

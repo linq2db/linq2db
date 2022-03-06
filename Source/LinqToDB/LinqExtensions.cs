@@ -1604,6 +1604,28 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Starts insert operation LINQ query definition.
+		/// </summary>
+		/// <typeparam name="T">Target table mapping class.</typeparam>
+		/// <param name="source">Target table.</param>
+		/// <returns>Insertable source query.</returns>
+		public static IValueInsertable<T> AsValueInsertable<T>(this ITable<T> source)
+			where T : notnull
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			var query = currentSource.Provider.CreateQuery<T>(
+				Expression.Call(
+					null,
+					Methods.LinqToDB.Insert.T.AsValueInsertable.MakeGenericMethod(typeof(T)),
+					currentSource.Expression));
+
+			return new ValueInsertable<T>(query);
+		}
+
+		/// <summary>
 		/// Starts insert operation LINQ query definition from field setter expression.
 		/// </summary>
 		/// <typeparam name="T">Target table record type.</typeparam>
