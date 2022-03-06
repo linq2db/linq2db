@@ -487,9 +487,28 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void MixedTypes([DataSources] string context)
+		{
+			var data = new[]
+			{
+				new Mixed { Int = 1, Str = "One", Date = new DateTime(2001, 1, 1), Double = 1.0, Bool = true },
+				new Mixed { Int = 2, Str = "Two", Date = new DateTime(2002, 2, 2), Double = 2.0, Bool = false },
+			};
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			table.Count(t => 
+					t.Int > 0 && 
+					Row(t.Str, t.Double, t.Bool) == Row("One", 1.0, true) &&
+					table.Any(u => Row(2, u.Date) > Row(u.Int, t.Date)))
+				.Should().Be(1);
+		}
+
+		[Test]
 		public void UpdateRowLiteral(
 			[IncludeDataSources(ProviderName.InformixDB2, TestProvName.AllPostgreSQL)] string context)
-		{			
+		{
 			var data = new[]
 			{
 				new Ints { One = 1,  Two = 2,  Three = 3,  Four = 4,  Five = 5,  Nil = (int?)null },
@@ -503,6 +522,43 @@ namespace Tests.Linq
 				.Set(i => i.One, i => i.Two * 5)
 				.Set(i => Row(i.Two, i.Three), i => Row(200, i.Three * 10))
 				.Set(i => Row(i.Four, i.Nil), i => Row(i.One * i.Four, (int?)600))
+				.Update();
+
+			ints.OrderBy(i => i.One)
+				.ToList()
+				.Should().Equal(
+					new Ints { One = 1,   Two = 2,   Three = 3,   Four = 4,   Five = 5, Nil = (int?)null },
+					new Ints { One = 100, Two = 200, Three = 300, Four = 400, Five = 5, Nil = 600 });
+		}
+
+		[Test]
+		public void UpdateRowSelect(
+			[IncludeDataSources(
+				ProviderName.InformixDB2, 
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllOracle)] string context)
+		{
+			var data = new[]
+			{
+				new Ints { One = 1,  Two = 2,  Three = 3,  Four = 4,  Five = 5,  Nil = (int?)null },
+				new Ints { One = 10, Two = 20, Three = 30, Four = 40, Five = 50, Nil = (int?)null },
+			};
+
+			using var db   = GetDataContext(context);
+			using var ints = db.CreateLocalTable(data);
+
+			ints.Where(i => i.One == 10)
+				.Set(i => i.One, i => i.Two * 5)
+				.Set(
+					i => Row(i.Two, i.Three), 
+					i => (from j in ints
+						  where j.One == 1
+						  select Row(i.Two * 10, j.Three * 100)
+						 .Single()))
+				.Set(
+					i => Row(i.Four, i.Nil), 
+					i => db.SelectQuery(() => Row(i.One * i.Four, (int?)600))
+					       .Single())
 				.Update();
 
 			ints.OrderBy(i => i.One)
@@ -531,6 +587,15 @@ namespace Tests.Linq
 					&& other.Five  == Five
 					&& other.Nil   == Nil;
 			}
+		}
+
+		class Mixed
+		{
+			public int      Int    { get; set; }
+			public string?  Str    { get; set; }
+			public DateTime Date   { get; set; }
+			public double   Double { get; set; }
+			public bool     Bool   { get; set; }
 		}
 	}
 }
