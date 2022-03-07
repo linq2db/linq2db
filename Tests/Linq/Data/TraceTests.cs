@@ -582,7 +582,7 @@ namespace Tests.Data
 		[Test]
 		public void TraceInfoStepsAreReportedForBeginTransactionIlosationLevel([NorthwindDataContext(
 #if NETFRAMEWORK
-			excludeSqliteMs: true
+			excludeSqlite: false, excludeSqliteMs: true
 #endif
 			)] string context)
 		{
@@ -627,7 +627,7 @@ namespace Tests.Data
 		[Test]
 		public async Task TraceInfoStepsAreReportedForBeginTransactionIlosationLevelAsync([NorthwindDataContext(
 #if NETFRAMEWORK
-			excludeSqliteMs: true
+			excludeSqlite: false, excludeSqliteMs: true
 #endif
 			)] string context)
 		{
