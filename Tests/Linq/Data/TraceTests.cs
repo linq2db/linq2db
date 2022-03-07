@@ -580,7 +580,11 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TraceInfoStepsAreReportedForBeginTransactionIlosationLevel([NorthwindDataContext] string context)
+		public void TraceInfoStepsAreReportedForBeginTransactionIlosationLevel([NorthwindDataContext(
+#if NETFRAMEWORK
+			excludeSqliteMs: true
+#endif
+			)] string context)
 		{
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
@@ -621,7 +625,11 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task TraceInfoStepsAreReportedForBeginTransactionIlosationLevelAsync([NorthwindDataContext] string context)
+		public async Task TraceInfoStepsAreReportedForBeginTransactionIlosationLevelAsync([NorthwindDataContext(
+#if NETFRAMEWORK
+			excludeSqliteMs: true
+#endif
+			)] string context)
 		{
 			var events = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
