@@ -1498,8 +1498,8 @@ namespace LinqToDB.Data
 			var dataConnectionTransaction = TraceAction(
 				this,
 				TraceOperation.BeginTransaction,
-				"BeginTransaction",
-				(object?)null,
+				static _ => "BeginTransaction",
+				default(object?),
 				static (dataContext, _) =>
 				{
 					// Create new transaction object.
@@ -1532,7 +1532,7 @@ namespace LinqToDB.Data
 			var dataConnectionTransaction = TraceAction(
 				this,
 				TraceOperation.BeginTransaction,
-				"BeginTransaction",
+				static il => $"BeginTransaction({il})",
 				isolationLevel,
 				static (dataConnection, isolationLevel) =>
 				{
@@ -1562,8 +1562,8 @@ namespace LinqToDB.Data
 				TraceAction(
 					this,
 					TraceOperation.CommitTransaction,
-					"CommitTransaction",
-					(object?)null,
+					static _ => "CommitTransaction",
+					default(object?),
 					static (dataConnection, _) =>
 					{
 						dataConnection.TransactionAsync!.Commit();
@@ -1592,8 +1592,8 @@ namespace LinqToDB.Data
 				TraceAction(
 					this,
 					TraceOperation.RollbackTransaction,
-					"RollbackTransaction",
-					(object?)null,
+					static _ => "RollbackTransaction",
+					default(object?),
 					static (dataConnection, _) =>
 					{
 						dataConnection.TransactionAsync!.Rollback();
@@ -1614,23 +1614,24 @@ namespace LinqToDB.Data
 
 		#endregion
 
-		protected TResult TraceAction<TContext, TResult>(
+		protected static TResult TraceAction<TContext, TResult>(
 			DataConnection                          dataConnection,
 			TraceOperation                          traceOperation,
-			string                                  commandText,
+			Func<TContext, string?>?                commandText,
 			TContext                                context,
 			Func<DataConnection, TContext, TResult> action)
 		{
-			var now        = DateTime.UtcNow;
-			Stopwatch? sw  = null;
+			var now       = DateTime.UtcNow;
+			Stopwatch? sw = null;
+			var sql       = dataConnection.TraceSwitchConnection.TraceInfo ? commandText?.Invoke(context) : null;
 
-			if (TraceSwitchConnection.TraceInfo)
+			if (dataConnection.TraceSwitchConnection.TraceInfo)
 			{
 				sw = Stopwatch.StartNew();
-				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, traceOperation, false)
+				dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.BeforeExecute, traceOperation, false)
 				{
 					TraceLevel  = TraceLevel.Info,
-					CommandText = commandText,
+					CommandText = sql,
 					StartTime   = now,
 				});
 			}
@@ -1639,12 +1640,12 @@ namespace LinqToDB.Data
 			{
 				var actionResult = action(dataConnection, context);
 
-				if (TraceSwitchConnection.TraceInfo)
+				if (dataConnection.TraceSwitchConnection.TraceInfo)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, traceOperation, false)
+					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.AfterExecute, traceOperation, false)
 					{
 						TraceLevel    = TraceLevel.Info,
-						CommandText   = commandText,
+						CommandText   = dataConnection.TraceSwitchConnection.TraceInfo ? sql : commandText?.Invoke(context),
 						StartTime     = now,
 						ExecutionTime = sw!.Elapsed
 					});
@@ -1654,12 +1655,12 @@ namespace LinqToDB.Data
 			}
 			catch (Exception ex)
 			{
-				if (TraceSwitchConnection.TraceError)
+				if (dataConnection.TraceSwitchConnection.TraceError)
 				{
-					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, traceOperation, false)
+					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.Error, traceOperation, false)
 					{
 						TraceLevel    = TraceLevel.Error,
-						CommandText   = commandText,
+						CommandText   = sql,
 						StartTime     = now,
 						ExecutionTime = sw?.Elapsed,
 						Exception     = ex,

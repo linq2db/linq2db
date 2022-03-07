@@ -29,7 +29,8 @@ namespace LinqToDB.Data
 			var dataConnectionTransaction = await TraceActionAsync(
 				this,
 				TraceOperation.BeginTransaction,
-				"BeginTransaction",
+				static _ => "BeginTransactionAsync",
+				default(object?),
 				static async (dataConnection, _, cancellationToken) =>
 				{
 					// Create new transaction object.
@@ -44,7 +45,7 @@ namespace LinqToDB.Data
 						dataConnection._command.Transaction = dataConnection.Transaction;
 
 					return new DataConnectionTransaction(dataConnection);
-				}, (object?)null, cancellationToken)
+				}, cancellationToken)
 				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return dataConnectionTransaction;
@@ -67,7 +68,8 @@ namespace LinqToDB.Data
 			var dataConnectionTransaction = await TraceActionAsync(
 				this,
 				TraceOperation.BeginTransaction,
-				"BeginTransaction",
+				static il => $"BeginTransactionAsync({il})",
+				isolationLevel,
 				static async (dataConnection, isolationLevel, cancellationToken) =>
 				{
 					// Create new transaction object.
@@ -82,7 +84,7 @@ namespace LinqToDB.Data
 						dataConnection._command.Transaction = dataConnection.Transaction;
 
 					return new DataConnectionTransaction(dataConnection);
-				}, isolationLevel, cancellationToken)
+				}, cancellationToken)
 				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return dataConnectionTransaction;
@@ -157,7 +159,8 @@ namespace LinqToDB.Data
 				await TraceActionAsync(
 					this,
 					TraceOperation.CommitTransaction,
-					"CommitTransaction",
+					static _ => "CommitTransactionAsync",
+					default(object?),
 					static async (dataConnection, _, cancellationToken) =>
 					{
 						await dataConnection.TransactionAsync!.CommitAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -171,7 +174,7 @@ namespace LinqToDB.Data
 								dataConnection._command.Transaction = null;
 						}
 						return _;
-					}, (object?)null, cancellationToken)
+					}, cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 		}
@@ -189,7 +192,8 @@ namespace LinqToDB.Data
 				await TraceActionAsync(
 					this,
 					TraceOperation.RollbackTransaction,
-					"RollbackTransaction",
+					static _ => "RollbackTransactionAsync",
+					default(object?),
 					static async (dataConnection, _, cancellationToken) =>
 					{
 						await dataConnection.TransactionAsync!.RollbackAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -203,7 +207,7 @@ namespace LinqToDB.Data
 								dataConnection._command.Transaction = null;
 						}
 						return _;
-					}, (object?)null, cancellationToken)
+					}, cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 		}
@@ -271,13 +275,14 @@ namespace LinqToDB.Data
 		protected static async Task<TResult> TraceActionAsync<TContext, TResult>(
 			DataConnection                                                   dataConnection,
 			TraceOperation                                                   traceOperation,
-			string?                                                          commandText,
-			Func<DataConnection, TContext, CancellationToken, Task<TResult>> action,
+			Func<TContext, string?>?                                         commandText,
 			TContext                                                         context,
+			Func<DataConnection, TContext, CancellationToken, Task<TResult>> action,
 			CancellationToken                                                cancellationToken)
 		{
 			var now       = DateTime.UtcNow;
 			Stopwatch? sw = null;
+			var sql       = dataConnection.TraceSwitchConnection.TraceInfo ? commandText?.Invoke(context) : null;
 
 			if (dataConnection.TraceSwitchConnection.TraceInfo)
 			{
@@ -285,7 +290,7 @@ namespace LinqToDB.Data
 				dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.BeforeExecute, traceOperation, true)
 				{
 					TraceLevel  = TraceLevel.Info,
-					CommandText = commandText,
+					CommandText = sql,
 					StartTime   = now,
 				});
 			}
@@ -299,7 +304,7 @@ namespace LinqToDB.Data
 					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.AfterExecute, traceOperation, true)
 					{
 						TraceLevel    = TraceLevel.Info,
-						CommandText   = commandText,
+						CommandText   = dataConnection.TraceSwitchConnection.TraceInfo ? sql : commandText?.Invoke(context),
 						StartTime     = now,
 						ExecutionTime = sw!.Elapsed
 					});
@@ -314,7 +319,7 @@ namespace LinqToDB.Data
 					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.Error, traceOperation, true)
 					{
 						TraceLevel    = TraceLevel.Error,
-						CommandText   = commandText,
+						CommandText   = sql,
 						StartTime     = now,
 						ExecutionTime = sw?.Elapsed,
 						Exception     = ex,
