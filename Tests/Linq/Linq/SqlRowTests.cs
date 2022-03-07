@@ -25,6 +25,9 @@ namespace Tests.Linq
 			return db.CreateLocalTable(tableName, data);
 		}
 
+#if NETFRAMEWORK
+		[ActiveIssue("Old SQLite version doesn't support Row Values", Configuration = ProviderName.SQLiteMS)]
+#endif
 		[Test]
 		public void ServerSideOnly([DataSources] string context)
 		{
@@ -43,6 +46,9 @@ namespace Tests.Linq
 			selectRow.Should().Throw<LinqToDBException>();
 		}
 
+#if NETFRAMEWORK
+		[ActiveIssue("Old SQLite version doesn't support Row Values", Configuration = ProviderName.SQLiteMS)]
+#endif
 		[Test]
 		public void IsNull([DataSources] string context)
 		{
@@ -52,6 +58,9 @@ namespace Tests.Linq
 			ints.Count(i => Row(i.One, i.Two, i.Three) == null)
 				.Should().Be(0);
 
+			// DB2 doesn't like null literals without casts, so following tests are skipped
+			if (context == ProviderName.InformixDB2) return;
+
 			ints.Count(i => Row(i.One, i.Nil, (int?)null) == null)
 				.Should().Be(0);
 
@@ -59,6 +68,9 @@ namespace Tests.Linq
 				.Should().Be(1);
 		}
 
+#if NETFRAMEWORK
+		[ActiveIssue("Old SQLite version doesn't support Row Values", Configuration = ProviderName.SQLiteMS)]
+#endif
 		[Test]
 		public void IsNotNull([DataSources] string context)
 		{
@@ -68,6 +80,9 @@ namespace Tests.Linq
 			ints.Count(i => Row(i.One, i.Two, i.Three) != null)
 				.Should().Be(1);
 
+			// DB2 doesn't like null literals without casts, so following tests are skipped
+			if (context == ProviderName.InformixDB2) return;
+
 			ints.Count(i => Row(i.One, i.Nil, (int?)null) != null)
 				.Should().Be(0);
 
@@ -75,6 +90,9 @@ namespace Tests.Linq
 				.Should().Be(0);
 		}
 
+#if NETFRAMEWORK
+		[ActiveIssue("Old SQLite version doesn't support Row Values", Configuration = ProviderName.SQLiteMS)]
+#endif
 		[Test]
 		public void Equals([DataSources] string context)
 		{
@@ -93,10 +111,16 @@ namespace Tests.Linq
 			ints.Count(i => Row(1, i.Nil, 3) == Row(i.One, i.Nil, i.Three))
 				.Should().Be(0);
 
+			// DB2 doesn't like null literals without casts, so following tests are skipped
+			if (context == ProviderName.InformixDB2) return;
+
 			ints.Count(i => Row(1, (int?)null, 3) == Row(i.One, i.Nil, i.Three))
 				.Should().Be(0);
 		}
 
+#if NETFRAMEWORK
+		[ActiveIssue("Old SQLite version doesn't support Row Values", Configuration = ProviderName.SQLiteMS)]
+#endif
 		[Test]
 		public void NotEquals([DataSources] string context)
 		{
@@ -115,10 +139,16 @@ namespace Tests.Linq
 			ints.Count(i => Row(1, i.Nil, 4) != Row(i.One, i.Nil, i.Three))
 				.Should().Be(1);
 
+			// DB2 doesn't like null literals without casts, so following tests are skipped
+			if (context == ProviderName.InformixDB2) return;
+
 			ints.Count(i => Row(1, (int?)null, 4) != Row(i.One, i.Nil, i.Three))
 				.Should().Be(1);
 		}
 
+#if NETFRAMEWORK
+		[ActiveIssue("Old SQLite version doesn't support Row Values", Configuration = ProviderName.SQLiteMS)]
+#endif
 		[Test]
 		public void Greater([DataSources] string context)
 		{
@@ -137,10 +167,16 @@ namespace Tests.Linq
 			ints.Count(i => Row(i.One, i.Nil, i.Four) > Row(i.One, (int?)i.Two, i.Three))
 				.Should().Be(0);
 
+			// DB2 doesn't like null literals without casts, so following tests are skipped
+			if (context == ProviderName.InformixDB2) return;
+
 			ints.Count(i => Row(2, (int?)null, 3) > Row(i.One, (int?)i.Two, i.Three))
 				.Should().Be(1);
 		}
 
+#if NETFRAMEWORK
+		[ActiveIssue("Old SQLite version doesn't support Row Values", Configuration = ProviderName.SQLiteMS)]
+#endif
 		[Test]
 		public void GreaterEquals([DataSources] string context)
 		{
@@ -159,10 +195,16 @@ namespace Tests.Linq
 			ints.Count(i => Row(i.One, i.Nil, i.Four) >= Row(i.One, (int?)i.Two, i.Three))
 				.Should().Be(0);
 
+			// DB2 doesn't like null literals without casts, so following tests are skipped
+			if (context == ProviderName.InformixDB2) return;
+
 			ints.Count(i => Row(2, (int?)null, 3) >= Row(i.One, (int?)i.Two, i.Three))
 				.Should().Be(1);
 		}
 
+#if NETFRAMEWORK
+		[ActiveIssue("Old SQLite version doesn't support Row Values", Configuration = ProviderName.SQLiteMS)]
+#endif
 		[Test]
 		public void Less([DataSources] string context)
 		{
@@ -181,10 +223,16 @@ namespace Tests.Linq
 			ints.Count(i => Row(i.One, i.Nil, i.One) < Row(i.One, (int?)i.Two, i.Three))
 				.Should().Be(0);
 
+			// DB2 doesn't like null literals without casts, so following tests are skipped
+			if (context == ProviderName.InformixDB2) return;
+
 			ints.Count(i => Row(0, (int?)null, 3) < Row(i.One, (int?)i.Two, i.Three))
 				.Should().Be(1);
 		}
 
+#if NETFRAMEWORK
+		[ActiveIssue("Old SQLite version doesn't support Row Values", Configuration = ProviderName.SQLiteMS)]
+#endif
 		[Test]
 		public void LessEquals([DataSources] string context)
 		{
@@ -202,16 +250,28 @@ namespace Tests.Linq
 
 			ints.Count(i => Row(i.One, i.Nil, i.One) <= Row(i.One, (int?)i.Two, i.Three))
 				.Should().Be(0);
+			
+			// DB2 doesn't like null literals without casts, so following tests are skipped
+			if (context == ProviderName.InformixDB2) return;
 
 			ints.Count(i => Row(0, (int?)null, 3) <= Row(i.One, (int?)i.Two, i.Three))
 				.Should().Be(1);
 		}
 
+#if NETFRAMEWORK
+		[ActiveIssue("Old SQLite version doesn't support Row Values", Configuration = ProviderName.SQLiteMS)]
+#endif
 		[Test]
 		public void In([DataSources] string context)
 		{
 			using var db   = GetDataContext(context);
 			using var ints = SetupIntsTable(db);
+
+			ints.Count(i => Row(i.One, i.Two).In(Row(1, i.One * 2)))
+			    .Should().Be(1);
+
+			// DB2 doesn't like null literals without casts, so following tests are skipped
+			if (context == ProviderName.InformixDB2) return;
 
 			ints.Count(i => Row((int?)i.One, i.Two, i.Three).In(
 					Row((int?)i.One, i.One * 2, i.Four - 1),
@@ -232,11 +292,20 @@ namespace Tests.Linq
 				.Should().Be(0);
 		}
 
+#if NETFRAMEWORK
+		[ActiveIssue("Old SQLite version doesn't support Row Values", Configuration = ProviderName.SQLiteMS)]
+#endif
 		[Test]
 		public void NotIn([DataSources] string context)
 		{
 			using var db   = GetDataContext(context);
 			using var ints = SetupIntsTable(db);
+
+			ints.Count(i => Row(i.One, i.Two).NotIn(Row(1, i.One * 2)))
+			    .Should().Be(0);
+
+			// DB2 doesn't like null literals without casts, so following tests are skipped
+			if (context == ProviderName.InformixDB2) return;
 
 			ints.Count(i => Row((int?)i.One, i.Two, i.Three).NotIn(
 					Row((int?)i.One, i.One * 2, i.Four - 1),
@@ -263,6 +332,9 @@ namespace Tests.Linq
 				.Should().Be(0);
 		}
 
+#if NETFRAMEWORK
+		[ActiveIssue("Old SQLite version doesn't support Row Values", Configuration = ProviderName.SQLiteMS)]
+#endif
 		[Test]
 		public void Between([DataSources] string context)
 		{
@@ -320,6 +392,9 @@ namespace Tests.Linq
 				.Should().Be(0);
 		}
 
+#if NETFRAMEWORK
+		[ActiveIssue("Old SQLite version doesn't support Row Values", Configuration = ProviderName.SQLiteMS)]
+#endif
 		[Test]
 		public void NotBetween([DataSources] string context)
 		{
@@ -377,10 +452,16 @@ namespace Tests.Linq
 				.Should().Be(0);
 		}
 
+#if NETFRAMEWORK
+		[ActiveIssue("Old SQLite version doesn't support Row Values", Configuration = ProviderName.SQLiteMS)]
+#endif
 		[Test]
 		public void Overlaps(
-			[IncludeDataSources(TestProvName.AllOracle, TestProvName.AllPostgreSQL, ProviderName.InformixDB2)] string context)
+			[IncludeDataSources(TestProvName.AllOracle, /* TestProvName.AllPostgreSQL, */ ProviderName.DB2)] string context)
 		{
+			// Postgre has support but needs to know the type of parameters explicitely,
+			// so this test wouldn't work without adding casts at every constant.
+
 			using var db   = GetDataContext(context);
 			using var ints = SetupIntsTable(db);
 
@@ -405,6 +486,9 @@ namespace Tests.Linq
 				.Should().Be(1);
 		}
 
+#if NETFRAMEWORK
+		[ActiveIssue("Old SQLite version doesn't support Row Values", Configuration = ProviderName.SQLiteMS)]
+#endif
 		[Test]
 		public void EqualToSelect(
 			[IncludeDataSources(
@@ -447,6 +531,9 @@ namespace Tests.Linq
 				.Should().Be(1);
 		}
 
+#if NETFRAMEWORK
+		[ActiveIssue("Old SQLite version doesn't support Row Values", Configuration = ProviderName.SQLiteMS)]
+#endif
 		[Test]
 		public void CompareToSelect(
 			[IncludeDataSources(
@@ -486,6 +573,9 @@ namespace Tests.Linq
 				.Should().Be(1);
 		}
 
+#if NETFRAMEWORK
+		[ActiveIssue("Old SQLite version doesn't support Row Values", Configuration = ProviderName.SQLiteMS)]
+#endif
 		[Test]
 		public void MixedTypes([DataSources] string context)
 		{
@@ -505,6 +595,9 @@ namespace Tests.Linq
 				.Should().Be(1);
 		}
 
+#if NETFRAMEWORK
+		[ActiveIssue("Old SQLite version doesn't support Row Values", Configuration = ProviderName.SQLiteMS)]
+#endif
 		[Test]
 		public void UpdateRowLiteral(
 			[IncludeDataSources(ProviderName.InformixDB2, TestProvName.AllPostgreSQL)] string context)
@@ -527,10 +620,13 @@ namespace Tests.Linq
 			ints.OrderBy(i => i.One)
 				.ToList()
 				.Should().Equal(
-					new Ints { One = 1,   Two = 2,   Three = 3,   Four = 4,   Five = 5, Nil = (int?)null },
-					new Ints { One = 100, Two = 200, Three = 300, Four = 400, Five = 5, Nil = 600 });
+					new Ints { One = 1,   Two = 2,   Three = 3,   Four = 4,   Five = 5,  Nil = (int?)null },
+					new Ints { One = 100, Two = 200, Three = 300, Four = 400, Five = 50, Nil = 600 });
 		}
 
+#if NETFRAMEWORK
+		[ActiveIssue("Old SQLite version doesn't support Row Values", Configuration = ProviderName.SQLiteMS)]
+#endif
 		[Test]
 		public void UpdateRowSelect(
 			[IncludeDataSources(
@@ -564,8 +660,8 @@ namespace Tests.Linq
 			ints.OrderBy(i => i.One)
 				.ToList()
 				.Should().Equal(
-					new Ints { One = 1,   Two = 2,   Three = 3,   Four = 4,   Five = 5, Nil = (int?)null },
-					new Ints { One = 100, Two = 200, Three = 300, Four = 400, Five = 5, Nil = 600 });
+					new Ints { One = 1,   Two = 2,   Three = 3,   Four = 4,   Five = 5,  Nil = (int?)null },
+					new Ints { One = 100, Two = 200, Three = 300, Four = 400, Five = 50, Nil = 600 });
 		}
 
 		class Ints : IEquatable<Ints>
