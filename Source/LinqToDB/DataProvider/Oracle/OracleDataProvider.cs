@@ -33,7 +33,7 @@ namespace LinqToDB.DataProvider.Oracle
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.ReadCommitted;
-			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.In | RowFeature.Update;
+			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.CompareToSelect | RowFeature.In | RowFeature.Update;
 
 			if (version >= OracleVersion.v12)
 			{

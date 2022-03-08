@@ -1362,7 +1362,8 @@ namespace LinqToDB.SqlProvider
 
 				// ROW(a, b) operator (SELECT c, d)
 				case SelectQuery:
-					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(feature))
+					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(feature) ||
+						!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.CompareToSelect))
 						throw new LinqException("SqlRow comparisons to SELECT are not supported by this DB provider");
 					break;
 

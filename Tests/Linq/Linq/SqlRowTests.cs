@@ -492,7 +492,6 @@ namespace Tests.Linq
 		[Test]
 		public void EqualToSelect(
 			[IncludeDataSources(
-				ProviderName.DB2, 
 				TestProvName.AllMySql, 
 				TestProvName.AllOracle, 
 				TestProvName.AllPostgreSQL, 
@@ -537,7 +536,6 @@ namespace Tests.Linq
 		[Test]
 		public void CompareToSelect(
 			[IncludeDataSources(
-				ProviderName.DB2, 
 				TestProvName.AllMySql, 
 				TestProvName.AllPostgreSQL, 
 				TestProvName.AllSQLite)] string context)
