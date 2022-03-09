@@ -14,6 +14,7 @@ namespace LinqToDB.SqlProvider
 	using Common;
 	using Mapping;
 	using SqlQuery;
+	using Extensions;
 
 	public abstract partial class BasicSqlBuilder : ISqlBuilder
 	{
@@ -34,7 +35,6 @@ namespace LinqToDB.SqlProvider
 		protected Step                   BuildStep;
 		protected ISqlOptimizer          SqlOptimizer;
 		protected SqlProviderFlags       SqlProviderFlags;
-		protected ValueToSqlConverter    ValueToSqlConverter => MappingSchema.ValueToSqlConverter;
 		protected StringBuilder          StringBuilder = null!;
 		protected bool                   SkipAlias;
 
@@ -2560,7 +2560,7 @@ namespace LinqToDB.SqlProvider
 						if (inlining)
 						{
 							var paramValue = parm.GetParameterValue(OptimizationContext.Context.ParameterValues);
-							if (!MappingSchema.ValueToSqlConverter.TryConvert(StringBuilder, new SqlDataType(paramValue.DbDataType), paramValue.Value))
+							if (!MappingSchema.TryConvertToSql(StringBuilder, new SqlDataType(paramValue.DbDataType), paramValue.Value))
 								inlining = false;
 						}
 
@@ -2701,10 +2701,7 @@ namespace LinqToDB.SqlProvider
 
 		protected void BuildValue(SqlDataType? dataType, object? value)
 		{
-			if (dataType != null)
-				ValueToSqlConverter.Convert(StringBuilder, dataType, value);
-			else
-				ValueToSqlConverter.Convert(StringBuilder, value);
+			MappingSchema.ConvertToSqlValue(StringBuilder, dataType, value);
 		}
 
 		#endregion
@@ -3297,13 +3294,13 @@ namespace LinqToDB.SqlProvider
 					if (p.Value is byte[] bytes                           &&
 					    Configuration.MaxBinaryParameterLengthLogging >= 0 &&
 					    bytes.Length > Configuration.MaxBinaryParameterLengthLogging &&
-					    ValueToSqlConverter.CanConvert(typeof(byte[])))
+					    MappingSchema.ValueToSqlConverter.CanConvert(typeof(byte[])))
 					{
 						var trimmed =
 							new byte[Configuration.MaxBinaryParameterLengthLogging];
 						Array.Copy(bytes, 0, trimmed, 0,
 							Configuration.MaxBinaryParameterLengthLogging);
-						ValueToSqlConverter.TryConvert(sb, trimmed);
+						MappingSchema.ValueToSqlConverter.TryConvert(sb, trimmed);
 						sb.AppendLine();
 						sb.Append(
 							$"-- value above truncated for logging, actual length is {bytes.Length}");
@@ -3311,7 +3308,7 @@ namespace LinqToDB.SqlProvider
 					else if (p.Value is Binary binaryData &&
 					         Configuration.MaxBinaryParameterLengthLogging >= 0 &&
 					         binaryData.Length > Configuration.MaxBinaryParameterLengthLogging &&
-					         ValueToSqlConverter.CanConvert(typeof(Binary)))
+					         MappingSchema.ValueToSqlConverter.CanConvert(typeof(Binary)))
 					{
 						//We aren't going to create a new Binary here,
 						//since ValueToSql always just .ToArray() anyway
@@ -3319,7 +3316,7 @@ namespace LinqToDB.SqlProvider
 							new byte[Configuration.MaxBinaryParameterLengthLogging];
 						Array.Copy(binaryData.ToArray(), 0, trimmed, 0,
 							Configuration.MaxBinaryParameterLengthLogging);
-						ValueToSqlConverter.TryConvert(sb, trimmed);
+						MappingSchema.TryConvertToSql(sb, null, trimmed);
 						sb.AppendLine();
 						sb.Append(
 							$"-- value above truncated for logging, actual length is {binaryData.Length}");
@@ -3327,19 +3324,17 @@ namespace LinqToDB.SqlProvider
 					else if (p.Value is string s && 
 					         Configuration.MaxStringParameterLengthLogging >= 0 &&
 					         s.Length > Configuration.MaxStringParameterLengthLogging &&
-					         ValueToSqlConverter.CanConvert(typeof(string)))
+					         MappingSchema.ValueToSqlConverter.CanConvert(typeof(string)))
 					{
 						var trimmed =
 							s.Substring(0,
 								Configuration.MaxStringParameterLengthLogging);
-						ValueToSqlConverter.TryConvert(sb, trimmed);
+						MappingSchema.TryConvertToSql(sb, null, trimmed);
 						sb.AppendLine();
 						sb.Append(
 							$"-- value above truncated for logging, actual length is {s.Length}");
 					}
-					else if (p.DbType == DbType.Object && p.Value?.GetType().IsEnum == true)
-						FormatParameterValue(sb, p.Value);
-					else if (!ValueToSqlConverter.TryConvert(sb, p.Value))
+					else if (!MappingSchema.TryConvertToSql(sb, null, p.Value))
 						FormatParameterValue(sb, p.Value);
 					sb.AppendLine();
 				}
