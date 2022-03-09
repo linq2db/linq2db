@@ -3337,6 +3337,8 @@ namespace LinqToDB.SqlProvider
 						sb.Append(
 							$"-- value above truncated for logging, actual length is {s.Length}");
 					}
+					else if (p.DbType == DbType.Object && p.Value?.GetType().IsEnum == true)
+						FormatParameterValue(sb, p.Value);
 					else if (!ValueToSqlConverter.TryConvert(sb, p.Value))
 						FormatParameterValue(sb, p.Value);
 					sb.AppendLine();

@@ -318,7 +318,21 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			{
 				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
 				if (param != null)
-					return _provider.Adapter.GetDbType(param).ToString();
+				{
+					try
+					{
+						// fast Enum detection path
+						if (param.DbType == DbType.Object && param.Value?.GetType().IsEnum == true)
+							return "Enum";
+
+						return _provider.Adapter.GetDbType(param).ToString();
+					}
+					catch (NotSupportedException)
+					{
+						// Hadling Npgsql mapping exception
+						// Exception is thrown whe using PostgreSQL Enums
+					}
+				}
 			}
 
 			return base.GetProviderTypeName(parameter);

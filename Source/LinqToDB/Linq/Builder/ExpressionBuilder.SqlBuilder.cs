@@ -1918,8 +1918,10 @@ namespace LinqToDB.Linq.Builder
 				{
 					value = ((UnaryExpression)value).Operand;
 
-					var l = ConvertToSql(context, operand);
-					var r = ConvertToSql(context, value);
+					var cd = SuggestColumnDescriptor(context, operand, value);
+
+					var l = ConvertToSql(context, operand, columnDescriptor: cd);
+					var r = ConvertToSql(context, value, columnDescriptor: cd);
 
 					return new SqlPredicate.ExprExpr(l, op, r, true);
 				}
