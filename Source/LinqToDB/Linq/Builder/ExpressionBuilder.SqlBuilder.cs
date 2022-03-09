@@ -1405,13 +1405,13 @@ namespace LinqToDB.Linq.Builder
 					break;
 				}
 
-				default:
+				/*default:
 				{
 					expression = BuildSqlExpression(new Dictionary<Expression, Expression>(), context, expression,
 						flags, alias);
 
 					break;
-				}
+				}*/
 			}
 
 			if (expression.Type == typeof(bool) && _convertedPredicates.Add(expression))
@@ -3533,11 +3533,45 @@ namespace LinqToDB.Linq.Builder
 
 						if (body is SqlGenericConstructorExpression genericConstructor)
 						{
-							throw new NotImplementedException();
+							Expression? bodyExpresion = null;
+							for (int i = 0; i < genericConstructor.Assignments.Count; i++)
+							{
+								var assignment = genericConstructor.Assignments[i];
+								if (MemberInfoEqualityComparer.Default.Equals(assignment.MemberInfo, member))
+								{
+									bodyExpresion = assignment.Expression;
+									break;
+								}
+							}
+
+							if (bodyExpresion == null)
+							{
+								// search in base class
+								for (int i = 0; i < genericConstructor.Assignments.Count; i++)
+								{
+									var assignment = genericConstructor.Assignments[i];
+									if (assignment.MemberInfo.ReflectedType != member.ReflectedType && assignment.MemberInfo.Name == member.Name)
+									{
+										var mi = assignment.MemberInfo.ReflectedType.GetMemberEx(member);
+										if (mi != null && MemberInfoEqualityComparer.Default.Equals(assignment.MemberInfo, mi))
+										{
+											bodyExpresion = assignment.Expression;
+											break;
+										}
+									}
+								}
+							}
+
+							if (bodyExpresion is not null)
+							{
+								return Project(context, path, nextPath, nextIndex - 1, flags, bodyExpresion);
+							}
+
+							return new DefaultValueExpression(null, nextPath[0].Type);
 						}
 					}
 
-					throw new NotImplementedException();
+					return body;
 				}
 
 				case ExpressionType.MemberAccess:
@@ -3746,8 +3780,10 @@ namespace LinqToDB.Linq.Builder
 
 			var key = new SqlCacheKey(path, null, null, null, flags);
 
-			if (_expressionCache.TryGetValue(key, out var expression))
+			if (_expressionCache.TryGetValue(key, out var expression) && expression.Type == path.Type)
 				return expression;
+
+			expression = null;
 
 			ContextRefExpression? rootContext = null;
 

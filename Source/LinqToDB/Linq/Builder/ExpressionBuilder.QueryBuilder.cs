@@ -52,6 +52,14 @@ namespace LinqToDB.Linq.Builder
 		{
 			var resultExpr = TryConvertToSqlExpr(context, expr, flags);
 
+			if (resultExpr is SqlPlaceholderExpression tryPlaceholder)
+			{
+				if (tryPlaceholder.Sql.ElementType == QueryElementType.SqlValue)
+				{
+					resultExpr = null;
+				}
+			}
+
 			if (resultExpr == null)
 			{
 				resultExpr = BuildSqlExpression(translated, context, expr, flags, alias);
@@ -587,16 +595,26 @@ namespace LinqToDB.Linq.Builder
 							return new TransformInfo(expr);
 						}
 
+
+						/*
+						case ExpressionType.Conditional:
+						case ExpressionType.Throw:
+						case ExpressionType.Block:
+
 						case ExpressionType.Lambda:
 						case ExpressionType.Parameter:
+						case ExpressionType.NewArrayInit:
 						{
 							return new TransformInfo(expr);
 						}
+					*/
 					}
 
+					/*
 					var asSQL = context.builder.TryConvertToSqlExpr(context.context, expr, context.flags);
 					if (asSQL != null)
 						return new TransformInfo(asSQL);
+						*/
 
 					return new TransformInfo(expr);
 				});

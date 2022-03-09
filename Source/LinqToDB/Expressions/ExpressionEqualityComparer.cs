@@ -56,6 +56,7 @@ namespace LinqToDB.Expressions
 					case ExpressionType.Quote:
 					case ExpressionType.TypeAs:
 					case ExpressionType.UnaryPlus:
+					case ExpressionType.Throw:
 					{
 						var unaryExpression = (UnaryExpression)obj;
 

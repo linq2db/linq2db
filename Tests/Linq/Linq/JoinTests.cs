@@ -469,7 +469,7 @@ namespace Tests.Linq
 
 				var list1 = q1.ToList();
 				var ch1   = list1[0].lj.ToList();
-
+ 
 				var q2 =
 					from p in db.Parent
 						join c in db.Child on p.ParentID + n equals c.ParentID into lj

@@ -65,14 +65,27 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						var generator = new ExpressionGenerator();
+						var firstMapping = inheritanceMappings[0];
 
-						Expression<Func<object, Exception>> throwExpr = code =>
+						var onType = firstMapping.Discriminator.MemberInfo.ReflectedType;
+						if (onType == null)
+						{
+							throw new LinqToDBException("Could not get discriminator ReflectedType.");
+						}
+
+						var generator    = new ExpressionGenerator();
+
+						Expression<Func<object, Type, Exception>> throwExpr = (code, et) =>
 							new LinqException(
 								"Inheritance mapping is not defined for discriminator value '{0}' in the '{1}' hierarchy.",
-								code, entityType);
+								code, et);
 
-						generator.Throw(throwExpr.Body);
+						var access = Expression.MakeMemberAccess(
+							new ContextRefExpression(onType, context), firstMapping.Discriminator.MemberInfo);
+
+						var codeExpr = Expression.Convert(access, typeof(object));
+
+						generator.Throw(throwExpr.GetBody(codeExpr, Expression.Constant(onType, typeof(Type))));
 						generator.AddExpression(new DefaultValueExpression(MappingSchema, entityType));
 
 						defaultExpression = generator.Build();
@@ -109,7 +122,7 @@ namespace LinqToDB.Linq.Builder
 				var assignments = members
 					.Select(x => new SqlGenericConstructorExpression.Assignment(x.Member, x.Expression)).ToList();
 
-				return new SqlGenericConstructorExpression(entityType, assignments);
+				return new SqlGenericConstructorExpression(true, entityType, assignments);
 			}
 
 			//if (flags.HasFlag(ProjectFlags.Expression))
@@ -188,9 +201,22 @@ namespace LinqToDB.Linq.Builder
 				else
 				{
 					var mi = refExpression.Type.GetMemberEx(column.MemberInfo);
+
+					var objExpression = refExpression;
 					if (mi == null)
-						continue;
-					me = Expression.MakeMemberAccess(refExpression, mi);
+					{
+						if (column.MemberInfo.ReflectedType == null)
+							continue;
+
+						// Skip fake assignments
+						if (flags.HasFlag(ProjectFlags.Expression))
+							continue;
+
+						objExpression = new ContextRefExpression(column.MemberInfo.ReflectedType, context);
+						mi = column.MemberInfo;
+					};
+
+					me = Expression.MakeMemberAccess(objExpression, mi);
 				}
 
 				var sqlExpression = context.Builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), context, me, flags);
@@ -236,7 +262,13 @@ namespace LinqToDB.Linq.Builder
 					.Where(m => m.Column == null || ignoredColumns?.Contains(m.Column) != true)
 					// IMPORTANT: refactoring this condition will affect hasComplex variable calculation below
 					.Where(static m => m.Column?.MemberAccessor.IsComplex != true)
-					.Select(static m => (MemberBinding)Expression.Bind(m.Column?.StorageInfo ?? m.Member, m.Expression))
+					.Select(static m => new
+					{
+						Storage = m.Column?.StorageInfo ?? m.Member,
+						Expression = m.Expression
+					})
+					.Where(static m => m.Storage is not PropertyInfo prop || prop.CanWrite)
+					.Select(static m => (MemberBinding)Expression.Bind(m.Storage, m.Expression))
 			);
 
 			foreach (var ai in members)
@@ -364,6 +396,12 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		#endregion Entity Construction
+
+		#region Generic Entity Construction
+
+		
+
+		#endregion
 
 		#region Helpers
 

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LinqToDB;
@@ -1101,5 +1102,65 @@ namespace Tests.Linq
 			}
 		}
 
+
+		[InheritanceMapping(Code = 1, Type = typeof(SetEntityA))]
+		[InheritanceMapping(Code = 2, Type = typeof(SetEntityB))]
+		[InheritanceMapping(Code = 3, Type = typeof(SetEntityC))]
+		abstract class SetEntityBase
+		{
+			[Column]
+			public int Id { get; set; }
+
+			[Column(IsDiscriminator = true)]
+			public abstract int Discriminator { get; }
+		}
+
+		class SetEntityA : SetEntityBase
+		{
+			[Column]
+			public          int? IntValue      { get; set; }
+
+			public override int  Discriminator => 1;
+		}
+
+		class SetEntityB : SetEntityBase
+		{
+			[Column]
+			public          string? StrValue      { get; set; }
+
+			public override int  Discriminator => 2;
+		}
+
+		class SetEntityC : SetEntityBase
+		{
+			[Column]
+			public double? DoubleValue { get; set; }
+
+			public override int Discriminator => 3;
+		}
+
+		[Test]
+		public void ConcatInheritance([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var items = new SetEntityBase[]
+			{
+				new SetEntityA{Id = 1, IntValue = 11},
+				new SetEntityB{Id = 2, StrValue = "Str22" },
+				new SetEntityC{Id = 3, DoubleValue = 33.33 }
+			};
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(items))
+			{
+				var query =
+					(from t1 in table.Where(x => x.Id == 1) select t1)
+					.Concat(
+						from t2 in table.Where(x => x.Id == 2) select t2)
+					.Concat(
+						from t3 in table.Where(x => x.Id == 3) select t3);
+
+				var zz = query.ToArray();
+			}
+		}
 	}
 }

@@ -129,8 +129,12 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (flags.HasFlag(ProjectFlags.Root) ||flags.HasFlag(ProjectFlags.AssociationRoot))
 				{
-					if (Body is ContextRefExpression)
-						return Body;
+					if (Body is ContextRefExpression bodyRef)
+					{
+						// updating type for Inheritance mapping
+						//
+						return bodyRef.UpdateType(path.Type);
+					}
 
 					return path;
 				}

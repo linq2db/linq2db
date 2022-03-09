@@ -207,7 +207,7 @@ namespace LinqToDB.Expressions
 
 				if (!ReferenceEquals(assignments, generic.Assignments))
 				{
-					return new SqlGenericConstructorExpression(generic.ObjectType, assignments.ToList());
+					return generic.ReplaceAssignments(assignments.ToList());
 				}
 
 				return expr;

@@ -41,6 +41,14 @@ namespace LinqToDB.Expressions
 			return Equals((ContextRefExpression)obj);
 		}
 
+		public ContextRefExpression UpdateType(Type type)
+		{
+			if (type == Type)
+				return this;
+
+			return new ContextRefExpression(type, BuildContext);
+		}
+
 		public override int GetHashCode()
 		{
 			unchecked

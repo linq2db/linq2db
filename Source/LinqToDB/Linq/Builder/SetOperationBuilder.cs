@@ -7,6 +7,7 @@ using System.Reflection;
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
+	using LinqToDB.Extensions;
 	using SqlQuery;
 
 	class SetOperationBuilder : MethodCallBuilder
@@ -179,7 +180,21 @@ namespace LinqToDB.Linq.Builder
 
 						var found = false;
 
-						var ma = Expression.MakeMemberAccess(root, left.MemberInfo);
+						var rootObj = root;
+						var mi = root.Type.GetMemberEx(left.MemberInfo);
+
+						if (mi == null)
+						{
+							// handling inheritance mapping
+							//
+							if (left.MemberInfo.ReflectedType == null)
+								throw new InvalidOperationException();
+
+							rootObj = new ContextRefExpression(left.MemberInfo.ReflectedType, this);
+							mi      = left.MemberInfo;
+						}
+
+						var ma = Expression.MakeMemberAccess(rootObj, mi);
 
 						var assignmentExpr = (Expression)ma;
 
@@ -244,8 +259,16 @@ namespace LinqToDB.Linq.Builder
 						newAssignments.Add(new SqlGenericConstructorExpression.Assignment(left.MemberInfo, ma));
 					}
 
+					// Shortcut, we can result object from any side
+					//
+					if (leftGeneric.ConstructType  == SqlGenericConstructorExpression.CreateType.Full &&
+					    rightGeneric.ConstructType == SqlGenericConstructorExpression.CreateType.Full)
+					{
+						return leftGeneric;
+					};
+
 					//TODO: try to merge with constructor
-					return new SqlGenericConstructorExpression(leftGeneric.ObjectType, newAssignments);
+					return new SqlGenericConstructorExpression(false, leftGeneric.ObjectType, newAssignments);
 				}
 
 				throw new NotImplementedException();
@@ -266,7 +289,9 @@ namespace LinqToDB.Linq.Builder
 				foreach (var matchedPair in _matchedPairs.OrderBy(x => x.Value.idx))
 				{
 					var alias = GenerateColumnAlias(matchedPair.Key);
-					if (matchedPair.Value.left.Expression is SqlPlaceholderExpression placehoderLeft)
+
+					var leftExpression = Builder.ConvertToSqlExpr(this, matchedPair.Value.left.Expression);
+					if (leftExpression is SqlPlaceholderExpression placehoderLeft)
 					{
 						if (alias != null)
 							placehoderLeft.Alias = alias;
@@ -274,7 +299,8 @@ namespace LinqToDB.Linq.Builder
 						var leftColumn = Builder.MakeColumn(SelectQuery, placehoderLeft);
 						_createdSQL.Add(matchedPair.Key, leftColumn);
 
-						if (matchedPair.Value.right.Expression is not SqlPlaceholderExpression placehoderRight)
+						var rightExpression = Builder.ConvertToSqlExpr(this, matchedPair.Value.right.Expression);
+						if (rightExpression is not SqlPlaceholderExpression placehoderRight)
 							throw new InvalidOperationException();
 
 						if (alias != null)
@@ -330,14 +356,35 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (_body != null)
 					{
-						if (!_createdSQL.TryGetValue(path, out var value))
+						var projected = Builder.Project(this, path, null, -1, flags, _body);
+						if (projected is MemberExpression)
 						{
-							return Builder.CreateSqlError(this, path);
+							if (_createdSQL.TryGetValue(projected, out var placeholderExpression))
+								return placeholderExpression;
+							return Builder.CreateSqlError(this, projected);
 						}
-
-						return value;
+						return projected;
 					}
 				}
+				else if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Expression))
+				{
+					if (_body != null)
+					{
+						if (_body.ConstructType == SqlGenericConstructorExpression.CreateType.Full)
+						{
+							var expr = Builder.BuildEntityExpression(this, _body.ObjectType, flags);
+
+							return expr;
+						}
+
+						_body.TryConstruct()
+
+						throw new NotImplementedException($"Handle other CreateTypes: {_body.ConstructType}");
+					}
+
+					throw new NotImplementedException("Scalar handling not implemented");
+				}
+
 
 				return base.MakeExpression(path, flags);
 			}
