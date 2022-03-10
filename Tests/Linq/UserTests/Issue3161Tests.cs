@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -66,7 +67,6 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		[ActiveIssue(Details = "Please see issue 3161")]
 		public void CrossApplyTwice([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -111,6 +111,11 @@ namespace Tests.UserTests
 				})
 				.ToList();
 			Assert.That(ret.Count, Is.EqualTo(2));
+
+			// uncomment after 3161 fixed
+			//var baselines = GetCurrentBaselines();
+			//baselines.Should().Contain("SELECT", Exactly.Twice());
+			//baselines.Should().Contain("SELECT TOP", Exactly.Once());
 		}
 	}
 }

@@ -1371,7 +1371,7 @@ namespace LinqToDB.Linq.Builder
 				var parameters = new[] { p };
 				if (!HasParametersDefined(expr, parameters))
 				{
-					// trying to evaluate Querybale method.
+					// trying to evaluate Queryable method.
 					if (expression.NodeType == ExpressionType.Call && HasParametersDefined(expr, parameters.Concat(allowedParameters)))
 					{
 						var callExpression = (MethodCallExpression)expression;
