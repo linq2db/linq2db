@@ -219,18 +219,18 @@ jobs:
       path: '$(Build.SourcesDirectory)/Source/LinqToDB/bin/Release'
       artifact: '$(artifact_linq2db_binaries)'
     displayName: Publish linq2db build results
-    condition: ${{ parameters.for_nuget }}
+    condition: and(succeeded(), ${{ parameters.for_nuget }})
 
   - task: PublishPipelineArtifact@1
     inputs:
       path: '$(Build.SourcesDirectory)/Source/LinqToDB.Tools/bin/Release'
       artifact: '$(artifact_linq2db_tools_binaries)'
     displayName: Publish linq2db.Tools build results
-    condition: ${{ parameters.for_nuget }}
+    condition: and(succeeded(), ${{ parameters.for_nuget }})
 
   - task: PublishPipelineArtifact@1
     inputs:
       path: '$(Build.SourcesDirectory)/Source/LinqToDB.AspNet/bin/Release'
       artifact: '$(artifact_linq2db_aspnet_binaries)'
     displayName: Publish linq2db.AspNet build results
-    condition: ${{ parameters.for_nuget }}
+    condition: and(succeeded(), ${{ parameters.for_nuget }})

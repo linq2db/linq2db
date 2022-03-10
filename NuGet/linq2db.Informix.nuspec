@@ -21,7 +21,7 @@
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="README.T4.md"                                                     target="README.md"                                                                                          />
+		<file src="..\Nuget\README.T4.md"                                            target="README.md"                                                                                          />
 
 		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                 target="tools"                                                                                              />
 		<file src="..\Tests\Tests.T4\bin\Azure\net472\Humanizer.dll"                 target="tools"                                                                                              />

@@ -3,3 +3,5 @@ variables:
     packageVersion: $(nugetVersion)
   ${{ if eq(variables['Build.SourceBranchName'], 'master') }}:
     packageVersion: $(nugetDevVersion)
+  ${{ if eq(variables.publish, false) }}:
+    packageVersion: 1.0.0
