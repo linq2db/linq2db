@@ -9,7 +9,7 @@ jobs:
   variables:
     - template: nuget-vars.yml
   dependsOn: build_job
-  condition: and(succeeded(), or(eq(variables['Build.SourceBranchName'], 'release'), eq(variables['Build.SourceBranchName'], 'master')))
+  condition: succeeded()
 
   steps:
 
