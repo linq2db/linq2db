@@ -1,5 +1,8 @@
 variables:
+  solution: 'linq2db.sln'
+  build_configuration: 'Azure'
+  assemblyVersion: 3.7.0
   ${{ if eq(variables['Build.SourceBranchName'], 'release') }}:
-    packageVersion: $(nugetVersion)
+    packageVersion: 3.7.0
   ${{ if ne(variables['Build.SourceBranchName'], 'release') }}:
-    packageVersion: $(nugetDevVersion)
+    packageVersion: 3.7.0

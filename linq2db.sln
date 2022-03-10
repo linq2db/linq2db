@@ -482,8 +482,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "templates", "templates", "{DAD073A0-C4D2-4C92-AB6D-F8162DB2D5D3}"
 	ProjectSection(SolutionItems) = preProject
 		Build\Azure\pipelines\templates\build-job.yml = Build\Azure\pipelines\templates\build-job.yml
+		Build\Azure\pipelines\templates\build-vars.yml = Build\Azure\pipelines\templates\build-vars.yml
 		Build\Azure\pipelines\templates\nuget-job.yml = Build\Azure\pipelines\templates\nuget-job.yml
-		Build\Azure\pipelines\templates\nuget-vars.yml = Build\Azure\pipelines\templates\nuget-vars.yml
 		Build\Azure\pipelines\templates\test-jobs.yml = Build\Azure\pipelines\templates\test-jobs.yml
 		Build\Azure\pipelines\templates\test-matrix.yml = Build\Azure\pipelines\templates\test-matrix.yml
 		Build\Azure\pipelines\templates\test-vars.yml = Build\Azure\pipelines\templates\test-vars.yml

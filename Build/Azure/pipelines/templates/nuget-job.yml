@@ -6,8 +6,6 @@ jobs:
   pool:
     vmImage: 'windows-2022'
   displayName: 'Nugets Generation'
-  variables:
-    - template: nuget-vars.yml
   dependsOn: build_job
   condition: succeeded()
 
