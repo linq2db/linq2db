@@ -24,7 +24,7 @@
 	</metadata>
 
 	<files>
-		<file src="README.AspNet.md"                                                        target="README.md"           />
+		<file src="..\Nuget\README.AspNet.md"                                               target="README.md"           />
 
 		<file src="..\Source\LinqToDB.AspNet\bin\Release\net45\linq2db.AspNet.pdb"          target="lib\net45\"          />
 		<file src="..\Source\LinqToDB.AspNet\bin\Release\net45\linq2db.AspNet.xml"          target="lib\net45\"          />
