@@ -59,7 +59,7 @@ jobs:
       script: $(Build.SourcesDirectory)/NuGet/Pack.bat
       workingDirectory: $(Build.SourcesDirectory)/BuiltNuGet
     displayName: Build nugets for Azure Artifacts
-    condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'master'))
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
 
   - task: CmdLine@2
     inputs:
@@ -73,6 +73,7 @@ jobs:
       pathToPublish: '$(Build.SourcesDirectory)/BuiltNuGet/built'
       artifactName: '$(artifact_nugets)'
     displayName: Publish nugets to artifacts
+    condition: succeeded()
 
   - task: NuGetCommand@2
     inputs:
