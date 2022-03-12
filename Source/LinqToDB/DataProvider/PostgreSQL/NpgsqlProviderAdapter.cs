@@ -572,6 +572,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				((Expression<Func<NpgsqlBinaryImporter, object?, NpgsqlDbType, CancellationToken, Task>>)((NpgsqlBinaryImporter this_, object? value, NpgsqlDbType type, CancellationToken token) => this_.WriteAsync(value, type, token)), true),
 				// [9]: Write
 				(Expression<Action<NpgsqlBinaryImporter, object?, NpgsqlDbType                        >>)((NpgsqlBinaryImporter this_, object? value, NpgsqlDbType type) => this_.Write(value, type)),
+				// [10]: Write
+				(Expression<Action<NpgsqlBinaryImporter, object?, string                              >>)((NpgsqlBinaryImporter this_, object? value, string dataTypeName) => this_.Write(value, dataTypeName)),
+				// [11]: WriteAsync
+				new Tuple<LambdaExpression, bool>
+				((Expression<Func<NpgsqlBinaryImporter, object?, string      , CancellationToken, Task>>)((NpgsqlBinaryImporter this_, object? value, string dataTypeName, CancellationToken token) => this_.WriteAsync(value, dataTypeName, token)), true),
 			};
 
 			public NpgsqlBinaryImporter(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -591,6 +596,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			public void Dispose()  => ((Action<NpgsqlBinaryImporter>)CompiledWrappers[3])(this);
 			public void StartRow() => ((Action<NpgsqlBinaryImporter>)CompiledWrappers[4])(this);
 			public void Write<T>(T value, NpgsqlDbType npgsqlDbType) => ((Action<NpgsqlBinaryImporter, object?, NpgsqlDbType>)CompiledWrappers[9])(this, value, npgsqlDbType);
+			public void Write<T>(T value, string dataTypeName) => ((Action<NpgsqlBinaryImporter, object?, string>)CompiledWrappers[10])(this, value, dataTypeName);
 
 #if NATIVE_ASYNC
 #pragma warning disable CS3002 // Return type is not CLS-compliant
@@ -617,6 +623,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			public Task WriteAsync<T>(T value, NpgsqlDbType npgsqlDbType, CancellationToken cancellationToken)
 				=> ((Func<NpgsqlBinaryImporter, object?, NpgsqlDbType, CancellationToken, Task>)CompiledWrappers[8])(this, value, npgsqlDbType, cancellationToken);
+			public Task WriteAsync<T>(T value, string dataTypeName, CancellationToken cancellationToken)
+				=> ((Func<NpgsqlBinaryImporter, object?, string, CancellationToken, Task>)CompiledWrappers[11])(this, value, dataTypeName, cancellationToken);
 
 			public bool HasComplete => CompiledWrappers[1] != null;
 			public bool HasComplete5 => CompiledWrappers[2] != null;

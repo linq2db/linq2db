@@ -330,7 +330,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					catch (NotSupportedException)
 					{
 						// Hadling Npgsql mapping exception
-						// Exception is thrown whe using PostgreSQL Enums
+						// Exception is thrown when using PostgreSQL Enums
 					}
 				}
 			}

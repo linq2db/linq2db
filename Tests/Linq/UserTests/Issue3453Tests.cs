@@ -15,19 +15,19 @@ namespace Tests.UserTests
 		[Table(Schema = "public", Name = "schedule")]
 		public class Schedule
 		{
-			[Column("id"), PrimaryKey, Identity]                 public int       Id           { get; set; } // integer
-			[Column("unit", DataType = DataType.Enum)]           public TimeUnit  Unit         { get; set; } // USER-DEFINED        
-			[Column("unit_nullable", DataType = DataType.Enum)]  public TimeUnit? UnitNullable { get; set; } // USER-DEFINED        
-			[Column("amount")]                                   public int       Amount       { get; set; } // integer
+			[Column("id"), PrimaryKey, Identity] public int Id { get; set; } // integer
+			[Column("unit", DataType = DataType.Enum)] public TimeUnit Unit { get; set; } // USER-DEFINED
+			[Column("unit_nullable", DataType = DataType.Enum)] public TimeUnit? UnitNullable { get; set; } // USER-DEFINED
+			[Column("amount")] public int Amount { get; set; } // integer
 		}
 
 		[Table(Schema = "public", Name = "schedule")]
 		public class ScheduleWithTypes
 		{
-			[Column("id"), PrimaryKey, Identity]                 public                int              Id           { get; set; } // integer
-			[Column("unit", DataType = DataType.Enum, DbType = "time_unit")]           public TimeUnit  Unit         { get; set; } // USER-DEFINED        
-			[Column("unit_nullable", DataType = DataType.Enum, DbType = "time_unit")]  public TimeUnit? UnitNullable { get; set; } // USER-DEFINED        
-			[Column("amount")]                                   public int            Amount                        { get; set; } // integer
+			[Column("id"), PrimaryKey, Identity] public int Id { get; set; } // integer
+			[Column("unit", DataType = DataType.Enum, DbType = "time_unit")] public TimeUnit Unit { get; set; } // USER-DEFINED
+			[Column("unit_nullable", DataType = DataType.Enum, DbType = "time_unit")] public TimeUnit? UnitNullable { get; set; } // USER-DEFINED
+			[Column("amount")] public int Amount { get; set; } // integer
 		}
 
 		public enum TimeUnit
@@ -35,40 +35,53 @@ namespace Tests.UserTests
 			[MapValue("hour")]
 			Hour,
 			[MapValue("day")]
-			Day,		
+			Day,
 		}
 
-		[Test]
-		public void EnumMappingTest([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
+		private MappingSchema SetupEnums(string context, bool withTable)
 		{
 			NpgsqlConnection.GlobalTypeMapper.MapEnum<TimeUnit>("time_unit");
+
 			var mappingSchema = new MappingSchema();
 
-			const string initScript = @"DROP TABLE IF EXISTS schedule;
+			const string initScript = @"
+DROP TABLE IF EXISTS schedule;
 DROP TYPE IF EXISTS time_unit;
-CREATE TYPE time_unit AS ENUM ('hour', 'day');
+CREATE TYPE time_unit AS ENUM ('hour', 'day');";
+
+			const string createTableScript = @"
 CREATE TABLE IF NOT EXISTS schedule
 (
   id SERIAL CONSTRAINT schedule_pk PRIMARY KEY,
-  unit         time_unit NOT NULL,
-  unit_nullable time_unit NULL,
-  amount INT NOT NULL
+  unit                 time_unit   NOT NULL,
+  unit_nullable        time_unit       NULL,
+  amount               int         NOT NULL
 );
 INSERT INTO schedule(unit, unit_nullable,amount) VALUES ('day','day',1),('day','day',2),('day','day',3);";
 
 			// executing separately, we have to reload just created types
-			using (var db = (DataConnection)GetDataContext(context, mappingSchema))
+			using (var db = (DataConnection)GetDataContext(context.Replace(".LinqService", string.Empty), mappingSchema))
 			{
 				db.Execute(initScript);
+				if (withTable)
+					db.Execute(createTableScript);
 
 				((NpgsqlConnection)db.Connection).ReloadTypes();
 			}
+
+			return mappingSchema;
+		}
+
+		[Test]
+		public void EnumMappingTest([IncludeDataSources(true, TestProvName.AllPostgreSQL95Plus)] string context)
+		{
+			var mappingSchema = SetupEnums(context, true);
 
 			var       unit         = TimeUnit.Day;
 			TimeUnit? unitNullable = TimeUnit.Day;
 			TimeUnit? unitNull     = null;
 
-			using (var db = (DataConnection)GetDataContext(context, mappingSchema))
+			using (var db = GetDataContext(context, mappingSchema))
 			{
 				db.Insert(new Schedule { Unit = TimeUnit.Hour, Amount = 1 });
 
@@ -96,24 +109,10 @@ INSERT INTO schedule(unit, unit_nullable,amount) VALUES ('day','day',1),('day','
 
 		}
 
-[Test]
-		public void EnumMappingTestWithTypes([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
+		[Test]
+		public void EnumMappingTestWithTypes([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values] BulkCopyType bcType)
 		{
-			NpgsqlConnection.GlobalTypeMapper.MapEnum<TimeUnit>("time_unit");
-			var mappingSchema = new MappingSchema();
-
-			const string initScript = @"
-DROP TABLE IF EXISTS schedule;
-DROP TYPE IF EXISTS time_unit;
-CREATE TYPE time_unit AS ENUM ('hour', 'day');";
-
-			// executing separately, we have to reload just created types
-			using (var db = (DataConnection)GetDataContext(context, mappingSchema))
-			{
-				db.Execute(initScript);
-
-				((NpgsqlConnection)db.Connection).ReloadTypes();
-			}
+			var mappingSchema = SetupEnums(context, false);
 
 			var data = new[]
 			{
@@ -130,7 +129,7 @@ CREATE TYPE time_unit AS ENUM ('hour', 'day');";
 			using (var db = (DataConnection)GetDataContext(context, mappingSchema))
 			using (db.CreateLocalTable<ScheduleWithTypes>())
 			{
-				db.BulkCopy(data);
+				db.BulkCopy(new BulkCopyOptions() { BulkCopyType = bcType }, data);
 
 				db.GetTable<Schedule>().Should().HaveCount(4);
 
@@ -153,9 +152,7 @@ CREATE TYPE time_unit AS ENUM ('hour', 'day');";
 				alItems[2].UnitNullable.Should().Be(TimeUnit.Day);
 				alItems[3].UnitNullable.Should().BeNull();
 			}
-
 		}
-
 	}
 
 }
