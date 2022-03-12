@@ -717,7 +717,7 @@ namespace LinqToDB.SqlProvider
 					StringBuilder.Append(')');
 				}
 				else
-					BuildExpression(expr.Column, SqlProviderFlags.IsUpdateSetTableAliasSupported, true, false);
+					BuildExpression(expr.Column!, SqlProviderFlags.IsUpdateSetTableAliasSupported, true, false);
 
 				if (expr.Expression != null)
 				{

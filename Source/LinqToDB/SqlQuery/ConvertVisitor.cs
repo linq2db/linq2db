@@ -539,7 +539,7 @@ namespace LinqToDB.SqlQuery
 						{
 							ISqlExpression[]? newRow = null;
 							for (int i = 0; i < row.Length; ++i)
-							{								
+							{
 								var r = (ISqlExpression?)ConvertInternal(row[i]);
 								if (r != null && !ReferenceEquals(row[i], r))
 								{
@@ -554,7 +554,7 @@ namespace LinqToDB.SqlQuery
 						{
 							var c = (ISqlExpression?)ConvertInternal(s.Column);
 							if (c != null && !ReferenceEquals(s.Column, c) || e != null && !ReferenceEquals(s.Expression, e))
-								newElement = new SqlSetExpression(c ?? s.Column, e ?? s.Expression);
+								newElement = new SqlSetExpression(c ?? s.Column!, e ?? s.Expression);
 						}
 
 						break;

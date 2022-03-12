@@ -668,8 +668,9 @@ namespace LinqToDB.Linq.Builder
 						sequence,
 						updateStatement.Update.Items);
 
+				// TODO: remove in v4?
 				updateStatement.Update.Items.RemoveDuplicatesFromTail((s1, s2) => 
-					s1.Row == null && s2.Row == null && s1.Column.Equals(s2.Column));
+					s1.Row == null && s2.Row == null && s1.Column!.Equals(s2.Column!));
 
 				return sequence;
 			}

@@ -643,7 +643,11 @@ namespace LinqToDB.SqlQuery
 				{
 					var set = (SqlSetExpression)(IQueryElement)element;
 					// TODO: children Clone called before _objectTree update (original cloning logic)
-					_objectTree.Add(element, clone = new SqlSetExpression(Clone(set.Column), Clone(set.Expression)));
+					_objectTree.Add(
+						element,
+						clone = set.Column != null
+							? new SqlSetExpression(Clone(set.Column), Clone(set.Expression))
+							: new SqlSetExpression(Clone(set.Row!)  , Clone(set.Expression)));
 					break;
 				}
 

@@ -6,12 +6,12 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlSetExpression : IQueryElement, ISqlExpressionWalkable
 	{
-		private ISqlExpression?   column;
-		private ISqlExpression[]? row;
+		private ISqlExpression?   _column;
+		private ISqlExpression[]? _row;
 
 		public SqlSetExpression(ISqlExpression column, ISqlExpression? expression)
 		{
-			this.column = column;
+			_column = column;
 			Expression  = expression;
 			RefineDbParameter(column, expression);
 		}
@@ -49,23 +49,23 @@ namespace LinqToDB.SqlQuery
 		// Most places (e.g. Insert) that use SqlSetExpression don't support the Row variant and access Column directly.
 		// In those places, an invalid query that was built with SqlRow will throw LinqToDBException.
 		// Codepaths that support Row (e.g. Update) will first check whether the `Row` property below is not null.
-		public ISqlExpression Column 
+		public ISqlExpression? Column 
 		{
-			get => this.column ?? throw new LinqToDBException("SET (SqlRow) not supported here.");
+			get => _column;
 			set
 			{
-				if (this.row != null) throw new InvalidOperationException("Can't set both Row and Column.");
-				this.column = value;
+				if (_row != null) throw new InvalidOperationException("Can't set both Row and Column.");
+				_column = value;
 			}
 		} 
 		
 		public ISqlExpression[]? Row
 		{ 
-			get => this.row;
+			get => _row;
 			set
 			{
-				if (this.column != null) throw new InvalidOperationException("Can't set both Row and Column.");
-				this.row = value;
+				if (_column != null) throw new InvalidOperationException("Can't set both Row and Column.");
+				_row = value;
 			}
 		}
 
@@ -109,14 +109,14 @@ namespace LinqToDB.SqlQuery
 
 		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			if (row is {} fields)
+			if (_row is {} fields)
 			{
 				for (int i = 0; i < fields.Length; i++)
 					fields[i] = fields[i].Walk(options, context, func)!;
 			}
 			else
 			{
-				column = column?.Walk(options, context, func);			
+				_column = _column?.Walk(options, context, func);			
 			}
 			Expression = Expression?.Walk(options, context, func);
 			return null;
@@ -140,7 +140,7 @@ namespace LinqToDB.SqlQuery
 				sb.Append(')');
 			}
 			else
-				Column.ToString(sb, dic);
+				Column!.ToString(sb, dic);
 
 			sb.Append(" = ");
 			Expression?.ToString(sb, dic);

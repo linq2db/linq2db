@@ -1272,6 +1272,7 @@ namespace LinqToDB.ServiceModel
 							var elem = (SqlSetExpression)e;
 
 							Append(elem.Column);
+							Append(elem.Row);
 							Append(elem.Expression);
 
 							break;
@@ -2198,7 +2199,18 @@ namespace LinqToDB.ServiceModel
 						break;
 					}
 
-					case QueryElementType.SetExpression : obj = new SqlSetExpression(Read     <ISqlExpression>()!, Read<ISqlExpression>()!); break;
+					case QueryElementType.SetExpression :
+					{
+						var column     = Read<ISqlExpression>();
+						var row        = ReadArray<ISqlExpression>();
+						var expression = Read<ISqlExpression>();
+
+						obj = column != null
+							? new SqlSetExpression(column, expression)
+							: new SqlSetExpression(row!, expression);
+
+						break;
+					}
 					case QueryElementType.FromClause    : obj = new SqlFromClause   (ReadArray<SqlTableSource>()!);                break;
 					case QueryElementType.WhereClause   : obj = new SqlWhereClause  (Read     <SqlSearchCondition>()!);            break;
 					case QueryElementType.GroupByClause : obj = new SqlGroupByClause((GroupingType)ReadInt(), ReadArray<ISqlExpression>()!); break;

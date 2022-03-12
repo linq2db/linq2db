@@ -1,4 +1,4 @@
-using LinqToDB;
+﻿using LinqToDB;
 using LinqToDB.Linq;
 using LinqToDB.Tools;
 using NUnit.Framework;
@@ -59,7 +59,7 @@ namespace Tests.Linq
 				.Should().Be(0);
 
 			// DB2 doesn't like null literals without casts, so following tests are skipped
-			if (context == ProviderName.InformixDB2) return;
+			if (context.Contains("Informix")) return;
 
 			ints.Count(i => Row(i.One, i.Nil, (int?)null) == null)
 				.Should().Be(0);
@@ -81,7 +81,7 @@ namespace Tests.Linq
 				.Should().Be(1);
 
 			// DB2 doesn't like null literals without casts, so following tests are skipped
-			if (context == ProviderName.InformixDB2) return;
+			if (context.Contains("Informix")) return;
 
 			ints.Count(i => Row(i.One, i.Nil, (int?)null) != null)
 				.Should().Be(0);
@@ -112,10 +112,23 @@ namespace Tests.Linq
 				.Should().Be(0);
 
 			// DB2 doesn't like null literals without casts, so following tests are skipped
-			if (context == ProviderName.InformixDB2) return;
+			if (context.Contains("Informix")) return;
 
 			ints.Count(i => Row(1, (int?)null, 3) == Row(i.One, i.Nil, i.Three))
 				.Should().Be(0);
+		}
+
+#if NETFRAMEWORK
+		[ActiveIssue("Old SQLite version doesn't support Row Values", Configuration = ProviderName.SQLiteMS)]
+#endif
+		[Test]
+		public void Caching([DataSources] string context, [Values(1, 2, 3)] int r3)
+		{
+			using var db   = GetDataContext(context);
+			using var ints = SetupIntsTable(db);
+
+			ints.Count(i => Row(i.One, i.Two, i.Three) == Row(i.One, i.One * 2, r3))
+				.Should().Be(r3 == 3 ? 1 : 0);
 		}
 
 #if NETFRAMEWORK
@@ -140,7 +153,7 @@ namespace Tests.Linq
 				.Should().Be(1);
 
 			// DB2 doesn't like null literals without casts, so following tests are skipped
-			if (context == ProviderName.InformixDB2) return;
+			if (context.Contains("Informix")) return;
 
 			ints.Count(i => Row(1, (int?)null, 4) != Row(i.One, i.Nil, i.Three))
 				.Should().Be(1);
@@ -168,7 +181,7 @@ namespace Tests.Linq
 				.Should().Be(0);
 
 			// DB2 doesn't like null literals without casts, so following tests are skipped
-			if (context == ProviderName.InformixDB2) return;
+			if (context.Contains("Informix")) return;
 
 			ints.Count(i => Row(2, (int?)null, 3) > Row(i.One, (int?)i.Two, i.Three))
 				.Should().Be(1);
@@ -196,7 +209,7 @@ namespace Tests.Linq
 				.Should().Be(0);
 
 			// DB2 doesn't like null literals without casts, so following tests are skipped
-			if (context == ProviderName.InformixDB2) return;
+			if (context.Contains("Informix")) return;
 
 			ints.Count(i => Row(2, (int?)null, 3) >= Row(i.One, (int?)i.Two, i.Three))
 				.Should().Be(1);
@@ -224,7 +237,7 @@ namespace Tests.Linq
 				.Should().Be(0);
 
 			// DB2 doesn't like null literals without casts, so following tests are skipped
-			if (context == ProviderName.InformixDB2) return;
+			if (context.Contains("Informix")) return;
 
 			ints.Count(i => Row(0, (int?)null, 3) < Row(i.One, (int?)i.Two, i.Three))
 				.Should().Be(1);
@@ -250,9 +263,9 @@ namespace Tests.Linq
 
 			ints.Count(i => Row(i.One, i.Nil, i.One) <= Row(i.One, (int?)i.Two, i.Three))
 				.Should().Be(0);
-			
+
 			// DB2 doesn't like null literals without casts, so following tests are skipped
-			if (context == ProviderName.InformixDB2) return;
+			if (context.Contains("Informix")) return;
 
 			ints.Count(i => Row(0, (int?)null, 3) <= Row(i.One, (int?)i.Two, i.Three))
 				.Should().Be(1);
@@ -271,7 +284,7 @@ namespace Tests.Linq
 			    .Should().Be(1);
 
 			// DB2 doesn't like null literals without casts, so following tests are skipped
-			if (context == ProviderName.InformixDB2) return;
+			if (context.Contains("Informix")) return;
 
 			ints.Count(i => Row((int?)i.One, i.Two, i.Three).In(
 					Row((int?)i.One, i.One * 2, i.Four - 1),
@@ -305,7 +318,7 @@ namespace Tests.Linq
 			    .Should().Be(0);
 
 			// DB2 doesn't like null literals without casts, so following tests are skipped
-			if (context == ProviderName.InformixDB2) return;
+			if (context.Contains("Informix")) return;
 
 			ints.Count(i => Row((int?)i.One, i.Two, i.Three).NotIn(
 					Row((int?)i.One, i.One * 2, i.Four - 1),
