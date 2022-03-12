@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Data;
@@ -130,6 +131,51 @@ INSERT INTO schedule(unit, unit_nullable,amount) VALUES ('day','day',1),('day','
 			using (db.CreateLocalTable<ScheduleWithTypes>())
 			{
 				db.BulkCopy(new BulkCopyOptions() { BulkCopyType = bcType }, data);
+
+				db.GetTable<Schedule>().Should().HaveCount(4);
+
+				db.GetTable<Schedule>().Where(x => x.Unit         == unit).Should().HaveCount(3);
+				db.GetTable<Schedule>().Where(x => x.UnitNullable == unit).Should().HaveCount(3);
+				db.GetTable<Schedule>().Where(x => x.UnitNullable == unitNullable).Should().HaveCount(3);
+				db.GetTable<Schedule>().Where(x => x.UnitNullable == TimeUnit.Day).Should().HaveCount(3);
+
+				db.GetTable<Schedule>().Where(x => x.UnitNullable == unitNull).Should().HaveCount(1);
+
+				var alItems = db.GetTable<Schedule>().ToArray();
+
+				alItems[0].Unit.Should().Be(TimeUnit.Day);
+				alItems[1].Unit.Should().Be(TimeUnit.Day);
+				alItems[2].Unit.Should().Be(TimeUnit.Day);
+				alItems[3].Unit.Should().Be(TimeUnit.Hour);
+
+				alItems[0].UnitNullable.Should().Be(TimeUnit.Day);
+				alItems[1].UnitNullable.Should().Be(TimeUnit.Day);
+				alItems[2].UnitNullable.Should().Be(TimeUnit.Day);
+				alItems[3].UnitNullable.Should().BeNull();
+			}
+		}
+
+		[Test]
+		public async Task EnumMappingTestWithTypesAsync([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values] BulkCopyType bcType)
+		{
+			var mappingSchema = SetupEnums(context, false);
+
+			var data = new[]
+			{
+				new ScheduleWithTypes { Unit = TimeUnit.Day, UnitNullable  = TimeUnit.Day, Amount = 1 },
+				new ScheduleWithTypes { Unit = TimeUnit.Day, UnitNullable  = TimeUnit.Day, Amount = 2 },
+				new ScheduleWithTypes { Unit = TimeUnit.Day, UnitNullable  = TimeUnit.Day, Amount = 3 },
+				new ScheduleWithTypes { Unit = TimeUnit.Hour, UnitNullable = null, Amount         = 1 },
+			};
+
+			var       unit         = TimeUnit.Day;
+			TimeUnit? unitNullable = TimeUnit.Day;
+			TimeUnit? unitNull     = null;
+
+			using (var db = (DataConnection)GetDataContext(context, mappingSchema))
+			using (db.CreateLocalTable<ScheduleWithTypes>())
+			{
+				await db.BulkCopyAsync(new BulkCopyOptions() { BulkCopyType = bcType }, data);
 
 				db.GetTable<Schedule>().Should().HaveCount(4);
 
