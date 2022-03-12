@@ -8,6 +8,7 @@
 		<tags>
 			linq linq2db LinqToDB ORM database DB SQL SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase Oracle ODP PostgreSQL DB2 Informix SapHana
 		</tags>
+		<readme>README.md</readme>
 		<dependencies>
 			<group targetFramework=".NETFramework4.5" >
 				<dependency id="linq2db" version="3.0.0" />
@@ -22,6 +23,8 @@
 	</metadata>
 
 	<files>
+		<file src="..\Nuget\README.Tools.md"                                              target="README.md"           />
+
 		<file src="..\Source\LinqToDB.Tools\bin\Release\net45\linq2db.Tools.pdb"          target="lib\net45\"          />
 		<file src="..\Source\LinqToDB.Tools\bin\Release\net45\linq2db.Tools.xml"          target="lib\net45\"          />
 		<file src="..\Source\LinqToDB.Tools\bin\Release\net45\linq2db.Tools.dll"          target="lib\net45\"          />

@@ -11,6 +11,7 @@
 			This package includes a T4 template to generate data models for MySql database and references to the linq2db and MySql.Data nugets.
 		</summary>
 		<tags>linq linq2db MySql LinqToDB ORM database DB SQL</tags>
+		<readme>README.md</readme>
 		<dependencies>
 			<dependency id="linq2db"    version="3.0.0"  />
 			<dependency id="MySql.Data" version="8.0.28" />
@@ -20,6 +21,8 @@
 		</contentFiles>
 	</metadata>
 	<files>
+		<file src="..\Nuget\README.T4.md"                                                  target="README.md"                                                                                          />
+
 		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                       target="tools"                                                                                              />
 		<file src="..\Tests\Tests.T4\bin\Azure\net472\Humanizer.dll"                       target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\MySqlConnector.dll"                      target="tools"                                                                                              />
