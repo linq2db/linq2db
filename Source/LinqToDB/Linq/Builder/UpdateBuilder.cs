@@ -158,6 +158,9 @@ namespace LinqToDB.Linq.Builder
 					throw new InvalidOperationException("Unknown Output Method");
 			}
 
+			if (updateStatement.Update.Items.Count == 0)
+				throw new LinqToDBException("Update query has no setters defined.");
+
 			if (updateType == UpdateType.Update)
 				return new UpdateContext(buildInfo.Parent, sequence);
 

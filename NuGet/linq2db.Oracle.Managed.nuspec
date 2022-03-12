@@ -12,6 +12,7 @@
 			Oracle data provider for .NET will still need to be installed on the production or development machine in order to connect to Oracle.
 		</summary>
 		<tags>linq linq2db Oracle LinqToDB ORM database DB SQL</tags>
+		<readme>README.md</readme>
 		<dependencies>
 			<group targetFramework=".NETFramework4.5">
 				<dependency id="linq2db"                       version="3.0.0"    />
@@ -43,6 +44,8 @@
 		</contentFiles>
 	</metadata>
 	<files>
+		<file src="..\Nuget\README.T4.md"                                            target="README.md"                                                                                          />
+
 		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                 target="tools"                                                                                              />
 		<file src="..\Tests\Tests.T4\bin\Azure\net472\Humanizer.dll"                 target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\Oracle.ManagedDataAccess.dll"      target="tools"                                                                                              />
