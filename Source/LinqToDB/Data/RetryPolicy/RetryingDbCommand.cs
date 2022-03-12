@@ -82,7 +82,7 @@ namespace LinqToDB.Data.RetryPolicy
 
 		protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
 		{
-			return _policy.Execute(() => (DbDataReader)_command.ExecuteReaderExt(behavior));
+			return _policy.Execute(() => _command.ExecuteReaderExt(behavior));
 		}
 
 		public override int ExecuteNonQuery()

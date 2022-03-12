@@ -457,7 +457,7 @@ namespace Tests.Linq
 #endif
 		[Test]
 		public void Overlaps(
-			[IncludeDataSources(TestProvName.AllOracle /* TestProvName.AllPostgreSQL, ProviderName.DB2 */)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle /* TestProvName.AllPostgreSQL, ProviderName.DB2 */)] string context)
 		{
 			// Postgre and DB2 have support but needs to know the type of parameters explicitely,
 			// so this test wouldn't work without adding casts at every constant.
@@ -491,7 +491,7 @@ namespace Tests.Linq
 #endif
 		[Test]
 		public void EqualToSelect(
-			[IncludeDataSources(
+			[IncludeDataSources(true,
 				TestProvName.AllMySql, 
 				TestProvName.AllOracle, 
 				TestProvName.AllPostgreSQL, 
@@ -535,7 +535,7 @@ namespace Tests.Linq
 #endif
 		[Test]
 		public void CompareToSelect(
-			[IncludeDataSources(
+			[IncludeDataSources(true,
 				TestProvName.AllMySql, 
 				TestProvName.AllPostgreSQL, 
 				TestProvName.AllSQLite)] string context)
@@ -598,7 +598,7 @@ namespace Tests.Linq
 #endif
 		[Test]
 		public void UpdateRowLiteral(
-			[IncludeDataSources(ProviderName.DB2, TestProvName.AllPostgreSQL)] string context)
+			[IncludeDataSources(true, ProviderName.DB2, TestProvName.AllPostgreSQL)] string context)
 		{
 			var data = new[]
 			{
@@ -627,7 +627,7 @@ namespace Tests.Linq
 #endif
 		[Test]
 		public void UpdateRowSelect(
-			[IncludeDataSources(
+			[IncludeDataSources(true,
 				ProviderName.DB2, 
 				TestProvName.AllPostgreSQL95Plus,
 				TestProvName.AllOracle)] string context)
