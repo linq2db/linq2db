@@ -1645,7 +1645,7 @@ namespace LinqToDB.Data
 					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.AfterExecute, traceOperation, false)
 					{
 						TraceLevel    = TraceLevel.Info,
-						CommandText   = dataConnection.TraceSwitchConnection.TraceInfo ? sql : commandText?.Invoke(context),
+						CommandText   = sql,
 						StartTime     = now,
 						ExecutionTime = sw!.Elapsed
 					});
@@ -1660,7 +1660,7 @@ namespace LinqToDB.Data
 					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.Error, traceOperation, false)
 					{
 						TraceLevel    = TraceLevel.Error,
-						CommandText   = sql,
+						CommandText   = dataConnection.TraceSwitchConnection.TraceInfo ? sql : commandText?.Invoke(context),
 						StartTime     = now,
 						ExecutionTime = sw?.Elapsed,
 						Exception     = ex,
