@@ -193,7 +193,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				{
 					TraceAction(
 						dataConnection,
-						() => "INSERT BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
+						() => $"INSERT BULK {tableName}({string.Join(", ", columns.Select(x => x.ColumnName))}){Environment.NewLine}",
 						() =>
 						{
 							if (writer.HasComplete)
@@ -306,7 +306,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				{
 					await TraceActionAsync(
 						dataConnection,
-						() => "INSERT ASYNC BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
+						() => $"INSERT ASYNC BULK {tableName}({string.Join(", ", columns.Select(x => x.ColumnName))}){Environment.NewLine}",
 						async () => {
 							var ret = await writer.CompleteAsync(cancellationToken)
 								.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -411,7 +411,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				{
 					await TraceActionAsync(
 						dataConnection,
-						() => "INSERT ASYNC BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
+						() => $"INSERT ASYNC BULK {tableName}({string.Join(", ", columns.Select(x => x.ColumnName))}){Environment.NewLine}",
 						async () => {
 							var ret = await writer.CompleteAsync(cancellationToken)
 								.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
