@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 
 namespace LinqToDB.Extensions
 {
@@ -20,16 +21,20 @@ namespace LinqToDB.Extensions
 		{
 			var underlyingType = systemType.ToNullableUnderlying();
 
-			if (underlyingType.IsEnum && mappingSchema.GetAttribute<Sql.EnumAttribute>(underlyingType) == null)
+			if (!mappingSchema.ValueToSqlConverter.CanConvert(underlyingType))
 			{
-				if (value != null || systemType == underlyingType)
+				if (underlyingType.IsEnum && mappingSchema.GetAttribute<Sql.EnumAttribute>(underlyingType) == null)
 				{
-					var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, systemType)!;
+					if (value != null || systemType == underlyingType)
+					{
+						var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, systemType)!;
 
-					if (Configuration.UseEnumValueNameForStringColumns && type == typeof(string) && mappingSchema.GetMapValues(underlyingType) == null)
-						return new SqlValue(type, value!.ToString());
+						if (Configuration.UseEnumValueNameForStringColumns && type == typeof(string) &&
+						    mappingSchema.GetMapValues(underlyingType)             == null)
+							return new SqlValue(type, value!.ToString());
 
-					return new SqlValue(type, Converter.ChangeType(value, type, mappingSchema));
+						return new SqlValue(type, Converter.ChangeType(value, type, mappingSchema));
+					}
 				}
 			}
 
@@ -38,5 +43,45 @@ namespace LinqToDB.Extensions
 
 			return new SqlValue(systemType, value);
 		}
+
+		public static bool TryConvertToSql(this MappingSchema mappingSchema, StringBuilder stringBuilder, SqlDataType? dataType, object? value)
+		{
+			var sqlConverter = mappingSchema.ValueToSqlConverter;
+
+			if (value is null)
+			{
+				return sqlConverter.TryConvert(stringBuilder, dataType, value);
+			}
+
+			var systemType     = value.GetType();
+			var underlyingType = systemType.ToNullableUnderlying();
+
+			if (!mappingSchema.ValueToSqlConverter.CanConvert(underlyingType))
+			{
+				if (underlyingType.IsEnum && mappingSchema.GetAttribute<Sql.EnumAttribute>(underlyingType) == null)
+				{
+					if (systemType == underlyingType)
+					{
+						var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, systemType)!;
+
+						if (Configuration.UseEnumValueNameForStringColumns && type == typeof(string) &&
+						    mappingSchema.GetMapValues(underlyingType)             == null)
+							value = value.ToString();
+						else
+							value = Converter.ChangeType(value, type, mappingSchema);
+					}
+				}
+			}
+
+			return sqlConverter.TryConvert(stringBuilder, dataType, value);
+		}
+
+		public static void ConvertToSqlValue(this MappingSchema mappingSchema, StringBuilder stringBuilder,
+			SqlDataType? dataType, object? value)
+		{
+			if (!mappingSchema.TryConvertToSql(stringBuilder, dataType, value))
+				throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
+		}
+
 	}
 }

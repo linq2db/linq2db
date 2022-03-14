@@ -1371,20 +1371,7 @@ namespace LinqToDB.Linq.Builder
 
 			var value = expr.EvaluateExpression();
 
-			if (value != null && MappingSchema.ValueToSqlConverter.CanConvert(dbType.SystemType))
-				sqlValue = new SqlValue(dbType, value);
-			else
-			{
-				if (value != null && value.GetType().IsEnum)
-				{
-					var attrs = value.GetType().GetCustomAttributes(typeof(Sql.EnumAttribute), true);
-
-					if (attrs.Length == 0)
-						value = MappingSchema.EnumToValue((Enum)value);
-				}
-
-				sqlValue = MappingSchema.GetSqlValue(expr.Type, value);
-			}
+			sqlValue = MappingSchema.GetSqlValue(expr.Type, value);
 
 			_constants.Add(key, sqlValue);
 
@@ -1918,8 +1905,10 @@ namespace LinqToDB.Linq.Builder
 				{
 					value = ((UnaryExpression)value).Operand;
 
-					var l = ConvertToSql(context, operand);
-					var r = ConvertToSql(context, value);
+					var cd = SuggestColumnDescriptor(context, operand, value);
+
+					var l = ConvertToSql(context, operand, columnDescriptor: cd);
+					var r = ConvertToSql(context, value, columnDescriptor: cd);
 
 					return new SqlPredicate.ExprExpr(l, op, r, true);
 				}

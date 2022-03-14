@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider
 {
@@ -9,8 +11,7 @@ namespace LinqToDB.DataProvider
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
-	using System.Threading;
-	using System.Threading.Tasks;
+	using Extensions;
 
 	public class MultipleRowsHelper<T> : MultipleRowsHelper
 		where T : notnull
@@ -35,7 +36,6 @@ namespace LinqToDB.DataProvider
 			MappingSchema  = dataConnection.MappingSchema;
 			Options        = options;
 			SqlBuilder     = DataConnection.DataProvider.CreateSqlBuilder(MappingSchema);
-			ValueConverter = MappingSchema.ValueToSqlConverter;
 			Descriptor     = MappingSchema.GetEntityDescriptor(entityType);
 			Columns        = Descriptor.Columns
 				.Where(c => !c.SkipOnInsert || c.IsIdentity && options.KeepIdentity == true)
@@ -48,7 +48,6 @@ namespace LinqToDB.DataProvider
 		public readonly DataConnection      DataConnection;
 		public readonly MappingSchema       MappingSchema;
 		public readonly BulkCopyOptions     Options;
-		public readonly ValueToSqlConverter ValueConverter;
 		public readonly EntityDescriptor    Descriptor;
 		public readonly ColumnDescriptor[]  Columns;
 		public readonly SqlDataType[]       ColumnTypes;
@@ -86,7 +85,7 @@ namespace LinqToDB.DataProvider
 				var column = Columns[i];
 				var value  = column.GetValue(item);
 
-				if (Options.UseParameters || skipConvert(column) || !ValueConverter.TryConvert(StringBuilder, ColumnTypes[i], value))
+				if (Options.UseParameters || skipConvert(column) || !MappingSchema.TryConvertToSql(StringBuilder, ColumnTypes[i], value))
 				{
 					var name = ParameterName == "?" ? ParameterName : ParameterName + ++ParameterIndex;
 
