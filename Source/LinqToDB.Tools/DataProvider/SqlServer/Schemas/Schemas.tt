@@ -1,4 +1,5 @@
 ﻿<#@ template debug="true" hostspecific="true" language="C#" #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true" #>
 <#@ output extension=".generated.cs" #>
 <#@ assembly name="System.Xml" #>
 <#@ assembly name="System.Xml.Linq" #>
@@ -8,6 +9,10 @@
 <#@ import namespace="System.IO" #>
 <#@ import namespace="System.Xml.Linq" #>
 <#@ import namespace="LinqToDB" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="LinqToDB.DataProvider.SqlServer" #>
+<#@ import namespace="LinqToDB.Reflection" #>
 <#
 	NamespaceName                     = "LinqToDB.Tools.DataProvider.SqlServer.Schemas";
 	DataContextName                   = "SystemDB";

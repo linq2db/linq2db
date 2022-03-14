@@ -3357,6 +3357,41 @@ sys.dm_cryptographic_provider_sessions(session_identifier)&lt;br/&gt;
     <column name="audit_file_path" type="nvarchar(256)">Full path and file name of the audit file target that is currently being used. Only populated for file audits.</column>
     <column name="audit_file_size" type="bigint">Approximate size of the audit file, in bytes. Only populated for file audits.</column>
   </table>
+  <table name="sys.database_service_objectives" category="AzureSQLDatabase" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-database-service-objectives-azure-sql-database">
+    <description>&lt;para&gt;&lt;strong&gt;sys.database_service_objectives (Azure SQL Database)&lt;/strong&gt;&lt;/para&gt;
+&lt;para&gt;&lt;strong&gt;Applies to:&lt;/strong&gt; √ Azure SQL Database √ Azure SQL Managed Instance √ Azure Synapse Analytics&lt;/para&gt;
+&lt;para&gt;Returns the edition (service tier), service objective (pricing tier) and elastic pool name, if any, for an Azure SQL database or an Azure Synapse Analytics. If logged on to the master database in an Azure SQL Database server, returns information on all databases. For Azure Synapse Analytics, you must be connected to the master database.&lt;br/&gt;
+&lt;br/&gt;
+ For information on pricing, see &lt;a href='https://azure.microsoft.com/pricing/details/sql-database/'&gt;SQL Database options and performance: SQL Database Pricing&lt;/a&gt; and &lt;a href='https://azure.microsoft.com/pricing/details/sql-data-warehouse/'&gt;Azure Synapse Analytics Pricing&lt;/a&gt;.&lt;br/&gt;
+ To change the service settings, see &lt;a href='https://docs.microsoft.com/en-us/sql/t-sql/statements/alter-database-transact-sql'&gt;ALTER DATABASE (Azure SQL Database)&lt;/a&gt; and &lt;a href='https://docs.microsoft.com/en-us/sql/t-sql/statements/alter-database-transact-sql?view=azure-sqldw-latest&amp;preserve-view=true'&gt;ALTER DATABASE (Azure Synapse Analytics)&lt;/a&gt;.&lt;br/&gt;
+ The sys.database_service_objectives view contains the following columns.&lt;/para&gt;</description>
+    <column name="database_id" type="int">The ID of the database, unique within an instance of Azure SQL Database server. Joinable with &lt;a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-databases-transact-sql'&gt;sys.databases (Transact-SQL)&lt;/a&gt;.</column>
+    <column name="edition" type="sysname">The service tier for the database or data warehouse: &lt;strong&gt;Basic&lt;/strong&gt;, &lt;strong&gt;Standard&lt;/strong&gt;, &lt;strong&gt;Premium&lt;/strong&gt; or &lt;strong&gt;Data Warehouse&lt;/strong&gt;.</column>
+    <column name="service_objective" type="sysname">The pricing tier of the database. If the database is in an elastic pool, returns &lt;strong&gt;ElasticPool&lt;/strong&gt;.&lt;br /&gt;&lt;br /&gt; On the &lt;strong&gt;Basic&lt;/strong&gt; tier, returns &lt;strong&gt;Basic&lt;/strong&gt;.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;Single database in a standard service tier&lt;/strong&gt; returns one of the following: S0, S1, S2, S3, S4, S6, S7, S9 or S12.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;Single database in a premium tier&lt;/strong&gt; returns of the following: P1, P2, P4, P6, P11 or P15.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;Azure Synapse Analytics&lt;/strong&gt; returns DW100 through DW30000c.&lt;br /&gt;&lt;br /&gt; For details, see &lt;a href='https://docs.microsoft.com/en-us/azure/sql-database/sql-database-dtu-resource-limits-single-databases/'&gt;single databases&lt;/a&gt;, &lt;a href='https://docs.microsoft.com/en-us/azure/sql-database/sql-database-dtu-resource-limits-elastic-pools/'&gt;elastic pools&lt;/a&gt;, &lt;a href='https://docs.microsoft.com/en-us/azure/sql-data-warehouse/what-is-a-data-warehouse-unit-dwu-cdwu/'&gt;data warehouses&lt;/a&gt;</column>
+    <column name="elastic_pool_name" type="sysname">The name of the &lt;a href='https://docs.microsoft.com/en-us/azure/azure-sql/database/elastic-pool-overview'&gt;elastic pool&lt;/a&gt; that the database belongs to. Returns &lt;strong&gt;NULL&lt;/strong&gt; if the database is a single database or a data warehouse.</column>
+  </table>
+  <table name="sys.server_resource_stats" category="AzureSQLDatabase" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-server-resource-stats-azure-sql-database">
+    <description>&lt;para&gt;&lt;strong&gt;sys.server_resource_stats (Azure SQL Managed Instance)&lt;/strong&gt;&lt;/para&gt;
+√ Azure SQL Managed Instance&lt;br/&gt;
+Returns CPU usage, IO, and storage data for Azure SQL Managed Instance. The data is collected, aggregated and updated within 5 to 10 minutes intervals. There is one row for every 15 seconds reporting. The data returned includes CPU usage, storage size, IO utilization, and SKU. Historical data is retained for approximately 14 days.&lt;br/&gt;
+The &lt;c&gt;sys.server_resource_stats&lt;/c&gt; view has different definitions depending on the version of the Azure SQL Managed Instance that the database is associated with. Consider these differences and any modifications your application requires when upgrading to a new server version.&lt;br/&gt;
+&lt;note type='note'&gt;&lt;br/&gt;
+This dynamic management view applies to Azure SQL Managed Instance only. For an equivalent view for Azure SQL Database, use &lt;a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-resource-stats-azure-sql-database'&gt;sys.resource_stats&lt;/a&gt;.&lt;br/&gt;
+&lt;/note&gt;</description>
+    <column name="start_time" type="datetime2">UTC time indicating the start of the fifteen-second reporting interval</column>
+    <column name="end_time" type="datetime">UTC time indicating the end of the fifteen-second reporting interval</column>
+    <column name="resource_type" type="Nvarchar(128)">Type of the resource for which metrics are provided</column>
+    <column name="resource_name" type="nvarchar(128)">Name of the resource.</column>
+    <column name="sku" type="nvarchar(128)">Managed Instance Service Tier of the Instance. The following are the possible values: &lt;br/&gt;&lt;ul&gt;&lt;li&gt;General Purpose&lt;/li&gt;&lt;/ul&gt;&lt;ul&gt;&lt;li&gt;Business Critical&lt;/li&gt;&lt;/ul&gt;</column>
+    <column name="hardware_generation" type="nvarchar(128)">Hardware generation identifier: such as Gen 4 or Gen 5</column>
+    <column name="virtual_core_count" type="int">Represents number of virtual cores per instance</column>
+    <column name="avg_cpu_percent" type="decimal(5,2)">Average compute utilization in percentage of the limit of the Managed Instance service tier utilized by the instance. It is calculated as sum of CPU time of all resource pools for all databases in the instance and divided by available CPU time for that tier in the given interval.</column>
+    <column name="reserved_storage_mb" type="bigint">Reserved storage per instance (amount of storage space that customer purchased for the managed instance)</column>
+    <column name="storage_space_used_mb" type="decimal(18,2)">Storage used by all database files in a managed instance (including both user and system databases)</column>
+    <column name="io_request" type="bigint">Total number of i/o physical operations within the interval</column>
+    <column name="io_bytes_read" type="bigint">Number of physical bytes read within the interval</column>
+    <column name="io_bytes_written" type="bigint">Number of physical bytes written within the interval</column>
+  </table>
   <table name="sys.all_columns" category="Object" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-all-columns-transact-sql">
     <description>&lt;para&gt;&lt;strong&gt;sys.all_columns (Transact-SQL)&lt;/strong&gt;&lt;/para&gt;
 &lt;para&gt;&lt;strong&gt;Applies to:&lt;/strong&gt; √ SQL Server (all supported versions) √ Azure SQL Database √ Azure SQL Managed Instance √ Azure Synapse Analytics √ Analytics Platform System (PDW)&lt;/para&gt;

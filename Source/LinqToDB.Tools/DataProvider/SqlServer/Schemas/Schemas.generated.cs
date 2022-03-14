@@ -554,14 +554,14 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			///  The <strong>sys.bandwidth_usage</strong> view contains the following columns.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-bandwidth-usage-azure-sql-database'>sys.bandwidth_usage</a>.</para>
 			/// </summary>
-			public ITable<BandwidthUsage>          BandwidthUsages          { get { return _dataContext.GetTable<BandwidthUsage>(); } }
+			public ITable<BandwidthUsage>           BandwidthUsages           { get { return _dataContext.GetTable<BandwidthUsage>(); } }
 			/// <summary>
 			/// <para><strong>sys.database_connection_stats (Azure SQL Database)</strong></para>
 			/// <para><strong>Applies to:</strong> √ Azure SQL Database</para>
 			/// <para>Contains statistics for SQL Database database <strong>connectivity</strong> events, providing an overview of database connection successes and failures. For more information about connectivity events, see Event Types in <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-event-log-azure-sql-database'>sys.event_log (Azure SQL Database)</a>.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-database-connection-stats-azure-sql-database'>sys.database_connection_stats</a>.</para>
 			/// </summary>
-			public ITable<DatabaseConnectionStat>  DatabaseConnectionStats  { get { return _dataContext.GetTable<DatabaseConnectionStat>(); } }
+			public ITable<DatabaseConnectionStat>   DatabaseConnectionStats   { get { return _dataContext.GetTable<DatabaseConnectionStat>(); } }
 			/// <summary>
 			/// <para><strong>sys.database_firewall_rules (Azure SQL Database)</strong></para>
 			/// <para><strong>Applies to:</strong> √ Azure SQL Database √ Azure SQL Managed Instance</para>
@@ -569,7 +569,18 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			///  The <c>sys.database_firewall_rules</c> view contains the following columns:</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-database-firewall-rules-azure-sql-database'>sys.database_firewall_rules</a>.</para>
 			/// </summary>
-			public ITable<DatabaseFirewallRule>    DatabaseFirewallRules    { get { return _dataContext.GetTable<DatabaseFirewallRule>(); } }
+			public ITable<DatabaseFirewallRule>     DatabaseFirewallRules     { get { return _dataContext.GetTable<DatabaseFirewallRule>(); } }
+			/// <summary>
+			/// <para><strong>sys.database_service_objectives (Azure SQL Database)</strong></para>
+			/// <para><strong>Applies to:</strong> √ Azure SQL Database √ Azure SQL Managed Instance √ Azure Synapse Analytics</para>
+			/// <para>Returns the edition (service tier), service objective (pricing tier) and elastic pool name, if any, for an Azure SQL database or an Azure Synapse Analytics. If logged on to the master database in an Azure SQL Database server, returns information on all databases. For Azure Synapse Analytics, you must be connected to the master database.<br/>
+			/// <br/>
+			///  For information on pricing, see <a href='https://azure.microsoft.com/pricing/details/sql-database/'>SQL Database options and performance: SQL Database Pricing</a> and <a href='https://azure.microsoft.com/pricing/details/sql-data-warehouse/'>Azure Synapse Analytics Pricing</a>.<br/>
+			///  To change the service settings, see <a href='https://docs.microsoft.com/en-us/sql/t-sql/statements/alter-database-transact-sql'>ALTER DATABASE (Azure SQL Database)</a> and <a href='https://docs.microsoft.com/en-us/sql/t-sql/statements/alter-database-transact-sql?view=azure-sqldw-latest&amp;preserve-view=true'>ALTER DATABASE (Azure Synapse Analytics)</a>.<br/>
+			///  The sys.database_service_objectives view contains the following columns.</para><br/>
+			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-database-service-objectives-azure-sql-database'>sys.database_service_objectives</a>.</para>
+			/// </summary>
+			public ITable<DatabaseServiceObjective> DatabaseServiceObjectives { get { return _dataContext.GetTable<DatabaseServiceObjective>(); } }
 			/// <summary>
 			/// <para><strong>sys.database_usage (Azure SQL Database)</strong></para>
 			/// <para><strong>Applies to:</strong> √ Azure SQL Database √ Azure SQL Managed Instance</para>
@@ -578,7 +589,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			///  The <strong>sys.database_usage</strong> view contains the following columns.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-database-usage-azure-sql-database'>sys.database_usage</a>.</para>
 			/// </summary>
-			public ITable<DatabaseUsage>           DatabaseUsages           { get { return _dataContext.GetTable<DatabaseUsage>(); } }
+			public ITable<DatabaseUsage>            DatabaseUsages            { get { return _dataContext.GetTable<DatabaseUsage>(); } }
 			/// <summary>
 			/// <para><strong>sys.elastic_pool_resource_stats (Azure SQL Database)</strong></para>
 			/// <para><strong>Applies to:</strong> √ Azure SQL Database √ Azure SQL Managed Instance</para>
@@ -588,7 +599,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// |<strong>Applies to</strong>:  SQL Database V12.|</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-elastic-pool-resource-stats-azure-sql-database'>sys.elastic_pool_resource_stats</a>.</para>
 			/// </summary>
-			public ITable<ElasticPoolResourceStat> ElasticPoolResourceStats { get { return _dataContext.GetTable<ElasticPoolResourceStat>(); } }
+			public ITable<ElasticPoolResourceStat>  ElasticPoolResourceStats  { get { return _dataContext.GetTable<ElasticPoolResourceStat>(); } }
 			/// <summary>
 			/// <para><strong>sys.event_log (Azure SQL Database)</strong></para>
 			/// <para><strong>Applies to:</strong> √ Azure SQL Database</para>
@@ -598,7 +609,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			///  The <c>sys.event_log</c> view contains the following columns.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-event-log-azure-sql-database'>sys.event_log</a>.</para>
 			/// </summary>
-			public ITable<EventLog>                EventLogs                { get { return _dataContext.GetTable<EventLog>(); } }
+			public ITable<EventLog>                 EventLogs                 { get { return _dataContext.GetTable<EventLog>(); } }
 			/// <summary>
 			/// <para><strong>sys.firewall_rules (Azure SQL Database)</strong></para>
 			/// <para><strong>Applies to:</strong> √ Azure SQL Database √ Azure SQL Managed Instance</para>
@@ -606,7 +617,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			///  The <c>sys.firewall_rules</c> view contains the following columns:</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-firewall-rules-azure-sql-database'>sys.firewall_rules</a>.</para>
 			/// </summary>
-			public ITable<FirewallRule>            FirewallRules            { get { return _dataContext.GetTable<FirewallRule>(); } }
+			public ITable<FirewallRule>             FirewallRules             { get { return _dataContext.GetTable<FirewallRule>(); } }
 			/// <summary>
 			/// <para><strong>sys.resource_stats (Azure SQL Database)</strong></para>
 			/// <para><strong>Applies to:</strong> √ Azure SQL Database</para>
@@ -619,7 +630,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			///  The following table describes the columns available in a v12 server:</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-resource-stats-azure-sql-database'>sys.resource_stats</a>.</para>
 			/// </summary>
-			public ITable<ResourceStat>            ResourceStats            { get { return _dataContext.GetTable<ResourceStat>(); } }
+			public ITable<ResourceStat>             ResourceStats             { get { return _dataContext.GetTable<ResourceStat>(); } }
 			/// <summary>
 			/// <para><strong>sys.resource_usage (Azure SQL Database)</strong></para>
 			/// <para><strong>Applies to:</strong> √ Azure SQL Database √ Azure SQL Managed Instance</para>
@@ -634,7 +645,18 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			///  For each user database, there is one row for every hour in continuous fashion. Even if the database was idle during that hour, there is one row, and the usage_in_seconds value for that database will be 0. Storage usage and SKU information is rolled up for the hour appropriately.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-resource-usage-azure-sql-database'>sys.resource_usage</a>.</para>
 			/// </summary>
-			public ITable<ResourceUsage>           ResourceUsages           { get { return _dataContext.GetTable<ResourceUsage>(); } }
+			public ITable<ResourceUsage>            ResourceUsages            { get { return _dataContext.GetTable<ResourceUsage>(); } }
+			/// <summary>
+			/// <para><strong>sys.server_resource_stats (Azure SQL Managed Instance)</strong></para>
+			/// √ Azure SQL Managed Instance<br/>
+			/// Returns CPU usage, IO, and storage data for Azure SQL Managed Instance. The data is collected, aggregated and updated within 5 to 10 minutes intervals. There is one row for every 15 seconds reporting. The data returned includes CPU usage, storage size, IO utilization, and SKU. Historical data is retained for approximately 14 days.<br/>
+			/// The <c>sys.server_resource_stats</c> view has different definitions depending on the version of the Azure SQL Managed Instance that the database is associated with. Consider these differences and any modifications your application requires when upgrading to a new server version.<br/>
+			/// <note type='note'><br/>
+			/// This dynamic management view applies to Azure SQL Managed Instance only. For an equivalent view for Azure SQL Database, use <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-resource-stats-azure-sql-database'>sys.resource_stats</a>.<br/>
+			/// </note><br/>
+			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-server-resource-stats-azure-sql-database'>sys.server_resource_stats</a>.</para>
+			/// </summary>
+			public ITable<ServerResourceStat>       ServerResourceStats       { get { return _dataContext.GetTable<ServerResourceStat>(); } }
 
 			private readonly IDataContext _dataContext;
 
@@ -761,6 +783,37 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// UTC date and time when the database-level firewall setting was last modified.
 			/// </summary>
 			[Column("modify_date"),      NotNull] public object ModifyDate     { get; set; } = null!; // DATETIME
+		}
+
+		/// <summary>
+		/// <para><strong>sys.database_service_objectives (Azure SQL Database)</strong></para>
+		/// <para><strong>Applies to:</strong> √ Azure SQL Database √ Azure SQL Managed Instance √ Azure Synapse Analytics</para>
+		/// <para>Returns the edition (service tier), service objective (pricing tier) and elastic pool name, if any, for an Azure SQL database or an Azure Synapse Analytics. If logged on to the master database in an Azure SQL Database server, returns information on all databases. For Azure Synapse Analytics, you must be connected to the master database.<br/>
+		/// <br/>
+		///  For information on pricing, see <a href='https://azure.microsoft.com/pricing/details/sql-database/'>SQL Database options and performance: SQL Database Pricing</a> and <a href='https://azure.microsoft.com/pricing/details/sql-data-warehouse/'>Azure Synapse Analytics Pricing</a>.<br/>
+		///  To change the service settings, see <a href='https://docs.microsoft.com/en-us/sql/t-sql/statements/alter-database-transact-sql'>ALTER DATABASE (Azure SQL Database)</a> and <a href='https://docs.microsoft.com/en-us/sql/t-sql/statements/alter-database-transact-sql?view=azure-sqldw-latest&amp;preserve-view=true'>ALTER DATABASE (Azure Synapse Analytics)</a>.<br/>
+		///  The sys.database_service_objectives view contains the following columns.</para><br/>
+		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-database-service-objectives-azure-sql-database'>sys.database_service_objectives</a>.</para>
+		/// </summary>
+		[Table(Schema="sys", Name="database_service_objectives", IsView=true)]
+		public partial class DatabaseServiceObjective
+		{
+			/// <summary>
+			/// The ID of the database, unique within an instance of Azure SQL Database server. Joinable with <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-databases-transact-sql'>sys.databases (Transact-SQL)</a>.
+			/// </summary>
+			[Column("database_id"),       NotNull] public int    DatabaseId       { get; set; } // int
+			/// <summary>
+			/// The service tier for the database or data warehouse: <strong>Basic</strong>, <strong>Standard</strong>, <strong>Premium</strong> or <strong>Data Warehouse</strong>.
+			/// </summary>
+			[Column("edition"),           NotNull] public string Edition          { get; set; } = null!; // sysname
+			/// <summary>
+			/// The pricing tier of the database. If the database is in an elastic pool, returns <strong>ElasticPool</strong>.<br/><br/> On the <strong>Basic</strong> tier, returns <strong>Basic</strong>.<br/><br/> <strong>Single database in a standard service tier</strong> returns one of the following: S0, S1, S2, S3, S4, S6, S7, S9 or S12.<br/><br/> <strong>Single database in a premium tier</strong> returns of the following: P1, P2, P4, P6, P11 or P15.<br/><br/> <strong>Azure Synapse Analytics</strong> returns DW100 through DW30000c.<br/><br/> For details, see <a href='https://docs.microsoft.com/en-us/azure/sql-database/sql-database-dtu-resource-limits-single-databases/'>single databases</a>, <a href='https://docs.microsoft.com/en-us/azure/sql-database/sql-database-dtu-resource-limits-elastic-pools/'>elastic pools</a>, <a href='https://docs.microsoft.com/en-us/azure/sql-data-warehouse/what-is-a-data-warehouse-unit-dwu-cdwu/'>data warehouses</a>
+			/// </summary>
+			[Column("service_objective"), NotNull] public string ServiceObjective { get; set; } = null!; // sysname
+			/// <summary>
+			/// The name of the <a href='https://docs.microsoft.com/en-us/azure/azure-sql/database/elastic-pool-overview'>elastic pool</a> that the database belongs to. Returns <strong>NULL</strong> if the database is a single database or a data warehouse.
+			/// </summary>
+			[Column("elastic_pool_name"), NotNull] public string ElasticPoolName  { get; set; } = null!; // sysname
 		}
 
 		/// <summary>
@@ -1066,6 +1119,73 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// Maximum storage size for the hour, including database data, indexes, stored procedures and metadata.
 			/// </summary>
 			[Column("storage_in_megabytes"), NotNull] public object   StorageInMegabytes { get; set; } = null!; // decimal
+		}
+
+		/// <summary>
+		/// <para><strong>sys.server_resource_stats (Azure SQL Managed Instance)</strong></para>
+		/// √ Azure SQL Managed Instance<br/>
+		/// Returns CPU usage, IO, and storage data for Azure SQL Managed Instance. The data is collected, aggregated and updated within 5 to 10 minutes intervals. There is one row for every 15 seconds reporting. The data returned includes CPU usage, storage size, IO utilization, and SKU. Historical data is retained for approximately 14 days.<br/>
+		/// The <c>sys.server_resource_stats</c> view has different definitions depending on the version of the Azure SQL Managed Instance that the database is associated with. Consider these differences and any modifications your application requires when upgrading to a new server version.<br/>
+		/// <note type='note'><br/>
+		/// This dynamic management view applies to Azure SQL Managed Instance only. For an equivalent view for Azure SQL Database, use <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-resource-stats-azure-sql-database'>sys.resource_stats</a>.<br/>
+		/// </note><br/>
+		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-server-resource-stats-azure-sql-database'>sys.server_resource_stats</a>.</para>
+		/// </summary>
+		[Table(Schema="sys", Name="server_resource_stats", IsView=true)]
+		public partial class ServerResourceStat
+		{
+			/// <summary>
+			/// UTC time indicating the start of the fifteen-second reporting interval
+			/// </summary>
+			[Column("start_time"),            NotNull] public DateTime StartTime          { get; set; } // datetime2
+			/// <summary>
+			/// UTC time indicating the end of the fifteen-second reporting interval
+			/// </summary>
+			[Column("end_time"),              NotNull] public DateTime EndTime            { get; set; } // datetime
+			/// <summary>
+			/// Type of the resource for which metrics are provided
+			/// </summary>
+			[Column("resource_type"),         NotNull] public object   ResourceType       { get; set; } = null!; // Nvarchar(128)
+			/// <summary>
+			/// Name of the resource.
+			/// </summary>
+			[Column("resource_name"),         NotNull] public string   ResourceName       { get; set; } = null!; // nvarchar(128)
+			/// <summary>
+			/// Managed Instance Service Tier of the Instance. The following are the possible values: <br/><ul><li>General Purpose</li></ul><ul><li>Business Critical</li></ul>
+			/// </summary>
+			[Column("sku"),                   NotNull] public string   Sku                { get; set; } = null!; // nvarchar(128)
+			/// <summary>
+			/// Hardware generation identifier: such as Gen 4 or Gen 5
+			/// </summary>
+			[Column("hardware_generation"),   NotNull] public string   HardwareGeneration { get; set; } = null!; // nvarchar(128)
+			/// <summary>
+			/// Represents number of virtual cores per instance
+			/// </summary>
+			[Column("virtual_core_count"),    NotNull] public int      VirtualCoreCount   { get; set; } // int
+			/// <summary>
+			/// Average compute utilization in percentage of the limit of the Managed Instance service tier utilized by the instance. It is calculated as sum of CPU time of all resource pools for all databases in the instance and divided by available CPU time for that tier in the given interval.
+			/// </summary>
+			[Column("avg_cpu_percent"),       NotNull] public object   AvgCpuPercent      { get; set; } = null!; // decimal(5,2)
+			/// <summary>
+			/// Reserved storage per instance (amount of storage space that customer purchased for the managed instance)
+			/// </summary>
+			[Column("reserved_storage_mb"),   NotNull] public long     ReservedStorageMb  { get; set; } // bigint
+			/// <summary>
+			/// Storage used by all database files in a managed instance (including both user and system databases)
+			/// </summary>
+			[Column("storage_space_used_mb"), NotNull] public object   StorageSpaceUsedMb { get; set; } = null!; // decimal(18,2)
+			/// <summary>
+			/// Total number of i/o physical operations within the interval
+			/// </summary>
+			[Column("io_request"),            NotNull] public long     IoRequest          { get; set; } // bigint
+			/// <summary>
+			/// Number of physical bytes read within the interval
+			/// </summary>
+			[Column("io_bytes_read"),         NotNull] public long     IoBytesRead        { get; set; } // bigint
+			/// <summary>
+			/// Number of physical bytes written within the interval
+			/// </summary>
+			[Column("io_bytes_written"),      NotNull] public long     IoBytesWritten     { get; set; } // bigint
 		}
 	}
 
