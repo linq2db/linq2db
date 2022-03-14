@@ -1,5 +1,5 @@
 rem without real 2005 image we use 2012 in compatibility mode
-docker run -d -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=Password12!" -p 1433:1433 -h mssql --name=mssql dbafromthecold/sqlserver2012express:rtm
+docker run -d -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=Password12!" -p 1433:1433 -h mssql --name=mssql cagrin/mssql-server-ltsc2022:2012-latest
 docker ps -a
 
 echo "Waiting for SQL Server to accept connections"
