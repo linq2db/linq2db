@@ -6,6 +6,7 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlSetExpression : IQueryElement, ISqlExpressionWalkable
 	{
+		// These are both nullable refs, but by construction either _column or _row is set.
 		private ISqlExpression?   _column;
 		private ISqlExpression[]? _row;
 
@@ -49,9 +50,9 @@ namespace LinqToDB.SqlQuery
 		// Most places (e.g. Insert) that use SqlSetExpression don't support the Row variant and access Column directly.
 		// In those places, an invalid query that was built with SqlRow will throw LinqToDBException.
 		// Codepaths that support Row (e.g. Update) will first check whether the `Row` property below is not null.
-		public ISqlExpression? Column 
+		public ISqlExpression Column 
 		{
-			get => _column;
+			get => _column ?? throw new LinqToDBException("SqlRow is not supported in this statement");
 			set
 			{
 				if (_row != null) throw new InvalidOperationException("Can't set both Row and Column.");
