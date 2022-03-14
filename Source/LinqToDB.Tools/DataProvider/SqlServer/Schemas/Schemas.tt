@@ -9,101 +9,49 @@
 <#@ import namespace="System.Xml.Linq" #>
 <#@ import namespace="LinqToDB" #>
 <#
-	NamespaceName = "LinqToDB.Tools.DataProvider.SqlServer.Schemas";
-	DataContextName = "SystemDB";
-	EnableNullableReferenceTypes = true;
-	GenerateSchemaAsType = true;
-	//	GenerateDbTypes              = true;
-	OneToManyAssociationType = "IList<{0}>";
-
-	SingularizeClassNames = false;
-	PluralizeDataContextPropertyNames = false;
-	NormalizeNamesWithoutUnderscores = true;
-	PluralizeForeignKeyNames = false;
-	SingularizeForeignKeyNames = true;
-
-	SchemaNameMapping.Add("sys", "System");
-	SchemaNameMapping.Add("INFORMATION_SCHEMA", "Information");
-
-	LoadDatabaseSchema = LoadSystemDatabaseSchema;
-
-	BeforeGenerateLinqToDBModel = () =>
-	{
-		foreach (var t in Tables.Values)
-		{
-			if (t.TableName.StartsWith("sys") && !t.TableName.StartsWith("system_"))
-			{
-				t.Schema = "Compatibility";
-			}
-			else if (t.TableName.StartsWith("dm_"))
-			{
-				t.Schema = "DynamicManagement";
-			}
-			else if (t.TableName.StartsWith("availability_"))
-			{
-				t.Schema = "AvailabilityGroup";
-			}
-			else if (t.TableName.StartsWith("change_tracking_"))
-			{
-				t.Schema = "ChangeTracking";
-			}
-			else if (t.TableName.StartsWith("xml_") || t.TableName is
-				"column_xml_schema_collection_usages" or
-				"parameter_xml_schema_collection_usages" or
-				"selective_xml_index_paths")
-			{
-				t.Schema = "Xml";
-			}
-		}
-	};
+	NamespaceName                     = "LinqToDB.Tools.DataProvider.SqlServer.Schemas";
+	DataContextName                   = "SystemDB";
+	EnableNullableReferenceTypes      = true;
+	GenerateSchemaAsType              = true;
+	OneToManyAssociationType          = "IList<{0}>";
+	SingularizeClassNames             = true;
+	PluralizeDataContextPropertyNames = true;
+	NormalizeNamesWithoutUnderscores  = true;
+	PluralizeForeignKeyNames          = false;
+	SingularizeForeignKeyNames        = true;
+	LoadDatabaseSchema                = LoadSystemDatabaseSchema;
 
 	LoadSqlServerMetadata(".", "master", SqlServerVersion.v2012);
-
-	var dic = new[]
-	{
-		"SysAltFiles", "SysCacheObjects", "SysCharSets", "SysCsContainers", "SysCurConfigs", "SysCursorColumns", "SysCursorRefs", "SysCursorTables",
-		"SysFileGroups", "SysForeignKeys", "SysFullTextCatalogs", "SysIndexKeys", "SysLockInfo", "SysOleDBUsers", "SysOpenTapes", "SysPerfInfo", "SysRemoteLogins"
-	}
-		.ToDictionary(n => n.ToLower(), n => n);
-
-	foreach (var tt in Tables)
-	{
-		var t = tt.Value;
-
-		if (dic.TryGetValue(t.TableName, out var name))
-			t.DataContextPropertyName = t.TypeName = name;
-		else if (t.TableName.StartsWith("sys") && !t.TableName.StartsWith("system_"))
-		{
-			var a = t.TypeName.ToCharArray();
-			a[3] = char.ToUpper(a[3]);
-
-			t.DataContextPropertyName = t.TypeName = new(a);
-		}
-
-		foreach (var c in t.Columns)
-			if (c.Value.ColumnName.EndsWith("_id"))
-				c.Value.MemberName = c.Value.MemberName.Substring(0, c.Value.MemberName.Length - 1) + "D";
-	}
-
 	GenerateModel();
 
 	GenerationEnvironment
-		.Replace("&lt;strong&gt;",    "<b>")
-		.Replace("&lt;/strong&gt;",   "</b>")
-		.Replace("&lt;br&gt;",        "<br/>")
-		.Replace("<br/><br/> ",       "<br/> ")
-		.Replace("&lt;a href=&quot;#remarks&quot; data-linktype=&quot;self-bookmark&quot;&gt;Remarks&lt;/a&gt;", "<a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-column-store-segments-transact-sql?view=sql-server-ver15#remarks'>Remarks</a>")
-		.Replace("&lt;a href=&quot;", "<a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/")
-		.Replace("&quot; data-linktype=&quot;relative-path&quot;&gt;", "'>")
-		.Replace("&lt;/a&gt;",        "</a>")
-		.Replace("&lt;code&gt;",      "<i>")
-		.Replace("&lt;/code&gt;",     "</i>")
-		.Replace("&lt;em&gt;",        "<em>")
-		.Replace("&lt;/em&gt;",       "</em>")
-		.Replace("&amp;lt;",          "&lt;")
-		.Replace("&amp;gt;",          "&gt;")
-		.Replace("&lt;a href=&apos;", "<a href='")
-		.Replace("&apos;&gt;",        "'>")
+		.Replace("&lt;",                                 "<")
+		.Replace("&gt;",                                 ">")
+		.Replace("&apos;",                               "'")
+		.Replace("<br />",                               "<br/>")
+		.Replace("<network_subnet_option>",              "&lt;network_subnet_option&gt;")
+		.Replace("<database_family_guid>",               "&lt;database_family_guid&gt;")
+		.Replace("<random_password_guid>",               "&lt;random_password_guid&gt;")
+		.Replace("<thumbprint>",                         "&lt;thumbprint&gt;")
+		.Replace(">0",                                   "&gt;0")
+		.Replace("\\<0",                                 "&lt;0")
+		.Replace("<strong&gt;0",                         "<strong>0")
+		.Replace("&quot;",                               "'")
+		.Replace("\\<principal>",                        "&lt;principal&gt;")
+		.Replace("<br/&gt;0",                            "<br/>0")
+		.Replace("\\<choice>",                           "&lt;choice&gt;")
+		.Replace("\\<sequence>",                         "&lt;sequence&gt;")
+		.Replace("\\<all>",                              "&lt;all&gt;")
+		.Replace("\\<schema>",                           "&lt;schema&gt;")
+		.Replace("\\<hobt_id, partition_id, column_id>", "&lt;hobt_id, partition_id, column_id&gt;")
+		.Replace("<segment_id>",                         "&lt;segment_id&gt;")
+		.Replace("<value>",                              "&lt;value&gt;")
+		.Replace("<database>",                           "&lt;database&gt;")
+		.Replace("<interval>",                           "&lt;interval&gt;")
+		.Replace("<size>",                               "&lt;size&gt;")
+		.Replace("<version><length>[<key>",              "&lt;version&gt;&lt;length&gt;[&lt;key&gt;")
+		.Replace("= <n>)",                               "= &lt;n&gt;")
+		.Replace("<c&gt;0.0.0.0</c>",                    "<c>0.0.0.0</c>")
 		;
 #>
 <#+
@@ -115,6 +63,7 @@ DatabaseSchema LoadSystemDatabaseSchema(DataConnection dataConnection, GetSchema
 		from t in XDocument.Load(xmlFile, LoadOptions.PreserveWhitespace).Root.Elements("table")
 		select new
 		{
+			Category    = t.Attribute("category").Value,
 			Name        = t.Attribute("name").Value,
 			Uri         = t.Attribute("uri").Value,
 			Description = t.Element("description").Value,
@@ -127,8 +76,28 @@ DatabaseSchema LoadSystemDatabaseSchema(DataConnection dataConnection, GetSchema
 					Type    = c.Attribute("type").Value,
 					Content = c.Value
 				}
+				into c
+				group c by c.Name into g
+				select new
+				{
+					Name    = g.Key,
+					Type    = g.First().Type,
+					Content = g.First().Content,
+					Items   = g.ToList()
+				}
 			)
 			.ToDictionary(c => c.Name, c => c)
+		}
+		into t
+		group t by new { t.Name } into g
+		select new
+		{
+			g.Key.Name,
+			g.First().Category,
+			g.First().Uri,
+			g.First().Description,
+			g.First().Columns,
+			Items = g.ToList()
 		}
 	)
 	.ToDictionary(t => t.Name, t => t);
@@ -175,7 +144,7 @@ order by OBJECT_SCHEMA_NAME(o.object_id), o.name, c.column_id
 			ID          = $"[{gs.Key.schema_name}].[{gs.Key.view_name}]",
 			SchemaName  = gs.Key.schema_name,
 			TableName   = gs.Key.view_name,
-			Description = doc != null ? $"{doc.Description}<br>\r\nSee <a href='{doc.Uri}'>{name}</a>." : null,
+			Description = doc != null ? $"{doc.Description}<br/>\r\n<para>See <a href='{doc.Uri}'>{name}</a>.</para>" : null,
 			TypeName    = gs.Key.view_name,
 			IsView      = true,
 			Columns     =
@@ -252,9 +221,75 @@ order by OBJECT_SCHEMA_NAME(o.object_id), o.name, c.column_id
 		}
 	).ToList();
 
-	SetForeignKeys("[sys].[all_objects]",    "object_id", "AllObject",    t => t.TableName!.StartsWith("all_"),    "all_views");
-	SetForeignKeys("[sys].[system_objects]", "object_id", "SystemObject", t => t.TableName!.StartsWith("system_"), "system_views");
-	SetForeignKeys("[sys].[objects]",        "object_id", "Object",       t => !t.TableName!.StartsWith("all_") && !t.TableName!.StartsWith("system_"),
+	var tableDic = tables.ToDictionary(t => t.SchemaName + "." + t.TableName);
+
+	tables =
+	(
+		from c in xml.Values
+		let table = tableDic.ContainsKey(c.Name) ? tableDic[c.Name] : null
+		let ns    = c.Name.Split('.')
+		where ns.Length == 2
+		orderby c.Name
+		select new TableSchema
+		{
+			ID          = c.Name,
+			GroupName   = c.Category,
+			SchemaName  = ns[0],
+			TableName   = ns[1],
+			Description = $"{c.Description}<br/>\r\n<para>See <a href='{c.Uri}'>{c.Name}</a>.</para>",
+			TypeName    = ns[1],
+			IsView      = true,
+			Columns     =
+			(
+				from cn in c.Columns.Values
+				let c = table?.Columns.FirstOrDefault(cc => cc.ColumnName == cn.Name)
+				select new ColumnSchema
+				{
+					ColumnName           = cn.Name,
+					Description          = cn.Content,
+					ColumnType           = (cn.Type.Length > 0 ? cn.Type : c?.ColumnType) ?? "object",
+					IsNullable           = c?.IsNullable == true,
+					MemberName           = cn.Name,
+					MemberType           = ((cn.Type.Length > 0 ? cn.Type : c?.ColumnType) ?? "").Split('(')[0] switch
+					{
+						"int"              => "int",
+						"tinyint"          => "byte",
+						"smallint"         => "short",
+						"bigint"           => "long",
+						"datetime"         => "DateTime",
+						"datetime2"        => "DateTime",
+						"datetimeoffset"   => "DateTimeOffset",
+						"time"             => "TimeSpan",
+						"sql_variant"      => "object",
+						"sysname"          => "string",
+						"bit"              => "bool",
+						"uniqueidentifier" => "Guid",
+						"numeric"          => "decimal",
+						"float"            => "double",
+						"real"             => "float",
+						"char"             => "string",
+						"nchar"            => "string",
+						"nvarchar"         => "string",
+						"varchar"          => "string",
+						"varbinary"        => "byte[]",
+						"binary"           => "byte[]",
+						"image"            => "byte[]",
+						var t              => "object" //throw new NotImplementedException($"Not implemented type {t}")
+					} + (c?.IsNullable == true ? "?" : ""),
+					SystemType           = typeof(int),
+					DataType             = DataType.Char,
+					Length               = c?.Length / 2,
+					Precision            = c?.Precision,
+					Scale                = c?.Scale,
+				}
+			).ToList(),
+			ForeignKeys = new(),
+		}
+	).ToList();
+
+	SetForeignKeys("sys.all_objects",    "object_id", "AllObject",    t => t.TableName!.StartsWith("all_"),    "all_views");
+	SetForeignKeys("sys.system_objects", "object_id", "SystemObject", t => t.TableName!.StartsWith("system_"), "system_views");
+	SetForeignKeys("sys.objects",        "object_id", "Object",       t => !t.TableName!.StartsWith("all_") && !t.TableName!.StartsWith("system_"),
 		// http://t-sql.ru/Download/SystemViewsPoster/2008.pdf
 		"assembly_modules",    // sys.objects.type in ('TA', 'PC', 'FS', 'FT')
 		"default_constraints", // sys.objects.type in ('D')
