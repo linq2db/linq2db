@@ -27,6 +27,12 @@
 	LoadDatabaseSchema                = LoadSystemDatabaseSchema;
 
 	LoadSqlServerMetadata(".", "master", SqlServerVersion.v2012);
+
+	GetTable("sys.endpoint_webmethods").DataContextPropertyName = "EndpointWebMethods";
+	GetTable("sys.endpoint_webmethods").TypeName                = "EndpointWebMethod";
+	GetTable("sys.events"). TypeName                            = "Event";
+	GetTable("sys.objects").TypeName                            = "Object";
+
 	GenerateModel();
 
 	GenerationEnvironment
@@ -241,17 +247,17 @@ order by OBJECT_SCHEMA_NAME(o.object_id), o.name, c.column_id
 			GroupName   = c.Category,
 			SchemaName  = ns[0],
 			TableName   = ns[1],
-			Description = $"{c.Description}<br/>\r\n<para>See <a href='{c.Uri}'>{c.Name}</a>.</para>",
+			Description = (table != null ? "" : null) + $"{c.Description}<br/>\r\n<para>See <a href='{c.Uri}'>{c.Name}</a>.</para>",
 			TypeName    = ns[1],
 			IsView      = true,
 			Columns     =
 			(
 				from cn in c.Columns.Values
-				let c = table?.Columns.FirstOrDefault(cc => cc.ColumnName == cn.Name)
+				let c = table?.Columns.FirstOrDefault(cc => cc.ColumnName.ToLower() == cn.Name.ToLower())
 				select new ColumnSchema
 				{
-					ColumnName           = cn.Name,
-					Description          = cn.Content,
+					ColumnName           = c?.ColumnName ?? cn.Name,
+					Description          = cn.Content,// + (c != null ? "<br/>+" : null),
 					ColumnType           = (cn.Type.Length > 0 ? cn.Type : c?.ColumnType) ?? "object",
 					IsNullable           = c?.IsNullable == true,
 					MemberName           = cn.Name,
