@@ -131,5 +131,47 @@ namespace Tests.Linq
 				Assert.That(l[0].AsSqlFullName, Is.EqualTo(l[0].LastName + ", " + l[0].FirstName));
 			}
 		}
+
+		[Table("Person")]
+		public class CustomPerson1
+		{
+			[ExpressionMethod(nameof(Expr), IsColumn = true)]
+			public string? MiddleNamePreview { get; set; }
+
+			private static Expression<Func<CustomPerson1, string?>> Expr()
+			{
+				return e => Sql.TableField<CustomPerson1, string>(e, "MiddleName").Substring(0, 200);
+			}
+		}
+
+		[Table("Person")]
+		public class CustomPerson2
+		{
+			[ExpressionMethod(nameof(Expr), IsColumn = true)]
+			public string? MiddleNamePreview { get; set; }
+
+			private static Expression<Func<CustomPerson2, string?>> Expr()
+			{
+				return e => Sql.Property<string>(e, "MiddleName").Substring(0, 200);
+			}
+		}
+
+		[Test]
+		public void CalculatedColumnExpression1([IncludeDataSources(true, TestProvName.AllFirebird)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				_ = db.GetTable<CustomPerson1>().ToArray();
+			}
+		}
+
+		[Test]
+		public void CalculatedColumnExpression2([IncludeDataSources(true, TestProvName.AllFirebird)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				_ = db.GetTable<CustomPerson2>().ToArray();
+			}
+		}
 	}
 }
