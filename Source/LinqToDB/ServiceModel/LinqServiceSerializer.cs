@@ -1270,9 +1270,10 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SetExpression :
 						{
 							var elem = (SqlSetExpression)e;
+							var row = elem.Row;
 
-							Append(elem.Column);
-							Append(elem.Row);
+							Append(row == null ? elem.Column : null);
+							Append(row);
 							Append(elem.Expression);
 
 							break;
