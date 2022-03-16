@@ -61,8 +61,12 @@
 		.Replace("<interval>",                           "&lt;interval&gt;")
 		.Replace("<size>",                               "&lt;size&gt;")
 		.Replace("<version><length>[<key>",              "&lt;version&gt;&lt;length&gt;[&lt;key&gt;")
+		.Replace("<hobt_id, partition_id, column_id>",   "&lt;hobt_id, partition_id, column_id&gt;")
+		.Replace("<sys.internal_table_name>",            "&lt;sys.internal_table_name&gt;")
+		.Replace("\\<other value>",                      "&lt;other value&gt;")
 		.Replace("= <n>)",                               "= &lt;n&gt;")
 		.Replace("<c&gt;0.0.0.0</c>",                    "<c>0.0.0.0</c>")
+		.Replace(", one of:< LOW ",                      ", one of: LOW ")
 		;
 #>
 <#+
