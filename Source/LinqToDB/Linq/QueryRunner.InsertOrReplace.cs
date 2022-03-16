@@ -229,7 +229,7 @@ namespace LinqToDB.Linq
 			var keys = firstStatement.Update.Keys;
 
 			foreach (var key in keys)
-				firstStatement.SelectQuery.Where.Expr(key.Column).Equal.Expr(key.Expression!);
+				firstStatement.SelectQuery.Where.Expr(key.Column!).Equal.Expr(key.Expression!);
 
 			//TODO! looks not working solution
 			if (firstStatement.Update.Items.Count > 0)

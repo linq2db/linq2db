@@ -50,7 +50,7 @@ namespace LinqToDB.SqlQuery
 		// Most places (e.g. Insert) that use SqlSetExpression don't support the Row variant and access Column directly.
 		// In those places, an invalid query that was built with SqlRow will throw LinqToDBException.
 		// Codepaths that support Row (e.g. Update) will first check whether the `Row` property below is not null.
-		public ISqlExpression Column 
+		public ISqlExpression? Column 
 		{
 			get => _column ?? throw new LinqToDBException("SqlRow is not supported in this statement");
 			set

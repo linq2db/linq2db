@@ -203,7 +203,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					StringBuilder.Append(InlineComma);
 				firstKey = false;
 
-				BuildExpression(expr.Column, false, true);
+				BuildExpression(expr.Column!, false, true);
 			}
 
 			if (insertOrUpdate.Update.Items.Count > 0)
@@ -221,7 +221,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					first = false;
 
 					AppendIndent();
-					BuildExpression(expr.Column, false, true);
+					BuildExpression(expr.Column!, false, true);
 					StringBuilder.Append(" = ");
 					BuildExpression(expr.Expression!, true, true);
 				}

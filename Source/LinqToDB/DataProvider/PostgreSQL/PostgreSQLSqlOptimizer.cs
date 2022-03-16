@@ -250,7 +250,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 						foreach (var item in statement.Update.Items)
 						{
-							var setField = QueryHelper.GetUnderlyingField(item.Column);
+							var setField = QueryHelper.GetUnderlyingField(item.Column!);
 							if (setField == null)
 								throw new LinqToDBException($"Unexpected element in setter expression: {item.Column}");
 
@@ -287,7 +287,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						return e;
 					});
 
-					var updateField = QueryHelper.GetUnderlyingField(newItem.Column);
+					var updateField = QueryHelper.GetUnderlyingField(newItem.Column!);
 					if (updateField != null)
 						newItem.Column = tableToUpdate[updateField.Name] ?? throw new LinqException($"Field {updateField.Name} not found in table {tableToUpdate}");
 

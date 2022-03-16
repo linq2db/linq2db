@@ -806,7 +806,7 @@ namespace LinqToDB.SqlProvider
 					first = false;
 
 					AppendIndent();
-					BuildExpression(expr.Column, false, true);
+					BuildExpression(expr.Column!, false, true);
 				}
 
 				Indent--;
@@ -879,7 +879,7 @@ namespace LinqToDB.SqlProvider
 			{
 				BuildExpression(keys[i].Expression!, false, false);
 				StringBuilder.Append(" AS ");
-				BuildExpression(keys[i].Column, false, false);
+				BuildExpression(keys[i].Column!, false, false);
 
 				if (i + 1 < keys.Count)
 					StringBuilder.Append(InlineComma);
@@ -900,7 +900,7 @@ namespace LinqToDB.SqlProvider
 
 				AppendIndent();
 
-				if (key.Column.CanBeNull)
+				if (key.Column!.CanBeNull)
 				{
 					StringBuilder.Append('(');
 
@@ -984,7 +984,7 @@ namespace LinqToDB.SqlProvider
 
 				AppendIndent();
 
-				if (expr.Column.CanBeNull)
+				if (expr.Column!.CanBeNull)
 				{
 					StringBuilder.Append('(');
 
