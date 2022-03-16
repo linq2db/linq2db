@@ -353,7 +353,7 @@ This dynamic management view applies to Azure SQL Managed Instance only. For an 
     <column name="create_date" type="datetime2 ">Date the assembly was added to the list of trusted assemblies. </column>
     <column name="created_by" type="nvarchar(128) ">Login name of the principal who added the assembly to the list. </column>
   </table>
-  <table name="dbo.sysdac_instances" category="DataTierApplications" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/data-tier-application-views-dbo-sysdac-instances">
+  <table name="dbo.sysdac_instances" category="DataTierApplications" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/data-tier-application-views-dbo-sysdac-instances" database="msdb">
     <description>&lt;para&gt;&lt;strong&gt;Data-tier Application Views - dbo.sysdac_instances&lt;/strong&gt;&lt;/para&gt;
  &lt;para&gt;&lt;strong&gt;Applies to:&lt;/strong&gt; √ SQL Server (all supported versions)&lt;/para&gt;
 &lt;para&gt;Displays one row for each data-tier application (DAC) instance deployed to an instance of the Database Engine. sysdac_instances belongs to the dbo schema in the msdb database. The following table describes the columns in the sysdac_instances view.&lt;/para&gt;</description>
@@ -367,7 +367,7 @@ This dynamic management view applies to Azure SQL Managed Instance only. For an 
     <column name="created_by" type="sysname">Login that created the DAC instance.</column>
     <column name="database_name" type="sysname">Name of the database created for the DAC isntance.</column>
   </table>
-  <table name="syscollector_collection_items" category="DataCollector" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syscollector-collection-items-transact-sql">
+  <table name="dbo.syscollector_collection_items" category="DataCollector" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syscollector-collection-items-transact-sql" database="msdb">
     <description>&lt;para&gt;&lt;strong&gt;syscollector_collection_items (Transact-SQL)&lt;/strong&gt;&lt;/para&gt;
 &lt;para&gt;&lt;strong&gt;Applies to:&lt;/strong&gt; √ SQL Server (all supported versions)&lt;/para&gt;
 &lt;para&gt;Returns information about an item in a collection set.&lt;/para&gt;</description>
@@ -378,7 +378,7 @@ This dynamic management view applies to Azure SQL Managed Instance only. For an 
     <column name="frequency" type="int">The frequency that data is collected by a collection item. Is not nullable.</column>
     <column name="parameters" type="xml">Describes the parameterization for the collector type associated with the collection item. The XML schema for this collection item is validated with the XML Schema (XSD) stored in the &lt;strong&gt;parameter_schema&lt;/strong&gt; for a particular collector type. Is nullable. For more information, see &lt;a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syscollector-collector-types-transact-sql'&gt;syscollector_collector_types (Transact-SQL)&lt;/a&gt;.</column>
   </table>
-  <table name="syscollector_collection_sets" category="DataCollector" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syscollector-collection-sets-transact-sql">
+  <table name="dbo.syscollector_collection_sets" category="DataCollector" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syscollector-collection-sets-transact-sql" database="msdb">
     <description>&lt;para&gt;&lt;strong&gt;syscollector_collection_sets (Transact-SQL)&lt;/strong&gt;&lt;/para&gt;
 &lt;para&gt;&lt;strong&gt;Applies to:&lt;/strong&gt; √ SQL Server (all supported versions)&lt;/para&gt;
 &lt;para&gt;Provides information about a collection set, including schedule, collection mode, and its state.&lt;/para&gt;</description>
@@ -399,7 +399,7 @@ This dynamic management view applies to Azure SQL Managed Instance only. For an 
     <column name="dump_on_any_error" type="bit">Turned on (1) or off (0) to indicate whether to create an SSIS dump file on any error. Is not nullable.</column>
     <column name="dump_on_codes" type="nvarchar(max)">Contains the list of SSIS error codes that are used to trigger the dump file. Is nullable.</column>
   </table>
-  <table name="syscollector_collector_types" category="DataCollector" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syscollector-collector-types-transact-sql">
+  <table name="dbo.syscollector_collector_types" category="DataCollector" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syscollector-collector-types-transact-sql" database="msdb">
     <description>&lt;para&gt;&lt;strong&gt;syscollector_collector_types (Transact-SQL)&lt;/strong&gt;&lt;/para&gt;
 &lt;para&gt;&lt;strong&gt;Applies to:&lt;/strong&gt; √ SQL Server (all supported versions)&lt;/para&gt;
 &lt;para&gt;Provides information about a collector type for a collection item.&lt;/para&gt;</description>
@@ -415,14 +415,14 @@ This dynamic management view applies to Azure SQL Managed Instance only. For an 
     <column name="upload_package_name" type="sysname">The name of the upload package. Is not nullable.</column>
     <column name="is_system" type="bit">Turned on (1) or off (0) to indicate if the collector type was shipped with the data collector or if it was added later by the &lt;strong&gt;dc_admin&lt;/strong&gt;. This could be a custom type developed in-house or by a third party. Is not nullable.</column>
   </table>
-  <table name="syscollector_config_store" category="DataCollector" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syscollector-config-store-transact-sql">
+  <table name="dbo.syscollector_config_store" category="DataCollector" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syscollector-config-store-transact-sql" database="msdb">
     <description>&lt;para&gt;&lt;strong&gt;syscollector_config_store (Transact-SQL)&lt;/strong&gt;&lt;/para&gt;
 &lt;para&gt;&lt;strong&gt;Applies to:&lt;/strong&gt; √ SQL Server (all supported versions)&lt;/para&gt;
 &lt;para&gt;Returns properties that apply to the entire data collector, as opposed to a collection set instance. Each row in this view describes a specific data collector property, such as the name of the management data warehouse, and the instance name where the management data warehouse is located.&lt;/para&gt;</description>
     <column name="parameter_name" type="nvarchar(128)">The name of the property. Is not nullable.</column>
     <column name="parameter_value" type="sql_variant">The actual value of the property. Is nullable.</column>
   </table>
-  <table name="syscollector_execution_log" category="DataCollector" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syscollector-execution-log-transact-sql">
+  <table name="dbo.syscollector_execution_log" category="DataCollector" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syscollector-execution-log-transact-sql" database="msdb">
     <description>&lt;para&gt;&lt;strong&gt;syscollector_execution_log (Transact-SQL)&lt;/strong&gt;&lt;/para&gt;
 &lt;para&gt;&lt;strong&gt;Applies to:&lt;/strong&gt; √ SQL Server (all supported versions)&lt;/para&gt;
 &lt;para&gt;Provides information from the execution log for a collection set or package.&lt;/para&gt;</description>
@@ -441,7 +441,7 @@ This dynamic management view applies to Azure SQL Managed Instance only. For an 
     <column name="package_execution_id" type="uniqueidentifier">Provides a link to the SSIS log table. Is nullable.</column>
     <column name="failure_message" type="nvarchar(2048)">If the collection set or package failed, the most recent error message for that component. Is nullable. To obtain more detailed error information, use the &lt;a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-functions/fn-syscollector-get-execution-details-transact-sql'&gt;fn_syscollector_get_execution_details (Transact-SQL)&lt;/a&gt; function.</column>
   </table>
-  <table name="syscollector_execution_log_full" category="DataCollector" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syscollector-execution-log-full-transact-sql">
+  <table name="dbo.syscollector_execution_log_full" category="DataCollector" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syscollector-execution-log-full-transact-sql" database="msdb">
     <description>&lt;para&gt;&lt;strong&gt;syscollector_execution_log_full (Transact-SQL)&lt;/strong&gt;&lt;/para&gt;
 &lt;para&gt;&lt;strong&gt;Applies to:&lt;/strong&gt; √ SQL Server (all supported versions)&lt;/para&gt;
 &lt;para&gt;Provides information about a collection set or package when the execution log is full.&lt;/para&gt;</description>
@@ -459,7 +459,7 @@ This dynamic management view applies to Azure SQL Managed Instance only. For an 
     <column name="package_execution_id" type="uniqueidentifier">Provides a link to the SSIS log table. Is nullable.</column>
     <column name="collection_set_id" type="int">Provides a link to the data collection configuration table in msdb. Is nullable.</column>
   </table>
-  <table name="syscollector_execution_stats" category="DataCollector" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syscollector-execution-stats-transact-sql">
+  <table name="dbo.syscollector_execution_stats" category="DataCollector" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syscollector-execution-stats-transact-sql" database="msdb">
     <description>&lt;para&gt;&lt;strong&gt;syscollector_execution_stats (Transact-SQL)&lt;/strong&gt;&lt;/para&gt;
 &lt;para&gt;&lt;strong&gt;Applies to:&lt;/strong&gt; √ SQL Server (all supported versions)&lt;/para&gt;
 &lt;para&gt;Provides information about task execution for a collection set or package.&lt;/para&gt;</description>
@@ -517,7 +517,7 @@ This dynamic management view applies to Azure SQL Managed Instance only. For an 
     <column name="is_system" type="bit">&lt;strong&gt;Applies to&lt;/strong&gt;: SQL Server 2012 (11.x) and later.&lt;br /&gt;&lt;br /&gt; 1 = Data space is used for full-text index fragments.&lt;br /&gt;&lt;br /&gt; 0 = Data space is not used for full-text index fragments.</column>
     <column name="function_id" type="int">ID of partition function used in the scheme.</column>
   </table>
-  <table name="sysmail_allitems" category="DatabaseMail" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-allitems-transact-sql">
+  <table name="dbo.sysmail_allitems" category="DatabaseMail" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-allitems-transact-sql" database="msdb">
     <description>&lt;para&gt;&lt;strong&gt;sysmail_allitems (Transact-SQL)&lt;/strong&gt;&lt;/para&gt;
 &lt;para&gt;&lt;strong&gt;Applies to:&lt;/strong&gt; √ SQL Server (all supported versions) √ Azure SQL Managed Instance&lt;/para&gt;
 &lt;para&gt;Contains one row for each message processed by Database Mail. Use this view when you want to see the status of all messages.&lt;br/&gt;
@@ -550,7 +550,7 @@ This dynamic management view applies to Azure SQL Managed Instance only. For an 
     <column name="last_mod_date" type="datetime">The date and time of the last modification of the row.</column>
     <column name="last_mod_user" type="sysname">The user who last modified the row.</column>
   </table>
-  <table name="sysmail_event_log" category="DatabaseMail" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-event-log-transact-sql">
+  <table name="dbo.sysmail_event_log" category="DatabaseMail" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-event-log-transact-sql" database="msdb">
     <description>&lt;para&gt;&lt;strong&gt;sysmail_event_log (Transact-SQL)&lt;/strong&gt;&lt;/para&gt;
 &lt;para&gt;&lt;strong&gt;Applies to:&lt;/strong&gt; √ SQL Server (all supported versions)&lt;/para&gt;
 &lt;para&gt;Contains one row for each Windows or SQL Server message returned by the Database Mail system. (Message in this context refers to a message such as an error message, not an e-mail message.) Configure the &lt;strong&gt;Logging Level&lt;/strong&gt; parameter by using the &lt;strong&gt;Configure System Parameters&lt;/strong&gt; dialog box of the Database Mail Configuration Wizard, or the &lt;a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-stored-procedures/sysmail-configure-sp-transact-sql'&gt;sysmail_configure_sp&lt;/a&gt; stored procedure, to determine which messages are returned.&lt;/para&gt;</description>
@@ -564,7 +564,7 @@ This dynamic management view applies to Azure SQL Managed Instance only. For an 
     <column name="last_mod_date" type="datetime">The date and time of the last modification of the row.</column>
     <column name="last_mod_user" type="sysname">The user who last modified the row. For e-mails, this is the user who sent the mail. For messages generated by the Database Mail external program, this is the user context of the program.</column>
   </table>
-  <table name="sysmail_faileditems" category="DatabaseMail" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-faileditems-transact-sql">
+  <table name="dbo.sysmail_faileditems" category="DatabaseMail" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-faileditems-transact-sql" database="msdb">
     <description>&lt;para&gt;&lt;strong&gt;sysmail_faileditems (Transact-SQL)&lt;/strong&gt;&lt;/para&gt;
 &lt;para&gt;&lt;strong&gt;Applies to:&lt;/strong&gt; √ SQL Server (all supported versions)&lt;/para&gt;
 &lt;para&gt;Contains one row for each Database Mail message with the &lt;strong&gt;failed&lt;/strong&gt; status. Use this view to determine which messages were not successfully sent.&lt;br/&gt;
@@ -597,7 +597,7 @@ This dynamic management view applies to Azure SQL Managed Instance only. For an 
     <column name="last_mod_date" type="datetime">The date and time of the last modification of the row.</column>
     <column name="last_mod_user" type="sysname">The user who last modified the row.</column>
   </table>
-  <table name="sysmail_mailattachments" category="DatabaseMail" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-mailattachments-transact-sql">
+  <table name="dbo.sysmail_mailattachments" category="DatabaseMail" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-mailattachments-transact-sql" database="msdb">
     <description>&lt;para&gt;&lt;strong&gt;sysmail_mailattachments (Transact-SQL)&lt;/strong&gt;&lt;/para&gt;
 &lt;para&gt;&lt;strong&gt;Applies to:&lt;/strong&gt; √ SQL Server (all supported versions)&lt;/para&gt;
 &lt;para&gt;Contains one row for each attachment submitted to Database Mail. Use this view when you want information about Database Mail attachments. To review all e-mails processed by Database Mail use &lt;a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-allitems-transact-sql'&gt;sysmail_allitems (Transact-SQL)&lt;/a&gt;.&lt;/para&gt;</description>
@@ -609,7 +609,7 @@ This dynamic management view applies to Azure SQL Managed Instance only. For an 
     <column name="last_mod_date" type="datetime">The date and time of the last modification of the row.</column>
     <column name="last_mod_user" type="sysname">The user who last modified the row.</column>
   </table>
-  <table name="sysmail_sentitems" category="DatabaseMail" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-sentitems-transact-sql">
+  <table name="dbo.sysmail_sentitems" category="DatabaseMail" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-sentitems-transact-sql" database="msdb">
     <description>&lt;para&gt;&lt;strong&gt;sysmail_sentitems (Transact-SQL)&lt;/strong&gt;&lt;/para&gt;
 &lt;para&gt;&lt;strong&gt;Applies to:&lt;/strong&gt; √ SQL Server (all supported versions) √ Azure SQL Managed Instance&lt;/para&gt;
 &lt;para&gt;Contains one row for each message sent by Database Mail. Use &lt;strong&gt;sysmail_sentitems&lt;/strong&gt; when you want to see which messages were successfully sent.&lt;br/&gt;
@@ -642,7 +642,7 @@ This dynamic management view applies to Azure SQL Managed Instance only. For an 
     <column name="last_mod_date" type="datetime">The date and time of the last modification of the row.</column>
     <column name="last_mod_user" type="sysname">The user who last modified the row.</column>
   </table>
-  <table name="sysmail_unsentitems" category="DatabaseMail" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-unsentitems-transact-sql">
+  <table name="dbo.sysmail_unsentitems" category="DatabaseMail" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-unsentitems-transact-sql" database="msdb">
     <description>&lt;para&gt;&lt;strong&gt;sysmail_unsentitems (Transact-SQL)&lt;/strong&gt;&lt;/para&gt;
 &lt;para&gt;&lt;strong&gt;Applies to:&lt;/strong&gt; √ SQL Server (all supported versions) √ Azure SQL Managed Instance&lt;/para&gt;
 &lt;para&gt;Contains one row for each Database Mail message with the &lt;strong&gt;unsent&lt;/strong&gt; or &lt;strong&gt;retrying&lt;/strong&gt; status. Messages with unsent or retrying status are still in the mail queue and may be sent at any time. Messages can have the &lt;strong&gt;unsent&lt;/strong&gt; status for the following reasons:&lt;br/&gt;
@@ -2823,7 +2823,7 @@ This feature will be removed in a future version of Microsoft SQL Server. Avoid 
     <column name="parameter_id" type="int">ID of the parameter of the function to which this value corresponds. The values in this column correspond with those in the &lt;strong&gt;parameter_id&lt;/strong&gt; column of the &lt;strong&gt;sys.partition_parameters&lt;/strong&gt; catalog view for any particular &lt;strong&gt;function_id&lt;/strong&gt;.</column>
     <column name="value" type="sql_variant">The actual boundary value.</column>
   </table>
-  <table name="syspolicy_conditions" category="Policy-BasedManagement" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syspolicy-conditions-transact-sql">
+  <table name="dbo.syspolicy_conditions" category="PolicyBasedManagement" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syspolicy-conditions-transact-sql" database="msdb">
     <description>&lt;para&gt;&lt;strong&gt;syspolicy_conditions (Transact-SQL)&lt;/strong&gt;&lt;/para&gt;
 &lt;para&gt;&lt;strong&gt;Applies to:&lt;/strong&gt; √ SQL Server (all supported versions)&lt;/para&gt;
 &lt;para&gt;Displays one row for each Policy-Based Management condition in the instance of SQL Server. syspolicy_conditions belongs to the dbo schema in the msdb database. The following table describes the columns in the syspolicy_conditions view.&lt;/para&gt;</description>
@@ -2839,7 +2839,7 @@ This feature will be removed in a future version of Microsoft SQL Server. Avoid 
     <column name="Expression" type="nvarchar(max)">Expression of the facet states.</column>
     <column name="obj_name" type="sysname">The object name assigned to @Name if the condition expression contains this variable.</column>
   </table>
-  <table name="syspolicy_policies" category="Policy-BasedManagement" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syspolicy-policies-transact-sql">
+  <table name="dbo.syspolicy_policies" category="PolicyBasedManagement" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syspolicy-policies-transact-sql" database="msdb">
     <description>&lt;para&gt;&lt;strong&gt;syspolicy_policies (Transact-SQL)&lt;/strong&gt;&lt;/para&gt;
 &lt;para&gt;&lt;strong&gt;Applies to:&lt;/strong&gt; √ SQL Server (all supported versions)&lt;/para&gt;
 &lt;para&gt;Displays one row for each Policy-Based Management policy in the instance of SQL Server. syspolicy_policies belongs to the dbo schema in the msdb database. The following table describes the columns in the syspolicy_policies view.&lt;/para&gt;</description>
@@ -2861,7 +2861,7 @@ This feature will be removed in a future version of Microsoft SQL Server. Avoid 
     <column name="modified_by" type="sysname">Login that most recently modified the policy. Is NULL if never modified.</column>
     <column name="date_modified" type="datetime">Date and time the policy was created. Is NULL if never modified.</column>
   </table>
-  <table name="syspolicy_policy_execution_history" category="Policy-BasedManagement" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syspolicy-policy-execution-history-transact-sql">
+  <table name="dbo.syspolicy_policy_execution_history" category="PolicyBasedManagement" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syspolicy-policy-execution-history-transact-sql" database="msdb">
     <description>&lt;para&gt;&lt;strong&gt;syspolicy_policy_execution_history (Transact-SQL)&lt;/strong&gt;&lt;/para&gt;
 &lt;para&gt;&lt;strong&gt;Applies to:&lt;/strong&gt; √ SQL Server (all supported versions)&lt;/para&gt;
 &lt;para&gt;Displays the time when policies were executed, the result of each execution, and details about errors if any occurred. The following table describes the columns in the syspolicy_policy_execution_history view.&lt;/para&gt;</description>
@@ -2873,7 +2873,7 @@ This feature will be removed in a future version of Microsoft SQL Server. Avoid 
     <column name="exception_message" type="nvarchar(max)">Message generated by the exception if one occurred.</column>
     <column name="exception" type="nvarchar(max)">Description of the exception if one occurred.</column>
   </table>
-  <table name="syspolicy_policy_execution_history_details" category="Policy-BasedManagement" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syspolicy-policy-execution-history-details-transact-sql">
+  <table name="dbo.syspolicy_policy_execution_history_details" category="PolicyBasedManagement" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syspolicy-policy-execution-history-details-transact-sql" database="msdb">
     <description>&lt;para&gt;&lt;strong&gt;syspolicy_policy_execution_history_details (Transact-SQL)&lt;/strong&gt;&lt;/para&gt;
 &lt;para&gt;&lt;strong&gt;Applies to:&lt;/strong&gt; √ SQL Server (all supported versions)&lt;/para&gt;
 &lt;para&gt;Displays the condition expressions that were executed, the targets of the expressions, the result of each execution, and details about errors if any occurred. The following table describes the columns in the syspolicy_execution_history_details view.&lt;/para&gt;</description>
@@ -2886,7 +2886,7 @@ This feature will be removed in a future version of Microsoft SQL Server. Avoid 
     <column name="exception_message" type="nvarchar(max)">Message generated by the exception if one occurred.</column>
     <column name="exception" type="nvarchar(max)">Description of the exception if one occurred.</column>
   </table>
-  <table name="syspolicy_policy_categories" category="Policy-BasedManagement" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syspolicy-policy-categories-transact-sql">
+  <table name="dbo.syspolicy_policy_categories" category="PolicyBasedManagement" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syspolicy-policy-categories-transact-sql" database="msdb">
     <description>&lt;para&gt;&lt;strong&gt;syspolicy_policy_categories (Transact-SQL)&lt;/strong&gt;&lt;/para&gt;
 &lt;para&gt;&lt;strong&gt;Applies to:&lt;/strong&gt; √ SQL Server (all supported versions)&lt;/para&gt;
 &lt;para&gt;Displays one row for each Policy-Based Management policy category in the instance of SQL Server. Policy categories help you organize policies when you have many policies. The following table describes the columns in the syspolicy_policy_groups view.&lt;/para&gt;</description>
@@ -2894,7 +2894,7 @@ This feature will be removed in a future version of Microsoft SQL Server. Avoid 
     <column name="name" type="sysname">Name of the policy category.</column>
     <column name="mandate_database_subscriptions" type="bit">Indicates whether the policy category applies to all databases in an instance without an explicit subscription (1) or the policy category must be applied to a database by using an explicit subscription (0).</column>
   </table>
-  <table name="syspolicy_policy_category_subscriptions" category="Policy-BasedManagement" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syspolicy-policy-category-subscriptions-transact-sql">
+  <table name="dbo.syspolicy_policy_category_subscriptions" category="PolicyBasedManagement" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syspolicy-policy-category-subscriptions-transact-sql" database="msdb">
     <description>&lt;para&gt;&lt;strong&gt;syspolicy_policy_category_subscriptions (Transact-SQL)&lt;/strong&gt;&lt;/para&gt;
 &lt;para&gt;&lt;strong&gt;Applies to:&lt;/strong&gt; √ SQL Server (all supported versions)&lt;/para&gt;
 &lt;para&gt;Displays one row for each Policy-Based Management subscription in the instance of SQL Server. Each row describes a target and policy category pair. The following table describes the columns in the syspolicy_policy_group_subscriptions view.&lt;/para&gt;</description>
@@ -2903,7 +2903,7 @@ This feature will be removed in a future version of Microsoft SQL Server. Avoid 
     <column name="target_object" type="sysname">Name of the target object.</column>
     <column name="policy_category_id" type="int">ID of the policy category that is applied to the target.</column>
   </table>
-  <table name="syspolicy_system_health_state" category="Policy-BasedManagement" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syspolicy-system-health-state-transact-sql">
+  <table name="dbo.syspolicy_system_health_state" category="PolicyBasedManagement" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/syspolicy-system-health-state-transact-sql" database="msdb">
     <description>&lt;para&gt;&lt;strong&gt;syspolicy_system_health_state (Transact-SQL)&lt;/strong&gt;&lt;/para&gt;
 &lt;para&gt;&lt;strong&gt;Applies to:&lt;/strong&gt; √ SQL Server (all supported versions)&lt;/para&gt;
 &lt;para&gt;Displays one row for each Policy-Based Management policy and target query expression combination. Use the syspolicy_system_health_state view to programmatically check the policy health of the server. The following table describes the columns in the syspolicy_system_health_state view.&lt;/para&gt;</description>

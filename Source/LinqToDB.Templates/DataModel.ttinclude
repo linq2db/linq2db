@@ -29,6 +29,7 @@ public string   OneToManyAssociationType      = "IEnumerable<{0}>";
 
 public bool     GenerateDatabaseInfo          = true;
 public bool     GenerateDatabaseName;
+public bool     GenerateDatabaseNameFromTable;
 public bool     GenerateConstructors          = true;
 public string   DefaultConfiguration;
 public bool     GenerateAssociations          = true;
