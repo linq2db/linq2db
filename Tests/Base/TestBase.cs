@@ -102,7 +102,8 @@ namespace Tests
 						ctx.Set(CustomTestContext.TRACE, trace);
 					}
 
-					trace.AppendLine($"{name}: {message}");
+					lock (trace)
+						trace.AppendLine($"{name}: {message}");
 
 					if (traceCount < TRACES_LIMIT || level == TraceLevel.Error)
 					{

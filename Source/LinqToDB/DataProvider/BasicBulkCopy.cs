@@ -352,7 +352,11 @@ namespace LinqToDB.DataProvider
 			int                                       maxParameters,
 			int                                       maxSqlLength)
 		{
-			var adjustedBatchSize = helper.Options.UseParameters ?  Math.Min(helper.BatchSize, helper.Options.MaxParametersForBatch.GetValueOrDefault(maxParameters) / helper.Columns.Length): helper.BatchSize;
+			var adjustedBatchSize = helper.Options.UseParameters
+				? Math.Min(helper.BatchSize,
+					helper.Options.MaxParametersForBatch.GetValueOrDefault(maxParameters) / helper.Columns.Length)
+				: helper.BatchSize;
+
 			prepFunction(helper);
 
 			foreach (var item in source)
