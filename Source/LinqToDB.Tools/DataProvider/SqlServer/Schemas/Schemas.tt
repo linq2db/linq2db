@@ -29,10 +29,8 @@
 
 	LoadSqlServerMetadata(".", "master", SqlServerVersion.v2012);
 
-	GetTable("sys.endpoint_webmethods").DataContextPropertyName = "EndpointWebMethods";
-	GetTable("sys.endpoint_webmethods").TypeName                = "EndpointWebMethod";
-	GetTable("sys.events"). TypeName                            = "Event";
-	GetTable("sys.objects").TypeName                            = "Object";
+	GetTable("sys.events"). TypeName = "Event";
+	GetTable("sys.objects").TypeName = "Object";
 
 	foreach (var table in Tables.Values)
 	{
@@ -41,17 +39,85 @@
 			new { TablePref = "syspolicy_",    TypePref = "Syspolicy"    },
 			new { TablePref = "sysmail_",      TypePref = "Sysmail"      },
 			new { TablePref = "syscollector_", TypePref = "Syscollector" },
+			new { TablePref = "pdw_",          TypePref = "Pdw"          },
 		})
 		if (table.TableName.StartsWith(pref.TablePref))
 		{
 			table.DataContextPropertyName = table.DataContextPropertyName.Replace(pref.TypePref, "");
-			table.TypeName                = table.TypeName.Replace(pref.TypePref, "");
+			table.TypeName                = table.TypeName.               Replace(pref.TypePref, "");
 		}
+
+		if (table.TableSchema.GroupName == "Compatibility" && table.TableName.StartsWith("sys"))
+		{
+			table.DataContextPropertyName = ToUpper(0, table.DataContextPropertyName.Substring(3, table.DataContextPropertyName.Length - 3));
+			table.TypeName                = ToUpper(0, table.TypeName.               Substring(3, table.TypeName.               Length - 3));
+		}
+
+		foreach (var suff in new[]
+		{
+			"Object",      "Objects",
+			"File",        "Files",
+			"Info",        "Infoes",
+			"DBUser",      "DBUsers",
+			"Config",      "Configs",
+			"Group",       "Groups",
+			"Key",         "Keys",
+			"TextCatalog", "TextCatalogs",
+			"Login",       "Logins",
+			"Login",       "Logins",
+			"WebMethod",   "WebMethods",
+		})
+		if (table.DataContextPropertyName.EndsWith(suff.ToLower()))
+		{
+			table.DataContextPropertyName = table.DataContextPropertyName.Substring(0, table.DataContextPropertyName.Length - suff.Length) + suff;
+		}
+		else if (table.TypeName.EndsWith(suff.ToLower()))
+		{
+			table.TypeName = table.TypeName.Substring(0, table.TypeName.Length - suff.Length) + suff;
+		}
+
+		if (table.TypeName == "Databas") table.TypeName = "Database";
+
+		var uSuff = new[]
+		{
+			"ID", "DHCP", "IP", "SID", "MB"
+		};
+
+		var cSuff = new[]
+		{
+			"IPAddress", "DTULimit", "IORequest", "IOBytesRead", "IOBytesWritten", "HoBTID", "MSShipped",
+			"FileID", "GroupID", "MaxSize", "FileName", "DbID", "BucketID", "ObjID", "ObjType", "DbIDExec",
+			"RefCounts", "UseCounts", "PagesUsed", "LangID", "DateFormat", "ExecTime", "LastTime", "LastReads",
+			"LastWrites", "Bytes", "CSID", "Definition", "XType", "TypeStat", "XUserType", "XPrec", "XScale",
+			"XOffset", "BitPos", "ColStat", "CDefault", "ColorDer", "AutoVal", "CollationID", "UserType",
+			"PrintFmt", "IsComputed", "IsOutParam", "IsNullable", "CText", "TextType", "DepID", "Number",
+			"SiteID", "ResultObj", "ReadObj", "Policy", "FKeyID", "RKeyID", "FKey", "RKey", "KeyNo", "FTCatID",
+			"MinLen", "KeyCnt", "RowCnt", "DPages"
+		};
 
 		foreach (var col in table.Columns.Values)
 		{
-			if (col.ColumnName.EndsWith("_id"))
-				col.MemberName = col.MemberName.Substring(0, col.MemberName.Length - 2) + "ID";
+			foreach (var suff in uSuff)
+				if (col.ColumnName == suff.ToLower() || col.ColumnName.EndsWith("_" + suff.ToLower()))
+					col.MemberName = col.MemberName.Substring(0, col.MemberName.Length - suff.Length) + suff;
+
+			foreach (var suff in cSuff)
+				if (col.MemberName.ToLower().EndsWith(suff.ToLower()))
+					col.MemberName = col.MemberName.Substring(0, col.MemberName.Length - suff.Length) + suff;
+
+			if (col.MemberName == "@class")    col.MemberName = "Class";
+			if (col.MemberName == "Uid")       col.MemberName = "UID";
+			if (col.MemberName == "Setopts")   col.MemberName = "SetOptions";
+			if (col.MemberName == "Colid")     col.MemberName = "ColumnID";
+			if (col.MemberName == "Constid")   col.MemberName = "ConstraintID";
+			if (col.MemberName == "Type")      col.MemberName = "TypeColumn";
+			if (col.MemberName == "Cmptlevel") col.MemberName = "CompatibilityLevel";
+			if (col.MemberName == "Deptype")   col.MemberName = "DepType";
+			if (col.MemberName == "Selall")    col.MemberName = "SelectAll";
+			if (col.MemberName == "Cntrltype") col.MemberName = "ControllerType";
+			if (col.MemberName == "Phyname")   col.MemberName = "PhysicalName";
+			if (col.MemberName == "GroupName") col.MemberName = "GroupName";
+			if (col.MemberName == "Indid")     col.MemberName = "IndexID";
 		}
 	}
 
@@ -92,6 +158,11 @@
 		;
 #>
 <#+
+string ToUpper(int pos, string str)
+{
+	return str.Substring(0, pos) + char.ToUpper(str[pos]) + str.Substring(pos + 1);
+}
+
 DatabaseSchema LoadSystemDatabaseSchema(DataConnection dataConnection, GetSchemaOptions schemaOptions)
 {
 	var xmlFile = Path.Combine(Path.GetDirectoryName(Host.TemplateFile)!, "Schemas.xml");
