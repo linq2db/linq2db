@@ -14,6 +14,7 @@ namespace Tests.Model
 		[Column(DataType = DataType.Int16, Configuration = ProviderName.Oracle)]
 		public bool      BoolValue;
 		[Column(DataType = DataType.Char, Length = 36, Configuration = ProviderName.Informix)]
+		[Column(DataType = DataType.Char, Length = 36, Configuration = ProviderName.NitrosBase)]
 		public Guid      GuidValue;
 		public Binary?   BinaryValue;
 		public short     SmallIntValue;
@@ -87,6 +88,7 @@ namespace Tests.Model
 		[Column(DataType = DataType.Int16, Configuration = ProviderName.Oracle)]
 		[Column]                                        public bool?     BoolValue;
 		[Column(DataType = DataType.Char, Length = 36, Configuration = ProviderName.Informix)]
+		[Column(DataType = DataType.Char, Length = 36, Configuration = ProviderName.NitrosBase)]
 		[Column]                                        public Guid?     GuidValue;
 		[Column]                                        public short?    SmallIntValue;
 		[Column]                                        public int?      IntValue;

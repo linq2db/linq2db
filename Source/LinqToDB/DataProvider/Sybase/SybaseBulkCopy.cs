@@ -195,20 +195,20 @@ namespace LinqToDB.DataProvider.Sybase
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 		{
-			return MultipleRowsCopy2(table, options, source, "");
+			return MultipleRowsCopy2(table, options, source, null);
 		}
 
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			return MultipleRowsCopy2Async(table, options, source, "", cancellationToken);
+			return MultipleRowsCopy2Async(table, options, source, null, cancellationToken);
 		}
 
 #if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			return MultipleRowsCopy2Async(table, options, source, "", cancellationToken);
+			return MultipleRowsCopy2Async(table, options, source, null, cancellationToken);
 		}
 #endif
 	}
