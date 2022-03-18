@@ -1476,7 +1476,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwColumnDistributionProperties")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -1811,7 +1811,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwIndexMappings")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -2024,7 +2024,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwMaterializedViewColumnDistributionProperties")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -2057,7 +2057,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwMaterializedViewDistributionProperties")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -2087,7 +2087,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwMaterializedViewMappings")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -2154,7 +2154,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// 1 = Column is a declared ROWGUIDCOL.<br/>
 			/// Range: Always 0.
 			/// </summary>
-			[Column("is_rowguidcol"),         NotNull] public bool   IsRowguidcol       { get; set; } // bit
+			[Column("is_rowguidcol"),         NotNull] public bool   IsRowGuidCol       { get; set; } // bit
 			/// <summary>
 			/// 1 = Column has identity values.<br/>
 			/// Range: Always 0.
@@ -2229,7 +2229,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwNodesColumns")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -2349,7 +2349,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwNodesColumnStoreRowGroups")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -2537,7 +2537,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwNodesIndexes")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -2594,7 +2594,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwNodesPartitions")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -2694,7 +2694,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Maximum column ID used by this table.
 			/// </summary>
-			[Column("max_column_id_used"),           NotNull] public int      MaxColumnIdUsed          { get; set; } // int
+			[Column("max_column_id_used"),           NotNull] public int      MaxColumnIDUsed          { get; set; } // int
 			/// <summary>
 			/// Table is locked on bulk load.<br/>
 			/// Range: TBD
@@ -2764,7 +2764,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwNodesTables")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -2796,7 +2796,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwPermanentTableMappings")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -2826,7 +2826,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwReplicatedTableCacheState")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -2860,7 +2860,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwTableDistributionProperties")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -2889,7 +2889,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="PdwTableMappings")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -3053,7 +3053,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ChangeTrackingTables")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -3342,6 +3342,16 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			public ITable<Device>          Devices          { get { return _dataContext.GetTable<Device>(); } }
 			/// <summary>
+			/// <para><strong>sys.systypes (Transact-SQL)</strong></para>
+			/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions) √ Azure SQL Database √ Azure SQL Managed Instance √ Azure Synapse Analytics √ Analytics Platform System (PDW)</para>
+			/// <para>Returns one row for each system-supplied and each user-defined data type defined in the database.<br/>
+			/// <note type='important'><br/>
+			/// This SQL Server 2000 system table is included as a view for backward compatibility. We  recommend that you use the current SQL Server system views instead. To find the equivalent system view or views, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/relational-databases/system-tables/mapping-system-tables-to-system-views-transact-sql'>Mapping System Tables to System Views (Transact-SQL)</a>. This feature will be removed in a future version of Microsoft SQL Server. Avoid using this feature in new development work, and plan to modify applications that currently use this feature.<br/>
+			/// </note></para><br/>
+			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-compatibility-views/sys-systypes-transact-sql'>sys.systypes</a>.</para>
+			/// </summary>
+			public ITable<ETable>          Types            { get { return _dataContext.GetTable<ETable>(); } }
+			/// <summary>
 			/// <para><strong>sys.sysfiles (Transact-SQL)</strong></para>
 			/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)</para>
 			/// <para>Contains one row for each file in a database.<br/>
@@ -3543,16 +3553,6 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-compatibility-views/sys-sysservers-transact-sql'>sys.sysservers</a>.</para>
 			/// </summary>
 			public ITable<Server>          Servers          { get { return _dataContext.GetTable<Server>(); } }
-			/// <summary>
-			/// <para><strong>sys.systypes (Transact-SQL)</strong></para>
-			/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions) √ Azure SQL Database √ Azure SQL Managed Instance √ Azure Synapse Analytics √ Analytics Platform System (PDW)</para>
-			/// <para>Returns one row for each system-supplied and each user-defined data type defined in the database.<br/>
-			/// <note type='important'><br/>
-			/// This SQL Server 2000 system table is included as a view for backward compatibility. We  recommend that you use the current SQL Server system views instead. To find the equivalent system view or views, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/relational-databases/system-tables/mapping-system-tables-to-system-views-transact-sql'>Mapping System Tables to System Views (Transact-SQL)</a>. This feature will be removed in a future version of Microsoft SQL Server. Avoid using this feature in new development work, and plan to modify applications that currently use this feature.<br/>
-			/// </note></para><br/>
-			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-compatibility-views/sys-systypes-transact-sql'>sys.systypes</a>.</para>
-			/// </summary>
-			public ITable<Type>            Types            { get { return _dataContext.GetTable<Type>(); } }
 			/// <summary>
 			/// <para><strong>sys.sysusers (Transact-SQL)</strong></para>
 			/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions) √ Azure SQL Managed Instance √ Azure Synapse Analytics √ Analytics Platform System (PDW)</para>
@@ -3942,7 +3942,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("language"),      Nullable] public short?  Language   { get; set; } // smallint
 			/// <summary>
-			/// Indicates whether the procedure definition is obfuscated.<br/><br/> 0 = Not obfuscated<br/><br/> 1 = Obfuscated<br/><br/> <strong>\*\* Important \*\</strong>* To obfuscate stored procedure definitions, use CREATE PROCEDURE with the ENCRYPTION keyword.
+			/// Indicates whether the procedure definition is obfuscated.<br/><br/> 0 = Not obfuscated<br/><br/> 1 = Obfuscated<br/><br/> <strong> Important \*\</strong>* To obfuscate stored procedure definitions, use CREATE PROCEDURE with the ENCRYPTION keyword.
 			/// </summary>
 			[Column("encrypted"),  NotNull    ] public bool    Encrypted  { get; set; } // bit
 			/// <summary>
@@ -4220,6 +4220,100 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		}
 
 		/// <summary>
+		/// <para><strong>sys.systypes (Transact-SQL)</strong></para>
+		/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions) √ Azure SQL Database √ Azure SQL Managed Instance √ Azure Synapse Analytics √ Analytics Platform System (PDW)</para>
+		/// <para>Returns one row for each system-supplied and each user-defined data type defined in the database.<br/>
+		/// <note type='important'><br/>
+		/// This SQL Server 2000 system table is included as a view for backward compatibility. We  recommend that you use the current SQL Server system views instead. To find the equivalent system view or views, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/relational-databases/system-tables/mapping-system-tables-to-system-views-transact-sql'>Mapping System Tables to System Views (Transact-SQL)</a>. This feature will be removed in a future version of Microsoft SQL Server. Avoid using this feature in new development work, and plan to modify applications that currently use this feature.<br/>
+		/// </note></para><br/>
+		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-compatibility-views/sys-systypes-transact-sql'>sys.systypes</a>.</para>
+		/// </summary>
+		[Table(Schema="sys", Name="systypes", IsView=true)]
+		public partial class ETable
+		{
+			/// <summary>
+			/// Data type name.
+			/// </summary>
+			[Column("name"),        NotNull    ] public string  Name        { get; set; } = null!; // sysname
+			/// <summary>
+			/// Physical storage type.
+			/// </summary>
+			[Column("xtype"),       NotNull    ] public byte    XType       { get; set; } // tinyint
+			/// <summary>
+			/// Identified for informational purposes only. Not supported. Future compatibility is not guaranteed.
+			/// </summary>
+			[Column("status"),         Nullable] public byte?   Status      { get; set; } // tinyint
+			/// <summary>
+			/// Extended user type. Overflows or returns NULL if the number of data types exceeds 32,767.
+			/// </summary>
+			[Column("xusertype"),      Nullable] public short?  XUserType   { get; set; } // smallint
+			/// <summary>
+			/// Physical length of the data type.
+			/// </summary>
+			[Column("length"),      NotNull    ] public short   Length      { get; set; } // smallint
+			/// <summary>
+			/// Internal precision, as used by the server. Not to be used in queries.
+			/// </summary>
+			[Column("xprec"),       NotNull    ] public byte    XPrec       { get; set; } // tinyint
+			/// <summary>
+			/// Internal scale, as used by the server. Not to be used in queries.
+			/// </summary>
+			[Column("xscale"),      NotNull    ] public byte    XScale      { get; set; } // tinyint
+			/// <summary>
+			/// ID of the stored procedure that contains integrity checks for this data type.
+			/// </summary>
+			[Column("tdefault"),    NotNull    ] public int     Tdefault    { get; set; } // int
+			/// <summary>
+			/// ID of the stored procedure that contains integrity checks for this data type.
+			/// </summary>
+			[Column("domain"),      NotNull    ] public int     Domain      { get; set; } // int
+			/// <summary>
+			/// Schema ID of the owner of the type.<br/><br/> For databases upgraded from an earlier version of SQL Server, the schema ID is equal to the user ID of the owner.<br/><br/> <strong> Important \*\</strong>* If you use any of the following SQL Server DDL statements, you must use the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-types-transact-sql'>sys.types</a> catalog view instead of <strong>sys.systypes</strong>.<br/><br/> ALTER AUTHORIZATION ON TYPE<br/><br/> CREATE TYPE<br/><br/> Overflows or returns NULL if the number of users and roles exceeds 32,767.
+			/// </summary>
+			[Column("uid"),            Nullable] public short?  UID         { get; set; } // smallint
+			/// <summary>
+			/// Identified for informational purposes only. Not supported. Future compatibility is not guaranteed.
+			/// </summary>
+			[Column("reserved"),       Nullable] public short?  Reserved    { get; set; } // smallint
+			/// <summary>
+			/// If character based, <strong>collationid</strong> is the id of the collation of the current database; otherwise, it is NULL.
+			/// </summary>
+			[Column("collationid"),    Nullable] public int?    CollationID { get; set; } // int
+			/// <summary>
+			/// User type ID. Overflows or returns NULL if the number of data types exceeds 32,767.
+			/// </summary>
+			[Column("usertype"),       Nullable] public short?  UserType    { get; set; } // smallint
+			/// <summary>
+			/// Variable-length data type.<br/><br/> 1 = True<br/><br/> 0 = False
+			/// </summary>
+			[Column("variable"),    NotNull    ] public bool    Variable    { get; set; } // bit
+			/// <summary>
+			/// Indicates the default nullability for this data type. This default value is overridden by if nullability is specified by using <a href='https://docs.microsoft.com/en-us/sql/t-sql/statements/create-table-transact-sql'>CREATE TABLE</a> or <a href='https://docs.microsoft.com/en-us/sql/t-sql/statements/alter-table-transact-sql'>ALTER TABLE</a>.
+			/// </summary>
+			[Column("allownulls"),     Nullable] public bool?   Allownulls  { get; set; } // bit
+			/// <summary>
+			/// Physical storage data type.
+			/// </summary>
+			[Column("type"),        NotNull    ] public byte    TypeColumn  { get; set; } // tinyint
+			/// <summary>
+			/// Identified for informational purposes only. Not supported. Future compatibility is not guaranteed.
+			/// </summary>
+			[Column("printfmt"),       Nullable] public string? PrintFmt    { get; set; } // varchar(255)
+			/// <summary>
+			/// Level of precision for this data type.<br/><br/> -1 = <strong>xml</strong> or large value types.
+			/// </summary>
+			[Column("prec"),           Nullable] public short?  Prec        { get; set; } // smallint
+			/// <summary>
+			/// Scale for this data type, based on precision.<br/><br/> NULL = Data type is nonnumeric.
+			/// </summary>
+			[Column("scale"),          Nullable] public byte?   Scale       { get; set; } // tinyint
+			/// <summary>
+			/// If character based, <strong>collation</strong> is the collation of the current database; otherwise, it is NULL.
+			/// </summary>
+			[Column("collation"),      Nullable] public string? Collation   { get; set; } // sysname
+		}
+
+		/// <summary>
 		/// <para><strong>sys.sysfiles (Transact-SQL)</strong></para>
 		/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)</para>
 		/// <para>Contains one row for each file in a database.<br/>
@@ -4296,7 +4390,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Name of the file group.
 			/// </summary>
-			[Column("groupname"),   NotNull    ] public string Groupname   { get; set; } = null!; // sysname
+			[Column("groupname"),   NotNull    ] public string GroupName   { get; set; } = null!; // sysname
 		}
 
 		/// <summary>
@@ -4430,7 +4524,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Counts the total number of inserted, deleted, or updated rows since the last time statistics were updated for the table.<br/><br/> 0 = Index is partitioned when <strong>indid</strong> > 1.<br/><br/> 0 = Table is partitioned when <strong>indid</strong> is 0 or 1.<br/><br/> In SQL Server 2005 (9.x) and later, <strong>rowmodctr</strong> is not fully compatible with earlier versions. For more information, see Remarks.
 			/// </summary>
-			[Column("rowmodctr"),    Nullable] public int?    Rowmodctr      { get; set; } // int
+			[Column("rowmodctr"),    Nullable] public int?    RowModCtr      { get; set; } // int
 			/// <summary>
 			/// Returns 0.<br/><br/> Identified for informational purposes only. Not supported. Future compatibility is not guaranteed.
 			/// </summary>
@@ -4442,11 +4536,11 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Maximum size of a row
 			/// </summary>
-			[Column("xmaxlen"),      Nullable] public short?  Xmaxlen        { get; set; } // smallint
+			[Column("xmaxlen"),      Nullable] public short?  XMaxLen        { get; set; } // smallint
 			/// <summary>
 			/// Maximum size of a nonleaf index row.<br/><br/> In SQL Server 2005 (9.x) and later, <strong>maxirow</strong> is not fully compatible with earlier versions.
 			/// </summary>
-			[Column("maxirow"),      Nullable] public short?  Maxirow        { get; set; } // smallint
+			[Column("maxirow"),      Nullable] public short?  MaxiRow        { get; set; } // smallint
 			/// <summary>
 			/// Original fill factor value used when the index was created. This value is not maintained; however, it can be helpful if you have to re-create an index and do not remember the fill factor value that was used.
 			/// </summary>
@@ -4466,7 +4560,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Index implementation flag.<br/><br/> Returns 0.<br/><br/> Identified for informational purposes only. Not supported. Future compatibility is not guaranteed.
 			/// </summary>
-			[Column("impid"),        Nullable] public short?  Impid          { get; set; } // smallint
+			[Column("impid"),        Nullable] public short?  ImpID          { get; set; } // smallint
 			/// <summary>
 			/// Used to constrain the considered lock granularities for an index. For example, to minimize locking cost, a lookup table that is essentially read-only could be set up to do only table-level locking.
 			/// </summary>
@@ -4474,7 +4568,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Returns 0.<br/><br/> Identified for informational purposes only. Not supported. Future compatibility is not guaranteed.
 			/// </summary>
-			[Column("pgmodctr"),     Nullable] public int?    Pgmodctr       { get; set; } // int
+			[Column("pgmodctr"),     Nullable] public int?    PgModCtr       { get; set; } // int
 			/// <summary>
 			/// List of the column IDs of the columns that make up the index key.<br/><br/> Returns NULL.<br/><br/> To display the index key columns, use <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-compatibility-views/sys-sysindexkeys-transact-sql'>sys.sysindexkeys</a>.
 			/// </summary>
@@ -4486,11 +4580,11 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Statistics binary large object (BLOB).<br/><br/> Returns NULL.
 			/// </summary>
-			[Column("statblob"),     Nullable] public byte[]? Statblob       { get; set; } // image
+			[Column("statblob"),     Nullable] public byte[]? StatBlob       { get; set; } // image
 			/// <summary>
 			/// Identified for informational purposes only. Not supported. Future compatibility is not guaranteed.
 			/// </summary>
-			[Column("maxlen"),       Nullable] public int?    Maxlen         { get; set; } // int
+			[Column("maxlen"),       Nullable] public int?    MaxLen         { get; set; } // int
 			/// <summary>
 			/// Data-level row count based on <strong>indid</strong> = 0 and <strong>indid</strong> = 1, and the value is repeated for <strong>indid</strong> >1.
 			/// </summary>
@@ -4539,187 +4633,47 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Unique language ID.
 			/// </summary>
-			[Column("langid"),                NotNull    ] public short   LangID             { get; set; } // smallint
+			[Column("langid"),      NotNull    ] public short   LangID      { get; set; } // smallint
 			/// <summary>
 			/// Date order, for example, DMY.
 			/// </summary>
-			[Column("dateformat"),            NotNull    ] public string  DateFormat         { get; set; } = null!; // nchar(3)
+			[Column("dateformat"),  NotNull    ] public string  DateFormat  { get; set; } = null!; // nchar(3)
 			/// <summary>
 			/// First day of the week: 1 for Monday, 2 for Tuesday, and so on through 7 for Sunday.
 			/// </summary>
-			[Column("datefirst"),             NotNull    ] public byte    Datefirst          { get; set; } // tinyint
+			[Column("datefirst"),   NotNull    ] public byte    Datefirst   { get; set; } // tinyint
 			/// <summary>
 			/// Reserved for system use.
 			/// </summary>
-			[Column("upgrade"),                  Nullable] public int?    Upgrade            { get; set; } // int
+			[Column("upgrade"),        Nullable] public int?    Upgrade     { get; set; } // int
 			/// <summary>
 			/// Official language name, for example, Français.
 			/// </summary>
-			[Column("name"),                  NotNull    ] public string  Name               { get; set; } = null!; // sysname
+			[Column("name"),        NotNull    ] public string  Name        { get; set; } = null!; // sysname
 			/// <summary>
 			/// Alternative language name, for example, French.
 			/// </summary>
-			[Column("alias"),                 NotNull    ] public string  Alias              { get; set; } = null!; // sysname
+			[Column("alias"),       NotNull    ] public string  Alias       { get; set; } = null!; // sysname
 			/// <summary>
 			/// Comma-separated list of full-length month names in order from January through December, with each name having up to 20 characters.
 			/// </summary>
-			[Column("months"),                   Nullable] public string? Months             { get; set; } // nvarchar(372)
+			[Column("months"),         Nullable] public string? Months      { get; set; } // nvarchar(372)
 			/// <summary>
 			/// Comma-separated list of short-month names in order from January through December, with each name having up to 9 characters.
 			/// </summary>
-			[Column("shortmonths"),              Nullable] public string? Shortmonths        { get; set; } // nvarchar(132)
+			[Column("shortmonths"),    Nullable] public string? ShortMonths { get; set; } // nvarchar(132)
 			/// <summary>
 			/// Comma-separated list of day names in order from Monday through Sunday, with each name having up to 30 characters.
 			/// </summary>
-			[Column("days"),                     Nullable] public string? Days               { get; set; } // nvarchar(217)
+			[Column("days"),           Nullable] public string? Days        { get; set; } // nvarchar(217)
 			/// <summary>
 			/// Microsoft Windows locale ID for the language.
 			/// </summary>
-			[Column("lcid"),                  NotNull    ] public int     Lcid               { get; set; } // int
+			[Column("lcid"),        NotNull    ] public int     Lcid        { get; set; } // int
 			/// <summary>
 			/// Database Engine message group ID.
 			/// </summary>
-			[Column("msglangid"),             NotNull    ] public short   MsgLangID          { get; set; } // smallint
-			/// <summary>
-			/// Database Engine message group ID
-			/// </summary>
-			[Column("Name in English"),       NotNull    ] public object  NameInEnglish      { get; set; } = null!; // Windows LCID
-			/// <summary>
-			/// -----------------------------------------
-			/// </summary>
-			[Column("---------------------"), NotNull    ] public object  _2                 { get; set; } = null!; // ------------------
-			/// <summary>
-			/// 1033
-			/// </summary>
-			[Column(),                        NotNull    ] public object  English            { get; set; } = null!; // 1033
-			/// <summary>
-			/// 1031
-			/// </summary>
-			[Column(),                        NotNull    ] public object  German             { get; set; } = null!; // 1031
-			/// <summary>
-			/// 1036
-			/// </summary>
-			[Column(),                        NotNull    ] public object  French             { get; set; } = null!; // 1036
-			/// <summary>
-			/// 1041
-			/// </summary>
-			[Column(),                        NotNull    ] public object  Japanese           { get; set; } = null!; // 1041
-			/// <summary>
-			/// 1030
-			/// </summary>
-			[Column(),                        NotNull    ] public object  Danish             { get; set; } = null!; // 1030
-			/// <summary>
-			/// 3082
-			/// </summary>
-			[Column(),                        NotNull    ] public object  Spanish            { get; set; } = null!; // 3082
-			/// <summary>
-			/// 1040
-			/// </summary>
-			[Column(),                        NotNull    ] public object  Italian            { get; set; } = null!; // 1040
-			/// <summary>
-			/// 1043
-			/// </summary>
-			[Column(),                        NotNull    ] public object  Dutch              { get; set; } = null!; // 1043
-			/// <summary>
-			/// 2068
-			/// </summary>
-			[Column(),                        NotNull    ] public object  Norwegian          { get; set; } = null!; // 2068
-			/// <summary>
-			/// 2070
-			/// </summary>
-			[Column(),                        NotNull    ] public object  Portuguese         { get; set; } = null!; // 2070
-			/// <summary>
-			/// 1035
-			/// </summary>
-			[Column(),                        NotNull    ] public object  Finnish            { get; set; } = null!; // 1035
-			/// <summary>
-			/// 1053
-			/// </summary>
-			[Column(),                        NotNull    ] public object  Swedish            { get; set; } = null!; // 1053
-			/// <summary>
-			/// 1029
-			/// </summary>
-			[Column(),                        NotNull    ] public object  Czech              { get; set; } = null!; // 1029
-			/// <summary>
-			/// 1038
-			/// </summary>
-			[Column(),                        NotNull    ] public object  Hungarian          { get; set; } = null!; // 1038
-			/// <summary>
-			/// 1045
-			/// </summary>
-			[Column(),                        NotNull    ] public object  Polish             { get; set; } = null!; // 1045
-			/// <summary>
-			/// 1048
-			/// </summary>
-			[Column(),                        NotNull    ] public object  Romanian           { get; set; } = null!; // 1048
-			/// <summary>
-			/// 1050
-			/// </summary>
-			[Column(),                        NotNull    ] public object  Croatian           { get; set; } = null!; // 1050
-			/// <summary>
-			/// 1051
-			/// </summary>
-			[Column(),                        NotNull    ] public object  Slovak             { get; set; } = null!; // 1051
-			/// <summary>
-			/// 1060
-			/// </summary>
-			[Column(),                        NotNull    ] public object  Slovene            { get; set; } = null!; // 1060
-			/// <summary>
-			/// 1032
-			/// </summary>
-			[Column(),                        NotNull    ] public object  Greek              { get; set; } = null!; // 1032
-			/// <summary>
-			/// 1026
-			/// </summary>
-			[Column(),                        NotNull    ] public object  Bulgarian          { get; set; } = null!; // 1026
-			/// <summary>
-			/// 1049
-			/// </summary>
-			[Column(),                        NotNull    ] public object  Russian            { get; set; } = null!; // 1049
-			/// <summary>
-			/// 1055
-			/// </summary>
-			[Column(),                        NotNull    ] public object  Turkish            { get; set; } = null!; // 1055
-			/// <summary>
-			/// 1033
-			/// </summary>
-			[Column("British English"),       NotNull    ] public object  BritishEnglish     { get; set; } = null!; // 2057
-			/// <summary>
-			/// 1061
-			/// </summary>
-			[Column(),                        NotNull    ] public object  Estonian           { get; set; } = null!; // 1061
-			/// <summary>
-			/// 1062
-			/// </summary>
-			[Column(),                        NotNull    ] public object  Latvian            { get; set; } = null!; // 1062
-			/// <summary>
-			/// 1063
-			/// </summary>
-			[Column(),                        NotNull    ] public object  Lithuanian         { get; set; } = null!; // 1063
-			/// <summary>
-			/// 1046
-			/// </summary>
-			[Column("Portuguese (Brazil)"),   NotNull    ] public object  PortugueseBrazil   { get; set; } = null!; // 1046
-			/// <summary>
-			/// 1028
-			/// </summary>
-			[Column("Traditional Chinese"),   NotNull    ] public object  TraditionalChinese { get; set; } = null!; // 1028
-			/// <summary>
-			/// 1042
-			/// </summary>
-			[Column(),                        NotNull    ] public object  Korean             { get; set; } = null!; // 1042
-			/// <summary>
-			/// 2052
-			/// </summary>
-			[Column("Simplified Chinese"),    NotNull    ] public object  SimplifiedChinese  { get; set; } = null!; // 2052
-			/// <summary>
-			/// 1025
-			/// </summary>
-			[Column(),                        NotNull    ] public object  Arabic             { get; set; } = null!; // 1025
-			/// <summary>
-			/// 1054
-			/// </summary>
-			[Column(),                        NotNull    ] public object  Thai               { get; set; } = null!; // 1054
+			[Column("msglangid"),   NotNull    ] public short   MsgLangID   { get; set; } // smallint
 		}
 
 		/// <summary>
@@ -4740,7 +4694,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Textual description of a lock resource. Contains a part of the resource name.
 			/// </summary>
-			[Column("rsc_text"),           NotNull    ] public string RsCText           { get; set; } = null!; // nchar(32)
+			[Column("rsc_text"),           NotNull    ] public string RscText           { get; set; } = null!; // nchar(32)
 			/// <summary>
 			/// Binary lock resource. Contains the actual lock resource that is contained in the lock manager. This column is included for tools that know about the lock resource format for generating their own formatted lock resource, and for performing self joins on <strong>syslockinfo</strong>.
 			/// </summary>
@@ -4871,7 +4825,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Name of the default database of the user when a connection is established.
 			/// </summary>
-			[Column("dbname"),           Nullable] public string?  Dbname        { get; set; } // sysname
+			[Column("dbname"),           Nullable] public string?  DbName        { get; set; } // sysname
 			/// <summary>
 			/// Returns NULL.
 			/// </summary>
@@ -4903,27 +4857,27 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// 1 = Login is a member of the <strong>sysadmin</strong> server role.
 			/// </summary>
-			[Column("sysadmin"),         Nullable] public int?     Sysadmin      { get; set; } // int
+			[Column("sysadmin"),         Nullable] public int?     SysAdmin      { get; set; } // int
 			/// <summary>
 			/// 1 = Login is a member of the <strong>securityadmin</strong> server role.
 			/// </summary>
-			[Column("securityadmin"),    Nullable] public int?     Securityadmin { get; set; } // int
+			[Column("securityadmin"),    Nullable] public int?     SecurityAdmin { get; set; } // int
 			/// <summary>
 			/// 1 = Login is a member of the <strong>serveradmin</strong> fixed server role.
 			/// </summary>
-			[Column("serveradmin"),      Nullable] public int?     Serveradmin   { get; set; } // int
+			[Column("serveradmin"),      Nullable] public int?     ServerAdmin   { get; set; } // int
 			/// <summary>
 			/// 1 = Login is a member of the <strong>setupadmin</strong> fixed server role.
 			/// </summary>
-			[Column("setupadmin"),       Nullable] public int?     Setupadmin    { get; set; } // int
+			[Column("setupadmin"),       Nullable] public int?     SetupAdmin    { get; set; } // int
 			/// <summary>
 			/// 1 = Login is a member of the <strong>processadmin</strong> fixed server role.
 			/// </summary>
-			[Column("processadmin"),     Nullable] public int?     Processadmin  { get; set; } // int
+			[Column("processadmin"),     Nullable] public int?     ProcessAdmin  { get; set; } // int
 			/// <summary>
 			/// 1 = Login is a member of the <strong>diskadmin</strong> fixed server role.
 			/// </summary>
-			[Column("diskadmin"),        Nullable] public int?     Diskadmin     { get; set; } // int
+			[Column("diskadmin"),        Nullable] public int?     DiskAdmin     { get; set; } // int
 			/// <summary>
 			/// 1 = Login is a member of the <strong>dbcreator</strong> fixed server role.
 			/// </summary>
@@ -4931,7 +4885,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// 1 = Login is a member of the <strong>bulkadmin</strong> fixed server role.
 			/// </summary>
-			[Column("bulkadmin"),        Nullable] public int?     Bulkadmin     { get; set; } // int
+			[Column("bulkadmin"),        Nullable] public int?     BulkAdmin     { get; set; } // int
 			/// <summary>
 			/// Login name of the user. Provided for backward compatibility.
 			/// </summary>
@@ -5019,7 +4973,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("xtype"),            NotNull    ] public string   XType          { get; set; } = null!; // char(2)
 			/// <summary>
-			/// Schema ID of the owner of the object. For databases upgraded from an earlier version of SQL Server, the schema ID is equal to the user ID of the owner. Overflows or returns NULL if the number of users and roles exceeds 32,767.<br/><br/> <strong>\*\* Important \*\</strong>* If you use any of the following SQL Server DDL statements, you must use the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-objects-transact-sql'>sys.objects</a> catalog view instead of sys.sysobjects.<br/><br/> CREATE &amp;#124; ALTER &amp;#124; DROP USER<br/><br/> CREATE &amp;#124; ALTER &amp;#124; DROP ROLE<br/><br/> CREATE &amp;#124; ALTER &amp;#124; DROP APPLICATION ROLE<br/><br/> CREATE SCHEMA<br/><br/> ALTER AUTHORIZATION ON OBJECT
+			/// Schema ID of the owner of the object. For databases upgraded from an earlier version of SQL Server, the schema ID is equal to the user ID of the owner. Overflows or returns NULL if the number of users and roles exceeds 32,767.<br/><br/> <strong> Important \*\</strong>* If you use any of the following SQL Server DDL statements, you must use the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-objects-transact-sql'>sys.objects</a> catalog view instead of sys.sysobjects.<br/><br/> CREATE &amp;#124; ALTER &amp;#124; DROP USER<br/><br/> CREATE &amp;#124; ALTER &amp;#124; DROP ROLE<br/><br/> CREATE &amp;#124; ALTER &amp;#124; DROP APPLICATION ROLE<br/><br/> CREATE SCHEMA<br/><br/> ALTER AUTHORIZATION ON OBJECT
 			/// </summary>
 			[Column("uid"),                 Nullable] public short?   UID            { get; set; } // smallint
 			/// <summary>
@@ -5770,100 +5724,6 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		}
 
 		/// <summary>
-		/// <para><strong>sys.systypes (Transact-SQL)</strong></para>
-		/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions) √ Azure SQL Database √ Azure SQL Managed Instance √ Azure Synapse Analytics √ Analytics Platform System (PDW)</para>
-		/// <para>Returns one row for each system-supplied and each user-defined data type defined in the database.<br/>
-		/// <note type='important'><br/>
-		/// This SQL Server 2000 system table is included as a view for backward compatibility. We  recommend that you use the current SQL Server system views instead. To find the equivalent system view or views, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/relational-databases/system-tables/mapping-system-tables-to-system-views-transact-sql'>Mapping System Tables to System Views (Transact-SQL)</a>. This feature will be removed in a future version of Microsoft SQL Server. Avoid using this feature in new development work, and plan to modify applications that currently use this feature.<br/>
-		/// </note></para><br/>
-		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-compatibility-views/sys-systypes-transact-sql'>sys.systypes</a>.</para>
-		/// </summary>
-		[Table(Schema="sys", Name="systypes", IsView=true)]
-		public partial class Type
-		{
-			/// <summary>
-			/// Data type name.
-			/// </summary>
-			[Column("name"),        NotNull    ] public string  Name        { get; set; } = null!; // sysname
-			/// <summary>
-			/// Physical storage type.
-			/// </summary>
-			[Column("xtype"),       NotNull    ] public byte    XType       { get; set; } // tinyint
-			/// <summary>
-			/// Identified for informational purposes only. Not supported. Future compatibility is not guaranteed.
-			/// </summary>
-			[Column("status"),         Nullable] public byte?   Status      { get; set; } // tinyint
-			/// <summary>
-			/// Extended user type. Overflows or returns NULL if the number of data types exceeds 32,767.
-			/// </summary>
-			[Column("xusertype"),      Nullable] public short?  XUserType   { get; set; } // smallint
-			/// <summary>
-			/// Physical length of the data type.
-			/// </summary>
-			[Column("length"),      NotNull    ] public short   Length      { get; set; } // smallint
-			/// <summary>
-			/// Internal precision, as used by the server. Not to be used in queries.
-			/// </summary>
-			[Column("xprec"),       NotNull    ] public byte    XPrec       { get; set; } // tinyint
-			/// <summary>
-			/// Internal scale, as used by the server. Not to be used in queries.
-			/// </summary>
-			[Column("xscale"),      NotNull    ] public byte    XScale      { get; set; } // tinyint
-			/// <summary>
-			/// ID of the stored procedure that contains integrity checks for this data type.
-			/// </summary>
-			[Column("tdefault"),    NotNull    ] public int     Tdefault    { get; set; } // int
-			/// <summary>
-			/// ID of the stored procedure that contains integrity checks for this data type.
-			/// </summary>
-			[Column("domain"),      NotNull    ] public int     Domain      { get; set; } // int
-			/// <summary>
-			/// Schema ID of the owner of the type.<br/><br/> For databases upgraded from an earlier version of SQL Server, the schema ID is equal to the user ID of the owner.<br/><br/> <strong>\*\* Important \*\</strong>* If you use any of the following SQL Server DDL statements, you must use the <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-types-transact-sql'>sys.types</a> catalog view instead of <strong>sys.systypes</strong>.<br/><br/> ALTER AUTHORIZATION ON TYPE<br/><br/> CREATE TYPE<br/><br/> Overflows or returns NULL if the number of users and roles exceeds 32,767.
-			/// </summary>
-			[Column("uid"),            Nullable] public short?  UID         { get; set; } // smallint
-			/// <summary>
-			/// Identified for informational purposes only. Not supported. Future compatibility is not guaranteed.
-			/// </summary>
-			[Column("reserved"),       Nullable] public short?  Reserved    { get; set; } // smallint
-			/// <summary>
-			/// If character based, <strong>collationid</strong> is the id of the collation of the current database; otherwise, it is NULL.
-			/// </summary>
-			[Column("collationid"),    Nullable] public int?    CollationID { get; set; } // int
-			/// <summary>
-			/// User type ID. Overflows or returns NULL if the number of data types exceeds 32,767.
-			/// </summary>
-			[Column("usertype"),       Nullable] public short?  UserType    { get; set; } // smallint
-			/// <summary>
-			/// Variable-length data type.<br/><br/> 1 = True<br/><br/> 0 = False
-			/// </summary>
-			[Column("variable"),    NotNull    ] public bool    Variable    { get; set; } // bit
-			/// <summary>
-			/// Indicates the default nullability for this data type. This default value is overridden by if nullability is specified by using <a href='https://docs.microsoft.com/en-us/sql/t-sql/statements/create-table-transact-sql'>CREATE TABLE</a> or <a href='https://docs.microsoft.com/en-us/sql/t-sql/statements/alter-table-transact-sql'>ALTER TABLE</a>.
-			/// </summary>
-			[Column("allownulls"),     Nullable] public bool?   Allownulls  { get; set; } // bit
-			/// <summary>
-			/// Physical storage data type.
-			/// </summary>
-			[Column("type"),        NotNull    ] public byte    TypeColumn  { get; set; } // tinyint
-			/// <summary>
-			/// Identified for informational purposes only. Not supported. Future compatibility is not guaranteed.
-			/// </summary>
-			[Column("printfmt"),       Nullable] public string? PrintFmt    { get; set; } // varchar(255)
-			/// <summary>
-			/// Level of precision for this data type.<br/><br/> -1 = <strong>xml</strong> or large value types.
-			/// </summary>
-			[Column("prec"),           Nullable] public short?  Prec        { get; set; } // smallint
-			/// <summary>
-			/// Scale for this data type, based on precision.<br/><br/> NULL = Data type is nonnumeric.
-			/// </summary>
-			[Column("scale"),          Nullable] public byte?   Scale       { get; set; } // tinyint
-			/// <summary>
-			/// If character based, <strong>collation</strong> is the collation of the current database; otherwise, it is NULL.
-			/// </summary>
-			[Column("collation"),      Nullable] public string? Collation   { get; set; } // sysname
-		}
-
-		/// <summary>
 		/// <para><strong>sys.sysusers (Transact-SQL)</strong></para>
 		/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions) √ Azure SQL Managed Instance √ Azure Synapse Analytics √ Analytics Platform System (PDW)</para>
 		/// <para>Contains one row for each Microsoft Windows user, Windows group, Microsoft SQL Server user, or SQL Server role in the database.<br/>
@@ -5969,7 +5829,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			///  To see only messages with the failed status, use <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-faileditems-transact-sql'>sysmail_faileditems (Transact-SQL)</a>. To see only unsent messages, use <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-unsentitems-transact-sql'>sysmail_unsentitems (Transact-SQL)</a>. To see only messages that were sent, use <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-sentitems-transact-sql'>sysmail_sentitems (Transact-SQL)</a>.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-allitems-transact-sql'>dbo.sysmail_allitems</a>.</para>
 			/// </summary>
-			public ITable<Allitem>        Allitems        { get { return _dataContext.GetTable<Allitem>(); } }
+			public ITable<AllItem>        AllItems        { get { return _dataContext.GetTable<AllItem>(); } }
 			/// <summary>
 			/// <para><strong>sysmail_event_log (Transact-SQL)</strong></para>
 			/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)</para>
@@ -5984,14 +5844,14 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			///  To see all messages processed by Database Mail, use <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-allitems-transact-sql'>sysmail_allitems (Transact-SQL)</a>. To see only unsent messages, use <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-unsentitems-transact-sql'>sysmail_unsentitems (Transact-SQL)</a>. To see only messages that were sent, use <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-sentitems-transact-sql'>sysmail_sentitems (Transact-SQL)</a>. To view e-mail attachments, use <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-mailattachments-transact-sql'>sysmail_mailattachments (Transact-SQL)</a>.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-faileditems-transact-sql'>dbo.sysmail_faileditems</a>.</para>
 			/// </summary>
-			public ITable<Faileditem>     Faileditems     { get { return _dataContext.GetTable<Faileditem>(); } }
+			public ITable<FailedItem>     FailedItems     { get { return _dataContext.GetTable<FailedItem>(); } }
 			/// <summary>
 			/// <para><strong>sysmail_mailattachments (Transact-SQL)</strong></para>
 			/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)</para>
 			/// <para>Contains one row for each attachment submitted to Database Mail. Use this view when you want information about Database Mail attachments. To review all e-mails processed by Database Mail use <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-allitems-transact-sql'>sysmail_allitems (Transact-SQL)</a>.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-mailattachments-transact-sql'>dbo.sysmail_mailattachments</a>.</para>
 			/// </summary>
-			public ITable<Mailattachment> Mailattachments { get { return _dataContext.GetTable<Mailattachment>(); } }
+			public ITable<MailAttachment> MailAttachments { get { return _dataContext.GetTable<MailAttachment>(); } }
 			/// <summary>
 			/// <para><strong>sysmail_sentitems (Transact-SQL)</strong></para>
 			/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions) √ Azure SQL Managed Instance</para>
@@ -5999,7 +5859,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			///  To see all messages processed by Database Mail, use <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-allitems-transact-sql'>sysmail_allitems (Transact-SQL)</a>. To see only messages with the failed status, use <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-faileditems-transact-sql'>sysmail_faileditems (Transact-SQL)</a>. To see only unsent or retrying messages, use <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-unsentitems-transact-sql'>sysmail_unsentitems (Transact-SQL)</a>. To see e-mail attachments, use <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-mailattachments-transact-sql'>sysmail_mailattachments (Transact-SQL)</a>.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-sentitems-transact-sql'>dbo.sysmail_sentitems</a>.</para>
 			/// </summary>
-			public ITable<Sentitem>       Sentitems       { get { return _dataContext.GetTable<Sentitem>(); } }
+			public ITable<SentItem>       SentItems       { get { return _dataContext.GetTable<SentItem>(); } }
 			/// <summary>
 			/// <para><strong>sysmail_unsentitems (Transact-SQL)</strong></para>
 			/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions) √ Azure SQL Managed Instance</para>
@@ -6012,7 +5872,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			///  To see all messages processed by Database Mail, use <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-allitems-transact-sql'>sysmail_allitems (Transact-SQL)</a>. To see only messages with the failed status, use <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-faileditems-transact-sql'>sysmail_faileditems (Transact-SQL)</a>. To see only messages that were sent, use <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-sentitems-transact-sql'>sysmail_sentitems (Transact-SQL)</a>.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-unsentitems-transact-sql'>dbo.sysmail_unsentitems</a>.</para>
 			/// </summary>
-			public ITable<Unsentitem>     Unsentitems     { get { return _dataContext.GetTable<Unsentitem>(); } }
+			public ITable<UnsentItem>     UnsentItems     { get { return _dataContext.GetTable<UnsentItem>(); } }
 
 			private readonly IDataContext _dataContext;
 
@@ -6030,16 +5890,16 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-allitems-transact-sql'>dbo.sysmail_allitems</a>.</para>
 		/// </summary>
 		[Table(Database="msdb", Schema="dbo", Name="sysmail_allitems", IsView=true)]
-		public partial class Allitem
+		public partial class AllItem
 		{
 			/// <summary>
 			/// Identifier of the mail item in the mail queue.
 			/// </summary>
-			[Column("mailitem_id"),                 NotNull] public int      MailitemID              { get; set; } // int
+			[Column("mailitem_id"),                 NotNull] public int      MailItemID              { get; set; } // int
 			/// <summary>
 			/// The identifier of the profile used to send the message.
 			/// </summary>
-			[Column("profile_id"),                  NotNull] public int      ProFileID               { get; set; } // int
+			[Column("profile_id"),                  NotNull] public int      ProfileID               { get; set; } // int
 			/// <summary>
 			/// The e-mail addresses of the message recipients.
 			/// </summary>
@@ -6174,7 +6034,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Identifier of the mail item in the mail queue. NULL if the message is not related to a specific e-mail item.
 			/// </summary>
-			[Column("mailitem_id"),   NotNull] public int      MailitemID  { get; set; } // int
+			[Column("mailitem_id"),   NotNull] public int      MailItemID  { get; set; } // int
 			/// <summary>
 			/// The <strong>account_id</strong> of the account related to the event. NULL if the message is not related to a specific account.
 			/// </summary>
@@ -6197,16 +6057,16 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-faileditems-transact-sql'>dbo.sysmail_faileditems</a>.</para>
 		/// </summary>
 		[Table(Database="msdb", Schema="dbo", Name="sysmail_faileditems", IsView=true)]
-		public partial class Faileditem
+		public partial class FailedItem
 		{
 			/// <summary>
 			/// Identifier of the mail item in the mail queue.
 			/// </summary>
-			[Column("mailitem_id"),                 NotNull] public int      MailitemID              { get; set; } // int
+			[Column("mailitem_id"),                 NotNull] public int      MailItemID              { get; set; } // int
 			/// <summary>
 			/// The identifier of the profile used to submit the message.
 			/// </summary>
-			[Column("profile_id"),                  NotNull] public int      ProFileID               { get; set; } // int
+			[Column("profile_id"),                  NotNull] public int      ProfileID               { get; set; } // int
 			/// <summary>
 			/// The e-mail addresses of the message recipients.
 			/// </summary>
@@ -6316,7 +6176,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-mailattachments-transact-sql'>dbo.sysmail_mailattachments</a>.</para>
 		/// </summary>
 		[Table(Database="msdb", Schema="dbo", Name="sysmail_mailattachments", IsView=true)]
-		public partial class Mailattachment
+		public partial class MailAttachment
 		{
 			/// <summary>
 			/// Identifier of the attachment.
@@ -6325,7 +6185,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Identifier of the mail item that contained the attachment.
 			/// </summary>
-			[Column("mailitem_id"),   NotNull] public int      MailitemID   { get; set; } // int
+			[Column("mailitem_id"),   NotNull] public int      MailItemID   { get; set; } // int
 			/// <summary>
 			/// The file name of the attachment. When <strong>attach_query_result</strong> is 1 and <strong>query_attachment_filename</strong> is NULL, Database Mail creates an arbitrary filename.
 			/// </summary>
@@ -6333,7 +6193,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// The size of the attachment in bytes.
 			/// </summary>
-			[Column("filesize"),      NotNull] public int      Filesize     { get; set; } // int
+			[Column("filesize"),      NotNull] public int      FileSize     { get; set; } // int
 			/// <summary>
 			/// The content of the attachment.
 			/// </summary>
@@ -6356,16 +6216,16 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-sentitems-transact-sql'>dbo.sysmail_sentitems</a>.</para>
 		/// </summary>
 		[Table(Database="msdb", Schema="dbo", Name="sysmail_sentitems", IsView=true)]
-		public partial class Sentitem
+		public partial class SentItem
 		{
 			/// <summary>
 			/// Identifier of the mail item in the mail queue.
 			/// </summary>
-			[Column("mailitem_id"),                 NotNull] public int      MailitemID              { get; set; } // int
+			[Column("mailitem_id"),                 NotNull] public int      MailItemID              { get; set; } // int
 			/// <summary>
 			/// The identifier of the profile used to send the message.
 			/// </summary>
-			[Column("profile_id"),                  NotNull] public int      ProFileID               { get; set; } // int
+			[Column("profile_id"),                  NotNull] public int      ProfileID               { get; set; } // int
 			/// <summary>
 			/// The e-mail addresses of the message recipients.
 			/// </summary>
@@ -6481,16 +6341,16 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sysmail-unsentitems-transact-sql'>dbo.sysmail_unsentitems</a>.</para>
 		/// </summary>
 		[Table(Database="msdb", Schema="dbo", Name="sysmail_unsentitems", IsView=true)]
-		public partial class Unsentitem
+		public partial class UnsentItem
 		{
 			/// <summary>
 			/// Identifier of the mail item in the mail queue.
 			/// </summary>
-			[Column("mailitem_id"),                 NotNull] public int      MailitemID              { get; set; } // int
+			[Column("mailitem_id"),                 NotNull] public int      MailItemID              { get; set; } // int
 			/// <summary>
 			/// The identifier of the profile used to submit the message.
 			/// </summary>
-			[Column("profile_id"),                  NotNull] public int      ProFileID               { get; set; } // int
+			[Column("profile_id"),                  NotNull] public int      ProfileID               { get; set; } // int
 			/// <summary>
 			/// The e-mail addresses of the message recipients.
 			/// </summary>
@@ -7736,7 +7596,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// The GUID used to identify the collector type. Is not nullable.
 			/// </summary>
-			[Column("collector_type_uid"), NotNull] public Guid   CollectorTypeUid { get; set; } // uniqueidentifier
+			[Column("collector_type_uid"), NotNull] public Guid   CollectorTypeUID { get; set; } // uniqueidentifier
 			/// <summary>
 			/// The name of the collection set. Is nullable.
 			/// </summary>
@@ -7767,7 +7627,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// The globally unique identifier for the collection set. Is not nullable.
 			/// </summary>
-			[Column("collection_set_uid"),    NotNull] public Guid   CollectionSetUid    { get; set; } // uniqueidentifier
+			[Column("collection_set_uid"),    NotNull] public Guid   CollectionSetUID    { get; set; } // uniqueidentifier
 			/// <summary>
 			/// The name of the collection set. Is nullable.
 			/// </summary>
@@ -7795,7 +7655,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Provides a pointer to the collection set schedule. Is nullable.
 			/// </summary>
-			[Column("schedule_uid"),          NotNull] public Guid   ScheduleUid         { get; set; } // uniqueidentifier
+			[Column("schedule_uid"),          NotNull] public Guid   ScheduleUID         { get; set; } // uniqueidentifier
 			/// <summary>
 			/// Identifies the collection job. Is nullable.
 			/// </summary>
@@ -7838,7 +7698,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// The GUID for a collection type. Is not nullable.
 			/// </summary>
-			[Column("collector_type_uid"),      NotNull] public object CollectorTypeUid      { get; set; } = null!; // uniqueidentifer
+			[Column("collector_type_uid"),      NotNull] public object CollectorTypeUID      { get; set; } = null!; // uniqueidentifer
 			/// <summary>
 			/// The name of the collection type. Is not nullable.
 			/// </summary>
@@ -7948,7 +7808,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Identifies who started the collection set or package. Is not nullable.
 			/// </summary>
-			[Column("operator"),               NotNull] public string   @operator            { get; set; } = null!; // nvarchar(128)
+			[Column("operator"),               NotNull] public string   Operator             { get; set; } = null!; // nvarchar(128)
 			/// <summary>
 			/// Identifies the collection set or package that generated this log. Is nullable.
 			/// </summary>
@@ -8019,7 +7879,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Identifies who started the collection set or package. Is nullable.
 			/// </summary>
-			[Column("operator"),               NotNull] public string   @operator            { get; set; } = null!; // nvarchar(128)
+			[Column("operator"),               NotNull] public string   Operator             { get; set; } = null!; // nvarchar(128)
 			/// <summary>
 			/// Provides a link to the SSIS log table. Is nullable.
 			/// </summary>
@@ -8270,7 +8130,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para>Displays one row for each data-tier application (DAC) instance deployed to an instance of the Database Engine. sysdac_instances belongs to the dbo schema in the msdb database. The following table describes the columns in the sysdac_instances view.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/data-tier-application-views-dbo-sysdac-instances'>dbo.sysdac_instances</a>.</para>
 			/// </summary>
-			public ITable<SysdacInstance> SysdacInstances { get { return _dataContext.GetTable<SysdacInstance>(); } }
+			public ITable<Instance> Instances { get { return _dataContext.GetTable<Instance>(); } }
 
 			private readonly IDataContext _dataContext;
 
@@ -8287,7 +8147,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/data-tier-application-views-dbo-sysdac-instances'>dbo.sysdac_instances</a>.</para>
 		/// </summary>
 		[Table(Database="msdb", Schema="dbo", Name="sysdac_instances", IsView=true)]
-		public partial class SysdacInstance
+		public partial class Instance
 		{
 			/// <summary>
 			/// Identifier of the DAC instance.
@@ -8356,7 +8216,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			///  Contains a row FOR EACH SOAP method defined on a SOAP-enabled HTTP endpoint. The combination of the endpoint_id and namespace columns is unique.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-endpoint-webmethods-transact-sql'>sys.endpoint_webmethods</a>.</para>
 			/// </summary>
-			public ITable<EndpointWebmethod>         EndpointWebmethods         { get { return _dataContext.GetTable<EndpointWebmethod>(); } }
+			public ITable<EndpointWebMethod>         EndpointWebMethods         { get { return _dataContext.GetTable<EndpointWebMethod>(); } }
 			/// <summary>
 			/// <para><strong>sys.http_endpoints (Transact-SQL)</strong></para>
 			/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)</para>
@@ -8541,7 +8401,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-endpoint-webmethods-transact-sql'>sys.endpoint_webmethods</a>.</para>
 		/// </summary>
 		[Table(Schema="sys", Name="endpoint_webmethods", IsView=true)]
-		public partial class EndpointWebmethod
+		public partial class EndpointWebMethod
 		{
 			/// <summary>
 			/// ID of the endpoint that the webmethod is defined on.
@@ -8550,7 +8410,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Namespace for the webmethod.
 			/// </summary>
-			[Column("namespace"),             Nullable] public string? @namespace       { get; set; } // nvarchar(384)
+			[Column("namespace"),             Nullable] public string? Namespace        { get; set; } // nvarchar(384)
 			/// <summary>
 			/// Alias for the method.<br/><br/> Note: Transact\-SQL identifiers allow characters that are not legal in WSDL method names.<br/><br/> The alias is used to map the name exposed in the WSDL description of the endpoint to the actual underlying Transact\-SQL executable object that is called when the webmethod is invoked.
 			/// </summary>
@@ -9090,7 +8950,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="DatabaseEventSessionFields")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -9286,7 +9146,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ServerEventSessionFields")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -9533,7 +9393,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Maximum column ID ever used for this table.
 			/// </summary>
-			[Column("max_column_id_used"),     Nullable] public int?     MaxColumnIdUsed   { get; set; } // int
+			[Column("max_column_id_used"),     Nullable] public int?     MaxColumnIDUsed   { get; set; } // int
 			/// <summary>
 			/// Table was created with the SET ANSI_NULLS database option ON.
 			/// </summary>
@@ -9589,7 +9449,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ExternalTables")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -9616,7 +9476,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para>Returns a row for each FileTable in SQL Server. For more information about FileTables, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/blob/filetables-sql-server'>FileTables (SQL Server)</a>.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-filetables-transact-sql'>sys.filetables</a>.</para>
 			/// </summary>
-			public ITable<Filetable>                    Filetables                    { get { return _dataContext.GetTable<Filetable>(); } }
+			public ITable<FileTable>                    FileTables                    { get { return _dataContext.GetTable<FileTable>(); } }
 			/// <summary>
 			/// <para><strong>sys.filetable_system_defined_objects (Transact-SQL)</strong></para>
 			/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)</para>
@@ -9625,7 +9485,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			///  For more information about FileTables, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/blob/filetables-sql-server'>FileTables (SQL Server)</a>.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-filetable-system-defined-objects-transact-sql'>sys.filetable_system_defined_objects</a>.</para>
 			/// </summary>
-			public ITable<FiletableSystemDefinedObject> FiletableSystemDefinedObjects { get { return _dataContext.GetTable<FiletableSystemDefinedObject>(); } }
+			public ITable<FileTableSystemDefinedObject> FileTableSystemDefinedObjects { get { return _dataContext.GetTable<FileTableSystemDefinedObject>(); } }
 
 			private readonly IDataContext _dataContext;
 
@@ -9670,7 +9530,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-filetables-transact-sql'>sys.filetables</a>.</para>
 		/// </summary>
 		[Table(Schema="sys", Name="filetables", IsView=true)]
-		public partial class Filetable
+		public partial class FileTable
 		{
 			/// <summary>
 			/// Object identification number. Is unique within a database.<br/><br/> For more information, <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-objects-transact-sql'>sys.objects (Transact-SQL)</a>.
@@ -9696,7 +9556,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="Filetables")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -9713,7 +9573,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-filetable-system-defined-objects-transact-sql'>sys.filetable_system_defined_objects</a>.</para>
 		/// </summary>
 		[Table(Schema="sys", Name="filetable_system_defined_objects", IsView=true)]
-		public partial class FiletableSystemDefinedObject
+		public partial class FileTableSystemDefinedObject
 		{
 			/// <summary>
 			/// Object ID of the system-defined object related to a FileTable.<br/><br/> References the object in <strong>sys.objects</strong>.
@@ -9727,7 +9587,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="FiletableSystemDefinedObjects")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -9749,49 +9609,63 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </note></para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-catalogs-transact-sql'>sys.fulltext_catalogs</a>.</para>
 			/// </summary>
-			public ITable<FulltextCatalog>                            FulltextCatalogs                            { get { return _dataContext.GetTable<FulltextCatalog>(); } }
+			public ITable<Catalog>                            Catalogs                            { get { return _dataContext.GetTable<Catalog>(); } }
 			/// <summary>
 			/// <para><strong>sys.fulltext_document_types (Transact-SQL)</strong></para>
 			/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)  √ Azure SQL Database</para>
 			/// <para>Returns a row for each document type that is available for full-text indexing operations. Each row represents the IFilter interface that is registered in the instance of SQL Server.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-document-types-transact-sql'>sys.fulltext_document_types</a>.</para>
 			/// </summary>
-			public ITable<FulltextDocumentType>                       FulltextDocumentTypes                       { get { return _dataContext.GetTable<FulltextDocumentType>(); } }
+			public ITable<DocumentType>                       DocumentTypes                       { get { return _dataContext.GetTable<DocumentType>(); } }
 			/// <summary>
 			/// <para><strong>sys.fulltext_indexes (Transact-SQL)</strong></para>
 			/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)  √ Azure SQL Database</para>
 			/// <para>Contains a row per full-text index of a tabular object.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-indexes-transact-sql'>sys.fulltext_indexes</a>.</para>
 			/// </summary>
-			public ITable<FulltextIndex>                              FulltextIndexes                             { get { return _dataContext.GetTable<FulltextIndex>(); } }
+			public ITable<Index>                              Indexes                             { get { return _dataContext.GetTable<Index>(); } }
 			/// <summary>
 			/// <para><strong>sys.fulltext_index_catalog_usages (Transact-SQL)</strong></para>
 			/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)  √ Azure SQL Database</para>
 			/// <para>Returns a row for each full-text catalog to full-text index reference.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-index-catalog-usages-transact-sql'>sys.fulltext_index_catalog_usages</a>.</para>
 			/// </summary>
-			public ITable<FulltextIndexCatalogUsage>                  FulltextIndexCatalogUsages                  { get { return _dataContext.GetTable<FulltextIndexCatalogUsage>(); } }
+			public ITable<IndexCatalogUsage>                  IndexCatalogUsages                  { get { return _dataContext.GetTable<IndexCatalogUsage>(); } }
 			/// <summary>
 			/// <para><strong>sys.fulltext_index_columns (Transact-SQL)</strong></para>
 			/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)  √ Azure SQL Database</para>
 			/// <para>Contains a row for each column that is part of a full-text index.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-index-columns-transact-sql'>sys.fulltext_index_columns</a>.</para>
 			/// </summary>
-			public ITable<FulltextIndexColumn>                        FulltextIndexColumns                        { get { return _dataContext.GetTable<FulltextIndexColumn>(); } }
+			public ITable<IndexColumn>                        IndexColumns                        { get { return _dataContext.GetTable<IndexColumn>(); } }
 			/// <summary>
 			/// <para><strong>sys.fulltext_index_fragments (Transact-SQL)</strong></para>
 			/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)  √ Azure SQL Database</para>
 			/// <para>A fulltext index uses internal tables called *full-text index fragments* to store the inverted index data. This view can be used to query the metadata about these fragments. This view contains a row for each full-text index fragment in every table that contains a full-text index.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-index-fragments-transact-sql'>sys.fulltext_index_fragments</a>.</para>
 			/// </summary>
-			public ITable<FulltextIndexFragment>                      FulltextIndexFragments                      { get { return _dataContext.GetTable<FulltextIndexFragment>(); } }
+			public ITable<IndexFragment>                      IndexFragments                      { get { return _dataContext.GetTable<IndexFragment>(); } }
 			/// <summary>
 			/// <para><strong>sys.fulltext_languages (Transact-SQL)</strong></para>
 			/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)  √ Azure SQL Database</para>
 			/// <para>This catalog view contains one row per language whose word breakers are registered with SQL Server. Each row displays the LCID and name of the language. When word breakers are registered for a language, its other linguistic resources-stemmers, noise words (stopwords), and thesaurus files-become available to full-text indexing/querying operations. The value of <strong>name</strong> or <strong>lcid</strong> can be specified in the full-text queries and full-text index Transact\-SQL statements.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-languages-transact-sql'>sys.fulltext_languages</a>.</para>
 			/// </summary>
-			public ITable<FulltextLanguage>                           FulltextLanguages                           { get { return _dataContext.GetTable<FulltextLanguage>(); } }
+			public ITable<Language>                           Languages                           { get { return _dataContext.GetTable<Language>(); } }
+			/// <summary>
+			/// <para><strong>sys.registered_search_properties (Transact-SQL)</strong></para>
+			/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)  √ Azure SQL Database</para>
+			/// <para>Contains a row for each search property contained by any search property list on the current database.</para><br/>
+			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-registered-search-properties-transact-sql'>sys.registered_search_properties</a>.</para>
+			/// </summary>
+			public ITable<RegisteredSearchProperty>           RegisteredSearchProperties          { get { return _dataContext.GetTable<RegisteredSearchProperty>(); } }
+			/// <summary>
+			/// <para><strong>sys.registered_search_property_lists (Transact-SQL)</strong></para>
+			/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)</para>
+			/// <para>Contains a row for each search property list on the current database.</para><br/>
+			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-registered-search-property-lists-transact-sql'>sys.registered_search_property_lists</a>.</para>
+			/// </summary>
+			public ITable<RegisteredSearchPropertyList>       RegisteredSearchPropertyLists       { get { return _dataContext.GetTable<RegisteredSearchPropertyList>(); } }
 			/// <summary>
 			/// <para><strong>sys.fulltext_semantic_languages (Transact-SQL)</strong></para>
 			/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)</para>
@@ -9799,7 +9673,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			///  This catalog view is similar to <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-languages-transact-sql'>sys.fulltext_languages (Transact-SQL)</a>.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-semantic-languages-transact-sql'>sys.fulltext_semantic_languages</a>.</para>
 			/// </summary>
-			public ITable<FulltextSemanticLanguage>                   FulltextSemanticLanguages                   { get { return _dataContext.GetTable<FulltextSemanticLanguage>(); } }
+			public ITable<SemanticLanguage>                   SemanticLanguages                   { get { return _dataContext.GetTable<SemanticLanguage>(); } }
 			/// <summary>
 			/// <para><strong>sys.fulltext_semantic_language_statistics_database (Transact-SQL)</strong></para>
 			/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)</para>
@@ -9807,42 +9681,28 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			///  You can query this view to find out about the semantic language statistics component required for semantic processing.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-semantic-language-statistics-database-transact-sql'>sys.fulltext_semantic_language_statistics_database</a>.</para>
 			/// </summary>
-			public ITable<FulltextSemanticLanguageStatisticsDatabase> FulltextSemanticLanguageStatisticsDatabases { get { return _dataContext.GetTable<FulltextSemanticLanguageStatisticsDatabase>(); } }
+			public ITable<SemanticLanguageStatisticsDatabase> SemanticLanguageStatisticsDatabases { get { return _dataContext.GetTable<SemanticLanguageStatisticsDatabase>(); } }
 			/// <summary>
 			/// <para><strong>sys.fulltext_stoplists (Transact-SQL)</strong></para>
 			/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)  √ Azure SQL Database</para>
 			/// <para>Contains a row per full-text stoplist in the database.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-stoplists-transact-sql'>sys.fulltext_stoplists</a>.</para>
 			/// </summary>
-			public ITable<FulltextStoplist>                           FulltextStoplists                           { get { return _dataContext.GetTable<FulltextStoplist>(); } }
+			public ITable<Stoplist>                           Stoplists                           { get { return _dataContext.GetTable<Stoplist>(); } }
 			/// <summary>
 			/// <para><strong>sys.fulltext_stopwords (Transact-SQL)</strong></para>
 			/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)  √ Azure SQL Database</para>
 			/// <para>Contains a row per stopword for all stoplists in the database.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-stopwords-transact-sql'>sys.fulltext_stopwords</a>.</para>
 			/// </summary>
-			public ITable<FulltextStopword>                           FulltextStopwords                           { get { return _dataContext.GetTable<FulltextStopword>(); } }
+			public ITable<StopWord>                           StopWords                           { get { return _dataContext.GetTable<StopWord>(); } }
 			/// <summary>
 			/// <para><strong>sys.fulltext_system_stopwords (Transact-SQL)</strong></para>
 			/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)  √ Azure SQL Database</para>
 			/// <para>Provides access to the system stoplist.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-system-stopwords-transact-sql'>sys.fulltext_system_stopwords</a>.</para>
 			/// </summary>
-			public ITable<FulltextSystemStopword>                     FulltextSystemStopwords                     { get { return _dataContext.GetTable<FulltextSystemStopword>(); } }
-			/// <summary>
-			/// <para><strong>sys.registered_search_properties (Transact-SQL)</strong></para>
-			/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)  √ Azure SQL Database</para>
-			/// <para>Contains a row for each search property contained by any search property list on the current database.</para><br/>
-			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-registered-search-properties-transact-sql'>sys.registered_search_properties</a>.</para>
-			/// </summary>
-			public ITable<RegisteredSearchProperty>                   RegisteredSearchProperties                  { get { return _dataContext.GetTable<RegisteredSearchProperty>(); } }
-			/// <summary>
-			/// <para><strong>sys.registered_search_property_lists (Transact-SQL)</strong></para>
-			/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)</para>
-			/// <para>Contains a row for each search property list on the current database.</para><br/>
-			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-registered-search-property-lists-transact-sql'>sys.registered_search_property_lists</a>.</para>
-			/// </summary>
-			public ITable<RegisteredSearchPropertyList>               RegisteredSearchPropertyLists               { get { return _dataContext.GetTable<RegisteredSearchPropertyList>(); } }
+			public ITable<SystemStopWord>                     SystemStopWords                     { get { return _dataContext.GetTable<SystemStopWord>(); } }
 
 			private readonly IDataContext _dataContext;
 
@@ -9862,7 +9722,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-catalogs-transact-sql'>sys.fulltext_catalogs</a>.</para>
 		/// </summary>
 		[Table(Schema="sys", Name="fulltext_catalogs", IsView=true)]
-		public partial class FulltextCatalog
+		public partial class Catalog
 		{
 			/// <summary>
 			/// ID of the full-text catalog. Is unique across the full-text catalogs in the database.
@@ -9909,28 +9769,28 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-document-types-transact-sql'>sys.fulltext_document_types</a>.</para>
 		/// </summary>
 		[Table(Schema="sys", Name="fulltext_document_types", IsView=true)]
-		public partial class FulltextDocumentType
+		public partial class DocumentType
 		{
 			/// <summary>
 			/// The file extension of the supported document type.<br/><br/> This value can be used to identify the filter that will be used during full-text indexing of columns of type <strong>varbinary(max)</strong> or <strong>image</strong>.
 			/// </summary>
-			[Column("document_type"), NotNull    ] public string  DocumentType { get; set; } = null!; // sysname
+			[Column("document_type"), NotNull    ] public string  DocumentTypeColumn { get; set; } = null!; // sysname
 			/// <summary>
 			/// GUID of the IFilter class that supports file extension.
 			/// </summary>
-			[Column("class_id"),      NotNull    ] public Guid    ClassID      { get; set; } // uniqueidentifier
+			[Column("class_id"),      NotNull    ] public Guid    ClassID            { get; set; } // uniqueidentifier
 			/// <summary>
 			/// The path to the IFilter DLL. The path is only visible to members of the <strong>serveradmin</strong> fixed server role.
 			/// </summary>
-			[Column("path"),             Nullable] public string? Path         { get; set; } // nvarchar(260)
+			[Column("path"),             Nullable] public string? Path               { get; set; } // nvarchar(260)
 			/// <summary>
 			/// Version of the IFilter DLL.
 			/// </summary>
-			[Column("version"),       NotNull    ] public string  Version      { get; set; } = null!; // sysname
+			[Column("version"),       NotNull    ] public string  Version            { get; set; } = null!; // sysname
 			/// <summary>
 			/// Name of the IFilter manufacturer.<br/><br/> Note: Only documents with the manufacturer as Microsoft are supported on SQL Database.
 			/// </summary>
-			[Column("manufacturer"),     Nullable] public string? Manufacturer { get; set; } // sysname
+			[Column("manufacturer"),     Nullable] public string? Manufacturer       { get; set; } // sysname
 		}
 
 		/// <summary>
@@ -9940,7 +9800,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-indexes-transact-sql'>sys.fulltext_indexes</a>.</para>
 		/// </summary>
 		[Table(Schema="sys", Name="fulltext_indexes", IsView=true)]
-		public partial class FulltextIndex
+		public partial class Index
 		{
 			/// <summary>
 			/// ID of the object to which this full-text index belongs.
@@ -10006,7 +9866,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="FulltextIndexes")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -10021,7 +9881,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-index-catalog-usages-transact-sql'>sys.fulltext_index_catalog_usages</a>.</para>
 		/// </summary>
 		[Table(Schema="sys", Name="fulltext_index_catalog_usages", IsView=true)]
-		public partial class FulltextIndexCatalogUsage
+		public partial class IndexCatalogUsage
 		{
 			/// <summary>
 			/// ID of the full-text indexed table. Is unique within the database.
@@ -10039,7 +9899,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="FulltextIndexCatalogUsages")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -10054,7 +9914,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-index-columns-transact-sql'>sys.fulltext_index_columns</a>.</para>
 		/// </summary>
 		[Table(Schema="sys", Name="fulltext_index_columns", IsView=true)]
-		public partial class FulltextIndexColumn
+		public partial class IndexColumn
 		{
 			/// <summary>
 			/// ID of the object of which this is part.
@@ -10080,7 +9940,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="FulltextIndexColumns")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -10095,7 +9955,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-index-fragments-transact-sql'>sys.fulltext_index_fragments</a>.</para>
 		/// </summary>
 		[Table(Schema="sys", Name="fulltext_index_fragments", IsView=true)]
-		public partial class FulltextIndexFragment
+		public partial class IndexFragment
 		{
 			/// <summary>
 			/// Object ID of the table that contains the full-text index fragment.
@@ -10134,7 +9994,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-languages-transact-sql'>sys.fulltext_languages</a>.</para>
 		/// </summary>
 		[Table(Schema="sys", Name="fulltext_languages", IsView=true)]
-		public partial class FulltextLanguage
+		public partial class Language
 		{
 			/// <summary>
 			/// Microsoft Windows locale identifier (LCID) for the language.
@@ -10144,131 +10004,6 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// Is either the value of the alias in <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-compatibility-views/sys-syslanguages-transact-sql'>sys.syslanguages</a> corresponding to the value of <strong>lcid</strong> or the string representation of the numeric LCID.
 			/// </summary>
 			[Column("name"), NotNull] public string Name { get; set; } = null!; // sysname
-		}
-
-		/// <summary>
-		/// <para><strong>sys.fulltext_semantic_languages (Transact-SQL)</strong></para>
-		/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)</para>
-		/// <para>Returns a row for each language whose statistics model is registered with the instance of SQL Server. When a language model is registered, that language is enabled for semantic indexing.<br/>
-		///  This catalog view is similar to <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-languages-transact-sql'>sys.fulltext_languages (Transact-SQL)</a>.</para><br/>
-		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-semantic-languages-transact-sql'>sys.fulltext_semantic_languages</a>.</para>
-		/// </summary>
-		[Table(Schema="sys", Name="fulltext_semantic_languages", IsView=true)]
-		public partial class FulltextSemanticLanguage
-		{
-			/// <summary>
-			/// Microsoft Windows locale identifier (LCID) for the language.
-			/// </summary>
-			[Column("lcid"), NotNull] public int    Lcid { get; set; } // int
-			/// <summary>
-			/// Is either the value of the alias in <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-compatibility-views/sys-syslanguages-transact-sql'>sys.syslanguages (Transact-SQL)</a> corresponding to the value of <strong>lcid</strong>, or the string representation of the numeric LCID.
-			/// </summary>
-			[Column("name"), NotNull] public string Name { get; set; } = null!; // sysname
-		}
-
-		/// <summary>
-		/// <para><strong>sys.fulltext_semantic_language_statistics_database (Transact-SQL)</strong></para>
-		/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)</para>
-		/// <para>Returns a row about the semantic language statistics database installed on the current instance of SQL Server.<br/>
-		///  You can query this view to find out about the semantic language statistics component required for semantic processing.</para><br/>
-		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-semantic-language-statistics-database-transact-sql'>sys.fulltext_semantic_language_statistics_database</a>.</para>
-		/// </summary>
-		[Table(Schema="sys", Name="fulltext_semantic_language_statistics_database", IsView=true)]
-		public partial class FulltextSemanticLanguageStatisticsDatabase
-		{
-			/// <summary>
-			/// ID of the database, unique within an instance of SQL Server.
-			/// </summary>
-			[Column("database_id"),   NotNull] public int      DatabaseID   { get; set; } // int
-			/// <summary>
-			/// Date the database was registered for semantic processing.
-			/// </summary>
-			[Column("register_date"), NotNull] public DateTime RegisterDate { get; set; } // datetime
-			/// <summary>
-			/// ID of the server principal that registered the database for semantic processing.
-			/// </summary>
-			[Column("registered_by"), NotNull] public int      RegisteredBy { get; set; } // int
-			/// <summary>
-			/// The latest version information specific to the semantic language statistics database.
-			/// </summary>
-			[Column("version"),       NotNull] public string   Version      { get; set; } = null!; // nvarchar(128)
-		}
-
-		/// <summary>
-		/// <para><strong>sys.fulltext_stoplists (Transact-SQL)</strong></para>
-		/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)  √ Azure SQL Database</para>
-		/// <para>Contains a row per full-text stoplist in the database.</para><br/>
-		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-stoplists-transact-sql'>sys.fulltext_stoplists</a>.</para>
-		/// </summary>
-		[Table(Schema="sys", Name="fulltext_stoplists", IsView=true)]
-		public partial class FulltextStoplist
-		{
-			/// <summary>
-			/// ID of the stoplist, unique within the database.
-			/// </summary>
-			[Column("stoplist_id"),  NotNull    ] public int      StoplistID  { get; set; } // int
-			/// <summary>
-			/// Name of the stoplist.
-			/// </summary>
-			[Column("name"),         NotNull    ] public string   Name        { get; set; } = null!; // sysname
-			/// <summary>
-			/// Date that stoplist was created.
-			/// </summary>
-			[Column("create_date"),  NotNull    ] public DateTime CreateDate  { get; set; } // datetime
-			/// <summary>
-			/// Date that stoplist was last modified using any ALTER statement.
-			/// </summary>
-			[Column("modify_date"),  NotNull    ] public DateTime ModifyDate  { get; set; } // datetime
-			/// <summary>
-			/// ID of the database principal that owns the stoplist.
-			/// </summary>
-			[Column("principal_id"),    Nullable] public int?     PrincipalID { get; set; } // int
-		}
-
-		/// <summary>
-		/// <para><strong>sys.fulltext_stopwords (Transact-SQL)</strong></para>
-		/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)  √ Azure SQL Database</para>
-		/// <para>Contains a row per stopword for all stoplists in the database.</para><br/>
-		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-stopwords-transact-sql'>sys.fulltext_stopwords</a>.</para>
-		/// </summary>
-		[Table(Schema="sys", Name="fulltext_stopwords", IsView=true)]
-		public partial class FulltextStopword
-		{
-			/// <summary>
-			/// ID of the stoplist to which <strong>stopword</strong> belongs. This ID is  unique within the database.
-			/// </summary>
-			[Column("stoplist_id"), NotNull] public int    StoplistID { get; set; } // int
-			/// <summary>
-			/// The term to be considered for a stop-word match.
-			/// </summary>
-			[Column("stopword"),    NotNull] public string Stopword   { get; set; } = null!; // nvarchar(64)
-			/// <summary>
-			/// Is either the value of the alias in <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-languages-transact-sql'>sys.fulltext_languages</a>corresponding to the value of the locale identifier (<strong>LCID</strong>), or is the string representation of the numeric LCID.
-			/// </summary>
-			[Column("language"),    NotNull] public string Language   { get; set; } = null!; // sysname
-			/// <summary>
-			/// LCID used for word breaking.
-			/// </summary>
-			[Column("language_id"), NotNull] public int    LanguageID { get; set; } // int
-		}
-
-		/// <summary>
-		/// <para><strong>sys.fulltext_system_stopwords (Transact-SQL)</strong></para>
-		/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)  √ Azure SQL Database</para>
-		/// <para>Provides access to the system stoplist.</para><br/>
-		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-system-stopwords-transact-sql'>sys.fulltext_system_stopwords</a>.</para>
-		/// </summary>
-		[Table(Schema="sys", Name="fulltext_system_stopwords", IsView=true)]
-		public partial class FulltextSystemStopword
-		{
-			/// <summary>
-			/// The term that is considered for a stop-word match.
-			/// </summary>
-			[Column("stopword"),       Nullable] public string? Stopword   { get; set; } // nvarchar(64)
-			/// <summary>
-			/// Locale identifier (LCID) of the language. This LCID is used for word breaking.
-			/// </summary>
-			[Column("language_id"), NotNull    ] public int     LanguageID { get; set; } // int
 		}
 
 		/// <summary>
@@ -10335,6 +10070,131 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// Owner of the property list.
 			/// </summary>
 			[Column("principal_id"),        Nullable] public int?     PrincipalID    { get; set; } // int
+		}
+
+		/// <summary>
+		/// <para><strong>sys.fulltext_semantic_languages (Transact-SQL)</strong></para>
+		/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)</para>
+		/// <para>Returns a row for each language whose statistics model is registered with the instance of SQL Server. When a language model is registered, that language is enabled for semantic indexing.<br/>
+		///  This catalog view is similar to <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-languages-transact-sql'>sys.fulltext_languages (Transact-SQL)</a>.</para><br/>
+		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-semantic-languages-transact-sql'>sys.fulltext_semantic_languages</a>.</para>
+		/// </summary>
+		[Table(Schema="sys", Name="fulltext_semantic_languages", IsView=true)]
+		public partial class SemanticLanguage
+		{
+			/// <summary>
+			/// Microsoft Windows locale identifier (LCID) for the language.
+			/// </summary>
+			[Column("lcid"), NotNull] public int    Lcid { get; set; } // int
+			/// <summary>
+			/// Is either the value of the alias in <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-compatibility-views/sys-syslanguages-transact-sql'>sys.syslanguages (Transact-SQL)</a> corresponding to the value of <strong>lcid</strong>, or the string representation of the numeric LCID.
+			/// </summary>
+			[Column("name"), NotNull] public string Name { get; set; } = null!; // sysname
+		}
+
+		/// <summary>
+		/// <para><strong>sys.fulltext_semantic_language_statistics_database (Transact-SQL)</strong></para>
+		/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)</para>
+		/// <para>Returns a row about the semantic language statistics database installed on the current instance of SQL Server.<br/>
+		///  You can query this view to find out about the semantic language statistics component required for semantic processing.</para><br/>
+		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-semantic-language-statistics-database-transact-sql'>sys.fulltext_semantic_language_statistics_database</a>.</para>
+		/// </summary>
+		[Table(Schema="sys", Name="fulltext_semantic_language_statistics_database", IsView=true)]
+		public partial class SemanticLanguageStatisticsDatabase
+		{
+			/// <summary>
+			/// ID of the database, unique within an instance of SQL Server.
+			/// </summary>
+			[Column("database_id"),   NotNull] public int      DatabaseID   { get; set; } // int
+			/// <summary>
+			/// Date the database was registered for semantic processing.
+			/// </summary>
+			[Column("register_date"), NotNull] public DateTime RegisterDate { get; set; } // datetime
+			/// <summary>
+			/// ID of the server principal that registered the database for semantic processing.
+			/// </summary>
+			[Column("registered_by"), NotNull] public int      RegisteredBy { get; set; } // int
+			/// <summary>
+			/// The latest version information specific to the semantic language statistics database.
+			/// </summary>
+			[Column("version"),       NotNull] public string   Version      { get; set; } = null!; // nvarchar(128)
+		}
+
+		/// <summary>
+		/// <para><strong>sys.fulltext_stoplists (Transact-SQL)</strong></para>
+		/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)  √ Azure SQL Database</para>
+		/// <para>Contains a row per full-text stoplist in the database.</para><br/>
+		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-stoplists-transact-sql'>sys.fulltext_stoplists</a>.</para>
+		/// </summary>
+		[Table(Schema="sys", Name="fulltext_stoplists", IsView=true)]
+		public partial class Stoplist
+		{
+			/// <summary>
+			/// ID of the stoplist, unique within the database.
+			/// </summary>
+			[Column("stoplist_id"),  NotNull    ] public int      StoplistID  { get; set; } // int
+			/// <summary>
+			/// Name of the stoplist.
+			/// </summary>
+			[Column("name"),         NotNull    ] public string   Name        { get; set; } = null!; // sysname
+			/// <summary>
+			/// Date that stoplist was created.
+			/// </summary>
+			[Column("create_date"),  NotNull    ] public DateTime CreateDate  { get; set; } // datetime
+			/// <summary>
+			/// Date that stoplist was last modified using any ALTER statement.
+			/// </summary>
+			[Column("modify_date"),  NotNull    ] public DateTime ModifyDate  { get; set; } // datetime
+			/// <summary>
+			/// ID of the database principal that owns the stoplist.
+			/// </summary>
+			[Column("principal_id"),    Nullable] public int?     PrincipalID { get; set; } // int
+		}
+
+		/// <summary>
+		/// <para><strong>sys.fulltext_stopwords (Transact-SQL)</strong></para>
+		/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)  √ Azure SQL Database</para>
+		/// <para>Contains a row per stopword for all stoplists in the database.</para><br/>
+		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-stopwords-transact-sql'>sys.fulltext_stopwords</a>.</para>
+		/// </summary>
+		[Table(Schema="sys", Name="fulltext_stopwords", IsView=true)]
+		public partial class StopWord
+		{
+			/// <summary>
+			/// ID of the stoplist to which <strong>stopword</strong> belongs. This ID is  unique within the database.
+			/// </summary>
+			[Column("stoplist_id"), NotNull] public int    StoplistID     { get; set; } // int
+			/// <summary>
+			/// The term to be considered for a stop-word match.
+			/// </summary>
+			[Column("stopword"),    NotNull] public string StopWordColumn { get; set; } = null!; // nvarchar(64)
+			/// <summary>
+			/// Is either the value of the alias in <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-languages-transact-sql'>sys.fulltext_languages</a>corresponding to the value of the locale identifier (<strong>LCID</strong>), or is the string representation of the numeric LCID.
+			/// </summary>
+			[Column("language"),    NotNull] public string Language       { get; set; } = null!; // sysname
+			/// <summary>
+			/// LCID used for word breaking.
+			/// </summary>
+			[Column("language_id"), NotNull] public int    LanguageID     { get; set; } // int
+		}
+
+		/// <summary>
+		/// <para><strong>sys.fulltext_system_stopwords (Transact-SQL)</strong></para>
+		/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)  √ Azure SQL Database</para>
+		/// <para>Provides access to the system stoplist.</para><br/>
+		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-fulltext-system-stopwords-transact-sql'>sys.fulltext_system_stopwords</a>.</para>
+		/// </summary>
+		[Table(Schema="sys", Name="fulltext_system_stopwords", IsView=true)]
+		public partial class SystemStopWord
+		{
+			/// <summary>
+			/// The term that is considered for a stop-word match.
+			/// </summary>
+			[Column("stopword"),       Nullable] public string? StopWord   { get; set; } // nvarchar(64)
+			/// <summary>
+			/// Locale identifier (LCID) of the language. This LCID is used for word breaking.
+			/// </summary>
+			[Column("language_id"), NotNull    ] public int     LanguageID { get; set; } // int
 		}
 	}
 
@@ -10528,7 +10388,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("CONSTRAINT_CATALOG"),    Nullable] public string? ConstraintCatalog { get; set; } // nvarchar(
 			/// <summary>
-			/// Name of the schema to which the constraint belongs.<br/><br/> &amp;#42;&amp;#42; Important &amp;#42;&amp;#42; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
+			/// Name of the schema to which the constraint belongs.<br/><br/> <strong> Important </strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
 			/// </summary>
 			[Column("CONSTRAINT_SCHEMA"),     Nullable] public string? ConstraintSchema  { get; set; } // nvarchar(
 			/// <summary>
@@ -10556,7 +10416,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("TABLE_CATALOG"),               Nullable] public string? TableCatalog           { get; set; } // nvarchar(
 			/// <summary>
-			/// Name of schema that contains the table.<br/><br/> <strong>&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;</strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
+			/// Name of schema that contains the table.<br/><br/> <strong> Important </strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
 			/// </summary>
 			[Column("TABLE_SCHEMA"),                Nullable] public string? TableSchema            { get; set; } // nvarchar(
 			/// <summary>
@@ -10636,7 +10496,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("DOMAIN_CATALOG"),              Nullable] public string? DomainCatalog          { get; set; } // nvarchar(
 			/// <summary>
-			/// If the column is a user-defined data type, this column returns the name of the schema of the user-defined data type. Otherwise, NULL is returned.<br/><br/> <strong>&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;</strong> Do not use INFORMATION_SCHEMA views to determine the schema of a data type. The only reliable way to find the schema of a type is to use the TYPEPROPERTY function.
+			/// If the column is a user-defined data type, this column returns the name of the schema of the user-defined data type. Otherwise, NULL is returned.<br/><br/> <strong> Important </strong> Do not use INFORMATION_SCHEMA views to determine the schema of a data type. The only reliable way to find the schema of a type is to use the TYPEPROPERTY function.
 			/// </summary>
 			[Column("DOMAIN_SCHEMA"),               Nullable] public string? DomainSchema           { get; set; } // nvarchar(
 			/// <summary>
@@ -10660,7 +10520,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("DOMAIN_CATALOG"),    Nullable] public string? DomainCatalog { get; set; } // nvarchar(
 			/// <summary>
-			/// Name of schema that contains the alias data type.<br/><br/> <strong>&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;</strong> Do not use INFORMATION_SCHEMA views to determine the schema of a data type. The only reliable way to find the schema of a type is to use the TYPEPROPERTY function.
+			/// Name of schema that contains the alias data type.<br/><br/> <strong> Important </strong> Do not use INFORMATION_SCHEMA views to determine the schema of a data type. The only reliable way to find the schema of a type is to use the TYPEPROPERTY function.
 			/// </summary>
 			[Column("DOMAIN_SCHEMA"),     Nullable] public string? DomainSchema  { get; set; } // nvarchar(
 			/// <summary>
@@ -10672,7 +10532,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("TABLE_CATALOG"),     Nullable] public string? TableCatalog  { get; set; } // nvarchar(
 			/// <summary>
-			/// Table owner.<br/><br/> <strong>&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;</strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
+			/// Table owner.<br/><br/> <strong> Important </strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
 			/// </summary>
 			[Column("TABLE_SCHEMA"),      Nullable] public string? TableSchema   { get; set; } // nvarchar(
 			/// <summary>
@@ -10708,7 +10568,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("TABLE_CATALOG"),     Nullable] public string? TableCatalog  { get; set; } // nvarchar(
 			/// <summary>
-			/// Name of schema that contains the table.<br/><br/> <strong>&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;</strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
+			/// Name of schema that contains the table.<br/><br/> <strong> Important </strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
 			/// </summary>
 			[Column("TABLE_SCHEMA"),      Nullable] public string? TableSchema   { get; set; } // nvarchar(
 			/// <summary>
@@ -10744,7 +10604,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("TABLE_CATALOG"),         Nullable] public string? TableCatalog      { get; set; } // nvarchar(
 			/// <summary>
-			/// Name of schema that contains the table owner.<br/><br/> <strong>&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;</strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
+			/// Name of schema that contains the table owner.<br/><br/> <strong> Important </strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
 			/// </summary>
 			[Column("TABLE_SCHEMA"),          Nullable] public string? TableSchema       { get; set; } // nvarchar(
 			/// <summary>
@@ -10760,7 +10620,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("CONSTRAINT_CATALOG"),    Nullable] public string? ConstraintCatalog { get; set; } // nvarchar(
 			/// <summary>
-			/// Name of schema that contains the constraint.<br/><br/> <strong>&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;</strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
+			/// Name of schema that contains the constraint.<br/><br/> <strong> Important </strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
 			/// </summary>
 			[Column("CONSTRAINT_SCHEMA"),     Nullable] public string? ConstraintSchema  { get; set; } // nvarchar(
 			/// <summary>
@@ -10784,7 +10644,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("TABLE_CATALOG"),         Nullable] public string? TableCatalog      { get; set; } // nvarchar(
 			/// <summary>
-			/// Name of schema that contains the table.<br/><br/> <strong>&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;</strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
+			/// Name of schema that contains the table.<br/><br/> <strong> Important </strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
 			/// </summary>
 			[Column("TABLE_SCHEMA"),          Nullable] public string? TableSchema       { get; set; } // nvarchar(
 			/// <summary>
@@ -10796,7 +10656,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("CONSTRAINT_CATALOG"),    Nullable] public string? ConstraintCatalog { get; set; } // nvarchar(
 			/// <summary>
-			/// Name of schema that contains the constraint.<br/><br/> <strong>&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;</strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
+			/// Name of schema that contains the constraint.<br/><br/> <strong> Important </strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
 			/// </summary>
 			[Column("CONSTRAINT_SCHEMA"),     Nullable] public string? ConstraintSchema  { get; set; } // nvarchar(
 			/// <summary>
@@ -10820,7 +10680,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("DOMAIN_CATALOG"),              Nullable] public string? DomainCatalog          { get; set; } // nvarchar(
 			/// <summary>
-			/// Name of the schema that contains the alias data type.<br/><br/> <strong>&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;</strong> Do not use INFORMATION_SCHEMA views to determine the schema of a data type. The only reliable way to find the schema of a type is to use the TYPEPROPERTY function.
+			/// Name of the schema that contains the alias data type.<br/><br/> <strong> Important </strong> Do not use INFORMATION_SCHEMA views to determine the schema of a data type. The only reliable way to find the schema of a type is to use the TYPEPROPERTY function.
 			/// </summary>
 			[Column("DOMAIN_SCHEMA"),               Nullable] public string? DomainSchema           { get; set; } // nvarchar(
 			/// <summary>
@@ -10900,7 +10760,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("CONSTRAINT_CATALOG"),    Nullable] public string? ConstraintCatalog { get; set; } // nvarchar(
 			/// <summary>
-			/// Name of schema that contains the constraint.<br/><br/> <strong>\*\* Important \*\*</strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
+			/// Name of schema that contains the constraint.<br/><br/> <strong> Important </strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
 			/// </summary>
 			[Column("CONSTRAINT_SCHEMA"),     Nullable] public string? ConstraintSchema  { get; set; } // nvarchar(
 			/// <summary>
@@ -10912,7 +10772,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("DOMAIN_CATALOG"),        Nullable] public string? DomainCatalog     { get; set; } // nvarchar(
 			/// <summary>
-			/// Name of schema that contains the alias data type.<br/><br/> <strong>\*\* Important \*\*</strong> Do not use INFORMATION_SCHEMA views to determine the schema of a data type. The only reliable way to find the schema of a type is to use the TYPEPROPERTY function.
+			/// Name of schema that contains the alias data type.<br/><br/> <strong> Important </strong> Do not use INFORMATION_SCHEMA views to determine the schema of a data type. The only reliable way to find the schema of a type is to use the TYPEPROPERTY function.
 			/// </summary>
 			[Column("DOMAIN_SCHEMA"),         Nullable] public string? DomainSchema      { get; set; } // nvarchar(
 			/// <summary>
@@ -10944,7 +10804,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("CONSTRAINT_CATALOG"),    Nullable] public string? ConstraintCatalog { get; set; } // nvarchar(
 			/// <summary>
-			/// Name of schema that contains the constraint.<br/><br/> <strong>\*\* Important \*\*</strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
+			/// Name of schema that contains the constraint.<br/><br/> <strong> Important </strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
 			/// </summary>
 			[Column("CONSTRAINT_SCHEMA"),     Nullable] public string? ConstraintSchema  { get; set; } // nvarchar(
 			/// <summary>
@@ -10956,7 +10816,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("TABLE_CATALOG"),         Nullable] public string? TableCatalog      { get; set; } // nvarchar(
 			/// <summary>
-			/// Name of schema that contains the table.<br/><br/> <strong>\*\* Important \*\*</strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
+			/// Name of schema that contains the table.<br/><br/> <strong> Important </strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
 			/// </summary>
 			[Column("TABLE_SCHEMA"),          Nullable] public string? TableSchema       { get; set; } // nvarchar(
 			/// <summary>
@@ -10988,7 +10848,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("SPECIFIC_CATALOG"),             Nullable] public string? SpecificCatalog        { get; set; } // nvarchar(
 			/// <summary>
-			/// Name of the schema of the routine for which this is a parameter.<br/><br/> <strong>\*\* Important \*\*</strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
+			/// Name of the schema of the routine for which this is a parameter.<br/><br/> <strong> Important </strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
 			/// </summary>
 			[Column("SPECIFIC_SCHEMA"),              Nullable] public string? SpecificSchema         { get; set; } // nvarchar(
 			/// <summary>
@@ -11116,7 +10976,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("CONSTRAINT_CATALOG"),           Nullable] public string? ConstraintCatalog       { get; set; } // nvarchar(
 			/// <summary>
-			/// Name of schema that contains the constraint.<br/><br/> <strong>&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;</strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
+			/// Name of schema that contains the constraint.<br/><br/> <strong> Important </strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
 			/// </summary>
 			[Column("CONSTRAINT_SCHEMA"),            Nullable] public string? ConstraintSchema        { get; set; } // nvarchar(
 			/// <summary>
@@ -11128,7 +10988,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("UNIQUE_CONSTRAINT_CATALOG"),    Nullable] public string? UniqueConstraintCatalog { get; set; } // nvarchar(
 			/// <summary>
-			/// Name of schema that contains the UNIQUE constraint.<br/><br/> <strong>&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;</strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
+			/// Name of schema that contains the UNIQUE constraint.<br/><br/> <strong> Important </strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
 			/// </summary>
 			[Column("UNIQUE_CONSTRAINT_SCHEMA"),     Nullable] public string? UniqueConstraintSchema  { get; set; } // nvarchar(
 			/// <summary>
@@ -11167,7 +11027,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("SPECIFIC_CATALOG"),            Nullable] public string?  SpecificCatalog        { get; set; } // nvarchar(
 			/// <summary>
-			/// Specific name of the schema.<br/><br/> <strong>\*\* Important \*\</strong>* Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
+			/// Specific name of the schema.<br/><br/> <strong> Important \*\</strong>* Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
 			/// </summary>
 			[Column("SPECIFIC_SCHEMA"),             Nullable] public string?  SpecificSchema         { get; set; } // nvarchar(
 			/// <summary>
@@ -11179,7 +11039,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("ROUTINE_CATALOG"),             Nullable] public string?  RoutineCatalog         { get; set; } // nvarchar(
 			/// <summary>
-			/// Name of the schema that contains this function.<br/><br/> <strong>\*\* Important \*\</strong>* Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
+			/// Name of the schema that contains this function.<br/><br/> <strong> Important \*\</strong>* Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
 			/// </summary>
 			[Column("ROUTINE_SCHEMA"),              Nullable] public string?  RoutineSchema          { get; set; } // nvarchar(
 			/// <summary>
@@ -11383,7 +11243,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("TABLE_CATALOG"),               Nullable] public string? TableCatalog           { get; set; } // nvarchar(
 			/// <summary>
-			/// Name of the schema that contains the table-valued function.<br/><br/> <strong>\*\* Important \*\*</strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
+			/// Name of the schema that contains the table-valued function.<br/><br/> <strong> Important </strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
 			/// </summary>
 			[Column("TABLE_SCHEMA"),                Nullable] public string? TableSchema            { get; set; } // nvarchar(
 			/// <summary>
@@ -11463,7 +11323,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("DOMAIN_CATALOG"),              Nullable] public string? DomainCatalog          { get; set; } // nvarchar(
 			/// <summary>
-			/// If the column is a user-defined data type, this column is the name of the schema that contains the user-defined data type. Otherwise, returns NULL.<br/><br/> <strong>\*\* Important \*\*</strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
+			/// If the column is a user-defined data type, this column is the name of the schema that contains the user-defined data type. Otherwise, returns NULL.<br/><br/> <strong> Important </strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.
 			/// </summary>
 			[Column("DOMAIN_SCHEMA"),               Nullable] public string? DomainSchema           { get; set; } // nvarchar(
 			/// <summary>
@@ -11490,7 +11350,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("SCHEMA_NAME"),                   NotNull    ] public string  SchemaName                 { get; set; } = null!; // nvarchar(
 			/// <summary>
-			/// Schema owner name.<br/><br/> <strong>&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;</strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of an object is to query the sys.objects catalog view.
+			/// Schema owner name.<br/><br/> <strong> Important </strong> Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of an object is to query the sys.objects catalog view.
 			/// </summary>
 			[Column("SCHEMA_OWNER"),                     Nullable] public string? SchemaOwner                { get; set; } // nvarchar(
 			/// <summary>
@@ -11522,7 +11382,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("TABLE_CATALOG"),    Nullable] public string? TableCatalog { get; set; } // nvarchar(
 			/// <summary>
-			/// Name of schema that contains the table.<br/><br/> <strong>\*\* Important \*\*</strong>  only reliable way to find the schema of an object is to query the sys.objects catalog view. INFORMATION_SCHEMA views could be incomplete since they are not updated for all new features.
+			/// Name of schema that contains the table.<br/><br/> <strong> Important </strong>  only reliable way to find the schema of an object is to query the sys.objects catalog view. INFORMATION_SCHEMA views could be incomplete since they are not updated for all new features.
 			/// </summary>
 			[Column("TABLE_SCHEMA"),     Nullable] public string? TableSchema  { get; set; } // nvarchar(
 			/// <summary>
@@ -11550,7 +11410,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("CONSTRAINT_CATALOG"),    Nullable] public string? ConstraintCatalog { get; set; } // nvarchar(
 			/// <summary>
-			/// Name of schema that contains the constraint.<br/><br/> <strong>\*\* Important \*\*</strong>  only reliable way to find the schema of a object is to query the sys.objects catalog view.
+			/// Name of schema that contains the constraint.<br/><br/> <strong> Important </strong>  only reliable way to find the schema of a object is to query the sys.objects catalog view.
 			/// </summary>
 			[Column("CONSTRAINT_SCHEMA"),     Nullable] public string? ConstraintSchema  { get; set; } // nvarchar(
 			/// <summary>
@@ -11562,7 +11422,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("TABLE_CATALOG"),         Nullable] public string? TableCatalog      { get; set; } // nvarchar(
 			/// <summary>
-			/// Name of schema that contains the table.<br/><br/> <strong>\*\* Important \*\*</strong>  only reliable way to find the schema of a object is to query the sys.objects catalog view.
+			/// Name of schema that contains the table.<br/><br/> <strong> Important </strong>  only reliable way to find the schema of a object is to query the sys.objects catalog view.
 			/// </summary>
 			[Column("TABLE_SCHEMA"),          Nullable] public string? TableSchema       { get; set; } // nvarchar(
 			/// <summary>
@@ -11606,7 +11466,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("TABLE_CATALOG"),     Nullable] public string? TableCatalog  { get; set; } // nvarchar(
 			/// <summary>
-			/// Name of schema that contains the table.<br/><br/> <strong>\*\* Important \*\*</strong>  only reliable way to find the schema of a object is to query the sys.objects catalog view.
+			/// Name of schema that contains the table.<br/><br/> <strong> Important </strong>  only reliable way to find the schema of a object is to query the sys.objects catalog view.
 			/// </summary>
 			[Column("TABLE_SCHEMA"),      Nullable] public string? TableSchema   { get; set; } // nvarchar(
 			/// <summary>
@@ -11638,7 +11498,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("TABLE_CATALOG"),      Nullable] public string? TableCatalog   { get; set; } // nvarchar(
 			/// <summary>
-			/// Name of schema that contains the view.<br/><br/> <strong>&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;</strong>  only reliable way to find the schema of a object is to query the sys.objects catalog view.
+			/// Name of schema that contains the view.<br/><br/> <strong> Important </strong>  only reliable way to find the schema of a object is to query the sys.objects catalog view.
 			/// </summary>
 			[Column("TABLE_SCHEMA"),       Nullable] public string? TableSchema    { get; set; } // nvarchar(
 			/// <summary>
@@ -11674,7 +11534,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("VIEW_CATALOG"),     Nullable] public string? ViewCatalog  { get; set; } // nvarchar(
 			/// <summary>
-			/// Name of schema that contains the view.<br/><br/> <strong>&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;</strong>  only reliable way to find the schema of a object is to query the sys.objects catalog view.
+			/// Name of schema that contains the view.<br/><br/> <strong> Important </strong>  only reliable way to find the schema of a object is to query the sys.objects catalog view.
 			/// </summary>
 			[Column("VIEW_SCHEMA"),      Nullable] public string? ViewSchema   { get; set; } // nvarchar(
 			/// <summary>
@@ -11686,7 +11546,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("TABLE_CATALOG"),    Nullable] public string? TableCatalog { get; set; } // nvarchar(
 			/// <summary>
-			/// Name of schema that contains the table.<br/><br/> <strong>&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;</strong>  only reliable way to find the schema of a object is to query the sys.objects catalog view.
+			/// Name of schema that contains the table.<br/><br/> <strong> Important </strong>  only reliable way to find the schema of a object is to query the sys.objects catalog view.
 			/// </summary>
 			[Column("TABLE_SCHEMA"),     Nullable] public string? TableSchema  { get; set; } // nvarchar(
 			/// <summary>
@@ -11714,7 +11574,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("VIEW_CATALOG"),     Nullable] public string? ViewCatalog  { get; set; } // nvarchar(
 			/// <summary>
-			/// Name of schema that contains the view.<br/><br/> <strong>&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;</strong>  only reliable way to find the schema of a object is to query the sys.objects catalog view.
+			/// Name of schema that contains the view.<br/><br/> <strong> Important </strong>  only reliable way to find the schema of a object is to query the sys.objects catalog view.
 			/// </summary>
 			[Column("VIEW_SCHEMA"),      Nullable] public string? ViewSchema   { get; set; } // nvarchar(
 			/// <summary>
@@ -11726,7 +11586,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("TABLE_CATALOG"),    Nullable] public string? TableCatalog { get; set; } // nvarchar(
 			/// <summary>
-			/// Name of schema that contains the base table.<br/><br/> <strong>&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;</strong>  only reliable way to find the schema of a object is to query the sys.objects catalog view.
+			/// Name of schema that contains the base table.<br/><br/> <strong> Important </strong>  only reliable way to find the schema of a object is to query the sys.objects catalog view.
 			/// </summary>
 			[Column("TABLE_SCHEMA"),     Nullable] public string? TableSchema  { get; set; } // nvarchar(
 			/// <summary>
@@ -12540,7 +12400,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// 1 = Column is a declared ROWGUIDCOL.
 			/// </summary>
-			[Column("is_rowguidcol"),                NotNull    ] public bool    IsRowguidcol             { get; set; } // bit
+			[Column("is_rowguidcol"),                NotNull    ] public bool    IsRowGuidCol             { get; set; } // bit
 			/// <summary>
 			/// 1 = Column has identity values
 			/// </summary>
@@ -12613,7 +12473,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// all_objects
+			/// all_objects (sys.all_objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="all_objects", BackReferenceName="AllColumns")]
 			public ObjectSchema.AllObject AllObject { get; set; } = null!;
@@ -12682,25 +12542,25 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// all_columns
+			/// all_columns (sys.all_columns)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.AllColumn> AllColumns { get; set; } = null!;
 
 			/// <summary>
-			/// all_parameters
+			/// all_parameters (sys.all_parameters)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.AllParameter> AllParameters { get; set; } = null!;
 
 			/// <summary>
-			/// all_sql_modules
+			/// all_sql_modules (sys.all_sql_modules)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.AllSqlModule> AllSqlModules { get; set; } = null!;
 
 			/// <summary>
-			/// all_views
+			/// all_views (sys.all_views)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
 			public ObjectSchema.AllView? AllView { get; set; }
@@ -12848,7 +12708,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// all_objects
+			/// all_objects (sys.all_objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="all_objects", BackReferenceName="AllParameters")]
 			public ObjectSchema.AllObject AllObject { get; set; } = null!;
@@ -12910,7 +12770,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// all_objects
+			/// all_objects (sys.all_objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="all_objects", BackReferenceName="AllSqlModules")]
 			public ObjectSchema.AllObject AllObject { get; set; } = null!;
@@ -13003,7 +12863,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// all_objects
+			/// all_objects (sys.all_objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="all_objects", BackReferenceName="AllView")]
 			public ObjectSchema.AllObject AllObject { get; set; } = null!;
@@ -13048,7 +12908,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="objects", BackReferenceName="AssemblyModule")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -13145,7 +13005,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="objects", BackReferenceName="CheckConstraint")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -13216,7 +13076,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// 1 = Column is a declared ROWGUIDCOL.
 			/// </summary>
-			[Column("is_rowguidcol"),                       NotNull    ] public bool    IsRowguidcol                    { get; set; } // bit
+			[Column("is_rowguidcol"),                       NotNull    ] public bool    IsRowGuidCol                    { get; set; } // bit
 			/// <summary>
 			/// 1 = Column has identity values
 			/// </summary>
@@ -13329,7 +13189,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="Columns")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -13437,7 +13297,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ColumnStoreRowGroups")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -13576,7 +13436,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// 1 = Column is a declared ROWGUIDCOL.
 			/// </summary>
-			[Column("is_rowguidcol"),                       NotNull    ] public bool    IsRowguidcol                    { get; set; } // bit
+			[Column("is_rowguidcol"),                       NotNull    ] public bool    IsRowGuidCol                    { get; set; } // bit
 			/// <summary>
 			/// 1 = Column has identity values
 			/// </summary>
@@ -13701,7 +13561,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ComputedColumns")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -13782,7 +13642,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="objects", BackReferenceName="DefaultConstraint")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -13827,7 +13687,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="Events")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -13892,7 +13752,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="EventNotifications")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -13988,7 +13848,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ExtendedProcedures")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -14235,7 +14095,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="objects", BackReferenceName="ForeignKey")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -14307,7 +14167,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="FunctionOrderColumns")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -14421,7 +14281,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="HashIndexes")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -14486,7 +14346,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// 1 = Column is a declared ROWGUIDCOL.
 			/// </summary>
-			[Column("is_rowguidcol"),                       NotNull    ] public bool    IsRowguidcol                    { get; set; } // bit
+			[Column("is_rowguidcol"),                       NotNull    ] public bool    IsRowGuidCol                    { get; set; } // bit
 			/// <summary>
 			/// 1 = Column has identity values
 			/// </summary>
@@ -14615,7 +14475,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="IdentityColumns")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -14724,7 +14584,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="Indexes")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -14781,7 +14641,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="IndexColumns")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -14855,7 +14715,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="IndexResumableOperations")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -14924,7 +14784,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="InternalPartitions")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -15018,7 +14878,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="InternalTables")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -15095,7 +14955,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="objects", BackReferenceName="KeyConstraint")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -15144,7 +15004,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="MaskedColumns")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -15185,7 +15045,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="MemoryOptimizedTablesInternalAttributes")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -15214,7 +15074,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ModuleAssemblyUsages")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -15250,7 +15110,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="NumberedProcedures")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -15321,7 +15181,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="NumberedProcedureParameters")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -15394,487 +15254,487 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// assembly_modules
+			/// assembly_modules (sys.assembly_modules)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
 			public ObjectSchema.AssemblyModule? AssemblyModule { get; set; }
 
 			/// <summary>
-			/// change_tracking_tables
+			/// change_tracking_tables (sys.change_tracking_tables)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ChangeTrackingSchema.ChangeTrackingTable> ChangeTrackingTables { get; set; } = null!;
 
 			/// <summary>
-			/// check_constraints
+			/// check_constraints (sys.check_constraints)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
 			public ObjectSchema.CheckConstraint? CheckConstraint { get; set; }
 
 			/// <summary>
-			/// columns
+			/// columns (sys.columns)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.Column> Columns { get; set; } = null!;
 
 			/// <summary>
-			/// column_store_row_groups
+			/// column_store_row_groups (sys.column_store_row_groups)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.ColumnStoreRowGroup> ColumnStoreRowGroups { get; set; } = null!;
 
 			/// <summary>
-			/// column_type_usages
+			/// column_type_usages (sys.column_type_usages)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ScalarTypesSchema.ColumnTypeUsage> ColumnTypeUsages { get; set; } = null!;
 
 			/// <summary>
-			/// column_xml_schema_collection_usages
+			/// column_xml_schema_collection_usages (sys.column_xml_schema_collection_usages)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<XmlSchema.ColumnXmlSchemaCollectionUsage> ColumnXmlSchemaCollectionUsages { get; set; } = null!;
 
 			/// <summary>
-			/// computed_columns
+			/// computed_columns (sys.computed_columns)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.ComputedColumn> ComputedColumns { get; set; } = null!;
 
 			/// <summary>
-			/// database_event_session_fields
+			/// database_event_session_fields (sys.database_event_session_fields)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ExtendedEventsSchema.DatabaseEventSessionField> DatabaseEventSessionFields { get; set; } = null!;
 
 			/// <summary>
-			/// default_constraints
+			/// default_constraints (sys.default_constraints)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
 			public ObjectSchema.DefaultConstraint? DefaultConstraint { get; set; }
 
 			/// <summary>
-			/// event_notifications
+			/// event_notifications (sys.event_notifications)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.EventNotification> EventNotifications { get; set; } = null!;
 
 			/// <summary>
-			/// events
+			/// events (sys.events)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.Event> Events { get; set; } = null!;
 
 			/// <summary>
-			/// extended_procedures
+			/// extended_procedures (sys.extended_procedures)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.ExtendedProcedure> ExtendedProcedures { get; set; } = null!;
 
 			/// <summary>
-			/// external_tables
+			/// external_tables (sys.external_tables)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ExternalOperationsSchema.ExternalTable> ExternalTables { get; set; } = null!;
 
 			/// <summary>
-			/// filetables
+			/// filetables (sys.filetables)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<FilestreamAndFileTableSchema.Filetable> Filetables { get; set; } = null!;
+			public IList<FilestreamAndFileTableSchema.FileTable> Filetables { get; set; } = null!;
 
 			/// <summary>
-			/// filetable_system_defined_objects
+			/// filetable_system_defined_objects (sys.filetable_system_defined_objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<FilestreamAndFileTableSchema.FiletableSystemDefinedObject> FiletableSystemDefinedObjects { get; set; } = null!;
+			public IList<FilestreamAndFileTableSchema.FileTableSystemDefinedObject> FiletableSystemDefinedObjects { get; set; } = null!;
 
 			/// <summary>
-			/// foreign_keys
+			/// foreign_keys (sys.foreign_keys)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
 			public ObjectSchema.ForeignKey? ForeignKey { get; set; }
 
 			/// <summary>
-			/// fulltext_index_catalog_usages
+			/// fulltext_index_catalog_usages (sys.fulltext_index_catalog_usages)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<FullTextSearchSchema.FulltextIndexCatalogUsage> FulltextIndexCatalogUsages { get; set; } = null!;
+			public IList<FullTextSearchSchema.IndexCatalogUsage> FulltextIndexCatalogUsages { get; set; } = null!;
 
 			/// <summary>
-			/// fulltext_index_columns
+			/// fulltext_index_columns (sys.fulltext_index_columns)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<FullTextSearchSchema.FulltextIndexColumn> FulltextIndexColumns { get; set; } = null!;
+			public IList<FullTextSearchSchema.IndexColumn> FulltextIndexColumns { get; set; } = null!;
 
 			/// <summary>
-			/// fulltext_indexes
+			/// fulltext_indexes (sys.fulltext_indexes)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
-			public IList<FullTextSearchSchema.FulltextIndex> FulltextIndexes { get; set; } = null!;
+			public IList<FullTextSearchSchema.Index> FulltextIndexes { get; set; } = null!;
 
 			/// <summary>
-			/// function_order_columns
+			/// function_order_columns (sys.function_order_columns)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.FunctionOrderColumn> FunctionOrderColumns { get; set; } = null!;
 
 			/// <summary>
-			/// hash_indexes
+			/// hash_indexes (sys.hash_indexes)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.HashIndex> HashIndexes { get; set; } = null!;
 
 			/// <summary>
-			/// identity_columns
+			/// identity_columns (sys.identity_columns)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.IdentityColumn> IdentityColumns { get; set; } = null!;
 
 			/// <summary>
-			/// index_columns
+			/// index_columns (sys.index_columns)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.IndexColumn> IndexColumns { get; set; } = null!;
 
 			/// <summary>
-			/// indexes
+			/// indexes (sys.indexes)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.Index> Indexes { get; set; } = null!;
 
 			/// <summary>
-			/// index_resumable_operations
+			/// index_resumable_operations (sys.index_resumable_operations)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.IndexResumableOperation> IndexResumableOperations { get; set; } = null!;
 
 			/// <summary>
-			/// internal_partitions
+			/// internal_partitions (sys.internal_partitions)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.InternalPartition> InternalPartitions { get; set; } = null!;
 
 			/// <summary>
-			/// internal_tables
+			/// internal_tables (sys.internal_tables)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.InternalTable> InternalTables { get; set; } = null!;
 
 			/// <summary>
-			/// key_constraints
+			/// key_constraints (sys.key_constraints)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
 			public ObjectSchema.KeyConstraint? KeyConstraint { get; set; }
 
 			/// <summary>
-			/// ledger_column_history
+			/// ledger_column_history (sys.ledger_column_history)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<SecuritySchema.LedgerColumnHistory> LedgerColumnHistory { get; set; } = null!;
 
 			/// <summary>
-			/// ledger_table_history
+			/// ledger_table_history (sys.ledger_table_history)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<SecuritySchema.LedgerTableHistory> LedgerTableHistory { get; set; } = null!;
 
 			/// <summary>
-			/// masked_columns
+			/// masked_columns (sys.masked_columns)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.MaskedColumn> MaskedColumns { get; set; } = null!;
 
 			/// <summary>
-			/// memory_optimized_tables_internal_attributes
+			/// memory_optimized_tables_internal_attributes (sys.memory_optimized_tables_internal_attributes)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.MemoryOptimizedTablesInternalAttribute> MemoryOptimizedTablesInternalAttributes { get; set; } = null!;
 
 			/// <summary>
-			/// module_assembly_usages
+			/// module_assembly_usages (sys.module_assembly_usages)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.ModuleAssemblyUsage> ModuleAssemblyUsages { get; set; } = null!;
 
 			/// <summary>
-			/// numbered_procedure_parameters
+			/// numbered_procedure_parameters (sys.numbered_procedure_parameters)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.NumberedProcedureParameter> NumberedProcedureParameters { get; set; } = null!;
 
 			/// <summary>
-			/// numbered_procedures
+			/// numbered_procedures (sys.numbered_procedures)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.NumberedProcedure> NumberedProcedures { get; set; } = null!;
 
 			/// <summary>
-			/// parameters
+			/// parameters (sys.parameters)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.Parameter> Parameters { get; set; } = null!;
 
 			/// <summary>
-			/// parameter_type_usages
+			/// parameter_type_usages (sys.parameter_type_usages)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ScalarTypesSchema.ParameterTypeUsage> ParameterTypeUsages { get; set; } = null!;
 
 			/// <summary>
-			/// parameter_xml_schema_collection_usages
+			/// parameter_xml_schema_collection_usages (sys.parameter_xml_schema_collection_usages)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<XmlSchema.ParameterXmlSchemaCollectionUsage> ParameterXmlSchemaCollectionUsages { get; set; } = null!;
 
 			/// <summary>
-			/// partitions
+			/// partitions (sys.partitions)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.Partition> Partitions { get; set; } = null!;
 
 			/// <summary>
-			/// pdw_column_distribution_properties
+			/// pdw_column_distribution_properties (sys.pdw_column_distribution_properties)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<AzureSynapseAnalyticsSchema.ColumnDistributionProperty> PdwColumnDistributionProperties { get; set; } = null!;
 
 			/// <summary>
-			/// pdw_index_mappings
+			/// pdw_index_mappings (sys.pdw_index_mappings)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<AzureSynapseAnalyticsSchema.IndexMapping> PdwIndexMappings { get; set; } = null!;
 
 			/// <summary>
-			/// pdw_materialized_view_column_distribution_properties
+			/// pdw_materialized_view_column_distribution_properties (sys.pdw_materialized_view_column_distribution_properties)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<AzureSynapseAnalyticsSchema.MaterializedViewColumnDistributionProperty> PdwMaterializedViewColumnDistributionProperties { get; set; } = null!;
 
 			/// <summary>
-			/// pdw_materialized_view_distribution_properties
+			/// pdw_materialized_view_distribution_properties (sys.pdw_materialized_view_distribution_properties)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<AzureSynapseAnalyticsSchema.MaterializedViewDistributionProperty> PdwMaterializedViewDistributionProperties { get; set; } = null!;
 
 			/// <summary>
-			/// pdw_materialized_view_mappings
+			/// pdw_materialized_view_mappings (sys.pdw_materialized_view_mappings)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<AzureSynapseAnalyticsSchema.MaterializedViewMapping> PdwMaterializedViewMappings { get; set; } = null!;
 
 			/// <summary>
-			/// pdw_nodes_columns
+			/// pdw_nodes_columns (sys.pdw_nodes_columns)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<AzureSynapseAnalyticsSchema.NodesColumn> PdwNodesColumns { get; set; } = null!;
 
 			/// <summary>
-			/// pdw_nodes_column_store_row_groups
+			/// pdw_nodes_column_store_row_groups (sys.pdw_nodes_column_store_row_groups)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<AzureSynapseAnalyticsSchema.NodesColumnStoreRowGroup> PdwNodesColumnStoreRowGroups { get; set; } = null!;
 
 			/// <summary>
-			/// pdw_nodes_indexes
+			/// pdw_nodes_indexes (sys.pdw_nodes_indexes)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<AzureSynapseAnalyticsSchema.NodesIndex> PdwNodesIndexes { get; set; } = null!;
 
 			/// <summary>
-			/// pdw_nodes_partitions
+			/// pdw_nodes_partitions (sys.pdw_nodes_partitions)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<AzureSynapseAnalyticsSchema.NodesPartition> PdwNodesPartitions { get; set; } = null!;
 
 			/// <summary>
-			/// pdw_nodes_tables
+			/// pdw_nodes_tables (sys.pdw_nodes_tables)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<AzureSynapseAnalyticsSchema.NodesTable> PdwNodesTables { get; set; } = null!;
 
 			/// <summary>
-			/// pdw_permanent_table_mappings
+			/// pdw_permanent_table_mappings (sys.pdw_permanent_table_mappings)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<AzureSynapseAnalyticsSchema.PermanentTableMapping> PdwPermanentTableMappings { get; set; } = null!;
 
 			/// <summary>
-			/// pdw_replicated_table_cache_state
+			/// pdw_replicated_table_cache_state (sys.pdw_replicated_table_cache_state)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<AzureSynapseAnalyticsSchema.ReplicatedTableCacheState> PdwReplicatedTableCacheState { get; set; } = null!;
 
 			/// <summary>
-			/// pdw_table_distribution_properties
+			/// pdw_table_distribution_properties (sys.pdw_table_distribution_properties)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<AzureSynapseAnalyticsSchema.TableDistributionProperty> PdwTableDistributionProperties { get; set; } = null!;
 
 			/// <summary>
-			/// pdw_table_mappings
+			/// pdw_table_mappings (sys.pdw_table_mappings)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<AzureSynapseAnalyticsSchema.TableMapping> PdwTableMappings { get; set; } = null!;
 
 			/// <summary>
-			/// periods
+			/// periods (sys.periods)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.Period> Periods { get; set; } = null!;
 
 			/// <summary>
-			/// procedures
+			/// procedures (sys.procedures)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.Procedure> Procedures { get; set; } = null!;
 
 			/// <summary>
-			/// query_store_query
+			/// query_store_query (sys.query_store_query)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<QueryStoreSchema.QueryStoreQuery> QueryStoreQuery { get; set; } = null!;
 
 			/// <summary>
-			/// remote_data_archive_tables
+			/// remote_data_archive_tables (sys.remote_data_archive_tables)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<StretchDatabaseSchema.RemoteDataArchiveTable> RemoteDataArchiveTables { get; set; } = null!;
 
 			/// <summary>
-			/// security_policies
+			/// security_policies (sys.security_policies)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<SecuritySchema.SecurityPolicy> SecurityPolicies { get; set; } = null!;
 
 			/// <summary>
-			/// security_predicates
+			/// security_predicates (sys.security_predicates)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<SecuritySchema.SecurityPredicate> SecurityPredicates { get; set; } = null!;
 
 			/// <summary>
-			/// selective_xml_index_paths
+			/// selective_xml_index_paths (sys.selective_xml_index_paths)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<XmlSchema.SelectiveXmlIndexPath> SelectiveXmlIndexPaths { get; set; } = null!;
 
 			/// <summary>
-			/// sequences
+			/// sequences (sys.sequences)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.Sequence> Sequences { get; set; } = null!;
 
 			/// <summary>
-			/// server_assembly_modules
+			/// server_assembly_modules (sys.server_assembly_modules)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.ServerAssemblyModule> ServerAssemblyModules { get; set; } = null!;
 
 			/// <summary>
-			/// server_event_notifications
+			/// server_event_notifications (sys.server_event_notifications)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.ServerEventNotification> ServerEventNotifications { get; set; } = null!;
 
 			/// <summary>
-			/// server_events
+			/// server_events (sys.server_events)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.ServerEvent> ServerEvents { get; set; } = null!;
 
 			/// <summary>
-			/// server_event_session_fields
+			/// server_event_session_fields (sys.server_event_session_fields)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ExtendedEventsSchema.ServerEventSessionField> ServerEventSessionFields { get; set; } = null!;
 
 			/// <summary>
-			/// server_sql_modules
+			/// server_sql_modules (sys.server_sql_modules)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.ServerSqlModule> ServerSqlModules { get; set; } = null!;
 
 			/// <summary>
-			/// server_triggers
+			/// server_triggers (sys.server_triggers)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.ServerTrigger> ServerTriggers { get; set; } = null!;
 
 			/// <summary>
-			/// service_queues
+			/// service_queues (sys.service_queues)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
 			public ServiceBrokerSchema.ServiceQueue? ServiceQueue { get; set; }
 
 			/// <summary>
-			/// spatial_indexes
+			/// spatial_indexes (sys.spatial_indexes)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<SpatialDataSchema.SpatialIndex> SpatialIndexes { get; set; } = null!;
 
 			/// <summary>
-			/// spatial_index_tessellations
+			/// spatial_index_tessellations (sys.spatial_index_tessellations)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<SpatialDataSchema.SpatialIndexTessellation> SpatialIndexTessellations { get; set; } = null!;
 
 			/// <summary>
-			/// sql_dependencies
+			/// sql_dependencies (sys.sql_dependencies)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.SqlDependency> SqlDependencies { get; set; } = null!;
 
 			/// <summary>
-			/// sql_modules
+			/// sql_modules (sys.sql_modules)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.SqlModule> SqlModules { get; set; } = null!;
 
 			/// <summary>
-			/// stats
+			/// stats (sys.stats)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.Stat> Stats { get; set; } = null!;
 
 			/// <summary>
-			/// stats_columns
+			/// stats_columns (sys.stats_columns)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.StatsColumn> StatsColumns { get; set; } = null!;
 
 			/// <summary>
-			/// synonyms
+			/// synonyms (sys.synonyms)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
 			public ObjectSchema.Synonym? Synonym { get; set; }
 
 			/// <summary>
-			/// tables
+			/// tables (sys.tables)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
 			public ObjectSchema.Table? Table { get; set; }
 
 			/// <summary>
-			/// trigger_events
+			/// trigger_events (sys.trigger_events)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.TriggerEvent> TriggerEvents { get; set; } = null!;
 
 			/// <summary>
-			/// triggers
+			/// triggers (sys.triggers)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.Trigger> Triggers { get; set; } = null!;
 
 			/// <summary>
-			/// views
+			/// views (sys.views)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
 			public ObjectSchema.View? View { get; set; }
 
 			/// <summary>
-			/// xml_indexes
+			/// xml_indexes (sys.xml_indexes)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<XmlSchema.XmlIndex> XmlIndexes { get; set; } = null!;
@@ -15979,7 +15839,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="Parameters")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -16036,7 +15896,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="Partitions")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -16081,7 +15941,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="Periods")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -16225,7 +16085,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="Procedures")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -16350,7 +16210,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="Sequences")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -16391,7 +16251,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ServerAssemblyModules")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -16432,7 +16292,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ServerEvents")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -16497,7 +16357,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ServerEventNotifications")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -16538,7 +16398,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ServerSqlModules")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -16603,7 +16463,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ServerTriggers")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -16686,7 +16546,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="SqlDependencies")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -16834,7 +16694,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="SqlModules")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -16908,7 +16768,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="Stats")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -16945,7 +16805,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="StatsColumns")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -17018,7 +16878,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="objects", BackReferenceName="Synonym")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -17082,7 +16942,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// 1 = Column is a declared ROWGUIDCOL.
 			/// </summary>
-			[Column("is_rowguidcol"),                NotNull    ] public bool    IsRowguidcol             { get; set; } // bit
+			[Column("is_rowguidcol"),                NotNull    ] public bool    IsRowGuidCol             { get; set; } // bit
 			/// <summary>
 			/// 1 = Column has identity values.
 			/// </summary>
@@ -17155,7 +17015,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// system_objects
+			/// system_objects (sys.system_objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="system_objects", BackReferenceName="SystemColumns")]
 			public ObjectSchema.SystemObject SystemObject { get; set; } = null!;
@@ -17224,25 +17084,25 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// system_columns
+			/// system_columns (sys.system_columns)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.SystemColumn> SystemColumns { get; set; } = null!;
 
 			/// <summary>
-			/// system_parameters
+			/// system_parameters (sys.system_parameters)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.SystemParameter> SystemParameters { get; set; } = null!;
 
 			/// <summary>
-			/// system_sql_modules
+			/// system_sql_modules (sys.system_sql_modules)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToMany, IsBackReference=true)]
 			public IList<ObjectSchema.SystemSqlModule> SystemSqlModules { get; set; } = null!;
 
 			/// <summary>
-			/// system_views
+			/// system_views (sys.system_views)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=true, Relationship=LinqToDB.Mapping.Relationship.OneToOne, IsBackReference=true)]
 			public ObjectSchema.SystemView? SystemView { get; set; }
@@ -17347,7 +17207,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// system_objects
+			/// system_objects (sys.system_objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="system_objects", BackReferenceName="SystemParameters")]
 			public ObjectSchema.SystemObject SystemObject { get; set; } = null!;
@@ -17404,7 +17264,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// system_objects
+			/// system_objects (sys.system_objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="system_objects", BackReferenceName="SystemSqlModules")]
 			public ObjectSchema.SystemObject SystemObject { get; set; } = null!;
@@ -17497,7 +17357,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// system_objects
+			/// system_objects (sys.system_objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="system_objects", BackReferenceName="SystemView")]
 			public ObjectSchema.SystemObject SystemObject { get; set; } = null!;
@@ -17573,7 +17433,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Maximum column ID ever used by this table.
 			/// </summary>
-			[Column("max_column_id_used"),                 NotNull    ] public int      MaxColumnIdUsed                { get; set; } // int
+			[Column("max_column_id_used"),                 NotNull    ] public int      MaxColumnIDUsed                { get; set; } // int
 			/// <summary>
 			/// Table is locked on bulk load. For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-stored-procedures/sp-tableoption-transact-sql'>sp_tableoption (Transact-SQL)</a>.
 			/// </summary>
@@ -17625,7 +17485,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// <strong>Applies to</strong>: SQL Server 2012 (11.x) and later and Azure SQL Database.<br/><br/> 1 = Table is a FileTable.<br/><br/> For more information about FileTables, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/blob/filetables-sql-server'>FileTables (SQL Server)</a>.
 			/// </summary>
-			[Column("is_filetable"),                          Nullable] public bool?    IsFiletable                    { get; set; } // bit
+			[Column("is_filetable"),                          Nullable] public bool?    IsFileTable                    { get; set; } // bit
 			/// <summary>
 			/// <strong>Applies to</strong>: SQL Server 2014 (12.x) and later and Azure SQL Database.<br/><br/> The following are possible values:<br/><br/> 0 = SCHEMA_AND_DATA<br/><br/> 1 = SCHEMA_ONLY<br/><br/> The value of 0 is the default value.
 			/// </summary>
@@ -17698,7 +17558,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="objects", BackReferenceName="Table")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -17795,7 +17655,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="Triggers")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -17851,7 +17711,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="TriggerEvents")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -17979,7 +17839,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="objects", BackReferenceName="View")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -18297,7 +18157,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// When the execution_mode is On schedule, contains the ID of the schedule; otherwise, is NULL.
 			/// </summary>
-			[Column("schedule_uid"),      NotNull] public Guid     ScheduleUid     { get; set; } // uniqueidentifier
+			[Column("schedule_uid"),      NotNull] public Guid     ScheduleUID     { get; set; } // uniqueidentifier
 			/// <summary>
 			/// Description of the policy. The description column is optional and can be NULL.
 			/// </summary>
@@ -18976,7 +18836,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="QueryStoreQuery")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -19462,7 +19322,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <para>Returns the stored Resource Governor state.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-resource-governor-configuration-transact-sql'>sys.resource_governor_configuration</a>.</para>
 			/// </summary>
-			public ITable<ResourceGovernorConfiguration>        ResourceGovernorConfigurations        { get { return _dataContext.GetTable<ResourceGovernorConfiguration>(); } }
+			public ITable<Configuration>        Configurations        { get { return _dataContext.GetTable<Configuration>(); } }
 			/// <summary>
 			/// <para><strong>sys.resource_governor_external_resource_pools (Transact-SQL)</strong></para>
 			/// <para><strong>Applies to:</strong> √ SQL Server 2016 (13.x) and later</para>
@@ -19470,21 +19330,21 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// Returns the stored external resource pool configuration in SQL Server. Each row of the view determines the configuration of a pool.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-resource-governor-external-resource-pools-transact-sql'>sys.resource_governor_external_resource_pools</a>.</para>
 			/// </summary>
-			public ITable<ResourceGovernorExternalResourcePool> ResourceGovernorExternalResourcePools { get { return _dataContext.GetTable<ResourceGovernorExternalResourcePool>(); } }
+			public ITable<ExternalResourcePool> ExternalResourcePools { get { return _dataContext.GetTable<ExternalResourcePool>(); } }
 			/// <summary>
 			/// <para><strong>sys.resource_governor_resource_pools (Transact-SQL)</strong></para>
 			/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)</para>
 			/// <para>Returns the stored resource pool configuration in SQL Server. Each row of the view determines the configuration of a pool.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-resource-governor-resource-pools-transact-sql'>sys.resource_governor_resource_pools</a>.</para>
 			/// </summary>
-			public ITable<ResourceGovernorResourcePool>         ResourceGovernorResourcePools         { get { return _dataContext.GetTable<ResourceGovernorResourcePool>(); } }
+			public ITable<ResourcePool>         ResourcePools         { get { return _dataContext.GetTable<ResourcePool>(); } }
 			/// <summary>
 			/// <para><strong>sys.resource_governor_workload_groups (Transact-SQL)</strong></para>
 			/// <para><strong>Applies to:</strong> √ SQL Server (all supported versions)</para>
 			/// <para>Returns the stored workload group configuration in SQL Server. Each workload group can subscribe to one and only one resource pool.</para><br/>
 			/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-resource-governor-workload-groups-transact-sql'>sys.resource_governor_workload_groups</a>.</para>
 			/// </summary>
-			public ITable<ResourceGovernorWorkloadGroup>        ResourceGovernorWorkloadGroups        { get { return _dataContext.GetTable<ResourceGovernorWorkloadGroup>(); } }
+			public ITable<WorkloadGroup>        WorkloadGroups        { get { return _dataContext.GetTable<WorkloadGroup>(); } }
 
 			private readonly IDataContext _dataContext;
 
@@ -19501,7 +19361,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-resource-governor-configuration-transact-sql'>sys.resource_governor_configuration</a>.</para>
 		/// </summary>
 		[Table(Schema="sys", Name="resource_governor_configuration", IsView=true)]
-		public partial class ResourceGovernorConfiguration
+		public partial class Configuration
 		{
 			/// <summary>
 			/// The ID of the classifier function as it is stored in the metadata. Is not nullable.<br/><br/> <strong>Note</strong> This function is used to classify new sessions and uses rules to route the workload to the appropriate workload group. For more information, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/resource-governor/resource-governor'>Resource Governor</a>.
@@ -19525,7 +19385,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-resource-governor-external-resource-pools-transact-sql'>sys.resource_governor_external_resource_pools</a>.</para>
 		/// </summary>
 		[Table(Schema="sys", Name="resource_governor_external_resource_pools", IsView=true)]
-		public partial class ResourceGovernorExternalResourcePool
+		public partial class ExternalResourcePool
 		{
 			/// <summary>
 			/// Unique ID of the resource pool. Is not nullable.
@@ -19560,7 +19420,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-resource-governor-resource-pools-transact-sql'>sys.resource_governor_resource_pools</a>.</para>
 		/// </summary>
 		[Table(Schema="sys", Name="resource_governor_resource_pools", IsView=true)]
-		public partial class ResourceGovernorResourcePool
+		public partial class ResourcePool
 		{
 			/// <summary>
 			/// Unique ID of the resource pool. Is not nullable.
@@ -19607,7 +19467,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <para>See <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-resource-governor-workload-groups-transact-sql'>sys.resource_governor_workload_groups</a>.</para>
 		/// </summary>
 		[Table(Schema="sys", Name="resource_governor_workload_groups", IsView=true)]
-		public partial class ResourceGovernorWorkloadGroup
+		public partial class WorkloadGroup
 		{
 			/// <summary>
 			/// Unique ID of the workload group. Is not nullable.
@@ -19763,7 +19623,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ColumnTypeUsages")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -19799,7 +19659,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ParameterTypeUsages")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -20955,18 +20815,6 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// ID of the object that the database scoped credential is mapped to. Returns 0 for database scoped credentials
 			/// </summary>
 			[Column("target_id"),              Nullable] public int?     TargetID           { get; set; } // int
-			/// <summary>
-			/// Description
-			/// </summary>
-			[Column("Column Name"),         NotNull    ] public object   ColumnName         { get; set; } = null!; // Data Type
-			/// <summary>
-			/// -----------------
-			/// </summary>
-			[Column("-----------------"),   NotNull    ] public object   _0                 { get; set; } = null!; // ---------------
-			/// <summary>
-			/// ID of the database principal who owns the key.
-			/// </summary>
-			[Column("principal_id"),        NotNull    ] public int      PrincipalID        { get; set; } // int
 		}
 
 		/// <summary>
@@ -21034,7 +20882,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="LedgerColumnHistory")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -21092,7 +20940,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="LedgerTableHistory")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -21278,7 +21126,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="SecurityPolicies")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -21331,7 +21179,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="SecurityPredicates")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -21638,207 +21486,43 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Identifies class of thing on which permission exists.<br/><br/> 100 = Server<br/><br/> 101 = Server-principal<br/><br/> 105 = Endpoint<br/><br/> 108 = Availability Group
 			/// </summary>
-			[Column("class"),                 NotNull    ] public byte    Class              { get; set; } // tinyint
+			[Column("class"),                NotNull    ] public byte    Class              { get; set; } // tinyint
 			/// <summary>
 			/// Description of class on which permission exists. One of the following values:<br/><br/> <strong>SERVER</strong><br/><br/> <strong>SERVER_PRINCIPAL</strong><br/><br/> <strong>ENDPOINT</strong><br/><br/> <strong>AVAILABILITY GROUP</strong>
 			/// </summary>
-			[Column("class_desc"),               Nullable] public string? ClassDesc          { get; set; } // nvarchar(60)
+			[Column("class_desc"),              Nullable] public string? ClassDesc          { get; set; } // nvarchar(60)
 			/// <summary>
 			/// ID of the securable on which permission exists, interpreted according to class. For most, this is just the kind of ID that applies to what the class represents. Interpretation for non-standard is as follows:<br/><br/> 100 = Always 0
 			/// </summary>
-			[Column("major_id"),              NotNull    ] public int     MajorID            { get; set; } // int
+			[Column("major_id"),             NotNull    ] public int     MajorID            { get; set; } // int
 			/// <summary>
 			/// Secondary ID of thing on which permission exists, interpreted according to class.
 			/// </summary>
-			[Column("minor_id"),              NotNull    ] public int     MinorID            { get; set; } // int
+			[Column("minor_id"),             NotNull    ] public int     MinorID            { get; set; } // int
 			/// <summary>
 			/// Server-principal-ID to which the permissions are granted.
 			/// </summary>
-			[Column("grantee_principal_id"),  NotNull    ] public int     GranteePrincipalID { get; set; } // int
+			[Column("grantee_principal_id"), NotNull    ] public int     GranteePrincipalID { get; set; } // int
 			/// <summary>
 			/// Server-principal-ID of the grantor of these permissions.
 			/// </summary>
-			[Column("grantor_principal_id"),  NotNull    ] public int     GrantorPrincipalID { get; set; } // int
+			[Column("grantor_principal_id"), NotNull    ] public int     GrantorPrincipalID { get; set; } // int
 			/// <summary>
 			/// Server permission type. For a list of permission types, see the next table.
 			/// </summary>
-			[Column("type"),                  NotNull    ] public string  TypeColumn         { get; set; } = null!; // char(4)
+			[Column("type"),                 NotNull    ] public string  TypeColumn         { get; set; } = null!; // char(4)
 			/// <summary>
 			/// Permission name.
 			/// </summary>
-			[Column("permission_name"),          Nullable] public string? PermissionName     { get; set; } // nvarchar(128)
+			[Column("permission_name"),         Nullable] public string? PermissionName     { get; set; } // nvarchar(128)
 			/// <summary>
 			/// Permission state:<br/><br/> D = Deny<br/><br/> R = Revoke<br/><br/> G = Grant<br/><br/> W = Grant With Grant option
 			/// </summary>
-			[Column("state"),                 NotNull    ] public string  State              { get; set; } = null!; // char(1)
+			[Column("state"),                NotNull    ] public string  State              { get; set; } = null!; // char(1)
 			/// <summary>
 			/// Description of permission state:<br/><br/> DENY<br/><br/> REVOKE<br/><br/> GRANT<br/><br/> GRANT_WITH_GRANT_OPTION
 			/// </summary>
-			[Column("state_desc"),               Nullable] public string? StateDesc          { get; set; } // nvarchar(60)
-			/// <summary>
-			/// Applies to securable
-			/// </summary>
-			[Column("Permission type"),       NotNull    ] public object  PermissionType     { get; set; } = null!; // Permission name
-			/// <summary>
-			/// --------------------------
-			/// </summary>
-			[Column("---------------------"), NotNull    ] public object  _1                 { get; set; } = null!; // ---------------------
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("AAES"),                  NotNull    ] public object  Aaes               { get; set; } = null!; // ALTER ANY EVENT SESSION
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("ADBO"),                  NotNull    ] public object  Adbo               { get; set; } = null!; // ADMINISTER BULK OPERATIONS
-			/// <summary>
-			/// ENDPOINT, LOGIN
-			/// </summary>
-			[Column("AL"),                    NotNull    ] public object  Al                 { get; set; } = null!; // ALTER
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("ALAA"),                  NotNull    ] public object  Alaa               { get; set; } = null!; // ALTER ANY SERVER AUDIT
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("ALAG"),                  NotNull    ] public object  Alag               { get; set; } = null!; // ALTER ANY AVAILABILITY GROUP
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("ALCD"),                  NotNull    ] public object  Alcd               { get; set; } = null!; // ALTER ANY CREDENTIAL
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("ALCO"),                  NotNull    ] public object  Alco               { get; set; } = null!; // ALTER ANY CONNECTION
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("ALDB"),                  NotNull    ] public object  Aldb               { get; set; } = null!; // ALTER ANY DATABASE
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("ALES"),                  NotNull    ] public object  Ales               { get; set; } = null!; // ALTER ANY EVENT NOTIFICATION
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("ALHE"),                  NotNull    ] public object  Alhe               { get; set; } = null!; // ALTER ANY ENDPOINT
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("ALLG"),                  NotNull    ] public object  Allg               { get; set; } = null!; // ALTER ANY LOGIN
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("ALLS"),                  NotNull    ] public object  Alls               { get; set; } = null!; // ALTER ANY LINKED SERVER
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("ALRS"),                  NotNull    ] public object  Alrs               { get; set; } = null!; // ALTER RESOURCES
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("ALSR"),                  NotNull    ] public object  Alsr               { get; set; } = null!; // ALTER ANY SERVER ROLE
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("ALSS"),                  NotNull    ] public object  Alss               { get; set; } = null!; // ALTER SERVER STATE
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("ALST"),                  NotNull    ] public object  Alst               { get; set; } = null!; // ALTER SETTINGS
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("ALTR"),                  NotNull    ] public object  Altr               { get; set; } = null!; // ALTER TRACE
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("AUTH"),                  NotNull    ] public object  Auth               { get; set; } = null!; // AUTHENTICATE SERVER
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("CADB"),                  NotNull    ] public object  Cadb               { get; set; } = null!; // CONNECT ANY DATABASE
-			/// <summary>
-			/// ENDPOINT, LOGIN
-			/// </summary>
-			[Column("CL"),                    NotNull    ] public object  Cl                 { get; set; } = null!; // CONTROL
-			/// <summary>
-			/// ENDPOINT
-			/// </summary>
-			[Column("CO"),                    NotNull    ] public object  Co                 { get; set; } = null!; // CONNECT
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("COSQ"),                  NotNull    ] public object  Cosq               { get; set; } = null!; // CONNECT SQL
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("CRAC"),                  NotNull    ] public object  Crac               { get; set; } = null!; // CREATE AVAILABILITY GROUP
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("CRDB"),                  NotNull    ] public object  Crdb               { get; set; } = null!; // CREATE ANY DATABASE
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("CRDE"),                  NotNull    ] public object  Crde               { get; set; } = null!; // CREATE DDL EVENT NOTIFICATION
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("CRHE"),                  NotNull    ] public object  Crhe               { get; set; } = null!; // CREATE ENDPOINT
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("CRSR"),                  NotNull    ] public object  Crsr               { get; set; } = null!; // CREATE SERVER ROLE
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("CRTE"),                  NotNull    ] public object  Crte               { get; set; } = null!; // CREATE TRACE EVENT NOTIFICATION
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("IAL"),                   NotNull    ] public object  Ial                { get; set; } = null!; // IMPERSONATE ANY LOGIN
-			/// <summary>
-			/// LOGIN
-			/// </summary>
-			[Column("IM"),                    NotNull    ] public object  Im                 { get; set; } = null!; // IMPERSONATE
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("SHDN"),                  NotNull    ] public object  Shdn               { get; set; } = null!; // SHUTDOWN
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("SUS"),                   NotNull    ] public object  Sus                { get; set; } = null!; // SELECT ALL USER SECURABLES
-			/// <summary>
-			/// ENDPOINT
-			/// </summary>
-			[Column("TO"),                    NotNull    ] public object  To                 { get; set; } = null!; // TAKE OWNERSHIP
-			/// <summary>
-			/// ENDPOINT, LOGIN
-			/// </summary>
-			[Column("VW"),                    NotNull    ] public object  Vw                 { get; set; } = null!; // VIEW DEFINITION
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("VWAD"),                  NotNull    ] public object  Vwad               { get; set; } = null!; // VIEW ANY DEFINITION
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("VWDB"),                  NotNull    ] public object  Vwdb               { get; set; } = null!; // VIEW ANY DATABASE
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("VWSS"),                  NotNull    ] public object  Vwss               { get; set; } = null!; // VIEW SERVER STATE
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("XA"),                    NotNull    ] public object  Xa                 { get; set; } = null!; // EXTERNAL ACCESS
-			/// <summary>
-			/// SERVER
-			/// </summary>
-			[Column("XU"),                    NotNull    ] public object  Xu                 { get; set; } = null!; // UNSAFE ASSEMBLY
+			[Column("state_desc"),              Nullable] public string? StateDesc          { get; set; } // nvarchar(60)
 		}
 
 		/// <summary>
@@ -23145,7 +22829,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.OneToOne, KeyName="objects", BackReferenceName="ServiceQueue")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -23386,7 +23070,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="SpatialIndexes")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -23474,7 +23158,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="SpatialIndexTessellations")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -23613,7 +23297,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="RemoteDataArchiveTables")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -23773,7 +23457,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ColumnXmlSchemaCollectionUsages")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -23806,7 +23490,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="ParameterXmlSchemaCollectionUsages")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -23915,7 +23599,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="SelectiveXmlIndexPaths")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -24048,7 +23732,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			#region Associations
 
 			/// <summary>
-			/// objects
+			/// objects (sys.objects)
 			/// </summary>
 			[Association(ThisKey="ObjectID", OtherKey="ObjectID", CanBeNull=false, Relationship=LinqToDB.Mapping.Relationship.ManyToOne, KeyName="objects", BackReferenceName="XmlIndexes")]
 			public ObjectSchema.Object Object { get; set; } = null!;
@@ -24686,7 +24370,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// <summary>
 			/// Name or URI of the namespace that is used by the XML wildcard.
 			/// </summary>
-			[Column("namespace"),        NotNull] public string @namespace     { get; set; } = null!; // nvarchar(4000)
+			[Column("namespace"),        NotNull] public string Namespace      { get; set; } = null!; // nvarchar(4000)
 		}
 	}
 }

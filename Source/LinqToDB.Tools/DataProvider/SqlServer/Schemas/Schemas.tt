@@ -1,11 +1,11 @@
 ﻿<#@ template debug="true" hostspecific="true" language="C#" #>
 <#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true" #>
 <#@ output extension=".generated.cs" #>
+<#@ include file="..\..\..\..\LinqToDB.Templates\LinqToDB.SqlServer.ttinclude"   once="true" #>
+<#@ include file="..\..\..\..\LinqToDB.Templates\PluralizationService.ttinclude" once="true" #>
 <#@ assembly name="System.Xml" #>
 <#@ assembly name="System.Xml.Linq" #>
 <#@ assembly name="$(SolutionDir)Source\LinqToDB.Tools\bin\Debug\net46\linq2db.dll" #>
-<#@ include file="..\..\..\..\LinqToDB.Templates\LinqToDB.SqlServer.ttinclude"   once="true" #>
-<#@ include file="..\..\..\..\LinqToDB.Templates\PluralizationService.ttinclude" once="true" #>
 <#@ import namespace="System.IO" #>
 <#@ import namespace="System.Xml.Linq" #>
 <#@ import namespace="LinqToDB" #>
@@ -29,17 +29,21 @@
 
 	LoadSqlServerMetadata(".", "master", SqlServerVersion.v2012);
 
-	GetTable("sys.events"). TypeName = "Event";
-	GetTable("sys.objects").TypeName = "Object";
+	GetTable("sys.events").  TypeName = "Event";
+	GetTable("sys.objects"). TypeName = "Object";
+	GetTable("sys.systypes").TypeName = "TypeTable";
 
 	foreach (var table in Tables.Values)
 	{
 		foreach (var pref in new[]
 		{
-			new { TablePref = "syspolicy_",    TypePref = "Syspolicy"    },
-			new { TablePref = "sysmail_",      TypePref = "Sysmail"      },
-			new { TablePref = "syscollector_", TypePref = "Syscollector" },
-			new { TablePref = "pdw_",          TypePref = "Pdw"          },
+			new { TablePref = "syspolicy_",         TypePref = "Syspolicy"        },
+			new { TablePref = "sysmail_",           TypePref = "Sysmail"          },
+			new { TablePref = "syscollector_",      TypePref = "Syscollector"     },
+			new { TablePref = "pdw_",               TypePref = "Pdw"              },
+			new { TablePref = "sysdac_",            TypePref = "Sysdac"           },
+			new { TablePref = "fulltext_",          TypePref = "Fulltext"         },
+			new { TablePref = "resource_governor_", TypePref = "ResourceGovernor" },
 		})
 		if (table.TableName.StartsWith(pref.TablePref))
 		{
@@ -64,60 +68,82 @@
 			"Key",         "Keys",
 			"TextCatalog", "TextCatalogs",
 			"Login",       "Logins",
-			"Login",       "Logins",
 			"WebMethod",   "WebMethods",
+			"Item",        "Items",
+			"Attachment",  "Attachments",
+			"StopWord",    "StopWords",
+
 		})
-		if (table.DataContextPropertyName.EndsWith(suff.ToLower()))
+		if (table.DataContextPropertyName.EndsWith(suff, StringComparison.OrdinalIgnoreCase))
 		{
 			table.DataContextPropertyName = table.DataContextPropertyName.Substring(0, table.DataContextPropertyName.Length - suff.Length) + suff;
 		}
-		else if (table.TypeName.EndsWith(suff.ToLower()))
+		else if (table.TypeName.EndsWith(suff, StringComparison.OrdinalIgnoreCase))
 		{
 			table.TypeName = table.TypeName.Substring(0, table.TypeName.Length - suff.Length) + suff;
 		}
 
+		foreach (var pref in new[]
+		{
+			"FileTable",
+			"FullText",
+			"StopWord",
+		})
+		if (table.TypeName.StartsWith(pref, StringComparison.OrdinalIgnoreCase))
+		{
+			table.TypeName                = pref + table.TypeName.               Substring(pref.Length);
+			table.DataContextPropertyName = pref + table.DataContextPropertyName.Substring(pref.Length);
+		}
+
 		if (table.TypeName == "Databas") table.TypeName = "Database";
 
-		var uSuff = new[]
+		var columnNameSuffix = new[]
 		{
-			"ID", "DHCP", "IP", "SID", "MB"
+			"ID", "DHCP", "IP", "SID", "MB", "UID", "RowGuidCol"
 		};
 
-		var cSuff = new[]
+		var memberNameSuffix = new[]
 		{
 			"IPAddress", "DTULimit", "IORequest", "IOBytesRead", "IOBytesWritten", "HoBTID", "MSShipped",
-			"FileID", "GroupID", "MaxSize", "FileName", "DbID", "BucketID", "ObjID", "ObjType", "DbIDExec",
+			"GroupID", "MaxSize", "FileName", "DbID", "BucketID", "ObjID", "ObjType", "DbIDExec",
 			"RefCounts", "UseCounts", "PagesUsed", "LangID", "DateFormat", "ExecTime", "LastTime", "LastReads",
 			"LastWrites", "Bytes", "CSID", "Definition", "XType", "TypeStat", "XUserType", "XPrec", "XScale",
 			"XOffset", "BitPos", "ColStat", "CDefault", "ColorDer", "AutoVal", "CollationID", "UserType",
-			"PrintFmt", "IsComputed", "IsOutParam", "IsNullable", "CText", "TextType", "DepID", "Number",
+			"PrintFmt", "IsComputed", "IsOutParam", "IsNullable", "TextType", "DepID", "Number", "Admin",
 			"SiteID", "ResultObj", "ReadObj", "Policy", "FKeyID", "RKeyID", "FKey", "RKey", "KeyNo", "FTCatID",
-			"MinLen", "KeyCnt", "RowCnt", "DPages"
+			"MinLen", "KeyCnt", "RowCnt", "DPages", "Months", "IDUsed", "StopWord", "FileTable",
+
+		};
+
+		var columnReplacement = new[]
+		{
+			new[] { "class",     "Class"              }, new[] { "uid",       "UID"          }, new[] { "setopts",     "SetOptions" },
+			new[] { "colid",     "ColumnID"           }, new[] { "constid",   "ConstraintID" }, new[] { "type",        "TypeColumn" },
+			new[] { "cmptlevel", "CompatibilityLevel" }, new[] { "deptype",   "DepType"      }, new[] { "selall",      "SelectAll"  },
+			new[] { "cntrltype", "ControllerType"     }, new[] { "phyname",   "PhysicalName" }, new[] { "groupname",   "GroupName"  },
+			new[] { "indid",     "IndexID"            }, new[] { "rowmodctr", "RowModCtr"    }, new[] { "xmaxlen",     "XMaxLen"    },
+			new[] { "maxirow",   "MaxiRow"            }, new[] { "impid",     "ImpID"        }, new[] { "pgmodctr",    "PgModCtr"   },
+			new[] { "statblob",  "StatBlob"           }, new[] { "maxlen",    "MaxLen"       }, new[] { "ctext",       "CText"      },
+			new[] { "dbname",    "DbName"             }, new[] { "fileid",    "FileID"       }, new[] { "mailitem_id", "MailItemID" },
+			new[] { "filesize",  "FileSize"           }, new[] { "operator",  "Operator"     }, new[] { "namespace",   "Namespace"  },
 		};
 
 		foreach (var col in table.Columns.Values)
 		{
-			foreach (var suff in uSuff)
+			foreach (var r in columnReplacement)
+				if (col.ColumnName == r[0])
+					col.MemberName = r[1];
+
+			foreach (var suff in columnNameSuffix)
 				if (col.ColumnName == suff.ToLower() || col.ColumnName.EndsWith("_" + suff.ToLower()))
 					col.MemberName = col.MemberName.Substring(0, col.MemberName.Length - suff.Length) + suff;
 
-			foreach (var suff in cSuff)
+			foreach (var suff in memberNameSuffix)
 				if (col.MemberName.ToLower().EndsWith(suff.ToLower()))
 					col.MemberName = col.MemberName.Substring(0, col.MemberName.Length - suff.Length) + suff;
 
-			if (col.MemberName == "@class")    col.MemberName = "Class";
-			if (col.MemberName == "Uid")       col.MemberName = "UID";
-			if (col.MemberName == "Setopts")   col.MemberName = "SetOptions";
-			if (col.MemberName == "Colid")     col.MemberName = "ColumnID";
-			if (col.MemberName == "Constid")   col.MemberName = "ConstraintID";
-			if (col.MemberName == "Type")      col.MemberName = "TypeColumn";
-			if (col.MemberName == "Cmptlevel") col.MemberName = "CompatibilityLevel";
-			if (col.MemberName == "Deptype")   col.MemberName = "DepType";
-			if (col.MemberName == "Selall")    col.MemberName = "SelectAll";
-			if (col.MemberName == "Cntrltype") col.MemberName = "ControllerType";
-			if (col.MemberName == "Phyname")   col.MemberName = "PhysicalName";
-			if (col.MemberName == "GroupName") col.MemberName = "GroupName";
-			if (col.MemberName == "Indid")     col.MemberName = "IndexID";
+			if (table.TypeName == col.MemberName)
+				col.MemberName += "Column";
 		}
 	}
 
@@ -224,23 +250,22 @@ DatabaseSchema LoadSystemDatabaseSchema(DataConnection dataConnection, GetSchema
 		scale       = 0,
 		is_nullable = false
 	}, @"
-select
-	OBJECT_SCHEMA_NAME(o.object_id) schema_name,
-	o.name                          view_name,
-	c.name                          column_name,
-	c.column_id,
-	t.name                          type_name,
-	c.max_length,
-	c.precision,
-	c.scale,
-	c.is_nullable
-from sys.system_objects o
-join sys.system_views v on o.object_id = v.object_id
-join sys.system_columns c on o.object_id = c.object_id
-join sys.types t on c.user_type_id = t.user_type_id
-where o.is_ms_shipped = 1
-order by OBJECT_SCHEMA_NAME(o.object_id), o.name, c.column_id
-");
+	select
+		OBJECT_SCHEMA_NAME(o.object_id) schema_name,
+		o.name                          view_name,
+		c.name                          column_name,
+		c.column_id,
+		t.name                          type_name,
+		c.max_length,
+		c.precision,
+		c.scale,
+		c.is_nullable
+	from sys.system_objects o
+	join sys.system_views v on o.object_id = v.object_id
+	join sys.system_columns c on o.object_id = c.object_id
+	join sys.types t on c.user_type_id = t.user_type_id
+	where o.is_ms_shipped = 1
+	order by OBJECT_SCHEMA_NAME(o.object_id), o.name, c.column_id");
 
 	var tables =
 	(
@@ -330,6 +355,7 @@ order by OBJECT_SCHEMA_NAME(o.object_id), o.name, c.column_id
 			ForeignKeys = new(),
 		}
 	).ToList();
+	//var tables = new List<TableSchema>();
 
 	var tableDic = tables.ToDictionary(t => t.SchemaName + "." + t.TableName);
 

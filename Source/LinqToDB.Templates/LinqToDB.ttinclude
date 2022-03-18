@@ -447,8 +447,16 @@ void GenerateTypesFromMetadata()
 
 				foreach (var key in keys.OrderBy(k => k.MemberName))
 				{
+					string otherTableName = null;
+
+					if (key.OtherTable.TableSchema.CatalogName != null)
+						otherTableName = key.OtherTable.TableSchema.CatalogName + ".";
+					if (key.OtherTable.TableSchema.SchemaName != null)
+						otherTableName += key.OtherTable.TableSchema.SchemaName + ".";
+					otherTableName += key.OtherTable.TableSchema.TableName;
+
 					key.Comment.Add("/ <summary>");
-					key.Comment.Add("/ " + key.KeyName);
+					key.Comment.Add($"/ {key.KeyName} ({otherTableName})");
 					key.Comment.Add("/ </summary>");
 
 					if (key.AssociationType == AssociationType.OneToMany)

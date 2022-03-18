@@ -3475,16 +3475,6 @@ For more information on database ledger, see &lt;a href='https://docs.microsoft.
     <column name="modify_date" type="datetime">Time at which the database scoped credential was last modified.</column>
     <column name="target_type" type="nvarchar(100)">Type of database scoped credential. Returns &lt;c&gt;NULL&lt;/c&gt; for database scoped credentials.</column>
     <column name="target_id" type="int">ID of the object that the database scoped credential is mapped to. Returns 0 for database scoped credentials</column>
-    <column name="Column Name" type="Data Type">Description</column>
-    <column name="-----------------" type="---------------">-----------------</column>
-    <column name="name" type="sysname">Name of the database scoped credential. Is unique in the database.</column>
-    <column name="credential_id" type="int">ID of the database scoped credential. Is unique in the database.</column>
-    <column name="principal_id" type="int">ID of the database principal who owns the key.</column>
-    <column name="credential_identity" type="nvarchar(4000)">Name of the identity to use. This will generally be a Windows user. It does not have to be unique.</column>
-    <column name="create_date" type="datetime">Time at which the database scoped credential was created.</column>
-    <column name="modify_date" type="datetime">Time at which the database scoped credential was last modified.</column>
-    <column name="target_type" type="nvarchar(100)">Type of database scoped credential. Returns &lt;c&gt;NULL&lt;/c&gt; for database scoped credentials.</column>
-    <column name="target_id" type="int">ID of the object that the database scoped credential is mapped to. Returns 0 for database scoped credentials</column>
   </table>
   <table name="sys.database_permissions" category="Security" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-database-permissions-transact-sql">
     <description>&lt;para&gt;&lt;strong&gt;sys.database_permissions (Transact-SQL)&lt;/strong&gt;&lt;/para&gt;
@@ -3733,48 +3723,6 @@ For more information on database ledger, see &lt;a href='https://docs.microsoft.
     <column name="permission_name" type="nvarchar(128)">Permission name.</column>
     <column name="state" type="char(1)">Permission state:&lt;br /&gt;&lt;br /&gt; D = Deny&lt;br /&gt;&lt;br /&gt; R = Revoke&lt;br /&gt;&lt;br /&gt; G = Grant&lt;br /&gt;&lt;br /&gt; W = Grant With Grant option</column>
     <column name="state_desc" type="nvarchar(60)">Description of permission state:&lt;br /&gt;&lt;br /&gt; DENY&lt;br /&gt;&lt;br /&gt; REVOKE&lt;br /&gt;&lt;br /&gt; GRANT&lt;br /&gt;&lt;br /&gt; GRANT_WITH_GRANT_OPTION</column>
-    <column name="Permission type" type="Permission name">Applies to securable</column>
-    <column name="---------------------" type="---------------------">--------------------------</column>
-    <column name="AAES" type="ALTER ANY EVENT SESSION">SERVER</column>
-    <column name="ADBO" type="ADMINISTER BULK OPERATIONS">SERVER</column>
-    <column name="AL" type="ALTER">ENDPOINT, LOGIN</column>
-    <column name="ALAA" type="ALTER ANY SERVER AUDIT">SERVER</column>
-    <column name="ALAG" type="ALTER ANY AVAILABILITY GROUP">SERVER</column>
-    <column name="ALCD" type="ALTER ANY CREDENTIAL">SERVER</column>
-    <column name="ALCO" type="ALTER ANY CONNECTION">SERVER</column>
-    <column name="ALDB" type="ALTER ANY DATABASE">SERVER</column>
-    <column name="ALES" type="ALTER ANY EVENT NOTIFICATION">SERVER</column>
-    <column name="ALHE" type="ALTER ANY ENDPOINT">SERVER</column>
-    <column name="ALLG" type="ALTER ANY LOGIN">SERVER</column>
-    <column name="ALLS" type="ALTER ANY LINKED SERVER">SERVER</column>
-    <column name="ALRS" type="ALTER RESOURCES">SERVER</column>
-    <column name="ALSR" type="ALTER ANY SERVER ROLE">SERVER</column>
-    <column name="ALSS" type="ALTER SERVER STATE">SERVER</column>
-    <column name="ALST" type="ALTER SETTINGS">SERVER</column>
-    <column name="ALTR" type="ALTER TRACE">SERVER</column>
-    <column name="AUTH" type="AUTHENTICATE SERVER">SERVER</column>
-    <column name="CADB" type="CONNECT ANY DATABASE">SERVER</column>
-    <column name="CL" type="CONTROL">ENDPOINT, LOGIN</column>
-    <column name="CL" type="CONTROL SERVER">SERVER</column>
-    <column name="CO" type="CONNECT">ENDPOINT</column>
-    <column name="COSQ" type="CONNECT SQL">SERVER</column>
-    <column name="CRAC" type="CREATE AVAILABILITY GROUP">SERVER</column>
-    <column name="CRDB" type="CREATE ANY DATABASE">SERVER</column>
-    <column name="CRDE" type="CREATE DDL EVENT NOTIFICATION">SERVER</column>
-    <column name="CRHE" type="CREATE ENDPOINT">SERVER</column>
-    <column name="CRSR" type="CREATE SERVER ROLE">SERVER</column>
-    <column name="CRTE" type="CREATE TRACE EVENT NOTIFICATION">SERVER</column>
-    <column name="IAL" type="IMPERSONATE ANY LOGIN">SERVER</column>
-    <column name="IM" type="IMPERSONATE">LOGIN</column>
-    <column name="SHDN" type="SHUTDOWN">SERVER</column>
-    <column name="SUS" type="SELECT ALL USER SECURABLES">SERVER</column>
-    <column name="TO" type="TAKE OWNERSHIP">ENDPOINT</column>
-    <column name="VW" type="VIEW DEFINITION">ENDPOINT, LOGIN</column>
-    <column name="VWAD" type="VIEW ANY DEFINITION">SERVER</column>
-    <column name="VWDB" type="VIEW ANY DATABASE">SERVER</column>
-    <column name="VWSS" type="VIEW SERVER STATE">SERVER</column>
-    <column name="XA" type="EXTERNAL ACCESS">SERVER</column>
-    <column name="XU" type="UNSAFE ASSEMBLY">SERVER</column>
   </table>
   <table name="sys.server_principals" category="Security" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-server-principals-transact-sql">
     <description>&lt;para&gt;&lt;strong&gt;sys.server_principals (Transact-SQL)&lt;/strong&gt;&lt;/para&gt;
@@ -5015,7 +4963,7 @@ FOR ( path1 = '/a/b/c' AS XQUERY 'xs:string',&lt;br/&gt;
 &lt;para&gt;Returns one row for each CHECK constraint in the current database. This information schema view returns information about the objects to which the current user has permissions.&lt;br/&gt;
 To retrieve information from these views, specify the fully qualified name of &lt;strong&gt;INFORMATION_SCHEMA.&lt;/strong&gt;_view_name_.&lt;/para&gt;</description>
     <column name="CONSTRAINT_CATALOG" type="nvarchar(">Constraint qualifier.</column>
-    <column name="CONSTRAINT_SCHEMA" type="nvarchar(">Name of the schema to which the constraint belongs.&lt;br /&gt;&lt;br /&gt; &amp;#42;&amp;#42; Important &amp;#42;&amp;#42; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
+    <column name="CONSTRAINT_SCHEMA" type="nvarchar(">Name of the schema to which the constraint belongs.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
     <column name="CONSTRAINT_NAME" type="sysname">Constraint name.</column>
     <column name="CHECK_CLAUSE" type="nvarchar(">Actual text of the Transact\-SQL definition statement.</column>
   </table>
@@ -5025,10 +4973,10 @@ To retrieve information from these views, specify the fully qualified name of &l
 &lt;para&gt;Returns one row for each column in the current database that has an alias data type. This information schema view returns information about the objects to which the current user has permissions.&lt;br/&gt;
  To retrieve information from these views, specify the fully qualified name of &lt;strong&gt;INFORMATION_SCHEMA.&lt;/strong&gt;_view_name_.&lt;/para&gt;</description>
     <column name="DOMAIN_CATALOG" type="nvarchar(">Database in which the alias data type exists.</column>
-    <column name="DOMAIN_SCHEMA" type="nvarchar(">Name of schema that contains the alias data type.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;&lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of a data type. The only reliable way to find the schema of a type is to use the TYPEPROPERTY function.</column>
+    <column name="DOMAIN_SCHEMA" type="nvarchar(">Name of schema that contains the alias data type.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of a data type. The only reliable way to find the schema of a type is to use the TYPEPROPERTY function.</column>
     <column name="DOMAIN_NAME" type="sysname">Alias data type.</column>
     <column name="TABLE_CATALOG" type="nvarchar(">Table qualifier.</column>
-    <column name="TABLE_SCHEMA" type="nvarchar(">Table owner.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;&lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
+    <column name="TABLE_SCHEMA" type="nvarchar(">Table owner.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
     <column name="TABLE_NAME" type="sysname">Table in which the alias  data type is used.</column>
     <column name="COLUMN_NAME" type="sysname">Column using the alias data type.</column>
   </table>
@@ -5040,7 +4988,7 @@ To retrieve information from these views, specify the fully qualified name of &l
     <column name="GRANTOR" type="nvarchar(">Privilege grantor.</column>
     <column name="GRANTEE" type="nvarchar(">Privilege grantee.</column>
     <column name="TABLE_CATALOG" type="nvarchar(">Table qualifier.</column>
-    <column name="TABLE_SCHEMA" type="nvarchar(">Name of schema that contains the table.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;&lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
+    <column name="TABLE_SCHEMA" type="nvarchar(">Name of schema that contains the table.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
     <column name="TABLE_NAME" type="sysname">Table name.</column>
     <column name="COLUMN_NAME" type="sysname">Column name.</column>
     <column name="PRIVILEGE_TYPE" type="varchar(">Type of privilege.</column>
@@ -5052,7 +5000,7 @@ To retrieve information from these views, specify the fully qualified name of &l
 &lt;para&gt;Returns one row for each column that can be accessed by the current user in the current database.&lt;br/&gt;
 To retrieve information from these views, specify the fully qualified name of &lt;strong&gt;INFORMATION_SCHEMA&lt;/strong&gt;_.view_name_.&lt;/para&gt;</description>
     <column name="TABLE_CATALOG" type="nvarchar(">Table qualifier.</column>
-    <column name="TABLE_SCHEMA" type="nvarchar(">Name of schema that contains the table.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;&lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
+    <column name="TABLE_SCHEMA" type="nvarchar(">Name of schema that contains the table.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
     <column name="TABLE_NAME" type="nvarchar(">Table name.</column>
     <column name="COLUMN_NAME" type="nvarchar(">Column name.</column>
     <column name="ORDINAL_POSITION" type="int">Column identification number.</column>
@@ -5072,7 +5020,7 @@ To retrieve information from these views, specify the fully qualified name of &l
     <column name="COLLATION_SCHEMA" type="nvarchar(">Always returns NULL.</column>
     <column name="COLLATION_NAME" type="nvarchar(">Returns the unique name for the collation if the column is character data or &lt;strong&gt;text&lt;/strong&gt; data type. Otherwise, NULL is returned.</column>
     <column name="DOMAIN_CATALOG" type="nvarchar(">If the column is an alias data type, this column is the database name in which the user-defined data type was created. Otherwise, NULL is returned.</column>
-    <column name="DOMAIN_SCHEMA" type="nvarchar(">If the column is a user-defined data type, this column returns the name of the schema of the user-defined data type. Otherwise, NULL is returned.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;&lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of a data type. The only reliable way to find the schema of a type is to use the TYPEPROPERTY function.</column>
+    <column name="DOMAIN_SCHEMA" type="nvarchar(">If the column is a user-defined data type, this column returns the name of the schema of the user-defined data type. Otherwise, NULL is returned.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of a data type. The only reliable way to find the schema of a type is to use the TYPEPROPERTY function.</column>
     <column name="DOMAIN_NAME" type="nvarchar(">If the column is a user-defined data type, this column is the name of the user-defined data type. Otherwise, NULL is returned.</column>
   </table>
   <table name="INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE" category="Information" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-information-schema-views/constraint-column-usage-transact-sql">
@@ -5081,11 +5029,11 @@ To retrieve information from these views, specify the fully qualified name of &l
 &lt;para&gt;Returns one row for each column in the current database that has a constraint defined on the column. This information schema view returns information about the objects to which the current user has permissions.&lt;br/&gt;
  To retrieve information from these views, specify the fully qualified name of &lt;strong&gt;INFORMATION_SCHEMA.&lt;/strong&gt;_view_name_.&lt;/para&gt;</description>
     <column name="TABLE_CATALOG" type="nvarchar(">Table qualifier.</column>
-    <column name="TABLE_SCHEMA" type="nvarchar(">Name of schema that contains the table owner.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;&lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
+    <column name="TABLE_SCHEMA" type="nvarchar(">Name of schema that contains the table owner.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
     <column name="TABLE_NAME" type="nvarchar(">Table name.</column>
     <column name="COLUMN_NAME" type="nvarchar(">Column name.</column>
     <column name="CONSTRAINT_CATALOG" type="nvarchar(">Constraint qualifier.</column>
-    <column name="CONSTRAINT_SCHEMA" type="nvarchar(">Name of schema that contains the constraint.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;&lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
+    <column name="CONSTRAINT_SCHEMA" type="nvarchar(">Name of schema that contains the constraint.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
     <column name="CONSTRAINT_NAME" type="nvarchar(">Constraint name.</column>
   </table>
   <table name="INFORMATION_SCHEMA.CONSTRAINT_TABLE_USAGE" category="Information" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-information-schema-views/constraint-table-usage-transact-sql">
@@ -5094,10 +5042,10 @@ To retrieve information from these views, specify the fully qualified name of &l
 &lt;para&gt;Returns one row for each table in the current database that has a constraint defined on the table. This information schema view returns information about the objects to which the current user has permissions.&lt;br/&gt;
  To retrieve information from these views, specify the fully qualified name of &lt;strong&gt;INFORMATION_SCHEMA.&lt;/strong&gt;_view_name_.&lt;/para&gt;</description>
     <column name="TABLE_CATALOG" type="nvarchar(">Table qualifier.</column>
-    <column name="TABLE_SCHEMA" type="nvarchar(">Name of schema that contains the table.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;&lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
+    <column name="TABLE_SCHEMA" type="nvarchar(">Name of schema that contains the table.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
     <column name="TABLE_NAME" type="sysname">Table name.</column>
     <column name="CONSTRAINT_CATALOG" type="nvarchar(">Constraint qualifier.</column>
-    <column name="CONSTRAINT_SCHEMA" type="nvarchar(">Name of schema that contains the constraint.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;&lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
+    <column name="CONSTRAINT_SCHEMA" type="nvarchar(">Name of schema that contains the constraint.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
     <column name="CONSTRAINT_NAME" type="sysname">Constraint name.</column>
   </table>
   <table name="INFORMATION_SCHEMA.DOMAIN_CONSTRAINTS" category="Information" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-information-schema-views/domain-constraints-transact-sql">
@@ -5106,10 +5054,10 @@ To retrieve information from these views, specify the fully qualified name of &l
 &lt;para&gt;Returns one row for each alias data type in the current database that has a rule bound to it and that can be accessed by current user.&lt;br/&gt;
  To retrieve information from these views, specify the fully qualified name of &lt;strong&gt;INFORMATION_SCHEMA.&lt;/strong&gt;_view_name_.&lt;/para&gt;</description>
     <column name="CONSTRAINT_CATALOG" type="nvarchar(">Database in which the rule exists.</column>
-    <column name="CONSTRAINT_SCHEMA" type="nvarchar(">Name of schema that contains the constraint.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;\*\* Important \*\*&lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
+    <column name="CONSTRAINT_SCHEMA" type="nvarchar(">Name of schema that contains the constraint.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
     <column name="CONSTRAINT_NAME" type="sysname">Rule name.</column>
     <column name="DOMAIN_CATALOG" type="nvarchar(">Database in which the alias data type exists.</column>
-    <column name="DOMAIN_SCHEMA" type="nvarchar(">Name of schema that contains the alias data type.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;\*\* Important \*\*&lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of a data type. The only reliable way to find the schema of a type is to use the TYPEPROPERTY function.</column>
+    <column name="DOMAIN_SCHEMA" type="nvarchar(">Name of schema that contains the alias data type.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of a data type. The only reliable way to find the schema of a type is to use the TYPEPROPERTY function.</column>
     <column name="DOMAIN_NAME" type="sysname">Alias data type.</column>
     <column name="IS_DEFERRABLE" type="varchar(">Specifies whether constraint checking is deferrable. Always returns NO.</column>
     <column name="INITIALLY_DEFERRED" type="varchar(">Specifies whether constraint checking is at first deferred. Always returns NO.</column>
@@ -5120,7 +5068,7 @@ To retrieve information from these views, specify the fully qualified name of &l
 &lt;para&gt;Returns one row for each alias data type that can be accessed by the current user in the current database.&lt;br/&gt;
  To retrieve information from these views, specify the fully qualified name of &lt;strong&gt;INFORMATION_SCHEMA.&lt;/strong&gt;_view_name_.&lt;/para&gt;</description>
     <column name="DOMAIN_CATALOG" type="nvarchar(">Database in which the alias data type exists.</column>
-    <column name="DOMAIN_SCHEMA" type="nvarchar(">Name of the schema that contains the alias data type.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;&lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of a data type. The only reliable way to find the schema of a type is to use the TYPEPROPERTY function.</column>
+    <column name="DOMAIN_SCHEMA" type="nvarchar(">Name of the schema that contains the alias data type.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of a data type. The only reliable way to find the schema of a type is to use the TYPEPROPERTY function.</column>
     <column name="DOMAIN_NAME" type="sysname">Alias data type.</column>
     <column name="DATA_TYPE" type="sysname">System-supplied data type.</column>
     <column name="CHARACTER_MAXIMUM_LENGTH" type="int">Maximum length, in characters, for binary data, character data, or text and image data.&lt;br /&gt;&lt;br /&gt; -1 for &lt;strong&gt;xml&lt;/strong&gt; and large-value type data. Otherwise, NULL is returned. For more information, see &lt;a href='https://docs.microsoft.com/en-us/sql/t-sql/data-types/data-types-transact-sql'&gt;Data Types (Transact-SQL)&lt;/a&gt;.</column>
@@ -5143,10 +5091,10 @@ To retrieve information from these views, specify the fully qualified name of &l
 &lt;para&gt;Returns one row for each column that is constrained as a key in the current database. This information schema view returns information about the objects to which the current user has permissions.&lt;br/&gt;
  To retrieve information from these views, specify the fully qualified name of &lt;strong&gt;INFORMATION_SCHEMA.&lt;/strong&gt;_view_name_.&lt;/para&gt;</description>
     <column name="CONSTRAINT_CATALOG" type="nvarchar(">Constraint qualifier.</column>
-    <column name="CONSTRAINT_SCHEMA" type="nvarchar(">Name of schema that contains the constraint.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;\*\* Important \*\*&lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
+    <column name="CONSTRAINT_SCHEMA" type="nvarchar(">Name of schema that contains the constraint.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
     <column name="CONSTRAINT_NAME" type="nvarchar(">Constraint name.</column>
     <column name="TABLE_CATALOG" type="nvarchar(">Table qualifier.</column>
-    <column name="TABLE_SCHEMA" type="nvarchar(">Name of schema that contains the table.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;\*\* Important \*\*&lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
+    <column name="TABLE_SCHEMA" type="nvarchar(">Name of schema that contains the table.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
     <column name="TABLE_NAME" type="nvarchar(">Table name.</column>
     <column name="COLUMN_NAME" type="nvarchar(">Column name.</column>
     <column name="ORDINAL_POSITION" type="int">Column ordinal position.</column>
@@ -5157,7 +5105,7 @@ To retrieve information from these views, specify the fully qualified name of &l
 &lt;para&gt;Returns one row for each parameter of a user-defined function or stored procedure that can be accessed by the current user in the current database. For functions, this view also returns one row with return value information.&lt;br/&gt;
  To retrieve information from these views, specify the fully qualified name of &lt;strong&gt;INFORMATION_SCHEMA.&lt;/strong&gt;_view_name_.&lt;/para&gt;</description>
     <column name="SPECIFIC_CATALOG" type="nvarchar(">Catalog name of the routine for which this is a parameter.</column>
-    <column name="SPECIFIC_SCHEMA" type="nvarchar(">Name of the schema of the routine for which this is a parameter.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;\*\* Important \*\*&lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
+    <column name="SPECIFIC_SCHEMA" type="nvarchar(">Name of the schema of the routine for which this is a parameter.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
     <column name="SPECIFIC_NAME" type="nvarchar(">Name of the routine for which this is a parameter.</column>
     <column name="ORDINAL_POSITION" type="int">Ordinal position of the parameter starting at 1. For the return value of a function, this is a 0.</column>
     <column name="PARAMETER_MODE" type="nvarchar(">Returns IN if an input parameter, OUT if an output parameter, and INOUT if an input/output parameter.</column>
@@ -5192,10 +5140,10 @@ To retrieve information from these views, specify the fully qualified name of &l
 &lt;para&gt;Returns one row for each FOREIGN KEY constraint in the current database. This information schema view returns information about the objects to which the current user has permissions.&lt;br/&gt;
  To retrieve information from these views, specify the fully qualified name of &lt;strong&gt;INFORMATION_SCHEMA.&lt;/strong&gt;_view_name_.&lt;/para&gt;</description>
     <column name="CONSTRAINT_CATALOG" type="nvarchar(">Constraint qualifier.</column>
-    <column name="CONSTRAINT_SCHEMA" type="nvarchar(">Name of schema that contains the constraint.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;&lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
+    <column name="CONSTRAINT_SCHEMA" type="nvarchar(">Name of schema that contains the constraint.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
     <column name="CONSTRAINT_NAME" type="sysname">Constraint name.</column>
     <column name="UNIQUE_CONSTRAINT_CATALOG" type="nvarchar(">UNIQUE constraint qualifier.</column>
-    <column name="UNIQUE_CONSTRAINT_SCHEMA" type="nvarchar(">Name of schema that contains the UNIQUE constraint.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;&lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
+    <column name="UNIQUE_CONSTRAINT_SCHEMA" type="nvarchar(">Name of schema that contains the UNIQUE constraint.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
     <column name="UNIQUE_CONSTRAINT_NAME" type="sysname">UNIQUE constraint.</column>
     <column name="MATCH_OPTION" type="varchar(">Referential constraint-matching conditions. Always returns SIMPLE. This means that no match is defined. The condition is considered a match when one of the following is true:&lt;br /&gt;&lt;br /&gt; At least one value in the foreign key column is NULL.&lt;br /&gt;&lt;br /&gt; All values in the foreign key column are not NULL, and there is a row in the primary key table that has the same key.</column>
     <column name="UPDATE_RULE" type="varchar(">Action taken when a Transact\-SQL statement violates the referential integrity that is defined by this constraint. Returns one of the following: &lt;br /&gt;NO ACTION&lt;br /&gt;CASCADE&lt;br /&gt;SET NULL&lt;br /&gt;SET DEFAULT&lt;br /&gt;&lt;br /&gt; If NO ACTION is specified on ON UPDATE for this constraint, the update of the primary key that is referenced in the constraint will not be propagated to the foreign key. If such an update of a primary key will cause a referential integrity violation because at least one foreign key contains the same value, SQL Server will not make any change to the parent and referring tables. SQL Server also will raise an error.&lt;br /&gt;&lt;br /&gt; If CASCADE is specified on ON UPDATE for this constraint, any change to the primary key value is automatically propagated to the foreign key value.</column>
@@ -5207,7 +5155,7 @@ To retrieve information from these views, specify the fully qualified name of &l
 &lt;para&gt;Returns one row for each column returned by the table-valued functions that can be accessed by the current user in the current database.&lt;br/&gt;
  To retrieve information from this view, specify the fully qualified name of &lt;strong&gt;INFORMATION_SCHEMA.&lt;/strong&gt;_view_name_.&lt;/para&gt;</description>
     <column name="TABLE_CATALOG" type="nvarchar(">Catalog or database name of the table-valued function.</column>
-    <column name="TABLE_SCHEMA" type="nvarchar(">Name of the schema that contains the table-valued function.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;\*\* Important \*\*&lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
+    <column name="TABLE_SCHEMA" type="nvarchar(">Name of the schema that contains the table-valued function.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
     <column name="TABLE_NAME" type="nvarchar(">Name of the table-valued function.</column>
     <column name="COLUMN_NAME" type="nvarchar(">Column name.</column>
     <column name="ORDINAL_POSITION" type="int">Column identification number.</column>
@@ -5227,7 +5175,7 @@ To retrieve information from these views, specify the fully qualified name of &l
     <column name="COLLATION_SCHEMA" type="varchar(">Always returns NULL.</column>
     <column name="COLLATION_NAME" type="nvarchar(">Returns the unique name for the sort order if the column is character data or &lt;strong&gt;text&lt;/strong&gt; data type. Otherwise, returns NULL.</column>
     <column name="DOMAIN_CATALOG" type="nvarchar(">If the column is an alias data type, this column is the database name in which the user-defined data type was created. Otherwise, returns NULL.</column>
-    <column name="DOMAIN_SCHEMA" type="nvarchar(">If the column is a user-defined data type, this column is the name of the schema that contains the user-defined data type. Otherwise, returns NULL.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;\*\* Important \*\*&lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
+    <column name="DOMAIN_SCHEMA" type="nvarchar(">If the column is a user-defined data type, this column is the name of the schema that contains the user-defined data type. Otherwise, returns NULL.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
     <column name="DOMAIN_NAME" type="nvarchar(">If the column is a user-defined data type, this column is the name of the user-defined data type. Otherwise, returns NULL.</column>
   </table>
   <table name="INFORMATION_SCHEMA.ROUTINES" category="Information" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-information-schema-views/routines-transact-sql">
@@ -5239,10 +5187,10 @@ To retrieve information from these views, specify the fully qualified name of &l
 The ROUTINE_DEFINITION column contains the source statements that created the function or stored procedure. These source statements are likely to contain embedded carriage returns. If you are returning this column to an application that displays the results in a text format, the embedded carriage returns in the ROUTINE_DEFINITION results may affect the formatting of the overall result set. If you select the ROUTINE_DEFINITION column, you must adjust for the embedded carriage returns; for example, by returning the result set into a grid or returning ROUTINE_DEFINITION into its own text box.&lt;br/&gt;
 &lt;/note&gt;&lt;/para&gt;</description>
     <column name="SPECIFIC_CATALOG" type="nvarchar(">Specific name of the catalog. This name is the same as ROUTINE_CATALOG.</column>
-    <column name="SPECIFIC_SCHEMA" type="nvarchar(">Specific name of the schema.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;\*\* Important \*\&lt;/strong&gt;* Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
+    <column name="SPECIFIC_SCHEMA" type="nvarchar(">Specific name of the schema.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important \*\&lt;/strong&gt;* Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
     <column name="SPECIFIC_NAME" type="nvarchar(">Specific name of the catalog. This name is the same as ROUTINE_NAME.</column>
     <column name="ROUTINE_CATALOG" type="nvarchar(">Catalog name of the function.</column>
-    <column name="ROUTINE_SCHEMA" type="nvarchar(">Name of the schema that contains this function.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;\*\* Important \*\&lt;/strong&gt;* Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
+    <column name="ROUTINE_SCHEMA" type="nvarchar(">Name of the schema that contains this function.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important \*\&lt;/strong&gt;* Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
     <column name="ROUTINE_NAME" type="nvarchar(">Name of the function.</column>
     <column name="ROUTINE_TYPE" type="nvarchar(">Returns PROCEDURE for stored procedures, and FUNCTION for functions.</column>
     <column name="MODULE_CATALOG" type="nvarchar(">NULL. Reserved for future use.</column>
@@ -5296,7 +5244,7 @@ The ROUTINE_DEFINITION column contains the source statements that created the fu
 &lt;para&gt;Returns one row for each schema in the current database. To retrieve information from these views, specify the fully qualified name of &lt;strong&gt;INFORMATION_SCHEMA.&lt;/strong&gt;_view_name_. To retrieve information about all databases in an instance of SQL Server, query the &lt;a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-databases-transact-sql'&gt;sys.databases (Transact-SQL)&lt;/a&gt; catalog view.&lt;/para&gt;</description>
     <column name="CATALOG_NAME" type="sysname">Name of current database</column>
     <column name="SCHEMA_NAME" type="nvarchar(">Returns the name of the schema.</column>
-    <column name="SCHEMA_OWNER" type="nvarchar(">Schema owner name.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;&lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of an object is to query the sys.objects catalog view.</column>
+    <column name="SCHEMA_OWNER" type="nvarchar(">Schema owner name.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt; Do not use INFORMATION_SCHEMA views to determine the schema of an object. INFORMATION_SCHEMA views only represent a subset of the metadata of an object. The only reliable way to find the schema of an object is to query the sys.objects catalog view.</column>
     <column name="DEFAULT_CHARACTER_SET_CATALOG" type="varchar(">Always returns NULL.</column>
     <column name="DEFAULT_CHARACTER_SET_SCHEMA" type="varchar(">Always returns NULL.</column>
     <column name="DEFAULT_CHARACTER_SET_NAME" type="sysname">Returns the name of the default character set.</column>
@@ -5307,10 +5255,10 @@ The ROUTINE_DEFINITION column contains the source statements that created the fu
 &lt;para&gt;Returns one row for each table constraint in the current database. This information schema view returns information about the objects to which the current user has permissions.&lt;br/&gt;
  To retrieve information from these views, specify the fully qualified name of &lt;strong&gt;INFORMATION_SCHEMA.&lt;/strong&gt;_view_name_.&lt;/para&gt;</description>
     <column name="CONSTRAINT_CATALOG" type="nvarchar(">Constraint qualifier.</column>
-    <column name="CONSTRAINT_SCHEMA" type="nvarchar(">Name of schema that contains the constraint.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;\*\* Important \*\*&lt;/strong&gt;  only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
+    <column name="CONSTRAINT_SCHEMA" type="nvarchar(">Name of schema that contains the constraint.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt;  only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
     <column name="CONSTRAINT_NAME" type="sysname">Constraint name.</column>
     <column name="TABLE_CATALOG" type="nvarchar(">Table qualifier.</column>
-    <column name="TABLE_SCHEMA" type="nvarchar(">Name of schema that contains the table.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;\*\* Important \*\*&lt;/strong&gt;  only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
+    <column name="TABLE_SCHEMA" type="nvarchar(">Name of schema that contains the table.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt;  only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
     <column name="TABLE_NAME" type="sysname">Table name.</column>
     <column name="CONSTRAINT_TYPE" type="varchar(">Type of constraint:&lt;br /&gt;&lt;br /&gt; CHECK&lt;br /&gt;&lt;br /&gt; UNIQUE&lt;br /&gt;&lt;br /&gt; PRIMARY KEY&lt;br /&gt;&lt;br /&gt; FOREIGN KEY</column>
     <column name="IS_DEFERRABLE" type="varchar(">Specifies whether constraint checking is deferrable. Always returns NO.</column>
@@ -5324,7 +5272,7 @@ The ROUTINE_DEFINITION column contains the source statements that created the fu
     <column name="GRANTOR" type="nvarchar(">Privilege grantor.</column>
     <column name="GRANTEE" type="nvarchar(">Privilege grantee.</column>
     <column name="TABLE_CATALOG" type="nvarchar(">Table qualifier.</column>
-    <column name="TABLE_SCHEMA" type="nvarchar(">Name of schema that contains the table.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;\*\* Important \*\*&lt;/strong&gt;  only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
+    <column name="TABLE_SCHEMA" type="nvarchar(">Name of schema that contains the table.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt;  only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
     <column name="TABLE_NAME" type="sysname">Table name.</column>
     <column name="PRIVILEGE_TYPE" type="varchar(">Type of privilege.</column>
     <column name="IS_GRANTABLE" type="varchar(">Specifies whether the grantee can grant permissions to others.</column>
@@ -5335,7 +5283,7 @@ The ROUTINE_DEFINITION column contains the source statements that created the fu
 &lt;para&gt;Returns one row for each table or view in the current database for which the current user has permissions.&lt;br/&gt;
 To retrieve information from these views, specify the fully qualified name of &lt;strong&gt;INFORMATION_SCHEMA.&lt;/strong&gt;_view_name_.&lt;/para&gt;</description>
     <column name="TABLE_CATALOG" type="nvarchar(">Table qualifier.</column>
-    <column name="TABLE_SCHEMA" type="nvarchar(">Name of schema that contains the table.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;\*\* Important \*\*&lt;/strong&gt;  only reliable way to find the schema of an object is to query the sys.objects catalog view. INFORMATION_SCHEMA views could be incomplete since they are not updated for all new features.</column>
+    <column name="TABLE_SCHEMA" type="nvarchar(">Name of schema that contains the table.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt;  only reliable way to find the schema of an object is to query the sys.objects catalog view. INFORMATION_SCHEMA views could be incomplete since they are not updated for all new features.</column>
     <column name="TABLE_NAME" type="sysname">Table or view name.</column>
     <column name="TABLE_TYPE" type="varchar(">Type of table. Can be VIEW or BASE TABLE.</column>
   </table>
@@ -5345,10 +5293,10 @@ To retrieve information from these views, specify the fully qualified name of &l
 &lt;para&gt;Returns one row for each column in the current database that is used in a view definition. This information schema view returns information about the objects to which the current user has permissions.&lt;br/&gt;
  To retrieve information from these views, specify the fully qualified name of &lt;strong&gt;INFORMATION_SCHEMA.&lt;/strong&gt;_view_name_.&lt;/para&gt;</description>
     <column name="VIEW_CATALOG" type="nvarchar(">View qualifier.</column>
-    <column name="VIEW_SCHEMA" type="nvarchar(">Name of schema that contains the view.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;&lt;/strong&gt;  only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
+    <column name="VIEW_SCHEMA" type="nvarchar(">Name of schema that contains the view.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt;  only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
     <column name="VIEW_NAME" type="sysname">View name.</column>
     <column name="TABLE_CATALOG" type="nvarchar(">Table qualifier.</column>
-    <column name="TABLE_SCHEMA" type="nvarchar(">Name of schema that contains the table.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;&lt;/strong&gt;  only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
+    <column name="TABLE_SCHEMA" type="nvarchar(">Name of schema that contains the table.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt;  only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
     <column name="TABLE_NAME" type="sysname">Base table.</column>
     <column name="COLUMN_NAME" type="sysname">Column name.</column>
   </table>
@@ -5358,10 +5306,10 @@ To retrieve information from these views, specify the fully qualified name of &l
 &lt;para&gt;Returns one row for each table in the current database that is used in a view. This information schema view returns information about the objects to which the current user has permissions.&lt;br/&gt;
  To retrieve information from these views, specify the fully qualified name of &lt;strong&gt;INFORMATION_SCHEMA.&lt;/strong&gt;_view_name_.&lt;/para&gt;</description>
     <column name="VIEW_CATALOG" type="nvarchar(">View qualifier.</column>
-    <column name="VIEW_SCHEMA" type="nvarchar(">Name of schema that contains the view.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;&lt;/strong&gt;  only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
+    <column name="VIEW_SCHEMA" type="nvarchar(">Name of schema that contains the view.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt;  only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
     <column name="VIEW_NAME" type="sysname">View name.</column>
     <column name="TABLE_CATALOG" type="nvarchar(">Table qualifier.</column>
-    <column name="TABLE_SCHEMA" type="nvarchar(">Name of schema that contains the base table.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;&lt;/strong&gt;  only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
+    <column name="TABLE_SCHEMA" type="nvarchar(">Name of schema that contains the base table.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt;  only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
     <column name="TABLE_NAME" type="sysname">Base table that the view is based on.</column>
   </table>
   <table name="INFORMATION_SCHEMA.VIEWS" category="Information" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-information-schema-views/views-transact-sql">
@@ -5370,7 +5318,7 @@ To retrieve information from these views, specify the fully qualified name of &l
 &lt;para&gt;Returns one row for views that can be accessed by the current user in the current database.&lt;br/&gt;
 To retrieve information from these views, specify the fully qualified name of &lt;strong&gt;INFORMATION_SCHEMA.&lt;/strong&gt;_view_name_.&lt;/para&gt;</description>
     <column name="TABLE_CATALOG" type="nvarchar(">View qualifier.</column>
-    <column name="TABLE_SCHEMA" type="nvarchar(">Name of schema that contains the view.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;&amp;#42;&amp;#42; Important &amp;#42;&amp;#42;&lt;/strong&gt;  only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
+    <column name="TABLE_SCHEMA" type="nvarchar(">Name of schema that contains the view.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important &lt;/strong&gt;  only reliable way to find the schema of a object is to query the sys.objects catalog view.</column>
     <column name="TABLE_NAME" type="nvarchar(">View name.</column>
     <column name="VIEW_DEFINITION" type="nvarchar(">If the length of definition is larger than &lt;strong&gt;nvarchar(&lt;/strong&gt;4000&lt;strong&gt;)&lt;/strong&gt;, this column is NULL. Otherwise, this column is the view definition text.</column>
     <column name="CHECK_OPTION" type="varchar(">Type of WITH CHECK OPTION. Is CASCADE if the original view was created by using the WITH CHECK OPTION. Otherwise, NONE is returned.</column>
@@ -5488,7 +5436,7 @@ This feature will be removed in a future version of Microsoft SQL Server. Avoid 
     <column name="ctext" type="varbinary(8000)">The raw bytes of the SQL definition statement.</column>
     <column name="texttype" type="smallint">0 = User-supplied comment&lt;br /&gt;&lt;br /&gt; 1 = System-supplied comment&lt;br /&gt;&lt;br /&gt; 4 = Encrypted comment</column>
     <column name="language" type="smallint">Identified for informational purposes only. Not supported. Future compatibility is not guaranteed.</column>
-    <column name="encrypted" type="bit">Indicates whether the procedure definition is obfuscated.&lt;br /&gt;&lt;br /&gt; 0 = Not obfuscated&lt;br /&gt;&lt;br /&gt; 1 = Obfuscated&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;\*\* Important \*\&lt;/strong&gt;* To obfuscate stored procedure definitions, use CREATE PROCEDURE with the ENCRYPTION keyword.</column>
+    <column name="encrypted" type="bit">Indicates whether the procedure definition is obfuscated.&lt;br /&gt;&lt;br /&gt; 0 = Not obfuscated&lt;br /&gt;&lt;br /&gt; 1 = Obfuscated&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important \*\&lt;/strong&gt;* To obfuscate stored procedure definitions, use CREATE PROCEDURE with the ENCRYPTION keyword.</column>
     <column name="compressed" type="bit">Always returns 0. This indicates that the procedure is compressed.</column>
     <column name="text" type="nvarchar(4000)">Actual text of the SQL definition statement.&lt;br /&gt;&lt;br /&gt; The semantics of the decoded expression are equivalent to the original text; however, there are no syntactic guarantees. For example, white spaces are removed from the decoded expression.&lt;br /&gt;&lt;br /&gt; This SQL Server 2000 (8.x)-compatible view obtains information from current SQL Server structures and can return more characters than the &lt;strong&gt;nvarchar(4000)&lt;/strong&gt; definition. &lt;strong&gt;sp_help&lt;/strong&gt; returns &lt;strong&gt;nvarchar(4000)&lt;/strong&gt; as the data type of the text column. When working with &lt;strong&gt;syscomments&lt;/strong&gt; consider using &lt;strong&gt;nvarchar(max)&lt;/strong&gt;. For new development work, do not use &lt;strong&gt;syscomments&lt;/strong&gt;.</column>
   </table>
@@ -5704,41 +5652,6 @@ This SQL Server 2000 system table is included as a view for backward compatibili
     <column name="days" type="nvarchar(217)">Comma-separated list of day names in order from Monday through Sunday, with each name having up to 30 characters.</column>
     <column name="lcid" type="int">Microsoft Windows locale ID for the language.</column>
     <column name="msglangid" type="smallint">Database Engine message group ID.</column>
-    <column name="Name in English" type="Windows LCID">Database Engine message group ID</column>
-    <column name="---------------------" type="------------------">-----------------------------------------</column>
-    <column name="English" type="1033">1033</column>
-    <column name="German" type="1031">1031</column>
-    <column name="French" type="1036">1036</column>
-    <column name="Japanese" type="1041">1041</column>
-    <column name="Danish" type="1030">1030</column>
-    <column name="Spanish" type="3082">3082</column>
-    <column name="Italian" type="1040">1040</column>
-    <column name="Dutch" type="1043">1043</column>
-    <column name="Norwegian" type="2068">2068</column>
-    <column name="Portuguese" type="2070">2070</column>
-    <column name="Finnish" type="1035">1035</column>
-    <column name="Swedish" type="1053">1053</column>
-    <column name="Czech" type="1029">1029</column>
-    <column name="Hungarian" type="1038">1038</column>
-    <column name="Polish" type="1045">1045</column>
-    <column name="Romanian" type="1048">1048</column>
-    <column name="Croatian" type="1050">1050</column>
-    <column name="Slovak" type="1051">1051</column>
-    <column name="Slovene" type="1060">1060</column>
-    <column name="Greek" type="1032">1032</column>
-    <column name="Bulgarian" type="1026">1026</column>
-    <column name="Russian" type="1049">1049</column>
-    <column name="Turkish" type="1055">1055</column>
-    <column name="British English" type="2057">1033</column>
-    <column name="Estonian" type="1061">1061</column>
-    <column name="Latvian" type="1062">1062</column>
-    <column name="Lithuanian" type="1063">1063</column>
-    <column name="Portuguese (Brazil)" type="1046">1046</column>
-    <column name="Traditional Chinese" type="1028">1028</column>
-    <column name="Korean" type="1042">1042</column>
-    <column name="Simplified Chinese" type="2052">2052</column>
-    <column name="Arabic" type="1025">1025</column>
-    <column name="Thai" type="1054">1054</column>
   </table>
   <table name="sys.syslockinfo" category="Compatibility" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-compatibility-views/sys-syslockinfo-transact-sql">
     <description>&lt;para&gt;&lt;strong&gt;sys.syslockinfo (Transact-SQL)&lt;/strong&gt;&lt;/para&gt;
@@ -5839,7 +5752,7 @@ This SQL Server 2000 system table is included as a view for backward compatibili
     <column name="name" type="sysname">Object name</column>
     <column name="id" type="int">Object identification number</column>
     <column name="xtype" type="char(2)">Object type. Can be one of the following object types:&lt;br /&gt;&lt;br /&gt; AF = Aggregate function (CLR)&lt;br /&gt;&lt;br /&gt; C = CHECK constraint&lt;br /&gt;&lt;br /&gt; D = Default or DEFAULT constraint&lt;br /&gt;&lt;br /&gt; F = FOREIGN KEY constraint&lt;br /&gt;&lt;br /&gt; L = Log&lt;br /&gt;&lt;br /&gt; FN = Scalar function&lt;br /&gt;&lt;br /&gt; FS = Assembly (CLR) scalar-function&lt;br /&gt;&lt;br /&gt; FT = Assembly (CLR) table-valued function&lt;br /&gt;&lt;br /&gt; IF = In-lined table-function&lt;br /&gt;&lt;br /&gt; IT = Internal table&lt;br /&gt;&lt;br /&gt; P = Stored procedure&lt;br /&gt;&lt;br /&gt; PC = Assembly (CLR) stored-procedure&lt;br /&gt;&lt;br /&gt; PK = PRIMARY KEY constraint (type is K)&lt;br /&gt;&lt;br /&gt; RF = Replication filter stored procedure&lt;br /&gt;&lt;br /&gt; S = System table&lt;br /&gt;&lt;br /&gt; SN = Synonym&lt;br /&gt;&lt;br /&gt; SQ = Service queue&lt;br /&gt;&lt;br /&gt; TA = Assembly (CLR) DML trigger&lt;br /&gt;&lt;br /&gt; TF = Table function&lt;br /&gt;&lt;br /&gt; TR = SQL DML Trigger&lt;br /&gt;&lt;br /&gt; TT = Table type&lt;br /&gt;&lt;br /&gt; U = User table&lt;br /&gt;&lt;br /&gt; UQ = UNIQUE constraint (type is K)&lt;br /&gt;&lt;br /&gt; V = View&lt;br /&gt;&lt;br /&gt; X = Extended stored procedure</column>
-    <column name="uid" type="smallint">Schema ID of the owner of the object. For databases upgraded from an earlier version of SQL Server, the schema ID is equal to the user ID of the owner. Overflows or returns NULL if the number of users and roles exceeds 32,767.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;\*\* Important \*\&lt;/strong&gt;* If you use any of the following SQL Server DDL statements, you must use the &lt;a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-objects-transact-sql'&gt;sys.objects&lt;/a&gt; catalog view instead of sys.sysobjects.&lt;br /&gt;&lt;br /&gt; CREATE &amp;#124; ALTER &amp;#124; DROP USER&lt;br /&gt;&lt;br /&gt; CREATE &amp;#124; ALTER &amp;#124; DROP ROLE&lt;br /&gt;&lt;br /&gt; CREATE &amp;#124; ALTER &amp;#124; DROP APPLICATION ROLE&lt;br /&gt;&lt;br /&gt; CREATE SCHEMA&lt;br /&gt;&lt;br /&gt; ALTER AUTHORIZATION ON OBJECT</column>
+    <column name="uid" type="smallint">Schema ID of the owner of the object. For databases upgraded from an earlier version of SQL Server, the schema ID is equal to the user ID of the owner. Overflows or returns NULL if the number of users and roles exceeds 32,767.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important \*\&lt;/strong&gt;* If you use any of the following SQL Server DDL statements, you must use the &lt;a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-objects-transact-sql'&gt;sys.objects&lt;/a&gt; catalog view instead of sys.sysobjects.&lt;br /&gt;&lt;br /&gt; CREATE &amp;#124; ALTER &amp;#124; DROP USER&lt;br /&gt;&lt;br /&gt; CREATE &amp;#124; ALTER &amp;#124; DROP ROLE&lt;br /&gt;&lt;br /&gt; CREATE &amp;#124; ALTER &amp;#124; DROP APPLICATION ROLE&lt;br /&gt;&lt;br /&gt; CREATE SCHEMA&lt;br /&gt;&lt;br /&gt; ALTER AUTHORIZATION ON OBJECT</column>
     <column name="info" type="smallint">Identified for informational purposes only. Not supported. Future compatibility is not guaranteed.</column>
     <column name="status" type="int">Identified for informational purposes only. Not supported. Future compatibility is not guaranteed.</column>
     <column name="base_schema_ver" type="int">Identified for informational purposes only. Not supported. Future compatibility is not guaranteed.</column>
@@ -6080,7 +5993,7 @@ This SQL Server 2000 system table is included as a view for backward compatibili
     <column name="xscale" type="tinyint">Internal scale, as used by the server. Not to be used in queries.</column>
     <column name="tdefault" type="int">ID of the stored procedure that contains integrity checks for this data type.</column>
     <column name="domain" type="int">ID of the stored procedure that contains integrity checks for this data type.</column>
-    <column name="uid" type="smallint">Schema ID of the owner of the type.&lt;br /&gt;&lt;br /&gt; For databases upgraded from an earlier version of SQL Server, the schema ID is equal to the user ID of the owner.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt;\*\* Important \*\&lt;/strong&gt;* If you use any of the following SQL Server DDL statements, you must use the &lt;a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-types-transact-sql'&gt;sys.types&lt;/a&gt; catalog view instead of &lt;strong&gt;sys.systypes&lt;/strong&gt;.&lt;br /&gt;&lt;br /&gt; ALTER AUTHORIZATION ON TYPE&lt;br /&gt;&lt;br /&gt; CREATE TYPE&lt;br /&gt;&lt;br /&gt; Overflows or returns NULL if the number of users and roles exceeds 32,767.</column>
+    <column name="uid" type="smallint">Schema ID of the owner of the type.&lt;br /&gt;&lt;br /&gt; For databases upgraded from an earlier version of SQL Server, the schema ID is equal to the user ID of the owner.&lt;br /&gt;&lt;br /&gt; &lt;strong&gt; Important \*\&lt;/strong&gt;* If you use any of the following SQL Server DDL statements, you must use the &lt;a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-types-transact-sql'&gt;sys.types&lt;/a&gt; catalog view instead of &lt;strong&gt;sys.systypes&lt;/strong&gt;.&lt;br /&gt;&lt;br /&gt; ALTER AUTHORIZATION ON TYPE&lt;br /&gt;&lt;br /&gt; CREATE TYPE&lt;br /&gt;&lt;br /&gt; Overflows or returns NULL if the number of users and roles exceeds 32,767.</column>
     <column name="reserved" type="smallint">Identified for informational purposes only. Not supported. Future compatibility is not guaranteed.</column>
     <column name="collationid" type="int">If character based, &lt;strong&gt;collationid&lt;/strong&gt; is the id of the collation of the current database; otherwise, it is NULL.</column>
     <column name="usertype" type="smallint">User type ID. Overflows or returns NULL if the number of data types exceeds 32,767.</column>
