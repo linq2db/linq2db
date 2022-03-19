@@ -649,8 +649,8 @@ namespace Tests.Linq
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
-						Median1   = Sql.Ext.Median(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
-						Median2   = Sql.Ext.Median(p.Value1).Over().ToValue(),
+						Median1 = Sql.Ext.Median(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
+						Median2 = Sql.Ext.Median(p.Value1).Over().ToValue(),
 					};
 				var res = q.ToArray();
 				Assert.IsNotEmpty(res);
@@ -1684,7 +1684,7 @@ namespace Tests.Linq
 			TestProvName.MariaDB)] string context)
 		{
 			// #3423: LEAD and LAG `default` parameter can be a type other than int.
-			var data = new Issue1799Table3[] 
+			var data = new Issue1799Table3[]
 			{
 				new() { ProcessID = 1, ProcessName = "One" },
 				new() { ProcessID = 2, ProcessName = "Two" },
@@ -1706,7 +1706,7 @@ namespace Tests.Linq
 				CollectionAssert.AreEqual(new[] { "None", "One" }, lags);
 			}
 		}
-		
+
 		[Test]
 		public void LeadLagOverloads([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1720,7 +1720,7 @@ namespace Tests.Linq
 			TestProvName.AllFirebird,
 			TestProvName.MySql55)] string context)
 		{
-			var data = new Issue1799Table3[] 
+			var data = new Issue1799Table3[]
 			{
 				new() { ProcessID = 1, ProcessName = "One" },
 				new() { ProcessID = 2, ProcessName = "Two" },
@@ -1747,7 +1747,7 @@ namespace Tests.Linq
 								.ToArray();
 
 				CollectionAssert.AreEqual(new string?[] { null, null, "One", "Two" }, lags);
-				
+
 				lags = table.Select(p => Sql.Ext.Lag(p.ProcessName)
 										 	.Over().OrderBy(p.ProcessID).ToValue())
 							.ToArray();
