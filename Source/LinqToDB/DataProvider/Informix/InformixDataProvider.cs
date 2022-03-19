@@ -22,16 +22,16 @@ namespace LinqToDB.DataProvider.Informix
 				InformixProviderAdapter.GetInstance(providerName))
 
 		{
-			SqlProviderFlags.IsParameterOrderDependent         = !Adapter.IsIDSProvider;
-			SqlProviderFlags.IsSubQueryTakeSupported           = false;
-			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
+			SqlProviderFlags.IsParameterOrderDependent          = !Adapter.IsIDSProvider;
+			SqlProviderFlags.IsSubQueryTakeSupported            = false;
+			SqlProviderFlags.IsInsertOrUpdateSupported          = false;
 			SqlProviderFlags.IsGroupByExpressionSupported      = false;
-			SqlProviderFlags.IsCrossJoinSupported              = false;
-			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
-			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
-			SqlProviderFlags.IsDistinctOrderBySupported        = false;
-			SqlProviderFlags.IsUpdateFromSupported             = false;
-			SqlProviderFlags.IsGroupByColumnRequred            = true;
+			SqlProviderFlags.IsCrossJoinSupported               = false;
+			SqlProviderFlags.IsCommonTableExpressionsSupported  = true;
+			SqlProviderFlags.IsSubQueryOrderBySupported         = true;
+			SqlProviderFlags.IsDistinctOrderBySupported         = false;
+			SqlProviderFlags.IsUpdateFromSupported              = false;
+			SqlProviderFlags.IsGroupByColumnRequred             = true;
 
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("NCHAR", (r,i) => r.GetString(i).TrimEnd(' '));
@@ -120,6 +120,10 @@ namespace LinqToDB.DataProvider.Informix
 			{
 				value    = value?.ToString();
 				dataType = dataType.WithDataType(DataType.Char);
+			}
+			else if (value is byte byteValue && dataType.DataType == DataType.Int16)
+			{
+				value = (short)byteValue;
 			}
 			else if (value is bool b)
 			{

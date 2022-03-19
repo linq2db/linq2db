@@ -43,7 +43,7 @@ namespace Tests.UserTests
 			using (db.CreateLocalTable<EmployeeScheduleSection>())
 			using (db.CreateLocalTable<EmployeeScheduleSectionAdditionalPermission>())
 			{
-				var fullAccess = false;				
+				var fullAccess = false;
 
 				var permissions = from ess in db.GetTable<EmployeeScheduleSection>()
 					let allowEdit = fullAccess || ess.AdditionalPermissions.Any(y => y.IsActive)
@@ -68,7 +68,6 @@ namespace Tests.UserTests
 				var data2 = permissions.ToList(); 
 			}
 		}
-
 
 		[Test]
 		public void SubQueryAny([DataSources] string context)

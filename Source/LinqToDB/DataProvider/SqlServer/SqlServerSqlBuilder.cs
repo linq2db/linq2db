@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using SqlQuery;
-	using SqlProvider;
 	using Mapping;
+	using SqlProvider;
+	using SqlQuery;
 
 	abstract class SqlServerSqlBuilder : BasicSqlBuilder
 	{

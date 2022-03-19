@@ -74,9 +74,11 @@ namespace LinqToDB.DataProvider
 
 		public virtual void BuildColumns(
 			object                        item,
-			Func<ColumnDescriptor, bool>? skipConvert    = null,
-			bool                          castParameters = false,
-			bool                          castAllRows    = false)
+			Func<ColumnDescriptor, bool>? skipConvert                   = null,
+			bool                          castParameters                = false,
+			bool                          castAllRows                   = false,
+			bool                          castFirstRowLiteralOnUnionAll = false,
+			Func<ColumnDescriptor, bool>? castLiteral                   = null)
 		{
 			skipConvert ??= defaultSkipConvert;
 
@@ -85,17 +87,19 @@ namespace LinqToDB.DataProvider
 				var column = Columns[i];
 				var value  = column.GetValue(item);
 
+				var position = StringBuilder.Length;
+
 				if (Options.UseParameters || skipConvert(column) || !MappingSchema.TryConvertToSql(StringBuilder, ColumnTypes[i], value))
 				{
 					var name = ParameterName == "?" ? ParameterName : ParameterName + ++ParameterIndex;
 
 					if (castParameters && (CurrentCount == 0 || castAllRows))
 					{
-						AddParameterCasted(name, ColumnTypes[i]);
+						AddValueCasted(name, ColumnTypes[i]);
 					}
 					else
 					{
-						StringBuilder.Append(name);	
+						StringBuilder.Append(name);
 					}
 					
 
@@ -110,6 +114,12 @@ namespace LinqToDB.DataProvider
 						Scale     = column.Scale
 					});
 				}
+				else if (castFirstRowLiteralOnUnionAll && CurrentCount == 0 && castLiteral?.Invoke(Columns[i]) != false)
+				{
+					var literal          = StringBuilder.ToString(position, StringBuilder.Length - position);
+					StringBuilder.Length = position;
+					AddValueCasted(literal, ColumnTypes[i]);
+				}
 
 				StringBuilder.Append(',');
 			}
@@ -117,10 +127,10 @@ namespace LinqToDB.DataProvider
 			StringBuilder.Length--;
 		}
 
-		private void AddParameterCasted(string name, SqlDataType type)
+		private void AddValueCasted(string sql, SqlDataType type)
 		{
 			StringBuilder.Append("CAST(");
-			StringBuilder.Append(name);
+			StringBuilder.Append(sql);
 			StringBuilder.Append(" AS ");
 			SqlBuilder.BuildDataType(StringBuilder, type);
 			StringBuilder.Append(')');

@@ -95,7 +95,7 @@ namespace LinqToDB.SqlProvider
 		public T? ConvertElement<T>(T? element)
 			where T : class, IQueryElement
 		{
-			return SqlOptimizer.ConvertElement(MappingSchema, element, OptimizationContext) as T;
+			return (T?)SqlOptimizer.ConvertElement(MappingSchema, element, OptimizationContext);
 		}
 
 		#endregion

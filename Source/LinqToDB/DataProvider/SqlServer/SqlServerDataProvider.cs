@@ -51,6 +51,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				SqlProviderFlags.IsApplyJoinSupported              = true;
 				SqlProviderFlags.TakeHintsSupported                = TakeHints.Percent | TakeHints.WithTies;
+				// TODO: move both options to SQL2005 level
 				SqlProviderFlags.IsCommonTableExpressionsSupported = version >= SqlServerVersion.v2008;
 			}
 
