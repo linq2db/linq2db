@@ -4,13 +4,13 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Expressions;
-using LinqToDB.SqlQuery;
-
 namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 {
+	using Expressions;
+	using SqlQuery;
+
 	[PublicAPI]
-	public static class Fn
+	public static class SqlFn
 	{
 		#region Data type
 
@@ -174,31 +174,11 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 
 		public enum ColumnPropertyName
 		{
-			AllowsNull,
-			ColumnId,
-			FullTextTypeColumn,
-			GeneratedAlwaysType,
-			IsColumnSet,
-			IsComputed,
-			IsCursorType,
-			IsDeterministic,
-			IsFulltextIndexed,
-			IsHidden,
-			IsIdentity,
-			IsIdNotForRepl,
-			IsIndexable,
-			IsOutParam,
-			IsPrecise,
-			IsRowGuidCol,
-			IsSparse,
-			IsSystemVerified,
-			IsXmlIndexable,
-			Precision,
-			Scale,
-			StatisticalSemantics,
-			SystemDataAccess,
-			UserDataAccess,
-			UsesAnsiTrim,
+			AllowsNull,   ColumnId,         FullTextTypeColumn, GeneratedAlwaysType, IsColumnSet,
+			IsComputed,   IsCursorType,     IsDeterministic,    IsFulltextIndexed,   IsHidden,
+			IsIdentity,   IsIdNotForRepl,   IsIndexable,        IsOutParam,          IsPrecise,
+			IsRowGuidCol, IsSparse,         IsSystemVerified,   IsXmlIndexable,      Precision,
+			Scale,        SystemDataAccess, UserDataAccess,     UsesAnsiTrim,        StatisticalSemantics,
 		}
 
 		/// <summary>
@@ -219,48 +199,15 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 
 		public enum DatabasePropertyName
 		{
-			Collation,
-			ComparisonStyle,
-			Edition,
-			IsAnsiNullDefault,
-			IsAnsiNullsEnabled,
-			IsAnsiPaddingEnabled,
-			IsAnsiWarningsEnabled,
-			IsArithmeticAbortEnabled,
-			IsAutoClose,
-			IsAutoCreateStatistics,
-			IsAutoCreateStatisticsIncremental,
-			IsAutoShrink,
-			IsAutoUpdateStatistics,
-			IsClone,
-			IsCloseCursorsOnCommitEnabled,
-			IsFulltextEnabled,
-			IsInStandBy,
-			IsLocalCursorsDefault,
-			IsMemoryOptimizedElevateToSnapshotEnabled,
-			IsMergePublished,
-			IsNullConcat,
-			IsNumericRoundAbortEnabled,
-			IsParameterizationForced,
-			IsQuotedIdentifiersEnabled,
-			IsPublished,
-			IsRecursiveTriggersEnabled,
-			IsSubscribed,
-			IsSyncWithBackup,
-			IsTornPageDetectionEnabled,
-			IsVerifiedClone,
-			IsXTPSupported,
-			LastGoodCheckDbTime,
-			LCID,
-			MaxSizeInBytes,
-			Recovery,
-			ServiceObjective,
-			ServiceObjectiveId,
-			SQLSortOrder,
-			Status,
-			Updateability,
-			UserAccess,
-			Version,
+			Collation,            ComparisonStyle,            Edition,                  IsAnsiNullDefault,   IsAnsiNullsEnabled,
+			IsAnsiPaddingEnabled, IsAnsiWarningsEnabled,      IsArithmeticAbortEnabled, IsAutoClose,         IsAutoCreateStatistics,
+			IsAutoShrink,         IsAutoUpdateStatistics,     IsClone,                  IsFulltextEnabled,   IsAutoCreateStatisticsIncremental,
+			IsInStandBy,          IsLocalCursorsDefault,      IsMergePublished,         IsNullConcat,        IsCloseCursorsOnCommitEnabled,
+			IsPublished,          IsRecursiveTriggersEnabled, IsSubscribed,             IsSyncWithBackup,    IsMemoryOptimizedElevateToSnapshotEnabled,
+			IsVerifiedClone,      IsNumericRoundAbortEnabled, IsXTPSupported,           LastGoodCheckDbTime, IsQuotedIdentifiersEnabled,
+			LCID,                 IsParameterizationForced,   MaxSizeInBytes,           Recovery,            IsTornPageDetectionEnabled,
+			ServiceObjective,     ServiceObjectiveId,         SQLSortOrder,             Status,              Updateability,
+			UserAccess,           Version,
 		}
 
 		/// <summary>
@@ -397,9 +344,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 
 		public enum FileGroupPropertyName
 		{
-			IsReadOnly,
-			IsUserDefinedFG,
-			IsDefault,
+			IsReadOnly, IsUserDefinedFG, IsDefault,
 		}
 
 		/// <summary>
@@ -419,10 +364,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 
 		public enum FilePropertyName
 		{
-			IsReadOnly,
-			IsPrimaryFile,
-			IsLogFile,
-			SpaceUsed,
+			IsReadOnly, IsPrimaryFile, IsLogFile, SpaceUsed,
 		}
 
 		/// <summary>
@@ -444,10 +386,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 
 		public enum FilePropertyExName
 		{
-			BlobTier,
-			AccountType,
-			IsInferredTier,
-			IsPageBlob,
+			BlobTier, AccountType, IsInferredTier, IsPageBlob,
 		}
 
 		/// <summary>
@@ -470,15 +409,8 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 
 		public enum FullTextCatalogPropertyName
 		{
-			AccentSensitivity,
-			IndexSize,
-			ItemCount,
-			LogSize,
-			MergeStatus,
-			PopulateCompletionAge,
-			PopulateStatus,
-			UniqueKeyCount,
-			ImportStatus,
+			AccentSensitivity,     IndexSize,      ItemCount,      LogSize,      MergeStatus,
+			PopulateCompletionAge, PopulateStatus, UniqueKeyCount, ImportStatus,
 		}
 
 		/// <summary>
@@ -498,12 +430,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 
 		public enum FullTextServicePropertyName
 		{
-			ResourceUsage,
-			ConnectTimeout,
-			IsFulltextInstalled,
-			DataTimeout,
-			LoadOSResources,
-			VerifySignature,
+			ResourceUsage, ConnectTimeout, IsFulltextInstalled, DataTimeout, LoadOSResources, VerifySignature,
 		}
 
 		/// <summary>
@@ -561,21 +488,9 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 
 		public enum IndexPropertyName
 		{
-			IndexDepth,
-			IndexFillFactor,
-			IndexID,
-			IsAutoStatistics,
-			IsClustered,
-			IsDisabled,
-			IsFulltextKey,
-			IsHypothetical,
-			IsPadIndex,
-			IsPageLockDisallowed,
-			IsRowLockDisallowed,
-			IsStatistics,
-			IsUnique,
-			IsColumnstore,
-			IsOptimizedForSequentialKey,
+			IndexDepth,          IndexFillFactor, IndexID,        IsAutoStatistics, IsClustered,
+			IsDisabled,          IsFulltextKey,   IsHypothetical, IsPadIndex,       IsPageLockDisallowed,
+			IsRowLockDisallowed, IsStatistics,    IsUnique,       IsColumnstore,    IsOptimizedForSequentialKey,
 		}
 
 		/// <summary>
@@ -625,21 +540,25 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <returns>Returns a number using the type of the sequence.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Extension(ProviderName.SqlServer, "NEXT VALUE FOR {sequence_name} OVER ({order_by_clause})",
-			ServerSideOnly=true, BuilderType=typeof(NextValueForBuilder), ChainPrecedence=1)]
+			ServerSideOnly=true, BuilderType=typeof(NextValueForBuilder), TokenName=AnalyticFunctions.FunctionToken, ChainPrecedence=1, IsWindowFunction=true)]
 		public static AnalyticFunctions.INeedsOrderByOnly<object?> NextValueForOver([SqlQueryDependent] string sequence_name)
 		{
 			throw new InvalidOperationException($"'{nameof(NextValueForOver)}' is a server side only function.");
 		}
 
-
-
-
-
-
-
-
-
-
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/OBJECT-DEFINITION-transact-sql">OBJECT_DEFINITION (Transact-SQL)</see></b></para>
+		/// <para>Returns the Transact-SQL source text of the definition of a specified object.</para>
+		/// </summary>
+		/// <param name="object_id">Is the ID of the object to be used. <c>object_id</c> is <b>int</b>,
+		/// and assumed to represent an object in the current database context.</param>
+		/// <returns>nvarchar(max)</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "OBJECT_DEFINITION", ServerSideOnly=true)]
+		public static string? ObjectDefinition(int? object_id)
+		{
+			throw new InvalidOperationException($"'{nameof(ObjectDefinition)}' is a server side only function.");
+		}
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/object-id-transact-sql">OBJECT_ID (Transact-SQL)</see></b></para>
@@ -670,6 +589,260 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		public static int? ObjectID(string object_name, string object_type)
 		{
 			throw new InvalidOperationException($"'{nameof(ObjectID)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/object-name-transact-sql">OBJECT_NAME (Transact-SQL)</see></b></para>
+		/// <para>Returns the database object name for schema-scoped objects. For a list of schema-scoped objects,
+		/// see <see href="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-objects-transact-sql">sys.objects (Transact-SQL)</see>.</para>
+		/// </summary>
+		/// <param name="object_id">Is the ID of the object to be used. <c>object_id</c> is <b>int</b> and is assumed to be
+		/// a schema-scoped object in the specified database, or in the current database context.</param>
+		/// <returns>sysname</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "OBJECT_NAME", ServerSideOnly=true)]
+		public static string? ObjectName(int? object_id)
+		{
+			throw new InvalidOperationException($"'{nameof(ObjectName)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/object-name-transact-sql">OBJECT_NAME (Transact-SQL)</see></b></para>
+		/// <para>Returns the database object name for schema-scoped objects. For a list of schema-scoped objects,
+		/// see <see href="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-objects-transact-sql">sys.objects (Transact-SQL)</see>.</para>
+		/// </summary>
+		/// <param name="object_id">Is the ID of the object to be used. <c>object_id</c> is <b>int</b> and is assumed to be
+		/// a schema-scoped object in the specified database, or in the current database context.</param>
+		/// <param name="database_id">Is the ID of the database where the object is to be looked up. <c>database_id</c> is <b>int</b>.</param>
+		/// <returns>sysname</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "OBJECT_NAME", ServerSideOnly=true)]
+		public static string? ObjectName(int? object_id, int? database_id)
+		{
+			throw new InvalidOperationException($"'{nameof(ObjectName)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/object-schema-name-transact-sql">OBJECT_SCHEMA_NAME (Transact-SQL)</see></b></para>
+		/// <para>Returns the database schema name for schema-scoped objects. For a list of schema-scoped objects,
+		/// see <see href="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-objects-transact-sql">sys.objects (Transact-SQL)</see>.</para>
+		/// </summary>
+		/// <param name="object_id">Is the ID of the object to be used. <c>object_id</c> is <b>int</b> and is assumed to be
+		/// a schema-scoped object in the specified database, or in the current database context.</param>
+		/// <returns>sysname</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "OBJECT_SCHEMA_NAME", ServerSideOnly=true)]
+		public static string? ObjectSchemaName(int? object_id)
+		{
+			throw new InvalidOperationException($"'{nameof(ObjectName)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/object-schema-name-transact-sql">OBJECT_SCHEMA_NAME (Transact-SQL)</see></b></para>
+		/// <para>Returns the database schema name for schema-scoped objects. For a list of schema-scoped objects,
+		/// see <see href="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-objects-transact-sql">sys.objects (Transact-SQL)</see>.</para>
+		/// </summary>
+		/// <param name="object_id">Is the ID of the object to be used. <c>object_id</c> is <b>int</b> and is assumed to be
+		/// a schema-scoped object in the specified database, or in the current database context.</param>
+		/// <param name="database_id">Is the ID of the database where the object is to be looked up. <c>database_id</c> is <b>int</b>.</param>
+		/// <returns>sysname</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "OBJECT_SCHEMA_NAME", ServerSideOnly=true)]
+		public static string? ObjectSchemaName(int? object_id, int? database_id)
+		{
+			throw new InvalidOperationException($"'{nameof(ObjectName)}' is a server side only function.");
+		}
+
+		public enum ObjectPropertyName
+		{
+			CnstIsClustKey,           CnstIsColumn,             CnstIsDeleteCascade,      CnstIsDisabled,           CnstIsNonclustKey,
+			CnstIsNotRepl,            CnstIsNotTrusted,         CnstIsUpdateCascade,      ExecIsAfterTrigger,       ExecIsAnsiNullsOn,
+			ExecIsDeleteTrigger,      ExecIsFirstDeleteTrigger, ExecIsFirstInsertTrigger, ExecIsFirstUpdateTrigger, ExecIsInsertTrigger,
+			ExecIsInsteadOfTrigger,   ExecIsLastDeleteTrigger,  ExecIsLastInsertTrigger,  ExecIsLastUpdateTrigger,  ExecIsQuotedIdentOn,
+			ExecIsStartup,            ExecIsTriggerDisabled,    ExecIsTriggerNotForRepl,  ExecIsUpdateTrigger,      ExecIsWithNativeCompilation,
+			HasAfterTrigger,          HasDeleteTrigger,         HasInsertTrigger,         HasInsteadOfTrigger,      HasUpdateTrigger,
+			IsAnsiNullsOn,            IsCheckCnst,              IsConstraint,             IsDefault,                IsDefaultCnst,
+			IsDeterministic,          IsEncrypted,              IsExecuted,               IsExtendedProc,           IsForeignKey,
+			IsIndexed,                IsIndexable,              IsInlineFunction,         IsMSShipped,              IsPrimaryKey,
+			IsProcedure,              IsQuotedIdentOn,          IsQueue,                  IsReplProc,               IsRule,
+			IsScalarFunction,         IsSchemaBound,            IsSystemTable,            IsSystemVerified,         IsTable,
+			IsTableFunction,          IsTrigger,                IsUniqueCnst,             IsUserTable,              IsView,
+			OwnerId,                  SchemaId,                 TableDeleteTrigger,       TableDeleteTriggerCount,  TableFullTextBackgroundUpdateIndexOn,
+			TableFullTextMergeStatus, TableFulltextCatalogId,   TableFulltextFailCount,   TableFulltextItemCount,   TableFulltextDocsProcessed,
+			TableFulltextKeyColumn,   TableHasCheckCnst,        TableHasClustIndex,       TableHasDefaultCnst,      TableFulltextChangeTrackingOn,
+			TableHasDeleteTrigger,    TableHasForeignKey,       TableHasForeignRef,       TableHasIdentity,         TableFulltextPendingChanges,
+			TableHasIndex,            TableHasInsertTrigger,    TableHasNonclustIndex,    TableHasPrimaryKey,       TableFulltextPopulateStatus,
+			TableHasRowGuidCol,       TableHasTextImage,        TableHasTimestamp,        TableHasUniqueCnst,       TableHasActiveFulltextIndex,
+			TableHasUpdateTrigger,    TableInsertTrigger,       TableInsertTriggerCount,  TableIsFake,              TableHasVarDecimalStorageFormat,
+			TableIsLockedOnBulkLoad,  TableIsMemoryOptimized,   TableIsPinned,            TableTextInRowLimit,      TableUpdateTrigger,
+			TableUpdateTriggerCount,  TableHasColumnSet,        TableTemporalType,
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/OBJECTPROPERTY-transact-sql">OBJECTPROPERTY (Transact-SQL)</see></b></para>
+		/// <para>Returns information about schema-scoped objects in the current database.
+		/// For a list of schema-scoped objects, see <see href="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-objects-transact-sql">sys.objects (Transact-SQL)</see>.
+		/// This function cannot be used for objects that are not schema-scoped, such as data definition language (DDL) triggers and event notifications.</para>
+		/// </summary>
+		/// <param name="id">Is an expression that represents the ID of the object in the current database.
+		/// <c>id</c> is <b>int</b> and is assumed to be a schema-scoped object in the current database context.</param>
+		/// <param name="property">Is an expression that represents the information to be returned for the object specified by <c>id</c>.
+		/// <c>property</c> can be one of the following values.</param>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "OBJECTPROPERTY", ServerSideOnly=true, BuilderType=typeof(PropertyBuilder<ObjectPropertyName>))]
+		public static int? ObjectProperty(int? id, [SqlQueryDependent] ObjectPropertyName property)
+		{
+			throw new InvalidOperationException($"'{nameof(ObjectProperty)}' is a server side only function.");
+		}
+
+		public enum ObjectPropertyExName
+		{
+			BaseType,               CnstIsClustKey,          CnstIsColumn,             CnstIsDeleteCascade,      CnstIsDisabled,
+			CnstIsNonclustKey,      CnstIsNotRepl,           CnstIsNotTrusted,         CnstIsUpdateCascade,      ExecIsAfterTrigger,
+			ExecIsAnsiNullsOn,      ExecIsDeleteTrigger,     ExecIsFirstDeleteTrigger, ExecIsFirstInsertTrigger, ExecIsFirstUpdateTrigger,
+			ExecIsInsertTrigger,    ExecIsInsteadOfTrigger,  ExecIsLastDeleteTrigger,  ExecIsLastInsertTrigger,  ExecIsLastUpdateTrigger,
+			ExecIsQuotedIdentOn,    ExecIsStartup,           ExecIsTriggerDisabled,    ExecIsTriggerNotForRepl,  ExecIsUpdateTrigger,
+			HasAfterTrigger,        HasDeleteTrigger,        HasInsertTrigger,         HasInsteadOfTrigger,      ExecIsWithNativeCompilation,
+			HasUpdateTrigger,       IsAnsiNullsOn,           IsCheckCnst,              IsConstraint,             IsDefault,
+			IsDefaultCnst,          IsDeterministic,         IsEncrypted,              IsExecuted,               IsExtendedProc,
+			IsForeignKey,           IsIndexed,               IsIndexable,              IsInlineFunction,         IsMSShipped,
+			IsPrecise,              IsPrimaryKey,            IsProcedure,              IsQuotedIdentOn,          IsQueue,
+			IsReplProc,             IsRule,                  IsScalarFunction,         IsSchemaBound,            IsSystemTable,
+			IsSystemVerified,       IsTable,                 IsTableFunction,          IsTrigger,                IsUniqueCnst,
+			IsUserTable,            IsView,                  OwnerId,                  SchemaId,                 SystemDataAccess,
+			TableDeleteTrigger,     TableDeleteTriggerCount, TableFullTextMergeStatus, TableFulltextCatalogId,   TableFullTextBackgroundUpdateIndexOn,
+			TableFulltextFailCount, TableFulltextItemCount,  TableFulltextKeyColumn,   TableHasCheckCnst,        TableFullTextChangeTrackingOn,
+			TableHasClustIndex,     TableHasDefaultCnst,     TableHasDeleteTrigger,    TableHasForeignKey,       TableFulltextDocsProcessed,
+			TableHasForeignRef,     TableHasIdentity,        TableHasIndex,            TableHasInsertTrigger,    TableFulltextPendingChanges,
+			TableHasNonclustIndex,  TableHasPrimaryKey,      TableHasRowGuidCol,       TableHasTextImage,        TableFulltextPopulateStatus,
+			TableHasTimestamp,      TableHasUniqueCnst,      TableHasUpdateTrigger,    TableInsertTrigger,       TableFullTextSemanticExtraction,
+			TableIsFake,            TableInsertTriggerCount, TableIsLockedOnBulkLoad,  TableIsMemoryOptimized,   TableHasActiveFulltextIndex,
+			TableIsPinned,          TableTextInRowLimit,     TableUpdateTrigger,       TableUpdateTriggerCount,  TableHasVarDecimalStorageFormat,
+			UserDataAccess,         TableHasColumnSet,       Cardinality,              TableTemporalType,
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/OBJECTPROPERTYEX-transact-sql">OBJECTPROPERTYEX (Transact-SQL)</see></b></para>
+		/// <para>Returns information about schema-scoped objects in the current database. For a list of these objects,
+		/// see <see href="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-objects-transact-sql">sys.objects (Transact-SQL)</see>.
+		/// OBJECTPROPERTYEX cannot be used for objects that are not schema-scoped, such as data definition language (DDL) triggers and event notifications.</para>
+		/// </summary>
+		/// <param name="id">Is an expression that represents the ID of the object in the current database.
+		/// <c>id</c> is <b>int</b> and is assumed to be a schema-scoped object in the current database context.</param>
+		/// <param name="property">Is an expression that contains the information to be returned for the object specified by <c>id</c>.
+		/// The return type is <b>sql_variant</b>. The following table shows the base data type for each property value.</param>
+		/// <returns>sql_variant</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "OBJECTPROPERTYEX", ServerSideOnly=true, BuilderType=typeof(PropertyBuilder<ObjectPropertyExName>))]
+		public static object? ObjectPropertyEx(int? id, [SqlQueryDependent] ObjectPropertyExName property)
+		{
+			throw new InvalidOperationException($"'{nameof(ObjectPropertyEx)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ORIGINAL-DB-NAME-transact-sql">ORIGINAL_DB_NAME (Transact-SQL)</see></b></para>
+		/// <para>Returns the database name specified by the user in the database connection string.
+		/// This database is specified by using the <b>sqlcmd-d</b> option (USE <c>database</c>).
+		/// It can also be specified with the Open Database Connectivity (ODBC) data source expression (initial catalog = <c>databasename</c>). </para>
+		/// <para>This database is different from the default user database.</para>
+		/// </summary>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "ORIGINAL_DB_NAME", ServerSideOnly=true)]
+		public static string? OriginalDbName()
+		{
+			throw new InvalidOperationException($"'{nameof(OriginalDbName)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/PARSENAME-transact-sql">PARSENAME (Transact-SQL)</see></b></para>
+		/// <para>Returns the database schema name for schema-scoped objects. For a list of schema-scoped objects,
+		/// see <see href="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-objects-transact-sql">sys.objects (Transact-SQL)</see>.</para>
+		/// </summary>
+		/// <param name="object_name">Is the parameter that holds the name of the object for which to retrieve the specified object part.
+		/// This parameter is an optionally-qualified object name. If all parts of the object name are qualified, this name can have four parts: the server name,
+		/// the database name, the schema name, and the object name. Each part of the 'object_name' string is type
+		/// sysname which is equivalent to nvarchar(128) or 256 bytes. If any part of the string exceeds 256 bytes,
+		/// PARSENAME will return NULL for that part as it is not a valid sysname.</param>
+		/// <param name="object_piece">Is the object part to return. object_piece is of type int, and can have these values:
+		/// <list type="bullet">
+		/// <item>1 = Object name</item>
+		/// <item>2 = Schema name</item>
+		/// <item>3 = Database name</item>
+		/// <item>4 = Server name</item>
+		/// </list></param>
+		/// <returns>sysname</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "PARSENAME", ServerSideOnly=true)]
+		public static string? ParseName(string? object_name, int object_piece)
+		{
+			throw new InvalidOperationException($"'{nameof(ParseName)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/schema-id-transact-sql">SCHEMA_ID (Transact-SQL)</see></b></para>
+		/// <para>Returns the schema ID associated with a schema name.</para>
+		/// </summary>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "SCHEMA_ID", ServerSideOnly=true)]
+		public static int? SchemaID()
+		{
+			throw new InvalidOperationException($"'{nameof(SchemaID)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/schema-id-transact-sql">SCHEMA_ID (Transact-SQL)</see></b></para>
+		/// <para>Returns the schema ID associated with a schema name.</para>
+		/// </summary>
+		/// <param name="schema_name">Is the name of the schema. <c>schema_name</c> is a <b>sysname</b>.
+		/// If <c>schema_name</c> is not specified, SCHEMA_ID will return the ID of the default schema of the caller.</param>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "SCHEMA_ID", ServerSideOnly=true)]
+		public static int? SchemaID(string schema_name)
+		{
+			throw new InvalidOperationException($"'{nameof(SchemaID)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SCHEMA-NAME-transact-sql">SCHEMA_NAME (Transact-SQL)</see></b></para>
+		/// <para>Returns the schema name associated with a schema ID.</para>
+		/// </summary>
+		/// <returns>sysname</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "SCHEMA_NAME", ServerSideOnly=true)]
+		public static string? SchemaName()
+		{
+			throw new InvalidOperationException($"'{nameof(SchemaName)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SCHEMA-NAME-transact-sql">SCHEMA_NAME (Transact-SQL)</see></b></para>
+		/// <para>Returns the schema name associated with a schema ID.</para>
+		/// </summary>
+		/// <param name="schema_id">The ID of the schema. <c>schema_id</c> is an <b>int</b>.
+		/// If <c>schema_id</c> is not defined, SCHEMA_NAME will return the name of the default schema of the caller.</param>
+		/// <returns>sysname</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "SCHEMA_NAME", ServerSideOnly=true)]
+		public static string? SchemaName(int? schema_id)
+		{
+			throw new InvalidOperationException($"'{nameof(SchemaName)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SCOPE-IDENTITY-transact-sql">SCOPE_IDENTITY (Transact-SQL)</see></b></para>
+		/// <para>Returns the last identity value inserted into an identity column in the same scope.
+		/// A scope is a module: a stored procedure, trigger, function, or batch. Therefore,
+		/// if two statements are in the same stored procedure, function, or batch, they are in the same scope.</para>
+		/// </summary>
+		/// <returns>numeric(38,0)</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "SCOPE_IDENTITY", ServerSideOnly=true)]
+		public static decimal ScopeIdentity()
+		{
+			throw new InvalidOperationException($"'{nameof(ScopeIdentity)}' is a server side only function.");
 		}
 
 		#endregion
