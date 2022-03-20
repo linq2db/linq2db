@@ -240,7 +240,7 @@ CREATE TABLE "LinqDataTypes"
 	"SmallIntValue"  smallint,
 	"IntValue"       int,
 	"BigIntValue"    bigint,
-	"StringValue"    VARCHAR(50)
+	"StringValue"    VARCHAR(50) CHARACTER SET UNICODE_FSS
 );
 COMMIT;
 
