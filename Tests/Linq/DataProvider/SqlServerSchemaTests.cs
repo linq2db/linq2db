@@ -377,5 +377,41 @@ namespace Tests.DataProvider
 			var result = db.Select(() => SqlFn.ScopeIdentity());
 			Assert.That(result, Is.EqualTo(0));
 		}
+
+		[Test]
+		public void ServerPropertyTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.ServerProperty(SqlFn.ServerPropertyName.Edition));
+			Console.WriteLine(result);
+			Assert.That(result, Is.Not.Null);
+		}
+
+		[Test]
+		public void StatsDateTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.StatsDate(SqlFn.ObjectID("dbo.Person"), 1));
+			Console.WriteLine(result);
+			Assert.That(result, Is.Not.Null.Or.Null);
+		}
+
+		[Test]
+		public void TypeNameIDTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.TypeName(SqlFn.TypeID("int")));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("int"));
+		}
+
+		[Test]
+		public void TypePropertyTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.TypeProperty("int", SqlFn.TypePropertyName.Precision));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(10));
+		}
 	}
 }

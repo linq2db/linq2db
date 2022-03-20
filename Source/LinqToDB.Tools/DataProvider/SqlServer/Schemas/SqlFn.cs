@@ -845,6 +845,94 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			throw new InvalidOperationException($"'{nameof(ScopeIdentity)}' is a server side only function.");
 		}
 
+		public enum ServerPropertyName
+		{
+			BuildClrVersion,     Collation,           CollationID,             ComparisonStyle,           ComputerNamePhysicalNetBIOS,
+			Edition,             EditionID,           EngineEdition,           FilestreamConfiguredLevel, FilestreamEffectiveLevel,
+			FilestreamShareName, HadrManagerStatus,   InstanceDefaultDataPath, InstanceDefaultLogPath,    InstanceDefaultBackupPath,
+			InstanceName,        IsBigDataCluster,    IsClustered,             IsFullTextInstalled,       IsAdvancedAnalyticsInstalled,
+			IsHadrEnabled,       IsLocalDB,           IsPolyBaseInstalled,     IsSingleUser,              IsExternalAuthenticationOnly,
+			IsXTPSupported,      LCID,                LicenseType,             MachineName,               IsIntegratedSecurityOnly,
+			NumLicenses,         ProcessID,           ProductBuild,            ProductBuildType,          IsTempDbMetadataMemoryOptimized,
+			ProductLevel,        ProductMajorVersion, ProductMinorVersion,     ProductUpdateLevel,        ProductUpdateReference,
+			ProductVersion,      ResourceVersion,     ServerName,              SqlCharSet,                ResourceLastUpdateDateTime,
+			SqlCharSetName,      SqlSortOrder,        SqlSortOrderName,
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SERVERPROPERTY-transact-sql">SERVERPROPERTY (Transact-SQL)</see></b></para>
+		/// <para>Returns property information about the server instance.</para>
+		/// </summary>
+		/// <param name="property">Is an expression that contains the property information to be returned for the server.</param>
+		/// <returns>sql_variant</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "SERVERPROPERTY", ServerSideOnly=true, BuilderType=typeof(PropertyBuilder<ServerPropertyName>))]
+		public static object? ServerProperty([SqlQueryDependent] ServerPropertyName property)
+		{
+			throw new InvalidOperationException($"'{nameof(ServerProperty)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/STATS-DATE-transact-sql">STATS_DATE (Transact-SQL)</see></b></para>
+		/// <para>Returns the date of the most recent update for statistics on a table or indexed view.</para>
+		/// </summary>
+		/// <param name="object_id">ID of the table or indexed view with the statistics.</param>
+		/// <param name="stats_id">ID of the statistics object.</param>
+		/// <returns>Returns <b>datetime</b> on success. Returns <b>NULL</b> if a statistics blob was not created.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "STATS_DATE", ServerSideOnly=true)]
+		public static DateTime? StatsDate(int? object_id, int? stats_id)
+		{
+			throw new InvalidOperationException($"'{nameof(StatsDate)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TYPE-ID-transact-sql">TYPE_ID (Transact-SQL)</see></b></para>
+		/// <para>Returns the ID for a specified data type name.</para>
+		/// </summary>
+		/// <param name="type_name">Is the name of the data type. type_name is of type <b>nvarchar</b>.
+		/// <c>type_name</c> can be a system or user-defined data type.</param>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "TYPE_ID", ServerSideOnly=true)]
+		public static int? TypeID(string type_name)
+		{
+			throw new InvalidOperationException($"'{nameof(TypeID)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TYPE-NAME-transact-sql">TYPE_NAME (Transact-SQL)</see></b></para>
+		/// <para>Returns the unqualified type name of a specified type ID.</para>
+		/// </summary>
+		/// <param name="type_id">Is the ID of the type that will be used. <c>type_id</c> is an <b>int</b>,
+		/// and it can refer to a type in any schema that the caller has permission to access.</param>
+		/// <returns>sysname</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "TYPE_NAME", ServerSideOnly=true)]
+		public static string? TypeName(int? type_id)
+		{
+			throw new InvalidOperationException($"'{nameof(TypeName)}' is a server side only function.");
+		}
+
+		public enum TypePropertyName
+		{
+			AllowsNull, OwnerId, Precision, Scale, UsesAnsiTrim,
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TYPEPROPERTY-transact-sql">TYPEPROPERTY (Transact-SQL)</see></b></para>
+		/// <para>Returns information about a data type.</para>
+		/// </summary>
+		/// <param name="type">Is the name of the data type.</param>
+		/// <param name="property">Is the type of information to be returned for the data type.</param>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "TYPEPROPERTY", ServerSideOnly=true, BuilderType=typeof(PropertyBuilder<TypePropertyName>))]
+		public static int? TypeProperty(string? type, [SqlQueryDependent] TypePropertyName property)
+		{
+			throw new InvalidOperationException($"'{nameof(TypeProperty)}' is a server side only function.");
+		}
+
 		#endregion
 
 		class PropertyBuilder<T> : Sql.IExtensionCallBuilder
