@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -316,9 +318,9 @@ namespace Tests.Linq
 
 
 				var expected = from t in data
-					select new 
-					{ 
-						Count      = data.Count(x => x.Value1 != null), 
+					select new
+					{
+						Count      = data.Count(x => x.Value1 != null),
 						Aggregated = string.Join(" -> ", data.Where(x => x.Value1 != null).Select(x => x.Value1))
 					};
 
@@ -522,6 +524,20 @@ namespace Tests.Linq
 
 				AreEqual(expected, actual);
 			}
+		}
+
+		[Test]
+		public void MySqlConcatStringsTest([IncludeDataSources(TestProvName.AllMySql)] string context)
+		{
+			using var db = (TestDataConnection)GetDataContext(context);
+
+			_ = (from p in db.Person where p.FirstName == ("A" + "B") select p).ToList();
+			Assert.That(db.LastQuery, Contains.Substring("AB"));
+
+			//var str = "C";
+
+			_ = (from p in db.Person where p.FirstName == "A" + p.FirstName + "B" select p).ToList();
+			Assert.That(db.LastQuery, Contains.Substring("Concat('A', `p`.`FirstName`, 'B')"));
 		}
 	}
 }

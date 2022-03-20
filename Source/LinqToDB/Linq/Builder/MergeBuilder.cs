@@ -32,7 +32,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var mergeContext = (MergeContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			var kind = MergeKind.Merge; 
+			var kind = MergeKind.Merge;
 
 			if (methodCall.IsSameGenericMethod(MergeWithOutputInto))
 				kind = MergeKind.MergeWithOutputInto;
@@ -120,7 +120,7 @@ namespace LinqToDB.Linq.Builder
 
 				var mergeStatement = (SqlMergeStatement)Statement!;
 
-				mergeStatement.Output!.OutputQuery = Sequence[0].SelectQuery;
+				mergeStatement.Output!.OutputColumns = Sequence[0].SelectQuery.Select.Columns.Select(c => c.Expression).ToList();
 
 				QueryRunner.SetRunQuery(query, mapper);
 			}
@@ -217,7 +217,7 @@ namespace LinqToDB.Linq.Builder
 				var sqlFlags = builder.DataContext.SqlProviderFlags;
 				new SelectQueryOptimizer(sqlFlags, query, query, 0, statement)
 					.FinalizeAndValidate(sqlFlags.IsApplyJoinSupported, sqlFlags.IsGroupByExpressionSupported);
-				
+
 				if (query.From.Tables.Count == 0)
 				{
 					result = query.Where.SearchCondition;

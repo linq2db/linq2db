@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
-using LinqToDB.Linq;
 
 namespace LinqToDB.SqlQuery
 {
@@ -32,7 +31,7 @@ namespace LinqToDB.SqlQuery
 #endif
 
 		ISqlExpression _expression;
-		
+
 		public ISqlExpression Expression
 		{
 			get => _expression;
@@ -46,7 +45,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		SelectQuery? _parent;
-		
+
 		public SelectQuery? Parent
 		{
 			get => _parent;

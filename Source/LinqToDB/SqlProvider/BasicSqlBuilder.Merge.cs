@@ -29,7 +29,7 @@ namespace LinqToDB.SqlProvider
 		/// If true, builder will generate command for empty enumerable source;
 		/// Otherwise exception will be generated.
 		/// </summary>
-		protected virtual bool isEmptyValuesSourceSupported => true;
+		protected virtual bool IsEmptyValuesSourceSupported => true;
 
 		/// <summary>
 		/// If <see cref="IsValuesSyntaxSupported"/> set to false and provider doesn't support SELECTs without
@@ -181,7 +181,7 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildMergeSourceQuery(SqlTableLikeSource mergeSource)
 		{
 			mergeSource = ConvertElement(mergeSource);
-			
+
 			BuildPhysicalTable(mergeSource.Source, null);
 
 			BuildMergeAsSourceClause(mergeSource);
@@ -235,7 +235,7 @@ namespace LinqToDB.SqlProvider
 
 				StringBuilder.Append(')');
 			}
-			else if (isEmptyValuesSourceSupported)
+			else if (IsEmptyValuesSourceSupported)
 				BuildMergeEmptySource(merge);
 			else
 				throw new LinqToDBException($"{Name} doesn't support merge with empty source");
