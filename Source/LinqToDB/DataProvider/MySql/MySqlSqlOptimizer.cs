@@ -1,10 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace LinqToDB.DataProvider.MySql
 {
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
+
+	using SqlBinary = SqlQuery.SqlBinaryExpression;
 
 	class MySqlSqlOptimizer : BasicSqlOptimizer
 	{
@@ -13,14 +17,25 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		public override bool CanCompareSearchConditions => true;
-		
+
 		public override SqlStatement TransformStatement(SqlStatement statement)
 		{
 			return statement.QueryType switch
 			{
 				QueryType.Update => CorrectMySqlUpdate((SqlUpdateStatement)statement),
+				QueryType.Delete => PrepareDelete((SqlDeleteStatement)statement),
 				_                => statement,
 			};
+		}
+
+		SqlStatement PrepareDelete(SqlDeleteStatement statement)
+		{
+			var tables = statement.SelectQuery.From.Tables;
+
+			if (statement.Output != null && tables.Count == 1 && tables[0].Joins.Count == 0)
+				tables[0].Alias = "$";
+
+			return statement;
 		}
 
 		private SqlUpdateStatement CorrectMySqlUpdate(SqlUpdateStatement statement)
@@ -40,51 +55,52 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			expression = base.ConvertExpressionImpl(expression, visitor);
 
-			if (expression is SqlBinaryExpression be)
+			return Convert(expression);
+
+			ISqlExpression Convert(ISqlExpression expr)
 			{
-				switch (be.Operation)
+				switch (expr)
 				{
-					case "+":
-						if (be.SystemType == typeof(string))
+					case SqlBinary(var type, var ex1, "+", var ex2) when type == typeof(string) :
+					{
+						return ConvertFunc(new (type, "Concat", ex1, ex2));
+
+						static SqlFunction ConvertFunc(SqlFunction func)
 						{
-							if (be.Expr1 is SqlFunction func)
+							for (var i = 0; i < func.Parameters.Length; i++)
 							{
-								if (func.Name == "Concat")
+								switch (func.Parameters[i])
 								{
-									var list = new List<ISqlExpression>(func.Parameters) { be.Expr2 };
-									return new SqlFunction(be.SystemType, "Concat", list.ToArray());
+									case SqlBinary(var t, var e1, "+", var e2) when t == typeof(string) :
+									{
+										var ps = new List<ISqlExpression>(func.Parameters);
+
+										ps.RemoveAt(i);
+										ps.Insert(i,     e1);
+										ps.Insert(i + 1, e2);
+
+										return ConvertFunc(new (t, func.Name, ps.ToArray()));
+									}
+
+									case SqlFunction(var t, "Concat") f when t == typeof(string) :
+									{
+										var ps = new List<ISqlExpression>(func.Parameters);
+
+										ps.RemoveAt(i);
+										ps.InsertRange(i, f.Parameters);
+
+										return ConvertFunc(new (t, func.Name, ps.ToArray()));
+									}
 								}
 							}
-							else if (be.Expr1 is SqlBinaryExpression && be.Expr1.SystemType == typeof(string) && ((SqlBinaryExpression)be.Expr1).Operation == "+")
-							{
-								var list = new List<ISqlExpression> { be.Expr2 };
-								var ex   = be.Expr1;
 
-								while (ex is SqlBinaryExpression && ex.SystemType == typeof(string) && ((SqlBinaryExpression)be.Expr1).Operation == "+")
-								{
-									var bex = (SqlBinaryExpression)ex;
-
-									list.Insert(0, bex.Expr2);
-									ex = bex.Expr1;
-								}
-
-								list.Insert(0, ex);
-
-								return new SqlFunction(be.SystemType, "Concat", list.ToArray());
-							}
-
-							return new SqlFunction(be.SystemType, "Concat", be.Expr1, be.Expr2);
+							return func;
 						}
+					}
 
-						break;
-				}
-			}
-			else if (expression is SqlFunction func)
-			{
-				switch (func.Name)
-				{
-					case "Convert" :
-						var ftype = func.SystemType.ToUnderlying();
+					case SqlFunction(var type, "Convert") func:
+					{
+						var ftype = type.ToUnderlying();
 
 						if (ftype == typeof(bool))
 						{
@@ -97,10 +113,11 @@ namespace LinqToDB.DataProvider.MySql
 							return func.Parameters[1];
 
 						return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);
+					}
+
+					default : return expr;
 				}
 			}
-
-			return expression;
 		}
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext> visitor)

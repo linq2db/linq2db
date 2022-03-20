@@ -1038,7 +1038,7 @@ namespace LinqToDB.SqlQuery
 		///     SELECT c1, c2       -- QA
 		///     FROM A
 		///        ) B
-		///   FROM 
+		///   FROM
 		///      ) C
 		/// </code>
 		/// </summary>
@@ -1164,12 +1164,12 @@ namespace LinqToDB.SqlQuery
 							visitor.RemoveVisited(field);
 
 						return resultQuery;
-					} 
-				
+					}
+
 					if (element is SqlField f && f.Table != null && visitor.Context.correctedTables.TryGetValue(f.Table, out var levelQuery))
 					{
 						return NeedColumnForExpression(levelQuery, f, false)!;
-					} 
+					}
 
 					return element;
 				}, withStack: withStack);
@@ -1185,7 +1185,7 @@ namespace LinqToDB.SqlQuery
 		/// SELECT c1, c2
 		/// FROM A
 		/// -- after
-		/// SELECT B.c1, B.c2 
+		/// SELECT B.c1, B.c2
 		/// FROM (
 		///   SELECT c1, c2
 		///   FROM A
@@ -1544,7 +1544,7 @@ namespace LinqToDB.SqlQuery
 		{
 			var newCondition = condition.Convert((sql, forTableSources), static (v, e) =>
 			{
-				if (   e is SqlColumn column && column.Parent != null && v.Context.forTableSources.Contains(column.Parent) 
+				if (   e is SqlColumn column && column.Parent != null && v.Context.forTableSources.Contains(column.Parent)
 				    || e is SqlField field   && field.Table   != null && v.Context.forTableSources.Contains(field.Table))
 				{
 					e = v.Context.sql.Select.AddColumn((ISqlExpression)e);
@@ -1742,6 +1742,34 @@ namespace LinqToDB.SqlQuery
 			});
 
 			return outerElementFound;
+		}
+
+		public static SqlTable? GetUpdateTable(this SqlUpdateStatement updateStatement)
+		{
+			var tableToUpdate = updateStatement.Update.Table;
+
+			if (tableToUpdate == null)
+			{
+				tableToUpdate = EnumerateAccessibleSources(updateStatement.SelectQuery)
+					.OfType<SqlTable>()
+					.FirstOrDefault();
+			}
+
+			return tableToUpdate;
+		}
+
+		public static SqlTable? GetDeleteTable(this SqlDeleteStatement deleteStatement)
+		{
+			var tableToDelete = deleteStatement.Table;
+
+			if (tableToDelete == null)
+			{
+				tableToDelete = EnumerateAccessibleSources(deleteStatement.SelectQuery)
+					.OfType<SqlTable>()
+					.FirstOrDefault();
+			}
+
+			return tableToDelete;
 		}
 	}
 }

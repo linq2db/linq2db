@@ -40,6 +40,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlProviderFlags.IsCountDistinctSupported          = true;
 			SqlProviderFlags.IsUpdateFromSupported             = true;
 			SqlProviderFlags.AcceptsOuterExpressionInAggregate = false;
+			SqlProviderFlags.OutputDeleteUseSpecialTable       = true;
+			SqlProviderFlags.OutputInsertUseSpecialTable       = true;
+			SqlProviderFlags.OutputUpdateUseSpecialTables      = true;
 
 			if (version == SqlServerVersion.v2000)
 			{
@@ -164,7 +167,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return Version == SqlServerVersion.v2000 ? new SqlServer2000SchemaProvider(this) : new SqlServerSchemaProvider(this);
 		}
 
-		static readonly ConcurrentDictionary<string,bool> _marsFlags = new ConcurrentDictionary<string,bool>();
+		static readonly ConcurrentDictionary<string,bool> _marsFlags = new ();
 
 		public override object? GetConnectionInfo(DataConnection dataConnection, string parameterName)
 		{
@@ -369,8 +372,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#region UDT support
 
-		private readonly ConcurrentDictionary<Type, string> _udtTypeNames = new ConcurrentDictionary<Type, string>();
-		private readonly ConcurrentDictionary<string, Type> _udtTypes     = new ConcurrentDictionary<string, Type>();
+		private readonly ConcurrentDictionary<Type, string> _udtTypeNames = new ();
+		private readonly ConcurrentDictionary<string, Type> _udtTypes     = new ();
 
 		public void AddUdtType(Type type, string udtName)
 		{
