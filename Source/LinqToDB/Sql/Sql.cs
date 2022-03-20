@@ -161,7 +161,7 @@ namespace LinqToDB
 				SqlPredicate predicate = left.CanBeNull || right.CanBeNull
 					? new SqlPredicate.IsDistinct(left, isNot, right)
 					: new SqlPredicate.ExprExpr(left, isNot ? SqlPredicate.Operator.Equal : SqlPredicate.Operator.NotEqual, right, withNull: null);
-				
+
 				builder.ResultExpression = new SqlSearchCondition(
 					new SqlCondition(isNot: false, predicate)
 				);
@@ -736,10 +736,10 @@ namespace LinqToDB
 
 		/*
 		 * marked internal as we don't have plans now to expose it directly (used by string.IsNullOrWhiteSpace mapping)
-		 * 
+		 *
 		 * implementation tries to mimic .NET implementation of string.IsNullOrWhiteSpace (except null check part):
 		 * return true if string doesn't contain any symbols except White_Space codepoints from Unicode.
-		 * 
+		 *
 		 * Known limitations:
 		 * 1. [Access] we handle only following WS:
 		 * - 0x20 (SPACE)
@@ -1082,7 +1082,7 @@ namespace LinqToDB
 			public override ISqlExpression? GetExpression<TContext>(TContext context, IDataContext dataContext, SelectQuery query, Expression expression, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
 				var expressionStr = Expression;
-				PrepareParameterValues(expression, ref expressionStr, true, out var knownExpressions, out _);
+				PrepareParameterValues(expression, ref expressionStr, true, out var knownExpressions, true, out _);
 
 				var arr = new ISqlExpression[knownExpressions.Count];
 

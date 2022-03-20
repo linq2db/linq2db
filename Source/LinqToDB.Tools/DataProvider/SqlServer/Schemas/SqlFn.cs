@@ -130,6 +130,39 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 
 		#endregion
 
+		#region Logical
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/logical-functions-CHOOSE-transact-sql">CHOOSE (Transact-SQL)</see></b></para>
+		/// <para>Returns the last identity value generated for a specified table or view. The last identity value generated can be for any session and any scope.</para>
+		/// </summary>
+		/// <param name="index">Is an integer expression that represents a 1-based index into the list of the items following it.</param>
+		/// <param name="values">List of comma separated values of any data type.</param>
+		/// <returns>Returns the data type with the highest precedence from the set of types passed to the function.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "CHOOSE", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		public static T Choose<T>(int? index, params T[] values)
+		{
+			throw new InvalidOperationException($"'{nameof(Choose)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/logical-functions-IIF-transact-sql">IIF (Transact-SQL)</see></b></para>
+		/// <para>Returns one of two values, depending on whether the Boolean expression evaluates to true or false in SQL Server.</para>
+		/// </summary>
+		/// <param name="boolean_expression">A valid Boolean expression.</param>
+		/// <param name="true_value">Value to return if <c>boolean_expression</c> evaluates to true.</param>
+		/// <param name="false_value">Value to return if <c>boolean_expression</c> evaluates to false.</param>
+		/// <returns>Returns the data type with the highest precedence from the types in <c>true_value</c> and <c>false_value</c>.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "IIF", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		public static T Iif<T>(bool? boolean_expression, T true_value, T false_value)
+		{
+			throw new InvalidOperationException($"'{nameof(Iif)}' is a server side only function.");
+		}
+
+		#endregion
+
 		#region Metadata
 
 		/// <summary>
@@ -931,6 +964,46 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		public static int? TypeProperty(string? type, [SqlQueryDependent] TypePropertyName property)
 		{
 			throw new InvalidOperationException($"'{nameof(TypeProperty)}' is a server side only function.");
+		}
+
+		#endregion
+
+		#region System
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/IDENTITY-transact-sql">@@IDENTITY (Transact-SQL)</see></b></para>
+		/// <para>Is a system function that returns the last-inserted identity value.</para>
+		/// </summary>
+		/// <returns>numeric(38,0)</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@IDENTITY", ServerSideOnly=true)]
+		public static decimal? Identity()
+		{
+			throw new InvalidOperationException($"'{nameof(Identity)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/PACK-RECEIVED-transact-sql">@@PACK_RECEIVED (Transact-SQL)</see></b></para>
+		/// <para>Returns the number of input packets read from the network by SQL Server since it was last started.</para>
+		/// </summary>
+		/// <returns>integer</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@PACK_RECEIVED", ServerSideOnly=true)]
+		public static int PackReceived()
+		{
+			throw new InvalidOperationException($"'{nameof(PackReceived)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRANCOUNT-transact-sql">@@TRANCOUNT (Transact-SQL)</see></b></para>
+		/// <para>Returns the number of input packets read from the network by SQL Server since it was last started.</para>
+		/// </summary>
+		/// <returns>integer</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@TRANCOUNT", ServerSideOnly=true)]
+		public static int TransactionCount()
+		{
+			throw new InvalidOperationException($"'{nameof(TransactionCount)}' is a server side only function.");
 		}
 
 		#endregion

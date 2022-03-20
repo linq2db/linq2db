@@ -22,7 +22,7 @@ namespace LinqToDB
 		{
 			/// <summary>
 			/// Defines an SQL Function, which
-			/// shall be the same as the name as the function called. 
+			/// shall be the same as the name as the function called.
 			/// </summary>
 			public FunctionAttribute()
 				: base(null)
@@ -90,12 +90,12 @@ namespace LinqToDB
 			public override ISqlExpression? GetExpression<TContext>(TContext context, IDataContext dataContext, SelectQuery query, Expression expression, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
 				var expressionStr = Expression;
-				PrepareParameterValues(expression, ref expressionStr, true, out var knownExpressions, out var genericTypes);
+				PrepareParameterValues(expression, ref expressionStr, true, out var knownExpressions, IgnoreGenericParameters, out var genericTypes);
 
 				if (string.IsNullOrEmpty(expressionStr))
 					throw new LinqToDBException($"Cannot retrieve function name for expression '{expression}'.");
 
-				var parameters = PrepareArguments(context, expressionStr!, ArgIndices, addDefault: true, knownExpressions, genericTypes, converter);
+				var parameters = PrepareArguments(context, expressionStr!, ArgIndices, true, knownExpressions, genericTypes, converter);
 
 				return new SqlFunction(expression.Type, expressionStr!, IsAggregate, IsPure, parameters)
 				{

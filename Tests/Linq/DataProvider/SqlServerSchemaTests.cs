@@ -11,11 +11,14 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class SqlServerSchemaTests : TestBase
 	{
+		#region Data type
+
 		[Test]
 		public void DataLengthTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DataLength("123"));
+			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(6));
 		}
 
@@ -24,6 +27,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DataLengthL("123"));
+			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(6));
 		}
 
@@ -32,6 +36,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.IdentityCurrent("Person"));
+			Console.WriteLine(result);
 			Assert.That(result, Is.GreaterThanOrEqualTo(0m));
 		}
 
@@ -40,6 +45,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.IdentityIncrement("Person"));
+			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(1m));
 		}
 
@@ -48,14 +54,44 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.IdentitySeed("Person"));
+			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(1m));
 		}
+
+		#endregion
+
+		#region Logical
+
+		[Test]
+		public void ChooseTest([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			var b = "B";
+
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Choose(2, "A", b, "C"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("B"));
+		}
+
+		[Test]
+		public void IifTest([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Iif(Sql.AsSql(1) > 2, "A", "B"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("B"));
+		}
+
+		#endregion
+
+		#region Metadata
 
 		[Test]
 		public void AppNameTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.AppName());
+			Console.WriteLine(result);
 			Assert.That(result, Is.Not.Null);
 		}
 
@@ -65,9 +101,11 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 
 			var result = db.Select(() => SqlFn.ColumnLength("Person", "PersonID"));
+			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(4));
 
 			result = db.Select(() => SqlFn.ColumnLength("Person", "ID"));
+			Console.WriteLine(result);
 			Assert.That(result, Is.Null);
 		}
 
@@ -76,6 +114,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ColumnName(SqlFn.ObjectID("dbo.Person", "U"), 1));
+			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo("PersonID"));
 		}
 
@@ -93,6 +132,7 @@ namespace Tests.DataProvider
 			})
 			{
 				var result = db.Select(() => SqlFn.ColumnProperty(SqlFn.ObjectID("dbo.Person"), "PersonID", item.Parameter));
+				Console.WriteLine(result);
 				Assert.That(result, Is.EqualTo(item.Result));
 			}
 		}
@@ -102,6 +142,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DatabasePropertyEx(SqlFn.DbName(), SqlFn.DatabasePropertyName.Version));
+			Console.WriteLine(result);
 			Assert.That(result, Is.GreaterThan(600));
 		}
 
@@ -110,6 +151,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DbID("TestData"));
+			Console.WriteLine(result);
 			Assert.That(result, Is.GreaterThan(0));
 		}
 
@@ -118,6 +160,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DbID());
+			Console.WriteLine(result);
 			Assert.That(result, Is.GreaterThan(0));
 		}
 
@@ -126,6 +169,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DbName(SqlFn.DbID()));
+			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo("TestData"));
 		}
 
@@ -134,6 +178,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DbName());
+			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo("TestData"));
 		}
 
@@ -144,6 +189,8 @@ namespace Tests.DataProvider
 
 			var file   = db.DatabasesAndFiles.DatabaseFiles.First();
 			var result = db.Select(() => SqlFn.FileID(file.Name));
+
+			Console.WriteLine(result);
 
 			Assert.That(result, Is.EqualTo(file.FileID));
 		}
@@ -156,6 +203,8 @@ namespace Tests.DataProvider
 			var file   = db.DatabasesAndFiles.DatabaseFiles.First();
 			var result = db.Select(() => SqlFn.FileIDEx(file.Name));
 
+			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(file.FileID));
 		}
 
@@ -167,6 +216,8 @@ namespace Tests.DataProvider
 			var file   = db.DatabasesAndFiles.DatabaseFiles.First();
 			var result = db.Select(() => SqlFn.FileName(file.FileID));
 
+			Console.WriteLine(result);
+
 			Assert.That(result, Is.EqualTo(file.Name));
 		}
 
@@ -175,6 +226,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.FileGroupID("PRIMARY"));
+			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(1));
 		}
 
@@ -183,6 +235,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.FileGroupName(1));
+			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo("PRIMARY"));
 		}
 
@@ -191,6 +244,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.FileGroupProperty("PRIMARY", SqlFn.FileGroupPropertyName.IsReadOnly));
+			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(0));
 		}
 
@@ -201,6 +255,8 @@ namespace Tests.DataProvider
 
 			var file   = db.DatabasesAndFiles.DatabaseFiles.First();
 			var result = db.Select(() => SqlFn.FileProperty(file.Name, SqlFn.FilePropertyName.IsPrimaryFile));
+
+			Console.WriteLine(result);
 
 			Assert.That(result, Is.EqualTo(1));
 		}
@@ -213,6 +269,8 @@ namespace Tests.DataProvider
 			var file   = db.DatabasesAndFiles.DatabaseFiles.First();
 			var result = db.Select(() => SqlFn.FilePropertyEx(file.Name, SqlFn.FilePropertyExName.AccountType));
 
+			Console.WriteLine(result);
+
 			Assert.That(result, Is.Not.Null);
 		}
 
@@ -221,6 +279,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.FullTextServiceProperty(SqlFn.FullTextServicePropertyName.IsFulltextInstalled));
+			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(0).Or.EqualTo(1));
 		}
 
@@ -229,6 +288,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.IndexColumn("Person", 1, 1));
+			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo("PersonID"));
 		}
 
@@ -237,6 +297,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.IndexKeyProperty(SqlFn.ObjectID("Person", "U"), 1, 1, SqlFn.IndexKeyPropertyName.ColumnId));
+			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(1));
 		}
 
@@ -245,6 +306,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.IndexProperty(SqlFn.ObjectID("dbo.Person"), "PK_Person", SqlFn.IndexPropertyName.IsClustered));
+			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(1));
 		}
 
@@ -253,6 +315,7 @@ namespace Tests.DataProvider
 		{
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.NextValueFor("dbo.TestSequence"));
+			Console.WriteLine(result);
 			Assert.That(result, Is.GreaterThan(0));
 		}
 
@@ -279,6 +342,7 @@ namespace Tests.DataProvider
 		{
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.ObjectDefinition(SqlFn.ObjectID("PersonSearch")));
+			Console.WriteLine(result);
 			Assert.That(result, Is.Not.Null);
 		}
 
@@ -287,6 +351,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ObjectName(SqlFn.ObjectID("dbo.Person")));
+			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo("Person"));
 		}
 
@@ -295,6 +360,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ObjectName(SqlFn.ObjectID("dbo.Person"), SqlFn.DbID("TestData")));
+			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo("Person"));
 		}
 
@@ -303,6 +369,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ObjectSchemaName(SqlFn.ObjectID("dbo.Person")));
+			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo("dbo"));
 		}
 
@@ -311,6 +378,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ObjectSchemaName(SqlFn.ObjectID("dbo.Person"), SqlFn.DbID("TestData")));
+			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo("dbo"));
 		}
 
@@ -319,6 +387,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ObjectProperty(SqlFn.ObjectID("dbo.Person"), SqlFn.ObjectPropertyName.HasDeleteTrigger));
+			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(0));
 		}
 
@@ -327,6 +396,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ObjectPropertyEx(SqlFn.ObjectID("dbo.Person"), SqlFn.ObjectPropertyExName.IsTable));
+			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(1));
 		}
 
@@ -335,6 +405,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.OriginalDbName());
+			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo("TestData"));
 		}
 
@@ -343,6 +414,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.ParseName("dbo.Person", 1));
+			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo("Person"));
 		}
 
@@ -351,6 +423,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.SchemaName(SqlFn.SchemaID("sys")));
+			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo("sys"));
 		}
 
@@ -359,6 +432,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.SchemaName());
+			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo("dbo"));
 		}
 
@@ -367,6 +441,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.SchemaName(SqlFn.SchemaID()));
+			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo("dbo"));
 		}
 
@@ -413,5 +488,38 @@ namespace Tests.DataProvider
 			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(10));
 		}
+
+		#endregion
+
+		#region System
+
+		[Test]
+		public void IdentityTest([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Identity());
+			Console.WriteLine(result);
+			Assert.That(result, Is.Null);
+		}
+
+		[Test]
+		public void PackReceivedTest([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.PackReceived());
+			Console.WriteLine(result);
+			Assert.That(result, Is.GreaterThan(0));
+		}
+
+		[Test]
+		public void TransactionCountTest([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.TransactionCount());
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(0));
+		}
+
+		#endregion
 	}
 }
