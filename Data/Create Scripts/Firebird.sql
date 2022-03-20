@@ -167,7 +167,7 @@ CREATE TABLE "DataTypeTest"
 	"DateTime_"       TIMESTAMP,
 	"Decimal_"        DECIMAL(10, 2),
 	"Double_"         DOUBLE PRECISION,
-	"Guid_"           CHAR(38),
+	"Guid_"           CHAR(16) CHARACTER SET OCTETS,
 	"Int16_"          SMALLINT,
 	"Int32_"          INTEGER,
 	"Int64_"          NUMERIC(11),
@@ -210,7 +210,7 @@ INSERT INTO "DataTypeTest"
 	 "Xml_")
 VALUES
 	('dddddddddddddddd', 1,  255,'dddddddddddddddd', 'B', 'NOW', 12345.67,
-	1234.567, 'dddddddddddddddddddddddddddddddd', 32767, 32768, 1000000, 12.3456, 127,
+	1234.567, X'dddddddddddddddddddddddddddddddd', 32767, 32768, 1000000, 12.3456, 127,
 	1234.123, 'dddddddddddddddd', 'string', 32767, 32768, 200000000,
 	'<root><element strattr="strvalue" intattr="12345"/></root>');
 COMMIT;
@@ -235,12 +235,12 @@ CREATE TABLE "LinqDataTypes"
 	"DateTimeValue"  timestamp,
 	"DateTimeValue2" timestamp,
 	"BoolValue"      char(1),
-	"GuidValue"      char(38),
+	"GuidValue"      CHAR(16) CHARACTER SET OCTETS,
 	"BinaryValue"    blob,
 	"SmallIntValue"  smallint,
 	"IntValue"       int,
 	"BigIntValue"    bigint,
-	"StringValue"    VARCHAR(50) CHARACTER SET UNICODE_FSS
+	"StringValue"    VARCHAR(50)
 );
 COMMIT;
 
@@ -775,7 +775,7 @@ CREATE TABLE "TestMerge1"
 	"FieldDouble"     DOUBLE PRECISION,
 	"FieldDateTime"   TIMESTAMP,
 	"FieldBinary"     BLOB(20),
-	"FieldGuid"       CHAR(38),
+	"FieldGuid"       CHAR(16) CHARACTER SET OCTETS,
 	"FieldDecimal"    DECIMAL(18, 10),
 	"FieldDate"       DATE,
 	"FieldTime"       TIMESTAMP,
@@ -803,7 +803,7 @@ CREATE TABLE "TestMerge2"
 	"FieldDouble"     DOUBLE PRECISION,
 	"FieldDateTime"   TIMESTAMP,
 	"FieldBinary"     BLOB(20),
-	"FieldGuid"       CHAR(38),
+	"FieldGuid"       CHAR(16) CHARACTER SET OCTETS,
 	"FieldDecimal"    DECIMAL(18, 10),
 	"FieldDate"       DATE,
 	"FieldTime"       TIMESTAMP,
