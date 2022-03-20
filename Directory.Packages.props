@@ -53,6 +53,7 @@
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.3"       />
 		<PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers"       Version="6.0.0"       />
 		<PackageVersion Include="Microsoft.SourceLink.GitHub"               Version="1.1.1"       />
+		<PackageVersion Include="System.Linq.Dynamic.Core"                  Version="1.2.18"      />
 		<!--nuget doesn't have strong name, so we use local self-signed copy-->
 		<!--
 		<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"       Version="1.5.0"       />
