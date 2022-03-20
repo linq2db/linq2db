@@ -1716,8 +1716,7 @@ namespace Tests.Linq
 #if NETFRAMEWORK
 			ProviderName.SQLiteMS, // TODO: time to switch to modern sqlite.ms version for netfx
 #endif
-			// All Firebird excluded because of #2839, test data is inserted with padding and then expectations fail
-			TestProvName.AllFirebird,
+			ProviderName.Firebird,
 			TestProvName.MySql55)] string context)
 		{
 			var data = new Issue1799Table3[] 

@@ -79,8 +79,9 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			switch (type.Type.DataType)
 			{
-				case DataType.DateTime2 : StringBuilder.Append("DateTime");       return;
-				case DataType.NVarChar:
+				case DataType.Guid      : StringBuilder.Append("VARCHAR(36)"); return;
+				case DataType.DateTime2 : StringBuilder.Append("DateTime");    return;
+				case DataType.NVarChar  :
 					// yep, 5461...
 					if (type.Type.Length == null || type.Type.Length > 5461 || type.Type.Length < 1)
 					{
@@ -93,6 +94,15 @@ namespace LinqToDB.DataProvider.Sybase
 			}
 
 			base.BuildDataTypeFromDataType(type, forCreateTable);
+		}
+
+		protected override void BuildCreateTableNullAttribute(SqlField field, DefaultNullable defaultNullable)
+		{
+			// BIT cannot be nullable in ASE
+			if (field.CanBeNull && field.Type.DataType == DataType.Boolean)
+				return;
+
+			base.BuildCreateTableNullAttribute(field, defaultNullable);
 		}
 
 		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)

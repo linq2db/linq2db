@@ -8,6 +8,7 @@ namespace LinqToDB.SqlQuery
 
 		bool  CanBeNull  { get; }
 		int   Precedence { get; }
+		// TODO: v4 refactoring: replace with DbDataType and eradicate nullability. Should remove need for GetExpressionType method
 		Type? SystemType { get; }
 	}
 }
