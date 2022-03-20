@@ -106,5 +106,26 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				FSharp.Issue2678.InsertAndSelectRecord(db);
 		}
+
+		[Test(Description = "record type support")]
+		public void Issue3357_FSharp1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.Issue3357.Union1(db);
+		}
+
+		[Test(Description = "record type support")]
+		public void Issue3357_FSharp2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.Issue3357.Union2(db);
+		}
+
+		[Test(Description = "record type support")]
+		public void Issue3357_FSharp3([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.Issue3357.Union3(db);
+		}
 	}
 }

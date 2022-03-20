@@ -8,7 +8,21 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
+		<Compile Include="..\Linq\Linq\AnalyticTests.cs" Link="AnalyticTests.cs" />
+
+		<Compile Include="..\Linq\Linq\AssociationTests.cs" Link="AssociationTests.cs" />
+		<Compile Include="..\Linq\Linq\ConcatUnionTests.cs" Link="ConcatUnionTests.cs" />
+		<Compile Include="..\Linq\Linq\CteTests.cs" Link="CteTests.cs" />
+		<Compile Include="..\Linq\Linq\DataTypesTests.cs" Link="DataTypesTests.cs" />
+		<Compile Include="..\Linq\Linq\FSharpTests.cs" Link="FSharpTests.cs" />
+		<Compile Include="..\Linq\Linq\MappingTests.cs" Link="MappingTests.cs" />
+		<Compile Include="..\Linq\Linq\SelectTests.cs" Link="SelectTests.cs" />
+		<Compile Include="..\Linq\Update\MergeTests.cs" Link="MergeTests.cs" />
+		<Compile Include="..\Linq\Update\MergeTests.Operations.Insert.cs" Link="MergeTests.Operations.Insert.cs" />
+		<Compile Include="..\Linq\UserTests\Issue2800Tests.cs" Link="Issue2800Tests.cs" />
+		<Compile Include="..\Linq\UserTests\Issue3402Tests.cs" Link="Issue3402Tests.cs" />
 	</ItemGroup>
 
 </Project>

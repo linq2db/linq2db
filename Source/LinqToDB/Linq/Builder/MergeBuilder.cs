@@ -32,7 +32,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var mergeContext = (MergeContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			var kind = MergeKind.Merge;
+			var kind = MergeKind.Merge; 
 
 			if (methodCall.IsSameGenericMethod(MergeWithOutputInto))
 				kind = MergeKind.MergeWithOutputInto;
@@ -216,8 +216,8 @@ namespace LinqToDB.Linq.Builder
 				//TODO: Why it is not handled by main optimizer
 				var sqlFlags = builder.DataContext.SqlProviderFlags;
 				new SelectQueryOptimizer(sqlFlags, query, query, 0, statement)
-					.FinalizeAndValidate(sqlFlags.IsApplyJoinSupported, sqlFlags.IsGroupByExpressionSupported);
-
+					.FinalizeAndValidate(sqlFlags.IsApplyJoinSupported);
+				
 				if (query.From.Tables.Count == 0)
 				{
 					result = query.Where.SearchCondition;

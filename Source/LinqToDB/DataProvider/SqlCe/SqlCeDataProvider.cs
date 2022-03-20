@@ -28,12 +28,10 @@ namespace LinqToDB.DataProvider.SqlCe
 			SqlProviderFlags.IsCountSubQuerySupported             = false;
 			SqlProviderFlags.IsApplyJoinSupported                 = true;
 			SqlProviderFlags.IsInsertOrUpdateSupported            = false;
-			SqlProviderFlags.IsCrossJoinSupported                 = true;
 			SqlProviderFlags.IsDistinctOrderBySupported           = false;
 			SqlProviderFlags.IsOrderByAggregateFunctionsSupported = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported     = false;
 			SqlProviderFlags.IsUpdateFromSupported                = false;
-			SqlProviderFlags.IsGroupByExpressionSupported         = false;
 
 			SetCharFieldToType<char>("NChar", DataTools.GetCharExpression);
 

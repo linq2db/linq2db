@@ -2,6 +2,7 @@
 {
 	using System.Data;
 	using System.Text;
+	using LinqToDB.SqlQuery;
 	using Mapping;
 	using SqlProvider;
 
@@ -56,6 +57,15 @@
 			}
 
 			return base.GetProviderTypeName(parameter);
+		}
+
+		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
+		{
+			// ODBC provider doesn't support NULL parameter as top-level select column value
+			if (expr is SqlParameter p && p.IsQueryParameter && p.Value == null)
+				expr = new SqlValue(p.Type, null);
+
+			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
 		}
 	}
 }

@@ -39,21 +39,10 @@ namespace LinqToDB.Data
 			OriginalType  = objectType;
 			ObjectType    = objectType;
 			Reader        = reader;
-			ReaderIndexes = Enumerable.Range(0, reader.FieldCount).ToDictionary(reader.GetName, i => i, MappingSchema.ColumnNameComparer);
+			ReaderIndexes = Enumerable.Range(0, reader.FieldCount).ToDictionary(reader.GetName, static i => i, MappingSchema.ColumnNameComparer);
 
 			var typedDataReader = Expression.Convert(DataReaderParam, reader.GetType());
 			DataReaderLocal     = BuildVariable(converterExpr?.GetBody(typedDataReader) ?? typedDataReader, "ldr");
-		}
-
-		static object DefaultInheritanceMappingException(object value, Type type)
-		{
-			throw new LinqException("Inheritance mapping is not defined for discriminator value '{0}' in the '{1}' hierarchy.", value, type);
-		}
-
-		static bool IsRecord(IEnumerable<Attribute> attrs)
-		{
-			return  attrs.Any(attr => attr.GetType().FullName == "Microsoft.FSharp.Core.CompilationMappingAttribute")
-				&& !attrs.Any(attr => attr.GetType().FullName == "Microsoft.FSharp.Core.CLIMutableAttribute");
 		}
 
 		Expression BuildReadExpression(bool buildBlock, Type objectType)
@@ -63,11 +52,10 @@ namespace LinqToDB.Data
 
 			var entityDescriptor = MappingSchema.GetEntityDescriptor(objectType);
 
-			bool isRecord = IsRecord(MappingSchema.GetAttributes<Attribute>(objectType));
-
-			var expr = isRecord == false
+			var recordType = RecordsHelper.GetRecordType(MappingSchema, objectType);
+			var expr = recordType == RecordType.NotRecord
 				? BuildDefaultConstructor(entityDescriptor, objectType)
-				: BuildRecordConstructor (entityDescriptor, objectType);
+				: BuildRecordConstructor (entityDescriptor, objectType, recordType);
 
 			expr = ProcessExpression(expr);
 
@@ -103,11 +91,13 @@ namespace LinqToDB.Data
 		{
 			if (!ReaderIndexes.TryGetValue(name, out var value))
 			{
-				var cd = entityDescriptor.Columns.Find(c =>
-					(objectType == null || c.MemberAccessor.TypeAccessor.Type == objectType) && c.MemberName == name);
-
-				if (cd != null)
-					return GetReaderIndex(cd.ColumnName);
+				foreach (var cd in entityDescriptor.Columns)
+				{
+					if ((objectType == null || cd.MemberAccessor.TypeAccessor.Type == objectType) && cd.MemberName == name)
+					{
+						return GetReaderIndex(cd.ColumnName);
+					}
+				}
 
 				return -1;
 			}
@@ -117,35 +107,40 @@ namespace LinqToDB.Data
 
 		IEnumerable<ReadColumnInfo> GetReadIndexes(EntityDescriptor entityDescriptor)
 		{
-			var result = from c in entityDescriptor.Columns
-				where c.MemberAccessor.TypeAccessor.Type == entityDescriptor.ObjectType
-				let   index = GetReaderIndex(c.ColumnName)
-				where index >= 0
-				select new ReadColumnInfo() { ReaderIndex = index, Column = c };
-			return result;
+			foreach (var c in entityDescriptor.Columns)
+			{
+				if (c.MemberAccessor.TypeAccessor.Type == entityDescriptor.ObjectType)
+				{
+					var index = GetReaderIndex(c.ColumnName);
+					if (index >= 0)
+					{
+						yield return new ReadColumnInfo() { ReaderIndex = index, Column = c };
+					}
+				}
+			}
 		}
 
 		Expression BuildDefaultConstructor(EntityDescriptor entityDescriptor, Type objectType)
 		{
-			var members =
-			(
-				from info in GetReadIndexes(entityDescriptor)
-				where info.Column.Storage != null ||
-				      info.Column.MemberAccessor.MemberInfo is not PropertyInfo pi ||
-				      pi.GetSetMethod(true) != null
-				select new
+			var members = new List<(ColumnDescriptor column, ConvertFromDataReaderExpression expr)>();
+			foreach (var info in GetReadIndexes(entityDescriptor))
+			{
+				if (info.Column.Storage != null ||
+					  info.Column.MemberAccessor.MemberInfo is not PropertyInfo pi ||
+					  pi.GetSetMethod(true) != null)
 				{
-					Column = info.Column,
-					Expr   = new ConvertFromDataReaderExpression(info.Column.StorageType, info.ReaderIndex, info.Column.ValueConverter, DataReaderLocal, DataContext)
+					members.Add((
+						info.Column,
+						new ConvertFromDataReaderExpression(info.Column.StorageType, info.ReaderIndex, info.Column.ValueConverter, DataReaderLocal, DataContext)));
 				}
-			).ToList();
+			}
 
 			var initExpr = Expression.MemberInit(
 				Expression.New(objectType),
 				members
 					// IMPORTANT: refactoring this condition will affect hasComplex variable calculation below
-					.Where (m => !m.Column.MemberAccessor.IsComplex)
-					.Select(m => (MemberBinding)Expression.Bind(m.Column.StorageInfo, m.Expr)));
+					.Where (static m => !m.column.MemberAccessor.IsComplex)
+					.Select(static m => (MemberBinding)Expression.Bind(m.column.StorageInfo, m.expr)));
 
 			Expression expr = initExpr;
 
@@ -157,9 +152,13 @@ namespace LinqToDB.Data
 				var obj   = Expression.Variable(expr.Type);
 				var exprs = new List<Expression> { Expression.Assign(obj, expr) };
 
-				exprs.AddRange(
-					members.Where(m => m.Column.MemberAccessor.IsComplex).Select(m =>
-						m.Column.MemberAccessor.SetterExpression.GetBody(obj, m.Expr)));
+				foreach (var m in members)
+				{
+					if (m.column.MemberAccessor.IsComplex)
+					{
+						exprs.Add(m.column.MemberAccessor.SetterExpression.GetBody(obj, m.expr));
+					}
+				}
 
 				exprs.Add(obj);
 
@@ -176,16 +175,30 @@ namespace LinqToDB.Data
 			public Expression Expression = null!;
 		}
 
-		IEnumerable<Expression?> GetExpressions(TypeAccessor typeAccessor, bool isRecordType, List<ColumnInfo> columns)
+		IEnumerable<Expression?> GetExpressions(TypeAccessor typeAccessor, RecordType recordType, List<ColumnInfo> columns)
 		{
-			var members = isRecordType ?
-				typeAccessor.Members.Where(m =>
-					IsRecord(MappingSchema.GetAttributes<Attribute>(typeAccessor.Type, m.MemberInfo))) :
-				typeAccessor.Members;
+			var members = typeAccessor.Members;
+			if (recordType == RecordType.FSharp)
+			{
+				members = new List<MemberAccessor>();
+				foreach (var member in typeAccessor.Members)
+				{
+					if (-1 != RecordsHelper.GetFSharpRecordMemberSequence(MappingSchema, typeAccessor.Type, member.MemberInfo))
+						members.Add(member);
+				}
+			}
 
 			foreach (var member in members)
 			{
-				var column = columns.FirstOrDefault(c => !c.IsComplex && c.Name == member.Name);
+				ColumnInfo? column = null;
+				foreach (var c in columns)
+				{
+					if (!c.IsComplex && c.Name == member.Name)
+					{
+						column = c;
+						break;
+					}
+				}
 
 				if (column != null)
 				{
@@ -196,7 +209,12 @@ namespace LinqToDB.Data
 					// HERE was removed associations and LoadWith
 
 					var name = member.Name + '.';
-					var cols = columns.Where(c => c.IsComplex && c.Name.StartsWith(name)).ToList();
+					var cols = new List<ColumnInfo>();
+					foreach (var c in columns)
+					{
+						if (c.IsComplex && c.Name.StartsWith(name))
+							cols.Add(c);
+					}
 
 					if (cols.Count == 0)
 					{
@@ -210,36 +228,39 @@ namespace LinqToDB.Data
 							col.IsComplex = col.Name.Contains(".");
 						}
 
-						var typeAcc  = TypeAccessor.GetAccessor(member.Type);
-						var isRecord = IsRecord(MappingSchema.GetAttributes<Attribute>(member.Type));
+						var typeAcc          = TypeAccessor.GetAccessor(member.Type);
+						var memberRecordType = RecordsHelper.GetRecordType(MappingSchema, member.Type);
 
-						var exprs = GetExpressions(typeAcc, isRecord, cols).ToList();
+						var exprs = GetExpressions(typeAcc, memberRecordType, cols).ToList();
 
-						if (isRecord)
+						if (memberRecordType != RecordType.NotRecord)
 						{
 							var ctor      = member.Type.GetConstructors().Single();
 							var ctorParms = ctor.GetParameters();
 
-							var parms =
-							(
-								from p in ctorParms.Select((p, i) => new {p, i})
-								join e in exprs.Select((e, i) => new {e, i}) on p.i equals e.i into j
-								from e in j.DefaultIfEmpty()
-								select
-									(e == null ? null : e.e) ??
-									Expression.Constant(p.p.DefaultValue ?? MappingSchema.GetDefaultValue(p.p.ParameterType),
-										p.p.ParameterType)
-							).ToList();
+							var parms = new List<Expression>();
+							for (var i = 0; i < ctorParms.Length; i++)
+							{
+								var p = ctorParms[i];
+								var e = (exprs.Count > i ? exprs[i] : null)
+									?? Expression.Constant(p.DefaultValue ?? MappingSchema.GetDefaultValue(p.ParameterType), p.ParameterType);
+								parms.Add(e);
+							}
 
 							yield return Expression.New(ctor, parms);
 						}
 						else
 						{
-							var expr = Expression.MemberInit(
-								Expression.New(member.Type),
-								from m in typeAcc.Members.Zip(exprs, (m, e) => new {m, e})
-								where m.e != null
-								select (MemberBinding) Expression.Bind(m.m.MemberInfo, m.e));
+							var bindings = new List<MemberBinding>();
+							for (var i = 0; i < typeAcc.Members.Count && i < exprs.Count; i++)
+							{
+								if (exprs[i] != null)
+								{
+									bindings.Add(Expression.Bind(typeAcc.Members[i].MemberInfo, exprs[i]!));
+								}
+							}
+
+							var expr = Expression.MemberInit(Expression.New(member.Type), bindings);
 
 							yield return expr;
 						}
@@ -248,29 +269,35 @@ namespace LinqToDB.Data
 			}
 		}
 
-		Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, Type objectType)
+		Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, Type objectType, RecordType recordType)
 		{
 			var ctor  = objectType.GetConstructors().Single();
 
-			var exprs = GetExpressions(entityDescriptor.TypeAccessor, true,
-				(
-					from info in GetReadIndexes(entityDescriptor)
-					select new ColumnInfo
-					{
-						IsComplex  = info.Column.MemberAccessor.IsComplex,
-						Name       = info.Column.MemberName,
-						Expression = new ConvertFromDataReaderExpression(info.Column.MemberType, info.ReaderIndex, info.Column.ValueConverter, DataReaderLocal, DataContext)
-					}
-				).ToList()).ToList();
+			var columns = new List<ColumnInfo>();
+			foreach (var info in GetReadIndexes(entityDescriptor))
+			{
+				columns.Add(new ColumnInfo
+				{
+					IsComplex  = info.Column.MemberAccessor.IsComplex,
+					Name       = info.Column.MemberName,
+					Expression = new ConvertFromDataReaderExpression(info.Column.MemberType, info.ReaderIndex, info.Column.ValueConverter, DataReaderLocal, DataContext)
+				});
+			}
 
-			var parms =
-			(
-				from p in ctor.GetParameters().Select((p,i) => new { p, i })
-				join e in exprs.Select((e,i) => new { e, i }) on p.i equals e.i into j
-				from e in j.DefaultIfEmpty()
-				select
-					(e == null ? null : e.e) ?? Expression.Constant(MappingSchema.GetDefaultValue(p.p.ParameterType), p.p.ParameterType)
-			).ToList();
+			var exprs = GetExpressions(entityDescriptor.TypeAccessor, recordType, columns);
+
+			var parameters       = ctor.GetParameters();
+			var parms            = new Expression[parameters.Length];
+			using var enumerator = exprs.GetEnumerator();
+
+			for (var i = 0; i < parameters.Length; i++)
+			{
+				Expression? e = null;
+				if (enumerator.MoveNext())
+					e = enumerator.Current;
+
+				parms[i] = e ?? Expression.Constant(MappingSchema.GetDefaultValue(parameters[i].ParameterType), parameters[i].ParameterType);
+			}
 
 			var expr = Expression.New(ctor, parms);
 
@@ -318,7 +345,7 @@ namespace LinqToDB.Data
 
 			Expression? expr = null;
 
-			var defaultMapping = inheritanceMapping.SingleOrDefault(m => m.IsDefault);
+			var defaultMapping = inheritanceMapping.SingleOrDefault(static m => m.IsDefault);
 
 			if (defaultMapping != null)
 			{
@@ -328,7 +355,6 @@ namespace LinqToDB.Data
 			}
 			else
 			{
-				var exceptionMethod = MemberHelper.MethodOf(() => DefaultInheritanceMappingException(null!, null!));
 				var dindex          = GetReaderIndex(entityDescriptor, null, inheritanceMapping[0].DiscriminatorName);
 
 				if (dindex >= 0)
@@ -336,7 +362,7 @@ namespace LinqToDB.Data
 					expr = Expression.Convert(
 						Expression.Call(
 							null,
-							exceptionMethod,
+							Methods.LinqToDB.Exceptions.DefaultInheritanceMappingException,
 							new ConvertFromDataReaderExpression(typeof(object), dindex, null, DataReaderLocal, DataContext),
 							Expression.Constant(ObjectType)),
 						ObjectType);
@@ -348,8 +374,11 @@ namespace LinqToDB.Data
 				return BuildReadExpression(true, ObjectType);
 			}
 
-			foreach (var mapping in inheritanceMapping.Select((m,i) => new { m, i }).Where(m => m.m != defaultMapping))
+			foreach (var mapping in inheritanceMapping.Select(static (m,i) => new { m, i }))
 			{
+				if (mapping.m == defaultMapping)
+					continue;
+
 				var ed     = MappingSchema.GetEntityDescriptor(mapping.m.Type);
 				var dindex = GetReaderIndex(ed, null, mapping.m.DiscriminatorName);
 

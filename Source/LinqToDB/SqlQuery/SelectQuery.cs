@@ -80,14 +80,15 @@ namespace LinqToDB.SqlQuery
 		private List<object>? _properties;
 		public  List<object>   Properties => _properties ??= new ();
 
-		public SelectQuery?    ParentSelect         { get; set; }
-		public bool            IsSimple => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty && !HasSetOperators;
-		public bool            IsParameterDependent { get; set; }
+		public SelectQuery?   ParentSelect         { get; set; }
+		public bool           IsSimple      => IsSimpleOrSet && !HasSetOperators;
+		public bool           IsSimpleOrSet => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty;
+		public bool           IsParameterDependent { get; set; }
 
 		/// <summary>
 		/// Gets or sets flag when sub-query can be removed during optimization.
 		/// </summary>
-		public bool            DoNotRemove          { get; set; }
+		public bool               DoNotRemove         { get; set; }
 		public bool            DoNotSetAliases      { get; set; }
 
 		List<ISqlExpression[]>? _uniqueKeys;
@@ -97,7 +98,7 @@ namespace LinqToDB.SqlQuery
 		/// Used in JoinOptimizer for safely removing sub-query from resulting SQL.
 		/// </summary>
 		public  List<ISqlExpression[]> UniqueKeys    => _uniqueKeys ??= new ();
-		public  bool                   HasUniqueKeys => _uniqueKeys != null && _uniqueKeys.Count > 0;
+		public  bool                    HasUniqueKeys => _uniqueKeys != null && _uniqueKeys.Count > 0;
 
 		#endregion
 
