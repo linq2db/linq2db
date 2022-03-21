@@ -332,6 +332,11 @@ namespace LinqToDB.Reflection
 				public static readonly PropertyInfo Value      = MemberHelper.PropertyOf<Data.DataParameter>(dp => dp.Value);
 			}
 
+			internal static class Exceptions
+			{
+				public static readonly MethodInfo DefaultInheritanceMappingException = MemberHelper.MethodOf(() => Linq.Exceptions.DefaultInheritanceMappingException(null!, null!));
+			}
+
 			internal static class Sql
 			{
 				public static readonly ConstructorInfo SqlParameterConstructor = MemberHelper.ConstructorOf(() => new SqlParameter(default(DbDataType), default(string), null));

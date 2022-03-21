@@ -1423,6 +1423,9 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
+		// TODO: IsAggregationOrWindowFunction use needs review - maybe we should call ContainsAggregationOrWindowFunction there
+		public static bool ContainsAggregationOrWindowFunction(IQueryElement expr) => null != expr.Find(IsAggregationOrWindowFunction);
+
 		/// <summary>
 		/// Collects unique keys from different sources.
 		/// </summary>
@@ -1719,11 +1722,9 @@ namespace LinqToDB.SqlQuery
 			return new DbDataType(expr.SystemType!);
 		}
 
-		public static bool HasOuterReferences(SelectQuery root, ISqlExpression expr)
+		public static bool HasOuterReferences(ISet<ISqlTableSource> sources, ISqlExpression expr)
 		{
-			var sources = new HashSet<ISqlTableSource>(EnumerateAccessibleSources(root));
-
-			var outerElementFound = null != expr.Find(e =>
+			var outerElementFound = null != expr.Find(sources, static (sources, e) =>
 			{
 				if (e.ElementType == QueryElementType.Column)
 				{

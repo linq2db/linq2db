@@ -11,7 +11,6 @@ namespace LinqToDB.DataProvider.Informix
 	using LinqToDB.Linq.Internal;
 	using Mapping;
 	using SqlProvider;
-	using SqlQuery;
 
 	public class InformixDataProvider : DynamicDataProviderBase<InformixProviderAdapter>
 	{
@@ -22,16 +21,15 @@ namespace LinqToDB.DataProvider.Informix
 				InformixProviderAdapter.GetInstance(providerName))
 
 		{
-			SqlProviderFlags.IsParameterOrderDependent          = !Adapter.IsIDSProvider;
-			SqlProviderFlags.IsSubQueryTakeSupported            = false;
-			SqlProviderFlags.IsInsertOrUpdateSupported          = false;
-			SqlProviderFlags.IsGroupByExpressionSupported      = false;
-			SqlProviderFlags.IsCrossJoinSupported               = false;
-			SqlProviderFlags.IsCommonTableExpressionsSupported  = true;
-			SqlProviderFlags.IsSubQueryOrderBySupported         = true;
-			SqlProviderFlags.IsDistinctOrderBySupported         = false;
-			SqlProviderFlags.IsUpdateFromSupported              = false;
-			SqlProviderFlags.IsGroupByColumnRequred             = true;
+			SqlProviderFlags.IsParameterOrderDependent         = !Adapter.IsIDSProvider;
+			SqlProviderFlags.IsSubQueryTakeSupported           = false;
+			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
+			SqlProviderFlags.IsCrossJoinSupported              = false;
+			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
+			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
+			SqlProviderFlags.IsDistinctOrderBySupported        = false;
+			SqlProviderFlags.IsUpdateFromSupported             = false;
+			SqlProviderFlags.IsGroupByColumnRequred            = true;
 
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("NCHAR", (r,i) => r.GetString(i).TrimEnd(' '));

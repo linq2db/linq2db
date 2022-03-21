@@ -14,6 +14,7 @@
 		<Compile Include="AssemblyInfo.fs" />
 		<Compile Include="Issue2678.fs" />
 		<Compile Include="Models.fs" />
+		<Compile Include="Issue3357.fs" />
 		<Compile Include="WhereTest.fs" />
 		<Compile Include="SelectTest.fs" />
 		<Compile Include="InsertTest.fs" />

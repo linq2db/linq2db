@@ -459,7 +459,10 @@ namespace LinqToDB.Linq.Builder
 						newInfo[i] = si;
 					else
 					{
-						var index = SelectQuery.Select.Add(si.Query!.Select.Columns[si.Index]);
+						var index = SelectQuery.Select.Add(
+							si.Query != null
+								? si.Query.Select.Columns[si.Index]
+								: si.Sql);
 
 						newInfo[i] = new SqlInfo(si.MemberChain, SelectQuery.Select.Columns[index], SelectQuery, index);
 					}

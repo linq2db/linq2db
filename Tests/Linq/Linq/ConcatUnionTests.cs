@@ -8,6 +8,8 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using System;
+	using System.Linq.Expressions;
 	using Model;
 
 
@@ -1041,6 +1043,438 @@ namespace Tests.Linq
 			query.Invoking(q => q.ToList()).Should().NotThrow();
 		}		
 
+		[Test(Description = "Test that we generate plain UNION without sub-queries")]
+		public void Issue3359_MultipleSets([DataSources(false)] string context)
+		{
+			using var db = (TestDataConnection)GetDataContext(context);
 
+			var query1 = db.Person.Select(p => new { p.FirstName, p.LastName });
+			var query2 = db.Person.Select(p => new { p.FirstName, p.LastName });
+			var query3 = db.Person.Select(p => new { p.FirstName, p.LastName });
+
+			query1.Concat(query2).Concat(query3).ToArray();
+
+			db.LastQuery!.Should().Contain("SELECT", Exactly.Thrice());
+		}
+
+		[Test(Description = "Test that we generate plain UNION without sub-queries")]
+		public void Issue3359_MultipleSetsCombined([DataSources(false)] string context)
+		{
+			using var db = (TestDataConnection)GetDataContext(context);
+
+			var query1 = db.Person.Select(p => new { p.FirstName, p.LastName });
+			var query2 = db.Person.Select(p => new { p.FirstName, p.LastName });
+			var query3 = db.Person.Select(p => new { p.FirstName, p.LastName });
+			var query4 = db.Person.Select(p => new { p.FirstName, p.LastName });
+			var query5 = db.Person.Select(p => new { p.FirstName, p.LastName });
+			var query6 = db.Person.Select(p => new { p.FirstName, p.LastName });
+
+			query1.Concat(query2.Concat(query3)).Concat(query4.Concat(query5).Concat(query6)).ToArray();
+
+			db.LastQuery!.Should().Contain("SELECT", Exactly.Times(6));
+		}
+
+		// only pgsql supports all 6 operators right now
+		[Test(Description = "Test that we generate sub-queries for incompatible set operators and order queries properly")]
+		public void Issue3359_MultipleSetsCombined_DifferentOperators([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = (TestDataConnection)GetDataContext(context);
+
+			var query1 = db.Person.Select(p => new { FirstName = p.FirstName + "q1", p.LastName });
+			var query2 = db.Person.Select(p => new { FirstName = p.FirstName + "q2", p.LastName });
+			var query3 = db.Person.Select(p => new { FirstName = p.FirstName + "q3", p.LastName });
+			var query4 = db.Person.Select(p => new { FirstName = p.FirstName + "q4", p.LastName });
+			var query5 = db.Person.Select(p => new { FirstName = p.FirstName + "q5", p.LastName });
+			var query6 = db.Person.Select(p => new { FirstName = p.FirstName + "q6", p.LastName });
+
+			query1.Union(query2.UnionAll(query3)).Intersect(query4.IntersectAll(query5).Except(query6)).ToArray();
+
+			var sql = db.LastQuery!;
+			// 6 main queries and 4 subqueries for incompatible operators
+			sql.Should().Contain("SELECT", Exactly.Times(6 + 4));
+
+			// operators generated
+			sql.Should().Contain("UNION ALL", Exactly.Once());
+			sql.Should().Contain("UNION", Exactly.Twice());
+			sql.Should().Contain("INTERSECT", Exactly.Twice());
+			sql.Should().Contain("INTERSECT ALL", Exactly.Once());
+			sql.Should().Contain("EXCEPT", Exactly.Once());
+
+			// operators order correct
+			var i1 = sql.IndexOf("UNION");
+			var i2 = sql.IndexOf("UNION ALL");
+			var i3 = sql.IndexOf("INTERSECT");
+			var i4 = sql.IndexOf("INTERSECT ALL");
+			var i5 = sql.IndexOf("EXCEPT");
+			Assert.AreNotEqual(-1, i1);
+			Assert.Less(i1, i2);
+			Assert.Less(i2, i3);
+			Assert.Less(i3, i4);
+			Assert.Less(i4, i5);
+
+			// queries order correct
+			i1 = sql.IndexOf("q1");
+			i2 = sql.IndexOf("q2");
+			i3 = sql.IndexOf("q3");
+			i4 = sql.IndexOf("q4");
+			i5 = sql.IndexOf("q5");
+			Assert.AreNotEqual(-1, i1);
+			Assert.Less(i1, i2);
+			Assert.Less(i2, i3);
+			Assert.Less(i3, i4);
+			Assert.Less(i4, i5);
+		}
+
+		public record class  Issue3357RecordClass (int Id, string FirstName, string LastName);
+		public class Issue3357RecordLike
+		{
+			public Issue3357RecordLike(int Id, string FirstName, string LastName)
+			{
+				this.Id        = Id;
+				this.FirstName = FirstName;
+				this.LastName  = LastName;
+			}
+
+			public int    Id        { get; }
+			public string FirstName { get; }
+			public string LastName  { get; }
+		}
+
+		[Test(Description = "record type support")]
+		public void Issue3357_RecordClass([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AreEqual(
+				Person.Select(p => new Issue3357RecordClass(p.ID, p.FirstName, p.LastName))
+				.Concat(Person.Select(p => new Issue3357RecordClass(p.ID, p.FirstName, p.LastName))),
+
+				db.Person.Select(p => new Issue3357RecordClass(p.ID, p.FirstName, p.LastName))
+				.Concat(db.Person.Select(p => new Issue3357RecordClass(p.ID, p.FirstName, p.LastName))));
+		}
+
+		[Test(Description = "record type support")]
+		public void Issue3357_RecordLikeClass([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AreEqualWithComparer(
+				Person.Select(p => new Issue3357RecordLike(p.ID, p.FirstName, p.LastName))
+				.Concat(Person.Select(p => new Issue3357RecordLike(p.ID, p.FirstName, p.LastName))),
+
+				db.Person.Select(p => new Issue3357RecordLike(p.ID, p.FirstName, p.LastName))
+				.Concat(db.Person.Select(p => new Issue3357RecordLike(p.ID, p.FirstName, p.LastName))));
+		}
+
+		[Table]
+		public class Issue3323Table
+		{
+			[PrimaryKey                      ] public int     Id       { get; set; }
+			[Column(SkipOnEntityFetch = true)] public string? FistName { get; set; }
+			[Column(SkipOnEntityFetch = true)] public string? LastName { get; set; }
+			[Column(CanBeNull = false)       ] public string  Text     { get; set; } = null!;
+
+			[ExpressionMethod(nameof(FullNameExpr), IsColumn = true)]
+			public string FullName { get; set; } = null!;
+
+
+			private static Expression<Func<Issue3323Table, string>> FullNameExpr() => entity => entity.FistName + " " + entity.LastName;
+		}
+
+		[Test(Description = "calculated column in set select")]
+		public void Issue3323([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3323Table>();
+			tb.Insert(() => new Issue3323Table()
+			{
+				Id       = 1,
+				FistName = "one",
+				LastName = "two",
+				Text     = "text"
+			});
+
+			var res = tb.Concat(tb).ToArray();
+
+			Assert.AreEqual(2, res.Length);
+			Assert.AreEqual("one two", res[0].FullName);
+			Assert.AreEqual("one two", res[1].FullName);
+		}
+
+		[Test(Description = "calculated column in set select")]
+		public void Issue3323_Mixed([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3323Table>();
+			tb.Insert(() => new Issue3323Table()
+			{
+				Id       = 1,
+				FistName = "one",
+				LastName = "two",
+				Text     = "text"
+			});
+
+			var query1 = tb.Select(r => new { r.Id, Text = r.FullName });
+			var query2 = tb.Select(r => new { Id = r.Id + 1, Text = r.Text });
+
+			var res = query1.Concat(query2).ToArray().OrderBy(r => r.Id).ToArray();
+
+			Assert.AreEqual(2        , res.Length);
+			Assert.AreEqual("one two", res[0].Text);
+			Assert.AreEqual("text"   , res[1].Text);
+
+			res = query2.Concat(query1).ToArray().OrderBy(r => r.Id).ToArray();
+
+			Assert.AreEqual(2        , res.Length);
+			Assert.AreEqual("one two", res[0].Text);
+			Assert.AreEqual("text"   , res[1].Text);
+		}
+
+		[Test(Description = "NullReferenceException : Object reference not set to an instance of an object.")]
+		public void Issue2505([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var src = db.Person.AsQueryable();
+
+			var query1 = src.Select(i => new
+			{
+				Person = i,
+				Gender = i.MiddleName == null ? Gender.Male : Gender.Other,
+			});
+
+			var query2 = src.Select(i => new
+			{
+				Person = i,
+				Gender = i.MiddleName == null ? Gender.Male : Gender.Other,
+			});
+
+			query1
+				.UnionAll(query2)
+				.Select(i => new
+				{
+					Person = i.Person,
+					Gender = i.Gender,
+				})
+				.Where(i => i.Gender == Gender.Other)
+				.OrderByDescending(i => i.Person.FirstName)
+				.Select(i => new
+				{
+					Account = i.Person.LastName
+				})
+				.ToList();
+		}
+
+		[Table]
+		[Column(MemberName = $"{nameof(Name)}.{nameof(FullName.FirstName)}")]
+		[Column(MemberName = $"{nameof(Name)}.{nameof(FullName.LastName)}")]
+		public class ComplexPerson
+		{
+			[PrimaryKey] public int       Id   { get; set; }
+			             public FullName? Name { get; set; }
+		}
+
+		public class FullName
+		{
+			public string? FirstName { get; set; }
+			public string? LastName  { get; set; }
+		}
+
+		[ActiveIssue(3346)]
+		[Test(Description = "composite columns in union (also tests create table)")]
+		public void Issue3346_ProjectionBuild([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<ComplexPerson>();
+
+			var query1 = from x in tb
+						 where x.Id < 10
+						 select x;
+
+			var query2 = from x in tb
+						 where x.Id < 20
+						 select x;
+
+			query1.Union(query2).ToArray();
+		}
+
+		[ActiveIssue(3346)]
+		[Test(Description = "composite columns in union (also tests create table)")]
+		public void Issue3346_Count([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<ComplexPerson>();
+
+			var query1 = from x in tb
+						 where x.Id < 10
+						 select x;
+
+			var query2 = from x in tb
+						 where x.Id < 20
+						 select x;
+
+			query1.Union(query2).Count();
+		}
+
+		[ActiveIssue(3150)]
+		[Test(Description = "preserve constant columns")]
+		public void Issue3150([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.Person.Where(p => p.ID == 1).Select(p => new { p.ID, Name = new { p.FirstName, Marker = "id=1" } });
+			var query2 = db.Person.Where(p => p.ID == 2).Select(p => new { p.ID, Name = new { p.FirstName, Marker = "id=2" } });
+
+			var result = query1.Concat(query2).ToArray();
+
+			Assert.AreEqual(2, result.Length);
+			Assert.AreEqual(1, result.Select(r => r.Name.Marker == "id=1").Count());
+			Assert.AreEqual(1, result.Select(r => r.Name.Marker == "id=2").Count());
+		}
+
+		public class Issue2948MyModel
+		{
+			public int    Id   { get; set; }
+			public string Name { get; set; } = null!;
+		}
+
+		public class Issue2948RankData<T>
+		{
+			public long Rank  { get; set; }
+			public T    Model { get; set; } = default!;
+		}
+
+		[ActiveIssue(2948)]
+		[Test(Description = "InvalidCastException : Unable to cast object of type 'System.Linq.Expressions.MemberMemberBinding' to type 'System.Linq.Expressions.MemberAssignment'.")]
+		public void Issue2948([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var main = (from p in db.Person
+						select new Issue2948RankData<Issue2948MyModel>()
+						{
+							Model = { Id = p.ID, Name = p.FirstName },
+							Rank  = Sql.Ext.RowNumber().Over().PartitionBy(p.ID).OrderBy(p.ID).ToValue()
+						}).Where(x => x.Rank == 1).Select(x => x.Model).AsSubQuery();
+
+			var first  = main.Where(x => x.Id != 2);
+			var second = main.Where(x => x.Id == 2).OrderByDescending(x => x.Name).Take(1);
+			var third  = main.Where(x => x.Id != 3).OrderBy(x => x.Name).Take(1);
+
+			var res = first.Concat(second).Concat(third).ToList();
+		}
+
+		[ActiveIssue(2932)]
+		[Test(Description = "invalid SQL for Any() subquery")]
+		public void Issue2932_Broken([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child.Select(p => new { p.ChildID, Sub = p.GrandChildren.Any() });
+
+			query.Concat(query).ToArray();
+		}
+
+		[Test(Description = "invalid SQL for Any() subquery")]
+		public void Issue2932_Works([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child.Select(p => new { p.ChildID, Sub = p.GrandChildren.Any() ? true : false });
+
+			query.Concat(query).ToArray();
+		}
+
+		[ActiveIssue(2619)]
+		[Test(Description = "set query with ORDER BY requires wrapping into subquery for some DBs")]
+		public void Issue2619_Query1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			((from item in db.Person select item)
+				.OrderBy(i => i.ID))
+				.Union((from item in db.Person select item))
+				.ToList();
+		}
+
+		[ActiveIssue(2619)]
+		[Test(Description = "set query with ORDER BY requires wrapping into subquery for some DBs")]
+		public void Issue2619_Query2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			(from item in db.Person select item)
+				.Union((from item in db.Person select item)
+				.OrderBy(i => i.ID))
+				.ToList();
+		}
+
+		[Test(Description = "ArgumentOutOfRangeException : Index was out of range. Must be non-negative and less than the size of the collection.")]
+		public void Issue2511_Query1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var res = db.Person.LoadWith(p => p.Patient).Concat(db.Person.LoadWith(p => p.Patient).Take(2)).ToArray();
+			
+			Assert.AreEqual(6, res.Length);
+			Assert.AreEqual(2, res.Where(r => r.ID == 2).Count());
+			var pat = res.Where(r => r.ID == 2).First();
+			Assert.IsNotNull(pat.Patient);
+			Assert.AreEqual("Hallucination with Paranoid Bugs' Delirium of Persecution", pat.Patient!.Diagnosis);
+			pat = res.Where(r => r.ID == 2).Skip(1).First();
+			Assert.IsNotNull(pat.Patient);
+			Assert.AreEqual("Hallucination with Paranoid Bugs' Delirium of Persecution", pat.Patient!.Diagnosis);
+		}
+
+		[ActiveIssue(2511)]
+		[Test(Description = "Associations with Concat/Union or other Set operations are not supported")]
+		public void Issue2511_Query2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var res = db.Person.LoadWith(p => p.Patient)
+				.Select(p => new Person()
+				{
+					ID         = p.ID,
+					FirstName  = p.FirstName,
+					LastName   = p.LastName,
+					MiddleName = p.MiddleName,
+					Gender     = p.Gender,
+					Patient    = p.Patient
+				}).Take(2)
+				.Concat(db.Person.LoadWith(p => p.Patient))
+				.ToArray();
+
+			Assert.AreEqual(6, res.Length);
+			var pat = res.Where(r => r.ID == 2).First();
+			Assert.IsNull(pat.Patient);
+			pat = res.Where(r => r.ID == 2).Skip(1).Single();
+			Assert.IsNotNull(pat.Patient);
+			Assert.AreEqual("Hallucination with Paranoid Bugs' Delirium of Persecution", pat.Patient!.Diagnosis);
+		}
+
+		[Test(Description = "Working version of Issue2511_Query2")]
+		public void Issue2511_Query3([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var res = db.Person.LoadWith(p => p.Patient)
+				.Select(p => new Person()
+				{
+					ID         = p.ID,
+					FirstName  = p.FirstName,
+					LastName   = p.LastName,
+					MiddleName = p.MiddleName,
+					Gender     = p.Gender,
+				}).Take(2)
+				.Concat(db.Person.LoadWith(p => p.Patient))
+				.ToArray();
+
+			Assert.AreEqual(6, res.Length);
+			var pat = res.Where(r => r.ID == 2).First();
+			Assert.IsNull(pat.Patient);
+			pat = res.Where(r => r.ID == 2).Skip(1).Single();
+			Assert.IsNull(pat.Patient);
+		}
 	}
 }

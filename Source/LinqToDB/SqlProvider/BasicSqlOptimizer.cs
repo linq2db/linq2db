@@ -48,8 +48,7 @@ namespace LinqToDB.SqlProvider
 				static (context, selectQuery) =>
 				{
 					new SelectQueryOptimizer(context.SqlProviderFlags, context.statement, selectQuery, 0).FinalizeAndValidate(
-						context.SqlProviderFlags.IsApplyJoinSupported,
-						context.SqlProviderFlags.IsGroupByExpressionSupported);
+						context.SqlProviderFlags.IsApplyJoinSupported);
 
 					return selectQuery;
 				}
@@ -73,8 +72,7 @@ namespace LinqToDB.SqlProvider
 					static (context, selectQuery) =>
 					{
 						new SelectQueryOptimizer(context.SqlProviderFlags, context.statement, selectQuery, 0).FinalizeAndValidate(
-							context.SqlProviderFlags.IsApplyJoinSupported,
-							context.SqlProviderFlags.IsGroupByExpressionSupported);
+							context.SqlProviderFlags.IsApplyJoinSupported);
 
 						return selectQuery;
 					}
@@ -160,16 +158,16 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected virtual SqlStatement FixSetOperationNulls(SqlStatement statement)
-		{
+							{
 			statement.VisitParentFirst(static e =>
-			{
+								{
 				if (e.ElementType == QueryElementType.SqlQuery)
-				{
+		{
 					var query = (SelectQuery)e;
 					if (query.HasSetOperators)
-					{
+			{
 						for (int i = 0; i < query.Select.Columns.Count; i++)
-						{
+				{
 							var column     = query.Select.Columns[i];
 							var columnExpr = column.Expression;
 
@@ -182,7 +180,7 @@ namespace LinqToDB.SqlProvider
 								CorrelateNullValueTypes(ref otherExpr, columnExpr);
 
 								otherColumn.Expression = otherExpr;
-							}
+								}
 
 							column.Expression = columnExpr;
 						}
@@ -194,7 +192,6 @@ namespace LinqToDB.SqlProvider
 
 			return statement;
 		}
-
 
 		protected virtual void FixEmptySelect(SqlStatement statement)
 		{
@@ -1173,7 +1170,8 @@ namespace LinqToDB.SqlProvider
 					return predicate;
 			}
 
-			if (predicate.TryEvaluateExpression(context, out var value) && value != null)
+			if (predicate.ElementType != QueryElementType.SearchCondition
+				&& predicate.TryEvaluateExpression(context, out var value) && value != null)
 			{
 				return new SqlPredicate.Expr(new SqlValue(value));
 			}
@@ -1864,6 +1862,7 @@ namespace LinqToDB.SqlProvider
 					});
 
 			}
+
 			return newElement;
 		}
 

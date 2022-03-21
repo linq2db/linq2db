@@ -39,6 +39,8 @@ namespace LinqToDB.SqlQuery
 			{
 				if (_expression == value)
 					return;
+				if (value == this)
+					throw new InvalidOperationException();
 				_expression = value;
 				_hashCode   = null;
 			}
