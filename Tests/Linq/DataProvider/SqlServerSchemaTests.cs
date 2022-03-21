@@ -2,11 +2,11 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Tools;
 using LinqToDB.Tools.DataProvider.SqlServer.Schemas;
 
 using NUnit.Framework;
-using NUnit.Framework.Constraints;
 
 namespace Tests.DataProvider
 {
@@ -152,7 +152,7 @@ namespace Tests.DataProvider
 		public void DbIDTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.DbID("TestData"));
+			var result = db.Select(() => SqlFn.DbID(SqlFn.DbName()));
 			Console.WriteLine(result);
 			Assert.That(result, Is.GreaterThan(0));
 		}
@@ -172,7 +172,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DbName(SqlFn.DbID()));
 			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo("TestData"));
+			Assert.That(result, Contains.Substring("TestData"));
 		}
 
 		[Test]
@@ -181,7 +181,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DbName());
 			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo("TestData"));
+			Assert.That(result, Contains.Substring("TestData"));
 		}
 
 		[Test]
@@ -361,7 +361,7 @@ namespace Tests.DataProvider
 		public void ObjectNameTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.ObjectName(SqlFn.ObjectID("dbo.Person"), SqlFn.DbID("TestData")));
+			var result = db.Select(() => SqlFn.ObjectName(SqlFn.ObjectID("dbo.Person"), SqlFn.DbID()));
 			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo("Person"));
 		}
@@ -379,7 +379,7 @@ namespace Tests.DataProvider
 		public void ObjectSchemaNameTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.ObjectSchemaName(SqlFn.ObjectID("dbo.Person"), SqlFn.DbID("TestData")));
+			var result = db.Select(() => SqlFn.ObjectSchemaName(SqlFn.ObjectID("dbo.Person"), SqlFn.DbID()));
 			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo("dbo"));
 		}
@@ -408,7 +408,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.OriginalDbName());
 			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo("TestData"));
+			Assert.That(result, Contains.Substring("TestData"));
 		}
 
 		[Test]
@@ -673,7 +673,7 @@ namespace Tests.DataProvider
 		public void GetAnsiNullTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
-			var result = db.Select(() => SqlFn.GetAnsiNull("TestData"));
+			var result = db.Select(() => SqlFn.GetAnsiNull(SqlFn.DbName()));
 			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(1));
 		}
@@ -750,6 +750,22 @@ namespace Tests.DataProvider
 			var result = db.Select(() => SqlFn.RowCountBig());
 			Console.WriteLine(result);
 			Assert.That(result, Is.GreaterThanOrEqualTo(0));
+		}
+
+		[Test]
+		public void XactStateTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = (DataConnection)GetDataContext(context);
+
+			db.BeginTransaction();
+			var result = db.Select(() => SqlFn.XactState());
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(1));
+
+			db.RollbackTransaction();
+			result = db.Select(() => SqlFn.XactState());
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(0));
 		}
 
 		#endregion

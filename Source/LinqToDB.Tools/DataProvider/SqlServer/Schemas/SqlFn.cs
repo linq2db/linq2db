@@ -1375,6 +1375,19 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			throw new InvalidOperationException($"'{nameof(RowCountBig)}' is a server side only function.");
 		}
 
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ROWCOUNT-BIG-transact-sql">XACT_STATE (Transact-SQL)</see></b></para>
+		/// <para>Is a scalar function that reports the user transaction state of a current running request.
+		/// XACT_STATE indicates whether the request has an active user transaction, and whether the transaction is capable of being committed.</para>
+		/// </summary>
+		/// <returns>smallint</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "XACT_STATE", ServerSideOnly=true)]
+		public static short XactState()
+		{
+			throw new InvalidOperationException($"'{nameof(XactState)}' is a server side only function.");
+		}
+
 		#endregion
 
 		class PropertyBuilder<T> : Sql.IExtensionCallBuilder
