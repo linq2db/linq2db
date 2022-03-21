@@ -23,6 +23,7 @@
 		<PackageReference Include="NUnit" />
 		<PackageReference Include="Newtonsoft.Json" />
 		<PackageReference Include="FluentAssertions"/>
+		<PackageReference Include="System.Linq.Dynamic.Core" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net472' ">

@@ -20,6 +20,11 @@ namespace LinqToDB.Reflection
 	/// </summary>
 	public static class Methods
 	{
+		public static class Object
+		{
+			public static readonly MethodInfo ToStringMethod = MemberHelper.MethodOf<object> (r => r.ToString());
+		}
+
 		public static class ADONet
 		{
 			public static readonly MethodInfo IsDBNull      = MemberHelper.MethodOf<IDataRecord> (r => r.IsDBNull(0));

@@ -15,8 +15,6 @@
 		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
 
 		<PackageReference Include="NodaTime" />
-
-		<PackageReference Include="System.Linq.Dynamic.Core" />
 	</ItemGroup>
 
 </Project>

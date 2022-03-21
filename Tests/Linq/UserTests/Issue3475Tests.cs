@@ -1,5 +1,4 @@
-﻿#if NET5_0_OR_GREATER || NET472
-using System.Linq;
+﻿using System.Linq;
 using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -43,15 +42,12 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<NumberLikeTestTable>())
 			{
-#pragma warning disable CS8602
-				var query1 = db.GetTable<NumberLikeTestTable>().Select(x => new NumberLikeTestObj() { Obj = x }).Where(x => Sql.Like(x.Obj.IntNProp.ToString(), "1%")).Take(50);
+				var query1 = db.GetTable<NumberLikeTestTable>().Select(x => new NumberLikeTestObj() { Obj = x }).Where(x => Sql.Like(x!.Obj!.IntNProp!.ToString(), "1%")).Take(50);
 				var query2 = db.GetTable<NumberLikeTestTable>().Select(x => new NumberLikeTestObj() { Obj = x }).Where("((Sql.Like(it.Obj.IntNProp.ToString(),@0)))", new object[]{ "1%" }).Take(50);
-
+				
 				var res1 = query1.ToList();
 				var res2 = query2.ToList();
-#pragma warning restore CS8602
 			}
 		}
 	}
 }
-#endif

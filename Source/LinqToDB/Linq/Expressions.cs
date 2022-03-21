@@ -25,6 +25,7 @@ namespace LinqToDB.Linq
 	using LinqToDB.Common.Internal;
 	using LinqToDB.DataProvider.Firebird;
 	using LinqToDB.Expressions;
+	using LinqToDB.Reflection;
 	using Mapping;
 
 	[PublicAPI]
@@ -253,12 +254,11 @@ namespace LinqToDB.Linq
 		#region Public Members
 
 		static bool _checkUserNamespace = true;
-		static MethodInfo _toObjectToStringMethod = typeof(object).GetMethod("ToString")!;
-
+		
 		public static LambdaExpression? ConvertMember(MappingSchema mappingSchema, Type? objectType, MemberInfo mi)
 		{
-			if (mi is MethodInfo && mi.Name == "ToString")
-				mi = _toObjectToStringMethod;
+			if (mi != Methods.Object.ToStringMethod && mi is MethodInfo && mi.Name == "ToString")
+				mi = Methods.Object.ToStringMethod;
 
 			if (_checkUserNamespace)
 			{
