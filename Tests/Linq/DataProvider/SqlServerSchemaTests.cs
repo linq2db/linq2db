@@ -13,6 +13,141 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class SqlServerSchemaTests : TestBase
 	{
+		#region Configuration
+
+		[Test]
+		public void DbTSTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DbTS());
+			Console.WriteLine(result.ToDiagnosticString());
+			Assert.That(result.Length, Is.EqualTo(8));
+		}
+
+		[Test]
+		public void LangIDTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.LangID());
+			Console.WriteLine(result);
+			Assert.That(result, Is.GreaterThanOrEqualTo(0));
+		}
+
+		[Test]
+		public void LanguageTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Language());
+			Console.WriteLine(result);
+			Assert.That(result, Is.Not.Null);
+		}
+
+		[Test]
+		public void LockTimeoutTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			db.Execute("SET LOCK_TIMEOUT 1000");
+			var result = db.Select(() => SqlFn.LockTimeout());
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(1000));
+		}
+
+		[Test]
+		public void MaxConnectionsTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.MaxConnections());
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(32767));
+		}
+
+		[Test]
+		public void MaxPrecisionTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.MaxPrecision());
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(38));
+		}
+
+		[Test]
+		public void NestLevelTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.NestLevel());
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(0));
+		}
+
+		[Test]
+		public void OptionsTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Options());
+			Console.WriteLine(result);
+			Assert.That(result, Is.Not.EqualTo(0));
+		}
+
+		[Test]
+		public void RemServerTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.RemServer());
+			Console.WriteLine(result);
+			Assert.That(result, Is.Null);
+		}
+
+		[Test]
+		public void ServerNameTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.ServerName());
+			Console.WriteLine(result);
+			Assert.That(result, Is.Not.Null);
+		}
+
+		[Test]
+		public void ServiceNameTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			if (context == "SqlAzure")
+				return;
+
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.ServiceName());
+			Console.WriteLine(result);
+			Assert.That(result, Is.Not.Null);
+		}
+
+		[Test]
+		public void SpIDTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.SpID());
+			Console.WriteLine(result);
+			Assert.That(result, Is.Not.EqualTo(0));
+		}
+
+		[Test]
+		public void TextSizeTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			db.Execute("SET TEXTSIZE 2048");
+			var result = db.Select(() => SqlFn.TextSize());
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(2048));
+		}
+
+		[Test]
+		public void VersionTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Version());
+			Console.WriteLine(result);
+			Assert.That(result, Is.Not.Null);
+		}
+
+		#endregion
+
 		#region Data type
 
 		[Test]

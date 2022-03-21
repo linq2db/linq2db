@@ -12,6 +12,180 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 	[PublicAPI]
 	public static class SqlFn
 	{
+		#region Configuration
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DBTS-transact-sql">@@DBTS (Transact-SQL)</see></b></para>
+		/// <para>This function returns the value of the current timestamp data type for the current database. The current database will have a guaranteed unique timestamp value.</para>
+		/// </summary>
+		/// <returns>varbinary</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@DBTS", ServerSideOnly=true)]
+		public static byte[] DbTS()
+		{
+			throw new InvalidOperationException($"'{nameof(DbTS)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/LANGID-transact-sql">@@LANGID (Transact-SQL)</see></b></para>
+		/// <para>Returns the local language identifier (ID) of the language that is currently being used.</para>
+		/// </summary>
+		/// <returns>smallint</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@LANGID", ServerSideOnly=true)]
+		public static short LangID()
+		{
+			throw new InvalidOperationException($"'{nameof(LangID)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/LANGUAGE-transact-sql">@@LANGUAGE (Transact-SQL)</see></b></para>
+		/// <para>Returns the name of the language currently being used.</para>
+		/// </summary>
+		/// <returns>nvarchar</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@LANGUAGE", ServerSideOnly=true)]
+		public static string Language()
+		{
+			throw new InvalidOperationException($"'{nameof(Language)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/LOCK-TIMEOUT-transact-sql">@@LOCK_TIMEOUT (Transact-SQL)</see></b></para>
+		/// <para>Returns the current lock time-out setting in milliseconds for the current session.</para>
+		/// </summary>
+		/// <returns>integer</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@LOCK_TIMEOUT", ServerSideOnly=true)]
+		public static int LockTimeout()
+		{
+			throw new InvalidOperationException($"'{nameof(LockTimeout)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/MAX-CONNECTIONS-transact-sql">@@MAX_CONNECTIONS (Transact-SQL)</see></b></para>
+		/// <para>Returns the maximum number of simultaneous user connections allowed on an instance of SQL Server.
+		/// The number returned is not necessarily the number currently configured.</para>
+		/// </summary>
+		/// <returns>integer</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@MAX_CONNECTIONS", ServerSideOnly=true)]
+		public static int MaxConnections()
+		{
+			throw new InvalidOperationException($"'{nameof(MaxConnections)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/MAX-PRECISION-transact-sql">@@MAX_PRECISION (Transact-SQL)</see></b></para>
+		/// <para>Returns the precision level used by <b>decimal</b> and <b>numeric</b> data types as currently set in the server.</para>
+		/// </summary>
+		/// <returns>tinyint</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@MAX_PRECISION", ServerSideOnly=true)]
+		public static sbyte MaxPrecision()
+		{
+			throw new InvalidOperationException($"'{nameof(MaxPrecision)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/NESTLEVEL-transact-sql">@@NESTLEVEL (Transact-SQL)</see></b></para>
+		/// <para>Returns the nesting level of the current stored procedure execution (initially 0) on the local server.</para>
+		/// </summary>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@NESTLEVEL", ServerSideOnly=true)]
+		public static sbyte NestLevel()
+		{
+			throw new InvalidOperationException($"'{nameof(NestLevel)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/OPTIONS-transact-sql">@@OPTIONS (Transact-SQL)</see></b></para>
+		/// <para>Returns information about the current SET options.</para>
+		/// </summary>
+		/// <returns>integer</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@OPTIONS", ServerSideOnly=true)]
+		public static int Options()
+		{
+			throw new InvalidOperationException($"'{nameof(Options)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/REMSERVER-transact-sql">@@REMSERVER (Transact-SQL)</see></b></para>
+		/// <para>Returns the name of the remote SQL Server database server as it appears in the login record.</para>
+		/// </summary>
+		/// <returns>nvarchar(128)</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@REMSERVER", ServerSideOnly=true)]
+		public static string? RemServer()
+		{
+			throw new InvalidOperationException($"'{nameof(RemServer)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SERVERNAME-transact-sql">@@SERVERNAME (Transact-SQL)</see></b></para>
+		/// <para>Returns the name of the local server that is running SQL Server.</para>
+		/// </summary>
+		/// <returns>nvarchar</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@SERVERNAME", ServerSideOnly=true)]
+		public static string ServerName()
+		{
+			throw new InvalidOperationException($"'{nameof(ServerName)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SERVICENAME-transact-sql">@@SERVICENAME (Transact-SQL)</see></b></para>
+		/// <para>Returns the name of the registry key under which SQL Server is running. @@SERVICENAME returns 'MSSQLSERVER'
+		/// if the current instance is the default instance; this function returns the instance name if the current instance is a named instance.</para>
+		/// </summary>
+		/// <returns>nvarchar</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@SERVICENAME", ServerSideOnly=true)]
+		public static string ServiceName()
+		{
+			throw new InvalidOperationException($"'{nameof(ServiceName)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SPID-transact-sql">@@SPID (Transact-SQL)</see></b></para>
+		/// <para>Returns the session ID of the current user process.</para>
+		/// </summary>
+		/// <returns>smallint</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@SPID", ServerSideOnly=true)]
+		public static short SpID()
+		{
+			throw new InvalidOperationException($"'{nameof(SpID)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TEXTSIZE-transact-sql">@@TEXTSIZE (Transact-SQL)</see></b></para>
+		/// <para>Returns the current value of the <see href="https://docs.microsoft.com/en-us/sql/t-sql/statements/set-textsize-transact-sql">TEXTSIZE</see> option.</para>
+		/// </summary>
+		/// <returns>integer</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@TEXTSIZE", ServerSideOnly=true)]
+		public static int TextSize()
+		{
+			throw new InvalidOperationException($"'{nameof(TextSize)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/version-transact-sql-configuration-functions">@@VERSION (Transact-SQL)</see></b></para>
+		/// <para>Returns system and build information for the current installation of SQL Server.</para>
+		/// </summary>
+		/// <returns>nvarchar</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@VERSION", ServerSideOnly=true)]
+		public static string Version()
+		{
+			throw new InvalidOperationException($"'{nameof(TextSize)}' is a server side only function.");
+		}
+
+		#endregion
+
 		#region Data type
 
 		/// <summary>
