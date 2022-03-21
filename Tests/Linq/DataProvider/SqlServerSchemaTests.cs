@@ -2,9 +2,11 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Tools;
 using LinqToDB.Tools.DataProvider.SqlServer.Schemas;
 
 using NUnit.Framework;
+using NUnit.Framework.Constraints;
 
 namespace Tests.DataProvider
 {
@@ -494,7 +496,7 @@ namespace Tests.DataProvider
 		#region System
 
 		[Test]
-		public void IdentityTest([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		public void IdentityTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Identity());
@@ -503,7 +505,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void PackReceivedTest([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		public void PackReceivedTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.PackReceived());
@@ -512,12 +514,141 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void TransactionCountTest([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		public void TransactionCountTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.TransactionCount());
 			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(0));
+		}
+
+		[Test]
+		public void BinaryCheckSumTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Person
+				select SqlFn.BinaryCheckSum();
+
+			var result = q.First();
+
+			Console.WriteLine(result);
+			Assert.That(result, Is.Not.EqualTo(0));
+		}
+
+		[Test]
+		public void BinaryCheckSumTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Person
+				where p.ID == 1
+				select SqlFn.BinaryCheckSum(p.ID, p.FirstName);
+
+			var result = q.First();
+
+			Console.WriteLine(result);
+			Assert.That(result, Is.Not.EqualTo(0));
+		}
+
+		[Test]
+		public void CheckSumTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Person
+				select SqlFn.CheckSum();
+
+			var result = q.First();
+
+			Console.WriteLine(result);
+			Assert.That(result, Is.Not.EqualTo(0));
+		}
+
+		[Test]
+		public void CheckSumTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Person
+				where p.ID == 1
+				select SqlFn.CheckSum(p.ID, p.FirstName);
+
+			var result = q.First();
+
+			Console.WriteLine(result);
+			Assert.That(result, Is.Not.EqualTo(0));
+		}
+
+		[Test]
+		public void CompressTest1([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.Select(() => SqlFn.Compress("ABC"));
+			Console.WriteLine(result.ToDiagnosticString());
+			Assert.That(result[0], Is.EqualTo(31));
+		}
+
+		[Test]
+		public void CompressTest2([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.Select(() => SqlFn.Compress(new byte[] { 1, 2, 3 }));
+			Console.WriteLine(result.ToDiagnosticString());
+			Assert.That(result[0], Is.EqualTo(31));
+		}
+
+		[Test]
+		public void ConnectionPropertyTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.Select(() => SqlFn.ConnectionProperty(SqlFn.ConnectionPropertyName.Net_Transport));
+			Console.WriteLine(result);
+			Assert.That(result, Is.Not.Null);
+		}
+
+		[Test]
+		public void CurrentRequestIDTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.Select(() => SqlFn.CurrentRequestID());
+			Console.WriteLine(result);
+			Assert.That(result, Is.Not.Null);
+		}
+
+		[Test]
+		public void CurrentTransactionIDTest([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.Select(() => SqlFn.CurrentTransactionID());
+			Console.WriteLine(result);
+			Assert.That(result, Is.Not.EqualTo(0));
+		}
+
+		[Test]
+		public void DecompressTest([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.Select(() => Sql.ConvertTo<string>.From(SqlFn.Decompress(new byte[]
+			{
+				31, 139, 8, 0, 0, 0, 0, 0, 4, 0, 115, 100, 112, 98, 112, 102, 0, 0, 26, 244, 143, 159, 6, 0, 0, 0
+
+			})));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("ABC"));
+		}
+
+		[Test]
+		public void FormatMessageTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.Select(() => SqlFn.FormatMessage(20009, "ABC", "CBA"));
+			Console.WriteLine(result);
+			Assert.That(result, Contains.Substring("ABC").And.Contains("CBA"));
 		}
 
 		#endregion

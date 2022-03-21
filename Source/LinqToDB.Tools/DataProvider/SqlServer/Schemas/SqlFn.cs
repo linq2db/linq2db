@@ -1006,6 +1006,219 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			throw new InvalidOperationException($"'{nameof(TransactionCount)}' is a server side only function.");
 		}
 
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/BINARY-CHECKSUM-transact-sql">BINARY_CHECKSUM (Transact-SQL)</see></b></para>
+		/// <para>Returns the binary checksum value computed over a row of a table or over a list of expressions.</para>
+		/// </summary>
+		/// <para>
+		/// Specifies that the computation covers all the table columns. BINARY_CHECKSUM ignores columns of noncomparable data types in its computation.
+		/// Noncomparable data types include
+		/// <list type="bullet">
+		/// <item>cursor</item>
+		/// <item>image</item>
+		/// <item>ntext</item>
+		/// <item>text</item>
+		/// <item>xml</item>
+		/// </list>
+		/// and noncomparable common language runtime (CLR) user-defined types.
+		/// </para>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "BINARY_CHECKSUM(*)", ServerSideOnly=true)]
+		public static int BinaryCheckSum()
+		{
+			throw new InvalidOperationException($"'{nameof(BinaryCheckSum)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/BINARY-CHECKSUM-transact-sql">BINARY_CHECKSUM (Transact-SQL)</see></b></para>
+		/// <para>Returns the binary checksum value computed over a row of a table or over a list of expressions.</para>
+		/// </summary>
+		/// <param name="expressions">An <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see> of any type.
+		/// BINARY_CHECKSUM ignores expressions of noncomparable data types in its computation.</param>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "BINARY_CHECKSUM", ServerSideOnly=true)]
+		public static int BinaryCheckSum(params object[] expressions)
+		{
+			throw new InvalidOperationException($"'{nameof(BinaryCheckSum)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CHECKSUM-transact-sql">CHECKSUM (Transact-SQL)</see></b></para>
+		/// <para>The <c>CHECKSUM</c> function returns the checksum value computed over a table row, or over an expression list.
+		/// Use <c>CHECKSUM</c> to build hash indexes.</para>
+		/// </summary>
+		/// <para>
+		/// This argument specifies that the checksum computation covers all table columns.
+		/// <c>CHECKSUM</c> returns an error if any column has a noncomparable data type. Noncomparable data types include:
+		/// <list type="bullet">
+		/// <item>cursor</item>
+		/// <item>image</item>
+		/// <item>ntext</item>
+		/// <item>text</item>
+		/// <item>XML</item>
+		/// </list>
+		/// Another noncomparable data type is <b>sql_variant</b> with any one of the preceding data types as its base type.
+		/// </para>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "CHECKSUM(*)", ServerSideOnly=true)]
+		public static int CheckSum()
+		{
+			throw new InvalidOperationException($"'{nameof(CheckSum)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CHECKSUM-transact-sql">CHECKSUM (Transact-SQL)</see></b></para>
+		/// <para>The <c>CHECKSUM</c> function returns the checksum value computed over a table row, or over an expression list.
+		/// Use <c>CHECKSUM</c> to build hash indexes.</para>
+		/// </summary>
+		/// <param name="expressions">An <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of any type, except a noncomparable data type.</param>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "CHECKSUM", ServerSideOnly=true)]
+		public static int CheckSum(params object[] expressions)
+		{
+			throw new InvalidOperationException($"'{nameof(CheckSum)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/COMPRESS-transact-sql">COMPRESS (Transact-SQL)</see></b></para>
+		/// <para>This function compresses the input expression, using the GZIP algorithm. The function returns a byte array of type <b>varbinary(max)</b>.</para>
+		/// </summary>
+		/// <param name="expression">A
+		/// <list type="bullet">
+		/// <item>binary(n)</item>
+		/// <item>char(n)</item>
+		/// <item>nchar(n)</item>
+		/// <item>nvarchar(max)</item>
+		/// <item>nvarchar(n)</item>
+		/// <item>varbinary(max)</item>
+		/// <item>varbinary(n)</item>
+		/// <item>varchar(max)</item>
+		/// </list>
+		/// or
+		/// <list type="bullet">
+		/// <item>varchar(n)</item>
+		/// </list>
+		/// expression.</param>
+		/// <returns><b>varbinary(max)</b> representing the compressed content of the input.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "COMPRESS", ServerSideOnly=true)]
+		public static byte[] Compress(string? expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Compress)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/COMPRESS-transact-sql">COMPRESS (Transact-SQL)</see></b></para>
+		/// <para>This function compresses the input expression, using the GZIP algorithm. The function returns a byte array of type <b>varbinary(max)</b>.</para>
+		/// </summary>
+		/// <param name="expression">A
+		/// <list type="bullet">
+		/// <item>binary(n)</item>
+		/// <item>char(n)</item>
+		/// <item>nchar(n)</item>
+		/// <item>nvarchar(max)</item>
+		/// <item>nvarchar(n)</item>
+		/// <item>varbinary(max)</item>
+		/// <item>varbinary(n)</item>
+		/// <item>varchar(max)</item>
+		/// </list>
+		/// or
+		/// <list type="bullet">
+		/// <item>varchar(n)</item>
+		/// </list>
+		/// expression.</param>
+		/// <returns><b>varbinary(max)</b> representing the compressed content of the input.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "COMPRESS", ServerSideOnly=true)]
+		public static byte[] Compress(byte[]? expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Compress)}' is a server side only function.");
+		}
+
+		public enum ConnectionPropertyName
+		{
+			Net_Transport,
+			Protocol_Type,
+			Auth_Scheme,
+			Local_Net_Address,
+			Local_TCP_Port,
+			Client_Net_Address,
+			Physical_Net_Transport,
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CONNECTIONPROPERTY-transact-sql">CONNECTIONPROPERTY (Transact-SQL)</see></b></para>
+		/// <para>For a request that comes in to the server, this function returns information about the
+		/// connection properties of the unique connection which supports that request.</para>
+		/// </summary>
+		/// <param name="property">The property of the connection.</param>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "CONNECTIONPROPERTY", ServerSideOnly=true, BuilderType=typeof(PropertyBuilder<ConnectionPropertyName>))]
+		public static object? ConnectionProperty([SqlQueryDependent] ConnectionPropertyName property)
+		{
+			throw new InvalidOperationException($"'{nameof(ConnectionProperty)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CURRENT-REQUEST-ID-transact-sql">CURRENT_REQUEST_ID (Transact-SQL)</see></b></para>
+		/// <para>This function returns the ID of the current request within the current session.</para>
+		/// </summary>
+		/// <returns>smallint</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "CURRENT_REQUEST_ID", ServerSideOnly=true)]
+		public static short CurrentRequestID()
+		{
+			throw new InvalidOperationException($"'{nameof(CurrentRequestID)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CURRENT-TRANSACTION-ID-transact-sql">CURRENT_TRANSACTION_ID (Transact-SQL)</see></b></para>
+		/// <para>This function returns the transaction ID of the current transaction in the current session.</para>
+		/// </summary>
+		/// <returns>bigint</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "CURRENT_TRANSACTION_ID", ServerSideOnly=true)]
+		public static long CurrentTransactionID()
+		{
+			throw new InvalidOperationException($"'{nameof(CurrentTransactionID)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DECOMPRESS-transact-sql">DECOMPRESS (Transact-SQL)</see></b></para>
+		/// <para>This function will decompress an input expression value, using the GZIP algorithm.
+		/// <c>DECOMPRESS</c> will return a byte array (VARBINARY(MAX) type).</para>
+		/// </summary>
+		/// <param name="expression">A <b>varbinary(n)</b>, <b>varbinary(max)</b>, or <b>binary(n)</b> value.</param>
+		/// <returns><b>varbinary(max)</b> representing the compressed content of the input.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "DECOMPRESS", ServerSideOnly=true)]
+		public static byte[] Decompress(byte[] expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Decompress)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/FORMATMESSAGE-transact-sql">FORMATMESSAGE (Transact-SQL)</see></b></para>
+		/// <para>Constructs a message from an existing message in sys.messages or from a provided string.
+		/// The functionality of FORMATMESSAGE resembles that of the RAISERROR statement.
+		/// However, RAISERROR prints the message immediately, while FORMATMESSAGE returns the formatted message for further processing.</para>
+		/// </summary>
+		/// <param name="msg_number">Is the ID of the message stored in sys.messages. If msg_number is &lt;= 13000, or if the message does not exist in sys.messages, NULL is returned.</param>
+		/// <param name="param_values">Is a parameter value for use in the message. Can be more than one parameter value. The values must be specified in the order in which the placeholder variables appear in the message. The maximum number of values is 20.</param>
+		/// <returns>nvarchar</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "FORMATMESSAGE", ServerSideOnly=true)]
+		public static string? FormatMessage(int msg_number, params object[] param_values)
+		{
+			throw new InvalidOperationException($"'{nameof(FormatMessage)}' is a server side only function.");
+		}
+
 		#endregion
 
 		class PropertyBuilder<T> : Sql.IExtensionCallBuilder
