@@ -253,9 +253,13 @@ namespace LinqToDB.Linq
 		#region Public Members
 
 		static bool _checkUserNamespace = true;
+		static MethodInfo _toObjectToStringMethod = typeof(object).GetMethod("ToString")!;
 
 		public static LambdaExpression? ConvertMember(MappingSchema mappingSchema, Type? objectType, MemberInfo mi)
 		{
+			if (mi is MethodInfo && mi.Name == "ToString")
+				mi = _toObjectToStringMethod;
+
 			if (_checkUserNamespace)
 			{
 				if (IsUserNamespace(mi.DeclaringType!.Namespace))
