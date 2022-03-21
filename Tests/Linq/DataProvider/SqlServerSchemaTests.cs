@@ -28,7 +28,7 @@ namespace Tests.DataProvider
 		public void DataLengthLTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.DataLengthL("123"));
+			var result = db.Select(() => SqlFn.DataLengthBig("123"));
 			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(6));
 		}
@@ -643,12 +643,113 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void FormatMessageTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void FormatMessageTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.FormatMessage(20009, "ABC", "CBA"));
 			Console.WriteLine(result);
 			Assert.That(result, Contains.Substring("ABC").And.Contains("CBA"));
+		}
+
+		[Test]
+		public void FormatMessageTest2([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.Select(() => SqlFn.FormatMessage("- %i %s -", 1, "A"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("- 1 A -"));
+		}
+
+		[Test]
+		public void GetAnsiNullTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.Select(() => SqlFn.GetAnsiNull());
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(1));
+		}
+
+		[Test]
+		public void GetAnsiNullTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.Select(() => SqlFn.GetAnsiNull("TestData"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(1));
+		}
+
+		[Test]
+		public void HostIDTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.Select(() => SqlFn.HostID());
+			Console.WriteLine(result);
+			Assert.That(result, Is.Not.Null);
+		}
+
+		[Test]
+		public void HostNameTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.Select(() => SqlFn.HostName());
+			Console.WriteLine(result);
+			Assert.That(result, Is.Not.Null);
+		}
+
+		[Test]
+		public void IsNullTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			int? p = null;
+
+			using var db = GetDataContext(context);
+			var result = db.Select(() => SqlFn.IsNull(p, 10));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(10));
+		}
+
+		[Test]
+		public void IsNumericTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.Select(() => SqlFn.IsNumeric(10));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(1));
+		}
+
+		[Test]
+		public void MinActiveRowVersionTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.Select(() => SqlFn.MinActiveRowVersion());
+			Console.WriteLine(result);
+			Assert.That(result.Length, Is.EqualTo(8));
+		}
+
+		[Test]
+		public void NewIDTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.Select(() => SqlFn.NewID());
+			Console.WriteLine(result);
+			Assert.That(result, Is.Not.Null);
+		}
+
+		[Test]
+		public void RowCountTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.Select(() => SqlFn.RowCount());
+			Console.WriteLine(result);
+			Assert.That(result, Is.GreaterThanOrEqualTo(0));
+		}
+
+		[Test]
+		public void RowCountBigTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.Select(() => SqlFn.RowCountBig());
+			Console.WriteLine(result);
+			Assert.That(result, Is.GreaterThanOrEqualTo(0));
 		}
 
 		#endregion

@@ -77,9 +77,9 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "DATALENGTH", 0, ServerSideOnly=true)]
 		[return: NotNullIfNotNull("expression")]
-		public static long? DataLengthL<T>(T expression)
+		public static long? DataLengthBig<T>(T expression)
 		{
-			throw new InvalidOperationException($"'{nameof(DataLengthL)}' is a server side only function.");
+			throw new InvalidOperationException($"'{nameof(DataLengthBig)}' is a server side only function.");
 		}
 
 		/// <summary>
@@ -1217,6 +1217,162 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		public static string? FormatMessage(int msg_number, params object[] param_values)
 		{
 			throw new InvalidOperationException($"'{nameof(FormatMessage)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/FORMATMESSAGE-transact-sql">FORMATMESSAGE (Transact-SQL)</see></b></para>
+		/// <para>Constructs a message from an existing message in sys.messages or from a provided string.
+		/// The functionality of FORMATMESSAGE resembles that of the RAISERROR statement.
+		/// However, RAISERROR prints the message immediately, while FORMATMESSAGE returns the formatted message for further processing.</para>
+		/// </summary>
+		/// <param name="msg_string">Is a string enclosed in single quotes and containing parameter value placeholders.
+		/// The error message can have a maximum of 2,047 characters. If the message contains 2,048 or more characters,
+		/// only the first 2,044 are displayed and an ellipsis is added to indicate that the message has been truncated.
+		/// Note that substitution parameters consume more characters than the output shows because of internal storage behavior.</param>
+		/// <param name="param_values">Is a parameter value for use in the message. Can be more than one parameter value.
+		/// The values must be specified in the order in which the placeholder variables appear in the message. The maximum number of values is 20.</param>
+		/// <returns>nvarchar</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "FORMATMESSAGE", ServerSideOnly=true)]
+		public static string? FormatMessage(string msg_string, params object[] param_values)
+		{
+			throw new InvalidOperationException($"'{nameof(FormatMessage)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/GETANSINULL-transact-sql">GETANSINULL (Transact-SQL)</see></b></para>
+		/// <para>Returns the default nullability for the database for this session.</para>
+		/// </summary>
+		/// <param name="database">Is the name of the database for which to return nullability information.
+		/// <c>database</c> is either <b>char</b> or <b>nchar</b>. If <b>char</b>, <c>database</c> is implicitly converted to <b>nchar</b>.</param>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "GETANSINULL", ServerSideOnly=true)]
+		public static int? GetAnsiNull(string database)
+		{
+			throw new InvalidOperationException($"'{nameof(GetAnsiNull)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/GETANSINULL-transact-sql">GETANSINULL (Transact-SQL)</see></b></para>
+		/// <para>Returns the default nullability for the database for this session.</para>
+		/// </summary>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "GETANSINULL", ServerSideOnly=true)]
+		public static int? GetAnsiNull()
+		{
+			throw new InvalidOperationException($"'{nameof(GetAnsiNull)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/HOST-ID-transact-sql">HOST_ID (Transact-SQL)</see></b></para>
+		/// <para>Returns the workstation identification number. The workstation identification number is the process ID (PID)
+		/// of the application on the client computer that is connecting to SQL Server.</para>
+		/// </summary>
+		/// <returns>char(10)</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "HOST_ID", ServerSideOnly=true)]
+		public static string HostID()
+		{
+			throw new InvalidOperationException($"'{nameof(HostID)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/HOST-NAME-transact-sql">HOST_NAME (Transact-SQL)</see></b></para>
+		/// <para>Returns the workstation identification number. The workstation identification number is the process ID (PID)
+		/// of the application on the client computer that is connecting to SQL Server.</para>
+		/// </summary>
+		/// <returns>nvarchar(128)</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "HOST_NAME", ServerSideOnly=true)]
+		public static string HostName()
+		{
+			throw new InvalidOperationException($"'{nameof(HostName)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ISNULL-transact-sql">ISNULL (Transact-SQL)</see></b></para>
+		/// <para>Replaces NULL with the specified replacement value.</para>
+		/// </summary>
+		/// <param name="check_expression">Is the <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// to be checked for NULL. <c>check_expression</c> can be of any type.</param>
+		/// <param name="replacement_value">Is the expression to be returned if <c>check_expression</c> is NULL.
+		/// <c>replacement_value</c> must be of a type that is implicitly convertible to the type of <c>check_expression</c>.</param>
+		/// <returns>Returns the same type as <c>check_expression</c>. If a literal NULL is provided as <c>check_expression</c>,
+		/// returns the datatype of the <c>replacement_value</c>. If a literal NULL is provided as <c>check_expression</c> and no
+		/// <c>replacement_value</c> is provided, returns an <b>int</b>.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "ISNULL", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		public static T IsNull<T>(T check_expression, T replacement_value)
+		{
+			throw new InvalidOperationException($"'{nameof(IsNull)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ISNUMERIC-transact-sql">ISNUMERIC (Transact-SQL)</see></b></para>
+		/// <para>Determines whether an expression is a valid numeric type.</para>
+		/// </summary>
+		/// <param name="expression">Is the <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// to be evaluated.</param>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "ISNUMERIC", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		public static int IsNumeric<T>(T expression)
+		{
+			throw new InvalidOperationException($"'{nameof(IsNumeric)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/MIN-ACTIVE-ROWVERSION-transact-sql">MIN_ACTIVE_ROWVERSION (Transact-SQL)</see></b></para>
+		/// <para>Returns the workstation identification number. The workstation identification number is the process ID (PID)
+		/// of the application on the client computer that is connecting to SQL Server.</para>
+		/// </summary>
+		/// <returns>Returns a <b>binary(8)</b> value.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "MIN_ACTIVE_ROWVERSION", ServerSideOnly=true)]
+		public static byte[] MinActiveRowVersion()
+		{
+			throw new InvalidOperationException($"'{nameof(MinActiveRowVersion)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/NEWID-transact-sql">NEWID (Transact-SQL)</see></b></para>
+		/// <para>Creates a unique value of type <b>uniqueidentifier</b>.</para>
+		/// </summary>
+		/// <returns>uniqueidentifier</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "NEWID", ServerSideOnly=true)]
+		public static Guid NewID()
+		{
+			throw new InvalidOperationException($"'{nameof(NewID)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ROWCOUNT-transact-sql">@@ROWCOUNT (Transact-SQL)</see></b></para>
+		/// <para>Returns the number of rows affected by the last statement. If the number of rows is more than 2 billion,
+		/// use <see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ROWCOUNT-BIG-transact-sql">ROWCOUNT_BIG</see>.</para>
+		/// </summary>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@ROWCOUNT", ServerSideOnly=true)]
+		public static int RowCount()
+		{
+			throw new InvalidOperationException($"'{nameof(RowCount)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ROWCOUNT-BIG-transact-sql">ROWCOUNT_BIG (Transact-SQL)</see></b></para>
+		/// <para>Returns the number of rows affected by the last statement executed. This function operates like
+		/// <see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ROWCOUNT-transact-sql">@@ROWCOUNT</see>,
+		/// except the return type of ROWCOUNT_BIG is bigint.</para>
+		/// </summary>
+		/// <returns>bigint</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "ROWCOUNT_BIG", ServerSideOnly=true)]
+		public static long RowCountBig()
+		{
+			throw new InvalidOperationException($"'{nameof(RowCountBig)}' is a server side only function.");
 		}
 
 		#endregion
