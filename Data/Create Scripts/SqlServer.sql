@@ -1292,7 +1292,8 @@ GO
 
 -- SKIP SqlServer.2005 BEGIN
 -- SKIP SqlServer.2008 BEGIN
-DROP SEQUENCE dbo.TestSequence
+IF EXISTS (SELECT name FROM sys.sequences  WHERE name = N'TestSequence')
+	DROP SEQUENCE dbo.TestSequence
 GO
 CREATE SEQUENCE dbo.TestSequence
 	START WITH 1
