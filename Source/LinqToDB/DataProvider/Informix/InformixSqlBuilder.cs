@@ -128,6 +128,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			switch (type.Type.DataType)
 			{
+				case DataType.Guid       : StringBuilder.Append("VARCHAR(36)");               return;
 				case DataType.VarBinary  : StringBuilder.Append("BYTE");                      return;
 				case DataType.Boolean    : StringBuilder.Append("BOOLEAN");                   return;
 				case DataType.DateTime   : StringBuilder.Append("datetime year to second");   return;

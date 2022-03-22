@@ -32,6 +32,7 @@ namespace LinqToDB.DataProvider.Firebird
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
+			SqlProviderFlags.OutputUpdateUseSpecialTables      = true;
 
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);
@@ -96,7 +97,7 @@ namespace LinqToDB.DataProvider.Firebird
 			FirebirdProviderAdapter.FbDbType? type = null;
 			switch (dataType.DataType)
 			{
-				case DataType.DateTimeOffset     : type = FirebirdProviderAdapter.FbDbType.TimeStampTZ; break;
+				case DataType.DateTimeOffset : type = FirebirdProviderAdapter.FbDbType.TimeStampTZ; break;
 			}
 
 			if (type != null)

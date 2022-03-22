@@ -85,10 +85,10 @@ namespace LinqToDB.ServiceModel
 
 		class QueryContext : IQueryContext
 		{
-			public SqlStatement    Statement   { get; set; } = null!;
-			public object?         Context     { get; set; }
-			public SqlParameter[]? Parameters  { get; set; }
-			public AliasesContext? Aliases     { get; set; }
+			public SqlStatement    Statement  { get; set; } = null!;
+			public object?         Context    { get; set; }
+			public SqlParameter[]? Parameters { get; set; }
+			public AliasesContext? Aliases    { get; set; }
 		}
 
 		[WebMethod]
@@ -174,13 +174,13 @@ namespace LinqToDB.ServiceModel
 				};
 
 				var names = new HashSet<string>();
-				var select = query.Statement.QueryType switch
+				var selectExpressions = query.Statement.QueryType switch
 				{
-					QueryType.Select => query.Statement.SelectQuery!,
-					QueryType.Insert => ((SqlInsertStatement)query.Statement).Output!.OutputQuery!,
-					QueryType.Delete => ((SqlDeleteStatement)query.Statement).Output!.OutputQuery!,
-					QueryType.Update => ((SqlUpdateStatement)query.Statement).Output!.OutputQuery!,
-					QueryType.Merge  => ((SqlMergeStatement )query.Statement).Output!.OutputQuery!,
+					QueryType.Select => query.Statement.SelectQuery!.Select.Columns.Select(c => c.Expression).ToList(),
+					QueryType.Insert => ((SqlInsertStatement)query.Statement).Output!.OutputColumns!,
+					QueryType.Delete => ((SqlDeleteStatement)query.Statement).Output!.OutputColumns!,
+					QueryType.Update => ((SqlUpdateStatement)query.Statement).Output!.OutputColumns!,
+					QueryType.Merge  => ((SqlMergeStatement )query.Statement).Output!.OutputColumns!,
 					_ => throw new NotImplementedException($"Query type not supported: {query.Statement.QueryType}"),
 				};
 
@@ -202,7 +202,7 @@ namespace LinqToDB.ServiceModel
 					// ugh...
 					// still if it fails here due to empty columns - it is a bug in columns generation
 
-					var fieldType = select.Select.Columns[i].SystemType!;
+					var fieldType = selectExpressions[i].SystemType!;
 
 					// async compiled query support
 					if (fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(Task<>))
@@ -231,7 +231,7 @@ namespace LinqToDB.ServiceModel
 
 				for (var i = 0; i < ret.FieldCount; i++)
 					columnReaders[i] = new ConvertFromDataReaderExpression.ColumnReader(db, db.MappingSchema,
-						ret.FieldTypes[i], i, QueryHelper.GetValueConverter(select.Select.Columns[i]), true);
+						ret.FieldTypes[i], i, QueryHelper.GetValueConverter(selectExpressions[i]), true);
 
 				while (rd.Read())
 				{

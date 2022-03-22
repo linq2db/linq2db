@@ -123,7 +123,7 @@ namespace LinqToDB.DataProvider
 		{
 			_dataConnection = dataConnection;
 			_columns        = columns;
-			_columnTypes    = _columns.Select(c => c.GetDbDataType(true)).ToArray();
+			_columnTypes    = _columns.Select(c => c.GetConvertedDbDataType()).ToArray();
 			_ordinals       = _columns.Select((c, i) => new { c, i }).ToDictionary(_ => _.c.ColumnName, _ => _.i);
 		}
 
@@ -256,10 +256,11 @@ namespace LinqToDB.DataProvider
 			for (var i = 0; i < _columns.Count; ++i)
 			{
 				var columnDescriptor = _columns[i];
+				var convertedType    = columnDescriptor.GetConvertedDbDataType();
 				var row              = table.NewRow();
 
 				row[SchemaTableColumn.ColumnName]              = columnDescriptor.ColumnName;
-				row[SchemaTableColumn.DataType]                = _dataConnection.DataProvider.ConvertParameterType(columnDescriptor.MemberType, _columnTypes[i]);
+				row[SchemaTableColumn.DataType]                = _dataConnection.DataProvider.ConvertParameterType(convertedType.SystemType, _columnTypes[i]);
 				row[SchemaTableColumn.IsKey]                   = columnDescriptor.IsPrimaryKey;
 				row[SchemaTableOptionalColumn.IsAutoIncrement] = columnDescriptor.IsIdentity;
 				row[SchemaTableColumn.AllowDBNull]             = columnDescriptor.CanBeNull;

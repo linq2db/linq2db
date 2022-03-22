@@ -928,6 +928,13 @@ namespace LinqToDB
 		/// <param name="outputExpression">Output record constructor expression.
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Returns number of target table records, affected by merge command.</returns>
+		/// <remarks>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2008+</item>
+		/// <item>Firebird 3+ (doesn't support more than one record and "action" parameter; database limitation)</item>
+		/// </list>
+		/// </remarks>
 		public static IEnumerable<TOutput> MergeWithOutput<TTarget, TSource, TOutput>(
 			this IMergeable<TTarget, TSource>                     merge,
 			     Expression<Func<string,TTarget,TTarget,TOutput>> outputExpression)
@@ -959,6 +966,13 @@ namespace LinqToDB
 		/// <param name="outputExpression">Output record constructor expression.
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Returns number of target table records, affected by merge command.</returns>
+		/// <remarks>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2008+</item>
+		/// <item>Firebird 3+ (doesn't support more than one record and "action" parameter; database limitation)</item>
+		/// </list>
+		/// </remarks>
 		public static IAsyncEnumerable<TOutput> MergeWithOutputAsync<TTarget, TSource, TOutput>(
 			this IMergeable<TTarget, TSource>                     merge,
 			Expression<Func<string,TTarget,TTarget,TOutput>> outputExpression)
@@ -991,6 +1005,12 @@ namespace LinqToDB
 		/// <param name="outputExpression">Output record constructor expression.
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Returns number of target table records, affected by merge command.</returns>
+		/// <remarks>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2008+</item>
+		/// </list>
+		/// </remarks>
 		public static int MergeWithOutputInto<TTarget, TSource, TOutput>(
 			this IMergeable<TTarget, TSource>                     merge,
 			     ITable<TOutput>                                  outputTable,
@@ -1030,6 +1050,12 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// Expression supports only record new expression with field initializers.</param>
 		/// <returns>Returns number of target table records, affected by merge command.</returns>
+		/// <remarks>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2008+</item>
+		/// </list>
+		/// </remarks>
 		public static Task<int> MergeWithOutputIntoAsync<TTarget, TSource, TOutput>(
 			this IMergeable<TTarget, TSource>                merge,
 			ITable<TOutput>                                  outputTable,

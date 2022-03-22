@@ -8,6 +8,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
 	</ItemGroup>
 

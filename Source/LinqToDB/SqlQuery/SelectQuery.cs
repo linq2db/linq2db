@@ -39,10 +39,11 @@ namespace LinqToDB.SqlQuery
 			SqlGroupByClause        groupBy,
 			SqlWhereClause          having,
 			SqlOrderByClause        orderBy,
-			List<SqlSetOperator>?   setOparators,
+			List<SqlSetOperator>?   setOperators,
 			List<ISqlExpression[]>? uniqueKeys,
 			SelectQuery?            parentSelect,
-			bool                    parameterDependent)
+			bool                    parameterDependent,
+			bool                    doNotSetAliases)
 		{
 			Select               = select;
 			From                 = from;
@@ -50,9 +51,10 @@ namespace LinqToDB.SqlQuery
 			GroupBy              = groupBy;
 			Having               = having;
 			OrderBy              = orderBy;
-			_setOperators        = setOparators;
+			_setOperators        = setOperators;
 			ParentSelect         = parentSelect;
 			IsParameterDependent = parameterDependent;
+			DoNotSetAliases      = doNotSetAliases;
 
 			if (uniqueKeys != null)
 				UniqueKeys.AddRange(uniqueKeys);
@@ -76,27 +78,27 @@ namespace LinqToDB.SqlQuery
 		public SqlOrderByClause OrderBy { get; internal set; } = null!;
 
 		private List<object>? _properties;
-		public  List<object>   Properties => _properties ??= new List<object>();
+		public  List<object>   Properties => _properties ??= new ();
 
 		public SelectQuery?   ParentSelect         { get; set; }
-		public bool           IsSimple => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty && !HasSetOperators;
+		public bool           IsSimple      => IsSimpleOrSet && !HasSetOperators;
+		public bool           IsSimpleOrSet => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty;
 		public bool           IsParameterDependent { get; set; }
 
 		/// <summary>
 		/// Gets or sets flag when sub-query can be removed during optimization.
 		/// </summary>
 		public bool               DoNotRemove         { get; set; }
+		public bool            DoNotSetAliases      { get; set; }
 
-		private List<ISqlExpression[]>? _uniqueKeys;
+		List<ISqlExpression[]>? _uniqueKeys;
 
 		/// <summary>
 		/// Contains list of columns that build unique key for this sub-query.
 		/// Used in JoinOptimizer for safely removing sub-query from resulting SQL.
 		/// </summary>
-		public  List<ISqlExpression[]>  UniqueKeys   => _uniqueKeys ??= new List<ISqlExpression[]>();
-
+		public  List<ISqlExpression[]> UniqueKeys    => _uniqueKeys ??= new ();
 		public  bool                    HasUniqueKeys => _uniqueKeys != null && _uniqueKeys.Count > 0;
-
 
 		#endregion
 

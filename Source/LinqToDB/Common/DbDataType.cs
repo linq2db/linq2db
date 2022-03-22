@@ -63,7 +63,6 @@ namespace LinqToDB.Common
 		public int?     Precision  { get; }
 		public int?     Scale      { get; }
 
-
 		internal static MethodInfo WithSetValuesMethodInfo =
 			MemberHelper.MethodOf<DbDataType>(dt => dt.WithSetValues(dt));
 

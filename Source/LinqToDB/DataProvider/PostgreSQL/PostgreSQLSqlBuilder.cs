@@ -368,35 +368,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
 
-		protected override void BuildReturningSubclause(SqlStatement statement)
-		{
-			var output = statement.GetOutputClause();
-			if (output != null)
-			{
-				StringBuilder
-					.AppendLine("RETURNING");
-
-				++Indent;
-
-				bool first = true;
-				foreach (var oi in output.OutputItems)
-				{
-					if (!first)
-						StringBuilder.AppendLine(Comma);
-					first = false;
-
-					AppendIndent();
-
-					BuildExpression(oi.Expression!);
-				}
-
-				StringBuilder
-					.AppendLine();
-
-				--Indent;
-			}
-		}
-
 		public override string? GetTableSchemaName(SqlTable table)
 		{
 			return table.Schema == null || table.TableOptions.HasIsTemporary() ? null : ConvertInline(table.Schema, ConvertType.NameToSchema);

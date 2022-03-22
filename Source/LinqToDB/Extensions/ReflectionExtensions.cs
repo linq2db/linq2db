@@ -1083,9 +1083,11 @@ namespace LinqToDB.Extensions
 			return
 				!type.IsPublic &&
 				 type.IsGenericType &&
+				// C# anonymous type name prefix
 				(type.Name.StartsWith("<>f__AnonymousType", StringComparison.Ordinal) ||
+				 // VB.NET anonymous type name prefix
 				 type.Name.StartsWith("VB$AnonymousType", StringComparison.Ordinal)) &&
-				type.GetCustomAttributes(typeof(CompilerGeneratedAttribute), true).Any();
+				type.GetCustomAttribute(typeof(CompilerGeneratedAttribute), false) != null;
 		}
 
 		internal static MemberInfo GetMemberOverride(this Type type, MemberInfo mi)

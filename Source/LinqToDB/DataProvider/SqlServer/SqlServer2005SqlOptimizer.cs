@@ -1,6 +1,4 @@
-﻿using LinqToDB.Common;
-
-namespace LinqToDB.DataProvider.SqlServer
+﻿namespace LinqToDB.DataProvider.SqlServer
 {
 	using SqlProvider;
 	using SqlQuery;
@@ -28,6 +26,5 @@ namespace LinqToDB.DataProvider.SqlServer
 			func = ConvertFunctionParameters(func, false);
 			return base.ConvertFunction(func);
 		}
-
 	}
 }

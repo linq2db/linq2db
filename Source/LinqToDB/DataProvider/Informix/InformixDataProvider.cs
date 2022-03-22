@@ -11,7 +11,6 @@ namespace LinqToDB.DataProvider.Informix
 	using LinqToDB.Linq.Internal;
 	using Mapping;
 	using SqlProvider;
-	using SqlQuery;
 
 	public class InformixDataProvider : DynamicDataProviderBase<InformixProviderAdapter>
 	{
@@ -25,7 +24,6 @@ namespace LinqToDB.DataProvider.Informix
 			SqlProviderFlags.IsParameterOrderDependent         = !Adapter.IsIDSProvider;
 			SqlProviderFlags.IsSubQueryTakeSupported           = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
-			SqlProviderFlags.IsGroupByExpressionSupported      = false;
 			SqlProviderFlags.IsCrossJoinSupported              = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
@@ -120,6 +118,10 @@ namespace LinqToDB.DataProvider.Informix
 			{
 				value    = value?.ToString();
 				dataType = dataType.WithDataType(DataType.Char);
+			}
+			else if (value is byte byteValue && dataType.DataType == DataType.Int16)
+			{
+				value = (short)byteValue;
 			}
 			else if (value is bool b)
 			{

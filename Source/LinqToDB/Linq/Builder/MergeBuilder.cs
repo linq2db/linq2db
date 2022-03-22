@@ -120,7 +120,7 @@ namespace LinqToDB.Linq.Builder
 
 				var mergeStatement = (SqlMergeStatement)Statement!;
 
-				mergeStatement.Output!.OutputQuery = Sequence[0].SelectQuery;
+				mergeStatement.Output!.OutputColumns = Sequence[0].SelectQuery.Select.Columns.Select(c => c.Expression).ToList();
 
 				QueryRunner.SetRunQuery(query, mapper);
 			}
@@ -216,7 +216,7 @@ namespace LinqToDB.Linq.Builder
 				//TODO: Why it is not handled by main optimizer
 				var sqlFlags = builder.DataContext.SqlProviderFlags;
 				new SelectQueryOptimizer(sqlFlags, query, query, 0, statement)
-					.FinalizeAndValidate(sqlFlags.IsApplyJoinSupported, sqlFlags.IsGroupByExpressionSupported);
+					.FinalizeAndValidate(sqlFlags.IsApplyJoinSupported);
 				
 				if (query.From.Tables.Count == 0)
 				{
