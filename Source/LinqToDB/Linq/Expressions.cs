@@ -257,9 +257,6 @@ namespace LinqToDB.Linq
 		
 		public static LambdaExpression? ConvertMember(MappingSchema mappingSchema, Type? objectType, MemberInfo mi)
 		{
-			if (mi != Methods.Object.ToStringMethod && mi is MethodInfo && mi.Name == "ToString")
-				mi = Methods.Object.ToStringMethod;
-
 			if (_checkUserNamespace)
 			{
 				if (IsUserNamespace(mi.DeclaringType!.Namespace))
@@ -344,6 +341,18 @@ namespace LinqToDB.Linq
 							return expr.GetExpression(mappingSchema);
 
 				_typeMembers[""].TryGetValue(key, out expr);
+			}
+
+			if (expr == null && mi is MethodInfo method && method.IsVirtual)
+			{
+				// walking up through hierarchy to find registered converter
+				//
+				if (method.DeclaringType is not null && method.DeclaringType != typeof(object) && method.DeclaringType.BaseType is not null)
+				{
+					var newMi = method.DeclaringType.BaseType.GetMemberEx(mi);
+					if (newMi != null && newMi.DeclaringType != mi.DeclaringType)
+						return ConvertMember(mappingSchema, objectType, newMi);
+				}
 			}
 
 			return expr?.GetExpression(mappingSchema);

@@ -22,7 +22,7 @@ namespace LinqToDB.Reflection
 	{
 		public static class Object
 		{
-			public static readonly MethodInfo ToStringMethod = MemberHelper.MethodOf<object> (r => r.ToString());
+			public static readonly MethodInfo ToStringMethod = MemberHelper.MethodOf<object>(r => r.ToString());
 		}
 
 		public static class ADONet
