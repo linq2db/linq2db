@@ -3,6 +3,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Tools;
 using LinqToDB.Tools.DataProvider.SqlServer.Schemas;
 
@@ -11,7 +12,7 @@ using NUnit.Framework;
 namespace Tests.DataProvider
 {
 	[TestFixture]
-	public class SqlServerSchemaTests : TestBase
+	public class SqlServerFunctionsTests : TestBase
 	{
 		#region Configuration
 
@@ -283,6 +284,249 @@ namespace Tests.DataProvider
 			var result = db.Select(() => SqlFn.Convert<string>(new DateTime(2022, 02, 22), 5));
 			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo("22-02-22"));
+		}
+
+		[Test]
+		public void ParseTest1([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Parse("Monday, 13 December 2010", SqlType.Date));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(new DateTime(2010, 12, 13)));
+		}
+
+		[Test]
+		public void ParseTest2([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Parse("123", SqlType.Decimal(30)));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(123m));
+		}
+
+		[Test]
+		public void ParseTest3([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Parse<int>("123"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(123));
+		}
+
+		[Test]
+		public void ParseWithCultureTest1([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Parse("€345,98", SqlType.Money, "de-DE"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(345.98m));
+		}
+
+		[Test]
+		public void ParseWithCultureTest2([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Parse("345,98", SqlType.Decimal(30,2), "de-DE"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(345.98m));
+		}
+
+		[Test]
+		public void ParseWithCultureTest3([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Parse<decimal>("345,98", "de-DE"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(345.98m));
+		}
+
+		[Test]
+		public void TryCastTest1([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db     = new SystemDB(context);
+			var       result = db.Select(() => SqlFn.TryCast("10:10:10", SqlType.Time));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(new TimeSpan(10, 10, 10)));
+		}
+
+		[Test]
+		public void TryCastTest2([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db     = new SystemDB(context);
+			var       result = db.Select(() => SqlFn.TryCast("10:10:10", SqlType.Time(3)));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(new TimeSpan(10, 10, 10)));
+		}
+
+		[Test]
+		public void TryCastTest3([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db     = new SystemDB(context);
+			var       result = db.Select(() => SqlFn.TryCast<string>(123));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("123"));
+		}
+
+		[Test]
+		public void TryConvertTest1([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.TryConvert(SqlType.VarChar(4), 123));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("123"));
+		}
+
+		[Test]
+		public void TryConvertTest2([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.TryConvert(SqlType.Decimal, 123));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(123m));
+		}
+
+		[Test]
+		public void TryConvertTest3([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.TryConvert(SqlType.NVarChar(10), 123));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("123"));
+		}
+
+		[Test]
+		public void TryConvertTest4([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.TryConvert(SqlType.VarCharMax, 123));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("123"));
+		}
+
+		[Test]
+		public void TryConvertTest5([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.TryConvert(SqlType.Decimal(30, 0), 123));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(123m));
+		}
+
+		[Test]
+		public void TryConvertTest6([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.TryConvert<string>(123));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("123"));
+		}
+
+		[Test]
+		public void TryConvertWithStyleTest1([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.TryConvert(SqlType.VarChar(4), 123, 1));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("123"));
+		}
+
+		[Test]
+		public void TryConvertWithStyleTest2([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.TryConvert(SqlType.Decimal, 123, 1));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(123m));
+		}
+
+		[Test]
+		public void TryConvertWithStyleTest3([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.TryConvert(SqlType.NVarChar(10), new DateTime(2022, 02, 22), 105));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("22-02-2022"));
+		}
+
+		[Test]
+		public void TryConvertWithStyleTest4([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.TryConvert(SqlType.VarCharMax, 123, 1));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("123"));
+		}
+
+		[Test]
+		public void TryConvertWithStyleTest5([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.TryConvert(SqlType.Decimal(30, 0), 123, 1));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(123m));
+		}
+
+		[Test]
+		public void TryConvertWithStyleTest6([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.TryConvert<string>(new DateTime(2022, 02, 22), 5));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("22-02-22"));
+		}
+
+		[Test]
+		public void TryParseTest1([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.TryParse("Monday, 13 December 2010", SqlType.Date));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(new DateTime(2010, 12, 13)));
+		}
+
+		[Test]
+		public void TryParseTest2([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.TryParse("123", SqlType.Decimal(30)));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(123m));
+		}
+
+		[Test]
+		public void TryParseTest3([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.TryParse<int>("123"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(123));
+		}
+
+		[Test]
+		public void TryParseWithCultureTest1([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.TryParse("€345,98", SqlType.Money, "de-DE"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(345.98m));
+		}
+
+		[Test]
+		public void TryParseWithCultureTest2([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.TryParse("345,98", SqlType.Decimal(30,2), "de-DE"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(345.98m));
+		}
+
+		[Test]
+		public void TryParseWithCultureTest3([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.TryParse<decimal>("345,98", "de-DE"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(345.98m));
 		}
 
 		#endregion

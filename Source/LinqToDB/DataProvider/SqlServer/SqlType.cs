@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
+namespace LinqToDB.DataProvider.SqlServer
 {
 	/// <summary>
 	/// See <see href="https://docs.microsoft.com/en-us/sql/t-sql/data-types/data-types-transact-sql">Data types</see>.
@@ -12,7 +12,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			_dataType = dataType;
 		}
 
-		public string _dataType { get; }
+		readonly string _dataType;
 
 		public override string ToString()
 		{
@@ -115,7 +115,5 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			: base(dataType)
 		{
 		}
-
-//		public override string ToString() =?> _dataType; //base.ToString();
 	}
 }

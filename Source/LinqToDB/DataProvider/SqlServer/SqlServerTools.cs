@@ -1,12 +1,12 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Reflection;
+using System.Text;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using System.Collections.Concurrent;
-	using System.Text;
 	using Common;
 	using Configuration;
 	using Data;

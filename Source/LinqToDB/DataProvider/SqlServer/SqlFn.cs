@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 using JetBrains.Annotations;
 
-namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
+namespace LinqToDB.DataProvider.SqlServer
 {
 	using Expressions;
 	using SqlQuery;
@@ -82,6 +81,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// </summary>
 		/// <returns>tinyint</returns>
 		/// <exception cref="InvalidOperationException" />
+		[CLSCompliant(false)]
 		[Sql.Expression(ProviderName.SqlServer, "@@MAX_PRECISION", ServerSideOnly=true)]
 		public static sbyte MaxPrecision()
 		{
@@ -95,6 +95,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <returns>int</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "@@NESTLEVEL", ServerSideOnly=true)]
+		[CLSCompliant(false)]
 		public static sbyte NestLevel()
 		{
 			throw new InvalidOperationException($"'{nameof(NestLevel)}' is a server side only function.");
@@ -340,7 +341,325 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 
 		#region Parse
 
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/PARSE-transact-sql">PARSE (Transact-SQL)</see></b></para>
+		/// <para>Returns the result of an expression, translated to the requested data type in SQL Server.</para>
+		/// </summary>
+		/// <param name="string_value"><b>nvarchar</b>(4000) value representing the formatted value to parse into the specified data type.</param>
+		/// <param name="data_type">Literal value representing the data type requested for the result.</param>
+		/// <returns>Returns the result of the expression, translated to the requested data type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "PARSE({string_value} as {data_type})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
+		public static T Parse<T>([ExprParameter] string string_value, [SqlQueryDependent] SqlType<T> data_type)
+		{
+			throw new InvalidOperationException($"'{nameof(Parse)}' is a server side only function.");
+		}
 
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/PARSE-transact-sql">PARSE (Transact-SQL)</see></b></para>
+		/// <para>Returns the result of an expression, translated to the requested data type in SQL Server.</para>
+		/// </summary>
+		/// <param name="string_value"><b>nvarchar</b>(4000) value representing the formatted value to parse into the specified data type.</param>
+		/// <param name="data_type">Literal value representing the data type requested for the result.</param>
+		/// <returns>Returns the result of the expression, translated to the requested data type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "PARSE({string_value} as {data_type})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
+		public static T Parse<T>([ExprParameter] string string_value, [SqlQueryDependent] Func<SqlType<T>> data_type)
+		{
+			throw new InvalidOperationException($"'{nameof(Parse)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/PARSE-transact-sql">PARSE (Transact-SQL)</see></b></para>
+		/// <para>Returns the result of an expression, translated to the requested data type in SQL Server.</para>
+		/// </summary>
+		/// <param name="string_value"><b>nvarchar</b>(4000) value representing the formatted value to parse into the specified data type.</param>
+		/// <returns>Returns the result of the expression, translated to the requested data type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "PARSE({0} as {1})", ServerSideOnly=true)]
+		public static T Parse<T>([ExprParameter] string string_value)
+		{
+			throw new InvalidOperationException($"'{nameof(Parse)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/PARSE-transact-sql">PARSE (Transact-SQL)</see></b></para>
+		/// <para>Returns the result of an expression, translated to the requested data type in SQL Server.</para>
+		/// </summary>
+		/// <param name="string_value"><b>nvarchar</b>(4000) value representing the formatted value to parse into the specified data type.</param>
+		/// <param name="data_type">Literal value representing the data type requested for the result.</param>
+		/// <param name="culture">Optional string that identifies the culture in which string_value is formatted.</param>
+		/// <returns>Returns the result of the expression, translated to the requested data type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "PARSE({string_value} as {data_type} USING {culture})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
+		public static T Parse<T>([ExprParameter] string string_value, [SqlQueryDependent] SqlType<T> data_type, [ExprParameter, SqlQueryDependent] string culture)
+		{
+			throw new InvalidOperationException($"'{nameof(Parse)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/PARSE-transact-sql">PARSE (Transact-SQL)</see></b></para>
+		/// <para>Returns the result of an expression, translated to the requested data type in SQL Server.</para>
+		/// </summary>
+		/// <param name="string_value"><b>nvarchar</b>(4000) value representing the formatted value to parse into the specified data type.</param>
+		/// <param name="data_type">Literal value representing the data type requested for the result.</param>
+		/// <param name="culture">Optional string that identifies the culture in which string_value is formatted.</param>
+		/// <returns>Returns the result of the expression, translated to the requested data type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "PARSE({string_value} as {data_type} USING {culture})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
+		public static T Parse<T>([ExprParameter] string string_value, [SqlQueryDependent] Func<SqlType<T>> data_type, [ExprParameter, SqlQueryDependent] string culture)
+		{
+			throw new InvalidOperationException($"'{nameof(Parse)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/PARSE-transact-sql">PARSE (Transact-SQL)</see></b></para>
+		/// <para>Returns the result of an expression, translated to the requested data type in SQL Server.</para>
+		/// </summary>
+		/// <param name="string_value"><b>nvarchar</b>(4000) value representing the formatted value to parse into the specified data type.</param>
+		/// <param name="culture">Optional string that identifies the culture in which string_value is formatted.</param>
+		/// <returns>Returns the result of the expression, translated to the requested data type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "PARSE({0} as {2} USING {1})", ServerSideOnly=true)]
+		public static T Parse<T>([ExprParameter] string string_value, [ExprParameter, SqlQueryDependent] string culture)
+		{
+			throw new InvalidOperationException($"'{nameof(Parse)}' is a server side only function.");
+		}
+
+		#endregion
+
+		#region TryCast
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY-CAST-transact-sql">TRY_CAST (Transact-SQL)</see></b></para>
+		/// <para>These functions convert an expression of one data type to another.</para>
+		/// </summary>
+		/// <param name="expression">Any valid <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>.</param>
+		/// <param name="data_type">The target data type. This includes <b>xml</b>, <b>bigint</b>, and <b>sql_variant</b>. Alias data types cannot be used.</param>
+		/// <returns>Returns expression, translated to data_type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "TRY_CAST({expression} as {data_type})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
+		[return: NotNullIfNotNull("expression")]
+		public static T TryCast<T>([ExprParameter] object? expression, [SqlQueryDependent] SqlType<T> data_type)
+		{
+			throw new InvalidOperationException($"'{nameof(TryCast)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY-CAST-transact-sql">TRY_CAST (Transact-SQL)</see></b></para>
+		/// <para>These functions convert an expression of one data type to another.</para>
+		/// </summary>
+		/// <param name="expression">Any valid <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>.</param>
+		/// <param name="data_type">The target data type. This includes <b>xml</b>, <b>bigint</b>, and <b>sql_variant</b>. Alias data types cannot be used.</param>
+		/// <returns>Returns expression, translated to data_type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "TRY_CAST({expression} as {data_type})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
+		[return: NotNullIfNotNull("expression")]
+		public static T TryCast<T>([ExprParameter] object? expression, [SqlQueryDependent] Func<SqlType<T>> data_type)
+		{
+			throw new InvalidOperationException($"'{nameof(TryCast)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY-CAST-transact-sql">TRY_CAST (Transact-SQL)</see></b></para>
+		/// <para>These functions convert an expression of one data type to another.</para>
+		/// </summary>
+		/// <param name="expression">Any valid <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>.</param>
+		/// <returns>Returns expression, translated to data_type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "TRY_CAST({0} as {1})", ServerSideOnly=true)]
+		[return: NotNullIfNotNull("expression")]
+		public static T TryCast<T>([ExprParameter] object? expression)
+		{
+			throw new InvalidOperationException($"'{nameof(TryCast)}' is a server side only function.");
+		}
+
+		#endregion
+
+		#region TryConvert
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY-CONVERT-transact-sql">TRY_CONVERT (Transact-SQL)</see></b></para>
+		/// <para>These functions convert an expression of one data type to another.</para>
+		/// </summary>
+		/// <param name="expression">Any valid <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>.</param>
+		/// <param name="data_type">The target data type. This includes <b>xml</b>, <b>bigint</b>, and <b>sql_variant</b>. Alias data types cannot be used.</param>
+		/// <returns>Returns expression, translated to data_type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "TRY_CONVERT({data_type}, {expression})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
+		[return: NotNullIfNotNull("expression")]
+		public static T TryConvert<T>([SqlQueryDependent] SqlType<T> data_type, [ExprParameter] object? expression)
+		{
+			throw new InvalidOperationException($"'{nameof(TryConvert)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY-CONVERT-transact-sql">TRY_CONVERT (Transact-SQL)</see></b></para>
+		/// <para>These functions convert an expression of one data type to another.</para>
+		/// </summary>
+		/// <param name="expression">Any valid <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>.</param>
+		/// <param name="data_type">The target data type. This includes <b>xml</b>, <b>bigint</b>, and <b>sql_variant</b>. Alias data types cannot be used.</param>
+		/// <returns>Returns expression, translated to data_type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "TRY_CONVERT({data_type}, {expression})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
+		[return: NotNullIfNotNull("expression")]
+		public static T TryConvert<T>([SqlQueryDependent] Func<SqlType<T>> data_type, [ExprParameter] object? expression)
+		{
+			throw new InvalidOperationException($"'{nameof(TryConvert)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY-CONVERT-transact-sql">TRY_CONVERT (Transact-SQL)</see></b></para>
+		/// <para>These functions convert an expression of one data type to another.</para>
+		/// </summary>
+		/// <param name="expression">Any valid <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>.</param>
+		/// <returns>Returns expression, translated to data_type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "TRY_CONVERT({1}, {0})", ServerSideOnly=true)]
+		[return: NotNullIfNotNull("expression")]
+		public static T TryConvert<T>([ExprParameter] object? expression)
+		{
+			throw new InvalidOperationException($"'{nameof(TryConvert)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY-CONVERT-transact-sql">TRY_CONVERT (Transact-SQL)</see></b></para>
+		/// <para>These functions convert an expression of one data type to another.</para>
+		/// </summary>
+		/// <param name="expression">Any valid <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>.</param>
+		/// <param name="data_type">The target data type. This includes <b>xml</b>, <b>bigint</b>, and <b>sql_variant</b>. Alias data types cannot be used.</param>
+		/// <returns>Returns expression, translated to data_type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "TRY_CONVERT({data_type}, {expression}, {style})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
+		[return: NotNullIfNotNull("expression")]
+		public static T TryConvert<T>([SqlQueryDependent] SqlType<T> data_type, [ExprParameter] object? expression, [SqlQueryDependent, ExprParameter] int style)
+		{
+			throw new InvalidOperationException($"'{nameof(TryConvert)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY-CONVERT-transact-sql">TRY_CONVERT (Transact-SQL)</see></b></para>
+		/// <para>These functions convert an expression of one data type to another.</para>
+		/// </summary>
+		/// <param name="expression">Any valid <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>.</param>
+		/// <param name="data_type">The target data type. This includes <b>xml</b>, <b>bigint</b>, and <b>sql_variant</b>. Alias data types cannot be used.</param>
+		/// <returns>Returns expression, translated to data_type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "TRY_CONVERT({data_type}, {expression}, {style})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
+		[return: NotNullIfNotNull("expression")]
+		public static T TryConvert<T>([SqlQueryDependent] Func<SqlType<T>> data_type, [ExprParameter] object? expression, [SqlQueryDependent, ExprParameter] int style)
+		{
+			throw new InvalidOperationException($"'{nameof(TryConvert)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY-CONVERT-transact-sql">TRY_CONVERT (Transact-SQL)</see></b></para>
+		/// <para>These functions convert an expression of one data type to another.</para>
+		/// </summary>
+		/// <param name="expression">Any valid <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>.</param>
+		/// <returns>Returns expression, translated to data_type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "TRY_CONVERT({2}, {0}, {1})", ServerSideOnly=true)]
+		[return: NotNullIfNotNull("expression")]
+		public static T TryConvert<T>([ExprParameter] object? expression, [SqlQueryDependent, ExprParameter] int style)
+		{
+			throw new InvalidOperationException($"'{nameof(TryConvert)}' is a server side only function.");
+		}
+
+		#endregion
+
+		#region TryParse
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY_PARSE-transact-sql">TRY_PARSE (Transact-SQL)</see></b></para>
+		/// <para>Returns the result of an expression, translated to the requested data type in SQL Server.</para>
+		/// </summary>
+		/// <param name="string_value"><b>nvarchar</b>(4000) value representing the formatted value to parse into the specified data type.</param>
+		/// <param name="data_type">Literal value representing the data type requested for the result.</param>
+		/// <returns>Returns the result of the expression, translated to the requested data type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "TRY_PARSE({string_value} as {data_type})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
+		[return: NotNullIfNotNull("string_value")]
+		public static T TryParse<T>([ExprParameter] string string_value, [SqlQueryDependent] SqlType<T> data_type)
+		{
+			throw new InvalidOperationException($"'{nameof(TryParse)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY_PARSE-transact-sql">TRY_PARSE (Transact-SQL)</see></b></para>
+		/// <para>Returns the result of an expression, translated to the requested data type in SQL Server.</para>
+		/// </summary>
+		/// <param name="string_value"><b>nvarchar</b>(4000) value representing the formatted value to parse into the specified data type.</param>
+		/// <param name="data_type">Literal value representing the data type requested for the result.</param>
+		/// <returns>Returns the result of the expression, translated to the requested data type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "TRY_PARSE({string_value} as {data_type})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
+		[return: NotNullIfNotNull("string_value")]
+		public static T TryParse<T>([ExprParameter] string string_value, [SqlQueryDependent] Func<SqlType<T>> data_type)
+		{
+			throw new InvalidOperationException($"'{nameof(TryParse)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY_PARSE-transact-sql">TRY_PARSE (Transact-SQL)</see></b></para>
+		/// <para>Returns the result of an expression, translated to the requested data type in SQL Server.</para>
+		/// </summary>
+		/// <param name="string_value"><b>nvarchar</b>(4000) value representing the formatted value to parse into the specified data type.</param>
+		/// <returns>Returns the result of the expression, translated to the requested data type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "TRY_PARSE({0} as {1})", ServerSideOnly=true)]
+		[return: NotNullIfNotNull("string_value")]
+		public static T TryParse<T>([ExprParameter] string string_value)
+		{
+			throw new InvalidOperationException($"'{nameof(TryParse)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY_PARSE-transact-sql">TRY_PARSE (Transact-SQL)</see></b></para>
+		/// <para>Returns the result of an expression, translated to the requested data type in SQL Server.</para>
+		/// </summary>
+		/// <param name="string_value"><b>nvarchar</b>(4000) value representing the formatted value to parse into the specified data type.</param>
+		/// <param name="data_type">Literal value representing the data type requested for the result.</param>
+		/// <param name="culture">Optional string that identifies the culture in which string_value is formatted.</param>
+		/// <returns>Returns the result of the expression, translated to the requested data type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "TRY_PARSE({string_value} as {data_type} USING {culture})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
+		[return: NotNullIfNotNull("string_value")]
+		public static T TryParse<T>([ExprParameter] string string_value, [SqlQueryDependent] SqlType<T> data_type, [ExprParameter, SqlQueryDependent] string culture)
+		{
+			throw new InvalidOperationException($"'{nameof(TryParse)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY_PARSE-transact-sql">TRY_PARSE (Transact-SQL)</see></b></para>
+		/// <para>Returns the result of an expression, translated to the requested data type in SQL Server.</para>
+		/// </summary>
+		/// <param name="string_value"><b>nvarchar</b>(4000) value representing the formatted value to parse into the specified data type.</param>
+		/// <param name="data_type">Literal value representing the data type requested for the result.</param>
+		/// <param name="culture">Optional string that identifies the culture in which string_value is formatted.</param>
+		/// <returns>Returns the result of the expression, translated to the requested data type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "TRY_PARSE({string_value} as {data_type} USING {culture})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
+		[return: NotNullIfNotNull("string_value")]
+		public static T TryParse<T>([ExprParameter] string string_value, [SqlQueryDependent] Func<SqlType<T>> data_type, [ExprParameter, SqlQueryDependent] string culture)
+		{
+			throw new InvalidOperationException($"'{nameof(TryParse)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY_PARSE-transact-sql">TRY_PARSE (Transact-SQL)</see></b></para>
+		/// <para>Returns the result of an expression, translated to the requested data type in SQL Server.</para>
+		/// </summary>
+		/// <param name="string_value"><b>nvarchar</b>(4000) value representing the formatted value to parse into the specified data type.</param>
+		/// <param name="culture">Optional string that identifies the culture in which string_value is formatted.</param>
+		/// <returns>Returns the result of the expression, translated to the requested data type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "TRY_PARSE({0} as {2} USING {1})", ServerSideOnly=true)]
+		[return: NotNullIfNotNull("string_value")]
+		public static T TryParse<T>([ExprParameter] string string_value, [ExprParameter, SqlQueryDependent] string culture)
+		{
+			throw new InvalidOperationException($"'{nameof(TryParse)}' is a server side only function.");
+		}
 
 		#endregion
 
@@ -376,6 +695,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <returns><b>bigint</b> if expression has an <b>nvarchar(max)</b>, <b>varbinary(max)</b>, or <b>varchar(max)</b> data type; otherwise <b>int</b>.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "DATALENGTH", 0, ServerSideOnly=true)]
+		[CLSCompliant(false)]
 		[return: NotNullIfNotNull("expression")]
 		public static int? DataLength<T>(T expression)
 		{
@@ -410,6 +730,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <returns><b>bigint</b> if expression has an <b>nvarchar(max)</b>, <b>varbinary(max)</b>, or <b>varchar(max)</b> data type; otherwise <b>int</b>.</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "DATALENGTH", 0, ServerSideOnly=true)]
+		[CLSCompliant(false)]
 		[return: NotNullIfNotNull("expression")]
 		public static long? DataLengthBig<T>(T expression)
 		{
