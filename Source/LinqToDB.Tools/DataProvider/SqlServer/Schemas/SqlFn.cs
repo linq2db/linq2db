@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
@@ -183,6 +184,165 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		{
 			throw new InvalidOperationException($"'{nameof(TextSize)}' is a server side only function.");
 		}
+
+		#endregion
+
+		#region Conversion
+
+		class DataTypeBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var dataType = builder.GetObjectValue("data_type");
+				builder.AddExpression("data_type", dataType is SqlType ? dataType.ToString()! : ((Func<SqlType>)dataType)().ToString());
+			}
+		}
+
+		#region Cast
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CAST-and-CONVERT-transact-sql">CAST and CONVERT (Transact-SQL)</see></b></para>
+		/// <para>These functions convert an expression of one data type to another.</para>
+		/// </summary>
+		/// <param name="expression">Any valid <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>.</param>
+		/// <param name="data_type">The target data type. This includes <b>xml</b>, <b>bigint</b>, and <b>sql_variant</b>. Alias data types cannot be used.</param>
+		/// <returns>Returns expression, translated to data_type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "CAST({expression} as {data_type})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
+		[return: NotNullIfNotNull("expression")]
+		public static T Cast<T>([ExprParameter] object? expression, [SqlQueryDependent] SqlType<T> data_type)
+		{
+			throw new InvalidOperationException($"'{nameof(Cast)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CAST-and-CONVERT-transact-sql">CAST and CONVERT (Transact-SQL)</see></b></para>
+		/// <para>These functions convert an expression of one data type to another.</para>
+		/// </summary>
+		/// <param name="expression">Any valid <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>.</param>
+		/// <param name="data_type">The target data type. This includes <b>xml</b>, <b>bigint</b>, and <b>sql_variant</b>. Alias data types cannot be used.</param>
+		/// <returns>Returns expression, translated to data_type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "CAST({expression} as {data_type})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
+		[return: NotNullIfNotNull("expression")]
+		public static T Cast<T>([ExprParameter] object? expression, [SqlQueryDependent] Func<SqlType<T>> data_type)
+		{
+			throw new InvalidOperationException($"'{nameof(Cast)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CAST-and-CONVERT-transact-sql">CAST and CONVERT (Transact-SQL)</see></b></para>
+		/// <para>These functions convert an expression of one data type to another.</para>
+		/// </summary>
+		/// <param name="expression">Any valid <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>.</param>
+		/// <returns>Returns expression, translated to data_type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "CAST({0} as {1})", ServerSideOnly=true)]
+		[return: NotNullIfNotNull("expression")]
+		public static T Cast<T>([ExprParameter] object? expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Cast)}' is a server side only function.");
+		}
+
+		#endregion
+
+		#region Convert
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CAST-and-CONVERT-transact-sql">CAST and CONVERT (Transact-SQL)</see></b></para>
+		/// <para>These functions convert an expression of one data type to another.</para>
+		/// </summary>
+		/// <param name="expression">Any valid <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>.</param>
+		/// <param name="data_type">The target data type. This includes <b>xml</b>, <b>bigint</b>, and <b>sql_variant</b>. Alias data types cannot be used.</param>
+		/// <returns>Returns expression, translated to data_type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "CONVERT({data_type}, {expression})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
+		[return: NotNullIfNotNull("expression")]
+		public static T Convert<T>([SqlQueryDependent] SqlType<T> data_type, [ExprParameter] object? expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Convert)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CAST-and-CONVERT-transact-sql">CAST and CONVERT (Transact-SQL)</see></b></para>
+		/// <para>These functions convert an expression of one data type to another.</para>
+		/// </summary>
+		/// <param name="expression">Any valid <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>.</param>
+		/// <param name="data_type">The target data type. This includes <b>xml</b>, <b>bigint</b>, and <b>sql_variant</b>. Alias data types cannot be used.</param>
+		/// <returns>Returns expression, translated to data_type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "CONVERT({data_type}, {expression})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
+		[return: NotNullIfNotNull("expression")]
+		public static T Convert<T>([SqlQueryDependent] Func<SqlType<T>> data_type, [ExprParameter] object? expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Convert)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CAST-and-CONVERT-transact-sql">CAST and CONVERT (Transact-SQL)</see></b></para>
+		/// <para>These functions convert an expression of one data type to another.</para>
+		/// </summary>
+		/// <param name="expression">Any valid <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>.</param>
+		/// <returns>Returns expression, translated to data_type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "CONVERT({1}, {0})", ServerSideOnly=true)]
+		[return: NotNullIfNotNull("expression")]
+		public static T Convert<T>([ExprParameter] object? expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Convert)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CAST-and-CONVERT-transact-sql">CAST and CONVERT (Transact-SQL)</see></b></para>
+		/// <para>These functions convert an expression of one data type to another.</para>
+		/// </summary>
+		/// <param name="expression">Any valid <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>.</param>
+		/// <param name="data_type">The target data type. This includes <b>xml</b>, <b>bigint</b>, and <b>sql_variant</b>. Alias data types cannot be used.</param>
+		/// <returns>Returns expression, translated to data_type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "CONVERT({data_type}, {expression}, {style})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
+		[return: NotNullIfNotNull("expression")]
+		public static T Convert<T>([SqlQueryDependent] SqlType<T> data_type, [ExprParameter] object? expression, [SqlQueryDependent, ExprParameter] int style)
+		{
+			throw new InvalidOperationException($"'{nameof(Convert)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CAST-and-CONVERT-transact-sql">CAST and CONVERT (Transact-SQL)</see></b></para>
+		/// <para>These functions convert an expression of one data type to another.</para>
+		/// </summary>
+		/// <param name="expression">Any valid <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>.</param>
+		/// <param name="data_type">The target data type. This includes <b>xml</b>, <b>bigint</b>, and <b>sql_variant</b>. Alias data types cannot be used.</param>
+		/// <returns>Returns expression, translated to data_type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "CONVERT({data_type}, {expression}, {style})", ServerSideOnly=true, BuilderType=typeof(DataTypeBuilder))]
+		[return: NotNullIfNotNull("expression")]
+		public static T Convert<T>([SqlQueryDependent] Func<SqlType<T>> data_type, [ExprParameter] object? expression, [SqlQueryDependent, ExprParameter] int style)
+		{
+			throw new InvalidOperationException($"'{nameof(Convert)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CAST-and-CONVERT-transact-sql">CAST and CONVERT (Transact-SQL)</see></b></para>
+		/// <para>These functions convert an expression of one data type to another.</para>
+		/// </summary>
+		/// <param name="expression">Any valid <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>.</param>
+		/// <returns>Returns expression, translated to data_type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "CONVERT({2}, {0}, {1})", ServerSideOnly=true)]
+		[return: NotNullIfNotNull("expression")]
+		public static T Convert<T>([ExprParameter] object? expression, [SqlQueryDependent, ExprParameter] int style)
+		{
+			throw new InvalidOperationException($"'{nameof(Convert)}' is a server side only function.");
+		}
+
+		#endregion
+
+		#region Parse
+
+
+
+		#endregion
 
 		#endregion
 

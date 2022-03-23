@@ -148,6 +148,145 @@ namespace Tests.DataProvider
 
 		#endregion
 
+		#region Conversion
+
+		[Test]
+		public void CastTest1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Cast("10:10:10", SqlType.Time));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(new TimeSpan(10, 10, 10)));
+		}
+
+		[Test]
+		public void CastTest2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Cast("10:10:10", SqlType.Time(3)));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(new TimeSpan(10, 10, 10)));
+		}
+
+		[Test]
+		public void CastTest3([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Cast<string>(123));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("123"));
+		}
+
+		[Test]
+		public void ConvertTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Convert(SqlType.VarChar(4), 123));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("123"));
+		}
+
+		[Test]
+		public void ConvertTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Convert(SqlType.Decimal, 123));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(123m));
+		}
+
+		[Test]
+		public void ConvertTest3([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Convert(SqlType.NVarChar(10), 123));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("123"));
+		}
+
+		[Test]
+		public void ConvertTest4([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Convert(SqlType.VarCharMax, 123));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("123"));
+		}
+
+		[Test]
+		public void ConvertTest5([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Convert(SqlType.Decimal(30, 0), 123));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(123m));
+		}
+
+		[Test]
+		public void ConvertTest6([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Convert<string>(123));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("123"));
+		}
+
+		[Test]
+		public void ConvertWithStyleTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Convert(SqlType.VarChar(4), 123, 1));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("123"));
+		}
+
+		[Test]
+		public void ConvertWithStyleTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Convert(SqlType.Decimal, 123, 1));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(123m));
+		}
+
+		[Test]
+		public void ConvertWithStyleTest3([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Convert(SqlType.NVarChar(10), new DateTime(2022, 02, 22), 105));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("22-02-2022"));
+		}
+
+		[Test]
+		public void ConvertWithStyleTest4([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Convert(SqlType.VarCharMax, 123, 1));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("123"));
+		}
+
+		[Test]
+		public void ConvertWithStyleTest5([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Convert(SqlType.Decimal(30, 0), 123, 1));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(123m));
+		}
+
+		[Test]
+		public void ConvertWithStyleTest6([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Convert<string>(new DateTime(2022, 02, 22), 5));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("22-02-22"));
+		}
+
+		#endregion
+
 		#region Data type
 
 		[Test]

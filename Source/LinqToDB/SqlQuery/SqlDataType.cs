@@ -3,15 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	using System.Numerics;
 	using Common;
-	using LinqToDB.Common.Internal;
+	using Common.Internal;
 	using LinqToDB.Extensions;
-	using LinqToDB.Mapping;
+	using Mapping;
 
 	public class SqlDataType : ISqlExpression
 	{
