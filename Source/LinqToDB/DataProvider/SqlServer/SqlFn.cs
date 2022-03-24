@@ -1464,6 +1464,49 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#endregion
 
+		#region GetDate
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/GETDATE-transact-sql">GETDATE (Transact-SQL)</see></b></para>
+		/// <para>Returns the current database system timestamp as a <b>datetime</b> value without the database time zone offset.</para>
+		/// </summary>
+		/// <returns>datetime</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "GETDATE", ServerSideOnly=true)]
+		public static DateTime GetDate()
+		{
+			throw new InvalidOperationException($"'{nameof(GetDate)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/GETUTCDATE-transact-sql">GETUTCDATE (Transact-SQL)</see></b></para>
+		/// <para>Returns the current database system timestamp as a <b>datetime</b> value. The database time zone offset is not included.
+		/// This value represents the current UTC time (Coordinated Universal Time). This value is derived from the operating system of the
+		/// computer on which the instance of SQL Server is running.</para>
+		/// </summary>
+		/// <returns>datetime</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "GETUTCDATE", ServerSideOnly=true)]
+		public static DateTime GetUtcDate()
+		{
+			throw new InvalidOperationException($"'{nameof(GetUtcDate)}' is a server side only function.");
+		}
+
+		#endregion
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ISDATE-transact-sql">ISDATE (Transact-SQL)</see></b></para>
+		/// <para>Returns 1 if the expression is a valid <b>datetime</b> value; otherwise, 0.
+		/// ISDATE returns 0 if the expression is a <b>datetime2</b> value.</para>
+		/// </summary>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "ISDATE", ServerSideOnly=true)]
+		public static int IsDate(string expression)
+		{
+			throw new InvalidOperationException($"'{nameof(GetDate)}' is a server side only function.");
+		}
+
 		#endregion
 
 		#region Logical

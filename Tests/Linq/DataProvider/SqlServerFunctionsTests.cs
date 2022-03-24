@@ -961,6 +961,16 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		public void EndOfMonthTest21([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var date   = "2022-02-24";
+			var result = db.Select(() =>  SqlFn.EndOfMonth(date, 1));
+			Console.WriteLine(result);
+			Assert.That(result?.Day, Is.EqualTo(31));
+		}
+
+		[Test]
 		public void EndOfMonthTest3([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
 		{
 			using var db = new SystemDB(context);
@@ -976,6 +986,33 @@ namespace Tests.DataProvider
 			var result = db.Select(() => SqlFn.EndOfMonth(new DateTime(2022, 02, 22), 1));
 			Console.WriteLine(result);
 			Assert.That(result?.Day, Is.EqualTo(31));
+		}
+
+		[Test]
+		public void GetDateTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.GetDate());
+			Console.WriteLine(result);
+			Assert.That(result.Year, Is.EqualTo(DateTime.Today.Year));
+		}
+
+		[Test]
+		public void GetUtcDateTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.GetUtcDate());
+			Console.WriteLine(result);
+			Assert.That(result.Year, Is.EqualTo(DateTime.UtcNow.Year));
+		}
+
+		[Test]
+		public void IsDateTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.IsDate("2022-02-22"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(1));
 		}
 
 		#endregion
