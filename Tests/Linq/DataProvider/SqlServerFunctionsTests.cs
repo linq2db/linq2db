@@ -580,6 +580,406 @@ namespace Tests.DataProvider
 
 		#endregion
 
+		#region Date and Time
+
+		[Test]
+		public void DateFirstTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DateFirst());
+			Console.WriteLine(result);
+			Assert.That(result, Is.GreaterThan(0));
+		}
+
+		[Test]
+		public void CurrentTimestampTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.CurrentTimestamp());
+			Console.WriteLine(result);
+			Assert.That(result.Year, Is.EqualTo(DateTime.Today.Year));
+		}
+
+		[Test]
+		public void CurrentTimezoneTest([IncludeDataSources(TestProvName.AllSqlServer2017Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.CurrentTimezone());
+			Console.WriteLine(result);
+			Assert.That(result, Is.Not.Null);
+		}
+
+		[Test]
+		public void CurrentTimezoneIDTest([IncludeDataSources(TestProvName.SqlAzure)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.CurrentTimezoneID());
+			Console.WriteLine(result);
+			Assert.That(result, Is.Not.Null);
+		}
+
+		[Test]
+		public void DateAddTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DateAdd(SqlFn.DateParts.Month, -1, "2022-02-22"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(new DateTime(2022, 01, 22)));
+		}
+
+		[Test]
+		public void DateAddTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DateAdd(SqlFn.DateParts.Day, 1, DateTime.Today));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(DateTime.Today.AddDays(1)));
+		}
+
+		[Test]
+		public void DateAddTest3([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DateAdd(SqlFn.DateParts.Year, 1, DateTimeOffset.Now));
+			Console.WriteLine(result);
+			Assert.That(result?.Date, Is.EqualTo(DateTime.Today.AddYears(1)));
+		}
+
+		[Test]
+		public void DateAddTest4([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DateAdd(SqlFn.DateParts.Hour, 1, TimeSpan.FromHours(2)));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(new TimeSpan(3, 0, 0)));
+		}
+
+		[Test]
+		public void DateDiffTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DateDiff(SqlFn.DateParts.Day, "2022-02-22", "2022-02-24"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(2));
+		}
+
+		[Test]
+		public void DateDiffTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DateDiff(SqlFn.DateParts.Month, DateTime.Today, DateTime.Today.AddYears(1)));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(12));
+		}
+
+		[Test]
+		public void DateDiffTest3([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DateDiff(SqlFn.DateParts.Month, DateTimeOffset.Now, DateTimeOffset.Now.AddYears(1)));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(12));
+		}
+
+		[Test]
+		public void DateDiffTest4([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DateDiff(SqlFn.DateParts.Hour, TimeSpan.FromHours(2), TimeSpan.FromHours(3)));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(1));
+		}
+
+		[Test]
+		public void DateDiffBigTest1([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DateDiffBig(SqlFn.DateParts.Day, "2022-02-22", "2022-02-24"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(2));
+		}
+
+		[Test]
+		public void DateDiffBigTest2([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DateDiffBig(SqlFn.DateParts.Month, DateTime.Today, DateTime.Today.AddYears(1)));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(12));
+		}
+
+		[Test]
+		public void DateDiffBigTest3([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DateDiffBig(SqlFn.DateParts.Month, DateTimeOffset.Now, DateTimeOffset.Now.AddYears(1)));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(12));
+		}
+
+		[Test]
+		public void DateDiffBigTest4([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DateDiffBig(SqlFn.DateParts.Hour, TimeSpan.FromHours(2), TimeSpan.FromHours(3)));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(1));
+		}
+
+		[Test]
+		public void TimeFromPartsTest1([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.TimeFromParts(1, 1, 1, 0, 0));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(new TimeSpan(1, 1, 1)));
+		}
+
+		[Test]
+		public void TimeFromPartsTest2([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.TimeFromParts(1, 1, 1));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(new TimeSpan(1, 1, 1)));
+		}
+
+		[Test]
+		public void DateFromPartsTest([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DateFromParts(2022, 2, 22));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(new DateTime(2022, 2, 22)));
+		}
+
+		[Test]
+		public void SmallDateTimeFromPartsTest([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.SmallDateTimeFromParts(2022, 2, 22, 0, 0));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(new DateTime(2022, 2, 22)));
+		}
+
+		[Test]
+		public void DateTimeFromPartsTest1([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DateTimeFromParts(2022, 2, 22, 0, 0, 0, 0));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(new DateTime(2022, 2, 22)));
+		}
+
+		[Test]
+		public void DateTimeFromPartsTest2([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DateTimeFromParts(2022, 2, 22, 0, 0, 0));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(new DateTime(2022, 2, 22)));
+		}
+
+		[Test]
+		public void DateTimeFromPartsTest3([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DateTimeFromParts(2022, 2, 22));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(new DateTime(2022, 2, 22)));
+		}
+
+		[Test]
+		public void DateTime2FromPartsTest1([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DateTime2FromParts(2022, 2, 22, 0, 0, 0, 0, 0));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(new DateTime(2022, 2, 22)));
+		}
+
+		[Test]
+		public void DateTime2FromPartsTest2([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DateTime2FromParts(2022, 2, 22, 0, 0, 0));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(new DateTime(2022, 2, 22)));
+		}
+
+		[Test]
+		public void DateTime2FromPartsTest3([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DateTime2FromParts(2022, 2, 22));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(new DateTime(2022, 2, 22)));
+		}
+
+		[Test]
+		public void DateTimeOffsetFromPartsTest1([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DateTimeOffsetFromParts(2022, 2, 22, 0, 0, 0, 0, 0, 0, 0));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(new DateTimeOffset(new DateTime(2022, 2, 22), TimeSpan.Zero)));
+		}
+
+		[Test]
+		public void DateTimeOffsetFromPartsTest2([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DateTimeOffsetFromParts(2022, 2, 22, 0, 0, 0));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(new DateTimeOffset(new DateTime(2022, 2, 22), TimeSpan.Zero)));
+		}
+
+		[Test]
+		public void DateTimeOffsetFromPartsTest3([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DateTimeOffsetFromParts(2022, 2, 22));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(new DateTimeOffset(new DateTime(2022, 2, 22), TimeSpan.Zero)));
+		}
+
+		[Test]
+		public void DateNameTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DateName(SqlFn.DateParts.Day, "2022-02-24"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("24"));
+		}
+
+		[Test]
+		public void DateNameTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DateName(SqlFn.DateParts.Month, new DateTime(2022, 03, 22)));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("March"));
+		}
+
+		[Test]
+		public void DateNameTest3([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DateName(SqlFn.DateParts.Month, new DateTimeOffset(new DateTime(2022, 03, 22), TimeSpan.Zero)));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("March"));
+		}
+
+		[Test]
+		public void DateNameTest4([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DateName(SqlFn.DateParts.Hour, TimeSpan.FromHours(2)));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("2"));
+		}
+
+		[Test]
+		public void DatePartTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DatePart(SqlFn.DateParts.Day, "2022-02-24"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(24));
+		}
+
+		[Test]
+		public void DatePartTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DatePart(SqlFn.DateParts.Month, new DateTime(2022, 02, 22)));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(2));
+		}
+
+		[Test]
+		public void DatePartTest3([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DatePart(SqlFn.DateParts.Month, new DateTimeOffset(new DateTime(2022, 02, 22), TimeSpan.Zero)));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(2));
+		}
+
+		[Test]
+		public void DatePartTest4([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.DatePart(SqlFn.DateParts.Hour, TimeSpan.FromHours(2)));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(2));
+		}
+
+		[Test]
+		public void DayTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Day("2022-02-24"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(24));
+		}
+
+		[Test]
+		public void DayTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Day(new DateTime(2022, 02, 22)));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(22));
+		}
+
+		[Test]
+		public void DayTest3([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Day(new DateTimeOffset(new DateTime(2022, 02, 22), TimeSpan.Zero)));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(22));
+		}
+
+		[Test]
+		public void EndOfMonthTest1([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.EndOfMonth("2022-02-24"));
+			Console.WriteLine(result);
+			Assert.That(result?.Day, Is.EqualTo(28));
+		}
+
+		[Test]
+		public void EndOfMonthTest2([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.EndOfMonth("2022-02-24", 1));
+			Console.WriteLine(result);
+			Assert.That(result?.Day, Is.EqualTo(31));
+		}
+
+		[Test]
+		public void EndOfMonthTest3([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.EndOfMonth(new DateTime(2022, 02, 22)));
+			Console.WriteLine(result);
+			Assert.That(result?.Day, Is.EqualTo(28));
+		}
+
+		[Test]
+		public void EndOfMonthTest4([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.EndOfMonth(new DateTime(2022, 02, 22), 1));
+			Console.WriteLine(result);
+			Assert.That(result?.Day, Is.EqualTo(31));
+		}
+
+		#endregion
+
 		#region Logical
 
 		[Test]

@@ -83,7 +83,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="InvalidOperationException" />
 		[CLSCompliant(false)]
 		[Sql.Expression(ProviderName.SqlServer, "@@MAX_PRECISION", ServerSideOnly=true)]
-		public static sbyte MaxPrecision()
+		public static byte MaxPrecision()
 		{
 			throw new InvalidOperationException($"'{nameof(MaxPrecision)}' is a server side only function.");
 		}
@@ -96,7 +96,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "@@NESTLEVEL", ServerSideOnly=true)]
 		[CLSCompliant(false)]
-		public static sbyte NestLevel()
+		public static int NestLevel()
 		{
 			throw new InvalidOperationException($"'{nameof(NestLevel)}' is a server side only function.");
 		}
@@ -240,7 +240,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "CAST({0} as {1})", ServerSideOnly=true)]
 		[return: NotNullIfNotNull("expression")]
-		public static T Cast<T>([ExprParameter] object? expression)
+		public static T Cast<T>(object? expression)
 		{
 			throw new InvalidOperationException($"'{nameof(Cast)}' is a server side only function.");
 		}
@@ -571,7 +571,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		#region TryParse
 
 		/// <summary>
-		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY_PARSE-transact-sql">TRY_PARSE (Transact-SQL)</see></b></para>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY-PARSE-transact-sql">TRY_PARSE (Transact-SQL)</see></b></para>
 		/// <para>Returns the result of an expression, translated to the requested data type in SQL Server.</para>
 		/// </summary>
 		/// <param name="string_value"><b>nvarchar</b>(4000) value representing the formatted value to parse into the specified data type.</param>
@@ -586,7 +586,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY_PARSE-transact-sql">TRY_PARSE (Transact-SQL)</see></b></para>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY-PARSE-transact-sql">TRY_PARSE (Transact-SQL)</see></b></para>
 		/// <para>Returns the result of an expression, translated to the requested data type in SQL Server.</para>
 		/// </summary>
 		/// <param name="string_value"><b>nvarchar</b>(4000) value representing the formatted value to parse into the specified data type.</param>
@@ -601,7 +601,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY_PARSE-transact-sql">TRY_PARSE (Transact-SQL)</see></b></para>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY-PARSE-transact-sql">TRY_PARSE (Transact-SQL)</see></b></para>
 		/// <para>Returns the result of an expression, translated to the requested data type in SQL Server.</para>
 		/// </summary>
 		/// <param name="string_value"><b>nvarchar</b>(4000) value representing the formatted value to parse into the specified data type.</param>
@@ -615,7 +615,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY_PARSE-transact-sql">TRY_PARSE (Transact-SQL)</see></b></para>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY-PARSE-transact-sql">TRY_PARSE (Transact-SQL)</see></b></para>
 		/// <para>Returns the result of an expression, translated to the requested data type in SQL Server.</para>
 		/// </summary>
 		/// <param name="string_value"><b>nvarchar</b>(4000) value representing the formatted value to parse into the specified data type.</param>
@@ -631,7 +631,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY_PARSE-transact-sql">TRY_PARSE (Transact-SQL)</see></b></para>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY-PARSE-transact-sql">TRY_PARSE (Transact-SQL)</see></b></para>
 		/// <para>Returns the result of an expression, translated to the requested data type in SQL Server.</para>
 		/// </summary>
 		/// <param name="string_value"><b>nvarchar</b>(4000) value representing the formatted value to parse into the specified data type.</param>
@@ -647,7 +647,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY_PARSE-transact-sql">TRY_PARSE (Transact-SQL)</see></b></para>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRY-PARSE-transact-sql">TRY_PARSE (Transact-SQL)</see></b></para>
 		/// <para>Returns the result of an expression, translated to the requested data type in SQL Server.</para>
 		/// </summary>
 		/// <param name="string_value"><b>nvarchar</b>(4000) value representing the formatted value to parse into the specified data type.</param>
@@ -782,6 +782,687 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			throw new InvalidOperationException($"'{nameof(IdentitySeed)}' is a server side only function.");
 		}
+
+		#endregion
+
+		#region Date and Time
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEFIRST-transact-sql">@@DATEFIRST (Transact-SQL)</see></b></para>
+		/// <para>This function returns the current value of <see href="https://docs.microsoft.com/en-us/sql/t-sql/statements/set-datefirst-transact-sql">SET DATEFIRST</see>,
+		/// for a specific session.</para>
+		/// </summary>
+		/// <returns>tinyint</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@DATEFIRST", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		public static byte DateFirst()
+		{
+			throw new InvalidOperationException($"'{nameof(DateFirst)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CURRENT-TIMESTAMP-transact-sql">CURRENT_TIMESTAMP (Transact-SQL)</see></b></para>
+		/// <para>This function returns the current database system timestamp as a <b>datetime</b> value, without the database time zone offset.
+		/// <c>CURRENT_TIMESTAMP</c> derives this value from the operating system of the computer on which the instance of SQL Server runs.</para>
+		/// </summary>
+		/// <returns>datetime</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "CURRENT_TIMESTAMP", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		public static DateTime CurrentTimestamp()
+		{
+			throw new InvalidOperationException($"'{nameof(CurrentTimestamp)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CURRENT-TIMEZONE-transact-sql">CURRENT_TIMEZONE (Transact-SQL)</see></b></para>
+		/// <para>This function returns the name of the time zone observed by a server or an instance. For SQL Managed Instance, return value
+		/// is based on the time zone of the instance itself assigned during instance creation, not the time zone of the underlying operating system.</para>
+		/// </summary>
+		/// <returns>varchar</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "CURRENT_TIMEZONE", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		public static string CurrentTimezone()
+		{
+			throw new InvalidOperationException($"'{nameof(CurrentTimezone)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CURRENT-TIMEZONE-ID-transact-sql">CURRENT_TIMEZONE_ID (Transact-SQL)</see></b></para>
+		/// <para>This function returns the ID of the time zone observed by a server or an instance. For Azure SQL Managed Instance, return value
+		/// is based on the time zone of the instance itself assigned during instance creation, not the time zone of the underlying operating system.</para>
+		/// </summary>
+		/// <returns>varchar</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "CURRENT_TIMEZONE_ID", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		public static string CurrentTimezoneID()
+		{
+			throw new InvalidOperationException($"'{nameof(CurrentTimezoneID)}' is a server side only function.");
+		}
+
+		[Sql.Enum]
+		public enum DateParts
+		{
+			Year,
+			Quarter,
+			Month,
+			DayOfYear,
+			Day,
+			Week,
+			WeekDay,
+			Hour,
+			Minute,
+			Second,
+			Millisecond,
+			Microsecond,
+			Nanosecond,
+		}
+
+		class DatePartBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var datepart = builder.GetValue<DateParts>("datepart");
+				builder.AddExpression("datepart", datepart.ToString());
+			}
+		}
+
+		#region DateAdd
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEADD-transact-sql">DATEADD (Transact-SQL)</see></b></para>
+		/// <para>This function adds a number (a signed integer) to a datepart of an input date, and returns a modified date/time value.</para>
+		/// </summary>
+		/// <param name="datepart">The part of date to which <c>DATEADD</c> adds an <b>integer</b> number. This table lists all valid datepart arguments.</param>
+		/// <param name="number">An expression that can resolve to an int that <c>DATEADD</c> adds to a datepart of date.
+		/// <c>DATEADD</c> accepts user-defined variable values for number.
+		/// <c>DATEADD</c> will truncate a specified number value that has a decimal fraction. It will not round the number value in this situation.</param>
+		/// <returns>varchar</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "DATEADD({datepart}, {number}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
+		[return: NotNullIfNotNull("date")]
+		public static DateTime? DateAdd([SqlQueryDependent] DateParts datepart, [ExprParameter] int? number, [ExprParameter] string? date)
+		{
+			throw new InvalidOperationException($"'{nameof(DateAdd)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEADD-transact-sql">DATEADD (Transact-SQL)</see></b></para>
+		/// <para>This function adds a number (a signed integer) to a datepart of an input date, and returns a modified date/time value.</para>
+		/// </summary>
+		/// <param name="datepart">The part of date to which <c>DATEADD</c> adds an <b>integer</b> number. This table lists all valid datepart arguments.</param>
+		/// <param name="number">An expression that can resolve to an int that <c>DATEADD</c> adds to a datepart of date.
+		/// <c>DATEADD</c> accepts user-defined variable values for number.
+		/// <c>DATEADD</c> will truncate a specified number value that has a decimal fraction. It will not round the number value in this situation.</param>
+		/// <returns>varchar</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "DATEADD({datepart}, {number}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
+		[return: NotNullIfNotNull("date")]
+		public static DateTime? DateAdd([SqlQueryDependent] DateParts datepart, [ExprParameter] int? number, [ExprParameter] DateTime? date)
+		{
+			throw new InvalidOperationException($"'{nameof(DateAdd)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEADD-transact-sql">DATEADD (Transact-SQL)</see></b></para>
+		/// <para>This function adds a number (a signed integer) to a datepart of an input date, and returns a modified date/time value.</para>
+		/// </summary>
+		/// <param name="datepart">The part of date to which <c>DATEADD</c> adds an <b>integer</b> number. This table lists all valid datepart arguments.</param>
+		/// <param name="number">An expression that can resolve to an int that <c>DATEADD</c> adds to a datepart of date.
+		/// <c>DATEADD</c> accepts user-defined variable values for number.
+		/// <c>DATEADD</c> will truncate a specified number value that has a decimal fraction. It will not round the number value in this situation.</param>
+		/// <returns>varchar</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "DATEADD({datepart}, {number}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
+		[return: NotNullIfNotNull("date")]
+		public static DateTimeOffset? DateAdd([SqlQueryDependent] DateParts datepart, [ExprParameter] int? number, [ExprParameter] DateTimeOffset? date)
+		{
+			throw new InvalidOperationException($"'{nameof(DateAdd)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEADD-transact-sql">DATEADD (Transact-SQL)</see></b></para>
+		/// <para>This function adds a number (a signed integer) to a datepart of an input date, and returns a modified date/time value.</para>
+		/// </summary>
+		/// <param name="datepart">The part of date to which <c>DATEADD</c> adds an <b>integer</b> number. This table lists all valid datepart arguments.</param>
+		/// <param name="number">An expression that can resolve to an int that <c>DATEADD</c> adds to a datepart of date.
+		/// <c>DATEADD</c> accepts user-defined variable values for number.
+		/// <c>DATEADD</c> will truncate a specified number value that has a decimal fraction. It will not round the number value in this situation.</param>
+		/// <returns>varchar</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "DATEADD({datepart}, {number}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
+		[return: NotNullIfNotNull("date")]
+		public static TimeSpan? DateAdd([SqlQueryDependent] DateParts datepart, [ExprParameter] int? number, [ExprParameter] TimeSpan? date)
+		{
+			throw new InvalidOperationException($"'{nameof(DateAdd)}' is a server side only function.");
+		}
+
+		#endregion
+
+		#region DateDiff
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEDIFF-transact-sql">DATEDIFF (Transact-SQL)</see></b></para>
+		/// <para>This function returns the count (as a signed integer value) of the specified datepart boundaries crossed
+		/// between the specified <c>startdate</c> and <c>enddate</c>.</para>
+		/// </summary>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "DATEDIFF({datepart}, {startdate}, {enddate})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
+		public static int? DateDiff([SqlQueryDependent] DateParts datepart, [ExprParameter] string? startdate, [ExprParameter] string? enddate)
+		{
+			throw new InvalidOperationException($"'{nameof(DateDiff)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEDIFF-transact-sql">DATEDIFF (Transact-SQL)</see></b></para>
+		/// <para>This function returns the count (as a signed integer value) of the specified datepart boundaries crossed
+		/// between the specified <c>startdate</c> and <c>enddate</c>.</para>
+		/// </summary>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "DATEDIFF({datepart}, {startdate}, {enddate})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
+		public static int? DateDiff([SqlQueryDependent] DateParts datepart, [ExprParameter] DateTime? startdate, [ExprParameter] DateTime? enddate)
+		{
+			throw new InvalidOperationException($"'{nameof(DateDiff)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEDIFF-transact-sql">DATEDIFF (Transact-SQL)</see></b></para>
+		/// <para>This function returns the count (as a signed integer value) of the specified datepart boundaries crossed
+		/// between the specified <c>startdate</c> and <c>enddate</c>.</para>
+		/// </summary>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "DATEDIFF({datepart}, {startdate}, {enddate})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
+		public static int? DateDiff([SqlQueryDependent] DateParts datepart, [ExprParameter] DateTimeOffset? startdate, [ExprParameter] DateTimeOffset? enddate)
+		{
+			throw new InvalidOperationException($"'{nameof(DateDiff)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEDIFF-transact-sql">DATEDIFF (Transact-SQL)</see></b></para>
+		/// <para>This function returns the count (as a signed integer value) of the specified datepart boundaries crossed
+		/// between the specified <c>startdate</c> and <c>enddate</c>.</para>
+		/// </summary>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "DATEDIFF({datepart}, {startdate}, {enddate})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
+		public static int? DateDiff([SqlQueryDependent] DateParts datepart, [ExprParameter] TimeSpan? startdate, [ExprParameter] TimeSpan? enddate)
+		{
+			throw new InvalidOperationException($"'{nameof(DateDiff)}' is a server side only function.");
+		}
+
+		#endregion
+
+		#region DateDiffBig
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEDIFF-BIG-transact-sql">DATEDIFF_BIG (Transact-SQL)</see></b></para>
+		/// <para>This function returns the count (as a signed integer value) of the specified datepart boundaries crossed
+		/// between the specified <c>startdate</c> and <c>enddate</c>.</para>
+		/// </summary>
+		/// <returns>bigint</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "DATEDIFF_BIG({datepart}, {startdate}, {enddate})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
+		public static long? DateDiffBig([SqlQueryDependent] DateParts datepart, [ExprParameter] string? startdate, [ExprParameter] string? enddate)
+		{
+			throw new InvalidOperationException($"'{nameof(DateDiffBig)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEDIFF-BIG-transact-sql">DATEDIFF_BIG (Transact-SQL)</see></b></para>
+		/// <para>This function returns the count (as a signed integer value) of the specified datepart boundaries crossed
+		/// between the specified <c>startdate</c> and <c>enddate</c>.</para>
+		/// </summary>
+		/// <returns>bigint</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "DATEDIFF_BIG({datepart}, {startdate}, {enddate})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
+		public static long? DateDiffBig([SqlQueryDependent] DateParts datepart, [ExprParameter] DateTime? startdate, [ExprParameter] DateTime? enddate)
+		{
+			throw new InvalidOperationException($"'{nameof(DateDiffBig)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEDIFF-BIG-transact-sql">DATEDIFF_BIG (Transact-SQL)</see></b></para>
+		/// <para>This function returns the count (as a signed integer value) of the specified datepart boundaries crossed
+		/// between the specified <c>startdate</c> and <c>enddate</c>.</para>
+		/// </summary>
+		/// <returns>bigint</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "DATEDIFF_BIG({datepart}, {startdate}, {enddate})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
+		public static long? DateDiffBig([SqlQueryDependent] DateParts datepart, [ExprParameter] DateTimeOffset? startdate, [ExprParameter] DateTimeOffset? enddate)
+		{
+			throw new InvalidOperationException($"'{nameof(DateDiffBig)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEDIFF-BIG-transact-sql">DATEDIFF_BIG (Transact-SQL)</see></b></para>
+		/// <para>This function returns the count (as a signed integer value) of the specified datepart boundaries crossed
+		/// between the specified <c>startdate</c> and <c>enddate</c>.</para>
+		/// </summary>
+		/// <returns>bigint</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "DATEDIFF_BIG({datepart}, {startdate}, {enddate})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
+		public static long? DateDiffBig([SqlQueryDependent] DateParts datepart, [ExprParameter] TimeSpan? startdate, [ExprParameter] TimeSpan? enddate)
+		{
+			throw new InvalidOperationException($"'{nameof(DateDiffBig)}' is a server side only function.");
+		}
+
+		#endregion
+
+		#region TimeFromParts
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TIMEFROMPARTS-transact-sql">TIMEFROMPARTS (Transact-SQL)</see></b></para>
+		/// <para>This function returns a <b>date</b> value that maps to the specified year, month, and day values.</para>
+		/// </summary>
+		/// <returns>date</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "TIMEFROMPARTS", ServerSideOnly=true)]
+		public static TimeSpan? TimeFromParts(int? hour, int? minute, int? seconds, int? fractions, int? precision)
+		{
+			throw new InvalidOperationException($"'{nameof(TimeFromParts)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TIMEFROMPARTS-transact-sql">TIMEFROMPARTS (Transact-SQL)</see></b></para>
+		/// <para>This function returns a <b>date</b> value that maps to the specified year, month, and day values.</para>
+		/// </summary>
+		/// <returns>date</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "TIMEFROMPARTS({0}, {1}, {2}, 0, 0)", ServerSideOnly=true)]
+		public static TimeSpan? TimeFromParts(int? hour, int? minute, int? seconds)
+		{
+			throw new InvalidOperationException($"'{nameof(TimeFromParts)}' is a server side only function.");
+		}
+
+		#endregion
+
+		#region DateFromParts
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEFROMPARTS-transact-sql">DATEFROMPARTS (Transact-SQL)</see></b></para>
+		/// <para>This function returns a <b>date</b> value that maps to the specified year, month, and day values.</para>
+		/// </summary>
+		/// <param name="year">An integer expression that specifies a year.</param>
+		/// <param name="month">An integer expression that specifies a month, from 1 to 12.</param>
+		/// <param name="day">An integer expression that specifies a day.</param>
+		/// <returns>date</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "DATEFROMPARTS", ServerSideOnly=true)]
+		public static DateTime? DateFromParts(int? year, int? month, int? day)
+		{
+			throw new InvalidOperationException($"'{nameof(DateFromParts)}' is a server side only function.");
+		}
+
+		#endregion
+
+		#region SmallDateTimeFromParts
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SMALLDATETIMEFROMPARTS-transact-sql">SMALLDATETIMEFROMPARTS (Transact-SQL)</see></b></para>
+		/// <para>Returns a <b>smalldatetime</b> value for the specified date and time.</para>
+		/// </summary>
+		/// <returns>datetime</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "SMALLDATETIMEFROMPARTS", ServerSideOnly=true)]
+		public static DateTime? SmallDateTimeFromParts(int? year, int? month, int? day, int? hour, int? minute)
+		{
+			throw new InvalidOperationException($"'{nameof(SmallDateTimeFromParts)}' is a server side only function.");
+		}
+
+		#endregion
+
+		#region DateTimeFromParts
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATETIMEFROMPARTS-transact-sql">DATETIMEFROMPARTS (Transact-SQL)</see></b></para>
+		/// <para>This function returns a <b>datetime</b> value for the specified date and time arguments.</para>
+		/// </summary>
+		/// <returns>datetime</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "DATETIMEFROMPARTS", ServerSideOnly=true)]
+		public static DateTime? DateTimeFromParts(int? year, int? month, int? day, int? hour, int? minute, int? seconds, int? milliseconds)
+		{
+			throw new InvalidOperationException($"'{nameof(DateTimeFromParts)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATETIMEFROMPARTS-transact-sql">DATETIMEFROMPARTS (Transact-SQL)</see></b></para>
+		/// <para>This function returns a <b>datetime</b> value for the specified date and time arguments.</para>
+		/// </summary>
+		/// <returns>datetime</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "DATETIMEFROMPARTS({0}, {1}, {2}, {3}, {4}, {5}, 0)", ServerSideOnly=true)]
+		public static DateTime? DateTimeFromParts(int? year, int? month, int? day, int? hour, int? minute, int? seconds)
+		{
+			throw new InvalidOperationException($"'{nameof(DateTimeFromParts)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATETIMEFROMPARTS-transact-sql">DATETIMEFROMPARTS (Transact-SQL)</see></b></para>
+		/// <para>This function returns a <b>datetime</b> value for the specified date and time arguments.</para>
+		/// </summary>
+		/// <returns>datetime</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "DATETIMEFROMPARTS({0}, {1}, {2}, 0, 0, 0, 0)", ServerSideOnly=true)]
+		public static DateTime? DateTimeFromParts(int? year, int? month, int? day)
+		{
+			throw new InvalidOperationException($"'{nameof(DateTimeFromParts)}' is a server side only function.");
+		}
+
+		#endregion
+
+		#region DateTime2FromParts
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATETIME2FROMPARTS-transact-sql">DATETIME2FROMPARTS (Transact-SQL)</see></b></para>
+		/// <para>This function returns a <b>datetime2</b> value for the specified date and time arguments.</para>
+		/// </summary>
+		/// <returns>datetime2</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "DATETIME2FROMPARTS", ServerSideOnly=true)]
+		public static DateTime? DateTime2FromParts(int? year, int? month, int? day, int? hour, int? minute, int? seconds, int? fractions, int? precision)
+		{
+			throw new InvalidOperationException($"'{nameof(DateTime2FromParts)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATETIME2FROMPARTS-transact-sql">DATETIME2FROMPARTS (Transact-SQL)</see></b></para>
+		/// <para>This function returns a <b>datetime2</b> value for the specified date and time arguments.</para>
+		/// </summary>
+		/// <returns>datetime2</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "DATETIME2FROMPARTS({0}, {1}, {2}, {3}, {4}, {5}, 0, 0)", ServerSideOnly=true)]
+		public static DateTime? DateTime2FromParts(int? year, int? month, int? day, int? hour, int? minute, int? seconds)
+		{
+			throw new InvalidOperationException($"'{nameof(DateTime2FromParts)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATETIME2FROMPARTS-transact-sql">DATETIME2FROMPARTS (Transact-SQL)</see></b></para>
+		/// <para>This function returns a <b>datetime2</b> value for the specified date and time arguments.</para>
+		/// </summary>
+		/// <returns>datetime2</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "DATETIME2FROMPARTS({0}, {1}, {2}, 0, 0, 0, 0, 0)", ServerSideOnly=true)]
+		public static DateTime? DateTime2FromParts(int? year, int? month, int? day)
+		{
+			throw new InvalidOperationException($"'{nameof(DateTime2FromParts)}' is a server side only function.");
+		}
+
+		#endregion
+
+		#region DateTimeOffsetFromParts
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATETIMEOFFSETFROMPARTS-transact-sql">DATETIMEOFFSETFROMPARTS (Transact-SQL)</see></b></para>
+		/// <para>Returns a <b>datetimeoffset</b> value for the specified date and time arguments.
+		/// The returned value has a precision specified by the precision argument, and an offset as specified by the offset arguments.</para>
+		/// </summary>
+		/// <returns>datetimeoffset</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "DATETIMEOFFSETFROMPARTS", ServerSideOnly=true)]
+		public static DateTimeOffset? DateTimeOffsetFromParts(
+			int? year, int? month, int? day,
+			int? hour, int? minute, int? seconds, int? fractions,
+			int? hour_offset, int? minute_offset, int? precision)
+		{
+			throw new InvalidOperationException($"'{nameof(DateTimeOffsetFromParts)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATETIMEOFFSETFROMPARTS-transact-sql">DATETIMEOFFSETFROMPARTS (Transact-SQL)</see></b></para>
+		/// <para>Returns a <b>datetimeoffset</b> value for the specified date and time arguments.
+		/// The returned value has a precision specified by the precision argument, and an offset as specified by the offset arguments.</para>
+		/// </summary>
+		/// <returns>datetimeoffset</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "DATETIMEOFFSETFROMPARTS({0}, {1}, {2}, {3}, {4}, {5}, 0, 0, 0, 0)", ServerSideOnly=true)]
+		public static DateTimeOffset? DateTimeOffsetFromParts(int? year, int? month, int? day, int? hour, int? minute, int? seconds)
+		{
+			throw new InvalidOperationException($"'{nameof(DateTimeOffsetFromParts)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATETIMEOFFSETFROMPARTS-transact-sql">DATETIMEOFFSETFROMPARTS (Transact-SQL)</see></b></para>
+		/// <para>Returns a <b>datetimeoffset</b> value for the specified date and time arguments.
+		/// The returned value has a precision specified by the precision argument, and an offset as specified by the offset arguments.</para>
+		/// </summary>
+		/// <returns>datetimeoffset</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "DATETIMEOFFSETFROMPARTS({0}, {1}, {2}, 0, 0, 0, 0, 0, 0, 0)", ServerSideOnly=true)]
+		public static DateTimeOffset? DateTimeOffsetFromParts(int? year, int? month, int? day)
+		{
+			throw new InvalidOperationException($"'{nameof(DateTimeOffsetFromParts)}' is a server side only function.");
+		}
+
+		#endregion
+
+		#region DateName
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATENAME-transact-sql">DATENAME (Transact-SQL)</see></b></para>
+		/// <para>This function returns a character string representing the specified datepart of the specified <c>date</c>.</para>
+		/// </summary>
+		/// <param name="datepart">The specific part of the date argument that <c>DATENAME</c> will return. This table lists all valid datepart arguments.</param>
+		/// <returns>nvarchar</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "DATENAME({datepart}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
+		[return: NotNullIfNotNull("date")]
+		public static string? DateName([SqlQueryDependent] DateParts datepart, [ExprParameter] string? date)
+		{
+			throw new InvalidOperationException($"'{nameof(DateName)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATENAME-transact-sql">DATENAME (Transact-SQL)</see></b></para>
+		/// <para>This function returns a character string representing the specified datepart of the specified <c>date</c>.</para>
+		/// </summary>
+		/// <param name="datepart">The specific part of the date argument that <c>DATENAME</c> will return. This table lists all valid datepart arguments.</param>
+		/// <returns>nvarchar</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "DATENAME({datepart}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
+		[return: NotNullIfNotNull("date")]
+		public static string? DateName([SqlQueryDependent] DateParts datepart, [ExprParameter] DateTime? date)
+		{
+			throw new InvalidOperationException($"'{nameof(DateName)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATENAME-transact-sql">DATENAME (Transact-SQL)</see></b></para>
+		/// <para>This function returns a character string representing the specified datepart of the specified <c>date</c>.</para>
+		/// </summary>
+		/// <param name="datepart">The specific part of the date argument that <c>DATENAME</c> will return. This table lists all valid datepart arguments.</param>
+		/// <returns>nvarchar</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "DATENAME({datepart}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
+		[return: NotNullIfNotNull("date")]
+		public static string? DateName([SqlQueryDependent] DateParts datepart, [ExprParameter] DateTimeOffset? date)
+		{
+			throw new InvalidOperationException($"'{nameof(DateName)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATENAME-transact-sql">DATENAME (Transact-SQL)</see></b></para>
+		/// <para>This function returns a character string representing the specified datepart of the specified <c>date</c>.</para>
+		/// </summary>
+		/// <param name="datepart">The specific part of the date argument that <c>DATENAME</c> will return. This table lists all valid datepart arguments.</param>
+		/// <returns>nvarchar</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "DATENAME({datepart}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
+		[return: NotNullIfNotNull("date")]
+		public static string? DateName([SqlQueryDependent] DateParts datepart, [ExprParameter] TimeSpan? date)
+		{
+			throw new InvalidOperationException($"'{nameof(DateName)}' is a server side only function.");
+		}
+
+		#endregion
+
+		#region DatePart
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEPART-transact-sql">DATEPART (Transact-SQL)</see></b></para>
+		/// <para>This function returns an integer representing the specified <c>datepart</c> of the specified <c>date</c>.</para>
+		/// </summary>
+		/// <param name="datepart">The specific part of the date argument for which <c>DATEPART</c> will return an <b>integer</b>. This table lists all valid datepart arguments.</param>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "DATEPART({datepart}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
+		[return: NotNullIfNotNull("date")]
+		public static int? DatePart([SqlQueryDependent] DateParts datepart, [ExprParameter] string? date)
+		{
+			throw new InvalidOperationException($"'{nameof(DatePart)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEPART-transact-sql">DATEPART (Transact-SQL)</see></b></para>
+		/// <para>This function returns an integer representing the specified <c>datepart</c> of the specified <c>date</c>.</para>
+		/// </summary>
+		/// <param name="datepart">The specific part of the date argument for which <c>DATEPART</c> will return an <b>integer</b>. This table lists all valid datepart arguments.</param>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "DATEPART({datepart}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
+		[return: NotNullIfNotNull("date")]
+		public static int? DatePart([SqlQueryDependent] DateParts datepart, [ExprParameter] DateTime? date)
+		{
+			throw new InvalidOperationException($"'{nameof(DatePart)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEPART-transact-sql">DATEPART (Transact-SQL)</see></b></para>
+		/// <para>This function returns an integer representing the specified <c>datepart</c> of the specified <c>date</c>.</para>
+		/// </summary>
+		/// <param name="datepart">The specific part of the date argument for which <c>DATEPART</c> will return an <b>integer</b>. This table lists all valid datepart arguments.</param>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "DATEPART({datepart}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
+		[return: NotNullIfNotNull("date")]
+		public static int? DatePart([SqlQueryDependent] DateParts datepart, [ExprParameter] DateTimeOffset? date)
+		{
+			throw new InvalidOperationException($"'{nameof(DatePart)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DATEPART-transact-sql">DATEPART (Transact-SQL)</see></b></para>
+		/// <para>This function returns an integer representing the specified <c>datepart</c> of the specified <c>date</c>.</para>
+		/// </summary>
+		/// <param name="datepart">The specific part of the date argument for which <c>DATEPART</c> will return an <b>integer</b>. This table lists all valid datepart arguments.</param>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "DATEPART({datepart}, {date})", ServerSideOnly=true, BuilderType=typeof(DatePartBuilder))]
+		[return: NotNullIfNotNull("date")]
+		public static int? DatePart([SqlQueryDependent] DateParts datepart, [ExprParameter] TimeSpan? date)
+		{
+			throw new InvalidOperationException($"'{nameof(DatePart)}' is a server side only function.");
+		}
+
+		#endregion
+
+		#region Day
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DAY-transact-sql">DAY (Transact-SQL)</see></b></para>
+		/// <para>This function returns an integer that represents the day (day of the month) of the specified <c>date</c>.</para>
+		/// </summary>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "DAY", ServerSideOnly=true)]
+		[return: NotNullIfNotNull("date")]
+		public static int? Day(string? date)
+		{
+			throw new InvalidOperationException($"'{nameof(Day)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DAY-transact-sql">DAY (Transact-SQL)</see></b></para>
+		/// <para>This function returns an integer that represents the day (day of the month) of the specified <c>date</c>.</para>
+		/// </summary>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "DAY", ServerSideOnly=true)]
+		[return: NotNullIfNotNull("date")]
+		public static int? Day(DateTime? date)
+		{
+			throw new InvalidOperationException($"'{nameof(Day)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DAY-transact-sql">DAY (Transact-SQL)</see></b></para>
+		/// <para>This function returns an integer that represents the day (day of the month) of the specified <c>date</c>.</para>
+		/// </summary>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "DAY", ServerSideOnly=true)]
+		[return: NotNullIfNotNull("date")]
+		public static int? Day(DateTimeOffset? date)
+		{
+			throw new InvalidOperationException($"'{nameof(Day)}' is a server side only function.");
+		}
+
+		#endregion
+
+		#region EndOfMonth
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/EOMONTH-transact-sql">EOMONTH (Transact-SQL)</see></b></para>
+		/// <para>This function returns the last day of the month containing a specified date, with an optional offset.</para>
+		/// </summary>
+		/// <param name="start_date">A date expression that specifies the date for which to return the last day of the month.</param>
+		/// <returns>date</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "EOMONTH", ServerSideOnly=true)]
+		[return: NotNullIfNotNull("start_date")]
+		public static DateTime? EndOfMonth(string? start_date)
+		{
+			throw new InvalidOperationException($"'{nameof(EndOfMonth)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/EOMONTH-transact-sql">EOMONTH (Transact-SQL)</see></b></para>
+		/// <para>This function returns the last day of the month containing a specified date, with an optional offset.</para>
+		/// </summary>
+		/// <param name="start_date">A date expression that specifies the date for which to return the last day of the month.</param>
+		/// <param name="month_to_add">An optional integer expression that specifies the number of months to add to <c>start_date</c>.</param>
+		/// <returns>date</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "EOMONTH", ServerSideOnly=true)]
+		[return: NotNullIfNotNull("start_date")]
+		public static DateTime? EndOfMonth(string? start_date, int? month_to_add)
+		{
+			throw new InvalidOperationException($"'{nameof(EndOfMonth)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/EOMONTH-transact-sql">EOMONTH (Transact-SQL)</see></b></para>
+		/// <para>This function returns the last day of the month containing a specified date, with an optional offset.</para>
+		/// </summary>
+		/// <param name="start_date">A date expression that specifies the date for which to return the last day of the month.</param>
+		/// <returns>date</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "EOMONTH", ServerSideOnly=true)]
+		[return: NotNullIfNotNull("start_date")]
+		public static DateTime? EndOfMonth(DateTime? start_date)
+		{
+			throw new InvalidOperationException($"'{nameof(EndOfMonth)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/EOMONTH-transact-sql">EOMONTH (Transact-SQL)</see></b></para>
+		/// <para>This function returns the last day of the month containing a specified date, with an optional offset.</para>
+		/// </summary>
+		/// <param name="start_date">A date expression that specifies the date for which to return the last day of the month.</param>
+		/// <param name="month_to_add">An optional integer expression that specifies the number of months to add to <c>start_date</c>.</param>
+		/// <returns>date</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "EOMONTH", ServerSideOnly=true)]
+		[return: NotNullIfNotNull("start_date")]
+		public static DateTime? EndOfMonth(DateTime? start_date, int? month_to_add)
+		{
+			throw new InvalidOperationException($"'{nameof(EndOfMonth)}' is a server side only function.");
+		}
+
+		#endregion
 
 		#endregion
 
