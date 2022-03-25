@@ -641,7 +641,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (result.Type != wpi.Type)
 						{
-							if (result.Type.IsEnum)
+							if (result.Type.IsValueType)
 								result = Expression.Convert(result, wpi.Type);
 						}
 
