@@ -1007,12 +1007,113 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		public void SysDatetimeTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.SysDatetime());
+			Console.WriteLine(result);
+			Assert.That(result.Year, Is.EqualTo(DateTime.Now.Year));
+		}
+
+		[Test]
+		public void SysDatetimeOffsetTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.SysDatetimeOffset());
+			Console.WriteLine(result);
+			Assert.That(result.Year, Is.EqualTo(DateTime.Now.Year));
+		}
+
+		[Test]
+		public void SysUtcDatetimeTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.SysUtcDatetime());
+			Console.WriteLine(result);
+			Assert.That(result.Year, Is.EqualTo(DateTime.Now.Year));
+		}
+
+		[Test]
 		public void IsDateTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.IsDate("2022-02-22"));
 			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(1));
+		}
+
+		[Test]
+		public void MonthTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+
+			var date   = "2022-02-24";
+			var result = db.Select(() => SqlFn.Month(date));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(2));
+		}
+
+		[Test]
+		public void MonthTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Month(new DateTime(2022, 02, 22)));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(2));
+		}
+
+		[Test]
+		public void MonthTest3([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Month(new DateTimeOffset(new DateTime(2022, 02, 22), TimeSpan.Zero)));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(2));
+		}
+
+		[Test]
+		public void SwitchOffsetTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.SwitchOffset(new DateTimeOffset(new DateTime(2022, 02, 22), TimeSpan.Zero), "-04:00"));
+			Console.WriteLine(result);
+			Assert.That(result?.Year, Is.EqualTo(2022));
+		}
+
+		[Test]
+		public void ToDatetimeOffsetTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.ToDatetimeOffset(new DateTime(2022, 02, 22), "-04:00"));
+			Console.WriteLine(result);
+			Assert.That(result?.Year, Is.EqualTo(2022));
+		}
+
+		[Test]
+		public void YearTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Year("2022-02-24"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(2022));
+		}
+
+		[Test]
+		public void YearTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db     = new SystemDB(context);
+			var       result = db.Select(() => SqlFn.Year(new DateTime(2022, 02, 22)));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(2022));
+		}
+
+		[Test]
+		public void YearTest3([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db     = new SystemDB(context);
+			var       result = db.Select(() => SqlFn.Year(new DateTimeOffset(new DateTime(2022, 02, 22), TimeSpan.Zero)));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(2022));
 		}
 
 		#endregion

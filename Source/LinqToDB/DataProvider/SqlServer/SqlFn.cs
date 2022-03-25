@@ -1492,7 +1492,48 @@ namespace LinqToDB.DataProvider.SqlServer
 			throw new InvalidOperationException($"'{nameof(GetUtcDate)}' is a server side only function.");
 		}
 
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SYSDATETIME-transact-sql">SYSDATETIME (Transact-SQL)</see></b></para>
+		/// <para>Returns a <b>datetime2(7)</b> value that contains the date and time of the computer on which the instance of SQL Server is running.</para>
+		/// </summary>
+		/// <returns>datetime2(7)</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "SYSDATETIME", ServerSideOnly=true)]
+		public static DateTime SysDatetime()
+		{
+			throw new InvalidOperationException($"'{nameof(SysDatetime)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SYSDATETIMEOFFSET-transact-sql">SYSDATETIMEOFFSET (Transact-SQL)</see></b></para>
+		/// <para>Returns a <b>datetimeoffset(7)</b> value that contains the date and time of the computer on which the instance of SQL Server is running.
+		/// The time zone offset is included.</para>
+		/// </summary>
+		/// <returns>datetimeoffset(7)</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "SYSDATETIMEOFFSET", ServerSideOnly=true)]
+		public static DateTimeOffset SysDatetimeOffset()
+		{
+			throw new InvalidOperationException($"'{nameof(SysDatetimeOffset)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SYSUTCDATETIME-transact-sql">SYSUTCDATETIME (Transact-SQL)</see></b></para>
+		/// <para>Returns a <b>datetime2</b> value that contains the date and time of the computer on which the instance of SQL Server is running.
+		/// The date and time is returned as UTC time (Coordinated Universal Time). The fractional second precision specification has a range from 1 to 7 digits.
+		/// The default precision is 7 digits.</para>
+		/// </summary>
+		/// <returns>datetime2</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "SYSUTCDATETIME", ServerSideOnly=true)]
+		public static DateTime SysUtcDatetime()
+		{
+			throw new InvalidOperationException($"'{nameof(SysUtcDatetime)}' is a server side only function.");
+		}
+
 		#endregion
+
+		#region IsDate
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ISDATE-transact-sql">ISDATE (Transact-SQL)</see></b></para>
@@ -1506,6 +1547,124 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			throw new InvalidOperationException($"'{nameof(GetDate)}' is a server side only function.");
 		}
+
+		#endregion
+
+		#region Month
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/MONTH-transact-sql">MONTH (Transact-SQL)</see></b></para>
+		/// <para>Returns an integer that represents the month of the specified date.</para>
+		/// </summary>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "MONTH", ServerSideOnly=true)]
+		[return: NotNullIfNotNull("date")]
+		public static int? Month(string? date)
+		{
+			throw new InvalidOperationException($"'{nameof(Month)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/MONTH-transact-sql">MONTH (Transact-SQL)</see></b></para>
+		/// <para>This function returns an integer that represents the day (day of the month) of the specified <c>date</c>.</para>
+		/// </summary>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "MONTH", ServerSideOnly=true)]
+		[return: NotNullIfNotNull("date")]
+		public static int? Month(DateTime? date)
+		{
+			throw new InvalidOperationException($"'{nameof(Month)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/MONTH-transact-sql">MONTH (Transact-SQL)</see></b></para>
+		/// <para>This function returns an integer that represents the day (day of the month) of the specified <c>date</c>.</para>
+		/// </summary>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "MONTH", ServerSideOnly=true)]
+		[return: NotNullIfNotNull("date")]
+		public static int? Month(DateTimeOffset? date)
+		{
+			throw new InvalidOperationException($"'{nameof(Month)}' is a server side only function.");
+		}
+
+		#endregion
+
+		#region Year
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/YEAR-transact-sql">YEAR (Transact-SQL)</see></b></para>
+		/// <para>Returns an integer that represents the year of the specified <c>date</c>.</para>
+		/// </summary>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "YEAR", ServerSideOnly=true)]
+		[return: NotNullIfNotNull("date")]
+		public static int? Year(string? date)
+		{
+			throw new InvalidOperationException($"'{nameof(Year)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/YEAR-transact-sql">YEAR (Transact-SQL)</see></b></para>
+		/// <para>This function returns an integer that represents the day (day of the month) of the specified <c>date</c>.</para>
+		/// </summary>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "YEAR", ServerSideOnly=true)]
+		[return: NotNullIfNotNull("date")]
+		public static int? Year(DateTime? date)
+		{
+			throw new InvalidOperationException($"'{nameof(Year)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/YEAR-transact-sql">YEAR (Transact-SQL)</see></b></para>
+		/// <para>This function returns an integer that represents the day (day of the month) of the specified <c>date</c>.</para>
+		/// </summary>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "YEAR", ServerSideOnly=true)]
+		[return: NotNullIfNotNull("date")]
+		public static int? Year(DateTimeOffset? date)
+		{
+			throw new InvalidOperationException($"'{nameof(Year)}' is a server side only function.");
+		}
+
+		#endregion
+
+		#region SwitchOffset
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SWITCHOFFSET-transact-sql">SWITCHOFFSET (Transact-SQL)</see></b></para>
+		/// <para>Returns a <b>datetimeoffset</b> value that is changed from the stored time zone offset to a specified new time zone offset.</para>
+		/// </summary>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "SWITCHOFFSET", ServerSideOnly=true)]
+		[return: NotNullIfNotNull("datetimeoffset_expression")]
+		public static DateTimeOffset? SwitchOffset(DateTimeOffset? datetimeoffset_expression, string timezoneoffset_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(SwitchOffset)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TODATETIMEOFFSET-transact-sql">TODATETIMEOFFSET (Transact-SQL)</see></b></para>
+		/// <para>Returns a <b>datetimeoffset</b> value that is translated from a <b>datetime2</b> expression.</para>
+		/// </summary>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "TODATETIMEOFFSET", ServerSideOnly=true)]
+		[return: NotNullIfNotNull("datetime_expression")]
+		public static DateTimeOffset? ToDatetimeOffset(DateTimeOffset? datetime_expression, string timezoneoffset_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(ToDatetimeOffset)}' is a server side only function.");
+		}
+
+		#endregion
 
 		#endregion
 
