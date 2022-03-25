@@ -1118,6 +1118,46 @@ namespace Tests.DataProvider
 
 		#endregion
 
+		#region Json
+
+		[Test]
+		public void IsJson([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.IsJson("{ \"test\" : 1 }"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.True);
+		}
+
+		[Test]
+		public void JsonValue([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.JsonValue("{ \"test\" : 1 }", "$.test"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("1"));
+		}
+
+		[Test]
+		public void JsonQuery([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.JsonQuery("{ \"test\" : 1 }", "$"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("{ \"test\" : 1 }"));
+		}
+
+		[Test]
+		public void JsonModify([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.JsonModify("{ \"test\" : 1 }", "$.test", "2"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("{ \"test\" : \"2\" }"));
+		}
+
+		#endregion
+
 		#region Logical
 
 		[Test]

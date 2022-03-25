@@ -1668,6 +1668,72 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#endregion
 
+		#region Json
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ISJSON-transact-sql">ISJSON (Transact-SQL)</see></b></para>
+		/// <para>Tests whether a string contains valid JSON.</para>
+		/// </summary>
+		/// <param name="expression">The string to test.</param>
+		/// <returns>Returns 1 if the string contains valid JSON; otherwise, returns 0. Returns null if expression is null.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "ISJSON", ServerSideOnly=true)]
+		[return: NotNullIfNotNull("expression")]
+		public static bool? IsJson(string? expression)
+		{
+			throw new InvalidOperationException($"'{nameof(IsJson)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/JSON-VALUE-transact-sql">JSON_VALUE (Transact-SQL)</see></b></para>
+		/// <para>Extracts a scalar value from a JSON string.</para>
+		/// </summary>
+		/// <param name="expression">An expression. Typically the name of a variable or a column that contains JSON text.</param>
+		/// <param name="path">A JSON path that specifies the property to extract.</param>
+		/// <returns>Returns a single text value of type nvarchar(4000).
+		/// The collation of the returned value is the same as the collation of the input expression.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "JSON_VALUE", ServerSideOnly=true)]
+		[return: NotNullIfNotNull("expression")]
+		public static string? JsonValue(string? expression, string path)
+		{
+			throw new InvalidOperationException($"'{nameof(JsonValue)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/JSON-QUERY-transact-sql">JSON_QUERY (Transact-SQL)</see></b></para>
+		/// <para>Extracts an object or an array from a JSON string.</para>
+		/// </summary>
+		/// <param name="expression">An expression. Typically the name of a variable or a column that contains JSON text.</param>
+		/// <param name="path">A JSON path that specifies the property to extract.</param>
+		/// <returns>Returns a JSON fragment of type nvarchar(max).
+		/// The collation of the returned value is the same as the collation of the input expression.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "JSON_QUERY", ServerSideOnly=true)]
+		[return: NotNullIfNotNull("expression")]
+		public static string? JsonQuery(string? expression, string path)
+		{
+			throw new InvalidOperationException($"'{nameof(JsonQuery)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/JSON-MODIFY-transact-sql">JSON_MODIFY (Transact-SQL)</see></b></para>
+		/// <para>Updates the value of a property in a JSON string and returns the updated JSON string.</para>
+		/// </summary>
+		/// <param name="expression">An expression. Typically the name of a variable or a column that contains JSON text.</param>
+		/// <param name="path">A JSON path expression that specifies the property to update.</param>
+		/// <param name="newValue">The new value for the property specified by path. The new value must be a [n]varchar or text.</param>
+		/// <returns>Returns the updated value of expression as properly formatted JSON text.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "JSON_MODIFY", ServerSideOnly=true)]
+		[return: NotNullIfNotNull("expression")]
+		public static string? JsonModify(string? expression, string path, string newValue)
+		{
+			throw new InvalidOperationException($"'{nameof(JsonModify)}' is a server side only function.");
+		}
+
+		#endregion
+
 		#region Logical
 
 		/// <summary>
