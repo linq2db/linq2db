@@ -317,6 +317,9 @@ namespace LinqToDB.Linq.Builder
 						if (mc.IsAssociation(MappingSchema))
 							return true;
 
+						if (IsGetTable(mc.Method))
+							break;
+
 						return GetTableFunctionAttribute(mc.Method) != null;
 					}
 
@@ -327,6 +330,11 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return false;
+		}
+
+		bool IsGetTable(MethodInfo mi)
+		{
+			return mi.Name == "GetTable" && (mi.DeclaringType == typeof(DataConnection) || mi.DeclaringType == typeof(DataExtensions));
 		}
 
 		bool IsSubQuerySource(IBuildContext context, Expression? expr)

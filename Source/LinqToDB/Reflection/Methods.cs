@@ -327,7 +327,7 @@ namespace LinqToDB.Reflection
 			}
 
 			public static class DataParameter
-			{ 
+			{
 				public static readonly PropertyInfo DbDataType = MemberHelper.PropertyOf<Data.DataParameter>(dp => dp.DbDataType);
 				public static readonly PropertyInfo Value      = MemberHelper.PropertyOf<Data.DataParameter>(dp => dp.Value);
 			}
