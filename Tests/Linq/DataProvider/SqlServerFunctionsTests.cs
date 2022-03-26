@@ -20,7 +20,7 @@ namespace Tests.DataProvider
 		public void DbTSTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.DbTS());
+			var result = db.Select(() => SqlFn.DbTS);
 			Console.WriteLine(result.ToDiagnosticString());
 			Assert.That(result.Length, Is.EqualTo(8));
 		}
@@ -29,7 +29,7 @@ namespace Tests.DataProvider
 		public void LangIDTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.LangID());
+			var result = db.Select(() => SqlFn.LangID);
 			Console.WriteLine(result);
 			Assert.That(result, Is.GreaterThanOrEqualTo(0));
 		}
@@ -38,7 +38,7 @@ namespace Tests.DataProvider
 		public void LanguageTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.Language());
+			var result = db.Select(() => SqlFn.Language);
 			Console.WriteLine(result);
 			Assert.That(result, Is.Not.Null);
 		}
@@ -48,7 +48,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			db.Execute("SET LOCK_TIMEOUT 1000");
-			var result = db.Select(() => SqlFn.LockTimeout());
+			var result = db.Select(() => SqlFn.LockTimeout);
 			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(1000));
 		}
@@ -57,7 +57,7 @@ namespace Tests.DataProvider
 		public void MaxConnectionsTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.MaxConnections());
+			var result = db.Select(() => SqlFn.MaxConnections);
 			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(32767));
 		}
@@ -66,7 +66,7 @@ namespace Tests.DataProvider
 		public void MaxPrecisionTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.MaxPrecision());
+			var result = db.Select(() => SqlFn.MaxPrecision);
 			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(38));
 		}
@@ -75,7 +75,7 @@ namespace Tests.DataProvider
 		public void NestLevelTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.NestLevel());
+			var result = db.Select(() => SqlFn.NestLevel);
 			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(0));
 		}
@@ -84,7 +84,7 @@ namespace Tests.DataProvider
 		public void OptionsTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.Options());
+			var result = db.Select(() => SqlFn.Options);
 			Console.WriteLine(result);
 			Assert.That(result, Is.Not.EqualTo(0));
 		}
@@ -93,7 +93,7 @@ namespace Tests.DataProvider
 		public void RemServerTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.RemServer());
+			var result = db.Select(() => SqlFn.RemServer);
 			Console.WriteLine(result);
 			Assert.That(result, Is.Null);
 		}
@@ -102,7 +102,7 @@ namespace Tests.DataProvider
 		public void ServerNameTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.ServerName());
+			var result = db.Select(() => SqlFn.ServerName);
 			Console.WriteLine(result);
 			Assert.That(result, Is.Not.Null);
 		}
@@ -114,7 +114,7 @@ namespace Tests.DataProvider
 				return;
 
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.ServiceName());
+			var result = db.Select(() => SqlFn.ServiceName);
 			Console.WriteLine(result);
 			Assert.That(result, Is.Not.Null);
 		}
@@ -123,7 +123,7 @@ namespace Tests.DataProvider
 		public void SpIDTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.SpID());
+			var result = db.Select(() => SqlFn.SpID);
 			Console.WriteLine(result);
 			Assert.That(result, Is.Not.EqualTo(0));
 		}
@@ -133,7 +133,7 @@ namespace Tests.DataProvider
 		{
 			using var db = new SystemDB(context);
 			db.Execute("SET TEXTSIZE 2048");
-			var result = db.Select(() => SqlFn.TextSize());
+			var result = db.Select(() => SqlFn.TextSize);
 			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(2048));
 		}
@@ -142,7 +142,7 @@ namespace Tests.DataProvider
 		public void VersionTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.Version());
+			var result = db.Select(() => SqlFn.Version);
 			Console.WriteLine(result);
 			Assert.That(result, Is.Not.Null);
 		}
@@ -586,7 +586,7 @@ namespace Tests.DataProvider
 		public void DateFirstTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.DateFirst());
+			var result = db.Select(() => SqlFn.DateFirst);
 			Console.WriteLine(result);
 			Assert.That(result, Is.GreaterThan(0));
 		}
@@ -595,7 +595,7 @@ namespace Tests.DataProvider
 		public void CurrentTimestampTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.CurrentTimestamp());
+			var result = db.Select(() => SqlFn.CurrentTimestamp);
 			Console.WriteLine(result);
 			Assert.That(result.Year, Is.EqualTo(DateTime.Today.Year));
 		}
@@ -1158,6 +1158,253 @@ namespace Tests.DataProvider
 
 		#endregion
 
+		#region Mathematical
+
+		[Test]
+		public void AbsTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Abs("-10"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("10"));
+		}
+
+		[Test]
+		public void AbsTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Abs(-10.01m));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(10.01m));
+		}
+
+		[Test]
+		public void AcosTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Acos(0.5));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(Math.Acos(0.5)));
+		}
+
+		[Test]
+		public void AsinTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Asin(0.5));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(Math.Asin(0.5)));
+		}
+
+		[Test]
+		public void AtanTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Atan(0.5));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(Math.Atan(0.5)));
+		}
+
+		[Test]
+		public void Atn2Test([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Atn2(10, 100));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(0));
+		}
+
+		[Test]
+		public void CeilingTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Ceiling(123.45));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(124));
+		}
+
+		[Test]
+		public void CosTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Cos(0));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(Math.Cos(0)));
+		}
+
+		[Test]
+		public void CotTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Cot(1));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(0));
+		}
+
+		[Test]
+		public void DegreesTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Degrees(1.5));
+			Console.WriteLine(result);
+			Assert.That(result, Is.GreaterThan(0));
+		}
+
+		[Test]
+		public void ExpTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Exp(10));
+			Console.WriteLine(result);
+			Assert.That(result, Is.GreaterThan(0));
+		}
+
+		[Test]
+		public void FloorTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Floor(10.11));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(10));
+		}
+
+		[Test]
+		public void LogTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Log(SqlFn.Exp(10)));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(10));
+		}
+
+		[Test]
+		public void LogTest2([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Log(10.0, 2));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(Math.Log(10, 2)));
+		}
+
+		[Test]
+		public void Log10Test([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Log10(SqlFn.Exp(10)));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(10));
+		}
+
+		[Test]
+		public void PITest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.PI());
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(Math.PI));
+		}
+
+		[Test]
+		public void PowerTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Power(2m, 2));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(Math.Pow(2, 2)));
+		}
+
+		[Test]
+		public void RadiansTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Round(SqlFn.Radians(-45.01m), 4));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(-0.7856m));
+		}
+
+		[Test]
+		public void RandTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Random());
+			Console.WriteLine(result);
+			Assert.That(result, Is.GreaterThanOrEqualTo(0).And.LessThanOrEqualTo(1));
+		}
+
+		[Test]
+		public void RandTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Random(10));
+			Console.WriteLine(result);
+			Assert.That(result, Is.GreaterThanOrEqualTo(0).And.LessThanOrEqualTo(1));
+		}
+
+		[Test]
+		public void RoundTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Round(12345, -3));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(12000));
+		}
+
+		[Test]
+		public void RoundTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Round(1.999, 2, 0));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(2));
+		}
+
+		[Test]
+		public void RoundTest3([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Round(0.999, 1, 1));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(0.9));
+		}
+
+		[Test]
+		public void SignTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Sign(1));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(1));
+		}
+
+		[Test]
+		public void SqrtTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Sqrt(4));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(2));
+		}
+
+		[Test]
+		public void SquareTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Square(4));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(16));
+		}
+
+		[Test]
+		public void TanTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Round(SqlFn.Tan(SqlFn.PI() / 2), -12));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(16331000000000000.0d));
+		}
+
+		#endregion
+
 		#region Logical
 
 		[Test]
@@ -1595,7 +1842,7 @@ namespace Tests.DataProvider
 		public void IdentityTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.Identity());
+			var result = db.Select(() => SqlFn.Identity);
 			Console.WriteLine(result);
 			Assert.That(result, Is.Null);
 		}
@@ -1604,7 +1851,7 @@ namespace Tests.DataProvider
 		public void PackReceivedTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.PackReceived());
+			var result = db.Select(() => SqlFn.PackReceived);
 			Console.WriteLine(result);
 			Assert.That(result, Is.GreaterThan(0));
 		}
@@ -1613,7 +1860,7 @@ namespace Tests.DataProvider
 		public void TransactionCountTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.TransactionCount());
+			var result = db.Select(() => SqlFn.TransactionCount);
 			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(0));
 		}
@@ -1834,7 +2081,7 @@ namespace Tests.DataProvider
 		public void RowCountTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
-			var result = db.Select(() => SqlFn.RowCount());
+			var result = db.Select(() => SqlFn.RowCount);
 			Console.WriteLine(result);
 			Assert.That(result, Is.GreaterThanOrEqualTo(0));
 		}

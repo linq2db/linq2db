@@ -21,10 +21,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>varbinary</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "@@DBTS", ServerSideOnly=true)]
-		public static byte[] DbTS()
-		{
-			throw new InvalidOperationException($"'{nameof(DbTS)}' is a server side only function.");
-		}
+		public static byte[] DbTS => throw new InvalidOperationException($"'{nameof(DbTS)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/LANGID-transact-sql">@@LANGID (Transact-SQL)</see></b></para>
@@ -33,10 +30,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>smallint</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "@@LANGID", ServerSideOnly=true)]
-		public static short LangID()
-		{
-			throw new InvalidOperationException($"'{nameof(LangID)}' is a server side only function.");
-		}
+		public static short LangID => throw new InvalidOperationException($"'{nameof(LangID)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/LANGUAGE-transact-sql">@@LANGUAGE (Transact-SQL)</see></b></para>
@@ -45,10 +39,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>nvarchar</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "@@LANGUAGE", ServerSideOnly=true)]
-		public static string Language()
-		{
-			throw new InvalidOperationException($"'{nameof(Language)}' is a server side only function.");
-		}
+		public static string Language => throw new InvalidOperationException($"'{nameof(Language)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/LOCK-TIMEOUT-transact-sql">@@LOCK_TIMEOUT (Transact-SQL)</see></b></para>
@@ -57,10 +48,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>integer</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "@@LOCK_TIMEOUT", ServerSideOnly=true)]
-		public static int LockTimeout()
-		{
-			throw new InvalidOperationException($"'{nameof(LockTimeout)}' is a server side only function.");
-		}
+		public static int LockTimeout => throw new InvalidOperationException($"'{nameof(LockTimeout)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/MAX-CONNECTIONS-transact-sql">@@MAX_CONNECTIONS (Transact-SQL)</see></b></para>
@@ -70,10 +58,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>integer</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "@@MAX_CONNECTIONS", ServerSideOnly=true)]
-		public static int MaxConnections()
-		{
-			throw new InvalidOperationException($"'{nameof(MaxConnections)}' is a server side only function.");
-		}
+		public static int MaxConnections => throw new InvalidOperationException($"'{nameof(MaxConnections)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/MAX-PRECISION-transact-sql">@@MAX_PRECISION (Transact-SQL)</see></b></para>
@@ -83,10 +68,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="InvalidOperationException" />
 		[CLSCompliant(false)]
 		[Sql.Expression(ProviderName.SqlServer, "@@MAX_PRECISION", ServerSideOnly=true)]
-		public static byte MaxPrecision()
-		{
-			throw new InvalidOperationException($"'{nameof(MaxPrecision)}' is a server side only function.");
-		}
+		public static byte MaxPrecision => throw new InvalidOperationException($"'{nameof(MaxPrecision)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/NESTLEVEL-transact-sql">@@NESTLEVEL (Transact-SQL)</see></b></para>
@@ -96,10 +78,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "@@NESTLEVEL", ServerSideOnly=true)]
 		[CLSCompliant(false)]
-		public static int NestLevel()
-		{
-			throw new InvalidOperationException($"'{nameof(NestLevel)}' is a server side only function.");
-		}
+		public static int NestLevel => throw new InvalidOperationException($"'{nameof(NestLevel)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/OPTIONS-transact-sql">@@OPTIONS (Transact-SQL)</see></b></para>
@@ -108,10 +87,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>integer</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "@@OPTIONS", ServerSideOnly=true)]
-		public static int Options()
-		{
-			throw new InvalidOperationException($"'{nameof(Options)}' is a server side only function.");
-		}
+		public static int Options => throw new InvalidOperationException($"'{nameof(Options)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/REMSERVER-transact-sql">@@REMSERVER (Transact-SQL)</see></b></para>
@@ -120,10 +96,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>nvarchar(128)</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "@@REMSERVER", ServerSideOnly=true)]
-		public static string? RemServer()
-		{
-			throw new InvalidOperationException($"'{nameof(RemServer)}' is a server side only function.");
-		}
+		public static string? RemServer => throw new InvalidOperationException($"'{nameof(RemServer)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SERVERNAME-transact-sql">@@SERVERNAME (Transact-SQL)</see></b></para>
@@ -132,10 +105,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>nvarchar</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "@@SERVERNAME", ServerSideOnly=true)]
-		public static string ServerName()
-		{
-			throw new InvalidOperationException($"'{nameof(ServerName)}' is a server side only function.");
-		}
+		public static string ServerName => throw new InvalidOperationException($"'{nameof(ServerName)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SERVICENAME-transact-sql">@@SERVICENAME (Transact-SQL)</see></b></para>
@@ -145,10 +115,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>nvarchar</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "@@SERVICENAME", ServerSideOnly=true)]
-		public static string ServiceName()
-		{
-			throw new InvalidOperationException($"'{nameof(ServiceName)}' is a server side only function.");
-		}
+		public static string ServiceName => throw new InvalidOperationException($"'{nameof(ServiceName)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SPID-transact-sql">@@SPID (Transact-SQL)</see></b></para>
@@ -157,10 +124,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>smallint</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "@@SPID", ServerSideOnly=true)]
-		public static short SpID()
-		{
-			throw new InvalidOperationException($"'{nameof(SpID)}' is a server side only function.");
-		}
+		public static short SpID => throw new InvalidOperationException($"'{nameof(SpID)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TEXTSIZE-transact-sql">@@TEXTSIZE (Transact-SQL)</see></b></para>
@@ -169,10 +133,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>integer</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "@@TEXTSIZE", ServerSideOnly=true)]
-		public static int TextSize()
-		{
-			throw new InvalidOperationException($"'{nameof(TextSize)}' is a server side only function.");
-		}
+		public static int TextSize => throw new InvalidOperationException($"'{nameof(TextSize)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/version-transact-sql-configuration-functions">@@VERSION (Transact-SQL)</see></b></para>
@@ -181,10 +142,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>nvarchar</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "@@VERSION", ServerSideOnly=true)]
-		public static string Version()
-		{
-			throw new InvalidOperationException($"'{nameof(TextSize)}' is a server side only function.");
-		}
+		public static string Version => throw new InvalidOperationException($"'{nameof(TextSize)}' is a server side only function.");
 
 		#endregion
 
@@ -795,10 +753,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>tinyint</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "@@DATEFIRST", ServerSideOnly=true, IgnoreGenericParameters=true)]
-		public static byte DateFirst()
-		{
-			throw new InvalidOperationException($"'{nameof(DateFirst)}' is a server side only function.");
-		}
+		public static byte DateFirst => throw new InvalidOperationException($"'{nameof(DateFirst)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CURRENT-TIMESTAMP-transact-sql">CURRENT_TIMESTAMP (Transact-SQL)</see></b></para>
@@ -808,10 +763,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>datetime</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "CURRENT_TIMESTAMP", ServerSideOnly=true, IgnoreGenericParameters=true)]
-		public static DateTime CurrentTimestamp()
-		{
-			throw new InvalidOperationException($"'{nameof(CurrentTimestamp)}' is a server side only function.");
-		}
+		public static DateTime CurrentTimestamp => throw new InvalidOperationException($"'{nameof(CurrentTimestamp)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CURRENT-TIMEZONE-transact-sql">CURRENT_TIMEZONE (Transact-SQL)</see></b></para>
@@ -1734,6 +1686,410 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#endregion
 
+		#region Mathematical
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ABS-transact-sql">ABS (Transact-SQL)</see></b></para>
+		/// <para>A mathematical function that returns the absolute (positive) value of the specified numeric expression.
+		/// (<c>ABS</c> changes negative values to positive values. <c>ABS</c> has no effect on zero or positive values.)</para>
+		/// </summary>
+		/// <param name="numeric_expression">An expression of the exact numeric or approximate numeric data type category.</param>
+		/// <returns>Returns the same type as numeric_expression.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "ABS", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		[return: NotNullIfNotNull("numeric_expression")]
+		public static T Abs<T>(T numeric_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Abs)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ACOS-transact-sql">ACOS (Transact-SQL)</see></b></para>
+		/// <para>A function that returns the angle, in radians, whose cosine is the specified float expression. This is also called arccosine.</para>
+		/// </summary>
+		/// <param name="float_expression">An <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of either type <b>float</b> or of a type that can implicitly convert to float. Only a value ranging from -1.00 to 1.00 is valid.
+		/// For values outside this range, no value is returned, and ACOS will report a domain error.</param>
+		/// <returns>float</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "ACOS", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		[return: NotNullIfNotNull("float_expression")]
+		public static T Acos<T>(T float_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Acos)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ASIN-transact-sql">ASIN (Transact-SQL)</see></b></para>
+		/// <para>A function that returns the angle, in radians, whose sine is the specified <b>float</b> expression. This is also called <b>arcsine</b>.</para>
+		/// </summary>
+		/// <param name="float_expression">An <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of either type <b>float</b> or of a type that can implicitly convert to float. Only a value ranging from -1.00 to 1.00 is valid.
+		/// For values outside this range, no value is returned, and ASIN will report a domain error.</param>
+		/// <returns>float</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "ASIN", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		[return: NotNullIfNotNull("float_expression")]
+		public static T Asin<T>(T float_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Asin)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ATAN-transact-sql">ATAN (Transact-SQL)</see></b></para>
+		/// <para>A function that returns the angle, in radians, whose tangent is a specified <b>float</b> expression. This is also called <b>arctangent</b>.</para>
+		/// </summary>
+		/// <param name="float_expression">An <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of either type <b>float</b> or of a type that implicitly convert to <b>float</b>.</param>
+		/// <returns>float</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "ATAN", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		[return: NotNullIfNotNull("float_expression")]
+		public static T Atan<T>(T float_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Atan)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ATN2-transact-sql">ATN2 (Transact-SQL)</see></b></para>
+		/// <para>Returns the angle, in radians, between the positive x-axis and the ray from the origin to the point (y, x),
+		/// where x and y are the values of the two specified float expressions.</para>
+		/// </summary>
+		/// <param name="float_expression">An <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of type <b>float</b>.</param>
+		/// <returns>float</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "ATN2", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		[return: NotNullIfNotNull("float_expression")]
+		public static T Atn2<T>(T float_expression, T float_expression2)
+		{
+			throw new InvalidOperationException($"'{nameof(Atn2)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CEILING-transact-sql">CEILING (Transact-SQL)</see></b></para>
+		/// <para>This function returns the smallest integer greater than, or equal to, the specified numeric expression.</para>
+		/// </summary>
+		/// <param name="numeric_expression">An <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of the exact numeric or approximate numeric data type category. For this function, the <b>bit</b> data type is invalid.</param>
+		/// <returns>Return values have the same type as <c>numeric_expression</c>.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "CEILING", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		[return: NotNullIfNotNull("numeric_expression")]
+		public static T Ceiling<T>(T numeric_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Ceiling)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/COS-transact-sql">COS (Transact-SQL)</see></b></para>
+		/// <para>A mathematical function that returns the trigonometric cosine of the specified angle - measured in radians - in the specified expression.</para>
+		/// </summary>
+		/// <param name="float_expression">An <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of type <b>float</b>.</param>
+		/// <returns>float</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "COS", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		[return: NotNullIfNotNull("float_expression")]
+		public static T Cos<T>(T float_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Cos)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/COT-transact-sql">COT (Transact-SQL)</see></b></para>
+		/// <para>A mathematical function that returns the trigonometric cotangent of the specified angle - in radians - in the specified <b>float</b> expression.</para>
+		/// </summary>
+		/// <param name="float_expression">An <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of type <b>float</b>, or of a type that can implicitly convert to <b>float</b>.</param>
+		/// <returns>float</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "COT", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		[return: NotNullIfNotNull("float_expression")]
+		public static T Cot<T>(T float_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Cot)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DEGREES-transact-sql">DEGREES (Transact-SQL)</see></b></para>
+		/// <para>This function returns the corresponding angle, in degrees, for an angle specified in radians.</para>
+		/// </summary>
+		/// <param name="numeric_expression">An <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of the exact numeric or approximate numeric data type category, except for the <b>bit</b> data type.</param>
+		/// <returns>Return values have the same type as <c>numeric_expression</c>.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "DEGREES", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		[return: NotNullIfNotNull("numeric_expression")]
+		public static T Degrees<T>(T numeric_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Degrees)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/EXP-transact-sql">EXP (Transact-SQL)</see></b></para>
+		/// <para>Returns the exponential value of the specified <b>float</b> expression.</para>
+		/// </summary>
+		/// <param name="float_expression">Is an <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of type <b>float</b> or of a type that can be implicitly converted to <b>float</b>.</param>
+		/// <returns>float</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "EXP", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		[return: NotNullIfNotNull("float_expression")]
+		public static T Exp<T>(T float_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Exp)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/FLOOR-transact-sql">FLOOR (Transact-SQL)</see></b></para>
+		/// <para>Returns the largest integer less than or equal to the specified numeric expression.</para>
+		/// </summary>
+		/// <param name="numeric_expression">An <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of the exact numeric or approximate numeric data type category, except for the <b>bit</b> data type.</param>
+		/// <returns>Return values have the same type as <c>numeric_expression</c>.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "FLOOR", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		[return: NotNullIfNotNull("numeric_expression")]
+		public static T Floor<T>(T numeric_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Floor)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/LOG-transact-sql">LOG (Transact-SQL)</see></b></para>
+		/// <para>Returns the natural logarithm of the specified <b>float</b> expression in SQL Server.</para>
+		/// </summary>
+		/// <param name="float_expression">Is an <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of type <b>float</b> or of a type that can be implicitly converted to <b>float</b>.</param>
+		/// <returns>float</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "LOG", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		[return: NotNullIfNotNull("float_expression")]
+		public static T Log<T>(T float_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Log)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/LOG-transact-sql">LOG (Transact-SQL)</see></b></para>
+		/// <para>Returns the natural logarithm of the specified <b>float</b> expression in SQL Server.</para>
+		/// </summary>
+		/// <param name="float_expression">Is an <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of type <b>float</b> or of a type that can be implicitly converted to <b>float</b>.</param>
+		/// <param name="base">Optional integer argument that sets the base for the logarithm.</param>
+		/// <returns>float</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "LOG", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		[return: NotNullIfNotNull("float_expression")]
+		public static T Log<T>(T float_expression, int @base)
+		{
+			throw new InvalidOperationException($"'{nameof(Log)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/LOG10-transact-sql">LOG10 (Transact-SQL)</see></b></para>
+		/// <para>Returns the base-10 logarithm of the specified <b>float</b> expression.</para>
+		/// </summary>
+		/// <param name="float_expression">Is an <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of type <b>float</b> or of a type that can be implicitly converted to <b>float</b>.</param>
+		/// <returns>float</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "LOG", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		[return: NotNullIfNotNull("float_expression")]
+		public static T Log10<T>(T float_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Log10)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/PI-transact-sql">PI (Transact-SQL)</see></b></para>
+		/// <para>Returns the constant value of PI.</para>
+		/// </summary>
+		/// <returns>float</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "PI", ServerSideOnly=true)]
+		public static double PI()
+		{
+			throw new InvalidOperationException($"'{nameof(Log10)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/POWER-transact-sql">POWER (Transact-SQL)</see></b></para>
+		/// <para>Returns the base-10 logarithm of the specified <b>float</b> expression.</para>
+		/// </summary>
+		/// <param name="float_expression">Is an <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of type <b>float</b> or of a type that can be implicitly converted to <b>float</b>.</param>
+		/// <param name="y">Is the power to which to raise <c>float_expression</c>. y can be an expression of the exact numeric or
+		/// approximate numeric data type category, except for the <b>bit</b> data type.</param>
+		/// <returns>float</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "POWER", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		[return: NotNullIfNotNull("float_expression")]
+		public static T Power<T>(T float_expression, T y)
+		{
+			throw new InvalidOperationException($"'{nameof(Power)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SIGN-transact-sql">SIGN (Transact-SQL)</see></b></para>
+		/// <para>Returns the positive (+1), zero (0), or negative (-1) sign of the specified expression.</para>
+		/// </summary>
+		/// <param name="numeric_expression">An <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of the exact numeric or approximate numeric data type category, except for the <b>bit</b> data type.</param>
+		/// <returns>Return values have the same type as <c>numeric_expression</c>.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "SIGN", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		[return: NotNullIfNotNull("numeric_expression")]
+		public static T Sign<T>(T numeric_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Sign)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/RAND-transact-sql">RAND (Transact-SQL)</see></b></para>
+		/// <para>Returns a pseudo-random <b>float</b> value from 0 through 1, exclusive.</para>
+		/// </summary>
+		/// <returns>float</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "RAND", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		public static double Random()
+		{
+			throw new InvalidOperationException($"'{nameof(Random)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/RAND-transact-sql">RAND (Transact-SQL)</see></b></para>
+		/// <para>Returns a pseudo-random <b>float</b> value from 0 through 1, exclusive.</para>
+		/// </summary>
+		/// <returns>float</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "RAND", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		public static double Random(int seed)
+		{
+			throw new InvalidOperationException($"'{nameof(Random)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ROUND-transact-sql">ROUND (Transact-SQL)</see></b></para>
+		/// <para>Returns a numeric value, rounded to the specified length or precision.</para>
+		/// </summary>
+		/// <param name="numeric_expression">An <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of the exact numeric or approximate numeric data type category, except for the <b>bit</b> data type.</param>
+		/// <param name="length">Is the precision to which <c>numeric_expression</c> is to be rounded.
+		/// <c>length</c> must be an expression of type <b>tinyint</b>, <b>smallint</b>, or <b>int</b>.
+		/// When <c>length</c> is a positive number, <c>numeric_expression</c> is rounded to the number of
+		/// decimal positions specified by <c>length</c>. When <c>length</c> is a negative number,
+		/// <c>numeric_expression</c> is rounded on the left side of the decimal point, as specified by <c>length</c>.</param>
+		/// <param name="function">Is the type of operation to perform. <c>function</c> must be <b>tinyint</b>, <b>smallint</b>, or <b>int</b>.
+		/// When function is omitted or has a value of 0 (default), <c>numeric_expression</c> is rounded. When a value other than 0 is specified,
+		/// <c>numeric_expression</c> is truncated</param>
+		/// <returns>Return values have the same type as <c>numeric_expression</c>.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "ROUND", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		[return: NotNullIfNotNull("numeric_expression")]
+		public static T Round<T>(T numeric_expression, int length, int function)
+		{
+			throw new InvalidOperationException($"'{nameof(Round)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ROUND-transact-sql">ROUND (Transact-SQL)</see></b></para>
+		/// <para>Returns a numeric value, rounded to the specified length or precision.</para>
+		/// </summary>
+		/// <param name="numeric_expression">An <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of the exact numeric or approximate numeric data type category, except for the <b>bit</b> data type.</param>
+		/// <param name="length">Is the precision to which <c>numeric_expression</c> is to be rounded.
+		/// <c>length</c> must be an expression of type <b>tinyint</b>, <b>smallint</b>, or <b>int</b>.
+		/// When <c>length</c> is a positive number, <c>numeric_expression</c> is rounded to the number of
+		/// decimal positions specified by <c>length</c>. When <c>length</c> is a negative number,
+		/// <c>numeric_expression</c> is rounded on the left side of the decimal point, as specified by <c>length</c>.</param>
+		/// <returns>Return values have the same type as <c>numeric_expression</c>.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "ROUND", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		[return: NotNullIfNotNull("numeric_expression")]
+		public static T Round<T>(T numeric_expression, int length)
+		{
+			throw new InvalidOperationException($"'{nameof(Round)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SIGN-transact-sql">SIGN (Transact-SQL)</see></b></para>
+		/// <para>Returns radians when a numeric expression, in degrees, is entered.</para>
+		/// </summary>
+		/// <param name="numeric_expression">An <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of the exact numeric or approximate numeric data type category, except for the <b>bit</b> data type.</param>
+		/// <returns>Return values have the same type as <c>numeric_expression</c>.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "SIGN", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		[return: NotNullIfNotNull("numeric_expression")]
+		public static T Radians<T>(T numeric_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Radians)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SIN-transact-sql">SIN (Transact-SQL)</see></b></para>
+		/// <para>Returns the trigonometric sine of the specified angle, in radians, and in an approximate numeric, <b>float</b>, expression.</para>
+		/// </summary>
+		/// <param name="float_expression">Is an <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of type <b>float</b> or of a type that can be implicitly converted to float, in radians.</param>
+		/// <returns>float</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "SIN", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		[return: NotNullIfNotNull("float_expression")]
+		public static T Sin<T>(T float_expression, T y)
+		{
+			throw new InvalidOperationException($"'{nameof(Sin)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SQRT-transact-sql">SQRT (Transact-SQL)</see></b></para>
+		/// <para>Returns the square root of the specified float value.</para>
+		/// </summary>
+		/// <param name="float_expression">Is an <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of type <b>float</b> or of a type that can be implicitly converted to <b>float</b>.</param>
+		/// <returns>float</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "SQRT", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		[return: NotNullIfNotNull("float_expression")]
+		public static T Sqrt<T>(T float_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Sqrt)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SQUARE-transact-sql">SQUARE (Transact-SQL)</see></b></para>
+		/// <para>Returns the square of the specified float value.</para>
+		/// </summary>
+		/// <param name="float_expression">Is an <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of type <b>float</b> or of a type that can be implicitly converted to <b>float</b>.</param>
+		/// <returns>float</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "SQUARE", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		[return: NotNullIfNotNull("float_expression")]
+		public static T Square<T>(T float_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Square)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TAN-transact-sql">TAN (Transact-SQL)</see></b></para>
+		/// <para>Returns the tangent of the input expression.</para>
+		/// </summary>
+		/// <param name="float_expression">Is an <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of type <b>float</b> or of a type that can be implicitly converted to <b>float</b>.</param>
+		/// <returns>float</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "TAN", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		[return: NotNullIfNotNull("float_expression")]
+		public static T Tan<T>(T float_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Tan)}' is a server side only function.");
+		}
+
+		#endregion
+
 		#region Logical
 
 		/// <summary>
@@ -2581,10 +2937,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>numeric(38,0)</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "@@IDENTITY", ServerSideOnly=true)]
-		public static decimal? Identity()
-		{
-			throw new InvalidOperationException($"'{nameof(Identity)}' is a server side only function.");
-		}
+		public static decimal? Identity => throw new InvalidOperationException($"'{nameof(Identity)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/PACK-RECEIVED-transact-sql">@@PACK_RECEIVED (Transact-SQL)</see></b></para>
@@ -2593,10 +2946,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>integer</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "@@PACK_RECEIVED", ServerSideOnly=true)]
-		public static int PackReceived()
-		{
-			throw new InvalidOperationException($"'{nameof(PackReceived)}' is a server side only function.");
-		}
+		public static int PackReceived => throw new InvalidOperationException($"'{nameof(PackReceived)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRANCOUNT-transact-sql">@@TRANCOUNT (Transact-SQL)</see></b></para>
@@ -2605,10 +2955,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>integer</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "@@TRANCOUNT", ServerSideOnly=true)]
-		public static int TransactionCount()
-		{
-			throw new InvalidOperationException($"'{nameof(TransactionCount)}' is a server side only function.");
-		}
+		public static int TransactionCount => throw new InvalidOperationException($"'{nameof(TransactionCount)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/BINARY-CHECKSUM-transact-sql">BINARY_CHECKSUM (Transact-SQL)</see></b></para>
@@ -2960,10 +3307,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>int</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Expression(ProviderName.SqlServer, "@@ROWCOUNT", ServerSideOnly=true)]
-		public static int RowCount()
-		{
-			throw new InvalidOperationException($"'{nameof(RowCount)}' is a server side only function.");
-		}
+		public static int RowCount => throw new InvalidOperationException($"'{nameof(RowCount)}' is a server side only function.");
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ROWCOUNT-BIG-transact-sql">ROWCOUNT_BIG (Transact-SQL)</see></b></para>
