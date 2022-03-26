@@ -23,6 +23,7 @@ namespace LinqToDB.Linq
 	using Common;
 	using Extensions;
 	using LinqToDB.Common.Internal;
+	using LinqToDB.DataProvider.Firebird;
 	using LinqToDB.Expressions;
 	using Mapping;
 
@@ -1281,6 +1282,8 @@ namespace LinqToDB.Linq
 
 					{ M(() => Sql.RoundToEven(0.0)  ), N(() => L<double?,double?>     ((double? v)        => (double?)Sql.RoundToEven((decimal)v!)))    },
 					{ M(() => Sql.RoundToEven(0.0,0)), N(() => L<double?,int?,double?>((double? v,int? p) => (double?)Sql.RoundToEven((decimal)v!, p))) },
+
+					{ M(() => Sql.ConvertTo<string>.From(Guid.Empty)), N(() => L<Guid,string?>((Guid p) => Sql.Lower(Sql.Ext.Firebird().UuidToChar(p)))) },
 				}},
 
 				#endregion

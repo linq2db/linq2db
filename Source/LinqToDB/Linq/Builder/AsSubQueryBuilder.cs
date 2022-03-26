@@ -30,9 +30,9 @@ namespace LinqToDB.Linq.Builder
 				sequence = new SubQueryContext(sequence);
 				sequence = new SelectContext(buildInfo.Parent, lambda, sequence);
 			}
-			else 
+			else
 				sequence = new SubQueryContext(sequence);
-			
+
 			return sequence;
 		}
 

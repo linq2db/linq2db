@@ -8,7 +8,7 @@ namespace LinqToDB.SqlQuery
 
 	public class AliasesContext
 	{
-		HashSet<IQueryElement> _aliasesSet = new HashSet<IQueryElement>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+		readonly HashSet<IQueryElement> _aliasesSet = new (Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
 
 		public void RegisterAliased(IQueryElement element)
 		{

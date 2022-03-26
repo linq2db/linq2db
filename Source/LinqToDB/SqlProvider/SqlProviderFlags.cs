@@ -11,24 +11,39 @@ namespace LinqToDB.SqlProvider
 	{
 		public bool        IsSybaseBuggyGroupBy              { get; set; }
 
-		public bool        IsParameterOrderDependent         { get; set; }
-		public bool        AcceptsTakeAsParameter            { get; set; }
-		public bool        AcceptsTakeAsParameterIfSkip      { get; set; }
-		public bool        IsTakeSupported                   { get; set; }
-		public bool        IsSkipSupported                   { get; set; }
-		public bool        IsSkipSupportedIfTake             { get; set; }
-		public bool        IsSubQueryTakeSupported           { get; set; }
-		public bool        IsSubQueryColumnSupported         { get; set; }
-		public bool        IsSubQueryOrderBySupported        { get; set; }
-		public bool        IsCountSubQuerySupported          { get; set; }
-		public bool        IsIdentityParameterRequired       { get; set; }
-		public bool        IsApplyJoinSupported              { get; set; }
-		public bool        IsInsertOrUpdateSupported         { get; set; }
-		public bool        CanCombineParameters              { get; set; }
-		public bool        IsGroupByExpressionSupported      { get; set; }
-		public int         MaxInListValuesCount              { get; set; }
-		public bool        IsUpdateSetTableAliasSupported    { get; set; }
-		public TakeHints?  TakeHintsSupported                { get; set; }
+		public bool        IsParameterOrderDependent          { get; set; }
+		public bool        AcceptsTakeAsParameter             { get; set; }
+		public bool        AcceptsTakeAsParameterIfSkip       { get; set; }
+		public bool        IsTakeSupported                    { get; set; }
+		public bool        IsSkipSupported                    { get; set; }
+		public bool        IsSkipSupportedIfTake              { get; set; }
+		public bool        IsSubQueryTakeSupported            { get; set; }
+		public bool        IsSubQueryColumnSupported          { get; set; }
+		public bool        IsSubQueryOrderBySupported         { get; set; }
+		public bool        IsCountSubQuerySupported           { get; set; }
+		public bool        IsIdentityParameterRequired        { get; set; }
+		public bool        IsApplyJoinSupported               { get; set; }
+		public bool        IsInsertOrUpdateSupported          { get; set; }
+		public bool        CanCombineParameters               { get; set; }
+		public int         MaxInListValuesCount               { get; set; }
+		public bool        IsUpdateSetTableAliasSupported     { get; set; }
+		public TakeHints?  TakeHintsSupported                 { get; set; }
+
+		/// <summary>
+		/// If <c>true</c>, removed record fields in OUTPUT clause of DELETE statement should be referenced using
+		/// table with special name (e.g. DELETED or OLD). Otherwise fields should be referenced using target table.
+		/// </summary>
+		public bool        OutputDeleteUseSpecialTable       { get; set; }
+		/// <summary>
+		/// If <c>true</c>, added record fields in OUTPUT clause of INSERT statement should be referenced using
+		/// table with special name (e.g. INSERTED or NEW). Otherwise fields should be referenced using target table.
+		/// </summary>
+		public bool        OutputInsertUseSpecialTable       { get; set; }
+		/// <summary>
+		/// If <c>true</c>, OUTPUT clause supports both OLD and NEW data in UPDATE statement using tables with special names.
+		/// Otherwise only current record fields (after update) available using target table.
+		/// </summary>
+		public bool        OutputUpdateUseSpecialTables      { get; set; }
 
 		/// <summary>
 		/// Provider requires that selected subquery column must be used in group by even for constant column.
@@ -165,7 +180,6 @@ namespace LinqToDB.SqlProvider
 				^ IsApplyJoinSupported                         .GetHashCode()
 				^ IsInsertOrUpdateSupported                    .GetHashCode()
 				^ CanCombineParameters                         .GetHashCode()
-				^ IsGroupByExpressionSupported                 .GetHashCode()
 				^ MaxInListValuesCount                         .GetHashCode()
 				^ IsUpdateSetTableAliasSupported               .GetHashCode()
 				^ (TakeHintsSupported?                         .GetHashCode() ?? 0)
@@ -181,6 +195,9 @@ namespace LinqToDB.SqlProvider
 				^ IsUpdateFromSupported                        .GetHashCode()
 				^ DefaultMultiQueryIsolationLevel              .GetHashCode()
 				^ AcceptsOuterExpressionInAggregate            .GetHashCode()
+				^ OutputDeleteUseSpecialTable                  .GetHashCode()
+				^ OutputInsertUseSpecialTable                  .GetHashCode()
+				^ OutputUpdateUseSpecialTables                 .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -202,7 +219,6 @@ namespace LinqToDB.SqlProvider
 				&& IsApplyJoinSupported                 == other.IsApplyJoinSupported
 				&& IsInsertOrUpdateSupported            == other.IsInsertOrUpdateSupported
 				&& CanCombineParameters                 == other.CanCombineParameters
-				&& IsGroupByExpressionSupported         == other.IsGroupByExpressionSupported
 				&& MaxInListValuesCount                 == other.MaxInListValuesCount
 				&& IsUpdateSetTableAliasSupported       == other.IsUpdateSetTableAliasSupported
 				&& TakeHintsSupported                   == other.TakeHintsSupported
@@ -218,10 +234,13 @@ namespace LinqToDB.SqlProvider
 				&& IsUpdateFromSupported                == other.IsUpdateFromSupported
 				&& DefaultMultiQueryIsolationLevel      == other.DefaultMultiQueryIsolationLevel
 				&& AcceptsOuterExpressionInAggregate    == other.AcceptsOuterExpressionInAggregate
+				&& OutputDeleteUseSpecialTable          == other.OutputDeleteUseSpecialTable
+				&& OutputInsertUseSpecialTable          == other.OutputInsertUseSpecialTable
+				&& OutputUpdateUseSpecialTables         == other.OutputUpdateUseSpecialTables
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                    == other.CustomFlags.Count
 				&& (CustomFlags.Count                   == 0
-					|| CustomFlags.OrderBy(_ => _).SequenceEqual(other.CustomFlags.OrderBy(_ => _)));
+					|| CustomFlags.OrderBy(_            => _).SequenceEqual(other.CustomFlags.OrderBy(_ => _)));
 		}
 		#endregion
 	}
