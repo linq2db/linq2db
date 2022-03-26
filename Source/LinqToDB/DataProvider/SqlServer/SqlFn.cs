@@ -2928,6 +2928,24 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#endregion
 
+		#region Replication
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/replication-functions-publishingservername">PUBLISHINGSERVERNAME (Transact-SQL)</see></b></para>
+		/// <para>Returns the name of the originating Publisher for a published database participating in a database mirroring session.
+		/// This function is executed at a Publisher instance of SQL Server on the publication database.
+		/// Use it to determine the original Publisher of the published database.</para>
+		/// </summary>
+		/// <returns>nvarchar</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "PUBLISHINGSERVERNAME", ServerSideOnly=true)]
+		public static string? PublishingServerName()
+		{
+			throw new InvalidOperationException($"'{nameof(PublishingServerName)}' is a server side only function.");
+		}
+
+		#endregion
+
 		#region System
 
 		/// <summary>

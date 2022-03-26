@@ -1836,6 +1836,19 @@ namespace Tests.DataProvider
 
 		#endregion
 
+		#region Replication
+
+		[Test]
+		public void PublishingServerNameTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.PublishingServerName());
+			Console.WriteLine(result);
+			Assert.That(result, Is.Not.Null);
+		}
+
+		#endregion
+
 		#region System
 
 		[Test]
