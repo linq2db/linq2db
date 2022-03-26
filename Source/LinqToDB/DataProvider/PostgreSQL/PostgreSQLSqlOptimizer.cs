@@ -7,6 +7,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using SqlProvider;
 	using SqlQuery;
 	using Linq;
+	using LinqToDB.Common;
 
 	class PostgreSQLSqlOptimizer : BasicSqlOptimizer
 	{
@@ -381,6 +382,65 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 
 			return expression;
+		}
+
+		protected override SqlStatement FixSetOperationColumnTypes(SqlStatement statement)
+		{
+			statement = base.FixSetOperationColumnTypes(statement);
+
+			// postgresql use more strict checks for sets in recursive CTEs, so we need to implement additional fixes for them.
+			// List of known limitations:
+			// - string types should be same
+			statement.Visit(static e =>
+			{
+				if (e is CteClause cte && cte.Body?.HasSetOperators == true)
+				{
+					var query = cte.Body;
+
+					for (int i = 0; i < query.Select.Columns.Count; i++)
+					{
+						var firstColumn = query.Select.Columns[i];
+
+						var dataType = firstColumn.Expression.GetExpressionType().DataType;
+
+						if (   dataType != DataType.NVarChar && dataType != DataType.VarChar
+							&& dataType != DataType.NChar    && dataType != DataType.Char
+							&& dataType != DataType.NText    && dataType != DataType.Text)
+							continue;
+
+						var field        = QueryHelper.GetUnderlyingField(firstColumn.Expression);
+						var applyConvert = field == null;
+
+						if (!applyConvert)
+						{
+							foreach (var setOperator in query.SetOperators)
+							{
+								var column   = setOperator.SelectQuery.Select.Columns[i];
+								applyConvert = applyConvert || QueryHelper.GetUnderlyingField(column) != field;
+
+								if (applyConvert)
+									break;
+							}
+						}
+
+						if (applyConvert)
+						{
+							// use text as varchar without length ignored in this place by pgsql for unknown reason
+							var type = new DbDataType(typeof(string), DataType.Text);
+
+							firstColumn.Expression = new SqlExpression(firstColumn.Expression.SystemType, "Cast({0} as {1})", Precedence.Primary, firstColumn.Expression, new SqlDataType(type));
+
+							foreach (var setOperator in query.SetOperators)
+							{
+								var column        = setOperator.SelectQuery.Select.Columns[i];
+								column.Expression = new SqlExpression(column.Expression.SystemType, "Cast({0} as {1})", Precedence.Primary, column.Expression, new SqlDataType(type));
+							}
+						}
+					}
+				}
+			});
+
+			return statement;
 		}
 
 	}

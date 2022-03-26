@@ -60,7 +60,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			type = base.ConvertParameterType(type, dataType);
 
-			// native client BulkCopy cannot stand nullable types
+			// native client BulkCopy cannot stand nullable types and enums
 			// AseBulkManager.IsWrongType
 			if (Name == ProviderName.Sybase)
 			{

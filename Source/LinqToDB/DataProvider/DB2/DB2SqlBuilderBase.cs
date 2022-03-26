@@ -143,7 +143,17 @@ namespace LinqToDB.DataProvider.DB2
 					return;
 				case DataType.Boolean   : StringBuilder.Append("smallint");              return;
 				case DataType.Guid      : StringBuilder.Append("char(16) for bit data"); return;
-				case DataType.NVarChar  :
+				case DataType.VarChar   :
+					if (type.Type.Length == null || type.Type.Length > 32672 || type.Type.Length < 1)
+					{
+						StringBuilder
+							.Append(type.Type.DataType)
+							.Append("(32672)");
+						return;
+					}
+
+					break;
+				case DataType.NVarChar:
 					if (type.Type.Length == null || type.Type.Length > 8168 || type.Type.Length < 1)
 					{
 						StringBuilder
