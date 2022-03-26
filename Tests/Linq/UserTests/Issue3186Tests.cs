@@ -84,7 +84,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void UpdateWhenTableSecond([DataSources] string context)
+		public void UpdateWhenTableSecond([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(element_services.TestData()))
@@ -109,7 +109,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void UpdateWhenTableFirst([DataSources] string context)
+		public void UpdateWhenTableFirst([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(element_services.TestData()))
@@ -134,7 +134,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void UpdateWhenTableFirstWithLeftJoin([DataSources] string context)
+		public void UpdateWhenTableFirstWithLeftJoin([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(element_services.TestData()))

@@ -505,11 +505,7 @@ namespace Tests.Data
 		public void TestDB2([IncludeDataSources(ProviderName.DB2)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-#if NET472
-			using (var db = CreateDataConnection(new DB2DataProvider(ProviderName.DB2LUW, DB2Version.LUW), context, type, "IBM.Data.DB2.DB2Connection, IBM.Data.DB2"))
-#else
-			using (var db = CreateDataConnection(new DB2DataProvider(ProviderName.DB2LUW, DB2Version.LUW), context, type, "IBM.Data.DB2.Core.DB2Connection, IBM.Data.DB2.Core"))
-#endif
+			using (var db = CreateDataConnection(new DB2DataProvider(ProviderName.DB2LUW, DB2Version.LUW), context, type, $"{DB2ProviderAdapter.ClientNamespace}.DB2Connection, {DB2ProviderAdapter.AssemblyName}"))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -1162,11 +1158,7 @@ namespace Tests.Data
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			var provider = new InformixDataProvider(ProviderName.InformixDB2);
-#if NET472
-			using (var db = CreateDataConnection(provider, context, type, "IBM.Data.DB2.DB2Connection, IBM.Data.DB2"))
-#else
-			using (var db = CreateDataConnection(provider, context, type, "IBM.Data.DB2.Core.DB2Connection, IBM.Data.DB2.Core"))
-#endif
+			using (var db = CreateDataConnection(provider, context, type, $"{DB2ProviderAdapter.ClientNamespace}.DB2Connection, {DB2ProviderAdapter.AssemblyName}"))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
