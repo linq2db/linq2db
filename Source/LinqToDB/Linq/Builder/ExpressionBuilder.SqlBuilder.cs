@@ -1347,7 +1347,10 @@ namespace LinqToDB.Linq.Builder
 			if (_constants.TryGetValue(key, out var sqlValue))
 				return sqlValue;
 
-			var dbType = columnDescriptor?.GetDbDataType(true).WithSystemType(expr.Type) ?? new DbDataType(expr.Type);
+			var columnType = columnDescriptor?.GetDbDataType(true);
+			var dbType = columnType != null && columnType.Value.SystemType == expr.Type
+				? columnType.Value.WithSystemType(expr.Type)
+				: new DbDataType(expr.Type);
 
 			var unwrapped = expr.Unwrap();
 			if (unwrapped != expr && !MappingSchema.ValueToSqlConverter.CanConvert(dbType.SystemType) &&
