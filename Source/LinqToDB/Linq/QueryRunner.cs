@@ -52,14 +52,14 @@ namespace LinqToDB.Linq
 			}
 
 			readonly Expression<Func<IQueryRunner,IDataReader,T>> _expression;
-			readonly ConcurrentDictionary<Type, ReaderMapperInfo> _mappers = new ();
+			readonly ConcurrentDictionary<Type,ReaderMapperInfo>  _mappers = new ();
 
 
 			internal class ReaderMapperInfo
 			{
-				public Expression<Func<IQueryRunner, IDataReader, T>> MapperExpression = null!;
-				public Func<IQueryRunner, IDataReader, T>             Mapper = null!;
-				public bool                                           IsFaulted;
+				public Expression<Func<IQueryRunner,IDataReader,T>> MapperExpression = null!;
+				public Func<IQueryRunner,IDataReader,T>             Mapper = null!;
+				public bool                                         IsFaulted;
 			}
 
 			public T Map(IDataContext context, IQueryRunner queryRunner, IDataReader dataReader, ref ReaderMapperInfo mapperInfo)

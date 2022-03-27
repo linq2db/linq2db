@@ -1849,6 +1849,275 @@ namespace Tests.DataProvider
 
 		#endregion
 
+		#region String
+
+		[Test]
+		public void AsciiTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Ascii('A'));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(65));
+		}
+
+		[Test]
+		public void AsciiTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Ascii("ABC"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(65));
+		}
+
+		[Test]
+		public void CharTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Char(65));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo('A'));
+		}
+
+		[Test]
+		public void CharIndexTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.CharIndex("34", "123456"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(3));
+		}
+
+		[Test]
+		public void CharIndexTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.CharIndex("34", "123456340", 4));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(7));
+		}
+
+		[Test]
+		public void CharIndexTest3([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.CharIndexBig("34", "123456"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(3));
+		}
+
+		[Test]
+		public void CharIndexTest4([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.CharIndexBig("34", "123456340", 4));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(7));
+		}
+
+		[Test]
+		public void CharIndexTest5([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.CharIndex("34", "123456340", 4L));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(7));
+		}
+
+		[Test]
+		public void ConcatTest([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Concat("34", "123456", "abc"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("34123456abc"));
+		}
+
+		[Test]
+		public void ConcatWithSeparatorTest([IncludeDataSources(TestProvName.AllSqlServer2017Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.ConcatWithSeparator("-", "34", "123456", "abc"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("34-123456-abc"));
+		}
+
+		[Test]
+		public void DifferenceTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Difference("Green", "Greene"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(4));
+		}
+
+		[Test]
+		public void FormatTest([IncludeDataSources(TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Format(123456789, "###-##-####"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("123-45-6789"));
+		}
+
+		[Test]
+		public void LeftTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Left("1234", 2));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("12"));
+		}
+
+		[Test]
+		public void LenTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Len("1234"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(4));
+		}
+
+		[Test]
+		public void LenBigTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.LenBig("1234"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(4L));
+		}
+
+		[Test]
+		public void LowerTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Lower("AbC"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("abc"));
+		}
+
+		[Test]
+		public void LeftTrimTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.LeftTrim("  ABC  "));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("ABC  "));
+		}
+
+		[Test]
+		public void NCharTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.NChar(248));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo('ø'));
+		}
+
+		[Test]
+		public void PatIndexTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.PatIndex("%ter%", "interesting data"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(3));
+		}
+
+		[Test]
+		public void PatIndexBigTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.PatIndexBig("%ter%", "interesting data"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(3));
+		}
+
+		[Test]
+		public void QuoteNameTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.QuoteName("abc[]def"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("[abc[]]def]"));
+		}
+
+		[Test]
+		public void QuoteNameTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.QuoteName("abc def", "><"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("<abc def>"));
+		}
+
+		[Test]
+		public void ReplaceTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Replace("abcdefghicde", "cde", "xxx"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("abxxxfghixxx"));
+		}
+
+		[Test]
+		public void ReplicateTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Replicate("ab", 2));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("abab"));
+		}
+
+		[Test]
+		public void ReplicateTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Replicate(new byte[] { (int)'a' }, 2));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("aa"));
+		}
+
+		[Test]
+		public void ReverseTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Reverse("abc"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("cba"));
+		}
+
+		[Test]
+		public void RightTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Right("12345", 2));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("45"));
+		}
+
+		[Test]
+		public void RightTrimTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.RightTrim("  123  "));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("  123"));
+		}
+
+
+
+
+		[Test]
+		public void UpperTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db     = new SystemDB(context);
+			var       result = db.Select(() => SqlFn.Upper("AbC"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("ABC"));
+		}
+
+
+		#endregion
+
 		#region System
 
 		[Test]

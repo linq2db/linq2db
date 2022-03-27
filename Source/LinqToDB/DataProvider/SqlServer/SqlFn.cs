@@ -2014,14 +2014,14 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		/// <summary>
-		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SIGN-transact-sql">SIGN (Transact-SQL)</see></b></para>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/RADIANS-transact-sql">RADIANS (Transact-SQL)</see></b></para>
 		/// <para>Returns radians when a numeric expression, in degrees, is entered.</para>
 		/// </summary>
 		/// <param name="numeric_expression">An <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
 		/// of the exact numeric or approximate numeric data type category, except for the <b>bit</b> data type.</param>
 		/// <returns>Return values have the same type as <c>numeric_expression</c>.</returns>
 		/// <exception cref="InvalidOperationException" />
-		[Sql.Function(ProviderName.SqlServer, "SIGN", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		[Sql.Function(ProviderName.SqlServer, "RADIANS", ServerSideOnly=true, IgnoreGenericParameters=true)]
 		[return: NotNullIfNotNull("numeric_expression")]
 		public static T Radians<T>(T numeric_expression)
 		{
@@ -2946,6 +2946,485 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#endregion
 
+		#region String
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ASCII-transact-sql">ASCII (Transact-SQL)</see></b></para>
+		/// <para>Returns the ASCII code value of the leftmost character of a character expression.</para>
+		/// </summary>
+		/// <param name="character_expression">An <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of type <b>char</b> or <b>varchar</b>.</param>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "ASCII", ServerSideOnly=true)]
+		public static int Ascii(char character_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Ascii)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/ASCII-transact-sql">ASCII (Transact-SQL)</see></b></para>
+		/// <para>Returns the ASCII code value of the leftmost character of a character expression.</para>
+		/// </summary>
+		/// <param name="character_expression">An <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of type <b>char</b> or <b>varchar</b>.</param>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "ASCII", ServerSideOnly=true)]
+		public static int? Ascii(string? character_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Ascii)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CHAR-transact-sql">CHAR (Transact-SQL)</see></b></para>
+		/// <para>Returns the ASCII code value of the leftmost character of a character expression.</para>
+		/// </summary>
+		/// <param name="integer_expression">An integer from 0 through 255. <c>CHAR</c> returns a <c>NULL</c> value for integer expressions
+		/// outside this input range or not representing a complete character. <c>CHAR</c> also returns a <c>NULL</c> value when
+		/// the character exceeds the length of the return type. Many common character sets share ASCII as a sub-set and will
+		/// return the same character for integer values in the range 0 through 127.</param>
+		/// <returns>char(1)</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "CHAR", ServerSideOnly=true)]
+		public static char? Char(int? integer_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Char)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CHARINDEX-transact-sql">CHARINDEX (Transact-SQL)</see></b></para>
+		/// <para>This function searches for one character expression inside a second character expression,
+		/// returning the starting position of the first expression if found.</para>
+		/// </summary>
+		/// <param name="expressionToFind">A character <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// containing the sequence to find. <c>expressionToFind</c> has an 8000 character limit.</param>
+		/// <param name="expressionToSearch">A character expression to search.</param>
+		/// <returns><b>bigint</b> if <c>expressionToSearch</c> has an <b>nvarchar(max)</b>, <b>varbinary(max)</b>, or <b>varchar(max)</b> data type; <b>int</b> otherwise.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "CHARINDEX", ServerSideOnly=true)]
+		public static int? CharIndex(string? expressionToFind, string? expressionToSearch)
+		{
+			throw new InvalidOperationException($"'{nameof(CharIndex)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CHARINDEX-transact-sql">CHARINDEX (Transact-SQL)</see></b></para>
+		/// <para>This function searches for one character expression inside a second character expression,
+		/// returning the starting position of the first expression if found.</para>
+		/// </summary>
+		/// <param name="expressionToFind">A character <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// containing the sequence to find. <c>expressionToFind</c> has an 8000 character limit.</param>
+		/// <param name="expressionToSearch">A character expression to search.</param>
+		/// <returns><b>bigint</b> if <c>expressionToSearch</c> has an <b>nvarchar(max)</b>, <b>varbinary(max)</b>, or <b>varchar(max)</b> data type; <b>int</b> otherwise.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "CHARINDEX", ServerSideOnly=true)]
+		public static long? CharIndexBig(string? expressionToFind, string? expressionToSearch)
+		{
+			throw new InvalidOperationException($"'{nameof(CharIndexBig)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CHARINDEX-transact-sql">CHARINDEX (Transact-SQL)</see></b></para>
+		/// <para>This function searches for one character expression inside a second character expression,
+		/// returning the starting position of the first expression if found.</para>
+		/// </summary>
+		/// <param name="expressionToFind">A character <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// containing the sequence to find. <c>expressionToFind</c> has an 8000 character limit.</param>
+		/// <param name="expressionToSearch">A character expression to search.</param>
+		/// <param name="start_location">An <b>integer</b> or <b>bigint</b> expression at which the search starts.
+		/// If <c>start_location</c> is not specified, has a negative value, or has a zero (0) value,
+		/// the search starts at the beginning of <c>expressionToSearch</c>.</param>
+		/// <returns><b>bigint</b> if <c>expressionToSearch</c> has an <b>nvarchar(max)</b>, <b>varbinary(max)</b>, or <b>varchar(max)</b> data type; <b>int</b> otherwise.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "CHARINDEX", ServerSideOnly=true)]
+		public static int? CharIndex(string? expressionToFind, string? expressionToSearch, int? start_location)
+		{
+			throw new InvalidOperationException($"'{nameof(CharIndex)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CHARINDEX-transact-sql">CHARINDEX (Transact-SQL)</see></b></para>
+		/// <para>This function searches for one character expression inside a second character expression,
+		/// returning the starting position of the first expression if found.</para>
+		/// </summary>
+		/// <param name="expressionToFind">A character <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// containing the sequence to find. <c>expressionToFind</c> has an 8000 character limit.</param>
+		/// <param name="expressionToSearch">A character expression to search.</param>
+		/// <param name="start_location">An <b>integer</b> or <b>bigint</b> expression at which the search starts.
+		/// If <c>start_location</c> is not specified, has a negative value, or has a zero (0) value,
+		/// the search starts at the beginning of <c>expressionToSearch</c>.</param>
+		/// <returns><b>bigint</b> if <c>expressionToSearch</c> has an <b>nvarchar(max)</b>, <b>varbinary(max)</b>, or <b>varchar(max)</b> data type; <b>int</b> otherwise.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "CHARINDEX", ServerSideOnly=true)]
+		public static long? CharIndex(string? expressionToFind, string? expressionToSearch, long? start_location)
+		{
+			throw new InvalidOperationException($"'{nameof(CharIndex)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CHARINDEX-transact-sql">CHARINDEX (Transact-SQL)</see></b></para>
+		/// <para>This function searches for one character expression inside a second character expression,
+		/// returning the starting position of the first expression if found.</para>
+		/// </summary>
+		/// <param name="expressionToFind">A character <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// containing the sequence to find. <c>expressionToFind</c> has an 8000 character limit.</param>
+		/// <param name="expressionToSearch">A character expression to search.</param>
+		/// <param name="start_location">An <b>integer</b> or <b>bigint</b> expression at which the search starts.
+		/// If <c>start_location</c> is not specified, has a negative value, or has a zero (0) value,
+		/// the search starts at the beginning of <c>expressionToSearch</c>.</param>
+		/// <returns><b>bigint</b> if <c>expressionToSearch</c> has an <b>nvarchar(max)</b>, <b>varbinary(max)</b>, or <b>varchar(max)</b> data type; <b>int</b> otherwise.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "CHARINDEX", ServerSideOnly=true)]
+		public static long? CharIndexBig(string? expressionToFind, string? expressionToSearch, int? start_location)
+		{
+			throw new InvalidOperationException($"'{nameof(CharIndexBig)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CONCAT-transact-sql">CONCAT (Transact-SQL)</see></b></para>
+		/// <para>This function returns a string resulting from the concatenation, or joining, of two or more string values in an end-to-end manner.</para>
+		/// </summary>
+		/// <param name="string_value">A string value to concatenate to the other values. The <c>CONCAT</c> function requires at least two
+		/// <c>string_value</c> arguments, and no more than 254 <c>string_value</c> arguments.</param>
+		/// <returns>string_value</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "CONCAT", ServerSideOnly=true)]
+		public static string? Concat(params string?[] string_value)
+		{
+			throw new InvalidOperationException($"'{nameof(Concat)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CONCAT-WS-transact-sql">CONCAT_WS (Transact-SQL)</see></b></para>
+		/// <para>This function returns a string resulting from the concatenation, or joining, of two or more string values in an end-to-end manner.
+		/// It separates those concatenated string values with the delimiter specified in the first function argument.
+		/// (<c>CONCAT_WS</c> indicates concatenate with separator.)</para>
+		/// </summary>
+		/// <param name="separator">An expression of any character type (<c>char</c>, <c>nchar</c>, <c>nvarchar</c>, or <c>varchar</c>).</param>
+		/// <param name="arguments">An expression of any type. The <c>CONCAT_WS</c> function requires at least two arguments, and no more than 254 arguments.</param>
+		/// <returns>A string value whose length and type depend on the input.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "CONCAT_WS", ServerSideOnly=true)]
+		public static string? ConcatWithSeparator(string? separator, params string?[] arguments)
+		{
+			throw new InvalidOperationException($"'{nameof(ConcatWithSeparator)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/DIFFERENCE-transact-sql">DIFFERENCE (Transact-SQL)</see></b></para>
+		/// <para>This function returns an integer value measuring the difference between the
+		/// <see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/soundex-transact-sql">SOUNDEX()</see> values of two different character expressions.</para>
+		/// </summary>
+		/// <param name="character_expression1">An alphanumeric
+		/// <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see> of character data.
+		/// <c>character_expression</c> can be a constant, variable, or column.</param>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "DIFFERENCE", ServerSideOnly=true)]
+		public static int? Difference(string? character_expression1, string? character_expression2)
+		{
+			throw new InvalidOperationException($"'{nameof(Difference)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/FORMAT-transact-sql">FORMAT (Transact-SQL)</see></b></para>
+		/// <para>Returns a value formatted with the specified format and optional culture. Use the FORMAT function for locale-aware
+		/// formatting of date/time and number values as strings. For general data type conversions, use CAST or CONVERT.</para>
+		/// </summary>
+		/// <param name="value">Expression of a supported data type to format. For a list of valid types, see the table in the following Remarks section.</param>
+		/// <returns><b>nvarchar</b> or null</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "FORMAT", ServerSideOnly=true)]
+		public static string? Format(object? value, string? format)
+		{
+			throw new InvalidOperationException($"'{nameof(Format)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/LEFT-transact-sql">LEFT (Transact-SQL)</see></b></para>
+		/// <para>Returns the left part of a character string with the specified number of characters.</para>
+		/// </summary>
+		/// <param name="character_expression">Is an <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of character or binary data. <c>character_expression</c> can be a constant, variable, or column.
+		/// <c>character_expression</c> can be of any data type, except <b>text</b> or <b>ntext</b>,
+		/// that can be implicitly converted to <b>varchar</b> or <b>nvarchar</b>. Otherwise, use the
+		/// <see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/cast-and-convert-transact-sql">CAST</see>
+		/// function to explicitly convert <c>character_expression</c>.</param>
+		/// <param name="integer_expression">Is a positive integer that specifies how many characters of the character_expression will be returned.
+		/// If <c>integer_expression</c> is negative, an error is returned. If <c>integer_expression</c> is type <b>bigint</b> and contains a large value,
+		/// <c>character_expression</c> must be of a large data type such as <b>varchar(max)</b>.
+		/// The <c>integer_expression</c> parameter counts a UTF-16 surrogate character as one character.</param>
+		/// <returns>Returns <b>varchar</b> when <c>character_expression</c> is a non-Unicode character data type.
+		/// Returns <b>nvarchar</b> when <c>character_expression</c> is a Unicode character data type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "LEFT", ServerSideOnly=true)]
+		public static string? Left(string? character_expression, int? integer_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Left)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/LEN-transact-sql">LEN (Transact-SQL)</see></b></para>
+		/// <para>Returns the number of characters of the specified string expression, excluding trailing spaces.</para>
+		/// </summary>
+		/// <param name="character_expression">Is the string <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// to be evaluated. <c>character_expression</c> can be a constant, variable, or column of either character or binary data.</param>
+		/// <returns><b>bigint</b> if expression is of the <b>varchar(max)</b>, <b>nvarchar(max)</b> or <b>varbinary(max)</b> data types; otherwise, <b>int</b>.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "LEN", ServerSideOnly=true)]
+		public static int? Len(string? character_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Len)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/LEN-transact-sql">LEN (Transact-SQL)</see></b></para>
+		/// <para>Returns the number of characters of the specified string expression, excluding trailing spaces.</para>
+		/// </summary>
+		/// <param name="character_expression">Is the string <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// to be evaluated. <c>character_expression</c> can be a constant, variable, or column of either character or binary data.</param>
+		/// <returns><b>bigint</b> if expression is of the <b>varchar(max)</b>, <b>nvarchar(max)</b> or <b>varbinary(max)</b> data types; otherwise, <b>int</b>.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "LEN", ServerSideOnly=true)]
+		public static long? LenBig(string? character_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(LenBig)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/LOWER-transact-sql">LOWER (Transact-SQL)</see></b></para>
+		/// <para>Returns a character expression after converting uppercase character data to lowercase.</para>
+		/// </summary>
+		/// <param name="character_expression">Is the string <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of character or binary data. <c>character_expression</c> can be a constant, variable, or column.
+		/// <c>character_expression</c> must be of a data type that is implicitly convertible to <b>varchar</b>.</param>
+		/// <returns><b>varchar</b> or <b>nvarchar</b></returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "LOWER", ServerSideOnly=true)]
+		public static string? Lower(string? character_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Lower)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/LTRIM-transact-sql">LTRIM (Transact-SQL)</see></b></para>
+		/// <para>Returns a character expression after it removes leading blanks.</para>
+		/// </summary>
+		/// <param name="character_expression">Is the string <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of character or binary data. <c>character_expression</c> can be a constant, variable, or column.
+		/// <c>character_expression</c> must be of a data type that is implicitly convertible to <b>varchar</b>.</param>
+		/// <returns><b>varchar</b> or <b>nvarchar</b></returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "LTRIM", ServerSideOnly=true)]
+		public static string? LeftTrim(string? character_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(LeftTrim)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/NCHAR-transact-sql">NCHAR (Transact-SQL)</see></b></para>
+		/// <para>Returns the Unicode character with the specified integer code, as defined by the Unicode standard.</para>
+		/// </summary>
+		/// <param name="integer_expression">When the collation of the database does not contain the Supplementary Character (SC) flag,
+		/// this is a positive integer from 0 through 65535 (0 through 0xFFFF). If a value outside this range is specified, NULL is returned.</param>
+		/// <returns><b>nchar(1)</b> when the default database collation does not support supplementary characters.
+		/// <b>nvarchar(2)</b> when the default database collation supports supplementary characters.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "NCHAR", ServerSideOnly=true)]
+		public static char? NChar(int? integer_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(NChar)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/PATINDEX-transact-sql">PATINDEX (Transact-SQL)</see></b></para>
+		/// <para>Returns the starting position of the first occurrence of a pattern in a specified expression, or zeros if the pattern is not found, on all valid text and character data types.</para>
+		/// </summary>
+		/// <param name="pattern">Is a character expression that contains the sequence to be found. Wildcard characters can be used; however,
+		/// the % character must come before and follow pattern (except when you search for first or last characters).
+		/// <c>pattern</c> is an expression of the character string data type category. pattern is limited to 8000 characters.</param>
+		/// <param name="expression">Is an expression, typically a column that is searched for the specified pattern.
+		/// <c>expression</c> is of the character string data type category.</param>
+		/// <returns><b>bigint</b> if <c>expression</c> is of the <b>varchar(max)</b> or <b>nvarchar(max)</b> data types; otherwise int.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "PATINDEX", ServerSideOnly=true)]
+		public static int? PatIndex(string? pattern, string? expression)
+		{
+			throw new InvalidOperationException($"'{nameof(PatIndex)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/PATINDEX-transact-sql">PATINDEX (Transact-SQL)</see></b></para>
+		/// <para>Returns the starting position of the first occurrence of a pattern in a specified expression,
+		/// or zeros if the pattern is not found, on all valid text and character data types.</para>
+		/// </summary>
+		/// <param name="pattern">Is a character expression that contains the sequence to be found. Wildcard characters can be used; however,
+		/// the % character must come before and follow pattern (except when you search for first or last characters).
+		/// <c>pattern</c> is an expression of the character string data type category. pattern is limited to 8000 characters.</param>
+		/// <param name="expression">Is an expression, typically a column that is searched for the specified pattern.
+		/// <c>expression</c> is of the character string data type category.</param>
+		/// <returns><b>bigint</b> if <c>expression</c> is of the <b>varchar(max)</b> or <b>nvarchar(max)</b> data types; otherwise int.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "PATINDEX", ServerSideOnly=true)]
+		public static long? PatIndexBig(string? pattern, string? expression)
+		{
+			throw new InvalidOperationException($"'{nameof(PatIndexBig)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/QUOTENAME-transact-sql">QUOTENAME (Transact-SQL)</see></b></para>
+		/// <para>Returns a Unicode string with the delimiters added to make the input string a valid SQL Server delimited identifier.</para>
+		/// </summary>
+		/// <param name="character_string">Is a string of Unicode character data. <c>character_string</c> is <b>sysname</b> and is limited to 128 characters.
+		/// Inputs greater than 128 characters return NULL.</param>
+		/// <returns>nvarchar(258)</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "QUOTENAME", ServerSideOnly=true)]
+		public static string? QuoteName(string? character_string)
+		{
+			throw new InvalidOperationException($"'{nameof(QuoteName)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/QUOTENAME-transact-sql">QUOTENAME (Transact-SQL)</see></b></para>
+		/// <para>Returns a Unicode string with the delimiters added to make the input string a valid SQL Server delimited identifier.</para>
+		/// </summary>
+		/// <param name="character_string">Is a string of Unicode character data. <c>character_string</c> is <b>sysname</b> and is limited to 128 characters.
+		/// Inputs greater than 128 characters return NULL.</param>
+		/// <param name="quote_character">Is a one-character string to use as the delimiter.
+		/// Can be a single quotation mark ( ' ), a left or right bracket ( [] ), a double quotation mark ( " ),
+		/// a left or right parenthesis ( () ), a greater than or less than sign ( &gt;&lt; ), a left or right brace ( {} ) or a backtick ( ` ).
+		/// NULL returns if an unacceptable character is supplied. If <c>quote_character</c> is not specified, brackets are used.</param>
+		/// <returns>nvarchar(258)</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "QUOTENAME", ServerSideOnly=true)]
+		public static string? QuoteName(string? character_string, string? quote_character)
+		{
+			throw new InvalidOperationException($"'{nameof(QuoteName)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/REPLACE-transact-sql">REPLACE (Transact-SQL)</see></b></para>
+		/// <para>Replaces all occurrences of a specified string value with another string value.</para>
+		/// </summary>
+		/// <param name="string_expression">Is the string expression to be searched. <c>string_expression</c> can be of a character or binary data type.</param>
+		/// <param name="string_pattern">Is the substring to be found. <c>string_pattern</c> can be of a character or binary data type.
+		/// <c>string_pattern</c> must not exceed the maximum number of bytes that fits on a page.
+		/// If <c>string_pattern</c> is an empty string (''), <c>string_expression</c> is returned unchanged.</param>
+		/// <param name="string_replacement">Is the replacement string. <c>string_replacement</c> can be of a character or binary data type.</param>
+		/// <returns>Returns <b>nvarchar</b> if one of the input arguments is of the <b>nvarchar</b> data type; otherwise,
+		/// <b>REPLACE</b> returns <b>varchar</b>. Returns NULL if any one of the arguments is NULL.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "REPLACE", ServerSideOnly=true)]
+		public static string? Replace(string? string_expression, string? string_pattern, string? string_replacement)
+		{
+			throw new InvalidOperationException($"'{nameof(Replace)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/REPLICATE-transact-sql">REPLICATE (Transact-SQL)</see></b></para>
+		/// <para>Repeats a string value a specified number of times.</para>
+		/// </summary>
+		/// <param name="string_expression">Is an expression of a character string or binary data type.</param>
+		/// <param name="integer_expression">Is an expression of any integer type, including <b>bigint</b>.
+		/// If <c>integer_expression</c> is negative, NULL is returned.</param>
+		/// <returns>Returns the same type as <c>string_expression</c>.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "REPLICATE", ServerSideOnly=true)]
+		public static string? Replicate(string? string_expression, int? integer_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Replicate)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/REPLICATE-transact-sql">REPLICATE (Transact-SQL)</see></b></para>
+		/// <para>Repeats a string value a specified number of times.</para>
+		/// </summary>
+		/// <param name="string_expression">Is an expression of a character string or binary data type.</param>
+		/// <param name="integer_expression">Is an expression of any integer type, including <b>bigint</b>.
+		/// If <c>integer_expression</c> is negative, NULL is returned.</param>
+		/// <returns>Returns the same type as <c>string_expression</c>.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "REPLICATE", ServerSideOnly=true)]
+		public static string? Replicate(byte[]? string_expression, int? integer_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Replicate)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/REVERSE-transact-sql">REVERSE (Transact-SQL)</see></b></para>
+		/// <para>Returns the reverse order of a string value.</para>
+		/// </summary>
+		/// <param name="string_expression"><c>string_expression</c> is an expression of a string or binary data type.
+		/// <c>string_expression</c> can be a constant, variable, or column of either character or binary data.</param>
+		/// <returns><b>varchar</b> or <b>nvarchar</b></returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "REVERSE", ServerSideOnly=true)]
+		public static string? Reverse(string? string_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Reverse)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/RIGHT-transact-sql">RIGHT (Transact-SQL)</see></b></para>
+		/// <para>Returns the right part of a character string with the specified number of characters.</para>
+		/// </summary>
+		/// <param name="character_expression">Is an <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of character or binary data. <c>character_expression</c> can be a constant, variable, or column.
+		/// <c>character_expression</c> can be of any data type, except <b>text</b> or <b>ntext</b>,
+		/// that can be implicitly converted to <b>varchar</b> or <b>nvarchar</b>. Otherwise, use the
+		/// <see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/cast-and-convert-transact-sql">CAST</see>
+		/// function to explicitly convert <c>character_expression</c>.</param>
+		/// <param name="integer_expression">Is a positive integer that specifies how many characters of the character_expression will be returned.
+		/// If <c>integer_expression</c> is negative, an error is returned. If <c>integer_expression</c> is type <b>bigint</b> and contains a large value,
+		/// <c>character_expression</c> must be of a large data type such as <b>varchar(max)</b>.
+		/// The <c>integer_expression</c> parameter counts a UTF-16 surrogate character as one character.</param>
+		/// <returns>Returns <b>varchar</b> when <c>character_expression</c> is a non-Unicode character data type.
+		/// Returns <b>nvarchar</b> when <c>character_expression</c> is a Unicode character data type.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "RIGHT", ServerSideOnly=true)]
+		public static string? Right(string? character_expression, int? integer_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Right)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/RTRIM-transact-sql">RTRIM (Transact-SQL)</see></b></para>
+		/// <para>Returns a character string after truncating all trailing spaces.</para>
+		/// </summary>
+		/// <param name="character_expression">Is an <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of character data. character_expression can be a constant, variable, or column of either character or binary data.</param>
+		/// <returns><b>varchar</b> or <b>nvarchar</b></returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "RTRIM", ServerSideOnly=true)]
+		public static string? RightTrim(string? character_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(RightTrim)}' is a server side only function.");
+		}
+
+
+
+
+
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/UPPER-transact-sql">UPPER (Transact-SQL)</see></b></para>
+		/// <para>Returns a character expression after converting uppercase character data to lowercase.</para>
+		/// </summary>
+		/// <param name="character_expression">Is the string <see href="https://docs.microsoft.com/en-us/sql/t-sql/language-elements/expressions-transact-sql">expression</see>
+		/// of character or binary data. <c>character_expression</c> can be a constant, variable, or column.
+		/// <c>character_expression</c> must be of a data type that is implicitly convertible to <b>varchar</b>.</param>
+		/// <returns><b>varchar</b> or <b>nvarchar</b></returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "UPPER", ServerSideOnly=true)]
+		public static string? Upper(string? character_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Upper)}' is a server side only function.");
+		}
+
+		#endregion
+
 		#region System
 
 		/// <summary>
@@ -3183,7 +3662,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>nvarchar</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "FORMATMESSAGE", ServerSideOnly=true)]
-		public static string? FormatMessage(int msg_number, params object[] param_values)
+		public static string? FormatMessage(int msg_number, params object?[] param_values)
 		{
 			throw new InvalidOperationException($"'{nameof(FormatMessage)}' is a server side only function.");
 		}
@@ -3203,7 +3682,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>nvarchar</returns>
 		/// <exception cref="InvalidOperationException" />
 		[Sql.Function(ProviderName.SqlServer, "FORMATMESSAGE", ServerSideOnly=true)]
-		public static string? FormatMessage(string msg_string, params object[] param_values)
+		public static string? FormatMessage(string msg_string, params object?[] param_values)
 		{
 			throw new InvalidOperationException($"'{nameof(FormatMessage)}' is a server side only function.");
 		}

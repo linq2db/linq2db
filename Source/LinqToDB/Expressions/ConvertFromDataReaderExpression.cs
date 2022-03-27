@@ -6,11 +6,11 @@ using System.Linq.Expressions;
 namespace LinqToDB.Expressions
 {
 	using Common;
-	using LinqToDB.Common.Internal;
+	using Common.Internal;
 	using LinqToDB.Extensions;
-	using LinqToDB.Linq;
-	using LinqToDB.Reflection;
+	using Linq;
 	using Mapping;
+	using Reflection;
 
 	class ConvertFromDataReaderExpression : Expression
 	{
@@ -31,17 +31,17 @@ namespace LinqToDB.Expressions
 			_slowModeDataContext = dataContext;
 		}
 
-		readonly int              _idx;
-		readonly Expression       _dataReaderParam;
-		readonly Type             _type;
-		readonly IDataContext?    _slowModeDataContext;
-		
-		public IValueConverter?   Converter { get; }
+		readonly int            _idx;
+		readonly Expression     _dataReaderParam;
+		readonly Type           _type;
+		readonly IDataContext?  _slowModeDataContext;
 
-		public override Type           Type        => _type;
-		public override ExpressionType NodeType    => ExpressionType.Extension;
-		public override bool           CanReduce   => true;
-		public          int            Index       => _idx;
+		public IValueConverter? Converter { get; }
+
+		public override Type           Type      => _type;
+		public override ExpressionType NodeType  => ExpressionType.Extension;
+		public override bool           CanReduce => true;
+		public          int            Index     => _idx;
 
 		public override Expression Reduce()
 		{
@@ -88,13 +88,14 @@ namespace LinqToDB.Expressions
 			var toType = type.ToNullableUnderlying();
 
 			Expression ex;
+
 			if (converter != null)
 			{
 				var expectedProvType = converter.FromProviderExpression.Parameters[0].Type;
 				ex = dataContext.GetReaderExpression(dataReader, idx, dataReaderExpr, expectedProvType);
 			}
 			else
-			{ 
+			{
 				ex = dataContext.GetReaderExpression(dataReader, idx, dataReaderExpr, toType);
 			}
 
@@ -114,7 +115,7 @@ namespace LinqToDB.Expressions
 				// we have to prepare read expression to conversion
 				//
 				var expectedType = converter.FromProviderExpression.Parameters[0].Type;
-				
+
 				if (converter.HandlesNulls)
 				{
 					ex = Condition(
@@ -133,7 +134,7 @@ namespace LinqToDB.Expressions
 				{
 					ex = Convert(ex, toType);
 				}
-					
+
 			}
 			else if (toType.IsEnum)
 			{
@@ -202,7 +203,7 @@ namespace LinqToDB.Expressions
 			 * from multiple threads, so it cannot have state. For same reason it doesn't make much sense to reduce number
 			 * of ColumnReader instances in mapper expression to one for single column. It could be done later if we will
 			 * see benefits of it, but frankly speaking it doesn't make sense to optimize slow-mode reader.
-			 * 
+			 *
 			 * Limitation is the same as for non-slow mapper:
 			 * column mapping expressions should use same reader method to get column value. This limitation enforced
 			 * in GetRawValueSequential method.
