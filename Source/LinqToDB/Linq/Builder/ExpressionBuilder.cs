@@ -16,6 +16,7 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 	using LinqToDB.Expressions;
+	using LinqToDB.Reflection;
 
 	partial class ExpressionBuilder
 	{
@@ -1405,10 +1406,10 @@ namespace LinqToDB.Linq.Builder
 				var path =
 					Expression.Call(
 						Expression.Constant(_query),
-						MemberHelper.MethodOf<Query>(a => a.GetIQueryable(0, null!)),
-						ExpressionInstances.Int32(n), accessor ?? Expression.Constant(null, typeof(Expression)));
+						Methods.Query.GetIQueryable,
+						ExpressionInstances.Int32(n), accessor ?? Expression.Constant(null, typeof(Expression)), Expression.Constant(true));
 
-				var qex = _query.GetIQueryable(n, expression);
+				var qex = _query.GetIQueryable(n, expression, force: false);
 
 				if (expression.NodeType == ExpressionType.Call && qex.NodeType == ExpressionType.Call)
 				{
