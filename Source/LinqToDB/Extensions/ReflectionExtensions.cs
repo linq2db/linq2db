@@ -17,6 +17,7 @@ namespace LinqToDB.Extensions
 	using System.Diagnostics.CodeAnalysis;
 	using Expressions;
 	using LinqToDB.Common;
+	using LinqToDB.Reflection;
 
 	[PublicAPI]
 	public static class ReflectionExtensions
@@ -209,8 +210,6 @@ namespace LinqToDB.Extensions
 			return memberInfo.MemberType == MemberTypes.Method;
 		}
 
-		private static readonly MemberInfo SQLPropertyMethod = MemberHelper.MethodOf(() => Sql.Property<string>(null!, null!)).GetGenericMethodDefinition();
-
 		/// <summary>
 		/// Determines whether member info represent a Sql.Property method.
 		/// </summary>
@@ -221,7 +220,7 @@ namespace LinqToDB.Extensions
 		public static bool IsSqlPropertyMethodEx(this MemberInfo memberInfo)
 		{
 			return memberInfo is MethodInfo methodCall && methodCall.IsGenericMethod &&
-			       methodCall.GetGenericMethodDefinition() == SQLPropertyMethod;
+			       methodCall.GetGenericMethodDefinition() == Methods.LinqToDB.SqlExt.Property;
 		}
 
 		/// <summary>
