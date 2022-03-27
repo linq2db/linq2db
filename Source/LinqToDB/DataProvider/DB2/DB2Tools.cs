@@ -97,11 +97,15 @@ namespace LinqToDB.DataProvider.DB2
 		public static void ResolveDB2(string path)
 		{
 			new AssemblyResolver(path, DB2ProviderAdapter.AssemblyName);
+			if (DB2ProviderAdapter.AssemblyNameOld != null)
+#pragma warning disable CS0162 // Unreachable code detected
+				new AssemblyResolver(path, DB2ProviderAdapter.AssemblyNameOld);
+#pragma warning restore CS0162 // Unreachable code detected
 		}
 
 		public static void ResolveDB2(Assembly assembly)
 		{
-			new AssemblyResolver(assembly, DB2ProviderAdapter.AssemblyName);
+			new AssemblyResolver(assembly, assembly.GetName().Name!);
 		}
 
 		#region CreateDataConnection
