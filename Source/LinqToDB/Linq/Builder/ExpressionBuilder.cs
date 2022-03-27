@@ -1409,7 +1409,7 @@ namespace LinqToDB.Linq.Builder
 						Methods.Query.GetIQueryable,
 						ExpressionInstances.Int32(n), accessor ?? Expression.Constant(null, typeof(Expression)), Expression.Constant(true));
 
-				var qex = _query.GetIQueryable(n, expression, false);
+				var qex = _query.GetIQueryable(n, expression, force: false);
 
 				if (expression.NodeType == ExpressionType.Call && qex.NodeType == ExpressionType.Call)
 				{
