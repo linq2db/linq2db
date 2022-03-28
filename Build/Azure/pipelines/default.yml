@@ -1,5 +1,6 @@
 variables:
-  - template: templates/shared-vars.yml
+  - template: templates/test-vars.yml
+  - template: templates/build-vars.yml
   - name: artifact_nugets
     value: nugets
   - name: artifact_linq2db_binaries
@@ -34,87 +35,10 @@ stages:
 
 #############
 # NUGET JOB #
-#############
-  - job: build_nugets_job
-    pool:
-      vmImage: 'windows-2022'
-    displayName: 'Nugets Generation'
-    variables:
-      - template: templates/nuget-vars.yml
-    dependsOn: build_job
-    condition: and(succeeded(), or(eq(variables['Build.SourceBranchName'], variables['release_branch']), eq(variables['Build.SourceBranchName'], variables['master_branch'])))
-
-    steps:
-
-    - task: NuGetToolInstaller@1
-
-    - powershell: echo "##vso[task.setvariable variable=packageVersion]$(packageVersion)-rc.$(Build.BuildId)"
-      condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
-      displayName: Update nuget version
-
-    - task: DownloadPipelineArtifact@2
-      displayName: Download LinqToDB files
-      inputs:
-        artifactName: '$(artifact_linq2db_binaries)'
-        targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB/bin/Release'
-
-    - task: DownloadPipelineArtifact@2
-      displayName: Download LinqToDB.Tools files
-      inputs:
-        artifactName: '$(artifact_linq2db_Tools_binaries)'
-        targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB.Tools/bin/Release'
-
-    - task: DownloadPipelineArtifact@2
-      displayName: Download LinqToDB.AspNet files
-      inputs:
-        artifactName: '$(artifact_linq2db_aspnet_binaries)'
-        targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB.AspNet/bin/Release'
-
-    - task: PowerShell@2
-      inputs:
-        filePath: '$(Build.SourcesDirectory)/Build/BuildNuspecs.ps1'
-        workingDirectory: '$(Build.SourcesDirectory)'
-        arguments: -path $(Build.SourcesDirectory)/NuGet/*.nuspec -buildPath $(Build.SourcesDirectory)/BuiltNuGet -version $(packageVersion) -branch $(Build.SourceBranchName)
-      displayName: Update nuspecs
-
-    - task: CmdLine@2
-      inputs:
-        script: $(Build.SourcesDirectory)/NuGet/Pack.bat
-        workingDirectory: $(Build.SourcesDirectory)/BuiltNuGet
-      displayName: Build nugets for Azure Artifacts
-      condition: and(succeeded(), eq(variables['Build.SourceBranchName'], variables['master_branch']))
-
-    - task: CmdLine@2
-      inputs:
-        script: $(Build.SourcesDirectory)/NuGet/Pack.bat snupkg
-        workingDirectory: $(Build.SourcesDirectory)/BuiltNuGet
-      displayName: Build nugets for Nuget.org
-      condition: and(succeeded(), eq(variables['Build.SourceBranchName'], variables['release_branch']))
-
-    - task: PublishBuildArtifacts@1
-      inputs:
-        pathToPublish: '$(Build.SourcesDirectory)/BuiltNuGet/built'
-        artifactName: '$(artifact_nugets)'
-      displayName: Publish nugets to artifacts
-
-    - task: NuGetCommand@2
-      inputs:
-        command: 'push'
-        packagesToPush: '$(Build.SourcesDirectory)/BuiltNuGet/built/*.nupkg'
-        nuGetFeedType: 'internal'
-        publishVstsFeed: '0dcc414b-ea54-451e-a54f-d63f05367c4b/967a4107-9788-41a4-9f6d-a2318aab1410'
-      displayName: Publish to Azure Artifacts feed
-      condition: and(succeeded(), eq(variables['Build.SourceBranchName'], variables['master_branch']))
-
-    - task: NuGetCommand@2
-      inputs:
-        command: 'push'
-        packagesToPush: '$(Build.SourcesDirectory)/BuiltNuGet/built/*.nupkg'
-        nuGetFeedType: 'external'
-        publishFeedCredentials: 'linq2db nuget.org feed'
-      displayName: Publish to Nuget.org
-      condition: and(succeeded(), eq(variables['Build.SourceBranchName'], variables['release_branch']))
-
+##############
+  - template: templates/nuget-job.yml
+    parameters:
+      publish: true
 #############
 # TEST JOBS #
 #############

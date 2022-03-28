@@ -234,6 +234,17 @@ namespace Tests
 			}
 		}
 
+		public static Version GetSqliteVersion(DataConnection db)
+		{
+			using (var cmd = db.CreateCommand())
+			{
+				cmd.CommandText = "select sqlite_version();";
+				var version     = (string)cmd.ExecuteScalar()!;
+
+				return new Version(version);
+			}
+		}
+
 		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName = null, TableOptions tableOptions = TableOptions.NotSet)
 			where T : notnull
 		{

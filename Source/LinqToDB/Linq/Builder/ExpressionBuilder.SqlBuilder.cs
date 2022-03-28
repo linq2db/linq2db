@@ -288,7 +288,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region IsSubQuery
 
-		bool IsSubQuery(IBuildContext context, MethodCallExpression call)
+		internal bool IsSubQuery(IBuildContext context, MethodCallExpression call)
 		{
 			var isAggregate = call.IsAggregate(MappingSchema);
 
@@ -317,6 +317,9 @@ namespace LinqToDB.Linq.Builder
 						if (mc.IsAssociation(MappingSchema))
 							return true;
 
+						if (IsGetTable(mc.Method))
+							break;
+
 						return GetTableFunctionAttribute(mc.Method) != null;
 					}
 
@@ -327,6 +330,11 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return false;
+		}
+
+		bool IsGetTable(MethodInfo mi)
+		{
+			return mi.Name == "GetTable" && (mi.DeclaringType == typeof(DataConnection) || mi.DeclaringType == typeof(DataExtensions));
 		}
 
 		bool IsSubQuerySource(IBuildContext context, Expression? expr)
@@ -1374,20 +1382,7 @@ namespace LinqToDB.Linq.Builder
 
 			var value = expr.EvaluateExpression();
 
-			if (value != null && MappingSchema.ValueToSqlConverter.CanConvert(dbType.SystemType))
-				sqlValue = new SqlValue(dbType, value);
-			else
-			{
-				if (value != null && value.GetType().IsEnum)
-				{
-					var attrs = value.GetType().GetCustomAttributes(typeof(Sql.EnumAttribute), true);
-
-					if (attrs.Length == 0)
-						value = MappingSchema.EnumToValue((Enum)value);
-				}
-
-				sqlValue = MappingSchema.GetSqlValue(expr.Type, value);
-			}
+			sqlValue = MappingSchema.GetSqlValue(expr.Type, value);
 
 			_constants.Add(key, sqlValue);
 
@@ -1921,8 +1916,10 @@ namespace LinqToDB.Linq.Builder
 				{
 					value = ((UnaryExpression)value).Operand;
 
-					var l = ConvertToSql(context, operand);
-					var r = ConvertToSql(context, value);
+					var cd = SuggestColumnDescriptor(context, operand, value);
+
+					var l = ConvertToSql(context, operand, columnDescriptor: cd);
+					var r = ConvertToSql(context, value, columnDescriptor: cd);
 
 					return new SqlPredicate.ExprExpr(l, op, r, true);
 				}

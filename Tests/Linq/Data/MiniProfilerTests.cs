@@ -511,10 +511,10 @@ namespace Tests.Data
 		public void TestDB2([IncludeDataSources(ProviderName.DB2)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-#if NET472
-			using (var db = CreateDataConnection(new DB2LUWDataProvider(), context, type, "IBM.Data.DB2.DB2Connection, IBM.Data.DB2"))
+#if NETCOREAPP3_1
+			using (var db = CreateDataConnection(new DB2LUWDataProvider(), context, type, $"{DB2ProviderAdapter.ClientNamespaceOld}.DB2Connection, {DB2ProviderAdapter.AssemblyNameOld}"))
 #else
-			using (var db = CreateDataConnection(new DB2LUWDataProvider(), context, type, "IBM.Data.DB2.Core.DB2Connection, IBM.Data.DB2.Core"))
+			using (var db = CreateDataConnection(new DB2LUWDataProvider(), context, type, $"{DB2ProviderAdapter.ClientNamespace}.DB2Connection, {DB2ProviderAdapter.AssemblyName}"))
 #endif
 			{
 				var trace = string.Empty;
@@ -1168,10 +1168,10 @@ namespace Tests.Data
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			var provider = new InformixDataProviderDB2();
-#if NET472
-			using (var db = CreateDataConnection(provider, context, type, "IBM.Data.DB2.DB2Connection, IBM.Data.DB2"))
+#if NETCOREAPP3_1
+			using (var db = CreateDataConnection(provider, context, type, $"{DB2ProviderAdapter.ClientNamespaceOld}.DB2Connection, {DB2ProviderAdapter.AssemblyNameOld}"))
 #else
-			using (var db = CreateDataConnection(provider, context, type, "IBM.Data.DB2.Core.DB2Connection, IBM.Data.DB2.Core"))
+			using (var db = CreateDataConnection(provider, context, type, $"{DB2ProviderAdapter.ClientNamespace}.DB2Connection, {DB2ProviderAdapter.AssemblyName}"))
 #endif
 			{
 				var trace = string.Empty;

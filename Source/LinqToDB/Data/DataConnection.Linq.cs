@@ -14,6 +14,7 @@ namespace LinqToDB.Data
 
 	public partial class DataConnection
 	{
+		// TODO: v4: remove both GetTable methods
 		/// <summary>
 		/// Returns queryable source for specified mapping class for current connection, mapped to database table or view.
 		/// </summary>

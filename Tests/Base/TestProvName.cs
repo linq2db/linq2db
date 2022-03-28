@@ -5,7 +5,7 @@ namespace Tests
 	public static class TestProvName
 	{
 		#region SQLite
-		public const string Default                           = "SQLite.Default";
+		public const string Default           = "SQLite.Default";
 		public const string NorthwindSQLite                   = "Northwind.SQLite";
 		public const string NorthwindSQLiteMS                 = "Northwind.SQLite.MS";
 		public const string AllSQLiteNorthwind                = $"{NorthwindSQLite},{NorthwindSQLiteMS}";
@@ -103,6 +103,7 @@ namespace Tests
 		#region Firebird
 		public const string Firebird3        = "Firebird3";
 		public const string Firebird4        = "Firebird4";
+		public const string AllFirebird3Plus = $"{Firebird3}","{Firebird4}";
 		public const string AllFirebirdLess4 = $"{ProviderName.Firebird},{Firebird3}";
 		public const string AllFirebird      = $"{AllFirebirdLess4},{Firebird4}";
 		#endregion
@@ -132,7 +133,7 @@ namespace Tests
 		public const string SqlServerSequentialAccessMS  = "SqlServer.SA.MS";
 		public const string AllSqlServerSequentialAccess = $"{SqlServerSequentialAccess},{SqlServerSequentialAccessMS}";
 
-		public const string SqlServerContained           = "SqlServer.Contained";
+		public const string SqlServerContained                  = "SqlServer.Contained";
 		public const string SqlServerContainedMS         = "SqlServer.Contained.MS";
 		public const string AllSqlServerContained        = $"{SqlServerContained},{SqlServerContainedMS}";
 

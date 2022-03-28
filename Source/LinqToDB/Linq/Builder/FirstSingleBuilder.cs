@@ -272,13 +272,55 @@ namespace LinqToDB.Linq.Builder
 				return _checkNullIndex;
 			}
 
+			static bool HasSubQuery(IBuildContext context)
+			{
+				var ctx = context;
+
+				while (true)
+				{
+					if (ctx is SelectContext sc)
+					{
+						foreach (var member in sc.Members.Values)
+						{
+							var found = null != member.Find(ctx, static(c, e) =>
+							{
+								if (e is MethodCallExpression mc && c.Builder.IsSubQuery(c, mc))
+									return true;
+								return false;
+							});
+
+							if (found)
+								return true;
+						}
+
+						return false;
+					}
+
+					if (ctx is SubQueryContext sub)
+					{
+						ctx = sub.SubQuery;
+					}
+					else if (ctx is PassThroughContext pass)
+					{
+						ctx = pass.Context;
+					}
+					else
+					{
+						break;
+					}
+				}
+
+				return false;
+			}
+
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				if (expression == null || level == 0)
 				{
 					if (Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported &&
 						Parent!.SelectQuery.GroupBy.IsEmpty &&
-						Parent.SelectQuery.From.Tables.Count > 0)
+						Parent.SelectQuery.From.Tables.Count > 0 &&
+						!HasSubQuery(Sequence))
 					{
 						CreateJoin();
 

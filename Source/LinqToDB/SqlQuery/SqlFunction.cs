@@ -25,7 +25,7 @@ namespace LinqToDB.SqlQuery
 			: this(systemType, name, isAggregate, true, precedence, parameters)
 		{
 		}
-		
+
 		public SqlFunction(Type systemType, string name, bool isAggregate, bool isPure, int precedence, params ISqlExpression[] parameters)
 		{
 			//_sourceID = Interlocked.Increment(ref SqlQuery.SourceIDCounter);
@@ -169,5 +169,16 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
+		public void Deconstruct(out Type systemType, out string name)
+		{
+			systemType = SystemType;
+			name       = Name;
+		}
+
+		public void Deconstruct(out string name)
+		{
+			name = Name;
+		}
 	}
 }

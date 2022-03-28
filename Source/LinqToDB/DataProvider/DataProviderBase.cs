@@ -39,7 +39,6 @@ namespace LinqToDB.DataProvider
 				IsInsertOrUpdateSupported            = true,
 				CanCombineParameters                 = true,
 				MaxInListValuesCount                 = int.MaxValue,
-				IsGroupByExpressionSupported         = true,
 				IsDistinctOrderBySupported           = true,
 				IsSubQueryOrderBySupported           = false,
 				IsUpdateSetTableAliasSupported       = true,

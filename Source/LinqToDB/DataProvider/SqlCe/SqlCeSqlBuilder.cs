@@ -73,6 +73,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			switch (type.Type.DataType)
 			{
+				case DataType.Guid          : StringBuilder.Append("UNIQUEIDENTIFIER");                                                             return;
 				case DataType.Char          : base.BuildDataTypeFromDataType(new SqlDataType(DataType.NChar,    type.Type.Length), forCreateTable); return;
 				case DataType.VarChar       : base.BuildDataTypeFromDataType(new SqlDataType(DataType.NVarChar, type.Type.Length), forCreateTable); return;
 				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10, 4)");                                                               return;

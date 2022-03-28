@@ -300,7 +300,7 @@ namespace LinqToDB.Linq.Builder
 								{
 									foreach (var arg in ce.Arguments.Skip(1))
 										if (!context.builder._skippedExpressions.Contains(arg))
-										context.builder._skippedExpressions.Add(arg);
+											context.builder._skippedExpressions.Add(arg);
 
 									if (context.builder.IsSubQuery(context.context, ce))
 									{
@@ -377,11 +377,14 @@ namespace LinqToDB.Linq.Builder
 							{
 								var mi      = (MemberInitExpression)expr;
 								var newPart = (NewExpression)context.builder.BuildExpression(context.context, mi.NewExpression, context.enforceServerSide);
+
 								List<MemberBinding>? bindings = null;
+
 								for (var i = 0; i < mi.Bindings.Count; i++)
 								{
 									var binding    = mi.Bindings[i];
 									var newBinding = binding;
+
 									if (binding is MemberAssignment assignment)
 									{
 										var argument = context.builder.ConvertAssignmentArgument(context.context,
@@ -396,8 +399,7 @@ namespace LinqToDB.Linq.Builder
 
 									if (newBinding != binding)
 									{
-										if (bindings == null)
-											bindings = mi.Bindings.Take(i).ToList();
+										bindings ??= mi.Bindings.Take(i).ToList();
 									}
 
 									bindings?.Add(newBinding);

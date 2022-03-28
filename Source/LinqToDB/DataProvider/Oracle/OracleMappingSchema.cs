@@ -49,13 +49,13 @@ namespace LinqToDB.DataProvider.Oracle
 
 			SetConvertExpression<decimal,TimeSpan>(v => new TimeSpan((long)v));
 
-			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v)         => ConvertGuidToSql    (sb,     (Guid)    v));
+			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v)         => ConvertBinaryToSql  (sb,     ((Guid)   v).ToByteArray()));
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v)         => ConvertDateTimeToSql(sb, dt, (DateTime)v));
 			SetValueToSqlConverter(typeof(DateTimeOffset), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, ((DateTimeOffset)v).UtcDateTime));
 			SetValueToSqlConverter(typeof(string)        , (sb, dt, v) => ConvertStringToSql  (sb, v.ToString()!));
 			SetValueToSqlConverter(typeof(char)          , (sb, dt, v) => ConvertCharToSql    (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]), (sb, dt, v)         => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary), (sb, dt, v)         => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(byte[]), (sb, dt, v)         => ConvertBinaryToSql  (sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary), (sb, dt, v)         => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
 
 			// adds floating point special values support
 			SetValueToSqlConverter(typeof(float), (sb, dt, v) =>
@@ -131,25 +131,6 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			return base.TryGetConvertExpression(from, to);
-		}
-
-		static void ConvertGuidToSql(StringBuilder stringBuilder, Guid value)
-		{
-			var s = value.ToString("N");
-
-			stringBuilder
-				.Append("Cast('")
-				.Append(s.Substring( 6,  2))
-				.Append(s.Substring( 4,  2))
-				.Append(s.Substring( 2,  2))
-				.Append(s.Substring( 0,  2))
-				.Append(s.Substring(10,  2))
-				.Append(s.Substring( 8,  2))
-				.Append(s.Substring(14,  2))
-				.Append(s.Substring(12,  2))
-				.Append(s.Substring(16, 16))
-				.Append("' as raw(16))")
-				;
 		}
 
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType dataType, DateTime value)

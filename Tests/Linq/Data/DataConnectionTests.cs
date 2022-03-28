@@ -465,15 +465,15 @@ namespace Tests.Data
 			{
 				conn.AddInterceptor(new TestConnectionInterceptor(
 					(args, cn) =>
-					{
-						if (cn.State == ConnectionState.Closed)
-							open = true;
+				{
+					if (cn.State == ConnectionState.Closed)
+						open = true;
 					},
 					null,
 					async (args, cn, ct) => await Task.Run(() =>
-					{
-						if (cn.State == ConnectionState.Closed)
-							openAsync = true;
+				{
+					if (cn.State == ConnectionState.Closed)
+						openAsync = true;
 					}, ct),
 					null));
 
@@ -500,9 +500,9 @@ namespace Tests.Data
 					},
 					null,
 					async (args, cn, ct) => await Task.Run(() =>
-					{
-						if (cn.State == ConnectionState.Closed)
-							openAsync = true;
+						{
+							if (cn.State == ConnectionState.Closed)
+								openAsync = true;
 					}, ct),
 					null));
 
@@ -619,10 +619,10 @@ namespace Tests.Data
 			{
 				OnClosingCallCounter++;
 				base.OnClosing(eventData);
-			}
+				}
 
 			public override void OnClosed(DataContextEventData eventData)
-			{
+				{
 				OnClosedCallCounter++;
 				base.OnClosed(eventData);
 			}
@@ -631,7 +631,7 @@ namespace Tests.Data
 			{
 				OnClosedAsyncCallCounter++;
 				return base.OnClosedAsync(eventData);
-			}
+				}
 
 			public override Task OnClosingAsync(DataContextEventData eventData)
 			{
@@ -1160,7 +1160,7 @@ namespace Tests.Data
 							// bug in Miniprofiler.
 							//
 							if (c != null)
-								Assert.AreEqual(ConnectionState.Closed, clonedConnection.State);
+							Assert.AreEqual(ConnectionState.Closed, clonedConnection.State);
 						}
 						catch (ObjectDisposedException)
 						{
@@ -1214,11 +1214,11 @@ namespace Tests.Data
 			[DataSources(false)] string context, [Values] bool withScope)
 		{
 			if (withScope && (
-				context == ProviderName.DB2                     ||
-				context == ProviderName.InformixDB2             ||
-				context == ProviderName.SapHanaNative           ||
-				context == ProviderName.SqlCe                   ||
-				context == ProviderName.Sybase                  ||
+				context == ProviderName.DB2            ||
+				context == ProviderName.InformixDB2    ||
+				context == ProviderName.SapHanaNative  ||
+				context == ProviderName.SqlCe          ||
+				context == ProviderName.Sybase         ||
 				context.IsAnyOf(TestProvName.AllMySqlConnector) ||
 				context.IsAnyOf(TestProvName.AllFirebird)       ||
 				context.IsAnyOf(TestProvName.AllOracle)         ||
@@ -1260,15 +1260,14 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestDisposeFlagCloning962Test2(
-			[DataSources(false)] string context, [Values] bool withScope)
+		public void TestDisposeFlagCloning962Test2([DataSources(false)] string context, [Values] bool withScope)
 		{
 			if (withScope && (
-				context == ProviderName.DB2                                 ||
-				context == ProviderName.InformixDB2                         ||
-				context == ProviderName.SapHanaOdbc                         ||
-				context == ProviderName.SqlCe                               ||
-				context == ProviderName.Sybase                              ||
+				context == ProviderName.DB2                 ||
+				context == ProviderName.InformixDB2         ||
+				context == ProviderName.SapHanaOdbc         ||
+				context == ProviderName.SqlCe               ||
+				context == ProviderName.Sybase              ||
 #if !NET472
 				context.IsAnyOf(TestProvName.AllOracleManaged)              ||
 				context.IsAnyOf(ProviderName.SapHanaNative)                 ||
@@ -1296,27 +1295,27 @@ namespace Tests.Data
 				Assert.Inconclusive("Provider not configured or has issues with TransactionScope");
 			}
 
-			TransactionScope? scope = withScope ? new TransactionScope() : null;
+			var scope = withScope ? new TransactionScope() : null;
+
 			try
 			{
-				using (var db = GetDataConnection(context))
-				{
+				using var db = GetDataConnection(context);
+
 					// test cloned data connection without LoadWith, as it doesn't use cloning in v3
 					db.Select(() => "test1");
-					using (var cdb = ((IDataContext)db).Clone(true))
-					{
+
+				using var cdb = ((IDataContext)db).Clone(true);
+
 						cdb.Select(() => "test2");
 
 						scope?.Complete();
 					}
-				}
-			}
 			finally
 			{
 				scope?.Dispose();
 			}
 		}
-#endregion
+		#endregion
 
 		[Table]
 		class TransactionScopeTable

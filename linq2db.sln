@@ -120,6 +120,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 		NuGet\linq2db.Tools.nuspec = NuGet\linq2db.Tools.nuspec
 		NuGet\Pack.bat = NuGet\Pack.bat
 		NuGet\PackLocal.cmd = NuGet\PackLocal.cmd
+		NuGet\README.AspNet.md = NuGet\README.AspNet.md
+		NuGet\README.linq2db.md = NuGet\README.linq2db.md
+		NuGet\README.T4.md = NuGet\README.T4.md
+		NuGet\README.Tools.md = NuGet\README.Tools.md
 	EndProjectSection
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Tests.FSharp", "Tests\FSharp\Tests.FSharp.fsproj", "{E3E09A92-ED23-457B-8E59-CCD34667B6EE}"
@@ -376,7 +380,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "templates", "templates", "{DAD073A0-C4D2-4C92-AB6D-F8162DB2D5D3}"
 	ProjectSection(SolutionItems) = preProject
 		Build\Azure\pipelines\templates\build-job.yml = Build\Azure\pipelines\templates\build-job.yml
-		Build\Azure\pipelines\templates\nuget-vars.yml = Build\Azure\pipelines\templates\nuget-vars.yml
+		Build\Azure\pipelines\templates\build-vars.yml = Build\Azure\pipelines\templates\build-vars.yml
+		Build\Azure\pipelines\templates\nuget-job.yml = Build\Azure\pipelines\templates\nuget-job.yml
 		Build\Azure\pipelines\templates\shared-vars.yml = Build\Azure\pipelines\templates\shared-vars.yml
 		Build\Azure\pipelines\templates\test-jobs.yml = Build\Azure\pipelines\templates\test-jobs.yml
 		Build\Azure\pipelines\templates\test-matrix.yml = Build\Azure\pipelines\templates\test-matrix.yml

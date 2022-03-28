@@ -443,7 +443,8 @@ namespace Tests.xUpdate
 				var results = source.ToList();
 
 				// 5 commas after selected columns and 1 comma in join
-				Assert.AreEqual(6, db.LastQuery!.Count(c => c == ','));
+				var explicitJoin = db.LastQuery!.Contains("JOIN");
+				Assert.AreEqual(explicitJoin ? 5 : 6, db.LastQuery!.Count(c => c == ','));
 
 				Assert.AreEqual(16, results.Count);
 			}

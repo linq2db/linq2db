@@ -91,6 +91,7 @@ namespace Tests.Model
 		[Column]                                        public short?    SmallIntValue;
 		[Column]                                        public int?      IntValue;
 		[Column]                                        public long?     BigIntValue;
+		[Column(DataType = DataType.NVarChar, Length = 50, Configuration = ProviderName.Firebird)]
 		[Column]                                        public string?   StringValue;
 
 		public override bool Equals(object? obj)

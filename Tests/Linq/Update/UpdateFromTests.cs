@@ -276,7 +276,6 @@ namespace Tests.xUpdate
 					});
 
 				AreEqual(expected, actual);
-
 			}
 		}
 

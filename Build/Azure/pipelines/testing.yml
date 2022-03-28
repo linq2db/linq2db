@@ -1,5 +1,6 @@
 variables:
-  - template: templates/shared-vars.yml
+  - template: templates/test-vars.yml
+  - template: templates/build-vars.yml
 
 trigger: none
 pr:

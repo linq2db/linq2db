@@ -7,7 +7,7 @@ using LinqToDB.ServiceModel;
 
 namespace LinqToDB.SqlQuery
 {
-	using LinqToDB.Linq.Builder;
+	using Linq.Builder;
 
 	public class ConvertVisitor<TContext>
 	{
@@ -913,7 +913,7 @@ namespace LinqToDB.SqlQuery
 
 					case QueryElementType.SqlQuery:
 					{
-						var q  = (SelectQuery)element;
+						var q = (SelectQuery)element;
 						var fc = (SqlFromClause?)   ConvertInternal(q.From   ) ?? q.From;
 						var sc = (SqlSelectClause?) ConvertInternal(q.Select ) ?? q.Select;
 						var wc = (SqlWhereClause?)  ConvertInternal(q.Where  ) ?? q.Where;
@@ -997,7 +997,8 @@ namespace LinqToDB.SqlQuery
 							nq.Init(sc, fc, wc, gc, hc, oc, us, uk,
 								q.ParentSelect,
 								q.IsParameterDependent,
-								q.QueryName);
+								q.QueryName,
+								q.DoNotSetAliases);
 
 							// update visited in case if columns were cloned
 							if (objTree != null)
@@ -1172,28 +1173,35 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.OutputClause:
 					{
 						var output    = (SqlOutputClause)element;
-						var sourceT   = ConvertInternal(output.SourceTable)   as SqlTable;
 						var insertedT = ConvertInternal(output.InsertedTable) as SqlTable;
 						var deletedT  = ConvertInternal(output.DeletedTable)  as SqlTable;
 						var outputT   = ConvertInternal(output.OutputTable)   as SqlTable;
-						var outputQ   = output.OutputQuery != null ? ConvertInternal(output.OutputQuery) as SelectQuery : null;
+						var outputС   = output.OutputColumns != null ? ConvertSafe(output.OutputColumns) : null;
+
+						List<SqlSetExpression>? outputItems = null;
+
+						if (output.HasOutputItems)
+							outputItems = ConvertSafe(output.OutputItems);
 
 						if (
-							sourceT   != null && !ReferenceEquals(output.SourceTable, sourceT)     ||
 							insertedT != null && !ReferenceEquals(output.InsertedTable, insertedT) ||
 							deletedT  != null && !ReferenceEquals(output.DeletedTable, deletedT)   ||
 							outputT   != null && !ReferenceEquals(output.OutputTable, outputT)     ||
-							outputQ   != null && !ReferenceEquals(output.OutputQuery, outputQ)
+							outputС   != null && !ReferenceEquals(output.OutputColumns, outputС)   ||
+							output.HasOutputItems && outputItems != null && !ReferenceEquals(output.OutputItems, outputItems)
 						)
 						{
 							newElement = new SqlOutputClause
 							{
-								SourceTable   = sourceT   ?? output.SourceTable,
 								InsertedTable = insertedT ?? output.InsertedTable,
 								DeletedTable  = deletedT  ?? output.DeletedTable,
 								OutputTable   = outputT   ?? output.OutputTable,
-								OutputQuery   = outputQ   ?? output.OutputQuery,
+								OutputColumns = outputС   ?? output.OutputColumns,
 							};
+
+							if (outputItems != null)
+								((SqlOutputClause)newElement).OutputItems.AddRange(outputItems);
+
 						}
 
 						break;

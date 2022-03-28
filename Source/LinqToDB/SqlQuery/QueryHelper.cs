@@ -1431,6 +1431,9 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
+		// TODO: IsAggregationOrWindowFunction use needs review - maybe we should call ContainsAggregationOrWindowFunction there
+		public static bool ContainsAggregationOrWindowFunction(IQueryElement expr) => null != expr.Find(IsAggregationOrWindowFunction);
+
 		/// <summary>
 		/// Collects unique keys from different sources.
 		/// </summary>
@@ -1727,11 +1730,9 @@ namespace LinqToDB.SqlQuery
 			return new DbDataType(expr.SystemType!);
 		}
 
-		public static bool HasOuterReferences(SelectQuery root, ISqlExpression expr)
+		public static bool HasOuterReferences(ISet<ISqlTableSource> sources, ISqlExpression expr)
 		{
-			var sources = new HashSet<ISqlTableSource>(EnumerateAccessibleSources(root));
-
-			var outerElementFound = null != expr.Find(e =>
+			var outerElementFound = null != expr.Find(sources, static (sources, e) =>
 			{
 				if (e.ElementType == QueryElementType.Column)
 				{
@@ -1750,6 +1751,34 @@ namespace LinqToDB.SqlQuery
 			});
 
 			return outerElementFound;
+		}
+
+		public static SqlTable? GetUpdateTable(this SqlUpdateStatement updateStatement)
+		{
+			var tableToUpdate = updateStatement.Update.Table;
+
+			if (tableToUpdate == null)
+			{
+				tableToUpdate = EnumerateAccessibleSources(updateStatement.SelectQuery)
+					.OfType<SqlTable>()
+					.FirstOrDefault();
+			}
+
+			return tableToUpdate;
+		}
+
+		public static SqlTable? GetDeleteTable(this SqlDeleteStatement deleteStatement)
+		{
+			var tableToDelete = deleteStatement.Table;
+
+			if (tableToDelete == null)
+			{
+				tableToDelete = EnumerateAccessibleSources(deleteStatement.SelectQuery)
+					.OfType<SqlTable>()
+					.FirstOrDefault();
+			}
+
+			return tableToDelete;
 		}
 	}
 }

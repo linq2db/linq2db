@@ -320,6 +320,70 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 
+				case QueryElementType.SearchCondition    :
+				{
+					var cond     = (SqlSearchCondition)expr;
+					errorMessage = null;
+
+					if (cond.Conditions.Count == 0)
+					{
+						result = true;
+						return true;
+					}
+
+					for (var i = 0; i < cond.Conditions.Count; i++)
+					{
+						var condition = cond.Conditions[i];
+						if (condition.TryEvaluateExpression(context, out var evaluated, out errorMessage))
+						{
+							if (evaluated is bool boolValue)
+							{
+								if (i == cond.Conditions.Count - 1 || condition.IsOr == boolValue)
+								{
+									result = boolValue;
+									return true;
+								}
+							}
+							else if (!condition.IsOr)
+							{
+								errorMessage = $"Non-boolean condition value '{evaluated}'.";
+								return false;
+							}
+						}
+					}
+
+					errorMessage ??= "Cannot evaluate search condition";
+					return false;
+				}
+				case QueryElementType.ExprPredicate      :
+				{
+					var predicate = (SqlPredicate.Expr)expr;
+					if (!predicate.Expr1.TryEvaluateExpression(context, out var value, out errorMessage))
+						return false;
+
+					result = value;
+					return true;
+				}
+				case QueryElementType.Condition          :
+				{
+					var cond = (SqlCondition)expr;
+					if (cond.Predicate.TryEvaluateExpression(context, out var evaluated, out errorMessage))
+					{
+						if (evaluated is bool boolValue)
+						{
+							result = cond.IsNot ? !boolValue : boolValue;
+							return true;
+						}
+						else
+						{
+							errorMessage = $"Non-boolean condition value '{evaluated}'.";
+							return false;
+						}
+					}
+
+					return false;
+				}
+
 				default:
 				{
 					errorMessage = $"Cannot evaluate '{expr.ElementType}' expression.";

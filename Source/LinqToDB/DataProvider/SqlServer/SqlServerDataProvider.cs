@@ -43,9 +43,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public SqlServerDataProvider(string name, SqlServerVersion version, SqlServerProvider provider)
 			: base(
-				name,
-				MappingSchemaInstance.Get(version),
-				SqlServerProviderAdapter.GetInstance(provider))
+				  name,
+				  MappingSchemaInstance.Get(version),
+				  SqlServerProviderAdapter.GetInstance(provider))
 		{
 			Version  = version;
 			Provider = provider;
@@ -56,9 +56,14 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlProviderFlags.IsCountDistinctSupported          = true;
 			SqlProviderFlags.IsUpdateFromSupported             = true;
 			SqlProviderFlags.AcceptsOuterExpressionInAggregate = false;
-			SqlProviderFlags.IsApplyJoinSupported              = true;
-			SqlProviderFlags.TakeHintsSupported                = TakeHints.Percent | TakeHints.WithTies;
-			SqlProviderFlags.IsCommonTableExpressionsSupported = version >= SqlServerVersion.v2008;
+			SqlProviderFlags.OutputDeleteUseSpecialTable       = true;
+			SqlProviderFlags.OutputInsertUseSpecialTable       = true;
+			SqlProviderFlags.OutputUpdateUseSpecialTables      = true;
+				SqlProviderFlags.IsApplyJoinSupported              = true;
+				SqlProviderFlags.TakeHintsSupported                = TakeHints.Percent | TakeHints.WithTies;
+				// TODO: move both options to SQL2005 level
+				SqlProviderFlags.IsCommonTableExpressionsSupported = version >= SqlServerVersion.v2008;
+			}
 
 			SetCharField("char" , (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r, i) => r.GetString(i).TrimEnd(' '));

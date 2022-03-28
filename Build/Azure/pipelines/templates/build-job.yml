@@ -104,7 +104,7 @@ jobs:
         if %errorlevel% neq 0 exit
         copy "Data\Create Scripts\Northwind.sql" testing\scripts\northwind.sql
         if %errorlevel% neq 0 exit
-    condition: ${{ parameters.for_tests }}
+    condition: and(succeeded(), ${{ parameters.for_tests }})
     displayName: Build Test Artifacts
 
   - task: PublishPipelineArtifact@1
@@ -112,25 +112,25 @@ jobs:
       path: '$(Build.SourcesDirectory)/testing'
       artifact: test_artifacts
     condition: ${{ parameters.for_tests }}
-    displayName: Publish test artifacts
+    condition: and(succeeded(), ${{ parameters.for_tests }})
 
   - task: PublishPipelineArtifact@1
     inputs:
       path: '$(Build.SourcesDirectory)/Source/LinqToDB/bin/Release'
       artifact: '$(artifact_linq2db_binaries)'
     displayName: Publish linq2db build results
-    condition: ${{ parameters.for_nuget }}
+    condition: and(succeeded(), ${{ parameters.for_nuget }})
 
   - task: PublishPipelineArtifact@1
     inputs:
       path: '$(Build.SourcesDirectory)/Source/LinqToDB.Tools/bin/Release'
       artifact: '$(artifact_linq2db_tools_binaries)'
     displayName: Publish linq2db.Tools build results
-    condition: ${{ parameters.for_nuget }}
+    condition: and(succeeded(), ${{ parameters.for_nuget }})
 
   - task: PublishPipelineArtifact@1
     inputs:
       path: '$(Build.SourcesDirectory)/Source/LinqToDB.AspNet/bin/Release'
       artifact: '$(artifact_linq2db_aspnet_binaries)'
     displayName: Publish linq2db.AspNet build results
-    condition: ${{ parameters.for_nuget }}
+    condition: and(succeeded(), ${{ parameters.for_nuget }})
