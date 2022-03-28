@@ -209,13 +209,7 @@ namespace LinqToDB.SqlQuery
 					{
 						var s = (SqlSetExpression)element;
 						
-						if (s.Row is {} row)
-						{
-							foreach (var field in row)
-								Visit(field);
-						}
-						else
-							Visit(s.Column);
+						Visit(s.Column);
 
 						Visit(s.Expression);
 						break;

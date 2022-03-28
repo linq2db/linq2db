@@ -144,7 +144,7 @@ namespace LinqToDB.SqlQuery
 			var selectQuery = statement.SelectQuery;
 			if (selectQuery == null)
 				throw new LinqToDBException("Sqlect Query required");
-				return selectQuery;
+			return selectQuery;
 		}
 
 		internal static bool IsSqlRow(this Expression expression)

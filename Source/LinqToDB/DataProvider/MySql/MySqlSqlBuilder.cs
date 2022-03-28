@@ -478,7 +478,7 @@ namespace LinqToDB.DataProvider.MySql
 					first = false;
 
 					AppendIndent();
-					BuildExpression(expr.Column!, false, true);
+					BuildExpression(expr.Column, false, true);
 					StringBuilder.Append(" = ");
 					BuildExpression(expr.Expression!, false, true);
 				}

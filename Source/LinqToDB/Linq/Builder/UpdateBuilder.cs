@@ -463,7 +463,10 @@ namespace LinqToDB.Linq.Builder
 				var row = ext.GetSqlRowValues()
 					.Select(GetField)
 					.ToArray();
-				setExpression = new SqlSetExpression(row, null);
+
+				var rowExpression = new SqlRow(row);
+
+				setExpression = new SqlSetExpression(rowExpression, null);
 			}
 			else
 			{
@@ -669,8 +672,7 @@ namespace LinqToDB.Linq.Builder
 						updateStatement.Update.Items);
 
 				// TODO: remove in v4?
-				updateStatement.Update.Items.RemoveDuplicatesFromTail((s1, s2) => 
-					s1.Row == null && s2.Row == null && s1.Column!.Equals(s2.Column!));
+				updateStatement.Update.Items.RemoveDuplicatesFromTail((s1, s2) => s1.Column.Equals(s2.Column));
 
 				return sequence;
 			}

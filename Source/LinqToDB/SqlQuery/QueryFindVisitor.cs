@@ -218,9 +218,7 @@ namespace LinqToDB.SqlQuery
 					{
 						var s = (SqlSetExpression)element;
 						return
-							(s.Row is {} row 
-								? Find(row) 
-								: Find(s.Column)) ??
+							Find(s.Column) ??
 							Find(s.Expression);
 					}
 

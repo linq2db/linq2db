@@ -495,7 +495,7 @@ namespace LinqToDB.Linq.Builder
 
 				// why we even do it?
 				// TODO: remove in v4?
-				insertStatement.Insert.Items.RemoveDuplicatesFromTail((s1, s2) => s1.Row == null && s2.Row == null && s1.Column!.Equals(s2.Column!));
+				insertStatement.Insert.Items.RemoveDuplicatesFromTail((s1, s2) => s1.Column.Equals(s2.Column));
 
 				return sequence;
 			}

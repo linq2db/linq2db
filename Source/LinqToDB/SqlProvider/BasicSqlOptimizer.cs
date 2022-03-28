@@ -2665,8 +2665,8 @@ namespace LinqToDB.SqlProvider
 						ex = innerQuery;
 					}
 
-					item.Column     = tableToUpdate[QueryHelper.GetUnderlyingField(item.Column!)!.Name]
-						?? throw new LinqException($"Field {QueryHelper.GetUnderlyingField(item.Column!)!.Name} not found in table {tableToUpdate}");
+					item.Column     = tableToUpdate[QueryHelper.GetUnderlyingField(item.Column)!.Name]
+						?? throw new LinqException($"Field {QueryHelper.GetUnderlyingField(item.Column)!.Name} not found in table {tableToUpdate}");
 					item.Expression = ex;
 					newUpdateStatement.Update.Items.Add(item);
 				}

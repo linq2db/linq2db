@@ -145,7 +145,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 						AppendIndent();
 
-						BuildExpression(oi.Column!, false, true);
+						BuildExpression(oi.Column, false, true);
 					}
 
 					StringBuilder

@@ -700,24 +700,15 @@ namespace LinqToDB.SqlProvider
 
 				AppendIndent();
 
-				if (expr.Row is {} row)
+				if (expr.Column is SqlRow row)
 				{
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Update))
 						throw new LinqToDBException("This provider does not support SqlRow in UPDATE.");
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.UpdateLiteral) && expr.Expression is not SelectQuery)
 						throw new LinqToDBException("This provider does not support SqlRow literal on the right-hand side of an UPDATE SET.");
-
-					StringBuilder.Append('(');
-					foreach (var field in row)
-					{
-						BuildExpression(field, SqlProviderFlags.IsUpdateSetTableAliasSupported, true, false);
-						StringBuilder.Append(", ");
-					}
-					if (row.Length > 0) StringBuilder.Length -= 2;
-					StringBuilder.Append(')');
 				}
-				else
-					BuildExpression(expr.Column!, SqlProviderFlags.IsUpdateSetTableAliasSupported, true, false);
+
+				BuildExpression(expr.Column, SqlProviderFlags.IsUpdateSetTableAliasSupported, true, false);
 
 				if (expr.Expression != null)
 				{
@@ -806,7 +797,7 @@ namespace LinqToDB.SqlProvider
 					first = false;
 
 					AppendIndent();
-					BuildExpression(expr.Column!, false, true);
+					BuildExpression(expr.Column, false, true);
 				}
 
 				Indent--;
@@ -879,7 +870,7 @@ namespace LinqToDB.SqlProvider
 			{
 				BuildExpression(keys[i].Expression!, false, false);
 				StringBuilder.Append(" AS ");
-				BuildExpression(keys[i].Column!, false, false);
+				BuildExpression(keys[i].Column, false, false);
 
 				if (i + 1 < keys.Count)
 					StringBuilder.Append(InlineComma);
@@ -900,7 +891,7 @@ namespace LinqToDB.SqlProvider
 
 				AppendIndent();
 
-				if (key.Column!.CanBeNull)
+				if (key.Column.CanBeNull)
 				{
 					StringBuilder.Append('(');
 
@@ -984,7 +975,7 @@ namespace LinqToDB.SqlProvider
 
 				AppendIndent();
 
-				if (expr.Column!.CanBeNull)
+				if (expr.Column.CanBeNull)
 				{
 					StringBuilder.Append('(');
 
