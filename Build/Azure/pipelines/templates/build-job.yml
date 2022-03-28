@@ -42,19 +42,19 @@ jobs:
   - task: CmdLine@2
     inputs:
       script: |
-        dotnet publish Tests\Linq\Tests.csproj -f netcoreapp3.1 -c Azure
+        dotnet publish Tests\Linq\Tests.csproj -f netcoreapp3.1 -c $(build_configuration)
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f net5.0 -c Azure
+        dotnet publish Tests\Linq\Tests.csproj -f net5.0 -c $(build_configuration)
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f net6.0 -c Azure
+        dotnet publish Tests\Linq\Tests.csproj -f net6.0 -c $(build_configuration)
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f net472 -c Azure -a x64 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\net472\publishx64
+        dotnet publish Tests\Linq\Tests.csproj -f net472 -c $(build_configuration) -a x64 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\net472\publishx64
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f netcoreapp3.1 -c Azure -a x86 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\netcoreapp3.1\publishx86
+        dotnet publish Tests\Linq\Tests.csproj -f netcoreapp3.1 -c $(build_configuration) -a x86 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\netcoreapp3.1\publishx86
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f net5.0 -c Azure -a x86 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\net5.0\publishx86
+        dotnet publish Tests\Linq\Tests.csproj -f net5.0 -c $(build_configuration) -a x86 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\net5.0\publishx86
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f net6.0 -c Azure -a x86 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\net6.0\publishx86
+        dotnet publish Tests\Linq\Tests.csproj -f net6.0 -c $(build_configuration) -a x86 /p:X86=SET -o Tests\Linq\bin\$(build_configuration)\net6.0\publishx86
         if %errorlevel% neq 0 exit
         mkdir testing
         if %errorlevel% neq 0 exit
@@ -92,15 +92,15 @@ jobs:
         if %errorlevel% neq 0 exit
         copy Tests\DataProviders.json testing\net60x86
         if %errorlevel% neq 0 exit
-        xcopy /i Build\Azure\net472 testing\configs\net472
+        xcopy /i Build\$(build_configuration)\net472 testing\configs\net472
         if %errorlevel% neq 0 exit
-        xcopy /i Build\Azure\netcoreapp31 testing\configs\netcore31
+        xcopy /i Build\$(build_configuration)\netcoreapp31 testing\configs\netcore31
         if %errorlevel% neq 0 exit
-        xcopy /i Build\Azure\net50 testing\configs\net50
+        xcopy /i Build\$(build_configuration)\net50 testing\configs\net50
         if %errorlevel% neq 0 exit
-        xcopy /i Build\Azure\net60 testing\configs\net60
+        xcopy /i Build\$(build_configuration)\net60 testing\configs\net60
         if %errorlevel% neq 0 exit
-        xcopy /i Build\Azure\scripts testing\scripts
+        xcopy /i Build\$(build_configuration)\scripts testing\scripts
         if %errorlevel% neq 0 exit
         copy "Data\Create Scripts\Northwind.sql" testing\scripts\northwind.sql
         if %errorlevel% neq 0 exit
@@ -136,14 +136,7 @@ jobs:
 
   - task: PublishPipelineArtifact@1
     inputs:
-      path: '$(Build.SourcesDirectory)/Tests/Linq/bin/Azure/net472'
+      path: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472'
       artifact: '$(netfx472_tests)'
     displayName: Publish nuget artifacts part 1
-    condition: and(succeeded(), ${{ parameters.for_nuget }})
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      path: '$(Build.SourcesDirectory)/Tests/Tests.T4/bin/Azure/net472'
-      artifact: '$(netfx472_tests_t4)'
-    displayName: Publish nuget artifacts part 2
     condition: and(succeeded(), ${{ parameters.for_nuget }})
