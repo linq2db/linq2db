@@ -14,7 +14,7 @@ jobs:
   - task: NuGetToolInstaller@1
 
   - powershell: echo "##vso[task.setvariable variable=packageVersion]$(packageVersion)-rc.$(Build.BuildId)"
-    condition: ne(variables['Build.SourceBranchName'], 'release')
+    condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
     displayName: Update nuget version
 
   - task: DownloadPipelineArtifact@2
@@ -41,12 +41,6 @@ jobs:
       artifactName: '$(netfx472_tests)'
       targetPath: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472'
 
-  - task: DownloadPipelineArtifact@2
-    displayName: Download test files (for t4 tools, part 2)
-    inputs:
-      artifactName: '$(netfx472_tests_t4)'
-      targetPath: '$(Build.SourcesDirectory)/Tests/Tests.T4/bin/$(build_configuration)/net472'
-
   - task: PowerShell@2
     inputs:
       filePath: '$(Build.SourcesDirectory)/Build/BuildNuspecs.ps1'
@@ -59,14 +53,14 @@ jobs:
       script: $(Build.SourcesDirectory)/NuGet/Pack.bat
       workingDirectory: $(Build.SourcesDirectory)/BuiltNuGet
     displayName: Build nugets for Azure Artifacts
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], 'release'))
+    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], variables['release_branch']))
 
   - task: CmdLine@2
     inputs:
       script: $(Build.SourcesDirectory)/NuGet/Pack.bat snupkg
       workingDirectory: $(Build.SourcesDirectory)/BuiltNuGet
     displayName: Build nugets for Nuget.org
-    condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'release'))
+    condition: and(succeeded(), eq(variables['Build.SourceBranchName'], variables['release_branch']))
 
   - task: PublishBuildArtifacts@1
     inputs:
@@ -82,7 +76,7 @@ jobs:
       nuGetFeedType: 'internal'
       publishVstsFeed: '0dcc414b-ea54-451e-a54f-d63f05367c4b/967a4107-9788-41a4-9f6d-a2318aab1410'
     displayName: Publish to Azure Artifacts feed
-    condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'master'), ${{ parameters.publish }})
+    condition: and(succeeded(), eq(variables['Build.SourceBranchName'], variables['master_branch']), ${{ parameters.publish }})
 
   - task: NuGetCommand@2
     inputs:
@@ -91,4 +85,4 @@ jobs:
       nuGetFeedType: 'external'
       publishFeedCredentials: 'linq2db nuget.org feed'
     displayName: Publish to Nuget.org
-    condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'release'), ${{ parameters.publish }})
+    condition: and(succeeded(), eq(variables['Build.SourceBranchName'], variables['release_branch']), ${{ parameters.publish }})

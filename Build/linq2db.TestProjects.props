@@ -25,6 +25,8 @@
 		<PackageReference Include="MiniProfiler.Shared" />
 		<PackageReference Include="NUnit3TestAdapter" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" />
+		<!--don't remove, it is used for T4 nugets build-->
+		<PackageReference Include="Humanizer.Core" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">

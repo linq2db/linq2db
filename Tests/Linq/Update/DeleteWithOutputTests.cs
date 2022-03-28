@@ -13,9 +13,9 @@ namespace Tests.xUpdate
 	[TestFixture]
 	public class DeleteWithOutputTests : TestBase
 	{
-		private const string FeatureDeleteOutputMultiple = TestProvName.AllSqlServer2005Plus + "," + TestProvName.MariaDB + "," + TestProvName.AllPostgreSQL + "," + TestProvName.AllSQLiteClassic;
-		private const string FeatureDeleteOutputSingle   = TestProvName.AllSqlServer2005Plus + "," + TestProvName.AllFirebird + "," + TestProvName.MariaDB + "," + TestProvName.AllPostgreSQL + "," + TestProvName.AllSQLiteClassic;
-		private const string FeatureDeleteOutputInto     = TestProvName.AllSqlServer2005Plus;
+		private const string FeatureDeleteOutputMultiple = $"{TestProvName.AllSqlServer},{TestProvName.MariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLiteClassic}";
+		private const string FeatureDeleteOutputSingle   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.MariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLiteClassic}";
+		private const string FeatureDeleteOutputInto     = TestProvName.AllSqlServer;
 
 		[Table]
 		class TableWithData

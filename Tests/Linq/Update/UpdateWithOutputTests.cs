@@ -14,13 +14,13 @@ namespace Tests.xUpdate
 	[TestFixture]
 	public class UpdateWithOutputTests : TestBase
 	{
-		private const string FeatureUpdateOutputWithOldSingle                      = TestProvName.AllSqlServer2005Plus + "," + TestProvName.AllFirebird;
-		private const string FeatureUpdateOutputWithOldSingleNoAlternateRewrite    = TestProvName.AllSqlServer2005Plus;
-		private const string FeatureUpdateOutputWithOldMultiple                    = TestProvName.AllSqlServer2005Plus;
-		private const string FeatureUpdateOutputWithoutOldSingle                   = TestProvName.AllSqlServer2005Plus + "," + TestProvName.AllFirebird + "," + TestProvName.AllPostgreSQL + "," + TestProvName.AllSQLiteClassic;
-		private const string FeatureUpdateOutputWithoutOldSingleNoAlternateRewrite = TestProvName.AllSqlServer2005Plus + "," + TestProvName.AllPostgreSQL;
-		private const string FeatureUpdateOutputWithoutOldMultiple                 = TestProvName.AllSqlServer2005Plus + "," + TestProvName.AllPostgreSQL + "," + TestProvName.AllSQLiteClassic;
-		private const string FeatureUpdateOutputInto                               = TestProvName.AllSqlServer2005Plus;
+		private const string FeatureUpdateOutputWithOldSingle                      = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird}";
+		private const string FeatureUpdateOutputWithOldSingleNoAlternateRewrite    = TestProvName.AllSqlServer;
+		private const string FeatureUpdateOutputWithOldMultiple                    = TestProvName.AllSqlServer;
+		private const string FeatureUpdateOutputWithoutOldSingle                   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLiteClassic}";
+		private const string FeatureUpdateOutputWithoutOldSingleNoAlternateRewrite = $"{TestProvName.AllSqlServer},{TestProvName.AllPostgreSQL}";
+		private const string FeatureUpdateOutputWithoutOldMultiple                 = $"{TestProvName.AllSqlServer},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLiteClassic}";
+		private const string FeatureUpdateOutputInto                               = TestProvName.AllSqlServer;
 
 		class UpdateOutputComparer<T> : IEqualityComparer<UpdateOutput<T>>
 			where T : notnull

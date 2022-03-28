@@ -294,7 +294,7 @@ If you want to skip building commit by CI (for example you have changed *.md fil
 1. Merge PR
 1. [Tag release](https://github.com/linq2db/linq2db/releases)
 1. Update versions in `master` branch (this will lead to publish all next `master` builds as new version RC):
-   * in [\Build\Azure\pipelines\templates\build-vars.yml](https://github.com/linq2db/linq2db/blob/master/Build/Azure/pipelines/templates/build-vars.yml) set `assemblyVersion`, `nugetDevVersion` and `nugetVersion` parameters to next version. Always use next minor version and change it to major only before release, if it should be new major version release
+   * in [\Build\Azure\pipelines\templates\build-vars.yml](https://github.com/linq2db/linq2db/blob/master/Build/Azure/pipelines/templates/build-vars.yml) set `assemblyVersion` and `packageVersion` (for release and development) parameters to next version. Always use next minor version and change it to major only before release, if it should be new major version release
 
 ## Process
 

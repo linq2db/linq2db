@@ -8,6 +8,10 @@ namespace IBM.Data.DB2
 {
 	public abstract class DB2Connection : DbConnection { }
 }
+namespace IBM.Data.Db2
+{
+	public abstract class DB2Connection : DbConnection { }
+}
 namespace IBM.Data.DB2.Core
 {
 	public abstract class DB2Connection : DbConnection { }

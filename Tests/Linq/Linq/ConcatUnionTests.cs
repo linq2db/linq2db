@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LinqToDB;
@@ -1175,7 +1177,6 @@ namespace Tests.Linq
 
 			[ExpressionMethod(nameof(FullNameExpr), IsColumn = true)]
 			public string FullName { get; set; } = null!;
-
 
 			private static Expression<Func<Issue3323Table, string>> FullNameExpr() => entity => entity.FistName + " " + entity.LastName;
 		}
