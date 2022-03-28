@@ -435,7 +435,7 @@ namespace Tests.Data
 						if (cn.State == ConnectionState.Closed)
 							open = true;
 					};
-				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() => 
+				conn.OnBeforeConnectionOpenAsync += async (dc, cn, token) => await Task.Run(() =>
 						{
 							if (cn.State == ConnectionState.Closed)
 								openAsync = true;
@@ -1153,8 +1153,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestDisposeFlagCloning962Test2(
-			[DataSources(false)] string context, [Values] bool withScope)
+		public void TestDisposeFlagCloning962Test2([DataSources(false)] string context, [Values] bool withScope)
 		{
 			if (withScope && (
 				context == ProviderName.DB2                 ||
@@ -1190,20 +1189,20 @@ namespace Tests.Data
 				Assert.Inconclusive("Provider not configured or has issues with TransactionScope");
 			}
 
-			TransactionScope? scope = withScope ? new TransactionScope() : null;
+			var scope = withScope ? new TransactionScope() : null;
+
 			try
 			{
-				using (var db = new DataConnection(context))
-				{
-					// test cloned data connection without LoadWith, as it doesn't use cloning in v3
-					db.Select(() => "test1");
-					using (var cdb = ((IDataContext)db).Clone(true))
-					{
-						cdb.Select(() => "test2");
+				using var db = new DataConnection(context);
 
-						scope?.Complete();
-					}
-				}
+				// test cloned data connection without LoadWith, as it doesn't use cloning in v3
+				db.Select(() => "test1");
+
+				using var cdb = ((IDataContext)db).Clone(true);
+
+				cdb.Select(() => "test2");
+
+				scope?.Complete();
 			}
 			finally
 			{

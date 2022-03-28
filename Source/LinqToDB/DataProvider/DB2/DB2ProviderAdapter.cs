@@ -16,11 +16,17 @@ namespace LinqToDB.DataProvider.DB2
 		public const string CoreClientNamespace  = "IBM.Data.DB2.Core";
 
 #if NETFRAMEWORK
-		public const string AssemblyName         = "IBM.Data.DB2";
-		public const string ClientNamespace      = "IBM.Data.DB2";
+		public const string  AssemblyName        = "IBM.Data.DB2";
+		public const string  ClientNamespace     = "IBM.Data.DB2";
+		public const string? AssemblyNameOld     = null;
+		public const string? ClientNamespaceOld  = null;
 #else
-		public const string AssemblyName         = "IBM.Data.DB2.Core";
-		public const string ClientNamespace      = "IBM.Data.DB2.Core";
+		// note that we try new assembly name (IBM.Data.Db2) which available since net5.0 even for older
+		// TFMs as we don't have .net5.0 linq2db build and netcoreapp3.1 build will be used there
+		public const string  AssemblyName        = "IBM.Data.Db2";
+		public const string  ClientNamespace     = "IBM.Data.Db2";
+		public const string  AssemblyNameOld     = "IBM.Data.DB2.Core";
+		public const string  ClientNamespaceOld  = "IBM.Data.DB2.Core";
 #endif
 
 		private static readonly object _syncRoot = new object();
@@ -181,25 +187,32 @@ namespace LinqToDB.DataProvider.DB2
 				lock (_syncRoot)
 					if (_instance == null)
 					{
-						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
+						var clientNamespace = ClientNamespace;
+
+						var assembly = Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
+						if (assembly == null && AssemblyNameOld != null)
+						{
+							assembly = Tools.TryLoadAssembly(AssemblyNameOld, ProviderFactoryName);
+							if (assembly != null)
+								clientNamespace = ClientNamespaceOld!;
+						}
 						if (assembly == null)
 							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 
-						var connectionType  = assembly.GetType($"{ClientNamespace}.DB2Connection" , true)!;
-						var parameterType   = assembly.GetType($"{ClientNamespace}.DB2Parameter"  , true)!;
-						var dataReaderType  = assembly.GetType($"{ClientNamespace}.DB2DataReader" , true)!;
-						var transactionType = assembly.GetType($"{ClientNamespace}.DB2Transaction", true)!;
-						var commandType     = assembly.GetType($"{ClientNamespace}.DB2Command"    , true)!;
-						var dbType          = assembly.GetType($"{ClientNamespace}.DB2Type"       , true)!;
-						var serverTypesType = assembly.GetType($"{ClientNamespace}.DB2ServerTypes", true)!;
+						var connectionType  = assembly.GetType($"{clientNamespace}.DB2Connection" , true)!;
+						var parameterType   = assembly.GetType($"{clientNamespace}.DB2Parameter"  , true)!;
+						var dataReaderType  = assembly.GetType($"{clientNamespace}.DB2DataReader" , true)!;
+						var transactionType = assembly.GetType($"{clientNamespace}.DB2Transaction", true)!;
+						var commandType     = assembly.GetType($"{clientNamespace}.DB2Command"    , true)!;
+						var dbType          = assembly.GetType($"{clientNamespace}.DB2Type"       , true)!;
+						var serverTypesType = assembly.GetType($"{clientNamespace}.DB2ServerTypes", true)!;
 
-						var bulkCopyType                    = assembly.GetType($"{ClientNamespace}.DB2BulkCopy"                       , true)!;
-						var bulkCopyOptionsType             = assembly.GetType($"{ClientNamespace}.DB2BulkCopyOptions"                , true)!;
-						var bulkCopyColumnMappingType       = assembly.GetType($"{ClientNamespace}.DB2BulkCopyColumnMapping"          , true)!;
-						var rowsCopiedEventHandlerType      = assembly.GetType($"{ClientNamespace}.DB2RowsCopiedEventHandler"         , true)!;
-						var rowsCopiedEventArgs             = assembly.GetType($"{ClientNamespace}.DB2RowsCopiedEventArgs"            , true)!;
-						var bulkCopyColumnMappingCollection = assembly.GetType($"{ClientNamespace}.DB2BulkCopyColumnMappingCollection", true)!;
-
+						var bulkCopyType                    = assembly.GetType($"{clientNamespace}.DB2BulkCopy"                       , true)!;
+						var bulkCopyOptionsType             = assembly.GetType($"{clientNamespace}.DB2BulkCopyOptions"                , true)!;
+						var bulkCopyColumnMappingType       = assembly.GetType($"{clientNamespace}.DB2BulkCopyColumnMapping"          , true)!;
+						var rowsCopiedEventHandlerType      = assembly.GetType($"{clientNamespace}.DB2RowsCopiedEventHandler"         , true)!;
+						var rowsCopiedEventArgs             = assembly.GetType($"{clientNamespace}.DB2RowsCopiedEventArgs"            , true)!;
+						var bulkCopyColumnMappingCollection = assembly.GetType($"{clientNamespace}.DB2BulkCopyColumnMappingCollection", true)!;
 
 						var mappingSchema = new MappingSchema();
 
@@ -222,6 +235,7 @@ namespace LinqToDB.DataProvider.DB2
 						var db2TimeStampType    = loadType("DB2TimeStamp"   , DataType.DateTime2)!;
 						var db2XmlType          = loadType("DB2Xml"         , DataType.Xml)!;
 						var db2TimeSpanType     = loadType("DB2TimeSpan"    , DataType.Timestamp, true, true);
+						// not mapped currently: DB2MonthSpan, DB2SmartLOB, DB2TimeStampOffset, DB2XsrObjectId
 
 						var typeMapper = new TypeMapper();
 

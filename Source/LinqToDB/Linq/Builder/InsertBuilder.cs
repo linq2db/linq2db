@@ -168,8 +168,6 @@ namespace LinqToDB.Linq.Builder
 									insertStatement.Insert.Items.Add(new SqlSetExpression(column[0].Sql, parameter.SqlParameter));
 								}
 
-								var insertedTable = SqlTable.Inserted(methodCall.Method.GetGenericArguments()[0]);
-
 								break;
 							}
 					}
@@ -180,17 +178,21 @@ namespace LinqToDB.Linq.Builder
 
 				if (insertType == InsertContext.InsertType.InsertOutput || insertType == InsertContext.InsertType.InsertOutputInto)
 				{
-					outputExpression = 
+					outputExpression =
 						(LambdaExpression?)methodCall.GetArgumentByName("outputExpression")?.Unwrap()
 						?? BuildDefaultOutputExpression(methodCall.Method.GetGenericArguments().Last());
 
 					insertStatement.Output = new SqlOutputClause();
 
-					var insertedTable = SqlTable.Inserted(outputExpression.Parameters[0].Type);
+					var insertedTable = builder.DataContext.SqlProviderFlags.OutputInsertUseSpecialTable ? SqlTable.Inserted(outputExpression.Parameters[0].Type) : insertStatement.Insert.Into;
+
+					if (insertedTable == null)
+						throw new InvalidOperationException("Cannot find target table for INSERT statement");
 
 					outputContext = new TableBuilder.TableContext(builder, new SelectQuery(), insertedTable);
 
-					insertStatement.Output.InsertedTable = insertedTable;
+					if (builder.DataContext.SqlProviderFlags.OutputInsertUseSpecialTable)
+						insertStatement.Output.InsertedTable = insertedTable;
 
 					if (insertType == InsertContext.InsertType.InsertOutputInto)
 					{
@@ -208,7 +210,6 @@ namespace LinqToDB.Linq.Builder
 						insertStatement.Output.OutputTable = ((TableBuilder.TableContext)destination).SqlTable;
 					}
 				}
-
 			}
 
 			var insert = insertStatement.Insert;
@@ -342,7 +343,7 @@ namespace LinqToDB.Linq.Builder
 				var insertStatement = (SqlInsertStatement)Statement!;
 				var outputQuery     = Sequence[0].SelectQuery;
 
-				insertStatement.Output!.OutputQuery = outputQuery;
+				insertStatement.Output!.OutputColumns = outputQuery.Select.Columns.Select(c => c.Expression).ToList();
 
 				QueryRunner.SetRunQuery(query, mapper);
 			}
@@ -483,7 +484,7 @@ namespace LinqToDB.Linq.Builder
 						sequence,
 						insertStatement.Insert.Into,
 						insertStatement.Insert.Items);
-				}				
+				}
 				else
 					UpdateBuilder.ParseSet(
 						builder,

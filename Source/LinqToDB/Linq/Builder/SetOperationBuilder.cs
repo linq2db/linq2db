@@ -31,22 +31,22 @@ namespace LinqToDB.Linq.Builder
 			SetOperation setOperation;
 			switch (methodCall.Method.Name)
 			{
-				case "Concat"       : 
-				case "UnionAll"     : setOperation = SetOperation.UnionAll;     break;
-				case "Union"        : setOperation = SetOperation.Union;        break;
-				case "Except"       : setOperation = SetOperation.Except;       break;
-				case "ExceptAll"    : setOperation = SetOperation.ExceptAll;    break;
-				case "Intersect"    : setOperation = SetOperation.Intersect;    break;
-				case "IntersectAll" : setOperation = SetOperation.IntersectAll; break;
-				default:
+				case "Concat"      :
+				case "UnionAll"    : setOperation = SetOperation.UnionAll;     break;
+				case "Union"       : setOperation = SetOperation.Union;        break;
+				case "Except"      : setOperation = SetOperation.Except;       break;
+				case "ExceptAll"   : setOperation = SetOperation.ExceptAll;    break;
+				case "Intersect"   : setOperation = SetOperation.Intersect;    break;
+				case "IntersectAll": setOperation = SetOperation.IntersectAll; break;
+				default            :
 					throw new ArgumentException($"Invalid method name {methodCall.Method.Name}.");
 			}
 
 			var needsEmulation = !builder.DataContext.SqlProviderFlags.IsAllSetOperationsSupported &&
-			                     (setOperation == SetOperation.ExceptAll || setOperation == SetOperation.IntersectAll)
-			                     ||
-			                     !builder.DataContext.SqlProviderFlags.IsDistinctSetOperationsSupported &&
-			                     (setOperation == SetOperation.Except || setOperation == SetOperation.Intersect);
+								 (setOperation == SetOperation.ExceptAll || setOperation == SetOperation.IntersectAll)
+								 ||
+								 !builder.DataContext.SqlProviderFlags.IsDistinctSetOperationsSupported &&
+								 (setOperation == SetOperation.Except || setOperation == SetOperation.Intersect);
 
 			if (needsEmulation)
 			{
@@ -85,14 +85,50 @@ namespace LinqToDB.Linq.Builder
 				return sequence;
 			}
 
-			var set1 = new SubQueryContext(sequence1);
-			var set2 = new SubQueryContext(sequence2);
 
-			var setOperator = new SqlSetOperator(set2.SelectQuery, setOperation);
+			var set1  = sequence1 as SetOperationContext;
+			var set2  = sequence2 as SetOperationContext;
 
-			set1.SelectQuery.SetOperators.Add(setOperator);
+			// mixing set operators in single query will result in wrong results
+			if (set1 != null && set1.Sequences[0].SelectQuery.SetOperators[0].Operation != setOperation)
+				set1 = null;
+			if (set2 != null && set2.Sequences[0].SelectQuery.SetOperators[0].Operation != setOperation)
+				set2 = null;
 
-			return new SetOperationContext(set1, set2, methodCall);
+			if (set1 != null)
+			{
+				if (set2 == null)
+				{
+					var seq2        = new SubQueryContext(sequence2);
+					var setOperator = new SqlSetOperator(seq2.SelectQuery, setOperation);
+					set1.AddSequence(seq2, setOperator);
+				}
+				else
+				{
+					set1.AddSequence(set2.Sequences[0], new SqlSetOperator(set2.Sequences[0].SelectQuery, setOperation));
+					for (var i = 1; i < set2.Sequences.Count; i++)
+						set1.AddSequence(set2.Sequences[i], set2.Sequences[0].SelectQuery.SetOperators[i - 1]);
+					set2.Sequences[0].SelectQuery.SetOperators.Clear();
+				}
+			}
+			else
+			{
+				var seq1 = new SubQueryContext(sequence1);
+				if (set2 == null)
+				{
+					var seq2 = new SubQueryContext(sequence2);
+					set1     = new SetOperationContext(seq1, seq2, methodCall, new SqlSetOperator(seq2.SelectQuery, setOperation));
+				}
+				else
+				{
+					set1 = new SetOperationContext(seq1, set2.Sequences[0], methodCall, new SqlSetOperator(set2.Sequences[0].SelectQuery, setOperation));
+					for (var i = 1; i < set2.Sequences.Count; i++)
+						set1.AddSequence(set2.Sequences[i], set2.Sequences[0].SelectQuery.SetOperators[i - 1]);
+					set2.Sequences[0].SelectQuery.SetOperators.Clear();
+				}
+			}
+
+			return set1;
 		}
 
 		protected override SequenceConvertInfo? Convert(
@@ -107,35 +143,31 @@ namespace LinqToDB.Linq.Builder
 
 		sealed class SetOperationContext : SubQueryContext
 		{
-			public SetOperationContext(SubQueryContext sequence1, SubQueryContext sequence2, MethodCallExpression methodCall)
+			public SetOperationContext(SubQueryContext sequence1, SubQueryContext sequence2, MethodCallExpression methodCall, SqlSetOperator setOperator)
 				: base(sequence1)
 			{
-				_sequence1  = sequence1;
-				_sequence2  = sequence2;
-				_methodCall = methodCall;
-
-				_sequence2.Parent = this;
-
 				_isObject =
 					sequence1.IsExpression(null, 0, RequestFor.Object).Result ||
 					sequence2.IsExpression(null, 0, RequestFor.Object).Result;
 
 				if (_isObject)
 				{
-					_type           = _methodCall.Method.GetGenericArguments()[0];
+					_type           = methodCall.Method.GetGenericArguments()[0];
 					_unionParameter = Expression.Parameter(_type, "t");
 				}
 
-				Init();
+				// initial sequences
+				AddSequence(sequence1, null);
+				AddSequence(sequence2, setOperator);
 			}
 
 			readonly Type?                         _type;
 			readonly bool                          _isObject;
-			readonly MethodCallExpression          _methodCall;
 			readonly ParameterExpression?          _unionParameter;
-			readonly Dictionary<MemberInfo,Member> _members = new(new MemberInfoComparer());
-			readonly SubQueryContext               _sequence1;
-			readonly SubQueryContext               _sequence2;
+			readonly Dictionary<MemberInfo,Member> _members   = new(new MemberInfoComparer());
+			         List<UnionMember>?            _unionMembers;
+
+			public readonly List<SubQueryContext>  Sequences = new ();
 
 			[DebuggerDisplay("{Member.MemberExpression}, SequenceInfo: ({SequenceInfo}), SqlQueryInfo: ({SqlQueryInfo})")]
 			class Member
@@ -145,144 +177,213 @@ namespace LinqToDB.Linq.Builder
 				public MemberExpression  MemberExpression = null!;
 			}
 
-			[DebuggerDisplay("{Member.MemberExpression}, Info1: ({Info1}), Info2: ({Info2})")]
+			[DebuggerDisplay("{Member.MemberExpression}, Infos.Count: {Infos.Count}, Infos[0]: ({Infos[0]}), Infos[1]: ({Infos[1]})")]
 			class UnionMember
 			{
-				public Member   Member = null!;
-				public SqlInfo? Info1;
-				public SqlInfo? Info2;
-				public string   Alias = null!;
+				public UnionMember(Member member, SqlInfo info)
+				{
+					Member = member;
+					Infos.Add(info);
+				}
+
+				public readonly Member        Member;
+				public readonly List<SqlInfo> Infos  = new ();
+				public          string        Alias  = null!;
 			}
 
-			void Init()
+			public void AddSequence(SubQueryContext sequence, SqlSetOperator? setOperator)
 			{
-				var info1 = _sequence1.ConvertToIndex(null, 0, ConvertFlags.All).ToList();
-				var info2 = _sequence2.ConvertToIndex(null, 0, ConvertFlags.All).ToList();
+				var isFirst = Sequences.Count == 0;
+				Sequences.Add(sequence);
+
+				// no need to set "sequence1.Parent = this" for first sequence?
+				if (!isFirst)
+					sequence.Parent = this;
+
+				if (setOperator != null)
+					Sequences[0].SelectQuery.SetOperators.Add(setOperator);
+
+				var infos = sequence.ConvertToIndex(null, 0, ConvertFlags.All);
 
 				if (!_isObject)
 					return;
 
-				var unionMembers = new List<UnionMember>();
+				if (isFirst)
+					_unionMembers = new ();
 
-				foreach (var info in info1)
+				foreach (var info in infos)
 				{
 					if (info.MemberChain.Length == 0)
 						throw new InvalidOperationException();
 
-					var mi = info.MemberChain.First(m => m.DeclaringType!.IsSameOrParentOf(_unionParameter!.Type));
-
-					var member = new Member
+					if (isFirst)
 					{
-						SequenceInfo     = info,
-						MemberExpression = Expression.MakeMemberAccess(_unionParameter, mi)
-					};
+						var mi = info.MemberChain.First(m => m.DeclaringType!.IsSameOrParentOf(_unionParameter!.Type));
 
-					unionMembers.Add(new UnionMember { Member = member, Info1 = info });
-				}
+						var member = new Member
+						{
+							SequenceInfo     = info,
+							MemberExpression = Expression.MakeMemberAccess(_unionParameter, mi)
+						};
 
-				foreach (var info in info2)
-				{
-					if (info.MemberChain.Length == 0)
-						throw new InvalidOperationException();
-
-					var em = unionMembers.FirstOrDefault(m =>
-						m.Member.SequenceInfo != null &&
-						m.Info2 == null &&
-						m.Member.SequenceInfo.CompareMembers(info));
-
-					if (em == null)
-					{
-						em = unionMembers.FirstOrDefault(m =>
-							m.Member.SequenceInfo != null &&
-							m.Info2 == null &&
-							m.Member.SequenceInfo.CompareLastMember(info));
-					}
-
-					if (em == null)
-					{
-						var member = new Member { MemberExpression = Expression.MakeMemberAccess(_unionParameter, info.MemberChain[0]) };
-
-						if (_sequence2.IsExpression(member.MemberExpression, 1, RequestFor.Object).Result)
-							throw new LinqException("Types in {0} are constructed incompatibly.", _methodCall.Method.Name);
-
-						unionMembers.Add(new UnionMember { Member = member, Info2 = info });
+						_unionMembers!.Add(new UnionMember(member, info));
 					}
 					else
 					{
-						em.Info2 = info;
+						UnionMember? em = null;
+
+						foreach (var m in _unionMembers!)
+						{
+							if (m.Member.SequenceInfo != null &&
+								m.Infos.Count < Sequences.Count &&
+								m.Member.SequenceInfo.CompareMembers(info))
+							{
+								em = m;
+								break;
+							}
+						}
+
+						if (em == null)
+						{
+							foreach (var m in _unionMembers!)
+							{
+								if (m.Member.SequenceInfo != null &&
+									m.Infos.Count < Sequences.Count &&
+									m.Member.SequenceInfo.CompareLastMember(info))
+								{
+									em = m;
+									break;
+								}
+							}
+						}
+
+						if (em == null)
+						{
+							var member = new Member { MemberExpression = Expression.MakeMemberAccess(_unionParameter, info.MemberChain[0]) };
+
+							if (sequence.IsExpression(member.MemberExpression, 1, RequestFor.Object).Result)
+								throw new LinqException("Types in UNION are constructed incompatibly.");
+
+							_unionMembers.Add(em = new UnionMember(member, info));
+							if (em.Infos.Count < Sequences.Count)
+							{
+								var dbType = QueryHelper.GetDbDataType(info.Sql);
+								if (dbType.SystemType == typeof(object))
+									dbType = dbType.WithSystemType(info.MemberChain.Last().GetMemberType());
+
+								while (em.Infos.Count < Sequences.Count)
+								{
+									var idx = Sequences.Count - em.Infos.Count - 1;
+
+									var newInfo = new SqlInfo(
+										info.MemberChain,
+										new SqlValue(dbType, null),
+										Sequences[idx].SelectQuery,
+										_unionMembers.Count - 1);
+
+									em.Infos.Insert(0, newInfo);
+
+									if (idx == 0)
+										em.Member.SequenceInfo = newInfo;
+								}
+							}
+						}
+						else
+						{
+							em.Infos.Add(info);
+						}
 					}
+				}
+
+				// add nulls for missing columns in current sequence
+				var midx = -1;
+				foreach (var member in _unionMembers!)
+				{
+					midx++;
+					if (member.Infos.Count == Sequences.Count)
+						continue;
+
+					//if (sequence.IsExpression(member.Member.MemberExpression, 1, RequestFor.Object).Result)
+					//	throw new LinqException("Types in UNION are constructed incompatibly.");
+
+					var info = member.Infos[0];
+
+					var dbType = QueryHelper.GetDbDataType(info.Sql);
+					if (dbType.SystemType == typeof(object))
+						dbType = dbType.WithSystemType(info.MemberChain.Last().GetMemberType());
+
+					var newInfo = new SqlInfo(
+						info.MemberChain,
+						new SqlValue(dbType, null),
+						sequence.SelectQuery,
+						midx);
+					member.Infos.Add(newInfo);
+				}
+
+				// currently re-run for each sequence > 2...
+				if (Sequences.Count > 1)
+					FinalizeAliases();
+			}
+
+			private void FinalizeAliases()
+			{
+				for (var i = 0; i < _unionMembers!.Count; i++)
+				{
+					var member = _unionMembers[i];
+
+					member.Alias = GetShortAlias(member);
+
+					member.Member.SequenceInfo = member.Member.SequenceInfo!.WithIndex(i);
+
+					_members[member.Member.MemberExpression.Member] = member.Member;
+				}
+
+				var nonUnique = _unionMembers
+					.GroupBy(static m => m.Alias, StringComparer.InvariantCultureIgnoreCase)
+					.Where(static g => g.Count() > 1);
+
+				foreach (var g in nonUnique)
+					foreach (var member in g)
+						member.Alias = GetFullAlias(member);
+
+				var idx = 0;
+				foreach (var sequence in Sequences)
+				{
+					sequence.SelectQuery.Select.Columns.Clear();
+					sequence.ColumnIndexes.Clear();
+
+					for (var i = 0; i < _unionMembers.Count; i++)
+					{
+						var member = _unionMembers[i];
+
+						sequence.SelectQuery.Select.AddNew(member.Infos[idx].Sql);
+						SetAliasForColumns(sequence.SelectQuery.Select.Columns[i], member.Alias);
+						sequence.ColumnIndexes[i] = i;
+					}
+
+					idx++;
 				}
 
 				static string GetFullAlias(UnionMember member)
 				{
-					if (member.Info1!.MemberChain.Length > 0)
+					foreach (var info in member.Infos)
 					{
-						return string.Join("_", member.Info1.MemberChain.Select(m => m.Name));
+						if (info.MemberChain.Length > 0)
+							return string.Join("_", info.MemberChain.Select(static m => m.Name));
 					}
-					if (member.Info2!.MemberChain.Length > 0)
-					{
-						return string.Join("_", member.Info2.MemberChain.Select(m => m.Name));
-					}
+
 					return member.Member.MemberExpression.Member.Name;
 				}
 
 				static string GetShortAlias(UnionMember member)
 				{
-					if (member.Info1!.MemberChain.Length > 0)
+					foreach (var info in member.Infos)
 					{
-						return member.Info1.MemberChain[member.Info1.MemberChain.Length - 1].Name;
+						if (info.MemberChain.Length > 0)
+							return info.MemberChain[info.MemberChain.Length - 1].Name;
 					}
 
-					if (member.Info2!.MemberChain.Length > 0)
-					{
-						return member.Info2.MemberChain[member.Info2.MemberChain.Length - 1].Name;
-					}
 					return member.Member.MemberExpression.Member.Name;
-				}
-
-
-				for (var i = 0; i < unionMembers.Count; i++)
-				{
-					var member = unionMembers[i];
-
-					if (member.Info1 == null)
-					{
-						var dbType = QueryHelper.GetDbDataType(member.Info2!.Sql);
-						if (dbType.SystemType == typeof(object))
-							dbType = dbType.WithSystemType(member.Info2!.MemberChain.Last().GetMemberType());
-
-						member.Info1 = new SqlInfo
-						(
-							member.Info2!.MemberChain,
-							new SqlValue(dbType, null),
-							_sequence1.SelectQuery,
-							i
-						);
-
-						member.Member.SequenceInfo = member.Info1;
-					}
-
-					if (member.Info2 == null)
-					{
-						var dbType = QueryHelper.GetDbDataType(member.Info1!.Sql);
-						if (dbType.SystemType == typeof(object))
-							dbType = dbType.WithSystemType(member.Info1!.MemberChain.Last().GetMemberType());
-
-						member.Info2 = new SqlInfo
-						(
-							member.Info1.MemberChain,
-							new SqlValue(dbType, null),
-							_sequence2.SelectQuery,
-							i
-						);
-					}
-
-					member.Alias = GetShortAlias(member);
-
-					if (member.Member.SequenceInfo != null)
-						member.Member.SequenceInfo = member.Member.SequenceInfo.WithIndex(i);
-
-					_members[member.Member.MemberExpression.Member] = member.Member;
 				}
 
 				static void SetAliasForColumns(SqlColumn column, string alias)
@@ -293,41 +394,10 @@ namespace LinqToDB.Linq.Builder
 					while (current.Expression is SqlColumn c)
 					{
 						c.RawAlias = null;
-						current    = c;
+						current = c;
 					}
 
 					current.RawAlias = alias;
-				}
-
-
-				var nonUnique = unionMembers.GroupBy(m => m.Alias, StringComparer.InvariantCultureIgnoreCase)
-					.Where(g => g.Count() > 1);
-
-				foreach (var g in nonUnique)
-				{
-					foreach (var member in g)
-					{
-						member.Alias = GetFullAlias(member);
-					}
-				}
-
-				_sequence1.SelectQuery.Select.Columns.Clear();
-				_sequence2.SelectQuery.Select.Columns.Clear();
-
-				_sequence1.ColumnIndexes.Clear();
-				_sequence2.ColumnIndexes.Clear();
-
-				for (var i = 0; i < unionMembers.Count; i++)
-				{
-					var member = unionMembers[i];
-
-					_sequence1.SelectQuery.Select.AddNew(member.Info1!.Sql);
-					SetAliasForColumns(_sequence1.SelectQuery.Select.Columns[i], member.Alias);
-					_sequence1.ColumnIndexes[i] = i;
-
-					_sequence2.SelectQuery.Select.AddNew(member.Info2!.Sql);
-					SetAliasForColumns(_sequence2.SelectQuery.Select.Columns[i], member.Alias);
-					_sequence2.ColumnIndexes[i] = i;
 				}
 			}
 
@@ -345,53 +415,106 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (expression == null)
 					{
-						var type  = _methodCall.Method.GetGenericArguments()[0];
+						var type  = _type!;
 						var nctor = (NewExpression?)Expression.Find(type, static (type, e) => e is NewExpression ne && e.Type == type && ne.Arguments?.Count > 0);
 
 						Expression expr;
 
 						if (nctor != null)
 						{
-							var members = nctor.Members!
-								.Select(m => m is MethodInfo info ? info.GetPropertyInfo() : m)
-								.ToList();
+							var recordType = RecordsHelper.GetRecordType(Builder.MappingSchema, nctor.Type);
+							if ((recordType & RecordType.CallConstructorOnRead) != 0)
+							{
+								if (nctor.Members != null)
+									throw new LinqToDBException($"Call to '{nctor.Type}' record constructor cannot have initializers.");
+								else if (nctor.Arguments.Count == 0)
+									throw new LinqToDBException($"Call to '{nctor.Type}' record constructor requires parameters.");
+								else
+								{
+									var ctorParms = nctor.Constructor!.GetParameters();
 
-							expr = Expression.New(
-								nctor.Constructor!,
-								members.Select(m => ExpressionHelper.PropertyOrField(_unionParameter!, m.Name)),
-								members);
+									var parms = new List<Expression>();
+									for (var i = 0; i < ctorParms.Length; i++)
+									{
+										var p = ctorParms[i];
+										parms.Add(ExpressionHelper.PropertyOrField(_unionParameter!, p.Name!));
+									}
+
+									expr = Expression.New(nctor.Constructor!, parms);
+								}
+							}
+							else
+							{
+								if (nctor.Members == null)
+									throw new LinqToDBException($"Call to '{nctor.Type}' constructor lacks initializers.");
+								else
+								{
+									var members = nctor.Members
+										.Select(m => m is MethodInfo info ? info.GetPropertyInfo() : m)
+										.ToList();
+
+									expr = Expression.New(
+										nctor.Constructor!,
+										members.Select(m => ExpressionHelper.PropertyOrField(_unionParameter!, m.Name)),
+										members);
+
+								}
+							}
 
 							var ex = Builder.BuildExpression(this, expr, enforceServerSide);
 							return ex;
 						}
 
 						var findVisitor  = FindVisitor<Type>.Create(type, static (type, e) => e.NodeType == ExpressionType.MemberInit && e.Type == type);
-						var new1         = findVisitor.Find(Expression);
+						var news         = new MemberInitExpression?[Sequences.Count];
 						var needsRewrite = false;
+						var hasValue     = false;
 
-						if (new1 != null)
+						for (var i = 0; i < Sequences.Count; i++)
 						{
-							var new2 = findVisitor.Find(_sequence2.Expression);
-							if (new2 == null)
+							news[i] = (MemberInitExpression?)findVisitor.Find(Sequences[i].Expression);
+							if (news[i] == null)
 								needsRewrite = true;
 							else
-							{
-								// Comparing bindings
+								hasValue = true;
+						}
 
-								var init1 = (MemberInitExpression)new1;
-								var init2 = (MemberInitExpression)new2;
-								needsRewrite = init1.Bindings.Count != init2.Bindings.Count;
-								if (!needsRewrite)
+						if (!needsRewrite)
+						{
+							// Comparing bindings
+							var first = news[0]!;
+
+							for (var i = 1; i < news.Length; i++)
+							{
+								if (first.Bindings.Count != news[i]!.Bindings.Count)
 								{
-									foreach (var binding in init1.Bindings)
+									needsRewrite = true;
+									break;
+								}
+							}
+
+							if (!needsRewrite)
+							{
+								foreach (var binding in first.Bindings)
+								{
+									if (binding.BindingType != MemberBindingType.Assignment)
 									{
-										if (binding.BindingType != MemberBindingType.Assignment)
+										needsRewrite = true;
+										break;
+									}
+
+									foreach (var next in news.Skip(1))
+									{
+										MemberBinding? foundBinding = null;
+										foreach (var b in next!.Bindings)
 										{
-											needsRewrite = true;
-											break;
+											if (b.Member == binding.Member)
+											{
+												foundBinding = b;
+												break;
+											}
 										}
 
-										var foundBinding = init2.Bindings.FirstOrDefault(b => b.Member == binding.Member);
 										if (foundBinding == null || foundBinding.BindingType != MemberBindingType.Assignment)
 										{
 											needsRewrite = true;
@@ -402,7 +525,7 @@ namespace LinqToDB.Linq.Builder
 										var assignment2 = (MemberAssignment)foundBinding;
 
 										if (!assignment1.Expression.EqualsTo(assignment2.Expression, Builder.OptimizationContext.GetSimpleEqualsToContext(false)) ||
-										    !(assignment1.Expression.NodeType == ExpressionType.MemberAccess || assignment1.Expression.NodeType == ExpressionType.Parameter))
+											!(assignment1.Expression.NodeType == ExpressionType.MemberAccess || assignment1.Expression.NodeType == ExpressionType.Parameter))
 										{
 											needsRewrite = true;
 											break;
@@ -410,15 +533,20 @@ namespace LinqToDB.Linq.Builder
 
 										// is is parameters, we have to select
 										if (assignment1.Expression.NodeType == ExpressionType.MemberAccess
-										    && Builder.GetRootObject(assignment1.Expression)?.NodeType == ExpressionType.Constant)
+											&& Builder.GetRootObject(assignment1.Expression)?.NodeType == ExpressionType.Constant)
 										{
 											needsRewrite = true;
 											break;
 										}
 									}
+
+									if (needsRewrite)
+										break;
 								}
 							}
 						}
+						else
+							needsRewrite = hasValue;
 
 						if (needsRewrite)
 						{
@@ -433,8 +561,15 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var ex = _sequence1.BuildExpression(null, level, enforceServerSide);
-							return ex;
+							Expression? ex = null;
+							foreach (var s in Sequences)
+							{
+								var res = s.BuildExpression(null, level, enforceServerSide);
+								if (ex == null)
+									ex = res;
+							}
+
+							return ex!;
 						}
 					}
 
@@ -457,14 +592,16 @@ namespace LinqToDB.Linq.Builder
 
 				var testExpression = expression?.GetLevelExpression(Builder.MappingSchema, level);
 
-				if (_sequence1.IsExpression(testExpression, level, RequestFor.Association).Result
-				 || _sequence2.IsExpression(testExpression, level, RequestFor.Association).Result)
+				foreach (var sequence in Sequences)
 				{
-					throw new LinqToDBException(
-						"Associations with Concat/Union or other Set operations are not supported.");
+					if (sequence.IsExpression(testExpression, level, RequestFor.Association).Result)
+					{
+						throw new LinqToDBException(
+							"Associations with Concat/Union or other Set operations are not supported.");
+					}
 				}
 
-				var ret   = _sequence1.BuildExpression(expression, level, enforceServerSide);
+				var ret   = Sequences[0].BuildExpression(expression, level, enforceServerSide);
 
 				//if (level == 1)
 				//	_sequence2.BuildExpression(expression, level);

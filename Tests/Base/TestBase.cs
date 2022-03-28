@@ -77,7 +77,7 @@ namespace Tests
 			DataConnection.TurnTraceSwitchOn();
 			DataConnection.WriteTraceLine = (message, name, level) =>
 			{
-				var ctx   = CustomTestContext.Get();
+				var ctx = CustomTestContext.Get();
 
 				if (ctx.Get<bool>(CustomTestContext.BASELINE_DISABLED) != true)
 				{
@@ -102,7 +102,8 @@ namespace Tests
 						ctx.Set(CustomTestContext.TRACE, trace);
 					}
 
-					trace.AppendLine($"{name}: {message}");
+					lock (trace)
+						trace.AppendLine($"{name}: {message}");
 
 					if (traceCount < TRACES_LIMIT || level == TraceLevel.Error)
 					{

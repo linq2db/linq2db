@@ -141,8 +141,8 @@ namespace LinqToDB.SqlQuery
 			foreach (var field in table.Fields)
 				Add(new SqlField(field));
 
-			SqlTableType   = table.SqlTableType;
-			TableArguments = table.TableArguments;
+			SqlTableType     = table.SqlTableType;
+			TableArguments   = table.TableArguments;
 		}
 
 		public SqlTable(SqlTable table, IEnumerable<SqlField> fields, ISqlExpression[] tableArguments)
@@ -155,6 +155,7 @@ namespace LinqToDB.SqlQuery
 			Name               = table.Name;
 			PhysicalName       = table.PhysicalName;
 			SequenceAttributes = table.SequenceAttributes;
+			TableOptions       = table.TableOptions;
 
 			AddRange(fields);
 
@@ -337,23 +338,23 @@ namespace LinqToDB.SqlQuery
 		internal static SqlTable Inserted(Type objectType)
 			=> new (objectType)
 			{
-				Name         = "INSERTED",
-				PhysicalName = "INSERTED",
-				Schema       = null,
-				Database     = null,
-				Server       = null,
-				SqlTableType = SqlTableType.SystemTable,
+				Name             = "INSERTED",
+				PhysicalName     = "INSERTED",
+				Schema           = null,
+				Database         = null,
+				Server           = null,
+				SqlTableType     = SqlTableType.SystemTable,
 			};
 
 		internal static SqlTable Deleted(Type objectType)
 			=> new (objectType)
 			{
-				Name         = "DELETED",
-				PhysicalName = "DELETED",
-				Schema       = null,
-				Database     = null,
-				Server       = null,
-				SqlTableType = SqlTableType.SystemTable,
+				Name             = "DELETED",
+				PhysicalName     = "DELETED",
+				Schema           = null,
+				Database         = null,
+				Server           = null,
+				SqlTableType     = SqlTableType.SystemTable,
 			};
 
 		#endregion

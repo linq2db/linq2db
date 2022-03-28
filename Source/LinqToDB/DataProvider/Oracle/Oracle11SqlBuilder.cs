@@ -394,7 +394,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 						.AppendLine("\tBEGIN")
 						.Append("\t\tEXECUTE IMMEDIATE 'DROP SEQUENCE ");
-					
+
 					AppendSchemaPrefix(StringBuilder, dropTable.Table!.Schema);
 					Convert(StringBuilder, MakeIdentitySequenceName(dropTable.Table.PhysicalName!), ConvertType.SequenceName);
 
@@ -643,7 +643,7 @@ END;",
 		protected void BuildMultiInsertClause(SqlMultiInsertStatement statement)
 		{
 			StringBuilder.AppendLine(statement.InsertType == MultiInsertType.First ? "INSERT FIRST" : "INSERT ALL");
-			
+
 			Indent++;
 
 			if (statement.InsertType == MultiInsertType.Unconditional)
@@ -659,7 +659,7 @@ END;",
 					{
 						int length = StringBuilder.Append("WHEN ").Length;
 						BuildSearchCondition(insert.When, wrapCondition: true);
-						// If `when` condition is optimized to always `true`, 
+						// If `when` condition is optimized to always `true`,
 						// then BuildSearchCondition doesn't write anything.
 						if (StringBuilder.Length == length)
 							StringBuilder.Append("1 = 1");
@@ -669,7 +669,7 @@ END;",
 					{
 						StringBuilder.AppendLine("ELSE");
 					}
-		
+
 					BuildInsertClause(statement, insert.Insert, "INTO ", appendTableName: true, addAlias: false);
 				}
 			}
@@ -677,6 +677,6 @@ END;",
 			Indent--;
 		}
 
-		#endregion 
+		#endregion
 	}
 }
