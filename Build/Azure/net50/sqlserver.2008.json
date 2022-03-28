@@ -1,8 +1,0 @@
-﻿{
-	"NET50.Azure": {
-		"Providers": [
-			"SqlServer.2008",
-			"SqlServer.2008.MS"
-		]
-	}
-}

@@ -153,7 +153,6 @@ jobs:
             extra: ${{ test_config.extra }}
             netfx: ${{ test_config.enable_fw_net472 }}
             netcore31: ${{ test_config.enable_fw_netcore31 }}
-            net50: ${{ test_config.enable_fw_net50 }}
             net60: ${{ test_config.enable_fw_net60 }}
             x86: ${{ test_config.x86 }}
 
@@ -186,7 +185,6 @@ jobs:
             docker_login: ${{ test_config.docker_login }}
             extra: ${{ test_config.extra }}
             netcore31: ${{ test_config.enable_fw_netcore31 }}
-            net50: ${{ test_config.enable_fw_net50 }}
             net60: ${{ test_config.enable_fw_net60 }}
 
   steps:
@@ -219,7 +217,6 @@ jobs:
             docker_login: ${{ test_config.docker_login }}
             extra: ${{ test_config.extra }}
             netcore31: ${{ test_config.enable_fw_netcore31 }}
-            net50: ${{ test_config.enable_fw_net50 }}
             net60: ${{ test_config.enable_fw_net60 }}
 
   steps:

@@ -22,8 +22,6 @@ namespace Tests
 			var target = "net472";
 #elif NETCOREAPP3_1
 			var target = "core31";
-#elif NET5_0
-			var target = "net50";
 #elif NET6_0
 			var target = "net60";
 #else

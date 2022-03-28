@@ -34,9 +34,6 @@
 		<PackageVersion Include="IBM.Data.DB2.Core"                                     Version="3.1.0.500"     />
 		<PackageVersion Include="IBM.Data.DB2.Core-lnx"                                 Version="3.1.0.500"     />
 		<PackageVersion Include="IBM.Data.DB2.Core-osx"                                 Version="3.1.0.500"     />
-		<PackageVersion Include="Net5.IBM.Data.Db2"                                     Version="5.0.0.500"     />
-		<PackageVersion Include="Net5.IBM.Data.Db2-lnx"                                 Version="5.0.0.500"     />
-		<PackageVersion Include="Net5.IBM.Data.Db2-osx"                                 Version="5.0.0.500"     />
 		<PackageVersion Include="Net.IBM.Data.Db2"                                      Version="6.0.0.200"     />
 		<PackageVersion Include="Net.IBM.Data.Db2-lnx"                                  Version="6.0.0.200"     />
 		<PackageVersion Include="Net.IBM.Data.Db2-osx"                                  Version="6.0.0.200"     />

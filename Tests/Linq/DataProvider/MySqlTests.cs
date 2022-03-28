@@ -29,7 +29,7 @@ using MySqlConnectorDateTime = MySqlConnector::MySql.Data.Types.MySqlDateTime;
 #else
 using MySqlConnectorDateTime = MySqlConnector::MySqlConnector.MySqlDateTime;
 #endif
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
 using MySqlConnectorDecimal  = MySqlConnector::MySqlConnector.MySqlDecimal;
 #endif
 
@@ -112,7 +112,7 @@ namespace Tests.DataProvider
 					}
 					else
 					{
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
 						TestType<MySqlConnectorDecimal?>(conn, "decimalDataType", DataType.Decimal);
 #endif
 						using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
@@ -211,7 +211,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
 		[Table]
 		public class BigDecimalMySqlConnectorTable
 		{

@@ -43,7 +43,7 @@ Solutions:
 
 Preferred target defines:
 - `NETFRAMEWORK` - `net45`, `net46` and `net472` target ifdef
-- `NETSTANDARD2_1PLUS` - targets with `netstandard2.1` support (`netstandard2.1`, `netcoreapp3.1`, `net5.0`, `net6.0`). Don't use this define in test projects!
+- `NETSTANDARD2_1PLUS` - targets with `netstandard2.1` support (`netstandard2.1`, `netcoreapp3.1`, `net6.0`). Don't use this define in test projects!
 - `NATIVE_ASYNC` - ifdef with native support for `ValueTask`, `IAsyncEnumerable<T>` and `IAsyncDisposable` types
 
 Other allowed target defines:
@@ -62,21 +62,20 @@ Allowed debugging defines:
 
 #### Test projects
 
-| Project \ Target                                   |.NET 4.7.2 | .NET Core 3.1 | .NET 5.0 | .NET 6.0 |
-|---------------------------------------------------:|:---------:|:-------------:|:--------:|:--------:|
-| `.\Tests\Base\Tests.Base.csproj`                   |     √     |       √       |    √     |    √     |
-| `.\Tests\FSharp\Tests.FSharp.fsproj`               |     √     |       √       |    √     |    √     |
-| `.\Tests\Linq\Tests.csproj`                        |     √     |       √       |    √     |    √     |
-| `.\Tests\Model\Tests.Model.csproj`                 |     √     |       √       |    √     |    √     |
-| `.\Tests\Tests.Benchmarks\Tests.Benchmarks.csproj` |     √     |       √       |    √     |    √     |
-| `.\Tests\Tests.Playground\Tests.Playground.csproj` |     √     |       √       |    √     |    √     |
-| `.\Tests\Tests.T4\Tests.T4.csproj`                 |     √     |       √       |    √     |    √     |
-| `.\Tests\VisualBasic\Tests.VisualBasic.vbproj`     |     √     |       √       |    √     |    √     |
+| Project \ Target                                   |.NET 4.7.2 | .NET Core 3.1 | .NET 6.0 |
+|---------------------------------------------------:|:---------:|:-------------:|:--------:|
+| `.\Tests\Base\Tests.Base.csproj`                   |     √     |       √       |    √     |
+| `.\Tests\FSharp\Tests.FSharp.fsproj`               |     √     |       √       |    √     |
+| `.\Tests\Linq\Tests.csproj`                        |     √     |       √       |    √     |
+| `.\Tests\Model\Tests.Model.csproj`                 |     √     |       √       |    √     |
+| `.\Tests\Tests.Benchmarks\Tests.Benchmarks.csproj` |     √     |       √       |    √     |
+| `.\Tests\Tests.Playground\Tests.Playground.csproj` |     √     |       √       |    √     |
+| `.\Tests\Tests.T4\Tests.T4.csproj`                 |     √     |       √       |    √     |
+| `.\Tests\VisualBasic\Tests.VisualBasic.vbproj`     |     √     |       √       |    √     |
 
 
 Allowed target defines:
 - `NETCOREAPP3_1` - `netcoreapp3.1` target ifdef
-- `NET5_0` - `net5.0` target ifdef
 - `NET6_0` - `net6.0` target ifdef
 - `NET472` - `net472` target ifdef
 - `AZURE` - for Azure Pipelines CI builds
@@ -89,7 +88,7 @@ You can use the solution to build and run tests. Also you can build whole soluti
 * `.\Build.cmd` - builds all the projects in the solution for Debug, Release and Azure configurations
 * `.\Compile.cmd` - builds LinqToDB project for Debug and Release configurations
 * `.\Clean.cmd` - cleanups solution projects for Debug, Release and Azure configurations
-* `.\Test.cmd` - build `Debug` configuration and run tests for `net472`, `netcoreapp3.1`, `net5.0` and `net6.0` targets. You can set other configuration by passing it as first parameter, disable test targets by passing 0 to second (for `net472`),  third (for `netcoreapp3.1`), fourth (for `net5.0`) or fifth (for `net6.0`) parameter and format (default:html) as 7th parameter.
+* `.\Test.cmd` - build `Debug` configuration and run tests for `net472`, `netcoreapp3.1` and `net6.0` targets. You can set other configuration by passing it as first parameter, disable test targets by passing 0 to second (for `net472`),  third (for `netcoreapp3.1`) or fourth (for `net6.0`) parameter and format (default:html) as 6th parameter.
 
 Example of running Release build tests for `netcoreapp3.1` only with trx as output:
 ```
@@ -267,9 +266,8 @@ We do run builds and tests with:
 * [Azure Pipelines](https://dev.azure.com/linq2db/linq2db/_build?definitionId=3) [pipelines/default.yml](https://github.com/linq2db/linq2db/blob/master/Build/Azure/pipelines/default.yml).
 It builds solution, generate and publish nugets and runs tests for:
   * .Net 4.7.2
-  * .Net Core 3.1 (Windows/Linux and MacOS)
-  * .Net 5.0 (Windows/Linux and MacOS)
-  * .Net 6.0 (Windows/Linux and MacOS)
+  * .Net Core 3.1 (Windows, Linux and MacOS)
+  * .Net 6.0 (Windows, Linux and MacOS)
 For more details check [readme](https://github.com/linq2db/linq2db/blob/master/Build/Azure/README.md)
 
 CI builds are done for all branches and PRs.

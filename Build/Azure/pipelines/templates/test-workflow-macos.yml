@@ -12,13 +12,6 @@ steps:
   condition: and(variables.title, eq(variables.netcore31, 'true'), succeeded())
 
 - task: UseDotNet@2
-  displayName: 'Install .net 5'
-  inputs:
-    packageType: sdk
-    version: 5.x
-  condition: and(variables.title, eq(variables.net50, 'true'), succeeded())
-
-- task: UseDotNet@2
   displayName: 'Install .net 6'
   inputs:
     packageType: sdk
@@ -45,13 +38,6 @@ steps:
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: Copy test config
   condition: and(variables.title, eq(variables.netcore31, 'true'), succeeded())
-
-- task: CmdLine@2
-  inputs:
-    script: 'cp $(System.DefaultWorkingDirectory)/configs/net50/$(config).json net50/UserDataProviders.json'
-    workingDirectory: '$(System.DefaultWorkingDirectory)'
-  displayName: Copy test config
-  condition: and(variables.title, eq(variables.net50, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
@@ -111,17 +97,6 @@ steps:
 - script: dotnet test ./netcore31/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f netcoreapp31 -l trx $(extra)
   condition: and(variables.title, eq(variables.netcore31, 'true'), succeeded())
   displayName: 'Tests (CORE31): $(title)'
-
-- task: CmdLine@2
-  inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/net50'
-  condition: and(variables.title, variables.script_local, eq(variables.net50, 'true'), succeeded())
-  displayName: Setup tests
-
-- script: dotnet test ./net50/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net50 -l trx $(extra)
-  condition: and(variables.title, eq(variables.net50, 'true'), succeeded())
-  displayName: 'Tests (NET50): $(title)'
 
 - task: CmdLine@2
   inputs:
