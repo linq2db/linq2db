@@ -8,5 +8,5 @@ variables:
   assemblyVersion: 4.0.0
   ${{ if eq(variables['Build.SourceBranchName'], 'release4') }}:
     packageVersion: 4.0.0
-  ${{ if eq(variables['Build.SourceBranchName'], 'dev.v4') }}:
+  ${{ if ne(variables['Build.SourceBranchName'], 'release4') }}:
     packageVersion: 4.0.0
