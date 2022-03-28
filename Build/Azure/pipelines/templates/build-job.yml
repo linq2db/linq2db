@@ -133,3 +133,17 @@ jobs:
       artifact: '$(artifact_linq2db_aspnet_binaries)'
     displayName: Publish linq2db.AspNet build results
     condition: and(succeeded(), ${{ parameters.for_nuget }})
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/Tests/Linq/bin/Azure/net472'
+      artifact: '$(netfx472_tests)'
+    displayName: Publish nuget artifacts part 1
+    condition: and(succeeded(), ${{ parameters.for_nuget }})
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/Tests/Tests.T4/bin/Azure/net472'
+      artifact: '$(netfx472_tests_t4)'
+    displayName: Publish nuget artifacts part 2
+    condition: and(succeeded(), ${{ parameters.for_nuget }})
