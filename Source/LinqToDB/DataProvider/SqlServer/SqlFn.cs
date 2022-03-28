@@ -3403,6 +3403,19 @@ namespace LinqToDB.DataProvider.SqlServer
 			throw new InvalidOperationException($"'{nameof(RightTrim)}' is a server side only function.");
 		}
 
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SOUNDEX-transact-sql">SOUNDEX (Transact-SQL)</see></b></para>
+		/// <para>Returns a four-character (SOUNDEX) code to evaluate the similarity of two strings.</para>
+		/// </summary>
+		/// <param name="character_expression">Is an alphanumeric expression of character data. character_expression can be a constant, variable, or column.</param>
+		/// <returns>varchar</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "SOUNDEX", ServerSideOnly=true)]
+		public static string? SoundEx(string? character_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(SoundEx)}' is a server side only function.");
+		}
+
 
 
 

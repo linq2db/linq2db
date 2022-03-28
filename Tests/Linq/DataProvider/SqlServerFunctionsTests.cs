@@ -2103,6 +2103,15 @@ namespace Tests.DataProvider
 			Assert.That(result, Is.EqualTo("  123"));
 		}
 
+		[Test]
+		public void SoundExTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.SoundEx("Bambardu"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("B516"));
+		}
+
 
 
 
