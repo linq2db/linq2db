@@ -137,7 +137,6 @@ namespace LinqToDB.DataProvider.Firebird
 				// BOOLEAN type available since FB 3.0, but FirebirdDataProvider.SetParameter converts boolean to '1'/'0'
 				// so for now we will use type, compatible with SetParameter by default
 				case DataType.Boolean       : StringBuilder.Append("CHAR");                               break;
-				case DataType.Guid          : StringBuilder.Append("CHAR(16) CHARACTER SET OCTETS");      break;
 				default: base.BuildDataTypeFromDataType(type, forCreateTable);                            break;
 			}
 		}

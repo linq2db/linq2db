@@ -88,7 +88,7 @@ namespace Tests.Linq
 			using var db = (TestDataConnection)GetDataContext(context);
 
 			var data = BooleanTable.Data;
-			if (context.Contains("Access") || context.Contains("Sybase"))
+			if (context.IsAnyOf(TestProvName.AllAccess, TestProvName.AllSybase))
 			{
 				// for both Access and ASE BIT type cannot be NULL
 				data = data.Select(r => new BooleanTable() { Id = r.Id, Column = r.Column, ColumnNullable = r.ColumnNullable ?? false }).ToArray();
@@ -162,19 +162,27 @@ namespace Tests.Linq
 
 			// test parameter
 			db.InlineParameters = false;
+			db.OnNextCommandInitialized((_, cmd) =>
+			{
+				Assert.AreEqual(2, cmd.Parameters.Count);
+				return cmd;
+			});
 			var record = table.Where(r => Equality(r.Column, data[1].Column) && Equality(r.ColumnNullable, data[1].ColumnNullable)).ToArray()[0];
 			Assert.AreEqual(2, record.Id);
 			Assert.AreEqual(data[1].Column, record.Column);
 			Assert.AreEqual(data[1].ColumnNullable, record.ColumnNullable);
-			Assert.AreEqual(2, db.LastParameters?.Count);
 
 			// test literal
 			db.InlineParameters = true;
+			db.OnNextCommandInitialized((_, cmd) =>
+			{
+				Assert.AreEqual(0, cmd.Parameters.Count);
+				return cmd;
+			});
 			record = table.Where(r => Equality(r.Column, data[1].Column) && Equality(r.ColumnNullable, data[1].ColumnNullable)).ToArray()[0];
 			Assert.AreEqual(2, record.Id);
 			Assert.AreEqual(data[1].Column, record.Column);
 			Assert.AreEqual(data[1].ColumnNullable, record.ColumnNullable);
-			Assert.AreEqual(0, db.LastParameters?.Count);
 			db.InlineParameters = false;
 
 			// test bulk copy

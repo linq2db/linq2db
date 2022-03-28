@@ -111,7 +111,6 @@ jobs:
     inputs:
       path: '$(Build.SourcesDirectory)/testing'
       artifact: test_artifacts
-    condition: ${{ parameters.for_tests }}
     condition: and(succeeded(), ${{ parameters.for_tests }})
 
   - task: PublishPipelineArtifact@1

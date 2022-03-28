@@ -29,7 +29,6 @@ namespace LinqToDB.DataProvider.Firebird
 			// firebird string literals can contain only limited set of characters, so we should encode them
 			SetValueToSqlConverter(typeof(string)  , (sb, dt, v) => ConvertStringToSql(sb, (string)v));
 			SetValueToSqlConverter(typeof(char)    , (sb, dt, v) => ConvertCharToSql  (sb, (char)v));
-			SetValueToSqlConverter(typeof(Guid)    , (sb, dt, v) => ConvertGuidToSql  (sb, (Guid)v));
 			SetValueToSqlConverter(typeof(byte[])  , (sb, dt, v) => ConvertBinaryToSql(sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary)  , (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => BuildDateTime(sb, dt, (DateTime)v));
@@ -84,7 +83,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		static void ConvertGuidToSql(StringBuilder sb, SqlDataType dataType, Guid value)
 		{
-			if (dataType.Type.DataType == DataType.Char || dataType.Type.DataType == DataType.NChar)
+			if (dataType.Type.DataType is DataType.Char or DataType.NChar or DataType.VarChar or DataType.NVarChar)
 				sb.Append('\'').Append(value.ToString()).Append('\'');
 			else
 			{
@@ -106,19 +105,6 @@ namespace LinqToDB.DataProvider.Firebird
 			stringBuilder.Append("X'");
 
 			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
-
-			stringBuilder.Append('\'');
-		}
-
-		static void ConvertGuidToSql(StringBuilder stringBuilder, Guid value)
-		{
-			stringBuilder.Append("X'");
-
-			var bytes = value.ToByteArray();
-
-			(bytes[3], bytes[2], bytes[1], bytes[0], bytes[5], bytes[4], bytes[7], bytes[6]) = (bytes[0], bytes[1], bytes[2], bytes[3], bytes[4],bytes[5], bytes[6], bytes[7]);
-
-			stringBuilder.AppendByteArrayAsHexViaLookup32(bytes);
 
 			stringBuilder.Append('\'');
 		}

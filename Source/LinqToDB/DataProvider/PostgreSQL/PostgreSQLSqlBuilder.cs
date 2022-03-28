@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Globalization;
@@ -315,7 +316,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						if (param.DbType == DbType.Object && param.Value?.GetType().IsEnum == true)
 							return "Enum";
 
-						return _provider.Adapter.GetDbType(param).ToString();
+						return provider.Adapter.GetDbType(param).ToString();
 					}
 					catch (NotSupportedException)
 					{

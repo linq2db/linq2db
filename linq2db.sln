@@ -382,7 +382,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "templates", "templates", "{
 		Build\Azure\pipelines\templates\build-job.yml = Build\Azure\pipelines\templates\build-job.yml
 		Build\Azure\pipelines\templates\build-vars.yml = Build\Azure\pipelines\templates\build-vars.yml
 		Build\Azure\pipelines\templates\nuget-job.yml = Build\Azure\pipelines\templates\nuget-job.yml
-		Build\Azure\pipelines\templates\shared-vars.yml = Build\Azure\pipelines\templates\shared-vars.yml
 		Build\Azure\pipelines\templates\test-jobs.yml = Build\Azure\pipelines\templates\test-jobs.yml
 		Build\Azure\pipelines\templates\test-matrix.yml = Build\Azure\pipelines\templates\test-matrix.yml
 		Build\Azure\pipelines\templates\test-workflow-linux.yml = Build\Azure\pipelines\templates\test-workflow-linux.yml

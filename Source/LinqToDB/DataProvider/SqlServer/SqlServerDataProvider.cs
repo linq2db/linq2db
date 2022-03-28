@@ -59,11 +59,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlProviderFlags.OutputDeleteUseSpecialTable       = true;
 			SqlProviderFlags.OutputInsertUseSpecialTable       = true;
 			SqlProviderFlags.OutputUpdateUseSpecialTables      = true;
-				SqlProviderFlags.IsApplyJoinSupported              = true;
-				SqlProviderFlags.TakeHintsSupported                = TakeHints.Percent | TakeHints.WithTies;
-				// TODO: move both options to SQL2005 level
-				SqlProviderFlags.IsCommonTableExpressionsSupported = version >= SqlServerVersion.v2008;
-			}
+			SqlProviderFlags.IsApplyJoinSupported              = true;
+			SqlProviderFlags.TakeHintsSupported                = TakeHints.Percent | TakeHints.WithTies;
+			// TODO: move both options to SQL2005 level
+			SqlProviderFlags.IsCommonTableExpressionsSupported = version >= SqlServerVersion.v2008;
 
 			SetCharField("char" , (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r, i) => r.GetString(i).TrimEnd(' '));

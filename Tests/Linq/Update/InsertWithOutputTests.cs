@@ -18,10 +18,10 @@ namespace Tests.xUpdate
 	[TestFixture]
 	public class InsertWithOutputTests : TestBase
 	{
-		private const string FeatureInsertOutputSingle     = TestProvName.AllSqlServer2005Plus + "," + TestProvName.AllFirebird + "," + TestProvName.MariaDB + "," + TestProvName.AllPostgreSQL + "," + TestProvName.AllSQLiteClassic;
-		private const string FeatureInsertOutputMultiple   = TestProvName.AllSqlServer2005Plus + "," + TestProvName.MariaDB + "," + TestProvName.AllPostgreSQL + "," + TestProvName.AllSQLiteClassic;
-		private const string FeatureInsertOutputWithSchema = TestProvName.AllSqlServer2005Plus + "," + TestProvName.AllFirebird + "," + TestProvName.MariaDB + "," + TestProvName.AllSQLiteClassic;
-		private const string FeatureInsertOutputInto       = TestProvName.AllSqlServer2005Plus;
+		private const string FeatureInsertOutputSingle     = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.MariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLiteClassic}";
+		private const string FeatureInsertOutputMultiple   = $"{TestProvName.AllSqlServer},{TestProvName.MariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLiteClassic}";
+		private const string FeatureInsertOutputWithSchema = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.MariaDB},{TestProvName.AllSQLiteClassic}";
+		private const string FeatureInsertOutputInto       = TestProvName.AllSqlServer;
 
 		[Table]
 		class TableWithData

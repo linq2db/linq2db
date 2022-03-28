@@ -51,11 +51,20 @@
 					<HintPath>$(PkgIBM_Data_DB_Provider)\build\net451\x86\IBM.Data.DB2.dll</HintPath>
 				</Reference>
 			</ItemGroup>
-			<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
-				<!--magic-->
+			<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
 				<PackageReference Include="IBM.Data.DB2.Core" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
 				<PackageReference Include="IBM.Data.DB2.Core-lnx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
 				<PackageReference Include="IBM.Data.DB2.Core-osx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' "/>
+			</ItemGroup>
+			<ItemGroup Condition=" '$(TargetFramework)' == 'net5.0' ">
+				<PackageReference Include="Net5.IBM.Data.Db2" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
+				<PackageReference Include="Net5.IBM.Data.Db2-lnx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
+				<PackageReference Include="Net5.IBM.Data.Db2-osx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' "/>
+			</ItemGroup>
+			<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
+				<PackageReference Include="Net.IBM.Data.Db2" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
+				<PackageReference Include="Net.IBM.Data.Db2-lnx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
+				<PackageReference Include="Net.IBM.Data.Db2-osx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' "/>
 			</ItemGroup>
 		</When>
 	</Choose>

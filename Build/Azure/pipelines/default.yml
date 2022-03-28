@@ -1,5 +1,4 @@
 variables:
-  - template: templates/test-vars.yml
   - template: templates/build-vars.yml
   - name: artifact_nugets
     value: nugets
@@ -39,6 +38,7 @@ stages:
   - template: templates/nuget-job.yml
     parameters:
       publish: true
+
 #############
 # TEST JOBS #
 #############
