@@ -28,7 +28,9 @@ namespace LinqToDB.DataProvider.DB2
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
-			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.Comparisons | RowFeature.Update | RowFeature.UpdateLiteral;
+
+			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality | RowFeature.Comparisons | RowFeature.Update |
+			                                         RowFeature.UpdateLiteral | RowFeature.Overlaps | RowFeature.Between;
 
 			SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);
 			SetCharField            ("CHAR", (r, i) => r.GetString(i).TrimEnd(' '));

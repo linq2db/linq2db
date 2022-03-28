@@ -17,7 +17,6 @@ namespace LinqToDB.SqlProvider
 	using DataProvider;
 	using Common.Internal;
 	using LinqToDB.Expressions;
-	using static LinqToDB.SqlQuery.SqlPredicate;
 
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{
@@ -1211,6 +1210,17 @@ namespace LinqToDB.SqlProvider
 					break;
 				}
 
+				case QueryElementType.BetweenPredicate:
+				{
+					var between = (SqlPredicate.Between)predicate;
+					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Between) && between.Expr1 is SqlRow)
+					{
+						return ConvertBetweenPredicate(between);
+					}
+
+					break;
+				}
+
 				case QueryElementType.ExprExprPredicate:
 				{
 					var expr = (SqlPredicate.ExprExpr)predicate;
@@ -1300,7 +1310,7 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.InListPredicate:
 				{
-					var inList = (InList)predicate;
+					var inList = (SqlPredicate.InList)predicate;
 					if (inList.Expr1.ElementType == QueryElementType.SqlRow)
 						return OptimizeRowInList(inList);
 					break;
@@ -1337,21 +1347,23 @@ namespace LinqToDB.SqlProvider
 
 		#region SqlRow
 
-		protected ISqlPredicate OptimizeRowExprExpr(ExprExpr predicate, EvaluationContext context)
+		protected ISqlPredicate OptimizeRowExprExpr(SqlPredicate.ExprExpr predicate, EvaluationContext context)
 		{
 			var op = predicate.Operator;
-			var feature = op is Operator.Equal or Operator.NotEqual 
-				? RowFeature.Equality 
-				: RowFeature.Comparisons;
+			var feature = op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual
+				? RowFeature.Equality
+				: op is SqlPredicate.Operator.Overlaps
+					? RowFeature.Overlaps
+					: RowFeature.Comparisons;
 
 			switch (predicate.Expr2)
 			{
 				// ROW(a, b) IS [NOT] NULL
 				case SqlValue { Value: null }:
-					if (op is not (Operator.Equal or Operator.NotEqual))
+					if (op is not (SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual))
 						throw new LinqException("Null SqlRow is only allowed in equality comparisons");
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.IsNull))
-						return RowIsNullFallback((SqlRow)predicate.Expr1, op == Operator.NotEqual);
+						return RowIsNullFallback((SqlRow)predicate.Expr1, op == SqlPredicate.Operator.NotEqual);
 					break;
 
 				// ROW(a, b) operator ROW(c, d)
@@ -1375,19 +1387,19 @@ namespace LinqToDB.SqlProvider
 			// We always disable CompareNullsAsValues behavior when comparing SqlRow.
 			return predicate.WithNull == null
 				? predicate
-				: new ExprExpr(predicate.Expr1, predicate.Operator, predicate.Expr2, withNull: null);
+				: new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, predicate.Expr2, withNull: null);
 		}
 
-		protected virtual ISqlPredicate OptimizeRowInList(InList predicate)
+		protected virtual ISqlPredicate OptimizeRowInList(SqlPredicate.InList predicate)
 		{
 			if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.In))
 			{			
-				var left = predicate.Expr1; 
-				var op = predicate.IsNot ? Operator.NotEqual : Operator.Equal;
-				var isOr = !predicate.IsNot;
+				var left    = predicate.Expr1; 
+				var op      = predicate.IsNot ? SqlPredicate.Operator.NotEqual : SqlPredicate.Operator.Equal;
+				var isOr    = !predicate.IsNot;
 				var rewrite = new SqlSearchCondition();
 				foreach (var item in predicate.Values)
-					rewrite.Conditions.Add(new SqlCondition(false, new ExprExpr(left, op, item, withNull: null), isOr));
+					rewrite.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(left, op, item, withNull: null), isOr));
 				return rewrite;
 			}
 
@@ -1395,7 +1407,7 @@ namespace LinqToDB.SqlProvider
 			// We always disable CompareNullsAsValues behavior when comparing SqlRow.
 			return predicate.WithNull == null
 				? predicate
-				: new InList(predicate.Expr1, withNull: null, predicate.IsNot, predicate.Values);
+				: new SqlPredicate.InList(predicate.Expr1, withNull: null, predicate.IsNot, predicate.Values);
 		}
 
 		protected ISqlPredicate RowIsNullFallback(SqlRow row, bool isNot)
@@ -1404,19 +1416,19 @@ namespace LinqToDB.SqlProvider
 			// (a, b) is null     => a is null     and b is null
 			// (a, b) is not null => a is not null and b is not null
 			foreach (var value in row.Values)
-				rewrite.Conditions.Add(new SqlCondition(false, new IsNull(value, isNot)));
+				rewrite.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(value, isNot)));
 			return rewrite;
 		}
 
-		protected ISqlPredicate RowComparisonFallback(Operator op, SqlRow row1, SqlRow row2, EvaluationContext context)
+		protected ISqlPredicate RowComparisonFallback(SqlPredicate.Operator op, SqlRow row1, SqlRow row2, EvaluationContext context)
 		{
 			var rewrite = new SqlSearchCondition();
 						
-			if (op is Operator.Equal or Operator.NotEqual)
+			if (op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
 			{			
 				// (a1, a2) =  (b1, b2) => a1 =  b1 and a2 = b2
 				// (a1, a2) <> (b1, b2) => a1 <> b1 or  a2 <> b2
-				bool isOr = op == Operator.NotEqual;
+				bool isOr = op == SqlPredicate.Operator.NotEqual;
 				var compares = row1.Values.Zip(row2.Values, (a, b) => 
 				{					
 					// There is a trap here, neither `a` nor `b` should be a constant null value,
@@ -1425,36 +1437,65 @@ namespace LinqToDB.SqlProvider
 					// We use `a >= null` instead, which is equivalent (always evaluates to `unknown`) but is never reduced by ExprExpr.
 					// Reducing to `false` is an inaccuracy that causes problems when composed in more complicated ways,
 					// e.g. the NOT IN SqlRow tests fail.
-					Operator nullSafeOp = a.TryEvaluateExpression(context, out var val) && val == null ||
-																b.TryEvaluateExpression(context, out     val) && val == null
-						? Operator.GreaterOrEqual
+					SqlPredicate.Operator nullSafeOp = a.TryEvaluateExpression(context, out var val) && val == null ||
+					                                   b.TryEvaluateExpression(context, out     val) && val == null
+						? SqlPredicate.Operator.GreaterOrEqual
 						: op;
-					return new ExprExpr(a, nullSafeOp, b, withNull: null);
+					return new SqlPredicate.ExprExpr(a, nullSafeOp, b, withNull: null);
 				});
 				foreach (var comp in compares)
 					rewrite.Conditions.Add(new SqlCondition(false, comp, isOr));
+
 				return rewrite;
 			}
 
-			if (op is Operator.Greater or Operator.GreaterOrEqual or Operator.Less or Operator.LessOrEqual)
+			if (op is SqlPredicate.Operator.Greater or SqlPredicate.Operator.GreaterOrEqual or SqlPredicate.Operator.Less or SqlPredicate.Operator.LessOrEqual)
 			{
 				// (a1, a2, a3) >  (b1, b2, b3) => a1 > b1 or (a1 = b1 and a2 > b2) or (a1 = b1 and a2 = b2 and a3 >  b3)
 				// (a1, a2, a3) >= (b1, b2, b3) => a1 > b1 or (a1 = b1 and a2 > b2) or (a1 = b1 and a2 = b2 and a3 >= b3)
 				// (a1, a2, a3) <  (b1, b2, b3) => a1 < b1 or (a1 = b1 and a2 < b2) or (a1 = b1 and a2 = b2 and a3 <  b3)
 				// (a1, a2, a3) <= (b1, b2, b3) => a1 < b1 or (a1 = b1 and a2 < b2) or (a1 = b1 and a2 = b2 and a3 <= b3)
-				var strictOp = op is Operator.Greater or Operator.GreaterOrEqual ? Operator.Greater : Operator.Less;
+				var strictOp = op is SqlPredicate.Operator.Greater or SqlPredicate.Operator.GreaterOrEqual ? SqlPredicate.Operator.Greater : SqlPredicate.Operator.Less;
 				var values1 = row1.Values;
 				var values2 = row2.Values;
 				for (int i = 0; i < values1.Length; ++i)
 				{
 					for (int j = 0; j < i; j++)
-						rewrite.Conditions.Add(new SqlCondition(false, new ExprExpr(values1[j], Operator.Equal, values2[j], withNull: null), isOr: false));
-					rewrite.Conditions.Add(new SqlCondition(false, new ExprExpr(values1[i], i == values1.Length - 1 ? op : strictOp, values2[i], withNull: null), isOr: true));
+						rewrite.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(values1[j], SqlPredicate.Operator.Equal, values2[j], withNull: null), isOr: false));
+					rewrite.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(values1[i], i == values1.Length - 1 ? op : strictOp, values2[i], withNull: null), isOr: true));
 				}
+
+				return rewrite;
+			}
+
+			if (op is SqlPredicate.Operator.Overlaps)
+			{
+				//TODO: make it working if possible
+				/*
+				if (row1.Values.Length != 2 || row2.Values.Length != 2)
+					throw new LinqException("Unsupported SqlRow conversion from operator: " + op);
+
+				rewrite.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(row1.Values[0], SqlPredicate.Operator.LessOrEqual, row2.Values[1], withNull: false))); 
+				rewrite.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(row2.Values[0], SqlPredicate.Operator.LessOrEqual, row1.Values[1], withNull: false))); 
+				*/
+
 				return rewrite;
 			}
 
 			throw new LinqException("Unsupported SqlRow operator: " + op);
+		}
+
+		public virtual ISqlPredicate ConvertBetweenPredicate(SqlPredicate.Between between)
+		{
+			var newPredicate = !between.IsNot
+				? new SqlSearchCondition(
+					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.GreaterOrEqual, between.Expr2, withNull: false)),
+					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.LessOrEqual,    between.Expr3, withNull: false)))
+				: new SqlSearchCondition(
+					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.Less,    between.Expr2, withNull: false), isOr: true),
+					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.Greater, between.Expr3, withNull: false)));
+
+			return newPredicate;
 		}
 
 		#endregion

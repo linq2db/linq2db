@@ -110,34 +110,6 @@ namespace LinqToDB
 			return value ?? default;
 		}
 
-		[Expression("{0} BETWEEN {1} AND {2}", PreferServerSide = true, IsPredicate = true)]
-		public static bool Between<T>(this T value, T low, T high)
-			where T : IComparable
-		{
-			return value != null && value.CompareTo(low) >= 0 && value.CompareTo(high) <= 0;
-		}
-
-		[Expression("{0} BETWEEN {1} AND {2}", PreferServerSide = true, IsPredicate = true)]
-		public static bool Between<T>(this T? value, T? low, T? high)
-			where T : struct, IComparable
-		{
-			return value != null && value.Value.CompareTo(low) >= 0 && value.Value.CompareTo(high) <= 0;
-		}
-
-		[Expression("{0} NOT BETWEEN {1} AND {2}", PreferServerSide = true, IsPredicate = true)]
-		public static bool NotBetween<T>(this T value, T low, T high)
-			where T : IComparable
-		{
-			return value != null && (value.CompareTo(low) < 0 || value.CompareTo(high) > 0);
-		}
-
-		[Expression("{0} NOT BETWEEN {1} AND {2}", PreferServerSide = true, IsPredicate = true)]
-		public static bool NotBetween<T>(this T? value, T? low, T? high)
-			where T : struct, IComparable
-		{
-			return value != null && (value.Value.CompareTo(low) < 0 || value.Value.CompareTo(high) > 0);
-		}
-
 		[Extension(typeof(IsDistinctBuilder), ServerSideOnly = false, PreferServerSide = false)]
 		public static bool IsDistinctFrom<T>(this T value, T other) => !EqualityComparer<T>.Default.Equals(value, other);
 

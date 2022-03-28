@@ -2085,14 +2085,15 @@ namespace LinqToDB.SqlProvider
 
 			switch (expr.Operator)
 			{
-				case SqlPredicate.Operator.Equal          : StringBuilder.Append(" = ");  break;
-				case SqlPredicate.Operator.NotEqual       : StringBuilder.Append(" <> "); break;
-				case SqlPredicate.Operator.Greater        : StringBuilder.Append(" > ");  break;
-				case SqlPredicate.Operator.GreaterOrEqual : StringBuilder.Append(" >= "); break;
-				case SqlPredicate.Operator.NotGreater     : StringBuilder.Append(" !> "); break;
-				case SqlPredicate.Operator.Less           : StringBuilder.Append(" < ");  break;
-				case SqlPredicate.Operator.LessOrEqual    : StringBuilder.Append(" <= "); break;
-				case SqlPredicate.Operator.NotLess        : StringBuilder.Append(" !< "); break;
+				case SqlPredicate.Operator.Equal          : StringBuilder.Append(" = ");        break;
+				case SqlPredicate.Operator.NotEqual       : StringBuilder.Append(" <> ");       break;
+				case SqlPredicate.Operator.Greater        : StringBuilder.Append(" > ");        break;
+				case SqlPredicate.Operator.GreaterOrEqual : StringBuilder.Append(" >= ");       break;
+				case SqlPredicate.Operator.NotGreater     : StringBuilder.Append(" !> ");       break;
+				case SqlPredicate.Operator.Less           : StringBuilder.Append(" < ");        break;
+				case SqlPredicate.Operator.LessOrEqual    : StringBuilder.Append(" <= ");       break;
+				case SqlPredicate.Operator.NotLess        : StringBuilder.Append(" !< ");       break;
+				case SqlPredicate.Operator.Overlaps       : StringBuilder.Append(" OVERLAPS "); break;
 			}
 
 			BuildPredicateRhsX(GetPrecedence(expr), expr.Expr2);
