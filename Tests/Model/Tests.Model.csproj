@@ -7,6 +7,9 @@
 	</PropertyGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
+		<Reference Include="System.ServiceModel" />
+		<PackageReference Include="System.Collections.Immutable" />
+
 		<ProjectReference Include="..\..\Source\LinqToDB.Remote.Wcf\LinqToDB.Remote.Wcf.csproj" />
 	</ItemGroup>
 

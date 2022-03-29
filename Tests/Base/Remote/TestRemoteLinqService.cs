@@ -45,7 +45,7 @@ namespace Tests.Remote
 		{
 			var dc = _linqService.CreateDataContext(configuration);
 
-			if (!SuppressSequentialAccess && configuration?.Contains(TestProvName.SqlServer2019SequentialAccess) == true)
+			if (!SuppressSequentialAccess && configuration?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
 				dc.AddInterceptor(SequentialAccessCommandInterceptor.Instance);
 
 			if (_interceptor != null)
@@ -112,7 +112,7 @@ namespace Tests.Remote
 		{
 			var dc = _linqService.CreateDataContext(configuration);
 
-			if (!SuppressSequentialAccess && configuration?.Contains(TestProvName.SqlServer2019SequentialAccess) == true)
+			if (!SuppressSequentialAccess && configuration?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
 				dc.AddInterceptor(SequentialAccessCommandInterceptor.Instance);
 
 			if (_interceptor != null)

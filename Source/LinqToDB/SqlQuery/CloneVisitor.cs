@@ -8,7 +8,6 @@ namespace LinqToDB.SqlQuery
 {
 	using Common;
 	using Linq.Builder;
-	using ServiceModel;
 	using Remote;
 
 	public readonly struct CloneVisitor<TContext>

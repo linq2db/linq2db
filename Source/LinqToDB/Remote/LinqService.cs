@@ -322,7 +322,7 @@ namespace LinqToDB.Remote
 
 		private LinqServiceResult ProcessDataReaderWrapper(LinqServiceQuery query, DataConnection db, DataReaderWrapper rd)
 		{
-			var reader = DataReaderWrapCache.TryUnwrapDataReader(db.MappingSchema, rd.DataReader!);
+			var reader = ((IDataContext)db).UnwrapDataObjectInterceptor?.UnwrapDataReader(db, rd.DataReader!) ?? rd.DataReader!;
 
 			var ret = new LinqServiceResult
 			{
@@ -333,8 +333,16 @@ namespace LinqToDB.Remote
 				Data       = new List<string[]>(),
 			};
 
-			var names = new HashSet<string>();
-			var select = GetQuerySelect(query);
+			var names             = new HashSet<string>();
+			var selectExpressions = query.Statement.QueryType switch
+			{
+				QueryType.Select => query.Statement.SelectQuery!.Select.Columns.Select(c => c.Expression).ToList(),
+				QueryType.Insert => ((SqlInsertStatement)query.Statement).Output!.OutputColumns!,
+				QueryType.Delete => ((SqlDeleteStatement)query.Statement).Output!.OutputColumns!,
+				QueryType.Update => ((SqlUpdateStatement)query.Statement).Output!.OutputColumns!,
+				QueryType.Merge  => ((SqlMergeStatement )query.Statement).Output!.OutputColumns!,
+				_ => throw new NotImplementedException($"Query type not supported: {query.Statement.QueryType}"),
+			};
 
 			for (var i = 0; i < ret.FieldCount; i++)
 			{
@@ -354,7 +362,7 @@ namespace LinqToDB.Remote
 				// ugh...
 				// still if it fails here due to empty columns - it is a bug in columns generation
 
-				var fieldType = select.Select.Columns[i].SystemType!;
+				var fieldType = selectExpressions[i].SystemType!;
 
 				// async compiled query support
 				if (fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(Task<>))
@@ -383,7 +391,7 @@ namespace LinqToDB.Remote
 
 			for (var i = 0; i < ret.FieldCount; i++)
 				columnReaders[i] = new ConvertFromDataReaderExpression.ColumnReader(db, db.MappingSchema,
-					ret.FieldTypes[i], i, QueryHelper.GetValueConverter(select.Select.Columns[i]), true);
+					ret.FieldTypes[i], i, QueryHelper.GetValueConverter(selectExpressions[i]), true);
 
 			while (rd.DataReader!.Read())
 			{
@@ -409,19 +417,6 @@ namespace LinqToDB.Remote
 		}
 
 		#endregion
-
-		private static SelectQuery GetQuerySelect(LinqServiceQuery query)
-		{
-			return query.Statement.QueryType switch
-			{
-				QueryType.Select => query.Statement.SelectQuery!,
-				QueryType.Insert => ((SqlInsertStatement)query.Statement).Output!.OutputQuery!,
-				QueryType.Delete => ((SqlDeleteStatement)query.Statement).Output!.OutputQuery!,
-				QueryType.Update => ((SqlUpdateStatement)query.Statement).Output!.OutputQuery!,
-				QueryType.Merge  => ((SqlMergeStatement )query.Statement).Output!.OutputQuery!,
-				_ => throw new NotImplementedException($"Query type not supported: {query.Statement.QueryType}"),
-			};
-		}
 
 		public int ExecuteBatch(string? configuration, string queryData)
 		{
