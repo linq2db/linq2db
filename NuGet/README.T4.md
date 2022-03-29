@@ -23,6 +23,12 @@ Don't use this package if you don't need database scaffolding functionality. Ins
   - [IBM.Data.DB2.Core](https://www.nuget.org/packages/IBM.Data.DB2.Core): .NET Core Windows provider
   - [IBM.Data.DB2.Core-lnx](https://www.nuget.org/packages/IBM.Data.DB2.Core-lnx): .NET Core Linux provider
   - [IBM.Data.DB2.Core-osx](https://www.nuget.org/packages/IBM.Data.DB2.Core-osx): .NET Core MacOS provider
+  - [Net5.IBM.Data.Db2](https://www.nuget.org/packages/Net5.IBM.Data.Db2): .NET 5+ Windows provider
+  - [Net5.IBM.Data.Db2-lnx](https://www.nuget.org/packages/Net5.IBM.Data.Db2-lnx): .NET 5+ Linux provider
+  - [Net5.IBM.Data.Db2-osx](https://www.nuget.org/packages/Net5.IBM.Data.Db2-osx): .NET 5+ MacOS provider
+  - [Net.IBM.Data.Db2](https://www.nuget.org/packages/Net.IBM.Data.Db2): .NET 6+ Windows provider
+  - [Net.IBM.Data.Db2-lnx](https://www.nuget.org/packages/Net.IBM.Data.Db2-lnx): .NET 6+ Linux provider
+  - [Net.IBM.Data.Db2-osx](https://www.nuget.org/packages/Net.IBM.Data.Db2-osx): .NET 6+ MacOS provider
   - for `Informix` you can also use legacy ODS or SQLi `IBM.Data.Informix` providers, but we don't recommend it
 - DB2 iSeries
   - [linq2db4iSeries](https://www.nuget.org/packages/linq2db4iSeries): Don't reference linq2db package explicitly. This package already references supported linq2db version
