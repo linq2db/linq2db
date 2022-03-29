@@ -55,7 +55,7 @@ namespace LinqToDB.Remote
 					var b  = li.CheckNullLambda.Body;
 					var ps = li.CheckNullLambda.Parameters;
 
-					var p  = Expression.Parameter(typeof(object), "p");
+					var p = Expression.Parameter(typeof(object), "p");
 					var ex = Expression.Lambda<Func<object, string>>(
 						b.Transform(
 							(ps, enumType, p),
@@ -96,19 +96,9 @@ namespace LinqToDB.Remote
 					var li = ms.GetConverter(new DbDataType(_stringType), new DbDataType(to), false);
 					if (li == null && to.IsEnum)
 					{
-						var type = Converter.GetDefaultMappingFromEnumType(ms, to);
-						if (type != null)
-						{
-							if (type == typeof(int) || type == typeof(long))
-								enumType = to;
-							to = type;
-						}
-						else
-						{
 							enumType = to;
 							to = Enum.GetUnderlyingType(to);
 						}
-					}
 
 					if (li == null)
 						li = ms.GetConverter(new DbDataType(_stringType), new DbDataType(to), true)!;

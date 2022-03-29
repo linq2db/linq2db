@@ -54,14 +54,14 @@ namespace Tests.UserTests
 
 				Assert.AreEqual(1, table.Where(r => r.Value!.Contains("6")).ToList().Count);
 
-				if (context == ProviderName.Access)
+				if (context.IsAnyOf(ProviderName.Access))
 				{
 #pragma warning disable CA1416 // windows-specific API
 					Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList());
 					Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList());
 #pragma warning disable CA1416
 				}
-				else if (context == ProviderName.AccessOdbc)
+				else if (context.IsAnyOf(ProviderName.AccessOdbc))
 				{
 					Assert.Throws<OdbcException>(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList());
 					Assert.Throws<OdbcException>(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList());

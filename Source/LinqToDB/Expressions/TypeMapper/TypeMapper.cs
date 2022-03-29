@@ -921,12 +921,12 @@ namespace LinqToDB.Expressions
 
 		#region MapActionLambda
 
-		public LambdaExpression MapActionLambda(Expression<Action> action) => MapLambdaInternal(action)!;
-		public LambdaExpression MapActionLambda<T>(Expression<Action<T>> action) => MapLambdaInternal(action)!;
-		public LambdaExpression MapActionLambda<T1, T2>(Expression<Action<T1, T2>> action) => MapLambdaInternal(action)!;
-		public LambdaExpression MapActionLambda<T1, T2, T3>(Expression<Action<T1, T2, T3>> action) => MapLambdaInternal(action)!;
-		public LambdaExpression MapActionLambda<T1, T2, T3, T4>(Expression<Action<T1, T2, T3, T4>> action) => MapLambdaInternal(action)!;
-		public LambdaExpression MapActionLambda<T1, T2, T3, T4, T5>(Expression<Action<T1, T2, T3, T4, T5>> action) => MapLambdaInternal(action)!;
+		public LambdaExpression MapActionLambda(Expression<Action> action) => MapLambdaInternal(action, true)!;
+		public LambdaExpression MapActionLambda<T>(Expression<Action<T>> action) => MapLambdaInternal(action, true)!;
+		public LambdaExpression MapActionLambda<T1, T2>(Expression<Action<T1, T2>> action) => MapLambdaInternal(action, true)!;
+		public LambdaExpression MapActionLambda<T1, T2, T3>(Expression<Action<T1, T2, T3>> action) => MapLambdaInternal(action, true)!;
+		public LambdaExpression MapActionLambda<T1, T2, T3, T4>(Expression<Action<T1, T2, T3, T4>> action) => MapLambdaInternal(action, true)!;
+		public LambdaExpression MapActionLambda<T1, T2, T3, T4, T5>(Expression<Action<T1, T2, T3, T4, T5>> action) => MapLambdaInternal(action, true)!;
 
 		#endregion
 

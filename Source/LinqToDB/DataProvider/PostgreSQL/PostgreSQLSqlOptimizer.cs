@@ -79,10 +79,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						var tableToCheck = tableToUpdate ?? table;
 						var onSources    = new HashSet<ISqlTableSource> { tableToCheck };
 
-						if (tableSource.Joins.All(j => j.JoinType == JoinType.Inner
-						                               && (j.Table.Source == tableToCheck || !QueryHelper.IsDependsOn(j.Table,
-							                               onSources)))
-						)
+						if (tableSource.Joins.All(j =>
+							j.JoinType == JoinType.Inner && (j.Table.Source == tableToCheck || !QueryHelper.IsDependsOn(j.Table, onSources))))
 						{
 							// simplify all to FROM
 
@@ -256,7 +254,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 							item.Column = tableToUpdate[setField.Name] ?? throw new LinqException($"Field {setField.Name} not found in table {tableToUpdate}");
 						}
-
 					}
 
 					// return first matched table

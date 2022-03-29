@@ -170,13 +170,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return typeName;
 		}
 
-		public override IDisposable? ExecuteScope(DataConnection dataConnection)
-		{
-			if (Adapter.DisposeCommandOnError)
-				return new DisposeCommandOnExceptionRegion(dataConnection);
-
-			return base.ExecuteScope(dataConnection);
-		}
+		public override IExecutionScope? ExecuteScope(DataConnection dataConnection) => Adapter.DisposeCommandOnError ? new DisposeCommandOnExceptionRegion(dataConnection) : null;
 
 		public override TableOptions SupportedTableOptions =>
 			TableOptions.IsTemporary               |

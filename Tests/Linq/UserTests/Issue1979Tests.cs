@@ -64,7 +64,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test_Linq([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void Test_Linq([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Tag>())
@@ -105,7 +105,7 @@ WHERE
 
 		}
 		[Test]
-		public void Test_Associations([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void Test_Associations([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Tag>())

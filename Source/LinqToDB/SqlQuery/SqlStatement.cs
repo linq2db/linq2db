@@ -108,6 +108,9 @@ namespace LinqToDB.SqlQuery
 
 		public static void PrepareQueryAndAliases(SqlStatement statement, AliasesContext? prevAliasContext, out AliasesContext newAliasContext)
 		{
+			if (statement.SelectQuery != null && !(statement is SqlSelectStatement && statement.SelectQuery.From.Tables.Count == 0))
+				statement.SelectQuery.DoNotSetAliases = true;
+
 			var ctx = new PrepareQueryAndAliasesContext(prevAliasContext);
 
 			statement.VisitAll(ctx, static (context, expr) =>
@@ -172,7 +175,7 @@ namespace LinqToDB.SqlQuery
 						{
 							var query = (SelectQuery)expr;
 
-							if (query.Select.Columns.Count > 0)
+							if (query.DoNotSetAliases == false && query.Select.Columns.Count > 0)
 							{
 								Utils.MakeUniqueNames(
 									query.Select.Columns.Where(c => c.Alias != "*"),
@@ -271,6 +274,9 @@ namespace LinqToDB.SqlQuery
 			}
 
 			newAliasContext = ctx.NewAliases;
+
+			if (statement is SqlUpdateStatement updateStatement)
+				updateStatement.AfterSetAliases();
 		}
 
 		#endregion

@@ -357,7 +357,7 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.SqlCe,
 				TestProvName.AllAccess,
-				ProviderName.SqlServer2005,
+				TestProvName.AllSqlServer2005,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
@@ -388,7 +388,7 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.SqlCe,
 				TestProvName.AllAccess,
-				ProviderName.SqlServer2005,
+				TestProvName.AllSqlServer2005,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
@@ -422,7 +422,7 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.SqlCe,
 				TestProvName.AllAccess,
-				ProviderName.SqlServer2005,
+				TestProvName.AllSqlServer2005,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
@@ -810,8 +810,8 @@ namespace Tests.Linq
 		{
 			// TODO: update condition to include only Firebird 2.5 when
 			// https://github.com/FirebirdSQL/firebird/issues/6750 releases
-			var skipFloatInf = context.Contains("Firebird") && inline;
-			var skipId       = context.StartsWith("DB2") || context.Contains("Sybase") || context.Contains("SqlCe");
+			var skipFloatInf = context.IsAnyOf(TestProvName.AllFirebird) && inline;
+			var skipId       = context.IsAnyOf(ProviderName.DB2) || context.IsAnyOf(TestProvName.AllSybase) || context.IsAnyOf(ProviderName.SqlCe);
 
 			using (var db = GetDataContext(context))
 			{

@@ -48,7 +48,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring("\tWITH OWNERACCESS OPTION"));
+			Assert.That(LastQuery, Contains.Substring("\tWITH OWNERACCESS OPTION").Using(StringComparison.Ordinal));
 		}
 	}
 }

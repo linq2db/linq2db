@@ -103,7 +103,7 @@ namespace LinqToDB
 		/// MySqlConnector provider.
 		/// Used as configuration name for MySql mapping schema <see cref="DataProvider.MySql.MySqlMappingSchema"/>.
 		/// </summary>
-		public const string MySqlConnector= "MySqlConnector";
+		public const string MySqlConnector = "MySqlConnector";
 		/// <summary>
 		/// Oracle ODP.NET autodetected provider (native or managed).
 		/// Used as configuration name for Oracle base mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema"/>.
@@ -169,13 +169,11 @@ namespace LinqToDB
 		/// Used as configuration name for SAP HANA mapping schema <see cref="DataProvider.SapHana.SapHanaMappingSchema"/>.
 		/// </summary>
 		public const string SapHana       = "SapHana";
-#if NETFRAMEWORK || NETCOREAPP
 		/// <summary>
 		/// SAP HANA provider.
 		/// Used as configuration name for SAP HANA mapping schema <see cref="DataProvider.SapHana.SapHanaMappingSchema.NativeMappingSchema"/>.
 		/// </summary>
 		public const string SapHanaNative = "SapHana.Native";
-#endif
 		/// <summary>
 		/// SAP HANA ODBC provider.
 		/// Used as configuration name for SAP HANA mapping schema <see cref="DataProvider.SapHana.SapHanaMappingSchema.OdbcMappingSchema"/>.

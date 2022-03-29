@@ -102,7 +102,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task ExecuteTestAsync([IncludeDataSources(ProviderName.SqlServer2008)] string context)
+		public async Task ExecuteTestAsync([IncludeDataSources(TestProvName.AllSqlServer2008)] string context)
 		{
 			var ret = new Retry();
 

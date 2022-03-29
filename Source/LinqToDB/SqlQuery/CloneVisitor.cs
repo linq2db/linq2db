@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
-using LinqToDB.Common;
-using LinqToDB.Linq.Builder;
-using LinqToDB.Remote;
 
 namespace LinqToDB.SqlQuery
 {
+	using Common;
+	using Linq.Builder;
+	using ServiceModel;
+	using Remote;
+
 	public readonly struct CloneVisitor<TContext>
 	{
 		private readonly Dictionary<IQueryElement, IQueryElement> _objectTree;
@@ -159,10 +161,10 @@ namespace LinqToDB.SqlQuery
 						DoNotRemove          = selectQuery.DoNotRemove,
 						QueryName            = selectQuery.QueryName,
 						SqlQueryExtensions   = selectQuery.SqlQueryExtensions,
+						DoNotSetAliases      = selectQuery.DoNotSetAliases
 					};
 
 					_objectTree.Add(element, clone = newSelectQuery);
-
 					_objectTree.Add(selectQuery.All, newSelectQuery.All);
 
 					if (selectQuery.ParentSelect != null)
@@ -486,16 +488,23 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.OutputClause:
 				{
 					var output = (SqlOutputClause)(IQueryElement)element;
+
 					SqlOutputClause newOutput;
+
 					// TODO: children Clone called before _objectTree update (original cloning logic)
 					// TODO: tables not cloned (original logic)
 					clone = newOutput = new SqlOutputClause()
 					{
-						SourceTable   = output.SourceTable,
 						DeletedTable  = output.DeletedTable,
 						InsertedTable = output.InsertedTable,
-						OutputTable   = output.OutputTable
+						OutputTable   = output.OutputTable,
 					};
+
+					if (output.OutputColumns != null)
+					{
+						newOutput.OutputColumns = new List<ISqlExpression>();
+						CloneInto(newOutput.OutputColumns, output.OutputColumns);
+					}
 
 					if (output.HasOutputItems)
 						CloneInto(newOutput.OutputItems, output.OutputItems);

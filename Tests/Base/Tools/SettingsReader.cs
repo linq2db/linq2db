@@ -3,37 +3,40 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-
-using Newtonsoft.Json;
-
+using System.Text.Json;
 using NUnit.Framework;
 
 namespace Tests.Tools
 {
 	public class TestConnection
 	{
-		public string  ConnectionString = null!;
-		public string? Provider;
+		public string? ConnectionString { get; set; }
+		public string? Provider         { get; set; }
 	}
 
 	public class TestSettings
 	{
-		public string?   BasedOn;
-		public string?   BaselinesPath;
-		public string[]? Providers;
-		public string[]? Skip;
-		public string?   TraceLevel;
-		public string?   DefaultConfiguration;
-		public string?   NoLinqService;
-		public Dictionary<string,TestConnection> Connections = new ();
+		public string?                             BasedOn              { get; set; }
+		public string?                             BaselinesPath        { get; set; }
+		public string[]?                           Providers            { get; set; }
+		public string[]?                           Skip                 { get; set; }
+		public string?                             TraceLevel           { get; set; }
+		public string?                             DefaultConfiguration { get; set; }
+		public string?                             NoLinqService        { get; set; }
+		public Dictionary<string, TestConnection>? Connections          { get; set; }
 	}
 
 	public static class SettingsReader
 	{
+		private static readonly JsonSerializerOptions _jsonOptions = new() { ReadCommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true };
+
 		public static TestSettings Deserialize(string configName, string defaultJson, string? userJson)
 		{
 			void Merge(TestSettings settings1, TestSettings settings2)
 			{
+				settings1.Connections ??= new();
+				settings2.Connections ??= new();
+
 				foreach (var connection in settings2.Connections)
 					if (!settings1.Connections.ContainsKey(connection.Key))
 						settings1.Connections.Add(connection.Key, connection.Value);
@@ -57,11 +60,11 @@ namespace Tests.Tools
 					settings1.BaselinesPath = settings2.BaselinesPath;
 			}
 
-			var defaultSettings = JsonConvert.DeserializeObject<Dictionary<string,TestSettings>>(defaultJson)!;
+			var defaultSettings = JsonSerializer.Deserialize<Dictionary<string,TestSettings>>(defaultJson, _jsonOptions)!;
 
 			if (userJson != null)
 			{
-				var userSettings = JsonConvert.DeserializeObject<Dictionary<string,TestSettings>>(userJson)!;
+				var userSettings = JsonSerializer.Deserialize<Dictionary<string,TestSettings>>(userJson, _jsonOptions)!;
 
 				foreach (var uSetting in userSettings)
 				{
@@ -105,10 +108,11 @@ namespace Tests.Tools
 				}
 
 				//Translate connection strings enclosed in brackets as references to other existing connection strings.
+				settings.Connections ??= new();
 				foreach (var connection in settings.Connections)
 				{
 					var cs = connection.Value.ConnectionString;
-					if (cs.StartsWith("[") && cs.EndsWith("]"))
+					if (cs != null && cs.StartsWith("[") && cs.EndsWith("]"))
 					{
 						cs = cs.Substring(1, cs.Length - 2);
 						if (settings.Connections.TryGetValue(cs, out var baseConnection))
@@ -124,10 +128,10 @@ namespace Tests.Tools
 			return GetSettings(configName ?? "");
 		}
 
-		public static void Serialize()
+		public static string Serialize()
 		{
-			var json = JsonConvert.SerializeObject(
-				new Dictionary<string,TestSettings>
+			var json = JsonSerializer.Serialize(
+				new Dictionary<string,TestSettings>()
 				{
 					{
 						"Default",
@@ -173,146 +177,7 @@ namespace Tests.Tools
 					},
 				});
 
-			File.WriteAllText("DefaultTestSettings.json", json);
-		}
-	}
-
-	public class TestSettingsTests
-	{
-		static string _defaultData = @"
-{
-	Default:
-	{
-		Connections:
-		{
-			'Con 1' : { ConnectionString : 'AAA', Provider : 'SqlServer' },
-			'Con 2' : { ConnectionString : 'BBB', Provider : 'SqlServer' }
-		},
-
-		Providers:
-		[ '111', '222' ]
-	},
-
-	CORE1:
-	{
-		TraceLevel  : 'Error',
-		BasedOn     : 'Default',
-		Connections :
-		{
-			'Con 2' : { ConnectionString : 'AAA', Provider : 'SqlServer' },
-			'Con 3' : { ConnectionString : 'CCC', Provider : 'SqlServer' }
-		}
-	},
-
-	CORE21:
-	{
-		BasedOn     : 'Default',
-		Connections :
-		{
-			'Con 2' : { ConnectionString : 'AAA', Provider : 'SqlServer' },
-			'Con 3' : { ConnectionString : 'CCC', Provider : 'SqlServer' }
-		}
-	}
-}";
-
-		static string _userData = @"
-{
-	Default:
-	{
-		Connections:
-		{
-			'Con 1' : { ConnectionString : 'DDD', Provider : 'SqlServer' },
-			'Con 4' : { ConnectionString : 'FFF', Provider : 'SqlServer' }
-		}
-	},
-
-	'CORE21':
-	{
-		BasedOn     : 'Default',
-		Connections :
-		{
-			'Con 2' : { ConnectionString : 'WWW', Provider : 'SqlServer' },
-			'Con 5' : { ConnectionString : 'EEE', Provider : 'SqlServer' }
-		}
-	}
-}";
-
-		public static IEnumerable TestData
-		{
-			get
-			{
-				yield return new TestCaseData("Default", "Default", _defaultData, null)
-					.SetName("Tests.Tools.Default")
-					.Returns(new[]
-					{
-						new { Key = "Con 1", ConnectionString = "AAA", Provider = "SqlServer" },
-						new { Key = "Con 2", ConnectionString = "BBB", Provider = "SqlServer" },
-					});
-
-				yield return new TestCaseData("Core 1", "CORE1", _defaultData, null)
-					.SetName("Tests.Tools.Core1")
-					.Returns(new[]
-					{
-						new { Key = "Con 1", ConnectionString = "AAA", Provider = "SqlServer" },
-						new { Key = "Con 2", ConnectionString = "AAA", Provider = "SqlServer" },
-						new { Key = "Con 3", ConnectionString = "CCC", Provider = "SqlServer" },
-					});
-
-				yield return new TestCaseData("Core 2.1", "CORE21", _defaultData, null)
-					.SetName("Tests.Tools.Core2")
-					.Returns(new[]
-					{
-						new { Key = "Con 1", ConnectionString = "AAA", Provider = "SqlServer" },
-						new { Key = "Con 2", ConnectionString = "AAA", Provider = "SqlServer" },
-						new { Key = "Con 3", ConnectionString = "CCC", Provider = "SqlServer" },
-					});
-
-				yield return new TestCaseData("User Default", "Default", _defaultData, _userData)
-					.SetName("Tests.Tools.UserDefault")
-					.Returns(new[]
-					{
-						new { Key = "Con 1", ConnectionString = "DDD", Provider = "SqlServer" },
-						new { Key = "Con 2", ConnectionString = "BBB", Provider = "SqlServer" },
-						new { Key = "Con 4", ConnectionString = "FFF", Provider = "SqlServer" },
-					});
-
-				yield return new TestCaseData("User Core 1", "CORE1", _defaultData, _userData)
-					.SetName("Tests.Tools.UserCore1")
-					.Returns(new[]
-					{
-						new { Key = "Con 1", ConnectionString = "DDD", Provider = "SqlServer" },
-						new { Key = "Con 2", ConnectionString = "AAA", Provider = "SqlServer" },
-						new { Key = "Con 3", ConnectionString = "CCC", Provider = "SqlServer" },
-						new { Key = "Con 4", ConnectionString = "FFF", Provider = "SqlServer" },
-					});
-
-				yield return new TestCaseData("User Core 2.1", "CORE21", _defaultData, _userData)
-					.SetName("Tests.Tools.UserCore2")
-					.Returns(new[]
-					{
-						new { Key = "Con 1", ConnectionString = "DDD", Provider = "SqlServer" },
-						new { Key = "Con 2", ConnectionString = "WWW", Provider = "SqlServer" },
-						new { Key = "Con 3", ConnectionString = "CCC", Provider = "SqlServer" },
-						new { Key = "Con 4", ConnectionString = "FFF", Provider = "SqlServer" },
-						new { Key = "Con 5", ConnectionString = "EEE", Provider = "SqlServer" },
-					});
-			}
-		}
-
-		[Test, TestCaseSource(nameof(TestData))]
-		public IEnumerable DeserializeTest(string name, string config, string defaultJson, string userJson)
-		{
-			var settings = SettingsReader.Deserialize(config, defaultJson, userJson);
-
-			return settings.Connections
-				.Select (c => new { c.Key, c.Value.ConnectionString, c.Value.Provider })
-				.OrderBy(c => c.Key);
-		}
-
-		[Test, Explicit]
-		public void SerializeTest()
-		{
-			SettingsReader.Serialize();
+			return json;
 		}
 	}
 }

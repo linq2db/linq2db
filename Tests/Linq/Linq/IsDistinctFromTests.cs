@@ -23,7 +23,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Ints(
-			[DataSources]        string context, 
+			[DataSources]        string context,
 			[Values(2, 4, null)] int?   value)
 		{
 			using var db  = GetDataContext(context);
@@ -42,9 +42,11 @@ namespace Tests.Linq
 			count.Should().Be(value != 4 ? 1 : 0);
 		}
 
+		// TODO: as fix we need to check why predicate optimizer doesn't simplify such expression
+		[ActiveIssue("Non-DB2 informix provider requires parameter wrapped in type cast for '? is null' sql with non-null value", Configuration = ProviderName.Informix)]
 		[Test]
 		public void Strings(
-			[DataSources(TestProvName.AllAccess)] string context, 
+			[DataSources(TestProvName.AllAccess)] string context,
 			[Values("abc", "xyz", null)] string? value)
 		{
 			using var db  = GetDataContext(context);
@@ -65,7 +67,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void OptimizeConstants(
-			[DataSources(TestProvName.AllAccess, ProviderName.SqlCe)] string context, 
+			[DataSources(TestProvName.AllAccess, ProviderName.SqlCe)] string context,
 			[Values(5, 6, null)] int? value)
 		{
 			using var db = GetDataContext(context);

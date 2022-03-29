@@ -9,34 +9,23 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Model\Tests.Model.csproj" />
 
-		<PackageReference Include="NUnit3TestAdapter" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" />
-		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
-		<PackageReference Include="FastExpressionCompiler" />
+		<PackageReference Include="NUnit" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net472' ">
 		<Reference Include="Microsoft.CSharp" />
+		<Reference Include="System.ServiceModel" />
 		
-		<None Update="SqlServerTypes\x64\msvcr120.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="SqlServerTypes\x64\SqlServerSpatial140.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="SqlServerTypes\x86\msvcr120.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="SqlServerTypes\x86\SqlServerSpatial140.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
+		<PackageReference Include="System.Text.Json" />
+	</ItemGroup>
 
-		<PackageReference Include="Microsoft.SqlServer.Types" />
-
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+		<!--netcoreapp31 needed due to very old transient depndency from oracle 2.19 provider-->
+		<PackageReference Include="System.Text.Json" />
 	</ItemGroup>
 
 	<!-- grpc testing packages -->
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'net5.0' OR '$(TargetFramework)' == 'net6.0' ">
+	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
 		<ProjectReference Include="..\..\Source\LinqToDB.Remote.Grpc\LinqToDB.Remote.Grpc.csproj" />
 
 		<PackageReference Include="protobuf-net.Grpc.AspNetCore" />

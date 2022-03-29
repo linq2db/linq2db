@@ -667,8 +667,8 @@ namespace Tests.xUpdate
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
-				if (context != ProviderName.Sybase)
-				AssertRow(InitialTargetData[2], result[2], null, 203);
+				if (!context.IsAnyOf(ProviderName.Sybase))
+					AssertRow(InitialTargetData[2], result[2], null, 203);
 
 				Assert.AreEqual(4, result[3].Id);
 				Assert.AreEqual(5, result[3].Field1);

@@ -160,7 +160,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Category(TestCategory.FTS)]
-		public void FreeTextTable1([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void FreeTextTable1([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -175,7 +175,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Category(TestCategory.FTS)]
-		public void FreeTextTable2([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void FreeTextTable2([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -190,7 +190,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Category(TestCategory.FTS)]
-		public void FreeText1([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void FreeText1([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -206,7 +206,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Category(TestCategory.FTS)]
-		public void FreeText2([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void FreeText2([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -222,7 +222,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Category(TestCategory.FTS)]
-		public void FreeText3([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void FreeText3([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -238,7 +238,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Category(TestCategory.FTS)]
-		public void FreeText4([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void FreeText4([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -254,7 +254,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void WithUpdateLock([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void WithUpdateLock([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -267,7 +267,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Category(TestCategory.FTS)]
-		public void Issue386InnerJoinWithExpression([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void Issue386InnerJoinWithExpression([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -282,7 +282,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Category(TestCategory.FTS)]
-		public void Issue386LeftJoinWithText([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void Issue386LeftJoinWithText([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{
@@ -297,7 +297,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Category(TestCategory.FTS)]
-		public void Issue386LeftJoinWithExpression([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void Issue386LeftJoinWithExpression([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var db = new NorthwindDB(context))
 			{

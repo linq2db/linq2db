@@ -58,7 +58,6 @@ namespace LinqToDB.DataProvider.SapHana
 
 		internal static readonly SapHanaMappingSchema Instance = new ();
 
-#if NETFRAMEWORK || NETCOREAPP
 		public class NativeMappingSchema : MappingSchema
 		{
 			public NativeMappingSchema()
@@ -66,7 +65,6 @@ namespace LinqToDB.DataProvider.SapHana
 			{
 			}
 		}
-#endif
 
 		public class OdbcMappingSchema : MappingSchema
 		{

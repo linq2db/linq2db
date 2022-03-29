@@ -1,14 +1,19 @@
-﻿using System.Data;
+﻿using System;
 using System.Data.Common;
+
 using LinqToDB;
+using LinqToDB.Configuration;
 using LinqToDB.Data;
+using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SQLite;
-using LinqToDB.Mapping;
+
 using StackExchange.Profiling;
 using StackExchange.Profiling.Data;
 
 namespace Tests
 {
+	using Data;
+
 	internal class SQLiteMiniprofilerProvider : SQLiteDataProvider
 	{
 		private readonly bool _mapped;
@@ -19,34 +24,10 @@ namespace Tests
 			_mapped = mapped;
 		}
 
-		public override MappingSchema MappingSchema => _mapped
-			? MappingSchemaInstance.MappedMappingSchema
-			: MappingSchemaInstance.UnmappedMappingSchema;
-
-		static class MappingSchemaInstance
+		public override void InitContext(IDataContext dataContext)
 		{
-			public static readonly MappingSchema MappedMappingSchema   = new MappedMappingSchema  ();
-			public static readonly MappingSchema UnmappedMappingSchema = new UnmappedMappingSchema();
-		}
-
-		public class MappedMappingSchema : MappingSchema
-		{
-			public MappedMappingSchema()
-				: base(TestProvName.SQLiteClassicMiniProfilerMapped, new SQLiteMappingSchema.ClassicMappingSchema())
-			{
-				SetConvertExpression<ProfiledDbConnection , DbConnection >(db => db.WrappedConnection );
-				SetConvertExpression<ProfiledDbDataReader , DbDataReader >(db => db.WrappedReader     );
-				SetConvertExpression<ProfiledDbTransaction, DbTransaction>(db => db.WrappedTransaction);
-				SetConvertExpression<ProfiledDbCommand    , DbCommand    >(db => db.InternalCommand   );
-			}
-		}
-
-		public class UnmappedMappingSchema : MappingSchema
-		{
-			public UnmappedMappingSchema()
-				: base(TestProvName.SQLiteClassicMiniProfilerUnmapped, new SQLiteMappingSchema.ClassicMappingSchema())
-			{
-			}
+			if (_mapped)
+				dataContext.AddInterceptor(new MiniProfilerTests.UnwrapProfilerInterceptor());
 		}
 
 		protected override DbConnection CreateConnectionInternal(string connectionString)
@@ -57,15 +38,22 @@ namespace Tests
 		public static void Init()
 		{
 			// initialize miniprofiler or it will not wrap non-connection objects
-#if NET472
-			MiniProfiler.Settings.ProfilerProvider = new SingletonProfilerProvider();
-			MiniProfiler.Start();
-#else
 			MiniProfiler.DefaultOptions.StartProfiler();
-#endif
 
-			DataConnection.AddDataProvider(TestProvName.SQLiteClassicMiniProfilerMapped  , new SQLiteMiniprofilerProvider(true ));
-			DataConnection.AddDataProvider(TestProvName.SQLiteClassicMiniProfilerUnmapped, new SQLiteMiniprofilerProvider(false));
+			var mpm = new SQLiteMiniprofilerProvider(true);
+			var mpu = new SQLiteMiniprofilerProvider(false);
+
+			DataConnection.InsertProviderDetector(ProviderDetector);
+
+			IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+			{
+				return css.Name switch
+				{
+					TestProvName.SQLiteClassicMiniProfilerMapped   => mpm,
+					TestProvName.SQLiteClassicMiniProfilerUnmapped => mpu,
+					_ => null
+				};
+			}
 		}
 	}
 }

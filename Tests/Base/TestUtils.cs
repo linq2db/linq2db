@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-
-using FirebirdSql.Data.FirebirdClient;
+using System.Diagnostics;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -13,12 +12,11 @@ using LinqToDB.DataProvider.Firebird;
 
 namespace Tests
 {
-	using System.Diagnostics;
 	using Model;
 #if NETFRAMEWORK
-	using Tests.Model.Remote.WCF;
-#elif NETCOREAPP3_1_OR_GREATER
-	using Tests.Model.Remote.Grpc;
+	using Model.Remote.WCF;
+#else
+	using Model.Remote.Grpc;
 #endif
 
 	public static class TestUtils
@@ -65,8 +63,7 @@ namespace Tests
 		}
 
 		[Sql.Expression("user"          , ServerSideOnly = true, Configuration = ProviderName.Informix)]
-		[Sql.Expression("user"          , ServerSideOnly = true, Configuration = ProviderName.OracleNative)]
-		[Sql.Expression("user"          , ServerSideOnly = true, Configuration = ProviderName.OracleManaged)]
+		[Sql.Expression("user"          , ServerSideOnly = true, Configuration = ProviderName.Oracle)]
 		[Sql.Expression("current schema", ServerSideOnly = true, Configuration = ProviderName.DB2)]
 		[Sql.Function("current_schema"  , ServerSideOnly = true, Configuration = ProviderName.PostgreSQL)]
 		[Sql.Function("USER_NAME"       , ServerSideOnly = true, Configuration = ProviderName.Sybase)]
@@ -77,8 +74,7 @@ namespace Tests
 			throw new InvalidOperationException();
 		}
 
-		[Sql.Expression("sys_context('userenv','service_name')", ServerSideOnly = true, Configuration = ProviderName.OracleNative)]
-		[Sql.Expression("sys_context('userenv','service_name')", ServerSideOnly = true, Configuration = ProviderName.OracleManaged)]
+		[Sql.Expression("sys_context('userenv','service_name')", ServerSideOnly = true, Configuration = ProviderName.Oracle)]
 		[Sql.Expression("DBSERVERNAME", ServerSideOnly = true, Configuration = ProviderName.Informix)]
 		[Sql.Expression("@@SERVERNAME", ServerSideOnly = true)]
 		private static string ServerName()
@@ -92,44 +88,17 @@ namespace Tests
 		/// </summary>
 		public static string GetSchemaName(IDataContext db)
 		{
-			var contextName = GetContextName(db);
+			var provider = GetContextName(db);
 
-			Debug.WriteLine($"Detected context name: {contextName}");
-
-			switch (contextName)
+			switch (provider)
 			{
-				case ProviderName.Informix                           :
-				case ProviderName.InformixDB2                        :
-				case ProviderName.Oracle                             :
-				case ProviderName.OracleNative                       :
-				case ProviderName.OracleManaged                      :
-				case TestProvName.Oracle11Native                     :
-				case TestProvName.Oracle11Managed                    :
-				case ProviderName.PostgreSQL                         :
-				case ProviderName.PostgreSQL92                       :
-				case ProviderName.PostgreSQL93                       :
-				case ProviderName.PostgreSQL95                       :
-				case TestProvName.PostgreSQL10                       :
-				case TestProvName.PostgreSQL11                       :
-				case TestProvName.PostgreSQL12                       :
-				case TestProvName.PostgreSQL13                       :
-				case TestProvName.PostgreSQL14                       :
-				case ProviderName.DB2                                :
-				case ProviderName.Sybase                             :
-				case ProviderName.SybaseManaged                      :
-				case ProviderName.SqlServer2005                      :
-				case ProviderName.SqlServer2008                      :
-				case ProviderName.SqlServer2012                      :
-				case ProviderName.SqlServer2014                      :
-				case ProviderName.SqlServer2016                      :
-				case ProviderName.SqlServer2017                      :
-				case TestProvName.SqlServer2019                      :
-				case TestProvName.SqlServer2019SequentialAccess      :
-				case TestProvName.SqlServer2019FastExpressionCompiler:
-				case TestProvName.SqlServerContained                 :
-				case TestProvName.SqlAzure                           :
-				case ProviderName.SapHanaNative                      :
-				case ProviderName.SapHanaOdbc                        :
+				case string when provider.IsAnyOf(TestProvName.AllInformix)  :
+				case string when provider.IsAnyOf(TestProvName.AllOracle)    :
+				case string when provider.IsAnyOf(TestProvName.AllPostgreSQL):
+				case string when provider.IsAnyOf(TestProvName.AllSybase)    :
+				case string when provider.IsAnyOf(TestProvName.AllSqlServer) :
+				case string when provider.IsAnyOf(TestProvName.AllSapHana)   :
+				case string when provider.IsAnyOf(ProviderName.DB2)          :
 					return db.GetTable<LinqDataTypes>().Select(_ => SchemaName()).First();
 			}
 
@@ -142,29 +111,15 @@ namespace Tests
 		/// </summary>
 		public static string GetServerName(IDataContext db)
 		{
-			switch (GetContextName(db))
+			var provider = GetContextName(db);
+			switch (provider)
 			{
-				case ProviderName.SybaseManaged                          :
-				case ProviderName.SqlServer2005                          :
-				case ProviderName.SqlServer2008                          :
-				case ProviderName.SqlServer2012                          :
-				case ProviderName.SqlServer2014                          :
-				case ProviderName.SqlServer2016                          :
-				case ProviderName.SqlServer2017                          :
-				case TestProvName.SqlServer2019                          :
-				case TestProvName.SqlServer2019SequentialAccess          :
-				case TestProvName.SqlServer2019FastExpressionCompiler    :
-				case TestProvName.SqlServerContained                     :
-				case TestProvName.SqlAzure                               :
-				case ProviderName.OracleManaged                          :
-				case ProviderName.OracleNative                           :
-				case TestProvName.Oracle11Native                         :
-				case TestProvName.Oracle11Managed                        :
-				case ProviderName.Informix                               :
-				case ProviderName.InformixDB2                            :
+				case String when provider.IsAnyOf(TestProvName.AllSybase)   :
+				case String when provider.IsAnyOf(TestProvName.AllSqlServer):
+				case String when provider.IsAnyOf(TestProvName.AllOracle)   :
+				case String when provider.IsAnyOf(TestProvName.AllInformix) :
 					return db.Select(() => ServerName());
-				case ProviderName.SapHanaNative                          :
-				case ProviderName.SapHanaOdbc                            :
+				case String when provider.IsAnyOf(TestProvName.AllSapHana)  :
 					/* SAP HANA should be configured for linked server queries
 					 This will help to configure (especially second link):
 					 https://www.linkedin.com/pulse/cross-database-queries-thing-past-how-use-sap-hana-your-nandan
@@ -189,7 +144,7 @@ namespace Tests
 		{
 #if NETFRAMEWORK 
 			if (db is TestWcfDataContext linqDb)
-#elif NETCOREAPP3_1_OR_GREATER
+#else
 			if (db is TestGrpcDataContext linqDb)
 #endif
 				return linqDb.Configuration!;
@@ -206,55 +161,25 @@ namespace Tests
 		/// </summary>
 		public static string GetDatabaseName(IDataContext db)
 		{
-			switch (GetContextName(db))
+			var context = GetContextName(db);
+			return context switch
 			{
-				case ProviderName.SQLiteClassic                      :
-				case TestProvName.SQLiteClassicMiniProfilerMapped    :
-				case TestProvName.SQLiteClassicMiniProfilerUnmapped  :
-				case ProviderName.SQLiteMS                           :
-					return "main";
-				case ProviderName.Access                             :
-				case ProviderName.AccessOdbc                         :
-					return "Database\\TestData";
-				case ProviderName.MySql                              :
-				case ProviderName.MySqlConnector                     :
-				case TestProvName.MariaDB                            :
-				case TestProvName.MySql55                            :
-				case ProviderName.PostgreSQL                         :
-				case ProviderName.PostgreSQL92                       :
-				case ProviderName.PostgreSQL93                       :
-				case ProviderName.PostgreSQL95                       :
-				case TestProvName.PostgreSQL10                       :
-				case TestProvName.PostgreSQL11                       :
-				case TestProvName.PostgreSQL12                       :
-				case TestProvName.PostgreSQL13                       :
-				case TestProvName.PostgreSQL14                       :
-				case ProviderName.DB2                                :
-				case ProviderName.Sybase                             :
-				case ProviderName.SybaseManaged                      :
-				case ProviderName.SqlServer2005                      :
-				case ProviderName.SqlServer2008                      :
-				case ProviderName.SqlServer2012                      :
-				case ProviderName.SqlServer2014                      :
-				case ProviderName.SqlServer2016                      :
-				case ProviderName.SqlServer2017                      :
-				case TestProvName.SqlServer2019                      :
-				case TestProvName.SqlServer2019SequentialAccess      :
-				case TestProvName.SqlServer2019FastExpressionCompiler:
-				case TestProvName.SqlServerContained                 :
-				case TestProvName.SqlAzure                           :
-					return db.GetTable<LinqDataTypes>().Select(_ => DbName()).First();
-				case ProviderName.Informix                           :
-				case ProviderName.InformixDB2                        :
-					return db.GetTable<LinqDataTypes>().Select(_ => DbInfo("dbname")).First();
-			}
-
-			return NO_DATABASE_NAME;
+				string when context.IsAnyOf(TestProvName.AllSQLite)   => "main",
+				string when context.IsAnyOf(TestProvName.AllAccess)   => "Database\\TestData",
+				string when context.IsAnyOf(
+					TestProvName.AllMySql,
+					TestProvName.AllPostgreSQL,
+					ProviderName.DB2,
+					TestProvName.AllSybase,
+					TestProvName.AllSqlServer)                        => db.GetTable<LinqDataTypes>().Select(_ => DbName()).First(),
+				string when context.IsAnyOf(TestProvName.AllInformix) => db.GetTable<LinqDataTypes>().Select(_ => DbInfo("dbname")).First(),
+				_                                                     => NO_DATABASE_NAME
+			};
 		}
 
 		public static bool ProviderNeedsTimeFix(this IDataContext db, string context)
 		{
-			if (context.Replace(".LinqService", "") == TestProvName.MySql55)
+			if (context.IsAnyOf(TestProvName.AllMySql55))
 			{
 				// MySql versions prior to 5.6.4 do not store fractional seconds so we need to trim
 				// them from expected data too
@@ -267,7 +192,7 @@ namespace Tests
 					return (versionParts[0] * 10000 + versionParts[1] * 100 + versionParts[2] < 50604);
 				}
 			}
-			else if (context.Replace(".LinqService", "") == ProviderName.AccessOdbc)
+			else if (context.IsAnyOf(ProviderName.AccessOdbc))
 			{
 				// ODBC driver strips milliseconds from values on both save and load
 				return true;
@@ -292,9 +217,9 @@ namespace Tests
 
 			public override void Dispose()
 			{
-				if (DataContext is DataConnection dc && dc.Connection is FbConnection fbc )
+				if (DataContext is DataConnection dc && dc.DataProvider.Name.Contains(ProviderName.Firebird))
 				{
-					FbConnection.ClearPool(fbc);
+					FirebirdTools.ClearAllPools();
 				}
 
 				DataContext.Close();
@@ -315,6 +240,17 @@ namespace Tests
 			{
 				db.Close();
 				FirebirdTools.ClearAllPools();
+			}
+		}
+
+		public static Version GetSqliteVersion(DataConnection db)
+		{
+			using (var cmd = db.CreateCommand())
+			{
+				cmd.CommandText = "select sqlite_version();";
+				var version     = (string)cmd.ExecuteScalar()!;
+
+				return new Version(version);
 			}
 		}
 
@@ -369,52 +305,17 @@ namespace Tests
 
 		public static string GetValidCollationName(string providerName)
 		{
-			switch (providerName)
+			return providerName switch
 			{
-				case ProviderName.OracleNative                       :
-				case ProviderName.OracleManaged                      :
-					return "latin_AI";
-				case ProviderName.DB2                                :
-					return "SYSTEM_923_DE";
-				case ProviderName.PostgreSQL                         :
-				case ProviderName.PostgreSQL92                       :
-				case ProviderName.PostgreSQL93                       :
-				case ProviderName.PostgreSQL95                       :
-				case TestProvName.PostgreSQL10                       :
-				case TestProvName.PostgreSQL11                       :
-				case TestProvName.PostgreSQL12                       :
-				case TestProvName.PostgreSQL13                       :
-				case TestProvName.PostgreSQL14                       :
-					return "POSIX";
-				case ProviderName.SQLiteClassic                      :
-				case ProviderName.SQLiteMS                           :
-				case TestProvName.SQLiteClassicMiniProfilerMapped    :
-				case TestProvName.SQLiteClassicMiniProfilerUnmapped  :
-					return "NOCASE";
-				case ProviderName.Firebird                           :
-				case TestProvName.Firebird3                          :
-				case TestProvName.Firebird4                          :
-					return "UNICODE_FSS";
-				case ProviderName.MySql                              :
-				case ProviderName.MySqlConnector                     :
-				case TestProvName.MySql55                            :
-				case TestProvName.MariaDB                            :
-					return "utf8_bin";
-				case TestProvName.SqlAzure                           :
-				case ProviderName.SqlServer2005                      :
-				case ProviderName.SqlServer2008                      :
-				case ProviderName.SqlServer2012                      :
-				case ProviderName.SqlServer2014                      :
-				case ProviderName.SqlServer2016                      :
-				case ProviderName.SqlServer2017                      :
-				case TestProvName.SqlServer2019                      :
-				case TestProvName.SqlServer2019SequentialAccess      :
-				case TestProvName.SqlServer2019FastExpressionCompiler:
-				case TestProvName.SqlServerContained                 :
-					return "Albanian_CI_AS";
-				default                                              :
-					return "whatever";
-			}
+				string when providerName.IsAnyOf(TestProvName.AllOracle12)   => "latin_AI",
+				string when providerName.IsAnyOf(ProviderName.DB2)           => "SYSTEM_923_DE",
+				string when providerName.IsAnyOf(TestProvName.AllPostgreSQL) => "POSIX",
+				string when providerName.IsAnyOf(TestProvName.AllSQLite)     => "NOCASE",
+				string when providerName.IsAnyOf(TestProvName.AllFirebird)   => "UNICODE_FSS",
+				string when providerName.IsAnyOf(TestProvName.AllMySql)      => "utf8_bin",
+				string when providerName.IsAnyOf(TestProvName.AllSqlServer)  => "Albanian_CI_AS",
+				_                                                            => "whatever"
+			};
 		}
 
 		public static string? Clean(this string? s)

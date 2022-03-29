@@ -981,7 +981,7 @@ namespace Tests.xUpdate
 					.Set(y => y.BoolValue, y => y.Tables2.All(x => x.Value1 == 1))
 					.Update();
 
-				if (!context.StartsWith(ProviderName.Sybase))
+				if (!context.IsAnyOf(TestProvName.AllSybase))
 				{
 					var idx = db.LastQuery!.IndexOf("INNER JOIN");
 
@@ -2001,5 +2001,16 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[Test]
+		public void AsUpdatableEmptyTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Person.AsUpdatable();
+
+				var ex = Assert.Throws<LinqToDBException>(() => query.Update())!;
+				Assert.AreEqual("Update query has no setters defined.", ex.Message);
+			}
+		}
 	}
 }

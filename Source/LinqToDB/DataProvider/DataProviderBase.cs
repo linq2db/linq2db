@@ -8,7 +8,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-
 using System.Xml;
 using System.Xml.Linq;
 
@@ -40,7 +39,6 @@ namespace LinqToDB.DataProvider
 				IsInsertOrUpdateSupported            = true,
 				CanCombineParameters                 = true,
 				MaxInListValuesCount                 = int.MaxValue,
-				IsGroupByExpressionSupported         = true,
 				IsDistinctOrderBySupported           = true,
 				IsSubQueryOrderBySupported           = false,
 				IsUpdateSetTableAliasSupported       = true,
@@ -82,6 +80,10 @@ namespace LinqToDB.DataProvider
 
 		public static Func<IDataProvider, DbConnection, DbConnection>? OnConnectionCreated { get; set; }
 
+		public virtual void InitContext(IDataContext dataContext)
+		{
+		}
+
 		public DbConnection CreateConnection(string connectionString)
 		{
 			var connection = CreateConnectionInternal(connectionString);
@@ -119,6 +121,14 @@ namespace LinqToDB.DataProvider
 			command.Dispose();
 		}
 
+#if NETSTANDARD2_1PLUS
+		public virtual ValueTask DisposeCommandAsync(DbCommand command)
+		{
+			ClearCommandParameters(command);
+			return command.DisposeAsync();
+		}
+#endif
+
 		public virtual object? GetConnectionInfo(DataConnection dataConnection, string parameterName)
 		{
 			return null;
@@ -129,7 +139,14 @@ namespace LinqToDB.DataProvider
 			return commandBehavior;
 		}
 
-		public virtual IDisposable? ExecuteScope(DataConnection dataConnection) => null;
+		/// <summary>
+		/// Creates disposable object, which should be disposed by caller after database query execution completed.
+		/// Could be used to execute provider's method with scope-specific settings, e.g. with Invariant culture to
+		/// workaround incorrect culture handling in provider.
+		/// </summary>
+		/// <param name="dataConnection">Current data connection object.</param>
+		/// <returns>Scoped execution disposable object or <c>null</c> if provider doesn't need scoped configuration.</returns>
+		public virtual IExecutionScope? ExecuteScope(DataConnection dataConnection) => null;
 
 		#endregion
 

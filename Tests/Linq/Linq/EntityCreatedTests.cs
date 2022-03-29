@@ -13,7 +13,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class EntityCreatedTests : TestBase
 	{
-		ITestDataContext GetEntityCreatedContext(string configString, TestDataContextInterceptor interceptor)
+		ITestDataContext GetEntityCreatedContext(string configString, TestEntityServiceInterceptor interceptor)
 		{
 			interceptor.EntityCreatedCallCounter = 0;
 			interceptor.CheckEntityIdentity      = false;
@@ -25,7 +25,7 @@ namespace Tests.Linq
 			return ctx;
 		}
 
-		private class TestDataContextInterceptor : DataContextInterceptor
+		class TestEntityServiceInterceptor : EntityServiceInterceptor
 		{
 			public int EntityCreatedCallCounter { get; set; }
 			public bool CheckEntityIdentity     { get; set; }
@@ -62,7 +62,7 @@ namespace Tests.Linq
 		[Test]
 		public void EntityCreatedTest1([DataSources] string configString)
 		{
-			var interceptor = new TestDataContextInterceptor();
+			var interceptor = new TestEntityServiceInterceptor();
 			using (var db = GetEntityCreatedContext(configString, interceptor))
 			{
 				var list = db.Parent.Take(5).ToList();
@@ -74,7 +74,7 @@ namespace Tests.Linq
 		[Test]
 		public void EntityCreatedTest2([DataSources] string configString)
 		{
-			var interceptor = new TestDataContextInterceptor();
+			var interceptor = new TestEntityServiceInterceptor();
 			using (var db = GetEntityCreatedContext(configString, interceptor))
 			{
 				var list = db.Child.Select(c => new { c, c.Parent, a = new { c } }).Take(1).ToList();
@@ -86,7 +86,7 @@ namespace Tests.Linq
 		[Test]
 		public void EntityCreatedTest3([DataSources] string configString, [Values(false,true)] bool checkEntityIdentity)
 		{
-			var interceptor = new TestDataContextInterceptor();
+			var interceptor = new TestEntityServiceInterceptor();
 			using (var db = GetEntityCreatedContext(configString, interceptor))
 			{
 				interceptor.CheckEntityIdentity = checkEntityIdentity;

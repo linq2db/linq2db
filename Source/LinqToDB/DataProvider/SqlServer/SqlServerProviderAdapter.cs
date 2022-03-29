@@ -394,7 +394,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				// [10]: set DestinationTableName
 				PropertySetter((SqlBulkCopy this_) => this_.DestinationTableName),
 				// [11]: WriteToServerAsync
-				(Expression<Func<SqlBulkCopy, IDataReader, CancellationToken, Task>>)((SqlBulkCopy this_, IDataReader reader, CancellationToken token) 
+				(Expression<Func<SqlBulkCopy, IDataReader, CancellationToken, Task>>)((SqlBulkCopy this_, IDataReader reader, CancellationToken token)
 					=> this_.WriteToServerAsync(reader, token)),
 			};
 
