@@ -3612,6 +3612,126 @@ namespace LinqToDB.DataProvider.SqlServer
 			throw new InvalidOperationException($"'{nameof(Upper)}' is a server side only function.");
 		}
 
+		class CollateBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var dataType = builder.GetValue<string>("collation_name");
+				builder.AddExpression("collation_name", dataType);
+			}
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/statements/collations">COLLATE (Transact-SQL)</see></b></para>
+		/// <para>Returns a character expression after converting uppercase character data to lowercase.</para>
+		/// <para>Windows_collation_name is the collation name for a
+		/// <see href="https://docs.microsoft.com/en-us/sql/t-sql/statements/windows-collation-name-transact-sql">Windows Collation Name</see>.</para>
+		/// <seealso href="https://docs.microsoft.com/en-us/sql/relational-databases/collations/collation-and-unicode-support">Collation and Unicode support</seealso>
+		/// </summary>
+		/// <param name="collation_name">Is the name of the collation to be applied to the expression, column definition, or database definition.
+		/// <c>collation_name</c> can be only a specified <c>Windows_collation_name</c> or a <c>SQL_collation_name</c>.
+		/// <c>collation_name</c> must be a literal value. <c>collation_name</c> cannot be represented by a variable or expression.</param>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Extension(ProviderName.SqlServer, "{string} COLLATE {collation_name}", ServerSideOnly=true, BuilderType=typeof(CollateBuilder))]
+		public static string? Collate([ExprParameter] string? @string, [SqlQueryDependent] string collation_name)
+		{
+			throw new InvalidOperationException($"'{nameof(Upper)}' is a server side only function.");
+		}
+
+		#endregion
+
+		#region System Statistical
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CONNECTIONS-transact-sql">@@CONNECTIONS (Transact-SQL)</see></b></para>
+		/// <para>This function returns the number of attempted connections - both successful and unsuccessful - since SQL Server was last started.</para>
+		/// </summary>
+		/// <returns>integer</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@CONNECTIONS", ServerSideOnly=true)]
+		public static int Connections => throw new InvalidOperationException($"'{nameof(Connections)}' is a server side only function.");
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/CPU-BUSY-transact-sql">@@CPU_BUSY (Transact-SQL)</see></b></para>
+		/// <para>This function returns the amount of time that SQL Server has spent in active operation since its latest start.</para>
+		/// </summary>
+		/// <returns>integer</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@CPU_BUSY", ServerSideOnly=true)]
+		public static int CpuBusy => throw new InvalidOperationException($"'{nameof(CpuBusy)}' is a server side only function.");
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/IDLE-transact-sql">@@IDLE (Transact-SQL)</see></b></para>
+		/// <para>Returns the time that SQL Server has been idle since it was last started.</para>
+		/// </summary>
+		/// <returns>integer</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@IDLE", ServerSideOnly=true)]
+		public static int Idle => throw new InvalidOperationException($"'{nameof(Idle)}' is a server side only function.");
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/IO_BUSY-transact-sql">@@IO_BUSY (Transact-SQL)</see></b></para>
+		/// <para>Returns the time that SQL Server has spent performing input and output operations since SQL Server was last started.</para>
+		/// </summary>
+		/// <returns>integer</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@IO_BUSY", ServerSideOnly=true)]
+		public static int IOBusy => throw new InvalidOperationException($"'{nameof(IOBusy)}' is a server side only function.");
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/PACK-SENT-transact-sql">@@PACK_SENT (Transact-SQL)</see></b></para>
+		/// <para>Returns the number of output packets written to the network by SQL Server since it was last started.</para>
+		/// </summary>
+		/// <returns>integer</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@PACK_SENT", ServerSideOnly=true)]
+		public static int PackSent => throw new InvalidOperationException($"'{nameof(PackSent)}' is a server side only function.");
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/PACKET-ERRORS-transact-sql">@@PACKET_ERRORS (Transact-SQL)</see></b></para>
+		/// <para>Returns the number of network packet errors that have occurred on SQL Server connections since SQL Server was last started.</para>
+		/// </summary>
+		/// <returns>integer</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@PACKET_ERRORS", ServerSideOnly=true)]
+		public static int PacketErrors => throw new InvalidOperationException($"'{nameof(PacketErrors)}' is a server side only function.");
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TIMETICKS-transact-sql">@@TIMETICKS (Transact-SQL)</see></b></para>
+		/// <para>Returns the number of microseconds per tick.</para>
+		/// </summary>
+		/// <returns>integer</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@TIMETICKS", ServerSideOnly=true)]
+		public static int TimeTicks => throw new InvalidOperationException($"'{nameof(TimeTicks)}' is a server side only function.");
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TOTAL-ERRORS-transact-sql">@@TOTAL_ERRORS (Transact-SQL)</see></b></para>
+		/// <para>Returns the number of microseconds per tick.</para>
+		/// </summary>
+		/// <returns>integer</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@TOTAL_ERRORS", ServerSideOnly=true)]
+		public static int TotalErrors => throw new InvalidOperationException($"'{nameof(TotalErrors)}' is a server side only function.");
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TOTAL-READ-transact-sql">@@TOTAL_READ (Transact-SQL)</see></b></para>
+		/// <para>Returns the number of microseconds per tick.</para>
+		/// </summary>
+		/// <returns>integer</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@TOTAL_READ", ServerSideOnly=true)]
+		public static int TotalRead => throw new InvalidOperationException($"'{nameof(TotalRead)}' is a server side only function.");
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TOTAL-WRITE-transact-sql">@@TOTAL_WRITE (Transact-SQL)</see></b></para>
+		/// <para>Returns the number of microseconds per tick.</para>
+		/// </summary>
+		/// <returns>integer</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "@@TOTAL_WRITE", ServerSideOnly=true)]
+		public static int TotalWrite => throw new InvalidOperationException($"'{nameof(TotalWrite)}' is a server side only function.");
+
 		#endregion
 
 		#region System

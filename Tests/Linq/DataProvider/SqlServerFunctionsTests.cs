@@ -2220,6 +2220,15 @@ namespace Tests.DataProvider
 			Assert.That(result, Is.EqualTo("ABC"));
 		}
 
+		[Test]
+		public void CollateTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Collate("AbC", "Latin1_General_CI_AS"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("AbC"));
+		}
+
 		#endregion
 
 		#region System
@@ -2495,6 +2504,100 @@ namespace Tests.DataProvider
 			result = db.Select(() => SqlFn.XactState());
 			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo(0));
+		}
+
+		#endregion
+
+		#region System Statistical
+
+		[Test]
+		public void ConnectionsTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Connections);
+			Console.WriteLine(result);
+			Assert.That(result, Is.GreaterThan(0));
+		}
+
+		[Test]
+		public void CpuBusyTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.CpuBusy);
+			Console.WriteLine(result);
+			Assert.That(result, Is.GreaterThan(0));
+		}
+
+		[Test]
+		public void IdleTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Idle);
+			Console.WriteLine(result);
+			Assert.That(result, Is.GreaterThan(0));
+		}
+
+		[Test]
+		public void IOBusyTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.IOBusy);
+			Console.WriteLine(result);
+			Assert.That(result, Is.GreaterThan(0));
+		}
+
+		[Test]
+		public void PackSentTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.PackSent);
+			Console.WriteLine(result);
+			Assert.That(result, Is.GreaterThan(0));
+		}
+
+		[Test]
+		public void PacketErrorsTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.PacketErrors);
+			Console.WriteLine(result);
+			Assert.That(result, Is.GreaterThanOrEqualTo(0));
+		}
+
+		[Test]
+		public void TimeTicksTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.TimeTicks);
+			Console.WriteLine(result);
+			Assert.That(result, Is.GreaterThanOrEqualTo(0));
+		}
+
+		[Test]
+		public void TotalErrorsTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.TotalErrors);
+			Console.WriteLine(result);
+			Assert.That(result, Is.GreaterThanOrEqualTo(0));
+		}
+
+		[Test]
+		public void TotalReadTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.TotalRead);
+			Console.WriteLine(result);
+			Assert.That(result, Is.GreaterThanOrEqualTo(0));
+		}
+
+		[Test]
+		public void TotalWriteTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.TotalWrite);
+			Console.WriteLine(result);
+			Assert.That(result, Is.GreaterThanOrEqualTo(0));
 		}
 
 		#endregion
