@@ -2112,18 +2112,113 @@ namespace Tests.DataProvider
 			Assert.That(result, Is.EqualTo("B516"));
 		}
 
+		[Test]
+		public void SpaceTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => "'" + SqlFn.Space(3) + "'");
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("'   '"));
+		}
 
+		[Test]
+		public void StrTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Str(10.101));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("        10"));
+		}
 
+		[Test]
+		public void StrTest2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Str(10.101, 3));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(" 10"));
+		}
+
+		[Test]
+		public void StrTest3([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Str(10.101, 5, 1));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(" 10.1"));
+		}
+
+		[Test]
+		public void StringEscapeTest([IncludeDataSources(TestProvName.AllSqlServer2017Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.StringEscape("\\  /  \n\\\\    \"", "json"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("\\\\  \\/  \\n\\\\\\\\    \\\""));
+		}
+
+		[Test]
+		public void StuffTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Stuff("abcdef", 2, 3, "ijklmn"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("aijklmnef"));
+		}
+
+		[Test]
+		public void SubstringTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Substring("abcdef", 2, 3));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("bcd"));
+		}
+
+		[Test]
+		public void TranslateTest([IncludeDataSources(TestProvName.AllSqlServer2017Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Translate("2*[3+4]/{7-2}", "[]{}", "()()"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("2*(3+4)/(7-2)"));
+		}
+
+		[Test]
+		public void TrimTest1([IncludeDataSources(TestProvName.AllSqlServer2017Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Trim("     test    "));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("test"));
+		}
+
+		[Test]
+		public void TrimTest2([IncludeDataSources(TestProvName.AllSqlServer2017Plus)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Trim(".,! ", "     #     test    ."));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo("#     test"));
+		}
+
+		[Test]
+		public void UnicodeTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Unicode("Åkergatan 24"));
+			Console.WriteLine(result);
+			Assert.That(result, Is.EqualTo(197));
+		}
 
 		[Test]
 		public void UpperTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using var db     = new SystemDB(context);
-			var       result = db.Select(() => SqlFn.Upper("AbC"));
+			using var db = new SystemDB(context);
+			var result = db.Select(() => SqlFn.Upper("AbC"));
 			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo("ABC"));
 		}
-
 
 		#endregion
 

@@ -3416,10 +3416,186 @@ namespace LinqToDB.DataProvider.SqlServer
 			throw new InvalidOperationException($"'{nameof(SoundEx)}' is a server side only function.");
 		}
 
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SPACE-transact-sql">SPACE (Transact-SQL)</see></b></para>
+		/// <para>Returns a string of repeated spaces.</para>
+		/// </summary>
+		/// <param name="integer_expression">Is a positive integer that indicates the number of spaces. If integer_expression is negative, a null string is returned.</param>
+		/// <returns>varchar</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "SPACE", ServerSideOnly=true)]
+		public static string? Space(int? integer_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Space)}' is a server side only function.");
+		}
 
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/STR-transact-sql">STR (Transact-SQL)</see></b></para>
+		/// <para>Returns character data converted from numeric data. The character data is right-justified, with a specified length and decimal precision.</para>
+		/// </summary>
+		/// <param name="float_expression">Is an expression of approximate numeric (<b>float</b>) data type with a decimal point.</param>
+		/// <returns>varchar</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "STR", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		public static string? Str<T>(T? float_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Str)}' is a server side only function.");
+		}
 
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/STR-transact-sql">STR (Transact-SQL)</see></b></para>
+		/// <para>Returns character data converted from numeric data. The character data is right-justified, with a specified length and decimal precision.</para>
+		/// </summary>
+		/// <param name="float_expression">Is an expression of approximate numeric (<b>float</b>) data type with a decimal point.</param>
+		/// <param name="length">Is the total length. This includes decimal point, sign, digits, and spaces. The default is 10.</param>
+		/// <returns>varchar</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "STR", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		public static string? Str<T>(T? float_expression, int length)
+		{
+			throw new InvalidOperationException($"'{nameof(Str)}' is a server side only function.");
+		}
 
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/STR-transact-sql">STR (Transact-SQL)</see></b></para>
+		/// <para>Returns character data converted from numeric data. The character data is right-justified, with a specified length and decimal precision.</para>
+		/// </summary>
+		/// <param name="float_expression">Is an expression of approximate numeric (<b>float</b>) data type with a decimal point.</param>
+		/// <param name="length">Is the total length. This includes decimal point, sign, digits, and spaces. The default is 10.</param>
+		/// <param name="decimal">Is the number of places to the right of the decimal point. decimal must be less than or equal to 16.
+		/// If decimal is more than 16 then the result is truncated to sixteen places to the right of the decimal point.</param>
+		/// <returns>varchar</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "STR", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		public static string? Str<T>(T? float_expression, int length, int @decimal)
+		{
+			throw new InvalidOperationException($"'{nameof(Str)}' is a server side only function.");
+		}
 
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/STRING-ESCAPE-transact-sql">STRING_ESCAPE (Transact-SQL)</see></b></para>
+		/// <para>Returns character data converted from numeric data. The character data is right-justified, with a specified length and decimal precision.</para>
+		/// </summary>
+		/// <param name="text">Is a <b>nvarchar</b> expression expression representing the object that should be escaped.</param>
+		/// <param name="type">Escaping rules that will be applied. Currently the value supported is <c>'json'</c>.</param>
+		/// <returns>varchar</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "STRING_ESCAPE", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		public static string? StringEscape(string? text, string? type)
+		{
+			throw new InvalidOperationException($"'{nameof(Str)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/STUFF-transact-sql">STUFF (Transact-SQL)</see></b></para>
+		/// <para>The STUFF function inserts a string into another string. It deletes a specified length of characters in the first string
+		/// at the start position and then inserts the second string into the first string at the start position.</para>
+		/// </summary>
+		/// <param name="character_expression">Is an expression of character data. <c>character_expression</c> can be a constant,
+		/// variable, or column of either character or binary data.</param>
+		/// <param name="start">Is an integer value that specifies the location to start deletion and insertion.
+		/// If <c>start</c> is negative or zero, a null string is returned. If start is longer than the first <c>character_expression</c>,
+		/// a null string is returned. start can be of type <b>bigint</b>.</param>
+		/// <param name="length">Is an integer that specifies the number of characters to delete. If <c>length</c> is negative, a null string is returned.
+		/// If <c>length</c> is longer than the first <c>character_expression</c>, deletion occurs up to the last character in the last <c>character_expression</c>.
+		/// If <c>length</c> is zero, insertion occurs at start location and no characters are deleted. length can be of type <b>bigint</b>.</param>
+		/// <param name="replaceWith_expression">Is an expression of character data. <c>character_expression</c> can be a constant, variable,
+		/// or column of either character or binary data. This expression replaces <c>length</c> characters of <c>character_expression</c> beginning at start.
+		/// Providing <c>NULL</c> as the <c>replaceWith_expression</c>, removes characters without inserting anything.</param>
+		/// <returns>Returns character data if character_expression is one of the supported character data types.
+		/// Returns binary data if character_expression is one of the supported binary data types.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "STUFF", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		public static string? Stuff(string? character_expression, int? start, int? length, string? replaceWith_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Str)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/SUBSTRING-transact-sql">SUBSTRING (Transact-SQL)</see></b></para>
+		/// <para>Returns part of a character, binary, text, or image expression in SQL Server.</para>
+		/// </summary>
+		/// <param name="expression">Is a <b>character</b>, <b>binary</b>, <b>text</b>, <b>ntext</b>, or <b>image</b> expression.</param>
+		/// <param name="start">Is an integer or <b>bigint</b> expression that specifies where the returned characters start.
+		/// (The numbering is 1 based, meaning that the first character in the expression is 1).
+		/// If <c>start</c> is less than 1, the returned expression will begin at the first character that is specified in <c>expression</c>.
+		/// In this case, the number of characters that are returned is the largest value of either the sum of <c>start + length</c> - 1 or 0.
+		/// If <c>start</c> is greater than the number of characters in the value expression, a zero-length expression is returned.</param>
+		/// <param name="length">Is a positive integer or <b>bigint</b> expression that specifies how many characters of the <c>expression</c> will be returned.
+		/// If <c>length</c> is negative, an error is generated and the statement is terminated. If the sum of start and <c>length</c> is greater
+		/// than the number of characters in <c>expression</c>, the whole value expression beginning at start is returned.</param>
+		/// <returns>Returns character data if expression is one of the supported character data types.
+		/// Returns binary data if expression is one of the supported binary data types.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "SUBSTRING", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		public static string? Substring(string? expression, int? start, int? length)
+		{
+			throw new InvalidOperationException($"'{nameof(Str)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRANSLATE-transact-sql">TRANSLATE (Transact-SQL)</see></b></para>
+		/// <para>Returns part of a character, binary, text, or image expression in SQL Server.</para>
+		/// </summary>
+		/// <param name="inputString"><c>inputString</c> Is the string expression to be searched. <c>inputString</c> can be any character data type
+		/// (nvarchar, varchar, nchar, char).</param>
+		/// <param name="characters ">Is a string expression containing characters that should be replaced. <c>characters</c> can be any character data type.</param>
+		/// <param name="translations">Is a string expression containing the replacement characters.
+		/// <c>translations</c> must be the same data type and length as characters.</param>
+		/// <returns>Returns a character expression of the same data type as <c>inputString</c> where characters from
+		/// the second argument are replaced with the matching characters from third argument.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "TRANSLATE", ServerSideOnly=true, IgnoreGenericParameters=true)]
+		public static string? Translate(string? inputString, string? characters, string? translations)
+		{
+			throw new InvalidOperationException($"'{nameof(Translate)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRIM-transact-sql">TRIM (Transact-SQL)</see></b></para>
+		/// <para>Removes the space character <c>char(32)</c> or other specified characters from the start and end of a string.</para>
+		/// </summary>
+		/// <param name="string">Is an expression of any character type (<c>nvarchar</c>, <c>varchar</c>, <c>nchar</c>, or <c>char</c>)
+		/// where characters should be removed.</param>
+		/// <returns>Returns a character expression with a type of string argument where the space character <c>char(32)</c> or
+		/// other specified characters are removed from both sides. Returns <c>NULL</c> if input string is <c>NULL</c>.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "TRIM", ServerSideOnly=true)]
+		public static string? Trim(string? @string)
+		{
+			throw new InvalidOperationException($"'{nameof(Trim)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/TRIM-transact-sql">TRIM (Transact-SQL)</see></b></para>
+		/// <para>Removes the space character <c>char(32)</c> or other specified characters from the start and end of a string.</para>
+		/// </summary>
+		/// <param name="characters">Is a literal, variable, or function call of any non-LOB character type
+		/// (<c>nvarchar</c>, <c>varchar</c>, <c>nchar</c>, or <c>char</c>) containing characters that should be removed.
+		/// <c>nvarchar(max)</c> and <c>varchar(max)</c> types aren't allowed.</param>
+		/// <param name="string">Is an expression of any character type (<c>nvarchar</c>, <c>varchar</c>, <c>nchar</c>, or <c>char</c>)
+		/// where characters should be removed.</param>
+		/// <returns>Returns a character expression with a type of string argument where the space character <c>char(32)</c> or
+		/// other specified characters are removed from both sides. Returns <c>NULL</c> if input string is <c>NULL</c>.</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Expression(ProviderName.SqlServer, "TRIM({0} FROM {1})", ServerSideOnly=true)]
+		public static string? Trim(string characters, string? @string)
+		{
+			throw new InvalidOperationException($"'{nameof(Trim)}' is a server side only function.");
+		}
+
+		/// <summary>
+		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/UNICODE-transact-sql">UNICODE (Transact-SQL)</see></b></para>
+		/// <para>Removes the space character <c>char(32)</c> or other specified characters from the start and end of a string.</para>
+		/// </summary>
+		/// <param name="ncharacter_expression">Is an <b>nchar</b> or <b>nvarchar</b> expression.</param>
+		/// <returns>int</returns>
+		/// <exception cref="InvalidOperationException" />
+		[Sql.Function(ProviderName.SqlServer, "UNICODE", ServerSideOnly=true)]
+		public static int? Unicode(string ncharacter_expression)
+		{
+			throw new InvalidOperationException($"'{nameof(Unicode)}' is a server side only function.");
+		}
 
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/UPPER-transact-sql">UPPER (Transact-SQL)</see></b></para>
