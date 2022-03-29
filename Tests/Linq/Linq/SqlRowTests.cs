@@ -1,5 +1,4 @@
 ﻿using LinqToDB;
-using LinqToDB.Linq;
 using LinqToDB.Tools;
 using NUnit.Framework;
 using System;

@@ -252,18 +252,23 @@ namespace LinqToDB.DataProvider.Oracle
 				throwExceptionIfTableNotFound);
 		}
 
-		protected override void BuildPredicateRhsX(int precedence, ISqlExpression expression)
+		protected override void BuildExprExprPredicate(SqlPredicate.ExprExpr expr)
 		{
-			// Oracle needs brackets around the right-hand side to disambiguate the syntax, e.g.:
-			// (1, 2) = ( (3, 4) )
-			if (expression.ElementType == QueryElementType.SqlRow)
+			BuildExpression(GetPrecedence(expr), expr.Expr1);
+
+			BuildExprExprPredicateOperator(expr);
+
+			var exprPrecedence = GetPrecedence(expr);
+
+			if (expr.Expr2.ElementType == QueryElementType.SqlRow && expr.Operator != SqlPredicate.Operator.Overlaps)
 			{
-				StringBuilder.Append('(');
-				BuildExpression(precedence, expression);
-				StringBuilder.Append(')');
+				// Oracle needs brackets around the right-hand side to disambiguate the syntax, e.g.:
+				// (1, 2) = ( (3, 4) )
+
+				exprPrecedence = int.MaxValue;
 			}
-			else
-				BuildExpression(precedence, expression);
+
+			BuildExpression(exprPrecedence, expr.Expr2);
 		}
 
 		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)

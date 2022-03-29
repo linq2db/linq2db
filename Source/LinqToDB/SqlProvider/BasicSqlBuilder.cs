@@ -2078,7 +2078,7 @@ namespace LinqToDB.SqlProvider
 			switch (predicate.ElementType)
 			{
 				case QueryElementType.ExprExprPredicate:
-					BuildPredicateX((SqlPredicate.ExprExpr) predicate);
+					BuildExprExprPredicate((SqlPredicate.ExprExpr) predicate);
 					break;
 
 				case QueryElementType.LikePredicate:
@@ -2170,10 +2170,8 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		void BuildPredicateX(SqlPredicate.ExprExpr expr)
+		protected virtual void BuildExprExprPredicateOperator(SqlPredicate.ExprExpr expr)
 		{
-			BuildExpression(GetPrecedence(expr), expr.Expr1);
-
 			switch (expr.Operator)
 			{
 				case SqlPredicate.Operator.Equal          : StringBuilder.Append(" = ");        break;
@@ -2186,13 +2184,17 @@ namespace LinqToDB.SqlProvider
 				case SqlPredicate.Operator.NotLess        : StringBuilder.Append(" !< ");       break;
 				case SqlPredicate.Operator.Overlaps       : StringBuilder.Append(" OVERLAPS "); break;
 			}
+		}
 
-			BuildPredicateRhsX(GetPrecedence(expr), expr.Expr2);
+		protected virtual void BuildExprExprPredicate(SqlPredicate.ExprExpr expr)
+		{
+			BuildExpression(GetPrecedence(expr), expr.Expr1);
+
+			BuildExprExprPredicateOperator(expr);
+
+			BuildExpression(GetPrecedence(expr), expr.Expr2);
 		}
 		
-		protected virtual void BuildPredicateRhsX(int precedence, ISqlExpression expression)
-			=> BuildExpression(precedence, expression);
-
 		protected virtual void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
 		{
 			BuildExpression(GetPrecedence(expr), expr.Expr1);
