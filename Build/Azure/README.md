@@ -1,7 +1,6 @@
 ﻿This directory contains test configs and setup scripts for test jobs on Azure Pipelines
 - `net472` folder stores test job configs for .NET 4.7.2 Windows tests
 - `netcoreapp31` folder stores test job configs for `netcoreapp3.1` test runs for Windows, Linux and MacOS
-- `net50` folder stores test job configs for `net5.0` test runs for Windows, Linux and MacOS
 - `net60` folder stores test job configs for `net6.0` test runs for Windows, Linux and MacOS
 - `scripts` folder stores test job setup scripts (`*.cmd` for Windows jobs and `*.sh` for Linux and MacOS)
 
@@ -58,7 +57,7 @@ Legend:
 - :heavy_check_mark: - test job implemented
 - :x: - test job not implemented yet
 - `netfx`: .NET Framework (4.7.2)
-- `netcore`: .NET Core 3.1 OR .NET 5.0 / 6.0
+- `netcore`: .NET Core 3.1 OR .NET 6.0
 - :door: - Windows 2022 or 2019 (for docker-images with win2019 dependency)
 - :penguin: - Linux (Ununtu 20.04)
 - :green_apple: - MacOS Catalina 10.15

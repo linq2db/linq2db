@@ -60,12 +60,6 @@ cat <<-EOJSON > HanaDataProviders.json
             "SapHana.Odbc"
         ]
     },
-    "NET50.Azure": {
-        "BasedOn": "BASE.Azure",
-        "Providers": [
-            "SapHana.Odbc"
-        ]
-    },
     "NET60.Azure": {
         "BasedOn": "BASE.Azure",
         "Providers": [
