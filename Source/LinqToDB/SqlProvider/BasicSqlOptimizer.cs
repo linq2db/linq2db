@@ -2798,23 +2798,23 @@ namespace LinqToDB.SqlProvider
 							ex = innerQuery;
 						}
 
-						if (updateStatement.Output != null)
-						{
-							newUpdateStatement.Output = updateStatement.Output.Convert(objectTree, static (v, e) =>
-							{
-								if (v.Context.TryGetValue(e, out var newElement))
-									return newElement;
-
-								return e;
-							});
-						}
-
 						item.Column = tableToUpdate[QueryHelper.GetUnderlyingField(item.Column)!.Name]
 						              ?? throw new LinqException(
 							              $"Field {QueryHelper.GetUnderlyingField(item.Column)!.Name} not found in table {tableToUpdate}");
 						item.Expression = ex;
 						newUpdateStatement.Update.Items.Add(item);
 					}
+				}
+
+				if (updateStatement.Output != null)
+				{
+					newUpdateStatement.Output = updateStatement.Output.Convert(objectTree, static (v, e) =>
+					{
+						if (v.Context.TryGetValue(e, out var newElement))
+							return newElement;
+
+						return e;
+					});
 				}
 
 				newUpdateStatement.Update.Table = updateStatement.Update.Table != null ? tableToUpdate : null;
