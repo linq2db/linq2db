@@ -43,6 +43,11 @@ namespace LinqToDB.DataProvider.SQLite
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality        | RowFeature.Comparisons |
 			                                         RowFeature.CompareToSelect | RowFeature.Between;
 
+			if (Name != ProviderName.SQLiteMS)
+			{
+				SqlProviderFlags.RowConstructorSupport |= RowFeature.Update;
+			}
+
 			_sqlOptimizer = new SQLiteSqlOptimizer(SqlProviderFlags);
 
 			/*

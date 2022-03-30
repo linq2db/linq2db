@@ -2652,79 +2652,176 @@ namespace LinqToDB.SqlProvider
 				}
 
 				clonedQuery.Select.Columns.Clear();
-				newUpdateStatement.SelectQuery.From.Table(tableToUpdate).Where.Exists(clonedQuery);
+				var processUniversalUpdate = true;
 
-				foreach (var item in updateStatement.Update.Items)
+				if (updateStatement.Update.Items.Count > 1 && SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Update))
 				{
-					var ex = item.Expression!.Convert(objectTree, static (v, expr) =>
-						v.Context.TryGetValue(expr, out var newValue)
-							? newValue
-							: expr);
-
-					var usedSources = new HashSet<ISqlTableSource>();
-					QueryHelper.GetUsedSources(ex, usedSources);
-					usedSources.Remove(tableToUpdate);
-					if (objectTree.TryGetValue(tableToUpdate, out var replaced))
-						usedSources.Remove((ISqlTableSource)replaced);
-
-					if (usedSources.Count > 0)
+					// check that items depends just on update table
+					//
+					var isComplex = false;
+					foreach (var item in updateStatement.Update.Items)
 					{
-						// it means that update value column depends on other tables and we have to generate more complicated query
+						var usedSources = new HashSet<ISqlTableSource>();
+						QueryHelper.GetUsedSources(item.Expression!, usedSources);
+						usedSources.Remove(tableToUpdate);
+						if (objectTree.TryGetValue(tableToUpdate, out var replaced))
+							usedSources.Remove((ISqlTableSource)replaced);
+
+						if (usedSources.Count > 0)
+						{
+							isComplex = true;
+							break;
+						}
+					}
+
+					if (isComplex)
+					{
+						// generating Row constructor update
+
+						processUniversalUpdate = false;
 
 						var innerQuery = clonedQuery.Clone(static e => e is not SqlTable);
-
-						innerQuery.ParentSelect = sql;
-
 						innerQuery.Select.Columns.Clear();
 
-						var remapped = ex.Convert((tableToUpdateMapping, innerQuery, objectTree),
-							static (v, e) =>
-							{
-								if (v.Context.tableToUpdateMapping.TryGetValue(e, out var n))
-								{
-									e = n;
-									v.Context.objectTree.Remove(e);
-									v.Context.objectTree.Add(e, n);
-								}
+						var rows = new List<(ISqlExpression, ISqlExpression)>(updateStatement.Update.Items.Count);
+						foreach (var item in updateStatement.Update.Items)
+						{
+							var ex = item.Expression!.Convert(objectTree, static (v, expr) =>
+								v.Context.TryGetValue(expr, out var newValue)
+									? newValue
+									: expr);
 
-								if (e is SqlColumn clmn && clmn.Parent != v.Context.innerQuery || e is SqlField)
+							var newColumn = tableToUpdate[QueryHelper.GetUnderlyingField(item.Column)!.Name]
+							                ?? throw new LinqException(
+								                $"Field {QueryHelper.GetUnderlyingField(item.Column)!.Name} not found in table {tableToUpdate}");
+
+							var remapped = ex.Convert((tableToUpdateMapping, innerQuery, objectTree),
+								static (v, e) =>
 								{
-									var column = QueryHelper.NeedColumnForExpression(v.Context.innerQuery, (ISqlExpression)e, false);
-									if (column != null)
+									if (v.Context.tableToUpdateMapping.TryGetValue(e, out var n))
 									{
+										e = n;
 										v.Context.objectTree.Remove(e);
-										v.Context.objectTree.Add(e, column);
-										return column;
-								}
-								}
+										v.Context.objectTree.Add(e, n);
+									}
+
+									if (e is SqlColumn clmn && clmn.Parent != v.Context.innerQuery || e is SqlField)
+									{
+										var column = QueryHelper.NeedColumnForExpression(v.Context.innerQuery,
+											(ISqlExpression)e, false);
+										if (column != null)
+										{
+											v.Context.objectTree.Remove(e);
+											v.Context.objectTree.Add(e, column);
+											return column;
+										}
+									}
+
+									return e;
+
+								});
+
+
+
+							//var column = QueryHelper.NeedColumnForExpression(innerQuery, item.Expression!, false);
+							var newUpdateExpression = innerQuery.Select.AddNewColumn(remapped);
+
+							if (newUpdateExpression == null)
+								throw new InvalidOperationException(
+									$"Could not create column for expression '{item.Expression}'");
+
+							rows.Add((newColumn, newUpdateExpression));
+						}
+
+						var sqlRow        = new SqlRow(rows.Select(r => r.Item1).ToArray());
+						var newUpdateItem = new SqlSetExpression(sqlRow, innerQuery);
+
+						newUpdateStatement.Update.Items.Clear();
+						newUpdateStatement.Update.Items.Add(newUpdateItem);
+
+					}
+				}
+
+				if (processUniversalUpdate)
+				{
+					foreach (var item in updateStatement.Update.Items)
+					{
+						var ex = item.Expression!.Convert(objectTree, static (v, expr) =>
+							v.Context.TryGetValue(expr, out var newValue)
+								? newValue
+								: expr);
+
+						var usedSources = new HashSet<ISqlTableSource>();
+						QueryHelper.GetUsedSources(ex, usedSources);
+						usedSources.Remove(tableToUpdate);
+						if (objectTree.TryGetValue(tableToUpdate, out var replaced))
+							usedSources.Remove((ISqlTableSource)replaced);
+
+						if (usedSources.Count > 0)
+						{
+							// it means that update value column depends on other tables and we have to generate more complicated query
+
+							var innerQuery = clonedQuery.Clone(static e => e is not SqlTable);
+
+							innerQuery.ParentSelect = sql;
+
+							innerQuery.Select.Columns.Clear();
+
+							var remapped = ex.Convert((tableToUpdateMapping, innerQuery, objectTree),
+								static (v, e) =>
+								{
+									if (v.Context.tableToUpdateMapping.TryGetValue(e, out var n))
+									{
+										e = n;
+										v.Context.objectTree.Remove(e);
+										v.Context.objectTree.Add(e, n);
+									}
+
+									if (e is SqlColumn clmn && clmn.Parent != v.Context.innerQuery || e is SqlField)
+									{
+										var column = QueryHelper.NeedColumnForExpression(v.Context.innerQuery,
+											(ISqlExpression)e, false);
+										if (column != null)
+										{
+											v.Context.objectTree.Remove(e);
+											v.Context.objectTree.Add(e, column);
+											return column;
+										}
+									}
+
+									return e;
+
+								});
+
+							innerQuery.Select.AddNew(remapped);
+							innerQuery.RemoveNotUnusedColumns();
+							ex = innerQuery;
+						}
+
+						if (updateStatement.Output != null)
+						{
+							newUpdateStatement.Output = updateStatement.Output.Convert(objectTree, static (v, e) =>
+							{
+								if (v.Context.TryGetValue(e, out var newElement))
+									return newElement;
 
 								return e;
-
 							});
+						}
 
-						innerQuery.Select.AddNew(remapped);
-						ex = innerQuery;
+						item.Column = tableToUpdate[QueryHelper.GetUnderlyingField(item.Column)!.Name]
+						              ?? throw new LinqException(
+							              $"Field {QueryHelper.GetUnderlyingField(item.Column)!.Name} not found in table {tableToUpdate}");
+						item.Expression = ex;
+						newUpdateStatement.Update.Items.Add(item);
 					}
-
-					if (updateStatement.Output != null)
-					{
-						newUpdateStatement.Output = updateStatement.Output.Convert(objectTree, static (v, e) =>
-						{
-							if (v.Context.TryGetValue(e, out var newElement))
-								return newElement;
-
-							return e;
-						});
-					}
-
-					item.Column     = tableToUpdate[QueryHelper.GetUnderlyingField(item.Column)!.Name]
-						?? throw new LinqException($"Field {QueryHelper.GetUnderlyingField(item.Column)!.Name} not found in table {tableToUpdate}");
-					item.Expression = ex;
-					newUpdateStatement.Update.Items.Add(item);
 				}
 
 				newUpdateStatement.Update.Table = updateStatement.Update.Table != null ? tableToUpdate : null;
 				newUpdateStatement.With         = updateStatement.With;
+
+				clonedQuery.RemoveNotUnusedColumns();
+				newUpdateStatement.SelectQuery.From.Table(tableToUpdate).Where.Exists(clonedQuery);
 
 				updateStatement.Update.Items.Clear();
 
