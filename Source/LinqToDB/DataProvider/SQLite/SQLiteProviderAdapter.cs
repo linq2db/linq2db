@@ -25,6 +25,7 @@ namespace LinqToDB.DataProvider.SQLite
 			Type    transactionType,
 			bool    disposeCommandOnError,
 			bool    supportsRowValue,
+			bool    supportsUpdateFrom,
 			Action? clearAllPulls)
 		{
 			ConnectionType  = connectionType;
@@ -35,6 +36,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 			DisposeCommandOnError = disposeCommandOnError;
 			SupportsRowValue      = supportsRowValue;
+			SupportsUpdateFrom    = supportsUpdateFrom;
 
 			ClearAllPools = clearAllPulls;
 		}
@@ -53,6 +55,8 @@ namespace LinqToDB.DataProvider.SQLite
 
 		// ROW VALUE feature introduced in SQLite 3.15.0.
 		internal bool SupportsRowValue { get; }
+		// UPDATE FROM feature introduced in SQLite 3.33.0.
+		internal bool SupportsUpdateFrom { get; }
 
 		public Action? ClearAllPools { get; }
 
@@ -83,13 +87,16 @@ namespace LinqToDB.DataProvider.SQLite
 					clearAllPools = typeMapper.BuildAction(typeMapper.MapActionLambda(() => SqliteConnection.ClearAllPools()));
 				}
 			}
-			else if(version >= ClearPoolsMinVersionSDS)
-				{
+			else if (version >= ClearPoolsMinVersionSDS)
+			{
 				var typeMapper = new TypeMapper();
 				typeMapper.RegisterTypeWrapper<SQLiteConnection>(connectionType);
 				typeMapper.FinalizeMappings();
 				clearAllPools = typeMapper.BuildAction(typeMapper.MapActionLambda(() => SQLiteConnection.ClearAllPools()));
 			}
+
+			var supportsRowValue   = version >= (clientNamespace == MicrosoftDataSQLiteClientNamespace ? RowValueMinVersionMDS   : RowValueMinVersionSDS);
+			var supportsUpdateFrom = version >= (clientNamespace == MicrosoftDataSQLiteClientNamespace ? UpdateFromMinVersionMDS : UpdateFromMinVersionSDS);
 
 			return new SQLiteProviderAdapter(
 				connectionType,
@@ -98,13 +105,17 @@ namespace LinqToDB.DataProvider.SQLite
 				commandType,
 				transactionType,
 				disposeCommandOnError,
-				clientNamespace != MicrosoftDataSQLiteClientNamespace || version >= RowValueMinVersionMDS,
+				supportsRowValue,
+				supportsUpdateFrom,
 				clearAllPools);
 		}
 
 		private static readonly Version ClearPoolsMinVersionMDS = new (6, 0, 0);
 		private static readonly Version ClearPoolsMinVersionSDS = new (1, 0, 55);
 		private static readonly Version RowValueMinVersionMDS   = new (2, 0, 0);
+		private static readonly Version RowValueMinVersionSDS   = new (1, 0, 104);
+		private static readonly Version UpdateFromMinVersionMDS = new (3, 1, 20);
+		private static readonly Version UpdateFromMinVersionSDS = new (1, 0, 114);
 
 		public static SQLiteProviderAdapter GetInstance(string name)
 		{
