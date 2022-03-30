@@ -40,12 +40,10 @@ namespace LinqToDB.DataProvider.SQLite
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.Serializable;
 
-			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality        | RowFeature.Comparisons |
-			                                         RowFeature.CompareToSelect | RowFeature.Between;
-
-			if (Name != ProviderName.SQLiteMS)
+			if (Adapter.SupportsRowValue)
 			{
-				SqlProviderFlags.RowConstructorSupport |= RowFeature.Update;
+				SqlProviderFlags.RowConstructorSupport = RowFeature.Equality        | RowFeature.Comparisons |
+				                                         RowFeature.CompareToSelect | RowFeature.Between     | RowFeature.Update;
 			}
 
 			_sqlOptimizer = new SQLiteSqlOptimizer(SqlProviderFlags);
