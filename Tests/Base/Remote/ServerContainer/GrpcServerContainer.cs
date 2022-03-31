@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using NUnit.Framework;
 using ProtoBuf.Grpc.Server;
 using Tests.Model;
 using Tests.Model.Remote.Grpc;
@@ -23,17 +24,12 @@ namespace Tests.Remote.ServerContainer
 		private readonly object _syncRoot = new ();
 
 		//useful for async tests
-		public bool KeepSamePortBetweenThreads
-		{
-			get;
-			set;
-		} = true;
+		public bool KeepSamePortBetweenThreads { get; set; } = true;
 
 		private TestGrpcLinqService? _service;
 		private bool _isHostOpen;
 
-		public GrpcServerContainer(
-			)
+		public GrpcServerContainer()
 		{
 		}
 
@@ -41,8 +37,7 @@ namespace Tests.Remote.ServerContainer
 			MappingSchema? ms,
 			IInterceptor? interceptor,
 			bool suppressSequentialAccess,
-			string configuration
-			)
+			string configuration)
 		{
 			OpenHost(ms, interceptor, suppressSequentialAccess);
 
@@ -52,8 +47,12 @@ namespace Tests.Remote.ServerContainer
 				_service!.AddInterceptor(interceptor);
 			}
 
+			var url = $"https://localhost:{GetPort()}";
+			// TODO: remove (debug)
+			TestContext.WriteLine($"Connect to GRPC Host at: {url} (CurrentManagedThreadId:{Environment.CurrentManagedThreadId}, RunID:{TestExternals.RunID})");
+
 			var dx = new TestGrpcDataContext(
-				$"https://localhost:{GetPort()}",
+				url,
 				() =>
 				{
 					_service!.SuppressSequentialAccess = false;
@@ -97,28 +96,31 @@ namespace Tests.Remote.ServerContainer
 					);
 
 				Startup.GrpcLinqService = _service;
-			}
 
-			var hb = Host.CreateDefaultBuilder();
-			var host = hb.ConfigureWebHostDefaults(
+				var hb = Host.CreateDefaultBuilder();
+				var host = hb.ConfigureWebHostDefaults(
 				webBuilder =>
 				{
 					webBuilder.UseStartup<Startup>();
 
-					webBuilder.UseUrls($"https://localhost:{GetPort()}");
+					var url = $"https://localhost:{GetPort()}";
+					webBuilder.UseUrls(url);
+					// TODO: remove (debug)
+					TestContext.WriteLine($"Start GRPC Host at: {url} (CurrentManagedThreadId:{Environment.CurrentManagedThreadId}, RunID:{TestExternals.RunID})");
 				}).Build();
 
-			host.Start();
+				host.Start();
 
-			//not sure does we need to wait for grpc server starts?
+				//not sure does we need to wait for grpc server starts?
 
-			_isHostOpen = true;
+				_isHostOpen = true;
+			}
 
 			TestExternals.Log($"grpc host opened");
 		}
 
 
-		//Environment.CurrentManagedThreadId need for a parallel test like <see cref= "DataConnectionTests.MultipleConnectionsTest" />
+		//Environment.CurrentManagedThreadId need for a parallel test like DataConnectionTests.MultipleConnectionsTest
 		public int GetPort()
 		{
 			if(KeepSamePortBetweenThreads)

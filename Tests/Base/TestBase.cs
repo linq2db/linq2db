@@ -386,14 +386,8 @@ namespace Tests
 				return GetDataConnection(configuration, ms, interceptor, suppressSequentialAccess: suppressSequentialAccess);
 			}
 
-#if NETFRAMEWORK || NETCOREAPP3_1_OR_GREATER
 			var str = configuration.Substring(0, configuration.Length - LinqServiceSuffix.Length);
-			var dx = _serverContainer.Prepare(ms, interceptor, suppressSequentialAccess, str);
-			return dx;
-#else
-			throw new NotImplementedException();
-#endif
-
+			return _serverContainer.Prepare(ms, interceptor, suppressSequentialAccess, str);
 		}
 
 		protected TestDataConnection GetDataConnection(
