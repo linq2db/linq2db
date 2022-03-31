@@ -27,8 +27,7 @@ namespace Tests.Remote.ServerContainer
 		//useful for async tests
 		public bool KeepSamePortBetweenThreads { get; set; } = true;
 
-		private TestGrpcLinqService? _service;
-		private ConcurrentDictionary<int, int> _isHostOpen = new();
+		private ConcurrentDictionary<int, TestGrpcLinqService> _openHosts = new();
 
 		public GrpcServerContainer()
 		{
@@ -40,12 +39,12 @@ namespace Tests.Remote.ServerContainer
 			bool suppressSequentialAccess,
 			string configuration)
 		{
-			OpenHost(ms, interceptor, suppressSequentialAccess);
+			var service = OpenHost(ms, interceptor, suppressSequentialAccess);
 
-			_service!.SuppressSequentialAccess = suppressSequentialAccess;
+			service.SuppressSequentialAccess = suppressSequentialAccess;
 			if (interceptor != null)
 			{
-				_service!.AddInterceptor(interceptor);
+				service.AddInterceptor(interceptor);
 			}
 
 			var url = $"https://localhost:{GetPort()}";
@@ -54,9 +53,9 @@ namespace Tests.Remote.ServerContainer
 				url,
 				() =>
 				{
-					_service!.SuppressSequentialAccess = false;
+					service.SuppressSequentialAccess = false;
 					if (interceptor != null)
-						_service!.RemoveInterceptor();
+						service.RemoveInterceptor();
 				})
 			{ Configuration = configuration };
 		
@@ -69,24 +68,24 @@ namespace Tests.Remote.ServerContainer
 			return dx;
 		}
 
-		private void OpenHost(MappingSchema? ms, IInterceptor? interceptor, bool suppressSequentialAccess)
+		private TestGrpcLinqService OpenHost(MappingSchema? ms, IInterceptor? interceptor, bool suppressSequentialAccess)
 		{
 			var port = GetPort();
-			if (_isHostOpen.ContainsKey(port))
+			if (_openHosts.TryGetValue(port, out var service))
 			{
-				_service!.MappingSchema = ms;
-				return;
+				service.MappingSchema = ms;
+				return service;
 			}
 
 			lock (_syncRoot)
 			{
-				if (_isHostOpen.ContainsKey(port))
+				if (_openHosts.TryGetValue(port, out service))
 				{
-					_service!.MappingSchema = ms;
-					return;
+					service.MappingSchema = ms;
+					return service;
 				}
 
-				_service = new TestGrpcLinqService(
+				service = new TestGrpcLinqService(
 					new LinqService()
 					{
 						AllowUpdates = true
@@ -94,8 +93,9 @@ namespace Tests.Remote.ServerContainer
 					interceptor,
 					suppressSequentialAccess
 					);
+				service.MappingSchema = ms;
 
-				Startup.GrpcLinqService = _service;
+				Startup.GrpcLinqService = service;
 
 				var hb = Host.CreateDefaultBuilder();
 				var host = hb.ConfigureWebHostDefaults(
@@ -109,12 +109,12 @@ namespace Tests.Remote.ServerContainer
 
 				host.Start();
 
-				//not sure does we need to wait for grpc server starts?
-
-				_isHostOpen[port] = port;
+				_openHosts[port] = service;
 			}
 
 			TestExternals.Log($"grpc host opened");
+
+			return service;
 		}
 
 

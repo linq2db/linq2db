@@ -15,7 +15,7 @@ using LinqToDB.SqlQuery;
 
 namespace Tests
 {
-	internal class TestNoopConnection : DbConnection
+	public class TestNoopConnection : DbConnection
 	{
 		private ConnectionState _state;
 
@@ -270,7 +270,7 @@ namespace Tests
 		protected override void        SetParameter (int index, DbParameter value           ) => throw new NotImplementedException();
 	}
 
-	internal class TestNoopProviderAdapter : IDynamicProviderAdapter
+	public class TestNoopProviderAdapter : IDynamicProviderAdapter
 	{
 		Type IDynamicProviderAdapter.ConnectionType  => typeof(TestNoopConnection );
 		Type IDynamicProviderAdapter.DataReaderType  => typeof(TestNoopDataReader );
@@ -279,7 +279,7 @@ namespace Tests
 		Type IDynamicProviderAdapter.TransactionType => throw new NotImplementedException();
 	}
 
-	internal class TestNoopProvider : DynamicDataProviderBase<TestNoopProviderAdapter>
+	public class TestNoopProvider : DynamicDataProviderBase<TestNoopProviderAdapter>
 	{
 		public TestNoopProvider()
 			: base(TestProvName.NoopProvider, new MappingSchema(), new TestNoopProviderAdapter())

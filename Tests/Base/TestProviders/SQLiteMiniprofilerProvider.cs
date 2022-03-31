@@ -12,9 +12,7 @@ using StackExchange.Profiling.Data;
 
 namespace Tests
 {
-	using Data;
-
-	internal class SQLiteMiniprofilerProvider : SQLiteDataProvider
+	public class SQLiteMiniprofilerProvider : SQLiteDataProvider
 	{
 		private readonly bool _mapped;
 
@@ -27,7 +25,7 @@ namespace Tests
 		public override void InitContext(IDataContext dataContext)
 		{
 			if (_mapped)
-				dataContext.AddInterceptor(new MiniProfilerTests.UnwrapProfilerInterceptor());
+				dataContext.AddInterceptor(UnwrapProfilerInterceptor.Instance);
 		}
 
 		protected override DbConnection CreateConnectionInternal(string connectionString)

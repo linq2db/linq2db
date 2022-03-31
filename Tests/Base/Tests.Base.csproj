@@ -10,6 +10,7 @@
 		<ProjectReference Include="..\Model\Tests.Model.csproj" />
 
 		<PackageReference Include="NUnit" />
+		<PackageReference Include="MiniProfiler.Shared" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net472' ">
@@ -32,6 +33,11 @@
 		<PackageReference Include="System.Configuration.ConfigurationManager" />
 		<PackageReference Include="System.Data.SqlClient" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Update="TestProviders\TestNoopProvider.cs">
+	    <SubType>Component</SubType>
+	  </Compile>
 	</ItemGroup>
 
 </Project>

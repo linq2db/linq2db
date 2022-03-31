@@ -78,6 +78,9 @@ namespace Tests.UserTests
 			}
 		}
 
+#if AZURE
+		[ActiveIssue(Configuration = ProviderName.Sybase, SkipForNonLinqService = true)]
+#endif
 		[Test]
 		public void FullWhiteSpaceTest([DataSources] string context, [ValueSource(nameof(WhiteSpaceChars))] int character)
 		{
