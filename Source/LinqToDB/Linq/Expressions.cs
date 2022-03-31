@@ -577,20 +577,6 @@ namespace LinqToDB.Linq
 			{ MT<uint   >(() => ((uint)    0)  .ToString()), N(() => L<uint,    string>((uint    p0) => Sql.ConvertTo<string>.From(p0) )) },
 			{ MT<ulong  >(() => ((ulong)   0)  .ToString()), N(() => L<ulong,   string>((ulong   p0) => Sql.ConvertTo<string>.From(p0) )) },
 
-			{ MT<bool?   >(() => ((bool?)  true).ToString()!), N(() => L<bool?,    string?>((bool?   p0) => p0 == null ? "" : p0.Value.ToString() )) },
-			{ MT<byte?   >(() => ((byte?)    0) .ToString()!), N(() => L<byte?,    string>((byte?    p0) => p0 == null ? "" : p0.Value.ToString() )) },
-			{ MT<char?   >(() => ((char?)   '0').ToString()!), N(() => L<char?,    string>((char?    p0) => p0 == null ? "" : p0.Value.ToString() )) },
-			{ MT<decimal?>(() => ((decimal?) 0) .ToString()!), N(() => L<decimal?, string>((decimal? p0) => p0 == null ? "" : p0.Value.ToString() )) },
-			{ MT<double? >(() => ((double?)  0) .ToString()!), N(() => L<double?,  string>((double?  p0) => p0 == null ? "" : p0.Value.ToString() )) },
-			{ MT<short?  >(() => ((short?)   0) .ToString()!), N(() => L<short?,   string>((short?   p0) => p0 == null ? "" : p0.Value.ToString() )) },
-			{ MT<int?    >(() => ((int?)     0) .ToString()!), N(() => L<int?,     string>((int?     p0) => p0 == null ? "" : p0.Value.ToString() )) },
-			{ MT<long?   >(() => ((long?)    0) .ToString()!), N(() => L<long?,    string>((long?    p0) => p0 == null ? "" : p0.Value.ToString() )) },
-			{ MT<sbyte?  >(() => ((sbyte?)   0) .ToString()!), N(() => L<sbyte?,   string>((sbyte?   p0) => p0 == null ? "" : p0.Value.ToString() )) },
-			{ MT<float?  >(() => ((float?)   0) .ToString()!), N(() => L<float?,   string>((float?   p0) => p0 == null ? "" : p0.Value.ToString() )) },
-			{ MT<ushort? >(() => ((ushort?)  0) .ToString()!), N(() => L<ushort?,  string>((ushort?  p0) => p0 == null ? "" : p0.Value.ToString() )) },
-			{ MT<uint?   >(() => ((uint?)    0) .ToString()!), N(() => L<uint?,    string>((uint?    p0) => p0 == null ? "" : p0.Value.ToString() )) },
-			{ MT<ulong?  >(() => ((ulong?)   0) .ToString()!), N(() => L<ulong?,   string>((ulong?   p0) => p0 == null ? "" : p0.Value.ToString() )) },
-
 			// handle all other as default
 			{ MT<object>(() => ((object)0).ToString()!), N(() => L<object, string>((object   p0) => Sql.ConvertTo<string>.From(p0) )) },
 
