@@ -7,12 +7,11 @@ namespace LinqToDB.SqlQuery
 	public class SqlSetExpression : IQueryElement, ISqlExpressionWalkable
 	{
 		// These are both nullable refs, but by construction either _column or _row is set.
-		private ISqlExpression   _column;
 
 		public SqlSetExpression(ISqlExpression column, ISqlExpression? expression)
 		{
-			_column = column;
-			Expression  = expression;
+			Column    = column;
+			Expression = expression;
 
 			ValidateColumnExpression(column, expression);
 		}
@@ -52,12 +51,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 
-		public ISqlExpression Column
-		{
-			get => _column;
-			set => _column = value;
-		} 
-		
+		public ISqlExpression  Column     { get; set; }
 		public ISqlExpression? Expression { get; set; }
 
 		private void RefineDbParameter(ISqlExpression column, ISqlExpression? value)
@@ -98,7 +92,7 @@ namespace LinqToDB.SqlQuery
 
 		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			_column    = _column.Walk(options, context, func)!;			
+			Column     = Column.Walk(options, context, func)!;
 			Expression = Expression?.Walk(options, context, func);
 			return null;
 		}

@@ -1534,17 +1534,24 @@ namespace LinqToDB.SqlQuery
 		{
 			// When selecting a SqlRow, expand the row into individual columns.
 			var columns = _selectQuery.Select.Columns;
-			int sqlRowIndex = columns.FindIndex(c => c.Expression.ElementType == QueryElementType.SqlRow);
-			if (sqlRowIndex >= 0)
+
+			for (var i = 0; i < columns.Count; i++)
 			{
-				if (_selectQuery.ParentSelect is null)
-					throw new LinqToDBException("SqlRow can not be returned from main SELECT");
-				if (columns.Count > 1)
-					throw new LinqToDBException("SqlRow expression must be the only result in a SELECT");
-				var row = (SqlRow)columns[0].Expression;
-				columns.Clear();
-				foreach (var value in row.Values)
-					_selectQuery.Select.AddNew(value);
+				var c = columns[i];
+				if (c.Expression.ElementType == QueryElementType.SqlRow)
+				{
+					if (_selectQuery.ParentSelect is null)
+						throw new LinqToDBException("SqlRow can not be returned from main SELECT");
+					if (columns.Count > 1)
+						throw new LinqToDBException("SqlRow expression must be the only result in a SELECT");
+
+					var row = (SqlRow)columns[0].Expression;
+					columns.Clear();
+					foreach (var value in row.Values)
+						_selectQuery.Select.AddNew(value);
+
+					break;
+				}
 			}
 
 			((ISqlExpressionWalkable)_selectQuery.Select).Walk(WalkOptions.Default, (object?)null, static (_, expr) =>

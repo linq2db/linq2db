@@ -216,10 +216,9 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.SetExpression:
 					{
-						var s = (SqlSetExpression)element;
 						return
-							Find(s.Column) ??
-							Find(s.Expression);
+							Find(((SqlSetExpression)element).Column) ??
+							Find(((SqlSetExpression)element).Expression);
 					}
 
 				case QueryElementType.InsertClause:
