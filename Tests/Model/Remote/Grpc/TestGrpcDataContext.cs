@@ -14,7 +14,16 @@ namespace Tests.Model.Remote.Grpc
 		private readonly Action? _onDispose;
 
 		public TestGrpcDataContext(string address, Action? onDispose = null)
-			: base(address)
+			: base(
+				  address,
+				  new GrpcChannelOptions
+				  {
+					  HttpClient = new HttpClient(
+						  new HttpClientHandler
+						  {
+							  ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+						  })
+				  })
 		{
 			_onDispose = onDispose;
 		}
@@ -42,23 +51,6 @@ namespace Tests.Model.Remote.Grpc
 		public ITable<TestIdentity>           TestIdentity           => this.GetTable<TestIdentity>();
 		public ITable<InheritanceParentBase>  InheritanceParent      => this.GetTable<InheritanceParentBase>();
 		public ITable<InheritanceChildBase>   InheritanceChild       => this.GetTable<InheritanceChildBase>();
-
-		protected override ILinqClient GetClient()
-		{
-			var channel = GrpcChannel.ForAddress(
-				_address,
-				new GrpcChannelOptions
-				{
-					HttpClient = new HttpClient(
-						new HttpClientHandler
-						{
-							ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-						})
-				}
-				);
-
-			return new GrpcLinqServiceClient(channel);
-		}
 
 		public ITable<Parent> GetParentByID(int? id)
 		{

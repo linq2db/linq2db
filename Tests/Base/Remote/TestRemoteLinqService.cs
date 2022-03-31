@@ -35,8 +35,8 @@ namespace Tests.Remote
 			)
 			: base(linqService, true)
 		{
-			_linqService = linqService;
-			_interceptor = interceptor;
+			_linqService             = linqService;
+			_interceptor             = interceptor;
 			SuppressSequentialAccess = suppressSequentialAccess;
 
 		}

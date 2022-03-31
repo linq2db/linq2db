@@ -2,6 +2,7 @@
   "solution": {
     "path": "linq2db.sln",
     "projects": [
+      "Source\\LinqToDB.Remote.Grpc\\LinqToDB.Remote.Grpc.csproj",
       "Source\\LinqToDB.Tools\\LinqToDB.Tools.csproj",
       "Source\\LinqToDB\\LinqToDB.csproj",
       "Tests\\Base\\Tests.Base.csproj",
