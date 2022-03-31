@@ -322,6 +322,19 @@ namespace LinqToDB.DataProvider.Informix
 			BuildDropTableStatementIfExists(dropTable);
 		}
 
+		protected override void BuildSqlRow(SqlRow expr, bool buildTableName, bool checkParentheses, bool throwExceptionIfTableNotFound)
+		{
+			// Informix needs ROW(1,2) syntax instead of BasicSqlBuilder default (1,2)
+			StringBuilder.Append("ROW (");
+			foreach (var value in expr.Values)
+			{
+				BuildExpression(value, buildTableName, checkParentheses, throwExceptionIfTableNotFound);
+				StringBuilder.Append(InlineComma);
+			}
+			StringBuilder.Length -= InlineComma.Length; // Note that SqlRow are never empty
+			StringBuilder.Append(')');
+		}
+
 		protected override ISqlExpression WrapBooleanExpression(ISqlExpression expr)
 		{
 			var newExpr = base.WrapBooleanExpression(expr);

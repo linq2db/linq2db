@@ -200,6 +200,14 @@ namespace LinqToDB.SqlQuery
 					_objectTree.Add(element, clone = new SqlAliasPlaceholder());
 					break;
 
+				case QueryElementType.SqlRow:
+				{
+					var row    = (SqlRow)(IQueryElement)element;
+					var values = Array.ConvertAll<ISqlExpression, ISqlExpression>(row.Values, Clone)!;
+					_objectTree.Add(element, clone = new SqlRow(values));
+					break;
+				}
+
 				case QueryElementType.SqlBinaryExpression:
 				{
 					var binary = (SqlBinaryExpression)(IQueryElement)element;
@@ -643,7 +651,9 @@ namespace LinqToDB.SqlQuery
 				{
 					var set = (SqlSetExpression)(IQueryElement)element;
 					// TODO: children Clone called before _objectTree update (original cloning logic)
-					_objectTree.Add(element, clone = new SqlSetExpression(Clone(set.Column), Clone(set.Expression)));
+					_objectTree.Add(
+						element,
+						clone = new SqlSetExpression(Clone(set.Column), Clone(set.Expression)));
 					break;
 				}
 

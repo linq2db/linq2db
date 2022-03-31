@@ -36,6 +36,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsAllSetOperationsSupported       = true;
 
+			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality        | RowFeature.Comparisons |
+			                                         RowFeature.CompareToSelect | RowFeature.In | RowFeature.IsNull |
+			                                         RowFeature.Update          | RowFeature.UpdateLiteral |
+			                                         RowFeature.Overlaps        | RowFeature.Between;
+
 			SetCharFieldToType<char>("bpchar"   , DataTools.GetCharExpression);
 			SetCharFieldToType<char>("character", DataTools.GetCharExpression);
 

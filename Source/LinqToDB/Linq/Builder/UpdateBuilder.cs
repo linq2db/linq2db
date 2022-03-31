@@ -451,29 +451,52 @@ namespace LinqToDB.Linq.Builder
 			IBuildContext                   fieldsContext,
 			IBuildContext                   valuesContext,
 			SqlTable?                       table,
-			List<SqlSetExpression> items)
+			List<SqlSetExpression>          items)
 		{
 			extract = (LambdaExpression)builder.ConvertExpression(extract);
 			var ext = extract.Body.Unwrap();
 
-			var sp    = fieldsContext.Parent;
-			var ctx   = new ExpressionContext(buildInfo.Parent, fieldsContext, extract);
-			var sql   = ctx.ConvertToSql(ext, 0, ConvertFlags.Field);
-			var field = sql.Select(s => QueryHelper.GetUnderlyingField(s.Sql)).FirstOrDefault(f => f != null);
+			var sp  = fieldsContext.Parent;
+			var ctx = new ExpressionContext(buildInfo.Parent, fieldsContext, extract);
+			
 			builder.ReplaceParent(ctx, sp);
 
-			if (sql.Length != 1)
-				throw new LinqException($"Expression '{extract}' can not be used as Update Field.");
+			Mapping.ColumnDescriptor? columnDescriptor = null;
+			SqlSetExpression 		  setExpression;
 
-			var column = table != null && field != null ? table[field.Name]! : sql[0].Sql;
+			if (ext.IsSqlRow())
+			{
+				var row = ext.GetSqlRowValues()
+					.Select(GetField)
+					.ToArray();
 
-			sp       = valuesContext.Parent;
-			ctx      = new ExpressionContext(buildInfo.Parent, valuesContext, update);
-			var expr = builder.ConvertToSqlExpression(ctx, update.Body, QueryHelper.GetColumnDescriptor(column), false);
+				var rowExpression = new SqlRow(row);
 
+				setExpression = new SqlSetExpression(rowExpression, null);
+			}
+			else
+			{
+				var column = GetField(ext);
+				columnDescriptor = QueryHelper.GetColumnDescriptor(column);
+				setExpression    = new SqlSetExpression(column, null); 
+			}
+
+			sp  = valuesContext.Parent;
+			ctx = new ExpressionContext(buildInfo.Parent, valuesContext, update);
+			setExpression.Expression = builder.ConvertToSqlExpression(ctx, update.Body, columnDescriptor, false);
 			builder.ReplaceParent(ctx, sp);
+			items.Add(setExpression);
 
-			items.Add(new SqlSetExpression(column, expr));
+			ISqlExpression GetField(Expression fieldExpr)
+			{
+				var sql   = ctx.ConvertToSql(fieldExpr, 0, ConvertFlags.Field);
+				var field = sql.Select(s => QueryHelper.GetUnderlyingField(s.Sql)).FirstOrDefault(f => f != null);
+				
+				if (sql.Length != 1)
+					throw new LinqException($"Expression '{extract}' can not be used as Update Field.");
+
+				return table != null && field != null ? table[field.Name]! : sql[0].Sql;
+			}
 		}
 
 		internal static void ParseSet(
@@ -523,6 +546,13 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var columnDescriptor = QueryHelper.GetColumnDescriptor(columnSql);
+
+			// Note: this ParseSet overload doesn't support a SqlRow value.
+			// This overload is called for a constants, e.g. `Set(x => x.Name, "Doe")`.
+			// SqlRow can't be constructed as C# values, they can only be used inside expressions, so the call
+			// `Set(x => SqlRow(x.Name, x.Age), SqlRow("Doe", 18))` 
+			// is not possible (2nd SqlRow would be called at runtime and throw).
+			// This is useless anyway, as `Set(x => x.Name, "Doe").Set(x => x.Age, 18)` generates simpler SQL anyway.
 
 			var p = builder.ParametersContext.BuildParameter(updateMethod.Arguments[valueIndex], columnDescriptor, true);
 
@@ -692,6 +722,7 @@ namespace LinqToDB.Linq.Builder
 						sequence,
 						updateStatement.Update.Items);
 
+				// TODO: remove in v4?
 				updateStatement.Update.Items.RemoveDuplicatesFromTail((s1, s2) => s1.Column.Equals(s2.Column));
 
 				return sequence;

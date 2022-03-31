@@ -30,6 +30,7 @@ namespace LinqToDB.DataProvider.Informix
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.IsGroupByColumnRequred            = true;
+			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.In;
 
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("NCHAR", (r,i) => r.GetString(i).TrimEnd(' '));
