@@ -1487,43 +1487,14 @@ namespace LinqToDB.Linq.Builder
 											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
 												return field;
 
-								if (memberExpression.Member.IsDynamicColumnPropertyEx())
-								{
-									var fieldName = memberExpression.Member.Name;
-
-									// do not add association columns
-									var flag = true;
-									foreach (var assoc in EntityDescriptor.Associations)
-									{
-										if (assoc.MemberInfo == memberExpression.Member)
-										{
-											flag = false;
-											break;
-										}
-									}
-
-									if (flag)
-									{
-										var newField = SqlTable[fieldName];
-										if (newField == null)
-										{
-											newField = new SqlField(
-												new ColumnDescriptor(
-													Builder.MappingSchema,
-													EntityDescriptor,
-													new ColumnAttribute(fieldName),
-													new MemberAccessor(EntityDescriptor.TypeAccessor,
-														memberExpression.Member, EntityDescriptor),
-													InheritanceMapping.Count > 0)
-											) { IsDynamic = true, };
-
-											SqlTable.Add(newField);
-										}
-
-										return newField;
-									}
-								}
+								var dynamicField = GetOrAddDynamicColumn(memberExpression);
+								if (dynamicField != null)
+									return dynamicField;
 							}
+
+							var newDynamicField = GetOrAddDynamicColumn(memberExpression);
+							if (newDynamicField != null)
+								return newDynamicField;
 
 							if (throwException &&
 								EntityDescriptor != null &&
@@ -1533,6 +1504,49 @@ namespace LinqToDB.Linq.Builder
 									memberExpression.Member.DeclaringType.Name, memberExpression.Member.Name);
 							}
 						}
+					}
+				}
+
+				return null;
+			}
+
+			private SqlField? GetOrAddDynamicColumn(MemberExpression memberExpression)
+			{
+				if (memberExpression.Member.IsDynamicColumnPropertyEx())
+				{
+					var fieldName = memberExpression.Member.Name;
+
+					// do not add association columns
+					var flag = true;
+					foreach (var assoc in EntityDescriptor.Associations)
+					{
+						if (assoc.MemberInfo == memberExpression.Member)
+						{
+							flag = false;
+							break;
+						}
+					}
+
+					if (flag)
+					{
+						var newField = SqlTable[fieldName];
+						if (newField == null)
+						{
+							newField = new SqlField(
+								new ColumnDescriptor(
+									Builder.MappingSchema,
+									EntityDescriptor,
+									new ColumnAttribute(fieldName),
+									new MemberAccessor(EntityDescriptor.TypeAccessor,
+										memberExpression.Member, EntityDescriptor),
+									InheritanceMapping.Count > 0)
+							)
+							{ IsDynamic = true, };
+
+							SqlTable.Add(newField);
+						}
+
+						return newField;
 					}
 				}
 

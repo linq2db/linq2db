@@ -13,6 +13,7 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using LinqToDB.Common;
+	using LinqToDB.Data;
 	using Model;
 
 	[TestFixture]
@@ -1000,6 +1001,46 @@ namespace Tests.Linq
 			using (var tb = db.CreateLocalTable<Issue2434Table>())
 			{
 				tb.OrderBy(x => x.FullName).ToArray();
+			}
+		}
+		#endregion
+
+		#region issue 3472
+		[Table]
+		public class Issue3472TableDC
+		{
+			[Column] public int Id { get; set; }
+
+			[ExpressionMethod(nameof(PersonsCountExpr), IsColumn = true)]
+			public int PersonsCount { get; set; }
+
+			private static Expression<Func<Issue3472TableDC, DataConnection, int>> PersonsCountExpr() => (r, db) => db.GetTable<Person>().Where(p => p.ID == r.Id).Count();
+		}
+
+		[Table]
+		public class Issue3472TableDCTX
+		{
+			[Column] public int Id { get; set; }
+
+			[ExpressionMethod(nameof(PersonsCountExpr), IsColumn = true)]
+			public int PersonsCount { get; set; }
+
+			private static Expression<Func<Issue3472TableDCTX, DataContext, int>> PersonsCountExpr() => (r, db) => db.GetTable<Person>().Where(p => p.ID == r.Id).Count();
+		}
+
+		[Test]
+		public void Issue3472Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			if (db is DataConnection)
+			{
+				using var tb = db.CreateLocalTable(new[] { new Issue3472TableDC() { Id = 1 } });
+				tb.ToArray();
+			}
+			else
+			{
+				using var tb = db.CreateLocalTable(new[] { new Issue3472TableDCTX() { Id = 1 } });
+				tb.ToArray();
 			}
 		}
 		#endregion

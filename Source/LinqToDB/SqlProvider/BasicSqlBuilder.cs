@@ -716,6 +716,14 @@ namespace LinqToDB.SqlProvider
 
 				AppendIndent();
 
+				if (expr.Column is SqlRow row)
+				{
+					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Update))
+						throw new LinqToDBException("This provider does not support SqlRow in UPDATE.");
+					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.UpdateLiteral) && expr.Expression is not SelectQuery)
+						throw new LinqToDBException("This provider does not support SqlRow literal on the right-hand side of an UPDATE SET.");
+				}
+
 				BuildExpression(expr.Column, SqlProviderFlags.IsUpdateSetTableAliasSupported, true, false);
 
 				if (expr.Expression != null)
@@ -2070,7 +2078,7 @@ namespace LinqToDB.SqlProvider
 			switch (predicate.ElementType)
 			{
 				case QueryElementType.ExprExprPredicate:
-					BuildPredicateX((SqlPredicate.ExprExpr) predicate);
+					BuildExprExprPredicate((SqlPredicate.ExprExpr) predicate);
 					break;
 
 				case QueryElementType.LikePredicate:
@@ -2162,25 +2170,31 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		void BuildPredicateX(SqlPredicate.ExprExpr expr)
+		protected virtual void BuildExprExprPredicateOperator(SqlPredicate.ExprExpr expr)
+		{
+			switch (expr.Operator)
+			{
+				case SqlPredicate.Operator.Equal          : StringBuilder.Append(" = ");        break;
+				case SqlPredicate.Operator.NotEqual       : StringBuilder.Append(" <> ");       break;
+				case SqlPredicate.Operator.Greater        : StringBuilder.Append(" > ");        break;
+				case SqlPredicate.Operator.GreaterOrEqual : StringBuilder.Append(" >= ");       break;
+				case SqlPredicate.Operator.NotGreater     : StringBuilder.Append(" !> ");       break;
+				case SqlPredicate.Operator.Less           : StringBuilder.Append(" < ");        break;
+				case SqlPredicate.Operator.LessOrEqual    : StringBuilder.Append(" <= ");       break;
+				case SqlPredicate.Operator.NotLess        : StringBuilder.Append(" !< ");       break;
+				case SqlPredicate.Operator.Overlaps       : StringBuilder.Append(" OVERLAPS "); break;
+			}
+		}
+
+		protected virtual void BuildExprExprPredicate(SqlPredicate.ExprExpr expr)
 		{
 			BuildExpression(GetPrecedence(expr), expr.Expr1);
 
-			switch (expr.Operator)
-			{
-				case SqlPredicate.Operator.Equal          : StringBuilder.Append(" = ");  break;
-				case SqlPredicate.Operator.NotEqual       : StringBuilder.Append(" <> "); break;
-				case SqlPredicate.Operator.Greater        : StringBuilder.Append(" > ");  break;
-				case SqlPredicate.Operator.GreaterOrEqual : StringBuilder.Append(" >= "); break;
-				case SqlPredicate.Operator.NotGreater     : StringBuilder.Append(" !> "); break;
-				case SqlPredicate.Operator.Less           : StringBuilder.Append(" < ");  break;
-				case SqlPredicate.Operator.LessOrEqual    : StringBuilder.Append(" <= "); break;
-				case SqlPredicate.Operator.NotLess        : StringBuilder.Append(" !< "); break;
-			}
+			BuildExprExprPredicateOperator(expr);
 
 			BuildExpression(GetPrecedence(expr), expr.Expr2);
 		}
-
+		
 		protected virtual void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
 		{
 			BuildExpression(GetPrecedence(expr), expr.Expr1);
@@ -2700,6 +2714,10 @@ namespace LinqToDB.SqlProvider
 
 					break;
 
+				case QueryElementType.SqlRow:
+					BuildSqlRow((SqlRow) expr, buildTableName, checkParentheses, throwExceptionIfTableNotFound);
+					break;
+
 				default:
 					throw new InvalidOperationException($"Unexpected expression type {expr.ElementType}");
 			}
@@ -2783,6 +2801,18 @@ namespace LinqToDB.SqlProvider
 			BuildExpression(value);
 			StringBuilder.Append(" AS ");
 			BuildDataType(dataType, false);
+			StringBuilder.Append(')');
+		}
+
+		protected virtual void BuildSqlRow(SqlRow expr, bool buildTableName, bool checkParentheses, bool throwExceptionIfTableNotFound)
+		{
+			StringBuilder.Append('(');
+			foreach (var value in expr.Values)
+			{
+				BuildExpression(value, buildTableName, checkParentheses, throwExceptionIfTableNotFound);
+				StringBuilder.Append(InlineComma);
+			}
+			StringBuilder.Length -= InlineComma.Length; // Note that SqlRow are never empty
 			StringBuilder.Append(')');
 		}
 

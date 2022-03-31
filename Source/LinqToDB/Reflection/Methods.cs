@@ -20,9 +20,9 @@ namespace LinqToDB.Reflection
 	/// </summary>
 	public static class Methods
 	{
-		public static class Object
+		internal static class Query
 		{
-			public static readonly MethodInfo ToStringMethod = MemberHelper.MethodOf<object>(r => r.ToString());
+			public static readonly MethodInfo GetIQueryable = MemberHelper.MethodOf<Linq.Query>(a => a.GetIQueryable(default, default!, default));
 		}
 
 		public static class ADONet
@@ -160,7 +160,7 @@ namespace LinqToDB.Reflection
 				public static readonly MethodInfo ToNotNull     = MemberHelper.MethodOfGeneric<int?>(i => global::LinqToDB.Sql.ToNotNull(i));
 				public static readonly MethodInfo ToNotNullable = MemberHelper.MethodOfGeneric<int?>(i => global::LinqToDB.Sql.ToNotNullable(i));
 				public static readonly MethodInfo Alias         = MemberHelper.MethodOfGeneric<int?>(i => global::LinqToDB.Sql.Alias(i, ""));
-				// don't use MethodOfGeneric here (Sql.Property treatened in specifal way by it)
+				// don't use MethodOfGeneric here (Sql.Property treatened in special way by it)
 				public static readonly MethodInfo Property      = typeof(global::LinqToDB.Sql).GetMethodEx(nameof(global::LinqToDB.Sql.Property))!.GetGenericMethodDefinition();
 			}
 
@@ -332,7 +332,7 @@ namespace LinqToDB.Reflection
 			}
 
 			public static class DataParameter
-			{ 
+			{
 				public static readonly PropertyInfo DbDataType = MemberHelper.PropertyOf<Data.DataParameter>(dp => dp.DbDataType);
 				public static readonly PropertyInfo Value      = MemberHelper.PropertyOf<Data.DataParameter>(dp => dp.Value);
 			}
