@@ -2,10 +2,6 @@
 {
 	public interface IServerContainer
 	{
-		bool KeepSamePortBetweenThreads
-		{
-			get;
-			set;
-		}
+		bool KeepSamePortBetweenThreads { get; set; }
 	}
 }

@@ -1,5 +1,6 @@
 ﻿#if NETCOREAPP3_1_OR_GREATER
 using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using LinqToDB;
 using LinqToDB.Interceptors;
@@ -27,7 +28,7 @@ namespace Tests.Remote.ServerContainer
 		public bool KeepSamePortBetweenThreads { get; set; } = true;
 
 		private TestGrpcLinqService? _service;
-		private bool _isHostOpen;
+		private ConcurrentDictionary<int, int> _isHostOpen = new();
 
 		public GrpcServerContainer()
 		{
@@ -48,8 +49,6 @@ namespace Tests.Remote.ServerContainer
 			}
 
 			var url = $"https://localhost:{GetPort()}";
-			// TODO: remove (debug)
-			TestContext.WriteLine($"Connect to GRPC Host at: {url} (CurrentManagedThreadId:{Environment.CurrentManagedThreadId}, RunID:{TestExternals.RunID})");
 
 			var dx = new TestGrpcDataContext(
 				url,
@@ -72,7 +71,8 @@ namespace Tests.Remote.ServerContainer
 
 		private void OpenHost(MappingSchema? ms, IInterceptor? interceptor, bool suppressSequentialAccess)
 		{
-			if (_isHostOpen)
+			var port = GetPort();
+			if (_isHostOpen.ContainsKey(port))
 			{
 				_service!.MappingSchema = ms;
 				return;
@@ -80,7 +80,7 @@ namespace Tests.Remote.ServerContainer
 
 			lock (_syncRoot)
 			{
-				if (_isHostOpen)
+				if (_isHostOpen.ContainsKey(port))
 				{
 					_service!.MappingSchema = ms;
 					return;
@@ -103,17 +103,15 @@ namespace Tests.Remote.ServerContainer
 				{
 					webBuilder.UseStartup<Startup>();
 
-					var url = $"https://localhost:{GetPort()}";
+					var url = $"https://localhost:{port}";
 					webBuilder.UseUrls(url);
-					// TODO: remove (debug)
-					TestContext.WriteLine($"Start GRPC Host at: {url} (CurrentManagedThreadId:{Environment.CurrentManagedThreadId}, RunID:{TestExternals.RunID})");
 				}).Build();
 
 				host.Start();
 
 				//not sure does we need to wait for grpc server starts?
 
-				_isHostOpen = true;
+				_isHostOpen[port] = port;
 			}
 
 			TestExternals.Log($"grpc host opened");

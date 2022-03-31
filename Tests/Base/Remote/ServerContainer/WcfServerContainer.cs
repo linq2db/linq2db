@@ -22,17 +22,12 @@ namespace Tests.Remote.ServerContainer
 		private readonly object _syncRoot = new ();
 
 		//useful for async tests
-		public bool KeepSamePortBetweenThreads
-		{
-			get;
-			set;
-		} = true;
+		public bool KeepSamePortBetweenThreads { get; set; } = true;
 
 		private TestWcfLinqService? _service;
 		private bool _isHostOpen;
 
-		public WcfServerContainer(
-			)
+		public WcfServerContainer()
 		{
 		}
 
@@ -40,8 +35,7 @@ namespace Tests.Remote.ServerContainer
 			MappingSchema? ms,
 			IInterceptor? interceptor,
 			bool suppressSequentialAccess,
-			string configuration
-			)
+			string configuration)
 		{
 			OpenHost(ms);
 
