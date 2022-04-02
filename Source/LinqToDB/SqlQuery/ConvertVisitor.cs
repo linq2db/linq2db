@@ -534,11 +534,11 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.SetExpression:
 					{
 						var s = (SqlSetExpression)element;
-						var c = (ISqlExpression?)ConvertInternal(s.Column    );
-						var e = (ISqlExpression?)ConvertInternal(s.Expression);
+						var e = (ISqlExpression?) ConvertInternal(s.Expression);
 
+						var c = (ISqlExpression?)ConvertInternal(s.Column);
 						if (c != null && !ReferenceEquals(s.Column, c) || e != null && !ReferenceEquals(s.Expression, e))
-							newElement = new SqlSetExpression(c ?? s.Column, e ?? s.Expression!);
+							newElement = new SqlSetExpression(c ?? s.Column, e ?? s.Expression);
 
 						break;
 					}
@@ -1357,6 +1357,18 @@ namespace LinqToDB.SqlQuery
 						if (newClauses != null)
 							newElement = new SqlWithClause() { Clauses = newClauses };
 
+						break;
+					}
+
+					case QueryElementType.SqlRow:
+					{
+						var row    = (SqlRow)element;
+						var values = Convert(row.Values);
+
+						if (values != null && !ReferenceEquals(row.Values, values))
+						{
+							newElement = new SqlRow(values);
+						}
 						break;
 					}
 

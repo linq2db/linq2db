@@ -217,7 +217,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SetExpression:
 					{
 						return
-							Find(((SqlSetExpression)element).Column    ) ??
+							Find(((SqlSetExpression)element).Column) ??
 							Find(((SqlSetExpression)element).Expression);
 					}
 
@@ -380,6 +380,11 @@ namespace LinqToDB.SqlQuery
 						return
 							Find(((SqlValuesTable)element).Fields                  ) ??
 							Find(((SqlValuesTable)element).Rows?.SelectMany(static r => r));
+					}
+
+				case QueryElementType.SqlRow:
+					{
+						return Find(((SqlRow)element).Values);
 					}
 
 				case QueryElementType.SqlField:

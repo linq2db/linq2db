@@ -1282,7 +1282,6 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SetExpression :
 						{
 							var elem = (SqlSetExpression)e;
-
 							Append(elem.Column);
 							Append(elem.Expression);
 
@@ -1432,6 +1431,15 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.SqlAliasPlaceholder:
 						{
+							break;
+						}
+
+					case QueryElementType.SqlRow:
+						{
+							var elem = (SqlRow)e;
+							
+							Append(elem.Values);
+
 							break;
 						}
 
@@ -2231,7 +2239,15 @@ namespace LinqToDB.ServiceModel
 						break;
 					}
 
-					case QueryElementType.SetExpression : obj = new SqlSetExpression(Read     <ISqlExpression>()!, Read<ISqlExpression>()!); break;
+					case QueryElementType.SetExpression :
+					{
+						var column     = Read<ISqlExpression>();
+						var expression = Read<ISqlExpression>();
+
+						obj = new SqlSetExpression(column!, expression);
+
+						break;
+					}
 					case QueryElementType.FromClause    : obj = new SqlFromClause   (ReadArray<SqlTableSource>()!);                break;
 					case QueryElementType.WhereClause   : obj = new SqlWhereClause  (Read     <SqlSearchCondition>()!);            break;
 					case QueryElementType.GroupByClause : obj = new SqlGroupByClause((GroupingType)ReadInt(), ReadArray<ISqlExpression>()!); break;
@@ -2341,6 +2357,13 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SqlAliasPlaceholder :
 						{
 							obj = new SqlAliasPlaceholder();
+							break;
+						}
+
+					case QueryElementType.SqlRow:
+						{
+							var values = ReadArray<ISqlExpression>()!;
+							obj        = new SqlRow(values);
 							break;
 						}
 

@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using LinqToDB.Linq;
 
 namespace LinqToDB.DataProvider.SQLite
 {
@@ -21,13 +24,25 @@ namespace LinqToDB.DataProvider.SQLite
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete :
+				{
 					statement = GetAlternativeDelete((SqlDeleteStatement)statement);
 					statement.SelectQuery!.From.Tables[0].Alias = "$";
 					break;
+				}
 
 				case QueryType.Update :
-					statement = GetAlternativeUpdate((SqlUpdateStatement)statement);
+				{
+					if (SqlProviderFlags.IsUpdateFromSupported)
+					{
+						statement = GetAlternativeUpdatePostgreSqlite((SqlUpdateStatement)statement);
+					}
+					else
+					{
+						statement = GetAlternativeUpdate((SqlUpdateStatement)statement);
+					}
+
 					break;
+				}
 			}
 
 			return statement;

@@ -41,8 +41,14 @@ namespace LinqToDB.DataProvider.SQLite
 			SqlProviderFlags.IsDistinctOrderBySupported        = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = true;
-			SqlProviderFlags.IsUpdateFromSupported             = false;
+			SqlProviderFlags.IsUpdateFromSupported             = Adapter.SupportsUpdateFrom;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.Serializable;
+
+			if (Adapter.SupportsRowValue)
+			{
+				SqlProviderFlags.RowConstructorSupport = RowFeature.Equality        | RowFeature.Comparisons |
+				                                         RowFeature.CompareToSelect | RowFeature.Between     | RowFeature.Update;
+			}
 
 			_sqlOptimizer = new SQLiteSqlOptimizer(SqlProviderFlags);
 

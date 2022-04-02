@@ -15,7 +15,8 @@ namespace LinqToDB.SqlQuery
 			NotGreater,     // !>    Is the operator used to test the condition of one expression not being greater than the other expression.
 			Less,           // <     Is the operator used to test the condition of one expression being less than the other.
 			LessOrEqual,    // <=    Is the operator used to test the condition of one expression being less than or equal to the other expression.
-			NotLess         // !<    Is the operator used to test the condition of one expression not being less than the other expression.
+			NotLess,        // !<    Is the operator used to test the condition of one expression not being less than the other expression.
+			Overlaps,       // x OVERLAPS y Is the operator used to test Overlaps operator.
 		}
 
 		public class Expr : SqlPredicate
@@ -129,6 +130,7 @@ namespace LinqToDB.SqlQuery
 					Operator.Less           => "<",
 					Operator.LessOrEqual    => "<=",
 					Operator.NotLess        => "!<",
+					Operator.Overlaps       => "OVERLAPS",
 					_                       => throw new InvalidOperationException(),
 				};
 				sb.Append(' ').Append(op).Append(' ');

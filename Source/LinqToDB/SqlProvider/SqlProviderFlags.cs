@@ -10,26 +10,26 @@ namespace LinqToDB.SqlProvider
 	{
 		public bool        IsSybaseBuggyGroupBy              { get; set; }
 
-		public bool        IsParameterOrderDependent         { get; set; }
+		public bool        IsParameterOrderDependent          { get; set; }
 
-		public bool        AcceptsTakeAsParameter            { get; set; }
-		public bool        AcceptsTakeAsParameterIfSkip      { get; set; }
-		public bool        IsTakeSupported                   { get; set; }
-		public bool        IsSkipSupported                   { get; set; }
-		public bool        IsSkipSupportedIfTake             { get; set; }
+		public bool        AcceptsTakeAsParameter             { get; set; }
+		public bool        AcceptsTakeAsParameterIfSkip       { get; set; }
+		public bool        IsTakeSupported                    { get; set; }
+		public bool        IsSkipSupported                    { get; set; }
+		public bool        IsSkipSupportedIfTake              { get; set; }
 		public TakeHints?  TakeHintsSupported              { get; set; }
-		public bool        IsSubQueryTakeSupported           { get; set; }
+		public bool        IsSubQueryTakeSupported            { get; set; }
 
-		public bool        IsSubQueryColumnSupported         { get; set; }
-		public bool        IsSubQueryOrderBySupported        { get; set; }
-		public bool        IsCountSubQuerySupported          { get; set; }
+		public bool        IsSubQueryColumnSupported          { get; set; }
+		public bool        IsSubQueryOrderBySupported         { get; set; }
+		public bool        IsCountSubQuerySupported           { get; set; }
 
-		public bool        IsIdentityParameterRequired       { get; set; }
-		public bool        IsApplyJoinSupported              { get; set; }
-		public bool        IsInsertOrUpdateSupported         { get; set; }
-		public bool        CanCombineParameters              { get; set; }
-		public int         MaxInListValuesCount              { get; set; }
-		public bool        IsUpdateSetTableAliasSupported    { get; set; }
+		public bool        IsIdentityParameterRequired        { get; set; }
+		public bool        IsApplyJoinSupported               { get; set; }
+		public bool        IsInsertOrUpdateSupported          { get; set; }
+		public bool        CanCombineParameters               { get; set; }
+		public int         MaxInListValuesCount               { get; set; }
+		public bool        IsUpdateSetTableAliasSupported     { get; set; }
 
 		/// <summary>
 		/// If <c>true</c>, removed record fields in OUTPUT clause of DELETE statement should be referenced using
@@ -165,6 +165,11 @@ namespace LinqToDB.SqlProvider
 		public IsolationLevel DefaultMultiQueryIsolationLevel { get; set; } = IsolationLevel.RepeatableRead;
 
 		/// <summary>
+		/// Provider support Row Constructor `(1, 2, 3)` in various positions (flags)
+		/// </summary>
+		public RowFeature RowConstructorSupport { get; set; }
+
+		/// <summary>
 		/// Flags for use by external providers.
 		/// </summary>
 		public List<string> CustomFlags { get; } = new List<string>();
@@ -206,6 +211,7 @@ namespace LinqToDB.SqlProvider
 				^ DefaultMultiQueryIsolationLevel              .GetHashCode()
 				^ AcceptsOuterExpressionInAggregate            .GetHashCode()
 				^ IsNamingQueryBlockSupported                  .GetHashCode()
+				^ RowConstructorSupport                        .GetHashCode()
 				^ OutputDeleteUseSpecialTable                  .GetHashCode()
 				^ OutputInsertUseSpecialTable                  .GetHashCode()
 				^ OutputUpdateUseSpecialTables                 .GetHashCode()
@@ -246,13 +252,14 @@ namespace LinqToDB.SqlProvider
 				&& DefaultMultiQueryIsolationLevel      == other.DefaultMultiQueryIsolationLevel
 				&& AcceptsOuterExpressionInAggregate    == other.AcceptsOuterExpressionInAggregate
 				&& IsNamingQueryBlockSupported          == other.IsNamingQueryBlockSupported
+				&& RowConstructorSupport                == other.RowConstructorSupport
 				&& OutputDeleteUseSpecialTable          == other.OutputDeleteUseSpecialTable
 				&& OutputInsertUseSpecialTable          == other.OutputInsertUseSpecialTable
 				&& OutputUpdateUseSpecialTables         == other.OutputUpdateUseSpecialTables
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                    == other.CustomFlags.Count
 				&& (CustomFlags.Count                   == 0
-					|| CustomFlags.OrderBy(_ => _).SequenceEqual(other.CustomFlags.OrderBy(_ => _)));
+					|| CustomFlags.OrderBy(_            => _).SequenceEqual(other.CustomFlags.OrderBy(_ => _)));
 		}
 		#endregion
 	}

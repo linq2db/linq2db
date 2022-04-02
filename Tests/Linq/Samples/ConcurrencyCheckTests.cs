@@ -36,6 +36,23 @@ namespace Tests.Samples
 				return clone;
 			}
 
+			static SqlTable? GetUpdateTable(SqlStatement statement)
+			{
+				if (statement is SqlUpdateStatement update)
+					return QueryHelper.GetUpdateTable(update);
+
+				if (statement.SelectQuery == null)
+					return null;
+
+				if (statement.SelectQuery.From.Tables.Count > 0 &&
+				    statement.SelectQuery?.From.Tables[0].Source is SqlTable source)
+				{
+					return source;
+				}
+
+				return null;
+			}
+
 			protected override SqlStatement ProcessQuery(SqlStatement statement, EvaluationContext context)
 			{
 				#region Update
@@ -43,10 +60,13 @@ namespace Tests.Samples
 				if (statement.QueryType == QueryType.Update || statement.QueryType == QueryType.InsertOrUpdate)
 				{
 					var query = statement.SelectQuery!;
-					if (!(query.From.Tables[0].Source is SqlTable source))
+
+					SqlTable? updateTable = GetUpdateTable(statement);
+
+					if (updateTable == null)
 						return statement;
 
-					var descriptor = MappingSchema.GetEntityDescriptor(source.ObjectType);
+					var descriptor = MappingSchema.GetEntityDescriptor(updateTable.ObjectType);
 					if (descriptor == null)
 						return statement;
 
@@ -55,8 +75,9 @@ namespace Tests.Samples
 						return statement;
 
 					var newStatment = Clone(statement);
-					source        = (SqlTable)newStatment.SelectQuery!.From.Tables[0].Source;
-					var field     = source[rowVersion.ColumnName] ?? throw new InvalidOperationException();
+					updateTable = GetUpdateTable(newStatment) ?? throw new InvalidOperationException();
+
+					var field = updateTable[rowVersion.ColumnName] ?? throw new InvalidOperationException();
 
 					// get real value of RowVersion
 					var updateColumn = newStatment.RequireUpdateClause().Items.FirstOrDefault(ui => ui.Column is SqlField fld && fld.Equals(field));
