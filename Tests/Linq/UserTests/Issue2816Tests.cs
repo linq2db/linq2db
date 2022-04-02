@@ -90,13 +90,14 @@ namespace Tests.UserTests
 
 			using (var db = GetDataContext(context))
 			{
+#if AZURE
+				// CI use docker image with non-utf8 database
+				// for some reason it cannot handle 8xxx characters in parameters
+				// for both managed and unmanaged providers, but can handle them in literals...
 				if (context.IsAnyOf(TestProvName.AllSybase) && isRemoteContext)
 				{
 					db.InlineParameters = true;
 				}
-#if AZURE
-		// extended characters fail with test image due to database encoding (works with utf8)
-		// probably provider
 #endif
 				using (var table = db.CreateLocalTable(testData))
 				{
