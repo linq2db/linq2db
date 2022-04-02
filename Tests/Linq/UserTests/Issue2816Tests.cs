@@ -78,21 +78,26 @@ namespace Tests.UserTests
 			}
 		}
 
-#if AZURE
-		[ActiveIssue(Configuration = ProviderName.Sybase, SkipForNonLinqService = true)]
-#endif
 		[Test]
 		public void FullWhiteSpaceTest([DataSources] string context, [ValueSource(nameof(WhiteSpaceChars))] int character)
 		{
 			if (!string.IsNullOrWhiteSpace(((char)character).ToString()))
 				Assert.Inconclusive($"Character {(char)character} not supported by runtime");
 
-			var testData = GetTestCase((char)character, GetProviderName(context, out _), out var supported);
+			var testData = GetTestCase((char)character, GetProviderName(context, out var isRemoteContext), out var supported);
 			if (!supported)
 				Assert.Inconclusive($"Character {(char)character} not supported by database");
 
 			using (var db = GetDataContext(context))
 			{
+				if (context.IsAnyOf(TestProvName.AllSybase) && isRemoteContext)
+				{
+					db.InlineParameters = true;
+				}
+#if AZURE
+		// extended characters fail with test image due to database encoding (works with utf8)
+		// probably provider
+#endif
 				using (var table = db.CreateLocalTable(testData))
 				{
 					var query = (from p in table
