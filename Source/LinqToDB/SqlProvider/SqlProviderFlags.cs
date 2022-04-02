@@ -201,9 +201,15 @@ namespace LinqToDB.SqlProvider
 		public IsolationLevel DefaultMultiQueryIsolationLevel { get; set; } = IsolationLevel.RepeatableRead;
 
 		/// <summary>
-		/// Flags for use by external providers.
+		/// Provider support Row Constructor `(1, 2, 3)` in various positions (flags)
 		/// </summary>
 		[DataMember(Order = 35)]
+		public RowFeature RowConstructorSupport { get; set; }
+
+		/// <summary>
+		/// Flags for use by external providers.
+		/// </summary>
+		[DataMember(Order = 36)]
 		public List<string> CustomFlags { get; set; } = new List<string>();
 
 		#region Equality
@@ -243,6 +249,7 @@ namespace LinqToDB.SqlProvider
 				^ DefaultMultiQueryIsolationLevel              .GetHashCode()
 				^ AcceptsOuterExpressionInAggregate            .GetHashCode()
 				^ IsNamingQueryBlockSupported                  .GetHashCode()
+				^ RowConstructorSupport                        .GetHashCode()
 				^ OutputDeleteUseSpecialTable                  .GetHashCode()
 				^ OutputInsertUseSpecialTable                  .GetHashCode()
 				^ OutputUpdateUseSpecialTables                 .GetHashCode()
@@ -283,6 +290,7 @@ namespace LinqToDB.SqlProvider
 				&& DefaultMultiQueryIsolationLevel      == other.DefaultMultiQueryIsolationLevel
 				&& AcceptsOuterExpressionInAggregate    == other.AcceptsOuterExpressionInAggregate
 				&& IsNamingQueryBlockSupported          == other.IsNamingQueryBlockSupported
+				&& RowConstructorSupport                == other.RowConstructorSupport
 				&& OutputDeleteUseSpecialTable          == other.OutputDeleteUseSpecialTable
 				&& OutputInsertUseSpecialTable          == other.OutputInsertUseSpecialTable
 				&& OutputUpdateUseSpecialTables         == other.OutputUpdateUseSpecialTables

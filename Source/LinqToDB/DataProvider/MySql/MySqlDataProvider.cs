@@ -36,6 +36,7 @@ namespace LinqToDB.DataProvider.MySql
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.IsNamingQueryBlockSupported       = true;
+			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.Comparisons | RowFeature.CompareToSelect | RowFeature.In;
 
 			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
 
@@ -94,7 +95,7 @@ namespace LinqToDB.DataProvider.MySql
 			// mysql.data bugs workaround
 			if (Adapter.MySqlDecimalType != null && Adapter.MySqlDecimalGetter != null && value?.GetType() == Adapter.MySqlDecimalType)
 			{
-						value = Adapter.MySqlDecimalGetter(value);
+				value    = Adapter.MySqlDecimalGetter(value);
 				// yep, MySql.Data just crash here on large decimals even for string value as it tries to convert it back
 				// to decimal for DataType.Decimal just to convert it back to string ¯\_(ツ)_/¯
 				// https://github.com/mysql/mysql-connector-net/blob/8.0/MySQL.Data/src/Types/MySqlDecimal.cs#L103

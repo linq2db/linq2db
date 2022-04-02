@@ -12,6 +12,7 @@
 		SqlDataType,
 		SqlTable,
 		SqlAliasPlaceholder,
+		SqlRow,
 
 		ExprPredicate,
 		NotExprPredicate,

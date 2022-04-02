@@ -244,6 +244,25 @@ namespace LinqToDB.DataProvider.Oracle
 				throwExceptionIfTableNotFound);
 		}
 
+		protected override void BuildExprExprPredicate(SqlPredicate.ExprExpr expr)
+		{
+			BuildExpression(GetPrecedence(expr), expr.Expr1);
+
+			BuildExprExprPredicateOperator(expr);
+
+			var exprPrecedence = GetPrecedence(expr);
+
+			if (expr.Expr2.ElementType == QueryElementType.SqlRow && expr.Operator != SqlPredicate.Operator.Overlaps)
+			{
+				// Oracle needs brackets around the right-hand side to disambiguate the syntax, e.g.:
+				// (1, 2) = ( (3, 4) )
+
+				exprPrecedence = int.MaxValue;
+			}
+
+			BuildExpression(exprPrecedence, expr.Expr2);
+		}
+
 		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
 		{
 			StringBuilder.Append("DECODE(");

@@ -649,8 +649,16 @@ namespace LinqToDB.Linq.Builder
 
 						if (result.Type != wpi.Type)
 						{
-							if (result.Type.IsEnum)
-								result = Expression.Convert(result, wpi.Type);
+							var noConvert = result.UnwrapConvert();
+							if (noConvert.Type == wpi.Type)
+							{
+								result = noConvert;
+							}
+							else
+							{
+								if (noConvert.Type.IsValueType)
+									result = Expression.Convert(noConvert, wpi.Type);
+							}
 						}
 
 						return result;
@@ -661,7 +669,13 @@ namespace LinqToDB.Linq.Builder
 			});
 
 			if (pi.Method.ReturnType != pie.Type)
-				pie = new ChangeTypeExpression(pie, pi.Method.ReturnType);
+			{
+				pie = pie.UnwrapConvert();
+				if (pi.Method.ReturnType != pie.Type)
+				{
+					pie = new ChangeTypeExpression(pie, pi.Method.ReturnType);
+				}
+			}
 
 			return pie;
 		}
@@ -1495,6 +1509,7 @@ namespace LinqToDB.Linq.Builder
 
 						predicate = ConvertInPredicate(context!, expr);
 					}
+
 #if NETFRAMEWORK
 					else if (e.Method == ReflectionHelper.Functions.String.Like11) predicate = ConvertLikePredicate(context!, e);
 					else if (e.Method == ReflectionHelper.Functions.String.Like12) predicate = ConvertLikePredicate(context!, e);

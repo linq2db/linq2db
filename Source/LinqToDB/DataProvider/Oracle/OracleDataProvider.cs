@@ -40,6 +40,9 @@ namespace LinqToDB.DataProvider.Oracle
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.ReadCommitted;
 			SqlProviderFlags.IsNamingQueryBlockSupported       = true;
 
+			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality | RowFeature.CompareToSelect | RowFeature.In |
+			                                         RowFeature.Update   | RowFeature.Overlaps;
+
 			if (version >= OracleVersion.v12)
 			{
 				SqlProviderFlags.IsApplyJoinSupported          = true;
