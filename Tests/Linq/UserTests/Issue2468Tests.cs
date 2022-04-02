@@ -90,7 +90,7 @@ namespace Tests.UserTests
 
 			var toStringMethod = type.GetMethods().First(m => m.Name == "ToString" && m.GetParameters().Length == 0);
 
-			Expressions.MapMember(toStringMethod, lambda);
+			Expressions.MapMember(type, toStringMethod, lambda);
 		}
 
 
