@@ -31,7 +31,7 @@ jobs:
       solution: 'Examples/Examples.sln'
       configuration: 'Debug'
       msbuildArguments: '/t:Restore;Rebuild -m'
-    displayName: Build Examles (verify)
+    displayName: Build Examples (verify)
 
   - task: MSBuild@1
     inputs:
