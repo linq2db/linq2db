@@ -2,7 +2,6 @@
 
 namespace LinqToDB.Remote.Grpc.Dto
 {
-
 	[DataContract]
 	public class GrpcInt
 	{
@@ -10,8 +9,6 @@ namespace LinqToDB.Remote.Grpc.Dto
 		public int Value { get; set; }
 
 		public static implicit operator int(GrpcInt a) => a.Value;
-
-		public static implicit operator GrpcInt(int a) => new GrpcInt { Value = a };
+		public static implicit operator GrpcInt(int a) => new() { Value = a };
 	}
-
 }

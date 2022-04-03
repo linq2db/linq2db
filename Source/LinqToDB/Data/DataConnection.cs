@@ -1012,24 +1012,6 @@ namespace LinqToDB.Data
 			}, true);
 		}
 
-		class ConnectionStringSettings : IConnectionStringSettings
-		{
-			public ConnectionStringSettings(
-				string name,
-				string connectionString,
-				string providerName)
-			{
-				Name             = name;
-				ConnectionString = connectionString;
-				ProviderName     = providerName;
-			}
-
-			public string ConnectionString { get; }
-			public string Name             { get; }
-			public string ProviderName     { get; }
-			public bool   IsGlobal         { get; }
-		}
-
 		public static void AddOrSetConfiguration(
 			string configuration,
 			string connectionString,

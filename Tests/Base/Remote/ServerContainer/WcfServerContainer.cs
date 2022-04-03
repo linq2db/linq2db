@@ -1,5 +1,4 @@
 ﻿#if NETFRAMEWORK
-
 using System;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
@@ -25,7 +24,7 @@ namespace Tests.Remote.ServerContainer
 		public bool KeepSamePortBetweenThreads { get; set; } = true;
 
 		private TestWcfLinqService? _service;
-		private bool _isHostOpen;
+		private bool                _isHostOpen;
 
 		public WcfServerContainer()
 		{
@@ -93,12 +92,12 @@ namespace Tests.Remote.ServerContainer
 				new NetTcpBinding(SecurityMode.None)
 				{
 					MaxReceivedMessageSize = 10000000,
-					MaxBufferPoolSize = 10000000,
-					MaxBufferSize = 10000000,
-					CloseTimeout = new TimeSpan(00, 01, 00),
-					OpenTimeout = new TimeSpan(00, 01, 00),
-					ReceiveTimeout = new TimeSpan(00, 10, 00),
-					SendTimeout = new TimeSpan(00, 10, 00),
+					MaxBufferPoolSize      = 10000000,
+					MaxBufferSize          = 10000000,
+					CloseTimeout           = new TimeSpan(00, 01, 00),
+					OpenTimeout            = new TimeSpan(00, 01, 00),
+					ReceiveTimeout         = new TimeSpan(00, 10, 00),
+					SendTimeout            = new TimeSpan(00, 10, 00),
 				},
 				"LinqOverWCF");
 
@@ -107,8 +106,6 @@ namespace Tests.Remote.ServerContainer
 			TestExternals.Log($"WCF host opened, Address : {host.BaseAddresses[0]}");
 		}
 
-
-		//Environment.CurrentManagedThreadId need for a parallel test like <see cref= "DataConnectionTests.MultipleConnectionsTest" />
 		public int GetPort()
 		{
 			return Port + TestExternals.RunID;
@@ -116,5 +113,4 @@ namespace Tests.Remote.ServerContainer
 
 	}
 }
-
 #endif

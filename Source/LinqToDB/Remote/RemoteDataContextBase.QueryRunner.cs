@@ -35,7 +35,7 @@ namespace LinqToDB.Remote
 
 			readonly RemoteDataContextBase _dataContext;
 
-			ILinqClient? _client;
+			ILinqService?     _client;
 			EvaluationContext _evaluationContext = null!;
 
 			public override Expression? MapperExpression { get; set; }
@@ -147,8 +147,6 @@ namespace LinqToDB.Remote
 
 			public override int ExecuteNonQuery()
 			{
-				string data;
-
 				SetCommand(false);
 
 				var queryContext = Query.Queries[QueryNumber];
@@ -156,7 +154,7 @@ namespace LinqToDB.Remote
 				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement,
 					_dataContext.MappingSchema, queryContext.Aliases!, _evaluationContext);
 
-				data = LinqServiceSerializer.Serialize(
+				var data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
 					_evaluationContext.ParameterValues,
@@ -178,8 +176,6 @@ namespace LinqToDB.Remote
 				if (_dataContext._batchCounter > 0)
 					throw new LinqException("Incompatible batch operation.");
 
-				string data;
-
 				SetCommand(false);
 
 				var queryContext = Query.Queries[QueryNumber];
@@ -187,7 +183,7 @@ namespace LinqToDB.Remote
 				var sqlOptimizer = _dataContext.GetSqlOptimizer();
 				var q = sqlOptimizer.PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, queryContext.Aliases!, _evaluationContext);
 
-				data = LinqServiceSerializer.Serialize(
+				var data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
 					_evaluationContext.ParameterValues,
@@ -219,15 +215,13 @@ namespace LinqToDB.Remote
 				if (_dataContext._batchCounter > 0)
 					throw new LinqException("Incompatible batch operation.");
 
-				string data;
-
 				SetCommand(false);
 
 				var queryContext = Query.Queries[QueryNumber];
 
 				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, queryContext.Aliases!, _evaluationContext);
 
-				data = LinqServiceSerializer.Serialize(
+				var data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
 					_evaluationContext.ParameterValues,
@@ -301,7 +295,8 @@ namespace LinqToDB.Remote
 				if (_dataContext._batchCounter > 0)
 					throw new LinqException("Incompatible batch operation.");
 
-				string data;
+				// preload _configurationInfo asynchronously if needed
+				await _dataContext.GetConfigurationInfoAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				SetCommand(false);
 
@@ -309,7 +304,7 @@ namespace LinqToDB.Remote
 
 				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, queryContext.Aliases!, _evaluationContext);
 
-				data = LinqServiceSerializer.Serialize(
+				var data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
 					_evaluationContext.ParameterValues,
@@ -317,7 +312,7 @@ namespace LinqToDB.Remote
 
 				_client = _dataContext.GetClient();
 
-				var ret = await _client.ExecuteReaderAsync(_dataContext.Configuration, data).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				var ret = await _client.ExecuteReaderAsync(_dataContext.Configuration, data, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				var result = LinqServiceSerializer.DeserializeResult(_dataContext.SerializationMappingSchema, ret);
 				var reader = new RemoteDataReader(_dataContext.SerializationMappingSchema, result);
@@ -330,7 +325,8 @@ namespace LinqToDB.Remote
 				if (_dataContext._batchCounter > 0)
 					throw new LinqException("Incompatible batch operation.");
 
-				string data;
+				// preload _configurationInfo asynchronously if needed
+				await _dataContext.GetConfigurationInfoAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				SetCommand(false);
 
@@ -338,7 +334,7 @@ namespace LinqToDB.Remote
 
 				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, queryContext.Aliases!, _evaluationContext);
 
-				data = LinqServiceSerializer.Serialize(
+				var data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
 					_evaluationContext.ParameterValues,
@@ -346,7 +342,8 @@ namespace LinqToDB.Remote
 
 				_client = _dataContext.GetClient();
 
-				var ret = await _client.ExecuteScalarAsync(_dataContext.Configuration, data).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				var ret = await _client.ExecuteScalarAsync(_dataContext.Configuration, data, cancellationToken)
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				object? result = null;
 				if (ret != null)
@@ -359,9 +356,10 @@ namespace LinqToDB.Remote
 				return result;
 			}
 
-			public override Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
+			public override async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
 			{
-				string data;
+				// preload _configurationInfo asynchronously if needed
+				await _dataContext.GetConfigurationInfoAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				SetCommand(false);
 
@@ -369,7 +367,7 @@ namespace LinqToDB.Remote
 
 				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, queryContext.Aliases!, _evaluationContext);
 
-				data = LinqServiceSerializer.Serialize(
+				var data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
 					q,
 					_evaluationContext.ParameterValues,
@@ -378,12 +376,13 @@ namespace LinqToDB.Remote
 				if (_dataContext._batchCounter > 0)
 				{
 					_dataContext._queryBatch!.Add(data);
-					return TaskCache.MinusOne;
+					return -1;
 				}
 
 				_client = _dataContext.GetClient();
 
-				return _client.ExecuteNonQueryAsync(_dataContext.Configuration, data);
+				return await _client.ExecuteNonQueryAsync(_dataContext.Configuration, data, cancellationToken)
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 		}
 	}

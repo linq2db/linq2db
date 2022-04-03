@@ -1,5 +1,6 @@
 ﻿#if NETFRAMEWORK
 using System;
+using System.ServiceModel;
 using System.Web.Services;
 
 namespace LinqToDB.Remote.Soap

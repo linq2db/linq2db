@@ -1,4 +1,4 @@
-﻿#if NETCOREAPP3_1_OR_GREATER
+﻿#if !NETFRAMEWORK
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;

@@ -1,77 +1,86 @@
-﻿#if NETFRAMEWORK
-using System;
+﻿using System;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.Remote.WCF
 {
-	class WcfLinqServiceClient : ClientBase<IWcfLinqClient>, ILinqClient, IDisposable
+	class WcfLinqServiceClient : ClientBase<IWcfLinqService>, ILinqService, IDisposable
 	{
-#region Init
+		public WcfLinqServiceClient(string endpointConfigurationName)
+			: base(endpointConfigurationName)
+		{ }
 
-		public WcfLinqServiceClient(string endpointConfigurationName)                                : base(endpointConfigurationName) { }
-		public WcfLinqServiceClient(string endpointConfigurationName, string remoteAddress)          : base(endpointConfigurationName, remoteAddress) { }
-		public WcfLinqServiceClient(string endpointConfigurationName, EndpointAddress remoteAddress) : base(endpointConfigurationName, remoteAddress) { }
-		public WcfLinqServiceClient(Binding binding, EndpointAddress remoteAddress)                  : base(binding, remoteAddress) { }
+		public WcfLinqServiceClient(string endpointConfigurationName, string remoteAddress)
+			: base(endpointConfigurationName, remoteAddress)
+		{ }
 
-#endregion
+		public WcfLinqServiceClient(string endpointConfigurationName, EndpointAddress remoteAddress)
+			: base(endpointConfigurationName, remoteAddress)
+		{ }
 
-#region ILinqClient Members
+		public WcfLinqServiceClient(Binding binding, EndpointAddress remoteAddress)
+			: base(binding, remoteAddress)
+		{ }
 
-		public LinqServiceInfo GetInfo(string? configuration)
+		#region ILinqService Members
+
+		LinqServiceInfo ILinqService.GetInfo(string? configuration)
 		{
 			return Channel.GetInfo(configuration);
 		}
 
-		public int ExecuteNonQuery(string? configuration, string queryData)
+		int ILinqService.ExecuteNonQuery(string? configuration, string queryData)
 		{
 			return Channel.ExecuteNonQuery(configuration, queryData);
 		}
 
-		public string? ExecuteScalar(string? configuration, string queryData)
+		string? ILinqService.ExecuteScalar(string? configuration, string queryData)
 		{
 			return Channel.ExecuteScalar(configuration, queryData);
 		}
 
-		public string ExecuteReader(string? configuration, string queryData)
+		string ILinqService.ExecuteReader(string? configuration, string queryData)
 		{
 			return Channel.ExecuteReader(configuration, queryData);
 		}
 
-		public int ExecuteBatch(string? configuration, string queryData)
+		int ILinqService.ExecuteBatch(string? configuration, string queryData)
 		{
 			return Channel.ExecuteBatch(configuration, queryData);
 		}
 
-		//public Task<LinqServiceInfo> GetInfoAsync(string? configuration)
-		//{
-		//	return Channel.GetInfoAsync(configuration);
-		//}
-
-		public Task<int> ExecuteNonQueryAsync(string? configuration, string queryData)
+		Task<LinqServiceInfo> ILinqService.GetInfoAsync(string? configuration, CancellationToken cancellationToken)
 		{
+			return Channel.GetInfoAsync(configuration);
+		}
+
+		Task<int> ILinqService.ExecuteNonQueryAsync(string? configuration, string queryData, CancellationToken cancellationToken)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
 			return Channel.ExecuteNonQueryAsync(configuration, queryData);
 		}
 
-		public Task<string?> ExecuteScalarAsync(string? configuration, string queryData)
+		Task<string?> ILinqService.ExecuteScalarAsync(string? configuration, string queryData, CancellationToken cancellationToken)
 		{
+			cancellationToken.ThrowIfCancellationRequested();
 			return Channel.ExecuteScalarAsync(configuration, queryData);
 		}
 
-		public Task<string> ExecuteReaderAsync(string? configuration, string queryData)
+		Task<string> ILinqService.ExecuteReaderAsync(string? configuration, string queryData, CancellationToken cancellationToken)
 		{
+			cancellationToken.ThrowIfCancellationRequested();
 			return Channel.ExecuteReaderAsync(configuration, queryData);
 		}
 
-		public Task<int> ExecuteBatchAsync(string? configuration, string queryData)
+		Task<int> ILinqService.ExecuteBatchAsync(string? configuration, string queryData, CancellationToken cancellationToken)
 		{
+			cancellationToken.ThrowIfCancellationRequested();
 			return Channel.ExecuteBatchAsync(configuration, queryData);
 		}
 
-#endregion
-
-#region IDisposable Members
+		#endregion
 
 		void IDisposable.Dispose()
 		{
@@ -96,8 +105,5 @@ namespace LinqToDB.Remote.WCF
 				throw;
 			}
 		}
-
-#endregion
 	}
 }
-#endif

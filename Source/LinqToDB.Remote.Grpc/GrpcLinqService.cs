@@ -7,180 +7,160 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Remote.Grpc
 {
+	/// <summary>
+	/// grpc-based remote data context server implementation.
+	/// </summary>
 	public class GrpcLinqService : IGrpcLinqService
 	{
 		private readonly ILinqService _linqService;
-		private readonly bool _transferInternalExceptionToClient;
+		private readonly bool         _transferInternalExceptionToClient;
 
-		public GrpcLinqService(
-			ILinqService linqService,
-			bool transferInternalExceptionToClient
-			)
+		/// <summary>
+		/// Create instance of grpc-based remote data context server.
+		/// </summary>
+		/// <param name="linqService">Remote data context server services.</param>
+		/// <param name="transferInternalExceptionToClient">when <c>true</c>, exception from server will contain exception details; otherwise generic grpc exception will be provided to client.</param>
+		/// <exception cref="ArgumentNullException"></exception>
+		public GrpcLinqService(ILinqService linqService, bool transferInternalExceptionToClient)
 		{
-			if (linqService is null)
-			{
-				throw new ArgumentNullException(nameof(linqService));
-			}
-
-			_linqService = linqService;
+			_linqService = linqService ?? throw new ArgumentNullException(nameof(linqService));
 			_transferInternalExceptionToClient = transferInternalExceptionToClient;
 		}
 
-
-		public LinqServiceInfo GetInfo(GrpcConfiguration configuration, CallContext context = default)
+		LinqServiceInfo IGrpcLinqService.GetInfo(GrpcConfiguration configuration, CallContext context)
 		{
 			try
 			{
-				var result = _linqService.GetInfo(configuration.Configuration);
-				return result;
+				return _linqService.GetInfo(configuration.Configuration);
 			}
-			catch (Exception exception)
-			when (_transferInternalExceptionToClient)
+			catch (Exception exception) when (_transferInternalExceptionToClient)
 			{
 				throw new RpcException(new Status(StatusCode.Unknown, exception.ToString()));
 			}
 		}
 
-		public GrpcInt ExecuteBatch(GrpcConfigurationQuery caq, CallContext context = default)
+		GrpcInt IGrpcLinqService.ExecuteNonQuery(GrpcConfigurationQuery caq, CallContext context)
 		{
 			try
 			{
-				var result = _linqService.ExecuteBatch(caq.Configuration, caq.QueryData);
-				return result;
+				return _linqService.ExecuteNonQuery(caq.Configuration, caq.QueryData);
 			}
-			catch (Exception exception)
-			when (_transferInternalExceptionToClient)
+			catch (Exception exception) when (_transferInternalExceptionToClient)
 			{
 				throw new RpcException(new Status(StatusCode.Unknown, exception.ToString()));
 			}
 		}
 
-		public GrpcInt ExecuteNonQuery(GrpcConfigurationQuery caq, CallContext context = default)
+		GrpcString IGrpcLinqService.ExecuteReader(GrpcConfigurationQuery caq, CallContext context)
 		{
 			try
 			{
-				var result = _linqService.ExecuteNonQuery(caq.Configuration, caq.QueryData);
-				return result;
+				return _linqService.ExecuteReader(caq.Configuration, caq.QueryData);
 			}
-			catch (Exception exception)
-			when (_transferInternalExceptionToClient)
+			catch (Exception exception) when (_transferInternalExceptionToClient)
 			{
 				throw new RpcException(new Status(StatusCode.Unknown, exception.ToString()));
 			}
 		}
 
-		public GrpcString ExecuteReader(GrpcConfigurationQuery caq, CallContext context = default)
+		GrpcString IGrpcLinqService.ExecuteScalar(GrpcConfigurationQuery caq, CallContext context)
 		{
 			try
 			{
-				var result = _linqService.ExecuteReader(caq.Configuration, caq.QueryData);
-				return result;
+				return _linqService.ExecuteScalar(caq.Configuration, caq.QueryData);
 			}
-			catch (Exception exception)
-			when(_transferInternalExceptionToClient)
+			catch (Exception exception) when (_transferInternalExceptionToClient)
 			{
 				throw new RpcException(new Status(StatusCode.Unknown, exception.ToString()));
 			}
 		}
 
-		public GrpcString ExecuteScalar(GrpcConfigurationQuery caq, CallContext context = default)
+		GrpcInt IGrpcLinqService.ExecuteBatch(GrpcConfigurationQuery caq, CallContext context)
 		{
 			try
 			{
-				var result = _linqService.ExecuteScalar(caq.Configuration, caq.QueryData);
-				return result;
+				return _linqService.ExecuteBatch(caq.Configuration, caq.QueryData);
 			}
-			catch (Exception exception)
-			when (_transferInternalExceptionToClient)
+			catch (Exception exception) when (_transferInternalExceptionToClient)
 			{
 				throw new RpcException(new Status(StatusCode.Unknown, exception.ToString()));
 			}
 		}
 
-
-
-		//public Task<GrpcLinqServiceInfo> GetInfoAsync(GrpcConfiguration configuration, CallContext context = default)
-		//{
-		//	//here is nothing to do asynchronously; leave it as is now
-
-		//	var result = _linqService.GetInfo(
-		//		configuration.Configuration
-		//		);
-
-		//	return Task.FromResult<GrpcLinqServiceInfo>(result);
-		//}
-
-		public Task<GrpcInt> ExecuteBatchAsync(GrpcConfigurationQuery caq, CallContext context = default)
+		async Task<LinqServiceInfo> IGrpcLinqService.GetInfoAsync(GrpcConfiguration configuration, CallContext context)
 		{
 			try
 			{
-				//TODO: modify LinqService to support async
-				var result = _linqService.ExecuteBatch(caq.Configuration, caq.QueryData);
-				return Task.FromResult<GrpcInt>(result);
+				return await _linqService.GetInfoAsync(
+					configuration.Configuration,
+					context.ServerCallContext?.CancellationToken ?? CancellationToken.None)
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
-			catch (Exception exception)
-			when (_transferInternalExceptionToClient)
+			catch (Exception exception) when (_transferInternalExceptionToClient)
 			{
 				throw new RpcException(new Status(StatusCode.Unknown, exception.ToString()));
 			}
 		}
 
-		public async Task<GrpcInt> ExecuteNonQueryAsync(GrpcConfigurationQuery caq, CallContext context = default)
+		async Task<GrpcInt> IGrpcLinqService.ExecuteNonQueryAsync(GrpcConfigurationQuery caq, CallContext context)
 		{
 			try
 			{
-				var result = await _linqService.ExecuteNonQueryAsync(
+				return await _linqService.ExecuteNonQueryAsync(
 					caq.Configuration,
 					caq.QueryData,
 					context.ServerCallContext?.CancellationToken ?? CancellationToken.None
 					).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-
-				return result;
 			}
-			catch (Exception exception)
-			when (_transferInternalExceptionToClient)
+			catch (Exception exception) when (_transferInternalExceptionToClient)
 			{
 				throw new RpcException(new Status(StatusCode.Unknown, exception.ToString()));
 			}
 		}
 
-		public async Task<GrpcString> ExecuteReaderAsync(GrpcConfigurationQuery caq, CallContext context = default)
+		async Task<GrpcString> IGrpcLinqService.ExecuteReaderAsync(GrpcConfigurationQuery caq, CallContext context)
 		{
 			try
 			{
-				var result = await _linqService.ExecuteReaderAsync(
+				return await _linqService.ExecuteReaderAsync(
 					caq.Configuration,
 					caq.QueryData,
 					context.ServerCallContext?.CancellationToken ?? CancellationToken.None
 					).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-
-				return result;
 			}
-			catch (Exception exception)
-			when (_transferInternalExceptionToClient)
+			catch (Exception exception) when (_transferInternalExceptionToClient)
 			{
 				throw new RpcException(new Status(StatusCode.Unknown, exception.ToString()));
 			}
 		}
 
-		public async Task<GrpcString> ExecuteScalarAsync(GrpcConfigurationQuery caq, CallContext context = default)
+		async Task<GrpcString> IGrpcLinqService.ExecuteScalarAsync(GrpcConfigurationQuery caq, CallContext context)
 		{
 			try
 			{
-				var result = await _linqService.ExecuteScalarAsync(
+				return await _linqService.ExecuteScalarAsync(
 					caq.Configuration,
 					caq.QueryData,
 					context.ServerCallContext?.CancellationToken ?? CancellationToken.None
 					).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-
-				return result;
 			}
-			catch (Exception exception)
-			when (_transferInternalExceptionToClient)
+			catch (Exception exception) when (_transferInternalExceptionToClient)
 			{
 				throw new RpcException(new Status(StatusCode.Unknown, exception.ToString()));
 			}
 		}
 
+		async Task<GrpcInt> IGrpcLinqService.ExecuteBatchAsync(GrpcConfigurationQuery caq, CallContext context)
+		{
+			try
+			{
+				return await _linqService.ExecuteBatchAsync(caq.Configuration, caq.QueryData)
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
+			catch (Exception exception) when (_transferInternalExceptionToClient)
+			{
+				throw new RpcException(new Status(StatusCode.Unknown, exception.ToString()));
+			}
+		}
 	}
 }

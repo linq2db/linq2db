@@ -2,22 +2,15 @@
 	<Import Project="..\..\..\linq2db.Examples.props" />
 
 	<PropertyGroup>
-		<TargetFrameworks>netcoreapp3.1</TargetFrameworks>
+		<TargetFrameworks>net6.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Content Remove="Properties\appsettings.Development.json" />
-	</ItemGroup>
+		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.Grpc\LinqToDB.Remote.Grpc.csproj" />
 
-	<ItemGroup>
 		<PackageReference Include="protobuf-net.Grpc.AspNetCore" />
 		<PackageReference Include="System.Configuration.ConfigurationManager" />
 		<PackageReference Include="System.Data.SqlClient" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.Grpc\LinqToDB.Remote.Grpc.csproj" />
-		<ProjectReference Include="..\..\..\..\Source\LinqToDB\LinqToDB.csproj" />
 	</ItemGroup>
 
 </Project>

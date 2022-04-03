@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Net.Client;
 using LinqToDB.Remote.Grpc.Dto;
@@ -6,163 +7,129 @@ using ProtoBuf.Grpc.Client;
 
 namespace LinqToDB.Remote.Grpc
 {
-	public class GrpcLinqServiceClient : ILinqClient, IDisposable
+	/// <summary>
+	/// grpc-base remote data context client.
+	/// </summary>
+	public class GrpcLinqServiceClient : ILinqService, IDisposable
 	{
-		private readonly GrpcChannel _channel;
+		private readonly GrpcChannel      _channel;
 		private readonly IGrpcLinqService _client;
 
-		#region Init
-
-		public GrpcLinqServiceClient(
-			GrpcChannel channel
-			)
+		public GrpcLinqServiceClient(GrpcChannel channel)
 		{
 			_channel = channel;
-			_client = channel.CreateGrpcService<IGrpcLinqService>();
+			_client  = channel.CreateGrpcService<IGrpcLinqService>();
 		}
 
-		#endregion
-
-		#region ILinqService Members
-
-		public LinqServiceInfo GetInfo(string? configuration)
+		LinqServiceInfo ILinqService.GetInfo(string? configuration)
 		{
-			var result = _client.GetInfo(
-				new GrpcConfiguration
+			return _client.GetInfo(
+				new GrpcConfiguration()
 				{
 					Configuration = configuration
-				}
-				);
-
-			return result;
+				});
 		}
 
-		public int ExecuteNonQuery(string? configuration, string queryData)
+		int ILinqService.ExecuteNonQuery(string? configuration, string queryData)
 		{
 			return _client.ExecuteNonQuery(
-				new GrpcConfigurationQuery
+				new GrpcConfigurationQuery()
 				{
 					Configuration = configuration,
-					QueryData = queryData
+					QueryData     = queryData
 				});
 		}
 
-		public string? ExecuteScalar(string? configuration, string queryData)
+		string? ILinqService.ExecuteScalar(string? configuration, string queryData)
 		{
 			return _client.ExecuteScalar(
-				new GrpcConfigurationQuery
+				new GrpcConfigurationQuery()
 				{
 					Configuration = configuration,
-					QueryData = queryData
+					QueryData     = queryData
 				});
-
 		}
 
-		public string ExecuteReader(string? configuration, string queryData)
+		string ILinqService.ExecuteReader(string? configuration, string queryData)
 		{
 			var ret = _client.ExecuteReader(
-				new GrpcConfigurationQuery
+				new GrpcConfigurationQuery()
 				{
 					Configuration = configuration,
-					QueryData = queryData
+					QueryData     = queryData
 				}).Value;
 
-			if(ret == null)
-			{
-				throw new LinqToDBException("Return value is not allowed to be null");
-			}
-
-			return ret;
+			return ret ?? throw new LinqToDBException("Return value is not allowed to be null");
 		}
 
-		public int ExecuteBatch(string? configuration, string queryData)
+		int ILinqService.ExecuteBatch(string? configuration, string queryData)
 		{
 			return _client.ExecuteBatch(
-				new GrpcConfigurationQuery
+				new GrpcConfigurationQuery()
 				{
 					Configuration = configuration,
-					QueryData = queryData
-				});
+					QueryData     = queryData
+				}).Value;
 		}
 
-
-
-		//public async Task<LinqServiceInfo> GetInfoAsync(string? configuration)
-		//{
-		//	var result = await _client.GetInfoAsync(
-		//		new GrpcConfiguration
-		//		{
-		//			Configuration = configuration
-		//		}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext); ;
-
-		//	return result;
-		//}
-
-		public async Task<int> ExecuteNonQueryAsync(string? configuration, string queryData)
+		Task<LinqServiceInfo> ILinqService.GetInfoAsync(string? configuration, CancellationToken cancellationToken)
 		{
-			var result = await _client.ExecuteNonQueryAsync(
-				new GrpcConfigurationQuery
+			return _client.GetInfoAsync(
+				new GrpcConfiguration()
 				{
-					Configuration = configuration,
-					QueryData = queryData
-				}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext); ;
-
-			return result;
+					Configuration = configuration
+				}, cancellationToken);
 		}
 
-		public async Task<string?> ExecuteScalarAsync(string? configuration, string queryData)
+		async Task<int> ILinqService.ExecuteNonQueryAsync(string? configuration, string queryData, CancellationToken cancellationToken)
 		{
-			var result = await _client.ExecuteScalarAsync(
-				new GrpcConfigurationQuery
+			return await _client.ExecuteNonQueryAsync(
+				new GrpcConfigurationQuery()
 				{
 					Configuration = configuration,
-					QueryData = queryData
-				}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-
-			return result;
+					QueryData     = queryData
+				}, cancellationToken)
+				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext); ;
 		}
 
-		public async Task<string> ExecuteReaderAsync(string? configuration, string queryData)
+		async Task<string?> ILinqService.ExecuteScalarAsync(string? configuration, string queryData, CancellationToken cancellationToken)
+		{
+			return await _client.ExecuteScalarAsync(
+				new GrpcConfigurationQuery()
+				{
+					Configuration = configuration,
+					QueryData     = queryData
+				}, cancellationToken)
+				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+		}
+
+		async Task<string> ILinqService.ExecuteReaderAsync(string? configuration, string queryData, CancellationToken cancellationToken)
 		{
 			var result = await _client.ExecuteReaderAsync(
-				new GrpcConfigurationQuery
+				new GrpcConfigurationQuery()
 				{
 					Configuration = configuration,
-					QueryData = queryData
-				}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					QueryData     = queryData
+				}, cancellationToken)
+				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			var ret = result.Value;
-
-			if (ret == null)
-			{
-				throw new LinqToDBException("Return value is not allowed to be null");
-			}
-
-			return ret;
+			return result.Value ?? throw new LinqToDBException("Return value is not allowed to be null");
 		}
 
-		public async Task<int> ExecuteBatchAsync(string? configuration, string queryData)
+		async Task<int> ILinqService.ExecuteBatchAsync(string? configuration, string queryData, CancellationToken cancellationToken)
 		{
-			var result = await _client.ExecuteBatchAsync(
-				new GrpcConfigurationQuery
+			return await _client.ExecuteBatchAsync(
+				new GrpcConfigurationQuery()
 				{
 					Configuration = configuration,
 					QueryData = queryData
-				}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-
-			return result;
+				})
+				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
-
-		#endregion
-
-		#region IDisposable Members
 
 		void IDisposable.Dispose()
 		{
 			_channel.Dispose();
 		}
-
-		#endregion
-
 	}
 }

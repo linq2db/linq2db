@@ -2,7 +2,7 @@
 
 #if NETFRAMEWORK
 using System.ServiceModel;
-#elif NETCOREAPP3_1_OR_GREATER
+#else
 using Grpc.Core;
 #endif
 
@@ -91,7 +91,7 @@ namespace Tests.UserTests
 				{
 #if NETFRAMEWORK
 					Assert.Throws<FaultException>(() => table.ToList());
-#elif NETCOREAPP3_1_OR_GREATER
+#else
 					Assert.Throws<RpcException>(() => table.ToList());
 #endif
 				}

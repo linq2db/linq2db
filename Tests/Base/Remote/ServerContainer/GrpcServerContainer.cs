@@ -1,4 +1,4 @@
-﻿#if NETCOREAPP3_1_OR_GREATER
+﻿#if !NETFRAMEWORK
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -112,7 +112,7 @@ namespace Tests.Remote.ServerContainer
 				_openHosts[port] = service;
 			}
 
-			TestExternals.Log($"grpc host opened");
+			TestExternals.Log("gRCP host opened");
 
 			return service;
 		}
@@ -159,7 +159,6 @@ namespace Tests.Remote.ServerContainer
 				});
 			}
 		}
-
 	}
 }
 #endif

@@ -10,7 +10,6 @@ namespace LinqToDB.Remote.Grpc.Dto
 
 		public static implicit operator string?(GrpcString a) => a.Value;
 
-		public static implicit operator GrpcString(string? a) => new GrpcString { Value = a };
+		public static implicit operator GrpcString(string? a) => new() { Value = a };
 	}
-
 }

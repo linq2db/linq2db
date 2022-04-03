@@ -370,10 +370,9 @@ namespace LinqToDB.Data
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
 			static async Task<int> ExecuteNonQueryImplAsync(
-				DataConnection dataConnection,
+				DataConnection         dataConnection,
 				ExecutionPreparedQuery executionQuery,
-				CancellationToken cancellationToken
-				)
+				CancellationToken      cancellationToken)
 			{
 				if (executionQuery.PreparedQuery.Commands.Length == 1)
 				{
@@ -459,11 +458,10 @@ namespace LinqToDB.Data
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
 			public static async Task<int> ExecuteNonQueryAsync(
-				DataConnection dataConnection,
-				IQueryContext context,
+				DataConnection            dataConnection,
+				IQueryContext             context,
 				IReadOnlyParameterValues? parameterValues,
-				CancellationToken cancellationToken
-				)
+				CancellationToken         cancellationToken)
 			{
 				var preparedQuery      = GetCommand(dataConnection, context, parameterValues, false);
 				var commandsParameters = GetParameters(dataConnection, preparedQuery, parameterValues, false);
@@ -489,10 +487,9 @@ namespace LinqToDB.Data
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
 			static async Task<object?> ExecuteScalarImplAsync(
-				DataConnection dataConnection,
+				DataConnection         dataConnection,
 				ExecutionPreparedQuery executionQuery,
-				CancellationToken cancellationToken
-				)
+				CancellationToken      cancellationToken)
 			{
 				var idParam = GetIdentityParameter(dataConnection, executionQuery);
 
@@ -566,11 +563,10 @@ namespace LinqToDB.Data
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
 			public static Task<object?> ExecuteScalarAsync(
-				DataConnection dataConnection,
-				IQueryContext context,
+				DataConnection            dataConnection,
+				IQueryContext             context,
 				IReadOnlyParameterValues? parameterValues,
-				CancellationToken cancellationToken
-				)
+				CancellationToken         cancellationToken)
 			{
 				var preparedQuery      = GetCommand(dataConnection, context, parameterValues, false);
 				var commandsParameters = GetParameters(dataConnection, preparedQuery, parameterValues, false);
@@ -636,11 +632,10 @@ namespace LinqToDB.Data
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
 			public static Task<DataReaderWrapper> ExecuteReaderAsync(
-				DataConnection dataConnection,
-				IQueryContext context,
+				DataConnection            dataConnection,
+				IQueryContext             context,
 				IReadOnlyParameterValues? parameterValues,
-				CancellationToken cancellationToken
-				)
+				CancellationToken         cancellationToken)
 			{
 				var executionQuery = CreateExecutionQuery(dataConnection, context, parameterValues, false);
 

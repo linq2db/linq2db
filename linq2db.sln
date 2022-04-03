@@ -108,6 +108,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 		NuGet\linq2db.Oracle.Unmanaged.nuspec = NuGet\linq2db.Oracle.Unmanaged.nuspec
 		NuGet\linq2db.png = NuGet\linq2db.png
 		NuGet\linq2db.PostgreSQL.nuspec = NuGet\linq2db.PostgreSQL.nuspec
+		NuGet\linq2db.Remote.Grpc.nuspec = NuGet\linq2db.Remote.Grpc.nuspec
+		NuGet\linq2db.Remote.Wcf.nuspec = NuGet\linq2db.Remote.Wcf.nuspec
 		NuGet\linq2db.SapHana.nuspec = NuGet\linq2db.SapHana.nuspec
 		NuGet\linq2db.SqlCe.nuspec = NuGet\linq2db.SqlCe.nuspec
 		NuGet\linq2db.SQLite.MS.nuspec = NuGet\linq2db.SQLite.MS.nuspec
@@ -122,6 +124,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 		NuGet\PackLocal.cmd = NuGet\PackLocal.cmd
 		NuGet\README.AspNet.md = NuGet\README.AspNet.md
 		NuGet\README.linq2db.md = NuGet\README.linq2db.md
+		NuGet\README.Remote.Grpc.md = NuGet\README.Remote.Grpc.md
+		NuGet\README.Remote.Wfc.md = NuGet\README.Remote.Wfc.md
 		NuGet\README.T4.md = NuGet\README.T4.md
 		NuGet\README.Tools.md = NuGet\README.Tools.md
 	EndProjectSection
@@ -426,8 +430,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net60", "net60", "{AA850554
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.Remote.Wcf", "Source\LinqToDB.Remote.Wcf\LinqToDB.Remote.Wcf.csproj", "{CBFFC259-5165-4828-B9AC-15DFB769BFEC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.Remote.Soap", "Source\LinqToDB.Remote.Soap\LinqToDB.Remote.Soap.csproj", "{D5500FDB-6919-497F-A498-95C6EDEF3C9C}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.Remote.Grpc", "Source\LinqToDB.Remote.Grpc\LinqToDB.Remote.Grpc.csproj", "{130786F1-BAD8-4390-8B4E-3FD2DEF50D56}"
 EndProject
 Global
@@ -508,12 +510,6 @@ Global
 		{CBFFC259-5165-4828-B9AC-15DFB769BFEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CBFFC259-5165-4828-B9AC-15DFB769BFEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CBFFC259-5165-4828-B9AC-15DFB769BFEC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D5500FDB-6919-497F-A498-95C6EDEF3C9C}.Azure|Any CPU.ActiveCfg = Debug|Any CPU
-		{D5500FDB-6919-497F-A498-95C6EDEF3C9C}.Azure|Any CPU.Build.0 = Debug|Any CPU
-		{D5500FDB-6919-497F-A498-95C6EDEF3C9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D5500FDB-6919-497F-A498-95C6EDEF3C9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D5500FDB-6919-497F-A498-95C6EDEF3C9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D5500FDB-6919-497F-A498-95C6EDEF3C9C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{130786F1-BAD8-4390-8B4E-3FD2DEF50D56}.Azure|Any CPU.ActiveCfg = Debug|Any CPU
 		{130786F1-BAD8-4390-8B4E-3FD2DEF50D56}.Azure|Any CPU.Build.0 = Debug|Any CPU
 		{130786F1-BAD8-4390-8B4E-3FD2DEF50D56}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -562,7 +558,6 @@ Global
 		{DAD073A0-C4D2-4C92-AB6D-F8162DB2D5D3} = {C937AC8E-2714-4850-A1EA-1710D980DF0B}
 		{AA850554-8CD1-4231-A3E3-804B62FF3622} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
 		{CBFFC259-5165-4828-B9AC-15DFB769BFEC} = {AF93451E-198C-4A94-8EB4-C330D886E102}
-		{D5500FDB-6919-497F-A498-95C6EDEF3C9C} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 		{130786F1-BAD8-4390-8B4E-3FD2DEF50D56} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution

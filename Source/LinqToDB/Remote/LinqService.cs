@@ -82,14 +82,27 @@ namespace LinqToDB.Remote
 			};
 		}
 
+		public virtual Task<LinqServiceInfo> GetInfoAsync(string? configuration, CancellationToken cancellationToken)
+		{
+			using var ctx = CreateDataContext(configuration);
+
+			return Task.FromResult(new LinqServiceInfo()
+			{
+				MappingSchemaType     = ctx.DataProvider.MappingSchema.GetType().AssemblyQualifiedName!,
+				SqlBuilderType        = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema).GetType().AssemblyQualifiedName!,
+				SqlOptimizerType      = ctx.DataProvider.GetSqlOptimizer().GetType().AssemblyQualifiedName!,
+				SqlProviderFlags      = ctx.DataProvider.SqlProviderFlags,
+				SupportedTableOptions = ctx.DataProvider.SupportedTableOptions
+			});
+		}
+
 		#region ExecuteNonQuery + ExecuteNonQueryAsync
 
 		// In case of change of the logic of this method, DO NOT FORGET to change the sibling method.
 		public async Task<int> ExecuteNonQueryAsync(
-			string? configuration,
-			string queryData,
-			CancellationToken cancellationToken
-			)
+			string?           configuration,
+			string            queryData,
+			CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -151,10 +164,9 @@ namespace LinqToDB.Remote
 
 		// In case of change of the logic of this method, DO NOT FORGET to change the sibling method.
 		public async Task<string?> ExecuteScalarAsync(
-			string? configuration,
-			string queryData,
-			CancellationToken cancellationToken
-			)
+			string?           configuration,
+			string            queryData,
+			CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -253,10 +265,9 @@ namespace LinqToDB.Remote
 
 		// In case of change of the logic of this method, DO NOT FORGET to change the sibling method.
 		public async Task<string> ExecuteReaderAsync(
-			string? configuration,
-			string queryData,
-			CancellationToken cancellationToken
-			)
+			string?           configuration,
+			string            queryData,
+			CancellationToken cancellationToken)
 		{
 			try
 			{
@@ -444,6 +455,45 @@ namespace LinqToDB.Remote
 				}
 
 				db.CommitTransaction();
+
+				return queryData.Length;
+			}
+			catch (Exception exception)
+			{
+				HandleException(exception);
+				throw;
+			}
+		}
+
+		public async Task<int> ExecuteBatchAsync(string? configuration, string queryData, CancellationToken cancellationToken)
+		{
+			try
+			{
+				var data    = LinqServiceSerializer.DeserializeStringArray(SerializationMappingSchema, queryData);
+				var queries = data.Select(r => LinqServiceSerializer.Deserialize(SerializationMappingSchema, r)).ToArray();
+
+				foreach (var query in queries)
+					ValidateQuery(query);
+
+				using var db = CreateDataContext(configuration);
+				using var _  = db.DataProvider.ExecuteScope(db);
+
+				await db.BeginTransactionAsync(cancellationToken)
+					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+				foreach (var query in queries)
+				{
+					if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
+
+					await DataConnection.QueryRunner.ExecuteNonQueryAsync(db, new QueryContext
+					{
+						Statement = query.Statement
+					}, null, cancellationToken)
+						.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				}
+
+				await db.CommitTransactionAsync(cancellationToken)
+					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				return queryData.Length;
 			}

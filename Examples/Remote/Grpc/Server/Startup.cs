@@ -1,4 +1,5 @@
 ﻿using LinqToDB;
+using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Remote;
 using LinqToDB.Remote.Grpc;

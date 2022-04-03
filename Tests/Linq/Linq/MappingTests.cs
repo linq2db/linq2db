@@ -451,7 +451,7 @@ namespace Tests.Linq
 #if NETFRAMEWORK
 					var fe = Assert.Throws<FaultException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
 					Assert.True(fe.Message.ToLowerInvariant().Contains("firstname"));
-#elif NETCOREAPP3_1_OR_GREATER
+#else
 					var fe = Assert.Throws<Grpc.Core.RpcException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
 					Assert.True(fe.Message.ToLowerInvariant().Contains("firstname"));
 #endif

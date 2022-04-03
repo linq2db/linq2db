@@ -6,6 +6,9 @@ using ProtoBuf.Grpc;
 
 namespace LinqToDB.Remote.Grpc
 {
+	/// <summary>
+	/// grpc-based remote context service contract.
+	/// </summary>
 	[ServiceContract]
 	public interface IGrpcLinqService
 	{
@@ -24,12 +27,8 @@ namespace LinqToDB.Remote.Grpc
 		[OperationContract(Name = "ExecuteBatch")]
 		GrpcInt ExecuteBatch(GrpcConfigurationQuery caq, CallContext context = default);
 
-
-
-
-
-		//[OperationContract(Name = "GetInfoAsync")]
-		//Task<LinqServiceInfo> GetInfoAsync(GrpcConfiguration configuration, CallContext context = default);
+		[OperationContract(Name = "GetInfoAsync")]
+		Task<LinqServiceInfo> GetInfoAsync(GrpcConfiguration configuration, CallContext context = default);
 
 		[OperationContract(Name = "ExecuteNonQueryAsync")]
 		Task<GrpcInt> ExecuteNonQueryAsync(GrpcConfigurationQuery caq, CallContext context = default);
@@ -43,5 +42,4 @@ namespace LinqToDB.Remote.Grpc
 		[OperationContract(Name = "ExecuteBatchAsync")]
 		Task<GrpcInt> ExecuteBatchAsync(GrpcConfigurationQuery caq, CallContext context = default);
 	}
-
 }

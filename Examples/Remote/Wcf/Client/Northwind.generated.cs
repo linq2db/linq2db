@@ -15,15 +15,11 @@ using System.ServiceModel;
 using LinqToDB;
 using LinqToDB.Configuration;
 using LinqToDB.Mapping;
+using LinqToDB.Remote.WCF;
 
 namespace DataModels
 {
-	/// <summary>
-	/// Database       : Northwind
-	/// Data Source    : .
-	/// Server Version : 15.00.2080
-	/// </summary>
-	public partial class NorthwindDB : LinqToDB.Remote.WCF.WcfDataContext
+	public partial class ExampleDataContext : WcfDataContext
 	{
 		public ITable<AlphabeticalListOfProduct>  AlphabeticalListOfProducts   { get { return this.GetTable<AlphabeticalListOfProduct>(); } }
 		public ITable<Category>                   Categories                   { get { return this.GetTable<Category>(); } }
@@ -685,26 +681,3 @@ namespace DataModels
 }
 
 #pragma warning restore 1591
-
-
-namespace DataModels
-{
-	public partial class NorthwindDB
-	{
-		public NorthwindDB() : base(
-			new NetTcpBinding(SecurityMode.None)
-			{
-				MaxReceivedMessageSize = 10000000,
-				MaxBufferPoolSize = 10000000,
-				MaxBufferSize = 10000000,
-				CloseTimeout = new TimeSpan(00, 01, 00),
-				OpenTimeout = new TimeSpan(00, 01, 00),
-				ReceiveTimeout = new TimeSpan(00, 10, 00),
-				SendTimeout = new TimeSpan(00, 10, 00),
-			},
-			new EndpointAddress("net.tcp://localhost:30304/LinqOverWCF"))
-		{
-			((NetTcpBinding)Binding).ReaderQuotas.MaxStringContentLength = 1000000;
-		}
-	}
-}

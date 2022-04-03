@@ -340,9 +340,9 @@ namespace Tests
 		}
 
 #if NETFRAMEWORK
-		public static          WcfServerContainer  _serverContainer  = new ();
-#elif NETCOREAPP3_1_OR_GREATER
-		public static          GrpcServerContainer  _serverContainer = new ();
+		public static          IServerContainer  _serverContainer  = new WcfServerContainer();
+#else
+		public static          IServerContainer  _serverContainer = new GrpcServerContainer();
 #endif
 
 		public static readonly HashSet<string> UserProviders;

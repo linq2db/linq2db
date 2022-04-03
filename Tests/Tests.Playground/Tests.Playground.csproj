@@ -8,7 +8,21 @@
 	<ItemGroup>
 		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
+		<Compile Include="..\Linq\DataProvider\InformixTests.cs" Link="InformixTests.cs" />
+		<Compile Include="..\Linq\DataProvider\MySqlTests.cs" Link="MySqlTests.cs" />
+		<Compile Include="..\Linq\DataProvider\PostgreSQLTests.cs" Link="PostgreSQLTests.cs" />
+		<Compile Include="..\Linq\DataProvider\SapHanaTests.cs" Link="SapHanaTests.cs" />
+		<Compile Include="..\Linq\DataProvider\SqlServerTests.cs" Link="SqlServerTests.cs" />
+		<Compile Include="..\Linq\DataProvider\SqlServerTypesTests.cs" Link="SqlServerTypesTests.cs" />
+		<Compile Include="..\Linq\DataProvider\SqlServerTypesTests.TVP.cs" Link="SqlServerTypesTests.TVP.cs" />
+		<Compile Include="..\Linq\DataProvider\SybaseTests.cs" Link="SybaseTests.cs" />
+		<Compile Include="..\Linq\Data\MiniProfilerTests.cs" Link="MiniProfilerTests.cs" />
+		<Compile Include="..\Linq\Extensions\SQLiteTests.cs" Link="SQLiteTests.cs" />
+		<Compile Include="..\Linq\Linq\ConcatUnionTests.cs" Link="ConcatUnionTests.cs" />
+		<Compile Include="..\Linq\Linq\GroupByTests.cs" Link="GroupByTests.cs" />
 		<Compile Include="..\Linq\TestsInitialization.cs" Link="TestsInitialization.cs" />
+		<Compile Include="..\Linq\Update\CreateTempTableTests.cs" Link="CreateTempTableTests.cs" />
+		<Compile Include="..\Linq\UserTests\Issue2816Tests.cs" Link="Issue2816Tests.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -2,7 +2,7 @@
 	<Import Project="..\..\Build\linq2db.Source.props" />
 
 	<PropertyGroup>
-		<AssemblyName>linq2db.Remote.WCF</AssemblyName>
+		<AssemblyName>linq2db.Remote.Wcf</AssemblyName>
 		<RootNamespace>LinqToDB.Remote.WCF</RootNamespace>
 
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.remote.wcf.xml</DocumentationFile>
@@ -14,13 +14,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Reference Include="Microsoft.CSharp" />
-		<Reference Include="System.Configuration" />
-		<Reference Include="System.Data.DataSetExtensions" />
-		<Reference Include="System.Data.Linq" />
-		<Reference Include="System.Data.Services" />
 		<Reference Include="System.ServiceModel" />
-		<Reference Include="System.Web.Services" />
-		<Reference Include="System.ComponentModel.DataAnnotations" />
 	</ItemGroup>
 </Project>

@@ -10,6 +10,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Remote
 {
+	using System.Threading;
 	using Common;
 	using DataProvider;
 	using Expressions;
@@ -68,7 +69,35 @@ namespace LinqToDB.Remote
 			return _configurationInfo;
 		}
 
-		protected abstract ILinqClient  GetClient();
+		async Task<ConfigurationInfo> GetConfigurationInfoAsync(CancellationToken cancellationToken)
+		{
+			if (_configurationInfo == null && !_configurations.TryGetValue(Configuration ?? "", out _configurationInfo))
+			{
+				var client = GetClient();
+
+				try
+				{
+					var info = await client.GetInfoAsync(Configuration, cancellationToken)
+						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					var type = Type.GetType(info.MappingSchemaType)!;
+					var ms   = new RemoteMappingSchema(ContextIDPrefix, (MappingSchema)Activator.CreateInstance(type)!);
+
+					_configurationInfo = new ConfigurationInfo
+					{
+						LinqServiceInfo = info,
+						MappingSchema = ms,
+					};
+				}
+				finally
+				{
+					(client as IDisposable)?.Dispose();
+				}
+			}
+
+			return _configurationInfo;
+		}
+
+		protected abstract ILinqService GetClient();
 		protected abstract IDataContext Clone    ();
 		protected abstract string       ContextIDPrefix { get; }
 

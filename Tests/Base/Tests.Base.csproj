@@ -27,16 +27,15 @@
 
 	<!-- grpc testing packages -->
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
-		<ProjectReference Include="..\..\Source\LinqToDB.Remote.Grpc\LinqToDB.Remote.Grpc.csproj" />
-
 		<PackageReference Include="protobuf-net.Grpc.AspNetCore" />
 		<PackageReference Include="System.Configuration.ConfigurationManager" />
 		<PackageReference Include="System.Data.SqlClient" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" />
 	</ItemGroup>
+	
 	<ItemGroup>
 	  <Compile Update="TestProviders\TestNoopProvider.cs">
-	    <SubType>Component</SubType>
+	    <SubType>Source</SubType>
 	  </Compile>
 	</ItemGroup>
 

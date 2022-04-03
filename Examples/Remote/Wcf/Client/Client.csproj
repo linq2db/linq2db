@@ -2,7 +2,7 @@
 	<Import Project="..\..\..\linq2db.Examples.props" />
 
 	<PropertyGroup>
-		<TargetFramework>net45</TargetFramework>
+		<TargetFramework>net48</TargetFramework>
 		<OutputType>Exe</OutputType>
 	</PropertyGroup>
 
@@ -11,12 +11,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="linq2db.t4models" />
-	</ItemGroup>
+		<Reference Include="System.ServiceModel" />
 
-	<ItemGroup>
 		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.Wcf\LinqToDB.Remote.Wcf.csproj" />
-		<ProjectReference Include="..\..\..\..\Source\LinqToDB\LinqToDB.csproj" />
+
+		<PackageReference Include="linq2db.t4models" />
+
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -24,17 +25,7 @@
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>Northwind.generated.cs</LastGenOutput>
 		</Content>
-	</ItemGroup>
 
-	<ItemGroup>
-		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Reference Include="System.ServiceModel" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<Compile Update="Northwind.generated.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>

@@ -699,7 +699,7 @@ namespace Tests.Extensions
 			catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 8622) {}
 #if NETFRAMEWORK
 			catch (System.ServiceModel.FaultException    ex) when (ex.Message.Contains("8622")) {}
-#elif NETCOREAPP3_1_OR_GREATER
+#else
 			catch (Grpc.Core.RpcException                ex) when (ex.Message.Contains("8622")) {}
 #endif
 
@@ -726,7 +726,7 @@ namespace Tests.Extensions
 			catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 8622) {}
 #if NETFRAMEWORK
 			catch (System.ServiceModel.FaultException    ex) when (ex.Message.Contains("8622")) { }
-#elif NETCOREAPP3_1_OR_GREATER
+#else
 			catch (Grpc.Core.RpcException                ex) when (ex.Message.Contains("8622")) {}
 #endif
 
@@ -752,7 +752,7 @@ namespace Tests.Extensions
 			catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 8622) {}
 #if NETFRAMEWORK
 			catch (System.ServiceModel.FaultException    ex) when (ex.Message.Contains("8622")) { }
-#elif NETCOREAPP3_1_OR_GREATER
+#else
 			catch (Grpc.Core.RpcException                ex) when (ex.Message.Contains("8622")) {}
 #endif
 
@@ -778,7 +778,7 @@ namespace Tests.Extensions
 			catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 8622) {}
 #if NETFRAMEWORK
 			catch (System.ServiceModel.FaultException    ex) when (ex.Message.Contains("8622")) { }
-#elif NETCOREAPP3_1_OR_GREATER
+#else
 			catch (Grpc.Core.RpcException                ex) when (ex.Message.Contains("8622")) {}
 #endif
 
