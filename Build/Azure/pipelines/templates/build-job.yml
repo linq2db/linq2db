@@ -131,7 +131,7 @@ jobs:
   - task: PublishPipelineArtifact@1
     inputs:
       path: '$(Build.SourcesDirectory)/Source/LinqToDB.Remote.Grpc/bin/Release'
-      artifact: '$(artifact_linq2db_remote_grps_binaries)'
+      artifact: '$(artifact_linq2db_remote_grpc_binaries)'
     displayName: Publish linq2db.remote.Grpc build results
     condition: and(succeeded(), ${{ parameters.for_nuget }})
 
