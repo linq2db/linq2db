@@ -6,6 +6,10 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 
+#if NET6_0_OR_GREATER
+[assembly: System.Reflection.Metadata.MetadataUpdateHandler(typeof(LinqToDB.Common.ConvertBuilder))]
+#endif
+
 namespace LinqToDB.Common
 {
 	using Expressions;
@@ -15,7 +19,7 @@ namespace LinqToDB.Common
 
 	static class ConvertBuilder
 	{
-		static readonly MethodInfo _defaultConverter = MemberHelper.MethodOf(() => ConvertDefault(null!, typeof(int)));
+		static MethodInfo _defaultConverter = MemberHelper.MethodOf(() => ConvertDefault(null!, typeof(int)));
 
 		static object ConvertDefault(object value, Type conversionType)
 		{
@@ -678,5 +682,13 @@ namespace LinqToDB.Common
 		}
 
 		#endregion
+
+		#region Hot reload compatibility
+		private static void ClearCache(Type[]? updatedTypes)
+		{
+			_defaultConverter = MemberHelper.MethodOf(() => ConvertDefault(null!, typeof(int)));
+		}
+		#endregion
+
 	}
 }

@@ -10,6 +10,10 @@ using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.SqlQuery;
 
+#if NET6_0_OR_GREATER
+[assembly: System.Reflection.Metadata.MetadataUpdateHandler(typeof(LinqToDB.Linq.Builder.ParametersContext))]
+#endif
+
 namespace LinqToDB.Linq.Builder
 {
 	class ParametersContext
@@ -516,5 +520,11 @@ namespace LinqToDB.Linq.Builder
 			return p.SqlParameter;
 		}
 
+		#region Hot reload compatibility
+		private static void ClearCache(Type[]? updatedTypes)
+		{
+			AccessorParameters = new ParameterExpression[] { ExpressionBuilder.ExpressionParam, ExpressionBuilder.DataContextParam, ExpressionBuilder.ParametersParam };
+		}
+		#endregion
 	}
 }

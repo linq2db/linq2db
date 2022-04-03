@@ -5,6 +5,11 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+#if NET6_0_OR_GREATER
+[assembly: System.Reflection.Metadata.MetadataUpdateHandler(typeof(LinqToDB.Linq.ReflectionHelper))]
+[assembly: System.Reflection.Metadata.MetadataUpdateHandler(typeof(LinqToDB.Linq.ReflectionHelper.IndexExpressor<>))]
+#endif
+
 namespace LinqToDB.Linq
 {
 	using LinqToDB.Expressions;
@@ -121,6 +126,11 @@ namespace LinqToDB.Linq
 			}
 
 			public static MethodInfo Item = IndexerExpressor(c => c[0]!);
+
+			private static void ClearCache(Type[]? updatedTypes) // Hot Reload Compatibility
+			{
+				Item = IndexerExpressor(c => c[0]!);
+			}
 		}
 
 		public class MemberAssignmentBind : Expressor<MemberAssignment>
@@ -174,5 +184,72 @@ namespace LinqToDB.Linq
 			}
 #endif
 		}
+
+		#region Hot Reload Compatibility
+		private static void ClearCache(Type[]? updatedTypes) // Hot Reload Compatibility
+		{
+			Binary.Conversion				= Binary.PropertyOf(e => e.Conversion);
+			Binary.Left						= Binary.PropertyOf(e => e.Left);
+			Binary.Right					= Binary.PropertyOf(e => e.Right);
+
+			Unary.Operand					= Unary.PropertyOf(e => e.Operand);
+
+			LambdaExpr.Body					= LambdaExpr.PropertyOf(e => e.Body);
+			LambdaExpr.Parameters			= LambdaExpr.PropertyOf(e => e.Parameters);
+
+			Constant.Value					= Constant.PropertyOf(e => e.Value);
+
+			QueryableInt.Expression			= QueryableInt.PropertyOf(e => e.Expression);
+
+			MethodCall.Object				= MethodCall.PropertyOf(e => e.Object);
+			MethodCall.Arguments			= MethodCall.PropertyOf(e => e.Arguments);
+
+			Conditional.Test				= Conditional.PropertyOf(e => e.Test);
+			Conditional.IfTrue				= Conditional.PropertyOf(e => e.IfTrue);
+			Conditional.IfFalse				= Conditional.PropertyOf(e => e.IfFalse);
+
+			Invocation.Expression			= Invocation.PropertyOf(e => e.Expression);
+			Invocation.Arguments			= Invocation.PropertyOf(e => e.Arguments);
+
+			ListInit.NewExpression			= ListInit.PropertyOf(e => e.NewExpression);
+			ListInit.Initializers			= ListInit.PropertyOf(e => e.Initializers);
+
+			ElementInit.Arguments			= ElementInit.PropertyOf(e => e.Arguments);
+
+			Member.Expression				= Member.PropertyOf(e => e.Expression);
+
+			MemberInit.NewExpression		= MemberInit.PropertyOf(e => e.NewExpression);
+			MemberInit.Bindings				= MemberInit.PropertyOf(e => e.Bindings);
+
+			New.Arguments					= New.PropertyOf(e => e.Arguments);
+
+			NewArray.Expressions			= NewArray.PropertyOf(e => e.Expressions);
+
+			TypeBinary.Expression			= TypeBinary.PropertyOf(e => e.Expression);
+
+			MemberAssignmentBind.Expression	= MemberAssignmentBind.PropertyOf(e => e.Expression);
+
+			MemberListBind.Initializers		= MemberListBind.PropertyOf(e => e.Initializers);
+
+			MemberMemberBind.Bindings		= MemberMemberBind.PropertyOf(e => e.Bindings);
+
+			Block.Expressions				= Block.PropertyOf(e => e.Expressions);
+			Block.Variables					= Block.PropertyOf(e => e.Variables);
+
+			ExprItem						= IndexExpressor<Expression>.Item;
+			ParamItem						= IndexExpressor<ParameterExpression>.Item;
+			ElemItem						= IndexExpressor<ElementInit>.Item;
+
+			DataReader.GetValue				= DataReader.MethodOf(rd => rd.GetValue(0));
+			DataReader.IsDBNull				= DataReader.MethodOf(rd => rd.IsDBNull(0));
+
+			Functions.String.Like21			= Functions.String.MethodOf(s => Sql.Like(s, ""));
+			Functions.String.Like22			= Functions.String.MethodOf(s => Sql.Like(s, "", ' '));
+#if !NET45
+			Functions.FormattableString.GetArguments 
+											= Functions.FormattableString.MethodOf(s => s.GetArgument(0));
+#endif
+		}
+		#endregion
 	}
 }

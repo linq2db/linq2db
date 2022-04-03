@@ -5,6 +5,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+#if NET6_0_OR_GREATER
+[assembly: System.Reflection.Metadata.MetadataUpdateHandler(typeof(LinqToDB.Data.RecordReaderBuilder))]
+#endif
+
 namespace LinqToDB.Data
 {
 	using Expressions;
@@ -16,8 +20,8 @@ namespace LinqToDB.Data
 
 	class RecordReaderBuilder
 	{
-		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(IDataReader),  "rd");
-		public        readonly ParameterExpression DataReaderLocal;
+		public static   ParameterExpression DataReaderParam  = Expression.Parameter(typeof(IDataReader),  "rd");
+		public readonly ParameterExpression DataReaderLocal;
 
 		public readonly List<ParameterExpression>  BlockVariables   = new ();
 		public readonly List<Expression>           BlockExpressions = new ();
@@ -439,5 +443,11 @@ namespace LinqToDB.Data
 			return expression;
 		}
 
+		#region Hot reload compatibility
+		private static void ClearCache(Type[]? updatedTypes) // Hot reload compatibility
+		{
+			DataReaderParam = Expression.Parameter(typeof(IDataReader),  "rd");
+		}
+		#endregion
 	}
 }
