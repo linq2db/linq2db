@@ -38,7 +38,7 @@ jobs:
   - task: DownloadPipelineArtifact@2
     displayName: Download LinqToDB.Remote.Wcf files
     inputs:
-      artifactName: '$(artifact_linq2db_remote_wfc_binaries)'
+      artifactName: '$(artifact_linq2db_remote_wcf_binaries)'
       targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB.Remote.Wcf/bin/Release'
 
   - task: DownloadPipelineArtifact@2
