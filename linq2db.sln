@@ -125,7 +125,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 		NuGet\README.AspNet.md = NuGet\README.AspNet.md
 		NuGet\README.linq2db.md = NuGet\README.linq2db.md
 		NuGet\README.Remote.Grpc.md = NuGet\README.Remote.Grpc.md
-		NuGet\README.Remote.Wfc.md = NuGet\README.Remote.Wfc.md
+		NuGet\README.Remote.Wcf.md = NuGet\README.Remote.Wcf.md
 		NuGet\README.T4.md = NuGet\README.T4.md
 		NuGet\README.Tools.md = NuGet\README.Tools.md
 	EndProjectSection
