@@ -24,13 +24,9 @@
 		<!--netcoreapp31 needed due to very old transient depndency from oracle 2.19 provider-->
 		<PackageReference Include="System.Text.Json" />
 	</ItemGroup>
-
-	<!-- grpc testing packages -->
+	
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
 		<PackageReference Include="protobuf-net.Grpc.AspNetCore" />
-		<PackageReference Include="System.Configuration.ConfigurationManager" />
-		<PackageReference Include="System.Data.SqlClient" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" />
 	</ItemGroup>
 	
 	<ItemGroup>
