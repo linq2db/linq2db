@@ -178,7 +178,7 @@ namespace LinqToDB.SqlQuery
 				var column           = Columns[i];
 				var columnExpression = column.Expression;
 
-				if (columnExpression.CanBeNull == colExpression.CanBeNull && column.UnderlyingExpression().Equals(col.UnderlyingExpression()))
+				if (columnExpression.CanBeNull == colExpression.CanBeNull && column.Expression.Equals(col.Expression))
 				{
 					return i;
 				}

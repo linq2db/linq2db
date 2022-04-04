@@ -81,5 +81,63 @@ namespace Tests.UserTests
 				query.GetSelectQuery().Select.Columns.Should().HaveCount(4);
 			}
 		}
+
+		[Table]
+		class Root
+		{
+			[Column] public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Draft1.RootId))]
+			public ICollection<Draft1> SomeDrafts { get; set; } = null!;
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Draft2.RootId))]
+			public ICollection<Draft2> OtherDrafts { get; set; } = null!;
+		}
+
+		[Table]
+		class Draft1
+		{
+			[Column] public int     RootId { get; set; }
+			[Column] public string? Html   { get; set; }
+			[Column] public string? Plain  { get; set; }
+		}
+
+		[Table]
+		class Draft2
+		{
+			[Column] public int     RootId { get; set; }
+			[Column] public string? Html   { get; set; }
+			[Column] public string? Plain  { get; set; }
+		}
+
+		[Test]
+		public void TestColumnsOptimization3487([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.GetTable<Root>()
+					.Select(x => new
+					{
+						NarrativeDraft = x.SomeDrafts
+							.Select(y => new
+							{
+								Html   = y.Html,
+								Plain2 = y.Plain
+							})
+							.FirstOrDefault(),
+						SynopsisDraft = x.OtherDrafts
+							.Select(y => new
+							{
+								Html  = y.Html,
+								Plain = y.Plain
+							})
+							.FirstOrDefault()
+					});
+
+				TestContext.WriteLine(query.ToString());
+
+				query.GetSelectQuery().Select.Columns.Should().HaveCount(6);
+			}
+		}
 	}
 }
