@@ -214,7 +214,7 @@ namespace LinqToDB.Data
 		{
 		}
 
-		private DataConnection(LinqToDbConnectionOptionsBuilder builder) : this(builder.Build())
+		DataConnection(LinqToDbConnectionOptionsBuilder builder) : this(builder.Build())
 		{
 		}
 
@@ -335,6 +335,10 @@ namespace LinqToDB.Data
 			if (options.MappingSchema != null)
 			{
 				AddMappingSchema(options.MappingSchema);
+			}
+			else
+			{
+				MappingSchema = new (MappingSchema);
 			}
 
 			if (options.OnTrace != null)
@@ -1739,7 +1743,8 @@ namespace LinqToDB.Data
 		/// <returns>Current connection object.</returns>
 		public DataConnection AddMappingSchema(MappingSchema mappingSchema)
 		{
-			MappingSchema = MappingSchema.CombineSchemas(MappingSchema, mappingSchema);
+			//MappingSchema = MappingSchema.CombineSchemas(MappingSchema, mappingSchema);
+			MappingSchema = new (mappingSchema, MappingSchema);
 			_id           = null;
 
 			return this;

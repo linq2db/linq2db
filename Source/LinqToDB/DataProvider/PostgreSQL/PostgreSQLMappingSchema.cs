@@ -1,15 +1,15 @@
 ﻿using System;
+using System.Data.Linq;
+using System.Globalization;
 using System.Net.NetworkInformation;
 using System.Text;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using LinqToDB.Common;
-	using LinqToDB.Data;
-	using LinqToDB.SqlQuery;
+	using Common;
+	using Data;
 	using Mapping;
-	using System.Data.Linq;
-	using System.Globalization;
+	using SqlQuery;
 
 	public class PostgreSQLMappingSchema : MappingSchema
 	{
@@ -133,44 +133,46 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		internal static MappingSchema Instance { get; } = new PostgreSQLMappingSchema();
-	}
 
-	public class PostgreSQL92MappingSchema : MappingSchema
-	{
-		public PostgreSQL92MappingSchema()
-			: base(ProviderName.PostgreSQL92, PostgreSQLMappingSchema.Instance)
+		public override bool IsFluentMappingSupported => false;
+
+		public class PostgreSQL92MappingSchema : MappingSchema
 		{
+			public PostgreSQL92MappingSchema()
+				: base(ProviderName.PostgreSQL92, Instance)
+			{
+			}
+
+			public PostgreSQL92MappingSchema(params MappingSchema[] schemas)
+					: base(ProviderName.PostgreSQL92, Array<MappingSchema>.Append(schemas, Instance))
+			{
+			}
 		}
 
-		public PostgreSQL92MappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.PostgreSQL92, Array<MappingSchema>.Append(schemas, PostgreSQLMappingSchema.Instance))
+		public class PostgreSQL93MappingSchema : MappingSchema
 		{
-		}
-	}
+			public PostgreSQL93MappingSchema()
+				: base(ProviderName.PostgreSQL93, Instance)
+			{
+			}
 
-	public class PostgreSQL93MappingSchema : MappingSchema
-	{
-		public PostgreSQL93MappingSchema()
-			: base(ProviderName.PostgreSQL93, PostgreSQLMappingSchema.Instance)
-		{
-		}
-
-		public PostgreSQL93MappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.PostgreSQL93, Array<MappingSchema>.Append(schemas, PostgreSQLMappingSchema.Instance))
-		{
-		}
-	}
-
-	public class PostgreSQL95MappingSchema : MappingSchema
-	{
-		public PostgreSQL95MappingSchema()
-			: base(ProviderName.PostgreSQL95, PostgreSQLMappingSchema.Instance)
-		{
+			public PostgreSQL93MappingSchema(params MappingSchema[] schemas)
+				: base(ProviderName.PostgreSQL93, Array<MappingSchema>.Append(schemas, Instance))
+			{
+			}
 		}
 
-		public PostgreSQL95MappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.PostgreSQL95, Array<MappingSchema>.Append(schemas, PostgreSQLMappingSchema.Instance))
+		public class PostgreSQL95MappingSchema : MappingSchema
 		{
+			public PostgreSQL95MappingSchema()
+				: base(ProviderName.PostgreSQL95, Instance)
+			{
+			}
+
+			public PostgreSQL95MappingSchema(params MappingSchema[] schemas)
+				: base(ProviderName.PostgreSQL95, Array<MappingSchema>.Append(schemas, Instance))
+			{
+			}
 		}
 	}
 }

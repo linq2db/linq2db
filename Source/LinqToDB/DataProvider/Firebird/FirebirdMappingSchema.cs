@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Data.Linq;
+using System.Globalization;
+using System.Numerics;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Firebird
@@ -6,9 +9,6 @@ namespace LinqToDB.DataProvider.Firebird
 	using Common;
 	using Mapping;
 	using SqlQuery;
-	using System.Data.Linq;
-	using System.Globalization;
-	using System.Numerics;
 
 	public class FirebirdMappingSchema : MappingSchema
 	{
@@ -163,19 +163,23 @@ namespace LinqToDB.DataProvider.Firebird
 		}
 
 		internal static MappingSchema Instance { get; } = new FirebirdMappingSchema();
-	}
 
-	// internal as it will be replaced with versioned schemas in v4
-	internal class FirebirdProviderMappingSchema : MappingSchema
-	{
-		public FirebirdProviderMappingSchema()
-			: base(ProviderName.Firebird, FirebirdMappingSchema.Instance)
-		{
-		}
+		public override bool IsFluentMappingSupported => false;
 
-		public FirebirdProviderMappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.Firebird, Array<MappingSchema>.Append(schemas, FirebirdMappingSchema.Instance))
+		// internal as it will be replaced with versioned schemas in v4
+		public class FirebirdProviderMappingSchema : MappingSchema
 		{
+			public FirebirdProviderMappingSchema()
+				: base(ProviderName.Firebird, Instance)
+			{
+			}
+
+			public FirebirdProviderMappingSchema(params MappingSchema[] schemas)
+					: base(ProviderName.Firebird, Array<MappingSchema>.Append(schemas, Instance))
+			{
+			}
+
+			public override bool IsFluentMappingSupported => false;
 		}
 	}
 }

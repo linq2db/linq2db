@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data.Linq;
 using System.Data.SqlTypes;
+using System.Globalization;
 using System.IO;
 using System.Linq.Expressions;
 using System.Text;
@@ -8,10 +9,9 @@ using System.Xml;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using System.Globalization;
 	using Common;
 	using Expressions;
-	using LinqToDB.Metadata;
+	using Metadata;
 	using Mapping;
 	using SqlQuery;
 
@@ -237,109 +237,124 @@ namespace LinqToDB.DataProvider.SqlServer
 			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 		}
 
-	}
+		public override bool IsFluentMappingSupported => false;
 
-	public class SqlServer2005MappingSchema : MappingSchema
-	{
-		public SqlServer2005MappingSchema()
-			: base(ProviderName.SqlServer2005, SqlServerMappingSchema.Instance)
+		public class SqlServer2005MappingSchema : MappingSchema
 		{
-			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+			public SqlServer2005MappingSchema()
+				: base(ProviderName.SqlServer2005, Instance)
+			{
+				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+			}
+
+			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+			{
+				return Instance.TryGetConvertExpression(@from, to);
+			}
+
+			public override bool IsFluentMappingSupported => false;
 		}
 
-		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+		public class SqlServer2008MappingSchema : MappingSchema
 		{
-			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
-		}
-	}
+			public SqlServer2008MappingSchema()
+				: base(ProviderName.SqlServer2008, Instance)
+			{
+				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			}
 
-	public class SqlServer2008MappingSchema : MappingSchema
-	{
-		public SqlServer2008MappingSchema()
-			: base(ProviderName.SqlServer2008, SqlServerMappingSchema.Instance)
-		{
-			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
-			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
-		}
+			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+			{
+				return Instance.TryGetConvertExpression(@from, to);
+			}
 
-		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
-		{
-			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
-		}
-	}
-
-	public class SqlServer2012MappingSchema : MappingSchema
-	{
-		public SqlServer2012MappingSchema()
-			: base(ProviderName.SqlServer2012, SqlServerMappingSchema.Instance)
-		{
-			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
-			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			public override bool IsFluentMappingSupported => false;
 		}
 
-		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+		public class SqlServer2012MappingSchema : MappingSchema
 		{
-			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
-		}
-	}
+			public SqlServer2012MappingSchema()
+				: base(ProviderName.SqlServer2012, Instance)
+			{
+				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			}
 
-	public class SqlServer2014MappingSchema : MappingSchema
-	{
-		public SqlServer2014MappingSchema()
-			: base(ProviderName.SqlServer2014, SqlServerMappingSchema.Instance)
-		{
-			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
-			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
-		}
+			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+			{
+				return Instance.TryGetConvertExpression(@from, to);
+			}
 
-		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
-		{
-			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
-		}
-	}
-
-	public class SqlServer2016MappingSchema : MappingSchema
-	{
-		public SqlServer2016MappingSchema()
-			: base(ProviderName.SqlServer2016, SqlServerMappingSchema.Instance)
-		{
-			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
-			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			public override bool IsFluentMappingSupported => false;
 		}
 
-		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+		public class SqlServer2014MappingSchema : MappingSchema
 		{
-			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
-		}
-	}
+			public SqlServer2014MappingSchema()
+				: base(ProviderName.SqlServer2014, Instance)
+			{
+				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			}
 
-	public class SqlServer2017MappingSchema : MappingSchema
-	{
-		public SqlServer2017MappingSchema()
-			: base(ProviderName.SqlServer2017, SqlServerMappingSchema.Instance)
-		{
-			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
-			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
-		}
+			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+			{
+				return Instance.TryGetConvertExpression(@from, to);
+			}
 
-		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
-		{
-			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
-		}
-	}
-
-	public class SqlServer2019MappingSchema : MappingSchema
-	{
-		public SqlServer2019MappingSchema()
-			: base(ProviderName.SqlServer2019, SqlServerMappingSchema.Instance)
-		{
-			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
-			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			public override bool IsFluentMappingSupported => false;
 		}
 
-		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+		public class SqlServer2016MappingSchema : MappingSchema
 		{
-			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
+			public SqlServer2016MappingSchema()
+				: base(ProviderName.SqlServer2016, Instance)
+			{
+				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			}
+
+			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+			{
+				return Instance.TryGetConvertExpression(@from, to);
+			}
+
+			public override bool IsFluentMappingSupported => false;
+		}
+
+		public class SqlServer2017MappingSchema : MappingSchema
+		{
+			public SqlServer2017MappingSchema()
+				: base(ProviderName.SqlServer2017, Instance)
+			{
+				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			}
+
+			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+			{
+				return Instance.TryGetConvertExpression(@from, to);
+			}
+
+			public override bool IsFluentMappingSupported => false;
+		}
+
+		public class SqlServer2019MappingSchema : MappingSchema
+		{
+			public SqlServer2019MappingSchema()
+				: base(ProviderName.SqlServer2019, Instance)
+			{
+				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+				SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			}
+
+			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+			{
+				return Instance.TryGetConvertExpression(@from, to);
+			}
+
+			public override bool IsFluentMappingSupported => false;
 		}
 	}
 }

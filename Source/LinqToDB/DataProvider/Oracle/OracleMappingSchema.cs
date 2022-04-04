@@ -182,6 +182,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 		internal static readonly OracleMappingSchema Instance = new ();
 
+		public override bool IsFluentMappingSupported => false;
+
 		public class NativeMappingSchema : MappingSchema
 		{
 			public NativeMappingSchema()
@@ -193,6 +195,8 @@ namespace LinqToDB.DataProvider.Oracle
 				: base(ProviderName.OracleNative, Array<MappingSchema>.Append(schemas, Instance))
 			{
 			}
+
+			public override bool IsFluentMappingSupported => false;
 		}
 
 		public class ManagedMappingSchema : MappingSchema
@@ -206,6 +210,8 @@ namespace LinqToDB.DataProvider.Oracle
 				: base(ProviderName.OracleManaged, Array<MappingSchema>.Append(schemas, Instance))
 			{
 			}
+
+			public override bool IsFluentMappingSupported => false;
 		}
 	}
 }

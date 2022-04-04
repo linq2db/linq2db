@@ -58,12 +58,16 @@ namespace LinqToDB.DataProvider.SapHana
 
 		internal static readonly SapHanaMappingSchema Instance = new ();
 
+		public override bool IsFluentMappingSupported => false;
+
 		public class NativeMappingSchema : MappingSchema
 		{
 			public NativeMappingSchema()
 				: base(ProviderName.SapHanaNative, Instance)
 			{
 			}
+
+			public override bool IsFluentMappingSupported => false;
 		}
 
 		public class OdbcMappingSchema : MappingSchema
@@ -72,6 +76,8 @@ namespace LinqToDB.DataProvider.SapHana
 				: base(ProviderName.SapHanaOdbc, Instance)
 			{
 			}
+
+			public override bool IsFluentMappingSupported => false;
 		}
 	}
 }

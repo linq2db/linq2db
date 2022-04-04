@@ -3,7 +3,7 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using LinqToDB.Common;
+	using Common;
 	using Mapping;
 	using SqlQuery;
 	using System.Data.Linq;
@@ -107,7 +107,6 @@ namespace LinqToDB.DataProvider.DB2
 			};
 		}
 
-
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType type, DateTime value)
 		{
 			stringBuilder.Append('\'');
@@ -148,31 +147,37 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 		internal static readonly DB2MappingSchema Instance = new ();
-	}
 
-	public class DB2zOSMappingSchema : MappingSchema
-	{
-		public DB2zOSMappingSchema()
-			: base(ProviderName.DB2zOS, DB2MappingSchema.Instance)
+		public override bool IsFluentMappingSupported => false;
+
+		public class DB2zOSMappingSchema : MappingSchema
 		{
+			public DB2zOSMappingSchema()
+				: base(ProviderName.DB2zOS, Instance)
+			{
+			}
+
+			public DB2zOSMappingSchema(params MappingSchema[] schemas)
+					: base(ProviderName.DB2zOS, Array<MappingSchema>.Append(schemas, Instance))
+			{
+			}
+
+			public override bool IsFluentMappingSupported => false;
 		}
 
-		public DB2zOSMappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.DB2zOS, Array<MappingSchema>.Append(schemas, DB2MappingSchema.Instance))
+		public class DB2LUWMappingSchema : MappingSchema
 		{
-		}
-	}
+			public DB2LUWMappingSchema()
+				: base(ProviderName.DB2LUW, Instance)
+			{
+			}
 
-	public class DB2LUWMappingSchema : MappingSchema
-	{
-		public DB2LUWMappingSchema()
-			: base(ProviderName.DB2LUW, DB2MappingSchema.Instance)
-		{
-		}
+			public DB2LUWMappingSchema(params MappingSchema[] schemas)
+					: base(ProviderName.DB2LUW, Array<MappingSchema>.Append(schemas, Instance))
+			{
+			}
 
-		public DB2LUWMappingSchema(params MappingSchema[] schemas)
-				: base(ProviderName.DB2LUW, Array<MappingSchema>.Append(schemas, DB2MappingSchema.Instance))
-		{
+			public override bool IsFluentMappingSupported => false;
 		}
 	}
 }

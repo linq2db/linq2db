@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using System.Data.Common;
 	using Common;
 	using Data;
 	using Mapping;
@@ -69,8 +68,8 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			return version switch
 			{
-				DB2Version.zOS => new DB2zOSMappingSchema(providerSchema),
-				_              => new DB2LUWMappingSchema(providerSchema),
+				DB2Version.zOS => new DB2MappingSchema.DB2zOSMappingSchema(providerSchema),
+				_              => new DB2MappingSchema.DB2LUWMappingSchema(providerSchema),
 			};
 		}
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Threading;
@@ -125,7 +124,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		private static MappingSchema GetMappingSchema(params MappingSchema?[] schemas)
 		{
-			return new FirebirdProviderMappingSchema(schemas.Where(s => s != null).ToArray()!);
+			return new FirebirdMappingSchema.FirebirdProviderMappingSchema(schemas.Where(s => s != null).ToArray()!);
 		}
 
 		#region BulkCopy

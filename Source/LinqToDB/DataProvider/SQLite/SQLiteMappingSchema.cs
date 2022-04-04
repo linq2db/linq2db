@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.Linq;
 using System.Globalization;
 using System.Text;
 
@@ -8,7 +9,6 @@ namespace LinqToDB.DataProvider.SQLite
 	using Common;
 	using Mapping;
 	using SqlQuery;
-	using System.Data.Linq;
 
 	public class SQLiteMappingSchema : MappingSchema
 	{
@@ -90,12 +90,16 @@ namespace LinqToDB.DataProvider.SQLite
 
 		internal static readonly SQLiteMappingSchema Instance = new ();
 
+		public override bool IsFluentMappingSupported => false;
+
 		public class ClassicMappingSchema : MappingSchema
 		{
 			public ClassicMappingSchema()
 				: base(ProviderName.SQLiteClassic, Instance)
 			{
 			}
+
+			public override bool IsFluentMappingSupported => false;
 		}
 
 		public class MicrosoftMappingSchema : MappingSchema
@@ -104,6 +108,8 @@ namespace LinqToDB.DataProvider.SQLite
 				: base(ProviderName.SQLiteMS, Instance)
 			{
 			}
+
+			public override bool IsFluentMappingSupported => false;
 		}
 	}
 }

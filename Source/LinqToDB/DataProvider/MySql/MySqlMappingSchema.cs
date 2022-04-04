@@ -71,6 +71,8 @@ namespace LinqToDB.DataProvider.MySql
 
 		internal static readonly MappingSchema Instance = new MySqlMappingSchema();
 
+		public override bool IsFluentMappingSupported => false;
+
 		public class MySqlOfficialMappingSchema : MappingSchema
 		{
 			public MySqlOfficialMappingSchema()
@@ -82,6 +84,8 @@ namespace LinqToDB.DataProvider.MySql
 				: base(ProviderName.MySqlOfficial, Array<MappingSchema>.Append(schemas, Instance))
 			{
 			}
+
+			public override bool IsFluentMappingSupported => false;
 		}
 
 		public class MySqlConnectorMappingSchema : MappingSchema
@@ -95,6 +99,8 @@ namespace LinqToDB.DataProvider.MySql
 				: base(ProviderName.MySqlConnector, Array<MappingSchema>.Append(schemas, Instance))
 			{
 			}
+
+			public override bool IsFluentMappingSupported => false;
 		}
 	}
 }

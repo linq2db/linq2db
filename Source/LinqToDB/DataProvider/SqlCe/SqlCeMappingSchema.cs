@@ -1,12 +1,12 @@
-﻿using System.Data.SqlTypes;
+﻿using System;
+using System.Data.Linq;
+using System.Data.SqlTypes;
 using System.IO;
 using System.Text;
 using System.Xml;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using System;
-	using System.Data.Linq;
 	using Common;
 	using Mapping;
 	using SqlQuery;
@@ -87,5 +87,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversionAction, value);
 		}
+
+		public override bool IsFluentMappingSupported => false;
 	}
 }

@@ -73,20 +73,24 @@ namespace LinqToDB.DataProvider.Access
 
 		internal static readonly AccessMappingSchema Instance = new ();
 
+		public override bool IsFluentMappingSupported => false;
+
 		public class OleDbMappingSchema : MappingSchema
 		{
-			public OleDbMappingSchema()
-				: base(ProviderName.Access, Instance)
+			public OleDbMappingSchema() : base(ProviderName.Access, Instance)
 			{
 			}
+
+			public override bool IsFluentMappingSupported => false;
 		}
 
 		public class ODBCMappingSchema : MappingSchema
 		{
-			public ODBCMappingSchema()
-				: base(ProviderName.AccessOdbc, Instance)
+			public ODBCMappingSchema() : base(ProviderName.AccessOdbc, Instance)
 			{
 			}
+
+			public override bool IsFluentMappingSupported => false;
 		}
 	}
 }

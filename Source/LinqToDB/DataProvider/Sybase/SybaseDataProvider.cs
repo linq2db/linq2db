@@ -94,10 +94,10 @@ namespace LinqToDB.DataProvider.Sybase
 
 		static class MappingSchemaInstance
 		{
-			public static readonly MappingSchema NativeMappingSchema  = new SybaseMappingSchema.NativeMappingSchema();
-			public static readonly MappingSchema ManagedMappingSchema = new SybaseMappingSchema.ManagedMappingSchema();
+			static readonly MappingSchema _nativeMappingSchema  = new SybaseMappingSchema.NativeMappingSchema();
+			static readonly MappingSchema _managedMappingSchema = new SybaseMappingSchema.ManagedMappingSchema();
 
-			public static MappingSchema Get(string name) => name == ProviderName.Sybase ? NativeMappingSchema : ManagedMappingSchema;
+			public static MappingSchema Get(string name) => name == ProviderName.Sybase ? _nativeMappingSchema : _managedMappingSchema;
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Text;
 
-
 namespace LinqToDB.DataProvider.Sybase
 {
 	using Common;
@@ -72,12 +71,16 @@ namespace LinqToDB.DataProvider.Sybase
 
 		internal static readonly SybaseMappingSchema Instance = new ();
 
+		public override bool IsFluentMappingSupported => false;
+
 		public class NativeMappingSchema : MappingSchema
 		{
 			public NativeMappingSchema()
 				: base(ProviderName.Sybase, Instance)
 			{
 			}
+
+			public override bool IsFluentMappingSupported => false;
 		}
 
 		public class ManagedMappingSchema : MappingSchema
@@ -86,6 +89,8 @@ namespace LinqToDB.DataProvider.Sybase
 				: base(ProviderName.SybaseManaged, Instance)
 			{
 			}
+
+			public override bool IsFluentMappingSupported => false;
 		}
 	}
 }

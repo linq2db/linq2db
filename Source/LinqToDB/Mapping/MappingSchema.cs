@@ -78,7 +78,7 @@ namespace LinqToDB.Mapping
 		{
 		}
 
-		static long _configurationCounter;
+		//static long _configurationCounter;
 
 		/// <summary>
 		/// Creates mapping schema with specified configuration name and base mapping schemas.
@@ -96,7 +96,7 @@ namespace LinqToDB.Mapping
 			// always generate "unique" configuration name, if name not provided to avoid duplicate names
 			// e.g. see https://github.com/linq2db/linq2db/issues/3251
 			if (string.IsNullOrEmpty(configuration))
-				configuration = "auto_" + Interlocked.Increment(ref _configurationCounter);
+				configuration = string.Empty;// $"auto_{Interlocked.Increment(ref _configurationCounter)}";
 
 			var schemaInfo = new MappingSchemaInfo(configuration);
 
@@ -110,10 +110,13 @@ namespace LinqToDB.Mapping
 			{
 				Schemas = new MappingSchemaInfo[1 + schemas[0].Schemas.Length];
 				Schemas[0] = schemaInfo;
+
 				Array.Copy(schemas[0].Schemas, 0, Schemas, 1, schemas[0].Schemas.Length);
 
 				var baseConverters = new ValueToSqlConverter[1 + schemas[0].ValueToSqlConverter.BaseConverters.Length];
+
 				baseConverters[0] = schemas[0].ValueToSqlConverter;
+
 				Array.Copy(schemas[0].ValueToSqlConverter.BaseConverters, 0, baseConverters, 1, schemas[0].ValueToSqlConverter.BaseConverters.Length);
 
 				ValueToSqlConverter = new ValueToSqlConverter(baseConverters);
@@ -1342,6 +1345,8 @@ namespace LinqToDB.Mapping
 
 				ValueToSqlConverter.SetDefaults();
 			}
+
+			public override bool IsFluentMappingSupported => false;
 		}
 
 		#endregion
@@ -1745,5 +1750,7 @@ namespace LinqToDB.Mapping
 				.OrderBy(static _ => _.Item2)
 				.Select (static _ => _.Item1);
 		}
+
+		public virtual bool IsFluentMappingSupported => true;
 	}
 }

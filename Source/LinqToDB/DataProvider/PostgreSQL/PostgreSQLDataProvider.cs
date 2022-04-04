@@ -532,13 +532,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return null;
 		}
 
-		private static MappingSchema GetMappingSchema(PostgreSQLVersion version, MappingSchema providerSchema)
+		static MappingSchema GetMappingSchema(PostgreSQLVersion version, MappingSchema providerSchema)
 		{
 			return version switch
 			{
-				PostgreSQLVersion.v92 => new PostgreSQL92MappingSchema(providerSchema),
-				PostgreSQLVersion.v93 => new PostgreSQL93MappingSchema(providerSchema),
-				_                     => new PostgreSQL95MappingSchema(providerSchema),
+				PostgreSQLVersion.v92 => new PostgreSQLMappingSchema.PostgreSQL92MappingSchema(providerSchema),
+				PostgreSQLVersion.v93 => new PostgreSQLMappingSchema.PostgreSQL93MappingSchema(providerSchema),
+				_                     => new PostgreSQLMappingSchema.PostgreSQL95MappingSchema(providerSchema),
 			};
 		}
 	}

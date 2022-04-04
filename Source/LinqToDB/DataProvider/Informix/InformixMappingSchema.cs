@@ -105,6 +105,8 @@ namespace LinqToDB.DataProvider.Informix
 
 		internal static readonly InformixMappingSchema Instance = new ();
 
+		public override bool IsFluentMappingSupported => false;
+
 		public class IfxMappingSchema : MappingSchema
 		{
 			public IfxMappingSchema()
@@ -116,6 +118,8 @@ namespace LinqToDB.DataProvider.Informix
 				: base(ProviderName.Informix, Array<MappingSchema>.Append(schemas, Instance))
 			{
 			}
+
+			public override bool IsFluentMappingSupported => false;
 		}
 
 		public class DB2MappingSchema : MappingSchema
@@ -129,6 +133,8 @@ namespace LinqToDB.DataProvider.Informix
 				: base(ProviderName.InformixDB2, Array<MappingSchema>.Append(schemas, Instance))
 			{
 			}
+
+			public override bool IsFluentMappingSupported => false;
 		}
 	}
 }
