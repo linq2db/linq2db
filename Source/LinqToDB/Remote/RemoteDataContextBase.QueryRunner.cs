@@ -145,6 +145,26 @@ namespace LinqToDB.Remote
 				base.Dispose();
 			}
 
+#if !NATIVE_ASYNC
+			public override async Task DisposeAsync()
+			{
+				if (_client is IDisposable disposable)
+					disposable.Dispose();
+
+				await base.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
+#else
+			public override async ValueTask DisposeAsync()
+			{
+				if (_client is IAsyncDisposable asyncDisposable)
+					await asyncDisposable.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				else if (_client is IDisposable disposable)
+					disposable.Dispose();
+
+				await base.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
+#endif
+
 			public override int ExecuteNonQuery()
 			{
 				SetCommand(false);

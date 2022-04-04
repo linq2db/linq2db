@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Remote.WCF
 {
-	class WcfLinqServiceClient : ClientBase<IWcfLinqService>, ILinqService, IDisposable
+	class WcfLinqServiceClient : ClientBase<IWcfLinqService>, ILinqService
 	{
 		public WcfLinqServiceClient(string endpointConfigurationName)
 			: base(endpointConfigurationName)
@@ -81,29 +81,5 @@ namespace LinqToDB.Remote.WCF
 		}
 
 		#endregion
-
-		void IDisposable.Dispose()
-		{
-			try
-			{
-				if (State != CommunicationState.Faulted)
-					((ICommunicationObject)this).Close();
-				else
-					Abort();
-			}
-			catch (CommunicationException)
-			{
-				Abort();
-			}
-			catch (TimeoutException)
-			{
-				Abort();
-			}
-			catch (Exception)
-			{
-				Abort();
-				throw;
-			}
-		}
 	}
 }

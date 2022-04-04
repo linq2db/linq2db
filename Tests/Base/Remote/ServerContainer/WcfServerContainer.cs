@@ -10,6 +10,7 @@ using System.Diagnostics;
 using LinqToDB;
 using Tests.Model.Remote.WCF;
 using Tests.Model;
+using System.Collections.Concurrent;
 
 namespace Tests.Remote.ServerContainer
 {
@@ -23,8 +24,7 @@ namespace Tests.Remote.ServerContainer
 		//useful for async tests
 		public bool KeepSamePortBetweenThreads { get; set; } = true;
 
-		private TestWcfLinqService? _service;
-		private bool                _isHostOpen;
+		private ConcurrentDictionary<int, TestWcfLinqService> _openHosts = new();
 
 		public WcfServerContainer()
 		{
@@ -36,21 +36,21 @@ namespace Tests.Remote.ServerContainer
 			bool suppressSequentialAccess,
 			string configuration)
 		{
-			OpenHost(ms);
+			var service = OpenHost(ms);
 
-			_service!.SuppressSequentialAccess = suppressSequentialAccess;
+			service.SuppressSequentialAccess = suppressSequentialAccess;
 			if (interceptor != null)
 			{
-				_service!.AddInterceptor(interceptor);
+				service.AddInterceptor(interceptor);
 			}
 
 			var dx = new TestWcfDataContext(
 				GetPort(),
 				() =>
 				{
-					_service!.SuppressSequentialAccess = false;
+					service.SuppressSequentialAccess = false;
 					if (interceptor != null)
-						_service!.RemoveInterceptor();
+						service.RemoveInterceptor();
 				})
 			{ Configuration = configuration };
 
@@ -62,53 +62,67 @@ namespace Tests.Remote.ServerContainer
 			return dx;
 		}
 
-		private void OpenHost(MappingSchema? ms)
+		private TestWcfLinqService OpenHost(MappingSchema? ms)
 		{
-			if (_isHostOpen)
+			var port = GetPort();
+			if (_openHosts.TryGetValue(port, out var service))
 			{
-				_service!.MappingSchema = ms;
-				return;
+				service.MappingSchema = ms;
+				return service;
 			}
-
-			ServiceHost host;
 
 			lock (_syncRoot)
 			{
-				if (_isHostOpen)
+				if (_openHosts.TryGetValue(port, out service))
 				{
-					_service!.MappingSchema = ms;
-					return;
+					service.MappingSchema = ms;
+					return service;
 				}
 
-				host = new ServiceHost(_service = new TestWcfLinqService(new LinqService(ms), null, false) { AllowUpdates = true }, new Uri($"net.tcp://localhost:{GetPort()}"));
-				_isHostOpen = true;
+				var host = new ServiceHost(service = new TestWcfLinqService(new LinqService(), null, false) { AllowUpdates = true }, new Uri($"net.tcp://localhost:{GetPort()}"));
+				service.MappingSchema = ms;
+
+				host.Description.Behaviors.Add(new ServiceMetadataBehavior());
+				host.Description.Behaviors.Find<ServiceDebugBehavior>().IncludeExceptionDetailInFaults = true;
+				host.AddServiceEndpoint(typeof(IMetadataExchange), MetadataExchangeBindings.CreateMexTcpBinding(), "mex");
+				host.AddServiceEndpoint(
+					typeof(IWcfLinqService),
+					new NetTcpBinding(SecurityMode.None)
+					{
+						MaxReceivedMessageSize = 10000000,
+						MaxBufferPoolSize      = 10000000,
+						MaxBufferSize          = 10000000,
+						CloseTimeout           = new TimeSpan(00, 01, 00),
+						OpenTimeout            = new TimeSpan(00, 01, 00),
+						ReceiveTimeout         = new TimeSpan(00, 10, 00),
+						SendTimeout            = new TimeSpan(00, 10, 00),
+					},
+					"LinqOverWCF");
+
+				host.Faulted += Host_Faulted;
+				host.Open();
+
+				_openHosts[port] = service;
+
+				TestExternals.Log($"WCF host opened, Address : {host.BaseAddresses[0]}");
 			}
 
-			host.Description.Behaviors.Add(new ServiceMetadataBehavior());
-			host.Description.Behaviors.Find<ServiceDebugBehavior>().IncludeExceptionDetailInFaults = true;
-			host.AddServiceEndpoint(typeof(IMetadataExchange), MetadataExchangeBindings.CreateMexTcpBinding(), "mex");
-			host.AddServiceEndpoint(
-				typeof(IWcfLinqService),
-				new NetTcpBinding(SecurityMode.None)
-				{
-					MaxReceivedMessageSize = 10000000,
-					MaxBufferPoolSize      = 10000000,
-					MaxBufferSize          = 10000000,
-					CloseTimeout           = new TimeSpan(00, 01, 00),
-					OpenTimeout            = new TimeSpan(00, 01, 00),
-					ReceiveTimeout         = new TimeSpan(00, 10, 00),
-					SendTimeout            = new TimeSpan(00, 10, 00),
-				},
-				"LinqOverWCF");
+			return service;
+		}
 
-			host.Open();
-
-			TestExternals.Log($"WCF host opened, Address : {host.BaseAddresses[0]}");
+		private void Host_Faulted(object sender, EventArgs e)
+		{
+			throw new NotImplementedException();
 		}
 
 		public int GetPort()
 		{
-			return Port + TestExternals.RunID;
+			if (KeepSamePortBetweenThreads)
+			{
+				return Port;
+			}
+
+			return Port + (Environment.CurrentManagedThreadId % 1000) + TestExternals.RunID;
 		}
 
 	}
