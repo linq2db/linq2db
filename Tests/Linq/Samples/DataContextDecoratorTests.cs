@@ -33,7 +33,8 @@ namespace Tests.Samples
 				MappingSchema = mappingSchema;
 			}
 
-			public string              ContextID             => _context.ContextID;
+			public string              ContextName           => _context.ContextName;
+			public int                 ContextID             => _context.ContextID;
 			public Func<ISqlOptimizer> GetSqlOptimizer       => _context.GetSqlOptimizer;
 			public Type                DataReaderType        => _context.DataReaderType;
 			public Func<ISqlBuilder>   CreateSqlProvider     => _context.CreateSqlProvider;

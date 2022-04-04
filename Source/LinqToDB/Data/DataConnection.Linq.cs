@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Interceptors;
 
 namespace LinqToDB.Data
 {
@@ -90,7 +89,8 @@ namespace LinqToDB.Data
 			return (DataConnection)Clone();
 		}
 
-		string IDataContext.ContextID => DataProvider.Name;
+		string IDataContext.ContextName => DataProvider.Name;
+		int    IDataContext.ContextID   => DataProvider.ID;
 
 		Func<ISqlBuilder> IDataContext.CreateSqlProvider => () => DataProvider.CreateSqlBuilder(MappingSchema);
 

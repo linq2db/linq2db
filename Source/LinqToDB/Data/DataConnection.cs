@@ -226,35 +226,41 @@ namespace LinqToDB.Data
 		{
 			if (options == null)
 				throw new ArgumentNullException(nameof(options));
-			
+
 			if (!options.IsValidConfigForConnectionType(this))
 				throw new LinqToDBException(
 					$"Improper options type used to create DataConnection {GetType()}, try creating a public constructor calling base and accepting type {nameof(LinqToDbConnectionOptions)}<{GetType().Name}>");
-			
+
 			InitConfig();
 
 			DbConnection?  localConnection  = null;
 			DbTransaction? localTransaction = null;
-			
+
 			switch (options.SetupType)
 			{
 				case ConnectionSetupType.ConfigurationString:
 				case ConnectionSetupType.DefaultConfiguration:
+				{
 					ConfigurationString = options.ConfigurationString ?? DefaultConfiguration;
+
 					if (ConfigurationString == null)
 						throw new LinqToDBException("Configuration string is not provided.");
+
 					var ci = GetConfigurationInfo(ConfigurationString);
 
 					DataProvider     = ci.DataProvider;
 					ConnectionString = ci.ConnectionString;
 					MappingSchema    = DataProvider.MappingSchema;
-					break;
 
+					break;
+				}
 				case ConnectionSetupType.ConnectionString:
-					if (options.ProviderName == null && options.DataProvider == null) 
+				{
+					if (options.ProviderName == null && options.DataProvider == null)
 						throw new LinqToDBException("DataProvider was not specified");
 
 					IDataProvider? dataProvider;
+
 					if (options.ProviderName != null)
 					{
 						if (!_dataProviders.TryGetValue(options.ProviderName, out dataProvider))
@@ -269,47 +275,49 @@ namespace LinqToDB.Data
 					DataProvider     = dataProvider;
 					ConnectionString = options.ConnectionString;
 					MappingSchema    = DataProvider.MappingSchema;
+
 					break;
-				
+				}
 				case ConnectionSetupType.ConnectionFactory:
+				{
 					//copy to tmp variable so that if the factory in options gets changed later we will still use the old one
 					//is this expected?
 					var originalConnectionFactory = options.ConnectionFactory!;
+
 					_connectionFactory = () =>
 					{
 						var connection = originalConnectionFactory();
-						
 						return connection;
 					};
 
 					DataProvider  = options.DataProvider!;
 					MappingSchema = DataProvider.MappingSchema;
+
 					break;
-				
+				}
 				case ConnectionSetupType.Connection:
-					{
-						localConnection    = options.DbConnection;
-						_disposeConnection = options.DisposeConnection;
+				{
+					localConnection    = options.DbConnection;
+					_disposeConnection = options.DisposeConnection;
 
-						DataProvider  = options.DataProvider!;
-						MappingSchema = DataProvider.MappingSchema;
-						break;
-					}
-
+					DataProvider  = options.DataProvider!;
+					MappingSchema = DataProvider.MappingSchema;
+					break;
+				}
 				case ConnectionSetupType.Transaction:
-					{
-						localConnection        = options.DbTransaction!.Connection;
-						localTransaction       = options.DbTransaction;
+				{
+					localConnection    = options.DbTransaction!.Connection;
+					localTransaction   = options.DbTransaction;
 
-						_closeTransaction  = false;
-						_closeConnection   = false;
-						_disposeConnection = false;
+					_closeTransaction  = false;
+					_closeConnection   = false;
+					_disposeConnection = false;
 
-						DataProvider  = options.DataProvider!;
-						MappingSchema = DataProvider.MappingSchema;
-						break;
-					}
+					DataProvider  = options.DataProvider!;
+					MappingSchema = DataProvider.MappingSchema;
 
+					break;
+				}
 				default:
 					throw new NotImplementedException($"SetupType: {options.SetupType}");
 			}
@@ -1626,13 +1634,13 @@ namespace LinqToDB.Data
 						dataConnection.TransactionAsync!.Rollback();
 
 						if (dataConnection._closeTransaction)
-				{
+						{
 							dataConnection.TransactionAsync.Dispose();
 							dataConnection.TransactionAsync = null;
 
 							if (dataConnection._command != null)
 								dataConnection._command.Transaction = null;
-				}
+						}
 
 						return true;
 					});
@@ -1722,7 +1730,7 @@ namespace LinqToDB.Data
 		/// Gets list of query hints (writable collection), that will be used only for next query, executed through current connection.
 		/// </summary>
 		public  List<string>  NextQueryHints => _nextQueryHints ??= new List<string>();
-		
+
 		/// <summary>
 		/// Adds additional mapping schema to current connection.
 		/// </summary>

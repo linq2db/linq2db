@@ -52,11 +52,11 @@ namespace LinqToDB.Linq
 
 		#region Compare
 
-		internal readonly string           ContextID;
+		internal readonly int              ContextID;
 		internal readonly Type             ContextType;
 		internal readonly Expression?      Expression;
 		internal readonly MappingSchema    MappingSchema;
-		internal readonly string           ConfigurationID;
+		internal readonly int              ConfigurationID;
 		internal readonly bool             InlineParameters;
 		internal readonly ISqlOptimizer    SqlOptimizer;
 		internal readonly SqlProviderFlags SqlProviderFlags;
@@ -65,9 +65,7 @@ namespace LinqToDB.Linq
 		protected bool Compare(IDataContext dataContext, Expression expr)
 		{
 			return
-				ContextID.Length        == dataContext.ContextID.Length                                                 &&
 				ContextID               == dataContext.ContextID                                                        &&
-				ConfigurationID.Length  == dataContext.MappingSchema.ConfigurationID.Length                             &&
 				ConfigurationID         == dataContext.MappingSchema.ConfigurationID                                    &&
 				InlineParameters        == dataContext.InlineParameters                                                 &&
 				ContextType             == dataContext.GetType()                                                        &&
@@ -147,8 +145,7 @@ namespace LinqToDB.Linq
 
 		internal object GetConvertedEnum(Type valueType, object value)
 		{
-			if (_enumConverters == null)
-				_enumConverters = new ConcurrentDictionary<Type, Func<object, object>>();
+			_enumConverters ??= new ();
 
 			if (!_enumConverters.TryGetValue(valueType, out var converter))
 			{

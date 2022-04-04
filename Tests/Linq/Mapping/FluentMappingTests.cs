@@ -98,6 +98,7 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
+
 			ms.EntityDescriptorCreatedCallback = (mappingSchema, entityDescriptor) =>
 			{
 				entityDescriptor.TableName = entityDescriptor.TableName.ToLower();
@@ -109,7 +110,6 @@ namespace Tests.Mapping
 
 			mb.Entity<MyClass>().HasTableName("NewName").Property(x => x.ID1).IsColumn();
 
-
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
 			Assert.That(ed.TableName, Is.EqualTo("newname"));
@@ -117,7 +117,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void AddAtribute1()
+		public void AddAttributeTest1()
 		{
 			var ms = new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
@@ -127,10 +127,15 @@ namespace Tests.Mapping
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
 			Assert.That(ed.TableName, Is.EqualTo("NewName"));
+
+			var ms2 = new MappingSchema();
+			var ed2 = ms2.GetEntityDescriptor(typeof(MyClass));
+
+			Assert.That(ed2.TableName, Is.EqualTo("MyClass"));
 		}
 
 		[Test]
-		public void AddAtribute2()
+		public void AddAttributeTest2()
 		{
 			var ms = new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();

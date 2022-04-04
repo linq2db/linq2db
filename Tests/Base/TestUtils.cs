@@ -143,7 +143,7 @@ namespace Tests
 			if (db is TestDataConnection testDb)
 				return testDb.ConfigurationString!;
 
-			return db.ContextID;
+			return db.ContextName;
 		}
 
 		/// <summary>

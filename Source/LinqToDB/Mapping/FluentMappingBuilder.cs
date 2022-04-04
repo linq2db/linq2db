@@ -20,16 +20,14 @@ namespace LinqToDB.Mapping
 		/// <param name="mappingSchema">Mapping schema.</param>
 		public FluentMappingBuilder(MappingSchema mappingSchema)
 		{
-			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
-
-			MappingSchema = mappingSchema;
+			MappingSchema = mappingSchema ?? throw new ArgumentNullException(nameof(mappingSchema));
 			MappingSchema.AddMetadataReader(_reader);
 		}
 
 		/// <summary>
 		/// Gets builder's mapping schema.
 		/// </summary>
-		public MappingSchema MappingSchema { get; private set; }
+		public MappingSchema MappingSchema { get; }
 
 		readonly FluentMetadataReader _reader = new FluentMetadataReader();
 

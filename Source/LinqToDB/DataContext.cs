@@ -97,6 +97,7 @@ namespace LinqToDB
 			if (options.WriteTrace    != null) _optionsBuilder.WriteTraceWith  (options.WriteTrace);
 
 			var dataProvider = options.DataProvider;
+
 			if (dataProvider == null)
 			{
 				if (options.ProviderName != null && options.ConnectionString != null)
@@ -132,7 +133,8 @@ namespace LinqToDB
 			// rebuild options instead of saving parameter directly (to have aggregated interceptors there)
 			_prebuiltOptions = _optionsBuilder.Build();
 
-			ContextID = dataProvider.Name;
+			ContextID   = dataProvider.ID;
+			ContextName = dataProvider.Name;
 		}
 
 		/// <summary>
@@ -147,10 +149,13 @@ namespace LinqToDB
 		/// Gets database provider implementation.
 		/// </summary>
 		public IDataProvider DataProvider        => _optionsBuilder.DataProvider!;
+
 		/// <summary>
 		/// Gets or sets context identifier. Uses provider's name by default.
 		/// </summary>
-		public string        ContextID           { get; set; }
+		public string        ContextName         { get; private set; }
+
+		public int           ContextID           { get; private set; }
 		/// <summary>
 		/// Gets or sets mapping schema. Uses provider's mapping schema by default.
 		/// </summary>
@@ -406,8 +411,9 @@ namespace LinqToDB
 			var dc = new DataContext(_prebuiltOptions)
 			{
 				KeepConnectionAlive = KeepConnectionAlive,
+				ContextName         = ContextName,
 				ContextID           = ContextID,
-				InlineParameters        = InlineParameters
+				InlineParameters    = InlineParameters
 			};
 
 			if (forNestedQuery && _dataConnection != null && _dataConnection.IsMarsEnabled)

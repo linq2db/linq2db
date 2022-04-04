@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
+using LinqToDB.Common.Internal;
 
 namespace LinqToDB.DataProvider
 {
@@ -82,6 +83,16 @@ namespace LinqToDB.DataProvider
 
 		public virtual void InitContext(IDataContext dataContext)
 		{
+		}
+
+		int? _id;
+		public int ID
+		{
+			get
+			{
+				_id ??= new IdentifierBuilder(Name).CreateID();
+				return _id.Value;
+			}
 		}
 
 		public DbConnection CreateConnection(string connectionString)

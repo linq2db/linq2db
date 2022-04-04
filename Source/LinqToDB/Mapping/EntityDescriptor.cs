@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 
 namespace LinqToDB.Mapping
 {
 	using Common;
+	using Expressions;
 	using Extensions;
 	using Linq;
-	using LinqToDB.Expressions;
 	using Reflection;
-	using System.Linq.Expressions;
-	using System.Reflection;
 
 	/// <summary>
 	/// Stores mapping entity descriptor.
@@ -28,8 +28,8 @@ namespace LinqToDB.Mapping
 		{
 			MappingSchema = mappingSchema;
 			TypeAccessor  = TypeAccessor.GetAccessor(type);
-			Associations  = new List<AssociationDescriptor>();
-			Columns       = new List<ColumnDescriptor>();
+			Associations  = new ();
+			Columns       = new ();
 
 			Init();
 			InitInheritanceMapping();

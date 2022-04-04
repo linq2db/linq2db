@@ -1041,7 +1041,7 @@ namespace Tests
 
 		protected IEnumerable<LinqDataTypes2> AdjustExpectedData(ITestDataContext db, IEnumerable<LinqDataTypes2> data)
 		{
-			if (db.ProviderNeedsTimeFix(db.ContextID))
+			if (db.ProviderNeedsTimeFix(db.ContextName))
 			{
 				var adjusted = new List<LinqDataTypes2>();
 				foreach (var record in data)

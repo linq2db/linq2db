@@ -17,13 +17,13 @@ using JetBrains.Annotations;
 namespace LinqToDB.Mapping
 {
 	using Common;
+	using Common.Internal;
+	using Common.Internal.Cache;
 	using Expressions;
 	using Extensions;
 	using Metadata;
 	using SqlProvider;
 	using SqlQuery;
-	using Common.Internal.Cache;
-	using LinqToDB.Common.Internal;
 
 	/// <summary>
 	/// Mapping schema.
@@ -31,7 +31,7 @@ namespace LinqToDB.Mapping
 	[PublicAPI]
 	public class MappingSchema
 	{
-		private static readonly MemoryCache<(string baseSchemaId, string addedSchemaId)> _combinedSchemasCache = new (new ());
+		static readonly MemoryCache<(int baseSchemaId, int addedSchemaId)> _combinedSchemasCache = new (new ());
 
 		internal static MappingSchema CombineSchemas(MappingSchema mappingSchema1, MappingSchema mappingSchema2)
 		{
@@ -605,7 +605,7 @@ namespace LinqToDB.Mapping
 						new DefaultValueExpression(this, expr.Body.Type)),
 					expr.Parameters);
 			}
-			
+
 			return expr;
 		}
 
@@ -667,7 +667,7 @@ namespace LinqToDB.Mapping
 				type = type.WithScale(null).WithPrecision(null);
 				return true;
 			}
-			
+
 			if (type.Length != null)
 			{
 				type = type.WithLength(null);
@@ -904,18 +904,18 @@ namespace LinqToDB.Mapping
 		{
 			if (Schemas.Length > 0)
 			{
-			var list = new List   <IMetadataReader>(Schemas.Length);
-			var hash = new HashSet<IMetadataReader>();
+				var list = new List   <IMetadataReader>(Schemas.Length);
+				var hash = new HashSet<IMetadataReader>();
 
-			for (var i = 0; i < Schemas.Length; i++)
-			{
-				var s = Schemas[i];
-				if (s.MetadataReader != null && hash.Add(s.MetadataReader))
-					list.Add(s.MetadataReader);
+				for (var i = 0; i < Schemas.Length; i++)
+				{
+					var s = Schemas[i];
+					if (s.MetadataReader != null && hash.Add(s.MetadataReader))
+						list.Add(s.MetadataReader);
+				}
+
+				_metadataReaders = list.ToArray();
 			}
-
-			_metadataReaders = list.ToArray();
-		}
 			else
 				_metadataReaders = Array<IMetadataReader>.Empty;
 		}
@@ -1104,7 +1104,7 @@ namespace LinqToDB.Mapping
 		/// <param name="inherit">If <c>true</c> - include inherited attributes.</param>
 		/// <param name="exactForConfiguration">If <c>true</c> - only associated to configuration attributes will be returned.</param>
 		/// <returns>Attributes of specified type.</returns>
-		public T[] GetAttributes<T>(Type type, Func<T,string?> configGetter, bool inherit = true, 
+		public T[] GetAttributes<T>(Type type, Func<T,string?> configGetter, bool inherit = true,
 			bool exactForConfiguration = false)
 			where T : Attribute
 		{
@@ -1138,7 +1138,7 @@ namespace LinqToDB.Mapping
 		/// <param name="inherit">If <c>true</c> - include inherited attributes.</param>
 		/// <param name="exactForConfiguration">If <c>true</c> - only associated to configuration attributes will be returned.</param>
 		/// <returns>Attributes of specified type.</returns>
-		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, Func<T,string?> configGetter, bool inherit = true, 
+		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, Func<T,string?> configGetter, bool inherit = true,
 			bool exactForConfiguration = false)
 			where T : Attribute
 		{
@@ -1226,20 +1226,33 @@ namespace LinqToDB.Mapping
 
 		#region Configuration
 
-		private string? _configurationID;
+		int? _configurationID;
 		/// <summary>
 		/// Unique schema configuration identifier. For internal use only.
 		/// </summary>
-		internal  string  ConfigurationID
+		internal int ConfigurationID
 		{
-			get { return _configurationID ??= string.Join(".", ConfigurationList); }
+			get
+			{
+				if (_configurationID == null)
+				{
+					var idBuilder = new IdentifierBuilder(ConfigurationList.Length);
+
+					foreach (var c in ConfigurationList)
+						idBuilder.Add(c);
+
+					_configurationID = idBuilder.CreateID();
+				}
+
+				return _configurationID.Value;
+			}
 		}
 
 		private string[]? _configurationList;
 		/// <summary>
 		/// Gets configurations, associated with current mapping schema.
 		/// </summary>
-		public  string[]  ConfigurationList
+		public  string[]   ConfigurationList
 		{
 			get
 			{
@@ -1636,7 +1649,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public Action<MappingSchema, IEntityChangeDescriptor>? EntityDescriptorCreatedCallback { get; set; }
 
-		internal static MemoryCache<(Type entityType, string schemaId)> EntityDescriptorsCache { get; } = new (new ());
+		internal static MemoryCache<(Type entityType, int schemaId)> EntityDescriptorsCache { get; } = new (new ());
 
 		/// <summary>
 		/// Returns mapped entity descriptor.

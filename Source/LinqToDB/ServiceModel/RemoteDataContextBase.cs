@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 
 using JetBrains.Annotations;
+using LinqToDB.Common.Internal;
 
 namespace LinqToDB.ServiceModel
 {
@@ -73,8 +74,11 @@ namespace LinqToDB.ServiceModel
 		protected abstract IDataContext Clone    ();
 		protected abstract string       ContextIDPrefix { get; }
 
-		string?            _contextID;
-		string IDataContext.ContextID => _contextID ??= GetConfigurationInfo().MappingSchema.ConfigurationList[0];
+		string?            _contextName;
+		string IDataContext.ContextName => _contextName ??= GetConfigurationInfo().MappingSchema.ConfigurationList[0];
+
+		int?               _contextID;
+		int    IDataContext.ContextID   => _contextID   ??= new IdentifierBuilder(((IDataContext)this).ContextName).CreateID();
 
 		private MappingSchema? _mappingSchema;
 		public  MappingSchema   MappingSchema

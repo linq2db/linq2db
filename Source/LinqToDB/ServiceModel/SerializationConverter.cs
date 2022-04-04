@@ -17,8 +17,8 @@ namespace LinqToDB.ServiceModel
 	internal class SerializationConverter
 	{
 		static readonly Type _stringType = typeof(string);
-		static readonly MemoryCache<(Type from, string schemaId)> _serializeConverters   = new (new ());
-		static readonly MemoryCache<(Type to  , string schemaId)> _deserializeConverters = new (new ());
+		static readonly MemoryCache<(Type from, int schemaId)> _serializeConverters   = new (new ());
+		static readonly MemoryCache<(Type to  , int schemaId)> _deserializeConverters = new (new ());
 
 		public static void ClearCaches()
 		{

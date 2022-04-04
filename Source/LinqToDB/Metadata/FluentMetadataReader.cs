@@ -3,21 +3,21 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.Metadata
 {
 	using Common;
+	using Extensions;
 
 	public class FluentMetadataReader : IMetadataReader
 	{
 		// don't forget to put lock on List<Attribute> when access it
-		readonly ConcurrentDictionary<Type,List<Attribute>>                            _types          = new ConcurrentDictionary<Type,List<Attribute>>();
+		readonly ConcurrentDictionary<Type,List<Attribute>>                           _types          = new();
 		// set used to guarantee uniqueness
 		// list used to guarantee same order for columns in select queries
-		readonly ConcurrentDictionary<Type,Tuple<ISet<MemberInfo>, IList<MemberInfo>>> _dynamicColumns = new ConcurrentDictionary<Type,Tuple<ISet<MemberInfo>, IList<MemberInfo>>>();
+		readonly ConcurrentDictionary<Type,Tuple<ISet<MemberInfo>,IList<MemberInfo>>> _dynamicColumns = new();
 
-		private static bool IsSystemOrNullType(Type? type)
+		static bool IsSystemOrNullType(Type? type)
 			=> type == null || type == typeof(object) || type == typeof(ValueType) || type == typeof(Enum);
 
 		public T[] GetAttributes<T>(Type type, bool inherit = true)
@@ -102,7 +102,7 @@ namespace LinqToDB.Metadata
 			if (_dynamicColumns.TryGetValue(type, out var dynamicColumns))
 				lock (dynamicColumns)
 					return dynamicColumns.Item2.ToArray();
-			
+
 			return Array<MemberInfo>.Empty;
 		}
 
