@@ -246,9 +246,9 @@ namespace LinqToDB.Remote
 								new Expression[]
 								{
 									Expression.Constant(null, typeof(IDataProvider)),
-									Expression.Constant(mappingSchema),
+									Expression.Constant(mappingSchema, typeof(MappingSchema)),
 									Expression.Constant(sqlOptimizer),
-									Expression.Constant(key.Item2)
+									Expression.Constant(key.Item4)
 								}))
 							.CompileExpression();
 					}
