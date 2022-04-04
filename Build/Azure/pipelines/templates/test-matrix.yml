@@ -117,13 +117,30 @@ jobs:
             enabled: false
 
 # Access
-        - name: Access_MDB
+        - name: Access_MDB_1
           title: Access MDB (Jet/ODBC)
           config_win: access.mdb
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
+          enable_fw_netcore31: false # reduce test time
+          enable_fw_net60: false
+          is_experimental: false
+          x86: true
+          extra: --arch x86
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
+            enabled: false
+
+        - name: Access_MDB_2
+          title: Access MDB (Jet/ODBC)
+          config_win: access.mdb
+          enable_os_windows: true
+          enable_os_ubuntu: false
+          enable_os_macos: false
+          enable_fw_net472: false
           enable_fw_netcore31: false # reduce test time
           enable_fw_net60: true
           is_experimental: false
@@ -134,7 +151,7 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
             enabled: false
 
-        - name: Access_ACE
+        - name: Access_ACE_1
           title: Access ACE (OLEDB/ODBC) x86
           config_win: access.ace
           script_win_global: access.ace.cmd
@@ -142,6 +159,24 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
+          enable_fw_netcore31: false # reduce test time
+          enable_fw_net60: false
+          is_experimental: false
+          x86: true
+          extra: --arch x86
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
+            enabled: false
+
+        - name: Access_ACE_2
+          title: Access ACE (OLEDB/ODBC) x86
+          config_win: access.ace
+          script_win_global: access.ace.cmd
+          enable_os_windows: true
+          enable_os_ubuntu: false
+          enable_os_macos: false
+          enable_fw_net472: false
           enable_fw_netcore31: false # reduce test time
           enable_fw_net60: true
           is_experimental: false
@@ -359,7 +394,7 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
-        - name: SqlServer2008
+        - name: SqlServer2008_1
           title: SQL Server 2008
           config_win: sqlserver.2008
           script_win_global: sqlserver.2008.cmd
@@ -367,6 +402,22 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
+          enable_fw_netcore31: false # reduce test time
+          enable_fw_net60: false
+          is_experimental: false
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
+            enabled: false
+
+        - name: SqlServer2008_2
+          title: SQL Server 2008
+          config_win: sqlserver.2008
+          script_win_global: sqlserver.2008.cmd
+          enable_os_windows: true
+          enable_os_ubuntu: false
+          enable_os_macos: false
+          enable_fw_net472: false
           enable_fw_netcore31: false # reduce test time
           enable_fw_net60: true
           is_experimental: false
@@ -391,7 +442,7 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
-        - name: SqlServer2014
+        - name: SqlServer2014_1
           title: SQL Server 2014
           config_win: sqlserver.2014
           script_win_global: sqlserver.2014.cmd
@@ -399,6 +450,22 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
+          enable_fw_netcore31: false # reduce test time
+          enable_fw_net60: false
+          is_experimental: false
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
+            enabled: false
+
+        - name: SqlServer2014_2
+          title: SQL Server 2014
+          config_win: sqlserver.2014
+          script_win_global: sqlserver.2014.cmd
+          enable_os_windows: true
+          enable_os_ubuntu: false
+          enable_os_macos: false
+          enable_fw_net472: false
           enable_fw_netcore31: false # reduce test time
           enable_fw_net60: true
           is_experimental: false
@@ -466,7 +533,7 @@ jobs:
             enabled: false
 
 # additional test runner for win as SqlServer2019 doesn't fit into time limits
-        - name: SqlServer2019Extras
+        - name: SqlServer2019Extras_1
           title: SQL Server EXTRAS
           config_win: sqlserver.extras
           script_win_global: sqlserver.extras.cmd
@@ -475,6 +542,23 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos:  false
           enable_fw_net472: true
+          enable_fw_netcore31: false # reduce test time
+          enable_fw_net60: false
+          is_experimental: false
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]'))) }}:
+            enabled: false
+
+        - name: SqlServer2019Extras_2
+          title: SQL Server EXTRAS
+          config_win: sqlserver.extras
+          script_win_global: sqlserver.extras.cmd
+          install_docker_macos: true
+          enable_os_windows: true
+          enable_os_ubuntu: false
+          enable_os_macos:  false
+          enable_fw_net472: false
           enable_fw_netcore31: false # reduce test time
           enable_fw_net60: true
           is_experimental: false

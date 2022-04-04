@@ -7,6 +7,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\..\Source\LinqToDB.AspNet\LinqToDB.AspNet.csproj" />
+		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
 
 		<None Include="..\..\Data\*">
