@@ -124,7 +124,7 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
-          enable_fw_netcore31: true
+          enable_fw_netcore31: false # reduce test time
           enable_fw_net60: true
           is_experimental: false
           x86: true
@@ -142,7 +142,7 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
-          enable_fw_netcore31: true
+          enable_fw_netcore31: false # reduce test time
           enable_fw_net60: true
           is_experimental: false
           x86: true
@@ -153,15 +153,15 @@ jobs:
             enabled: false
 
         - name: Access_ACE_x64
-          title: Access ACE (OLEDB/ODBC) x64
-          config_win: access.ace
+          title: Access ACE (ODBC-only) x64 # x64 OLEDB crashes randomly https://github.com/dotnet/runtime/issues/46187
+          config_win: access.ace.x64
           script_win_global: access.ace.x64.cmd
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_net472: true
-          enable_fw_netcore31: false # https://github.com/dotnet/runtime/issues/46187
-          enable_fw_net60: false # https://github.com/dotnet/runtime/issues/46187
+          enable_fw_netcore31: true
+          enable_fw_net60: true
           is_experimental: false
           extra: --arch x64
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:

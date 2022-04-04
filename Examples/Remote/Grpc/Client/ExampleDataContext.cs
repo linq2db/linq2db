@@ -13,8 +13,11 @@ namespace DataModels
 				  "https://localhost:15001",
 				  new GrpcChannelOptions()
 				  {
+					  // HttpClient instantiated manually for simplicilty of example
+					  // in real code concider use of dependency injection and IHttpClientFactory
+					  // https://docs.microsoft.com/en-us/dotnet/core/extensions/http-client
 					  HttpClient = new HttpClient(
-						  new HttpClientHandler
+						  new HttpClientHandler()
 						  {
 							  ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
 						  })

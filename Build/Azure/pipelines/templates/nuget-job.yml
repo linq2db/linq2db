@@ -48,7 +48,7 @@ jobs:
       targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB.Remote.Grpc/bin/Release'
 
   - task: DownloadPipelineArtifact@2
-    displayName: Download test files (for t4 tools, part 1)
+    displayName: Download test files (for t4 nugets)
     inputs:
       artifactName: '$(netfx472_tests)'
       targetPath: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472'
