@@ -486,6 +486,7 @@ namespace Tests
 			{
 				if (_types == null)
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 						_types = db.Types.ToList();
 
@@ -500,6 +501,7 @@ namespace Tests
 			{
 				if (_types2 == null)
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 						_types2 = db.Types2.ToList();
 
@@ -517,6 +519,7 @@ namespace Tests
 				if (_person == null)
 				{
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 						_person = db.Person.ToList();
 
@@ -536,6 +539,7 @@ namespace Tests
 				if (_patient == null)
 				{
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 						_patient = db.Patient.ToList();
 
@@ -555,6 +559,7 @@ namespace Tests
 				if (_doctor == null)
 				{
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 						_doctor = db.Doctor.ToList();
 				}
@@ -572,6 +577,7 @@ namespace Tests
 			{
 				if (_parent == null)
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 					{
 						_parent = db.Parent.ToList();
@@ -663,6 +669,7 @@ namespace Tests
 			{
 				if (_child == null)
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 					{
 						db.Child.Delete(c => c.ParentID >= 1000);
@@ -690,6 +697,7 @@ namespace Tests
 			{
 				if (_grandChild == null)
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 					{
 						_grandChild = db.GrandChild.ToList();
@@ -710,6 +718,7 @@ namespace Tests
 			{
 				if (_grandChild1 == null)
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 					{
 						_grandChild1 = db.GrandChild1.ToList();
@@ -737,6 +746,7 @@ namespace Tests
 				if (_inheritanceParent == null)
 				{
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 						_inheritanceParent = db.InheritanceParent.ToList();
 				}
@@ -753,6 +763,7 @@ namespace Tests
 				if (_inheritanceChild == null)
 				{
 					using (new DisableLogging())
+					using (new DisableBaseline("Default Database"))
 					using (var db = new TestDataConnection())
 						_inheritanceChild = db.InheritanceChild.LoadWith(_ => _.Parent).ToList();
 				}
@@ -786,6 +797,7 @@ namespace Tests
 				{
 					if (_category == null)
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_category = db.Category.ToList();
 					return _category;
@@ -800,6 +812,7 @@ namespace Tests
 					if (_customer == null)
 					{
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_customer = db.Customer.ToList();
 
@@ -819,6 +832,7 @@ namespace Tests
 					if (_employee == null)
 					{
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 						{
 							_employee = db.Employee.ToList();
@@ -842,6 +856,7 @@ namespace Tests
 				{
 					if (_employeeTerritory == null)
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_employeeTerritory = db.EmployeeTerritory.ToList();
 					return _employeeTerritory;
@@ -855,6 +870,7 @@ namespace Tests
 				{
 					if (_orderDetail == null)
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_orderDetail = db.OrderDetail.ToList();
 					return _orderDetail;
@@ -869,6 +885,7 @@ namespace Tests
 					if (_order == null)
 					{
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_order = db.Order.ToList();
 
@@ -890,6 +907,7 @@ namespace Tests
 				{
 					if (_product == null)
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_product = db.Product.ToList();
 
@@ -910,6 +928,7 @@ namespace Tests
 				{
 					if (_region == null)
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_region = db.Region.ToList();
 					return _region;
@@ -923,6 +942,7 @@ namespace Tests
 				{
 					if (_shipper == null)
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_shipper = db.Shipper.ToList();
 					return _shipper;
@@ -936,6 +956,7 @@ namespace Tests
 				{
 					if (_supplier == null)
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_supplier = db.Supplier.ToList();
 					return _supplier;
@@ -949,6 +970,7 @@ namespace Tests
 				{
 					if (_territory == null)
 						using (new DisableLogging())
+						using (new DisableBaseline("Default Database"))
 						using (var db = new NorthwindDB(_context))
 							_territory = db.Territory.ToList();
 					return _territory;
@@ -1203,6 +1225,7 @@ namespace Tests
 							{
 								var newCall = LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Queryable.ToArray, mc);
 								using (new DisableLogging())
+								using (new DisableBaseline("test infrastructure"))
 								{
 									var items = newCall.EvaluateExpression();
 									itemsExpression = Expression.Constant(items, entityType.MakeArrayType());
@@ -1372,7 +1395,7 @@ namespace Tests
 				if (!_dic.TryGetValue(context, out var list))
 				{
 					using (new DisableLogging())
-					using (new DisableLogging())
+					using (new DisableBaseline("Test Cache"))
 					using (var db = new DataConnection(context))
 					{
 						list = db.GetTable<T>().ToList();
