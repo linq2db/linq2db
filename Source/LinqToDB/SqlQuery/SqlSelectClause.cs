@@ -171,6 +171,7 @@ namespace LinqToDB.SqlQuery
 		/// <returns>Returns index of column in Columns list.</returns>
 		int AddOrFindColumn(SqlColumn col)
 		{
+			var colUnderlying = col.UnderlyingExpression();
 			var colExpression = col.Expression;
 
 			for (var i = 0; i < Columns.Count; i++)
@@ -178,9 +179,21 @@ namespace LinqToDB.SqlQuery
 				var column           = Columns[i];
 				var columnExpression = column.Expression;
 
-				if (columnExpression.CanBeNull == colExpression.CanBeNull && column.Expression.Equals(col.Expression))
+				if (columnExpression.CanBeNull == colExpression.CanBeNull)
 				{
-					return i;
+					var underlying = column.UnderlyingExpression();
+
+					if (underlying.Equals(colUnderlying))
+					{
+						if (underlying.ElementType    == QueryElementType.SqlValue &&
+						    colExpression.ElementType == QueryElementType.Column)
+						{
+							// avoid suppressing constant columns
+							continue;
+						}
+
+						return i;
+					}
 				}
 			}
 
