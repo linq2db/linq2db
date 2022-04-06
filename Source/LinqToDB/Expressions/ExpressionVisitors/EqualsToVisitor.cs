@@ -200,8 +200,8 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.TypeIs:
 				{
-					//						var e1 = (TypeBinaryExpression)expr1;
-					//						var e2 = (TypeBinaryExpression)expr2;
+					// var e1 = (TypeBinaryExpression)expr1;
+					// var e2 = (TypeBinaryExpression)expr2;
 					return
 						((TypeBinaryExpression)expr1).TypeOperand == ((TypeBinaryExpression)expr2).TypeOperand &&
 						((TypeBinaryExpression)expr1).Expression.EqualsTo(((TypeBinaryExpression)expr2).Expression, info);

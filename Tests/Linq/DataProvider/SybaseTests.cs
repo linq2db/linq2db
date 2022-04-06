@@ -1075,11 +1075,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = GetDataConnection(context))
 			{
-				var ms = new MappingSchema();
-
-				db.AddMappingSchema(ms);
-
-				ms.GetFluentMappingBuilder()
+				db.MappingSchema.GetFluentMappingBuilder()
 					.Entity<AllType>()
 						.HasTableName("AllTypeCreateTest");
 

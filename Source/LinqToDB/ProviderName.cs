@@ -1,9 +1,12 @@
-﻿using JetBrains.Annotations;
-using LinqToDB.DataProvider.DB2;
-using LinqToDB.DataProvider.SqlServer;
+﻿using System;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB
 {
+	using DataProvider.DB2;
+	using DataProvider.SqlServer;
+
 	/// <summary>
 	/// Default names for providers.
 	/// </summary>
@@ -54,7 +57,7 @@ namespace LinqToDB
 		public const string InformixDB2   = "Informix.DB2";
 		/// <summary>
 		/// Microsoft SQL Server default provider (SQL Server 2008).
-		/// Used as configuration name for SQL Server base mapping schema <see cref="DataProvider.SqlServer.SqlServerMappingSchema"/>.
+		/// Used as configuration name for SQL Server base mapping schema <see cref="SqlServerMappingSchema"/>.
 		/// </summary>
 		public const string SqlServer     = "SqlServer";
 		/// <summary>

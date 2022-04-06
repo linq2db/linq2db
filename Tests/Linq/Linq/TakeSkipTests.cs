@@ -20,7 +20,7 @@ namespace Tests.Linq
 
 		static void CheckTakeGlobalParams(IDataContext dc, int additional = 0)
 		{
-			CheckTakeSkipParams(dc, !LinqToDB.Common.Configuration.Linq.ParameterizeTakeSkip, additional);
+			CheckTakeSkipParams(dc, !LinqToDB.Common.Configuration.Linq.ParametrizeTakeSkip, additional);
 		}
 
 		static void CheckTakeSkipParams(IDataContext dc, bool inline, int additional = 0)

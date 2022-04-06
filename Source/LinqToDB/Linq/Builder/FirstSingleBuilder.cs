@@ -53,7 +53,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (take != 0)
 			{
-				var takeExpression = Configuration.Linq.ParameterizeTakeSkip
+				var takeExpression = Configuration.Linq.ParametrizeTakeSkip
 					? (ISqlExpression)new SqlParameter(new DbDataType(typeof(int)), "take", take)
 					{
 						IsQueryParameter = !builder.DataContext.InlineParameters
@@ -350,7 +350,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (expression == null)
 					{
-						if (   !Builder.DataContext.SqlProviderFlags.IsSubQueryColumnSupported 
+						if (   !Builder.DataContext.SqlProviderFlags.IsSubQueryColumnSupported
 						    || Sequence.IsExpression(null, level, RequestFor.Object).Result)
 						{
 							return Builder.BuildMultipleQuery(Parent!, _methodCall, enforceServerSide);

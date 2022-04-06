@@ -237,7 +237,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void Assosiation()
+		public void Association()
 		{
 			var ms = new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();

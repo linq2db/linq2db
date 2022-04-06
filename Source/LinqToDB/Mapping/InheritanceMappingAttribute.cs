@@ -1,4 +1,5 @@
 ﻿using System;
+using LinqToDB.Common.Internal;
 
 namespace LinqToDB.Mapping
 {
@@ -13,7 +14,7 @@ namespace LinqToDB.Mapping
 	/// for a list of supported types.
 	/// </remarks>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple=true)]
-	public class InheritanceMappingAttribute : Attribute
+	public class InheritanceMappingAttribute : MappingAttribute
 	{
 		/// <summary>
 		/// Gets or sets mapping schema configuration name, for which this attribute should be taken into account.
@@ -36,5 +37,11 @@ namespace LinqToDB.Mapping
 		/// Gets or sets type, to which record with current discriminator value should be mapped.
 		/// </summary>
 		public Type   Type          { get; set; } = null!;
+
+		public override string GetObjectID()
+		{
+			var type = IdentifierBuilder.CreateID(Type);
+			return $".{Configuration}.{Code}.{(IsDefault?'1':'0')}.{type}.";
+		}
 	}
 }

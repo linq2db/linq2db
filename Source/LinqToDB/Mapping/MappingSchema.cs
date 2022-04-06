@@ -8,7 +8,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -62,6 +61,13 @@ namespace LinqToDB.Mapping
 		public MappingSchema(params MappingSchema[] schemas)
 			: this(null, schemas)
 		{
+		}
+
+		public MappingSchema(int n, MappingSchema schema)
+			: this(null, new[] { schema })
+		{
+			_configurationList = schema.ConfigurationList;
+			_configurationID   = schema.ConfigurationID;
 		}
 
 		/// <summary>
@@ -964,9 +970,12 @@ namespace LinqToDB.Mapping
 		/// <param name="reader">Metadata attributes provider.</param>
 		public void AddMetadataReader(IMetadataReader reader)
 		{
+			ResetID();
+
 			lock (_metadataReadersSyncRoot)
 			{
 				var currentReader = MetadataReader;
+
 				if (currentReader is MetadataReader metadataReader)
 				{
 					metadataReader.AddReader(reader);
@@ -1222,7 +1231,10 @@ namespace LinqToDB.Mapping
 		/// <returns>Fluent mapping builder.</returns>
 		public FluentMappingBuilder GetFluentMappingBuilder()
 		{
-			return new FluentMappingBuilder(this);
+			if (IsFluentMappingSupported)
+				return new (this);
+
+			throw new LinqToDBException("Mapping Schema does not support fluent mapping.");
 		}
 
 		#endregion
@@ -1244,11 +1256,51 @@ namespace LinqToDB.Mapping
 					foreach (var c in ConfigurationList)
 						idBuilder.Add(c);
 
+					var list = new List<FluentMetadataReader>();
+
+					lock (_metadataReadersSyncRoot)
+					{
+						foreach (var schema in Schemas)
+						{
+							switch (schema.MetadataReader)
+							{
+								case FluentMetadataReader fr :
+									list.Add(fr);
+									break;
+								case MetadataReader mr :
+									foreach (var r in mr.Readers)
+										if (r is FluentMetadataReader fr)
+											list.Add(fr);
+									break;
+							}
+						}
+					}
+
+					if (list.Count > 0)
+					{
+						foreach (var id in
+						(
+							from id in list
+							from a in id.GetObjectIDs()
+							orderby a
+							select a
+						)
+						.Distinct())
+						{
+							idBuilder.Add(id);
+						}
+					}
+
 					_configurationID = idBuilder.CreateID();
 				}
 
 				return _configurationID.Value;
 			}
+		}
+
+		internal void ResetID()
+		{
+			_configurationID = null;
 		}
 
 		private string[]? _configurationList;
@@ -1285,7 +1337,7 @@ namespace LinqToDB.Mapping
 
 			Schemas = new[] { mappingSchemaInfo };
 
-			ValueToSqlConverter = new ValueToSqlConverter();
+			ValueToSqlConverter = new ();
 		}
 
 		/// <summary>
@@ -1696,10 +1748,10 @@ namespace LinqToDB.Mapping
 			EntityDescriptorsCache.Clear();
 		}
 
-		internal void ResetEntityDescriptor(Type type)
-		{
-			EntityDescriptorsCache.Remove((type, ConfigurationID));
-		}
+//		internal void ResetEntityDescriptor(Type type)
+//		{
+//			//EntityDescriptorsCache.Remove((type, ConfigurationID));
+//		}
 
 		#endregion
 

@@ -95,6 +95,10 @@ namespace Tests.Samples
 			public void AddInterceptor(IInterceptor interceptor) => _context.AddInterceptor(interceptor);
 
 			public IUnwrapDataObjectInterceptor? UnwrapDataObjectInterceptor { get; }
+			public FluentMappingBuilder          GetFluentMappingBuilder()
+			{
+				return MappingSchema.GetFluentMappingBuilder();
+			}
 		}
 
 		public class Entity

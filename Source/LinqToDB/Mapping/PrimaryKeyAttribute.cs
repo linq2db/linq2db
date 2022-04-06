@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace LinqToDB.Mapping
 {
@@ -6,7 +6,7 @@ namespace LinqToDB.Mapping
 	/// Marks property or field as a member of primary key for current mapping type.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true)]
-	public class PrimaryKeyAttribute : Attribute
+	public class PrimaryKeyAttribute : MappingAttribute
 	{
 		/// <summary>
 		/// Creates attribute instance.
@@ -49,6 +49,11 @@ namespace LinqToDB.Mapping
 		/// from columns with smallest order value to greatest.
 		/// Default value: <c>-1</c>.
 		/// </summary>
-		public int    Order         { get; set; }
+		public int     Order         { get; set; }
+
+		public override string GetObjectID()
+		{
+			return $".{Configuration}.{Order}.";
+		}
 	}
 }

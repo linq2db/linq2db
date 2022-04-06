@@ -770,7 +770,7 @@ namespace LinqToDB
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
-			setTable(db.MappingSchema.GetFluentMappingBuilder().Entity<T>());
+			setTable(db.GetFluentMappingBuilder().Entity<T>());
 
 			return new TempTable<T>(db, items, tableName, databaseName, schemaName, action, serverName, tableOptions);
 		}
@@ -831,7 +831,7 @@ namespace LinqToDB
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
-			setTable(db.MappingSchema.GetFluentMappingBuilder().Entity<T>());
+			setTable(db.GetFluentMappingBuilder().Entity<T>());
 
 			return new TempTable<T>(db, tableName, items, databaseName, schemaName, action, serverName, tableOptions);
 		}
@@ -979,7 +979,7 @@ namespace LinqToDB
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
-			setTable(db.MappingSchema.GetFluentMappingBuilder().Entity<T>());
+			setTable(db.GetFluentMappingBuilder().Entity<T>());
 
 			return TempTable<T>.CreateAsync(db, items, tableName, databaseName, schemaName, action, serverName, tableOptions, cancellationToken);
 		}
@@ -1044,7 +1044,7 @@ namespace LinqToDB
 		{
 			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
-			setTable(db.MappingSchema.GetFluentMappingBuilder().Entity<T>());
+			setTable(db.GetFluentMappingBuilder().Entity<T>());
 
 			return TempTable<T>.CreateAsync(db, tableName, items, databaseName, schemaName, action, serverName, tableOptions, cancellationToken);
 		}
@@ -1106,7 +1106,7 @@ namespace LinqToDB
 		{
 			if (items is IExpressionQuery eq)
 			{
-				setTable?.Invoke(eq.DataContext.MappingSchema.GetFluentMappingBuilder().Entity<T>());
+				setTable?.Invoke(eq.DataContext.GetFluentMappingBuilder().Entity<T>());
 				return new TempTable<T>(eq.DataContext, items, tableName, databaseName, schemaName, action, serverName, tableOptions);
 			}
 
@@ -1171,7 +1171,7 @@ namespace LinqToDB
 		{
 			if (items is IExpressionQuery eq)
 			{
-				setTable?.Invoke(eq.DataContext.MappingSchema.GetFluentMappingBuilder().Entity<T>());
+				setTable?.Invoke(eq.DataContext.GetFluentMappingBuilder().Entity<T>());
 				return TempTable<T>.CreateAsync(eq.DataContext, items, tableName, databaseName, schemaName, action, serverName, tableOptions, cancellationToken);
 			}
 

@@ -298,13 +298,13 @@ namespace LinqToDB.Linq
 			/// </summary>
 			InlineParameters    = 0x2,
 			/// <summary>
-			/// Bit set, when inline Take/Skip parameterization is enabled for query.
+			/// Bit set, when inline Take/Skip parametrization is enabled for query.
 			/// </summary>
-			ParameterizeTakeSkip = 0x4,
+			ParametrizeTakeSkip = 0x4,
 			/// <summary>
 			/// Bit set, when PreferApply is enabled for query.
 			/// </summary>
-			PreferApply = 0x8,
+			PreferApply         = 0x8,
 		}
 
 		class QueryCache
@@ -517,8 +517,8 @@ namespace LinqToDB.Linq
 			// global flag change
 			if (Configuration.Linq.GuardGrouping)
 				flags |= QueryFlags.GroupByGuard;
-			if (Configuration.Linq.ParameterizeTakeSkip)
-				flags |= QueryFlags.ParameterizeTakeSkip;
+			if (Configuration.Linq.ParametrizeTakeSkip)
+				flags |= QueryFlags.ParametrizeTakeSkip;
 			if (Configuration.Linq.PreferApply)
 				flags |= QueryFlags.PreferApply;
 

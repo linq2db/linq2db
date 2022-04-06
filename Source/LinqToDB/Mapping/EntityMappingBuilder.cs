@@ -34,8 +34,8 @@ namespace LinqToDB.Mapping
 
 			Configuration = configuration;
 
-			// We'll reset cache here, because there is no need to create builder if you don't want to change something
-			_builder.MappingSchema.ResetEntityDescriptor(typeof(TEntity));
+//			// We'll reset cache here, because there is no need to create builder if you don't want to change something
+//			_builder.MappingSchema.ResetEntityDescriptor(typeof(TEntity));
 		}
 
 		readonly FluentMappingBuilder _builder;
@@ -145,9 +145,10 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="attribute">Mapping attribute to add.</param>
 		/// <returns>Returns current fluent entity mapping builder.</returns>
-		public EntityMappingBuilder<TEntity> HasAttribute(Attribute attribute)
+		public EntityMappingBuilder<TEntity> HasAttribute(MappingAttribute attribute)
 		{
 			_builder.HasAttribute(typeof(TEntity), attribute);
+			_builder.MappingSchema.ResetID();
 			return this;
 		}
 
@@ -157,9 +158,10 @@ namespace LinqToDB.Mapping
 		/// <param name="memberInfo">Target member.</param>
 		/// <param name="attribute">Mapping attribute to add to specified member.</param>
 		/// <returns>Returns current fluent entity mapping builder.</returns>
-		public EntityMappingBuilder<TEntity> HasAttribute(MemberInfo memberInfo, Attribute attribute)
+		public EntityMappingBuilder<TEntity> HasAttribute(MemberInfo memberInfo, MappingAttribute attribute)
 		{
 			_builder.HasAttribute(memberInfo, attribute);
+			_builder.MappingSchema.ResetID();
 			return this;
 		}
 
@@ -169,9 +171,10 @@ namespace LinqToDB.Mapping
 		/// <param name="func">Target member, specified using lambda expression.</param>
 		/// <param name="attribute">Mapping attribute to add to specified member.</param>
 		/// <returns>Returns current fluent entity mapping builder.</returns>
-		public EntityMappingBuilder<TEntity> HasAttribute(LambdaExpression func, Attribute attribute)
+		public EntityMappingBuilder<TEntity> HasAttribute(LambdaExpression func, MappingAttribute attribute)
 		{
 			_builder.HasAttribute(func, attribute);
+			_builder.MappingSchema.ResetID();
 			return this;
 		}
 
@@ -181,9 +184,10 @@ namespace LinqToDB.Mapping
 		/// <param name="func">Target member, specified using lambda expression.</param>
 		/// <param name="attribute">Mapping attribute to add to specified member.</param>
 		/// <returns>Returns current fluent entity mapping builder.</returns>
-		public EntityMappingBuilder<TEntity> HasAttribute(Expression<Func<TEntity,object?>> func, Attribute attribute)
+		public EntityMappingBuilder<TEntity> HasAttribute(Expression<Func<TEntity,object?>> func, MappingAttribute attribute)
 		{
 			_builder.HasAttribute(func, attribute);
+			_builder.MappingSchema.ResetID();
 			return this;
 		}
 
@@ -206,9 +210,9 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="func">Column mapping property or field getter expression.</param>
 		/// <returns>Returns fluent property mapping builder.</returns>
-		public PropertyMappingBuilder<TEntity, TProperty> Property<TProperty>(Expression<Func<TEntity,TProperty>> func)
+		public PropertyMappingBuilder<TEntity,TProperty> Property<TProperty>(Expression<Func<TEntity,TProperty>> func)
 		{
-			return new PropertyMappingBuilder<TEntity, TProperty>(this, func).IsColumn();
+			return new PropertyMappingBuilder<TEntity,TProperty>(this, func).IsColumn();
 		}
 
 		/// <summary>
@@ -218,7 +222,7 @@ namespace LinqToDB.Mapping
 		/// <returns>Returns fluent property mapping builder.</returns>
 		public PropertyMappingBuilder<TEntity, TProperty> Member<TProperty>(Expression<Func<TEntity,TProperty>> func)
 		{
-			return new PropertyMappingBuilder<TEntity, TProperty>(this, func);
+			return new (this, func);
 		}
 
 		/// <summary>
@@ -245,7 +249,7 @@ namespace LinqToDB.Mapping
 			var thisKeyName  = MemberHelper.GetMemberInfo(thisKey).Name;
 			var otherKeyName = MemberHelper.GetMemberInfo(otherKey).Name;
 
-			return Property( prop ).HasAttribute( new AssociationAttribute { ThisKey = thisKeyName, OtherKey = otherKeyName, CanBeNull = canBeNull } );
+			return Property(prop).HasAttribute(new AssociationAttribute { ThisKey = thisKeyName, OtherKey = otherKeyName, CanBeNull = canBeNull });
 		}
 
 		/// <summary>
@@ -272,7 +276,7 @@ namespace LinqToDB.Mapping
 			var thisKeyName  = MemberHelper.GetMemberInfo(thisKey).Name;
 			var otherKeyName = MemberHelper.GetMemberInfo(otherKey).Name;
 
-			return Property( prop ).HasAttribute( new AssociationAttribute { ThisKey = thisKeyName, OtherKey = otherKeyName, CanBeNull = canBeNull } );
+			return Property(prop).HasAttribute(new AssociationAttribute { ThisKey = thisKeyName, OtherKey = otherKeyName, CanBeNull = canBeNull });
 		}
 
 		/// <summary>
@@ -291,7 +295,7 @@ namespace LinqToDB.Mapping
 			if (prop      == null) throw new ArgumentNullException(nameof(prop));
 			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-			return Property( prop ).HasAttribute( new AssociationAttribute { Predicate = predicate, CanBeNull = canBeNull, Relationship = Relationship.OneToMany } );
+			return Property(prop).HasAttribute(new AssociationAttribute { Predicate = predicate, CanBeNull = canBeNull, Relationship = Relationship.OneToMany });
 		}
 
 		/// <summary>
@@ -310,7 +314,7 @@ namespace LinqToDB.Mapping
 			if (prop      == null) throw new ArgumentNullException(nameof(prop));
 			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-			return Property( prop ).HasAttribute( new AssociationAttribute { Predicate = predicate, CanBeNull = canBeNull } );
+			return Property(prop).HasAttribute(new AssociationAttribute { Predicate = predicate, CanBeNull = canBeNull });
 		}
 
 		/// <summary>
@@ -329,7 +333,7 @@ namespace LinqToDB.Mapping
 			if (prop            == null) throw new ArgumentNullException(nameof(prop));
 			if (queryExpression == null) throw new ArgumentNullException(nameof(queryExpression));
 
-			return Property( prop ).HasAttribute( new AssociationAttribute { QueryExpression = queryExpression, CanBeNull = canBeNull, Relationship = Relationship.OneToMany } );
+			return Property(prop).HasAttribute(new AssociationAttribute { QueryExpression = queryExpression, CanBeNull = canBeNull, Relationship = Relationship.OneToMany });
 		}
 
 		/// <summary>
@@ -348,7 +352,7 @@ namespace LinqToDB.Mapping
 			if (prop            == null) throw new ArgumentNullException(nameof(prop));
 			if (queryExpression == null) throw new ArgumentNullException(nameof(queryExpression));
 
-			return Property( prop ).HasAttribute( new AssociationAttribute { QueryExpression = queryExpression, CanBeNull = canBeNull } );
+			return Property(prop).HasAttribute(new AssociationAttribute { QueryExpression = queryExpression, CanBeNull = canBeNull });
 		}
 
 		/// <summary>
@@ -673,8 +677,10 @@ namespace LinqToDB.Mapping
 			Action<TA>       modifyExisting,
 			Func<TA,string?> configGetter,
 			Func<TA,TA>      overrideAttribute)
-			where TA : Attribute
+			where TA : MappingAttribute
 		{
+			_builder.MappingSchema.ResetID();
+
 			var attrs = GetAttributes(typeof(TEntity), configGetter);
 
 			if (attrs.Length == 0)
@@ -704,8 +710,10 @@ namespace LinqToDB.Mapping
 			Action<TA>                 modifyExisting,
 			Func<TA, string?>          configGetter,
 			Func<IEnumerable<TA>, TA?> existingGetter)
-			where TA : Attribute
+			where TA : MappingAttribute
 		{
+			_builder.MappingSchema.ResetID();
+
 			var attr = existingGetter(GetAttributes(typeof(TEntity), configGetter));
 
 			if (attr == null)
@@ -729,8 +737,10 @@ namespace LinqToDB.Mapping
 			Func<TA,TA>?                        overrideAttribute = null,
 			Func<IEnumerable<TA>, TA?>?         existingGetter    = null
 			)
-			where TA : Attribute
+			where TA : MappingAttribute
 		{
+			_builder.MappingSchema.ResetID();
+
 			var ex = func.Body;
 
 			if (ex is UnaryExpression expression)

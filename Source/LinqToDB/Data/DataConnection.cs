@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading;
 
 using JetBrains.Annotations;
+using LinqToDB.Common.Internal;
 
 namespace LinqToDB.Data
 {
@@ -336,7 +337,7 @@ namespace LinqToDB.Data
 			{
 				AddMappingSchema(options.MappingSchema);
 			}
-			else
+			else if (Configuration.Linq.EnableAutoFluentMapping)
 			{
 				MappingSchema = new (MappingSchema);
 			}
@@ -401,9 +402,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		public IRetryPolicy? RetryPolicy         { get; set; }
 
-		static readonly ConcurrentDictionary<string,int> _configurationIDs;
-		static int _maxID;
-
+		private int  _msID;
 		private int? _id;
 		/// <summary>
 		/// For internal use only.
@@ -412,14 +411,11 @@ namespace LinqToDB.Data
 		{
 			get
 			{
-				if (!_id.HasValue)
+				if (!_id.HasValue || _msID != MappingSchema.ConfigurationID)
 				{
-					var key = MappingSchema.ConfigurationID + "." + (ConfigurationString ?? ConnectionString ?? Connection.ConnectionString);
-
-					if (!_configurationIDs.TryGetValue(key, out var id))
-						_configurationIDs[key] = id = Interlocked.Increment(ref _maxID);
-
-					_id = id;
+					_id = new IdentifierBuilder(_msID = MappingSchema.ConfigurationID)
+						.Add((ConfigurationString ?? ConnectionString ?? Connection.ConnectionString))
+						.CreateID();
 				}
 
 				return _id.Value;
@@ -686,8 +682,6 @@ namespace LinqToDB.Data
 
 		static DataConnection()
 		{
-			_configurationIDs = new ConcurrentDictionary<string,int>();
-
 			// lazy registration of embedded providers using detectors
 			AddProviderDetector(LinqToDB.DataProvider.Access    .AccessTools    .ProviderDetector);
 			AddProviderDetector(LinqToDB.DataProvider.DB2       .DB2Tools       .ProviderDetector);
@@ -1178,6 +1172,13 @@ namespace LinqToDB.Data
 			}
 
 			_dataContextInterceptor?.OnClosed(new (this));
+		}
+
+		public FluentMappingBuilder GetFluentMappingBuilder()
+		{
+			if (MappingSchema.IsFluentMappingSupported == false)
+				MappingSchema = new(MappingSchema);
+			return MappingSchema.GetFluentMappingBuilder();
 		}
 
 		#endregion

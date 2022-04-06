@@ -314,7 +314,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void TestAssociation(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context, 
+			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context,
 			[Values(14, 15)] int startId
 		)
 		{
@@ -331,7 +331,6 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(GenerateTestData()))
 			using (var other = db.CreateLocalTable<SomeOtherClass>())
 			{
-
 				var query = from t in table
 					select new
 					{
@@ -340,6 +339,38 @@ namespace Tests.Linq
 					};
 
 				var result = query.ToArray();
+			}
+		}
+
+		[Test]
+		public void FluentMappingTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			Run();
+			Run();
+
+			void Run()
+			{
+				var ms = new MappingSchema();
+
+				var idFilter = 1;
+
+				ms.GetFluentMappingBuilder()
+					.Entity<SampleClass>()
+						.Association(x => x.AssociatedOne, (x, db) => db.FromSql<SomeOtherClass>(someGeneratedSqlString, x.Id, idFilter));
+
+				using var db    = GetDataContext(context, ms);
+				using var table = db.CreateLocalTable(GenerateTestData());
+				using var __    = db.CreateLocalTable<SomeOtherClass>();
+
+				var query =
+					from t in table
+					select new
+					{
+						t.Id,
+						t.AssociatedOne
+					};
+
+				_ = query.ToArray();
 			}
 		}
 

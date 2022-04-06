@@ -574,6 +574,11 @@ namespace LinqToDB
 			return new QueryRunner(this, ((IDataContext)GetDataConnection()).GetQueryRunner(query, queryNumber, expression, parameters, preambles));
 		}
 
+		public FluentMappingBuilder GetFluentMappingBuilder()
+		{
+			return MappingSchema.GetFluentMappingBuilder();
+		}
+
 		class QueryRunner : IQueryRunner
 		{
 			public QueryRunner(DataContext dataContext, IQueryRunner queryRunner)

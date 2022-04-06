@@ -16,7 +16,7 @@ namespace LinqToDB.Common
 	/// </summary>
 	public static class Compilation
 	{
-		private static Func<LambdaExpression, Delegate?>? _compiler;
+		private static Func<LambdaExpression,Delegate?>? _compiler;
 
 		/// <summary>
 		/// Sets LINQ expression compilation method.
@@ -254,10 +254,15 @@ namespace LinqToDB.Common
 			public static bool KeepDistinctOrdered = true;
 
 			/// <summary>
-			/// Enables Take/Skip parameterization.
+			/// Enables Take/Skip parametrization.
 			/// Default value: <c>true</c>.
 			/// </summary>
-			public static bool ParameterizeTakeSkip = true;
+			public static bool ParametrizeTakeSkip = true;
+
+			/// <summary>
+			/// If <c>true</c>, auto support for fluent mapping is ON.
+			/// </summary>
+			public static bool EnableAutoFluentMapping = true;
 		}
 
 		/// <summary>

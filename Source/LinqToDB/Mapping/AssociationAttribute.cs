@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB.Mapping
@@ -9,19 +10,19 @@ namespace LinqToDB.Mapping
 	/// Could be applied to:
 	/// - instance properties and fields;
 	/// - instance and static methods.
-	/// 
+	///
 	/// For associations, defined using static methods, <c>this</c> mapping side defined by type of first parameter.
 	/// Also, optionally, you can pass data context object as extra method parameter.
-	/// 
+	///
 	/// Based on association type - to one or to multiple records - result type should be target record's mapping type or
 	/// <see cref="IEquatable{T}"/> collection.
-	/// 
+	///
 	/// By default associations are used only for joins generation in LINQ queries and will have <c>null</c> value for loaded
 	/// records. To load data into association, you should explicitly specify it in your query using <see cref="LinqExtensions.LoadWith{TEntity,TProperty}(System.Linq.IQueryable{TEntity},System.Linq.Expressions.Expression{System.Func{TEntity,TProperty}})"/> method.
 	/// </summary>
 	[PublicAPI]
 	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Field, AllowMultiple=false)]
-	public class AssociationAttribute : Attribute
+	public class AssociationAttribute : MappingAttribute
 	{
 		/// <summary>
 		/// Creates attribute instance.
@@ -66,7 +67,6 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public Expression?  Predicate           { get; set; }
 
-
 		/// <summary>
 		/// Specifies static property or method without parameters, that returns IQueryable expression. If is set, other association keys are ignored.
 		/// Result of query method should be lambda which takes two parameters: this record, IDataContext and returns IQueryable result.
@@ -77,7 +77,7 @@ namespace LinqToDB.Mapping
 		/// {
 		///     [Association(ExpressionQueryMethod = nameof(OtherImpl), CanBeNull = true)]
 		///     public SomeOtherEntity Other { get; set; }
-		/// 
+		///
 		///     public static Expression&lt;Func&lt;SomeEntity, IDataContext, IQueryable&lt;SomeOtherEntity&gt;&gt;&gt; OtherImpl()
 		///     {
 		///         return (e, db) =&gt; db.GetTable&lt;SomeOtherEntity&gt;().Where(se =&gt; se.Id == e.Id);
@@ -154,5 +154,10 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <returns>List of key members.</returns>
 		public string[] GetOtherKeys() { return AssociationDescriptor.ParseKeys(OtherKey); }
+
+		public override string GetObjectID()
+		{
+			return $".{Configuration}.{ThisKey}.{OtherKey}.{ExpressionPredicate}.{QueryExpressionMethod}.{Storage}.{(CanBeNull?1:0)}.{KeyName}.{BackReferenceName}.{(IsBackReference?1:0)}.{(int)Relationship}.{AliasName}.";
+		}
 	}
 }
