@@ -1,27 +1,30 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Transactions;
+
 using LinqToDB;
+using LinqToDB.AspNet;
 using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Data.RetryPolicy;
+using LinqToDB.Interceptors;
+using LinqToDB.Mapping;
+
+using Microsoft.Extensions.DependencyInjection;
+
 using NUnit.Framework;
 
 namespace Tests.Data
 {
-	using System.Collections.Generic;
-	using System.Data.Common;
-	using System.Transactions;
-	using LinqToDB.AspNet;
-	using LinqToDB.Data.RetryPolicy;
-	using LinqToDB.Interceptors;
-	using LinqToDB.Mapping;
-	using Microsoft.Extensions.DependencyInjection;
 	using Model;
 
 	[TestFixture]
@@ -52,11 +55,8 @@ namespace Tests.Data
 
 		[Test]
 		public void Test3([IncludeDataSources(
-			ProviderName.SqlServer,
 			ProviderName.SqlServer2008,
-			ProviderName.SqlServer2008 + ".1",
 			ProviderName.SqlServer2005,
-			ProviderName.SqlServer2005 + ".1",
 			TestProvName.AllAccess)]
 			string context)
 		{
@@ -104,7 +104,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void GetDataProviderTest([IncludeDataSources(ProviderName.DB2, TestProvName.AllSqlServer2005Plus)] string context)
+		public void GetDataProviderTest([IncludeDataSources(ProviderName.DB2, TestProvName.AllSqlServer)] string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
 
@@ -116,7 +116,7 @@ namespace Tests.Data
 				{
 					dataProvider = DataConnection.GetDataProvider("DB2", connectionString)!;
 
-					Assert.That(dataProvider, Is.TypeOf<DB2DataProvider>());
+					Assert.That(dataProvider, Is.TypeOf<DB2LUWDataProvider>());
 
 					var sqlServerDataProvider = (DB2DataProvider)dataProvider;
 
@@ -129,7 +129,7 @@ namespace Tests.Data
 				{
 					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", "MyConfig.2005", connectionString)!;
 
-					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
+					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider2005SystemDataSqlClient>());
 
 					var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
@@ -147,7 +147,7 @@ namespace Tests.Data
 				{
 					dataProvider = DataConnection.GetDataProvider("SqlServer", connectionString)!;
 
-					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
+					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider2008SystemDataSqlClient>());
 
 					var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
@@ -165,7 +165,7 @@ namespace Tests.Data
 				{
 					dataProvider = DataConnection.GetDataProvider("SqlServer.2012", connectionString)!;
 
-					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
+					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider2012SystemDataSqlClient>());
 
 					var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
@@ -181,18 +181,18 @@ namespace Tests.Data
 
 				case ProviderName.SqlServer2014:
 				{
-					dataProvider = DataConnection.GetDataProvider("SqlServer", "SqlServer.2012", connectionString)!;
+					dataProvider = DataConnection.GetDataProvider("SqlServer", "SqlServer.2014", connectionString)!;
 
-					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
+					Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider2014SystemDataSqlClient>());
 
 					var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
-					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
+					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2014));
 
 					dataProvider = DataConnection.GetDataProvider("System.Data.SqlClient", connectionString)!;
 					sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
-					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2012));
+					Assert.That(sqlServerDataProvider.Version, Is.EqualTo(SqlServerVersion.v2014));
 
 					break;
 				}
@@ -201,7 +201,7 @@ namespace Tests.Data
 					{
 						dataProvider = DataConnection.GetDataProvider("SqlServer", "SqlServer.2017", connectionString)!;
 
-						Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider>());
+						Assert.That(dataProvider, Is.TypeOf<SqlServerDataProvider2017SystemDataSqlClient>());
 
 						var sqlServerDataProvider = (SqlServerDataProvider)dataProvider;
 
@@ -219,30 +219,31 @@ namespace Tests.Data
 
 		private class TestConnectionInterceptor : ConnectionInterceptor
 		{
-			private readonly Action<ConnectionOpeningEventData, DbConnection>? _onConnectionOpening;
-			private readonly Action<ConnectionOpenedEventData, DbConnection>? _onConnectionOpened;
+			private readonly Action<ConnectionEventData, DbConnection>? _onConnectionOpening;
+			private readonly Action<ConnectionEventData, DbConnection>? _onConnectionOpened;
 
-			private readonly Func<ConnectionOpeningEventData, DbConnection, CancellationToken, Task>? _onConnectionOpeningAsync;
-			private readonly Func<ConnectionOpenedEventData, DbConnection, CancellationToken, Task>?  _onConnectionOpenedAsync;
+			private readonly Func<ConnectionEventData, DbConnection, CancellationToken, Task>? _onConnectionOpeningAsync;
+			private readonly Func<ConnectionEventData, DbConnection, CancellationToken, Task>?  _onConnectionOpenedAsync;
 
 			public TestConnectionInterceptor(
-				Action<ConnectionOpeningEventData, DbConnection>? onConnectionOpening,
-				Action<ConnectionOpenedEventData, DbConnection>? onConnectionOpened,
-				Func<ConnectionOpeningEventData, DbConnection, CancellationToken, Task>? onConnectionOpeningAsync,
-				Func<ConnectionOpenedEventData, DbConnection, CancellationToken, Task>? onConnectionOpenedAsync)
+				Action<ConnectionEventData, DbConnection>? onConnectionOpening,
+				Action<ConnectionEventData, DbConnection>? onConnectionOpened,
+				Func<ConnectionEventData, DbConnection, CancellationToken, Task>? onConnectionOpeningAsync,
+				Func<ConnectionEventData, DbConnection, CancellationToken, Task>? onConnectionOpenedAsync)
 			{
 				_onConnectionOpening = onConnectionOpening;
 				_onConnectionOpened  = onConnectionOpened;
 				_onConnectionOpeningAsync = onConnectionOpeningAsync;
 				_onConnectionOpenedAsync = onConnectionOpenedAsync;
 			}
-			public override void ConnectionOpened(ConnectionOpenedEventData eventData, DbConnection connection)
+
+			public override void ConnectionOpened(ConnectionEventData eventData, DbConnection connection)
 			{
 				_onConnectionOpened?.Invoke(eventData, connection);
 				base.ConnectionOpened(eventData, connection);
 			}
 
-			public override async Task ConnectionOpenedAsync(ConnectionOpenedEventData eventData, DbConnection connection, CancellationToken cancellationToken)
+			public override async Task ConnectionOpenedAsync(ConnectionEventData eventData, DbConnection connection, CancellationToken cancellationToken)
 			{
 				if (_onConnectionOpenedAsync != null)
 					await _onConnectionOpenedAsync(eventData, connection, cancellationToken);
@@ -250,13 +251,13 @@ namespace Tests.Data
 				await base.ConnectionOpenedAsync(eventData, connection, cancellationToken);
 			}
 
-			public override void ConnectionOpening(ConnectionOpeningEventData eventData, DbConnection connection)
+			public override void ConnectionOpening(ConnectionEventData eventData, DbConnection connection)
 			{
 				_onConnectionOpening?.Invoke(eventData, connection);
 				base.ConnectionOpening(eventData, connection);
 			}
 
-			public override async Task ConnectionOpeningAsync(ConnectionOpeningEventData eventData, DbConnection connection, CancellationToken cancellationToken)
+			public override async Task ConnectionOpeningAsync(ConnectionEventData eventData, DbConnection connection, CancellationToken cancellationToken)
 			{
 				if (_onConnectionOpeningAsync != null)
 					await _onConnectionOpeningAsync(eventData, connection, cancellationToken);
@@ -464,15 +465,15 @@ namespace Tests.Data
 			{
 				conn.AddInterceptor(new TestConnectionInterceptor(
 					(args, cn) =>
-					{
-						if (cn.State == ConnectionState.Closed)
-							open = true;
+				{
+					if (cn.State == ConnectionState.Closed)
+						open = true;
 					},
 					null,
 					async (args, cn, ct) => await Task.Run(() =>
-					{
-						if (cn.State == ConnectionState.Closed)
-							openAsync = true;
+				{
+					if (cn.State == ConnectionState.Closed)
+						openAsync = true;
 					}, ct),
 					null));
 
@@ -499,9 +500,9 @@ namespace Tests.Data
 					},
 					null,
 					async (args, cn, ct) => await Task.Run(() =>
-					{
-						if (cn.State == ConnectionState.Closed)
-							openAsync = true;
+						{
+							if (cn.State == ConnectionState.Closed)
+								openAsync = true;
 					}, ct),
 					null));
 
@@ -515,7 +516,7 @@ namespace Tests.Data
 
 		[Test]
 		[SkipCI]
-		public void CommandTimeoutTest([IncludeDataSources(ProviderName.SqlServer2014)] string context)
+		public void CommandTimeoutTest([IncludeDataSources(TestProvName.AllSqlServer2014)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -564,40 +565,40 @@ namespace Tests.Data
 			{
 				var personsCount = db.GetTable<Person>().Count();
 
-				db.GetTable<Person>().ToList();
+				_ = db.GetTable<Person>().ToList();
 
-				var interceptor = new TestDataContextInterceptor();
+				var interceptor = new TestEntityServiceInterceptor();
 
 				db.AddInterceptor(interceptor);
 
-				db.GetTable<Person>().ToList();
+				_ = db.GetTable<Person>().ToList();
 				Assert.AreEqual(personsCount, interceptor.EntityCreatedCallCounter);
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
 					interceptor.EntityCreatedCallCounter = 0;
-					cdb.GetTable<Person>().ToList();
+					_ = cdb.GetTable<Person>().ToList();
 					Assert.AreEqual(personsCount, interceptor.EntityCreatedCallCounter);
 
 					interceptor.EntityCreatedCallCounter = 0;
-					db.GetTable<Person>().ToList();
+					_ = db.GetTable<Person>().ToList();
 					Assert.AreEqual(personsCount, interceptor.EntityCreatedCallCounter);
 
-					cdb.GetTable<Person>().ToList();
+					_ = cdb.GetTable<Person>().ToList();
 					Assert.AreEqual(personsCount * 2, interceptor.EntityCreatedCallCounter);
 				}
 
 				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
 				{
 					interceptor.EntityCreatedCallCounter = 0;
-					cdb.GetTable<Person>().ToList();
+					_ = cdb.GetTable<Person>().ToList();
 
 					Assert.AreEqual(personsCount, interceptor.EntityCreatedCallCounter);
 				}
 			}
 		}
 
-		private class TestDataContextInterceptor : DataContextInterceptor
+		class TestEntityServiceInterceptor : EntityServiceInterceptor
 		{
 			public int EntityCreatedCallCounter { get; set; }
 			public override object EntityCreated(EntityCreatedEventData eventData, object entity)
@@ -605,21 +606,23 @@ namespace Tests.Data
 				EntityCreatedCallCounter++;
 				return base.EntityCreated(eventData, entity);
 			}
+		}
 
+		class TestDataContextInterceptor : DataContextInterceptor
+		{
 			public int OnClosingCallCounter { get; set; }
 			public int OnClosedCallCounter { get; set; }
 			public int OnClosedAsyncCallCounter { get; set; }
 			public int OnClosingAsyncCallCounter { get; set; }
 
-
 			public override void OnClosing(DataContextEventData eventData)
 			{
 				OnClosingCallCounter++;
 				base.OnClosing(eventData);
-			}
+				}
 
 			public override void OnClosed(DataContextEventData eventData)
-			{
+				{
 				OnClosedCallCounter++;
 				base.OnClosed(eventData);
 			}
@@ -628,7 +631,7 @@ namespace Tests.Data
 			{
 				OnClosedAsyncCallCounter++;
 				return base.OnClosedAsync(eventData);
-			}
+				}
 
 			public override Task OnClosingAsync(DataContextEventData eventData)
 			{
@@ -1152,6 +1155,11 @@ namespace Tests.Data
 						Assert.AreEqual(ConnectionState.Open, cn.State);
 						try
 						{
+							var c = ((IDataContext)db).UnwrapDataObjectInterceptor?.UnwrapConnection(db, clonedConnection);
+
+							// bug in Miniprofiler.
+							//
+							if (c != null)
 							Assert.AreEqual(ConnectionState.Closed, clonedConnection.State);
 						}
 						catch (ObjectDisposedException)
@@ -1208,18 +1216,15 @@ namespace Tests.Data
 			if (withScope && (
 				context == ProviderName.DB2            ||
 				context == ProviderName.InformixDB2    ||
-				context == ProviderName.MySqlConnector ||
-				context == TestProvName.MariaDB        ||
 				context == ProviderName.SapHanaNative  ||
 				context == ProviderName.SqlCe          ||
 				context == ProviderName.Sybase         ||
-				context.Contains("Firebird")           ||
-				context.Contains("Oracle")             ||
-				context.Contains("PostgreSQL")         ||
-				context.Contains("SqlServer")          ||
-				context.Contains("SqlAzure")           ||
-				context.Contains(ProviderName.SQLiteClassic)
-				))
+				context.IsAnyOf(TestProvName.AllMySqlConnector) ||
+				context.IsAnyOf(TestProvName.AllFirebird)       ||
+				context.IsAnyOf(TestProvName.AllOracle)         ||
+				context.IsAnyOf(TestProvName.AllPostgreSQL)     ||
+				context.IsAnyOf(TestProvName.AllSqlServer)      ||
+				context.IsAnyOf(TestProvName.AllSQLiteClassic)))
 			{
 				// DB2: ERROR [58005] [IBM][DB2.NET] SQL0902 An unexpected exception has occurred in  Process: 22188 Thread 16 AppDomain: Name:domain-1b9769ae-linq2db.Tests.dll
 				// Firebird: SQL error code = -204 Table unknown CATEGORIES
@@ -1255,8 +1260,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestDisposeFlagCloning962Test2(
-			[DataSources(false)] string context, [Values] bool withScope)
+		public void TestDisposeFlagCloning962Test2([DataSources(false)] string context, [Values] bool withScope)
 		{
 			if (withScope && (
 				context == ProviderName.DB2                 ||
@@ -1265,15 +1269,14 @@ namespace Tests.Data
 				context == ProviderName.SqlCe               ||
 				context == ProviderName.Sybase              ||
 #if !NET472
-				(context.Contains("Oracle") && context.Contains("Managed")) ||
-				context == ProviderName.SapHanaNative       ||
+				context.IsAnyOf(TestProvName.AllOracleManaged)              ||
+				context.IsAnyOf(ProviderName.SapHanaNative)                 ||
 #endif
-				TestProvName.AllMySqlData.Contains(context) ||
-				context.StartsWith("Access")                ||
-				context.Contains("SqlServer")               ||
-				context.Contains("SqlAzure")                ||
-				context.Contains("PostgreSQL")              ||
-				context.Contains(ProviderName.SQLiteClassic)
+				context.IsAnyOf(TestProvName.AllMySqlData)                  ||
+				context.IsAnyOf(TestProvName.AllAccess)                     ||
+				context.IsAnyOf(TestProvName.AllSqlServer)                  ||
+				context.IsAnyOf(TestProvName.AllPostgreSQL)                 ||
+				context.IsAnyOf(TestProvName.AllSQLiteClassic)
 				))
 			{
 				// Access: The ITransactionLocal interface is not supported by the 'Microsoft.Jet.OLEDB.4.0' provider.  Local transactions are unavailable with the current provider.
@@ -1292,27 +1295,27 @@ namespace Tests.Data
 				Assert.Inconclusive("Provider not configured or has issues with TransactionScope");
 			}
 
-			TransactionScope? scope = withScope ? new TransactionScope() : null;
+			var scope = withScope ? new TransactionScope() : null;
+
 			try
 			{
-				using (var db = GetDataConnection(context))
-				{
+				using var db = GetDataConnection(context);
+
 					// test cloned data connection without LoadWith, as it doesn't use cloning in v3
 					db.Select(() => "test1");
-					using (var cdb = ((IDataContext)db).Clone(true))
-					{
+
+				using var cdb = ((IDataContext)db).Clone(true);
+
 						cdb.Select(() => "test2");
 
 						scope?.Complete();
 					}
-				}
-			}
 			finally
 			{
 				scope?.Dispose();
 			}
 		}
-#endregion
+		#endregion
 
 		[Table]
 		class TransactionScopeTable
@@ -1321,7 +1324,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void Issue2676TransactionScopeTest1([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void Issue2676TransactionScopeTest1([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -1360,7 +1363,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void Issue2676TransactionScopeTest2([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void Issue2676TransactionScopeTest2([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -1397,7 +1400,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void Issue2676TransactionScopeTest3([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void Issue2676TransactionScopeTest3([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -1449,9 +1452,6 @@ namespace Tests.Data
 			[IncludeDataSources(false,
 				TestProvName.AllOracle,
 				ProviderName.SqlCe,
-#if NET472
-				ProviderName.SQLiteMS,
-#endif
 				ProviderName.SybaseManaged)] string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -1701,9 +1701,6 @@ namespace Tests.Data
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
 				TestProvName.AllSQLiteClassic,
-#if NET472
-				ProviderName.SQLiteMS,
-#endif
 				TestProvName.AllSqlServer,
 				TestProvName.AllSybase)] string context)
 		{

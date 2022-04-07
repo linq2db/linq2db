@@ -1,48 +1,55 @@
-﻿using System;
+﻿extern alias MySqlConnector;
+extern alias MySqlData;
+
+using System;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
+using System.Data.SqlTypes;
+using System.Globalization;
 using System.Linq;
+using System.Numerics;
+using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Access;
+using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.Firebird;
+using LinqToDB.DataProvider.Informix;
 using LinqToDB.DataProvider.MySql;
+using LinqToDB.DataProvider.Oracle;
+using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.DataProvider.SapHana;
 using LinqToDB.DataProvider.SqlCe;
+using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.DataProvider.Sybase;
+using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
+
+using FirebirdSql.Data.Types;
+using IBM.Data.DB2Types;
+using Microsoft.SqlServer.Types;
 using NUnit.Framework;
 using StackExchange.Profiling;
 using StackExchange.Profiling.Data;
-using Tests.Model;
-
-#if !NETCOREAPP2_1
-using MySqlDataDateTime           = MySql.Data.Types.MySqlDateTime;
-using MySqlDataDecimal            = MySql.Data.Types.MySqlDecimal;
-using MySqlConnectorDateTime      = MySqlConnector.MySqlDateTime;
-using MySqlDataMySqlConnection    = MySql.Data.MySqlClient.MySqlConnection;
-#endif
-using System.Globalization;
-using LinqToDB.DataProvider.SQLite;
-using LinqToDB.DataProvider.DB2;
-using IBM.Data.DB2Types;
 using Tests.DataProvider;
-using System.Data.SqlTypes;
-using Microsoft.SqlServer.Types;
-using LinqToDB.DataProvider.Sybase;
-using LinqToDB.DataProvider.Informix;
-using LinqToDB.DataProvider.Oracle;
-using LinqToDB.DataProvider.PostgreSQL;
-using System.Threading.Tasks;
-using LinqToDB.Common;
-using FirebirdSql.Data.Types;
-using System.Numerics;
+using Tests.Model;
 #if NET472
 using IBM.Data.Informix;
 #endif
+
+#if NETFRAMEWORK
+using MySqlConnectorDateTime   = MySqlConnector::MySql.Data.Types.MySqlDateTime;
+#else
+using MySqlConnectorDateTime   = MySqlConnector::MySqlConnector.MySqlDateTime;
+#endif
+using MySqlDataDateTime        = MySqlData::MySql.Data.Types.MySqlDateTime;
+using MySqlDataDecimal         = MySqlData::MySql.Data.Types.MySqlDecimal;
+using MySqlDataMySqlConnection = MySqlData::MySql.Data.MySqlClient.MySqlConnection;
 
 namespace Tests.Data
 {
@@ -78,7 +85,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void Test1([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void Test1([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var mpcon = new MiniProfilerDataContext(context))
 			{
@@ -253,7 +260,6 @@ namespace Tests.Data
 			public DateTime Value { get; set; }
 		}
 
-#if !NETCOREAPP2_1
 		class MapperExpressionTest2
 		{
 			public MySqlDataDateTime Value { get; set; }
@@ -269,7 +275,7 @@ namespace Tests.Data
 		public void TestMapperMap([IncludeDataSources(TestProvName.AllMySqlData)] string context, [Values] ConnectionType type)
 		{
 			// AllowZeroDateTime is to enable MySqlDateTime type
-			using (var db = CreateDataConnection(new MySqlDataProvider(ProviderName.MySqlOfficial), context, type, "MySql.Data.MySqlClient.MySqlConnection, MySql.Data", ";AllowZeroDateTime=true"))
+			using (var db = CreateDataConnection(new MySqlDataProviderMySqlOfficial(), context, type, "MySql.Data.MySqlClient.MySqlConnection, MySql.Data", ";AllowZeroDateTime=true"))
 			{
 				var dtValue = new DateTime(2012, 12, 12, 12, 12, 12, 0);
 
@@ -300,7 +306,7 @@ namespace Tests.Data
 		// tests support of data reader methods by LinqService
 		// full of hacks to made test work as expected
 		[Test]
-		public void TestLinqService([IncludeDataSources(true, ProviderName.MySql)] string context, [Values] ConnectionType type)
+		public void TestLinqService([IncludeDataSources(true, TestProvName.AllMySqlData)] string context, [Values] ConnectionType type)
 		{
 			var provider = GetProviderName(context, out var isLinq);
 
@@ -328,16 +334,12 @@ namespace Tests.Data
 			var ms = new MappingSchema();
 			ms.SetConvertExpression<MySqlDataDateTime, string>(value => value.Value.ToBinary().ToString(CultureInfo.InvariantCulture));
 			ms.SetConvertExpression<string, MySqlDataDateTime>(value => new MySqlDataDateTime(DateTime.FromBinary(long.Parse(value, CultureInfo.InvariantCulture))));
-			switch (type)
-			{
-				case ConnectionType.MiniProfiler:
-					ms.SetConvertExpression<ProfiledDbConnection, DbConnection>(db => db.WrappedConnection);
-					ms.SetConvertExpression<ProfiledDbDataReader, DbDataReader>(db => db.WrappedReader);
-					break;
-			}
 
 			using (var db = GetDataContext(testContext + (isLinq ? ".LinqService" : null), ms))
 			{
+				if (type == ConnectionType.MiniProfiler)
+					db.AddInterceptor(new UnwrapProfilerInterceptor());
+
 				var dtValue = new DateTime(2012, 12, 12, 12, 12, 12, 0);
 
 				// ExecuteReader
@@ -356,7 +358,7 @@ namespace Tests.Data
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			// AllowZeroDateTime is to enable MySqlDateTime type
-			using (var db = CreateDataConnection(new MySqlDataProvider(ProviderName.MySqlOfficial), context, type, "MySql.Data.MySqlClient.MySqlConnection, MySql.Data", ";AllowZeroDateTime=true"))
+			using (var db = CreateDataConnection(new MySqlDataProviderMySqlOfficial(), context, type, "MySql.Data.MySqlClient.MySqlConnection, MySql.Data", ";AllowZeroDateTime=true"))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -414,10 +416,15 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task TestMySqlConnector([IncludeDataSources(ProviderName.MySqlConnector)] string context, [Values] ConnectionType type)
+		public async Task TestMySqlConnector([IncludeDataSources(TestProvName.AllMySqlConnector)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-			using (var db = CreateDataConnection(new MySqlDataProvider(ProviderName.MySqlConnector), context, type, "MySqlConnector.MySqlConnection, MySqlConnector", ";AllowZeroDateTime=true"))
+#if NETFRAMEWORK
+			var connectionTypeName = "MySql.Data.MySqlClient.MySqlConnection, MySqlConnector";
+#else
+			var connectionTypeName = "MySqlConnector.MySqlConnection, MySqlConnector";
+#endif
+			using (var db = CreateDataConnection(new MySqlDataProviderMySqlConnector(), context, type, connectionTypeName, ";AllowZeroDateTime=true"))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -479,12 +486,11 @@ namespace Tests.Data
 				db.DataProvider.GetSchemaProvider().GetSchema(db);
 			}
 		}
-#endif
 
 		[Test]
 		public void TestSystemSqlite([IncludeDataSources(ProviderName.SQLiteClassic)] string context, [Values] ConnectionType type)
 		{
-			using (var db = CreateDataConnection(new SQLiteDataProvider(ProviderName.SQLiteClassic), context, type, "System.Data.SQLite.SQLiteConnection, System.Data.SQLite"))
+			using (var db = CreateDataConnection(SQLiteTools.GetDataProvider(ProviderName.SQLiteClassic), context, type, "System.Data.SQLite.SQLiteConnection, System.Data.SQLite"))
 			{
 				// just check schema (no api used)
 				db.DataProvider.GetSchemaProvider().GetSchema(db);
@@ -494,7 +500,7 @@ namespace Tests.Data
 		[Test]
 		public void TestMicrosoftSqlite([IncludeDataSources(ProviderName.SQLiteMS)] string context, [Values] ConnectionType type)
 		{
-			using (var db = CreateDataConnection(new SQLiteDataProvider(ProviderName.SQLiteMS), context, type, "Microsoft.Data.Sqlite.SqliteConnection, Microsoft.Data.Sqlite"))
+			using (var db = CreateDataConnection(SQLiteTools.GetDataProvider(ProviderName.SQLiteMS), context, type, "Microsoft.Data.Sqlite.SqliteConnection, Microsoft.Data.Sqlite"))
 			{
 				// just check schema (no api used)
 				db.DataProvider.GetSchemaProvider().GetSchema(db);
@@ -505,10 +511,10 @@ namespace Tests.Data
 		public void TestDB2([IncludeDataSources(ProviderName.DB2)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-#if NET472
-			using (var db = CreateDataConnection(new DB2DataProvider(ProviderName.DB2LUW, DB2Version.LUW), context, type, "IBM.Data.DB2.DB2Connection, IBM.Data.DB2"))
+#if NETCOREAPP3_1
+			using (var db = CreateDataConnection(new DB2LUWDataProvider(), context, type, $"{DB2ProviderAdapter.ClientNamespaceOld}.DB2Connection, {DB2ProviderAdapter.AssemblyNameOld}"))
 #else
-			using (var db = CreateDataConnection(new DB2DataProvider(ProviderName.DB2LUW, DB2Version.LUW), context, type, "IBM.Data.DB2.Core.DB2Connection, IBM.Data.DB2.Core"))
+			using (var db = CreateDataConnection(new DB2LUWDataProvider(), context, type, $"{DB2ProviderAdapter.ClientNamespace}.DB2Connection, {DB2ProviderAdapter.AssemblyName}"))
 #endif
 			{
 				var trace = string.Empty;
@@ -913,7 +919,7 @@ namespace Tests.Data
 		public async Task TestSapHanaNative([IncludeDataSources(ProviderName.SapHanaNative)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-			using (var db = CreateDataConnection(new SapHanaDataProvider(ProviderName.SapHanaNative), context, type, DbProviderFactories.GetFactory("Sap.Data.Hana").GetType().Assembly.GetType("Sap.Data.Hana.HanaConnection")!))
+			using (var db = CreateDataConnection(new SapHanaDataProvider(), context, type, DbProviderFactories.GetFactory("Sap.Data.Hana").GetType().Assembly.GetType("Sap.Data.Hana.HanaConnection")!))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -1008,7 +1014,7 @@ namespace Tests.Data
 		public void TestSybaseNative([IncludeDataSources(ProviderName.Sybase)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-			using (var db = CreateDataConnection(new SybaseDataProvider(ProviderName.Sybase), context, type, DbProviderFactories.GetFactory("Sybase.Data.AseClient").GetType().Assembly.GetType("Sybase.Data.AseClient.AseConnection")!))
+			using (var db = CreateDataConnection(SybaseTools.GetDataProvider(ProviderName.Sybase), context, type, DbProviderFactories.GetFactory("Sybase.Data.AseClient").GetType().Assembly.GetType("Sybase.Data.AseClient.AseConnection")!))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -1060,7 +1066,7 @@ namespace Tests.Data
 		public void TestSybaseManaged([IncludeDataSources(ProviderName.SybaseManaged)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-			using (var db = CreateDataConnection(new SybaseDataProvider(ProviderName.SybaseManaged), context, type, "AdoNetCore.AseClient.AseConnection, AdoNetCore.AseClient"))
+			using (var db = CreateDataConnection(SybaseTools.GetDataProvider(ProviderName.SybaseManaged), context, type, "AdoNetCore.AseClient.AseConnection, AdoNetCore.AseClient"))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -1082,7 +1088,7 @@ namespace Tests.Data
 		public void TestInformixIFX([IncludeDataSources(ProviderName.Informix)] string context, [Values] ConnectionType type)
 		{
 			var unmapped  = type == ConnectionType.MiniProfilerNoMappings;
-			var provider  = new InformixDataProvider(ProviderName.Informix);
+			var provider  = new InformixDataProviderInformix();
 			using (var db = CreateDataConnection(provider, context, type, "IBM.Data.Informix.IfxConnection, IBM.Data.Informix"))
 			{
 				var trace = string.Empty;
@@ -1161,11 +1167,11 @@ namespace Tests.Data
 		public void TestInformixDB2([IncludeDataSources(ProviderName.InformixDB2)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-			var provider = new InformixDataProvider(ProviderName.InformixDB2);
-#if NET472
-			using (var db = CreateDataConnection(provider, context, type, "IBM.Data.DB2.DB2Connection, IBM.Data.DB2"))
+			var provider = new InformixDataProviderDB2();
+#if NETCOREAPP3_1
+			using (var db = CreateDataConnection(provider, context, type, $"{DB2ProviderAdapter.ClientNamespaceOld}.DB2Connection, {DB2ProviderAdapter.AssemblyNameOld}"))
 #else
-			using (var db = CreateDataConnection(provider, context, type, "IBM.Data.DB2.Core.DB2Connection, IBM.Data.DB2.Core"))
+			using (var db = CreateDataConnection(provider, context, type, $"{DB2ProviderAdapter.ClientNamespace}.DB2Connection, {DB2ProviderAdapter.AssemblyName}"))
 #endif
 			{
 				var trace = string.Empty;
@@ -1421,13 +1427,15 @@ namespace Tests.Data
 			var wrapped = type == ConnectionType.MiniProfilerNoMappings || type == ConnectionType.MiniProfiler;
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 
-			PostgreSQLVersion version;
+			Type providerType;
+
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-				version = ((PostgreSQLDataProvider)db.DataProvider).Version;
+				providerType = db.DataProvider.GetType();
 			}
 
-			var provider = new PostgreSQLDataProvider(version);
+			var provider = (PostgreSQLDataProvider)Activator.CreateInstance(providerType)!;
+
 			using (var db = CreateDataConnection(provider, context, type, "Npgsql.NpgsqlConnection, Npgsql"))
 			{
 				// needed for proper AllTypes columns mapping
@@ -1576,9 +1584,7 @@ namespace Tests.Data
 
 		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Func<string, DbConnection> connectionFactory, string? csExtra = null)
 		{
-			var ms = new MappingSchema();
-			DataConnection? db = null;
-			db = new DataConnection(provider, () =>
+			var db = new DataConnection(provider, () =>
 			{
 				// don't create connection using provider, or it will initialize types
 				var cn = connectionFactory(DataConnection.GetConnectionString(context) + csExtra);
@@ -1597,16 +1603,34 @@ namespace Tests.Data
 			switch (type)
 			{
 				case ConnectionType.MiniProfiler:
-					ms.SetConvertExpression<ProfiledDbConnection, DbConnection>  (db => db.WrappedConnection);
-					ms.SetConvertExpression<ProfiledDbDataReader,  DbDataReader> (db => db.WrappedReader);
-					ms.SetConvertExpression<ProfiledDbTransaction, DbTransaction>(db => db.WrappedTransaction);
-					ms.SetConvertExpression<ProfiledDbCommand,     DbCommand>    (db => db.InternalCommand);
+					db.AddInterceptor(new UnwrapProfilerInterceptor());
 					break;
 			}
 
-			db.AddMappingSchema(ms);
-
 			return db;
+		}
+
+		internal class UnwrapProfilerInterceptor : UnwrapDataObjectInterceptor
+		{
+			public override DbConnection UnwrapConnection(IDataContext dataContext, DbConnection connection)
+			{
+				return connection is ProfiledDbConnection c ? c.WrappedConnection : connection;
+			}
+
+			public override DbTransaction UnwrapTransaction(IDataContext dataContext, DbTransaction transaction)
+			{
+				return transaction is ProfiledDbTransaction t ? t.WrappedTransaction : transaction;
+			}
+
+			public override DbCommand UnwrapCommand(IDataContext dataContext, DbCommand command)
+			{
+				return command is ProfiledDbCommand c ? c.InternalCommand : command;
+			}
+
+			public override DbDataReader UnwrapDataReader(IDataContext dataContext, DbDataReader dataReader)
+			{
+				return dataReader is ProfiledDbDataReader dr ? dr.WrappedReader : dataReader;
+			}
 		}
 	}
 }

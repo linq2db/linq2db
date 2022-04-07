@@ -14,6 +14,7 @@ using System.Runtime.CompilerServices;
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
+	using Common.Internal;
 	using Data;
 	using LinqToDB.Expressions;
 	using Extensions;
@@ -30,12 +31,12 @@ namespace LinqToDB.Linq.Builder
 		{
 			var isHaving = (bool?)null;
 			expr.VisitParentFirst(e =>
-			{
+		{
 				if (isHaving == false)
 					return false;
 
 				if (e is SqlFunction func)
-				{
+			{
 					if (forGroup)
 						isHaving = func.IsAggregate;
 					else
@@ -146,7 +147,7 @@ namespace LinqToDB.Linq.Builder
 		public IBuildContext GetSubQuery(IBuildContext context, Expression expr, bool isTest)
 		{
 			var info = new BuildInfo(context, expr, new SelectQuery {ParentSelect = context.SelectQuery})
-			{
+		{
 				CreateSubQuery = true,
 				IsTest = isTest
 			};
@@ -168,7 +169,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region IsSubQuery
 
-		bool IsSubQuery(IBuildContext context, MethodCallExpression call)
+		internal bool IsSubQuery(IBuildContext context, MethodCallExpression call)
 		{
 			var isAggregate = call.IsAggregate(MappingSchema);
 
@@ -203,6 +204,9 @@ namespace LinqToDB.Linq.Builder
 						if (mc.IsAssociation(MappingSchema))
 							return true;
 
+						if (IsGetTable(mc.Method))
+							break;
+
 						return GetTableFunctionAttribute(mc.Method) != null;
 					}
 
@@ -213,6 +217,11 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return false;
+		}
+
+		bool IsGetTable(MethodInfo mi)
+		{
+			return mi.Name == "GetTable" && (mi.DeclaringType == typeof(DataConnection) || mi.DeclaringType == typeof(DataExtensions));
 		}
 
 		bool IsSubQuerySource(IBuildContext context, Expression? expr)
@@ -527,8 +536,16 @@ namespace LinqToDB.Linq.Builder
 
 						if (result.Type != wpi.Type)
 						{
-							if (result.Type.IsEnum)
-								result = Expression.Convert(result, wpi.Type);
+							var noConvert = result.UnwrapConvert();
+							if (noConvert.Type == wpi.Type)
+							{
+								result = noConvert;
+							}
+							else
+							{
+								if (noConvert.Type.IsValueType)
+									result = Expression.Convert(noConvert, wpi.Type);
+							}
 						}
 
 						return result;
@@ -539,7 +556,13 @@ namespace LinqToDB.Linq.Builder
 			});
 
 			if (pi.Method.ReturnType != pie.Type)
+			{
+				pie = pie.UnwrapConvert();
+				if (pi.Method.ReturnType != pie.Type)
+				{
 				pie = new ChangeTypeExpression(pie, pi.Method.ReturnType);
+				}
+			}
 
 			return pie;
 		}
@@ -663,6 +686,10 @@ namespace LinqToDB.Linq.Builder
 								var info = subQueryContextInfo.Context.ConvertToSql(null, 0, ConvertFlags.All);
 								return info;
 							}
+
+							var sql = subQueryContextInfo.Context.GetSubQuery(context);
+							if (sql != null)
+								return new[] { new SqlInfo(sql) };
 
 							return new[] { new SqlInfo(subQueryContextInfo.Context.SelectQuery) };
 						}
@@ -837,7 +864,7 @@ namespace LinqToDB.Linq.Builder
 						return hashCode;
 					}
 				}
-			}
+		}
 
 			public static IEqualityComparer<ColumnCacheKey> ColumnCacheKeyComparer { get; } = new ColumnCacheKeyEqualityComparer();
 		}
@@ -928,9 +955,9 @@ namespace LinqToDB.Linq.Builder
 
 			if (sql == null)
 			{
-				if (!PreferServerSide(expression, false))
-				{
-					if (columnDescriptor?.ValueConverter == null && CanBeConstant(expression))
+			if (!PreferServerSide(expression, false))
+			{
+				if (columnDescriptor?.ValueConverter == null && CanBeConstant(expression))
 						sql = BuildConstant(expression, columnDescriptor);
 					else
 						if (CanBeCompiled(expression))
@@ -963,7 +990,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return result;
-		}
+			}
 
 
 		Expression ConvertToSqlInternal(IBuildContext context, Expression expression, ProjectFlags flags, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false, string? alias = null)
@@ -1451,13 +1478,13 @@ namespace LinqToDB.Linq.Builder
 			if (attr.InlineParameters)
 				DataContext.InlineParameters = true;
 
-			var sqlExpression =
-				attr.GetExpression(
-					(this_: this, context: context),
+			var sqlExpression = attr.GetExpression(
+				(this_: this, context),
 					DataContext,
 					context!.SelectQuery,
 					mc,
 					static (context, e, descriptor) => context.this_.ConvertToExtensionSql(context.context, e, descriptor));
+
 			if (sqlExpression == null)
 				throw new LinqToDBException($"Cannot convert to SQL method '{mc}'.");
 
@@ -1468,7 +1495,7 @@ namespace LinqToDB.Linq.Builder
 
 		public static ISqlExpression ConvertToSqlConvertible(Expression expression)
 		{
-			var l = Expression.Lambda<Func<IToSqlConverter>>(expression);
+			var l = Expression.Lambda<Func<IToSqlConverter>>(Expression.Convert(expression, typeof(IToSqlConverter)));
 			var f = l.CompileExpression();
 			var c = f();
 
@@ -1540,20 +1567,7 @@ namespace LinqToDB.Linq.Builder
 
 			var value = expr.EvaluateExpression();
 
-			if (value != null && MappingSchema.ValueToSqlConverter.CanConvert(dbType.SystemType))
-				sqlValue = new SqlValue(dbType, value);
-			else
-			{
-				if (value != null && value.GetType().IsEnum)
-				{
-					var attrs = value.GetType().GetCustomAttributes(typeof(Sql.EnumAttribute), true);
-
-					if (attrs.Length == 0)
-						value = MappingSchema.EnumToValue((Enum)value);
-				}
-
 				sqlValue = MappingSchema.GetSqlValue(expr.Type, value);
-			}
 
 			_constants.Add(key, sqlValue);
 
@@ -1633,7 +1647,8 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (e.Method.DeclaringType == typeof(Enumerable) ||
 							typeof(IList).IsSameOrParentOf(e.Method.DeclaringType!) ||
-							typeof(ICollection<>).IsSameOrParentOf(e.Method.DeclaringType!))
+							typeof(ICollection<>).IsSameOrParentOf(e.Method.DeclaringType!) ||
+							typeof(IReadOnlyCollection<>).IsSameOrParentOf(e.Method.DeclaringType!))
 						{
 							predicate = ConvertInPredicate(context!, e);
 						}
@@ -1666,6 +1681,7 @@ namespace LinqToDB.Linq.Builder
 
 						predicate = ConvertInPredicate(context!, expr);
 					}
+
 #if NETFRAMEWORK
 					else if (e.Method == ReflectionHelper.Functions.String.Like11) predicate = ConvertLikePredicate(context!, e, flags);
 					else if (e.Method == ReflectionHelper.Functions.String.Like12) predicate = ConvertLikePredicate(context!, e, flags);
@@ -1749,7 +1765,7 @@ namespace LinqToDB.Linq.Builder
 			var        param = Expression.Parameter(current.Type, "o");
 			Expression body  = param;
 			for (int i = memberPath.Count - 1; i >= 0; i--)
-			{
+		{
 				body = Expression.MakeMemberAccess(body, memberPath[i]);
 			}
 
@@ -2290,8 +2306,10 @@ namespace LinqToDB.Linq.Builder
 				{
 					value = ((UnaryExpression)value).Operand;
 
-					var l = ConvertToSql(context, operand);
-					var r = ConvertToSql(context, value);
+					var cd = SuggestColumnDescriptor(context, operand, value, ProjectFlags.SQL);
+
+					var l = ConvertToSql(context, operand, columnDescriptor: cd);
+					var r = ConvertToSql(context, value, columnDescriptor: cd);
 
 					return new SqlPredicate.ExprExpr(l, op, r, true);
 				}
@@ -2463,12 +2481,12 @@ namespace LinqToDB.Linq.Builder
 				if (placeholders.Count == 1)
 					expr = placeholders[0].Sql;
 				else
-				{
+			{
 					var objParam = Expression.Parameter(typeof(object));
 
 					var getters = new SqlGetValue[placeholders.Count];
 					for (int i = 0; i < getters.Length; i++)
-					{
+			{
 						var placeholder = placeholders[i];
 
 						var cd = QueryHelper.GetColumnDescriptor(placeholder.Sql);
@@ -2477,7 +2495,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							getters[i] = new SqlGetValue(placeholder.Sql, placeholder.Type, cd, null);
 						}
-						else
+				else
 						{
 							var body = placeholder.Path.Replace(arg, Expression.Convert(objParam, arg.Type));
 							body = Expression.Convert(body, typeof(object));
@@ -2562,7 +2580,7 @@ namespace LinqToDB.Linq.Builder
 
 			return null;
 		}
-	
+
 
 		#endregion
 
@@ -2795,7 +2813,7 @@ namespace LinqToDB.Linq.Builder
 
 		internal bool BuildSearchCondition(IBuildContext? context, Expression expression, ProjectFlags flags, List<SqlCondition> conditions)
 		{
-			//expression = expression.Transform(RemoveNullPropagation);
+			//expression = GetRemoveNullPropagationTransformer(true).Transform(expression);
 
 			switch (expression.NodeType)
 			{
@@ -3055,15 +3073,33 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		private TransformVisitor<ExpressionBuilder>? _removeNullPropagationTransformer;
+		private TransformVisitor<ExpressionBuilder>? _removeNullPropagationTransformerForSearch;
 		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private TransformVisitor<ExpressionBuilder> GetRemoveNullPropagationTransformer()
+		private TransformVisitor<ExpressionBuilder> GetRemoveNullPropagationTransformer(bool forSearch)
 		{
-			return _removeNullPropagationTransformer ??= TransformVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.RemoveNullPropagation(e));
+			if (forSearch)
+				return _removeNullPropagationTransformerForSearch ??= TransformVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.RemoveNullPropagation(e, true));
+			else
+				return _removeNullPropagationTransformer ??= TransformVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.RemoveNullPropagation(e, false));
 		}
 
-		Expression RemoveNullPropagation(Expression expr)
+		Expression RemoveNullPropagation(Expression expr, bool forSearch)
 		{
+			bool IsAcceptableType(Type type)
+		{
+				if (!forSearch)
+					return type.IsNullableType();
+
+				if (type != typeof(string) && typeof(IEnumerable<>).IsSameOrParentOf(type))
+					return true;
+
+				if (!MappingSchema.IsScalarType(type))
+					return true;
+
+				return false;
+			}
+
 			// Do not modify parameters
 			//
 			if (CanBeCompiled(expr))
@@ -3082,13 +3118,13 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (nullRight && nullLeft)
 							{
-								return GetRemoveNullPropagationTransformer().Transform(conditional.IfFalse);
+								return GetRemoveNullPropagationTransformer(forSearch).Transform(conditional.IfFalse);
 							}
 							else if (IsNullConstant(conditional.IfFalse)
-								&& ((nullRight && !MappingSchema.IsScalarType(binary.Left.Type)) ||
-									(nullLeft  && !MappingSchema.IsScalarType(binary.Right.Type))))
+								&& ((nullRight && IsAcceptableType(binary.Left.Type) ||
+									(nullLeft  && IsAcceptableType(binary.Right.Type)))))
 							{
-								return GetRemoveNullPropagationTransformer().Transform(conditional.IfTrue);
+								return GetRemoveNullPropagationTransformer(forSearch).Transform(conditional.IfTrue);
 							}
 						}
 					}
@@ -3101,13 +3137,13 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (nullRight && nullLeft)
 							{
-								return GetRemoveNullPropagationTransformer().Transform(conditional.IfTrue);
+								return GetRemoveNullPropagationTransformer(forSearch).Transform(conditional.IfTrue);
 							}
 							else if (IsNullConstant(conditional.IfTrue)
-								&& ((nullRight && !MappingSchema.IsScalarType(binary.Left.Type)) ||
-									(nullLeft  && !MappingSchema.IsScalarType(binary.Right.Type))))
+							         && ((nullRight && IsAcceptableType(binary.Left.Type) ||
+							              (nullLeft && IsAcceptableType(binary.Right.Type)))))
 							{
-								return GetRemoveNullPropagationTransformer().Transform(conditional.IfFalse);
+								return GetRemoveNullPropagationTransformer(forSearch).Transform(conditional.IfFalse);
 							}
 						}
 					}
@@ -3156,14 +3192,13 @@ namespace LinqToDB.Linq.Builder
 					if (members.ContainsKey(foundMember.MemberInfo))
 						continue;
 
-					var converted = GetRemoveNullPropagationTransformer().Transform(arguments[i]);
-
-					if (!foundMember.MemberInfo.GetMemberType().IsAssignableFrom(converted.Type))
-						continue;
+					var converted = arguments[i];
 
 					members.Add(foundMember.MemberInfo, converted);
 				}
 			}
+
+			expression = GetRemoveNullPropagationTransformer(false).Transform(expression);
 
 			switch (expression.NodeType)
 			{
@@ -3179,7 +3214,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								var member = expr.Members[i];
 
-								var converted = GetRemoveNullPropagationTransformer().Transform(expr.Arguments[i]);
+								var converted = expr.Arguments[i];
 								members.Add(member, converted);
 
 								if (member is MethodInfo info)
@@ -3211,7 +3246,7 @@ namespace LinqToDB.Linq.Builder
 
 						foreach (var (binding, _) in assignments.OrderBy(static a => a.order))
 						{
-							var converted = GetRemoveNullPropagationTransformer().Transform(binding.Expression);
+							var converted = binding.Expression;
 							members.Add(binding.Member, converted);
 
 							if (binding.Member is MethodInfo info)
@@ -3262,7 +3297,7 @@ namespace LinqToDB.Linq.Builder
 				if (sql.Length > 0)
 				{
 					// Handling case when all columns are aggregates, it cause query to produce only single record and we have to include at least one aggregation in Select statement.
-					// 
+					//
 					var allAggregate = sql.All(static s => QueryHelper.IsAggregationOrWindowFunction(s.Sql));
 					if (allAggregate)
 					{
@@ -3328,7 +3363,7 @@ namespace LinqToDB.Linq.Builder
 			idx = null;
 			return null;
 		}
-		
+
 
 		public Tuple<CteClause, IBuildContext?> BuildCte(Expression cteExpression, Func<CteClause?, Tuple<CteClause, IBuildContext?>> buildFunc)
 		{
@@ -3377,8 +3412,8 @@ namespace LinqToDB.Linq.Builder
 		{
 			_preambles ??= new();
 			_preambles.Add(
-				Tuple.Create<object?, 
-					Func<object?, IDataContext, Expression, object?[]?, object?>, 
+				Tuple.Create<object?,
+					Func<object?, IDataContext, Expression, object?[]?, object?>,
 					Func<object?, IDataContext, Expression, object?[]?, CancellationToken, Task<object?>>
 				>
 				(
@@ -3395,7 +3430,7 @@ namespace LinqToDB.Linq.Builder
 
 		private Stack<Type[]>? _disabledFilters;
 
-		public void AddDisabledQueryFilters(Type[] disabledFilters)
+		public void PushDisabledQueryFilters(Type[] disabledFilters)
 		{
 			if (_disabledFilters == null)
 				_disabledFilters = new Stack<Type[]>();
@@ -3412,12 +3447,30 @@ namespace LinqToDB.Linq.Builder
 			return Array.IndexOf(filter, entityType) >= 0;
 		}
 
-		public void RemoveDisabledFilter()
+		public void PopDisabledFilter()
 		{
 			if (_disabledFilters == null)
 				throw new InvalidOperationException();
 
 			_ = _disabledFilters.Pop();
+		}
+
+		#endregion
+
+		#region Query Hint Stack
+
+		List<SqlQueryExtension>? _sqlQueryExtensionStack;
+
+		public void PushSqlQueryExtension(SqlQueryExtension extension)
+		{
+			(_sqlQueryExtensionStack ??= new()).Add(extension);
+		}
+
+		public void PopSqlQueryExtension(SqlQueryExtension extension)
+		{
+			if (_sqlQueryExtensionStack == null || _sqlQueryExtensionStack.Count > 0)
+				throw new InvalidOperationException();
+			_sqlQueryExtensionStack.RemoveAt(_sqlQueryExtensionStack.Count - 1);
 		}
 
 		#endregion
@@ -3509,7 +3562,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (flags.HasFlag(ProjectFlags.SQL))
 			{
-				body = RemoveNullPropagation(body);
+				body = RemoveNullPropagation(body, true);
 			}
 
 			switch (body.NodeType)

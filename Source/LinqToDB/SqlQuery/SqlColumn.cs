@@ -31,7 +31,7 @@ namespace LinqToDB.SqlQuery
 #endif
 
 		ISqlExpression _expression;
-		
+
 		public ISqlExpression Expression
 		{
 			get => _expression;
@@ -39,13 +39,15 @@ namespace LinqToDB.SqlQuery
 			{
 				if (_expression == value)
 					return;
+				if (value == this)
+					throw new InvalidOperationException();
 				_expression = value;
 				_hashCode   = null;
 			}
 		}
 
 		SelectQuery? _parent;
-		
+
 		public SelectQuery? Parent
 		{
 			get => _parent;

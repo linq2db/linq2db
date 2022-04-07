@@ -58,7 +58,8 @@ namespace LinqToDB.ServiceModel
 
 		class SerializerBase
 		{
-			private   readonly MappingSchema _ms;
+			readonly MappingSchema _mappingSchema;
+
 			protected readonly StringBuilder             Builder        = new ();
 			protected readonly Dictionary<object,int>    ObjectIndices  = new ();
 			protected readonly Dictionary<object,string> DelayedObjects = new ();
@@ -68,7 +69,7 @@ namespace LinqToDB.ServiceModel
 
 			protected SerializerBase(MappingSchema serializationMappingSchema)
 			{
-				_ms = serializationMappingSchema;
+				_mappingSchema = serializationMappingSchema;
 			}
 
 			protected void Append(Type type, object? value, bool withType = true)
@@ -81,7 +82,7 @@ namespace LinqToDB.ServiceModel
 					Append((string?)null);
 				else if (!type.IsArray)
 				{
-					Append(SerializationConverter.Serialize(_ms, value));
+					Append(SerializationConverter.Serialize(_mappingSchema, value));
 				}
 				else
 				{
@@ -643,7 +644,13 @@ namespace LinqToDB.ServiceModel
 
 				Builder.AppendLine();
 
-				return Builder.ToString();
+				var str = Builder.ToString();
+
+#if DEBUG
+				Debug.WriteLine(str);
+#endif
+
+				return str;
 			}
 
 			void Visit(IQueryElement e, EvaluationContext evaluationContext)
@@ -666,6 +673,7 @@ namespace LinqToDB.ServiceModel
 
 							break;
 						}
+
 					case QueryElementType.SqlField :
 						{
 							var fld = (SqlField)e;
@@ -823,7 +831,8 @@ namespace LinqToDB.ServiceModel
 							var elem = (SqlValue)e;
 
 							Append(elem.ValueType);
-							Append(elem.ValueType.SystemType, elem.Value, false);
+							var type  = elem.Value?.GetType() ?? elem.ValueType.SystemType;
+							Append(type, elem.Value);
 
 							break;
 						}
@@ -849,6 +858,7 @@ namespace LinqToDB.ServiceModel
 							Append(elem.Schema);
 							Append(elem.PhysicalName);
 							Append(elem.ObjectType);
+							Append(elem.ID);
 
 							if (elem.SequenceAttributes.IsNullOrEmpty())
 								Builder.Append(" -");
@@ -1084,6 +1094,8 @@ namespace LinqToDB.ServiceModel
 							Append(elem.OrderBy);
 							Append(elem.ParentSelect?.SourceID ?? 0);
 							Append(elem.IsParameterDependent);
+							Append(elem.QueryName);
+							Append(elem.DoNotSetAliases);
 
 							if (!elem.HasSetOperators)
 								Builder.Append(" -");
@@ -1270,7 +1282,6 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SetExpression :
 						{
 							var elem = (SqlSetExpression)e;
-
 							Append(elem.Column);
 							Append(elem.Expression);
 
@@ -1421,14 +1432,21 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SqlAliasPlaceholder:
 						{
 							break;
-						};
+						}
+
+					case QueryElementType.SqlRow:
+						{
+							var elem = (SqlRow)e;
+							
+							Append(elem.Values);
+
+							break;
+						}
 
 					case QueryElementType.OutputClause:
 						{
 							var elem = (SqlOutputClause)e;
 
-							// actually only InsertedTable implemented now
-							Append(elem.SourceTable);
 							Append(elem.DeletedTable);
 							Append(elem.InsertedTable);
 							Append(elem.OutputTable);
@@ -1438,7 +1456,7 @@ namespace LinqToDB.ServiceModel
 							else
 								Builder.Append(" -");
 
-							Append(elem.OutputQuery);
+							Append(elem.OutputColumns);
 
 							break;
 						}
@@ -1448,10 +1466,36 @@ namespace LinqToDB.ServiceModel
 						var elem = (SqlComment)e;
 						AppendStringList(elem.Lines);
 						break;
-					};
+						}
 
 					default:
 						throw new InvalidOperationException($"Serialize not implemented for element {e.ElementType}");
+				}
+
+				if (e is IQueryExtendible qe)
+				{
+					if (qe.SqlQueryExtensions == null || qe.SqlQueryExtensions.Count == 0)
+					{
+						Append(0);
+					}
+					else
+					{
+						Append(qe.SqlQueryExtensions.Count);
+
+						foreach (var ext in qe.SqlQueryExtensions)
+						{
+							Append(ext.Configuration);
+							Append((int)ext.Scope);
+							Append(ext.BuilderType);
+							Append(ext.Arguments.Count);
+
+							foreach (var argument in ext.Arguments)
+							{
+								Append(argument.Key);
+								Append(argument.Value);
+							}
+						}
+					}
 				}
 
 				Builder.AppendLine();
@@ -1537,7 +1581,7 @@ namespace LinqToDB.ServiceModel
 				switch ((QueryElementType)type)
 				{
 					case (QueryElementType)TypeIndex      : obj = ResolveType(ReadString());                break;
-					case (QueryElementType)TypeArrayIndex : obj = GetArrayType(Read<Type>()!);              break;
+					case (QueryElementType)TypeArrayIndex : obj = GetArrayType(ReadType()!);              break;
 
 					case QueryElementType.SqlField :
 						{
@@ -1579,7 +1623,7 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.SqlFunction :
 						{
-							var systemType    = Read<Type>()!;
+							var systemType    = ReadType()!;
 							var name          = ReadString()!;
 							var isAggregate   = ReadBool();
 							var isPure        = ReadBool();
@@ -1603,7 +1647,7 @@ namespace LinqToDB.ServiceModel
 							var isQueryParameter = ReadBool();
 							var dbDataType       = ReadDbDataType();
 
-							var value            = ReadValue(Read<Type>()!);
+							var value            = ReadValue(ReadType()!);
 
 							obj = new SqlParameter(dbDataType, name, value)
 							{
@@ -1615,7 +1659,7 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.SqlExpression :
 						{
-							var systemType  = Read<Type>();
+							var systemType  = ReadType();
 							var expr        = ReadString()!;
 							var precedence  = ReadInt();
 							var flags       = (SqlFlags)ReadInt();
@@ -1628,7 +1672,7 @@ namespace LinqToDB.ServiceModel
 
 					case QueryElementType.SqlBinaryExpression :
 						{
-							var systemType = Read<Type>()!;
+							var systemType = ReadType()!;
 							var expr1      = Read<ISqlExpression>()!;
 							var operation  = ReadString()!;
 							var expr2      = Read<ISqlExpression>()!;
@@ -1642,7 +1686,7 @@ namespace LinqToDB.ServiceModel
 					case QueryElementType.SqlValue :
 						{
 							var dbDataType = ReadDbDataType();
-							var value      = ReadValue(dbDataType.SystemType);
+							var value      = ReadValue(ReadType()!);
 
 							obj = new SqlValue(dbDataType, value);
 
@@ -1667,7 +1711,8 @@ namespace LinqToDB.ServiceModel
 							var database           = ReadString();
 							var schema             = ReadString();
 							var physicalName       = ReadString();
-							var objectType         = Read<Type>()!;
+							var objectType         = ReadType()!;
+							var tableID            = ReadString();
 							var sequenceAttributes = null as SequenceNameAttribute[];
 
 							var count = ReadCount();
@@ -1693,7 +1738,7 @@ namespace LinqToDB.ServiceModel
 
 							obj = new SqlTable(
 								sourceID, name, alias, server, database, schema, physicalName, objectType, sequenceAttributes, flds,
-								sqlTableType, tableArgs, tableOptions);
+								sqlTableType, tableArgs, tableOptions, tableID);
 
 							break;
 						}
@@ -1738,7 +1783,7 @@ namespace LinqToDB.ServiceModel
 						{
 							var sourceID           = ReadInt();
 							var alias              = ReadString()!;
-							var objectType         = Read<Type>()!;
+							var objectType         = ReadType()!;
 
 							var all    = Read<SqlField>()!;
 							var fields = ReadArray<SqlField>()!;
@@ -1899,9 +1944,12 @@ namespace LinqToDB.ServiceModel
 							var orderBy            = Read<SqlOrderByClause>()!;
 							var parentSql          = ReadInt();
 							var parameterDependent = ReadBool();
+							var queryName          = ReadString();
+							var doNotSetAliases    = ReadBool();
 							var unions             = ReadArray<SqlSetOperator>();
 
 							var query = new SelectQuery(sid);
+
 							_statement = new SqlSelectStatement(query);
 
 							query.Init(
@@ -1914,7 +1962,9 @@ namespace LinqToDB.ServiceModel
 								unions?.ToList(),
 								null, // we do not serialize unique keys
 								null,
-								parameterDependent);
+								parameterDependent,
+								queryName,
+								doNotSetAliases);
 
 							_queries.Add(sid, query);
 
@@ -2036,7 +2086,7 @@ namespace LinqToDB.ServiceModel
 						{
 							var name        = ReadString()!;
 							var body        = Read<SelectQuery>();
-							var objectType  = Read<Type>()!;
+							var objectType  = ReadType()!;
 							var fields      = ReadArray<SqlField>()!;
 							var isRecursive = ReadBool();
 
@@ -2189,7 +2239,15 @@ namespace LinqToDB.ServiceModel
 						break;
 					}
 
-					case QueryElementType.SetExpression : obj = new SqlSetExpression(Read     <ISqlExpression>()!, Read<ISqlExpression>()!); break;
+					case QueryElementType.SetExpression :
+					{
+						var column     = Read<ISqlExpression>();
+						var expression = Read<ISqlExpression>();
+
+						obj = new SqlSetExpression(column!, expression);
+
+						break;
+					}
 					case QueryElementType.FromClause    : obj = new SqlFromClause   (ReadArray<SqlTableSource>()!);                break;
 					case QueryElementType.WhereClause   : obj = new SqlWhereClause  (Read     <SqlSearchCondition>()!);            break;
 					case QueryElementType.GroupByClause : obj = new SqlGroupByClause((GroupingType)ReadInt(), ReadArray<ISqlExpression>()!); break;
@@ -2302,26 +2360,31 @@ namespace LinqToDB.ServiceModel
 							break;
 						}
 
+					case QueryElementType.SqlRow:
+						{
+							var values = ReadArray<ISqlExpression>()!;
+							obj        = new SqlRow(values);
+							break;
+						}
+
 					case QueryElementType.OutputClause:
 						{
 
-							var source   = Read<SqlTable>()!;
 							var deleted  = Read<SqlTable>()!;
 							var inserted = Read<SqlTable>()!;
 							var output   = Read<SqlTable>()!;
 							var items    = ReadArray<SqlSetExpression>()!;
-							var query    = Read<SelectQuery>();
+							var columns  = ReadList<ISqlExpression>();
 
 							var c = new SqlOutputClause()
 							{
-								SourceTable   = source,
 								DeletedTable  = deleted,
 								InsertedTable = inserted,
 								OutputTable   = output,
-								OutputQuery   = query
+								OutputColumns = columns
 							};
 
-							if (items.Length > 0)
+							if (items != null && items.Length > 0)
 								c.OutputItems.AddRange(items);
 
 							obj = c;
@@ -2339,16 +2402,44 @@ namespace LinqToDB.ServiceModel
 						throw new InvalidOperationException($"Parse not implemented for element {(QueryElementType)type}");
 				}
 
+				if (obj is IQueryExtendible qe)
+				{
+					var count = ReadInt();
+
+					if (count > 0)
+					{
+						qe.SqlQueryExtensions = new(count);
+
+						for (var i = 0; i < count; i++)
+						{
+							var ext = new SqlQueryExtension();
+
+							ext.Configuration = ReadString();
+							ext.Scope         = (Sql.QueryExtensionScope)ReadInt();
+							ext.BuilderType   = ReadType();
+
+							var cnt = ReadInt();
+
+							for (var j = 0; j < cnt; j++)
+							{
+								var key   = ReadString();
+								var value = Read<ISqlExpression>();
+
+								ext.Arguments.Add(key!, value!);
+							}
+
+							qe.SqlQueryExtensions.Add(ext);
+						}
+					}
+				}
+
 				ObjectIndices.Add(idx, obj!);
 
-				if (DelayedObjects.Count > 0)
-				{
-					if (DelayedObjects.TryGetValue(idx, out var action))
+				if (DelayedObjects.Count > 0 && DelayedObjects.TryGetValue(idx, out var action))
 					{
 						action(obj!);
 						DelayedObjects.Remove(idx);
 					}
-				}
 
 				return true;
 			}

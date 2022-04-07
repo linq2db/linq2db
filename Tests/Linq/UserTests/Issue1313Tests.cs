@@ -105,7 +105,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestQuery([DataSources(false, ProviderName.SQLiteMS)] string context)
+		public void TestQuery([DataSources(false)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{

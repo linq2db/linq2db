@@ -13,13 +13,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 	public class SapHanaOdbcDataProvider : DynamicDataProviderBase<OdbcProviderAdapter>
 	{
-		public SapHanaOdbcDataProvider()
-			: this(ProviderName.SapHanaOdbc, MappingSchemaInstance)
-		{
-		}
-
-		protected SapHanaOdbcDataProvider(string name, MappingSchema mappingSchema)
-			: base(name, mappingSchema, OdbcProviderAdapter.GetInstance())
+		public SapHanaOdbcDataProvider() : base(ProviderName.SapHanaOdbc, MappingSchemaInstance, OdbcProviderAdapter.GetInstance())
 		{
 			//supported flags
 			SqlProviderFlags.IsParameterOrderDependent = true;
@@ -69,7 +63,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new SapHanaOdbcSqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new SapHanaOdbcSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -112,7 +106,7 @@ namespace LinqToDB.DataProvider.SapHana
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		public override IDisposable ExecuteScope(DataConnection dataConnection) => new InvariantCultureRegion(base.ExecuteScope(dataConnection));
+		public override IExecutionScope ExecuteScope(DataConnection dataConnection) => new InvariantCultureRegion(null);
 
 		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{

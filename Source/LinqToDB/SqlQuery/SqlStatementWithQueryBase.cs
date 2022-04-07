@@ -5,10 +5,10 @@ namespace LinqToDB.SqlQuery
 {
 	public abstract class SqlStatementWithQueryBase : SqlStatement
 	{
-		public override bool               IsParameterDependent
+		public override bool          IsParameterDependent
 		{
-			get => SelectQuery!.IsParameterDependent;
-			set => SelectQuery!.IsParameterDependent = value;
+			get => SelectQuery.IsParameterDependent;
+			set => SelectQuery.IsParameterDependent = value;
 		}
 
 		private         SelectQuery? _selectQuery;

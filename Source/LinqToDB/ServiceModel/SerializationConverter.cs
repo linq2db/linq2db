@@ -97,19 +97,9 @@ namespace LinqToDB.ServiceModel
 					var li = ms.GetConverter(new DbDataType(_stringType), new DbDataType(to), false);
 					if (li == null && to.IsEnum)
 					{
-						var type = Converter.GetDefaultMappingFromEnumType(ms, to);
-						if (type != null)
-						{
-							if (type == typeof(int) || type == typeof(long))
-								enumType = to;
-							to = type;
-						}	
-						else
-						{
 							enumType = to;
 							to = Enum.GetUnderlyingType(to);
 						}
-					}
 
 					if (li == null)
 						li = ms.GetConverter(new DbDataType(_stringType), new DbDataType(to), true)!;

@@ -841,7 +841,7 @@ namespace LinqToDB.SqlProvider
 						{
 							// try merge if joins are the same
 							var removed = TryToRemoveIndependentLeftJoin(fromTable, j1, keys);
-							
+
 							if (removed)
 							{
 								fromTable.Joins.RemoveAt(i1);
@@ -1051,7 +1051,6 @@ namespace LinqToDB.SqlProvider
 			SqlJoinedTable join1, SqlJoinedTable join2,
 			List<VirtualField[]> uniqueKeys)
 		{
-
 			if (!(join2.Table.Source is SqlTable t && t.SqlTableType == SqlTableType.Table))
 				return false;
 
@@ -1314,7 +1313,7 @@ namespace LinqToDB.SqlProvider
 			public bool   CanBeNull => Element.CanBeNull;
 
 			private ISqlExpression? _expression;
-			private ISqlExpression Expression => 
+			private ISqlExpression Expression =>
 				_expression ??= Field ?? QueryHelper.GetUnderlyingField(Column!) as ISqlExpression ?? Column!;
 
 			public ISqlExpression Element

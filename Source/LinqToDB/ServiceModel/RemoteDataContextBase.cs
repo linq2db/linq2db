@@ -1,5 +1,6 @@
 ﻿#if NETFRAMEWORK
 using System;
+using System.Data.Common;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -10,11 +11,11 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.ServiceModel
 {
-	using System.Data.Common;
+	using Common;
+	using DataProvider;
 	using Expressions;
 	using Extensions;
-	using LinqToDB.Common;
-	using LinqToDB.Interceptors;
+	using Interceptors;
 	using Mapping;
 	using SqlProvider;
 
@@ -29,7 +30,7 @@ namespace LinqToDB.ServiceModel
 			public MappingSchema   MappingSchema   = null!;
 		}
 
-		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new ();
+		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new();
 
 		class RemoteMappingSchema : MappingSchema
 		{
@@ -50,7 +51,6 @@ namespace LinqToDB.ServiceModel
 				try
 				{
 					var info = client.GetInfo(Configuration);
-
 					var type = Type.GetType(info.MappingSchemaType)!;
 					var ms   = new RemoteMappingSchema(ContextIDPrefix, (MappingSchema)Activator.CreateInstance(type));
 
@@ -88,7 +88,7 @@ namespace LinqToDB.ServiceModel
 		}
 
 		private  MappingSchema? _serializationMappingSchema;
-		internal MappingSchema  SerializationMappingSchema => _serializationMappingSchema ??= new SerializationMappingSchema(MappingSchema);
+		internal MappingSchema   SerializationMappingSchema => _serializationMappingSchema ??= new SerializationMappingSchema(MappingSchema);
 
 		public  bool InlineParameters { get; set; }
 		public  bool CloseAfterUse    { get; set; }
@@ -201,12 +201,14 @@ namespace LinqToDB.ServiceModel
 										Expression.New(
 											type.GetConstructor(new[]
 											{
+												typeof(IDataProvider),
 												typeof(MappingSchema),
 												typeof(ISqlOptimizer),
 												typeof(SqlProviderFlags)
 											}) ?? throw new InvalidOperationException($"Constructor for type '{type.Name}' not found."),
 											new Expression[]
 											{
+												Expression.Constant(null, typeof(IDataProvider)),
 												Expression.Constant(((IDataContext)this).MappingSchema),
 												Expression.Constant(GetSqlOptimizer()),
 												Expression.Constant(((IDataContext)this).SqlProviderFlags)
@@ -310,10 +312,10 @@ namespace LinqToDB.ServiceModel
 		{
 			ThrowOnDisposed();
 
-			var ctx = Clone();
+			var ctx = (RemoteDataContextBase)Clone();
 
-			if (_contextInterceptors != null)
-				ctx.AddInterceptor(_contextInterceptors.Clone());
+			ctx._dataContextInterceptor   = _dataContextInterceptor   is AggregatedDataContextInterceptor   dc ? (AggregatedDataContextInterceptor)  dc.Clone() : _dataContextInterceptor;
+			ctx._entityServiceInterceptor = _entityServiceInterceptor is AggregatedEntityServiceInterceptor es ? (AggregatedEntityServiceInterceptor)es.Clone() : _entityServiceInterceptor;
 
 			return ctx;
 		}
@@ -328,22 +330,17 @@ namespace LinqToDB.ServiceModel
 
 		void IDataContext.Close()
 		{
-			if (_contextInterceptors != null)
-				_contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosing(arg), new DataContextEventData(this));
-
-			if (_contextInterceptors != null)
-				_contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosed(arg), new DataContextEventData(this));
+			_dataContextInterceptor?.OnClosing(new (this));
+			_dataContextInterceptor?.OnClosed (new (this));
 		}
 
 		async Task IDataContext.CloseAsync()
 		{
-			if (_contextInterceptors != null)
-				await _contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosingAsync(arg), new DataContextEventData(this))
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-
-			if (_contextInterceptors != null)
-				await _contextInterceptors.Apply((interceptor, arg) => interceptor.OnClosedAsync(arg), new DataContextEventData(this))
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			if (_dataContextInterceptor != null)
+			{
+				await _dataContextInterceptor.OnClosingAsync(new (this)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await _dataContextInterceptor.OnClosedAsync (new (this)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
 		}
 
 		public virtual void Dispose()

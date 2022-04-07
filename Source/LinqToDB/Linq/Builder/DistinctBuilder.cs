@@ -19,7 +19,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			var sql = sequence.SelectQuery;
+			var sql      = sequence.SelectQuery;
 			if (sql.Select.TakeValue != null || sql.Select.SkipValue != null)
 			{
 				sequence = new SubQueryContext(sequence);

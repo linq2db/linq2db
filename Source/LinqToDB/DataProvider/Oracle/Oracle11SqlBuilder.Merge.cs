@@ -10,7 +10,7 @@
 
 		// NULL value in sort leads to "cannot insert NULL into (TARGET.NON_NULL_COLUMN)" error in insert command
 		// TODO: find a way to workaround it
-		protected override bool isEmptyValuesSourceSupported => true;
+		protected override bool IsEmptyValuesSourceSupported => true;
 
 		// VALUES(...) syntax not supported by Oracle
 		protected override bool IsValuesSyntaxSupported => false;
@@ -23,14 +23,17 @@
 
 		protected override void BuildMergeInto(SqlMergeStatement merge)
 		{
-			StringBuilder.Append("MERGE ");
+			StringBuilder.Append("MERGE");
+
+			StartStatementQueryExtensions(merge.SelectQuery);
+
+			StringBuilder.Append(' ');
 
 			if (merge.Hint != null)
 			{
-				StringBuilder
-					.Append("/*+ ")
-					.Append(merge.Hint)
-					.Append(" */ ");
+				if (HintBuilder!.Length > 0)
+					HintBuilder.Append(' ');
+				HintBuilder.Append(merge.Hint);
 			}
 
 			StringBuilder.Append("INTO ");

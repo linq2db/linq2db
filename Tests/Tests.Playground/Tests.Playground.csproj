@@ -1,13 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\Build\linq2db.Tests.Providers.props" />
+	<Import Project="..\..\Build\linq2db.TestProjects.props" />
 
 	<PropertyGroup>
-		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 		<AssemblyName>linq2db.Tests.Playground</AssemblyName>
-		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
 	</PropertyGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
 		<Compile Include="..\Linq\Linq\AssociationTests.cs" Link="AssociationTests.cs" />
 		<Compile Include="..\Linq\Linq\ConcatUnionTests.cs" Link="ConcatUnionTests.cs" />
@@ -24,6 +23,10 @@
 		<Compile Include="..\Linq\Update\DeleteTests.cs" Link="DeleteTests.cs" />
 		<Compile Include="..\Linq\Update\InsertTests.cs" Link="InsertTests.cs" />
 		<Compile Include="..\Linq\UserTests\IndexOutOfRangeInUnions.cs" Link="IndexOutOfRangeInUnions.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="..\Linq\app.config" Link="app.config" />
 	</ItemGroup>
 
 </Project>

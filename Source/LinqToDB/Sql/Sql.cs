@@ -110,34 +110,6 @@ namespace LinqToDB
 			return value ?? default;
 		}
 
-		[Expression("{0} BETWEEN {1} AND {2}", PreferServerSide = true, IsPredicate = true)]
-		public static bool Between<T>(this T value, T low, T high)
-			where T : IComparable
-		{
-			return value != null && value.CompareTo(low) >= 0 && value.CompareTo(high) <= 0;
-		}
-
-		[Expression("{0} BETWEEN {1} AND {2}", PreferServerSide = true, IsPredicate = true)]
-		public static bool Between<T>(this T? value, T? low, T? high)
-			where T : struct, IComparable
-		{
-			return value != null && value.Value.CompareTo(low) >= 0 && value.Value.CompareTo(high) <= 0;
-		}
-
-		[Expression("{0} NOT BETWEEN {1} AND {2}", PreferServerSide = true, IsPredicate = true)]
-		public static bool NotBetween<T>(this T value, T low, T high)
-			where T : IComparable
-		{
-			return value != null && (value.CompareTo(low) < 0 || value.CompareTo(high) > 0);
-		}
-
-		[Expression("{0} NOT BETWEEN {1} AND {2}", PreferServerSide = true, IsPredicate = true)]
-		public static bool NotBetween<T>(this T? value, T? low, T? high)
-			where T : struct, IComparable
-		{
-			return value != null && (value.Value.CompareTo(low) < 0 || value.Value.CompareTo(high) > 0);
-		}
-
 		[Extension(typeof(IsDistinctBuilder), ServerSideOnly = false, PreferServerSide = false)]
 		public static bool IsDistinctFrom<T>(this T value, T other) => !EqualityComparer<T>.Default.Equals(value, other);
 
@@ -161,7 +133,7 @@ namespace LinqToDB
 				SqlPredicate predicate = left.CanBeNull || right.CanBeNull
 					? new SqlPredicate.IsDistinct(left, isNot, right)
 					: new SqlPredicate.ExprExpr(left, isNot ? SqlPredicate.Operator.Equal : SqlPredicate.Operator.NotEqual, right, withNull: null);
-				
+
 				builder.ResultExpression = new SqlSearchCondition(
 					new SqlCondition(isNot: false, predicate)
 				);
@@ -397,8 +369,10 @@ namespace LinqToDB
 
 		[Property(PN.PostgreSQL,    "TimeStamp",      ServerSideOnly=true)]
 		[Property(PN.Firebird,      "TimeStamp",      ServerSideOnly=true)]
+		[Property(PN.SqlServer2019, "DateTimeOffset", ServerSideOnly=true)]
 		[Property(PN.SqlServer2017, "DateTimeOffset", ServerSideOnly=true)]
 		[Property(PN.SqlServer2016, "DateTimeOffset", ServerSideOnly=true)]
+		[Property(PN.SqlServer2014, "DateTimeOffset", ServerSideOnly=true)]
 		[Property(PN.SqlServer2012, "DateTimeOffset", ServerSideOnly=true)]
 		[Property(PN.SqlServer2008, "DateTimeOffset", ServerSideOnly=true)]
 		[Property(PN.SapHana,       "TimeStamp",      ServerSideOnly=true)]
@@ -734,10 +708,10 @@ namespace LinqToDB
 
 		/*
 		 * marked internal as we don't have plans now to expose it directly (used by string.IsNullOrWhiteSpace mapping)
-		 * 
+		 *
 		 * implementation tries to mimic .NET implementation of string.IsNullOrWhiteSpace (except null check part):
 		 * return true if string doesn't contain any symbols except White_Space codepoints from Unicode.
-		 * 
+		 *
 		 * Known limitations:
 		 * 1. [Access] we handle only following WS:
 		 * - 0x20 (SPACE)
@@ -754,6 +728,7 @@ namespace LinqToDB
 		[Extension(PN.Informix,      typeof(IsNullOrWhiteSpaceInformixBuilder),      IsPredicate = true)]
 		[Extension(PN.SqlServer,     typeof(IsNullOrWhiteSpaceSqlServerBuilder),     IsPredicate = true)]
 		[Extension(PN.SqlServer2017, typeof(IsNullOrWhiteSpaceSqlServer2017Builder), IsPredicate = true)]
+		[Extension(PN.SqlServer2019, typeof(IsNullOrWhiteSpaceSqlServer2017Builder), IsPredicate = true)]
 		[Extension(PN.Access,        typeof(IsNullOrWhiteSpaceAccessBuilder),        IsPredicate = true)]
 		[Extension(PN.Sybase,        typeof(IsNullOrWhiteSpaceSybaseBuilder),        IsPredicate = true)]
 		[Extension(PN.MySql,         typeof(IsNullOrWhiteSpaceMySqlBuilder),         IsPredicate = true)]

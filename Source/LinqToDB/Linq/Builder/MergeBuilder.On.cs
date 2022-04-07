@@ -126,12 +126,6 @@ namespace LinqToDB.Linq.Builder
 				mergeContext.SourceContext.MatchBuilt();
 				return mergeContext;
 			}
-
-			protected override SequenceConvertInfo? Convert(
-				ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-			{
-				return null;
-			}
 		}
 	}
 }

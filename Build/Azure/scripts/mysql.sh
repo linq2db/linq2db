@@ -17,4 +17,4 @@ until docker exec mysql mysql --protocol TCP -uroot -proot -e "show databases;";
 done
 
 docker exec mysql mysql -e 'CREATE DATABASE testdata DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;' -uroot -proot
-docker exec mysql mysql -e 'CREATE DATABASE testdata2 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;' -uroot -proot
+docker exec mysql mysql -e 'CREATE DATABASE testdataconnector DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;' -uroot -proot

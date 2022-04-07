@@ -992,7 +992,7 @@ namespace Tests.Linq
 
 		[Test, Explicit]
 		public void StackOverflow([IncludeDataSources(
-			ProviderName.SqlServer2008, ProviderName.SqlServer2012/*, ProviderName.SqlServer2014*/)]
+			TestProvName.AllSqlServer2008, TestProvName.AllSqlServer2012)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1163,7 +1163,7 @@ namespace Tests.Linq
 		public class AllJoinsSourceAttribute : IncludeDataSourcesAttribute
 		{
 			public AllJoinsSourceAttribute() : base(
-				TestProvName.AllSqlServer2005Plus,
+				TestProvName.AllSqlServer,
 				TestProvName.AllOracle,
 				TestProvName.AllFirebird,
 				TestProvName.AllPostgreSQL)

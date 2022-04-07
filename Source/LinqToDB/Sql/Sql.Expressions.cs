@@ -3,6 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB
@@ -468,7 +469,7 @@ namespace LinqToDB
 		}
 
 		[Extension("", BuilderType = typeof(TableFieldBuilder))]
-		internal static TColumn TableField<TEntity, TColumn>([NoEnumeration] TEntity entity, string fieldName)
+		public static TColumn TableField<TEntity, TColumn>([NoEnumeration] TEntity entity, string fieldName)
 		{
 			throw new LinqToDBException("'Sql.TableField' is server side only method and used only for generating custom SQL parts");
 		}

@@ -28,8 +28,8 @@ namespace LinqToDB.Linq.Builder
 			set => throw new NotImplementedException();
 		}
 
-		public SqlStatement? Statement 
-		{ 
+		public SqlStatement? Statement
+		{
 			get => SubqueryContext.Statement;
 			set => SubqueryContext.Statement = value;
 		}

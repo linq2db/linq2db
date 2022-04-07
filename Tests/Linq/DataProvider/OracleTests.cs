@@ -126,7 +126,7 @@ namespace Tests.DataProvider
 				TestType(conn, "\"datetimeoffsetDataType\"", new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(-5, 0, 0)));
 
 				// TODO: fix timezones handling
-				if (!context.Contains("Native"))
+				if (!context.IsAnyOf(TestProvName.AllOracleNative))
 				{
 					var dt = new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeSpan.Zero);
 					TestType(conn, "\"localZoneDataType\"", new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeZoneInfo.Local.GetUtcOffset(dt) /* new TimeSpan(-4, 0, 0)*/), throwException:true);
@@ -495,7 +495,7 @@ namespace Tests.DataProvider
 				var xdoc = XDocument.Parse("<xml/>");
 				var xml  = Convert<string,XmlDocument>.Lambda("<xml/>");
 
-				var xmlExpected = GetProviderName(context, out var _).Contains("Native") ? "<xml/>\n" : "<xml/>";
+				var xmlExpected = context.IsAnyOf(TestProvName.AllOracleNative) ? "<xml/>\n" : "<xml/>";
 				Assert.That(conn.Execute<string>     (PathThroughSql, DataParameter.Xml("p", "<xml/>")),        Is.EqualTo(xmlExpected));
 				Assert.That(conn.Execute<XDocument>  (PathThroughSql, DataParameter.Xml("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
 				Assert.That(conn.Execute<XmlDocument>(PathThroughSql, DataParameter.Xml("p", xml)). InnerXml,   Is.EqualTo("<xml />"));
@@ -970,7 +970,7 @@ namespace Tests.DataProvider
 								.IsNotColumn()
 						;
 
-					if (GetProviderName(context, out var _).Contains("Native"))
+					if (context.IsAnyOf(TestProvName.AllOracleNative))
 					{
 						ms.GetFluentMappingBuilder()
 							.Entity<LinqDataTypes>()
@@ -1019,7 +1019,7 @@ namespace Tests.DataProvider
 								.IsNotColumn()
 						;
 
-					if (GetProviderName(context, out var _).Contains("Native"))
+					if (context.IsAnyOf(TestProvName.AllOracleNative))
 					{
 						ms.GetFluentMappingBuilder()
 							.Entity<LinqDataTypes>()
@@ -1345,7 +1345,7 @@ namespace Tests.DataProvider
 			{
 				db.GetTable<LinqDataTypesBC>().Delete();
 
-				if (context.Contains("Native") && bulkCopyType == BulkCopyType.ProviderSpecific)
+				if (context.IsAnyOf(TestProvName.AllOracleNative) && bulkCopyType == BulkCopyType.ProviderSpecific)
 				{
 					var ms = new MappingSchema();
 
@@ -1383,7 +1383,7 @@ namespace Tests.DataProvider
 			{
 				db.GetTable<LinqDataTypesBC>().Delete();
 
-				if (context.Contains("Native") && bulkCopyType == BulkCopyType.ProviderSpecific)
+				if (context.IsAnyOf(TestProvName.AllOracleNative) && bulkCopyType == BulkCopyType.ProviderSpecific)
 				{
 					var ms = new MappingSchema();
 
@@ -2684,7 +2684,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void ProcedureOutParameters([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
-			var isNative = GetProviderName(context, out var _).Contains("Native");
+			var isNative = context.IsAnyOf(TestProvName.AllOracleNative);
 			using (var db = (DataConnection)GetDataContext(context))
 			{
 				var pms = new[]
@@ -2776,7 +2776,7 @@ namespace Tests.DataProvider
 				Assert.AreEqual(new DateTimeOffset(2012, 12, 12, 12, 12, 12, isNative ? 0 : 12, TimeSpan.FromHours(-5)), pms[14].Value);
 
 				// TODO: fix timezones handling
-				if (!context.Contains("Native"))
+				if (!context.IsAnyOf(TestProvName.AllOracleNative))
 					Assert.That(pms[15].Value,
 						Is.EqualTo(new DateTimeOffset(2012, 12, 12, 11, 12, 12, isNative ? 0 : 12, TimeSpan.Zero)).
 						Or.EqualTo(new DateTimeOffset(2012, 12, 12, 11, 12, 12, isNative ? 0 : 12, TestData.DateTimeOffset.Offset)).

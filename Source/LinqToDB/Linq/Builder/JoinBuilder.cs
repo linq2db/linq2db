@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -15,7 +16,7 @@ namespace LinqToDB.Linq.Builder
 				return false;
 
 			// other overload for Join
-			if (!(methodCall.Arguments[2].Unwrap() is LambdaExpression lambda))
+			if (methodCall.Arguments[2].Unwrap() is not LambdaExpression lambda)
 				return false;
 
 			var body = lambda.Body.Unwrap();
@@ -45,10 +46,21 @@ namespace LinqToDB.Linq.Builder
 			outerContext = new SubQueryContext(outerContext);
 			innerContext = new SubQueryContext(innerContext);
 
+			List<SqlQueryExtension>? extensions = null;
+
+			if (innerContext is QueryExtensionBuilder.JoinHintContext jhc)
+			{
+				innerContext = jhc.Context;
+				extensions   = jhc.Extensions;
+			}
+
 			var join = innerContext.SelectQuery.InnerJoin();
 			var sql  = outerContext.SelectQuery;
 
 			sql.From.Tables[0].Joins.Add(join.JoinedTable);
+
+			if (extensions != null)
+				join.JoinedTable.SqlQueryExtensions = extensions;
 
 			var selector = (LambdaExpression)methodCall.Arguments[4].Unwrap();
 
@@ -108,12 +120,6 @@ namespace LinqToDB.Linq.Builder
 				;
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
 		internal static void BuildJoin(
 			ExpressionBuilder builder,
 			SqlSearchCondition condition,
@@ -130,7 +136,7 @@ namespace LinqToDB.Linq.Builder
 				predicate = new SqlPredicate.ExprExpr(
 					builder.ConvertToSql(outerKeyContext, outerKeySelector),
 					SqlPredicate.Operator.Equal,
-					builder.ConvertToSql(innerKeyContext, innerKeySelector), 
+					builder.ConvertToSql(innerKeyContext, innerKeySelector),
 					Common.Configuration.Linq.CompareNullsAsValues ? true : null);
 			}
 

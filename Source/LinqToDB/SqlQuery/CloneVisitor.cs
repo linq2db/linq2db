@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
-using LinqToDB.Common;
-using LinqToDB.Linq.Builder;
+using LinqToDB.ServiceModel;
 
 namespace LinqToDB.SqlQuery
 {
+	using Common;
+	using Linq.Builder;
+
 	public readonly struct CloneVisitor<TContext>
 	{
 		private readonly Dictionary<IQueryElement, IQueryElement> _objectTree;
@@ -155,11 +157,13 @@ namespace LinqToDB.SqlQuery
 					var newSelectQuery = new SelectQuery(Interlocked.Increment(ref SelectQuery.SourceIDCounter))
 					{
 						IsParameterDependent = selectQuery.IsParameterDependent,
-						DoNotRemove          = selectQuery.DoNotRemove
+						DoNotRemove          = selectQuery.DoNotRemove,
+						QueryName            = selectQuery.QueryName,
+						SqlQueryExtensions   = selectQuery.SqlQueryExtensions,
+						DoNotSetAliases      = selectQuery.DoNotSetAliases
 					};
 
 					_objectTree.Add(element, clone = newSelectQuery);
-
 					_objectTree.Add(selectQuery.All, newSelectQuery.All);
 
 					if (selectQuery.ParentSelect != null)
@@ -198,6 +202,14 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlAliasPlaceholder:
 					_objectTree.Add(element, clone = new SqlAliasPlaceholder());
 					break;
+
+				case QueryElementType.SqlRow:
+				{
+					var row    = (SqlRow)(IQueryElement)element;
+					var values = Array.ConvertAll<ISqlExpression, ISqlExpression>(row.Values, Clone)!;
+					_objectTree.Add(element, clone = new SqlRow(values));
+					break;
+				}
 
 				case QueryElementType.SqlBinaryExpression:
 				{
@@ -483,16 +495,23 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.OutputClause:
 				{
 					var output = (SqlOutputClause)(IQueryElement)element;
+
 					SqlOutputClause newOutput;
+
 					// TODO: children Clone called before _objectTree update (original cloning logic)
 					// TODO: tables not cloned (original logic)
 					clone = newOutput = new SqlOutputClause()
 					{
-						SourceTable   = output.SourceTable,
 						DeletedTable  = output.DeletedTable,
 						InsertedTable = output.InsertedTable,
-						OutputTable   = output.OutputTable
+						OutputTable   = output.OutputTable,
 					};
+
+					if (output.OutputColumns != null)
+					{
+						newOutput.OutputColumns = new List<ISqlExpression>();
+						CloneInto(newOutput.OutputColumns, output.OutputColumns);
+					}
 
 					if (output.HasOutputItems)
 						CloneInto(newOutput.OutputItems, output.OutputItems);
@@ -635,7 +654,9 @@ namespace LinqToDB.SqlQuery
 				{
 					var set = (SqlSetExpression)(IQueryElement)element;
 					// TODO: children Clone called before _objectTree update (original cloning logic)
-					_objectTree.Add(element, clone = new SqlSetExpression(Clone(set.Column), Clone(set.Expression)));
+					_objectTree.Add(
+						element,
+						clone = new SqlSetExpression(Clone(set.Column), Clone(set.Expression)));
 					break;
 				}
 
@@ -782,6 +803,28 @@ namespace LinqToDB.SqlQuery
 				//case QueryElementType.MergeSourceTable:
 				default:
 					throw new NotImplementedException($"Unsupported query element type: {element.GetType()} ({element.ElementType})");
+			}
+
+			if (element is IQueryExtendible { SqlQueryExtensions: {} } qe)
+			{
+				var te = (IQueryExtendible)clone;
+
+				te.SqlQueryExtensions = new(qe.SqlQueryExtensions.Count);
+
+				foreach (var item in qe.SqlQueryExtensions)
+				{
+					var ext = new SqlQueryExtension
+					{
+						Configuration = item.Configuration,
+						Scope         = item.Scope,
+						BuilderType   = item.BuilderType,
+					};
+
+					foreach (var arg in item.Arguments)
+						ext.Arguments.Add(arg.Key, Clone(arg.Value));
+
+					te.SqlQueryExtensions.Add(ext);
+				}
 			}
 
 			return (T)clone;

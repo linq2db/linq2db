@@ -14,23 +14,9 @@ namespace LinqToDB.DataProvider.Sybase
 	public static class SybaseTools
 	{
 #if NETFRAMEWORK
-		private static readonly Lazy<IDataProvider> _sybaseNativeDataProvider = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new SybaseDataProvider(ProviderName.Sybase);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
+		static readonly Lazy<IDataProvider> _sybaseNativeDataProvider  = DataConnection.CreateDataProvider<SybaseDataProviderNative>();
 #endif
-		private static readonly Lazy<IDataProvider> _sybaseManagedDataProvider = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new SybaseDataProvider(ProviderName.SybaseManaged);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
+		static readonly Lazy<IDataProvider> _sybaseManagedDataProvider = DataConnection.CreateDataProvider<SybaseDataProviderManaged>();
 
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{

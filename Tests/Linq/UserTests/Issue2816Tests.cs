@@ -137,8 +137,7 @@ namespace Tests.UserTests
 		{
 			switch (providerName)
 			{
-				case ProviderName.Access:
-				case ProviderName.AccessOdbc:
+				case string when providerName.IsAnyOf(TestProvName.AllAccess):
 					// only 4 characters including space supported
 					return character == 0x20
 						|| character == 0x1680

@@ -12,25 +12,18 @@ namespace LinqToDB.DataProvider.Sybase
 
 	partial class SybaseSqlBuilder : BasicSqlBuilder
 	{
-		private readonly SybaseDataProvider? _provider;
-
-		public SybaseSqlBuilder(
-			SybaseDataProvider? provider,
-			MappingSchema       mappingSchema,
-			ISqlOptimizer       sqlOptimizer,
-			SqlProviderFlags    sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public SybaseSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
-			_provider = provider;
 		}
 
-		// remote context
-		public SybaseSqlBuilder(
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		SybaseSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
+		}
+
+		protected override ISqlBuilder CreateSqlBuilder()
+		{
+			return new SybaseSqlBuilder(this) { _skipAliases = _isSelect };
 		}
 
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
@@ -47,15 +40,8 @@ namespace LinqToDB.DataProvider.Sybase
 			return "TOP {0}";
 		}
 
-		private  bool _isSelect;
-		readonly bool _skipAliases;
-
-		SybaseSqlBuilder(SybaseDataProvider? provider, bool skipAliases, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
-		{
-			_provider    = provider;
-			_skipAliases = skipAliases;
-		}
+		bool _isSelect;
+		bool _skipAliases;
 
 		protected override void BuildSelectClause(SelectQuery selectQuery)
 		{
@@ -71,17 +57,13 @@ namespace LinqToDB.DataProvider.Sybase
 			if (_skipAliases) addAlias = false;
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new SybaseSqlBuilder(_provider, _isSelect, MappingSchema, SqlOptimizer, SqlProviderFlags);
-		}
-
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
 		{
 			switch (type.Type.DataType)
 			{
-				case DataType.DateTime2 : StringBuilder.Append("DateTime");       return;
-				case DataType.NVarChar:
+				case DataType.Guid      : StringBuilder.Append("VARCHAR(36)"); return;
+				case DataType.DateTime2 : StringBuilder.Append("DateTime");    return;
+				case DataType.NVarChar  :
 					// yep, 5461...
 					if (type.Type.Length == null || type.Type.Length > 5461 || type.Type.Length < 1)
 					{
@@ -94,6 +76,15 @@ namespace LinqToDB.DataProvider.Sybase
 			}
 
 			base.BuildDataTypeFromDataType(type, forCreateTable);
+		}
+
+		protected override void BuildCreateTableNullAttribute(SqlField field, DefaultNullable defaultNullable)
+		{
+			// BIT cannot be nullable in ASE
+			if (field.CanBeNull && field.Type.DataType == DataType.Boolean)
+				return;
+
+			base.BuildCreateTableNullAttribute(field, defaultNullable);
 		}
 
 		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
@@ -203,16 +194,16 @@ namespace LinqToDB.DataProvider.Sybase
 			StringBuilder.Append(')');
 		}
 
-		protected override string? GetProviderTypeName(DbParameter parameter)
+		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
-			if (_provider != null)
+			if (DataProvider is SybaseDataProvider provider)
 			{
-				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)
-					return _provider.Adapter.GetDbType(param).ToString();
+					return provider.Adapter.GetDbType(param).ToString();
 			}
 
-			return base.GetProviderTypeName(parameter);
+			return base.GetProviderTypeName(dataContext, parameter);
 		}
 
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)

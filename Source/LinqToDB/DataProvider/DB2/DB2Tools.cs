@@ -14,23 +14,8 @@ namespace LinqToDB.DataProvider.DB2
 	[PublicAPI]
 	public static class DB2Tools
 	{
-		private static readonly Lazy<IDataProvider> _db2DataProviderzOS = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new DB2DataProvider(ProviderName.DB2zOS, DB2Version.zOS);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
-
-		private static readonly Lazy<IDataProvider> _db2DataProviderLUW = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new DB2DataProvider(ProviderName.DB2LUW, DB2Version.LUW);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
+		static readonly Lazy<IDataProvider> _db2DataProviderzOS = DataConnection.CreateDataProvider<DB2zOSDataProvider>();
+		static readonly Lazy<IDataProvider> _db2DataProviderLUW = DataConnection.CreateDataProvider<DB2LUWDataProvider>();
 
 		public static bool AutoDetectProvider { get; set; } = true;
 
@@ -98,11 +83,15 @@ namespace LinqToDB.DataProvider.DB2
 		public static void ResolveDB2(string path)
 		{
 			new AssemblyResolver(path, DB2ProviderAdapter.AssemblyName);
+			if (DB2ProviderAdapter.AssemblyNameOld != null)
+#pragma warning disable CS0162 // Unreachable code detected
+				new AssemblyResolver(path, DB2ProviderAdapter.AssemblyNameOld);
+#pragma warning restore CS0162 // Unreachable code detected
 		}
 
 		public static void ResolveDB2(Assembly assembly)
 		{
-			new AssemblyResolver(assembly, DB2ProviderAdapter.AssemblyName);
+			new AssemblyResolver(assembly, assembly.GetName().Name!);
 		}
 
 		#region CreateDataConnection

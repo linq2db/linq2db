@@ -7,9 +7,10 @@ using System.Linq;
 namespace LinqToDB.SqlQuery
 {
 	using Common;
+	using ServiceModel;
 
 	[DebuggerDisplay("SQL = {" + nameof(DebugSqlText) + "}")]
-	public abstract class SqlStatement : IQueryElement, ISqlExpressionWalkable
+	public abstract class SqlStatement : IQueryElement, ISqlExpressionWalkable, IQueryExtendible
 	{
 		public string SqlText =>
 			((IQueryElement)this)
@@ -52,7 +53,8 @@ namespace LinqToDB.SqlQuery
 
 		public abstract SelectQuery? SelectQuery { get; set; }
 
-		public SqlComment? Tag { get; internal set; }
+		public SqlComment?              Tag                { get; internal set; }
+		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }
 
 		#region IQueryElement
 
@@ -63,7 +65,13 @@ namespace LinqToDB.SqlQuery
 
 		#region IEquatable<ISqlExpression>
 
-		public abstract ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func);
+		public virtual ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
+		{
+			if (SqlQueryExtensions != null)
+				foreach (var e in SqlQueryExtensions)
+					e.Walk(options, context, func);
+			return null;
+		}
 
 		#endregion
 
@@ -100,6 +108,9 @@ namespace LinqToDB.SqlQuery
 
 		public static void PrepareQueryAndAliases(SqlStatement statement, AliasesContext? prevAliasContext, out AliasesContext newAliasContext)
 		{
+			if (statement.SelectQuery != null && !(statement is SqlSelectStatement && statement.SelectQuery.From.Tables.Count == 0))
+				statement.SelectQuery.DoNotSetAliases = true;
+
 			var ctx = new PrepareQueryAndAliasesContext(prevAliasContext);
 
 			statement.VisitAll(ctx, static (context, expr) =>
@@ -164,13 +175,13 @@ namespace LinqToDB.SqlQuery
 						{
 							var query = (SelectQuery)expr;
 
-							if (query.Select.Columns.Count > 0)
+							if (query.DoNotSetAliases == false && query.Select.Columns.Count > 0)
 							{
 								Utils.MakeUniqueNames(
 									query.Select.Columns.Where(c => c.Alias != "*"),
 									null,
-									(n, a) => !ReservedWords.IsReserved(n), 
-									c => c.Alias, 
+									(n, a) => !ReservedWords.IsReserved(n),
+									c => c.Alias,
 									(c, n, a) =>
 									{
 										a?.Add(n);
@@ -263,6 +274,9 @@ namespace LinqToDB.SqlQuery
 			}
 
 			newAliasContext = ctx.NewAliases;
+
+			if (statement is SqlUpdateStatement updateStatement)
+				updateStatement.AfterSetAliases();
 		}
 
 		#endregion

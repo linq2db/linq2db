@@ -190,6 +190,19 @@ namespace Tests.Linq
 					from p in db.Parent where arr.Contains(p.ParentID) select p);
 		}
 
+#if NET6_0_OR_GREATER
+		[Test]
+		public void ContainsReadOnlySet([DataSources] string context)
+		{
+			IReadOnlySet<int> arr = new HashSet<int> { 1, 2 };
+
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from p in    Parent where arr.Contains(p.ParentID) select p,
+					from p in db.Parent where arr.Contains(p.ParentID) select p);
+		}
+#endif
+
 		[Test]
 		public void EmptyContains1([DataSources] string context)
 		{

@@ -14,16 +14,13 @@ namespace LinqToDB.DataProvider.DB2
 
 	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder
 	{
-		protected DB2DataProvider? Provider { get; }
-
-		protected DB2SqlBuilderBase(
-			DB2DataProvider? provider,
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		protected DB2SqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
 		{
-			Provider = provider;
+		}
+
+		protected DB2SqlBuilderBase(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		{
 		}
 
 		SqlField? _identityField;
@@ -144,7 +141,7 @@ namespace LinqToDB.DataProvider.DB2
 					return;
 				case DataType.Boolean   : StringBuilder.Append("smallint");              return;
 				case DataType.Guid      : StringBuilder.Append("char(16) for bit data"); return;
-				case DataType.NVarChar:
+				case DataType.NVarChar  :
 					if (type.Type.Length == null || type.Type.Length > 8168 || type.Type.Length < 1)
 					{
 						StringBuilder
@@ -157,6 +154,14 @@ namespace LinqToDB.DataProvider.DB2
 			}
 
 			base.BuildDataTypeFromDataType(type, forCreateTable);
+		}
+
+		protected override void BuildCreateTableNullAttribute(SqlField field, DefaultNullable defaultNullable)
+		{
+			if (field.CanBeNull && field.Type.DataType == DataType.Guid)
+				return;
+
+			base.BuildCreateTableNullAttribute(field, defaultNullable);
 		}
 
 		public static DB2IdentifierQuoteMode IdentifierQuoteMode = DB2IdentifierQuoteMode.Auto;
@@ -230,7 +235,7 @@ namespace LinqToDB.DataProvider.DB2
 			return base.BuildTableName(sb, null, database, schema, table, tableOptions);
 		}
 
-		protected override string? GetProviderTypeName(DbParameter parameter)
+		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
 			if (parameter.DbType == DbType.Decimal && parameter.Value is decimal decValue)
 			{
@@ -238,14 +243,14 @@ namespace LinqToDB.DataProvider.DB2
 				return "(" + d.Precision + InlineComma + d.Scale + ")";
 			}
 
-			if (Provider != null)
+			if (DataProvider is DB2DataProvider provider)
 			{
-				var param = Provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)
-					return Provider.Adapter.GetDbType(param).ToString();
+					return provider.Adapter.GetDbType(param).ToString();
 			}
 
-			return base.GetProviderTypeName(parameter);
+			return base.GetProviderTypeName(dataContext, parameter);
 		}
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)

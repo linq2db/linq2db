@@ -6,14 +6,15 @@ namespace LinqToDB.Linq.Builder
 
 	class TableAttributeBuilder : MethodCallBuilder
 	{
-		private static readonly string[] MethodNames = new []
+		private static readonly string[] MethodNames = new[]
 		{
 			nameof(LinqExtensions.TableName),
 			nameof(LinqExtensions.ServerName),
 			nameof(LinqExtensions.DatabaseName),
 			nameof(LinqExtensions.SchemaName),
 			nameof(TableExtensions.IsTemporary),
-			nameof(TableExtensions.TableOptions)
+			nameof(TableExtensions.TableOptions),
+			nameof(LinqExtensions.TableID),
 		};
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -37,15 +38,10 @@ namespace LinqToDB.Linq.Builder
 				case nameof(LinqExtensions.SchemaName)    : table.SqlTable.Schema        = (string?)     value;  break;
 				case nameof(TableExtensions.TableOptions) : table.SqlTable.TableOptions  = (TableOptions)value!; break;
 				case nameof(TableExtensions.IsTemporary)  : table.SqlTable.Set((bool)value!, TableOptions.IsTemporary); break;
+				case nameof(LinqExtensions.TableID)       : table.SqlTable.ID            = (string?)     value;  break;
 			}
 
 			return sequence;
-		}
-
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
 		}
 	}
 }

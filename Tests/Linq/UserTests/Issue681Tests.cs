@@ -38,16 +38,16 @@ namespace Tests.UserTests
 			string? schemaName;
 			string? dbName;
 
-			using (new DisableBaseline("Use instance name is SQL", context.Contains("SqlServer") && withServer))
+			using (new DisableBaseline("Use instance name is SQL", context.IsAnyOf(TestProvName.AllSqlServer) && !context.IsAnyOf(TestProvName.AllSqlAzure) && withServer))
 			using (var db = GetDataContext(context, testLinqService : false))
 			{
-				if (withServer && (!withDatabase || !withSchema) && (context.Contains("SqlServer") || context.Contains("Azure")))
+				if (withServer && (!withDatabase || !withSchema) && context.IsAnyOf(TestProvName.AllSqlServer))
 				{
 					// SQL Server FQN requires schema and db components for linked-server query
 					throws = true;
 				}
 
-				if (withServer && withDatabase && withSchema && context.Contains("Azure"))
+				if (withServer && withDatabase && withSchema && context.IsAnyOf(TestProvName.AllSqlAzure))
 				{
 					// linked servers not supported by Azure
 					// "Reference to database and/or server name in '...' is not supported in this version of SQL Server."
@@ -55,19 +55,19 @@ namespace Tests.UserTests
 					throwsSqlException = true;
 				}
 
-				if (withServer && !withDatabase && context.Contains("Informix"))
+				if (withServer && !withDatabase && context.IsAnyOf(TestProvName.AllInformix))
 				{
 					// Informix requires db name for linked server queries
 					throws = true;
 				}
 
-				if (withServer && !withSchema && context.Contains("SapHana"))
+				if (withServer && !withSchema && context.IsAnyOf(TestProvName.AllSapHana))
 				{
 					// SAP HANA requires schema name for linked server queries
 					throws = true;
 				}
 
-				if (withDatabase && !withSchema && context.Contains("DB2") && !context.Contains("Informix"))
+				if (withDatabase && !withSchema && context.IsAnyOf(ProviderName.DB2))
 				{
 					throws = true;
 				}

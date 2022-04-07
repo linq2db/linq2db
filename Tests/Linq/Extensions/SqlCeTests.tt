@@ -1,0 +1,125 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".generated.cs" #>
+// Generated.
+//
+using System;
+using System.Linq;
+using System.Linq.Expressions;
+
+using LinqToDB;
+using LinqToDB.DataProvider.SqlCe;
+
+using NUnit.Framework;
+
+namespace Tests.Extensions
+{
+	partial class SqlCeTests
+	{
+<#
+	GenerateTable("HoldLock");
+	GenerateTable("NoLock");
+	GenerateTable("PagLock");
+	GenerateTable("RowLock");
+	GenerateTable("TabLock");
+	GenerateTable("UpdLock");
+	GenerateTable("XLock");
+#>
+	}
+}
+<#+
+void GenerateTable(string test)
+{
+#>
+		[Test]
+		public void With<#= test #>TableTest([IncludeDataSources(true, ProviderName.SqlCe)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsSqlCe()
+					.With<#= test #>()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("WITH (<#= test #>)"));
+		}
+
+		[Test]
+		public void With<#= test #>InScopeTest([IncludeDataSources(true, ProviderName.SqlCe)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Parent
+				join c in db.Child on p.ParentID equals c.ParentID
+				select p
+			)
+			.AsSqlCe()
+			.With<#= test #>InScope();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("[p] WITH (<#= test #>)"));
+			Assert.That(LastQuery, Contains.Substring("[c_1] WITH (<#= test #>)"));
+		}
+
+<#+
+}
+
+void GenerateOptionTest(string test)
+{
+#>
+		[Test]
+		public void Option<#= test #>Test([IncludeDataSources(true, ProviderName.SqlCe)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlCe()
+			.Option<#= test #>();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlCeHints.Query.<#= test #>})"));
+		}
+
+<#+
+}
+
+void GenerateOptionTest2(string test)
+{
+#>
+		[Test]
+		public void Option<#= test #>Test([IncludeDataSources(true, ProviderName.SqlCe)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsSqlCe()
+			.Option<#= test #>(10);
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"OPTION ({SqlCeHints.Query.<#= test #>(10)})"));
+		}
+
+<#+
+}
+#>

@@ -29,12 +29,6 @@ namespace LinqToDB.Linq.Builder
 			return new ContainsContext(buildInfo.Parent, methodCall, sequence, buildInStatement);
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
 		public static bool IsConstant(MethodCallExpression methodCall)
 		{
 			if (!methodCall.IsQueryable("Contains"))

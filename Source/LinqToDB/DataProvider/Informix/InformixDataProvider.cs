@@ -1,22 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using System.Data.Common;
 	using Common;
 	using Data;
-	using LinqToDB.Linq.Internal;
+	using Linq.Internal;
 	using Mapping;
 	using SqlProvider;
-	using SqlQuery;
 
-	public class InformixDataProvider : DynamicDataProviderBase<InformixProviderAdapter>
+	class InformixDataProviderInformix : InformixDataProvider { public InformixDataProviderInformix() : base(ProviderName.Informix)    {} }
+	class InformixDataProviderDB2      : InformixDataProvider { public InformixDataProviderDB2()      : base(ProviderName.InformixDB2) {} }
+
+	public abstract class InformixDataProvider : DynamicDataProviderBase<InformixProviderAdapter>
 	{
-		public InformixDataProvider(string providerName)
+		protected InformixDataProvider(string providerName)
 			: base(
 				providerName,
 				GetMappingSchema(providerName, InformixProviderAdapter.GetInstance(providerName).MappingSchema),
@@ -26,13 +27,13 @@ namespace LinqToDB.DataProvider.Informix
 			SqlProviderFlags.IsParameterOrderDependent         = !Adapter.IsIDSProvider;
 			SqlProviderFlags.IsSubQueryTakeSupported           = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
-			SqlProviderFlags.IsGroupByExpressionSupported      = false;
 			SqlProviderFlags.IsCrossJoinSupported              = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.IsGroupByColumnRequred            = true;
+			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.In;
 
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("NCHAR", (r,i) => r.GetString(i).TrimEnd(' '));
@@ -79,7 +80,7 @@ namespace LinqToDB.DataProvider.Informix
 				return dr.GetDecimal(idx);
 		}
 
-		public override IDisposable ExecuteScope(DataConnection dataConnection) => new InvariantCultureRegion(base.ExecuteScope(dataConnection));
+		public override IExecutionScope ExecuteScope(DataConnection dataConnection) => new InvariantCultureRegion(null);
 
 		public override TableOptions SupportedTableOptions =>
 			TableOptions.IsTemporary               |
@@ -119,12 +120,16 @@ namespace LinqToDB.DataProvider.Informix
 				value    = value?.ToString();
 				dataType = dataType.WithDataType(DataType.Char);
 			}
+			else if (value is byte byteValue && dataType.DataType == DataType.Int16)
+			{
+				value = (short)byteValue;
+			}
 			else if (value is bool b)
 			{
 				// IDS provider needs short values for bulk copy, but chars still for regular SQL
 				if (parameter is BulkCopyReader.Parameter)
 				{
-					value    = (short)(b == true ? 1 : 0);
+					value    = (short)(b ? 1 : 0);
 					dataType = dataType.WithDataType(DataType.Int16);
 				}
 				else
@@ -156,7 +161,7 @@ namespace LinqToDB.DataProvider.Informix
 
 			if (idsType != null && db2Type != null)
 			{
-				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(dataConnection, parameter);
 				if (param != null)
 				{
 					if (Adapter.SetIfxType != null)

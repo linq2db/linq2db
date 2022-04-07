@@ -16,8 +16,8 @@ namespace LinqToDB
 	using Common;
 	using Expressions;
 	using Extensions;
-	using SqlQuery;
 	using Mapping;
+	using SqlQuery;
 
 	[AttributeUsage(AttributeTargets.Parameter)]
 	[MeansImplicitUse]
@@ -35,7 +35,7 @@ namespace LinqToDB
 		}
 	}
 
-	public static class ExtensionlBuilderExtensions
+	public static class ExtensionBuilderExtensions
 	{
 		public static Sql.SqlExtensionParam AddParameter(this Sql.ISqExtensionBuilder builder, string name, string value)
 		{
@@ -167,12 +167,12 @@ namespace LinqToDB
 
 			public int ChainPrecedence { get; set; }
 
-			public SqlExtension(Type? systemType, string expr, int precedence, int chainPrecedence, 
-				bool isAggregate, 
+			public SqlExtension(Type? systemType, string expr, int precedence, int chainPrecedence,
+				bool isAggregate,
 				bool isWindowFunction,
-				bool isPure, 
+				bool isPure,
 				bool isPredicate,
-				bool? canBeNull, 
+				bool? canBeNull,
 				params SqlExtensionParam[] parameters)
 			{
 				if (parameters == null) throw new ArgumentNullException(nameof(parameters));
@@ -414,8 +414,8 @@ namespace LinqToDB
 					return BuildSqlExpression(Extension, Extension.SystemType, precedence,
 						(Extension.IsAggregate      ? SqlFlags.IsAggregate      : SqlFlags.None) |
 						(Extension.IsPure           ? SqlFlags.IsPure           : SqlFlags.None) |
-						(Extension.IsPredicate      ? SqlFlags.IsPredicate      : SqlFlags.None) | 
-						(Extension.IsWindowFunction ? SqlFlags.IsWindowFunction : SqlFlags.None), 
+						(Extension.IsPredicate      ? SqlFlags.IsPredicate      : SqlFlags.None) |
+						(Extension.IsWindowFunction ? SqlFlags.IsWindowFunction : SqlFlags.None),
 						Extension.CanBeNull, IsNullableType.Undefined);
 				}
 
@@ -916,7 +916,7 @@ namespace LinqToDB
 							var e = c.UnderName[i];
 							mainExtension.AddParameter(e);
 						}
-					}	
+					}
 					else
 					{
 						var firstPrecedence = first.Extension.ChainPrecedence;
@@ -934,7 +934,7 @@ namespace LinqToDB
 				}
 
 				//TODO: Precedence calculation
-				var res = BuildSqlExpression(mainExtension, mainExtension.SystemType, 
+				var res = BuildSqlExpression(mainExtension, mainExtension.SystemType,
 					mainExtension.Precedence,
 					(isAggregate  ? SqlFlags.IsAggregate      : SqlFlags.None) |
 					(isPure       ? SqlFlags.IsPure           : SqlFlags.None) |

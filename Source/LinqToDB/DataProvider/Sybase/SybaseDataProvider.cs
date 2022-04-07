@@ -16,11 +16,14 @@ namespace LinqToDB.DataProvider.Sybase
 	using Extensions;
 	using System.Data.Common;
 
-	public class SybaseDataProvider : DynamicDataProviderBase<SybaseProviderAdapter>
+	class SybaseDataProviderNative  : SybaseDataProvider { public SybaseDataProviderNative()  : base(ProviderName.Sybase)        {} }
+	class SybaseDataProviderManaged : SybaseDataProvider { public SybaseDataProviderManaged() : base(ProviderName.SybaseManaged) {} }
+
+	public abstract class SybaseDataProvider : DynamicDataProviderBase<SybaseProviderAdapter>
 	{
 		#region Init
 
-		public SybaseDataProvider(string name)
+		protected SybaseDataProvider(string name)
 			: base(name, MappingSchemaInstance.Get(name), SybaseProviderAdapter.GetInstance(name))
 		{
 			SqlProviderFlags.AcceptsTakeAsParameter           = false;
@@ -33,7 +36,6 @@ namespace LinqToDB.DataProvider.Sybase
 			SqlProviderFlags.IsSubQueryOrderBySupported       = false;
 			SqlProviderFlags.IsDistinctOrderBySupported       = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
-			SqlProviderFlags.IsGroupByExpressionSupported     = false;
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
@@ -173,7 +175,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 			if (type != null)
 			{
-				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(dataConnection, parameter);
 				if (param != null)
 				{
 					Adapter.SetDbType(param, type.Value);

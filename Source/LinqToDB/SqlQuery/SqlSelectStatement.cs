@@ -31,10 +31,13 @@ namespace LinqToDB.SqlQuery
 		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			With?.Walk(options, context, func);
+
 			var newQuery = SelectQuery.Walk(options, context, func);
+
 			if (!ReferenceEquals(newQuery, SelectQuery))
 				SelectQuery = (SelectQuery)newQuery;
-			return null;
+
+			return base.Walk(options, context, func);
 		}
 	}
 }

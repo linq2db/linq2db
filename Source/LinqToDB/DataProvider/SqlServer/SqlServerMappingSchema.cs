@@ -83,6 +83,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			AddScalarType(typeof(DateTime),  DataType.DateTime);
 			AddScalarType(typeof(DateTime?), DataType.DateTime);
 
+
 			SqlServerTypes.Configure(this);
 
 			SetValueToSqlConverter(typeof(string),         (sb,dt,v) => ConvertStringToSql        (sb, dt, v.ToString()!));
@@ -235,7 +236,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			stringBuilder.Append("0x");
 			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 		}
-		
+
 	}
 
 	public class SqlServer2005MappingSchema : MappingSchema
@@ -282,6 +283,21 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 	}
 
+	public class SqlServer2014MappingSchema : MappingSchema
+	{
+		public SqlServer2014MappingSchema()
+			: base(ProviderName.SqlServer2014, SqlServerMappingSchema.Instance)
+		{
+			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
+		}
+
+		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+		{
+			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
+		}
+	}
+
 	public class SqlServer2016MappingSchema : MappingSchema
 	{
 		public SqlServer2016MappingSchema()
@@ -301,6 +317,21 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 		public SqlServer2017MappingSchema()
 			: base(ProviderName.SqlServer2017, SqlServerMappingSchema.Instance)
+		{
+			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
+		}
+
+		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+		{
+			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
+		}
+	}
+
+	public class SqlServer2019MappingSchema : MappingSchema
+	{
+		public SqlServer2019MappingSchema()
+			: base(ProviderName.SqlServer2019, SqlServerMappingSchema.Instance)
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));

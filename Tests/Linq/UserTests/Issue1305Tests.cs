@@ -9,7 +9,7 @@ namespace Tests.UserTests
 {
 	/// <summary>
 	/// Test fixes to Issue #1305.
-	/// Before fix fields in derived tables were added first in the column order by <see cref="DataExtensions.CreateTable{T}(IDataContext, string, string, string, string, string, LinqToDB.SqlQuery.DefaultNullable)"/>.
+	/// Before fix fields in derived tables were added first in the column order by <see cref="DataExtensions.CreateTable{T}(IDataContext, string?, string?, string?, string?, string?, LinqToDB.SqlQuery.DefaultNullable, string?, TableOptions)"/>.
 	/// </summary>
 	[TestFixture]
 	public class Issue1305Tests : TestBase
@@ -62,7 +62,7 @@ namespace Tests.UserTests
 		/// </summary>
 		/// <param name="context">Configuration string for test context.</param>
 		[Test]
-		public void TestAttributeMapping([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector)] string context)
+		public void TestAttributeMapping([DataSources(false, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (var __ = db.CreateLocalTable<ColumnOrderTest>())
@@ -93,7 +93,7 @@ namespace Tests.UserTests
 		/// </summary>
 		/// <param name="context">Configuration string for test context.</param>
 		[Test]
-		public void TestFluentMapping([DataSources(false, ProviderName.SQLiteMS, ProviderName.MySqlConnector)] string context)
+		public void TestFluentMapping([DataSources(false, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{

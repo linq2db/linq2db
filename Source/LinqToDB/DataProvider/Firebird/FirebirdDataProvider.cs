@@ -15,12 +15,11 @@ namespace LinqToDB.DataProvider.Firebird
 
 	public class FirebirdDataProvider : DynamicDataProviderBase<FirebirdProviderAdapter>
 	{
-		public FirebirdDataProvider()
-			: this(ProviderName.Firebird, null, null)
+		public FirebirdDataProvider() : this(ProviderName.Firebird, null, null)
 		{
 		}
 
-		public FirebirdDataProvider(ISqlOptimizer sqlOptimizer)
+		protected internal FirebirdDataProvider(ISqlOptimizer sqlOptimizer)
 			: this(ProviderName.Firebird, null, sqlOptimizer)
 		{
 		}
@@ -33,6 +32,7 @@ namespace LinqToDB.DataProvider.Firebird
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
+			SqlProviderFlags.OutputUpdateUseSpecialTables      = true;
 
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);
@@ -97,12 +97,12 @@ namespace LinqToDB.DataProvider.Firebird
 			FirebirdProviderAdapter.FbDbType? type = null;
 			switch (dataType.DataType)
 			{
-				case DataType.DateTimeOffset     : type = FirebirdProviderAdapter.FbDbType.TimeStampTZ; break;
+				case DataType.DateTimeOffset : type = FirebirdProviderAdapter.FbDbType.TimeStampTZ; break;
 			}
 
 			if (type != null)
 			{
-				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(dataConnection, parameter);
 				if (param != null)
 				{
 					Adapter.SetDbType(param, type.Value);

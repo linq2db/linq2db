@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Interceptors;
 
 namespace LinqToDB.Data
 {
@@ -14,6 +14,7 @@ namespace LinqToDB.Data
 
 	public partial class DataConnection
 	{
+		// TODO: v4: remove both GetTable methods
 		/// <summary>
 		/// Returns queryable source for specified mapping class for current connection, mapped to database table or view.
 		/// </summary>
@@ -70,19 +71,20 @@ namespace LinqToDB.Data
 			if (forNestedQuery && _connection != null && IsMarsEnabled)
 				return new DataConnection(DataProvider, _connection.Connection)
 				{
-					MappingSchema               = MappingSchema,
-					TransactionAsync            = TransactionAsync,
-					IsMarsEnabled               = IsMarsEnabled,
-					ConnectionString            = ConnectionString,
-					RetryPolicy                 = RetryPolicy,
-					CommandTimeout              = CommandTimeout,
-					InlineParameters            = InlineParameters,
-					ThrowOnDisposed             = ThrowOnDisposed,
-					_queryHints                 = _queryHints?.Count > 0 ? _queryHints.ToList() : null,
-					OnTraceConnection           = OnTraceConnection,
-					_commandInterceptors        = _commandInterceptors?.Clone(),
-					_connectionInterceptors     = _connectionInterceptors?.Clone(),
-					_contextInterceptors        = _contextInterceptors?.Clone(),
+					MappingSchema             = MappingSchema,
+					TransactionAsync          = TransactionAsync,
+					IsMarsEnabled             = IsMarsEnabled,
+					ConnectionString          = ConnectionString,
+					RetryPolicy               = RetryPolicy,
+					CommandTimeout            = CommandTimeout,
+					InlineParameters          = InlineParameters,
+					ThrowOnDisposed           = ThrowOnDisposed,
+					_queryHints               = _queryHints?.Count > 0 ? _queryHints.ToList() : null,
+					OnTraceConnection         = OnTraceConnection,
+					_commandInterceptor       = _commandInterceptor      .CloneAggregated(),
+					_connectionInterceptor    = _connectionInterceptor   .CloneAggregated(),
+					_dataContextInterceptor   = _dataContextInterceptor  .CloneAggregated(),
+					_entityServiceInterceptor = _entityServiceInterceptor.CloneAggregated(),
 				};
 
 			return (DataConnection)Clone();

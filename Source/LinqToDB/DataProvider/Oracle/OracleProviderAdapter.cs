@@ -532,7 +532,9 @@ namespace LinqToDB.DataProvider.Oracle
 			Ref          = 130,
 
 			// Oracle 21c
-			Json         = 135
+			Json         = 135,
+			ArrayAsJson  = 136,
+			ObjectAsJson = 137
 		}
 
 		[Wrapper]

@@ -2,12 +2,13 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text.Json;
 using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
-using Newtonsoft.Json;
+using LinqToDB.SqlQuery;
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -30,7 +31,7 @@ namespace Tests.UserTests
 			var valueExpression = (ConstantExpression) memberExpression.Expression!;
 			var value = ((PropertyInfo) propertyExpression.Member).GetValue(fieldInfo.GetValue(valueExpression.Value))!;
 
-			builder.AddParameter("value", value.ToString()!);
+			builder.AddParameter("value", new SqlValue(value));
 		}
 	}
 
@@ -80,13 +81,13 @@ namespace Tests.UserTests
 		{
 			var schema = new MappingSchema();
 
-			schema.SetConverter<DbObject<TestJson>, string>(v => JsonConvert.SerializeObject(v.Value));
+			schema.SetConverter<DbObject<TestJson>, string>(v => JsonSerializer.Serialize(v.Value));
 			schema.SetConverter<DbObject<TestJson>, DataParameter>(v => new DataParameter
 			{
 				DataType = DataType.NVarChar,
-				Value    = JsonConvert.SerializeObject(v.Value)
+				Value    = JsonSerializer.Serialize(v.Value)
 			});
-			schema.SetConverter<string, DbObject<TestJson>>(json => new DbObject<TestJson>(JsonConvert.DeserializeObject<TestJson>(json)!));
+			schema.SetConverter<string, DbObject<TestJson>>(json => new DbObject<TestJson>(JsonSerializer.Deserialize<TestJson>(json)!));
 			
 			using (var db    = (DataConnection)GetDataContext(context, schema))
 			using (var table = db.CreateLocalTable<TestTable>())

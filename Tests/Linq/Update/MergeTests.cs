@@ -21,7 +21,7 @@ namespace Tests.xUpdate
 				TestProvName.AllAccess,
 				ProviderName.SqlCe,
 				TestProvName.AllSQLite,
-				TestProvName.AllSqlServer2005Minus,
+				TestProvName.AllSqlServer2005,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
 			}.SelectMany(_ => _.Split(',')).ToList();
@@ -223,11 +223,10 @@ namespace Tests.xUpdate
 
 		private void AssertRowCount(int expected, int actual, string context)
 		{
-			var provider = GetProviderName(context, out var _);
 			// another sybase quirk, nothing surprising
-			if (provider == ProviderName.Sybase || provider == ProviderName.SybaseManaged)
+			if (context.IsAnyOf(TestProvName.AllSybase))
 				Assert.LessOrEqual(expected, actual);
-			else if ((provider == ProviderName.OracleNative || provider == TestProvName.Oracle11Native) && actual == -1)
+			else if (context.IsAnyOf(TestProvName.AllOracleNative) && actual == -1)
 			{ }
 			else
 				Assert.AreEqual(expected, actual);

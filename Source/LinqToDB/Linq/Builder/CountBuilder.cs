@@ -54,7 +54,7 @@ namespace LinqToDB.Linq.Builder
 			if (sequence == null)
 			{
 				sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { CreateSubQuery = true, IsAggregation = false });
-			}
+				}
 
 			var returnType = methodCall.Method.ReturnType;
 
@@ -63,31 +63,31 @@ namespace LinqToDB.Linq.Builder
 
 			if (!buildInfo.IsSubQuery)
 			{
-				if (sequence.SelectQuery.Select.IsDistinct        ||
-				    sequence.SelectQuery.Select.TakeValue != null ||
-				    sequence.SelectQuery.Select.SkipValue != null)
-				{
-					sequence = new SubQueryContext(sequence);
-				}
+			if (sequence.SelectQuery.Select.IsDistinct        ||
+			    sequence.SelectQuery.Select.TakeValue != null ||
+			    sequence.SelectQuery.Select.SkipValue != null)
+			{
+				sequence = new SubQueryContext(sequence);
+			}
 				else if (inGrouping)
-				{
+			{
 					//TODO: maybe remove
-					if (!builder.DataContext.SqlProviderFlags.IsSybaseBuggyGroupBy)
-						sequence.SelectQuery.Select.Add(new SqlValue(0));
-					else
-						foreach (var item in sequence.SelectQuery.GroupBy.Items)
-							sequence.SelectQuery.Select.Add(item);
+				if (!builder.DataContext.SqlProviderFlags.IsSybaseBuggyGroupBy)
+					sequence.SelectQuery.Select.Add(new SqlValue(0));
+				else
+					foreach (var item in sequence.SelectQuery.GroupBy.Items)
+						sequence.SelectQuery.Select.Add(item);
 
+				sequence = new SubQueryContext(sequence);
+			}
+
+			if (sequence.SelectQuery.OrderBy.Items.Count > 0)
+			{
+				if (sequence.SelectQuery.Select.TakeValue == null && sequence.SelectQuery.Select.SkipValue == null)
+					sequence.SelectQuery.OrderBy.Items.Clear();
+				else
 					sequence = new SubQueryContext(sequence);
-				}
-
-				if (sequence.SelectQuery.OrderBy.Items.Count > 0)
-				{
-					if (sequence.SelectQuery.Select.TakeValue == null && sequence.SelectQuery.Select.SkipValue == null)
-						sequence.SelectQuery.OrderBy.Items.Clear();
-					else
-						sequence = new SubQueryContext(sequence);
-				}
+			}
 			}
 
 			var parentContext = buildInfo.Parent;
@@ -137,8 +137,8 @@ namespace LinqToDB.Linq.Builder
 
 			readonly Type       _returnType;
 
-			public int                      FieldIndex;
-			public ISqlExpression?          Sql;
+			public int             FieldIndex;
+			public ISqlExpression? Sql;
 			public SqlPlaceholderExpression Placeholder = null!;
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)

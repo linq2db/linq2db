@@ -1534,7 +1534,7 @@ namespace LinqToDB.Linq.Builder
 
 		public static LambdaExpression CorrectLambdaType(LambdaExpression before, LambdaExpression after, MappingSchema mappingSchema)
 		{
-			if (IsEnumerableType(before.ReturnType, mappingSchema) && before.ReturnType.IsGenericType)
+			if (IsEnumerableType(before.ReturnType, mappingSchema) && before.ReturnType.IsGenericType && before.ReturnType.GenericTypeArguments.Length == 1)
 			{
 				var generic     = before.ReturnType.GetGenericTypeDefinition();
 				var elementType = GetEnumerableElementType(after.ReturnType, mappingSchema);

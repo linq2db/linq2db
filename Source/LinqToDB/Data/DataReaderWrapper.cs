@@ -77,9 +77,9 @@ namespace LinqToDB.Data
 				OnBeforeCommandDispose?.Invoke(Command);
 
 				if (_dataConnection != null)
-					_dataConnection.DataProvider.DisposeCommand(Command);
+					await _dataConnection.DataProvider.DisposeCommandAsync(Command).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				else
-					Command.Dispose();
+					await Command.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 		}
 #elif !NETFRAMEWORK

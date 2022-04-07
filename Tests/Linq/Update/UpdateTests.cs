@@ -724,7 +724,7 @@ namespace Tests.xUpdate
 				}
 			}
 		}
-		
+
 		[Test]
 		public void UpdateComplex2([DataSources] string context)
 		{
@@ -981,7 +981,7 @@ namespace Tests.xUpdate
 					.Set(y => y.BoolValue, y => y.Tables2.All(x => x.Value1 == 1))
 					.Update();
 
-				if (!context.StartsWith(ProviderName.Sybase))
+				if (!context.IsAnyOf(TestProvName.AllSybase))
 				{
 					var idx = db.LastQuery!.IndexOf("INNER JOIN");
 
@@ -1426,7 +1426,7 @@ namespace Tests.xUpdate
 
 			using (var db = GetDataContext(context))
 			{
-				db.DropTable<Patient>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+				db.DropTable<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
 			}
 
 			using (var db = GetDataContext(context))
@@ -1457,6 +1457,9 @@ namespace Tests.xUpdate
 				var updatedPerson = table.Single();
 				Assert.AreEqual("None", updatedPerson.MiddleName);
 
+				if (db is DataConnection { Connection: FirebirdSql.Data.FirebirdClient.FbConnection })
+					db.Close();
+
 				table.Drop();
 			}
 		}
@@ -1469,7 +1472,7 @@ namespace Tests.xUpdate
 
 			using (var db = GetDataContext(context))
 			{
-				await db.DropTableAsync<Patient>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+				await db.DropTableAsync<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
 			}
 
 			using (var db = GetDataContext(context))
@@ -1499,6 +1502,9 @@ namespace Tests.xUpdate
 
 				var updatedPerson = await table.SingleAsync();
 				Assert.AreEqual("None", updatedPerson.MiddleName);
+
+				//if (db is DataConnection { Connection: FirebirdSql.Data.FirebirdClient.FbConnection })
+					await db.CloseAsync();
 
 				await table.DropAsync();
 			}
@@ -1995,5 +2001,16 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[Test]
+		public void AsUpdatableEmptyTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Person.AsUpdatable();
+
+				var ex = Assert.Throws<LinqToDBException>(() => query.Update())!;
+				Assert.AreEqual("Update query has no setters defined.", ex.Message);
+			}
+		}
 	}
 }

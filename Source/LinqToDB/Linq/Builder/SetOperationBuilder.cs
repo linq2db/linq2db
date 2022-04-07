@@ -377,7 +377,7 @@ namespace LinqToDB.Linq.Builder
 							return expr;
 						}
 
-						_body.TryConstruct()
+						//_body.TryConstruct()
 
 						throw new NotImplementedException($"Handle other CreateTypes: {_body.ConstructType}");
 					}

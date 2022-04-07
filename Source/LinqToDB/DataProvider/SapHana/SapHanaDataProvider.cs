@@ -1,5 +1,4 @@
-﻿#if NETFRAMEWORK || NETCOREAPP
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -16,17 +15,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 	public class SapHanaDataProvider : DynamicDataProviderBase<SapHanaProviderAdapter>
 	{
-		public SapHanaDataProvider()
-			: this(ProviderName.SapHanaNative)
-		{
-		}
-
-		public SapHanaDataProvider(string name)
-			: this(name, MappingSchemaInstance)
-		{
-		}
-		protected SapHanaDataProvider(string name, MappingSchema mappingSchema)
-			: base(name, mappingSchema, SapHanaProviderAdapter.GetInstance())
+		public SapHanaDataProvider() : base(ProviderName.SapHanaNative, MappingSchemaInstance, SapHanaProviderAdapter.GetInstance())
 		{
 			SqlProviderFlags.IsParameterOrderDependent = true;
 
@@ -66,7 +55,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new SapHanaSqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new SapHanaSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -128,7 +117,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 			if (type != null)
 			{
-				var param = TryGetProviderParameter(parameter, dataConnection.MappingSchema);
+				var param = TryGetProviderParameter(dataConnection, parameter);
 				if (param != null)
 				{
 					Adapter.SetDbType(param, type.Value);
@@ -192,4 +181,3 @@ namespace LinqToDB.DataProvider.SapHana
 		private static readonly MappingSchema MappingSchemaInstance = new SapHanaMappingSchema.NativeMappingSchema();
 	}
 }
-#endif

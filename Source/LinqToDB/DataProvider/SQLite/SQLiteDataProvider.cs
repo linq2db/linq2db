@@ -14,6 +14,9 @@ namespace LinqToDB.DataProvider.SQLite
 	using SchemaProvider;
 	using SqlProvider;
 
+	class SQLiteDataProviderClassic : SQLiteDataProvider { public SQLiteDataProviderClassic() : base(ProviderName.SQLiteClassic) {} }
+	class SQLiteDataProviderMS      : SQLiteDataProvider { public SQLiteDataProviderMS()      : base(ProviderName.SQLiteMS)      {} }
+
 	public class SQLiteDataProvider : DynamicDataProviderBase<SQLiteProviderAdapter>
 	{
 		/// <summary>
@@ -22,7 +25,7 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="name">If ProviderName.SQLite is provided,
 		/// the detection mechanism preferring System.Data.SQLite
 		/// to Microsoft.Data.Sqlite will be used.</param>
-		public SQLiteDataProvider(string name)
+		protected SQLiteDataProvider(string name)
 			: this(name, MappingSchemaInstance.Get(name))
 		{
 		}
@@ -38,8 +41,14 @@ namespace LinqToDB.DataProvider.SQLite
 			SqlProviderFlags.IsDistinctOrderBySupported        = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = true;
-			SqlProviderFlags.IsUpdateFromSupported             = false;
+			SqlProviderFlags.IsUpdateFromSupported             = Adapter.SupportsUpdateFrom;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.Serializable;
+
+			if (Adapter.SupportsRowValue)
+			{
+				SqlProviderFlags.RowConstructorSupport = RowFeature.Equality        | RowFeature.Comparisons |
+				                                         RowFeature.CompareToSelect | RowFeature.Between     | RowFeature.Update;
+			}
 
 			_sqlOptimizer = new SQLiteSqlOptimizer(SqlProviderFlags);
 
@@ -48,33 +57,33 @@ namespace LinqToDB.DataProvider.SQLite
 			 * - sqlite has only 5 types: https://sqlite.org/datatype3.html
 			 * - types applied to value, not to column => column could contain value of any type (e.g. all 5 types)
 			 * - there is "column type affinity" thingy, which doesn't help with data read
-			 * 
+			 *
 			 * Which means our general approach to build column read expression, where we ask data reader
 			 * about column type and read value using corresponding Get*() method, doesn't work as provider cannot
 			 * give us detailed type information.
-			 * 
+			 *
 			 * How it works for supported providers
 			 * System.Data.Sqlite:
 			 * This provider actually works fine, as it use column type name from create table statement to infer column
 			 * type. In other words, while you use proper type names to create your table and don't mix values of different
 			 * types in your column - you are safe.
-			 * 
+			 *
 			 * Microsoft.Data.Sqlite:
 			 * This provider decides to leave typing to user and return data to user only using 5 basic types
 			 * (v1.x also could return int-typed value, which is just casted long value).
-			 * 
+			 *
 			 * Which means we need to handle Microsoft.Data.Sqlite in special way to be able to read data from database
 			 * without fallback to slow-mode mapping
-			 * 
+			 *
 			 * There are two ways to fix it:
 			 * 1. implement extra type-name resolve as it is done by System.Data.Sqlite (we can still get type name from provider)
 			 * 2. implement mixed type support using target field type
-			 * 
+			 *
 			 * in other words use column type name vs target field type to decide value of which type we should create (read)
-			 * 
+			 *
 			 * While 2 sounds tempting, it doesn't work well with mapping to custom field types. Also VARIANT-like columns is
 			 * not something users usually do, even with sqlite, so we will implement first approach here.
-			 * 
+			 *
 			 * Type information we can get from provider:
 			 * 1. column type name from GetDataTypeName(): could be type name from CREATE TABLE statement or if this
 			 *    information missing - standard type: INTEGER, REAL, TEXT, BLOB
@@ -167,13 +176,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return typeName;
 		}
 
-		public override IDisposable? ExecuteScope(DataConnection dataConnection)
-		{
-			if (Adapter.DisposeCommandOnError)
-				return new DisposeCommandOnExceptionRegion(dataConnection);
-
-			return base.ExecuteScope(dataConnection);
-		}
+		public override IExecutionScope? ExecuteScope(DataConnection dataConnection) => Adapter.DisposeCommandOnError ? new DisposeCommandOnExceptionRegion(dataConnection) : null;
 
 		public override TableOptions SupportedTableOptions =>
 			TableOptions.IsTemporary               |
@@ -184,7 +187,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
 		{
-			return new SQLiteSqlBuilder(mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new SQLiteSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
 		}
 
 		static class MappingSchemaInstance

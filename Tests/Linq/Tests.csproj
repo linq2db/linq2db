@@ -1,20 +1,71 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\Build\linq2db.Tests.Providers.props" />
+	<Import Project="..\..\Build\linq2db.TestProjects.props" />
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests</AssemblyName>
-		<!--suppress complains about IBM.Data.DB2.Core.dll-->
-		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
-
-		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 	</PropertyGroup>
-
+	
 	<ItemGroup>
+		<!-- T4 support -->
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+
 		<ProjectReference Include="..\..\Source\LinqToDB.AspNet\LinqToDB.AspNet.csproj" />
 		<ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj" />
 		<ProjectReference Include="..\FSharp\Tests.FSharp.fsproj" />
 
-		<PackageReference Include="NodaTime" />
+		<None Update="Extensions\MySqlTests.tt">
+			<LastGenOutput>MySqlTests.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<Compile Update="Extensions\MySqlTests.generated.cs">
+			<DependentUpon>MySqlTests.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+		</Compile>
+
+		<None Update="Extensions\PostgreSQLTests.tt">
+			<LastGenOutput>PostgreSQLTests.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<Compile Update="Extensions\PostgreSQLTests.generated.cs">
+			<DependentUpon>PostgreSQLTests.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+		</Compile>
+
+		<None Update="Extensions\OracleTests.tt">
+			<LastGenOutput>OracleTests.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<Compile Update="Extensions\OracleTests.generated.cs">
+			<DependentUpon>OracleTests.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+		</Compile>
+
+		<None Update="Extensions\SqlServerTests.tt">
+			<LastGenOutput>SqlServerTests.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<Compile Update="Extensions\SqlServerTests.generated.cs">
+			<DependentUpon>SqlServerTests.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+		</Compile>
+
+		<None Update="Extensions\SqlCeTests.tt">
+			<LastGenOutput>SqlCeTests.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<Compile Update="Extensions\SqlCeTests.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>SqlCeTests.tt</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 	</ItemGroup>
 
 </Project>

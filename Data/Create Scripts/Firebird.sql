@@ -210,7 +210,7 @@ INSERT INTO "DataTypeTest"
 	 "Xml_")
 VALUES
 	('dddddddddddddddd', 1,  255,'dddddddddddddddd', 'B', 'NOW', 12345.67,
-	1234.567, 'dddddddddddddddd', 32767, 32768, 1000000, 12.3456, 127,
+	1234.567, X'dddddddddddddddddddddddddddddddd', 32767, 32768, 1000000, 12.3456, 127,
 	1234.123, 'dddddddddddddddd', 'string', 32767, 32768, 200000000,
 	'<root><element strattr="strvalue" intattr="12345"/></root>');
 COMMIT;
@@ -235,7 +235,7 @@ CREATE TABLE "LinqDataTypes"
 	"DateTimeValue"  timestamp,
 	"DateTimeValue2" timestamp,
 	"BoolValue"      char(1),
-	"GuidValue"      char(16) CHARACTER SET OCTETS,
+	"GuidValue"      CHAR(16) CHARACTER SET OCTETS,
 	"BinaryValue"    blob,
 	"SmallIntValue"  smallint,
 	"IntValue"       int,

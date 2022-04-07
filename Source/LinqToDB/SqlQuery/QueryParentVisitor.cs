@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using LinqToDB.ServiceModel;
 
 namespace LinqToDB.SqlQuery
 {
@@ -34,7 +35,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (element == null || !_all && VisitedElements.ContainsKey(element))
 				return;
-			
+
 			if (!_all)
 				VisitedElements.Add(element, element);
 
@@ -391,6 +392,10 @@ namespace LinqToDB.SqlQuery
 					VisitX((SqlValuesTable)element);
 					break;
 
+				case QueryElementType.SqlRow:
+					VisitX((SqlRow)element);
+					break;
+
 				case QueryElementType.MergeOperationClause:
 					VisitX((SqlMergeOperationClause)element);
 					break;
@@ -405,6 +410,13 @@ namespace LinqToDB.SqlQuery
 
 				default:
 					throw new InvalidOperationException($"Visit visitor not implemented for element {element.ElementType}");
+			}
+
+			if (element is IQueryExtendible { SqlQueryExtensions.Count: > 0 } qe)
+			{
+				foreach (var ext in qe.SqlQueryExtensions)
+				foreach (var arg in ext.Arguments)
+					Visit(arg.Value);
 			}
 		}
 
@@ -521,12 +533,13 @@ namespace LinqToDB.SqlQuery
 			if (outputClause == null)
 				return;
 
-			VisitX(outputClause.SourceTable);
 			VisitX(outputClause.DeletedTable);
 			VisitX(outputClause.InsertedTable);
 			VisitX(outputClause.OutputTable);
-			if (outputClause.OutputQuery != null)
-				VisitX(outputClause.OutputQuery);
+
+			if (outputClause.OutputColumns != null)
+				foreach (var item in outputClause.OutputColumns)
+					Visit(item);
 
 			if (outputClause.HasOutputItems)
 				foreach (var item in outputClause.OutputItems)
@@ -561,6 +574,11 @@ namespace LinqToDB.SqlQuery
 		void VisitX(SqlExpression element)
 		{
 			foreach (var v in element.Parameters) Visit(v);
+		}
+
+		void VisitX(SqlRow element)
+		{
+			foreach (var v in element.Values) Visit(v);
 		}
 
 		void VisitX(SqlObjectExpression element)

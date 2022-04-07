@@ -1,0 +1,305 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".generated.cs" #>
+// Generated.
+//
+using System;
+using System.Linq;
+using System.Linq.Expressions;
+
+using LinqToDB;
+using LinqToDB.DataProvider.MySql;
+
+using NUnit.Framework;
+
+namespace Tests.Extensions
+{
+	partial class MySqlTests
+	{
+<#
+	GenerateTable("JoinFixedOrder");              GenerateQuery4("JoinFixedOrder");
+	GenerateTable("JoinOrder");                   GenerateQuery4("JoinOrder");
+	GenerateTable("JoinPrefix");                  GenerateQuery4("JoinPrefix");
+	GenerateTable("JoinSuffix");                  GenerateQuery4("JoinSuffix");
+
+	GenerateTable("Bka");                         GenerateQuery4("Bka");
+	GenerateTable("BatchedKeyAccess");            GenerateQuery4("BatchedKeyAccess");
+	GenerateTable("NoBka");                       GenerateQuery4("NoBka");
+	GenerateTable("NoBatchedKeyAccess");          GenerateQuery4("NoBatchedKeyAccess");
+	GenerateTable("Bnl");                         GenerateQuery4("Bnl");
+	GenerateTable("BlockNestedLoop");             GenerateQuery4("BlockNestedLoop");
+	GenerateTable("NoBnl");                       GenerateQuery4("NoBnl");
+	GenerateTable("NoBlockNestedLoop");           GenerateQuery4("NoBlockNestedLoop");
+
+	GenerateTable("DerivedConditionPushDown");    GenerateQuery4("DerivedConditionPushDown");
+	GenerateTable("NoDerivedConditionPushDown");  GenerateQuery4("NoDerivedConditionPushDown");
+	GenerateTable("HashJoin");                    GenerateQuery4("HashJoin");
+	GenerateTable("NoHashJoin");                  GenerateQuery4("NoHashJoin");
+	GenerateTable("Merge");                       GenerateQuery4("Merge");
+	GenerateTable("NoMerge");                     GenerateQuery4("NoMerge");
+
+	GenerateIndex("GroupIndex");
+	GenerateIndex("NoGroupIndex");
+	GenerateIndex("Index");
+	GenerateIndex("NoIndex");
+	GenerateIndex("IndexMerge");
+	GenerateIndex("NoIndexMerge");
+	GenerateIndex("JoinIndex");
+	GenerateIndex("NoJoinIndex");
+	GenerateIndex("Mrr");
+	GenerateIndex("NoMrr");
+	GenerateIndex("NoIcp");
+	GenerateIndex("NoRangeOptimization");
+	GenerateIndex("OrderIndex");
+	GenerateIndex("NoOrderIndex");
+	GenerateIndex("SkipScan");
+	GenerateIndex("NoSkipScan");
+
+	GenerateQuery5("SemiJoin");
+	GenerateQuery5("NoSemiJoin");
+
+	GenerateQuery2("MaxExecutionTime");
+	GenerateQuery3("SetVar");
+	GenerateQuery3("ResourceGroup");
+
+	GenerateIndex2("UseIndex");
+	GenerateIndex2("UseIndexForJoin");
+	GenerateIndex2("UseIndexForOrderBy");
+	GenerateIndex2("UseIndexForGroupBy");
+	GenerateIndex2("UseKey");
+	GenerateIndex2("UseKeyForJoin");
+	GenerateIndex2("UseKeyForOrderBy");
+	GenerateIndex2("UseKeyForGroupBy");
+	GenerateIndex2("IgnoreIndex");
+	GenerateIndex2("IgnoreIndexForJoin");
+	GenerateIndex2("IgnoreIndexForOrderBy");
+	GenerateIndex2("IgnoreIndexForGroupBy");
+	GenerateIndex2("IgnoreKey");
+	GenerateIndex2("IgnoreKeyForJoin");
+	GenerateIndex2("IgnoreKeyForOrderBy");
+	GenerateIndex2("IgnoreKeyForGroupBy");
+	GenerateIndex2("ForceIndex");
+	GenerateIndex2("ForceIndexForJoin");
+	GenerateIndex2("ForceIndexForOrderBy");
+	GenerateIndex2("ForceIndexForGroupBy");
+	GenerateIndex2("ForceKey");
+	GenerateIndex2("ForceKeyForJoin");
+	GenerateIndex2("ForceKeyForOrderBy");
+	GenerateIndex2("ForceKeyForGroupBy");
+#>
+	}
+}
+<#+
+void GenerateTable(string test)
+{
+#>
+		[Test]
+		public void TableHint<#= test #>Test([IncludeDataSources(true, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsMySql()
+					.<#= test #>Hint()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {MySqlHints.Table.<#= test #>}(p) */"));
+		}
+
+		[Test]
+		public void TableHint<#= test #>InScopeTest([IncludeDataSources(true, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Parent
+				join c in db.Child on p.ParentID equals c.ParentID
+				select p
+			)
+			.AsMySql()
+			.<#= test #>InScopeHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {MySqlHints.Table.<#= test #>}(p) {MySqlHints.Table.<#= test #>}(c_1) */"));
+		}
+
+<#+
+}
+
+void GenerateIndex(string test)
+{
+#>
+		[Test]
+		public void IndexHint<#= test #>Test([IncludeDataSources(true, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Parent
+					.AsMySql()
+					.<#= test #>Hint("parent_ix", "parent2_ix")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {MySqlHints.Table.<#= test #>}(p parent_ix, parent2_ix) */"));
+		}
+
+<#+
+}
+
+void GenerateIndex2(string test)
+{
+#>
+		[Test]
+		public void IndexHint<#= test #>Test([IncludeDataSources(true, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Child
+					.AsMySql()
+					.<#= test #>Hint("IX_ChildIndex", "IX_ChildIndex2")
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"`Child` `p` {MySqlHints.Table.<#= test #>}(IX_ChildIndex, IX_ChildIndex2)"));
+		}
+
+<#+
+}
+
+void GenerateQuery(string test)
+{
+#>
+		[Test]
+		public void QueryHint<#= test #>Test([IncludeDataSources(true, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsMySql()
+			.<#= test #>Hint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {MySqlHints.Query.<#= test #>} */"));
+		}
+
+<#+
+}
+
+void GenerateQuery2(string test)
+{
+#>
+		[Test]
+		public void QueryHint<#= test #>Test2([IncludeDataSources(true, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsMySql()
+			.<#= test #>Hint(10);
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {MySqlHints.Query.<#= test #>(10)} */"));
+		}
+
+<#+
+}
+
+void GenerateQuery3(string test)
+{
+#>
+		[Test]
+		public void QueryHint<#= test #>Test3([IncludeDataSources(true, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsMySql()
+			.<#= test #>Hint("aaa");
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {MySqlHints.Query.<#= test #>}(aaa) */"));
+		}
+
+<#+
+}
+
+void GenerateQuery4(string test)
+{
+#>
+		[Test]
+		public void QueryHint<#= test #>Test4([IncludeDataSources(true, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child.TableID("cc")
+				join p in db.Parent.TableID("pp") on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsMySql()
+			.<#= test #>Hint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {MySqlHints.Query.<#= test #>}(c_1, p) */"));
+		}
+
+<#+
+}
+
+void GenerateQuery5(string test)
+{
+#>
+		[Test]
+		public void QueryHint<#= test #>Test4([IncludeDataSources(true, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Parent
+				from c in db.Child
+				select p
+			)
+			.AsMySql()
+				.<#= test #>Hint("FIRSTMATCH", "LOOSESCAN");
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {MySqlHints.Query.<#= test #>}(FIRSTMATCH, LOOSESCAN)"));
+		}
+
+<#+
+}
+#>

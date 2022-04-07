@@ -176,7 +176,7 @@ namespace LinqToDB
 			if (query is IQueryProviderAsync queryAsync)
 				return queryAsync.ExecuteAsync<int>(expr, token);
 
-			return TaskEx.Run(() => query.Provider.Execute<int>(expr), token);
+			return Task.Run(() => query.Provider.Execute<int>(expr), token);
 		}
 
 		/// <summary>
@@ -221,7 +221,7 @@ namespace LinqToDB
 			if (query is IQueryProviderAsync queryAsync)
 				return queryAsync.ExecuteAsync<int>(expr, token);
 
-			return TaskEx.Run(() => query.Provider.Execute<int>(expr), token);
+			return Task.Run(() => query.Provider.Execute<int>(expr), token);
 		}
 
 		/// <summary>
@@ -266,7 +266,7 @@ namespace LinqToDB
 			if (query is IQueryProviderAsync queryAsync)
 				return queryAsync.ExecuteAsync<int>(expr, token);
 
-			return TaskEx.Run(() => query.Provider.Execute<int>(expr), token);
+			return Task.Run(() => query.Provider.Execute<int>(expr), token);
 		}		
 
 		#endregion

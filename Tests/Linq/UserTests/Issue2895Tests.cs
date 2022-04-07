@@ -143,7 +143,6 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		[ActiveIssue(Details = "Please see issue 2895")]
 		public void EagerLoadingTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

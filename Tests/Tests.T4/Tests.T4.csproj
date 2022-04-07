@@ -6,8 +6,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Humanizer.Core" />
-		<PackageReference Include="System.ComponentModel.Annotations" />
 		<PackageReference Include="Npgsql" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
 
@@ -15,6 +13,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+		<Reference Include="System.ComponentModel.DataAnnotations" />
 		<Reference Include="PresentationCore" />
 		<Reference Include="PresentationFramework" />
 		<Reference Include="WindowsBase" />
@@ -35,9 +34,17 @@
 		<Content Include="Models\bbb.txt" />
 	</ItemGroup>
 
+	<ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+		<Compile Update="WPF\ViewModel.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>ViewModel.tt</DependentUpon>
+		</Compile>
+	</ItemGroup>
+	
 	<ItemGroup Condition="'$(TargetFramework)' != 'net472'">
-		<Compile Remove="WPF\ViewModel.cs" />
-		<Compile Remove="WPF\ViewModel.generated.cs" />
+		<Compile Remove="WPF\*.cs" />
+		<None Include="WPF\ViewModel.cs" />
 
 		<None Remove="SqlServer.tt" />
 		<None Remove="SqlServerAzure.tt" />
@@ -306,11 +313,6 @@
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
 			<DependentUpon>Unlock.tt</DependentUpon>
-		</Compile>
-		<Compile Update="WPF\ViewModel.generated.cs">
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-			<DependentUpon>ViewModel.tt</DependentUpon>
 		</Compile>
 	</ItemGroup>
 

@@ -155,18 +155,18 @@ namespace LinqToDB.SqlProvider
 
 		public bool TryConvert(StringBuilder stringBuilder, object? value)
 		{
+			return TryConvert(stringBuilder, null, value);
+		}
+
+		public bool TryConvert(StringBuilder stringBuilder, SqlDataType? dataType, object? value)
+		{
 			if (value == null || value is INullable nullable && nullable.IsNull)
 			{
 				stringBuilder.Append("NULL");
 				return true;
 			}
 
-			return TryConvertImpl(stringBuilder, new SqlDataType(value.GetType()), value, true);
-		}
-
-		public bool TryConvert(StringBuilder stringBuilder, SqlDataType dataType, object? value)
-		{
-			return TryConvertImpl(stringBuilder, dataType, value, true);
+			return TryConvertImpl(stringBuilder, dataType ?? new SqlDataType(value.GetType()), value, true);
 		}
 
 		public bool CanConvert(SqlDataType dataType, object? value)
@@ -229,13 +229,10 @@ namespace LinqToDB.SqlProvider
 
 		public StringBuilder Convert(StringBuilder stringBuilder, object? value)
 		{
-			if (!TryConvert(stringBuilder, value))
-				throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
-
-			return stringBuilder;
+			return Convert(stringBuilder, null, value);
 		}
 
-		public StringBuilder Convert(StringBuilder stringBuilder, SqlDataType dataType, object? value)
+		public StringBuilder Convert(StringBuilder stringBuilder, SqlDataType? dataType, object? value)
 		{
 			if (!TryConvert(stringBuilder, dataType, value))
 				throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");

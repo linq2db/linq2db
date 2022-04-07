@@ -1,37 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
+using System.IO;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using System.Data.Common;
-	using System.IO;
+	using Common;
+	using Configuration;
 	using Data;
-	using LinqToDB.Common;
-	using LinqToDB.Configuration;
-	using LinqToDB.DataProvider.DB2;
+	using DB2;
 
 	public static class InformixTools
 	{
 #if NETFRAMEWORK
-		private static readonly Lazy<IDataProvider> _informixDataProvider = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new InformixDataProvider(ProviderName.Informix);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
+		static readonly Lazy<IDataProvider> _informixDataProvider = DataConnection.CreateDataProvider<InformixDataProviderInformix>();
 #endif
 
-		private static readonly Lazy<IDataProvider> _informixDB2DataProvider = new Lazy<IDataProvider>(() =>
-		{
-			var provider = new InformixDataProvider(ProviderName.InformixDB2);
-
-			DataConnection.AddDataProvider(provider);
-
-			return provider;
-		}, true);
+		static readonly Lazy<IDataProvider> _informixDB2DataProvider = DataConnection.CreateDataProvider<InformixDataProviderDB2>();
 
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
@@ -99,7 +85,7 @@ namespace LinqToDB.DataProvider.Informix
 #endif
 		}
 
-#region CreateDataConnection
+		#region CreateDataConnection
 
 		public static DataConnection CreateDataConnection(string connectionString, string? providerName = null)
 		{
@@ -116,12 +102,12 @@ namespace LinqToDB.DataProvider.Informix
 			return new DataConnection(GetDataProvider(providerName), transaction);
 		}
 
-#endregion
+		#endregion
 
-#region BulkCopy
+		#region BulkCopy
 
 		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.ProviderSpecific;
 
-#endregion
+		#endregion
 	}
 }

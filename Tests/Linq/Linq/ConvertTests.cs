@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -736,7 +736,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_Byte([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvert_Byte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -753,7 +753,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_Byte([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvertWithExtension_Byte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -770,7 +770,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_SByte([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvert_SByte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -787,7 +787,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_SByte([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvertWithExtension_SByte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -804,7 +804,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_Int16([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvert_Int16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -821,7 +821,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_Int16([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvertWithExtension_Int16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -838,7 +838,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_UInt16([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvert_UInt16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -855,7 +855,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_UInt16([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvertWithExtension_UInt16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -872,7 +872,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_Int32([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvert_Int32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -889,7 +889,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_Int32([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvertWithExtension_Int32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -906,7 +906,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_UInt32([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvert_UInt32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -923,7 +923,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_UInt32([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvertWithExtension_UInt32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -940,7 +940,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_Int64([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvert_Int64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -957,7 +957,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_Int64([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvertWithExtension_Int64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -974,7 +974,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_UInt64([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvert_UInt64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -991,7 +991,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_UInt64([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvertWithExtension_UInt64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -1008,7 +1008,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_ByteN([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvert_ByteN([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -1025,7 +1025,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_ByteN([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvertWithExtension_ByteN([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -1042,7 +1042,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_SByteN([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvert_SByteN([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -1059,7 +1059,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_SByteN([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvertWithExtension_SByteN([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -1076,7 +1076,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_Int16N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvert_Int16N([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -1093,7 +1093,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_Int16N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvertWithExtension_Int16N([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -1110,7 +1110,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_UInt16N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvert_UInt16N([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -1127,7 +1127,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_UInt16N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvertWithExtension_UInt16N([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -1144,7 +1144,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_Int32N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvert_Int32N([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -1161,7 +1161,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_Int32N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvertWithExtension_Int32N([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -1178,7 +1178,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_UInt32N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvert_UInt32N([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -1195,7 +1195,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_UInt32N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvertWithExtension_UInt32N([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -1212,7 +1212,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_Int64N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvert_Int64N([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -1229,7 +1229,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_Int64N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvertWithExtension_Int64N([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -1246,7 +1246,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_UInt64N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvert_UInt64N([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -1263,7 +1263,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_UInt64N([IncludeDataSources(false, TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNoConvertWithExtension_UInt64N([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -1336,5 +1336,163 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		class ToStringConvertibleTypes
+		{
+			public bool    Prop_bool    { get; set; }
+			public byte    Prop_byte    { get; set; }
+			public char    Prop_char    { get; set; }
+			public decimal Prop_decimal { get; set; }
+			public double  Prop_double  { get; set; }
+			public short   Prop_short   { get; set; }
+			public int     Prop_int     { get; set; }
+			public long    Prop_long    { get; set; }
+			public sbyte   Prop_sbyte   { get; set; }
+			public float   Prop_float   { get; set; }
+			public ushort  Prop_ushort  { get; set; }
+			public uint    Prop_uint    { get; set; }
+			public ulong   Prop_ulong   { get; set; }
+			public Guid    Prop_Guid    { get; set; }
+
+			public bool?    NullableProp_bool    { get; set; }
+			public byte?    NullableProp_byte    { get; set; }
+			public char?    NullableProp_char    { get; set; }
+			public decimal? NullableProp_decimal { get; set; }
+			public double?  NullableProp_double  { get; set; }
+			public short?   NullableProp_short   { get; set; }
+			public int?     NullableProp_int     { get; set; }
+			public long?    NullableProp_long    { get; set; }
+			public sbyte?   NullableProp_sbyte   { get; set; }
+			public float?   NullableProp_float   { get; set; }
+			public ushort?  NullableProp_ushort  { get; set; }
+			public uint?    NullableProp_uint    { get; set; }
+			public ulong?   NullableProp_ulong   { get; set; }
+			public Guid?    NullableProp_Guid    { get; set; }
+
+			public DateTime  Prop_DateTime         { get; set; }
+			public DateTime? NullableProp_DateTime { get; set; }
+
+			public static ToStringConvertibleTypes[] Seed()
+			{
+				return new ToStringConvertibleTypes[]
+				{
+					new ToStringConvertibleTypes
+					{
+						Prop_bool             = true,
+						Prop_byte             = 1,
+						Prop_char             = 'c',
+						Prop_decimal          = 1.2m,
+						Prop_double           = 1.2,
+						Prop_short            = short.MaxValue,
+						Prop_int              = int.MaxValue,
+						Prop_long             = long.MaxValue,
+						Prop_sbyte            = sbyte.MaxValue,
+						Prop_float            = 1.2f,
+						Prop_ushort           = ushort.MaxValue,
+						Prop_uint             = uint.MaxValue,
+						Prop_ulong            = uint.MaxValue,
+						Prop_Guid             = Guid.Empty,
+						NullableProp_bool     = true,
+						NullableProp_byte     = 1,
+						NullableProp_char     = 'c',
+						NullableProp_decimal  = 1.2m,
+						NullableProp_double   = 1.2,
+						NullableProp_short    = short.MaxValue,
+						NullableProp_int      = int.MaxValue,
+						NullableProp_long     = long.MaxValue,
+						NullableProp_sbyte    = sbyte.MaxValue,
+						NullableProp_float    = 1.2f,
+						NullableProp_ushort   = ushort.MaxValue,
+						NullableProp_uint     = uint.MaxValue,
+						NullableProp_ulong    = uint.MaxValue,
+						NullableProp_Guid     = Guid.Empty,
+						Prop_DateTime         = new DateTime(2022, 3, 25, 13, 40, 33),
+						NullableProp_DateTime = new DateTime(2022, 3, 25, 13, 40, 33),
+					},
+				};
+			}
+		}
+
+		[Test]
+		public void TestToStringConversion([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable<ToStringConvertibleTypes>(ToStringConvertibleTypes.Seed()))
+			{
+				var sqlConverted = table.Select(x => new
+					{
+						Prop_bool             = Sql.AsSql(x.Prop_bool            .ToString()),
+						Prop_byte             = Sql.AsSql(x.Prop_byte            .ToString()),
+						Prop_char             = Sql.AsSql(x.Prop_char            .ToString()),
+						Prop_decimal          = Sql.AsSql(x.Prop_decimal         .ToString()),
+						Prop_double           = Sql.AsSql(x.Prop_double          .ToString()),
+						Prop_short            = Sql.AsSql(x.Prop_short           .ToString()),
+						Prop_int              = Sql.AsSql(x.Prop_int             .ToString()),
+						Prop_long             = Sql.AsSql(x.Prop_long            .ToString()),
+						Prop_sbyte            = Sql.AsSql(x.Prop_sbyte           .ToString()),
+						Prop_float            = Sql.AsSql(x.Prop_float           .ToString()),
+						Prop_ushort           = Sql.AsSql(x.Prop_ushort          .ToString()),
+						Prop_uint             = Sql.AsSql(x.Prop_uint            .ToString()),
+						Prop_ulong            = Sql.AsSql(x.Prop_ulong           .ToString()),
+						Prop_Guid             = Sql.AsSql(x.Prop_Guid            .ToString()),
+						NullableProp_bool     = Sql.AsSql(x.NullableProp_bool    .ToString()),
+						NullableProp_byte     = Sql.AsSql(x.NullableProp_byte    .ToString()),
+						NullableProp_char     = Sql.AsSql(x.NullableProp_char    .ToString()),
+						NullableProp_decimal  = Sql.AsSql(x.NullableProp_decimal .ToString()),
+						NullableProp_double   = Sql.AsSql(x.NullableProp_double  .ToString()),
+						NullableProp_short    = Sql.AsSql(x.NullableProp_short   .ToString()),
+						NullableProp_int      = Sql.AsSql(x.NullableProp_int     .ToString()),
+						NullableProp_long     = Sql.AsSql(x.NullableProp_long    .ToString()),
+						NullableProp_sbyte    = Sql.AsSql(x.NullableProp_sbyte   .ToString()),
+						NullableProp_float    = Sql.AsSql(x.NullableProp_float   .ToString()),
+						NullableProp_ushort   = Sql.AsSql(x.NullableProp_ushort  .ToString()),
+						NullableProp_uint     = Sql.AsSql(x.NullableProp_uint    .ToString()),
+						NullableProp_ulong    = Sql.AsSql(x.NullableProp_ulong   .ToString()),
+						NullableProp_Guid     = Sql.AsSql(x.NullableProp_Guid    .ToString()),
+						Prop_DateTime         = Sql.AsSql(x.Prop_DateTime        .ToString()),
+						NullableProp_DateTime = Sql.AsSql(x.NullableProp_DateTime.ToString()),
+					})
+					.First();
+
+				var noSqlConverted = table.Select(x => new
+					{
+						Prop_bool            = x.Prop_bool ? "1" : "0",
+						Prop_byte            = x.Prop_byte            .ToString(),
+						Prop_char            = x.Prop_char            .ToString(),
+						Prop_decimal         = x.Prop_decimal         .ToString(),
+						Prop_double          = x.Prop_double          .ToString(),
+						Prop_short           = x.Prop_short           .ToString(),
+						Prop_int             = x.Prop_int             .ToString(),
+						Prop_long            = x.Prop_long            .ToString(),
+						Prop_sbyte           = x.Prop_sbyte           .ToString(),
+						Prop_float           = x.Prop_float           .ToString(),
+						Prop_ushort          = x.Prop_ushort          .ToString(),
+						Prop_uint            = x.Prop_uint            .ToString(),
+						Prop_ulong           = x.Prop_ulong           .ToString(),
+						Prop_Guid            = x.Prop_Guid            .ToString(),
+						NullableProp_bool    = x.NullableProp_bool == null ? "" : x.NullableProp_bool.Value ? "1" : "0",
+						NullableProp_byte    = x.NullableProp_byte    .ToString(),
+						NullableProp_char    = x.NullableProp_char    .ToString(),
+						NullableProp_decimal = x.NullableProp_decimal .ToString(),
+						NullableProp_double  = x.NullableProp_double  .ToString(),
+						NullableProp_short   = x.NullableProp_short   .ToString(),
+						NullableProp_int     = x.NullableProp_int     .ToString(),
+						NullableProp_long    = x.NullableProp_long    .ToString(),
+						NullableProp_sbyte   = x.NullableProp_sbyte   .ToString(),
+						NullableProp_float   = x.NullableProp_float   .ToString(),
+						NullableProp_ushort  = x.NullableProp_ushort  .ToString(),
+						NullableProp_uint    = x.NullableProp_uint    .ToString(),
+						NullableProp_ulong   = x.NullableProp_ulong   .ToString(),
+						NullableProp_Guid    = x.NullableProp_Guid    .ToString(),
+						Prop_DateTime         = Sql.AsSql(x.Prop_DateTime        .ToString()),
+						NullableProp_DateTime = Sql.AsSql(x.NullableProp_DateTime.ToString()),
+					})
+					.First();
+
+
+				sqlConverted.Should().Be(noSqlConverted);
+			}
+		}
+		
 	}
 }

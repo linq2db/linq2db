@@ -457,7 +457,9 @@ namespace LinqToDB.Mapping
 					systemType = typeof(object);
 				}
 				else
-					if (systemType.IsEnum)
+				{
+					var enumType = systemType.ToNullableUnderlying();
+					if (enumType.IsEnum)
 					{
 						var type = Converter.GetDefaultMappingFromEnumType(MappingSchema, dbDataType.SystemType);
 						if (type != null)
@@ -465,6 +467,7 @@ namespace LinqToDB.Mapping
 							systemType = type;
 						}
 					}
+				}
 			}
 
 			if (dbDataType.SystemType != systemType)
@@ -686,7 +689,8 @@ namespace LinqToDB.Mapping
 				}
 				else
 				{
-					if (valueConverter == null && includingEnum)
+					// For DataType.Enum we do not provide any additional conversion
+					if (valueConverter == null && includingEnum && dbDataType.DataType != DataType.Enum)
 					{
 						var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, getterExpr.Type);
 						if (type != null)

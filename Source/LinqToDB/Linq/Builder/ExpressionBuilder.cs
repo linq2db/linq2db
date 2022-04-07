@@ -16,6 +16,7 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 	using LinqToDB.Expressions;
+	using LinqToDB.Reflection;
 
 	partial class ExpressionBuilder
 	{
@@ -62,6 +63,7 @@ namespace LinqToDB.Linq.Builder
 			new CastBuilder                (),
 			new OfTypeBuilder              (),
 			new AsUpdatableBuilder         (),
+			new AsValueInsertableBuilder   (),
 			new LoadWithBuilder            (),
 			new DropBuilder                (),
 			new TruncateBuilder            (),
@@ -87,6 +89,8 @@ namespace LinqToDB.Linq.Builder
 			new MultiInsertBuilder         (),
 			new TagQueryBuilder            (),
 			new EnumerableBuilder          (),
+			new QueryExtensionBuilder      (),
+			new QueryNameBuilder           (),
 		};
 
 		public static void AddBuilder(ISequenceBuilder builder)
@@ -104,15 +108,17 @@ namespace LinqToDB.Linq.Builder
 		readonly ExpressionTreeOptimizationContext _optimizationContext;
 		readonly ParametersContext                 _parametersContext;
 
-		public ExpressionTreeOptimizationContext OptimizationContext => _optimizationContext;
-		public ParametersContext                 ParametersContext   => _parametersContext;
+		public ExpressionTreeOptimizationContext   OptimizationContext => _optimizationContext;
+		public ParametersContext                   ParametersContext   => _parametersContext;
 
-		public readonly List<ParameterExpression>  BlockVariables       = new ();
-		public readonly List<Expression>           BlockExpressions     = new ();
+		public readonly List<ParameterExpression>  BlockVariables   = new ();
+		public readonly List<Expression>           BlockExpressions = new ();
 		public          bool                       IsBlockDisable;
 		public          int                        VarIndex;
 
-		public          SqlComment?                Tag;
+		public SqlComment?                      Tag;
+		public List<SqlQueryExtension>?         SqlQueryExtensions;
+		public List<TableBuilder.TableContext>? TablesInScope;
 
 		public ExpressionBuilder(
 			Query                             query,
@@ -134,7 +140,7 @@ namespace LinqToDB.Linq.Builder
 			_parametersContext   = parametersContext;
 			Expression           = ConvertExpressionTree(expression);
 			_optimizationContext.ClearVisitedCache();
-			
+
 			DataReaderLocal      = BuildVariable(DataReaderParam, "ldr");
 		}
 
@@ -154,6 +160,18 @@ namespace LinqToDB.Linq.Builder
 		public        readonly ParameterExpression DataReaderLocal;
 		public static readonly ParameterExpression ParametersParam  = Expression.Parameter(typeof(object[]),     "ps");
 		public static readonly ParameterExpression ExpressionParam  = Expression.Parameter(typeof(Expression),   "expr");
+
+		static bool _isDataContextParamInitialized;
+
+		public static ParameterExpression GetDataContextParam()
+		{
+			if (!_isDataContextParamInitialized)
+			{
+				_isDataContextParamInitialized = true;
+			}
+
+			return DataContextParam;
+		}
 
 		public MappingSchema MappingSchema => DataContext.MappingSchema;
 
@@ -1394,7 +1412,7 @@ namespace LinqToDB.Linq.Builder
 				var parameters = new[] { p };
 				if (!HasParametersDefined(expr, parameters))
 				{
-					// trying to evaluate Querybale method.
+					// trying to evaluate Queryable method.
 					if (expression.NodeType == ExpressionType.Call && HasParametersDefined(expr, parameters.Concat(allowedParameters)))
 					{
 						var callExpression = (MethodCallExpression)expression;
@@ -1428,10 +1446,10 @@ namespace LinqToDB.Linq.Builder
 				var path =
 					Expression.Call(
 						Expression.Constant(_query),
-						MemberHelper.MethodOf<Query>(a => a.GetIQueryable(0, null!)),
-						ExpressionInstances.Int32(n), accessor ?? Expression.Constant(null, typeof(Expression)));
+						Methods.Query.GetIQueryable,
+						ExpressionInstances.Int32(n), accessor ?? Expression.Constant(null, typeof(Expression)), Expression.Constant(true));
 
-				var qex = _query.GetIQueryable(n, expression);
+				var qex = _query.GetIQueryable(n, expression, force: false);
 
 				if (expression.NodeType == ExpressionType.Call && qex.NodeType == ExpressionType.Call)
 				{

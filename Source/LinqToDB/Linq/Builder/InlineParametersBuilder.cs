@@ -20,14 +20,8 @@ namespace LinqToDB.Linq.Builder
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
 			builder.DataContext.InlineParameters = saveInline;
-			
-			return sequence;
-		}
 
-		protected override SequenceConvertInfo? Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo,
-			ParameterExpression? param)
-		{
-			return null;
+			return sequence;
 		}
 	}
 }

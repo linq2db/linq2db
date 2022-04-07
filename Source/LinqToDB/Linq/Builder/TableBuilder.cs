@@ -95,6 +95,25 @@ namespace LinqToDB.Linq.Builder
 						return BuildContextType.MemberAccess;
 
 					break;
+
+				case ExpressionType.Parameter:
+					{
+						if (buildInfo.IsSubQuery && buildInfo.SelectQuery.From.Tables.Count == 0)
+						{
+							// It should be handled by GroupByElementBuilder 
+							//
+							if (typeof(IGrouping<,>).IsSameOrParentOf(expression.Type))
+								break;
+							
+							parentContext = builder.GetContext(buildInfo.Parent, expression);
+							if (parentContext != null)
+							{
+								return BuildContextType.Association;
+							}
+						}
+
+						break;
+					}
 			}
 
 			return BuildContextType.None;
@@ -123,7 +142,7 @@ namespace LinqToDB.Linq.Builder
 
 			var fakeQuery = ExpressionQueryImpl.CreateQuery(entityType, builder.DataContext, null);
 
-			// Here we tell for Equality Comparer to compare optimized expressions 
+			// Here we tell for Equality Comparer to compare optimized expressions
 			//
 			builder.AddQueryableMemberAccessors((filterFunc, fakeQuery), new AccessorMember(memberInfo), builder.DataContext, static (context, mi, dc) =>
 			{
@@ -131,14 +150,15 @@ namespace LinqToDB.Linq.Builder
 
 				// here we use light version of optimization, only for comparing trees
 				var optimizationContext = new ExpressionTreeOptimizationContext(dc);
-				var optimizedExpr =
-					ExpressionBuilder.CorrectDataConnectionReference(filtered.Expression, ExpressionBuilder.DataContextParam);
-				    optimizedExpr = optimizationContext.ExposeExpression(optimizedExpr);
-				    optimizedExpr = optimizationContext.ExpandQueryableMethods(optimizedExpr);
+				var optimizedExpr       = ExpressionBuilder.CorrectDataConnectionReference(filtered.Expression, ExpressionBuilder.DataContextParam);
+
+				optimizedExpr = optimizationContext.ExposeExpression(optimizedExpr);
+				optimizedExpr = optimizationContext.ExpandQueryableMethods(optimizedExpr);
+
 				return optimizedExpr;
 			});
 
-			var filtered = (IQueryable)filterFunc.DynamicInvoke(fakeQuery, builder.DataContext)!;
+			var filtered  = (IQueryable)filterFunc.DynamicInvoke(fakeQuery, builder.DataContext)!;
 			var optimized = ExpressionBuilder.CorrectDataConnectionReference(filtered.Expression, ExpressionBuilder.DataContextParam);
 
 			optimized = builder.ConvertExpressionTree(optimized);
@@ -164,14 +184,14 @@ namespace LinqToDB.Linq.Builder
 				case BuildContextType.TableConstant:
 					{
 						return ApplyQueryFilters(builder, buildInfo, null,
-							new TableContext(builder, buildInfo, ((IQueryable)buildInfo.Expression.EvaluateExpression()!).ElementType));
+							AddTableInScope(new(builder, buildInfo, ((IQueryable)buildInfo.Expression.EvaluateExpression()!).ElementType)));
 					}
 				case BuildContextType.GetTableMethod         :
 				case BuildContextType.MemberAccess           :
 					{
 						return ApplyQueryFilters(builder, buildInfo, null,
-							new TableContext(builder, buildInfo,
-								buildInfo.Expression.Type.GetGenericArguments()[0]));
+							AddTableInScope(new(builder, buildInfo,
+								buildInfo.Expression.Type.GetGenericArguments()[0])));
 					}
 				case BuildContextType.Association            :
 				{
@@ -188,6 +208,12 @@ namespace LinqToDB.Linq.Builder
 				case BuildContextType.CteConstant            : return BuildCteContextTable(builder, buildInfo);
 				case BuildContextType.FromSqlMethod          : return BuildRawSqlTable(builder, buildInfo, false);
 				case BuildContextType.FromSqlScalarMethod    : return BuildRawSqlTable(builder, buildInfo, true);
+			}
+
+			TableContext AddTableInScope(TableContext context)
+			{
+				builder.TablesInScope?.Add(context);
+				return context;
 			}
 
 			throw new InvalidOperationException();

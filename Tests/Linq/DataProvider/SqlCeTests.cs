@@ -510,10 +510,10 @@ namespace Tests.DataProvider
 		[Test]
 		public void SelectTableWithHintTest([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(Person, db.Person.With("TABLOCK"));
-			}
+			using var db = GetDataContext(context);
+			AreEqual(Person, db.Person.With("TABLOCK"), ps => ps.OrderBy(p => p.ID));
+
+			Assert.That(LastQuery, Contains.Substring("[Person] [t1] WITH (TABLOCK)"));
 		}
 
 		[Test]
@@ -562,7 +562,7 @@ namespace Tests.DataProvider
 			[Column(DbType = "int"), PrimaryKey, Identity]
 			public int ID { get; set; }
 			[Column(DataType = DataType.Image), Nullable]
-			public byte[]? imageDataType { get; set; } 
+			public byte[]? imageDataType { get; set; }
 		}
 
 		[Test]

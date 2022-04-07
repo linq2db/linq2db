@@ -59,7 +59,7 @@ namespace Tests.xUpdate
 
 			ResetAllTypesIdentity(context);
 
-			if ((context == ProviderName.OracleNative || context == TestProvName.Oracle11Native) && copyType == BulkCopyType.ProviderSpecific)
+			if (context.IsAnyOf(TestProvName.AllOracleNative) && copyType == BulkCopyType.ProviderSpecific)
 				Assert.Inconclusive("Oracle BulkCopy doesn't support identity triggers");
 
 			// don't use transactions as some providers will fallback to non-provider-specific implementation then
@@ -83,7 +83,7 @@ namespace Tests.xUpdate
 
 					// oracle supports identity insert only starting from version 12c, which is not used yet for tests
 					var useGenerated = keepIdentity != true
-						|| context.Contains("Oracle");
+						|| context.IsAnyOf(TestProvName.AllOracle);
 
 					Assert.AreEqual(lastId + (!useGenerated ? 10 : 1), data[0].ID);
 					Assert.AreEqual(200, data[0].Value);
@@ -166,7 +166,7 @@ namespace Tests.xUpdate
 
 					// oracle supports identity insert only starting from version 12c, which is not used yet for tests
 					var useGenerated = keepIdentity != true
-						|| context.Contains("Oracle");
+						|| context.IsAnyOf(TestProvName.AllOracle);
 
 					Assert.AreEqual(lastId + (!useGenerated ? 10 : 1), data[0].ID);
 					Assert.AreEqual(200, data[0].Value);
@@ -229,7 +229,7 @@ namespace Tests.xUpdate
 
 		private async Task<bool> ExecuteAsync(DataConnection db, string context, Func<Task> perform, bool? keepIdentity, BulkCopyType copyType)
 		{
-			if (context.Contains("Firebird")
+			if (context.IsAnyOf(TestProvName.AllFirebird)
 				&& keepIdentity == true
 				&& (copyType    == BulkCopyType.Default
 					|| copyType == BulkCopyType.MultipleRows
@@ -242,7 +242,7 @@ namespace Tests.xUpdate
 			}
 
 			bool notSupported = false;
-			if (context.Contains(ProviderName.Informix))
+			if (context.IsAnyOf(TestProvName.AllInformix))
 			{
 				notSupported = !((InformixDataProvider)db.DataProvider).Adapter.IsIDSProvider
 					|| copyType == BulkCopyType.MultipleRows;
@@ -250,12 +250,11 @@ namespace Tests.xUpdate
 
 			// RowByRow right now uses DataConnection.Insert which doesn't support identity insert
 			if ((copyType       == BulkCopyType.RowByRow
-					|| context  == ProviderName.Access
-					|| context  == ProviderName.AccessOdbc
+					|| context.IsAnyOf(TestProvName.AllAccess)
 					|| notSupported
-					|| (context.StartsWith(ProviderName.SapHana)
+					|| (context.IsAnyOf(TestProvName.AllSapHana)
 						&& (copyType == BulkCopyType.MultipleRows || copyType == BulkCopyType.Default))
-					|| (context == ProviderName.SapHanaOdbc && copyType == BulkCopyType.ProviderSpecific))
+					|| (context.IsAnyOf(ProviderName.SapHanaOdbc) && copyType == BulkCopyType.ProviderSpecific))
 				&& keepIdentity == true)
 			{
 				var ex = Assert.CatchAsync(async () => await perform())!;

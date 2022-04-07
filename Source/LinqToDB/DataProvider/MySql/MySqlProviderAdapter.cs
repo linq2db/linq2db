@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Data;
+using System.Collections.Generic;
+using System.Data.Common;
+using System.Linq.Expressions;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using System.Collections.Generic;
-	using System.Data.Common;
-	using System.Linq.Expressions;
-	using System.Threading;
-	using System.Threading.Tasks;
 	using LinqToDB.Expressions;
 	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
 
 	public class MySqlProviderAdapter : IDynamicProviderAdapter
 	{
@@ -50,7 +52,7 @@ namespace LinqToDB.DataProvider.MySql
 			Type  mySqlDateTimeType,
 			Type  mySqlGeometryType,
 
-			Func<object, decimal>? mySqlDecimalGetter,
+			Func<object, string>? mySqlDecimalGetter,
 
 			Func<DbParameter, object> dbTypeGetter,
 
@@ -98,19 +100,19 @@ namespace LinqToDB.DataProvider.MySql
 		public MappingSchema MappingSchema { get; }
 
 		/// <summary>
-		/// Not supported by MySqlConnector.
+		/// Not supported by MySqlConnector prior to 2.1.0.
 		/// </summary>
 		public Type? MySqlDecimalType  { get; }
 		public Type  MySqlDateTimeType { get; }
 		public Type  MySqlGeometryType { get; }
 
 		/// <summary>
-		/// Not supported by MySqlConnector.
+		/// Not needed for MySqlConnector as it supports MySqlDecimal parameters.
 		/// </summary>
-		public Func<object, decimal>? MySqlDecimalGetter { get; }
+		public Func<object, string>? MySqlDecimalGetter { get; }
 
 		/// <summary>
-		/// Not supported by MySqlConnector.
+		/// Not supported by MySqlConnector prior to 2.1.0.
 		/// </summary>
 		public string? GetMySqlDecimalMethodName { get; }
 
@@ -166,6 +168,8 @@ namespace LinqToDB.DataProvider.MySql
 			}
 		}
 
+		private static void AppendAction(StringBuilder sb, string value) => sb.Append(value);
+
 		private class MySqlData
 		{
 			internal static MySqlProviderAdapter CreateAdapter()
@@ -191,11 +195,18 @@ namespace LinqToDB.DataProvider.MySql
 				typeMapper.RegisterTypeWrapper<MySqlDecimal>(mySqlDecimalType);
 
 				var dbTypeGetter      = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType).BuildGetter<DbParameter>();
-				var decimalGetter     = typeMapper.Type<MySqlDecimal>().Member(p => p.Value).BuildGetter<object>();
+				var decimalGetter      = typeMapper.BuildFunc<object, string>(typeMapper.MapLambda((object value) => ((MySqlDecimal)value).ToString()));
+				var toDecimalConverter = typeMapper.MapLambda((MySqlDecimal d) => d.Value);
+				var toDoubleConverter  = typeMapper.MapLambda((MySqlDecimal d) => d.ToDouble());
 				var dateTimeConverter = typeMapper.MapLambda((MySqlDateTime dt) => dt.GetDateTime());
 
 				var mappingSchema = new MappingSchema();
+
 				mappingSchema.SetDataType(mySqlDecimalType, DataType.Decimal);
+				mappingSchema.SetConvertExpression(mySqlDecimalType, typeof(decimal), toDecimalConverter);
+				mappingSchema.SetConvertExpression(mySqlDecimalType, typeof(double), toDoubleConverter);
+				mappingSchema.SetValueToSqlConverter(mySqlDecimalType, typeMapper.BuildAction<StringBuilder, SqlDataType, object>(typeMapper.MapActionLambda((StringBuilder sb, SqlDataType type, object value) => AppendAction(sb, ((MySqlDecimal)value).ToString()))));
+
 				mappingSchema.SetDataType(mySqlDateTimeType, DataType.DateTime2);
 				mappingSchema.SetConvertExpression(mySqlDateTimeType, typeof(DateTime), dateTimeConverter);
 
@@ -228,7 +239,9 @@ namespace LinqToDB.DataProvider.MySql
 			[Wrapper]
 			private class MySqlDecimal
 			{
-				public decimal Value { get; }
+				public          decimal Value      => throw new NotImplementedException();
+				public          double  ToDouble() => throw new NotImplementedException();
+				public override string  ToString() => throw new NotImplementedException();
 			}
 
 			[Wrapper]
@@ -287,6 +300,8 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			private static readonly Version MinBulkCopyVersion = new (0, 67);
 			private static readonly Version MinModernVersion   = new (1, 0);
+			// actually it was added in 2.1.0, but assembly version wasn't updated
+			private static readonly Version MinMySqlDecimalVersion = new (2, 0);
 
 			internal static MySqlProviderAdapter CreateAdapter()
 			{
@@ -308,11 +323,14 @@ namespace LinqToDB.DataProvider.MySql
 				var dbType            = assembly.GetType($"{clientNamespace}.MySqlDbType"     , true)!;
 				var mySqlDateTimeType = assembly.GetType($"{typesNamespace}.MySqlDateTime"    , true)!;
 				var mySqlGeometryType = assembly.GetType($"{typesNamespace}.MySqlGeometry"    , true)!;
+				var mySqlDecimalType  = assembly.GetName().Version >= MinMySqlDecimalVersion ? assembly.GetType($"{typesNamespace}.MySqlDecimal", false) : null;
 
 				var typeMapper = new TypeMapper();
 				typeMapper.RegisterTypeWrapper<MySqlParameter>(parameterType);
 				typeMapper.RegisterTypeWrapper<MySqlDbType   >(dbType);
 				typeMapper.RegisterTypeWrapper<MySqlDateTime >(mySqlDateTimeType);
+				if (mySqlDecimalType != null)
+					typeMapper.RegisterTypeWrapper<MySqlDecimal>(mySqlDecimalType);
 
 				typeMapper.RegisterTypeWrapper<MySqlConnection >(connectionType);
 				typeMapper.RegisterTypeWrapper<MySqlTransaction>(transactionType);
@@ -320,7 +338,7 @@ namespace LinqToDB.DataProvider.MySql
 				BulkCopyAdapter? bulkCopy = null;
 				if (hasBulkCopy)
 				{
-					var bulkCopyType                   = assembly.GetType($"{clientNamespace}.MySqlBulkCopy", true)!;
+					var bulkCopyType                   = assembly.GetType($"{clientNamespace}.MySqlBulkCopy"              , true)!;
 					var bulkRowsCopiedEventHandlerType = assembly.GetType($"{clientNamespace}.MySqlRowsCopiedEventHandler", true)!;
 					var bulkCopyColumnMappingType      = assembly.GetType($"{clientNamespace}.MySqlBulkCopyColumnMapping" , true)!;
 					var rowsCopiedEventArgsType        = assembly.GetType($"{clientNamespace}.MySqlRowsCopiedEventArgs"   , true)!;
@@ -348,6 +366,18 @@ namespace LinqToDB.DataProvider.MySql
 				mappingSchema.SetDataType(mySqlDateTimeType, DataType.DateTime2);
 				mappingSchema.SetConvertExpression(mySqlDateTimeType, typeof(DateTime), dateTimeConverter);
 
+				if (mySqlDecimalType != null)
+				{
+					var toDecimalConverter = typeMapper.MapLambda((MySqlDecimal d) => d.Value);
+					var toDoubleConverter  = typeMapper.MapLambda((MySqlDecimal d) => d.ToDouble());
+
+					mappingSchema.SetDataType(mySqlDecimalType, DataType.Decimal);
+					mappingSchema.SetConvertExpression(mySqlDecimalType, typeof(decimal), toDecimalConverter);
+					mappingSchema.SetValueToSqlConverter(mySqlDecimalType, typeMapper.BuildAction<StringBuilder, SqlDataType, object>(typeMapper.MapActionLambda((StringBuilder sb, SqlDataType type, object value) => AppendAction(sb, ((MySqlDecimal)value).ToString()))));
+
+					mappingSchema.SetConvertExpression(mySqlDecimalType, typeof(double) , toDoubleConverter);
+				}
+
 				return new MySqlProviderAdapter(
 					MySqlProvider.MySqlConnector,
 					connectionType,
@@ -355,12 +385,12 @@ namespace LinqToDB.DataProvider.MySql
 					parameterType,
 					commandType,
 					transactionType,
-					null,
+					mySqlDecimalType,
 					mySqlDateTimeType,
 					mySqlGeometryType,
 					null,
 					p => typeGetter(p),
-					null,
+					mySqlDecimalType != null ? "GetMySqlDecimal" : null,
 					"GetDateTimeOffset",
 					"GetMySqlDateTime",
 					typesNamespace,
@@ -369,6 +399,14 @@ namespace LinqToDB.DataProvider.MySql
 			}
 
 			#region wrappers
+			[Wrapper]
+			private class MySqlDecimal
+			{
+				public          decimal Value      => throw new NotImplementedException();
+				public          double  ToDouble() => throw new NotImplementedException();
+				public override string  ToString() => throw new NotImplementedException();
+			}
+
 			[Wrapper]
 			private class MySqlDateTime
 			{
@@ -629,8 +667,8 @@ namespace LinqToDB.DataProvider.MySql
 			[Wrapper]
 			public delegate void MySqlRowsCopiedEventHandler(object sender, MySqlRowsCopiedEventArgs e);
 
-			#endregion
-			#endregion
+#endregion
+#endregion
 		}
 
 		[Wrapper]

@@ -1,22 +1,20 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
 	using Common;
-	using LinqToDB.Common.Internal;
+	using Common.Internal;
 	using LinqToDB.Extensions;
-	using LinqToDB.Linq;
-	using LinqToDB.Reflection;
+	using Linq;
+	using Reflection;
 	using Mapping;
 
 	class ConvertFromDataReaderExpression : Expression
 	{
-		public ConvertFromDataReaderExpression(Type type, int idx, IValueConverter? converter,
-			Expression dataReaderParam)
+		public ConvertFromDataReaderExpression(Type type, int idx, IValueConverter? converter, Expression dataReaderParam)
 		{
 			_type            = type;
 			Converter        = converter;
@@ -25,8 +23,7 @@ namespace LinqToDB.Expressions
 		}
 
 		// slow mode constructor
-		public ConvertFromDataReaderExpression(Type type, int idx, IValueConverter? converter,
-			Expression dataReaderParam, IDataContext dataContext)
+		public ConvertFromDataReaderExpression(Type type, int idx, IValueConverter? converter, Expression dataReaderParam, IDataContext dataContext)
 			: this(type, idx, converter, dataReaderParam)
 		{
 			_slowModeDataContext = dataContext;
@@ -36,7 +33,7 @@ namespace LinqToDB.Expressions
 		readonly Expression       _dataReaderParam;
 		readonly Type             _type;
 		readonly IDataContext?    _slowModeDataContext;
-		
+
 		public IValueConverter?   Converter { get; }
 
 		public override Type           Type        => _type;
@@ -46,11 +43,14 @@ namespace LinqToDB.Expressions
 
 		public override Expression Reduce()
 		{
-			return Reduce(_slowModeDataContext!, true);
+			return Reduce(_slowModeDataContext, true);
 		}
 
-		public Expression Reduce(IDataContext dataContext, bool slowMode)
+		public Expression Reduce(IDataContext? dataContext, bool slowMode)
 		{
+			if (dataContext == null)
+				return _dataReaderParam;
+
 			var columnReader = new ColumnReader(dataContext, dataContext.MappingSchema, _type, _idx, Converter, slowMode);
 
 			if (slowMode && Configuration.OptimizeForSequentialAccess)
@@ -61,7 +61,7 @@ namespace LinqToDB.Expressions
 
 		public Expression Reduce(IDataContext dataContext, DbDataReader dataReader)
 		{
-			dataReader = DataReaderWrapCache.TryUnwrapDataReader(dataContext.MappingSchema, dataReader);
+			dataReader = dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(dataContext, dataReader) ?? dataReader;
 
 			return GetColumnReader(dataContext, dataContext.MappingSchema, dataReader, _type, Converter, _idx, _dataReaderParam, forceNullCheck: false);
 		}
@@ -95,7 +95,7 @@ namespace LinqToDB.Expressions
 				ex = dataContext.GetReaderExpression(dataReader, idx, dataReaderExpr, expectedProvType);
 			}
 			else
-			{ 
+			{
 				ex = dataContext.GetReaderExpression(dataReader, idx, dataReaderExpr, toType);
 			}
 
@@ -115,7 +115,7 @@ namespace LinqToDB.Expressions
 				// we have to prepare read expression to conversion
 				//
 				var expectedType = converter.FromProviderExpression.Parameters[0].Type;
-				
+
 				if (converter.HandlesNulls)
 				{
 					ex = Condition(
@@ -134,7 +134,7 @@ namespace LinqToDB.Expressions
 				{
 					ex = Convert(ex, toType);
 				}
-					
+
 			}
 			else if (toType.IsEnum)
 			{
@@ -203,7 +203,7 @@ namespace LinqToDB.Expressions
 			 * from multiple threads, so it cannot have state. For same reason it doesn't make much sense to reduce number
 			 * of ColumnReader instances in mapper expression to one for single column. It could be done later if we will
 			 * see benefits of it, but frankly speaking it doesn't make sense to optimize slow-mode reader.
-			 * 
+			 *
 			 * Limitation is the same as for non-slow mapper:
 			 * column mapping expressions should use same reader method to get column value. This limitation enforced
 			 * in GetRawValueSequential method.
