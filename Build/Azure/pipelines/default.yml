@@ -11,13 +11,13 @@ variables:
 
 # build on commits to important branches: 'release', 'master'
 trigger:
-  - dev.v4
-  - release4
+  - master
+  - release
 # don't trigger pr builds by default, users should trigger them manually using /azp bot commands to avoid situations
 # when we have multiple test runs waiting for free job, when nobody needs them
 # we only want to trigger it for pr to release branch
 pr:
-  - release4
+  - release
 
 stages:
 
