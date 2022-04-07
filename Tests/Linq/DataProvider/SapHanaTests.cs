@@ -15,7 +15,13 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using System.Data;
+	using System.Globalization;
+	using System.IO;
+	using System.Linq.Expressions;
+	using System.Text;
 	using System.Threading.Tasks;
+	using LinqToDB.DataProvider;
 	using Model;
 
 	[TestFixture]
@@ -774,6 +780,145 @@ namespace Tests.DataProvider
 			using (var db = GetDataContext(context))
 			{
 				Assert.Throws<ArgumentException>(() => db.GetTable<AllTypesGeo>().ToArray());
+			}
+		}
+
+		[Table]
+		public class ArraysTable
+		{
+			[PrimaryKey                           ] public int        Id           { get; set; }
+			[Column(DbType = "INT ARRAY")         ] public int[]?     IntArray     { get; set; }
+			[Column(DbType = "VARCHAR(255) ARRAY")] public string?[]? VarCharArray { get; set; }
+			[Column(DbType = "INT ARRAY")         ] public int?[]?    IntArrayN    { get; set; }
+		}
+
+
+		[Test]
+		public void TestArrays([IncludeDataSources(CurrentProvider)] string context)
+		{
+			var ms = new MappingSchema();
+			// TODO: add DbDataType converter key
+
+			ms.SetValueToSqlConverter(typeof(int[]), (sb, t, v) => sb.Append($"ARRAY({string.Join(", ", ((int[])v).Select(_ => _.ToString(CultureInfo.InvariantCulture)))})"));
+			ms.SetValueToSqlConverter(typeof(int?[]), (sb, t, v) => sb.Append($"ARRAY({string.Join(", ", ((int?[])v).Select(_ => _ == null ? "NULL" : _.Value.ToString(CultureInfo.InvariantCulture)))})"));
+			// just for tests, string conversion is not correct
+			ms.SetValueToSqlConverter(typeof(string[]), (sb, t, v) => sb.Append($"ARRAY({string.Join(", ", ((string?[])v).Select(_ => _ == null ? "NULL" : "'" + _.ToString(CultureInfo.InvariantCulture) + "'"))})"));
+
+			using (var db = new DataConnection(context, ms))
+			using (var tb = db.CreateLocalTable<ArraysTable>())
+			{
+				// not correct, should use subclassing
+				var provider = (DataProviderBase)db.DataProvider;
+				provider.ReaderExpressions[new ReaderInfo()
+				{
+					DataTypeName = "varbinary",
+					FieldType = typeof(byte[]),
+					ProviderFieldType = typeof(byte[]),
+					ToType = typeof(int[])
+				}] = (Expression<Func<IDataReader, int, int[]>>)((dr, i) => ParseIntArray((byte[])dr.GetValue(i)));
+				provider.ReaderExpressions[new ReaderInfo()
+				{
+					DataTypeName = "varbinary",
+					FieldType = typeof(byte[]),
+					ProviderFieldType = typeof(byte[]),
+					ToType = typeof(int?[])
+				}] = (Expression<Func<IDataReader, int, int?[]>>)((dr, i) => ParseIntNArray((byte[])dr.GetValue(i)));
+				provider.ReaderExpressions[new ReaderInfo()
+				{
+					DataTypeName = "varbinary",
+					FieldType = typeof(byte[]),
+					ProviderFieldType = typeof(byte[]),
+					ToType = typeof(string[])
+				}] = (Expression<Func<IDataReader, int, string?[]>>)((dr, i) => ParseStringArray((byte[])dr.GetValue(i)));
+
+
+
+				db.InlineParameters = true;
+				db.Insert(new ArraysTable() { Id = 1 });
+				db.Insert(new ArraysTable() { Id = 2, IntArray = new[] { 3, 2, 4 } });
+				db.Insert(new ArraysTable() { Id = 3, VarCharArray = new[] { "one", null, "", "два" } });
+				db.Insert(new ArraysTable() { Id = 4, IntArrayN = new int?[] { 4, null, -1 } });
+
+				var data = tb.OrderBy(_ => _.Id).ToArray();
+			}
+		}
+
+		private static int[] ParseIntArray(byte[] rawData)
+		{
+			using (var ms = new MemoryStream(rawData))
+			using (var rd = new BinaryReader(ms))
+			{
+				var size = rd.ReadInt32();
+				var res = new int[size];
+				for (var i = 0; i < size; i++)
+				{
+					if (rd.ReadByte() == 0)
+					{
+						res[i] = default;
+					}
+					else
+					{
+						res[i] = rd.ReadInt32();
+					}
+				}
+
+				return res;
+			}
+		}
+
+		private static int?[] ParseIntNArray(byte[] rawData)
+		{
+			using (var ms = new MemoryStream(rawData))
+			using (var rd = new BinaryReader(ms))
+			{
+				var size = rd.ReadInt32();
+				var res = new int?[size];
+				for (var i = 0; i < size; i++)
+				{
+					if (rd.ReadByte() == 0)
+					{
+						res[i] = null;
+					}
+					else
+					{
+						res[i] = rd.ReadInt32();
+					}
+				}
+
+				return res;
+			}
+		}
+
+		private static string?[] ParseStringArray(byte[] rawData)
+		{
+			var pos = 0;
+			using (var ms = new MemoryStream(rawData))
+			using (var rd = new BinaryReader(ms))
+			{
+				var size = rd.ReadInt32();
+				pos += 4;
+				var res = new string?[size];
+				for (var i = 0; i < size; i++)
+				{
+					pos += 1;
+					// what about bigger strings?
+					var length = rd.ReadByte();
+					if (length == 255)
+					{
+						res[i] = null;
+					}
+					else if (length == 0)
+					{
+						res[i] = string.Empty;
+					}
+					else
+					{
+						res[i] = Encoding.UTF8.GetString(rd.ReadBytes(length));
+						pos += length;
+					}
+				}
+
+				return res;
 			}
 		}
 	}
