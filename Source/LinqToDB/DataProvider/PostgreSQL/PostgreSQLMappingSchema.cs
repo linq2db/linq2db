@@ -39,6 +39,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => BuildDateTime(sb, dt, (DateTime)v));
 
+			// explicitly type smallint literal as there is no
+			// implicit int->smallint conversion by default in pgsql
+			// https://github.com/linq2db/linq2db/issues/3298
+			SetValueToSqlConverter(typeof(short),    (sb,dt,v) => sb.AppendFormat(CultureInfo.InvariantCulture, "{0}::smallint", (short)v));
+
 			// adds floating point special values support
 			SetValueToSqlConverter(typeof(float) , (sb, dt, v) =>
 			{
